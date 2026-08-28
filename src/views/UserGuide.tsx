@@ -110,9 +110,9 @@ const UserGuide: React.FC = () => {
   const analyticsTables = GUIDE_DATASETS.length
 
   return (
-    <main className="mx-auto max-w-[1500px] px-3 pb-28 pt-4 sm:px-5 lg:px-8">
-      <header className="overflow-hidden rounded-[22px] border-[4px] border-black bg-[#CCFF00] shadow-[8px_8px_0_0_#000]">
-        <div className="grid gap-6 p-5 md:grid-cols-[1.4fr_.6fr] md:p-8">
+    <main className="mx-auto w-full min-w-0 max-w-[1500px] overflow-x-hidden px-3 pb-28 pt-4 sm:px-5 lg:px-8">
+      <header className="min-w-0 overflow-hidden rounded-[22px] border-[4px] border-black bg-[#CCFF00] shadow-[8px_8px_0_0_#000]">
+        <div className="grid min-w-0 gap-6 p-5 md:grid-cols-[1.4fr_.6fr] md:p-8">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-white px-3 py-1 text-xs font-black uppercase tracking-[.16em]">
               <BookOpen size={15} strokeWidth={3} /> Guide V2
@@ -124,21 +124,21 @@ const UserGuide: React.FC = () => {
               One searchable manual for connecting your channel, understanding your data, creating, editing, publishing, and fixing problems.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3 self-end">
+          <div className="grid min-w-0 grid-cols-2 gap-3 self-end">
             <Stat value={String(liveFeatures.length)} label="Current features" />
             <Stat value={String(analyticsTables)} label="Data tables" />
             <Stat value={String(GUIDE_METRICS.length)} label="Core metrics" />
             <Stat value={String(GUIDE_TOOLS.length)} label="Tool systems" />
           </div>
         </div>
-        <div className="border-t-[4px] border-black bg-white p-4 md:p-5">
-          <label className="flex items-center gap-3 rounded-2xl border-[4px] border-black bg-white px-4 shadow-[4px_4px_0_0_#000] focus-within:bg-[#FFFBEA]">
+        <div className="min-w-0 border-t-[4px] border-black bg-white p-3 sm:p-4 md:p-5">
+          <label className="flex min-w-0 items-center gap-2 rounded-2xl sm:gap-3 border-[4px] border-black bg-white px-4 shadow-[4px_4px_0_0_#000] focus-within:bg-[#FFFBEA]">
             <Search size={24} strokeWidth={3} />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search features, datasets, metrics, tools..."
-              className="min-w-0 flex-1 bg-transparent py-4 text-base font-black outline-none placeholder:text-black/35 sm:text-lg"
+              placeholder="Search ViewTube..."
+              className="w-0 min-w-0 flex-1 bg-transparent py-4 text-sm font-black outline-none placeholder:text-black/35 sm:text-lg"
             />
             <kbd className="hidden rounded-lg border-2 border-black bg-[#E5E7EB] px-2 py-1 text-xs font-black sm:block">GUIDE</kbd>
           </label>
@@ -156,7 +156,7 @@ const UserGuide: React.FC = () => {
         </div>
       </header>
 
-      <nav className="sticky top-2 z-20 mt-6 flex gap-2 overflow-x-auto rounded-2xl border-[4px] border-black bg-white p-2 shadow-[5px_5px_0_0_#000]">
+      <nav aria-label="Guide sections" className="sticky top-2 z-20 mt-6 flex w-full min-w-0 gap-2 overflow-x-auto overscroll-x-contain rounded-2xl border-[4px] border-black bg-white p-2 shadow-[5px_5px_0_0_#000]">
         <button onClick={() => setDomain("all")} className={`shrink-0 rounded-xl border-[3px] border-black px-3 py-2 text-xs font-black uppercase ${domain === "all" ? "bg-black text-white" : "bg-white"}`}>All</button>
         {(Object.keys(domainMeta) as GuideDomain[]).map((key) => (
           <button key={key} onClick={() => setDomain(key)} className={`shrink-0 rounded-xl border-[3px] border-black px-3 py-2 text-xs font-black uppercase ${domain === key ? domainMeta[key].className : "bg-white"}`}>{domainMeta[key].label}</button>
