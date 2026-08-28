@@ -62,8 +62,10 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
         height: '100%',
         background: '#000',
         overflow: 'hidden',
-        borderRadius: 12,
+        borderRadius: 8,
         minHeight: 140,
+        border: '2px solid #111',
+        boxShadow: '3px 3px 0 rgba(17,17,17,0.16)',
       }}
       data-aspect={aspect}
     >
@@ -121,9 +123,9 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
           top: 8,
           left: 12,
           padding: '4px 8px',
-          borderRadius: 6,
-          background: 'rgba(0,0,0,0.55)',
-          color: '#fff',
+          borderRadius: 4,
+          background: '#ffffff',
+          color: '#111',
           fontSize: 12,
           fontVariantNumeric: 'tabular-nums',
           fontWeight: 600,
