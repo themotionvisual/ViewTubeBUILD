@@ -59,7 +59,7 @@ export const MobileEditorSurface: React.FC<MobileEditorSurfaceProps> = ({
         width: '100%',
         height: '100dvh',
         overflow: 'hidden',
-        background: '#020617',
+        background: '#ffffff',
         WebkitTapHighlightColor: 'transparent',
       }}
     >
