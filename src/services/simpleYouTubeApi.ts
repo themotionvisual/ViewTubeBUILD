@@ -170,3 +170,94 @@ export const setSimpleVideoThumbnail = async (videoId: string, file: File) => {
   });
   return readApiJson(response);
 };
+
+
+export interface SimpleVideoSnippet {
+  videoId: string;
+  title: string;
+  publishedAt: string;
+  thumbnail: string;
+}
+
+export interface SimpleVideoDetails extends SimpleVideoSnippet {
+  description: string;
+  tags: string[];
+  categoryId: string;
+  privacyStatus: string;
+}
+
+export interface SimpleVideoStats {
+  videoId: string;
+  views: string;
+  likes: string;
+  comments: string;
+  duration: string;
+  durationRaw: string;
+  privacyStatus: string;
+  title: string;
+  description: string;
+  tags: string[];
+}
+
+const bestThumbnail = (snippet: any) =>
+  String(
+    snippet?.thumbnails?.maxres?.url ||
+    snippet?.thumbnails?.standard?.url ||
+    snippet?.thumbnails?.high?.url ||
+    snippet?.thumbnails?.medium?.url ||
+    snippet?.thumbnails?.default?.url ||
+    "",
+  );
+
+export const toSimpleVideoSnippet = (item: any): SimpleVideoSnippet => ({
+  videoId: String(item?.id || ""),
+  title: String(item?.snippet?.title || ""),
+  publishedAt: String(item?.snippet?.publishedAt || ""),
+  thumbnail: bestThumbnail(item?.snippet),
+});
+
+export const toSimpleVideoDetails = (item: any): SimpleVideoDetails => ({
+  ...toSimpleVideoSnippet(item),
+  description: String(item?.snippet?.description || ""),
+  tags: Array.isArray(item?.snippet?.tags) ? item.snippet.tags.map(String) : [],
+  categoryId: String(item?.snippet?.categoryId || "22"),
+  privacyStatus: String(item?.status?.privacyStatus || "private"),
+});
+
+export const toSimpleVideoStats = (item: any): SimpleVideoStats => ({
+  videoId: String(item?.id || ""),
+  views: String(item?.statistics?.viewCount || "0"),
+  likes: String(item?.statistics?.likeCount || "0"),
+  comments: String(item?.statistics?.commentCount || "0"),
+  duration: String(item?.contentDetails?.duration || "PT0S"),
+  durationRaw: String(item?.contentDetails?.duration || "PT0S"),
+  privacyStatus: String(item?.status?.privacyStatus || ""),
+  title: String(item?.snippet?.title || ""),
+  description: String(item?.snippet?.description || ""),
+  tags: Array.isArray(item?.snippet?.tags) ? item.snippet.tags.map(String) : [],
+});
+
+export const fetchSimpleVideoInventory = async (): Promise<{
+  videos: SimpleVideoSnippet[];
+  rawItems: any[];
+}> => {
+  const payload = await fetchSimpleOwnedVideos();
+  const rawItems = Array.isArray(payload?.items) ? payload.items : [];
+  return {
+    videos: rawItems.map(toSimpleVideoSnippet).filter((video) => video.videoId),
+    rawItems,
+  };
+};
+
+export const fetchSimpleVideoBundle = async (videoId: string): Promise<{
+  details: SimpleVideoDetails;
+  stats: SimpleVideoStats;
+  raw: any;
+}> => {
+  const raw = await fetchSimpleOwnedVideo(videoId);
+  return {
+    details: toSimpleVideoDetails(raw),
+    stats: toSimpleVideoStats(raw),
+    raw,
+  };
+};
