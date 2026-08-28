@@ -5,7 +5,11 @@ export interface GuideDatasetDefinition {
  label: string
  description: string
  categoryIds: readonly string[]
- datasetId?: string
+ canonicalDatasetId: string
+ syncUnitId?: string
+ exportName: string
+ columnCount: number
+ metricColumnCount: number
 }
 
 export const GUIDE_DATASETS: readonly GuideDatasetDefinition[] = Object.freeze(
@@ -14,7 +18,11 @@ export const GUIDE_DATASETS: readonly GuideDatasetDefinition[] = Object.freeze(
   label: table.label,
   description: table.description,
   categoryIds: table.categoryIds,
-  datasetId: table.datasetId,
+  canonicalDatasetId: table.performanceHubDatasetId,
+  syncUnitId: table.syncUnitId,
+  exportName: table.exportName,
+  columnCount: table.columns.length,
+  metricColumnCount: table.columns.filter((column) => column.semanticRole === "metric").length,
  })),
 )
 
