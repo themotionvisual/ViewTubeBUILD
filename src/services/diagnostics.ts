@@ -63,22 +63,23 @@ export const sanitizeDiagnosticData = (value: Record<string, unknown> | undefine
  value ? sanitizeValue(value) as Record<string, unknown> : undefined
 
 export const isDeveloperDiagnosticsEnabled = (): boolean => {
- if (typeof window === "undefined") return Boolean(import.meta.env?.DEV)
- if (import.meta.env?.DEV) return true
- // ?vtDiagnostics=1 enables AND persists so a mobile user who lands with the
- // param once keeps the overlay on across every subsequent navigation.
- // Passing ?vtDiagnostics=0 turns it back off.
+ if (typeof window === "undefined") return true
+ // Diagnostics are temporarily ON by default across production and local
+ // builds while the auth/API stabilization work is being verified.
+ //
+ // ?vtDiagnostics=0 is an explicit per-browser opt-out and persists.
+ // ?vtDiagnostics=1 re-enables the overlay/log after an opt-out.
  const params = new URLSearchParams(window.location.search)
  const paramValue = params.get("vtDiagnostics")
  if (paramValue === "1") {
-  try { window.localStorage.setItem("vt_diagnostics", "1") } catch { /* no-op */ }
+  try { window.localStorage.removeItem("vt_diagnostics_disabled") } catch { /* no-op */ }
   return true
  }
  if (paramValue === "0") {
-  try { window.localStorage.removeItem("vt_diagnostics") } catch { /* no-op */ }
+  try { window.localStorage.setItem("vt_diagnostics_disabled", "1") } catch { /* no-op */ }
   return false
  }
- try { return window.localStorage.getItem("vt_diagnostics") === "1" } catch { return false }
+ try { return window.localStorage.getItem("vt_diagnostics_disabled") !== "1" } catch { return true }
 }
 
 const flushConsoleSummary = () => {
