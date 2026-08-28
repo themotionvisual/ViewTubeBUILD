@@ -55,14 +55,14 @@ export const PortraitLayout: React.FC<PortraitLayoutProps> = ({ store, renderPre
         position: 'relative',
         width: '100%',
         height: containerHeight,
-        background: '#020617',
-        color: '#f8fafc',
+        background: '#ffffff',
+        color: '#111111',
         display: 'grid',
         // Preview takes ~38% of the viewport; transport + dock are their own
         // rows; timeline gets the remainder above the peeking panel sheet.
         gridTemplateRows: `${Math.round(containerHeight * 0.38)}px 60px 68px minmax(0, 1fr)`,
-        gap: 8,
-        padding: 8,
+        gap: 6,
+        padding: 6,
         paddingBottom: 70, // reserve space for the sheet's peek strip
         boxSizing: 'border-box',
         overflow: 'hidden',
