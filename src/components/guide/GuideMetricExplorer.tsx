@@ -51,6 +51,18 @@ const MetricDetail: React.FC<{ metric: GuideMetricDefinition | null }> = ({ metr
    <BookOpen size={30} strokeWidth={3} />
    <h3 className="mt-8 break-words text-2xl font-black uppercase leading-none sm:text-3xl">{metric.label}</h3>
    <p className="mt-3 text-base font-bold leading-relaxed">{metric.definition}</p>
+   {metric.interpretation ? (
+    <div className="mt-4 rounded-xl border-[3px] border-black bg-[#FFF7A8] p-4">
+     <p className="text-[10px] font-black uppercase tracking-wide text-black/45">How to use it</p>
+     <p className="mt-2 text-sm font-bold leading-relaxed">{metric.interpretation}</p>
+    </div>
+   ) : null}
+   {metric.caution ? (
+    <div className="mt-3 rounded-xl border-[3px] border-black bg-white p-4">
+     <p className="text-[10px] font-black uppercase tracking-wide text-black/45">Do not misread it</p>
+     <p className="mt-2 text-sm font-bold leading-relaxed">{metric.caution}</p>
+    </div>
+   ) : null}
    <div className="mt-6 grid min-w-0 gap-3 sm:grid-cols-2">
     <Detail label="Format" value={metric.format} />
     <Detail label="Source" value={metric.source} />
