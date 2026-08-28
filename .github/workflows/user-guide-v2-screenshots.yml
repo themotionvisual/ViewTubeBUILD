@@ -59,7 +59,9 @@ jobs:
               deviceScaleFactor: 1,
             })
             const page = await context.newPage()
-            await page.goto("http://localhost:5173/user-guide", { waitUntil: "networkidle" })
+            await page.goto("http://localhost:5173/user-guide", { waitUntil: "domcontentloaded" })
+            await page.getByRole("heading", { name: /learn viewtube by doing/i }).waitFor({ state: "visible", timeout: 30000 })
+            await page.locator("#start").waitFor({ state: "visible", timeout: 30000 })
             await page.evaluate(() => {
               for (const el of Array.from(document.querySelectorAll("body *"))) {
                 const text = (el.textContent || "").trim()
