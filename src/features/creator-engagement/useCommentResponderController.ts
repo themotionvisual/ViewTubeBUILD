@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { generatePerfectReply } from "../../services/gemini"
 import { fetchVideoSnippetDetails } from "../../services/youtubeService"
-import { fetchSimpleCommentThreads, postSimpleCommentReply } from "../../services/simpleYouTubeApi"
+import { fetchAllSimpleCommentThreads, postSimpleCommentReply } from "../../services/simpleYouTubeApi"
 import type { CommentResponderController, CommentResponderTab, CreatorEngagementContext } from "./types"
 
 export const resolveSuggestedVideoId = (
@@ -65,9 +65,8 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
   setLoading(true)
   setError(null)
   try {
-   const result = await fetchSimpleCommentThreads(100)
+   const nextThreads = await fetchAllSimpleCommentThreads(100)
    if (generation !== requestGeneration.current) return
-   const nextThreads = Array.isArray(result?.items) ? result.items : []
    setThreads(nextThreads)
    void syncMetadata(nextThreads)
   } catch (cause) {
