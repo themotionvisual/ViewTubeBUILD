@@ -77,7 +77,7 @@ export const normalizeSimpleSession = (value: unknown): SimpleSession => {
 };
 
 export const fetchSimpleSession = async (): Promise<SimpleSession> => {
-  const response = await fetch("/api/auth/session", {
+  const response = await fetch("/api/auth-session", {
     credentials: "include",
     headers: { Accept: "application/json" },
     cache: "no-store",
@@ -87,11 +87,11 @@ export const fetchSimpleSession = async (): Promise<SimpleSession> => {
 };
 
 export const beginSimpleLogin = (returnTo = window.location.pathname + window.location.search + window.location.hash) => {
-  window.location.assign(`/api/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`);
+  window.location.assign(`/api/auth-start?returnTo=${encodeURIComponent(returnTo)}`);
 };
 
 export const simpleLogout = async (): Promise<void> => {
-  const response = await fetch("/api/auth/logout", {
+  const response = await fetch("/api/auth-logout", {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },

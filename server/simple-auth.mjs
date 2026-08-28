@@ -34,8 +34,9 @@ export const publicOrigin = () => cleanOrigin(
   (process.env.NODE_ENV === "production" ? "https://viewtube.live" : "http://localhost:5173")
 );
 const callbackUrl = () => String(
-  process.env.GOOGLE_SIMPLE_OAUTH_REDIRECT_URI ||
-  `${publicOrigin()}/api/auth/google/callback`
+  process.env.NODE_ENV === "production"
+    ? `${publicOrigin()}/api/auth-callback`
+    : process.env.GOOGLE_SIMPLE_OAUTH_REDIRECT_URI || `${publicOrigin()}/api/auth-callback`
 );
 const clientId = () => String(process.env.GOOGLE_OAUTH_CLIENT_ID || "").trim();
 const clientSecret = () => String(process.env.GOOGLE_OAUTH_CLIENT_SECRET || "").trim();
