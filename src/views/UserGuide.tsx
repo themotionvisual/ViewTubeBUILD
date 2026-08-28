@@ -73,7 +73,7 @@ const UserGuide: React.FC = () => {
   const searchItems = useMemo<SearchItem[]>(() => [
     ...GUIDE_PAGES.map((page) => ({
       id: `page:${page.id}`, kind: "Guide" as const, title: page.title,
-      description: `${page.depths.join(" / ")} guide`, href: `#${page.id}`, domain: page.domain,
+      description: `${page.depths.join(" / ")} guide`, href: `#guide-${page.id}`, domain: page.domain,
     })),
     ...GUIDE_FEATURES.map((feature) => ({
       id: `feature:${feature.id}`, kind: "Feature" as const, title: feature.title,
