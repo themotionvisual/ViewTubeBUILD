@@ -4,10 +4,10 @@ This branch starts the replacement auth island. It does not depend on browser Go
 
 ## Public auth surface
 
-- `GET /api/auth/google/start?returnTo=/...`
-- `GET /api/auth/google/callback`
-- `GET /api/auth/session`
-- `POST /api/auth/logout`
+- `GET /api/auth-start?returnTo=/...`
+- `GET /api/auth-callback`
+- `GET /api/auth-session`
+- `POST /api/auth-logout`
 
 ## First typed YouTube surface
 
@@ -16,7 +16,7 @@ This branch starts the replacement auth island. It does not depend on browser Go
 
 ## Browser auth truth
 
-The browser receives only an HttpOnly `vt_session` cookie and the JSON returned by `/api/auth/session`.
+The browser receives only an HttpOnly `vt_session` cookie and the JSON returned by `/api/auth-session`.
 
 ## Required production environment
 
@@ -28,7 +28,7 @@ Existing:
 - `ACCOUNT_PUBLIC_ORIGIN=https://viewtube.live`
 
 New redirect URI:
-- `GOOGLE_SIMPLE_OAUTH_REDIRECT_URI=https://viewtube.live/api/auth/google/callback`
+- `GOOGLE_SIMPLE_OAUTH_REDIRECT_URI=https://viewtube.live/api/auth-callback`
 
 The same URI must be added to the OAuth client's Authorized redirect URIs in Google Cloud before this flow can be promoted to production.
 
