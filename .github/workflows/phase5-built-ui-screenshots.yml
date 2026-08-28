@@ -1,0 +1,46 @@
+name: Phase 5 Built UI Screenshots
+
+on:
+  push:
+    branches:
+      - themotionvisual/feat/brain-phase-five-production-chains
+  workflow_dispatch:
+    inputs:
+      preview_url:
+        description: 'Vercel preview URL to capture'
+        required: false
+        type: string
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Wait for branch preview
+        env:
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://viewtube-git-themotionvisual-b88999-cbrewsterart-1584s-projects.vercel.app' }}
+        run: |
+          for i in {1..30}; do
+            code=$(curl -L -s -o /dev/null -w '%{http_code}' "$PREVIEW_URL" || true)
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 10
+          done
+          echo 'Preview did not become publicly reachable; capture step will still report route failures.'
+      - name: Capture desktop and mobile UI
+        env:
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://viewtube-git-themotionvisual-b88999-cbrewsterart-1584s-projects.vercel.app' }}
+        run: node scripts/capture-phase5-built-ui.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase5-built-ui-screenshots
+          path: artifacts/phase5-built-ui
+          if-no-files-found: warn
+          retention-days: 14
