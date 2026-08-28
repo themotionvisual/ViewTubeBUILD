@@ -1,4 +1,4 @@
-import { listCommentThreads, markCommentAsSpam, moderateComment, postCommentReply, postTopLevelComment, toApiError } from "../../server/simple-youtube.mjs";
+import { getOwnedVideo, listCommentThreads, listOwnedVideos, markCommentAsSpam, moderateComment, patchOwnedVideo, postCommentReply, postTopLevelComment, toApiError } from "../../server/simple-youtube.mjs";
 
 const json = (res, status, payload) => {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
@@ -11,6 +11,16 @@ export const routeSimpleYouTube = async (req, res) => {
   const pathname = parsedUrl.pathname.replace(/\/$/, "") || "/";
 
   try {
+    if (method === "GET" && pathname === "/api/youtube/videos") {
+      return json(res, 200, await listOwnedVideos({ req }));
+    }
+    const videoMatch = pathname.match(/^\/api\/youtube\/videos\/([^/]+)$/);
+    if (videoMatch && method === "GET") {
+      return json(res, 200, await getOwnedVideo({ req, videoId: decodeURIComponent(videoMatch[1]) }));
+    }
+    if (videoMatch && method === "PATCH") {
+      return json(res, 200, await patchOwnedVideo({ req, videoId: decodeURIComponent(videoMatch[1]) }));
+    }
     if (method === "GET" && pathname === "/api/youtube/comments/threads") {
       return json(res, 200, await listCommentThreads({ req, parsedUrl }));
     }
