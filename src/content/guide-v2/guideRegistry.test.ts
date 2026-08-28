@@ -5,6 +5,7 @@ import {
  GUIDE_FEATURES,
  GUIDE_PAGES,
  GUIDE_WIDGETS,
+ guideWidgetTeaching,
 } from "./index"
 
 const expectUnique = (values: readonly string[]) => {
@@ -48,6 +49,16 @@ describe("User Guide V2 registry governance", () => {
    expect(dataset.exportName).toBeTruthy()
    expect(dataset.columnCount).toBeGreaterThan(0)
    expect(dataset.metricColumnCount).toBeGreaterThanOrEqual(0)
+  }
+ })
+
+ it("teaches users how to interpret every registered widget", () => {
+  for (const widget of GUIDE_WIDGETS) {
+   const teaching = guideWidgetTeaching(widget)
+   expect(teaching.whatItShows.length).toBeGreaterThan(20)
+   expect(teaching.howToRead.length).toBeGreaterThanOrEqual(2)
+   expect(teaching.patterns.length).toBeGreaterThanOrEqual(1)
+   expect(teaching.controls.length).toBeGreaterThanOrEqual(1)
   }
  })
 
