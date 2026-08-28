@@ -17,4 +17,13 @@ describe('VT_E1 timeline contract', () => {
     expect(sourceTimeAtTimelineSec(project, left, 3.1)).toBeCloseTo(3.6, 4);
     expect(sourceTimeAtTimelineSec(project, right, 2.9)).toBeCloseTo(0.4, 4);
   });
+
+  it('keeps the shared transition interval symmetric around its seam', () => {
+    const window = transitionWindowFor({ durationSec: 1.2, nominalSeamSec: 3 }, left, right);
+
+    expect(window).toMatchObject({ seamSec: 3, durationSec: 1.2, halfDurationSec: 0.6 });
+    expect(window.startSec).toBeCloseTo(2.4, 4);
+    expect(window.endSec).toBeCloseTo(3.6, 4);
+    expect(window.endSec - window.startSec).toBeCloseTo(window.durationSec, 4);
+  });
 });
