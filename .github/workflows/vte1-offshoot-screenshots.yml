@@ -1,0 +1,94 @@
+name: VT-E1 Offshoot Visual Verification
+
+on:
+  push:
+    branches:
+      - feat/vt-e1-unification-2026-08-27
+  workflow_dispatch:
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout offshoot
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build offshoot
+        run: npm run build
+
+      - name: Start preview server
+        run: |
+          nohup npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/vte1-preview.log 2>&1 &
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:4173/editor >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/vte1-preview.log
+          exit 1
+
+      - name: Capture desktop and mobile
+        run: |
+          mkdir -p artifacts/vte1-screens
+          cat > capture-vte1.mjs <<'EOF'
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({ headless: true });
+          const cases = [
+            { name: 'desktop', viewport: { width: 1440, height: 1000 }, isMobile: false },
+            { name: 'mobile-portrait', viewport: { width: 390, height: 844 }, isMobile: true },
+            { name: 'mobile-landscape', viewport: { width: 844, height: 390 }, isMobile: true },
+          ];
+
+          for (const c of cases) {
+            const context = await browser.newContext({
+              viewport: c.viewport,
+              isMobile: c.isMobile,
+              hasTouch: c.isMobile,
+              deviceScaleFactor: 1,
+            });
+            const page = await context.newPage();
+            page.on('console', msg => console.log(`[${c.name}] console:`, msg.type(), msg.text()));
+            page.on('pageerror', err => console.log(`[${c.name}] pageerror:`, err.message));
+            await page.goto('http://127.0.0.1:4173/editor', { waitUntil: 'networkidle', timeout: 60000 });
+            await page.waitForTimeout(2500);
+            if (c.isMobile) {
+              try {
+                const diag = page.getByText('DIAG', { exact: true }).first();
+                if (await diag.isVisible({ timeout: 1000 })) {
+                  await diag.click();
+                  await page.waitForTimeout(350);
+                }
+              } catch {}
+            }
+            await page.screenshot({
+              path: `artifacts/vte1-screens/${c.name}.png`,
+              fullPage: false,
+            });
+            await context.close();
+          }
+
+          await browser.close();
+          EOF
+          node capture-vte1.mjs
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: vte1-offshoot-screenshots
+          path: artifacts/vte1-screens/*.png
+          if-no-files-found: error

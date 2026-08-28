@@ -91,7 +91,16 @@ const transitionWindow = (transition: VTTransition, leftClip: VTClip, rightClip:
 const sourceTimeForClipAt = (project: NonNullable<RenderJob['project']>, clip: VTClip, sec: number) => {
   return sharedSourceTimeAtTimelineSec(project, clip, sec);
 };
-const transitionInfluenceAt = (project: NonNullable<RenderJob['project']>, transition: VTTransition | undefined, clip: VTClip, sec: number) => {
+type TransitionInfluence = {
+  opacity: number;
+  transformExtra: string;
+  filterExtra: string;
+  clipPath?: string;
+  maskImage?: string;
+  WebkitMaskImage?: string;
+};
+
+const transitionInfluenceAt = (project: NonNullable<RenderJob['project']>, transition: VTTransition | undefined, clip: VTClip, sec: number): TransitionInfluence => {
   if (!transition) return { opacity: 1, transformExtra: '', filterExtra: '' };
   const left = (project.clips || []).find((entry) => entry.id === transition.leftClipId);
   const right = (project.clips || []).find((entry) => entry.id === transition.rightClipId);
@@ -110,7 +119,9 @@ const transitionInfluenceAt = (project: NonNullable<RenderJob['project']>, trans
   const fadeIn = p;
   const opacity = isLeft ? fadeOut : fadeIn;
   const amt = (1 - p) * intensity * amount;
-  switch (String(transition.type || 'fade')) {
+  const visibleProgress = isLeft ? 1 - p : p;
+  const presentation = String(transition.type || 'fade');
+  switch (presentation) {
     case 'cut':
       return { opacity: isLeft ? 1 : 0, transformExtra: '', filterExtra: '' };
     case 'fade':
@@ -121,10 +132,48 @@ const transitionInfluenceAt = (project: NonNullable<RenderJob['project']>, trans
       return { opacity, transformExtra: ` translateX(${dirSignX * amt * 40}px)`, filterExtra: '' };
     case 'slideRight':
       return { opacity, transformExtra: ` translateX(${dirSignX * -amt * 40}px)`, filterExtra: '' };
+    case 'wipe':
     case 'wipeLeft':
-      return { opacity, transformExtra: ` translateX(${dirSignX * amt * 24}px)`, filterExtra: '' };
+      return {
+        opacity: 1,
+        transformExtra: '',
+        filterExtra: '',
+        clipPath: `inset(0 ${(1 - visibleProgress) * 100}% 0 0)`,
+      };
     case 'wipeRight':
-      return { opacity, transformExtra: ` translateX(${dirSignX * -amt * 24}px)`, filterExtra: '' };
+      return {
+        opacity: 1,
+        transformExtra: '',
+        filterExtra: '',
+        clipPath: `inset(0 0 0 ${(1 - visibleProgress) * 100}%)`,
+      };
+    case 'iris':
+      return {
+        opacity: 1,
+        transformExtra: '',
+        filterExtra: '',
+        clipPath: `circle(${Math.max(0.001, visibleProgress * 72)}% at 50% 50%)`,
+      };
+    case 'flip': {
+      const deg = isLeft ? p * 90 : -90 + p * 90;
+      return {
+        opacity: 1,
+        transformExtra: ` perspective(1200px) rotateY(${deg}deg)`,
+        filterExtra: '',
+      };
+    }
+    case 'clock-wipe':
+    case 'clockWipe': {
+      const degrees = Math.max(0.001, visibleProgress * 360);
+      const maskImage = `conic-gradient(#000 0deg ${degrees}deg, transparent ${degrees}deg 360deg)`;
+      return {
+        opacity: 1,
+        transformExtra: '',
+        filterExtra: '',
+        maskImage,
+        WebkitMaskImage: maskImage,
+      };
+    }
     case 'zoom':
       return { opacity, transformExtra: ` scale(${isLeft ? 1 + (p * 0.2 * intensity) : 0.86 + (p * 0.14 * intensity)})`, filterExtra: '' };
     default:
@@ -546,6 +595,9 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
           zIndex,
           overflow: 'hidden',
           filter: [layerFilter(payload), transitionFx.filterExtra].filter(Boolean).join(' '),
+          clipPath: transitionFx.clipPath,
+          maskImage: transitionFx.maskImage,
+          WebkitMaskImage: transitionFx.WebkitMaskImage,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

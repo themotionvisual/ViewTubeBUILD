@@ -26,6 +26,7 @@ import {
   slipTimelineClip,
   splitTimelineClip,
 } from '../../shared/vtE1TimelineOperations.js';
+import { MobileEditorSurface } from './mobile/MobileEditor';
     import { createRoot } from 'react-dom/client';
     import * as LucideIcons from 'lucide-react';
     import {
@@ -2980,6 +2981,11 @@ import {
       const [lastSavedHash, setLastSavedHash] = useState('');
       const [playhead, setPlayhead] = useState(0);
       const [isPlaying, setIsPlaying] = useState(false);
+      const [mobileEditorUi, setMobileEditorUi] = useState(() => ({
+        playbackRate: 1,
+        tool: 'select',
+        panel: { open: false, id: 'select', height: 0.55 }
+      }));
       const [transportModule] = useState('neon-slab');
       const SHUTTLE_SPEEDS = [1, 2, 4, 8, 16, 32];
       const [rewShuttleSpeed, setRewShuttleSpeed] = useState(1);
@@ -9939,25 +9945,37 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           const opacity = transition.type === 'fade' && !isLeft ? 1 : opacityBase;
           const dir = isLeft ? -1 : 1;
           const amt = (1 - p) * intensity * amount;
+          const visibleProgress = isLeft ? 1 - p : p;
           const effectForType = (type) => {
             switch (type) {
               case 'cut': return { opacity: isLeft ? 1 : 0, transformExtra: '', filterExtra: '' };
               case 'fade':
               case 'crossfade': return { opacity, transformExtra: '', filterExtra: '' };
               case 'dipToColor': return { opacity: Math.max(0.15, opacity), transformExtra: '', filterExtra: '' };
-              case 'wipeLeft': return { opacity, transformExtra: ` translateX(${dirSignX * amt * 24}px)`, filterExtra: '' };
-              case 'wipeRight': return { opacity, transformExtra: ` translateX(${dirSignX * -amt * 24}px)`, filterExtra: '' };
+              case 'wipe':
+              case 'wipeLeft': return { opacity: 1, transformExtra: '', filterExtra: '', clipPath: `inset(0 ${(1 - visibleProgress) * 100}% 0 0)` };
+              case 'wipeRight': return { opacity: 1, transformExtra: '', filterExtra: '', clipPath: `inset(0 0 0 ${(1 - visibleProgress) * 100}%)` };
               case 'slideLeft':
               case 'slide': return { opacity, transformExtra: ` translateX(${dirSignX * amt * 40}px)`, filterExtra: '' };
               case 'slideRight': return { opacity, transformExtra: ` translateX(${dirSignX * -amt * 40}px)`, filterExtra: '' };
               case 'slideDiagonal': return { opacity, transformExtra: ` translate(${dirSignX * amt * 32}px, ${dirSignY * amt * 18}px)`, filterExtra: '' };
               case 'slideLong': return { opacity, transformExtra: ` translateX(${dirSignX * amt * 72}px)`, filterExtra: '' };
+              case 'iris': return { opacity: 1, transformExtra: '', filterExtra: '', clipPath: `circle(${Math.max(0.001, visibleProgress * 72)}% at 50% 50%)` };
+              case 'clockWipe':
+              case 'clock-wipe': {
+                const degrees = Math.max(0.001, visibleProgress * 360);
+                const maskImage = `conic-gradient(#000 0deg ${degrees}deg, transparent ${degrees}deg 360deg)`;
+                return { opacity: 1, transformExtra: '', filterExtra: '', maskImage, WebkitMaskImage: maskImage };
+              }
               case 'zoom': return { opacity, transformExtra: ` scale(${isLeft ? 1 + (p * 0.2 * intensity) : 0.86 + (p * 0.14 * intensity)})`, filterExtra: '' };
               case 'scale':
               case 'expand': return { opacity, transformExtra: ` scale(${isLeft ? 1 + (p * 0.12 * intensity) : 0.88 + (p * 0.12 * intensity)})`, filterExtra: '' };
               case 'squeeze': return { opacity, transformExtra: ` scale(${1 - p * 0.12 * intensity})`, filterExtra: '' };
               case 'bounce': return { opacity, transformExtra: ` translateY(${Math.sin(p * Math.PI * 2.2) * (14 * (1 - p) * intensity)}px) scale(${0.96 + p * 0.08})`, filterExtra: '' };
-              case 'flip': return { opacity, transformExtra: ` rotateY(${(isLeft ? -1 : 1) * (1 - p) * 90 * intensity}deg)`, filterExtra: '' };
+              case 'flip': {
+                const deg = isLeft ? p * 90 : -90 + p * 90;
+                return { opacity: 1, transformExtra: ` perspective(1200px) rotateY(${deg}deg)`, filterExtra: '' };
+              }
               case 'roll':
               case 'rotate': return { opacity, transformExtra: ` rotate(${(isLeft ? -1 : 1) * (1 - p) * params.rotateDeg * intensity}deg)`, filterExtra: '' };
               case 'spin':
@@ -10102,25 +10120,37 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           const opacity = transition.type === 'fade' && !isLeft ? 1 : opacityBase;
           const dir = isLeft ? -1 : 1;
           const amt = (1 - p) * intensity * amount;
+          const visibleProgress = isLeft ? 1 - p : p;
           const effectForType = (type) => {
             switch (type) {
               case 'cut': return { opacity: isLeft ? 1 : 0, transformExtra: '', filterExtra: '' };
               case 'fade':
               case 'crossfade': return { opacity, transformExtra: '', filterExtra: '' };
               case 'dipToColor': return { opacity: Math.max(0.15, opacity), transformExtra: '', filterExtra: '' };
-              case 'wipeLeft': return { opacity, transformExtra: ` translateX(${dirSignX * amt * 24}px)`, filterExtra: '' };
-              case 'wipeRight': return { opacity, transformExtra: ` translateX(${dirSignX * -amt * 24}px)`, filterExtra: '' };
+              case 'wipe':
+              case 'wipeLeft': return { opacity: 1, transformExtra: '', filterExtra: '', clipPath: `inset(0 ${(1 - visibleProgress) * 100}% 0 0)` };
+              case 'wipeRight': return { opacity: 1, transformExtra: '', filterExtra: '', clipPath: `inset(0 0 0 ${(1 - visibleProgress) * 100}%)` };
               case 'slideLeft':
               case 'slide': return { opacity, transformExtra: ` translateX(${dirSignX * amt * 40}px)`, filterExtra: '' };
               case 'slideRight': return { opacity, transformExtra: ` translateX(${dirSignX * -amt * 40}px)`, filterExtra: '' };
               case 'slideDiagonal': return { opacity, transformExtra: ` translate(${dirSignX * amt * 32}px, ${dirSignY * amt * 18}px)`, filterExtra: '' };
               case 'slideLong': return { opacity, transformExtra: ` translateX(${dirSignX * amt * 72}px)`, filterExtra: '' };
+              case 'iris': return { opacity: 1, transformExtra: '', filterExtra: '', clipPath: `circle(${Math.max(0.001, visibleProgress * 72)}% at 50% 50%)` };
+              case 'clockWipe':
+              case 'clock-wipe': {
+                const degrees = Math.max(0.001, visibleProgress * 360);
+                const maskImage = `conic-gradient(#000 0deg ${degrees}deg, transparent ${degrees}deg 360deg)`;
+                return { opacity: 1, transformExtra: '', filterExtra: '', maskImage, WebkitMaskImage: maskImage };
+              }
               case 'zoom': return { opacity, transformExtra: ` scale(${isLeft ? 1 + (p * 0.2 * intensity) : 0.86 + (p * 0.14 * intensity)})`, filterExtra: '' };
               case 'scale':
               case 'expand': return { opacity, transformExtra: ` scale(${isLeft ? 1 + (p * 0.12 * intensity) : 0.88 + (p * 0.12 * intensity)})`, filterExtra: '' };
               case 'squeeze': return { opacity, transformExtra: ` scale(${1 - p * 0.12 * intensity})`, filterExtra: '' };
               case 'bounce': return { opacity, transformExtra: ` translateY(${Math.sin(p * Math.PI * 2.2) * (14 * (1 - p) * intensity)}px) scale(${0.96 + p * 0.08})`, filterExtra: '' };
-              case 'flip': return { opacity, transformExtra: ` rotateY(${(isLeft ? -1 : 1) * (1 - p) * 90 * intensity}deg)`, filterExtra: '' };
+              case 'flip': {
+                const deg = isLeft ? p * 90 : -90 + p * 90;
+                return { opacity: 1, transformExtra: ` perspective(1200px) rotateY(${deg}deg)`, filterExtra: '' };
+              }
               case 'roll':
               case 'rotate': return { opacity, transformExtra: ` rotate(${(isLeft ? -1 : 1) * (1 - p) * params.rotateDeg * intensity}deg)`, filterExtra: '' };
               case 'spin':
@@ -10235,6 +10265,8 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                 height: Number(payload.height || 0),
                 resolvedOpacity: clamp(Number(payload.opacity || 1) * (transFx.opacity ?? 1) * (animFx.opacity ?? 1), 0, 1),
                 resolvedFilter: `${buildEffectFilter(payload, sourceProject.meta.visualDNA)} ${transFx.filterExtra || ''}`.trim(),
+                resolvedClipPath: transFx.clipPath || '',
+                resolvedMaskImage: transFx.maskImage || '',
                 resolvedRotation: Number(payload.rotation || 0) + extraRotate,
                 resolvedScale: Number(payload.scale || 1) * extraScale,
                 transformExtras,
@@ -12554,6 +12586,285 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
           </div>
         );
       };
+
+      const mobileEditorProject = {
+        ...project,
+        durationSec: Number(project.meta?.durationSec || 0),
+        tracks: [...(project.tracks || [])]
+          .sort((a, b) => Number(a.order || 0) - Number(b.order || 0))
+          .map((track) => ({
+            ...track,
+            kind: track.kind === AUDIO_TRACK_KIND ? 'audio' : 'video',
+            hidden: track.visible === false
+          }))
+      };
+
+      const mobileEditorDispatch = (action) => {
+        if (!action || typeof action.type !== 'string') return;
+        switch (action.type) {
+          case 'setPlayhead':
+            setPlayhead(clamp(Number(action.sec || 0), 0, Number(project.meta?.durationSec || 0)));
+            return;
+          case 'setPlaying':
+            setIsPlaying(Boolean(action.playing));
+            return;
+          case 'togglePlaying':
+            setIsPlaying((prev) => !prev);
+            return;
+          case 'setPlaybackRate':
+            setMobileEditorUi((prev) => ({ ...prev, playbackRate: clamp(Number(action.rate || 1), 0.1, 4) }));
+            return;
+          case 'setZoom':
+            markHistoryAction('Mobile Timeline Zoom');
+            setProject((prev) => ({
+              ...prev,
+              meta: {
+                ...prev.meta,
+                zoom: clamp(Number(action.pxPerSec || BASE_PX_PER_SEC) / BASE_PX_PER_SEC, 0.2, 8)
+              }
+            }));
+            return;
+          case 'selectClip': {
+            const id = String(action.id || '');
+            if (!id) return;
+            if (action.additive) {
+              setSelectedClipIds((prev) => prev.includes(id) ? prev.filter((entry) => entry !== id) : [...prev, id]);
+            } else {
+              setSelectedClipIds([id]);
+            }
+            setSelectedClipId(id);
+            const clip = project.clips.find((entry) => entry.id === id);
+            if (clip?.layerId) setSelectedLayerId(clip.layerId);
+            return;
+          }
+          case 'selectTrack':
+            if (action.id) {
+              const firstClip = project.clips.find((clip) => clip.trackId === action.id);
+              if (firstClip) {
+                setSelectedClipId(firstClip.id);
+                setSelectedClipIds([firstClip.id]);
+                setSelectedLayerId(firstClip.layerId || null);
+              }
+            }
+            return;
+          case 'selectTransition':
+            setSelectedTransitionId(action.id || null);
+            return;
+          case 'clearSelection':
+            clearClipSelection();
+            setSelectedTransitionId(null);
+            return;
+          case 'setTool':
+            setMobileEditorUi((prev) => ({ ...prev, tool: action.tool }));
+            return;
+          case 'openPanel':
+            setMobileEditorUi((prev) => ({
+              ...prev,
+              tool: action.id,
+              panel: { open: true, id: action.id, height: Number(action.height ?? prev.panel.height) }
+            }));
+            return;
+          case 'closePanel':
+            setMobileEditorUi((prev) => ({ ...prev, panel: { ...prev.panel, open: false } }));
+            return;
+          case 'setPanelHeight':
+            setMobileEditorUi((prev) => ({ ...prev, panel: { ...prev.panel, height: clamp(Number(action.height || 0.55), 0.15, 1) } }));
+            return;
+          case 'setPanelId':
+            setMobileEditorUi((prev) => ({ ...prev, panel: { ...prev.panel, id: action.id } }));
+            return;
+          case 'addClip': {
+            const incoming = action.clip || {};
+            const requestedTrack = project.tracks.find((track) => track.id === incoming.trackId);
+            const targetTrack = requestedTrack && requestedTrack.kind !== AUDIO_TRACK_KIND
+              ? requestedTrack
+              : project.tracks.find((track) => track.kind !== AUDIO_TRACK_KIND);
+            if (!targetTrack) return;
+            const isText = Boolean(incoming.text);
+            const layerId = uid('layer');
+            const clipId = incoming.id || uid('clip');
+            const start = clamp(Number(incoming.start ?? playhead), 0, Number(project.meta?.durationSec || 0));
+            const end = Math.max(start + 0.1, Number(incoming.end ?? (start + 2)));
+            markHistoryAction(isText ? 'Add Mobile Text Clip' : 'Add Mobile Clip');
+            setProject((prev) => ({
+              ...prev,
+              layers: [
+                ...prev.layers,
+                {
+                  id: layerId,
+                  trackId: targetTrack.id,
+                  type: isText ? 'text' : 'shape',
+                  visible: true,
+                  payload: {
+                    ...basePayload(isText ? 'text' : 'shape', Number(targetTrack.order || 0)),
+                    layerName: isText ? 'MOBILE_TEXT' : 'MOBILE_CLIP',
+                    ...(isText ? { text: String(incoming.text || 'TEXT') } : {})
+                  },
+                  color: isText ? COLORS.yellow : COLORS.cyan
+                }
+              ],
+              clips: [
+                ...prev.clips,
+                {
+                  ...incoming,
+                  id: clipId,
+                  layerId,
+                  trackId: targetTrack.id,
+                  start,
+                  end,
+                  keyframes: Array.isArray(incoming.keyframes) ? incoming.keyframes : []
+                }
+              ],
+              meta: { ...prev.meta, durationSec: Math.max(Number(prev.meta?.durationSec || 0), end + 1) }
+            }));
+            setSelectedClipId(clipId);
+            setSelectedClipIds([clipId]);
+            setSelectedLayerId(layerId);
+            return;
+          }
+          case 'updateClip':
+            markHistoryAction('Update Mobile Clip');
+            setProject((prev) => ({
+              ...prev,
+              clips: prev.clips.map((clip) => clip.id === action.id ? { ...clip, ...(action.patch || {}) } : clip)
+            }));
+            return;
+          case 'moveClip':
+            markFallbackHistoryAction('Move Mobile Clip');
+            setProject((prev) => ({
+              ...prev,
+              clips: prev.clips.map((clip) => {
+                if (clip.id !== action.id) return clip;
+                const duration = Math.max(0.05, clip.end - clip.start);
+                const start = Math.max(0, clip.start + Number(action.deltaSec || 0));
+                return { ...clip, start, end: start + duration };
+              })
+            }));
+            return;
+          case 'trimClip':
+            markFallbackHistoryAction('Trim Mobile Clip');
+            setProject((prev) => ({
+              ...prev,
+              clips: prev.clips.map((clip) => {
+                if (clip.id !== action.id) return clip;
+                if (action.side === 'left') return { ...clip, start: Math.min(clip.end - 0.05, Math.max(0, Number(action.sec || 0))) };
+                return { ...clip, end: Math.max(clip.start + 0.05, Number(action.sec || clip.end)) };
+              })
+            }));
+            return;
+          case 'splitClipAtPlayhead': {
+            const clip = project.clips.find((entry) => entry.id === action.id);
+            if (clip) splitClipAt(clip, playhead, 'split');
+            return;
+          }
+          case 'deleteClips':
+            removeClipsAndLayers(action.ids || []);
+            return;
+          case 'duplicateClip':
+            markHistoryAction('Duplicate Mobile Clip');
+            duplicateClipAndLayer(action.id);
+            return;
+          case 'muteTrack':
+            markHistoryAction('Toggle Mobile Track Mute');
+            setProject((prev) => ({
+              ...prev,
+              tracks: prev.tracks.map((track) => track.id === action.id ? { ...track, muted: action.muted ?? !track.muted } : track)
+            }));
+            return;
+          case 'lockTrack':
+            markHistoryAction('Toggle Mobile Track Lock');
+            setProject((prev) => ({
+              ...prev,
+              tracks: prev.tracks.map((track) => track.id === action.id ? { ...track, locked: action.locked ?? !track.locked } : track)
+            }));
+            return;
+          case 'hideTrack':
+            markHistoryAction('Toggle Mobile Track Visibility');
+            setProject((prev) => ({
+              ...prev,
+              tracks: prev.tracks.map((track) => track.id === action.id ? { ...track, visible: action.hidden === undefined ? track.visible === false : !action.hidden } : track)
+            }));
+            return;
+          case 'addTransition': {
+            const transition = action.transition;
+            if (!transition) return;
+            const left = project.clips.find((clip) => clip.id === transition.leftClipId);
+            const right = project.clips.find((clip) => clip.id === transition.rightClipId);
+            if (!left || !right || !validateTransitionSeam(left, right).valid) {
+              setProviderStatus({ mode: 'error', message: 'Mobile transition requires two clips sharing the same timeline seam.' });
+              return;
+            }
+            const presentation = String(transition.presentation || transition.type || 'fade');
+            markHistoryAction('Add Mobile Transition');
+            setProject((prev) => ({
+              ...prev,
+              transitions: [
+                ...(prev.transitions || []),
+                {
+                  ...transition,
+                  id: transition.id || uid('transition'),
+                  type: presentation === 'clockWipe' ? 'clock-wipe' : presentation,
+                  presentation: presentation === 'clockWipe' ? 'clock-wipe' : presentation,
+                  nominalSeamSec: Number(transition.nominalSeamSec ?? left.end)
+                }
+              ]
+            }));
+            return;
+          }
+          case 'removeTransition':
+            markHistoryAction('Remove Mobile Transition');
+            setProject((prev) => ({
+              ...prev,
+              transitions: (prev.transitions || []).filter((transition) => String(transition.id || '') !== String(action.id || ''))
+            }));
+            if (String(selectedTransitionId || '') === String(action.id || '')) setSelectedTransitionId(null);
+            return;
+          case 'undo':
+            undoProject();
+            return;
+          case 'redo':
+            redoProject();
+            return;
+          default:
+            return;
+        }
+      };
+
+      const mobileEditorStore = {
+        state: {
+          project: mobileEditorProject,
+          playheadSec: playhead,
+          playing: isPlaying,
+          playbackRate: mobileEditorUi.playbackRate,
+          zoomPxPerSec: BASE_PX_PER_SEC * Math.max(0.2, Number(project.meta?.zoom) || 1),
+          selection: {
+            clipIds: selectedClipIds.length ? selectedClipIds : (selectedClipId ? [selectedClipId] : []),
+            trackId: selectedClipId ? (project.clips.find((clip) => clip.id === selectedClipId)?.trackId || null) : null,
+            transitionId: selectedTransitionId
+          },
+          tool: mobileEditorUi.tool,
+          panel: mobileEditorUi.panel,
+          history: { past: [], future: [] }
+        },
+        dispatch: mobileEditorDispatch,
+        selectedClips: project.clips.filter((clip) => (selectedClipIds.length ? selectedClipIds : [selectedClipId]).filter(Boolean).includes(clip.id)),
+        trackById: (id) => mobileEditorProject.tracks.find((track) => track.id === id),
+        clipsOnTrack: (trackId) => project.clips.filter((clip) => clip.trackId === trackId).sort((a, b) => a.start - b.start),
+        activeClipAtPlayhead: (trackId) => project.clips.find((clip) => playhead >= clip.start && playhead < clip.end && (!trackId || clip.trackId === trackId)),
+        canUndo,
+        canRedo
+      };
+
+      const useTouchFirstMobileEditor = shellViewport.w < 1024;
+
+      if (useTouchFirstMobileEditor) {
+        return (
+          <MobileEditorSurface
+            store={mobileEditorStore}
+            layout="auto"
+          />
+        );
+      }
 
       return (
         <div
@@ -15210,6 +15521,9 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                         transform: `translate(calc(-50% + ${payload.x || 0}px), calc(-50% + ${payload.y || 0}px)) scale(${payload.scale || 1}) rotate(${payload.rotation || 0}deg)${transFx.transformExtra || ''}${animFx.transformExtra || ''}${motionTransform}`,
                         opacity: clamp((payload.opacity ?? 1) * (transFx.opacity ?? 1) * (animFx.opacity ?? 1) * motionOpacity, 0, 1),
                         filter: `${buildEffectFilter(payload, project.meta.visualDNA)} ${transFx.filterExtra || ''}${motionFilter}${depthBlurAmount > 0 ? ` blur(${depthBlurAmount}px)` : ''}`.trim(),
+                        clipPath: transFx.clipPath,
+                        maskImage: transFx.maskImage,
+                        WebkitMaskImage: transFx.WebkitMaskImage,
                         boxShadow: selectedLayerId === layer.id && layer.type === 'media'
                           ? '0 0 0 1px rgba(87,154,255,0.95), 0 0 8px rgba(87,154,255,0.55)'
                           : undefined,
@@ -16542,8 +16856,10 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                           const transitionSurface = isGroupedSeam
                             ? 'group-rail'
                             : (transition ? 'temporal-envelope' : 'cut');
+                          // The envelope width is the actual shared render interval. Do not
+                          // turn it into a fixed-size badge at different timeline zoom levels.
                           const badgeWidth = transitionWindow
-                            ? Math.max(38, Math.min((transitionWindow.endSec - transitionWindow.startSec) * pxPerSec, 260))
+                            ? Math.max(6, (transitionWindow.endSec - transitionWindow.startSec) * pxPerSec)
                             : (isGroupedSeam ? 38 : 6);
                           const seamLeft = transitionWindow
                             ? timeToPx(transitionWindow.startSec)
@@ -16562,7 +16878,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                                 width: `${badgeWidth}px`,
                                 padding: 0,
                                 height: `${Math.max(2, Math.min(rowMeta.height - 2, 44))}px`,
-                                minWidth: '38px',
+                                minWidth: transition ? '6px' : `${badgeWidth}px`,
                                 zIndex: 26,
                                 fontSize: '10px',
                                 overflow: 'hidden',
@@ -16666,6 +16982,7 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
                   )}
                 </div>
               </div>
+
             </section>
 
           <div style={{ display: 'none' }}>
