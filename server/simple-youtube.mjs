@@ -188,3 +188,114 @@ export const toApiError = (error) => {
     },
   };
 };
+
+
+const chunk = (items, size) => {
+  const out = [];
+  for (let index = 0; index < items.length; index += size) out.push(items.slice(index, index + size));
+  return out;
+};
+
+export const listOwnedVideos = async ({ req }) => {
+  const userId = await requireUser(req);
+  const channel = await googleJson(userId, `${BASE}/channels?part=contentDetails&mine=true`);
+  const uploads = channel?.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+  if (!uploads) return { items: [], totalResults: 0 };
+
+  const videoIds = [];
+  let pageToken = "";
+  do {
+    const params = new URLSearchParams({
+      part: "contentDetails",
+      playlistId: uploads,
+      maxResults: "50",
+    });
+    if (pageToken) params.set("pageToken", pageToken);
+    const page = await googleJson(userId, `${BASE}/playlistItems?${params.toString()}`);
+    for (const item of page.items || []) {
+      const id = String(item?.contentDetails?.videoId || "");
+      if (id) videoIds.push(id);
+    }
+    pageToken = page.nextPageToken || "";
+  } while (pageToken);
+
+  const items = [];
+  for (const ids of chunk(videoIds, 50)) {
+    const params = new URLSearchParams({
+      part: "snippet,statistics,contentDetails,status",
+      id: ids.join(","),
+      maxResults: "50",
+    });
+    const page = await googleJson(userId, `${BASE}/videos?${params.toString()}`);
+    items.push(...(page.items || []));
+  }
+
+  const rank = new Map(videoIds.map((id, index) => [id, index]));
+  items.sort((a, b) => (rank.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (rank.get(b.id) ?? Number.MAX_SAFE_INTEGER));
+  return { items, totalResults: items.length, uploadsPlaylistId: uploads };
+};
+
+export const getOwnedVideo = async ({ req, videoId }) => {
+  const userId = await requireUser(req);
+  const params = new URLSearchParams({
+    part: "snippet,statistics,contentDetails,status",
+    id: videoId,
+  });
+  const page = await googleJson(userId, `${BASE}/videos?${params.toString()}`);
+  const item = page?.items?.[0];
+  if (!item) {
+    const error = new Error("Video not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return item;
+};
+
+export const patchOwnedVideo = async ({ req, videoId }) => {
+  const userId = await requireUser(req);
+  const body = await readJsonBody(req);
+  const currentParams = new URLSearchParams({ part: "snippet,status", id: videoId });
+  const currentPage = await googleJson(userId, `${BASE}/videos?${currentParams.toString()}`);
+  const current = currentPage?.items?.[0];
+  if (!current) {
+    const error = new Error("Video not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const allowedSnippet = ["title","description","tags","categoryId","defaultLanguage","defaultAudioLanguage"];
+  const allowedStatus = ["privacyStatus","selfDeclaredMadeForKids"];
+  const snippetPatch = body?.snippet && typeof body.snippet === "object" ? body.snippet : {};
+  const statusPatch = body?.status && typeof body.status === "object" ? body.status : {};
+  const nextSnippet = { ...(current.snippet || {}) };
+  const nextStatus = { ...(current.status || {}) };
+
+  for (const key of allowedSnippet) {
+    if (Object.prototype.hasOwnProperty.call(snippetPatch, key)) nextSnippet[key] = snippetPatch[key];
+  }
+  for (const key of allowedStatus) {
+    if (Object.prototype.hasOwnProperty.call(statusPatch, key)) nextStatus[key] = statusPatch[key];
+  }
+
+  const parts = [];
+  const updateBody = { id: videoId };
+  if (Object.keys(snippetPatch).some((key) => allowedSnippet.includes(key))) {
+    parts.push("snippet");
+    updateBody.snippet = nextSnippet;
+  }
+  if (Object.keys(statusPatch).some((key) => allowedStatus.includes(key))) {
+    parts.push("status");
+    updateBody.status = nextStatus;
+  }
+  if (!parts.length) {
+    const error = new Error("No supported video fields were supplied.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return googleJson(userId, `${BASE}/videos?part=${encodeURIComponent(parts.join(","))}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updateBody),
+  });
+};
