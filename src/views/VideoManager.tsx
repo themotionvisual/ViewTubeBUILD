@@ -1,26 +1,22 @@
 import React, { useCallback, useState, useEffect, useRef } from "react"
+import { fetchSingleVideoAnalytics } from "../services/youtubeService"
+import type { SingleVideoAnalytics } from "../services/youtubeService"
 import {
- fetchVideoDetails,
- updateVideo,
- updateVideoThumbnail,
- fetchVideoStats,
- fetchSingleVideoAnalytics,
- fetchUserPlaylists,
- fetchVideoPlaylistMemberships,
- addToPlaylist,
- removeFromPlaylist,
-} from "../services/youtubeService"
-import type {
- VideoSnippet,
- VideoDetails,
- VideoStats,
- SingleVideoAnalytics,
- Playlist,
- PlaylistMembership,
-} from "../services/youtubeService"
-import { useUnifiedAccount } from "../context/UnifiedAccountContext"
-import { useAccountStatus } from "../services/auth-canon"
-import { useVideoAssetCatalog } from "../context/VideoAssetCatalogContext"
+ addSimpleVideoToPlaylist,
+ fetchSimplePlaylists,
+ fetchSimpleVideoBundle,
+ fetchSimpleVideoInventory,
+ fetchSimpleVideoPlaylistMemberships,
+ patchSimpleOwnedVideo,
+ removeSimpleVideoFromPlaylist,
+ setSimpleVideoThumbnail,
+ type SimplePlaylist as Playlist,
+ type SimplePlaylistMembership as PlaylistMembership,
+ type SimpleVideoDetails as VideoDetails,
+ type SimpleVideoSnippet as VideoSnippet,
+ type SimpleVideoStats as VideoStats,
+} from "../services/simpleYouTubeApi"
+import { useSimpleAuth } from "../auth/AuthProvider"
 import { useNavigate } from "react-router-dom"
 // Removed isChannelConnected import
 import {
@@ -226,19 +222,13 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  isOpenInitial = true,
  paletteIndex,
 }) => {
- const account = useUnifiedAccount()
- const accountStatus = useAccountStatus()
- const {
-  snapshot: catalogSnapshot,
-  ensure: ensureCatalog,
-  search: searchCatalog,
- } = useVideoAssetCatalog()
- const connected = accountStatus.canReadYouTube
+ const auth = useSimpleAuth()
+ const connected = auth.session.status === "ready" && auth.session.capabilities.youtubeRead
+ const canManageVideos = auth.session.status === "ready" && auth.session.capabilities.youtubeWrite
  const navigate = useNavigate()
  const basePalette = paletteIndex ?? 0
- const [videos, setVideos] = useState<VideoSnippet[]>(() =>
-  normalizeVideoSnippets(catalogSnapshot.items),
- )
+ const [allVideos, setAllVideos] = useState<VideoSnippet[]>([])
+ const [videos, setVideos] = useState<VideoSnippet[]>([])
  const [videoSearchQuery, setVideoSearchQuery] = useState("")
  const [isSearchingVideos, setIsSearchingVideos] = useState(false)
  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null)
@@ -254,7 +244,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const [dropdownOpen, setDropdownOpen] = useState(false)
  const dropdownRef = useRef<HTMLDivElement>(null)
  const lastSearchRef = useRef("")
- const activeChannelIdRef = useRef(accountStatus.channelId)
+ const activeChannelIdRef = useRef(auth.session.channel?.id || "")
 
  // Edit State
  const [editTitle, setEditTitle] = useState("")
@@ -286,13 +276,9 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
  const [isDraggingThumbnail, setIsDraggingThumbnail] = useState(false)
  const [isOpen, setIsOpen] = useState(isOpenInitial)
- const [hasLoadedInitialData, setHasLoadedInitialData] = useState(
-  catalogSnapshot.status !== "idle",
- )
+ const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false)
  const [videoListLoadState, setVideoListLoadState] =
-  useState<VideoListLoadState>(() =>
-   resolveVideoListLoadState(catalogSnapshot.status, catalogSnapshot.items.length),
-  )
+  useState<VideoListLoadState>("idle")
  const hasTriggeredInitialLoadRef = useRef(false)
  const chooseVideoPalette = getToolboxPaletteColors(basePalette + 1)
  const updateDetailsPalette = getToolboxPaletteColors(basePalette + 5)
@@ -316,8 +302,9 @@ const VideoManager: React.FC<VideoManagerProps> = ({
      } as VideoSnippet & Partial<VideoDetails>)
    : null
  useEffect(() => {
-  if (activeChannelIdRef.current === accountStatus.channelId) return
-  activeChannelIdRef.current = accountStatus.channelId
+  const channelId = auth.session.channel?.id || ""
+  if (activeChannelIdRef.current === channelId) return
+  activeChannelIdRef.current = channelId
   setSelectedVideoId(null)
   setVideoDetails(null)
   setVideoStats(null)
@@ -325,9 +312,11 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   setUserPlaylists([])
   setCurrentPlaylists([])
   setSelectedPlaylistIds([])
+  setAllVideos([])
+  setVideos([])
   setHasLoadedInitialData(false)
   hasTriggeredInitialLoadRef.current = false
- }, [accountStatus.channelId])
+ }, [auth.session.channel?.id])
 
  useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
@@ -343,41 +332,20 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  }, [])
 
 
- const loadInitialData = useCallback(async (force = false) => {
-  setVideoListLoadState((prev) => videos.length > 0 || prev === "success" ? prev : "loading")
+ const loadInitialData = useCallback(async () => {
+  setVideoListLoadState("loading")
   setLoading(true)
   setError(null)
   try {
-   const results = await Promise.allSettled([
-    ensureCatalog({ force, reason: force ? "manual" : "boot" }),
-    fetchUserPlaylists(),
+   const [inventory, playlists] = await Promise.all([
+    fetchSimpleVideoInventory(),
+    fetchSimplePlaylists(),
    ])
-
-   if (results[0].status === "rejected") {
-    throw results[0].reason;
-   }
-
-   const catalogSnapshot = results[0].value
-   const videoList = normalizeVideoSnippets(catalogSnapshot.items)
-   const playlists = results[1].status === "fulfilled" ? results[1].value : [];
-
-   setVideos(videoList)
+   setAllVideos(inventory.videos)
+   setVideos(inventory.videos)
    setUserPlaylists(playlists)
    setHasLoadedInitialData(true)
-   setVideoListLoadState(resolveVideoListLoadState(catalogSnapshot.status, videoList.length))
-   setError(catalogSnapshot.error?.message || null)
-   if (videoList.length > 0) {
-    console.info("[VideoManager] Hydrated videos from shared asset catalog", {
-     source: catalogSnapshot.source,
-     count: videoList.length,
-    })
-   } else if (connected) {
-    console.info("[VideoManager] Empty video list after initial load", {
-     isAuthenticated: connected,
-     maxResults: 50,
-     query: null,
-    })
-   }
+   setVideoListLoadState(inventory.videos.length > 0 ? "success" : "empty")
   } catch (err: any) {
    console.error(err)
    setError(formatVideoLoadError(err))
@@ -386,28 +354,28 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   } finally {
    setLoading(false)
   }
- }, [connected, ensureCatalog, videos.length])
+ }, [])
 
  useEffect(() => {
+  if (!dropdownOpen) return
   const delayDebounceFn = setTimeout(() => {
-   if (!dropdownOpen) return
-   const nextQuery = videoSearchQuery.trim()
+   const nextQuery = videoSearchQuery.trim().toLowerCase()
    if (nextQuery === lastSearchRef.current) return
    lastSearchRef.current = nextQuery
    setIsSearchingVideos(true)
-   setVideos(normalizeVideoSnippets(searchCatalog(nextQuery, 50)))
+   const nextVideos = !nextQuery
+    ? allVideos
+    : allVideos.filter((video) =>
+       video.title.toLowerCase().includes(nextQuery) ||
+       video.videoId.toLowerCase().includes(nextQuery)
+      )
+   setVideos(nextVideos.slice(0, 50))
    setIsSearchingVideos(false)
   }, 260)
   return () => clearTimeout(delayDebounceFn)
- }, [dropdownOpen, searchCatalog, videoSearchQuery])
+ }, [allVideos, dropdownOpen, videoSearchQuery])
 
- useEffect(() => {
-  const nextVideos = normalizeVideoSnippets(searchCatalog(videoSearchQuery, 50))
-  setVideos(nextVideos)
-  setHasLoadedInitialData(catalogSnapshot.status !== "idle")
-  setVideoListLoadState(resolveVideoListLoadState(catalogSnapshot.status, nextVideos.length))
-  setError(catalogSnapshot.error?.message || null)
- }, [catalogSnapshot.error, catalogSnapshot.revision, catalogSnapshot.status, searchCatalog, videoSearchQuery])
+
 
  useEffect(() => {
   if (!connected) {
@@ -430,14 +398,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   handleSelectVideo(firstVideoId, userPlaylists)
  }, [connected, videos, selectedVideoId, userPlaylists])
 
- useEffect(() => {
-  if (!selectedVideoId) return
-  if (catalogSnapshot.items.some((video) => video.videoId === selectedVideoId)) return
-  setSelectedVideoId(null)
-  setVideoDetails(null)
-  setVideoStats(null)
-  setVideoAnalytics(null)
- }, [catalogSnapshot.channelId, catalogSnapshot.items, catalogSnapshot.revision, selectedVideoId])
+
 
  const handleSelectVideo = async (
   videoId: string,
@@ -451,13 +412,13 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   setThumbnailPreview(null)
   setThumbnailFile(null)
   try {
-   const [details, stats, analytics] = await Promise.all([
-    fetchVideoDetails(videoId),
-    fetchVideoStats([videoId]),
+   const [videoBundle, analytics] = await Promise.all([
+    fetchSimpleVideoBundle(videoId),
     fetchSingleVideoAnalytics(videoId),
    ])
+   const details = videoBundle.details
    setVideoDetails(details)
-   setVideoStats(stats[0] || null)
+   setVideoStats(videoBundle.stats)
    setVideoAnalytics(analytics)
    setEditTitle(details.title)
    setEditDescription(details.description)
@@ -466,7 +427,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    setEditCategoryId(details.categoryId)
    setSuggestedTags([])
 
-   const memberships = await fetchVideoPlaylistMemberships(
+   const memberships = await fetchSimpleVideoPlaylistMemberships(
     videoId,
     playlistsToUse.map((p) => p.id),
    )
@@ -628,28 +589,30 @@ const VideoManager: React.FC<VideoManagerProps> = ({
 
  const handleSave = async () => {
   if (!selectedVideoId) return
-  if (!accountStatus.canManageVideos) {
+  if (!canManageVideos) {
    setError("Reconnect Channel to grant YouTube video-management permission.")
-   void account.start("reconnect_channel", "/video-manager")
+   auth.login("/video-manager")
    return
   }
   setSaving(true)
   setError(null)
   setSaveSuccess(false)
   try {
-   await updateVideo(selectedVideoId, {
-    title: editTitle,
-    description: editDescription,
-    tags: editTags
-     .split(",")
-     .map((t) => t.trim())
-     .filter(Boolean),
-    categoryId: editCategoryId,
-    privacyStatus: editPrivacy as any,
+   await patchSimpleOwnedVideo(selectedVideoId, {
+    snippet: {
+     title: editTitle,
+     description: editDescription,
+     tags: editTags
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean),
+     categoryId: editCategoryId,
+    },
+    status: { privacyStatus: editPrivacy },
    })
 
    if (thumbnailFile) {
-    await updateVideoThumbnail(selectedVideoId, thumbnailFile)
+    await setSimpleVideoThumbnail(selectedVideoId, thumbnailFile)
     setThumbnailFile(null)
    }
 
@@ -661,8 +624,8 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    )
 
    await Promise.all([
-    ...toAdd.map((id) => addToPlaylist(id, selectedVideoId)),
-    ...toRemove.map((m) => removeFromPlaylist(m.playlistItemId)),
+    ...toAdd.map((id) => addSimpleVideoToPlaylist(id, selectedVideoId)),
+    ...toRemove.map((m) => removeSimpleVideoFromPlaylist(m.playlistItemId)),
    ])
 
    setSaveSuccess(true)
@@ -670,7 +633,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    setVideos((current) => current.map((video) =>
     video.videoId === selectedVideoId ? { ...video, title: editTitle } : video,
    ))
-   void ensureCatalog({ force: true, reason: "manual" })
+   void loadInitialData()
   } catch (err: any) {
    setError("Save failed: " + err.message)
   } finally {
@@ -844,7 +807,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
     revenue: Number(videoAnalytics?.estimatedRevenue || 0),
    }
   }
- }, [selectedVideoId, videoStats, videoAnalytics, catalogSnapshot.revision])
+ }, [selectedVideoId, videoStats, videoAnalytics])
 
   const kpiCards = [
   {
@@ -984,17 +947,17 @@ const VideoManager: React.FC<VideoManagerProps> = ({
      </div>
      <div className="space-y-4 max-w-md">
       <h2 className="text-4xl font-[1000] uppercase tracking-tighter">
-       {accountStatus.status === "connecting" ? "Connecting Channel" : accountStatus.status === "needs_reconnect" ? "Reconnect Channel" : "Channel Offline"}
+       {auth.loading ? "Connecting Channel" : auth.session.status === "reconnect_required" ? "Reconnect Channel" : "Channel Offline"}
       </h2>
       <p className="text-gray-600 font-bold">
-       {accountStatus.status === "connecting"
+       {auth.loading
         ? "ViewTube is confirming your signed-in channel and permissions."
-        : accountStatus.status === "needs_reconnect"
+        : auth.session.status === "reconnect_required"
          ? "Your ViewTube account is signed in, but YouTube permission must be refreshed."
          : "Connect your YouTube channel in Settings to manage assets, optimize metadata, and run AI tag analysis."}
       </p>
       <button
-       onClick={() => void account.start(account.intent, "/video-manager")}
+       onClick={() => auth.login("/video-manager")}
        className="w-full bg-[#FF3399] text-white border-[4px] border-black rounded-xl p-4 font-black uppercase text-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center justify-center gap-3">
        <Sparkles size={24} /> {account.label}
       </button>
