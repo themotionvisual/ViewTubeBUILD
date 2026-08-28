@@ -17,6 +17,7 @@ const TASKS = [
  { label: "Find a metric", detail: "Definitions, sources, aliases", href: "#metrics", icon: Search, className: "bg-[#FFB86B]" },
  { label: "Find a dataset", detail: "VT-SYNC tables + ownership", href: "#datasets", icon: Database, className: "bg-[#40C6E9]" },
  { label: "Understand performance", detail: "Analytics + Intelligence", href: "#guide-analytics", icon: BarChart3, className: "bg-[#40C6E9]" },
+ { label: "Understand a chart", detail: "Visual encodings + module encyclopedia", href: "#visuals", icon: BarChart3, className: "bg-[#CCFF00]" },
  { label: "Plan a video", detail: "Projects, ideas, hooks, storyboards", href: "#guide-create", icon: Lightbulb, className: "bg-[#FF8AAF]" },
  { label: "Use AI Brain", detail: "Channel-grounded analysis", href: "#create", icon: WandSparkles, className: "bg-[#FF8AAF]" },
  { label: "Work with comments", detail: "Audience + engagement tools", href: "#widgets", icon: MessageSquareText, className: "bg-[#72E6B1]" },
@@ -31,7 +32,7 @@ export const GuideTaskNavigator: React.FC = () => (
    <p className="text-[10px] font-black uppercase tracking-[.18em] text-white/60">Task navigator</p>
    <h3 className="text-xl font-black uppercase">I want to...</h3>
   </div>
-  <div className="grid sm:grid-cols-2 xl:grid-cols-5">
+  <div className="grid sm:grid-cols-2 xl:grid-cols-6">
    {TASKS.map(({ label, detail, href, icon: Icon, className }) => (
     <a
      key={label}
