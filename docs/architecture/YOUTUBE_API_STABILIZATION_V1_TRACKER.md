@@ -37,11 +37,11 @@
 - [x] Add canonical playlist list/membership/add/remove endpoints.
 - [x] Migrate Video Manager playlists.
 - [x] Add typed thumbnail upload endpoint.
-- [ ] Migrate Thumbnail Studio, Video Manager thumbnail edit, A/B thumbnail widgets.
+- [~] Video Manager thumbnail edit migrated; Thumbnail Studio and A/B thumbnail widgets remain.
 - [ ] Add resumable upload endpoint/session for Video Publisher.
 - [ ] Add caption list/insert/update/download routes.
 - [ ] Migrate Video Publisher to upload -> thumbnail -> captions -> final metadata/status sequence.
-- [ ] Add per-operation Data API quota estimates.
+- [x] Add per-operation Data API quota estimates.
 
 ## Wave C — Analytics + VT-SYNC
 
@@ -66,7 +66,7 @@
 ## Wave D — Reporting API bulk ingestion
 
 - [x] reportTypes.list endpoint.
-- [~] jobs.list/create implemented; delete remains.
+- [x] jobs.list/create/delete endpoints.
 - [x] reports.list/get endpoints.
 - [x] secure report download endpoint.
 - [ ] canonical dedupe by report id + create time.
