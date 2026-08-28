@@ -328,3 +328,55 @@ export const fetchSimpleReportingReports = async (
 
 export const simpleReportingDownloadUrl = (jobId: string, reportId: string) =>
   `/api/youtube/reporting/jobs/${encodeURIComponent(jobId)}/reports/${encodeURIComponent(reportId)}/download`;
+
+
+export interface SimpleSingleVideoAnalytics {
+  shares: string;
+  averageViewPercentage: string;
+  clickThroughRate: string;
+  estimatedRevenue: string;
+}
+
+const todayIsoDate = () => new Date().toISOString().slice(0, 10);
+
+export const fetchSimpleSingleVideoAnalytics = async (
+  videoId: string,
+): Promise<SimpleSingleVideoAnalytics> => {
+  const base = {
+    ids: "channel==MINE",
+    startDate: "2000-01-01",
+    endDate: todayIsoDate(),
+    filters: `video==${videoId}`,
+  };
+
+  const [core, interaction, monetary] = await Promise.all([
+    querySimpleAnalytics({
+      ...base,
+      metrics: ["shares", "averageViewPercentage"],
+    }).catch(() => null),
+    querySimpleAnalytics({
+      ...base,
+      metrics: ["cardClickRate"],
+    }).catch(() => null),
+    querySimpleAnalytics({
+      ...base,
+      metrics: ["estimatedRevenue"],
+    }).catch(() => null),
+  ]);
+
+  const coreRow = Array.isArray(core?.rows) ? core.rows[0] : null;
+  const interactionRow = Array.isArray(interaction?.rows) ? interaction.rows[0] : null;
+  const monetaryRow = Array.isArray(monetary?.rows) ? monetary.rows[0] : null;
+
+  const shares = Number(coreRow?.[0] || 0);
+  const avp = Number(coreRow?.[1] || 0);
+  const cardClickRate = Number(interactionRow?.[0] || 0);
+  const revenue = Number(monetaryRow?.[0] || 0);
+
+  return {
+    shares: String(Number.isFinite(shares) ? shares : 0),
+    averageViewPercentage: Number.isFinite(avp) ? avp.toFixed(1) : "0.0",
+    clickThroughRate: Number.isFinite(cardClickRate) ? `${cardClickRate.toFixed(1)}%` : "N/A",
+    estimatedRevenue: Number.isFinite(revenue) ? revenue.toFixed(2) : "0.00",
+  };
+};
