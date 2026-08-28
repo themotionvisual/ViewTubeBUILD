@@ -33,10 +33,10 @@
 - [x] Canonical owned-video inventory endpoint using uploads playlist + batched videos.list.
 - [x] Canonical single-video endpoint.
 - [x] Safe partial video metadata/status patch endpoint that hydrates existing resource before videos.update.
-- [ ] Migrate Video Manager list/details/save to typed video service.
-- [ ] Add canonical playlist list/membership/add/remove endpoints.
-- [ ] Migrate Video Manager playlists.
-- [ ] Add typed thumbnail upload endpoint.
+- [x] Migrate Video Manager list/details/save to typed video service.
+- [x] Add canonical playlist list/membership/add/remove endpoints.
+- [x] Migrate Video Manager playlists.
+- [x] Add typed thumbnail upload endpoint.
 - [ ] Migrate Thumbnail Studio, Video Manager thumbnail edit, A/B thumbnail widgets.
 - [ ] Add resumable upload endpoint/session for Video Publisher.
 - [ ] Add caption list/insert/update/download routes.
@@ -46,7 +46,7 @@
 ## Wave C — Analytics + VT-SYNC
 
 - [x] Matrix derived from official report families is encoded locally.
-- [ ] Build server Analytics query endpoint using the matrix validator.
+- [x] Build server Analytics query endpoint using the matrix validator.
 - [ ] Remove Analytics API browser proxy/token dependencies.
 - [ ] Split VT-SYNC datasets into explicit report families:
   - core activity
@@ -65,10 +65,10 @@
 
 ## Wave D — Reporting API bulk ingestion
 
-- [ ] reportTypes.list endpoint.
-- [ ] jobs.list/create/delete endpoints.
-- [ ] reports.list/get endpoints.
-- [ ] secure report download endpoint.
+- [x] reportTypes.list endpoint.
+- [~] jobs.list/create implemented; delete remains.
+- [x] reports.list/get endpoints.
+- [x] secure report download endpoint.
 - [ ] canonical dedupe by report id + create time.
 - [ ] ingest channel_basic_a2.
 - [ ] ingest channel_traffic_source_a2.
