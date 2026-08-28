@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";\nimport { CircleHelp } from "lucide-react";
 import { AdaptiveNavigationShell } from "../components/navigation/AdaptiveNavigationShell";
 import { usePreserveOrientationPosition } from "../hooks/usePreserveOrientationPosition";
 import { DashboardProvider } from "../context/DashboardContext";
@@ -12,7 +12,7 @@ import {
   syncEntitlementIfDrifted,
   type EntitlementState,
 } from "../services/billingEntitlement";
-import type { SubscriptionPlanId } from "../services/subscriptionPlans";
+import type { SubscriptionPlanId } from "../services/subscriptionPlans";\nimport { contextHelpForRoute } from "../content/guide-v2";
 import { useUnifiedAccount } from "../context/UnifiedAccountContext";
 
 interface AppShellProps {
