@@ -4,6 +4,7 @@ import { GuideArticlePanel } from "../components/guide/GuideArticlePanel"
 import { GuideDatasetExplorer } from "../components/guide/GuideDatasetExplorer"
 import { GuideMetricExplorer } from "../components/guide/GuideMetricExplorer"
 import { GuideAnalyticsVisualExplorer } from "../components/guide/GuideAnalyticsVisualExplorer"
+import { GuideVisualLanguage } from "../components/guide/GuideVisualLanguage"
 import { GuideWidgetExplorer } from "../components/guide/GuideWidgetExplorer"
 import { GuideTaskNavigator } from "../components/guide/GuideTaskNavigator"
 import {
@@ -229,7 +230,8 @@ const UserGuide: React.FC = () => {
 
       <section id="visuals" className="mt-10 scroll-mt-28">
         <SectionTitle eyebrow="07 · Analytics" title="Visual module encyclopedia" icon={BarChart3} />
-        <GuideAnalyticsVisualExplorer />
+        <GuideVisualLanguage />
+        <div className="mt-4"><GuideAnalyticsVisualExplorer /></div>
       </section>
 
       <section id="metrics" className="mt-10 scroll-mt-28">
