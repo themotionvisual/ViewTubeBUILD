@@ -17,8 +17,8 @@ export const GuideMetricExplorer: React.FC = () => {
  const selected = GUIDE_METRICS.find((metric) => metric.id === selectedId) || filtered[0] || null
 
  return (
-  <div className="grid gap-4 lg:grid-cols-[.85fr_1.15fr]">
-   <div className="rounded-2xl border-[4px] border-black bg-white p-4 shadow-[6px_6px_0_0_#000]">
+  <div className="grid min-w-0 gap-4 lg:grid-cols-[.85fr_1.15fr]">
+   <div className="min-w-0 rounded-2xl border-[4px] border-black bg-white p-4 shadow-[6px_6px_0_0_#000]">
     <div className="flex items-center justify-between gap-3">
      <div>
       <p className="text-[10px] font-black uppercase tracking-[.18em] text-black/45">Reference registry</p>
@@ -47,11 +47,11 @@ export const GuideMetricExplorer: React.FC = () => {
 const MetricDetail: React.FC<{ metric: GuideMetricDefinition | null }> = ({ metric }) => {
  if (!metric) return <div className="rounded-2xl border-[4px] border-black bg-[#F3F4F6] p-5 font-black">No matching metric.</div>
  return (
-  <article className="rounded-2xl border-[4px] border-black bg-[#FFB86B] p-5 shadow-[6px_6px_0_0_#000]">
+  <article className="min-w-0 overflow-hidden rounded-2xl border-[4px] border-black bg-[#FFB86B] p-5 shadow-[6px_6px_0_0_#000]">
    <BookOpen size={30} strokeWidth={3} />
-   <h3 className="mt-8 text-3xl font-black uppercase leading-none">{metric.label}</h3>
+   <h3 className="mt-8 break-words text-2xl font-black uppercase leading-none sm:text-3xl">{metric.label}</h3>
    <p className="mt-3 text-base font-bold leading-relaxed">{metric.definition}</p>
-   <div className="mt-6 grid gap-3 sm:grid-cols-2">
+   <div className="mt-6 grid min-w-0 gap-3 sm:grid-cols-2">
     <Detail label="Format" value={metric.format} />
     <Detail label="Source" value={metric.source} />
    </div>
@@ -59,7 +59,7 @@ const MetricDetail: React.FC<{ metric: GuideMetricDefinition | null }> = ({ metr
     <div className="mt-3 rounded-xl border-[3px] border-black bg-white p-4">
      <p className="text-[10px] font-black uppercase tracking-wide text-black/45">Also called</p>
      <div className="mt-2 flex flex-wrap gap-2">
-      {metric.aliases.map((alias) => <span key={alias} className="rounded-lg border-2 border-black bg-[#F3F4F6] px-2 py-1 text-[10px] font-black uppercase">{alias}</span>)}
+      {metric.aliases.map((alias) => <span key={alias} className="max-w-full break-all rounded-lg border-2 border-black bg-[#F3F4F6] px-2 py-1 text-[10px] font-black uppercase">{alias}</span>)}
      </div>
     </div>
    ) : null}
@@ -68,7 +68,7 @@ const MetricDetail: React.FC<{ metric: GuideMetricDefinition | null }> = ({ metr
 }
 
 const Detail = ({ label, value }: { label: string; value: string }) => (
- <div className="rounded-xl border-[3px] border-black bg-white p-3">
+ <div className="min-w-0 rounded-xl border-[3px] border-black bg-white p-3">
   <p className="text-[10px] font-black uppercase tracking-wide text-black/45">{label}</p>
   <p className="mt-1 text-sm font-black">{value}</p>
  </div>
