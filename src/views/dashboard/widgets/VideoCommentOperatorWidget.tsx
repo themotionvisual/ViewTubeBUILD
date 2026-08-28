@@ -14,7 +14,7 @@ import type {
  WidgetDefinition,
  WidgetInstanceState,
 } from "../types"
-import { postVideoTopLevelComment } from "../../../services/youtubeService"
+import { postSimpleTopLevelComment } from "../../../services/simpleYouTubeApi"
 import { getActiveModel, getAiClient, hasGeminiKey } from "../../../services/gemini"
 import { WidgetSelect } from "../WidgetPrimitives"
 
@@ -283,7 +283,7 @@ export const VideoCommentOperatorWidget = ({
   setPostingComment(true)
   setCommentStatus("Posting top-level comment to YouTube...")
   try {
-   await postVideoTopLevelComment(selectedVideo.videoId, text)
+   await postSimpleTopLevelComment(selectedVideo.videoId, text)
    setCommentStatus(
     "Comment posted. Open the video on YouTube and pin it manually.",
    )
