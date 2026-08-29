@@ -54,6 +54,10 @@ describe("VT-SYNC compact unified controller", () => {
   expect(markup).not.toContain(" rows")
   expect(markup).not.toContain(">Sync time<")
   expect(markup).not.toContain(">Source<")
+  expect(markup.match(/class="comp-label"/g)).toHaveLength(2)
+  expect(markup).toContain("vt-sync-unit-count")
+  expect(markup).toContain("vt-sync-unit-freshness")
+  expect(markup).toContain("vt-sync-unit-status")
  })
 
  it("runs every visible unit from Sync All without changing selection", async () => {

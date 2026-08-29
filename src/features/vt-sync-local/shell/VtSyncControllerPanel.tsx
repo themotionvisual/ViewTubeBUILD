@@ -204,6 +204,7 @@ export const VtSyncControllerPanel: React.FC<{
   disabled,
   size = "unit",
   activated = status === "live",
+  showLabel = true,
  }: {
   idleLabel: string
   status: VtSyncConsoleStatus
@@ -211,6 +212,7 @@ export const VtSyncControllerPanel: React.FC<{
   disabled?: boolean
   size?: "unit" | "global"
   activated?: boolean
+  showLabel?: boolean
  }) => {
   const presentation = VT_SYNC_CONSOLE_STATUS_PRESENTATION[status]
   const visibleLabel = status === "never" ? idleLabel : presentation.label
@@ -240,7 +242,7 @@ export const VtSyncControllerPanel: React.FC<{
       </div>
      </button>
     </div>
-    <div className="comp-label">{visibleLabel}</div>
+    {showLabel ? <div className="comp-label">{visibleLabel}</div> : null}
    </div>
   )
  }
@@ -363,11 +365,13 @@ export const VtSyncControllerPanel: React.FC<{
         </h3>
         <div className="flex shrink-0 items-center gap-2 border-l-[3px] border-black px-2">
          {progressGroup?.issueCount ? <span className="vt-sync-issue-count">{progressGroup.issueCount} {progressGroup.issueCount === 1 ? "issue" : "issues"}</span> : null}
+         <span className="vt-sync-switch-status" style={{ "--vt-sync-status-tone": VT_SYNC_CONSOLE_STATUS_PRESENTATION[progressGroup?.effectiveStatus || "never"].tone } as React.CSSProperties}>{VT_SYNC_CONSOLE_STATUS_PRESENTATION[progressGroup?.effectiveStatus || "never"].label}</span>
          {renderCategorySlideSwitch({
           idleLabel: "SYNC ALL",
           status: progressGroup?.effectiveStatus || "never",
           activated: groupCategoryIds.length > 0 && groupCategoryIds.every((id) => activeCategorySet.has(id)),
           onClick: () => void startCategories(groupCategoryIds, units.some((unit) => unit.id === "retention")),
+          showLabel: false,
          })}
         </div>
        </div>
@@ -381,10 +385,13 @@ export const VtSyncControllerPanel: React.FC<{
            const detailsId = `vt-sync-unit-details-${unit.id}`
            const syncDuration = formatSyncDuration(progressUnit?.startedAt, progressUnit?.completedAt)
            const freshness = formatRelativeTime(progressUnit?.completedAt || progressUnit?.storedUpdatedAt)
+           const resultCount = unit.id === "video_catalog" && videoCatalogCoverage ? videoCatalogCoverage.catalogTotal : (progressUnit?.displayRows || 0)
+           const resultNoun = resultCount === 1 ? unit.resultNoun.singular : unit.resultNoun.plural
+           const effectiveStatus = progressUnit?.effectiveStatus || "never"
            return (
             <React.Fragment key={unit.id}>
-             <div className={`grid min-h-[60px] w-full grid-cols-[30px_minmax(0,1fr)_104px] items-center gap-2 px-2 py-1.5 text-left hover:bg-[#f8f7f1] max-sm:grid-cols-[30px_minmax(0,1fr)_88px] max-sm:gap-1.5 ${checked ? "bg-white" : "bg-white/55 text-black/55"}`}>
-              <label className="vt-sync-unit-selector cursor-pointer" title={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`}>
+             <div className={`vt-sync-unit-row ${checked ? "bg-white" : "bg-white/55 text-black/55"}`}>
+              <label className={`vt-sync-unit-selector cursor-pointer ${checked ? "is-selected" : ""}`} title={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`}>
                <input type="checkbox" checked={checked} onChange={() => toggleMany(unit.categoryIds)} className="h-5 w-5 accent-black" aria-label={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`} />
               </label>
               <button
@@ -406,16 +413,19 @@ export const VtSyncControllerPanel: React.FC<{
                </span>
                <span className="mt-1 block truncate text-[8px] font-bold uppercase leading-none tracking-[0.03em] text-black/55">
                 {unit.id === "video_catalog" && videoCatalogCoverage
-                 ? `${videoCatalogCoverage.catalogTotal.toLocaleString()} videos · metadata ${videoCatalogCoverage.metadataAvailable.toLocaleString()} · analytics ${videoCatalogCoverage.analyticsAvailable.toLocaleString()} · ${freshness}${syncDuration ? ` · ${syncDuration}` : ""}`
-                 : `${progressUnit?.displayCountLabel || `0 ${unit.resultNoun.plural}`} · ${freshness}${syncDuration ? ` · ${syncDuration}` : ""}`}
+                 ? `metadata ${videoCatalogCoverage.metadataAvailable.toLocaleString()} · analytics ${videoCatalogCoverage.analyticsAvailable.toLocaleString()}`
+                 : unit.description}
                </span>
-               <span className="mt-1 block truncate text-[8px] font-black uppercase leading-tight tracking-[0.02em] text-black/65" title={unit.description}>{unit.description}</span>
               </button>
-              <div className="justify-self-end">
+              <span className="vt-sync-unit-status" style={{ "--vt-sync-status-tone": VT_SYNC_CONSOLE_STATUS_PRESENTATION[effectiveStatus].tone } as React.CSSProperties}>{VT_SYNC_CONSOLE_STATUS_PRESENTATION[effectiveStatus].label}</span>
+              <span className="vt-sync-unit-count"><b>{resultCount.toLocaleString()}</b><small>{resultNoun}</small></span>
+              <span className="vt-sync-unit-freshness"><b>{freshness}</b>{syncDuration ? <small>{syncDuration}</small> : null}</span>
+              <div className="vt-sync-unit-switch">
                {renderCategorySlideSwitch({
                 idleLabel: "SYNC",
-                status: progressUnit?.effectiveStatus || "never",
+                status: effectiveStatus,
                 onClick: () => void startCategories(unit.categoryIds),
+                showLabel: false,
                })}
               </div>
              </div>

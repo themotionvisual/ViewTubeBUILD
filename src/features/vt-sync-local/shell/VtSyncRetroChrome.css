@@ -363,19 +363,24 @@
  height: 17px;
  border-radius: 50%;
  background: #252525;
- box-shadow: inset 0 1px 1px rgba(255,255,255,.3), 0 0 7px color-mix(in srgb, var(--vt-sync-status-tone) 45%, transparent);
+ box-shadow: inset 0 1px 1px rgba(255,255,255,.3);
 }
 .vt-retro-pcb-group.is-category-action .led-bulb {
  width: 9px;
  height: 9px;
  border-radius: 50%;
- background: var(--vt-sync-status-tone);
- box-shadow: 0 0 9px var(--vt-sync-status-tone);
- opacity: .34;
+ background: #62666b;
+ box-shadow: none;
+ opacity: .58;
 }
 .vt-retro-pcb-group.is-category-action.is-status-live .led-bulb,
 .vt-retro-pcb-group.is-category-action.is-status-queued .led-bulb {
+ background: var(--vt-sync-status-tone);
+ box-shadow: 0 0 9px var(--vt-sync-status-tone);
  opacity: 1;
+}
+.vt-retro-pcb-group.is-category-action:is(.is-status-live, .is-status-queued) .led-rim {
+ box-shadow: inset 0 1px 1px rgba(255,255,255,.3), 0 0 7px color-mix(in srgb, var(--vt-sync-status-tone) 45%, transparent);
 }
 .vt-retro-pcb-group.is-category-action.is-status-never .led-bulb {
  opacity: .18;
@@ -522,6 +527,27 @@
  font-weight: 1000;
  line-height: 1;
 }
+.vt-sync-switch-status,
+.vt-sync-unit-status {
+ color: var(--vt-sync-status-tone, #777);
+ font-size: 8px;
+ font-weight: 1000;
+ letter-spacing: .04em;
+ text-align: center;
+ text-transform: uppercase;
+ white-space: nowrap;
+}
+.vt-sync-unit-row {
+ min-height: 60px;
+ width: 100%;
+ display: grid;
+ grid-template-columns: 30px minmax(100px, 1fr) 54px 64px 58px 82px;
+ align-items: center;
+ gap: 6px;
+ padding: 6px 8px;
+ text-align: left;
+}
+.vt-sync-unit-row:hover { background: #f8f7f1; }
 .vt-sync-unit-selector {
  box-sizing: border-box;
  width: 30px;
@@ -533,13 +559,70 @@
  border: 2px solid #000;
  border-radius: 7px;
  background: #fff;
- box-shadow: 1px 1px 0 #000;
+ position: relative;
+ box-shadow: none;
 }
 .vt-sync-unit-selector input {
- width: 18px;
- height: 18px;
+ position: absolute;
+ inset: 0;
+ width: 100%;
+ height: 100%;
  margin: 0;
- accent-color: #000;
+ opacity: 0;
+ cursor: pointer;
+}
+.vt-sync-unit-selector.is-selected {
+ background: #000;
+}
+.vt-sync-unit-selector.is-selected::after {
+ content: "×";
+ color: #fff;
+ font-size: 25px;
+ font-weight: 1000;
+ line-height: 1;
+ transform: translateY(-1px);
+}
+.vt-sync-unit-selector:has(input:focus-visible) {
+ outline: 3px solid #000;
+ outline-offset: 2px;
+}
+.vt-sync-unit-count,
+.vt-sync-unit-freshness {
+ min-width: 0;
+ display: grid;
+ align-content: center;
+ justify-items: center;
+ line-height: 1;
+ text-align: center;
+ text-transform: uppercase;
+}
+.vt-sync-unit-count b {
+ max-width: 100%;
+ overflow: hidden;
+ font-size: 16px;
+ font-weight: 1000;
+ text-overflow: ellipsis;
+}
+.vt-sync-unit-count small,
+.vt-sync-unit-freshness small {
+ margin-top: 3px;
+ font-size: 7px;
+ font-weight: 900;
+ letter-spacing: .035em;
+ white-space: nowrap;
+}
+.vt-sync-unit-freshness {
+ align-self: stretch;
+ border-inline: 1px solid rgba(0,0,0,.25);
+ background: rgba(255,255,255,.34);
+}
+.vt-sync-unit-freshness b {
+ font-size: 9px;
+ font-weight: 1000;
+ white-space: nowrap;
+}
+.vt-sync-unit-switch {
+ justify-self: end;
 }
 .vt-sync-issue-count {
  padding: 4px 7px;
@@ -604,6 +687,22 @@
  .vt-sync-issue-count { display: none; }
  .vt-sync-content-owner > span { display: none; }
  .vt-sync-content-owner select { max-width: 96px; }
+}
+
+@container (max-width: 520px) {
+ .vt-sync-unit-row {
+  grid-template-columns: 30px minmax(58px, 1fr) 42px 46px 43px 72px;
+  gap: 4px;
+  padding-inline: 8px;
+ }
+ .vt-sync-unit-row .vt-retro-pcb-group.is-category-action,
+ .vt-sync-unit-row .vt-retro-pcb-group.is-category-action .sw-slide-housing { width: 72px; min-width: 72px; }
+ .vt-sync-unit-row .vt-retro-pcb-group.is-category-action .sw-slide-track { width: 36px; flex-basis: 36px; }
+ .vt-sync-unit-status { font-size: 7px; }
+ .vt-sync-unit-count b { font-size: 13px; }
+ .vt-sync-unit-count small,
+ .vt-sync-unit-freshness small { font-size: 6px; }
+ .vt-sync-unit-freshness b { font-size: 8px; }
 }
 
 @media (max-width: 640px) {
