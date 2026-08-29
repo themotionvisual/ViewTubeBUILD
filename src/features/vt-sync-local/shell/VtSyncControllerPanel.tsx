@@ -135,8 +135,8 @@ export const VtSyncControllerPanel: React.FC<{
  const syncLeds: RetroLedSpec[] = VT_SYNC_CONSOLE_STATUS_ORDER.map((status) => ({
   id: status,
   label: `${consoleModel.tally[status]} visible units ${VT_SYNC_CONSOLE_STATUS_PRESENTATION[status].label.toLowerCase()}`,
-  tone: VT_SYNC_CONSOLE_STATUS_PRESENTATION[status].tone,
-  lit: consoleModel.tally[status] > 0,
+ tone: VT_SYNC_CONSOLE_STATUS_PRESENTATION[status].tone,
+  lit: consoleModel.tally[status] > 0 && (status === "live" || status === "queued"),
   pulse: status === "live",
  }))
 
@@ -203,19 +203,21 @@ export const VtSyncControllerPanel: React.FC<{
   onClick,
   disabled,
   size = "unit",
+  activated = status === "live",
  }: {
   idleLabel: string
   status: VtSyncConsoleStatus
   onClick: () => void
   disabled?: boolean
   size?: "unit" | "global"
+  activated?: boolean
  }) => {
   const presentation = VT_SYNC_CONSOLE_STATUS_PRESENTATION[status]
   const visibleLabel = status === "never" ? idleLabel : presentation.label
 
   return (
    <div
-    className={`vt-retro-pcb-group is-category-action is-status-${status} ${status !== "never" ? "is-active" : ""} ${size === "global" ? "is-global-action" : ""}`}
+    className={`vt-retro-pcb-group is-category-action is-status-${status} ${activated ? "is-active" : ""} ${size === "global" ? "is-global-action" : ""}`}
     style={{ "--vt-sync-status-tone": presentation.tone } as React.CSSProperties}
    >
     <div className="vt-retro-pcb-controls">
@@ -306,12 +308,14 @@ export const VtSyncControllerPanel: React.FC<{
      {renderCategorySlideSwitch({
       idleLabel: "SYNC ALL",
       status: statusForCategories(allVisibleCategoryIds),
+      activated: allVisibleCategoryIds.length > 0 && allVisibleCategoryIds.every((id) => activeCategorySet.has(id)),
       onClick: () => void startCategories(allVisibleCategoryIds, allVisibleCategoryIds.includes("retention")),
       size: "global",
      })}
      {renderCategorySlideSwitch({
       idleLabel: `SYNC SELECTED (${selectedUnitCount})`,
       status: statusForCategories(selected),
+      activated: selected.length > 0 && selected.every((id) => activeCategorySet.has(id)),
       onClick: () => void start(),
       disabled: selectedUnitCount === 0,
       size: "global",
@@ -319,7 +323,7 @@ export const VtSyncControllerPanel: React.FC<{
     </div>
     <div className="vt-sync-status-grid" role="status" aria-label={`${consoleModel.units.length} visible sync units`}>
      {VT_SYNC_CONSOLE_STATUS_ORDER.map((status) => (
-      <span key={status} className={`vt-sync-status-cell is-status-${status}`} style={{ "--vt-sync-status-tone": VT_SYNC_CONSOLE_STATUS_PRESENTATION[status].tone } as React.CSSProperties}>
+      <span key={status} className={`vt-sync-status-cell is-status-${status} ${consoleModel.tally[status] === 0 ? "is-empty" : ""}`} style={{ "--vt-sync-status-tone": VT_SYNC_CONSOLE_STATUS_PRESENTATION[status].tone } as React.CSSProperties}>
        <i aria-hidden="true" />
        <span>{VT_SYNC_CONSOLE_STATUS_PRESENTATION[status].label}</span>
        <b>{consoleModel.tally[status]}</b>
@@ -336,7 +340,7 @@ export const VtSyncControllerPanel: React.FC<{
      const progressGroup = progressGroupById.get(group)
      return (
       <section key={group} className="border-b-[3px] border-black bg-[#0d0d0d] last:border-b-0">
-       <div className="flex items-stretch" style={{ backgroundColor: GROUP_COLORS[group] }}>
+       <div className="vt-sync-group-row flex items-stretch" style={{ backgroundColor: GROUP_COLORS[group] }}>
         <h3 className="min-w-0 flex-1">
         <button
          ref={(node) => {
@@ -347,7 +351,7 @@ export const VtSyncControllerPanel: React.FC<{
          aria-expanded={expanded}
          aria-controls={contentId}
          onClick={() => toggleGroup(group)}
-         className={`vt-retro-acc-header flex h-full w-full items-center justify-between gap-3 px-2 text-left focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-black ${expanded ? "border-b-[2px] border-black" : ""}`}
+         className="vt-retro-acc-header flex h-full w-full items-center justify-between gap-3 px-2 text-left focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-black"
         >
          <span className="flex min-w-0 items-center gap-2">
           <span className="vt-sync-group-disclosure" aria-hidden="true">
@@ -357,16 +361,17 @@ export const VtSyncControllerPanel: React.FC<{
          </span>
         </button>
         </h3>
-        <div className={`flex shrink-0 items-center gap-2 border-l-[3px] border-black px-2 ${expanded ? "border-b-[2px]" : ""}`}>
+        <div className="flex shrink-0 items-center gap-2 border-l-[3px] border-black px-2">
          {progressGroup?.issueCount ? <span className="vt-sync-issue-count">{progressGroup.issueCount} {progressGroup.issueCount === 1 ? "issue" : "issues"}</span> : null}
          {renderCategorySlideSwitch({
           idleLabel: "SYNC ALL",
           status: progressGroup?.effectiveStatus || "never",
+          activated: groupCategoryIds.length > 0 && groupCategoryIds.every((id) => activeCategorySet.has(id)),
           onClick: () => void startCategories(groupCategoryIds, units.some((unit) => unit.id === "retention")),
          })}
         </div>
        </div>
-       <div id={contentId} hidden={!expanded}>
+       <div id={contentId} hidden={!expanded} className="border-t-[2px] border-black">
          <div className="divide-y-[2px] divide-black">
           {units.map((unit) => {
            const checked = unit.categoryIds.every((id) => selectedSet.has(id))
@@ -378,8 +383,8 @@ export const VtSyncControllerPanel: React.FC<{
            const freshness = formatRelativeTime(progressUnit?.completedAt || progressUnit?.storedUpdatedAt)
            return (
             <React.Fragment key={unit.id}>
-             <div className={`grid min-h-[60px] w-full grid-cols-[44px_minmax(0,1fr)_104px] items-center gap-2 px-3 py-1.5 text-left hover:bg-[#f8f7f1] max-sm:grid-cols-[36px_minmax(0,1fr)_88px] max-sm:gap-1.5 max-sm:px-2 ${checked ? "bg-white" : "bg-white/55 text-black/55"}`}>
-              <label className="grid min-h-11 min-w-11 cursor-pointer place-items-center max-sm:min-w-9" title={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`}>
+             <div className={`grid min-h-[60px] w-full grid-cols-[30px_minmax(0,1fr)_104px] items-center gap-2 px-2 py-1.5 text-left hover:bg-[#f8f7f1] max-sm:grid-cols-[30px_minmax(0,1fr)_88px] max-sm:gap-1.5 ${checked ? "bg-white" : "bg-white/55 text-black/55"}`}>
+              <label className="vt-sync-unit-selector cursor-pointer" title={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`}>
                <input type="checkbox" checked={checked} onChange={() => toggleMany(unit.categoryIds)} className="h-5 w-5 accent-black" aria-label={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`} />
               </label>
               <button
