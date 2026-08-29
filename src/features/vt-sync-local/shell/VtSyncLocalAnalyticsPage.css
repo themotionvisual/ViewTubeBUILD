@@ -14,6 +14,27 @@
  font-family: var(--vt-studio-toolbox-font);
 }
 
+/* The unified console commonly occupies half of the analytics grid. Keep its
+   decorative header lights compact enough for that real container width. */
+.vt-sync-local-page .vt-sync-unified-console .vt-retro-led-row {
+ gap: 5px;
+ padding: 5px 7px;
+}
+
+.vt-sync-local-page .vt-sync-unified-console .vt-retro-led {
+ width: 14px;
+ height: 14px;
+}
+
+.vt-sync-local-page .vt-sync-unified-console > header > div:first-child,
+.vt-sync-local-page .vt-sync-unified-console > header > div:first-child > div:last-child {
+ min-width: 0;
+}
+
+.vt-sync-local-page .vt-sync-unified-console > header > div:last-child {
+ flex: 0 0 auto;
+}
+
 /* Data Visuals includes legacy SVG and inline module labels. Their typography
    is intentionally normalized too, while metrics, colors, and geometry stay
    owned by the existing visual contracts. */
@@ -74,24 +95,6 @@
   display: none;
  }
 
- .vt-sync-local-page .vt-sync-unified-console .vt-retro-switch {
-  min-height: 44px;
-  justify-content: center;
- }
-
- .vt-sync-local-page .vt-sync-unified-console .vt-retro-pcb-group.is-category-action {
-  min-width: 82px !important;
- }
-
- .vt-sync-local-page .vt-sync-unified-console .vt-retro-pcb-group.is-category-action .sw-slide-housing,
- .vt-sync-local-page .vt-sync-unified-console .vt-retro-pcb-group.is-category-action .comp-label {
-  width: 78px !important;
- }
-
- .vt-sync-local-page .vt-sync-unified-console .vt-retro-pcb-group.is-category-action .sw-slide-track {
-  flex-basis: 42px;
-  width: 42px;
- }
 }
 
 @media (max-width: 390px) {

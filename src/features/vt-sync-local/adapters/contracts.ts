@@ -192,6 +192,11 @@ export type VtSyncTrafficDetailRow = VtSyncTrafficRow & {
  coverageStatus?: "complete" | "partial" | "unavailable" | "unsupported"
 }
 
+export type VtSyncResultNoun = {
+ singular: string
+ plural: string
+}
+
 export type VtSyncSyncUnitDefinition = {
  id: string
  label: string
@@ -202,6 +207,8 @@ export type VtSyncSyncUnitDefinition = {
  /** The top-level data-table category this user-facing switch owns. */
  tableCategoryId: string
  categoryIds: string[]
+ /** Creator-facing name for one or many results produced by this unit. */
+ resultNoun: VtSyncResultNoun
  defaultEnabled: boolean
  refreshPolicy: "each_run" | "daily_incremental" | "on_demand"
 }

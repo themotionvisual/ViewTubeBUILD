@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
-import { ChevronDown, ChevronRight, Copy, RefreshCw, ShieldCheck } from "lucide-react"
-import { ToolboxScaffold } from "../../../components/Toolbox"
+import { ChevronDown, ChevronRight } from "lucide-react"
+import { CONTROL_SHELL, ToolboxScaffold } from "../../../components/Toolbox"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
 import { RetroLcd, RetroLedRow, RetroRivets, type RetroLedSpec } from "./VtSyncRetroChrome"
 import type { VtSyncCategoryGroup, VtSyncDatasetFreshness } from "../adapters/contracts"
@@ -14,14 +14,13 @@ import {
  expandVtSyncCategoryDependencies,
  filterVtSyncVisibleCategoryIds,
 } from "../upstream/syncCategoryRegistry"
+import { VT_SYNC_GROUP_LABELS, VT_SYNC_GROUP_ORDER, VT_SYNC_SYNC_UNITS, getVtSyncDefaultUnitIds, getVtSyncUnitCategoryIds } from "../upstream/syncUnitRegistry"
 import {
- VT_SYNC_GROUP_LABELS,
- VT_SYNC_GROUP_ORDER,
- VT_SYNC_SYNC_UNITS,
- getVtSyncDefaultUnitIds,
- getVtSyncUnitCategoryIds,
-} from "../upstream/syncUnitRegistry"
-import { buildVtSyncConsoleModel } from "./vtSyncProgressModel"
+ buildVtSyncConsoleModel,
+ VT_SYNC_CONSOLE_STATUS_ORDER,
+ VT_SYNC_CONSOLE_STATUS_PRESENTATION,
+ type VtSyncConsoleStatus,
+} from "./vtSyncProgressModel"
 
 export type VtSyncRetentionVideoOption = {
  id: string
@@ -44,34 +43,6 @@ const buildUnitGroups = (hasContentOwner: boolean) => VT_SYNC_GROUP_ORDER
  }))
  .filter((entry) => entry.units.length > 0)
 
-const categoryFreshness = (freshness: VtSyncDatasetFreshness | undefined, categoryId: string) =>
- freshness?.[categoryId] || Object.values(freshness || {}).find((entry) => entry.phase === categoryId)
-
-const syncStatusLabel = (status?: string) => {
- switch (status) {
-  case "pending": return "Waiting"
-  case "running": return "Syncing"
-  case "complete": return "Complete"
-  case "synced": return "Synced"
-  case "partial": return "Partial"
-  case "failed": return "Failed"
-  case "skipped": return "Skipped"
-  case "stale": return "Previous"
-  case "placeholder": return "Waiting"
-  case "queued": return "Queued"
-  case "never": return "Never synced"
-  default: return String(status || "Unknown")
- }
-}
-
-const syncStatusTone = (status?: string) => {
- if (status === "complete" || status === "synced") return "#3FEE56"
- if (status === "partial" || status === "pending" || status === "running" || status === "queued") return "#FFDA47"
- if (status === "failed") return "#FA618A"
- if (status === "skipped" || status === "stale" || status === "placeholder") return "#FFA85C"
- return "#e9eaec"
-}
-
 const formatRelativeTime = (iso?: string): string => {
  if (!iso) return "Never"
  const ms = Date.now() - new Date(iso).getTime()
@@ -86,31 +57,13 @@ const formatRelativeTime = (iso?: string): string => {
  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(iso))
 }
 
-const formatSyncTime = (startedAt?: string, completedAt?: string, storedUpdatedAt?: string) => {
- if (!startedAt) return storedUpdatedAt
-  ? `Last completed ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(storedUpdatedAt))}`
-  : "Never run"
+const formatSyncDuration = (startedAt?: string, completedAt?: string) => {
+ if (!startedAt) return ""
  const start = new Date(startedAt).getTime()
  const end = new Date(completedAt || Date.now()).getTime()
  const seconds = Math.max(0, Math.round((end - start) / 1000))
  const duration = seconds >= 60 ? `${Math.floor(seconds / 60)}m ${seconds % 60}s` : `${seconds}s`
- return `${new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date(startedAt))} · ${completedAt ? "completed" : "running"} · ${duration}`
-}
-
-const writeClipboardText = async (text: string) => {
- if (navigator.clipboard?.writeText) {
-  await navigator.clipboard.writeText(text)
-  return
- }
- const textarea = document.createElement("textarea")
- textarea.value = text
- textarea.setAttribute("readonly", "true")
- textarea.style.position = "fixed"
- textarea.style.left = "-9999px"
- document.body.appendChild(textarea)
- textarea.select()
- document.execCommand("copy")
- document.body.removeChild(textarea)
+ return `${completedAt ? "sync" : "running"} ${duration}`
 }
 
 export const VtSyncControllerPanel: React.FC<{
@@ -131,13 +84,14 @@ export const VtSyncControllerPanel: React.FC<{
  const [selected, setSelected] = useState<string[]>(() => getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))
  const [retentionVideoIds, setRetentionVideoIds] = useState<string[]>([])
  const [videoSearch, setVideoSearch] = useState("")
- const [copyStatus, setCopyStatus] = useState("")
  const [expandedUnitIds, setExpandedUnitIds] = useState<Set<string>>(() => new Set())
  const [openGroups, setOpenGroups] = useState<Set<VtSyncCategoryGroup>>(
   () => new Set(["channel"]),
  )
  const unitGroups = useMemo(() => buildUnitGroups(Boolean(activeContentOwnerId)), [activeContentOwnerId])
  const availableUnits = useMemo(() => unitGroups.flatMap((entry) => entry.units), [unitGroups])
+ const visibleUnitIds = useMemo(() => availableUnits.map((unit) => unit.id), [availableUnits])
+ const allVisibleCategoryIds = useMemo(() => [...new Set(availableUnits.flatMap((unit) => unit.categoryIds))], [availableUnits])
  const groupHeaderRefs = useRef(new Map<VtSyncCategoryGroup, HTMLButtonElement>())
  const selectedSet = useMemo(() => new Set(selected), [selected])
  const selectedUnitCount = useMemo(() => availableUnits.filter((unit) => unit.categoryIds.every((id) => selectedSet.has(id))).length, [availableUnits, selectedSet])
@@ -152,7 +106,8 @@ export const VtSyncControllerPanel: React.FC<{
   queuedCategoryIds,
   syncError,
   videoCatalogCoverage,
- }), [datasetFreshness, progress, queuedCategoryIds, syncError, videoCatalogCoverage])
+  visibleUnitIds,
+ }), [datasetFreshness, progress, queuedCategoryIds, syncError, videoCatalogCoverage, visibleUnitIds])
  const progressUnitById = useMemo(() => new Map(consoleModel.units.map((unit) => [unit.id, unit])), [consoleModel.units])
  const progressGroupById = useMemo(() => new Map(consoleModel.groups.map((group) => [group.group, group])), [consoleModel.groups])
  const sortedVideos = useMemo(() => [...videos].sort((a, b) => (b.views || 0) - (a.views || 0)), [videos])
@@ -171,48 +126,19 @@ export const VtSyncControllerPanel: React.FC<{
   return sortedVideos.filter((video) => video.title.toLowerCase().includes(query))
  }, [sortedVideos, videoSearch])
 
- const activeOrIssueGroup = consoleModel.groups.find((group) => group.status === "running" || group.issueCount > 0)?.group
+ const activeOrIssueGroup = consoleModel.groups.find((group) => group.effectiveStatus === "live" || group.issueCount > 0)?.group
  useEffect(() => {
   if (!activeOrIssueGroup) return
   setOpenGroups((current) => current.has(activeOrIssueGroup) ? current : new Set([...current, activeOrIssueGroup]))
  }, [activeOrIssueGroup])
 
- const syncLeds: RetroLedSpec[] = [
-  { id: "live", label: progress?.status === "running" ? "Live sync in progress" : "No active sync", tone: "#36E0F6", lit: progress?.status === "running", pulse: true },
-  { id: "synced", label: `${consoleModel.tally.synced || 0} datasets synced`, tone: "#3FEE56", lit: (consoleModel.tally.synced || 0) > 0 },
-  { id: "partial", label: `${consoleModel.tally.partial || 0} datasets partial`, tone: "#FFDA47", lit: (consoleModel.tally.partial || 0) > 0 },
-  { id: "failed", label: `${consoleModel.tally.failed || 0} datasets failed`, tone: "#FA618A", lit: (consoleModel.tally.failed || 0) > 0 },
- ]
-
- const copyProgressSummary = async () => {
-  const lines = [
-   "ViewTube Analytics Sync Summary",
-   `Run status: ${syncStatusLabel(progress?.status || "idle")}`,
-   `Current query: ${consoleModel.queue.currentLabel}`,
-   `Next query: ${consoleModel.queue.nextLabel}`,
-   `Latest dataset update: ${formatRelativeTime(consoleModel.latestDatasetAt)}`,
-   `Stored rows: ${consoleModel.totalRows.toLocaleString()}`,
-   `Synced: ${(consoleModel.tally.synced || 0).toLocaleString()}`,
-   `Partial: ${(consoleModel.tally.partial || 0).toLocaleString()}`,
-   `Failed: ${(consoleModel.tally.failed || 0).toLocaleString()}`,
-   `Never synced: ${(consoleModel.tally.never || 0).toLocaleString()}`,
-   "",
-   ...consoleModel.rows.map((row) => [
-    `- ${row.category.label}`,
-    `  Source: ${row.source}`,
-    `  Status: ${syncStatusLabel(row.displayStatus)}`,
-    `  Rows: ${row.displayRows.toLocaleString()}`,
-    `  Updated: ${row.updatedAt ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(row.updatedAt)) : "Never"}`,
-    `  Message: ${row.message}`,
-   ].join("\n")),
-  ]
-  try {
-   await writeClipboardText(lines.join("\n"))
-   setCopyStatus("Sync summary copied.")
-  } catch {
-   setCopyStatus("Could not copy sync summary.")
-  }
- }
+ const syncLeds: RetroLedSpec[] = VT_SYNC_CONSOLE_STATUS_ORDER.map((status) => ({
+  id: status,
+  label: `${consoleModel.tally[status]} visible units ${VT_SYNC_CONSOLE_STATUS_PRESENTATION[status].label.toLowerCase()}`,
+  tone: VT_SYNC_CONSOLE_STATUS_PRESENTATION[status].tone,
+  lit: consoleModel.tally[status] > 0,
+  pulse: status === "live",
+ }))
 
  const toggleMany = (ids: string[]) => {
   setSelected((current) => {
@@ -271,73 +197,26 @@ export const VtSyncControllerPanel: React.FC<{
   await onStartSync(expanded, includeRetentionVideoIds ? retentionVideoIds : undefined, forceFullVideoMetadata)
  }
 
- // Track category-specific completion
- const previousActiveCategoryIdsRef = useRef<string[]>([])
- const [categoryCompleted, setCategoryCompleted] = useState<Record<string, boolean>>({})
-
- React.useEffect(() => {
-  const activeSet = new Set(activeCategoryIds)
-  const justCompleted: string[] = []
-  previousActiveCategoryIdsRef.current.forEach((id) => {
-   if (!activeSet.has(id)) {
-    justCompleted.push(id)
-   }
-  })
-  previousActiveCategoryIdsRef.current = activeCategoryIds
-
-  if (justCompleted.length > 0) {
-   setCategoryCompleted((current) => {
-    const next = { ...current }
-    justCompleted.forEach((id) => {
-     next[id] = true
-    })
-    return next
-   })
-
-   const timer = setTimeout(() => {
-    setCategoryCompleted((current) => {
-     const next = { ...current }
-     justCompleted.forEach((id) => {
-      delete next[id]
-     })
-     return next
-    })
-   }, 5000)
-   return () => clearTimeout(timer)
-  }
-
- }, [activeCategoryIds])
-
  const renderCategorySlideSwitch = ({
-  label,
-  active,
-  queued,
-  completed,
+  idleLabel,
+  status,
   onClick,
   disabled,
+  size = "unit",
  }: {
-  label: string
-  active: boolean
-  queued?: boolean
-  completed: boolean
+  idleLabel: string
+  status: VtSyncConsoleStatus
   onClick: () => void
   disabled?: boolean
+  size?: "unit" | "global"
  }) => {
-  const statusClass =
-   active ? "is-syncing"
-   : queued ? "is-waiting"
-   : completed ? "is-completed"
-   : ""
+  const presentation = VT_SYNC_CONSOLE_STATUS_PRESENTATION[status]
+  const visibleLabel = status === "never" ? idleLabel : presentation.label
 
   return (
    <div
-    className={`vt-retro-pcb-group is-category-action ${active || completed || queued ? "is-active" : ""} ${statusClass}`}
-    style={
-     {
-      "--active-col": "var(--led-green)",
-      "--active-col-rgb": "var(--led-green-rgb)",
-     } as React.CSSProperties
-    }
+    className={`vt-retro-pcb-group is-category-action is-status-${status} ${status !== "never" ? "is-active" : ""} ${size === "global" ? "is-global-action" : ""}`}
+    style={{ "--vt-sync-status-tone": presentation.tone } as React.CSSProperties}
    >
     <div className="vt-retro-pcb-controls">
      <button
@@ -345,9 +224,9 @@ export const VtSyncControllerPanel: React.FC<{
       disabled={disabled}
       onClick={onClick}
       className="switch-hitbox"
-      aria-pressed={active}
-      title={`${active ? "Running" : queued ? "Queued" : "Start"} Sync`}
-      aria-label={`${active ? "Running" : queued ? "Queued" : "Start"} Sync`}
+      aria-pressed={status === "live"}
+      title={`${idleLabel}: ${presentation.label}`}
+      aria-label={`${idleLabel}: ${presentation.label}`}
      >
       <div className="sw-slide-housing">
        <div className="sw-slide-track">
@@ -359,9 +238,15 @@ export const VtSyncControllerPanel: React.FC<{
       </div>
      </button>
     </div>
-    <div className="comp-label">{active ? "RUNNING" : queued ? "QUEUED" : completed ? "DONE" : label}</div>
+    <div className="comp-label">{visibleLabel}</div>
    </div>
   )
+ }
+
+ const statusForCategories = (categoryIds: string[]): VtSyncConsoleStatus => {
+  if (categoryIds.some((id) => activeCategorySet.has(id))) return "live"
+  if (categoryIds.some((id) => queuedCategorySet.has(id))) return "queued"
+  return "never"
  }
 
  return (
@@ -379,7 +264,7 @@ export const VtSyncControllerPanel: React.FC<{
    headerActions={<RetroLedRow leds={syncLeds} />}
   >
    <RetroRivets />
-   <div className="w-full" data-vt-sync-unified-console>
+   <div className="w-full" data-vt-sync-unified-console style={{ "--vt-sync-control-height": `${CONTROL_SHELL.height}px` } as React.CSSProperties}>
 
    <section aria-label="Current sync operation" aria-live="polite" className="mb-3 overflow-hidden rounded-[14px] border-[3px] border-black bg-white">
     <header className="flex items-center justify-between gap-2 border-b-[3px] border-black bg-[#C0F240] px-3 py-2">
@@ -387,7 +272,20 @@ export const VtSyncControllerPanel: React.FC<{
       <h3 className="vt-retro-acc-label truncate text-[14px] font-[1000] tracking-tighter">Sync operations</h3>
       <p className="truncate text-[8px] font-black uppercase tracking-[0.07em] text-black/55">Live execution and stored freshness share one dataset tree.</p>
      </div>
-     <RetroLcd tone="#3FEE56" className="shrink-0">{formatRelativeTime(consoleModel.latestDatasetAt)}</RetroLcd>
+     <div className="flex min-w-0 items-center gap-2">
+      {contentOwners.length > 0 ? <label className="vt-sync-content-owner">
+       <span>Content Owner</span>
+       <select
+        aria-label="Active YouTube Content Owner"
+        value={activeContentOwnerId || ""}
+        onChange={(event) => { if (event.target.value) void onSelectContentOwner?.(event.target.value) }}
+       >
+        <option value="">Select owner</option>
+        {contentOwners.map((owner) => <option key={owner.id} value={owner.id}>{owner.displayName}</option>)}
+       </select>
+      </label> : null}
+      <RetroLcd tone={VT_SYNC_CONSOLE_STATUS_PRESENTATION.synced.tone} className="shrink-0">{formatRelativeTime(consoleModel.latestDatasetAt)}</RetroLcd>
+     </div>
     </header>
     <div className="grid grid-cols-2">
      <div className="min-w-0 border-r-[3px] border-black bg-[#36E0F6] px-3 py-2">
@@ -401,52 +299,41 @@ export const VtSyncControllerPanel: React.FC<{
       <span className="block truncate text-[8px] font-bold uppercase tracking-[0.04em] text-black/55">{consoleModel.queue.nextMessage}</span>
      </div>
     </div>
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t-[3px] border-black bg-[#161616] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-white">
-     {[
-      ["Live", progress?.status === "running" ? 1 : 0, "#36E0F6"],
-      ["Synced", consoleModel.tally.synced || 0, "#3FEE56"],
-      ["Partial", consoleModel.tally.partial || 0, "#FFDA47"],
-      ["Failed", consoleModel.tally.failed || 0, "#FA618A"],
-      ["Never", consoleModel.tally.never || 0, "#9aa0ab"],
-     ].map(([label, value, tone]) => (
-      <span key={String(label)} className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full border border-white/70" style={{ backgroundColor: String(tone) }} aria-hidden="true" />{label} <b className="font-mono text-[11px]" style={{ color: String(tone) }}>{Number(value).toLocaleString()}</b></span>
+   </section>
+
+   <section className="vt-sync-command-rail" aria-label="Sync commands and visible unit status">
+    <div className="vt-sync-global-actions">
+     {renderCategorySlideSwitch({
+      idleLabel: "SYNC ALL",
+      status: statusForCategories(allVisibleCategoryIds),
+      onClick: () => void startCategories(allVisibleCategoryIds, allVisibleCategoryIds.includes("retention")),
+      size: "global",
+     })}
+     {renderCategorySlideSwitch({
+      idleLabel: `SYNC SELECTED (${selectedUnitCount})`,
+      status: statusForCategories(selected),
+      onClick: () => void start(),
+      disabled: selectedUnitCount === 0,
+      size: "global",
+     })}
+    </div>
+    <div className="vt-sync-status-grid" role="status" aria-label={`${consoleModel.units.length} visible sync units`}>
+     {VT_SYNC_CONSOLE_STATUS_ORDER.map((status) => (
+      <span key={status} className={`vt-sync-status-cell is-status-${status}`} style={{ "--vt-sync-status-tone": VT_SYNC_CONSOLE_STATUS_PRESENTATION[status].tone } as React.CSSProperties}>
+       <i aria-hidden="true" />
+       <span>{VT_SYNC_CONSOLE_STATUS_PRESENTATION[status].label}</span>
+       <b>{consoleModel.tally[status]}</b>
+      </span>
      ))}
     </div>
    </section>
-
-   <div className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-    <button type="button" onClick={() => setSelected(availableUnits.flatMap((unit) => unit.categoryIds))} className="vt-retro-switch"><span className="vt-retro-switch-led" />Select All</button>
-    <button type="button" onClick={() => setSelected(availableUnits.filter((unit) => unit.defaultEnabled).flatMap((unit) => unit.categoryIds))} className="vt-retro-switch" style={{ "--tone": "#FFDA47", "--tone-light": "#fff3b0" } as React.CSSProperties}><span className="vt-retro-switch-led" />Core Units</button>
-    <button type="button" onClick={() => setSelected(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))} className="vt-retro-switch" style={{ "--tone": "#36E0F6", "--tone-light": "#b9f2ff" } as React.CSSProperties}><span className="vt-retro-switch-led" />Recommended</button>
-    <button type="button" onClick={() => setSelected([])} className="vt-retro-switch"><span className="vt-retro-switch-led" />Clear</button>
-    <button type="button" onClick={() => void copyProgressSummary()} className="vt-retro-switch" style={{ "--tone": "#F55EFC", "--tone-light": "#ffd6f7" } as React.CSSProperties}>
-     <Copy className="h-4 w-4" aria-hidden="true" />Copy Summary
-    </button>
-    {contentOwners.length > 0 ? <label className="vt-retro-switch">
-     <span className="vt-retro-switch-led" />Content Owner
-     <select
-      aria-label="Active YouTube Content Owner"
-      value={activeContentOwnerId || ""}
-      onChange={(event) => { if (event.target.value) void onSelectContentOwner?.(event.target.value) }}
-     >
-      <option value="">Select owner</option>
-     {contentOwners.map((owner) => <option key={owner.id} value={owner.id}>{owner.displayName}</option>)}
-     </select>
-    </label> : null}
-   </div>
-   <div className="sr-only" aria-live="polite">{copyStatus}</div>
-   {copyStatus ? <p className="mb-3 rounded-[12px] border-[2px] border-black bg-[#FFDA47] px-3 py-2 text-[10px] font-black uppercase tracking-[0.06em]">{copyStatus}</p> : null}
 
    <div className="overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0d0d0d]">
     {unitGroups.map(({ group, label, units }) => {
      const expanded = openGroups.has(group)
      const contentId = `vt-sync-controller-group-${group}`
      const groupCategoryIds = [...new Set(units.flatMap((unit) => unit.categoryIds))]
-     const groupActive = groupCategoryIds.some((id) => activeCategorySet.has(id))
-     const groupQueued = groupCategoryIds.some((id) => queuedCategorySet.has(id))
-     const groupCompleted = groupCategoryIds.some((id) => categoryCompleted[id])
      const progressGroup = progressGroupById.get(group)
-     const selectedInGroup = units.filter((unit) => unit.categoryIds.every((id) => selectedSet.has(id))).length
      return (
       <section key={group} className="border-b-[3px] border-black bg-[#0d0d0d] last:border-b-0">
        <div className="flex items-stretch" style={{ backgroundColor: GROUP_COLORS[group] }}>
@@ -460,29 +347,21 @@ export const VtSyncControllerPanel: React.FC<{
          aria-expanded={expanded}
          aria-controls={contentId}
          onClick={() => toggleGroup(group)}
-         className={`vt-retro-acc-header flex h-full w-full items-center justify-between gap-3 py-1.5 px-3 text-left focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-black ${expanded ? "border-b-[2px] border-black" : ""}`}
+         className={`vt-retro-acc-header flex h-full w-full items-center justify-between gap-3 px-2 text-left focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-black ${expanded ? "border-b-[2px] border-black" : ""}`}
         >
          <span className="flex min-w-0 items-center gap-2">
-          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-[5px] border-[2px] border-black bg-white" aria-hidden="true">
-           {expanded ? <ChevronDown className="h-4 w-4" strokeWidth={3.5} /> : <ChevronRight className="h-4 w-4" strokeWidth={3.5} />}
+          <span className="vt-sync-group-disclosure" aria-hidden="true">
+           {expanded ? <ChevronDown strokeWidth={4} /> : <ChevronRight strokeWidth={4} />}
           </span>
-          <span className="vt-retro-acc-label truncate text-[15px] font-[1000] tracking-tighter">{label}</span>
+          <span className="vt-sync-group-title vt-retro-acc-label truncate">{label}</span>
          </span>
         </button>
         </h3>
-        <div className={`flex shrink-0 items-center gap-2 border-l-[3px] border-black px-2 py-1 ${expanded ? "border-b-[2px]" : ""}`}>
-         <span className="hidden text-right text-[8px] font-black uppercase leading-tight tracking-[0.04em] text-black/65 sm:block">
-          <span className="block">{selectedInGroup}/{units.length} selected</span>
-          <span className="block">{progressGroup?.rowCount.toLocaleString() || 0} rows · {progressGroup?.issueCount || 0} issues</span>
-         </span>
-         <span className="rounded-[6px] border-[2px] border-black px-2 py-1 text-[8px] font-black uppercase leading-none" style={{ backgroundColor: syncStatusTone(groupActive ? "running" : groupQueued ? "queued" : progressGroup?.status) }}>
-          {syncStatusLabel(groupActive ? "running" : groupQueued ? "queued" : progressGroup?.status)}
-         </span>
+        <div className={`flex shrink-0 items-center gap-2 border-l-[3px] border-black px-2 ${expanded ? "border-b-[2px]" : ""}`}>
+         {progressGroup?.issueCount ? <span className="vt-sync-issue-count">{progressGroup.issueCount} {progressGroup.issueCount === 1 ? "issue" : "issues"}</span> : null}
          {renderCategorySlideSwitch({
-          label: "SYNC ALL",
-          active: groupActive,
-          queued: groupQueued,
-          completed: groupCompleted,
+          idleLabel: "SYNC ALL",
+          status: progressGroup?.effectiveStatus || "never",
           onClick: () => void startCategories(groupCategoryIds, units.some((unit) => unit.id === "retention")),
          })}
         </div>
@@ -491,26 +370,23 @@ export const VtSyncControllerPanel: React.FC<{
          <div className="divide-y-[2px] divide-black">
           {units.map((unit) => {
            const checked = unit.categoryIds.every((id) => selectedSet.has(id))
-           const active = unit.categoryIds.some((id) => activeCategorySet.has(id))
-           const queued = unit.categoryIds.some((id) => queuedCategorySet.has(id))
            const progressUnit = progressUnitById.get(unit.id)
-           const hasPriorData = Boolean(progressUnit?.storedUpdatedAt || unit.categoryIds.some((id) => {
-             const entry = categoryFreshness(datasetFreshness, id)
-             return Boolean(entry?.status && entry.status !== "failed")
-            }))
-           const detailsExpanded = active || Boolean(progressUnit?.issues.length) || expandedUnitIds.has(unit.id)
+           const hasUnitDetails = Boolean(progressUnit?.issues.length) || unit.id === "video_catalog"
+           const detailsExpanded = hasUnitDetails && (Boolean(progressUnit?.issues.length) || expandedUnitIds.has(unit.id))
            const detailsId = `vt-sync-unit-details-${unit.id}`
-           const displayStatus = active ? "running" : queued ? "queued" : progressUnit?.status
+           const syncDuration = formatSyncDuration(progressUnit?.startedAt, progressUnit?.completedAt)
+           const freshness = formatRelativeTime(progressUnit?.completedAt || progressUnit?.storedUpdatedAt)
            return (
             <React.Fragment key={unit.id}>
-             <div className={`grid min-h-[66px] w-full grid-cols-[44px_minmax(0,1fr)_auto_104px] items-center gap-2 px-3 py-2 text-left hover:bg-[#f8f7f1] max-sm:min-h-[58px] max-sm:grid-cols-[36px_minmax(0,1fr)_88px] max-sm:gap-1.5 max-sm:px-2 max-sm:py-1.5 ${checked ? "bg-white" : "bg-white/55 text-black/55"}`}>
+             <div className={`grid min-h-[60px] w-full grid-cols-[44px_minmax(0,1fr)_104px] items-center gap-2 px-3 py-1.5 text-left hover:bg-[#f8f7f1] max-sm:grid-cols-[36px_minmax(0,1fr)_88px] max-sm:gap-1.5 max-sm:px-2 ${checked ? "bg-white" : "bg-white/55 text-black/55"}`}>
               <label className="grid min-h-11 min-w-11 cursor-pointer place-items-center max-sm:min-w-9" title={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`}>
                <input type="checkbox" checked={checked} onChange={() => toggleMany(unit.categoryIds)} className="h-5 w-5 accent-black" aria-label={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`} />
               </label>
               <button
                type="button"
-               aria-expanded={detailsExpanded}
+               aria-expanded={hasUnitDetails ? detailsExpanded : undefined}
                aria-controls={detailsId}
+               disabled={!hasUnitDetails}
                onClick={() => setExpandedUnitIds((current) => {
                 const next = new Set(current)
                 if (next.has(unit.id)) next.delete(unit.id)
@@ -520,43 +396,30 @@ export const VtSyncControllerPanel: React.FC<{
                className="min-w-0 py-1 text-left focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-black"
               >
                <span className="flex min-w-0 items-center gap-1.5">
-                {detailsExpanded ? <ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" /> : <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />}
+                {hasUnitDetails ? (detailsExpanded ? <ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" /> : <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />) : null}
                 <span className="truncate text-[12px] font-black uppercase tracking-[-0.01em]">{unit.label}</span>
-                {unit.defaultEnabled ? <span className="rounded-[4px] border border-black bg-[#3FEE56] px-1.5 py-[1px] text-[8px] font-black uppercase leading-tight">Core</span> : null}
                </span>
                <span className="mt-1 block truncate text-[8px] font-bold uppercase leading-none tracking-[0.03em] text-black/55">
                 {unit.id === "video_catalog" && videoCatalogCoverage
-                 ? `${videoCatalogCoverage.catalogTotal.toLocaleString()} videos · metadata ${videoCatalogCoverage.metadataAvailable.toLocaleString()} · analytics ${videoCatalogCoverage.analyticsAvailable.toLocaleString()}`
-                 : `${progressUnit?.displayRows.toLocaleString() || 0} rows · ${formatRelativeTime(progressUnit?.storedUpdatedAt)}`} · {syncStatusLabel(displayStatus)}
+                 ? `${videoCatalogCoverage.catalogTotal.toLocaleString()} videos · metadata ${videoCatalogCoverage.metadataAvailable.toLocaleString()} · analytics ${videoCatalogCoverage.analyticsAvailable.toLocaleString()} · ${freshness}${syncDuration ? ` · ${syncDuration}` : ""}`
+                 : `${progressUnit?.displayCountLabel || `0 ${unit.resultNoun.plural}`} · ${freshness}${syncDuration ? ` · ${syncDuration}` : ""}`}
                </span>
                <span className="mt-1 block truncate text-[8px] font-black uppercase leading-tight tracking-[0.02em] text-black/65" title={unit.description}>{unit.description}</span>
               </button>
-              <span className="rounded-[6px] border-[2px] border-black px-2 py-1 text-[8px] font-black uppercase leading-none max-sm:hidden" style={{ backgroundColor: syncStatusTone(displayStatus) }}>
-               {syncStatusLabel(displayStatus)}{progressUnit?.issues.length ? ` · ${progressUnit.issues.length} issue${progressUnit.issues.length === 1 ? "" : "s"}` : ""}
-              </span>
               <div className="justify-self-end">
                {renderCategorySlideSwitch({
-                label: hasPriorData ? "UPDATE" : "FULL SYNC",
-                active,
-                queued,
-                completed: unit.categoryIds.some((id) => categoryCompleted[id]),
+                idleLabel: "SYNC",
+                status: progressUnit?.effectiveStatus || "never",
                 onClick: () => void startCategories(unit.categoryIds),
                })}
               </div>
              </div>
-             <div id={detailsId} hidden={!detailsExpanded} className="grid gap-2 bg-[#f1f1ec] px-3 py-3 text-[9px] font-black uppercase tracking-[0.035em] sm:grid-cols-2">
-              <section className="border-[2px] border-black bg-white px-2 py-2 shadow-[2px_2px_0_0_#000]">
-               <strong className="block text-[8px] text-black/50">Sync time</strong>
-               <span>{formatSyncTime(progressUnit?.startedAt, progressUnit?.completedAt, progressUnit?.storedUpdatedAt)}</span>
-              </section>
-              <section className="border-[2px] border-black bg-white px-2 py-2 shadow-[2px_2px_0_0_#000]">
+             <div id={detailsId} hidden={!detailsExpanded} className="vt-sync-unit-details">
+              {progressUnit?.issues.length ? <section className="border-[2px] border-black bg-white px-2 py-2 shadow-[2px_2px_0_0_#000]">
                <strong className="block text-[8px] text-black/50">Issues</strong>
-               {progressUnit?.issues.length ? <ul className="mt-1 space-y-1 normal-case tracking-normal text-black/75">{progressUnit.issues.map((row) => <li key={`${unit.id}-${row.category.id}`}><b>{row.category.label}:</b> {row.message}</li>)}</ul> : <span>No issues.</span>}
-              </section>
-              <div className="grid gap-1 border-t border-black/25 pt-2 sm:col-span-2">
-               {(progressUnit?.rows || []).map((row) => <div key={row.category.id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2"><span className="truncate">{row.category.label} · {row.source}</span><span>{row.displayRows.toLocaleString()} rows</span><span>{syncStatusLabel(row.displayStatus)}</span></div>)}
-              </div>
-              {unit.id === "video_catalog" ? <button type="button" onClick={() => void startCategories(unit.categoryIds, false, true)} className="min-h-11 border-[2px] border-black bg-[#FFDA47] px-3 py-2 text-[9px] font-black uppercase shadow-[3px_3px_0_0_#000] transition-transform hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_0_#000] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none sm:col-span-2">Full Video Metadata Refresh</button> : null}
+               <ul className="mt-1 space-y-1 normal-case tracking-normal text-black/75">{progressUnit.issues.map((row) => <li key={`${unit.id}-${row.category.id}`}><b>{row.category.label}:</b> {row.message}</li>)}</ul>
+              </section> : null}
+              {unit.id === "video_catalog" ? <button type="button" onClick={() => void startCategories(unit.categoryIds, false, true)} className="vt-sync-full-metadata-action">Full Video Metadata Refresh</button> : null}
              </div>
             </React.Fragment>
            )
@@ -609,16 +472,6 @@ export const VtSyncControllerPanel: React.FC<{
      )
     })}
    </div>
-
-   <button
-    type="button"
-    onClick={isAuthenticated ? start : onLogin}
-    disabled={isAuthenticated && selected.length === 0}
-    className="mt-4 flex w-full items-center justify-center gap-2 rounded-[14px] border-[3px] border-black bg-[#3FEE56] py-3.5 text-[14px] font-black uppercase tracking-[0.03em] shadow-[4px_4px_0_0_#000] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_0_#000] disabled:cursor-not-allowed disabled:opacity-50"
-   >
-    {isAuthenticated ? <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} /> : <ShieldCheck className="h-4 w-4" />}
-    {isSyncing ? `Queue Selected YouTube Data (${selectedUnitCount})` : isAuthenticated ? `Sync Selected YouTube Data (${selectedUnitCount})` : "Connect YouTube Channel"}
-   </button>
 
    </div>
   </ToolboxScaffold>

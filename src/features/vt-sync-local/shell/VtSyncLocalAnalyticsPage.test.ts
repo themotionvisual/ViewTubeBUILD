@@ -8,7 +8,9 @@ import {
  buildVtSyncConsoleModel,
  buildVtSyncUnifiedProgressRows,
  claimVtSyncSyncRequest,
+ formatVtSyncResultCount,
  getVtSyncProgressQueueSummary,
+ VT_SYNC_CONSOLE_STATUS_ORDER,
 } from "./vtSyncProgressModel"
 
 const pageSource = readFileSync(new URL("./VtSyncLocalAnalyticsPage.tsx", import.meta.url), "utf8")
@@ -31,7 +33,7 @@ describe("VT-SYNC unified progress rows", () => {
   expect(pageSource).not.toContain("new ResizeObserver")
   expect(pageSource).not.toContain("--vt-sync-controller-height")
   expect(pageCss).not.toContain("--vt-sync-controller-height")
-  expect(pageSource).toContain('className="grid items-start gap-6 md:grid-cols-2"')
+  expect(pageSource).toContain('className="grid items-start gap-6 lg:grid-cols-2"')
  })
 
  it("synchronously rejects a second active sync request", () => {
@@ -86,6 +88,47 @@ describe("VT-SYNC unified progress rows", () => {
   expect(model.groups.map((group) => group.group)).toEqual(VT_SYNC_GROUP_ORDER)
   expect(model.queue.currentLabel).toBe("Idle")
   expect(model.queue.nextLabel).toBe("No queued query")
+ })
+
+ it("counts only visible units and assigns each one exactly one effective status", () => {
+  const model = buildVtSyncConsoleModel({
+   progress: {
+    runId: "visible-run",
+    startedAt: "2026-08-29T08:00:00.000Z",
+    status: "running",
+    requestedCategoryIds: ["daily_metrics", "traffic_overview"],
+    phases: [
+     { id: "daily_metrics", label: "Daily Stats", status: "running", rows: 7 },
+     { id: "traffic", label: "Traffic", status: "pending", rows: 0 },
+    ],
+   },
+   queuedCategoryIds: ["traffic_overview"],
+   visibleUnitIds: ["daily_stats", "traffic_overview"],
+  })
+
+  expect(model.units.map((unit) => unit.id)).toEqual(["daily_stats", "traffic_overview"])
+  expect(model.tally.live).toBe(1)
+  expect(model.tally.queued).toBe(1)
+  expect(VT_SYNC_CONSOLE_STATUS_ORDER.reduce((sum, status) => sum + model.tally[status], 0)).toBe(2)
+ })
+
+ it("formats registry-owned natural result nouns", () => {
+  const model = buildVtSyncConsoleModel({
+   progress: null,
+   visibleUnitIds: ["daily_stats", "monthly_stats", "traffic_detail_search_terms", "geography_country"],
+   datasetFreshness: {
+    daily_metrics: { phase: "daily_metrics", status: "synced", source: "current_run", rows: 7 },
+    monthly_metrics: { phase: "monthly_metrics", status: "synced", source: "current_run", rows: 1 },
+    search_terms: { phase: "search_terms", status: "synced", source: "current_run", rows: 12 },
+    geography_country: { phase: "geography_country", status: "synced", source: "current_run", rows: 3 },
+   },
+  })
+
+  expect(model.units.find((unit) => unit.id === "daily_stats")?.displayCountLabel).toBe("7 days")
+  expect(model.units.find((unit) => unit.id === "monthly_stats")?.displayCountLabel).toBe("1 month")
+  expect(model.units.find((unit) => unit.id === "traffic_detail_search_terms")?.displayCountLabel).toBe("12 search terms")
+  expect(model.units.find((unit) => unit.id === "geography_country")?.displayCountLabel).toBe("3 countries")
+  expect(formatVtSyncResultCount(1, { singular: "video", plural: "videos" })).toBe("1 video")
  })
 
  it("reports the video catalog authority instead of summing child-query rows", () => {

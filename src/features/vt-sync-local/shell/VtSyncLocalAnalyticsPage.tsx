@@ -441,7 +441,7 @@ const refreshManualImports = useCallback(async (payload?: {
      onViewProgress={() => scrollToPanel(controllerPanelRef.current)}
     />
 
-    <section className="grid items-start gap-6 md:grid-cols-2">
+    <section className="grid items-start gap-6 lg:grid-cols-2">
      <div ref={controllerPanelRef} className="min-w-0">
       <VtSyncControllerPanel
        isAuthenticated={authReady}
