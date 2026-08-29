@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { CONTROL_SHELL, ToolboxScaffold } from "../../../components/Toolbox"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
+import "../../../styles/spectrumBadge.css"
 import { RetroLcd, RetroLedRow, RetroRivets, type RetroLedSpec } from "./VtSyncRetroChrome"
 import type { VtSyncCategoryGroup, VtSyncDatasetFreshness } from "../adapters/contracts"
 import type { VtSyncLocalSyncProgress } from "../adapters/localSyncEngine"
@@ -376,8 +377,8 @@ export const VtSyncControllerPanel: React.FC<{
         </button>
         </h3>
         <div className="flex shrink-0 items-center gap-2 border-l-[3px] border-black px-2">
-         {progressGroup?.issueCount ? <span className="vt-sync-issue-count">{progressGroup.issueCount} {progressGroup.issueCount === 1 ? "issue" : "issues"}</span> : null}
-         <span className="vt-sync-switch-status" style={{ "--vt-sync-status-tone": VT_SYNC_CONSOLE_STATUS_PRESENTATION[progressGroup?.effectiveStatus || "never"].tone } as React.CSSProperties}>{VT_SYNC_CONSOLE_STATUS_PRESENTATION[progressGroup?.effectiveStatus || "never"].label}</span>
+         {progressGroup?.issueCount ? <span className="vt-spectrum-badge vt-sync-issue-count" style={{ "--vt-spectrum-badge-stroke": VT_SYNC_CONSOLE_STATUS_PRESENTATION.failed.tone } as React.CSSProperties}>{progressGroup.issueCount} {progressGroup.issueCount === 1 ? "issue" : "issues"}</span> : null}
+         <span className="vt-spectrum-badge vt-sync-switch-status" style={{ "--vt-spectrum-badge-stroke": VT_SYNC_CONSOLE_STATUS_PRESENTATION[progressGroup?.effectiveStatus || "never"].tone } as React.CSSProperties}>{VT_SYNC_CONSOLE_STATUS_PRESENTATION[progressGroup?.effectiveStatus || "never"].label}</span>
          {renderCategorySlideSwitch({
           idleLabel: "SYNC ALL",
           status: progressGroup?.effectiveStatus || "never",
@@ -430,7 +431,7 @@ export const VtSyncControllerPanel: React.FC<{
                  : unit.description}
                </span>
               </button>
-              <span className="vt-sync-unit-status" style={{ "--vt-sync-status-tone": VT_SYNC_CONSOLE_STATUS_PRESENTATION[effectiveStatus].tone } as React.CSSProperties}>{VT_SYNC_CONSOLE_STATUS_PRESENTATION[effectiveStatus].label}</span>
+              <span className="vt-spectrum-badge vt-sync-unit-status" style={{ "--vt-spectrum-badge-stroke": VT_SYNC_CONSOLE_STATUS_PRESENTATION[effectiveStatus].tone } as React.CSSProperties}>{VT_SYNC_CONSOLE_STATUS_PRESENTATION[effectiveStatus].label}</span>
               <span className="vt-sync-unit-count"><b>{resultCount.toLocaleString()}</b><small>{resultNoun.split(/\s+/).map((word) => <span key={word}>{word}</span>)}</small></span>
               <span className="vt-sync-unit-freshness" title={`${freshness}${syncDuration ? ` · ${syncDuration}` : ""}`}><b>{freshnessParts.value}</b><small>{freshnessParts.labels.map((word) => <span key={word}>{word}</span>)}</small></span>
               <div className="vt-sync-unit-switch">

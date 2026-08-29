@@ -531,17 +531,7 @@
 .vt-sync-unit-status {
  width: max-content;
  justify-self: center;
- padding: 3px 5px;
- border: 1px solid #000;
- border-radius: 4px;
- background: var(--vt-sync-status-tone, #aaa);
- color: #000;
- font-size: 7px;
- font-weight: 1000;
- letter-spacing: .04em;
  text-align: center;
- text-transform: uppercase;
- white-space: nowrap;
 }
 .vt-sync-unit-row {
  min-height: 60px;
@@ -637,14 +627,7 @@
  justify-self: end;
 }
 .vt-sync-issue-count {
- padding: 4px 7px;
- border: 2px solid #000;
- border-radius: 5px;
- background: #fff;
- font-size: 8px;
- font-weight: 900;
- text-transform: uppercase;
- white-space: nowrap;
+ flex: 0 0 auto;
 }
 .vt-sync-content-owner {
  min-width: 0;
@@ -710,7 +693,6 @@
  .vt-sync-unit-row .vt-retro-pcb-group.is-category-action,
  .vt-sync-unit-row .vt-retro-pcb-group.is-category-action .sw-slide-housing { width: 72px; min-width: 72px; }
  .vt-sync-unit-row .vt-retro-pcb-group.is-category-action .sw-slide-track { width: 36px; flex-basis: 36px; }
- .vt-sync-unit-status { font-size: 7px; }
  .vt-sync-unit-count b { font-size: 13px; }
  .vt-sync-unit-count small,
  .vt-sync-unit-freshness small { font-size: 6px; }
