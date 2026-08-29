@@ -534,16 +534,73 @@
  text-align: center;
 }
 .vt-sync-unit-row {
- min-height: 60px;
+ box-sizing: border-box;
+ min-height: 46px;
  width: 100%;
  display: grid;
- grid-template-columns: 30px minmax(100px, 1fr) 54px 64px 58px 82px;
+ grid-template-columns: 30px minmax(180px, 1fr) 54px 64px 58px 82px;
  align-items: center;
  gap: 6px;
- padding: 6px 8px;
+ padding: 0 8px;
  text-align: left;
 }
 .vt-sync-unit-row:hover { background: #f8f7f1; }
+.vt-sync-unit-identity {
+ min-width: 0;
+ align-self: stretch;
+ display: grid;
+ grid-template-columns: minmax(86px, .82fr) minmax(96px, 1.18fr);
+ align-items: center;
+ gap: 8px;
+ margin: 0;
+ padding: 0;
+}
+.vt-sync-unit-title-control {
+ min-width: 0;
+ height: 100%;
+ display: flex;
+ align-items: center;
+ gap: 4px;
+ margin: 0;
+ padding: 0;
+ border: 0;
+ background: transparent;
+ color: #000;
+ font-family: var(--vt-retro-display);
+ font-size: 18px;
+ font-weight: 1000;
+ line-height: 1;
+ letter-spacing: -.01em;
+ text-align: left;
+ text-transform: uppercase;
+}
+.vt-sync-unit-title-control svg {
+ width: 14px;
+ height: 14px;
+ flex: 0 0 auto;
+ stroke-width: 4;
+}
+.vt-sync-unit-title-control span,
+.vt-sync-unit-description {
+ display: -webkit-box;
+ min-width: 0;
+ overflow: hidden;
+ -webkit-box-orient: vertical;
+}
+.vt-sync-unit-title-control span {
+ -webkit-line-clamp: 2;
+}
+.vt-sync-unit-description {
+ -webkit-line-clamp: 3;
+ margin: 0;
+ padding: 0;
+ color: rgb(0 0 0 / 55%);
+ font-size: 8px;
+ font-weight: 700;
+ line-height: .8;
+ letter-spacing: .03em;
+ text-transform: uppercase;
+}
 .vt-sync-unit-selector {
  box-sizing: border-box;
  width: 30px;
@@ -686,13 +743,30 @@
 
 @container (max-width: 520px) {
  .vt-sync-unit-row {
-  grid-template-columns: 30px minmax(58px, 1fr) 42px 46px 43px 72px;
-  gap: 4px;
+  min-height: 54px;
+  grid-template-columns: 30px minmax(38px, 1fr) 42px 42px 66px;
+  grid-template-rows: 26px 26px;
+  gap: 0 4px;
   padding-inline: 8px;
  }
+ .vt-sync-unit-selector {
+  grid-row: 1 / 3;
+ }
+ .vt-sync-unit-identity {
+  grid-column: 2 / -1;
+  grid-row: 1;
+  grid-template-columns: minmax(122px, .95fr) minmax(120px, 1.05fr);
+  gap: 6px;
+ }
+ .vt-sync-unit-title-control span { -webkit-line-clamp: 1; }
+ .vt-sync-unit-status { grid-column: 2; grid-row: 2; }
+ .vt-sync-unit-count { grid-column: 3; grid-row: 2; }
+ .vt-sync-unit-freshness { grid-column: 4; grid-row: 2; }
+ .vt-sync-unit-switch { grid-column: 5; grid-row: 2; }
  .vt-sync-unit-row .vt-retro-pcb-group.is-category-action,
- .vt-sync-unit-row .vt-retro-pcb-group.is-category-action .sw-slide-housing { width: 72px; min-width: 72px; }
- .vt-sync-unit-row .vt-retro-pcb-group.is-category-action .sw-slide-track { width: 36px; flex-basis: 36px; }
+ .vt-sync-unit-row .vt-retro-pcb-group.is-category-action .sw-slide-housing { width: 66px; min-width: 66px; }
+ .vt-sync-unit-row .vt-retro-pcb-group.is-category-action .sw-slide-track { width: 32px; flex-basis: 32px; }
+ .vt-sync-unit-title-control { font-size: 18px; }
  .vt-sync-unit-count b { font-size: 13px; }
  .vt-sync-unit-count small,
  .vt-sync-unit-freshness small { font-size: 6px; }

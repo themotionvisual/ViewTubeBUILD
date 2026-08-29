@@ -21,6 +21,7 @@ import {
  VT_SYNC_CONSOLE_STATUS_PRESENTATION,
  type VtSyncConsoleStatus,
 } from "./vtSyncProgressModel"
+import { getVtSyncCompactMenuLabel } from "./toolbox-table/vtSyncToolboxTableModel"
 
 export type VtSyncRetentionVideoOption = {
  id: string
@@ -402,35 +403,35 @@ export const VtSyncControllerPanel: React.FC<{
            const resultCount = unit.id === "video_catalog" && videoCatalogCoverage ? videoCatalogCoverage.catalogTotal : (progressUnit?.displayRows || 0)
            const resultNoun = resultCount === 1 ? unit.resultNoun.singular : unit.resultNoun.plural
            const effectiveStatus = progressUnit?.effectiveStatus || "never"
+           const unitTitle = getVtSyncCompactMenuLabel(unit.tableId, unit.label)
+           const unitDescription = unit.id === "video_catalog" && videoCatalogCoverage
+            ? `metadata ${videoCatalogCoverage.metadataAvailable.toLocaleString()} · analytics ${videoCatalogCoverage.analyticsAvailable.toLocaleString()}`
+            : unit.description
            return (
             <React.Fragment key={unit.id}>
              <div className="vt-sync-unit-row bg-white text-black">
               <label className={`vt-sync-unit-selector cursor-pointer ${checked ? "is-selected" : ""}`} title={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`}>
                <input type="checkbox" checked={checked} onChange={() => toggleMany(unit.categoryIds)} className="h-5 w-5 accent-black" aria-label={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`} />
               </label>
-              <button
-               type="button"
-               aria-expanded={hasUnitDetails ? detailsExpanded : undefined}
-               aria-controls={detailsId}
-               disabled={!hasUnitDetails}
-               onClick={() => setExpandedUnitIds((current) => {
-                const next = new Set(current)
-                if (next.has(unit.id)) next.delete(unit.id)
-                else next.add(unit.id)
-                return next
-               })}
-               className="min-w-0 py-1 text-left focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-black"
-              >
-               <span className="flex min-w-0 items-center gap-1.5">
-                {hasUnitDetails ? (detailsExpanded ? <ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" /> : <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />) : null}
-                <span className="truncate text-[12px] font-black uppercase tracking-[-0.01em]">{unit.label}</span>
-               </span>
-               <span className="mt-1 block truncate text-[8px] font-bold uppercase leading-none tracking-[0.03em] text-black/55">
-                {unit.id === "video_catalog" && videoCatalogCoverage
-                 ? `metadata ${videoCatalogCoverage.metadataAvailable.toLocaleString()} · analytics ${videoCatalogCoverage.analyticsAvailable.toLocaleString()}`
-                 : unit.description}
-               </span>
-              </button>
+              <div className="vt-sync-unit-identity">
+               <button
+                type="button"
+                aria-expanded={hasUnitDetails ? detailsExpanded : undefined}
+                aria-controls={detailsId}
+                disabled={!hasUnitDetails}
+                onClick={() => setExpandedUnitIds((current) => {
+                 const next = new Set(current)
+                 if (next.has(unit.id)) next.delete(unit.id)
+                 else next.add(unit.id)
+                 return next
+                })}
+                className="vt-sync-unit-title-control focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-black"
+               >
+                {hasUnitDetails ? (detailsExpanded ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />) : null}
+                <span>{unitTitle}</span>
+               </button>
+               <span className="vt-sync-unit-description" title={unitDescription}>{unitDescription}</span>
+              </div>
               <span className="vt-spectrum-badge vt-sync-unit-status" style={{ "--vt-spectrum-badge-stroke": VT_SYNC_CONSOLE_STATUS_PRESENTATION[effectiveStatus].tone } as React.CSSProperties}>{VT_SYNC_CONSOLE_STATUS_PRESENTATION[effectiveStatus].label}</span>
               <span className="vt-sync-unit-count"><b>{resultCount.toLocaleString()}</b><small>{resultNoun.split(/\s+/).map((word) => <span key={word}>{word}</span>)}</small></span>
               <span className="vt-sync-unit-freshness" title={`${freshness}${syncDuration ? ` · ${syncDuration}` : ""}`}><b>{freshnessParts.value}</b><small>{freshnessParts.labels.map((word) => <span key={word}>{word}</span>)}</small></span>

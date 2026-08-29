@@ -59,6 +59,12 @@ describe("VT-SYNC compact unified controller", () => {
   expect(markup).toContain("vt-sync-unit-status")
   expect(markup).toContain("vt-spectrum-badge vt-sync-unit-status")
   expect(markup).toContain("vt-spectrum-badge vt-sync-switch-status")
+  expect(markup).toContain("vt-sync-unit-identity")
+  expect(markup).toContain("vt-sync-unit-description")
+  expect(markup).toContain(">Channel Totals<")
+  expect(markup).toContain(">Videos<")
+  expect(markup).not.toContain(">Channel Overview + Windows<")
+  expect(markup).not.toContain(">Video Catalog &amp; Analytics<")
  })
 
  it("runs every visible unit from Sync All without changing selection", async () => {
