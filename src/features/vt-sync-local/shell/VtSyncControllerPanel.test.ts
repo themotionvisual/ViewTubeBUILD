@@ -4,7 +4,6 @@ import { createRoot, type Root } from "react-dom/client"
 import { renderToStaticMarkup } from "react-dom/server"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { expandVtSyncCategoryDependencies } from "../upstream/syncCategoryRegistry"
 import { VT_SYNC_SYNC_UNITS, getVtSyncDefaultUnitIds, getVtSyncUnitCategoryIds } from "../upstream/syncUnitRegistry"
 import { VtSyncControllerPanel } from "./VtSyncControllerPanel"
 
@@ -77,7 +76,7 @@ describe("VT-SYNC compact unified controller", () => {
   expect(syncSelected).toBeTruthy()
   await act(async () => syncSelected?.click())
 
-  const expected = expandVtSyncCategoryDependencies(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))
+  const expected = getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds)
   expect(props.onStartSync).toHaveBeenCalledWith(expected, undefined)
  })
 })

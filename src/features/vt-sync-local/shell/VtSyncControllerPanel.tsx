@@ -11,7 +11,6 @@ import { selectVtSyncBaseRetentionVideos } from "../adapters/retentionSelection"
 // mid-flow user cancels don't propagate as unhandled promise rejections.
 import { isLoginAbortError } from "../../../services/auth/loginErrors"
 import {
- expandVtSyncCategoryDependencies,
  filterVtSyncVisibleCategoryIds,
 } from "../upstream/syncCategoryRegistry"
 import { VT_SYNC_GROUP_LABELS, VT_SYNC_GROUP_ORDER, VT_SYNC_SYNC_UNITS, getVtSyncDefaultUnitIds, getVtSyncUnitCategoryIds } from "../upstream/syncUnitRegistry"
@@ -57,6 +56,19 @@ const formatRelativeTime = (iso?: string): string => {
  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(iso))
 }
 
+const formatFreshnessParts = (iso?: string): { value: string; labels: string[] } => {
+ if (!iso) return { value: "—", labels: ["never"] }
+ const ms = Date.now() - new Date(iso).getTime()
+ if (!Number.isFinite(ms)) return { value: "—", labels: ["never"] }
+ if (ms < 0 || ms < 60_000) return { value: "0", labels: ["mins", "ago"] }
+ const minutes = Math.floor(ms / 60_000)
+ if (minutes < 60) return { value: minutes.toLocaleString(), labels: [minutes === 1 ? "min" : "mins", "ago"] }
+ const hours = Math.floor(minutes / 60)
+ if (hours < 24) return { value: hours.toLocaleString(), labels: [hours === 1 ? "hour" : "hours", "ago"] }
+ const days = Math.floor(hours / 24)
+ return { value: days.toLocaleString(), labels: [days === 1 ? "day" : "days", "ago"] }
+}
+
 const formatSyncDuration = (startedAt?: string, completedAt?: string) => {
  if (!startedAt) return ""
  const start = new Date(startedAt).getTime()
@@ -72,6 +84,7 @@ export const VtSyncControllerPanel: React.FC<{
  progress: VtSyncLocalSyncProgress | null
  videos: VtSyncRetentionVideoOption[]
  queuedCategoryIds?: string[]
+ activeCategoryIds?: string[]
  datasetFreshness?: VtSyncDatasetFreshness
  syncError?: string
  videoCatalogCoverage?: VtSyncVideoCatalogCoverage
@@ -80,7 +93,7 @@ export const VtSyncControllerPanel: React.FC<{
  onSelectContentOwner?: (ownerId: string) => Promise<void>
  onLogin: () => Promise<void>
  onStartSync: (categoryIds: string[], retentionVideoIds?: string[], forceFullVideoMetadata?: boolean) => Promise<void>
-}> = ({ isAuthenticated, isSyncing, progress, videos, queuedCategoryIds = [], datasetFreshness, syncError, videoCatalogCoverage, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
+}> = ({ isAuthenticated, isSyncing, progress, videos, queuedCategoryIds = [], activeCategoryIds = [], datasetFreshness, syncError, videoCatalogCoverage, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
  const [selected, setSelected] = useState<string[]>(() => getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))
  const [retentionVideoIds, setRetentionVideoIds] = useState<string[]>([])
  const [videoSearch, setVideoSearch] = useState("")
@@ -97,7 +110,6 @@ export const VtSyncControllerPanel: React.FC<{
  const selectedUnitCount = useMemo(() => availableUnits.filter((unit) => unit.categoryIds.every((id) => selectedSet.has(id))).length, [availableUnits, selectedSet])
  const retentionSelectedSet = useMemo(() => new Set(retentionVideoIds), [retentionVideoIds])
  const retentionEnabled = selectedSet.has("retention")
- const activeCategoryIds = progress?.status === "running" ? progress.requestedCategoryIds : []
  const activeCategorySet = useMemo(() => new Set(activeCategoryIds), [activeCategoryIds])
  const queuedCategorySet = useMemo(() => new Set(queuedCategoryIds), [queuedCategoryIds])
  const consoleModel = useMemo(() => buildVtSyncConsoleModel({
@@ -107,7 +119,8 @@ export const VtSyncControllerPanel: React.FC<{
   syncError,
   videoCatalogCoverage,
   visibleUnitIds,
- }), [datasetFreshness, progress, queuedCategoryIds, syncError, videoCatalogCoverage, visibleUnitIds])
+  activeCategoryIds,
+ }), [activeCategoryIds, datasetFreshness, progress, queuedCategoryIds, syncError, videoCatalogCoverage, visibleUnitIds])
  const progressUnitById = useMemo(() => new Map(consoleModel.units.map((unit) => [unit.id, unit])), [consoleModel.units])
  const progressGroupById = useMemo(() => new Map(consoleModel.groups.map((group) => [group.group, group])), [consoleModel.groups])
  const sortedVideos = useMemo(() => [...videos].sort((a, b) => (b.views || 0) - (a.views || 0)), [videos])
@@ -182,7 +195,7 @@ export const VtSyncControllerPanel: React.FC<{
    // Post-login auth check — user may have cancelled mid-flow.
    if (!isAuthenticated) return
   }
-  await onStartSync(expandVtSyncCategoryDependencies(filterVtSyncVisibleCategoryIds(selected)), retentionEnabled ? retentionVideoIds : undefined)
+  await onStartSync(filterVtSyncVisibleCategoryIds(selected), retentionEnabled ? retentionVideoIds : undefined)
  }
 
  const startCategories = async (categoryIds: string[], includeRetentionVideoIds = false, forceFullVideoMetadata = false) => {
@@ -193,8 +206,7 @@ export const VtSyncControllerPanel: React.FC<{
    }
    if (!isAuthenticated) return
   }
-  const expanded = expandVtSyncCategoryDependencies(categoryIds)
-  await onStartSync(expanded, includeRetentionVideoIds ? retentionVideoIds : undefined, forceFullVideoMetadata)
+  await onStartSync(categoryIds, includeRetentionVideoIds ? retentionVideoIds : undefined, forceFullVideoMetadata)
  }
 
  const renderCategorySlideSwitch = ({
@@ -385,12 +397,13 @@ export const VtSyncControllerPanel: React.FC<{
            const detailsId = `vt-sync-unit-details-${unit.id}`
            const syncDuration = formatSyncDuration(progressUnit?.startedAt, progressUnit?.completedAt)
            const freshness = formatRelativeTime(progressUnit?.completedAt || progressUnit?.storedUpdatedAt)
+           const freshnessParts = formatFreshnessParts(progressUnit?.completedAt || progressUnit?.storedUpdatedAt)
            const resultCount = unit.id === "video_catalog" && videoCatalogCoverage ? videoCatalogCoverage.catalogTotal : (progressUnit?.displayRows || 0)
            const resultNoun = resultCount === 1 ? unit.resultNoun.singular : unit.resultNoun.plural
            const effectiveStatus = progressUnit?.effectiveStatus || "never"
            return (
             <React.Fragment key={unit.id}>
-             <div className={`vt-sync-unit-row ${checked ? "bg-white" : "bg-white/55 text-black/55"}`}>
+             <div className="vt-sync-unit-row bg-white text-black">
               <label className={`vt-sync-unit-selector cursor-pointer ${checked ? "is-selected" : ""}`} title={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`}>
                <input type="checkbox" checked={checked} onChange={() => toggleMany(unit.categoryIds)} className="h-5 w-5 accent-black" aria-label={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`} />
               </label>
@@ -418,8 +431,8 @@ export const VtSyncControllerPanel: React.FC<{
                </span>
               </button>
               <span className="vt-sync-unit-status" style={{ "--vt-sync-status-tone": VT_SYNC_CONSOLE_STATUS_PRESENTATION[effectiveStatus].tone } as React.CSSProperties}>{VT_SYNC_CONSOLE_STATUS_PRESENTATION[effectiveStatus].label}</span>
-              <span className="vt-sync-unit-count"><b>{resultCount.toLocaleString()}</b><small>{resultNoun}</small></span>
-              <span className="vt-sync-unit-freshness"><b>{freshness}</b>{syncDuration ? <small>{syncDuration}</small> : null}</span>
+              <span className="vt-sync-unit-count"><b>{resultCount.toLocaleString()}</b><small>{resultNoun.split(/\s+/).map((word) => <span key={word}>{word}</span>)}</small></span>
+              <span className="vt-sync-unit-freshness" title={`${freshness}${syncDuration ? ` · ${syncDuration}` : ""}`}><b>{freshnessParts.value}</b><small>{freshnessParts.labels.map((word) => <span key={word}>{word}</span>)}</small></span>
               <div className="vt-sync-unit-switch">
                {renderCategorySlideSwitch({
                 idleLabel: "SYNC",

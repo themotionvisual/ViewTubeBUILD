@@ -245,6 +245,7 @@ export const buildVtSyncConsoleModel = ({
  syncError,
  videoCatalogCoverage,
  visibleUnitIds,
+ activeCategoryIds = [],
 }: {
  progress: VtSyncLocalSyncProgress | null
  datasetFreshness?: VtSyncDatasetFreshness
@@ -252,6 +253,7 @@ export const buildVtSyncConsoleModel = ({
  syncError?: string
  videoCatalogCoverage?: VtSyncVideoCatalogCoverage
  visibleUnitIds?: string[]
+ activeCategoryIds?: string[]
 }): VtSyncConsoleModel => {
  const rows = buildVtSyncUnifiedProgressRows(progress, datasetFreshness)
  const latestDatasetAt = [...rows]
@@ -290,9 +292,8 @@ export const buildVtSyncConsoleModel = ({
   }
   const completedTimes = livePhases.map((phase) => phase.completedAt).filter(Boolean).sort()
   const storedTimes = unitRows.map((row) => row.updatedAt).filter(Boolean).sort()
-  const isLive = livePhases.some((phase) => phase.status === "running")
+  const isLive = activeCategoryIds.some((categoryId) => unit.categoryIds.includes(categoryId))
   const isQueued = queuedCategoryIds.some((categoryId) => unit.categoryIds.includes(categoryId))
-   || livePhases.some((phase) => phase.status === "pending")
   const displayRows = unit.id === "video_catalog" && videoCatalogCoverage
    ? videoCatalogCoverage.catalogTotal
    : unitRows.reduce((sum, row) => sum + row.displayRows, 0)

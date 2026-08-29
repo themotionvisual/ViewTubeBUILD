@@ -291,8 +291,9 @@ const refreshManualImports = useCallback(async (payload?: {
  const [authTick, setAuthTick] = useState(0)
  const controllerPanelRef = useRef<HTMLDivElement | null>(null)
  const syncRequestActiveRef = useRef(false)
- const syncQueueRef = useRef<Array<{ categoryIds: string[]; retentionVideoIds?: string[]; forceFullVideoMetadata?: boolean }>>([])
+ const syncQueueRef = useRef<Array<{ categoryIds: string[]; displayCategoryIds: string[]; retentionVideoIds?: string[]; forceFullVideoMetadata?: boolean }>>([])
  const [queuedCategoryIds, setQueuedCategoryIds] = useState<string[]>([])
+ const [activeCategoryIds, setActiveCategoryIds] = useState<string[]>([])
 
  const publishSyncProgress = useCallback((next: VtSyncLocalSyncProgress) => {
   pendingSyncProgressRef.current = next
@@ -360,7 +361,7 @@ const refreshManualImports = useCallback(async (payload?: {
  }
 
  const updateQueuedCategories = () => {
-  setQueuedCategoryIds([...new Set(syncQueueRef.current.flatMap((request) => request.categoryIds))])
+  setQueuedCategoryIds([...new Set(syncQueueRef.current.flatMap((request) => request.displayCategoryIds))])
  }
 
  const runQueuedSyncs = async () => {
@@ -369,8 +370,10 @@ const refreshManualImports = useCallback(async (payload?: {
   updateQueuedCategories()
   if (!request) {
    syncRequestActiveRef.current = false
+   setActiveCategoryIds([])
    return
   }
+  setActiveCategoryIds(request.displayCategoryIds)
   setBusy(true)
   setSyncError("")
   try {
@@ -418,6 +421,7 @@ const refreshManualImports = useCallback(async (payload?: {
    }
   } finally {
    syncRequestActiveRef.current = false
+   setActiveCategoryIds([])
    setBusy(false)
    if (syncQueueRef.current.length > 0) void runQueuedSyncs()
   }
@@ -425,7 +429,7 @@ const refreshManualImports = useCallback(async (payload?: {
 
  const startSync = async (categoryIds: string[], retentionVideoIds?: string[], forceFullVideoMetadata = false) => {
   const requestedCategoryIds = expandVtSyncCategoryDependencies(categoryIds)
-  syncQueueRef.current.push({ categoryIds: requestedCategoryIds, retentionVideoIds, forceFullVideoMetadata })
+  syncQueueRef.current.push({ categoryIds: requestedCategoryIds, displayCategoryIds: categoryIds, retentionVideoIds, forceFullVideoMetadata })
   updateQueuedCategories()
   void runQueuedSyncs()
  }
@@ -448,6 +452,7 @@ const refreshManualImports = useCallback(async (payload?: {
        isSyncing={busy}
        progress={syncProgress}
        queuedCategoryIds={queuedCategoryIds}
+       activeCategoryIds={activeCategoryIds}
        datasetFreshness={mergedSnapshot.datasetFreshness}
        syncError={syncError}
        videoCatalogCoverage={videoCatalogProjection.coverage}

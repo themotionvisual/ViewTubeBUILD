@@ -100,8 +100,9 @@ describe("VT-SYNC unified progress rows", () => {
     phases: [
      { id: "daily_metrics", label: "Daily Stats", status: "running", rows: 7 },
      { id: "traffic", label: "Traffic", status: "pending", rows: 0 },
-    ],
-   },
+   ],
+  },
+   activeCategoryIds: ["daily_metrics"],
    queuedCategoryIds: ["traffic_overview"],
    visibleUnitIds: ["daily_stats", "traffic_overview"],
   })
@@ -110,6 +111,23 @@ describe("VT-SYNC unified progress rows", () => {
   expect(model.tally.live).toBe(1)
   expect(model.tally.queued).toBe(1)
   expect(VT_SYNC_CONSOLE_STATUS_ORDER.reduce((sum, status) => sum + model.tally[status], 0)).toBe(2)
+ })
+
+ it("does not spread one direct sync target across units that share a runtime phase", () => {
+  const model = buildVtSyncConsoleModel({
+   progress: {
+    runId: "direct-target-run",
+    startedAt: "2026-08-29T08:00:00.000Z",
+    status: "running",
+    requestedCategoryIds: ["creator_content_type"],
+    phases: [{ id: "segments", label: "Segments", status: "running", rows: 4 }],
+   },
+   activeCategoryIds: ["creator_content_type"],
+   visibleUnitIds: ["content_type", "formats_subscriber_status"],
+  })
+
+  expect(model.units.find((unit) => unit.id === "content_type")?.effectiveStatus).toBe("live")
+  expect(model.units.find((unit) => unit.id === "formats_subscriber_status")?.effectiveStatus).toBe("never")
  })
 
  it("formats registry-owned natural result nouns", () => {
