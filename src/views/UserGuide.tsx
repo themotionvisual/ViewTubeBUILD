@@ -142,7 +142,7 @@ const UserGuide: React.FC = () => {
               Search, understand, create, edit, publish, and troubleshoot ViewTube.
             </p>
           </div>
-          <div className="grid min-w-0 grid-cols-4 gap-2">
+          <div className="grid min-w-0 grid-cols-4 gap-1.5 sm:gap-2">
             <Stat value={String(liveFeatures.length)} label="Features" />
             <Stat value={String(analyticsTables)} label="Tables" />
             <Stat value={String(GUIDE_METRICS.length)} label="Metrics" />
@@ -174,33 +174,28 @@ const UserGuide: React.FC = () => {
         </div>
       </header>
 
-      <nav aria-label="Guide sections" className="sticky top-2 z-20 mt-6 flex w-full min-w-0 gap-2 overflow-x-auto overscroll-x-contain rounded-2xl border-[4px] border-black bg-white p-2 shadow-[5px_5px_0_0_#000]">
+      <nav aria-label="Guide sections" className="sticky top-2 z-20 mt-5 flex w-full min-w-0 gap-1.5 overflow-x-auto overscroll-x-contain rounded-xl border-[4px] border-black bg-white p-1.5 shadow-[4px_4px_0_0_#000]">
         <button onClick={() => setDomain("all")} className={`shrink-0 rounded-xl border-[3px] border-black px-3 py-2 text-xs font-black uppercase ${domain === "all" ? "bg-black text-white" : "bg-white"}`}>All</button>
         {(Object.keys(domainMeta) as GuideDomain[]).map((key) => (
           <button key={key} onClick={() => setDomain(key)} className={`shrink-0 rounded-xl border-[3px] border-black px-3 py-2 text-xs font-black uppercase ${domain === key ? domainMeta[key].className : "bg-white"}`}>{domainMeta[key].label}</button>
         ))}
       </nav>
 
-      <section id="start" className="mt-8 scroll-mt-28">
+      <section id="start" className="mt-7 scroll-mt-28">
         <SectionTitle eyebrow="01 · Start here" title="Four ways in" icon={Sparkles} />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {quickStarts.map(({ title, copy, icon: Icon, href }, index) => (
-            <a key={title} href={href} className={`group rounded-2xl border-[4px] border-black p-5 shadow-[6px_6px_0_0_#000] transition-transform hover:-translate-y-1 ${["bg-[#CCFF00]","bg-[#40C6E9]","bg-[#FF8AAF]","bg-[#FFD84D]"][index]}`}>
-              <Icon size={30} strokeWidth={3} />
-              <h3 className="mt-8 text-2xl font-black uppercase leading-none">{title}</h3>
-              <p className="mt-3 text-sm font-bold leading-snug">{copy}</p>
-              <ArrowRight className="mt-5 transition-transform group-hover:translate-x-2" strokeWidth={3} />
-            </a>
+            <QuickStartCard key={title} title={title} copy={copy} icon={Icon} href={href} paletteIndex={index} />
           ))}
         </div>
       </section>
 
-      <section className="mt-10">
+      <section className="mt-8">
         <SectionTitle eyebrow="02 · Find a task" title="What are you trying to do?" icon={Search} />
         <GuideTaskNavigator />
       </section>
 
-      <section id="app-map" className="mt-10 scroll-mt-28">
+      <section id="app-map" className="mt-8 scroll-mt-28">
         <SectionTitle eyebrow="03 · Product map" title="What is actually in ViewTube?" icon={Boxes} />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {GUIDE_FEATURES.filter((feature) => domain === "all" || feature.domain === domain).map((feature, index) => {
@@ -247,19 +242,19 @@ const UserGuide: React.FC = () => {
         </div>
       </section>
 
-      <section id="widgets" className="mt-10 scroll-mt-28">
+      <section id="widgets" className="mt-8 scroll-mt-28">
         <SectionTitle eyebrow="04 · Widgets" title="Dashboard module encyclopedia" icon={Boxes} />
         <GuideWidgetExplorer />
       </section>
 
-      <section className="mt-10">
+      <section className="mt-8">
         <SectionTitle eyebrow="05 · Deep guides" title="Choose how deep to go" icon={BookOpen} />
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {GUIDE_ARTICLES.map((article) => <GuideArticlePanel key={article.pageId} article={article} />)}
         </div>
       </section>
 
-      <section id="analytics" className="mt-10 scroll-mt-28">
+      <section id="analytics" className="mt-8 scroll-mt-28">
         <SectionTitle eyebrow="06 · Analytics" title="Data you can trace" icon={Database} />
         <div className="grid gap-4 lg:grid-cols-[.8fr_1.2fr]">
           <div className="rounded-2xl border-[4px] border-black bg-[#40C6E9] p-5 shadow-[6px_6px_0_0_#000]">
@@ -271,18 +266,18 @@ const UserGuide: React.FC = () => {
         </div>
       </section>
 
-      <section id="visuals" className="mt-10 scroll-mt-28">
+      <section id="visuals" className="mt-8 scroll-mt-28">
         <SectionTitle eyebrow="07 · Analytics" title="Visual module encyclopedia" icon={BarChart3} />
         <GuideVisualLanguage />
         <div className="mt-4"><GuideAnalyticsVisualExplorer /></div>
       </section>
 
-      <section id="metrics" className="mt-10 scroll-mt-28">
+      <section id="metrics" className="mt-8 scroll-mt-28">
         <SectionTitle eyebrow="08 · Reference" title="Metric dictionary" icon={BookOpen} />
         <GuideMetricExplorer />
       </section>
 
-      <section id="create" className="mt-10 scroll-mt-28">
+      <section id="create" className="mt-8 scroll-mt-28">
         <SectionTitle eyebrow="09 · Workflows" title="Create → edit → publish" icon={Upload} />
         <div className="rounded-2xl border-[4px] border-black bg-white p-4 shadow-[6px_6px_0_0_#000]">
           <div className="grid gap-3 md:grid-cols-3">
@@ -293,7 +288,7 @@ const UserGuide: React.FC = () => {
         </div>
       </section>
 
-      <section id="connect" className="mt-10 scroll-mt-28">
+      <section id="connect" className="mt-8 scroll-mt-28">
         <SectionTitle eyebrow="09 · Connection" title="Simple channel setup" icon={Gauge} />
         <div className="rounded-2xl border-[4px] border-black bg-[#CCFF00] p-5 shadow-[6px_6px_0_0_#000]">
           <div className="grid gap-3 md:grid-cols-3">
@@ -307,7 +302,7 @@ const UserGuide: React.FC = () => {
         </div>
       </section>
 
-      <section id="help" className="mt-10 scroll-mt-28">
+      <section id="help" className="mt-8 scroll-mt-28">
         <SectionTitle eyebrow="10 · Help" title="Find the broken layer" icon={CircleHelp} />
         <div className="grid gap-3 md:grid-cols-4">
           {["Connection", "Sync & data", "Tool output", "Editor & render"].map((title, index) => (
@@ -323,16 +318,32 @@ const UserGuide: React.FC = () => {
 }
 
 const Stat = ({ value, label }: { value: string; label: string }) => (
-  <div className="min-w-[74px] rounded-lg border-[3px] border-black bg-white px-2.5 py-2 shadow-[2px_2px_0_0_#000]">
+  <div className="min-w-0 rounded-lg border-[3px] border-black bg-white px-2 py-2 shadow-[2px_2px_0_0_#000] sm:min-w-[74px] sm:px-2.5">
     <div className="text-2xl font-black leading-none">{value}</div>
     <div className="mt-0.5 text-[8px] font-black uppercase tracking-wide">{label}</div>
   </div>
 )
 
+const QuickStartCard = ({ title, copy, icon: Icon, href, paletteIndex }: { title: string; copy: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number }>; href: string; paletteIndex: number }) => {
+  const palette = getToolboxPaletteColors(paletteIndex)
+  return (
+    <a href={href} className="group min-w-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-white shadow-[4px_4px_0_0_#000] transition-transform hover:-translate-y-0.5">
+      <div className="flex min-h-[46px] border-b-[3px] border-black" style={{ backgroundColor: palette.header }}>
+        <span className="flex w-12 shrink-0 items-center justify-center border-r-[3px] border-black text-black" style={{ backgroundColor: palette.icon }}>
+          <Icon size={21} strokeWidth={3} />
+        </span>
+        <h3 className="flex min-w-0 flex-1 items-center px-3 py-2 text-base font-black uppercase leading-none text-black">{title}</h3>
+        <ArrowRight className="mr-3 self-center text-black transition-transform group-hover:translate-x-1" size={17} strokeWidth={3} />
+      </div>
+      <p className="px-3 py-2.5 text-xs font-bold leading-snug text-black/65">{copy}</p>
+    </a>
+  )
+}
+
 const SectionTitle = ({ eyebrow, title, icon: Icon }: { eyebrow: string; title: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }) => (
-  <div className="mb-4 flex items-end justify-between gap-4">
-    <div><p className="text-xs font-black uppercase tracking-[.18em] text-black/50">{eyebrow}</p><h2 className="mt-1 text-3xl font-black uppercase leading-none tracking-[-.035em] sm:text-4xl">{title}</h2></div>
-    <Icon size={30} strokeWidth={3} />
+  <div className="mb-3 flex items-end justify-between gap-4">
+    <div><p className="text-[10px] font-black uppercase tracking-[.18em] text-black/50">{eyebrow}</p><h2 className="mt-0.5 text-2xl font-black uppercase leading-none tracking-[-.035em] sm:text-3xl">{title}</h2></div>
+    <Icon size={25} strokeWidth={3} />
   </div>
 )
 
