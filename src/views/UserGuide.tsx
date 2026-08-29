@@ -4,8 +4,10 @@ import { GuideArticlePanel } from "../components/guide/GuideArticlePanel"
 import { GuideDatasetExplorer } from "../components/guide/GuideDatasetExplorer"
 import { GuideMetricExplorer } from "../components/guide/GuideMetricExplorer"
 import { GuideAnalyticsVisualExplorer } from "../components/guide/GuideAnalyticsVisualExplorer"
+import { GuideVisualLanguage } from "../components/guide/GuideVisualLanguage"
 import { GuideWidgetExplorer } from "../components/guide/GuideWidgetExplorer"
 import { GuideTaskNavigator } from "../components/guide/GuideTaskNavigator"
+import { getToolboxPaletteColors } from "../styles/toolboxPalette"
 import {
   ArrowRight,
   BarChart3,
@@ -16,6 +18,9 @@ import {
   Database,
   Film,
   Gauge,
+  LayoutDashboard,
+  Lightbulb,
+  Rocket,
   Search,
   Sparkles,
   Upload,
@@ -59,6 +64,17 @@ const lifecycleClass: Record<GuideLifecycle, string> = {
   experimental: "bg-[#FFB86B]",
   planned: "bg-[#B79CFF]",
   legacy: "bg-[#E5E7EB]",
+}
+
+const featureIconByDomain: Record<GuideDomain, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
+  start: LayoutDashboard,
+  analytics: BarChart3,
+  create: Lightbulb,
+  editor: Film,
+  publish: Rocket,
+  data: Database,
+  reference: Boxes,
+  help: CircleHelp,
 }
 
 const quickStarts = [
@@ -113,36 +129,36 @@ const UserGuide: React.FC = () => {
 
   return (
     <main className="mx-auto w-full min-w-0 max-w-[1500px] overflow-x-hidden px-3 pb-28 pt-4 sm:px-5 lg:px-8">
-      <header className="min-w-0 overflow-hidden rounded-[22px] border-[4px] border-black bg-[#CCFF00] shadow-[8px_8px_0_0_#000]">
-        <div className="grid min-w-0 gap-6 p-5 md:grid-cols-[1.4fr_.6fr] md:p-8">
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-white px-3 py-1 text-xs font-black uppercase tracking-[.16em]">
-              <BookOpen size={15} strokeWidth={3} /> Guide V2
+      <header className="min-w-0 overflow-hidden rounded-[18px] border-[4px] border-black bg-[#CCFF00] shadow-[6px_6px_0_0_#000]">
+        <div className="grid min-w-0 items-center gap-4 p-4 lg:grid-cols-[1fr_auto] lg:px-5 lg:py-4">
+          <div className="min-w-0">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border-[2px] border-black bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[.14em]">
+              <BookOpen size={13} strokeWidth={3} /> Guide V2
             </div>
-            <h1 className="max-w-4xl text-4xl font-black uppercase leading-[.9] tracking-[-.055em] text-black sm:text-6xl lg:text-7xl">
+            <h1 className="max-w-4xl text-3xl font-black uppercase leading-[.9] tracking-[-.05em] text-black sm:text-4xl lg:text-5xl">
               Learn ViewTube by doing.
             </h1>
-            <p className="mt-5 max-w-3xl text-base font-bold leading-snug text-black/75 sm:text-lg">
-              One searchable manual for connecting your channel, understanding your data, creating, editing, publishing, and fixing problems.
+            <p className="mt-2 max-w-3xl text-xs font-bold leading-snug text-black/70 sm:text-sm">
+              Search, understand, create, edit, publish, and troubleshoot ViewTube.
             </p>
           </div>
-          <div className="grid min-w-0 grid-cols-2 gap-3 self-end">
-            <Stat value={String(liveFeatures.length)} label="Current features" />
-            <Stat value={String(analyticsTables)} label="Data tables" />
-            <Stat value={String(GUIDE_METRICS.length)} label="Core metrics" />
-            <Stat value={String(GUIDE_TOOLS.length)} label="Tool systems" />
+          <div className="grid min-w-0 grid-cols-4 gap-2">
+            <Stat value={String(liveFeatures.length)} label="Features" />
+            <Stat value={String(analyticsTables)} label="Tables" />
+            <Stat value={String(GUIDE_METRICS.length)} label="Metrics" />
+            <Stat value={String(GUIDE_TOOLS.length)} label="Tools" />
           </div>
         </div>
-        <div className="min-w-0 border-t-[4px] border-black bg-white p-3 sm:p-4 md:p-5">
-          <label className="flex min-w-0 items-center gap-2 rounded-2xl sm:gap-3 border-[4px] border-black bg-white px-4 shadow-[4px_4px_0_0_#000] focus-within:bg-[#FFFBEA]">
-            <Search size={24} strokeWidth={3} />
+        <div className="min-w-0 border-t-[4px] border-black bg-white p-2.5">
+          <label className="flex min-w-0 items-center gap-2 rounded-xl border-[3px] border-black bg-white px-3 focus-within:bg-[#FFFBEA]">
+            <Search size={20} strokeWidth={3} />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search ViewTube..."
-              className="w-0 min-w-0 flex-1 bg-transparent py-4 text-sm font-black outline-none placeholder:text-black/35 sm:text-lg"
+              className="w-0 min-w-0 flex-1 bg-transparent py-2.5 text-sm font-black outline-none placeholder:text-black/35"
             />
-            <kbd className="hidden rounded-lg border-2 border-black bg-[#E5E7EB] px-2 py-1 text-xs font-black sm:block">GUIDE</kbd>
+            <kbd className="hidden rounded-md border-2 border-black bg-[#E5E7EB] px-2 py-0.5 text-[10px] font-black sm:block">GUIDE</kbd>
           </label>
           {query && (
             <div className="mt-3 grid gap-2">
@@ -186,20 +202,48 @@ const UserGuide: React.FC = () => {
 
       <section id="app-map" className="mt-10 scroll-mt-28">
         <SectionTitle eyebrow="03 · Product map" title="What is actually in ViewTube?" icon={Boxes} />
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {GUIDE_FEATURES.filter((feature) => domain === "all" || feature.domain === domain).map((feature) => (
-            <article key={feature.id} className="rounded-2xl border-[3px] border-black bg-white p-4 shadow-[4px_4px_0_0_#000]">
-              <div className="flex items-start justify-between gap-3">
-                <span className={`rounded-lg border-2 border-black px-2 py-1 text-[10px] font-black uppercase ${domainMeta[feature.domain].className}`}>{domainMeta[feature.domain].label}</span>
-                <span className={`rounded-full border-2 border-black px-2 py-1 text-[9px] font-black uppercase ${lifecycleClass[feature.lifecycle]}`}>{feature.lifecycle}</span>
-              </div>
-              <h3 className="mt-4 text-xl font-black uppercase leading-none">{feature.title}</h3>
-              <p className="mt-2 min-h-[42px] text-sm font-bold text-black/65">{feature.summary}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {feature.routes.slice(0, 2).map((route) => <Link key={route} to={route} className="rounded-lg border-2 border-black bg-[#F3F4F6] px-2 py-1 text-[10px] font-black">{route}</Link>)}
-              </div>
-            </article>
-          ))}
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {GUIDE_FEATURES.filter((feature) => domain === "all" || feature.domain === domain).map((feature, index) => {
+            const Icon = featureIconByDomain[feature.domain]
+            const palette = getToolboxPaletteColors(index)
+            return (
+              <Link
+                key={feature.id}
+                to={feature.routes[0] || "/user-guide"}
+                className="group min-w-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-white shadow-[4px_4px_0_0_#000] transition-transform hover:-translate-y-0.5"
+              >
+                <div
+                  className="flex min-h-[42px] items-stretch border-b-[3px] border-black"
+                  style={{ backgroundColor: palette.header }}
+                >
+                  <span
+                    className="flex w-[44px] shrink-0 items-center justify-center border-r-[3px] border-black text-black"
+                    style={{ backgroundColor: palette.icon }}
+                  >
+                    <Icon size={20} strokeWidth={3} />
+                  </span>
+                  <span className="flex min-w-0 flex-1 items-center px-3 py-2 text-[13px] font-black uppercase leading-none text-black">
+                    <span className="truncate">{feature.title}</span>
+                  </span>
+                  <span className={`m-1.5 flex shrink-0 items-center rounded-full border-2 border-black px-2 text-[8px] font-black uppercase ${lifecycleClass[feature.lifecycle]}`}>
+                    {feature.lifecycle}
+                  </span>
+                </div>
+                <div className="flex min-h-[54px] items-center gap-3 px-3 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[11px] font-bold text-black/60">{feature.summary}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className={`rounded-md border-2 border-black px-1.5 py-0.5 text-[8px] font-black uppercase ${domainMeta[feature.domain].className}`}>
+                        {domainMeta[feature.domain].label}
+                      </span>
+                      <span className="truncate text-[9px] font-black text-black/45">{feature.routes[0]}</span>
+                    </div>
+                  </div>
+                  <ArrowRight size={16} strokeWidth={3} className="shrink-0 transition-transform group-hover:translate-x-1" />
+                </div>
+              </Link>
+            )
+          })}
         </div>
       </section>
 
@@ -229,7 +273,8 @@ const UserGuide: React.FC = () => {
 
       <section id="visuals" className="mt-10 scroll-mt-28">
         <SectionTitle eyebrow="07 · Analytics" title="Visual module encyclopedia" icon={BarChart3} />
-        <GuideAnalyticsVisualExplorer />
+        <GuideVisualLanguage />
+        <div className="mt-4"><GuideAnalyticsVisualExplorer /></div>
       </section>
 
       <section id="metrics" className="mt-10 scroll-mt-28">
@@ -278,9 +323,9 @@ const UserGuide: React.FC = () => {
 }
 
 const Stat = ({ value, label }: { value: string; label: string }) => (
-  <div className="rounded-xl border-[3px] border-black bg-white p-3 shadow-[3px_3px_0_0_#000]">
-    <div className="text-3xl font-black leading-none">{value}</div>
-    <div className="mt-1 text-[10px] font-black uppercase tracking-wide">{label}</div>
+  <div className="min-w-[74px] rounded-lg border-[3px] border-black bg-white px-2.5 py-2 shadow-[2px_2px_0_0_#000]">
+    <div className="text-2xl font-black leading-none">{value}</div>
+    <div className="mt-0.5 text-[8px] font-black uppercase tracking-wide">{label}</div>
   </div>
 )
 

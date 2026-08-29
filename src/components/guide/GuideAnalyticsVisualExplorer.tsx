@@ -2,7 +2,9 @@ import React, { useMemo, useState } from "react"
 import { BarChart3, Search } from "lucide-react"
 import {
  GUIDE_ANALYTICS_VISUALS,
+ GUIDE_DATASETS,
  guideMetricById,
+ guideVisualEncodingById,
  type GuideAnalyticsVisualDefinition,
 } from "../../content/guide-v2"
 
@@ -31,6 +33,13 @@ export const GuideAnalyticsVisualExplorer: React.FC = () => {
 
 const VisualDetail:React.FC<{visual:GuideAnalyticsVisualDefinition|null}>=({visual})=>{
  if(!visual)return <div className="rounded-2xl border-[4px] border-black bg-[#F3F4F6] p-5 font-black">No matching visual.</div>
+ const encoding = guideVisualEncodingById(visual.id)
+ const matchedDatasets = encoding
+  ? GUIDE_DATASETS.filter((dataset) => {
+     const haystack = `${dataset.id} ${dataset.label} ${dataset.description} ${dataset.categoryIds.join(" ")}`.toLowerCase()
+     return encoding.datasetSearchTerms.some((term) => haystack.includes(term.toLowerCase()))
+    }).slice(0, 8)
+  : []
  return <article className="min-w-0 overflow-hidden rounded-2xl border-[4px] border-black bg-[#CCFF00] p-4 shadow-[6px_6px_0_0_#000] sm:p-5">
   <div className="flex items-start justify-between gap-4"><BarChart3 size={30} strokeWidth={3}/><span className="rounded-lg border-[3px] border-black bg-white px-2 py-1 text-[10px] font-black uppercase">{visual.status}</span></div>
   <h3 className="mt-7 break-words text-2xl font-black uppercase leading-none sm:text-3xl">{visual.title}</h3>
@@ -38,6 +47,8 @@ const VisualDetail:React.FC<{visual:GuideAnalyticsVisualDefinition|null}>=({visu
   <Section title="How to read it" tone="bg-white"><p>{visual.read}</p></Section>
   <Section title="Metrics" tone="bg-[#FFF7A8]"><div className="flex flex-wrap gap-2">{visual.metricIds.map(id=><span key={id} className="rounded-lg border-2 border-black bg-white px-2 py-1 text-[10px] font-black uppercase">{guideMetricById(id)?.label||id}</span>)}</div></Section>
   <Section title="Data concepts" tone="bg-[#DDEBFF]"><Chips items={visual.dataConcepts}/></Section>
+  {encoding ? <Section title="Visual encoding" tone="bg-[#E7DAFF]"><List items={encoding.encodings}/></Section> : null}
+  {encoding ? <Section title="Data provenance" tone="bg-[#D7FFF2]"><p>{encoding.provenance}</p>{matchedDatasets.length ? <div className="mt-3 flex flex-wrap gap-2">{matchedDatasets.map(dataset=><span key={dataset.id} className="max-w-full break-words rounded-lg border-2 border-black bg-white px-2 py-1 text-[10px] font-black uppercase">{dataset.label}</span>)}</div> : null}</Section> : null}
   <Section title="Controls" tone="bg-[#FFD7E4]"><List items={visual.controls}/></Section>
   <Section title="Patterns to notice" tone="bg-[#CFF7E8]"><List items={visual.patterns}/></Section>
   <Section title="Compare with" tone="bg-white"><div className="flex flex-wrap gap-2">{visual.compareWith.map(id=><span key={id} className="rounded-lg border-2 border-black bg-[#F3F4F6] px-2 py-1 text-[10px] font-black uppercase">{GUIDE_ANALYTICS_VISUALS.find(v=>v.id===id)?.title||id}</span>)}</div></Section>
