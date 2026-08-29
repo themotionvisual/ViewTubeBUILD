@@ -84,6 +84,58 @@ const quickStarts = [
   { title: "Edit a video", copy: "Learn the timeline, clips, transitions, preview, transport and editor workflow.", icon: Film, href: "#editor" },
 ]
 
+const productPageGroups = [
+  {
+    id: "home",
+    eyebrow: "01",
+    title: "Home & setup",
+    subtitle: "Start here, connect your channel, and get oriented.",
+    featureIds: ["dashboard", "account"],
+  },
+  {
+    id: "analytics",
+    eyebrow: "02",
+    title: "Analytics",
+    subtitle: "Sync, inspect, visualize, and interpret channel performance.",
+    featureIds: ["analytics", "intelligence", "graphs", "performance-hub"],
+  },
+  {
+    id: "create",
+    eyebrow: "03",
+    title: "Create",
+    subtitle: "Plan, research, package, and prepare new content.",
+    featureIds: ["studio", "projects", "ai-brain", "strategy", "media-analyzer", "hook-generator", "thumbnail-studio", "algorithm-architect", "storyboard-studio", "video-manager", "vault"],
+  },
+  {
+    id: "editor",
+    eyebrow: "04",
+    title: "Editor",
+    subtitle: "Build and assemble the video itself.",
+    featureIds: ["editor"],
+  },
+  {
+    id: "publish",
+    eyebrow: "05",
+    title: "Publish",
+    subtitle: "Finish metadata, discoverability, and upload preparation.",
+    featureIds: ["seo-generator", "video-publisher"],
+  },
+  {
+    id: "data-reference",
+    eyebrow: "06",
+    title: "Data & reference",
+    subtitle: "Inspect provenance, research systems, and technical references.",
+    featureIds: ["data-privacy", "research-lab", "reference-studio"],
+  },
+  {
+    id: "help",
+    eyebrow: "07",
+    title: "Help & about",
+    subtitle: "Documentation, product context, and support surfaces.",
+    featureIds: ["user-guide", "about"],
+  },
+] as const
+
 const UserGuide: React.FC = () => {
   const [query, setQuery] = useState("")
   const [domain, setDomain] = useState<GuideDomain | "all">("all")
@@ -196,47 +248,41 @@ const UserGuide: React.FC = () => {
       </section>
 
       <section id="app-map" className="mt-8 scroll-mt-28">
-        <SectionTitle eyebrow="03 · Product map" title="What is actually in ViewTube?" icon={Boxes} />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {GUIDE_FEATURES.filter((feature) => domain === "all" || feature.domain === domain).map((feature, index) => {
-            const Icon = featureIconByDomain[feature.domain]
-            const palette = getToolboxPaletteColors(index)
+        <SectionTitle eyebrow="03 · Product map" title="Browse ViewTube by page" icon={Boxes} />
+        <div className="overflow-hidden rounded-2xl border-[3px] border-black bg-white shadow-[5px_5px_0_0_#000]">
+          {productPageGroups.map((page, pageIndex) => {
+            const pageFeatures = page.featureIds
+              .map((featureId) => GUIDE_FEATURES.find((feature) => feature.id === featureId))
+              .filter((feature): feature is (typeof GUIDE_FEATURES)[number] => Boolean(feature))
+              .filter((feature) => domain === "all" || feature.domain === domain)
+
+            if (!pageFeatures.length) return null
+
             return (
-              <Link
-                key={feature.id}
-                to={feature.routes[0] || "/user-guide"}
-                className="group min-w-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-white shadow-[4px_4px_0_0_#000] transition-transform hover:-translate-y-0.5"
+              <section
+                key={page.id}
+                className={pageIndex === 0 ? "" : "border-t-[3px] border-black"}
               >
-                <div
-                  className="flex min-h-[42px] items-stretch border-b-[3px] border-black"
-                  style={{ backgroundColor: palette.header }}
-                >
-                  <span
-                    className="flex w-[44px] shrink-0 items-center justify-center border-r-[3px] border-black text-black"
-                    style={{ backgroundColor: palette.icon }}
-                  >
-                    <Icon size={20} strokeWidth={3} />
-                  </span>
-                  <span className="flex min-w-0 flex-1 items-center px-3 py-2 text-[13px] font-black uppercase leading-none text-black">
-                    <span className="truncate">{feature.title}</span>
-                  </span>
-                  <span className={`m-1.5 flex shrink-0 items-center rounded-full border-2 border-black px-2 text-[8px] font-black uppercase ${lifecycleClass[feature.lifecycle]}`}>
-                    {feature.lifecycle}
-                  </span>
-                </div>
-                <div className="flex min-h-[54px] items-center gap-3 px-3 py-2.5">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[11px] font-bold text-black/60">{feature.summary}</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      <span className={`rounded-md border-2 border-black px-1.5 py-0.5 text-[8px] font-black uppercase ${domainMeta[feature.domain].className}`}>
-                        {domainMeta[feature.domain].label}
-                      </span>
-                      <span className="truncate text-[9px] font-black text-black/45">{feature.routes[0]}</span>
-                    </div>
+                <div className="grid gap-3 p-3 lg:grid-cols-[180px_1fr] lg:items-start">
+                  <div className="px-1 py-1">
+                    <p className="text-[9px] font-black uppercase tracking-[.18em] text-black/45">
+                      {page.eyebrow} · Page
+                    </p>
+                    <h3 className="mt-1 text-lg font-black uppercase leading-none">{page.title}</h3>
+                    <p className="mt-1.5 text-[11px] font-bold leading-snug text-black/55">{page.subtitle}</p>
                   </div>
-                  <ArrowRight size={16} strokeWidth={3} className="shrink-0 transition-transform group-hover:translate-x-1" />
+
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    {pageFeatures.map((feature, featureIndex) => (
+                      <ProductToolButton
+                        key={feature.id}
+                        feature={feature}
+                        paletteIndex={(pageIndex * 4 + featureIndex) % 12}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </Link>
+              </section>
             )
           })}
         </div>
@@ -314,6 +360,52 @@ const UserGuide: React.FC = () => {
         </div>
       </section>
     </main>
+  )
+}
+
+const ProductToolButton = ({
+  feature,
+  paletteIndex,
+}: {
+  feature: (typeof GUIDE_FEATURES)[number]
+  paletteIndex: number
+}) => {
+  const Icon = featureIconByDomain[feature.domain]
+  const palette = getToolboxPaletteColors(paletteIndex)
+
+  return (
+    <Link
+      to={feature.routes[0] || "/user-guide"}
+      className="group min-w-0 overflow-hidden rounded-[12px] border-[3px] border-black shadow-[3px_3px_0_0_#000] transition-transform hover:-translate-y-0.5"
+      style={{ backgroundColor: palette.header }}
+    >
+      <div className="flex min-h-[68px] min-w-0 items-stretch">
+        <span
+          className="flex w-[46px] shrink-0 items-center justify-center border-r-[3px] border-black text-black"
+          style={{ backgroundColor: palette.icon }}
+        >
+          <Icon size={20} strokeWidth={3} />
+        </span>
+
+        <div className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2.5">
+          <div className="min-w-0 flex-1">
+            <h4 className="truncate text-[13px] font-black uppercase leading-none text-black">{feature.title}</h4>
+            <p className="mt-1 line-clamp-2 text-[10px] font-bold leading-tight text-black/65">{feature.summary}</p>
+          </div>
+
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <span className={`rounded-full border-2 border-black px-2 py-0.5 text-[7px] font-black uppercase ${lifecycleClass[feature.lifecycle]}`}>
+              {feature.lifecycle}
+            </span>
+            <span className="rounded-md border-2 border-black bg-white/65 px-1.5 py-0.5 text-[7px] font-black uppercase text-black">
+              {domainMeta[feature.domain].label}
+            </span>
+          </div>
+
+          <ArrowRight size={15} strokeWidth={3} className="shrink-0 text-black transition-transform group-hover:translate-x-1" />
+        </div>
+      </div>
+    </Link>
   )
 }
 
