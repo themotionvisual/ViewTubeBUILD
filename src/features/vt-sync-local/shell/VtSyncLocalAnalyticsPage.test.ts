@@ -1,15 +1,11 @@
 import { readFileSync } from "node:fs"
-import React from "react"
-import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import type { VtSyncDatasetFreshness } from "../adapters/contracts"
 import type { VtSyncLocalSyncProgress } from "../adapters/localSyncEngine"
 import { VT_SYNC_GROUP_ORDER } from "../upstream/syncUnitRegistry"
 import {
- ProgressRail,
-} from "./VtSyncLocalAnalyticsPage"
-import {
+ buildVtSyncConsoleModel,
  buildVtSyncUnifiedProgressRows,
  claimVtSyncSyncRequest,
  getVtSyncProgressQueueSummary,
@@ -23,18 +19,19 @@ describe("VT-SYNC unified progress rows", () => {
   expect(pageSource).toContain("<VtSyncCreatorHero")
   expect(pageSource).toContain("void startSync(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))")
   expect(pageSource).toContain("scrollToPanel(controllerPanelRef.current)")
-  expect(pageSource).toContain("scrollToPanel(progressPanelRef.current)")
+  expect(pageSource).not.toContain("progressPanelRef")
   expect(pageSource).not.toContain("VT-SYNC Tools Page")
   expect(pageSource).not.toContain("NO CANONICAL WRITES")
   expect(pageSource).not.toContain("VtSyncStatCard")
  })
 
- it("measures the controller and constrains the progress toolbox to the same desktop height", () => {
-  expect(pageSource).toContain("new ResizeObserver(updateHeight)")
-  expect(pageSource).toContain("--vt-sync-controller-height")
-  expect(pageSource).toContain("fillAvailable")
-  expect(pageSource).toContain("min-h-0 flex-1 overflow-auto")
-  expect(pageCss).toContain("height: var(--vt-sync-controller-height, auto)")
+ it("renders one half-width unified console without a duplicate progress toolbox or height coupling", () => {
+  expect(pageSource.match(/<VtSyncControllerPanel/g)).toHaveLength(1)
+  expect(pageSource).not.toContain("ProgressRail")
+  expect(pageSource).not.toContain("new ResizeObserver")
+  expect(pageSource).not.toContain("--vt-sync-controller-height")
+  expect(pageCss).not.toContain("--vt-sync-controller-height")
+  expect(pageSource).toContain('className="grid items-start gap-6 md:grid-cols-2"')
  })
 
  it("synchronously rejects a second active sync request", () => {
@@ -84,18 +81,15 @@ describe("VT-SYNC unified progress rows", () => {
   })
  })
 
- it("groups progress datasets into the same collapsible categories as the controller", () => {
-  const markup = renderToStaticMarkup(React.createElement(ProgressRail, { progress: null }))
-  VT_SYNC_GROUP_ORDER.forEach((group) => {
-   expect(markup).toContain(`id="vt-sync-progress-group-${group}"`)
-  })
-  expect(markup.match(/aria-expanded="true"/g)).toHaveLength(1)
-  expect(markup).toContain("Now syncing")
-  expect(markup).toContain("Next queued query")
+ it("groups progress datasets into the same categories as the controller", () => {
+  const model = buildVtSyncConsoleModel({ progress: null })
+  expect(model.groups.map((group) => group.group)).toEqual(VT_SYNC_GROUP_ORDER)
+  expect(model.queue.currentLabel).toBe("Idle")
+  expect(model.queue.nextLabel).toBe("No queued query")
  })
 
  it("reports the video catalog authority instead of summing child-query rows", () => {
-  const markup = renderToStaticMarkup(React.createElement(ProgressRail, {
+  const model = buildVtSyncConsoleModel({
    progress: null,
    datasetFreshness: {
     videos: { status: "synced", source: "current_run", rows: 1_446 },
@@ -110,10 +104,10 @@ describe("VT-SYNC unified progress rows", () => {
     importOnly: 0,
     unresolvedImports: 0,
    },
-  }))
+  })
 
-  expect(markup).toContain("1,446 videos · metadata 1,442 · analytics 1,388")
-  expect(markup).not.toContain("4,276 rows")
+  expect(model.units.find((unit) => unit.id === "video_catalog")?.displayRows).toBe(1_446)
+  expect(model.units.find((unit) => unit.id === "video_catalog")?.displayRows).not.toBe(4_276)
  })
 
  it("uses live phase state only for datasets requested by the active run", () => {

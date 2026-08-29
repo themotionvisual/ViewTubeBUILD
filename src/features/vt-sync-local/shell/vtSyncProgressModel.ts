@@ -2,9 +2,12 @@ import type {
  VtSyncCategoryDefinition,
  VtSyncDatasetFreshness,
  VtSyncLocalSyncProgress,
+ VtSyncVideoCatalogCoverage,
 } from ".."
 import {
  VT_SYNC_CATEGORY_OPTIONS,
+ VT_SYNC_GROUP_LABELS,
+ VT_SYNC_GROUP_ORDER,
  VT_SYNC_SYNC_UNITS,
 } from ".."
 
@@ -73,6 +76,35 @@ export type VtSyncUnifiedProgressRow = ReturnType<typeof summarizeDatasetFreshne
  displayStatus: string
  displayRows: number
  message: string
+}
+
+export type VtSyncConsoleUnitModel = (typeof VT_SYNC_SYNC_UNITS)[number] & {
+ rows: VtSyncUnifiedProgressRow[]
+ status: string
+ issues: VtSyncUnifiedProgressRow[]
+ startedAt?: string
+ completedAt?: string
+ storedUpdatedAt?: string
+ displayRows: number
+}
+
+export type VtSyncConsoleGroupModel = {
+ group: (typeof VT_SYNC_GROUP_ORDER)[number]
+ label: string
+ units: VtSyncConsoleUnitModel[]
+ status: string
+ issueCount: number
+ rowCount: number
+}
+
+export type VtSyncConsoleModel = {
+ rows: VtSyncUnifiedProgressRow[]
+ units: VtSyncConsoleUnitModel[]
+ groups: VtSyncConsoleGroupModel[]
+ tally: Record<string, number>
+ totalRows: number
+ latestDatasetAt?: string
+ queue: ReturnType<typeof getVtSyncProgressQueueSummary>
 }
 
 export const buildVtSyncUnifiedProgressRows = (
@@ -147,5 +179,106 @@ export const getVtSyncProgressQueueSummary = (
    : queuedCategory
     ? "Waiting behind the current sync request."
     : "The queue is clear.",
+ }
+}
+
+const resolveAggregateStatus = (statuses: string[]) => {
+ if (statuses.includes("failed")) return "failed"
+ if (statuses.includes("partial")) return "partial"
+ if (statuses.includes("running")) return "running"
+ if (statuses.includes("pending")) return "pending"
+ if (statuses.includes("synced") || statuses.includes("complete")) return "synced"
+ if (statuses.includes("stale")) return "stale"
+ if (statuses.includes("skipped")) return "skipped"
+ return "never"
+}
+
+export const buildVtSyncConsoleModel = ({
+ progress,
+ datasetFreshness,
+ queuedCategoryIds = [],
+ syncError,
+ videoCatalogCoverage,
+}: {
+ progress: VtSyncLocalSyncProgress | null
+ datasetFreshness?: VtSyncDatasetFreshness
+ queuedCategoryIds?: string[]
+ syncError?: string
+ videoCatalogCoverage?: VtSyncVideoCatalogCoverage
+}): VtSyncConsoleModel => {
+ const rows = buildVtSyncUnifiedProgressRows(progress, datasetFreshness)
+ const latestDatasetAt = [...rows]
+  .sort((left, right) => new Date(right.updatedAt || 0).getTime() - new Date(left.updatedAt || 0).getTime())
+  .find((row) => row.updatedAt)?.updatedAt
+ const tally = rows.reduce<Record<string, number>>((acc, row) => {
+  acc[row.displayStatus] = (acc[row.displayStatus] || 0) + 1
+  return acc
+ }, {})
+ const activeOrLatestPhaseId = (progress?.phases || [])
+  .filter((phase) => phase.startedAt)
+  .sort((left, right) => String(right.startedAt).localeCompare(String(left.startedAt)))[0]?.id
+ const terminalIssueUnitId = VT_SYNC_SYNC_UNITS.find((unit) => unit.categoryIds.some((categoryId) => {
+  const category = VT_SYNC_CATEGORY_OPTIONS.find((entry) => entry.id === categoryId)
+  return category?.runtimePhaseId === activeOrLatestPhaseId
+ }))?.id
+
+ const units = VT_SYNC_SYNC_UNITS.map<VtSyncConsoleUnitModel>((unit) => {
+  const unitRows = rows.filter((row) => row.syncUnitId === unit.id)
+  const livePhases = (progress?.phases || []).filter((phase) => unit.categoryIds.some((categoryId) => {
+   const category = VT_SYNC_CATEGORY_OPTIONS.find((entry) => entry.id === categoryId)
+   return category?.runtimePhaseId === phase.id
+  }))
+  const issues = unitRows.filter((row) => row.displayStatus === "failed" || row.displayStatus === "partial" || /reconnect|required|missing/i.test(row.message))
+  if (syncError && unit.id === terminalIssueUnitId) {
+   issues.push({
+    category: VT_SYNC_CATEGORY_OPTIONS.find((category) => unit.categoryIds.includes(category.id)) || VT_SYNC_CATEGORY_OPTIONS[0],
+    status: "failed",
+    rows: 0,
+    missingMetrics: [],
+    source: "Sync connection",
+    syncUnitId: unit.id,
+    syncUnitLabel: unit.label,
+    phaseLabel: "Sync connection",
+    displayStatus: "failed",
+    displayRows: 0,
+    message: syncError,
+   })
+  }
+  const completedTimes = livePhases.map((phase) => phase.completedAt).filter(Boolean).sort()
+  const storedTimes = unitRows.map((row) => row.updatedAt).filter(Boolean).sort()
+  return {
+   ...unit,
+   rows: unitRows,
+   status: resolveAggregateStatus(unitRows.map((row) => row.displayStatus)),
+   issues,
+   startedAt: livePhases.map((phase) => phase.startedAt).filter(Boolean).sort()[0] || undefined,
+   completedAt: completedTimes[completedTimes.length - 1] || undefined,
+   storedUpdatedAt: storedTimes[storedTimes.length - 1] || undefined,
+   displayRows: unit.id === "video_catalog" && videoCatalogCoverage
+    ? videoCatalogCoverage.catalogTotal
+    : unitRows.reduce((sum, row) => sum + row.displayRows, 0),
+  }
+ })
+
+ const groups = VT_SYNC_GROUP_ORDER.map<VtSyncConsoleGroupModel>((group) => {
+  const groupUnits = units.filter((unit) => unit.group === group)
+  return {
+   group,
+   label: VT_SYNC_GROUP_LABELS[group],
+   units: groupUnits,
+   status: resolveAggregateStatus(groupUnits.map((unit) => unit.status)),
+   issueCount: groupUnits.reduce((sum, unit) => sum + unit.issues.length, 0),
+   rowCount: groupUnits.reduce((sum, unit) => sum + unit.displayRows, 0),
+  }
+ }).filter((group) => group.units.length > 0)
+
+ return {
+  rows,
+  units,
+  groups,
+  tally,
+  totalRows: rows.reduce((sum, row) => sum + row.displayRows, 0),
+  latestDatasetAt,
+  queue: getVtSyncProgressQueueSummary(progress, queuedCategoryIds),
  }
 }

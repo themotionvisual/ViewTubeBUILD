@@ -10,6 +10,7 @@ describe("VT-SYNC controller accordion", () => {
   const markup = renderToStaticMarkup(React.createElement(VtSyncControllerPanel, {
    isAuthenticated: true,
    isSyncing: false,
+   progress: null,
    videos: [],
    onLogin: vi.fn(async () => undefined),
    onStartSync: vi.fn(async () => undefined),
@@ -17,11 +18,14 @@ describe("VT-SYNC controller accordion", () => {
   const groups = [...new Set(VT_SYNC_SYNC_UNITS.map((unit) => unit.group))]
   const groupCount = groups.length
 
-  expect(markup.match(/aria-expanded="true"/g)).toHaveLength(1)
-  expect(markup.match(/aria-expanded="false"/g)).toHaveLength(groupCount - 1)
+  expect(markup.match(/aria-expanded="true" aria-controls="vt-sync-controller-group-/g)).toHaveLength(1)
+  expect(markup.match(/aria-expanded="false" aria-controls="vt-sync-controller-group-/g)).toHaveLength(groupCount - 1)
   expect(markup).toContain('id="vt-sync-controller-group-channel"')
   expect(markup).toContain('id="vt-sync-controller-group-time" hidden=""')
   expect(markup.match(/id="vt-sync-controller-group-[^"]+"/g)).toHaveLength(groupCount)
   expect(markup.match(/SYNC ALL/g)).toHaveLength(groupCount)
+  expect(markup).toContain("Sync operations")
+  expect(markup).toContain("Now syncing")
+  expect(markup).toContain("Next queued query")
  })
 })
