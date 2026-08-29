@@ -17,6 +17,12 @@ import {
   Database,
   Film,
   Gauge,
+  LayoutDashboard,
+  Lightbulb,
+  PlaySquare,
+  Rocket,
+  Settings,
+  ShieldCheck,
   Search,
   Sparkles,
   Upload,
@@ -61,6 +67,32 @@ const lifecycleClass: Record<GuideLifecycle, string> = {
   planned: "bg-[#B79CFF]",
   legacy: "bg-[#E5E7EB]",
 }
+
+const featureIconByDomain: Record<GuideDomain, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
+  start: LayoutDashboard,
+  analytics: BarChart3,
+  create: Lightbulb,
+  editor: Film,
+  publish: Rocket,
+  data: Database,
+  reference: Boxes,
+  help: CircleHelp,
+}
+
+const featurePalette = [
+  "bg-[#CCFF00]",
+  "bg-[#40C6E9]",
+  "bg-[#FF8AAF]",
+  "bg-[#FFD84D]",
+  "bg-[#B79CFF]",
+  "bg-[#72E6B1]",
+  "bg-[#FFB86B]",
+  "bg-[#9FE3FF]",
+  "bg-[#FF9F6E]",
+  "bg-[#D9FF6B]",
+  "bg-[#E8B5FF]",
+  "bg-[#A7F3D0]",
+] as const
 
 const quickStarts = [
   { title: "Connect your channel", copy: "Authorize ViewTube, confirm the active channel, then run your first sync.", icon: Gauge, href: "#connect" },
@@ -187,20 +219,42 @@ const UserGuide: React.FC = () => {
 
       <section id="app-map" className="mt-10 scroll-mt-28">
         <SectionTitle eyebrow="03 · Product map" title="What is actually in ViewTube?" icon={Boxes} />
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {GUIDE_FEATURES.filter((feature) => domain === "all" || feature.domain === domain).map((feature) => (
-            <article key={feature.id} className="rounded-2xl border-[3px] border-black bg-white p-4 shadow-[4px_4px_0_0_#000]">
-              <div className="flex items-start justify-between gap-3">
-                <span className={`rounded-lg border-2 border-black px-2 py-1 text-[10px] font-black uppercase ${domainMeta[feature.domain].className}`}>{domainMeta[feature.domain].label}</span>
-                <span className={`rounded-full border-2 border-black px-2 py-1 text-[9px] font-black uppercase ${lifecycleClass[feature.lifecycle]}`}>{feature.lifecycle}</span>
-              </div>
-              <h3 className="mt-4 text-xl font-black uppercase leading-none">{feature.title}</h3>
-              <p className="mt-2 min-h-[42px] text-sm font-bold text-black/65">{feature.summary}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {feature.routes.slice(0, 2).map((route) => <Link key={route} to={route} className="rounded-lg border-2 border-black bg-[#F3F4F6] px-2 py-1 text-[10px] font-black">{route}</Link>)}
-              </div>
-            </article>
-          ))}
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {GUIDE_FEATURES.filter((feature) => domain === "all" || feature.domain === domain).map((feature, index) => {
+            const Icon = featureIconByDomain[feature.domain]
+            const tone = featurePalette[index % featurePalette.length]
+            return (
+              <Link
+                key={feature.id}
+                to={feature.routes[0] || "/user-guide"}
+                className="group min-w-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-white shadow-[4px_4px_0_0_#000] transition-transform hover:-translate-y-0.5"
+              >
+                <div className={`flex min-h-[42px] items-stretch border-b-[3px] border-black ${tone}`}>
+                  <span className="flex w-[44px] shrink-0 items-center justify-center border-r-[3px] border-black bg-black text-white">
+                    <Icon size={20} strokeWidth={3} />
+                  </span>
+                  <span className="flex min-w-0 flex-1 items-center px-3 py-2 text-[13px] font-black uppercase leading-none">
+                    <span className="truncate">{feature.title}</span>
+                  </span>
+                  <span className={`m-1.5 flex shrink-0 items-center rounded-full border-2 border-black px-2 text-[8px] font-black uppercase ${lifecycleClass[feature.lifecycle]}`}>
+                    {feature.lifecycle}
+                  </span>
+                </div>
+                <div className="flex min-h-[54px] items-center gap-3 px-3 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[11px] font-bold text-black/60">{feature.summary}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className={`rounded-md border-2 border-black px-1.5 py-0.5 text-[8px] font-black uppercase ${domainMeta[feature.domain].className}`}>
+                        {domainMeta[feature.domain].label}
+                      </span>
+                      <span className="truncate text-[9px] font-black text-black/45">{feature.routes[0]}</span>
+                    </div>
+                  </div>
+                  <ArrowRight size={16} strokeWidth={3} className="shrink-0 transition-transform group-hover:translate-x-1" />
+                </div>
+              </Link>
+            )
+          })}
         </div>
       </section>
 
