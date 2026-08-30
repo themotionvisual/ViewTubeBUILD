@@ -7,12 +7,7 @@ import { handleCompressAnalysisRoute } from "./media-compression.mjs";
 import { handleYouTubeAcquireRoute } from "./youtube-acquisition.mjs";
 import { getReleaseMetadata } from "./release-metadata.mjs";
 import { getAuthenticatedViewtubeUserId, handleAccountRoute } from "./account-auth.mjs";
-import {
-  beginSimpleGoogleAuth,
-  completeSimpleGoogleAuth,
-  logoutSimpleSession,
-  readSimpleSession,
-} from "./simple-auth.mjs";
+import { routeSimpleAuth } from "./simple-auth-route.mjs";
 import {
   appendAiCreditLedgerEntry,
   claimWebhookEvent,
@@ -721,36 +716,9 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (
-      method === "GET" &&
-      (pathname === "/api/auth-start" || pathname === "/api/auth/google/start")
-    ) {
+    if (await routeSimpleAuth({ req, res, method, pathname, parsedUrl })) {
       console.log(`[billing] Matched: ${method} ${pathname}`);
-      return await beginSimpleGoogleAuth({ req, res, parsedUrl });
-    }
-
-    if (
-      method === "GET" &&
-      (pathname === "/api/auth-callback" || pathname === "/api/auth/google/callback")
-    ) {
-      console.log(`[billing] Matched: ${method} ${pathname}`);
-      return await completeSimpleGoogleAuth({ req, res, parsedUrl });
-    }
-
-    if (
-      method === "GET" &&
-      (pathname === "/api/auth-session" || pathname === "/api/auth/session")
-    ) {
-      console.log(`[billing] Matched: ${method} ${pathname}`);
-      return await readSimpleSession({ req, res });
-    }
-
-    if (
-      method === "POST" &&
-      (pathname === "/api/auth-logout" || pathname === "/api/auth/logout")
-    ) {
-      console.log(`[billing] Matched: ${method} ${pathname}`);
-      return await logoutSimpleSession({ req, res });
+      return;
     }
 
     if (method === "GET" && pathname === "/api/release") {

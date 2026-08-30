@@ -6,7 +6,7 @@ const root = process.cwd()
 const read = (relativePath: string) => fs.readFileSync(path.join(root, relativePath), "utf8")
 
 describe("unified account surface governance", () => {
-  it("uses popup-first copy in active application code", () => {
+  it("uses centralized Simple Auth copy in active application code", () => {
     const activeFiles = [
       "src/components/navigation/ApplicationAccountMenu.tsx",
       "src/views/Settings.tsx",
@@ -18,15 +18,15 @@ describe("unified account surface governance", () => {
     const source = activeFiles.map(read).join("\n")
     expect(source).not.toContain("Continue with Google")
     expect(source).toContain("account.start")
+    expect(source).toContain("auth.login")
     expect(read("src/services/account/accountContracts.ts")).toContain('"Sign in"')
     expect(read("src/services/account/accountContracts.ts")).toContain('"Sign up"')
   })
 
-  it("routes primary account CTAs through the shared popup launcher", () => {
+  it("routes primary account CTAs through the shared auth launchers", () => {
     for (const relativePath of [
       "src/views/Settings.tsx",
       "src/views/Subscribe.tsx",
-      "src/views/VideoManager.tsx",
       "src/views/dashboard/DashboardHeader.tsx",
       "src/features/vt-sync-local/shell/VtSyncLocalAnalyticsPage.tsx",
     ]) {
@@ -34,6 +34,10 @@ describe("unified account surface governance", () => {
       expect(source, relativePath).toContain("account.start")
       expect(source, relativePath).not.toContain("navigate(buildAccountRoute")
     }
+    const videoManager = read("src/views/VideoManager.tsx")
+    expect(videoManager).toContain("useSimpleAuth")
+    expect(videoManager).toContain("auth.login")
+    expect(videoManager).not.toContain("navigate(buildAccountRoute")
     for (const relativePath of [
       "src/components/account/AccountActionButton.tsx",
       "src/components/navigation/ApplicationAccountMenu.tsx",

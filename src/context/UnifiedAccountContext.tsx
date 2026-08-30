@@ -39,9 +39,9 @@ interface UnifiedAccountContextValue {
  *
  * It deliberately does NOT:
  * - read browser Google tokens
- * - listen for vt_auth_changed
+ * - listen for legacy authentication broadcasts
  * - hydrate auth from analytics/localStorage
- * - call beginAccountIntent
+ * - invoke the retired unified-account launcher
  * - choose between "server" and "legacy" auth modes
  * - emit account/auth events
  */
