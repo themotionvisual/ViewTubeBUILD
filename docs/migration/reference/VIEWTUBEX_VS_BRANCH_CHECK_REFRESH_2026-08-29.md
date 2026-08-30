@@ -6,7 +6,7 @@
 
 **Second refresh:** 2026-08-29 22:38 America/New_York, after PR #76 merged.
 
-**Bottom line:** use current `main` as the architectural and deployment base; treat branch-check as the current feature-development donor; treat ViewTubeX as a historical behavior oracle plus a small visualization donor. Neither local worktree is safe to merge or push as-is because both are dirty, and branch-check has also diverged from its remote branch.
+**Bottom line:** use current `main` as the architectural base, but do not classify the `.live` deployment as login-functional. Branch-check local is the current known-good login behavior. Treat branch-check as the feature-development and auth-behavior donor; treat ViewTubeX as a historical behavior oracle plus a small visualization donor. Neither local worktree is safe to merge or push as-is because both are dirty, and branch-check has also diverged from its remote branch.
 
 ## What changed since the 2026-08-27 comparison
 
@@ -172,9 +172,35 @@ The five failures cover:
 - three Google read transport fallback/scope cases;
 - dashboard V9 registry ordering.
 
-All three Vercel production deployments attached to this main commit—`project-2tjr5`, `viewtube`, and `viewtubebuild`—are recorded as successful. This confirms deployment of the commit but not which duplicate project should be canonical or which one owns the public domain. The public `viewtube.live` and `www.viewtube.live` domains still return HTTP 200, but the exact project-to-domain ownership remains unverified.
+All three Vercel production deployments attached to this main commit—`project-2tjr5`, `viewtube`, and `viewtubebuild`—are recorded as successful. This proves build/deployment completion, not functional login. The public domain's `/api/release` endpoint proves that `viewtube.live` is serving current main `7490cd46`, while `/api/auth-start` fails before reaching Google.
 
-Therefore neither branch-check nor ViewTubeX should be promoted until main’s auth/transport contract and production-project topology are stable.
+### Live login diagnosis — confirmed regression
+
+The user's report is reproducible with a direct HTTP differential:
+
+| Probe | branch-check local | `viewtube.live` |
+|---|---|---|
+| `/api/auth-session` | HTTP 200, signed-out/ready contract | HTTP 200, signed-out/ready contract |
+| `/api/account/snapshot` | HTTP 200, compatibility snapshot | HTTP 200, compatibility snapshot |
+| `/api/auth-start` | **HTTP 302 to Google** | **HTTP 503** |
+| returned error | none | `Google OAuth server credentials are not configured.` |
+
+Branch-check local has the required configuration keys available through `.env.local`: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `ACCOUNT_PUBLIC_ORIGIN`, and `ACCOUNT_TOKEN_ENCRYPTION_KEY`. Values were not recorded. Current main checks the same OAuth key names in `server/simple-auth.mjs`.
+
+This narrows the immediate root cause to the Vercel environment serving `viewtube.live`: `GOOGLE_OAUTH_CLIENT_ID` and/or `GOOGLE_OAUTH_CLIENT_SECRET` is absent, empty, or unavailable to the production runtime. The auth router itself is reached and returns its intentional configuration error. Cookie persistence cannot be evaluated until OAuth start succeeds.
+
+Required production repair sequence:
+
+1. identify the Vercel project that owns `viewtube.live`;
+2. configure both OAuth variables in that project's **Production** environment without copying values into source, logs, or documentation;
+3. confirm `ACCOUNT_TOKEN_ENCRYPTION_KEY` and `ACCOUNT_PUBLIC_ORIGIN=https://viewtube.live` are also present;
+4. redeploy current main so the runtime receives the variables;
+5. verify `/api/auth-start` changes from 503 to a Google redirect;
+6. complete a real callback, then reload `/api/auth-session` and multiple app pages to prove the `vt_session` HttpOnly cookie persists.
+
+The Vercel CLI is logged out in the local environment, so project ownership and environment-variable presence could not be inspected or changed during this audit.
+
+Therefore branch-check local currently outranks `.live` for verified login behavior, even though main remains the correct code-integration base. Neither dirty worktree should be promoted wholesale.
 
 ## 6. Updated ratings
 
@@ -194,12 +220,13 @@ Therefore neither branch-check nor ViewTubeX should be promoted until main’s a
 ## 7. Safe merge sequence
 
 1. **Checkpoint, do not merge.** Preserve both dirty worktrees on new local topic branches/commits without mixing unrelated files. Do not push secrets, archives, or generated data.
-2. **Stabilize main first.** Resolve the five capability/transport/dashboard tests and designate one canonical Vercel production project after proving public-domain ownership.
-3. **Rebase branch-check’s committed VT-SYNC console.** Resolve the branch’s one-remote/ six-local divergence explicitly; do not force-push over either side.
-4. **Separate Guide deltas.** Main already merged PR #74. Retain only visual-language/provenance behavior not already present.
-5. **Extract dirty branch-check modules.** Suggested order: packed dataset → feature gating → unified comment transport → dashboard widgets. Account/billing/auth changes get their own security-reviewed track.
-6. **Extract ViewTubeX forecaster.** Include forecaster, data bridge, toolbox wiring, and tests only. Leave deleted scripts and unrelated Brain registry edits behind.
-7. **Run cross-version behavioral parity.** Fresh login, return session, reconnect, proxy failure, scope failure, cached analytics, and tool-population journeys must agree across Settings, navigation, dashboard, VT-SYNC, Comment Responder, Video Publisher, Realtime, Channel Overview, and AI Brain.
+2. **Restore production login first.** Configure the OAuth variables on the project owning `viewtube.live`, redeploy, and verify start → callback → persistent session.
+3. **Stabilize main.** Resolve the five capability/transport/dashboard tests and designate one canonical Vercel production project after proving public-domain ownership.
+4. **Rebase branch-check’s committed VT-SYNC console.** Resolve the branch’s one-remote/ six-local divergence explicitly; do not force-push over either side.
+5. **Separate Guide deltas.** Main already merged PR #74. Retain only visual-language/provenance behavior not already present.
+6. **Extract dirty branch-check modules.** Suggested order: packed dataset → feature gating → unified comment transport → dashboard widgets. Account/billing/auth changes get their own security-reviewed track.
+7. **Extract ViewTubeX forecaster.** Include forecaster, data bridge, toolbox wiring, and tests only. Leave deleted scripts and unrelated Brain registry edits behind.
+8. **Run cross-version behavioral parity.** Fresh login, return session, reconnect, proxy failure, scope failure, cached analytics, and tool-population journeys must agree across Settings, navigation, dashboard, VT-SYNC, Comment Responder, Video Publisher, Realtime, Channel Overview, and AI Brain.
 
 ## 8. Final contrast
 
