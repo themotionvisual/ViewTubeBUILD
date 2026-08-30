@@ -2,13 +2,15 @@
 
 **Compared:** 2026-08-29
 
-**Current remote main:** `75fcc69a655c9edbd373f58f10c6936d36e03972`
+**Current remote main:** `7490cd469531219d57817428f754d360a1aa182c`
+
+**Second refresh:** 2026-08-29 22:38 America/New_York, after PR #76 merged.
 
 **Bottom line:** use current `main` as the architectural and deployment base; treat branch-check as the current feature-development donor; treat ViewTubeX as a historical behavior oracle plus a small visualization donor. Neither local worktree is safe to merge or push as-is because both are dirty, and branch-check has also diverged from its remote branch.
 
 ## What changed since the 2026-08-27 comparison
 
-Main advanced from `f968bdb7` to `75fcc69a` and merged or directly landed:
+Main advanced from `f968bdb7` to `7490cd46` and merged or directly landed:
 
 - Simple server-owned Google Auth V1 and flat Vercel auth endpoints;
 - YouTube auth/API stabilization and typecheck restoration;
@@ -16,6 +18,7 @@ Main advanced from `f968bdb7` to `75fcc69a` and merged or directly landed:
 - VT_E1 renderer stabilization and temporal-envelope fix;
 - User Guide V2 foundations and PR #74 updates;
 - auth event-ownership fixes and the known-good ViewTubeX Google read fallback.
+- PR #76's single flat `api/auth.mjs` Vercel router and shared `server/simple-auth-route.mjs` implementation.
 
 This means several items classified as undeployed on 2026-08-27 are now in main. The earlier artifact remains useful as a point-in-time audit, not as a current execution checklist.
 
@@ -26,7 +29,7 @@ This means several items classified as undeployed on 2026-08-27 are now in main.
 | Local path | `/Users/cwb/ViewTube-branch-check` | `/Users/cwb/Downloads/viewtube/viewtubeX` |
 | Branch | `codex/chore/branch-check-version-2026-08-27` | `codex/chore/viewtubex-version-2026-08-27` |
 | HEAD | `788814a2` | `edf47536` |
-| Against current main | 13 behind / 19 ahead | 219 behind / 1 ahead |
+| Against current main | 15 behind / 19 ahead | 221 behind / 1 ahead |
 | Dirty paths | 81 | 12 |
 | Tracked working delta | 62 files, +2,203 / -769 | 11 files, +255 / -1,761 |
 | Untracked files | 19 | 1 |
@@ -56,7 +59,7 @@ The 19 local-only commits concentrate in two product areas:
    - compact product map, colored toolbox navigation, and encyclopedia navigation;
    - canonical 12-color toolbox pair usage.
 
-The committed tree also retains seven nested `api/auth/**` routes that current main deleted during the flat-route migration. These are inherited divergence, not part of the VT-SYNC/Guide feature set; a rebase should preserve main's deletions unless a separate compatibility PR proves they are still required.
+The committed tree also retains seven nested `api/auth/**` routes that current main deleted during the flat-route migration. Current main has since consolidated the remaining four flat endpoint files into one `api/auth.mjs` router. These are inherited divergences, not part of the VT-SYNC/Guide feature set; a rebase should preserve main's route consolidation unless a separate compatibility PR proves another route is still required.
 
 Committed delta from the main merge base is 23 files, about 1,597 additions and 972 deletions. The largest risk is the 427-line simplification of `VtSyncLocalAnalyticsPage.tsx` combined with a 412-line controller rewrite and a 595-line retro-chrome stylesheet change. Review this as a cohesive VT-SYNC console feature, not isolated CSS cherry-picks.
 
@@ -132,7 +135,7 @@ Legacy modules still coexist:
 - browser-token `authSession` fallback;
 - `googleReadTransport` and YouTube request modules.
 
-The new authority is directionally correct, but the compatibility surface is incomplete. The current main test suite catches exactly this transition risk: compatibility projection, capability registry, account surface governance, and three Google transport cases are failing.
+The new authority is directionally correct, but the compatibility surface is incomplete. PR #76 repaired the compatibility-projection and account-surface-governance failures. The current suite still catches capability registry and three Google transport failures.
 
 ### ViewTubeX
 
@@ -142,7 +145,7 @@ That makes ViewTubeX useful for behavioral parity, not code authority. Restoring
 
 ### branch-check working-tree auth risk
 
-Branch-check is based on Simple Auth but its committed tree still retains seven nested `api/auth/**` files that main deliberately removed after the shared merge base. Its dirty worktree separately modifies account auth/store/billing and Google transport modules. During rebase, preserve main’s nested-route deletions unless compatibility evidence justifies a dedicated restoration PR; do not let the old route files return accidentally with the VT-SYNC or Guide work.
+Branch-check is based on Simple Auth but its committed tree still retains seven nested `api/auth/**` files that main deliberately removed after the shared merge base. It also predates main's newer consolidation of four flat auth endpoint files into `api/auth.mjs`. Its dirty worktree separately modifies account auth/store/billing and Google transport modules. During rebase, preserve main’s route deletions and consolidation unless compatibility evidence justifies a dedicated restoration PR; do not let old route files return accidentally with the VT-SYNC or Guide work.
 
 ### Correct source-of-truth model
 
@@ -157,21 +160,19 @@ Use Simple Auth/server session as identity authority. Keep `UnifiedAccountSnapsh
 
 ## 5. Current main, CI, and deployment status
 
-Main `75fcc69a` has a successful production build job but a failed release workflow:
+Main `7490cd46` has a successful production build job and successful Vercel deployments, but its release workflow remains red:
 
 - focused contracts, source governance, local smoke, and production build: pass;
-- full suite: **7 failed / 843 passed** across 141 test files;
+- full suite: **5 failed / 845 passed** across 141 test files;
 - static quality: **2,047 findings** (`1,943` errors, `104` warnings).
 
-The seven failures cover:
+The five failures cover:
 
-- Simple Auth compatibility projection;
 - account capability registry;
-- account-surface governance;
 - three Google read transport fallback/scope cases;
 - dashboard V9 registry ordering.
 
-All three Vercel production attempts attached to this main commit—`project-2tjr5`, `viewtube`, and `viewtubebuild`—are recorded as failed. The public `viewtube.live` and `www.viewtube.live` domains still return HTTP 200 with identical 3,404-byte HTML, but the exact served commit is not proven by those responses.
+All three Vercel production deployments attached to this main commit—`project-2tjr5`, `viewtube`, and `viewtubebuild`—are recorded as successful. This confirms deployment of the commit but not which duplicate project should be canonical or which one owns the public domain. The public `viewtube.live` and `www.viewtube.live` domains still return HTTP 200, but the exact project-to-domain ownership remains unverified.
 
 Therefore neither branch-check nor ViewTubeX should be promoted until main’s auth/transport contract and production-project topology are stable.
 
@@ -193,7 +194,7 @@ Therefore neither branch-check nor ViewTubeX should be promoted until main’s a
 ## 7. Safe merge sequence
 
 1. **Checkpoint, do not merge.** Preserve both dirty worktrees on new local topic branches/commits without mixing unrelated files. Do not push secrets, archives, or generated data.
-2. **Stabilize main first.** Resolve the seven auth/capability/transport/dashboard tests and identify why all three Vercel production deployments failed.
+2. **Stabilize main first.** Resolve the five capability/transport/dashboard tests and designate one canonical Vercel production project after proving public-domain ownership.
 3. **Rebase branch-check’s committed VT-SYNC console.** Resolve the branch’s one-remote/ six-local divergence explicitly; do not force-push over either side.
 4. **Separate Guide deltas.** Main already merged PR #74. Retain only visual-language/provenance behavior not already present.
 5. **Extract dirty branch-check modules.** Suggested order: packed dataset → feature gating → unified comment transport → dashboard widgets. Account/billing/auth changes get their own security-reviewed track.
