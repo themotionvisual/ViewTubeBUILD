@@ -9,6 +9,9 @@ const projectRoot = path.resolve(scriptsDir, "..");
 const packageJson = JSON.parse(
   await readFile(path.join(projectRoot, "package.json"), "utf8"),
 );
+const vercelConfig = JSON.parse(
+  await readFile(path.join(projectRoot, "vercel.json"), "utf8"),
+);
 
 const FULL_STACK_COMMAND = "node --env-file-if-exists=.env.local scripts/dev-all.mjs";
 
@@ -35,5 +38,32 @@ test("API commands are explicit and no package script executes ignored docs", ()
 
   for (const [name, command] of Object.entries(packageJson.scripts)) {
     assert.doesNotMatch(command, /(?:^|\s)docs\//, `${name} executes ignored docs`);
+  }
+});
+
+test("Vercel keeps flat auth URLs while deploying one auth function", async () => {
+  await access(path.join(projectRoot, "api", "auth.mjs"));
+
+  const expectedRewrites = {
+    "/api/auth-start": "/api/auth?__vt_auth_operation=start",
+    "/api/auth-callback": "/api/auth?__vt_auth_operation=callback",
+    "/api/auth-session": "/api/auth?__vt_auth_operation=session",
+    "/api/auth-logout": "/api/auth?__vt_auth_operation=logout",
+  };
+  const configuredRewrites = Object.fromEntries(
+    vercelConfig.rewrites.map(({ source, destination }) => [source, destination]),
+  );
+  assert.deepEqual(
+    Object.fromEntries(Object.keys(expectedRewrites).map((source) => [source, configuredRewrites[source]])),
+    expectedRewrites,
+  );
+
+  for (const retiredFile of [
+    "auth-start.mjs",
+    "auth-callback.mjs",
+    "auth-session.mjs",
+    "auth-logout.mjs",
+  ]) {
+    await assert.rejects(access(path.join(projectRoot, "api", retiredFile)));
   }
 });
