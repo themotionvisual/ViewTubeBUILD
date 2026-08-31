@@ -138,7 +138,9 @@ describe("VT-SYNC data visual module registry", () => {
   expect(source).toContain('id.startsWith("vt2-channel-big-bang")')
   expect(source).toContain('id.startsWith("vt2-trajectory-forecaster")')
   expect(source).toContain('id.startsWith("vt2-multi-metric-timeline")')
-  expect(source.match(/id\.startsWith\("vt2-[^"]+"\)\) return \["daily"\]/g)).toHaveLength(4)
+  expect(source).toContain('id.startsWith("vt2-trajectory-forecaster")) return ["daily", "monthly"]')
+  expect(source).toContain('<TrajectoryForecasterModule data={data} dailyMetrics={dailyMetrics} monthlyMetrics={monthlyMetrics} />')
+  expect(source.match(/id\.startsWith\("vt2-[^"]+"\)\) return \["daily"\]/g)).toHaveLength(3)
  })
 
  it("feeds Clock Burst from traffic overview and detail datasets, never Traffic Source x Day", () => {
