@@ -8,7 +8,6 @@
 # Essential root directories for the application to run and build
 !/src/
 !/public/
-!/ui/
 !/server/
 !/api/
 !/scripts/
@@ -76,6 +75,7 @@ src/standalone/
 src/generated/
 src/fix_*.py
 src/remove_subtoolbox*.py
+src/*.fullbak
 
 # Local task/workspace/tool caches
 .account/
