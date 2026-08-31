@@ -33,6 +33,7 @@
   "exclude": [
     "src/_parking/**/*",
     "_quarantine/**/*",
+    "src/standalone/**/*",
     "src/remotion-editor/**/*"
   ]
 }

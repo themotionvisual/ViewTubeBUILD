@@ -3,10 +3,12 @@ import path from "node:path"
 import process from "node:process"
 
 const repoRoot = process.cwd()
-const phase1Dir = path.join(repoRoot, "docs/VT Brain/super-tool-agent-plans/phase-1")
+const workspaceRoot = path.resolve(repoRoot, "..")
+const sharedDocsRoot = path.join(workspaceRoot, "docs")
+const phase1Dir = path.join(sharedDocsRoot, "VT Brain/super-tool-agent-plans/phase-1")
 const phase3Report = path.join(
- repoRoot,
- "docs/VT Brain/super-tool-agent-plans/phase-3/VIEWTUBEX_SUPER_TOOL_AGENT_OPTIMIZATION_REPORTS.md",
+ sharedDocsRoot,
+ "VT Brain/super-tool-agent-plans/phase-3/VIEWTUBEX_SUPER_TOOL_AGENT_OPTIMIZATION_REPORTS.md",
 )
 const runtimeRegistry = path.join(repoRoot, "src/services/superToolRuntimePlanRegistry.ts")
 const superToolRegistry = path.join(repoRoot, "src/services/superToolRegistry.ts")

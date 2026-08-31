@@ -87,7 +87,7 @@ export const ASSISTANT_INTELLIGENCE_SYSTEMS: IntelligenceSystemDefinition[] = [
   title: "Brain OS",
   category: "brain",
   route: "/data-transparency?internalTool=brain-command-center",
-  sourceOfTruth: "src/services/brain + docs/VT Brain/VIEWTUBEX_BRAIN_OS_CANONICAL_GOVERNANCE.md",
+  sourceOfTruth: "src/services/brain + /Users/cwb/Downloads/viewtube/docs/VT Brain/VIEWTUBEX_BRAIN_OS_CANONICAL_GOVERNANCE.md",
   assistantAccess: "queue",
   summary: "Application-wide intelligence owner for memory, prompt policy, reflection, onboarding, creator profile, channel knowledge, and context access.",
   targetToolId: BRAIN_OS_CONTROL_SURFACE_TOOL_ID,

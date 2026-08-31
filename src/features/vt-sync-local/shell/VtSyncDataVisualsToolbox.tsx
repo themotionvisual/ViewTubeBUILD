@@ -120,7 +120,7 @@ const VT2_MODULES: LegacyVisualModuleDefinition[] = [
  { id: "vt2-search-term-gravity", group: "vt2", delayMs: 120, render: ({ data, trafficRows }) => <SearchTermGravityModule data={data} trafficRows={trafficRows} /> },
  { id: "vt2-video-fingerprint", group: "vt2", delayMs: 160, render: ({ data }) => <VideoPerformanceFingerprintModule data={data} /> },
  { id: "vt2-channel-big-bang", group: "vt2", delayMs: 200, render: ({ data, dailyMetrics }) => <ChannelBigBangTimelineModule data={data} dailyMetrics={dailyMetrics} /> },
- { id: "vt2-trajectory-forecaster", group: "vt2", delayMs: 240, render: ({ data, dailyMetrics }) => <TrajectoryForecasterModule data={data} dailyMetrics={dailyMetrics} /> },
+ { id: "vt2-trajectory-forecaster", group: "vt2", delayMs: 240, render: ({ data, dailyMetrics, monthlyMetrics }) => <TrajectoryForecasterModule data={data} dailyMetrics={dailyMetrics} monthlyMetrics={monthlyMetrics} /> },
  { id: "vt2-multi-metric-timeline", group: "vt2", delayMs: 280, render: ({ data, dailyMetrics }) => <MultiMetricTimelineModule data={data} dailyMetrics={dailyMetrics} /> },
 ]
 
@@ -133,7 +133,7 @@ const sourceTablesForVisual = (id: string): readonly string[] => {
  if (id.startsWith("vt2-search-term-gravity")) return ["traffic", "search"]
  if (id.startsWith("vt2-video-fingerprint")) return ["videos"]
  if (id.startsWith("vt2-channel-big-bang")) return ["daily"]
- if (id.startsWith("vt2-trajectory-forecaster")) return ["daily"]
+ if (id.startsWith("vt2-trajectory-forecaster")) return ["daily", "monthly"]
  if (id.startsWith("vt2-multi-metric-timeline")) return ["daily"]
  if (id.includes("traffic")) return ["traffic", "traffic_day"]
  if (id.includes("format") || id.includes("shorts-vs-longs")) return ["creator", "videos"]

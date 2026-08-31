@@ -198,12 +198,15 @@ export const useNavLayoutMorph = ({
         clone.classList.add("is-shining")
 
         if (!reversing) {
-          // top -> sidebar: drop into the row height first (morphing size/type partway), then slide left into the column.
+          // Top -> sidebar: contract both dimensions while dropping into the target row, then dock the
+          // already-smaller button into the sidebar column. This makes the sidebar-only size change visible
+          // as part of the morph instead of looking like a width snap at the end.
+          const contractedLeft = s.left + (s.width - e.width) / 2
           await clone.animate(
             [
               { left: `${s.left}px`, top: `${s.top}px`, width: `${s.width}px`, height: `${s.height}px`, fontSize: sStyle.fontSize, letterSpacing: sStyle.letterSpacing, fontWeight: sStyle.fontWeight, lineHeight: sStyle.lineHeight, borderRadius: sStyle.borderRadius, paddingLeft: sStyle.paddingLeft, paddingRight: sStyle.paddingRight },
-              { left: `${s.left}px`, top: `${s.top + (e.top - s.top) * 0.56}px`, width: `${s.width}px`, height: `${e.height}px`, fontSize: `calc(${sStyle.fontSize} * .55 + ${eStyle.fontSize} * .45)`, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight, offset: 0.58 },
-              { left: `${s.left}px`, top: `${e.top}px`, width: `${s.width}px`, height: `${e.height}px`, fontSize: eStyle.fontSize, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight },
+              { left: `${s.left + (contractedLeft - s.left) * 0.62}px`, top: `${s.top + (e.top - s.top) * 0.56}px`, width: `${s.width + (e.width - s.width) * 0.62}px`, height: `${s.height + (e.height - s.height) * 0.72}px`, fontSize: `calc(${sStyle.fontSize} * .55 + ${eStyle.fontSize} * .45)`, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight, offset: 0.58 },
+              { left: `${contractedLeft}px`, top: `${e.top}px`, width: `${e.width}px`, height: `${e.height}px`, fontSize: eStyle.fontSize, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight },
             ],
             { duration: TO_SIDEBAR_PHASE1_DURATION, easing: "cubic-bezier(.55,.02,.85,.42)", fill: "forwards" },
           ).finished
@@ -214,7 +217,7 @@ export const useNavLayoutMorph = ({
 
           await clone.animate(
             [
-              { left: `${s.left}px`, top: `${e.top}px`, width: `${s.width}px`, height: `${e.height}px`, fontSize: eStyle.fontSize, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight },
+              { left: `${contractedLeft}px`, top: `${e.top}px`, width: `${e.width}px`, height: `${e.height}px`, fontSize: eStyle.fontSize, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight },
               { left: `${e.left}px`, top: `${e.top}px`, width: `${e.width}px`, height: `${e.height}px`, fontSize: eStyle.fontSize, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight },
             ],
             { duration: TO_SIDEBAR_PHASE2_DURATION, easing: "cubic-bezier(.12,.72,.18,1)", fill: "forwards" },

@@ -55,7 +55,7 @@ export const listAIBrainSkillResources = (): AIBrainSkillResource[] => [
    "Promote only repeated or high-confidence learnings into durable memory.",
    "Keep feature requests separate from confirmed channel facts.",
   ],
-  docPath: "docs/VT Brain/AI_BRAIN_SELF_IMPROVEMENT_WORKFLOWS.md",
+  docPath: "/Users/cwb/Downloads/viewtube/docs/VT Brain/AI_BRAIN_SELF_IMPROVEMENT_WORKFLOWS.md",
   status: "active",
  },
  {
@@ -69,7 +69,7 @@ export const listAIBrainSkillResources = (): AIBrainSkillResource[] => [
    "Keep improvements specific to this creator and this channel.",
    "Prefer short prevention rules over long incident writeups.",
   ],
-  docPath: "docs/VT Brain/AI_BRAIN_SKILL_RESOURCE_REGISTRY.md",
+  docPath: "/Users/cwb/Downloads/viewtube/docs/VT Brain/AI_BRAIN_SKILL_RESOURCE_REGISTRY.md",
   status: "active",
  },
  {
@@ -83,7 +83,7 @@ export const listAIBrainSkillResources = (): AIBrainSkillResource[] => [
    "Backtrack when a new learning contradicts existing Brain memory.",
    "Overall confidence is limited by the weakest reflection step.",
   ],
-  docPath: "docs/VT Brain/AI_BRAIN_REFLECTING_CHAIN_REFERENCE.md",
+  docPath: "/Users/cwb/Downloads/viewtube/docs/VT Brain/AI_BRAIN_REFLECTING_CHAIN_REFERENCE.md",
   status: "active",
  },
 ]

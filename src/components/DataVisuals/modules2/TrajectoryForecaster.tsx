@@ -14,19 +14,25 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { TrendingUp } from "lucide-react"
 import type { TubeExplorerVisualProps } from "../../TubeExplorerVisualModules"
-import { ChartModule, SlabControl } from "../ChartModule"
-import { useVt2Theme } from "./theme"
+import { SubToolboxChartModule } from "../../SubToolboxChartModule"
 import {
+  VT_SPECTRUM_PALETTE_06,
+  VT_VISUAL_METRIC_COLORS,
+} from "../../../styles/toolboxPalette"
+import {
+  describeWeeklySource,
   labelWeek,
+  rollupDailyFromDaily,
   rollupMonthlyChannelWithSource,
   rollupWeeklyChannelWithSource,
+  type Vt2DailyRow,
   type Vt2MonthlyRow,
   type Vt2WeeklyRow,
 } from "./dataBridge"
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 type MetricKey = "views" | "revenue" | "watchHrs" | "subs"
-type Gran = "WEEKLY" | "MONTHLY"
+type Gran = "DAILY" | "WEEKLY" | "MONTHLY"
 type Tab = "TRAJECTORY" | "GOALS"
 
 type MetricDef = {
@@ -38,19 +44,18 @@ type MetricDef = {
   smartMult: number
 }
 
-type MetricRow = Vt2WeeklyRow | Vt2MonthlyRow
+type MetricRow = Vt2DailyRow | Vt2WeeklyRow | Vt2MonthlyRow
 
-const buildMetrics = (
-  hues: string[], accent: string, positive: string, warm: string,
-): Record<MetricKey, MetricDef> => ({
-  views:    { label: "VIEWS",     unit: "views", color: accent,   fmt: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v.toFixed(0), step: 1000, smartMult: 1.25 },
-  revenue:  { label: "REVENUE",   unit: "$",     color: warm,     fmt: (v) => `$${v.toFixed(0)}`,                                     step: 10,   smartMult: 1.30 },
-  watchHrs: { label: "WATCH HRS", unit: "hrs",   color: positive, fmt: (v) => `${v.toFixed(0)}h`,                                     step: 50,   smartMult: 1.25 },
-  subs:     { label: "SUBS",      unit: "subs",  color: hues[2],  fmt: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v.toFixed(0), step: 25,   smartMult: 1.20 },
-})
+const METRICS: Record<MetricKey, MetricDef> = {
+  views:    { label: "VIEWS",     unit: "views", color: VT_VISUAL_METRIC_COLORS.views,       fmt: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v.toFixed(0), step: 1000, smartMult: 1.25 },
+  revenue:  { label: "REVENUE",   unit: "$",     color: VT_VISUAL_METRIC_COLORS.revenue,     fmt: (v) => `$${v.toFixed(0)}`,                                     step: 10,   smartMult: 1.30 },
+  watchHrs: { label: "WATCH HRS", unit: "hrs",   color: VT_VISUAL_METRIC_COLORS.watchTime,   fmt: (v) => `${v.toFixed(0)}h`,                                     step: 50,   smartMult: 1.25 },
+  subs:     { label: "SUBS",      unit: "subs",  color: VT_VISUAL_METRIC_COLORS.subscribers, fmt: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v.toFixed(0), step: 25,   smartMult: 1.20 },
+}
 
-const COLOR_OPT = "#4A9EFF"
-const COLOR_CAU = "#FF4D8F"
+const COLOR_OPT = VT_SPECTRUM_PALETTE_06[8]
+const COLOR_CAU = VT_SPECTRUM_PALETTE_06[10]
+const COLOR_PRESENT = VT_SPECTRUM_PALETTE_06[3]
 
 // ─── Forecast math (preserved from the source) ─────────────────────────────
 function linReg(vals: number[]): number {
@@ -97,6 +102,41 @@ function makeForecast(vals: number[], periods: number): { opt: number[]; real: n
   return { opt, real, cau }
 }
 
+const PERIOD_OPTIONS: Record<Gran, number[]> = {
+  DAILY: Array.from({ length: 22 }, (_, index) => index + 7),
+  WEEKLY: [4, 8, 12, 16, 24],
+  MONTHLY: [3, 6, 9, 12, 18, 24],
+}
+
+const stepPeriodOption = (gran: Gran, current: number, direction: -1 | 1): number => {
+  const options = PERIOD_OPTIONS[gran]
+  const exact = options.indexOf(current)
+  if (exact >= 0) return options[Math.max(0, Math.min(options.length - 1, exact + direction))]
+  const nearest = options.reduce((best, value) =>
+    Math.abs(value - current) < Math.abs(best - current) ? value : best, options[0])
+  const nearestIndex = options.indexOf(nearest)
+  return options[Math.max(0, Math.min(options.length - 1, nearestIndex + direction))]
+}
+
+const futurePeriodLabels = (rows: MetricRow[], gran: Gran, periods: number): string[] => {
+  const last = rows[rows.length - 1]
+  if (!last) return []
+  const raw = "date" in last ? last.date : `${last.monthKey}-01`
+  const base = new Date(`${raw}T00:00:00Z`)
+  if (!Number.isFinite(base.getTime())) return []
+  return Array.from({ length: periods }, (_, index) => {
+    const next = new Date(base)
+    if (gran === "DAILY") next.setUTCDate(next.getUTCDate() + index + 1)
+    else if (gran === "WEEKLY") next.setUTCDate(next.getUTCDate() + (index + 1) * 7)
+    else next.setUTCMonth(next.getUTCMonth() + index + 1)
+    return next.toLocaleString(undefined, {
+      month: "short",
+      ...(gran === "MONTHLY" ? { year: "2-digit" as const } : { day: "numeric" as const }),
+      timeZone: "UTC",
+    })
+  })
+}
+
 interface ForecastChartProps {
   historical: number[]
   opt: number[]; real: number[]; cau: number[]
@@ -118,7 +158,10 @@ function ForecastChart({
   const [hover, setHover] = useState<{ period: number; future: boolean } | null>(null)
   const realColor = `${accentColor}cc`
   const periods = opt.length
-  const h = compact ? 80 : 280
+  // Keep the time-series plot within a stable wide aspect range. The previous
+  // fixed CSS height could be stretched by the legacy module shell while the
+  // canvas backing store retained a different ratio.
+  const h = compact ? 80 : Math.round(Math.max(240, Math.min(320, canvasWidth / 3)))
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -178,13 +221,13 @@ function ForecastChart({
 
     const divX = xOf(historical.length - 1)
     ctx.setLineDash([4, 4])
-    ctx.strokeStyle = "#FFE500"
+    ctx.strokeStyle = COLOR_PRESENT
     ctx.lineWidth = 2
     ctx.beginPath(); ctx.moveTo(divX, pT); ctx.lineTo(divX, pT + cH); ctx.stroke()
     ctx.setLineDash([])
 
     if (!compact) {
-      ctx.fillStyle = "#FFE500"
+      ctx.fillStyle = COLOR_PRESENT
       ctx.font = "900 9px monospace"
       ctx.textAlign = "center"
       ctx.fillText("▲ PRESENT", divX, pT - 7)
@@ -193,11 +236,11 @@ function ForecastChart({
     if (goalValue && goalValue > 0 && !compact) {
       const gy = yOf(goalValue)
       ctx.setLineDash([6, 4])
-      ctx.strokeStyle = "#00E5FF"
+      ctx.strokeStyle = VT_SPECTRUM_PALETTE_06[7]
       ctx.lineWidth = 1.5
       ctx.beginPath(); ctx.moveTo(pL, gy); ctx.lineTo(pL + cW, gy); ctx.stroke()
       ctx.setLineDash([])
-      ctx.fillStyle = "#00E5FF"
+      ctx.fillStyle = VT_SPECTRUM_PALETTE_06[7]
       ctx.font = "800 9px monospace"
       ctx.textAlign = "left"
       ctx.fillText(`GOAL ${fmt(goalValue)}`, pL + 4, gy - 5)
@@ -241,7 +284,7 @@ function ForecastChart({
       const lx = xOf(historical.length - 1)
       const ly = yOf(lastHist)
       ctx.beginPath(); ctx.arc(lx, ly, compact ? 4 : 6, 0, Math.PI * 2)
-      ctx.fillStyle = "#FFE500"; ctx.fill()
+      ctx.fillStyle = COLOR_PRESENT; ctx.fill()
       ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.stroke()
     }
 
@@ -293,7 +336,7 @@ function ForecastChart({
         ctx.font = "800 9px monospace"; ctx.textAlign = "left"
         ctx.fillStyle = accentColor
         ctx.fillText(`${labels[period] ?? ""}: ${fmt(historical[period] ?? 0)}`, ttX + 8, ttY + 14)
-        ctx.fillStyle = isPres ? "#FFE500" : "rgba(255,255,255,0.35)"
+        ctx.fillStyle = isPres ? COLOR_PRESENT : "rgba(255,255,255,0.35)"
         ctx.font = "600 8px monospace"
         ctx.fillText(isPres ? "HISTORICAL (PRESENT)" : "HISTORICAL", ttX + 8, ttY + 30)
       }
@@ -322,7 +365,7 @@ function ForecastChart({
       ref={canvasRef}
       width={canvasWidth}
       height={h}
-      style={{ width: "100%", height: h, display: "block", cursor: compact ? "default" : "crosshair" }}
+      style={{ width: "100%", height: h, maxHeight: 320, display: "block", cursor: compact ? "default" : "crosshair" }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setHover(null)}
     />
@@ -332,12 +375,12 @@ function ForecastChart({
 // ─── Main module ──────────────────────────────────────────────────────────
 export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
   dailyMetrics = [],
+  monthlyMetrics = [],
 }) => {
-  const { palette } = useVt2Theme()
   const [metric, setMetric] = useState<MetricKey>("views")
-  const [gran, setGran] = useState<Gran>("MONTHLY")
+  const [gran, setGran] = useState<Gran>("DAILY")
   const [tab, setTab] = useState<Tab>("TRAJECTORY")
-  const [forecastPeriods, setForecastPeriods] = useState<number>(12)
+  const [forecastPeriods, setForecastPeriods] = useState<number>(14)
 
   const [showHist, setShowHist] = useState(true)
   const [showOpt, setShowOpt] = useState(true)
@@ -347,22 +390,23 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
   const [goalOverride, setGoalOverride] = useState<number | null>(null)
   const [deadline, setDeadline] = useState<number>(12)
 
-  const metricMap = useMemo(
-    () => buildMetrics(palette.hue, palette.accent, palette.positive, palette.warm),
-    [palette],
-  )
-  const m = metricMap[metric]
+  const m = METRICS[metric]
   const accent = m.color
 
   const rollupRes = useMemo(
-    () => gran === "WEEKLY"
-      ? rollupWeeklyChannelWithSource(dailyMetrics, 16)
-      : rollupMonthlyChannelWithSource(dailyMetrics),
-    [gran, dailyMetrics],
+    () => {
+      if (gran === "DAILY") {
+        const days = rollupDailyFromDaily(dailyMetrics, forecastPeriods)
+        return { source: days.length > 0 ? "daily_metrics" as const : "none" as const, days }
+      }
+      if (gran === "WEEKLY") return rollupWeeklyChannelWithSource(dailyMetrics, 16)
+      return rollupMonthlyChannelWithSource(dailyMetrics, monthlyMetrics, 12)
+    },
+    [gran, dailyMetrics, monthlyMetrics, forecastPeriods],
   )
 
   const rows: MetricRow[] = useMemo(
-    () => "weeks" in rollupRes ? rollupRes.weeks : rollupRes.months,
+    () => "days" in rollupRes ? rollupRes.days : "weeks" in rollupRes ? rollupRes.weeks : rollupRes.months,
     [rollupRes],
   )
 
@@ -379,13 +423,18 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
     () => rows.map((row) => "label" in row ? row.label : labelWeek(row as Vt2WeeklyRow)),
     [rows],
   )
+  const forecastLabels = useMemo(
+    () => futurePeriodLabels(rows, gran, forecastPeriods),
+    [rows, gran, forecastPeriods],
+  )
 
   const { opt, real, cau } = useMemo(
     () => makeForecast(historical, forecastPeriods),
     [historical, forecastPeriods],
   )
 
-  const periodLabel = gran === "WEEKLY" ? "week" : "month"
+  const periodLabel = gran === "DAILY" ? "day" : gran === "WEEKLY" ? "week" : "month"
+  const sourceLabel = describeWeeklySource(rollupRes.source)
   const activeHist = historical.filter((v) => v > 0)
   const recentAvg = activeHist.length > 0
     ? activeHist.slice(-6).reduce((a, b) => a + b, 0) / Math.min(6, activeHist.length)
@@ -402,14 +451,13 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
   )
   const effectiveGoal = goalOverride ?? smartGoal
 
-  // Reset goal override when metric/granularity flips — same behavior as source.
-  const prevMetric = useRef(metric)
-  const prevGran = useRef(gran)
-  if (prevMetric.current !== metric || prevGran.current !== gran) {
-    prevMetric.current = metric
-    prevGran.current = gran
-    if (goalOverride !== null) setGoalOverride(null)
-  }
+  useEffect(() => {
+    setGoalOverride(null)
+  }, [metric, gran])
+
+  useEffect(() => {
+    setDeadline((current) => Math.min(current, forecastPeriods))
+  }, [forecastPeriods])
 
   function adjGoal(dir: 1 | -1) {
     const base = effectiveGoal
@@ -443,51 +491,78 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
   }
 
   const empty = historical.length < 2
+  const rangeLabel = labels.length > 0
+    ? `${labels[0]}–${labels[labels.length - 1]}`
+    : "NO SYNCED HISTORY"
 
   return (
-    <ChartModule
-      title="CHANNEL TRAJECTORY FORECASTER"
-      icon={<TrendingUp size={44} strokeWidth={2.5} />}
-      iconBg={palette.hue[1]}
-      titleBg={palette.hue[1]}
-      subtitle={`FORECAST HORIZON: ${forecastPeriods} ${periodLabel.toUpperCase()}S · SCENARIOS BUILT FROM MULTI-WINDOW LINEAR REGRESSION`}
-      controlBlock={
-        <SlabControl
-          cfg={{
-            accent,
-            r1: accent, r2: accent, r3: palette.hue[0],
-            count: forecastPeriods,
-            countOptions: [4, 8, 12, 16, 24],
-            onCount: (n) => setForecastPeriods(n),
-            type: gran,
-            typeOptions: ["WEEKLY", "MONTHLY"],
-            onType: (t) => setGran(t as Gran),
-            metric: m.label,
-            metricOptions: Object.values(metricMap).map((x) => x.label),
-            onMetric: (lbl) => {
-              const key = (Object.keys(metricMap) as MetricKey[]).find((k) => metricMap[k].label === lbl)
-              if (key) setMetric(key)
-            },
-          }}
-        />
-      }
-      hovTitle={`FORECAST: ${m.label} (${forecastPeriods} ${periodLabel.toUpperCase()} HORIZON)`}
-      stats={[
-        { value: m.fmt(recentAvg), label: "RECENT AVG", bg: accent },
-        { value: m.fmt(realFutureAvg), label: "REALISTIC", bg: palette.positive },
-        { value: m.fmt(optFutureAvg), label: "OPTIMISTIC", bg: COLOR_OPT },
-        { value: m.fmt(cauFutureAvg), label: "CAUTIOUS", bg: COLOR_CAU },
+    <SubToolboxChartModule
+      header={{
+        title: "CHANNEL TRAJECTORY FORECASTER",
+        subtitle: `${rangeLabel} · ${sourceLabel} · ${forecastPeriods}-${periodLabel.toUpperCase()} FORECAST`,
+        icon: <TrendingUp size={44} strokeWidth={2.5} />,
+      }}
+      theme={{
+        headerBandBg: VT_SPECTRUM_PALETTE_06[2],
+        iconBlockBg: VT_SPECTRUM_PALETTE_06[7],
+        shadowColor: `${VT_SPECTRUM_PALETTE_06[2]}73`,
+      }}
+      activeContext={{
+        title: `FORECAST: ${m.label} · ${gran} · ${rangeLabel}`,
+        stats: [
+          { value: m.fmt(recentAvg), label: "RECENT AVG", tone: accent, valueTone: "#000000", lockTone: true, compact: true },
+          { value: m.fmt(realFutureAvg), label: "REALISTIC", tone: accent, valueTone: "#000000", lockTone: true, compact: true },
+          { value: m.fmt(optFutureAvg), label: "OPTIMISTIC", tone: COLOR_OPT, valueTone: "#000000", lockTone: true, compact: true },
+          { value: m.fmt(cauFutureAvg), label: "CAUTIOUS", tone: COLOR_CAU, valueTone: "#000000", lockTone: true, compact: true },
+        ],
+        minHeight: 44,
+      }}
+      controllerRows={[
+        {
+          type: "number",
+          value: `${forecastPeriods} ${periodLabel.toUpperCase()}S`,
+          onPrev: () => setForecastPeriods((current) => stepPeriodOption(gran, current, -1)),
+          onNext: () => setForecastPeriods((current) => stepPeriodOption(gran, current, 1)),
+          bgTone: VT_SPECTRUM_PALETTE_06[3],
+          fgTone: "#000000",
+          isBig: false,
+        },
+        {
+          type: "dropdown",
+          value: gran,
+          options: (["DAILY", "WEEKLY", "MONTHLY"] as Gran[]).map((value) => ({ label: value, value })),
+          onSelect: (value) => {
+            const next = value as Gran
+            setGran(next)
+            setForecastPeriods(next === "DAILY" ? 14 : next === "WEEKLY" ? 12 : 12)
+          },
+          bgTone: VT_SPECTRUM_PALETTE_06[7],
+          fgTone: "#000000",
+        },
+        {
+          type: "dropdown",
+          value: metric,
+          options: (Object.keys(METRICS) as MetricKey[]).map((value) => ({ label: METRICS[value].label, value })),
+          onSelect: (value) => setMetric(value as MetricKey),
+          bgTone: accent,
+          fgTone: "#000000",
+        },
       ]}
-      chartInsight={
-        empty
-          ? "Not enough history to fit a forecast — sync more videos to unlock the trajectory model."
-          : `Realistic ${m.label.toLowerCase()} averages ${m.fmt(realFutureAvg)} per ${periodLabel} across the horizon.`
-      }
-      personalInsight="Toggle scenarios to compare — the shaded band shows the optimistic-to-cautious envelope."
-      bodyBg="#0a0a0f"
-      minHeight={380}
-      bodyFitMode="preserveRatio"
+      controllerDensity="compact"
+      layout={{ moduleMinHeight: "520px" }}
+      legendLayout={{
+        left: <span style={{ color: accent }}>● HISTORICAL / REALISTIC</span>,
+        center: <span style={{ color: COLOR_OPT }}>— OPTIMISTIC</span>,
+        right: <span style={{ color: COLOR_CAU }}>-- CAUTIOUS</span>,
+      }}
+      insight={{
+        personalInsight: empty
+          ? "Sync Daily Stats to unlock a channel-level forecast."
+          : `Realistic ${m.label.toLowerCase()} averages ${m.fmt(realFutureAvg)} per ${periodLabel} across the selected horizon.`,
+        actionInsight: "Use Daily for 7–28-day planning; switch to Weekly or Monthly for longer strategic horizons.",
+      }}
     >
+      <div style={{ width: "100%", overflow: "hidden", background: "#0a0a0f" }}>
       {/* Tab bar */}
       <div style={{ display: "flex", borderBottom: "3px solid #000", background: "#0a0a0f" }}>
         {(["TRAJECTORY", "GOALS"] as Tab[]).map((t) => (
@@ -530,7 +605,7 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
           <div style={{ borderBottom: "2px solid #1a1a22" }}>
             <ForecastChart
               historical={historical} opt={opt} real={real} cau={cau}
-              accentColor={accent} fmt={m.fmt} labels={labels}
+              accentColor={accent} fmt={m.fmt} labels={labels} forecastLabels={forecastLabels}
               showHist={showHist} showOpt={showOpt} showReal={showReal} showCau={showCau}
             />
           </div>
@@ -565,7 +640,7 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
                   </div>
                   <div style={{ fontFamily: "monospace", fontSize: 8, color: "#555" }}>
                     avg {m.fmt(avgVal)}
-                    <span style={{ marginLeft: 6, color: delta >= 0 ? palette.positive : COLOR_CAU }}>
+                    <span style={{ marginLeft: 6, color: delta >= 0 ? VT_SPECTRUM_PALETTE_06[5] : COLOR_CAU }}>
                       {delta >= 0 ? "▲" : "▼"}{m.fmt(Math.abs(delta))}
                     </span>
                   </div>
@@ -648,7 +723,7 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
           <div style={{ borderBottom: "2px solid #1a1a22" }}>
             <ForecastChart
               historical={historical} opt={opt} real={real} cau={cau}
-              accentColor={accent} fmt={m.fmt} labels={labels}
+              accentColor={accent} fmt={m.fmt} labels={labels} forecastLabels={forecastLabels}
               goalValue={effectiveGoal}
               showHist showOpt showReal showCau
             />
@@ -664,7 +739,7 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
               const atDeadline = s.vals[deadline - 1] ?? 0
               const ahead = atDeadline >= effectiveGoal
               const pct = effectiveGoal > 0 ? Math.round((atDeadline / effectiveGoal) * 100) : 0
-              const statusColor = ahead ? palette.positive : atDeadline >= effectiveGoal * 0.8 ? palette.accent : COLOR_CAU
+              const statusColor = ahead ? VT_SPECTRUM_PALETTE_06[5] : atDeadline >= effectiveGoal * 0.8 ? VT_SPECTRUM_PALETTE_06[3] : COLOR_CAU
               return (
                 <div key={i} style={{ padding: 16, borderRight: i < 2 ? "2px solid #1a1a22" : "none", background: "#0d0d14" }}>
                   <div style={{ fontFamily: "monospace", fontSize: 9, color: s.color, fontWeight: 900, marginBottom: 8, letterSpacing: "0.1em" }}>
@@ -698,9 +773,9 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
 
           <div style={{ display: "flex", background: "#0a0a0f" }}>
             {[
-              { l: "YOUR GOAL", v: `${m.fmt(effectiveGoal)} / ${periodLabel}`, color: palette.hue[0] },
+              { l: "YOUR GOAL", v: `${m.fmt(effectiveGoal)} / ${periodLabel}`, color: VT_SPECTRUM_PALETTE_06[0] },
               { l: "YOUR RECENT AVG", v: `${m.fmt(recentAvg)} / ${periodLabel}`, color: accent },
-              { l: "GAP TO CLOSE", v: `${m.fmt(Math.max(0, effectiveGoal - recentAvg))} / ${periodLabel}`, color: recentAvg >= effectiveGoal ? palette.positive : COLOR_CAU },
+              { l: "GAP TO CLOSE", v: `${m.fmt(Math.max(0, effectiveGoal - recentAvg))} / ${periodLabel}`, color: recentAvg >= effectiveGoal ? VT_SPECTRUM_PALETTE_06[5] : COLOR_CAU },
             ].map((s, i) => (
               <div key={i} style={{ padding: "12px 20px", borderRight: "2px solid #1a1a22", flex: 1 }}>
                 <div style={{ fontFamily: "monospace", fontSize: 8, color: "#444", marginBottom: 3 }}>{s.l}</div>
@@ -710,7 +785,8 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
           </div>
         </div>
       )}
-    </ChartModule>
+      </div>
+    </SubToolboxChartModule>
   )
 }
 

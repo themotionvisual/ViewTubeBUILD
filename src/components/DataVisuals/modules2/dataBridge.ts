@@ -252,7 +252,7 @@ export const rollupWeeklyFromDaily = (
 /** Which source powered the current weekly rollup. Modules surface this
  *  string so a chart's totals are traceable to the underlying analytics
  *  table (or fallback) they came from. */
-export type Vt2WeeklySource = "daily_metrics" | "none"
+export type Vt2WeeklySource = "daily_metrics" | "monthly_metrics" | "none"
 
 export type Vt2WeeklyRollup = {
   weeks: Vt2WeeklyRow[]
@@ -290,6 +290,7 @@ export const rollupWeeklyChannel = (
 export const describeWeeklySource = (source: Vt2WeeklySource): string => {
   switch (source) {
     case "daily_metrics": return "DAILY STATS TABLE"
+    case "monthly_metrics": return "MONTHLY STATS TABLE"
     case "none": return "DAILY STATS UNAVAILABLE"
   }
 }
@@ -374,32 +375,55 @@ export const rollupDailyFromDaily = (
 ): Vt2DailyRow[] => {
   if (days <= 0 || daily.length === 0) return []
 
-  // Normalize then sort ascending by parsed date.
-  type Parsed = { key: string; ts: number; row: Record<string, unknown> }
-  const parsed: Parsed[] = []
+  type Bucket = {
+    key: string
+    ts: number
+    views: number
+    revenue: number
+    watchHrs: number
+    subs: number
+  }
+  const buckets = new Map<string, Bucket>()
   for (const row of daily) {
     const dateInput = row.date ?? row.day ?? row.publishedDate
     if (dateInput === null || dateInput === undefined || dateInput === "") continue
     const raw = typeof dateInput === "string" ? dateInput : String(dateInput)
     const d = new Date(raw)
     if (!Number.isFinite(d.getTime())) continue
-    parsed.push({ key: d.toISOString().slice(0, 10), ts: d.getTime(), row })
+    const key = d.toISOString().slice(0, 10)
+    const bucket = buckets.get(key) ?? {
+      key,
+      ts: Date.parse(`${key}T00:00:00Z`),
+      views: 0,
+      revenue: 0,
+      watchHrs: 0,
+      subs: 0,
+    }
+    bucket.views += numOr(row.views)
+    bucket.revenue += numOr(row.revenue ?? row.estimatedRevenue)
+    // visualData passes the canonical Daily Stats value through unchanged;
+    // VT-SYNC's daily contract stores watchTime in hours.
+    bucket.watchHrs += numOr(row.watchTime ?? row.watchHours)
+    bucket.subs += numOr(row.subscribersGained) - numOr(row.subscribersLost)
+    buckets.set(key, bucket)
   }
-  if (parsed.length === 0) return []
-  parsed.sort((a, b) => a.ts - b.ts)
+  const sorted = Array.from(buckets.values()).sort((a, b) => a.ts - b.ts)
+  if (sorted.length === 0) return []
 
-  const recent = parsed.slice(-days)
-  return recent.map((entry) => {
-    const wt = numOr(entry.row.watchTime)
-    return {
+  // Keep an actual recent calendar window. Missing dates remain missing instead
+  // of being silently converted to zero-valued observations.
+  const endTs = sorted[sorted.length - 1].ts
+  const startTs = endTs - (days - 1) * 86_400_000
+  return sorted
+    .filter((entry) => entry.ts >= startTs && entry.ts <= endTs)
+    .map((entry) => ({
       label: fmtDayLabel(entry.key),
       date: entry.key,
-      views: numOr(entry.row.views),
-      revenue: numOr(entry.row.revenue ?? entry.row.estimatedRevenue),
-      watchHrs: wt > 24 ? wt / 60 : wt,
-      subs: numOr(entry.row.subscribersGained) - numOr(entry.row.subscribersLost),
-    }
-  })
+      views: entry.views,
+      revenue: entry.revenue,
+      watchHrs: entry.watchHrs,
+      subs: entry.subs,
+    }))
 }
 
 /** Compact day label like "Aug 3". `Intl.DateTimeFormat` handles i18n. */
@@ -449,8 +473,7 @@ export const rollupMonthlyFromDaily = (
     }
     bucket.views += numOr(row.views)
     bucket.revenue += numOr(row.revenue ?? row.estimatedRevenue)
-    const wt = numOr(row.watchTime)
-    bucket.watchHrs += wt > 24 ? wt / 60 : wt
+    bucket.watchHrs += numOr(row.watchTime ?? row.watchHours)
     bucket.subs += numOr(row.subscribersGained) - numOr(row.subscribersLost)
     map.set(key, bucket)
   }
@@ -487,8 +510,15 @@ export const rollupMonthlyFromVideos = (
 /** Channel-wide monthly rollup sourced exclusively from Daily Stats. */
 export const rollupMonthlyChannelWithSource = (
   dailyMetrics?: ReadonlyArray<Record<string, unknown>>,
-  monthsCount: number = 12,
+  monthlyMetricsOrCount?: ReadonlyArray<Record<string, unknown>> | number,
+  requestedMonths: number = 12,
 ): { source: Vt2WeeklySource; months: Vt2MonthlyRow[] } => {
+  const monthlyMetrics = Array.isArray(monthlyMetricsOrCount) ? monthlyMetricsOrCount : undefined
+  const monthsCount = typeof monthlyMetricsOrCount === "number" ? monthlyMetricsOrCount : requestedMonths
+  if (monthlyMetrics && monthlyMetrics.length > 0) {
+    const months = rollupMonthlyFromDaily(monthlyMetrics, monthsCount)
+    if (months.length > 0) return { source: "monthly_metrics", months }
+  }
   if (dailyMetrics && dailyMetrics.length > 0) {
     const months = rollupMonthlyFromDaily(dailyMetrics, monthsCount)
     if (months.length > 0) return { source: "daily_metrics", months }

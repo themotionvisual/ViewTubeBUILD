@@ -5,7 +5,7 @@ import type {
  SuperToolRuntimePlanRecord,
 } from "../types"
 
-export const SUPER_TOOL_PLAN_BASE = "/Users/cwb/Downloads/viewtube/viewtubeX/docs/VT Brain"
+export const SUPER_TOOL_PLAN_BASE = "/Users/cwb/Downloads/viewtube/docs/VT Brain"
 export const SUPER_TOOL_PHASE_3_REPORT_PATH =
  "super-tool-agent-plans/phase-3/VIEWTUBEX_SUPER_TOOL_AGENT_OPTIMIZATION_REPORTS.md"
 
