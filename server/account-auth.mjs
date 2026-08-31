@@ -5,6 +5,7 @@ import {
   createAccountSession,
   deleteAccountRecord,
   getAccountSnapshotData,
+  getAiUsageSummary,
   getGoogleCredentialRecord,
   getSessionUserId,
   markGoogleConnectionExpired,
@@ -241,7 +242,61 @@ export const sendGoogleJson = async (json, res, response, fallback) => {
   return json(res, response.status, payload);
 };
 
-const requireGoogleScope = async (req, res, scope) => {
+export const commentThreadPageSize = (value) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 100;
+  return Math.max(1, Math.min(100, Math.floor(parsed)));
+};
+
+export const buildCommentThreadListUrl = (channelId, maxResults, pageToken = "") => {
+  const params = new URLSearchParams({
+    part: "snippet,replies",
+    allThreadsRelatedToChannelId: channelId,
+    maxResults: String(commentThreadPageSize(maxResults)),
+    order: "time",
+    textFormat: "plainText",
+  });
+  if (pageToken) params.set("pageToken", pageToken);
+  return `https://www.googleapis.com/youtube/v3/commentThreads?${params.toString()}`;
+};
+
+const fetchCompleteCommentReplies = async (accessToken, parentId) => {
+  const comments = [];
+  let pageToken = "";
+  do {
+    const params = new URLSearchParams({
+      part: "snippet",
+      parentId,
+      maxResults: "100",
+      textFormat: "plainText",
+    });
+    if (pageToken) params.set("pageToken", pageToken);
+    const response = await fetch(`https://www.googleapis.com/youtube/v3/comments?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(30_000),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload?.error?.message || "Failed to load comment replies.");
+    comments.push(...(Array.isArray(payload.items) ? payload.items : []));
+    pageToken = String(payload.nextPageToken || "");
+  } while (pageToken);
+  return comments;
+};
+
+const hydrateCommentThreadReplies = async (accessToken, thread) => {
+  const includedReplies = Array.isArray(thread?.replies?.comments) ? thread.replies.comments : [];
+  const totalReplyCount = Number(thread?.snippet?.totalReplyCount || 0);
+  const parentId = String(thread?.snippet?.topLevelComment?.id || "");
+  if (!parentId || includedReplies.length >= totalReplyCount) return { ...thread, repliesComplete: true };
+  try {
+    const comments = await fetchCompleteCommentReplies(accessToken, parentId);
+    return { ...thread, replies: { ...(thread.replies || {}), comments }, repliesComplete: true };
+  } catch {
+    return { ...thread, repliesComplete: false };
+  }
+};
+
+const requireGoogleScope = async (req, res, scope, json) => {
   const userId = await sessionUserId(req);
   if (!userId) {
     json(res, 401, { error: "Authentication required." });
@@ -293,7 +348,7 @@ const buildSnapshot = async (userId) => {
       google: { status: "disconnected", youtubeScopesGranted: false, channelId: null, channelTitle: null, channelHandle: null, channelThumbnail: null, contentOwners: [], activeContentOwnerId: null, contentOwnerSelectionRequired: false },
       onboarding: { status: "not_started", nextStep: null },
       billing: { status: "inactive", planId: null },
-      ai: { planId: null, availableCredits: 0 },
+      ai: { planId: null, availableCredits: 0, usage: null },
       grantedCapabilities: [],
       nextIntent: "sign_up",
       error: null,
@@ -337,7 +392,7 @@ const buildSnapshot = async (userId) => {
     },
     onboarding: { status: record.onboarding?.status || "not_started", nextStep: record.onboarding?.nextStep || null },
     billing: { status: record.subscription?.status || "inactive", planId: record.subscription?.planId || null },
-    ai: { planId: record.subscription?.planId || null, availableCredits: Math.max(0, Number(record.availableCredits || 0)) },
+    ai: { planId: record.subscription?.planId || null, availableCredits: Math.max(0, Number(record.availableCredits || 0)), usage: await getAiUsageSummary(userId) },
     grantedCapabilities,
     nextIntent,
     error: null,
@@ -656,8 +711,32 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
     return json(res, 200, { plans: PUBLIC_PLANS }), true;
   }
 
+  if (method === "GET" && pathname === "/api/account/youtube/comment-threads") {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl", json);
+    if (!userId) return true;
+    const account = await getAccountSnapshotData(userId);
+    const channelId = plainText(account?.channelId, 128);
+    if (!youtubeId(channelId)) {
+      return json(res, 409, { error: "Reconnect your YouTube channel to load comments." }), true;
+    }
+    const pageToken = plainText(parsedUrl.searchParams.get("pageToken"), 512);
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const response = await fetch(buildCommentThreadListUrl(channelId, parsedUrl.searchParams.get("maxResults"), pageToken), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!response.ok) {
+      await sendGoogleJson(json, res, response, "Failed to load comment threads.");
+      return true;
+    }
+    const page = await response.json().catch(() => ({}));
+    const items = await Promise.all((Array.isArray(page.items) ? page.items : [])
+      .map((thread) => hydrateCommentThreadReplies(accessToken, thread)));
+    return json(res, 200, { ...page, items }), true;
+  }
+
   if (method === "POST" && pathname === "/api/account/youtube/comment-replies") {
-    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl", json);
     if (!userId) return true;
     const payload = await readJsonBody(req, readBody);
     const parentId = plainText(payload.parentId, 128);
@@ -673,7 +752,7 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
   }
 
   if (method === "POST" && pathname === "/api/account/youtube/comment-threads") {
-    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl", json);
     if (!userId) return true;
     const payload = await readJsonBody(req, readBody);
     const videoId = plainText(payload.videoId, 128);
@@ -690,7 +769,7 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
 
   const commentMatch = pathname.match(/^\/api\/account\/youtube\/comments\/([A-Za-z0-9_-]{6,128})$/);
   if (method === "PUT" && commentMatch) {
-    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl", json);
     if (!userId) return true;
     const payload = await readJsonBody(req, readBody);
     const text = plainText(payload.text, 10_000);
@@ -705,7 +784,7 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
   }
 
   if (method === "POST" && pathname === "/api/account/youtube/playlist-items") {
-    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl", json);
     if (!userId) return true;
     const payload = await readJsonBody(req, readBody);
     const playlistId = plainText(payload.playlistId, 128);
@@ -722,7 +801,7 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
 
   const playlistItemMatch = pathname.match(/^\/api\/account\/youtube\/playlist-items\/([A-Za-z0-9_-]{6,128})$/);
   if (method === "DELETE" && playlistItemMatch) {
-    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl", json);
     if (!userId) return true;
     const accessToken = await getServerGoogleAccessToken(userId);
     const response = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?id=${encodeURIComponent(playlistItemMatch[1])}`, {
@@ -735,7 +814,7 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
 
   const videoMatch = pathname.match(/^\/api\/account\/youtube\/videos\/([A-Za-z0-9_-]{6,128})$/);
   if (method === "PUT" && videoMatch) {
-    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl", json);
     if (!userId) return true;
     const payload = await readJsonBody(req, readBody);
     const title = plainText(payload.title, 100);
@@ -754,7 +833,7 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
 
   const thumbnailMatch = pathname.match(/^\/api\/account\/youtube\/thumbnails\/([A-Za-z0-9_-]{6,128})$/);
   if (method === "POST" && thumbnailMatch) {
-    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl", json);
     if (!userId) return true;
     const contentType = String(req.headers["content-type"] || "").toLowerCase();
     if (!/^image\/(jpeg|png|webp)$/.test(contentType)) return json(res, 400, { error: "Thumbnail must be JPEG, PNG, or WebP." }), true;
@@ -769,7 +848,7 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
   }
 
   if (method === "POST" && pathname === "/api/account/youtube/uploads") {
-    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.upload");
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.upload", json);
     if (!userId) return true;
     const payload = await readJsonBody(req, readBody);
     const contentLength = Number(payload.contentLength);
@@ -795,7 +874,7 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
 
   const uploadMatch = pathname.match(/^\/api\/account\/youtube\/uploads\/([^/]+)$/);
   if (method === "PUT" && uploadMatch) {
-    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.upload");
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.upload", json);
     if (!userId) return true;
     let session;
     try { session = decodeUploadSession(decodeURIComponent(uploadMatch[1]), userId); }

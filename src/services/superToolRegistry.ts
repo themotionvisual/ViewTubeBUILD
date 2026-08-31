@@ -1,7 +1,8 @@
 import type { SuperToolDefinition, SuperToolId, SuperToolSurface } from "@/types"
 import { assertUniqueIds } from "./registryAssertions"
+import type { FeatureGateId } from "./featureGating"
 
-export const SUPER_TOOLS: SuperToolDefinition[] = [
+const SUPER_TOOL_BASE: Omit<SuperToolDefinition, "featureGateId">[] = [
  {
   id: "creator-canvas-os",
   title: "Creator Canvas OS",
@@ -195,6 +196,30 @@ export const SUPER_TOOLS: SuperToolDefinition[] = [
   visibility: "internal_only",
  },
 ]
+
+const SUPER_TOOL_GATES: Partial<Record<SuperToolId, FeatureGateId>> = {
+ "creator-canvas-os": "creator.generation",
+ "audience-loop-studio": "community.write",
+ "packaging-lab-pro": "creator.generation",
+ "project-command-kanban": "workspace.personal",
+ "series-and-theme-generator": "creator.generation",
+ "publishing-schedule-architect": "creator.generation",
+ "motion-scene-builder": "editor.advanced",
+ "timeline-asset-vault-dock": "editor.core",
+ "template-and-foley-forge": "creator.generation",
+ "caption-and-fx-pipeline": "creator.generation",
+ "shorts-extraction-studio": "editor.advanced",
+ "creator-vault-os": "workspace.personal",
+ "cinematic-analytics-lab": "analytics.connected_sync",
+ "retention-autopsy-experiment-engine": "analytics.retention",
+ "brain-command-center": "brain.core",
+ "workflow-chain-builder": "workspace.team",
+}
+
+export const SUPER_TOOLS: SuperToolDefinition[] = SUPER_TOOL_BASE.map((tool) => ({
+ ...tool,
+ featureGateId: SUPER_TOOL_GATES[tool.id],
+}))
 
 if (import.meta.env.DEV) {
  assertUniqueIds(SUPER_TOOLS, (tool) => tool.id, "Super-tool registry")

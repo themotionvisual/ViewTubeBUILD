@@ -12,6 +12,7 @@ export type ApplicationMenuIconId =
   | "graphs"
   | "account"
   | "billing"
+  | "access"
   | "settings"
   | "privacy"
   | "integrations"
@@ -123,6 +124,15 @@ export const APPLICATION_MENU_DESTINATIONS: readonly ApplicationMenuDestination[
     group: "account",
     icon: "billing",
     keywords: ["plan", "credits", "subscription", "payment", "usage"],
+  },
+  {
+    id: "feature-access",
+    path: "/settings?panel=access",
+    label: "Feature Access",
+    description: "See plan, connection and rollout requirements",
+    group: "account",
+    icon: "access",
+    keywords: ["gating", "access", "locked", "plan", "capability", "requirements"],
   },
   {
     id: "settings",

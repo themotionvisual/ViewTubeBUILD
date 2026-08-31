@@ -310,14 +310,17 @@ declare global {
 
 // Helper to get the AI settings
 const getAiSettings = () => {
+ const hasLocalStorage = typeof window !== "undefined" && typeof localStorage !== "undefined" && typeof localStorage.getItem === "function"
  const customKey =
   getVaultKey("gemini") ||
-  localStorage.getItem("yt_api_key") ||
-  localStorage.getItem("vt_gemini_api_key") ||
-  localStorage.getItem("gemini_api_key") ||
-  localStorage.getItem("google_api_key") ||
-  ""
- const modelPreference = localStorage.getItem("vt_ai_model") || "gemini-3.1-flash"
+  (hasLocalStorage ? (
+    localStorage.getItem("yt_api_key") ||
+    localStorage.getItem("vt_gemini_api_key") ||
+    localStorage.getItem("gemini_api_key") ||
+    localStorage.getItem("google_api_key") ||
+    ""
+  ) : "")
+ const modelPreference = hasLocalStorage ? (localStorage.getItem("vt_ai_model") || "gemini-3.1-flash") : "gemini-3.1-flash"
  return { customKey, modelPreference }
 }
 
@@ -451,9 +454,19 @@ export const isGeminiConfigured = (): boolean => {
  return resolveGeminiApiKey().length > 0
 }
 
+export type AiUsageCategory = "analysis" | "assets" | "other"
+
+export const classifyAiUsageCategory = (pathname: string): AiUsageCategory => {
+ const path = String(pathname || "").split(/[?#]/)[0]
+ if (["/ai-brain", "/intelligence", "/media-analyzer", "/research-lab"].includes(path)) return "analysis"
+ if (["/studio", "/seo-generator", "/hook-generator", "/storyboard-studio", "/thumbnail-studio", "/editor"].includes(path)) return "assets"
+ return "other"
+}
+
 // Helper to get the AI client
-export const getAiClient = () => {
+export const getAiClient = (options: { usageCategory?: AiUsageCategory } = {}) => {
  const { apiKey, keySource } = resolveGeminiKeyMeta()
+ const usageCategory = options.usageCategory || classifyAiUsageCategory(typeof window === "undefined" ? "" : window.location.pathname)
  if (!apiKey) {
   throw new Error(
    "Gemini API key is missing. Open System Settings -> Key Vault and set Gemini AI API Key.",
@@ -589,6 +602,7 @@ export const getAiClient = () => {
      idempotencyKey: chargeId,
      metadata: {
       modelId: effectiveCanonicalModel,
+      usageCategory,
       inputTokens: inputTokens > 0 ? inputTokens : quote.inputTokensEstimate,
       outputTokens: outputTokens > 0 ? outputTokens : quote.outputTokensEstimate,
       reason: inputTokens > 0 || outputTokens > 0 ? "usage_metadata" : "fallback_estimate",

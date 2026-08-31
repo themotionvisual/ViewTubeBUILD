@@ -1,3 +1,11 @@
+import JSZip from "jszip"
+
+import {
+ decodeVtSyncDataset,
+ encodeVtSyncDataset,
+ type VtSyncPackedDatasetManifestV2,
+} from "./packedDataset"
+
 export const VT_SYNC_ANALYTICS_BUNDLE_FORMAT = "viewtube-analytics-bundle" as const
 export const VT_SYNC_ANALYTICS_BUNDLE_VERSION = 1 as const
 
@@ -22,6 +30,21 @@ export type VtSyncAnalyticsBundleV1 = {
  }
  datasets: Record<string, VtSyncPortableDataset>
  uiHints?: { defaultDataset?: string }
+}
+
+type VtSyncAnalyticsArchiveManifestV2 = {
+ format: "viewtube-analytics-archive"
+ version: 2
+ exportedAt: string
+ channel?: { id?: string; title?: string }
+ source: VtSyncAnalyticsBundleV1["source"]
+ uiHints?: VtSyncAnalyticsBundleV1["uiHints"]
+ datasets: Record<string, {
+  rowCount: number
+  packedManifest: VtSyncPackedDatasetManifestV2
+  schemaPath: string
+  chunkPaths: string[]
+ }>
 }
 
 const SECRET_FIELD = /^(?:access[_-]?token|refresh[_-]?token|api[_-]?key|authorization|cookie|client[_-]?secret|session)$/i
@@ -104,4 +127,101 @@ export const parseVtSyncAnalyticsBundle = (
    throw new Error(`Dataset ${datasetId} contains an invalid row.`)
  }
  return bundle as VtSyncAnalyticsBundleV1
+}
+
+export const createVtSyncAnalyticsArchive = async (
+ bundle: VtSyncAnalyticsBundleV1,
+): Promise<Blob> => {
+ const zip = new JSZip()
+ const datasets: VtSyncAnalyticsArchiveManifestV2["datasets"] = {}
+ const checksums: Record<string, string> = {}
+ const channelId = bundle.channel?.id || "unscoped"
+
+ for (const [datasetId, dataset] of Object.entries(bundle.datasets)) {
+  const packed = await encodeVtSyncDataset({
+   channelId,
+   datasetId,
+   rows: dataset.rows,
+   capturedAt: dataset.exportedAt,
+  })
+  const schemaPath = `schemas/${encodeURIComponent(datasetId)}.json`
+  zip.file(schemaPath, JSON.stringify(packed.schema))
+  const chunkPaths = packed.chunks.map((chunk, index) => {
+   const path = `data/${encodeURIComponent(datasetId)}/${String(index).padStart(5, "0")}.bin${chunk.compression === "gzip" ? ".gz" : ""}`
+   zip.file(path, chunk.data, { compression: "STORE" })
+   checksums[path] = chunk.checksum
+   return path
+  })
+  datasets[datasetId] = {
+   rowCount: dataset.rowCount,
+   packedManifest: packed.manifest,
+   schemaPath,
+   chunkPaths,
+  }
+ }
+
+ const manifest: VtSyncAnalyticsArchiveManifestV2 = {
+  format: "viewtube-analytics-archive",
+  version: 2,
+  exportedAt: bundle.exportedAt,
+  channel: bundle.channel,
+  source: bundle.source,
+  uiHints: bundle.uiHints,
+  datasets,
+ }
+ zip.file("manifest.json", JSON.stringify(manifest))
+ zip.file("checksums.json", JSON.stringify(checksums))
+ return zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } })
+}
+
+export const parseVtSyncAnalyticsArchive = async (
+ archive: Blob | Uint8Array | ArrayBuffer,
+ allowedDatasetIds: ReadonlySet<string>,
+): Promise<VtSyncAnalyticsBundleV1> => {
+ const input = archive instanceof Blob ? await archive.arrayBuffer() : archive
+ const zip = await JSZip.loadAsync(input)
+ const manifestFile = zip.file("manifest.json")
+ if (!manifestFile) throw new Error("This analytics archive has no manifest.")
+ const manifest = JSON.parse(await manifestFile.async("text")) as VtSyncAnalyticsArchiveManifestV2
+ if (manifest.format !== "viewtube-analytics-archive" || manifest.version !== 2)
+  throw new Error("Unsupported ViewTube analytics archive.")
+ const checksumsFile = zip.file("checksums.json")
+ if (!checksumsFile) throw new Error("This analytics archive has no checksum index.")
+ const checksums = JSON.parse(await checksumsFile.async("text")) as Record<string, string>
+ const datasets: VtSyncAnalyticsBundleV1["datasets"] = {}
+
+ for (const [datasetId, entry] of Object.entries(manifest.datasets)) {
+  if (!allowedDatasetIds.has(datasetId)) throw new Error(`Unknown analytics dataset: ${datasetId}.`)
+  const schemaFile = zip.file(entry.schemaPath)
+  if (!schemaFile) throw new Error(`Dataset ${datasetId} has no schema.`)
+  const schema = JSON.parse(await schemaFile.async("text")) as { id: string; columns: string[] }
+  const chunks = await Promise.all(entry.chunkPaths.map(async (path, index) => {
+   const file = zip.file(path)
+   if (!file) throw new Error(`Dataset ${datasetId} is missing chunk ${index}.`)
+   const data = await file.async("uint8array")
+   const metadata = entry.packedManifest.chunks[index]
+   if (!metadata || checksums[path] !== metadata.checksum)
+    throw new Error(`Dataset ${datasetId} checksum index is invalid.`)
+   return { ...metadata, data }
+  }))
+  const rows = await decodeVtSyncDataset({ manifest: entry.packedManifest, schema, chunks })
+  if (rows.length !== entry.rowCount) throw new Error(`Dataset ${datasetId} row count does not match its manifest.`)
+  datasets[datasetId] = {
+   schemaVersion: 1,
+   rows,
+   rowCount: rows.length,
+   exportedAt: manifest.exportedAt,
+   source: "imported",
+  }
+ }
+
+ return {
+  format: VT_SYNC_ANALYTICS_BUNDLE_FORMAT,
+  version: VT_SYNC_ANALYTICS_BUNDLE_VERSION,
+  exportedAt: manifest.exportedAt,
+  channel: manifest.channel,
+  source: manifest.source,
+  datasets,
+  uiHints: manifest.uiHints,
+ }
 }

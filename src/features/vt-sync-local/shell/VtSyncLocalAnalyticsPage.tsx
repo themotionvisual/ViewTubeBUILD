@@ -26,6 +26,7 @@ import {
  type VtSyncVideoInventoryRecord,
  type VtSyncVideoCatalogCoverage,
  buildVtSyncVideoCatalogProjection,
+ buildResolvedAnalyticsDatasetBundle,
  listVtSyncVideoInventory,
  clearVtSyncLocalDb,
  clearVtSyncSavedTableData,
@@ -33,6 +34,7 @@ import {
  clearVtSyncTableDataFromSnapshot,
  removeVtSyncTableFromImportState,
  saveVtSyncSnapshot,
+ subscribeToVtSyncSnapshot,
 } from ".."
 import { VtSyncControllerPanel } from "./VtSyncControllerPanel"
 import { buildVtSyncCreatorHeroModel, VtSyncCreatorHero } from "./VtSyncCreatorHero"
@@ -221,6 +223,14 @@ const refreshManualImports = useCallback(async (payload?: {
   }
  }, [snapshot.channelId])
 
+ useEffect(() => subscribeToVtSyncSnapshot(() => {
+  const next = getVtSyncSnapshot()
+  snapshotRef.current = next
+  setSnapshot(next)
+  void refreshPersistedApiRows(next.channelId)
+  void refreshVideoInventory(next.channelId)
+ }), [refreshPersistedApiRows, refreshVideoInventory])
+
  useEffect(() => {
   void refreshManualImports()
  }, [refreshManualImports])
@@ -281,6 +291,10 @@ const refreshManualImports = useCallback(async (payload?: {
  )
  const consumerSnapshot = useMemo(
   () => applyVtSyncPrivacyFilters(catalogSnapshot, privacyFilters),
+  [catalogSnapshot, privacyFilters],
+ )
+ const resolvedAnalyticsBundle = useMemo(
+  () => buildResolvedAnalyticsDatasetBundle(catalogSnapshot, privacyFilters),
   [catalogSnapshot, privacyFilters],
  )
  const [syncProgress, setSyncProgress] = useState<VtSyncLocalSyncProgress | null>(null)
@@ -480,7 +494,7 @@ const refreshManualImports = useCallback(async (payload?: {
       Hub → data table → visuals is the natural reading order because
       the Hub answers "what does this data mean?" and the table +
       visuals are "here is the raw data." */}
-    <VtSyncIntelligenceHubGate snapshot={consumerSnapshot} />
+    <VtSyncIntelligenceHubGate snapshot={consumerSnapshot} resolvedBundle={resolvedAnalyticsBundle} />
     <VtSyncToolboxDataTable
      snapshot={catalogSnapshot}
      privacyFilters={privacyFilters}
@@ -491,6 +505,7 @@ const refreshManualImports = useCallback(async (payload?: {
      videoCatalogCoverage={videoCatalogProjection.coverage}
      storageStatus={videoInventory.channelId === snapshot.channelId ? videoInventory.status : "loading"}
      storageError={videoInventory.channelId === snapshot.channelId ? videoInventory.error : undefined}
+     resolvedBundle={resolvedAnalyticsBundle}
     />
     <VtSyncDataVisualsGate snapshot={consumerSnapshot} />
    </div>

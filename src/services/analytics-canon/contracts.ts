@@ -15,6 +15,7 @@
 //    functions from there — those come from selectors.ts and use VT Sync.
 
 import type { AnalyticsWindow } from "../analytics/DataStore"
+import type { ResolvedAnalyticsDatasetBundleV2 } from "../../features/vt-sync-local/adapters/resolvedAnalyticsBundle"
 
 export type {
  AnalyticsWindow,
@@ -111,6 +112,57 @@ export type IntelligenceEvidenceRequest = {
  sectionIds?: string[]
  maximumRowsPerDataset?: number
  maximumCharacters?: number
+ resolvedBundle?: ResolvedAnalyticsDatasetBundleV2
+}
+
+export type ReportEvidenceItemV2 = {
+ id: string
+ datasetId: string
+ datasetVersion: string
+ kind: "row" | "aggregate"
+ label: string
+ value?: string | number | null
+ unit?: string
+ sourceEvidenceIds: string[]
+ sources: CanonicalIntelligenceSource[]
+ window: string
+ capturedAt: string
+ formula?: string
+}
+
+export type ReportFactV2 = {
+ id: string
+ label: string
+ statement: string
+ value?: string | number | null
+ unit?: string
+ classification: "fact" | "observation" | "inference" | "hypothesis"
+ evidenceIds: string[]
+ confidence: number
+ formula?: string
+}
+
+export type ChannelReportEvidencePackV2 = {
+ version: "channel-report-evidence-v2"
+ channelId: string | null
+ snapshotId: string
+ selectedWindow: AnalyticsWindow
+ bundleFingerprint: string
+ privacyFingerprint: string
+ datasets: Array<{
+  id: string
+  datasetVersion: string
+  status: CanonicalIntelligenceDatasetStatus
+  rowCount: number
+  sources: CanonicalIntelligenceSource[]
+  updatedAt: string
+  missingMetrics: string[]
+ }>
+ facts: ReportFactV2[]
+ sectionFactIds: Record<string, string[]>
+ evidenceIndex: Record<string, ReportEvidenceItemV2>
+ contradictions: string[]
+ missingInputs: string[]
 }
 
 export type CanonicalIntelligenceEvidenceBundle = {
@@ -126,4 +178,7 @@ export type CanonicalIntelligenceEvidenceBundle = {
  requestedSectionIds: string[]
  omittedDatasetIds: string[]
  contextText: string
+ resolvedBundleFingerprint?: string
+ privacyFingerprint?: string
+ reportEvidencePack?: ChannelReportEvidencePackV2
 }

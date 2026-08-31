@@ -350,14 +350,85 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     setIsLocked(reset.locked)
   }, [setIsLocked])
 
+  const handleToggleWidget = useCallback((widgetId: string) => {
+    toggleWidgetVisibility(widgetId)
+  }, [])
+
+  const handleShowAll = useCallback(() => {
+    setLayout((prev) => ({
+      ...prev,
+      hidden: [],
+    }))
+  }, [])
+
+  const handleHideAll = useCallback(() => {
+    setLayout((prev) => ({
+      ...prev,
+      hidden: prev.order.filter((id) => id !== "dashboard-controls"),
+    }))
+  }, [])
+
+  const handleApplyPreset = useCallback((presetId: string) => {
+    const presetMap: Record<string, string[]> = {
+      default: [
+        "kpi-cluster", "community-post", "comment-replier", "consistency-heatmap",
+        "realtime-performance", "goals-tracker", "keyword-engine", "daily-oracle",
+        "brain-hub", "image-generator", "video-uploader", "data-edit",
+        "traffic-sources", "shorts-vs-long", "publish-momentum", "audience-matrix",
+        "dashboard-controls",
+      ],
+      analytics: [
+        "kpi-cluster", "realtime-performance", "consistency-heatmap", "keyword-engine",
+        "traffic-sources", "shorts-vs-long", "publish-momentum", "audience-matrix",
+        "keyword-overlap-intelligence", "retention-sim", "cpm-geo", "algo-benchmark",
+        "device-matrix", "audience-retention", "dashboard-controls",
+      ],
+      studio: [
+        "script-studio", "thumb-ai", "image-generator", "video-uploader", "data-edit",
+        "description-editor", "community-post", "comment-replier", "tag-generator",
+        "title-rewriter", "video-comment-operator", "dashboard-controls",
+      ],
+      oracle: [
+        "daily-oracle", "brain-hub", "flight-check",
+        "burnout-monitor", "goals-tracker", "quick-actions",
+        "collab-matchmaker", "dashboard-controls",
+      ],
+      full: DASHBOARD_WIDGET_REGISTRY.map((w) => w.id),
+      minimal: ["kpi-cluster", "daily-oracle", "quick-actions", "dashboard-controls"],
+    }
+    const targetIds = presetMap[presetId]
+    if (!targetIds) return
+    const visibleSet = new Set(targetIds)
+    setLayout((prev) => ({
+      ...prev,
+      hidden: prev.order.filter((id) => !visibleSet.has(id)),
+    }))
+  }, [])
+
   useEffect(() => {
     registerActions({
       exportLayout: handleExport,
       importLayout: handleImportClick,
       resetLayout: handleReset,
       toggleLock: handleToggleLock,
+      toggleWidget: handleToggleWidget,
+      showAllWidgets: handleShowAll,
+      hideAllWidgets: handleHideAll,
+      applyPreset: handleApplyPreset,
+      getLayout: () => layout,
     })
-  }, [handleExport, handleImportClick, handleReset, handleToggleLock, registerActions])
+  }, [
+    handleExport,
+    handleImportClick,
+    handleReset,
+    handleToggleLock,
+    handleToggleWidget,
+    handleShowAll,
+    handleHideAll,
+    handleApplyPreset,
+    layout,
+    registerActions,
+  ])
 
   return (
     <DashboardBarrier>

@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useState, ReactNode } from 'react';
 import { loadDashboardLayout } from '../views/dashboard/storage';
+import type { DashboardLayoutState } from '../views/dashboard/types';
 
 interface DashboardContextType {
   editMode: boolean;
@@ -12,11 +13,21 @@ interface DashboardContextType {
   importLayout: () => void;
   resetLayout: () => void;
   toggleLock: () => void;
+  toggleWidget: (widgetId: string) => void;
+  showAllWidgets: () => void;
+  hideAllWidgets: () => void;
+  applyPreset: (presetId: string) => void;
+  getLayout: () => DashboardLayoutState;
   registerActions: (actions: {
     exportLayout: () => void;
     importLayout: () => void;
     resetLayout: () => void;
     toggleLock: () => void;
+    toggleWidget?: (widgetId: string) => void;
+    showAllWidgets?: () => void;
+    hideAllWidgets?: () => void;
+    applyPreset?: (presetId: string) => void;
+    getLayout?: () => DashboardLayoutState;
   }) => void;
 }
 
@@ -31,6 +42,11 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
     importLayout: () => void;
     resetLayout: () => void;
     toggleLock: () => void;
+    toggleWidget?: (widgetId: string) => void;
+    showAllWidgets?: () => void;
+    hideAllWidgets?: () => void;
+    applyPreset?: (presetId: string) => void;
+    getLayout?: () => DashboardLayoutState;
   } | null>(null);
 
   const registerActions = useCallback((newActions: {
@@ -38,6 +54,11 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
     importLayout: () => void;
     resetLayout: () => void;
     toggleLock: () => void;
+    toggleWidget?: (widgetId: string) => void;
+    showAllWidgets?: () => void;
+    hideAllWidgets?: () => void;
+    applyPreset?: (presetId: string) => void;
+    getLayout?: () => DashboardLayoutState;
   }) => {
     setActions(newActions);
   }, []);
@@ -55,6 +76,11 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
         importLayout: () => actions?.importLayout(),
         resetLayout: () => actions?.resetLayout(),
         toggleLock: () => actions?.toggleLock(),
+        toggleWidget: (id: string) => actions?.toggleWidget?.(id),
+        showAllWidgets: () => actions?.showAllWidgets?.(),
+        hideAllWidgets: () => actions?.hideAllWidgets?.(),
+        applyPreset: (presetId: string) => actions?.applyPreset?.(presetId),
+        getLayout: () => actions?.getLayout?.() || loadDashboardLayout(),
         registerActions,
       }}
     >
@@ -79,6 +105,11 @@ export const useDashboard = () => {
       importLayout: () => {},
       resetLayout: () => {},
       toggleLock: () => {},
+      toggleWidget: () => {},
+      showAllWidgets: () => {},
+      hideAllWidgets: () => {},
+      applyPreset: () => {},
+      getLayout: () => loadDashboardLayout(),
       registerActions: () => {},
     };
   }

@@ -2086,4 +2086,5 @@ export interface SuperToolDefinition {
  sourceOfTruth: string
  status: "live-shell" | "integrating" | "planned"
  visibility: "public" | "internal_only"
+ featureGateId?: import("./services/featureGating").FeatureGateId
 }

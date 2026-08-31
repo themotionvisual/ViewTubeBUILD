@@ -22,7 +22,6 @@ import type {
 import type { CanonicalIntelligenceEvidenceBundle } from "../../services/analytics-canon"
 import { IntelligenceChart } from "./IntelligenceChart"
 import { emitSignal } from "../../services/brain"
-import { isGeminiConfigured } from "../../services/gemini"
 import { generateUltimateChannelReport } from "./ultimateReport"
 import { loadIntelligenceBrainContext, persistIntelligenceBrainArtifacts } from "./brainIntegration"
 import {
@@ -30,8 +29,9 @@ import {
  resolveIntelligenceGenerationReadiness,
 } from "./generationPolicy"
 
-const ULTIMATE_REPORT_STORAGE_KEY = "vt_ultimate_channel_report_v1"
-const ULTIMATE_REPORT_HISTORY_KEY = "vt_ultimate_generation_history_v1"
+const ULTIMATE_REPORT_STORAGE_KEY = "vt_ultimate_channel_report_v2"
+const LEGACY_ULTIMATE_REPORT_STORAGE_KEY = "vt_ultimate_channel_report_v1"
+const ULTIMATE_REPORT_HISTORY_KEY = "vt_ultimate_generation_history_v2"
 const ULTIMATE_REPORT_EVENT = "vt_generate_ultimate_report"
 
 type IntelligenceHubProps = {
@@ -127,7 +127,10 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
   useState<UltimateChannelReport | null>(() => {
    try {
     const scopedKey = analyticsContext.channelId ? `${ULTIMATE_REPORT_STORAGE_KEY}:${analyticsContext.channelId}` : ""
-    const raw = (scopedKey && localStorage.getItem(scopedKey)) || localStorage.getItem(ULTIMATE_REPORT_STORAGE_KEY)
+    const legacyScopedKey = analyticsContext.channelId ? `${LEGACY_ULTIMATE_REPORT_STORAGE_KEY}:${analyticsContext.channelId}` : ""
+    const raw = (scopedKey && localStorage.getItem(scopedKey))
+     || (legacyScopedKey && localStorage.getItem(legacyScopedKey))
+     || localStorage.getItem(LEGACY_ULTIMATE_REPORT_STORAGE_KEY)
     return raw ? (JSON.parse(raw) as UltimateChannelReport) : null
    } catch {
     return null
@@ -141,6 +144,7 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
  const [generationEvents, setGenerationEvents] = useState<SectionGenerationEvent[]>([])
  const [preflight, setPreflight] = useState<ReportPreflightResult | null>(null)
  const [activeEvidence, setActiveEvidence] = useState<CanonicalIntelligenceEvidenceBundle | null>(null)
+ const [openEvidenceIds, setOpenEvidenceIds] = useState<string[]>([])
  const [sessionMeta, setSessionMeta] = useState<{
   generationId: string
   startedAt: string
@@ -153,9 +157,20 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
  } | null>(null)
  const showFullSurface = mode === "full"
  const readiness = resolveIntelligenceGenerationReadiness({
-  aiConfigured: isGeminiConfigured(),
+  aiConfigured: true,
   channelId: analyticsContext.channelId,
  })
+ const toggleEvidence = (ids: string[]) => {
+  const same = ids.length === openEvidenceIds.length && ids.every((id) => openEvidenceIds.includes(id))
+  setOpenEvidenceIds(same ? [] : ids)
+  if (!same) {
+   emitSignal("intelligence-hub", "REPORT_EVIDENCE_OPENED", {
+    generationId: ultimateReport?.meta.generationId,
+    evidenceCount: ids.length,
+    evidenceVersion: ultimateReport?.meta.evidenceVersion,
+   }).catch(console.error)
+  }
+ }
 
  const applySectionUpdate = (section: ReportSectionState, event: SectionGenerationEvent) => {
   setSectionStates((prev) => {
@@ -265,9 +280,9 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
     analysisMode: unifiedReport.meta.analysisMode,
     promptPackVersion: unifiedReport.meta.promptPackVersion,
     contextMode: unifiedReport.meta.contextMode,
-    actionPlan: unifiedReport.actionPlan.slice(0, 5),
-    riskFlags: unifiedReport.riskFlags.slice(0, 5),
     brainStatus: brainUpdate.status,
+    reportStatus: unifiedReport.meta.overallStatus,
+    evidenceVersion: unifiedReport.meta.evidenceVersion,
    }).catch(console.error)
    setActiveSectionIdx(0)
   } catch (e) {
@@ -700,9 +715,37 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
         Mode: {ultimateReport.meta.analysisMode} · Prompt Pack:{" "}
         {ultimateReport.meta.promptPackVersion}
        </p>
-       <p className="text-sm font-bold whitespace-pre-wrap">
-        {ultimateReport.executiveSummary}
-       </p>
+      <p className="text-sm font-bold whitespace-pre-wrap">
+       {ultimateReport.executiveSummary}
+      </p>
+       {ultimateReport.executiveLayer && (
+        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+         <div className="border-2 border-black bg-white p-3">
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-black/55">Channel health</p>
+          <p className="mt-1 text-sm font-black uppercase">{ultimateReport.executiveLayer.health}</p>
+         </div>
+         <div className="border-2 border-black bg-[#CCFF00] p-3">
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-black/55">Strongest signal</p>
+          <p className="mt-1 text-xs font-bold">{ultimateReport.executiveLayer.strongestSignal}</p>
+         </div>
+         <div className="border-2 border-black bg-[#FF7497] p-3">
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-black/55">Critical gap</p>
+          <p className="mt-1 text-xs font-bold">{ultimateReport.executiveLayer.criticalGap}</p>
+         </div>
+         <div className="border-2 border-black bg-[#FFDD00] p-3">
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-black/55">Evidence coverage</p>
+          <p className="mt-1 text-xs font-bold">{ultimateReport.executiveLayer.evidenceCoverage}</p>
+         </div>
+        </div>
+       )}
+       {ultimateReport.executiveLayer?.nextActions?.length ? (
+        <div className="mt-3 border-2 border-black bg-white p-3">
+         <p className="text-[9px] font-black uppercase tracking-[0.14em] text-black/55">Next actions</p>
+         <ul className="mt-2 list-disc space-y-1 pl-5 text-xs font-bold">
+          {ultimateReport.executiveLayer.nextActions.map((action, index) => <li key={`executive-action-${index}`}>{action}</li>)}
+         </ul>
+        </div>
+       ) : null}
        {(ultimateReport.meta.overallStatus || sessionMeta?.overallStatus) && (
         <div className="mt-4 border-2 border-black rounded-xl bg-white p-3">
          <p className="text-[10px] font-black uppercase tracking-[0.12em]">
@@ -772,6 +815,37 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
           <p className="text-sm font-bold leading-relaxed whitespace-pre-wrap">
            {block.summary || "Section generated without summary. Review diagnostics in timeline."}
           </p>
+          {block.payload?.evidenceRefs?.length ? (
+           <div>
+            <button
+             type="button"
+             onClick={() => toggleEvidence(block.payload?.evidenceRefs || [])}
+             className="border-2 border-black bg-[#CCFF00] px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] shadow-[3px_3px_0px_0px_black]">
+             Evidence · {block.payload.evidenceRefs.length} sources · {block.payload.confidence || 0}% confidence
+            </button>
+            {block.payload.evidenceRefs.some((id) => openEvidenceIds.includes(id)) && (
+             <div className="mt-3 grid gap-2 border-2 border-black bg-white p-3">
+              {(block.payload.evidenceRefs || []).map((evidenceId) => {
+               const item = ultimateReport.evidenceBundle?.reportEvidencePack?.evidenceIndex[evidenceId]
+               return (
+                <div key={evidenceId} className="border-2 border-black bg-[#F4F1EB] p-3">
+                 <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-[10px] font-black uppercase">{item?.kind || "evidence"} · {item?.datasetId || "unresolved"}</p>
+                  {item?.datasetId ? <a className="text-[10px] font-black uppercase underline" href={`/analytics?vtTable=${encodeURIComponent(item.datasetId)}#intelligence`}>Open in Analytics</a> : null}
+                 </div>
+                 <p className="mt-1 break-all text-[10px] font-bold">{item?.label || evidenceId}</p>
+                 {item?.value !== undefined ? <p className="mt-1 text-xs font-black">{String(item.value)} {item.unit || ""}</p> : null}
+                 <p className="mt-1 text-[9px] font-bold uppercase text-black/55">Window {item?.window || ultimateReport.meta.analysisMode} · Updated {item?.capturedAt ? new Date(item.capturedAt).toLocaleString() : "unknown"}</p>
+                 {item?.formula ? <p className="mt-1 text-[9px] font-bold text-black/60">Derived: {item.formula}</p> : null}
+                </div>
+               )
+              })}
+             </div>
+            )}
+           </div>
+          ) : (
+           <div className="border-2 border-black bg-[#FFF2A8] p-3 text-[10px] font-black uppercase">Not enough validated evidence for this section.</div>
+          )}
           {renderPayload(block.payload)}
           {block.chartSuggestion && (
            <div className="border-2 border-black rounded-xl bg-white p-4 overflow-x-auto">

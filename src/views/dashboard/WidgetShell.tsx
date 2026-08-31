@@ -66,39 +66,40 @@ export const WidgetShell: React.FC<{
 }) => {
  const [isSubtitleOpen, setIsSubtitleOpen] = useState(false);
 
- const description = WIDGET_DESCRIPTIONS[widget.id] || {
+ const widgetId = widget?.id || "unmapped"
+ const description = WIDGET_DESCRIPTIONS[widgetId] || {
   short: "INTERACTIVE SOURCE PREVIEW RETAINED AS IDEA-BANK.",
   detailed: "View raw data streams and historical references before promoting components to the main dashboard."
  };
 
  return (
   <div
-   className={cn("vt-widget", instance.collapsed ? "is-collapsed" : "open")}
+   className={cn("vt-widget", instance?.collapsed ? "is-collapsed" : "open")}
    style={{
-    "--widget-color": widget.headerColor,
-    "--widget-icon-rail-color": widget.iconRailColor,
+    "--widget-color": widget?.headerColor || "#36E0F6",
+    "--widget-icon-rail-color": widget?.iconRailColor || "#C0F240",
    } as React.CSSProperties}
-   data-responsive-mode={widget.responsiveMode}
+   data-responsive-mode={widget?.responsiveMode || "container"}
   >
    <div className="vt-widget-header">
     <div className="left">
      <div className="icon-rail">
       {icon || <Layers size={22} />}
      </div>
-     <span className="title">{widget.title}</span>
+     <span className="title">{widget?.title || "Widget"}</span>
     </div>
 
     {headerContent && (
-     <div
-      className="header-extra"
-      onClick={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
-      onTouchStart={(e) => e.stopPropagation()}
-      style={{ flex: 1, display: "flex", justifyContent: "center" }}
-     >
-      {headerContent}
-     </div>
-    )}
+      <div
+       className="header-extra"
+       onClick={(e) => e.stopPropagation()}
+       onPointerDown={(e) => e.stopPropagation()}
+       onTouchStart={(e) => e.stopPropagation()}
+       style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "0 6px", minWidth: 0 }}
+      >
+       {headerContent}
+      </div>
+     )}
 
     <div
      className="toggle flex items-center gap-2"

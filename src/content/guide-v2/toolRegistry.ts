@@ -1,4 +1,5 @@
 import { SUPER_TOOLS } from "../../services/superToolRegistry"
+import type { FeatureGateId } from "../../services/featureGating"
 
 export interface GuideToolDefinition {
  id: string
@@ -9,6 +10,7 @@ export interface GuideToolDefinition {
  status: string
  visibility: string
  sourceOfTruth: string
+ featureGateId?: FeatureGateId
 }
 
 export const GUIDE_TOOLS: readonly GuideToolDefinition[] = Object.freeze(
@@ -21,6 +23,7 @@ export const GUIDE_TOOLS: readonly GuideToolDefinition[] = Object.freeze(
   status: tool.status,
   visibility: tool.visibility,
   sourceOfTruth: tool.sourceOfTruth,
+  featureGateId: tool.featureGateId,
  })),
 )
 

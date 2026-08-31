@@ -11,6 +11,7 @@ import {
  deleteVtSyncDatasetTableRows,
  getVtSyncChannelIndex,
  getVtSyncKnownVideoIds,
+ getVtSyncPackedStorageDiagnostics,
  listVtSyncDatasetRawReports,
  listVtSyncDatasetTableRows,
  listVtSyncSyncRuns,
@@ -23,6 +24,7 @@ import {
  replaceLatestVtSyncDatasetRawReport,
  replaceLatestVtSyncDatasetTableRows,
  replaceLatestVtSyncSyncRun,
+ upsertLatestVtSyncDatasetTableRows,
 } from "./localDbRepository"
 import { clearVtSyncSavedTableData } from "./manualImports"
 
@@ -31,15 +33,46 @@ afterEach(async () => {
 })
 
 describe("VT Sync local IndexedDB repository", () => {
- it("creates the v1 schema with VT Sync-only stores", async () => {
+ it("creates the v2 schema with compact canonical stores", async () => {
   const db = await openVtSyncLocalDb()
 
   expect(db.name).toBe(VT_SYNC_LOCAL_DB_NAME)
-  expect(db.version).toBe(1)
+  expect(db.version).toBe(2)
   Object.values(VT_SYNC_LOCAL_STORE_NAMES).forEach((storeName) => {
    expect(db.objectStoreNames.contains(storeName)).toBe(true)
   })
   db.close()
+ })
+
+ it("persists channel-scoped table rows as a lossless packed generation", async () => {
+  const rows = Array.from({ length: 80 }, (_, index) => ({
+   date: `2026-06-${String((index % 28) + 1).padStart(2, "0")}`,
+   views: 1_000 + index,
+   watchTime: index === 3 ? null : 200.5 + index,
+   metricProvenance: { views: "youtube_analytics_v2", watchTime: "youtube_analytics_v2" },
+  }))
+  await putVtSyncDatasetTableRows({
+   id: "channel-a-daily",
+   runId: "run-a",
+   channelId: "channel-a",
+   datasetId: "daily",
+   phase: "daily_history",
+   capturedAt: "2026-08-29T12:00:00.000Z",
+   rows,
+   provenance: "api",
+  })
+
+  expect(await listVtSyncDatasetTableRows()).toEqual([
+   expect.objectContaining({ id: "channel-a-daily", rows }),
+  ])
+  expect(await getVtSyncPackedStorageDiagnostics()).toEqual([
+   expect.objectContaining({
+    channelId: "channel-a",
+    datasetId: "daily",
+    rowCount: 80,
+    generationHealth: "verified",
+   }),
+  ])
  })
 
  it("persists and clears stable per-table manual CSV records", async () => {
@@ -140,6 +173,28 @@ describe("VT Sync local IndexedDB repository", () => {
    expect.objectContaining({ id: "manual_import::videos", provenance: "csv" }),
    expect.objectContaining({ id: "channel-b", channelId: "channel-b" }),
   ]))
+ })
+
+ it("supplementally upserts startup rows without deleting history or private analytics", async () => {
+  await replaceLatestVtSyncDatasetTableRows({
+   runId: "full-sync", channelId: "channel-a", datasetId: "daily", phase: "daily_history",
+   capturedAt: "2026-08-28T00:00:00Z",
+   rows: [
+    { date: "2026-08-27", views: 100, watchTime: 40, revenue: 5 },
+    { date: "2026-08-26", views: 90, watchTime: 35, revenue: 4 },
+   ],
+  })
+  await upsertLatestVtSyncDatasetTableRows({
+   runId: "bootstrap", channelId: "channel-a", datasetId: "daily", phase: "initial_channel_bootstrap",
+   capturedAt: "2026-08-29T00:00:00Z",
+   rows: [{ date: "2026-08-27", views: 105 }],
+  })
+
+  const record = (await listVtSyncDatasetTableRows()).find((candidate) => candidate.datasetId === "daily")
+  expect(record?.rows).toEqual([
+   { date: "2026-08-27", views: 105, watchTime: 40, revenue: 5 },
+   { date: "2026-08-26", views: 90, watchTime: 35, revenue: 4 },
+  ])
  })
 
  it("replaces raw diagnostics and sync-run history only after a new record exists", async () => {

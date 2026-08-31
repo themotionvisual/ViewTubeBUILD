@@ -233,70 +233,23 @@ const fullRowCountByField = (snapshot: VtSyncSnapshot): Record<string, number> =
   arrayFields.map((field) => [field, Array.isArray(snapshot[field]) ? snapshot[field].length : 0]),
  )
 
-const withCompactPreviewMetadata = (snapshot: VtSyncSnapshot): VtSyncSnapshot => {
+const withManifestOnlyMetadata = (snapshot: VtSyncSnapshot): VtSyncSnapshot => {
  const fullCounts = fullRowCountByField(snapshot)
- const compactSnapshot: VtSyncSnapshot = {
+ const arrayPlaceholders = Object.fromEntries(arrayFields.map((field) => [field, []]))
+ const manifestSnapshot: VtSyncSnapshot = {
   ...snapshot,
-  videos: snapshot.videos.slice(0, 25),
-  dailyMetrics: snapshot.dailyMetrics.slice(0, 30),
-  monthlyMetrics: snapshot.monthlyMetrics.slice(0, 24),
-  trafficSources: snapshot.trafficSources.slice(0, 25),
-  trafficDetails: [],
-  searchTerms: [],
-  demographics: snapshot.demographics.slice(0, 25),
-  geography: snapshot.geography.slice(0, 25),
-  devices: snapshot.devices.slice(0, 25),
-  operatingSystems: snapshot.operatingSystems.slice(0, 25),
-  playbackLocations: snapshot.playbackLocations.slice(0, 25),
-  subscriptionStatuses: snapshot.subscriptionStatuses.slice(0, 25),
-  formatSubscriberStatuses: snapshot.formatSubscriberStatuses.slice(0, 25),
-  playlistsData: snapshot.playlistsData.slice(0, 25),
-  adTypes: snapshot.adTypes.slice(0, 25),
-  cities: [],
-  provinces: [],
-  dmaRegions: [],
-  continentsData: [],
-  extWebsites: [],
-  suggestedVideos: [],
-  hashtags: [],
-  soundPages: [],
-  creatorContentTypes: [],
-  demographicsByAge: [],
-  demographicsByGender: [],
-  trafficAdvertising: [],
-  audienceWatchBehavior: [],
-  sharingService: [],
-  newReturningViewers: [],
-  revenueSource: [],
-  subscriptionSource: [],
-  trafficChannelPages: [],
-  trafficOtherFeatures: [],
-  trafficSubscriberData: [],
-  trafficShorts: [],
-  trafficShortsContentLink: [],
-  trafficBrowseFeatures: [],
-  trafficCampaignCard: [],
-  trafficCard: [],
-  trafficEndScreen: [],
-  trafficLiveRedirect: [],
-  trafficNotification: [],
-  trafficNoLinkEmbedded: [],
-  trafficNoLinkOther: [],
-  trafficPlaylist: [],
-  trafficYtPlaylistPage: [],
-  trafficByDay: snapshot.trafficByDay.slice(0, 25),
-  retentions: [],
+  ...arrayPlaceholders,
   tableExports: {},
- }
- const visibleCounts = fullRowCountByField(compactSnapshot)
+ } as VtSyncSnapshot
  return {
-  ...compactSnapshot,
+  ...manifestSnapshot,
   storageMetadata: {
-   storageMode: "compact_preview",
+   storageMode: "manifest_only",
    isCompacted: true,
+   manifestOnly: true,
    fullRowCountByField: fullCounts,
-   visiblePreviewRowCountByField: visibleCounts,
-   warning: "localStorage contains a compact boot preview; IndexedDB owns complete Analytics table rows.",
+   visiblePreviewRowCountByField: fullRowCountByField(manifestSnapshot),
+   warning: "localStorage contains metadata only; complete Analytics rows are restoring from IndexedDB.",
   },
   datasetFreshness: {
    ...(snapshot.datasetFreshness || {}),
@@ -314,7 +267,7 @@ const withCompactPreviewMetadata = (snapshot: VtSyncSnapshot): VtSyncSnapshot =>
 }
 
 const storageSafeSnapshot = (snapshot: VtSyncSnapshot): VtSyncSnapshot =>
- withCompactPreviewMetadata(snapshot)
+ withManifestOnlyMetadata(snapshot)
 
 export const saveVtSyncSnapshot = (snapshot: VtSyncSnapshot): void => {
  if (typeof window === "undefined") return

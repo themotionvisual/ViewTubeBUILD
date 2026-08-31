@@ -5,8 +5,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleCompressAnalysisRoute } from "./media-compression.mjs";
 import { handleYouTubeAcquireRoute } from "./youtube-acquisition.mjs";
+import { handleIntelligenceReportRoute } from "./intelligence-report.mjs";
 import { getReleaseMetadata } from "./release-metadata.mjs";
 import { getAuthenticatedViewtubeUserId, handleAccountRoute } from "./account-auth.mjs";
+import { routeSimpleYouTube } from "../api/youtube/_route.mjs";
 import {
   beginSimpleGoogleAuth,
   completeSimpleGoogleAuth,
@@ -721,6 +723,10 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (await handleIntelligenceReportRoute({ req, res, method, pathname, json, readBody })) {
+      return;
+    }
+
     if (
       method === "GET" &&
       (pathname === "/api/auth-start" || pathname === "/api/auth/google/start")
@@ -775,6 +781,10 @@ const server = http.createServer(async (req, res) => {
 
     if (method === "POST" && pathname === "/api/youtube/acquire") {
       return await handleYouTubeAcquireRoute(req, res);
+    }
+
+    if (pathname.startsWith("/api/youtube")) {
+      return await routeSimpleYouTube(req, res);
     }
 
     if (pathname.startsWith("/api/projects/")) {

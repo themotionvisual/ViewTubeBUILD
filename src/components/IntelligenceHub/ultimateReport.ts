@@ -1,12 +1,7 @@
 import {
-  generateArchitectDiagnosis,
-  generateKeywordResearch,
-  generateOracleReport,
-  isGeminiConfigured,
-} from "@/services/gemini";
-import {
   INTELLIGENCE_SECTION_DATASETS,
   type CanonicalIntelligenceEvidenceBundle,
+  type ChannelReportEvidencePackV2,
 } from "@/services/analytics-canon";
 import {
   DATA_ANALYSIS_SYSTEM_PROMPT,
@@ -37,6 +32,7 @@ import type {
   UltimateChannelReport,
   UltimateReportBlock,
   UnifiedTableSpec,
+  LayeredChannelReportModelOutputV2,
 } from "./types";
 import {
   classifyIntelligenceAiFailure,
@@ -44,6 +40,14 @@ import {
   resolveIntelligenceReportStatus,
   type IntelligenceAiFailure,
 } from "./generationPolicy";
+import {
+  createHttpChannelReportProvider,
+  LAYERED_REPORT_PROMPT_VERSION,
+  LAYERED_REPORT_SCHEMA_VERSION,
+  sanitizeInvalidLayeredReport,
+  validateLayeredChannelReport,
+  type ChannelReportProvider,
+} from "./channelReportProvider";
 
 type GenerateUltimateReportInput = {
   evidence: CanonicalIntelligenceEvidenceBundle;
@@ -53,6 +57,7 @@ type GenerateUltimateReportInput = {
   autoContext?: string;
   dataSources?: string[];
   signal?: AbortSignal;
+  provider?: ChannelReportProvider;
   onSessionUpdate?: (meta: {
     generationId: string;
     startedAt: string;
@@ -375,6 +380,13 @@ const sanitizeOracleReport = (report: OracleReport): OracleReport => {
 
 const buildComparativeGrid = (report: OracleReport, keywordData: KeywordAnalysis): UnifiedTableSpec => {
   const stats = report.stats || {};
+  const metric = (value: unknown, options: { currency?: boolean; percent?: boolean } = {}) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return "Not enough evidence";
+    if (options.currency) return `$${numeric.toFixed(2)}`;
+    if (options.percent) return `${numeric.toFixed(2)}%`;
+    return numeric.toLocaleString();
+  };
   const formatRows = keywordData.contentFormats.slice(0, 4).map((entry) => [
     entry.name,
     `${entry.percentage.toFixed(1)}%`,
@@ -383,10 +395,10 @@ const buildComparativeGrid = (report: OracleReport, keywordData: KeywordAnalysis
     title: "Comparative Analytics Grid",
     headers: ["Dimension", "Value", "Evidence"],
     rows: [
-      ["Total Views", Number(stats.views || 0).toLocaleString(), "Oracle Stats"],
-      ["CTR", `${Number(stats.ctr || 0).toFixed(2)}%`, "Oracle Stats"],
-      ["Subscribers", Number(stats.subscribers || 0).toLocaleString(), "Oracle Stats"],
-      ["Revenue", `$${Number(stats.revenue || 0).toFixed(2)}`, "Oracle Stats"],
+      ["Total Views", metric(stats.views), "VT-SYNC evidence"],
+      ["CTR", metric(stats.ctr, { percent: true }), "VT-SYNC evidence"],
+      ["Subscribers", metric(stats.subscribers), "VT-SYNC evidence"],
+      ["Revenue", metric(stats.revenue, { currency: true }), "VT-SYNC evidence"],
       ...formatRows.map((row) => [`Format Mix: ${row[0]}`, row[1], "Keyword Lab"]),
     ],
   };
@@ -413,10 +425,7 @@ const buildRiskFlags = (report: OracleReport): string[] => {
     .filter((line) => line.length > 24)
     .slice(0, 4);
   if (raw.length > 0) return raw;
-  return [
-    "CTR variability indicates packaging inconsistency across otherwise similar topics.",
-    "Retention decay in early sequence suggests hook and transition mismatch.",
-  ];
+  return ["Not enough evidence to identify a channel risk without a validated supporting claim."];
 };
 
 const payloadFrom = (bullets: string[] = [], notes: string[] = []): ReportSectionPayload => ({
@@ -641,20 +650,21 @@ const toSectionStates = (
         : ["brain", "vt-sync", "user_profile"]),
       ...dependentDatasets.flatMap((dataset) => dataset.sources),
     ]));
+    const hasExplicitEvidenceRefs = Object.prototype.hasOwnProperty.call(payload, "evidenceRefs");
     const evidenceRefs = Array.from(new Set([
-      ...(payload.evidenceRefs?.length
-        ? payload.evidenceRefs
+      ...(hasExplicitEvidenceRefs
+        ? payload.evidenceRefs || []
         : [
           `brain:${sourceSnapshot.brainContext ? "available" : "missing"}`,
           `vt-sync:${evidence.snapshotId}`,
           `journal:${sourceSnapshot.aiJournalContext ? "available" : "missing"}`,
           `profile:${sourceSnapshot.userProfileContext ? "available" : "missing"}`,
         ]),
-      ...dependentDatasets.flatMap((dataset) =>
+      ...(hasExplicitEvidenceRefs ? [] : dependentDatasets.flatMap((dataset) =>
         dataset.evidenceRefs.length
           ? dataset.evidenceRefs
           : [`${evidence.snapshotId}:${dataset.id}:${dataset.status}`],
-      ),
+      )),
     ]));
     const qualityFlags = [
       ...unavailableDatasets.map((dataset) => `dataset_${dataset.status}:${dataset.id}`),
@@ -691,6 +701,13 @@ const mapToBlocks = (
   report: OracleReport,
   keywordData: KeywordAnalysis,
 ): UltimateReportBlock[] => {
+  const metric = (value: unknown, options: { currency?: boolean; percent?: boolean } = {}) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return "Not enough evidence";
+    if (options.currency) return `$${numeric.toFixed(2)}`;
+    if (options.percent) return `${numeric.toFixed(2)}%`;
+    return numeric.toLocaleString();
+  };
   const honesty = sectionByMatch(report, "HONEST");
   const growth = sectionByMatch(report, "GROWTH");
   const weakness = sectionByMatch(report, "WEAKNESS");
@@ -746,10 +763,10 @@ const mapToBlocks = (
       recommendations: ["Use KPI movement as gating criteria before changing content format mix."],
       payload: {
         metrics: [
-          { label: "Views", value: Number(report.stats.views || 0).toLocaleString(), evidence: "Oracle Stats" },
-          { label: "Watch Time", value: Number(report.stats.watchTime || 0).toLocaleString(), evidence: "Oracle Stats" },
-          { label: "CTR", value: `${Number(report.stats.ctr || 0).toFixed(2)}%`, evidence: "Oracle Stats" },
-          { label: "RPM", value: Number(report.stats.rpm || 0).toFixed(2), evidence: "Oracle Stats" },
+          { label: "Views", value: metric(report.stats.views), evidence: "VT-SYNC evidence" },
+          { label: "Watch Time", value: metric(report.stats.watchTime), evidence: "VT-SYNC evidence" },
+          { label: "CTR", value: metric(report.stats.ctr, { percent: true }), evidence: "VT-SYNC evidence" },
+          { label: "RPM", value: metric(report.stats.rpm, { currency: true }), evidence: "VT-SYNC evidence" },
         ],
         sourceLabels: ["master_table", "api"],
         evidenceRefs: ["stats:views", "stats:watchTime", "stats:ctr", "stats:rpm"],
@@ -944,6 +961,114 @@ const buildFusionPromptContext = (mode: "channel" | "retention"): string => {
   ].join("\n");
 };
 
+const factValue = (pack: ChannelReportEvidencePackV2, id: string): number => {
+  const value = pack.facts.find((fact) => fact.id === id)?.value;
+  return typeof value === "number" && Number.isFinite(value) ? value : Number.NaN;
+};
+
+const factsForSection = (pack: ChannelReportEvidencePackV2, sectionId: string) => {
+  const ids = new Set(pack.sectionFactIds[sectionId] || []);
+  return pack.facts.filter((fact) => ids.has(fact.id));
+};
+
+const deterministicSectionTitle: Record<string, string> = {
+  "executive-summary": "Executive Summary",
+  "algorithm-diagnosis": "The Honesty Scale + Algorithm Diagnosis",
+  "strategy-engine": "Growth Sentinel + Strategy Engine",
+  "sculpting-engine": "Weakness Audit + Sculpting Engine",
+  "channel-pulse": "Channel Pulse + Audience DNA",
+  "comparative-analysis": "Content Velocity + Comparative Analysis",
+  "keyword-matrix": "Keyword Matrix",
+  "engagement-matrix": "Engagement Health",
+  "retention-burnout": "Retention Vault + Burnout Analysis",
+  "revenue-dynamics": "Monetization Engine",
+  "risk-guardrails": "Risk Flags + Guardrails",
+  "execution-queue": "Execution Queue + Progress Delta",
+};
+
+const buildDeterministicLayeredFallback = (
+  pack: ChannelReportEvidencePackV2,
+): LayeredChannelReportModelOutputV2 => {
+  const topFacts = pack.facts.slice(0, 3);
+  const missingSummary = pack.missingInputs.length
+    ? pack.missingInputs.slice(0, 2).join(" ")
+    : "No critical dataset gaps were detected in the report manifest.";
+  return {
+    executiveSummary: topFacts.length
+      ? topFacts.map((fact) => fact.statement).join(" ")
+      : "Not enough validated channel evidence is available to produce an executive summary.",
+    executiveLayer: {
+      health: topFacts.length ? "mixed" : "insufficient-evidence",
+      strongestSignal: topFacts[0]?.statement || "Not enough validated evidence to name a strongest signal.",
+      criticalGap: missingSummary,
+      nextActions: pack.missingInputs.length
+        ? ["Sync the missing datasets, then regenerate the report."]
+        : ["Review the evidence-backed section findings before changing channel strategy."],
+    },
+    sections: Object.keys(deterministicSectionTitle).map((id) => {
+      const facts = factsForSection(pack, id);
+      return {
+        id,
+        title: deterministicSectionTitle[id],
+        summary: facts.length ? facts.slice(0, 4).map((fact) => fact.statement).join(" ") : "Not enough evidence for this section.",
+        bullets: facts.slice(0, 6).map((fact) => fact.statement),
+        actions: facts.length ? ["Open the cited evidence before acting on this finding."] : ["Sync the required source data."],
+        claims: facts.slice(0, 8).map((fact) => ({
+          id: `claim:${id}:${fact.id}`,
+          statement: fact.statement,
+          classification: fact.classification,
+          evidenceIds: fact.evidenceIds,
+          confidence: fact.confidence,
+          validationStatus: "valid" as const,
+        })),
+      };
+    }),
+  };
+};
+
+const layeredSection = (report: LayeredChannelReportModelOutputV2, id: string) =>
+  report.sections.find((section) => section.id === id);
+
+const layeredSectionContent = (report: LayeredChannelReportModelOutputV2, id: string): string => {
+  const section = layeredSection(report, id);
+  if (!section) return "Not enough evidence for this section.";
+  return [section.summary, ...section.bullets].filter(Boolean).join("\n\n");
+};
+
+const layeredToOracle = (
+  report: LayeredChannelReportModelOutputV2,
+  pack: ChannelReportEvidencePackV2,
+): OracleReport => ({
+  executiveSummary: report.executiveSummary,
+  stats: {
+    views: factValue(pack, "channel-views"),
+    watchTime: factValue(pack, "channel-watch-time"),
+    revenue: factValue(pack, "revenue-total"),
+    subscribers: factValue(pack, "subscribers-gained"),
+    rpm: factValue(pack, "channel-rpm"),
+    ctr: factValue(pack, "channel-ctr"),
+  },
+  sections: [
+    { title: "The Honesty Scale", content: layeredSectionContent(report, "algorithm-diagnosis") },
+    { title: "Growth Sentinel", content: layeredSectionContent(report, "strategy-engine") },
+    { title: "Weakness Audit", content: layeredSectionContent(report, "sculpting-engine") },
+    { title: "Engagement Health", content: layeredSectionContent(report, "engagement-matrix") },
+    { title: "Strategic Action Plan", content: layeredSectionContent(report, "execution-queue") },
+    { title: "Content Velocity Analysis", content: layeredSectionContent(report, "comparative-analysis") },
+    { title: "Monetization Engine", content: layeredSectionContent(report, "revenue-dynamics") },
+    { title: "Retention Vault", content: layeredSectionContent(report, "retention-burnout") },
+    { title: "Growth Trajectory", content: layeredSectionContent(report, "strategy-engine") },
+  ],
+  miniSpreadsheets: [],
+  keywordComparisonTable: {
+    title: "Observed Search Terms",
+    headers: ["Search term", "Observed value"],
+    rows: pack.facts.filter((fact) => fact.id.startsWith("search-term-")).slice(0, 10)
+      .map((fact) => [fact.statement.split(" has ")[0], fact.value ?? "Not enough evidence"]),
+  },
+  analysisMode: "channel",
+});
+
 const buildToolContextPack = (
   diagnosis: AlgorithmDiagnosis,
   report: OracleReport,
@@ -956,16 +1081,18 @@ const buildToolContextPack = (
   channelId: evidence.channelId,
   createdAt: new Date().toISOString(),
   sourceSnapshotId: evidence.snapshotId,
-  evidenceFingerprint: `${evidence.snapshotId}:${evidence.datasets.map((dataset) => `${dataset.id}:${dataset.rowCount}:${dataset.status}`).join("|")}`,
-  promptVersion: ULTIMATE_PROMPT_PACK_VERSION,
+  evidenceFingerprint: evidence.resolvedBundleFingerprint || `${evidence.snapshotId}:${evidence.datasets.map((dataset) => `${dataset.id}:${dataset.rowCount}:${dataset.status}`).join("|")}`,
+  promptVersion: LAYERED_REPORT_PROMPT_VERSION,
   summary: report.executiveSummary.slice(0, 600),
   contextBlock: [
     `MODE: ${analysisMode}`,
     `CLUSTER: ${diagnosis.clusterCenter}`,
-    `AUTHORITY: ${diagnosis.nicheAuthority}%`,
+    "AUTHORITY: Not enough evidence for an external niche benchmark.",
     `EXEC_SUMMARY: ${report.executiveSummary.slice(0, 280)}`,
   ].join("\n"),
-  evidenceIds: evidence.datasets.flatMap((dataset) => dataset.evidenceRefs).slice(0, 160),
+  evidenceIds: evidence.reportEvidencePack
+    ? Object.keys(evidence.reportEvidencePack.evidenceIndex).filter((id) => id.startsWith("agg:")).slice(0, 160)
+    : evidence.datasets.flatMap((dataset) => dataset.evidenceRefs).slice(0, 160),
   confidence: diagnosis.nicheAuthority >= 70 ? "high" : diagnosis.nicheAuthority >= 40 ? "medium" : "low",
   unavailableInputs: evidence.datasets.filter((dataset) => dataset.status === "unavailable" || dataset.status === "failed").map((dataset) => dataset.id),
 });
@@ -1156,7 +1283,12 @@ export async function generateUltimateChannelReport(
     aiJournalContext: "AI Journal is not a required analytics source.",
     userProfileContext: manualIntent || autoContext || evidence.channelName || evidence.channelId || "User profile unavailable.",
   };
-  const preflight = buildPreflightResult(sourceSnapshot, evidence, isGeminiConfigured());
+  const preflight = buildPreflightResult(sourceSnapshot, evidence, true);
+  if (!evidence.reportEvidencePack) {
+    preflight.ok = false;
+    preflight.blockers.push("missing_resolved_evidence_pack");
+    preflight.remediation.push("Rebuild the report from the resolved VT-SYNC dataset bundle.");
+  }
 
   if (!preflight.ok) {
     input.onSessionUpdate?.({
@@ -1169,21 +1301,20 @@ export async function generateUltimateChannelReport(
       degradedCount: 0,
       totalCount: ULTIMATE_SECTION_ORDER.length,
     });
-    const missingAi = preflight.blockers.includes("missing_gemini_configuration");
     throw new IntelligenceGenerationError({
-      code: missingAi ? "AI_NOT_CONFIGURED" : "AI_GENERATION_FAILED",
-      message: missingAi
-        ? "Gemini is not configured. Add a Gemini API key in Settings before generating a report."
-        : "Required report sources are missing. Sync required sources and retry.",
+      code: "AI_GENERATION_FAILED",
+      message: "Required report sources are missing. Sync required sources and retry.",
       retryable: false,
-      recoveryAction: missingAi ? "configure_ai" : "inspect_request",
+      recoveryAction: "inspect_request",
     }, generationId, { preflight });
   }
+
+  const reportEvidencePack = evidence.reportEvidencePack!;
 
   const resolvedContext = [
     manualIntent && `USER STRATEGIC INTENT: ${manualIntent}`,
     autoContext && `AUTO-DETECTED CONTEXT: ${autoContext}`,
-    `VT-SYNC CANONICAL EVIDENCE:\n${analyticsSnapshot}`,
+    `VT-SYNC STRUCTURED FACTS:\n${JSON.stringify(reportEvidencePack.facts).slice(0, 18_000)}`,
     `[BRAIN SOURCE]\n${sourceSnapshot.brainContext.slice(0, 900)}`,
     `[VT-SYNC COVERAGE MANIFEST]\n${sourceSnapshot.apiSnapshot.slice(0, 4000)}`,
     `[AI JOURNAL]\n${sourceSnapshot.aiJournalContext.slice(0, 900)}`,
@@ -1195,13 +1326,13 @@ export async function generateUltimateChannelReport(
   input.signal?.throwIfAborted();
 
   const contextMode = manualIntent && autoContext ? "hybrid" : manualIntent ? "manual" : "auto";
-  const stageAStartReason = "Stage A (legacy analysis) started.";
-  const stageBStartReason = "Stage B (oracle refinement) started.";
+  const stageAStartReason = "Evidence-bound synthesis started.";
+  const stageBStartReason = "Claim and evidence validation started.";
   input.onSectionUpdate?.(
     {
       id: "stageA",
       order: 0,
-      title: "Stage A Legacy Analysis",
+      title: "Evidence-bound synthesis",
       status: "running",
       summary: stageAStartReason,
       bullets: [],
@@ -1216,33 +1347,76 @@ export async function generateUltimateChannelReport(
     { sectionId: "stageA", status: "running", ts: new Date().toISOString(), note: stageAStartReason },
   );
 
-  const [diagnosisStep, stageAStep, keywordStep] = await Promise.all([
-    withTimeoutRetry(
-      async (compact) => generateArchitectDiagnosis(compact ? buildSlimContext(resolvedContext) : resolvedContext),
-      SECTION_TIMEOUTS_MS.diagnosis,
-      "architect diagnosis",
-      input.signal,
-    ),
-    withTimeoutRetry(
-      async (compact) => generateOracleReport(buildStageAContext(compact ? buildSlimContext(resolvedContext) : resolvedContext)),
-      SECTION_TIMEOUTS_MS.stageA,
-      "stage A report",
-      input.signal,
-    ),
-    withTimeoutRetry(
-      async (compact) => generateKeywordResearch(compact ? buildSlimContext(resolvedContext) : resolvedContext, "YouTube Channel"),
-      SECTION_TIMEOUTS_MS.keyword,
-      "keyword research",
-      input.signal,
-    ),
-  ]);
+  const provider = input.provider || createHttpChannelReportProvider();
+  let stageAStep = await withTimeoutRetry(
+    async () => provider.generate({
+      generationId,
+      channelId: evidence.channelId!,
+      snapshotId: evidence.snapshotId,
+      promptVersion: LAYERED_REPORT_PROMPT_VERSION,
+      schemaVersion: LAYERED_REPORT_SCHEMA_VERSION,
+      evidence: reportEvidencePack,
+      brainContext: sourceSnapshot.brainContext.slice(0, 6_000),
+      creatorIntent: [manualIntent, autoContext].filter(Boolean).join("\n"),
+      signal: input.signal,
+    }),
+    60_000,
+    "evidence-bound channel report",
+    input.signal,
+  );
   input.signal?.throwIfAborted();
+  const validProviderShape = Boolean(
+    stageAStep.value
+    && typeof stageAStep.value === "object"
+    && Array.isArray((stageAStep.value as LayeredChannelReportModelOutputV2).sections)
+    && (stageAStep.value as LayeredChannelReportModelOutputV2).executiveLayer,
+  );
+  if (!validProviderShape && !stageAStep.failed) {
+    stageAStep = { ...stageAStep, failed: true, reason: "Provider returned a malformed layered report." };
+  }
+  let layeredReport = stageAStep.failed
+    ? buildDeterministicLayeredFallback(reportEvidencePack)
+    : stageAStep.value as LayeredChannelReportModelOutputV2;
+  let validation = validateLayeredChannelReport(layeredReport, reportEvidencePack);
+  let stageBStep: ReportStepResult = {
+    value: layeredReport,
+    timedOut: false,
+    failed: false,
+    elapsedMs: 0,
+    retryCount: 0,
+  };
+  if (!validation.valid && !stageAStep.failed) {
+    stageBStep = await withTimeoutRetry(
+      async () => provider.generate({
+        generationId,
+        channelId: evidence.channelId!,
+        snapshotId: evidence.snapshotId,
+        promptVersion: LAYERED_REPORT_PROMPT_VERSION,
+        schemaVersion: LAYERED_REPORT_SCHEMA_VERSION,
+        evidence: reportEvidencePack,
+        brainContext: sourceSnapshot.brainContext.slice(0, 6_000),
+        creatorIntent: [manualIntent, autoContext].filter(Boolean).join("\n"),
+        repair: { previousOutput: layeredReport, errors: validation.errors },
+        signal: input.signal,
+      }),
+      40_000,
+      "evidence repair",
+      input.signal,
+    );
+    if (!stageBStep.failed) {
+      const repaired = stageBStep.value as LayeredChannelReportModelOutputV2;
+      const repairedValidation = validateLayeredChannelReport(repaired, reportEvidencePack);
+      validation = { ...repairedValidation, repaired: repairedValidation.valid };
+      layeredReport = repairedValidation.valid ? repaired : sanitizeInvalidLayeredReport(repaired, repairedValidation);
+    }
+  }
+  if (!validation.valid) layeredReport = sanitizeInvalidLayeredReport(layeredReport, validation);
 
-  const stageAOracle = normalizeOracleReport(stageAStep.value, resolvedContext);
+  const stageAOracle = layeredToOracle(layeredReport, reportEvidencePack);
   const stageA: StageAReport = {
     ...sanitizeOracleReport(stageAOracle),
     stage: "A",
-    promptVersion: LEGACY_PROMPT_VERSION,
+    promptVersion: LAYERED_REPORT_PROMPT_VERSION,
     sections: enforceNineSections(stageAOracle.sections || []),
   };
 
@@ -1250,7 +1424,7 @@ export async function generateUltimateChannelReport(
     {
       id: "stageA",
       order: 0,
-      title: "Stage A Legacy Analysis",
+      title: "Evidence-bound synthesis",
       status: stageAStep.failed ? "failed" : "complete",
       summary: stageAStep.failed ? `Stage A failed: ${stageAStep.reason || "unknown"}` : "Stage A completed.",
       bullets: [],
@@ -1258,8 +1432,8 @@ export async function generateUltimateChannelReport(
       notes: [],
       sourceLabels: ["brain", "master_table", "api", "user_profile"],
       evidenceRefs: [],
-      confidence: stageAStep.failed ? 0 : 70,
-      qualityFlags: stageAStep.failed ? ["stage_a_failed"] : [],
+      confidence: stageAStep.failed ? 65 : 90,
+      qualityFlags: stageAStep.failed ? ["provider_failed_deterministic_fallback"] : [],
       actions: [],
     },
     {
@@ -1274,7 +1448,7 @@ export async function generateUltimateChannelReport(
     {
       id: "stageB",
       order: 0,
-      title: "Stage B Oracle Refinement",
+      title: "Evidence validation and repair",
       status: "running",
       summary: stageBStartReason,
       bullets: [],
@@ -1289,21 +1463,12 @@ export async function generateUltimateChannelReport(
     { sectionId: "stageB", status: "running", ts: new Date().toISOString(), note: stageBStartReason },
   );
 
-  const stageBStep = await withTimeoutRetry(
-    async (compact) =>
-      generateOracleReport(
-        buildStageBContext(compact ? buildSlimContext(resolvedContext) : resolvedContext, stageA),
-      ),
-    SECTION_TIMEOUTS_MS.stageB,
-    "stage B report",
-    input.signal,
-  );
   input.signal?.throwIfAborted();
-  const stageBOracle = normalizeOracleReport(stageBStep.value, resolvedContext);
+  const stageBOracle = layeredToOracle(layeredReport, reportEvidencePack);
   const stageB: StageBRefinement = {
     ...sanitizeOracleReport(stageBOracle),
     stage: "B",
-    promptVersion: ORACLE_REFINEMENT_VERSION,
+    promptVersion: LAYERED_REPORT_PROMPT_VERSION,
     sections: enforceNineSections(stageBOracle.sections || []),
   };
 
@@ -1311,30 +1476,53 @@ export async function generateUltimateChannelReport(
     {
       id: "stageB",
       order: 0,
-      title: "Stage B Oracle Refinement",
-      status: stageBStep.failed ? "failed" : "complete",
-      summary: stageBStep.failed ? `Stage B failed: ${stageBStep.reason || "unknown"}` : "Stage B completed.",
+      title: "Evidence validation and repair",
+      status: validation.valid ? "complete" : "degraded",
+      summary: validation.valid ? "All report claims passed evidence validation." : "Unsupported claims were removed or degraded.",
       bullets: [],
       metrics: [],
       notes: [],
       sourceLabels: ["brain", "master_table", "api", "user_profile"],
       evidenceRefs: [],
-      confidence: stageBStep.failed ? 0 : 78,
-      qualityFlags: stageBStep.failed ? ["stage_b_failed"] : [],
+      confidence: validation.valid ? 95 : 65,
+      qualityFlags: validation.valid ? [] : ["claim_validation_degraded"],
       actions: [],
     },
     {
       sectionId: "stageB",
-      status: stageBStep.failed ? "failed" : "complete",
+      status: validation.valid ? "complete" : "degraded",
       ts: new Date().toISOString(),
-      note: stageBStep.failed ? `Stage B failed: ${stageBStep.reason || "unknown"}` : "Stage B completed.",
+      note: validation.valid ? "Evidence validation completed." : "Evidence validation completed in degraded mode.",
     },
   );
-
-  const diagnosis = normalizeDiagnosis(diagnosisStep.value);
-  const fused = sanitizeOracleReport(fuseStageReports(stageA, stageB)) as FusionReport;
+  const firstStrategy = layeredSection(layeredReport, "strategy-engine");
+  const diagnosisStep: ReportStepResult = { value: layeredReport, timedOut: false, failed: false, elapsedMs: 0, retryCount: 0 };
+  const keywordStep: ReportStepResult = { value: layeredReport, timedOut: false, failed: false, elapsedMs: 0, retryCount: 0 };
+  const diagnosis = normalizeDiagnosis({
+    clusterCenter: evidence.channelName || "Channel evidence",
+    audienceDNA: factsForSection(reportEvidencePack, "channel-pulse").map((fact) => fact.statement),
+    hiddenStory: layeredReport.executiveLayer.strongestSignal,
+    dailyBrief: {
+      priority: layeredReport.executiveLayer.criticalGap,
+      impact: "Evidence-bound recommendation",
+      steps: firstStrategy?.actions || layeredReport.executiveLayer.nextActions,
+    },
+  });
+  const fused = {
+    ...sanitizeOracleReport(layeredToOracle(layeredReport, reportEvidencePack)),
+    stage: "fused" as const,
+    decisions: [],
+  } as FusionReport;
   const oracle = fused;
-  const keyword = normalizeKeywordAnalysis(keywordStep.value);
+  const keyword = normalizeKeywordAnalysis({
+    marketAnalysis: layeredSectionContent(layeredReport, "keyword-matrix"),
+    keywordMetrics: reportEvidencePack.facts.filter((fact) => fact.id.startsWith("search-term-")).map((fact) => ({
+      keyword: fact.statement.split(" has ")[0],
+      volume: Number(fact.value || 0),
+      difficulty: 0,
+      relevance: fact.confidence * 100,
+    })),
+  });
 
   const analysisMode = oracle.analysisMode || modeHint;
   const actionPlan = buildExecutionQueue(diagnosis, oracle);
@@ -1384,8 +1572,33 @@ export async function generateUltimateChannelReport(
       elapsedMs: keywordStep.elapsedMs,
       retryCount: keywordStep.retryCount,
     },
-    fusion: { status: "complete", elapsedMs: 0, retryCount: 0 },
+    fusion: { status: validation.valid ? "complete" : "degraded", elapsedMs: 0, retryCount: 0 },
   };
+
+  const layeredClaims = layeredReport.sections.flatMap((section) => section.claims || []);
+  const baseBlocks = mapToBlocks(diagnosis, oracle, keyword);
+  const blocks = baseBlocks.map((block, index) => {
+    const sectionId = ULTIMATE_SECTION_EVIDENCE_KEYS[Math.min(index, ULTIMATE_SECTION_EVIDENCE_KEYS.length - 1)];
+    const section = layeredSection(layeredReport, sectionId);
+    const claims = section?.claims || [];
+    return {
+      ...block,
+      summary: section?.summary || block.summary,
+      recommendations: section?.actions?.length ? section.actions : block.recommendations,
+      payload: {
+        ...(block.payload || {}),
+        bullets: section?.bullets || block.payload?.bullets || [],
+        actions: section?.actions || block.payload?.actions || block.recommendations,
+        evidenceRefs: Array.from(new Set(claims.flatMap((claim) => claim.evidenceIds))),
+        confidence: claims.length
+          ? Math.round(claims.reduce((total, claim) => total + claim.confidence, 0) / claims.length * 100)
+          : 0,
+        qualityFlags: claims.length ? [] : ["not_enough_evidence"],
+        sourceLabels: ["vt-sync", "analytics-canon"],
+        stageOrigin: "fused" as const,
+      },
+    };
+  });
 
   const report: UltimateChannelReport = {
     meta: {
@@ -1395,7 +1608,11 @@ export async function generateUltimateChannelReport(
       dataSources: input.dataSources?.length ? input.dataSources : ["vt-sync", "analytics-canon", "ai-brain"],
       contextMode,
       analysisMode,
-      promptPackVersion: ULTIMATE_PROMPT_PACK_VERSION,
+      promptPackVersion: LAYERED_REPORT_PROMPT_VERSION,
+      schemaVersion: LAYERED_REPORT_SCHEMA_VERSION,
+      evidenceVersion: reportEvidencePack.version,
+      resolvedBundleFingerprint: reportEvidencePack.bundleFingerprint,
+      privacyFingerprint: reportEvidencePack.privacyFingerprint,
       authoritativeSurface: "/analytics",
       channelId: evidence.channelId,
       snapshotId: evidence.snapshotId,
@@ -1403,9 +1620,8 @@ export async function generateUltimateChannelReport(
       omittedDatasetIds: evidence.omittedDatasetIds,
       aliases: ["performance hub", "analytics", "channel intelligence lab"],
       diagnostics: {
-        modelRecoveryApplied:
-          diagnosisStep.failed || stageAStep.failed || stageBStep.failed || keywordStep.failed,
-        missingSectionsRecovered: oracle.sections.length === 0,
+        modelRecoveryApplied: stageAStep.failed || validation.repaired || !validation.valid,
+        missingSectionsRecovered: layeredReport.sections.some((section) => section.summary === "Not enough evidence for this section."),
         warningCount:
           (oracle.sections.length === 0 ? 1 : 0) +
           (diagnosisStep.failed ? 1 : 0) +
@@ -1417,7 +1633,13 @@ export async function generateUltimateChannelReport(
       },
     },
     executiveSummary: antiGenericSummary(oracle.executiveSummary || diagnosis.hiddenStory || "No summary returned."),
-    blocks: mapToBlocks(diagnosis, oracle, keyword),
+    executiveLayer: {
+      ...layeredReport.executiveLayer,
+      evidenceCoverage: `${evidence.coverage.available + evidence.coverage.partial + evidence.coverage.stale}/${evidence.coverage.total} datasets represented · ${reportEvidencePack.facts.length} validated facts`,
+    },
+    claims: layeredClaims,
+    validation,
+    blocks,
     actionPlan,
     riskFlags,
     keywordComparisonTable: oracle.keywordComparisonTable,
@@ -1430,6 +1652,7 @@ export async function generateUltimateChannelReport(
       stageB,
       fusion: fused,
     },
+    evidenceBundle: evidence,
   };
 
   const sectionStates = toSectionStates(report, sourceSnapshot, evidence);
@@ -1513,7 +1736,7 @@ export async function generateUltimateChannelReport(
   const generationRecord: IntelligenceReportGenerationRecord = {
     id: generationId,
     generatedAt: report.meta.generatedAt,
-    promptPackVersion: ULTIMATE_PROMPT_PACK_VERSION,
+    promptPackVersion: LAYERED_REPORT_PROMPT_VERSION,
     analysisMode,
     contextMode,
     contextSnapshot: resolvedContext.slice(0, 4000),

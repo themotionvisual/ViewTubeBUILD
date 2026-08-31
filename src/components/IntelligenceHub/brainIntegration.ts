@@ -64,7 +64,9 @@ const createBrainGenerationRecord = (
   contextText,
  ].join("\n"), 4_000),
  outputSummary: clip(report.executiveSummary, 2_000),
- sourceEvidenceIds: evidence.datasets.flatMap((dataset) => dataset.evidenceRefs).slice(0, 240),
+ sourceEvidenceIds: evidence.reportEvidencePack
+  ? Object.keys(evidence.reportEvidencePack.evidenceIndex).filter((id) => id.startsWith("agg:")).slice(0, 240)
+  : evidence.datasets.flatMap((dataset) => dataset.evidenceRefs).slice(0, 240),
  createdAt: report.meta.generatedAt,
 })
 
@@ -81,6 +83,32 @@ export const persistIntelligenceBrainArtifacts = async (
    updated: false,
    notes: ["Brain write rejected because the generation did not produce a usable report."],
    qualityFlags: ["brain_report_generation_failed"],
+  }
+  report.brainUpdate = result
+  return result
+ }
+ const reportPack = evidence.reportEvidencePack
+ const availableEvidenceIds = new Set(Object.keys(reportPack?.evidenceIndex || {}))
+ const invalidClaims = (report.claims || []).filter((claim) => {
+  const requiresEvidence = claim.classification === "fact" || claim.classification === "observation"
+  return claim.validationStatus === "invalid"
+   || claim.validationStatus === "unsupported"
+   || (requiresEvidence && !claim.evidenceIds.length)
+   || claim.evidenceIds.some((id) => !availableEvidenceIds.has(id))
+ })
+ const evidenceScopeMismatch = !reportPack
+  || report.meta.resolvedBundleFingerprint !== reportPack.bundleFingerprint
+  || report.meta.privacyFingerprint !== reportPack.privacyFingerprint
+ if (!report.validation?.valid || invalidClaims.length || evidenceScopeMismatch) {
+  const result: BrainUpdateResult = {
+   status: "failed",
+   updated: false,
+   notes: ["Brain write rejected because report claims or resolved evidence scope did not pass validation."],
+   qualityFlags: [
+    !report.validation?.valid ? "brain_report_validation_failed" : "",
+    invalidClaims.length ? "brain_report_claims_unsupported" : "",
+    evidenceScopeMismatch ? "brain_resolved_evidence_scope_mismatch" : "",
+   ].filter(Boolean),
   }
   report.brainUpdate = result
   return result

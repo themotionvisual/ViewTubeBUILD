@@ -32,4 +32,10 @@ describe("creator engagement cross-surface parity", () => {
   expect(studioCommunity).toContain('htmlFor="community-post-copy"')
   expect(studioCommunity).not.toContain("transition-all")
  })
+
+ it("keeps owned-reply editing on the shared controller", () => {
+  expect(studioComment).toContain("Edit reply")
+  expect(studioComment).toContain("comments.saveEditedReply")
+  expect(studioComment).toContain("authorChannelId?.value === context.channelId")
+ })
 })

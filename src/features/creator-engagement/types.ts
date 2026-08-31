@@ -87,9 +87,15 @@ export interface CommentResponderController {
  fetchedVideoData: Record<string, any>
  inboundImageUrl: string | null
  canPostReply: boolean
+ editingReplyId: string | null
+ editingReplyText: string
  refresh: () => Promise<void>
  draftReply: () => Promise<void>
  suggestVideo: () => Promise<void>
  postReply: () => Promise<void>
+ startEditingReply: (reply: any) => void
+ setEditingReplyText: (value: string) => void
+ cancelEditingReply: () => void
+ saveEditedReply: () => Promise<void>
  reconnect: () => Promise<void>
 }

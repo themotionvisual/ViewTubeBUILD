@@ -17,13 +17,14 @@ vi.mock("../auth/authSession", () => ({
 }))
 
 import { markUnifiedAccountServerUnavailable } from "../account/accountCoordinator"
-import { authorizedGoogleRead } from "./googleReadTransport"
+import { _resetAccountProxyDisabledForTest, authorizedGoogleRead } from "./googleReadTransport"
 
 describe("authorizedGoogleRead", () => {
  beforeEach(() => {
   mocks.unified = false
   mocks.token = "legacy-token"
   vi.restoreAllMocks()
+  _resetAccountProxyDisabledForTest()
  })
 
  it("uses the HttpOnly account proxy without exposing a browser token", async () => {

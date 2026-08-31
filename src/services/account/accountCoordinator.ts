@@ -399,6 +399,15 @@ export const fetchUnifiedAccountSnapshot = async (): Promise<UnifiedAccountSnaps
   }
 }
 
+/** Strict read used by access decisions. Never returns a cached snapshot as verified. */
+export const fetchVerifiedUnifiedAccountSnapshot = async (): Promise<UnifiedAccountSnapshot> => {
+  const response = await accountFetch(accountUrl("/api/account/snapshot"), {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  })
+  return readAccountSnapshotJson(response)
+}
+
 export const selectUnifiedContentOwner = async (ownerId: string): Promise<UnifiedAccountSnapshot> => {
   const response = await fetch(accountUrl("/api/account/content-owner"), {
     method: "PUT",

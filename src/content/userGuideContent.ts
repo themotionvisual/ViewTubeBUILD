@@ -16,8 +16,8 @@ export type GuideSection = {
   tools: GuideToolEntry[]
 }
 
-export const GUIDE_PROTOCOL_VERSION = "v2.3"
-export const GUIDE_LAST_UPDATED = "2026-07-28"
+export const GUIDE_PROTOCOL_VERSION = "v2.4"
+export const GUIDE_LAST_UPDATED = "2026-08-28"
 
 export const userGuideSections: GuideSection[] = [
   {
@@ -531,7 +531,7 @@ export const userGuideSections: GuideSection[] = [
         toolName: "Billing Panel",
         routeRef: "/settings?panel=billing",
         whatItDoes:
-          "Controls plan selection (Free/Medium/Large), checkout handoff, and entitlement sync state.",
+          "Shows your Basic, Beta, Creator, Creator Plus, Creator Pro, or Executive plan, checkout handoff, shared AI credits, and entitlement state.",
         howToSteps: [
           "Go to Settings and open Billing & Subscription.",
           "Review current tier and credit balance.",
@@ -540,12 +540,59 @@ export const userGuideSections: GuideSection[] = [
         troubleshooting: [
           "If checkout fails, verify billing server environment keys and connectivity.",
           "If tier does not update, re-open Settings and trigger entitlement sync.",
-          "If paid actions remain blocked, confirm active plan in Billing panel.",
+          "If a tool remains unavailable, open Feature Access to see whether it needs a plan, channel permission, synced data, credits, rollout access, or approval.",
         ],
         qaChecks: [
           "Plan selection button states update correctly.",
           "Billing status messages reflect success/failure clearly.",
           "Entitlement values persist after page refresh.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "feature-access",
+    title: "Feature Access and AI Usage",
+    audience: "Users who need to understand why a tool is available, limited, or asking for an action.",
+    routeRefs: ["/settings?panel=access", "/settings?panel=ai"],
+    tools: [
+      {
+        toolId: "FEATURE_ACCESS_SETTINGS",
+        toolName: "Feature Access",
+        routeRef: "/settings?panel=access",
+        whatItDoes: "Explains the current advisory access policy for tools: account sign-in, plan, Google permissions, synced data, AI credits, rollout availability, and approval for external actions.",
+        howToSteps: [
+          "Open Settings and select Feature Access.",
+          "Read the action label: Upgrade, Connect/Reconnect channel, Review credits, or preview/dry run.",
+          "Complete the named action, then retry the tool without clearing data or changing unrelated settings.",
+        ],
+        troubleshooting: [
+          "A paid plan does not replace missing Google authorization; reconnect when a channel permission is required.",
+          "A connected channel does not replace a plan, credits, or real synced data.",
+          "Feature Access is advisory during this rollout, so it explains current requirements without removing existing tool entry.",
+        ],
+        qaChecks: [
+          "Each unavailable feature names a specific recovery action instead of showing a generic lock.",
+          "Feature Access never changes analytics rows, source provenance, or connection state by itself.",
+        ],
+      },
+      {
+        toolId: "AI_USAGE_METERS",
+        toolName: "AI Usage by Work Type",
+        routeRef: "/settings?panel=ai",
+        whatItDoes: "Shows current UTC-month recorded server credit debits for analysis and asset generation. The bars show usage categories over one shared AI credit balance, not separate quotas.",
+        howToSteps: [
+          "Open Settings and select AI Runtime.",
+          "Review Analysis and Asset generation usage, then open Billing to review the shared balance and plan.",
+          "Use a custom provider key only when the tool specifically supports it; its usage is not included in ViewTube's server credit meter.",
+        ],
+        troubleshooting: [
+          "Usage unavailable means ViewTube has no verified server ledger summary for this account yet.",
+          "BYOK, streaming, and older uncategorized activity are excluded or grouped as Other; the bars are not provider-wide billing statements.",
+        ],
+        qaChecks: [
+          "Both bars remain visible at narrow widths and have progress-bar labels.",
+          "The text says credits are shared and does not imply separate category limits.",
         ],
       },
     ],

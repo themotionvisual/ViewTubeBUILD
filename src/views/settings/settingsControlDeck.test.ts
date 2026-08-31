@@ -10,6 +10,7 @@ describe("settings control deck", () => {
   it("preserves billing deep links and normalizes unknown panels", () => {
     expect(resolveSettingsPanel("billing")).toBe("billing")
     expect(resolveSettingsPanel("workspace-data")).toBe("data")
+    expect(resolveSettingsPanel("feature-gating")).toBe("access")
     expect(resolveSettingsPanel("not-a-panel")).toBe("overview")
     expect(resolveSettingsPanel(null)).toBe("overview")
   })

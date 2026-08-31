@@ -13,6 +13,7 @@ import {
 import { NavIcon } from "./navIcons"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
+import { useFeatureAccess } from "../../context/featureAccessContext"
 import { useBrain } from "../../context/useBrain"
 // Direct import — the feature barrel would drag in the entire VT-SYNC engine
 // (tableRegistry, localSyncEngine, adapters) on every first paint even though
@@ -250,6 +251,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   entitlement,
   isEditorSurface,
 }) => {
+  const featureAccess = useFeatureAccess()
   const location = useLocation()
   const navigate = useNavigate()
   const account = useUnifiedAccount()
@@ -334,7 +336,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const creditPercent = unlimited
     ? 100
     : Math.max(0, Math.min(100, Math.round((Math.max(0, entitlement.creditBalance) / creditCap) * 100)))
-  const canSeeApiKeys = entitlement.subscriptionPlanId === "executive" || isOwnerEmail(knownEmail())
+  const canSeeApiKeys = entitlement.subscriptionPlanId === "executive" || isOwnerEmail(knownEmail()) || featureAccess.decision("settings.api_keys").disposition === "enabled"
   const applicationMenuRecentItems = useMemo<ApplicationMenuRecentItem[]>(() => {
     if (!accountOpen) return []
 

@@ -32,3 +32,7 @@ export {
  getCanonicalIntelligenceDatasetCatalog,
  buildCanonicalIntelligenceEvidence,
 } from "./intelligenceEvidence"
+export {
+ CHANNEL_REPORT_EVIDENCE_VERSION,
+ buildChannelReportEvidencePack,
+} from "./channelReportEvidence"

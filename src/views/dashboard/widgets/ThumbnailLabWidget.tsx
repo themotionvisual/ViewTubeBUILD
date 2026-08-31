@@ -4,7 +4,7 @@ import { useEntitlement } from "../../../context/entitlementContext"
 import { Image as ImageIcon, Sparkles, Download, Search, CheckCircle2, AlertTriangle, Upload, ArrowRight } from "lucide-react"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
 import { VideoAssetSelect } from "./VideoAssetSelect"
-import { WidgetScrollArea } from "../WidgetPrimitives"
+import { WidgetHeaderToggle, WidgetScrollArea } from "../WidgetPrimitives"
 import {
   firstYouTubeThumbnailCandidate,
   nextYouTubeThumbnailCandidate,
@@ -12,7 +12,7 @@ import {
 
 type TabMode = "generate" | "analyze" | "abtest"
 
-export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onDecSize, onDecHeight, onRemove, data }: any) => {
+export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onCycleHeight, onDecSize, onDecHeight, onRemove, data, initialMode = "generate" }: any) => {
   const common = {
   widget,
   instance,
@@ -26,7 +26,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   onDecHeight,
  }
 
-  const [mode, setMode] = useState<TabMode>("generate")
+  const [mode, setMode] = useState<TabMode>(initialMode)
   const [prompt, setPrompt] = useState("")
   const [selectedVideo, setSelectedVideo] = useState("")
   const [videoSearch, setVideoSearch] = useState("")
@@ -128,31 +128,17 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
   }, [])
   const bestIdx = variants.reduce((best, v, i) => v.score > variants[best].score ? i : best, 0)
 
-  const TABS: { id: TabMode; label: string; color: string }[] = [
-    { id: "generate", label: "Generate", color: "#FF83EA" },
-    { id: "analyze", label: "Analyze", color: "#00D2FF" },
-    { id: "abtest", label: "A/B Test", color: "#C9F830" },
-  ]
-
   const modeTabBar = (
-    <div style={{ display: "flex", gap: "0", background: "#f5f5f5", padding: "3px", borderRadius: "8px", border: "2px solid #000" }}>
-      {TABS.map(tab => (
-        <button
-          key={tab.id}
-          onClick={() => { setMode(tab.id); setResult(null) }}
-          style={{
-            flex: 1, padding: "5px 4px",
-            background: mode === tab.id ? tab.color : "transparent",
-            color: mode === tab.id ? "#000" : "rgba(0,0,0,0.4)",
-            border: mode === tab.id ? "2px solid #000" : "2px solid transparent",
-            borderRadius: "6px", fontSize: "9px", fontWeight: 900,
-            textTransform: "uppercase", cursor: "pointer",
-            boxShadow: mode === tab.id ? "1px 1px 0 0 #000" : "none",
-          }}>
-          {tab.label}
-        </button>
-      ))}
-    </div>
+    <WidgetHeaderToggle
+      label="Thumbnail mode"
+      value={mode}
+      onChange={(val) => { setMode(val as TabMode); setResult(null) }}
+      items={[
+        { id: "generate", label: "Generate" },
+        { id: "analyze", label: "Analyze" },
+        { id: "abtest", label: "A/B Test" },
+      ]}
+    />
   )
 
   // Video dropdown (shared by analyze + abtest)

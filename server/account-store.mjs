@@ -620,6 +620,49 @@ export const consumeAiCredits = async (userId, input) => {
   });
 };
 
+const normalizeUsageCategory = (value) => ["analysis", "assets"].includes(value) ? value : "other";
+
+export const summarizeAiUsageEntries = (entries) => {
+  const byCategory = { analysis: 0, assets: 0, other: 0 };
+  let usedCredits = 0;
+  for (const entry of entries) {
+    const delta = Number(entry.deltaCredits || 0);
+    if (delta >= 0) continue;
+    const used = Math.abs(delta);
+    usedCredits += used;
+    byCategory[normalizeUsageCategory(entry.metadata?.usageCategory)] += used;
+  }
+  return { usedCredits, byCategory };
+};
+
+/** Aggregate only authoritative, metered server debits for the current UTC month. */
+export const getAiUsageSummary = async (userId, now = new Date()) => {
+  await initAccountStore();
+  const periodStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const periodEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  let entries;
+  if (usePostgres()) {
+    const result = await pool.query(
+      `SELECT delta_credits,metadata FROM viewtube_ai_credit_ledger
+       WHERE viewtube_user_id=$1 AND created_at >= $2 AND created_at < $3`,
+      [userId, periodStart.toISOString(), periodEnd.toISOString()],
+    );
+    entries = result.rows.map((row) => ({ deltaCredits: Number(row.delta_credits || 0), metadata: row.metadata || {} }));
+  } else {
+    const db = await readFileDb();
+    entries = db.aiLedger.filter((entry) => entry.viewtubeUserId === userId &&
+      Date.parse(entry.createdAt) >= periodStart.getTime() && Date.parse(entry.createdAt) < periodEnd.getTime());
+  }
+  const { usedCredits, byCategory } = summarizeAiUsageEntries(entries);
+  const record = await getAccountSnapshotData(userId);
+  const unlimited = record?.subscription?.planId === "executive";
+  return {
+    periodStartIso: periodStart.toISOString(), periodEndIso: periodEnd.toISOString(), usedCredits,
+    capacityCredits: unlimited ? null : usedCredits + Math.max(0, Number(record?.availableCredits || 0)),
+    byCategory, source: "server_ledger", coverage: "recorded_metered_debits_only",
+  };
+};
+
 export const getAccountSnapshotData = async (userId) => {
   await initAccountStore();
   if (!userId) return null;

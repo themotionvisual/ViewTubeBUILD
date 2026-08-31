@@ -132,28 +132,37 @@ export const fetchChannelPublishingDefaults = async (): Promise<ChannelPublishin
  const token = await refreshTokenIfExpired()
  if (!token) {
   throw new YouTubeApiError(
-   "Your YouTube session has expired or is invalid. Please reconnect your channel in Settings.",
+   "Your YouTube session is not active. Please connect your channel in Settings.",
    401,
    "authError",
   )
  }
 
- const response = await proxyFetch(
-  "https://www.googleapis.com/youtube/v3/channels?part=brandingSettings&mine=true",
-  { headers: { Authorization: `Bearer ${token}` } },
- )
+ try {
+  const response = await proxyFetch(
+   "https://www.googleapis.com/youtube/v3/channels?part=brandingSettings&mine=true",
+   { headers: { Authorization: `Bearer ${token}` } },
+  )
 
- if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch channel publishing defaults")
- const data = await response.json()
- const branding = data.items?.[0]?.brandingSettings?.channel || {}
- const rawKeywords = String(branding.keywords || "")
- const tags = (rawKeywords.match(/"([^"]+)"|'([^']+)'|[^,\s]+/g) || [])
-  .map((tag) => tag.trim().replace(/^['"]|['"]$/g, "").trim())
-  .filter(Boolean)
+  if (!response.ok) await handleYouTubeApiError(response, "Failed to fetch channel publishing defaults")
+  const data = await response.json()
+  const branding = data.items?.[0]?.brandingSettings?.channel || {}
+  const rawKeywords = String(branding.keywords || "")
+  const tags = (rawKeywords.match(/"([^"]+)"|'([^']+)'|[^,\s]+/g) || [])
+   .map((tag) => tag.trim().replace(/^['"]|['"]$/g, "").trim())
+   .filter(Boolean)
 
- return {
-  description: String(branding.description || "").trim(),
-  tags: Array.from(new Set(tags)),
+  return {
+   description: String(branding.description || "").trim(),
+   tags: Array.from(new Set(tags)),
+  }
+ } catch (error) {
+  if (error instanceof YouTubeApiError) throw error
+  throw new YouTubeApiError(
+   "Could not load channel defaults from YouTube.",
+   500,
+   "networkError",
+  )
  }
 }
 
@@ -711,6 +720,7 @@ export const updateVideo = async (videoId: string, details: any) => {
   },
   status: {
    privacyStatus: details.privacyStatus,
+   publishAt: details.publishAt || undefined,
   },
  }
 
@@ -745,7 +755,7 @@ export const updateVideoThumbnail = async (
   },
  )
  if (!response.ok)
-  await handleYouTubeApiError(response, "Failed to update thumbnail")
+  await handleYouTubeApiError(response, "Failed to update video thumbnail")
  return response.json()
 }
 
@@ -754,6 +764,7 @@ export const uploadVideo = async (file: File, details: any) => {
   return uploadUnifiedVideo(file, {
    title: details.title || "Untitled Video", description: details.description || "", categoryId: details.categoryId || "22",
    tags: details.tags || [], privacyStatus: details.privacyStatus || "private",
+   publishAt: details.publishAt || undefined,
   })
  }
  const token = await refreshTokenIfExpired()
@@ -770,6 +781,7 @@ export const uploadVideo = async (file: File, details: any) => {
   },
   status: {
    privacyStatus: details.privacyStatus || "private",
+   publishAt: details.publishAt || undefined,
    madeForKids: details.madeForKids || false,
    embeddable: details.embeddable !== false,
    publicStatsViewable: details.publicStatsViewable !== false,

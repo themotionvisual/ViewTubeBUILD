@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { withVerifiedPostgresSslMode } from "./account-store.mjs";
+import { summarizeAiUsageEntries, withVerifiedPostgresSslMode } from "./account-store.mjs";
 import {
   PUBLIC_PLANS,
   GOOGLE_SCOPES,
   GOOGLE_PROXY_ERROR_CODES,
+  buildCommentThreadListUrl,
+  commentThreadPageSize,
   classifyGoogleProxyResponse,
   decryptToken,
   encryptToken,
@@ -15,6 +17,18 @@ import {
   sanitizeReturnTo,
   sendGoogleJson,
 } from "./account-auth.mjs";
+
+test("comment thread listing keeps the server-owned channel and bounded pagination contract", () => {
+  assert.equal(commentThreadPageSize("0"), 1);
+  assert.equal(commentThreadPageSize("250"), 100);
+  assert.equal(commentThreadPageSize("invalid"), 100);
+  const url = new URL(buildCommentThreadListUrl("UCchannel1", "250", "next-page"));
+  assert.equal(url.pathname, "/youtube/v3/commentThreads");
+  assert.equal(url.searchParams.get("allThreadsRelatedToChannelId"), "UCchannel1");
+  assert.equal(url.searchParams.get("maxResults"), "100");
+  assert.equal(url.searchParams.get("pageToken"), "next-page");
+  assert.equal(url.searchParams.get("part"), "snippet,replies");
+});
 
 test("PostgreSQL connections explicitly verify the server identity", () => {
   const secured = new URL(withVerifiedPostgresSslMode("postgres://user:pass@db.example/viewtube?sslmode=require"));
@@ -60,6 +74,15 @@ test("server plan catalog owns every public plan id", () => {
   assert.deepEqual(PUBLIC_PLANS.map((plan) => plan.id), [
     "basic", "beta", "creator", "creator_plus", "creator_pro", "executive",
   ]);
+});
+
+test("AI usage summaries separate analysis, assets, and legacy uncategorized debits", () => {
+  assert.deepEqual(summarizeAiUsageEntries([
+    { deltaCredits: -12, metadata: { usageCategory: "analysis" } },
+    { deltaCredits: -8, metadata: { usageCategory: "assets" } },
+    { deltaCredits: -3, metadata: {} },
+    { deltaCredits: 50, metadata: { usageCategory: "analysis" } },
+  ]), { usedCredits: 23, byCategory: { analysis: 12, assets: 8, other: 3 } });
 });
 
 test("OAuth tokens are encrypted at rest", () => {

@@ -21,6 +21,9 @@ export interface VaultSnapshot {
 }
 
 export const getVaultKey = (name: VaultKeyName): string => {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined' || typeof localStorage.getItem !== 'function') {
+    return DEFAULTS[name] || '';
+  }
   if (name === 'gemini') {
     const found = GEMINI_ALIASES.map((key) => localStorage.getItem(key) || '').find((value) => value.trim().length > 0);
     return found || '';
@@ -30,6 +33,9 @@ export const getVaultKey = (name: VaultKeyName): string => {
 };
 
 export const setVaultKey = (name: VaultKeyName, value: string): void => {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined' || typeof localStorage.setItem !== 'function') {
+    return;
+  }
   if (name === 'gemini') {
     const trimmed = value.trim();
     if (!trimmed) {

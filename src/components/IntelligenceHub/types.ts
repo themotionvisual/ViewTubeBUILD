@@ -212,6 +212,10 @@ export interface UltimateChannelReport {
     contextMode: "auto" | "manual" | "hybrid";
     analysisMode: "channel" | "retention";
     promptPackVersion: string;
+    schemaVersion?: "layered-channel-report-v2";
+    evidenceVersion?: "channel-report-evidence-v2";
+    resolvedBundleFingerprint?: string;
+    privacyFingerprint?: string;
     authoritativeSurface: "/analytics";
     channelId: string | null;
     snapshotId: string;
@@ -228,6 +232,9 @@ export interface UltimateChannelReport {
     };
   };
   executiveSummary: string;
+  executiveLayer?: ExecutiveLayerV2;
+  claims?: ReportClaimV2[];
+  validation?: ReportValidationV2;
   blocks: UltimateReportBlock[];
   sectionStates?: ReportSectionState[];
   generationEvents?: SectionGenerationEvent[];
@@ -244,6 +251,47 @@ export interface UltimateChannelReport {
     fusion?: FusionReport;
   };
   evidenceBundle?: CanonicalIntelligenceEvidenceBundle;
+}
+
+export interface ExecutiveLayerV2 {
+ health: "strong" | "mixed" | "at-risk" | "insufficient-evidence";
+ strongestSignal: string;
+ criticalGap: string;
+ nextActions: string[];
+ evidenceCoverage: string;
+}
+
+export interface ReportClaimV2 {
+ id: string;
+ statement: string;
+ classification: "fact" | "observation" | "inference" | "hypothesis" | "recommendation";
+ evidenceIds: string[];
+ confidence: number;
+ uncertainty?: string;
+ validationStatus?: "valid" | "invalid" | "unsupported";
+}
+
+export interface LayeredReportSectionV2 {
+ id: string;
+ title: string;
+ summary: string;
+ bullets: string[];
+ actions: string[];
+ claims: ReportClaimV2[];
+}
+
+export interface LayeredChannelReportModelOutputV2 {
+ executiveSummary: string;
+ executiveLayer: Omit<ExecutiveLayerV2, "evidenceCoverage">;
+ sections: LayeredReportSectionV2[];
+}
+
+export interface ReportValidationV2 {
+ valid: boolean;
+ repaired: boolean;
+ errors: string[];
+ invalidClaimIds: string[];
+ unsupportedNumbers: string[];
 }
 
 export interface GenerationDiagnostics {

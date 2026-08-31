@@ -15,61 +15,76 @@ type DefaultDashboardSlot = Readonly<{
 }>
 
 export const DEFAULT_DASHBOARD_ROWS = [
- // Top row — Channel Overview (left half) + About VIEWTUBE hero (right half).
- // The About panel doubles as a sign-in / sign-up CTA on new sessions and
- // stays hidden for connected users (see WidgetRenderer's gate).
+ // Row 1 — Command & Vitals: Mini Sync Controller (left half) + Channel Overview (right half).
  [
-  { id: "kpi-cluster", size: "half", height: "medium" },
+  { id: "sync-controller", size: "half", height: "tall" },
+  { id: "kpi-cluster", size: "half", height: "tall" },
+ ],
+ // Row 2 — Platform Trust & Quick Actions: About VIEWTUBE (left half) + Quick Actions (right half).
+ [
   { id: "app-verification-explainer", size: "half", height: "medium" },
+  { id: "quick-actions", size: "half", height: "medium" },
  ],
- [
-  { id: "community-post", size: "half", height: "tall" },
-  { id: "comment-replier", size: "half", height: "tall" },
- ],
+ // Row 3 — Realtime Pulse & Cadence (4-column quarter matrix).
  [
   { id: "consistency-heatmap", size: "quarter", height: "medium" },
   { id: "realtime-performance", size: "quarter", height: "medium" },
   { id: "goals-tracker", size: "quarter", height: "medium" },
   { id: "keyword-engine", size: "quarter", height: "medium" },
  ],
+ // Row 4 — Daily Strategy & Intelligence.
  [
-  { id: "daily-oracle", size: "third", height: "xtall" },
-  { id: "ask-me", size: "third", height: "xtall" },
-  { id: "ai-journal", size: "third", height: "xtall" },
+  { id: "daily-oracle", size: "half", height: "xtall" },
+  { id: "brain-hub", size: "half", height: "xtall" },
  ],
+ // Row 5 — Content Generation & Production.
  [
   { id: "image-generator", size: "half", height: "xtall" },
   { id: "video-uploader", size: "half", height: "xtall" },
  ],
+ // Row 6 — Video Editing & Script Studio.
  [
   { id: "data-edit", size: "half", height: "xtall" },
-  { id: "traffic-sources", size: "half", height: "xtall" },
+  { id: "script-studio", size: "half", height: "xtall" },
  ],
+ // Row 7 — Discovery & Format Intelligence (3-column third matrix).
  [
   { id: "shorts-vs-long", size: "third", height: "medium" },
   { id: "publish-momentum", size: "third", height: "medium" },
   { id: "audience-matrix", size: "third", height: "medium" },
  ],
+ // Row 8 — Retention, Settings & Keyword Overlap.
  [
+  { id: "retention-sim", size: "quarter", height: "tall" },
   { id: "system-micro-stack", size: "quarter", height: "tall" },
   { id: "keyword-overlap-intelligence", size: "half", height: "tall" },
-  { id: "retention-sim", size: "quarter", height: "tall" },
  ],
+ // Row 9 — Traffic Sources & Community Post.
  [
-  { id: "upload-scheduler", size: "half", height: "xtall" },
-  { id: "brain-hub", size: "half", height: "xtall" },
+  { id: "traffic-sources", size: "half", height: "tall" },
+  { id: "community-post", size: "half", height: "tall" },
  ],
+ // Row 10 — Comment Replier & Thumb AI.
  [
-  { id: "thumb-ai", size: "half", height: "medium" },
-  { id: "quick-actions", size: "quarter", height: "medium" },
-  { id: "ai-prompt-box", size: "quarter", height: "medium" },
+  { id: "comment-replier", size: "half", height: "tall" },
+  { id: "thumb-ai", size: "half", height: "tall" },
  ],
+ // Row 11 — Monetization & Metadata (3-column third matrix).
  [
   { id: "revenue-momentum", size: "third", height: "medium" },
   { id: "title-rewriter", size: "third", height: "medium" },
   { id: "description-editor", size: "third", height: "medium" },
  ],
- [{ id: "hashtag-analyzer", size: "full", height: "medium" }],
+ // Row 12 — Upload Safety & Scheduling.
+ [
+  { id: "upload-scheduler", size: "half", height: "xtall" },
+  { id: "flight-check", size: "half", height: "xtall" },
+ ],
+ // Row 13 — Dashboard Controls & Hashtag Analyzer.
+ [
+  { id: "dashboard-controls", size: "half", height: "tall" },
+  { id: "hashtag-analyzer", size: "half", height: "tall" },
+ ],
 ] as const satisfies readonly (readonly DefaultDashboardSlot[])[]
 
 const defaultDashboardSlotById = new Map<string, DefaultDashboardSlot>(
@@ -77,6 +92,21 @@ const defaultDashboardSlotById = new Map<string, DefaultDashboardSlot>(
 )
 
 const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
+ {
+  id: "dashboard-controls",
+  title: "Dashboard Controls",
+  subtitle: "Layout management, widget picker, preset configs, and backup tools",
+  category: "system",
+  defaultSize: "half",
+  minSize: "third",
+  maxSize: "full",
+  defaultHeight: "tall",
+  minHeight: "medium",
+  maxHeight: "xtall",
+  ...getDashboardWidgetPaletteColors(0),
+  dependency: ["none"],
+  status: "ready",
+ },
  {
   id: "app-verification-explainer",
   title: "About VIEWTUBE",
@@ -211,21 +241,6 @@ const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
   ...getDashboardWidgetPaletteColors(7),
   dependency: ["none"],
   status: "ready",
- },
- {
-  id: "ai-prompt-box",
-  title: "AI Prompt Box",
-  subtitle: "Fast strategy asks",
-  category: "ai",
-  defaultSize: "third",
-  minSize: "quarter",
-  maxSize: "full",
-  defaultHeight: "medium",
-  minHeight: "short",
-  maxHeight: "xtall",
-  ...getDashboardWidgetPaletteColors(8),
-  dependency: ["none"],
-  status: "prototype",
  },
  {
   id: "revenue-momentum",
@@ -389,6 +404,21 @@ const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
   minHeight: "short",
   maxHeight: "xtall",
   ...getDashboardWidgetPaletteColors(19),
+  dependency: ["none"],
+  status: "ready",
+ },
+ {
+  id: "script-studio",
+  title: "Script Studio",
+  subtitle: "AI script editor with runtime estimation and voice matching",
+  category: "creation",
+  defaultSize: "half",
+  minSize: "third",
+  maxSize: "full",
+  defaultHeight: "tall",
+  minHeight: "medium",
+  maxHeight: "xtall",
+  ...getDashboardWidgetPaletteColors(20),
   dependency: ["none"],
   status: "ready",
  },
@@ -588,24 +618,9 @@ const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
   status: "ready",
  },
  {
-  id: "ask-me",
-  title: "Ask Me",
-  subtitle: "AI Q&A Chat",
-  category: "ai",
-  defaultSize: "third",
-  minSize: "quarter",
-  maxSize: "full",
-  defaultHeight: "xtall",
-  minHeight: "short",
-  maxHeight: "xtall",
-  ...getDashboardWidgetPaletteColors(33),
-  dependency: ["none"],
-  status: "ready",
- },
- {
   id: "daily-oracle",
-  title: "Daily Oracle",
-  subtitle: "Strategic Advice",
+  title: "Daily Command Center",
+  subtitle: "Oracle-powered daily priorities, ranked actions, and Brain feedback loop",
   category: "ai",
   defaultSize: "third",
   minSize: "quarter",
@@ -768,24 +783,9 @@ const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
    status: "ready",
   },
   {
-    id: "ai-journal",
-    title: "AI Journal",
-    subtitle: "Creator vision & the pulse",
-    category: "ai",
-    defaultSize: "third",
-    minSize: "quarter",
-    maxSize: "full",
-    defaultHeight: "xtall",
-    minHeight: "short",
-    maxHeight: "xtall",
-    ...getDashboardWidgetPaletteColors(44),
-    dependency: ["gemini_api"],
-    status: "ready",
-  },
-  {
     id: "brain-hub",
-    title: "Brain Hub",
-    subtitle: "AI Memory & OODA Directive",
+    title: "Central Intelligence Hub",
+    subtitle: "Ask AI, Creator Journal, Brain OS & Strategy Prompts",
     category: "ai",
     defaultSize: "half",
     minSize: "quarter",
@@ -826,6 +826,22 @@ const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
     headerColor: "#FF1744",
     iconRailColor: "#C9F830",
     dependency: ["youtube_analytics_v2", "gemini_api"],
+    status: "ready",
+  },
+  {
+    id: "sync-controller",
+    title: "Sync Controller",
+    subtitle: "Monitor, trigger, and diagnose every VT-SYNC dataset",
+    category: "system",
+    defaultSize: "half",
+    minSize: "quarter",
+    maxSize: "full",
+    defaultHeight: "tall",
+    minHeight: "medium",
+    maxHeight: "xtall",
+    headerColor: "#36E0F6",
+    iconRailColor: "#C0F240",
+    dependency: ["youtube_analytics_v2"],
     status: "ready",
   },
 ]
@@ -932,10 +948,14 @@ export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: stri
    short: "AI-POWERED GENERATOR FOR ENGAGING COMMUNITY UPDATES.",
    detailed: "Draft polls, images, and text posts optimized for reach. Best used to prime the algorithm between major video uploads."
   },
-  "description-editor": {
-   short: "STANDARDIZE AND REFINE YOUR VIDEO METADATA AT SCALE.",
-   detailed: "Bulk edit or template your descriptions with SEO-ready blocks. Use snippets to keep your links and socials consistent."
-  },
+  	"description-editor": {
+		short: "STANDARDIZE AND REFINE YOUR VIDEO METADATA AT SCALE.",
+		detailed: "Bulk edit or template your descriptions with SEO-ready blocks. Use snippets to keep your links and socials consistent."
+	},
+	"script-studio": {
+		short: "AI-POWERED SCRIPT EDITOR WITH RUNTIME ESTIMATION AND VOICE MATCHING.",
+		detailed: "Draft, format, and refine video scripts with live runtime estimation and voice match scoring. Use AI rewrite to adapt selected text to your channel's tone."
+	},
   "tag-generator": {
    short: "AI-EXTRACTED KEYWORD CLUSTERS FOR MAXIMUM SEO REACH.",
    detailed: "Generate high-ranking tags based on your video content. Best used to discover niche keywords you might have missed."
@@ -1075,6 +1095,10 @@ export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: stri
   "collab-matchmaker": {
    short: "FIND PEERS AND GENERATE COLLAB PITCHES.",
    detailed: "Discover creators with similar audiences and get AI-drafted reach-out scripts. Use this to grow your community through partnership."
+  },
+  "sync-controller": {
+   short: "COMPACT SYNC OPERATIONS CONSOLE FOR THE DASHBOARD.",
+   detailed: "Full-featured miniature of the Analytics page sync controller. Monitor dataset freshness, trigger group or unit syncs, view live queue status, and diagnose sync failures — all without leaving the dashboard."
   },
   "brain-hub": {
    short: "YOUR AI BRAIN'S MEMORY, DIRECTIVES, AND STRATEGIC ADVICE.",

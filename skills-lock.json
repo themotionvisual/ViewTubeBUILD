@@ -73,6 +73,12 @@
       "skillPath": "skills/clean-code/SKILL.md",
       "computedHash": "74bf6ded4f61ddcb593e7a29beb96c284f888cbe0639ad6e23710447c36ff19a"
     },
+    "dead-code": {
+      "source": "parcadei/continuous-claude-v3",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/dead-code/SKILL.md",
+      "computedHash": "a8d4f025ee6e04d925e56835c19de1446b4d7ead8e5dfe230e5d54d34a9531ec"
+    },
     "design-an-interface": {
       "source": "mattpocock/skills",
       "sourceType": "github",

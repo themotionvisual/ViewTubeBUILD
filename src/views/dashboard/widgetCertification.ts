@@ -54,7 +54,11 @@ const CERTIFICATION_INTENT: Record<string, readonly [string, string, WidgetPerfo
   "revenue-momentum": ["Show monetization trajectory", "Change revenue metric", "moderate"],
   "title-rewriter": ["Improve video title options", "Rewrite a title", "heavy"],
   "description-editor": ["Improve video description copy", "Save description draft", "moderate"],
+  "script-studio": ["Edit script and estimate video runtime", "Rewrite selection with AI", "heavy"],
   "hashtag-analyzer": ["Evaluate hashtag fit", "Analyze hashtags", "heavy"],
+  "dashboard-controls": ["Manage dashboard layout, widget toggles, presets, and backup", "Toggle widget visibility or switch preset", "light"],
+  "sync-controller": ["Monitor and trigger VT-SYNC dataset operations", "Trigger dataset sync", "moderate"],
+  "flight-check": ["Pre-publish checklist and sanity scan", "Review upload readiness", "moderate"],
 }
 
 export const WIDGET_CERTIFICATION_MATRIX: Record<string, WidgetCertificationContract> =

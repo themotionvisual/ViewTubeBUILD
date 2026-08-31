@@ -139,10 +139,11 @@ body {
 /* Canonical text input + textarea surface (matches Video Manager title/description style) */
 .vt-input-standard:not(.dashboard-barrier .vt-input-standard) {
   width: 100%;
-  background: color-mix(in srgb, var(--vt-subtoolbox-fill, #f6f6f6) 16%, #ffffff);
+  background: color-mix(in srgb, var(--vt-subtoolbox-fill, #f6f6f6) 14%, #ffffff);
+  color: color-mix(in srgb, var(--vt-subtoolbox-fill, #000) 35%, #111111);
   border: 3px solid #000;
   border-radius: 12px;
-  box-shadow: 4px 4px 0 0 var(--vt-subtoolbox-shadow, rgb(0 0 0 / 0.25));
+  box-shadow: none;
   padding: 0.75rem;
   font-weight: 800;
   font-size: 0.875rem;
@@ -153,7 +154,14 @@ body {
     background-color 0.2s ease,
     border-color 0.2s ease,
     box-shadow 0.2s ease,
-    transform 0.12s ease;
+    color 0.2s ease,
+    font-weight 0.2s ease;
+}
+
+.vt-input-standard:not(.dashboard-barrier .vt-input-standard)::placeholder {
+  color: color-mix(in srgb, var(--vt-subtoolbox-fill, #000) 30%, #777777);
+  opacity: 0.55;
+  font-weight: 700;
 }
 
 .vt-input-standard:not(.dashboard-barrier .vt-input-standard)[data-border-width="4"] {
@@ -161,21 +169,57 @@ body {
 }
 
 .vt-input-standard:not(.dashboard-barrier .vt-input-standard):focus {
-  border-color: #000;
-  box-shadow: 2px 2px 0 0 rgba(0,0,0,1);
-  background: color-mix(in srgb, var(--vt-subtoolbox-fill, #ffffff) 10%, #ffffff);
+  border-color: #000 !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 1000 !important;
+  outline: none !important;
+  box-shadow:
+    inset 0 0 0 2px var(--vt-subtoolbox-fill, #40c6e9),
+    0 0 0 3px var(--vt-subtoolbox-fill, #40c6e9) !important;
 }
 
 .vt-textarea-standard:not(.dashboard-barrier .vt-textarea-standard) {
   min-height: 116px;
   padding: 1rem;
   resize: vertical;
+  color: color-mix(in srgb, var(--vt-subtoolbox-fill, #000) 35%, #111111);
+  box-shadow: none;
 }
 
 .vt-textarea-standard:not(.dashboard-barrier .vt-textarea-standard):focus {
-  border-color: #000;
-  box-shadow: 2px 2px 0 0 rgba(0,0,0,1);
-  background: #fff;
+  border-color: #000 !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 1000 !important;
+  outline: none !important;
+  box-shadow:
+    inset 0 0 0 2px var(--vt-subtoolbox-fill, #40c6e9),
+    0 0 0 3px var(--vt-subtoolbox-fill, #40c6e9) !important;
+}
+
+/* Uniform Toolbox / Thumbnail Studio Loading & Skeleton Stripes Surface */
+@keyframes vtLoadingStripeWipe {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 72px 0;
+  }
+}
+
+.vt-loading-stripes,
+.vt-skeleton-stripes,
+[data-loading="true"] {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.42) 0px,
+    rgba(255, 255, 255, 0.42) 12px,
+    rgba(255, 255, 255, 0) 12px,
+    rgba(255, 255, 255, 0) 24px
+  ) !important;
+  background-size: 72px 72px !important;
+  animation: vtLoadingStripeWipe 1.4s linear infinite !important;
 }
 
 /* Shared layout variants for standardized field sizing behavior */

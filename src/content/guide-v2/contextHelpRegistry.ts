@@ -12,7 +12,7 @@ export const CONTEXT_HELP: readonly ContextHelpEntry[] = Object.freeze([
  { id:"ai-brain", title:"AI Brain help", route:"/ai-brain", guideAnchor:"guide-create", summary:"Use channel-grounded AI analysis and creator workflows." },
  { id:"editor", title:"Editor help", route:"/editor", guideAnchor:"guide-editor", summary:"Timeline, clips, transitions, preview and rendering." },
  { id:"projects", title:"Projects help", route:"/projects", guideAnchor:"guide-create", summary:"Plan and hand off creator projects." },
- { id:"settings", title:"Account help", route:"/settings", guideAnchor:"guide-connect", summary:"Connection, account, billing and configuration." },
+ { id:"settings", title:"Account help", route:"/settings", guideAnchor:"feature-access", summary:"Connection, plans, feature access, AI credits and configuration." },
 ])
 
 export const contextHelpForRoute = (route: string) =>

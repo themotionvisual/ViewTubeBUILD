@@ -65,6 +65,19 @@ export const GUIDE_ARTICLES: readonly GuideArticleDefinition[] = Object.freeze([
   ],
  },
  {
+  pageId: "feature-access",
+  quick: "Feature Access explains what a tool needs without changing the tool itself during this advisory rollout. A requirement can be sign-in, plan, Google permission, real synced data, AI credits, a rollout flag, or explicit approval for an external action.",
+  learn: [
+   { heading: "Read the required action", body: "Upgrade means the verified plan is below the requirement. Connect or reconnect means a required Google permission is missing or expired. Insufficient credits means the plan permits the AI feature but the shared balance cannot cover the operation." },
+   { heading: "Keep data and access separate", body: "A successful connection does not mean every dataset is synced, and a plan does not supply missing Google permission. Sync or import real data when a tool names unavailable data as the blocker." },
+   { heading: "External actions stay deliberate", body: "Publishing, comments, and similar changes remain preview or dry-run work until an explicit approval and server-side enforcement are in place." },
+  ],
+  technical: [
+   { heading: "Verified authority", body: "The access display reads the server account snapshot. Cached browser state supports continuity only and cannot grant a paid or privileged feature." },
+   { heading: "AI usage scope", body: "Settings meter categories include recorded server debits only. They do not include BYOK or streaming provider usage, and uncategorized historical debits remain Other." },
+  ],
+ },
+ {
   pageId: "analytics",
   quick: "Analytics is the canonical place to sync, inspect, filter and understand ViewTube's YouTube data. VT-SYNC is the data spine; visualizations and AI analysis should read from canonical datasets rather than separate caches.",
   learn: [

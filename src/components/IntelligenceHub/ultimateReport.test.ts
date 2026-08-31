@@ -137,7 +137,7 @@ describe("ultimateReport generation integration", () => {
 
     const result = await generateUltimateChannelReport({ evidence: buildEvidence(), autoContext: "ctx", generationId: "generation-from-ui" });
     expect(result.report.blocks).toHaveLength(14);
-    expect(result.report.executiveSummary).toBe("Executive summary only");
+    expect(result.report.executiveSummary).toContain("Video A has 1,200 views");
     expect(result.report.meta.generationId).toBe("generation-from-ui");
     expect(result.oracle.sections).toHaveLength(9);
   });
@@ -157,31 +157,29 @@ describe("ultimateReport generation integration", () => {
     expect(result.report.meta.snapshotId).toBe("report-snapshot");
   });
 
-  it("blocks before every AI call when Gemini is not configured", async () => {
+  it("does not depend on a client-side Gemini key", async () => {
     vi.mocked(isGeminiConfigured).mockReturnValue(false);
-    await expect(generateUltimateChannelReport({ evidence: buildEvidence(), autoContext: "ctx" })).rejects.toMatchObject({
-      failure: expect.objectContaining({ code: "AI_NOT_CONFIGURED", retryable: false }),
-    });
+    const result = await generateUltimateChannelReport({ evidence: buildEvidence(), autoContext: "ctx" });
+    expect(result.report.executiveSummary).toContain("Video A has 1,200 views");
     expect(generateArchitectDiagnosis).not.toHaveBeenCalled();
     expect(generateOracleReport).not.toHaveBeenCalled();
     expect(generateKeywordResearch).not.toHaveBeenCalled();
   });
 
-  it("does not retry or persist an all-failed report", async () => {
+  it("uses an evidence-only degraded report when the managed provider is unavailable", async () => {
     const missingKey = new Error("Gemini API key is missing");
     vi.mocked(generateArchitectDiagnosis).mockRejectedValue(missingKey);
     vi.mocked(generateOracleReport).mockRejectedValue(missingKey);
     vi.mocked(generateKeywordResearch).mockRejectedValue(missingKey);
 
-    await expect(generateUltimateChannelReport({ evidence: buildEvidence(), autoContext: "ctx" })).rejects.toMatchObject({
-      failure: expect.objectContaining({ code: "AI_NOT_CONFIGURED", retryable: false }),
-    });
-
-    expect(generateArchitectDiagnosis).toHaveBeenCalledTimes(1);
-    expect(generateKeywordResearch).toHaveBeenCalledTimes(1);
-    expect(generateOracleReport).toHaveBeenCalledTimes(2);
-    expect(Object.keys(storage).some((key) => key.startsWith("vt_ultimate_generation_history_v1:"))).toBe(false);
-    expect(Object.keys(storage).some((key) => key.startsWith("vt_ultimate_generation_failures_v1:"))).toBe(true);
+    const result = await generateUltimateChannelReport({ evidence: buildEvidence(), autoContext: "ctx" });
+    expect(result.report.meta.overallStatus).toBe("degraded");
+    expect(result.report.meta.diagnostics.modelRecoveryApplied).toBe(true);
+    expect(result.report.validation?.valid).toBe(true);
+    expect(generateArchitectDiagnosis).not.toHaveBeenCalled();
+    expect(generateKeywordResearch).not.toHaveBeenCalled();
+    expect(generateOracleReport).not.toHaveBeenCalled();
+    expect(Object.keys(storage).some((key) => key.startsWith("vt_ultimate_generation_history_v1:"))).toBe(true);
   });
 
   it("keeps usable partial output as degraded and preserves dataset quality flags", async () => {

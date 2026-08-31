@@ -48,7 +48,7 @@ export const SettingsHelpSection: React.FC<SettingsHelpSectionProps> = ({ onNavi
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
         <HelpCard accent="#40C6E9" cta="Account" description="Connection status, verified identity, and workspace link expectations." onClick={() => onNavigate("/user-guide#sync")} title="Account connection help" />
-        <HelpCard accent="#CCFF00" cta="Billing" description="Plans, top-ups, referral setup, and credit-balance troubleshooting." onClick={() => onNavigate("/user-guide#billing")} title="Billing and credits" />
+        <HelpCard accent="#CCFF00" cta="Access" description="Plans, channel permissions, AI credits, rollout state, and approval requirements." onClick={() => onNavigate("/user-guide#feature-access")} title="Feature access and credits" />
         <HelpCard accent="#FF83EA" cta="AI" description="Gemini key setup, AI workspace context, and model-selection guidance." onClick={() => onNavigate("/user-guide#sync")} title="AI key and models" />
         <HelpCard accent="#FFE357" cta="Data" description="Public handle resolution, exports, cache clearing, and account-linked data controls." onClick={() => onNavigate("/user-guide#sync")} title="Sync and data setup" />
         <HelpCard accent="#FFB570" cta="QA" description="Sitewide recovery flow for chart issues, stale data, billing blocks, and resets." onClick={() => onNavigate("/user-guide#troubleshooting")} title="Troubleshooting playbook" />

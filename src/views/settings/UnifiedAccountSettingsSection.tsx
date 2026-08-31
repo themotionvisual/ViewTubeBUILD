@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Sparkles,
   Trash2,
+  ListChecks,
 } from "lucide-react"
 import { AccountActionButton } from "../../components/account/AccountActionButton"
 import { AIModelSelector } from "../../components/ui/AIModelSelector"
@@ -23,6 +24,9 @@ import { TOPUP_DEFINITIONS, getReferralCode, type EntitlementState } from "../..
 import type { IngestMode } from "../../services/productArchitecture"
 import type { SubscriptionPlanId } from "../../services/subscriptionPlans"
 import type { SettingsPanel, SettingsReadiness } from "./settingsControlDeck"
+import { useFeatureAccess } from "../../context/featureAccessContext"
+import { FeatureAccessNotice } from "../../components/FeatureAccessNotice"
+import { FEATURE_GATES, type FeatureGateDefinition } from "../../services/featureGating"
 
 const PLANS: Array<{ id: SubscriptionPlanId; label: string; price: string; bullets: string[]; accent: string }> = [
   { id: "basic", label: "Basic", price: "$0", bullets: ["Core tools", "Manual sync", "Basic analytics"], accent: "#C9F830" },
@@ -36,6 +40,7 @@ const PLANS: Array<{ id: SubscriptionPlanId; label: string; price: string; bulle
 const PANELS: Array<{ id: SettingsPanel; label: string; description: string; icon: React.ReactNode }> = [
   { id: "overview", label: "Overview", description: "System readiness", icon: <LayoutDashboard size={19} /> },
   { id: "account", label: "Account", description: "Identity and channel", icon: <CircleUserRound size={19} /> },
+  { id: "access", label: "Feature Access", description: "Plans and requirements", icon: <ListChecks size={19} /> },
   { id: "ai", label: "AI Runtime", description: "Brain, models, API key", icon: <Bot size={19} /> },
   { id: "billing", label: "Plan + Credits", description: "Billing and referrals", icon: <CreditCard size={19} /> },
   { id: "data", label: "Data + Privacy", description: "Sources and recovery", icon: <Database size={19} /> },
@@ -122,6 +127,7 @@ export type UnifiedAccountSettingsSectionProps = {
 }
 
 export const UnifiedAccountSettingsSection: React.FC<UnifiedAccountSettingsSectionProps> = (props) => {
+  const featureAccess = useFeatureAccess()
   const {
     activePanel, billingStatus, canResolvePublicHandle, canViewGeminiKey, channelConnection,
     currentEmail, currentHandleValue, customReferralCode, customTopupAmount, dataResetStatus,
@@ -187,8 +193,28 @@ export const UnifiedAccountSettingsSection: React.FC<UnifiedAccountSettingsSecti
           </div>
         ) : null}
 
+        {activePanel === "access" ? (
+          <Card accent="#FFE357" title="Feature access foundation" description="One advisory registry now explains plan, connection, capability, data, credit, rollout, and approval requirements. Existing tool entry remains unchanged while operation-level server checks are added.">
+            <div className="grid gap-3 lg:grid-cols-2">
+              {FEATURE_GATES.filter((gate) => !(gate as FeatureGateDefinition).allowAnonymous || gate.id === "data.portability").map((gate) => <FeatureAccessNotice key={gate.id} featureId={gate.id} compact />)}
+            </div>
+            <p className="text-sm font-bold leading-6 text-black/65">Access is checked from the server account snapshot. Beta and owner exceptions require explicit server assertions; browser email and local storage never grant them.</p>
+          </Card>
+        ) : null}
+
         {activePanel === "ai" ? (
           <div className="grid gap-6 lg:grid-cols-2">
+            <Card accent="#FFE357" title="AI usage by work type" description="Recorded, metered server credit debits for the current UTC month.">
+              {(["analysis", "assets"] as const).map((category) => {
+                const usage = featureAccess.snapshot.ai.usage
+                const used = usage?.byCategory[category] || 0
+                const capacity = usage?.capacityCredits
+                const percent = capacity === null ? 0 : capacity ? Math.min(100, Math.round((used / capacity) * 100)) : 0
+                const label = category === "analysis" ? "Analysis" : "Asset generation"
+                return <div key={category}><div className="mb-2 flex items-end justify-between gap-3"><p className={labelClass}>{label}</p><p className="text-xs font-black">{usage ? `${used.toLocaleString()} credits${capacity === null ? " · unlimited plan" : ` · ${percent}% of current capacity`}` : "Usage unavailable"}</p></div><div role="progressbar" aria-label={`${label} AI usage`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent} className="h-4 w-full overflow-hidden border-[3px] border-black bg-[#E5E7EB]"><div className="h-full bg-[#FF4FD8] motion-safe:transition-[width]" style={{ width: `${percent}%` }} /></div></div>
+              })}
+              <p className="text-xs font-bold leading-5 text-black/60">Coverage includes recorded metered debits only. BYOK, streaming, and older uncategorized calls are excluded or grouped as Other ({(featureAccess.snapshot.ai.usage?.byCategory.other || 0).toLocaleString()} credits). Credits are shared across AI work; these bars are usage views, not separate quotas.</p>
+            </Card>
             <Card accent="#FF4FD8" title="Creator Brain" description="One profile powers Copilot, Oracle, Journal, and creator coaching."><div className="grid gap-3 sm:grid-cols-2"><div className="rounded-xl border-[3px] border-black bg-[#f8f7f1] p-4"><p className={labelClass}>What it captures</p><p className="mt-2 text-sm font-bold leading-6">Niche, audience, goals, strengths, weaknesses, and creator direction.</p></div><div className="rounded-xl border-[3px] border-black bg-[#FFFF61] p-4"><p className={labelClass}>What it improves</p><p className="mt-2 text-sm font-bold leading-6">Recommendations, titles, thumbnails, publishing plans, and monetization moves.</p></div></div><button type="button" onClick={onOpenAiBrainIntake} className={`${buttonClass} bg-[#CCFF00]`}><Sparkles size={17} /> Open Brain intake</button></Card>
             <Card accent="#00F0FF" title="Model orchestration" description="Set the default model for creator workflows."><AIModelSelector /><div className="grid grid-cols-2 gap-3">{[["Flash", "1–1.5x", "#CCFF00"], ["Pro", "10–15x", "#FF83EA"]].map(([label, value, accent]) => <div key={label} className="rounded-xl border-[3px] border-black p-4" style={{ backgroundColor: accent }}><p className={labelClass}>{label}</p><p className="mt-2 text-2xl font-black uppercase">{value}</p><p className="mt-1 text-xs font-bold">Credit multiplier</p></div>)}</div></Card>
             {canViewGeminiKey ? <Card accent="#FFFF61" title="Bring your own key" description="Run Gemini generation against your own quota and billing."><form onSubmit={(event) => { event.preventDefault(); onSaveGeminiKey() }} className="grid gap-4"><label htmlFor="settings-gemini-key" className={labelClass}>Gemini API key</label><div className="relative"><input id="settings-gemini-key" type={showKey ? "text" : "password"} autoComplete="new-password" value={geminiKey} onChange={(event) => onUpdateGeminiKey(event.target.value)} placeholder="Enter your Gemini API key" className={`${inputClass} pr-14`} /><button type="button" onClick={onToggleShowKey} aria-label={showKey ? "Hide API key" : "Show API key"} className="absolute right-3 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg border-2 border-black bg-white focus-visible:outline focus-visible:outline-4"><span aria-hidden="true">{showKey ? <EyeOff size={19} /> : <Eye size={19} />}</span></button></div><button type="submit" className={`${buttonClass} bg-[#CCFF00]`}><KeyRound size={17} /> Save API key</button>{settingsSaveStatus ? <p role="status" aria-live="polite" className="text-sm font-black uppercase">{settingsSaveStatus}</p> : null}</form></Card> : null}

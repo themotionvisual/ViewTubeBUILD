@@ -1,4 +1,5 @@
 import { DEFAULT_VT_SYNC_PRIVACY_FILTERS } from "../../features/vt-sync-local/adapters/privacyPolicy"
+import { buildResolvedAnalyticsDatasetBundle } from "../../features/vt-sync-local/adapters/resolvedAnalyticsBundle"
 import { tableRows } from "../../features/vt-sync-local/adapters/tableData"
 import type {
  VtSyncDatasetFreshness,
@@ -17,6 +18,8 @@ import type {
  IntelligenceDatasetCoverage,
  IntelligenceEvidenceRequest,
 } from "./contracts"
+import type { ResolvedAnalyticsDatasetBundleV2 } from "../../features/vt-sync-local/adapters/resolvedAnalyticsBundle"
+import { buildChannelReportEvidencePack } from "./channelReportEvidence"
 
 export const CANONICAL_INTELLIGENCE_DATASET_COUNT = 34 as const
 export const CANONICAL_INTELLIGENCE_EVIDENCE_VERSION = "vt-intelligence-evidence-v1" as const
@@ -185,6 +188,41 @@ export const getCanonicalIntelligenceDatasetCatalog = (
  })
 }
 
+const canonicalSourceFromResolved = (source: string): CanonicalIntelligenceSource => {
+ if (source === "youtube_data_v3" || source === "youtube_analytics_v2" || source === "youtube_reporting_v1") return source
+ if (source === "manual_import" || source === "derived") return source
+ return "unknown"
+}
+
+const getCatalogFromResolvedBundle = (
+ bundle: ResolvedAnalyticsDatasetBundleV2,
+ maximumRowsPerDataset: number,
+): CanonicalIntelligenceDatasetManifest[] => bundle.datasetOrder.map((id) => {
+ const dataset = bundle.datasets[id]
+ const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((definition) => definition.id === id)
+ if (!table) throw new Error(`[analytics-canon] Missing table definition for resolved dataset ${id}.`)
+ const sampleRows = dataset.rows.slice(0, Math.max(0, maximumRowsPerDataset)).map((row) =>
+  Object.fromEntries(Object.entries(row).map(([key, value]) => [key, safeCell(value)])),
+ )
+ return {
+  id: dataset.id,
+  label: dataset.label,
+  description: dataset.description,
+  categoryIds: [],
+  status: dataset.status,
+  rowCount: dataset.rowCount,
+  updatedAt: dataset.updatedAt,
+  sources: dataset.sources.map(canonicalSourceFromResolved),
+  missingMetrics: dataset.missingMetrics,
+  columns: sampleRows.length
+   ? Object.keys(sampleRows[0]).map((key) => ({ key, label: key }))
+   : [],
+  evidenceRefs: dataset.rowProvenance.slice(0, sampleRows.length).map((row) => row.evidenceId),
+  metrics: summarizeMetrics(dataset.rows, table),
+  sampleRows,
+ }
+})
+
 const buildCoverage = (datasets: CanonicalIntelligenceDatasetManifest[]): IntelligenceDatasetCoverage => ({
  total: datasets.length,
  available: datasets.filter((dataset) => dataset.status === "available").length,
@@ -233,7 +271,10 @@ export const buildCanonicalIntelligenceEvidence = (
  const maximumCharacters = request.maximumCharacters ?? DEFAULT_MAXIMUM_CHARACTERS
  const requestedSectionIds = [...(request.sectionIds || [])]
  const selectedIds = selectedDatasetIds(requestedSectionIds)
- const datasets = getCanonicalIntelligenceDatasetCatalog(snapshot, maximumRowsPerDataset)
+ const resolvedBundle = request.resolvedBundle || buildResolvedAnalyticsDatasetBundle(snapshot, DEFAULT_VT_SYNC_PRIVACY_FILTERS)
+ const datasets = resolvedBundle
+  ? getCatalogFromResolvedBundle(resolvedBundle, maximumRowsPerDataset)
+  : getCanonicalIntelligenceDatasetCatalog(snapshot, maximumRowsPerDataset)
  const selectedDatasets = datasets.filter((dataset) => selectedIds.has(dataset.id))
  const contextParts: string[] = []
  const omittedDatasetIds: string[] = []
@@ -287,5 +328,8 @@ export const buildCanonicalIntelligenceEvidence = (
   requestedSectionIds,
   omittedDatasetIds,
   contextText: contextParts.join("\n\n"),
+  resolvedBundleFingerprint: resolvedBundle?.bundleFingerprint,
+  privacyFingerprint: resolvedBundle?.privacyFingerprint,
+  reportEvidencePack: resolvedBundle ? buildChannelReportEvidencePack(resolvedBundle) : undefined,
  }
 }

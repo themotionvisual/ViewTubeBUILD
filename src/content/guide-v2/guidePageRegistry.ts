@@ -13,6 +13,7 @@ export interface GuidePageDefinition {
 export const GUIDE_PAGES: readonly GuidePageDefinition[] = Object.freeze([
  { id:"start", title:"Start Here", slug:"start", domain:"start", featureIds:["dashboard","account"], depths:["quick","learn"], status:"ready" },
  { id:"connect", title:"Connect Your Channel", slug:"start/connect", domain:"start", featureIds:["account"], depths:["quick","learn","technical"], status:"ready" },
+ { id:"feature-access", title:"Feature Access", slug:"start/feature-access", domain:"start", featureIds:["feature-access","account"], depths:["quick","learn","technical"], status:"ready" },
  { id:"app-map", title:"ViewTube at a Glance", slug:"start/app-map", domain:"start", featureIds:["dashboard","studio","analytics","editor","vault"], depths:["quick","learn"], status:"ready" },
  { id:"widgets", title:"Widget Encyclopedia", slug:"reference/widgets", domain:"reference", featureIds:["dashboard"], depths:["quick","learn"], status:"ready" },
  { id:"analytics", title:"Analytics", slug:"analytics", domain:"analytics", featureIds:["analytics","graphs","intelligence"], depths:["quick","learn","technical"], status:"ready" },

@@ -60,6 +60,7 @@ export interface UnifiedAccountSnapshot {
   ai: {
     planId: string | null
     availableCredits: number
+    usage?: AiUsageSummary | null
   }
   grantedCapabilities: AccountCapability[]
   nextIntent: AccountIntent | null
@@ -68,6 +69,16 @@ export interface UnifiedAccountSnapshot {
     message: string
     recoverable: boolean
   } | null
+}
+
+export interface AiUsageSummary {
+  periodStartIso: string
+  periodEndIso: string
+  usedCredits: number
+  capacityCredits: number | null
+  byCategory: Record<"analysis" | "assets" | "other", number>
+  source: "server_ledger"
+  coverage: "recorded_metered_debits_only"
 }
 
 export const ANONYMOUS_ACCOUNT_SNAPSHOT: UnifiedAccountSnapshot = {
@@ -103,6 +114,7 @@ export const ANONYMOUS_ACCOUNT_SNAPSHOT: UnifiedAccountSnapshot = {
   ai: {
     planId: null,
     availableCredits: 0,
+    usage: null,
   },
   grantedCapabilities: [],
   nextIntent: "sign_up",

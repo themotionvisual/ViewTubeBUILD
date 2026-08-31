@@ -3,6 +3,7 @@ import { BrainCircuit } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import { buildCanonicalIntelligenceEvidence } from "../../../services/analytics-canon"
 import type { VtSyncSnapshot } from "../adapters/contracts"
+import type { ResolvedAnalyticsDatasetBundleV2 } from "../adapters/resolvedAnalyticsBundle"
 
 const IntelligenceHub = lazy(() => import("../../../components/IntelligenceHub/IntelligenceHub"))
 
@@ -14,7 +15,10 @@ const IntelligenceLoadingState = () => (
  </div>
 )
 
-export const VtSyncIntelligenceHubGate: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snapshot }) => {
+export const VtSyncIntelligenceHubGate: React.FC<{
+ snapshot: VtSyncSnapshot
+ resolvedBundle: ResolvedAnalyticsDatasetBundleV2
+}> = ({ snapshot, resolvedBundle }) => {
  const [isOpen, setIsOpen] = useState(() => typeof window !== "undefined" && window.location.hash === "#intelligence")
 
  useEffect(() => {
@@ -28,8 +32,9 @@ export const VtSyncIntelligenceHubGate: React.FC<{ snapshot: VtSyncSnapshot }> =
  const buildEvidence = useCallback(() => buildCanonicalIntelligenceEvidence(snapshot, {
   window: snapshot.selectedTimeWindow || "28d",
   maximumRowsPerDataset: 8,
-  maximumCharacters: 24_000,
- }), [snapshot])
+ maximumCharacters: 24_000,
+  resolvedBundle,
+ }), [resolvedBundle, snapshot])
 
  return (
   <div id="intelligence" className="scroll-mt-24">

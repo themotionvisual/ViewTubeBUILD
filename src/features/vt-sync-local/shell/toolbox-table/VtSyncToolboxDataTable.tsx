@@ -46,11 +46,17 @@ import type {
 } from "../../adapters/contracts"
 import type { VtSyncVideoCatalogCoverage } from "../../adapters/videoCatalogProjection"
 import {
+ resolveAnalyticsTableRows,
+ type ResolvedAnalyticsDatasetBundleV2,
+} from "../../adapters/resolvedAnalyticsBundle"
+import {
  manualImportRecordId,
  mergeVtSyncSupplementalTableRows,
 } from "../../adapters/manualImports"
 import {
+ createVtSyncAnalyticsArchive,
  createVtSyncAnalyticsBundle,
+ parseVtSyncAnalyticsArchive,
  parseVtSyncAnalyticsBundle,
 } from "../../adapters/analyticsBundle"
 import {
@@ -160,49 +166,7 @@ type Group = {
 }
 type CssVars = React.CSSProperties & Record<`--${string}`, string | number>
 
-export const resolveAnalyticsTableRows = ({
- tableId,
- snapshot,
- snapshotRows,
- importedRows,
- recoveredRows,
- privacyFilters,
-}: {
- tableId: string
- snapshot: VtSyncSnapshot
- snapshotRows: VtSyncTableRow[]
- importedRows?: VtSyncImportedRows[string]
- recoveredRows?: VtSyncImportedRows[string]
- privacyFilters: VtSyncPrivacyFilters
-}): VtSyncTableRow[] => {
- if (importedRows?.length) {
-  // Fresh CSV imports are additive: keep API/snapshot rows as the base,
-  // fill missing fields from the import, and append CSV-only identities.
-  return mergeVtSyncSupplementalTableRows<VtSyncTableRow>(
-   tableId,
-   snapshotRows,
-   importedRows,
-  )
- }
-
- const normalizedRecoveredRows = recoveredRows?.length
-  ? normalizeVtSyncTableRows(tableId, recoveredRows)
-  : []
-
- const visibleRecoveredRows = tableId === "videos"
-  ? filterVtSyncVideos(normalizedRecoveredRows, privacyFilters)
-  : normalizedRecoveredRows
-
- if (visibleRecoveredRows.length) {
-  return mergeVtSyncSupplementalTableRows<VtSyncTableRow>(
-   tableId,
-   snapshotRows,
-   visibleRecoveredRows,
-  )
- }
-
- return snapshotRows
-}
+export { resolveAnalyticsTableRows }
 
 const GROUP_COLORS = [
  "#FA618A",
@@ -427,6 +391,17 @@ const downloadJson = (name: string, value: unknown) => {
  const url = URL.createObjectURL(
   new Blob([stringifyForExport(value, 2)], { type: "application/json;charset=utf-8" }),
  )
+ const anchor = document.createElement("a")
+ anchor.href = url
+ anchor.download = name
+ document.body.appendChild(anchor)
+ anchor.click()
+ anchor.remove()
+ window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
+}
+
+const downloadBlob = (name: string, blob: Blob) => {
+ const url = URL.createObjectURL(blob)
  const anchor = document.createElement("a")
  anchor.href = url
  anchor.download = name
@@ -943,7 +918,8 @@ export const VtSyncToolboxDataTable: React.FC<{
  videoCatalogCoverage?: VtSyncVideoCatalogCoverage
  storageStatus?: "loading" | "ready" | "failed"
  storageError?: string
-}> = ({ snapshot, privacyFilters, onPrivacyFiltersChange, onManualImportsChange, onClearSavedData, savedDataClearDisabled = false, videoCatalogCoverage, storageStatus = "ready", storageError }) => {
+ resolvedBundle?: ResolvedAnalyticsDatasetBundleV2
+}> = ({ snapshot, privacyFilters, onPrivacyFiltersChange, onManualImportsChange, onClearSavedData, savedDataClearDisabled = false, videoCatalogCoverage, storageStatus = "ready", storageError, resolvedBundle }) => {
  const initialWorkspaceState = useMemo(
   () => resolveVtSyncWorkspaceUrlState(typeof window === "undefined" ? "" : window.location.search),
   [],
@@ -1171,16 +1147,17 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
  const sourceRows = useMemo(() => {
   // Traffic × Day imports are already merged by the page owner. Other imports
   // are supplemented here for immediate post-import feedback.
-  const importedRows = table.id === "traffic_day" ? undefined : imported[table.id]
-  const snapshotRows = buildVtSyncTableViewModel(snapshot, table, activePrivacyFilters).rows
+ const importedRows = table.id === "traffic_day" ? undefined : imported[table.id]
+ const snapshotRows = buildVtSyncTableViewModel(snapshot, table, activePrivacyFilters).rows
+  const canonicalRows = resolvedBundle?.datasets[table.id]?.rows
+  if (canonicalRows) return canonicalRows as VtSyncTableRow[]
   return resolveAnalyticsTableRows({
    tableId: table.id,
-   snapshot,
    snapshotRows,
    importedRows,
    privacyFilters: activePrivacyFilters,
   })
- }, [activePrivacyFilters, imported, snapshot, table])
+ }, [activePrivacyFilters, imported, resolvedBundle, snapshot, table])
  const trafficDayReference = useMemo(() => {
   const trafficDayTable = findVtSyncTable("traffic_day")
   return {
@@ -2391,7 +2368,7 @@ const filteredRows = useMemo(() => {
   toastTimerRef.current = window.setTimeout(() => setToast(null), 2_800)
  }
 
- const exportAnalyticsBundle = () => {
+ const buildAnalyticsBundle = () => {
   const datasets = Object.fromEntries(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((definition) => {
    const snapshotRows = buildVtSyncTableViewModel(snapshot, definition, activePrivacyFilters).rows
    const rows = resolveAnalyticsTableRows({
@@ -2411,14 +2388,29 @@ const filteredRows = useMemo(() => {
    buildCommit: BUILD_INFO.commit,
    defaultDataset: table.id,
   })
+  return bundle
+ }
+
+ const exportAnalyticsBundle = async () => {
+  const bundle = buildAnalyticsBundle()
+  const archive = await createVtSyncAnalyticsArchive(bundle)
+  downloadBlob(`viewtube-analytics-${new Date().toISOString().slice(0, 10)}.vtanalytics`, archive)
+  const rowCount = Object.values(bundle.datasets).reduce((sum, dataset) => sum + dataset.rowCount, 0)
+  showToast(`Exported ${rowCount.toLocaleString()} rows in a compact archive`)
+ }
+
+ const exportReadableAnalyticsBundle = () => {
+  const bundle = buildAnalyticsBundle()
   downloadJson(`viewtube-analytics-${new Date().toISOString().slice(0, 10)}.json`, bundle)
   const rowCount = Object.values(bundle.datasets).reduce((sum, dataset) => sum + dataset.rowCount, 0)
-  showToast(`Exported ${rowCount.toLocaleString()} rows across ${Object.keys(bundle.datasets).length} datasets`)
+  showToast(`Exported ${rowCount.toLocaleString()} rows as readable JSON`)
  }
 
  const importAnalyticsBundle = async (file: File) => {
   const allowedDatasetIds = new Set(VT_SYNC_VISIBLE_TABLE_DEFINITIONS.map((definition) => definition.id))
-  const bundle = parseVtSyncAnalyticsBundle(await file.text(), allowedDatasetIds)
+  const bundle = file.name.toLowerCase().endsWith(".vtanalytics")
+   ? await parseVtSyncAnalyticsArchive(file, allowedDatasetIds)
+   : parseVtSyncAnalyticsBundle(await file.text(), allowedDatasetIds)
   const capturedAt = new Date().toISOString()
   const channelId = snapshot.channelId || null
 
@@ -5933,7 +5925,7 @@ setSort(table.defaultSort)
        ref={bundleFileRef}
        hidden
        type="file"
-       accept=".json,application/json"
+       accept=".vtanalytics,.json,application/json,application/zip"
        onChange={async (event) => {
         const file = event.target.files?.[0]
         if (!file) return
@@ -5968,9 +5960,13 @@ setSort(table.defaultSort)
          <span>{sortedRows.length.toLocaleString()} visible rows</span>
         </button>
         <small>All data</small>
-        <button type="button" onClick={exportAnalyticsBundle}>
-         <b>Export All Analytics · JSON</b>
-         <span>Portable versioned backup · no secrets</span>
+        <button type="button" onClick={() => void exportAnalyticsBundle()}>
+         <b>Export All Analytics · Compact</b>
+         <span>Lossless compressed archive · no row limits</span>
+        </button>
+        <button type="button" onClick={exportReadableAnalyticsBundle}>
+         <b>Export All Analytics · Readable JSON</b>
+         <span>Legacy-compatible uncompressed backup</span>
         </button>
        </div>
       </details>

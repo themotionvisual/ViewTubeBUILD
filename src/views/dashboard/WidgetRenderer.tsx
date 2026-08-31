@@ -67,8 +67,9 @@ const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.Comp
  "keyword-overlap-intelligence": React.lazy(() => import("./widgets/KeywordOverlapWidget").then((module) => ({ default: module.KeywordOverlapWidget }))),
  "publish-momentum": React.lazy(() => import("./widgets/PublishMomentumWidget").then((module) => ({ default: module.PublishMomentumWidget }))),
  "traffic-sources": React.lazy(() => import("./widgets/TrafficSourcesWidget").then((module) => ({ default: module.TrafficSourcesWidget }))),
- "ask-me": React.lazy(() => import("./widgets/AskMeWidget").then((module) => ({ default: module.AskMeWidget }))),
- "daily-oracle": React.lazy(() => import("./widgets/DailyOracleWidget").then((module) => ({ default: module.DailyOracleWidget }))),
+ "ask-me": React.lazy(() => import("./widgets/CentralIntelligenceWidget").then((module) => ({ default: (props: any) => <module.CentralIntelligenceWidget {...props} defaultTab="ask" /> }))),
+ "daily-oracle": React.lazy(() => import("./widgets/CreatorCommandCenterWidget").then((module) => ({ default: module.CreatorCommandCenterWidget }))),
+ "creator-command-center": React.lazy(() => import("./widgets/CreatorCommandCenterWidget").then((module) => ({ default: module.CreatorCommandCenterWidget }))),
  "flight-check": React.lazy(() => import("./widgets/FlightCheckWidget").then((module) => ({ default: module.FlightCheckWidget }))),
  "description-editor": React.lazy(() => import("./widgets/DescriptionEditorWidget").then((module) => ({ default: module.DescriptionEditorWidget }))),
  "data-edit": React.lazy(() => import("./widgets/DataEditWidget").then((module) => ({ default: module.DataEditWidget }))),
@@ -80,14 +81,19 @@ const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.Comp
  "collab-matchmaker": React.lazy(() => import("./widgets/CollabMatchmakerWidget").then((module) => ({ default: module.CollabMatchmakerWidget }))),
  "bridge-efficiency": React.lazy(() => import("./widgets/BridgeEfficiencyWidget").then((module) => ({ default: module.BridgeEfficiencyWidget }))),
  "audience-matrix": React.lazy(() => import("./widgets/AudienceMatrixWidget").then((module) => ({ default: module.AudienceMatrixWidget }))),
- "brain-hub": React.lazy(() => import("./widgets/BrainHubWidget").then((module) => ({ default: module.BrainHubWidget }))),
+ "brain-hub": React.lazy(() => import("./widgets/CentralIntelligenceWidget").then((module) => ({ default: (props: any) => <module.CentralIntelligenceWidget {...props} defaultTab="memory" /> }))),
  "image-generator": React.lazy(() => import("./widgets/ImageGeneratorWidget").then((module) => ({ default: module.ImageGeneratorWidget }))),
  "video-uploader": React.lazy(() => import("./widgets/DataEditWidget").then((module) => ({ default: module.VideoUploaderWidget }))),
  "audience-retention": React.lazy(() => import("./widgets/AudienceRetentionWidget").then((module) => ({ default: module.AudienceRetentionWidget }))),
  "shorts-vs-long": React.lazy(() => import("./widgets/FormatClashWidget").then((module) => ({ default: module.FormatClashWidget }))),
  "comment-replier": React.lazy(() => import("./widgets/CommentReplyWidget").then((module) => ({ default: module.CommentReplyWidget }))),
- "ai-journal": React.lazy(() => import("./widgets/AIJournalWidget").then((module) => ({ default: module.AIJournalWidget }))),
+ "ai-journal": React.lazy(() => import("./widgets/CentralIntelligenceWidget").then((module) => ({ default: (props: any) => <module.CentralIntelligenceWidget {...props} defaultTab="journal" /> }))),
+ "ai-prompt-box": React.lazy(() => import("./widgets/CentralIntelligenceWidget").then((module) => ({ default: (props: any) => <module.CentralIntelligenceWidget {...props} defaultTab="prompts" /> }))),
+ "central-intelligence": React.lazy(() => import("./widgets/CentralIntelligenceWidget").then((module) => ({ default: module.CentralIntelligenceWidget }))),
  "video-autopsy": React.lazy(() => import("./widgets/VideoAutopsyWidget").then((module) => ({ default: module.VideoAutopsyWidget }))),
+ "script-studio": React.lazy(() => import("./widgets/ScriptStudioWidget").then((module) => ({ default: module.ScriptStudioWidget }))),
+ "dashboard-controls": React.lazy(() => import("./widgets/DashboardControlWidget").then((module) => ({ default: module.DashboardControlWidget }))),
+ "sync-controller": React.lazy(() => import("./widgets/SyncControllerWidget").then((module) => ({ default: module.SyncControllerWidget }))),
 }
 
 const INLINE_WIDGET_RENDERER_KEYS = [
@@ -104,7 +110,6 @@ const INLINE_WIDGET_RENDERER_KEYS = [
  "top-performer",
  "goals-tracker",
  "alerts-feed",
- "ai-prompt-box",
  "revenue-momentum",
  "superfan-card",
  "system-micro-stack",
@@ -138,15 +143,14 @@ const VerificationExplainerWidget: React.FC<{
  common: CommonWidgetProps
  onNavigate: (to: string) => void
 }> = ({ common, onNavigate }) => {
+ const account = useUnifiedAccount()
+ const isConnected = account.snapshot.google.status === "connected"
+  || account.snapshot.google.youtubeScopesGranted
  const handleNavigate = (event: React.MouseEvent<HTMLAnchorElement>, to: string) => {
   event.preventDefault()
   onNavigate(to)
  }
 
- // Six on-brand feature chips, each on a different VT palette stop.
- // Deliberately short two-word verb phrases so the grid stays magnetic and
- // scannable at glance — the visitor's brain sees "OWN THE ALGO / KILL
- // GUESSWORK / SHIP FASTER" and gets the pitch before reading anything.
  const features: Array<{ Icon: typeof TrendingUp; title: string; desc: string; tone: string }> = [
   { Icon: TrendingUp, title: "OWN THE ALGO",   desc: "Live views, watch time, revenue in one canonical stream.",      tone: "cyan" },
   { Icon: RefreshCw,  title: "SYNC EVERYTHING", desc: "One tap pulls every video, comment, and metric — no CSVs.",     tone: "lime" },
@@ -158,28 +162,38 @@ const VerificationExplainerWidget: React.FC<{
 
  return (
   <WidgetShell {...common} icon={<BookOpen size={22} aria-hidden="true" />}>
-   <section className="widget-about" aria-label="Join VIEWTUBE">
-    {/* HERO — big magnetic pitch. Word-per-line stacking keeps the
-        typography feeling engineered, not slapped on. */}
+   <section className="widget-about" aria-label="About VIEWTUBE">
     <header className="widget-about__hero">
      <div className="widget-about__hero-brand" translate="no">
       <span>View</span><span>Tube</span>
      </div>
      <div className="widget-about__hero-tagline">
-      <b>The creator OS</b>
-      <em>Everything you need to grow. Nothing you don't.</em>
+      <b>{isConnected ? "System Ready & Connected" : "The creator OS"}</b>
+      <em>{isConnected ? "Channel analytics and sync operations active." : "Everything you need to grow. Nothing you don't."}</em>
      </div>
-     <a
-      href="/account/connect"
-      onClick={event => handleNavigate(event, "/account/connect")}
-      className="widget-about__hero-cta">
-      <Rocket size={18} strokeWidth={2.75} aria-hidden="true" />
-      <span>JOIN VIEWTUBE</span>
-      <Sparkles size={16} strokeWidth={2.75} aria-hidden="true" />
-     </a>
+     {isConnected ? (
+      <a
+       href="/account"
+       onClick={event => handleNavigate(event, "/account")}
+       className="widget-about__hero-cta is-connected"
+       style={{ background: "#4FFF5B", color: "#000" }}
+      >
+       <ShieldCheck size={18} strokeWidth={2.75} aria-hidden="true" />
+       <span>CONNECTED</span>
+       <Sparkles size={16} strokeWidth={2.75} aria-hidden="true" />
+      </a>
+     ) : (
+      <a
+       href="/account/connect"
+       onClick={event => handleNavigate(event, "/account/connect")}
+       className="widget-about__hero-cta">
+       <Rocket size={18} strokeWidth={2.75} aria-hidden="true" />
+       <span>JOIN VIEWTUBE</span>
+       <Sparkles size={16} strokeWidth={2.75} aria-hidden="true" />
+      </a>
+     )}
     </header>
 
-    {/* Feature matrix — 6 on-brand chips */}
     <ul className="widget-about__features" aria-label="What VIEWTUBE does">
      {features.map(({ Icon, title, desc, tone }) => (
       <li key={title} className={`widget-about__feature is-${tone}`}>
@@ -190,8 +204,6 @@ const VerificationExplainerWidget: React.FC<{
      ))}
     </ul>
 
-    {/* Trust panel — smaller, quieter, but present so the "your data" question
-        is answered before someone bounces. */}
     <aside className="widget-about__trust">
      <span className="widget-about__trust-lock"><Lock size={16} strokeWidth={2.75} aria-hidden="true" /></span>
      <p>
@@ -199,7 +211,6 @@ const VerificationExplainerWidget: React.FC<{
      </p>
     </aside>
 
-    {/* Secondary links row */}
     <nav className="widget-about__links" aria-label="VIEWTUBE resources">
      <a href="/about" onClick={event => handleNavigate(event, "/about")} className="is-cyan">About</a>
      <a href="/user-guide" onClick={event => handleNavigate(event, "/user-guide")} className="is-yellow">User Guide</a>
@@ -386,15 +397,6 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  }
 
  if (widget.id === "app-verification-explainer") {
-  // Only show the sign-in helper when the user actually needs to
-  // connect. A signed-in user with YouTube linked would otherwise see
-  // a persistent "Connect your channel" prompt right next to widgets
-  // full of their own data — the mixed-message state the mobile
-  // auth-fragmentation bug surfaced. Hide entirely once google.status
-  // is "connected" so the layout collapses cleanly.
-  const isConnected = account.snapshot.google.status === "connected"
-   || account.snapshot.google.youtubeScopesGranted
-  if (isConnected) return null
   return <VerificationExplainerWidget common={common} onNavigate={onNavigate} />
  }
 
@@ -1155,53 +1157,6 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        <span>{alert}</span>
       </div>
      ))}
-    </div>
-   </WidgetShell>
-  )
- }
-
-
-
- // 11. ORACLE (Strategic)
- if (widget.id === "ai-prompt-box") {
-  return (
-   <WidgetShell {...common} icon={<WandSparkles size={22} />}>
-    <div className="vt-widget-fill" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-     <div
-      style={{
-       display: "flex",
-       alignItems: "center",
-       gap: "4px",
-       marginBottom: "2px",
-      }}>
-      <Activity size={14} className="text-[#FF8AAF]" />
-      <span className="label-tiny" style={{ color: "#FF8AAF" }}>
-       Strategic Priorities
-      </span>
-     </div>
-     <div
-      style={{
-       display: "flex",
-       background: "#fff",
-       border: "2px solid #000",
-       borderRadius: "10px",
-       overflow: "hidden",
-       boxShadow: "3px 3px 0 0 rgba(255,138,175,0.4)",
-      }}>
-      <div style={{ width: "5px", background: "#FF8AAF", flexShrink: 0 }}></div>
-      <div
-       style={{ flex: 1, padding: "6px", fontSize: "13px", fontWeight: 700 }}>
-       Title hooks are generic. Commit to 2 unique scripts this week.
-      </div>
-     </div>
-     <div className="label-tiny" style={{ opacity: 0.3 }}>
-      Ask Agent Anything
-     </div>
-     <input
-      className="brutal-input"
-      style={{ height: "36px" }}
-      placeholder="Drop a question..."
-     />
     </div>
    </WidgetShell>
   )

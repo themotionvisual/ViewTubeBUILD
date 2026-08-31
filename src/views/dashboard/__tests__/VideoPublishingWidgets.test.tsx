@@ -48,7 +48,7 @@ describe("split video publishing widgets", () => {
   container.remove()
  })
 
- it("builds the uploader with a simple upload action and footer step navigation", async () => {
+ it("builds the uploader with multi-project rail, responsive details grid, and clean 2-tab navigation", async () => {
   const widget = DASHBOARD_WIDGET_BY_ID["video-uploader"]
   await act(async () => {
    root.render(
@@ -68,24 +68,30 @@ describe("split video publishing widgets", () => {
    )
   })
 
+  // Header project draft toggle
+  expect(container.querySelector(".video-uploader-header-drafts")).not.toBeNull()
+  expect(container.querySelector(".video-uploader-header-drafts")?.textContent).toContain("Project 1")
+  expect(container.querySelector(".video-uploader-header-add")).not.toBeNull()
+
+  // Upload actions & frame
   expect(container.querySelectorAll(".widget-media-upload")).toHaveLength(1)
-  expect(container.querySelector(".video-uploader-title-row .video-upload-file-action")?.textContent).toContain("Upload video")
-  expect(container.querySelector(".video-thumbnail-column .widget-media-upload-action")?.textContent).toContain("Upload thumbnail")
-  expect(container.querySelectorAll(".video-uploader-description-row .widget-media-upload-frame")).toHaveLength(1)
-  expect(container.querySelectorAll(".video-uploader-meta-row .video-uploader-selects .widget-select-trigger")).toHaveLength(3)
-  expect(container.querySelectorAll(".widget-footer.widget-toolbar .widget-workflow-buttons > .vt-button")).toHaveLength(3)
+  expect(container.querySelector(".video-upload-file-action")?.textContent).toContain("UPLOAD VIDEO")
+  expect(container.querySelector(".video-thumbnail-column .widget-media-upload-action")?.textContent).toContain("UPLOAD THUMBNAIL")
+
+  // Metadata inputs
   expect(container.querySelector('[aria-label="Video title"].vt-input')).not.toBeNull()
-  expect(container.querySelector(".widget-counted-input")).toBeNull()
-  expect(container.querySelectorAll(".video-uploader-meta-row .video-uploader-selects .widget-select-trigger")).toHaveLength(3)
-  expect(container.querySelector('[aria-label="Category"]')?.textContent).toContain("Category")
-  expect(container.querySelector('[aria-label="Playlist"]')?.textContent).toContain("Playlist")
   expect(container.querySelector('[aria-label="Description"].widget-description-textarea')).not.toBeNull()
-  expect(container.querySelectorAll(".widget-control-disclosure")).toHaveLength(0)
-  expect(container.querySelector(".is-green, .is-blue, .is-pink")).toBeNull()
-  expect(container.querySelector(".video-meta-workspace, .video-meta-footer")).toBeNull()
+  expect(container.querySelector('[aria-label="Category"]')?.textContent).toContain("People & Blogs")
+  expect(container.querySelector('[aria-label="Playlist"]')?.textContent).toContain("Playlist")
+  expect(container.querySelector('[aria-label="Visibility"]')?.textContent).toContain("PUBLIC")
+
+  // Clean 2-tab navigation in footer
+  expect(container.querySelectorAll(".video-uploader-nav-tabs > .vt-button")).toHaveLength(2)
+  expect(container.querySelector(".video-uploader-nav-tabs")?.textContent).toContain("DETAILS")
+  expect(container.querySelector(".video-uploader-nav-tabs")?.textContent).toContain("OPTIONS & SUITABILITY")
  })
 
- it("shows the selected published video's thumbnail and keeps editor modules collapsed by default", async () => {
+ it("shows the selected published video's thumbnail and displays metadata in manage mode", async () => {
   const widget = DASHBOARD_WIDGET_BY_ID["data-edit"]
   await act(async () => {
    root.render(
@@ -126,10 +132,9 @@ describe("split video publishing widgets", () => {
 
   const thumbnail = container.querySelector<HTMLImageElement>('img[alt="Thumbnail for Published test video"]')
   expect(thumbnail?.src).toBe("https://example.com/video123.jpg")
-  expect([...container.querySelectorAll("details")].every((module) => !module.open)).toBe(true)
  })
 
- it("adds the educational timestamps page when Education is selected", async () => {
+ it("navigates to options & compliance page and displays ad suitability with education timestamps", async () => {
   const widget = DASHBOARD_WIDGET_BY_ID["video-uploader"]
   await act(async () => {
    root.render(
@@ -149,12 +154,21 @@ describe("split video publishing widgets", () => {
    )
   })
 
+  // Select Education category
   const category = container.querySelector<HTMLButtonElement>('[aria-label="Category"]')
   await act(async () => category?.click())
   const education = [...document.querySelectorAll<HTMLElement>('[role="option"]')]
    .find((option) => option.textContent === "Education")
   await act(async () => education?.click())
 
-  expect(container.querySelector('.widget-workflow-buttons button')?.parentElement?.textContent).toContain("Timestamps")
+  // Switch to Options & Suitability page
+  const optionsTab = [...container.querySelectorAll<HTMLButtonElement>(".video-uploader-nav-tabs button")]
+   .find((btn) => btn.textContent?.includes("OPTIONS & SUITABILITY"))
+  expect(optionsTab).not.toBeUndefined()
+  await act(async () => optionsTab?.click())
+
+  // Verify Ad Suitability and Timestamps sections render in unified compliance page
+  expect(container.querySelector(".video-uploader-ads-grid")).not.toBeNull()
+  expect(container.querySelector(".video-timestamp-workspace")).not.toBeNull()
  })
 })

@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { generatePerfectReply } from "../../services/gemini"
 import { fetchVideoSnippetDetails } from "../../services/youtubeService"
-import { fetchAllSimpleCommentThreads, postSimpleCommentReply } from "../../services/simpleYouTubeApi"
+import { fetchAllUnifiedCommentThreads } from "../../services/youtube/unifiedYouTubeCommentTransport"
+import { postUnifiedCommentReply, updateUnifiedComment } from "../../services/youtube/youtubeWriteTransport"
 import type { CommentResponderController, CommentResponderTab, CreatorEngagementContext } from "./types"
 
 export const resolveSuggestedVideoId = (
@@ -29,6 +30,8 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
  const [error, setError] = useState<string | null>(null)
  const [threads, setThreads] = useState<any[]>([])
  const [replyText, setReplyTextById] = useState<Record<string, string>>({})
+ const [editingReplyId, setEditingReplyId] = useState<string | null>(null)
+ const [editingReplyText, setEditingReplyText] = useState("")
  const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set())
  const [currentIndex, setCurrentIndex] = useState(0)
  const [fetchedVideoData, setFetchedVideoData] = useState<Record<string, any>>({})
@@ -65,7 +68,7 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
   setLoading(true)
   setError(null)
   try {
-   const nextThreads = await fetchAllSimpleCommentThreads(100)
+   const nextThreads = await fetchAllUnifiedCommentThreads(100, abortController.signal)
    if (generation !== requestGeneration.current) return
    setThreads(nextThreads)
    void syncMetadata(nextThreads)
@@ -165,12 +168,49 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
   try {
    const parentId = currentThread.snippet?.topLevelComment?.id || currentId
    const text = replyText[currentId]
-   const posted = await postSimpleCommentReply(parentId, text)
+   const posted = await postUnifiedCommentReply(parentId, text)
    setReplyTextById((current) => { const next = { ...current }; delete next[currentId]; return next })
    setThreads((current) => current.map((thread) => thread.id !== currentId ? thread : ({ ...thread, replies: { ...thread.replies, comments: [...(thread.replies?.comments || []), { ...posted, snippet: { ...posted?.snippet, authorChannelId: posted?.snippet?.authorChannelId || { value: context.channelId }, authorDisplayName: posted?.snippet?.authorDisplayName || context.channelName, authorProfileImageUrl: posted?.snippet?.authorProfileImageUrl || context.channelThumbnail, textDisplay: posted?.snippet?.textDisplay || text, publishedAt: posted?.snippet?.publishedAt || new Date().toISOString() } }] } })))
    setTab("history")
   } catch (cause) {
    setError(cause instanceof Error ? cause.message : "ViewTube could not post this reply. Reconnect and try again.")
+ } finally { setLoading(false) }
+ }
+
+ const startEditingReply = (reply: any) => {
+  const replyId = String(reply?.id || "")
+  const authorChannelId = String(reply?.snippet?.authorChannelId?.value || "")
+  if (!replyId || authorChannelId !== context.channelId) return
+  setEditingReplyId(replyId)
+  setEditingReplyText(String(reply?.snippet?.textOriginal || reply?.snippet?.textDisplay || ""))
+  setError(null)
+ }
+
+ const cancelEditingReply = () => {
+  setEditingReplyId(null)
+  setEditingReplyText("")
+ }
+
+ const saveEditedReply = async () => {
+  const replyId = editingReplyId
+  const text = editingReplyText.trim()
+  if (!replyId || !text || !context.canPostComments) return
+  setLoading(true)
+  setError(null)
+  try {
+   const updated = await updateUnifiedComment(replyId, text)
+   setThreads((current) => current.map((thread) => ({
+    ...thread,
+    replies: {
+     ...thread.replies,
+     comments: (thread.replies?.comments || []).map((reply: any) => reply.id === replyId
+      ? { ...reply, ...updated, snippet: { ...reply.snippet, ...updated?.snippet, textDisplay: updated?.snippet?.textDisplay || text, textOriginal: updated?.snippet?.textOriginal || text } }
+      : reply),
+    },
+   })))
+   cancelEditingReply()
+  } catch (cause) {
+   setError(cause instanceof Error ? cause.message : "ViewTube could not update this reply. Reconnect and try again.")
   } finally { setLoading(false) }
  }
 
@@ -179,6 +219,7 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
   replyText: currentId ? replyText[currentId] || "" : "",
   setReplyText: (value) => currentId && setReplyTextById((current) => ({ ...current, [currentId]: value })),
   generating: generatingIds.has(currentId), fetchedVideoData, inboundImageUrl,
-  canPostReply: context.canPostComments, refresh, draftReply, suggestVideo, postReply, reconnect: context.reconnect,
+  canPostReply: context.canPostComments, editingReplyId, editingReplyText, refresh, draftReply, suggestVideo, postReply,
+  startEditingReply, setEditingReplyText, cancelEditingReply, saveEditedReply, reconnect: context.reconnect,
  }
 }

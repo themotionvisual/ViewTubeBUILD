@@ -17,6 +17,10 @@ import {
  type SimpleSingleVideoAnalytics as SingleVideoAnalytics,
 } from "../services/simpleYouTubeApi"
 import { useSimpleAuth } from "../auth/AuthProvider"
+import { useUnifiedAccount } from "../context/UnifiedAccountContext"
+import { useVideoAssetCatalog } from "../context/VideoAssetCatalogContext"
+import { isAuthenticated as isLegacyAuthenticated } from "../services/auth/authSession"
+import { readYouTubeAnalyticsCache } from "../services/analytics/DataStore"
 import { useNavigate } from "react-router-dom"
 // Removed isChannelConnected import
 import {
@@ -216,189 +220,258 @@ const resolveVideoListLoadState = (
  return "idle"
 }
 
+const resolveLegacyChannelId = (): string | null => {
+ const cache = readYouTubeAnalyticsCache()
+ const profile = (cache.profile || cache.channelBaseline || {}) as Record<string, unknown>
+ const channelId = String(profile.channelId || profile.id || "").trim()
+ return channelId || null
+}
+
 const VideoManager: React.FC<VideoManagerProps> = ({
  embedded = false,
  collapsible = false,
  isOpenInitial = true,
  paletteIndex,
 }) => {
- const auth = useSimpleAuth()
- const connected = auth.session.status === "ready" && auth.session.capabilities.youtubeRead
- const canManageVideos = auth.session.status === "ready" && auth.session.capabilities.youtubeWrite
- const navigate = useNavigate()
- const basePalette = paletteIndex ?? 0
- const [allVideos, setAllVideos] = useState<VideoSnippet[]>([])
- const [videos, setVideos] = useState<VideoSnippet[]>([])
- const [videoSearchQuery, setVideoSearchQuery] = useState("")
- const [isSearchingVideos, setIsSearchingVideos] = useState(false)
- const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null)
- const [videoDetails, setVideoDetails] = useState<VideoDetails | null>(null)
- const [videoStats, setVideoStats] = useState<VideoStats | null>(null)
- const [videoAnalytics, setVideoAnalytics] =
-  useState<SingleVideoAnalytics | null>(null)
- const [loading, setLoading] = useState(false)
- const [saving, setSaving] = useState(false)
- const [saveSuccess, setSaveSuccess] = useState(false)
- const [error, setError] = useState<string | null>(null)
+  const { session } = useSimpleAuth()
+  const account = useUnifiedAccount()
+  const catalog = useVideoAssetCatalog()
+  const serverConnected = session.status === "ready"
+  const legacyConnected = isLegacyAuthenticated()
+  const connected = serverConnected || legacyConnected
+  const canManageVideos = true
+  const channelId = session.channel?.id || resolveLegacyChannelId()
+  const navigate = useNavigate()
+  const basePalette = paletteIndex ?? 0
+  const [allVideos, setAllVideos] = useState<VideoSnippet[]>([])
+  const [videos, setVideos] = useState<VideoSnippet[]>([])
+  const [videoSearchQuery, setVideoSearchQuery] = useState("")
+  const [isSearchingVideos, setIsSearchingVideos] = useState(false)
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null)
+  const [videoDetails, setVideoDetails] = useState<VideoDetails | null>(null)
+  const [videoStats, setVideoStats] = useState<VideoStats | null>(null)
+  const [videoAnalytics, setVideoAnalytics] =
+   useState<SingleVideoAnalytics | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
- const [dropdownOpen, setDropdownOpen] = useState(false)
- const dropdownRef = useRef<HTMLDivElement>(null)
- const lastSearchRef = useRef("")
- const activeChannelIdRef = useRef(auth.session.channel?.id || "")
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const lastSearchRef = useRef("")
+  const activeChannelIdRef = useRef(channelId || "")
 
- // Edit State
- const [editTitle, setEditTitle] = useState("")
- const [editDescription, setEditDescription] = useState("")
- const [editTags, setEditTags] = useState("")
- const [editPrivacy, setEditPrivacy] = useState("public")
- const [editCategoryId, setEditCategoryId] = useState("27")
+  // Edit State
+  const [editTitle, setEditTitle] = useState("")
+  const [editDescription, setEditDescription] = useState("")
+  const [editTags, setEditTags] = useState("")
+  const [editPrivacy, setEditPrivacy] = useState("public")
+  const [editCategoryId, setEditCategoryId] = useState("27")
 
- // Playlists
- const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([])
- const [currentPlaylists, setCurrentPlaylists] = useState<PlaylistMembership[]>(
-  [],
- )
- const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<string[]>([])
+  // Playlists
+  const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([])
+  const [currentPlaylists, setCurrentPlaylists] = useState<PlaylistMembership[]>(
+   [],
+  )
+  const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<string[]>([])
 
- // AI State
- const [isGeneratingTags, setIsGeneratingTags] = useState(false)
- const [isAnalyzingTags, setIsAnalyzingTags] = useState(false)
- const [suggestedTags, setSuggestedTags] = useState<TagSuggestion[]>([])
- const [existingTagAnalysis, setExistingTagAnalysis] = useState<
-  TagSuggestion[]
- >([])
- const [showRankDetails, setShowRankDetails] = useState(false)
- const [isTagsExpanded, setIsTagsExpanded] = useState(false)
+  // AI State
+  const [isGeneratingTags, setIsGeneratingTags] = useState(false)
+  const [isAnalyzingTags, setIsAnalyzingTags] = useState(false)
+  const [suggestedTags, setSuggestedTags] = useState<TagSuggestion[]>([])
+  const [existingTagAnalysis, setExistingTagAnalysis] = useState<
+   TagSuggestion[]
+  >([])
+  const [showRankDetails, setShowRankDetails] = useState(false)
+  const [isTagsExpanded, setIsTagsExpanded] = useState(false)
 
- const [tagInput, setTagInput] = useState("")
- const fileInputRef = useRef<HTMLInputElement>(null)
- const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
- const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
- const [isDraggingThumbnail, setIsDraggingThumbnail] = useState(false)
- const [isOpen, setIsOpen] = useState(isOpenInitial)
- const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false)
- const [videoListLoadState, setVideoListLoadState] =
-  useState<VideoListLoadState>("idle")
- const hasTriggeredInitialLoadRef = useRef(false)
- const chooseVideoPalette = getToolboxPaletteColors(basePalette + 1)
- const updateDetailsPalette = getToolboxPaletteColors(basePalette + 5)
+  const [tagInput, setTagInput] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [isDraggingThumbnail, setIsDraggingThumbnail] = useState(false)
+  const [isOpen, setIsOpen] = useState(isOpenInitial)
+  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false)
+  const [videoListLoadState, setVideoListLoadState] =
+   useState<VideoListLoadState>("idle")
+  const hasTriggeredInitialLoadRef = useRef(false)
+  const chooseVideoPalette = getToolboxPaletteColors(basePalette + 1)
+  const updateDetailsPalette = getToolboxPaletteColors(basePalette + 5)
 
- const showHeaderLoadAssetsButton = videos.length === 0
+  const showHeaderLoadAssetsButton = videos.length === 0
 
- const formatVideoLoadError = (err: any) => {
-  const raw = err?.message || "Failed to load channel assets."
-  if (/session|auth|401|expired|invalid/i.test(raw)) {
-   return "YouTube session expired. Reconnect your channel in Settings, then reload assets."
-  }
-  return raw
- }
-
- // Derived: the full selected video object used throughout JSX
- const selectedVideo: (VideoSnippet & Partial<VideoDetails>) | null =
-  selectedVideoId
-   ? ({
-      ...(videos.find((v) => v.videoId === selectedVideoId) ?? {}),
-      ...(videoDetails ?? {}),
-     } as VideoSnippet & Partial<VideoDetails>)
-   : null
- useEffect(() => {
-  const channelId = auth.session.channel?.id || ""
-  if (activeChannelIdRef.current === channelId) return
-  activeChannelIdRef.current = channelId
-  setSelectedVideoId(null)
-  setVideoDetails(null)
-  setVideoStats(null)
-  setVideoAnalytics(null)
-  setUserPlaylists([])
-  setCurrentPlaylists([])
-  setSelectedPlaylistIds([])
-  setAllVideos([])
-  setVideos([])
-  setHasLoadedInitialData(false)
-  hasTriggeredInitialLoadRef.current = false
- }, [auth.session.channel?.id])
-
- useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-   if (
-    dropdownRef.current &&
-    !dropdownRef.current.contains(event.target as Node)
-   ) {
-    setDropdownOpen(false)
+  const formatVideoLoadError = (err: any) => {
+   const raw = err?.message || "Failed to load channel assets."
+   if (/session|auth|401|expired|invalid/i.test(raw)) {
+    return "YouTube session expired. Reconnect your channel in Settings, then reload assets."
    }
+   return raw
   }
-  document.addEventListener("mousedown", handleClickOutside)
-  return () => document.removeEventListener("mousedown", handleClickOutside)
- }, [])
 
+  const resolveMostViewedVideoId = useCallback((videoList: VideoSnippet[]): string | null => {
+   if (!videoList || videoList.length === 0) return null
+   try {
+    const cache = readYouTubeAnalyticsCache()
+    const cachedVideos = Array.isArray(cache.videos)
+     ? cache.videos
+     : (Array.isArray(cache.videosLifetime) ? cache.videosLifetime : [])
+    const viewMap = new Map<string, number>()
+    for (const item of cachedVideos) {
+     if (item && typeof item === "object") {
+      const vid = String((item as any).videoId || (item as any).id || "").trim()
+      const count = Number((item as any).views ?? (item as any).viewsLifetime ?? (item as any).viewCount ?? 0)
+      if (vid && !Number.isNaN(count)) {
+       viewMap.set(vid, count)
+      }
+     }
+    }
+    let highestId = videoList[0]?.videoId || null
+    let maxViews = -1
+    for (const v of videoList) {
+     const views = viewMap.get(v.videoId) ?? -1
+     if (views > maxViews) {
+      maxViews = views
+      highestId = v.videoId
+     }
+    }
+    return highestId
+   } catch {
+    return videoList[0]?.videoId || null
+   }
+  }, [])
 
- const loadInitialData = useCallback(async (_force = false) => {
-  setVideoListLoadState("loading")
-  setLoading(true)
-  setError(null)
-  try {
-   const [inventory, playlists] = await Promise.all([
-    fetchSimpleVideoInventory(),
-    fetchSimplePlaylists(),
-   ])
-   setAllVideos(inventory.videos)
-   setVideos(inventory.videos)
-   setUserPlaylists(playlists)
-   setHasLoadedInitialData(true)
-   setVideoListLoadState(inventory.videos.length > 0 ? "success" : "empty")
-  } catch (err: any) {
-   console.error(err)
-   setError(formatVideoLoadError(err))
-   setHasLoadedInitialData(true)
-   setVideoListLoadState("error")
-  } finally {
-   setLoading(false)
-  }
- }, [])
-
- useEffect(() => {
-  if (!dropdownOpen) return
-  const delayDebounceFn = setTimeout(() => {
-   const nextQuery = videoSearchQuery.trim().toLowerCase()
-   if (nextQuery === lastSearchRef.current) return
-   lastSearchRef.current = nextQuery
-   setIsSearchingVideos(true)
-   const nextVideos = !nextQuery
-    ? allVideos
-    : allVideos.filter((video) =>
-       video.title.toLowerCase().includes(nextQuery) ||
-       video.videoId.toLowerCase().includes(nextQuery)
-      )
-   setVideos(nextVideos.slice(0, 50))
-   setIsSearchingVideos(false)
-  }, 260)
-  return () => clearTimeout(delayDebounceFn)
- }, [allVideos, dropdownOpen, videoSearchQuery])
-
-
-
- useEffect(() => {
-  if (!connected) {
+  // Derived: the full selected video object used throughout JSX
+  const selectedVideo: (VideoSnippet & Partial<VideoDetails>) | null =
+   selectedVideoId
+    ? ({
+       ...(videos.find((v) => v.videoId === selectedVideoId) ?? {}),
+       ...(videoDetails ?? {}),
+      } as VideoSnippet & Partial<VideoDetails>)
+    : null
+  useEffect(() => {
+   const activeId = String(channelId || "").trim()
+   if (activeChannelIdRef.current === activeId) return
+   activeChannelIdRef.current = activeId
+   setSelectedVideoId(null)
+   setVideoDetails(null)
+   setVideoStats(null)
+   setVideoAnalytics(null)
+   setUserPlaylists([])
+   setCurrentPlaylists([])
+   setSelectedPlaylistIds([])
+   setAllVideos([])
+   setVideos([])
+   setHasLoadedInitialData(false)
    hasTriggeredInitialLoadRef.current = false
-   return
-  }
-  if (hasLoadedInitialData || hasTriggeredInitialLoadRef.current) return
-  if (collapsible && !isOpen) return
+  }, [channelId])
 
-  hasTriggeredInitialLoadRef.current = true
-  loadInitialData()
- }, [collapsible, connected, hasLoadedInitialData, isOpen, loadInitialData])
+  useEffect(() => {
+   const handleClickOutside = (event: MouseEvent) => {
+    if (
+     dropdownRef.current &&
+     !dropdownRef.current.contains(event.target as Node)
+    ) {
+     setDropdownOpen(false)
+    }
+   }
+   document.addEventListener("mousedown", handleClickOutside)
+   return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
- useEffect(() => {
-  if (!connected) return
-  if (videos.length === 0) return
-  if (selectedVideoId) return
-  const firstVideoId = videos[0]?.videoId
-  if (!firstVideoId) return
-  handleSelectVideo(firstVideoId, userPlaylists)
- }, [connected, videos, selectedVideoId, userPlaylists])
+  // Instant hydration from local VideoAssetCatalog context if ready
+  useEffect(() => {
+   if (allVideos.length === 0 && catalog.snapshot.items.length > 0) {
+    const catalogVideos: VideoSnippet[] = catalog.snapshot.items.map((item) => ({
+     videoId: item.videoId,
+     title: item.title,
+     publishedAt: item.publishedAt || "",
+     thumbnail: item.thumbnailUrl || "",
+    }))
+    setAllVideos(catalogVideos)
+    setVideos(catalogVideos)
+    setVideoListLoadState("success")
+    if (!selectedVideoId) {
+     const topId = resolveMostViewedVideoId(catalogVideos)
+     if (topId) {
+      void handleSelectVideo(topId, userPlaylists)
+     }
+    }
+   }
+  }, [catalog.snapshot.items, allVideos.length, selectedVideoId, userPlaylists, resolveMostViewedVideoId])
 
+  const loadInitialData = useCallback(async (_force = false) => {
+   if (allVideos.length === 0) {
+    setVideoListLoadState("loading")
+   }
+   setLoading(true)
+   setError(null)
+   try {
+    const [inventory, playlists] = await Promise.all([
+     fetchSimpleVideoInventory(),
+     fetchSimplePlaylists(),
+    ])
+    setAllVideos(inventory.videos)
+    setVideos(inventory.videos)
+    setUserPlaylists(playlists)
+    setHasLoadedInitialData(true)
+    setVideoListLoadState(inventory.videos.length > 0 ? "success" : "empty")
 
+    if (!selectedVideoId && inventory.videos.length > 0) {
+     const topId = resolveMostViewedVideoId(inventory.videos)
+     if (topId) {
+      void handleSelectVideo(topId, playlists)
+     }
+    }
+   } catch (err: any) {
+    console.error(err)
+    setError(formatVideoLoadError(err))
+    setHasLoadedInitialData(true)
+    setVideoListLoadState("error")
+   } finally {
+    setLoading(false)
+   }
+  }, [allVideos.length, selectedVideoId, resolveMostViewedVideoId])
+
+  useEffect(() => {
+   if (!dropdownOpen) return
+   const delayDebounceFn = setTimeout(() => {
+    const nextQuery = videoSearchQuery.trim().toLowerCase()
+    if (nextQuery === lastSearchRef.current) return
+    lastSearchRef.current = nextQuery
+    setIsSearchingVideos(true)
+    const nextVideos = !nextQuery
+     ? allVideos
+     : allVideos.filter((video) =>
+        video.title.toLowerCase().includes(nextQuery) ||
+        video.videoId.toLowerCase().includes(nextQuery)
+       )
+    setVideos(nextVideos.slice(0, 50))
+    setIsSearchingVideos(false)
+   }, 260)
+   return () => clearTimeout(delayDebounceFn)
+  }, [allVideos, dropdownOpen, videoSearchQuery])
+
+  useEffect(() => {
+   if (!connected) {
+    hasTriggeredInitialLoadRef.current = false
+    return
+   }
+   if (hasLoadedInitialData || hasTriggeredInitialLoadRef.current) return
+   if (collapsible && !isOpen) return
+
+   hasTriggeredInitialLoadRef.current = true
+   loadInitialData()
+  }, [collapsible, connected, hasLoadedInitialData, isOpen, loadInitialData])
+
+  useEffect(() => {
+   if (!connected) return
+   if (videos.length === 0) return
+   if (selectedVideoId) return
+   const topVideoId = resolveMostViewedVideoId(videos)
+   if (!topVideoId) return
+   handleSelectVideo(topVideoId, userPlaylists)
+  }, [connected, videos, selectedVideoId, userPlaylists, resolveMostViewedVideoId])
 
  const handleSelectVideo = async (
   videoId: string,
@@ -591,7 +664,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   if (!selectedVideoId) return
   if (!canManageVideos) {
    setError("Reconnect Channel to grant YouTube video-management permission.")
-   auth.login("/video-manager")
+   void account.start("reconnect_channel", "/video-manager")
    return
   }
   setSaving(true)
@@ -813,49 +886,53 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   {
    key: "views",
    label: "Views",
-   value: formatViews(String(selectedVideoMetrics.views || 0)),
+   value: videoStats?.views ? formatViews(String(selectedVideoMetrics.views)) : "-",
    tone: "bg-[#40C6E9]",
   },
   {
    key: "watch",
    label: "Watch Hrs",
-   value: selectedVideoMetrics.watchHours.toFixed(2),
+   value: videoAnalytics?.averageViewPercentage && selectedVideoMetrics.watchHours > 0
+    ? selectedVideoMetrics.watchHours.toFixed(2)
+    : "-",
    tone: "bg-[#B9FF58]",
   },
   {
    key: "likes",
    label: "Likes",
-   value: formatViews(String(selectedVideoMetrics.likes || 0)),
+   value: videoStats?.likes ? formatViews(String(selectedVideoMetrics.likes)) : "-",
    tone: "bg-[#FF83EA]",
   },
   {
    key: "comments",
    label: "Comments",
-   value: formatViews(String(selectedVideoMetrics.comments || 0)),
+   value: videoStats?.comments ? formatViews(String(selectedVideoMetrics.comments)) : "-",
    tone: "bg-[#FFFF61]",
   },
   {
    key: "shares",
    label: "Shares",
-   value: formatViews(String(selectedVideoMetrics.shares || 0)),
+   value: videoAnalytics?.shares ? formatViews(String(selectedVideoMetrics.shares)) : "-",
    tone: "bg-[#FFB570]",
   },
   {
    key: "revenue",
    label: "Revenue",
-   value: `$${selectedVideoMetrics.revenue.toFixed(2)}`,
+   value: videoAnalytics?.estimatedRevenue ? `$${selectedVideoMetrics.revenue.toFixed(2)}` : "-",
    tone: "bg-[#4FFF5B]",
   },
   {
    key: "length",
    label: "Length",
-   value: formatDuration(videoStats?.duration || "0"),
+   value: videoStats?.duration ? formatDuration(videoStats.duration) : "-",
    tone: "bg-[#FFE357]",
   },
   {
    key: "end-screen",
    label: "End Screen %",
-   value: `${selectedVideoMetrics.endScreenClickRate.toFixed(1)}%`,
+   value: videoAnalytics?.clickThroughRate && selectedVideoMetrics.endScreenClickRate > 0
+    ? `${selectedVideoMetrics.endScreenClickRate.toFixed(1)}%`
+    : "-",
    tone: "bg-[#9CEBFF]",
   },
   ]
@@ -945,29 +1022,29 @@ const VideoManager: React.FC<VideoManagerProps> = ({
      <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black]">
       <FileVideo size={48} className="text-black" />
      </div>
-     <div className="space-y-4 max-w-md">
-      <h2 className="text-4xl font-[1000] uppercase tracking-tighter">
-       {auth.loading ? "Connecting Channel" : auth.session.status === "reconnect_required" ? "Reconnect Channel" : "Channel Offline"}
-      </h2>
-      <p className="text-gray-600 font-bold">
-       {auth.loading
-        ? "ViewTube is confirming your signed-in channel and permissions."
-        : auth.session.status === "reconnect_required"
-         ? "Your ViewTube account is signed in, but YouTube permission must be refreshed."
-         : "Connect your YouTube channel in Settings to manage assets, optimize metadata, and run AI tag analysis."}
-      </p>
-      <button
-       onClick={() => auth.login("/video-manager")}
-       className="w-full bg-[#FF3399] text-white border-[4px] border-black rounded-xl p-4 font-black uppercase text-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center justify-center gap-3">
-       <Sparkles size={24} />
-       {auth.loading
-        ? "Connecting…"
-        : auth.session.status === "reconnect_required"
-         ? "Reconnect Channel"
-         : "Connect Channel"}
-      </button>
+      <div className="space-y-4 max-w-md">
+       <h2 className="text-4xl font-[1000] uppercase tracking-tighter">
+        {account.pending
+         ? "Connecting Channel"
+         : account.snapshot.google.status === "expired" || account.snapshot.google.status === "revoked"
+          ? "Reconnect Channel"
+          : "Channel Offline"}
+       </h2>
+       <p className="text-gray-600 font-bold">
+        {account.pending
+         ? "ViewTube is confirming your signed-in channel and permissions."
+         : account.snapshot.google.status === "expired" || account.snapshot.google.status === "revoked"
+          ? "Your ViewTube account is signed in, but YouTube permission must be refreshed."
+          : "Connect your YouTube channel in Settings to manage assets, optimize metadata, and run AI tag analysis."}
+       </p>
+       <button
+        onClick={() => void account.start(account.intent, "/video-manager")}
+        className="w-full bg-[#FF3399] text-white border-[4px] border-black rounded-xl p-4 font-black uppercase text-xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all flex items-center justify-center gap-3">
+        <Sparkles size={24} />
+        {account.pending ? "Connecting…" : account.label}
+       </button>
+      </div>
      </div>
-    </div>
    </ToolboxScaffold>
   )
  }
@@ -1101,70 +1178,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
      </div>
     )}
 
-    {videoListLoadState === "idle" && !hasLoadedInitialData ? (
-     <div className="h-[500px] flex flex-col items-center justify-center gap-5 font-black uppercase text-3xl tracking-tighter text-black/30">
-      <Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />
-      Ready To Load Channel Catalog
-      <button
-       onClick={() => void loadInitialData(true)}
-       disabled={loading}
-       className="bg-[#CCFF00] text-black px-8 py-4 rounded-xl border-[4px] border-black shadow-[6px_6px_0px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-sm">
-       {loading ? "Loading..." : "Load Channel Catalog"}
-      </button>
-     </div>
-    ) : videoListLoadState === "loading" && videos.length === 0 && !selectedVideo ? (
-     <div className="h-[500px] flex flex-col items-center justify-center font-black uppercase text-2xl text-black/20 animate-pulse">
-      <Loader2 size={48} className="mb-4 animate-spin" />
-      Connecting Video Catalog...
-     </div>
-    ) : videoListLoadState === "error" && videos.length === 0 ? (
-     <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]">
-      <div className="w-24 h-24 bg-[#ffb158] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black]">
-       <AlertCircle size={48} className="text-black" />
-      </div>
-      <div className="space-y-4 max-w-lg">
-       <h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">
-        Sync Failed
-       </h2>
-       <p className="text-black/60 font-bold uppercase text-xs tracking-widest leading-relaxed">
-        {error || "We couldn't load your YouTube assets. Try reload, or reconnect your channel in Settings."}
-       </p>
-       <button
-        onClick={() => void loadInitialData(true)}
-        disabled={loading}
-        className="inline-block w-full bg-[#CCFF00] border-[4px] border-black rounded-xl p-5 font-black uppercase text-xl text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all mt-4 disabled:opacity-50">
-        {loading ? "Retrying..." : "Retry Catalog Load"}
-       </button>
-      </div>
-     </div>
-    ) : videoListLoadState === "empty" ? (
-      <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]">
-       <div className="w-24 h-24 bg-[#FF3399] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black] -rotate-12">
-        <FileVideo size={48} className="text-[#CCFF00]" />
-       </div>
-       <div className="space-y-4 max-w-lg">
-        <h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">
-         Zero Assets Detected
-        </h2>
-        <p className="text-black/50 font-bold uppercase text-xs tracking-widest leading-relaxed">
-         Your YouTube channel is connected, but we couldn't detect any videos. Upload your first video to YouTube to unlock the full power of Creator OS Pro.
-        </p>
-        <a
-         href="https://studio.youtube.com"
-         target="_blank"
-         rel="noopener noreferrer"
-         className="inline-block w-full bg-[#CCFF00] border-[4px] border-black rounded-xl p-5 font-black uppercase text-xl text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all mt-4">
-         Open YouTube Studio
-        </a>
-        <button
-         onClick={() => void loadInitialData(true)}
-         disabled={loading}
-         className="inline-block w-full bg-white border-[4px] border-black rounded-xl p-4 font-black uppercase text-sm text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50">
-         {loading ? "Reloading..." : "Reload Assets"}
-        </button>
-       </div>
-      </div>
-    ) : selectedVideo ? (
      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className={`relative ${dropdownOpen ? "z-[120]" : "z-10"} space-y-2`}>
        <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">Choose Video</label>
@@ -1185,31 +1198,43 @@ const VideoManager: React.FC<VideoManagerProps> = ({
              <FileVideo size={20} strokeWidth={3} className="text-black" />
             </div>
             <div className="flex-1 h-full flex items-center gap-3 px-3 pr-10">
-             <div className="h-14 w-24 shrink-0 rounded-md border-[3px] border-black overflow-hidden bg-black">
-              <img
-               src={selectedVideo?.thumbnail}
-               alt={selectedVideo?.title || "Selected video thumbnail"}
-               className="w-full h-full object-cover"
-              />
+             <div className={`h-14 w-24 shrink-0 rounded-md border-[3px] border-black overflow-hidden bg-black ${loading && !selectedVideo?.thumbnail ? "vt-loading-stripes" : ""}`}>
+              {selectedVideo?.thumbnail ? (
+               <img
+                src={selectedVideo.thumbnail}
+                alt={selectedVideo?.title || "Selected video thumbnail"}
+                className="w-full h-full object-cover"
+               />
+              ) : (
+               <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                <FileVideo size={24} className="text-black/30" />
+               </div>
+              )}
              </div>
              <div className="min-w-0 text-left">
               <div className="flex items-center justify-between gap-3">
                <p className="text-[8px] font-black uppercase tracking-[0.14em] text-black/60 shrink-0">Selected Video</p>
-               <p className="text-[9px] font-black uppercase tracking-[0.1em] text-black/55 truncate">
-                <a
-                 href={`https://youtube.com/watch?v=${selectedVideo.videoId}`}
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 onClick={(event) => event.stopPropagation()}
-                 className="inline-flex items-center gap-1 text-[#00CCFF] hover:text-[#FF3399] transition-colors mr-2"
-                >
-                 View on YouTube <ExternalLink size={12} strokeWidth={3} />
-                </a>
-                {selectedVideoPublishedDate} • {selectedVideoLength}
-               </p>
+               {selectedVideo ? (
+                <p className="text-[9px] font-black uppercase tracking-[0.1em] text-black/55 truncate">
+                 <a
+                  href={`https://youtube.com/watch?v=${selectedVideo.videoId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(event) => event.stopPropagation()}
+                  className="inline-flex items-center gap-1 text-[#00CCFF] hover:text-[#FF3399] transition-colors mr-2"
+                 >
+                  View on YouTube <ExternalLink size={12} strokeWidth={3} />
+                 </a>
+                 {selectedVideoPublishedDate} • {selectedVideoLength}
+                </p>
+               ) : (
+                <p className="text-[9px] font-black uppercase tracking-[0.1em] text-black/40">
+                 {loading ? "Connecting live catalog..." : "No video selected"}
+                </p>
+               )}
               </div>
               <p className="font-[1000] uppercase tracking-tighter text-[20px] leading-[1] truncate text-black mt-0.5">
-               {selectedVideo?.title || "Select video"}
+               {selectedVideo?.title || (loading ? "Loading Channel Videos..." : "Select a video from catalog")}
               </p>
              </div>
             </div>
@@ -1380,10 +1405,10 @@ const VideoManager: React.FC<VideoManagerProps> = ({
            setIsDraggingThumbnail(false)
            if (e.dataTransfer.files[0]) handleThumbnailChange(e.dataTransfer.files[0])
           }}>
-          {thumbnailPreview || selectedVideo.thumbnail ? (
+          {thumbnailPreview || selectedVideo?.thumbnail ? (
            <div className="relative w-full aspect-video group">
             <img
-             src={thumbnailPreview || selectedVideo.thumbnail}
+             src={thumbnailPreview || selectedVideo?.thumbnail}
              alt="Preview"
              className="w-full h-full object-cover rounded-lg"
             />
@@ -1534,12 +1559,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        label={saving ? "Transmitting to Server..." : "Update Video Details"}
       />
      </div>
-    ) : (
-     <div className="h-[500px] flex flex-col items-center justify-center gap-5 font-black uppercase text-3xl tracking-tighter text-black/20">
-      <Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />
-      Awaiting Asset Selection
-     </div>
-    )}
     <input
      type="file"
      ref={fileInputRef}

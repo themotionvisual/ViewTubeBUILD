@@ -13,6 +13,9 @@ import { DiagnosticOverlay } from "./app/DiagnosticOverlay"
 import { recordBootPhase } from "./app/onScreenDiagnostics"
 import { isDeveloperDiagnosticsEnabled } from "./services/diagnostics"
 import { SimpleAuthProvider } from "./auth/AuthProvider"
+import { FeatureAccessProvider } from "./context/FeatureAccessProvider"
+import { FeatureAccessNotice } from "./components/FeatureAccessNotice"
+import { featureGateForRoute } from "./services/featureGating"
 
 const DARK_THEME_CSS = `
   .dark-theme-override {
@@ -55,6 +58,7 @@ const DARK_THEME_CSS = `
  */
 function AppInner() {
  const location = useLocation()
+ const routeFeatureId = featureGateForRoute(location.pathname)
  const isBareRoute = location.pathname.startsWith("/render-bench")
  // Diagnostic overlay renders only when the user explicitly enabled it via
  // ?vtDiagnostics=1 or localStorage vt_diagnostics=1. Computed once per mount
@@ -83,6 +87,7 @@ function AppInner() {
    {/* QW#7 — reset scroll position on route change (hash navigation exempted). */}
    <ScrollToTop />
    <AppShell>
+    {routeFeatureId ? <FeatureAccessNotice featureId={routeFeatureId} /> : null}
     <AppRoutes />
    </AppShell>
    {showDiag ? <DiagnosticOverlay /> : null}
@@ -104,6 +109,7 @@ function App() {
   <div className={isDarkTheme ? "dark-theme-override" : undefined}>
    <SimpleAuthProvider>
     <UnifiedAccountProvider>
+     <FeatureAccessProvider>
      <GeminiKeyProvider>
      <InitialChannelBootstrapProvider>
       <VideoAssetCatalogProvider>
@@ -126,6 +132,7 @@ function App() {
       </VideoAssetCatalogProvider>
      </InitialChannelBootstrapProvider>
      </GeminiKeyProvider>
+     </FeatureAccessProvider>
     </UnifiedAccountProvider>
    </SimpleAuthProvider>
   </div>

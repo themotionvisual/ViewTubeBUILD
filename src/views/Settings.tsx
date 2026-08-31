@@ -3,6 +3,7 @@ import { Check, Settings as SettingsIcon, ShieldCheck, X } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useBrain } from "../context/useBrain"
 import { useUnifiedAccount } from "../context/UnifiedAccountContext"
+import { useFeatureAccess } from "../context/featureAccessContext"
 import {
   createBillingPortalSession,
   createCheckoutSession,
@@ -47,6 +48,7 @@ const Settings: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const account = useUnifiedAccount()
+  const featureAccess = useFeatureAccess()
   const { authState, channelConnection, connectChannel, disconnectChannel } = useBrain()
   const isAuth = account.snapshot.authentication.status === "authenticated" || authState.isAuthenticated
 
@@ -72,7 +74,7 @@ const Settings: React.FC = () => {
   const activePanel = resolveSettingsPanel(query.get("panel"))
   const entitlement = getCurrentEntitlement()
   const isBasicPlan = entitlement.subscriptionPlanId === "basic"
-  const canViewGeminiKey = entitlement.tier === "large" || isOwnerEmail(currentEmail)
+  const canViewGeminiKey = entitlement.tier === "large" || isOwnerEmail(currentEmail) || featureAccess.decision("settings.api_keys").disposition === "enabled"
   const showInternalOpsLink = isOwnerEmail(currentEmail)
   const profileName = account.snapshot.profile.displayName || authState.channelName || ""
   const profileHandle = account.snapshot.google.channelHandle || authState.channelHandle || ""

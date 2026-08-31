@@ -15,6 +15,7 @@ import {
 import {
   DASHBOARD_LAYOUT_BACKUP_KEY,
   DASHBOARD_LAYOUT_STORAGE_KEY,
+  DASHBOARD_SCHEMA_VERSION,
   LEGACY_DASHBOARD_LAYOUT_STORAGE_KEYS,
 } from "../tokens"
 import {
@@ -82,12 +83,15 @@ describe("dashboard v9 registry and layout migration", () => {
       .filter((widget) => widget.releaseTier === "supported")
       .sort((left, right) => left.defaultOrder - right.defaultOrder)
 
-    expect(supported).toHaveLength(30)
-    expect(supported[0]?.id).toBe("app-verification-explainer")
+    expect(supported).toHaveLength(31)
+    expect(supported[0]?.id).toBe("sync-controller")
+    expect(supported.map((widget) => widget.id)).toContain("app-verification-explainer")
     expect(supported.map((widget) => widget.id)).toContain("video-uploader")
     expect(supported.map((widget) => widget.id)).toContain("data-edit")
-    expect(supported[29]?.id).toBe("hashtag-analyzer")
-    expect(SUPPORTED_DASHBOARD_WIDGET_IDS).toHaveLength(30)
+    expect(supported.map((widget) => widget.id)).toContain("script-studio")
+    expect(supported.map((widget) => widget.id)).toContain("dashboard-controls")
+    expect(supported.map((widget) => widget.id)).toContain("brain-hub")
+    expect(SUPPORTED_DASHBOARD_WIDGET_IDS).toHaveLength(31)
     expect(DASHBOARD_WIDGET_REGISTRY.find((widget) => widget.id === "tag-generator")?.releaseTier).toBe("preview")
     expect(supported.every((widget) => widget.supportedDimensions.length > 0)).toBe(true)
   })
@@ -103,7 +107,7 @@ describe("dashboard v9 registry and layout migration", () => {
   it("has a complete certification contract for every supported widget", () => {
     const report = buildWidgetCertificationReport()
 
-    expect(report.supportedCount).toBe(30)
+    expect(report.supportedCount).toBe(31)
     expect(report.missing).toEqual([])
     expect(report.invalid).toEqual([])
     expect(report.certified).toBe(true)
@@ -114,9 +118,12 @@ describe("dashboard v9 registry and layout migration", () => {
     const visible = layout.order.filter((id) => !layout.hidden.includes(id))
     const exported = exportDashboardLayout(layout)
 
-    expect(layout.schemaVersion).toBe(9)
-    expect(visible).toHaveLength(30)
-    expect(visible[29]).toBe("hashtag-analyzer")
+    expect(layout.schemaVersion).toBe(DASHBOARD_SCHEMA_VERSION)
+    expect(visible).toHaveLength(31)
+    expect(visible).toContain("dashboard-controls")
+    expect(visible).toContain("brain-hub")
+    expect(visible).toContain("script-studio")
+    expect(visible).toContain("hashtag-analyzer")
     expect(exported).not.toContain("headerColor")
     expect(exported).not.toContain("iconRailColor")
     expect(exported).not.toContain("pinned")
@@ -141,7 +148,7 @@ describe("dashboard v9 registry and layout migration", () => {
       },
     })
 
-    expect(migrated.schemaVersion).toBe(9)
+    expect(migrated.schemaVersion).toBe(DASHBOARD_SCHEMA_VERSION)
     expect(migrated.locked).toBe(true)
     expect(migrated.order.slice(0, 2)).toEqual(["goals-tracker", "kpi-cluster"])
     expect(migrated.hidden).not.toContain("video-uploader")
@@ -169,7 +176,7 @@ describe("dashboard v9 registry and layout migration", () => {
 
     const migrated = loadDashboardLayout()
 
-    expect(migrated.schemaVersion).toBe(9)
+    expect(migrated.schemaVersion).toBe(DASHBOARD_SCHEMA_VERSION)
     expect(migrated.order.slice(0, 2)).toEqual(["goals-tracker", "kpi-cluster"])
     expect(storage.getItem(DASHBOARD_LAYOUT_STORAGE_KEY)).toBeTruthy()
     expect(storage.getItem(DASHBOARD_LAYOUT_BACKUP_KEY)).toContain(legacyKey)

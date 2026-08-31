@@ -5,14 +5,19 @@ export const VT_SYNC_DISABLE_PERFORMANCE_HUB_API_SYNC_FLAG = "VITE_DISABLE_PERFO
 export const VT_SYNC_DISABLE_PERFORMANCE_HUB_API_SYNC_KEY = "vt_disable_performance_hub_api_sync" as const
 export const VT_SYNC_LOCAL_SNAPSHOT_KEY = "vt_sync_local_snapshot" as const
 export const VT_SYNC_LOCAL_DB_NAME = "ViewTubeVtSyncLocalDB" as const
-export const VT_SYNC_LOCAL_DB_VERSION = 1 as const
+export const VT_SYNC_LOCAL_DB_VERSION = 2 as const
 export const VT_SYNC_LOCAL_STORE_NAMES = {
  channelIndex: "channel_index",
+ channelDimensions: "channel_dimensions",
  videoInventory: "video_inventory",
+ videoDimensions: "video_dimensions",
  syncRuns: "sync_runs",
  syncCursors: "sync_cursors",
  datasetRawReports: "dataset_raw_reports",
  datasetTableRows: "dataset_table_rows",
+ datasetManifests: "dataset_manifests",
+ datasetChunks: "dataset_chunks",
+ rawReportBlobs: "raw_report_blobs",
 } as const
 export const ANALYTICS_LOCAL_SNAPSHOT_KEY = VT_SYNC_LOCAL_SNAPSHOT_KEY
 export const ANALYTICS_LOCAL_DB_NAME = VT_SYNC_LOCAL_DB_NAME
@@ -356,7 +361,7 @@ export type VtSyncDatasetFreshness = Record<string, {
 }>
 
 export type VtSyncSnapshotStorageMetadata = {
- storageMode: "full" | "compact_preview" | "memory_only" | "unknown"
+ storageMode: "full" | "compact_preview" | "manifest_only" | "memory_only" | "unknown"
  isCompacted: boolean
  manifestOnly?: boolean
  fullRowCountByField?: Record<string, number>

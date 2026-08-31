@@ -9,7 +9,7 @@ import {
  putVtSyncChannelIndex,
  putVtSyncVideoInventoryRecords,
  replaceLatestVtSyncDatasetRawReport,
- replaceLatestVtSyncDatasetTableRows,
+ upsertLatestVtSyncDatasetTableRows,
  replaceLatestVtSyncSyncRun,
 } from "./localDbRepository"
 import { getVtSyncSnapshot, saveVtSyncSnapshot } from "./snapshot"
@@ -212,7 +212,7 @@ export const publishInitialBootstrapToVtSync = async (input: {
    rows: dataset.rows,
    source: dataset.source,
   })
-  await replaceLatestVtSyncDatasetTableRows({
+  await upsertLatestVtSyncDatasetTableRows({
    runId: input.runId,
    channelId: input.channel.channelId,
    datasetId: dataset.id,

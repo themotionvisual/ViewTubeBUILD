@@ -630,10 +630,10 @@ export const mergeVtSyncManualImportsIntoSnapshot = (
  return merged
 }
 
-// localStorage intentionally stores compact boot previews. Restore complete
-// same-channel IndexedDB rows when a field is empty or its storage metadata
-// proves that it is truncated. A full in-memory/live snapshot always remains
-// authoritative, so recovery cannot replace an active sync with older rows.
+// localStorage stores a row-free boot manifest (and older builds stored compact
+// previews). Restore complete same-channel IndexedDB rows when a field is empty
+// or storage metadata proves it is truncated. A full in-memory/live snapshot
+// remains authoritative, so recovery cannot replace an active sync with older rows.
 export const mergeVtSyncPersistedApiRowsIntoSnapshot = (
  snapshot: VtSyncSnapshot,
  persisted: VtSyncPersistedApiState,

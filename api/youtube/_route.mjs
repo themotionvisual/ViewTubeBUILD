@@ -2,8 +2,17 @@ import { queryAnalytics } from "../../server/simple-analytics.mjs";
 import { createReportingJob, deleteReportingJob, getReportingReport, listReportingJobs, listReportingReports, listReportTypes, streamReportingReport } from "../../server/simple-reporting.mjs";
 import { addVideoToPlaylist, getOwnedVideo, listCommentThreads, listOwnedVideos, listPlaylists, listVideoPlaylistMemberships, markCommentAsSpam, moderateComment, patchOwnedVideo, postCommentReply, postTopLevelComment, removeVideoFromPlaylist, setVideoThumbnail, toApiError } from "../../server/simple-youtube.mjs";
 
+const BILLING_ORIGIN = process.env.BILLING_ORIGIN || "http://localhost:5173";
+
 const json = (res, status, payload) => {
-  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+  res.writeHead(status, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Access-Control-Allow-Origin": BILLING_ORIGIN,
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET,POST,PATCH,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Credentials": "true",
+    "Cache-Control": "no-store",
+  });
   res.end(JSON.stringify(payload));
 };
 

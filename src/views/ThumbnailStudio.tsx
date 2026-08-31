@@ -538,8 +538,20 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
 
      {/* Column 2: Canvas (Matched Width) + Controls */}
      <div className="flex flex-col h-full gap-6 min-h-0">
-      <div className="flex-1 min-h-0 w-full border-[4px] border-black bg-[#f1f5f9] rounded-[48px] shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-8 overflow-hidden transition-all duration-700">
-       {generatedImage ? (
+      <div className={`flex-1 min-h-0 w-full border-[4px] border-black bg-[#f1f5f9] rounded-[48px] shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-8 overflow-hidden transition-all duration-700 ${genLoading ? "vt-loading-stripes" : ""}`}>
+       {genLoading ? (
+        <div className="text-center p-12 bg-white/95 border-[4px] border-black rounded-[48px] shadow-[8px_8px_0px_0px_black] w-full max-w-sm">
+         <div className="w-20 h-20 bg-[#FF7497] border-[4px] border-black rounded-full mx-auto mb-8 flex items-center justify-center shadow-[6px_6px_0px_0px_black] vt-loading-stripes">
+          <CustomIcon name="zap" size={32} />
+         </div>
+         <h3 className="text-4xl font-[1000] uppercase tracking-tighter text-black leading-none mb-4 italic">
+          RENDERING ASSET
+         </h3>
+         <p className="font-black text-black/60 uppercase tracking-[0.3em] text-[10px]">
+          Executing Neural Generation Sequence
+         </p>
+        </div>
+       ) : generatedImage ? (
         <>
          <img
           src={generatedImage}

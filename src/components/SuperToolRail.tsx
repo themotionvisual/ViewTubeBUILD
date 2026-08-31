@@ -1,5 +1,6 @@
 import React from "react"
 import type { SuperToolDefinition } from "@/types"
+import { FeatureAccessNotice } from "./FeatureAccessNotice"
 
 interface SuperToolRailProps {
  title: string
@@ -49,6 +50,7 @@ export const SuperToolRail: React.FC<SuperToolRailProps> = ({
 
       <div className="flex flex-1 flex-col gap-3 p-4">
        <p className="text-sm font-bold leading-5 text-black/75">{tool.summary}</p>
+       {tool.featureGateId ? <FeatureAccessNotice featureId={tool.featureGateId} compact /> : null}
        <div className="text-[10px] font-black uppercase tracking-[0.18em] text-black/60">
         Source of truth: {tool.sourceOfTruth}
        </div>

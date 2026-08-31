@@ -18,9 +18,10 @@ describe("YouTube API stabilization governance", () => {
 
  it("keeps Comment Responder on the typed server API", () => {
   const controller = source("../../features/creator-engagement/useCommentResponderController.ts")
-  expect(controller).toContain("fetchAllSimpleCommentThreads")
-  expect(controller).toContain("postSimpleCommentReply")
-  expect(controller).not.toContain("fetchAllCommentThreads")
+  expect(controller).toContain("fetchAllUnifiedCommentThreads")
+  expect(controller).toContain("postUnifiedCommentReply")
+  expect(controller).toContain("updateUnifiedComment")
+  expect(controller).not.toContain("simpleYouTubeApi")
   expect(controller).not.toContain("googleapis.com")
  })
 

@@ -60,7 +60,7 @@ export const ImageGeneratorWidget = ({
       onChange={(value) => setMode(value as TemplateMode)}
       items={[
         { id: "thumbnail", label: "Thumbnail" },
-        { id: "endscreen", label: "End\nScreen" },
+        { id: "endscreen", label: "End Screen" },
       ]}
     />
   )
