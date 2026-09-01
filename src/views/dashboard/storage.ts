@@ -228,6 +228,11 @@ export const sizeBucketClassName = (size: DashboardSizeBucket): string => {
   if (size === "between") return "col-span-24 md:col-span-10"
   if (size === "third") return "col-span-24 md:col-span-8"
   if (size === "companion") return "col-span-24 md:col-span-7"
+  if (size === "quarter") return "col-span-24 md:col-span-6"
+  if (size === "sixth") return "col-span-12 md:col-span-4"
+  if (size === "eighth") return "col-span-12 md:col-span-3"
+  if (size === "twelfth") return "col-span-12 md:col-span-2"
+  if (size === "twenty-fourth") return "col-span-6 md:col-span-1"
   return "col-span-24 md:col-span-6"
 }
 
@@ -237,6 +242,9 @@ export const heightBucketClassName = (height: DashboardHeightBucket): string => 
   if (height === "tall") return "h-[350px]"
   if (height === "xtall") return "h-[450px]"
   if (height === "massive") return "h-[850px]"
+  if (height === "colossal") return "h-[1200px]"
+  if (height === "titanic") return "h-[1600px]"
+  if (height === "boundless") return "h-[2200px]"
   return "h-[250px]"
 }
 

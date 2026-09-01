@@ -1,5 +1,5 @@
 :root {
-  --vt-nav-top-height: 85px;
+  --vt-nav-top-height: 60px;
   --vt-nav-brand-width: 204px;
   --vt-nav-wide-width: 204px;
   --vt-nav-thin-width: 154px;
@@ -9,13 +9,6 @@
   --vt-nav-paper: #f3f4f6;
   --vt-nav-ink: #000;
   --vt-nav-focus: #528ffa;
-  /* Sidebar-button rhythm — ported from viewtubeX so top-layout and
-     sidebar layouts share one button metaphor. Both consumers
-     (wide/thin sidebar link override AND top-layout link override
-     inside the narrow media query) resolve their height + width from
-     these tokens. */
-  --vt-nav-sidebar-button-width: 75%;
-  --vt-nav-sidebar-button-height: 33px;
 }
 
 .vt-adaptive-shell {
@@ -49,7 +42,7 @@
   left: 0;
   display: grid;
   width: 26px;
-  min-height: 46px;
+  min-height: 36px;
   place-items: center;
   border: 2px solid #111;
   border-right-width: 0;
@@ -66,16 +59,6 @@
 /* Mobile uses native touch scrolling, so the custom draggable scroll rail (a
    fixed 28px black bar) is hidden — it otherwise overlaps content on the right. */
 .vt-adaptive-shell[data-layout="mobile"] .vt-app-scroll-track { display: none; }
-
-/* QW#6 — Suppress the custom scrollbar on any coarse-pointer / touch-first
-   device (iPad, touch laptop, kiosk display), not only when the layout mode
-   is `mobile`. Users on those devices have overlay scrollbars and finger
-   scrolling; a 28 px draggable rail wastes real estate and eats touches. */
-@media (hover: none) and (pointer: coarse) {
-  .vt-app-scroll-track {
-    display: none !important;
-  }
-}
 
 .vt-adaptive-shell[data-layout="top"] {
   grid-template: var(--vt-nav-top-height) minmax(0, 1fr) / minmax(0, 1fr);
@@ -105,6 +88,7 @@
   grid-area: 1 / 1;
   grid-template-columns: var(--vt-nav-brand-width) minmax(0, 1fr) auto;
   height: var(--vt-nav-top-height);
+  align-items: center;
   background: var(--vt-nav-paper);
 }
 
@@ -159,37 +143,29 @@
   display: grid;
   grid-template-columns: repeat(8, minmax(70px, 1fr));
   min-width: 0;
-  gap: 6px;
+  gap: 5px;
   align-items: center;
   padding: 4px 8px 4px 4px;
 }
-
-/* NOTE — the "left bleed" idea from an earlier iteration is removed here.
-   Screenshotting the live viewtubeX sidebar showed the buttons cleanly
-   centered inside the rail (via width: 75%), not bleeding past the
-   viewport. Keeping them centered matches viewtubeX 1:1. */
 
 .vt-adaptive-nav__link {
   position: relative;
   display: flex;
   box-sizing: border-box;
   min-width: 0;
-  /* Height matches the sidebar-layout button (was 74px). This makes the top-
-     bar and sidebar reads as the same button system at different orientations
-     instead of two different button metaphors. */
   height: 44px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 0 10px;
-  border: 3px solid #000;
+  padding: 0 6px;
+  border: var(--vt-nav-control-stroke) solid #000;
   border-radius: var(--vt-nav-radius);
   background: var(--vt-nav-color);
   color: #000;
-  /* Sidebar rhythm — bigger uppercase title, tighter tracking. */
-  font-size: 15px;
-  font-weight: 1000;
-  letter-spacing: -.045em;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
   line-height: 1;
   text-align: center;
   text-decoration: none;
@@ -198,19 +174,10 @@
   white-space: nowrap;
   touch-action: manipulation;
   transition: transform 110ms ease, box-shadow 110ms ease;
-  /* Toolbox-style colored offset shadow — the button's own color darkened
-     so it reads as a chunky raised chip on any background. */
-  box-shadow: 4px 4px 0 0 color-mix(in srgb, var(--vt-nav-color) 55%, #000);
 }
 
-.vt-adaptive-nav__link:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 6px 6px 0 0 color-mix(in srgb, var(--vt-nav-color) 55%, #000);
-}
-.vt-adaptive-nav__link:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 0 color-mix(in srgb, var(--vt-nav-color) 55%, #000);
-}
+.vt-adaptive-nav__link:hover { transform: translateY(-1px); box-shadow: 0 2px 0 #000; }
+.vt-adaptive-nav__link:active { transform: translateY(1px); box-shadow: none; }
 
 /* Selected state: the hover shine frozen near its right-side flash point. */
 .vt-adaptive-nav__link.active::after {
@@ -351,67 +318,33 @@
 .vt-adaptive-nav__account-trigger {
   display: grid;
   box-sizing: border-box;
-  /* Signed-in state — avatar + channel title ONLY. Meta text and auth-status
-     chip are hidden below via display:none so this is the entire cluster. */
-  grid-template-columns: 34px minmax(0, 1fr) 16px;
-  width: clamp(220px, 18vw, 300px);
+  grid-template-columns: 48px minmax(0, 1fr) 22px;
+  width: auto; min-width: 250px; max-width: 420px;
   min-width: 0;
-  /* Matches the sidebar-layout link height so the top bar reads as one
-     coherent button row instead of a tall pill next to short chips. */
   height: 44px;
+  min-height: 44px;
   align-items: center;
   gap: 8px;
-  padding: 4px 8px;
+  padding: 3px 8px;
   overflow: hidden;
-  border: 3px solid #000;
+  border: var(--vt-nav-control-stroke) solid #000;
   border-radius: var(--vt-nav-radius);
-  /* Next stop in the VT palette after the sidebar's warm slots: Royal Purple
-     (#A467F4). Slight highlight sweep keeps it in the same neo-brutalist
-     language as the other nav chips. */
   background:
-    linear-gradient(90deg, #A467F4 0 60%, color-mix(in srgb, #A467F4 78%, #fff) 60% 100%);
+    linear-gradient(90deg, #A467F4 0 58%, #fff 58% 61%, #A467F4 61% 100%);
   color: #000;
   text-align: left;
   touch-action: manipulation;
   cursor: pointer;
-  /* Toolbox-style colored offset shadow, purple. */
-  box-shadow: 4px 4px 0 0 color-mix(in srgb, #A467F4 55%, #000);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .1);
   transition: transform 110ms ease, box-shadow 110ms ease;
 }
-.vt-adaptive-nav__account-trigger:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 6px 6px 0 0 color-mix(in srgb, #A467F4 55%, #000);
-}
-.vt-adaptive-nav__account-trigger:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 0 color-mix(in srgb, #A467F4 55%, #000);
-}
-/* Simplified content — only avatar + channel title. Meta/plan/auth-status
-   move into the drop-down menu, which is where the density belongs. */
-.vt-adaptive-nav__account-trigger .vt-adaptive-nav__account-meta,
-.vt-adaptive-nav__account-trigger .vt-adaptive-nav__auth-status { display: none; }
-.vt-adaptive-nav__account-trigger .vt-adaptive-nav__account-copy strong {
-  font-size: 13px;
-  font-weight: 1000;
-  letter-spacing: -.03em;
-  text-transform: uppercase;
-}
-/* Avatar scaled to the compact 34px slot; the base 46px avatar would overflow
-   the smaller trigger. Only applies inside the account trigger — free-standing
-   avatar uses remain at the original size. */
-.vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar {
-  width: 32px;
-  height: 32px;
-}
-.vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar svg {
-  width: 16px;
-  height: 16px;
-}
+.vt-adaptive-nav__account-trigger:hover { transform: translateY(-1px); box-shadow: 0 2px 0 #000, inset 0 -3px 0 rgba(0, 0, 0, .1); }
+.vt-adaptive-nav__account-trigger:active { transform: translateY(1px); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .12); }
 
 .vt-adaptive-nav__avatar {
   display: grid;
-  width: 46px;
-  height: 46px;
+  width: 36px;
+  height: 36px;
   place-items: center;
   overflow: hidden;
   border: var(--vt-nav-control-stroke) solid #000;
@@ -466,7 +399,7 @@
   grid-template-columns: 48px minmax(0, 1fr) 22px;
   background: linear-gradient(90deg, #c0f240 0 72%, rgba(255,255,255,.72) 72% 75%, #c0f240 75% 100%);
 }
-.vt-adaptive-nav__account-trigger--signup .vt-adaptive-nav__avatar { background: #000; color: #c0f240; flex-shrink: 0; }
+.vt-adaptive-nav__account-trigger--signup .vt-adaptive-nav__avatar { background: #000; color: #A467F4; flex-shrink: 0; }
 .vt-adaptive-nav__account-trigger--signup .vt-adaptive-nav__account-copy { flex: 1 1 auto; }
 .vt-adaptive-nav__account-chevron { width: 17px; height: 17px; stroke-width: 3; }
 
@@ -524,7 +457,7 @@
   grid-template-columns: 24px minmax(0, 1fr) 36px;
   align-items: center;
   gap: 7px;
-  min-height: 46px;
+  min-height: 36px;
   margin-top: 8px;
   padding: 3px 4px 3px 10px;
   border: 3px solid #000;
@@ -706,165 +639,11 @@
 }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link {
-  /* Sidebar link rhythm — ported straight from viewtubeX so the two
-     working trees converge on one button metaphor. Buttons now
-     LEFT-ANCHORED (justify-self: start, gap for the leading icon) and
-     BLEED past the sidebar's left edge via negative margin so their
-     left border is cut off by the viewport chrome — matches user's
-     PROJECTS-button reference photo. */
   width: 100%;
-  height: var(--vt-nav-sidebar-button-height);
-  min-height: var(--vt-nav-sidebar-button-height);
-  padding-inline: 20px 10px;
-  font-size: 18px;
-  font-weight: 1000;
-  letter-spacing: -.045em;
-  justify-content: flex-start;
-  gap: 8px;
-  margin-left: -14px;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  border-left-width: 0;
-  transition: transform 140ms cubic-bezier(.2, .8, .2, 1),
-              box-shadow 140ms cubic-bezier(.2, .8, .2, 1);
-}
-/* Selected page: juts 15px further LEFT than the others — makes the
-   active route feel physically pushed forward out of the rail. */
-.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link.active,
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link.active {
-  transform: translateX(-15px);
-  z-index: 2;
-}
-/* Hover slides the (non-active) button 10px to the RIGHT. Active buttons
-   remain in their jutted-out position so the hover doesn't fight the
-   selected state's visual anchor. */
-.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link:not(.active):hover,
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link:not(.active):hover {
-  transform: translateX(10px);
-}
-/* Icon inside the link — inherits `currentColor`, sits before the label.
-   HIDDEN by default so wide/thin/top all show text-only chips. The rail
-   layout further down re-enables the icon and hides the label. */
-.vt-adaptive-nav__icon { display: none; flex: 0 0 auto; }
-.vt-adaptive-nav__link-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-/* Sidebar __links container needs `overflow: visible` so bleed + hover
-   translates don't get clipped, and no left padding so the negative
-   margin actually reaches the viewport edge. */
-.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__links,
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__links {
-  padding-inline: 0 6px !important;
-  align-items: stretch !important;
-  overflow: visible !important;
-}
-
-/* ============================================================================ */
-/*  Icon rail — collapsed layout: icon-only column, page reclaims viewport.     */
-/* ============================================================================ */
-.vt-adaptive-shell[data-layout="rail"] {
-  grid-template: minmax(0, 1fr) / 60px minmax(0, 1fr);
-}
-.vt-adaptive-shell[data-layout="rail"] > .vt-adaptive-nav {
-  /* Brand at top (fixed), links flex-fill in the middle, utilities anchored
-     to the bottom. Previously used `auto` for links which collapsed its own
-     box to 60px while children overflowed to y=360 — utilities then painted
-     UNDER the icons. Swapping links → minmax(0, 1fr) and utilities → auto
-     puts the account chip + layout controls where they belong. */
-  grid-template-rows: 60px minmax(0, 1fr) auto;
-  grid-template-columns: minmax(0, 1fr);
-  padding: 6px 4px;
-  gap: 4px;
-}
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__brand,
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__logo span:last-child { display: none; }
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__logo {
-  height: 60px;
-  padding: 0;
-  font-size: 14px;
-}
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__logo span:first-child { margin-right: 0; }
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__links {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 0;
-  overflow: visible;
-  /* Grow to fill the middle row; utilities is now `auto`-sized at the
-     bottom, so links owns whatever's left after brand + utilities. */
-  min-height: 0;
-  align-content: flex-start;
-}
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__link {
-  width: 52px;
   height: 44px;
   min-height: 44px;
-  padding: 0 6px 0 14px;
-  gap: 0;
-  justify-content: center;
-  /* Bleed off the viewport's left edge exactly like the expanded sidebar
-     buttons — user asked the collapsed rail to hang off too. Same recipe:
-     negative margin, no left border, squared left corners. */
-  margin-left: -14px;
-  border-left-width: 0;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  border-top-right-radius: var(--vt-nav-radius);
-  border-bottom-right-radius: var(--vt-nav-radius);
-  font-size: 0; /* hide the label text; NavIcon keeps its own dimensions */
-  transition: transform 140ms cubic-bezier(.2, .8, .2, 1);
-}
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__link-label { display: none; }
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__icon { display: inline-flex; }
-/* Phosphor renders a real <svg>, not a <use>-referenced symbol — target it
-   for the extra-bold visual weight so the rail icons match the density of
-   the reference photos. */
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__icon svg,
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__icon {
-  width: 26px !important;
-  height: 26px !important;
-}
-/* Small-viewport top-layout also gets icons when labels are hidden */
-@media (max-width: 1100px) {
-  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__icon { display: inline-flex; }
-}
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__link.active {
-  transform: translateX(0);
-  box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--vt-nav-color) 55%, #000);
-}
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__link:not(.active):hover {
-  transform: translateX(2px);
-}
-/* Account chip in rail — profile picture takes the icon slot, hangs off
-   the left edge with the same recipe as the icon buttons above. Nothing
-   else visible (no copy, no chevron, no auth-status pill). */
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__account-trigger {
-  grid-template-columns: 32px !important;
-  width: 52px !important;
-  height: 44px !important;
-  padding: 0 !important;
-  place-items: center;
-  justify-content: center;
-  margin-left: -14px !important;
-  padding-left: 14px !important;
-  border-left-width: 0 !important;
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
-  border-top-right-radius: var(--vt-nav-radius);
-  border-bottom-right-radius: var(--vt-nav-radius);
-}
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__account-copy,
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__account-chevron { display: none; }
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar {
-  /* Slightly bigger than the default 32px so the pp reads as an icon-scale
-     glyph, not a tiny thumbnail — matches the 26px filled icons above. */
-  width: 30px !important;
-  height: 30px !important;
-}
-.vt-adaptive-shell[data-layout="rail"] .vt-adaptive-nav__utilities {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 4px;
-  align-items: center;
+  font-size: 20px;
+  letter-spacing: -0.03em;
 }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__link.active::after,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link.active::after {
@@ -873,7 +652,7 @@
   bottom: -2px;
   width: 28px;
 }
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link { font-size: 11px; }
+.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__link { font-size: 20px; letter-spacing: -0.03em; }
 
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__utilities,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__utilities {
@@ -884,21 +663,10 @@
 }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-trigger,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger {
-  grid-template-columns: 32px minmax(0, 1fr) 16px;
+  grid-template-columns: 42px minmax(0, 1fr) 18px;
   width: 100%;
-  /* Same 44px rhythm as the sidebar links — one row of buttons, one height. */
-  height: 44px;
-  padding: 4px 8px;
-}
-.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar,
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar {
-  width: 32px;
-  height: 32px;
-}
-.vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar svg,
-.vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__account-trigger .vt-adaptive-nav__avatar svg {
-  width: 18px;
-  height: 18px;
+  height: 68px;
+  padding: 6px;
 }
 .vt-adaptive-shell[data-layout="wide"] .vt-adaptive-nav__avatar,
 .vt-adaptive-shell[data-layout="thin"] .vt-adaptive-nav__avatar {
@@ -1008,26 +776,7 @@
     grid-template-rows: repeat(2, 35px);
     gap: 5px;
   }
-  /* Top-nav link now matches the sidebar-layout button metaphor —
-     same 33px height, 18px uppercase weight-1000 letter-tight text —
-     so the two orientations read as one system instead of two
-     different button chips. User asked for this parity explicitly
-     after seeing the sidebar-mode buttons live. */
-  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__link {
-    height: var(--vt-nav-sidebar-button-height);
-    min-height: var(--vt-nav-sidebar-button-height);
-    padding-inline: 8px;
-    font-size: 16px;
-    font-weight: 1000;
-    letter-spacing: -.045em;
-    gap: 6px;
-  }
-  /* Top-nav buttons on narrower viewports hide the label once every button
-     would clip its text — the icon carries the meaning by itself. */
-  @media (max-width: 1100px) {
-    .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__link-label { display: none; }
-    .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__link { justify-content: center; padding-inline: 4px; }
-  }
+  .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__link { height: 35px; font-size: 11px; }
   .vt-adaptive-shell[data-layout="top"] .vt-adaptive-nav__account-trigger {
     grid-template-columns: 44px minmax(0, 1fr) 18px;
     width: clamp(224px, 20vw, 270px);

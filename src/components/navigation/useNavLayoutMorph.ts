@@ -27,12 +27,10 @@ const styleSnapshot = (el: Element): VtNavStyleSnapshot => {
   }
 }
 
-const cloneFor = (el: HTMLElement, rect: DOMRect): HTMLElement => {
-  const clone = el.cloneNode(true) as HTMLElement
-  clone.classList.add("vt-nav-flight-clone")
-  clone.removeAttribute("id")
-  clone.setAttribute("aria-hidden", "true")
-  clone.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"))
+const cloneFor = (el: HTMLElement, rect: DOMRect, labelOverride?: string): HTMLDivElement => {
+  const clone = document.createElement("div")
+  clone.className = "vt-nav-flight-clone"
+  clone.textContent = labelOverride ?? el.textContent?.trim() ?? ""
   const cs = getComputedStyle(el)
   Object.assign(clone.style, {
     left: `${rect.left}px`,
@@ -42,7 +40,6 @@ const cloneFor = (el: HTMLElement, rect: DOMRect): HTMLElement => {
     background: cs.backgroundColor,
     borderRadius: cs.borderRadius,
     borderWidth: cs.borderTopWidth,
-    display: cs.display,
     fontFamily: cs.fontFamily,
     fontSize: cs.fontSize,
     letterSpacing: cs.letterSpacing,
@@ -95,7 +92,7 @@ const animatePageContext = async (
 const prefersReducedMotion = (): boolean =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
-type VtFlightItem = { el: HTMLElement }
+type VtFlightItem = { el: HTMLElement; label?: string }
 
 // Durations/stagger below are the prototype's originals scaled 1.5x.
 const STAGGER_STEP = 225 // 150 * 1.5
@@ -141,7 +138,7 @@ export const useNavLayoutMorph = ({
       const items: VtFlightItem[] = [
         ...[...linksRef.current.values()].map((el) => ({ el })),
         ...(controlElRef.current ? [{ el: controlElRef.current }] : []),
-        ...(accountButtonRef.current ? [{ el: accountButtonRef.current }] : []),
+        ...(accountButtonRef.current ? [{ el: accountButtonRef.current, label: "Account" }] : []),
       ]
 
       if (!shell || !items.length || prefersReducedMotion()) {
@@ -161,7 +158,7 @@ export const useNavLayoutMorph = ({
       document.body.appendChild(flightLayer)
 
       const clones = items.map((item, index) => {
-        const clone = cloneFor(item.el, start[index])
+        const clone = cloneFor(item.el, start[index], item.label)
         flightLayer.appendChild(clone)
         item.el.classList.add("vt-nav-source-hidden")
         return clone
@@ -198,15 +195,12 @@ export const useNavLayoutMorph = ({
         clone.classList.add("is-shining")
 
         if (!reversing) {
-          // Top -> sidebar: contract both dimensions while dropping into the target row, then dock the
-          // already-smaller button into the sidebar column. This makes the sidebar-only size change visible
-          // as part of the morph instead of looking like a width snap at the end.
-          const contractedLeft = s.left + (s.width - e.width) / 2
+          // top -> sidebar: drop into the row height first (morphing size/type partway), then slide left into the column.
           await clone.animate(
             [
               { left: `${s.left}px`, top: `${s.top}px`, width: `${s.width}px`, height: `${s.height}px`, fontSize: sStyle.fontSize, letterSpacing: sStyle.letterSpacing, fontWeight: sStyle.fontWeight, lineHeight: sStyle.lineHeight, borderRadius: sStyle.borderRadius, paddingLeft: sStyle.paddingLeft, paddingRight: sStyle.paddingRight },
-              { left: `${s.left + (contractedLeft - s.left) * 0.62}px`, top: `${s.top + (e.top - s.top) * 0.56}px`, width: `${s.width + (e.width - s.width) * 0.62}px`, height: `${s.height + (e.height - s.height) * 0.72}px`, fontSize: `calc(${sStyle.fontSize} * .55 + ${eStyle.fontSize} * .45)`, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight, offset: 0.58 },
-              { left: `${contractedLeft}px`, top: `${e.top}px`, width: `${e.width}px`, height: `${e.height}px`, fontSize: eStyle.fontSize, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight },
+              { left: `${s.left}px`, top: `${s.top + (e.top - s.top) * 0.56}px`, width: `${s.width}px`, height: `${e.height}px`, fontSize: `calc(${sStyle.fontSize} * .55 + ${eStyle.fontSize} * .45)`, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight, offset: 0.58 },
+              { left: `${s.left}px`, top: `${e.top}px`, width: `${s.width}px`, height: `${e.height}px`, fontSize: eStyle.fontSize, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight },
             ],
             { duration: TO_SIDEBAR_PHASE1_DURATION, easing: "cubic-bezier(.55,.02,.85,.42)", fill: "forwards" },
           ).finished
@@ -217,7 +211,7 @@ export const useNavLayoutMorph = ({
 
           await clone.animate(
             [
-              { left: `${contractedLeft}px`, top: `${e.top}px`, width: `${e.width}px`, height: `${e.height}px`, fontSize: eStyle.fontSize, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight },
+              { left: `${s.left}px`, top: `${e.top}px`, width: `${s.width}px`, height: `${e.height}px`, fontSize: eStyle.fontSize, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight },
               { left: `${e.left}px`, top: `${e.top}px`, width: `${e.width}px`, height: `${e.height}px`, fontSize: eStyle.fontSize, letterSpacing: eStyle.letterSpacing, fontWeight: eStyle.fontWeight, lineHeight: eStyle.lineHeight, borderRadius: eStyle.borderRadius, paddingLeft: eStyle.paddingLeft, paddingRight: eStyle.paddingRight },
             ],
             { duration: TO_SIDEBAR_PHASE2_DURATION, easing: "cubic-bezier(.12,.72,.18,1)", fill: "forwards" },

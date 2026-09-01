@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%23ff6f9f%22/><path d=%22M6 8h20v16H6z%22 fill=%22white%22 stroke=%22%23111019%22 stroke-width=%223%22/></svg>">
+  <title>ViewTube Mini Widget Map Atlas</title>
+  <style>
+    :root {
+      --ink:#111019;
+      --paper:#f3f1f7;
+      --white:#fff;
+      --pink:#ff6f9f;
+      --coral:#ff7e70;
+      --orange:#ffad5c;
+      --yellow:#ffe258;
+      --lime:#c8fa31;
+      --green:#3bf27b;
+      --teal:#51d8bd;
+      --cyan:#23cee9;
+      --blue:#568cef;
+      --purple:#9d61e7;
+      --magenta:#ee5cec;
+      --rose:#f56ab2;
+      --page-pad:clamp(12px,2.4vw,34px);
+      --line:2px solid var(--ink);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      min-width:320px;
+      color:var(--ink);
+      background:
+        linear-gradient(rgba(17,16,25,.035) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(17,16,25,.035) 1px,transparent 1px),
+        var(--paper);
+      background-size:20px 20px;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    button{font:inherit;color:inherit}
+    button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+
+    .prototype-flag{
+      position:fixed;z-index:50;top:0;right:14px;
+      padding:5px 8px;border:var(--line);border-top:0;background:var(--yellow);
+      font-size:9px;font-weight:1000;letter-spacing:.07em;text-transform:uppercase;
+    }
+    .hero{padding:42px var(--page-pad) 20px;border-bottom:3px solid var(--ink);background:var(--pink)}
+    .hero-kicker{display:inline-block;padding:4px 8px;border:var(--line);border-radius:999px;background:white;font-size:9px;font-weight:1000;text-transform:uppercase}
+    .hero h1{max-width:980px;margin:12px 0 7px;font-size:clamp(34px,6vw,74px);line-height:.87;letter-spacing:-.055em;text-transform:uppercase}
+    .hero p{max-width:780px;margin:0;font-size:clamp(12px,1.4vw,16px);font-weight:850;line-height:1.25}
+    .hero-stats{display:flex;flex-wrap:wrap;gap:6px;margin-top:15px}
+    .hero-stats span{padding:6px 8px;border:var(--line);background:white;font-size:9px;font-weight:1000;text-transform:uppercase}
+
+    .sticky-nav{
+      position:sticky;z-index:30;top:0;display:flex;justify-content:space-between;align-items:center;gap:8px;
+      min-height:52px;padding:8px var(--page-pad);border-bottom:3px solid var(--ink);background:rgba(255,255,255,.97);backdrop-filter:blur(10px)
+    }
+    .tabs,.filters,.idea-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .tab,.filter,.idea-tab,.step-button{
+      min-height:30px;padding:5px 10px;border:var(--line);border-radius:7px;background:white;
+      font-size:9px;font-weight:1000;text-transform:uppercase;cursor:pointer
+    }
+    .tab[aria-selected="true"],.filter[aria-pressed="true"],.idea-tab[aria-pressed="true"]{background:var(--lime);box-shadow:2px 2px 0 var(--ink)}
+    .nav-note{color:#6c6675;font-size:9px;font-weight:900;text-transform:uppercase}
+
+    main{padding:0 var(--page-pad) 96px}
+    .view{display:none}.view.is-active{display:block}
+    .section-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:18px;padding:32px 0 15px}
+    .section-head h2{margin:0;font-size:clamp(25px,4vw,46px);line-height:.92;letter-spacing:-.045em;text-transform:uppercase}
+    .section-head p{max-width:690px;margin:6px 0 0;font-size:11px;font-weight:800;line-height:1.28}
+    .constraint-note{display:inline-block;margin-top:8px;padding:5px 7px;border:1.5px solid var(--ink);background:var(--yellow);font-size:8px;font-weight:1000;text-transform:uppercase}
+    .filter{min-height:26px;padding:4px 7px;border-width:1.5px;font-size:7px}
+
+    .study-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,350px),1fr));gap:15px}
+    .study-card{min-width:0;padding:9px;border:var(--line);border-radius:12px;background:rgba(255,255,255,.82);box-shadow:4px 4px 0 var(--ink)}
+    .study-card.is-filtered{display:none}
+    .study-label{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
+    .study-label b{font-size:23px;line-height:1}.study-label strong{font-size:9px;text-align:right;text-transform:uppercase}
+    .study-note{min-height:29px;margin:7px 1px 0;color:#5d5765;font-size:8px;font-weight:780;line-height:1.25}
+
+    .scale-stage{
+      display:grid;grid-template-columns:minmax(105px,1fr) minmax(170px,1.4fr);gap:8px;align-items:stretch;min-height:145px;
+      padding:8px;border:1.5px solid var(--ink);border-radius:7px;background:#e9e6ed
+    }
+    .size-cell{display:grid;justify-items:center;align-content:center;gap:8px;min-width:0;padding:8px 5px;border:1px solid var(--ink);border-radius:5px;background:white}
+    .size-cell small{font-size:6px;font-weight:1000;letter-spacing:.08em;text-transform:uppercase}
+    .actual-measure{display:flex;align-items:center;gap:4px;color:#716b78;font:800 7px/1 ui-monospace,monospace}
+    .actual-measure::before,.actual-measure::after{content:"";width:10px;border-top:1px solid currentColor}
+
+    /* The real design object: responsive from 85px to 150px wide. */
+    .micro-widget{
+      --c:var(--cyan);--rail:color-mix(in srgb,var(--c),white 35%);--stroke:color-mix(in srgb,var(--c),black 56%);
+      position:relative;width:min(var(--widget-w,115px),100%);aspect-ratio:1.85/1;display:grid;grid-template-rows:24% minmax(0,1fr);
+      overflow:hidden;border:1px solid var(--stroke);border-radius:4px;background:white;
+      box-shadow:2px 2px 0 color-mix(in srgb,var(--c),transparent 28%);font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+      container-type:inline-size;
+      transition:opacity 120ms ease,transform 120ms ease
+    }
+    .micro-widget.is-off{opacity:.34;filter:grayscale(.75)}
+    .micro-widget.is-off::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(17,16,25,.16) 6px 8px);pointer-events:none}
+    .micro-head{display:grid;grid-template-columns:22% minmax(0,1fr);min-width:0;border-bottom:1px solid var(--stroke);background:var(--c)}
+    .micro-head-icon{display:grid;place-items:center;border-right:1px solid var(--stroke);background:var(--rail);font-size:clamp(4px,5.5cqw,8px);font-weight:1000;line-height:1}
+    .micro-title{min-width:0;overflow:hidden;padding:3% 4% 1%;color:var(--stroke);font-size:clamp(5px,6.5cqw,9px);font-weight:1000;line-height:1;letter-spacing:-.035em;text-overflow:ellipsis;text-transform:uppercase;white-space:nowrap}
+    .micro-body{position:relative;min-width:0;min-height:0;display:grid;align-content:center;gap:4%;padding:5%;background:white}
+    .micro-signal{height:clamp(9px,13cqw,18px);border:.75px solid var(--stroke);border-radius:2px;background:linear-gradient(135deg,color-mix(in srgb,var(--c),white 82%) 0 42%,var(--c) 43% 58%,color-mix(in srgb,var(--c),white 82%) 59%)}
+    .micro-thumb{position:relative;height:clamp(22px,32cqw,44px);overflow:hidden;border:.75px solid var(--stroke);border-radius:2px;background:linear-gradient(155deg,var(--stroke) 0 23%,var(--c) 24% 55%,color-mix(in srgb,var(--c),white 60%) 56%)}
+    .micro-thumb::before,.micro-thumb::after{content:"";position:absolute;right:4%;left:4%;height:8%;background:white}
+    .micro-thumb::before{top:6%}.micro-thumb::after{bottom:6%}
+    .micro-bars{display:flex;align-items:end;gap:4%;height:clamp(18px,27cqw,36px);padding-inline:4%}
+    .micro-bars i{display:block;flex:1;background:var(--c);border:0}
+    .micro-bars i:nth-child(1){height:45%}.micro-bars i:nth-child(2){height:80%}.micro-bars i:nth-child(3){height:58%}.micro-bars i:nth-child(4){height:100%}
+
+    .micro-controls{display:flex;align-items:stretch;gap:3px;min-width:0}
+    .micro-button{
+      position:relative;display:grid;place-items:center;min-width:0;width:clamp(11px,12cqw,17px);height:clamp(10px,11cqw,15px);padding:0;
+      border:.75px solid var(--stroke);border-radius:2px;background:color-mix(in srgb,var(--c),white 70%);color:var(--stroke);
+      box-shadow:1px 1px 0 color-mix(in srgb,var(--c),transparent 25%);font-size:clamp(5px,6cqw,8px);font-weight:1000;line-height:1;cursor:pointer
+    }
+    .micro-button:active{transform:translate(1px,1px);box-shadow:none}
+    .micro-button.eye::before{content:"";width:55%;height:40%;border:1px solid currentColor;border-radius:50% 50% 45% 45%}
+    .micro-button.eye::after{content:"";position:absolute;width:18%;aspect-ratio:1;border-radius:50%;background:currentColor}
+    .micro-button.grip::before{content:"";width:50%;aspect-ratio:1;background:radial-gradient(circle,currentColor 1px,transparent 1.25px) 0 0/50% 50%}
+    .micro-button.split{grid-template-columns:38% 1fr;width:clamp(22px,24cqw,32px)}
+    .micro-button.split::before{content:"";height:100%;border-right:.75px solid var(--stroke);background:var(--c)}
+    .micro-button.split::after{content:"";width:40%;height:1px;background:var(--stroke)}
+
+    /* Selected grid contract: one shared interior for every widget. */
+    .canonical-mini .canonical-body{align-content:stretch;grid-template-rows:minmax(0,1fr) auto;gap:5%;padding:4%}
+    .canonical-mini .micro-signal{height:auto;min-height:8px}
+    .canonical-footer{display:flex;align-items:end;justify-content:space-between;gap:4%;min-width:0}
+    .canonical-state-controls{display:flex;align-items:end;gap:2px}
+    .canonical-state-controls .micro-button{width:clamp(13px,14cqw,19px);height:clamp(11px,12cqw,17px)}
+    .micro-button.collapse::before{content:"−";font-size:85%;font-weight:1000;line-height:1}
+    .direction-pad{display:grid;grid-template-columns:repeat(2,clamp(9px,9cqw,13px));grid-template-rows:repeat(2,clamp(8px,8cqw,12px));gap:1px}
+    .direction-pad .micro-button{width:100%;height:100%;border-radius:1.5px;box-shadow:none;font-size:clamp(5px,5.5cqw,8px)}
+    .canonical-mini.is-collapsed{aspect-ratio:3.15/1;grid-template-rows:42% minmax(0,1fr)}
+    .canonical-mini.is-collapsed .canonical-body{grid-template-rows:1fr;padding:2% 4%}
+    .canonical-mini.is-collapsed .micro-signal{display:none}
+    .canonical-mini.is-collapsed .canonical-footer{align-items:center}
+    .canonical-mini.is-collapsed .micro-button.collapse::before{content:"+"}
+
+    /* Twenty-five simple control-placement studies. */
+    .m01 .micro-controls{position:absolute;right:5%;bottom:6%}
+    .m02 .micro-body{grid-template-columns:1fr 18%}.m02 .micro-controls{display:grid;grid-template-rows:repeat(2,1fr);gap:3px}.m02 .micro-button{width:100%;height:100%}
+    .m03 .micro-controls{position:absolute;left:5%;right:5%;bottom:6%;justify-content:space-between}
+    .m04 .micro-controls{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}.m04 .micro-signal{opacity:.18}
+    .m05 .micro-controls{position:absolute;right:5%;top:7%}.m05 .micro-body{padding-top:20%}
+    .m06 .micro-head{grid-template-columns:22% 1fr 18%}.m06 .micro-head .micro-button{width:80%;height:72%;align-self:center}.m06 .micro-controls{position:absolute;right:4%;bottom:5%}
+    .m07 .micro-body{padding:3%}.m07 .micro-controls{position:absolute;right:4%;bottom:5%}.m07 .micro-thumb{height:90%}
+    .m08 .micro-controls{position:absolute;left:4%;bottom:5%}.m08 .micro-button{width:clamp(22px,24cqw,32px);grid-template-columns:38% 1fr}
+    .m09 .micro-controls{position:absolute;right:4%;bottom:5%}.m09 .micro-button.eye{width:clamp(20px,22cqw,30px);height:clamp(14px,15cqw,21px)}
+    .m10 .micro-controls{position:absolute;right:4%;bottom:5%}.m10 .micro-bars{padding-right:30%}
+    .m11 .micro-controls{position:absolute;left:5%;right:5%;bottom:6%}.m11 .micro-button{flex:1}.m11 .micro-button.eye{flex:0 0 24%}
+    .m12 .micro-body{background:repeating-linear-gradient(135deg,#fff 0 7px,color-mix(in srgb,var(--c),white 82%) 7px 10px)}.m12 .micro-controls{position:absolute;right:5%;bottom:6%}
+    .m13{outline:2px solid var(--c);outline-offset:2px}.m13 .micro-controls{position:absolute;left:5%;bottom:6%}
+    .m14{height:clamp(28px,28cqw,38px);aspect-ratio:auto;grid-template-rows:45% 1fr}.m14 .micro-signal{display:none}.m14 .micro-controls{position:absolute;right:3%;bottom:4%}.m14 .micro-body{padding:2%}
+    .m15 .micro-controls{position:absolute;right:5%;bottom:6%}.m15 .micro-button.grip{position:absolute;left:5%;bottom:6%}
+    .m16 .micro-controls{position:absolute;right:3%;bottom:4%}.m16 .micro-button{width:clamp(10px,10cqw,14px);height:clamp(9px,9cqw,13px)}
+    .m17 .micro-controls{position:absolute;left:4%;bottom:5%}.m17 .micro-button{width:clamp(22px,24cqw,32px)}
+    .m18 .micro-body{grid-template-columns:1fr 22%}.m18 .micro-controls{display:grid;align-content:center}.m18 .micro-button{width:100%;height:clamp(18px,24cqw,32px)}
+    .m19 .micro-controls{position:absolute;left:4%;bottom:5%}.m19 .micro-button.eye{width:clamp(26px,30cqw,40px);grid-template-columns:38% 1fr}.m19 .micro-button.eye::before{margin-left:8%}
+    .m20 .micro-controls{position:absolute;left:3%;top:6%;bottom:6%;display:grid;grid-template-rows:repeat(2,1fr)}.m20 .micro-button{width:clamp(11px,12cqw,17px);height:auto}.m20 .micro-signal{margin-left:18%}
+    .m21 .micro-controls{position:absolute;right:4%;left:4%;bottom:5%;justify-content:center}.m21 .micro-signal{margin-bottom:18%}
+    .m22 .micro-thumb{height:90%}.m22 .micro-controls{position:absolute;left:50%;bottom:6%;transform:translateX(-50%)}
+    .m23 .micro-body{grid-template-columns:1fr 28%}.m23 .micro-button.split{width:100%;height:100%;grid-template-columns:38% 1fr}
+    .m24 .micro-controls{position:absolute;right:5%;bottom:6%;opacity:.4}.m24:hover .micro-controls,.m24:focus-within .micro-controls{opacity:1}
+    .m25 .micro-body{grid-template-columns:1fr 21%}.m25 .micro-controls{align-self:center;display:grid;gap:3px}.m25 .micro-signal{height:55%}
+
+    /* Dashboard map ideas. Widgets stay within the corrected 85–150px miniature range. */
+    .grid-lab{overflow:hidden;border:3px solid var(--ink);border-radius:14px;background:white;box-shadow:6px 6px 0 var(--purple)}
+    .grid-lab-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px 11px;border-bottom:3px solid var(--ink);background:var(--yellow)}
+    .grid-lab-head h3{margin:0;font-size:clamp(18px,3vw,32px);line-height:.95;text-transform:uppercase}.grid-lab-head p{margin:3px 0 0;font-size:8px;font-weight:900;text-transform:uppercase}
+    .grid-meta{padding:5px 7px;border:var(--line);background:white;font-size:7px;font-weight:1000;text-transform:uppercase;white-space:nowrap}
+    .grid-stage{min-height:520px;padding:18px;background:#e8e5ed}
+    .grid-idea{display:none}.grid-idea.is-active{display:block}
+    .idea-note{display:flex;justify-content:space-between;gap:10px;margin-top:9px;font-size:8px;font-weight:850}
+    .module-frame{max-width:760px;margin:auto;padding:10px;border:2px solid var(--ink);border-radius:9px;background:white;box-shadow:4px 4px 0 var(--cyan)}
+    .module-toolbar{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid var(--ink);font-size:7px;font-weight:1000;text-transform:uppercase}
+    .module-toolbar-buttons{display:flex;gap:4px}.module-toolbar-buttons span{padding:3px 5px;border:1px solid var(--ink);border-radius:3px;background:var(--lime)}
+
+    .map-board{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-flow:row dense;gap:6px;align-items:start;width:100%;margin-inline:auto;padding:10px;border:1.5px solid var(--ink);background:#f5f3f7}
+    .map-slot{grid-column:span var(--span,3);display:flex;justify-content:center;min-width:0}
+    .map-slot .micro-widget,.map-slot.is-wide .micro-widget,.map-slot.is-full .micro-widget{width:min(100%,var(--widget-w,115px))}
+    .map-slot.is-selected{padding:2px;outline:1px solid var(--blue);outline-offset:1px;background:color-mix(in srgb,var(--blue),white 75%)}
+    .map-slot.is-dim{opacity:.3}
+
+    .shelf-board{display:flex;flex-direction:column;gap:5px}
+    .shelf-row{display:flex;align-items:center;gap:8px;min-height:74px;padding:7px;border:1px solid var(--ink);background:#f5f3f7}
+    .shelf-label{width:40px;flex:0 0 40px;font-size:7px;font-weight:1000;text-transform:uppercase}.shelf-items{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+    .thumb-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px}
+    .thumb-map-card{display:grid;grid-template-rows:18px 90px 18px;padding:0;border:1.5px solid var(--ink);border-radius:5px;background:white;box-shadow:2px 2px 0 var(--c)}
+    .thumb-band{display:flex;align-items:center;min-width:0;overflow:hidden;padding:2px 5px;border-bottom:1px solid var(--ink);background:var(--c);font-size:7px;font-weight:1000;text-transform:uppercase;white-space:nowrap}.thumb-band:last-child{border-top:1px solid var(--ink);border-bottom:0}
+    .thumb-map-body{display:grid;place-items:center;background:linear-gradient(145deg,var(--ink) 0 30%,var(--c) 31% 62%,color-mix(in srgb,var(--c),white 65%) 63%)}
+    .thumb-map-body .micro-widget{width:min(115px,88%)}
+
+    .control-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px}
+    .control-pair{display:grid;place-items:center;min-height:105px;padding:10px;border:1px solid var(--ink);background:white}
+
+    .focus-board{display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:10px}
+    .focus-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(85px,1fr));justify-content:center;gap:6px;align-content:start;padding:8px;border:1px solid var(--ink);background:#f5f3f7}.focus-map .map-slot{grid-column:auto!important;width:auto;padding:0}.focus-map .micro-widget{width:min(100%,var(--widget-w,115px))}.focus-map .map-slot.is-selected{padding:2px}
+    .inspector{padding:8px;border:2px solid var(--ink);border-radius:7px;background:white;box-shadow:3px 3px 0 var(--pink)}
+    .inspector h4{margin:0 0 8px;font-size:10px;text-transform:uppercase}.inspector-preview{display:grid;place-items:center;min-height:118px;border:1px solid var(--ink);background:#ebe8ef}.inspector-preview .micro-widget{width:150px}
+    .inspector-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px}.inspector-actions button{min-height:28px;border:1.5px solid var(--ink);border-radius:4px;background:var(--lime);font-size:7px;font-weight:1000;text-transform:uppercase}
+
+    .bottom-switcher{position:fixed;z-index:45;bottom:13px;left:50%;display:none;grid-template-columns:34px minmax(170px,auto) 34px;align-items:center;transform:translateX(-50%);overflow:hidden;border:3px solid var(--ink);border-radius:10px;background:white;box-shadow:4px 4px 0 var(--ink)}
+    body[data-view="grids"] .bottom-switcher{display:grid}.step-button{height:35px;min-height:35px;padding:0;border:0;border-radius:0;background:var(--lime);font-size:18px}.step-button:first-child{border-right:2px solid var(--ink)}.step-button:last-child{border-left:2px solid var(--ink)}.switch-label{padding:0 9px;text-align:center;font-size:8px;font-weight:1000;text-transform:uppercase}
+
+    @media(max-width:760px){
+      .sticky-nav{align-items:flex-start;flex-direction:column}.nav-note{display:none}.section-head{grid-template-columns:1fr}.grid-lab-head{grid-template-columns:1fr}.grid-meta{justify-self:start}.focus-board{grid-template-columns:1fr}.idea-note{padding-bottom:46px}.grid-stage{min-height:0;padding:10px}.prototype-flag{right:8px}
+    }
+    @media(max-width:480px){
+      :root{--page-pad:10px}.hero h1{font-size:35px}.study-grid{grid-template-columns:1fr}.scale-stage{grid-template-columns:1fr}.thumb-board,.control-board{grid-template-columns:1fr}.shelf-label{display:none}.module-frame{padding:6px}.map-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:6px}.map-slot{grid-column:auto!important}.map-slot .micro-widget,.map-slot.is-wide .micro-widget{width:min(100%,var(--widget-w,115px))}
+    }
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body data-view="components">
+  <div class="prototype-flag">Prototype · 85–150px target</div>
+  <header class="hero">
+    <span class="hero-kicker">▦ Dashboard Controls · Micro Widget Map</span>
+    <h1>Mini Widget Controls Atlas</h1>
+    <p>Twenty-five compact widget treatments sized for their real 85–150px range, derived from ViewTube’s split-left buttons, colored widget shells, Comment Responder thumbnail, and like/reply badges.</p>
+    <div class="hero-stats"><span>85–150px real width</span><span>split-left title rail</span><span>color-matched stroke + shadow</span><span>show/hide + collapse + directions</span></div>
+  </header>
+
+  <nav class="sticky-nav" aria-label="Prototype sections">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-view-target="components">25 Micro Widgets</button>
+      <button class="tab" role="tab" aria-selected="false" data-view-target="grids">5 Grid Ideas</button>
+    </div>
+    <span class="nav-note">Left = 85px compact · right = 150px expanded</span>
+  </nav>
+
+  <main>
+    <section id="components" class="view is-active" aria-labelledby="component-title">
+      <div class="section-head">
+        <div>
+          <h2 id="component-title">25 responsive mini components</h2>
+          <p>Each option is shown at both ends of the real size range. The layout scales continuously between them without adding or removing controls.</p>
+          <span class="constraint-note">All options keep the colored title band + split-left icon cell</span>
+        </div>
+        <div class="filters" aria-label="Filter designs"></div>
+      </div>
+      <div id="study-grid" class="study-grid"></div>
+    </section>
+
+    <section id="grids" class="view" aria-labelledby="grid-title-main">
+      <div class="section-head">
+        <div>
+          <h2 id="grid-title-main">5 module-grid ideas</h2>
+          <p>These arrangements use 85–150px widgets so the miniature dashboard remains readable while accurately reflecting the real widget order, color, and size class.</p>
+        </div>
+        <div id="idea-tabs" class="idea-tabs" aria-label="Grid ideas"></div>
+      </div>
+
+      <div class="grid-lab">
+        <header class="grid-lab-head">
+          <div><h3 id="idea-title">A · Exact Micro Mirror</h3><p id="idea-description">A direct mini dashboard using current row order and proportional spans.</p></div>
+          <span id="idea-meta" class="grid-meta">Most literal</span>
+        </header>
+        <div class="grid-stage">
+          <section class="grid-idea is-active" data-idea="0" aria-label="Exact micro mirror">
+            <div class="module-frame">
+              <div class="module-toolbar"><span>Current dashboard · 17 visible</span><div class="module-toolbar-buttons"><span>Show all</span><span>Hide</span></div></div>
+              <div id="map-a" class="map-board"></div>
+            </div>
+            <div class="idea-note"><span>Every miniature keeps its current color, title, size bucket, and placement.</span><span>Widgets remain within the 85–150px range.</span></div>
+          </section>
+
+          <section class="grid-idea" data-idea="1" aria-label="Row shelves">
+            <div class="module-frame">
+              <div class="module-toolbar"><span>Rows as movable shelves</span><div class="module-toolbar-buttons"><span>▲ Row</span><span>▼ Row</span></div></div>
+              <div id="shelf-board" class="shelf-board"></div>
+            </div>
+            <div class="idea-note"><span>Rows are explicit, making vertical placement easier to understand.</span><span>Individual widgets retain their compact controls.</span></div>
+          </section>
+
+          <section class="grid-idea" data-idea="2" aria-label="Thumbnail modules">
+            <div class="module-frame">
+              <div class="module-toolbar"><span>Thumbnail-derived widget tiles</span><div class="module-toolbar-buttons"><span>Fit</span><span>100%</span></div></div>
+              <div id="thumb-board" class="thumb-board"></div>
+            </div>
+            <div class="idea-note"><span>Top and bottom title bands echo Comment Responder’s video module.</span><span>Useful when widget identity matters more than exact spans.</span></div>
+          </section>
+
+          <section class="grid-idea" data-idea="3" aria-label="Uniform control matrix">
+            <div class="module-frame">
+              <div class="module-toolbar"><span>Uniform internal controls</span><div class="module-toolbar-buttons"><span>Arrange</span><span>Done</span></div></div>
+              <div id="control-board" class="control-board"></div>
+            </div>
+            <div class="idea-note"><span>Every widget uses the same visibility, collapse, and directional controls.</span><span>Only color and title change.</span></div>
+          </section>
+
+          <section class="grid-idea" data-idea="4" aria-label="Map and inspector">
+            <div class="module-frame">
+              <div class="module-toolbar"><span>Complete map + selected widget</span><div class="module-toolbar-buttons"><span>Fit</span><span>Locate</span></div></div>
+              <div class="focus-board"><div id="focus-map" class="focus-map"></div><aside class="inspector"><h4>Selected · Channel Overview</h4><div class="inspector-preview" id="inspector-preview"></div><div class="inspector-actions"><button>Show / hide</button><button>Move</button></div></aside></div>
+            </div>
+            <div class="idea-note"><span>The map remains tiny while the selected widget and its controls become inspectable.</span><span>Best accessibility compromise.</span></div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="bottom-switcher" aria-label="Grid idea switcher"><button class="step-button" type="button" data-step="-1" aria-label="Previous idea">‹</button><div id="switch-label" class="switch-label">A · Exact Micro Mirror</div><button class="step-button" type="button" data-step="1" aria-label="Next idea">›</button></div>
+
+  <script>
+    const palette=["pink","coral","orange","yellow","lime","green","teal","cyan","blue","purple","magenta","rose"];
+    const designs=[
+      ["Footer Pair","footer","Eye + move control in the lower-right corner."],
+      ["Right Stack","side","Two compact controls stacked beside the signal."],
+      ["Split Footer","footer","Visibility on the left; movement on the right."],
+      ["Center Pair","toggle","Hide and move-mode controls float over a muted interior."],
+      ["Top Corner","corner","Controls live against the top-right of the body."],
+      ["Header Eye","header","Visibility joins the colored title band; move stays below."],
+      ["Thumbnail Control","thumbnail","Comment thumbnail anatomy with one corner action."],
+      ["Reaction Badges","badge","Like/reply split-button geometry becomes hide/move."],
+      ["Large Eye","visibility","Visibility is the primary interior action."],
+      ["Move Toggle + Bars","toggle","One move-mode toggle shares space with a tiny bar signal."],
+      ["Full Control Row","footer","Hide and move controls share the bottom edge."],
+      ["Hidden Hatch","visibility","Off state is visible without changing widget geometry."],
+      ["Selected Outline","selection","Color outline identifies the selected widget."],
+      ["Collapsed Strip","state","A compact collapsed state retains its identity and controls."],
+      ["Grip + Actions","move","Dedicated drag grip is separate from hide/move."],
+      ["Corner Pair","corner","Two quiet controls occupy the bottom corner."],
+      ["Wide Badges","badge","Two reaction-style controls prioritize legibility."],
+      ["Thumbnail Rail","thumbnail","A narrow right rail sits beside thumbnail content."],
+      ["Split Hide","visibility","Split-left badge combines eye cell and state cell."],
+      ["Left Move Rail","side","Movement lives vertically on the left interior edge."],
+      ["Centered Toggles","move","Visibility and move mode stay centered below the signal."],
+      ["Thumbnail Dock","thumbnail","Controls dock across the thumbnail’s lower title band."],
+      ["Body Split","side","The content and one full-height split control share the body."],
+      ["Reveal Controls","state","Controls stay quiet until hover or keyboard focus."],
+      ["Canonical Pair","canonical","Recommended: signal left, hide and move-mode controls right."]
+    ];
+
+    const iconFor=index=>["◉","↔","▦","✣","●","◫","▶","◎","◉","▥","⌁","□"][index%12];
+    const signalFor=index=>index%4===2?'<div class="micro-thumb"></div>':index%4===1?'<div class="micro-bars"><i></i><i></i><i></i><i></i></div>':'<div class="micro-signal"></div>';
+    const button=(kind,label="")=>`<button type="button" class="micro-button ${kind}" data-micro-action="${kind}" aria-label="${label||kind}">${kind.includes("eye")||kind.includes("grip")||kind.includes("split")?"":label}</button>`;
+    const compass=()=>`<div class="micro-controls">${button("eye","Show or hide")}${button("grip","Open move controls")}</div>`;
+
+    function controlsFor(index){
+      if([3,9,24].includes(index))return compass();
+      if(index===1)return `<div class="micro-controls">${button("eye","Show or hide")}${button("grip","Open move controls")}</div>`;
+      if(index===2)return `<div class="micro-controls">${button("eye","Show or hide")}${button("grip","Open move controls")}</div>`;
+      if(index===4)return `<div class="micro-controls">${button("eye","Show or hide")}${button("grip","Open move controls")}</div>`;
+      if(index===5)return `<div class="micro-controls">${button("grip","Open move controls")}</div>`;
+      if(index===7||index===16)return `<div class="micro-controls">${button("split","Hide")}${button("split","Move")}</div>`;
+      if(index===8)return `<div class="micro-controls">${button("eye","Show or hide")}</div>`;
+      if(index===10)return `<div class="micro-controls">${button("eye","Show or hide")}${button("grip","Open move controls")}</div>`;
+      if(index===14)return `<div class="micro-controls">${button("grip","Drag")}${button("eye","Show or hide")}</div>`;
+      if(index===15)return `<div class="micro-controls">${button("eye","Show or hide")}${button("grip","Open move controls")}</div>`;
+      if(index===18)return `<div class="micro-controls">${button("eye split","Show or hide")}</div>`;
+      if(index===19)return `<div class="micro-controls">${button("eye","Show or hide")}${button("grip","Open move controls")}</div>`;
+      if(index===20)return `<div class="micro-controls">${button("eye","Show or hide")}${button("grip","Open move controls")}</div>`;
+      if(index===22)return `<div class="micro-controls">${button("split","Move")}</div>`;
+      return `<div class="micro-controls">${button("eye","Show or hide")}${button("grip","Open move controls")}</div>`;
+    }
+
+    const widthFor=index=>[85,100,115,130,150][index%5];
+    function micro(index,idSuffix="",width=widthFor(index),title="Channel Overview",icon=iconFor(index)){
+      const color=palette[index%palette.length];
+      const off=index===11?" is-off":"";
+      return `<article class="micro-widget m${String(index+1).padStart(2,"0")}${off}" data-micro-id="${index}${idSuffix}" style="--c:var(--${color});--widget-w:${width}px" aria-label="${title} ${width} pixel widget">
+        <header class="micro-head"><span class="micro-head-icon" aria-hidden="true">${icon}</span><span class="micro-title">${title}</span>${index===5?button("eye","Show or hide"):""}</header>
+        <div class="micro-body">${signalFor(index)}${index===22?button("split","Move"):controlsFor(index)}</div>
+      </article>`;
+    }
+
+    function canonicalMini(colorIndex,idSuffix="",width=115,title="Channel Overview",icon="◉"){
+      const color=palette[colorIndex%palette.length];
+      return `<article class="micro-widget canonical-mini" data-micro-id="canonical-${colorIndex}${idSuffix}" style="--c:var(--${color});--widget-w:${width}px" aria-label="${title} ${width} pixel widget">
+        <header class="micro-head"><span class="micro-head-icon" aria-hidden="true">${icon}</span><span class="micro-title">${title}</span></header>
+        <div class="micro-body canonical-body">
+          <div class="micro-signal" aria-hidden="true"></div>
+          <div class="canonical-footer">
+            <div class="canonical-state-controls">
+              ${button("eye","Show or hide")}
+              <button type="button" class="micro-button collapse" data-micro-action="collapse" aria-label="Collapse widget" aria-expanded="true"></button>
+            </div>
+            <div class="direction-pad" aria-label="Move widget">
+              ${button("direction up","↑")}${button("direction right","→")}${button("direction left","←")}${button("direction down","↓")}
+            </div>
+          </div>
+        </div>
+      </article>`;
+    }
+
+    const categories=["all",...new Set(designs.map(item=>item[1]))];
+    const filters=document.querySelector(".filters");
+    categories.forEach((category,index)=>filters.insertAdjacentHTML("beforeend",`<button type="button" class="filter" data-filter="${category}" aria-pressed="${index===0}">${category}</button>`));
+    document.getElementById("study-grid").innerHTML=designs.map((design,index)=>`<section class="study-card" data-category="${design[1]}">
+      <div class="study-label"><b>${String(index+1).padStart(2,"0")}</b><strong>${design[0]}</strong></div>
+      <div class="scale-stage"><div class="size-cell">${micro(index,"-compact",85)}<span class="actual-measure">85px</span><small>Compact</small></div><div class="size-cell">${micro(index,"-expanded",150)}<span class="actual-measure">150px</span><small>Expanded</small></div></div>
+      <p class="study-note">${design[2]}</p></section>`).join("");
+
+    filters.addEventListener("click",event=>{const target=event.target.closest("[data-filter]");if(!target)return;filters.querySelectorAll("button").forEach(button=>button.setAttribute("aria-pressed",String(button===target)));document.querySelectorAll(".study-card").forEach(card=>card.classList.toggle("is-filtered",target.dataset.filter!=="all"&&card.dataset.category!==target.dataset.filter))});
+
+    document.addEventListener("click",event=>{
+      const action=event.target.closest("[data-micro-action]");if(!action)return;
+      event.stopPropagation();
+      const widget=action.closest(".micro-widget");
+      if(action.dataset.microAction.includes("eye")){
+        const pairedWidgets=widget.closest(".scale-stage")?.querySelectorAll(".micro-widget")||[widget];
+        const nextOff=!widget.classList.contains("is-off");
+        pairedWidgets.forEach(item=>item.classList.toggle("is-off",nextOff));
+      }
+      else if(action.dataset.microAction==="collapse"){
+        const collapsed=widget.classList.toggle("is-collapsed");
+        action.setAttribute("aria-expanded",String(!collapsed));
+        action.setAttribute("aria-label",collapsed?"Expand widget":"Collapse widget");
+      }
+      else{widget.animate([{transform:"translate(0,0)"},{transform:"translate(.7px,0)"},{transform:"translate(0,0)"}],{duration:160});}
+    });
+
+    const mapWidgets=[
+      ["About ViewTube","?",3,0],["Channel Overview","◉",3,1],["Data Visuals","⌁",3,2],["Comment Responder","✎",3,3],
+      ["Heat Matrix","▦",3,4],["Real-Time","↗",3,5],["Goals & Trajectory","◎",3,6],["Keyword Network","K",3,7],
+      ["Oracle","✦",4,8],["Community","＋",4,9],["Image","▧",4,10],
+      ["Traffic Sources","⌁",3,11],["Format Dominance","↕",3,12],["Momentum","↗",3,13],["Age × Gender","▦",3,14],
+      ["VT Brain","✦",6,15],["Thumbnail AI","▧",6,16]
+    ];
+    function mapSlot(item,index,extra=""){
+      const [title,icon,span,design]=item;
+      const width=span<=3?85:span===4?115:150;
+      return `<div class="map-slot ${span>=6?"is-wide":""} ${extra}" style="--span:${span}" title="${title}">${canonicalMini(design,`-map-${index}`,width,title,icon)}</div>`;
+    }
+    document.getElementById("map-a").innerHTML=mapWidgets.map((item,index)=>mapSlot(item,index)).join("");
+
+    const shelfRows=[mapWidgets.slice(0,4),mapWidgets.slice(4,8),mapWidgets.slice(8,11),mapWidgets.slice(11,15),mapWidgets.slice(15)];
+    document.getElementById("shelf-board").innerHTML=shelfRows.map((row,index)=>`<div class="shelf-row"><span class="shelf-label">Row ${index+1}</span><div class="shelf-items">${row.map((item,itemIndex)=>canonicalMini(item[3],`-shelf-${index}-${itemIndex}`,item[2]<=3?85:item[2]===4?115:150,item[0],item[1])).join("")}</div></div>`).join("");
+
+    document.getElementById("thumb-board").innerHTML=mapWidgets.slice(0,12).map((item,index)=>`<article class="thumb-map-card" style="--c:var(--${palette[index%12]})"><div class="thumb-band">${item[0]}</div><div class="thumb-map-body">${canonicalMini(item[3],`-thumb-${index}`,115,item[0],item[1])}</div><div class="thumb-band">${item[2]} / 12 columns</div></article>`).join("");
+
+    document.getElementById("control-board").innerHTML=mapWidgets.slice(0,12).map((item,index)=>`<article class="control-pair" style="--c:var(--${palette[index%12]})">${canonicalMini(item[3],`-control-${index}`,115,item[0],item[1])}</article>`).join("");
+
+    document.getElementById("focus-map").innerHTML=mapWidgets.slice(0,12).map((item,index)=>mapSlot(item,index,index===1?"is-selected":index>7?"is-dim":"")).join("");
+    document.getElementById("inspector-preview").innerHTML=canonicalMini(1,"-inspector",150,"Channel Overview","◉");
+
+    const ideas=[
+      ["A · Exact Micro Mirror","A direct mini dashboard using current row order and proportional spans.","Most literal"],
+      ["B · Row Shelves","Explicit horizontal rows make up/down movement understandable.","Placement clearest"],
+      ["C · Thumbnail Modules","Comment Responder thumbnail anatomy frames each miniature.","Identity clearest"],
+      ["D · Uniform Control Matrix","Every widget exposes the same six-button control layout.","Controls clearest"],
+      ["E · Map + Inspector","The whole tiny map stays visible while one widget is magnified.","Best balance"]
+    ];
+    const ideaTabs=document.getElementById("idea-tabs");
+    ideas.forEach((idea,index)=>ideaTabs.insertAdjacentHTML("beforeend",`<button type="button" class="idea-tab" data-idea-target="${index}" aria-pressed="${index===0}" aria-label="Show ${idea[0]}">${String.fromCharCode(65+index)}</button>`));
+    let currentIdea=0;
+    function showIdea(index,updateUrl=true){
+      currentIdea=(index+ideas.length)%ideas.length;
+      document.querySelectorAll(".grid-idea").forEach((idea,i)=>idea.classList.toggle("is-active",i===currentIdea));
+      ideaTabs.querySelectorAll("button").forEach((button,i)=>button.setAttribute("aria-pressed",String(i===currentIdea)));
+      document.getElementById("idea-title").textContent=ideas[currentIdea][0];document.getElementById("idea-description").textContent=ideas[currentIdea][1];document.getElementById("idea-meta").textContent=ideas[currentIdea][2];document.getElementById("switch-label").textContent=ideas[currentIdea][0];
+      if(updateUrl){const url=new URL(location.href);url.searchParams.set("grid",String.fromCharCode(65+currentIdea));history.replaceState({},"",url)}
+    }
+    ideaTabs.addEventListener("click",event=>{const target=event.target.closest("[data-idea-target]");if(target)showIdea(Number(target.dataset.ideaTarget))});
+    document.querySelectorAll("[data-step]").forEach(button=>button.addEventListener("click",()=>showIdea(currentIdea+Number(button.dataset.step))));
+
+    function setView(view,updateUrl=true){
+      const safe=view==="grids"?"grids":"components";document.body.dataset.view=safe;
+      document.querySelectorAll(".view").forEach(section=>section.classList.toggle("is-active",section.id===safe));document.querySelectorAll("[data-view-target]").forEach(button=>button.setAttribute("aria-selected",String(button.dataset.viewTarget===safe)));
+      if(updateUrl){const url=new URL(location.href);url.searchParams.set("view",safe);history.replaceState({},"",url)}
+    }
+    document.querySelectorAll("[data-view-target]").forEach(button=>button.addEventListener("click",()=>setView(button.dataset.viewTarget)));
+    document.addEventListener("keydown",event=>{if(document.body.dataset.view!=="grids"||["INPUT","TEXTAREA"].includes(document.activeElement?.tagName)||document.activeElement?.isContentEditable)return;if(event.key==="ArrowLeft")showIdea(currentIdea-1);if(event.key==="ArrowRight")showIdea(currentIdea+1)});
+
+    const params=new URLSearchParams(location.search);const gridCode=(params.get("grid")||"A").toUpperCase().charCodeAt(0)-65;showIdea(gridCode>=0&&gridCode<5?gridCode:0,false);setView(params.get("view")||"components",false);
+  </script>
+</body>
+</html>

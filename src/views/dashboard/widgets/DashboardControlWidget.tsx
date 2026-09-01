@@ -9,7 +9,6 @@ import {
   Download,
   Upload,
   Search,
-  Check,
   Eye,
   EyeOff,
   Sparkles,
@@ -26,8 +25,23 @@ import {
   WidgetSection,
 } from "../WidgetPrimitives"
 import { useDashboard } from "../../../context/DashboardContext"
-import { DASHBOARD_WIDGET_REGISTRY } from "../WidgetRegistry"
-import type { DashboardWidgetCategory, WidgetDefinition } from "../types"
+import { DASHBOARD_WIDGET_BY_ID, DASHBOARD_WIDGET_REGISTRY } from "../WidgetRegistry"
+import type { CommonWidgetProps, DashboardWidgetCategory, WidgetDefinition } from "../types"
+import {
+  DashboardMiniatureActions,
+  DashboardWidgetMiniature,
+  type DashboardMiniMoveTargets,
+  type DashboardMiniResizeAvailability,
+} from "../DashboardWidgetMiniature"
+import {
+  buildDashboardMiniLayout,
+  canResizeDashboardWidget,
+  getDashboardMoveTarget,
+  type DashboardMiniPlacement,
+  type DashboardMoveDirection,
+  type DashboardResizeDirection,
+} from "../dashboardMiniLayout"
+import { resolveDashboardSpectrum, resolveVisibleWidgetSpectrum } from "../spectrum"
 
 type ControlSection = "layout" | "widgets" | "presets"
 
@@ -41,58 +55,71 @@ const CATEGORIES: Array<{ id: "all" | DashboardWidgetCategory; label: string }> 
   { id: "system", label: "System" },
 ]
 
+/**
+ * Six preset layouts: 3 "default" balanced flavors + 3 "unique" specialty
+ * arrangements. Every preset ends with `dashboard-controls` so the user
+ * always has the layout hub visible after switching.
+ */
 const PRESET_DEFINITIONS = [
+  // ── 3 default flavors ─────────────────────────────────────────────
   {
-    id: "default",
-    title: "Default Signature",
-    description: "Standard balanced ViewTube suite for daily creator workflow",
+    id: "default-standard",
+    title: "Standard",
+    description: "Balanced daily creator suite — overview, creation, analytics, community",
     icon: Sparkles,
     color: "#FA618A",
+    tone: "default" as const,
     count: 18,
   },
   {
-    id: "analytics",
-    title: "Analytics Master",
-    description: "Deep statistical metrics, graphs, audience retention & traffic",
+    id: "default-analytics",
+    title: "Analytics-first",
+    description: "KPI + traffic + retention up top, creation tools below",
     icon: BarChart3,
     color: "#40C6E9",
-    count: 15,
+    tone: "default" as const,
+    count: 17,
   },
   {
-    id: "studio",
-    title: "Creation & Studio",
-    description: "Script writing, thumbnail generation, publishing & video editing",
+    id: "default-creator",
+    title: "Creator-first",
+    description: "Script + image + video + community leads; analytics as reference",
     icon: Video,
     color: "#579AFF",
+    tone: "default" as const,
+    count: 17,
+  },
+  // ── 3 unique specialty layouts ────────────────────────────────────
+  {
+    id: "unique-command",
+    title: "Command Center",
+    description: "Daily Command Center + Opportunity Desk + Idea Portfolio front and center",
+    icon: Brain,
+    color: "#7A2BFF",
+    tone: "unique" as const,
     count: 12,
   },
   {
-    id: "oracle",
-    title: "AI & Intelligence",
-    description: "Daily Oracle strategy, Brain OS loop, AI journal & recommendations",
-    icon: Brain,
-    color: "#7A2BFF",
-    count: 11,
-  },
-  {
-    id: "full",
-    title: "Full Studio Suite",
-    description: "All 40 signature ViewTube dashboard widgets active simultaneously",
-    icon: LayoutGrid,
-    color: "#FFE357",
-    count: 40,
-  },
-  {
-    id: "minimal",
-    title: "Minimal Focus",
-    description: "Core metrics and Daily Command Center with maximum speed",
+    id: "unique-minimal",
+    title: "Minimal",
+    description: "Only the essentials — KPI, Oracle, Quick Actions, Controls",
     icon: Zap,
     color: "#4FFF5B",
-    count: 4,
+    tone: "unique" as const,
+    count: 5,
+  },
+  {
+    id: "unique-atlas",
+    title: "Atlas",
+    description: "Every registered widget active — full observability",
+    icon: LayoutGrid,
+    color: "#FFE357",
+    tone: "unique" as const,
+    count: 58,
   },
 ]
 
-export const DashboardControlWidget = ({
+export const DashboardControlWidget: React.FC<CommonWidgetProps> = ({
   widget,
   instance,
   editMode: instanceEditMode,
@@ -102,7 +129,7 @@ export const DashboardControlWidget = ({
   onDecSize,
   onDecHeight,
   onRemove,
-}: any) => {
+}) => {
   const common = {
     widget,
     instance,
@@ -126,6 +153,9 @@ export const DashboardControlWidget = ({
     importLayout,
     resetLayout,
     toggleWidget,
+    toggleWidgetCollapse,
+    moveWidget,
+    resizeWidget,
     showAllWidgets,
     hideAllWidgets,
     applyPreset,
@@ -137,6 +167,8 @@ export const DashboardControlWidget = ({
   const [selectedCategory, setSelectedCategory] = useState<"all" | DashboardWidgetCategory>("all")
   const [resetConfirm, setResetConfirm] = useState(false)
   const [appliedPreset, setAppliedPreset] = useState<string | null>(null)
+  const [selectedWidgetId, setSelectedWidgetId] = useState<string | null>(null)
+  const [layoutAnnouncement, setLayoutAnnouncement] = useState("")
 
   const layout = getLayout()
   const hiddenSet = useMemo(() => new Set(layout.hidden || []), [layout.hidden])
@@ -154,6 +186,134 @@ export const DashboardControlWidget = ({
       return true
     }).sort((a: WidgetDefinition, b: WidgetDefinition) => a.defaultOrder - b.defaultOrder)
   }, [searchQuery, selectedCategory])
+
+  const matchingWidgetIds = useMemo(
+    () => new Set(filteredWidgets.map((widget) => widget.id)),
+    [filteredWidgets],
+  )
+  const visibleGeometry = useMemo(() => buildDashboardMiniLayout(layout), [layout])
+  const hiddenWidgetIds = useMemo(
+    () => layout.order.filter((id) => {
+      const widget = DASHBOARD_WIDGET_BY_ID[id]
+      return hiddenSet.has(id) && widget?.releaseTier !== "hidden"
+    }),
+    [hiddenSet, layout.order],
+  )
+  const hiddenGeometry = useMemo(() => buildDashboardMiniLayout({
+    ...layout,
+    order: hiddenWidgetIds,
+    hidden: [],
+  }), [hiddenWidgetIds, layout])
+  const spectrumByWidgetId = useMemo(
+    () => resolveVisibleWidgetSpectrum(layout.order, hiddenSet),
+    [hiddenSet, layout.order],
+  )
+  const moveTargetsByWidgetId = useMemo(() => Object.fromEntries(
+    visibleGeometry.placements.map(({ widgetId }) => [widgetId, {
+      up: getDashboardMoveTarget(layout, widgetId, "up"),
+      right: getDashboardMoveTarget(layout, widgetId, "right"),
+      left: getDashboardMoveTarget(layout, widgetId, "left"),
+      down: getDashboardMoveTarget(layout, widgetId, "down"),
+    } satisfies DashboardMiniMoveTargets]),
+  ) as Record<string, DashboardMiniMoveTargets>, [layout, visibleGeometry.placements])
+
+  const emptyMoveTargets: DashboardMiniMoveTargets = {
+    up: null,
+    right: null,
+    left: null,
+    down: null,
+  }
+
+  const getResizeAvailability = (
+    widgetId: string,
+    instance: CommonWidgetProps["instance"],
+  ): DashboardMiniResizeAvailability => ({
+    wider: canResizeDashboardWidget(widgetId, instance, "wider"),
+    thinner: canResizeDashboardWidget(widgetId, instance, "thinner"),
+    taller: canResizeDashboardWidget(widgetId, instance, "taller"),
+    shorter: canResizeDashboardWidget(widgetId, instance, "shorter"),
+  })
+
+  const announceVisibility = (widget: WidgetDefinition, hidden: boolean) => {
+    toggleWidget(widget.id)
+    setLayoutAnnouncement(`${widget.title} ${hidden ? "shown" : "hidden"}.`)
+  }
+
+  const announceCollapse = (widget: WidgetDefinition, collapsed: boolean) => {
+    toggleWidgetCollapse(widget.id)
+    setLayoutAnnouncement(`${widget.title} ${collapsed ? "expanded" : "collapsed"}.`)
+  }
+
+  const announceMove = (
+    widget: WidgetDefinition,
+    direction: DashboardMoveDirection,
+    targets: DashboardMiniMoveTargets,
+  ) => {
+    const targetId = targets[direction]
+    if (!targetId) return
+    moveWidget(widget.id, direction)
+    const targetTitle = DASHBOARD_WIDGET_BY_ID[targetId]?.title
+    setLayoutAnnouncement(`${widget.title} moved ${direction}${targetTitle ? ` near ${targetTitle}` : ""}.`)
+  }
+
+  const announceResize = (
+    widget: WidgetDefinition,
+    direction: DashboardResizeDirection,
+  ) => {
+    resizeWidget(widget.id, direction)
+    setLayoutAnnouncement(`${widget.title} is now ${direction}.`)
+  }
+
+  const renderMiniature = (
+    placement: DashboardMiniPlacement,
+    hidden: boolean,
+    palettePosition: number,
+  ) => {
+    const widget = DASHBOARD_WIDGET_BY_ID[placement.widgetId]
+    const instance = layout.instances[placement.widgetId]
+    if (!widget || !instance) return null
+    const palette = hidden
+      ? resolveDashboardSpectrum(palettePosition)
+      : spectrumByWidgetId[widget.id] || resolveDashboardSpectrum(palettePosition)
+    const moveTargets = hidden ? emptyMoveTargets : moveTargetsByWidgetId[widget.id] || emptyMoveTargets
+    const resizeAvailability = getResizeAvailability(widget.id, instance)
+
+    return (
+      <DashboardWidgetMiniature
+        key={widget.id}
+        widget={widget}
+        instance={instance}
+        placement={placement}
+        palette={palette}
+        hidden={hidden}
+        locked={layout.locked}
+        moveTargets={moveTargets}
+        resizeAvailability={resizeAvailability}
+        filteredOut={!matchingWidgetIds.has(widget.id)}
+        selected={selectedWidgetId === widget.id}
+        onSelect={() => setSelectedWidgetId(widget.id)}
+        onToggleVisibility={() => announceVisibility(widget, hidden)}
+        onToggleCollapse={() => announceCollapse(widget, instance.collapsed)}
+        onMove={(direction) => announceMove(widget, direction, moveTargets)}
+        onResize={(direction) => announceResize(widget, direction)}
+      />
+    )
+  }
+
+  const selectedWidget = selectedWidgetId
+    ? DASHBOARD_WIDGET_BY_ID[selectedWidgetId]
+    : undefined
+  const selectedInstance = selectedWidget ? layout.instances[selectedWidget.id] : undefined
+  const selectedHidden = selectedWidget ? hiddenSet.has(selectedWidget.id) : false
+  const selectedTargets = selectedWidget && !selectedHidden
+    ? moveTargetsByWidgetId[selectedWidget.id] || emptyMoveTargets
+    : emptyMoveTargets
+  const selectedResizeAvailability = selectedWidget && selectedInstance
+    ? getResizeAvailability(selectedWidget.id, selectedInstance)
+    : { wider: false, thinner: false, taller: false, shorter: false }
+  const selectedPalette = selectedWidget
+    ? spectrumByWidgetId[selectedWidget.id] || resolveDashboardSpectrum(visibleGeometry.placements.length)
+    : undefined
 
   const handleApplyPresetClick = (presetId: string) => {
     applyPreset(presetId)
@@ -200,14 +360,14 @@ export const DashboardControlWidget = ({
             {/* Primary Action Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {/* Rearrange Mode Toggle */}
-              <div className="flex flex-col justify-between p-2.5 bg-white border-[2px] border-black rounded-lg shadow-[2px_2px_0_0_#000]">
+              <div className="flex flex-col justify-between widget-control-card">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5 font-black text-[11px] uppercase tracking-wider">
                     <Edit3 size={14} className="text-[#FF1744]" />
                     <span>Rearrange Mode</span>
                   </div>
                   <span
-                    className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase border border-black ${
+                    className={`widget-control-pill ${
                       editMode ? "bg-[#C9F830] text-black" : "bg-gray-100 text-gray-500"
                     }`}
                   >
@@ -229,14 +389,14 @@ export const DashboardControlWidget = ({
               </div>
 
               {/* Lock Layout Toggle */}
-              <div className="flex flex-col justify-between p-2.5 bg-white border-[2px] border-black rounded-lg shadow-[2px_2px_0_0_#000]">
+              <div className="flex flex-col justify-between widget-control-card">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5 font-black text-[11px] uppercase tracking-wider">
                     {isLocked ? <Lock size={14} className="text-[#FA618A]" /> : <LockOpen size={14} className="text-[#40C6E9]" />}
                     <span>Layout Lock</span>
                   </div>
                   <span
-                    className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase border border-black ${
+                    className={`widget-control-pill ${
                       isLocked ? "bg-[#FF1744] text-white" : "bg-[#4FFF5B] text-black"
                     }`}
                   >
@@ -336,7 +496,7 @@ export const DashboardControlWidget = ({
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search all 40 widgets..."
+                  placeholder={`Search all ${totalWidgets} widgets...`}
                   className="vt-input w-full pl-8 text-[11px]"
                 />
               </div>
@@ -349,9 +509,9 @@ export const DashboardControlWidget = ({
                       key={cat.id}
                       type="button"
                       onClick={() => setSelectedCategory(cat.id)}
-                      className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border border-black transition-colors ${
+                      className={`widget-control-tab ${
                         selectedCategory === cat.id
-                          ? "bg-black text-white"
+                          ? "is-active"
                           : "bg-white text-black hover:bg-gray-100"
                       }`}
                     >
@@ -364,7 +524,7 @@ export const DashboardControlWidget = ({
                   <button
                     type="button"
                     onClick={showAllWidgets}
-                    className="px-2 py-0.5 rounded text-[8px] font-black uppercase bg-[#4FFF5B] border border-black hover:opacity-80"
+                    className="widget-control-mini-btn is-primary"
                     title="Show all widgets"
                   >
                     <Eye size={10} className="inline mr-0.5" /> All
@@ -372,7 +532,7 @@ export const DashboardControlWidget = ({
                   <button
                     type="button"
                     onClick={hideAllWidgets}
-                    className="px-2 py-0.5 rounded text-[8px] font-black uppercase bg-gray-200 border border-black hover:opacity-80"
+                    className="widget-control-mini-btn"
                     title="Hide non-essential widgets"
                   >
                     <EyeOff size={10} className="inline mr-0.5" /> Clear
@@ -381,56 +541,70 @@ export const DashboardControlWidget = ({
               </div>
             </div>
 
-            {/* Widgets List */}
-            <div className="flex flex-col gap-1 pr-0.5">
-              {filteredWidgets.map((w: WidgetDefinition) => {
-                const isVisible = !hiddenSet.has(w.id)
-                return (
-                  <div
-                    key={w.id}
-                    onClick={() => toggleWidget(w.id)}
-                    className={`flex items-center justify-between p-2 rounded-lg border-[2px] border-black cursor-pointer transition-all ${
-                      isVisible
-                        ? "bg-white shadow-[2px_2px_0_0_#000]"
-                        : "bg-gray-100 opacity-60 hover:opacity-90"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div
-                        className={`w-5 h-5 rounded flex items-center justify-center border border-black shrink-0 ${
-                          isVisible ? "bg-[#C9F830]" : "bg-white"
-                        }`}
-                      >
-                        {isVisible && <Check size={12} strokeWidth={3} />}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-black text-[11px] uppercase tracking-wide truncate">
-                          {w.title}
-                        </span>
-                        <span className="text-[9px] font-bold text-gray-500 truncate">
-                          {w.subtitle}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                      <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-gray-200 border border-black">
-                        {w.category}
-                      </span>
-                      <span className="text-[8px] font-extrabold uppercase opacity-50">
-                        {w.defaultSize}
-                      </span>
-                    </div>
+            {filteredWidgets.length === 0 ? (
+              <div className="dashboard-miniature-empty">
+                No widgets found matching "{searchQuery}"
+              </div>
+            ) : (
+              <div className="dashboard-miniature-workspace">
+                <section className="dashboard-miniature-section" aria-labelledby="dashboard-miniature-visible-title">
+                  <header className="dashboard-miniature-section-header">
+                    <h3 id="dashboard-miniature-visible-title">Current Dashboard</h3>
+                    <span>{visibleGeometry.placements.length} visible</span>
+                  </header>
+                  <div className="dashboard-miniature-grid" aria-label="Current dashboard miniature layout">
+                    {visibleGeometry.placements.map((placement, index) =>
+                      renderMiniature(placement, false, index))}
                   </div>
-                )
-              })}
+                </section>
 
-              {filteredWidgets.length === 0 && (
-                <div className="p-4 text-center text-[11px] font-bold text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                  No widgets found matching "{searchQuery}"
-                </div>
-              )}
-            </div>
+                <section className="dashboard-miniature-section is-hidden-shelf" aria-labelledby="dashboard-miniature-hidden-title">
+                  <header className="dashboard-miniature-section-header">
+                    <h3 id="dashboard-miniature-hidden-title">Hidden Widgets</h3>
+                    <span>{hiddenGeometry.placements.length} hidden</span>
+                  </header>
+                  {hiddenGeometry.placements.length ? (
+                    <div className="dashboard-miniature-grid" aria-label="Hidden dashboard widgets">
+                      {hiddenGeometry.placements.map((placement, index) =>
+                        renderMiniature(placement, true, visibleGeometry.placements.length + index))}
+                    </div>
+                  ) : (
+                    <p className="dashboard-miniature-shelf-empty">All available widgets are visible.</p>
+                  )}
+                </section>
+
+                {selectedWidget && selectedInstance && selectedPalette ? (
+                  <section
+                    className="dashboard-miniature-selected-controls"
+                    aria-label={`Selected widget controls for ${selectedWidget.title}`}
+                    style={{
+                      "--widget-color": selectedPalette.headerColor,
+                      "--widget-border": selectedPalette.borderColor,
+                      "--widget-shadow": selectedPalette.shadowColor,
+                    } as React.CSSProperties}
+                  >
+                    <strong>{selectedWidget.title}</strong>
+                    <DashboardMiniatureActions
+                      widget={selectedWidget}
+                      instance={selectedInstance}
+                      hidden={selectedHidden}
+                      locked={layout.locked}
+                      moveTargets={selectedTargets}
+                      resizeAvailability={selectedResizeAvailability}
+                      expanded
+                      onToggleVisibility={() => announceVisibility(selectedWidget, selectedHidden)}
+                      onToggleCollapse={() => announceCollapse(selectedWidget, selectedInstance.collapsed)}
+                      onMove={(direction) => announceMove(selectedWidget, direction, selectedTargets)}
+                      onResize={(direction) => announceResize(selectedWidget, direction)}
+                    />
+                  </section>
+                ) : null}
+              </div>
+            )}
+
+            <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+              {layoutAnnouncement}
+            </span>
           </div>
         )}
 
@@ -444,7 +618,7 @@ export const DashboardControlWidget = ({
                 Select Layout Preset
               </span>
               {appliedPreset && (
-                <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-[#4FFF5B] border border-black animate-pulse">
+                <span className="widget-control-live-tag">
                   Applied!
                 </span>
               )}
@@ -456,7 +630,7 @@ export const DashboardControlWidget = ({
                 return (
                   <div
                     key={preset.id}
-                    className="flex flex-col justify-between p-2.5 bg-white border-[2px] border-black rounded-lg shadow-[2px_2px_0_0_#000] hover:shadow-[3px_3px_0_0_#000] transition-all"
+                    className="flex flex-col justify-between widget-control-card"
                   >
                     <div>
                       <div className="flex items-center justify-between mb-1">
@@ -464,7 +638,7 @@ export const DashboardControlWidget = ({
                           <IconComponent size={14} style={{ color: preset.color }} />
                           <span>{preset.title}</span>
                         </div>
-                        <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-gray-100 border border-black">
+                        <span className="widget-control-tag">
                           {preset.count} Widgets
                         </span>
                       </div>

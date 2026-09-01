@@ -698,7 +698,7 @@ export const ScriptStudioWidget: React.FC<{
               <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1, minWidth: "160px" }}>
                 <Target size={13} />
                 <span>Target: {wordCount}/{targetWordCount} w</span>
-                <div style={{ flex: 1, height: "8px", border: "1.5px solid #000", borderRadius: "999px", background: "#fff", overflow: "hidden" }}>
+                <div style={{ flex: 1, height: "8px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "999px", background: "#fff", overflow: "hidden" }}>
                   <div
                     style={{
                       height: "100%",
@@ -827,7 +827,7 @@ export const ScriptStudioWidget: React.FC<{
                   fontSize: "20px",
                   fontWeight: 900,
                   background: hookScore > 75 ? "#3FEE56" : "#FFDA47",
-                  border: "2px solid #000",
+                  border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                   borderRadius: "6px",
                   padding: "2px 10px",
                 }}
@@ -899,7 +899,7 @@ export const ScriptStudioWidget: React.FC<{
                       fontWeight: 700,
                       padding: "6px 8px",
                       background: "#FFF4CE",
-                      border: "1.5px solid #000",
+                      border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                       borderRadius: "6px",
                       display: "flex",
                       alignItems: "center",

@@ -95,11 +95,11 @@ export const FormatClashWidget = ({ widget, instance, editMode, onToggleCollapse
         </div>
         <div className="bub" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <div style={{ width: "8px", height: "8px", background: "#FF00FF", border: "1px solid #000" }} />
+            <div style={{ width: "8px", height: "8px", background: "#FF00FF", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)" }} />
             <span>SHORTS: {shortsPct}%</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <div style={{ width: "8px", height: "8px", background: "#00D2FF", border: "1px solid #000" }} />
+            <div style={{ width: "8px", height: "8px", background: "#00D2FF", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)" }} />
             <span>LONGS: {longsPct}%</span>
           </div>
         </div>
@@ -144,17 +144,17 @@ export const FormatClashWidget = ({ widget, instance, editMode, onToggleCollapse
           flexWrap: "wrap",
           gap: "8px",
           justifyContent: "center",
-          borderTop: "2px solid #000",
+          borderTop: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
           paddingTop: "6px",
           marginTop: "4px",
           paddingBottom: "4px",
          }}>
           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-           <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#FF00FF", border: "1px solid #000", flexShrink: 0 }} />
+           <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#FF00FF", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", flexShrink: 0 }} />
            <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase" }}>SHORTS</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-           <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#00D2FF", border: "1px solid #000", flexShrink: 0 }} />
+           <div style={{ width: "8px", height: "8px", borderRadius: "2px", background: "#00D2FF", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", flexShrink: 0 }} />
            <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase" }}>LONGS</span>
           </div>
         </div>

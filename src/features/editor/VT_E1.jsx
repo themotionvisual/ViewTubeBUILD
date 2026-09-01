@@ -26,6 +26,10 @@ import {
   slipTimelineClip,
   splitTimelineClip,
 } from '../../shared/vtE1TimelineOperations.js';
+import {
+  buildEditorIntelligenceContextPack,
+  createEditorIntelligenceProposal,
+} from '../../services/editorIntelligenceBridge';
     import { createRoot } from 'react-dom/client';
     import * as LucideIcons from 'lucide-react';
     import {
@@ -3039,6 +3043,13 @@ import {
       const [svgShortsPrompt, setSvgShortsPrompt] = useState('Neon target lock with rhythmic warning hook.');
       const [svgShortsStatus, setSvgShortsStatus] = useState('SVG Shorts relay workflow ready.');
       const [svgShortsPresetId, setSvgShortsPresetId] = useState('traffic-lock');
+      const [editorIntelligenceState, setEditorIntelligenceState] = useState({
+        creatorBrief: '',
+        proposalKind: 'creative-brief',
+        requestedOutcome: '',
+        contextPack: null,
+        proposal: null,
+      });
       const [contextMenu, setContextMenu] = useState(null);
       const [trackSettingsFor, setTrackSettingsFor] = useState(null);
       const [codeJsonDraft, setCodeJsonDraft] = useState('');
@@ -3820,6 +3831,34 @@ import {
         () => project.layers.find((l) => l.id === selectedLayerId) || null,
         [project.layers, selectedLayerId]
       );
+      const buildEditorIntelligencePacket = () => {
+        const contextPack = buildEditorIntelligenceContextPack({
+          project,
+          creatorBrief: editorIntelligenceState.creatorBrief,
+          selectedClipId: selectedClip?.id || null,
+          selectedLayerId: selectedLayer?.id || null,
+          playheadSec: playhead,
+        });
+        const proposal = createEditorIntelligenceProposal({
+          contextPack,
+          kind: editorIntelligenceState.proposalKind,
+          requestedOutcome: editorIntelligenceState.requestedOutcome || editorIntelligenceState.creatorBrief,
+        });
+        setEditorIntelligenceState((prev) => ({ ...prev, contextPack, proposal }));
+      };
+      const exportEditorIntelligencePacket = () => {
+        if (!editorIntelligenceState.contextPack || !editorIntelligenceState.proposal) return;
+        const blob = new Blob([JSON.stringify({
+          contextPack: editorIntelligenceState.contextPack,
+          proposal: editorIntelligenceState.proposal,
+        }, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = 'VT_E1.editor-intelligence-proposal.json';
+        anchor.click();
+        URL.revokeObjectURL(url);
+      };
       const isUrlModeForLayer = (layerId) => Boolean(selectedLayerUrlMode[layerId]);
       useEffect(() => {
         if (!selectedLayer) return;
@@ -13858,6 +13897,56 @@ Design a six-second SVG-heavy short with one strong hook, one primitive composit
 
               {activeTab === 'interactive' && (
                 <>
+                  <div className="neo-card p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-xs font-black uppercase">Editor Intelligence Bridge</div>
+                      <span className="border-2 border-black rounded-full px-2 py-1 text-[9px] font-black" style={{ background: COLORS.yellow }}>Draft only</span>
+                    </div>
+                    <div className="text-[10px] font-black opacity-70">
+                      Packages the current project, selection, and creator direction for Brain OS. It cannot change the timeline until a later reviewed apply step.
+                    </div>
+                    <textarea
+                      className="w-full min-h-20 border-2 border-black rounded-md p-2 text-[10px] font-black"
+                      value={editorIntelligenceState.creatorBrief}
+                      onChange={(event) => setEditorIntelligenceState((prev) => ({ ...prev, creatorBrief: event.target.value }))}
+                      placeholder="Creator brief: audience, outcome, tone, format, constraints..."
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <select
+                        className="w-full border-2 border-black rounded-md p-2 text-[10px] font-black bg-white"
+                        value={editorIntelligenceState.proposalKind}
+                        onChange={(event) => setEditorIntelligenceState((prev) => ({ ...prev, proposalKind: event.target.value }))}
+                      >
+                        <option value="creative-brief">Creative Brief</option>
+                        <option value="script">Script</option>
+                        <option value="hook">Hook</option>
+                        <option value="caption-plan">Caption Plan</option>
+                        <option value="broll-plan">B-Roll Plan</option>
+                        <option value="template-match">Template Match</option>
+                        <option value="shorts-framing">Shorts Framing</option>
+                        <option value="svg-motion-scene">SVG Motion Scene</option>
+                      </select>
+                      <input
+                        className="w-full border-2 border-black rounded-md p-2 text-[10px] font-black"
+                        value={editorIntelligenceState.requestedOutcome}
+                        onChange={(event) => setEditorIntelligenceState((prev) => ({ ...prev, requestedOutcome: event.target.value }))}
+                        placeholder="Requested outcome"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button className="neo-btn" style={{ background: COLORS.cyan }} onClick={buildEditorIntelligencePacket}>Build Review Packet</button>
+                      <button className="neo-btn" style={{ background: COLORS.white }} disabled={!editorIntelligenceState.proposal} onClick={exportEditorIntelligencePacket}>Export Packet JSON</button>
+                    </div>
+                    {editorIntelligenceState.contextPack ? (
+                      <div className="border-2 border-black rounded-md p-2 bg-white text-[10px] font-black leading-5">
+                        <div>{editorIntelligenceState.contextPack.project.name} · {editorIntelligenceState.contextPack.project.aspectRatio} · {editorIntelligenceState.contextPack.project.clipCount} clips</div>
+                        <div>Evidence: {editorIntelligenceState.contextPack.evidence.length} · Review: required</div>
+                        {editorIntelligenceState.contextPack.missingInputs.length ? (
+                          <div className="mt-1 text-amber-800">Missing: {editorIntelligenceState.contextPack.missingInputs.join(' ')}</div>
+                        ) : <div className="mt-1 text-green-800">Context has a creator brief and project style.</div>}
+                      </div>
+                    ) : null}
+                  </div>
                   <div className="neo-card p-3 space-y-3">
                     <div className="text-xs font-black uppercase">FX Studio</div>
                     <div className="grid grid-cols-2 gap-2">

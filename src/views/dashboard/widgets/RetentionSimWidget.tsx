@@ -115,21 +115,21 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
   return (
   <WidgetShell {...common} icon={<BarChart3 size={22} />}>
    <WidgetScrollArea ariaLabel="Retention simulation" contentClassName="flex min-h-full flex-col gap-2">
-     <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(204,255,0,0.16)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", lineHeight: 1.35 }}>
+     <div style={{ padding: "8px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: "rgba(204,255,0,0.16)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", lineHeight: 1.35 }}>
       Analysis-only upload policy active: local videos are compressed before analysis to reduce AI processing cost.
      </div>
      {compressing && (
-      <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(36,211,255,0.15)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>
+      <div style={{ padding: "8px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: "rgba(36,211,255,0.15)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>
        Compressing upload for analysis...
       </div>
      )}
      {compressionError && (
-      <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(255,23,68,0.15)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>
+      <div style={{ padding: "8px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: "rgba(255,23,68,0.15)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>
        {compressionError}
       </div>
      )}
      {compressionStats && (
-      <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(79,255,91,0.14)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>
+      <div style={{ padding: "8px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: "rgba(79,255,91,0.14)", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>
        Compressed: {Math.round(compressionStats.originalBytes / 1024 / 1024)}MB to {Math.max(1, Math.round(compressionStats.compressedBytes / 1024 / 1024))}MB ({Math.round(compressionStats.reductionRatio * 100)}% smaller)
       </div>
      )}
@@ -162,7 +162,7 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
     {selectedVideo && retentionPoints.length > 0 && (
      <>
       {/* Retention Curve */}
-      <div style={{ height: "80px", border: "2px solid #000", borderRadius: "8px", background: "#f5f5f5", padding: "8px", position: "relative", flexShrink: 0 }}>
+      <div style={{ height: "80px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: "#f5f5f5", padding: "8px", position: "relative", flexShrink: 0 }}>
        <svg width="100%" height="100%" viewBox="0 0 200 60" preserveAspectRatio="none">
         <defs>
          <linearGradient id="retGrad" x1="0" y1="0" x2="0" y2="1">
@@ -180,7 +180,7 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
          <div key={i} style={{
           position: "absolute", left: `${pct}%`, top: "30px", width: "10px", height: "10px", borderRadius: "50%",
           background: z.severity === "high" ? "#FF1744" : z.severity === "medium" ? "#FFE357" : "#4FFF5B",
-          border: "2px solid #000", transform: "translate(-50%, -50%)", zIndex: 10
+          border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", transform: "translate(-50%, -50%)", zIndex: 10
          }} />
         )
        })}
@@ -199,17 +199,17 @@ export const RetentionSimWidget = ({ widget, instance, editMode, onToggleCollaps
       {analysis && (
        <div style={{ display: "flex", flexDirection: "column", gap: "6px", flexShrink: 0 }}>
         <div style={{ display: "flex", gap: "6px" }}>
-         <div style={{ flex: 1, padding: "8px", border: "2px solid #000", borderRadius: "8px", background: analysis.hookScore >= 70 ? "rgba(79,255,91,0.1)" : "rgba(255,23,68,0.1)", textAlign: "center" }}>
+         <div style={{ flex: 1, padding: "8px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: analysis.hookScore >= 70 ? "rgba(79,255,91,0.1)" : "rgba(255,23,68,0.1)", textAlign: "center" }}>
           <div style={{ fontSize: "18px", fontWeight: 1000 }}>{analysis.hookScore}</div>
           <div style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", opacity: 0.5 }}>Hook Score</div>
          </div>
-         <div style={{ flex: 1, padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(36,211,255,0.1)", textAlign: "center" }}>
+         <div style={{ flex: 1, padding: "8px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: "rgba(36,211,255,0.1)", textAlign: "center" }}>
           <div style={{ fontSize: "18px", fontWeight: 1000 }}>+{analysis.estimatedLift}%</div>
           <div style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", opacity: 0.5 }}>Est. View Lift</div>
          </div>
         </div>
         {analysis.zones.map((z, i) => (
-         <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "#fff", boxShadow: "2px 2px 0 0 rgba(0,0,0,0.1)" }}>
+         <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "8px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: "#fff", boxShadow: "2px 2px 0 0 rgba(0,0,0,0.1)" }}>
           <AlertTriangle size={14} color={z.severity === "high" ? "#FF1744" : z.severity === "medium" ? "#FFE357" : "#4FFF5B"} style={{ flexShrink: 0, marginTop: "2px" }} />
           <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
            <span style={{ fontSize: "9px", fontWeight: 1000, opacity: 0.5 }}>@{z.time}</span>

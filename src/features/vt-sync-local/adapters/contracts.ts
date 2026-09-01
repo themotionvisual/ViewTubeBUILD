@@ -5,7 +5,7 @@ export const VT_SYNC_DISABLE_PERFORMANCE_HUB_API_SYNC_FLAG = "VITE_DISABLE_PERFO
 export const VT_SYNC_DISABLE_PERFORMANCE_HUB_API_SYNC_KEY = "vt_disable_performance_hub_api_sync" as const
 export const VT_SYNC_LOCAL_SNAPSHOT_KEY = "vt_sync_local_snapshot" as const
 export const VT_SYNC_LOCAL_DB_NAME = "ViewTubeVtSyncLocalDB" as const
-export const VT_SYNC_LOCAL_DB_VERSION = 2 as const
+export const VT_SYNC_LOCAL_DB_VERSION = 3 as const
 export const VT_SYNC_LOCAL_STORE_NAMES = {
  channelIndex: "channel_index",
  channelDimensions: "channel_dimensions",
@@ -18,6 +18,11 @@ export const VT_SYNC_LOCAL_STORE_NAMES = {
  datasetManifests: "dataset_manifests",
  datasetChunks: "dataset_chunks",
  rawReportBlobs: "raw_report_blobs",
+} as const
+export const VT_SYNC_LOCAL_INDEX_NAMES = {
+ chunksByRecord: "record_id",
+ chunksByGeneration: "record_generation",
+ recordsByChannel: "channel_id",
 } as const
 export const ANALYTICS_LOCAL_SNAPSHOT_KEY = VT_SYNC_LOCAL_SNAPSHOT_KEY
 export const ANALYTICS_LOCAL_DB_NAME = VT_SYNC_LOCAL_DB_NAME

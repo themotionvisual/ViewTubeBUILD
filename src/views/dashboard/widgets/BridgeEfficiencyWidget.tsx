@@ -107,7 +107,7 @@ export const BridgeEfficiencyWidget: React.FC<any> = ({widget, instance, editMod
                     return (
                       <div style={{
                         background: "#fff",
-                        border: "2px solid #000",
+                        border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                         padding: "6px",
                         borderRadius: "6px",
                         boxShadow: "2px 2px 0 0 rgba(0,0,0,0.5)"

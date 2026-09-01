@@ -246,6 +246,93 @@ describe("VT-SYNC manual imports snapshot merge", () => {
   expect(rehydrated.monthlyMetrics).toHaveLength(43)
  })
 
+ it("restores complete durable Daily rows after the initial bootstrap saves a short preview", () => {
+  const persistedRows = Array.from({ length: 365 }, (_, index) => ({
+   date: new Date(Date.UTC(2026, 7, 31 - index)).toISOString().slice(0, 10),
+   views: 1000 - index,
+   watchTime: 50 - index / 10,
+  }))
+  const previewRows = persistedRows.slice(0, 8).map((row, index) => ({
+   date: row.date,
+   views: index === 0 ? 1_500 : row.views,
+  }))
+  const snapshot = {
+   ...baseSnapshot(),
+   dailyMetrics: previewRows,
+   storageMetadata: { storageMode: "full" as const, isCompacted: false },
+   syncManifest: { stop_reason: "initial_channel_bootstrap_committed" },
+  }
+
+  const rehydrated = mergeVtSyncPersistedApiRowsIntoSnapshot(snapshot, {
+   rowsByTableId: { daily: persistedRows },
+   capturedAtByTableId: { daily: "2026-08-31T18:00:00.000Z" },
+  })
+
+  expect(rehydrated.dailyMetrics).toHaveLength(365)
+  expect(rehydrated.dailyMetrics.find((row) => row.date === previewRows[0].date)).toEqual(expect.objectContaining({
+   views: 1_500,
+   watchTime: 50,
+  }))
+ })
+
+ it("preserves private video Analytics when startup refreshes only public counters", () => {
+  const snapshot = {
+   ...baseSnapshot(),
+   videos: [{
+    id: "video-a",
+    title: "Current metadata",
+    thumbnail: "current.jpg",
+    publishedAt: "2026-08-01T00:00:00Z",
+    format: "long",
+    metrics: { views: 120, likes: 12, comments: 5 },
+   }],
+   storageMetadata: { storageMode: "full" as const, isCompacted: false },
+   syncManifest: { stop_reason: "initial_channel_bootstrap_committed" },
+  }
+
+  const rehydrated = mergeVtSyncPersistedApiRowsIntoSnapshot(snapshot, {
+   rowsByTableId: {
+    videos: [{ id: "video-a", title: "Persisted metadata", views: 100, likes: 10, comments: 4, watchTime: 40, revenue: 2 }],
+   },
+   capturedAtByTableId: { videos: "2026-08-31T18:00:00.000Z" },
+  })
+
+  expect(rehydrated.videos[0]).toEqual(expect.objectContaining({
+   id: "video-a",
+   title: "Current metadata",
+   metrics: expect.objectContaining({ views: 120, likes: 12, comments: 5, watchTime: 40, revenue: 2 }),
+  }))
+ })
+
+ it("restores all durable months when startup has only a 24-month view", () => {
+  const persistedRows = Array.from({ length: 43 }, (_, index) => ({
+   month: `${2026 - Math.floor(index / 12)}-${String(12 - (index % 12)).padStart(2, "0")}`,
+   views: 1000 - index,
+   watchTime: 500 - index,
+  }))
+  const previewRows = persistedRows.slice(0, 24).map((row, index) => ({
+   date: row.month,
+   views: index === 0 ? 1_500 : row.views,
+  }))
+  const snapshot = {
+   ...baseSnapshot(),
+   monthlyMetrics: previewRows,
+   storageMetadata: { storageMode: "full" as const, isCompacted: false },
+   syncManifest: { stop_reason: "initial_channel_bootstrap_committed" },
+  }
+
+  const rehydrated = mergeVtSyncPersistedApiRowsIntoSnapshot(snapshot, {
+   rowsByTableId: { monthly: persistedRows },
+   capturedAtByTableId: { monthly: "2026-08-31T18:00:00.000Z" },
+  })
+
+  expect(rehydrated.monthlyMetrics).toHaveLength(43)
+  expect(rehydrated.monthlyMetrics.find((row) => row.date === previewRows[0].date)).toEqual(expect.objectContaining({
+   views: 1_500,
+   watchTime: 500,
+  }))
+ })
+
  it("uses a saved Monthly Stats CSV as a supplement instead of reducing the API dataset", () => {
   const apiRows = Array.from({ length: 43 }, (_, index) => ({
    date: `${2026 - Math.floor(index / 12)}-${String(12 - (index % 12)).padStart(2, "0")}`,

@@ -43,8 +43,11 @@ describe("DashboardControlWidget", () => {
         editMode={false}
         onToggleCollapse={vi.fn()}
         onCycleSize={vi.fn()}
+        onDecSize={vi.fn()}
         onCycleHeight={vi.fn()}
+        onDecHeight={vi.fn()}
         onRemove={vi.fn()}
+        canEdit
       />
     )
 

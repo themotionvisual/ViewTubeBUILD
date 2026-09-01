@@ -21,5 +21,9 @@ export const DASHBOARD_TOKENS = {
   transitionMs: 180,
 } as const
 
-export const SIZE_BUCKET_ORDER = ["quarter", "companion", "third", "between", "half", "two-thirds", "three-quarters", "full"] as const
-export const HEIGHT_BUCKET_ORDER = ["short", "medium", "tall", "xtall", "massive"] as const
+// Sizes and heights are ordered smallest → largest so
+// SIZE_BUCKET_ORDER.indexOf(x) doubles as a monotonic scale.
+// Smallest tier: `twenty-fourth` (1 col) → `twelfth` (2) → `eighth` (3).
+// Tallest tier: `colossal` → `titanic` → `boundless`.
+export const SIZE_BUCKET_ORDER = ["twenty-fourth", "twelfth", "eighth", "sixth", "quarter", "companion", "third", "between", "half", "two-thirds", "three-quarters", "full"] as const
+export const HEIGHT_BUCKET_ORDER = ["short", "medium", "tall", "xtall", "massive", "colossal", "titanic", "boundless"] as const

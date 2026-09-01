@@ -15,7 +15,7 @@ import {
   useSortable,
   arrayMove,
 } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+import { CSS, getEventCoordinates } from "@dnd-kit/utilities"
 import { motion, useReducedMotion } from "framer-motion"
 import { DashboardBarrier } from "./DashboardBarrier"
 import { useDashboard } from "../../context/DashboardContext"
@@ -40,6 +40,12 @@ import { WidgetRenderer } from "./WidgetRenderer"
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary"
 import { resolveVisibleWidgetSpectrum } from "./spectrum"
 import { WidgetDragHandleProvider } from "./WidgetShell"
+import { getDashboardResizedInstance, moveDashboardWidgetOrder } from "./dashboardMiniLayout"
+import type { DashboardMoveDirection, DashboardResizeDirection } from "./dashboardMiniLayout"
+import {
+  getDashboardEdgeScrollDelta,
+  getDashboardInteractionPermissions,
+} from "./dashboardDrag"
 
 interface DashboardCanvasProps {
   data: DashboardData
@@ -92,14 +98,14 @@ const SortableWidgetItem: React.FC<{
   }
 
   return (
-    <motion.div 
-      ref={setNodeRef} 
+    <motion.div
+      ref={setNodeRef}
       layout
       transition={reduceMotion ? { duration: 0 } : {
         layout: { type: "spring", stiffness: 300, damping: 30 },
         opacity: { duration: 0.2 }
       }}
-      style={style} 
+      style={style}
       className={`dashboard-widget-slot ${className} ${isDragging ? 'opacity-60' : 'opacity-100'}`}
       data-widget-id={id}
       inert={isDragging}
@@ -117,11 +123,11 @@ const SortableWidgetItem: React.FC<{
 }
 
 export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNavigate }) => {
-  const { 
-    editMode, setEditMode, 
+  const {
+    editMode, setEditMode,
     setIsLocked,
-    pickerOpen, setPickerOpen, 
-    registerActions 
+    pickerOpen, setPickerOpen,
+    registerActions
   } = useDashboard()
   const [layout, setLayout] = useState<DashboardLayoutState>(() => loadDashboardLayout())
   const [dragPreviewOrder, setDragPreviewOrder] = useState<string[] | null>(null)
@@ -131,6 +137,8 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     return params.get("onboarding") === "welcome"
   })
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const dragPointerYRef = useRef<number | null>(null)
+  const dragAutoScrollFrameRef = useRef<number | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -154,16 +162,69 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     saveDashboardLayout(layout)
   }, [layout])
 
-  const canDrag = editMode && !layout.locked
+  const { canEdit, canReorder, canResize } = getDashboardInteractionPermissions({
+    editMode,
+    locked: layout.locked,
+  })
+
+  const runDragAutoScroll = useCallback(() => {
+    const scrollNextFrame = () => {
+      const pointerY = dragPointerYRef.current
+      const scrollingElement = document.scrollingElement
+      if (pointerY === null || !scrollingElement) {
+        dragAutoScrollFrameRef.current = null
+        return
+      }
+
+      const delta = getDashboardEdgeScrollDelta({
+        pointerY,
+        viewportHeight: window.innerHeight,
+        scrollTop: scrollingElement.scrollTop,
+        scrollHeight: scrollingElement.scrollHeight,
+      })
+      if (delta !== 0) window.scrollBy({ top: delta, left: 0, behavior: "auto" })
+      dragAutoScrollFrameRef.current = window.requestAnimationFrame(scrollNextFrame)
+    }
+
+    dragAutoScrollFrameRef.current = window.requestAnimationFrame(scrollNextFrame)
+  }, [])
+
+  const updateDragPointerPosition = useCallback((event: PointerEvent) => {
+    dragPointerYRef.current = event.clientY
+  }, [])
+
+  const startDragAutoScroll = useCallback((event: Event) => {
+    const coordinates = getEventCoordinates(event)
+    if (!coordinates) return
+    dragPointerYRef.current = coordinates.y
+    window.addEventListener("pointermove", updateDragPointerPosition, { passive: true })
+    if (dragAutoScrollFrameRef.current === null) {
+      runDragAutoScroll()
+    }
+  }, [runDragAutoScroll, updateDragPointerPosition])
+
+  const stopDragAutoScroll = useCallback(() => {
+    window.removeEventListener("pointermove", updateDragPointerPosition)
+    dragPointerYRef.current = null
+    if (dragAutoScrollFrameRef.current !== null) {
+      window.cancelAnimationFrame(dragAutoScrollFrameRef.current)
+      dragAutoScrollFrameRef.current = null
+    }
+  }, [updateDragPointerPosition])
+
+  useEffect(() => stopDragAutoScroll, [stopDragAutoScroll])
 
   const handleDragStart = (event: DragStartEvent) => {
-    if (!canDrag) return
+    if (!canReorder) return
     const activeId = String(event.active.id)
-    if (visibleWidgetIds.includes(activeId)) setDragPreviewOrder(visibleWidgetIds)
+    if (visibleWidgetIds.includes(activeId)) {
+      setDragPreviewOrder(visibleWidgetIds)
+      startDragAutoScroll(event.activatorEvent)
+    }
   }
 
   const handleDragOver = (event: DragOverEvent) => {
-    if (!canDrag || !event.over) return
+    if (!canReorder || !event.over) return
     setDragPreviewOrder((current) => {
       const order = current || visibleWidgetIds
       const oldIndex = order.indexOf(String(event.active.id))
@@ -174,11 +235,13 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
   }
 
   const handleDragCancel = () => {
+    stopDragAutoScroll()
     setDragPreviewOrder(null)
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
-    if (!canDrag) return
+    stopDragAutoScroll()
+    if (!canReorder) return
     const { active, over } = event
     const proposedOrder = dragPreviewOrder
     setDragPreviewOrder(null)
@@ -207,7 +270,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     })
   }
 
-  const onToggleCollapse = (widgetId: string) => {
+  const onToggleCollapse = useCallback((widgetId: string) => {
     setLayout((prev) => ({
       ...prev,
       instances: {
@@ -218,10 +281,31 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
         },
       },
     }))
-  }
+  }, [])
+
+  const handleMoveWidget = useCallback((widgetId: string, direction: DashboardMoveDirection) => {
+    setLayout((prev) => {
+      const order = moveDashboardWidgetOrder(prev, widgetId, direction)
+      return order === prev.order ? prev : { ...prev, order }
+    })
+  }, [])
+
+  const handleResizeWidget = useCallback((widgetId: string, direction: DashboardResizeDirection) => {
+    setLayout((prev) => {
+      if (prev.locked) return prev
+      const instance = prev.instances[widgetId]
+      if (!instance) return prev
+      const resized = getDashboardResizedInstance(widgetId, instance, direction)
+      if (resized === instance) return prev
+      return {
+        ...prev,
+        instances: { ...prev.instances, [widgetId]: resized },
+      }
+    })
+  }, [])
 
   const onCycleSize = (widgetId: string) => {
-    if (!canDrag) return
+    if (!canResize) return
     setLayout((prev) => {
       const current = prev.instances[widgetId]
       if (!current) return prev
@@ -239,7 +323,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
   }
 
   const onDecSize = (widgetId: string) => {
-    if (!canDrag) return
+    if (!canResize) return
     setLayout((prev) => {
       const current = prev.instances[widgetId]
       if (!current) return prev
@@ -257,7 +341,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
   }
 
   const onCycleHeight = (widgetId: string) => {
-    if (!canDrag) return
+    if (!canResize) return
     setLayout((prev) => {
       const current = prev.instances[widgetId]
       if (!current) return prev
@@ -275,7 +359,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
   }
 
   const onDecHeight = (widgetId: string) => {
-    if (!canDrag) return
+    if (!canResize) return
     setLayout((prev) => {
       const current = prev.instances[widgetId]
       if (!current) return prev
@@ -293,7 +377,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
   }
 
   const onRemoveWidget = (widgetId: string) => {
-    if (!canDrag) return
+    if (!canResize) return
     setLayout((prev) => ({
       ...prev,
       hidden: prev.hidden.includes(widgetId) ? prev.hidden : [...prev.hidden, widgetId],
@@ -369,32 +453,46 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
   }, [])
 
   const handleApplyPreset = useCallback((presetId: string) => {
+    // Six presets = 3 balanced defaults + 3 specialty unique layouts.
+    // Every preset includes "dashboard-controls" so the user always has
+    // the layout hub visible after switching.
     const presetMap: Record<string, string[]> = {
-      default: [
-        "kpi-cluster", "community-post", "comment-replier", "consistency-heatmap",
-        "realtime-performance", "goals-tracker", "keyword-engine", "daily-oracle",
-        "brain-hub", "image-generator", "video-uploader", "data-edit",
+      "default-standard": [
+        "app-verification-explainer", "kpi-cluster", "overview-data-visuals",
+        "comment-replier",
+        "consistency-heatmap", "realtime-performance", "goals-tracker", "keyword-engine",
+        "daily-oracle", "community-post",
+        "image-generator", "data-edit",
         "traffic-sources", "shorts-vs-long", "publish-momentum", "audience-matrix",
+        "dashboard-controls", "account-billing",
+      ],
+      "default-analytics": [
+        "kpi-cluster", "overview-data-visuals",
+        "consistency-heatmap", "realtime-performance", "revenue-momentum", "publish-momentum",
+        "traffic-sources", "shorts-vs-long", "audience-matrix", "audience-retention",
+        "relative-retention-benchmark", "ad-stack-intelligence", "reach-funnel",
+        "revenue-chart", "keyword-overlap-intelligence", "retention-sim",
         "dashboard-controls",
       ],
-      analytics: [
-        "kpi-cluster", "realtime-performance", "consistency-heatmap", "keyword-engine",
-        "traffic-sources", "shorts-vs-long", "publish-momentum", "audience-matrix",
-        "keyword-overlap-intelligence", "retention-sim", "cpm-geo", "algo-benchmark",
-        "device-matrix", "audience-retention", "dashboard-controls",
+      "default-creator": [
+        "app-verification-explainer", "kpi-cluster",
+        "script-studio", "image-generator", "thumb-ai", "video-uploader",
+        "data-edit", "community-post", "community-post-studio", "shorts-generator",
+        "comment-replier", "title-rewriter", "description-editor",
+        "tag-generator", "hashtag-analyzer",
+        "dashboard-controls", "account-billing",
       ],
-      studio: [
-        "script-studio", "thumb-ai", "image-generator", "video-uploader", "data-edit",
-        "description-editor", "community-post", "comment-replier", "tag-generator",
-        "title-rewriter", "video-comment-operator", "dashboard-controls",
+      "unique-command": [
+        "daily-command-center", "opportunity-desk", "idea-portfolio",
+        "brain-hub", "brain-control-center",
+        "daily-oracle", "goals-tracker", "quick-actions",
+        "kpi-cluster", "dashboard-controls",
       ],
-      oracle: [
-        "daily-oracle", "brain-hub", "flight-check",
-        "burnout-monitor", "goals-tracker", "quick-actions",
-        "collab-matchmaker", "dashboard-controls",
+      "unique-minimal": [
+        "kpi-cluster", "daily-oracle", "quick-actions",
+        "dashboard-controls", "account-billing",
       ],
-      full: DASHBOARD_WIDGET_REGISTRY.map((w) => w.id),
-      minimal: ["kpi-cluster", "daily-oracle", "quick-actions", "dashboard-controls"],
+      "unique-atlas": DASHBOARD_WIDGET_REGISTRY.map((w) => w.id),
     }
     const targetIds = presetMap[presetId]
     if (!targetIds) return
@@ -412,6 +510,9 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
       resetLayout: handleReset,
       toggleLock: handleToggleLock,
       toggleWidget: handleToggleWidget,
+      toggleWidgetCollapse: onToggleCollapse,
+      moveWidget: handleMoveWidget,
+      resizeWidget: handleResizeWidget,
       showAllWidgets: handleShowAll,
       hideAllWidgets: handleHideAll,
       applyPreset: handleApplyPreset,
@@ -423,6 +524,9 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     handleReset,
     handleToggleLock,
     handleToggleWidget,
+    onToggleCollapse,
+    handleMoveWidget,
+    handleResizeWidget,
     handleShowAll,
     handleHideAll,
     handleApplyPreset,
@@ -455,6 +559,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
       )}
       <DndContext
         sensors={sensors}
+        autoScroll={false}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
@@ -493,7 +598,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
                  <SortableWidgetItem
                    key={widgetId}
                    id={widgetId}
-                   disabled={!canDrag}
+                   disabled={!canReorder}
                    className={`vt-dash-cell ${instance.collapsed ? "is-collapsed" : ""} ${sizeBucketClassName(instance.size)} ${instance.collapsed ? "h-[48px]" : heightBucketClassName(instance.height)}`}>
                     <DeferredDashboardWidget eager={editMode}>
                       <WidgetErrorBoundary widgetId={widgetId}>
@@ -502,7 +607,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
                           widget={themedWidget}
                           instance={instance}
                           editMode={editMode}
-                          canEdit={canDrag}
+                          canEdit={canEdit}
                           data={data}
                           onNavigate={onNavigate}
                           onToggleCollapse={onToggleCollapse}

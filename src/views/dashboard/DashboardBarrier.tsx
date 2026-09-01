@@ -1,6 +1,7 @@
 import React from "react"
 import "./toolboxWidgetSystem.css"
 import "./widgetScrollbar.css"
+import "../../features/vt-widgets/interior-grid/interior-grid.css"
 
 /**
  * DashboardBarrier — Invisible CSS containment wrapper that injects the

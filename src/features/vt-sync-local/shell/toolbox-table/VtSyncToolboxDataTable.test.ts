@@ -930,7 +930,21 @@ describe("VT Sync toolbox data table", () => {
  it("uses the requested video metric-group labels exactly once in order", () => {
   const videos = VT_SYNC_TABLE_DEFINITIONS.find((table) => table.id === "videos")!
   expect([...new Set(videos.columns.map((column) => column.group))]).toEqual([
-   "Video", "Details", "Format", "Core Stats", "Engagement", "Subscribers", "Per 100 Views", "Revenue", "Advertising", "Premium", "Card Links",
+   "Video", "Details", "Format", "Core Stats", "Engagement", "Playlist Actions", "Subscribers", "Per 100 Views", "Revenue", "Advertising", "Premium", "Cards", "Teasers",
+  ])
+  expect(videos.columns.filter((column) => column.group === "Playlist Actions").map((column) => column.key)).toEqual([
+   "videosAddedToPlaylists",
+   "videosRemovedFromPlaylists",
+  ])
+  expect(videos.columns.filter((column) => column.group === "Cards").map((column) => column.key)).toEqual([
+   "cardsShown",
+   "cardClicks",
+   "clicksPerCardShown",
+  ])
+  expect(videos.columns.filter((column) => column.group === "Teasers").map((column) => column.key)).toEqual([
+   "cardTeasersShown",
+   "cardTeaserClicks",
+   "teaserClicksPerCardTeaserShown",
   ])
   expect(videos.columns.find((column) => column.key === "watchTime")?.format).toBe("durationHours")
   expect(videos.columns.find((column) => column.key === "youtubePremiumWatchTime")?.format).toBe("durationHours")
@@ -1331,15 +1345,20 @@ describe("VT Sync toolbox data table", () => {
  expect(getVisibleVtSyncColumns(table, paidRevenue, true, true).some((column) => column.group === "Revenue")).toBe(true)
  })
 
- it("keeps video Card Links visible and expanded even before card values sync", () => {
+ it("keeps video Cards and Teasers visible and expanded even before values sync", () => {
   const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((item) => item.id === "videos")!
   const rows = buildVtSyncTableViewModel(normalizeVtSyncSnapshot({ videos: [{ id: "zero-cards", title: "Zero cards", metrics: { views: 25 } }] }), table).rows
-  const cardColumns = table.columns.filter((column) => column.group === "Card Links")
+  const cardColumns = table.columns.filter((column) => column.group === "Cards")
+  const teaserColumns = table.columns.filter((column) => column.group === "Teasers")
 
   expect(cardColumns.length).toBeGreaterThan(0)
+  expect(teaserColumns.length).toBeGreaterThan(0)
   expect(cardColumns.every((column) => column.visibility !== "whenMeaningful")).toBe(true)
-  expect(table.collapsedGroups).not.toContain("Card Links")
-  expect(getVisibleVtSyncColumns(table, rows, true, true).filter((column) => column.group === "Card Links").map((column) => column.key)).toEqual(cardColumns.map((column) => column.key))
+  expect(teaserColumns.every((column) => column.visibility !== "whenMeaningful")).toBe(true)
+  expect(table.collapsedGroups).not.toContain("Cards")
+  expect(table.collapsedGroups).not.toContain("Teasers")
+  expect(getVisibleVtSyncColumns(table, rows, true, true).filter((column) => column.group === "Cards").map((column) => column.key)).toEqual(cardColumns.map((column) => column.key))
+  expect(getVisibleVtSyncColumns(table, rows, true, true).filter((column) => column.group === "Teasers").map((column) => column.key)).toEqual(teaserColumns.map((column) => column.key))
  })
 
  it("keeps totals anchored when formulas are hidden", () => {

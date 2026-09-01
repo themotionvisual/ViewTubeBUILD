@@ -642,3 +642,61 @@ export const WidgetMediaUploadAction: React.FC<
     {children}
   </button>
 )
+
+// ═══════════════════════════════════════════════════════════
+// WidgetBadge — canonical 12-slot spectrum badge, 2px stroke.
+// Wraps the existing .vt-spectrum-badge class so styling stays
+// in one source (src/styles/spectrumBadge.css). Every consumer
+// picks a spectrum slot by index or semantic name, or an intent
+// which maps to a slot; the badge stays monochromatic in that
+// hue (stroke + text + translucent fill).
+// ═══════════════════════════════════════════════════════════
+import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
+
+export const WIDGET_BADGE_SPECTRUM = [
+  "rose", "coral", "orange", "yellow", "lime", "green",
+  "teal", "cyan", "royal", "purple", "magenta", "pink",
+] as const
+
+export type WidgetBadgeSpectrumName = typeof WIDGET_BADGE_SPECTRUM[number]
+export type WidgetBadgeTone = WidgetBadgeSpectrumName | number
+export type WidgetBadgeStatus = "positive" | "warning" | "danger" | "neutral"
+
+const STATUS_TO_SLOT: Record<WidgetBadgeStatus, number> = {
+  positive: 5,  // green
+  warning:  3,  // yellow
+  danger:   0,  // rose
+  neutral:  8,  // royal
+}
+
+const resolveBadgeHue = (tone?: WidgetBadgeTone, status?: WidgetBadgeStatus): string => {
+  if (typeof tone === "number") {
+    return VT_SPECTRUM_PALETTE_06[((tone % 12) + 12) % 12]
+  }
+  if (typeof tone === "string") {
+    const idx = WIDGET_BADGE_SPECTRUM.indexOf(tone as WidgetBadgeSpectrumName)
+    if (idx >= 0) return VT_SPECTRUM_PALETTE_06[idx]
+  }
+  if (status) return VT_SPECTRUM_PALETTE_06[STATUS_TO_SLOT[status]]
+  // No hint → use widget's palette color (CSS var falls back per-widget).
+  return "var(--widget-color, #40C6E9)"
+}
+
+export const WidgetBadge: React.FC<{
+  tone?: WidgetBadgeTone
+  status?: WidgetBadgeStatus
+  icon?: React.ReactNode
+  className?: string
+  children: React.ReactNode
+}> = ({ tone, status, icon, className = "", children }) => {
+  const hue = resolveBadgeHue(tone, status)
+  return (
+    <span
+      className={`vt-spectrum-badge ${className}`.trim()}
+      style={{ ["--vt-spectrum-badge-stroke" as string]: hue }}
+    >
+      {icon && <span className="vt-spectrum-badge__icon" aria-hidden="true">{icon}</span>}
+      <span>{children}</span>
+    </span>
+  )
+}

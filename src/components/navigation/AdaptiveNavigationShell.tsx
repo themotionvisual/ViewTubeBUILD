@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ChevronDown,
-  ChevronsLeft,
-  ChevronsRight,
   Menu,
   PanelLeft,
   PanelTop,
@@ -10,10 +8,8 @@ import {
   UserRound,
   X,
 } from "lucide-react"
-import { NavIcon } from "./navIcons"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
-import { useFeatureAccess } from "../../context/featureAccessContext"
 import { useBrain } from "../../context/useBrain"
 // Direct import — the feature barrel would drag in the entire VT-SYNC engine
 // (tableRegistry, localSyncEngine, adapters) on every first paint even though
@@ -251,7 +247,6 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   entitlement,
   isEditorSurface,
 }) => {
-  const featureAccess = useFeatureAccess()
   const location = useLocation()
   const navigate = useNavigate()
   const account = useUnifiedAccount()
@@ -283,9 +278,15 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     account.snapshot.authentication.status === "authenticated" ||
     authState.isAuthenticated ||
     channelConnection.hasSession
-  const googleConnected = account.snapshot.google.status === "connected" || account.snapshot.google.youtubeScopesGranted || channelConnection.isConnected
+  const googleConnected =
+    account.snapshot.google.status === "connected" ||
+    account.snapshot.google.youtubeScopesGranted ||
+    channelConnection.isConnected ||
+    Boolean(channelIdentity.name) ||
+    Boolean(authState.channelName)
   const channelVerified = channelConnection.state === "connected_verified" || channelIdentity.isVerified
-  const isConnected = accountAuthenticated && googleConnected
+  const isConnected = accountAuthenticated || googleConnected
+  const isChannelConnected = isConnected && googleConnected
   const accountChipLabel = resolveAccountChipLabel(account.snapshot)
   const accountDisplayName =
     cleanAccountText(account.snapshot.profile.displayName) ||
@@ -324,8 +325,8 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     ? formatSyncLabel(getSyncTimestamp(authState))
     : channelConnection.state === "syncing"
       ? channelVerified ? "Refreshing catalog" : "Signed in"
-      : isConnected
-        ? channelVerified ? channelConnection.statusLabel || "Connected" : "Signed in"
+      : isChannelConnected
+        ? channelVerified ? channelConnection.statusLabel || "Connected" : "Connected"
         : accountChipLabel
   const label = planLabel(entitlement.subscriptionPlanId)
   const unlimited = entitlement.tier === "large"
@@ -336,7 +337,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const creditPercent = unlimited
     ? 100
     : Math.max(0, Math.min(100, Math.round((Math.max(0, entitlement.creditBalance) / creditCap) * 100)))
-  const canSeeApiKeys = entitlement.subscriptionPlanId === "executive" || isOwnerEmail(knownEmail()) || featureAccess.decision("settings.api_keys").disposition === "enabled"
+  const canSeeApiKeys = entitlement.subscriptionPlanId === "executive" || isOwnerEmail(knownEmail())
   const applicationMenuRecentItems = useMemo<ApplicationMenuRecentItem[]>(() => {
     if (!accountOpen) return []
 
@@ -385,30 +386,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const setLayout = (nextLayout: NavigationLayout) => {
     setLayoutState(nextLayout)
     closeAccountMenu()
-    const label =
-      nextLayout === "top" ? "Top bar"
-      : nextLayout === "wide" ? "Wide sidebar"
-      : nextLayout === "thin" ? "Thin sidebar"
-      : "Icon rail"
-    setAnnouncement(`${label} navigation active`)
-  }
-  // Toggle between the current sidebar mode and the collapsed "rail" mode —
-  // one-tap way to reclaim the full-width viewport for the page content and
-  // then bring the sidebar back at the same wideness.
-  const previousSidebarLayoutRef = useRef<Extract<NavigationLayout, "wide" | "thin">>(
-    layout === "wide" || layout === "thin" ? layout : "wide"
-  )
-  useEffect(() => {
-    if (layout === "wide" || layout === "thin") previousSidebarLayoutRef.current = layout
-  }, [layout])
-  const toggleRail = () => {
-    if (layout === "rail") {
-      setLayout(previousSidebarLayoutRef.current)
-    } else {
-      // Only meaningful from a sidebar mode; from "top" this collapses the
-      // top bar into a rail too (sidebar shell + icon-only column).
-      setLayout("rail")
-    }
+    setAnnouncement(`${nextLayout === "top" ? "Top bar" : nextLayout === "wide" ? "Wide sidebar" : "Thin sidebar"} navigation active`)
   }
 
   const { shellRef, registerLink, registerControl, animateToSidebar, animateToTop } = useNavLayoutMorph({
@@ -517,10 +495,8 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
           onFocus={() => prefetchRoute(item.path)}
           className="vt-adaptive-nav__link"
           style={{ "--vt-nav-color": getNavPaletteColor(item.paletteIndex) } as React.CSSProperties}
-          title={item.label}
         >
-          <NavIcon id={item.iconId} size={22} weight="fill" className="vt-adaptive-nav__icon" />
-          <span className="vt-adaptive-nav__link-label">{item.label}</span>
+          {item.label}
         </NavLink>
       ))}
     </nav>
@@ -530,19 +506,6 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     <div ref={registerControl} className="vt-adaptive-nav__layout-controls" role="group" aria-label="Navigation layout">
       <button type="button" onClick={animateToTop} aria-label="Use top bar" title="Top bar">
         <PanelTop aria-hidden="true" />
-      </button>
-      {/* Rail toggle — one tap to collapse the sidebar to icon-only so the
-          page reclaims full width; tapping again restores the previous
-          wideness. Uses ChevronsLeft/Right so the button also indicates
-          which direction it will move. */}
-      <button
-        type="button"
-        onClick={toggleRail}
-        aria-label={layout === "rail" ? "Expand navigation" : "Collapse to icon rail"}
-        aria-pressed={layout === "rail"}
-        title={layout === "rail" ? "Expand" : "Collapse to rail"}
-      >
-        {layout === "rail" ? <ChevronsRight aria-hidden="true" /> : <ChevronsLeft aria-hidden="true" />}
       </button>
     </div>
   )

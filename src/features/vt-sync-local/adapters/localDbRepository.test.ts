@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it } from "vitest"
 
 import {
  VT_SYNC_LOCAL_DB_NAME,
+ VT_SYNC_LOCAL_DB_VERSION,
+ VT_SYNC_LOCAL_INDEX_NAMES,
  VT_SYNC_LOCAL_STORE_NAMES,
 } from "./contracts"
 import {
@@ -33,16 +35,78 @@ afterEach(async () => {
 })
 
 describe("VT Sync local IndexedDB repository", () => {
- it("creates the v2 schema with compact canonical stores", async () => {
+ it("creates the indexed compact schema for large canonical datasets", async () => {
   const db = await openVtSyncLocalDb()
 
   expect(db.name).toBe(VT_SYNC_LOCAL_DB_NAME)
-  expect(db.version).toBe(2)
+  expect(db.version).toBe(VT_SYNC_LOCAL_DB_VERSION)
   Object.values(VT_SYNC_LOCAL_STORE_NAMES).forEach((storeName) => {
    expect(db.objectStoreNames.contains(storeName)).toBe(true)
   })
+  const tx = db.transaction([
+   VT_SYNC_LOCAL_STORE_NAMES.datasetChunks,
+   VT_SYNC_LOCAL_STORE_NAMES.videoInventory,
+   VT_SYNC_LOCAL_STORE_NAMES.videoDimensions,
+  ], "readonly")
+  expect(tx.objectStore(VT_SYNC_LOCAL_STORE_NAMES.datasetChunks).indexNames.contains(VT_SYNC_LOCAL_INDEX_NAMES.chunksByRecord)).toBe(true)
+  expect(tx.objectStore(VT_SYNC_LOCAL_STORE_NAMES.datasetChunks).indexNames.contains(VT_SYNC_LOCAL_INDEX_NAMES.chunksByGeneration)).toBe(true)
+  expect(tx.objectStore(VT_SYNC_LOCAL_STORE_NAMES.videoInventory).indexNames.contains(VT_SYNC_LOCAL_INDEX_NAMES.recordsByChannel)).toBe(true)
+  expect(tx.objectStore(VT_SYNC_LOCAL_STORE_NAMES.videoDimensions).indexNames.contains(VT_SYNC_LOCAL_INDEX_NAMES.recordsByChannel)).toBe(true)
   db.close()
  })
+
+ it("persists thousands of days and tens of thousands of combination rows without truncation", async () => {
+  const days = Array.from({ length: 5_000 }, (_, index) => {
+   const date = new Date(Date.UTC(2000, 0, index + 1)).toISOString().slice(0, 10)
+   return { date, views: index, watchTime: index / 3, estimatedRevenue: index / 100 }
+  })
+  const trafficByDay = Array.from({ length: 60_000 }, (_, index) => {
+   const dayIndex = Math.floor(index / 24)
+   return {
+    term: `SOURCE_${index % 24}`,
+    day: days[dayIndex].date,
+    views: index,
+    engagedViews: index - (index % 7),
+    watchTime: index / 10,
+    averageViewDuration: 75 + (index % 30),
+    averageViewPercentage: 50 + (index % 40),
+    comments: index % 19,
+    likes: index % 101,
+    shares: index % 11,
+    subscribersGained: index % 13,
+    estimatedRevenue: index / 1_000,
+   }
+  })
+
+  await putVtSyncDatasetTableRows({
+   id: "large-daily",
+   runId: "large-run",
+   channelId: "large-channel",
+   datasetId: "daily",
+   phase: "daily_history",
+   capturedAt: "2026-08-31T23:50:00.000Z",
+   rows: days,
+   provenance: "api",
+  })
+  await putVtSyncDatasetTableRows({
+   id: "large-traffic-day",
+   runId: "large-run",
+   channelId: "large-channel",
+   datasetId: "traffic_day",
+   phase: "traffic_day",
+   capturedAt: "2026-08-31T23:50:00.000Z",
+   rows: trafficByDay,
+   provenance: "api",
+  })
+
+  const records = await listVtSyncDatasetTableRows()
+  expect(records.find((record) => record.id === "large-daily")?.rows).toEqual(days)
+  expect(records.find((record) => record.id === "large-traffic-day")?.rows).toEqual(trafficByDay)
+  expect(await getVtSyncPackedStorageDiagnostics()).toEqual(expect.arrayContaining([
+   expect.objectContaining({ id: "large-daily", rowCount: 5_000, generationHealth: "verified" }),
+   expect.objectContaining({ id: "large-traffic-day", rowCount: 60_000, generationHealth: "verified" }),
+  ]))
+ }, 30_000)
 
  it("persists channel-scoped table rows as a lossless packed generation", async () => {
   const rows = Array.from({ length: 80 }, (_, index) => ({

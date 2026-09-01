@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { Users, Mail, Phone, ExternalLink, Sparkles, MessageCircle, ArrowRight, UserPlus } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
-import { WidgetScrollArea } from "../WidgetPrimitives"
+import { WidgetScrollArea, WidgetBadge } from "../WidgetPrimitives"
 import { generateCollabOpportunities, type CollabPeer } from "../../../services/CollabEngine"
 import { isGeminiConfigured } from "../../../services/gemini"
 
@@ -50,11 +50,11 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
   }
 
   return (
-    <WidgetShell {...common} icon={<Users size={20} />}>
+    <WidgetShell {...common} icon={<Users size={20} />} headerContent={<WidgetBadge slot={11}>BETA</WidgetBadge>}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: "8px", overflow: "hidden" }}>
         
         {/* Header Action */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "4px", borderBottom: "1px solid #eee" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "4px", borderBottom: "var(--widget-module-stroke, 2px) solid color-mix(in srgb, var(--widget-border) 18%, transparent)" }}>
           <span style={{ fontSize: "10px", fontWeight: 800, opacity: 0.6 }}>PEER NETWORK</span>
           <button 
             onClick={findPeers}
@@ -66,7 +66,7 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
           </button>
         </div>
         {!geminiReady && (
-          <div style={{ padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "#fff7db", fontSize: "10px", fontWeight: 800 }}>
+          <div style={{ padding: "8px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: "#fff7db", fontSize: "10px", fontWeight: 800 }}>
             Gemini key missing. Set it in Settings - Key Vault to enable collab generation.
           </div>
         )}
@@ -100,7 +100,7 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
                   width: "24px", 
                   height: "24px", 
                   borderRadius: "50%", 
-                  border: "1px solid black",
+                  border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                   background: "#eee",
                   overflow: "hidden",
                   flexShrink: 0
@@ -122,7 +122,7 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
           <div style={{ 
             flex: 1.5, 
             background: "#f0f0f0", 
-            border: "2px solid black",
+            border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
             borderRadius: "8px",
             padding: "8px",
             display: "flex",
@@ -143,7 +143,7 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
                     href={`https://youtube.com/${selectedPeer.handle}/about`} 
                     target="_blank" 
                     rel="noreferrer"
-                    style={{ color: "black", background: "#eee", border: "1.5px solid black", borderRadius: "4px", padding: "2px" }}
+                    style={{ color: "black", background: "#eee", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "4px", padding: "2px" }}
                   >
                     <ExternalLink size={12} />
                   </a>
@@ -156,7 +156,7 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
                   </div>
                   <div style={{ 
                     background: "white", 
-                    border: "1.5px solid black", 
+                    border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", 
                     borderRadius: "6px", 
                     padding: "6px", 
                     fontSize: "9px", 
@@ -175,14 +175,14 @@ export const CollabMatchmakerWidget: React.FC<any> = ({widget, instance, editMod
                     </div>
                     <button 
                       onClick={() => handleCopy(selectedPeer.outreachMessage || "", selectedPeer.id)}
-                      style={{ fontSize: "7px", fontWeight: 900, padding: "2px 4px", background: copySuccess === selectedPeer.id ? "#4FFF5B" : "#eee", border: "1px solid black", borderRadius: "4px" }}
+                      style={{ fontSize: "7px", fontWeight: 900, padding: "2px 4px", background: copySuccess === selectedPeer.id ? "#4FFF5B" : "#eee", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "4px" }}
                     >
                       {copySuccess === selectedPeer.id ? "COPIED!" : "COPY"}
                     </button>
                   </div>
                   <div style={{ 
                     background: "#e8faff", 
-                    border: "1.5px solid black", 
+                    border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", 
                     borderRadius: "6px", 
                     padding: "6px", 
                     fontSize: "9px", 

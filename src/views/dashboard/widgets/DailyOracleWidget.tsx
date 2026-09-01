@@ -154,7 +154,7 @@ export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse
     style={{
      flexShrink: 0,
      display: "flex", background: advice.completed ? "color-mix(in srgb, var(--widget-color) 10%, white)" : "#fff",
-     border: `2px solid #000`, borderRadius: "4px",
+     border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "4px",
      overflow: "hidden", boxShadow: `2px 2px 0 0 ${advice.shadowColor}`,
      opacity: advice.completed ? 0.78 : 1,
     }}>

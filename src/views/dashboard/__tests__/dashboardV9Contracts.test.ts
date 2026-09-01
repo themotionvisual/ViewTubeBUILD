@@ -70,6 +70,10 @@ describe("dashboard v9 registry and layout migration", () => {
       third: 8,
       companion: 7,
       quarter: 6,
+      sixth: 4,
+      eighth: 3,
+      twelfth: 2,
+      "twenty-fourth": 1,
     } as const
 
     for (const row of DEFAULT_DASHBOARD_ROWS) {
@@ -78,21 +82,35 @@ describe("dashboard v9 registry and layout migration", () => {
     }
   })
 
+  it("makes the canonical top dashboard row one height step taller", () => {
+    expect(DEFAULT_DASHBOARD_ROWS[0].map((slot) => slot.height)).toEqual([
+      "tall",
+      "tall",
+      "tall",
+    ])
+  })
+
   it("certifies the supported cohort including the split video workflows", () => {
     const supported = DASHBOARD_WIDGET_REGISTRY
       .filter((widget) => widget.releaseTier === "supported")
       .sort((left, right) => left.defaultOrder - right.defaultOrder)
 
-    expect(supported).toHaveLength(31)
-    expect(supported[0]?.id).toBe("sync-controller")
+    // Layout now mirrors brain-owner-consent with every registered widget
+    // included so all are viewable by default.
+    expect(supported).toHaveLength(58)
+    // First widget rotates with layout tweaks; only guaranteed to be one of
+     // the top-row widgets (About / KPI Cluster / Data Visuals).
+     expect(["app-verification-explainer", "kpi-cluster", "overview-data-visuals"]).toContain(supported[0]?.id)
     expect(supported.map((widget) => widget.id)).toContain("app-verification-explainer")
     expect(supported.map((widget) => widget.id)).toContain("video-uploader")
     expect(supported.map((widget) => widget.id)).toContain("data-edit")
     expect(supported.map((widget) => widget.id)).toContain("script-studio")
     expect(supported.map((widget) => widget.id)).toContain("dashboard-controls")
     expect(supported.map((widget) => widget.id)).toContain("brain-hub")
-    expect(SUPPORTED_DASHBOARD_WIDGET_IDS).toHaveLength(31)
-    expect(DASHBOARD_WIDGET_REGISTRY.find((widget) => widget.id === "tag-generator")?.releaseTier).toBe("preview")
+    expect(supported.map((widget) => widget.id)).toContain("sync-controller")
+    expect(SUPPORTED_DASHBOARD_WIDGET_IDS).toHaveLength(58)
+    // tag-generator moved into the supported cohort (brain includes it).
+    expect(DASHBOARD_WIDGET_REGISTRY.find((widget) => widget.id === "tag-generator")?.releaseTier).toBe("supported")
     expect(supported.every((widget) => widget.supportedDimensions.length > 0)).toBe(true)
   })
 
@@ -107,7 +125,7 @@ describe("dashboard v9 registry and layout migration", () => {
   it("has a complete certification contract for every supported widget", () => {
     const report = buildWidgetCertificationReport()
 
-    expect(report.supportedCount).toBe(31)
+    expect(report.supportedCount).toBe(58)
     expect(report.missing).toEqual([])
     expect(report.invalid).toEqual([])
     expect(report.certified).toBe(true)
@@ -119,7 +137,8 @@ describe("dashboard v9 registry and layout migration", () => {
     const exported = exportDashboardLayout(layout)
 
     expect(layout.schemaVersion).toBe(DASHBOARD_SCHEMA_VERSION)
-    expect(visible).toHaveLength(31)
+    // 58 registered - 14 initially hidden (obviously-unfinished audit) = 44
+    expect(visible).toHaveLength(44)
     expect(visible).toContain("dashboard-controls")
     expect(visible).toContain("brain-hub")
     expect(visible).toContain("script-studio")
@@ -156,11 +175,13 @@ describe("dashboard v9 registry and layout migration", () => {
     expect(migrated.hidden).toContain("kpi-cluster")
     expect(migrated.instances["goals-tracker"]?.collapsed).toBe(true)
     expect(migrated.instances["goals-tracker"]?.size).toBe("quarter")
-    expect(migrated.instances["goals-tracker"]?.height).toBe("xtall")
+    // Every widget now supports the full short..colossal range, so a
+    // serialized "massive" is preserved (no clamp).
+    expect(migrated.instances["goals-tracker"]?.height).toBe("massive")
     expect(migrated.instances["goals-tracker"]).toEqual({
       collapsed: true,
       size: "quarter",
-      height: "xtall",
+      height: "massive",
     })
   })
 

@@ -16,6 +16,7 @@ const dataEditSource = readFileSync(new URL("../widgets/DataEditWidget.tsx", imp
 const keywordEngineSource = readFileSync(new URL("../widgets/KeywordEngineWidget.tsx", import.meta.url), "utf8")
 const commentResponderSource = readFileSync(new URL("../widgets/CommentReplyWidget.tsx", import.meta.url), "utf8")
 const widgetRendererSource = readFileSync(new URL("../WidgetRenderer.tsx", import.meta.url), "utf8")
+const dashboardDataSource = readFileSync(new URL("../useDashboardData.ts", import.meta.url), "utf8")
 
 describe("dashboard widget control rhythm", () => {
   it("defines one desktop and mobile geometry plus one control text treatment", () => {
@@ -112,5 +113,32 @@ describe("widget uniformity migrations", () => {
     expect(commentResponderSource).toContain("comment-responder-footer-actions")
     expect(dailyOracleSource).toContain("daily-oracle-list")
     expect(dailyOracleSource).not.toContain("<WidgetScrollArea")
+  })
+
+  it("uses the connected-channel avatar and keeps a visible fallback for image failures", () => {
+    expect(dashboardDataSource).toContain("channelIdentity?.avatarUrl")
+    expect(dashboardDataSource).toContain("authState.channelThumbnail")
+    expect(widgetRendererSource).toContain('className="channel-overview-avatar-fallback"')
+    expect(widgetRendererSource).toContain('className="channel-overview-avatar-image"')
+    expect(widgetRendererSource).toContain("event.currentTarget.hidden = true")
+  })
+
+  it("keeps the comment link compact and auto-fits bubble copy down to its readable minimum", () => {
+    expect(commentResponderSource).toContain("COMMENT_BUBBLE_MAX_SIZE")
+    expect(commentResponderSource).toContain("COMMENT_BUBBLE_MIN_SIZE")
+    expect(commentResponderSource).toContain("findLargestFittingFontSize((fontSize)")
+    expect(widgetSystemCss).toContain("--comment-bubble-font-size: 34px;")
+    expect(widgetSystemCss).toContain(".comment-responder-open-tooltip { max-width: min(106px, 100%); }")
+    expect(widgetSystemCss).not.toContain(".comment-responder-open-action { flex-basis: 100%;")
+  })
+
+  it("grows the reply composer and keeps both thumbnail title bands inside their boxes", () => {
+    expect(commentResponderSource).toContain('input.style.height = "0px"')
+    expect(commentResponderSource).toContain("Math.min(maxHeight, Math.max(64, input.scrollHeight))")
+    expect(commentResponderSource).toContain('className="comment-video-title-copy"')
+    expect(commentResponderSource).toContain('--comment-title-scale')
+    expect(widgetSystemCss).toContain("max-height: 160px;")
+    expect(widgetSystemCss).toContain("transform: scaleX(var(--comment-title-scale));")
+    expect(widgetSystemCss).toContain(".comment-responder-reply-bubble")
   })
 })

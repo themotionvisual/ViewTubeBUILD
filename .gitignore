@@ -117,3 +117,7 @@ gha-creds-*.json
 # Inventory outputs generated on demand by scripts/inventory/source-inventory.mjs.
 # They are for manual review, not for git history.
 scripts/inventory/reports/
+
+# Vite dep-optimization cache (isolated per project to avoid
+# 504 Outdated Optimize Dep when node_modules is symlinked)
+.vite-cache

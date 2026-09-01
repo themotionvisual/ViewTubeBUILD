@@ -236,6 +236,9 @@ const COLLAPSED_GROUP_DISPLAY_LABELS: Record<string, string> = {
  Advertisement: "advrtsmt.",
  Premium: "premium",
  "Cards & End Screens": "cards",
+ "Playlist Actions": "playlists",
+ Cards: "cards",
+ Teasers: "teasers",
 }
 
 const numericColumnValue = (

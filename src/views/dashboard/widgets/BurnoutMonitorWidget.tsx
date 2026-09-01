@@ -121,17 +121,17 @@ export const BurnoutMonitorWidget = ({ widget, instance, editMode, onToggleColla
 
     {/* Stats Row */}
     <div style={{ display: "flex", gap: "6px", width: "100%" }}>
-     <div style={{ flex: 1, padding: "4px", border: "2px solid #000", borderRadius: "6px", textAlign: "center", background: "#fff" }}>
+     <div style={{ flex: 1, padding: "4px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "6px", textAlign: "center", background: "#fff" }}>
       <Flame size={12} style={{ margin: "0 auto" }} />
       <div style={{ fontSize: "12px", fontWeight: 1000 }}>{stressData.streak}</div>
       <div style={{ fontSize: "6px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4 }}>Week Streak</div>
      </div>
-     <div style={{ flex: 1, padding: "4px", border: "2px solid #000", borderRadius: "6px", textAlign: "center", background: "#fff" }}>
+     <div style={{ flex: 1, padding: "4px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "6px", textAlign: "center", background: "#fff" }}>
       <Trophy size={12} style={{ margin: "0 auto" }} />
       <div style={{ fontSize: "12px", fontWeight: 1000 }}>{stressData.recentUploads}</div>
       <div style={{ fontSize: "6px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4 }}>14d Uploads</div>
      </div>
-     <div style={{ flex: 1, padding: "4px", border: "2px solid #000", borderRadius: "6px", textAlign: "center", background: "#fff" }}>
+     <div style={{ flex: 1, padding: "4px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "6px", textAlign: "center", background: "#fff" }}>
       <Coffee size={12} style={{ margin: "0 auto" }} />
       <div style={{ fontSize: "12px", fontWeight: 1000 }}>{stressData.daysSinceRest}d</div>
       <div style={{ fontSize: "6px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4 }}>Since Rest</div>
@@ -139,13 +139,13 @@ export const BurnoutMonitorWidget = ({ widget, instance, editMode, onToggleColla
     </div>
 
     {/* Tip */}
-    <div style={{ width: "100%", padding: "8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(255,228,87,0.1)", fontSize: "10px", fontWeight: 700, lineHeight: 1.4 }}>
+    <div style={{ width: "100%", padding: "8px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: "rgba(255,228,87,0.1)", fontSize: "10px", fontWeight: 700, lineHeight: 1.4 }}>
      {getTip(stressData.score)}
     </div>
 
     {/* Rest Day Button */}
     <button onClick={markRestDay} disabled={isResting} style={{
-     width: "100%", height: "32px", border: "2px solid #000", borderRadius: "8px",
+     width: "100%", height: "32px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px",
      background: isResting ? "#4FFF5B" : "#fff", fontSize: "10px", fontWeight: 1000,
      textTransform: "uppercase", cursor: isResting ? "default" : "pointer",
      display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",

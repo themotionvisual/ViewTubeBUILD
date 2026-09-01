@@ -1,6 +1,7 @@
 import {
  VT_SYNC_LOCAL_DB_NAME,
  VT_SYNC_LOCAL_DB_VERSION,
+ VT_SYNC_LOCAL_INDEX_NAMES,
  VT_SYNC_LOCAL_STORE_NAMES,
  type VtSyncChannelIndexRecord,
  type VtSyncDatasetRawReportRecord,
@@ -13,6 +14,7 @@ import {
 import {
  decodeVtSyncDataset,
  encodeVtSyncDataset,
+ getVtSyncPackedDatasetPrimaryKey,
  type VtSyncPackedDatasetChunk,
  type VtSyncPackedDatasetManifestV2,
 } from "./packedDataset"
@@ -84,9 +86,20 @@ export const openVtSyncLocalDb = async (): Promise<IDBDatabase> =>
   const request = indexedDB.open(VT_SYNC_LOCAL_DB_NAME, VT_SYNC_LOCAL_DB_VERSION)
   request.onupgradeneeded = () => {
    const db = request.result
+   const transaction = request.transaction
    Object.values(VT_SYNC_LOCAL_STORE_NAMES).forEach((storeName) => {
     if (!db.objectStoreNames.contains(storeName)) db.createObjectStore(storeName, { keyPath: "id" })
    })
+   if (!transaction) return
+   const ensureIndex = (storeName: VtSyncLocalDbStoreName, indexName: string, keyPath: string | string[]) => {
+    const store = transaction.objectStore(storeName)
+    if (!store.indexNames.contains(indexName)) store.createIndex(indexName, keyPath, { unique: false })
+   }
+   ensureIndex(VT_SYNC_LOCAL_STORE_NAMES.datasetChunks, VT_SYNC_LOCAL_INDEX_NAMES.chunksByRecord, "recordId")
+   ensureIndex(VT_SYNC_LOCAL_STORE_NAMES.datasetChunks, VT_SYNC_LOCAL_INDEX_NAMES.chunksByGeneration, ["recordId", "generation"])
+   ensureIndex(VT_SYNC_LOCAL_STORE_NAMES.videoInventory, VT_SYNC_LOCAL_INDEX_NAMES.recordsByChannel, "channelId")
+   ensureIndex(VT_SYNC_LOCAL_STORE_NAMES.videoDimensions, VT_SYNC_LOCAL_INDEX_NAMES.recordsByChannel, "channelId")
+   ensureIndex(VT_SYNC_LOCAL_STORE_NAMES.datasetManifests, VT_SYNC_LOCAL_INDEX_NAMES.recordsByChannel, "record.channelId")
   }
   request.onsuccess = () => resolve(request.result)
   request.onerror = () => reject(request.error || new Error("Failed to open VT Sync local database."))
@@ -160,6 +173,15 @@ const putMany = async <T extends Record<string, unknown>>(
 
 const getAll = async <T>(storeName: VtSyncLocalDbStoreName): Promise<T[]> => {
  const result = await withStore<T[]>(storeName, "readonly", (store) => store.getAll())
+ return result || []
+}
+
+const getAllByIndex = async <T>(
+ storeName: VtSyncLocalDbStoreName,
+ indexName: string,
+ key: IDBValidKey,
+): Promise<T[]> => {
+ const result = await withStore<T[]>(storeName, "readonly", (store) => store.index(indexName).getAll(key))
  return result || []
 }
 
@@ -294,8 +316,8 @@ export const putVtSyncVideoInventoryRecords = async (
 
 export const listVtSyncVideoInventory = async (channelId: string): Promise<VtSyncVideoInventoryRecord[]> => {
  const [records, dimensions] = await Promise.all([
-  getAll<VtSyncVideoInventoryRecord>(VT_SYNC_LOCAL_STORE_NAMES.videoInventory),
-  getAll<VtSyncVideoDimensionRecord>(VT_SYNC_LOCAL_STORE_NAMES.videoDimensions),
+  getAllByIndex<VtSyncVideoInventoryRecord>(VT_SYNC_LOCAL_STORE_NAMES.videoInventory, VT_SYNC_LOCAL_INDEX_NAMES.recordsByChannel, channelId),
+  getAllByIndex<VtSyncVideoDimensionRecord>(VT_SYNC_LOCAL_STORE_NAMES.videoDimensions, VT_SYNC_LOCAL_INDEX_NAMES.recordsByChannel, channelId),
  ])
  const dimensionsById = new Map(dimensions.map((record) => [record.id, record]))
  return records
@@ -390,9 +412,12 @@ export const putVtSyncDatasetTableRows = async (record: VtSyncDatasetTableRowsRe
  record.channelId ? putPackedDatasetTableRows(record) : putRecord(VT_SYNC_LOCAL_STORE_NAMES.datasetTableRows, record)
 
 const chunksForManifest = async (manifest: VtSyncPackedManifestRecord): Promise<VtSyncPackedDatasetChunk[]> => {
- const chunks = await getAll<VtSyncPackedChunkRecord>(VT_SYNC_LOCAL_STORE_NAMES.datasetChunks)
+ const chunks = await getAllByIndex<VtSyncPackedChunkRecord>(
+  VT_SYNC_LOCAL_STORE_NAMES.datasetChunks,
+  VT_SYNC_LOCAL_INDEX_NAMES.chunksByGeneration,
+  [manifest.id, manifest.manifest.generation],
+ )
  return chunks
-  .filter((chunk) => chunk.recordId === manifest.id && chunk.generation === manifest.manifest.generation)
   .sort((left, right) => left.rowStart - right.rowStart)
   .map((chunk) => ({
    id: chunk.id,
@@ -409,8 +434,12 @@ const splitVideoDimensions = async (
  channelId: string,
  rows: Array<Record<string, unknown>>,
 ): Promise<Array<Record<string, unknown>>> => {
- const existing = await getAll<VtSyncVideoDimensionRecord>(VT_SYNC_LOCAL_STORE_NAMES.videoDimensions)
- const byId = new Map(existing.filter((record) => record.channelId === channelId).map((record) => [record.videoId, record]))
+ const existing = await getAllByIndex<VtSyncVideoDimensionRecord>(
+  VT_SYNC_LOCAL_STORE_NAMES.videoDimensions,
+  VT_SYNC_LOCAL_INDEX_NAMES.recordsByChannel,
+  channelId,
+ )
+ const byId = new Map(existing.map((record) => [record.videoId, record]))
  const facts = rows.map((row) => {
   const videoId = String(row.id ?? row.videoId ?? "")
   if (!videoId) return row
@@ -432,8 +461,12 @@ const joinVideoDimensions = async (
  channelId: string,
  rows: Array<Record<string, unknown>>,
 ): Promise<Array<Record<string, unknown>>> => {
- const dimensions = await getAll<VtSyncVideoDimensionRecord>(VT_SYNC_LOCAL_STORE_NAMES.videoDimensions)
- const byVideoId = new Map(dimensions.filter((record) => record.channelId === channelId).map((record) => [record.videoId, record.fields]))
+ const dimensions = await getAllByIndex<VtSyncVideoDimensionRecord>(
+  VT_SYNC_LOCAL_STORE_NAMES.videoDimensions,
+  VT_SYNC_LOCAL_INDEX_NAMES.recordsByChannel,
+  channelId,
+ )
+ const byVideoId = new Map(dimensions.map((record) => [record.videoId, record.fields]))
  return rows.map((row) => {
   const videoId = String(row.id ?? row.videoId ?? "")
   return { ...(byVideoId.get(videoId) || {}), ...row }
@@ -483,8 +516,11 @@ const putPackedDatasetTableRows = async (record: VtSyncDatasetTableRowsRecord): 
  // this generation. A failed staging generation leaves the previous manifest
  // untouched and removes only its own orphaned chunks.
  try {
-  const storedChunks = (await getAll<VtSyncPackedChunkRecord>(VT_SYNC_LOCAL_STORE_NAMES.datasetChunks))
-   .filter((chunk) => chunk.recordId === record.id && chunk.generation === packed.manifest.generation)
+  const storedChunks = (await getAllByIndex<VtSyncPackedChunkRecord>(
+   VT_SYNC_LOCAL_STORE_NAMES.datasetChunks,
+   VT_SYNC_LOCAL_INDEX_NAMES.chunksByGeneration,
+   [record.id, packed.manifest.generation],
+  ))
    .sort((left, right) => left.rowStart - right.rowStart)
    .map((chunk) => ({
     id: chunk.id,
@@ -513,12 +549,14 @@ const putPackedDatasetTableRows = async (record: VtSyncDatasetTableRowsRecord): 
  await withStore(VT_SYNC_LOCAL_STORE_NAMES.datasetTableRows, "readwrite", (store) => store.delete(record.id))
 
  if (previous && previous.manifest.generation !== packed.manifest.generation) {
-  const allChunks = await getAll<VtSyncPackedChunkRecord>(VT_SYNC_LOCAL_STORE_NAMES.datasetChunks)
+  const previousChunks = await getAllByIndex<VtSyncPackedChunkRecord>(
+   VT_SYNC_LOCAL_STORE_NAMES.datasetChunks,
+   VT_SYNC_LOCAL_INDEX_NAMES.chunksByGeneration,
+   [record.id, previous.manifest.generation],
+  )
   await deleteMany(
    VT_SYNC_LOCAL_STORE_NAMES.datasetChunks,
-   allChunks
-    .filter((chunk) => chunk.recordId === record.id && chunk.generation === previous.manifest.generation)
-    .map((chunk) => chunk.id),
+   previousChunks.map((chunk) => chunk.id),
   )
  }
 }
@@ -584,10 +622,14 @@ export const deleteVtSyncDatasetTableRows = async (id: string): Promise<void> =>
   withStore(VT_SYNC_LOCAL_STORE_NAMES.datasetManifests, "readwrite", (store) => store.delete(id)),
  ])
  if (manifest) {
-  const chunks = await getAll<VtSyncPackedChunkRecord>(VT_SYNC_LOCAL_STORE_NAMES.datasetChunks)
+  const chunks = await getAllByIndex<VtSyncPackedChunkRecord>(
+   VT_SYNC_LOCAL_STORE_NAMES.datasetChunks,
+   VT_SYNC_LOCAL_INDEX_NAMES.chunksByRecord,
+   id,
+  )
   await deleteMany(
    VT_SYNC_LOCAL_STORE_NAMES.datasetChunks,
-   chunks.filter((chunk) => chunk.recordId === id).map((chunk) => chunk.id),
+   chunks.map((chunk) => chunk.id),
   )
  }
 }
@@ -608,10 +650,18 @@ export const replaceLatestVtSyncDatasetTableRows = async (
 }
 
 const rowIdentity = (datasetId: string, row: Record<string, unknown>, index: number): string => {
- if (datasetId === "videos") return String(row.id ?? row.videoId ?? `row:${index}`)
- if (datasetId === "daily") return String(row.date ?? row.day ?? `row:${index}`)
- if (datasetId === "monthly" || datasetId === "monthly_api") return String(row.month ?? row.date ?? `row:${index}`)
- if (datasetId === "channel_totals") return String(row.window ?? `row:${index}`)
+ const normalizedRow = {
+  ...row,
+  id: row.id ?? row.videoId,
+  date: row.date ?? row.day,
+  month: row.month ?? row.date,
+  term: row.term ?? row.insightTrafficSourceType,
+  device: row.device ?? row.deviceType,
+ } as Record<string, unknown>
+ const primaryKey = getVtSyncPackedDatasetPrimaryKey(datasetId)
+ if (primaryKey.length && primaryKey.every((field) => normalizedRow[field] !== undefined && normalizedRow[field] !== null && normalizedRow[field] !== "")) {
+  return primaryKey.map((field) => `${field}:${String(normalizedRow[field])}`).join("|")
+ }
  return String(row.id ?? row.videoId ?? row.date ?? row.day ?? row.month ?? row.term ?? `row:${index}`)
 }
 

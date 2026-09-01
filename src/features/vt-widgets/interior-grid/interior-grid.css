@@ -1,0 +1,124 @@
+/*
+ * ViewTube Widget Interior Grid — layout primitives.
+ *
+ * Owns .vt-widget__body and .vt-tile plus the [data-rows]/[data-cols]
+ * span system. Kept in a low-specificity :where() layer so widget-specific
+ * chrome can override without !important.
+ *
+ * See viewtube-widget-interior-grid skill (Rules 2–4, 9).
+ */
+
+@import "./tokens.css";
+
+@layer vt.tokens, vt.shell, vt.primitives, vt.interior-grid, vt.layouts, vt.widgets, vt.overrides;
+
+@layer vt.interior-grid {
+  /* Container-query anchor. The existing .vt-widget already sets
+     container-type: inline-size; we only name it so density media queries
+     in tokens.css can bind. */
+  :where(.dashboard-barrier .vt-widget) {
+    container-name: vt-widget;
+  }
+
+  /* Rule 3 — the interior container. */
+  :where(.vt-widget__body) {
+    display: grid;
+    grid-auto-rows: var(--vt-row);
+    grid-template-columns: repeat(auto-fit, var(--vt-col));
+    gap: var(--vt-gap);
+    padding: var(--vt-inset);
+    align-content: start;
+    justify-content: start;
+    min-width: 0;
+    min-height: 0;
+    box-sizing: border-box;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  /* Optional modifier: stretch the interior columns to fill the widget
+     width instead of leaving right-side gutter. Used when the widget
+     wants to fill (e.g. the 1:1 audience matrix). */
+  :where(.vt-widget__body--fill) {
+    grid-template-columns: repeat(var(--vt-cols, auto-fit), minmax(0, 1fr));
+  }
+
+  /* Rule 4 — .vt-tile is the only class allowed for interior modules. */
+  :where(.vt-tile) {
+    box-sizing: border-box;
+    border: var(--vt-stroke) solid var(--vt-ink);
+    display: grid;
+    grid-auto-rows: var(--vt-row);
+    gap: var(--vt-gap);
+    min-width: 0;
+    min-height: 0;
+    background: var(--vt-tile-bg, transparent);
+  }
+
+  /* Span attributes — the ONLY place span math is written. */
+  :where(.vt-tile[data-rows="1"]) { grid-row: span 1; }
+  :where(.vt-tile[data-rows="2"]) { grid-row: span 2; }
+  :where(.vt-tile[data-rows="3"]) { grid-row: span 3; }
+  :where(.vt-tile[data-rows="4"]) { grid-row: span 4; }
+  :where(.vt-tile[data-rows="5"]) { grid-row: span 5; }
+  :where(.vt-tile[data-rows="6"]) { grid-row: span 6; }
+  :where(.vt-tile[data-rows="7"]) { grid-row: span 7; }
+  :where(.vt-tile[data-rows="8"]) { grid-row: span 8; }
+
+  :where(.vt-tile[data-cols="1"]) { grid-column: span 1; }
+  :where(.vt-tile[data-cols="2"]) { grid-column: span 2; }
+  :where(.vt-tile[data-cols="3"]) { grid-column: span 3; }
+  :where(.vt-tile[data-cols="4"]) { grid-column: span 4; }
+  :where(.vt-tile[data-cols="5"]) { grid-column: span 5; }
+  :where(.vt-tile[data-cols="6"]) { grid-column: span 6; }
+
+  /* Rule 9 — exactly one row-fluid tile per widget. */
+  :where(.vt-tile[data-rows="fluid"]) {
+    grid-row: 1 / -1;
+    min-height: 0;
+  }
+
+  /* Tone modifiers — chrome only, no geometry impact. */
+  :where(.vt-tile[data-tone="subtle"])  { --vt-tile-bg: color-mix(in srgb, var(--widget-color, #000) 6%, #fff); }
+  :where(.vt-tile[data-tone="ink"])     { --vt-tile-bg: #000; color: #fff; }
+  :where(.vt-tile[data-tone="hue"])     { --vt-tile-bg: var(--widget-color, #40c6e9); }
+  :where(.vt-tile[data-tone="ghost"])   { --vt-tile-bg: transparent; border-color: transparent; }
+
+  /* Stroke modifiers — module (default) / heavy / none. */
+  :where(.vt-tile[data-stroke="none"])  { border-width: 0; }
+  :where(.vt-tile[data-stroke="heavy"]) { border-width: calc(var(--vt-stroke) * 1.5); }
+
+  /* Rule 6 — media frames. Snap to integer --vt-row steps via data-rows and
+     fit-shrink to the smaller of body width/height so the ratio is
+     preserved without overflowing the widget shell. */
+  :where(.vt-tile[data-media]) {
+    place-items: stretch;
+    overflow: hidden;
+  }
+  :where(.vt-tile[data-media][data-ratio]) {
+    inline-size: auto;
+    block-size: 100%;
+    max-inline-size: 100%;
+    max-block-size: 100%;
+    justify-self: center;
+    align-self: center;
+  }
+  :where(.vt-tile[data-media] > *) {
+    inline-size: 100%;
+    block-size: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* Aspect-ratio hints as convenience for WidgetVisualFrame. */
+  :where(.vt-tile[data-ratio="1/1"])   { aspect-ratio: 1 / 1; }
+  :where(.vt-tile[data-ratio="4/3"])   { aspect-ratio: 4 / 3; }
+  :where(.vt-tile[data-ratio="16/9"])  { aspect-ratio: 16 / 9; }
+  :where(.vt-tile[data-ratio="3/4"])   { aspect-ratio: 3 / 4; }
+  :where(.vt-tile[data-ratio="2/1"])   { aspect-ratio: 2 / 1; }
+
+  /* Nested tiles adopt the same grid, no chrome tweaks by default. */
+  :where(.vt-tile--nested) {
+    /* reserved; per-family overrides live in widget-specific CSS */
+  }
+}

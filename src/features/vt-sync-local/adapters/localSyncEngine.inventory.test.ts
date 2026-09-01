@@ -696,7 +696,7 @@ describe("syncUploadsInventory", () => {
    const startIndex = Number(parsed.searchParams.get("startIndex") || "1")
    const maxResults = Number(parsed.searchParams.get("maxResults") || "0")
    requestedStartIndexes.push(startIndex)
-   const remaining = Math.max(0, 450 - startIndex + 1)
+   const remaining = Math.max(0, 1_050 - startIndex + 1)
    const count = Math.min(maxResults, remaining)
    const rows = Array.from({ length: count }, (_, index) => {
     const rank = startIndex + index
@@ -722,8 +722,8 @@ describe("syncUploadsInventory", () => {
    }),
   })
 
-  expect(requestedStartIndexes).toEqual([1, 201, 401])
-  expect(snapshot.trafficByDay).toHaveLength(450)
+  expect(requestedStartIndexes).toEqual([1, 201, 401, 601, 801, 1_001])
+  expect(snapshot.trafficByDay).toHaveLength(1_050)
   expect(snapshot.trafficByDay.some((row) => row.term === "STALE_SOURCE")).toBe(false)
   expect(snapshot.datasetFreshness?.traffic_day?.status).toBe("synced")
  })

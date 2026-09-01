@@ -48,7 +48,7 @@ export const AudienceRetentionWidget = ({ widget, instance, editMode, onToggleCo
      style={{
       flex: 1,
       position: "relative",
-      border: "1px solid #000",
+      border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
       borderRadius: "8px",
       background: "#fafafa",
       overflow: "hidden",

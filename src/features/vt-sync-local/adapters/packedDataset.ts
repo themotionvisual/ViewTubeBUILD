@@ -57,11 +57,14 @@ export type VtSyncPackedDatasetV2 = {
  chunks: VtSyncPackedDatasetChunk[]
 }
 
-const primaryKeyForDataset = (datasetId: string): string[] => {
+export const getVtSyncPackedDatasetPrimaryKey = (datasetId: string): string[] => {
  if (datasetId === "videos") return ["id"]
  if (datasetId === "daily") return ["date"]
  if (datasetId === "monthly" || datasetId === "monthly_api") return ["month"]
  if (datasetId === "channel_totals") return ["window"]
+ if (datasetId === "traffic_day") return ["term", "day"]
+ if (datasetId === "formats_subscriber_status") return ["creatorContentType", "subscribedStatus"]
+ if (datasetId === "device_os") return ["device", "operatingSystem"]
  return []
 }
 
@@ -272,7 +275,7 @@ export const encodeVtSyncDataset = async ({
    schemaHash,
    generation,
    rowCount: rows.length,
-   primaryKey: primaryKeyForDataset(datasetId),
+   primaryKey: getVtSyncPackedDatasetPrimaryKey(datasetId),
    chunks: manifestChunks,
    capturedAt,
   },

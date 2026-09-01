@@ -563,11 +563,54 @@ const shouldRestoreCompactedDataset = (
  const current = snapshot[key as keyof VtSyncSnapshot]
  const currentCount = Array.isArray(current) ? current.length : 0
  if (currentCount === 0) return true
+ if (snapshot.syncManifest?.stop_reason === "initial_channel_bootstrap_committed") return true
  if (!snapshot.storageMetadata?.isCompacted) return false
  // Legacy compact previews did not always record fullRowCountByField. The
  // newest same-channel IndexedDB API record is the durable table authority;
  // a larger durable set must restore any compact preview uniformly.
  return persistedRows.length > currentCount
+}
+
+const mergeDefinedRowFields = (
+ current: Record<string, unknown>,
+ incoming: Record<string, unknown>,
+): Record<string, unknown> => {
+ const merged = { ...current }
+ Object.entries(incoming).forEach(([field, value]) => {
+  if (value === undefined || value === null) return
+  const previous = merged[field]
+  merged[field] = value && typeof value === "object" && !Array.isArray(value)
+   && previous && typeof previous === "object" && !Array.isArray(previous)
+   ? mergeDefinedRowFields(previous as Record<string, unknown>, value as Record<string, unknown>)
+   : value
+ })
+ return merged
+}
+
+const mergeDurableRowsWithBootstrapPreview = (
+ tableId: string,
+ durableRows: unknown[],
+ previewRows: unknown,
+): unknown[] => {
+ const currentPreview = Array.isArray(previewRows) ? previewRows : []
+ const order: string[] = []
+ const rowsById = new Map<string, unknown>()
+ durableRows.forEach((row, index) => {
+  const key = supplementalRowKey(tableId, row, index)
+  order.push(key)
+  rowsById.set(key, row)
+ })
+ currentPreview.forEach((row, index) => {
+  const key = supplementalRowKey(tableId, row, durableRows.length + index)
+  const durable = rowsById.get(key)
+  if (!durable) order.push(key)
+  rowsById.set(key,
+   durable && typeof durable === "object" && row && typeof row === "object"
+    ? mergeDefinedRowFields(durable as Record<string, unknown>, row as Record<string, unknown>)
+    : row,
+  )
+ })
+ return order.map((key) => rowsById.get(key)).filter((row) => row !== undefined)
 }
 
 // Merge CSV rows into the corresponding snapshot arrays. Manual imports always
@@ -633,13 +676,15 @@ export const mergeVtSyncManualImportsIntoSnapshot = (
 // localStorage stores a row-free boot manifest (and older builds stored compact
 // previews). Restore complete same-channel IndexedDB rows when a field is empty
 // or storage metadata proves it is truncated. A full in-memory/live snapshot
-// remains authoritative, so recovery cannot replace an active sync with older rows.
+// remains authoritative except for the explicitly marked initial bootstrap,
+// whose short preview supplements rather than replaces the durable generation.
 export const mergeVtSyncPersistedApiRowsIntoSnapshot = (
  snapshot: VtSyncSnapshot,
  persisted: VtSyncPersistedApiState,
 ): VtSyncSnapshot => {
  const overrides: Record<string, unknown> = {}
  const source = snapshot as unknown as Record<string, unknown>
+ const isInitialBootstrap = snapshot.syncManifest?.stop_reason === "initial_channel_bootstrap_committed"
  for (const [tableId, rows] of Object.entries(persisted.rowsByTableId)) {
  const key = getVtSyncSnapshotKeyForTable(tableId)
   if (!key || !rows.length) continue
@@ -654,7 +699,9 @@ export const mergeVtSyncPersistedApiRowsIntoSnapshot = (
     : rows
   overrides[key] = isSharedSnapshotDataset(key)
    ? mergeSharedSnapshotRows(overrides[key] ?? source[key], normalizedRows)
-   : normalizedRows
+   : isInitialBootstrap
+    ? mergeDurableRowsWithBootstrapPreview(tableId, normalizedRows, source[key])
+    : normalizedRows
   const legacyField = TRAFFIC_DETAIL_LEGACY_FIELD_BY_SOURCE[sourceType || ""]
   if (legacyField && !(Array.isArray(source[legacyField]) && source[legacyField].length > 0)) {
    overrides[legacyField] = normalizedRows

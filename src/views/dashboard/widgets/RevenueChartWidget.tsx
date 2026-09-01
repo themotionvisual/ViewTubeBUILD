@@ -115,7 +115,7 @@ export const RevenueChartWidget = ({ widget, instance, editMode, onToggleCollaps
      <div
       style={{
        display: "flex",
-       border: "2px solid #000",
+       border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
        borderRadius: "8px",
        overflow: "hidden",
       }}>
@@ -140,7 +140,7 @@ export const RevenueChartWidget = ({ widget, instance, editMode, onToggleCollaps
         fontSize: "8px",
         fontWeight: 1000,
         border: "none",
-        borderLeft: "2px solid #000",
+        borderLeft: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
         cursor: "pointer",
         background: revenueType === "gross" ? "#000" : "#fff",
         color: revenueType === "gross" ? "#FFE357" : "#000",
@@ -155,7 +155,7 @@ export const RevenueChartWidget = ({ widget, instance, editMode, onToggleCollaps
     <div
      style={{
       flex: 1,
-      border: "2px solid #000",
+      border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
       borderRadius: "12px",
       background: "#f5f5f5",
       display: "flex",
@@ -260,7 +260,7 @@ export const RevenueChartWidget = ({ widget, instance, editMode, onToggleCollaps
            width: "100%",
            height: `${heightPct}%`,
            background: color,
-           border: "3px solid #000",
+           border: "var(--widget-shell-stroke, 3px) solid var(--widget-border, #000)",
            borderRadius: "4px 4px 0 0",
            transition: "height 0.3s ease-out",
            marginTop: "auto",
@@ -276,7 +276,7 @@ export const RevenueChartWidget = ({ widget, instance, editMode, onToggleCollaps
      <div
       style={{
        display: "flex",
-       borderTop: "2px solid #000",
+       borderTop: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
        marginTop: "4px",
        paddingTop: "4px",
        paddingLeft: "20px",

@@ -1,0 +1,44 @@
+/*
+ * ViewTube Widget Interior Grid — atomic tokens.
+ *
+ * See viewtube-widget-interior-grid skill (Rule 1). Four tokens; every
+ * interior geometry derives from them. Density bands re-tune all four
+ * together via container queries — never in individual widgets.
+ *
+ * Scoped under .dashboard-barrier so the tokens live where existing widget
+ * variables live and never leak beyond the dashboard container.
+ */
+
+@layer vt.interior-grid {
+  .dashboard-barrier {
+    --vt-row:    40px;   /* atomic vertical unit */
+    --vt-col:    88px;   /* atomic horizontal unit */
+    --vt-gap:     8px;   /* shared row-gap AND column-gap */
+    --vt-stroke:  2px;   /* module stroke; INSIDE the tile via border-box */
+    --vt-ink:    #000;   /* stroke color for interior tiles */
+    --vt-inset:   8px;   /* padding around .vt-widget__body */
+  }
+
+  /* Density bands. Container queries respond to the widget's allocated
+     inline size, not the viewport. All four tokens re-tune together;
+     span counts do NOT change with density. */
+  @container vt-widget (width < 520px) {
+    .vt-widget {
+      --vt-row: 34px;
+      --vt-col: 72px;
+      --vt-gap: 6px;
+      --vt-stroke: 2px;
+      --vt-inset: 6px;
+    }
+  }
+
+  @container vt-widget (width < 380px) {
+    .vt-widget {
+      --vt-row: 28px;
+      --vt-col: 60px;
+      --vt-gap: 4px;
+      --vt-stroke: 2px;
+      --vt-inset: 4px;
+    }
+  }
+}

@@ -157,7 +157,7 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
                   flex: 1,
                   padding: "4px 3px",
                   background: goal ? cat.color : "#fff",
-                  border: "2px solid #000",
+                  border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                   borderRadius: "6px",
                   fontSize: "10px",
                   fontWeight: 1000,
@@ -279,7 +279,7 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "center" }}>
             {categories.map((cat) => (
               <span key={cat.key} className="goals-tracker-legend">
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: cat.color, border: "1px solid #000" }} />
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: cat.color, border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)" }} />
                 <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", opacity: 0.65 }}>{cat.label}</span>
               </span>
             ))}
@@ -309,21 +309,21 @@ export const GoalsTrackerWidget: React.FC<GoalsTrackerWidgetProps> = ({ data, co
             }}>
               {/* Header row */}
               <div style={{ display: "flex", gap: "6px" }}>
-                <div style={{ flex: 1, height: "32px", background: cat.color, border: "2px solid #000", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 900, boxShadow: "2px 2px 0 0 #000" }}>
+                <div style={{ flex: 1, height: "32px", background: cat.color, border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 900, boxShadow: "2px 2px 0 0 #000" }}>
                   {activeGoalPrompt.toUpperCase()}
                 </div>
-                <div style={{ flex: 1, height: "32px", background: "#f5f5f5", border: "2px solid #000", borderRadius: "4px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 900 }}>
+                <div style={{ flex: 1, height: "32px", background: "#f5f5f5", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "4px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 900 }}>
                   <span style={{ opacity: 0.45, fontSize: "7px" }}>28D TOTAL</span>
                   <span>{displayTotal}</span>
                 </div>
-                <div style={{ flex: 1, height: "32px", background: "#f5f5f5", border: "2px solid #000", borderRadius: "4px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 900 }}>
+                <div style={{ flex: 1, height: "32px", background: "#f5f5f5", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "4px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: 900 }}>
                   <span style={{ opacity: 0.45, fontSize: "7px" }}>DAILY AVG</span>
                   <span>{displayDaily}</span>
                 </div>
               </div>
 
               {/* Type toggle */}
-              <div className="vt-tab-group" style={{ height: "30px", "--widget-color": cat.color, border: "2px solid black" } as any}>
+              <div className="vt-tab-group" style={{ height: "30px", "--widget-color": cat.color, border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)" } as any}>
                 <button onClick={() => setGoalType("total")} className={`vt-tab-btn ${goalType === "total" ? "active" : ""}`} style={{ fontSize: "9px", fontWeight: 900 }}>28D TOTAL</button>
                 <button onClick={() => setGoalType("avg")} className={`vt-tab-btn ${goalType === "avg" ? "active" : ""}`} style={{ fontSize: "9px", fontWeight: 900 }}>DAILY AVG</button>
               </div>

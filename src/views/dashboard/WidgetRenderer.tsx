@@ -94,6 +94,16 @@ const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.Comp
  "script-studio": React.lazy(() => import("./widgets/ScriptStudioWidget").then((module) => ({ default: module.ScriptStudioWidget }))),
  "dashboard-controls": React.lazy(() => import("./widgets/DashboardControlWidget").then((module) => ({ default: module.DashboardControlWidget }))),
  "sync-controller": React.lazy(() => import("./widgets/SyncControllerWidget").then((module) => ({ default: module.SyncControllerWidget }))),
+ "overview-data-visuals": React.lazy(() => import("./widgets/OverviewDataVisualsWidget").then((module) => ({ default: module.OverviewDataVisualsWidget }))),
+ "account-billing": React.lazy(() => import("./widgets/AccountBillingWidget").then((module) => ({ default: module.AccountBillingWidget }))),
+ "daily-command-center": React.lazy(() => import("./widgets/DailyCommandCenterWidget").then((module) => ({ default: module.DailyCommandCenterWidget }))),
+ "opportunity-desk": React.lazy(() => import("./widgets/OpportunityDeskWidget").then((module) => ({ default: module.OpportunityDeskWidget }))),
+ "idea-portfolio": React.lazy(() => import("./widgets/IdeaPortfolioWidget").then((module) => ({ default: module.IdeaPortfolioWidget }))),
+ "community-post-studio": React.lazy(() => import("./widgets/CommunityPostStudioWidget").then((module) => ({ default: module.CommunityPostStudioWidget }))),
+ "brain-control-center": React.lazy(() => import("./widgets/BrainControlCenterWidget").then((module) => ({ default: module.BrainControlCenterWidget }))),
+ "shorts-generator": React.lazy(() => import("./widgets/ShortsGeneratorWidget").then((module) => ({ default: module.ShortsGeneratorWidget }))),
+ "quick-actions": React.lazy(() => import("./widgets/QuickActionsWidget").then((module) => ({ default: module.QuickActionsWidget }))),
+ "mini-calendar": React.lazy(() => import("./widgets/MiniCalendarWidget").then((module) => ({ default: module.MiniCalendarWidget }))),
 }
 
 const INLINE_WIDGET_RENDERER_KEYS = [
@@ -104,8 +114,6 @@ const INLINE_WIDGET_RENDERER_KEYS = [
  "ad-stack-intelligence",
  "kpi-cluster",
  "channel-overview",
- "mini-calendar",
- "quick-actions",
  "recent-uploads",
  "top-performer",
  "goals-tracker",
@@ -176,7 +184,7 @@ const VerificationExplainerWidget: React.FC<{
        href="/account"
        onClick={event => handleNavigate(event, "/account")}
        className="widget-about__hero-cta is-connected"
-       style={{ background: "#4FFF5B", color: "#000" }}
+       style={{ background: "#4FFF5B", color: "var(--widget-border, #000)" }}
       >
        <ShieldCheck size={18} strokeWidth={2.75} aria-hidden="true" />
        <span>CONNECTED</span>
@@ -262,7 +270,7 @@ const SuperfanCardWidget: React.FC<{
                 display: "flex",
                 gap: "8px",
                 alignItems: "center",
-                borderBottom: idx < displayFans.length - 1 ? "1px solid #eee" : "none",
+                borderBottom: idx < displayFans.length - 1 ? "var(--widget-module-stroke, 2px) solid color-mix(in srgb, var(--widget-border) 18%, transparent)" : "none",
                 paddingBottom: "4px",
               }}
             >
@@ -272,7 +280,7 @@ const SuperfanCardWidget: React.FC<{
                   height: "32px",
                   borderRadius: "50%",
                   background: fan.color,
-                  border: "2px solid #000",
+                  border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -286,7 +294,7 @@ const SuperfanCardWidget: React.FC<{
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <span style={{ fontSize: "11px", fontWeight: 800 }}>{fan.name}</span>
-                  <span style={{ fontSize: "8px", fontWeight: 900, background: fan.color, padding: "1px 4px", borderRadius: "4px", border: "1px solid #000" }}>{fan.tag}</span>
+                  <span style={{ fontSize: "8px", fontWeight: 900, background: fan.color, padding: "1px 4px", borderRadius: "4px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)" }}>{fan.tag}</span>
                 </div>
                 <div style={{ fontSize: "9px", fontWeight: 700, opacity: 0.5 }}>{fan.detail}</div>
               </div>
@@ -349,8 +357,8 @@ const RevenueMomentumWidget: React.FC<{
             return (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                 <span style={{ width: "20px", fontSize: "9px", fontWeight: 800 }}>W{i+1}</span>
-                <div style={{ flex: 1, height: "18px", border: "2px solid #000", borderRadius: "6px", background: "#f2f2f2", overflow: "hidden" }}>
-                  <div style={{ width: `${pct}%`, height: "100%", background: "#C9F830", borderRight: "2px solid #000" }} />
+                <div style={{ flex: 1, height: "18px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "6px", background: "#f2f2f2", overflow: "hidden" }}>
+                  <div style={{ width: `${pct}%`, height: "100%", background: "#C9F830", borderRight: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)" }} />
                 </div>
                 <span style={{ width: "35px", textAlign: "right", fontSize: "9px", fontWeight: 800 }}>
                   {metric === "revenue" ? `$${val.toFixed(0)}` : formatHumanNumber(val)}
@@ -380,8 +388,12 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   dashboardControls,
 }) => {
   const account = useUnifiedAccount();
-  const timeWindows = ["7 DAYS", "14 DAYS", "28 DAYS", "60 DAYS", "90 DAYS", "180 DAYS", "365 DAYS", "LIFETIME"];
-  const [kpiTimeWindowIdx, setKpiTimeWindowIdx] = useState(2);
+  // Only windows the Analytics-API bootstrap actually returns —
+  // 14/60/180 aren't backed, so exposing them here would toggle to an
+  // empty state and make the KPI cards look broken.
+  const timeWindows = ["7 DAYS", "28 DAYS", "90 DAYS", "365 DAYS", "LIFETIME"];
+  // Default = 28 days (2nd entry) matches the 28d bootstrap surface most creators expect.
+  const [kpiTimeWindowIdx, setKpiTimeWindowIdx] = useState(1);
 
   const common = {
   widget,
@@ -418,7 +430,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        data.brain?.recentMetrics?.totalImpressions || 0,
       ).toLocaleString()}
      </div>
-     <div className="w-full h-2 bg-gray-100 rounded-full border-2 border-black overflow-hidden mt-2">
+     <div className="w-full h-2 bg-gray-100 rounded-full border-[color:var(--widget-border)] border-[length:var(--widget-module-stroke,2px)] overflow-hidden mt-2">
       <div
        className="h-full bg-[#00CCFF]"
        style={{ width: `${data.brain?.recentMetrics?.ctr || 5}%` }}
@@ -445,7 +457,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        EXCEPTIONAL
       </span>
      </div>
-     <div className="flex-1 bg-gray-50 border-2 border-black rounded-xl relative overflow-hidden flex items-end">
+     <div className="flex-1 bg-gray-50 border-[color:var(--widget-border)] border-[length:var(--widget-module-stroke,2px)] rounded-xl relative overflow-hidden flex items-end">
       {/* Mocking the relative performance curve vs average */}
       <svg
        viewBox="0 0 100 100"
@@ -483,7 +495,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
         }}>
         {cDays.map((day) => {
          let bgStyle = "#f5f5f5"
-         let brdStyle = "2px solid #000"
+         let brdStyle = "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)"
          let brdDashed = false
          
          if (day.active) {
@@ -495,7 +507,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
           brdStyle = "2.5px solid #FF3399"
          } else if (day.isFuture) {
           bgStyle = "transparent"
-          brdStyle = "1.5px solid #000"
+          brdStyle = "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)"
           brdDashed = true
          }
          
@@ -526,15 +538,15 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        </div>
        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-         <div style={{ width: "10px", height: "10px", background: "#00D2FF", border: "1.5px solid #000", borderRadius: "2px" }} />
+         <div style={{ width: "10px", height: "10px", background: "#00D2FF", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "2px" }} />
          <span style={{ fontSize: "8px", fontWeight: 800, textTransform: "uppercase" }}>Long</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-         <div style={{ width: "10px", height: "10px", background: "#FFE32E", border: "1.5px solid #000", borderRadius: "2px" }} />
+         <div style={{ width: "10px", height: "10px", background: "#FFE32E", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "2px" }} />
          <span style={{ fontSize: "8px", fontWeight: 800, textTransform: "uppercase" }}>Short</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-         <div style={{ width: "10px", height: "10px", background: "#4FFF5B", border: "1.5px solid #000", borderRadius: "2px" }} />
+         <div style={{ width: "10px", height: "10px", background: "#4FFF5B", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "2px" }} />
          <span style={{ fontSize: "8px", fontWeight: 800, textTransform: "uppercase" }}>Both</span>
         </div>
        </div>
@@ -555,13 +567,13 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   return (
    <WidgetShell {...common} icon={<DollarSign size={22} />}>
     <div className="grid grid-cols-2 gap-3 h-full">
-     <div className="flex flex-col justify-center bg-gray-50 border-2 border-black rounded-xl p-3">
+     <div className="flex flex-col justify-center bg-gray-50 border-[color:var(--widget-border)] border-[length:var(--widget-module-stroke,2px)] rounded-xl p-3">
       <span className="text-[9px] font-black uppercase opacity-40">
        Gross Rev
       </span>
       <div className="text-xl font-black">${revenue}</div>
      </div>
-     <div className="flex flex-col justify-center bg-gray-50 border-2 border-black rounded-xl p-3">
+     <div className="flex flex-col justify-center bg-gray-50 border-[color:var(--widget-border)] border-[length:var(--widget-module-stroke,2px)] rounded-xl p-3">
       <span className="text-[9px] font-black uppercase opacity-40">
        CPM (Est)
       </span>
@@ -597,12 +609,30 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     />
    )
 
+   // A user counts as "connected" if ANY of the identity signals are
+   // populated — authState.isAuthenticated can lag behind the actual
+   // sign-in state (session hydration), so we widen the check to include
+   // the account snapshot, brain channel profile, and data.avatarUrl /
+   // channelTitle. The JOIN CTAs should only show for a truly anonymous
+   // visitor.
+   const isConnectedChannel =
+     data.authState?.isAuthenticated
+     || Boolean(data.authState?.channelId)
+     || Boolean(data.authState?.channelHandle)
+     || Boolean(data.channelCustomUrl && data.channelCustomUrl !== "@handle")
+     || account?.snapshot?.google?.status === "connected"
+     || account?.snapshot?.authentication?.status === "authenticated"
+     || Boolean(account?.snapshot?.google?.channelId)
+     || Boolean(account?.snapshot?.profile?.avatarUrl)
+     || Boolean(avatar)
+     || Boolean(data.channelTitle && data.channelTitle !== "Your Channel")
+
    return (
     <WidgetShell {...common} icon={<TrendingUp size={22} />} headerContent={timeWindowToggle}>
      <div className="channel-overview-layout">
       <div className="kpi-cluster-row channel-overview-main">
        {/* Circular Avatar Sidebar — replaced with a sign-up nudge when no account is connected */}
-       {!data.authState.isAuthenticated ? (
+       {!isConnectedChannel ? (
         <div className="kpi-cluster-avatar" style={{
           display: "flex",
           flexDirection: "column",
@@ -637,12 +667,16 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        ) : (
         <div className="channel-overview-avatar">
          <div className="channel-overview-avatar-frame">
-          {avatar ? (
-            <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          ) : (
-            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <TrendingUp size={isSmall ? 40 : 60} opacity={0.2} />
-            </div>
+          <TrendingUp className="channel-overview-avatar-fallback" size={isSmall ? 40 : 60} opacity={0.2} aria-hidden="true" />
+          {avatar && (
+            <img
+              className="channel-overview-avatar-image"
+              src={avatar}
+              alt={`${data.channelTitle || "Connected channel"} profile picture`}
+              referrerPolicy="no-referrer"
+              onLoad={(event) => { event.currentTarget.hidden = false }}
+              onError={(event) => { event.currentTarget.hidden = true }}
+            />
           )}
          </div>
         </div>
@@ -674,7 +708,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
              key={idx}
              style={{
               background: "#fff",
-              border: `2px solid black`,
+              border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
               borderRadius: "8px",
               boxShadow: `2px 2px 0px 0px rgba(0,0,0,0.1)`,
               display: "flex",
@@ -685,14 +719,14 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
              <div
               style={{
                background: cardColor,
-               borderBottom: "2px solid black",
+               borderBottom: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                height: "22px",
                display: "flex",
                justifyContent: "center",
                alignItems: "center",
                padding: "0 4px",
               }}>
-              <span style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.02em", color: "#000", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <span style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--widget-border, #000)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                {stat.label}
               </span>
              </div>
@@ -725,59 +759,6 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
         })}
        </div>
 
-       {/* Donuts + Stacked Bars Panel */}
-       <div className="channel-overview-breakdown">
-        {/* 4 Donut Charts */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "4px" }}>
-         {[
-          { color: "#FA618A", bg: `conic-gradient(#FA618A 0 82%, #528FFA 82% 95%, #3FEE56 95% 100%)`, icon: <><path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.7"/></>, label: "Views" },
-          { color: "#FFA85C", bg: `conic-gradient(#FA618A 0 60%, #528FFA 60% 92%, #3FEE56 92% 100%)`, icon: <><circle cx="12" cy="7.2" r="3.2"/><path d="M5.3 20c0-4.1 2.8-6.3 6.7-6.3s6.7 2.2 6.7 6.3"/></>, label: "Subs" },
-          { color: "#FFDA47", bg: `conic-gradient(#FA618A 0 30%, #528FFA 30% 90%, #3FEE56 90% 100%)`, icon: <><circle cx="12" cy="12" r="8"/><path d="M12 7.2v5l3.2 2"/></>, label: "Hours" },
-          { color: "#528FFA", bg: `conic-gradient(#FA618A 0 20%, #528FFA 20% 95%, #3FEE56 95% 100%)`, icon: <><path d="M15 6.5c-.8-.8-1.8-1.2-3.1-1.2-1.9 0-3.1.8-3.1 2.2 0 3.2 6.5 1.4 6.5 5.2 0 1.7-1.4 2.8-3.5 2.8-1.6 0-2.9-.5-3.8-1.5"/><path d="M12 3v18"/></>, label: "Rev" },
-         ].map((d, i) => (
-          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-           <div style={{ position: "relative", width: "100%", aspectRatio: "1/1", borderRadius: "50%", background: d.bg }}>
-            <div style={{ position: "absolute", inset: "29%", borderRadius: "50%", background: "#fff" }} />
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: "29%", aspectRatio: "1/1", display: "grid", placeItems: "center", zIndex: 2 }}>
-             <svg viewBox="0 0 24 24" style={{ width: "100%", height: "100%", fill: "none", stroke: "#050505", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}>{d.icon}</svg>
-            </div>
-           </div>
-           <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.04em", color: "#050505", lineHeight: 1 }}>{d.label}</span>
-          </div>
-         ))}
-        </div>
-
-        {/* 3 Stacked Bar Charts */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-         {[
-          {
-           icon: <><circle cx="9" cy="8" r="3"/><path d="M3.8 20c0-4 2.3-6 5.2-6s5.2 2 5.2 6"/><path d="M17 5h4M19 3v4"/></>,
-           segs: [{ label: "Male", pct: "78%", bg: "#36E0F6" }, { label: "Female", pct: "22%", bg: "#FF7AC8" }],
-          },
-          {
-           icon: <><rect x="7" y="4" width="10" height="17" rx="2"/><circle cx="12" cy="8" r=".5"/><circle cx="12" cy="12" r=".5"/><circle cx="12" cy="16" r=".5"/></>,
-           segs: [{ label: "Shorts", pct: "35%", bg: "#FA618A" }, { label: "Browse", pct: "20%", bg: "#FFA85C" }, { label: "Search", pct: "20%", bg: "#FFDA47" }, { label: "Subs", pct: "15%", bg: "#4EE4BE" }, { label: "Ext", pct: "10%", bg: "#C0F240" }],
-          },
-          {
-           icon: <><circle cx="12" cy="12" r="8"/><path d="M14.8 8.1c-.7-.7-1.6-1.1-2.8-1.1-1.6 0-2.8.7-2.8 1.9 0 2.8 6 1.3 6 4.7 0 1.5-1.3 2.5-3.2 2.5-1.4 0-2.6-.5-3.4-1.3"/><path d="M12 5v14"/></>,
-           segs: [{ label: "Ads", pct: "52%", bg: "#528FFA" }, { label: "Premium", pct: "22%", bg: "#FA618A" }, { label: "Members", pct: "26%", bg: "#C0F240" }],
-          },
-         ].map((bar, i) => (
-          <div key={i} style={{ position: "relative" }}>
-           <div style={{ position: "absolute", left: "8px", top: 0, height: "100%", display: "flex", alignItems: "center", zIndex: 2, pointerEvents: "none" }}>
-            <svg viewBox="0 0 24 24" style={{ width: "18px", height: "18px", fill: "none", stroke: "#050505", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}>{bar.icon}</svg>
-           </div>
-           <div style={{ display: "flex", height: "28px", borderRadius: "3px", overflow: "hidden" }}>
-            {bar.segs.map((seg, j) => (
-             <div key={j} style={{ width: seg.pct, background: seg.bg, display: "flex", alignItems: "center", justifyContent: "center", paddingLeft: j === 0 ? "28px" : "0", overflow: "hidden" }}>
-              <span style={{ fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.01em", whiteSpace: "nowrap", color: "#050505" }}>{seg.label}</span>
-             </div>
-            ))}
-           </div>
-          </div>
-         ))}
-        </div>
-       </div>
       </div>
 
       {/* Full Width Footer */}
@@ -830,7 +811,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        justifyContent: "space-between",
        alignItems: "center",
        background: "#fff",
-       border: "2px solid #000",
+       border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
        borderRadius: "8px",
        padding: "6px 10px",
        boxShadow: "2px 2px 0 0 #FF1744",
@@ -848,12 +829,12 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        justifyContent: "space-between",
        alignItems: "center",
        background: "#fff",
-       border: "2px solid #000",
+       border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
        borderRadius: "8px",
        padding: "6px 10px",
-       boxShadow: "2px 2px 0 0 #000",
+       boxShadow: "2px 2px 0 0 color-mix(in srgb, var(--widget-color, #000) 45%, transparent)",
       }}>
-      <span style={{ fontSize: "10px", fontWeight: 900, color: "#000" }}>
+      <span style={{ fontSize: "10px", fontWeight: 900, color: "var(--widget-border, #000)" }}>
        TWITTER
       </span>
       <span style={{ fontSize: "14px", fontWeight: 800 }}>21.2K</span>
@@ -864,7 +845,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        justifyContent: "space-between",
        alignItems: "center",
        background: "#fff",
-       border: "2px solid #000",
+       border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
        borderRadius: "8px",
        padding: "6px 10px",
        boxShadow: "2px 2px 0 0 #00D2FF",
@@ -892,7 +873,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
         style={{
          aspectRatio: "1",
          borderRadius: "2px",
-         border: "1px solid #000",
+         border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
          display: "flex",
          alignItems: "center",
          justifyContent: "center",
@@ -918,7 +899,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          style={{
           display: "flex",
           background: "#fff",
-          border: "1px solid #000",
+          border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
           borderRadius: "6px",
           padding: "4px 8px",
           alignItems: "center",
@@ -930,7 +911,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
            width: "8px",
            height: "8px",
            borderRadius: "1px",
-           border: "1.5px solid #000",
+           border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
            background: task.completed ? "#4FFF5B" : "#eee",
           }}></div>
          <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>{task.text}</span>
@@ -978,13 +959,13 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
           style={{
            "--widget-color": action.color || undefined,
            fontSize: "12px",
-           border: action.isTool ? "2px solid #000" : undefined,
-           color: action.isTool ? "#000" : undefined,
+           border: action.isTool ? "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)" : undefined,
+           color: action.isTool ? "var(--widget-border, #000)" : undefined,
           } as React.CSSProperties}
          >
           <span className="split-icon" style={{
               ...(action.iconColor ? { color: action.iconColor } : {}),
-              ...(action.isTool ? { color: "#000", borderRight: "2px solid #000" } : {})
+              ...(action.isTool ? { color: "var(--widget-border, #000)", borderRight: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)" } : {})
           }}>
             <IconComponent size={18} strokeWidth={2.5} />
           </span>
@@ -1026,7 +1007,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
        style={{
         display: "flex",
         background: "#fff",
-        border: "2px solid #000",
+        border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
         borderRadius: "10px",
         padding: "4px",
         gap: "6px",
@@ -1037,7 +1018,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
          width: "60px",
          height: "34px",
          borderRadius: "6px",
-         border: "1px solid #000",
+         border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
          background: "#eee",
          overflow: "hidden",
          flexShrink: 0,
@@ -1094,17 +1075,22 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
         maxWidth: "180px",
         aspectRatio: "16/9",
         borderRadius: "8px",
-        border: "2px solid #000",
+        border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
         overflow: "hidden",
         boxShadow: "3px 3px 0 0 rgba(0,0,0,0.1)",
        }}>
-       <img
-        src={
-         data.topPerformer.thumbnailUrl ||
-         `https://img.youtube.com/vi/${data.topPerformer.videoId}/mqdefault.jpg`
-        }
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-       />
+       {(data.topPerformer.thumbnailUrl || data.topPerformer.videoId) && (
+        <img
+         src={
+          data.topPerformer.thumbnailUrl ||
+          `https://img.youtube.com/vi/${data.topPerformer.videoId}/mqdefault.jpg`
+         }
+         alt=""
+         referrerPolicy="no-referrer"
+         onError={(event) => { event.currentTarget.style.visibility = "hidden" }}
+         style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+       )}
       </div>
       <div
        style={{
@@ -1194,24 +1180,24 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
    <WidgetShell {...common} icon={<Database size={22} />}>
     <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
      <div style={{ display: "flex", gap: "6px" }}>
-      <div style={{ flex: 1, border: "2px solid #000", borderRadius: "8px", padding: "6px 8px", background: isConnected ? "#4FFF5B" : "#FF1744" }}>
+      <div style={{ flex: 1, border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", padding: "6px 8px", background: isConnected ? "#4FFF5B" : "#FF1744" }}>
        <div style={{ fontSize: "8px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase" }}>Channel</div>
        <div style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase" }}>{isConnected ? "Connected" : "Not connected"}</div>
       </div>
-      <div style={{ flex: 1, border: "2px solid #000", borderRadius: "8px", padding: "6px 8px", background: "#fff" }}>
+      <div style={{ flex: 1, border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", padding: "6px 8px", background: "#fff" }}>
        <div style={{ fontSize: "8px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase" }}>Last Sync</div>
        <div style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase" }}>{isConnected ? lastSync : "Never"}</div>
       </div>
      </div>
 
-     <div style={{ border: "2px solid #000", borderRadius: "8px", padding: "6px 8px", background: "#fff", display: "flex", flexDirection: "column", gap: "4px" }}>
+     <div style={{ border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", padding: "6px 8px", background: "#fff", display: "flex", flexDirection: "column", gap: "4px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
        <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase" }}>Active AI Brain</span>
-       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", border: "2px solid #000", borderRadius: "6px", padding: "1px 6px", background: "#f3f4f6" }}>{currentModelLabel}</span>
+       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "6px", padding: "1px 6px", background: "#f3f4f6" }}>{currentModelLabel}</span>
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
        <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase" }}>Plan</span>
-       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", border: "2px solid #000", borderRadius: "6px", padding: "1px 6px", background: "#f3f4f6" }}>{planId}</span>
+       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "6px", padding: "1px 6px", background: "#f3f4f6" }}>{planId}</span>
       </div>
      </div>
 

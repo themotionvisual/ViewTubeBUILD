@@ -184,7 +184,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
               disabled={isProcessing || !prompt.trim() || !canAffordModeCost}
               className="vt-button primary"
               style={{ height: "36px", width: "100%", opacity: !prompt.trim() ? 0.5 : 1 }}>
-              {isProcessing ? <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,0,0,0.2)", borderTop: "2px solid #000", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Sparkles size={14} />}
+              {isProcessing ? <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,0,0,0.2)", borderTop: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Sparkles size={14} />}
               {isProcessing ? "Generating..." : "Generate Concept"}
             </button>
           </div>
@@ -194,8 +194,8 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
         {mode === "analyze" && !result && (
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
             {inboundImageUrl && (
-              <div style={{ border: "2px solid #000", borderRadius: "8px", overflow: "hidden", background: "#fff" }}>
-                <img src={inboundImageUrl} alt="Inbound generated asset" style={{ width: "100%", height: "100px", objectFit: "cover", borderBottom: "2px solid #000" }} />
+              <div style={{ border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", overflow: "hidden", background: "#fff" }}>
+                <img src={inboundImageUrl} alt="Inbound generated asset" style={{ width: "100%", height: "100px", objectFit: "cover", borderBottom: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)" }} />
                 <div style={{ padding: "4px 8px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.7 }}>
                   Incoming Generated Image
                 </div>
@@ -203,7 +203,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
             )}
             {videoDropdown}
             {activeVideo && (
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", background: "#f5f5f5", border: "2px solid #000", borderRadius: "8px", overflow: "hidden" }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px", background: "#f5f5f5", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", overflow: "hidden" }}>
                 <img 
                   src={firstYouTubeThumbnailCandidate(activeVideo.videoId, [activeVideo.thumbnailUrl])}
                   alt="Preview" 
@@ -211,7 +211,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
                     const target = e.currentTarget
                     target.src = nextYouTubeThumbnailCandidate(activeVideo.videoId, target.src, [activeVideo.thumbnailUrl])
                   }}
-                  style={{ width: "100%", height: "120px", objectFit: "cover", borderBottom: "2px solid #000" }} 
+                  style={{ width: "100%", height: "120px", objectFit: "cover", borderBottom: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)" }} 
                 />
                 <div style={{ padding: "8px" }}>
                   <button
@@ -219,7 +219,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
                     disabled={isProcessing || !canAffordModeCost}
                     className="vt-button primary"
                     style={{ width: "100%", height: "36px" }}>
-                    {isProcessing ? <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,0,0,0.2)", borderTop: "2px solid #000", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Search size={14} />}
+                    {isProcessing ? <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,0,0,0.2)", borderTop: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "50%", animation: "spin 1s linear infinite" }} /> : <Search size={14} />}
                     {isProcessing ? "Analyzing..." : "Analyze Thumbnail"}
                   </button>
                 </div>
@@ -236,13 +236,13 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
               {variants.map((v, idx) => (
                 <div key={v.label} style={{
                   flex: 1, display: "flex", flexDirection: "column", gap: "4px",
-                  background: "#fff", border: "2px solid #000", borderRadius: "10px",
+                  background: "#fff", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "10px",
                   padding: "6px", boxShadow: "2px 2px 0 0 #000",
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontSize: "12px", fontWeight: 1000 }}>Variant {v.label}</span>
                     {v.score > 0 && idx === bestIdx && (
-                      <span style={{ fontSize: "7px", fontWeight: 900, background: "#C9F830", border: "1px solid #000", borderRadius: "4px", padding: "1px 4px", textTransform: "uppercase" }}>AI Favored</span>
+                      <span style={{ fontSize: "7px", fontWeight: 900, background: "#C9F830", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "4px", padding: "1px 4px", textTransform: "uppercase" }}>AI Favored</span>
                     )}
                   </div>
                   <label className="widget-upload-frame" style={{
@@ -268,7 +268,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
                     style={{ fontSize: "9px", padding: "4px 6px" }}
                   />
                   {v.score > 0 && (
-                    <div style={{ width: "100%", height: "10px", background: "#eee", borderRadius: "5px", border: "1px solid #000", overflow: "hidden", position: "relative" }}>
+                    <div style={{ width: "100%", height: "10px", background: "#eee", borderRadius: "5px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", overflow: "hidden", position: "relative" }}>
                       <div style={{ height: "100%", width: `${v.score}%`, background: "linear-gradient(90deg, #FF7497, #FFE357, #C9F830)", borderRadius: "4px" }} />
                       <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "7px", fontWeight: 1000, mixBlendMode: "difference", color: "#fff" }}>CTR: {(v.score / 10).toFixed(1)}%</span>
                     </div>
@@ -291,7 +291,7 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
         {/* RESULTS: Generation */}
         {result && result.type === "generation" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
-            <img src={result.imageUrl} alt="Generated" style={{ width: "100%", height: "160px", objectFit: "cover", border: "2px solid #000", borderRadius: "8px", flexShrink: 0 }} />
+            <img src={result.imageUrl} alt="Generated" style={{ width: "100%", height: "160px", objectFit: "cover", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", flexShrink: 0 }} />
             <div style={{ display: "flex", gap: "6px", marginTop: "auto" }}>
               <button onClick={reset} className="vt-button" style={{ flex: 1 }}>Back</button>
               <button className="vt-button primary" style={{ flex: 2 }}>
@@ -305,17 +305,17 @@ export const ThumbnailLabWidget = ({ widget, instance, editMode, onToggleCollaps
         {result && result.type === "analysis" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
             <div style={{ display: "flex", gap: "8px" }}>
-              <div style={{ flex: 1, background: "#fff", border: "2px solid #000", borderRadius: "8px", padding: "10px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 0 #4FFF5B" }}>
+              <div style={{ flex: 1, background: "#fff", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", padding: "10px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxShadow: "2px 2px 0 0 #4FFF5B" }}>
                 <span style={{ fontSize: "28px", fontWeight: 1000, lineHeight: 1 }}>{result.score}</span>
                 <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", opacity: 0.5, marginTop: "4px" }}>Hook Score</span>
               </div>
-              <div style={{ flex: 2, background: "#fff", border: "2px solid #000", borderRadius: "8px", padding: "8px", display: "flex", flexDirection: "column", justifyContent: "center", gap: "4px", boxShadow: "2px 2px 0 0 #000" }}>
+              <div style={{ flex: 2, background: "#fff", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", padding: "8px", display: "flex", flexDirection: "column", justifyContent: "center", gap: "4px", boxShadow: "2px 2px 0 0 #000" }}>
                 <div style={{ fontSize: "10px", fontWeight: 900, display: "flex", justifyContent: "space-between" }}><span>CTR Potential:</span> <span style={{ color: "#008B00" }}>{result.ctrPotential}</span></div>
                 <div style={{ fontSize: "10px", fontWeight: 900, display: "flex", justifyContent: "space-between" }}><span>Emotion:</span> <span>{result.emotion}</span></div>
               </div>
             </div>
-            <div style={{ flex: 1, background: "#fff", border: "2px solid #000", borderRadius: "8px", padding: "8px" }}>
-              <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", borderBottom: "1px solid #eee", paddingBottom: "4px", marginBottom: "6px" }}>AI Breakdown</div>
+            <div style={{ flex: 1, background: "#fff", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", padding: "8px" }}>
+              <div style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", borderBottom: "var(--widget-module-stroke, 2px) solid color-mix(in srgb, var(--widget-border) 18%, transparent)", paddingBottom: "4px", marginBottom: "6px" }}>AI Breakdown</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {result.flags.map((flag: any, i: number) => (
                   <div key={i} style={{ display: "flex", gap: "6px", alignItems: "flex-start", fontSize: "10px", fontWeight: 700, lineHeight: 1.3 }}>

@@ -4240,7 +4240,7 @@ type ExpansionDatasets = {
  diagnostics: { rows: number; trafficRows: number; missing: string[] }
 }
 
-const parseCsvRows = (): Record<string, unknown>[] => {
+export const parseCsvRows = (): Record<string, unknown>[] => {
  try {
   const files = JSON.parse(localStorage.getItem(UPLOAD_CACHE_FILES_KEY) || "[]") as CsvFileWithTag[]
   if (!Array.isArray(files)) return []
@@ -4771,7 +4771,7 @@ const TrafficPercentAxisTick: React.FC<{
  )
 }
 
-const normalizeTrafficDayRows = (rows: Array<Record<string, unknown>>): TrafficDayPoint[] =>
+export const normalizeTrafficDayRows = (rows: Array<Record<string, unknown>>): TrafficDayPoint[] =>
  rows
   .map((row) => {
    const timestamp = parseTrafficDayTimestamp(row.day || row.Day || row.date || row.bucket || row.syncedAt)

@@ -1,5 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react"
 import { useBrain } from "../../context/useBrain"
+import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 // analytics-canon = the canonical read path over vt-sync (see
 // docs/migration/README.md). Legacy Selectors/DataStore imports below
 // remain only as a graceful fallback while consumers migrate; Phase 5
@@ -57,6 +58,7 @@ const formatRelativeTime = (timestamp?: number | null) => {
 
 export const useDashboardData = () => {
   const { brain, authState, channelIdentity, lastSyncComplete, isSyncing, globalSyncData } = useBrain()
+  const account = useUnifiedAccount()
   const { snapshot: videoAssetCatalog } = useVideoAssetCatalog()
   const { snapshot: initialBootstrap } = useInitialChannelBootstrap()
   const channelHandle = authState.channelHandle
@@ -276,18 +278,35 @@ export const useDashboardData = () => {
   const formatMoney = (value: number | null) => (value === null || value === undefined || isNaN(value)) ? "---" : `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
 
   const getTrendBars = (metricKeys: string[], days: number, data: any[]) => {
-    if (data.length === 0) return [40, 60, 45, 80, 55, 90, 75]
+    // Try real bars from the daily series first. Need at least a couple of
+    // sample points to say something meaningful; anything thinner falls
+    // through to the bootstrap-total sparkline so cards never look flat.
     const chunks = [0, 0, 0, 0, 0, 0, 0]
-    const chunkSize = Math.max(1, days / 7)
-    data.forEach((row, i) => {
-      const chunkIdx = Math.floor(i / chunkSize)
-      if (chunkIdx < 7) {
-        chunks[chunkIdx] += getRowMetricVal(row, ...metricKeys)
-      }
-    })
-    chunks.reverse()
-    const max = Math.max(...chunks, 1)
-    return chunks.map(v => 20 + (v / max) * 80)
+    if (data.length >= 2) {
+      const chunkSize = Math.max(1, days / 7)
+      data.forEach((row, i) => {
+        const chunkIdx = Math.floor(i / chunkSize)
+        if (chunkIdx < 7) {
+          chunks[chunkIdx] += getRowMetricVal(row, ...metricKeys)
+        }
+      })
+      chunks.reverse()
+      const sum = chunks.reduce((a, b) => a + b, 0)
+      const max = Math.max(...chunks, 1)
+      if (sum > 0) return chunks.map(v => 20 + (v / max) * 80)
+    }
+    // Fallback: distribute the bootstrap window total across 7 slots with
+    // a gentle recency lift so the sparkline still shows real magnitude.
+    const windowKey = days <= 7 ? "7d" : days <= 28 ? "28d" : days <= 90 ? "90d" : days <= 365 ? "365d" : "lifetime"
+    const bootstrapCurrent = initialBootstrap?.periods?.find((s) => s.window === windowKey && (s.period || "current") === "current")
+    const primary = metricKeys[0]
+    const total = Number(bootstrapCurrent?.metrics?.[primary]) || 0
+    if (total <= 0) return [40, 60, 45, 80, 55, 90, 75]
+    const weights = [0.9, 1.0, 0.85, 1.1, 0.95, 1.15, 1.05]
+    const wSum = weights.reduce((a, b) => a + b, 0)
+    const slice = weights.map(w => (total * w / wSum))
+    const max = Math.max(...slice, 1)
+    return slice.map(v => 20 + (v / max) * 80)
   }
 
   const getAvdBars = (days: number, data: any[]) => {
@@ -311,33 +330,44 @@ export const useDashboardData = () => {
     return avdChunks.map(v => 20 + (v / max) * 80)
   }
   
-  const getVideoCountBars = (days: number, data: any[]) => {
-    if (data.length === 0) return [40, 60, 45, 80, 55, 90, 75]
-    const chunks = [0, 0, 0, 0, 0, 0, 0]
+  const getVideoCountBars = (days: number, _data: any[]) => {
+    // Slice the requested window into 7 sub-periods and count uploads in
+    // each. Doesn't depend on daily-analytics coverage — the uploads list
+    // itself is authoritative for whether an upload happened.
     const uploads = (initialBootstrap?.videos || []).filter(v => v.privacyStatus === "public")
-    const chunkSize = Math.max(1, days / 7)
-    
-    data.forEach((row, i) => {
-      const chunkIdx = Math.floor(i / chunkSize)
-      if (chunkIdx < 7) {
-        const dateStr = String(row.date || row.day || row.Date || row.Day || "").slice(0, 10)
-        const vids = uploads.filter(v => v.publishedAt && v.publishedAt.slice(0, 10) === dateStr).length
-        chunks[chunkIdx] += vids
-      }
-    })
-    chunks.reverse()
+    const now = Date.now()
+    const clampedDays = days >= 99999 ? Math.max(30, Math.min(730, uploads.length > 0
+      ? Math.ceil((now - new Date(uploads[uploads.length - 1]?.publishedAt || now).getTime()) / 86400000)
+      : 365)) : days
+    const subMs = (clampedDays / 7) * 86400 * 1000
+    const chunks = [0, 0, 0, 0, 0, 0, 0]
+    for (let i = 0; i < 7; i++) {
+      const start = now - (7 - i) * subMs
+      const end   = now - (6 - i) * subMs
+      chunks[i] = uploads.filter((v: any) => {
+        const t = v.publishedAt ? new Date(v.publishedAt).getTime() : 0
+        return Number.isFinite(t) && t >= start && t < end
+      }).length
+    }
     const max = Math.max(...chunks, 1)
-    return chunks.map(v => max === 1 && v === 0 ? 20 : 20 + (v / max) * 80)
+    return chunks.map(v => max === 0 ? 20 : 20 + (v / max) * 80)
   }
 
   const getKpiStatBlocks = (days: number) => {
     const currentData = sortedDaily.slice(0, days)
     const previousData = sortedDaily.slice(days, days * 2)
-    const hasDailySeries = currentData.length > 0
+    // Coverage-aware: the daily-series total is only trustworthy if the
+    // series actually covers most of the requested window. A user syncing
+    // 7d and toggling to 90d/365d/lifetime otherwise sees a suspiciously
+    // small "window total" on the right because the sum only spans the
+    // 7 days that exist — swap in the bootstrap window totals whenever
+    // the daily series is too thin to represent the window.
+    const coverageOk = currentData.length >= Math.min(days, 14)
 
     const sumMetricKeys = (data: any[], ...keys: string[]) => data.reduce((acc, row) => acc + getRowMetricVal(row, ...keys), 0)
 
-    // If daily series is empty, use initialBootstrap period data as fallback
+    // If daily series is empty OR too thin to cover the window, use
+    // initialBootstrap period data as the authoritative window total.
     const windowKey = days <= 7 ? "7d" : days <= 28 ? "28d" : days <= 90 ? "90d" : days <= 365 ? "365d" : "lifetime"
     const bootstrapCurrent = initialBootstrap?.periods?.find((s) =>
       s.window === windowKey && (s.period || "current") === "current")
@@ -347,46 +377,58 @@ export const useDashboardData = () => {
       const v = summary?.metrics?.[key]
       return typeof v === "number" && Number.isFinite(v) ? v : 0
     }
+    const preferBootstrap = (daily: number, bootstrap: number) => {
+      if (coverageOk && daily > 0) return daily
+      if (bootstrap > 0) return bootstrap
+      return daily
+    }
 
     const curSubsGained = sumMetricKeys(currentData, "subscribersGained", "Subscribers gained", "subscribers", "Subscribers")
     const curSubsLost = sumMetricKeys(currentData, "subscribersLost", "Subscribers lost")
-    let curSubs = curSubsGained - curSubsLost
-    if (!hasDailySeries && curSubs === 0) curSubs = bm(bootstrapCurrent, "netSubscribers") || bm(bootstrapCurrent, "subscribersGained")
+    const dailySubs = curSubsGained - curSubsLost
+    const curSubs = preferBootstrap(dailySubs, bm(bootstrapCurrent, "netSubscribers") || bm(bootstrapCurrent, "subscribersGained"))
 
     const prevSubsGained = sumMetricKeys(previousData, "subscribersGained", "Subscribers gained", "subscribers", "Subscribers")
     const prevSubsLost = sumMetricKeys(previousData, "subscribersLost", "Subscribers lost")
-    let prevSubs = prevSubsGained - prevSubsLost
-    if (!hasDailySeries && prevSubs === 0) prevSubs = bm(bootstrapPrevious, "netSubscribers") || bm(bootstrapPrevious, "subscribersGained")
+    const dailyPrevSubs = prevSubsGained - prevSubsLost
+    const prevSubs = preferBootstrap(dailyPrevSubs, bm(bootstrapPrevious, "netSubscribers") || bm(bootstrapPrevious, "subscribersGained"))
 
-    let curViews = sumMetricKeys(currentData, "views", "Views")
-    let prevViews = sumMetricKeys(previousData, "views", "Views")
-    if (!hasDailySeries && curViews === 0) curViews = bm(bootstrapCurrent, "views")
-    if (!hasDailySeries && prevViews === 0) prevViews = bm(bootstrapPrevious, "views")
+    const dailyCurViews = sumMetricKeys(currentData, "views", "Views")
+    const dailyPrevViews = sumMetricKeys(previousData, "views", "Views")
+    const curViews = preferBootstrap(dailyCurViews, bm(bootstrapCurrent, "views"))
+    const prevViews = preferBootstrap(dailyPrevViews, bm(bootstrapPrevious, "views"))
 
     const curMins = sumMetricKeys(currentData, "estimatedMinutesWatched") || (sumMetricKeys(currentData, "watchTime", "watchHours", "Watch time (hours)") * 60)
     const prevMins = sumMetricKeys(previousData, "estimatedMinutesWatched") || (sumMetricKeys(previousData, "watchTime", "watchHours", "Watch time (hours)") * 60)
-    let curWatchHours = curMins / 60
-    let prevWatchHours = prevMins / 60
-    if (!hasDailySeries && curWatchHours === 0) curWatchHours = bm(bootstrapCurrent, "watchHours")
-    if (!hasDailySeries && prevWatchHours === 0) prevWatchHours = bm(bootstrapPrevious, "watchHours")
+    const curWatchHours = preferBootstrap(curMins / 60, bm(bootstrapCurrent, "watchHours"))
+    const prevWatchHours = preferBootstrap(prevMins / 60, bm(bootstrapPrevious, "watchHours"))
 
-    let curRev = sumMetricKeys(currentData, "estimatedRevenue", "revenue", "Estimated revenue (USD)", "Your estimated revenue (USD)")
-    let prevRev = sumMetricKeys(previousData, "estimatedRevenue", "revenue", "Estimated revenue (USD)", "Your estimated revenue (USD)")
-    if (!hasDailySeries && curRev === 0) curRev = bm(bootstrapCurrent, "revenue")
-    if (!hasDailySeries && prevRev === 0) prevRev = bm(bootstrapPrevious, "revenue")
+    const dailyCurRev = sumMetricKeys(currentData, "estimatedRevenue", "revenue", "Estimated revenue (USD)", "Your estimated revenue (USD)")
+    const dailyPrevRev = sumMetricKeys(previousData, "estimatedRevenue", "revenue", "Estimated revenue (USD)", "Your estimated revenue (USD)")
+    const curRev = preferBootstrap(dailyCurRev, bm(bootstrapCurrent, "revenue"))
+    const prevRev = preferBootstrap(dailyPrevRev, bm(bootstrapPrevious, "revenue"))
 
     const curAVD = curViews > 0 ? (curWatchHours * 3600) / curViews : 0
     const prevAVD = prevViews > 0 ? (prevWatchHours * 3600) / prevViews : 0
     
-    const countUploads = (data: any[]) => {
-      const uploads = (initialBootstrap?.videos || []).filter(v => v.privacyStatus === "public")
-      return data.reduce((acc, row) => {
-        const dateStr = (row.date || row.day || "").slice(0, 10)
-        return acc + uploads.filter(v => v.publishedAt.slice(0, 10) === dateStr).length
-      }, 0)
+    // Count uploads within the requested window directly against the
+    // uploads list — the previous approach depended on daily rows aligning
+    // to upload dates, which collapsed to 0 when the daily series was
+    // shorter than the window.
+    const uploads = (initialBootstrap?.videos || []).filter(v => v.privacyStatus === "public")
+    const now = Date.now()
+    const windowMs = days >= 99999 ? Infinity : days * 86400 * 1000
+    const countUploadsInWindow = (offsetDays: number) => {
+      if (windowMs === Infinity) return uploads.length
+      const start = now - (offsetDays + days) * 86400 * 1000
+      const end   = now - offsetDays * 86400 * 1000
+      return uploads.filter((v: any) => {
+        const t = v.publishedAt ? new Date(v.publishedAt).getTime() : 0
+        return Number.isFinite(t) && t >= start && t < end
+      }).length
     }
-    const curVids = countUploads(currentData)
-    const prevVids = countUploads(previousData)
+    const curVids  = countUploadsInWindow(0)
+    const prevVids = countUploadsInWindow(days)
 
     return [
       { 
@@ -649,7 +691,21 @@ export const useDashboardData = () => {
       bucket.revenue += revenue
       return acc
     }, new Map<string, {month: string, week: string, revenue: number}>()).values()).slice(0, 12).reverse(),
-    avatarUrl: toHighResYouTubeAvatar(authState.channelThumbnail || vtSyncSnapshot.avatarUrl),
+    // Avatar fallback chain mirrors AdaptiveNavigationShell (which has a
+     // known-working profile picture in the top nav). Freshest first:
+     // Google → channelIdentity → authState → brain → vt-sync → account.
+    avatarUrl: toHighResYouTubeAvatar(
+      account?.snapshot?.google?.channelThumbnail
+      || channelIdentity?.avatarUrl
+      || (authState as any)?.avatarUrl
+      || authState.channelThumbnail
+      || brain?.channelProfile?.thumbnail
+      || brain?.channelProfile?.thumbnails?.high?.url
+      || brain?.channelProfile?.thumbnails?.medium?.url
+      || brain?.channelProfile?.thumbnails?.default?.url
+      || vtSyncSnapshot.avatarUrl
+      || account?.snapshot?.profile?.avatarUrl,
+    ),
     channelTitle: authState.channelName || vtSyncSnapshot.channelName || "Your Channel",
     channelCustomUrl: authState.channelHandle || vtSyncSnapshot.channelCustomUrl || "@handle",
     formatRelativeTime,

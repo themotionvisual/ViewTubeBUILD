@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { ChevronDown, GitMerge } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
-import { WidgetScrollArea } from "../WidgetPrimitives"
+import { WidgetScrollArea, WidgetBadge } from "../WidgetPrimitives"
 import {
   buildKeywordConstellationDataset,
   buildKeywordSelectionSummary,
@@ -64,7 +64,7 @@ const MetricModeDropdown: React.FC<{
         style={{
           width: "100%",
           height: "30px",
-          border: "2px solid #000",
+          border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
           borderRadius: "8px",
           background: "#fff",
           color: "#000",
@@ -87,7 +87,7 @@ const MetricModeDropdown: React.FC<{
             top: "34px",
             left: 0,
             right: 0,
-            border: "2px solid #000",
+            border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
             borderRadius: "8px",
             background: "#fff",
             zIndex: 10,
@@ -104,7 +104,7 @@ const MetricModeDropdown: React.FC<{
                 width: "100%",
                 height: "28px",
                 border: "none",
-                borderTop: option === MODE_OPTIONS[0] ? "none" : "1px solid #000",
+                borderTop: option === MODE_OPTIONS[0] ? "none" : "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                 background: option === mode ? "#000" : "#fff",
                 color: option === mode ? "#fff" : "#000",
                 fontSize: "10px",
@@ -174,10 +174,10 @@ export const KeywordOverlapWidget = ({
   }
 
   return (
-    <WidgetShell {...common} icon={<GitMerge size={22} />}>
+    <WidgetShell {...common} icon={<GitMerge size={22} />} headerContent={<WidgetBadge slot={10}>BETA</WidgetBadge>}>
       <WidgetScrollArea ariaLabel="Keyword overlap analysis" contentClassName="flex min-h-full flex-col gap-2">
         {!hasEnoughData ? (
-          <div style={{ border: "2px solid #000", borderRadius: "10px", padding: "10px", background: "#F5F5F5" }}>
+          <div style={{ border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "10px", padding: "10px", background: "#F5F5F5" }}>
             <div style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase" }}>Need More Keyword Data</div>
             <div style={{ fontSize: "10px", fontWeight: 700, opacity: 0.7, marginTop: "4px" }}>
               This chart needs at least 3 recurring title keywords appearing in 2 or more videos.
@@ -185,8 +185,8 @@ export const KeywordOverlapWidget = ({
           </div>
         ) : (
           <>
-            <div style={{ border: "2px solid #000", borderRadius: "10px", background: "#ECECEC", padding: "8px" }}>
-              <div style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", border: "2px solid #000", borderRadius: "8px", background: "#F8F8F8", overflow: "hidden" }}>
+            <div style={{ border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "10px", background: "#ECECEC", padding: "8px" }}>
+              <div style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: "#F8F8F8", overflow: "hidden" }}>
                 {nodes.map((node) => {
                   const slot = NODE_POSITIONS[Math.max(0, Math.min(NODE_POSITIONS.length - 1, node.slot))]
                   const sizePct = nodeSizePct(node.tier)
@@ -205,7 +205,7 @@ export const KeywordOverlapWidget = ({
                         width: `${sizePct}%`,
                         height: `${sizePct}%`,
                         borderRadius: "50%",
-                        border: selectedKeywords.includes(node.word) ? "2px solid #000" : "1px solid rgba(0,0,0,0.45)",
+                        border: selectedKeywords.includes(node.word) ? "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)" : "var(--widget-module-stroke, 2px) solid color-mix(in srgb, var(--widget-border) 60%, transparent)",
                         background: nodeColor(node),
                         opacity: active ? 1 : 0.3,
                         display: "flex",
@@ -235,7 +235,7 @@ export const KeywordOverlapWidget = ({
                     key={keyword.word}
                     onClick={() => toggleKeyword(keyword.word)}
                     style={{
-                      border: "1.5px solid #000",
+                      border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                       borderRadius: "999px",
                       padding: "3px 8px",
                       fontSize: "9px",
@@ -255,7 +255,7 @@ export const KeywordOverlapWidget = ({
         )}
 
         {summary && (
-          <div style={{ border: "2px solid #000", borderRadius: "10px", padding: "8px", background: "#fff" }}>
+          <div style={{ border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "10px", padding: "8px", background: "#fff" }}>
             <div style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase" }}>
               Selection: {summary.keywords.join(" + ")}
             </div>
@@ -274,7 +274,7 @@ export const KeywordOverlapWidget = ({
                   key={title}
                   title={title}
                   style={{
-                    border: "1px solid #000",
+                    border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                     borderRadius: "6px",
                     padding: "4px 6px",
                     fontSize: "9px",
@@ -293,7 +293,7 @@ export const KeywordOverlapWidget = ({
           </div>
         )}
 
-        <div style={{ border: "2px solid #000", borderRadius: "10px", padding: "8px", background: "#fff" }}>
+        <div style={{ border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "10px", padding: "8px", background: "#fff" }}>
           <div style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", marginBottom: "6px" }}>
             Ranked Keywords ({modeLabel(metricMode)})
           </div>
@@ -304,7 +304,7 @@ export const KeywordOverlapWidget = ({
                 style={{
                   width: "100%",
                   textAlign: "left",
-                  border: "1.5px solid #000",
+                  border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                   borderRadius: "8px",
                   background: "#F6F6F6",
                   padding: "6px 8px",

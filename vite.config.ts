@@ -78,6 +78,11 @@ function trimFlagIconsCss(): Plugin {
 // NOTE: Vite 8 uses Rolldown (not Rollup/esbuild) as the bundler, so chunking
 // tuning uses Rolldown-native options (`advancedChunks`).
 export default defineConfig(() => ({
+  // Give this project its own dep-optimization cache. node_modules is symlinked
+  // between viewtubeX and the brain-* worktrees, so a shared cache
+  // (default: node_modules/.vite) causes 504 "Outdated Optimize Dep" whenever
+  // both dev servers run at once.
+  cacheDir: '.vite-cache',
   plugins: [react(), tailwindcss(), stripDebugConsole(), trimFlagIconsCss()],
   test: {
     include: ['src/**/*.test.{ts,tsx}'],

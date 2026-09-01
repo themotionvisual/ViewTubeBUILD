@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest"
-import { findLargestFittingFontSize, fitThumbnailTitle, formatCommentTimestamp } from "./commentResponderUtils"
+import {
+  COMMENT_BUBBLE_MAX_SIZE,
+  COMMENT_BUBBLE_MIN_SIZE,
+  findLargestFittingFontSize,
+  fitThumbnailTitle,
+  formatCommentTimestamp,
+} from "./commentResponderUtils"
 
 const now = new Date("2026-07-05T16:20:00")
 
@@ -61,5 +67,16 @@ describe("findLargestFittingFontSize", () => {
 
   it("uses the minimum only when no larger size fits", () => {
     expect(findLargestFittingFontSize(() => false, { min: 6, max: 14 })).toBe(6)
+  })
+
+  it("keeps comment copy at the configured maximum when it fits and never shrinks below 10px", () => {
+    expect(findLargestFittingFontSize(
+      (fontSize) => fontSize <= COMMENT_BUBBLE_MAX_SIZE,
+      { min: COMMENT_BUBBLE_MIN_SIZE, max: COMMENT_BUBBLE_MAX_SIZE, step: 0.5 },
+    )).toBe(COMMENT_BUBBLE_MAX_SIZE)
+    expect(findLargestFittingFontSize(
+      () => false,
+      { min: COMMENT_BUBBLE_MIN_SIZE, max: COMMENT_BUBBLE_MAX_SIZE, step: 0.5 },
+    )).toBe(10)
   })
 })

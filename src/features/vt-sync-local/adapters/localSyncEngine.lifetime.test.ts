@@ -17,12 +17,15 @@ const inclusiveDays = (start: string, end: string) =>
  Math.floor((utcDay(end) - utcDay(start)) / 86_400_000) + 1
 
 describe("VT-SYNC lifetime analytics windows", () => {
- it("covers a multi-year channel lifetime with contiguous windows of at most 500 days", () => {
-  const windows = buildVtSyncAnalyticsDateWindows("2023-01-01", "2026-07-28")
+ it("covers more than a decade of daily history with contiguous windows of at most 500 days", () => {
+  const startDate = "2014-01-01"
+  const endDate = "2026-07-28"
+  const windows = buildVtSyncAnalyticsDateWindows(startDate, endDate)
 
-  expect(windows.length).toBeGreaterThan(1)
-  expect(windows[0].startDate).toBe("2023-01-01")
-  expect(windows.at(-1)?.endDate).toBe("2026-07-28")
+  expect(inclusiveDays(startDate, endDate)).toBeGreaterThan(4_000)
+  expect(windows.length).toBeGreaterThan(8)
+  expect(windows[0].startDate).toBe(startDate)
+  expect(windows.at(-1)?.endDate).toBe(endDate)
   windows.forEach((window, index) => {
    expect(inclusiveDays(window.startDate, window.endDate)).toBeLessThanOrEqual(VT_SYNC_ANALYTICS_DATE_WINDOW_DAYS)
    if (index > 0) {

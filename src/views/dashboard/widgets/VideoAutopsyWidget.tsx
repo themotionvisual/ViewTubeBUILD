@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react"
 import { WidgetShell } from "../WidgetShell"
+import { WidgetBadge } from "../WidgetPrimitives"
 import { useEntitlement } from "../../../context/entitlementContext"
 import {
   Activity,
@@ -179,19 +180,11 @@ export const VideoAutopsyWidget = ({
     })
   }
 
+  const healthLabel = autopsy ? `${autopsy.healthScore}/100` : "SELECT VIDEO"
   const headerContent = (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <div style={{ 
-        fontSize: "9px", 
-        fontWeight: 900, 
-        textTransform: "uppercase",
-        padding: "2px 6px",
-        background: autopsy ? HEALTH_COLORS[autopsy.overallHealth] : "#E0E0E0",
-        border: "2px solid #000",
-        borderRadius: "4px"
-      }}>
-        {autopsy ? `${autopsy.healthScore}/100` : "SELECT VIDEO"}
-      </div>
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <WidgetBadge slot={8}>BETA</WidgetBadge>
+      <WidgetBadge slot={autopsy ? 4 : 11}>{healthLabel}</WidgetBadge>
     </div>
   )
 
@@ -231,7 +224,7 @@ export const VideoAutopsyWidget = ({
                     alignItems: "center",
                     gap: "8px",
                     padding: "8px",
-                    border: "2px solid #000",
+                    border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                     borderRadius: "8px",
                     background: "#fff",
                     cursor: "pointer",
@@ -247,11 +240,15 @@ export const VideoAutopsyWidget = ({
                     overflow: "hidden",
                     flexShrink: 0
                   }}>
-                    <img 
-                      src={`https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      alt=""
-                    />
+                    {video.videoId && (
+                      <img
+                        src={`https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        alt=""
+                        referrerPolicy="no-referrer"
+                        onError={(event) => { event.currentTarget.style.visibility = "hidden" }}
+                      />
+                    )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: "10px", fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -278,7 +275,7 @@ export const VideoAutopsyWidget = ({
               alignItems: "center",
               gap: "10px",
               padding: "8px",
-              border: "3px solid #000",
+              border: "var(--widget-shell-stroke, 3px) solid var(--widget-border, #000)",
               borderRadius: "10px",
               background: "#fff"
             }}>
@@ -289,7 +286,7 @@ export const VideoAutopsyWidget = ({
                 borderRadius: "6px",
                 overflow: "hidden",
                 flexShrink: 0,
-                border: "2px solid #000"
+                border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)"
               }}>
                 <img 
                   src={`https://img.youtube.com/vi/${selectedVideo.videoId}/mqdefault.jpg`}
@@ -361,7 +358,7 @@ export const VideoAutopsyWidget = ({
                   justifyContent: "space-between",
                   padding: "12px",
                   background: HEALTH_COLORS[autopsy.overallHealth],
-                  border: "3px solid #000",
+                  border: "var(--widget-shell-stroke, 3px) solid var(--widget-border, #000)",
                   borderRadius: "10px"
                 }}>
                   <div>
@@ -389,7 +386,7 @@ export const VideoAutopsyWidget = ({
                 <div style={{
                   padding: "10px",
                   background: QUADRANT_LABELS[autopsy.ctrAvdQuadrant].color,
-                  border: "3px solid #000",
+                  border: "var(--widget-shell-stroke, 3px) solid var(--widget-border, #000)",
                   borderRadius: "10px"
                 }}>
                   <div style={{ fontSize: "10px", fontWeight: 1000, textTransform: "uppercase" }}>
@@ -402,7 +399,7 @@ export const VideoAutopsyWidget = ({
 
                 {/* Retention Milestones Section */}
                 <div style={{
-                  border: "3px solid #000",
+                  border: "var(--widget-shell-stroke, 3px) solid var(--widget-border, #000)",
                   borderRadius: "10px",
                   overflow: "hidden"
                 }}>
@@ -447,7 +444,7 @@ export const VideoAutopsyWidget = ({
                               key={milestone}
                               style={{
                                 padding: "8px",
-                                border: "2px solid #000",
+                                border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                                 borderRadius: "8px",
                                 background: status === "done" ? (
                                   analysis?.status === "strong" ? "#C9F830" :
@@ -492,7 +489,7 @@ export const VideoAutopsyWidget = ({
 
                 {/* Engagement Health Section */}
                 <div style={{
-                  border: "3px solid #000",
+                  border: "var(--widget-shell-stroke, 3px) solid var(--widget-border, #000)",
                   borderRadius: "10px",
                   overflow: "hidden"
                 }}>
@@ -528,7 +525,7 @@ export const VideoAutopsyWidget = ({
                             background: metric.status === "above" ? "#C9F830" :
                                        metric.status === "at" ? "#FFE357" : "#FF8AAF",
                             borderRadius: "6px",
-                            border: "2px solid #000"
+                            border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)"
                           }}
                         >
                           <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" }}>
@@ -549,7 +546,7 @@ export const VideoAutopsyWidget = ({
 
                 {/* Key Insights */}
                 <div style={{
-                  border: "3px solid #000",
+                  border: "var(--widget-shell-stroke, 3px) solid var(--widget-border, #000)",
                   borderRadius: "10px",
                   overflow: "hidden"
                 }}>
@@ -598,7 +595,7 @@ export const VideoAutopsyWidget = ({
 
                 {/* Action Plan */}
                 <div style={{
-                  border: "3px solid #000",
+                  border: "var(--widget-shell-stroke, 3px) solid var(--widget-border, #000)",
                   borderRadius: "10px",
                   overflow: "hidden"
                 }}>
@@ -631,7 +628,7 @@ export const VideoAutopsyWidget = ({
                             alignItems: "flex-start",
                             gap: "10px",
                             padding: "8px",
-                            border: "2px solid #000",
+                            border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
                             borderRadius: "8px",
                             background: "#fff"
                           }}

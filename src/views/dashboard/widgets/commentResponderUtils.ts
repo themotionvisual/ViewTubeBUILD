@@ -7,6 +7,11 @@ export const THUMBNAIL_TITLE_MAX_SIZE = 15
 export const THUMBNAIL_TITLE_BASE_SIZE = 11
 export const THUMBNAIL_TITLE_MIN_SIZE = 6
 export const THUMBNAIL_TITLE_LETTER_SPACING_EM = 0.034
+// Default (max) size deliberately large — AutoFitCommentBubble ratchets
+// this down via the findLargestFittingFontSize search only when the comment
+// cannot fit inside the standard bubble beside the video card.
+export const COMMENT_BUBBLE_MAX_SIZE = 34
+export const COMMENT_BUBBLE_MIN_SIZE = 10
 
 export const findLargestFittingFontSize = (
   fits: (fontSize: number) => boolean,

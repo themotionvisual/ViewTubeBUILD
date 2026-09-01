@@ -1,6 +1,27 @@
 import React, { createContext, useCallback, useContext, useState, ReactNode } from 'react';
 import { loadDashboardLayout } from '../views/dashboard/storage';
 import type { DashboardLayoutState } from '../views/dashboard/types';
+import type {
+  DashboardMoveDirection,
+  DashboardResizeDirection,
+  DashboardVisibilityChanges,
+} from '../views/dashboard/dashboardMiniLayout';
+
+interface DashboardRegisteredActions {
+  exportLayout: () => void;
+  importLayout: () => void;
+  resetLayout: () => void;
+  toggleLock: () => void;
+  toggleWidget?: (widgetId: string) => void;
+  toggleWidgetCollapse?: (widgetId: string) => void;
+  moveWidget?: (widgetId: string, direction: DashboardMoveDirection) => void;
+  resizeWidget?: (widgetId: string, direction: DashboardResizeDirection) => void;
+  applyWidgetVisibility?: (changes: DashboardVisibilityChanges) => void;
+  showAllWidgets?: () => void;
+  hideAllWidgets?: () => void;
+  applyPreset?: (presetId: string) => void;
+  getLayout?: () => DashboardLayoutState;
+}
 
 interface DashboardContextType {
   editMode: boolean;
@@ -14,21 +35,15 @@ interface DashboardContextType {
   resetLayout: () => void;
   toggleLock: () => void;
   toggleWidget: (widgetId: string) => void;
+  toggleWidgetCollapse: (widgetId: string) => void;
+  moveWidget: (widgetId: string, direction: DashboardMoveDirection) => void;
+  resizeWidget: (widgetId: string, direction: DashboardResizeDirection) => void;
+  applyWidgetVisibility: (changes: DashboardVisibilityChanges) => void;
   showAllWidgets: () => void;
   hideAllWidgets: () => void;
   applyPreset: (presetId: string) => void;
   getLayout: () => DashboardLayoutState;
-  registerActions: (actions: {
-    exportLayout: () => void;
-    importLayout: () => void;
-    resetLayout: () => void;
-    toggleLock: () => void;
-    toggleWidget?: (widgetId: string) => void;
-    showAllWidgets?: () => void;
-    hideAllWidgets?: () => void;
-    applyPreset?: (presetId: string) => void;
-    getLayout?: () => DashboardLayoutState;
-  }) => void;
+  registerActions: (actions: DashboardRegisteredActions) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -37,29 +52,9 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [editMode, setEditMode] = useState(false);
   const [isLocked, setIsLocked] = useState(() => loadDashboardLayout().locked);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [actions, setActions] = useState<{
-    exportLayout: () => void;
-    importLayout: () => void;
-    resetLayout: () => void;
-    toggleLock: () => void;
-    toggleWidget?: (widgetId: string) => void;
-    showAllWidgets?: () => void;
-    hideAllWidgets?: () => void;
-    applyPreset?: (presetId: string) => void;
-    getLayout?: () => DashboardLayoutState;
-  } | null>(null);
+  const [actions, setActions] = useState<DashboardRegisteredActions | null>(null);
 
-  const registerActions = useCallback((newActions: {
-    exportLayout: () => void;
-    importLayout: () => void;
-    resetLayout: () => void;
-    toggleLock: () => void;
-    toggleWidget?: (widgetId: string) => void;
-    showAllWidgets?: () => void;
-    hideAllWidgets?: () => void;
-    applyPreset?: (presetId: string) => void;
-    getLayout?: () => DashboardLayoutState;
-  }) => {
+  const registerActions = useCallback((newActions: DashboardRegisteredActions) => {
     setActions(newActions);
   }, []);
 
@@ -77,6 +72,10 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
         resetLayout: () => actions?.resetLayout(),
         toggleLock: () => actions?.toggleLock(),
         toggleWidget: (id: string) => actions?.toggleWidget?.(id),
+        toggleWidgetCollapse: (id: string) => actions?.toggleWidgetCollapse?.(id),
+        moveWidget: (id: string, direction: DashboardMoveDirection) => actions?.moveWidget?.(id, direction),
+        resizeWidget: (id: string, direction: DashboardResizeDirection) => actions?.resizeWidget?.(id, direction),
+        applyWidgetVisibility: (changes: DashboardVisibilityChanges) => actions?.applyWidgetVisibility?.(changes),
         showAllWidgets: () => actions?.showAllWidgets?.(),
         hideAllWidgets: () => actions?.hideAllWidgets?.(),
         applyPreset: (presetId: string) => actions?.applyPreset?.(presetId),
@@ -106,6 +105,10 @@ export const useDashboard = () => {
       resetLayout: () => {},
       toggleLock: () => {},
       toggleWidget: () => {},
+      toggleWidgetCollapse: () => {},
+      moveWidget: () => {},
+      resizeWidget: () => {},
+      applyWidgetVisibility: () => {},
       showAllWidgets: () => {},
       hideAllWidgets: () => {},
       applyPreset: () => {},

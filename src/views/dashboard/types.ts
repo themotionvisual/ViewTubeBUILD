@@ -1,5 +1,5 @@
-export type DashboardSizeBucket = "full" | "three-quarters" | "two-thirds" | "half" | "between" | "third" | "companion" | "quarter"
-export type DashboardHeightBucket = "short" | "medium" | "tall" | "xtall" | "massive"
+export type DashboardSizeBucket = "full" | "three-quarters" | "two-thirds" | "half" | "between" | "third" | "companion" | "quarter" | "sixth" | "eighth" | "twelfth" | "twenty-fourth"
+export type DashboardHeightBucket = "short" | "medium" | "tall" | "xtall" | "massive" | "colossal" | "titanic" | "boundless"
 
 export type DashboardWidgetCategory =
   | "core"

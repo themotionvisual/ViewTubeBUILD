@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
  decodeVtSyncDataset,
  encodeVtSyncDataset,
+ VT_SYNC_PACKED_DATASET_CHUNK_SIZE,
 } from "./packedDataset"
 
 describe("VT-SYNC packed datasets", () => {
@@ -69,6 +70,25 @@ describe("VT-SYNC packed datasets", () => {
   const jsonBytes = new TextEncoder().encode(JSON.stringify(rows)).byteLength
 
   expect(await decodeVtSyncDataset(packed)).toEqual(rows)
-  expect(packedBytes).toBeLessThan(jsonBytes * 0.4)
+ expect(packedBytes).toBeLessThan(jsonBytes * 0.4)
+ })
+
+ it("uses chunks as partitions rather than row limits", async () => {
+  const rows = Array.from({ length: 10_001 }, (_, index) => ({
+   term: `SOURCE_${index % 16}`,
+   day: `DAY_${Math.floor(index / 16)}`,
+   views: index,
+  }))
+  const packed = await encodeVtSyncDataset({
+   channelId: "large-channel",
+   datasetId: "traffic_day",
+   rows,
+   capturedAt: "2026-08-31T23:50:00.000Z",
+  })
+
+  expect(packed.manifest.rowCount).toBe(10_001)
+  expect(packed.manifest.primaryKey).toEqual(["term", "day"])
+  expect(packed.chunks).toHaveLength(Math.ceil(rows.length / VT_SYNC_PACKED_DATASET_CHUNK_SIZE))
+  expect(await decodeVtSyncDataset(packed)).toEqual(rows)
  })
 })

@@ -47,7 +47,7 @@ export const FlightCheckWidget = ({ widget, instance, editMode, onToggleCollapse
    <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", minHeight: 0 }}>
     {/* Progress Bar */}
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-     <div style={{ flex: 1, height: "14px", background: "#eee", borderRadius: "7px", border: "2px solid #000", overflow: "hidden" }}>
+     <div style={{ flex: 1, height: "14px", background: "#eee", borderRadius: "7px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", overflow: "hidden" }}>
       <div style={{ width: `${pct}%`, height: "100%", background: allDone ? "#4FFF5B" : "repeating-linear-gradient(45deg, #FFE357, #FFE357 6px, #FFCC00 6px, #FFCC00 12px)", transition: "width 0.3s" }} />
      </div>
      <span style={{ fontSize: "12px", fontWeight: 1000, minWidth: "36px" }}>{pct}%</span>
@@ -62,11 +62,11 @@ export const FlightCheckWidget = ({ widget, instance, editMode, onToggleCollapse
        style={{
         display: "flex", alignItems: "center", gap: "8px", padding: "6px 8px",
         background: item.done ? "rgba(79,255,91,0.1)" : "#fff",
-        border: "2px solid #000", borderRadius: "8px", cursor: "pointer",
+        border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", cursor: "pointer",
         transition: "all 0.15s",
        }}>
        <div style={{
-        width: "18px", height: "18px", border: "2px solid #000", borderRadius: "4px",
+        width: "18px", height: "18px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "4px",
         background: item.done ? "#4FFF5B" : "#fff", display: "flex", alignItems: "center",
         justifyContent: "center", flexShrink: 0, boxShadow: item.done ? "none" : "inset 1px 1px 0 rgba(0,0,0,0.1)",
        }}>
@@ -85,7 +85,7 @@ export const FlightCheckWidget = ({ widget, instance, editMode, onToggleCollapse
      <button
       disabled={!allDone}
       style={{
-       flex: 1, height: "36px", border: "2px solid #000", borderRadius: "8px",
+       flex: 1, height: "36px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px",
        background: allDone ? "#4FFF5B" : "#eee", fontSize: "10px", fontWeight: 1000,
        textTransform: "uppercase", cursor: allDone ? "pointer" : "not-allowed",
        display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
@@ -94,7 +94,7 @@ export const FlightCheckWidget = ({ widget, instance, editMode, onToggleCollapse
       <Rocket size={14} /> Publish
      </button>
      <button onClick={reset} style={{
-      width: "36px", height: "36px", border: "2px solid #000", borderRadius: "8px",
+      width: "36px", height: "36px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px",
       background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
      }}>
       <RotateCcw size={14} />

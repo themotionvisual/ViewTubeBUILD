@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { WidgetScrollArea } from "../WidgetPrimitives"
+import { WidgetScrollArea, WidgetBadge } from "../WidgetPrimitives"
 import { useEntitlement } from "../../../context/entitlementContext"
 import { Hash, Sparkles, Copy, Check, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { canAffordAiTokensFromState } from "../../../services/billingEntitlement"
@@ -75,7 +75,7 @@ export const HashtagAnalyzerWidget = ({ widget, instance, editMode, onToggleColl
  const compColor = (c: string) => c === "low" ? "#4FFF5B" : c === "medium" ? "#FFE357" : "#FF8AAF"
 
  return (
-  <WidgetShell {...common} icon={<Hash size={22} />}>
+  <WidgetShell {...common} icon={<Hash size={22} />} headerContent={<WidgetBadge slot={9}>BETA</WidgetBadge>}>
    <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", minHeight: 0 }}>
     <div style={{ display: "flex", gap: "6px" }}>
      <input className="vt-input" value={input} onChange={(e) => setInput(e.target.value)}
@@ -84,7 +84,7 @@ export const HashtagAnalyzerWidget = ({ widget, instance, editMode, onToggleColl
       style={{ flex: 1 }}
      />
      <button onClick={analyze} disabled={analyzing || !canAffordAnalyze} style={{
-      padding: "0 12px", border: "2px solid #000", borderRadius: "8px", background: "#CC00FF",
+      padding: "0 12px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: "#CC00FF",
       color: "#fff", fontSize: "9px", fontWeight: 1000, textTransform: "uppercase",
       cursor: analyzing ? "wait" : "pointer", boxShadow: "2px 2px 0 0 #000",
      }}>
@@ -100,7 +100,7 @@ export const HashtagAnalyzerWidget = ({ widget, instance, editMode, onToggleColl
     {results.length > 0 && (
      <>
       {/* Results Table */}
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", border: "2px solid #000", borderRadius: "8px", overflow: "hidden" }}>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", overflow: "hidden" }}>
        <div style={{ flexShrink: 0, display: "grid", gridTemplateColumns: "1fr 60px 60px 30px", padding: "4px 8px", background: "#000", color: "#fff", fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em" }}>
         <span>Tag</span><span>Reach</span><span>Comp.</span><span>📈</span>
        </div>
@@ -108,7 +108,7 @@ export const HashtagAnalyzerWidget = ({ widget, instance, editMode, onToggleColl
         {results.map((r, i) => (
          <div key={i} style={{
           display: "grid", gridTemplateColumns: "1fr 60px 60px 30px", padding: "4px 8px",
-          borderBottom: "1px solid #eee", fontSize: "10px", fontWeight: 700, alignItems: "center",
+          borderBottom: "var(--widget-module-stroke, 2px) solid color-mix(in srgb, var(--widget-border) 18%, transparent)", fontSize: "10px", fontWeight: 700, alignItems: "center",
          }}>
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.tag}</span>
           <span>{formatReach(r.reach)}</span>
@@ -123,13 +123,13 @@ export const HashtagAnalyzerWidget = ({ widget, instance, editMode, onToggleColl
       </div>
 
       {/* Optimal Combo */}
-      <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 8px", border: "2px solid #000", borderRadius: "8px", background: "rgba(204,0,255,0.05)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 8px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "8px", background: "rgba(204,0,255,0.05)" }}>
        <Sparkles size={12} color="#CC00FF" />
        <span style={{ flex: 1, fontSize: "10px", fontWeight: 900 }}>
         Optimal: {getOptimal3().map(r => r.tag).join(" ")}
        </span>
        <button onClick={copyAll} style={{
-        padding: "2px 8px", border: "1px solid #000", borderRadius: "4px",
+        padding: "2px 8px", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "4px",
         background: copied ? "#4FFF5B" : "#fff", fontSize: "8px", fontWeight: 900,
         cursor: "pointer", textTransform: "uppercase",
        }}>

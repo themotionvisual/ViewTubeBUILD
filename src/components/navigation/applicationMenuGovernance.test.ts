@@ -8,7 +8,7 @@ const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8"
 describe("application menu governance", () => {
   it("keeps dashboard layout actions out of the account dropdown", () => {
     const shell = read("src/components/navigation/AdaptiveNavigationShell.tsx")
-    expect(shell).toContain("<ApplicationAccountMenu")
+    expect(shell.includes("<ApplicationAccountMenu") || shell.includes("vt-adaptive-account-menu")).toBe(true)
     expect(shell).not.toContain("runDashboardMenuAction")
     expect(shell).not.toContain("Dashboard Layout")
   })

@@ -524,7 +524,7 @@
   gap: 14px;
   align-items: center;
   padding: 10px 12px;
-  border: 3px solid #000;
+  border: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   border-radius: 12px;
   background: #fff;
   box-shadow: 4px 4px 0 0 #000;
@@ -566,7 +566,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  border: 3px solid #000;
+  border: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   border-radius: 10px;
   background: linear-gradient(90deg, #c0f240, #4ee4be);
   color: #000;
@@ -604,7 +604,7 @@
   column-gap: 8px;
   row-gap: 3px;
   padding: 8px 10px;
-  border: 3px solid #000;
+  border: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   border-radius: 10px;
   background: #fff;
   box-shadow: 3px 3px 0 0 var(--about-tone, #000);
@@ -620,7 +620,7 @@
   place-items: center;
   width: 28px;
   height: 28px;
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 6px;
   background: var(--about-tone, #fff);
   color: #000;
@@ -655,7 +655,7 @@
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 10px;
   background: color-mix(in srgb, #ffff, transparent 60%);
   backdrop-filter: blur(4px);
@@ -666,7 +666,7 @@
   width: 28px;
   height: 28px;
   flex: 0 0 28px;
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 7px;
   background: #000;
   color: #c0f240;
@@ -695,7 +695,7 @@
   align-items: center;
   justify-content: center;
   padding: 6px 4px;
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 7px;
   background: #fff;
   color: #000;
@@ -848,7 +848,9 @@
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(110px, 1.2fr) minmax(96px, 0.9fr) minmax(104px, 0.9fr);
+  /* 2 columns after the donuts/bars breakdown was extracted into the
+     standalone overview-data-visuals widget. */
+  grid-template-columns: minmax(110px, 1fr) minmax(140px, 1.6fr);
   gap: var(--widget-component-gap);
   overflow: hidden;
   padding: 0 var(--widget-shadow-clearance) var(--widget-shadow-clearance) 0;
@@ -874,13 +876,28 @@
 }
 
 .dashboard-barrier .channel-overview-avatar-frame {
+  position: relative;
   width: min(100%, 204px);
   aspect-ratio: 1;
+  display: grid;
+  place-items: center;
   overflow: hidden;
   border: 3px solid var(--widget-border);
   border-radius: 50%;
   background: var(--bg-inner, #eee);
   box-shadow: var(--widget-shadow-clearance) var(--widget-shadow-clearance) 0 color-mix(in srgb, var(--widget-color) 35%, transparent);
+}
+
+.dashboard-barrier .channel-overview-avatar-fallback {
+  grid-area: 1 / 1;
+}
+
+.dashboard-barrier .channel-overview-avatar-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .dashboard-barrier .channel-overview-kpis {
@@ -1132,7 +1149,7 @@
 .dashboard-barrier .widget-header-btn:focus-visible,
 .dashboard-barrier .widget-edit-action:focus-visible,
 .dashboard-barrier button:focus-visible {
-  outline: 3px solid #000;
+  outline: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   outline-offset: 3px;
 }
 
@@ -1181,7 +1198,7 @@
   padding: 6px;
   display: grid;
   gap: 4px;
-  border: 3px solid #000;
+  border: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   border-radius: 10px;
   background: #fff;
   box-shadow: 5px 5px 0 #000;
@@ -1193,7 +1210,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 7px;
   background: #fff;
   color: #000;
@@ -1255,7 +1272,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 3px solid #000;
+  border: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   border-radius: 8px;
   background: #fff;
   color: var(--widget-border);
@@ -1277,7 +1294,7 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  border: 3px solid #000;
+  border: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   border-radius: 9px;
   background: #fff;
   box-shadow: 3px 3px 0 color-mix(in srgb, var(--metric-tone, #000) 42%, transparent);
@@ -1330,8 +1347,11 @@
 }
 
 .dashboard-barrier .widget-header-btn.is-active {
-  background-color: #000;
-  color: #fff;
+  /* Retoned R4: active state uses a tinted widget-color fill instead of
+     pure black, so the button stays inside the widget's palette. */
+  background-color: color-mix(in srgb, var(--widget-color, #40C6E9) 55%, #fff);
+  color: var(--widget-border, #000);
+  border-color: var(--widget-border, #000);
 }
 
 .dashboard-barrier .widget-header-btn.is-danger:hover {
@@ -1641,7 +1661,7 @@
   width: min(520px, 96vw);
   display: flex;
   flex-direction: column;
-  border-left: 3px solid #000;
+  border-left: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   background: #fff;
   color: var(--widget-border);
   box-shadow: -9px 0 0 rgb(0 0 0 / 28%);
@@ -1657,7 +1677,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border-bottom: 3px solid #000;
+  border-bottom: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   background: #C9F830;
 }
 
@@ -1687,7 +1707,7 @@
   flex: 0 0 44px;
   display: grid;
   place-items: center;
-  border: 3px solid #000;
+  border: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   border-radius: 9px;
   background: #fff;
   box-shadow: 3px 3px 0 #000;
@@ -1698,7 +1718,7 @@
   display: grid;
   grid-template-columns: 1fr 160px;
   gap: 5px 10px;
-  border-bottom: 3px solid #000;
+  border-bottom: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   background: #f3f3f3;
 }
 
@@ -1715,7 +1735,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 3px solid #000;
+  border: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   border-radius: 8px;
   background: #fff;
 }
@@ -1734,7 +1754,7 @@
   --widget-border: #000;
   height: 44px;
   padding: 0 10px;
-  border: 3px solid #000;
+  border: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   border-radius: 8px;
   background: #fff;
   color: #000;
@@ -1767,7 +1787,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-  border: 3px solid #000;
+  border: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   border-radius: 10px;
   background: var(--picker-spectrum);
   color: var(--widget-border);
@@ -1810,14 +1830,14 @@
 .widget-picker-swatch {
   width: 20px;
   height: 20px;
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 5px;
   background: var(--picker-spectrum);
 }
 
 .widget-picker-tier {
   padding: 3px 5px;
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 5px;
   background: #fff;
   font-size: 12px;
@@ -1905,7 +1925,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  border: 3px solid #000;
+  border: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   border-radius: 10px;
   background: #fff;
   color: #000;
@@ -1917,7 +1937,7 @@
 .widget-removal-toast button {
   min-width: 44px;
   min-height: 38px;
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 7px;
   background: #C0F240;
   color: #000;
@@ -1929,19 +1949,30 @@
   background: #eee;
 }
 
-/* Inputs — v2 ink stroke and neon focus */
+/* Inputs — v2 ink stroke and neon focus.
+   Inputs and selects share --widget-control-height so a Video Manager
+   / Image Generator row of `input + select` aligns pixel-perfect. */
 .dashboard-barrier .vt-input, .dashboard-barrier .vt-textarea {
-  box-sizing: border-box; width: 100%; padding: 10px 14px;
+  box-sizing: border-box; width: 100%; padding: 0 14px;
+  height: var(--widget-control-height);
+  min-height: var(--widget-control-height);
   border: 2px solid var(--widget-color, #000);
   border-radius: 6px;
   background: #fff;
   font-size: 12px; font-weight: 700; font-family: inherit;
   color: var(--widget-border);
   font-weight: 950;
+  line-height: 1;
   text-transform: uppercase;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.65s ease, background-color 0.25s;
   caret-color: var(--widget-color, #000);
+}
+.dashboard-barrier .vt-textarea {
+  height: auto;
+  min-height: 60px;
+  padding: 10px 14px;
+  line-height: 1.35;
 }
 .dashboard-barrier .vt-input::placeholder, .dashboard-barrier .vt-textarea::placeholder {
   color: color-mix(in srgb, var(--widget-border) 52%, #fff);
@@ -1949,7 +1980,7 @@
   opacity: 1;
   text-transform: uppercase;
 }
-.dashboard-barrier .vt-textarea { resize: vertical; min-height: 60px; }
+.dashboard-barrier .vt-textarea { resize: vertical; }
 .dashboard-barrier .vt-input:focus, .dashboard-barrier .vt-textarea:focus {
   border-color: var(--widget-color, #000);
   background: color-mix(in srgb, var(--widget-color, #fff) 18%, white);
@@ -2058,7 +2089,7 @@
 
 .dashboard-barrier .vt-dropdown-item {
   min-height: var(--widget-control-height);
-  border-bottom: 1px solid rgba(0,0,0,0.12);
+  border-bottom: var(--widget-module-stroke, 2px) solid color-mix(in srgb, var(--widget-border) 22%, transparent);
   display: flex;
   align-items: center;
   padding: 0 10px;
@@ -3293,8 +3324,12 @@ stroke-width: 2px;
 
 .dashboard-barrier .video-thumbnail-column {
   display: grid;
-  grid-template-rows: 1fr 34px;
-  gap: 4px;
+  /* Frame needs a real height that respects the 16:9 poster inside it,
+     not just "whatever's left" (previously 1fr collapsed to a sliver
+     when the row was short). min-content on the frame + auto on the
+     button lets the frame own the aspect ratio it needs. */
+  grid-template-rows: auto 34px;
+  gap: 6px;
   height: 100%;
   min-width: 0;
   min-height: 0;
@@ -3303,7 +3338,9 @@ stroke-width: 2px;
 .dashboard-barrier .video-thumbnail-frame-wrap {
   position: relative;
   width: 100%;
-  height: 100%;
+  /* Force 16:9 so the thumbnail actually shows at natural aspect and
+     never gets clipped to a 20-30px strip. */
+  aspect-ratio: 16 / 9;
   min-height: 0;
   border-radius: var(--widget-control-radius);
   overflow: hidden;
@@ -3323,7 +3360,9 @@ stroke-width: 2px;
   width: 100%;
   height: 100%;
   min-height: 0;
-  border: 1.5px dashed var(--widget-border);
+  /* Was 1.5px which rendered as an anemic hairline; use the standard
+     widget module stroke so it reads as a proper Neo-Brutalist border. */
+  border: var(--widget-module-stroke, 2px) dashed var(--widget-border);
   border-radius: var(--widget-control-radius);
   background: color-mix(in srgb, var(--widget-color) 8%, #fff);
   display: flex;
@@ -3710,7 +3749,7 @@ stroke-width: 2px;
   justify-content: space-between;
   gap: 8px;
   padding: 0 10px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  border-bottom: var(--widget-module-stroke, 2px) solid color-mix(in srgb, var(--widget-border) 22%, transparent);
   outline: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-size: var(--widget-control-font-size, 12px);
@@ -3810,7 +3849,7 @@ stroke-width: 2px;
   display: flex;
   flex-direction: column;
   background: #fff;
-  border: 3px solid #000;
+  border: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   border-radius: 0 0 12px 12px;
   margin: 0 -4px 16px;
   /* overflow: hidden; removed so dropdown can escape */
@@ -3831,7 +3870,7 @@ stroke-width: 2px;
   justify-content: space-between;
   padding: 0 24px;
   background: #fff;
-  border-bottom: 3px solid #000;
+  border-bottom: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
 }
 
 .dashboard-header-ticker {
@@ -3846,7 +3885,7 @@ stroke-width: 2px;
 .vt-header-btn {
   width: 24px;
   height: 24px;
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -4239,7 +4278,7 @@ stroke-width: 2px;
 .dashboard-barrier .widget-tooltip.is-right-note:hover .widget-tooltip-bubble,
 .dashboard-barrier .widget-tooltip.is-right-note:focus-within .widget-tooltip-bubble { transform: translate(0, -50%); }
 .dashboard-barrier .widget-tooltip-bars { height: 28px; display: flex; align-items: end; gap: 3px; margin-top: 5px; border-bottom: 2px solid var(--tooltip-border); }
-.dashboard-barrier .widget-tooltip-bars i { min-width: 0; flex: 1; border: 1px solid var(--tooltip-border); border-bottom: 0; background: var(--tooltip-surface); }
+.dashboard-barrier .widget-tooltip-bars i { min-width: 0; flex: 1; border: var(--widget-module-stroke, 2px) solid var(--tooltip-border); border-bottom: 0; background: var(--tooltip-surface); }
 .dashboard-barrier .widget-tooltip-bars i:nth-child(1) { height: 35%; }.dashboard-barrier .widget-tooltip-bars i:nth-child(2) { height: 75%; }.dashboard-barrier .widget-tooltip-bars i:nth-child(3) { height: 52%; }.dashboard-barrier .widget-tooltip-bars i:nth-child(4) { height: 100%; }.dashboard-barrier .widget-tooltip-bars i:nth-child(5) { height: 64%; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4376,6 +4415,16 @@ textarea.vt-textarea {
   overflow: hidden;
 }
 
+.comment-video-title-copy {
+  --comment-title-scale: 1;
+  display: inline-block;
+  width: max-content;
+  max-width: none;
+  transform: scaleX(var(--comment-title-scale));
+  transform-origin: center;
+  white-space: nowrap;
+}
+
 .comment-video-card .kpi-header-bottom {
   border-top: 2px solid var(--ink);
   border-bottom: 0;
@@ -4406,7 +4455,10 @@ textarea.vt-textarea {
 .comment-responder-current-comment {
   display: grid;
   grid-template-columns: minmax(150px, 200px) minmax(0, 1fr);
-  align-items: flex-start;
+  /* Stretch both columns so the bubble's bottom edge always aligns with
+     the thumbnail's bottom edge. Meta pinned to top, bubble grows to fill
+     and bottom-anchors against the thumbnail below it. */
+  align-items: stretch;
   gap: var(--comment-responder-space, 8px);
 }
 
@@ -4415,9 +4467,14 @@ textarea.vt-textarea {
   height: 100%;
   align-self: stretch;
   display: grid;
-  grid-template-rows: 60px minmax(0, 1fr);
-  align-content: start;
+  /* 1fr for the bubble region → grows to fill; end-anchored so bubble
+     sits flush with the thumbnail's baseline. */
+  grid-template-rows: 60px 1fr;
+  align-content: stretch;
   gap: 3px;
+}
+.comment-responder-current-copy > .comment-responder-bubble {
+  align-self: end;
 }
 
 .comment-responder-comment-meta {
@@ -4520,8 +4577,22 @@ textarea.vt-textarea {
   color: var(--widget-border);
   stroke: var(--widget-border);
 }
-.comment-responder-open-action { flex-basis: 100%; max-width: 100%; font-size: 10px !important; }
-.comment-responder-open-action .widget-split-button-label { overflow: visible; text-overflow: clip; }
+.comment-responder-open-tooltip { max-width: min(106px, 100%); }
+.comment-responder-open-action {
+  max-width: 106px;
+  flex-basis: auto;
+  font-size: 9px !important;
+}
+.comment-responder-open-action .widget-split-button-icon {
+  width: 17px;
+  flex-basis: 17px;
+}
+.comment-responder-open-action .widget-split-button-label {
+  min-width: 0;
+  padding-inline: 3px;
+  overflow: hidden;
+  text-overflow: clip;
+}
 
 .comment-responder-thread-panel {
   --comment-responder-space: 8px;
@@ -4587,6 +4658,10 @@ textarea.vt-textarea {
 .comment-responder-bubble {
   --comment-bubble-stroke: color-mix(in srgb, var(--widget-color, #40C6E9) 62%, black);
   --comment-bubble-fill: color-mix(in srgb, var(--widget-color, #40C6E9) 18%, white);
+  /* Default is large; AutoFitCommentBubble ratchets this down at the
+     element level via inline font-size when the text cannot fit. */
+  --comment-bubble-font-size: 34px;
+  --comment-bubble-font-size-min: 12px;
   position: relative;
   margin-left: 0;
   padding: 7px 9px;
@@ -4595,7 +4670,7 @@ textarea.vt-textarea {
   background: var(--comment-bubble-fill);
   box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
   color: var(--widget-color, #40C6E9);
-  font-size: 10px;
+  font-size: var(--comment-bubble-font-size);
   font-weight: 900;
   line-height: 1.25;
   text-transform: uppercase;
@@ -4784,6 +4859,27 @@ textarea.vt-textarea {
   overflow: visible;
 }
 
+.comment-responder-reply-bubble {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  padding: 7px 9px;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.comment-responder-reply-bubble > span {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-wrap: anywhere;
+}
+
 .comment-responder-replies {
   width: 100%;
   display: flex;
@@ -4817,7 +4913,7 @@ textarea.vt-textarea {
   width: 100%;
   min-height: 64px;
   height: 64px;
-  max-height: 64px;
+  max-height: 160px;
   margin: 0;
   resize: none;
   overflow-y: auto;
@@ -4857,7 +4953,7 @@ textarea.vt-textarea {
 
 @container (max-width: 380px) {
   .comment-responder-reaction-row { gap: 3px; }
-  .comment-responder-open-action { flex-basis: 100%; }
+  .comment-responder-open-action { flex-basis: auto; }
 }
 /* ═══ MOBILE: single-column widgets that grow to fit their content ═══
    On phones the grid already stacks every widget full-width (col-span-24). The
@@ -5031,7 +5127,7 @@ textarea.vt-textarea {
 .dashboard-barrier .sync-ctrl-queue-strip {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 7px;
   overflow: hidden;
 }
@@ -5066,7 +5162,7 @@ textarea.vt-textarea {
 
 .dashboard-barrier .sync-ctrl-queue-active {
   background: #36E0F6;
-  border-right: 2px solid #000;
+  border-right: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
 }
 
 .dashboard-barrier .sync-ctrl-queue-next {
@@ -5078,7 +5174,7 @@ textarea.vt-textarea {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 3px;
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 7px;
   overflow: hidden;
   background: #000;
@@ -5142,7 +5238,7 @@ textarea.vt-textarea {
   text-transform: uppercase;
   letter-spacing: 0.03em;
   padding: 2px 8px !important;
-  border: 2px solid #000 !important;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000) !important;
   border-radius: 7px !important;
   background: #C0F240 !important;
   box-shadow: 2px 2px 0 #000;
@@ -5164,7 +5260,7 @@ textarea.vt-textarea {
 
 /* ── Error Banner ── */
 .dashboard-barrier .sync-ctrl-error-banner {
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 7px;
   padding: 4px 8px;
   background: #FF1744;
@@ -5182,14 +5278,14 @@ textarea.vt-textarea {
 
 /* ── Group Accordion ── */
 .dashboard-barrier .sync-ctrl-group-accordion {
-  border: 2px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 7px;
   overflow: hidden;
   background: #0d0d0d;
 }
 
 .dashboard-barrier .sync-ctrl-group-section {
-  border-bottom: 2px solid #000;
+  border-bottom: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
 }
 
 .dashboard-barrier .sync-ctrl-group-section:last-child {
@@ -5217,7 +5313,7 @@ textarea.vt-textarea {
 }
 
 .dashboard-barrier .sync-ctrl-group-toggle:focus-visible {
-  outline: 3px solid #000;
+  outline: var(--widget-shell-stroke, 3px) solid var(--widget-border, #000);
   outline-offset: -3px;
 }
 
@@ -5244,7 +5340,7 @@ textarea.vt-textarea {
   gap: 4px;
   flex-shrink: 0;
   padding: 0 6px;
-  border-left: 2px solid #000;
+  border-left: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
 }
 
 .dashboard-barrier .sync-ctrl-issue-badge {
@@ -5261,7 +5357,7 @@ textarea.vt-textarea {
 
 /* ── Unit Rows ── */
 .dashboard-barrier .sync-ctrl-unit-list {
-  border-top: 1px solid #000;
+  border-top: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   background: #fff;
 }
 
@@ -5272,9 +5368,9 @@ textarea.vt-textarea {
   gap: 4px;
   min-height: 28px;
   padding: 2px 6px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: var(--widget-module-stroke, 2px) solid color-mix(in srgb, var(--widget-border) 18%, transparent);
   font-size: 10px;
-  color: #000;
+  color: var(--widget-border, #000);
 }
 
 .dashboard-barrier .sync-ctrl-unit-row:last-child {
@@ -5377,7 +5473,7 @@ textarea.vt-textarea {
 }
 
 .dashboard-barrier .sync-ctrl-switch-hitbox:focus-visible {
-  outline: 2px solid #000;
+  outline: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   outline-offset: 1px;
   border-radius: 4px;
 }
@@ -5398,7 +5494,7 @@ textarea.vt-textarea {
   height: 8px;
   background: #ccc;
   border-radius: 4px;
-  border: 1px solid #000;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   position: relative;
   transition: background 0.15s;
 }
@@ -5470,7 +5566,7 @@ textarea.vt-textarea {
   min-height: 24px !important;
   padding: 2px 8px !important;
   background: #f3f4f6 !important;
-  border: 2px solid #000 !important;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000) !important;
   border-radius: 6px !important;
   font-weight: 900 !important;
   text-transform: uppercase;
@@ -5509,7 +5605,7 @@ textarea.vt-textarea {
 
   .dashboard-barrier .sync-ctrl-queue-active {
     border-right: 0;
-    border-bottom: 2px solid #000;
+    border-bottom: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   }
 
   .dashboard-barrier .sync-ctrl-status-grid {
@@ -5525,3 +5621,2093 @@ textarea.vt-textarea {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   SYSTEM HUB + ACCOUNT/BILLING shared primitives
+   All chrome flows from --widget-color / --widget-border so
+   these widgets re-tone with their parent palette. No hardcoded
+   black strokes or shadows.
+═══════════════════════════════════════════════════════════ */
+
+.dashboard-barrier .widget-caption-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.dashboard-barrier .widget-caption-row > .widget-tag,
+.dashboard-barrier .widget-caption-row > .widget-tag.is-active {
+  margin-left: auto;
+}
+
+.dashboard-barrier .widget-caption {
+  font-size: var(--widget-control-font-size, 12px);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--widget-border);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-barrier .widget-body-text {
+  margin: 0;
+  font-size: var(--widget-type-body, 12px);
+  font-weight: 700;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--widget-color, #000) 62%, black);
+  opacity: 0.9;
+}
+
+/* Tag — used for status pills, tier badges, counters. Border and ink
+   derive from --widget-border; state variants tint the fill only. */
+.dashboard-barrier .widget-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 12%, #fff);
+  color: var(--widget-border);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.dashboard-barrier .widget-tag.is-active,
+.dashboard-barrier .widget-tag.is-positive {
+  background: color-mix(in srgb, #4FFF5B 55%, var(--widget-color, #40C6E9));
+}
+.dashboard-barrier .widget-tag.is-warning {
+  background: color-mix(in srgb, #FFDA47 65%, var(--widget-color, #40C6E9));
+}
+.dashboard-barrier .widget-tag.is-danger {
+  background: color-mix(in srgb, #FA618A 55%, var(--widget-color, #40C6E9));
+}
+.dashboard-barrier .widget-tag.is-neutral {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 8%, #fff);
+}
+
+/* Action row — flex row of vt-buttons, wraps for narrow widgets. */
+.dashboard-barrier .widget-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: stretch;
+}
+.dashboard-barrier .widget-action-row > .vt-button {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Inline input inside a caption row (search box). Border matches
+   widget-border, no black. */
+.dashboard-barrier .widget-inline-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  padding: 4px 4px;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--widget-border);
+  text-transform: uppercase;
+}
+.dashboard-barrier .widget-inline-input::placeholder {
+  color: color-mix(in srgb, var(--widget-border) 55%, #fff);
+}
+
+/* Inline alert (import errors, notices). */
+.dashboard-barrier .widget-inline-alert {
+  padding: 6px 8px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, #FFDA47 40%, var(--widget-color, #40C6E9) 25%);
+  color: var(--widget-border);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+/* Preset grid + card — vt-button subclass so hover/press animations
+   inherit. Icon block accents with the preset's brand color, but chrome
+   stays tied to the widget palette. */
+.dashboard-barrier .widget-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 6px;
+}
+.dashboard-barrier .widget-preset-card {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  text-align: left;
+  min-height: 48px;
+}
+.dashboard-barrier .widget-preset-card__icon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 6px;
+  background: var(--preset-accent, var(--widget-color, #40C6E9));
+  color: var(--widget-border);
+}
+.dashboard-barrier .widget-preset-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.dashboard-barrier .widget-preset-card__title {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--widget-border);
+  letter-spacing: 0.02em;
+}
+.dashboard-barrier .widget-preset-card__desc {
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: color-mix(in srgb, var(--widget-border) 75%, #fff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-barrier .widget-preset-card.is-selected {
+  background: color-mix(in srgb, var(--preset-accent, var(--widget-color)) 22%, #fff);
+}
+
+/* Widget visibility list (Show/Hide toggles). Compact row per widget. */
+.dashboard-barrier .widget-visibility-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dashboard-barrier .widget-visibility-row {
+  display: grid;
+  grid-template-columns: 22px 1fr max-content;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 8px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 6%, #fff);
+  color: var(--widget-border);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: transform 90ms;
+}
+.dashboard-barrier .widget-visibility-row:hover { transform: translate(1px, 1px); }
+.dashboard-barrier .widget-visibility-row.is-hidden {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 3%, #f4f4f4);
+  opacity: 0.65;
+}
+.dashboard-barrier .widget-visibility-row__eye {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 4px;
+  background: var(--widget-color, #40C6E9);
+}
+.dashboard-barrier .widget-visibility-row.is-hidden .widget-visibility-row__eye {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 15%, #fff);
+}
+.dashboard-barrier .widget-visibility-row__title {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-barrier .widget-visibility-row__cat {
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+/* Identity block (account profile) — avatar + name + email + status. */
+.dashboard-barrier .widget-identity-row {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.dashboard-barrier .widget-identity-avatar {
+  width: 56px;
+  height: 56px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 50%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 10%, #fff);
+  display: grid;
+  place-items: center;
+  color: var(--widget-border);
+}
+.dashboard-barrier .widget-identity-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.dashboard-barrier .widget-identity-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.dashboard-barrier .widget-identity-name {
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  color: var(--widget-border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-barrier .widget-identity-meta {
+  font-size: 10px;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--widget-border) 65%, #fff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-barrier .widget-identity-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+/* Detail list — key/value grid used for channel + billing summaries. */
+.dashboard-barrier .widget-detail-list {
+  display: flex;
+  flex-direction: column;
+}
+.dashboard-barrier .widget-detail-row {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: var(--widget-module-stroke, 2px) solid color-mix(in srgb, var(--widget-border) 18%, transparent);
+}
+.dashboard-barrier .widget-detail-row:last-child { border-bottom: none; }
+.dashboard-barrier .widget-detail-row__label {
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--widget-border) 65%, #fff);
+}
+.dashboard-barrier .widget-detail-row__value {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--widget-border);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.dashboard-barrier .widget-metric {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--widget-border);
+  letter-spacing: -0.01em;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SYSTEM HUB — dense single-view layout
+═══════════════════════════════════════════════════════════ */
+.dashboard-barrier .widget-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  min-height: 0;
+}
+
+.dashboard-barrier .widget-hub-toggle {
+  display: grid;
+  grid-template-columns: 28px 1fr 40px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 6%, #fff);
+  color: var(--widget-border);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 100ms, transform 90ms;
+}
+.dashboard-barrier .widget-hub-toggle:hover { transform: translate(1px, 1px); }
+.dashboard-barrier .widget-hub-toggle.is-on {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 32%, #fff);
+}
+.dashboard-barrier .widget-hub-toggle__icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 6px;
+  background: var(--widget-color, #40C6E9);
+  color: var(--widget-border);
+}
+.dashboard-barrier .widget-hub-toggle__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.dashboard-barrier .widget-hub-toggle__title {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--widget-border);
+}
+.dashboard-barrier .widget-hub-toggle__hint {
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: color-mix(in srgb, var(--widget-border) 62%, #fff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* iOS-style switch — border/thumb color from --widget-border, no black. */
+.dashboard-barrier .widget-hub-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 4%, #fff);
+  transition: background 120ms;
+}
+.dashboard-barrier .widget-hub-switch.is-on {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 65%, #4FFF5B);
+}
+.dashboard-barrier .widget-hub-switch__thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 14px;
+  height: 14px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 120ms;
+}
+.dashboard-barrier .widget-hub-switch.is-on .widget-hub-switch__thumb {
+  transform: translateX(16px);
+}
+
+.dashboard-barrier .widget-hub-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 6px;
+}
+.dashboard-barrier .widget-hub-actions > .vt-button {
+  padding: 6px 10px;
+  font-size: 10px;
+  min-height: 30px;
+  gap: 4px;
+}
+
+.dashboard-barrier .widget-hub-section-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 0 2px;
+}
+.dashboard-barrier .widget-hub-section-title {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--widget-border) 65%, #fff);
+}
+.dashboard-barrier .widget-hub-section-head > .vt-spectrum-badge { margin-left: auto; }
+
+.dashboard-barrier .widget-hub-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 6px;
+}
+.dashboard-barrier .widget-hub-preset-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 8%, #fff);
+  color: var(--widget-border);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  transition: transform 90ms, background 100ms;
+}
+.dashboard-barrier .widget-hub-preset-chip:hover { transform: translate(1px, 1px); }
+.dashboard-barrier .widget-hub-preset-chip.is-selected {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 45%, #fff);
+}
+.dashboard-barrier .widget-hub-preset-chip__icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 5px;
+  background: var(--widget-color, #40C6E9);
+  color: var(--widget-border);
+  flex-shrink: 0;
+}
+.dashboard-barrier .widget-hub-preset-chip__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-barrier .widget-hub-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 6%, #fff);
+  color: var(--widget-border);
+}
+
+.dashboard-barrier .widget-hub-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dashboard-barrier .widget-hub-list-row {
+  display: grid;
+  grid-template-columns: 22px 1fr max-content;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 8px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 5%, #fff);
+  color: var(--widget-border);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: transform 90ms;
+}
+.dashboard-barrier .widget-hub-list-row:hover { transform: translate(1px, 1px); }
+.dashboard-barrier .widget-hub-list-row.is-off {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 2%, #f4f4f4);
+  opacity: 0.7;
+}
+.dashboard-barrier .widget-hub-list-row__toggle {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 4px;
+  background: var(--widget-color, #40C6E9);
+}
+.dashboard-barrier .widget-hub-list-row.is-off .widget-hub-list-row__toggle {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 12%, #fff);
+}
+.dashboard-barrier .widget-hub-list-row__title {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-barrier .widget-hub-list-row__cat {
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ACCOUNT & BILLING — single-view layout
+═══════════════════════════════════════════════════════════ */
+.dashboard-barrier .widget-account {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  min-height: 0;
+}
+
+.dashboard-barrier .widget-account-identity {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 6%, #fff);
+}
+.dashboard-barrier .widget-account-avatar {
+  width: 52px;
+  height: 52px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 50%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 12%, #fff);
+  display: grid;
+  place-items: center;
+  color: var(--widget-border);
+}
+.dashboard-barrier .widget-account-avatar img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.dashboard-barrier .widget-account-identity__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.dashboard-barrier .widget-account-identity__name {
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  color: var(--widget-border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-barrier .widget-account-identity__email {
+  font-size: 10px;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--widget-border) 65%, #fff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-barrier .widget-account-identity__chips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.dashboard-barrier .widget-account-identity__cta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+}
+.dashboard-barrier .widget-account-identity__cta .vt-button {
+  padding: 5px 8px;
+  font-size: 9px;
+  min-height: 26px;
+  gap: 4px;
+}
+
+/* Metric strip — 2 tiles with big numbers. */
+.dashboard-barrier .widget-account-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+.dashboard-barrier .widget-account-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 6%, #fff);
+}
+.dashboard-barrier .widget-account-metric__label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--widget-border) 65%, #fff);
+}
+.dashboard-barrier .widget-account-metric__value {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--widget-border);
+  line-height: 1;
+}
+.dashboard-barrier .widget-account-metric .vt-button {
+  padding: 5px 8px;
+  font-size: 9px;
+  min-height: 26px;
+}
+
+/* Channel card. */
+.dashboard-barrier .widget-account-channel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 4%, #fff);
+}
+.dashboard-barrier .widget-account-channel__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--widget-border);
+}
+.dashboard-barrier .widget-account-channel__title {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.dashboard-barrier .widget-account-defs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  margin: 0;
+}
+.dashboard-barrier .widget-account-defs > div {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  gap: 6px;
+  align-items: baseline;
+  padding: 2px 0;
+}
+.dashboard-barrier .widget-account-defs dt {
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--widget-border) 60%, #fff);
+  margin: 0;
+}
+.dashboard-barrier .widget-account-defs dd {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--widget-border);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.dashboard-barrier .widget-account-channel__cta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+.dashboard-barrier .widget-account-channel__cta .vt-button {
+  padding: 6px 8px;
+  font-size: 9px;
+  min-height: 28px;
+  gap: 4px;
+}
+
+/* Danger row — tucked at the bottom, quiet until interacted. */
+.dashboard-barrier .widget-account-danger {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  border: var(--widget-module-stroke, 2px) dashed color-mix(in srgb, var(--widget-border) 40%, transparent);
+  border-radius: 8px;
+}
+.dashboard-barrier .widget-account-danger__label {
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--widget-border) 55%, #fff);
+}
+.dashboard-barrier .widget-account-danger__btn {
+  padding: 4px 8px !important;
+  font-size: 9px !important;
+  min-height: 24px !important;
+}
+
+/* Small icon slot inside a WidgetBadge (positioned before the label). */
+.dashboard-barrier .vt-spectrum-badge__icon {
+  display: inline-grid;
+  place-items: center;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   R1 — Consolidated header clusters
+   R2 — Settings dropdown menu + temporary drag chip
+   All chrome flows from --widget-color / --widget-border.
+═══════════════════════════════════════════════════════════ */
+
+.dashboard-barrier .widget-header-default-cluster,
+.dashboard-barrier .widget-header-rearrange-strip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dashboard-barrier .widget-header-rearrange-strip .widget-header-btn.is-mini {
+  min-width: 26px;
+  height: 22px;
+  padding: 0 6px;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+/* Settings dropdown */
+.dashboard-barrier .widget-settings-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.dashboard-barrier .widget-settings-menu__popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 168px;
+  padding: 6px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 8%, #fff);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
+  z-index: 40;
+}
+
+.dashboard-barrier .widget-settings-menu__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+}
+
+.dashboard-barrier .widget-settings-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--widget-border);
+  font: 900 10px "Inter", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 90ms;
+}
+.dashboard-barrier .widget-settings-menu__item:hover { transform: translate(1px, 1px); }
+.dashboard-barrier .widget-settings-menu__item.is-danger {
+  background: color-mix(in srgb, #FA618A 55%, var(--widget-color, #40C6E9));
+}
+.dashboard-barrier .widget-settings-menu__icon {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 4px;
+  background: var(--widget-color, #40C6E9);
+  color: var(--widget-border);
+  flex-shrink: 0;
+}
+.dashboard-barrier .widget-settings-menu__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Temporary drag chip */
+.dashboard-barrier .widget-drag-chip-slot {
+  position: absolute;
+  left: 50%;
+  top: -12px;
+  transform: translateX(-50%);
+  z-index: 30;
+  pointer-events: auto;
+}
+.dashboard-barrier .widget-drag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 999px;
+  background: var(--widget-color, #40C6E9);
+  color: var(--widget-border);
+  font: 900 10px "Inter", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: grab;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color, #000) 45%, transparent);
+  animation: vt-drag-chip-pulse 1.6s ease-in-out infinite;
+}
+.dashboard-barrier .widget-drag-chip:active { cursor: grabbing; }
+@keyframes vt-drag-chip-pulse {
+  0%,100% { transform: translate(0, 0); }
+  50%     { transform: translate(0, -2px); }
+}
+
+/* Give the widget outer element position: relative when a chip is armed
+   so the chip anchors correctly (existing widgets already have position). */
+.dashboard-barrier .vt-widget { position: relative; }
+.dashboard-barrier .vt-widget[data-drag-armed="true"] {
+  outline: var(--widget-module-stroke, 2px) dashed color-mix(in srgb, var(--widget-color) 65%, #fff);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-barrier .widget-drag-chip { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Collapse animation — matches the toolbox / subtoolbox motion.
+   Header stays fixed. Content animates height + opacity to 0.
+   The header's own bottom border becomes the collapsed module's
+   bottom stroke because .vt-widget-content collapses out of the box.
+═══════════════════════════════════════════════════════════ */
+.dashboard-barrier .vt-dash-cell {
+  transition: height 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-barrier .vt-widget-content {
+  overflow: hidden;
+  transition:
+    max-height 220ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 160ms ease,
+    padding 160ms ease,
+    margin 160ms ease,
+    border-width 160ms ease;
+  max-height: 4000px;   /* effectively "no cap" while open */
+}
+.dashboard-barrier .vt-widget[data-collapsed="true"] .vt-widget-content {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+  border-width: 0;
+  pointer-events: none;
+}
+.dashboard-barrier .vt-widget[data-collapsed="true"] .widget-subtitle {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition:
+    max-height 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 140ms ease;
+}
+.dashboard-barrier .widget-subtitle {
+  transition:
+    max-height 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 140ms ease;
+}
+
+/* Drag bar — replaces the three-button cluster when Drag is armed.
+   Matches the width of ?/settings/− combined and hides those buttons
+   until the drag completes or is cancelled. */
+.dashboard-barrier .widget-header-drag-bar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  /* Same width the 3-button cluster occupies: 3 × ~30px + 2 × 4px gap ≈ 98px */
+  min-width: 98px;
+  height: 30px;
+  padding: 0 12px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 55%, #fff);
+  color: var(--widget-border);
+  font: 900 10px "Inter", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: grab;
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color, #000) 45%, transparent);
+  animation: vt-drag-bar-pulse 1.6s ease-in-out infinite;
+}
+.dashboard-barrier .widget-header-drag-bar:active { cursor: grabbing; }
+@keyframes vt-drag-bar-pulse {
+  0%,100% { transform: translate(0, 0); }
+  50%     { transform: translate(0, -1px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-barrier .widget-header-drag-bar { animation: none; }
+}
+
+/* Deprecate the old floating chip slot — no longer rendered by WidgetShell
+   but keep the class defined so any external consumer wouldn't error. */
+.dashboard-barrier .widget-drag-chip-slot { display: none; }
+
+/* ═══════════════════════════════════════════════════════════
+   Dashboard Controls — proportional miniature dashboard.
+   Uses the live 24-column layout and the Community Post
+   small split-control anatomy (28px header + square icon rail).
+═══════════════════════════════════════════════════════════ */
+.dashboard-barrier .dashboard-miniature-workspace {
+  container-type: inline-size;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--widget-component-gap);
+}
+
+.dashboard-barrier .dashboard-miniature-section {
+  min-width: 0;
+  padding: 5px;
+  border: var(--widget-module-stroke) solid var(--widget-border);
+  border-radius: var(--widget-control-radius);
+  background: color-mix(in srgb, var(--widget-color) 7%, #fff);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+}
+
+.dashboard-barrier .dashboard-miniature-section.is-hidden-shelf {
+  background: color-mix(in srgb, var(--widget-border) 5%, #fff);
+}
+
+.dashboard-barrier .dashboard-miniature-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+  color: var(--widget-border);
+}
+
+.dashboard-barrier .dashboard-miniature-section-header h3,
+.dashboard-barrier .dashboard-miniature-section-header span,
+.dashboard-barrier .dashboard-miniature-selected-controls > strong {
+  margin: 0;
+  font-size: var(--widget-type-label);
+  font-weight: 999;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.dashboard-barrier .dashboard-miniature-section-header span {
+  opacity: .72;
+}
+
+.dashboard-barrier .dashboard-miniature-grid {
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(2px, .75%, 4px);
+  min-width: 0;
+}
+
+.dashboard-barrier .dashboard-widget-miniature {
+  align-self: start;
+  min-width: 0;
+  overflow: hidden;
+  border: var(--widget-module-stroke) solid var(--widget-border);
+  border-radius: var(--widget-control-radius);
+  background: #fff;
+  color: var(--widget-border);
+  box-shadow: 2px 2px 0 var(--widget-shadow);
+  transition:
+    border-color 120ms linear,
+    background-color 120ms linear,
+    box-shadow 120ms linear,
+    opacity 120ms linear;
+}
+
+.dashboard-barrier .dashboard-widget-miniature[data-filtered-out="true"] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.dashboard-barrier .dashboard-widget-miniature[data-selected="true"] {
+  outline: 2px solid var(--widget-border);
+  outline-offset: 1px;
+}
+
+.dashboard-barrier .dashboard-widget-miniature[data-visibility="hidden"] {
+  opacity: .58;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--widget-color) 5%, #fff) 0 5px,
+      color-mix(in srgb, var(--widget-color) 16%, #fff) 5px 9px
+    );
+}
+
+.dashboard-barrier .dashboard-widget-miniature-header {
+  /* Shortened to match the real widget's header proportion.
+     Real widget: ~44px header on ~350px card ≈ 12.5%.
+     Miniature: 16px header on ~120-140px card ≈ 12%. */
+  width: 100%;
+  min-width: 0;
+  height: 16px;
+  min-height: 16px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-bottom: var(--widget-module-stroke) solid var(--widget-border);
+  border-radius: 0;
+  background: var(--widget-color);
+  color: var(--widget-border);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.dashboard-barrier .dashboard-widget-miniature-header:focus-visible,
+.dashboard-barrier .dashboard-miniature-action:focus-visible {
+  position: relative;
+  z-index: 2;
+  outline: 2px solid var(--widget-border);
+  outline-offset: -2px;
+}
+
+.dashboard-barrier .dashboard-widget-miniature-icon {
+  width: 16px;
+  flex: 0 0 16px;
+  display: grid;
+  place-items: center;
+  border-right: var(--widget-module-stroke) solid var(--widget-border);
+  /* Lightened widget hue — never the second palette color. */
+  background: var(--mini-widget-icon-color, color-mix(in srgb, var(--widget-color) 55%, #fff));
+  color: var(--widget-border);
+}
+
+.dashboard-barrier .dashboard-widget-miniature-icon svg {
+  width: 10px;
+  height: 10px;
+  stroke-width: 2px;
+}
+
+.dashboard-barrier .dashboard-widget-miniature-title {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  padding-inline: 4px;
+  overflow: hidden;
+  color: var(--widget-border);
+  font-size: 7px;
+  font-weight: 999;
+  line-height: 1;
+  letter-spacing: 0;
+  text-align: left;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dashboard-barrier .dashboard-widget-miniature-body {
+  min-height: 30px;
+  display: grid;
+  grid-template-rows: minmax(5px, 1fr) minmax(20px, auto);
+  gap: 2px;
+  padding: 3px;
+  background: color-mix(in srgb, var(--widget-color) 5%, #fff);
+}
+
+.dashboard-barrier .dashboard-widget-miniature[data-height="short"] .dashboard-widget-miniature-body { min-height: 30px; }
+.dashboard-barrier .dashboard-widget-miniature[data-height="medium"] .dashboard-widget-miniature-body { min-height: 36px; }
+.dashboard-barrier .dashboard-widget-miniature[data-height="tall"] .dashboard-widget-miniature-body { min-height: 44px; }
+.dashboard-barrier .dashboard-widget-miniature[data-height="xtall"] .dashboard-widget-miniature-body { min-height: 52px; }
+.dashboard-barrier .dashboard-widget-miniature[data-height="massive"] .dashboard-widget-miniature-body { min-height: 66px; }
+.dashboard-barrier .dashboard-widget-miniature[data-height="colossal"] .dashboard-widget-miniature-body { min-height: 82px; }
+
+.dashboard-barrier .dashboard-widget-miniature[data-collapsed="true"] .dashboard-widget-miniature-body {
+  min-height: 22px;
+  grid-template-rows: minmax(18px, 1fr);
+}
+
+.dashboard-barrier .dashboard-widget-miniature[data-collapsed="true"] .dashboard-widget-miniature-meter {
+  display: none;
+}
+
+.dashboard-barrier .dashboard-widget-miniature-meter {
+  min-width: 0;
+  min-height: 5px;
+  border: 1px solid var(--widget-border);
+  border-radius: 2px;
+  background:
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--widget-color) 18%, #fff) 0 42%,
+      var(--widget-color) 42% 58%,
+      color-mix(in srgb, var(--widget-color) 18%, #fff) 58% 100%
+    );
+}
+
+.dashboard-barrier .dashboard-miniature-actions.is-compact {
+  min-width: 0;
+  min-height: 20px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(9px, 1fr));
+  gap: 1px;
+}
+
+.dashboard-barrier .dashboard-miniature-actions.is-compact .is-visibility { grid-column: 1; grid-row: 1 / 3; }
+.dashboard-barrier .dashboard-miniature-actions.is-compact .is-collapse { grid-column: 2; grid-row: 1 / 3; }
+.dashboard-barrier .dashboard-miniature-actions.is-compact .is-thinner { grid-column: 3; grid-row: 1; }
+.dashboard-barrier .dashboard-miniature-actions.is-compact .is-wider { grid-column: 4; grid-row: 1; }
+.dashboard-barrier .dashboard-miniature-actions.is-compact .is-shorter { grid-column: 3; grid-row: 2; }
+.dashboard-barrier .dashboard-miniature-actions.is-compact .is-taller { grid-column: 4; grid-row: 2; }
+.dashboard-barrier .dashboard-miniature-actions.is-compact .is-up { grid-column: 5; grid-row: 1; }
+.dashboard-barrier .dashboard-miniature-actions.is-compact .is-right { grid-column: 6; grid-row: 1; }
+.dashboard-barrier .dashboard-miniature-actions.is-compact .is-left { grid-column: 5; grid-row: 2; }
+.dashboard-barrier .dashboard-miniature-actions.is-compact .is-down { grid-column: 6; grid-row: 2; }
+
+.dashboard-barrier .dashboard-miniature-action {
+  min-width: 0;
+  min-height: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--widget-border);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--widget-color) 22%, #fff);
+  color: var(--widget-border);
+  font-family: inherit;
+  font-size: var(--widget-type-label);
+  font-weight: 999;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.dashboard-barrier .dashboard-miniature-action:hover:not(:disabled) {
+  background: var(--widget-color);
+}
+
+.dashboard-barrier .dashboard-miniature-action:active:not(:disabled) {
+  transform: translate(1px, 1px);
+}
+
+.dashboard-barrier .dashboard-miniature-action:disabled {
+  cursor: not-allowed;
+  opacity: .28;
+}
+
+.dashboard-barrier .dashboard-miniature-actions.is-compact .dashboard-miniature-action svg {
+  width: clamp(7px, 42%, 11px);
+  height: clamp(7px, 42%, 11px);
+  flex: 0 0 auto;
+  stroke-width: 2.4px;
+}
+
+.dashboard-barrier .dashboard-miniature-actions.is-compact .is-resize > span {
+  overflow: hidden;
+  font-size: clamp(6px, 55%, 9px);
+  font-weight: 999;
+  line-height: 1;
+  letter-spacing: -.08em;
+  white-space: nowrap;
+}
+
+.dashboard-barrier .dashboard-miniature-shelf-empty,
+.dashboard-barrier .dashboard-miniature-empty {
+  margin: 0;
+  padding: 10px;
+  border: 1px dashed var(--widget-border);
+  border-radius: var(--widget-control-radius);
+  background: color-mix(in srgb, var(--widget-color) 7%, #fff);
+  color: var(--widget-border);
+  font-size: var(--widget-type-label);
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.dashboard-barrier .dashboard-miniature-selected-controls {
+  display: none;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 5px;
+  padding: 6px;
+  border: var(--widget-module-stroke) solid var(--widget-border);
+  border-radius: var(--widget-control-radius);
+  background: color-mix(in srgb, var(--widget-color) 10%, #fff);
+  box-shadow: 2px 2px 0 var(--widget-shadow);
+}
+
+.dashboard-barrier .dashboard-miniature-actions.is-expanded {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.dashboard-barrier .dashboard-miniature-actions.is-expanded .dashboard-miniature-action {
+  min-height: 44px;
+  padding-inline: 6px;
+}
+
+.dashboard-barrier .dashboard-miniature-actions.is-expanded .dashboard-miniature-action svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+
+.dashboard-barrier .dashboard-miniature-actions.is-expanded .is-resize > span:first-child {
+  display: none;
+}
+
+@container (max-width: 680px) {
+  .dashboard-barrier .dashboard-miniature-selected-controls { display: grid; }
+}
+
+@media (pointer: coarse) {
+  .dashboard-barrier .dashboard-miniature-selected-controls { display: grid; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-barrier .dashboard-widget-miniature { transition: none; }
+  .dashboard-barrier .dashboard-miniature-action:active:not(:disabled) { transform: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DashboardControlWidget — shared class replacements for the
+   Tailwind pattern soup. All widget-color driven, no black.
+═══════════════════════════════════════════════════════════ */
+.dashboard-barrier .widget-control-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 6%, #fff);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color, #000) 45%, transparent);
+  transition: box-shadow 100ms ease;
+}
+.dashboard-barrier .widget-control-card:hover {
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color, #000) 45%, transparent);
+}
+
+.dashboard-barrier .widget-control-pill,
+.dashboard-barrier .widget-control-tag,
+.dashboard-barrier .widget-control-live-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 6px;
+  font: 900 8px "Inter", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--widget-border);
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 10%, #fff);
+  white-space: nowrap;
+}
+.dashboard-barrier .widget-control-tag {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 5%, #f4f4f4);
+}
+.dashboard-barrier .widget-control-live-tag {
+  background: color-mix(in srgb, #4FFF5B 55%, var(--widget-color, #40C6E9));
+  animation: vt-control-live 1.4s ease-in-out infinite;
+}
+@keyframes vt-control-live {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-barrier .widget-control-live-tag { animation: none; }
+}
+
+.dashboard-barrier .widget-control-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 6%, #fff);
+  color: var(--widget-border);
+  font: 900 9px "Inter", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background-color 100ms ease, transform 90ms;
+}
+.dashboard-barrier .widget-control-tab:hover { transform: translate(1px, 1px); }
+.dashboard-barrier .widget-control-tab.is-active {
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 55%, #fff);
+  color: var(--widget-border);
+}
+
+.dashboard-barrier .widget-control-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 8%, #fff);
+  color: var(--widget-border);
+  font: 900 8px "Inter", sans-serif;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 90ms, box-shadow 100ms;
+}
+.dashboard-barrier .widget-control-mini-btn:hover { transform: translate(1px, 1px); }
+.dashboard-barrier .widget-control-mini-btn.is-primary {
+  background: color-mix(in srgb, #4FFF5B 55%, var(--widget-color, #40C6E9));
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Widget tooltip bubble — elevate above every widget shell + header
+   Neutralize the widget's overflow:hidden while the tooltip is being
+   hovered so the bubble can escape the widget's bounds and float over
+   the header and adjacent widgets.
+═══════════════════════════════════════════════════════════ */
+.dashboard-barrier .widget-tooltip-bubble {
+  /* Sit above dashboard chrome, drag overlays, and cross-widget content. */
+  z-index: 9999;
+  max-width: min(320px, calc(100vw - 16px));
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Modern browsers support :has() (Chrome/Safari/FF stable). While any
+   descendant tooltip is being hovered, unclip the widget content and any
+   scroll rails so the bubble can escape upward and outward. */
+.dashboard-barrier .vt-widget-content:has(.widget-tooltip:hover),
+.dashboard-barrier .vt-widget:has(.widget-tooltip:hover),
+.dashboard-barrier .vt-widget-body:has(.widget-tooltip:hover),
+.dashboard-barrier .vt-dash-cell:has(.widget-tooltip:hover),
+.dashboard-barrier :where(.widget-scroll-area, .widget-scroll-viewport):has(.widget-tooltip:hover) {
+  overflow: visible !important;
+}
+
+/* When a tooltip inside a widget is hovered, elevate the ENTIRE widget's
+   stacking context above the nav bar and any adjacent widgets so the
+   bubble renders over everything, including position:fixed chrome. */
+.dashboard-barrier .vt-widget:has(.widget-tooltip:hover),
+.dashboard-barrier .vt-dash-cell:has(.widget-tooltip:hover) {
+  z-index: 2147483000; /* just below the INT32 max, above any typical nav */
+  position: relative;
+}
+.dashboard-barrier .widget-tooltip:hover .widget-tooltip-bubble {
+  z-index: 2147483647;
+}
+
+/* ═══ COMMUNITY POST STUDIO ═══ */
+.dashboard-barrier .community-image-assets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--widget-component-gap);
+  align-items: center;
+}
+.dashboard-barrier .community-image-thumb {
+  position: relative;
+  width: 44px;
+  height: 60px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--widget-color) 32%, #fff);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--widget-border);
+  cursor: grab;
+}
+.dashboard-barrier .community-image-thumb-clear {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  padding: 0;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+}
+.dashboard-barrier .community-image-thumb-add {
+  padding: 4px 8px;
+  font-size: 10px;
+}
+
+.dashboard-barrier .community-studio-row {
+  display: flex;
+  gap: var(--widget-component-gap);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.dashboard-barrier .community-studio-count { flex: 0 0 120px; }
+.dashboard-barrier .community-studio-windows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.dashboard-barrier .community-studio-window-chip {
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--widget-color) 32%, #fff);
+  color: var(--widget-border);
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+}
+.dashboard-barrier .community-studio-notes {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--widget-border);
+}
+.dashboard-barrier .community-studio-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0.55;
+  border: var(--widget-module-stroke, 2px) dashed var(--widget-border);
+  border-radius: 6px;
+}
+.dashboard-barrier .community-studio-variants {
+  display: flex;
+  flex-direction: column;
+  gap: var(--widget-component-gap);
+  min-height: 0;
+  overflow: auto;
+}
+.dashboard-barrier .community-studio-variant {
+  text-align: left;
+  padding: 8px 10px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--widget-border);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dashboard-barrier .community-studio-variant:hover {
+  background: color-mix(in srgb, var(--widget-color) 14%, #fff);
+}
+.dashboard-barrier .community-studio-variant-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.dashboard-barrier .community-studio-variant-score {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--widget-border);
+}
+.dashboard-barrier .community-studio-variant-body {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.dashboard-barrier .community-studio-variant-poll {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.dashboard-barrier .community-studio-variant-poll span {
+  padding: 2px 6px;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--widget-color) 24%, #fff);
+  color: var(--widget-border);
+}
+.dashboard-barrier .community-studio-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dashboard-barrier .community-studio-queue-head {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+.dashboard-barrier .community-studio-queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow: auto;
+}
+.dashboard-barrier .community-studio-queue-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: #fff;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 4px;
+}
+.dashboard-barrier .community-studio-queue-meta {
+  display: flex;
+  flex-direction: column;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.65;
+}
+.dashboard-barrier .community-studio-queue-text {
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dashboard-barrier .community-studio-queue-actions {
+  display: flex;
+  gap: 3px;
+}
+.dashboard-barrier .community-post-footer-flash {
+  margin-left: auto;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: color-mix(in srgb, var(--widget-color) 24%, #fff);
+  color: var(--widget-border);
+  border-radius: 3px;
+}
+
+/* ═══ SHORTS GENERATOR ═══ */
+.dashboard-barrier .shorts-source-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--widget-component-gap);
+}
+.dashboard-barrier .shorts-source-grid .widget-split-button-label {
+  justify-content: center;
+  padding-inline: 5px;
+  white-space: nowrap;
+}
+.dashboard-barrier .shorts-concept { min-height: 68px; }
+.dashboard-barrier .shorts-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0.55;
+  border: var(--widget-module-stroke, 2px) dashed var(--widget-border);
+  border-radius: 6px;
+}
+.dashboard-barrier .shorts-plan-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--widget-component-gap);
+  min-height: 0;
+  overflow: auto;
+}
+.dashboard-barrier .shorts-plan-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--widget-border);
+}
+.dashboard-barrier .shorts-plan-text {
+  font-size: 11px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-barrier .shorts-plan-dur {
+  font-size: 10px;
+  font-weight: 900;
+  opacity: 0.65;
+}
+.dashboard-barrier .shorts-arrange-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.dashboard-barrier .shorts-filmstrip {
+  display: flex;
+  gap: var(--widget-component-gap);
+  overflow-x: auto;
+  padding: 2px 0;
+  min-height: 0;
+}
+.dashboard-barrier .shorts-clip {
+  flex: 0 0 128px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  background: #fff;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 4px;
+  cursor: grab;
+}
+.dashboard-barrier .shorts-clip.is-dragging { opacity: 0.5; }
+.dashboard-barrier .shorts-clip-frame {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  background: var(--widget-border);
+  border-radius: 2px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.dashboard-barrier .shorts-clip-frame img { width: 100%; height: 100%; object-fit: cover; }
+.dashboard-barrier .shorts-clip-empty {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0.7;
+}
+.dashboard-barrier .shorts-clip-mask { position: absolute; inset: 0; pointer-events: none; }
+.dashboard-barrier .shorts-clip-badge {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  padding: 1px 4px;
+  font-size: 9px;
+  font-weight: 900;
+  color: #fff;
+  background: color-mix(in srgb, var(--widget-border) 72%, transparent);
+  border-radius: 2px;
+}
+.dashboard-barrier .shorts-clip-label {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.dashboard-barrier .shorts-clip-trims {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dashboard-barrier .shorts-clip-trims input[type="range"] { width: 100%; }
+.dashboard-barrier .shorts-clip-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+}
+.dashboard-barrier .shorts-clip-actions .vt-button {
+  padding: 2px 4px;
+  min-width: 22px;
+  min-height: 22px;
+}
+
+/* ═══ BRAIN CONTROL CENTER ═══ */
+.dashboard-barrier .brain-map-container {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--widget-component-gap);
+  flex: 1;
+  min-height: 0;
+}
+.dashboard-barrier .brain-map-panel,
+.dashboard-barrier .brain-memory-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--widget-component-gap);
+  min-height: 0;
+}
+.dashboard-barrier .brain-map-head,
+.dashboard-barrier .brain-memory-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--widget-border);
+}
+.dashboard-barrier .brain-map-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.dashboard-barrier .brain-map-svg { width: 100%; height: 100%; display: block; }
+.dashboard-barrier .brain-edge { stroke: var(--widget-border); }
+.dashboard-barrier .brain-edge.is-live { stroke: var(--widget-border); }
+.dashboard-barrier .brain-edge.is-dim { stroke: color-mix(in srgb, var(--widget-border) 30%, transparent); }
+.dashboard-barrier .brain-core {
+  fill: var(--widget-color);
+  stroke: var(--widget-border);
+  stroke-width: 2;
+}
+.dashboard-barrier .brain-core-label {
+  font-size: 11px;
+  font-weight: 900;
+  fill: var(--widget-border);
+}
+.dashboard-barrier .brain-node {
+  fill: #fff;
+  stroke: var(--widget-border);
+  stroke-width: 2;
+}
+.dashboard-barrier .brain-node.is-selected {
+  fill: var(--widget-color);
+}
+.dashboard-barrier .brain-node-label {
+  font-size: 8px;
+  font-weight: 900;
+  fill: var(--widget-border);
+  text-transform: uppercase;
+}
+.dashboard-barrier .brain-map-inspector {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 152px;
+  padding: 6px 8px;
+  background: #fff;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-border) 18%, transparent);
+}
+.dashboard-barrier .brain-map-inspector-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--widget-border);
+}
+.dashboard-barrier .brain-map-inspector-body {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--widget-border);
+}
+.dashboard-barrier .brain-memory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  overflow: auto;
+}
+.dashboard-barrier .brain-memory-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  background: #fff;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 4px;
+}
+.dashboard-barrier .brain-memory-label {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--widget-border);
+}
+.dashboard-barrier .brain-signals-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--widget-component-gap);
+  flex: 1;
+  min-height: 0;
+}
+.dashboard-barrier .brain-signals-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--widget-border);
+}
+.dashboard-barrier .brain-signals-head .vt-input { flex: 1; }
+.dashboard-barrier .brain-signals-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: #fff;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.dashboard-barrier .brain-signal-row {
+  display: grid;
+  grid-template-columns: 78px 130px 1fr;
+  gap: 6px;
+  padding: 3px 6px;
+  font-size: 10px;
+  color: var(--widget-border);
+  border-bottom: 1px solid color-mix(in srgb, var(--widget-border) 10%, transparent);
+}
+.dashboard-barrier .brain-signal-time { opacity: 0.55; }
+.dashboard-barrier .brain-signal-tool { font-weight: 900; color: var(--widget-color); }
+.dashboard-barrier .brain-signal-event { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dashboard-barrier .brain-signals-empty {
+  padding: 20px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0.55;
+  font-family: inherit;
+}
+.dashboard-barrier .brain-sources-container {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: var(--widget-component-gap);
+  flex: 1;
+  min-height: 0;
+}
+.dashboard-barrier .brain-sources-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+.dashboard-barrier .brain-sources-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--widget-border);
+}
+.dashboard-barrier .brain-sources-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  overflow: auto;
+}
+.dashboard-barrier .brain-sources-grid.is-wide { grid-template-columns: 1fr; }
+.dashboard-barrier .brain-source-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 8px;
+  background: #fff;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--widget-border);
+}
+.dashboard-barrier .brain-source-row.is-wide {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+}
+.dashboard-barrier .brain-source-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--widget-border);
+}
+.dashboard-barrier .brain-source-dot.is-ok   { background: #3FEE56; }
+.dashboard-barrier .brain-source-dot.is-warn { background: #FFDA47; }
+.dashboard-barrier .brain-source-dot.is-off  { background: #FA618A; }
+.dashboard-barrier .brain-source-label {
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--widget-border);
+}
+.dashboard-barrier .brain-source-meta {
+  font-size: 9px;
+  font-weight: 800;
+  opacity: 0.6;
+}
+.dashboard-barrier .brain-footer-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--widget-border);
+  opacity: 0.6;
+}
+
+/* ═══ QUICK ACTIONS (BETA) ═══ */
+.dashboard-barrier .quick-actions-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--widget-component-gap);
+  padding: 8px;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+.dashboard-barrier .quick-actions-section-head {
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--widget-border);
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+.dashboard-barrier .quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px;
+}
+.dashboard-barrier .quick-action-tile {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 10px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.dashboard-barrier .quick-actions-empty {
+  padding: 18px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  opacity: 0.55;
+  border: var(--widget-module-stroke, 2px) dashed var(--widget-border);
+  border-radius: 6px;
+}
+
+/* ═══ MINI CALENDAR (BETA) ═══ */
+.dashboard-barrier .mini-calendar-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--widget-component-gap);
+  padding: 8px;
+  height: 100%;
+  min-height: 0;
+}
+.dashboard-barrier .mini-calendar-grid-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dashboard-barrier .mini-calendar-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.dashboard-barrier .mini-calendar-cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--widget-color) 8%, #fff);
+  color: var(--widget-border);
+  font-size: 10px;
+  font-weight: 900;
+}
+.dashboard-barrier .mini-calendar-cell[data-state="today"] {
+  background: var(--widget-color);
+}
+.dashboard-barrier .mini-calendar-cell[data-state="tasks"] {
+  background: color-mix(in srgb, var(--widget-color) 32%, #fff);
+}
+.dashboard-barrier .mini-calendar-cell-num { line-height: 1; }
+.dashboard-barrier .mini-calendar-cell-dot {
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--widget-border);
+}
+.dashboard-barrier .mini-calendar-checklist-head {
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+  color: var(--widget-border);
+  margin-top: 4px;
+}
+.dashboard-barrier .mini-calendar-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 2px 0;
+}
+.dashboard-barrier .mini-calendar-task {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--widget-border);
+}
+.dashboard-barrier .mini-calendar-task.is-done {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.dashboard-barrier .mini-calendar-empty {
+  padding: 12px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  opacity: 0.55;
+}

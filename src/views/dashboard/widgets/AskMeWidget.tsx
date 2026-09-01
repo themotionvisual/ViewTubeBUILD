@@ -49,7 +49,7 @@ const FormattedMessage = ({ text }: { text: string }) => {
        alignSelf: 'flex-start',
        alignItems: 'center',
        background: color,
-       border: '2px solid #000',
+       border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
        borderRadius: '8px',
        padding: '4px 8px',
        fontSize: '11px',
@@ -276,7 +276,7 @@ export const AskMeWidget = ({ widget, instance, editMode, onToggleCollapse, onCy
       </div>
      ))}
      {isThinking && (
-      <div style={{ alignSelf: "flex-start", padding: "8px 12px", background: "#f0f0f0", border: "2px solid #000", borderRadius: "10px", display: "flex", alignItems: "center", gap: "6px" }}>
+      <div style={{ alignSelf: "flex-start", padding: "8px 12px", background: "#f0f0f0", border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", borderRadius: "10px", display: "flex", alignItems: "center", gap: "6px" }}>
        <Sparkles size={12} style={{ animation: "spin 2s linear infinite" }} />
        <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", opacity: 0.6 }}>Analyzing...</span>
       </div>

@@ -12,6 +12,8 @@ import {
   Link2,
 } from "lucide-react"
 import {
+  COMMENT_BUBBLE_MAX_SIZE,
+  COMMENT_BUBBLE_MIN_SIZE,
   findLargestFittingFontSize,
   fitThumbnailTitle,
   THUMBNAIL_TITLE_MIN_SIZE,
@@ -49,6 +51,8 @@ const CommentVideoThumbnail = ({ title, videoId, thumbnailUrl }: { title: string
   const cardRef = useRef<HTMLDivElement | null>(null)
   const topTitleRef = useRef<HTMLDivElement | null>(null)
   const bottomTitleRef = useRef<HTMLDivElement | null>(null)
+  const topTitleCopyRef = useRef<HTMLSpanElement | null>(null)
+  const bottomTitleCopyRef = useRef<HTMLSpanElement | null>(null)
   const [layout, setLayout] = useState<ThumbnailTitleLayout>(() => fitThumbnailTitle(title, 188))
 
   useLayoutEffect(() => {
@@ -76,17 +80,40 @@ const CommentVideoThumbnail = ({ title, videoId, thumbnailUrl }: { title: string
   }, [title])
 
   useLayoutEffect(() => {
-    const titleBands = [topTitleRef.current, bottomTitleRef.current].filter((band): band is HTMLDivElement => Boolean(band))
+    const titleBands = [
+      { band: topTitleRef.current, copy: topTitleCopyRef.current },
+      { band: bottomTitleRef.current, copy: bottomTitleCopyRef.current },
+    ].filter((entry): entry is { band: HTMLDivElement; copy: HTMLSpanElement } => Boolean(entry.band && entry.copy))
     if (!titleBands.length) return
 
-    const fittedSize = findLargestFittingFontSize((fontSize) => {
-      titleBands.forEach((band) => { band.style.fontSize = `${fontSize}px` })
-      return titleBands.every((band) => band.scrollWidth <= band.clientWidth + 0.5)
-    }, { min: THUMBNAIL_TITLE_MIN_SIZE, max: layout.fontSize })
-
-    if (fittedSize !== layout.fontSize) {
-      setLayout((current) => ({ ...current, fontSize: fittedSize }))
+    const availableWidth = (band: HTMLDivElement) => {
+      const styles = window.getComputedStyle(band)
+      return Math.max(1, band.clientWidth - (parseFloat(styles.paddingLeft) || 0) - (parseFloat(styles.paddingRight) || 0))
     }
+
+    const fitRenderedBands = () => {
+      titleBands.forEach(({ copy }) => copy.style.setProperty("--comment-title-scale", "1"))
+      const fittedSize = findLargestFittingFontSize((fontSize) => {
+        titleBands.forEach(({ band }) => { band.style.fontSize = `${fontSize}px` })
+        return titleBands.every(({ band, copy }) => copy.scrollWidth <= availableWidth(band) + 0.5)
+      }, { min: THUMBNAIL_TITLE_MIN_SIZE, max: layout.fontSize })
+
+      if (fittedSize !== layout.fontSize) {
+        setLayout((current) => ({ ...current, fontSize: fittedSize }))
+        return
+      }
+
+      titleBands.forEach(({ band, copy }) => {
+        const naturalWidth = copy.scrollWidth
+        const scale = naturalWidth > 0 ? Math.min(1, availableWidth(band) / naturalWidth) : 1
+        copy.style.setProperty("--comment-title-scale", String(scale))
+      })
+    }
+
+    fitRenderedBands()
+    const observer = new ResizeObserver(fitRenderedBands)
+    titleBands.forEach(({ band }) => observer.observe(band))
+    return () => observer.disconnect()
   }, [layout.fontSize, layout.lines])
 
   const handleThumbnailError = (event: React.SyntheticEvent<HTMLImageElement>) => {
@@ -99,7 +126,9 @@ const CommentVideoThumbnail = ({ title, videoId, thumbnailUrl }: { title: string
 
   return (
     <div ref={cardRef} className="kpi-video-card comment-video-card">
-      <div ref={topTitleRef} className="kpi-header" style={{ fontSize: `${layout.fontSize}px` }}>{layout.lines[0]}</div>
+      <div ref={topTitleRef} className="kpi-header" style={{ fontSize: `${layout.fontSize}px` }}>
+        <span ref={topTitleCopyRef} className="comment-video-title-copy">{layout.lines[0]}</span>
+      </div>
       <div className="kpi-body">
         {videoId ? (
           <img width={320} height={180} src={thumbnailUrl} onError={handleThumbnailError} alt={`Video thumbnail for ${title}`} />
@@ -107,7 +136,9 @@ const CommentVideoThumbnail = ({ title, videoId, thumbnailUrl }: { title: string
           <div className="comment-video-card-placeholder"><Loader2 size={16} className="animate-spin text-black/20" /></div>
         )}
       </div>
-      <div ref={bottomTitleRef} className="kpi-header kpi-header-bottom" style={{ fontSize: `${layout.fontSize}px` }}>{layout.lines[1]}</div>
+      <div ref={bottomTitleRef} className="kpi-header kpi-header-bottom" style={{ fontSize: `${layout.fontSize}px` }}>
+        <span ref={bottomTitleCopyRef} className="comment-video-title-copy">{layout.lines[1]}</span>
+      </div>
     </div>
   )
 }
@@ -134,15 +165,30 @@ const AutoFitCommentBubble = ({ text }: { text: string }) => {
         const cardHeight = card.getBoundingClientRect().height
         const bubbleHeight = Math.max(42, cardHeight - meta.getBoundingClientRect().height - gap)
         const bubbleStyles = window.getComputedStyle(bubble)
-        const verticalInsets = parseFloat(bubbleStyles.paddingTop) + parseFloat(bubbleStyles.paddingBottom)
+        const readPixels = (value: string) => parseFloat(value) || 0
+        const verticalInsets = (
+          readPixels(bubbleStyles.paddingTop) +
+          readPixels(bubbleStyles.paddingBottom) +
+          readPixels(bubbleStyles.borderTopWidth) +
+          readPixels(bubbleStyles.borderBottomWidth)
+        )
+        const availableTextHeight = Math.max(1, bubbleHeight - verticalInsets)
 
-        // Keep readable copy at the system size. Short comments collapse to
-        // their content; only long comments use the available bubble height
-        // and the internal scroll rail.
+        // Start at the larger system size and shrink only when the full comment
+        // cannot fit inside the standard bubble beside the video card.
         copy.style.height = `${cardHeight}px`
-        bubble.style.height = "auto"
+        bubble.style.height = `${bubbleHeight}px`
+        textNode.style.height = "auto"
+        const fittedSize = findLargestFittingFontSize((fontSize) => {
+          textNode.style.fontSize = `${fontSize}px`
+          return textNode.scrollHeight <= availableTextHeight + 0.5
+            && textNode.scrollWidth <= textNode.clientWidth + 0.5
+        }, { min: COMMENT_BUBBLE_MIN_SIZE, max: COMMENT_BUBBLE_MAX_SIZE, step: 0.5 })
+        bubble.style.setProperty("--comment-bubble-font-size", `${fittedSize}px`)
+        textNode.style.fontSize = ""
         const naturalHeight = textNode.scrollHeight + verticalInsets
         bubble.style.height = `${Math.min(bubbleHeight, Math.max(42, naturalHeight))}px`
+        textNode.style.height = "100%"
       })
     }
 
@@ -278,7 +324,9 @@ export const CommentReplyWidget = ({
 
   const autosizeReplyInput = (input: HTMLTextAreaElement | null) => {
     if (!input) return
-    input.style.height = ""
+    input.style.height = "0px"
+    const maxHeight = parseFloat(window.getComputedStyle(input).maxHeight) || input.scrollHeight
+    input.style.height = `${Math.min(maxHeight, Math.max(64, input.scrollHeight))}px`
   }
 
   useEffect(() => {
@@ -356,7 +404,7 @@ export const CommentReplyWidget = ({
         )}
 
         {error && (
-          <div role="alert" style={{ border: "2px solid #000", margin: "10px 10px 0", padding: "7px 9px", background: "#FFB158", color: "#000", fontSize: "10px", fontWeight: 900, lineHeight: 1.3 }}>
+          <div role="alert" style={{ border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)", margin: "10px 10px 0", padding: "7px 9px", background: "#FFB158", color: "#000", fontSize: "10px", fontWeight: 900, lineHeight: 1.3 }}>
             {error}
           </div>
         )}
@@ -445,9 +493,8 @@ export const CommentReplyWidget = ({
                               {replyCount}
                             </WidgetSplitButton>
                             <WidgetTooltip className="comment-responder-open-tooltip" content="Go to this comment on YouTube">
-                              <a className="widget-split-button is-compact is-auto comment-responder-reaction-badge comment-responder-open-action" aria-label="Go to comment on YouTube" href={`https://www.youtube.com/watch?v=${videoId}&lc=${thread.snippet.topLevelComment.id}`} target="_blank" rel="noreferrer">
+                              <a className="widget-split-button is-compact is-auto comment-responder-reaction-badge comment-responder-open-action is-icon-only" aria-label="Go to comment on YouTube" href={`https://www.youtube.com/watch?v=${videoId}&lc=${thread.snippet.topLevelComment.id}`} target="_blank" rel="noreferrer">
                                 <span className="widget-split-button-icon"><ExternalLink size={14} /></span>
-                                <span className="widget-split-button-label">Go to comment</span>
                               </a>
                             </WidgetTooltip>
                           </div>
@@ -469,8 +516,8 @@ export const CommentReplyWidget = ({
                       return (
                         <div key={reply.id || idx} className="comment-responder-reply-row">
                           {!isChannelReply && replyAvatar}
-                          <div className={isChannelReply ? "previous-reply-bubble" : "viewer-reply-bubble"} style={{ flex: 1, minWidth: 0, padding: "7px 9px", fontSize: "11px", fontWeight: 900, lineHeight: 1.25, textTransform: "uppercase", display: "flex", flexWrap: "wrap", gap: "6px 8px", alignItems: "flex-start" }}>
-                            <span style={{ flex: "1 1 120px", minWidth: 0, overflowWrap: "anywhere" }}>{htmlDecode(reply.snippet.textDisplay || "")}</span>
+                          <div className={`${isChannelReply ? "previous-reply-bubble" : "viewer-reply-bubble"} comment-responder-reply-bubble`}>
+                            <span>{htmlDecode(reply.snippet.textDisplay || "")}</span>
                           </div>
                           {isChannelReply && replyAvatar}
                         </div>

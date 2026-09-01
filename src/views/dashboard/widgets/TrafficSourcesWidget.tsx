@@ -103,7 +103,7 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
      <div className="bub" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px", zIndex: 110 }}>
        {sources.map((src, index) => (
          <div key={`${src.label}-${index}`} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-           <div style={{ width: "8px", height: "8px", background: src.color, border: "1px solid #000" }} />
+           <div style={{ width: "8px", height: "8px", background: src.color, border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)" }} />
            <span>{src.label}: {src.pct}%</span>
          </div>
        ))}
@@ -117,7 +117,7 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
       flexWrap: "wrap",
       gap: "6px",
       justifyContent: "center",
-      borderTop: "2px solid #000",
+      borderTop: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
       paddingTop: "6px",
      }}>
      {sources.map((src, index) => (
@@ -134,7 +134,7 @@ export const TrafficSourcesWidget = ({ widget, instance, editMode, data, onToggl
          height: "8px",
          borderRadius: "2px",
          background: src.color,
-         border: "1px solid #000",
+         border: "var(--widget-module-stroke, 2px) solid var(--widget-border, #000)",
          flexShrink: 0,
         }}
        />

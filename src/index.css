@@ -347,13 +347,16 @@ textarea:not(.dashboard-barrier textarea)::placeholder {
 ═══════════════════════════════════════════════════════════ */
 .dashboard-barrier .vt-button {
   background: #ffffff;
-  border: 2px solid #000;
+  /* Border + ink now flow from the widget's palette-derived --widget-border
+     (color-mix of --widget-color with a small amount of black) instead of
+     pure #000, so buttons re-tone with their parent widget's hue. */
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #000);
   border-radius: 6px;
   font-family: 'Inter', sans-serif;
   font-weight: 800;
   font-size: 11px;
   text-transform: uppercase;
-  color: #000;
+  color: var(--widget-border, #000);
   cursor: pointer;
   box-shadow: 2px 2px 0px 0px color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
   transition: transform 0.1s, box-shadow 0.1s;
