@@ -23,6 +23,11 @@ This branch is documentation/reference only. It is now the consolidated evidence
 
 The reference branch does **not** authorize merging those branches wholesale. It records how their systems fit together and what should be harvested or normalized.
 
+## Current prototype references
+
+- [prototypes/VIEWTUBE_BRAIN_USER_CONTROL_CENTER_2026-09-03.html](prototypes/VIEWTUBE_BRAIN_USER_CONTROL_CENTER_2026-09-03.html) — creator-controlled Brain policy, personalization, learning, safety, retention and per-tool permissions reference.
+- [prototypes/ADAPTIVE_BRAIN_ORCHESTRATOR_2026-09-03.html](prototypes/ADAPTIVE_BRAIN_ORCHESTRATOR_2026-09-03.html) — adaptive orchestration reference for goals, profile, ranking, explanation, autonomy mode and approval-gated publishing.
+
 ## Historical / migration references
 
 - [BRANCH_CHECK_TO_VIEWTUBEX_RELOCATION_2026-08-30.md](BRANCH_CHECK_TO_VIEWTUBEX_RELOCATION_2026-08-30.md) — local application relocation, preservation, verification and recovery reference.
