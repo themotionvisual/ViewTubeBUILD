@@ -23,6 +23,10 @@ This branch is documentation/reference only. It is now the consolidated evidence
 
 The reference branch does **not** authorize merging those branches wholesale. It records how their systems fit together and what should be harvested or normalized.
 
+## Merge resources
+
+- [PR_78_SAFE_MERGE_TO_MAIN_2026-09-03.md](PR_78_SAFE_MERGE_TO_MAIN_2026-09-03.md) — focused correction, verification, squash-merge, rollback and follow-up plan for landing PR #78 safely on main.
+
 ## Machine-readable architecture
 
 - [VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json](VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json) — canonical owner/status/dependency/branch/PR registry for active ViewTube systems.
