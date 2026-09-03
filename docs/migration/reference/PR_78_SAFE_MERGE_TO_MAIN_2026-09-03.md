@@ -4,90 +4,92 @@
 **Repository:** `themotionvisual/ViewTubeBUILD`  
 **PR:** #78 — **Anomaly intelligence foundation**  
 **Source branch:** `feature/anomaly-intelligence-foundation`  
-**Target branch:** `main`
+**Target branch:** `main`  
+**Required predecessor:** **PR #77 — `refactor/viewtubex-clean-consolidation`**
 
 ## Executive decision
 
-PR #78 is a small, additive foundation and is a good candidate to merge into `main` **after a focused correction-and-verification pass**.
+**PR #77 must merge first. PR #78 must then be rebased/reintegrated onto the new post-#77 `main`, corrected, and fully revalidated before it can merge.**
 
-Current branch comparison:
+The earlier “#78 is 0 behind main” condition is only true against the pre-#77 main and must not be used after #77 lands.
 
-- **10 commits ahead of main**
-- **0 commits behind main**
-- **10 files changed**
-- **332 additions**
-- **0 deletions**
-- no application UI route is mounted by this PR
-- no direct YouTube API/auth runtime is added
-- VT-SYNC remains the raw-data owner
-- `analytics-canon` remains the public analytics boundary
+Current branch relationship before #77 merge:
 
-Because the PR is additive and currently ahead-only, the safest strategy is **not** to broaden it. Fix the known dataset-key assumptions, run focused and baseline regression gates, then **squash merge** the foundation as one atomic change.
+- #77 and #78 are **diverged**
+- #77 changes a very large application surface
+- #77 modifies the same canonical analytics files that #78 modifies:
+  - `src/services/analytics-canon/contracts.ts`
+  - `src/services/analytics-canon/index.ts`
+  - `src/services/analytics-canon/intelligenceEvidence.ts`
+- #77 also modifies adjacent intelligence infrastructure, including `src/services/aiBrainSelfImprovement.ts`
+- #78 imports and extends those canonical/intelligence seams
 
-## What PR #78 adds
+Therefore the correct merge sequence is:
 
-### analytics-canon
+```text
+PR #77
+   ↓
+new main
+   ↓
+rebase / reintegrate PR #78
+   ↓
+resolve analytics-canon + Brain/intelligence seams deliberately
+   ↓
+apply #78 dataset corrections
+   ↓
+run post-#77 regression gates
+   ↓
+squash merge #78
+```
 
-Modified:
+PR #78 should **not** be merged before #77 and should **not** be merged immediately after #77 without a fresh integration review.
+
+# 0. Required predecessor gate — PR #77
+
+## Why #77 must land first
+
+PR #77 is the broad ViewTubeX consolidation branch. It changes VT-SYNC, analytics, Brain/intelligence, auth/account, tool/runtime, dashboard and guide systems. It also modifies the exact canonical analytics files that #78 extends.
+
+That means #78's current branch was built against an older version of the canonical analytics seam.
+
+## After #77 merges
+
+Do not simply press Merge on #78.
+
+Create a fresh post-#77 integration state:
+
+### Preferred method
+
+1. fetch the new `main`;
+2. create a safety tag/branch at the current #78 head;
+3. rebase `feature/anomaly-intelligence-foundation` onto the new `main`, or create a new `feature/anomaly-intelligence-foundation-after-77` branch from new main and reapply #78's minimal anomaly commits;
+4. resolve overlapping canonical files manually;
+5. rerun the entire #78 verification plan.
+
+### Safer alternative for a large #77 merge
+
+Because #77 is broad, it may be cleaner to create a **new branch from post-#77 main** and port only #78's intended foundation changes:
+
+- canonical full-row intelligence accessor, if still needed after #77;
+- anomaly service files;
+- Brain capability registration, adapted to the post-#77 registry;
+- detector tests.
+
+This avoids accidentally resurrecting pre-#77 versions of canonical files during conflict resolution.
+
+## Overlap files requiring human review
+
+At minimum:
 
 - `src/services/analytics-canon/contracts.ts`
 - `src/services/analytics-canon/index.ts`
 - `src/services/analytics-canon/intelligenceEvidence.ts`
+- `src/services/brain/BrainCapabilityRegistry.ts`
+- `src/services/aiBrainSelfImprovement.ts` as an adjacent dependency used by #78
 
-New capability:
+Rule:
 
-`getCanonicalIntelligenceDatasetRows(snapshot, datasetId)`
-
-This exposes full normalized rows for one canonical VT-SYNC intelligence dataset while preserving:
-
-- dataset status
-- snapshot ID
-- channel ID
-- source provenance
-- freshness
-- missing metrics
-- privacy filtering
-
-### anomaly-intelligence service
-
-Added:
-
-- `contracts.ts`
-- `detector.ts`
-- `service.ts`
-- `brainContext.ts`
-- `index.ts`
-- detector tests
-
-Foundation behavior:
-
-- robust median baseline
-- median absolute deviation
-- spike/drop detection
-- relative delta
-- surprise score
-- impact score
-- confidence
-- evidence refs
-- Brain-context formatting
-- optional capture into the existing Brain learning evidence system
-
-### Brain
-
-PR #78 adds one Brain capability registration:
-
-`signal-anomaly-intelligence`
-
-for:
-
-- analytics
-- strategy
-- revenue
-- audience
-
-It requires channel data and does not itself add a new model/API path.
-
----
+> **Post-#77 main wins as the canonical base. Reapply #78's smallest necessary additions on top. Do not resolve conflicts by choosing the old #78 file wholesale.**
 
 # 1. Merge invariants
 
@@ -434,24 +436,20 @@ No new UI, persistence, API fetching, action execution or Profile-writing featur
 
 Especially the traffic grouping regression.
 
-## Step 4 — Re-check main relationship
+## Step 4 — Rebuild #78 on post-#77 main
 
-Immediately before merge:
+After #77 is merged, the old “0 behind” status is obsolete.
 
-```text
-feature/anomaly-intelligence-foundation vs main
-```
+1. fetch the new `main`;
+2. compare new main against the current #78 branch;
+3. use post-#77 main as the canonical base;
+4. rebase #78 or create a fresh after-77 anomaly branch;
+5. manually review the three overlapping analytics-canon files;
+6. review `BrainCapabilityRegistry.ts` against the post-#77 Brain stack;
+7. confirm `captureAIBrainLearningEvent()` still has the same safe semantics after #77;
+8. rerun every focused and full regression gate.
 
-If still **0 behind**, no rebase is necessary.
-
-If main has advanced:
-
-1. fetch current main;
-2. rebase or merge main into #78 according to repository convention;
-3. manually review all three modified canonical files and `BrainCapabilityRegistry.ts`;
-4. rerun all gates.
-
-Do not force-push over unreviewed conflict resolutions.
+Do not use wholesale “ours/theirs” conflict resolution for canonical analytics or Brain files. Preserve #77's canonical changes and reapply #78's minimal additions intentionally.
 
 ## Step 5 — Run gates
 
@@ -567,7 +565,10 @@ Only after outcome data exists:
 
 PR #78 is ready for main when all of the following are true:
 
-- [ ] branch is current with main or conflicts are explicitly resolved
+- [ ] PR #77 has merged and its post-merge main is stable
+- [ ] #78 has been rebuilt/rebased against post-#77 main
+- [ ] overlapping analytics-canon/Brain seams were manually reviewed
+- [ ] branch is current with post-#77 main and conflicts are explicitly resolved
 - [ ] `traffic_day` grouping key corrected
 - [ ] aggregate `formats_subscribers` is not treated as a fake daily series
 - [ ] focused detector tests pass
@@ -583,6 +584,6 @@ PR #78 is ready for main when all of the following are true:
 
 ## Recommended decision
 
-**MERGE AFTER CORRECTIONS + GREEN DELTA GATES.**
+**MERGE ONLY AFTER #77 → POST-#77 REBASE/REINTEGRATION → CORRECTIONS → GREEN DELTA GATES.**
 
 The architecture is correct: PR #78 builds on `analytics-canon`, preserves VT-SYNC ownership, adds a derived intelligence service, and keeps the initial blast radius small. The two dataset-shape assumptions should be corrected before merge so the foundation lands cleanly enough to support the larger anomaly system without immediately carrying silent data-quality debt.
