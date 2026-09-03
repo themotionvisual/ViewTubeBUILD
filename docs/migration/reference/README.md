@@ -27,6 +27,10 @@ The reference branch does **not** authorize merging those branches wholesale. It
 
 - [PR_78_SAFE_MERGE_TO_MAIN_2026-09-03.md](PR_78_SAFE_MERGE_TO_MAIN_2026-09-03.md) — focused correction, verification, squash-merge, rollback and follow-up plan for landing PR #78 safely on main.
 
+## PR merge + analytics master references
+
+- [PR_77_MAIN_MERGE_VT_SYNC_ANALYTICS_MASTER_REFERENCE_2026-09-03.md](PR_77_MAIN_MERGE_VT_SYNC_ANALYTICS_MASTER_REFERENCE_2026-09-03.md) — full #77→main merge runbook plus VT-SYNC datasets, queries, pagination, storage, CSV, tables, controllers, visuals, insights and deep-dive architecture reference.
+
 ## Machine-readable architecture
 
 - [VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json](VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json) — canonical owner/status/dependency/branch/PR registry for active ViewTube systems.
