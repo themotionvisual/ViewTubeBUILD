@@ -23,6 +23,11 @@ This branch is documentation/reference only. It is now the consolidated evidence
 
 The reference branch does **not** authorize merging those branches wholesale. It records how their systems fit together and what should be harvested or normalized.
 
+## Machine-readable architecture
+
+- [VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json](VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json) — canonical owner/status/dependency/branch/PR registry for active ViewTube systems.
+- [VIEWTUBE_SYSTEM_INTEGRATION_MATRIX_2026-09-03.md](VIEWTUBE_SYSTEM_INTEGRATION_MATRIX_2026-09-03.md) — implementation crosswalk from system ownership into data, Brain, workflow, safety, evaluation and learning loops.
+
 ## Current prototype references
 
 - [prototypes/VIEWTUBE_BRAIN_USER_CONTROL_CENTER_2026-09-03.html](prototypes/VIEWTUBE_BRAIN_USER_CONTROL_CENTER_2026-09-03.html) — creator-controlled Brain policy, personalization, learning, safety, retention and per-tool permissions reference.
