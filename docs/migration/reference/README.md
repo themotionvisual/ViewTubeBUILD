@@ -27,6 +27,7 @@ The reference branch does **not** authorize merging those branches wholesale. It
 
 - [VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json](VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json) — canonical owner/status/dependency/branch/PR registry for active ViewTube systems.
 - [VIEWTUBE_SYSTEM_INTEGRATION_MATRIX_2026-09-03.md](VIEWTUBE_SYSTEM_INTEGRATION_MATRIX_2026-09-03.md) — implementation crosswalk from system ownership into data, Brain, workflow, safety, evaluation and learning loops.
+- [VIEWTUBE_CANONICAL_OWNER_MIGRATION_PLAN_2026-09-03.md](VIEWTUBE_CANONICAL_OWNER_MIGRATION_PLAN_2026-09-03.md) — step-by-step owner migration, donor-branch harvesting rules, retirement gates and implementation waves.
 
 ## Current prototype references
 
