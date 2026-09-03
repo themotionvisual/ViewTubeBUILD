@@ -1,0 +1,609 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-03",
+  "repository": "themotionvisual/ViewTubeBUILD",
+  "integrationBase": "main",
+  "documentationBranch": "codex/docs/viewtube-system-reference-2026-08-27",
+  "statusVocabulary": [
+    "canonical-live",
+    "canonical-foundation",
+    "active-development",
+    "donor",
+    "prototype-reference",
+    "documentation",
+    "historical",
+    "quarantine"
+  ],
+  "principles": {
+    "oneCanonicalOwnerPerDurableFact": true,
+    "analyticsBoundary": "analytics-canon over VT-SYNC",
+    "intelligenceBoundary": "Brain orchestrator + capability registry",
+    "crossToolTransport": "ActionPacket / Handoff",
+    "outcomeBoundary": "Outcome / Evaluation Ledger",
+    "durableLearningBoundary": "Channel Profile after validation/approval"
+  },
+  "systems": [
+    {
+      "id": "app-shell",
+      "name": "App Shell / Route Registry",
+      "category": "platform",
+      "owner": "application shell",
+      "status": "canonical-live",
+      "dependencies": [
+        "auth",
+        "tool-registry",
+        "user-guide"
+      ],
+      "consumers": [
+        "all mounted surfaces"
+      ],
+      "integrationRule": "Routes, navigation, lifecycle labels and feature visibility should derive from one registry.",
+      "priority": "high"
+    },
+    {
+      "id": "auth",
+      "name": "Auth / Account / Billing",
+      "category": "platform",
+      "owner": "server-owned Simple Auth / account contracts",
+      "status": "canonical-foundation",
+      "dependencies": [
+        "youtube-transport"
+      ],
+      "consumers": [
+        "all authenticated tools",
+        "VT-SYNC",
+        "Publisher"
+      ],
+      "integrationRule": "One server-owned session/account authority; legacy paths only behind explicit compatibility adapters.",
+      "priority": "critical",
+      "references": [
+        "PR #69",
+        "PR #77 historical consolidation material"
+      ]
+    },
+    {
+      "id": "vt-sync",
+      "name": "VT-SYNC",
+      "category": "data",
+      "owner": "VT-SYNC snapshot/store",
+      "status": "canonical-live",
+      "dependencies": [
+        "youtube-transport",
+        "youtube-api-skill"
+      ],
+      "consumers": [
+        "analytics-canon",
+        "analytics-ui",
+        "brain",
+        "anomaly-intelligence"
+      ],
+      "integrationRule": "Own raw synced facts, freshness, provenance, imports and availability.",
+      "priority": "critical"
+    },
+    {
+      "id": "analytics-canon",
+      "name": "Analytics Canon",
+      "category": "data",
+      "owner": "src/services/analytics-canon",
+      "status": "canonical-live",
+      "dependencies": [
+        "vt-sync"
+      ],
+      "consumers": [
+        "analytics-ui",
+        "brain",
+        "anomaly-intelligence",
+        "strategy engines"
+      ],
+      "integrationRule": "Only public analytics boundary for intelligence and product consumers.",
+      "priority": "critical",
+      "references": [
+        "PR #78 extends full-row intelligence access"
+      ]
+    },
+    {
+      "id": "analytics-ui",
+      "name": "Analytics / Data Explorer / Visual Analytics",
+      "category": "product",
+      "owner": "analytics surfaces + widget/visual registries",
+      "status": "active-development",
+      "dependencies": [
+        "analytics-canon",
+        "design-system"
+      ],
+      "consumers": [
+        "creator",
+        "brain-context"
+      ],
+      "integrationRule": "Every chart/table is a projection over canonical analytics selectors with provenance.",
+      "priority": "high"
+    },
+    {
+      "id": "brain",
+      "name": "ViewTube Brain",
+      "category": "intelligence",
+      "owner": "Brain orchestrator / capability registry / context broker",
+      "status": "active-development",
+      "dependencies": [
+        "channel-profile",
+        "analytics-canon",
+        "projects",
+        "video-assets",
+        "brain-policy"
+      ],
+      "consumers": [
+        "all AI-capable tools"
+      ],
+      "integrationRule": "Brain assembles bounded evidence-backed context; it does not own raw analytics or silently rewrite Profile.",
+      "priority": "critical",
+      "branches": [
+        "themotionvisual/feat/brain-phase-five-production-chains"
+      ],
+      "prs": [
+        72
+      ]
+    },
+    {
+      "id": "brain-policy",
+      "name": "Brain User Control Center",
+      "category": "intelligence-governance",
+      "owner": "shared creator policy service",
+      "status": "prototype-reference",
+      "dependencies": [
+        "brain",
+        "tool-registry"
+      ],
+      "consumers": [
+        "brain",
+        "tool-runtime"
+      ],
+      "integrationRule": "Convert prototype controls into enforced typed policy checked before reads, learning and writes.",
+      "priority": "critical",
+      "references": [
+        "docs/migration/reference/prototypes/VIEWTUBE_BRAIN_USER_CONTROL_CENTER_2026-09-03.html"
+      ]
+    },
+    {
+      "id": "channel-profile",
+      "name": "Channel Profile",
+      "category": "intelligence",
+      "owner": "Channel Profile service",
+      "status": "active-development",
+      "dependencies": [
+        "evaluation-learning"
+      ],
+      "consumers": [
+        "brain",
+        "creator-os",
+        "studio-tools",
+        "anomaly-intelligence"
+      ],
+      "integrationRule": "Own durable channel identity, creator rules, baselines and validated learnings only.",
+      "priority": "critical",
+      "references": [
+        "PR #72 includes ChannelProfileAdapter"
+      ]
+    },
+    {
+      "id": "action-packets",
+      "name": "ActionPacket / Handoff Runtime",
+      "category": "workflow",
+      "owner": "shared workflow transport",
+      "status": "active-development",
+      "dependencies": [
+        "brain",
+        "tool-registry"
+      ],
+      "consumers": [
+        "handoff-inbox",
+        "studio-tools"
+      ],
+      "integrationRule": "All cross-tool work uses one typed packet with evidence, confidence, missing inputs and approval requirements.",
+      "priority": "critical",
+      "references": [
+        "PR #72"
+      ]
+    },
+    {
+      "id": "handoff-inbox",
+      "name": "Handoff Inbox",
+      "category": "workflow",
+      "owner": "Brain Handoff Inbox",
+      "status": "active-development",
+      "dependencies": [
+        "action-packets"
+      ],
+      "consumers": [
+        "studio-tools",
+        "creator"
+      ],
+      "integrationRule": "Persist queued/opened/accepted/completed/dismissed work and destination prefill.",
+      "priority": "high",
+      "references": [
+        "PR #72"
+      ]
+    },
+    {
+      "id": "outcome-ledger",
+      "name": "Outcome / Evaluation Ledger",
+      "category": "learning",
+      "owner": "evaluation ledger",
+      "status": "active-development",
+      "dependencies": [
+        "action-packets",
+        "handoff-inbox",
+        "analytics-canon"
+      ],
+      "consumers": [
+        "adaptive-intelligence",
+        "learning-ledger"
+      ],
+      "integrationRule": "Every meaningful recommendation/action gets lineage and measurable outcome windows.",
+      "priority": "critical",
+      "references": [
+        "PR #72"
+      ]
+    },
+    {
+      "id": "learning-ledger",
+      "name": "Learning Ledger",
+      "category": "learning",
+      "owner": "Brain/Workflow Learning",
+      "status": "active-development",
+      "dependencies": [
+        "outcome-ledger",
+        "channel-profile"
+      ],
+      "consumers": [
+        "brain",
+        "channel-profile"
+      ],
+      "integrationRule": "Candidate lessons require evidence, contradiction checks and promotion controls.",
+      "priority": "critical",
+      "references": [
+        "PR #72"
+      ]
+    },
+    {
+      "id": "adaptive-intelligence",
+      "name": "Adaptive Intelligence / Brain Orchestrator",
+      "category": "intelligence",
+      "owner": "adaptive orchestration + workflow learning",
+      "status": "active-development",
+      "dependencies": [
+        "brain",
+        "outcome-ledger",
+        "learning-ledger",
+        "brain-policy"
+      ],
+      "consumers": [
+        "studio-tools",
+        "creator"
+      ],
+      "integrationRule": "Rank tools/actions using goals, profile, evidence and learned outcomes while respecting approval policy.",
+      "priority": "high",
+      "references": [
+        "docs/migration/reference/prototypes/ADAPTIVE_BRAIN_ORCHESTRATOR_2026-09-03.html",
+        "PR #72"
+      ]
+    },
+    {
+      "id": "anomaly-intelligence",
+      "name": "Signal Anomaly Intelligence",
+      "category": "intelligence",
+      "owner": "src/services/anomaly-intelligence",
+      "status": "active-development",
+      "dependencies": [
+        "analytics-canon",
+        "brain",
+        "channel-profile",
+        "outcome-ledger"
+      ],
+      "consumers": [
+        "brain",
+        "algorithm-momentum",
+        "stats-chat"
+      ],
+      "integrationRule": "Derived events only; VT-SYNC remains raw owner. Separate observation, association, hypothesis and action.",
+      "priority": "high",
+      "branches": [
+        "feature/anomaly-intelligence-foundation"
+      ],
+      "prs": [
+        78
+      ],
+      "pending": [
+        "persistent store",
+        "new-entity detector",
+        "share/distribution detector",
+        "cross-dataset correlation",
+        "scan trigger",
+        "UI mount"
+      ]
+    },
+    {
+      "id": "algorithm-momentum",
+      "name": "Algorithm Momentum / Opportunity Engine",
+      "category": "intelligence",
+      "owner": "strategy/action layer",
+      "status": "active-development",
+      "dependencies": [
+        "anomaly-intelligence",
+        "brain",
+        "channel-profile",
+        "analytics-canon"
+      ],
+      "consumers": [
+        "studio-tools",
+        "creator-os"
+      ],
+      "integrationRule": "Turn evidence-backed opportunities/anomalies into controlled recommendations and ActionPackets.",
+      "priority": "high"
+    },
+    {
+      "id": "projects",
+      "name": "Projects / Creator OS",
+      "category": "creator-workflow",
+      "owner": "project state",
+      "status": "active-development",
+      "dependencies": [
+        "channel-profile",
+        "brain",
+        "vault",
+        "video-assets"
+      ],
+      "consumers": [
+        "creator tools",
+        "editor",
+        "publisher"
+      ],
+      "integrationRule": "Own project intent, workflow state, hypotheses, decisions and project artifacts.",
+      "priority": "high"
+    },
+    {
+      "id": "video-assets",
+      "name": "Video Assets / Video Catalog",
+      "category": "data",
+      "owner": "services/videoAssets",
+      "status": "canonical-live",
+      "dependencies": [
+        "vt-sync",
+        "youtube-data-api"
+      ],
+      "consumers": [
+        "brain",
+        "comment-responder",
+        "analytics",
+        "publisher"
+      ],
+      "integrationRule": "Canonical video inventory and metadata identity keyed by video ID.",
+      "priority": "high"
+    },
+    {
+      "id": "vault",
+      "name": "Vault / Asset System",
+      "category": "creator-workflow",
+      "owner": "canonical media asset catalog",
+      "status": "active-development",
+      "dependencies": [
+        "projects"
+      ],
+      "consumers": [
+        "brain",
+        "editor",
+        "thumbnail-studio",
+        "publisher"
+      ],
+      "integrationRule": "Use durable asset IDs/provenance across all creation tools; avoid editor-local duplicate catalogs.",
+      "priority": "high",
+      "references": [
+        "PR #72 includes BrainVaultAdapter"
+      ]
+    },
+    {
+      "id": "editor",
+      "name": "ViewTube Editor VT_E1",
+      "category": "creator-workflow",
+      "owner": "shared editor store/timeline contract",
+      "status": "active-development",
+      "dependencies": [
+        "vault",
+        "projects",
+        "design-system"
+      ],
+      "consumers": [
+        "publisher"
+      ],
+      "integrationRule": "One editor state owner across desktop/mobile; shared transition/render semantics.",
+      "priority": "high",
+      "branches": [
+        "feat/vt-e1-unification-2026-08-27"
+      ],
+      "prs": [
+        66
+      ]
+    },
+    {
+      "id": "studio-tools",
+      "name": "Studio Hub Toolboxes",
+      "category": "creator-workflow",
+      "owner": "super tool registry/runtime",
+      "status": "active-development",
+      "dependencies": [
+        "tool-registry",
+        "brain",
+        "action-packets",
+        "channel-profile"
+      ],
+      "consumers": [
+        "creator"
+      ],
+      "integrationRule": "Each tool declares capabilities, permissions, ActionPacket inputs/outputs and outcome events.",
+      "priority": "critical",
+      "references": [
+        "PR #72 mounts/bridges multiple live tools"
+      ]
+    },
+    {
+      "id": "comment-responder",
+      "name": "Comment Responder / Audience Loop",
+      "category": "creator-workflow",
+      "owner": "creator engagement controller",
+      "status": "active-development",
+      "dependencies": [
+        "video-assets",
+        "brain",
+        "channel-profile",
+        "youtube-transport"
+      ],
+      "consumers": [
+        "audience workflow"
+      ],
+      "integrationRule": "Use source-video metadata + comment + catalog + profile; outcome feedback returns to evaluation.",
+      "priority": "medium",
+      "references": [
+        "PR #72",
+        "PR #77 donor material"
+      ]
+    },
+    {
+      "id": "packaging-publishing",
+      "name": "Packaging / Video Publisher",
+      "category": "creator-workflow",
+      "owner": "packaging artifacts + publisher",
+      "status": "active-development",
+      "dependencies": [
+        "projects",
+        "brain",
+        "channel-profile",
+        "youtube-transport"
+      ],
+      "consumers": [
+        "youtube"
+      ],
+      "integrationRule": "One package artifact flows through approval gates; published outcomes return through VT-SYNC/Evaluation.",
+      "priority": "high",
+      "references": [
+        "PR #72 includes VideoPublisher handoff work"
+      ]
+    },
+    {
+      "id": "youtube-api-skill",
+      "name": "YouTube API Expert Skill / MCP Reference",
+      "category": "agent-reference",
+      "owner": ".claude/skills/youtube-api-expert",
+      "status": "canonical-live",
+      "dependencies": [],
+      "consumers": [
+        "agents working on YouTube APIs"
+      ],
+      "integrationRule": "Agent knowledge/reference only; must not create a second production auth/API runtime.",
+      "priority": "medium",
+      "references": [
+        "PR #63 merged",
+        "PR #77 preserves skill/reference material"
+      ]
+    },
+    {
+      "id": "user-guide",
+      "name": "User Guide / Documentation Registry",
+      "category": "documentation",
+      "owner": "guide registries + system reference",
+      "status": "canonical-live",
+      "dependencies": [
+        "tool-registry",
+        "analytics registries",
+        "system-registry"
+      ],
+      "consumers": [
+        "creator",
+        "developers",
+        "agents"
+      ],
+      "integrationRule": "Move toward registry-derived documentation so product and docs cannot silently drift.",
+      "priority": "medium",
+      "references": [
+        "PR #67/#74 merged",
+        "PR #75 current reference branch"
+      ]
+    },
+    {
+      "id": "reference-branch",
+      "name": "System Reference / Consolidation Branch",
+      "category": "documentation",
+      "owner": "docs/migration/reference",
+      "status": "documentation",
+      "dependencies": [
+        "all active branch/PR audits"
+      ],
+      "consumers": [
+        "developers",
+        "agents"
+      ],
+      "integrationRule": "Documentation-only evidence/status/architecture index; never application runtime authority.",
+      "priority": "high",
+      "branches": [
+        "codex/docs/viewtube-system-reference-2026-08-27"
+      ],
+      "prs": [
+        75
+      ]
+    },
+    {
+      "id": "viewtubex-consolidation",
+      "name": "ViewTubeX Clean Consolidation",
+      "category": "governance",
+      "owner": "donor branch",
+      "status": "donor",
+      "dependencies": [
+        "main"
+      ],
+      "consumers": [
+        "subsystem audits"
+      ],
+      "integrationRule": "Compare and harvest by subsystem; never replace current main wholesale.",
+      "priority": "medium",
+      "branches": [
+        "refactor/viewtubex-clean-consolidation"
+      ],
+      "prs": [
+        77
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "name": "Observability / Diagnostics",
+      "category": "platform",
+      "owner": "shared diagnostic event schema",
+      "status": "active-development",
+      "dependencies": [
+        "auth",
+        "vt-sync",
+        "brain",
+        "studio-tools"
+      ],
+      "consumers": [
+        "developers",
+        "support UI"
+      ],
+      "integrationRule": "Keep one correlation/event schema across auth, sync, Brain and tool runtime.",
+      "priority": "high"
+    },
+    {
+      "id": "design-system",
+      "name": "ViewTube Design / Widget System",
+      "category": "ui",
+      "owner": "shared tokens + shells + visual module contracts",
+      "status": "active-development",
+      "dependencies": [],
+      "consumers": [
+        "analytics",
+        "studio-tools",
+        "user-guide",
+        "promo"
+      ],
+      "integrationRule": "Application, Guide, promo and standalone references share the same visual tokens/compositions.",
+      "priority": "medium"
+    }
+  ]
+}
