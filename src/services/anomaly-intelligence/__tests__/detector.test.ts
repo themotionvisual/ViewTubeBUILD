@@ -1,7 +1,29 @@
 import { describe, expect, it } from "vitest"
-import { detectRobustMagnitudeAnomaly } from "../detector"
+import { detectRobustMagnitudeAnomaly, groupRowsIntoDailySeries } from "../detector"
 
 describe("anomaly intelligence detector", () => {
+ it("groups traffic-day rows by the canonical term field", () => {
+  const series = groupRowsIntoDailySeries({
+   dataset: {
+    datasetId: "traffic_day",
+    label: "Traffic × Day",
+    status: "available",
+    snapshotId: "snapshot-traffic",
+    channelId: "channel-1",
+    sources: ["youtube_analytics_v2"],
+    rows: [
+     { term: "EXTERNAL", day: "2026-09-01", views: 12 },
+     { term: "SEARCH", day: "2026-09-01", views: 24 },
+    ],
+   },
+   dateKey: "day",
+   metricKey: "views",
+   entityKey: "term",
+  })
+
+  expect(series.map((entry) => entry.entity)).toEqual(["EXTERNAL", "SEARCH"])
+ })
+
  it("detects a material spike against a robust baseline", () => {
   const anomaly = detectRobustMagnitudeAnomaly({
    channelId: "channel-1",

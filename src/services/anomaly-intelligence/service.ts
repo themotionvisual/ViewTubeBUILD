@@ -11,8 +11,7 @@ import {
 
 const DATASET_SCANS = [
  { datasetId: "daily", family: "video", dateKey: "date", metricKey: "views" },
- { datasetId: "traffic_day", family: "traffic", dateKey: "date", metricKey: "views", entityKey: "source" },
- { datasetId: "formats_subscribers", family: "audience", dateKey: "date", metricKey: "views", entityKey: "status" },
+ { datasetId: "traffic_day", family: "traffic", dateKey: "date", metricKey: "views", entityKey: "term" },
 ] as const
 
 export const scanCanonicalSnapshotForAnomalies = (
