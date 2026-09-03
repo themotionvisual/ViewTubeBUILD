@@ -80,6 +80,18 @@ export type CanonicalIntelligenceMetricSummary = {
  maximum: number
 }
 
+export type CanonicalIntelligenceDatasetRows = {
+ datasetId: string
+ label: string
+ status: CanonicalIntelligenceDatasetStatus
+ snapshotId: string
+ channelId: string | null
+ updatedAt?: string
+ sources: CanonicalIntelligenceSource[]
+ missingMetrics: string[]
+ rows: Array<Record<string, unknown>>
+}
+
 export type CanonicalIntelligenceDatasetManifest = {
  id: string
  label: string
