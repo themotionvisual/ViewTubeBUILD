@@ -30,5 +30,6 @@ export {
  CANONICAL_INTELLIGENCE_EVIDENCE_VERSION,
  INTELLIGENCE_SECTION_DATASETS,
  getCanonicalIntelligenceDatasetCatalog,
+ getCanonicalIntelligenceDatasetRows,
  buildCanonicalIntelligenceEvidence,
 } from "./intelligenceEvidence"
