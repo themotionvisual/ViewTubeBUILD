@@ -4,32 +4,39 @@
 **Branch:** `codex/docs/viewtube-system-reference-2026-08-27`  
 **PR:** #75
 
-This branch is documentation/reference only. It is now the consolidated evidence and architecture index for ViewTube's active development systems, migration decisions, donor branches, Brain stack, analytics/VT-SYNC work, editor work, anomaly intelligence, auth consolidation, and ViewTubeX/branch-check history.
+This branch is documentation/reference only. It is the consolidated evidence and architecture index for ViewTube's active development systems, migration decisions, donor branches, Brain stack, analytics/VT-SYNC work, editor work, anomaly intelligence, auth consolidation, Channel Intelligence/Algorithm workflows, and ViewTubeX/branch-check history.
 
 ## Start here
 
 1. **[VIEWTUBE_UNIFIED_SYSTEMS_ARCHITECTURE_2026-09-03.md](VIEWTUBE_UNIFIED_SYSTEMS_ARCHITECTURE_2026-09-03.md)** — current master architecture: canonical owners, system atlas, shared contracts, integrated loops, PR/branch consolidation rules, target code spine, and unification roadmap.
-2. **[VIEWTUBE_SYSTEM_REFERENCE_REFRESH_2026-09-03.md](VIEWTUBE_SYSTEM_REFERENCE_REFRESH_2026-09-03.md)** — current branch/PR refresh and how newer Brain, ViewTubeX consolidation, editor, and anomaly work changes the older audits.
+2. **[VIEWTUBE_SYSTEM_REFERENCE_REFRESH_2026-09-03.md](VIEWTUBE_SYSTEM_REFERENCE_REFRESH_2026-09-03.md)** — current branch/PR refresh and how newer Brain, ViewTubeX consolidation, editor, and anomaly work changes older audits.
 3. **[VIEWTUBE_DEVELOPMENT_STATUS_2026-09-03.md](VIEWTUBE_DEVELOPMENT_STATUS_2026-09-03.md)** — current Brain/tool integration state, Handoff Inbox, Outcome Ledger, PR #72 production chains, PR #78 anomaly foundation, and next implementation pass.
+4. **[CHANNEL_INTELLIGENCE_ALGORITHM_WORKFLOW_SYSTEMS_2026-09-03.md](CHANNEL_INTELLIGENCE_ALGORITHM_WORKFLOW_SYSTEMS_2026-09-03.md)** — current Channel Intelligence, deterministic Algorithm Strategy and workflow-routing architecture from draft PR #79.
 
 ## Current application-development branches represented
 
 - PR #72 — `themotionvisual/feat/brain-phase-five-production-chains`
 - PR #77 — `refactor/viewtubex-clean-consolidation`
 - PR #78 — `feature/anomaly-intelligence-foundation`
+- PR #79 — `feature/channel-intelligence-algorithm-workflows` stacked on PR #72
 - PR #66 — `feat/vt-e1-unification-2026-08-27`
 - PR #69 — `chore/auth-pr-consolidation-audit`
 - PR #75 — this documentation/reference branch
 
-The reference branch does **not** authorize merging those branches wholesale. It records how their systems fit together and what should be harvested or normalized.
+The reference branch does **not** authorize merging those branches wholesale. It records how their systems fit together and what should be harvested, normalized or sequenced.
 
 ## Merge resources
 
-- [PR_78_SAFE_MERGE_TO_MAIN_2026-09-03.md](PR_78_SAFE_MERGE_TO_MAIN_2026-09-03.md) — focused correction, verification, squash-merge, rollback and follow-up plan for landing PR #78 safely on main.
+- [PR_78_SAFE_MERGE_TO_MAIN_2026-09-03.md](PR_78_SAFE_MERGE_TO_MAIN_2026-09-03.md) — PR #78 safety/correction plan, now requiring PR #77 to land first and #78 to be reintegrated against post-#77 main.
+- [VIEWTUBE_PR77_TO_MAIN_MERGE_FEATURE_COMBINATION_OPTIMIZATION_GUIDE_2026-09-03.md](VIEWTUBE_PR77_TO_MAIN_MERGE_FEATURE_COMBINATION_OPTIMIZATION_GUIDE_2026-09-03.md) — standalone PR #77 → main merge, feature-combination, optimization, test, smoke-test and rollback guide.
 
-## PR merge + analytics master references
+## VT-SYNC / analytics master reference
 
-- [PR_77_MAIN_MERGE_VT_SYNC_ANALYTICS_MASTER_REFERENCE_2026-09-03.md](PR_77_MAIN_MERGE_VT_SYNC_ANALYTICS_MASTER_REFERENCE_2026-09-03.md) — full #77→main merge runbook plus VT-SYNC datasets, queries, pagination, storage, CSV, tables, controllers, visuals, insights and deep-dive architecture reference.
+- [VIEWTUBE_VT_SYNC_ANALYTICS_ARCHITECTURE_MASTER_REFERENCE_2026-09-03.md](VIEWTUBE_VT_SYNC_ANALYTICS_ARCHITECTURE_MASTER_REFERENCE_2026-09-03.md) — standalone master reference for VT-SYNC datasets, data tables, sync controllers, dimensions/metrics, windows, query process, pagination, storage, CSV recognition/merge, visuals, controllers, insights, Deep Dive planning, missing/planned datasets and legacy analytics code.
+
+## Historical combined reference
+
+- [PR_77_MAIN_MERGE_VT_SYNC_ANALYTICS_MASTER_REFERENCE_2026-09-03.md](PR_77_MAIN_MERGE_VT_SYNC_ANALYTICS_MASTER_REFERENCE_2026-09-03.md) — earlier combined reference retained for history; superseded by the two standalone resources above.
 
 ## Machine-readable architecture
 
@@ -53,29 +60,33 @@ The reference branch does **not** authorize merging those branches wholesale. It
 
 ## Consolidated architectural decision
 
-Use current `main` as the application integration base.
+Use current `main` as the application integration base, with the explicit sequence that PR #77 is integrated first; PR #78 is then rebuilt/revalidated on post-#77 main. PR #79 remains stacked on the Phase 5 Brain production-chain branch until the Brain branch sequence is normalized.
 
-Normalize all active work around these owners:
+Normalize active work around these owners:
 
 - **VT-SYNC** — raw analytics/API/import evidence
 - **analytics-canon** — the only public analytics boundary
 - **Channel Profile** — durable creator/channel knowledge and validated learnings
+- **Channel Intelligence** — compact derived channel-specific context from Profile + workflow/outcome history
 - **Projects** — project intent/workflow state
 - **Brain** — orchestration, evidence reasoning and recommendations
+- **Anomaly Intelligence** — derived detection of meaningful changes
+- **Algorithm Strategy / Momentum** — evidence-backed action recommendations
 - **ActionPacket / Handoff** — cross-tool work transport
 - **Outcome / Evaluation** — recommendation and action results
 - **Learning Ledger** — candidate learnings and promotion decisions
 - **Video Assets / Vault** — canonical video/media identities
 - **Tool Runtime** — execution surfaces with shared permissions and approval gates
 
-The core target loop is:
+The target loop is:
 
 ```text
 VT-SYNC
  → analytics-canon
- → Brain / Anomaly
- → Momentum / recommendation
- → ActionPacket
+ → Anomaly / deterministic signals
+ → Channel Intelligence
+ → Algorithm Strategy / Brain
+ → ActionPacket / Handoff
  → Tool
  → Outcome Ledger
  → Learning Ledger
@@ -86,7 +97,7 @@ VT-SYNC
 
 - New reference files should link back to the master architecture rather than inventing a parallel status authority.
 - Point-in-time audits must be labeled historical after their assumptions move.
-- Runtime branches remain separate from this branch.
+- Runtime branches remain separate from this documentation branch.
 - Secrets, local account stores, private backups, generated caches and credentials never belong here.
 - Standalone HTML/UI artifacts are reference/prototype evidence unless explicitly mounted in the application.
 - The long-term goal is to derive documentation from canonical route/tool/system registries so docs cannot drift from product truth.
