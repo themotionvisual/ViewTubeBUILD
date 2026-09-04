@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ViewTube Brain — User Control Center</title>
+<style>
+:root{
+ --ink:#000;--paper:#efefec;--white:#fff;
+ --pink:#ff4d6f;--cyan:#20d9ee;--yellow:#ffd84d;
+ --green:#55e86b;--blue:#4f8cff;--purple:#a86fff;--orange:#ff9f43;
+}
+*{box-sizing:border-box}html,body{margin:0;background:#111;font-family:Inter,system-ui,-apple-system,sans-serif;color:#000}
+body{-webkit-text-size-adjust:100%}.page{max-width:1500px;margin:auto;padding:12px 12px 80px}
+.hero,.panel{background:#fff;border:4px solid #000;border-radius:18px;box-shadow:8px 8px 0 rgba(0,0,0,.15);overflow:hidden}
+.strip{height:16px;display:grid;grid-template-columns:repeat(7,1fr);border-bottom:4px solid #000}
+.strip i:nth-child(1){background:var(--pink)}.strip i:nth-child(2){background:var(--yellow)}.strip i:nth-child(3){background:var(--green)}.strip i:nth-child(4){background:var(--cyan)}.strip i:nth-child(5){background:var(--blue)}.strip i:nth-child(6){background:var(--purple)}.strip i:nth-child(7){background:var(--orange)}
+.hero .inner{padding:20px}.hero h1{margin:0;font-size:clamp(34px,6vw,72px);line-height:.88;letter-spacing:-.06em;text-transform:uppercase}.hero p{font-size:14px;line-height:1.45;font-weight:760;max-width:100ch}
+.topchips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.chip{border:2px solid #000;border-radius:999px;background:#f3f3f3;padding:5px 9px;font-size:9px;font-weight:1000;text-transform:uppercase}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}.panel{padding:0}.ph{padding:12px 14px;border-bottom:3px solid #000;display:flex;align-items:center;justify-content:space-between;gap:8px}.ph h2{margin:0;font-size:20px;letter-spacing:-.03em}.ph small{font-size:9px;font-weight:1000;text-transform:uppercase}.pb{padding:12px;display:grid;gap:9px}
+.row{border:3px solid #000;border-radius:11px;background:#fff;padding:9px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}.row b{font-size:12px}.row p{margin:3px 0 0;font-size:10px;line-height:1.35;color:#444}.toggle{width:54px;height:30px;border:3px solid #000;border-radius:999px;background:#ddd;position:relative;cursor:pointer}.toggle::after{content:"";position:absolute;width:20px;height:20px;border:2px solid #000;background:#fff;border-radius:50%;left:3px;top:2px;transition:.15s}.toggle.on{background:var(--green)}.toggle.on::after{left:25px}
+select,input[type=number],input[type=range]{font:inherit}.select{border:3px solid #000;border-radius:8px;background:#fff;padding:7px 8px;font-size:10px;font-weight:900;max-width:180px}
+.rangebox{display:grid;grid-template-columns:1fr 42px;gap:8px;align-items:center}.rangebox output{border:2px solid #000;border-radius:7px;background:var(--yellow);padding:4px;text-align:center;font-size:9px;font-weight:1000}
+.toolgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.tool{border:3px solid #000;border-radius:10px;background:#fff;padding:8px}.tooltop{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.tool b{font-size:10px;text-transform:uppercase}.perms{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}.perm{border:2px solid #000;border-radius:999px;padding:3px 6px;background:#eee;font-size:7px;font-weight:1000;text-transform:uppercase;cursor:pointer}.perm.on{background:var(--cyan)}
+.actionbar{position:sticky;bottom:8px;margin-top:14px;border:4px solid #000;border-radius:14px;background:#fff;padding:8px;display:flex;gap:8px;flex-wrap:wrap;box-shadow:8px 8px 0 rgba(0,0,0,.15)}button{border:3px solid #000;border-radius:8px;background:#fff;padding:8px 12px;font-size:9px;font-weight:1000;text-transform:uppercase;cursor:pointer}.save{background:var(--green)}.reset{background:var(--pink)}.export{background:var(--yellow)}
+.status{margin-left:auto;display:flex;align-items:center;font-size:9px;font-weight:1000}
+.wide{grid-column:1/-1}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.toolgrid{grid-template-columns:1fr}.page{padding:8px 8px 65px}.hero,.panel{border-width:3px}}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="hero">
+ <div class="strip"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+ <div class="inner">
+  <h1>Brain User Control Center</h1>
+  <p>The creator controls what ViewTube Brain may access, remember, learn from, execute, research, share and promote into the Channel Profile. This is a policy layer used by Brain and every connected ViewTube tool—not merely a visual settings screen.</p>
+  <div class="topchips"><span class="chip">Creator rules always win</span><span class="chip">Approval gates</span><span class="chip">Per-tool access</span><span class="chip">Learning controls</span><span class="chip">Research opt-in</span></div>
+ </div>
+</section>
+<div class="grid">
+ <section class="panel"><div class="ph" style="background:var(--pink)"><h2>Brain & Autonomy</h2><small>AI behavior</small></div><div class="pb">
+   <div class="row"><div><b>ViewTube Brain</b><p>Global AI intelligence layer.</p></div><div class="toggle on" data-key="ai.enabled"></div></div>
+   <div class="row"><div><b>Autonomy</b><p>How far Brain may act without stopping.</p></div><select class="select" data-key="ai.autonomy"><option>advice_only</option><option>prepare_actions</option><option selected>confirm_writes</option><option>auto_safe_actions</option></select></div>
+   <div class="row"><div><b>Model preference</b><p>Balance quality, speed and cost.</p></div><select class="select" data-key="ai.modelPreference"><option selected>balanced</option><option>quality</option><option>speed</option><option>cost</option></select></div>
+   <div class="row"><div><b>Evidence-first responses</b><p>Show supporting evidence and confidence.</p></div><div class="toggle on" data-key="ai.showEvidence"></div></div>
+   <div class="row"><div><b>External research</b><p>Allow public web/search research when a task needs it.</p></div><div class="toggle on" data-key="ai.allowExternalResearch"></div></div>
+   <div class="row"><div><b>Code execution</b><p>Allow analysis skills to run calculations/code.</p></div><div class="toggle on" data-key="ai.allowCodeExecution"></div></div>
+ </div></section>
+ <section class="panel"><div class="ph" style="background:var(--cyan)"><h2>Channel Personalization</h2><small>Profile access</small></div><div class="pb">
+   <div class="row"><div><b>Use Channel Profile</b><p>Adapt Brain and tools to this channel.</p></div><div class="toggle on" data-key="personalization.enabled"></div></div>
+   <div class="row"><div><b>Memory scope</b><p>How persistent creator intelligence may be.</p></div><select class="select" data-key="personalization.memoryMode"><option>session_only</option><option>project</option><option selected>channel</option><option>channel_and_research</option></select></div>
+   <div class="row"><div><b>Project context</b><p>Allow tools to understand project intent.</p></div><div class="toggle on" data-key="personalization.useProjectContext"></div></div>
+   <div class="row"><div><b>Historical analytics</b><p>Use VT-SYNC history and channel baselines.</p></div><div class="toggle on" data-key="personalization.useHistoricalAnalytics"></div></div>
+   <div class="row"><div><b>Creator feedback</b><p>Use explicit corrections and ratings to personalize future output.</p></div><div class="toggle on" data-key="personalization.useCreatorFeedback"></div></div>
+ </div></section>
+ <section class="panel"><div class="ph" style="background:var(--yellow)"><h2>Adaptive Learning</h2><small>Self-improvement</small></div><div class="pb">
+   <div class="row"><div><b>Channel learning</b><p>Allow evidence-backed candidate learnings.</p></div><div class="toggle on" data-key="learning.enabled"></div></div>
+   <div class="row"><div><b>Learning mode</b><p>How candidates become durable channel knowledge.</p></div><select class="select" data-key="learning.mode"><option>off</option><option>candidate_only</option><option selected>approval_required</option><option>auto_high_confidence</option></select></div>
+   <div class="row"><div><b>Auto-promotion threshold</b><p>Only used if high-confidence auto mode is enabled.</p></div><div class="rangebox"><input type="range" min="75" max="99" value="90" data-key="learning.minConfidenceForAutoPromotion"><output>90%</output></div></div>
+   <div class="row"><div><b>Brand changes need approval</b><p>AI cannot silently rewrite channel identity.</p></div><div class="toggle on" data-key="learning.creatorApprovalRequiredForBrand"></div></div>
+   <div class="row"><div><b>Contribute to niche learning</b><p>Requires de-identified research opt-in.</p></div><div class="toggle" data-key="learning.allowNicheContribution"></div></div>
+   <div class="row"><div><b>Contribute to global learning</b><p>Separate explicit control for product-wide improvements.</p></div><div class="toggle" data-key="learning.allowGlobalContribution"></div></div>
+ </div></section>
+ <section class="panel"><div class="ph" style="background:var(--green)"><h2>Action Safety</h2><small>Write gates</small></div><div class="pb">
+   <div class="row"><div><b>Confirm external publishing</b><p>Always stop before a public publish/send action.</p></div><div class="toggle on" data-key="actions.requireConfirmationForExternalPublish"></div></div>
+   <div class="row"><div><b>Confirm deletes</b><p>Require confirmation for destructive actions.</p></div><div class="toggle on" data-key="actions.requireConfirmationForDeletes"></div></div>
+   <div class="row"><div><b>Confirm account changes</b><p>Protect account/security configuration.</p></div><div class="toggle on" data-key="actions.requireConfirmationForAccountChanges"></div></div>
+   <div class="row"><div><b>Create internal drafts</b><p>Allow Brain/toolboxes to create non-public drafts.</p></div><div class="toggle on" data-key="actions.allowDraftCreationWithoutConfirmation"></div></div>
+   <div class="row"><div><b>Internal analysis</b><p>Allow read-only analysis without approval prompts.</p></div><div class="toggle on" data-key="actions.allowInternalAnalysisWithoutConfirmation"></div></div>
+ </div></section>
+ <section class="panel"><div class="ph" style="background:var(--purple)"><h2>Research & Improvement</h2><small>all opt-in</small></div><div class="pb">
+   <div class="row"><div><b>Product telemetry</b><p>Anonymous product usage events.</p></div><div class="toggle" data-key="research.productTelemetry"></div></div>
+   <div class="row"><div><b>De-identified analytics research</b><p>Allow aggregate research without public channel identity.</p></div><div class="toggle" data-key="research.deidentifiedAnalyticsResearch"></div></div>
+   <div class="row"><div><b>AI response evaluation</b><p>Use outcomes and ratings to improve AI quality.</p></div><div class="toggle" data-key="research.aiResponseEvaluation"></div></div>
+   <div class="row"><div><b>Human review of flagged sessions</b><p>Independent permission for human quality review.</p></div><div class="toggle" data-key="research.humanReviewOfFlaggedSessions"></div></div>
+   <div class="row"><div><b>Public case studies</b><p>Never implied by research participation.</p></div><div class="toggle" data-key="research.publicCaseStudies"></div></div>
+   <div class="row"><div><b>Named testimonial use</b><p>Independent approval for name/channel attribution.</p></div><div class="toggle" data-key="research.namedTestimonialUse"></div></div>
+ </div></section>
+ <section class="panel"><div class="ph" style="background:var(--orange)"><h2>Retention & Forgetting</h2><small>data lifespan</small></div><div class="pb">
+   <div class="row"><div><b>Brain history</b><p>Null = retain until creator deletes/changes policy.</p></div><select class="select" data-key="retention.keepBrainHistoryDays"><option value="">Until deleted</option><option>30</option><option>90</option><option>365</option></select></div>
+   <div class="row"><div><b>Evaluation history</b><p>Controls prediction/outcome evaluation retention.</p></div><select class="select" data-key="retention.keepEvaluationHistoryDays"><option value="">Until deleted</option><option>90</option><option>365</option><option>730</option></select></div>
+   <div class="row"><div><b>Tool event history</b><p>Creator choices and analysis-event retention.</p></div><select class="select" data-key="retention.keepToolEventHistoryDays"><option value="">Until deleted</option><option>30</option><option>90</option><option>365</option></select></div>
+   <div class="row"><div><b>Forget learned pattern</b><p>Learning Ledger supports per-pattern correction, lock, forget and retest.</p></div><button>Open Learning Ledger</button></div>
+   <div class="row"><div><b>Export creator intelligence</b><p>Download controls, rules and promoted channel learnings.</p></div><button>Export</button></div>
+ </div></section>
+ <section class="panel wide"><div class="ph" style="background:var(--blue);color:#fff"><h2>Per-Tool Brain & Profile Access</h2><small>granular override</small></div><div class="pb"><div class="toolgrid" id="tools"></div></div></section>
+</div>
+<div class="actionbar"><button class="save">Save Control Profile</button><button class="export">Export JSON</button><button class="reset">Reset Defaults</button><div class="status" id="status">Local prototype · no account changes made</div></div>
+</div>
+<script>
+const toolNames=["Video Manager","Video Publisher","Content Analysis","Thumbnail Studio","Community Posts","Comment Responder","End-Screen Architect","Pre-Launch Priming","Hook Generator","Tactics Engine","Projects","Analytics","Vault","Editor","Brain Chat"];
+const perms=["PROFILE","PROJECT","ANALYTICS","WRITE","EVENTS","BRAIN"];
+const tools=document.getElementById("tools");
+tools.innerHTML=toolNames.map((n,i)=>`<div class="tool"><div class="tooltop"><b>${n}</b><div class="toggle on"></div></div><div class="perms">${perms.map((p,j)=>`<span class="perm ${j<3||j>4?'on':''}">${p}</span>`).join("")}</div></div>`).join("");
+document.querySelectorAll(".toggle").forEach(t=>{t.onclick=()=>t.classList.toggle("on");});
+document.querySelectorAll(".perm").forEach(p=>{p.onclick=()=>p.classList.toggle("on");});
+document.querySelectorAll('input[type="range"]').forEach(r=>{const o=r.parentElement.querySelector("output");r.oninput=()=>o.textContent=r.value+"%";});
+function snapshot(){const state={};document.querySelectorAll("[data-key]").forEach(el=>{const key=el.dataset.key;if(el.classList.contains("toggle")) state[key]=el.classList.contains("on");else state[key]=el.value===""?null:el.type==="range"?Number(el.value)/100:el.value;});state.toolOverrides=[...document.querySelectorAll(".tool")].map(tool=>({tool:tool.querySelector("b").textContent,enabled:tool.querySelector(".toggle").classList.contains("on"),permissions:[...tool.querySelectorAll(".perm.on")].map(x=>x.textContent)}));return state;}
+document.querySelector(".save").onclick=()=>{localStorage.setItem("vt-user-control-prototype",JSON.stringify(snapshot(),null,2));document.getElementById("status").textContent="Prototype controls saved locally";};
+document.querySelector(".export").onclick=()=>{const blob=new Blob([JSON.stringify(snapshot(),null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="viewtube-user-control-profile.json";a.click();};
+document.querySelector(".reset").onclick=()=>location.reload();
+</script>
+</body></html>
