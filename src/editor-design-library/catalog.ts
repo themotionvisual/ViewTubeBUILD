@@ -4,6 +4,7 @@ import {graphicTemplates} from './templates/graphics';
 import {sceneTemplates} from './templates/scenes';
 import {transitionTemplates} from './templates/transitions';
 import {engagementTemplates} from './templates/engagement';
+import {editorPackTemplates} from './templates/editorPack';
 
 export const templateCatalog: TemplateDefinition[] = [
   ...textTemplates,
@@ -11,6 +12,7 @@ export const templateCatalog: TemplateDefinition[] = [
   ...sceneTemplates,
   ...transitionTemplates,
   ...engagementTemplates,
+  ...editorPackTemplates,
 ];
 
 export function filterTemplateCatalog(category?: TemplateCategory, query = ''): TemplateDefinition[] {
