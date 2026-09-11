@@ -16,8 +16,9 @@ Signal / Anomaly / Opportunity / Priming
   -> approved ActionPacket / Handoff
   -> Tool execution
   -> Evaluation checkpoint
-  -> analytics-canon / workflow observations
+  -> analytics-canon + workflow observations
   -> measured outcome
+  -> Evaluation Inbox / attribution
   -> repeated learning candidate
   -> learning governance review
   -> Channel Intelligence
@@ -27,114 +28,65 @@ Signal / Anomaly / Opportunity / Priming
 ## Canonical services
 
 ### AlgorithmIntelligenceEventLedger
-Tracks stable lineage across anomaly escalations, opportunities, priming plans/steps, recommendations, handoffs, workflows, evaluation checkpoints, measured outcomes, learning candidates, and learning-candidate reviews.
-
-Stable IDs are used for source-level provenance events and candidate events so repeated Brain portfolio builds do not manufacture duplicate history. Existing timestamps and evidence lineage are preserved on upsert.
+Tracks stable lineage across anomaly escalations, opportunities, priming plans/steps, recommendations, handoffs, workflows, evaluation checkpoints, measured outcomes, learning candidates, and learning-candidate reviews. Stable IDs prevent repeated Brain portfolio builds from manufacturing duplicate history.
 
 ### AlgorithmEvaluationEngine
-Evaluates declared metric targets after their checkpoint. It returns pending, insufficient-data, positive, neutral, negative, or mixed rather than inventing success when evidence is missing.
-
-Evaluation targets may be hydrated with a canonical baseline snapshot. The measured outcome stores the exact target set and canonical evidence references used for the comparison.
+Evaluates declared metric targets after their checkpoint. It returns pending, insufficient-data, positive, neutral, negative, or mixed rather than inventing success when evidence is missing. Evaluation targets may be hydrated with a canonical baseline snapshot.
 
 ### CanonicalAlgorithmEvaluation
-Bridges Phase 6 to the existing `VT-SYNC -> analytics-canon` ownership path.
+Bridges Phase 6 to the existing `VT-SYNC -> analytics-canon` ownership path. Brain evaluation concepts map onto canonical evidence rather than creating another analytics store. Video-scoped events prefer matching canonical video rows; channel-scoped events use canonical summaries. Failed/unavailable datasets are not evidence.
 
-Brain evaluation concepts are mapped onto canonical evidence rather than creating another analytics store:
+Workflow-only concepts such as `diagnosis_complete` are excluded from analytics resolution.
 
-- `ctr` -> canonical CTR/import fields when available
-- `watch_quality` -> average percentage viewed / canonical watch-quality fields
-- `qualified_views` -> engaged views, with views as the bounded fallback
-- `session_continuation` -> playlist/end-screen continuation evidence when available
-- `followup_demand` -> search/suggested/traffic demand evidence
-
-Video-scoped events prefer the matching canonical video row. Channel-scoped events use canonical metric summaries. Failed/unavailable datasets are never accepted as evaluation evidence.
-
-Workflow-only concepts such as `diagnosis_complete` are intentionally excluded from analytics resolution; they must come from the tool/workflow outcome path.
+### AlgorithmWorkflowOutcomeBridge
+Provides the complementary non-analytics evidence path. Explicit workflow completion/rejection/abandonment can resolve workflow-only evaluation targets by ActionPacket ID, workflow ID, or Algorithm event ID. Analytics never fabricates tool completion.
 
 ### BrainEvaluationLoop
-Finds due evaluations, processes manual or canonical observations, records measured outcomes, refreshes learning candidates, and summarizes loop health for Brain-facing surfaces.
+Finds due evaluations, processes manual/canonical observations, records measured outcomes, refreshes learning candidates, and summarizes loop health. Insufficient-data results remain retryable after later sync/import evidence arrives.
 
-It now supports:
+### BrainEvaluationInbox
+Builds the Brain-facing review model without creating another store. It combines:
 
-- one-event evaluation from a current VT-SYNC snapshot
-- optional pre-intervention baseline snapshots
-- batch evaluation of due checkpoints
-- baseline resolver per event
-- retry behavior for `insufficient_data`
+- overdue checkpoints
+- insufficient-data retries
+- measured positive/negative/mixed outcomes
+- learning candidates awaiting governance review
+- full event lineage / attribution IDs
+- priority based on severity and overdue duration
+- learning-loop and governance summary counts
 
-An insufficient-data result does **not** permanently close a checkpoint. It remains due and can be re-evaluated after another sync/import.
+This model can feed a compact Brain panel, Stats Chat, or a dedicated Algorithm Intelligence surface.
 
 ### AlgorithmLearningCandidates
-Aggregates repeated measured outcomes into evidence-backed learning candidates. A minimum repeated-evidence threshold is required before a candidate can influence Channel Intelligence.
-
-Learning-candidate events use stable IDs so refreshing the loop updates the same candidate rather than duplicating it.
-
-This service does **not** write directly to durable Channel Profile memory.
+Aggregates repeated measured outcomes into evidence-backed learning candidates. Candidate events use stable IDs so loop refreshes update the same candidate rather than duplicating it.
 
 ### AlgorithmLearningGovernance
-Adds the review boundary between a measured learning candidate and any future durable Channel Profile promotion.
+Adds the review boundary between a measured candidate and future durable Channel Profile promotion. Decisions are `hold`, `reject`, or `approve_for_profile_review`. Approval does not mutate Channel Profile.
 
-Available decisions:
-
-- `hold`
-- `reject`
-- `approve_for_profile_review`
-
-Approval here means only that the candidate is eligible for a later Profile-promotion flow. It does not mutate Channel Profile itself.
+### AlgorithmRecommendationCalibration
+Compares recommendation confidence with measured outcomes. It reports success rate by low/medium/high confidence and by recommendation command, plus warnings when a confidence bucket is materially over- or under-calibrated. Calibration remains descriptive in Phase 6; it does not silently rewrite strategy weights.
 
 ## Provenance starts before execution
 
-Phase 6 records stable provenance as soon as an Algorithm Intelligence portfolio is built:
+Phase 6 records stable provenance when an Algorithm Intelligence portfolio is built for material anomaly escalations, opportunities, Algorithm Priming plans, and Algorithm recommendations. Execution events attach ActionPacket IDs, workflow IDs, evaluation targets, and checkpoints to that earlier evidence lineage.
 
-- material anomaly escalations
-- opportunities
-- Algorithm Priming plans
-- Algorithm recommendations
-
-Execution events later attach ActionPacket IDs, workflow IDs, evaluation targets, and checkpoints to that earlier evidence lineage.
-
-This makes it possible to answer:
-
-- Which anomaly or opportunity caused this recommendation?
-- Which priming plan produced this tool action?
-- Did the creator execute it?
-- Which canonical metrics changed afterward?
-- Did that tactic repeatedly help this channel?
-- Has the resulting learning candidate been reviewed?
-
-## Attribution
-
-Executed Algorithm recommendations and Algorithm Priming steps record:
-
-- stable event ID
-- source signal / step ID
-- recommendation ID or priming plan/step ID
-- action packet ID
-- workflow ID
-- evidence IDs
-- evaluation target(s)
-- checkpoint time
-- creator/project/video scope
-- canonical current snapshot ID
-- canonical baseline snapshot ID when supplied
+This allows ViewTube to answer: what caused the recommendation, whether it was executed, which tool/workflow acted, which canonical metrics changed, whether the tactic repeatedly helped, and whether the resulting learning has been reviewed.
 
 ## Learning boundary
 
-Phase 6 deliberately separates four levels:
+Phase 6 separates four levels:
 
 1. **Outcome** — one measured result.
 2. **Learning candidate** — repeated measured evidence with enough consistency.
 3. **Governance decision** — hold, reject, or approve for Profile review.
-4. **Durable Channel Profile learning** — a separately governed promotion decision.
-
-Channel Intelligence may surface measured learning candidates, but it must label them as candidates and preserve their evidence/sample size.
+4. **Durable Channel Profile learning** — a separately permissioned promotion decision.
 
 ## Remaining Phase 6 build slices
 
-1. Add Brain-facing Evaluation Inbox and attribution UI.
-2. Add workflow-native observations for non-analytics targets such as diagnosis completion.
+1. Mount the Evaluation Inbox into a creator-facing Brain / Algorithm Intelligence UI.
+2. Connect `AlgorithmWorkflowOutcomeBridge` directly to the canonical Brain Outcome Ledger lifecycle.
 3. Add experiment cohort matching so pre/post comparisons use comparable lifecycle windows.
-4. Add recommendation calibration: predicted confidence vs measured success.
-5. Add stale/pending checkpoint policies without automatic external actions.
-6. Add a separately permissioned Channel Profile promotion adapter for approved candidates.
-7. Add retention limits / archival policy for the 2,000-event local ledger before production persistence migration.
+4. Add stale/pending checkpoint policies without automatic external actions.
+5. Add a separately permissioned Channel Profile promotion adapter for approved candidates.
+6. Add retention/archival policy for the local event ledger before production persistence migration.
+7. Use calibration as evidence for a future governed strategy-weight adjustment system rather than changing recommendation behavior automatically.
