@@ -15,6 +15,8 @@
         "nonGoals": {"type": "array", "items": {"type": "string"}},
         "domains": {"type": "array", "items": {"type": "string"}},
         "canonicalOwners": {"type": "object"},
+        "artifacts": {"type": "array", "items": {"type": "string"}},
+        "filesExpected": {"type": "array", "items": {"type": "string"}},
         "acceptance": {"type": "array", "minItems": 1, "items": {"type": "string"}},
         "authorization": {"type": "object"},
         "risk": {"enum": ["low", "medium", "high"]},
@@ -24,19 +26,22 @@
     },
     "workOrder": {
       "type": "object",
-      "required": ["schemaVersion", "missionId", "executionId", "checkout", "baseSha", "orderedSteps", "writerScopes", "testsRequired"],
+      "required": ["schemaVersion", "missionId", "executionId", "checkout", "baseRef", "baseSha", "headRef", "orderedSteps", "writers", "testsRequired"],
       "properties": {
         "schemaVersion": {"const": "viewtube.work-order.v1"},
         "missionId": {"type": "string"},
         "executionId": {"type": "string"},
         "checkout": {"type": "string"},
+        "baseRef": {"type": "string"},
         "baseSha": {"type": "string"},
+        "headRef": {"type": "string"},
         "headSha": {"type": ["string", "null"]},
-        "orderedSteps": {"type": "array", "items": {"type": "string"}},
-        "writerScopes": {"type": "array", "items": {"type": "object", "required": ["owner", "paths"], "properties": {"owner": {"type": "string"}, "paths": {"type": "array", "items": {"type": "string"}}}}},
+        "orderedSteps": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "writers": {"type": "array", "items": {"type": "object", "required": ["role", "paths"], "properties": {"role": {"type": "string"}, "paths": {"type": "array", "items": {"type": "string"}}}}},
         "reviewers": {"type": "array", "items": {"type": "string"}},
         "testsRequired": {"type": "array", "items": {"type": "string"}},
-        "deploymentRequired": {"type": "boolean"}
+        "releaseRequired": {"type": "boolean"},
+        "status": {"type": "string"}
       }
     },
     "receipt": {
@@ -45,9 +50,12 @@
       "properties": {
         "schemaVersion": {"const": "viewtube.receipt.v1"},
         "missionId": {"type": "string"},
+        "receiptId": {"type": "string"},
         "worker": {"type": "string"},
-        "changedPaths": {"type": "array", "items": {"type": "string"}},
+        "kind": {"type": "string"},
+        "changed": {"type": "array", "items": {"type": "string"}},
         "checks": {"type": "array", "items": {"type": "object"}},
+        "observed": {"type": "array", "items": {"type": "string"}},
         "artifacts": {"type": "array", "items": {"type": "string"}},
         "limitations": {"type": "array", "items": {"type": "string"}},
         "status": {"enum": ["complete", "partial", "blocked"]}
@@ -55,12 +63,13 @@
     },
     "decision": {
       "type": "object",
-      "required": ["schemaVersion", "decisionId", "question", "evidence", "state"],
+      "required": ["schemaVersion", "decisionId", "missionId", "question", "evidence", "state"],
       "properties": {
         "schemaVersion": {"const": "viewtube.decision.v1"},
         "decisionId": {"type": "string"},
+        "missionId": {"type": "string"},
         "question": {"type": "string"},
-        "evidence": {"type": "array", "items": {"type": "string"}},
+        "evidence": {"type": "array", "minItems": 1, "items": {"type": "string"}},
         "recommendation": {"type": "string"},
         "alternatives": {"type": "array", "items": {"type": "string"}},
         "state": {"enum": ["proposed", "accepted", "rejected", "needs-creator-decision"]}
@@ -68,7 +77,7 @@
     },
     "artifactRecord": {
       "type": "object",
-      "required": ["schemaVersion", "artifactId", "title", "type", "status", "source"],
+      "required": ["schemaVersion", "artifactId", "missionId", "title", "type", "status", "source", "verified"],
       "properties": {
         "schemaVersion": {"const": "viewtube.artifact-record.v1"},
         "artifactId": {"type": "string"},
@@ -80,7 +89,39 @@
         "source": {"type": "string"},
         "canonicalTarget": {"type": ["string", "null"]},
         "producedBy": {"type": ["string", "null"]},
-        "verified": {"type": "boolean"}
+        "verified": {"type": "boolean"},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "handoff": {
+      "type": "object",
+      "required": ["schemaVersion", "handoffId", "missionId", "from", "to", "scope", "requiredOutputs", "state"],
+      "properties": {
+        "schemaVersion": {"const": "viewtube.handoff.v1"},
+        "handoffId": {"type": "string"},
+        "missionId": {"type": "string"},
+        "from": {"type": "string"},
+        "to": {"type": "string"},
+        "scope": {"type": "string"},
+        "inputs": {"type": "array", "items": {"type": "string"}},
+        "requiredOutputs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "state": {"enum": ["proposed", "accepted", "complete", "blocked"]}
+      }
+    },
+    "conflict": {
+      "type": "object",
+      "required": ["schemaVersion", "conflictId", "missionId", "level", "topic", "state"],
+      "properties": {
+        "schemaVersion": {"const": "viewtube.conflict.v1"},
+        "conflictId": {"type": "string"},
+        "missionId": {"type": "string"},
+        "level": {"enum": ["L0", "L1", "L2", "L3"]},
+        "topic": {"type": "string"},
+        "kingdomPosition": {"type": "string"},
+        "republicConstraint": {"type": "string"},
+        "resolution": {"type": "string"},
+        "resolvedBy": {"type": "array", "items": {"type": "string"}},
+        "state": {"enum": ["open", "resolved", "creator-decision-required"]}
       }
     }
   }
