@@ -17,6 +17,8 @@ import type {
   WidgetInstanceState,
 } from "./types"
 
+const ALL_WIDGETS_VISIBLE_MIGRATION_KEY = "viewtube.dashboard.all-widgets-visible.v1"
+
 const LegacyWidgetInstanceSchema = z.object({
   collapsed: z.boolean().optional(),
   size: z.string().optional(),
@@ -87,7 +89,7 @@ export const buildDefaultDashboardLayout = (): DashboardLayoutState => {
     schemaVersion: DASHBOARD_SCHEMA_VERSION,
     locked: false,
     order: definitions.map((widget) => widget.id),
-    hidden: definitions.filter((widget) => !widget.defaultVisible).map((widget) => widget.id),
+    hidden: [],
     instances: Object.fromEntries(
       definitions.map((widget) => [widget.id, defaultInstanceFor(widget)]),
     ),
@@ -114,11 +116,6 @@ export const normalizeDashboardLayout = (input: unknown): DashboardLayoutState =
       ? uniqueKnownIds(parsed.data.hidden ?? [])
       : defaultLayout.hidden,
   )
-  if (requestedOrder.length > 0) {
-    for (const id of missingIds) {
-      if (!DASHBOARD_WIDGET_BY_ID[id]?.defaultVisible) hidden.add(id)
-    }
-  }
 
   const instances = Object.fromEntries(definitions.map((widget) => {
     const candidate = parsed.data.instances?.[widget.id]
@@ -152,17 +149,27 @@ export const loadDashboardLayout = (): DashboardLayoutState => {
     try {
       const parsed = JSON.parse(raw) as unknown
       const layout = normalizeDashboardLayout(parsed)
-      if (key !== DASHBOARD_LAYOUT_STORAGE_KEY) {
-        storage.setItem(DASHBOARD_LAYOUT_BACKUP_KEY, JSON.stringify({ sourceKey: key, raw }))
-        storage.setItem(DASHBOARD_LAYOUT_STORAGE_KEY, JSON.stringify(layout))
+      const shouldRevealAllWidgets = storage.getItem(ALL_WIDGETS_VISIBLE_MIGRATION_KEY) !== "1"
+      const migratedLayout = shouldRevealAllWidgets ? { ...layout, hidden: [] } : layout
+
+      if (key !== DASHBOARD_LAYOUT_STORAGE_KEY || shouldRevealAllWidgets) {
+        if (key !== DASHBOARD_LAYOUT_STORAGE_KEY) {
+          storage.setItem(DASHBOARD_LAYOUT_BACKUP_KEY, JSON.stringify({ sourceKey: key, raw }))
+        }
+        storage.setItem(DASHBOARD_LAYOUT_STORAGE_KEY, JSON.stringify(migratedLayout))
       }
-      return layout
+      if (shouldRevealAllWidgets) {
+        storage.setItem(ALL_WIDGETS_VISIBLE_MIGRATION_KEY, "1")
+      }
+      return migratedLayout
     } catch {
       continue
     }
   }
 
-  return buildDefaultDashboardLayout()
+  const fresh = buildDefaultDashboardLayout()
+  storage.setItem(ALL_WIDGETS_VISIBLE_MIGRATION_KEY, "1")
+  return fresh
 }
 
 export const saveDashboardLayout = (layout: DashboardLayoutState): void => {
