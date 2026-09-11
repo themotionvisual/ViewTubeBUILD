@@ -3,6 +3,7 @@ import {
  classifyIntelligenceAiFailure,
  resolveIntelligenceGenerationReadiness,
  resolveIntelligenceReportStatus,
+ validateIntelligenceEvidenceScope,
 } from "./generationPolicy"
 
 describe("Intelligence Hub generation policy", () => {
@@ -10,6 +11,14 @@ describe("Intelligence Hub generation policy", () => {
   expect(resolveIntelligenceGenerationReadiness({ aiConfigured: true, channelId: null })).toMatchObject({ ready: false, action: "connect_channel" })
   expect(resolveIntelligenceGenerationReadiness({ aiConfigured: false, channelId: "channel-a" })).toMatchObject({ ready: false, action: "configure_ai" })
   expect(resolveIntelligenceGenerationReadiness({ aiConfigured: true, channelId: "channel-a" })).toMatchObject({ ready: true, action: "generate" })
+ })
+
+ it("pins evidence to the active channel and snapshot before generation", () => {
+  expect(validateIntelligenceEvidenceScope({ evidenceChannelId: "channel-a", evidenceSnapshotId: "snapshot-a", activeChannelId: "channel-a", activeSnapshotId: "snapshot-a" })).toBeNull()
+  expect(validateIntelligenceEvidenceScope({ evidenceChannelId: "channel-b", evidenceSnapshotId: "snapshot-a", activeChannelId: "channel-a", activeSnapshotId: "snapshot-a" }))
+   .toMatchObject({ code: "AI_REQUEST_INVALID", retryable: false })
+  expect(validateIntelligenceEvidenceScope({ evidenceChannelId: "channel-a", evidenceSnapshotId: "snapshot-old", activeChannelId: "channel-a", activeSnapshotId: "snapshot-a" }))
+   .toMatchObject({ code: "AI_REQUEST_INVALID", retryable: true })
  })
 
  it("never retries setup, permission, quota, or invalid-request failures", () => {

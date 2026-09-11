@@ -1,212 +1,91 @@
-import React, { useState } from "react"
-import { Brain, Zap, Sparkles, Dna, BarChart3, Map } from "lucide-react"
+import React, { useEffect, useMemo, useState } from "react"
+import { BarChart3, Brain, Database, ExternalLink, MessageSquare, Package, Radar, RefreshCw, Send, Settings2, ShieldCheck, Sparkles, Target } from "lucide-react"
+import { Link } from "react-router-dom"
 import { WidgetShell } from "../WidgetShell"
 import type { CommonWidgetProps } from "../types"
 import type { DashboardData } from "../useDashboardData"
 import { useBrain } from "../../../context/useBrain"
-import { reflectAndCompress } from "../../../services/brain"
+import { hasGeminiKey } from "../../../services/gemini"
+import { buildAIBrainContextSnapshot, buildAIBrainSystemPrompt } from "../../../services/aiBrainCommandInterface"
+import { buildCreatorGrowthContext } from "../../../services/aiBrainConversationStore"
+import { runBrainTurn } from "../../../services/brain/BrainOrchestrator"
+import { readBrainUserControls, setActiveBrainControlChannel, type BrainUserControls } from "../../../services/brain/BrainUserControls"
+import { readBrainEngineControls, type BrainEngineControls } from "../../../services/brain/BrainEngineControls"
+import { readAlgorithmIntelligenceForBrain, type AlgorithmIntelligenceAccessResult } from "../../../services/brain/AlgorithmIntelligenceAccess"
+import type { AlgorithmIntelligencePortfolio } from "../../../services/brain/AlgorithmIntelligenceOrchestrator"
+import { searchVaultForBrain } from "../../../services/brain/BrainVaultAdapter"
+import type { AIBrainConversationTurn } from "../../../types"
 
-interface BrainHubWidgetProps extends CommonWidgetProps {
-  data: DashboardData
-}
+interface BrainHubWidgetProps extends CommonWidgetProps { data: DashboardData }
+type Tab="chat"|"intelligence"|"evidence"|"packages"
 
-const MEMORY_SECTIONS = [
-  { key: "identityAndAspirations", label: "Identity", icon: Sparkles, color: "#FF3399" },
-  { key: "contentDNA", label: "Content DNA", icon: Dna, color: "#00D2FF" },
-  { key: "performanceLedger", label: "Performance", icon: BarChart3, color: "#C9F830" },
-  { key: "futureStateMap", label: "Future Map", icon: Map, color: "#FFB570" },
-] as const
+const pill=(active:boolean,color:string):React.CSSProperties=>({border:"2px solid color-mix(in srgb, var(--widget-color) 72%, #45172a)",background:active?color:"#fff",color:"color-mix(in srgb, var(--widget-color) 54%, #45172a)",borderRadius:6,height:24,padding:"0 7px",fontSize:8,fontWeight:1000,textTransform:"uppercase",cursor:"pointer"})
 
-export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data, ...common }) => {
-  const { getBrainMemory } = useBrain()
-  const memory = getBrainMemory()
-  const [isReflecting, setIsReflecting] = useState(false)
-  const [expandedSection, setExpandedSection] = useState<string | null>(null)
+export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...common }) => {
+ const { brain, authState, channelConnection, getBrainMemory }=useBrain()
+ const channelId=authState.channelId||authState.channelHandle||null
+ const [tab,setTab]=useState<Tab>("chat")
+ const [input,setInput]=useState("")
+ const [busy,setBusy]=useState(false)
+ const [turns,setTurns]=useState<AIBrainConversationTurn[]>([])
+ const [answer,setAnswer]=useState<AIBrainConversationTurn|null>(null)
+ const [controls,setControls]=useState<BrainUserControls>(()=>readBrainUserControls(channelId))
+ const [engines,setEngines]=useState<BrainEngineControls>(()=>readBrainEngineControls(channelId))
+ const [portfolio,setPortfolio]=useState<AlgorithmIntelligencePortfolio|null>(null)
+ const [intelStatus,setIntelStatus]=useState<string>("Not loaded")
 
-  const handleReflect = async () => {
-    setIsReflecting(true)
-    try {
-      await reflectAndCompress()
-      window.location.reload()
-    } catch {
-      setIsReflecting(false)
-    }
-  }
+ useEffect(()=>{
+  setActiveBrainControlChannel(channelId)
+  setControls(readBrainUserControls(channelId))
+  setEngines(readBrainEngineControls(channelId))
+  const refresh=()=>{setControls(readBrainUserControls(channelId));setEngines(readBrainEngineControls(channelId))}
+  window.addEventListener("vt_brain_user_controls_changed",refresh)
+  window.addEventListener("vt_brain_engine_controls_changed",refresh)
+  return()=>{window.removeEventListener("vt_brain_user_controls_changed",refresh);window.removeEventListener("vt_brain_engine_controls_changed",refresh)}
+ },[channelId])
 
-  const lastSync = memory.lastReflection
-    ? new Date(memory.lastReflection).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    : "Never"
+ const snapshot=useMemo(()=>buildAIBrainContextSnapshot({brain,authState,channelConnection,brainMemory:controls.personalization?getBrainMemory():null,recentConversationTurns:controls.personalization?turns:[]}),[brain,authState,channelConnection,controls.personalization,turns,getBrainMemory])
+ const growthContext=useMemo(()=>buildCreatorGrowthContext(snapshot,turns,[]),[snapshot,turns])
+ const packages=useMemo(()=>controls.allowVault&&engines.videoPackages?searchVaultForBrain({query:"package",limit:8}):{assets:[],evidence:[]},[controls.allowVault,engines.videoPackages,answer])
+ const evidence=(((snapshot.evidencePack as any)?.items)||[]).slice(0,engines.maxEvidenceItems)
 
-  return (
-    <WidgetShell {...common} icon={<Brain size={22} />}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%", overflow: "auto" }}>
+ const loadIntelligence=async()=>{
+  if(!channelId||!controls.enabled||!controls.allowAnalytics){setIntelStatus("Analytics access disabled");return}
+  setIntelStatus("Building portfolio…")
+  const result:AlgorithmIntelligenceAccessResult<AlgorithmIntelligencePortfolio>=await readAlgorithmIntelligenceForBrain({channelId})
+  if(result.status==="ok"){setPortfolio(result.value);setIntelStatus("Ready")}else setIntelStatus(result.message)
+ }
 
-        {/* OODA Directive Banner */}
-        {memory.strategicAdvice && (
-          <div style={{
-            background: "#000",
-            color: "#ccff00",
-            padding: "10px 12px",
-            borderRadius: "10px",
-            border: "3px solid #000",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "8px",
-          }}>
-            <div style={{
-              background: "#ccff00",
-              borderRadius: "6px",
-              padding: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <Zap size={14} color="#000" />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{
-                fontSize: "8px",
-                fontWeight: 900,
-                textTransform: "uppercase",
-                letterSpacing: "0.2em",
-                opacity: 0.5,
-                marginBottom: "2px",
-              }}>
-                OODA Directive
-              </div>
-              <div style={{
-                fontSize: "11px",
-                fontWeight: 900,
-                lineHeight: 1.3,
-                textTransform: "uppercase",
-                fontStyle: "italic",
-              }}>
-                "{memory.strategicAdvice}"
-              </div>
-            </div>
-          </div>
-        )}
+ const send=async()=>{
+  const text=input.trim();if(!text||busy||!controls.enabled)return
+  setInput("");setBusy(true)
+  try{
+   if(engines.channelIntelligence&&!portfolio) await loadIntelligence()
+   const system=buildAIBrainSystemPrompt({brain,authState,channelConnection,brainMemory:controls.personalization?getBrainMemory():null,recentConversationTurns:controls.personalization?turns:[]})+`\n\nBRAIN COMMAND WIDGET POLICY\nAnalytics=${controls.allowAnalytics}; Projects=${controls.allowProjects}; Vault=${controls.allowVault}; Publisher=${controls.allowPublisher}; ApprovalRequired=${controls.externalActionsRequireApproval}.\nEngine policy: channelIntelligence=${engines.channelIntelligence}; anomalyIntelligence=${engines.anomalyIntelligence}; opportunityIntelligence=${engines.opportunityIntelligence}; algorithmPriming=${engines.algorithmPriming}; videoPackages=${engines.videoPackages}.\nNever claim an engine supplied evidence when it is disabled or absent. External write/publish actions remain explicit approval-aware handoffs.`
+   const result=await runBrainTurn({channelId,userText:text,snapshot,systemPrompt:system,growthContext,recentTurns:controls.personalization?turns:[],history:controls.personalization?turns.slice(0,4).reverse().flatMap(t=>[{role:"user",parts:[{text:t.userText}]},{role:"model",parts:[{text:t.assistantText}]}]):[],allowModel:hasGeminiKey()})
+   setAnswer(result.turn);setTurns(v=>[result.turn,...v].slice(0,12))
+  }catch(error){console.warn("[BrainHubWidget] turn failed",error);setInput(text)}finally{setBusy(false)}
+ }
 
-        {/* Memory Sections */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridAutoRows: "1fr", gap: "10px" }}>
-          {MEMORY_SECTIONS.map(({ key, label, icon: Icon, color }) => {
-            const value = (memory as any)[key] || "Awaiting data..."
-            const isExpanded = expandedSection === key
+ const tabs:[Tab,string,React.ComponentType<{size?:number}>][]=[["chat","Chat",MessageSquare],["intelligence","Intel",Target],["evidence","Evidence",Database],["packages","Packages",Package]]
+ return <WidgetShell {...common} icon={<Brain size={22}/>}>
+  <div style={{display:"flex",flexDirection:"column",height:"100%",minHeight:0,gap:7,color:"color-mix(in srgb, var(--widget-color) 52%, #3b1020)"}}>
+   <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4}}>{tabs.map(([id,label,Icon])=><button key={id} onClick={()=>setTab(id)} style={pill(tab===id,"color-mix(in srgb, var(--widget-color) 42%, white)")}><Icon size={10}/>{label}</button>)}</div>
+   <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4}}>
+    {[{l:"Analytics",on:controls.allowAnalytics,i:BarChart3},{l:"Anomaly",on:engines.anomalyIntelligence,i:Radar},{l:"Priming",on:engines.algorithmPriming,i:Target},{l:"Packages",on:engines.videoPackages&&controls.allowVault,i:Package}].map(({l,on,i:Icon})=><div key={l} style={{border:"1.5px solid currentColor",borderRadius:5,padding:"3px 5px",background:on?"color-mix(in srgb, var(--widget-color) 18%, white)":"#f3f3f3",opacity:on?1:.45}}><Icon size={9}/><b style={{display:"block",fontSize:7,textTransform:"uppercase"}}>{l}</b></div>)}
+   </div>
 
-            return (
-              <div
-                key={key}
-                onClick={() => setExpandedSection(isExpanded ? null : key)}
-                style={{
-                  background: isExpanded ? "#f9f9f9" : "#fff",
-                  border: "2.5px solid #000",
-                  borderRadius: "10px",
-                  padding: "12px",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                  <div style={{
-                    width: "22px",
-                    height: "22px",
-                    borderRadius: "6px",
-                    background: color,
-                    border: "1.5px solid #000",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}>
-                    <Icon size={12} color="#000" />
-                  </div>
-                  <span style={{
-                    fontSize: "10px",
-                    fontWeight: 900,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                  }}>
-                    {label}
-                  </span>
-                </div>
-                <div style={{
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  lineHeight: 1.4,
-                  opacity: 0.8,
-                  flex: 1,
-                }}>
-                  {value}
-                </div>
-              </div>
-            )
-          })}
-        </div>
+   <div style={{flex:1,minHeight:0,overflow:"auto",border:"2px solid currentColor",borderRadius:8,background:"#fff",padding:8}}>
+    {tab==="chat"&&<div>
+     {answer?.response?<><div style={{fontSize:8,fontWeight:1000,textTransform:"uppercase",opacity:.45}}>Brain answer · {answer.response.confidence}</div><p style={{fontSize:11,fontWeight:850,lineHeight:1.35,margin:"5px 0"}}>{answer.response.keyInsight}</p><div style={{display:"flex",gap:4,flexWrap:"wrap"}}><span style={pill(true,"#b9f536")}>{answer.response.evidenceIds?.length||0} evidence</span><span style={pill(true,"#34cdea")}>{answer.response.modules?.length||0} modules</span></div></>:<div style={{display:"grid",placeItems:"center",minHeight:100,textAlign:"center"}}><div><Sparkles size={22}/><b style={{display:"block",fontSize:12,textTransform:"uppercase"}}>Brain Command</b><small style={{fontSize:9,fontWeight:700}}>Ask about analytics, evidence, packages, anomalies, opportunities, priming or next actions.</small></div></div>}
+    </div>}
+    {tab==="intelligence"&&<div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><b style={{fontSize:10,textTransform:"uppercase"}}>Algorithm Intelligence Portfolio</b><button onClick={()=>void loadIntelligence()} style={pill(true,"#ffe04e")}><RefreshCw size={9}/> Refresh</button></div><small style={{fontSize:8,fontWeight:800}}>{intelStatus}</small>{portfolio&&<div style={{display:"grid",gap:5,marginTop:7}}><div style={{fontSize:9,fontWeight:900}}>CHANNEL PATTERNS · {portfolio.channelIntelligence.patterns.length}</div><div style={{fontSize:9,fontWeight:900}}>ANOMALY SIGNALS · {portfolio.anomalySignals.length}</div><div style={{fontSize:9,fontWeight:900}}>OPPORTUNITIES · {portfolio.opportunitySignals.length}</div><div style={{fontSize:9,fontWeight:900}}>RECOMMENDATIONS · {portfolio.recommendations.length}</div><div style={{fontSize:9,fontWeight:900}}>PRIMING · {portfolio.primingPlan?portfolio.primingPlan.steps.length+" steps":"Needs project context"}</div>{portfolio.primaryRecommendation&&<div style={{padding:6,border:"2px solid currentColor",borderRadius:6,background:"#ffe04e55"}}><small style={{fontSize:7,fontWeight:1000}}>PRIMARY</small><b style={{display:"block",fontSize:10}}>{portfolio.primaryRecommendation.title}</b></div>}</div>}</div>}
+    {tab==="evidence"&&<div><b style={{fontSize:10,textTransform:"uppercase"}}>Analytics + Evidence Access</b><p style={{fontSize:8,fontWeight:700,opacity:.6}}>Showing {evidence.length} of the bounded Brain evidence pack.</p><div style={{display:"grid",gap:4}}>{evidence.map((item:any)=><div key={item.id} style={{borderLeft:"4px solid var(--widget-color)",padding:"4px 6px",background:"color-mix(in srgb,var(--widget-color) 8%,white)"}}><b style={{display:"block",fontSize:8}}>{item.label||item.id}</b><small style={{fontSize:7}}>{item.source||"evidence"}{item.detail?` · ${item.detail}`:""}</small></div>)}</div></div>}
+    {tab==="packages"&&<div><b style={{fontSize:10,textTransform:"uppercase"}}>Video Packages + Vault</b><p style={{fontSize:8,fontWeight:700,opacity:.6}}>{controls.allowVault&&engines.videoPackages?`${packages.assets.length} matching package assets`:`Package access disabled in Brain Controls.`}</p><div style={{display:"grid",gap:4}}>{packages.assets.map(asset=><div key={asset.id} style={{padding:5,border:"2px solid currentColor",borderRadius:6}}><b style={{display:"block",fontSize:8}}>{asset.name}</b><small style={{fontSize:7}}>{asset.kind} · {asset.projectName||"No project"} · {asset.source}</small></div>)}</div></div>}
+   </div>
 
-        {/* Footer: Stats + Reflect */}
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginTop: "auto",
-          paddingTop: "4px",
-          borderTop: "2px solid #f0f0f0",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              <div style={{
-                width: "6px",
-                height: "6px",
-                borderRadius: "50%",
-                background: "#ccff00",
-                boxShadow: "0 0 6px #ccff00",
-              }} />
-              <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", opacity: 0.3 }}>
-                Synced: {lastSync}
-              </span>
-            </div>
-            <span style={{
-              fontSize: "8px",
-              fontWeight: 900,
-              background: "#f0f0f0",
-              border: "1.5px solid #000",
-              borderRadius: "4px",
-              padding: "1px 5px",
-            }}>
-              {memory.interactionCount} signals
-            </span>
-          </div>
-
-          <button
-            onClick={handleReflect}
-            disabled={isReflecting}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              background: "#000",
-              color: "#fff",
-              border: "2.5px solid #000",
-              borderRadius: "8px",
-              padding: "4px 10px",
-              fontSize: "8px",
-              fontWeight: 900,
-              textTransform: "uppercase",
-              letterSpacing: "0.02em",
-              cursor: isReflecting ? "wait" : "pointer",
-              opacity: isReflecting ? 0.5 : 1,
-              boxShadow: "2px 2px 0px 0px #ccff00",
-              transition: "all 0.15s",
-            }}
-          >
-            <Zap size={10} color="#ccff00" />
-            {isReflecting ? "Thinking..." : "Reflect"}
-          </button>
-        </div>
-      </div>
-    </WidgetShell>
-  )
+   <div style={{display:"grid",gridTemplateColumns:"1fr 34px",gap:5}}><input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")void send()}} disabled={!controls.enabled} placeholder={controls.enabled?"Ask Brain…":"Brain disabled"} style={{height:32,border:"2px solid currentColor",borderRadius:7,padding:"0 8px",fontSize:10,fontWeight:800,outline:"none",minWidth:0}}/><button onClick={()=>void send()} disabled={!input.trim()||busy||!controls.enabled} style={{height:32,border:"2px solid currentColor",borderRadius:7,background:"#b9f536",display:"grid",placeItems:"center",opacity:busy?0.55:1}} aria-label="Send"><Send size={13}/></button></div>
+   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:5}}><span style={{fontSize:7,fontWeight:1000,textTransform:"uppercase",opacity:.5}}><ShieldCheck size={9} style={{display:"inline"}}/> {controls.externalActionsRequireApproval?"Approval gated":"Approval policy relaxed"}</span><Link to="/brain-controls" style={{...pill(true,"color-mix(in srgb,var(--widget-color) 24%,white)"),display:"inline-flex",alignItems:"center",gap:3,textDecoration:"none"}}><Settings2 size={9}/> Controls <ExternalLink size={8}/></Link></div>
+  </div>
+ </WidgetShell>
 }

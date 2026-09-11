@@ -41,6 +41,7 @@ const SeoGenerator = lazy(() => import("../views/SeoGenerator"))
 const VideoPublisher = lazy(() => import("../views/VideoPublisher"))
 const HookGenerator = lazy(() => import("../views/HookGenerator"))
 const ScriptArchitect = lazy(() => import("../views/ScriptArchitect"))
+const PackagingLabPro = lazy(() => import("../views/PackagingLabPro"))
 const StoryboardStudio = lazy(() => import("../views/StoryboardStudio"))
 const ComponentGridLab = lazy(() =>
  import("../components/ComponentGridLab").then((m) => ({ default: m.ComponentGridLab })),
@@ -55,6 +56,7 @@ const VtSyncLocalAnalyticsPage = lazy(
  () => import("../features/vt-sync-local/shell/VtSyncLocalAnalyticsPage"),
 )
 const AIBrainCommandInterface = lazy(() => import("../views/AIBrainCommandInterface"))
+const BrainControlsPage = lazy(() => import("../views/BrainControlsPage"))
 const AccountConnectPage = lazy(() => import("../views/AccountConnectPage"))
 
 export const AppRoutes: React.FC = () => {
@@ -78,6 +80,7 @@ export const AppRoutes: React.FC = () => {
     <Route path="/subscribe" element={<Subscribe />} />
     <Route path="/data-transparency" element={<DataTransparencyCenter />} />
     <Route path="/ai-brain" element={<AIBrainCommandInterface />} />
+    <Route path="/brain-controls" element={<BrainControlsPage />} />
     <Route path="/local-analytics" element={<VtSyncLocalAnalyticsPage />} />
     <Route path="/analytics" element={<VtSyncLocalAnalyticsPage />} />
     <Route path="/vt-sync-local" element={<VtSyncLocalAnalyticsPage />} />
@@ -155,6 +158,7 @@ export const AppRoutes: React.FC = () => {
     <Route path="/video-publisher" element={<VideoPublisher />} />
     <Route path="/hook-generator" element={<HookGenerator />} />
     <Route path="/script-architect" element={<ScriptArchitect />} />
+    <Route path="/packaging-lab-pro" element={<PackagingLabPro />} />
     <Route path="/thumbnail-studio" element={<Navigate to="/reference-studio/thumbnail-studio" replace />} />
     {/* Algorithm Architect is now an evidence-backed mode of the Brain, not a
         separate page. The component still exists for Reference Studio / bench. */}

@@ -16,8 +16,8 @@ type DefaultDashboardSlot = Readonly<{
 
 export const DEFAULT_DASHBOARD_ROWS = [
  // Top row — Channel Overview (left half) + About VIEWTUBE hero (right half).
- // The About panel doubles as a sign-in / sign-up CTA on new sessions and
- // stays hidden for connected users (see WidgetRenderer's gate).
+ // The About panel explains the product and data use. Its visibility is owned
+ // exclusively by dashboard layout state, like every other widget.
  [
   { id: "kpi-cluster", size: "half", height: "medium" },
   { id: "app-verification-explainer", size: "half", height: "medium" },
@@ -1002,8 +1002,7 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = DASHBOARD_WIDGET_BA
    defaultHeight: defaultSlot?.height ?? widget.defaultHeight,
    rendererKey: widget.id,
    releaseTier: supportedOrder.has(widget.id) ? "supported" : "preview",
-   // Every registered widget ships visible; creators curate from Settings -> Dashboard Widgets.
-   defaultVisible: true,
+   defaultVisible: supportedOrder.has(widget.id),
    defaultOrder: supportedOrder.get(widget.id) ?? SUPPORTED_DASHBOARD_WIDGET_IDS.length + index,
    supportedSizes,
    supportedHeights,

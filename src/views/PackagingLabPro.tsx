@@ -192,7 +192,7 @@ const config: InternalWorkbenchConfig = {
  ],
  buildPacket: ({ source, objective, notes, mode, brainContext, workflowCount }) => ({
   title: source || "Packaging Packet",
-  summary: `Built ${mode.label.toLowerCase()} packaging packet for ${source || "a content candidate"} with persisted ranking and experiment handoff data.`,
+  summary: `Built ${mode.label.toLowerCase()} packet for ${source || "a content candidate"} with persisted ranking and experiment handoff data.`,
   packet: {
    ownership: "titles, thumbnails, descriptions, packaging experiments",
    mode: mode.label,

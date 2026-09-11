@@ -55,7 +55,6 @@ const formatHumanNumber = (value: unknown): string => {
 
 import { WidgetShell } from "./WidgetShell"
 import { WidgetFooter, WidgetHeaderStepper, WidgetScrollArea, WidgetSelect } from "./WidgetPrimitives"
-import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 
 const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
  "tag-generator": React.lazy(() => import("./widgets/TagGeneratorWidget").then((module) => ({ default: module.TagGeneratorWidget }))),
@@ -378,7 +377,6 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   onRemoveWidget,
   dashboardControls,
 }) => {
-  const account = useUnifiedAccount();
   const timeWindows = ["7 DAYS", "14 DAYS", "28 DAYS", "60 DAYS", "90 DAYS", "180 DAYS", "365 DAYS", "LIFETIME"];
   const [kpiTimeWindowIdx, setKpiTimeWindowIdx] = useState(2);
 
@@ -396,15 +394,9 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
  }
 
  if (widget.id === "app-verification-explainer") {
-  // Only show the sign-in helper when the user actually needs to
-  // connect. A signed-in user with YouTube linked would otherwise see
-  // a persistent "Connect your channel" prompt right next to widgets
-  // full of their own data — the mixed-message state the mobile
-  // auth-fragmentation bug surfaced. Hide entirely once google.status
-  // is "connected" so the layout collapses cleanly.
-  const isConnected = account.snapshot.google.status === "connected"
-   || account.snapshot.google.youtubeScopesGranted
-  if (isConnected) return null
+  // Visibility belongs to the dashboard layout. Do not apply a second auth
+  // gate here: conflicting account snapshots previously left a visible grid
+  // slot rendering null even after the user chose Show All Widgets.
   return <VerificationExplainerWidget common={common} onNavigate={onNavigate} />
  }
 
@@ -1280,6 +1272,19 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
      >
       <Edit3 size={14} aria-hidden="true" />
       {dashboardControls?.editMode ? "HIDE DASHBOARD CONTROLS" : "SHOW DASHBOARD CONTROLS"}
+     </button>
+
+     <button
+      type="button"
+      className="vt-button"
+      disabled={!dashboardControls?.hiddenWidgetCount}
+      style={{ width: "100%", minHeight: "34px", fontSize: "9px", background: dashboardControls?.hiddenWidgetCount ? "#C9F830" : "#eee" }}
+      onClick={() => dashboardControls?.showAllWidgets?.()}
+     >
+      <Layers size={14} aria-hidden="true" />
+      {dashboardControls?.hiddenWidgetCount
+       ? `SHOW ALL READY WIDGETS (${dashboardControls.hiddenWidgetCount})`
+       : "ALL READY WIDGETS VISIBLE"}
      </button>
 
      <div style={{ display: "flex", gap: "6px", marginTop: "auto" }}>

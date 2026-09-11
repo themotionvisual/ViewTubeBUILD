@@ -113,4 +113,10 @@ describe("widget uniformity migrations", () => {
     expect(dailyOracleSource).toContain("daily-oracle-list")
     expect(dailyOracleSource).not.toContain("<WidgetScrollArea")
   })
+
+  it("lets dashboard visibility control the About VIEWTUBE widget", () => {
+    expect(widgetRendererSource).toContain('if (widget.id === "app-verification-explainer")')
+    expect(widgetRendererSource).toContain("return <VerificationExplainerWidget")
+    expect(widgetRendererSource).not.toContain("if (isConnected) return null")
+  })
 })

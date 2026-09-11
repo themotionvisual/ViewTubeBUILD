@@ -1,9 +1,10 @@
 import React, { createContext, useState } from "react"
-import { CircleQuestionMark, GripVertical, Layers, Minus, MoveHorizontal, MoveVertical, Plus, Settings2, Trash2 } from "lucide-react"
+import { CircleQuestionMark, Eye, GripVertical, Layers, Minus, MoveHorizontal, MoveVertical, Plus, Settings2, Trash2 } from "lucide-react"
 import { VTLottie } from "../../components/VTLottie"
 import { cn } from "../../lib/utils"
 import type { WidgetDefinition, WidgetInstanceState } from "./types"
 import { WIDGET_DESCRIPTIONS } from "./WidgetRegistry"
+import { loadDashboardLayout, saveDashboardLayout } from "./storage"
 
 export interface WidgetDragHandleBindings {
  attributes?: React.ButtonHTMLAttributes<HTMLButtonElement>
@@ -70,6 +71,13 @@ export const WidgetShell: React.FC<{
   short: "INTERACTIVE SOURCE PREVIEW RETAINED AS IDEA-BANK.",
   detailed: "View raw data streams and historical references before promoting components to the main dashboard."
  };
+
+ const handleShowAllWidgets = () => {
+  const layout = loadDashboardLayout()
+  if (layout.hidden.length === 0) return
+  saveDashboardLayout({ ...layout, hidden: [] })
+  window.location.reload()
+ }
 
  return (
   <div
@@ -253,6 +261,17 @@ export const WidgetShell: React.FC<{
      }}
      onTouchStart={(e) => e.stopPropagation()}
     >
+     {widget.id === "system-micro-stack" && (
+      <button
+       type="button"
+       className="vt-button"
+       onClick={handleShowAllWidgets}
+       style={{ width: "100%", minHeight: "34px", fontSize: "9px", marginBottom: "8px", background: "#fff" }}
+      >
+       <Eye size={14} aria-hidden="true" />
+       SHOW ALL WIDGETS
+      </button>
+     )}
      {children}
     </div>
    </div>}

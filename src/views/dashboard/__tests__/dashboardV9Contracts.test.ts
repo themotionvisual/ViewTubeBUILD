@@ -11,6 +11,7 @@ import {
   importDashboardLayout,
   loadDashboardLayout,
   normalizeDashboardLayout,
+  revealAllReadyDashboardWidgets,
 } from "../storage"
 import {
   DASHBOARD_LAYOUT_BACKUP_KEY,
@@ -58,7 +59,24 @@ describe("dashboard positional spectrum", () => {
   })
 })
 
-describe("dashboard registry and layout migration", () => {
+describe("dashboard v9 registry and layout migration", () => {
+  it("reveals Brain Hub without resetting the user's layout choices", () => {
+    const layout = normalizeDashboardLayout({
+      schemaVersion: 9,
+      locked: true,
+      order: ["brain-hub", "kpi-cluster"],
+      hidden: ["brain-hub", "kpi-cluster"],
+      instances: { "brain-hub": { collapsed: true, size: "half", height: "xtall" } },
+    })
+
+    const revealed = revealAllReadyDashboardWidgets(layout)
+
+    expect(revealed.hidden).toEqual(["ai-prompt-box", "superfan-card"])
+    expect(revealed.order[0]).toBe("brain-hub")
+    expect(revealed.instances["brain-hub"]?.collapsed).toBe(true)
+    expect(revealed.locked).toBe(true)
+  })
+
   it("packs every default row to full width with one shared height", () => {
     const widthUnits = {
       full: 24,
@@ -83,7 +101,8 @@ describe("dashboard registry and layout migration", () => {
       .sort((left, right) => left.defaultOrder - right.defaultOrder)
 
     expect(supported).toHaveLength(30)
-    expect(supported[0]?.id).toBe("app-verification-explainer")
+    expect(supported[0]?.id).toBe("kpi-cluster")
+    expect(supported[1]?.id).toBe("app-verification-explainer")
     expect(supported.map((widget) => widget.id)).toContain("video-uploader")
     expect(supported.map((widget) => widget.id)).toContain("data-edit")
     expect(supported[29]?.id).toBe("hashtag-analyzer")
@@ -114,12 +133,11 @@ describe("dashboard registry and layout migration", () => {
     const visible = layout.order.filter((id) => !layout.hidden.includes(id))
     const exported = exportDashboardLayout(layout)
 
-    expect(layout.schemaVersion).toBe(10)
-    // From v10 every registered widget ships visible; creators curate in
-    // Settings -> Dashboard Widgets rather than discovering an empty picker.
-    expect(layout.hidden).toEqual([])
-    expect(visible).toHaveLength(DASHBOARD_WIDGET_REGISTRY.length)
-    expect(visible[29]).toBe("hashtag-analyzer")
+    expect(layout.schemaVersion).toBe(9)
+    expect(visible).toHaveLength(DASHBOARD_WIDGET_REGISTRY.filter((widget) => widget.status === "ready").length)
+    expect(visible).toContain("brain-hub")
+    expect(visible).not.toContain("ai-prompt-box")
+    expect(visible).not.toContain("superfan-card")
     expect(exported).not.toContain("headerColor")
     expect(exported).not.toContain("iconRailColor")
     expect(exported).not.toContain("pinned")
@@ -144,7 +162,7 @@ describe("dashboard registry and layout migration", () => {
       },
     })
 
-    expect(migrated.schemaVersion).toBe(10)
+    expect(migrated.schemaVersion).toBe(9)
     expect(migrated.locked).toBe(true)
     expect(migrated.order.slice(0, 2)).toEqual(["goals-tracker", "kpi-cluster"])
     expect(migrated.hidden).not.toContain("video-uploader")
@@ -172,11 +190,8 @@ describe("dashboard registry and layout migration", () => {
 
     const migrated = loadDashboardLayout()
 
-    expect(migrated.schemaVersion).toBe(10)
+    expect(migrated.schemaVersion).toBe(9)
     expect(migrated.order.slice(0, 2)).toEqual(["goals-tracker", "kpi-cluster"])
-    // Migrating forward reveals anything the older schema hid only because it
-    // was not in that version's default rows. The untouched payload is backed up.
-    expect(migrated.hidden).toEqual([])
     expect(storage.getItem(DASHBOARD_LAYOUT_STORAGE_KEY)).toBeTruthy()
     expect(storage.getItem(DASHBOARD_LAYOUT_BACKUP_KEY)).toContain(legacyKey)
   })
