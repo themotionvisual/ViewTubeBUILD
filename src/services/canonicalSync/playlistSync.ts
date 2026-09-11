@@ -16,8 +16,9 @@ import {
  rowsToObjects,
  toMetricNumber,
 } from "./query"
+import { ANALYTICS_WINDOWS } from "../analytics/windows"
 
-const PLAYLIST_WINDOWS: AnalyticsWindow[] = ["lifetime", "365d", "90d", "28d"]
+const PLAYLIST_WINDOWS: AnalyticsWindow[] = ANALYTICS_WINDOWS
 const PLAYLIST_METRICS = [
  "playlistViews",
  "playlistEstimatedMinutesWatched",

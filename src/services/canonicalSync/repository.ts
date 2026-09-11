@@ -79,6 +79,7 @@ import {
 } from "./trafficPresentation"
 import { mergeTrafficCsvFiles } from "./trafficCsvMerge"
 import { syncTrafficAnalytics } from "../youtube/trafficAnalyticsSync"
+import { ANALYTICS_WINDOWS } from "../analytics/windows"
 
 const buildSyncRun = (
  channelId = "pending",
@@ -173,7 +174,7 @@ export const runCanonicalBootstrapSync = async (): Promise<{
  channelWindowSummaries: Awaited<ReturnType<typeof listChannelWindowSummaries>>
 }> => {
  setCanonicalSyncEnabled(true)
- let syncRun = buildFamilySyncRun("pending", ["lifetime", "365d", "90d", "28d"], {
+ let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
   channel_bootstrap: "pending",
   channel_window: "pending",
  })
@@ -243,7 +244,7 @@ const stageStatusFromOverview = (
 })
 
 export const runCanonicalPhaseOneSync = async (): Promise<CanonicalSyncOverview> => {
- let syncRun = buildFamilySyncRun("pending", ["lifetime", "365d", "90d", "28d"], {
+ let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
   channel_bootstrap: "pending",
   channel_window: "pending",
   channel_daily: "pending",
@@ -289,7 +290,7 @@ export const runCanonicalPhaseOneSync = async (): Promise<CanonicalSyncOverview>
 
 export const runCanonicalPhaseTwoSync = async (): Promise<CanonicalSyncOverview> => {
  const previousOverview = await buildCanonicalSyncOverview()
- let syncRun = buildFamilySyncRun("pending", ["lifetime", "365d", "90d", "28d"], {
+ let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
   ...stageStatusFromOverview(previousOverview),
   channel_bootstrap: "pending",
   channel_window: "pending",
@@ -344,7 +345,7 @@ export const runCanonicalPhaseTwoSync = async (): Promise<CanonicalSyncOverview>
 
 export const runCanonicalPhaseThreeSync = async (): Promise<CanonicalSyncOverview> => {
  const previousOverview = await buildCanonicalSyncOverview()
- let syncRun = buildFamilySyncRun("pending", ["lifetime", "365d", "90d", "28d", "7d"], {
+ let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
   ...stageStatusFromOverview(previousOverview),
   channel_bootstrap: "pending",
   viewer_cohorts: "pending",
@@ -1277,7 +1278,7 @@ export const runCanonicalShadowSync = async (): Promise<CanonicalSyncOverview> =
 export const runCanonicalVideoMetricsSync = async (): Promise<
  CanonicalSyncOverview
 > => {
- let syncRun = buildFamilySyncRun("pending", ["lifetime", "365d", "90d", "28d"], {
+ let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
   channel_bootstrap: "pending",
   channel_window: "pending",
   video_inventory: "pending",
@@ -1397,7 +1398,7 @@ export const runCanonicalDailyMetricsSync = async (): Promise<
 export const runCanonicalAudienceSync = async (): Promise<
  CanonicalSyncOverview
 > => {
- let syncRun = buildFamilySyncRun("pending", ["lifetime", "365d", "90d", "28d", "7d"], {
+ let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
  channel_bootstrap: "pending",
  audience_segments: "pending",
   demographics_sync: "pending",
@@ -1445,7 +1446,7 @@ export const runCanonicalAudienceSync = async (): Promise<
 export const runCanonicalDemographicsSync = async (): Promise<
  CanonicalSyncOverview
 > => {
- let syncRun = buildFamilySyncRun("pending", ["lifetime", "28d"], {
+ let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
   channel_bootstrap: "pending",
   demographics_sync: "pending",
  })
@@ -1482,7 +1483,7 @@ export const runCanonicalDemographicsSync = async (): Promise<
 export const runCanonicalGeographySync = async (): Promise<
  CanonicalSyncOverview
 > => {
- let syncRun = buildFamilySyncRun("pending", ["lifetime", "365d", "90d", "28d"], {
+ let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
   channel_bootstrap: "pending",
   geography_sync: "pending",
  })
@@ -1519,7 +1520,7 @@ export const runCanonicalGeographySync = async (): Promise<
 export const runCanonicalRevenueSync = async (): Promise<
  CanonicalSyncOverview
 > => {
- let syncRun = buildFamilySyncRun("pending", ["lifetime", "365d", "90d", "28d"], {
+ let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
   channel_bootstrap: "pending",
   video_inventory: "pending",
   video_metrics: "pending",
@@ -1602,7 +1603,7 @@ export const runCanonicalViewerCohortSync = async (): Promise<
 export const runCanonicalPlaylistSync = async (): Promise<
  CanonicalSyncOverview
 > => {
- let syncRun = buildFamilySyncRun("pending", ["lifetime", "365d", "90d", "28d"], {
+ let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
   channel_bootstrap: "pending",
   playlist_sync: "pending",
  })
@@ -1756,7 +1757,7 @@ export const buildCanonicalDataBundle = async (
   "videos/video_catalog.csv",
   toExportRows(videos) as unknown as Record<string, unknown>[],
  )
- ;(["lifetime", "365d", "90d", "28d", "7d"] as AnalyticsWindow[]).forEach((window) => {
+ ;(ANALYTICS_WINDOWS as AnalyticsWindow[]).forEach((window) => {
   addCsv(`videos/video_metrics_${window}.csv`, buildVideoMetricRows(videos, window))
  })
  addJson("traffic/traffic_rows.json", trafficRows, trafficRows.length)
@@ -1911,8 +1912,9 @@ const getRetentionTargetVideos = async (
 
 export const runCanonicalRetentionSync = async (
  videoIds?: string[],
- window: AnalyticsWindow = "lifetime",
+ windows: AnalyticsWindow | AnalyticsWindow[] = "lifetime",
 ): Promise<CanonicalSyncOverview> => {
+ const retentionWindows = Array.isArray(windows) ? windows : [windows]
  const bootstrap = await ensureCanonicalChannelBootstrap(
   `canonical-retention-bootstrap::${new Date().toISOString()}`,
  )
@@ -1938,13 +1940,13 @@ export const runCanonicalRetentionSync = async (
   startedAt: new Date().toISOString(),
   status: "running",
   videoCount: targetVideoIds.length,
-  windows: [window],
+  windows: retentionWindows,
   stageStatus: { retention_sync: "pending" },
  }
  await putCanonicalSyncRun(syncRun)
  try {
   const retention = await syncRetentionSeries(channelId, targetVideoIds, syncRun.id, {
-   window,
+   windows: retentionWindows,
   })
   await putCanonicalRetentionSeries(retention.series)
   await putCanonicalRawAuditEntries(retention.audit)
@@ -1969,7 +1971,7 @@ export const runCanonicalRetentionSync = async (
 
 export const runCanonicalDefaultSync = async (): Promise<CanonicalSyncOverview> => {
  setCanonicalSyncEnabled(true)
- let syncRun = buildSyncRun("pending", ["lifetime", "365d", "90d", "28d", "7d"])
+ let syncRun = buildSyncRun("pending", ANALYTICS_WINDOWS)
  await putCanonicalSyncRun(syncRun)
  try {
   const { channel } = await ensureCanonicalChannelBootstrap(syncRun.id, {
