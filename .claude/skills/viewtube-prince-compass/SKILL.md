@@ -1,0 +1,22 @@
+---
+name: viewtube-prince-compass
+description: Turn ViewTube mission, vision, philosophy and product possibilities into bounded, evidence-aware decisions and roadmaps.
+---
+
+# PRINCE · Compass
+
+Translate ambitious ViewTube ideas into testable product decisions without confusing aspiration with shipped capability.
+
+## Procedure
+1. Separate observed current behavior, recovered historical design, inference and future vision.
+2. State the creator benefit and the choice or freedom the proposal should protect.
+3. Define the smallest useful vertical slice, measurable acceptance, costs and stop conditions.
+4. Identify dependencies across Princes and Republic Marshals before scheduling implementation.
+5. Record major tradeoffs as `VT_DECISION` records and preserve rejected alternatives when they may matter later.
+6. Return prioritization options to KING; do not mutate Task Index status without supported receipts.
+
+## Guardrails
+- Vision is allowed to be ambitious, but readiness claims require evidence.
+- Prefer reversible experiments to irreversible architecture bets.
+- Preserve creator sovereignty, explainability and exportability as product principles.
+- Roadmaps must distinguish now, next, later and speculative horizons.
