@@ -78,16 +78,19 @@ export const recordAlgorithmIntelligenceEvent = (
   metadata?: Record<string, unknown>
  },
 ): AlgorithmIntelligenceEvent => {
+ const events = read()
+ const id = input.id || makeId()
+ const existing = events.find((candidate) => candidate.id === id)
  const event: AlgorithmIntelligenceEvent = {
   ...input,
-  id: input.id || makeId(),
-  parentEventIds: [...new Set(input.parentEventIds || [])],
-  evidenceIds: [...new Set(input.evidenceIds || [])],
-  evaluationTargets: input.evaluationTargets || [],
-  metadata: input.metadata || {},
-  createdAt: Date.now(),
+  id,
+  parentEventIds: [...new Set([...(existing?.parentEventIds || []), ...(input.parentEventIds || [])])],
+  evidenceIds: [...new Set([...(existing?.evidenceIds || []), ...(input.evidenceIds || [])])],
+  evaluationTargets: input.evaluationTargets || existing?.evaluationTargets || [],
+  metadata: { ...(existing?.metadata || {}), ...(input.metadata || {}) },
+  createdAt: existing?.createdAt || Date.now(),
  }
- write([event, ...read().filter((candidate) => candidate.id !== event.id)])
+ write([event, ...events.filter((candidate) => candidate.id !== event.id)])
  return event
 }
 
