@@ -3,4 +3,8 @@ export * from './core/tokens';
 export * from './core/registry';
 export * from './primitives/backgrounds';
 export * from './templates/text';
+export * from './templates/graphics';
+export * from './templates/scenes';
 export * from './motion/presets';
+export * from './catalog';
+export * from './integration/timelineAdapter';
