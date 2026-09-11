@@ -10,6 +10,8 @@ export const BRAIN_CAPABILITY_REGISTRY: BrainCapabilityDefinition[] = [
  { id: "signal-anomaly-intelligence", label: "Signal / anomaly intelligence", description: "Explains evidence-backed unusual analytics changes while keeping observation separate from causal hypothesis or creator action.", intents: ["analytics", "strategy", "revenue", "audience"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
  { id: "opportunity-intelligence", label: "Opportunity intelligence", description: "Identifies channel-relevant openings such as emerging demand, catalog gaps, session adjacency, and reusable audience interest even when they are not anomalies.", intents: ["strategy", "seo", "audience", "content_analysis"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
  { id: "algorithm-priming", label: "Algorithm priming", description: "Builds proactive pre-launch, launch, post-launch, session, derivative, and learning workflows for a specific video/project.", intents: ["strategy", "publishing", "content_generation"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
+ { id: "algorithm-evaluation", label: "Algorithm evaluation", description: "Explains whether prior recommendations or priming actions actually worked, what remains unresolved, checkpoint status, attribution lineage, and confidence calibration.", intents: ["analytics", "strategy", "content_analysis", "revenue"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
+ { id: "learning-governance", label: "Learning governance", description: "Reviews repeated measured learning candidates and keeps promotion into durable Channel Profile memory creator-controlled.", intents: ["strategy", "analytics", "content_analysis"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
  { id: "top-performer-mining", label: "Top performer mining", description: "Finds repeatable patterns in proven videos.", intents: ["strategy", "content_analysis", "seo"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
  { id: "audience-promise", label: "Audience promise", description: "Connects topics and formats to a clear viewer payoff.", intents: ["audience", "strategy", "publishing"], maximumInvocationsPerTurn: 1 },
  { id: "seo-opportunity", label: "SEO opportunity", description: "Builds channel-relevant title, topic, and search opportunities.", intents: ["seo", "publishing"], maximumInvocationsPerTurn: 1 },
@@ -33,8 +35,8 @@ const capabilityAllowedByCreator = (
  controls: ReturnType<typeof readBrainUserControls>,
 ): boolean => {
  if (!controls.enabled) return false
- if (!controls.personalization && ["channel-profile", "channel-intelligence", "journal-memory", "goal-coach"].includes(capability.id)) return false
- if (!controls.allowAnalytics && ["analytics-diagnosis", "top-performer-mining", "signal-anomaly-intelligence", "channel-intelligence"].includes(capability.id)) return false
+ if (!controls.personalization && ["channel-profile", "channel-intelligence", "journal-memory", "goal-coach", "learning-governance"].includes(capability.id)) return false
+ if (!controls.allowAnalytics && ["analytics-diagnosis", "top-performer-mining", "signal-anomaly-intelligence", "channel-intelligence", "algorithm-evaluation", "learning-governance"].includes(capability.id)) return false
  return true
 }
 

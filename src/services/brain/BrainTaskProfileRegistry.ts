@@ -6,6 +6,7 @@ export type BrainTaskProfileId =
  | "first_week_plan"
  | "best_video_autopsy"
  | "channel_revival"
+ | "evaluation"
  | "strategy"
  | "analytics"
  | "seo"
@@ -42,6 +43,7 @@ export interface BrainTaskProfile {
 const creationVerb = /\b(write|draft|create|generate|rewrite|make me|give me|compose|produce)\b/i
 const creatorAsset = /\b(scripts?|hooks?|pinned comments?|comments?|community posts?|posts?|replies?|titles?|descriptions?|tags?|captions?|outlines?|intros?|outros?|calls? to action|ctas?)\b/i
 const videoCreation = /\b(want to make|make a new video|new video about|video about|video on|create a video|plan a video|plan.*video)\b/i
+const evaluationRequest = /\b(what worked|what failed|what did not work|what didn'?t work|which recommendation|recommendation.*work|priming.*work|did .* help|needs? evidence|missing evidence|overdue|evaluation|evaluate|measured outcome|outcome|attribution|confidence calibration|how reliable|how accurate|overconfident|underconfident|stop doing|should i stop|learning candidate|what have we learned)\b/i
 
 const resolveAssetKind = (text: string): BrainCreatorAssetKind => {
  if (/\bpinned comments?\b/i.test(text)) return "pinned_comment"
@@ -98,6 +100,7 @@ export const resolveBrainTaskProfile = (userText: string): BrainTaskProfile => {
  if (/\b(quick win|today'?s priority|today)\b/i.test(value)) return profile("goal_coach", "strategy", "goal_coach")
  if (/\b(first week plan|week plan|7.day plan|seven.day plan)\b/i.test(value)) return profile("first_week_plan", "strategy", "publishing_checklist")
  if (/\b(best video autopsy|video autopsy|autopsy)\b/i.test(value)) return profile("best_video_autopsy", "analytics", "analytics_diagnosis")
+ if (evaluationRequest.test(value)) return profile("evaluation", "analytics", "analytics_diagnosis")
  if (/\b(revive|revival|comeback|return|not posted|haven't posted|after.*break|greet.*audience|greet.*subscriber|welcome back)\b/i.test(value)) {
   return profile("channel_revival", "strategy", "strategy_brief")
  }
@@ -129,6 +132,15 @@ export const buildBrainTaskInstruction = (task: BrainTaskProfile): string => {
  if (task.id === "first_week_plan") return "FIRST WEEK PLAN TASK\nReturn seven distinct daily actions grounded in this channel's niche, top videos, and gaps."
  if (task.id === "best_video_autopsy") return "BEST VIDEO AUTOPSY TASK\nName the strongest video, explain its title, hook, retention, and shareability signals, then give a same-payoff/different-angle replication plan."
  if (task.id === "channel_revival") return "CHANNEL REVIVAL TASK\nGive a channel-specific comeback plan, first publish choice, subscriber re-engagement, and a paste-ready two-to-three sentence opening hook."
+ if (task.id === "evaluation") return [
+  "ALGORITHM EVALUATION TASK",
+  "Answer from measured outcome, checkpoint, attribution, lifecycle-cohort, learning-candidate, and calibration evidence when available.",
+  "Separate recommendation creation, creator approval, execution, and measured outcome; never treat one as proof of another.",
+  "If a result is insufficient_data, say exactly which metric or workflow evidence is still missing and whether the checkpoint remains retryable.",
+  "When lifecycle cohorts exist, prefer comparable T+window peers over lifetime/current totals.",
+  "Treat calibration as descriptive evidence only; do not silently change strategy weights or claim future accuracy is guaranteed.",
+  "For 'what should I stop doing?', require repeated negative measured outcomes or an approved learning candidate rather than one failure.",
+ ].join("\n")
  if (task.id === "audience") return [
   "AUDIENCE LANGUAGE TASK",
   "Identify what this audience appears to value and give concrete words or phrases the creator can use.",
