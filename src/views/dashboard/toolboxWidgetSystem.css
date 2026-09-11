@@ -62,6 +62,10 @@
   flex-shrink: 0;
   font-size: var(--widget-type-body);
   line-height: 1.4;
+  /* Named so `@container vt-widget (...)` queries resolve. Without the name those
+     queries never match, even though the container-type is correct. Unnamed
+     @container queries elsewhere still match this container by proximity. */
+  container-name: vt-widget;
   container-type: inline-size;
   /* 3PX exterior border colored dark based on widget color */
   --widget-border: color-mix(in srgb, var(--widget-color, #000) 60%, black);
@@ -1913,6 +1917,8 @@
 .dashboard-widget-slot {
   content-visibility: auto;
   contain-intrinsic-size: auto 250px;
+  /* Clearance so the widget's offset shadow is not clipped by the grid cell. */
+  padding: 4px;
 }
 
 .widget-removal-toast {
@@ -4330,10 +4336,6 @@ textarea.vt-input:focus {
   /* Optional: ensure the transition is smooth */
   transition: background-color 0.2s ease;
 
-}
-
-.dashboard-widget-slot {
-  padding: 4px !important;
 }
 
 /* Ensure the widget doesn't shrink, but leaves room for the shadow */
