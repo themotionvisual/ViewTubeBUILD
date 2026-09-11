@@ -13,6 +13,8 @@ export interface CanonicalMetricResolutionRule {
  aggregation: "sum" | "average"
 }
 
+type CanonicalCatalog = ReturnType<typeof getCanonicalIntelligenceDatasetCatalog>
+
 /**
  * Phase 6 semantic metric registry.
  *
@@ -73,30 +75,28 @@ const findVideoRow = (
  return index >= 0 ? { row: rows[index], index } : null
 }
 
-const resolveFromDataset = (input: {
- snapshot: VtSyncSnapshot
- event: AlgorithmIntelligenceEvent
+export const resolveAlgorithmMetricFromCanonicalCatalog = (input: {
+ catalog: CanonicalCatalog
+ snapshotId: string
+ videoId?: string | null
  rule: CanonicalMetricResolutionRule
-}) => {
- // Request enough canonical rows to resolve a concrete video when present. The
- // catalog remains privacy-filtered because analytics-canon owns row exposure.
- const catalog = getCanonicalIntelligenceDatasetCatalog(input.snapshot, 5000)
+}): { value: number; evidenceId: string } | null => {
  const ordered = input.rule.datasetIds
-  .map((id) => catalog.find((dataset) => dataset.id === id))
+  .map((id) => input.catalog.find((dataset) => dataset.id === id))
   .filter(Boolean)
 
  for (const dataset of ordered) {
   if (!dataset || dataset.status === "failed" || dataset.status === "unavailable") continue
 
-  if (input.event.videoId) {
-   const matched = findVideoRow(dataset.sampleRows, input.event.videoId)
+  if (input.videoId) {
+   const matched = findVideoRow(dataset.sampleRows, input.videoId)
    if (matched) {
     for (const field of input.rule.fields) {
      const value = numericValue(matched.row[field])
      if (value == null) continue
      return {
       value,
-      evidenceId: `${input.snapshot.snapshotId}:${dataset.id}:${matched.index + 1}:${field}`,
+      evidenceId: `${input.snapshotId}:${dataset.id}:${matched.index + 1}:${field}`,
      }
     }
    }
@@ -109,7 +109,7 @@ const resolveFromDataset = (input: {
     if (Number.isFinite(value)) {
      return {
       value,
-      evidenceId: `${input.snapshot.snapshotId}:${dataset.id}:summary:${field}`,
+      evidenceId: `${input.snapshotId}:${dataset.id}:summary:${field}`,
      }
     }
    }
@@ -125,7 +125,7 @@ const resolveFromDataset = (input: {
     : values.reduce((total, candidate) => total + candidate, 0) / values.length
    return {
     value,
-    evidenceId: `${input.snapshot.snapshotId}:${dataset.id}:sample:${field}`,
+    evidenceId: `${input.snapshotId}:${dataset.id}:sample:${field}`,
    }
   }
  }
@@ -138,12 +138,20 @@ export const collectCanonicalAlgorithmObservations = (input: {
 }): AlgorithmMetricObservation[] => {
  const requiredMetrics = [...new Set(input.event.evaluationTargets.map((target) => target.metric))]
  const observedAt = observedAtFor(input.snapshot)
+ // Request enough canonical rows to resolve a concrete video when present. The
+ // catalog remains privacy-filtered because analytics-canon owns row exposure.
+ const catalog = getCanonicalIntelligenceDatasetCatalog(input.snapshot, 5000)
  return requiredMetrics.flatMap((metric) => {
   // Workflow/tool completion is intentionally not fabricated from analytics.
   if (metric === "diagnosis_complete") return []
   const rule = CANONICAL_ALGORITHM_METRIC_RULES.find((candidate) => candidate.metric === metric)
   if (!rule) return []
-  const resolved = resolveFromDataset({ ...input, rule })
+  const resolved = resolveAlgorithmMetricFromCanonicalCatalog({
+   catalog,
+   snapshotId: input.snapshot.snapshotId,
+   videoId: input.event.videoId,
+   rule,
+  })
   if (!resolved) return []
   return [{
    metric,
