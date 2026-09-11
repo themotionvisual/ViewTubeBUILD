@@ -40,10 +40,7 @@ const relativeChange = (baseline: number | null | undefined, current: number | n
  return (current - baseline) / Math.abs(baseline)
 }
 
-const evaluateTarget = (
- target: AlgorithmEvaluationTarget,
- observation: AlgorithmMetricObservation | undefined,
-): AlgorithmTargetEvaluation => {
+const evaluateTarget = (target: AlgorithmEvaluationTarget, observation: AlgorithmMetricObservation | undefined): AlgorithmTargetEvaluation => {
  const baseline = target.baselineValue ?? null
  const current = observation?.value ?? null
  const delta = relativeChange(baseline, current)
@@ -65,15 +62,9 @@ const confidenceFor = (available: number, total: number): BrainConfidenceLevel =
  return ratio >= .8 ? "high" : ratio >= .5 ? "medium" : "low"
 }
 
-export const evaluateAlgorithmEvent = (input: {
- event: AlgorithmIntelligenceEvent
- observations: AlgorithmMetricObservation[]
- now?: number
-}): AlgorithmEvaluationResult => {
+export const evaluateAlgorithmEvent = (input: { event: AlgorithmIntelligenceEvent; observations: AlgorithmMetricObservation[]; now?: number }): AlgorithmEvaluationResult => {
  const now = input.now || Date.now()
- const targetResults = input.event.evaluationTargets.map((target) =>
-  evaluateTarget(target, input.observations.find((observation) => observation.metric === target.metric)),
- )
+ const targetResults = input.event.evaluationTargets.map((target) => evaluateTarget(target, input.observations.find((observation) => observation.metric === target.metric)))
  const available = targetResults.filter((result) => result.status !== "unavailable")
  const met = targetResults.filter((result) => result.status === "met").length
  const missed = targetResults.filter((result) => result.status === "missed").length
@@ -85,27 +76,13 @@ export const evaluateAlgorithmEvent = (input: {
  else if (missed) status = "negative"
  else status = "neutral"
  const evidenceIds = [...new Set(input.observations.map((observation) => observation.evidenceId).filter(Boolean) as string[])]
- const explanation = status === "positive"
-  ? `${met}/${targetResults.length} evaluation targets were met.`
-  : status === "negative"
-   ? `${missed}/${targetResults.length} evaluation targets were missed.`
-   : status === "mixed"
-    ? `${met} targets were met and ${missed} were missed.`
-    : status === "insufficient_data"
-     ? "The checkpoint was reached but the required metric observations are unavailable."
-     : status === "pending"
-      ? "The evaluation checkpoint has not been reached yet."
+ const explanation = status === "positive" ? `${met}/${targetResults.length} evaluation targets were met.`
+  : status === "negative" ? `${missed}/${targetResults.length} evaluation targets were missed.`
+   : status === "mixed" ? `${met} targets were met and ${missed} were missed.`
+    : status === "insufficient_data" ? "The checkpoint was reached but the required metric observations are unavailable."
+     : status === "pending" ? "The evaluation checkpoint has not been reached yet."
       : "The observed result is neutral relative to the defined targets."
- return {
-  eventId: input.event.id,
-  channelId: input.event.channelId,
-  status,
-  confidence: confidenceFor(available.length, targetResults.length),
-  targetResults,
-  evidenceIds,
-  explanation,
-  evaluatedAt: now,
- }
+ return { eventId: input.event.id, channelId: input.event.channelId, status, confidence: confidenceFor(available.length, targetResults.length), targetResults, evidenceIds, explanation, evaluatedAt: now }
 }
 
 export const recordAlgorithmEvaluation = (input: {
@@ -117,11 +94,10 @@ export const recordAlgorithmEvaluation = (input: {
 }) => {
  const event = listAlgorithmIntelligenceEvents().find((candidate) => candidate.id === input.sourceEventId)
  if (!event) throw new Error(`Unknown Algorithm Intelligence event: ${input.sourceEventId}`)
- const effectiveEvent = input.evaluationTargets
-  ? { ...event, evaluationTargets: input.evaluationTargets }
-  : event
+ const effectiveEvent = input.evaluationTargets ? { ...event, evaluationTargets: input.evaluationTargets } : event
  const evaluation = evaluateAlgorithmEvent({ event: effectiveEvent, observations: input.observations, now: input.now })
  const recorded = recordAlgorithmIntelligenceEvent({
+  id: `algorithm-outcome:${event.id}`,
   channelId: event.channelId,
   projectId: event.projectId,
   videoId: event.videoId,
@@ -139,10 +115,7 @@ export const recordAlgorithmEvaluation = (input: {
   title: `Evaluation: ${event.title}`,
   summary: evaluation.explanation,
   evaluationTargets: effectiveEvent.evaluationTargets,
-  metadata: {
-   ...(input.metadata || {}),
-   evaluation,
-  },
+  metadata: { ...(input.metadata || {}), evaluation },
  })
  return { evaluation, recorded }
 }
