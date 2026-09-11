@@ -56,6 +56,7 @@ const VtSyncLocalAnalyticsPage = lazy(
  () => import("../features/vt-sync-local/shell/VtSyncLocalAnalyticsPage"),
 )
 const AIBrainCommandInterface = lazy(() => import("../views/AIBrainCommandInterface"))
+const BrainControlsPage = lazy(() => import("../views/BrainControlsPage"))
 const AccountConnectPage = lazy(() => import("../views/AccountConnectPage"))
 
 export const AppRoutes: React.FC = () => {
@@ -79,6 +80,7 @@ export const AppRoutes: React.FC = () => {
     <Route path="/subscribe" element={<Subscribe />} />
     <Route path="/data-transparency" element={<DataTransparencyCenter />} />
     <Route path="/ai-brain" element={<AIBrainCommandInterface />} />
+    <Route path="/brain-controls" element={<BrainControlsPage />} />
     <Route path="/local-analytics" element={<VtSyncLocalAnalyticsPage />} />
     <Route path="/analytics" element={<VtSyncLocalAnalyticsPage />} />
     <Route path="/vt-sync-local" element={<VtSyncLocalAnalyticsPage />} />
