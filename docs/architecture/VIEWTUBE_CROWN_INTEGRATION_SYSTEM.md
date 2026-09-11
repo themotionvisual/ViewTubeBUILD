@@ -73,8 +73,20 @@ KING compares outcome to intent. Task Authority may update Task Index only from 
 - Recovery material is reviewed and classified before cleanup.
 
 ## Adoption plan
-Phase A (this PR): instruction skills + protocol/schema + offline demo, no runtime wiring.
-Phase B: add a small file-backed `.viewtube/exchange/` mission/receipt reference implementation outside runtime-critical paths.
-Phase C: connect Task Index and Master Index readers to Crown records in read-only mode.
-Phase D: add optional builder UI for mission/receipt inspection.
-Phase E: after contract tests, allow selected developer workflows to emit Crown records automatically.
+### Phase A — foundation
+Instruction skills + protocol/schema + offline demo, no runtime wiring. **Implemented on `codex/feat/crown-integration-system`.**
+
+### Phase B — Royal Exchange
+Add a file-backed `.viewtube/exchange/` reference implementation outside runtime-critical paths, plus fixtures and a validator. **In progress and materially implemented:** the Exchange README, example mission/work-order/receipt and `scripts/validate-crown-exchange.mjs` now exist.
+
+### Phase C — read-only indexes
+Connect Task Index and Master Index readers to Crown records in read-only mode. Do not permit automatic task-status mutation in the first integration.
+
+### Phase D — builder UI
+Add optional in-app inspection for missions, work orders, receipts, decisions and artifacts. Keep it separate from creator-facing production workflows until stable.
+
+### Phase E — selective automation
+After contract tests, allow selected developer workflows to emit Crown records automatically. Automation may create coordination records; consequential external actions still follow existing authorization boundaries.
+
+## Current skill layer
+The branch now includes Crown, bridge, conflict, verification, finder/authoring/grill support skills plus five domain Princes: Observatory, Citadel, Brain, Forge and Compass. The Princes own desired-state coordination; current repository skills and Republic engineering roles remain the execution specialists.
