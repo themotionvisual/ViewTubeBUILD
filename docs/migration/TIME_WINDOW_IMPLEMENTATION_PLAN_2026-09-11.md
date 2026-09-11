@@ -126,6 +126,28 @@ lifetime clamps to `channelPublishedAt`.
 
 ### 3.1 Windowed metrics, not upload-date filtering (blocking)
 
+> **Correction (2026-09-11, during implementation).** This section originally
+> said the fix was to read each row's per-window metric map. That is right for
+> the **canonicalSync** video record, which does have
+> `Record<AnalyticsWindow, …>` (`canonicalSync/contracts.ts:187`) — but
+> `vtSyncAdapter` reads the **vt-sync snapshot**, and `VtSyncVideoItem.metrics`
+> is a single flat map. VT-SYNC fetches `videos_analytics` from `2000-01-01`
+> (`localSyncEngine.ts:2183`), so only lifetime values are ever stored.
+> **Per-window video metrics do not exist until Phase 3 lands**, and rewriting
+> the selector to read them first would have returned empty everywhere.
+>
+> Shipped instead (commit `80c1b48`): the *seam*. `CanonicalVideoRow` gained
+> `window` + `windowSource` (`window_exact` | `lifetime_fallback` |
+> `unavailable`), the projector takes a window and prefers
+> `video.metricsByWindow[window]`, and `VtSyncVideoItem` gained the
+> `metricsByWindow` field Phase 3 populates. Displayed values are unchanged —
+> the mislabeling is now *labelled* rather than silent. The date predicate is
+> renamed `filterRowsByUploadRecency` (old name kept as a deprecated alias).
+>
+> **Still open:** the consumer display policy for the gap period — what
+> `useDashboardData` should show for 28d while only `lifetime_fallback` rows
+> exist. See §13.
+
 `filterCanonicalRowsByWindow` must stop being a date filter and start reading
 per-window metric values. The canonical video record already has the right
 shape: `Record<AnalyticsWindow, Record<string, number | null>>`
@@ -176,7 +198,7 @@ supported subset:
 | `demographicSync.ts` | 16 | all 5 | no change |
 | `audienceSegmentSync.ts` | 17 | all 5 | no change |
 | `viewerCohortSync.ts` | 19 | `7d,28d,90d` | **keep** — API limit; already reason-coded |
-| `retentionSync.ts` | 95 | `opts.window \|\| "lifetime"` | accept `windows[]`, default `["lifetime","28d"]` |
+| `retentionSync.ts` | 95 | `opts.window \|\| "lifetime"` | accept `windows[]`, default stays **single window** (see note) |
 | `channelWindowSync.ts` | 18–19 | all 5 + 4 previous | no change — reference implementation |
 | `channelDailySync.ts` | — | day-grained | no change — **class A, derive** |
 | `videoInventorySync.ts` | — | unwindowed | no change — **class C** |
@@ -451,3 +473,36 @@ last-complete-day offset, and confirm a channel younger than 365 days shows
 - `youtube-api-expert` (supporting) — Analytics API v2 vs Data API v3 quota
   pools, the `analytics_reports_query` surface, and why request count rather
   than quota units is the binding constraint here.
+
+---
+
+## 13. Open decision — display policy during the gap period
+
+Raised during Phase 1 implementation; **not yet decided**.
+
+Until Phase 3 fetches per-window video metrics, `getCanonicalRowsFromVtSync`
+can only return `lifetime_fallback` rows for 7/28/90/365. The seam now labels
+them, but nothing consumes the label yet, so the dashboard still renders a
+lifetime number under a 28-day heading.
+
+`useDashboardData.ts:74-79` gates on `rowCount > 0`:
+
+```ts
+const canonical28d = useCanonicalMetricSummary("28d")
+const summary28d = canonical28d.rowCount > 0
+  ? canonical28d                                    // lifetime values today
+  : getMetricSummary("28d", "hybrid", brain.csvFiles || [])
+```
+
+Three options:
+
+| Option | Behavior | Trade |
+|---|---|---|
+| **A. Leave as is** | Keeps today's numbers | The wrong number stays on screen until Phase 3 |
+| **B. Return `[]` for fallback-only windows** | `rowCount` hits 0, so the dashboard falls through to its CSV path and to `bootstrap28d`, which reads `initialBootstrap.periods` — real `window === "28d"` rows from `channelWindowSync` | Likely **more** correct, but it is a live behavior change and the fallback chain needs verifying against a real channel first |
+| **C. Show the value with a provenance badge** | "1.2M · lifetime — 28d not synced yet" | Most honest; needs a UI change in every consumer |
+
+Recommendation: **B**, verified against a real channel on a preview deploy
+before merge, with **C** as the follow-up once the controller can request
+windows. B is the only option that routes the dashboard to a genuinely
+windowed source (`channelWindowSummaries`) that already exists and is correct.
