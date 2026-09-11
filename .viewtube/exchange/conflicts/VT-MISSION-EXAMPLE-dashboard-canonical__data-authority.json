@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "viewtube.conflict.v1",
+  "conflictId": "VT-CONFLICT-EXAMPLE-dashboard-data-authority",
+  "missionId": "VT-MISSION-EXAMPLE-dashboard-canonical",
+  "level": "L2",
+  "topic": "analytics data authority",
+  "kingdomPosition": "The dashboard mission needs simple access to consistent analytics evidence.",
+  "republicConstraint": "Current repository ownership assigns raw analytics to VT-SYNC and consumer parity to analytics-canon.",
+  "resolution": "Reuse the existing canonical owners. Crown coordinates the mission and evidence trail but does not create another runtime data owner.",
+  "resolvedBy": ["viewtube-king", "viewtube-emperor"],
+  "state": "resolved"
+}
