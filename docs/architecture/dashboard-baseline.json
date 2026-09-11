@@ -1,0 +1,108 @@
+{
+  "measuredAt": "2026-09-11",
+  "css": {
+    "files": {
+      "toolboxWidgetSystem.css": {
+        "lines": 7716,
+        "bytes": 232622,
+        "important": 184,
+        "media": 15,
+        "container": 18
+      },
+      "widgetMatrixPrimitives.css": {
+        "lines": 339,
+        "bytes": 10762,
+        "important": 0,
+        "media": 2,
+        "container": 0
+      },
+      "widgetPrimitiveExactHeights.css": {
+        "lines": 76,
+        "bytes": 3363,
+        "important": 23,
+        "media": 1,
+        "container": 0
+      },
+      "widgetPrimitiveTones.css": {
+        "lines": 186,
+        "bytes": 8170,
+        "important": 41,
+        "media": 0,
+        "container": 0
+      },
+      "widgetPrimitiveVariants.css": {
+        "lines": 447,
+        "bytes": 11929,
+        "important": 19,
+        "media": 1,
+        "container": 2
+      },
+      "widgetScrollbar.css": {
+        "lines": 147,
+        "bytes": 3577,
+        "important": 0,
+        "media": 2,
+        "container": 0
+      }
+    },
+    "totals": {
+      "lines": 8911,
+      "bytes": 270423,
+      "important": 267,
+      "media": 21,
+      "container": 20
+    },
+    "barrierPrefixedRules": 953,
+    "distinctSelectorRoots": 113,
+    "duplicatedSelectorRoots": 68
+  },
+  "source": {
+    "WidgetRenderer.tsx": 1348,
+    "WidgetRegistry.ts": 1219,
+    "WidgetPrimitives.tsx": 703,
+    "useDashboardData.ts": 666,
+    "WidgetPrimitiveExtensions.tsx": 513,
+    "DashboardCanvas.tsx": 500,
+    "WidgetShell.tsx": 281,
+    "storage.ts": 258
+  },
+  "widgets": {
+    "registered": 59,
+    "uniqueIds": 59,
+    "duplicateIds": 0,
+    "lazyRenderers": 40,
+    "inlineRenderers": 19,
+    "uncoveredIds": [],
+    "orphanWidgetFiles": [
+      "AdStackWidget",
+      "ReachFunnelWidget",
+      "ThumbAIWidget"
+    ]
+  },
+  "build": {
+    "Dashboard.js": {
+      "raw": 94446,
+      "gzip": 27193
+    },
+    "Dashboard.css": {
+      "raw": 189462,
+      "gzip": 26332
+    },
+    "UIReferenceLibraryWidget.js": {
+      "raw": 20772,
+      "gzip": 5974
+    },
+    "UIReferenceLibraryWidget.css": {
+      "raw": 25752,
+      "gzip": 3863
+    },
+    "index.js": {
+      "raw": 190764,
+      "gzip": 55540
+    },
+    "index.css": {
+      "raw": 306337,
+      "gzip": 44007
+    }
+  }
+}
