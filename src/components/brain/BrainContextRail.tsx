@@ -10,6 +10,7 @@ import type { AIBrainContextSnapshot } from "../../services/aiBrainCommandInterf
 import { sanitizeCreatorFacingBrainCopy } from "../../services/aiBrainConversationStore"
 import { BrainQuestionPrompt } from "./BrainQuestionPrompt"
 import { BrainQuickActionCard } from "./BrainAnswerModules"
+import { BrainEvaluationInboxPanel } from "./BrainEvaluationInboxPanel"
 
 const Panel: React.FC<{ title: string; tone: string; children: React.ReactNode }> = ({
  title,
@@ -66,6 +67,7 @@ export const BrainContextRail: React.FC<{
  const goalQuestion = availableQuestions.find((question) => question.category === "creator_goal")
  const topQuestion = availableQuestions.find((question) => question.category !== "creator_goal")
  const laneOptions = snapshot.inferredProfile.topicClusters.slice(0, 4)
+ const evaluationChannelId = snapshot.channel.handle || null
 
  return (
   <aside
@@ -94,6 +96,12 @@ export const BrainContextRail: React.FC<{
      {goal || "Not set. Tell me what matters most this month."}
     </p>
    </Panel>
+
+   <BrainEvaluationInboxPanel
+    channelId={evaluationChannelId}
+    maximumItems={compactGrid ? 3 : 5}
+    compact={compactGrid}
+   />
 
    {quickActions.length ? (
     <Panel title="Do this next" tone="#C0F240">
