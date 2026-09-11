@@ -4,6 +4,7 @@ import { resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
 
 export const BRAIN_CAPABILITY_REGISTRY: BrainCapabilityDefinition[] = [
  { id: "channel-profile", label: "Channel profile", description: "Uses inferred niche, pillars, formats, and creator goals.", intents: ["strategy", "audience", "content_analysis"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
+ { id: "signal-anomaly-intelligence", label: "Signal anomaly intelligence", description: "Detects and explains unusual shifts in canonical VT-SYNC analytics while preserving evidence provenance and uncertainty.", intents: ["analytics", "strategy", "revenue", "audience"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
  { id: "analytics-diagnosis", label: "Analytics diagnosis", description: "Reads known channel and video performance without inventing missing values.", intents: ["analytics", "revenue"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
  { id: "top-performer-mining", label: "Top performer mining", description: "Finds repeatable patterns in proven videos.", intents: ["strategy", "content_analysis", "seo"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
  { id: "audience-promise", label: "Audience promise", description: "Connects topics and formats to a clear viewer payoff.", intents: ["audience", "strategy", "publishing"], maximumInvocationsPerTurn: 1 },

@@ -10,6 +10,7 @@ import { VT_SYNC_CATEGORY_OPTIONS } from "../../features/vt-sync-local/upstream/
 import { VT_SYNC_VISIBLE_TABLE_DEFINITIONS } from "../../features/vt-sync-local/upstream/tableRegistry"
 import type {
  CanonicalIntelligenceDatasetManifest,
+ CanonicalIntelligenceDatasetRows,
  CanonicalIntelligenceDatasetStatus,
  CanonicalIntelligenceEvidenceBundle,
  CanonicalIntelligenceMetricSummary,
@@ -149,6 +150,28 @@ const datasetSources = (
  if (freshness?.source === "manual_import") sources.add("manual_import")
  if (!sources.size) sources.add("unknown")
  return [...sources]
+}
+
+export const getCanonicalIntelligenceDatasetRows = (
+ snapshot: VtSyncSnapshot,
+ datasetId: string,
+): CanonicalIntelligenceDatasetRows | null => {
+ assertDatasetRegistry()
+ const table = VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((definition) => definition.id === datasetId)
+ if (!table) return null
+ const rows = tableRows(snapshot, table, DEFAULT_VT_SYNC_PRIVACY_FILTERS)
+ const freshness = resolveFreshness(snapshot.datasetFreshness, table)
+ return {
+  datasetId: table.id,
+  label: table.label,
+  status: statusFor(rows.length, freshness),
+  snapshotId: snapshot.snapshotId,
+  channelId: snapshot.channelId || null,
+  updatedAt: freshness?.updatedAt || snapshot.capturedAt,
+  sources: datasetSources(table, freshness),
+  missingMetrics: [...(freshness?.missingMetrics || [])],
+  rows,
+ }
 }
 
 export const getCanonicalIntelligenceDatasetCatalog = (
