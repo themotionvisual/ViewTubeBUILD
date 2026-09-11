@@ -43,6 +43,30 @@ export const listBrainOutcomes = (channelId?: string | null) => {
  return channelId ? records.filter((record) => record.channelId === channelId) : records
 }
 
+const feedAlgorithmEvaluation = async (record: BrainOutcomeRecord) => {
+ if (!record.channelId || (!record.actionPacketId && !record.workflowId)) return null
+ try {
+  const { recordAlgorithmWorkflowOutcome } = await import("./AlgorithmWorkflowOutcomeBridge")
+  return recordAlgorithmWorkflowOutcome({
+   channelId: record.channelId,
+   actionPacketId: record.actionPacketId,
+   workflowId: record.workflowId,
+   status: record.outcome,
+   completedAt: record.createdAt,
+   evidenceIds: record.evidence,
+   metadata: {
+    brainOutcomeId: record.id,
+    sourceToolId: record.sourceToolId,
+    targetToolId: record.targetToolId,
+   },
+  })
+ } catch {
+  // Outcome recording remains authoritative even if Algorithm Intelligence is
+  // not available in this runtime. Evaluation can be retried from the ledger.
+  return null
+ }
+}
+
 export const recordBrainOutcome = async (input: Omit<BrainOutcomeRecord, "id" | "createdAt">) => {
  const record: BrainOutcomeRecord = {
   ...input,
@@ -71,6 +95,11 @@ export const recordBrainOutcome = async (input: Omit<BrainOutcomeRecord, "id" | 
    targetToolId: input.targetToolId,
   },
  })
+
+ // Phase 6 integration: the existing Outcome Ledger remains the canonical
+ // workflow-result owner. It may additionally feed declared workflow-native
+ // Algorithm evaluation targets, but never analytics targets.
+ await feedAlgorithmEvaluation(record)
  return record
 }
 
