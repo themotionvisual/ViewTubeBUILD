@@ -11,14 +11,31 @@ this repo. Keep it short. Longer notes belong in `docs/` or per-feature READMEs.
 local :5173  →  feature branch  →  PR  →  main  →  Vercel  →  viewtube.live
 ```
 
-- **`main` is production.** Vercel's `viewtube` project auto-deploys every commit
-  landed on `main` to https://viewtube.live. There is no separate release step.
+- **`main` is production.** Vercel's **`viewtubebuild`** project
+  (`prj_xCtpqziBwueQncNa8sEVKAXAgPbi`) owns the `viewtube.live` and
+  `www.viewtube.live` aliases and auto-deploys every commit landed on `main`.
+  There is no separate release step.
 - Vercel also deploys **preview URLs** for every pushed branch, so pushing a
   feature branch gives you a live URL you can share and inspect without
   touching production.
-- The `viewtubebuild` and `project-2tjr5` Vercel projects that also
-  auto-deploy from this repo are **not** the ones serving `viewtube.live`.
-  Ignore their status; unlink them in the Vercel dashboard when convenient.
+- **The `viewtube` project does *not* serve `viewtube.live`.** It builds the same
+  repo and its aliases are `viewtube-red.vercel.app` plus the per-branch
+  `*-cbrewsterart-1584s-projects.vercel.app` hosts. It is useful as a preview
+  surface; a green deploy there says nothing about what production is serving.
+  Verify the alias list on the deployment before concluding a change is live:
+
+  ```bash
+  # which project actually owns the domain
+  vercel project ls           # or the Vercel MCP get_project → .domains
+  ```
+
+- Both projects share one **Neon** database via the Vercel integration, and the
+  free plan caps the org at **10 database branches**. Each preview deployment
+  provisions one. When the cap is reached, deployments fail at *Provisioning
+  Integrations* with `Resource provisioning failed` and **no build logs** —
+  which looks like a broken build but is a quota problem. Delete archived
+  `preview/*` branches in Neon, or disable automatic branch creation for
+  previews.
 
 ## Golden rules
 

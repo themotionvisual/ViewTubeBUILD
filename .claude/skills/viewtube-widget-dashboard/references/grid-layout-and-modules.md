@@ -1,0 +1,130 @@
+# Grid, Layout, and Widget Module Reference
+
+Read this when laying out the dashboard, choosing or changing a widget's size/height,
+creating a new widget module, or changing the grid itself.
+
+All facts here were read from the repository on 2026-09-11. Re-check before relying on
+them as acceptance criteria.
+
+## The grid, as actually implemented
+
+The dashboard grid is 24 columns. A widget's span is **not** set by CSS on a data
+attribute — it is a Tailwind class string produced by `sizeBucketClassName()` in
+`src/views/dashboard/storage.ts`:
+
+| Size bucket | Class | Columns at `md`+ | Columns below `md` |
+| --- | --- | --- | --- |
+| `full` | `col-span-24` | 24 | 24 |
+| `three-quarters` | `col-span-24 md:col-span-18` | 18 | 24 |
+| `two-thirds` | `col-span-24 md:col-span-16` | 16 | 24 |
+| `half` | `col-span-24 md:col-span-12` | 12 | 24 |
+| `between` | `col-span-24 md:col-span-10` | 10 | 24 |
+| `third` | `col-span-24 md:col-span-8` | 8 | 24 |
+| `companion` | `col-span-24 md:col-span-7` | 7 | 24 |
+| `quarter` | `col-span-24 md:col-span-6` | 6 | 24 |
+
+**Consequence you must design around: below the Tailwind `md` breakpoint every widget is
+full width, whatever its bucket.** Do not assume a `quarter` widget is ever narrow on
+mobile — it is not. Design the narrow layout for the widget's *content*, not for its bucket.
+
+Heights are fixed pixels from `heightBucketClassName()` in the same file:
+
+| Height bucket | Height |
+| --- | --- |
+| `short` | 150px |
+| `medium` | 250px |
+| `tall` | 350px |
+| `xtall` | 450px |
+| `massive` | 850px |
+
+Height is independent of width, so `quarter`/`short` and `full`/`short` both give you 150px.
+A widget must not assume its height scales with its span. Overflow goes in an explicit
+`WidgetScrollArea`, never in the shell.
+
+Bucket order for stepping up and down is in `src/views/dashboard/tokens.ts`
+(`SIZE_BUCKET_ORDER`, `HEIGHT_BUCKET_ORDER`); stepping is clamped to the widget's own
+`supportedSizes` / `supportedHeights` by `nextSizeBucket` / `nextHeightBucket` in
+`storage.ts`. Every entry in `supportedDimensions` is a public state and must be inspected.
+
+## Container queries
+
+`.vt-widget` is the widget container: `container-type: inline-size`, `container-name: vt-widget`.
+
+- Prefer **unnamed** `@container (max-width: …)` for widget internals. It resolves to
+  `.vt-widget` by proximity and survives renaming.
+- Use a **named** query only when nesting makes resolution ambiguous, and only against a
+  container that actually declares that name. A named query against an unnamed container
+  silently never matches — this exact defect shipped in `widgetPrimitiveVariants.css` and
+  left the reference-library variant grid stuck at three columns.
+- Named containers currently in the repo: `vt-widget`, `video-uploader`, `sync-ctrl`.
+- Media queries are for the page shell only: navigation, and stacking the 24-column grid.
+  Never put a media query inside a widget's internals.
+
+## Choosing a size
+
+Pick from information density and the primary action, not from a mock:
+
+| Need | Bucket |
+| --- | --- |
+| one KPI, status chip, or a single short action | `quarter` / `companion` |
+| compact workflow or small comparison | `third` / `between` |
+| standard chart, list, or multi-step tool | `half` |
+| dense analysis or editing surface | `two-thirds` / `three-quarters` |
+| table, timeline, relationship graph, multi-panel workspace | `full` |
+
+Pair every size with a declared height bucket. Never set an ad-hoc fixed height inside a
+widget — use the bucket plus a `WidgetScrollArea`.
+
+## Layout archetypes
+
+| Archetype | Best size | Structure |
+| --- | --- | --- |
+| KPI / status | quarter → third | 1-3 metrics, status, one action |
+| Compact list | third → half | filters, bounded scroll area, footer |
+| Chart | half → full | KPI strip, labelled chart, legend, controls |
+| Workflow | half → three-quarters | form stack, preview/state, primary action |
+| Dense analysis | two-thirds → full | summary, tabs/filters, visualization or table |
+| Command centre | three-quarters → full | system state, steps, approvals, run log |
+
+## Adding a widget module
+
+1. Create `src/views/dashboard/widgets/<Name>Widget.tsx`. One file, one implementation.
+2. Add one definition to `WidgetRegistry.ts`: stable `id`, `title`, `subtitle`, `category`,
+   `dependency[]`, `status`, `headerColor`, `iconRailColor`, default/min/max size and height.
+3. Add one `React.lazy` entry in `WidgetRenderer.tsx` keyed by the renderer key. Do **not**
+   write the component inline in the renderer — that file is a resolver.
+4. If it should be visible by default, add it to `DEFAULT_DASHBOARD_ROWS`. `releaseTier`,
+   `defaultVisible` and `supportedOrder` are derived from those rows; do not hand-maintain them.
+5. Registering is what makes a widget exist. Three finished widget files
+   (`AdStackWidget`, `ReachFunnelWidget`, `ThumbAIWidget`) are unreachable purely because
+   nobody did steps 2-3. Check for that before writing anything new.
+6. Use `status: "ready"` only when the renderer exists, dependencies fail safely, every
+   declared dimension works, and all six data states are implemented. Otherwise
+   `prototype` or `needs-backend`.
+
+## CSS placement
+
+Ordered layers, outermost first. Put a new rule in the first layer that can own it:
+
+1. tokens and palette;
+2. shell and grid (`toolboxWidgetSystem.css`);
+3. primitives (`widgetPrimitiveTones.css`, `widgetPrimitiveExactHeights.css`,
+   `widgetPrimitiveVariants.css`, `widgetMatrixPrimitives.css`);
+4. archetype recipes;
+5. widget-specific rules, beside the widget so Vite can code-split them;
+6. accessibility and motion.
+
+Do not add `!important`. There are already 263 of them and most exist only to beat the
+`.dashboard-barrier` prefix that 953 rules in `toolboxWidgetSystem.css` carry. If you need
+`!important`, the real problem is cascade ownership — fix that instead, or document the
+exception.
+
+Do not use a Tailwind utility chain as a CSS selector. One already exists
+(`.flex-1.flex.flex-col.gap-2.overflow-y-auto`) and it breaks on any markup change.
+
+## Changing IDs or dimensions
+
+Public widget IDs are persisted in `vt_dashboard_layout_v9` (see `tokens.ts`). Changing an
+ID or removing a supported dimension requires a schema migration in `storage.ts` and a bump
+of `DASHBOARD_SCHEMA_VERSION`, plus a backup key. `normalizeDashboardLayout` is where old
+IDs and dimensions get mapped forward. Never change an ID without that path.
