@@ -1,5 +1,12 @@
 import React, { useMemo, useState } from "react"
-import { SuperToolRail } from "../components/SuperToolRail"
+import { Archive } from "lucide-react"
+import {
+ StandardInput,
+ SubToolbox,
+ SubToolboxDropdownControl,
+ SubToolboxInnerActionButton,
+} from "../components/Toolbox"
+import SuperToolShell, { type SuperToolMountProps } from "./supertools/SuperToolShell"
 import { listGenerationRecords } from "../services/generationStore"
 import { listPublicSuperToolsByIds } from "../services/superToolRegistry"
 import { createWorkflowChain, createWorkflowStep, listWorkflowChains } from "../services/workflowEngine"
@@ -16,7 +23,7 @@ const VAULT_TOOL_IDS = [
  "workflow-chain-builder",
 ] as const
 
-const CreatorVaultOS: React.FC = () => {
+const CreatorVaultOS: React.FC<SuperToolMountProps> = (props) => {
  const [assetName, setAssetName] = useState("")
  const [projectName, setProjectName] = useState("")
  const [kind, setKind] = useState<VaultAssetKind>("image")
@@ -84,91 +91,68 @@ const CreatorVaultOS: React.FC = () => {
  }
 
  return (
-  <div className="mx-auto flex max-w-[1600px] flex-col gap-8 pb-24">
-   <div className="rounded-[24px] border-[5px] border-black bg-[#0f0f0f] px-8 py-8 text-white shadow-[12px_12px_0px_0px_#CCFF00]">
-    <div className="text-[11px] font-black uppercase tracking-[0.35em] text-[#CCFF00]">
-     Vault Surface
-    </div>
-    <h1 className="mt-3 text-6xl font-[1000] uppercase leading-none tracking-[-0.07em]">
-     Creator Vault OS
-    </h1>
-    <p className="mt-4 max-w-4xl text-sm font-bold uppercase tracking-[0.12em] text-white/70">
-     Drive-first asset storage, generated-output persistence, and project-linked media routing for the ViewTube super-tool stack.
-    </p>
-   </div>
-
-   <SuperToolRail
-    title="Vault and Workflow Layer"
-    subtitle="Storage, timeline reuse, and creator process orchestration"
-    tools={vaultTools}
-    accentClassName="bg-[#00F0FF]"
-    note="Every generation, asset, and workflow should remain addressable and reusable across Studio, Projects, VT_E1, and Analytics."
-   />
+  <SuperToolShell
+   toolNumber="16"
+   title="Creator Vault OS"
+   subtitle="Drive-first asset storage, generated-output persistence, and project-linked media routing for the ViewTube super-tool stack."
+   icon={<Archive />}
+   accentClassName="bg-[#00F0FF]"
+   railTitle="Vault and Workflow Layer"
+   railSubtitle="Storage, timeline reuse, and creator process orchestration"
+   railNote="Every generation, asset, and workflow should remain addressable and reusable across Studio, Projects, VT_E1, and Analytics."
+   sisterTools={vaultTools}
+   {...props}>
 
    <section className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
-    <div className="rounded-[22px] border-[4px] border-black bg-white shadow-[8px_8px_0px_0px_black]">
-     <div className="border-b-[4px] border-black bg-[#CCFF00] px-6 py-5">
-      <div className="text-[10px] font-black uppercase tracking-[0.22em] text-black/55">
-       Asset Intake
-      </div>
-      <div className="text-3xl font-[1000] uppercase tracking-[-0.05em]">
-       Add Vault Assets
-      </div>
-     </div>
-     <div className="grid gap-4 p-6 md:grid-cols-2">
-      <label className="flex flex-col gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-black/60">
-       Asset name
-       <input
+    <SubToolbox
+     title="Asset Intake"
+     icon={<Archive />}
+     collapsible
+     isOpenInitial
+     helpText="Name an asset, tag it to a project, and save it into the vault — or link the project's Drive folder.">
+     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="min-w-0">
+       <label htmlFor="vault-asset-name" className="text-[10px] font-black uppercase tracking-wider">Asset name</label>
+       <StandardInput
+        id="vault-asset-name"
+        name="vaultAssetName"
         value={assetName}
         onChange={(event) => setAssetName(event.target.value)}
-        className="h-12 rounded-[14px] border-[4px] border-black px-4 text-sm font-bold uppercase tracking-[0.08em] text-black"
         placeholder="Alder hero image"
+        className="mt-2"
        />
-      </label>
-      <label className="flex flex-col gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-black/60">
-       Project
-       <input
+      </div>
+      <div className="min-w-0">
+       <label htmlFor="vault-project-name" className="text-[10px] font-black uppercase tracking-wider">Project</label>
+       <StandardInput
+        id="vault-project-name"
+        name="vaultProjectName"
         value={projectName}
         onChange={(event) => setProjectName(event.target.value)}
-        className="h-12 rounded-[14px] border-[4px] border-black px-4 text-sm font-bold uppercase tracking-[0.08em] text-black"
         placeholder="Roman Engineering Series"
+        className="mt-2"
        />
-      </label>
-      <label className="flex flex-col gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-black/60">
-       Asset kind
-       <select
+      </div>
+      <div className="min-w-0">
+       <SubToolboxDropdownControl
+        label="Asset kind"
         value={kind}
-        onChange={(event) => setKind(event.target.value as VaultAssetKind)}
-        className="h-12 rounded-[14px] border-[4px] border-black px-4 text-sm font-bold uppercase tracking-[0.08em] text-black"
-       >
-        {["image", "video", "audio", "font", "document", "template", "generated", "other"].map((option) => (
-         <option key={option} value={option}>
-          {option}
-         </option>
-        ))}
-       </select>
-      </label>
-      <div className="flex flex-col gap-3">
-       <button
-        onClick={handleAddAsset}
-        className="h-12 rounded-[14px] border-[4px] border-black bg-[#FF4FD8] px-4 text-sm font-black uppercase tracking-[0.12em] text-white shadow-[5px_5px_0px_0px_black]"
-       >
-        Save asset
-       </button>
-       <button
-        onClick={handleDriveLink}
-        className="h-12 rounded-[14px] border-[4px] border-black bg-[#111] px-4 text-sm font-black uppercase tracking-[0.12em] text-[#CCFF00] shadow-[5px_5px_0px_0px_black]"
-       >
-        Link Drive folder
-       </button>
+        options={["image", "video", "audio", "font", "document", "template", "generated", "other"]}
+        onChange={(option) => setKind(option as VaultAssetKind)}
+        tone="cyan"
+       />
+      </div>
+      <div className="grid min-w-0 grid-cols-1 gap-2">
+       <SubToolboxInnerActionButton label="Save Asset" iconName="database" tone="pink" onClick={handleAddAsset} />
+       <SubToolboxInnerActionButton label="Link Drive" iconName="cloud" tone="cyan" onClick={handleDriveLink} />
       </div>
       {driveStatus ? (
-       <div className="md:col-span-2 rounded-[14px] border-[4px] border-black bg-[#f6f1da] px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-black/70">
+       <p role="status" className="md:col-span-2 rounded-[14px] border-[3px] border-black bg-[#f6f1da] px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-black/70">
         {driveStatus}
-       </div>
+       </p>
       ) : null}
      </div>
-    </div>
+    </SubToolbox>
 
     <div className="rounded-[22px] border-[4px] border-black bg-[#111] text-white shadow-[8px_8px_0px_0px_#FF4FD8]">
      <div className="border-b-[4px] border-black bg-[#FF4FD8] px-6 py-5 text-black">
@@ -307,7 +291,7 @@ const CreatorVaultOS: React.FC = () => {
      </div>
     </div>
    </section>
-  </div>
+  </SuperToolShell>
  )
 }
 
