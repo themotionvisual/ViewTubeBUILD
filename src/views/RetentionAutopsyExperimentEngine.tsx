@@ -1,10 +1,9 @@
 import React, { useMemo, useState } from "react"
 import { AlertTriangle, BarChart3, CheckCircle2, FlaskConical, LineChart, ListChecks, Plus, Workflow, Zap } from "lucide-react"
-import { SuperToolRail } from "../components/SuperToolRail"
+import SuperToolShell, { type SuperToolMountProps } from "./supertools/SuperToolShell"
 import { useBrain } from "../context/useBrain"
 import { listSuperToolsByIds } from "../services/superToolRegistry"
 import { createWorkflowChain, createWorkflowStep, listWorkflowChains } from "../services/workflowEngine"
-import type { SuperToolId } from "../types"
 import SuperToolPrototypeWorkspace, {
  type PrototypeWorkspaceConfig,
 } from "./supertools/SuperToolPrototypeWorkspace"
@@ -329,13 +328,9 @@ const classifyAutopsy = (video: RetentionVideoSignal) => {
  }
 }
 
-interface RetentionAutopsyExperimentEngineProps {
- embedded?: boolean
-}
+type RetentionAutopsyExperimentEngineProps = SuperToolMountProps
 
-const RetentionAutopsyExperimentEngine: React.FC<RetentionAutopsyExperimentEngineProps> = ({
- embedded = false,
-}) => {
+const RetentionAutopsyExperimentEngine: React.FC<RetentionAutopsyExperimentEngineProps> = (props) => {
  const { emitSignal } = useBrain()
  const [refreshTick, setRefreshTick] = useState(0)
  const [selectedVideoId, setSelectedVideoId] = useState<string>("")
@@ -407,30 +402,16 @@ const RetentionAutopsyExperimentEngine: React.FC<RetentionAutopsyExperimentEngin
  }
 
  return (
-  <div className="mx-auto flex max-w-[1600px] flex-col gap-8 pb-24">
-   {!embedded ? (
-    <>
-     <section className="rounded-[24px] border-[5px] border-black bg-[#111] px-8 py-8 text-white shadow-[12px_12px_0px_0px_#CCFF00]">
-      <div className="text-[11px] font-black uppercase tracking-[0.35em] text-[#CCFF00]">
-       Super-Tool 13
-      </div>
-      <h1 className="mt-3 text-5xl font-[1000] uppercase leading-none tracking-[-0.06em] md:text-6xl">
-       Retention Autopsy and Experiment Engine
-      </h1>
-      <p className="mt-4 max-w-4xl text-sm font-bold uppercase tracking-[0.12em] text-white/70">
-       Diagnose drop-off failure modes, queue measurable interventions, and send retention learning into Brain and workflow loops.
-      </p>
-     </section>
-
-     <SuperToolRail
-      title="Retention Experiment Layer"
-      subtitle="Performance Hub evidence, intervention planning, workflow handoff, Brain learning"
-      tools={tools}
-      accentClassName="bg-[#CCFF00]"
-      note="This tool owns diagnosis and experiment logic. Performance Hub remains the analytics source of truth."
-     />
-    </>
-   ) : null}
+  <SuperToolShell
+   toolNumber="13"
+   title="Retention Autopsy and Experiment Engine"
+   subtitle="Diagnose drop-off failure modes, queue measurable interventions, and send retention learning into Brain and workflow loops."
+   accentClassName="bg-[#CCFF00]"
+   railTitle="Retention Experiment Layer"
+   railSubtitle="Performance Hub evidence, intervention planning, workflow handoff, Brain learning"
+   railNote="This tool owns diagnosis and experiment logic. Performance Hub remains the analytics source of truth."
+   sisterTools={tools}
+   {...props}>
 
    <section className="grid gap-8 xl:grid-cols-4">
     {[
@@ -712,7 +693,7 @@ const RetentionAutopsyExperimentEngine: React.FC<RetentionAutopsyExperimentEngin
      </p>
     </section>
    ) : null}
-  </div>
+  </SuperToolShell>
  )
 }
 

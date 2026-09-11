@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { Brain, CheckCircle2, Database, Lightbulb, Network, RefreshCw, ShieldCheck, Workflow, Zap } from "lucide-react"
 import { AssistantCommandContextBanner } from "../components/AssistantCommandContextBanner"
-import { SuperToolRail } from "../components/SuperToolRail"
+import SuperToolShell, { type SuperToolMountProps } from "./supertools/SuperToolShell"
 import { SidebarChatbot } from "../components/SidebarChatbot"
 import { useBrain } from "../context/useBrain"
 import { listGenerationRecords } from "../services/generationStore"
@@ -189,11 +189,9 @@ const brainPrototypeConfig: PrototypeWorkspaceConfig = {
  handoffTargets: ["Workflow Chain", "Project Command", "Daily Brief"],
 }
 
-interface BrainCommandCenterProps {
- embedded?: boolean
-}
+type BrainCommandCenterProps = SuperToolMountProps
 
-const BrainCommandCenter: React.FC<BrainCommandCenterProps> = ({ embedded = false }) => {
+const BrainCommandCenter: React.FC<BrainCommandCenterProps> = (props) => {
  const { getBrainMemory, emitSignal, reflectAndCompress, channelIdentity } = useBrain()
  const [note, setNote] = useState("")
  const [priority, setPriority] = useState<"low" | "medium" | "high" | "urgent">("high")
@@ -331,43 +329,27 @@ const BrainCommandCenter: React.FC<BrainCommandCenterProps> = ({ embedded = fals
  }
 
  return (
-  <div className="mx-auto flex max-w-[1600px] flex-col gap-8 pb-24">
+  <SuperToolShell
+   toolNumber="14"
+   title="Brain Command Center"
+   subtitle="The operating surface for daily priorities, confidence boundaries, reflection loops, and cross-tool routing."
+   accentClassName="bg-[#FF4FD8]"
+   railTitle="Command Orchestration Layer"
+   railSubtitle="Brain, workflow, and retention feedback loops"
+   railNote="This surface reads the canonical Brain and routes work; it does not create a second Brain or duplicate analytics stores."
+   sisterTools={tools}
+   headerActions={
+    <button
+     type="button"
+     onClick={handleReflect}
+     className="hidden h-11 items-center justify-center gap-2 rounded-[12px] border-[3px] border-black bg-[#CCFF00] px-4 text-[10px] font-black uppercase tracking-[0.12em] text-black shadow-[3px_3px_0px_0px_black] transition-transform active:translate-x-[3px] active:translate-y-[3px] active:shadow-none sm:inline-flex">
+     <Zap size={16} aria-hidden="true" />
+     Force Reflection
+    </button>
+   }
+   {...props}>
    <AssistantCommandContextBanner targetToolId="brain-command-center" />
-   {!embedded ? (
-    <>
-     <section className="rounded-[24px] border-[5px] border-black bg-[#111] px-8 py-8 text-white shadow-[12px_12px_0px_0px_#FF4FD8]">
-      <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-       <div>
-        <div className="text-[11px] font-black uppercase tracking-[0.35em] text-[#CCFF00]">
-         Super-Tool 14
-        </div>
-        <h1 className="mt-3 text-5xl font-[1000] uppercase leading-none tracking-[-0.06em] md:text-6xl">
-         Brain Command Center
-        </h1>
-        <p className="mt-4 max-w-4xl text-sm font-bold uppercase tracking-[0.12em] text-white/70">
-         The operating surface for daily priorities, confidence boundaries, reflection loops, and cross-tool routing.
-        </p>
-       </div>
-       <button
-        type="button"
-        onClick={handleReflect}
-        className="inline-flex h-14 items-center justify-center gap-3 rounded-[14px] border-[4px] border-black bg-[#CCFF00] px-5 text-sm font-black uppercase tracking-[0.12em] text-black shadow-[6px_6px_0px_0px_white] transition-transform hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
-       >
-        <Zap size={18} />
-        Force Reflection
-       </button>
-      </div>
-     </section>
 
-     <SuperToolRail
-      title="Command Orchestration Layer"
-      subtitle="Brain, workflow, and retention feedback loops"
-      tools={tools}
-      accentClassName="bg-[#FF4FD8]"
-      note="This surface reads the canonical Brain and routes work; it does not create a second Brain or duplicate analytics stores."
-     />
-    </>
-   ) : null}
 
    <section className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
     <div className="rounded-[22px] border-[4px] border-black bg-white shadow-[8px_8px_0px_0px_black]">
@@ -738,7 +720,7 @@ const BrainCommandCenter: React.FC<BrainCommandCenterProps> = ({ embedded = fals
      Command Center outputs should be evaluated on clarity, grounding, safety, robustness, and context budget. It should route work, expose evidence, and trigger reflection without becoming a hidden autonomous agent.
     </p>
    </section>
-  </div>
+  </SuperToolShell>
  )
 }
 

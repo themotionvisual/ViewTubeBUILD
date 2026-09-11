@@ -39,6 +39,21 @@ Use these; do not hand-roll equivalents. All from `src/components/Toolbox.tsx` u
 `CommunityPostGenerator.tsx` is the reference implementation. When unsure how something
 should look, copy what it does.
 
+### Shells for the internal super-tools
+
+Do not re-roll a hero for one of these; two shells already own the chrome.
+
+- `src/views/supertools/InternalSuperToolWorkbench.tsx` — the seven config-only tools
+  (Creator Canvas, Audience Loop, Packaging Lab, Series/Theme, Kanban, Publishing Schedule,
+  Cinematic Analytics). You write an `InternalWorkbenchConfig`; the shell renders the whole
+  toolbox. Editing the shell changes all seven at once.
+- `src/views/supertools/SuperToolShell.tsx` — for a tool with a bespoke interior (Shorts,
+  Workflow Chain, Brain Command, Retention Autopsy). It gives you the scaffold header, the
+  sister-tools sub-toolbox and the hub prop shape; your sections are the children.
+
+Both take `SuperToolMountProps` (`embedded`/`collapsible`/`isOpenInitial`/`paletteIndex`), so
+spread `{...props}` and the tool mounts in a hub without further work.
+
 ### ToolboxScaffold props that matter
 
 ```tsx
@@ -84,7 +99,8 @@ These are real defects hit while building; the linter and typechecker catch none
    and 404s — a broken image, not an error. Valid keys:
    `home search video image analytics ideas settings zap sparkles target cloud database mic
    volume headset calendar checklist play pause layers eye eye-off audio paint-bucket
-   AB-TESTING` plus the `!!!`-prefixed set (`!!!TRAFIC !!!REVENUE !!!SUBSCRIBERS !!!GEOGRAPHY
+   AB-TESTING`. `CustomIcon.test.ts` now fails any map entry whose asset is missing — three
+   of these names (`cloud`, `layers`, `checklist`) shipped broken before that guard existed plus the `!!!`-prefixed set (`!!!TRAFIC !!!REVENUE !!!SUBSCRIBERS !!!GEOGRAPHY
    !!!YOUTUBE !!!POST-VIDEO !!!IDEA !!!ANALYTICS !!!PALETTE !!!TEXT !!!COLLECTION !!!CLOUD
    !!!GENERATE1 !!!GENERATE2`).
    Use `lucide-react` icons for `ToolboxScaffold`/`SubToolbox` `icon` props; `iconName` on the

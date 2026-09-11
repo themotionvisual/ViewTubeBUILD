@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react"
 import { Clapperboard, Crop, Download, Film, ListVideo, LogIn, Scissors, Sparkles, Workflow } from "lucide-react"
-import { SuperToolRail } from "../components/SuperToolRail"
+import SuperToolShell, { type SuperToolMountProps } from "./supertools/SuperToolShell"
 import { useBrain } from "../context/useBrain"
 import { listSuperToolsByIds } from "../services/superToolRegistry"
 import { createSuperToolActionPacket } from "../services/superToolActionPackets"
@@ -170,11 +170,9 @@ const shortsPrototypeConfig: PrototypeWorkspaceConfig = {
  handoffTargets: ["VT_E1", "Caption FX", "Workflow Chain"],
 }
 
-interface ShortsExtractionStudioProps {
- embedded?: boolean
-}
+type ShortsExtractionStudioProps = SuperToolMountProps
 
-const ShortsExtractionStudio: React.FC<ShortsExtractionStudioProps> = ({ embedded = false }) => {
+const ShortsExtractionStudio: React.FC<ShortsExtractionStudioProps> = (props) => {
  const { emitSignal } = useBrain()
  const [sourceTitle, setSourceTitle] = useState("")
  const [sourceTimecode, setSourceTimecode] = useState("")
@@ -265,30 +263,17 @@ const ShortsExtractionStudio: React.FC<ShortsExtractionStudioProps> = ({ embedde
  }
 
  return (
-  <div className="mx-auto flex max-w-[1600px] flex-col gap-8 pb-24">
-   {!embedded ? (
-    <>
-     <section className="rounded-[24px] border-[5px] border-black bg-[#111] px-8 py-8 text-white shadow-[12px_12px_0px_0px_#CCFF00]">
-      <div className="text-[11px] font-black uppercase tracking-[0.35em] text-[#CCFF00]">
-       Super-Tool 11
-      </div>
-      <h1 className="mt-3 text-5xl font-[1000] uppercase leading-none tracking-[-0.06em] md:text-6xl">
-       Shorts Extraction Studio
-      </h1>
-      <p className="mt-4 max-w-4xl text-sm font-bold uppercase tracking-[0.12em] text-white/70">
-       One unified tool for highlight extraction, Shorts cutting, repost trimming, vertical reframing, and editor handoff.
-      </p>
-     </section>
-
-     <SuperToolRail
-      title="Shorts Production Layer"
-      subtitle="Extract, trim, reframe, caption, hand off, and learn"
-      tools={tools}
-      accentClassName="bg-[#CCFF00]"
-      note="This replaces Creator Vault OS as canonical Tool 11. Vault storage remains a supporting utility, not the Tool 11 identity."
-     />
-    </>
-   ) : null}
+  <SuperToolShell
+   toolNumber="11"
+   title="Shorts Extraction Studio"
+   subtitle="One unified tool for highlight extraction, Shorts cutting, repost trimming, vertical reframing, and editor handoff."
+   icon={<Film />}
+   accentClassName="bg-[#CCFF00]"
+   railTitle="Shorts Production Layer"
+   railSubtitle="Extract, trim, reframe, caption, hand off, and learn"
+   railNote="This replaces Creator Vault OS as canonical Tool 11. Vault storage remains a supporting utility, not the Tool 11 identity."
+   sisterTools={tools}
+   {...props}>
 
    <section className="grid gap-8 xl:grid-cols-[1fr_0.9fr]">
     <div className="rounded-[22px] border-[4px] border-black bg-white shadow-[8px_8px_0px_0px_black]">
@@ -492,7 +477,7 @@ const ShortsExtractionStudio: React.FC<ShortsExtractionStudioProps> = ({ embedde
      </article>
     ))}
    </section>
-  </div>
+  </SuperToolShell>
  )
 }
 
