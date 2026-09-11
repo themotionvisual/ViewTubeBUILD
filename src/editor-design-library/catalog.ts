@@ -8,6 +8,7 @@ import {editorPackTemplates} from './templates/editorPack';
 import {expansionPackTemplates} from './templates/expansionPack';
 import {motionGraphicsTemplates} from './templates/motionGraphics';
 import {verticalSceneTemplates} from './templates/verticalScenes';
+import {youtuberOpenerTemplates} from './templates/youtuberOpeners';
 
 export const templateCatalog: TemplateDefinition[] = [
   ...textTemplates,
@@ -19,6 +20,7 @@ export const templateCatalog: TemplateDefinition[] = [
   ...expansionPackTemplates,
   ...motionGraphicsTemplates,
   ...verticalSceneTemplates,
+  ...youtuberOpenerTemplates,
 ];
 
 export function filterTemplateCatalog(category?: TemplateCategory, query = ''): TemplateDefinition[] {
