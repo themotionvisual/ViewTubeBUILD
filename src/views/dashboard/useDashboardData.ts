@@ -6,7 +6,6 @@ import { useBrain } from "../../context/useBrain"
 // deletes both once every consumer is off them.
 import {
   useCanonicalMetricSummary,
-  useCanonicalRows,
 } from "../../services/analytics-canon"
 import { getMasterRows, getMetricSummary, metricCellValue } from "../../services/analytics/Selectors"
 import { readYouTubeAnalyticsCache } from "../../services/analytics/DataStore"
@@ -19,7 +18,12 @@ import {
   subscribeToVtSyncSnapshot,
 } from "../../features/vt-sync-local/adapters/snapshot"
 import { getToolboxPaletteColors, getNavPaletteColor } from "../../styles/toolboxPalette"
+import { sortDailyDescending, readRowMetric, sumRowMetric } from "./dashboardSelectors"
 
+// Deliberately not widgetFormatters.formatHumanNumber: this one renders "---"
+// for negative or non-finite input and uses toLocaleString() below 1000,
+// where that one renders "0" and a bare toString(). Merging them would
+// change what several widgets display.
 const formatHumanNumber = (value: unknown): string => {
   const parsed = Number(value)
   if (!Number.isFinite(parsed) || parsed < 0) return "---"
@@ -138,31 +142,26 @@ export const useDashboardData = () => {
     return (brain.channelHub as any)?.historicalSeries?.daily || []
   }, [lastSyncComplete, vtSyncSnapshot.dailyMetrics, brain.channelHub, cache28dCheck])
 
-  const sortedDaily = [...dailySeries].sort((a, b) => {
-    const tA = new Date(a.date || a.day || a.Date || a.Day || 0).getTime()
-    const tB = new Date(b.date || b.day || b.Date || b.Day || 0).getTime()
-    return tB - tA
-  })
-  const last28 = sortedDaily.slice(0, 28)
+  // Sorting and the fallback reduces below used to run on every render of this
+  // hook, which feeds every widget on the dashboard. They depend only on
+  // dailySeries, so they are cached against it.
+  const sortedDaily = useMemo(() => sortDailyDescending(dailySeries), [dailySeries])
+  const last28 = useMemo(() => sortedDaily.slice(0, 28), [sortedDaily])
 
-  const getRowMetricVal = (row: any, ...keys: string[]) => {
-    for (const k of keys) {
-      if (row && row[k] !== undefined && row[k] !== null && row[k] !== "") {
-        const val = Number(row[k])
-        if (!isNaN(val)) return val
-      }
-    }
-    return 0
-  }
+  const fallbackSums = useMemo(
+    () => ({
+      views: sumRowMetric(last28, "views"),
+      watchMinutes: sumRowMetric(last28, "watchTime", "estimatedMinutesWatched"),
+      revenue: sumRowMetric(last28, "revenue", "estimatedRevenue"),
+      subscribers: sumRowMetric(last28, "subscribersGained", "subscribers"),
+    }),
+    [last28],
+  )
 
-  const fallbackSum = (key1: string, key2?: string) => {
-    return last28.reduce((sum, row) => sum + getRowMetricVal(row, key1, key2 || ""), 0)
-  }
-
-  const views28d = summary28d.totals.views || bootstrapMetric("views") || fallbackSum("views")
-  const hours28d = summary28d.totals.watchHours || bootstrapMetric("watchHours") || (fallbackSum("watchTime", "estimatedMinutesWatched") / 60)
-  const revenue28d = summary28d.totals.revenue || bootstrapMetric("revenue") || fallbackSum("revenue", "estimatedRevenue")
-  const subscribers28d = summary28d.totals.subscribersGained || bootstrapMetric("netSubscribers") || bootstrapMetric("subscribersGained") || fallbackSum("subscribersGained", "subscribers")
+  const views28d = summary28d.totals.views || bootstrapMetric("views") || fallbackSums.views
+  const hours28d = summary28d.totals.watchHours || bootstrapMetric("watchHours") || (fallbackSums.watchMinutes / 60)
+  const revenue28d = summary28d.totals.revenue || bootstrapMetric("revenue") || fallbackSums.revenue
+  const subscribers28d = summary28d.totals.subscribersGained || bootstrapMetric("netSubscribers") || bootstrapMetric("subscribersGained") || fallbackSums.subscribers
 
   const hoursLifetime = summaryLifetime.totals.watchHours
   const revenueLifetime = summaryLifetime.totals.revenue
@@ -282,7 +281,7 @@ export const useDashboardData = () => {
     data.forEach((row, i) => {
       const chunkIdx = Math.floor(i / chunkSize)
       if (chunkIdx < 7) {
-        chunks[chunkIdx] += getRowMetricVal(row, ...metricKeys)
+        chunks[chunkIdx] += readRowMetric(row, ...metricKeys)
       }
     })
     chunks.reverse()
@@ -298,8 +297,8 @@ export const useDashboardData = () => {
     data.forEach((row, i) => {
       const chunkIdx = Math.floor(i / chunkSize)
       if (chunkIdx < 7) {
-        chunksViews[chunkIdx] += getRowMetricVal(row, "views", "Views")
-        const mins = getRowMetricVal(row, "estimatedMinutesWatched") || (getRowMetricVal(row, "watchTime", "watchHours", "Watch time (hours)") * 60)
+        chunksViews[chunkIdx] += readRowMetric(row, "views", "Views")
+        const mins = readRowMetric(row, "estimatedMinutesWatched") || (readRowMetric(row, "watchTime", "watchHours", "Watch time (hours)") * 60)
         chunksMins[chunkIdx] += mins
       }
     })
@@ -335,7 +334,7 @@ export const useDashboardData = () => {
     const previousData = sortedDaily.slice(days, days * 2)
     const hasDailySeries = currentData.length > 0
 
-    const sumMetricKeys = (data: any[], ...keys: string[]) => data.reduce((acc, row) => acc + getRowMetricVal(row, ...keys), 0)
+    const sumMetricKeys = (data: any[], ...keys: string[]) => data.reduce((acc, row) => acc + readRowMetric(row, ...keys), 0)
 
     // If daily series is empty, use initialBootstrap period data as fallback
     const windowKey = days <= 7 ? "7d" : days <= 28 ? "28d" : days <= 90 ? "90d" : days <= 365 ? "365d" : "lifetime"
