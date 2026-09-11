@@ -3081,9 +3081,9 @@ stroke-width: 2px;
   left: 2px;
   width: 20px;
   height: 20px;
-  border: 2px solid var(--widget-border);
+  border: 0;
   border-radius: 50%;
-  background: #fff;
+  background: var(--widget-border);
   transition: transform 180ms cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 .widget-control-switch input:checked + .widget-control-switch-track { background: var(--widget-color); }
@@ -6379,7 +6379,35 @@ textarea.vt-textarea {
   min-height: 24px !important;
 }
 
-/* Small icon slot inside a WidgetBadge (positioned before the label). */
+/* Canonical spectrum badges and A–Z tags. */
+:where(.dashboard-barrier) .vt-spectrum-badge {
+  --vt-badge-height: 18px;
+  --vt-badge-radius: 3px;
+  --vt-badge-font: 8px;
+  box-sizing: border-box;
+  min-width: 0;
+  height: var(--vt-badge-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 1px 5px;
+  border: 2px solid var(--vt-spectrum-badge-stroke, var(--widget-border));
+  border-radius: var(--vt-badge-radius);
+  background: color-mix(in srgb, var(--vt-spectrum-badge-stroke, var(--widget-color)) 18%, white);
+  color: var(--vt-spectrum-badge-stroke, var(--widget-border));
+  font-size: var(--vt-badge-font);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+:where(.dashboard-barrier) .vt-spectrum-badge.is-height-24 { --vt-badge-height: 24px; --vt-badge-radius: 4px; --vt-badge-font: 9px; }
+:where(.dashboard-barrier) .vt-spectrum-badge.is-height-32 { --vt-badge-height: 32px; --vt-badge-radius: 6px; --vt-badge-font: 11px; }
+:where(.dashboard-barrier) .vt-spectrum-badge.is-height-38 { --vt-badge-height: 38px; --vt-badge-radius: 7px; --vt-badge-font: 12px; }
+:where(.dashboard-barrier) .vt-spectrum-badge.is-alphabetical { padding-inline: 4px; }
+
 :where(.dashboard-barrier) .vt-spectrum-badge__icon {
   display: inline-grid;
   place-items: center;
