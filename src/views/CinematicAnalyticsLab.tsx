@@ -1,6 +1,7 @@
 import React from "react"
 import { AlertTriangle, Clapperboard, Film, Gauge, LineChart, Presentation, SplitSquareVertical } from "lucide-react"
 import InternalSuperToolWorkbench, {
+ type InternalToolProps,
  type InternalWorkbenchConfig,
 } from "./supertools/InternalSuperToolWorkbench"
 
@@ -248,8 +249,8 @@ const config: InternalWorkbenchConfig = {
  }),
 }
 
-const CinematicAnalyticsLab: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => (
- <InternalSuperToolWorkbench config={config} embedded={embedded} />
+const CinematicAnalyticsLab: React.FC<InternalToolProps> = (props) => (
+ <InternalSuperToolWorkbench config={config} {...props} />
 )
 
 export default CinematicAnalyticsLab

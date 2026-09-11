@@ -1,0 +1,1085 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>Widget Library v12 · Matrix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;700&family=Manrope:wght@400;500;700;900&display=swap">
+
+<style>
+:root {
+  --ground:  #ececef;
+  --surface: #ffffff;
+  --ink:     #1a1a2e;
+  --ink-2:   #40445a;
+  --muted:   #5a627a;
+
+  --hue-rose:    #FA618A;
+  --hue-orange:  #FFA85C;
+  --hue-yellow:  #FFDA47;
+  --hue-lime:    #C0F240;
+  --hue-green:   #3FEE56;
+  --hue-cyan:    #36E0F6;
+  --hue-royal:   #528FFA;
+  --hue-purple:  #A467F4;
+  --hue-magenta: #F55EFC;
+
+  --vt-h-xs: 14px;
+  --vt-h-s:  18px;
+  --vt-h-m:  32px;
+  --vt-h-l:  40px;
+  --vt-r-xs: 2px;
+  --vt-r-s:  4px;
+  --vt-r-m:  6px;
+  --vt-r-l:  8px;
+  --vt-f-xs: 8px;
+  --vt-f-s:  10px;
+  --vt-f-m:  14px;
+  --vt-f-l:  16px;
+
+  --f-display: "Archivo Black", "Impact", "Franklin Gothic Bold", system-ui, sans-serif;
+  --f-body:    "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:    "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 32px);
+}
+
+header.masthead {
+  padding: 20px 24px;
+  margin-bottom: 32px;
+  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 0 var(--ink);
+}
+.masthead h1 {
+  font-family: var(--f-display);
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  margin: 0 0 6px;
+}
+.masthead .sub {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  max-inline-size: 74ch;
+}
+.masthead .sub b { color: var(--ink); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Layout · NO CONTAINERS.  Section = just a heading + rows of raw components.
+   Rows use flex-wrap so at narrow widths components wrap to next line
+   instead of scrolling.  No dividers, no card backgrounds, no borders around
+   sections or rows.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.color-system {
+  --hue: var(--hue-cyan);
+  --widget-color:    var(--hue);
+  --widget-ink:      color-mix(in srgb, var(--hue) 38%, #121826);
+  --widget-fill-100: var(--hue);
+  --widget-fill-75:  color-mix(in srgb, var(--hue) 75%, #fff);
+  --widget-fill-50:  color-mix(in srgb, var(--hue) 50%, #fff);
+  --widget-fill-25:  color-mix(in srgb, var(--hue) 25%, #fff);
+  --widget-shadow:   color-mix(in srgb, var(--hue) 50%, transparent);
+
+  padding: 24px 0;
+}
+
+.color-system-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 0 0 12px 4px;
+  font-family: var(--f-display);
+  font-size: 18px;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+.color-system-head .kind {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.matrix-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 4px;
+}
+.matrix-row .label {
+  font-family: var(--f-display);
+  font-size: 16px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  min-width: 32px;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   COMPONENT PRIMITIVES · with real hover / active / focus interactions
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Universal interactive transitions */
+.c-btn, .c-split-btn, .c-dropdown, .c-split-dropdown,
+.c-icon-btn, .c-icon-badge, .c-pagination, .c-stepper,
+.c-toggle, .c-radio, .c-check, .c-input, .c-split-input {
+  transition: transform 90ms linear, box-shadow 90ms linear, background 160ms ease, border-color 160ms ease;
+  user-select: none;
+}
+
+/* Standard button */
+.c-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 4px;
+  padding: 0 10px;
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--row-r);
+  background: var(--widget-fill-50);
+  color: var(--widget-ink);
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--row-f);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--widget-shadow);
+  height: var(--row-h);
+  outline: none;
+}
+.c-btn:hover        { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--widget-shadow); }
+.c-btn:active       { transform: translate(2px, 2px);   box-shadow: none; }
+.c-btn:focus-visible { outline: 2px solid var(--widget-fill-100); outline-offset: 2px; }
+
+/* Split button · 1:1 icon */
+.c-split-btn {
+  display: inline-flex; align-items: stretch;
+  background: var(--widget-fill-50);
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--row-r);
+  overflow: hidden;
+  color: var(--widget-ink);
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--row-f);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--widget-shadow);
+  height: var(--row-h);
+  outline: none;
+}
+.c-split-btn:hover        { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--widget-shadow); }
+.c-split-btn:active       { transform: translate(2px, 2px);   box-shadow: none; }
+.c-split-btn:focus-visible { outline: 2px solid var(--widget-fill-100); outline-offset: 2px; }
+.c-split-btn > .g {
+  aspect-ratio: 1 / 1;
+  height: 100%;
+  display: grid; place-items: center;
+  border-inline-end: 2px solid var(--widget-ink);
+  background: color-mix(in srgb, var(--widget-fill-50) 60%, #fff);
+  padding: 0;
+}
+.c-split-btn > .g > svg {
+  width: 90%; height: 90%;
+  stroke: currentColor; stroke-width: 2; fill: none;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.c-split-btn > .l { padding: 0 10px; align-self: center; }
+
+/* Standard dropdown */
+.c-dropdown {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 10px;
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--row-r);
+  background: var(--widget-fill-50);
+  color: var(--widget-ink);
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--row-f);
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--widget-shadow);
+  height: var(--row-h);
+  position: relative;
+  outline: none;
+}
+.c-dropdown:hover  { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--widget-shadow); }
+.c-dropdown:active { transform: translate(2px, 2px);   box-shadow: none; }
+.c-dropdown > svg  {
+  width: 1em; height: 1em;
+  stroke: currentColor; stroke-width: 2.5; fill: none;
+  transition: transform 200ms ease;
+}
+.c-dropdown[data-open="true"] > svg { transform: rotate(180deg); }
+.c-menu {
+  position: absolute; top: calc(100% + 4px); left: 0;
+  min-width: 100%;
+  background: #fff;
+  border: 2px solid var(--widget-color);
+  border-radius: var(--row-r);
+  box-shadow: 3px 3px 0 var(--widget-shadow);
+  padding: 4px;
+  display: none;
+  z-index: 20;
+}
+.c-dropdown[data-open="true"] .c-menu { display: block; }
+.c-menu-item {
+  display: block; padding: 6px 10px;
+  border-radius: 3px;
+  color: var(--widget-ink);
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--row-f);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.c-menu-item:hover { background: var(--widget-fill-25); }
+.c-menu-item.on { background: var(--widget-fill-100); }
+
+/* Split dropdown */
+.c-split-dropdown {
+  display: inline-flex; align-items: stretch;
+  background: var(--widget-fill-50);
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--row-r);
+  overflow: hidden;
+  color: var(--widget-ink);
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--row-f);
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--widget-shadow);
+  height: var(--row-h);
+  position: relative;
+  outline: none;
+}
+.c-split-dropdown:hover  { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--widget-shadow); }
+.c-split-dropdown:active { transform: translate(2px, 2px);   box-shadow: none; }
+.c-split-dropdown > .g {
+  aspect-ratio: 1 / 1;
+  height: 100%;
+  display: grid; place-items: center;
+  border-inline-end: 2px solid var(--widget-ink);
+  background: color-mix(in srgb, var(--widget-fill-50) 60%, #fff);
+}
+.c-split-dropdown > .g > svg { width: 90%; height: 90%; stroke: currentColor; stroke-width: 2; fill: none; }
+.c-split-dropdown > .l { padding: 0 6px; align-self: center; }
+.c-split-dropdown > .arrow {
+  display: grid; place-items: center; padding: 0 6px;
+  border-inline-start: 1px solid color-mix(in srgb, var(--widget-ink) 30%, transparent);
+}
+.c-split-dropdown > .arrow > svg {
+  width: 1em; height: 1em;
+  stroke: currentColor; stroke-width: 2.5; fill: none;
+  transition: transform 200ms ease;
+}
+.c-split-dropdown[data-open="true"] > .arrow > svg { transform: rotate(180deg); }
+
+/* Icon buttons + badges · 1:1 · icon = 90% */
+.c-icon-btn, .c-icon-badge {
+  aspect-ratio: 1 / 1;
+  height: var(--row-h);
+  display: inline-grid; place-items: center;
+  padding: 0;
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--row-r);
+  background: var(--widget-fill-50);
+  color: var(--widget-ink);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--widget-shadow);
+  outline: none;
+}
+.c-icon-badge { cursor: default; }
+.c-icon-btn:hover  { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--widget-shadow); }
+.c-icon-btn:active { transform: translate(2px, 2px);   box-shadow: none; }
+.c-icon-btn > svg, .c-icon-badge > svg {
+  width: 90%; height: 90%;
+  stroke: currentColor; stroke-width: 2; fill: none;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* Toggle switch — clickable, animates */
+.c-toggle {
+  display: inline-flex; align-items: center;
+  position: relative;
+  height: var(--row-h);
+  width: calc(var(--row-h) * 1.7);
+  background: color-mix(in srgb, var(--widget-ink) 12%, #fff);
+  border: 2px solid var(--widget-ink);
+  border-radius: 999px;
+  cursor: pointer;
+  outline: none;
+}
+.c-toggle::after {
+  content: "";
+  position: absolute; inset: 3px auto 3px 3px;
+  aspect-ratio: 1 / 1;
+  height: calc(var(--row-h) - 10px);
+  background: #fff;
+  border: 1.5px solid var(--widget-ink);
+  border-radius: 999px;
+  transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 1px 1px 0 var(--widget-ink);
+}
+.c-toggle.on { background: var(--widget-fill-100); }
+.c-toggle.on::after { transform: translateX(calc(var(--row-h) * 0.7 - 4px)); }
+.c-toggle:focus-visible { outline: 2px solid var(--widget-fill-100); outline-offset: 2px; }
+
+/* Radio (clickable in group) */
+.c-radio {
+  aspect-ratio: 1 / 1;
+  height: var(--row-h);
+  display: inline-grid; place-items: center;
+  border: 2px solid var(--widget-ink);
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+}
+.c-radio::after {
+  content: "";
+  width: 55%; height: 55%;
+  border-radius: 999px;
+  background: transparent;
+  transition: background 160ms ease;
+}
+.c-radio.on::after { background: var(--widget-ink); }
+
+/* Checkbox */
+.c-check {
+  aspect-ratio: 1 / 1;
+  height: var(--row-h);
+  display: inline-grid; place-items: center;
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--vt-r-xs);
+  background: #fff;
+  cursor: pointer;
+  color: var(--widget-ink);
+  outline: none;
+}
+.c-check.on { background: var(--widget-fill-50); }
+.c-check::after {
+  content: "";
+  width: 50%; height: 50%;
+  background: transparent;
+  transition: background 160ms ease;
+}
+.c-check.on::after { background: var(--widget-ink); }
+
+/* Text input */
+.c-input {
+  padding: 0 10px;
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--row-r);
+  background: #fff;
+  color: var(--widget-ink);
+  font-family: var(--f-body);
+  font-weight: 700;
+  font-size: var(--row-f);
+  outline: none;
+  height: var(--row-h);
+  min-width: 100px;
+}
+.c-input:focus {
+  border-color: var(--widget-fill-100);
+  background: color-mix(in srgb, var(--widget-color) 8%, #fff);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--widget-color) 30%, transparent);
+}
+
+/* Split text input */
+.c-split-input {
+  display: inline-flex; align-items: stretch;
+  background: #fff;
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--row-r);
+  overflow: hidden;
+  height: var(--row-h);
+  min-width: 140px;
+}
+.c-split-input:focus-within {
+  border-color: var(--widget-fill-100);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--widget-color) 30%, transparent);
+}
+.c-split-input > .g {
+  aspect-ratio: 1 / 1;
+  height: 100%;
+  display: grid; place-items: center;
+  background: var(--widget-fill-50);
+  border-inline-end: 2px solid var(--widget-ink);
+  color: var(--widget-ink);
+}
+.c-split-input > .g > svg { width: 90%; height: 90%; stroke: currentColor; stroke-width: 2; fill: none; }
+.c-split-input > input {
+  border: 0; padding: 0 8px;
+  font-family: var(--f-body); font-weight: 700; font-size: var(--row-f);
+  color: var(--widget-ink); background: transparent;
+  outline: none;
+  min-width: 60px;
+}
+
+/* Spectrum badge · vivid (properly colored) */
+.c-spectrum-badge {
+  --hue-badge: var(--widget-color);
+  display: inline-flex; align-items: center;
+  padding: 0 10px;
+  border: 2px solid var(--hue-badge);
+  border-radius: var(--row-r);
+  background: color-mix(in srgb, var(--hue-badge) 35%, transparent);
+  color: color-mix(in srgb, var(--hue-badge) 20%, var(--ink));
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--row-f);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  height: var(--row-h);
+}
+.c-spectrum-badge.is-muted {
+  border-width: 0;
+  background: color-mix(in srgb, var(--hue-badge) 22%, transparent);
+  color: color-mix(in srgb, var(--hue-badge) 60%, var(--ink));
+}
+
+/* Status badge */
+.c-status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 10px;
+  background: var(--widget-fill-100);
+  color: var(--widget-ink);
+  border-radius: 999px;
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--row-f);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  height: var(--row-h);
+}
+.c-status-badge::before {
+  content: ""; width: 0.5em; height: 0.5em;
+  border-radius: 999px;
+  background: var(--widget-ink);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.75); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .c-status-badge::before { animation: none; }
+}
+
+/* Split badge */
+.c-split-badge {
+  display: inline-flex; align-items: stretch;
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--row-r);
+  background: var(--widget-fill-25);
+  color: var(--widget-ink);
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--row-f);
+  text-transform: uppercase;
+  overflow: hidden;
+  height: var(--row-h);
+}
+.c-split-badge > .g {
+  aspect-ratio: 1 / 1;
+  height: 100%;
+  display: grid; place-items: center;
+  background: var(--widget-fill-100);
+  border-inline-end: 2px solid var(--widget-ink);
+}
+.c-split-badge > .g > svg { width: 90%; height: 90%; stroke: currentColor; stroke-width: 2; fill: none; }
+.c-split-badge > .l { padding: 0 10px; align-self: center; }
+
+/* Progress · animates fill on load */
+.c-progress {
+  position: relative;
+  width: 120px;
+  background: color-mix(in srgb, var(--widget-ink) 12%, #fff);
+  border: 2px solid var(--widget-ink);
+  border-radius: 999px;
+  overflow: hidden;
+  height: calc(var(--row-h) * 0.55);
+  align-self: center;
+}
+.c-progress > .fill {
+  position: absolute; inset: 0;
+  width: var(--progress, 0%);
+  background: var(--widget-fill-100);
+  border-inline-end: 2px solid var(--widget-ink);
+  transition: width 800ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Pagination */
+.c-pagination {
+  display: inline-flex;
+  background: #fff;
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--row-r);
+  overflow: hidden;
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--row-f);
+  color: var(--widget-ink);
+  box-shadow: 2px 2px 0 var(--widget-shadow);
+  height: var(--row-h);
+}
+.c-pagination > * {
+  min-width: var(--row-h);
+  padding: 0 6px;
+  display: grid; place-items: center;
+  border-inline-end: 2px solid var(--widget-ink);
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+.c-pagination > *:last-child { border-inline-end: 0; }
+.c-pagination > *:hover:not(.on) { background: var(--widget-fill-25); }
+.c-pagination > .on { background: var(--widget-fill-100); }
+
+/* Stepper */
+.c-stepper {
+  display: inline-flex;
+  background: #fff;
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--row-r);
+  overflow: hidden;
+  color: var(--widget-ink);
+  box-shadow: 2px 2px 0 var(--widget-shadow);
+  height: var(--row-h);
+}
+.c-stepper > button {
+  aspect-ratio: 1 / 1;
+  height: 100%;
+  background: var(--widget-fill-25);
+  border: 0;
+  color: inherit;
+  font-family: var(--f-display); font-weight: 900;
+  cursor: pointer;
+  font-size: calc(var(--row-f) * 1.4);
+  transition: background 140ms ease;
+}
+.c-stepper > button:hover { background: var(--widget-fill-50); }
+.c-stepper > button:active { background: var(--widget-fill-75); }
+.c-stepper > button:disabled { opacity: 0.4; cursor: not-allowed; background: var(--widget-fill-25); }
+.c-stepper > .value {
+  padding: 0 12px; display: grid; place-items: center;
+  font-family: var(--f-display); font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  border-inline: 2px solid var(--widget-ink);
+  font-size: var(--row-f);
+}
+
+/* Action card */
+.c-action-card {
+  display: grid;
+  grid-template-columns: 4px auto minmax(0, 1fr);
+  gap: 6px;
+  padding: 0 8px 0 0;
+  background: color-mix(in srgb, var(--widget-color) 8%, #fff);
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--row-r);
+  color: var(--widget-ink);
+  overflow: hidden;
+  align-items: center;
+  height: var(--row-h);
+}
+.c-action-card::before {
+  content: ""; background: var(--widget-fill-100); height: 100%;
+}
+.c-action-card > .glyph {
+  aspect-ratio: 1 / 1;
+  height: calc(var(--row-h) - 8px);
+  display: grid; place-items: center;
+  background: var(--widget-fill-25);
+  border: 1.5px solid var(--widget-ink);
+  border-radius: var(--vt-r-s);
+  color: var(--widget-ink);
+  margin: 4px 0;
+}
+.c-action-card > .glyph > svg { width: 90%; height: 90%; stroke: currentColor; stroke-width: 2; fill: none; }
+.c-action-card > .body {
+  font-family: var(--f-display); font-weight: 900;
+  font-size: var(--row-f);
+  text-transform: uppercase;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Toast · dismissable */
+.c-toast {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+  padding: 0 6px;
+  background: var(--widget-fill-25);
+  border: 2px solid var(--widget-ink);
+  border-radius: var(--row-r);
+  color: var(--widget-ink);
+  box-shadow: 2px 2px 0 var(--widget-fill-100);
+  overflow: hidden;
+  height: var(--row-h);
+  transition: opacity 200ms ease, transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.c-toast.dismissed {
+  opacity: 0;
+  transform: translateX(20px);
+  pointer-events: none;
+}
+.c-toast > .glyph {
+  aspect-ratio: 1 / 1;
+  height: calc(var(--row-h) - 8px);
+  display: grid; place-items: center;
+  background: var(--widget-fill-100);
+  border: 1.5px solid var(--widget-ink);
+  border-radius: var(--vt-r-s);
+}
+.c-toast > .glyph > svg { width: 90%; height: 90%; stroke: currentColor; stroke-width: 2.5; fill: none; }
+.c-toast > .body {
+  font-family: var(--f-display); font-weight: 900;
+  font-size: var(--row-f);
+  text-transform: uppercase;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding-inline: 4px;
+}
+.c-toast > .close {
+  aspect-ratio: 1 / 1;
+  height: calc(var(--row-h) - 8px);
+  display: grid; place-items: center;
+  background: #fff;
+  border: 1.5px solid var(--widget-ink);
+  border-radius: var(--vt-r-s);
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+.c-toast > .close:hover { background: var(--widget-fill-25); }
+.c-toast > .close > svg { width: 60%; height: 60%; stroke: currentColor; stroke-width: 2.5; fill: none; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Height modifiers · applied at row level via --row-*
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.h-xs { --row-h: var(--vt-h-xs); --row-r: var(--vt-r-xs); --row-f: var(--vt-f-xs); }
+.h-s  { --row-h: var(--vt-h-s);  --row-r: var(--vt-r-s);  --row-f: var(--vt-f-s); }
+.h-m  { --row-h: var(--vt-h-m);  --row-r: var(--vt-r-m);  --row-f: var(--vt-f-m); }
+.h-l  { --row-h: var(--vt-h-l);  --row-r: var(--vt-r-l);  --row-f: var(--vt-f-l); }
+
+/* XS · borderless (per Round-13 contract) */
+.h-xs .c-btn, .h-xs .c-split-btn, .h-xs .c-dropdown, .h-xs .c-split-dropdown,
+.h-xs .c-icon-btn, .h-xs .c-icon-badge, .h-xs .c-input, .h-xs .c-split-input,
+.h-xs .c-status-badge, .h-xs .c-split-badge, .h-xs .c-pagination, .h-xs .c-stepper,
+.h-xs .c-action-card, .h-xs .c-toast, .h-xs .c-progress, .h-xs .c-toggle {
+  border-width: 0;
+  box-shadow: none;
+}
+.h-xs .c-btn, .h-xs .c-input { padding: 0 6px; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Color-system modifiers
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.color-system.tone-primary   .c-btn, .color-system.tone-primary   .c-split-btn,
+.color-system.tone-primary   .c-dropdown, .color-system.tone-primary   .c-split-dropdown,
+.color-system.tone-primary   .c-icon-btn, .color-system.tone-primary   .c-icon-badge {
+  background: var(--widget-fill-100);
+}
+.color-system.tone-primary   .c-split-btn > .g,
+.color-system.tone-primary   .c-split-dropdown > .g {
+  background: color-mix(in srgb, var(--widget-fill-100) 70%, #fff);
+}
+
+.color-system.tone-secondary .c-btn, .color-system.tone-secondary .c-split-btn,
+.color-system.tone-secondary .c-dropdown, .color-system.tone-secondary .c-split-dropdown,
+.color-system.tone-secondary .c-icon-btn, .color-system.tone-secondary .c-icon-badge {
+  background: var(--widget-fill-75);
+}
+.color-system.tone-secondary .c-split-btn > .g,
+.color-system.tone-secondary .c-split-dropdown > .g {
+  background: color-mix(in srgb, var(--widget-fill-75) 65%, #fff);
+}
+
+.color-system.tone-primary-no-stroke .c-btn,
+.color-system.tone-primary-no-stroke .c-split-btn,
+.color-system.tone-primary-no-stroke .c-dropdown,
+.color-system.tone-primary-no-stroke .c-split-dropdown,
+.color-system.tone-primary-no-stroke .c-icon-btn,
+.color-system.tone-primary-no-stroke .c-icon-badge,
+.color-system.tone-primary-no-stroke .c-input,
+.color-system.tone-primary-no-stroke .c-split-input,
+.color-system.tone-primary-no-stroke .c-status-badge,
+.color-system.tone-primary-no-stroke .c-split-badge,
+.color-system.tone-primary-no-stroke .c-pagination,
+.color-system.tone-primary-no-stroke .c-stepper,
+.color-system.tone-primary-no-stroke .c-action-card,
+.color-system.tone-primary-no-stroke .c-toast,
+.color-system.tone-primary-no-stroke .c-progress,
+.color-system.tone-primary-no-stroke .c-toggle {
+  background: var(--widget-fill-100);
+  border-width: 0;
+  box-shadow: none;
+}
+.color-system.tone-primary-no-stroke .c-split-btn > .g,
+.color-system.tone-primary-no-stroke .c-split-dropdown > .g,
+.color-system.tone-primary-no-stroke .c-split-badge > .g,
+.color-system.tone-primary-no-stroke .c-split-input > .g,
+.color-system.tone-primary-no-stroke .c-action-card > .glyph,
+.color-system.tone-primary-no-stroke .c-toast > .glyph,
+.color-system.tone-primary-no-stroke .c-toast > .close,
+.color-system.tone-primary-no-stroke .c-stepper > button,
+.color-system.tone-primary-no-stroke .c-stepper > .value,
+.color-system.tone-primary-no-stroke .c-pagination > *,
+.color-system.tone-primary-no-stroke .c-radio,
+.color-system.tone-primary-no-stroke .c-check {
+  border-width: 0 !important;
+  border-inline-width: 0 !important;
+  background: color-mix(in srgb, var(--widget-fill-100) 65%, #fff);
+}
+.color-system.tone-primary-no-stroke .c-progress {
+  background: color-mix(in srgb, var(--widget-fill-100) 25%, #fff);
+}
+.color-system.tone-primary-no-stroke .c-progress > .fill { border-inline-end: 0; }
+.color-system.tone-primary-no-stroke .c-spectrum-badge {
+  background: var(--widget-color);
+  color: color-mix(in srgb, var(--widget-color) 10%, #fff);
+  border-width: 0;
+}
+
+/* Height-scoped hover boost on interactive elements (kept subtle at XS) */
+.h-xs .c-btn:hover, .h-xs .c-split-btn:hover,
+.h-xs .c-dropdown:hover, .h-xs .c-split-dropdown:hover,
+.h-xs .c-icon-btn:hover { transform: none; box-shadow: none; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Standard Button Matrix · 4 sizes × 4 colors
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.btn-matrix {
+  --hue: var(--hue-cyan);
+  --widget-color:    var(--hue);
+  --widget-ink:      color-mix(in srgb, var(--hue) 38%, #121826);
+  --widget-fill-100: var(--hue);
+  --widget-fill-75:  color-mix(in srgb, var(--hue) 75%, #fff);
+  --widget-fill-50:  color-mix(in srgb, var(--hue) 50%, #fff);
+  --widget-shadow:   color-mix(in srgb, var(--hue) 50%, transparent);
+
+  padding: 8px 4px 32px;
+  border-bottom: 3px solid var(--ink);
+  margin-bottom: 16px;
+}
+.btn-matrix-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 0 0 16px;
+  font-family: var(--f-display);
+  font-size: 18px;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+.btn-matrix-head .kind {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.btn-matrix-grid {
+  display: grid;
+  grid-template-columns: 48px repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: center;
+}
+.btn-matrix-col-head {
+  font-family: var(--f-display);
+  font-size: 12px;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-align: center;
+  padding: 4px;
+}
+.btn-matrix-col-head .kind-line {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+.btn-matrix-row-label {
+  font-family: var(--f-display);
+  font-size: 16px;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+.btn-matrix-cell {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+}
+/* Cell-scoped tone overrides — apply the same tone rules from the main
+   matrix, but at CELL level so we can put all 4 tones side-by-side in one
+   grid.  The c-btn inside inherits --widget-color from the .btn-matrix. */
+.btn-matrix-cell.tone-default   .c-btn { background: var(--widget-fill-50); }
+.btn-matrix-cell.tone-primary   .c-btn { background: var(--widget-fill-100); }
+.btn-matrix-cell.tone-secondary .c-btn { background: var(--widget-fill-75); }
+.btn-matrix-cell.tone-primary-no-stroke .c-btn {
+  background: var(--widget-fill-100);
+  border-width: 0;
+  box-shadow: none;
+}
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div>
+      <h1>Widget Library v12 · Matrix</h1>
+      <div class="sub">
+        <b>ViewTubeX</b> · v12 · 4 color systems × 4 heights · 19 components each row.
+        Live interactions — click a toggle, radio, checkbox, dropdown, stepper +/−,
+        pagination page, or toast × to see state changes.  Hover any button for the
+        translate lift; press for the depress.  Focus a text input for the ring.
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       Standard Button Matrix · 4 colors × 4 sizes = 16 buttons
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="btn-matrix">
+    <div class="btn-matrix-head">
+      <span class="title">Standard Buttons · 4 × 4 matrix</span>
+      <span class="kind">.c-btn</span>
+    </div>
+    <div id="btn-matrix"></div>
+  </section>
+
+  <div id="matrix"></div>
+
+</div>
+
+<script>
+/* ──────────────────────────────────────────────────────────────
+   Row template + generator · one function builds all 16 rows.
+   ────────────────────────────────────────────────────────────── */
+
+const SVG = {
+  check:   '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>',
+  plus:    '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  chevron: '<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>',
+  circle:  '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/></svg>',
+  search:  '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  star:    '<svg viewBox="0 0 24 24"><polygon points="12 2 15 8.5 22 9 17 14 18 21 12 17.5 6 21 7 14 2 9 9 8.5 12 2"/></svg>',
+  x:       '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+}
+
+const COLOR_SYSTEMS = [
+  { klass: 'tone-default',            hue: 'var(--hue-cyan)',    accent: 'var(--hue-magenta)', label: 'Default',                     kind: 'widget-fill-50 background', spectrum: 'vivid' },
+  { klass: 'tone-primary',            hue: 'var(--hue-rose)',    accent: 'var(--hue-lime)',    label: 'Primary',                     kind: 'widget-fill-100 background', spectrum: 'vivid' },
+  { klass: 'tone-secondary',          hue: 'var(--hue-yellow)',  accent: 'var(--hue-purple)',  label: 'Secondary',                   kind: 'widget-fill-75 background',  spectrum: 'muted' },
+  { klass: 'tone-primary-no-stroke',  hue: 'var(--hue-green)',   accent: 'var(--hue-orange)',  label: 'Primary — no stroke',         kind: 'borderless',                 spectrum: 'vivid' },
+]
+
+const HEIGHTS = ['xs', 's', 'm', 'l']
+
+function row(h, accent, spectrum) {
+  const spec = spectrum === 'muted' ? 'is-muted' : ''
+  return `<div class="matrix-row h-${h}">
+    <div class="label">${h.toUpperCase()}</div>
+    <div class="c-icon-badge">${SVG.circle}</div>
+    <button class="c-icon-btn">${SVG.plus}</button>
+    <button class="c-btn">Save</button>
+    <button class="c-split-btn"><div class="g">${SVG.check}</div><div class="l">Save</div></button>
+    <button class="c-dropdown" data-open="false"><span>Public</span>${SVG.chevron}
+      <div class="c-menu">
+        <div class="c-menu-item on" data-val="Public">Public</div>
+        <div class="c-menu-item" data-val="Unlisted">Unlisted</div>
+        <div class="c-menu-item" data-val="Private">Private</div>
+      </div>
+    </button>
+    <button class="c-split-dropdown" data-open="false"><div class="g">${SVG.circle}</div><div class="l">Pick</div><div class="arrow">${SVG.chevron}</div>
+      <div class="c-menu">
+        <div class="c-menu-item on" data-val="Pick">Pick</div>
+        <div class="c-menu-item" data-val="Draft">Draft</div>
+        <div class="c-menu-item" data-val="Send">Send</div>
+      </div>
+    </button>
+    <div class="c-toggle on" tabindex="0" role="switch" aria-checked="true"></div>
+    <div class="c-radio on" tabindex="0" role="radio" aria-checked="true"></div>
+    <div class="c-check on" tabindex="0" role="checkbox" aria-checked="true"></div>
+    <input class="c-input" placeholder="Type…" />
+    <label class="c-split-input"><div class="g">${SVG.search}</div><input placeholder="Search" /></label>
+    <div class="c-spectrum-badge ${spec}" style="--widget-color: ${accent};">Badge</div>
+    <div class="c-status-badge">Live</div>
+    <div class="c-split-badge"><div class="g">${SVG.check}</div><div class="l">Ok</div></div>
+    <div class="c-progress"><div class="fill" data-target="62"></div></div>
+    <div class="c-pagination"><span data-page="1">1</span><span data-page="2" class="on">2</span><span data-page="3">3</span></div>
+    <div class="c-stepper" data-value="10" data-min="0" data-max="99"><button data-step="-1">−</button><span class="value">10</span><button data-step="1">+</button></div>
+    <div class="c-action-card"><div class="glyph">${SVG.star}</div><div class="body">Action</div></div>
+    <div class="c-toast"><div class="glyph">${SVG.check}</div><div class="body">Saved</div><div class="close">${SVG.x}</div></div>
+  </div>`
+}
+
+function section(cs) {
+  return `<section class="color-system ${cs.klass}" style="--hue: ${cs.hue};">
+    <div class="color-system-head">
+      <span>${cs.label}</span>
+      <span class="kind">${cs.kind}</span>
+    </div>
+    ${HEIGHTS.map(h => row(h, cs.accent, cs.spectrum)).join('')}
+  </section>`
+}
+
+document.getElementById('matrix').innerHTML = COLOR_SYSTEMS.map(section).join('')
+
+/* ──────────────────────────────────────────────────────────────
+   Standard Button matrix · 4 sizes × 4 colors = 16 buttons
+   ────────────────────────────────────────────────────────────── */
+
+const BTN_TONES = [
+  { klass: 'tone-default',           label: 'Default',                kind: '.tone-default' },
+  { klass: 'tone-primary',           label: 'Primary',                kind: '.tone-primary' },
+  { klass: 'tone-secondary',         label: 'Secondary',              kind: '.tone-secondary' },
+  { klass: 'tone-primary-no-stroke', label: 'Primary — no stroke',    kind: '.tone-primary-no-stroke' },
+]
+
+document.getElementById('btn-matrix').innerHTML = `
+  <div class="btn-matrix-grid">
+    <div></div>
+    ${BTN_TONES.map(t => `
+      <div class="btn-matrix-col-head">${t.label}<span class="kind-line">${t.kind}</span></div>
+    `).join('')}
+    ${HEIGHTS.map(h => `
+      <div class="btn-matrix-row-label">${h.toUpperCase()}</div>
+      ${BTN_TONES.map(t => `
+        <div class="btn-matrix-cell h-${h} ${t.klass}">
+          <button class="c-btn">Save</button>
+        </div>
+      `).join('')}
+    `).join('')}
+  </div>
+`
+
+/* ──────────────────────────────────────────────────────────────
+   Wire up interactivity
+   ────────────────────────────────────────────────────────────── */
+
+const $ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel))
+
+// Toggle / radio / checkbox — click flips `.on`
+$('.c-toggle, .c-radio, .c-check').forEach(el => {
+  el.addEventListener('click', () => {
+    if (el.classList.contains('c-radio')) {
+      // Radios in the same row form a group — untick siblings first
+      const row = el.closest('.matrix-row')
+      $('.c-radio', row).forEach(r => { r.classList.remove('on'); r.setAttribute('aria-checked', 'false') })
+      el.classList.add('on'); el.setAttribute('aria-checked', 'true')
+    } else {
+      el.classList.toggle('on')
+      el.setAttribute('aria-checked', el.classList.contains('on'))
+    }
+  })
+  el.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); el.click() }
+  })
+})
+
+// Dropdown open / close · click outside to close
+$('.c-dropdown, .c-split-dropdown').forEach(el => {
+  el.addEventListener('click', (e) => {
+    const isItem = e.target.closest('.c-menu-item')
+    if (isItem) {
+      // Select this item
+      $('.c-menu-item', el).forEach(i => i.classList.remove('on'))
+      isItem.classList.add('on')
+      const val = isItem.dataset.val
+      const label = el.querySelector('.l, span:first-child')
+      if (label && val) label.textContent = val
+      el.dataset.open = 'false'
+      e.stopPropagation()
+      return
+    }
+    if (e.target.closest('.c-menu')) return
+    el.dataset.open = el.dataset.open === 'true' ? 'false' : 'true'
+  })
+})
+document.addEventListener('click', (e) => {
+  $('.c-dropdown, .c-split-dropdown').forEach(el => {
+    if (!el.contains(e.target)) el.dataset.open = 'false'
+  })
+})
+
+// Stepper +/−
+$('.c-stepper').forEach(el => {
+  const valueEl = el.querySelector('.value')
+  const [dec, inc] = el.querySelectorAll('button')
+  const min = Number(el.dataset.min ?? 0)
+  const max = Number(el.dataset.max ?? 99)
+  let v = Number(el.dataset.value ?? 0)
+  const render = () => {
+    valueEl.textContent = v
+    dec.disabled = v <= min
+    inc.disabled = v >= max
+  }
+  dec.addEventListener('click', () => { v = Math.max(min, v - 1); render() })
+  inc.addEventListener('click', () => { v = Math.min(max, v + 1); render() })
+  render()
+})
+
+// Pagination
+$('.c-pagination').forEach(el => {
+  const pages = $('span', el)
+  pages.forEach(p => {
+    p.addEventListener('click', () => {
+      pages.forEach(x => x.classList.remove('on'))
+      p.classList.add('on')
+    })
+  })
+})
+
+// Toast dismiss
+$('.c-toast .close').forEach(close => {
+  close.addEventListener('click', () => {
+    const t = close.closest('.c-toast')
+    t.classList.add('dismissed')
+    setTimeout(() => {
+      t.classList.remove('dismissed')  // restore after 1.6s so gallery repopulates
+    }, 1600)
+  })
+})
+
+// Progress fill · animate to target after a small delay
+setTimeout(() => {
+  $('.c-progress .fill').forEach(f => {
+    const target = f.dataset.target || 62
+    f.style.setProperty('--progress', `${target}%`)
+    f.style.width = `${target}%`
+  })
+}, 200)
+</script>
+
+</body></html>

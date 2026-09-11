@@ -1,6 +1,7 @@
 import React from "react"
 import { BadgeCheck, Gauge, Images, ScanSearch, TestTube2, Type } from "lucide-react"
 import InternalSuperToolWorkbench, {
+ type InternalToolProps,
  type InternalWorkbenchConfig,
 } from "./supertools/InternalSuperToolWorkbench"
 
@@ -247,8 +248,8 @@ const config: InternalWorkbenchConfig = {
  }),
 }
 
-const PackagingLabPro: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => (
- <InternalSuperToolWorkbench config={config} embedded={embedded} />
+const PackagingLabPro: React.FC<InternalToolProps> = (props) => (
+ <InternalSuperToolWorkbench config={config} {...props} />
 )
 
 export default PackagingLabPro

@@ -1,6 +1,7 @@
 import React from "react"
 import { AlertTriangle, CalendarRange, CheckCircle2, Clock3, Layers3, Scale } from "lucide-react"
 import InternalSuperToolWorkbench, {
+ type InternalToolProps,
  type InternalWorkbenchConfig,
 } from "./supertools/InternalSuperToolWorkbench"
 
@@ -234,8 +235,6 @@ const config: InternalWorkbenchConfig = {
  }),
 }
 
-const PublishingScheduleArchitect: React.FC<{ embedded?: boolean }> = ({
- embedded = false,
-}) => <InternalSuperToolWorkbench config={config} embedded={embedded} />
+const PublishingScheduleArchitect: React.FC<InternalToolProps> = (props) => <InternalSuperToolWorkbench config={config} {...props} />
 
 export default PublishingScheduleArchitect

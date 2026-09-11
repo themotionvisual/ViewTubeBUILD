@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { Blocks, CheckCircle2, CircleDot, Link2, Network, Plus, Workflow, XCircle } from "lucide-react"
 import { AssistantCommandContextBanner } from "../components/AssistantCommandContextBanner"
-import { SuperToolRail } from "../components/SuperToolRail"
+import SuperToolShell, { type SuperToolMountProps } from "./supertools/SuperToolShell"
 import { useBrain } from "../context/useBrain"
 import { listSuperTools, listSuperToolsByIds } from "../services/superToolRegistry"
 import {
@@ -193,11 +193,9 @@ const workflowPrototypeConfig: PrototypeWorkspaceConfig = {
  handoffTargets: ["Brain Command", "Project Command", "Vault"],
 }
 
-interface WorkflowChainBuilderProps {
- embedded?: boolean
-}
+type WorkflowChainBuilderProps = SuperToolMountProps
 
-const WorkflowChainBuilder: React.FC<WorkflowChainBuilderProps> = ({ embedded = false }) => {
+const WorkflowChainBuilder: React.FC<WorkflowChainBuilderProps> = (props) => {
  const { emitSignal } = useBrain()
  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(chainTemplates[0].id)
  const [customTitle, setCustomTitle] = useState("")
@@ -308,31 +306,18 @@ const WorkflowChainBuilder: React.FC<WorkflowChainBuilderProps> = ({ embedded = 
  }
 
  return (
-  <div className="mx-auto flex max-w-[1600px] flex-col gap-8 pb-24">
+  <SuperToolShell
+   toolNumber="15"
+   title="Workflow Chain Builder"
+   subtitle="Resumable creator workflows with explicit handoffs, blockers, provenance, artifacts, and Brain feedback."
+   accentClassName="bg-[#00F0FF]"
+   railTitle="Workflow Glue Layer"
+   railSubtitle="Idea, analytics, vault, editor, publish, and follow-up chains"
+   railNote="Workflow Chain Builder owns handoffs and progress. It should reuse sibling tools rather than becoming a shadow version of them."
+   sisterTools={railTools}
+   {...props}>
    <AssistantCommandContextBanner targetToolId="workflow-chain-builder" />
-   {!embedded ? (
-    <>
-     <section className="rounded-[24px] border-[5px] border-black bg-[#111] px-8 py-8 text-white shadow-[12px_12px_0px_0px_#00F0FF]">
-      <div className="text-[11px] font-black uppercase tracking-[0.35em] text-[#CCFF00]">
-       Super-Tool 15
-      </div>
-      <h1 className="mt-3 text-5xl font-[1000] uppercase leading-none tracking-[-0.06em] md:text-6xl">
-       Workflow Chain Builder
-      </h1>
-      <p className="mt-4 max-w-4xl text-sm font-bold uppercase tracking-[0.12em] text-white/70">
-       Resumable creator workflows with explicit handoffs, blockers, provenance, artifacts, and Brain feedback.
-      </p>
-     </section>
 
-     <SuperToolRail
-      title="Workflow Glue Layer"
-      subtitle="Idea, analytics, vault, editor, publish, and follow-up chains"
-      tools={railTools}
-      accentClassName="bg-[#00F0FF]"
-      note="Workflow Chain Builder owns handoffs and progress. It should reuse sibling tools rather than becoming a shadow version of them."
-     />
-    </>
-   ) : null}
 
    <section className="rounded-[22px] border-[4px] border-black bg-white shadow-[8px_8px_0px_0px_black]">
     <div className="border-b-[4px] border-black bg-[#00F0FF] px-6 py-5">
@@ -680,7 +665,7 @@ const WorkflowChainBuilder: React.FC<WorkflowChainBuilderProps> = ({ embedded = 
      ))}
     </div>
    </section>
-  </div>
+  </SuperToolShell>
  )
 }
 

@@ -148,7 +148,7 @@ describe("aiBrainCommandInterface", () => {
 
  it("resolves AI Brain tool routes through the reviewed command route helper", () => {
   expect(resolveAIBrainToolRoute("brain-command-center", "cmd-1").route).toBe(
-   "/data-transparency?internalTool=brain-command-center&commandActionId=cmd-1",
+   "/tools/brain-command-center?commandActionId=cmd-1",
   )
  })
 

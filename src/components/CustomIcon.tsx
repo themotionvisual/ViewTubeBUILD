@@ -43,16 +43,19 @@ const iconMap: Record<string, string> = {
   zap: '!!!GENERATE1.svg',
   sparkles: 'wand_stars_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48(1).svg',
   target: 'center_focus_weak_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
-  cloud: '!!!CLOUD.svg',
+  cloud: 'cloud_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
   database: 'storage_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
   mic: 'mic_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
   volume: 'volume_up_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
   headset: 'podcasts_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
   calendar: 'calendar_apps_script_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
-  checklist: 'rule_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
+  // `rule_*.svg` was never added to src/assets/icons, so `checklist` resolved to
+  // /icons/rule_*.svg and 404'd wherever it was used (Script Architect included).
+  // view_cozy is the closest bundled list glyph.
+  checklist: 'view_cozy_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
   play: '!!!GENERATE1.svg',
   pause: '!!!GENERATE2.svg',
-  layers: '!!!COLLECTION.svg',
+  layers: 'view_cozy_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
   eye: '!!!GENERATE1.svg',
   'eye-off': '!!!DELETE.svg',
   audio: 'mic_70dp_1F1F1F_FILL0_wght700_GRAD0_opsz48.svg',
