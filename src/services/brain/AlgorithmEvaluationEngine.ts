@@ -121,7 +121,12 @@ export const recordAlgorithmEvaluation = (input: {
   ? { ...event, evaluationTargets: input.evaluationTargets }
   : event
  const evaluation = evaluateAlgorithmEvent({ event: effectiveEvent, observations: input.observations, now: input.now })
+
+ // One action owns one measured-outcome record. Retries caused by insufficient
+ // evidence update that record in place instead of manufacturing multiple outcomes
+ // and accidentally inflating learning/calibration sample sizes.
  const recorded = recordAlgorithmIntelligenceEvent({
+  id: `algorithm-outcome:${event.id}`,
   channelId: event.channelId,
   projectId: event.projectId,
   videoId: event.videoId,
