@@ -10,6 +10,7 @@ import type { AlgorithmSignal } from "./AlgorithmStrategyEngine"
 import { buildBrainEvaluationInbox } from "./BrainEvaluationInbox"
 import { buildAlgorithmRecommendationCalibration } from "./AlgorithmRecommendationCalibration"
 import { buildBrainCheckpointPolicy } from "./BrainCheckpointPolicy"
+import { summarizeAlgorithmLifecycleObservationStore } from "./AlgorithmLifecycleObservationStore"
 
 export interface BrainAlgorithmIntelligenceRequest {
  channelId: string
@@ -26,14 +27,16 @@ export interface BrainAlgorithmIntelligenceResult {
  evaluationInbox: ReturnType<typeof buildBrainEvaluationInbox>
  calibration: ReturnType<typeof buildAlgorithmRecommendationCalibration>
  checkpointPolicy: ReturnType<typeof buildBrainCheckpointPolicy>
+ lifecycleEvidence: ReturnType<typeof summarizeAlgorithmLifecycleObservationStore>
 }
 
 const buildPhaseSixContext = (input: {
  evaluationInbox: ReturnType<typeof buildBrainEvaluationInbox>
  calibration: ReturnType<typeof buildAlgorithmRecommendationCalibration>
  checkpointPolicy: ReturnType<typeof buildBrainCheckpointPolicy>
+ lifecycleEvidence: ReturnType<typeof summarizeAlgorithmLifecycleObservationStore>
 }) => {
- const { evaluationInbox, calibration, checkpointPolicy } = input
+ const { evaluationInbox, calibration, checkpointPolicy, lifecycleEvidence } = input
  const urgentItems = evaluationInbox.items
   .filter((item) => item.priority === "critical" || item.priority === "high")
   .slice(0, 6)
@@ -51,6 +54,9 @@ const buildPhaseSixContext = (input: {
   `criticalItems=${evaluationInbox.counts.critical}`,
   `staleCheckpoints=${checkpointPolicy.counts.stale}`,
   `criticalCheckpoints=${checkpointPolicy.counts.critical}`,
+  `lifecycleObservations=${lifecycleEvidence.observations}`,
+  `lifecycleVideos=${lifecycleEvidence.videos}`,
+  `lifecycleMetrics=${lifecycleEvidence.metrics.join(",") || "none"}`,
   "",
   "URGENT EVALUATION ITEMS",
   ...(urgentItems.length ? urgentItems : ["- No high-priority evaluation items."]),
@@ -63,8 +69,24 @@ const buildPhaseSixContext = (input: {
   "- Do not claim an action worked unless a measured outcome exists.",
   "- Treat insufficient-data evaluations as unresolved, not failed or successful.",
   "- Workflow completion is not evidence that CTR, retention, views, or revenue improved.",
+  "- Prefer comparable lifecycle peers at the declared evaluation horizon over mismatched lifetime/current totals.",
+  "- If lifecycle peer evidence is insufficient, say so rather than inventing a baseline.",
   "- Learning candidates are not durable Channel Profile facts until governance and creator approval complete.",
  ].join("\n")
+}
+
+export const buildBrainAlgorithmEvaluationContext = (channelId: string) => {
+ const evaluationInbox = buildBrainEvaluationInbox({ channelId, maximum: 60 })
+ const calibration = buildAlgorithmRecommendationCalibration(channelId)
+ const checkpointPolicy = buildBrainCheckpointPolicy({ channelId, maximum: 100 })
+ const lifecycleEvidence = summarizeAlgorithmLifecycleObservationStore(channelId)
+ return {
+  evaluationInbox,
+  calibration,
+  checkpointPolicy,
+  lifecycleEvidence,
+  context: buildPhaseSixContext({ evaluationInbox, calibration, checkpointPolicy, lifecycleEvidence }).slice(0, 6_000),
+ }
 }
 
 /**
@@ -72,24 +94,19 @@ const buildPhaseSixContext = (input: {
  * The caller decides which evidence sources are available; this service never
  * fetches YouTube data directly and never executes a tool action.
  *
- * Phase 6 appends bounded evaluation, attribution and calibration context so the
- * Brain can reason about whether prior recommendations worked without confusing
- * execution with success.
+ * Phase 6 appends bounded evaluation, attribution, lifecycle and calibration
+ * context so the Brain can reason about whether prior recommendations worked
+ * without confusing execution with success.
  */
 export const buildBrainAlgorithmIntelligence = async (
  input: BrainAlgorithmIntelligenceRequest,
 ): Promise<BrainAlgorithmIntelligenceResult> => {
  const portfolio = await buildAlgorithmIntelligencePortfolio(input)
- const evaluationInbox = buildBrainEvaluationInbox({ channelId: input.channelId, maximum: 60 })
- const calibration = buildAlgorithmRecommendationCalibration(input.channelId)
- const checkpointPolicy = buildBrainCheckpointPolicy({ channelId: input.channelId, maximum: 100 })
+ const evaluation = buildBrainAlgorithmEvaluationContext(input.channelId)
  const phaseFiveContext = buildAlgorithmIntelligenceContext(portfolio)
- const phaseSixContext = buildPhaseSixContext({ evaluationInbox, calibration, checkpointPolicy })
  return {
   portfolio,
-  evaluationInbox,
-  calibration,
-  checkpointPolicy,
-  context: `${phaseFiveContext}\n${phaseSixContext}`.slice(0, 12_000),
+  ...evaluation,
+  context: `${phaseFiveContext}\n${evaluation.context}`.slice(0, 12_000),
  }
 }
