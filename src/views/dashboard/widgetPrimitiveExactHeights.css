@@ -8,149 +8,61 @@
 :where(.dashboard-barrier) .vt-widget-body .widget-split-button.vt-sized-control,
 :where(.dashboard-barrier) .vt-widget-body .widget-select-trigger.vt-sized-control,
 :where(.dashboard-barrier) .vt-widget-body .widget-text-input.vt-sized-control,
-:where(.dashboard-barrier) .vt-widget-body .widget-video-select-trigger.vt-sized-control {
-  box-sizing: border-box;
-  height: var(--vt-primitive-height);
-  min-height: var(--vt-primitive-height);
-  max-height: var(--vt-primitive-height);
+:where(.dashboard-barrier) .vt-widget-body .widget-video-select-trigger.vt-sized-control { box-sizing:border-box; height:var(--vt-primitive-height); min-height:var(--vt-primitive-height); max-height:var(--vt-primitive-height); }
+
+@media (max-width:767px) {
+:where(.dashboard-barrier) .vt-widget-body .vt-button.vt-sized-control,
+:where(.dashboard-barrier) .vt-widget-body button.vt-button.vt-sized-control,
+:where(.dashboard-barrier) .vt-widget-body .widget-action.vt-sized-control,
+:where(.dashboard-barrier) .vt-widget-body .widget-split-button.vt-sized-control,
+:where(.dashboard-barrier) .vt-widget-body .widget-select-trigger.vt-sized-control,
+:where(.dashboard-barrier) .vt-widget-body button.widget-select-trigger.vt-sized-control,
+:where(.dashboard-barrier) .vt-widget-body .widget-text-input.vt-sized-control,
+:where(.dashboard-barrier) .vt-widget-body input.widget-text-input.vt-sized-control,
+:where(.dashboard-barrier) .vt-widget-body .widget-video-select-trigger.vt-sized-control { height:var(--vt-primitive-height); min-height:var(--vt-primitive-height); max-height:var(--vt-primitive-height); }
 }
 
-@media (max-width: 767px) {
-  :where(.dashboard-barrier) .vt-widget-body .vt-button.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body button.vt-button.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body .widget-action.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body .widget-split-button.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body .widget-select-trigger.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body button.widget-select-trigger.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body .widget-text-input.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body input.widget-text-input.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body .widget-video-select-trigger.vt-sized-control {
-    height: var(--vt-primitive-height);
-    min-height: var(--vt-primitive-height);
-    max-height: var(--vt-primitive-height);
-  }
-}
+/* The size class owns typography and geometry globally, including matrix controls and portalled menus. */
+.is-height-18 { --vt-primitive-height:18px; --vt-primitive-font:8px; --vt-primitive-radius:2px; }
+.is-height-24 { --vt-primitive-height:24px; --vt-primitive-font:9px; --vt-primitive-radius:3px; }
+.is-height-32 { --vt-primitive-height:32px; --vt-primitive-font:11px; --vt-primitive-radius:4px; }
+.is-height-38 { --vt-primitive-height:38px; --vt-primitive-font:12px; --vt-primitive-radius:6px; }
+:where(.dashboard-barrier) .vt-widget-body .is-height-18.vt-sized-control { height:18px; min-height:18px; max-height:18px; }
+:where(.dashboard-barrier) .vt-widget-body .is-height-24.vt-sized-control { height:24px; min-height:24px; max-height:24px; }
+:where(.dashboard-barrier) .vt-widget-body .is-height-32.vt-sized-control { height:32px; min-height:32px; max-height:32px; }
+:where(.dashboard-barrier) .vt-widget-body .is-height-38.vt-sized-control { height:38px; min-height:38px; max-height:38px; }
 
-:where(.dashboard-barrier) .vt-widget-body .is-height-18.vt-sized-control {
-  --vt-primitive-height: 18px;
-  --vt-primitive-font: 8px;
-  height: 18px;
-  min-height: 18px;
-  max-height: 18px;
-}
-:where(.dashboard-barrier) .vt-widget-body .is-height-24.vt-sized-control {
-  --vt-primitive-height: 24px;
-  --vt-primitive-font: 9px;
-  height: 24px;
-  min-height: 24px;
-  max-height: 24px;
-}
-:where(.dashboard-barrier) .vt-widget-body .is-height-32.vt-sized-control {
-  --vt-primitive-height: 32px;
-  --vt-primitive-font: 11px;
-  height: 32px;
-  min-height: 32px;
-  max-height: 32px;
-}
-:where(.dashboard-barrier) .vt-widget-body .is-height-38.vt-sized-control {
-  --vt-primitive-height: 38px;
-  --vt-primitive-font: 12px;
-  height: 38px;
-  min-height: 38px;
-  max-height: 38px;
-}
-
-/* Typography follows the control lattice, including nested trigger labels. */
-:where(.dashboard-barrier) .vt-widget-body .vt-sized-control {
-  font-size: var(--vt-primitive-font) !important;
-}
-:where(.dashboard-barrier) .vt-widget-body .vt-sized-control :is(span, strong, button, input) {
-  font-size: inherit;
-}
-
-/* Keep the micro surface borderless, but interactive controls now share the
-   same physical press language as the larger controls. */
-:where(.dashboard-barrier) .vt-widget-body .is-height-18.vt-sized-control {
-  border-width: 0;
-  border-style: none;
-}
+.vt-sized-control { font-size:var(--vt-primitive-font,11px) !important; line-height:1 !important; }
+.vt-sized-control :is(span,strong,small,button,input) { font-size:inherit !important; }
+:where(.dashboard-barrier) .vt-widget-body .is-height-18.vt-sized-control { border-width:0; border-style:none; }
+.vt-sized-control.is-height-18 { border-radius:2px !important; }
+.vt-sized-control.is-height-24 { border-radius:3px !important; }
+.vt-sized-control.is-height-32 { border-radius:4px !important; }
+.vt-sized-control.is-height-38 { border-radius:6px !important; }
 
 :where(.dashboard-barrier) .vt-widget-body .vt-button.vt-sized-control,
 :where(.dashboard-barrier) .vt-widget-body .widget-select-trigger.vt-sized-control,
 :where(.dashboard-barrier) .vt-widget-body .widget-video-select-trigger.vt-sized-control,
-:where(.dashboard-barrier) .vt-widget-body .widget-split-button.vt-sized-control {
-  padding-block: 0;
-  transition: transform 90ms ease, box-shadow 90ms ease !important;
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color, #34cdea) 50%, transparent) !important;
-}
-:where(.dashboard-barrier) .vt-widget-body :is(.vt-button, .widget-select-trigger, .widget-video-select-trigger, .widget-split-button).vt-sized-control:hover:not(:disabled) {
-  transform: translate(1px, 1px);
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color, #34cdea) 50%, transparent) !important;
-}
-:where(.dashboard-barrier) .vt-widget-body :is(.vt-button, .widget-select-trigger, .widget-video-select-trigger, .widget-split-button).vt-sized-control:active:not(:disabled) {
-  transform: translate(3px, 3px);
-  box-shadow: none !important;
-}
+:where(.dashboard-barrier) .vt-widget-body .widget-split-button.vt-sized-control { padding-block:0; transition:transform 90ms ease,box-shadow 90ms ease !important; box-shadow:3px 3px 0 color-mix(in srgb,var(--widget-color,#34cdea) 50%,transparent) !important; }
+:where(.dashboard-barrier) .vt-widget-body :is(.vt-button,.widget-select-trigger,.widget-video-select-trigger,.widget-split-button).vt-sized-control:hover:not(:disabled) { transform:translate(1px,1px); box-shadow:2px 2px 0 color-mix(in srgb,var(--widget-color,#34cdea) 50%,transparent) !important; }
+:where(.dashboard-barrier) .vt-widget-body :is(.vt-button,.widget-select-trigger,.widget-video-select-trigger,.widget-split-button).vt-sized-control:active:not(:disabled) { transform:translate(3px,3px); box-shadow:none !important; }
 
-/* Portalled standard dropdowns carry the size class for variables, but the
-   menu itself must not be clamped to one control-height. Each option is. */
-.widget-select-content.vt-sized-control {
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: min(340px, calc(var(--vt-primitive-height, 32px) * 9)) !important;
-  overflow-y: auto;
-  font-size: var(--vt-primitive-font, 11px) !important;
-}
+.widget-select-content.vt-sized-control { height:auto !important; min-height:0 !important; max-height:min(340px,calc(var(--vt-primitive-height,32px) * 9)) !important; overflow-y:auto; font-size:var(--vt-primitive-font,11px) !important; }
 .widget-select-content.vt-sized-control .widget-select-item,
-.widget-select-content.vt-sized-control .widget-select-scroll {
-  box-sizing: border-box;
-  height: var(--vt-primitive-height, 32px) !important;
-  min-height: var(--vt-primitive-height, 32px) !important;
-  max-height: var(--vt-primitive-height, 32px) !important;
-  font-size: var(--vt-primitive-font, 11px) !important;
-  line-height: 1;
-}
-.widget-select-content.vt-sized-control .widget-select-item * {
-  font-size: inherit !important;
-}
+.widget-select-content.vt-sized-control .widget-select-scroll { box-sizing:border-box; height:var(--vt-primitive-height,32px) !important; min-height:var(--vt-primitive-height,32px) !important; max-height:var(--vt-primitive-height,32px) !important; font-size:inherit !important; line-height:1; }
 
-/* The video selector menu is an independent viewport. It inherits the size
-   variables from its is-height-* class but is never itself one row tall. */
-:where(.dashboard-barrier) .vt-widget-body .widget-video-select-menu.vt-sized-control {
-  height: auto !important;
-  min-height: calc(var(--vt-primitive-height, 32px) * 5 + 52px) !important;
-  max-height: calc(var(--vt-primitive-height, 32px) * 8 + 52px) !important;
-  overflow-y: auto !important;
-  font-size: var(--vt-primitive-font, 11px) !important;
-}
-:where(.dashboard-barrier) .vt-widget-body .widget-video-select-menu .widget-video-select-option {
-  box-sizing: border-box;
-  height: var(--vt-primitive-height, 32px) !important;
-  min-height: var(--vt-primitive-height, 32px) !important;
-  max-height: var(--vt-primitive-height, 32px) !important;
-  grid-template-columns: calc((var(--vt-primitive-height, 32px) - 8px) * 1.7778) minmax(0, 1fr);
-  padding: 3px 4px;
-  font-size: var(--vt-primitive-font, 11px) !important;
-  overflow: hidden;
-}
-:where(.dashboard-barrier) .vt-widget-body .widget-video-select-menu .widget-video-select-option img {
-  width: auto;
-  height: calc(var(--vt-primitive-height, 32px) - 8px);
-  max-width: 100%;
-}
-:where(.dashboard-barrier) .vt-widget-body .widget-video-select-menu .widget-video-select-option-copy strong {
-  font-size: inherit !important;
-}
-:where(.dashboard-barrier) .vt-widget-body .widget-video-select-menu .widget-video-select-option-copy small {
-  font-size: max(7px, calc(var(--vt-primitive-font, 11px) - 2px)) !important;
-}
+:where(.dashboard-barrier) .vt-widget-body .widget-video-select-menu.vt-sized-control { height:auto !important; min-height:calc(var(--vt-primitive-height,32px) * 5 + 42px) !important; max-height:calc(var(--vt-primitive-height,32px) * 8 + 42px) !important; overflow-y:auto !important; padding:4px !important; gap:2px !important; font-size:var(--vt-primitive-font,11px) !important; }
+:where(.dashboard-barrier) .vt-widget-body .widget-video-select-menu .widget-video-select-search { margin:0 0 2px !important; }
+:where(.dashboard-barrier) .vt-widget-body .widget-video-select-menu .widget-video-select-option { box-sizing:border-box; height:var(--vt-primitive-height,32px) !important; min-height:var(--vt-primitive-height,32px) !important; max-height:var(--vt-primitive-height,32px) !important; grid-template-columns:calc((var(--vt-primitive-height,32px) - 6px) * 1.7778) minmax(0,1fr) !important; gap:5px !important; padding:2px 3px !important; border-radius:var(--vt-primitive-radius,4px) !important; font-size:var(--vt-primitive-font,11px) !important; overflow:hidden; align-items:center; }
+:where(.dashboard-barrier) .vt-widget-body .widget-video-select-menu .widget-video-select-option img { display:block; width:calc((var(--vt-primitive-height,32px) - 6px) * 1.7778) !important; height:calc(var(--vt-primitive-height,32px) - 6px) !important; aspect-ratio:16/9; object-fit:cover; border-radius:max(1px,calc(var(--vt-primitive-radius,4px) - 1px)); align-self:center; }
+:where(.dashboard-barrier) .vt-widget-body .widget-video-select-option-copy { min-width:0; gap:0 !important; align-content:center; overflow:hidden; }
+:where(.dashboard-barrier) .vt-widget-body .widget-video-select-option-copy strong { display:block; font-size:inherit !important; line-height:1 !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+:where(.dashboard-barrier) .vt-widget-body .widget-video-select-option-copy small { display:block; font-size:max(7px,calc(var(--vt-primitive-font,11px) - 2px)) !important; line-height:1 !important; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 :where(.dashboard-barrier) .vt-widget-body .widget-video-select-menu.is-height-18 .widget-video-select-option-copy small,
-:where(.dashboard-barrier) .vt-widget-body .widget-video-select-menu.is-height-24 .widget-video-select-option-copy small {
-  display: none;
-}
+:where(.dashboard-barrier) .vt-widget-body .widget-video-select-menu.is-height-24 .widget-video-select-option-copy small { display:none; }
 
-/* UI Reference Library header: the category filter is intentionally removed
-   from the visible header. All sections remain visible via the default ALL state. */
-:where(.dashboard-barrier) .widget-reference-header-controls > .widget-header-toggle:first-child {
-  display: none !important;
-}
+/* 16:9 is the default upload canvas. Opposing solid edges alternate widget color / ink; dashed borders are forbidden. */
+:where(.dashboard-barrier) .widget-upload-frame { width:100%; aspect-ratio:16/9 !important; min-height:0 !important; height:auto !important; padding:8px !important; border-style:solid !important; border-width:2px !important; border-top-color:var(--widget-color,#34cdea) !important; border-right-color:var(--widget-border,var(--widget-ink,#222)) !important; border-bottom-color:var(--widget-color,#34cdea) !important; border-left-color:var(--widget-border,var(--widget-ink,#222)) !important; border-radius:var(--widget-control-radius,8px); background:color-mix(in srgb,var(--widget-color,#34cdea) 10%,white); box-sizing:border-box; align-content:center; justify-items:center; }
+:where(.dashboard-barrier) .widget-upload-frame::before { content:none !important; }
+
+:where(.dashboard-barrier) .widget-reference-header-controls > .widget-header-toggle:first-child { display:none !important; }
