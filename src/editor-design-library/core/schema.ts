@@ -1,7 +1,10 @@
 export type TemplateAspectRatio = '16:9' | '9:16' | '1:1' | 'responsive';
 export type TemplateCategory = 'background' | 'pattern' | 'text' | 'graphic' | 'scene' | 'transition' | 'engagement';
 export type TemplateElementType = 'svg' | 'text' | 'image' | 'video' | 'group';
-export type TemplateRenderMode = 'svg-clip' | 'full-frame';
+export type TemplateRenderMode = 'svg-overlay' | 'svg-scene' | 'background' | 'transition' | 'svg-clip' | 'full-frame';
+export type TemplateSafeZoneBehavior = 'free' | 'landscape' | 'portrait' | 'square' | 'end-screen';
+export type TemplateTokenRole = 'primary' | 'secondary' | 'accent' | 'foreground' | 'background' | 'border' | 'muted' | 'danger' | 'success';
+export type TemplateMotionRole = 'plate' | 'headline' | 'supporting' | 'icon' | 'accent' | 'underline' | 'highlight' | 'marker' | 'slot';
 export type MotionPreset =
   | 'none'
   | 'fade'
@@ -66,6 +69,7 @@ export interface TemplateAnimation {
   direction?: 'left' | 'right' | 'up' | 'down' | 'in' | 'out';
   intensity?: number;
   easing?: string;
+  portion?: number;
 }
 
 export interface TemplateStyleConfig {
@@ -125,6 +129,21 @@ export interface TemplateResponsiveLayout {
   square?: Partial<TemplateStyleConfig>;
 }
 
+export interface TemplateBounds {
+  width: number;
+  height: number;
+  viewBox?: string;
+}
+
+export interface TemplateTransform {
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
+  anchorX?: number;
+  anchorY?: number;
+}
+
 export interface TemplateClipBehavior {
   transparentBackground: boolean;
   movable: boolean;
@@ -135,6 +154,8 @@ export interface TemplateClipBehavior {
   layerable: boolean;
   preserveAspectRatio?: boolean;
   defaultScale?: number;
+  safeZoneBehavior?: TemplateSafeZoneBehavior;
+  snapToSafeZones?: boolean;
 }
 
 export interface TemplateElement {
@@ -149,6 +170,7 @@ export interface TemplateElement {
   opacity?: number;
   fill?: string;
   fillToken?: StyleTokenPath;
+  tokenRole?: TemplateTokenRole;
   stroke?: string;
   strokeToken?: StyleTokenPath;
   strokeWidth?: number;
@@ -163,6 +185,7 @@ export interface TemplateElement {
   svg?: string;
   children?: TemplateElement[];
   animation?: TemplateAnimation;
+  motionRole?: TemplateMotionRole;
   editable?: boolean;
 }
 
@@ -177,6 +200,10 @@ export interface TemplateDefinition {
   durationFrames?: number;
   background?: string;
   renderMode?: TemplateRenderMode;
+  transparent?: boolean;
+  intrinsicBounds?: TemplateBounds;
+  defaultTransform?: TemplateTransform;
+  safeZoneBehavior?: TemplateSafeZoneBehavior;
   clipBehavior?: TemplateClipBehavior;
   elements: TemplateElement[];
   palette?: string[];
@@ -186,6 +213,7 @@ export interface TemplateDefinition {
   entrance?: TemplateAnimation;
   emphasis?: TemplateAnimation;
   loop?: TemplateAnimation;
+  exit?: TemplateAnimation;
   transition?: TemplateAnimation;
   customizable?: boolean;
 }
