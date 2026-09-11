@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
  loadScopedIntelligenceHistory,
  loadScopedIntelligenceReport,
+ persistScopedIntelligenceReport,
  ULTIMATE_REPORT_HISTORY_KEY,
  ULTIMATE_REPORT_STORAGE_KEY,
 } from "./reportStorage"
@@ -10,6 +11,14 @@ const report = (channelId: string | null, generationId = "generation-a") => ({ m
 const storage = (values: Record<string, unknown>) => ({
  getItem: (key: string) => key in values ? JSON.stringify(values[key]) : null,
 })
+
+const writableStorage = (initial: Record<string, unknown>) => {
+ const values = new Map(Object.entries(initial).map(([key, value]) => [key, JSON.stringify(value)]))
+ return {
+  getItem: (key: string) => values.get(key) || null,
+  setItem: (key: string, value: string) => values.set(key, value),
+ }
+}
 
 describe("scoped Intelligence Hub storage", () => {
  it("never returns another channel's scoped report", () => {
@@ -35,5 +44,22 @@ describe("scoped Intelligence Hub storage", () => {
    ],
   })
   expect(loadScopedIntelligenceHistory(source, "channel-a")).toHaveLength(1)
+ })
+
+ it("updates the matching history record after Brain persistence", () => {
+  const source = writableStorage({
+   [`${ULTIMATE_REPORT_HISTORY_KEY}:channel-a`]: [{
+    id: "one",
+    report: { ...report("channel-a", "one"), brainUpdate: { status: "pending" } },
+   }],
+  })
+  const updated = { ...report("channel-a", "one"), brainUpdate: { status: "persisted" } }
+  expect(persistScopedIntelligenceReport(source, updated as never)).toBe(true)
+  expect(loadScopedIntelligenceHistory(source, "channel-a")[0]?.report.brainUpdate?.status).toBe("persisted")
+  expect(loadScopedIntelligenceReport(source, "channel-a")?.brainUpdate?.status).toBe("persisted")
+ })
+
+ it("refuses to persist an unscoped report", () => {
+  expect(persistScopedIntelligenceReport(writableStorage({}), report(null) as never)).toBe(false)
  })
 })
