@@ -1,10 +1,16 @@
 import React, { useMemo, useState } from "react"
-import { ArrowLeft, ArrowRight, CheckCircle2, CircleDot, OctagonAlert, PanelsTopLeft } from "lucide-react"
+import { ArrowLeft, ArrowRight, CheckCircle2, CircleDot, OctagonAlert, PanelsTopLeft, Plus, RotateCcw, Trash2 } from "lucide-react"
 import {
  StandardTextArea,
  SubToolbox,
  ToolboxScaffold,
 } from "../../components/Toolbox"
+import {
+ loadBoardCards,
+ makeBoardCardId,
+ resetBoardCards,
+ saveBoardCards,
+} from "../../features/super-tools/prototypeBoardStore"
 import type { SuperToolId } from "../../types"
 
 export type PrototypeCardStatus = "queued" | "active" | "blocked" | "ready" | "complete"
@@ -34,6 +40,8 @@ export type PrototypeWorkspaceCard = {
  output?: string
  integrations?: string[]
  handoffTarget?: string
+ /** "sample" ships with the tool config; "creator" was added in the app. */
+ origin?: "sample" | "creator"
 }
 
 export type PrototypeWorkspaceConfig = {
@@ -408,6 +416,8 @@ export const PrototypeCard: React.FC<{
    {card.deadline ? <PrototypeMetricChip label={card.deadline} tone="bg-[#FFEA5A] text-black" /> : null}
    {card.status ? <PrototypeMetricChip label={card.status} tone={statusTone[card.status]} /> : null}
    {card.priority ? <PrototypeMetricChip label={card.priority} tone={priorityTone[card.priority]} /> : null}
+   {card.origin === "creator" ? <PrototypeMetricChip label="Yours" tone="bg-[#CCFF00] text-black" /> : null}
+   {card.origin === "sample" ? <PrototypeMetricChip label="Sample" tone="bg-black text-white" /> : null}
    {card.chips?.map((chip) => <PrototypeMetricChip key={chip} label={chip} tone="bg-[#f8f7f1] text-black" />)}
   </div>
   {(card.dependency || card.blocker) ? (
@@ -473,6 +483,16 @@ export const PrototypeColumn: React.FC<{
  </div>
 )
 
+/** The board actions the Kanban toolbar needs from the workspace. */
+type BoardControls = {
+ newCardTitle: string
+ setNewCardTitle: (value: string) => void
+ addCard: (title: string) => void
+ removeSelectedCard: () => void
+ resetBoard: () => void
+ boardNotice: string | null
+}
+
 const laneStatus = (laneTitle: string): PrototypeCardStatus => {
  const normalized = laneTitle.toLowerCase()
  if (normalized.includes("blocked")) return "blocked"
@@ -496,7 +516,7 @@ const BlueprintBlock: React.FC<{
  title: string
  tone?: string
  children?: React.ReactNode
-}> = ({ title, tone = "bg-white", children }) => (
+}> = ({ title, children }) => (
  <SubToolbox
   title={title}
   icon={<PanelsTopLeft />}
@@ -636,8 +656,71 @@ const renderProjectKanban = (
  moveSelected: (offset: number) => void,
  markBlocked: () => void,
  markReady: () => void,
+ board: BoardControls,
 ) => (
 	 <div className="grid gap-5 p-5">
+  <div className="grid gap-3 rounded-[18px] border-[4px] border-black bg-white p-4 md:grid-cols-[1fr_auto_auto]">
+   <div className="min-w-0">
+    <label htmlFor={`${config.toolId}-new-card`} className="text-[10px] font-black uppercase tracking-wider">
+     Add your own card
+    </label>
+    <StandardTextArea
+     id={`${config.toolId}-new-card`}
+     name={`${config.toolId}-new-card`}
+     value={board.newCardTitle}
+     onChange={(event) => board.setNewCardTitle(event.target.value)}
+     onKeyDown={(event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+       event.preventDefault()
+       board.addCard(board.newCardTitle)
+      }
+     }}
+     placeholder="A launch, a video, a blocker you are tracking…"
+     minHeight="52px"
+     className="mt-2"
+     style={{ minHeight: "52px", textTransform: "none", fontWeight: 600 }}
+    />
+   </div>
+   <div className="flex items-end">
+    <button
+     type="button"
+     onClick={() => board.addCard(board.newCardTitle)}
+     disabled={!board.newCardTitle.trim()}
+     className="inline-flex h-11 items-center gap-2 rounded-[12px] border-[3px] border-black bg-[#CCFF00] px-4 text-[10px] font-black uppercase tracking-[0.14em] text-black shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-40"
+    >
+     <Plus size={14} aria-hidden="true" />
+     Add Card
+    </button>
+   </div>
+   <div className="flex items-end gap-2">
+    <button
+     type="button"
+     onClick={board.removeSelectedCard}
+     disabled={!selectedCard}
+     className="inline-flex h-11 items-center gap-2 rounded-[12px] border-[3px] border-black bg-white px-4 text-[10px] font-black uppercase tracking-[0.14em] text-black shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:opacity-40"
+    >
+     <Trash2 size={14} aria-hidden="true" />
+     Delete
+    </button>
+    <button
+     type="button"
+     onClick={board.resetBoard}
+     className="inline-flex h-11 items-center gap-2 rounded-[12px] border-[3px] border-black bg-white px-4 text-[10px] font-black uppercase tracking-[0.14em] text-black shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+    >
+     <RotateCcw size={14} aria-hidden="true" />
+     Reset Samples
+    </button>
+   </div>
+   {board.boardNotice ? (
+    <p role="status" className="md:col-span-3 rounded-[12px] border-[3px] border-black bg-[#FFEA5A] px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em]">
+     {board.boardNotice}
+    </p>
+   ) : (
+    <p className="md:col-span-3 text-[10px] font-black uppercase tracking-[0.12em] text-black/45">
+     This board saves on this device. Cards marked Sample ship with the tool; Reset Samples restores them.
+    </p>
+   )}
+  </div>
 	  <div className="overflow-x-auto pb-2">
 	   <div className="grid min-w-[1480px] grid-cols-5 gap-4">
 	    {config.lanes.map((lane) => (
@@ -1155,9 +1238,58 @@ const renderWorkflowChain = (cards: PrototypeWorkspaceCard[]) => (
 const SuperToolPrototypeWorkspace: React.FC<{
  config: PrototypeWorkspaceConfig
 }> = ({ config }) => {
- const [cards, setCards] = useState(config.cards)
- const [selectedCardId, setSelectedCardId] = useState(config.cards[0]?.id || "")
+ const laneIds = useMemo(() => config.lanes.map((lane) => lane.id), [config.lanes])
+ // The board is the creator's, not a demo: load what they left here last time.
+ const [cards, setCards] = useState<PrototypeWorkspaceCard[]>(() =>
+  loadBoardCards(config.toolId, config.cards, laneIds),
+ )
+ const [selectedCardId, setSelectedCardId] = useState(cards[0]?.id || "")
  const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
+ const [newCardTitle, setNewCardTitle] = useState("")
+ const [boardNotice, setBoardNotice] = useState<string | null>(null)
+ /** Every board mutation goes through here, so nothing is lost on reload. */
+ const commitCards = (next: PrototypeWorkspaceCard[]) => {
+  setCards(next)
+  setBoardNotice(
+   saveBoardCards(config.toolId, next) ? null : (
+    "This board could not be saved on this device — it will reset when you reload."
+   ),
+  )
+ }
+
+ const addCard = (title: string) => {
+  const trimmed = title.trim()
+  if (!trimmed) return
+  const id = makeBoardCardId()
+  commitCards([
+   ...cards,
+   {
+    id,
+    laneId: laneIds[0] || "",
+    title: trimmed,
+    summary: "Added in this tool.",
+    status: "queued",
+    origin: "creator",
+   },
+  ])
+  setSelectedCardId(id)
+  setNewCardTitle("")
+ }
+
+ const removeSelectedCard = () => {
+  if (!selectedCardId) return
+  const next = cards.filter((card) => card.id !== selectedCardId)
+  commitCards(next)
+  setSelectedCardId(next[0]?.id || "")
+ }
+
+ const resetBoard = () => {
+  resetBoardCards(config.toolId)
+  const seeds = loadBoardCards(config.toolId, config.cards, laneIds)
+  setCards(seeds)
+  setSelectedCardId(seeds[0]?.id || "")
+  setBoardNotice(null)
+ }
 
  const selectedCard = cards.find((card) => card.id === selectedCardId) || cards[0]
  const selectedLane = config.lanes.find((lane) => lane.id === selectedCard?.laneId) || config.lanes[0]
@@ -1179,8 +1311,8 @@ const SuperToolPrototypeWorkspace: React.FC<{
  const updateSelectedCard = (laneId: string, status?: PrototypeCardStatus, patch: Partial<PrototypeWorkspaceCard> = {}) => {
   if (!selectedCard) return
   const lane = config.lanes.find((item) => item.id === laneId)
-  setCards((current) =>
-   current.map((card) =>
+  commitCards(
+   cards.map((card) =>
     card.id === selectedCard.id ?
      {
       ...card,
@@ -1212,8 +1344,8 @@ const SuperToolPrototypeWorkspace: React.FC<{
  const moveDraggedCardToLane = (laneId: string) => {
   if (!draggingCardId) return
   const lane = config.lanes.find((item) => item.id === laneId)
-  setCards((current) =>
-   current.map((card) =>
+  commitCards(
+   cards.map((card) =>
     card.id === draggingCardId ?
      {
       ...card,
@@ -1255,6 +1387,7 @@ const SuperToolPrototypeWorkspace: React.FC<{
     moveSelected,
     markBlocked,
     markReady,
+    { newCardTitle, setNewCardTitle, addCard, removeSelectedCard, resetBoard, boardNotice },
    )
   }
   if (config.toolId === "creator-canvas-os") return renderCreatorCanvas(config, cards)
