@@ -18,6 +18,11 @@ export const CrownLiveBrain: React.FC = () => {
   const providerCount = brain.activeProviders.length
   const memorySignals = brain.journalEntries.length + brain.journalFollowUps.length + brain.microPolls.length
   const contextSignals = [brain.channelProfile, brain.recentMetrics, brain.coreConcept, brain.targetNiche].filter(Boolean).length
+  const hydrationReady = [
+    initialDashboardHydrationStatus.identityReady,
+    initialDashboardHydrationStatus.lifetimeReady,
+    initialDashboardHydrationStatus.inventoryReady,
+  ].filter(Boolean).length
 
   return (
     <section className="mt-4 grid gap-4 lg:grid-cols-[.72fr_1.28fr]">
@@ -28,7 +33,7 @@ export const CrownLiveBrain: React.FC = () => {
         <div className="mt-5 space-y-2 text-xs font-bold">
           <div className="flex gap-2"><Sparkles size={15} /> Model: {aiModel}</div>
           <div className="flex gap-2"><Layers3 size={15} /> Boot phase: {channelBootPhase}</div>
-          <div className="flex gap-2"><MessageSquareText size={15} /> Dashboard hydration: {initialDashboardHydrationStatus}</div>
+          <div className="flex gap-2"><MessageSquareText size={15} /> Dashboard hydration: {hydrationReady}/3 core stages ready</div>
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
