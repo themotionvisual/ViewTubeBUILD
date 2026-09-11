@@ -85,6 +85,7 @@ export const deriveAlgorithmLearningCandidates = (channelId: string): AlgorithmL
 export const recordAlgorithmLearningCandidates = (channelId: string) => {
  const candidates = deriveAlgorithmLearningCandidates(channelId).filter((candidate) => candidate.status === "candidate")
  return candidates.map((candidate) => recordAlgorithmIntelligenceEvent({
+  id: `algorithm-event:learning-candidate:${candidate.id}`,
   channelId,
   kind: "LEARNING_CANDIDATE_CREATED",
   sourceSystem: "learning",
