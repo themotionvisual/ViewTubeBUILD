@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "viewtube.work-order.v1",
+  "missionId": "VT-MISSION-BRAIN-evidence-tool-connection",
+  "executionId": "VT-EXEC-BRAIN-evidence-tool-connection-01",
+  "checkout": "themotionvisual/ViewTubeBUILD",
+  "baseRef": "main",
+  "baseSha": "4a103111b67ea8a5f4614925cbb391c662b31084",
+  "headRef": "codex/feat/crown-integration-system",
+  "writers": [{"role": "brain-tool-specialist", "paths": ["src/services/brain/**", "src/components/brain/**"]}],
+  "reviewers": ["viewtube-prince-brain", "viewtube-verification-chancellor"],
+  "orderedSteps": ["Trace capability selection and context assembly.", "Map source evidence into recommendations.", "Separate proposals from actions.", "Verify user controls and missing-data behavior.", "Record a receipt."],
+  "testsRequired": ["Brain capability tests", "Brain evidence tests", "production build"],
+  "releaseRequired": false,
+  "status": "planned"
+}
