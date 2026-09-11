@@ -11,6 +11,7 @@ import { buildBrainEvaluationInbox } from "./BrainEvaluationInbox"
 import { buildAlgorithmRecommendationCalibration } from "./AlgorithmRecommendationCalibration"
 import { buildBrainCheckpointPolicy } from "./BrainCheckpointPolicy"
 import { summarizeAlgorithmLifecycleObservationStore } from "./AlgorithmLifecycleObservationStore"
+import { summarizeAlgorithmMonitoringResolution } from "./AlgorithmMonitoringResolver"
 
 export interface BrainAlgorithmIntelligenceRequest {
  channelId: string
@@ -28,6 +29,7 @@ export interface BrainAlgorithmIntelligenceResult {
  calibration: ReturnType<typeof buildAlgorithmRecommendationCalibration>
  checkpointPolicy: ReturnType<typeof buildBrainCheckpointPolicy>
  lifecycleEvidence: ReturnType<typeof summarizeAlgorithmLifecycleObservationStore>
+ monitoringResolution: ReturnType<typeof summarizeAlgorithmMonitoringResolution>
 }
 
 const buildPhaseSixContext = (input: {
@@ -35,16 +37,11 @@ const buildPhaseSixContext = (input: {
  calibration: ReturnType<typeof buildAlgorithmRecommendationCalibration>
  checkpointPolicy: ReturnType<typeof buildBrainCheckpointPolicy>
  lifecycleEvidence: ReturnType<typeof summarizeAlgorithmLifecycleObservationStore>
+ monitoringResolution: ReturnType<typeof summarizeAlgorithmMonitoringResolution>
 }) => {
- const { evaluationInbox, calibration, checkpointPolicy, lifecycleEvidence } = input
- const urgentItems = evaluationInbox.items
-  .filter((item) => item.priority === "critical" || item.priority === "high")
-  .slice(0, 6)
-  .map((item) => `- ${item.kind}: ${item.title} — ${item.summary}`)
- const calibrationLines = calibration.buckets
-  .filter((bucket) => bucket.measured > 0)
-  .map((bucket) => `- ${bucket.confidence}: measured=${bucket.measured}; success=${bucket.successRate == null ? "unknown" : `${Math.round(bucket.successRate * 100)}%`}; gap=${bucket.calibrationGap == null ? "unknown" : `${Math.round(bucket.calibrationGap * 100)}pp`}`)
-
+ const { evaluationInbox, calibration, checkpointPolicy, lifecycleEvidence, monitoringResolution } = input
+ const urgentItems = evaluationInbox.items.filter((item) => item.priority === "critical" || item.priority === "high").slice(0, 6).map((item) => `- ${item.kind}: ${item.title} — ${item.summary}`)
+ const calibrationLines = calibration.buckets.filter((bucket) => bucket.measured > 0).map((bucket) => `- ${bucket.confidence}: measured=${bucket.measured}; success=${bucket.successRate == null ? "unknown" : `${Math.round(bucket.successRate * 100)}%`}; gap=${bucket.calibrationGap == null ? "unknown" : `${Math.round(bucket.calibrationGap * 100)}pp`}`)
  return [
   "",
   "PHASE 6 — EVALUATION, ATTRIBUTION & LEARNING",
@@ -57,6 +54,10 @@ const buildPhaseSixContext = (input: {
   `lifecycleObservations=${lifecycleEvidence.observations}`,
   `lifecycleVideos=${lifecycleEvidence.videos}`,
   `lifecycleMetrics=${lifecycleEvidence.metrics.join(",") || "none"}`,
+  `resolvedMonitoringCheckpoints=${monitoringResolution.resolvedCheckpoints}`,
+  `autoResolvedMonitoringCheckpoints=${monitoringResolution.autoResolvedCheckpoints}`,
+  `intermediateObservations=${monitoringResolution.intermediateObservations}`,
+  `finalHorizonsReached=${monitoringResolution.finalHorizonsReached}`,
   "",
   "URGENT EVALUATION ITEMS",
   ...(urgentItems.length ? urgentItems : ["- No high-priority evaluation items."]),
@@ -69,6 +70,7 @@ const buildPhaseSixContext = (input: {
   "- Do not claim an action worked unless a measured outcome exists.",
   "- Treat insufficient-data evaluations as unresolved, not failed or successful.",
   "- Workflow completion is not evidence that CTR, retention, views, or revenue improved.",
+  "- An auto-resolved intermediate monitoring checkpoint is observation evidence only, not a separate success/failure.",
   "- Prefer comparable lifecycle peers at the declared evaluation horizon over mismatched lifetime/current totals.",
   "- If lifecycle peer evidence is insufficient, say so rather than inventing a baseline.",
   "- Learning candidates are not durable Channel Profile facts until governance and creator approval complete.",
@@ -80,33 +82,20 @@ export const buildBrainAlgorithmEvaluationContext = (channelId: string) => {
  const calibration = buildAlgorithmRecommendationCalibration(channelId)
  const checkpointPolicy = buildBrainCheckpointPolicy({ channelId, maximum: 100 })
  const lifecycleEvidence = summarizeAlgorithmLifecycleObservationStore(channelId)
+ const monitoringResolution = summarizeAlgorithmMonitoringResolution(channelId)
  return {
   evaluationInbox,
   calibration,
   checkpointPolicy,
   lifecycleEvidence,
-  context: buildPhaseSixContext({ evaluationInbox, calibration, checkpointPolicy, lifecycleEvidence }).slice(0, 6_000),
+  monitoringResolution,
+  context: buildPhaseSixContext({ evaluationInbox, calibration, checkpointPolicy, lifecycleEvidence, monitoringResolution }).slice(0, 6_000),
  }
 }
 
-/**
- * Brain-facing entry point for the Algorithm Intelligence & Momentum system.
- * The caller decides which evidence sources are available; this service never
- * fetches YouTube data directly and never executes a tool action.
- *
- * Phase 6 appends bounded evaluation, attribution, lifecycle and calibration
- * context so the Brain can reason about whether prior recommendations worked
- * without confusing execution with success.
- */
-export const buildBrainAlgorithmIntelligence = async (
- input: BrainAlgorithmIntelligenceRequest,
-): Promise<BrainAlgorithmIntelligenceResult> => {
+export const buildBrainAlgorithmIntelligence = async (input: BrainAlgorithmIntelligenceRequest): Promise<BrainAlgorithmIntelligenceResult> => {
  const portfolio = await buildAlgorithmIntelligencePortfolio(input)
  const evaluation = buildBrainAlgorithmEvaluationContext(input.channelId)
  const phaseFiveContext = buildAlgorithmIntelligenceContext(portfolio)
- return {
-  portfolio,
-  ...evaluation,
-  context: `${phaseFiveContext}\n${evaluation.context}`.slice(0, 12_000),
- }
+ return { portfolio, ...evaluation, context: `${phaseFiveContext}\n${evaluation.context}`.slice(0, 12_000) }
 }
