@@ -16,6 +16,10 @@ const dataEditSource = readFileSync(new URL("../widgets/DataEditWidget.tsx", imp
 const keywordEngineSource = readFileSync(new URL("../widgets/KeywordEngineWidget.tsx", import.meta.url), "utf8")
 const commentResponderSource = readFileSync(new URL("../widgets/CommentReplyWidget.tsx", import.meta.url), "utf8")
 const widgetRendererSource = readFileSync(new URL("../WidgetRenderer.tsx", import.meta.url), "utf8")
+const verificationExplainerSource = readFileSync(
+  new URL("../widgets/VerificationExplainerWidget.tsx", import.meta.url),
+  "utf8",
+)
 
 describe("dashboard widget control rhythm", () => {
   it("defines one desktop and mobile geometry plus one control text treatment", () => {
@@ -115,8 +119,15 @@ describe("widget uniformity migrations", () => {
   })
 
   it("lets dashboard visibility control the About VIEWTUBE widget", () => {
-    expect(widgetRendererSource).toContain('if (widget.id === "app-verification-explainer")')
-    expect(widgetRendererSource).toContain("return <VerificationExplainerWidget")
+    // The widget moved out of WidgetRenderer.tsx in Phase 2, so it now resolves
+    // through the lazy map rather than an inline branch. The invariant it is
+    // guarding is unchanged: nothing may gate this widget on account state and
+    // render null, which previously left a visible grid slot empty even after
+    // the user chose Show All Widgets. Visibility is the layout's job alone.
+    expect(widgetRendererSource).toContain('"app-verification-explainer": React.lazy(')
     expect(widgetRendererSource).not.toContain("if (isConnected) return null")
+    expect(verificationExplainerSource).not.toContain("if (isConnected) return null")
+    expect(verificationExplainerSource).not.toContain("useUnifiedAccount")
+    expect(verificationExplainerSource).toContain("<WidgetShell")
   })
 })

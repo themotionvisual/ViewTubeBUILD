@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Legacy inline renderers are being migrated behind typed registry contracts incrementally. */
-import React, { useState, useMemo } from "react"
+import React, { useState } from "react"
 import {
   Activity,
   Bell,
@@ -8,14 +8,12 @@ import {
   Database,
   DollarSign,
   Layers,
-  Star,
   TrendingUp,
   Upload,
   UserCircle2,
   Video,
   WandSparkles,
   Edit3,
-  Lock,
   Settings,
   Image as ImageIcon,
   MessageSquare,
@@ -26,15 +24,10 @@ import {
   NotebookPen,
   RefreshCw,
   BookOpen,
-  Sparkles,
-  ShieldCheck,
-  Zap,
  } from "lucide-react"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
-import { useVideoComments } from "./useVideoComments"
 import type { DashboardData } from "./useDashboardData"
 import type {
- CommonWidgetProps,
  WidgetDefinition,
  WidgetRenderCallbacks,
  WidgetInstanceState,
@@ -46,16 +39,9 @@ const GoalsTrackerWidget = React.lazy(() =>
  import("./widgets/GoalsTrackerWidget").then((module) => ({ default: module.GoalsTrackerWidget })),
 )
 
-const formatHumanNumber = (value: unknown): string => {
- const v = Number(value)
- if (isNaN(v)) return "0"
- if (v >= 1000000) return (v / 1000000).toFixed(1) + "M"
- if (v >= 1000) return (v / 1000).toFixed(1) + "K"
- return v.toString()
-}
-
 import { WidgetShell } from "./WidgetShell"
-import { WidgetFooter, WidgetHeaderStepper, WidgetScrollArea, WidgetSelect } from "./WidgetPrimitives"
+import { formatUploadDate } from "./widgetFormatters"
+import { WidgetFooter, WidgetHeaderStepper, WidgetScrollArea } from "./WidgetPrimitives"
 
 const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
  "tag-generator": React.lazy(() => import("./widgets/TagGeneratorWidget").then((module) => ({ default: module.TagGeneratorWidget }))),
@@ -98,10 +84,14 @@ const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.Comp
  "premium-pulse": React.lazy(() => import("./widgets/PremiumPulseWidget").then((module) => ({ default: module.PremiumPulseWidget }))),
  "sharing-dna": React.lazy(() => import("./widgets/SharingDnaWidget").then((module) => ({ default: module.SharingDnaWidget }))),
  "video-comment-operator": React.lazy(() => import("./widgets/VideoCommentOperatorWidget").then((module) => ({ default: module.VideoCommentOperatorWidget }))),
+ // Phase 2 extractions: these three used to be written inline in this file,
+ // so their markup shipped inside the eagerly loaded Dashboard chunk.
+ "app-verification-explainer": React.lazy(() => import("./widgets/VerificationExplainerWidget").then((module) => ({ default: module.VerificationExplainerWidget }))),
+ "revenue-momentum": React.lazy(() => import("./widgets/RevenueMomentumWidget").then((module) => ({ default: module.RevenueMomentumWidget }))),
+ "superfan-card": React.lazy(() => import("./widgets/SuperfanCardWidget").then((module) => ({ default: module.SuperfanCardWidget }))),
 }
 
 const INLINE_WIDGET_RENDERER_KEYS = [
- "app-verification-explainer",
  "reach-funnel",
  "relative-retention-benchmark",
  "consistency-heatmap",
@@ -115,8 +105,6 @@ const INLINE_WIDGET_RENDERER_KEYS = [
  "goals-tracker",
  "alerts-feed",
  "ai-prompt-box",
- "revenue-momentum",
- "superfan-card",
  "system-micro-stack",
  "task-stack",
  "alerts-ticker",
@@ -139,229 +127,6 @@ export const DASHBOARD_WIDGET_RENDERER_KEYS = new Set<string>([
   dashboardControls?: any
  }
 
-const formatUploadDate = (value: unknown): string => {
- const dt = new Date(String(value || ""))
- return Number.isNaN(dt.getTime()) ? "Unknown date" : dt.toLocaleDateString()
-}
-
-const VerificationExplainerWidget: React.FC<{
- common: CommonWidgetProps
- onNavigate: (to: string) => void
-}> = ({ common, onNavigate }) => {
- const handleNavigate = (event: React.MouseEvent<HTMLAnchorElement>, to: string) => {
-  event.preventDefault()
-  onNavigate(to)
- }
-
- // Six on-brand feature chips, each on a different VT palette stop.
- // Deliberately short two-word verb phrases so the grid stays magnetic and
- // scannable at glance — the visitor's brain sees "OWN THE ALGO / KILL
- // GUESSWORK / SHIP FASTER" and gets the pitch before reading anything.
- const features: Array<{ Icon: typeof TrendingUp; title: string; desc: string; tone: string }> = [
-  { Icon: TrendingUp, title: "OWN THE ALGO",   desc: "Live views, watch time, revenue in one canonical stream.",      tone: "cyan" },
-  { Icon: RefreshCw,  title: "SYNC EVERYTHING", desc: "One tap pulls every video, comment, and metric — no CSVs.",     tone: "lime" },
-  { Icon: CalendarDays,title: "PLAN & PUBLISH", desc: "Draft, schedule, and ship uploads on your cadence.",            tone: "orange" },
-  { Icon: Bot,        title: "AI BRAIN",       desc: "Ask your channel anything, grounded in your data.",              tone: "magenta" },
-  { Icon: Zap,        title: "KILL GUESSWORK", desc: "Metric-mapped diagnostics tell you what to change, not just what happened.", tone: "yellow" },
-  { Icon: ShieldCheck,title: "STAY IN CONTROL", desc: "Your data lives in your browser cache. Disconnect anytime.",    tone: "royal" },
- ]
-
- return (
-  <WidgetShell {...common} icon={<BookOpen size={22} aria-hidden="true" />}>
-   <section className="widget-about" aria-label="Join VIEWTUBE">
-    {/* HERO — big magnetic pitch. Word-per-line stacking keeps the
-        typography feeling engineered, not slapped on. */}
-    <header className="widget-about__hero">
-     <div className="widget-about__hero-brand" translate="no">
-      <span>View</span><span>Tube</span>
-     </div>
-     <div className="widget-about__hero-tagline">
-      <b>The creator OS</b>
-      <em>Everything you need to grow. Nothing you don't.</em>
-     </div>
-     <a
-      href="/account/connect"
-      onClick={event => handleNavigate(event, "/account/connect")}
-      className="widget-about__hero-cta">
-      <Rocket size={18} strokeWidth={2.75} aria-hidden="true" />
-      <span>JOIN VIEWTUBE</span>
-      <Sparkles size={16} strokeWidth={2.75} aria-hidden="true" />
-     </a>
-    </header>
-
-    {/* Feature matrix — 6 on-brand chips */}
-    <ul className="widget-about__features" aria-label="What VIEWTUBE does">
-     {features.map(({ Icon, title, desc, tone }) => (
-      <li key={title} className={`widget-about__feature is-${tone}`}>
-       <span className="widget-about__feature-icon"><Icon size={18} strokeWidth={2.6} aria-hidden="true" /></span>
-       <b>{title}</b>
-       <p>{desc}</p>
-      </li>
-     ))}
-    </ul>
-
-    {/* Trust panel — smaller, quieter, but present so the "your data" question
-        is answered before someone bounces. */}
-    <aside className="widget-about__trust">
-     <span className="widget-about__trust-lock"><Lock size={16} strokeWidth={2.75} aria-hidden="true" /></span>
-     <p>
-      <b>Private by design.</b> Data lives in your browser. Never sold. Disconnect anytime.
-     </p>
-    </aside>
-
-    {/* Secondary links row */}
-    <nav className="widget-about__links" aria-label="VIEWTUBE resources">
-     <a href="/about" onClick={event => handleNavigate(event, "/about")} className="is-cyan">About</a>
-     <a href="/user-guide" onClick={event => handleNavigate(event, "/user-guide")} className="is-yellow">User Guide</a>
-     <a href="/privacy.html" className="is-magenta">Privacy</a>
-     <a href="/terms.html" className="is-orange">Terms</a>
-    </nav>
-   </section>
-  </WidgetShell>
- )
-}
-
-const SuperfanCardWidget: React.FC<{
-  data: DashboardData
-  common: CommonWidgetProps
-}> = ({ data, common }) => {
-  const recentVideoId = data.canonicalRows[0]?.videoId || null
-  const { comments, loading } = useVideoComments(recentVideoId)
-  
-  const displayFans = useMemo(() => {
-    if (comments.length > 0) {
-      return comments.slice(0, 4).map((comment, i) => ({
-        name: `@${comment.author.replace(/[^a-zA-Z0-9]/g, "")}`,
-        color: ["#00D2FF", "#FF3399", "#4FFF5B", "#FFE357"][i % 4],
-        detail: i === 0 ? "Most recent commenter" : "Active audience member",
-        tag: ["SUPERFAN", "LOYALTY", "VIBE", "LEGEND"][i % 4],
-      }))
-    }
-    
-    // If no comments, use fallback profiles based on actual channel name
-    const channelBase = (data.authState.channelName || "Create").split(" ")[0]
-    return [
-      { name: `@${channelBase}Max`, color: "#00D2FF", detail: "Top 1% Engagement", tag: "SUPERFAN" },
-      { name: `@${channelBase}Pro`, color: "#FF3399", detail: "Sub Shared 5+ Videos", tag: "LOYALTY" },
-      { name: `@${channelBase}User`, color: "#4FFF5B", detail: "Frequent Commenter", tag: "VIBE" },
-      { name: `@${channelBase}Fan`, color: "#FFE357", detail: "Early Supporter", tag: "LEGEND" },
-    ].slice(0, common.instance.size === "quarter" ? 1 : 4)
-  }, [comments, data.authState.channelName, common.instance.size])
-
-  return (
-    <WidgetShell {...common} icon={<Star size={22} />}>
-      <div className="vt-widget-fill" style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        {loading ? (
-          <div style={{ opacity: 0.3, fontSize: "10px", fontWeight: 900, textTransform: "uppercase" }}>Scanning for superfans...</div>
-        ) : (
-          displayFans.map((fan, idx) => (
-            <div
-              key={idx}
-              style={{
-                display: "flex",
-                gap: "8px",
-                alignItems: "center",
-                borderBottom: idx < displayFans.length - 1 ? "1px solid #eee" : "none",
-                paddingBottom: "4px",
-              }}
-            >
-              <div
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  background: fan.color,
-                  border: "2px solid #000",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "12px",
-                  fontWeight: 800,
-                  flexShrink: 0,
-                }}
-              >
-                {fan.name.charAt(1).toUpperCase()}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span style={{ fontSize: "11px", fontWeight: 800 }}>{fan.name}</span>
-                  <span style={{ fontSize: "8px", fontWeight: 900, background: fan.color, padding: "1px 4px", borderRadius: "4px", border: "1px solid #000" }}>{fan.tag}</span>
-                </div>
-                <div style={{ fontSize: "9px", fontWeight: 700, opacity: 0.5 }}>{fan.detail}</div>
-              </div>
-            </div>
-          ))
-        )}
-     </div>
-   </WidgetShell>
-  )
-}
-
-const RevenueMomentumWidget: React.FC<{
-  data: DashboardData
-  common: CommonWidgetProps
-}> = ({ data, common }) => {
-  const [metric, setMetric] = useState<"revenue" | "views" | "subscribers">("revenue")
-  const [renderedAt] = useState(() => Date.now())
-  
-  const weeklyData = useMemo(() => {
-    // Basic 4-week simulation based on canonicalRows if direct week-buckets aren't available
-    const weeks = [0, 0, 0, 0]
-    data.canonicalRows.forEach(row => {
-      const d = new Date(row.uploadDate)
-      const diff = (renderedAt - d.getTime()) / (1000 * 3600 * 24 * 7)
-      const weekIdx = Math.floor(diff)
-      if (weekIdx < 4) {
-        let val = 0
-        if (metric === "revenue") val = row.metrics.revenue?.value || 0
-        else if (metric === "views") val = row.metrics.views?.value || 0
-        else if (metric === "subscribers") val = row.metrics.subscribersGained?.value || 0
-        weeks[3 - weekIdx] += val
-      }
-    })
-    return weeks
-  }, [data.canonicalRows, metric, renderedAt])
-
-  const maxVal = Math.max(...weeklyData, 1)
-
-  return (
-    <WidgetShell {...common} icon={<TrendingUp size={22} />}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px", height: "100%" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "9px", fontWeight: 800, opacity: 0.4, textTransform: "uppercase" }}>Momentum Pulse</span>
-          <WidgetSelect
-            value={metric} 
-            onChange={(value) => setMetric(value as typeof metric)}
-            label="Momentum metric"
-            style={{ height: "24px", fontSize: "9px", padding: "0 4px", width: "auto" }}
-            options={[
-              { value: "revenue", label: "Revenue" },
-              { value: "views", label: "Views" },
-              { value: "subscribers", label: "Subs" },
-            ]}
-          />
-        </div>
-        
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1, justifyContent: "center" }}>
-          {weeklyData.map((val, i) => {
-            const pct = (val / maxVal) * 100
-            return (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                <span style={{ width: "20px", fontSize: "9px", fontWeight: 800 }}>W{i+1}</span>
-                <div style={{ flex: 1, height: "18px", border: "2px solid #000", borderRadius: "6px", background: "#f2f2f2", overflow: "hidden" }}>
-                  <div style={{ width: `${pct}%`, height: "100%", background: "#C9F830", borderRight: "2px solid #000" }} />
-                </div>
-                <span style={{ width: "35px", textAlign: "right", fontSize: "9px", fontWeight: 800 }}>
-                  {metric === "revenue" ? `$${val.toFixed(0)}` : formatHumanNumber(val)}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </WidgetShell>
-  )
-}
 
 export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   widget,
@@ -395,16 +160,20 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   onRemove: () => onRemoveWidget(widget.id),
  }
 
- if (widget.id === "app-verification-explainer") {
-  // Visibility belongs to the dashboard layout. Do not apply a second auth
-  // gate here: conflicting account snapshots previously left a visible grid
-  // slot rendering null even after the user chose Show All Widgets.
-  return <VerificationExplainerWidget common={common} onNavigate={onNavigate} />
- }
-
+ // Visibility belongs to the dashboard layout. Widgets must not apply a second
+ // auth gate of their own: conflicting account snapshots previously left the
+ // verification explainer's grid slot rendering null even after the user chose
+ // Show All Widgets.
  const LazyWidgetRenderer = LAZY_WIDGET_RENDERERS[widget.rendererKey]
  if (LazyWidgetRenderer) {
-  return <LazyWidgetRenderer {...common} data={data} editMode={editMode} />
+  return (
+   <LazyWidgetRenderer
+    {...common}
+    data={data}
+    editMode={editMode}
+    onNavigate={onNavigate}
+   />
+  )
  }
 
   // 28. REACH FUNNEL
@@ -1210,16 +979,6 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     </div>
    </WidgetShell>
   )
- }
-
- // 12. REVENUE MOMENTUM
- if (widget.id === "revenue-momentum") {
-  return <RevenueMomentumWidget data={data} common={common} />
- }
-
- // 13. SUPERFAN
- if (widget.id === "superfan-card") {
-  return <SuperfanCardWidget data={data} common={common} />
  }
 
  // 14. SETTINGS (merged: system + sync)

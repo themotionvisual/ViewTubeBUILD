@@ -208,9 +208,15 @@ if (check) {
     if (now > before) regressions.push(`${name}: ${before} -> ${now}`)
   }
   if (build && prev.build) {
+    // Chunk boundaries shift by a few bytes between builds for reasons that have
+    // nothing to do with the dashboard, so only flag a move that is both
+    // material in absolute terms and more than rounding in relative terms.
+    const tolerance = (before) => Math.max(512, Math.round(before * 0.01))
     for (const [file, { gzip }] of Object.entries(build)) {
       const before = prev.build[file]?.gzip
-      if (before && gzip > before) regressions.push(`${file} gzip: ${before} -> ${gzip}`)
+      if (before && gzip > before + tolerance(before)) {
+        regressions.push(`${file} gzip: ${before} -> ${gzip} (+${gzip - before} B)`)
+      }
     }
   }
   if (regressions.length) {

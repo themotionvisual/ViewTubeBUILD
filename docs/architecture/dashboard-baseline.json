@@ -57,7 +57,7 @@
     "duplicatedSelectorRoots": 68
   },
   "source": {
-    "WidgetRenderer.tsx": 1348,
+    "WidgetRenderer.tsx": 1107,
     "WidgetRegistry.ts": 1219,
     "WidgetPrimitives.tsx": 703,
     "useDashboardData.ts": 666,
@@ -70,8 +70,8 @@
     "registered": 59,
     "uniqueIds": 59,
     "duplicateIds": 0,
-    "lazyRenderers": 40,
-    "inlineRenderers": 19,
+    "lazyRenderers": 43,
+    "inlineRenderers": 16,
     "uncoveredIds": [],
     "orphanWidgetFiles": [
       "AdStackWidget",
@@ -80,29 +80,29 @@
     ]
   },
   "build": {
-    "Dashboard.js": {
-      "raw": 94446,
-      "gzip": 27193
-    },
     "Dashboard.css": {
       "raw": 189462,
       "gzip": 26332
     },
+    "Dashboard.js": {
+      "raw": 87649,
+      "gzip": 25334
+    },
     "UIReferenceLibraryWidget.js": {
       "raw": 20772,
-      "gzip": 5974
+      "gzip": 5975
     },
     "UIReferenceLibraryWidget.css": {
       "raw": 25752,
       "gzip": 3863
     },
-    "index.js": {
-      "raw": 190764,
-      "gzip": 55540
-    },
     "index.css": {
       "raw": 306337,
       "gzip": 44007
+    },
+    "index.js": {
+      "raw": 190764,
+      "gzip": 55537
     }
   }
 }
