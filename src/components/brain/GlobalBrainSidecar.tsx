@@ -48,19 +48,37 @@ export const GlobalBrainSidecar: React.FC = () => {
   if (typeof window !== "undefined") localStorage.setItem(OPEN_KEY, String(value))
  }
 
+ // On phones the sidecar covers the whole screen, so the header's minimize
+ // button is the only way out. Escape is a second one, and it closes the
+ // controls sheet first when that is layered on top.
+ useEffect(() => {
+  if (!open && !showControls) return
+  const onKeyDown = (event: KeyboardEvent) => {
+   if (event.key !== "Escape") return
+   if (showControls) {
+    setShowControls(false)
+    return
+   }
+   setOpen(false)
+   if (typeof window !== "undefined") localStorage.setItem(OPEN_KEY, "false")
+  }
+  window.addEventListener("keydown", onKeyDown)
+  return () => window.removeEventListener("keydown", onKeyDown)
+ }, [open, showControls])
+
  if (!controls.enabled) {
   return (
    <>
     <button
      type="button"
      onClick={() => setShowControls(true)}
-     className="fixed bottom-4 right-4 z-[80] inline-flex items-center gap-2 rounded-[10px] border-[3px] border-black bg-[#FFDA47] px-3 py-2 text-[9px] font-[1000] uppercase shadow-[4px_4px_0_0_#000]"
+     className="fixed bottom-4 right-4 z-[130] inline-flex items-center gap-2 rounded-[10px] border-[3px] border-black bg-[#FFDA47] px-3 py-2 text-[9px] font-[1000] uppercase shadow-[4px_4px_0_0_#000]"
      aria-label="Open Brain controls"
     >
      <Brain size={15} />Brain Off · Controls
     </button>
     {showControls ? (
-     <aside className="fixed bottom-3 right-3 z-[100] h-[min(680px,calc(100dvh-24px))] w-[min(440px,calc(100vw-24px))] overflow-hidden rounded-[16px] border-[3px] border-black bg-white shadow-[8px_8px_0_0_#000]">
+     <aside className="fixed bottom-3 right-3 z-[140] h-[min(680px,calc(100dvh-24px))] w-[min(440px,calc(100vw-24px))] overflow-hidden rounded-[16px] border-[3px] border-black bg-white shadow-[8px_8px_0_0_#000]">
       <BrainUserControlPanel open channelId={channelId} onClose={() => setShowControls(false)} onChange={setControls} />
      </aside>
     ) : null}
@@ -73,7 +91,7 @@ export const GlobalBrainSidecar: React.FC = () => {
    <button
     type="button"
     onClick={() => setOpenState(true)}
-    className="fixed bottom-4 right-4 z-[80] inline-flex items-center gap-2 rounded-[12px] border-[3px] border-black bg-[#C0F240] px-4 py-3 text-[10px] font-[1000] uppercase shadow-[5px_5px_0_0_#000] transition hover:-translate-y-0.5"
+    className="fixed bottom-4 right-4 z-[130] inline-flex items-center gap-2 rounded-[12px] border-[3px] border-black bg-[#C0F240] px-4 py-3 text-[10px] font-[1000] uppercase shadow-[5px_5px_0_0_#000] transition hover:-translate-y-0.5"
     aria-label="Open ViewTube Brain"
    >
     <Brain size={17} />Brain
@@ -82,7 +100,10 @@ export const GlobalBrainSidecar: React.FC = () => {
  }
 
  return (
-  <aside className="fixed bottom-3 right-3 z-[90] flex max-h-[calc(100dvh-24px)] w-[min(440px,calc(100vw-24px))] flex-col overflow-hidden rounded-[16px] border-[3px] border-black bg-white shadow-[8px_8px_0_0_#000] max-[760px]:inset-2 max-[760px]:max-h-none max-[760px]:w-auto" aria-label="ViewTube Brain sidecar">
+  <aside
+   className="fixed bottom-3 right-3 z-[130] flex max-h-[calc(100dvh-24px)] w-[min(440px,calc(100vw-24px))] flex-col overflow-hidden rounded-[16px] border-[3px] border-black bg-white shadow-[8px_8px_0_0_#000] max-[760px]:inset-2 max-[760px]:bottom-[max(8px,env(safe-area-inset-bottom))] max-[760px]:top-[max(8px,env(safe-area-inset-top))] max-[760px]:max-h-none max-[760px]:w-auto"
+   aria-label="ViewTube Brain sidecar"
+  >
    <header className="flex shrink-0 items-center gap-2 border-b-[3px] border-black bg-[#A96CFF] px-3 py-2">
     <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[8px] border-[2px] border-black bg-white"><Brain size={18} /></div>
     <div className="min-w-0 flex-1">
