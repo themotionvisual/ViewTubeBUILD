@@ -1002,7 +1002,8 @@ export const DASHBOARD_WIDGET_REGISTRY: WidgetDefinition[] = DASHBOARD_WIDGET_BA
    defaultHeight: defaultSlot?.height ?? widget.defaultHeight,
    rendererKey: widget.id,
    releaseTier: supportedOrder.has(widget.id) ? "supported" : "preview",
-   defaultVisible: supportedOrder.has(widget.id),
+   // Every registered widget ships visible; creators curate from Settings -> Dashboard Widgets.
+   defaultVisible: true,
    defaultOrder: supportedOrder.get(widget.id) ?? SUPPORTED_DASHBOARD_WIDGET_IDS.length + index,
    supportedSizes,
    supportedHeights,

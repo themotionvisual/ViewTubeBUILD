@@ -1,6 +1,6 @@
 import type { UnifiedAccountSnapshot } from "../../services/account/accountContracts"
 
-export type SettingsPanel = "overview" | "account" | "ai" | "billing" | "data" | "help"
+export type SettingsPanel = "overview" | "account" | "ai" | "widgets" | "billing" | "data" | "help"
 
 const SETTINGS_PANEL_ALIASES: Record<string, SettingsPanel> = {
   overview: "overview",
@@ -11,6 +11,9 @@ const SETTINGS_PANEL_ALIASES: Record<string, SettingsPanel> = {
   ai: "ai",
   "ai-brain-context": "ai",
   "api-keys": "ai",
+  widgets: "widgets",
+  "dashboard-widgets": "widgets",
+  dashboard: "widgets",
   billing: "billing",
   "billing-meter": "billing",
   data: "data",

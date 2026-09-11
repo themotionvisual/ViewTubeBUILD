@@ -141,6 +141,13 @@ export const normalizeDashboardLayout = (input: unknown): DashboardLayoutState =
 const getStorage = (): Storage | null =>
   typeof window === "undefined" ? null : window.localStorage
 
+export const revealDefaultVisibleWidgets = (
+  layout: DashboardLayoutState,
+): DashboardLayoutState => ({
+  ...layout,
+  hidden: layout.hidden.filter((id) => !DASHBOARD_WIDGET_BY_ID[id]?.defaultVisible),
+})
+
 export const loadDashboardLayout = (): DashboardLayoutState => {
   const storage = getStorage()
   if (!storage) return buildDefaultDashboardLayout()
@@ -151,8 +158,13 @@ export const loadDashboardLayout = (): DashboardLayoutState => {
     if (!raw) continue
     try {
       const parsed = JSON.parse(raw) as unknown
-      const layout = normalizeDashboardLayout(parsed)
+      let layout = normalizeDashboardLayout(parsed)
       if (key !== DASHBOARD_LAYOUT_STORAGE_KEY) {
+        // Migrating an older schema. Every widget is visible by default from v10
+        // on, so reveal anything the previous schema had hidden purely because it
+        // was not part of that version's default rows. The untouched payload is
+        // kept under the backup key so the prior curation is recoverable.
+        layout = revealDefaultVisibleWidgets(layout)
         storage.setItem(DASHBOARD_LAYOUT_BACKUP_KEY, JSON.stringify({ sourceKey: key, raw }))
         storage.setItem(DASHBOARD_LAYOUT_STORAGE_KEY, JSON.stringify(layout))
       }

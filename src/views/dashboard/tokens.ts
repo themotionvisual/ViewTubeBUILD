@@ -1,7 +1,8 @@
-export const DASHBOARD_SCHEMA_VERSION = 9
-export const DASHBOARD_LAYOUT_STORAGE_KEY = "vt_dashboard_layout_v9"
-export const DASHBOARD_LAYOUT_BACKUP_KEY = "vt_dashboard_layout_backup_v9"
+export const DASHBOARD_SCHEMA_VERSION = 10
+export const DASHBOARD_LAYOUT_STORAGE_KEY = "vt_dashboard_layout_v10"
+export const DASHBOARD_LAYOUT_BACKUP_KEY = "vt_dashboard_layout_backup_v10"
 export const LEGACY_DASHBOARD_LAYOUT_STORAGE_KEYS = [
+  "vt_dashboard_layout_v9",
   "vt_dashboard_layout_v8",
   "vt_dashboard_layout_v7",
 ] as const
