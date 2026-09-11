@@ -28,10 +28,14 @@ import { loadIntelligenceBrainContext, persistIntelligenceBrainArtifacts } from 
 import {
  IntelligenceGenerationError,
  resolveIntelligenceGenerationReadiness,
+ validateIntelligenceEvidenceScope,
 } from "./generationPolicy"
+import {
+ loadScopedIntelligenceHistory,
+ loadScopedIntelligenceReport,
+ persistScopedIntelligenceReport,
+} from "./reportStorage"
 
-const ULTIMATE_REPORT_STORAGE_KEY = "vt_ultimate_channel_report_v1"
-const ULTIMATE_REPORT_HISTORY_KEY = "vt_ultimate_generation_history_v1"
 const ULTIMATE_REPORT_EVENT = "vt_generate_ultimate_report"
 
 type IntelligenceHubProps = {
@@ -124,14 +128,10 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
  const [report, setReport] = useState<OracleReport | null>(null)
  const [keywordData, setKeywordData] = useState<KeywordAnalysis | null>(null)
  const [ultimateReport, setUltimateReport] =
-  useState<UltimateChannelReport | null>(() => {
-   try {
-    const scopedKey = analyticsContext.channelId ? `${ULTIMATE_REPORT_STORAGE_KEY}:${analyticsContext.channelId}` : ""
-    const raw = (scopedKey && localStorage.getItem(scopedKey)) || localStorage.getItem(ULTIMATE_REPORT_STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as UltimateChannelReport) : null
-   } catch {
-    return null
-   }
+ useState<UltimateChannelReport | null>(() => {
+   return typeof localStorage === "undefined"
+    ? null
+    : loadScopedIntelligenceReport(localStorage, analyticsContext.channelId)
   })
  const [history, setHistory] = useState<IntelligenceReportGenerationRecord[]>([])
 const [nexusContext, setNexusContext] = useState("")
@@ -189,13 +189,7 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
  }
 
  const readHistory = (channelId: string | null) => {
-  try {
-   const raw = localStorage.getItem(`${ULTIMATE_REPORT_HISTORY_KEY}:${channelId}`)
-   const parsed = raw ? JSON.parse(raw) : []
-   setHistory(Array.isArray(parsed) ? parsed as IntelligenceReportGenerationRecord[] : [])
-  } catch {
-   setHistory([])
-  }
+  setHistory(loadScopedIntelligenceHistory(localStorage, channelId) as IntelligenceReportGenerationRecord[])
  }
 
  const runOmniBrain = async () => {
@@ -215,6 +209,13 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
   setPreflight(null)
   try {
    const evidence = buildEvidence()
+   const scopeFailure = validateIntelligenceEvidenceScope({
+    evidenceChannelId: evidence.channelId,
+    evidenceSnapshotId: evidence.snapshotId,
+    activeChannelId: analyticsContext.channelId,
+    activeSnapshotId: analyticsContext.snapshotId,
+   })
+   if (scopeFailure) throw new IntelligenceGenerationError(scopeFailure, generationId)
    setActiveEvidence(evidence)
    emitSignal("intelligence-hub", "ULTIMATE_REPORT_STARTED", {
     generationId,
@@ -258,7 +259,7 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
    setSectionStates(unifiedReport.sectionStates || [])
    setGenerationEvents(unifiedReport.generationEvents || [])
    setPreflight(unifiedReport.meta.diagnostics.preflight || null)
-   localStorage.setItem(`${ULTIMATE_REPORT_STORAGE_KEY}:${evidence.channelId}`, JSON.stringify(unifiedReport))
+   persistScopedIntelligenceReport(localStorage, unifiedReport)
    readHistory(evidence.channelId)
    emitSignal("intelligence-hub", brainUpdate.status === "persisted" ? "ULTIMATE_REPORT_GENERATED" : "ULTIMATE_REPORT_BRAIN_DEGRADED", {
     generationId: unifiedReport.meta.generationId,
@@ -345,7 +346,8 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
    controller.signal.throwIfAborted()
    const updatedReport = { ...ultimateReport, brainUpdate: result }
    setUltimateReport(updatedReport)
-   localStorage.setItem(`${ULTIMATE_REPORT_STORAGE_KEY}:${activeEvidence.channelId}`, JSON.stringify(updatedReport))
+   persistScopedIntelligenceReport(localStorage, updatedReport)
+   readHistory(activeEvidence.channelId)
    setGenerationStatus(result.status === "persisted" ? "AI Brain persistence completed." : result.notes.join(" "))
   } catch (error) {
    if (!(error instanceof DOMException && error.name === "AbortError")) {
@@ -392,13 +394,13 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
 
  useEffect(() => {
   readHistory(analyticsContext.channelId)
-  try {
-   const scopedKey = analyticsContext.channelId ? `${ULTIMATE_REPORT_STORAGE_KEY}:${analyticsContext.channelId}` : ""
-   const scoped = scopedKey ? localStorage.getItem(scopedKey) : null
-   if (scoped) setUltimateReport(JSON.parse(scoped) as UltimateChannelReport)
-  } catch {
-   // Keep the currently visible report when scoped history cannot be read.
-  }
+  const scoped = loadScopedIntelligenceReport(localStorage, analyticsContext.channelId)
+  setUltimateReport(scoped)
+  setActiveEvidence(null)
+  setDiagnosis(null)
+  setReport(null)
+  setKeywordData(null)
+  setPreflight(scoped?.meta.diagnostics.preflight || null)
  }, [analyticsContext.channelId])
 
  const isGenerated = diagnosis && report && keywordData

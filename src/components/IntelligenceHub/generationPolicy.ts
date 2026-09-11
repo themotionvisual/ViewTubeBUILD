@@ -86,6 +86,36 @@ export type IntelligenceGenerationReadiness = {
  message?: string
 }
 
+export const validateIntelligenceEvidenceScope = ({
+ evidenceChannelId,
+ evidenceSnapshotId,
+ activeChannelId,
+ activeSnapshotId,
+}: {
+ evidenceChannelId: string | null
+ evidenceSnapshotId: string
+ activeChannelId: string | null
+ activeSnapshotId: string
+}): IntelligenceAiFailure | null => {
+ if (!evidenceChannelId || evidenceChannelId !== activeChannelId) {
+  return {
+   code: "AI_REQUEST_INVALID",
+   message: "The analytics evidence belongs to a different or unresolved channel. Refresh Analytics before generating.",
+   retryable: false,
+   recoveryAction: "inspect_request",
+  }
+ }
+ if (!evidenceSnapshotId || evidenceSnapshotId !== activeSnapshotId) {
+  return {
+   code: "AI_REQUEST_INVALID",
+   message: "The analytics snapshot changed before generation started. Refresh the evidence and generate again.",
+   retryable: true,
+   recoveryAction: "retry",
+  }
+ }
+ return null
+}
+
 export const resolveIntelligenceGenerationReadiness = ({
  aiConfigured,
  channelId,
