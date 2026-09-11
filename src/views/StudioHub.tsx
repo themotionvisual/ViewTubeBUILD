@@ -5,6 +5,7 @@ import VideoPublisher from "./VideoPublisher"
 import ThumbnailStudio from "./ThumbnailStudio"
 import MediaAnalyzer from "./MediaAnalyzer"
 import HookGenerator from "./HookGenerator"
+import ScriptArchitect from "./ScriptArchitect"
 import ActionableTactics from "./ActionableTactics"
 import PreLaunchPriming from "../components/PreLaunchPriming"
 import VideoManager from "./VideoManager"
@@ -97,6 +98,10 @@ const StudioHub: React.FC = () => {
     <PreLaunchPriming collapsible isOpenInitial={false} paletteIndex={7} />
     <HookGenerator collapsible isOpenInitial={false} paletteIndex={8} />
     <ActionableTactics collapsible isOpenInitial={false} paletteIndex={9} />
+
+    <div id="script-architect" className="scroll-mt-24">
+     <ScriptArchitect collapsible isOpenInitial={false} paletteIndex={10} />
+    </div>
    </div>
   </div>
  )

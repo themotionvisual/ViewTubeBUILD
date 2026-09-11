@@ -723,6 +723,39 @@ export interface ThumbnailHistoryItem {
  timestamp: number
 }
 
+export interface ScriptBeat {
+ id: string
+ label: string
+ purpose: string
+ script: string
+ proof: string
+ transition: string
+ durationEstimate: number
+ retentionRisk: "low" | "medium" | "high"
+ riskNote: string
+}
+
+export interface ScriptBlueprint {
+ title: string
+ promise: string
+ runtimeEstimate: number
+ beats: ScriptBeat[]
+ proofOrder: string[]
+ weakTransitions: string[]
+ missingProof: string[]
+ storyboardHandoff: string[]
+}
+
+export interface ScriptArchitectInput {
+ angle: string
+ targetViewer: string
+ proofPoints: string
+ format: string
+ beatCount: number
+ runtimeTargetMinutes: number
+ transitionNotes: string
+}
+
 export interface Scene {
  id: string
  name: string

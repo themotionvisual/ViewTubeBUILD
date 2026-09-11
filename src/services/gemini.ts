@@ -3,6 +3,7 @@ import {
  Type,
  ThinkingLevel,
  GenerateContentResponse,
+ type Schema,
 } from "@google/genai"
 import { AspectRatio, ImageSize } from "@/types"
 import type {
@@ -17,6 +18,9 @@ import type {
  ShortsConcept,
  ProjectPlan,
  Scene,
+ ScriptArchitectInput,
+ ScriptBeat,
+ ScriptBlueprint,
  Tactic,
  Trend,
  CreatorStrategyInput,
@@ -40,6 +44,7 @@ import {
  KEYWORD_LAB_INSTRUCTIONS,
  END_SCREEN_CONCEPT_INSTRUCTIONS,
  INTEREST_SEEDING_INSTRUCTIONS,
+ SCRIPT_ARCHITECT_INSTRUCTIONS,
 } from "@/services/prompts"
 import { geminiQueue } from "../utils/RequestQueue"
 import { getVaultKey } from "./keyVault"
@@ -3377,6 +3382,175 @@ export const generateStoryboard = async (
    )
    const corrected = await selfCorrectJson(text, responseSchema)
    return processScenes(corrected)
+  }
+ })
+}
+
+export const generateScriptBlueprint = async (
+ input: ScriptArchitectInput,
+ brain?: unknown,
+): Promise<ScriptBlueprint> => {
+ const journalContext = getJournalKnowledge(brain)
+ const runtimeTargetSeconds = Math.max(15, Math.round(input.runtimeTargetMinutes * 60))
+
+ const responseSchema: Schema = {
+  type: Type.OBJECT,
+  properties: {
+   title: { type: Type.STRING, description: "Working title for this script structure." },
+   promise: {
+    type: Type.STRING,
+    description: "The single promise the opening makes to the viewer.",
+   },
+   runtimeEstimate: {
+    type: Type.NUMBER,
+    description: "Total estimated runtime in seconds across all beats.",
+   },
+   beats: {
+    type: Type.ARRAY,
+    items: {
+     type: Type.OBJECT,
+     properties: {
+      id: { type: Type.STRING },
+      label: { type: Type.STRING, description: "Short beat name, e.g. Cold Open." },
+      purpose: { type: Type.STRING, description: "The one viewer outcome this beat owns." },
+      script: { type: Type.STRING, description: "Spoken lines or narration for this beat." },
+      proof: {
+       type: Type.STRING,
+       description: "The evidence, example, or demonstration used inside this beat.",
+      },
+      transition: {
+       type: Type.STRING,
+       description: "The open loop carried into the next beat.",
+      },
+      durationEstimate: { type: Type.NUMBER, description: "Estimated seconds for this beat." },
+      retentionRisk: { type: Type.STRING, description: "low, medium, or high" },
+      riskNote: { type: Type.STRING, description: "Why the beat carries that risk level." },
+     },
+     required: [
+      "id",
+      "label",
+      "purpose",
+      "script",
+      "proof",
+      "transition",
+      "durationEstimate",
+      "retentionRisk",
+      "riskNote",
+     ],
+    },
+   },
+   proofOrder: {
+    type: Type.ARRAY,
+    items: { type: Type.STRING },
+    description: "Proof points in the order the viewer receives them.",
+   },
+   weakTransitions: {
+    type: Type.ARRAY,
+    items: { type: Type.STRING },
+    description: "Named beats whose handoff is flat or unmotivated.",
+   },
+   missingProof: {
+    type: Type.ARRAY,
+    items: { type: Type.STRING },
+    description: "Claims asserted in the script with no supporting proof supplied.",
+   },
+   storyboardHandoff: {
+    type: Type.ARRAY,
+    items: { type: Type.STRING },
+    description: "Scene, asset, and motion notes for the storyboard and editor handoff.",
+   },
+  },
+  required: [
+   "title",
+   "promise",
+   "runtimeEstimate",
+   "beats",
+   "proofOrder",
+   "weakTransitions",
+   "missingProof",
+   "storyboardHandoff",
+  ],
+ }
+
+ const prompt = `
+    ${SCRIPT_ARCHITECT_INSTRUCTIONS}
+
+    CREATOR CONTEXT (From AI Journal):
+    ${journalContext}
+
+    CHOSEN ANGLE:
+    ${input.angle}
+
+    TARGET VIEWER: ${input.targetViewer || "not specified"}
+    FORMAT: ${input.format}
+    RUNTIME TARGET: ${runtimeTargetSeconds} seconds
+    BEAT COUNT: ${input.beatCount}
+
+    PROOF POINTS AVAILABLE:
+    ${input.proofPoints || "none supplied - flag every unsupported claim in missingProof"}
+
+    TRANSITION / CONSTRAINT NOTES:
+    ${input.transitionNotes || "none supplied"}
+
+    INSTRUCTIONS:
+    1. Produce exactly ${input.beatCount} beats in running order.
+    2. Keep the summed beat durations within 15% of the runtime target.
+    3. Use only the supplied proof points. Never invent statistics, sources, or results.
+    4. Name every weak transition and every unsupported claim, even when the script reads well.
+  `
+
+ return await executeWithRetry(async () => {
+  const result = await getAiClient().models.generateContent({
+   model: getActiveModel("analysis"),
+   contents: [{ role: "user", parts: [{ text: prompt }] }],
+   config: {
+    responseMimeType: "application/json",
+    responseSchema: responseSchema,
+    thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
+   },
+  })
+
+  const text = result.text
+  if (!text) throw new Error("No script blueprint generated")
+
+  const toStringList = (value: unknown): string[] =>
+   Array.isArray(value) ? value.map((entry) => String(entry)) : []
+
+  const normalize = (raw: unknown): ScriptBlueprint => {
+   const parsed = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>
+   const rawBeats = Array.isArray(parsed.beats) ? (parsed.beats as Record<string, unknown>[]) : []
+   const beats: ScriptBeat[] = rawBeats.map((beat, index) => {
+    const risk = String(beat?.retentionRisk ?? "medium").toLowerCase()
+    return {
+     id: beat?.id ? String(beat.id) : `beat-${index + 1}`,
+     label: String(beat?.label ?? `Beat ${index + 1}`),
+     purpose: String(beat?.purpose ?? ""),
+     script: String(beat?.script ?? ""),
+     proof: String(beat?.proof ?? ""),
+     transition: String(beat?.transition ?? ""),
+     durationEstimate: Number(beat?.durationEstimate) || 0,
+     retentionRisk: risk === "low" || risk === "high" ? risk : "medium",
+     riskNote: String(beat?.riskNote ?? ""),
+    }
+   })
+   const summedRuntime = beats.reduce((total, beat) => total + beat.durationEstimate, 0)
+   return {
+    title: String(parsed.title || input.angle || "Script blueprint"),
+    promise: String(parsed.promise ?? ""),
+    runtimeEstimate: Number(parsed.runtimeEstimate) || summedRuntime,
+    beats,
+    proofOrder: toStringList(parsed.proofOrder),
+    weakTransitions: toStringList(parsed.weakTransitions),
+    missingProof: toStringList(parsed.missingProof),
+    storyboardHandoff: toStringList(parsed.storyboardHandoff),
+   }
+  }
+
+  try {
+   return normalize(JSON.parse(cleanJsonString(text)))
+  } catch {
+   console.warn("[Gemini] Script blueprint JSON parse failed, attempting self-correction...")
+   return normalize(await selfCorrectJson(text, responseSchema))
   }
  })
 }

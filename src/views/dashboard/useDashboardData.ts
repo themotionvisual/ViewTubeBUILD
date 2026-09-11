@@ -504,6 +504,7 @@ export const useDashboardData = () => {
     { label: "Pre-Launch Priming", to: "/studio#pre-launch-priming", paletteIndex: 7, icon: "Rocket", isTool: true },
     { label: "Hook Generator", to: "/studio#hook-generator", paletteIndex: 8, icon: "Magnet", isTool: true },
     { label: "Tactics Engine", to: "/studio#tactics-engine", paletteIndex: 9, icon: "WandSparkles", isTool: true },
+    { label: "Script Architect", to: "/studio#script-architect", paletteIndex: 10, icon: "NotebookPen", isTool: true },
 
     // Pages (Single color with light/dark toggle)
     { label: "Studio", to: "/studio", paletteIndex: 1, icon: "Layers", isTool: false },
