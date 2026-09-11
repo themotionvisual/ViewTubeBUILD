@@ -2,6 +2,7 @@ import type { BrainConfidenceLevel } from "../../types"
 import { loadBrainChannelProfile } from "./ChannelProfileAdapter"
 import { listBrainOutcomes, summarizeBrainOutcomes, type BrainOutcomeRecord } from "./BrainOutcomeLedger"
 import { getBrainWorkflowResults, type BrainWorkflowResult } from "../brainWorkflowLearning"
+import { deriveAlgorithmLearningCandidates } from "./AlgorithmLearningCandidates"
 
 export type ChannelIntelligencePatternKind =
  | "workflow_strength"
@@ -9,6 +10,7 @@ export type ChannelIntelligencePatternKind =
  | "creator_preference"
  | "creator_avoidance"
  | "validated_claim"
+ | "measured_learning_candidate"
 
 export interface ChannelIntelligencePattern {
  id: string
@@ -114,6 +116,7 @@ export const deriveChannelIntelligencePatterns = (input: {
  workflowResults: BrainWorkflowResult[]
  outcomes: BrainOutcomeRecord[]
  learnedClaims?: Array<{ id: string; value: string; confidence?: BrainConfidenceLevel }>
+ measuredCandidates?: ReturnType<typeof deriveAlgorithmLearningCandidates>
 }): ChannelIntelligencePattern[] => {
  const claims: ChannelIntelligencePattern[] = (input.learnedClaims || []).slice(0, 12).map((claim) => ({
   id: `validated-claim:${claim.id}`,
@@ -123,8 +126,20 @@ export const deriveChannelIntelligencePatterns = (input: {
   evidenceCount: 1,
   evidenceIds: [claim.id],
  }))
+ const measured: ChannelIntelligencePattern[] = (input.measuredCandidates || [])
+  .filter((candidate) => candidate.status === "candidate")
+  .slice(0, 12)
+  .map((candidate) => ({
+   id: `measured:${candidate.id}`,
+   kind: "measured_learning_candidate",
+   statement: candidate.statement,
+   confidence: candidate.confidence,
+   evidenceCount: candidate.sampleSize,
+   evidenceIds: candidate.evidenceIds,
+  }))
  return [
   ...claims,
+  ...measured,
   ...workflowPatternRows(input.workflowResults),
   ...outcomeToolPatterns(input.outcomes),
  ]
@@ -136,6 +151,7 @@ export const buildChannelIntelligenceSnapshot = async (
  const profile = await loadBrainChannelProfile(channelId)
  const outcomes = listBrainOutcomes(channelId)
  const workflowResults = getBrainWorkflowResults(channelId)
+ const measuredCandidates = deriveAlgorithmLearningCandidates(channelId)
  const profileSummary = [
   profile.toolContextPack ? JSON.stringify(profile.toolContextPack) : "",
   profile.knowledgeModel ? JSON.stringify(profile.knowledgeModel) : "",
@@ -154,6 +170,7 @@ export const buildChannelIntelligenceSnapshot = async (
   patterns: deriveChannelIntelligencePatterns({
    workflowResults,
    outcomes,
+   measuredCandidates,
    learnedClaims: profile.memoryClaims.map((claim) => ({
     id: claim.id,
     value: claim.value,
