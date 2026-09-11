@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "viewtube.mission.v2",
+  "missionId": "VT-MISSION-OBSERVATORY-dashboard-evidence",
+  "taskIds": [],
+  "objective": "Standardize one analytics dashboard workflow so widgets, tables, Brain evidence and exports resolve the same canonical VT-SYNC/analytics-canon values and provenance.",
+  "why": "Use a real Observatory-shaped mission to prove the Crown contract across dashboard, analytics and UI boundaries.",
+  "nonGoals": ["Do not create a new analytics store.", "Do not rename public widget IDs.", "Do not change metric definitions or scopes."],
+  "domains": ["dashboard", "analytics", "visualization", "ui"],
+  "canonicalOwners": {"rawAnalytics": "VT-SYNC", "analyticsConsumer": "analytics-canon", "dashboard": "src/views/dashboard", "brainEvidence": "src/services/brain"},
+  "acceptance": ["Equivalent views resolve identical metric values, time windows, grain and provenance.", "Persisted widget identity and layout migration behavior remain stable.", "Loading, empty, partial, stale, blocked and error states remain explicit.", "Dashboard contract tests and production build pass."],
+  "authorization": {"externalWrites": false, "deploy": false, "billingChange": false, "oauthScopeChange": false},
+  "risk": "medium",
+  "rollback": "Revert only mission-scoped branch commits; preserve current registry IDs, layout schema and canonical adapters.",
+  "state": "draft"
+}
