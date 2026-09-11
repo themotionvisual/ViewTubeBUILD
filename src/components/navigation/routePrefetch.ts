@@ -25,6 +25,7 @@ const factories: Record<string, PrefetchFactory> = {
  "/editor": () => import("../../views/EditorV1Page"),
  "/settings": () => import("../../views/Settings"),
  "/user-guide": () => import("../../views/UserGuide"),
+ "/crown": () => import("../../views/CrownControlRoom"),
 }
 
 export const prefetchRoute = (path: string): void => {
