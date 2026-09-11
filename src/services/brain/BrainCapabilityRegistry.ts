@@ -5,7 +5,11 @@ import { readBrainUserControls } from "./BrainUserControls"
 
 export const BRAIN_CAPABILITY_REGISTRY: BrainCapabilityDefinition[] = [
  { id: "channel-profile", label: "Channel profile", description: "Uses inferred niche, pillars, formats, and creator goals.", intents: ["strategy", "audience", "content_analysis"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
+ { id: "channel-intelligence", label: "Channel intelligence", description: "Uses durable profile context, workflow outcomes, creator choices, and validated repeated channel patterns.", intents: ["strategy", "analytics", "audience", "content_analysis"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
  { id: "analytics-diagnosis", label: "Analytics diagnosis", description: "Reads known channel and video performance without inventing missing values.", intents: ["analytics", "revenue"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
+ { id: "signal-anomaly-intelligence", label: "Signal / anomaly intelligence", description: "Explains evidence-backed unusual analytics changes while keeping observation separate from causal hypothesis or creator action.", intents: ["analytics", "strategy", "revenue", "audience"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
+ { id: "opportunity-intelligence", label: "Opportunity intelligence", description: "Identifies channel-relevant openings such as emerging demand, catalog gaps, session adjacency, and reusable audience interest even when they are not anomalies.", intents: ["strategy", "seo", "audience", "content_analysis"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
+ { id: "algorithm-priming", label: "Algorithm priming", description: "Builds proactive pre-launch, launch, post-launch, session, derivative, and learning workflows for a specific video/project.", intents: ["strategy", "publishing", "content_generation"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
  { id: "top-performer-mining", label: "Top performer mining", description: "Finds repeatable patterns in proven videos.", intents: ["strategy", "content_analysis", "seo"], maximumInvocationsPerTurn: 1, requiresChannelData: true },
  { id: "audience-promise", label: "Audience promise", description: "Connects topics and formats to a clear viewer payoff.", intents: ["audience", "strategy", "publishing"], maximumInvocationsPerTurn: 1 },
  { id: "seo-opportunity", label: "SEO opportunity", description: "Builds channel-relevant title, topic, and search opportunities.", intents: ["seo", "publishing"], maximumInvocationsPerTurn: 1 },
@@ -29,8 +33,8 @@ const capabilityAllowedByCreator = (
  controls: ReturnType<typeof readBrainUserControls>,
 ): boolean => {
  if (!controls.enabled) return false
- if (!controls.personalization && ["channel-profile", "journal-memory", "goal-coach"].includes(capability.id)) return false
- if (!controls.allowAnalytics && ["analytics-diagnosis", "top-performer-mining"].includes(capability.id)) return false
+ if (!controls.personalization && ["channel-profile", "channel-intelligence", "journal-memory", "goal-coach"].includes(capability.id)) return false
+ if (!controls.allowAnalytics && ["analytics-diagnosis", "top-performer-mining", "signal-anomaly-intelligence", "channel-intelligence"].includes(capability.id)) return false
  return true
 }
 
