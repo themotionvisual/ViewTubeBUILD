@@ -29,6 +29,7 @@ import {
 import { resolvePublicChannel } from "../services/publicHandleMode"
 import type { SubscriptionPlanId } from "../services/subscriptionPlans"
 import { SettingsHelpSection } from "./settings/SettingsHelpSection"
+import { DashboardWidgetsSettingsSection } from "./settings/DashboardWidgetsSettingsSection"
 import { UnifiedAccountSettingsSection } from "./settings/UnifiedAccountSettingsSection"
 import {
   resolveSettingsPanel,
@@ -372,6 +373,7 @@ const Settings: React.FC = () => {
         showKey={showKey}
       />
 
+      {activePanel === "widgets" ? <DashboardWidgetsSettingsSection /> : null}
       {activePanel === "help" ? <SettingsHelpSection onNavigate={navigate} /> : null}
 
       {confirmation ? (

@@ -30,6 +30,7 @@ import {
   ShieldCheck,
   Zap,
  } from "lucide-react"
+import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import { useVideoComments } from "./useVideoComments"
 import type { DashboardData } from "./useDashboardData"
 import type {
@@ -377,6 +378,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   onRemoveWidget,
   dashboardControls,
 }) => {
+  const account = useUnifiedAccount()
   const timeWindows = ["7 DAYS", "14 DAYS", "28 DAYS", "60 DAYS", "90 DAYS", "180 DAYS", "365 DAYS", "LIFETIME"];
   const [kpiTimeWindowIdx, setKpiTimeWindowIdx] = useState(2);
 

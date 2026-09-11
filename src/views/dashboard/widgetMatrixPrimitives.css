@@ -1,0 +1,323 @@
+/* Widget Library v12 matrix primitives.
+   Loaded after widgetPrimitiveTones.css so the shared --vt-tone-* tokens are
+   already resolved. Every control here is a .vt-sized-control, so the exact
+   height lattice in widgetPrimitiveExactHeights.css owns its box height and
+   these rules only describe the interior. */
+
+.widget-icon-button,
+.widget-icon-badge,
+.widget-stepper,
+.widget-pagination,
+.widget-split-badge,
+.widget-search-input,
+.widget-live-badge,
+.widget-spectrum-fill-badge,
+.widget-toggle-switch,
+.widget-radio,
+.widget-checkbox {
+  box-sizing: border-box;
+  font-family: inherit;
+  color: var(--vt-tone-ink, var(--widget-ink, #222));
+  transition: background 160ms ease, border-color 160ms ease, transform 90ms linear,
+    box-shadow 90ms linear;
+}
+
+/* ── Square icon button / badge ─────────────────────────────── */
+.widget-icon-button,
+.widget-icon-badge {
+  aspect-ratio: 1 / 1;
+  width: var(--vt-primitive-height);
+  min-width: var(--vt-primitive-height);
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid var(--vt-tone-stroke, currentColor);
+  border-radius: 6px;
+  background: var(--vt-tone-bg, #fff);
+  cursor: pointer;
+}
+.widget-icon-badge { cursor: default; }
+.widget-icon-button:hover:not(:disabled) { filter: brightness(0.97); }
+.widget-icon-button:active:not(:disabled) { transform: translate(1px, 1px); }
+.widget-icon-button:disabled { opacity: 0.45; cursor: not-allowed; }
+.widget-icon-button-glyph {
+  display: grid;
+  place-items: center;
+  width: 90%;
+  height: 90%;
+}
+.widget-icon-button-glyph > svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* ── Stepper ────────────────────────────────────────────────── */
+.widget-stepper,
+.widget-pagination {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 2px solid var(--vt-tone-stroke, currentColor);
+  border-radius: 6px;
+  background: #fff;
+  font-weight: 900;
+  line-height: 1;
+}
+.widget-stepper-step {
+  aspect-ratio: 1 / 1;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: var(--vt-tone-fill, var(--widget-color, #34cdea));
+  color: inherit;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.widget-stepper-step:hover:not(:disabled) { filter: brightness(0.95); }
+.widget-stepper-step:disabled { opacity: 0.4; cursor: not-allowed; }
+.widget-stepper-value {
+  display: grid;
+  place-items: center;
+  padding: 0 0.75em;
+  border-inline: 2px solid var(--vt-tone-stroke, currentColor);
+  font-variant-numeric: tabular-nums;
+  background: #fff;
+}
+
+/* ── Pagination ─────────────────────────────────────────────── */
+.widget-pagination-page {
+  min-width: var(--vt-primitive-height);
+  padding: 0 0.4em;
+  border: 0;
+  border-inline-end: 2px solid var(--vt-tone-stroke, currentColor);
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.widget-pagination-page:last-child { border-inline-end: 0; }
+.widget-pagination-page:hover:not(.is-active) {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 22%, white);
+}
+.widget-pagination-page.is-active {
+  background: var(--vt-tone-fill, var(--widget-color, #34cdea));
+}
+
+/* ── Split-left badge ───────────────────────────────────────── */
+.widget-split-badge,
+.widget-search-input {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 2px solid var(--vt-tone-stroke, currentColor);
+  border-radius: 6px;
+  background: var(--vt-tone-bg, #fff);
+}
+.widget-split-badge-icon,
+.widget-search-input-icon {
+  aspect-ratio: 1 / 1;
+  height: 100%;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-inline-end: 2px solid var(--vt-tone-stroke, currentColor);
+  background: var(--vt-tone-fill, var(--widget-color, #34cdea));
+}
+.widget-split-badge-icon > svg,
+.widget-search-input-icon > svg {
+  width: 68%;
+  height: 68%;
+  stroke: currentColor;
+  fill: none;
+}
+.is-icon-white-on-color > .widget-split-badge-icon,
+.is-icon-white-on-color > .widget-search-input-icon { color: #fff; }
+.is-icon-color-on-light > .widget-split-badge-icon,
+.is-icon-color-on-light > .widget-search-input-icon {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 20%, white);
+  color: var(--widget-ink, #222);
+}
+.widget-split-badge-label {
+  display: grid;
+  place-items: center;
+  padding: 0 0.7em;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* ── Split-left search bar ──────────────────────────────────── */
+.widget-search-input { min-width: 140px; background: #fff; }
+.widget-search-input > input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  padding: 0 0.6em;
+  background: transparent;
+  color: var(--vt-tone-ink, var(--widget-ink, #222));
+  font: inherit;
+  font-weight: 700;
+  outline: none;
+}
+.widget-search-input > input::-webkit-search-cancel-button { cursor: pointer; }
+.widget-search-input:focus-within {
+  border-color: var(--widget-color, #34cdea);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--widget-color, #34cdea) 30%, transparent);
+}
+
+/* ── Live badge ─────────────────────────────────────────────── */
+.widget-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0 0.75em;
+  border-radius: 999px;
+  background: var(--vt-tone-fill, var(--widget-color, #34cdea));
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.widget-live-badge-dot {
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 999px;
+  background: currentColor;
+  animation: widget-live-pulse 1.6s ease-in-out infinite;
+}
+@keyframes widget-live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .widget-live-badge-dot { animation: none; }
+}
+
+/* ── 12-colour borderless fill badge, white text ────────────── */
+.widget-spectrum-fill-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75em;
+  border: 0;
+  border-radius: 6px;
+  background: var(--widget-spectrum-fill, #528FFA);
+  color: #fff;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+/* ── Toggle switch ──────────────────────────────────────────── */
+.widget-toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: calc(var(--vt-primitive-height) * 1.7);
+  min-width: calc(var(--vt-primitive-height) * 1.7);
+  padding: 0;
+  border: 2px solid var(--vt-tone-stroke, currentColor);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--widget-ink, #222) 12%, #fff);
+  cursor: pointer;
+}
+.widget-toggle-switch.is-on { background: var(--vt-tone-fill, var(--widget-color, #34cdea)); }
+.widget-toggle-switch:disabled { opacity: 0.45; cursor: not-allowed; }
+.widget-toggle-switch-knob {
+  position: absolute;
+  inset-block: 2px;
+  inset-inline-start: 2px;
+  aspect-ratio: 1 / 1;
+  height: calc(100% - 4px);
+  border: 1.5px solid var(--vt-tone-stroke, currentColor);
+  border-radius: 999px;
+  background: #fff;
+  transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.widget-toggle-switch.is-on .widget-toggle-switch-knob {
+  transform: translateX(calc(var(--vt-primitive-height) * 0.7));
+}
+@media (prefers-reduced-motion: reduce) {
+  .widget-toggle-switch-knob { transition: none; }
+}
+
+/* ── Radio + checkbox ───────────────────────────────────────── */
+.widget-radio,
+.widget-checkbox {
+  aspect-ratio: 1 / 1;
+  width: var(--vt-primitive-height);
+  min-width: var(--vt-primitive-height);
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid var(--vt-tone-stroke, currentColor);
+  background: #fff;
+  cursor: pointer;
+}
+.widget-radio { border-radius: 999px; }
+.widget-checkbox { border-radius: 3px; }
+.widget-radio:disabled,
+.widget-checkbox:disabled { opacity: 0.45; cursor: not-allowed; }
+.widget-radio-dot {
+  width: 55%;
+  height: 55%;
+  border-radius: 999px;
+  background: transparent;
+  transition: background 160ms ease;
+}
+.widget-radio.is-on .widget-radio-dot { background: var(--vt-tone-fill, var(--widget-color, #34cdea)); }
+.widget-checkbox.is-on { background: var(--vt-tone-fill, var(--widget-color, #34cdea)); }
+.widget-checkbox-mark {
+  display: grid;
+  place-items: center;
+  width: 72%;
+  height: 72%;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+.widget-checkbox.is-on .widget-checkbox-mark { opacity: 1; }
+.widget-checkbox-mark > svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
+
+/* ── 18px rule: filled, borderless, shadowless ──────────────── */
+.is-height-18.widget-icon-button,
+.is-height-18.widget-icon-badge,
+.is-height-18.widget-stepper,
+.is-height-18.widget-pagination,
+.is-height-18.widget-split-badge,
+.is-height-18.widget-search-input,
+.is-height-18.widget-toggle-switch,
+.is-height-18.widget-radio,
+.is-height-18.widget-checkbox {
+  border-width: 0;
+  box-shadow: none;
+}
+.is-height-18 .widget-stepper-value { border-inline-width: 0; }
+.is-height-18 .widget-pagination-page { border-inline-end-width: 0; }
+.is-height-18 .widget-split-badge-icon,
+.is-height-18 .widget-search-input-icon { border-inline-end-width: 0; }
+.is-height-18 .widget-toggle-switch-knob { border-width: 0; }
+
+/* Visually hidden label text for controls whose label is not rendered. */
+.vt-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

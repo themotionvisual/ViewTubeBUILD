@@ -15,7 +15,7 @@ import {
   LockKeyhole,
   ShieldCheck,
   Sparkles,
-  Trash2,
+  Trash2, LayoutGrid,
 } from "lucide-react"
 import { AccountActionButton } from "../../components/account/AccountActionButton"
 import { AIModelSelector } from "../../components/ui/AIModelSelector"
@@ -37,6 +37,7 @@ const PANELS: Array<{ id: SettingsPanel; label: string; description: string; ico
   { id: "overview", label: "Overview", description: "System readiness", icon: <LayoutDashboard size={19} /> },
   { id: "account", label: "Account", description: "Identity and channel", icon: <CircleUserRound size={19} /> },
   { id: "ai", label: "AI Runtime", description: "Brain, models, API key", icon: <Bot size={19} /> },
+  { id: "widgets", label: "Dashboard Widgets", description: "Show or hide widgets", icon: <LayoutGrid size={19} /> },
   { id: "billing", label: "Plan + Credits", description: "Billing and referrals", icon: <CreditCard size={19} /> },
   { id: "data", label: "Data + Privacy", description: "Sources and recovery", icon: <Database size={19} /> },
   { id: "help", label: "Help + Legal", description: "Guides and policies", icon: <ShieldCheck size={19} /> },

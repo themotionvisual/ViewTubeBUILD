@@ -1,9 +1,18 @@
 import React, { useMemo, useState } from "react"
-import { ChevronDown, FileVideo2, Search } from "lucide-react"
-import { WidgetSelect, WidgetSplitButton, type WidgetSelectOption } from "./WidgetPrimitives"
+import { Check, ChevronDown, FileVideo2, Search } from "lucide-react"
+import {
+  WIDGET_BADGE_SPECTRUM,
+  WidgetSelect,
+  WidgetSplitButton,
+  type WidgetBadgeSpectrumName,
+  type WidgetBadgeTone,
+  type WidgetSelectOption,
+} from "./WidgetPrimitives"
+import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import "./widgetPrimitiveVariants.css"
 import "./widgetPrimitiveExactHeights.css"
 import "./widgetPrimitiveTones.css"
+import "./widgetMatrixPrimitives.css"
 
 export type WidgetControlHeight = 18 | 24 | 32 | 38
 export type WidgetPrimitiveTone = "default" | "primary" | "secondary"
@@ -231,3 +240,273 @@ export const WidgetProgressBar: React.FC<{
     </div>
   )
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Widget Library v12 matrix primitives.
+   Every control below takes the same `height` (18/24/32/38) and `tone`
+   (default/primary/secondary) contract as the controls above, carries
+   `vt-sized-control` so the exact-height lattice applies, and reads its colour
+   from the widget's own --widget-color/--widget-ink palette.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/** Square 1:1 icon button. Icon fills 90% of the box, matching the v12 matrix. */
+export const WidgetIconButton: React.FC<
+  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
+    icon: React.ReactNode
+    label: string
+    height?: WidgetControlHeight
+    tone?: WidgetPrimitiveTone
+  }
+> = ({ icon, label, height = 32, tone = "default", className = "", type = "button", ...props }) => (
+  <button
+    type={type}
+    aria-label={label}
+    title={label}
+    className={`widget-icon-button ${widgetControlHeightClass(height)} ${toneClass(tone)} ${className}`.trim()}
+    {...props}
+  >
+    <span className="widget-icon-button-glyph" aria-hidden="true">{icon}</span>
+  </button>
+)
+
+/** Square 1:1 icon badge — the non-interactive twin of WidgetIconButton. */
+export const WidgetIconBadge: React.FC<{
+  icon: React.ReactNode
+  label?: string
+  height?: WidgetControlHeight
+  tone?: WidgetPrimitiveTone
+  className?: string
+}> = ({ icon, label, height = 32, tone = "default", className = "" }) => (
+  <span
+    role={label ? "img" : undefined}
+    aria-label={label}
+    aria-hidden={label ? undefined : true}
+    className={`widget-icon-badge ${widgetControlHeightClass(height)} ${toneClass(tone)} ${className}`.trim()}
+  >
+    <span className="widget-icon-button-glyph">{icon}</span>
+  </span>
+)
+
+/** Numeric stepper: − value +, clamped to [min, max]. */
+export const WidgetStepper: React.FC<{
+  value: number
+  onChange: (value: number) => void
+  min?: number
+  max?: number
+  step?: number
+  label: string
+  height?: WidgetControlHeight
+  tone?: WidgetPrimitiveTone
+  className?: string
+}> = ({ value, onChange, min = 0, max = 99, step = 1, label, height = 32, tone = "default", className = "" }) => {
+  const clamp = (next: number) => Math.max(min, Math.min(max, next))
+  return (
+    <div
+      className={`widget-stepper ${widgetControlHeightClass(height)} ${toneClass(tone)} ${className}`.trim()}
+      role="group"
+      aria-label={label}
+    >
+      <button
+        type="button"
+        className="widget-stepper-step"
+        aria-label={`Decrease ${label}`}
+        disabled={value <= min}
+        onClick={() => onChange(clamp(value - step))}
+      >
+        −
+      </button>
+      <span className="widget-stepper-value" aria-live="polite">{value}</span>
+      <button
+        type="button"
+        className="widget-stepper-step"
+        aria-label={`Increase ${label}`}
+        disabled={value >= max}
+        onClick={() => onChange(clamp(value + step))}
+      >
+        +
+      </button>
+    </div>
+  )
+}
+
+/** Page selector. Renders every page when the count is small, else a windowed range. */
+export const WidgetPagination: React.FC<{
+  page: number
+  pageCount: number
+  onChange: (page: number) => void
+  label?: string
+  height?: WidgetControlHeight
+  tone?: WidgetPrimitiveTone
+  className?: string
+}> = ({ page, pageCount, onChange, label = "Pagination", height = 32, tone = "default", className = "" }) => {
+  const pages = useMemo(() => {
+    if (pageCount <= 5) return Array.from({ length: pageCount }, (_, index) => index + 1)
+    const start = Math.max(1, Math.min(page - 2, pageCount - 4))
+    return Array.from({ length: 5 }, (_, index) => start + index)
+  }, [page, pageCount])
+
+  return (
+    <div
+      className={`widget-pagination ${widgetControlHeightClass(height)} ${toneClass(tone)} ${className}`.trim()}
+      role="navigation"
+      aria-label={label}
+    >
+      {pages.map((entry) => (
+        <button
+          key={entry}
+          type="button"
+          className={`widget-pagination-page ${entry === page ? "is-active" : ""}`.trim()}
+          aria-current={entry === page ? "page" : undefined}
+          aria-label={`Page ${entry}`}
+          onClick={() => onChange(entry)}
+        >
+          {entry}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** Split-left badge: a 1:1 icon bay followed by a label. Read-only. */
+export const WidgetLeftSplitBadge: React.FC<{
+  icon: React.ReactNode
+  children: React.ReactNode
+  height?: WidgetControlHeight
+  tone?: WidgetPrimitiveTone
+  iconStyle?: WidgetSplitIconStyle
+  className?: string
+}> = ({ icon, children, height = 32, tone = "default", iconStyle = "white-on-color", className = "" }) => (
+  <span
+    className={`widget-split-badge is-left-split ${widgetControlHeightClass(height)} ${toneClass(tone)} is-icon-${iconStyle} ${className}`.trim()}
+  >
+    <span className="widget-split-badge-icon" aria-hidden="true">{icon}</span>
+    <span className="widget-split-badge-label">{children}</span>
+  </span>
+)
+
+/** Split-left search bar: a 1:1 search bay joined to a text field. */
+export const WidgetSearchInput: React.FC<
+  Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> & {
+    label: string
+    height?: WidgetControlHeight
+    tone?: WidgetPrimitiveTone
+    iconStyle?: WidgetSplitIconStyle
+  }
+> = ({ label, height = 32, tone = "default", iconStyle = "white-on-color", className = "", ...props }) => (
+  <label
+    className={`widget-search-input is-left-split ${widgetControlHeightClass(height)} ${toneClass(tone)} is-icon-${iconStyle} ${className}`.trim()}
+  >
+    <span className="widget-search-input-icon" aria-hidden="true">
+      <Search strokeWidth={2.5} />
+    </span>
+    <span className="vt-visually-hidden">{label}</span>
+    <input type="search" aria-label={label} {...props} />
+  </label>
+)
+
+/** Live badge — pill with a pulsing dot. Honours prefers-reduced-motion. */
+export const WidgetLiveBadge: React.FC<{
+  children?: React.ReactNode
+  height?: WidgetControlHeight
+  tone?: WidgetPrimitiveTone
+  className?: string
+}> = ({ children = "Live", height = 24, tone = "primary", className = "" }) => (
+  <span className={`widget-live-badge ${widgetControlHeightClass(height)} ${toneClass(tone)} ${className}`.trim()}>
+    <span className="widget-live-badge-dot" aria-hidden="true" />
+    <span>{children}</span>
+  </span>
+)
+
+/** Borderless badge in one of the 12 spectrum colours, with white text. */
+export const WidgetSpectrumFillBadge: React.FC<{
+  tone: WidgetBadgeTone
+  children: React.ReactNode
+  height?: WidgetControlHeight
+  className?: string
+}> = ({ tone, children, height = 24, className = "" }) => {
+  const index =
+    typeof tone === "number"
+      ? ((tone % 12) + 12) % 12
+      : Math.max(0, WIDGET_BADGE_SPECTRUM.indexOf(tone as WidgetBadgeSpectrumName))
+  return (
+    <span
+      className={`widget-spectrum-fill-badge ${widgetControlHeightClass(height)} ${className}`.trim()}
+      style={{ ["--widget-spectrum-fill" as string]: VT_SPECTRUM_PALETTE_06[index] }}
+    >
+      {children}
+    </span>
+  )
+}
+
+/** Toggle switch. */
+export const WidgetToggleSwitch: React.FC<{
+  checked: boolean
+  onChange: (checked: boolean) => void
+  label: string
+  height?: WidgetControlHeight
+  tone?: WidgetPrimitiveTone
+  disabled?: boolean
+  className?: string
+}> = ({ checked, onChange, label, height = 32, tone = "default", disabled = false, className = "" }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={checked}
+    aria-label={label}
+    disabled={disabled}
+    onClick={() => onChange(!checked)}
+    className={`widget-toggle-switch ${widgetControlHeightClass(height)} ${toneClass(tone)} ${checked ? "is-on" : ""} ${className}`.trim()}
+  >
+    <span className="widget-toggle-switch-knob" aria-hidden="true" />
+  </button>
+)
+
+/** Radio button. Give every member of a group the same `name`. */
+export const WidgetRadio: React.FC<{
+  checked: boolean
+  onChange: () => void
+  label: string
+  name: string
+  height?: WidgetControlHeight
+  tone?: WidgetPrimitiveTone
+  disabled?: boolean
+  className?: string
+}> = ({ checked, onChange, label, name, height = 32, tone = "default", disabled = false, className = "" }) => (
+  <button
+    type="button"
+    role="radio"
+    name={name}
+    aria-checked={checked}
+    aria-label={label}
+    disabled={disabled}
+    onClick={onChange}
+    className={`widget-radio ${widgetControlHeightClass(height)} ${toneClass(tone)} ${checked ? "is-on" : ""} ${className}`.trim()}
+  >
+    <span className="widget-radio-dot" aria-hidden="true" />
+  </button>
+)
+
+/** Checkbox. */
+export const WidgetCheckbox: React.FC<{
+  checked: boolean
+  onChange: (checked: boolean) => void
+  label: string
+  height?: WidgetControlHeight
+  tone?: WidgetPrimitiveTone
+  disabled?: boolean
+  className?: string
+}> = ({ checked, onChange, label, height = 32, tone = "default", disabled = false, className = "" }) => (
+  <button
+    type="button"
+    role="checkbox"
+    aria-checked={checked}
+    aria-label={label}
+    disabled={disabled}
+    onClick={() => onChange(!checked)}
+    className={`widget-checkbox ${widgetControlHeightClass(height)} ${toneClass(tone)} ${checked ? "is-on" : ""} ${className}`.trim()}
+  >
+    <span className="widget-checkbox-mark" aria-hidden="true">
+      <Check strokeWidth={3.5} />
+    </span>
+  </button>
+)
