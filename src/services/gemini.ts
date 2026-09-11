@@ -52,6 +52,7 @@ import {
 import { geminiQueue } from "../utils/RequestQueue"
 import { getVaultKey } from "./keyVault"
 import { budgetToTimeline, type ScriptBudget } from "./scriptBudget"
+import { stitchFullScript } from "./scriptQuality"
 import {
  applyMeterChargeEvent,
  estimateMeterQuote,
@@ -3651,11 +3652,6 @@ const normalizeGeneratedScript = (
   }))
   .filter((entry) => entry.hook || entry.excerpt)
 
- const fullScript = sections
-  .filter((section) => section.script.trim())
-  .map((section) => `## ${section.label}\n\n${section.script.trim()}`)
-  .join("\n\n")
-
  const assumptions = toStringList(parsed.assumptions)
  if (!project.topic.trim()) assumptions.unshift("Topic was blank — inferred from the rest of the brief.")
 
@@ -3663,7 +3659,7 @@ const normalizeGeneratedScript = (
   outline,
   timeline: budgetToTimeline(budget),
   sections,
-  fullScript,
+  fullScript: stitchFullScript(sections),
   visualSuggestions,
   shortsIdeas,
   assumptions,

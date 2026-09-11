@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { generateScript } from "../../services/gemini"
 import { createSuperToolActionPacket } from "../../services/superToolActionPackets"
 import {
@@ -8,6 +8,29 @@ import {
  formatClock,
  type ScriptBudget,
 } from "../../services/scriptBudget"
+import {
+ applyGeneratedSections,
+ lockVerificationSummary,
+ reconcileScript,
+ repairLockedSections,
+ verifyLockedFragments,
+ weightsFromReconciliation,
+ type LockVerification,
+ type ScriptReconciliation,
+} from "../../services/scriptQuality"
+import {
+ clearScriptProjectState,
+ emptyScriptProject,
+ makeChapter,
+ makeFragment,
+ makeReference,
+ readScriptProjectState,
+ readScriptVault,
+ removeScriptDraft,
+ saveScriptDraft,
+ writeScriptProjectState,
+ type ScriptDraftV1,
+} from "./scriptProjectStore"
 import { useBrain } from "../../context/useBrain"
 import type {
  ChapterInput,
@@ -23,37 +46,14 @@ import type {
  * Script Architect controller.
  *
  * Holds the ScriptProject the creator is filling in, recomputes the word/runtime
- * budget on every edit, runs one assembly call, and hands the finished script to
- * the shared super-tool packet path (Vault artifact + workflow chain + Brain).
+ * budget on every edit, runs one assembly call, verifies the creator's locked
+ * text survived, reconciles the delivered length against the target, and hands
+ * the finished script to the shared super-tool packet path.
  *
  * Every field is optional by design — assemble works from a bare topic.
  */
 
-let idCounter = 0
-const makeId = (prefix: string) => `${prefix}-${++idCounter}-${Date.now().toString(36)}`
-
-const makeChapter = (name = "", description = ""): ChapterInput => ({
- id: makeId("ch"),
- name,
- description,
- weight: 1,
-})
-
-const INITIAL_PROJECT = (): ScriptProject => ({
- topic: "",
- angle: "",
- niche: "",
- audience: "",
- tone: "Cinematic",
- goal: "Subscribe",
- targetMinutes: 10,
- pacing: "standard",
- includeHook: true,
- includeOutro: true,
- chapters: [makeChapter(), makeChapter(), makeChapter()],
- globalReferences: [],
- globalFragments: [],
-})
+const AUTOSAVE_DEBOUNCE_MS = 600
 
 export const TONE_OPTIONS = ["Cinematic", "Casual", "Academic", "Energetic", "Calm authority", "Comedic"]
 export const GOAL_OPTIONS = ["Subscribe", "Teach", "Sell", "Funnel to another video", "Serialize"]
@@ -80,6 +80,13 @@ export interface ScriptArchitectController {
  loading: boolean
  error: string | null
  status: string | null
+ restoredFromDraft: boolean
+ drafts: ScriptDraftV1[]
+ draftName: string
+ setDraftName: (name: string) => void
+ lockChecks: LockVerification[]
+ lockSummary: { total: number; verbatim: number; altered: number; misplaced: number }
+ reconciliation: ScriptReconciliation | null
  sectionPinOptions: SectionPinOption[]
  setField: <K extends keyof ScriptProject>(key: K, value: ScriptProject[K]) => void
  addChapter: () => void
@@ -93,19 +100,54 @@ export interface ScriptArchitectController {
  updateFragment: (id: string, patch: Partial<ScriptFragment>) => void
  removeFragment: (id: string) => void
  assemble: () => Promise<void>
+ updateSectionScript: (sectionId: string, script: string) => void
+ restoreLockedText: () => void
+ matchTargetToScript: () => void
+ rebalanceWeightsToScript: () => void
  copyScript: () => Promise<void>
  savePacket: () => Promise<void>
+ saveDraft: () => void
+ loadDraft: (id: string) => void
+ deleteDraft: (id: string) => void
+ startNewDraft: () => void
 }
 
 export const useScriptArchitect = (): ScriptArchitectController => {
  const { brain, emitSignal } = useBrain()
- const [project, setProject] = useState<ScriptProject>(INITIAL_PROJECT)
- const [result, setResult] = useState<GeneratedScript | null>(null)
+
+ // Restore the autosaved draft on first render so a reload never costs a brief.
+ const restored = useRef(readScriptProjectState())
+ const [project, setProject] = useState<ScriptProject>(
+  () => restored.current?.project || emptyScriptProject(),
+ )
+ const [result, setResult] = useState<GeneratedScript | null>(() => restored.current?.result || null)
+ const [restoredFromDraft] = useState(() => Boolean(restored.current))
+ const [drafts, setDrafts] = useState<ScriptDraftV1[]>(() => readScriptVault())
+ const [draftName, setDraftName] = useState(() => restored.current?.name || "")
  const [loading, setLoading] = useState(false)
  const [error, setError] = useState<string | null>(null)
  const [status, setStatus] = useState<string | null>(null)
 
  const budget = useMemo(() => buildScriptBudget(project), [project])
+
+ const lockChecks = useMemo(
+  () => (result ? verifyLockedFragments(project, result.sections) : []),
+  [project, result],
+ )
+ const lockSummary = useMemo(() => lockVerificationSummary(lockChecks), [lockChecks])
+ const reconciliation = useMemo(
+  () => (result ? reconcileScript(budget, result.sections) : null),
+  [budget, result],
+ )
+
+ // Debounced autosave: every keystroke would thrash localStorage.
+ useEffect(() => {
+  const timer = window.setTimeout(
+   () => writeScriptProjectState(project, result),
+   AUTOSAVE_DEBOUNCE_MS,
+  )
+  return () => window.clearTimeout(timer)
+ }, [project, result])
 
  const sectionPinOptions = useMemo<SectionPinOption[]>(() => {
   const options: SectionPinOption[] = [{ id: "", label: "Unpinned" }]
@@ -162,10 +204,7 @@ export const useScriptArchitect = (): ScriptArchitectController => {
  }, [])
 
  const addReference = useCallback(() => {
-  setProject((prev) => ({
-   ...prev,
-   globalReferences: [...prev.globalReferences, { id: makeId("ref"), url: "", note: "" }],
-  }))
+  setProject((prev) => ({ ...prev, globalReferences: [...prev.globalReferences, makeReference()] }))
  }, [])
 
  const updateReference = useCallback((id: string, patch: Partial<ReferenceLink>) => {
@@ -185,13 +224,7 @@ export const useScriptArchitect = (): ScriptArchitectController => {
  }, [])
 
  const addFragment = useCallback(() => {
-  setProject((prev) => ({
-   ...prev,
-   globalFragments: [
-    ...prev.globalFragments,
-    { id: makeId("frag"), label: "", text: "", mode: "lock" },
-   ],
-  }))
+  setProject((prev) => ({ ...prev, globalFragments: [...prev.globalFragments, makeFragment()] }))
  }, [])
 
  const updateFragment = useCallback((id: string, patch: Partial<ScriptFragment>) => {
@@ -217,6 +250,13 @@ export const useScriptArchitect = (): ScriptArchitectController => {
   try {
    const generated = await generateScript(project, budget, brain)
    setResult(generated)
+   const checks = verifyLockedFragments(project, generated.sections)
+   const broken = checks.filter((entry) => entry.status === "altered").length
+   setStatus(
+    broken > 0
+     ? `Script assembled. ${broken} locked piece${broken === 1 ? "" : "s"} did not come back word-for-word — restore below.`
+     : "Script assembled.",
+   )
   } catch (e) {
    console.error("[ScriptArchitect] assembly failed", e)
    setError(e instanceof Error ? e.message : "Failed to assemble the script. Please try again.")
@@ -224,6 +264,43 @@ export const useScriptArchitect = (): ScriptArchitectController => {
    setLoading(false)
   }
  }, [project, budget, brain])
+
+ /** Edits to the delivered script are the creator's; counts and checks follow them. */
+ const updateSectionScript = useCallback((sectionId: string, script: string) => {
+  setResult((prev) =>
+   prev
+    ? applyGeneratedSections(
+       prev,
+       prev.sections.map((section) =>
+        section.sectionId === sectionId ? { ...section, script } : section,
+       ),
+      )
+    : prev,
+  )
+ }, [])
+
+ const restoreLockedText = useCallback(() => {
+  setResult((prev) => {
+   if (!prev) return prev
+   const checks = verifyLockedFragments(project, prev.sections)
+   const repaired = repairLockedSections(project, prev.sections, checks)
+   return applyGeneratedSections(prev, repaired)
+  })
+  setStatus("Your exact wording was restored into the script.")
+ }, [project])
+
+ const matchTargetToScript = useCallback(() => {
+  if (!reconciliation) return
+  const minutes = Math.max(1, Math.min(90, Math.round(reconciliation.actualMinutes)))
+  setField("targetMinutes", minutes)
+  setStatus(`Target raised to ${minutes} minutes to match the delivered script.`)
+ }, [reconciliation, setField])
+
+ const rebalanceWeightsToScript = useCallback(() => {
+  if (!reconciliation) return
+  setProject((prev) => weightsFromReconciliation(prev, reconciliation))
+  setStatus("Chapter weights rebalanced to the delivered script — assemble again to use them.")
+ }, [reconciliation])
 
  const copyScript = useCallback(async () => {
   if (!result?.fullScript) return
@@ -235,14 +312,45 @@ export const useScriptArchitect = (): ScriptArchitectController => {
   }
  }, [result])
 
+ const saveDraft = useCallback(() => {
+  const next = saveScriptDraft(draftName, project, result)
+  setDrafts(next)
+  setStatus(`Saved "${next[0]?.name || draftName}" to the script vault.`)
+ }, [draftName, project, result])
+
+ const loadDraft = useCallback(
+  (id: string) => {
+   const draft = drafts.find((entry) => entry.id === id)
+   if (!draft) return
+   setProject(draft.project)
+   setResult(draft.result)
+   setDraftName(draft.name)
+   setStatus(`Loaded "${draft.name}".`)
+  },
+  [drafts],
+ )
+
+ const deleteDraft = useCallback((id: string) => {
+  setDrafts(removeScriptDraft(id))
+ }, [])
+
+ const startNewDraft = useCallback(() => {
+  setProject(emptyScriptProject())
+  setResult(null)
+  setDraftName("")
+  setError(null)
+  clearScriptProjectState()
+  setStatus("Started a new script. Saved drafts are untouched.")
+ }, [])
+
  const savePacket = useCallback(async () => {
   if (!result) return
   const title = project.topic.trim() || "Untitled script"
-  const lockedFragments = project.globalFragments.filter((fragment) => fragment.mode === "lock")
+  const locked = lockSummary
   const confidence =
-   result.groundingNotes.length === 0 && result.assumptions.length <= 1
+   locked.altered === 0 && result.groundingNotes.length === 0 && result.assumptions.length <= 1
     ? "high"
-    : result.groundingNotes.length > 2
+    : locked.altered > 0 || result.groundingNotes.length > 2
       ? "low"
       : "medium"
 
@@ -250,7 +358,7 @@ export const useScriptArchitect = (): ScriptArchitectController => {
    toolId: "creator-canvas-os",
    moduleId: "script-architect",
    title: `${title} script packet`,
-   summary: `Assembled a ${formatClock(budget.allocatedMinutes)} script for ${title} across ${budget.sections.length} sections (${budget.wordBudget} word budget, ${project.pacing} pacing), preserving ${lockedFragments.length} locked fragment(s) and proposing ${result.shortsIdeas.length} priming short(s).`,
+   summary: `Assembled a ${formatClock(reconciliation?.actualMinutes ?? budget.allocatedMinutes)} script for ${title} across ${result.sections.length} sections (${budget.wordBudget} word budget, ${project.pacing} pacing), with ${locked.verbatim}/${locked.total} locked pieces verified verbatim and ${result.shortsIdeas.length} priming short(s) proposed.`,
    inputs: {
     topic: project.topic,
     angle: project.angle,
@@ -269,6 +377,9 @@ export const useScriptArchitect = (): ScriptArchitectController => {
     fullScript: result.fullScript,
     visualSuggestions: result.visualSuggestions,
     shortsIdeas: result.shortsIdeas,
+    lockedPiecesVerbatim: `${locked.verbatim}/${locked.total}`,
+    deliveredRuntime: formatClock(reconciliation?.actualMinutes ?? 0),
+    deliveredWords: reconciliation?.actualWords ?? 0,
    },
    confidence,
    evidence: [
@@ -278,6 +389,7 @@ export const useScriptArchitect = (): ScriptArchitectController => {
    missingInputs: [
     project.audience?.trim() ? null : "ideal audience",
     project.globalReferences.length ? null : "references",
+    ...(locked.altered > 0 ? [`${locked.altered} locked piece(s) not reproduced verbatim`] : []),
     ...result.groundingNotes,
    ].filter(Boolean) as string[],
    handoffTargets: [
@@ -312,7 +424,7 @@ export const useScriptArchitect = (): ScriptArchitectController => {
      title: "Plan production",
      surface: "projects",
      toolId: "project-command-kanban",
-     details: `Schedule filming and editing for a ${formatClock(budget.allocatedMinutes)} runtime.`,
+     details: `Schedule filming and editing for a ${formatClock(reconciliation?.actualMinutes ?? budget.allocatedMinutes)} runtime.`,
     },
    ],
    tags: ["script-architect", confidence, project.pacing],
@@ -320,7 +432,7 @@ export const useScriptArchitect = (): ScriptArchitectController => {
 
   await emitSignal("SCRIPT_ARCHITECT", "SCRIPT_PACKET_CREATED", packet)
   setStatus("Script packet saved with Vault artifact, workflow chain, and Brain signal.")
- }, [result, project, budget, emitSignal])
+ }, [result, project, budget, reconciliation, lockSummary, emitSignal])
 
  return {
   project,
@@ -329,6 +441,13 @@ export const useScriptArchitect = (): ScriptArchitectController => {
   loading,
   error,
   status,
+  restoredFromDraft,
+  drafts,
+  draftName,
+  setDraftName,
+  lockChecks,
+  lockSummary,
+  reconciliation,
   sectionPinOptions,
   setField,
   addChapter,
@@ -342,7 +461,15 @@ export const useScriptArchitect = (): ScriptArchitectController => {
   updateFragment,
   removeFragment,
   assemble,
+  updateSectionScript,
+  restoreLockedText,
+  matchTargetToScript,
+  rebalanceWeightsToScript,
   copyScript,
   savePacket,
+  saveDraft,
+  loadDraft,
+  deleteDraft,
+  startNewDraft,
  }
 }

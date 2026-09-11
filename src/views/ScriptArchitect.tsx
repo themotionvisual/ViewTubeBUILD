@@ -10,6 +10,8 @@ import {
  Link2,
  NotebookPen,
  Plus,
+ Save,
+ ShieldCheck,
  Smartphone,
  Sparkles,
  Trash2,
@@ -79,6 +81,72 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start w-full">
     {/* ---------------- INPUTS ---------------- */}
     <div className="flex flex-col gap-6 min-w-0">
+     <SubToolbox
+      title={`Script Vault · ${architect.drafts.length}`}
+      subtitle={
+       architect.restoredFromDraft
+        ? "Your last draft was restored — everything autosaves as you type"
+        : "Everything autosaves as you type"
+      }
+      icon={<Save />}
+      collapsible
+      isOpenInitial={false}>
+      <div className="space-y-3">
+       <div className="flex gap-2">
+        <div className="flex-1 min-w-0">
+         <StandardInput
+          aria-label="Draft name"
+          value={architect.draftName}
+          onChange={(event) => architect.setDraftName(event.target.value)}
+          placeholder="NAME THIS SCRIPT…"
+          minHeight="48px"
+         />
+        </div>
+        <button
+         type="button"
+         onClick={architect.saveDraft}
+         className="shrink-0 px-4 min-h-12 border-[3px] border-black rounded-xl bg-[#FFE357] font-black uppercase text-[10px] shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none">
+         Save
+        </button>
+        <button
+         type="button"
+         onClick={architect.startNewDraft}
+         title="Clear the workspace — saved drafts are untouched"
+         className="shrink-0 px-4 min-h-12 border-[3px] border-black rounded-xl bg-white font-black uppercase text-[10px] shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none">
+         New
+        </button>
+       </div>
+       {architect.drafts.map((draft) => (
+        <div key={draft.id} className="grid grid-cols-[1fr_auto] gap-2 border-[2px] border-black rounded-lg p-2">
+         <button
+          type="button"
+          className="text-left min-w-0"
+          onClick={() => architect.loadDraft(draft.id)}>
+          <span className="block text-[9px] font-black uppercase opacity-50">
+           {draft.project.targetMinutes} min · {draft.project.chapters.length} chapters
+           {draft.result ? " · assembled" : ""}
+          </span>
+          <span className="block truncate text-xs font-black uppercase">
+           {draft.name || draft.project.topic || "Untitled script"}
+          </span>
+         </button>
+         <button
+          type="button"
+          aria-label={`Delete draft ${draft.name}`}
+          onClick={() => architect.deleteDraft(draft.id)}
+          className="size-10 border-[2px] border-black rounded-lg grid place-items-center bg-[#FF77D6]">
+          <Trash2 size={15} strokeWidth={3} />
+         </button>
+        </div>
+       ))}
+       {!architect.drafts.length && (
+        <p className="p-3 text-center text-[10px] font-black uppercase opacity-50">
+         No saved drafts yet.
+        </p>
+       )}
+      </div>
+     </SubToolbox>
+
      <SubToolbox
       title="The Brief"
       subtitle="Everything optional — the engine fills the gaps"
@@ -634,27 +702,168 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
         </div>
        </SubToolbox>
 
+       {architect.lockSummary.total > 0 && (
+        <SubToolbox
+         title={`Your Locked Words · ${architect.lockSummary.verbatim}/${architect.lockSummary.total}`}
+         subtitle="Checked against the script itself, not taken on trust"
+         icon={<ShieldCheck />}
+         collapsible
+         isOpenInitial={architect.lockSummary.altered > 0}>
+         <div className="space-y-2">
+          {architect.lockChecks.map((check) => (
+           <div
+            key={check.fragmentId}
+            className={`border-[3px] border-black rounded-xl p-3 ${
+             check.status === "verbatim"
+              ? "bg-[#8CFF8F]"
+              : check.status === "empty"
+                ? "bg-white"
+                : "bg-[#FFB158]"
+            }`}>
+            <div className="flex items-center justify-between gap-2">
+             <span className="font-black uppercase text-xs truncate">{check.label}</span>
+             <span className="shrink-0 text-[9px] font-black uppercase tracking-widest">
+              {check.status === "verbatim"
+               ? "✓ Word-for-word"
+               : check.status === "empty"
+                 ? "Empty"
+                 : "⚠ Not reproduced"}
+             </span>
+            </div>
+            <p className="mt-1 text-[9px] font-black uppercase tracking-widest text-black/60">
+             {check.status === "verbatim"
+              ? `Found in ${check.foundInSectionLabel}${check.misplaced ? " — not the section you pinned it to" : ""}`
+              : check.status === "empty"
+                ? "No text in this piece yet."
+                : "The model paraphrased or dropped it."}
+            </p>
+           </div>
+          ))}
+          {architect.lockSummary.altered > 0 && (
+           <SubToolboxGridActionButton
+            label="Restore My Wording"
+            iconName="checklist"
+            tone="pink"
+            onClick={architect.restoreLockedText}
+           />
+          )}
+         </div>
+        </SubToolbox>
+       )}
+
+       {architect.reconciliation && (
+        <SubToolbox
+         title="Length Check"
+         subtitle="What the script actually delivered against the budget"
+         icon={<Clock />}
+         collapsible
+         isOpenInitial={architect.reconciliation.offTarget}>
+         <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-2 text-center border-[3px] border-black rounded-xl bg-[#FFF9E8] p-3">
+           <div>
+            <div className="text-[9px] font-black uppercase tracking-widest text-black/40">Words</div>
+            <div className="text-xl font-[1000]">{architect.reconciliation.actualWords}</div>
+           </div>
+           <div>
+            <div className="text-[9px] font-black uppercase tracking-widest text-black/40">Runtime</div>
+            <div className="text-xl font-[1000]">
+             {formatClock(architect.reconciliation.actualMinutes)}
+            </div>
+           </div>
+           <div>
+            <div className="text-[9px] font-black uppercase tracking-widest text-black/40">
+             Vs target
+            </div>
+            <div
+             className={`text-xl font-[1000] ${architect.reconciliation.offTarget ? "text-[#D6246E]" : "text-[#1F9D55]"}`}>
+             {architect.reconciliation.driftMinutes >= 0 ? "+" : "−"}
+             {formatClock(Math.abs(architect.reconciliation.driftMinutes))}
+            </div>
+           </div>
+          </div>
+          <div className="space-y-1">
+           {architect.reconciliation.sections.map((section) => (
+            <div
+             key={section.sectionId}
+             className="flex items-center justify-between gap-2 text-[10px] font-black uppercase">
+             <span className="truncate">{section.label}</span>
+             <span className="shrink-0 text-black/50">
+              {section.actualWords} / {section.allocatedWords} w
+              <span
+               className={
+                Math.abs(section.deltaWords) > Math.max(25, section.allocatedWords * 0.15)
+                 ? " text-[#D6246E]"
+                 : " text-black/40"
+               }>
+               {" "}
+               ({section.deltaWords >= 0 ? "+" : ""}
+               {section.deltaWords})
+              </span>
+             </span>
+            </div>
+           ))}
+          </div>
+          {architect.reconciliation.offTarget && (
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <SubToolboxGridActionButton
+             label="Match Target"
+             iconName="target"
+             tone="cyan"
+             onClick={architect.matchTargetToScript}
+            />
+            <SubToolboxGridActionButton
+             label="Rebalance Weights"
+             iconName="layers"
+             tone="orange"
+             onClick={architect.rebalanceWeightsToScript}
+            />
+           </div>
+          )}
+         </div>
+        </SubToolbox>
+       )}
+
        <SubToolbox
         title="Full Script"
-        subtitle="Locked pieces reproduced word-for-word"
+        subtitle="Edit anything here — counts and lock checks follow your edits"
         icon={<FileText />}
         collapsible
         isOpenInitial>
         <div className="space-y-3">
-         <div className="max-h-[420px] overflow-y-auto border-[3px] border-black rounded-xl bg-[#FFF9E8] p-4 space-y-4">
-          {result.sections.map((section) => (
-           <div key={section.sectionId}>
-            <h5 className="inline-block border-[2px] border-black bg-[#CCFF00] px-2 py-0.5 font-black uppercase text-[10px] tracking-wider">
-             {section.label}
-             {section.lockedFragmentIds.length > 0 ? " · locked" : ""}
-            </h5>
-            <p className="mt-2 text-sm font-semibold leading-relaxed whitespace-pre-wrap break-words">
-             {section.script || (
-              <span className="opacity-40 uppercase text-xs">No copy returned for this section.</span>
-             )}
-            </p>
-           </div>
-          ))}
+         <div className="max-h-[520px] overflow-y-auto border-[3px] border-black rounded-xl bg-[#FFF9E8] p-4 space-y-4">
+          {result.sections.map((section) => {
+           const counts = architect.reconciliation?.sections.find(
+            (entry) => entry.sectionId === section.sectionId,
+           )
+           return (
+            <div key={section.sectionId}>
+             <div className="flex items-center justify-between gap-2 flex-wrap">
+              <h5 className="inline-block border-[2px] border-black bg-[#CCFF00] px-2 py-0.5 font-black uppercase text-[10px] tracking-wider">
+               {section.label}
+               {section.lockedFragmentIds.length > 0 ? " · locked" : ""}
+              </h5>
+              {counts && (
+               <span className="text-[9px] font-black uppercase tracking-widest text-black/40">
+                {counts.actualWords} / {counts.allocatedWords} words
+               </span>
+              )}
+             </div>
+             <StandardTextArea
+              aria-label={`${section.label} script`}
+              value={section.script}
+              onChange={(event) =>
+               architect.updateSectionScript(section.sectionId, event.target.value)
+              }
+              placeholder="No copy returned for this section…"
+              className="mt-2"
+              // Script prose is the one field meant to be read, so it opts out
+              // of the standard field's uppercase transform. Inline style is
+              // required: the shared rule outranks a utility class.
+              style={{ minHeight: "140px", textTransform: "none", fontWeight: 600 }}
+             />
+            </div>
+           )
+          })}
          </div>
          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <SubToolboxGridActionButton

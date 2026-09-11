@@ -25,7 +25,7 @@ export const PACING_WPM: Record<ScriptPacing, number> = {
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
-const countWords = (text: string): number =>
+export const countWords = (text: string): number =>
  text.trim() ? text.trim().split(/\s+/).length : 0
 
 export interface SectionAllocation {
