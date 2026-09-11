@@ -14,10 +14,11 @@ Signal / Anomaly / Opportunity / Priming
   -> approved ActionPacket / Handoff
   -> Tool execution
   -> multi-horizon monitoring
+  -> evidence-backed checkpoint resolution
   -> final evaluation checkpoint
   -> analytics-canon + canonical Brain Outcome Ledger
   -> lifecycle-comparable measured outcome
-  -> Evaluation Inbox / attribution
+  -> Evaluation Inbox / attribution trace
   -> repeated learning candidate
   -> learning governance review
   -> explicit creator approval
@@ -30,7 +31,7 @@ Signal / Anomaly / Opportunity / Priming
 Tracks stable lineage across anomaly escalations, opportunities, priming plans/steps, recommendations, handoffs, workflows, monitoring checkpoints, measured outcomes, learning candidates, reviews, and governed promotions. Stable IDs prevent repeated Brain portfolio builds from manufacturing duplicate history.
 
 ### AlgorithmEvaluationEngine
-Evaluates declared metric targets after their final checkpoint. It returns pending, insufficient-data, positive, neutral, negative, or mixed rather than inventing success when evidence is missing.
+Evaluates declared metric targets after their final checkpoint. It returns pending, insufficient-data, positive, neutral, negative, or mixed rather than inventing success when evidence is missing. Each source action owns one idempotent measured-outcome event so evidence retries cannot inflate calibration or learning sample sizes.
 
 ### CanonicalAlgorithmEvaluation
 Bridges Phase 6 to the existing `VT-SYNC -> analytics-canon` ownership path. Video-scoped events prefer matching canonical video rows; channel-scoped events use canonical summaries. Failed/unavailable datasets are not evidence. Workflow-only concepts are intentionally excluded.
@@ -50,7 +51,7 @@ Baseline precedence is:
 Current/lifetime totals are never relabeled as an earlier lifecycle baseline.
 
 ### AlgorithmMonitoringSchedule
-Each recommendation or Priming execution now receives a monitoring schedule built from standard horizons:
+Each recommendation or Priming execution receives a monitoring schedule built from standard horizons:
 
 - T+1h
 - T+6h
@@ -65,18 +66,29 @@ Intermediate monitoring checkpoints may create `CHECKPOINT_REACHED` lineage even
 
 Both `AlgorithmWorkflowRecipes` and `AlgorithmPrimingWorkflow` attach these schedules to their canonical intelligence events.
 
+### AlgorithmMonitoringResolver
+Automatically resolves due video-scoped monitoring checkpoints only when matching lifecycle evidence has actually been captured.
+
+Resolution rules:
+
+- all declared checkpoint metrics must be present before a checkpoint is fully resolved;
+- evidence must belong to the same channel and video;
+- evidence must be close to the checkpoint's real due time;
+- early checkpoints use tighter timing tolerances than later checkpoints;
+- a much later lifetime/current observation cannot satisfy an earlier T+1h/T+6h/T+24h checkpoint;
+- partial evidence remains partial and visible;
+- non-video-scoped checkpoints cannot be resolved from video lifecycle evidence;
+- auto-resolution records `CHECKPOINT_REACHED` only, never `OUTCOME_MEASURED`.
+
+The Brain Evaluation Inbox runs this resolver after canonical VT-SYNC lifecycle capture, so monitoring can advance automatically as real evidence arrives without manufacturing success/failure.
+
+### AlgorithmFinalEvaluationResolver
+Final-outcome processing is automatic only after the declared final monitoring horizon has actually been reached. The resolver first preflights canonical observations plus explicit/lifecycle baselines. If the preview is still `pending` or `insufficient_data`, no measured outcome is recorded by this path. The action simply remains unresolved and retryable after future syncs. Only positive, neutral, negative, or mixed terminal results are committed.
+
 ### BrainEvaluationInbox
-Builds the Brain-facing review model without creating another store. It combines:
+Builds the Brain-facing review model without creating another store. It combines intermediate observation checkpoints, overdue final evaluations, missing-evidence retries, measured outcomes, learning-review items, full attribution lineage, priority, and governance summaries.
 
-- intermediate observation checkpoints
-- overdue final evaluations
-- missing-evidence retries
-- measured outcomes
-- learning-review items
-- full attribution lineage
-- priority and governance summaries
-
-The inbox is mounted in the Brain context rail and subscribes to canonical VT-SYNC snapshot updates. Intermediate monitoring items are explicitly labeled non-learnable.
+The inbox is mounted in the Brain context rail and subscribes to canonical VT-SYNC snapshot updates. Each snapshot advances Phase 6 in order: capture genuine lifecycle evidence -> resolve evidence-backed monitoring checkpoints -> finalize only resolvable final evaluations. Intermediate monitoring items are explicitly labeled non-learnable.
 
 ### BrainCheckpointPolicy
 Classifies overdue final checkpoints as `due`, `aging`, `stale`, or `critical`. Aging changes review priority only; it never causes automatic external action.
@@ -92,6 +104,14 @@ The store captures semantic metrics including qualified views, watch quality, CT
 ### AlgorithmLifecycleBaseline
 Hydrates missing evaluation baselines from persisted lifecycle peers only when a concrete video and evaluation horizon exist. Explicit baselines always win.
 
+### AlgorithmAttributionDetail
+Builds a drill-down model for one recommendation/Priming/evaluation event. It follows both ancestor lineage and related events sharing recommendation, Priming step, ActionPacket, or workflow identity.
+
+The detail model separates source signals/opportunities/Priming provenance, decisions, execution/handoffs, monitoring checkpoints, measured outcomes, learning/review/promotion events, evidence references, lifecycle observations, and confidence/command calibration.
+
+### BrainAttributionDetailPanel
+The Evaluation Inbox exposes a **Trace evidence** action. The creator-facing drill-down displays evidence/checkpoint/outcome/learning counts, current measured result, command/confidence calibration, monitoring schedule with reached checkpoints, and the evidence -> decision -> execution -> monitoring -> outcome -> learning timeline. The panel is read-only with respect to execution and cannot silently alter strategy weights.
+
 ### AlgorithmLearningCandidates
 Aggregates repeated measured outcomes into evidence-backed learning candidates. Stable candidate IDs prevent duplicate history. Intermediate monitoring checkpoints do not contribute to candidate sample size.
 
@@ -105,19 +125,10 @@ The final promotion adapter requires both prior governance approval and explicit
 Compares recommendation confidence with measured outcomes. It reports success rate by low/medium/high confidence and by command, plus warnings for meaningful over/under-confidence. Calibration is descriptive only in Phase 6.
 
 ### BrainAlgorithmIntelligenceContext
-The Brain-facing context includes urgent evaluation items, overdue/insufficient-data counts, monitoring state, stale/critical checkpoints, learning reviews, calibration, warnings, and lifecycle-evidence coverage. `buildBrainAlgorithmEvaluationContext(channelId)` supplies the feedback-loop context without rebuilding the full Phase 5 portfolio.
+The Brain-facing context includes urgent evaluation items, overdue/insufficient-data counts, monitoring state, auto-resolved checkpoint counts, stale/critical checkpoints, learning reviews, calibration, warnings, and lifecycle-evidence coverage. `buildBrainAlgorithmEvaluationContext(channelId)` supplies the feedback-loop context without rebuilding the full Phase 5 portfolio.
 
 ### Brain task routing and Context Broker
-`BrainTaskProfileRegistry` recognizes evaluation questions such as:
-
-- What worked?
-- What failed?
-- Which recommendation actually helped?
-- What still needs evidence?
-- What should I stop doing?
-- How reliable are your high-confidence recommendations?
-
-These route to a distinct evaluation task profile. `BrainContextBroker` now conditionally injects Phase 6 context through the standard Brain path whenever the resolved task is `evaluation`, using the active Brain channel or connected channel handle. This gives the full Brain Hub, Sidebar Chatbot, dashboard Brain surfaces, and other standard orchestrator consumers the same evidence without bloating unrelated prompts.
+`BrainTaskProfileRegistry` recognizes evaluation questions such as “What worked?”, “What failed?”, “Which recommendation actually helped?”, “What still needs evidence?”, “What should I stop doing?”, and “How reliable are your high-confidence recommendations?” These route to a distinct evaluation task profile. `BrainContextBroker` conditionally injects Phase 6 context through the standard Brain path whenever the resolved task is `evaluation`.
 
 ## Learning boundary
 
@@ -132,23 +143,13 @@ Phase 6 separates six levels:
 
 ## Regression coverage added
 
-Focused tests now cover:
+Focused tests cover evaluation status behavior, canonical metric resolution, lifecycle-cohort baselines, evaluation-intent routing, workflow/analytics ownership boundaries, governed learning promotion, one-final-outcome monitoring schedules, evidence-backed monitoring resolution, rejection of much-later observations, and the video-scope requirement.
 
-- evaluation status behavior and missing evidence
-- canonical metric resolution
-- lifecycle-cohort median baselines and rejection of mismatched ages
-- evaluation-intent routing
-- workflow completion cannot satisfy analytics targets
-- non-terminal/unattributed workflow outcomes do not evaluate
-- learning promotion requires governance + creator approval + enabled learning controls
-- standard monitoring horizons produce one final evaluation and observation-only intermediate checkpoints
-
-These tests are committed to the Phase 6 branch; no GitHub Actions run has been observed yet, so they should not be described as CI-verified until a workflow actually runs.
+These tests are committed; they are not CI-verified until a workflow or verified local runner executes them.
 
 ## Remaining Phase 6 build slices
 
 1. Move lifecycle observations and Algorithm event history from bounded local storage into the production persistence layer once the persistence migration contract is finalized.
-2. Add an explicit acknowledgement/capture lifecycle for intermediate monitoring checkpoints so resolved observations do not remain indefinitely in the Inbox.
-3. Add creator-facing calibration detail and attribution drill-down views beyond the compact Inbox cards.
-4. Use calibration only as evidence for a future governed strategy-weight adjustment system; do not silently modify recommendation behavior.
-5. Run the focused Phase 6 test set and build/typecheck through CI or a verified local runner before marking PR #88 ready for review.
+2. Add richer creator controls for filtering attribution traces by video, command, source signal, and outcome.
+3. Use calibration only as evidence for a future governed strategy-weight adjustment system; do not silently modify recommendation behavior.
+4. Run the focused Phase 6 test set and build/typecheck through CI or a verified local runner before marking the follow-up PR ready for review.
