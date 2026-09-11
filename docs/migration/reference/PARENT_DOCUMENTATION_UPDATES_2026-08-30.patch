@@ -1,0 +1,27 @@
+diff --git "a/docs/VT Brain/README.md" "b/docs/VT Brain/README.md"
+--- a/docs/VT Brain/README.md
++++ b/docs/VT Brain/README.md
+@@ -8,0 +9,2 @@
++Local application home (2026-08-30): `/Users/cwb/Downloads/viewtube/viewtubeX` now runs the captured branch-check application plus preserved ViewTubeX enhancements. [Relocation, verification, and recovery reference](/Users/cwb/ViewTube-system-reference-2026-08-27/docs/migration/reference/BRANCH_CHECK_TO_VIEWTUBEX_RELOCATION_2026-08-30.md) is maintained on the documentation-only branch; shared docs and the Task Index remain in this parent workspace.
++
+diff --git "a/docs/VT Brain/MASTER_RECOMMENDATIONS_AND_STATUS_REGISTRY.md" "b/docs/VT Brain/MASTER_RECOMMENDATIONS_AND_STATUS_REGISTRY.md"
+--- a/docs/VT Brain/MASTER_RECOMMENDATIONS_AND_STATUS_REGISTRY.md
++++ b/docs/VT Brain/MASTER_RECOMMENDATIONS_AND_STATUS_REGISTRY.md
+@@ -75,0 +76,1 @@
++| REC-061 | Branch-check to ViewTubeX local relocation | Workflow / Governance | `/Users/cwb/ViewTube-system-reference-2026-08-27/docs/migration/reference/BRANCH_CHECK_TO_VIEWTUBEX_RELOCATION_2026-08-30.md` | Created | Implemented | ViewTubeX local runtime + documentation-only reference branch | Location migration only: source preserved, features reconciled, build/tests and OAuth-start checked; inherited 21 type errors and authenticated end-to-end validation remain open. No production deployment. |
+diff --git "a/docs/VT Brain/VIEWTUBEX_CANONICAL_OWNERS_AND_RESOURCE_LOCATIONS.md" "b/docs/VT Brain/VIEWTUBEX_CANONICAL_OWNERS_AND_RESOURCE_LOCATIONS.md"
+--- a/docs/VT Brain/VIEWTUBEX_CANONICAL_OWNERS_AND_RESOURCE_LOCATIONS.md
++++ b/docs/VT Brain/VIEWTUBEX_CANONICAL_OWNERS_AND_RESOURCE_LOCATIONS.md
+@@ -30,0 +31,6 @@
++### Active local application — explicit user-selected location
++
++As of 2026-08-30, the active app, agents, and build home is `/Users/cwb/Downloads/viewtube/viewtubeX`, on local branch `codex/branch-check-in-viewtubex-20260830`. This deliberately configured workspace is an exception to the generic rule against loose Downloads artifacts. `/Users/cwb/ViewTube-branch-check` remains preserved source; it is not the active local server home.
++
++Shared documentation stays `/Users/cwb/Downloads/viewtube/docs`; only `/Users/cwb/Downloads/viewtube/ViewTube-Task-Index.html` owns task/status tracking. The [relocation reference](/Users/cwb/ViewTube-system-reference-2026-08-27/docs/migration/reference/BRANCH_CHECK_TO_VIEWTUBEX_RELOCATION_2026-08-30.md) on the documentation-only branch owns migration evidence and recovery instructions, not product status.
++
+diff --git "a/docs/VT Brain/VIEWTUBEX_DOCUMENTATION_SYSTEM_OS.md" "b/docs/VT Brain/VIEWTUBEX_DOCUMENTATION_SYSTEM_OS.md"
+--- a/docs/VT Brain/VIEWTUBEX_DOCUMENTATION_SYSTEM_OS.md
++++ b/docs/VT Brain/VIEWTUBEX_DOCUMENTATION_SYSTEM_OS.md
+@@ -122,0 +123,2 @@
++Runtime-location reference (2026-08-30): the captured branch-check app now runs from `/Users/cwb/Downloads/viewtube/viewtubeX`. Shared docs and Task Index ownership do not move. See [migration evidence and recovery](/Users/cwb/ViewTube-system-reference-2026-08-27/docs/migration/reference/BRANCH_CHECK_TO_VIEWTUBEX_RELOCATION_2026-08-30.md), maintained on the separate documentation-only branch and indexed as REC-061. This is execution evidence, not a second task ledger.
++
