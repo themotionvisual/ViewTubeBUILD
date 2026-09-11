@@ -1,3 +1,4 @@
+import type { BrainConfidenceLevel } from "../../types"
 import { buildChannelIntelligenceSnapshot, type ChannelIntelligenceSnapshot } from "./ChannelIntelligence"
 import {
  buildAlgorithmPrimingPlan,
@@ -17,6 +18,7 @@ import {
  type AlgorithmRecommendation,
  type AlgorithmSignal,
 } from "./AlgorithmStrategyEngine"
+import { recordAlgorithmIntelligenceEvent } from "./AlgorithmIntelligenceEventLedger"
 
 export interface AlgorithmProjectContext {
  channelId: string
@@ -58,6 +60,111 @@ const uniqueSignals = (signals: AlgorithmSignal[]) => {
   seen.add(signal.id)
   return true
  })
+}
+
+const confidenceLabel = (value: number): BrainConfidenceLevel =>
+ value >= 85 ? "high" : value >= 65 ? "medium" : "low"
+
+const stableEventId = (kind: string, sourceId: string) =>
+ `algorithm-event:${kind}:${sourceId}`
+
+const capturePortfolioProvenance = (input: {
+ project?: AlgorithmProjectContext | null
+ anomalySignals: AlgorithmSignal[]
+ opportunitySignals: AlgorithmSignal[]
+ primingPlan: AlgorithmPrimingPlan | null
+ recommendations: AlgorithmRecommendation[]
+}) => {
+ const projectId = input.project?.projectId || null
+
+ input.anomalySignals.forEach((signal) => recordAlgorithmIntelligenceEvent({
+  id: stableEventId("anomaly", signal.id),
+  channelId: signal.channelId,
+  projectId,
+  videoId: signal.videoId || null,
+  kind: "ANOMALY_ESCALATED",
+  sourceSystem: "anomaly",
+  sourceId: signal.id,
+  evidenceIds: signal.evidenceIds,
+  confidence: confidenceLabel(signal.confidence),
+  title: signal.entity ? `Anomaly: ${signal.entity}` : `Anomaly: ${signal.kind}`,
+  summary: `Material anomaly signal escalated into Algorithm Intelligence (${signal.kind}).`,
+  metadata: {
+   signalKind: signal.kind,
+   signalOrigin: signal.origin || "anomaly",
+   impactScore: signal.impactScore,
+   relativeDelta: signal.relativeDelta ?? null,
+   metric: signal.metric || null,
+  },
+ }))
+
+ input.opportunitySignals.forEach((signal) => recordAlgorithmIntelligenceEvent({
+  id: stableEventId("opportunity", signal.id),
+  channelId: signal.channelId,
+  projectId,
+  videoId: signal.videoId || null,
+  kind: "OPPORTUNITY_IDENTIFIED",
+  sourceSystem: "opportunity",
+  sourceId: signal.id,
+  evidenceIds: signal.evidenceIds,
+  confidence: confidenceLabel(signal.confidence),
+  title: signal.entity ? `Opportunity: ${signal.entity}` : `Opportunity: ${signal.kind}`,
+  summary: `Strategic opportunity identified independently of anomaly detection (${signal.kind}).`,
+  metadata: {
+   signalKind: signal.kind,
+   signalOrigin: signal.origin || "opportunity",
+   impactScore: signal.impactScore,
+   relativeDelta: signal.relativeDelta ?? null,
+   metric: signal.metric || null,
+  },
+ }))
+
+ if (input.primingPlan) {
+  recordAlgorithmIntelligenceEvent({
+   id: stableEventId("priming-plan", input.primingPlan.id),
+   channelId: input.primingPlan.channelId,
+   projectId: input.primingPlan.projectId || projectId,
+   videoId: input.primingPlan.videoId || null,
+   kind: "PRIMING_PLAN_CREATED",
+   sourceSystem: "priming",
+   sourceId: input.primingPlan.id,
+   primingPlanId: input.primingPlan.id,
+   evidenceIds: input.primingPlan.evidenceIds,
+   confidence: input.primingPlan.confidence,
+   title: "Algorithm Priming Plan",
+   summary: input.primingPlan.objectiveSummary,
+   metadata: {
+    launchAt: input.primingPlan.launchAt || null,
+    stepCount: input.primingPlan.steps.length,
+    guardrails: input.primingPlan.guardrails,
+   },
+  })
+ }
+
+ input.recommendations.forEach((recommendation) => recordAlgorithmIntelligenceEvent({
+  id: stableEventId("recommendation", recommendation.id),
+  channelId: recommendation.channelId,
+  projectId,
+  videoId: typeof recommendation.payload.videoId === "string" ? recommendation.payload.videoId : null,
+  kind: "RECOMMENDATION_CREATED",
+  sourceSystem: "decision",
+  sourceId: recommendation.signalId,
+  recommendationId: recommendation.id,
+  parentEventIds: [
+   stableEventId(recommendation.signalOrigin === "anomaly" ? "anomaly" : recommendation.signalOrigin === "opportunity" ? "opportunity" : "signal", recommendation.signalId),
+  ],
+  evidenceIds: recommendation.evidenceIds,
+  confidence: recommendation.confidence,
+  title: recommendation.title,
+  summary: recommendation.rationale,
+  metadata: {
+   command: recommendation.command,
+   score: recommendation.score,
+   signalOrigin: recommendation.signalOrigin,
+   targetToolId: recommendation.targetToolId,
+   checkpoint: recommendation.checkpoint,
+  },
+ }))
 }
 
 /**
@@ -115,6 +222,14 @@ export const buildAlgorithmIntelligencePortfolio = async (input: {
   }
   primingPlan = buildAlgorithmPrimingPlan({ video, intelligence: channelIntelligence })
  }
+
+ capturePortfolioProvenance({
+  project: input.project,
+  anomalySignals,
+  opportunitySignals,
+  primingPlan,
+  recommendations,
+ })
 
  return {
   channelId: input.channelId,
