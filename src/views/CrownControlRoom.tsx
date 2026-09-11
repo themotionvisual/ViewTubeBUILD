@@ -16,6 +16,8 @@ import {
   Sparkles,
   Workflow,
 } from "lucide-react"
+import { CrownLiveBrain } from "../components/crown/CrownLiveBrain"
+import { CrownLiveServices } from "../components/crown/CrownLiveServices"
 import { CROWN_LIFECYCLE, CROWN_MISSIONS, CROWN_SNAPSHOT_META, type CrownMissionSnapshot } from "../data/crownControlRoomSnapshot"
 import { CROWN_ARTIFACTS, CROWN_DECISIONS, CROWN_EXECUTION, CROWN_TASK_AUTHORITY, CROWN_VERIFICATION } from "../data/crownControlRoomRecords"
 
@@ -127,7 +129,10 @@ const CrownControlRoom: React.FC = () => {
 
       {section === "verification" ? <section className="mt-4 grid gap-4 lg:grid-cols-[.75fr_1.25fr]"><ReaderHeader title="Verification" note="Receipts are separated from work orders so the system cannot equate planned execution with proven behavior." tone="#c0f240" /><div className="grid gap-3">{CROWN_VERIFICATION.map((item) => <article key={item.record} className={`${cardClass} p-4`}><div className="flex items-center justify-between gap-2"><div className="text-[10px] font-black uppercase tracking-[.14em]">{item.kind}</div><span className="rounded-full border-[2px] border-black bg-[#ffefae] px-2 py-1 text-[9px] font-black uppercase">{item.state}</span></div><div className="mt-2 text-sm font-black">{item.missionId}</div><div className="mt-2 break-all text-[11px] font-bold text-black/55">{item.record}</div></article>)}</div></section> : null}
 
-      {["code", "services", "brain", "release"].includes(section) ? <section className="mt-4 grid gap-4 lg:grid-cols-[.75fr_1.25fr]"><ReaderHeader title={SECTIONS.find(([id]) => id === section)?.[1] || section} note="This surface is reserved for a live adapter in the next layer. Until then it stays explicitly read-only and does not synthesize operational truth." /><div className={`${cardClass} p-5`}><div className="text-sm font-black uppercase">No live adapter attached yet</div><p className="mt-3 text-xs font-bold leading-5">The Control Room will only promote this section once it can read the canonical owner directly and distinguish snapshot, preview, production and live verification.</p></div></section> : null}
+      {section === "services" ? <CrownLiveServices /> : null}
+      {section === "brain" ? <CrownLiveBrain /> : null}
+
+      {["code", "release"].includes(section) ? <section className="mt-4 grid gap-4 lg:grid-cols-[.75fr_1.25fr]"><ReaderHeader title={SECTIONS.find(([id]) => id === section)?.[1] || section} note="This surface is reserved for a canonical live adapter. Until then it stays explicitly read-only and does not synthesize operational truth." /><div className={`${cardClass} p-5`}><div className="text-sm font-black uppercase">No canonical live adapter attached yet</div><p className="mt-3 text-xs font-bold leading-5">The Control Room will only promote this section once it can distinguish repository state, preview state, production deployment and live verification.</p></div></section> : null}
     </main>
   )
 }
