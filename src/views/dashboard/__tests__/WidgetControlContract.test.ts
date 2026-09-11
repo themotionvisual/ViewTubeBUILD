@@ -31,13 +31,13 @@ describe("dashboard widget control rhythm", () => {
   })
 
   it.each([
-    ".dashboard-barrier .vt-widget-body .vt-button",
-    ".dashboard-barrier .vt-widget-body .vt-select",
-    ".dashboard-barrier .vt-widget-body .vt-dropdown-trigger",
-    ".dashboard-barrier .vt-widget-body .widget-select-trigger",
-    ".dashboard-barrier .vt-widget-body .vt-tab-button",
-    ".dashboard-barrier .vt-widget-body .vt-tab-btn",
-    ".dashboard-barrier .vt-widget-body .widget-step-tabs > button",
+    ":where(.dashboard-barrier) .vt-widget-body .vt-button",
+    ":where(.dashboard-barrier) .vt-widget-body .vt-select",
+    ":where(.dashboard-barrier) .vt-widget-body .vt-dropdown-trigger",
+    ":where(.dashboard-barrier) .vt-widget-body .widget-select-trigger",
+    ":where(.dashboard-barrier) .vt-widget-body .vt-tab-button",
+    ":where(.dashboard-barrier) .vt-widget-body .vt-tab-btn",
+    ":where(.dashboard-barrier) .vt-widget-body .widget-step-tabs > button",
   ])("routes %s through the canonical body-control rule", (selector) => {
     expect(widgetSystemCss).toContain(selector)
   })
@@ -55,9 +55,9 @@ describe("dashboard widget scrollbar contract", () => {
     expect(widgetScrollbarCss).toContain("--widget-scroll-edge: 3px;")
     expect(widgetScrollbarCss).toContain("--widget-scroll-fill: color-mix(in srgb, var(--widget-color) 75%, transparent);")
     expect(widgetScrollbarCss).toContain("--widget-scroll-ink: var(--widget-border);")
-    expect(widgetScrollbarCss).toContain(".dashboard-barrier .widget-scroll-controller")
-    expect(widgetScrollbarCss).toContain(".dashboard-barrier .widget-scroll-visual")
-    expect(widgetScrollbarCss).toContain(".dashboard-barrier .widget-scroll-segment")
+    expect(widgetScrollbarCss).toContain(":where(.dashboard-barrier) .widget-scroll-controller")
+    expect(widgetScrollbarCss).toContain(":where(.dashboard-barrier) .widget-scroll-visual")
+    expect(widgetScrollbarCss).toContain(":where(.dashboard-barrier) .widget-scroll-segment")
     expect(widgetScrollbarCss).toContain("width: 44px;")
     expect(widgetScrollbarCss).toContain("background: #fff;")
     expect(widgetScrollbarCss).toContain("border: 2px solid var(--widget-scroll-ink);")

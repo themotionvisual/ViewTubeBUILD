@@ -177,8 +177,8 @@
 }
 
 /* Preserve Community Post-style focus while respecting tone surface. */
-.dashboard-barrier .widget-text-input.vt-sized-control:focus,
-.dashboard-barrier .widget-text-input.vt-sized-control:focus-visible {
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control:focus,
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control:focus-visible {
   outline: none !important;
   border-color: var(--widget-color, #34cdea) !important;
   background: color-mix(in srgb, var(--widget-color, #34cdea) 18%, white) !important;

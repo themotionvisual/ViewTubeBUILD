@@ -82,8 +82,8 @@
 
 /* Match the Community Post input focus behavior exactly: widget-color
    border, 18% widget-color tint, and no browser-native outline. */
-.dashboard-barrier .widget-text-input.vt-sized-control:focus,
-.dashboard-barrier .widget-text-input.vt-sized-control:focus-visible {
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control:focus,
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control:focus-visible {
   outline: none;
   border-color: var(--widget-color, #000) !important;
   background: color-mix(in srgb, var(--widget-color, #fff) 18%, white) !important;
@@ -117,8 +117,8 @@
   opacity: 1;
 }
 
-.dashboard-barrier .widget-text-input.is-height-18:focus,
-.dashboard-barrier .widget-text-input.is-height-18:focus-visible {
+:where(.dashboard-barrier) .widget-text-input.is-height-18:focus,
+:where(.dashboard-barrier) .widget-text-input.is-height-18:focus-visible {
   border: 0 !important;
   box-shadow: none !important;
   background: color-mix(in srgb, var(--widget-color, #34cdea) 68%, white) !important;
