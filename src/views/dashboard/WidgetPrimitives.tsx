@@ -164,6 +164,21 @@ export const WidgetScrollArea: React.FC<WidgetScrollAreaProps> = ({
   )
 }
 
+export const WidgetAlphabeticalTag: React.FC<{
+  label: string
+  tone?: WidgetBadgeTone
+  height?: WidgetBadgeHeight
+  className?: string
+}> = ({ label, tone, height = 18, className = "" }) => (
+  <WidgetBadge
+    tone={tone ?? resolveAlphabeticalSpectrumSlot(label)}
+    height={height}
+    className={`is-alphabetical ${className}`.trim()}
+  >
+    {label}
+  </WidgetBadge>
+)
+
 export const WidgetSection: React.FC<{
   edge?: "inset" | "full"
   surface?: "transparent" | "white" | "subtle"
@@ -375,11 +390,14 @@ export const WidgetSelect: React.FC<{
   placeholder?: string
   disabled?: boolean
   className?: string
+  contentClassName?: string
   style?: React.CSSProperties
-}> = ({ value, onChange, options, label, placeholder = "Select…", disabled = false, className = "", style }) => {
+}> = ({ value, onChange, options, label, placeholder = "Select…", disabled = false, className = "", contentClassName = "", style }) => {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const [menuColor, setMenuColor] = useState("#FA618A")
   const [menuInk, setMenuInk] = useState("#9f3653")
+  const [menuStroke, setMenuStroke] = useState("#9f3653")
+  const [menuSurface, setMenuSurface] = useState("#fff")
 
   return (
     <Select.Root
@@ -392,6 +410,8 @@ export const WidgetSelect: React.FC<{
         const ink = computed.getPropertyValue("--widget-border").trim() || computed.color
         if (color) setMenuColor(color)
         if (ink) setMenuInk(ink)
+        if (computed.borderColor) setMenuStroke(computed.borderColor)
+        if (computed.backgroundColor) setMenuSurface(computed.backgroundColor)
       }}
     >
       <Select.Trigger
@@ -406,13 +426,15 @@ export const WidgetSelect: React.FC<{
       </Select.Trigger>
       <Select.Portal>
         <Select.Content
-          className="widget-select-content"
+          className={`widget-select-content ${contentClassName}`.trim()}
           position="popper"
           sideOffset={4}
           collisionPadding={12}
           style={{
             "--widget-select-color": menuColor,
             "--widget-select-ink": menuInk,
+            "--widget-select-stroke": menuStroke,
+            "--widget-select-surface": menuSurface,
           } as React.CSSProperties}
         >
           <Select.ScrollUpButton className="widget-select-scroll"><ChevronUp /></Select.ScrollUpButton>
@@ -661,6 +683,7 @@ export const WIDGET_BADGE_SPECTRUM = [
 export type WidgetBadgeSpectrumName = typeof WIDGET_BADGE_SPECTRUM[number]
 export type WidgetBadgeTone = WidgetBadgeSpectrumName | number
 export type WidgetBadgeStatus = "positive" | "warning" | "danger" | "neutral"
+export type WidgetBadgeHeight = 18 | 24 | 32 | 38
 
 const STATUS_TO_SLOT: Record<WidgetBadgeStatus, number> = {
   positive: 5,  // green
@@ -669,7 +692,7 @@ const STATUS_TO_SLOT: Record<WidgetBadgeStatus, number> = {
   neutral:  8,  // royal
 }
 
-const resolveBadgeHue = (tone?: WidgetBadgeTone, status?: WidgetBadgeStatus): string => {
+export const resolveBadgeHue = (tone?: WidgetBadgeTone, status?: WidgetBadgeStatus): string => {
   if (typeof tone === "number") {
     return VT_SPECTRUM_PALETTE_06[((tone % 12) + 12) % 12]
   }
@@ -682,17 +705,25 @@ const resolveBadgeHue = (tone?: WidgetBadgeTone, status?: WidgetBadgeStatus): st
   return "var(--widget-color, #40C6E9)"
 }
 
+/** Maps A–Z evenly and deterministically across the canonical 12-color spectrum. */
+export const resolveAlphabeticalSpectrumSlot = (label: string): number => {
+  const firstLetter = label.trim().toUpperCase().match(/[A-Z]/)?.[0]
+  if (!firstLetter) return 0
+  return Math.round(((firstLetter.charCodeAt(0) - 65) * 11) / 25)
+}
+
 export const WidgetBadge: React.FC<{
   tone?: WidgetBadgeTone
   status?: WidgetBadgeStatus
+  height?: WidgetBadgeHeight
   icon?: React.ReactNode
   className?: string
   children: React.ReactNode
-}> = ({ tone, status, icon, className = "", children }) => {
+}> = ({ tone, status, height = 18, icon, className = "", children }) => {
   const hue = resolveBadgeHue(tone, status)
   return (
     <span
-      className={`vt-spectrum-badge ${className}`.trim()}
+      className={`vt-spectrum-badge is-height-${height} ${className}`.trim()}
       style={{ ["--vt-spectrum-badge-stroke" as string]: hue }}
     >
       {icon && <span className="vt-spectrum-badge__icon" aria-hidden="true">{icon}</span>}
