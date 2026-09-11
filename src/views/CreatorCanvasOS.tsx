@@ -3,6 +3,7 @@ import { Clapperboard, Compass, GitBranch, Lightbulb, NotebookPen, ShieldCheck }
 import { useBrain } from "../context/useBrain"
 import { createSuperToolActionPacket } from "../services/superToolActionPackets"
 import InternalSuperToolWorkbench, {
+ type InternalToolProps,
  type InternalWorkbenchConfig,
 } from "./supertools/InternalSuperToolWorkbench"
 
@@ -447,8 +448,8 @@ const CreatorCanvasDeepActions: React.FC = () => {
  )
 }
 
-const CreatorCanvasOS: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => (
- <InternalSuperToolWorkbench config={config} embedded={embedded}>
+const CreatorCanvasOS: React.FC<InternalToolProps> = (props) => (
+ <InternalSuperToolWorkbench config={config} {...props}>
   <CreatorCanvasDeepActions />
  </InternalSuperToolWorkbench>
 )
