@@ -89,6 +89,15 @@ const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.Comp
  "comment-replier": React.lazy(() => import("./widgets/CommentReplyWidget").then((module) => ({ default: module.CommentReplyWidget }))),
  "ai-journal": React.lazy(() => import("./widgets/AIJournalWidget").then((module) => ({ default: module.AIJournalWidget }))),
  "video-autopsy": React.lazy(() => import("./widgets/VideoAutopsyWidget").then((module) => ({ default: module.VideoAutopsyWidget }))),
+ "ab-thumbnail": React.lazy(() => import("./widgets/ABThumbnailWidget").then((module) => ({ default: module.ABThumbnailWidget }))),
+ "algo-benchmark": React.lazy(() => import("./widgets/AlgoBenchmarkWidget").then((module) => ({ default: module.AlgoBenchmarkWidget }))),
+ "cpm-geo": React.lazy(() => import("./widgets/CpmGeoWidget").then((module) => ({ default: module.CpmGeoWidget }))),
+ "device-matrix": React.lazy(() => import("./widgets/DeviceMatrixWidget").then((module) => ({ default: module.DeviceMatrixWidget }))),
+ "guest-ratio": React.lazy(() => import("./widgets/GuestRatioWidget").then((module) => ({ default: module.GuestRatioWidget }))),
+ "playback-origins": React.lazy(() => import("./widgets/PlaybackOriginsWidget").then((module) => ({ default: module.PlaybackOriginsWidget }))),
+ "premium-pulse": React.lazy(() => import("./widgets/PremiumPulseWidget").then((module) => ({ default: module.PremiumPulseWidget }))),
+ "sharing-dna": React.lazy(() => import("./widgets/SharingDnaWidget").then((module) => ({ default: module.SharingDnaWidget }))),
+ "video-comment-operator": React.lazy(() => import("./widgets/VideoCommentOperatorWidget").then((module) => ({ default: module.VideoCommentOperatorWidget }))),
 }
 
 const INLINE_WIDGET_RENDERER_KEYS = [
