@@ -90,6 +90,17 @@ const SELECTORS = [
   ".widget-toggle-switch",
   ".widget-checkbox",
   ".widget-radio",
+  // Reference-library primitives. These were missing from the first pass, which
+  // left the spectrum badges — the densest use of the tone system on the page —
+  // unguarded through the Phase 4 cascade rewrite.
+  ".vt-spectrum-badge",
+  ".vt-spectrum-badge.is-alphabetical",
+  ".vt-spectrum-badge__icon",
+  ".widget-reference-family",
+  ".widget-reference-variants",
+  ".widget-reference-variant",
+  ".widget-tag",
+  ".widget-badge",
 ]
 
 // Properties whose value is derived from content rather than from the cascade,
