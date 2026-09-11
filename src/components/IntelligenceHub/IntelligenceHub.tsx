@@ -33,7 +33,7 @@ import {
 import {
  loadScopedIntelligenceHistory,
  loadScopedIntelligenceReport,
- ULTIMATE_REPORT_STORAGE_KEY,
+ persistScopedIntelligenceReport,
 } from "./reportStorage"
 
 const ULTIMATE_REPORT_EVENT = "vt_generate_ultimate_report"
@@ -259,7 +259,7 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
    setSectionStates(unifiedReport.sectionStates || [])
    setGenerationEvents(unifiedReport.generationEvents || [])
    setPreflight(unifiedReport.meta.diagnostics.preflight || null)
-   localStorage.setItem(`${ULTIMATE_REPORT_STORAGE_KEY}:${evidence.channelId}`, JSON.stringify(unifiedReport))
+   persistScopedIntelligenceReport(localStorage, unifiedReport)
    readHistory(evidence.channelId)
    emitSignal("intelligence-hub", brainUpdate.status === "persisted" ? "ULTIMATE_REPORT_GENERATED" : "ULTIMATE_REPORT_BRAIN_DEGRADED", {
     generationId: unifiedReport.meta.generationId,
@@ -346,7 +346,8 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
    controller.signal.throwIfAborted()
    const updatedReport = { ...ultimateReport, brainUpdate: result }
    setUltimateReport(updatedReport)
-   localStorage.setItem(`${ULTIMATE_REPORT_STORAGE_KEY}:${activeEvidence.channelId}`, JSON.stringify(updatedReport))
+   persistScopedIntelligenceReport(localStorage, updatedReport)
+   readHistory(activeEvidence.channelId)
    setGenerationStatus(result.status === "persisted" ? "AI Brain persistence completed." : result.notes.join(" "))
   } catch (error) {
    if (!(error instanceof DOMException && error.name === "AbortError")) {
