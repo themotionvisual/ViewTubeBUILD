@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "viewtube.work-order.v1",
+  "missionId": "VT-MISSION-CITADEL-auth-sync-recovery",
+  "executionId": "VT-EXEC-CITADEL-auth-sync-recovery-01",
+  "checkout": "themotionvisual/ViewTubeBUILD",
+  "baseRef": "main",
+  "baseSha": "4a103111b67ea8a5f4614925cbb391c662b31084",
+  "headRef": "codex/feat/crown-integration-system",
+  "writers": [{"role": "citadel-auth-sync-specialist", "paths": ["src/auth/**", "server/**", "api/auth/**", "src/features/vt-sync-local/**"]}],
+  "reviewers": ["viewtube-prince-citadel", "viewtube-verification-chancellor"],
+  "orderedSteps": ["Trace server session, selected channel, OAuth capability and sync ownership.", "Separate login recovery from analytics hydration.", "Identify duplicate writers, fallback paths and stale client authority.", "Exercise fresh login, return session, expiry, reconnect and proxy/scope failure paths.", "Record auth/sync receipts without changing OAuth scope."],
+  "testsRequired": ["account/auth contract tests", "VT-SYNC focused tests", "production build"],
+  "releaseRequired": false,
+  "status": "planned"
+}
