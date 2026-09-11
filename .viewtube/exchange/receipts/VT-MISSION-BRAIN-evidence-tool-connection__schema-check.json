@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "viewtube.receipt.v1",
+  "missionId": "VT-MISSION-BRAIN-evidence-tool-connection",
+  "receiptId": "VT-RECEIPT-BRAIN-schema-check",
+  "worker": "viewtube-verification-chancellor",
+  "kind": "verification",
+  "changedPaths": [],
+  "checks": [{"name": "domain-contract", "state": "documented", "evidence": "Mission and work-order records represent Brain capability, evidence, memory, user control and tool-proposal boundaries without claiming execution."}],
+  "artifacts": [],
+  "limitations": ["No Brain or tool implementation has been executed under this mission yet."],
+  "status": "partial"
+}
