@@ -1,0 +1,185 @@
+/* ViewTube primitive tone + split-icon system.
+   Applies after widgetPrimitiveVariants.css and widgetPrimitiveExactHeights.css. */
+
+/* ── Shared tone surfaces ───────────────────────────────────── */
+.vt-sized-control.is-tone-default,
+.widget-progress-bar.is-tone-default {
+  --vt-tone-bg: #fff;
+  --vt-tone-fill: color-mix(in srgb, var(--widget-color, #34cdea) 54%, white);
+  --vt-tone-ink: var(--widget-ink, var(--widget-border, #222));
+  --vt-tone-stroke: var(--widget-border, var(--widget-ink, #222));
+}
+
+.vt-sized-control.is-tone-primary,
+.widget-progress-bar.is-tone-primary {
+  --vt-tone-bg: var(--widget-color, #34cdea);
+  --vt-tone-fill: var(--widget-color, #34cdea);
+  --vt-tone-ink: var(--widget-ink, var(--widget-border, #222));
+  --vt-tone-stroke: var(--widget-border, var(--widget-ink, #222));
+}
+
+.vt-sized-control.is-tone-secondary,
+.widget-progress-bar.is-tone-secondary {
+  --vt-tone-bg: color-mix(in srgb, var(--widget-color, #34cdea) 22%, white);
+  --vt-tone-fill: color-mix(in srgb, var(--widget-color, #34cdea) 72%, white);
+  --vt-tone-ink: var(--widget-ink, var(--widget-border, #222));
+  --vt-tone-stroke: color-mix(in srgb, var(--widget-color, #34cdea) 78%, var(--widget-ink, #222));
+}
+
+.vt-button.vt-sized-control,
+.widget-action.vt-sized-control,
+.widget-split-button.vt-sized-control,
+.widget-select-trigger.vt-sized-control,
+.widget-text-input.vt-sized-control,
+.widget-video-select-trigger.vt-sized-control {
+  background: var(--vt-tone-bg, #fff) !important;
+  color: var(--vt-tone-ink, currentColor) !important;
+  border-color: var(--vt-tone-stroke, currentColor) !important;
+}
+
+/* Primary and secondary input/select surfaces should remain readable while
+   using the same monochromatic widget palette. */
+.widget-text-input.vt-sized-control.is-tone-primary,
+.widget-select-trigger.vt-sized-control.is-tone-primary,
+.widget-video-select-trigger.vt-sized-control.is-tone-primary {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 86%, white) !important;
+}
+
+.widget-text-input.vt-sized-control.is-tone-secondary,
+.widget-select-trigger.vt-sized-control.is-tone-secondary,
+.widget-video-select-trigger.vt-sized-control.is-tone-secondary {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 24%, white) !important;
+}
+
+/* 18px controls are always filled, borderless and shadowless, with a distinct
+   fill for each tone. */
+.vt-sized-control.is-height-18.is-tone-default,
+.widget-progress-bar.is-height-18.is-tone-default {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 34%, white) !important;
+}
+
+.vt-sized-control.is-height-18.is-tone-primary,
+.widget-progress-bar.is-height-18.is-tone-primary {
+  background: var(--widget-color, #34cdea) !important;
+}
+
+.vt-sized-control.is-height-18.is-tone-secondary,
+.widget-progress-bar.is-height-18.is-tone-secondary {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 62%, white) !important;
+}
+
+.vt-sized-control.is-height-18,
+.widget-progress-bar.is-height-18 {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ── Split-left icon bay variants ───────────────────────────── */
+.widget-split-button.is-left-split .widget-split-button-icon,
+.widget-video-select-trigger .widget-video-select-trigger-icon {
+  color: inherit;
+}
+
+/* White icon stroke on a full colored bay. */
+.widget-split-button.is-left-split.is-icon-white-on-color .widget-split-button-icon,
+.widget-video-select-trigger.is-icon-white-on-color .widget-video-select-trigger-icon {
+  background: var(--widget-color, #34cdea) !important;
+  color: #fff !important;
+}
+
+.widget-split-button.is-left-split.is-icon-white-on-color .widget-split-button-icon svg,
+.widget-video-select-trigger.is-icon-white-on-color .widget-video-select-trigger-icon svg {
+  stroke: #fff !important;
+  color: #fff !important;
+}
+
+/* Colored icon stroke on a light/white bay. */
+.widget-split-button.is-left-split.is-icon-color-on-light .widget-split-button-icon,
+.widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-icon {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 14%, white) !important;
+  color: var(--widget-color, #34cdea) !important;
+}
+
+.widget-split-button.is-left-split.is-icon-color-on-light .widget-split-button-icon svg,
+.widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-icon svg {
+  stroke: var(--widget-color, #34cdea) !important;
+  color: var(--widget-color, #34cdea) !important;
+}
+
+/* 18px split controls keep no separator stroke, regardless of icon mode. */
+.widget-split-button.is-left-split.is-height-18 .widget-split-button-icon,
+.widget-video-select-trigger.is-height-18 .widget-video-select-trigger-icon {
+  border-right: 0 !important;
+}
+
+/* ── Icon scale ratios ─────────────────────────────────────────
+   Larger controls now scale the icon with the bay instead of leaving the
+   Lucide glyph visually undersized. */
+.widget-split-button.is-left-split.is-height-18 .widget-split-button-icon svg,
+.widget-video-select-trigger.is-height-18 .widget-video-select-trigger-icon svg,
+.widget-video-select-trigger.is-height-18 .widget-video-select-trigger-chevron svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.widget-split-button.is-left-split.is-height-24 .widget-split-button-icon svg,
+.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-icon svg,
+.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-chevron svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.widget-split-button.is-left-split.is-height-32 .widget-split-button-icon svg,
+.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-icon svg,
+.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-chevron svg {
+  width: 25px !important;
+  height: 25px !important;
+}
+
+.widget-split-button.is-left-split.is-height-38 .widget-split-button-icon svg,
+.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-icon svg,
+.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-chevron svg {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+/* Keep chevrons slightly calmer than primary icon bays. */
+.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-chevron svg { width: 20px !important; height: 20px !important; }
+.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-chevron svg { width: 23px !important; height: 23px !important; }
+
+/* ── Progress tone anatomy ───────────────────────────────────── */
+.widget-progress-bar.is-tone-default {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 12%, white) !important;
+  border-color: var(--vt-tone-stroke) !important;
+}
+.widget-progress-bar.is-tone-default .widget-progress-bar-fill {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 54%, white);
+}
+
+.widget-progress-bar.is-tone-primary {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 28%, white) !important;
+  border-color: var(--vt-tone-stroke) !important;
+}
+.widget-progress-bar.is-tone-primary .widget-progress-bar-fill {
+  background: var(--widget-color, #34cdea);
+}
+
+.widget-progress-bar.is-tone-secondary {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 8%, white) !important;
+  border-color: var(--vt-tone-stroke) !important;
+}
+.widget-progress-bar.is-tone-secondary .widget-progress-bar-fill {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 72%, white);
+}
+
+.widget-progress-bar.is-height-18 {
+  border: 0 !important;
+}
+
+/* Preserve Community Post-style focus while respecting tone surface. */
+.dashboard-barrier .widget-text-input.vt-sized-control:focus,
+.dashboard-barrier .widget-text-input.vt-sized-control:focus-visible {
+  outline: none !important;
+  border-color: var(--widget-color, #34cdea) !important;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 18%, white) !important;
+}
