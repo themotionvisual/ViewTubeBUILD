@@ -9,6 +9,7 @@ import {expansionPackTemplates} from './templates/expansionPack';
 import {motionGraphicsTemplates} from './templates/motionGraphics';
 import {verticalSceneTemplates} from './templates/verticalScenes';
 import {youtuberOpenerTemplates} from './templates/youtuberOpeners';
+import {youtuberUtilityTemplates} from './templates/youtuberUtility';
 
 export const templateCatalog: TemplateDefinition[] = [
   ...textTemplates,
@@ -21,6 +22,7 @@ export const templateCatalog: TemplateDefinition[] = [
   ...motionGraphicsTemplates,
   ...verticalSceneTemplates,
   ...youtuberOpenerTemplates,
+  ...youtuberUtilityTemplates,
 ];
 
 export function filterTemplateCatalog(category?: TemplateCategory, query = ''): TemplateDefinition[] {
