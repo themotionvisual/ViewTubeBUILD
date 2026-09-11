@@ -40,6 +40,7 @@ const MediaAnalyzer = lazy(() => import("../views/MediaAnalyzer"))
 const SeoGenerator = lazy(() => import("../views/SeoGenerator"))
 const VideoPublisher = lazy(() => import("../views/VideoPublisher"))
 const HookGenerator = lazy(() => import("../views/HookGenerator"))
+const ScriptArchitect = lazy(() => import("../views/ScriptArchitect"))
 const StoryboardStudio = lazy(() => import("../views/StoryboardStudio"))
 const ComponentGridLab = lazy(() =>
  import("../components/ComponentGridLab").then((m) => ({ default: m.ComponentGridLab })),
@@ -153,6 +154,7 @@ export const AppRoutes: React.FC = () => {
     <Route path="/seo-generator" element={<SeoGenerator />} />
     <Route path="/video-publisher" element={<VideoPublisher />} />
     <Route path="/hook-generator" element={<HookGenerator />} />
+    <Route path="/script-architect" element={<ScriptArchitect />} />
     <Route path="/thumbnail-studio" element={<Navigate to="/reference-studio/thumbnail-studio" replace />} />
     {/* Algorithm Architect is now an evidence-backed mode of the Brain, not a
         separate page. The component still exists for Reference Studio / bench. */}

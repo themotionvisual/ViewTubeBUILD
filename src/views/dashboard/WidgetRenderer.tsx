@@ -23,6 +23,7 @@ import {
   Monitor,
   Rocket,
   Magnet,
+  NotebookPen,
   RefreshCw,
   BookOpen,
   Sparkles,
@@ -960,6 +961,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
         else if (action.icon === "Rocket") IconComponent = Rocket;
         else if (action.icon === "Magnet") IconComponent = Magnet;
         else if (action.icon === "WandSparkles") IconComponent = WandSparkles;
+        else if (action.icon === "NotebookPen") IconComponent = NotebookPen;
         else if (action.icon === "Layers") IconComponent = Layers;
         else if (action.icon === "CalendarDays") IconComponent = CalendarDays;
         else if (action.icon === "Bot") IconComponent = Bot;

@@ -121,6 +121,7 @@ export const PAGE_REGISTRY: readonly PageRegistryEntry[] = Object.freeze([
  { path: "/seo-generator", title: "SEO Generator", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/video-publisher", title: "Video Publisher", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/hook-generator", title: "Hook Generator", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
+ { path: "/script-architect", title: "Script Architect", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/thumbnail-studio", title: "Thumbnail Studio", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/algorithm-architect", title: "Algorithm Architect", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/storyboard-studio", title: "Storyboard Studio", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
