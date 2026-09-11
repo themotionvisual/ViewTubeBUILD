@@ -67,7 +67,7 @@ export const buildBrainContextPack = (input: {
 
  let resolvedAlgorithmIntelligence = input.algorithmIntelligence || ""
  if (!resolvedAlgorithmIntelligence && controls.allowAnalytics && taskProfile.id === "evaluation") {
-  const channelId = getActiveBrainControlChannel()
+  const channelId = getActiveBrainControlChannel() || input.snapshot.channel.handle
   if (channelId) {
    try {
     resolvedAlgorithmIntelligence = buildBrainAlgorithmEvaluationContext(channelId).context
