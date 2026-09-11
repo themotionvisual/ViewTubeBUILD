@@ -1,7 +1,8 @@
 import React from "react"
-import { Routes, Route, Navigate } from "react-router-dom"
+import { Routes, Route, Navigate, useSearchParams } from "react-router-dom"
 
 import { lazyRoute, RouteSuspense } from "./lazyRoute"
+import { isMountableSuperTool, superToolRoute } from "./superToolViewRegistry"
 
 // `lazyRoute` = `React.lazy` + one retry on chunk-load failure + a single
 // hard-reload backstop when the retry also fails (usually a stale
@@ -58,6 +59,26 @@ const VtSyncLocalAnalyticsPage = lazy(
 const AIBrainCommandInterface = lazy(() => import("../views/AIBrainCommandInterface"))
 const BrainControlsPage = lazy(() => import("../views/BrainControlsPage"))
 const AccountConnectPage = lazy(() => import("../views/AccountConnectPage"))
+const SuperToolIndex = lazy(() => import("../views/SuperToolIndex"))
+const SuperToolRoute = lazy(() => import("../views/SuperToolRoute"))
+
+/**
+ * Honors the legacy "/data-transparency?internalTool=<id>" address.
+ *
+ * Brain command actions persisted before this route existed still carry that
+ * URL in localStorage, so it has to keep resolving; without the parameter this
+ * is just the Data Transparency Center.
+ */
+const InternalToolRedirect: React.FC = () => {
+ const [params] = useSearchParams()
+ const requestedTool = params.get("internalTool")
+ if (isMountableSuperTool(requestedTool)) {
+  const commandActionId = params.get("commandActionId")
+  const suffix = commandActionId ? `?commandActionId=${encodeURIComponent(commandActionId)}` : ""
+  return <Navigate to={`${superToolRoute(requestedTool)}${suffix}`} replace />
+ }
+ return <DataTransparencyCenter />
+}
 
 export const AppRoutes: React.FC = () => {
  return (
@@ -78,7 +99,12 @@ export const AppRoutes: React.FC = () => {
     <Route path="/account/connect" element={<AccountConnectPage />} />
     <Route path="/settings" element={<Settings />} />
     <Route path="/subscribe" element={<Subscribe />} />
-    <Route path="/data-transparency" element={<DataTransparencyCenter />} />
+    {/* Internal super-tools. The runtime plan has always documented an address
+        for these ("/data-transparency?internalTool=<id>") but nothing read the
+        parameter, so every prototype was unreachable. This is that reader. */}
+    <Route path="/tools" element={<SuperToolIndex />} />
+    <Route path="/tools/:toolId" element={<SuperToolRoute />} />
+    <Route path="/data-transparency" element={<InternalToolRedirect />} />
     <Route path="/ai-brain" element={<AIBrainCommandInterface />} />
     <Route path="/brain-controls" element={<BrainControlsPage />} />
     <Route path="/local-analytics" element={<VtSyncLocalAnalyticsPage />} />
