@@ -77,7 +77,7 @@
   width: 100%;
   padding-inline: 9px;
   color: var(--widget-ink, var(--widget-border, #222));
-  caret-color: var(--widget-color, #34cdea);
+  caret-color: currentColor;
 }
 
 /* Match the Community Post input focus behavior exactly: widget-color
@@ -140,7 +140,7 @@
   height: 100%;
   display: grid;
   place-items: center;
-  border-right: var(--vt-primitive-stroke, 2px) solid var(--widget-border, var(--widget-ink, currentColor));
+  border-right: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, currentColor));
   background: color-mix(in srgb, var(--widget-color, #34cdea) 74%, white);
 }
 
@@ -194,7 +194,7 @@
 
 .widget-video-select-trigger-icon {
   background: color-mix(in srgb, var(--widget-color, #34cdea) 82%, white);
-  border-right: var(--vt-primitive-stroke, 2px) solid var(--widget-border, var(--widget-ink, currentColor));
+  border-right: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, currentColor));
 }
 
 .widget-video-select-trigger.is-height-18 .widget-video-select-trigger-icon {
@@ -253,9 +253,10 @@
   max-height: 340px;
   overflow: auto;
   padding: 7px;
-  background: #fff;
-  border: 2px solid var(--widget-border, var(--widget-ink, #222));
-  border-radius: 7px;
+  background: var(--vt-tone-bg, #fff);
+  color: var(--vt-tone-ink, var(--widget-ink, #222));
+  border: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, #222));
+  border-radius: var(--vt-primitive-radius, 7px);
   box-shadow: 4px 4px 0 color-mix(in srgb, var(--widget-color, #34cdea) 45%, transparent);
 }
 
@@ -263,23 +264,39 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #fff;
+  background: var(--vt-tone-bg, #fff);
 }
 
 .widget-video-select-option {
   width: 100%;
-  min-height: 44px;
+  min-height: max(var(--vt-primitive-height, 38px), 38px);
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr);
   gap: 8px;
   align-items: center;
   padding: 5px;
   border: 2px solid color-mix(in srgb, var(--widget-border, #222) 72%, transparent);
-  border-radius: 6px;
-  background: #fff;
-  color: var(--widget-ink, var(--widget-border, #222));
+  border-radius: var(--vt-primitive-radius, 7px);
+  background: color-mix(in srgb, var(--vt-tone-bg, #fff) 86%, white);
+  color: var(--vt-tone-ink, var(--widget-ink, var(--widget-border, #222)));
   text-align: left;
   cursor: pointer;
+}
+
+
+/* Portalled selects mirror the closed trigger's exact surface and outline. */
+.widget-select-content.vt-sized-control {
+  border-width: var(--vt-primitive-stroke, 2px);
+  border-color: var(--widget-select-stroke, var(--widget-select-ink, #222));
+  border-radius: var(--vt-primitive-radius, 7px);
+  background: var(--widget-select-surface, #fff);
+}
+
+.widget-select-content.vt-sized-control .widget-select-item,
+.widget-select-content.vt-sized-control .widget-select-scroll {
+  min-height: var(--vt-primitive-height, 32px);
+  height: var(--vt-primitive-height, 32px);
+  font-size: var(--vt-primitive-font, 11px);
 }
 
 .widget-video-select-option:hover,
@@ -401,11 +418,46 @@
   opacity: .5;
 }
 
+
+.widget-reference-header-controls {
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.widget-reference-header-controls > .widget-header-toggle:first-child {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.widget-reference-header-controls > .widget-header-toggle:first-child::-webkit-scrollbar {
+  display: none;
+}
+
+.widget-reference-header-controls .widget-header-stepper {
+  flex: none;
+}
+
 .widget-reference-variants {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
   align-items: end;
+}
+
+
+/* Square families keep all four canonical sizes on one compact row. */
+.widget-reference-square-variants {
+  display: grid;
+  grid-template-columns: repeat(4, max-content);
+  gap: 6px;
+  align-items: end;
+  overflow-x: auto;
+  padding-bottom: 2px;
 }
 
 .widget-reference-variant {
