@@ -80,29 +80,29 @@
     ]
   },
   "build": {
+    "Dashboard.js": {
+      "raw": 87649,
+      "gzip": 25344
+    },
     "Dashboard.css": {
       "raw": 189462,
       "gzip": 26332
     },
-    "Dashboard.js": {
-      "raw": 87649,
-      "gzip": 25334
-    },
     "UIReferenceLibraryWidget.js": {
       "raw": 20772,
-      "gzip": 5975
+      "gzip": 5974
     },
     "UIReferenceLibraryWidget.css": {
       "raw": 25752,
       "gzip": 3863
     },
-    "index.css": {
-      "raw": 306337,
-      "gzip": 44007
-    },
     "index.js": {
       "raw": 190764,
-      "gzip": 55537
+      "gzip": 55539
+    },
+    "index.css": {
+      "raw": 306370,
+      "gzip": 44018
     }
   }
 }

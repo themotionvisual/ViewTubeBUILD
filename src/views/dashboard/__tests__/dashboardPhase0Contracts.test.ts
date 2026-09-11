@@ -6,6 +6,7 @@
  * cascade; both are safe only while the registry stays the single source of
  * truth and every declared dimension keeps working.
  */
+import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import {
   DASHBOARD_WIDGET_BY_ID,
@@ -35,6 +36,14 @@ describe("registry is the single source of truth", () => {
     expect(duplicates).toEqual([])
   })
 
+  it("keeps rendererKey equal to id", () => {
+    // The two are the same value today. A definition that drifts would resolve
+    // through the lazy map under one name while the layout persists the other.
+    for (const widget of DASHBOARD_WIDGET_REGISTRY) {
+      expect(widget.rendererKey, `${widget.id} rendererKey`).toBe(widget.id)
+    }
+  })
+
   it("indexes every definition by id", () => {
     for (const widget of DASHBOARD_WIDGET_REGISTRY) {
       expect(DASHBOARD_WIDGET_BY_ID[widget.id]?.id).toBe(widget.id)
@@ -46,6 +55,42 @@ describe("registry is the single source of truth", () => {
     const orphans = [...DASHBOARD_WIDGET_RENDERER_KEYS].filter((key) => !claimed.has(key))
 
     expect(orphans).toEqual([])
+  })
+})
+
+describe("the renderer's inline key list matches its actual branches", () => {
+  // INLINE_WIDGET_RENDERER_KEYS is hand-maintained, and DASHBOARD_WIDGET_RENDERER_KEYS
+  // is built from it. If a branch is deleted without its list entry, certification
+  // keeps reporting the widget as covered while it renders nothing — a failure that
+  // shows up as an empty grid slot rather than an error.
+  const rendererSource = readFileSync(new URL("../WidgetRenderer.tsx", import.meta.url), "utf8")
+
+  const declared = new Set(
+    (rendererSource.match(/const INLINE_WIDGET_RENDERER_KEYS[\s\S]*?\n\]/)?.[0] ?? "")
+      .match(/"([a-z0-9-]+)"/g)
+      ?.map((quoted) => quoted.slice(1, -1)) ?? [],
+  )
+
+  // Count distinct ids, not occurrences: one branch can test the same id again in a
+  // ternary for its icon or copy, which is not a second branch.
+  const branched = new Set(
+    (rendererSource.match(/widget\.id === "([a-z0-9-]+)"/g) ?? [])
+      .map((match) => match.replace(/.*"(.*)"/, "$1")),
+  )
+
+  it("declares every id the resolver actually branches on", () => {
+    const undeclared = [...branched].filter((id) => !declared.has(id)).sort()
+    expect(undeclared).toEqual([])
+  })
+
+  it("branches on every id it declares", () => {
+    const unbranched = [...declared].filter((id) => !branched.has(id)).sort()
+    expect(unbranched).toEqual([])
+  })
+
+  it("finds a registry definition for every inline key", () => {
+    const unregistered = [...declared].filter((id) => !DASHBOARD_WIDGET_BY_ID[id]).sort()
+    expect(unregistered).toEqual([])
   })
 })
 
