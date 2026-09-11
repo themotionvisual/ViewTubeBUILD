@@ -2,6 +2,7 @@ import type { SuperToolId } from "../../types"
 import { createBrainSuperToolHandoff } from "./BrainSuperToolBridge"
 import type { AlgorithmRecommendation } from "./AlgorithmStrategyEngine"
 import { recordAlgorithmIntelligenceEvent, type AlgorithmEvaluationTarget } from "./AlgorithmIntelligenceEventLedger"
+import { attachAlgorithmMonitoringSchedule } from "./AlgorithmMonitoringSchedule"
 
 export const ALGORITHM_COMMAND_TARGETS: Partial<Record<AlgorithmRecommendation["command"], SuperToolId>> = {
  AMPLIFY: "audience-loop-studio",
@@ -66,7 +67,7 @@ export const createAlgorithmRecommendationHandoff = async (input: {
  const evaluationTargets = evaluationTargetsFor(recommendation)
 
  if (recommendation.command === "HOLD") {
-  const event = recordAlgorithmIntelligenceEvent({
+  const event = attachAlgorithmMonitoringSchedule(recordAlgorithmIntelligenceEvent({
    channelId: recommendation.channelId,
    projectId: input.projectId,
    videoId: typeof recommendation.payload.videoId === "string" ? recommendation.payload.videoId : null,
@@ -81,7 +82,7 @@ export const createAlgorithmRecommendationHandoff = async (input: {
    evaluationTargets,
    checkpointAt: checkpointAtFor(evaluationTargets),
    metadata: { command: recommendation.command, checkpoint: recommendation.checkpoint, hold: true },
-  })
+  }))
   return {
    status: "hold" as const,
    recommendation,
@@ -119,7 +120,7 @@ export const createAlgorithmRecommendationHandoff = async (input: {
   confidence: recommendation.confidence,
  })
 
- const event = recordAlgorithmIntelligenceEvent({
+ const event = attachAlgorithmMonitoringSchedule(recordAlgorithmIntelligenceEvent({
   channelId: recommendation.channelId,
   projectId: input.projectId,
   videoId: typeof recommendation.payload.videoId === "string" ? recommendation.payload.videoId : null,
@@ -140,7 +141,7 @@ export const createAlgorithmRecommendationHandoff = async (input: {
    destinationToolId,
    checkpoint: recommendation.checkpoint,
   },
- })
+ }))
 
  return {
   status: "handoff_created" as const,
