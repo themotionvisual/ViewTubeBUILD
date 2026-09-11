@@ -1,7 +1,6 @@
 import React, { useState } from "react"
 import {
   Check,
-  FileVideo2,
   ImagePlus,
   Layers,
   Plus,
@@ -9,7 +8,6 @@ import {
   Save,
   Sparkles,
   UploadCloud,
-  X,
 } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
 import {
@@ -107,10 +105,31 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
   )
 
   const sectionHeading = (title: string, detail: string) => (
-    <header className="flex items-center justify-between gap-2 border-b pb-2" style={{ borderColor: "color-mix(in srgb, var(--widget-color) 30%, transparent)" }}>
+    <header
+      className="flex items-center justify-between gap-2 border-b pb-2"
+      style={{ borderColor: "color-mix(in srgb, var(--widget-color) 30%, transparent)" }}
+    >
       <strong className="text-xs font-black uppercase tracking-wider">{title}</strong>
       <span className="text-[9px] font-black uppercase opacity-55">{detail}</span>
     </header>
+  )
+
+  const familyHeading = (title: string, detail: string) => (
+    <div className="widget-reference-family-title">
+      <span>{title}</span>
+      <small>{detail}</small>
+    </div>
+  )
+
+  const SizeVariants = ({ children }: { children: (height: WidgetControlHeight) => React.ReactNode }) => (
+    <div className="widget-reference-variants">
+      {CONTROL_HEIGHTS.map((height) => (
+        <div className="widget-reference-variant" key={height}>
+          <small>{height}px</small>
+          {children(height)}
+        </div>
+      ))}
+    </div>
   )
 
   return (
@@ -121,90 +140,129 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
       >
         {(activeCategory === "all" || activeCategory === "controls") && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("1. Standard Control Heights", "18 / 24 / 32 / 38 px")}
+            {sectionHeading("1. Standard Controls", "18 / 24 / 32 / 38 px")}
             <p className="text-[10px] font-bold uppercase opacity-60">
-              18px controls are borderless. 24px, 32px and 38px controls use a 2px stroke.
+              Component families are grouped together for direct size comparison. 18px controls are filled, borderless and shadowless. 24px, 32px and 38px controls use a 2px stroke.
             </p>
 
-            <div className="grid gap-3">
-              {CONTROL_HEIGHTS.map((height) => (
-                <div key={height} className="grid grid-cols-[48px_minmax(0,1fr)] gap-2 items-center">
-                  <strong className="text-[10px] font-black">{height}px</strong>
-                  <div className="flex flex-wrap gap-1 items-center min-w-0">
-                    <WidgetSizedButton height={height}>Button</WidgetSizedButton>
-                    <WidgetSizedButton height={height} className="primary">Primary</WidgetSizedButton>
-                    <WidgetLeftSplitButton height={height} icon={<Sparkles size={Math.max(10, height - 18)} />}>
-                      Split Left
-                    </WidgetLeftSplitButton>
-                    <WidgetTextInput
-                      height={height}
-                      value={textValue}
-                      onChange={(event) => setTextValue(event.currentTarget.value)}
-                      aria-label={`${height}px text input`}
-                      style={{ width: 150 }}
-                    />
-                    <div style={{ width: 150 }}>
-                      <WidgetSizedSelect
-                        height={height}
-                        value={selectValue}
-                        onChange={setSelectValue}
-                        label={`${height}px dropdown`}
-                        options={[
-                          { value: "public", label: "PUBLIC" },
-                          { value: "unlisted", label: "UNLISTED" },
-                          { value: "private", label: "PRIVATE" },
-                        ]}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="widget-reference-family">
+              {familyHeading("Buttons", "Default")}
+              <SizeVariants>
+                {(height) => <WidgetSizedButton height={height}>Button</WidgetSizedButton>}
+              </SizeVariants>
             </div>
 
-            <div className="flex flex-wrap gap-2 pt-2 border-t" style={{ borderColor: "color-mix(in srgb, var(--widget-color) 25%, transparent)" }}>
-              <WidgetActionButton tone="neutral">Action Neutral</WidgetActionButton>
-              <WidgetActionButton tone="primary">Action Primary</WidgetActionButton>
-              <WidgetActionButton tone="danger">Action Danger</WidgetActionButton>
-              <WidgetSplitButton tone="primary" icon={<Save size={14} />}>Legacy Split</WidgetSplitButton>
-              <WidgetTooltip content="Reset control example">
-                <button type="button" className="vt-button is-icon-only" aria-label="Reset"><RotateCcw size={14} /></button>
-              </WidgetTooltip>
+            <div className="widget-reference-family">
+              {familyHeading("Buttons", "Primary")}
+              <SizeVariants>
+                {(height) => <WidgetSizedButton height={height} className="primary">Primary</WidgetSizedButton>}
+              </SizeVariants>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Split Left Buttons", "Community Post anatomy")}
+              <SizeVariants>
+                {(height) => (
+                  <WidgetLeftSplitButton
+                    height={height}
+                    icon={<Sparkles size={Math.max(10, height - 18)} />}
+                    width="full"
+                  >
+                    Split Left
+                  </WidgetLeftSplitButton>
+                )}
+              </SizeVariants>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Text Inputs", "Community Post input + focus style")}
+              <SizeVariants>
+                {(height) => (
+                  <WidgetTextInput
+                    height={height}
+                    value={textValue}
+                    onChange={(event) => setTextValue(event.currentTarget.value)}
+                    aria-label={`${height}px text input`}
+                  />
+                )}
+              </SizeVariants>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Dropdown Menus", "Radix select")}
+              <SizeVariants>
+                {(height) => (
+                  <WidgetSizedSelect
+                    height={height}
+                    value={selectValue}
+                    onChange={setSelectValue}
+                    label={`${height}px dropdown`}
+                    options={[
+                      { value: "public", label: "PUBLIC" },
+                      { value: "unlisted", label: "UNLISTED" },
+                      { value: "private", label: "PRIVATE" },
+                    ]}
+                  />
+                )}
+              </SizeVariants>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Legacy / Utility Actions", "Existing primitives")}
+              <div className="flex flex-wrap gap-2">
+                <WidgetActionButton tone="neutral">Action Neutral</WidgetActionButton>
+                <WidgetActionButton tone="primary">Action Primary</WidgetActionButton>
+                <WidgetActionButton tone="danger">Action Danger</WidgetActionButton>
+                <WidgetSplitButton tone="primary" icon={<Save size={14} />}>Legacy Split</WidgetSplitButton>
+                <WidgetTooltip content="Reset control example">
+                  <button type="button" className="vt-button is-icon-only" aria-label="Reset"><RotateCcw size={14} /></button>
+                </WidgetTooltip>
+              </div>
             </div>
           </WidgetSection>
         )}
 
         {(activeCategory === "all" || activeCategory === "video") && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("2. Video Manager Select", "Video Manager-derived dropdown")}
+            {sectionHeading("2. Video Select", "Video Manager-derived dropdown")}
             <p className="text-[10px] font-bold uppercase opacity-60">
               Thumbnail-aware selector with a colored left icon bay, selected-video title, chevron, searchable menu and video rows.
             </p>
-            {CONTROL_HEIGHTS.map((height) => (
-              <div key={height} className="grid grid-cols-[48px_minmax(0,1fr)] gap-2 items-center">
-                <strong className="text-[10px] font-black">{height}px</strong>
-                <WidgetVideoSelect
-                  height={height}
-                  value={selectedVideo}
-                  onChange={setSelectedVideo}
-                  label={`Select video ${height}px`}
-                  options={VIDEO_OPTIONS}
-                />
-              </div>
-            ))}
+            <div className="widget-reference-family">
+              {familyHeading("Video Selector", "All standard heights")}
+              <SizeVariants>
+                {(height) => (
+                  <WidgetVideoSelect
+                    height={height}
+                    value={selectedVideo}
+                    onChange={setSelectedVideo}
+                    label={`Select video ${height}px`}
+                    options={VIDEO_OPTIONS}
+                  />
+                )}
+              </SizeVariants>
+            </div>
           </WidgetSection>
         )}
 
         {(activeCategory === "all" || activeCategory === "progress") && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("3. Keyword Engine Progress Bars", "Fill + overlay copy")}
+            {sectionHeading("3. Progress Bars", "Keyword Engine anatomy")}
             <p className="text-[10px] font-bold uppercase opacity-60">
-              The Keyword Engine bar anatomy is now reusable as a primitive at every standard control height.
+              Fill and overlay-copy progress bars are grouped as one component family across all four control heights.
             </p>
-            <div className="grid gap-2">
-              <WidgetProgressBar height={18} value={82} label="napoleon" displayValue="82.40%" />
-              <WidgetProgressBar height={24} value={67} label="austerlitz" displayValue="67.25%" />
-              <WidgetProgressBar height={32} value={51} label="cavalry" displayValue="51.80%" />
-              <WidgetProgressBar height={38} value={39} label="emperor" displayValue="39.10%" />
+            <div className="widget-reference-family">
+              {familyHeading("Progress Bars", "18 / 24 / 32 / 38")}
+              <SizeVariants>
+                {(height) => (
+                  <WidgetProgressBar
+                    height={height}
+                    value={height === 18 ? 82 : height === 24 ? 67 : height === 32 ? 51 : 39}
+                    label={height === 18 ? "napoleon" : height === 24 ? "austerlitz" : height === 32 ? "cavalry" : "emperor"}
+                    displayValue={height === 18 ? "82.40%" : height === 24 ? "67.25%" : height === 32 ? "51.80%" : "39.10%"}
+                  />
+                )}
+              </SizeVariants>
             </div>
           </WidgetSection>
         )}
@@ -319,7 +377,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
       </WidgetScrollArea>
 
       <WidgetFooter className="widget-toolbar widget-workflow-toolbar">
-        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.0 · 18 / 24 / 32 / 38</span>
+        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.1 · grouped by component family</span>
         <WidgetLeftSplitButton height={32} tone="primary" icon={<Check size={14} />}>
           Standard Compliant
         </WidgetLeftSplitButton>
