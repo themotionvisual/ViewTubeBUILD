@@ -7,6 +7,7 @@ import {
   RotateCcw,
   Save,
   Sparkles,
+  Star,
   UploadCloud,
 } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
@@ -31,16 +32,28 @@ import {
   WidgetTooltip,
 } from "../WidgetPrimitives"
 import {
+  WidgetCheckbox,
+  WidgetIconBadge,
+  WidgetIconButton,
+  WidgetLeftSplitBadge,
   WidgetLeftSplitButton,
+  WidgetLiveBadge,
+  WidgetPagination,
   WidgetProgressBar,
+  WidgetRadio,
+  WidgetSearchInput,
   WidgetSizedButton,
   WidgetSizedSelect,
+  WidgetSpectrumFillBadge,
+  WidgetStepper,
   WidgetTextInput,
+  WidgetToggleSwitch,
   WidgetVideoSelect,
   type WidgetControlHeight,
   type WidgetPrimitiveTone,
   type WidgetSplitIconStyle,
 } from "../WidgetPrimitiveExtensions"
+import { WIDGET_BADGE_SPECTRUM } from "../WidgetPrimitives"
 
 type ReferenceCategory =
   | "all"
@@ -49,6 +62,7 @@ type ReferenceCategory =
   | "progress"
   | "media"
   | "navigation"
+  | "matrix"
   | "states"
 
 const CONTROL_HEIGHTS: WidgetControlHeight[] = [18, 24, 32, 38]
@@ -75,6 +89,34 @@ const VIDEO_OPTIONS = [
   },
 ]
 
+/* Hoisted out of the component: both read only module constants, so defining
+   them during render remounted every variant on each parent render. */
+const SizeVariants = ({ children }: { children: (height: WidgetControlHeight) => React.ReactNode }) => (
+  <div className="widget-reference-variants">
+    {CONTROL_HEIGHTS.map((height) => (
+      <div className="widget-reference-variant" key={height}>
+        <small>{height}px</small>
+        {children(height)}
+      </div>
+    ))}
+  </div>
+)
+
+const ToneRows = ({
+  render,
+}: {
+  render: (tone: WidgetPrimitiveTone, height: WidgetControlHeight) => React.ReactNode
+}) => (
+  <div className="grid gap-2">
+    {CONTROL_TONES.map((tone) => (
+      <div key={tone} className="grid gap-1">
+        <small className="text-[8px] font-black uppercase tracking-wider opacity-55">{tone}</small>
+        <SizeVariants>{(height) => render(tone, height)}</SizeVariants>
+      </div>
+    ))}
+  </div>
+)
+
 export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
   const [activeCategory, setActiveCategory] = useState<ReferenceCategory>("all")
   const [selectValue, setSelectValue] = useState("public")
@@ -89,6 +131,12 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
   const [tags, setTags] = useState(["viewtube", "analytics", "creator"])
   const [hasThumbnail, setHasThumbnail] = useState(false)
   const [statePanelStatus, setStatePanelStatus] = useState<"loading" | "ready" | "empty" | "blocked" | "stale" | "error">("ready")
+  const [matrixStepper, setMatrixStepper] = useState(10)
+  const [matrixPage, setMatrixPage] = useState(2)
+  const [matrixToggle, setMatrixToggle] = useState(true)
+  const [matrixRadio, setMatrixRadio] = useState<WidgetPrimitiveTone>("primary")
+  const [matrixCheck, setMatrixCheck] = useState(true)
+  const [matrixSearch, setMatrixSearch] = useState("")
 
   const headerContent = (
     <WidgetHeaderToggle
@@ -97,6 +145,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
       items={[
         { id: "all", label: "ALL" },
         { id: "controls", label: "CONTROLS" },
+        { id: "matrix", label: "MATRIX" },
         { id: "video", label: "VIDEO" },
         { id: "progress", label: "BARS" },
         { id: "media", label: "MEDIA" },
@@ -121,32 +170,6 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
     <div className="widget-reference-family-title">
       <span>{title}</span>
       <small>{detail}</small>
-    </div>
-  )
-
-  const SizeVariants = ({ children }: { children: (height: WidgetControlHeight) => React.ReactNode }) => (
-    <div className="widget-reference-variants">
-      {CONTROL_HEIGHTS.map((height) => (
-        <div className="widget-reference-variant" key={height}>
-          <small>{height}px</small>
-          {children(height)}
-        </div>
-      ))}
-    </div>
-  )
-
-  const ToneRows = ({
-    render,
-  }: {
-    render: (tone: WidgetPrimitiveTone, height: WidgetControlHeight) => React.ReactNode
-  }) => (
-    <div className="grid gap-2">
-      {CONTROL_TONES.map((tone) => (
-        <div key={tone} className="grid gap-1">
-          <small className="text-[8px] font-black uppercase tracking-wider opacity-55">{tone}</small>
-          <SizeVariants>{(height) => render(tone, height)}</SizeVariants>
-        </div>
-      ))}
     </div>
   )
 
@@ -293,6 +316,167 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
           </WidgetSection>
         )}
 
+        {(activeCategory === "all" || activeCategory === "matrix") && (
+          <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
+            {sectionHeading("3b. Matrix Primitives", "v12 library · 3 tones × 4 heights")}
+
+            <div className="widget-reference-family">
+              {familyHeading("Square Icon Buttons", "1:1 · 3 tones × 4 heights")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetIconButton height={height} tone={tone} label="Add" icon={<Plus strokeWidth={2.5} />} />
+                )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Square Icon Badges", "Read-only twin")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetIconBadge height={height} tone={tone} label="Starred" icon={<Star strokeWidth={2.5} />} />
+                )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Steppers", "Clamped numeric control")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetStepper
+                    height={height}
+                    tone={tone}
+                    label="Quantity"
+                    value={matrixStepper}
+                    onChange={setMatrixStepper}
+                    min={0}
+                    max={99}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Pagination", "Windowed page selector")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetPagination
+                    height={height}
+                    tone={tone}
+                    page={matrixPage}
+                    pageCount={3}
+                    onChange={setMatrixPage}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Split-Left Badges", "1:1 icon bay + label")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetLeftSplitBadge height={height} tone={tone} icon={<Check strokeWidth={2.5} />}>
+                    Ok
+                  </WidgetLeftSplitBadge>
+                )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Split-Left Search Bars", "Search bay + field")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetSearchInput
+                    height={height}
+                    tone={tone}
+                    label="Search library"
+                    placeholder="Search"
+                    value={matrixSearch}
+                    onChange={(event) => setMatrixSearch(event.currentTarget.value)}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Live Badges", "Pulsing status pill")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetLiveBadge height={height} tone={tone}>
+                    Live
+                  </WidgetLiveBadge>
+                )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Spectrum Fill Badges", "12 colors · borderless · white text")}
+              <div className="widget-reference-variants">
+                {WIDGET_BADGE_SPECTRUM.map((name) => (
+                  <div className="widget-reference-variant" key={name}>
+                    <small>{name}</small>
+                    <WidgetSpectrumFillBadge tone={name} height={24}>
+                      {name}
+                    </WidgetSpectrumFillBadge>
+                  </div>
+                ))}
+              </div>
+              <SizeVariants>
+                {(height) => (
+                  <WidgetSpectrumFillBadge tone="royal" height={height}>
+                    Badge
+                  </WidgetSpectrumFillBadge>
+                )}
+              </SizeVariants>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Toggle Switches", "3 tones × 4 heights")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetToggleSwitch
+                    height={height}
+                    tone={tone}
+                    label={`Toggle ${tone} ${height}`}
+                    checked={matrixToggle}
+                    onChange={setMatrixToggle}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Radio Buttons", "One group per tone")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetRadio
+                    height={height}
+                    tone={tone}
+                    name={`matrix-radio-${height}`}
+                    label={`Select ${tone}`}
+                    checked={matrixRadio === tone}
+                    onChange={() => setMatrixRadio(tone)}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Checkboxes", "3 tones × 4 heights")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetCheckbox
+                    height={height}
+                    tone={tone}
+                    label={`Check ${tone} ${height}`}
+                    checked={matrixCheck}
+                    onChange={setMatrixCheck}
+                  />
+                )}
+              />
+            </div>
+          </WidgetSection>
+        )}
+
         {(activeCategory === "all" || activeCategory === "media") && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("4. Media Uploaders", "Upload + dropzone primitives")}
@@ -385,6 +569,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
             </div>
             <WidgetStatePanel
               state={{
+                data: null,
                 status: statePanelStatus,
                 message: statePanelStatus === "ready" ? "Data synchronized with the canonical store." : undefined,
                 provenance: "VT-SYNC",

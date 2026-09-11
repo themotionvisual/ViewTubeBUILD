@@ -24,9 +24,14 @@ export type AlgorithmMomentumCommand =
  | "CREATE_FOLLOWUP"
  | "INSPECT"
 
+/** Which intelligence surface raised a signal. */
+export type AlgorithmSignalOrigin = "anomaly" | "opportunity" | "creator"
+
 export interface AlgorithmSignal {
  id: string
  kind: AlgorithmSignalKind
+ /** Defaults to "creator" when a caller supplies a signal directly. */
+ origin?: AlgorithmSignalOrigin
  channelId: string
  videoId?: string | null
  entity?: string | null
@@ -50,6 +55,8 @@ export interface AlgorithmRecommendation {
  id: string
  channelId: string
  signalId: string
+ /** Carried through from the signal that produced this recommendation. */
+ signalOrigin?: AlgorithmSignalOrigin
  command: AlgorithmMomentumCommand
  title: string
  rationale: string
@@ -198,6 +205,7 @@ export const recommendAlgorithmAction = (input: {
   id: `algorithm:${signal.id}:${command.toLowerCase()}`,
   channelId: signal.channelId,
   signalId: signal.id,
+  signalOrigin: signal.origin || "creator",
   command,
   title: `${command}: ${signal.entity || signal.kind.replaceAll("_", " ")}`,
   rationale,
