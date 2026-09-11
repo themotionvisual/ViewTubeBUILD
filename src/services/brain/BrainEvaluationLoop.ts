@@ -9,6 +9,8 @@ import {
 } from "./AlgorithmEvaluationEngine"
 import { recordAlgorithmLearningCandidates } from "./AlgorithmLearningCandidates"
 import { buildCanonicalEvaluationEvidence } from "./CanonicalAlgorithmEvaluation"
+import { hydrateEvaluationTargetsWithLifecycleCohorts } from "./AlgorithmLifecycleBaseline"
+import { captureCanonicalLifecycleObservations } from "./AlgorithmLifecycleObservationStore"
 
 export interface DueAlgorithmEvaluation {
  event: AlgorithmIntelligenceEvent
@@ -84,9 +86,9 @@ export const processAlgorithmEvaluation = (input: {
 /**
  * Evaluate one Brain action from canonical VT-SYNC evidence.
  *
- * A baseline snapshot is optional because some targets are inspection-only. For
- * increase/decrease/hold targets, a missing baseline deliberately yields
- * insufficient data instead of inventing a comparison.
+ * Baseline precedence is explicit intervention snapshot -> genuine historical
+ * lifecycle peers -> insufficient_data. Current/lifetime totals are never
+ * relabeled as an earlier lifecycle baseline.
  */
 export const processCanonicalAlgorithmEvaluation = (input: {
  channelId: string
@@ -100,20 +102,37 @@ export const processCanonicalAlgorithmEvaluation = (input: {
   .find((candidate) => candidate.id === input.eventId)
  if (!event) throw new Error(`Unknown Algorithm Intelligence event: ${input.eventId}`)
 
+ const capturedLifecycle = captureCanonicalLifecycleObservations({
+  channelId: input.channelId,
+  snapshot: input.currentSnapshot,
+ })
  const evidence = buildCanonicalEvaluationEvidence({
   event,
   currentSnapshot: input.currentSnapshot,
   baselineSnapshot: input.baselineSnapshot,
  })
+ const lifecycleBaseline = hydrateEvaluationTargetsWithLifecycleCohorts({
+  event: { ...event, evaluationTargets: evidence.evaluationTargets },
+ })
  const result = recordAlgorithmEvaluation({
   sourceEventId: event.id,
   observations: evidence.observations,
-  evaluationTargets: evidence.evaluationTargets,
+  evaluationTargets: lifecycleBaseline.targets,
   now: input.now,
   metadata: {
    evidenceSource: "analytics-canon",
    currentSnapshotId: evidence.currentSnapshotId,
    baselineSnapshotId: evidence.baselineSnapshotId,
+   lifecycleObservationsCaptured: capturedLifecycle.captured,
+   lifecycleBaselineUsed: lifecycleBaseline.usedLifecycleBaseline,
+   lifecycleCohorts: lifecycleBaseline.cohorts.map((cohort) => ({
+    metric: cohort.metric,
+    lifecycleHour: cohort.lifecycleHour,
+    status: cohort.status,
+    sampleSize: cohort.sampleSize,
+    baselineValue: cohort.baselineValue,
+    evidenceIds: cohort.evidenceIds,
+   })),
   },
  })
  const learningEvents = input.refreshLearningCandidates === false
@@ -122,16 +141,17 @@ export const processCanonicalAlgorithmEvaluation = (input: {
  return {
   ...result,
   observations: evidence.observations,
-  evaluationTargets: evidence.evaluationTargets,
+  evaluationTargets: lifecycleBaseline.targets,
+  lifecycleBaseline,
+  capturedLifecycle,
   learningEvents,
  }
 }
 
 /**
  * Process currently-due checkpoints against one current canonical snapshot.
- * Callers may provide a baseline resolver so each event can be compared with the
- * snapshot captured before its intervention. Events with insufficient evidence
- * remain due and can be retried after another sync/import.
+ * The snapshot is also captured once into the lifecycle-observation store so
+ * future launches gain fair historical peers over time.
  */
 export const processDueCanonicalAlgorithmEvaluations = (input: {
  channelId: string
@@ -141,6 +161,10 @@ export const processDueCanonicalAlgorithmEvaluations = (input: {
  maximum?: number
  refreshLearningCandidates?: boolean
 }) => {
+ const capturedLifecycle = captureCanonicalLifecycleObservations({
+  channelId: input.channelId,
+  snapshot: input.currentSnapshot,
+ })
  const due = listDueAlgorithmEvaluations({
   channelId: input.channelId,
   now: input.now,
@@ -160,6 +184,7 @@ export const processDueCanonicalAlgorithmEvaluations = (input: {
  return {
   processed: results.length,
   results,
+  lifecycleObservationsCaptured: capturedLifecycle.captured,
   learningEvents,
  }
 }
