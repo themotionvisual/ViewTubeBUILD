@@ -82,7 +82,7 @@
   "build": {
     "Dashboard.js": {
       "raw": 87649,
-      "gzip": 25345
+      "gzip": 25339
     },
     "Dashboard.css": {
       "raw": 198172,
@@ -90,19 +90,19 @@
     },
     "UIReferenceLibraryWidget.js": {
       "raw": 20772,
-      "gzip": 5974
+      "gzip": 5975
     },
     "UIReferenceLibraryWidget.css": {
       "raw": 25746,
       "gzip": 3872
     },
-    "index.css": {
-      "raw": 306865,
-      "gzip": 44029
-    },
     "index.js": {
-      "raw": 190763,
-      "gzip": 55556
+      "raw": 190764,
+      "gzip": 55540
+    },
+    "index.css": {
+      "raw": 306898,
+      "gzip": 44040
     }
   }
 }

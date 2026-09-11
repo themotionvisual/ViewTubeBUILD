@@ -71,6 +71,10 @@ export const DashboardWidgetsSettingsSection: React.FC = () => {
   }, [category, query, widgets])
 
   const visibleCount = widgets.length - hiddenSet.size
+  // Two widgets ship as `prototype`: coded, but not certified for production
+  // data and interaction. They are shown here so the list is honest about what
+  // "Show all" reveals, rather than silently mixing them in with finished ones.
+  const previewCount = widgets.filter((widget) => widget.status !== "ready").length
 
   return (
     <section className="grid gap-5">
@@ -95,13 +99,30 @@ export const DashboardWidgetsSettingsSection: React.FC = () => {
             <div className="mt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white/55">
               Visible
             </div>
+            {previewCount > 0 ? (
+              <div className="mt-1 text-[9px] font-black uppercase tracking-[0.14em] text-[#FFD84D]">
+                {previewCount} preview
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button type="button" onClick={() => setHidden([])} className={`${buttonClass} bg-[#CCFF00]`}>
-          <Eye size={16} aria-hidden="true" /> Show all
+        <button
+          type="button"
+          onClick={() => setHidden(widgets.filter((widget) => widget.status !== "ready").map((widget) => widget.id))}
+          className={`${buttonClass} bg-[#CCFF00]`}
+        >
+          <Eye size={16} aria-hidden="true" /> Show all ready
+        </button>
+        <button
+          type="button"
+          onClick={() => setHidden([])}
+          className={`${buttonClass} bg-white`}
+          title="Includes preview widgets that are not production-certified"
+        >
+          <Eye size={16} aria-hidden="true" /> Show all + previews
         </button>
         <button
           type="button"
@@ -171,8 +192,15 @@ export const DashboardWidgetsSettingsSection: React.FC = () => {
                   style={{ background: widget.headerColor }}
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-[1000] uppercase leading-tight">
-                    {widget.title}
+                  <span className="flex items-center gap-1.5">
+                    <span className="min-w-0 truncate text-sm font-[1000] uppercase leading-tight">
+                      {widget.title}
+                    </span>
+                    {widget.status !== "ready" ? (
+                      <span className="flex-shrink-0 rounded border-2 border-black bg-[#FFD84D] px-1 text-[8px] font-[1000] uppercase tracking-[0.1em]">
+                        Preview
+                      </span>
+                    ) : null}
                   </span>
                   <span className="mt-0.5 block truncate text-[11px] font-bold text-black/55">
                     {widget.subtitle}
@@ -200,7 +228,8 @@ export const DashboardWidgetsSettingsSection: React.FC = () => {
 
       <p className="text-[11px] font-bold leading-5 text-black/55">
         Changes save immediately and apply the next time the dashboard renders. Widget size, height
-        and position are still edited on the dashboard itself.
+        and position are still edited on the dashboard itself. Widgets marked Preview are built but
+        not production-certified, so their data and controls may be incomplete.
       </p>
     </section>
   )
