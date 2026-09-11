@@ -20,6 +20,10 @@ normalization, six standard data states, error boundaries, and a passing contrac
 
 ## Measured Baseline
 
+Re-measure at any time with `npm run report:dashboard-baseline`, and gate a change
+against the committed figures in `docs/architecture/dashboard-baseline.json` with
+`npm run check:dashboard-baseline`.
+
 Every number below was measured on this branch on 2026-09-11. Where it differs from the
 figures in the supplied architecture baseline and PDF audit, **the measured number wins** —
 the supplied documents are a September snapshot of a different branch and they instruct
@@ -44,7 +48,7 @@ re-measurement before use as acceptance criteria.
 | --- | --- | --- | --- |
 | Dashboard CSS lines (6 files) | **8,903** | 7,713 (1 file) | +1,190; 5 satellite files were not counted |
 | `toolboxWidgetSystem.css` alone | 7,713 / ~226 KB | 7,713 / ~232 KB | matches |
-| `!important` declarations | **264** | 185 | **+79** |
+| `!important` declarations | **267** occurrences (263 lines) | 185 | **+82** |
 | `@media` blocks | **21** | 15 | +6 |
 | `@container` blocks | **18** | 16 | +2 |
 | Approx. rule count in `toolboxWidgetSystem.css` | 855 | 1,442 occurrences | different metric |
@@ -73,11 +77,22 @@ widget module. It is the single highest-leverage CSS change available.
 - Status mix: `ready` 57, `prototype` 2.
 - Categories: analytics 26, creation 11, system 6, core 6, ai 5, community 5.
 - Release tiers derived from `DEFAULT_DASHBOARD_ROWS`: 30 supported, 29 preview.
-- Renderer coverage: 41 lazy + 18 inline/other = full coverage of all 59; **no uncovered IDs**.
-- 4 widget components are still defined inline inside `WidgetRenderer.tsx`:
-  `VerificationExplainerWidget` (147), `SuperfanCardWidget` (224), `RevenueMomentumWidget` (300),
-  plus the `GoalsTrackerWidget` lazy wrapper at 45.
-- 3 widget files exist but are registered nowhere: `AdStackWidget`, `ReachFunnelWidget`, `ThumbAIWidget`.
+- Renderer coverage: 40 lazy + 19 inline = full coverage of all 59; **no uncovered IDs**.
+- **19** renderer keys are implemented inline inside `WidgetRenderer.tsx`, listed in its
+  `INLINE_WIDGET_RENDERER_KEYS` array: `app-verification-explainer`, `reach-funnel`,
+  `relative-retention-benchmark`, `consistency-heatmap`, `ad-stack-intelligence`,
+  `kpi-cluster`, `channel-overview`, `mini-calendar`, `quick-actions`, `recent-uploads`,
+  `top-performer`, `goals-tracker`, `alerts-feed`, `ai-prompt-box`, `revenue-momentum`,
+  `superfan-card`, `system-micro-stack`, `task-stack`, `alerts-ticker`.
+  Only 3 of them are top-level `const …Widget` declarations; the other 16 are
+  `if (widget.id === "…")` branches inside the resolver body, which is why a
+  declaration-only scan undercounts them.
+- 3 widget files are unreferenced anywhere in `src/`: `AdStackWidget`, `ReachFunnelWidget`,
+  `ThumbAIWidget`. Their IDs *are* registered — `thumb-ai` resolves to `ThumbnailLabWidget`,
+  while `reach-funnel` and `ad-stack-intelligence` are served by inline branches. The files
+  are divergent drafts, not extractions: `ReachFunnelWidget.tsx` adds a CTR simulator whose
+  button is inert. Wiring them up would ship dead UI, so they are quarantine candidates,
+  not Phase 2 inputs. They are unimported, so they cost nothing in the bundle.
 
 ### Grid and responsive contract
 
@@ -206,8 +221,10 @@ A destination map, not a demand to move every file at once.
 1. Land the three zero-risk fixes proven above:
    - add `container-name: vt-widget` to `.vt-widget` so the two dead container queries live;
    - merge the two `.dashboard-widget-slot` blocks into one and drop its `!important`;
-   - delete or register `AdStackWidget`, `ReachFunnelWidget`, `ThumbAIWidget` after a
-     consumer search (see Removal Gate).
+   - run the Removal Gate on `AdStackWidget`, `ReachFunnelWidget`, `ThumbAIWidget`.
+     Confirmed: zero importers in `src/`, and their IDs are already served by other
+     implementations. They are unimported so they cost no bundle; quarantine and let
+     the owner decide, rather than deleting unshipped drafts.
 2. Add a repeatable dashboard build report emitting route JS/CSS raw and gzip figures.
 3. Add development render counters around canvas, slot, shell, and one light plus one heavy widget.
 4. Capture DOM node counts at 10 / 100 / 1,000 / 10,000-row table and gallery fixtures.
@@ -233,7 +250,9 @@ Exit: one definition drives dashboard, picker, guide, certification and assistan
 
 ### Phase 2 — Renderer and mount cost
 
-1. Extract the 4 inline implementations from `WidgetRenderer.tsx` into widget modules.
+1. Extract the 19 inline implementations from `WidgetRenderer.tsx` into widget modules,
+   in small groups. This is the phase's bulk: they currently sit in the eagerly loaded
+   Dashboard route chunk, so extraction moves real bytes off first paint.
 2. Replace the conditional chain with a typed lazy loader map.
 3. Keep exactly one Suspense fallback and one `WidgetErrorBoundary` per slot.
 4. Memoize slots/shells only after profiling shows benefit.
@@ -276,7 +295,7 @@ explicit deletion gate.
 7. Move per-widget styles beside their lazy component so Vite code-splits them.
 8. Add lint checks blocking new raw palette values, spacing drift, and widget-scoped media queries.
 
-Exit targets: at least **40% fewer `!important`** in the first pass (264 → ≤158); repeated
+Exit targets: at least **40% fewer `!important`** in the first pass (267 → ≤160); repeated
 selector ownership documented or reduced; visuals match baselines; `Dashboard-*.css` gzip
 does not regress from 26,443 B and preferably falls.
 
@@ -374,7 +393,7 @@ Do not combine phases. Merge slowly, preserve `main`, keep every commit reversib
 ## Immediate First Sprint
 
 1. Ship the three Phase 0 quick wins and the baseline report.
-2. Extract the 4 inline widgets from `WidgetRenderer.tsx`.
+2. Extract the first five of the 19 inline widgets from `WidgetRenderer.tsx`.
 3. Create typed per-domain selectors without deleting fallbacks.
 4. Remove `.dashboard-barrier` and establish CSS layers; consolidate the top repeated shell/body selectors.
 5. Convert one light, one chart and one workflow widget to the full container contract.

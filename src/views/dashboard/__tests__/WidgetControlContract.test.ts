@@ -16,6 +16,10 @@ const dataEditSource = readFileSync(new URL("../widgets/DataEditWidget.tsx", imp
 const keywordEngineSource = readFileSync(new URL("../widgets/KeywordEngineWidget.tsx", import.meta.url), "utf8")
 const commentResponderSource = readFileSync(new URL("../widgets/CommentReplyWidget.tsx", import.meta.url), "utf8")
 const widgetRendererSource = readFileSync(new URL("../WidgetRenderer.tsx", import.meta.url), "utf8")
+const verificationExplainerSource = readFileSync(
+  new URL("../widgets/VerificationExplainerWidget.tsx", import.meta.url),
+  "utf8",
+)
 
 describe("dashboard widget control rhythm", () => {
   it("defines one desktop and mobile geometry plus one control text treatment", () => {
@@ -27,13 +31,13 @@ describe("dashboard widget control rhythm", () => {
   })
 
   it.each([
-    ".dashboard-barrier .vt-widget-body .vt-button",
-    ".dashboard-barrier .vt-widget-body .vt-select",
-    ".dashboard-barrier .vt-widget-body .vt-dropdown-trigger",
-    ".dashboard-barrier .vt-widget-body .widget-select-trigger",
-    ".dashboard-barrier .vt-widget-body .vt-tab-button",
-    ".dashboard-barrier .vt-widget-body .vt-tab-btn",
-    ".dashboard-barrier .vt-widget-body .widget-step-tabs > button",
+    ":where(.dashboard-barrier) .vt-widget-body .vt-button",
+    ":where(.dashboard-barrier) .vt-widget-body .vt-select",
+    ":where(.dashboard-barrier) .vt-widget-body .vt-dropdown-trigger",
+    ":where(.dashboard-barrier) .vt-widget-body .widget-select-trigger",
+    ":where(.dashboard-barrier) .vt-widget-body .vt-tab-button",
+    ":where(.dashboard-barrier) .vt-widget-body .vt-tab-btn",
+    ":where(.dashboard-barrier) .vt-widget-body .widget-step-tabs > button",
   ])("routes %s through the canonical body-control rule", (selector) => {
     expect(widgetSystemCss).toContain(selector)
   })
@@ -51,9 +55,9 @@ describe("dashboard widget scrollbar contract", () => {
     expect(widgetScrollbarCss).toContain("--widget-scroll-edge: 3px;")
     expect(widgetScrollbarCss).toContain("--widget-scroll-fill: color-mix(in srgb, var(--widget-color) 75%, transparent);")
     expect(widgetScrollbarCss).toContain("--widget-scroll-ink: var(--widget-border);")
-    expect(widgetScrollbarCss).toContain(".dashboard-barrier .widget-scroll-controller")
-    expect(widgetScrollbarCss).toContain(".dashboard-barrier .widget-scroll-visual")
-    expect(widgetScrollbarCss).toContain(".dashboard-barrier .widget-scroll-segment")
+    expect(widgetScrollbarCss).toContain(":where(.dashboard-barrier) .widget-scroll-controller")
+    expect(widgetScrollbarCss).toContain(":where(.dashboard-barrier) .widget-scroll-visual")
+    expect(widgetScrollbarCss).toContain(":where(.dashboard-barrier) .widget-scroll-segment")
     expect(widgetScrollbarCss).toContain("width: 44px;")
     expect(widgetScrollbarCss).toContain("background: #fff;")
     expect(widgetScrollbarCss).toContain("border: 2px solid var(--widget-scroll-ink);")
@@ -115,8 +119,15 @@ describe("widget uniformity migrations", () => {
   })
 
   it("lets dashboard visibility control the About VIEWTUBE widget", () => {
-    expect(widgetRendererSource).toContain('if (widget.id === "app-verification-explainer")')
-    expect(widgetRendererSource).toContain("return <VerificationExplainerWidget")
+    // The widget moved out of WidgetRenderer.tsx in Phase 2, so it now resolves
+    // through the lazy map rather than an inline branch. The invariant it is
+    // guarding is unchanged: nothing may gate this widget on account state and
+    // render null, which previously left a visible grid slot empty even after
+    // the user chose Show All Widgets. Visibility is the layout's job alone.
+    expect(widgetRendererSource).toContain('"app-verification-explainer": React.lazy(')
     expect(widgetRendererSource).not.toContain("if (isConnected) return null")
+    expect(verificationExplainerSource).not.toContain("if (isConnected) return null")
+    expect(verificationExplainerSource).not.toContain("useUnifiedAccount")
+    expect(verificationExplainerSource).toContain("<WidgetShell")
   })
 })
