@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react"
 import type { LucideIcon } from "lucide-react"
-import { CheckCircle2, Database, Sparkles, Workflow } from "lucide-react"
 import { AssistantCommandContextBanner } from "../../components/AssistantCommandContextBanner"
 import BrainLiveToolInbox from "../../components/brain/BrainLiveToolInbox"
 import { SuperToolRail } from "../../components/SuperToolRail"

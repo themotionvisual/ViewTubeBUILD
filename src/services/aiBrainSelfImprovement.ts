@@ -23,7 +23,6 @@ import {
 import { resolveBrainTaskProfile } from "./brain/BrainTaskProfileRegistry"
 import {
  readBrainUserControls,
- shouldBrainLearnFromInteraction,
 } from "./brain/BrainUserControls"
 
 const nowIso = () => new Date().toISOString()
