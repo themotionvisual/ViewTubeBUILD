@@ -15,6 +15,7 @@ export type AlgorithmIntelligenceEventKind =
  | "OUTCOME_MEASURED"
  | "LEARNING_CANDIDATE_CREATED"
  | "LEARNING_CANDIDATE_REVIEWED"
+ | "LEARNING_PROMOTED"
 
 export interface AlgorithmEvaluationTarget {
  metric: string
