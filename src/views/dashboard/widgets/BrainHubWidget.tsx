@@ -7,6 +7,7 @@ import type { DashboardData } from "../useDashboardData"
 import { useBrain } from "../../../context/useBrain"
 import { hasGeminiKey } from "../../../services/gemini"
 import { buildAIBrainContextSnapshot, buildAIBrainSystemPrompt } from "../../../services/aiBrainCommandInterface"
+import { buildCreatorGrowthContext } from "../../../services/aiBrainConversationStore"
 import { runBrainTurn } from "../../../services/brain/BrainOrchestrator"
 import { readBrainUserControls, setActiveBrainControlChannel, type BrainUserControls } from "../../../services/brain/BrainUserControls"
 import { readBrainEngineControls, type BrainEngineControls } from "../../../services/brain/BrainEngineControls"
@@ -44,6 +45,7 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
  },[channelId])
 
  const snapshot=useMemo(()=>buildAIBrainContextSnapshot({brain,authState,channelConnection,brainMemory:controls.personalization?getBrainMemory():null,recentConversationTurns:controls.personalization?turns:[]}),[brain,authState,channelConnection,controls.personalization,turns,getBrainMemory])
+ const growthContext=useMemo(()=>buildCreatorGrowthContext(snapshot,turns,[]),[snapshot,turns])
  const packages=useMemo(()=>controls.allowVault&&engines.videoPackages?searchVaultForBrain({query:"package",limit:8}):{assets:[],evidence:[]},[controls.allowVault,engines.videoPackages,answer])
  const evidence=(((snapshot.evidencePack as any)?.items)||[]).slice(0,engines.maxEvidenceItems)
 
@@ -60,7 +62,7 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
   try{
    if(engines.channelIntelligence&&!portfolio) await loadIntelligence()
    const system=buildAIBrainSystemPrompt({brain,authState,channelConnection,brainMemory:controls.personalization?getBrainMemory():null,recentConversationTurns:controls.personalization?turns:[]})+`\n\nBRAIN COMMAND WIDGET POLICY\nAnalytics=${controls.allowAnalytics}; Projects=${controls.allowProjects}; Vault=${controls.allowVault}; Publisher=${controls.allowPublisher}; ApprovalRequired=${controls.externalActionsRequireApproval}.\nEngine policy: channelIntelligence=${engines.channelIntelligence}; anomalyIntelligence=${engines.anomalyIntelligence}; opportunityIntelligence=${engines.opportunityIntelligence}; algorithmPriming=${engines.algorithmPriming}; videoPackages=${engines.videoPackages}.\nNever claim an engine supplied evidence when it is disabled or absent. External write/publish actions remain explicit approval-aware handoffs.`
-   const result=await runBrainTurn({channelId,userText:text,snapshot,systemPrompt:system,recentTurns:controls.personalization?turns:[],history:controls.personalization?turns.slice(0,4).reverse().flatMap(t=>[{role:"user",parts:[{text:t.userText}]},{role:"model",parts:[{text:t.assistantText}]}]):[],allowModel:hasGeminiKey()})
+   const result=await runBrainTurn({channelId,userText:text,snapshot,systemPrompt:system,growthContext,recentTurns:controls.personalization?turns:[],history:controls.personalization?turns.slice(0,4).reverse().flatMap(t=>[{role:"user",parts:[{text:t.userText}]},{role:"model",parts:[{text:t.assistantText}]}]):[],allowModel:hasGeminiKey()})
    setAnswer(result.turn);setTurns(v=>[result.turn,...v].slice(0,12))
   }catch(error){console.warn("[BrainHubWidget] turn failed",error);setInput(text)}finally{setBusy(false)}
  }

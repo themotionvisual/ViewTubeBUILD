@@ -30,6 +30,7 @@ import {
   nextSizeBucket,
   prevSizeBucket,
   resetDashboardLayout,
+  revealAllReadyDashboardWidgets,
   saveDashboardLayout,
   sizeBucketClassName,
   heightBucketClassName,
@@ -350,6 +351,10 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
     setIsLocked(reset.locked)
   }, [setIsLocked])
 
+  const handleShowAllWidgets = useCallback(() => {
+    setLayout((current) => revealAllReadyDashboardWidgets(current))
+  }, [])
+
   useEffect(() => {
     registerActions({
       exportLayout: handleExport,
@@ -447,6 +452,8 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({ data, onNaviga
                             toggleLock: handleToggleLock,
                             openPicker: () => setPickerOpen(true),
                             resetLayout: handleReset,
+                            showAllWidgets: handleShowAllWidgets,
+                            hiddenWidgetCount: layout.hidden.length,
                             handleExport,
                             handleImportClick
                           }}
