@@ -51,6 +51,13 @@
   background: color-mix(in srgb, var(--widget-color, #34cdea) 24%, white) !important;
 }
 
+/* Secondary glyphs use the same ink as their visible outline. More-specific
+   white-on-color icon treatments below intentionally override this. */
+.vt-sized-control.is-tone-secondary svg {
+  color: var(--vt-tone-stroke, var(--widget-border, #222));
+  stroke: var(--vt-tone-stroke, var(--widget-border, #222));
+}
+
 /* 18px controls are always filled, borderless and shadowless, with a distinct
    fill for each tone. */
 .vt-sized-control.is-height-18.is-tone-default,
@@ -97,13 +104,13 @@
 .widget-split-button.is-left-split.is-icon-color-on-light .widget-split-button-icon,
 .widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-icon {
   background: color-mix(in srgb, var(--widget-color, #34cdea) 14%, white) !important;
-  color: var(--widget-color, #34cdea) !important;
+  color: var(--vt-tone-stroke, var(--widget-border, #222)) !important;
 }
 
 .widget-split-button.is-left-split.is-icon-color-on-light .widget-split-button-icon svg,
 .widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-icon svg {
-  stroke: var(--widget-color, #34cdea) !important;
-  color: var(--widget-color, #34cdea) !important;
+  stroke: var(--vt-tone-stroke, var(--widget-border, #222)) !important;
+  color: var(--vt-tone-stroke, var(--widget-border, #222)) !important;
 }
 
 /* 18px split controls keep no separator stroke, regardless of icon mode. */
@@ -157,7 +164,7 @@
 }
 
 .widget-progress-bar.is-tone-primary {
-  background: color-mix(in srgb, var(--widget-color, #34cdea) 28%, white) !important;
+  background: #fff !important;
   border-color: var(--vt-tone-stroke) !important;
 }
 .widget-progress-bar.is-tone-primary .widget-progress-bar-fill {
@@ -182,4 +189,11 @@
   outline: none !important;
   border-color: var(--widget-color, #34cdea) !important;
   background: color-mix(in srgb, var(--widget-color, #34cdea) 18%, white) !important;
+}
+
+
+/* Secondary inputs return to a white editing surface while focused. */
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control.is-tone-secondary:focus,
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control.is-tone-secondary:focus-visible {
+  background: #fff !important;
 }

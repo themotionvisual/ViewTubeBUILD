@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useMemo, useState } from "react"
 import {
   Check,
   ImagePlus,
@@ -13,6 +13,8 @@ import {
 import { WidgetShell } from "../WidgetShell"
 import {
   WidgetActionButton,
+  WidgetAlphabeticalTag,
+  WidgetBadge,
   WidgetChoice,
   WidgetDisclosure,
   WidgetDropzone,
@@ -54,12 +56,14 @@ import {
   type WidgetSplitIconStyle,
 } from "../WidgetPrimitiveExtensions"
 import { WIDGET_BADGE_SPECTRUM } from "../WidgetPrimitives"
+import { getDashboardWidgetPaletteColors } from "../../../styles/toolboxPalette"
 
 type ReferenceCategory =
   | "all"
   | "controls"
   | "video"
   | "progress"
+  | "tags"
   | "media"
   | "navigation"
   | "matrix"
@@ -67,6 +71,11 @@ type ReferenceCategory =
 
 const CONTROL_HEIGHTS: WidgetControlHeight[] = [18, 24, 32, 38]
 const CONTROL_TONES: WidgetPrimitiveTone[] = ["default", "primary", "secondary"]
+const REFERENCE_PALETTE_NAMES = [
+  "ROSE", "CORAL", "ORANGE", "YELLOW", "LIME", "GREEN",
+  "TEAL", "CYAN", "ROYAL", "PURPLE", "MAGENTA", "PINK",
+] as const
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 
 const VIDEO_OPTIONS = [
   {
@@ -91,8 +100,14 @@ const VIDEO_OPTIONS = [
 
 /* Hoisted out of the component: both read only module constants, so defining
    them during render remounted every variant on each parent render. */
-const SizeVariants = ({ children }: { children: (height: WidgetControlHeight) => React.ReactNode }) => (
-  <div className="widget-reference-variants">
+const SizeVariants = ({
+  children,
+  square = false,
+}: {
+  children: (height: WidgetControlHeight) => React.ReactNode
+  square?: boolean
+}) => (
+  <div className={square ? "widget-reference-square-variants" : "widget-reference-variants"}>
     {CONTROL_HEIGHTS.map((height) => (
       <div className="widget-reference-variant" key={height}>
         <small>{height}px</small>
@@ -104,21 +119,26 @@ const SizeVariants = ({ children }: { children: (height: WidgetControlHeight) =>
 
 const ToneRows = ({
   render,
+  square = false,
 }: {
   render: (tone: WidgetPrimitiveTone, height: WidgetControlHeight) => React.ReactNode
+  square?: boolean
 }) => (
   <div className="grid gap-2">
     {CONTROL_TONES.map((tone) => (
       <div key={tone} className="grid gap-1">
         <small className="text-[8px] font-black uppercase tracking-wider opacity-55">{tone}</small>
-        <SizeVariants>{(height) => render(tone, height)}</SizeVariants>
+        <SizeVariants square={square}>{(height) => render(tone, height)}</SizeVariants>
       </div>
     ))}
   </div>
 )
 
-export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
+type UIReferenceLibraryWidgetProps = Omit<React.ComponentProps<typeof WidgetShell>, "children" | "headerContent" | "icon">
+
+export default function UIReferenceLibraryWidget({ widget, ...common }: UIReferenceLibraryWidgetProps) {
   const [activeCategory, setActiveCategory] = useState<ReferenceCategory>("all")
+  const [paletteIndex, setPaletteIndex] = useState(7)
   const [selectValue, setSelectValue] = useState("public")
   const [selectedVideo, setSelectedVideo] = useState("v1")
   const [headerToggleValue, setHeaderToggleValue] = useState("draft-1")
@@ -137,8 +157,13 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
   const [matrixRadio, setMatrixRadio] = useState<WidgetPrimitiveTone>("primary")
   const [matrixCheck, setMatrixCheck] = useState(true)
   const [matrixSearch, setMatrixSearch] = useState("")
+  const previewWidget = useMemo(
+    () => ({ ...widget, ...getDashboardWidgetPaletteColors(paletteIndex) }),
+    [paletteIndex, widget],
+  )
 
   const headerContent = (
+    <div className="widget-reference-header-controls">
     <WidgetHeaderToggle
       label="Reference category"
       value={activeCategory}
@@ -148,12 +173,20 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
         { id: "matrix", label: "MATRIX" },
         { id: "video", label: "VIDEO" },
         { id: "progress", label: "BARS" },
+        { id: "tags", label: "TAGS" },
         { id: "media", label: "MEDIA" },
         { id: "navigation", label: "NAV" },
         { id: "states", label: "STATES" },
       ]}
       onChange={(value) => setActiveCategory(value as ReferenceCategory)}
     />
+      <WidgetHeaderStepper
+        label="Widget color palette"
+        value={`${REFERENCE_PALETTE_NAMES[paletteIndex]} ${paletteIndex + 1}/12`}
+        onPrevious={() => setPaletteIndex((current) => (current + 11) % 12)}
+        onNext={() => setPaletteIndex((current) => (current + 1) % 12)}
+      />
+    </div>
   )
 
   const sectionHeading = (title: string, detail: string) => (
@@ -193,7 +226,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
   )
 
   return (
-    <WidgetShell widget={widget} headerContent={headerContent} icon={<Layers size={22} />} {...common}>
+    <WidgetShell widget={previewWidget} headerContent={headerContent} icon={<Layers size={22} />} {...common}>
       <WidgetScrollArea
         ariaLabel="ViewTube Widget Component Reference Library"
         contentClassName="flex min-h-full flex-col gap-3 p-3"
@@ -322,7 +355,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
 
             <div className="widget-reference-family">
               {familyHeading("Square Icon Buttons", "1:1 · 3 tones × 4 heights")}
-              <ToneRows
+              <ToneRows square
                 render={(tone, height) => (
                   <WidgetIconButton height={height} tone={tone} label="Add" icon={<Plus strokeWidth={2.5} />} />
                 )}
@@ -331,7 +364,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
 
             <div className="widget-reference-family">
               {familyHeading("Square Icon Badges", "Read-only twin")}
-              <ToneRows
+              <ToneRows square
                 render={(tone, height) => (
                   <WidgetIconBadge height={height} tone={tone} label="Starred" icon={<Star strokeWidth={2.5} />} />
                 )}
@@ -477,9 +510,40 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
           </WidgetSection>
         )}
 
+        {(activeCategory === "all" || activeCategory === "tags") && (
+          <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
+            {sectionHeading("4. Alphabetical Spectrum Tags", "A–Z mapped across all 12 colors")}
+            <div className="widget-reference-family">
+              {familyHeading("Canonical Spectrum", "12 explicit palette slots")}
+              <div className="flex flex-wrap gap-1">
+                {WIDGET_BADGE_SPECTRUM.map((tone, index) => (
+                  <WidgetAlphabeticalTag key={tone} label={`${String.fromCharCode(65 + index)} ${tone}`} tone={tone} />
+                ))}
+              </div>
+            </div>
+            <div className="widget-reference-family">
+              {familyHeading("Alphabetical Mapping", "First letter chooses a stable spectrum slot")}
+              <div className="flex flex-wrap gap-1">
+                {ALPHABET.map((letter) => <WidgetAlphabeticalTag key={letter} label={letter} />)}
+              </div>
+            </div>
+            <div className="widget-reference-family">
+              {familyHeading("Badge Heights", "Radius and typography follow component height")}
+              <div className="widget-reference-variants">
+                {CONTROL_HEIGHTS.map((height, index) => (
+                  <div className="widget-reference-variant" key={height}>
+                    <small>{height}px</small>
+                    <WidgetBadge height={height} tone={index * 3}>{height}px Badge</WidgetBadge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </WidgetSection>
+        )}
+
         {(activeCategory === "all" || activeCategory === "media") && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("4. Media Uploaders", "Upload + dropzone primitives")}
+            {sectionHeading("5. Media Uploaders", "Upload + dropzone primitives")}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
               <div className="flex flex-col gap-2">
                 <div className="h-[120px] w-full">
@@ -508,7 +572,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
 
         {(activeCategory === "all" || activeCategory === "navigation") && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("5. Navigation", "Toggles + steppers + tabs")}
+            {sectionHeading("6. Navigation", "Toggles + steppers + tabs")}
             <WidgetHeaderToggle
               label="Project drafts"
               value={headerToggleValue}
@@ -548,7 +612,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
 
         {(activeCategory === "all" || activeCategory === "states") && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("6. Metrics + States", "Feedback system")}
+            {sectionHeading("7. Metrics + States", "Feedback system")}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <WidgetMetric label="LIFETIME VIEWS" value="1.42M" detail="+14.2%" tone="#34cdea" />
               <WidgetMetric label="CLICK-THROUGH" value="8.90%" detail="High" tone="#b9f536" />
@@ -593,7 +657,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
       </WidgetScrollArea>
 
       <WidgetFooter className="widget-toolbar widget-workflow-toolbar">
-        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.2 · tones + split icon variants</span>
+        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.3 · 12 palettes + spectrum tags</span>
         <WidgetLeftSplitButton height={32} tone="primary" iconStyle="white-on-color" icon={<Check />}>
           Standard Compliant
         </WidgetLeftSplitButton>

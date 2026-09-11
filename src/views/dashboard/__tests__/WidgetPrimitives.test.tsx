@@ -2,6 +2,8 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import {
+  WidgetAlphabeticalTag,
+  WidgetBadge,
   WidgetChoice,
   WidgetDisclosure,
   WidgetDropzone,
@@ -20,7 +22,11 @@ import {
   WidgetTag,
   WidgetTooltip,
   WidgetWorkflowMain,
+  WIDGET_BADGE_SPECTRUM,
+  resolveAlphabeticalSpectrumSlot,
 } from "../WidgetPrimitives"
+import { WidgetIconButton } from "../WidgetPrimitiveExtensions"
+import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
 import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"
 
 describe("widget viewport indicator geometry", () => {
@@ -115,6 +121,37 @@ describe("WidgetStatePanel", () => {
 })
 
 describe("shared widget form primitives", () => {
+  it("maps A–Z across all 12 canonical spectrum colors", () => {
+    expect(resolveAlphabeticalSpectrumSlot("A")).toBe(0)
+    expect(resolveAlphabeticalSpectrumSlot("N analytics")).toBe(6)
+    expect(resolveAlphabeticalSpectrumSlot("Zebra")).toBe(11)
+    expect(resolveAlphabeticalSpectrumSlot("123")).toBe(0)
+
+    const markup = renderToStaticMarkup(
+      <>{WIDGET_BADGE_SPECTRUM.map((tone) => (
+        <WidgetAlphabeticalTag key={tone} label={tone} tone={tone} />
+      ))}</>,
+    )
+
+    expect(markup.match(/class="vt-spectrum-badge/g)).toHaveLength(12)
+    VT_SPECTRUM_PALETTE_06.forEach((hue) => {
+      expect(markup).toContain(`--vt-spectrum-badge-stroke:${hue}`)
+    })
+  })
+
+  it("applies the shared height contract to badges and square icon buttons", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <WidgetBadge tone="cyan" height={38}>Cyan badge</WidgetBadge>
+        <WidgetIconButton icon={<span>R</span>} label="Reset" height={24} tone="secondary" />
+      </div>,
+    )
+
+    expect(markup).toContain("vt-spectrum-badge is-height-38")
+    expect(markup).toContain('aria-label="Reset"')
+    expect(markup).toContain("widget-icon-button vt-sized-control is-height-24 is-tone-secondary")
+  })
+
   it("provides canonical field, disclosure, choice, and select surfaces", () => {
     const markup = renderToStaticMarkup(
       <div>

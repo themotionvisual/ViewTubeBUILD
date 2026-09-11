@@ -92,6 +92,7 @@ export const WidgetSizedSelect: React.FC<{
 }> = ({ height = 32, tone = "default", className = "", ...props }) => (
   <WidgetSelect
     className={`${widgetControlHeightClass(height)} ${toneClass(tone)} ${className}`.trim()}
+    contentClassName={`${widgetControlHeightClass(height)} ${toneClass(tone)}`}
     {...props}
   />
 )
@@ -163,7 +164,7 @@ export const WidgetVideoSelect: React.FC<{
       </button>
 
       {open ? (
-        <div className="widget-video-select-menu" role="listbox" aria-label={label}>
+        <div className={`widget-video-select-menu ${widgetControlHeightClass(height)} ${toneClass(tone)}`} role="listbox" aria-label={label}>
           {searchable ? (
             <div className="widget-video-select-search">
               <Search size={13} aria-hidden="true" style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", opacity: .55 }} />
