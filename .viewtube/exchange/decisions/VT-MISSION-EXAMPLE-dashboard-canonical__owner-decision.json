@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "viewtube.decision.v1",
+  "decisionId": "VT-DECISION-EXAMPLE-dashboard-owner",
+  "missionId": "VT-MISSION-EXAMPLE-dashboard-canonical",
+  "question": "Should the Crown introduce a new analytics store to simplify the dashboard mission?",
+  "evidence": [
+    "Current ViewTube ownership assigns raw analytics to VT-SYNC.",
+    "Current consumer parity is owned by analytics-canon.",
+    "The dashboard skill requires reuse of canonical widget and data paths before new abstractions."
+  ],
+  "recommendation": "Do not add a new analytics store. Route the mission through VT-SYNC and analytics-canon and keep Crown as coordination/provenance only.",
+  "alternatives": [
+    "Create a Crown-specific cache, rejected because it would duplicate data authority.",
+    "Copy values into mission records, rejected because mission files are not runtime data stores."
+  ],
+  "state": "accepted"
+}
