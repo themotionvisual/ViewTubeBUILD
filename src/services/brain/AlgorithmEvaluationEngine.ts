@@ -112,10 +112,15 @@ export const recordAlgorithmEvaluation = (input: {
  sourceEventId: string
  observations: AlgorithmMetricObservation[]
  now?: number
+ evaluationTargets?: AlgorithmEvaluationTarget[]
+ metadata?: Record<string, unknown>
 }) => {
  const event = listAlgorithmIntelligenceEvents().find((candidate) => candidate.id === input.sourceEventId)
  if (!event) throw new Error(`Unknown Algorithm Intelligence event: ${input.sourceEventId}`)
- const evaluation = evaluateAlgorithmEvent({ event, observations: input.observations, now: input.now })
+ const effectiveEvent = input.evaluationTargets
+  ? { ...event, evaluationTargets: input.evaluationTargets }
+  : event
+ const evaluation = evaluateAlgorithmEvent({ event: effectiveEvent, observations: input.observations, now: input.now })
  const recorded = recordAlgorithmIntelligenceEvent({
   channelId: event.channelId,
   projectId: event.projectId,
@@ -133,8 +138,11 @@ export const recordAlgorithmEvaluation = (input: {
   confidence: evaluation.confidence,
   title: `Evaluation: ${event.title}`,
   summary: evaluation.explanation,
-  evaluationTargets: event.evaluationTargets,
-  metadata: { evaluation },
+  evaluationTargets: effectiveEvent.evaluationTargets,
+  metadata: {
+   ...(input.metadata || {}),
+   evaluation,
+  },
  })
  return { evaluation, recorded }
 }
