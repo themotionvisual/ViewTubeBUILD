@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "viewtube.receipt.v1",
+  "missionId": "VT-MISSION-FORGE-video-package-editor",
+  "receiptId": "VT-RECEIPT-FORGE-schema-check",
+  "worker": "viewtube-verification-chancellor",
+  "kind": "verification",
+  "changedPaths": [],
+  "checks": [{"name": "domain-contract", "state": "documented", "evidence": "Mission and work-order records represent package, editor, render and publishing boundaries while keeping publishing separately authorized."}],
+  "artifacts": [],
+  "limitations": ["No editor, render or publishing implementation has been executed under this mission yet."],
+  "status": "partial"
+}
