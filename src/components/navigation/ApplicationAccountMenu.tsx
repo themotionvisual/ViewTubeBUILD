@@ -7,6 +7,7 @@ import {
   CircleUserRound,
   Clapperboard,
   CreditCard,
+  Crown,
   FileClock,
   FlaskConical,
   FolderKanban,
@@ -71,6 +72,7 @@ const iconById: Record<ApplicationMenuIconId, React.ComponentType<{ "aria-hidden
   settings: Settings,
   privacy: ShieldCheck,
   integrations: KeyRound,
+  crown: Crown,
   guide: BookOpen,
   about: Info,
 }
