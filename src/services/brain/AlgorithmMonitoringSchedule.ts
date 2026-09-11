@@ -75,6 +75,21 @@ export const monitoringScheduleForEvent = (event: AlgorithmIntelligenceEvent): A
  })
 }
 
+/** Adds a stable monitoring schedule to an existing intelligence event. */
+export const attachAlgorithmMonitoringSchedule = (
+ event: AlgorithmIntelligenceEvent,
+): AlgorithmIntelligenceEvent => {
+ const monitoringSchedule = monitoringScheduleForEvent(event)
+ return recordAlgorithmIntelligenceEvent({
+  ...event,
+  id: event.id,
+  metadata: {
+   ...event.metadata,
+   monitoringSchedule,
+  },
+ })
+}
+
 export interface DueAlgorithmMonitoringCheckpoint {
  event: AlgorithmIntelligenceEvent
  checkpoint: AlgorithmMonitoringCheckpoint
