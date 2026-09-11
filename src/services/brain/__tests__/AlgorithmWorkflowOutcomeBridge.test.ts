@@ -22,9 +22,9 @@ const mocks = vi.hoisted(() => {
  }
  return {
   event,
-  listAlgorithmIntelligenceEvents: vi.fn(() => [event]),
-  findAlgorithmEventByActionPacket: vi.fn(() => event),
-  processAlgorithmEvaluation: vi.fn(() => ({
+  listAlgorithmIntelligenceEvents: vi.fn((): any[] => [event]),
+  findAlgorithmEventByActionPacket: vi.fn((_id?: string): any => event),
+  processAlgorithmEvaluation: vi.fn((_input?: any): any => ({
    evaluation: { status: "neutral" },
    recorded: { id: "measured-1" },
    learningEvents: [],
