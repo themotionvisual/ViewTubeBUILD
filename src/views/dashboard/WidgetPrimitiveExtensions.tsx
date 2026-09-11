@@ -5,16 +5,23 @@ import "./widgetPrimitiveVariants.css"
 import "./widgetPrimitiveExactHeights.css"
 
 export type WidgetControlHeight = 18 | 24 | 32 | 38
+export type WidgetPrimitiveTone = "default" | "primary" | "secondary"
+export type WidgetSplitIconStyle = "white-on-color" | "color-on-light"
 
 export const widgetControlHeightClass = (height: WidgetControlHeight = 32) =>
   `vt-sized-control is-height-${height}`
 
+const toneClass = (tone: WidgetPrimitiveTone = "default") => `is-tone-${tone}`
+
 export const WidgetSizedButton: React.FC<
-  React.ButtonHTMLAttributes<HTMLButtonElement> & { height?: WidgetControlHeight }
-> = ({ height = 32, className = "", type = "button", ...props }) => (
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    height?: WidgetControlHeight
+    tone?: WidgetPrimitiveTone
+  }
+> = ({ height = 32, tone = "default", className = "", type = "button", ...props }) => (
   <button
     type={type}
-    className={`vt-button ${widgetControlHeightClass(height)} ${className}`.trim()}
+    className={`vt-button ${widgetControlHeightClass(height)} ${toneClass(tone)} ${className}`.trim()}
     {...props}
   />
 )
@@ -23,14 +30,16 @@ export const WidgetLeftSplitButton: React.FC<
   Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
     icon: React.ReactNode
     children: React.ReactNode
-    tone?: "primary" | "soft" | "neutral"
+    tone?: WidgetPrimitiveTone
+    iconStyle?: WidgetSplitIconStyle
     width?: "auto" | "compact" | "wide" | "full"
     height?: WidgetControlHeight
   }
 > = ({
   icon,
   children,
-  tone = "neutral",
+  tone = "default",
+  iconStyle = "white-on-color",
   width = "auto",
   height = 32,
   className = "",
@@ -38,9 +47,9 @@ export const WidgetLeftSplitButton: React.FC<
 }) => (
   <WidgetSplitButton
     icon={icon}
-    tone={tone}
+    tone="neutral"
     width={width}
-    className={`is-left-split ${widgetControlHeightClass(height)} ${className}`.trim()}
+    className={`is-left-split ${widgetControlHeightClass(height)} ${toneClass(tone)} is-icon-${iconStyle} ${className}`.trim()}
     {...props}
   >
     {children}
@@ -48,10 +57,13 @@ export const WidgetLeftSplitButton: React.FC<
 )
 
 export const WidgetTextInput: React.FC<
-  React.InputHTMLAttributes<HTMLInputElement> & { height?: WidgetControlHeight }
-> = ({ height = 32, className = "", ...props }) => (
+  React.InputHTMLAttributes<HTMLInputElement> & {
+    height?: WidgetControlHeight
+    tone?: WidgetPrimitiveTone
+  }
+> = ({ height = 32, tone = "default", className = "", ...props }) => (
   <input
-    className={`vt-input widget-text-input ${widgetControlHeightClass(height)} ${className}`.trim()}
+    className={`vt-input widget-text-input ${widgetControlHeightClass(height)} ${toneClass(tone)} ${className}`.trim()}
     {...props}
   />
 )
@@ -66,9 +78,10 @@ export const WidgetSizedSelect: React.FC<{
   className?: string
   style?: React.CSSProperties
   height?: WidgetControlHeight
-}> = ({ height = 32, className = "", ...props }) => (
+  tone?: WidgetPrimitiveTone
+}> = ({ height = 32, tone = "default", className = "", ...props }) => (
   <WidgetSelect
-    className={`${widgetControlHeightClass(height)} ${className}`.trim()}
+    className={`${widgetControlHeightClass(height)} ${toneClass(tone)} ${className}`.trim()}
     {...props}
   />
 )
@@ -87,6 +100,8 @@ export const WidgetVideoSelect: React.FC<{
   label: string
   placeholder?: string
   height?: WidgetControlHeight
+  tone?: WidgetPrimitiveTone
+  iconStyle?: WidgetSplitIconStyle
   searchable?: boolean
   disabled?: boolean
   className?: string
@@ -97,6 +112,8 @@ export const WidgetVideoSelect: React.FC<{
   label,
   placeholder = "Select a video…",
   height = 38,
+  tone = "default",
+  iconStyle = "white-on-color",
   searchable = true,
   disabled = false,
   className = "",
@@ -116,7 +133,7 @@ export const WidgetVideoSelect: React.FC<{
     <div className={`widget-video-select ${open ? "is-open" : ""} ${className}`.trim()}>
       <button
         type="button"
-        className={`widget-video-select-trigger ${widgetControlHeightClass(height)}`}
+        className={`widget-video-select-trigger ${widgetControlHeightClass(height)} ${toneClass(tone)} is-icon-${iconStyle}`}
         aria-label={label}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -124,14 +141,14 @@ export const WidgetVideoSelect: React.FC<{
         onClick={() => setOpen((current) => !current)}
       >
         <span className="widget-video-select-trigger-icon" aria-hidden="true">
-          <FileVideo2 size={Math.max(12, height - 18)} strokeWidth={2.5} />
+          <FileVideo2 strokeWidth={2.5} />
         </span>
         <span className="widget-video-select-trigger-copy">
           {selected?.thumbnail ? <img src={selected.thumbnail} alt="" /> : null}
           <span>{selected?.label || placeholder}</span>
         </span>
         <span className="widget-video-select-trigger-chevron" aria-hidden="true">
-          <ChevronDown size={Math.max(12, height - 18)} strokeWidth={2.5} />
+          <ChevronDown strokeWidth={2.5} />
         </span>
       </button>
 
@@ -142,6 +159,7 @@ export const WidgetVideoSelect: React.FC<{
               <Search size={13} aria-hidden="true" style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", opacity: .55 }} />
               <WidgetTextInput
                 height={32}
+                tone="secondary"
                 value={query}
                 onChange={(event) => setQuery(event.currentTarget.value)}
                 placeholder="Search videos…"
@@ -181,6 +199,7 @@ export const WidgetProgressBar: React.FC<{
   label?: React.ReactNode
   displayValue?: React.ReactNode
   height?: WidgetControlHeight
+  tone?: WidgetPrimitiveTone
   className?: string
   style?: React.CSSProperties
 }> = ({
@@ -189,13 +208,14 @@ export const WidgetProgressBar: React.FC<{
   label,
   displayValue,
   height = 24,
+  tone = "default",
   className = "",
   style,
 }) => {
   const percentage = Math.max(0, Math.min(100, max > 0 ? (value / max) * 100 : 0))
   return (
     <div
-      className={`widget-progress-bar is-height-${height} ${className}`.trim()}
+      className={`widget-progress-bar is-height-${height} ${toneClass(tone)} ${className}`.trim()}
       style={{ ...style, ["--widget-progress" as string]: `${percentage}%` }}
       role="progressbar"
       aria-valuemin={0}
