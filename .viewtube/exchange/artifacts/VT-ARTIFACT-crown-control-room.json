@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "viewtube.artifact-record.v1",
+  "artifactId": "VT-ARTIFACT-crown-control-room",
+  "missionId": "VT-MISSION-EXAMPLE-dashboard-canonical",
+  "taskIds": [],
+  "title": "ViewTube Crown Control Room",
+  "type": "prototype",
+  "status": "PROTOTYPE",
+  "source": "docs/demos/ViewTube_Crown_Control_Room.html",
+  "canonicalTarget": null,
+  "producedBy": "viewtube-crown",
+  "verified": false,
+  "notes": [
+    "Standalone offline governance demo only.",
+    "Does not prove runtime integration with Task Index, Brain, analytics or deployment."
+  ]
+}
