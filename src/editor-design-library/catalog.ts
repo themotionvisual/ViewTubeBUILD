@@ -1,4 +1,5 @@
 import type {TemplateCategory, TemplateDefinition} from './core/schema';
+import {normalizeTemplateCatalog} from './core/normalizeTemplate';
 import {textTemplates} from './templates/text';
 import {graphicTemplates} from './templates/graphics';
 import {sceneTemplates} from './templates/scenes';
@@ -11,7 +12,7 @@ import {verticalSceneTemplates} from './templates/verticalScenes';
 import {youtuberOpenerTemplates} from './templates/youtuberOpeners';
 import {youtuberUtilityTemplates} from './templates/youtuberUtility';
 
-export const templateCatalog: TemplateDefinition[] = [
+export const templateCatalog: TemplateDefinition[] = normalizeTemplateCatalog([
   ...textTemplates,
   ...graphicTemplates,
   ...sceneTemplates,
@@ -23,7 +24,7 @@ export const templateCatalog: TemplateDefinition[] = [
   ...verticalSceneTemplates,
   ...youtuberOpenerTemplates,
   ...youtuberUtilityTemplates,
-];
+]);
 
 export function filterTemplateCatalog(category?: TemplateCategory, query = ''): TemplateDefinition[] {
   const q = query.trim().toLowerCase();
