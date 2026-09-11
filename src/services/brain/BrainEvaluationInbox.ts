@@ -2,8 +2,10 @@ import { listDueAlgorithmEvaluations, summarizeAlgorithmLearningLoop } from "./B
 import { getAlgorithmEventLineage, listAlgorithmIntelligenceEvents, type AlgorithmIntelligenceEvent } from "./AlgorithmIntelligenceEventLedger"
 import { listAlgorithmLearningCandidatesForReview, summarizeAlgorithmLearningGovernance } from "./AlgorithmLearningGovernance"
 import type { AlgorithmEvaluationResult } from "./AlgorithmEvaluationEngine"
+import { listDueAlgorithmMonitoringCheckpoints } from "./AlgorithmMonitoringSchedule"
 
 export type BrainEvaluationInboxItemKind =
+ | "monitoring_checkpoint"
  | "overdue_checkpoint"
  | "insufficient_data"
  | "measured_outcome"
@@ -103,6 +105,36 @@ const insufficientDataItems = (channelId: string): BrainEvaluationInboxItem[] =>
   }))
 }
 
+const monitoringItems = (channelId: string, now: number): BrainEvaluationInboxItem[] =>
+ listDueAlgorithmMonitoringCheckpoints({ channelId, now, maximum: 100 })
+  .filter(({ checkpoint }) => checkpoint.role === "observe")
+  .map(({ event, checkpoint, overdueByMs }) => ({
+   id: `evaluation-inbox:monitor:${checkpoint.id}`,
+   kind: "monitoring_checkpoint" as const,
+   priority: overdueByMs >= 24 * 60 * 60 * 1000 ? "high" as const : "low" as const,
+   channelId,
+   projectId: event.projectId,
+   videoId: event.videoId,
+   title: `${checkpoint.label} observation: ${event.title}`,
+   summary: `Intermediate monitoring horizon reached for ${checkpoint.metrics.join(", ") || "declared metrics"}. This is observation-only and does not count as a separate learning outcome.`,
+   sourceEventId: event.id,
+   recommendationId: event.recommendationId,
+   actionPacketId: event.actionPacketId,
+   workflowId: event.workflowId,
+   evidenceIds: event.evidenceIds,
+   createdAt: event.createdAt,
+   dueAt: checkpoint.dueAt,
+   overdueByMs,
+   requiredMetrics: checkpoint.metrics,
+   lineageEventIds: getAlgorithmEventLineage(event.id).map((candidate) => candidate.id),
+   metadata: {
+    monitoringCheckpointId: checkpoint.id,
+    monitoringRole: checkpoint.role,
+    horizonHours: checkpoint.horizonHours,
+    learnableOutcome: false,
+   },
+  }))
+
 const dueItems = (channelId: string, now: number): BrainEvaluationInboxItem[] =>
  listDueAlgorithmEvaluations({ channelId, now, maximum: 100 }).map(({ event, dueAt, overdueByMs, requiredMetrics }) => ({
   id: `evaluation-inbox:due:${event.id}`,
@@ -112,7 +144,7 @@ const dueItems = (channelId: string, now: number): BrainEvaluationInboxItem[] =>
   projectId: event.projectId,
   videoId: event.videoId,
   title: `Evaluate: ${event.title}`,
-  summary: `Checkpoint is overdue by ${Math.round(overdueByMs / 3600000)}h and requires ${requiredMetrics.join(", ") || "declared outcome evidence"}.`,
+  summary: `Final evaluation checkpoint is overdue by ${Math.round(overdueByMs / 3600000)}h and requires ${requiredMetrics.join(", ") || "declared outcome evidence"}.`,
   sourceEventId: event.id,
   recommendationId: event.recommendationId,
   actionPacketId: event.actionPacketId,
@@ -123,7 +155,7 @@ const dueItems = (channelId: string, now: number): BrainEvaluationInboxItem[] =>
   overdueByMs,
   requiredMetrics,
   lineageEventIds: getAlgorithmEventLineage(event.id).map((candidate) => candidate.id),
-  metadata: {},
+  metadata: { monitoringRole: "final_evaluation" },
  }))
 
 const learningItems = (channelId: string): BrainEvaluationInboxItem[] =>
@@ -157,6 +189,7 @@ export const buildBrainEvaluationInbox = (input: {
   ...dueItems(input.channelId, now),
   ...insufficientDataItems(input.channelId),
   ...learningItems(input.channelId),
+  ...monitoringItems(input.channelId, now),
   ...(input.includeMeasuredOutcomes === false ? [] : measuredOutcomeItems(input.channelId)),
  ]
   .sort((left, right) => priorityRank[right.priority] - priorityRank[left.priority] || right.createdAt - left.createdAt)
@@ -169,6 +202,7 @@ export const buildBrainEvaluationInbox = (input: {
   counts: {
    total: items.length,
    critical: items.filter((item) => item.priority === "critical").length,
+   monitoring: items.filter((item) => item.kind === "monitoring_checkpoint").length,
    overdue: items.filter((item) => item.kind === "overdue_checkpoint").length,
    insufficientData: items.filter((item) => item.kind === "insufficient_data").length,
    measuredOutcomes: items.filter((item) => item.kind === "measured_outcome").length,
