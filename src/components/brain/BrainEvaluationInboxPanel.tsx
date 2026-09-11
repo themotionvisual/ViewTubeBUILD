@@ -6,6 +6,7 @@ import { BRAIN_OUTCOME_EVENT } from "../../services/brain/BrainOutcomeLedger"
 import { reviewAlgorithmLearningCandidate } from "../../services/brain/AlgorithmLearningGovernance"
 import { captureCanonicalLifecycleObservations } from "../../services/brain/AlgorithmLifecycleObservationStore"
 import { resolveDueAlgorithmMonitoringCheckpoints } from "../../services/brain/AlgorithmMonitoringResolver"
+import { processResolvableFinalAlgorithmEvaluations } from "../../services/brain/AlgorithmFinalEvaluationResolver"
 import { BrainAttributionDetailPanel } from "./BrainAttributionDetailPanel"
 import {
  getVtSyncSnapshot,
@@ -46,19 +47,22 @@ export const BrainEvaluationInboxPanel: React.FC<{
   }
  }, [])
 
- // Capture lifecycle evidence whenever the canonical VT-SYNC snapshot changes,
- // then resolve any due monitoring checkpoints that now have genuine evidence.
- // Intermediate checkpoints remain observation-only; this never creates an
- // OUTCOME_MEASURED event or increases a learning candidate's sample size.
+ // Canonical snapshot updates advance Phase 6 in three safe steps:
+ // 1) capture genuine lifecycle evidence;
+ // 2) resolve monitoring checkpoints only when matching evidence exists;
+ // 3) finalize only final-horizon evaluations that preflight as measurable.
+ // Missing evidence remains retryable and does not manufacture success/failure.
  useEffect(() => {
   if (!channelId) return
   const capture = () => {
    try {
-    captureCanonicalLifecycleObservations({ channelId, snapshot: getVtSyncSnapshot() })
+    const snapshot = getVtSyncSnapshot()
+    captureCanonicalLifecycleObservations({ channelId, snapshot })
     resolveDueAlgorithmMonitoringCheckpoints({ channelId })
+    processResolvableFinalAlgorithmEvaluations({ channelId, currentSnapshot: snapshot })
     setRevision((value) => value + 1)
    } catch (error) {
-    console.warn("[BrainEvaluationInbox] lifecycle capture/monitoring resolution unavailable:", error)
+    console.warn("[BrainEvaluationInbox] lifecycle/evaluation advancement unavailable:", error)
    }
   }
   capture()
