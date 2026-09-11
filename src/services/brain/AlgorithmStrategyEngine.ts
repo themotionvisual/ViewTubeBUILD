@@ -1,6 +1,14 @@
 import type { BrainConfidenceLevel, SuperToolId } from "../../types"
 import type { ChannelIntelligenceSnapshot } from "./ChannelIntelligence"
 
+export type AlgorithmSignalOrigin =
+ | "anomaly"
+ | "opportunity"
+ | "channel_intelligence"
+ | "project"
+ | "creator"
+ | "priming_feedback"
+
 export type AlgorithmSignalKind =
  | "traffic_expansion"
  | "traffic_contraction"
@@ -26,6 +34,7 @@ export type AlgorithmMomentumCommand =
 
 export interface AlgorithmSignal {
  id: string
+ origin?: AlgorithmSignalOrigin
  kind: AlgorithmSignalKind
  channelId: string
  videoId?: string | null
@@ -50,6 +59,7 @@ export interface AlgorithmRecommendation {
  id: string
  channelId: string
  signalId: string
+ signalOrigin: AlgorithmSignalOrigin
  command: AlgorithmMomentumCommand
  title: string
  rationale: string
@@ -198,6 +208,7 @@ export const recommendAlgorithmAction = (input: {
   id: `algorithm:${signal.id}:${command.toLowerCase()}`,
   channelId: signal.channelId,
   signalId: signal.id,
+  signalOrigin: signal.origin || "creator",
   command,
   title: `${command}: ${signal.entity || signal.kind.replaceAll("_", " ")}`,
   rationale,
@@ -208,6 +219,7 @@ export const recommendAlgorithmAction = (input: {
   checkpoint,
   guardrails,
   payload: {
+   signalOrigin: signal.origin || "creator",
    signalKind: signal.kind,
    videoId: signal.videoId || null,
    entity: signal.entity || null,
