@@ -1,0 +1,90 @@
+---
+name: viewtube-widget-dashboard
+description: Build, redesign, register, lay out, audit, and optimize ViewTube dashboard widgets using the canonical WidgetShell, widget primitives, Toolbox CSS system, responsive size contracts, data states, and performance guardrails. Use for dashboard widget work; do not use for unrelated page-level tools or generic React components.
+---
+
+# ViewTube Widget Dashboard
+
+Treat the repository as the source of truth. Preserve working behavior while reducing duplicate rendering, CSS, data access, and registry paths.
+
+## Start Here
+
+1. Inspect the current branch and working tree; preserve unrelated edits.
+2. Read the relevant canonical files:
+   - `src/views/dashboard/WidgetRegistry.ts`
+   - `src/views/dashboard/WidgetRenderer.tsx`
+   - `src/views/dashboard/WidgetShell.tsx`
+   - `src/views/dashboard/WidgetPrimitives.tsx`
+   - `src/views/dashboard/WidgetPrimitiveExtensions.tsx`
+   - `src/views/dashboard/types.ts`
+   - `src/views/dashboard/tokens.ts`
+   - `src/views/dashboard/toolboxWidgetSystem.css`
+3. For architectural optimization, migration, performance auditing, or code removal, read [references/architecture-baseline.md](references/architecture-baseline.md).
+4. For creating, redesigning, resizing, or certifying a widget, read [references/widget-build-contract.md](references/widget-build-contract.md).
+
+## Choose the Work Mode
+
+### Create or redesign one widget
+
+- Start from the user task and information priority, not a visual mock alone.
+- Reuse `WidgetShell` and primitives before adding markup or CSS.
+- Give the widget one registry definition, one renderer key, and one implementation.
+- Support every declared size/height combination using container responsiveness.
+- Model loading, ready, empty, blocked, stale, and error states when the widget reads data.
+- Keep expensive libraries, API calls, and context subscriptions inside the lazy widget boundary.
+- Register and certify the widget only after its states and dimensions work.
+
+### Design a dashboard layout or grid
+
+- Keep the shell's 24-column grid and size bucket vocabulary unless a measured failure justifies migration.
+- Select size from information density and primary action needs:
+  - `quarter`/`companion`: one KPI, status, or short action.
+  - `third`/`between`: compact workflows or small comparisons.
+  - `half`: standard charts, lists, and multi-step tools.
+  - `two-thirds`/`three-quarters`: dense analysis or editing.
+  - `full`: tables, timelines, relationship graphs, or multi-panel workspaces.
+- Pair size with a declared height bucket. Do not use ad hoc fixed heights inside a widget.
+- Use shell media queries only for page-level navigation/grid behavior. Use container queries for widget internals.
+- Test narrow mobile, quarter, half, and full-width placements independently.
+
+### Optimize, merge, simplify, or remove code
+
+- Measure before changing: route chunks, CSS output, render counts, DOM nodes for large lists, and interaction timing.
+- Prefer extraction and deletion over adding a second abstraction.
+- Preserve public widget IDs and normalize stored layouts through a schema migration when IDs or dimensions change.
+- Consolidate duplicate CSS by layer: tokens, shell, primitives, archetypes, widget-specific rules, accessibility.
+- Split inline widget implementations out of `WidgetRenderer.tsx`; keep it a typed lazy resolver and fallback boundary.
+- Virtualize only genuinely large or unbounded tables/galleries. Do not add a virtualization dependency to ordinary widget grids.
+- Do not introduce Module Federation or another micro-frontend runtime without an independently deployable-widget requirement and measured benefit.
+- Remove legacy code only after import, registry, persisted-layout, and user-guide consumers are accounted for.
+
+## Non-Negotiable ViewTube UI Contract
+
+- Colored header and left icon rail meet the outer edge; no third strip.
+- Black icon strokes; title/button/label text is heavy and legible.
+- Outer spacing follows tokens: 24px grid gap/padding, 12px internal gap, 8px dense gap.
+- Border hierarchy: 4px shell, 3px module, 2px control; radii 16/12/8px.
+- Shadow color derives from the widget title color at controlled opacity.
+- Inputs use the icon-rail/title color for focus indication.
+- Media uses explicit `aspect-ratio` (16/9, 9/16, or the declared asset ratio).
+- Overflow belongs in an explicit `WidgetScrollArea`; headers and titles do not scroll.
+- Data visuals include text labels or patterns; color is never the sole carrier of meaning.
+
+## Verification and Handoff
+
+Run the narrowest relevant checks, then the dashboard contract suite and production build for structural work:
+
+~~~bash
+npm test -- --run src/views/dashboard/__tests__ src/views/dashboard/useDashboardData.vtSync.test.ts
+npm run build
+~~~
+
+Also verify:
+
+- registry IDs and renderer keys are unique and covered;
+- all ready widgets are revealable and persisted layouts normalize correctly;
+- no widget crashes the dashboard because `WidgetErrorBoundary` and lazy fallback remain intact;
+- keyboard labels, focus visibility, reduced motion, blocked/error recovery, and mobile overflow work;
+- before/after bundle and CSS figures are recorded for performance changes.
+
+Report changed files, tests, measured impact, remaining risks, and any migration/rollback requirement.
