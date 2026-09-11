@@ -15,6 +15,7 @@ export type ApplicationMenuIconId =
   | "settings"
   | "privacy"
   | "integrations"
+  | "crown"
   | "guide"
   | "about"
 
@@ -151,6 +152,15 @@ export const APPLICATION_MENU_DESTINATIONS: readonly ApplicationMenuDestination[
     icon: "integrations",
     keywords: ["gemini", "api", "key", "provider", "byok"],
     action: "gemini-settings",
+  },
+  {
+    id: "crown-control-room",
+    path: "/crown",
+    label: "Crown Control Room",
+    description: "Inspect missions, execution and verification",
+    group: "account",
+    icon: "crown",
+    keywords: ["king", "emperor", "mission", "work order", "receipt", "artifact", "verification", "governance"],
   },
   {
     id: "user-guide",
