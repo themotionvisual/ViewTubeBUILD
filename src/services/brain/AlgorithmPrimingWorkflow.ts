@@ -1,6 +1,7 @@
 import { createBrainSuperToolHandoff } from "./BrainSuperToolBridge"
 import type { AlgorithmPrimingPlan, PrimingStep } from "./AlgorithmPrimingEngine"
 import { recordAlgorithmIntelligenceEvent, type AlgorithmEvaluationTarget } from "./AlgorithmIntelligenceEventLedger"
+import { attachAlgorithmMonitoringSchedule } from "./AlgorithmMonitoringSchedule"
 
 const objectiveFor = (step: PrimingStep) => `${step.title}. ${step.description}`
 
@@ -32,7 +33,7 @@ export const createPrimingStepHandoff = async (input: {
  const checkpointAt = Date.now() + Math.max(...evaluationTargets.map((target) => target.windowHours || 24), 24) * 60 * 60 * 1000
 
  if (!step.targetToolId) {
-  const event = recordAlgorithmIntelligenceEvent({
+  const event = attachAlgorithmMonitoringSchedule(recordAlgorithmIntelligenceEvent({
    channelId: input.plan.channelId,
    projectId: input.plan.projectId,
    videoId: input.plan.videoId,
@@ -48,7 +49,7 @@ export const createPrimingStepHandoff = async (input: {
    evaluationTargets,
    checkpointAt,
    metadata: { phase: step.phase, objective: step.objective, outputKind: step.outputKind, noToolAction: true },
-  })
+  }))
   return {
    status: "no_tool_action" as const,
    step,
@@ -87,7 +88,7 @@ export const createPrimingStepHandoff = async (input: {
   confidence: input.plan.confidence,
  })
 
- const event = recordAlgorithmIntelligenceEvent({
+ const event = attachAlgorithmMonitoringSchedule(recordAlgorithmIntelligenceEvent({
   channelId: input.plan.channelId,
   projectId: input.plan.projectId,
   videoId: input.plan.videoId,
@@ -105,7 +106,7 @@ export const createPrimingStepHandoff = async (input: {
   evaluationTargets,
   checkpointAt,
   metadata: { phase: step.phase, objective: step.objective, outputKind: step.outputKind, destinationToolId: step.targetToolId },
- })
+ }))
 
  return { status: "handoff_created" as const, step, result, event }
 }
