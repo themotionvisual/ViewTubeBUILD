@@ -31,6 +31,7 @@
     "check:css": "node scripts/check-css-parse.mjs",
     "report:dashboard-baseline": "node scripts/dashboard-baseline-report.mjs",
     "check:dashboard-baseline": "node scripts/dashboard-baseline-report.mjs --check",
+    "snapshot:dashboard-styles": "node scripts/dashboard-style-snapshot.mjs",
     "check:quarantine": "node scripts/check-quarantine-integrity.mjs",
     "check:src-governance": "node scripts/check-src-governance.mjs",
     "check:architecture": "npm run check:quarantine && npm run check:src-governance && npm run typecheck",
