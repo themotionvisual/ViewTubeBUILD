@@ -50,7 +50,7 @@ export const WidgetTextInput: React.FC<
   React.InputHTMLAttributes<HTMLInputElement> & { height?: WidgetControlHeight }
 > = ({ height = 32, className = "", ...props }) => (
   <input
-    className={`widget-text-input ${widgetControlHeightClass(height)} ${className}`.trim()}
+    className={`vt-input widget-text-input ${widgetControlHeightClass(height)} ${className}`.trim()}
     {...props}
   />
 )
