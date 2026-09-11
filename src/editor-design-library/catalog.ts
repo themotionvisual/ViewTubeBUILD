@@ -2,8 +2,16 @@ import type {TemplateCategory, TemplateDefinition} from './core/schema';
 import {textTemplates} from './templates/text';
 import {graphicTemplates} from './templates/graphics';
 import {sceneTemplates} from './templates/scenes';
+import {transitionTemplates} from './templates/transitions';
+import {engagementTemplates} from './templates/engagement';
 
-export const templateCatalog: TemplateDefinition[] = [...textTemplates, ...graphicTemplates, ...sceneTemplates];
+export const templateCatalog: TemplateDefinition[] = [
+  ...textTemplates,
+  ...graphicTemplates,
+  ...sceneTemplates,
+  ...transitionTemplates,
+  ...engagementTemplates,
+];
 
 export function filterTemplateCatalog(category?: TemplateCategory, query = ''): TemplateDefinition[] {
   const q = query.trim().toLowerCase();
