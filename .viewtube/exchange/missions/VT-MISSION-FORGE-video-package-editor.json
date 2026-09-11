@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "viewtube.mission.v2",
+  "missionId": "VT-MISSION-FORGE-video-package-editor",
+  "taskIds": [],
+  "objective": "Carry a creator project from bounded content package into the current editor/render pipeline while preserving project identity, asset provenance and preview/export parity.",
+  "why": "Prove the Crown contract across projects, editor, assets, rendering and publishing boundaries.",
+  "nonGoals": ["Do not replace the current video-package contract.", "Do not claim unsupported preview/render parity.", "Do not publish without explicit destination and payload approval."],
+  "domains": ["creator-tools", "video-editor", "assets", "render", "publishing"],
+  "canonicalOwners": {"videoPackage": "current canonical video-package contract", "editor": "current VT_E1/editor owners", "render": "current render pipeline", "publishing": "current publisher owners"},
+  "acceptance": ["A project retains stable identity across package, editor and render stages.", "Previewed supported features match exported output within documented limits.", "Assets retain source/provenance references and missing assets fail explicitly.", "Publishing remains a separate authorized step with destination/payload preview."],
+  "authorization": {"externalWrites": false, "deploy": false, "billingChange": false, "oauthScopeChange": false},
+  "risk": "medium",
+  "rollback": "Revert mission-scoped integration edits; preserve existing project, package and render owners and generated artifacts.",
+  "state": "draft"
+}
