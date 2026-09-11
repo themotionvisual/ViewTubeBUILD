@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-27",
+  "repository": "themotionvisual/ViewTubeBUILD",
+  "main": {
+    "sha": "f968bdb79e9d59a67ccc27e1c93add6c4396709b",
+    "releaseGate": "failed",
+    "productionDeployment": {
+      "project": "project-2tjr5",
+      "state": "success",
+      "url": "https://project-2tjr5-5qh9bx9uz-arttreasurechestnyc-7455s-projects.vercel.app"
+    }
+  },
+  "vercelProjectsObserved": ["project-2tjr5", "viewtube", "viewtubebuild"],
+  "openPullRequests": [
+    {"number": 62, "branch": "themotionvisual/fix/account-session-dataset-isolation", "rating": "A-", "disposition": "rebase, repair gates, merge first"},
+    {"number": 61, "branch": "codex/vt-e1-temporal-envelope", "rating": "B+", "disposition": "rebase and merge after focused visual tests"},
+    {"number": 58, "branch": "claude/video-editing-engine-tgk6xy", "rating": "B", "disposition": "review as a product subsystem; do not mix with auth migration"},
+    {"number": 14, "branch": "docs/claude-md-and-workflow", "rating": "C", "disposition": "refresh or close as superseded documentation"}
+  ],
+  "unpublishedCandidates": [
+    {"name": "Brain owner consent and data privacy", "location": "/Users/cwb/Downloads/viewtube/viewtubeX-brain-owner-consent", "rating": "B", "risk": "critical", "state": "26 dirty paths; not committed"},
+    {"name": "Brain phase one integration", "branch": "themotionvisual/feat/brain-phase-one-integration", "rating": "C+", "state": "59 ahead, 19 behind"},
+    {"name": "Brain phase two learning handoffs", "branch": "themotionvisual/feat/brain-phase-two-learning-handoffs", "rating": "B-", "state": "63 ahead, 19 behind"},
+    {"name": "Brain phase three adaptive orchestration", "branch": "themotionvisual/feat/brain-phase-three-adaptive-orchestration", "rating": "B-", "state": "69 ahead, 19 behind"},
+    {"name": "ViewTubeX creator engagement snapshot", "branch": "codex/chore/viewtubex-version-2026-08-27", "rating": "B", "state": "1 ahead, 178 behind; archival donor only"},
+    {"name": "Integration final superset", "location": "/Users/cwb/ViewTube-branch-check 2", "rating": "D", "risk": "critical", "state": "78 dirty paths; quarantine"}
+  ],
+  "targetAuthority": {
+    "accountSession": "UnifiedAccountSnapshot from the server-owned account module",
+    "reactConnectionStatus": "auth-canon useAccountStatus plus a single channel/sync projection",
+    "youtubeTransport": "googleReadTransport and youtubeWriteTransport",
+    "analytics": "analytics-canon over the VT-SYNC snapshot",
+    "localCache": "restore and offline display only; never identity authority",
+    "uiLabels": "accountContracts plus one canonical connection view model"
+  },
+  "mergeOrder": [
+    "stabilize main release gate and choose one Vercel production project",
+    "rebase and validate PR 62",
+    "migrate visible account and channel surfaces to auth-canon",
+    "preserve ViewTubeX fast population behavior behind canonical transports",
+    "complete analytics-canon consumer migration",
+    "review editor and Brain tracks independently"
+  ]
+}

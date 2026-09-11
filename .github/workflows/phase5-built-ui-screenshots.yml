@@ -1,0 +1,44 @@
+name: Phase 5 Built UI Screenshots
+
+on:
+  push:
+    branches:
+      - themotionvisual/feat/brain-phase-five-production-chains
+  workflow_dispatch:
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Build exact branch
+        run: npm run build
+      - name: Start local ViewTube preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/viewtube-preview.log 2>&1 &
+          echo $! > /tmp/viewtube-preview.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/viewtube-preview.log
+          exit 1
+      - name: Capture actual desktop and mobile UI
+        env:
+          PREVIEW_URL: http://127.0.0.1:4173
+          VERCEL_SHARE_URL: ''
+        run: node scripts/capture-phase5-built-ui.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase5-built-ui-screenshots
+          path: artifacts/phase5-built-ui
+          if-no-files-found: warn
+          retention-days: 14

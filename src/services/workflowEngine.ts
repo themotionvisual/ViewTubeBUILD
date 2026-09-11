@@ -35,13 +35,14 @@ export const createWorkflowStep = (
  ownerSurface: SuperToolSurface,
  toolId?: SuperToolId | null,
  details?: string,
+ status: WorkflowStepStatus = "pending",
 ): WorkflowStep => ({
  id: crypto.randomUUID(),
  title,
  ownerSurface,
  toolId: toolId || null,
  details,
- status: "pending",
+ status,
  artifactIds: [],
 })
 
