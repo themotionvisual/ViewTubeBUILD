@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewtube.local/schemas/crown-protocols.schema.json",
+  "title": "ViewTube Crown Protocols",
+  "$defs": {
+    "mission": {
+      "type": "object",
+      "required": ["schemaVersion", "missionId", "objective", "acceptance", "authorization", "state"],
+      "properties": {
+        "schemaVersion": {"const": "viewtube.mission.v2"},
+        "missionId": {"type": "string"},
+        "taskIds": {"type": "array", "items": {"type": "string"}},
+        "objective": {"type": "string", "minLength": 1},
+        "why": {"type": "string"},
+        "nonGoals": {"type": "array", "items": {"type": "string"}},
+        "domains": {"type": "array", "items": {"type": "string"}},
+        "canonicalOwners": {"type": "object"},
+        "acceptance": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "authorization": {"type": "object"},
+        "risk": {"enum": ["low", "medium", "high"]},
+        "rollback": {"type": "string"},
+        "state": {"enum": ["draft", "approved-for-execution", "executing", "verification", "complete", "partial", "blocked"]}
+      }
+    },
+    "workOrder": {
+      "type": "object",
+      "required": ["schemaVersion", "missionId", "executionId", "checkout", "baseSha", "orderedSteps", "writerScopes", "testsRequired"],
+      "properties": {
+        "schemaVersion": {"const": "viewtube.work-order.v1"},
+        "missionId": {"type": "string"},
+        "executionId": {"type": "string"},
+        "checkout": {"type": "string"},
+        "baseSha": {"type": "string"},
+        "headSha": {"type": ["string", "null"]},
+        "orderedSteps": {"type": "array", "items": {"type": "string"}},
+        "writerScopes": {"type": "array", "items": {"type": "object", "required": ["owner", "paths"], "properties": {"owner": {"type": "string"}, "paths": {"type": "array", "items": {"type": "string"}}}}},
+        "reviewers": {"type": "array", "items": {"type": "string"}},
+        "testsRequired": {"type": "array", "items": {"type": "string"}},
+        "deploymentRequired": {"type": "boolean"}
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "required": ["schemaVersion", "missionId", "worker", "status", "checks", "limitations"],
+      "properties": {
+        "schemaVersion": {"const": "viewtube.receipt.v1"},
+        "missionId": {"type": "string"},
+        "worker": {"type": "string"},
+        "changedPaths": {"type": "array", "items": {"type": "string"}},
+        "checks": {"type": "array", "items": {"type": "object"}},
+        "artifacts": {"type": "array", "items": {"type": "string"}},
+        "limitations": {"type": "array", "items": {"type": "string"}},
+        "status": {"enum": ["complete", "partial", "blocked"]}
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["schemaVersion", "decisionId", "question", "evidence", "state"],
+      "properties": {
+        "schemaVersion": {"const": "viewtube.decision.v1"},
+        "decisionId": {"type": "string"},
+        "question": {"type": "string"},
+        "evidence": {"type": "array", "items": {"type": "string"}},
+        "recommendation": {"type": "string"},
+        "alternatives": {"type": "array", "items": {"type": "string"}},
+        "state": {"enum": ["proposed", "accepted", "rejected", "needs-creator-decision"]}
+      }
+    },
+    "artifactRecord": {
+      "type": "object",
+      "required": ["schemaVersion", "artifactId", "title", "type", "status", "source"],
+      "properties": {
+        "schemaVersion": {"const": "viewtube.artifact-record.v1"},
+        "artifactId": {"type": "string"},
+        "missionId": {"type": ["string", "null"]},
+        "taskIds": {"type": "array", "items": {"type": "string"}},
+        "title": {"type": "string"},
+        "type": {"enum": ["plan", "spec", "prototype", "code", "screenshot", "report", "reference", "other"]},
+        "status": {"enum": ["CANONICAL", "RECOVERY", "PROTOTYPE", "REFERENCE", "SUPERSEDED", "PARTIAL", "UNKNOWN"]},
+        "source": {"type": "string"},
+        "canonicalTarget": {"type": ["string", "null"]},
+        "producedBy": {"type": ["string", "null"]},
+        "verified": {"type": "boolean"}
+      }
+    }
+  }
+}
