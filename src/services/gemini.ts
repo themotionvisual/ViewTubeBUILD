@@ -18,9 +18,11 @@ import type {
  ShortsConcept,
  ProjectPlan,
  Scene,
- ScriptArchitectInput,
- ScriptBeat,
- ScriptBlueprint,
+ ScriptFragment,
+ ScriptProject,
+ ScriptSectionDraft,
+ GeneratedScript,
+ ReferenceLink,
  Tactic,
  Trend,
  CreatorStrategyInput,
@@ -45,9 +47,11 @@ import {
  END_SCREEN_CONCEPT_INSTRUCTIONS,
  INTEREST_SEEDING_INSTRUCTIONS,
  SCRIPT_ARCHITECT_INSTRUCTIONS,
+ FUNNEL_TEASER_SYSTEM_PROMPT,
 } from "@/services/prompts"
 import { geminiQueue } from "../utils/RequestQueue"
 import { getVaultKey } from "./keyVault"
+import { budgetToTimeline, type ScriptBudget } from "./scriptBudget"
 import {
  applyMeterChargeEvent,
  estimateMeterQuote,
@@ -3386,91 +3390,124 @@ export const generateStoryboard = async (
  })
 }
 
-export const generateScriptBlueprint = async (
- input: ScriptArchitectInput,
+/**
+ * Script Architect assembly.
+ *
+ * One structured call returns outline, per-section script, timeline, visuals and
+ * priming Shorts. The word budget is computed locally (services/scriptBudget.ts)
+ * and passed in, so the model writes to a length instead of being trimmed after.
+ */
+export const generateScript = async (
+ project: ScriptProject,
+ budget: ScriptBudget,
  brain?: unknown,
-): Promise<ScriptBlueprint> => {
+): Promise<GeneratedScript> => {
  const journalContext = getJournalKnowledge(brain)
- const runtimeTargetSeconds = Math.max(15, Math.round(input.runtimeTargetMinutes * 60))
+
+ const sectionSchema: Schema = {
+  type: Type.OBJECT,
+  properties: {
+   sectionId: { type: Type.STRING, description: "Must match a supplied section id." },
+   label: { type: Type.STRING },
+   kind: { type: Type.STRING, description: "hook, chapter, or outro" },
+   script: { type: Type.STRING, description: "The spoken script for this section." },
+   lockedFragmentIds: {
+    type: Type.ARRAY,
+    items: { type: Type.STRING },
+    description: "Ids of LOCK fragments reproduced verbatim in this section.",
+   },
+  },
+  required: ["sectionId", "label", "kind", "script", "lockedFragmentIds"],
+ }
 
  const responseSchema: Schema = {
   type: Type.OBJECT,
   properties: {
-   title: { type: Type.STRING, description: "Working title for this script structure." },
-   promise: {
-    type: Type.STRING,
-    description: "The single promise the opening makes to the viewer.",
-   },
-   runtimeEstimate: {
-    type: Type.NUMBER,
-    description: "Total estimated runtime in seconds across all beats.",
-   },
-   beats: {
+   outline: {
     type: Type.ARRAY,
     items: {
      type: Type.OBJECT,
      properties: {
-      id: { type: Type.STRING },
-      label: { type: Type.STRING, description: "Short beat name, e.g. Cold Open." },
-      purpose: { type: Type.STRING, description: "The one viewer outcome this beat owns." },
-      script: { type: Type.STRING, description: "Spoken lines or narration for this beat." },
-      proof: {
-       type: Type.STRING,
-       description: "The evidence, example, or demonstration used inside this beat.",
-      },
-      transition: {
-       type: Type.STRING,
-       description: "The open loop carried into the next beat.",
-      },
-      durationEstimate: { type: Type.NUMBER, description: "Estimated seconds for this beat." },
-      retentionRisk: { type: Type.STRING, description: "low, medium, or high" },
-      riskNote: { type: Type.STRING, description: "Why the beat carries that risk level." },
+      sectionId: { type: Type.STRING },
+      section: { type: Type.STRING },
+      beats: { type: Type.ARRAY, items: { type: Type.STRING } },
      },
-     required: [
-      "id",
-      "label",
-      "purpose",
-      "script",
-      "proof",
-      "transition",
-      "durationEstimate",
-      "retentionRisk",
-      "riskNote",
-     ],
+     required: ["sectionId", "section", "beats"],
     },
    },
-   proofOrder: {
+   sections: { type: Type.ARRAY, items: sectionSchema },
+   visualSuggestions: {
     type: Type.ARRAY,
-    items: { type: Type.STRING },
-    description: "Proof points in the order the viewer receives them.",
+    items: {
+     type: Type.OBJECT,
+     properties: {
+      sectionId: { type: Type.STRING },
+      ideas: { type: Type.ARRAY, items: { type: Type.STRING } },
+     },
+     required: ["sectionId", "ideas"],
+    },
    },
-   weakTransitions: {
+   shortsIdeas: {
     type: Type.ARRAY,
-    items: { type: Type.STRING },
-    description: "Named beats whose handoff is flat or unmotivated.",
+    items: {
+     type: Type.OBJECT,
+     properties: {
+      sourceSectionId: { type: Type.STRING },
+      hook: { type: Type.STRING },
+      excerpt: { type: Type.STRING, description: "Real text cut from the generated script." },
+      primingRationale: { type: Type.STRING },
+      postWindow: { type: Type.STRING, description: 'e.g. "T-5 days", "T-2 days", "premiere"' },
+     },
+     required: ["hook", "excerpt", "primingRationale", "postWindow"],
+    },
    },
-   missingProof: {
+   assumptions: {
     type: Type.ARRAY,
     items: { type: Type.STRING },
-    description: "Claims asserted in the script with no supporting proof supplied.",
+    description: "Anything inferred because the creator left it blank.",
    },
-   storyboardHandoff: {
+   groundingNotes: {
     type: Type.ARRAY,
     items: { type: Type.STRING },
-    description: "Scene, asset, and motion notes for the storyboard and editor handoff.",
+    description: "Claims the supplied references could not ground.",
    },
   },
   required: [
-   "title",
-   "promise",
-   "runtimeEstimate",
-   "beats",
-   "proofOrder",
-   "weakTransitions",
-   "missingProof",
-   "storyboardHandoff",
+   "outline",
+   "sections",
+   "visualSuggestions",
+   "shortsIdeas",
+   "assumptions",
+   "groundingNotes",
   ],
  }
+
+ const describeFragment = (fragment: ScriptFragment) =>
+  `- [${fragment.mode.toUpperCase()}] id=${fragment.id} label="${fragment.label || "untitled"}" section=${fragment.chapterId || "unpinned"}\n  """${fragment.text}"""`
+
+ const describeReference = (reference: ReferenceLink) =>
+  `- ${[reference.url, reference.note].filter(Boolean).join(" — ") || "empty reference"}`
+
+ const sectionPlan = budget.sections
+  .map(
+   (section) =>
+    `- id=${section.id} | ${section.label} | ${section.kind} | ${section.words} words (~${section.minutes.toFixed(2)} min)${
+     section.lockedWords > 0 ? ` | ${section.lockedWords} of those words are already locked text` : ""
+    }`,
+  )
+  .join("\n")
+
+ const chapterBrief = project.chapters
+  .map(
+   (chapter, index) =>
+    `- id=${chapter.id} | ${index + 1}. ${chapter.name || "unnamed"} — ${chapter.description || "no description supplied, infer it"}`,
+  )
+  .join("\n")
+
+ const fragments = project.globalFragments.filter((fragment) => fragment.text.trim())
+ const references = project.globalReferences.filter(
+  (reference) => (reference.url || "").trim() || (reference.note || "").trim(),
+ )
 
  const prompt = `
     ${SCRIPT_ARCHITECT_INSTRUCTIONS}
@@ -3478,25 +3515,42 @@ export const generateScriptBlueprint = async (
     CREATOR CONTEXT (From AI Journal):
     ${journalContext}
 
-    CHOSEN ANGLE:
-    ${input.angle}
+    BRIEF
+    Topic: ${project.topic || "not supplied — infer a topic from the rest of the brief"}
+    Angle: ${project.angle || "not supplied — choose the sharpest angle for this audience"}
+    Channel niche: ${project.niche || "not supplied"}
+    Ideal audience: ${project.audience || "not supplied — infer from niche and topic"}
+    Tone: ${project.tone || "not supplied — match the channel's usual voice"}
+    Goal / CTA: ${project.goal || "not supplied — default to subscribe"}
 
-    TARGET VIEWER: ${input.targetViewer || "not specified"}
-    FORMAT: ${input.format}
-    RUNTIME TARGET: ${runtimeTargetSeconds} seconds
-    BEAT COUNT: ${input.beatCount}
+    FORMAT
+    Target runtime: ${project.targetMinutes} minutes at ${project.pacing} pacing (${budget.wpm} words per minute)
+    Total word budget: ${budget.wordBudget}
+    Hook: ${project.includeHook ? "yes" : "no"} | Outro/CTA: ${project.includeOutro ? "yes" : "no"}
 
-    PROOF POINTS AVAILABLE:
-    ${input.proofPoints || "none supplied - flag every unsupported claim in missingProof"}
+    SECTION PLAN (write one entry per id, in this order)
+    ${sectionPlan || "- no sections supplied: build your own chapter list and label the ids ch-1, ch-2, ..."}
 
-    TRANSITION / CONSTRAINT NOTES:
-    ${input.transitionNotes || "none supplied"}
+    CHAPTERS AS BRIEFED
+    ${chapterBrief || "- none supplied, infer a chapter list that fits the runtime"}
 
-    INSTRUCTIONS:
-    1. Produce exactly ${input.beatCount} beats in running order.
-    2. Keep the summed beat durations within 15% of the runtime target.
-    3. Use only the supplied proof points. Never invent statistics, sources, or results.
-    4. Name every weak transition and every unsupported claim, even when the script reads well.
+    REFERENCES (ground every factual claim in these)
+    ${references.length ? references.map(describeReference).join("\n") : "- none supplied: avoid specific statistics, dates and quotes you cannot support, and record that in groundingNotes"}
+
+    THE CREATOR'S OWN SCRIPT PIECES
+    ${fragments.length ? fragments.map(describeFragment).join("\n") : "- none supplied"}
+    ${
+     budget.lockedOverflow
+      ? "\n    WARNING: the locked fragments alone exceed the word budget. Use every locked fragment verbatim anyway, keep the connective writing to an absolute minimum, and state the overrun in assumptions."
+      : ""
+    }
+
+    SHORTS PRIMING GUIDANCE
+    ${INTEREST_SEEDING_INSTRUCTIONS}
+
+    ${FUNNEL_TEASER_SYSTEM_PROMPT}
+
+    Propose 2-4 Shorts cut from real excerpts of the script you just wrote, each with a post window before or at the long-form upload.
   `
 
  return await executeWithRetry(async () => {
@@ -3511,48 +3565,110 @@ export const generateScriptBlueprint = async (
   })
 
   const text = result.text
-  if (!text) throw new Error("No script blueprint generated")
-
-  const toStringList = (value: unknown): string[] =>
-   Array.isArray(value) ? value.map((entry) => String(entry)) : []
-
-  const normalize = (raw: unknown): ScriptBlueprint => {
-   const parsed = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>
-   const rawBeats = Array.isArray(parsed.beats) ? (parsed.beats as Record<string, unknown>[]) : []
-   const beats: ScriptBeat[] = rawBeats.map((beat, index) => {
-    const risk = String(beat?.retentionRisk ?? "medium").toLowerCase()
-    return {
-     id: beat?.id ? String(beat.id) : `beat-${index + 1}`,
-     label: String(beat?.label ?? `Beat ${index + 1}`),
-     purpose: String(beat?.purpose ?? ""),
-     script: String(beat?.script ?? ""),
-     proof: String(beat?.proof ?? ""),
-     transition: String(beat?.transition ?? ""),
-     durationEstimate: Number(beat?.durationEstimate) || 0,
-     retentionRisk: risk === "low" || risk === "high" ? risk : "medium",
-     riskNote: String(beat?.riskNote ?? ""),
-    }
-   })
-   const summedRuntime = beats.reduce((total, beat) => total + beat.durationEstimate, 0)
-   return {
-    title: String(parsed.title || input.angle || "Script blueprint"),
-    promise: String(parsed.promise ?? ""),
-    runtimeEstimate: Number(parsed.runtimeEstimate) || summedRuntime,
-    beats,
-    proofOrder: toStringList(parsed.proofOrder),
-    weakTransitions: toStringList(parsed.weakTransitions),
-    missingProof: toStringList(parsed.missingProof),
-    storyboardHandoff: toStringList(parsed.storyboardHandoff),
-   }
-  }
+  if (!text) throw new Error("No script generated")
 
   try {
-   return normalize(JSON.parse(cleanJsonString(text)))
+   return normalizeGeneratedScript(JSON.parse(cleanJsonString(text)), project, budget)
   } catch {
-   console.warn("[Gemini] Script blueprint JSON parse failed, attempting self-correction...")
-   return normalize(await selfCorrectJson(text, responseSchema))
+   console.warn("[Gemini] Script JSON parse failed, attempting self-correction...")
+   return normalizeGeneratedScript(await selfCorrectJson(text, responseSchema), project, budget)
   }
  })
+}
+
+const toStringList = (value: unknown): string[] =>
+ Array.isArray(value) ? value.map((entry) => String(entry)).filter(Boolean) : []
+
+/**
+ * Shape whatever the model returned into GeneratedScript: sections are keyed back
+ * to the local budget so the timeline always reflects the creator's plan, and
+ * fullScript is stitched from the sections rather than trusted as a second copy.
+ */
+const normalizeGeneratedScript = (
+ raw: unknown,
+ project: ScriptProject,
+ budget: ScriptBudget,
+): GeneratedScript => {
+ const parsed = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>
+ const rawSections = Array.isArray(parsed.sections)
+  ? (parsed.sections as Record<string, unknown>[])
+  : []
+
+ const sections: ScriptSectionDraft[] = budget.sections.map((allocation, index) => {
+  const match =
+   rawSections.find((entry) => String(entry?.sectionId || "") === allocation.id) ||
+   rawSections[index]
+  return {
+   sectionId: allocation.id,
+   label: String(match?.label || allocation.label),
+   kind: allocation.kind,
+   script: String(match?.script || ""),
+   lockedFragmentIds: toStringList(match?.lockedFragmentIds),
+  }
+ })
+
+ // A model that invents extra sections still gets them rendered, after the plan.
+ rawSections.forEach((entry) => {
+  const id = String(entry?.sectionId || "")
+  if (!id || sections.some((section) => section.sectionId === id)) return
+  sections.push({
+   sectionId: id,
+   label: String(entry?.label || id),
+   kind: "chapter",
+   script: String(entry?.script || ""),
+   lockedFragmentIds: toStringList(entry?.lockedFragmentIds),
+  })
+ })
+
+ const outline = (Array.isArray(parsed.outline) ? (parsed.outline as Record<string, unknown>[]) : [])
+  .map((entry, index) => ({
+   sectionId: String(entry?.sectionId || sections[index]?.sectionId || `section-${index + 1}`),
+   section: String(entry?.section || sections[index]?.label || `Section ${index + 1}`),
+   beats: toStringList(entry?.beats),
+  }))
+  .filter((entry) => entry.beats.length > 0)
+
+ const visualSuggestions = (
+  Array.isArray(parsed.visualSuggestions)
+   ? (parsed.visualSuggestions as Record<string, unknown>[])
+   : []
+ )
+  .map((entry, index) => ({
+   sectionId: String(entry?.sectionId || sections[index]?.sectionId || `section-${index + 1}`),
+   ideas: toStringList(entry?.ideas),
+  }))
+  .filter((entry) => entry.ideas.length > 0)
+
+ const shortsIdeas = (
+  Array.isArray(parsed.shortsIdeas) ? (parsed.shortsIdeas as Record<string, unknown>[]) : []
+ )
+  .map((entry) => ({
+   sourceSectionId: entry?.sourceSectionId ? String(entry.sourceSectionId) : undefined,
+   hook: String(entry?.hook || ""),
+   excerpt: String(entry?.excerpt || ""),
+   primingRationale: String(entry?.primingRationale || ""),
+   postWindow: String(entry?.postWindow || "before upload"),
+  }))
+  .filter((entry) => entry.hook || entry.excerpt)
+
+ const fullScript = sections
+  .filter((section) => section.script.trim())
+  .map((section) => `## ${section.label}\n\n${section.script.trim()}`)
+  .join("\n\n")
+
+ const assumptions = toStringList(parsed.assumptions)
+ if (!project.topic.trim()) assumptions.unshift("Topic was blank — inferred from the rest of the brief.")
+
+ return {
+  outline,
+  timeline: budgetToTimeline(budget),
+  sections,
+  fullScript,
+  visualSuggestions,
+  shortsIdeas,
+  assumptions,
+  groundingNotes: toStringList(parsed.groundingNotes),
+ }
 }
 
 export const generateProjectSuggestions = async (

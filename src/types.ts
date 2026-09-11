@@ -723,37 +723,92 @@ export interface ThumbnailHistoryItem {
  timestamp: number
 }
 
-export interface ScriptBeat {
+export type FragmentMode = "lock" | "improve" | "inspire"
+
+export type ScriptPacing = "tight" | "standard" | "breathing"
+
+export interface ScriptFragment {
  id: string
  label: string
- purpose: string
+ text: string
+ mode: FragmentMode
+ chapterId?: string
+}
+
+export interface ReferenceLink {
+ id: string
+ url?: string
+ note?: string
+ chapterId?: string
+}
+
+export interface ChapterInput {
+ id: string
+ name: string
+ description: string
+ /** Runtime share relative to the other chapters. Defaults to 1. */
+ weight?: number
+}
+
+export interface ScriptProject {
+ topic: string
+ angle?: string
+ niche?: string
+ audience?: string
+ tone?: string
+ goal?: string
+ targetMinutes: number
+ pacing: ScriptPacing
+ includeHook: boolean
+ includeOutro: boolean
+ chapters: ChapterInput[]
+ globalReferences: ReferenceLink[]
+ globalFragments: ScriptFragment[]
+}
+
+export type ScriptSectionKind = "hook" | "chapter" | "outro"
+
+export interface TimelineSection {
+ id: string
+ label: string
+ kind: ScriptSectionKind
+ estMinutes: number
+ wordCount: number
+}
+
+export interface ScriptSectionDraft {
+ sectionId: string
+ label: string
+ kind: ScriptSectionKind
  script: string
- proof: string
- transition: string
- durationEstimate: number
- retentionRisk: "low" | "medium" | "high"
- riskNote: string
+ /** Fragment ids reproduced verbatim inside this section. */
+ lockedFragmentIds: string[]
 }
 
-export interface ScriptBlueprint {
- title: string
- promise: string
- runtimeEstimate: number
- beats: ScriptBeat[]
- proofOrder: string[]
- weakTransitions: string[]
- missingProof: string[]
- storyboardHandoff: string[]
+export interface VisualSuggestion {
+ sectionId: string
+ ideas: string[]
 }
 
-export interface ScriptArchitectInput {
- angle: string
- targetViewer: string
- proofPoints: string
- format: string
- beatCount: number
- runtimeTargetMinutes: number
- transitionNotes: string
+export interface ShortIdea {
+ sourceSectionId?: string
+ hook: string
+ excerpt: string
+ primingRationale: string
+ postWindow: string
+}
+
+export interface GeneratedScript {
+ outline: { sectionId: string; section: string; beats: string[] }[]
+ timeline: TimelineSection[]
+ sections: ScriptSectionDraft[]
+ fullScript: string
+ visualSuggestions: VisualSuggestion[]
+ shortsIdeas: ShortIdea[]
+ /** Fields the model inferred because the creator left them blank. */
+ assumptions: string[]
+ /** Claims the references could not ground, stated instead of fabricated. */
+ groundingNotes: string[]
 }
 
 export interface Scene {

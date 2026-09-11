@@ -1,204 +1,70 @@
-import React, { useMemo, useState } from "react"
-import { AlertTriangle, ClipboardCopy, NotebookPen, ShieldCheck } from "lucide-react"
-import { generateScriptBlueprint } from "../services/gemini"
-import { createSuperToolActionPacket } from "../services/superToolActionPackets"
-import type { ScriptBlueprint } from "../types"
-import { ToolboxScaffold, SubToolbox, StandardTextArea } from "../components/Toolbox"
-import { StandardInput } from "../components/StandardInput"
-import { StandardDropdown } from "../components/StandardDropdown"
-import { useBrain } from "../context/useBrain"
+import React, { useState } from "react"
+import {
+ AlertTriangle,
+ ArrowDown,
+ ArrowUp,
+ Clapperboard,
+ Clock,
+ FileText,
+ Layers,
+ Link2,
+ NotebookPen,
+ Plus,
+ Smartphone,
+ Sparkles,
+ Trash2,
+} from "lucide-react"
+import {
+ StandardInput,
+ StandardTextArea,
+ SubToolbox,
+ SubToolboxDropdownControl,
+ SubToolboxGridActionButton,
+ ToolboxScaffold,
+} from "../components/Toolbox"
 import { PostActionReflection } from "../components/PostActionReflection"
+import { formatClock } from "../services/scriptBudget"
+import {
+ FRAGMENT_MODES,
+ GOAL_OPTIONS,
+ PACING_OPTIONS,
+ TONE_OPTIONS,
+ useScriptArchitect,
+} from "../features/script-architect/useScriptArchitect"
+import { getToolboxPaletteColors } from "../styles/toolboxPalette"
+import type { FragmentMode } from "../types"
 
 interface ScriptArchitectProps {
- globalScript?: string
  embedded?: boolean
  collapsible?: boolean
  isOpenInitial?: boolean
  paletteIndex?: number
 }
 
-const FORMAT_OPTIONS = [
- { label: "Long-form explainer", value: "long-form explainer" },
- { label: "Tutorial", value: "tutorial" },
- { label: "Video essay", value: "video essay" },
- { label: "Listicle / ranked", value: "listicle" },
- { label: "Series episode", value: "series episode" },
- { label: "Shorts sequence", value: "shorts sequence" },
-]
-
-const RISK_TONE: Record<string, string> = {
- low: "bg-[#57F15C]",
- medium: "bg-[#FFEA5A]",
- high: "bg-[#FF4FD8] text-white",
+const FRAGMENT_TONE: Record<FragmentMode, string> = {
+ lock: "bg-[#FF77D6]",
+ improve: "bg-[#73DEFF]",
+ inspire: "bg-[#CCFF00]",
 }
 
-const formatClock = (seconds: number) => {
- const safe = Math.max(0, Math.round(seconds))
- const mins = Math.floor(safe / 60)
- const secs = safe % 60
- return `${mins}:${String(secs).padStart(2, "0")}`
-}
+const fieldLabel = "text-[10px] font-black uppercase tracking-widest text-black/50"
 
 const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
- globalScript,
  embedded = false,
  collapsible = false,
  isOpenInitial = true,
  paletteIndex,
 }) => {
- const { brain, emitSignal } = useBrain()
-
- const [angle, setAngle] = useState(globalScript || "")
- const [targetViewer, setTargetViewer] = useState("")
- const [proofPoints, setProofPoints] = useState("")
- const [transitionNotes, setTransitionNotes] = useState("")
- const [format, setFormat] = useState("long-form explainer")
- const [beatCount, setBeatCount] = useState(6)
- const [runtimeTargetMinutes, setRuntimeTargetMinutes] = useState(8)
-
- const [blueprint, setBlueprint] = useState<ScriptBlueprint | null>(null)
- const [loading, setLoading] = useState(false)
- const [status, setStatus] = useState<string | null>(null)
+ const architect = useScriptArchitect()
  const [isOpen, setIsOpen] = useState(isOpenInitial)
+ const { project, budget, result } = architect
 
- const runtimeTargetSeconds = Math.round(runtimeTargetMinutes * 60)
-
- const runtimeDrift = useMemo(() => {
-  if (!blueprint) return 0
-  return blueprint.runtimeEstimate - runtimeTargetSeconds
- }, [blueprint, runtimeTargetSeconds])
-
- const fullScript = useMemo(() => {
-  if (!blueprint) return ""
-  return blueprint.beats
-   .map(
-    (beat, index) =>
-     `${index + 1}. ${beat.label.toUpperCase()} (${formatClock(beat.durationEstimate)})\n${beat.script}\n\nTRANSITION: ${beat.transition}`,
-   )
-   .join("\n\n---\n\n")
- }, [blueprint])
-
- const handleGenerate = async () => {
-  if (!angle.trim()) {
-   alert("Add the chosen angle or concept first.")
-   return
-  }
-  setLoading(true)
-  setStatus(null)
-  try {
-   const result = await generateScriptBlueprint(
-    {
-     angle: angle.trim(),
-     targetViewer: targetViewer.trim(),
-     proofPoints: proofPoints.trim(),
-     format,
-     beatCount,
-     runtimeTargetMinutes,
-     transitionNotes: transitionNotes.trim(),
-    },
-    brain,
-   )
-   setBlueprint(result)
-  } catch (e) {
-   console.error("[ScriptArchitect] generation failed", e)
-   alert("Failed to build the script structure. Please try again.")
-  } finally {
-   setLoading(false)
-  }
- }
-
- const handleCopyScript = async () => {
-  if (!fullScript) return
-  try {
-   await navigator.clipboard.writeText(fullScript)
-   setStatus("Full script copied to clipboard.")
-  } catch {
-   setStatus("Clipboard blocked by the browser. Select the beats manually.")
-  }
- }
-
- const handleSavePacket = async () => {
-  if (!blueprint) return
-  const inputs = {
-   angle: angle.trim(),
-   targetViewer: targetViewer.trim(),
-   proofPoints: proofPoints.trim(),
-   transitionNotes: transitionNotes.trim(),
-   format,
-   beatCount,
-   runtimeTargetMinutes,
-  }
-  const confidence =
-   blueprint.missingProof.length === 0 && blueprint.weakTransitions.length === 0
-    ? "high"
-    : blueprint.missingProof.length > 2 || blueprint.weakTransitions.length > 2
-      ? "low"
-      : "medium"
-
-  const result = createSuperToolActionPacket({
-   toolId: "creator-canvas-os",
-   moduleId: "script-architect",
-   title: `${blueprint.title} script beat packet`,
-   summary: `Structured ${blueprint.beats.length} beats for ${blueprint.title} at ${formatClock(blueprint.runtimeEstimate)} against a ${formatClock(runtimeTargetSeconds)} target, with proof order and transition risks recorded.`,
-   inputs,
-   outputs: {
-    promise: blueprint.promise,
-    beats: blueprint.beats,
-    proofOrder: blueprint.proofOrder,
-    runtimeEstimate: blueprint.runtimeEstimate,
-    storyboardHandoff: blueprint.storyboardHandoff,
-   },
-   confidence,
-   evidence: [inputs.angle, ...blueprint.proofOrder].filter(Boolean),
-   missingInputs: [
-    inputs.targetViewer ? null : "target viewer",
-    inputs.proofPoints ? null : "proof points",
-    ...blueprint.missingProof,
-   ].filter(Boolean) as string[],
-   handoffTargets: [
-    "editor:motion-scene-builder",
-    "projects:project-command-kanban",
-    "workflow:workflow-chain-builder",
-   ],
-   workflowTitle: `${blueprint.title} script to scenes`,
-   workflowGoal:
-    "Move a locked beat structure into scene planning, production milestones, and editor handoff.",
-   workflowSteps: [
-    {
-     title: "Convert beats to scenes",
-     surface: "editor",
-     toolId: "motion-scene-builder",
-     details:
-      blueprint.storyboardHandoff.join(" | ") ||
-      `Break ${blueprint.beats.length} beats into scene, asset, and motion prompts.`,
-    },
-    {
-     title: "Schedule production",
-     surface: "projects",
-     toolId: "project-command-kanban",
-     details: `Plan filming and edit milestones for a ${formatClock(blueprint.runtimeEstimate)} runtime.`,
-    },
-    {
-     title: "Track script revisions",
-     surface: "workflow",
-     toolId: "workflow-chain-builder",
-     details:
-      blueprint.weakTransitions.length > 0
-       ? `Resolve weak transitions: ${blueprint.weakTransitions.join("; ")}`
-       : "Keep the beat order connected to packaging and retention follow-up.",
-    },
-   ],
-   tags: ["script-architect", confidence, format],
-  })
-
-  await emitSignal("SCRIPT_ARCHITECT", "SCRIPT_BEAT_PACKET_CREATED", result)
-  setStatus("Script beat packet saved with Vault artifact, workflow chain, and storyboard handoff.")
- }
+ const segmentColor = (index: number) => getToolboxPaletteColors(index + 1).header
 
  return (
   <ToolboxScaffold
    title="SCRIPT ARCHITECT"
-   subtitle="Turn a chosen angle into beats, proof order, transitions + storyboard-ready scene packets"
+   subtitle="Give it a spark or give it everything — assembles a timed script, visuals + priming shorts"
    icon={<NotebookPen size={40} strokeWidth={3} className="text-black" />}
    headerColor="bg-[#00F0FF]"
    iconBoxColor="bg-[#CCFF00]"
@@ -207,331 +73,673 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
    isOpen={isOpen}
    onToggle={() => setIsOpen(!isOpen)}
    embedded={embedded}
-   helpText="Give it the angle you already picked plus the proof you actually have. It returns an ordered beat structure with durations, transitions, and a list of every claim you still need to back up."
+   helpText="Fill in as much or as little as you want — every field is optional. Paste your own script pieces and mark them Lock (used word-for-word), Improve (rewritten), or Inspire (direction only), then hit Assemble Script."
    shellClassName="animate-fade-in"
    contentClassName={embedded ? "p-0" : "p-8"}>
-   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    {/* Inputs */}
-    <div className="lg:col-span-1 space-y-6 flex flex-col h-full">
+   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start w-full">
+    {/* ---------------- INPUTS ---------------- */}
+    <div className="flex flex-col gap-6 min-w-0">
      <SubToolbox
-      title="Structure Inputs"
-      icon={<NotebookPen size={20} strokeWidth={3} />}
+      title="The Brief"
+      subtitle="Everything optional — the engine fills the gaps"
+      icon={<Sparkles />}
       collapsible
-      isOpenInitial={true}>
-      <div className="p-6 space-y-6 bg-white">
-       <div className="space-y-2">
-        <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
-         Chosen Angle / Concept
-        </label>
-        <StandardTextArea
-         value={angle}
-         onChange={(e) => setAngle(e.target.value)}
-         placeholder="THE ANGLE YOU ALREADY PICKED, NOT THE RAW TOPIC..."
-         minHeight="120px"
-         className="uppercase focus:bg-gray-50"
-        />
-       </div>
-
-       <div className="space-y-2">
-        <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
-         Target Viewer
+      isOpenInitial>
+      <div className="space-y-4">
+       <div>
+        <label htmlFor="sa-topic" className={fieldLabel}>
+         Topic
         </label>
         <StandardInput
-         value={targetViewer}
-         onChange={(e) => setTargetViewer(e.target.value)}
-         placeholder="WHO THIS IS FOR"
+         id="sa-topic"
+         name="scriptTopic"
+         value={project.topic}
+         onChange={(event) => architect.setField("topic", event.target.value)}
+         placeholder="WHAT THE VIDEO IS ABOUT…"
+         className="mt-2"
         />
        </div>
-
-       <div className="space-y-2">
-        <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
-         Proof Points You Have
+       <div>
+        <label htmlFor="sa-angle" className={fieldLabel}>
+         Angle
         </label>
-        <StandardTextArea
-         value={proofPoints}
-         onChange={(e) => setProofPoints(e.target.value)}
-         placeholder="RESULTS, EXAMPLES, DEMOS, RECEIPTS, SOURCES..."
-         minHeight="110px"
-         className="uppercase focus:bg-gray-50"
+        <StandardInput
+         id="sa-angle"
+         name="scriptAngle"
+         value={project.angle || ""}
+         onChange={(event) => architect.setField("angle", event.target.value)}
+         placeholder="THE SPECIFIC TAKE — CONTRARIAN, BEGINNER, DEEP-DIVE…"
+         className="mt-2"
         />
        </div>
-
-       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-         <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
-          Beat Count
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="min-w-0">
+         <label htmlFor="sa-niche" className={fieldLabel}>
+          Channel niche
          </label>
          <StandardInput
-          type="number"
-          min={3}
-          max={14}
-          value={beatCount}
-          onChange={(e) =>
-           setBeatCount(Math.min(14, Math.max(3, Number(e.target.value) || 3)))
-          }
+          id="sa-niche"
+          name="scriptNiche"
+          value={project.niche || ""}
+          onChange={(event) => architect.setField("niche", event.target.value)}
+          placeholder="YOUR LANE…"
+          className="mt-2"
          />
         </div>
-        <div className="space-y-2">
-         <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
-          Runtime (Min)
+        <div className="min-w-0">
+         <label htmlFor="sa-audience" className={fieldLabel}>
+          Ideal audience
          </label>
          <StandardInput
-          type="number"
-          min={1}
-          max={90}
-          value={runtimeTargetMinutes}
-          onChange={(e) =>
-           setRuntimeTargetMinutes(Math.min(90, Math.max(1, Number(e.target.value) || 1)))
-          }
+          id="sa-audience"
+          name="scriptAudience"
+          value={project.audience || ""}
+          onChange={(event) => architect.setField("audience", event.target.value)}
+          placeholder="WHO THIS IS FOR…"
+          className="mt-2"
          />
         </div>
        </div>
+       <SubToolboxDropdownControl
+        label="Tone / voice"
+        value={project.tone || TONE_OPTIONS[0]}
+        options={TONE_OPTIONS}
+        onChange={(value) => architect.setField("tone", value)}
+        tone="pink"
+       />
+       <SubToolboxDropdownControl
+        label="Goal / CTA"
+        value={project.goal || GOAL_OPTIONS[0]}
+        options={GOAL_OPTIONS}
+        onChange={(value) => architect.setField("goal", value)}
+        tone="cyan"
+       />
+      </div>
+     </SubToolbox>
 
-       <div className="space-y-2">
-        <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
-         Format
-        </label>
-        <StandardDropdown options={FORMAT_OPTIONS} value={format} onChange={setFormat} />
+     <SubToolbox
+      title="Format & Pacing"
+      subtitle="Duration drives the word budget"
+      icon={<Clock />}
+      collapsible
+      isOpenInitial>
+      <div className="space-y-4">
+       <div className="flex items-center justify-between gap-3 flex-wrap">
+        <span className={fieldLabel}>Target length</span>
+        <div className="flex items-center gap-2">
+         <button
+          type="button"
+          aria-label="Decrease target length"
+          onClick={() => architect.setField("targetMinutes", Math.max(1, project.targetMinutes - 1))}
+          className="size-10 border-[3px] border-black rounded-xl bg-white font-black grid place-items-center shadow-[2px_2px_0_0_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
+          −
+         </button>
+         <span className="min-w-[96px] text-center border-[3px] border-black rounded-full bg-white px-4 py-2 font-black text-sm">
+          {project.targetMinutes} MIN
+         </span>
+         <button
+          type="button"
+          aria-label="Increase target length"
+          onClick={() => architect.setField("targetMinutes", Math.min(90, project.targetMinutes + 1))}
+          className="size-10 border-[3px] border-black rounded-xl bg-white font-black grid place-items-center shadow-[2px_2px_0_0_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
+          +
+         </button>
+        </div>
        </div>
 
-       <div className="space-y-2">
-        <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
-         Transition / Constraint Notes
-        </label>
-        <StandardTextArea
-         value={transitionNotes}
-         onChange={(e) => setTransitionNotes(e.target.value)}
-         placeholder="SPONSOR SLOT, RECURRING SEGMENT, TONE LIMITS, MUST-HIT MOMENTS..."
-         minHeight="90px"
-         className="uppercase focus:bg-gray-50"
-        />
+       <div>
+        <span className={fieldLabel}>Pacing</span>
+        <div className="grid grid-cols-3 gap-2 mt-2" aria-label="Pacing">
+         {PACING_OPTIONS.map((option) => (
+          <button
+           key={option.id}
+           type="button"
+           aria-pressed={project.pacing === option.id}
+           onClick={() => architect.setField("pacing", option.id)}
+           className={`min-h-11 border-[3px] border-black rounded-xl font-black uppercase text-[10px] shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-[transform,box-shadow,background-color] ${
+            project.pacing === option.id ? "bg-[#FFE357]" : "bg-white"
+           }`}>
+           {option.label}
+          </button>
+         ))}
+        </div>
        </div>
 
+       <div className="grid grid-cols-2 gap-2">
+        {(
+         [
+          ["includeHook", "Hook"],
+          ["includeOutro", "Outro / CTA"],
+         ] as const
+        ).map(([key, label]) => (
+         <button
+          key={key}
+          type="button"
+          aria-pressed={project[key]}
+          onClick={() => architect.setField(key, !project[key])}
+          className={`min-h-11 border-[3px] border-black rounded-xl font-black uppercase text-[10px] shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none ${
+           project[key] ? "bg-[#CCFF00]" : "bg-white"
+          }`}>
+          {project[key] ? `✓ ${label}` : label}
+         </button>
+        ))}
+       </div>
+
+       <div className="border-[3px] border-black rounded-xl bg-[#FFF9E8] p-4 grid grid-cols-3 gap-2 text-center">
+        <div>
+         <div className="text-[9px] font-black uppercase tracking-widest text-black/40">Words</div>
+         <div className="text-xl font-[1000]">{budget.wordBudget}</div>
+        </div>
+        <div>
+         <div className="text-[9px] font-black uppercase tracking-widest text-black/40">WPM</div>
+         <div className="text-xl font-[1000]">{budget.wpm}</div>
+        </div>
+        <div>
+         <div className="text-[9px] font-black uppercase tracking-widest text-black/40">Sections</div>
+         <div className="text-xl font-[1000]">{budget.sections.length}</div>
+        </div>
+       </div>
+      </div>
+     </SubToolbox>
+
+     <SubToolbox
+      title={`Chapter Builder · ${project.chapters.length}`}
+      subtitle="Structure — name, cover, and runtime weight"
+      icon={<Layers />}
+      collapsible
+      isOpenInitial>
+      <div className="space-y-3">
+       {project.chapters.map((chapter, index) => (
+        <div key={chapter.id} className="border-[3px] border-black rounded-xl p-3 bg-white space-y-2">
+         <div className="flex items-center gap-2">
+          <span className="size-8 shrink-0 grid place-items-center border-[2px] border-black rounded-lg bg-[#B14BFF] text-white font-black text-[10px]">
+           {String(index + 1).padStart(2, "0")}
+          </span>
+          <div className="flex-1 min-w-0">
+           <StandardInput
+            aria-label={`Chapter ${index + 1} name`}
+            value={chapter.name}
+            onChange={(event) => architect.updateChapter(chapter.id, { name: event.target.value })}
+            placeholder={`CHAPTER ${index + 1} NAME…`}
+            minHeight="48px"
+           />
+          </div>
+          <button
+           type="button"
+           aria-label={`Move chapter ${index + 1} up`}
+           disabled={index === 0}
+           onClick={() => architect.moveChapter(chapter.id, -1)}
+           className="size-9 border-[2px] border-black rounded-lg bg-white grid place-items-center disabled:opacity-30">
+           <ArrowUp size={14} strokeWidth={3} />
+          </button>
+          <button
+           type="button"
+           aria-label={`Move chapter ${index + 1} down`}
+           disabled={index === project.chapters.length - 1}
+           onClick={() => architect.moveChapter(chapter.id, 1)}
+           className="size-9 border-[2px] border-black rounded-lg bg-white grid place-items-center disabled:opacity-30">
+           <ArrowDown size={14} strokeWidth={3} />
+          </button>
+          <button
+           type="button"
+           aria-label={`Remove chapter ${index + 1}`}
+           onClick={() => architect.removeChapter(chapter.id)}
+           className="size-9 border-[2px] border-black rounded-lg bg-[#FF77D6] grid place-items-center">
+           <Trash2 size={14} strokeWidth={3} />
+          </button>
+         </div>
+         <div className="grid grid-cols-[1fr_88px] gap-2">
+          <div className="min-w-0">
+           <StandardInput
+            aria-label={`Chapter ${index + 1} description`}
+            value={chapter.description}
+            onChange={(event) =>
+             architect.updateChapter(chapter.id, { description: event.target.value })
+            }
+            placeholder="WHAT THIS CHAPTER COVERS…"
+            minHeight="48px"
+           />
+          </div>
+          <div className="min-w-0">
+           <StandardInput
+            aria-label={`Chapter ${index + 1} runtime weight`}
+            title="Runtime weight — how much of the body this chapter deserves"
+            type="number"
+            min={0.5}
+            step={0.5}
+            value={chapter.weight ?? 1}
+            onChange={(event) =>
+             architect.updateChapter(chapter.id, { weight: Number(event.target.value) || 1 })
+            }
+            minHeight="48px"
+            className="text-center"
+           />
+          </div>
+         </div>
+         <div className="text-[9px] font-black uppercase tracking-widest text-black/40">
+          {budget.sections.find((section) => section.id === chapter.id)?.words ?? 0} words ·{" "}
+          {formatClock(budget.sections.find((section) => section.id === chapter.id)?.minutes ?? 0)}
+         </div>
+        </div>
+       ))}
+       {!project.chapters.length && (
+        <p className="p-4 text-center text-[10px] font-black uppercase opacity-50">
+         No chapters — the engine will infer a structure.
+        </p>
+       )}
        <button
-        onClick={handleGenerate}
-        disabled={loading || !angle.trim()}
-        className="w-full bg-[#00F0FF] border-[4px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-y-0.5 transition-all disabled:opacity-50">
-        {loading ? "STRUCTURING BEATS..." : "BUILD SCRIPT STRUCTURE"}
+        type="button"
+        onClick={architect.addChapter}
+        className="w-full min-h-12 border-[3px] border-black rounded-xl bg-[#D08BFF] font-black uppercase text-xs flex items-center justify-center gap-2 shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none">
+        <Plus size={16} strokeWidth={3} /> Add chapter
+       </button>
+      </div>
+     </SubToolbox>
+
+     <SubToolbox
+      title={`References · ${project.globalReferences.length}`}
+      subtitle="Grounding — claims track your research, not the model's guesses"
+      icon={<Link2 />}
+      collapsible
+      isOpenInitial={false}>
+      <div className="space-y-3">
+       {project.globalReferences.map((reference, index) => (
+        <div key={reference.id} className="border-[3px] border-black rounded-xl p-3 bg-white space-y-2">
+         <div className="flex gap-2">
+          <div className="flex-1 min-w-0">
+           <StandardInput
+            aria-label={`Reference ${index + 1} link`}
+            type="url"
+            value={reference.url || ""}
+            onChange={(event) => architect.updateReference(reference.id, { url: event.target.value })}
+            placeholder="HTTPS://…"
+            minHeight="48px"
+           />
+          </div>
+          <button
+           type="button"
+           aria-label={`Remove reference ${index + 1}`}
+           onClick={() => architect.removeReference(reference.id)}
+           className="size-11 shrink-0 border-[2px] border-black rounded-lg bg-[#FF77D6] grid place-items-center">
+           <Trash2 size={14} strokeWidth={3} />
+          </button>
+         </div>
+         <StandardTextArea
+          aria-label={`Reference ${index + 1} note`}
+          value={reference.note || ""}
+          onChange={(event) => architect.updateReference(reference.id, { note: event.target.value })}
+          placeholder="PASTED NOTES, QUOTES, OR FACTS FROM THIS SOURCE…"
+          minHeight="70px"
+         />
+        </div>
+       ))}
+       {!project.globalReferences.length && (
+        <p className="p-4 text-center text-[10px] font-black uppercase opacity-50">
+         No references — specific stats and quotes will be avoided.
+        </p>
+       )}
+       <button
+        type="button"
+        onClick={architect.addReference}
+        className="w-full min-h-12 border-[3px] border-black rounded-xl bg-[#8CFF8F] font-black uppercase text-xs flex items-center justify-center gap-2 shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none">
+        <Plus size={16} strokeWidth={3} /> Add reference
+       </button>
+      </div>
+     </SubToolbox>
+
+     <SubToolbox
+      title={`Your Script Pieces · ${project.globalFragments.length}`}
+      subtitle="Lock = word-for-word · Improve = rewritten · Inspire = direction only"
+      icon={<FileText />}
+      collapsible
+      isOpenInitial={false}>
+      <div className="space-y-3">
+       {project.globalFragments.map((fragment, index) => (
+        <div key={fragment.id} className="border-[3px] border-black rounded-xl bg-white overflow-hidden">
+         <div
+          className={`flex items-center gap-2 p-2 border-b-[3px] border-black ${FRAGMENT_TONE[fragment.mode]}`}>
+          <div className="flex-1 min-w-0">
+           <StandardInput
+            aria-label={`Piece ${index + 1} label`}
+            value={fragment.label}
+            onChange={(event) => architect.updateFragment(fragment.id, { label: event.target.value })}
+            placeholder={`PIECE ${index + 1} — E.G. COLD OPEN`}
+            minHeight="48px"
+           />
+          </div>
+          <button
+           type="button"
+           aria-label={`Remove piece ${index + 1}`}
+           onClick={() => architect.removeFragment(fragment.id)}
+           className="size-11 shrink-0 border-[2px] border-black rounded-lg bg-white grid place-items-center">
+           <Trash2 size={14} strokeWidth={3} />
+          </button>
+         </div>
+         <div className="p-3 space-y-2">
+          <div className="grid grid-cols-3 gap-2" aria-label={`Piece ${index + 1} mode`}>
+           {FRAGMENT_MODES.map((mode) => (
+            <button
+             key={mode.id}
+             type="button"
+             title={mode.hint}
+             aria-pressed={fragment.mode === mode.id}
+             onClick={() => architect.updateFragment(fragment.id, { mode: mode.id })}
+             className={`min-h-10 border-[2px] border-black rounded-lg font-black uppercase text-[9px] ${
+              fragment.mode === mode.id ? FRAGMENT_TONE[mode.id] : "bg-white"
+             }`}>
+             {mode.label}
+            </button>
+           ))}
+          </div>
+          <StandardTextArea
+           aria-label={`Piece ${index + 1} text`}
+           value={fragment.text}
+           onChange={(event) => architect.updateFragment(fragment.id, { text: event.target.value })}
+           placeholder="PASTE THE LINES YOU ALREADY WROTE…"
+           minHeight="90px"
+          />
+          <SubToolboxDropdownControl
+           label="Pin to section"
+           value={
+            architect.sectionPinOptions.find((option) => option.id === (fragment.chapterId || ""))
+             ?.label || "Unpinned"
+           }
+           options={architect.sectionPinOptions.map((option) => option.label)}
+           onChange={(label) =>
+            architect.updateFragment(fragment.id, {
+             chapterId:
+              architect.sectionPinOptions.find((option) => option.label === label)?.id || undefined,
+            })
+           }
+           tone="orange"
+          />
+          <p className="text-[9px] font-black uppercase tracking-widest text-black/40">
+           {FRAGMENT_MODES.find((mode) => mode.id === fragment.mode)?.hint}
+          </p>
+         </div>
+        </div>
+       ))}
+       {!project.globalFragments.length && (
+        <p className="p-4 text-center text-[10px] font-black uppercase opacity-50">
+         Nothing pasted yet — the script will be written from scratch.
+        </p>
+       )}
+       <button
+        type="button"
+        onClick={architect.addFragment}
+        className="w-full min-h-12 border-[3px] border-black rounded-xl bg-[#FF9CD8] font-black uppercase text-xs flex items-center justify-center gap-2 shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none">
+        <Plus size={16} strokeWidth={3} /> Add script piece
        </button>
       </div>
      </SubToolbox>
     </div>
 
-    {/* Output */}
-    <div className="lg:col-span-1 space-y-6 flex flex-col h-full">
-     {loading ? (
-      <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-[4px] border-dashed border-black/20 rounded-[32px] bg-gray-50">
-       <div className="w-20 h-20 bg-[#00F0FF] border-[4px] border-black rounded-full animate-ping mb-8 shadow-[6px_6px_0px_0px_black]"></div>
-       <p className="font-black text-2xl text-black/40 uppercase tracking-widest animate-pulse">
-        Ordering Proof + Beats...
-       </p>
-      </div>
-     ) : blueprint ? (
-      <div className="space-y-8">
-       {/* Summary */}
-       <div className="bg-white border-[4px] border-black rounded-[24px] shadow-[8px_8px_0px_0px_black] overflow-hidden">
-        <div className="bg-[#00F0FF] p-6 border-b-[4px] border-black">
-         <h2 className="text-3xl font-[1000] uppercase tracking-tighter text-black leading-none">
-          {blueprint.title}
-         </h2>
-         <p className="text-sm font-black text-black/60 mt-2 uppercase tracking-widest">
-          {blueprint.promise}
+    {/* ---------------- ASSEMBLE + OUTPUTS ---------------- */}
+    <div className="flex flex-col gap-6 min-w-0">
+     <SubToolbox
+      title="Assemble"
+      subtitle="Everything above → one script"
+      icon={<Sparkles />}
+      collapsible
+      isOpenInitial>
+      <div className="space-y-4">
+       <div>
+        <div className="flex w-full border-[3px] border-black rounded-xl overflow-hidden shadow-[3px_3px_0_0_black]">
+         {budget.sections.map((section, index) => (
+          <div
+           key={section.id}
+           className="min-w-0 px-2 py-3 border-r-[3px] border-black last:border-r-0 flex flex-col gap-0.5"
+           style={{ flex: Math.max(0.4, section.minutes), backgroundColor: segmentColor(index) }}
+           title={`${section.label} · ${section.words} words`}>
+           <span className="text-[9px] font-black uppercase truncate">{section.label}</span>
+           <span className="text-[10px] font-black">{formatClock(section.minutes)}</span>
+          </div>
+         ))}
+        </div>
+        <div className="flex justify-between mt-2 text-[9px] font-black uppercase tracking-widest text-black/50">
+         <span>Allocated · {formatClock(budget.allocatedMinutes)}</span>
+         <span>
+          Target · {formatClock(budget.targetMinutes)} ·{" "}
+          <span className={budget.headroomMinutes >= 0 ? "text-[#1F9D55]" : "text-[#D6246E]"}>
+           {budget.headroomMinutes >= 0 ? "▲" : "▼"} {formatClock(Math.abs(budget.headroomMinutes))}
+          </span>
+         </span>
+        </div>
+       </div>
+
+       {budget.lockedOverflow && (
+        <div role="alert" className="border-[3px] border-black bg-[#FFB158] rounded-xl p-3 flex gap-2">
+         <AlertTriangle size={18} strokeWidth={3} className="shrink-0 mt-0.5" />
+         <p className="text-[10px] font-black uppercase leading-relaxed">
+          Locked pieces ({budget.lockedWords} words) exceed the {budget.wordBudget}-word budget.
+          Raise the target length or switch a piece to Improve so it can be trimmed.
          </p>
         </div>
-        <div className="grid grid-cols-3 divide-x-[4px] divide-black border-b-[4px] border-black">
-         <div className="p-4 text-center">
-          <div className="text-[10px] font-black uppercase tracking-widest text-black/40">
-           Beats
-          </div>
-          <div className="text-3xl font-[1000]">{blueprint.beats.length}</div>
-         </div>
-         <div className="p-4 text-center">
-          <div className="text-[10px] font-black uppercase tracking-widest text-black/40">
-           Runtime
-          </div>
-          <div className="text-3xl font-[1000]">{formatClock(blueprint.runtimeEstimate)}</div>
-         </div>
-         <div className="p-4 text-center">
-          <div className="text-[10px] font-black uppercase tracking-widest text-black/40">
-           Vs Target
-          </div>
-          <div
-           className={`text-3xl font-[1000] ${Math.abs(runtimeDrift) > runtimeTargetSeconds * 0.15 ? "text-[#FF4FD8]" : "text-black"}`}>
-           {runtimeDrift >= 0 ? "+" : "-"}
-           {formatClock(Math.abs(runtimeDrift))}
-          </div>
-         </div>
+       )}
+
+       <SubToolboxGridActionButton
+        label={architect.loading ? "Assembling…" : "Assemble Script"}
+        iconName="sparkles"
+        tone="pink"
+        disabled={architect.loading}
+        onClick={architect.assemble}
+       />
+
+       {architect.error && (
+        <div role="alert" className="border-[3px] border-black bg-[#FF9CD8] rounded-xl p-3 text-[10px] font-black uppercase">
+         {architect.error}
         </div>
-        {blueprint.proofOrder.length > 0 ? (
-         <div className="p-6">
-          <h3 className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em] mb-3">
-           Proof Order
-          </h3>
-          <ol className="space-y-2">
-           {blueprint.proofOrder.map((proof, index) => (
-            <li
-             key={index}
-             className="flex gap-3 text-sm font-bold uppercase text-black leading-snug">
-             <span className="font-[1000] text-black/30">{index + 1}</span>
-             <span>{proof}</span>
-            </li>
-           ))}
-          </ol>
-         </div>
-        ) : null}
+       )}
+       <div role="status" aria-live="polite" className="min-h-4 text-[10px] font-black uppercase text-black/60">
+        {architect.status || ""}
        </div>
+      </div>
+     </SubToolbox>
 
-       {/* Beats */}
-       {blueprint.beats.map((beat, index) => (
-        <div
-         key={beat.id}
-         className="bg-white border-[4px] border-black rounded-[24px] shadow-[8px_8px_0px_0px_black] overflow-hidden">
-         <div className="bg-[#CCFF00] p-6 border-b-[4px] border-black flex justify-between items-start gap-4">
-          <div>
-           <h3 className="text-2xl font-[1000] uppercase tracking-tighter text-black leading-none">
-            {beat.label}
-           </h3>
-           <p className="text-xs font-black text-black/60 mt-2 uppercase tracking-widest">
-            {beat.purpose}
-           </p>
-          </div>
-          <div className="text-right shrink-0">
-           <div className="text-3xl font-black text-black/20">#{index + 1}</div>
-           <div className="text-xs font-black uppercase tracking-widest text-black/60">
-            {formatClock(beat.durationEstimate)}
-           </div>
-          </div>
-         </div>
+     {architect.loading && !result && (
+      <div className="min-h-[320px] flex flex-col items-center justify-center border-[4px] border-dashed border-black/20 rounded-[32px] bg-gray-50">
+       <div className="w-20 h-20 bg-[#00F0FF] border-[4px] border-black rounded-full animate-ping mb-8 shadow-[6px_6px_0px_0px_black]" />
+       <p className="font-black text-xl text-black/40 uppercase tracking-widest animate-pulse">
+        Budgeting sections + writing…
+       </p>
+      </div>
+     )}
 
-         <div className="p-6 space-y-5">
-          <div className="bg-gray-50 p-5 rounded-xl border-[4px] border-black">
-           <h4 className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em] mb-2">
-            Script
-           </h4>
-           <p className="text-base font-bold text-black leading-relaxed">{beat.script}</p>
-          </div>
+     {!result && !architect.loading && (
+      <div className="min-h-[320px] flex flex-col items-center justify-center border-[4px] border-dashed border-black/20 rounded-[32px] bg-gray-50 p-8 text-center">
+       <NotebookPen size={72} className="text-black/20 mb-6" />
+       <h3 className="text-2xl font-[1000] text-black/40 uppercase tracking-tighter mb-2">
+        A Spark Is Enough
+       </h3>
+       <p className="text-black/30 font-bold max-w-md uppercase text-sm">
+        Type a topic and hit assemble. Add chapters, references and your own lines whenever you
+        want more control — nothing you write by hand gets overwritten.
+       </p>
+      </div>
+     )}
 
-          <div className="bg-[#57F15C]/20 p-4 rounded-xl border-[3px] border-black">
-           <h4 className="text-[10px] font-black text-black/50 uppercase tracking-[0.2em] mb-1">
-            Proof In This Beat
-           </h4>
-           <p className="text-sm font-black text-black uppercase">{beat.proof}</p>
-          </div>
-
-          <div className="bg-[#FFEA5A]/30 p-4 rounded-xl border-[3px] border-black">
-           <h4 className="text-[10px] font-black text-black/50 uppercase tracking-[0.2em] mb-1">
-            Transition Out
-           </h4>
-           <p className="text-sm font-black text-black uppercase">{beat.transition}</p>
-          </div>
-
-          <div className="flex items-center gap-3">
-           <span
-            className={`px-3 py-1 border-[3px] border-black rounded-lg text-[10px] font-black uppercase tracking-widest ${RISK_TONE[beat.retentionRisk] || RISK_TONE.medium}`}>
-            {beat.retentionRisk} risk
-           </span>
-           <span className="text-xs font-bold text-black/60 uppercase">{beat.riskNote}</span>
-          </div>
-         </div>
-        </div>
-       ))}
-
-       {/* Self-audit */}
-       {blueprint.weakTransitions.length > 0 || blueprint.missingProof.length > 0 ? (
-        <div className="bg-white border-[4px] border-black rounded-[24px] shadow-[8px_8px_0px_0px_black] overflow-hidden">
-         <div className="bg-[#FF4FD8] p-5 border-b-[4px] border-black flex items-center gap-3">
-          <AlertTriangle size={24} strokeWidth={3} className="text-white" />
-          <h3 className="text-xl font-[1000] uppercase tracking-tighter text-white">
-           Fix Before Filming
-          </h3>
-         </div>
-         <div className="p-6 space-y-5">
-          {blueprint.weakTransitions.length > 0 ? (
+     {result && (
+      <>
+       {(result.assumptions.length > 0 || result.groundingNotes.length > 0) && (
+        <SubToolbox
+         title="Assumptions & Grounding"
+         subtitle="What was inferred, and what the references could not support"
+         icon={<AlertTriangle />}
+         collapsible
+         isOpenInitial>
+         <div className="space-y-4">
+          {result.assumptions.length > 0 && (
            <div>
-            <h4 className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em] mb-2">
-             Weak Transitions
-            </h4>
-            <ul className="space-y-2">
-             {blueprint.weakTransitions.map((item, index) => (
-              <li key={index} className="text-sm font-bold uppercase text-black leading-snug">
+            <h4 className={fieldLabel}>Inferred for you</h4>
+            <ul className="mt-2 space-y-1">
+             {result.assumptions.map((item, index) => (
+              <li key={index} className="text-xs font-bold uppercase leading-snug">
                • {item}
               </li>
              ))}
             </ul>
            </div>
-          ) : null}
-          {blueprint.missingProof.length > 0 ? (
+          )}
+          {result.groundingNotes.length > 0 && (
            <div>
-            <h4 className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em] mb-2">
-             Claims Without Proof
-            </h4>
-            <ul className="space-y-2">
-             {blueprint.missingProof.map((item, index) => (
-              <li key={index} className="text-sm font-bold uppercase text-black leading-snug">
+            <h4 className={fieldLabel}>Not grounded by your references</h4>
+            <ul className="mt-2 space-y-1">
+             {result.groundingNotes.map((item, index) => (
+              <li key={index} className="text-xs font-bold uppercase leading-snug">
                • {item}
               </li>
              ))}
             </ul>
            </div>
-          ) : null}
+          )}
          </div>
-        </div>
-       ) : null}
+        </SubToolbox>
+       )}
 
-       {/* Storyboard handoff */}
-       {blueprint.storyboardHandoff.length > 0 ? (
-        <div className="bg-white border-[4px] border-black rounded-[24px] shadow-[8px_8px_0px_0px_black] overflow-hidden">
-         <div className="bg-[#00F0FF] p-5 border-b-[4px] border-black flex items-center gap-3">
-          <ShieldCheck size={24} strokeWidth={3} className="text-black" />
-          <h3 className="text-xl font-[1000] uppercase tracking-tighter text-black">
-           Storyboard Handoff
-          </h3>
-         </div>
-         <ul className="p-6 space-y-2">
-          {blueprint.storyboardHandoff.map((item, index) => (
-           <li key={index} className="text-sm font-bold uppercase text-black leading-snug">
-            • {item}
-           </li>
+       <SubToolbox
+        title="Visual Outline"
+        subtitle="The skeleton before the prose"
+        icon={<Layers />}
+        collapsible
+        isOpenInitial>
+        <div className="space-y-3">
+         {result.outline.map((entry) => {
+          const timed = result.timeline.find((section) => section.id === entry.sectionId)
+          return (
+           <div key={entry.sectionId} className="border-[3px] border-black rounded-xl bg-white p-3">
+            <div className="flex justify-between items-baseline gap-2">
+             <h4 className="font-[1000] uppercase text-sm tracking-tight">{entry.section}</h4>
+             {timed && (
+              <span className="text-[10px] font-black uppercase text-black/50">
+               {formatClock(timed.estMinutes)}
+              </span>
+             )}
+            </div>
+            <ul className="mt-2 space-y-1">
+             {entry.beats.map((beat, beatIndex) => (
+              <li key={beatIndex} className="flex gap-2 text-xs font-bold leading-snug">
+               <span className="mt-1.5 size-2 shrink-0 border-[1.5px] border-black bg-[#CCFF00]" />
+               <span>{beat}</span>
+              </li>
+             ))}
+            </ul>
+           </div>
+          )
+         })}
+         {!result.outline.length && (
+          <p className="p-4 text-center text-[10px] font-black uppercase opacity-50">
+           No outline returned.
+          </p>
+         )}
+        </div>
+       </SubToolbox>
+
+       <SubToolbox
+        title="Full Script"
+        subtitle="Locked pieces reproduced word-for-word"
+        icon={<FileText />}
+        collapsible
+        isOpenInitial>
+        <div className="space-y-3">
+         <div className="max-h-[420px] overflow-y-auto border-[3px] border-black rounded-xl bg-[#FFF9E8] p-4 space-y-4">
+          {result.sections.map((section) => (
+           <div key={section.sectionId}>
+            <h5 className="inline-block border-[2px] border-black bg-[#CCFF00] px-2 py-0.5 font-black uppercase text-[10px] tracking-wider">
+             {section.label}
+             {section.lockedFragmentIds.length > 0 ? " · locked" : ""}
+            </h5>
+            <p className="mt-2 text-sm font-semibold leading-relaxed whitespace-pre-wrap break-words">
+             {section.script || (
+              <span className="opacity-40 uppercase text-xs">No copy returned for this section.</span>
+             )}
+            </p>
+           </div>
           ))}
-         </ul>
+         </div>
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <SubToolboxGridActionButton
+           label="Copy Script"
+           iconName="layers"
+           tone="green"
+           disabled={!result.fullScript}
+           onClick={architect.copyScript}
+          />
+          <SubToolboxGridActionButton
+           label="Save Packet"
+           iconName="database"
+           tone="yellow"
+           onClick={architect.savePacket}
+          />
+         </div>
         </div>
-       ) : null}
+       </SubToolbox>
 
-       {/* Actions */}
-       <div className="flex flex-col md:flex-row gap-4">
-        <button
-         onClick={handleCopyScript}
-         className="flex-1 inline-flex items-center justify-center gap-2 bg-white border-[4px] border-black p-4 font-black uppercase text-sm rounded-xl shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-y-0.5 transition-all">
-         <ClipboardCopy size={18} strokeWidth={3} /> Copy Full Script
-        </button>
-        <button
-         onClick={handleSavePacket}
-         className="flex-1 bg-[#CCFF00] border-[4px] border-black p-4 font-black uppercase text-sm rounded-xl shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-y-0.5 transition-all">
-         Save Beat Packet + Handoff
-        </button>
-       </div>
+       {result.visualSuggestions.length > 0 && (
+        <SubToolbox
+         title="Visual Suggestions"
+         subtitle="B-roll, graphics and overlays per section"
+         icon={<Clapperboard />}
+         collapsible
+         isOpenInitial={false}>
+         <div className="space-y-3">
+          {result.visualSuggestions.map((suggestion) => {
+           const section = result.sections.find(
+            (entry) => entry.sectionId === suggestion.sectionId,
+           )
+           return (
+            <div
+             key={suggestion.sectionId}
+             className="border-[3px] border-black rounded-xl bg-white p-3">
+             <h4 className="font-[1000] uppercase text-xs tracking-tight">
+              {section?.label || suggestion.sectionId}
+             </h4>
+             <ul className="mt-2 space-y-1">
+              {suggestion.ideas.map((idea, index) => (
+               <li key={index} className="flex gap-2 text-xs font-bold leading-snug">
+                <span className="mt-1.5 size-2 shrink-0 border-[1.5px] border-black bg-[#73DEFF]" />
+                <span>{idea}</span>
+               </li>
+              ))}
+             </ul>
+            </div>
+           )
+          })}
+         </div>
+        </SubToolbox>
+       )}
 
-       {status ? (
-        <div className="rounded-xl border-[3px] border-black bg-[#FFEA5A] px-4 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-black/70">
-         {status}
-        </div>
-       ) : null}
+       {result.shortsIdeas.length > 0 && (
+        <SubToolbox
+         title={`Priming Shorts · ${result.shortsIdeas.length}`}
+         subtitle="Cut from the script to condition the audience before launch"
+         icon={<Smartphone />}
+         collapsible
+         isOpenInitial>
+         <div className="space-y-3">
+          {result.shortsIdeas.map((short, index) => (
+           <div key={index} className="border-[3px] border-black rounded-xl bg-white p-3 space-y-2">
+            <div className="flex justify-between items-center gap-2">
+             <h4 className="font-[1000] uppercase text-xs tracking-tight">{short.hook}</h4>
+             <span className="shrink-0 border-[2px] border-black rounded bg-[#FFC587] px-2 py-0.5 text-[9px] font-black uppercase">
+              {short.postWindow}
+             </span>
+            </div>
+            <p className="text-xs font-semibold italic leading-snug border-l-[3px] border-black pl-2">
+             {short.excerpt}
+            </p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-black/50">
+             {short.primingRationale}
+            </p>
+           </div>
+          ))}
+         </div>
+        </SubToolbox>
+       )}
 
        <div className="animate-in slide-in-from-bottom-4 duration-700">
         <PostActionReflection toolId="SCRIPT_ARCHITECT" />
        </div>
-      </div>
-     ) : (
-      <div className="h-full min-h-[400px] flex flex-col items-center justify-center border-[4px] border-dashed border-black/20 rounded-[32px] bg-gray-50 p-8 text-center">
-       <NotebookPen size={80} className="text-black/20 mb-6" />
-       <h3 className="text-3xl font-[1000] text-black/40 uppercase tracking-tighter mb-2">
-        Angle In, Beats Out
-       </h3>
-       <p className="text-black/30 font-bold max-w-md uppercase">
-        Drop the angle you already chose on the left. You get an ordered beat structure with
-        proof placement, transitions, runtime, and every claim you still need to back up.
-       </p>
-      </div>
+      </>
      )}
     </div>
    </div>
