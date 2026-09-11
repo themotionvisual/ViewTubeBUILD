@@ -79,6 +79,8 @@ export const PAGE_REGISTRY: readonly PageRegistryEntry[] = Object.freeze([
  { path: "/subscribe", title: "Subscribe", section: "account", navigationVisibility: "hidden", lifecycle: "production" },
  { path: "/data-transparency", title: "Data & Privacy", section: "account", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/ai-brain", title: "AI Brain", section: "studio", navigationVisibility: "top-nav", lifecycle: "production" },
+ { path: "/brain-controls", title: "Brain Controls", section: "studio", navigationVisibility: "hidden", lifecycle: "production" },
+ { path: "/crown", title: "Crown Control Room", section: "system", navigationVisibility: "hidden", lifecycle: "lab", description: "Read-only mission, execution, evidence and verification control room." },
  { path: "/local-analytics", title: "Analytics", section: "analytics", navigationVisibility: "top-nav", lifecycle: "production", aliases: ["/analytics", "/vt-sync-local"] },
  { path: "/analytics", title: "Analytics (alias)", section: "analytics", navigationVisibility: "hidden", lifecycle: "production" },
  { path: "/vt-sync-local", title: "VT Sync Local (alias)", section: "analytics", navigationVisibility: "hidden", lifecycle: "production" },
