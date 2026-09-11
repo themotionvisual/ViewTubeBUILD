@@ -42,7 +42,7 @@ const workflowPatternRows = (rows: BrainWorkflowResult[]): ChannelIntelligencePa
   byChain.set(row.chainId, list)
  })
 
- return [...byChain.entries()].flatMap(([chainId, chainRows]) => {
+ return [...byChain.entries()].flatMap(([chainId, chainRows]): ChannelIntelligencePattern[] => {
   const positive = chainRows.filter((row) => row.outcome === "accepted" || row.outcome === "completed")
   const negative = chainRows.filter((row) => row.outcome === "rejected" || row.outcome === "abandoned")
   if (chainRows.length < 2) return []
@@ -83,7 +83,7 @@ const outcomeToolPatterns = (rows: BrainOutcomeRecord[]): ChannelIntelligencePat
   counts.set(key, current)
  })
 
- return [...counts.entries()].flatMap(([toolId, value]) => {
+ return [...counts.entries()].flatMap(([toolId, value]): ChannelIntelligencePattern[] => {
   const total = value.positive + value.negative
   if (total < 2) return []
   if (value.positive / total >= 0.7) {
