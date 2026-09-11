@@ -38,6 +38,8 @@ import {
   WidgetTextInput,
   WidgetVideoSelect,
   type WidgetControlHeight,
+  type WidgetPrimitiveTone,
+  type WidgetSplitIconStyle,
 } from "../WidgetPrimitiveExtensions"
 
 type ReferenceCategory =
@@ -50,6 +52,7 @@ type ReferenceCategory =
   | "states"
 
 const CONTROL_HEIGHTS: WidgetControlHeight[] = [18, 24, 32, 38]
+const CONTROL_TONES: WidgetPrimitiveTone[] = ["default", "primary", "secondary"]
 
 const VIDEO_OPTIONS = [
   {
@@ -132,6 +135,40 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
     </div>
   )
 
+  const ToneRows = ({
+    render,
+  }: {
+    render: (tone: WidgetPrimitiveTone, height: WidgetControlHeight) => React.ReactNode
+  }) => (
+    <div className="grid gap-2">
+      {CONTROL_TONES.map((tone) => (
+        <div key={tone} className="grid gap-1">
+          <small className="text-[8px] font-black uppercase tracking-wider opacity-55">{tone}</small>
+          <SizeVariants>{(height) => render(tone, height)}</SizeVariants>
+        </div>
+      ))}
+    </div>
+  )
+
+  const splitFamily = (iconStyle: WidgetSplitIconStyle, title: string, detail: string) => (
+    <div className="widget-reference-family">
+      {familyHeading(title, detail)}
+      <ToneRows
+        render={(tone, height) => (
+          <WidgetLeftSplitButton
+            height={height}
+            tone={tone}
+            iconStyle={iconStyle}
+            icon={<Sparkles />}
+            width="full"
+          >
+            Split Left
+          </WidgetLeftSplitButton>
+        )}
+      />
+    </div>
+  )
+
   return (
     <WidgetShell widget={widget} headerContent={headerContent} icon={<Layers size={22} />} {...common}>
       <WidgetScrollArea
@@ -140,63 +177,50 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
       >
         {(activeCategory === "all" || activeCategory === "controls") && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("1. Standard Controls", "18 / 24 / 32 / 38 px")}
+            {sectionHeading("1. Standard Controls", "Default / Primary / Secondary")}
             <p className="text-[10px] font-bold uppercase opacity-60">
-              Component families are grouped together for direct size comparison. 18px controls are filled, borderless and shadowless. 24px, 32px and 38px controls use a 2px stroke.
+              Every component family uses the same three monochromatic color styles at 18 / 24 / 32 / 38px. 18px controls stay filled, borderless and shadowless; larger controls use a 2px stroke.
             </p>
 
             <div className="widget-reference-family">
-              {familyHeading("Buttons", "Default")}
-              <SizeVariants>
-                {(height) => <WidgetSizedButton height={height}>Button</WidgetSizedButton>}
-              </SizeVariants>
-            </div>
-
-            <div className="widget-reference-family">
-              {familyHeading("Buttons", "Primary")}
-              <SizeVariants>
-                {(height) => <WidgetSizedButton height={height} className="primary">Primary</WidgetSizedButton>}
-              </SizeVariants>
-            </div>
-
-            <div className="widget-reference-family">
-              {familyHeading("Split Left Buttons", "Community Post anatomy")}
-              <SizeVariants>
-                {(height) => (
-                  <WidgetLeftSplitButton
-                    height={height}
-                    icon={<Sparkles size={Math.max(10, height - 18)} />}
-                    width="full"
-                  >
-                    Split Left
-                  </WidgetLeftSplitButton>
+              {familyHeading("Buttons", "3 tones × 4 heights")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetSizedButton height={height} tone={tone}>
+                    {tone === "default" ? "Button" : tone}
+                  </WidgetSizedButton>
                 )}
-              </SizeVariants>
+              />
             </div>
 
+            {splitFamily("white-on-color", "Split Left Buttons", "White icon / colored bay")}
+            {splitFamily("color-on-light", "Split Left Buttons", "Colored icon / light bay")}
+
             <div className="widget-reference-family">
-              {familyHeading("Text Inputs", "Community Post input + focus style")}
-              <SizeVariants>
-                {(height) => (
+              {familyHeading("Text Inputs", "Community Post focus + 3 tones")}
+              <ToneRows
+                render={(tone, height) => (
                   <WidgetTextInput
                     height={height}
+                    tone={tone}
                     value={textValue}
                     onChange={(event) => setTextValue(event.currentTarget.value)}
-                    aria-label={`${height}px text input`}
+                    aria-label={`${tone} ${height}px text input`}
                   />
                 )}
-              </SizeVariants>
+              />
             </div>
 
             <div className="widget-reference-family">
-              {familyHeading("Dropdown Menus", "Radix select")}
-              <SizeVariants>
-                {(height) => (
+              {familyHeading("Dropdown Menus", "Radix select + 3 tones")}
+              <ToneRows
+                render={(tone, height) => (
                   <WidgetSizedSelect
                     height={height}
+                    tone={tone}
                     value={selectValue}
                     onChange={setSelectValue}
-                    label={`${height}px dropdown`}
+                    label={`${tone} ${height}px dropdown`}
                     options={[
                       { value: "public", label: "PUBLIC" },
                       { value: "unlisted", label: "UNLISTED" },
@@ -204,7 +228,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
                     ]}
                   />
                 )}
-              </SizeVariants>
+              />
             </div>
 
             <div className="widget-reference-family">
@@ -226,43 +250,45 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("2. Video Select", "Video Manager-derived dropdown")}
             <p className="text-[10px] font-bold uppercase opacity-60">
-              Thumbnail-aware selector with a colored left icon bay, selected-video title, chevron, searchable menu and video rows.
+              Both split-icon treatments are available: white icon on the colored bay, or widget-colored icon on a light bay.
             </p>
-            <div className="widget-reference-family">
-              {familyHeading("Video Selector", "All standard heights")}
-              <SizeVariants>
-                {(height) => (
-                  <WidgetVideoSelect
-                    height={height}
-                    value={selectedVideo}
-                    onChange={setSelectedVideo}
-                    label={`Select video ${height}px`}
-                    options={VIDEO_OPTIONS}
-                  />
-                )}
-              </SizeVariants>
-            </div>
+            {(["white-on-color", "color-on-light"] as WidgetSplitIconStyle[]).map((iconStyle) => (
+              <div className="widget-reference-family" key={iconStyle}>
+                {familyHeading("Video Selector", iconStyle === "white-on-color" ? "White icon / colored bay" : "Colored icon / light bay")}
+                <ToneRows
+                  render={(tone, height) => (
+                    <WidgetVideoSelect
+                      height={height}
+                      tone={tone}
+                      iconStyle={iconStyle}
+                      value={selectedVideo}
+                      onChange={setSelectedVideo}
+                      label={`${tone} select video ${height}px`}
+                      options={VIDEO_OPTIONS}
+                    />
+                  )}
+                />
+              </div>
+            ))}
           </WidgetSection>
         )}
 
         {(activeCategory === "all" || activeCategory === "progress") && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("3. Progress Bars", "Keyword Engine anatomy")}
-            <p className="text-[10px] font-bold uppercase opacity-60">
-              Fill and overlay-copy progress bars are grouped as one component family across all four control heights.
-            </p>
             <div className="widget-reference-family">
-              {familyHeading("Progress Bars", "18 / 24 / 32 / 38")}
-              <SizeVariants>
-                {(height) => (
+              {familyHeading("Progress Bars", "3 tones × 4 heights")}
+              <ToneRows
+                render={(tone, height) => (
                   <WidgetProgressBar
                     height={height}
-                    value={height === 18 ? 82 : height === 24 ? 67 : height === 32 ? 51 : 39}
-                    label={height === 18 ? "napoleon" : height === 24 ? "austerlitz" : height === 32 ? "cavalry" : "emperor"}
-                    displayValue={height === 18 ? "82.40%" : height === 24 ? "67.25%" : height === 32 ? "51.80%" : "39.10%"}
+                    tone={tone}
+                    value={tone === "default" ? 82 : tone === "primary" ? 64 : 43}
+                    label={tone === "default" ? "napoleon" : tone === "primary" ? "austerlitz" : "cavalry"}
+                    displayValue={tone === "default" ? "82%" : tone === "primary" ? "64%" : "43%"}
                   />
                 )}
-              </SizeVariants>
+              />
             </div>
           </WidgetSection>
         )}
@@ -347,7 +373,12 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
             </div>
             <div className="flex flex-wrap gap-1">
               {(["loading", "ready", "empty", "blocked", "stale", "error"] as const).map((status) => (
-                <WidgetSizedButton key={status} height={24} onClick={() => setStatePanelStatus(status)} className={statePanelStatus === status ? "primary" : ""}>
+                <WidgetSizedButton
+                  key={status}
+                  height={24}
+                  tone={statePanelStatus === status ? "primary" : "default"}
+                  onClick={() => setStatePanelStatus(status)}
+                >
                   {status}
                 </WidgetSizedButton>
               ))}
@@ -367,7 +398,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
                 {tags.map((tag) => (
                   <WidgetTag key={tag} onRemove={() => setTags((current) => current.filter((item) => item !== tag))}>{tag}</WidgetTag>
                 ))}
-                <WidgetSizedButton height={24} onClick={() => setTags((current) => [...current, `tag-${current.length + 1}`])} aria-label="Add tag">
+                <WidgetSizedButton height={24} tone="secondary" onClick={() => setTags((current) => [...current, `tag-${current.length + 1}`])} aria-label="Add tag">
                   <Plus size={12} />
                 </WidgetSizedButton>
               </div>
@@ -377,8 +408,8 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: any) {
       </WidgetScrollArea>
 
       <WidgetFooter className="widget-toolbar widget-workflow-toolbar">
-        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.1 · grouped by component family</span>
-        <WidgetLeftSplitButton height={32} tone="primary" icon={<Check size={14} />}>
+        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.2 · tones + split icon variants</span>
+        <WidgetLeftSplitButton height={32} tone="primary" iconStyle="white-on-color" icon={<Check />}>
           Standard Compliant
         </WidgetLeftSplitButton>
       </WidgetFooter>
