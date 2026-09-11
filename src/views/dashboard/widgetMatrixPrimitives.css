@@ -22,6 +22,20 @@
     box-shadow 90ms linear;
 }
 
+/* These controls size to their contents. Without this they stretch to fill a
+   grid/flex parent (the reference library lays each variant out in a grid,
+   whose items default to justify-self: stretch). */
+.widget-stepper,
+.widget-pagination,
+.widget-split-badge,
+.widget-search-input,
+.widget-live-badge,
+.widget-spectrum-fill-badge {
+  width: fit-content;
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+
 /* ── Square icon button / badge ─────────────────────────────── */
 .widget-icon-button,
 .widget-icon-badge {
@@ -157,9 +171,10 @@
 }
 
 /* ── Split-left search bar ──────────────────────────────────── */
-.widget-search-input { min-width: 140px; background: #fff; }
+.widget-search-input { background: #fff; }
 .widget-search-input > input {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
+  width: 9ch;
   min-width: 0;
   border: 0;
   padding: 0 0.6em;
