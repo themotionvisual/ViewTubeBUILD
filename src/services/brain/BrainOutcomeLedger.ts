@@ -55,7 +55,7 @@ export const recordBrainOutcome = async (input: Omit<BrainOutcomeRecord, "id" | 
  const corrective = input.outcome === "corrected" || input.outcome === "rejected"
  await captureAIBrainLearningEvent({
   channelId: input.channelId,
-  source: "tool",
+  source: "command_handoff",
   summary: input.summary,
   detail: `${input.sourceToolId}${input.targetToolId ? ` → ${input.targetToolId}` : ""}: ${input.outcome}`,
   category: corrective ? "correction" : "tool_workflow",

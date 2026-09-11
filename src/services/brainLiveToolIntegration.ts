@@ -14,18 +14,22 @@ export interface BrainToolIntegrationEnvelope<T = unknown> {
   reason?: string
 }
 
+type BrainToolIntegrationCandidate = Omit<BrainToolIntegrationEnvelope, "packet"> & {
+  packet: ViewTubeActionPacket | null
+}
+
 export const getPendingToolIntegrations = (destinationToolId: string): BrainToolIntegrationEnvelope[] => {
   const target = getViewTubeToolCapability(destinationToolId)
   return listBrainHandoffs(destinationToolId)
     .filter(item => item.state === "queued" || item.state === "opened")
-    .map(handoff => {
+    .map((handoff): BrainToolIntegrationCandidate => {
       const packet = loadViewTubeActionPacket(handoff.packetId)
       if (!packet) return { handoff, packet: null, destinationToolId, payloadKind: handoff.payloadKind, state: "blocked" as const, reason: "ActionPacket is no longer available." }
       if (!target) return { handoff, packet, destinationToolId, payloadKind: packet.payloadKind, state: "blocked" as const, reason: "Destination tool is not registered." }
       if (!target.accepts.includes(packet.payloadKind)) return { handoff, packet, destinationToolId, payloadKind: packet.payloadKind, state: "blocked" as const, reason: `${target.label} cannot accept ${packet.payloadKind}.` }
       return { handoff, packet, destinationToolId, payloadKind: packet.payloadKind, state: "ready" as const }
     })
-    .filter((row): row is BrainToolIntegrationEnvelope => Boolean(row.packet))
+    .filter((row): row is BrainToolIntegrationEnvelope => row.packet !== null)
 }
 
 export const openToolIntegration = (handoffId: string) => updateBrainHandoffState(handoffId, "opened")
@@ -43,5 +47,5 @@ export const dismissToolIntegration = (handoffId: string, channelId?: string | n
 
 export const extractToolPrefill = <T extends Record<string, unknown> = Record<string, unknown>>(packet: ViewTubeActionPacket): Partial<T> => {
   if (packet.payload && typeof packet.payload === "object" && !Array.isArray(packet.payload)) return packet.payload as Partial<T>
-  return { handoffValue: packet.payload } as Partial<T>
+  return { handoffValue: packet.payload } as unknown as Partial<T>
 }
