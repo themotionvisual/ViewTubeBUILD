@@ -22,14 +22,31 @@ export interface AlgorithmWorkflowOutcome {
  metadata?: Record<string, unknown>
 }
 
+const WORKFLOW_NATIVE_METRICS = new Set([
+ "diagnosis_complete",
+ "workflow_completed",
+ "creator_accepted",
+])
+
 const workflowObservation = (outcome: AlgorithmWorkflowOutcome): AlgorithmMetricObservation[] => {
  const observedAt = outcome.completedAt || Date.now()
  const evidenceId = outcome.evidenceIds?.[0] || null
- if (outcome.status === "completed") return [{ metric: "diagnosis_complete", value: 1, observedAt, evidenceId }]
- if (["dismissed", "rejected", "abandoned"].includes(outcome.status)) {
-  return [{ metric: "diagnosis_complete", value: 0, observedAt, evidenceId }]
+ const observations: AlgorithmMetricObservation[] = []
+ if (outcome.status === "completed") {
+  observations.push({ metric: "diagnosis_complete", value: 1, observedAt, evidenceId })
+  observations.push({ metric: "workflow_completed", value: 1, observedAt, evidenceId })
  }
- return []
+ if (["dismissed", "rejected", "abandoned"].includes(outcome.status)) {
+  observations.push({ metric: "diagnosis_complete", value: 0, observedAt, evidenceId })
+  observations.push({ metric: "workflow_completed", value: 0, observedAt, evidenceId })
+ }
+ if (outcome.status === "accepted") {
+  observations.push({ metric: "creator_accepted", value: 1, observedAt, evidenceId })
+ }
+ if (outcome.status === "rejected") {
+  observations.push({ metric: "creator_accepted", value: 0, observedAt, evidenceId })
+ }
+ return observations
 }
 
 export const resolveAlgorithmEventForWorkflowOutcome = (outcome: AlgorithmWorkflowOutcome) => {
@@ -52,14 +69,26 @@ export const resolveAlgorithmEventForWorkflowOutcome = (outcome: AlgorithmWorkfl
  * Converts explicit workflow lifecycle evidence into Brain evaluation evidence.
  * This is deliberately separate from analytics-canon: tool completion must come
  * from the workflow/outcome system and must never be inferred from analytics.
+ *
+ * Workflow evidence is only allowed to satisfy targets explicitly declared as
+ * workflow-native. A completed workflow cannot accidentally satisfy CTR,
+ * retention, qualified views, or any other analytics target.
  */
 export const recordAlgorithmWorkflowOutcome = (outcome: AlgorithmWorkflowOutcome) => {
  const event = resolveAlgorithmEventForWorkflowOutcome(outcome)
  if (!event) return { status: "unattributed" as const, event: null, evaluation: null }
+
+ const workflowTargets = event.evaluationTargets.filter((target) => WORKFLOW_NATIVE_METRICS.has(target.metric))
+ if (!workflowTargets.length) {
+  return { status: "no_workflow_target" as const, event, evaluation: null }
+ }
+
  const observations = workflowObservation(outcome)
+  .filter((observation) => workflowTargets.some((target) => target.metric === observation.metric))
  if (!observations.length) {
   return { status: "non_terminal" as const, event, evaluation: null }
  }
+
  const result = processAlgorithmEvaluation({
   channelId: outcome.channelId,
   eventId: event.id,
