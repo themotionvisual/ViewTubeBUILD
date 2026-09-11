@@ -11,6 +11,7 @@ import {motionGraphicsTemplates} from './templates/motionGraphics';
 import {verticalSceneTemplates} from './templates/verticalScenes';
 import {youtuberOpenerTemplates} from './templates/youtuberOpeners';
 import {youtuberUtilityTemplates} from './templates/youtuberUtility';
+import {premiumUtilityTemplates} from './templates/premiumUtility';
 
 export const templateCatalog: TemplateDefinition[] = normalizeTemplateCatalog([
   ...textTemplates,
@@ -24,6 +25,7 @@ export const templateCatalog: TemplateDefinition[] = normalizeTemplateCatalog([
   ...verticalSceneTemplates,
   ...youtuberOpenerTemplates,
   ...youtuberUtilityTemplates,
+  ...premiumUtilityTemplates,
 ]);
 
 export function filterTemplateCatalog(category?: TemplateCategory, query = ''): TemplateDefinition[] {
