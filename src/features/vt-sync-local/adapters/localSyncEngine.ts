@@ -45,6 +45,7 @@ import type {
  VtSyncVideoInventoryRecord,
  VtSyncVideoItem,
 } from "./contracts"
+import { ANALYTICS_WINDOWS, resolveWindowRange } from "../../../services/analytics/windows"
 
 export const VT_SYNC_SERVER_ACCOUNT_TOKEN = "__viewtube_server_account_session__"
 export const VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE = 25
@@ -187,6 +188,20 @@ const daysBetweenInclusive = (startDate: string, endDate: string) =>
  Math.max(1, Math.floor((parseDateKey(endDate).getTime() - parseDateKey(startDate).getTime()) / 86_400_000) + 1)
 // YouTube Analytics data for "today" is usually incomplete; report through yesterday instead.
 const reportEndDate = () => daysAgo(1)
+/**
+ * Start date for a VT-SYNC window, from the shared resolver so this engine,
+ * canonicalSync and SyncCoordinator all bound a window identically. Both the
+ * direct channel-totals query and the daily-derived fallback must call this —
+ * if they disagree, the fallback silently covers a different range than the
+ * number it is filling in for.
+ */
+const vtSyncWindowStartDate = (
+ window: VtSyncAnalyticsWindow,
+ lifetimeStartDate: string,
+): string =>
+ window === "lifetime"
+  ? lifetimeStartDate
+  : resolveWindowRange({ window }).startDate
 // Fallback lifetime start date for calls made before the channel's actual sign-up date
 // (snapshot.channelPublishedAt) is known, e.g. if channel_metadata wasn't synced this run.
 const VT_SYNC_LIFETIME_START_DATE = "2000-01-01"
@@ -1719,7 +1734,7 @@ const analyticsBundleDiagnostic = ({
 })
 
 const channelTotalsForWindow = async (token: string, window: VtSyncAnalyticsWindow, lifetimeStartDate: string) => {
- const startDate = window === "lifetime" ? lifetimeStartDate : daysAgo(Number(window.replace("d", "")))
+ const startDate = vtSyncWindowStartDate(window, lifetimeStartDate)
  const bundles = VT_SYNC_ANALYTICS_METRIC_BUNDLES
  const results: BundleResult[] = []
  for (const bundle of bundles) {
@@ -1839,7 +1854,7 @@ const fillMissingChannelTotalsFromDaily = (
 ) => {
  if (!totals || !dailyRows.length) return totals
  const endDate = reportEndDate()
- const windows: VtSyncAnalyticsWindow[] = ["7d", "28d", "90d", "365d", "lifetime"]
+ const windows: VtSyncAnalyticsWindow[] = ANALYTICS_WINDOWS
  const next = { ...(totals as Record<string, any>) }
  // The undimensioned channel-totals query does not reliably aggregate card and
  // playlist-save metrics (YouTube returns them missing or as 0), so the
@@ -1854,7 +1869,7 @@ const fillMissingChannelTotalsFromDaily = (
   "cardTeaserClicks",
  ])
  windows.forEach((window) => {
-  const startDate = window === "lifetime" ? lifetimeStartDate : daysAgo(Number(window.replace("d", "")))
+  const startDate = vtSyncWindowStartDate(window, lifetimeStartDate)
   const rows = dailyRows.filter((row) => {
    const date = String(row.date || row.day || "")
    return date >= startDate && date <= endDate
@@ -2295,7 +2310,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   if (shouldSync(selected, "channel_totals")) {
    updatePhase(progress, "channel_totals", { status: "running", startedAt: new Date().toISOString() }, onProgress)
    const previousChannelTotals = snapshot.channelTotals as Record<string, any> | null
-   const windows: VtSyncAnalyticsWindow[] = ["7d", "28d", "90d", "365d", "lifetime"]
+   const windows: VtSyncAnalyticsWindow[] = ANALYTICS_WINDOWS
    const totalsEntries: Array<readonly [VtSyncAnalyticsWindow, Awaited<ReturnType<typeof channelTotalsForWindow>>]> = []
    for (const window of windows) {
     totalsEntries.push([window, await channelTotalsForWindow(token, window, channelStartDate)] as const)

@@ -25,6 +25,7 @@ import type {
  MetricSummary,
  WindowTotals,
 } from "./contracts"
+import { windowDayCount } from "../analytics/windows"
 
 // --- Full set of canonical metric keys the adapter emits -----------------
 // Kept as a runtime array so the "unavailable-defaults" record can be
@@ -196,19 +197,11 @@ export const projectVtSyncVideoToCanonicalRow = (
 
 // --- Window filtering ----------------------------------------------------
 
-const WINDOW_TO_DAYS: Record<AnalyticsWindow, number | null> = {
- "7d": 7,
- "28d": 28,
- "90d": 90,
- "365d": 365,
- lifetime: null,
-}
-
 export const filterCanonicalRowsByWindow = (
  rows: CanonicalVideoRow[],
  window: AnalyticsWindow,
 ): CanonicalVideoRow[] => {
- const days = WINDOW_TO_DAYS[window]
+ const days = windowDayCount(window)
  if (days === null) return rows
  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
  return rows.filter((row) => {

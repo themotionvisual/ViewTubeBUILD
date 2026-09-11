@@ -1,5 +1,9 @@
-import type { AnalyticsWindow } from "../analytics/DataStore"
-export type { AnalyticsWindow } from "../analytics/DataStore"
+import type { AnalyticsWindow, AnalyticsPeriod } from "../analytics/DataStore"
+export type {
+ AnalyticsWindow,
+ ComparableAnalyticsWindow,
+ AnalyticsPeriod,
+} from "../analytics/DataStore"
 
 export const CANONICAL_SYNC_DB_NAME = "ViewTubeCanonicalAnalyticsDB"
 export const CANONICAL_SYNC_DB_VERSION = 5
@@ -119,8 +123,8 @@ export type CanonicalThumbnailSet = {
  maxres?: CanonicalThumbnail
 }
 
-export type ChannelPeriod = "current" | "previous"
-export type ComparableAnalyticsWindow = Exclude<AnalyticsWindow, "lifetime">
+/** Alias of the shared AnalyticsPeriod, kept for the many channel-scoped callers. */
+export type ChannelPeriod = AnalyticsPeriod
 
 export type CanonicalChannelRecord = {
  channelId: string

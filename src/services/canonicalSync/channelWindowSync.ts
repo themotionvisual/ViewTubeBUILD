@@ -10,19 +10,16 @@ import type {
 } from "./contracts"
 import {
  fetchCanonicalAnalyticsReport,
- isoDate,
  toMetricNumber,
 } from "./query"
+import {
+ ANALYTICS_WINDOWS,
+ COMPARABLE_WINDOWS,
+ latestCompleteAnalyticsDate,
+ resolveWindowRange,
+} from "../analytics/windows"
 import { buildMetricValue } from "./normalizers/video"
 
-const CURRENT_WINDOWS: AnalyticsWindow[] = ["lifetime", "365d", "90d", "28d", "7d"]
-const COMPARABLE_WINDOWS: ComparableAnalyticsWindow[] = ["365d", "90d", "28d", "7d"]
-const DAY_COUNTS: Record<ComparableAnalyticsWindow, number> = {
- "7d": 7,
- "28d": 28,
- "90d": 90,
- "365d": 365,
-}
 
 type MetricBundle = {
  id: string
@@ -60,53 +57,18 @@ const METRIC_BUNDLES: MetricBundle[] = [
  },
 ]
 
-const toValidDate = (value?: string | null): Date | null => {
- if (!value) return null
- const parsed = new Date(`${value.slice(0, 10)}T00:00:00Z`)
- return Number.isNaN(parsed.getTime()) ? null : parsed
-}
-
-const addUtcDays = (value: Date, days: number): Date => {
- const next = new Date(value)
- next.setUTCDate(next.getUTCDate() + days)
- return next
-}
-
-export const latestCompleteAnalyticsDate = (now = new Date()): Date => {
- const value = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
- return addUtcDays(value, -1)
-}
-
+/**
+ * Channel period ranges now come from the shared resolver. Re-exported under
+ * the original name so existing callers and tests keep working.
+ */
 export const resolveChannelPeriodRange = (input: {
  window: AnalyticsWindow
  period: ChannelPeriod
  channelPublishedAt?: string | null
  endDate?: Date
-}): { startDate: string; endDate: string; coverage: "complete" | "partial" } => {
- const end = input.endDate || latestCompleteAnalyticsDate()
- const published = toValidDate(input.channelPublishedAt)
- let requestedStart: Date
- let requestedEnd = end
+}) => resolveWindowRange(input)
 
- if (input.window === "lifetime") {
-  requestedStart = published || new Date("2005-04-23T00:00:00Z")
- } else {
-  const days = DAY_COUNTS[input.window]
-  if (input.period === "previous") {
-   requestedEnd = addUtcDays(end, -days)
-   requestedStart = addUtcDays(requestedEnd, -(days - 1))
-  } else {
-   requestedStart = addUtcDays(end, -(days - 1))
-  }
- }
-
- const clampedStart = published && requestedStart < published ? published : requestedStart
- return {
-  startDate: isoDate(clampedStart),
-  endDate: isoDate(requestedEnd),
-  coverage: clampedStart.getTime() === requestedStart.getTime() ? "complete" : "partial",
- }
-}
+export { latestCompleteAnalyticsDate }
 
 const splitMetricMap = (
  metrics: Record<string, CanonicalMetricValue>,
@@ -308,7 +270,7 @@ export const syncChannelPeriodSummaries = async (
  partial: boolean
 }> => {
  const requests = [
-  ...(options.currentWindows || CURRENT_WINDOWS).map((window) => ({ window, period: "current" as const })),
+  ...(options.currentWindows || ANALYTICS_WINDOWS).map((window) => ({ window, period: "current" as const })),
   ...(options.previousWindows || COMPARABLE_WINDOWS).map((window) => ({ window, period: "previous" as const })),
  ]
  const results = [] as Awaited<ReturnType<typeof syncOnePeriod>>[]

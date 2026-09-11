@@ -41,6 +41,7 @@ import { ytApiQueue } from "../utils/RequestQueue"
 import {
  ANALYTICS_WINDOWS,
  type AnalyticsWindow,
+ resolveWindowRange,
  canonicalMetricOrder,
  getMetricByAliases,
  readYouTubeAnalyticsCache,
@@ -138,16 +139,6 @@ const DEFAULT_VIDEO_SYNC_BATCH_STATE: VideoSyncBatchState = {
  lastBatchCount: 0,
 }
 
-const WINDOW_DAY_LOOKBACK: Record<
- Exclude<AnalyticsWindow, "lifetime">,
- number
-> = {
- "7d": 7,
- "28d": 28,
- "90d": 90,
- "365d": 365,
-}
-
 type SyncMergePolicy = "merge" | "latest_only"
 
 export interface GA4AnalyticsData {
@@ -225,18 +216,15 @@ export class SyncCoordinator {
    AnalyticsWindow,
    { startDate: string; endDate: string }
   >
-  const end = this.toIsoDate(endDate)
+  const channelPublishedAt = this.toIsoDate(lifetimeStart)
 
   ANALYTICS_WINDOWS.forEach((window) => {
-   if (window === "lifetime") {
-    ranges[window] = { startDate: this.toIsoDate(lifetimeStart), endDate: end }
-    return
-   }
-
-   const days = WINDOW_DAY_LOOKBACK[window]
-   const start = new Date(endDate)
-   start.setDate(start.getDate() - (days - 1))
-   ranges[window] = { startDate: this.toIsoDate(start), endDate: end }
+   const { startDate, endDate: rangeEnd } = resolveWindowRange({
+    window,
+    channelPublishedAt,
+    endDate,
+   })
+   ranges[window] = { startDate, endDate: rangeEnd }
   })
 
   return ranges

@@ -1,4 +1,7 @@
-export type VtSyncAnalyticsWindow = "7d" | "28d" | "90d" | "365d" | "lifetime"
+// One window vocabulary across the whole app. Aliased rather than redeclared so
+// vt-sync-local and canonicalSync cannot drift apart again.
+export type { AnalyticsWindow as VtSyncAnalyticsWindow } from "../../../services/analytics/windows"
+import type { AnalyticsWindow as VtSyncAnalyticsWindow } from "../../../services/analytics/windows"
 
 export const VT_SYNC_LOCAL_ANALYTICS_FLAG = "VITE_USE_VT_SYNC_LOCAL_ANALYTICS" as const
 export const VT_SYNC_DISABLE_PERFORMANCE_HUB_API_SYNC_FLAG = "VITE_DISABLE_PERFORMANCE_HUB_API_SYNC" as const

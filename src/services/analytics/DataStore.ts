@@ -1,5 +1,20 @@
 // --- BEGIN canonicalAnalyticsStore.ts ---
 
+import type {
+ AnalyticsWindow,
+ ComparableAnalyticsWindow,
+ AnalyticsPeriod,
+} from "./windows"
+import {
+ ANALYTICS_WINDOWS,
+ COMPARABLE_WINDOWS,
+ WINDOW_DAYS,
+ WINDOW_LABELS,
+ WINDOW_SHORT_LABELS,
+ latestCompleteAnalyticsDate,
+ resolveWindowRange,
+} from "./windows"
+
 export type CanonicalMetricAvailability = "available" | "unavailable"
 
 export interface CanonicalMetricValue {
@@ -291,15 +306,19 @@ export const buildCanonicalMetricValue = (
 // --- END canonicalAnalyticsStore.ts ---
 
 // --- BEGIN analyticsContract.ts ---
-export type AnalyticsWindow = "7d" | "28d" | "90d" | "365d" | "lifetime"
-
-export const ANALYTICS_WINDOWS: AnalyticsWindow[] = [
- "lifetime",
- "365d",
- "90d",
- "28d",
- "7d",
-]
+// The window vocabulary lives in ./windows — the single source of truth shared
+// by canonicalSync, vt-sync-local and SyncCoordinator. Re-exported here so the
+// many existing `from "../analytics/DataStore"` imports keep working.
+export type { AnalyticsWindow, ComparableAnalyticsWindow, AnalyticsPeriod }
+export {
+ ANALYTICS_WINDOWS,
+ COMPARABLE_WINDOWS,
+ WINDOW_DAYS,
+ WINDOW_LABELS,
+ WINDOW_SHORT_LABELS,
+ latestCompleteAnalyticsDate,
+ resolveWindowRange,
+}
 
 export type MetricStatus = "actual" | "derived" | "unavailable"
 export type MetricSource = "api" | "csv_table" | "ga4" | "hybrid"
