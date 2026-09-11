@@ -13,6 +13,7 @@ export * from "./contracts"
 export {
  projectVtSyncVideoToCanonicalRow,
  filterCanonicalRowsByWindow,
+ filterRowsByUploadRecency,
  getCanonicalRowsFromVtSync,
  summarizeCanonicalRows,
  getMetricSummaryFromVtSync,

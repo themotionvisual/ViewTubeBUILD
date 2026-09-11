@@ -141,7 +141,17 @@ export type VtSyncVideoItem = {
  definition?: string
  caption?: string
  descriptionSnippet?: string
+ /**
+  * LIFETIME per-video metrics. VT-SYNC fetches video analytics from
+  * 2000-01-01, so this map is lifetime regardless of any selected window.
+  */
  metrics?: VtSyncVideoMetric
+ /**
+  * Real per-window metrics, populated once the engine loops windows for the
+  * videos_analytics phase. Absent today; consumers must treat a missing entry
+  * as "no data for that window" rather than silently reading `metrics`.
+  */
+ metricsByWindow?: Partial<Record<VtSyncAnalyticsWindow, VtSyncVideoMetric>>
  /** Per-field source of the currently displayed metric value. */
  metricProvenance?: Record<string, "youtube_data_v3" | "youtube_analytics_v2">
 }

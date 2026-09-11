@@ -474,6 +474,17 @@ export interface CanonicalVideoRow {
  rowMatchConfidence?: CanonicalRowMatchConfidence
  sourceMode: MetricSource
  metrics: Record<CanonicalMetricKey, MetricCell>
+ /** The window `metrics` actually represents. */
+ window?: AnalyticsWindow
+ /**
+  * Where `metrics` came from relative to the requested window:
+  *  - "window_exact"     — real per-window values for the requested window
+  *  - "lifetime_fallback"— no per-window values exist yet, so these are
+  *                         LIFETIME values standing in. Never present them as
+  *                         the requested window's numbers without saying so.
+  *  - "unavailable"      — no values for this window and no usable fallback
+  */
+ windowSource?: "window_exact" | "lifetime_fallback" | "unavailable"
  originalData?: Record<string, unknown>
  supplementalData?: Record<string, unknown>
 }
