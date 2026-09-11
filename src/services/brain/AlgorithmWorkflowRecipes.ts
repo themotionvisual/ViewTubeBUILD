@@ -1,6 +1,7 @@
 import type { SuperToolId } from "../../types"
 import { createBrainSuperToolHandoff } from "./BrainSuperToolBridge"
 import type { AlgorithmRecommendation } from "./AlgorithmStrategyEngine"
+import { recordAlgorithmIntelligenceEvent, type AlgorithmEvaluationTarget } from "./AlgorithmIntelligenceEventLedger"
 
 export const ALGORITHM_COMMAND_TARGETS: Partial<Record<AlgorithmRecommendation["command"], SuperToolId>> = {
  AMPLIFY: "audience-loop-studio",
@@ -23,16 +24,68 @@ const objectiveFor = (recommendation: AlgorithmRecommendation) => {
  }
 }
 
+const evaluationTargetsFor = (recommendation: AlgorithmRecommendation): AlgorithmEvaluationTarget[] => {
+ switch (recommendation.command) {
+  case "REPACKAGE": return [
+   { metric: "ctr", direction: "increase", minimumRelativeChange: .05, windowHours: 72 },
+   { metric: "watch_quality", direction: "hold", minimumRelativeChange: .05, windowHours: 72 },
+  ]
+  case "RETARGET": return [
+   { metric: "watch_quality", direction: "increase", minimumRelativeChange: .05, windowHours: 168 },
+  ]
+  case "REINFORCE_SESSION": return [
+   { metric: "session_continuation", direction: "increase", minimumRelativeChange: .05, windowHours: 168 },
+  ]
+  case "AMPLIFY": return [
+   { metric: "qualified_views", direction: "increase", minimumRelativeChange: .05, windowHours: 72 },
+   { metric: "watch_quality", direction: "hold", minimumRelativeChange: .05, windowHours: 72 },
+  ]
+  case "CREATE_FOLLOWUP": return [
+   { metric: "followup_demand", direction: "inspect", windowHours: 168 },
+  ]
+  case "INSPECT": return [
+   { metric: "diagnosis_complete", direction: "inspect", windowHours: 24 },
+  ]
+  case "HOLD": return [
+   { metric: "watch_quality", direction: "hold", minimumRelativeChange: .05, windowHours: 48 },
+  ]
+ }
+}
+
+const checkpointAtFor = (targets: AlgorithmEvaluationTarget[]) => {
+ const hours = Math.max(...targets.map((target) => target.windowHours || 24), 24)
+ return Date.now() + hours * 60 * 60 * 1000
+}
+
 export const createAlgorithmRecommendationHandoff = async (input: {
  recommendation: AlgorithmRecommendation
  projectId?: string | null
  creatorDecisions?: Array<{ type: string; choice: string }>
 }) => {
  const { recommendation } = input
+ const evaluationTargets = evaluationTargetsFor(recommendation)
+
  if (recommendation.command === "HOLD") {
+  const event = recordAlgorithmIntelligenceEvent({
+   channelId: recommendation.channelId,
+   projectId: input.projectId,
+   videoId: typeof recommendation.payload.videoId === "string" ? recommendation.payload.videoId : null,
+   kind: "RECOMMENDATION_CREATED",
+   sourceSystem: "decision",
+   sourceId: recommendation.signalId,
+   recommendationId: recommendation.id,
+   evidenceIds: recommendation.evidenceIds,
+   confidence: recommendation.confidence,
+   title: recommendation.title,
+   summary: recommendation.rationale,
+   evaluationTargets,
+   checkpointAt: checkpointAtFor(evaluationTargets),
+   metadata: { command: recommendation.command, checkpoint: recommendation.checkpoint, hold: true },
+  })
   return {
    status: "hold" as const,
    recommendation,
+   event,
    message: recommendation.checkpoint,
   }
  }
@@ -66,10 +119,34 @@ export const createAlgorithmRecommendationHandoff = async (input: {
   confidence: recommendation.confidence,
  })
 
+ const event = recordAlgorithmIntelligenceEvent({
+  channelId: recommendation.channelId,
+  projectId: input.projectId,
+  videoId: typeof recommendation.payload.videoId === "string" ? recommendation.payload.videoId : null,
+  kind: "RECOMMENDATION_EXECUTED",
+  sourceSystem: "workflow",
+  sourceId: recommendation.signalId,
+  recommendationId: recommendation.id,
+  actionPacketId: result.packet.id,
+  workflowId: result.chain.id,
+  evidenceIds: recommendation.evidenceIds,
+  confidence: recommendation.confidence,
+  title: recommendation.title,
+  summary: recommendation.rationale,
+  evaluationTargets,
+  checkpointAt: checkpointAtFor(evaluationTargets),
+  metadata: {
+   command: recommendation.command,
+   destinationToolId,
+   checkpoint: recommendation.checkpoint,
+  },
+ })
+
  return {
   status: "handoff_created" as const,
   recommendation,
   result,
+  event,
  }
 }
 
