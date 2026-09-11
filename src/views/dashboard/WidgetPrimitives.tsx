@@ -164,21 +164,6 @@ export const WidgetScrollArea: React.FC<WidgetScrollAreaProps> = ({
   )
 }
 
-export const WidgetAlphabeticalTag: React.FC<{
-  label: string
-  tone?: WidgetBadgeTone
-  height?: WidgetBadgeHeight
-  className?: string
-}> = ({ label, tone, height = 18, className = "" }) => (
-  <WidgetBadge
-    tone={tone ?? resolveAlphabeticalSpectrumSlot(label)}
-    height={height}
-    className={`is-alphabetical ${className}`.trim()}
-  >
-    {label}
-  </WidgetBadge>
-)
-
 export const WidgetSection: React.FC<{
   edge?: "inset" | "full"
   surface?: "transparent" | "white" | "subtle"
@@ -731,3 +716,18 @@ export const WidgetBadge: React.FC<{
     </span>
   )
 }
+
+export const WidgetAlphabeticalTag: React.FC<{
+  label: string
+  tone?: WidgetBadgeTone
+  height?: WidgetBadgeHeight
+  className?: string
+}> = ({ label, tone, height = 18, className = "" }) => (
+  <WidgetBadge
+    tone={tone ?? resolveAlphabeticalSpectrumSlot(label)}
+    height={height}
+    className={`is-alphabetical ${className}`.trim()}
+  >
+    {label}
+  </WidgetBadge>
+)
