@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "viewtube.receipt.v1",
+  "missionId": "VT-MISSION-CITADEL-auth-sync-recovery",
+  "receiptId": "VT-RECEIPT-CITADEL-schema-check",
+  "worker": "viewtube-verification-chancellor",
+  "kind": "verification",
+  "changedPaths": [],
+  "checks": [{"name": "domain-contract", "state": "documented", "evidence": "Mission and work-order records represent auth, account, YouTube capability, sync and cache-hydration boundaries without changing runtime authority."}],
+  "artifacts": [],
+  "limitations": ["No auth or sync implementation has been executed under this mission yet."],
+  "status": "partial"
+}
