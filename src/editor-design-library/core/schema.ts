@@ -1,6 +1,7 @@
 export type TemplateAspectRatio = '16:9' | '9:16' | '1:1' | 'responsive';
 export type TemplateCategory = 'background' | 'pattern' | 'text' | 'graphic' | 'scene' | 'transition' | 'engagement';
 export type TemplateElementType = 'svg' | 'text' | 'image' | 'video' | 'group';
+export type TemplateRenderMode = 'svg-clip' | 'full-frame';
 export type MotionPreset =
   | 'none'
   | 'fade'
@@ -124,6 +125,18 @@ export interface TemplateResponsiveLayout {
   square?: Partial<TemplateStyleConfig>;
 }
 
+export interface TemplateClipBehavior {
+  transparentBackground: boolean;
+  movable: boolean;
+  resizable: boolean;
+  rotatable: boolean;
+  duplicable: boolean;
+  trimmable: boolean;
+  layerable: boolean;
+  preserveAspectRatio?: boolean;
+  defaultScale?: number;
+}
+
 export interface TemplateElement {
   id: string;
   type: TemplateElementType;
@@ -163,6 +176,8 @@ export interface TemplateDefinition {
   height: number;
   durationFrames?: number;
   background?: string;
+  renderMode?: TemplateRenderMode;
+  clipBehavior?: TemplateClipBehavior;
   elements: TemplateElement[];
   palette?: string[];
   responsive?: boolean;
