@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react"
 import { ChevronDown, FileVideo2, Search } from "lucide-react"
 import { WidgetSelect, WidgetSplitButton, type WidgetSelectOption } from "./WidgetPrimitives"
 import "./widgetPrimitiveVariants.css"
+import "./widgetPrimitiveExactHeights.css"
 
 export type WidgetControlHeight = 18 | 24 | 32 | 38
 
