@@ -4,6 +4,11 @@ import { buildBrainEvaluationInbox, type BrainEvaluationInboxItem } from "../../
 import { ALGORITHM_INTELLIGENCE_EVENT_CHANGED } from "../../services/brain/AlgorithmIntelligenceEventLedger"
 import { BRAIN_OUTCOME_EVENT } from "../../services/brain/BrainOutcomeLedger"
 import { reviewAlgorithmLearningCandidate } from "../../services/brain/AlgorithmLearningGovernance"
+import { captureCanonicalLifecycleObservations } from "../../services/brain/AlgorithmLifecycleObservationStore"
+import {
+ getVtSyncSnapshot,
+ subscribeToVtSyncSnapshot,
+} from "../../features/vt-sync-local/adapters/snapshot"
 
 const toneFor = (item: BrainEvaluationInboxItem) => {
  if (item.priority === "critical") return "#FF6B6B"
@@ -37,6 +42,23 @@ export const BrainEvaluationInboxPanel: React.FC<{
    window.removeEventListener(BRAIN_OUTCOME_EVENT, refresh)
   }
  }, [])
+
+ // Capture lifecycle evidence whenever the canonical VT-SYNC snapshot changes.
+ // This records the actual age of each video at snapshot time; it never backfills
+ // a lifetime/current value into an earlier T+24h or T+72h checkpoint.
+ useEffect(() => {
+  if (!channelId) return
+  const capture = () => {
+   try {
+    captureCanonicalLifecycleObservations({ channelId, snapshot: getVtSyncSnapshot() })
+    setRevision((value) => value + 1)
+   } catch (error) {
+    console.warn("[BrainEvaluationInbox] lifecycle capture unavailable:", error)
+   }
+  }
+  capture()
+  return subscribeToVtSyncSnapshot(capture)
+ }, [channelId])
 
  const inbox = useMemo(
   () => channelId ? buildBrainEvaluationInbox({ channelId, maximum: Math.max(20, maximumItems * 4) }) : null,
