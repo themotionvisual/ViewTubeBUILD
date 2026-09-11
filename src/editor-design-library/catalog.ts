@@ -6,6 +6,8 @@ import {transitionTemplates} from './templates/transitions';
 import {engagementTemplates} from './templates/engagement';
 import {editorPackTemplates} from './templates/editorPack';
 import {expansionPackTemplates} from './templates/expansionPack';
+import {motionGraphicsTemplates} from './templates/motionGraphics';
+import {verticalSceneTemplates} from './templates/verticalScenes';
 
 export const templateCatalog: TemplateDefinition[] = [
   ...textTemplates,
@@ -15,6 +17,8 @@ export const templateCatalog: TemplateDefinition[] = [
   ...engagementTemplates,
   ...editorPackTemplates,
   ...expansionPackTemplates,
+  ...motionGraphicsTemplates,
+  ...verticalSceneTemplates,
 ];
 
 export function filterTemplateCatalog(category?: TemplateCategory, query = ''): TemplateDefinition[] {
