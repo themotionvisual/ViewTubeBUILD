@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "viewtube.receipt.v1",
+  "missionId": "VT-MISSION-COMPASS-task-artifact-consolidation",
+  "receiptId": "VT-RECEIPT-COMPASS-schema-check",
+  "worker": "viewtube-verification-chancellor",
+  "kind": "verification",
+  "changedPaths": [],
+  "checks": [{"name": "domain-contract", "state": "documented", "evidence": "Mission and work-order records represent planning, artifacts, Task Index references and dossier synthesis while preserving read-only Task Index authority."}],
+  "artifacts": [],
+  "limitations": ["No canonical Task Index status or artifact mutation has been performed under this mission."],
+  "status": "partial"
+}
