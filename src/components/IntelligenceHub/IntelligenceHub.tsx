@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import {
  Brain,
  Zap,
@@ -21,6 +21,7 @@ import type {
 } from "./types"
 import type { CanonicalIntelligenceEvidenceBundle } from "../../services/analytics-canon"
 import { IntelligenceChart } from "./IntelligenceChart"
+import { EvidencePreflightPanel } from "./EvidencePreflightPanel"
 import { emitSignal } from "../../services/brain"
 import { isGeminiConfigured } from "../../services/gemini"
 import { generateUltimateChannelReport } from "./ultimateReport"
@@ -156,6 +157,14 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
   aiConfigured: isGeminiConfigured(),
   channelId: analyticsContext.channelId,
  })
+ const previewEvidence = useMemo(() => {
+  try {
+   return buildEvidence()
+  } catch {
+   return null
+  }
+ }, [buildEvidence])
+ const visibleEvidence = activeEvidence || previewEvidence
 
  const applySectionUpdate = (section: ReportSectionState, event: SectionGenerationEvent) => {
   setSectionStates((prev) => {
@@ -548,8 +557,9 @@ const [activeSectionIdx, setActiveSectionIdx] = useState(0)
     <div><span className="block text-[9px] font-black uppercase tracking-[0.14em] text-white/55">Channel</span><strong className="text-sm">{analyticsContext.channelName || analyticsContext.channelId || "Not connected"}</strong></div>
     <div><span className="block text-[9px] font-black uppercase tracking-[0.14em] text-white/55">Window</span><strong className="text-sm uppercase">{analyticsContext.selectedWindow}</strong></div>
     <div><span className="block text-[9px] font-black uppercase tracking-[0.14em] text-white/55">Snapshot</span><strong className="text-sm">{new Date(analyticsContext.capturedAt).toLocaleString()}</strong></div>
-    <div><span className="block text-[9px] font-black uppercase tracking-[0.14em] text-white/55">Dataset coverage</span><strong className="text-sm">{activeEvidence ? `${activeEvidence.coverage.available + activeEvidence.coverage.partial + activeEvidence.coverage.stale} / ${activeEvidence.coverage.total}` : "34 registered · run preflight"}</strong></div>
+    <div><span className="block text-[9px] font-black uppercase tracking-[0.14em] text-white/55">Dataset coverage</span><strong className="text-sm">{visibleEvidence ? `${visibleEvidence.coverage.available + visibleEvidence.coverage.partial + visibleEvidence.coverage.stale} / ${visibleEvidence.coverage.total}` : "Snapshot unavailable"}</strong></div>
    </div>
+   <EvidencePreflightPanel evidence={visibleEvidence} aiConfigured={isGeminiConfigured()} />
    {showFullSurface ?
     <div className="border-4 border-black bg-white rounded-3xl overflow-hidden shadow-[8px_8px_0px_0px_black] mb-12">
      <div className="bg-[#00CCFF] border-b-4 border-black px-6 py-4 flex items-center justify-between">
