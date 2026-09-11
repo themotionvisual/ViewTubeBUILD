@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "viewtube.mission.v2",
+  "missionId": "VT-MISSION-COMPASS-task-artifact-consolidation",
+  "taskIds": [],
+  "objective": "Consolidate one scattered ViewTube initiative into a source-linked mission dossier, artifact set and read-only Task Index relationship without changing canonical task status automatically.",
+  "why": "Prove the Crown contract across mission, roadmap, philosophy, historical artifacts and task/document governance.",
+  "nonGoals": ["Do not delete superseded artifacts automatically.", "Do not promote task status without verification receipts.", "Do not overwrite canonical implementation with a prototype."],
+  "domains": ["mission", "planning", "artifacts", "task-index", "documentation"],
+  "canonicalOwners": {"taskAuthority": "ViewTube Task Index", "artifactPortal": "MASTER_INDEX/docs authority", "missionSynthesis": "Grand Artifact Compiler", "productMeaning": "KING/Compass"},
+  "acceptance": ["All included artifacts carry provenance and classification.", "Canonical, recovery, prototype, reference and superseded material remain distinguishable.", "Task relationships are readable without automatic status mutation.", "The resulting dossier identifies implementation gaps, verification gaps and next executable work."],
+  "authorization": {"externalWrites": false, "deploy": false, "billingChange": false, "oauthScopeChange": false},
+  "risk": "low",
+  "rollback": "Remove only the generated Crown records/dossier; leave source artifacts and canonical Task Index unchanged.",
+  "state": "draft"
+}
