@@ -1,6 +1,7 @@
 /* ViewTube widget primitive control lattice
    Heights: 18 / 24 / 32 / 38 px.
-   18px is intentionally borderless; all larger controls use a 2px stroke. */
+   18px controls are borderless, filled, and shadowless.
+   24px, 32px, and 38px controls use a 2px stroke. */
 
 :root {
   --vt-control-h-18: 18px;
@@ -69,21 +70,58 @@
   text-transform: uppercase;
 }
 
+/* The text input deliberately carries .vt-input from Community Post.
+   These rules only enforce the shared height lattice and do not replace
+   the canonical Community Post focus treatment. */
 .widget-text-input.vt-sized-control {
   width: 100%;
   padding-inline: 9px;
-  background: #fff;
   color: var(--widget-ink, var(--widget-border, #222));
-  outline: none;
+  caret-color: var(--widget-color, #34cdea);
 }
 
-.widget-text-input.vt-sized-control:focus-visible,
+/* Match the Community Post input focus behavior exactly: widget-color
+   border, 18% widget-color tint, and no browser-native outline. */
+.dashboard-barrier .widget-text-input.vt-sized-control:focus,
+.dashboard-barrier .widget-text-input.vt-sized-control:focus-visible {
+  outline: none;
+  border-color: var(--widget-color, #000) !important;
+  background: color-mix(in srgb, var(--widget-color, #fff) 18%, white) !important;
+}
+
 .widget-select-trigger.vt-sized-control:focus-visible,
 .widget-video-select-trigger.vt-sized-control:focus-visible,
 .widget-action.vt-sized-control:focus-visible,
-.widget-split-button.vt-sized-control:focus-visible {
+.widget-split-button.vt-sized-control:focus-visible,
+.vt-button.vt-sized-control:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--widget-color, #34cdea) 72%, white);
   outline-offset: 2px;
+}
+
+/* 18px is a true micro-control style, not a strokeless 24px control. */
+.widget-action.is-height-18,
+.widget-split-button.is-height-18,
+.widget-select-trigger.is-height-18,
+.widget-text-input.is-height-18,
+.widget-video-select-trigger.is-height-18,
+.vt-button.is-height-18,
+.widget-progress-bar.is-height-18 {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 48%, white) !important;
+  color: var(--widget-ink, var(--widget-border, #222));
+}
+
+.widget-text-input.is-height-18::placeholder {
+  color: color-mix(in srgb, var(--widget-ink, #222) 64%, transparent);
+  opacity: 1;
+}
+
+.dashboard-barrier .widget-text-input.is-height-18:focus,
+.dashboard-barrier .widget-text-input.is-height-18:focus-visible {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 68%, white) !important;
 }
 
 /* Community Post-derived split-left anatomy: a dedicated left action/icon bay. */
@@ -117,8 +155,17 @@
   text-overflow: ellipsis;
 }
 
+.widget-split-button.is-left-split.is-height-18 {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 42%, white) !important;
+}
+
 .widget-split-button.is-left-split.is-height-18 .widget-split-button-icon {
   border-right-width: 0;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 78%, white);
+}
+
+.widget-split-button.is-left-split.is-height-18 .widget-split-button-label {
+  padding-inline: 6px;
 }
 
 /* Video Manager-derived video selector. */
@@ -150,6 +197,10 @@
   border-right: var(--vt-primitive-stroke, 2px) solid var(--widget-border, var(--widget-ink, currentColor));
 }
 
+.widget-video-select-trigger.is-height-18 .widget-video-select-trigger-icon {
+  border-right: 0;
+}
+
 .widget-video-select.is-open .widget-video-select-trigger-chevron {
   transform: rotate(180deg);
 }
@@ -166,12 +217,22 @@
   padding-inline: 7px;
 }
 
+.widget-video-select-trigger.is-height-18 .widget-video-select-trigger-copy {
+  gap: 4px;
+  padding-inline: 5px;
+}
+
 .widget-video-select-trigger-copy img {
   height: calc(var(--vt-primitive-height, 32px) - 8px);
   aspect-ratio: 16 / 9;
   object-fit: cover;
   border-radius: 3px;
   flex: none;
+}
+
+.widget-video-select-trigger.is-height-18 .widget-video-select-trigger-copy img {
+  height: 14px;
+  border-radius: 2px;
 }
 
 .widget-video-select-trigger-copy span {
@@ -278,6 +339,10 @@
   transition: width 220ms ease;
 }
 
+.widget-progress-bar.is-height-18 .widget-progress-bar-fill {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 82%, white);
+}
+
 .widget-progress-bar-copy {
   position: relative;
   z-index: 1;
@@ -293,12 +358,84 @@
   letter-spacing: .02em;
 }
 
+.widget-progress-bar.is-height-18 .widget-progress-bar-copy {
+  padding-inline: 5px;
+  gap: 5px;
+}
+
 .widget-progress-bar-copy span,
 .widget-progress-bar-copy strong {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* UI Reference Library comparison grids. Component families own rows;
+   size variants own cells, so mobile never becomes a mixed control stack. */
+.widget-reference-family {
+  display: grid;
+  gap: 7px;
+  padding-top: 2px;
+}
+
+.widget-reference-family + .widget-reference-family {
+  border-top: 1px solid color-mix(in srgb, var(--widget-color, #34cdea) 28%, transparent);
+  padding-top: 10px;
+}
+
+.widget-reference-family-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 9px;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.widget-reference-family-title small {
+  font-size: 8px;
+  font-weight: 900;
+  opacity: .5;
+}
+
+.widget-reference-variants {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  align-items: end;
+}
+
+.widget-reference-variant {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.widget-reference-variant > small {
+  font-size: 8px;
+  font-weight: 1000;
+  line-height: 1;
+  text-transform: uppercase;
+  opacity: .55;
+}
+
+.widget-reference-variant > *:not(small) {
+  min-width: 0;
+}
+
+@container vt-widget (max-width: 520px) {
+  .widget-reference-variants {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container vt-widget (max-width: 360px) {
+  .widget-reference-variants {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
