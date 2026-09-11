@@ -6,7 +6,11 @@ import type {
 import type { AIBrainContextSnapshot } from "../aiBrainCommandInterface"
 import { buildBrainTaskInstruction, resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
 import { buildRelevantNicheKnowledgeContext } from "./NicheKnowledge"
-import { readBrainUserControls } from "./BrainUserControls"
+import {
+ getActiveBrainControlChannel,
+ readBrainUserControls,
+} from "./BrainUserControls"
+import { buildBrainAlgorithmEvaluationContext } from "./BrainAlgorithmIntelligenceContext"
 
 const clip = (value: string, maximum: number): string => value.slice(0, Math.max(0, maximum))
 
@@ -21,6 +25,7 @@ export const buildBrainContextPack = (input: {
  maximumCharacters?: number
 }): { systemInstruction: string; budget: BrainContextBudget } => {
  const controls = readBrainUserControls()
+ const taskProfile = resolveBrainTaskProfile(input.userText)
  const maximumCharacters = input.maximumCharacters || 24_000
  const omittedSections: string[] = []
  const system = clip(input.systemPrompt, 11_000)
@@ -60,15 +65,29 @@ export const buildBrainContextPack = (input: {
   : "Analytics evidence access is disabled by the creator in Brain User Controls. Do not infer private channel metrics or quote stored analytics values."
  if (!controls.allowAnalytics) omittedSections.push("analytics_access_disabled")
 
+ let resolvedAlgorithmIntelligence = input.algorithmIntelligence || ""
+ if (!resolvedAlgorithmIntelligence && controls.allowAnalytics && taskProfile.id === "evaluation") {
+  const channelId = getActiveBrainControlChannel()
+  if (channelId) {
+   try {
+    resolvedAlgorithmIntelligence = buildBrainAlgorithmEvaluationContext(channelId).context
+   } catch {
+    omittedSections.push("algorithm_evaluation_context_unavailable")
+   }
+  } else {
+   omittedSections.push("algorithm_evaluation_channel_unresolved")
+  }
+ }
+
  const algorithmIntelligence = controls.allowAnalytics
-  ? clip(input.algorithmIntelligence || "", 3200)
+  ? clip(resolvedAlgorithmIntelligence, 6000)
   : ""
- if (input.algorithmIntelligence && !controls.allowAnalytics) omittedSections.push("algorithm_intelligence_analytics_disabled")
- if (input.algorithmIntelligence && algorithmIntelligence.length < input.algorithmIntelligence.length) omittedSections.push("algorithm_intelligence_clipped")
+ if (resolvedAlgorithmIntelligence && !controls.allowAnalytics) omittedSections.push("algorithm_intelligence_analytics_disabled")
+ if (resolvedAlgorithmIntelligence && algorithmIntelligence.length < resolvedAlgorithmIntelligence.length) omittedSections.push("algorithm_intelligence_clipped")
 
  const knowledge = clip(buildRelevantNicheKnowledgeContext(input.nicheKnowledge || null, input.userText, 2200), 2200)
  const research = clip(input.currentResearch || "", 1800)
- const taskInstruction = buildBrainTaskInstruction(resolveBrainTaskProfile(input.userText))
+ const taskInstruction = buildBrainTaskInstruction(taskProfile)
  const controlInstruction = [
   "\nCREATOR CONTROL POLICY",
   `Brain enabled: ${controls.enabled ? "yes" : "no"}`,
@@ -76,8 +95,9 @@ export const buildBrainContextPack = (input: {
   `Analytics evidence: ${controls.allowAnalytics ? "allowed" : "disabled"}`,
   `Learning from interactions: ${controls.learnFromInteractions ? "allowed" : "disabled"}`,
   "Never work around a disabled creator permission by reconstructing private data from memory.",
-  "Treat anomaly observations, opportunity signals, priming plans, and algorithm recommendations as distinct evidence classes.",
+  "Treat anomaly observations, opportunity signals, priming plans, algorithm recommendations, executions, and measured outcomes as distinct evidence classes.",
   "Never describe a recommendation or priming step as already executed unless the workflow outcome says it was completed.",
+  "Never describe an execution as successful unless a measured outcome supports that conclusion.",
  ].join("\n")
 
  const sections = [
