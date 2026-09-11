@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "viewtube.receipt.v1",
+  "missionId": "VT-MISSION-OBSERVATORY-dashboard-evidence",
+  "receiptId": "VT-RECEIPT-OBSERVATORY-schema-check",
+  "worker": "viewtube-verification-chancellor",
+  "kind": "verification",
+  "changedPaths": [],
+  "checks": [{"name": "domain-contract", "state": "documented", "evidence": "Mission and work-order records represent dashboard, analytics, UI and provenance boundaries without adding runtime code."}],
+  "artifacts": [],
+  "limitations": ["No dashboard implementation has been executed under this mission yet."],
+  "status": "partial"
+}

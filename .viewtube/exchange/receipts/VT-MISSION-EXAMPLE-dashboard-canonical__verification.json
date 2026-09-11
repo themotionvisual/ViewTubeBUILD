@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "viewtube.receipt.v1",
+  "missionId": "VT-MISSION-EXAMPLE-dashboard-canonical",
+  "receiptId": "VT-RECEIPT-EXAMPLE-dashboard-canonical-verification",
+  "worker": "viewtube-verification-chancellor",
+  "kind": "verification",
+  "changed": [],
+  "checks": [
+    {
+      "name": "mission-contract-example",
+      "state": "documented",
+      "evidence": "Example-only receipt. No production implementation is claimed."
+    }
+  ],
+  "observed": [
+    "The mission and work order demonstrate separate desired-state and executable-state records."
+  ],
+  "artifacts": [
+    ".viewtube/exchange/missions/VT-MISSION-EXAMPLE-dashboard-canonical.json",
+    ".viewtube/exchange/work-orders/VT-MISSION-EXAMPLE-dashboard-canonical__emperor.json"
+  ],
+  "limitations": [
+    "This is a protocol fixture, not evidence that a dashboard change was executed.",
+    "No live preview or production receipt is attached."
+  ],
+  "status": "partial"
+}

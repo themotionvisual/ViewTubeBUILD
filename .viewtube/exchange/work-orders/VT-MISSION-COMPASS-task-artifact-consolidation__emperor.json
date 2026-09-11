@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "viewtube.work-order.v1",
+  "missionId": "VT-MISSION-COMPASS-task-artifact-consolidation",
+  "executionId": "VT-EXEC-COMPASS-task-artifact-consolidation-01",
+  "checkout": "themotionvisual/ViewTubeBUILD",
+  "baseRef": "main",
+  "baseSha": "4a103111b67ea8a5f4614925cbb391c662b31084",
+  "headRef": "codex/feat/crown-integration-system",
+  "writers": [{"role": "viewtube-task-artifact-bridge", "paths": [".viewtube/exchange/**", "docs/architecture/**", "scripts/report-crown-links.mjs"]}],
+  "reviewers": ["viewtube-prince-compass", "viewtube-verification-chancellor"],
+  "orderedSteps": ["Collect source-linked plans, artifacts and task references.", "Classify canonical, recovery, prototype, reference and superseded material.", "Generate a read-only mission dossier and link report.", "Do not mutate Task Index status or source artifacts.", "Record consolidation gaps and verification needs."],
+  "testsRequired": ["Crown exchange validation", "read-only link report"],
+  "releaseRequired": false,
+  "status": "planned"
+}

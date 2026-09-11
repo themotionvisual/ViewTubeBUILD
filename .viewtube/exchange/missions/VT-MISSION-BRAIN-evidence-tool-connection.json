@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "viewtube.mission.v2",
+  "missionId": "VT-MISSION-BRAIN-evidence-tool-connection",
+  "taskIds": [],
+  "objective": "Connect one Brain recommendation flow to bounded creator context, explicit evidence and an inspectable tool proposal without claiming execution before user approval.",
+  "why": "Prove the Crown contract across Brain capability routing, evidence, memory, tool adapters and user control.",
+  "nonGoals": ["Do not create a parallel memory store.", "Do not infer unsupported creator facts.", "Do not execute external writes from a recommendation record."],
+  "domains": ["brain", "ai", "evidence", "tool-connection"],
+  "canonicalOwners": {"brainCapabilities": "src/services/brain/BrainCapabilityRegistry.ts", "userControls": "src/components/brain/BrainUserControlPanel.tsx", "analyticsEvidence": "VT-SYNC/analytics-canon", "toolExecution": "current bounded tool adapters"},
+  "acceptance": ["Every surfaced recommendation can expose supporting evidence and material limitations.", "Unknown or unavailable data remains unknown rather than substituted.", "Tool proposals remain separate from actual execution and carry authorization requirements.", "Memory or learned preference updates remain revisable and source-linked."],
+  "authorization": {"externalWrites": false, "deploy": false, "billingChange": false, "oauthScopeChange": false},
+  "risk": "medium",
+  "rollback": "Revert only mission-scoped Brain/tool wiring while preserving current capability, evidence and user-control owners.",
+  "state": "draft"
+}

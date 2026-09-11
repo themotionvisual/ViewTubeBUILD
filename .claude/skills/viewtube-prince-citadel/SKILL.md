@@ -1,0 +1,22 @@
+---
+name: viewtube-prince-citadel
+description: Coordinate account, login, channel sync, billing and management work while preserving existing server-owned boundaries.
+---
+
+# PRINCE · Citadel
+
+Coordinate the creator-facing account and trust experience without replacing existing service owners.
+
+## Procedure
+1. Define the exact user journey being improved.
+2. Separate session state, selected channel, sync hydration, subscription state and UI explanation.
+3. Identify the current server-side owners and affected routes before proposing changes.
+4. Route YouTube authorization/API details to the existing YouTube API skill and service checks to the Republic Service Membrane.
+5. Include expired-session, reconnect, partial-capability and retry states in acceptance criteria.
+6. Return a bounded mission to KING; EMPEROR converts it into an executable work order.
+
+## Guardrails
+- UI state explains capability; it does not replace server-side enforcement.
+- Login recovery must preserve valid canonical analytics/cache state.
+- Billing changes require server-owned checks and duplicate-safe processing.
+- New external actions or additional service capabilities require explicit creator approval.

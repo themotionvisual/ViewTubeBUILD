@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "viewtube.conflict.v1",
+  "conflictId": "VT-CONFLICT-OBSERVATORY-main-drift",
+  "missionId": "VT-MISSION-OBSERVATORY-dashboard-evidence",
+  "level": "L2",
+  "parties": ["viewtube-prince-observatory", "EMPEROR"],
+  "question": "Should dashboard execution proceed while the Crown branch is behind current main by four commits?",
+  "desiredState": "Use current canonical dashboard owners and guardrails for all Observatory work.",
+  "executableConstraint": "Main advanced to ece51db after PR #95, adding dashboard baseline guardrails, lazy widget extraction and a computed-style snapshot harness. The Crown branch still has merge-base 4a103111.",
+  "recommendedResolution": "Do not execute dashboard runtime changes from the stale base. Refresh the branch from current main first, then re-resolve owners and tests before any Observatory implementation.",
+  "state": "open"
+}

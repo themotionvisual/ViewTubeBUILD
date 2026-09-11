@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "viewtube.mission.v2",
+  "missionId": "VT-MISSION-CITADEL-auth-sync-recovery",
+  "taskIds": [],
+  "objective": "Recover sign-in, channel ownership, reconnect and analytics hydration as one explicit Citadel mission without introducing parallel auth state or bypass paths.",
+  "why": "Prove the Crown contract across server-authoritative identity, YouTube capability, sync and cached analytics boundaries.",
+  "nonGoals": ["Do not broaden OAuth scopes.", "Do not add client-only authorization.", "Do not replace valid canonical analytics during reconnect."],
+  "domains": ["auth", "account", "sync", "youtube-api"],
+  "canonicalOwners": {"identity": "server auth/account owners", "youtubeTransport": "canonical YouTube transports", "analytics": "VT-SYNC", "accountUI": "current account surfaces"},
+  "acceptance": ["Fresh login, return session, logout, expired session and reconnect have distinct observable states.", "One selected channel and one sync writer exist per authorized account scope.", "Valid cached analytics hydrate before refresh and are not overwritten by empty bootstrap data.", "Denied, revoked and insufficient-scope states remain recoverable and explicit."],
+  "authorization": {"externalWrites": false, "deploy": false, "billingChange": false, "oauthScopeChange": false},
+  "risk": "high",
+  "rollback": "Revert mission-scoped auth/sync edits and preserve the last verified server-session and VT-SYNC ownership paths.",
+  "state": "draft"
+}

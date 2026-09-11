@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "viewtube.mission.v2",
+  "missionId": "VT-MISSION-EXAMPLE-dashboard-canonical",
+  "taskIds": [],
+  "objective": "Consolidate a dashboard widget onto canonical VT-SYNC/analytics-canon evidence without changing metric meaning or persisted widget identity.",
+  "why": "Demonstrate a complete Crown handoff using current ViewTube dashboard and analytics ownership rules.",
+  "nonGoals": [
+    "Do not create a second analytics cache.",
+    "Do not rename public widget IDs.",
+    "Do not change OAuth scopes or billing rules."
+  ],
+  "domains": ["dashboard", "analytics", "ui"],
+  "canonicalOwners": {
+    "rawAnalytics": "VT-SYNC",
+    "analyticsConsumer": "analytics-canon",
+    "dashboard": "src/views/dashboard"
+  },
+  "artifacts": [],
+  "filesExpected": [
+    "src/views/dashboard/WidgetRegistry.ts",
+    "src/views/dashboard/WidgetRenderer.tsx"
+  ],
+  "acceptance": [
+    "The widget reads the same canonical values and provenance as equivalent tables and Brain evidence.",
+    "Persisted widget identity remains stable.",
+    "Loading, empty, blocked, stale and error states remain representable.",
+    "Relevant dashboard contract tests and production build pass."
+  ],
+  "authorization": {
+    "externalWrites": false,
+    "deploy": false,
+    "billingChange": false,
+    "oauthScopeChange": false
+  },
+  "risk": "medium",
+  "rollback": "Revert only the mission-scoped feature branch commit(s); preserve prior dashboard layout schema and canonical data adapters.",
+  "state": "draft"
+}

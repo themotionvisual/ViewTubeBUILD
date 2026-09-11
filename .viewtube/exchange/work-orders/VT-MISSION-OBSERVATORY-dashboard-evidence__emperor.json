@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "viewtube.work-order.v1",
+  "missionId": "VT-MISSION-OBSERVATORY-dashboard-evidence",
+  "executionId": "VT-EXEC-OBSERVATORY-dashboard-evidence-01",
+  "checkout": "themotionvisual/ViewTubeBUILD",
+  "baseRef": "main",
+  "baseSha": "4a103111b67ea8a5f4614925cbb391c662b31084",
+  "headRef": "codex/feat/crown-integration-system",
+  "writers": [{"role": "viewtube-widget-dashboard", "paths": ["src/views/dashboard/**"]}],
+  "reviewers": ["viewtube-prince-observatory", "viewtube-verification-chancellor"],
+  "orderedSteps": ["Inspect current dashboard and analytics consumers.", "Compare metric, window, grain and provenance contracts.", "Prefer reuse or consolidation over a new adapter.", "Run the existing dashboard contract suite and production build.", "Record a verification receipt."],
+  "testsRequired": ["dashboard contract suite", "production build"],
+  "releaseRequired": false,
+  "status": "planned"
+}

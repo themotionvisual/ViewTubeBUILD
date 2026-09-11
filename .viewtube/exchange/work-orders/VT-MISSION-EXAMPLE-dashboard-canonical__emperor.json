@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "viewtube.work-order.v1",
+  "missionId": "VT-MISSION-EXAMPLE-dashboard-canonical",
+  "executionId": "VT-EXEC-EXAMPLE-dashboard-canonical-01",
+  "checkout": "themotionvisual/ViewTubeBUILD",
+  "baseRef": "main",
+  "baseSha": "4a103111b67ea8a5f4614925cbb391c662b31084",
+  "headRef": "codex/feat/crown-integration-system",
+  "writers": [
+    {
+      "role": "viewtube-widget-dashboard",
+      "paths": ["src/views/dashboard/**"]
+    }
+  ],
+  "reviewers": [
+    "viewtube-prince-observatory",
+    "viewtube-verification-chancellor"
+  ],
+  "orderedSteps": [
+    "Inspect current widget registry, renderer, shell, primitives and canonical analytics consumer.",
+    "Identify whether the requested behavior can be achieved by reuse or consolidation before adding code.",
+    "Make the smallest bounded change on a feature branch.",
+    "Run dashboard contract tests and production build.",
+    "Record a VT_RECEIPT with changed paths, test evidence, limitations and rollback."
+  ],
+  "testsRequired": [
+    "npx vitest run src/views/dashboard/__tests__ src/views/dashboard/useDashboardData.vtSync.test.ts",
+    "npm run build"
+  ],
+  "releaseRequired": false,
+  "status": "planned"
+}

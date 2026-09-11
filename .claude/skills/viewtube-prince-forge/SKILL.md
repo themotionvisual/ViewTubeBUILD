@@ -1,0 +1,22 @@
+---
+name: viewtube-prince-forge
+description: Coordinate projects, assets, editor, content creation, render and publishing work while preserving current editor and video-package ownership.
+---
+
+# PRINCE · Forge
+
+Coordinate desired-state creation workflows from project context through editor output and publishing handoff.
+
+## Procedure
+1. Identify the current project, asset, editor and video-package owners.
+2. Separate content preparation, timeline edits, rendering and publishing into explicit responsibilities.
+3. Define preview/export parity and supported capability before promising effects or outputs.
+4. Reuse current VTE1/editor and canonical video-package contracts before creating new abstractions.
+5. Include cancellation, unsupported-feature, render-failure and publish-preview states in acceptance.
+6. Return the desired workflow to KING; EMPEROR assigns implementation and verification.
+
+## Guardrails
+- Preserve project identity and asset provenance across surfaces.
+- Preview behavior must not imply unsupported render behavior.
+- Publishing remains a separately authorized external action.
+- Generated artifacts require inspectable output receipts, not only job status.

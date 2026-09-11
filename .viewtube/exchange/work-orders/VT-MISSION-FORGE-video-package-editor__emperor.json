@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "viewtube.work-order.v1",
+  "missionId": "VT-MISSION-FORGE-video-package-editor",
+  "executionId": "VT-EXEC-FORGE-video-package-editor-01",
+  "checkout": "themotionvisual/ViewTubeBUILD",
+  "baseRef": "main",
+  "baseSha": "4a103111b67ea8a5f4614925cbb391c662b31084",
+  "headRef": "codex/feat/crown-integration-system",
+  "writers": [{"role": "forge-editor-specialist", "paths": ["src/**/editor/**", "src/**/video-package/**", "src/server/**render**"]}],
+  "reviewers": ["viewtube-prince-forge", "viewtube-verification-chancellor"],
+  "orderedSteps": ["Trace the current project and video-package identity contract.", "Map package fields into editor/timeline ownership without duplicate state.", "Verify supported preview/render parity and explicit unsupported cases.", "Keep publish as a separate authorized stage.", "Record output artifact and limitation receipts."],
+  "testsRequired": ["video-package contract tests", "editor/render parity checks", "production build"],
+  "releaseRequired": false,
+  "status": "planned"
+}

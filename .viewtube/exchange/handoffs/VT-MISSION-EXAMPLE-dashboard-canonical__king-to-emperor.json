@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "viewtube.handoff.v1",
+  "handoffId": "VT-HANDOFF-EXAMPLE-dashboard-king-emperor",
+  "missionId": "VT-MISSION-EXAMPLE-dashboard-canonical",
+  "from": "viewtube-king",
+  "to": "viewtube-emperor",
+  "scope": "Translate the approved product intent into a bounded execution plan while preserving current analytics ownership.",
+  "inputs": [
+    ".viewtube/exchange/missions/VT-MISSION-EXAMPLE-dashboard-canonical.json",
+    ".viewtube/exchange/decisions/VT-MISSION-EXAMPLE-dashboard-canonical__owner-decision.json"
+  ],
+  "requiredOutputs": [
+    "Work order tied to the real checkout and base SHA",
+    "Non-overlapping writer ownership",
+    "Verification requirements and rollback"
+  ],
+  "state": "accepted"
+}
