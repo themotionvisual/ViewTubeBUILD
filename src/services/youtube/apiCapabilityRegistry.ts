@@ -136,7 +136,12 @@ export const API_CAPABILITY_REGISTRY: ApiCapabilityRegistry = {
    sampleAction: "reportTypes.list/jobs.list/jobs.create/reports.list",
    endpointPattern: "/v1/jobs",
    requiredScopes: [YOUTUBE_SCOPES.ANALYTICS_READONLY],
-   supportedAccountContexts: ACCOUNT_ANY,
+   // Bulk reporting jobs stay content-owner only. 8fa2c520 switched this to
+   // ACCOUNT_ANY while stabilizing the auth toolchain, which left ACCOUNT_OWNER
+   // with no remaining use and broke the documented contract: creators are meant
+   // to see data-transparency-center as blocked, and performance-hub as partial
+   // rather than full.
+   supportedAccountContexts: ACCOUNT_OWNER,
    tools: ["performance-hub", "analytics-sync", "data-transparency-center"],
    fallbackBehavior: "auth_required when analytics scope is missing",
    enabled: true,

@@ -16,14 +16,27 @@ vi.mock("../auth/authSession", () => ({
  getValidAccessToken: async () => mocks.token,
 }))
 
-import { markUnifiedAccountServerUnavailable } from "../account/accountCoordinator"
-import { authorizedGoogleRead } from "./googleReadTransport"
+import type { Mock } from "vitest"
+
+// googleReadTransport keeps its circuit breaker in module scope
+// (accountProxyDisabledForSession). A static import would share that flag
+// across every test in this file, so the first test that trips the breaker
+// would silently send the rest straight down the direct path — which is what
+// made the scope-failure test below pass alone and fail in sequence. Reset the
+// module registry and re-import per test so each one starts with the breaker
+// closed.
+let authorizedGoogleRead: typeof import("./googleReadTransport").authorizedGoogleRead
+let markUnifiedAccountServerUnavailable: Mock
 
 describe("authorizedGoogleRead", () => {
- beforeEach(() => {
+ beforeEach(async () => {
   mocks.unified = false
   mocks.token = "legacy-token"
   vi.restoreAllMocks()
+  vi.resetModules()
+  const coordinator = await import("../account/accountCoordinator")
+  markUnifiedAccountServerUnavailable = coordinator.markUnifiedAccountServerUnavailable as Mock
+  ;({ authorizedGoogleRead } = await import("./googleReadTransport"))
  })
 
  it("uses the HttpOnly account proxy without exposing a browser token", async () => {
@@ -61,7 +74,10 @@ describe("authorizedGoogleRead", () => {
     headers: expect.objectContaining({ Authorization: "Bearer legacy-token" }),
    }),
   )
-  expect(markUnifiedAccountServerUnavailable).toHaveBeenCalled()
+  // The proxy breaker is deliberately local to this transport. Flipping the
+  // global unified-account flag here would change auth mode for the whole app,
+  // which can turn a fallback Google 401 into a full ViewTube logout.
+  expect(markUnifiedAccountServerUnavailable).not.toHaveBeenCalled()
  })
 
  it("recovers from proxy origin rejection through the shared direct transport", async () => {
@@ -88,7 +104,8 @@ describe("authorizedGoogleRead", () => {
     headers: expect.objectContaining({ Authorization: "Bearer legacy-token" }),
    }),
   )
-  expect(markUnifiedAccountServerUnavailable).toHaveBeenCalled()
+  // Same as above: fall back locally, leave global auth mode alone.
+  expect(markUnifiedAccountServerUnavailable).not.toHaveBeenCalled()
  })
 
  it("does not bypass the server for a genuine Google scope failure", async () => {
