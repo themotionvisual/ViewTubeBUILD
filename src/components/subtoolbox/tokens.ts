@@ -33,7 +33,9 @@ export const SUBTOOLBOX_TOKENS = {
   controlHeight: {
     compact: 32,
     standard: 48,
-    action: 60,
+    // Level-1/module actions align exactly with a collapsed standard
+    // SubToolbox. They must never be taller than the module they belong to.
+    action: 56,
   },
   typography: {
     label: 10,
