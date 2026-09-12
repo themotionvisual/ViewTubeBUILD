@@ -7,13 +7,13 @@ export const EDITOR_FRONTEND_MODES = [
     id: 'current-main' as const,
     label: 'Current Main',
     shortLabel: 'CURRENT',
-    description: 'Current ViewTube editor host. Uses the responsive mobile/desktop shell from main.',
+    description: 'Current ViewTube editor from main, including its responsive mobile/desktop host.',
   },
   {
     id: 'linked-classic' as const,
     label: 'Linked Branch',
     shortLabel: 'LINKED',
-    description: 'Classic VT_E1 host used by the linked Vercel editor deployment. Keeps the same current editor engine and project state.',
+    description: 'Exact VT_E1 frontend snapshot from the linked Vercel deployment commit 763cc59b.',
   },
 ] as const;
 
