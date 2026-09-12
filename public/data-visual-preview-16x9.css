@@ -1,37 +1,56 @@
-/* Scoped 16:9 preview-canvas contract for selected ViewTube data visuals.
-   The module/toolbox shell remains unconstrained; only the chart preview body
-   receives the ratio. JS marks selected visual cards with data-vt-preview-16x9. */
-[data-vt-preview-16x9] [data-vt-chart-body] {
+/* Strict 16:9 preview-canvas contract for selected ViewTube data visuals.
+   The outer toolbox remains responsive; the actual preview canvas does not
+   become portrait on a narrow viewport. */
+[data-vt-preview-16x9] [data-vt-chart-body],
+[data-vt-preview-canvas-16x9] {
+  box-sizing: border-box !important;
   width: 100% !important;
   height: auto !important;
   min-height: 0 !important;
   max-height: none !important;
   aspect-ratio: 16 / 9 !important;
   overflow: hidden !important;
+  contain: layout paint !important;
 }
 
-[data-vt-preview-16x9] [data-vt-chart-body] > * {
+[data-vt-preview-16x9] [data-vt-chart-body] > *,
+[data-vt-preview-canvas-16x9] > * {
+  box-sizing: border-box !important;
   width: 100% !important;
   height: 100% !important;
+  min-width: 0 !important;
   min-height: 0 !important;
+  max-width: 100% !important;
   max-height: 100% !important;
+  overflow: hidden !important;
 }
 
 [data-vt-preview-16x9] [data-vt-chart-body] .recharts-responsive-container,
 [data-vt-preview-16x9] [data-vt-chart-body] .recharts-wrapper,
 [data-vt-preview-16x9] [data-vt-chart-body] svg,
-[data-vt-preview-16x9] [data-vt-chart-body] canvas {
+[data-vt-preview-16x9] [data-vt-chart-body] canvas,
+[data-vt-preview-canvas-16x9] .recharts-responsive-container,
+[data-vt-preview-canvas-16x9] .recharts-wrapper,
+[data-vt-preview-canvas-16x9] svg,
+[data-vt-preview-canvas-16x9] canvas {
   max-width: 100% !important;
   max-height: 100% !important;
 }
 
-/* Compact narrow canvases without changing the 16:9 geometry. */
+/* The ratio is invariant on phones in portrait and landscape. Internal visual
+   content must compress/scroll inside the canvas instead of increasing height. */
 @media (max-width: 767px) {
-  [data-vt-preview-16x9] [data-vt-chart-body] {
+  [data-vt-preview-16x9] [data-vt-chart-body],
+  [data-vt-preview-canvas-16x9] {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     aspect-ratio: 16 / 9 !important;
   }
 
-  [data-vt-preview-16x9] [data-vt-chart-body] [class*="min-h-["] {
+  [data-vt-preview-16x9] [data-vt-chart-body] [class*="min-h-["],
+  [data-vt-preview-canvas-16x9] [class*="min-h-["] {
     min-height: 0 !important;
   }
 }
