@@ -13,6 +13,8 @@ import { CommunityPostGenerator } from "../components/CommunityPostGenerator"
 import { CommentResponder } from "../components/CommentResponder"
 import { EndScreenTool } from "../components/EndScreenTool"
 
+const ToolboxUIReferenceLibrary = React.lazy(() => import("../components/ToolboxUIReferenceLibrary"))
+
 const StudioHub: React.FC = () => {
  const [states, setStates] = useState({
   posts: false,
@@ -36,6 +38,10 @@ const StudioHub: React.FC = () => {
 
    {/* Accordion Modules */}
    <div className="space-y-6">
+    <React.Suspense fallback={null}>
+     <ToolboxUIReferenceLibrary collapsible isOpenInitial={false} paletteIndex={7} />
+    </React.Suspense>
+
     {/* Natively Supported Tools */}
     <VideoManager collapsible isOpenInitial={true} paletteIndex={0} />
     <VideoPublisher collapsible isOpenInitial={false} paletteIndex={1} />
