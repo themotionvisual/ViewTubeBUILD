@@ -1,7 +1,7 @@
 import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
-import { SubToolbox } from "./Toolbox"
+import { SubToolbox, ToolboxScaffold } from "./Toolbox"
 
 const renderShell = (open: boolean) =>
  renderToStaticMarkup(
@@ -21,14 +21,17 @@ describe("SubToolbox", () => {
   const html = renderShell(false)
 
   expect(html).toContain('data-vt-subtoolbox="true"')
+  expect(html).toContain('data-vt-toolbox-level="sub"')
   expect(html).toContain('data-state="closed"')
-  expect(html).toContain("box-shadow:6px 6px 0px 0px rgba(255, 170, 51, 0.5)")
+  expect(html).toContain("--vt-subtoolbox-shell-shadow:rgba(255, 170, 51, 0.5)")
+  expect(html).toContain("box-shadow:var(--vt-subtoolbox-shadow-offset, 6px)")
+  expect(html).not.toContain("box-shadow:4px 4px 0 0 currentColor")
  })
 
  it("clips colored fills to the reduced 12px subtoolbox frame", () => {
   const html = renderShell(true)
 
-  expect(html).toContain("border-radius:12px")
+  expect(html).toContain("border-radius:var(--vt-subtoolbox-radius, 12px)")
   expect(html).toContain("overflow-hidden")
   expect(html).toContain("isolation:isolate")
  })
@@ -38,8 +41,39 @@ describe("SubToolbox", () => {
   const open = renderShell(true)
 
   expect(closed).toContain("border-bottom:0 solid transparent")
-  expect(open).toContain("border-bottom:4px solid black")
+  expect(open).toContain("border-bottom:var(--vt-subtoolbox-stroke, 4px) solid black")
   expect(closed).not.toContain("margin-top:-4px")
   expect(open).not.toContain("margin-top:-4px")
+ })
+
+ it("is collapsible by default and keeps the canonical arrow", () => {
+  const html = renderToStaticMarkup(
+   <SubToolbox title="Default" icon={<span>I</span>}>
+    <div>Body</div>
+   </SubToolbox>,
+  )
+
+  expect(html).toContain("cursor-pointer")
+  expect(html).toContain("lucide-expand")
+ })
+})
+
+describe("ToolboxScaffold", () => {
+ it("does not double the bottom stroke when collapsed", () => {
+  const html = renderToStaticMarkup(
+   <ToolboxScaffold
+    title="Thumbnail"
+    headerColor="bg-[#FFAA33]"
+    icon={<span>I</span>}
+    collapsible
+    isOpen={false}
+   >
+    <div>Body</div>
+   </ToolboxScaffold>,
+  )
+
+  expect(html).toContain('data-vt-toolbox-level="main"')
+  expect(html).toContain("border-bottom:0 solid transparent")
+  expect(html).not.toContain("margin-top:-5px")
  })
 })

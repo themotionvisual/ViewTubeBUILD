@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useBrain } from '../context/useBrain';
 import { CustomIcon } from './CustomIcon';
-import { AccordionContainer } from './Toolbox';
+import { SubToolbox, ToolboxScaffold } from './Toolbox';
 import {
     Calendar,
     Plus,
@@ -255,19 +255,8 @@ export const ProjectStudio: React.FC = () => {
         </button>
     );
 
-    return (
-        <div className="w-full max-w-[1400px] mx-auto mb-40 bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] transition-all duration-700 ease-in-out flex flex-col overflow-hidden">
-
-            {/* 1. Header Strip */}
-            <header className={`bg-[#ff3399] h-[80px] flex items-center justify-between px-0 overflow-hidden transition-all duration-700 ${isMainToolOpen ? 'border-b-[6px] border-black' : ''}`}>
-                <div onClick={() => setIsMainToolOpen(!isMainToolOpen)} className="flex items-center h-full cursor-pointer">
-                    <div className="bg-[#ccff00] h-full w-[80px] flex items-center justify-center border-r-[6px] border-black flex-shrink-0">
-                        <CustomIcon name="analytics" size={48} className="text-black" />
-                    </div>
-                    <h1 className="text-[50px] font-[1000] uppercase tracking-tighter text-black pl-8 leading-none">PROJECT PLANNING</h1>
-                </div>
-
-                <div className="flex items-center gap-6 pr-6">
+    const projectPlanningActions = (
+        <>
                     {brain.projects.length === 0 ? (
                         <button
                             onClick={() => setShowNewProjectModal(true)}
@@ -291,16 +280,25 @@ export const ProjectStudio: React.FC = () => {
                             </button>
                         </div>
                     )}
+        </>
+    );
 
-                    <div onClick={() => setIsMainToolOpen(!isMainToolOpen)} className={`cursor-pointer transition-all duration-700 ease-in-out transform ${isMainToolOpen ? 'rotate-180 scale-110' : 'rotate-0 scale-100'}`}>
-                        <CustomIcon name={isMainToolOpen ? "SYMBOLS 19" : "SYMBOLS 22"} size={48} className="opacity-80 hover:opacity-100 transition-opacity" />
-                    </div>
-                </div>
-            </header>
-
-            {/* Main Content Area */}
-            <div className={`grid transition-all duration-1000 ease-in-out ${isMainToolOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                <div className="overflow-hidden flex flex-col">
+    return (
+        <ToolboxScaffold
+            title="PROJECT PLANNING"
+            subtitle="Plan channel priorities, publishing dates, project goals, scripts, and visual production"
+            icon={<CustomIcon name="analytics" size={40} className="text-black" />}
+            paletteIndex={0}
+            headerColor="bg-[#ff3399]"
+            iconBoxColor="bg-[#ccff00]"
+            collapsible
+            isOpen={isMainToolOpen}
+            onToggle={() => setIsMainToolOpen((open) => !open)}
+            headerActions={projectPlanningActions}
+            contentClassName="p-0"
+            shellClassName="w-full max-w-[1400px] mx-auto mb-40"
+        >
+                <div className="flex flex-col">
                     {/* 2. Content Calendar & Daily Planner */}
                     <section className="border-b-[5px] border-black bg-white flex flex-col xl:flex-row">
                         {/* Left: Calendar Grid */}
@@ -569,13 +567,13 @@ export const ProjectStudio: React.FC = () => {
 	                        {viewContext === 'channel' ? (
 	                            /* CHANNEL VIEW (Picture #1 Bottom) */
 	                            <div className="p-10 animate-fade-in flex flex-col gap-10">
-	                                <div className="grid grid-cols-2 gap-10">
+	                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
                                     {/* To-Do List */}
-                                    <AccordionContainer
+                                    <SubToolbox
                                         title="CHANNEL TO-DO LIST"
                                         icon={<CheckSquare size={32} />}
                                         headerColor="bg-[#ff3399]"
-                                        iconBoxColor="bg-white"
+                                        collapsible
                                         isOpenInitial={true}
                                     >
                                         <div className="space-y-6">
@@ -606,14 +604,14 @@ export const ProjectStudio: React.FC = () => {
                                                 <BigActionButton text="GENERATE IDEAS" onClick={() => { }} icon={Sparkles} colorClass="bg-[#ccff00]" />
                                             </div>
                                         </div>
-                                    </AccordionContainer>
+                                    </SubToolbox>
 
                                     {/* Goals List */}
-                                    <AccordionContainer
+                                    <SubToolbox
                                         title="CHANNEL GOALS"
                                         icon={<Target size={32} />}
                                         headerColor="bg-[#ccff00]"
-                                        iconBoxColor="bg-white"
+                                        collapsible
                                         isOpenInitial={true}
                                     >
                                         <div className="space-y-6">
@@ -648,7 +646,7 @@ export const ProjectStudio: React.FC = () => {
                                                 <BigActionButton text="GENERATE IDEAS" onClick={() => { }} icon={Sparkles} colorClass="bg-[#ff3399]" />
                                             </div>
                                         </div>
-                                    </AccordionContainer>
+                                    </SubToolbox>
                                 </div>
                             </div>
                         ) : (
@@ -705,10 +703,10 @@ export const ProjectStudio: React.FC = () => {
                                         </div>
 
                                         {/* 2. Tool Grid (Picture #2 & #3) */}
-                                        <div className="grid grid-cols-2 gap-8 items-start">
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
                                             {/* Left Column */}
                                             <div className="flex flex-col">
-                                                <AccordionContainer title="Description" icon={<AlignLeft size={32} />} headerColor="bg-[#ccff00]" iconBoxColor="bg-white" isOpenInitial={true}>
+                                                <SubToolbox title="Description" icon={<AlignLeft size={32} />} headerColor="bg-[#ccff00]" collapsible isOpenInitial={true}>
                                                     <div className="space-y-4">
                                                         <textarea
                                                             className="w-full min-h-[200px] p-0 bg-transparent outline-none font-bold text-sm resize-none border-none placeholder:text-black/10 text-black leading-relaxed"
@@ -717,9 +715,9 @@ export const ProjectStudio: React.FC = () => {
                                                             onChange={(e) => updateProject(activeProject!.id, { description: e.target.value })}
                                                         />
                                                     </div>
-                                                </AccordionContainer>
+                                                </SubToolbox>
 
-                                                <AccordionContainer title="Checklist" icon={<CheckSquare size={32} />} headerColor="bg-[#ff3399]" iconBoxColor="bg-white" isOpenInitial={true}>
+                                                <SubToolbox title="Checklist" icon={<CheckSquare size={32} />} headerColor="bg-[#ff3399]" collapsible isOpenInitial={true}>
                                                     <div className="space-y-4">
                                                         <div className="flex gap-4 mb-4 pb-4 border-b-2 border-black/10">
                                                             <div className="flex-1">
@@ -783,33 +781,33 @@ export const ProjectStudio: React.FC = () => {
                                                             />
                                                         </div>
                                                     </div>
-                                                </AccordionContainer>
+                                                </SubToolbox>
                                             </div>
 
                                             {/* Right Column */}
                                             <div className="flex flex-col gap-6">
-                                                <AccordionContainer title="Script" icon={<FileText size={32} />} headerColor="bg-[#00ccff]" iconBoxColor="bg-white" isOpenInitial={true}>
+                                                <SubToolbox title="Script" icon={<FileText size={32} />} headerColor="bg-[#00ccff]" collapsible isOpenInitial={true}>
                                                     <textarea
                                                         className="w-full h-[300px] p-0 bg-transparent outline-none font-bold text-sm resize-none border-none placeholder:text-black/10 text-black leading-relaxed"
                                                         placeholder="Start writing your script here..."
                                                         value={activeProject?.script}
                                                         onChange={(e) => updateProject(activeProject!.id, { script: e.target.value })}
                                                     />
-                                                </AccordionContainer>
+                                                </SubToolbox>
 
-                                                <AccordionContainer title="Notes" icon={<Zap size={32} />} headerColor="bg-[#FF9900]" iconBoxColor="bg-white">
+                                                <SubToolbox title="Notes" icon={<Zap size={32} />} headerColor="bg-[#FF9900]" collapsible>
                                                     <textarea
                                                         className="w-full h-[300px] p-0 bg-transparent outline-none font-bold text-sm resize-none border-none placeholder:text-black/10 text-black leading-relaxed"
                                                         placeholder="Add any additional notes here..."
                                                         value={activeProject?.notes}
                                                         onChange={(e) => updateProject(activeProject!.id, { notes: e.target.value })}
                                                     />
-                                                </AccordionContainer>
+                                                </SubToolbox>
                                             </div>
                                         </div>
 
                                         <div className="space-y-6 mt-6">
-                                            <AccordionContainer title="STRATEGY ENGINE" icon={<Target size={32} />} headerColor="bg-[#9933FF]" iconBoxColor="bg-white">
+                                            <SubToolbox title="STRATEGY ENGINE" icon={<Target size={32} />} headerColor="bg-[#9933FF]" collapsible>
                                                 <div className="grid grid-cols-2 gap-6 pb-4">
                                                     {(['topic', 'description', 'length', 'audience'] as const).map(f => (
                                                         <div key={f} className="border-[3px] border-black rounded-xl p-4 bg-white flex flex-col gap-1 transition-all shadow-[3px_3px_0px_0px_black] group">
@@ -838,12 +836,12 @@ export const ProjectStudio: React.FC = () => {
                                                     disabled={isGenerating}
                                                     isSpinning={isGenerating}
                                                 />
-                                            </AccordionContainer>
+                                            </SubToolbox>
 
-                                            <AccordionContainer title="VISUAL STORYBOARD" icon={<CustomIcon name="video" size={32} />} headerColor="bg-[#ff3399]" iconBoxColor="bg-white">
+                                            <SubToolbox title="VISUAL STORYBOARD" icon={<CustomIcon name="video" size={32} />} headerColor="bg-[#ff3399]" collapsible>
                                                 <div className="space-y-8">
                                                     {activeProject?.storyboard && activeProject.storyboard.length > 0 ? (
-                                                        <div className="grid grid-cols-3 gap-6">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                                             {activeProject.storyboard.map((scene, idx) => (
                                                                 <div key={scene.id} className="bg-white border-[3px] border-black rounded-2xl overflow-hidden shadow-[6px_6px_0px_0px_black] group transition-all">
                                                                     <div className="aspect-video bg-black/5 border-b-[3px] border-black relative">
@@ -871,14 +869,14 @@ export const ProjectStudio: React.FC = () => {
                                                         isSpinning={isGeneratingStoryboard}
                                                     />
                                                 </div>
-                                            </AccordionContainer>
+                                            </SubToolbox>
                                         </div>
                                     </div>
                                 ) : (
                                     /* PROJECT LIST (If no project selected) */
                                     <div className="animate-fade-in flex flex-col gap-10">
                                         <BigActionButton text="NEW PROJECT" onClick={() => setShowNewProjectModal(true)} icon={Plus} colorClass="bg-[#00ccff]" />
-                                        <div className="grid grid-cols-3 gap-10">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-10">
                                             {brain.projects.map(p => (
                                                 <div
                                                     key={p.id}
@@ -976,7 +974,6 @@ export const ProjectStudio: React.FC = () => {
                         </div>
                     </div>
                 )}
-            </div>
-        </div>
+        </ToolboxScaffold>
     );
 };

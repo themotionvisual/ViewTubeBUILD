@@ -380,7 +380,7 @@ export const PrototypePanel: React.FC<{
 	   {children ? (
 	    <div
 	     data-prototype-workspace-surface={config.toolId}
-	     className="mb-6 min-w-0 overflow-hidden rounded-[22px] border-[4px] border-black bg-[#f8f7f1] shadow-[6px_6px_0px_0px_black]"
+	     className="mb-6 min-w-0"
 	    >
 	     {children}
 	    </div>
@@ -511,20 +511,29 @@ const cardsForLane = (cards: PrototypeWorkspaceCard[], laneId: string) =>
 const firstCard = (cards: PrototypeWorkspaceCard[], laneId: string) =>
  cards.find((card) => card.laneId === laneId)
 
+const BLUEPRINT_TONE_PALETTE_INDEX: Record<string, number> = {
+ "bg-[#FF4FD8] text-white": 10,
+ "bg-[#FFEA5A]": 3,
+ "bg-[#CCFF00]": 4,
+ "bg-[#00F0FF]": 7,
+ "bg-white": 8,
+}
+
 const BlueprintBlock: React.FC<{
  label: string
  title: string
  tone?: string
  children?: React.ReactNode
-}> = ({ title, children }) => (
+}> = ({ label, title, tone = "bg-white", children }) => (
  <SubToolbox
   title={title}
+  subtitle={label}
   icon={<PanelsTopLeft />}
- isOpenInitial
- openUnits={3}
- overflowVisible
- shellClassName="[&_h3]:!text-[clamp(1.35rem,2.4vw,2.25rem)] [&_h3]:!tracking-[-0.04em]"
->
+  paletteIndex={BLUEPRINT_TONE_PALETTE_INDEX[tone] ?? 8}
+  collapsible
+  isOpenInitial
+  openUnits={3}
+ >
   {children ? <div className="grid gap-3">{children}</div> : null}
  </SubToolbox>
 )

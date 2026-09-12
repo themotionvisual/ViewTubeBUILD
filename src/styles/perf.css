@@ -299,12 +299,9 @@
 /* Studio Hub sub-toolbox mobile fit                                    */
 /* -------------------------------------------------------------------- */
 /*
- * The ToolboxScaffold header (used by every StudioHub sub-tool + the
- * dashboard analytics widgets) hardcodes:
- *   - headerHeight: 56px  (via CONTROL_SHELL)
- *   - IconRail width matching header height
- *   - Title text: text-[32px] on mobile (sm+ ramps to 40px)
- *   - Border: 4px stroke, radius 16px, shadow 6px
+ * ToolboxScaffold and SubToolbox expose explicit level markers and responsive
+ * variables. The main shell is 80px/5px/16px/10px; nested shells reduce to
+ * 56px/4px/12px/6px while retaining the same composition and palette shadow.
  *
  * On a 375px viewport that leaves ~200px for the title after subtracting
  * the 56px icon rail, ~120px of right-side action chrome (help + toggle +
@@ -314,33 +311,37 @@
  * every axis of the header on portrait phones so the natural rhythm still
  * works.
  *
- * These rules only apply to the OUTER scaffold header — they do not touch
- * the visual-card widget headers inside the analytics dashboard, which
- * already got their own compact rules in the section above.
+ * These rules target the two shell levels independently. They do not touch
+ * visual-card widget headers inside the analytics dashboard.
  */
 @media (max-width: 767px) and (orientation: portrait) {
   /* Header + icon rail height come down together to keep the icon centered. */
-  .vt-toolbox > header {
+  [data-vt-toolbox-level="main"] > header,
+  [data-vt-toolbox-level="sub"] > div > header {
     height: 44px !important;
     min-height: 44px !important;
   }
   /* IconRail is the first child inside header; its width matches header height.
      Aspect-square by construction, so shrinking width is enough. */
-  .vt-toolbox > header > div:first-child > div:first-child {
+  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child,
+  [data-vt-toolbox-level="sub"] > div > header > div:first-child > div:first-child {
     width: 44px !important;
     min-width: 44px !important;
     max-width: 44px !important;
   }
   /* Icon SVG inside the rail — was size=40, shrink to 24 so it clears the
      44px rail with margin. */
-  .vt-toolbox > header > div:first-child > div:first-child svg {
+  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child svg,
+  [data-vt-toolbox-level="sub"] > div > header > div:first-child > div:first-child svg {
     width: 24px !important;
     height: 24px !important;
   }
   /* Title — was text-[32px] on mobile via the source's ramp. Cap at 18px
      and tighten tracking so multi-word titles ("COMMUNITY POSTS",
      "COMMENT RESPONDER") stay on one line. */
-  .vt-toolbox > header h3 {
+  [data-vt-toolbox-level="main"] > header h1,
+  [data-vt-toolbox-level="main"] > header h3,
+  [data-vt-toolbox-level="sub"] > div > header h3 {
     font-size: 18px !important;
     letter-spacing: -0.02em !important;
     line-height: 1 !important;
@@ -350,16 +351,23 @@
   }
   /* Help/toggle buttons on the right stay their existing size but tighten
      the padding so the whole right cluster consumes less of the row. */
-  .vt-toolbox > header > div:last-child {
+  [data-vt-toolbox-level="main"] > header > div:last-child,
+  [data-vt-toolbox-level="sub"] > div > header > div:last-child {
     padding-right: 6px !important;
     gap: 4px !important;
   }
   /* Outer stroke/shadow/radius — shrink the neo-brutalist chrome so the
      toolbox looks proportional to its now-compact header. */
-  .vt-toolbox[data-vt-toolbox] {
-    border-width: 3px !important;
-    border-radius: 12px !important;
-    box-shadow: 4px 4px 0 0 currentColor !important;
+  [data-vt-toolbox-level="main"] {
+    --vt-toolbox-stroke: 3px;
+    --vt-toolbox-radius: 12px;
+    --vt-toolbox-shadow-offset: 4px;
+  }
+  [data-vt-toolbox-level="sub"] {
+    --vt-subtoolbox-stroke: 3px;
+    --vt-subtoolbox-radius: 10px;
+    --vt-subtoolbox-shadow-offset: 4px;
+    --vt-subtoolbox-header-height: 44px;
   }
 
   /* Studio Hub page title — text-7xl (72px) is 2× too big for a 375px
@@ -372,20 +380,25 @@
 @media (max-width: 900px) and (orientation: landscape) {
   /* Landscape phones — same intent as portrait, slightly less aggressive
      shrinking since horizontal room isn't the constraint. */
-  .vt-toolbox > header {
+  [data-vt-toolbox-level="main"] > header,
+  [data-vt-toolbox-level="sub"] > div > header {
     height: 44px !important;
     min-height: 44px !important;
   }
-  .vt-toolbox > header > div:first-child > div:first-child {
+  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child,
+  [data-vt-toolbox-level="sub"] > div > header > div:first-child > div:first-child {
     width: 44px !important;
     min-width: 44px !important;
     max-width: 44px !important;
   }
-  .vt-toolbox > header > div:first-child > div:first-child svg {
+  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child svg,
+  [data-vt-toolbox-level="sub"] > div > header > div:first-child > div:first-child svg {
     width: 24px !important;
     height: 24px !important;
   }
-  .vt-toolbox > header h3 {
+  [data-vt-toolbox-level="main"] > header h1,
+  [data-vt-toolbox-level="main"] > header h3,
+  [data-vt-toolbox-level="sub"] > div > header h3 {
     font-size: 20px !important;
     letter-spacing: -0.02em !important;
     line-height: 1 !important;
@@ -393,9 +406,15 @@
     overflow: hidden !important;
     text-overflow: ellipsis !important;
   }
-  .vt-toolbox[data-vt-toolbox] {
-    border-width: 3px !important;
-    border-radius: 12px !important;
-    box-shadow: 4px 4px 0 0 currentColor !important;
+  [data-vt-toolbox-level="main"] {
+    --vt-toolbox-stroke: 3px;
+    --vt-toolbox-radius: 12px;
+    --vt-toolbox-shadow-offset: 4px;
+  }
+  [data-vt-toolbox-level="sub"] {
+    --vt-subtoolbox-stroke: 3px;
+    --vt-subtoolbox-radius: 10px;
+    --vt-subtoolbox-shadow-offset: 4px;
+    --vt-subtoolbox-header-height: 44px;
   }
 }

@@ -5,7 +5,7 @@ import {
 } from "../services/gemini"
 import type { AlgorithmDiagnosis, PollBlueprint, ShortsConcept } from "../types"
 import { Rocket, Zap, Sparkles, Copy, Check, MessageSquare } from "lucide-react"
-import { ToolboxScaffold, Toolbox } from "./Toolbox"
+import { ToolboxScaffold, SubToolbox } from "./Toolbox"
 import { PostActionReflection } from "./PostActionReflection"
 
 interface PreLaunchPrimingProps {
@@ -129,14 +129,13 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
    </div>
 
    {activeAction !== "none" && (
-    <Toolbox
-      variant="sub"
+    <SubToolbox
       title={activeAction === "seeding" ? "POLL GENERATOR ACTIVE" : "SHORTS TEASER ACTIVE"}
       icon={<Zap size={24} />}
       headerColor={activeAction === "seeding" ? "bg-[#FF7497]" : "bg-[#00CCFF]"}
       collapsible
       isOpenInitial={true}
-      outerClassName="mt-8"
+      shellClassName="mt-8"
      >
      <div className="p-8 space-y-6">
       {!pollResult && !teaserResult ? (
@@ -245,7 +244,7 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
         </div>
        )}
       </div>
-    </Toolbox>
+    </SubToolbox>
    )}
   </ToolboxScaffold>
  )
