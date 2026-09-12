@@ -26,11 +26,6 @@ import type { SuperToolId } from "../types"
 /** Every mountable view takes the same optional prop, so hubs can embed them. */
 export type SuperToolView = ComponentType<{ embedded?: boolean }>
 
-const PublishingScheduleView: SuperToolView = (props) => {
- const PublishingScheduleArchitect = React.lazy(() => import("../views/PublishingScheduleArchitect"))
- return <PublishingScheduleArchitect {...props} />
-}
-
 export const SUPER_TOOL_VIEWS: Partial<
  Record<SuperToolId, LazyExoticComponent<SuperToolView>>
 > = {
