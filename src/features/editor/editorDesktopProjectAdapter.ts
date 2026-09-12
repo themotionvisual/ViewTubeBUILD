@@ -95,6 +95,10 @@ export function mobileBridgeProjectToDesktopProject(
   const fallbackTrackById = new Map((fallback.tracks ?? []).map((track) => [String(track.id), track]));
   const tracks = (mobileProject.tracks ?? []).map((track, index) => {
     const prior = fallbackTrackById.get(String(track.id));
+    const visible = typeof track.hidden === 'boolean'
+      ? !track.hidden
+      : (track.desktopVisible ?? (typeof prior?.visible === 'boolean' ? prior.visible : true));
+
     return {
       ...(prior ?? {}),
       id: String(track.id ?? `track_${index}`),
@@ -102,7 +106,7 @@ export function mobileBridgeProjectToDesktopProject(
       kind: track.desktopKind ?? prior?.kind ?? (track.kind === 'audio' ? 'audio' : 'visual'),
       muted: Boolean(track.muted),
       locked: Boolean(track.locked),
-      visible: track.desktopVisible ?? !track.hidden,
+      visible,
       color: track.color ?? prior?.color,
     };
   });
