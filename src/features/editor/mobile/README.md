@@ -1,8 +1,6 @@
 # Mobile Editor
 
-Self-contained mobile editor for ViewTube — a fresh, touch-first component
-tree that lives beside the existing desktop editor (`VT_E1.jsx`) without
-touching it. Both portrait and landscape are first-class.
+Self-contained mobile editor for ViewTube — a touch-first component tree that lives beside the canonical desktop editor (`VT_E1.jsx`). Both portrait and landscape are first-class.
 
 ```
 mobile/
@@ -27,17 +25,35 @@ mobile/
                              transitions, effects, export)
 ```
 
+## Current host ownership
+
+`EditorV1Page` owns the mobile `EditorStore` and passes it into `ResponsiveEditorShell` through `externalStore`. The store therefore survives switching the **Editor UI** preference away from the responsive/mobile host and back again for the lifetime of the editor route.
+
+The route also uses `editorProjectBridge.ts` to persist the compatible mobile project payload. On route mount, a previous mobile bridge snapshot can seed the store. While the mobile host is active, project changes are written back through the versioned bridge.
+
+Current bridge status:
+
+- mobile -> shared bridge: implemented
+- shared bridge -> mobile project seed on route mount: implemented
+- route-owned mobile store survives frontend switching: implemented
+- desktop VT_E1 -> shared bridge adapter: pending
+- shared bridge -> live desktop VT_E1 apply: pending
+
+Do not describe desktop/mobile project synchronization as complete until the canonical `VT_E1.jsx` model is connected to this same bridge contract.
+
 ## Quick start
 
 ```tsx
-import { ResponsiveEditorShell } from '@/features/editor/mobile';
-import { DesktopEditor } from '@/features/editor/VT_E1';
+import { ResponsiveEditorShell, useEditorState } from '@/features/editor/mobile';
+import VTE1Editor from '@/features/editor/VT_E1';
 
 export default function EditorRoute() {
+  const mobileStore = useEditorState();
+
   return (
     <ResponsiveEditorShell
-      desktop={<DesktopEditor />}
-      seed={{ durationSec: 60 }}
+      desktop={<VTE1Editor />}
+      externalStore={mobileStore}
       renderPreview={({ widthPx, heightPx }) => (
         <MyRemotionPlayer width={widthPx} height={heightPx} />
       )}
@@ -46,10 +62,9 @@ export default function EditorRoute() {
 }
 ```
 
-The shell decides mobile vs desktop from `useViewport().isMobile`
-(`< 1024px` wide). Force one side with `mode="mobile"` or `mode="desktop"`.
+The shell decides mobile vs desktop from `useViewport().isMobile` (`< 1024px` wide). Force one side with `mode="mobile"` or `mode="desktop"`.
 
-## What the four gestures do
+## What the gestures do
 
 | Gesture | Where | Effect |
 |---|---|---|
@@ -62,39 +77,25 @@ The shell decides mobile vs desktop from `useViewport().isMobile`
 | **Swipe** | Panel-sheet header | Advances between tool tabs |
 | **Vertical drag** | Panel-sheet handle | Resizes the sheet (peek / half / full) |
 
-Every hit target is ≥ 44×44 CSS px (WCAG target-size AAA). `useSuppressBrowserZoom`
-attached at the root disables the browser's own pinch-zoom and double-tap-zoom
-so all gestures reach the editor.
+Every hit target is ≥ 44×44 CSS px. `useSuppressBrowserZoom` attached at the root disables the browser's own pinch-zoom and double-tap-zoom so all gestures reach the editor.
 
-## Sharing state with the desktop editor
+## State boundary
 
-The mobile editor keeps its own `useEditorState` reducer by default so it can
-run standalone. If you're ready to unify:
+The mobile reducer owns presentation/interactivity state such as playhead, playback, zoom, selection, active tool, panel state, and 50-step undo/redo. The shared project bridge intentionally stores the compatible `VtE1Project` payload rather than those mobile-only UI details.
 
-1. Lift the reducer's `EditorStore` into a shared context.
-2. Have both `MobileEditor` and `VT_E1` consume it via `useContext`.
-3. Pass `externalStore={store}` to `<MobileEditor>` so it uses the shared one.
-
-The reducer already handles: clips (add/update/move/trim/split/duplicate/delete),
-tracks (mute/lock/hide), transitions (add/remove), playhead, playback,
-zoom, selection, panel state, and 50-step undo/redo.
+That separation lets the next desktop adapter exchange clips, transitions, and compatible project fields without forcing the desktop and mobile interfaces to share every piece of UI state.
 
 ## Renderer slot
 
 `<PreviewPane renderPreview={...}>` is a slot — pass any renderer:
 
-- The existing desktop preview canvas
-- The engine's `<Player composition={…} />` from
-  `src/remotion-editor/src/engine/cloud/player`
-- A `<video>` tag
-- A `<canvas>` you paint into
+- the existing desktop preview canvas
+- the engine's `<Player composition={…} />` from `src/remotion-editor/src/engine/cloud/player`
+- a `<video>` tag
+- a `<canvas>` you paint into
 
-If omitted, the pane falls back to a plain "no clip / clip id at playhead"
-message that's still fully interactive.
+If omitted, the pane falls back to a plain "no clip / clip id at playhead" message that's still fully interactive.
 
 ## Panel bodies
 
-Default bodies live in `components/PanelBodies.tsx`. They're deliberately
-compact — enough to be immediately useful on mobile but not a full port of the
-desktop panels. Override any of them by passing your own `render` prop to
-`<PanelSheet>` (composable through `PortraitLayout` / `LandscapeLayout`).
+Default bodies live in `components/PanelBodies.tsx`. They're deliberately compact — enough to be immediately useful on mobile but not a full port of the desktop panels. Override any of them by passing your own `render` prop to `<PanelSheet>` (composable through `PortraitLayout` / `LandscapeLayout`).
