@@ -1,4 +1,4 @@
-import { getSessionUserId } from "../server/account-store.mjs";
+import { getAccountSnapshotData, getSessionUserId } from "../server/account-store.mjs";
 import {
   listPersistedBrainEvents,
   listPersistedLifecycleObservations,
@@ -24,6 +24,16 @@ const requireUser = async (req) => {
   return userId;
 };
 
+const requireConnectedChannel = async (userId, channelId) => {
+  const account = await getAccountSnapshotData(userId);
+  const connectedChannelId = String(account?.channelId || "").trim();
+  if (!connectedChannelId || connectedChannelId !== channelId) {
+    const error = new Error("The requested channel is not connected to this ViewTube account.");
+    error.statusCode = 403;
+    throw error;
+  }
+};
+
 const readJson = async (req) => {
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
@@ -45,6 +55,7 @@ export default async function handler(req, res) {
     const url = new URL(req.url || "/api/brain-intelligence", `http://${req.headers.host || "localhost"}`);
     const channelId = String(url.searchParams.get("channelId") || "").trim();
     if (!channelId) return res.status(400).json({ error: "CHANNEL_ID_REQUIRED" });
+    await requireConnectedChannel(userId, channelId);
 
     if (method === "GET") {
       const [events, observations] = await Promise.all([
