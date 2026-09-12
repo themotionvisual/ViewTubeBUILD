@@ -1,6 +1,5 @@
 /**
  * TransportBar — play/pause + skip + speed + undo/redo, sized for thumbs.
- * Every hit target is at least 44×44 CSS px (WCAG target-size AAA).
  */
 import React from 'react';
 import { EditorStore } from '../state/editorState';
@@ -10,6 +9,9 @@ export interface TransportBarProps {
   compact?: boolean;
 }
 
+const CYAN = '#36E0F6';
+const INK = '#248b99';
+
 export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) => {
   const { state, dispatch, canUndo, canRedo } = store;
   const size = compact ? 38 : 46;
@@ -17,10 +19,11 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
     width: size,
     height: size,
     minWidth: size,
-    borderRadius: 10,
-    background: '#1f2937',
-    color: '#f8fafc',
-    border: 'none',
+    borderRadius: 5,
+    background: '#fff',
+    color: '#000',
+    border: `2px solid ${INK}`,
+    boxShadow: '2px 2px 0 rgba(54,224,246,.45)',
     display: 'grid',
     placeItems: 'center',
     cursor: 'pointer',
@@ -28,7 +31,7 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
     padding: 0,
     ...extra,
   });
-  const step = 1 / 30; // one frame at 30fps
+  const step = 1 / 30;
 
   return (
     <div
@@ -37,64 +40,25 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
         gap: 4,
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '6px 8px',
-        background: '#0f172a',
-        borderRadius: 14,
-        border: '1px solid #1e293b',
+        padding: '4px 6px',
+        background: '#fff',
+        borderRadius: 7,
+        border: `3px solid ${INK}`,
         overflow: 'hidden',
         height: '100%',
+        boxShadow: '3px 3px 0 rgba(54,224,246,.35)',
       }}
     >
       <div style={{ display: 'flex', gap: 4 }}>
-        <button
-          style={btn({ opacity: canUndo ? 1 : 0.35 })}
-          disabled={!canUndo}
-          onClick={() => dispatch({ type: 'undo' })}
-          aria-label="Undo"
-        >
-          <UndoIcon />
-        </button>
-        <button
-          style={btn({ opacity: canRedo ? 1 : 0.35 })}
-          disabled={!canRedo}
-          onClick={() => dispatch({ type: 'redo' })}
-          aria-label="Redo"
-        >
-          <RedoIcon />
-        </button>
+        <button style={btn({ opacity: canUndo ? 1 : 0.35 })} disabled={!canUndo} onClick={() => dispatch({ type: 'undo' })} aria-label="Undo"><UndoIcon /></button>
+        <button style={btn({ opacity: canRedo ? 1 : 0.35 })} disabled={!canRedo} onClick={() => dispatch({ type: 'redo' })} aria-label="Redo"><RedoIcon /></button>
       </div>
-
       <div style={{ display: 'flex', gap: 4 }}>
-        <button
-          style={btn()}
-          onClick={() => dispatch({ type: 'setPlayhead', sec: state.playheadSec - state.playbackRate })}
-          aria-label="Back 1s"
-        >
-          <RewindIcon />
-        </button>
-        <button
-          style={btn({ background: '#22d3ee', color: '#0f172a', width: size + 10, minWidth: size + 10 })}
-          onClick={() => dispatch({ type: 'togglePlaying' })}
-          aria-label={state.playing ? 'Pause' : 'Play'}
-        >
-          {state.playing ? <PauseIcon /> : <PlayIcon />}
-        </button>
-        <button
-          style={btn()}
-          onClick={() => dispatch({ type: 'setPlayhead', sec: state.playheadSec + state.playbackRate })}
-          aria-label="Forward 1s"
-        >
-          <ForwardIcon />
-        </button>
-        <button
-          style={btn()}
-          onClick={() => dispatch({ type: 'setPlayhead', sec: state.playheadSec + step })}
-          aria-label="Next frame"
-        >
-          <FrameIcon />
-        </button>
+        <button style={btn()} onClick={() => dispatch({ type: 'setPlayhead', sec: state.playheadSec - state.playbackRate })} aria-label="Back 1s"><RewindIcon /></button>
+        <button style={btn({ background: CYAN, width: size + 10, minWidth: size + 10 })} onClick={() => dispatch({ type: 'togglePlaying' })} aria-label={state.playing ? 'Pause' : 'Play'}>{state.playing ? <PauseIcon /> : <PlayIcon />}</button>
+        <button style={btn()} onClick={() => dispatch({ type: 'setPlayhead', sec: state.playheadSec + state.playbackRate })} aria-label="Forward 1s"><ForwardIcon /></button>
+        <button style={btn()} onClick={() => dispatch({ type: 'setPlayhead', sec: state.playheadSec + step })} aria-label="Next frame"><FrameIcon /></button>
       </div>
-
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
         <select
           value={state.playbackRate}
@@ -102,38 +66,27 @@ export const TransportBar: React.FC<TransportBarProps> = ({ store, compact }) =>
           style={{
             height: size,
             padding: '0 6px',
-            borderRadius: 10,
-            background: '#1f2937',
-            color: '#f8fafc',
-            border: 'none',
-            fontWeight: 700,
-            fontSize: 12,
+            borderRadius: 5,
+            background: '#fff',
+            color: '#000',
+            border: `2px solid ${INK}`,
+            boxShadow: '2px 2px 0 rgba(54,224,246,.35)',
+            fontWeight: 900,
+            fontSize: 10,
             fontVariantNumeric: 'tabular-nums',
             appearance: 'none',
             WebkitAppearance: 'none',
             minWidth: 52,
           }}
         >
-          {[0.25, 0.5, 1, 1.5, 2, 4].map((v) => (
-            <option key={v} value={v}>{v}×</option>
-          ))}
+          {[0.25, 0.5, 1, 1.5, 2, 4].map((v) => <option key={v} value={v}>{v}×</option>)}
         </select>
       </div>
     </div>
   );
 };
 
-/* Simple, dependency-free icons. */
-const stroke: React.SVGProps<SVGSVGElement> = {
-  viewBox: '0 0 24 24',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 2.2,
-  strokeLinecap: 'round',
-  strokeLinejoin: 'round',
-  width: 22,
-  height: 22,
-};
+const stroke: React.SVGProps<SVGSVGElement> = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', width: 22, height: 22 };
 const PlayIcon = () => (<svg {...stroke} fill="currentColor" stroke="none"><path d="M8 5v14l11-7z" /></svg>);
 const PauseIcon = () => (<svg {...stroke} fill="currentColor" stroke="none"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>);
 const RewindIcon = () => (<svg {...stroke}><polyline points="11 19 2 12 11 5" /><polyline points="22 19 13 12 22 5" /></svg>);
