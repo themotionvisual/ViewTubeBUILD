@@ -8,6 +8,10 @@ import {
   writeEditorFrontendMode,
   type EditorFrontendMode,
 } from "../features/editor/editorFrontendMode";
+import {
+  readEditorProjectBridgeSnapshot,
+  writeEditorProjectBridgeSnapshot,
+} from "../features/editor/editorProjectBridge";
 
 interface EditorRouteBoundaryState {
   error: Error | null;
@@ -148,9 +152,10 @@ const EditorFrontendSwitcher: React.FC<{
  * The mobile editor store is owned by this route rather than by MobileEditor.
  * That keeps mobile timeline/project edits alive if a user temporarily switches
  * to the classic host and then returns to the responsive/mobile presentation.
- * The canonical VT_E1 desktop project model is still separate; a direct
- * desktop<->mobile project adapter is the next bridge layer rather than being
- * implied by the UI switcher.
+ * Mobile project data also writes through the small versioned project bridge so
+ * route remounts can restore the clip/transition project without coupling the
+ * mobile UI to the giant desktop component. The canonical VT_E1 desktop model
+ * still needs its adapter to complete two-way desktop<->mobile synchronization.
  */
 const EditorV1Page: React.FC = () => {
   const forced = React.useMemo(() => {
@@ -161,7 +166,11 @@ const EditorV1Page: React.FC = () => {
   }, []);
 
   const [frontendMode, setFrontendMode] = React.useState<EditorFrontendMode>(() => readEditorFrontendMode());
-  const mobileStore = useEditorState();
+  const restoredMobileProject = React.useMemo(() => {
+    const snapshot = readEditorProjectBridgeSnapshot();
+    return snapshot?.source === 'mobile' ? snapshot.project : undefined;
+  }, []);
+  const mobileStore = useEditorState(restoredMobileProject);
 
   const switchFrontend = React.useCallback((nextMode: EditorFrontendMode) => {
     writeEditorFrontendMode(nextMode);
@@ -169,6 +178,11 @@ const EditorV1Page: React.FC = () => {
   }, []);
 
   const shellMode = editorHostModeFor(frontendMode, forced);
+
+  React.useEffect(() => {
+    if (shellMode !== 'mobile') return;
+    writeEditorProjectBridgeSnapshot('mobile', mobileStore.state.project);
+  }, [shellMode, mobileStore.state.project]);
 
   return (
     <section
