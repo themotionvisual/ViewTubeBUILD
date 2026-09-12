@@ -4,6 +4,7 @@ import "./widgetControlOwnership.css"
 import "./widgetArchetypeResponsive.css"
 import "./widgetShellOwnership.css"
 import "./widgetScrollbar.css"
+import "./widgetMobileContract.css"
 
 /**
  * DashboardBarrier — containment boundary for dashboard design tokens.
