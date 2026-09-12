@@ -10,7 +10,7 @@ export const CONTROL_SHELL = {
   headerHeight: 56, // Header block height; 56 + 4px stroke seam = 60px control rhythm.
   height: 60,
   stroke: 4,
-  radius: 16,
+  radius: 8,
   railSize: 56,
   shadowOffset: 6,
   transition: "duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
@@ -166,8 +166,8 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   const radius = variant === 'accordion' ? 12 : 16;
   const finalContentClass = useMemo(() => {
     if (contentClassName) return contentClassName;
-    if (variant === 'accordion') return 'p-6 bg-white text-black';
-    return embedded ? 'p-0' : 'p-8';
+    if (variant === 'accordion') return 'py-6 px-[10px] bg-white text-black';
+    return embedded ? 'p-0' : 'py-8 px-[10px]';
   }, [contentClassName, variant, embedded]);
 
   const resolvedIcon = useMemo(() => {
@@ -264,9 +264,9 @@ export const Toolbox: React.FC<ToolboxProps> = ({
 
             <div className={`flex flex-col pl-4 justify-center pointer-events-none select-none`}>
               {variant === 'accordion' ? (
-                <h3 className="text-[32px] font-[900] uppercase tracking-tighter leading-none mt-0.5">{title}</h3>
+                <h3 className="text-[20px] font-[900] uppercase tracking-tighter leading-none mt-0.5">{title}</h3>
               ) : (
-                <h1 className="max-w-full truncate text-[24px] font-[1000] uppercase leading-none mt-1 sm:text-[36px] xl:text-[50px]">{title}</h1>
+                <h1 className="max-w-full truncate text-[26px] font-[1000] uppercase leading-none mt-1">{title}</h1>
               )}
             </div>
           </div>
@@ -350,6 +350,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
                     ["--vt-level1-stroke" as any]: "4px",
                     ["--vt-level1-shadow" as any]: "6px",
                     ["--vt-level1-shadow-color" as any]: headerHex ? hexToRgba(headerHex, 0.45) : "rgba(0,0,0,0.35)",
+                    ...(embedded ? {} : { paddingInline: "var(--vt-toolbox-content-inline-padding, 10px)" }),
                   } as React.CSSProperties
                 }
               >
@@ -490,7 +491,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     fillAvailable={fillAvailable}
     outerClassName={outerClassName}
     shellClassName={shellClassName}
-    contentClassName={contentClassName || (embedded ? "p-0" : "p-8")}
+    contentClassName={contentClassName || (embedded ? "p-0" : "py-8 px-[10px]")}
     headerActions={headerActions}
     indicator={collapsible ? "symbols" : "none"}
     disableCollapseAnimation={disableCollapseAnimation}
@@ -635,7 +636,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           </IconRail>
 
           <div className="flex items-center pl-2.5 h-full pointer-events-none select-none">
-            <h3 className="font-[900] uppercase tracking-tighter leading-none text-[32px] sm:text-[36px] md:text-[40px]">
+            <h3 className="font-[900] uppercase tracking-tighter leading-none text-[20px]">
               {title}
             </h3>
           </div>
@@ -650,7 +651,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
               className="group h-full flex items-center justify-center transition-all hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px]"
               aria-label="Toggle subtoolbox help"
             >
-              <span className="inline-flex items-center justify-center w-8 h-8 border-[3px] border-black rounded-full bg-white shadow-[4px_4px_0px_0px_black] transition-all group-active:shadow-[2px_2px_0px_0px_black]">
+              <span className="inline-flex items-center justify-center w-8 h-8 border-[3px] border-black rounded-full bg-white shadow-[4px_4px_0px_0px_var(--vt-subtoolbox-shell-shadow)] transition-all group-active:shadow-[2px_2px_0px_0px_var(--vt-subtoolbox-shell-shadow)]">
                 <CircleQuestionMark size={18} strokeWidth={2.6} />
               </span>
             </button>
@@ -726,10 +727,10 @@ export const StandardUploadBox: React.FC<StandardUploadBoxProps> = ({
 
   return (
     <div
-      className="w-full border-[3px] border-black bg-white rounded-2xl flex-1 flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+      className="w-full border-[3px] border-black bg-white rounded-[8px] flex-1 flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
       style={{
         minHeight,
-        boxShadow: `${SUB_TOOLBOX_INNER_SHADOW}px ${SUB_TOOLBOX_INNER_SHADOW}px 0px 0px rgba(0,0,0,0.35)`,
+        boxShadow: `${SUB_TOOLBOX_INNER_SHADOW}px ${SUB_TOOLBOX_INNER_SHADOW}px 0px 0px var(--vt-subtoolbox-shadow, rgba(0,0,0,0.25))`,
       }}
     >
       <input
@@ -741,7 +742,7 @@ export const StandardUploadBox: React.FC<StandardUploadBoxProps> = ({
       />
       <div
         onClick={() => inputRef.current?.click()}
-        className="w-full h-full border-[3px] border-[#9ca3af] border-dashed rounded-2xl bg-gray-100 flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-gray-200 transition-colors"
+        className="w-full h-full border-[3px] border-[#9ca3af] border-dashed rounded-[6px] bg-gray-100 flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-gray-200 transition-colors"
       >
         <div className="w-16 h-16 mt-2 border-[3px] border-black rounded-full bg-white flex items-center justify-center">
           {icon || <Zap size={32} strokeWidth={2.5} className="text-black" style={{ color: iconBgColor }} />}
@@ -905,7 +906,7 @@ export const SubToolboxDropdownControl: React.FC<SubToolboxDropdownControlProps>
           });
         }}
         className={`group w-full border-[3px] border-black overflow-hidden transition-[border-radius] ${CONTROL_SHELL.transition} block appearance-none p-0 ${
-          open ? "rounded-t-[16px] rounded-b-none" : "rounded-[16px]"
+          open ? "rounded-t-[8px] rounded-b-none" : "rounded-[8px]"
         }`}
         style={{
           backgroundColor: resolvedSurface,
@@ -928,7 +929,7 @@ export const SubToolboxDropdownControl: React.FC<SubToolboxDropdownControlProps>
       {open && menuRect &&
         createPortal(
           <div
-            className="border-x-[3px] border-b-[3px] border-black rounded-b-[16px] overflow-hidden bg-white"
+            className="border-x-[3px] border-b-[3px] border-black rounded-b-[8px] overflow-hidden bg-white"
             style={{
               position: "fixed",
               left: menuRect.left,
@@ -1021,7 +1022,7 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
           });
         }}
         className={`group w-full border-black overflow-hidden transition-[border-radius] ${CONTROL_SHELL.transition} block appearance-none p-0 ${
-          open ? "rounded-t-[16px] rounded-b-none" : "rounded-[16px]"
+          open ? "rounded-t-[8px] rounded-b-none" : "rounded-[8px]"
         } ${borderClass}`}
         style={{
           backgroundColor: resolvedSurface,
@@ -1044,7 +1045,7 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
       {open && menuRect &&
         createPortal(
           <div
-            className={`${borderClass} border-black rounded-b-[16px] overflow-hidden bg-white`}
+            className={`${borderClass} border-black rounded-b-[8px] overflow-hidden bg-white`}
             style={{
               position: "fixed",
               left: menuRect.left,
@@ -1138,7 +1139,7 @@ const SubToolboxRefineButtonBase: React.FC<SubToolboxRefineButtonStyleProps> = (
       onMouseDown={() => setIsPressing(true)}
       onMouseUp={() => setIsPressing(false)}
       disabled={disabled}
-      className={`w-full rounded-[16px] overflow-hidden transition-all shrink-0 flex items-center justify-center appearance-none p-0 hover:translate-y-[1.5px] active:translate-y-[3px] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${className}`}
+      className={`w-full rounded-[8px] overflow-hidden transition-all shrink-0 flex items-center justify-center appearance-none p-0 hover:translate-y-[1.5px] active:translate-y-[3px] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${className}`}
       style={{
         height: `${CONTROL_SHELL.height}px`,
         backgroundColor: resolvedSurface,
