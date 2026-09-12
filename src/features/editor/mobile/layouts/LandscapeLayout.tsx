@@ -37,13 +37,13 @@ export const LandscapeLayout: React.FC<LandscapeLayoutProps> = ({ store, renderP
 
   return (
     <div ref={rootRef} style={{
-      position: 'relative', width: '100%', height: containerHeight, background: '#020617', color: '#f8fafc',
+      position: 'relative', width: '100%', height: containerHeight, background: '#f3f3f3', color: '#000',
       display: 'grid', gridTemplateColumns: '58px minmax(0, 1fr)',
       gridTemplateRows: `minmax(0, 1fr) 46px ${Math.round(containerHeight * 0.24)}px 44px`,
       gap: 4, padding: 4, paddingBottom: 60, boxSizing: 'border-box', overflow: 'hidden', touchAction: 'manipulation',
     }}>
       <div style={{ gridRow: '1 / span 4', minHeight: 0 }}><ToolDock store={store} orientation="column" /></div>
-      <div style={{ gridColumn: 2, minHeight: 0, minWidth: 0, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
+      <div style={{ gridColumn: 2, minHeight: 0, minWidth: 0, display: 'grid', placeItems: 'center', overflow: 'hidden', background: '#fff', border: '3px solid #248b99', borderRadius: 7 }}>
         <div style={{ height: '100%', width: isPortraitVideo ? 'auto' : '100%', aspectRatio: String(compositionAspect), maxWidth: '100%' }}>
           <PreviewPane store={store} renderPreview={renderPreview} aspect={compositionAspect} />
         </div>
