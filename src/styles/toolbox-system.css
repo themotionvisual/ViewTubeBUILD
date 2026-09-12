@@ -1,13 +1,71 @@
-/* Canonical ViewTube Main Toolbox geometry. Intentionally scoped so Widget and SubToolbox systems cannot override it. */
+/* Canonical ViewTube MAIN TOOLBOX authority.
+ * Main toolboxes must remain visually distinct from nested SubToolboxes.
+ * This file is intentionally scoped to data-vt-toolbox-level="main" so the
+ * widget and subtoolbox systems cannot resize the level-0 application shell.
+ */
 [data-vt-toolbox][data-vt-toolbox-level="main"] {
   --vt-toolbox-header-height: 80px;
   --vt-toolbox-stroke: 5px;
   --vt-toolbox-radius: 16px;
   --vt-toolbox-shadow-offset: 10px;
   --vt-toolbox-title-size: 26px;
+
+  border-width: 5px !important;
+  border-style: solid !important;
+  border-color: #000 !important;
+  border-radius: 16px !important;
 }
-[data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="scaffold"] > header { height: 80px; min-height: 80px; }
-[data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="scaffold"] > header > :first-child > :first-child { width: 80px; min-width: 80px; height: 80px; aspect-ratio: 1 / 1; }
-[data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="scaffold"] > header h1 { font-size: 26px; font-weight: 1000; }
-[data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="accordion"] { --vt-toolbox-header-height: 56px; --vt-toolbox-radius: 12px; --vt-toolbox-title-size: 20px; }
-@media (max-width: 767px) { [data-vt-toolbox][data-vt-toolbox-level="main"] { width: 100%; max-width: 100%; min-width: 0; } }
+
+/* Every production main-toolbox treatment uses the large level-0 header.
+ * Accordion is deliberately excluded below because it is legacy/reference
+ * compatibility; production nested sections belong to SubToolbox instead.
+ */
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
+  height: 80px !important;
+  min-height: 80px !important;
+  border-bottom-width: 5px !important;
+  border-bottom-style: solid !important;
+  border-bottom-color: #000 !important;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
+  width: 80px !important;
+  min-width: 80px !important;
+  height: 80px !important;
+  flex: 0 0 80px !important;
+  aspect-ratio: 1 / 1 !important;
+  border-right-width: 5px !important;
+  border-right-style: solid !important;
+  border-right-color: #000 !important;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
+  font-size: 26px !important;
+  line-height: 1 !important;
+  font-weight: 1000 !important;
+}
+
+/* Preserve the intentionally smaller compatibility accordion treatment only.
+ * It must not become the visual contract for ToolboxScaffold or page tools.
+ */
+[data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="accordion"] {
+  --vt-toolbox-header-height: 56px;
+  --vt-toolbox-radius: 12px;
+  --vt-toolbox-title-size: 20px;
+  border-width: 4px !important;
+  border-radius: 12px !important;
+}
+
+/* Main owns only its own frame. Nested production SubToolboxes keep their
+ * independent 56/4/12/6 contract from subtoolbox-system.css. */
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] {
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  [data-vt-toolbox][data-vt-toolbox-level="main"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+}
