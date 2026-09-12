@@ -61,7 +61,7 @@ describe("SubToolbox", () => {
  it("matches its title size to the 20px inner action label", () => {
   const html = renderShell(true)
 
-  expect(html).toContain("text-[20px]")
+  expect(html).toContain("text-[length:var(--vt-subtoolbox-title-size,20px)]")
  })
 })
 
