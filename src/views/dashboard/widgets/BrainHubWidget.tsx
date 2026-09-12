@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import {
  BarChart3,
  Brain,
@@ -38,6 +38,12 @@ import {
  buildAIBrainSystemPrompt,
 } from "../../../services/aiBrainCommandInterface"
 import { buildCreatorGrowthContext } from "../../../services/aiBrainConversationStore"
+import {
+ buildBrainConversationHistory,
+ loadBrainConversationState,
+ notifyBrainConversationChanged,
+ subscribeBrainConversationChanges,
+} from "../../../services/brain/BrainConversationController"
 import { runBrainTask } from "../../../services/brain/runtime/BrainRuntime"
 import {
  readBrainUserControls,
@@ -97,6 +103,7 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
  const [chatPage, setChatPage] = useState<ChatPage>("conversation")
  const [input, setInput] = useState("")
  const [busy, setBusy] = useState(false)
+ const [hydratingConversation, setHydratingConversation] = useState(true)
  const [error, setError] = useState<string | null>(null)
  const [turns, setTurns] = useState<AIBrainConversationTurn[]>([])
  const [answer, setAnswer] = useState<AIBrainConversationTurn | null>(null)
@@ -104,6 +111,18 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
  const [engines, setEngines] = useState<BrainEngineControls>(() => readBrainEngineControls(channelId))
  const [portfolio, setPortfolio] = useState<AlgorithmIntelligencePortfolio | null>(null)
  const [intelStatus, setIntelStatus] = useState("Not loaded")
+
+ const restoreConversation = useCallback(async () => {
+  try {
+   const state = await loadBrainConversationState(channelId)
+   setTurns(state.turns)
+   setAnswer(state.latestVisibleTurn)
+  } catch (caught) {
+   console.warn("[BrainHubWidget] shared thread unavailable", caught)
+  } finally {
+   setHydratingConversation(false)
+  }
+ }, [channelId])
 
  useEffect(() => {
   setActiveBrainControlChannel(channelId)
@@ -122,6 +141,14 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
    window.removeEventListener("vt_brain_engine_controls_changed", refresh)
   }
  }, [channelId])
+
+ useEffect(() => {
+  setHydratingConversation(true)
+  void restoreConversation()
+  return subscribeBrainConversationChanges(channelId, () => {
+   void restoreConversation()
+  })
+ }, [channelId, restoreConversation])
 
  const snapshot = useMemo(
   () => buildAIBrainContextSnapshot({
@@ -206,12 +233,7 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
     systemPrompt,
     growthContext,
     recentTurns: controls.personalization ? turns : [],
-    history: controls.personalization
-     ? turns.slice(0, 4).reverse().flatMap((turn) => [
-      { role: "user", parts: [{ text: turn.userText }] },
-      { role: "model", parts: [{ text: turn.assistantText }] },
-     ])
-     : [],
+    history: controls.personalization ? buildBrainConversationHistory(turns) : [],
     allowModel: hasGeminiKey(),
     visibleContext: {
      dashboardWidget: "brain-hub",
@@ -225,7 +247,12 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
    })
 
    setAnswer(result.turn)
-   setTurns((current) => [result.turn, ...current].slice(0, 12))
+   await restoreConversation()
+   notifyBrainConversationChanged({
+    channelId,
+    source: "brain-hub-widget",
+    turnId: result.turn.id,
+   })
    setChatPage("conversation")
   } catch (caught) {
    console.warn("[BrainHubWidget] turn failed", caught)
@@ -251,10 +278,11 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
     {mainPage === "chat" ? (
      <>
       <div className="brain-hub-context-row" aria-label="Brain context status">
-       <WidgetBadge tone="rose">Ready</WidgetBadge>
+       <WidgetBadge tone="rose">{hydratingConversation ? "Restoring" : "Ready"}</WidgetBadge>
        <WidgetBadge tone="cyan">{channelId ? "Channel" : "No channel"}</WidgetBadge>
        <WidgetBadge tone="yellow">{evidence.length} evidence</WidgetBadge>
        <WidgetBadge tone="purple">{portfolio ? "Intel ready" : "Intel idle"}</WidgetBadge>
+       {turns.length ? <WidgetBadge tone="green">{turns.length} turns</WidgetBadge> : null}
        {controls.externalActionsRequireApproval ? <WidgetBadge tone="royal">Approval gated</WidgetBadge> : null}
       </div>
 
@@ -288,10 +316,17 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
              <div className="brain-hub-answer-badges">
               <WidgetBadge tone="cyan">{answer.response.evidenceIds?.length || 0} evidence</WidgetBadge>
               <WidgetBadge tone="purple">{answer.response.modules?.length || 0} modules</WidgetBadge>
+              {turns.length > 1 ? <WidgetBadge tone="orange">Shared thread</WidgetBadge> : null}
               {controls.externalActionsRequireApproval ? <WidgetBadge tone="green">Approval gated</WidgetBadge> : null}
              </div>
             </div>
            </article>
+          ) : hydratingConversation ? (
+           <div className="brain-hub-empty">
+            <RefreshCw aria-hidden="true" />
+            <strong>Restoring Brain thread</strong>
+            <span>Loading the same durable conversation used by the Sidebar and full Brain workspace.</span>
+           </div>
           ) : (
            <div className="brain-hub-empty">
             <Sparkles aria-hidden="true" />
@@ -385,7 +420,7 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
          onKeyDown={(event) => {
           if (event.key === "Enter") void send()
          }}
-         disabled={!controls.enabled || busy}
+         disabled={!controls.enabled || busy || hydratingConversation}
          placeholder={controls.enabled ? "Ask Brain…" : "Brain disabled"}
          height={32}
          tone="default"
@@ -395,13 +430,13 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
          label="Send to Brain"
          height={32}
          tone="primary"
-         disabled={!input.trim() || busy || !controls.enabled}
+         disabled={!input.trim() || busy || hydratingConversation || !controls.enabled}
          onClick={() => void send()}
         />
        </div>
        <div className="brain-hub-footer-meta">
         <span><ShieldCheck aria-hidden="true" /> {controls.externalActionsRequireApproval ? "Approval gated" : "Approval policy relaxed"}</span>
-        <span>{busy ? "Brain working…" : "Enter to send"}</span>
+        <span>{busy ? "Brain working…" : hydratingConversation ? "Restoring thread…" : "Enter to send"}</span>
        </div>
       </WidgetFooter>
      </>
