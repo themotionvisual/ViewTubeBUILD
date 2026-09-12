@@ -7,16 +7,13 @@
  * landscape) mount the same reducer so switching orientation mid-edit
  * doesn't lose state.
  *
- * The reducer is deliberately independent of the giant `VT_E1.jsx` desktop
- * editor. When we're ready to unify, this module can be lifted into a
- * shared parent and the desktop file dispatches into the same reducer.
+ * The reducer remains independently mounted during the no-loss migration,
+ * but timeline mutation math is progressively delegated to the canonical
+ * shared operations used by desktop/rendering.
  */
 import { useCallback, useMemo, useReducer } from 'react';
 import type { VtE1Clip, VtE1Project, VtE1Transition } from '../../../../shared/vtE1TimelineContract';
-
-/* ------------------------------------------------------------------ */
-/* Track                                                              */
-/* ------------------------------------------------------------------ */
+import { splitTimelineClip } from '../../../../shared/vtE1TimelineOperations.js';
 
 export type TrackKind = 'video' | 'audio' | 'overlay' | 'caption';
 
@@ -30,10 +27,6 @@ export interface Track {
   color?: string;
 }
 
-/* ------------------------------------------------------------------ */
-/* Selection                                                          */
-/* ------------------------------------------------------------------ */
-
 export interface Selection {
   clipIds: string[];
   trackId: string | null;
@@ -41,10 +34,6 @@ export interface Selection {
 }
 
 const emptySelection: Selection = { clipIds: [], trackId: null, transitionId: null };
-
-/* ------------------------------------------------------------------ */
-/* Tool                                                               */
-/* ------------------------------------------------------------------ */
 
 export type Tool =
   | 'select'
@@ -56,34 +45,24 @@ export type Tool =
   | 'effects'
   | 'export';
 
-/* ------------------------------------------------------------------ */
-/* Full state                                                         */
-/* ------------------------------------------------------------------ */
-
 export interface EditorState {
   project: VtE1Project & { tracks: Track[]; durationSec: number };
   playheadSec: number;
   playing: boolean;
   playbackRate: number;
-  zoomPxPerSec: number;      // timeline scale (pixels per second)
+  zoomPxPerSec: number;
   selection: Selection;
   tool: Tool;
   panel: {
     open: boolean;
-    /** which panel is currently shown */
     id: Tool;
-    /** 0..1 — sheet expansion (0 = collapsed peek, 1 = full-height). */
     height: number;
   };
   history: {
-    past: string[];   // serialised snapshots
+    past: string[];
     future: string[];
   };
 }
-
-/* ------------------------------------------------------------------ */
-/* Actions                                                            */
-/* ------------------------------------------------------------------ */
 
 export type EditorAction =
   | { type: 'setPlayhead'; sec: number }
@@ -115,10 +94,6 @@ export type EditorAction =
   | { type: 'undo' }
   | { type: 'redo' };
 
-/* ------------------------------------------------------------------ */
-/* Helpers                                                            */
-/* ------------------------------------------------------------------ */
-
 const snapshot = (s: EditorState): string =>
   JSON.stringify({
     project: s.project,
@@ -135,10 +110,6 @@ const withHistory = (prev: EditorState, next: EditorState): EditorState => ({
 });
 
 const clampSec = (v: number, max: number) => Math.max(0, Math.min(v, max));
-
-/* ------------------------------------------------------------------ */
-/* Reducer                                                            */
-/* ------------------------------------------------------------------ */
 
 export function initialState(project?: Partial<EditorState['project']>): EditorState {
   const p: EditorState['project'] = {
@@ -192,10 +163,8 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       return { ...state, selection: { ...emptySelection, transitionId: action.id } };
     case 'clearSelection':
       return { ...state, selection: emptySelection };
-
     case 'setTool':
       return { ...state, tool: action.tool };
-
     case 'openPanel':
       return { ...state, panel: { open: true, id: action.id, height: action.height ?? state.panel.height } };
     case 'closePanel':
@@ -205,20 +174,13 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
     case 'setPanelId':
       return { ...state, panel: { ...state.panel, id: action.id } };
 
-    case 'addClip': {
-      const next = { ...state, project: { ...state.project, clips: [...state.project.clips, action.clip] } };
-      return withHistory(state, next);
-    }
-    case 'updateClip': {
-      const next = {
+    case 'addClip':
+      return withHistory(state, { ...state, project: { ...state.project, clips: [...state.project.clips, action.clip] } });
+    case 'updateClip':
+      return withHistory(state, {
         ...state,
-        project: {
-          ...state.project,
-          clips: state.project.clips.map((c) => (c.id === action.id ? { ...c, ...action.patch } : c)),
-        },
-      };
-      return withHistory(state, next);
-    }
+        project: { ...state.project, clips: state.project.clips.map((c) => (c.id === action.id ? { ...c, ...action.patch } : c)) },
+      });
     case 'moveClip': {
       const next = {
         ...state,
@@ -250,14 +212,18 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
     }
     case 'splitClipAtPlayhead': {
       const clip = state.project.clips.find((c) => c.id === action.id);
-      if (!clip || state.playheadSec <= clip.start || state.playheadSec >= clip.end) return state;
-      const left = { ...clip, end: state.playheadSec };
-      const right = { ...clip, id: `${clip.id}_r_${Date.now().toString(36)}`, start: state.playheadSec };
+      if (!clip) return state;
+      const split = splitTimelineClip(clip, state.playheadSec);
+      if (!split) return state;
+      const right: VtE1Clip = {
+        ...split.right,
+        id: `${clip.id}_r_${Date.now().toString(36)}`,
+      };
       const next = {
         ...state,
         project: {
           ...state.project,
-          clips: state.project.clips.flatMap((c) => (c.id === clip.id ? [left, right] : [c])),
+          clips: state.project.clips.flatMap((c) => (c.id === clip.id ? [split.left, right] : [c])),
         },
       };
       return withHistory(state, next);
@@ -282,61 +248,18 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       if (!clip) return state;
       const dur = clip.end - clip.start;
       const dup: VtE1Clip = { ...clip, id: `${clip.id}_dup_${Date.now().toString(36)}`, start: clip.end, end: clip.end + dur };
-      return withHistory(state, {
-        ...state,
-        project: { ...state.project, clips: [...state.project.clips, dup] },
-      });
+      return withHistory(state, { ...state, project: { ...state.project, clips: [...state.project.clips, dup] } });
     }
     case 'muteTrack':
-      return {
-        ...state,
-        project: {
-          ...state.project,
-          tracks: state.project.tracks.map((t) =>
-            t.id === action.id ? { ...t, muted: action.muted ?? !t.muted } : t,
-          ),
-        },
-      };
+      return { ...state, project: { ...state.project, tracks: state.project.tracks.map((t) => t.id === action.id ? { ...t, muted: action.muted ?? !t.muted } : t) } };
     case 'lockTrack':
-      return {
-        ...state,
-        project: {
-          ...state.project,
-          tracks: state.project.tracks.map((t) =>
-            t.id === action.id ? { ...t, locked: action.locked ?? !t.locked } : t,
-          ),
-        },
-      };
+      return { ...state, project: { ...state.project, tracks: state.project.tracks.map((t) => t.id === action.id ? { ...t, locked: action.locked ?? !t.locked } : t) } };
     case 'hideTrack':
-      return {
-        ...state,
-        project: {
-          ...state.project,
-          tracks: state.project.tracks.map((t) =>
-            t.id === action.id ? { ...t, hidden: action.hidden ?? !t.hidden } : t,
-          ),
-        },
-      };
-    case 'addTransition': {
-      const next = {
-        ...state,
-        project: {
-          ...state.project,
-          transitions: [...(state.project.transitions ?? []), action.transition],
-        },
-      };
-      return withHistory(state, next);
-    }
-    case 'removeTransition': {
-      const next = {
-        ...state,
-        project: {
-          ...state.project,
-          transitions: (state.project.transitions ?? []).filter((t) => (t as { id?: string }).id !== action.id),
-        },
-      };
-      return withHistory(state, next);
-    }
+      return { ...state, project: { ...state.project, tracks: state.project.tracks.map((t) => t.id === action.id ? { ...t, hidden: action.hidden ?? !t.hidden } : t) } };
+    case 'addTransition':
+      return withHistory(state, { ...state, project: { ...state.project, transitions: [...(state.project.transitions ?? []), action.transition] } });
+    case 'removeTransition':
+      return withHistory(state, { ...state, project: { ...state.project, transitions: (state.project.transitions ?? []).filter((t) => (t as { id?: string }).id !== action.id) } });
 
     case 'undo': {
       const last = state.history.past[state.history.past.length - 1];
@@ -354,20 +277,14 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       const future = state.history.future.slice(1);
       return { ...state, project: parsed.project, playheadSec: parsed.playhead, selection: parsed.selection, history: { past, future } };
     }
-
     default:
       return state;
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* useEditorState hook                                                */
-/* ------------------------------------------------------------------ */
-
 export interface EditorStore {
   state: EditorState;
   dispatch: React.Dispatch<EditorAction>;
-  // Derived read-only helpers.
   selectedClips: VtE1Clip[];
   trackById: (id: string) => Track | undefined;
   clipsOnTrack: (trackId: string) => VtE1Clip[];
@@ -378,27 +295,11 @@ export interface EditorStore {
 
 export function useEditorState(seed?: Partial<EditorState['project']>): EditorStore {
   const [state, dispatch] = useReducer(editorReducer, undefined, () => initialState(seed));
-
-  const selectedClips = useMemo(
-    () => state.project.clips.filter((c) => state.selection.clipIds.includes(c.id)),
-    [state.project.clips, state.selection.clipIds],
-  );
-  const trackById = useCallback(
-    (id: string) => state.project.tracks.find((t) => t.id === id),
-    [state.project.tracks],
-  );
-  const clipsOnTrack = useCallback(
-    (trackId: string) => state.project.clips.filter((c) => c.trackId === trackId).sort((a, b) => a.start - b.start),
-    [state.project.clips],
-  );
+  const selectedClips = useMemo(() => state.project.clips.filter((c) => state.selection.clipIds.includes(c.id)), [state.project.clips, state.selection.clipIds]);
+  const trackById = useCallback((id: string) => state.project.tracks.find((t) => t.id === id), [state.project.tracks]);
+  const clipsOnTrack = useCallback((trackId: string) => state.project.clips.filter((c) => c.trackId === trackId).sort((a, b) => a.start - b.start), [state.project.clips]);
   const activeClipAtPlayhead = useCallback(
-    (trackId?: string) =>
-      state.project.clips.find(
-        (c) =>
-          state.playheadSec >= c.start &&
-          state.playheadSec < c.end &&
-          (trackId ? c.trackId === trackId : true),
-      ),
+    (trackId?: string) => state.project.clips.find((c) => state.playheadSec >= c.start && state.playheadSec < c.end && (trackId ? c.trackId === trackId : true)),
     [state.project.clips, state.playheadSec],
   );
 
