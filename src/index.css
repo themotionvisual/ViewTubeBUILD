@@ -11,6 +11,10 @@
    (QW#8) and container-query density tokens (QW#10). */
 @import "./styles/perf.css";
 
+/* Shared subtoolbox shell, primitive, layout and state contract. Loaded after
+   legacy performance overrides so this layer remains the visual authority. */
+@import "./styles/subtoolbox-system.css";
+
 html,
 body,
 #root {

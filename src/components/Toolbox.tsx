@@ -4,38 +4,24 @@ import { CustomIcon } from './CustomIcon';
 import { getToolboxPaletteColors } from '../styles/toolboxPalette';
 import { hexToRgba, AnimatedToggleIcon } from './ToolboxUISystem';
 import { ChevronDown, CircleQuestionMark, Cloud, Zap } from 'lucide-react';
+import {
+  CONTROL_SHELL,
+  SUBTOOLBOX_COLLAPSE_TRANSITION,
+  SUBTOOLBOX_TOKENS,
+  resolveSubtoolboxMinHeight,
+} from './subtoolbox/tokens';
 
-// Canonical shell tokens shared by SubToolbox, DropdownControl, and ActionControlButton.
-export const CONTROL_SHELL = {
-  headerHeight: 56, // Header block height; 56 + 4px stroke seam = 60px control rhythm.
-  height: 60,
-  stroke: 4,
-  radius: 8,
-  railSize: 56,
-  shadowOffset: 6,
-  transition: "duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
-} as const;
-const SHELL_COLLAPSE_TRANSITION = "duration-300 ease-out motion-reduce:transition-none";
-const SHELL_COLLAPSE_DURATION_MS = 300;
+export { CONTROL_SHELL } from './subtoolbox/tokens';
+
+const SHELL_COLLAPSE_TRANSITION = SUBTOOLBOX_COLLAPSE_TRANSITION;
+const SHELL_COLLAPSE_DURATION_MS = SUBTOOLBOX_TOKENS.motion.collapseMs;
 const MAIN_TOOLBOX_STROKE = 5;
 const MAIN_TOOLBOX_SHADOW = 10;
-const SUB_TOOLBOX_STROKE = 4;
-const SUB_TOOLBOX_SHADOW = 6;
-const SUB_TOOLBOX_RADIUS = 12;
-const SUB_TOOLBOX_INNER_STROKE = 4;
-const SUB_TOOLBOX_INNER_SHADOW = 4;
-
-const resolveSubtoolboxMinHeight = (
-  openUnits: number,
-  heightMode: "standard" | "compact"
-) => {
-  // Target total = openUnits * 60 + (openUnits-1) * 24
-  const gap = 24;
-  const overhead = 60; // 56 header + 2px top + 2px bottom (approx)
-  const computed = openUnits * 60 + (openUnits - 1) * gap - overhead;
-  if (heightMode === "compact") return Math.max(0, Math.min(computed, 144));
-  return Math.max(0, computed);
-};
+const SUB_TOOLBOX_STROKE = SUBTOOLBOX_TOKENS.shell.stroke;
+const SUB_TOOLBOX_SHADOW = SUBTOOLBOX_TOKENS.shell.shadowOffset;
+const SUB_TOOLBOX_RADIUS = SUBTOOLBOX_TOKENS.shell.radius;
+const SUB_TOOLBOX_INNER_STROKE = SUBTOOLBOX_TOKENS.shell.stroke;
+const SUB_TOOLBOX_INNER_SHADOW = SUBTOOLBOX_TOKENS.interior.shadowOffset;
 
 interface IconRailProps {
   backgroundColor: string;
@@ -656,7 +642,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           </IconRail>
 
           <div className="flex items-center pl-2.5 h-full pointer-events-none select-none">
-            <h3 className="font-[900] uppercase tracking-tighter leading-none text-[20px]">
+            <h3 className="font-[900] uppercase tracking-tighter leading-none text-[length:var(--vt-subtoolbox-title-size,20px)]">
               {title}
             </h3>
           </div>
@@ -715,8 +701,8 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
               // Provide parent accent to all inner controls via CSS vars
               ["--vt-subtoolbox-fill" as any]: headerHex,
               ["--vt-subtoolbox-shadow" as any]: shadowColor,
-              ["--vt-inner-stroke" as any]: "3px",
-              ["--vt-inner-shadow" as any]: "4px",
+              ["--vt-inner-stroke" as any]: `${SUBTOOLBOX_TOKENS.interior.stroke}px`,
+              ["--vt-inner-shadow" as any]: `${SUBTOOLBOX_TOKENS.interior.shadowOffset}px`,
             }}
           >
             {children}

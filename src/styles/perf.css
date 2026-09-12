@@ -316,23 +316,20 @@
  */
 @media (max-width: 767px) and (orientation: portrait) {
   /* Header + icon rail height come down together to keep the icon centered. */
-  [data-vt-toolbox-level="main"] > header,
-  [data-vt-toolbox-level="sub"] > div > header {
+  [data-vt-toolbox-level="main"] > header {
     height: 44px !important;
     min-height: 44px !important;
   }
   /* IconRail is the first child inside header; its width matches header height.
      Aspect-square by construction, so shrinking width is enough. */
-  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child,
-  [data-vt-toolbox-level="sub"] > div > header > div:first-child > div:first-child {
+  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child {
     width: 44px !important;
     min-width: 44px !important;
     max-width: 44px !important;
   }
   /* Icon SVG inside the rail — was size=40, shrink to 24 so it clears the
      44px rail with margin. */
-  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child svg,
-  [data-vt-toolbox-level="sub"] > div > header > div:first-child > div:first-child svg {
+  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child svg {
     width: 24px !important;
     height: 24px !important;
   }
@@ -347,18 +344,9 @@
     overflow: hidden !important;
     text-overflow: ellipsis !important;
   }
-  [data-vt-toolbox-level="sub"] > div > header h3 {
-    font-size: 20px !important;
-    letter-spacing: -0.02em !important;
-    line-height: 1 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
   /* Help/toggle buttons on the right stay their existing size but tighten
      the padding so the whole right cluster consumes less of the row. */
-  [data-vt-toolbox-level="main"] > header > div:last-child,
-  [data-vt-toolbox-level="sub"] > div > header > div:last-child {
+  [data-vt-toolbox-level="main"] > header > div:last-child {
     padding-right: 6px !important;
     gap: 4px !important;
   }
@@ -368,12 +356,6 @@
     --vt-toolbox-stroke: 3px;
     --vt-toolbox-radius: 12px;
     --vt-toolbox-shadow-offset: 4px;
-  }
-  [data-vt-toolbox-level="sub"] {
-    --vt-subtoolbox-stroke: 3px;
-    --vt-subtoolbox-radius: 10px;
-    --vt-subtoolbox-shadow-offset: 4px;
-    --vt-subtoolbox-header-height: 44px;
   }
 
   /* Studio Hub page title — text-7xl (72px) is 2× too big for a 375px
@@ -386,19 +368,16 @@
 @media (max-width: 900px) and (orientation: landscape) {
   /* Landscape phones — same intent as portrait, slightly less aggressive
      shrinking since horizontal room isn't the constraint. */
-  [data-vt-toolbox-level="main"] > header,
-  [data-vt-toolbox-level="sub"] > div > header {
+  [data-vt-toolbox-level="main"] > header {
     height: 44px !important;
     min-height: 44px !important;
   }
-  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child,
-  [data-vt-toolbox-level="sub"] > div > header > div:first-child > div:first-child {
+  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child {
     width: 44px !important;
     min-width: 44px !important;
     max-width: 44px !important;
   }
-  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child svg,
-  [data-vt-toolbox-level="sub"] > div > header > div:first-child > div:first-child svg {
+  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child svg {
     width: 24px !important;
     height: 24px !important;
   }
@@ -411,23 +390,9 @@
     overflow: hidden !important;
     text-overflow: ellipsis !important;
   }
-  [data-vt-toolbox-level="sub"] > div > header h3 {
-    font-size: 20px !important;
-    letter-spacing: -0.02em !important;
-    line-height: 1 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
   [data-vt-toolbox-level="main"] {
     --vt-toolbox-stroke: 3px;
     --vt-toolbox-radius: 12px;
     --vt-toolbox-shadow-offset: 4px;
-  }
-  [data-vt-toolbox-level="sub"] {
-    --vt-subtoolbox-stroke: 3px;
-    --vt-subtoolbox-radius: 10px;
-    --vt-subtoolbox-shadow-offset: 4px;
-    --vt-subtoolbox-header-height: 44px;
   }
 }

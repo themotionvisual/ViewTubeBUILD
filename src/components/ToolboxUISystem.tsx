@@ -4,6 +4,9 @@ import { StandardButton } from "./StandardButton"
 import { StandardInput } from "./StandardInput"
 import { StandardDropdown } from "./StandardDropdown"
 import { StandardKPI } from "./StandardKPI"
+import { CONTROL_SHELL } from "./subtoolbox/tokens"
+
+export { CONTROL_SHELL } from "./subtoolbox/tokens"
 
 import {
  ChevronDown,
@@ -165,10 +168,6 @@ type ActionControlButtonProps = {
  shadowColor?: string
 }
 
-// Universal subtoolbox-sized control geometry.
-// Any subtoolbox-row control should read these tokens rather than define local sizes/corners.
-const HEAD_HEIGHT = 56 // Header block height; 56 + 4px stroke seam = 60px control rhythm.
-
 const ROW_CONTROL_THEMES = {
  orange: {
   surface: "#FCAF57",
@@ -190,18 +189,6 @@ const ROW_CONTROL_THEMES = {
   control: "#C9F830",
   shadow: "#24D3FF",
  },
-} as const
-
-// Canonical shell tokens shared by SubToolbox, DropdownControl, and ActionControlButton.
-export const CONTROL_SHELL = {
- headerHeight: HEAD_HEIGHT,
- height: 60,
- stroke: 4,
- radius: 16,
- railSize: HEAD_HEIGHT,
- contentOffset: HEAD_HEIGHT,
- shadowOffset: 6,
- transition: "duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
 } as const
 
 const CONFIG: SystemConfig = {

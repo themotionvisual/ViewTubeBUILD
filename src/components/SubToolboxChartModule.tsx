@@ -13,6 +13,7 @@ import {
 } from "./analyticsVisualContextBar"
 import { HeaderHeroPlayButton } from "./HeroIntroBoundary"
 import type { HeroVisualId } from "./heroVisualAnimations"
+import { SUBTOOLBOX_COLLAPSE_TRANSITION, SUBTOOLBOX_TOKENS } from "./subtoolbox/tokens"
 
 type Tone = "pink" | "cyan" | "lime" | "yellow" | "purple" | "orange" | "white"
 
@@ -203,11 +204,12 @@ export const SubToolboxChartModule: React.FC<
     setHasOpened(true)
   }
 
+  const headerBandBg = visualStyle?.headerColorPair?.title ?? theme?.headerBandBg ?? "#FF82B0"
   const tokens = {
     frameBg: theme?.frameBg ?? "#FFFFFF",
     frameBorder: theme?.frameBorder ?? "#000000",
-    shadowColor: visualStyle?.headerColorPair?.title ? `${visualStyle.headerColorPair.title}73` : theme?.shadowColor ?? "#000000",
-    headerBandBg: visualStyle?.headerColorPair?.title ?? theme?.headerBandBg ?? "#FF82B0",
+    shadowColor: visualStyle?.headerColorPair?.title ? `${visualStyle.headerColorPair.title}73` : theme?.shadowColor ?? `${headerBandBg}73`,
+    headerBandBg,
     iconBlockBg: visualStyle?.headerColorPair?.icon ?? theme?.iconBlockBg ?? "#26C7EC",
     iconBlockBorder: theme?.iconBlockBorder ?? "#000000",
     controlBoxBg: theme?.controlBoxBg ?? "#000000",
@@ -224,18 +226,22 @@ export const SubToolboxChartModule: React.FC<
       : activeContext?.stats?.length
         ? activeContext.stats.slice(0, 4).map((s) => ({ label: s.label, tone: s.tone }))
         : []
-  const headerBorderClass = collapsible && !internalOpen ? "" : "border-b-[4px] border-black"
   const interiorMinHeight = collapsible && !internalOpen ? 0 : (layout?.moduleMinHeight ?? "420px")
   const activeContextHeight = resolveAnalyticsVisualContextBarHeight(activeContext)
 
   return (
     <div
-      className="border-[4px] rounded-2xl overflow-hidden flex flex-col"
+      data-vt-subtoolbox-module="true"
+      data-state={internalOpen ? "open" : "closed"}
+      className="overflow-hidden flex flex-col"
       style={{
         background: tokens.frameBg,
-        borderColor: tokens.frameBorder,
-        boxShadow: `8px 8px 0px 0px ${tokens.shadowColor}`,
+        border: `var(--vt-subtoolbox-stroke, ${SUBTOOLBOX_TOKENS.shell.stroke}px) solid ${tokens.frameBorder}`,
+        borderRadius: `var(--vt-subtoolbox-radius, ${SUBTOOLBOX_TOKENS.shell.radius}px)`,
+        boxShadow: `var(--vt-subtoolbox-shadow-offset, ${SUBTOOLBOX_TOKENS.shell.shadowOffset}px) var(--vt-subtoolbox-shadow-offset, ${SUBTOOLBOX_TOKENS.shell.shadowOffset}px) 0 0 ${tokens.shadowColor}`,
         maxWidth: layout?.moduleWidth ?? "100%",
+        ["--vt-subtoolbox-fill" as any]: tokens.headerBandBg,
+        ["--vt-subtoolbox-shadow" as any]: tokens.shadowColor,
       }}
     >
       {/*
@@ -249,7 +255,11 @@ export const SubToolboxChartModule: React.FC<
           controllers on their own row underneath, spanning the full width.
       */}
       <div
-        className={`${headerBorderClass} flex flex-col sm:flex-row sm:items-stretch min-h-[80px] ${collapsible ? 'cursor-pointer' : ''}`}
+        className={`flex flex-col sm:flex-row sm:items-stretch ${collapsible ? 'cursor-pointer' : ''}`}
+        style={{
+          minHeight: `var(--vt-subtoolbox-header-height, ${SUBTOOLBOX_TOKENS.shell.headerHeight}px)`,
+          borderBottom: `var(--vt-subtoolbox-stroke, ${SUBTOOLBOX_TOKENS.shell.stroke}px) solid #000`,
+        }}
         onClick={collapsible ? setOpen : undefined}
       >
         <div
@@ -259,14 +269,19 @@ export const SubToolboxChartModule: React.FC<
           {/* self-stretch fills the header's full height (no white frame showing beneath),
               and aspect-square drives the width off that height so the block stays square. */}
           <div
-            className="self-stretch aspect-square min-w-[80px] shrink-0 flex-none border-r-[4px] border-black flex items-center justify-center"
-            style={{ background: tokens.iconBlockBg, borderColor: tokens.iconBlockBorder }}
+            className="self-stretch aspect-square shrink-0 flex-none flex items-center justify-center"
+            style={{
+              width: `var(--vt-subtoolbox-header-height, ${SUBTOOLBOX_TOKENS.shell.headerHeight}px)`,
+              minWidth: `var(--vt-subtoolbox-header-height, ${SUBTOOLBOX_TOKENS.shell.headerHeight}px)`,
+              background: tokens.iconBlockBg,
+              borderRight: `var(--vt-subtoolbox-stroke, ${SUBTOOLBOX_TOKENS.shell.stroke}px) solid ${tokens.iconBlockBorder}`,
+            }}
           >
             <span className="[&_svg]:h-8 [&_svg]:w-8">{resolvedHeaderIcon}</span>
           </div>
           <div className="flex min-w-0 flex-1 items-center gap-3 py-2 pl-3 pr-3 text-black">
             <div className="min-w-0 flex-1">
-              <div className={`max-w-full font-[1000] uppercase tracking-[0em] ${header.titleClassName ?? "text-[clamp(20px,5vw,42px)] leading-[0.88]"}`}>
+              <div className={`max-w-full font-[1000] uppercase tracking-[0em] leading-none ${header.titleClassName ?? ""}`} style={{ fontSize: "var(--vt-subtoolbox-title-size, 20px)" }}>
                 {header.title}
               </div>
               <div className="max-w-full truncate text-[clamp(10px,2.2vw,14px)] font-black uppercase tracking-[0.069em] text-black/80">
@@ -322,7 +337,10 @@ export const SubToolboxChartModule: React.FC<
         ) : null}
       </div>
 
-      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ${internalOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+      <div
+        className={`grid transition-[grid-template-rows,opacity] ${SUBTOOLBOX_COLLAPSE_TRANSITION} ${internalOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+        style={{ marginTop: `calc(var(--vt-subtoolbox-stroke, ${SUBTOOLBOX_TOKENS.shell.stroke}px) * -1)` }}
+      >
         <div className="overflow-hidden flex flex-col relative">
           {activeContext ? (
             <div
