@@ -1,0 +1,43 @@
+/* Canonical split-left geometry. Apply data-vt-split-left to module actions,
+ * dropdown triggers and other split-left controls. */
+[data-vt-toolbox-level="sub"] [data-vt-split-left] {
+  --vt-split-left-height: var(--vt-subtoolbox-header-height, 56px);
+  min-height: var(--vt-split-left-height);
+  height: var(--vt-split-left-height);
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  padding: 0;
+  font-size: var(--vt-subtoolbox-title-size, 20px);
+  font-weight: 900;
+}
+
+[data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-rail] {
+  width: var(--vt-split-left-height);
+  min-width: var(--vt-split-left-height);
+  height: var(--vt-split-left-height);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--vt-split-left-height);
+  border-right: var(--vt-subtoolbox-stroke, 4px) solid #000;
+}
+
+[data-vt-toolbox-level="sub"] [data-vt-split-left][data-size="compact"] {
+  --vt-split-left-height: 44px;
+}
+
+[data-vt-toolbox-level="sub"] [data-vt-split-left][data-size="compact"] > [data-vt-split-left-rail] {
+  border-right-width: 3px;
+}
+
+[data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-label] {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  padding-inline: 12px;
+  text-transform: uppercase;
+  line-height: 1;
+}
