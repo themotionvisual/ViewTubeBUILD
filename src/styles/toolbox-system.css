@@ -1,0 +1,49 @@
+/* ViewTube main-toolbox CSS authority.
+ * Keep these selectors rooted to the main toolbox owner so widget and
+ * subtoolbox geometry cannot bleed across component systems.
+ */
+[data-vt-toolbox-level="main"] {
+  --vt-toolbox-header-height: 80px;
+  --vt-toolbox-stroke: 5px;
+  --vt-toolbox-radius: 16px;
+  --vt-toolbox-shadow-offset: 10px;
+  --vt-toolbox-title-size: 26px;
+}
+
+[data-vt-toolbox-level="main"][data-vt-toolbox-variant="scaffold"] > header {
+  min-height: var(--vt-toolbox-header-height);
+}
+
+/* The first header region is always a square rail. */
+[data-vt-toolbox-level="main"][data-vt-toolbox-variant="scaffold"] > header > :first-child > :first-child {
+  width: var(--vt-toolbox-header-height);
+  min-width: var(--vt-toolbox-header-height);
+  aspect-ratio: 1 / 1;
+}
+
+[data-vt-toolbox-level="main"][data-vt-toolbox-variant="scaffold"] > header h1 {
+  font-size: var(--vt-toolbox-title-size);
+  font-weight: 1000;
+}
+
+/* Explicitly exclude the legacy accordion reference treatment from the main
+ * scaffold geometry. Production nested sections belong to SubToolbox. */
+[data-vt-toolbox-level="main"][data-vt-toolbox-variant="accordion"] {
+  --vt-toolbox-header-height: 56px;
+  --vt-toolbox-radius: 12px;
+  --vt-toolbox-title-size: 20px;
+}
+
+/* Studio Hub toolbox content may contain subtoolboxes, but the main owner does
+ * not reach into their geometry. Subtoolbox styling stays in its own system. */
+[data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] {
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  [data-vt-toolbox-level="main"] {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
