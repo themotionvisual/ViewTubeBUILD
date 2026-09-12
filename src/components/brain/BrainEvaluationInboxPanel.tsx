@@ -1,10 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { AlertTriangle, CheckCircle2, Clock3, GitBranch, RefreshCw, Sparkles } from "lucide-react"
 import { buildBrainEvaluationInbox, type BrainEvaluationInboxItem } from "../../services/brain/BrainEvaluationInbox"
-import { ALGORITHM_INTELLIGENCE_EVENT_CHANGED } from "../../services/brain/AlgorithmIntelligenceEventLedger"
+import {
+ ALGORITHM_INTELLIGENCE_EVENT_CHANGED,
+ hydrateAlgorithmIntelligenceEvents,
+} from "../../services/brain/AlgorithmIntelligenceEventLedger"
 import { BRAIN_OUTCOME_EVENT } from "../../services/brain/BrainOutcomeLedger"
 import { reviewAlgorithmLearningCandidate } from "../../services/brain/AlgorithmLearningGovernance"
-import { captureCanonicalLifecycleObservations } from "../../services/brain/AlgorithmLifecycleObservationStore"
+import {
+ captureCanonicalLifecycleObservations,
+ hydrateAlgorithmLifecycleObservations,
+} from "../../services/brain/AlgorithmLifecycleObservationStore"
 import { resolveDueAlgorithmMonitoringCheckpoints } from "../../services/brain/AlgorithmMonitoringResolver"
 import { processResolvableFinalAlgorithmEvaluations } from "../../services/brain/AlgorithmFinalEvaluationResolver"
 import { BrainAttributionDetailPanel } from "./BrainAttributionDetailPanel"
@@ -42,7 +48,11 @@ export const BrainEvaluationInboxPanel: React.FC<{ channelId: string | null; max
 
  useEffect(() => {
   if (!channelId) return
-  const capture = () => {
+  let cancelled = false
+  let unsubscribe: () => void = () => undefined
+
+  const advance = () => {
+   if (cancelled) return
    try {
     const snapshot = getVtSyncSnapshot()
     captureCanonicalLifecycleObservations({ channelId, snapshot })
@@ -53,8 +63,22 @@ export const BrainEvaluationInboxPanel: React.FC<{ channelId: string | null; max
     console.warn("[BrainEvaluationInbox] lifecycle/evaluation advancement unavailable:", error)
    }
   }
-  capture()
-  return subscribeToVtSyncSnapshot(capture)
+
+  void Promise.all([
+   hydrateAlgorithmIntelligenceEvents(channelId),
+   hydrateAlgorithmLifecycleObservations(channelId),
+  ]).catch((error) => {
+   console.warn("[BrainEvaluationInbox] durable intelligence hydration unavailable; using local cache:", error)
+  }).finally(() => {
+   if (cancelled) return
+   advance()
+   unsubscribe = subscribeToVtSyncSnapshot(advance)
+  })
+
+  return () => {
+   cancelled = true
+   unsubscribe()
+  }
  }, [channelId])
 
  const inbox = useMemo(() => channelId ? buildBrainEvaluationInbox({ channelId, maximum: Math.max(20, maximumItems * 4) }) : null, [channelId, maximumItems, revision])
