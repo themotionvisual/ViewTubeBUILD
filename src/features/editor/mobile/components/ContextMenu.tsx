@@ -1,10 +1,4 @@
-/**
- * Long-press context menu.
- *
- * Positioned as a floating card near the touch point, but auto-flipped when
- * it would spill off-screen. Renders a flat list of actions with
- * icon + label + optional destructive style.
- */
+/** Long-press context menu. */
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 export interface ContextMenuItem {
@@ -21,6 +15,9 @@ export interface ContextMenuProps {
   onDismiss: () => void;
   title?: string;
 }
+
+const CYAN = '#36E0F6';
+const INK = '#248b99';
 
 export const ContextMenu: React.FC<ContextMenuProps> = ({ items, at, onDismiss, title }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -43,10 +40,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, at, onDismiss, 
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onDismiss(); };
-    const onDown = (e: PointerEvent) => {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) onDismiss();
-    };
+    const onDown = (e: PointerEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onDismiss(); };
     window.addEventListener('keydown', onKey);
     window.addEventListener('pointerdown', onDown, { capture: true });
     return () => {
@@ -56,67 +50,19 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, at, onDismiss, 
   }, [onDismiss]);
 
   return (
-    <div
-      ref={ref}
-      role="menu"
-      style={{
-        position: 'fixed',
-        top: pos.y,
-        left: pos.x,
-        minWidth: 200,
-        background: '#0f172a',
-        border: '1px solid #1e293b',
-        borderRadius: 12,
-        boxShadow: '0 20px 40px rgba(0,0,0,0.55)',
-        padding: 6,
-        zIndex: 200,
-      }}
-    >
-      {title && (
-        <div style={{
-          padding: '6px 10px 8px',
-          fontSize: 10,
-          fontWeight: 800,
-          color: '#94a3b8',
-          textTransform: 'uppercase',
-          letterSpacing: 0.6,
-          borderBottom: '1px solid #1e293b',
-          marginBottom: 4,
-        }}>
-          {title}
-        </div>
-      )}
+    <div ref={ref} role="menu" style={{ position: 'fixed', top: pos.y, left: pos.x, minWidth: 200, background: '#fff', border: `3px solid ${INK}`, borderRadius: 7, boxShadow: '4px 4px 0 rgba(54,224,246,.4)', padding: 5, zIndex: 200, color: '#000' }}>
+      {title && <div style={{ padding: '6px 8px', fontSize: 9, fontWeight: 900, color: '#000', textTransform: 'uppercase', letterSpacing: 0.6, borderBottom: `2px solid ${INK}`, marginBottom: 4, background: CYAN }}>{title}</div>}
       {items.map((item, i) => (
         <button
           key={i}
           role="menuitem"
           disabled={item.disabled}
           onClick={() => { item.onSelect(); onDismiss(); }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            width: '100%',
-            padding: '10px 12px',
-            borderRadius: 8,
-            border: 'none',
-            background: 'transparent',
-            color: item.destructive ? '#f87171' : '#e2e8f0',
-            fontSize: 14,
-            fontWeight: 600,
-            textAlign: 'left',
-            cursor: item.disabled ? 'not-allowed' : 'pointer',
-            opacity: item.disabled ? 0.4 : 1,
-            touchAction: 'manipulation',
-          }}
-          onPointerEnter={(e) => {
-            if (!item.disabled) (e.currentTarget as HTMLButtonElement).style.background = '#1e293b';
-          }}
-          onPointerLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
-          }}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '8px 9px', borderRadius: 4, border: `1.5px solid ${INK}`, marginTop: i ? 3 : 0, background: '#fff', color: item.destructive ? '#b91c1c' : '#000', fontSize: 11, fontWeight: 900, textAlign: 'left', cursor: item.disabled ? 'not-allowed' : 'pointer', opacity: item.disabled ? 0.4 : 1, touchAction: 'manipulation' }}
+          onPointerEnter={(e) => { if (!item.disabled) (e.currentTarget as HTMLButtonElement).style.background = CYAN; }}
+          onPointerLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#fff'; }}
         >
-          <span style={{ width: 20, textAlign: 'center', opacity: 0.85 }}>{item.icon}</span>
+          <span style={{ width: 20, textAlign: 'center' }}>{item.icon}</span>
           <span>{item.label}</span>
         </button>
       ))}
