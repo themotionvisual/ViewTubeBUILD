@@ -7,4 +7,7 @@ export * from './templates/graphics';
 export * from './templates/scenes';
 export * from './motion/presets';
 export * from './catalog';
+export * from './integration/types';
+export * from './integration/legacyTemplateAliases';
+export * from './integration/vtE1Adapter';
 export * from './integration/timelineAdapter';
