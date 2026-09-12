@@ -1,0 +1,69 @@
+name: Wire VT_E1 desktop project bridge
+
+on:
+  push:
+    branches:
+      - feat/editor-desktop-project-bridge-hook-2026-09-12
+    paths:
+      - .github/workflows/editor-bridge-self-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  wire-bridge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/editor-desktop-project-bridge-hook-2026-09-12
+          fetch-depth: 0
+
+      - name: Wire bridge hook into canonical VT_E1
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/features/editor/VT_E1.jsx')
+          source = path.read_text()
+
+          import_line = "import { useDesktopProjectBridge } from './useDesktopProjectBridge';"
+          if import_line not in source:
+              anchor = "import JSZip from 'jszip';"
+              if anchor not in source:
+                  raise SystemExit('VT_E1 import anchor not found')
+              source = source.replace(anchor, anchor + "\n" + import_line, 1)
+
+          hook_call = "      useDesktopProjectBridge({ project, setProject, normalizeProject });"
+          if hook_call not in source:
+              anchor = "      const [project, setProject] = useState(() => normalizeProject(defaultProject()));"
+              if anchor not in source:
+                  raise SystemExit('VT_E1 project state anchor not found')
+              source = source.replace(anchor, anchor + "\n" + hook_call, 1)
+
+          path.write_text(source)
+          PY
+
+      - name: Verify surgical diff
+        shell: bash
+        run: |
+          git diff --check
+          git diff -- src/features/editor/VT_E1.jsx
+          grep -F "import { useDesktopProjectBridge } from './useDesktopProjectBridge';" src/features/editor/VT_E1.jsx
+          grep -F "useDesktopProjectBridge({ project, setProject, normalizeProject });" src/features/editor/VT_E1.jsx
+
+      - name: Commit bridge wiring and remove one-time workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/editor-bridge-self-patch.yml
+          git add src/features/editor/VT_E1.jsx
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          git commit -m "feat(editor): connect VT_E1 to shared project bridge"
+          git push origin HEAD:feat/editor-desktop-project-bridge-hook-2026-09-12
