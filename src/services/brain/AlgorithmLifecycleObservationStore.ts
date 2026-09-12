@@ -4,6 +4,7 @@ import {
  lifecycleObservationKey,
  type AlgorithmLifecycleObservation,
 } from "./AlgorithmLifecycleCohorts"
+import { loadPersistedBrainIntelligence, persistBrainIntelligence } from "./BrainIntelligencePersistence"
 
 const STORAGE_KEY = "vt_algorithm_lifecycle_observations_v1"
 export const ALGORITHM_LIFECYCLE_OBSERVATIONS_CHANGED = "vt_algorithm_lifecycle_observations_changed"
@@ -42,6 +43,22 @@ const write = (rows: AlgorithmLifecycleObservation[]) => {
  window.dispatchEvent(new CustomEvent(ALGORITHM_LIFECYCLE_OBSERVATIONS_CHANGED, { detail: bounded.length }))
 }
 
+export const hydrateAlgorithmLifecycleObservations = async (channelId: string) => {
+ const persisted = await loadPersistedBrainIntelligence(channelId)
+ if (!persisted) return { hydrated: 0 }
+ const remote = (persisted.observations || []) as AlgorithmLifecycleObservation[]
+ const local = read()
+ const byKey = new Map(local.map((row) => [lifecycleObservationKey(row), row]))
+ remote.forEach((row) => {
+  if (!row?.videoId || row.channelId !== channelId) return
+  const key = lifecycleObservationKey(row)
+  const current = byKey.get(key)
+  if (!current || row.observedAt >= current.observedAt) byKey.set(key, row)
+ })
+ write([...byKey.values()])
+ return { hydrated: remote.length }
+}
+
 export const listAlgorithmLifecycleObservations = (input: {
  channelId?: string | null
  videoId?: string | null
@@ -64,6 +81,17 @@ export const upsertAlgorithmLifecycleObservations = (
  })
  const next = [...byKey.values()]
  write(next)
+ const byChannel = new Map<string, AlgorithmLifecycleObservation[]>()
+ observations.forEach((row) => {
+  const rows = byChannel.get(row.channelId) || []
+  rows.push(row)
+  byChannel.set(row.channelId, rows)
+ })
+ byChannel.forEach((rows, channelId) => {
+  void persistBrainIntelligence({ channelId, observations: rows }).catch((error) => {
+   console.warn("[AlgorithmLifecycleObservationStore] durable sync deferred:", error)
+  })
+ })
  return observations
 }
 
@@ -95,14 +123,6 @@ const semanticMetricsForVideoRow = (row: Record<string, unknown>) => {
  return metrics.filter((entry): entry is [string, number] => entry[1] != null)
 }
 
-/**
- * Captures genuine lifecycle evidence from a canonical VT-SYNC snapshot.
- *
- * A video row is only useful as lifecycle evidence because the snapshot has a
- * concrete capture time and the video has a concrete publish time. We store the
- * actual lifecycle age at capture; we never relabel a current/lifetime total as
- * T+24h or T+72h after the fact.
- */
 export const captureCanonicalLifecycleObservations = (input: {
  channelId: string
  snapshot: VtSyncSnapshot
