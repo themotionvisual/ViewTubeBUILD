@@ -7,14 +7,13 @@ import PublishingScheduleArchitect from "./PublishingScheduleArchitect";
 /**
  * User-facing Projects workspace.
  *
- * The Kanban board is the primary project-management surface. It works against
- * the existing persisted Brain project records while its lane/order/filter
- * metadata is isolated in the projects workspace store. The older internal
- * Project Command workbench is intentionally not mounted here anymore: creator
- * workflows should expose projects and actions, not system/tool architecture.
- *
- * ProjectStudio and the publishing scheduler remain below the board while the
- * calendar/scheduling phase is rebuilt against the same shared project model.
+ * The project board and publishing calendar are the primary planning surfaces.
+ * Both work against the existing persisted Brain project records: board-specific
+ * lane/order/filter metadata stays isolated in the project workspace store,
+ * while schedule dates write directly to each project's publishDate field.
+ * Internal Project Command and Publishing Architect workbenches are deliberately
+ * not mounted here; creator workflows expose projects, dates, progress, and
+ * actions instead of system architecture.
  */
 const ProjectCalendarPage: React.FC = () => {
   return (
@@ -23,12 +22,12 @@ const ProjectCalendarPage: React.FC = () => {
         <ProjectKanbanWorkspace />
       </div>
 
+      <div id="publishing-schedule" className="scroll-mt-24">
+        <PublishingScheduleArchitect collapsible isOpenInitial paletteIndex={3} />
+      </div>
+
       <ProjectStudio />
       <StoryboardStudio collapsible isOpenInitial={false} paletteIndex={1} />
-
-      <div id="publishing-schedule" className="scroll-mt-24">
-        <PublishingScheduleArchitect collapsible isOpenInitial={false} paletteIndex={3} />
-      </div>
     </div>
   );
 };
