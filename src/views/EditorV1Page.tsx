@@ -12,6 +12,11 @@ import {
   readEditorProjectBridgeSnapshot,
   writeEditorProjectBridgeSnapshot,
 } from "../features/editor/editorProjectBridge";
+import {
+  desktopProjectToMobileBridgeProject,
+  type DesktopProjectRecord,
+  type MobileBridgeProject,
+} from "../features/editor/editorDesktopProjectAdapter";
 
 interface EditorRouteBoundaryState {
   error: Error | null;
@@ -138,6 +143,17 @@ const EditorFrontendSwitcher: React.FC<{
   );
 };
 
+function projectSeedForMobile(): MobileBridgeProject | undefined {
+  const snapshot = readEditorProjectBridgeSnapshot();
+  if (!snapshot) return undefined;
+
+  if (snapshot.source === 'desktop') {
+    return desktopProjectToMobileBridgeProject(snapshot.project as DesktopProjectRecord);
+  }
+
+  return snapshot.project as MobileBridgeProject;
+}
+
 /**
  * VT_E1 editor host with two selectable front-end presentations over one
  * canonical desktop editor engine:
@@ -152,10 +168,10 @@ const EditorFrontendSwitcher: React.FC<{
  * The mobile editor store is owned by this route rather than by MobileEditor.
  * That keeps mobile timeline/project edits alive if a user temporarily switches
  * to the classic host and then returns to the responsive/mobile presentation.
- * Mobile project data also writes through the small versioned project bridge so
- * route remounts can restore the clip/transition project without coupling the
- * mobile UI to the giant desktop component. The canonical VT_E1 desktop model
- * still needs its adapter to complete two-way desktop<->mobile synchronization.
+ * The route can seed mobile from either a mobile bridge snapshot or a full
+ * desktop VT_E1 project snapshot using the explicit desktop/mobile adapter.
+ * The final remaining bridge step is publishing/applying those snapshots from
+ * inside canonical VT_E1 itself.
  */
 const EditorV1Page: React.FC = () => {
   const forced = React.useMemo(() => {
@@ -166,10 +182,7 @@ const EditorV1Page: React.FC = () => {
   }, []);
 
   const [frontendMode, setFrontendMode] = React.useState<EditorFrontendMode>(() => readEditorFrontendMode());
-  const restoredMobileProject = React.useMemo(() => {
-    const snapshot = readEditorProjectBridgeSnapshot();
-    return snapshot?.source === 'mobile' ? snapshot.project : undefined;
-  }, []);
+  const restoredMobileProject = React.useMemo(() => projectSeedForMobile(), []);
   const mobileStore = useEditorState(restoredMobileProject);
 
   const switchFrontend = React.useCallback((nextMode: EditorFrontendMode) => {
