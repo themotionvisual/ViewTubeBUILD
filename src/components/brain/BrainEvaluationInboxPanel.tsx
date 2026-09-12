@@ -49,7 +49,7 @@ export const BrainEvaluationInboxPanel: React.FC<{ channelId: string | null; max
  useEffect(() => {
   if (!channelId) return
   let cancelled = false
-  let unsubscribe = () => undefined
+  let unsubscribe: () => void = () => undefined
 
   const advance = () => {
    if (cancelled) return
