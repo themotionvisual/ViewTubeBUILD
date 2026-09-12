@@ -1,10 +1,26 @@
 import { describe, expect, it } from "vitest"
-import type { AIBrainConversationThread, AIBrainConversationTurn } from "../../../types"
+import type { AIBrainConversationThread, AIBrainConversationTurn, CreatorBrainResponse } from "../../../types"
 import {
  buildBrainConversationHistory,
  normalizeBrainConversationState,
  visibleBrainConversationTurns,
 } from "../BrainConversationController"
+
+const response = (id: string, assistantText: string): CreatorBrainResponse => ({
+ id: `response-${id}`,
+ mode: "strategy_brief",
+ headline: `Answer ${id}`,
+ keyInsight: assistantText,
+ body: assistantText,
+ evidenceIds: [],
+ evidenceChips: [],
+ sections: [],
+ modules: [],
+ actions: ["Next"],
+ learningSummary: "",
+ questions: [],
+ confidence: "medium",
+})
 
 const turn = (
  id: string,
@@ -17,16 +33,7 @@ const turn = (
  channelId: "channel-1",
  userText,
  assistantText,
- response: {
-  headline: `Answer ${id}`,
-  keyInsight: assistantText,
-  nextAction: "Next",
-  confidence: "medium",
-  evidenceIds: [],
-  sections: [],
-  modules: [],
-  questions: [],
- },
+ response: response(id, assistantText),
  answerModules: [],
  questionAnswers: [],
  learningEntryIds: [],
@@ -34,9 +41,9 @@ const turn = (
  createdAt: `2026-09-12T00:0${id}.000Z`,
  updatedAt: `2026-09-12T00:0${id}.000Z`,
  metadata: source ? { source } : {},
-}) as AIBrainConversationTurn
+})
 
-const thread = {
+const thread: AIBrainConversationThread = {
  id: "thread-1",
  channelId: "channel-1",
  title: "Test",
@@ -44,7 +51,7 @@ const thread = {
  turnIds: [],
  createdAt: "2026-09-12T00:00:00.000Z",
  updatedAt: "2026-09-12T00:00:00.000Z",
-} as AIBrainConversationThread
+}
 
 describe("BrainConversationController", () => {
  it("filters non-conversation persistence events from creator-visible turns", () => {
