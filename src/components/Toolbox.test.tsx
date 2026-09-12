@@ -25,10 +25,10 @@ describe("SubToolbox", () => {
   expect(html).toContain("box-shadow:6px 6px 0px 0px rgba(255, 170, 51, 0.5)")
  })
 
- it("clips colored fills to the canonical 16px frame", () => {
+ it("clips colored fills to the reduced 12px subtoolbox frame", () => {
   const html = renderShell(true)
 
-  expect(html).toContain("border-radius:16px")
+  expect(html).toContain("border-radius:12px")
   expect(html).toContain("overflow-hidden")
   expect(html).toContain("isolation:isolate")
  })
