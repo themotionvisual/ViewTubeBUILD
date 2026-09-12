@@ -15,10 +15,12 @@ export const CONTROL_SHELL = {
   shadowOffset: 6,
   transition: "duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
 } as const;
+const SHELL_COLLAPSE_TRANSITION = "duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)]";
 const MAIN_TOOLBOX_STROKE = 5;
 const MAIN_TOOLBOX_SHADOW = 10;
 const SUB_TOOLBOX_STROKE = 4;
 const SUB_TOOLBOX_SHADOW = 6;
+const SUB_TOOLBOX_RADIUS = 12;
 const SUB_TOOLBOX_INNER_STROKE = 4;
 const SUB_TOOLBOX_INNER_SHADOW = 4;
 
@@ -200,7 +202,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   const frameClass = `w-full bg-white overflow-hidden flex flex-col relative ${fillAvailable ? 'h-full min-h-0' : ''} ${outerClassName}`;
   const collapseTransitionClass = disableCollapseAnimation
     ? "duration-0 ease-linear"
-    : "duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)]";
+    : SHELL_COLLAPSE_TRANSITION;
   
   const headerHeight = variant === 'accordion' ? 56 : 80;
   const paletteCycleContextValue = useMemo<PaletteCycleContextValue>(() => {
@@ -585,9 +587,9 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
       data-vt-toolbox
       data-vt-subtoolbox="true"
       data-state={open ? "open" : "closed"}
-      className={`vt-toolbox w-full relative flex flex-col transition-all duration-300 ${collapsible && !open ? "self-start" : ""} ${shellClassName}`}
+      className={`vt-toolbox w-full relative flex flex-col transition-all ${SHELL_COLLAPSE_TRANSITION} ${collapsible && !open ? "self-start" : ""} ${shellClassName}`}
       style={{
-        borderRadius: `${CONTROL_SHELL.radius}px`,
+        borderRadius: `${SUB_TOOLBOX_RADIUS}px`,
         boxShadow: `${SUB_TOOLBOX_SHADOW}px ${SUB_TOOLBOX_SHADOW}px 0px 0px ${shadowColor}`,
         ["--vt-subtoolbox-header" as any]: headerHex,
         ["--vt-subtoolbox-shell-shadow" as any]: shadowColor,
@@ -597,7 +599,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
         className={`w-full bg-white relative flex flex-col flex-1 min-h-0 ${overflowVisible ? "" : "overflow-hidden"}`}
         style={{
           border: `${SUB_TOOLBOX_STROKE}px solid black`,
-          borderRadius: `${CONTROL_SHELL.radius}px`,
+          borderRadius: `${SUB_TOOLBOX_RADIUS}px`,
           isolation: "isolate",
         }}
       >
@@ -613,8 +615,8 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
             open || showHelpRail
               ? `${SUB_TOOLBOX_INNER_STROKE}px solid black`
               : "0 solid transparent",
-          borderTopLeftRadius: `${CONTROL_SHELL.radius - SUB_TOOLBOX_STROKE}px`,
-          borderTopRightRadius: `${CONTROL_SHELL.radius - SUB_TOOLBOX_STROKE}px`,
+          borderTopLeftRadius: `${SUB_TOOLBOX_RADIUS - SUB_TOOLBOX_STROKE}px`,
+          borderTopRightRadius: `${SUB_TOOLBOX_RADIUS - SUB_TOOLBOX_STROKE}px`,
           overflow: "hidden",
         }}
       >
@@ -672,12 +674,12 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
       )}
 
       <div
-        className={`grid transition-[grid-template-rows] ${CONTROL_SHELL.transition} ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden"}`}
+        className={`grid transition-[grid-template-rows] ${SHELL_COLLAPSE_TRANSITION} ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden"}`}
         style={{ marginTop: 0 }}
       >
         <div className={`${overflowVisible ? "" : "overflow-hidden"} min-h-0`}>
           <main
-            className={`bg-white w-full p-4 text-black flex flex-col transition-opacity vt-subtoolbox-content ${CONTROL_SHELL.transition} ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            className={`bg-white w-full p-4 text-black flex flex-col transition-opacity vt-subtoolbox-content ${SHELL_COLLAPSE_TRANSITION} ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             style={{
               ...contentSizeStyle,
               // Provide parent accent to all inner controls via CSS vars
