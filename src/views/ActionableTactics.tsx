@@ -21,7 +21,7 @@ import { useBrain } from "../context/useBrain"
 import { CustomIcon } from "../components/CustomIcon"
 import {
  ToolboxScaffold,
- Toolbox,
+ SubToolbox,
 } from "../components/Toolbox"
 import { toolboxSystem, toolboxActionButton } from "../components/toolboxSystem"
 import { PostActionReflection } from "../components/PostActionReflection"
@@ -195,8 +195,7 @@ const ActionableTactics: React.FC<{
     <div className={toolboxSystem.shellRow}>
      {/* Left Column: Input Form */}
      <div className={toolboxSystem.inputColumn}>
-      <Toolbox
-       variant="sub"
+      <SubToolbox
        title="Strategy Params"
        icon={<Settings size={20} />}
        headerColor="bg-[#CCFF00]"
@@ -275,7 +274,7 @@ const ActionableTactics: React.FC<{
          {loading ? "Analyzing..." : "Gen 20 Tactics"}
         </button>
        </div>
-       </Toolbox>
+       </SubToolbox>
      </div>
 
      {/* Right Column: Tactics List */}

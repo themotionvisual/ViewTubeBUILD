@@ -1,0 +1,31 @@
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
+import { describe, expect, it } from "vitest"
+
+const productionSubtoolboxConsumers = [
+ "src/components/PreLaunchPriming.tsx",
+ "src/components/ProjectStudio.tsx",
+ "src/views/ActionableTactics.tsx",
+ "src/views/MediaAnalyzer.tsx",
+ "src/views/StoryboardStudio.tsx",
+ "src/views/supertools/SuperToolPrototypeWorkspace.tsx",
+]
+
+const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
+
+describe("subtoolbox design governance", () => {
+ it.each(productionSubtoolboxConsumers)("keeps %s on the canonical nested shell", (path) => {
+  const contents = source(path)
+
+  expect(contents).not.toMatch(/<Toolbox\s[^>]*variant=["']sub["']/s)
+  expect(contents).not.toContain("AccordionContainer")
+ })
+
+ it("does not replace palette shadows with inherited black on mobile", () => {
+  const responsiveCss = source("src/styles/perf.css")
+
+  expect(responsiveCss).not.toMatch(/\.vt-toolbox\[data-vt-toolbox\][^{]*\{[^}]*currentColor/s)
+  expect(responsiveCss).toContain('--vt-subtoolbox-shadow-offset: 4px')
+  expect(responsiveCss).toContain('[data-vt-toolbox-level="sub"]')
+ })
+})
