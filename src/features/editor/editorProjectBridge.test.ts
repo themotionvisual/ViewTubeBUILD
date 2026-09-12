@@ -11,21 +11,27 @@ const project = {
     { id: 'clip-1', trackId: 't_video', start: 0, end: 4 },
   ],
   transitions: [],
+  tracks: [{ id: 't_video', name: 'Video', kind: 'video' }],
+  durationSec: 30,
 };
 
 describe('editorProjectBridge', () => {
-  it('normalizes a valid versioned mobile snapshot', () => {
-    expect(normalizeEditorProjectBridgeSnapshot({
+  it('normalizes a valid versioned mobile snapshot without stripping compatible project fields', () => {
+    const normalized = normalizeEditorProjectBridgeSnapshot({
       version: EDITOR_PROJECT_BRIDGE_VERSION,
       source: 'mobile',
       updatedAt: 100,
       project,
-    })).toEqual({
+    });
+
+    expect(normalized).toEqual({
       version: 1,
       source: 'mobile',
       updatedAt: 100,
       project,
     });
+    expect((normalized?.project as typeof project).durationSec).toBe(30);
+    expect((normalized?.project as typeof project).tracks).toHaveLength(1);
   });
 
   it('rejects malformed or future-version snapshots', () => {
