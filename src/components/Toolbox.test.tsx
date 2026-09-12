@@ -20,7 +20,7 @@ describe("SubToolbox", () => {
  it("uses the header color for the translucent shell shadow", () => {
   const html = renderShell(false)
 
-  expect(html).toContain('data-vt-subtoolbox=""')
+  expect(html).toContain('data-vt-subtoolbox="true"')
   expect(html).toContain('data-state="closed"')
   expect(html).toContain("box-shadow:6px 6px 0px 0px rgba(255, 170, 51, 0.5)")
  })
