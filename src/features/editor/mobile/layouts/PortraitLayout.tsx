@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { EditorStore } from '../state/editorState';
 import { PreviewPane } from '../components/PreviewPane';
 import { TransportBar } from '../components/TransportBar';
-import { TimelineStrip } from '../components/TimelineStrip';
+import { TimelineStrip, type TimelineViewport } from '../components/TimelineStrip';
 import { MiniTimelineMap } from '../components/MiniTimelineMap';
 import { PanelSheet } from '../components/PanelSheet';
 import { ToolDock } from '../components/ToolDock';
@@ -20,6 +20,8 @@ export interface PortraitLayoutProps {
 export const PortraitLayout: React.FC<PortraitLayoutProps> = ({ store, renderPreview, height, compositionAspect = 9 / 16 }) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<{ items: ContextMenuItem[]; at: { x: number; y: number }; title?: string } | null>(null);
+  const [timelineViewport, setTimelineViewport] = useState<TimelineViewport>({ startSec: 0, endSec: 0 });
+  const [scrollToSec, setScrollToSec] = useState(0);
   const containerHeight = height ?? (typeof window !== 'undefined' ? window.innerHeight : 800);
   const isPortraitVideo = compositionAspect < 1;
 
@@ -48,11 +50,19 @@ export const PortraitLayout: React.FC<PortraitLayoutProps> = ({ store, renderPre
       <TransportBar store={store} compact />
       <ToolDock store={store} orientation="row" />
       <div style={{ minHeight: 0, overflow: 'hidden' }}>
-        <TimelineStrip store={store}
+        <TimelineStrip
+          store={store}
+          scrollToSec={scrollToSec}
+          onViewportChange={setTimelineViewport}
           onClipContextMenu={(clip, at) => setMenu({ items: clipMenuFor(clip), at, title: String(clip.id) })}
-          onEmptyContextMenu={(at) => setMenu({ items: emptyMenu, at, title: 'Timeline' })} />
+          onEmptyContextMenu={(at) => setMenu({ items: emptyMenu, at, title: 'Timeline' })}
+        />
       </div>
-      <MiniTimelineMap store={store} />
+      <MiniTimelineMap
+        store={store}
+        viewport={timelineViewport}
+        onViewportNavigate={setScrollToSec}
+      />
       <PanelSheet store={store} render={renderPanelBody} containerHeight={containerHeight} />
       {menu && <ContextMenu {...menu} onDismiss={() => setMenu(null)} />}
     </div>
