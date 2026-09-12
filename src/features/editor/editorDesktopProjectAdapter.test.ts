@@ -48,7 +48,7 @@ describe('editorDesktopProjectAdapter', () => {
     expect(mobile.seamLinks).toEqual(desktopProject.seamLinks);
   });
 
-  it('restores the desktop track vocabulary and preserves non-mobile project fields', () => {
+  it('restores the desktop track vocabulary, applies mobile visibility edits, and preserves non-mobile project fields', () => {
     const mobile = desktopProjectToMobileBridgeProject(desktopProject);
     mobile.clips = [{ ...mobile.clips[0], start: 1, end: 5 }];
     mobile.tracks[0] = { ...mobile.tracks[0], hidden: true };
@@ -61,7 +61,7 @@ describe('editorDesktopProjectAdapter', () => {
     expect(restored.tracks?.[0]).toMatchObject({
       id: 'v1',
       kind: 'visual',
-      visible: true,
+      visible: false,
     });
     expect(restored.clips[0]).toMatchObject({ start: 1, end: 5, layerId: 'layer-1' });
   });
