@@ -1,6 +1,13 @@
 import React from "react";
 import VTE1Editor from "../features/editor/VT_E1.jsx";
+import VTE1LinkedClassicEditor from "../features/editor/VT_E1_LinkedClassic.jsx";
 import { ResponsiveEditorShell } from "../features/editor/mobile";
+import {
+  EDITOR_FRONTEND_MODES,
+  readEditorFrontendMode,
+  writeEditorFrontendMode,
+  type EditorFrontendMode,
+} from "../features/editor/editorFrontendMode";
 
 interface EditorRouteBoundaryState {
   error: Error | null;
@@ -48,17 +55,96 @@ class EditorRouteBoundary extends React.Component<React.PropsWithChildren, Edito
   }
 }
 
+const EditorFrontendSwitcher: React.FC<{
+  mode: EditorFrontendMode;
+  onChange: (mode: EditorFrontendMode) => void;
+}> = ({ mode, onChange }) => {
+  const [open, setOpen] = React.useState(false);
+  const active = EDITOR_FRONTEND_MODES.find((item) => item.id === mode) ?? EDITOR_FRONTEND_MODES[0];
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  return (
+    <div className="pointer-events-auto absolute right-2 top-2 z-[120] flex flex-col items-end gap-1">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className="flex h-8 items-center gap-2 rounded-[7px] border-[2px] border-black bg-white px-2.5 text-[9px] font-black uppercase tracking-[0.08em] text-black"
+        title="Switch editor frontend"
+      >
+        <span aria-hidden="true">⚙</span>
+        <span>Editor UI</span>
+        <span className="rounded-[4px] border border-black bg-[#40C6E9] px-1.5 py-0.5 text-[8px]">
+          {active.shortLabel}
+        </span>
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          aria-label="Editor frontend"
+          className="w-[300px] max-w-[calc(100vw-16px)] rounded-[10px] border-[3px] border-black bg-[#f0f0f4] p-2 text-black"
+        >
+          <div className="px-1 pb-2 pt-0.5">
+            <div className="text-[10px] font-black uppercase tracking-[0.12em]">Editor Frontend</div>
+            <div className="mt-0.5 text-[9px] font-bold leading-4 text-black/60">
+              Switch between the current main editor and the exact frontend snapshot used by the linked deployment.
+            </div>
+          </div>
+          <div className="grid gap-1.5">
+            {EDITOR_FRONTEND_MODES.map((item) => {
+              const selected = item.id === mode;
+              return (
+                <button
+                  key={item.id}
+                  role="menuitemradio"
+                  aria-checked={selected}
+                  type="button"
+                  onClick={() => {
+                    onChange(item.id);
+                    setOpen(false);
+                  }}
+                  className="w-full rounded-[8px] border-[2px] border-black px-3 py-2 text-left"
+                  style={{ background: selected ? "#FFFF61" : "#ffffff" }}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] font-black uppercase">{item.label}</span>
+                    <span className="text-[8px] font-black uppercase">{selected ? "Active" : "Switch"}</span>
+                  </div>
+                  <div className="mt-1 text-[9px] font-bold leading-4 text-black/65">{item.description}</div>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-2 border-t-2 border-black/15 px-1 pt-2 text-[8px] font-bold leading-4 text-black/55">
+            Preference is saved on this device. You can also use <b>?editorStyle=current</b> or <b>?editorStyle=linked</b> for direct testing.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 /**
- * VT_E1 editor host.
+ * VT_E1 editor host with two preserved frontends:
  *
- * `ResponsiveEditorShell` picks the layout by viewport:
- *   - < 1024px wide  → mobile editor (portrait or landscape branch)
- *   - ≥ 1024px wide  → desktop VT_E1
+ * - Current Main: current responsive host. Below 1024px it uses the touch-first
+ *   mobile editor; desktop keeps the current VT_E1 implementation.
+ * - Linked Branch: exact VT_E1.jsx snapshot from Vercel deployment commit
+ *   763cc59b3c55dae41171a1f27f87fe66bd9c354b, mounted the same way that
+ *   deployment mounted it.
  *
- * The desktop path keeps the framed "card" look; on landscape phones and
- * short viewports we drop the border/rounded corners so whichever editor is
- * hosting gets every pixel. A URL flag lets contributors force either mode
- * for testing without spinning up a real phone (?editor=mobile / ?editor=desktop).
+ * The selected frontend is a local UI preference. It is deliberately kept out
+ * of project/export data so changing editor chrome cannot change a video.
  */
 const EditorV1Page: React.FC = () => {
   const forced = React.useMemo(() => {
@@ -68,20 +154,33 @@ const EditorV1Page: React.FC = () => {
     return "auto" as const;
   }, []);
 
+  const [frontendMode, setFrontendMode] = React.useState<EditorFrontendMode>(() => readEditorFrontendMode());
+
+  const switchFrontend = React.useCallback((nextMode: EditorFrontendMode) => {
+    writeEditorFrontendMode(nextMode);
+    setFrontendMode(nextMode);
+  }, []);
+
   return (
     <section
+      data-editor-frontend={frontendMode}
       className="
-        h-full min-h-0 w-full overflow-hidden bg-[#111] flex flex-col
+        relative h-full min-h-0 w-full overflow-hidden bg-[#111] flex flex-col
         rounded-[10px] border-[2px] border-black
         landscape:max-[932px]:border-0 landscape:max-[932px]:rounded-none
         max-[560px]:border-0 max-[560px]:rounded-none
       "
     >
-      <EditorRouteBoundary>
-        <ResponsiveEditorShell
-          mode={forced}
-          desktop={<VTE1Editor />}
-        />
+      <EditorFrontendSwitcher mode={frontendMode} onChange={switchFrontend} />
+      <EditorRouteBoundary key={frontendMode}>
+        {frontendMode === "linked-classic" ? (
+          <VTE1LinkedClassicEditor />
+        ) : (
+          <ResponsiveEditorShell
+            mode={forced}
+            desktop={<VTE1Editor />}
+          />
+        )}
       </EditorRouteBoundary>
     </section>
   );
