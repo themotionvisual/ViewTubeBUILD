@@ -1,0 +1,58 @@
+/* Canonical control ownership — Phase 2.
+   Sized primitive extensions remain responsible for explicit 18/24/32/38px
+   variants; this layer owns the shared default control anatomy. */
+@layer primitives {
+  :is(.vt-button,.vt-input,.vt-select,.vt-textarea,.vt-dropdown-trigger,.widget-action,.widget-select-trigger,.widget-video-select-trigger) {
+    box-sizing:border-box;
+    min-width:0;
+    border:var(--widget-module-stroke,2px) solid var(--widget-border);
+    border-radius:var(--widget-control-radius,4px);
+    font-family:inherit;
+    font-size:var(--widget-control-font-size,12px);
+    font-weight:var(--widget-control-font-weight,1000);
+    line-height:var(--widget-control-line-height,1);
+    transition:transform 90ms ease-out,box-shadow 90ms ease-out,background-color 90ms ease-out,border-color 90ms ease-out;
+  }
+
+  :is(.vt-button,.vt-select,.vt-dropdown-trigger,.widget-action,.widget-select-trigger,.widget-video-select-trigger) {
+    min-height:var(--widget-control-height,32px);
+  }
+
+  :is(.vt-button,.widget-action,.vt-dropdown-trigger,.widget-select-trigger,.widget-video-select-trigger) {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    cursor:pointer;
+    box-shadow:var(--vt-control-shadow-x,2px) var(--vt-control-shadow-y,2px) 0 color-mix(in srgb,var(--widget-color,#000) 50%,transparent);
+  }
+
+  :is(.vt-button,.widget-action,.vt-dropdown-trigger,.widget-select-trigger,.widget-video-select-trigger):hover {
+    transform:translate(1px,1px);
+    box-shadow:1px 1px 0 color-mix(in srgb,var(--widget-color,#000) 50%,transparent);
+  }
+
+  :is(.vt-button,.widget-action,.vt-dropdown-trigger,.widget-select-trigger,.widget-video-select-trigger):active {
+    transform:translate(2px,2px);
+    box-shadow:none;
+  }
+
+  :is(.vt-input,.vt-select,.vt-textarea) {
+    width:100%;
+    background:var(--bg-input,#fff);
+    color:var(--text-main,#000);
+    outline:none;
+  }
+
+  :is(.vt-input,.vt-select) { min-height:var(--widget-control-height,32px); padding-inline:8px; }
+  .vt-textarea { padding:8px; resize:vertical; }
+
+  :is(.vt-input,.vt-select,.vt-textarea):focus-visible {
+    border-color:var(--widget-color,#40c6e9);
+    box-shadow:0 0 0 1px var(--widget-color,#40c6e9);
+  }
+
+  .vt-button.primary { background:var(--widget-color,#4fff5b); }
+  .vt-button.secondary { background:color-mix(in srgb,var(--widget-color,#000) 30%,white); }
+  :is(.vt-button,.widget-action):disabled { cursor:not-allowed; opacity:.5; transform:none; box-shadow:none; }
+}
