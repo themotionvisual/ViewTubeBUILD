@@ -56,6 +56,12 @@ describe("SubToolbox", () => {
   expect(html).toContain("cursor-pointer")
   expect(html).toContain("lucide-expand")
  })
+
+ it("matches its title size to the 20px inner action label", () => {
+  const html = renderShell(true)
+
+  expect(html).toContain("text-[20px]")
+ })
 })
 
 describe("ToolboxScaffold", () => {
@@ -73,6 +79,8 @@ describe("ToolboxScaffold", () => {
   )
 
   expect(html).toContain('data-vt-toolbox-level="main"')
+  expect(html).toContain("text-[26px]")
+  expect(html).toContain("padding-inline:var(--vt-toolbox-content-inline-padding, 10px)")
   expect(html).toContain("border-bottom:0 solid transparent")
   expect(html).not.toContain("margin-top:-5px")
  })

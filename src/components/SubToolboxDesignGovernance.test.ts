@@ -28,4 +28,14 @@ describe("subtoolbox design governance", () => {
   expect(responsiveCss).toContain('--vt-subtoolbox-shadow-offset: 4px')
   expect(responsiveCss).toContain('[data-vt-toolbox-level="sub"]')
  })
+
+ it("keeps the compact inner-control hierarchy below the subtoolbox shell", () => {
+  const toolboxSource = source("src/components/Toolbox.tsx")
+  const globalCss = source("src/index.css")
+
+  expect(toolboxSource).toContain('radius: 8')
+  expect(toolboxSource).toContain('rounded-[8px]')
+  expect(globalCss).toContain('border-radius: 8px')
+  expect(globalCss).toContain('var(--vt-subtoolbox-shadow')
+ })
 })

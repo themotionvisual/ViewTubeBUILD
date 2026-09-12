@@ -336,13 +336,19 @@
     width: 24px !important;
     height: 24px !important;
   }
-  /* Title — was text-[32px] on mobile via the source's ramp. Cap at 18px
-     and tighten tracking so multi-word titles ("COMMUNITY POSTS",
-     "COMMENT RESPONDER") stay on one line. */
+  /* Keep the title hierarchy tied to the canonical inner action type:
+     subtoolbox = 20px; toolbox = 20px * 1.3 = 26px. */
   [data-vt-toolbox-level="main"] > header h1,
-  [data-vt-toolbox-level="main"] > header h3,
+  [data-vt-toolbox-level="main"] > header h3 {
+    font-size: 26px !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
   [data-vt-toolbox-level="sub"] > div > header h3 {
-    font-size: 18px !important;
+    font-size: 20px !important;
     letter-spacing: -0.02em !important;
     line-height: 1 !important;
     white-space: nowrap !important;
@@ -397,7 +403,14 @@
     height: 24px !important;
   }
   [data-vt-toolbox-level="main"] > header h1,
-  [data-vt-toolbox-level="main"] > header h3,
+  [data-vt-toolbox-level="main"] > header h3 {
+    font-size: 26px !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
   [data-vt-toolbox-level="sub"] > div > header h3 {
     font-size: 20px !important;
     letter-spacing: -0.02em !important;
