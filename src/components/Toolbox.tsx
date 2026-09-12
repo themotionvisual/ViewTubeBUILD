@@ -562,10 +562,16 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   const palette = effectivePaletteIndex !== undefined && effectivePaletteIndex !== null
     ? getToolboxPaletteColors(effectivePaletteIndex)
     : null;
-  const headerHex = palette?.header ?? extractHexFromBgClass(headerColor) ?? "#00CCFF";
+  const inlineHeaderColor =
+    typeof headerStyle?.backgroundColor === "string" ? headerStyle.backgroundColor : null;
+  const headerHex = palette?.header ?? inlineHeaderColor ?? extractHexFromBgClass(headerColor) ?? "#00CCFF";
   const iconBg = palette?.icon ?? headerHex;
-  
-  const shadowColor = hexToRgba(headerHex, 0.5);
+
+  // Match the parent toolbox contract: the shadow is a translucent version of
+  // the visible title/header color, never the legacy solid-black shadow.
+  const shadowColor = headerHex.startsWith("#")
+    ? hexToRgba(headerHex, 0.5)
+    : `color-mix(in srgb, ${headerHex} 50%, transparent)`;
   const minInnerHeight = resolveSubtoolboxMinHeight(openUnits, heightMode);
 
   const contentSizeStyle = heightMode === "compact" ? undefined : { minHeight: `${Math.max(0, minInnerHeight)}px` };
@@ -577,13 +583,24 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   return (
     <div
       data-vt-toolbox
-      className={`vt-toolbox w-full bg-white relative flex flex-col transition-all duration-300 ${collapsible && !open ? "self-start" : ""} ${overflowVisible ? "" : "overflow-hidden"} ${shellClassName}`}
+      data-vt-subtoolbox
+      data-state={open ? "open" : "closed"}
+      className={`vt-toolbox w-full relative flex flex-col transition-all duration-300 ${collapsible && !open ? "self-start" : ""} ${shellClassName}`}
       style={{
-        border: `${SUB_TOOLBOX_STROKE}px solid black`,
-        borderRadius: `16px`,
+        borderRadius: `${CONTROL_SHELL.radius}px`,
         boxShadow: `${SUB_TOOLBOX_SHADOW}px ${SUB_TOOLBOX_SHADOW}px 0px 0px ${shadowColor}`,
+        ["--vt-subtoolbox-header" as any]: headerHex,
+        ["--vt-subtoolbox-shell-shadow" as any]: shadowColor,
       }}
     >
+      <div
+        className={`w-full bg-white relative flex flex-col flex-1 min-h-0 ${overflowVisible ? "" : "overflow-hidden"}`}
+        style={{
+          border: `${SUB_TOOLBOX_STROKE}px solid black`,
+          borderRadius: `${CONTROL_SHELL.radius}px`,
+          isolation: "isolate",
+        }}
+      >
       <header
         className={`flex items-center justify-between select-none relative z-20 group ${collapsible ? 'cursor-pointer' : ''}`}
         onClick={collapsible ? setOpen : undefined}
@@ -591,7 +608,10 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           height: `${CONTROL_SHELL.headerHeight}px`,
           minHeight: `${CONTROL_SHELL.headerHeight}px`,
           backgroundColor: headerHex,
-          borderBottom: `${SUB_TOOLBOX_INNER_STROKE}px solid black`,
+          borderBottom:
+            open || showHelpRail
+              ? `${SUB_TOOLBOX_INNER_STROKE}px solid black`
+              : "0 solid transparent",
           ...headerStyle,
         }}
       >
@@ -634,7 +654,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             showHelpRail ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
           }`}
-          style={{ marginTop: `-${SUB_TOOLBOX_INNER_STROKE}px` }}
+          style={{ marginTop: 0 }}
         >
           <div className="overflow-hidden min-h-0">
             <div className="bg-white border-b-[3px] border-black px-4 py-2">
@@ -650,7 +670,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
 
       <div
         className={`grid transition-[grid-template-rows] ${CONTROL_SHELL.transition} ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden"}`}
-        style={{ marginTop: `-${SUB_TOOLBOX_INNER_STROKE}px` }}
+        style={{ marginTop: 0 }}
       >
         <div className={`${overflowVisible ? "" : "overflow-hidden"} min-h-0`}>
           <main
@@ -667,6 +687,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
             {children}
           </main>
         </div>
+      </div>
       </div>
     </div>
   );
