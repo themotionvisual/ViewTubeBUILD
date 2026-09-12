@@ -583,7 +583,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   return (
     <div
       data-vt-toolbox
-      data-vt-subtoolbox
+      data-vt-subtoolbox="true"
       data-state={open ? "open" : "closed"}
       className={`vt-toolbox w-full relative flex flex-col transition-all duration-300 ${collapsible && !open ? "self-start" : ""} ${shellClassName}`}
       style={{
@@ -605,6 +605,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
         className={`flex items-center justify-between select-none relative z-20 group ${collapsible ? 'cursor-pointer' : ''}`}
         onClick={collapsible ? setOpen : undefined}
         style={{
+          ...headerStyle,
           height: `${CONTROL_SHELL.headerHeight}px`,
           minHeight: `${CONTROL_SHELL.headerHeight}px`,
           backgroundColor: headerHex,
@@ -612,7 +613,9 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
             open || showHelpRail
               ? `${SUB_TOOLBOX_INNER_STROKE}px solid black`
               : "0 solid transparent",
-          ...headerStyle,
+          borderTopLeftRadius: `${CONTROL_SHELL.radius - SUB_TOOLBOX_STROKE}px`,
+          borderTopRightRadius: `${CONTROL_SHELL.radius - SUB_TOOLBOX_STROKE}px`,
+          overflow: "hidden",
         }}
       >
         <div className="flex items-center h-full flex-1">
@@ -679,7 +682,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
               ...contentSizeStyle,
               // Provide parent accent to all inner controls via CSS vars
               ["--vt-subtoolbox-fill" as any]: headerHex,
-              ["--vt-subtoolbox-shadow" as any]: hexToRgba(headerHex, 0.45),
+              ["--vt-subtoolbox-shadow" as any]: shadowColor,
               ["--vt-inner-stroke" as any]: "3px",
               ["--vt-inner-shadow" as any]: "4px",
             }}
