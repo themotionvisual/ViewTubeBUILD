@@ -77,7 +77,7 @@ describe('editorDesktopProjectAdapter', () => {
     expect(desktopProjectCanRoundTripThroughMobile(desktopProject)).toBe(true);
     expect(desktopProjectCanRoundTripThroughMobile({ clips: [], tracks: undefined })).toBe(false);
     expect(desktopProjectCanRoundTripThroughMobile({
-      clips: [{ id: 'bad', trackId: 'v1', start: 'x', end: 4 }],
+      clips: [{ id: 'bad', trackId: 'v1', start: Number.NaN, end: 4 }],
       tracks: [],
     })).toBe(false);
   });
