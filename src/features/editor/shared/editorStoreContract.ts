@@ -48,15 +48,8 @@ export interface VtE1EditorState {
   zoomPxPerSec: number;
   selection: VtE1EditorSelection;
   tool: VtE1EditorTool;
-  panel: {
-    open: boolean;
-    id: VtE1EditorTool;
-    height: number;
-  };
-  history: {
-    past: string[];
-    future: string[];
-  };
+  panel: { open: boolean; id: VtE1EditorTool; height: number };
+  history: { past: string[]; future: string[] };
 }
 
 export type VtE1EditorAction =
@@ -79,7 +72,10 @@ export type VtE1EditorAction =
   | { type: 'moveClip'; id: string; deltaSec: number }
   | { type: 'trimClip'; id: string; side: 'left' | 'right'; sec: number }
   | { type: 'splitClipAtPlayhead'; id: string }
+  | { type: 'slipClip'; id: string; deltaSec: number; sourceDurationSec?: number }
+  | { type: 'slideClip'; id: string; deltaSec: number }
   | { type: 'deleteClips'; ids: string[] }
+  | { type: 'rippleDeleteClips'; ids: string[] }
   | { type: 'duplicateClip'; id: string }
   | { type: 'muteTrack'; id: string; muted?: boolean }
   | { type: 'lockTrack'; id: string; locked?: boolean }
@@ -103,15 +99,11 @@ export interface VtE1EditorStore {
 /**
  * Canonical UI/runtime boundary for VT-E1.
  *
- * This contract intentionally contains no timeline mutation implementation.
- * Desktop and mobile surfaces can converge on this state/action vocabulary
- * while timeline math remains owned by src/shared/vtE1TimelineOperations.js
- * and preview/render timing remains owned by src/shared/vtE1TimelineContract.js.
- *
- * During the no-loss migration, existing desktop and mobile implementations
- * remain functional authorities until their behavior is proven equivalent
- * through adapters/tests. Do not replace either implementation merely by
- * importing this type contract.
+ * Basic move/trim/delete actions retain their existing semantics. Slip,
+ * slide and ripple-delete are deliberately separate actions so advanced
+ * timeline behavior can never be introduced implicitly by a migration.
+ * Mutation math remains owned by src/shared/vtE1TimelineOperations.js;
+ * preview/render timing remains owned by src/shared/vtE1TimelineContract.js.
  */
 export type VtE1EditorStoreFactory = (
   seed?: Partial<VtE1EditorProject>,
