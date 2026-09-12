@@ -1,0 +1,13 @@
+/* Canonical ViewTube Main Toolbox geometry. Intentionally scoped so Widget and SubToolbox systems cannot override it. */
+[data-vt-toolbox][data-vt-toolbox-level="main"] {
+  --vt-toolbox-header-height: 80px;
+  --vt-toolbox-stroke: 5px;
+  --vt-toolbox-radius: 16px;
+  --vt-toolbox-shadow-offset: 10px;
+  --vt-toolbox-title-size: 26px;
+}
+[data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="scaffold"] > header { height: 80px; min-height: 80px; }
+[data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="scaffold"] > header > :first-child > :first-child { width: 80px; min-width: 80px; height: 80px; aspect-ratio: 1 / 1; }
+[data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="scaffold"] > header h1 { font-size: 26px; font-weight: 1000; }
+[data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="accordion"] { --vt-toolbox-header-height: 56px; --vt-toolbox-radius: 12px; --vt-toolbox-title-size: 20px; }
+@media (max-width: 767px) { [data-vt-toolbox][data-vt-toolbox-level="main"] { width: 100%; max-width: 100%; min-width: 0; } }
