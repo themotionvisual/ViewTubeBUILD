@@ -1,6 +1,6 @@
 import React from "react";
 import VTE1Editor from "../features/editor/VT_E1.jsx";
-import { ResponsiveEditorShell } from "../features/editor/mobile";
+import { ResponsiveEditorShell, useEditorState } from "../features/editor/mobile";
 import {
   EDITOR_FRONTEND_MODES,
   editorHostModeFor,
@@ -145,8 +145,12 @@ const EditorFrontendSwitcher: React.FC<{
  *   current main, so forcing the desktop host reproduces that presentation
  *   without maintaining a second 1 MB editor implementation.
  *
- * On desktop both modes resolve to the same VTE1Editor element, so switching
- * modes does not intentionally remount the editor or fork project state.
+ * The mobile editor store is owned by this route rather than by MobileEditor.
+ * That keeps mobile timeline/project edits alive if a user temporarily switches
+ * to the classic host and then returns to the responsive/mobile presentation.
+ * The canonical VT_E1 desktop project model is still separate; a direct
+ * desktop<->mobile project adapter is the next bridge layer rather than being
+ * implied by the UI switcher.
  */
 const EditorV1Page: React.FC = () => {
   const forced = React.useMemo(() => {
@@ -157,6 +161,7 @@ const EditorV1Page: React.FC = () => {
   }, []);
 
   const [frontendMode, setFrontendMode] = React.useState<EditorFrontendMode>(() => readEditorFrontendMode());
+  const mobileStore = useEditorState();
 
   const switchFrontend = React.useCallback((nextMode: EditorFrontendMode) => {
     writeEditorFrontendMode(nextMode);
@@ -180,6 +185,7 @@ const EditorV1Page: React.FC = () => {
         <ResponsiveEditorShell
           mode={shellMode}
           desktop={<VTE1Editor />}
+          externalStore={mobileStore}
         />
       </EditorRouteBoundary>
     </section>
