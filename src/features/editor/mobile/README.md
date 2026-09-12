@@ -39,7 +39,7 @@ Current bridge status:
 - desktop VT_E1 -> shared bridge adapter: pending
 - shared bridge -> live desktop VT_E1 apply: pending
 
-Do not describe desktop/mobile project synchronization as complete until the canonical `VT_E1.jsx` model is connected to this same bridge contract.
+The next phase is explicitly the desktop adapter. Do not describe desktop/mobile project synchronization as complete until the canonical `VT_E1.jsx` model is connected to this same bridge contract.
 
 ## Quick start
 
