@@ -1,9 +1,9 @@
 import React from "react";
 import VTE1Editor from "../features/editor/VT_E1.jsx";
-import VTE1LinkedClassicEditor from "../features/editor/VT_E1_LinkedClassic.jsx";
 import { ResponsiveEditorShell } from "../features/editor/mobile";
 import {
   EDITOR_FRONTEND_MODES,
+  editorHostModeFor,
   readEditorFrontendMode,
   writeEditorFrontendMode,
   type EditorFrontendMode,
@@ -97,7 +97,7 @@ const EditorFrontendSwitcher: React.FC<{
           <div className="px-1 pb-2 pt-0.5">
             <div className="text-[10px] font-black uppercase tracking-[0.12em]">Editor Frontend</div>
             <div className="mt-0.5 text-[9px] font-bold leading-4 text-black/60">
-              Switch between the current main editor and the exact frontend snapshot used by the linked deployment.
+              Both modes use the same VT_E1 engine. Current Main uses the responsive host; Linked Branch reproduces the classic direct VT_E1 host from the linked deployment.
             </div>
           </div>
           <div className="grid gap-1.5">
@@ -126,7 +126,7 @@ const EditorFrontendSwitcher: React.FC<{
             })}
           </div>
           <div className="mt-2 border-t-2 border-black/15 px-1 pt-2 text-[8px] font-bold leading-4 text-black/55">
-            Preference is saved on this device. You can also use <b>?editorStyle=current</b> or <b>?editorStyle=linked</b> for direct testing.
+            Preference is saved on this device. Direct QA: <b>?editorStyle=current</b> or <b>?editorStyle=linked</b>.
           </div>
         </div>
       )}
@@ -135,16 +135,18 @@ const EditorFrontendSwitcher: React.FC<{
 };
 
 /**
- * VT_E1 editor host with two preserved frontends:
+ * VT_E1 editor host with two selectable front-end presentations over one
+ * canonical desktop editor engine:
  *
- * - Current Main: current responsive host. Below 1024px it uses the touch-first
- *   mobile editor; desktop keeps the current VT_E1 implementation.
- * - Linked Branch: exact VT_E1.jsx snapshot from Vercel deployment commit
- *   763cc59b3c55dae41171a1f27f87fe66bd9c354b, mounted the same way that
- *   deployment mounted it.
+ * - Current Main: responsive host. On mobile it uses the touch-first mobile
+ *   editor; on desktop it mounts canonical VT_E1.
+ * - Linked Branch: classic/direct host used by the linked Vercel deployment.
+ *   The linked deployment's VT_E1.jsx and VT_E1.css blobs are identical to
+ *   current main, so forcing the desktop host reproduces that presentation
+ *   without maintaining a second 1 MB editor implementation.
  *
- * The selected frontend is a local UI preference. It is deliberately kept out
- * of project/export data so changing editor chrome cannot change a video.
+ * On desktop both modes resolve to the same VTE1Editor element, so switching
+ * modes does not intentionally remount the editor or fork project state.
  */
 const EditorV1Page: React.FC = () => {
   const forced = React.useMemo(() => {
@@ -161,6 +163,8 @@ const EditorV1Page: React.FC = () => {
     setFrontendMode(nextMode);
   }, []);
 
+  const shellMode = editorHostModeFor(frontendMode, forced);
+
   return (
     <section
       data-editor-frontend={frontendMode}
@@ -172,15 +176,11 @@ const EditorV1Page: React.FC = () => {
       "
     >
       <EditorFrontendSwitcher mode={frontendMode} onChange={switchFrontend} />
-      <EditorRouteBoundary key={frontendMode}>
-        {frontendMode === "linked-classic" ? (
-          <VTE1LinkedClassicEditor />
-        ) : (
-          <ResponsiveEditorShell
-            mode={forced}
-            desktop={<VTE1Editor />}
-          />
-        )}
+      <EditorRouteBoundary>
+        <ResponsiveEditorShell
+          mode={shellMode}
+          desktop={<VTE1Editor />}
+        />
       </EditorRouteBoundary>
     </section>
   );
