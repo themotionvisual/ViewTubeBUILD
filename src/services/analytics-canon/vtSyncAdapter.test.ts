@@ -175,13 +175,19 @@ describe("filterRowsByUploadRecency", () => {
 })
 
 describe("window provenance", () => {
- it("tags lifetime-only snapshots as a fallback, never as the window's own data", () => {
+ it("tags lifetime-only rows as a fallback, never as the window's own data", () => {
   // VT-SYNC fetches video analytics from 2000-01-01, so a snapshot today has
-  // lifetime metrics only. Asking for 28d must not silently return them as 28d.
-  const snap = makeSnapshot([makeVideo("recent", 5, { views: 1000 })])
-  const [row] = getCanonicalRowsFromVtSync(snap, "28d")
+  // lifetime metrics only. The projector must mark them as a stand-in.
+  const row = projectVtSyncVideoToCanonicalRow(makeVideo("recent", 5, { views: 1000 }), "28d")
   expect(row.window).toBe("28d")
   expect(row.windowSource).toBe("lifetime_fallback")
+ })
+
+ it("returns no rows for a window with no real data, rather than lifetime values", () => {
+  // Consumers gate on rowCount, so [] lets them fall through to a genuinely
+  // windowed source instead of rendering lifetime numbers as 28d numbers.
+  const snap = makeSnapshot([makeVideo("recent", 5, { views: 1000 })])
+  expect(getCanonicalRowsFromVtSync(snap, "28d")).toEqual([])
  })
 
  it("reads real per-window metrics when the engine has them", () => {
@@ -237,14 +243,17 @@ describe("getCanonicalRowsFromVtSync + snapshot integration", () => {
   expect(getCanonicalRowsFromVtSync(snap, "28d")).toEqual([])
  })
 
- it("projects and filters in one call", () => {
+ it("returns [] for a window with no per-window data", () => {
   const snap = makeSnapshot([
    makeVideo("recent", 5),
    makeVideo("old", 100),
   ])
-  const rows = getCanonicalRowsFromVtSync(snap, "28d")
-  expect(rows).toHaveLength(1)
-  expect(rows[0].id).toBe("recent")
+  expect(getCanonicalRowsFromVtSync(snap, "28d")).toEqual([])
+ })
+
+ it("still returns every row for lifetime", () => {
+  const snap = makeSnapshot([makeVideo("recent", 5), makeVideo("old", 100)])
+  expect(getCanonicalRowsFromVtSync(snap, "lifetime")).toHaveLength(2)
  })
 })
 

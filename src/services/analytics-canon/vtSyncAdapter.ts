@@ -248,9 +248,11 @@ export const filterCanonicalRowsByWindow = filterRowsByUploadRecency
  * the last 28 days.
  *
  * VT-SYNC does not fetch per-window video metrics yet (videos_analytics runs
- * from 2000-01-01), so today this takes the legacy path: lifetime metrics for
- * recently published videos, tagged `windowSource: "lifetime_fallback"`.
- * Callers must honour that tag rather than printing the value as the window's.
+ * from 2000-01-01), so for a non-lifetime window this returns [] until the
+ * engine window loops land. Consumers that gate on row count then fall through
+ * to a genuinely windowed source rather than rendering lifetime values under a
+ * window heading. Use `filterRowsByUploadRecency` if you actually want
+ * recently published videos.
  */
 export const getCanonicalRowsFromVtSync = (
  snapshot: VtSyncSnapshot | null | undefined,
@@ -265,8 +267,11 @@ export const getCanonicalRowsFromVtSync = (
  const windowed = rows.filter((row) => row.windowSource === "window_exact")
  if (windowed.length > 0) return windowed
 
- // Legacy path — see the note above.
- return filterRowsByUploadRecency(rows, window)
+ // No real data for this window. Return nothing rather than lifetime values
+ // wearing the window's name: an empty result lets consumers fall through to a
+ // genuinely windowed source (Selectors.getMetricSummary reads the windowed
+ // channel ledger), whereas a populated-but-wrong result silently wins.
+ return []
 }
 
 // --- Metric aggregation --------------------------------------------------

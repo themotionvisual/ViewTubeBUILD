@@ -732,16 +732,19 @@ export class SyncCoordinator {
     cacheData.channelLifetimeSummary = coreSyncResult.channelLifetimeSummary
 
     if (coreSyncResult.windowedAnalytics) {
+      // These used to be assigned onto cacheData directly, which put them at the
+      // top level while every reader (Selectors.resolveWindowTotals) looks them
+      // up inside cacheData.ledger. Combined with the old day28/day90/day365
+      // key names, the windowed channel totals were written but never readable.
       for (const [window, report] of Object.entries(coreSyncResult.windowedAnalytics)) {
-        cacheData[`youtube_analytics_v2::channel::::${window}`] = {
+        cacheData = upsertLedgerEntry(cacheData, {
           source: "youtube_analytics_v2",
           context: "channel",
           dimensions: [],
           metrics: [...CHANNEL_LIFETIME_METRICS],
-          window,
+          window: window as AnalyticsWindow,
           payload: report,
-          syncedAt: new Date().toISOString()
-        }
+        })
       }
     }
 
