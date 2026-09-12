@@ -38,4 +38,15 @@ describe("subtoolbox design governance", () => {
   expect(globalCss).toContain('border-radius: 8px')
   expect(globalCss).toContain('var(--vt-subtoolbox-shadow')
  })
+
+ it("keeps the Mini Toolbox Lab divider and collapse timing contract", () => {
+  const toolboxSource = source("src/components/Toolbox.tsx")
+
+  expect(toolboxSource).toContain('duration-300 ease-out motion-reduce:transition-none')
+  expect(toolboxSource).toContain('borderBottom: `var(--vt-toolbox-stroke, ${stroke}px) solid black`')
+  expect(toolboxSource).toContain('borderBottom: `var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_INNER_STROKE}px) solid black`')
+  expect(toolboxSource).toContain('SHELL_COLLAPSE_DURATION_MS = 300')
+  expect(toolboxSource).toContain('shouldRenderContent = !unmountWhenClosed || open || keepClosingContentMounted')
+  expect(toolboxSource).toContain('shouldRenderContent = !unmountOnClose || open || keepClosingContentMounted')
+ })
 })

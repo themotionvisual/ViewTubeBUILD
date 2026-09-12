@@ -12,7 +12,7 @@ import {
  writeCommunityPostState,
  writeCommunityPostVault,
 } from "./communityPostStore"
-import { buildChannelCommunityUrl } from "./useCommunityPostController"
+import { buildChannelCommunityUrl, buildYouTubeShortUrl, resolveCommunityPostVideoLink } from "./useCommunityPostController"
 import { partitionCommentThreads, resolveSuggestedVideoId } from "./useCommentResponderController"
 
 describe("creator engagement persistence", () => {
@@ -69,6 +69,22 @@ describe("creator engagement contracts", () => {
   expect(buildChannelCommunityUrl({ channelId: "UC123", channelHandle: "creator" })).toBe("https://www.youtube.com/channel/UC123/community")
   expect(buildChannelCommunityUrl({ channelId: "", channelHandle: "@creator" })).toBe("https://www.youtube.com/@creator/community")
   expect(buildChannelCommunityUrl({ channelId: "", channelHandle: "" })).toBeNull()
+ })
+
+ it("builds the selected video's canonical youtu.be URL", () => {
+  expect(buildYouTubeShortUrl("abc_123-XYZ")).toBe("https://youtu.be/abc_123-XYZ")
+  expect(buildYouTubeShortUrl(" ")).toBeNull()
+ })
+
+ it("replaces generated bracket placeholders with the selected video URL", () => {
+  const content = "Watch the full story here: [LINK TO NAPOLEON'S IRISH LEGEND]"
+
+  expect(resolveCommunityPostVideoLink(content, "abc123")).toBe("Watch the full story here: https://youtu.be/abc123")
+ })
+
+ it("appends the selected video URL when the generator omits it", () => {
+  expect(resolveCommunityPostVideoLink("Watch the full story.", "abc123")).toBe("Watch the full story.\n\nhttps://youtu.be/abc123")
+  expect(resolveCommunityPostVideoLink("No linked video", "")).toBe("No linked video")
  })
 
  it("classifies only reply-complete comment threads", () => {
