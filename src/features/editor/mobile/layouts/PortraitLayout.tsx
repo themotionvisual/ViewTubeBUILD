@@ -38,11 +38,11 @@ export const PortraitLayout: React.FC<PortraitLayoutProps> = ({ store, renderPre
 
   return (
     <div ref={rootRef} style={{
-      position: 'relative', width: '100%', height: containerHeight, background: '#020617', color: '#f8fafc',
+      position: 'relative', width: '100%', height: containerHeight, background: '#f3f3f3', color: '#000',
       display: 'grid', gridTemplateRows: `${previewHeight}px 52px 58px minmax(0, 1fr) 48px`, gap: 4, padding: 4,
       paddingBottom: 66, boxSizing: 'border-box', overflow: 'hidden', touchAction: 'manipulation',
     }}>
-      <div style={{ minHeight: 0, minWidth: 0, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
+      <div style={{ minHeight: 0, minWidth: 0, display: 'grid', placeItems: 'center', overflow: 'hidden', background: '#fff', border: '3px solid #248b99', borderRadius: 7 }}>
         <div style={{ height: '100%', width: isPortraitVideo ? 'auto' : '100%', aspectRatio: String(compositionAspect), maxWidth: '100%' }}>
           <PreviewPane store={store} renderPreview={renderPreview} aspect={compositionAspect} />
         </div>
