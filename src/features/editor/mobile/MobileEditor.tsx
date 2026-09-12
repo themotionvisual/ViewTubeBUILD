@@ -1,15 +1,6 @@
 /**
- * MobileEditor — top-level entry.
- *
- * Automatically picks the portrait vs landscape layout based on the current
- * viewport, and mounts a single shared `useEditorState` reducer so state
- * survives orientation changes. The viewport gate is deliberate — mount a
- * `<MobileEditor />` above the desktop editor and let it decide:
- *
- *     const vp = useViewport();
- *     return vp.isMobile ? <MobileEditor /> : <VT_E1 />;
- *
- * or wrap them together in the exported `<ResponsiveEditorShell />` below.
+ * MobileEditor — orientation-responsive shell with an independent project ratio.
+ * Phone orientation controls the UI layout; compositionAspect controls the video canvas.
  */
 import React from 'react';
 import { EditorStore, useEditorState } from './state/editorState';
@@ -19,19 +10,16 @@ import { PortraitLayout } from './layouts/PortraitLayout';
 import { LandscapeLayout } from './layouts/LandscapeLayout';
 import type { VtE1Clip } from '../../../shared/vtE1TimelineContract';
 
+export type CompositionAspect = 'portrait' | 'landscape';
+
 export interface MobileEditorProps {
-  /** Initial clips/tracks/duration seed. */
-  seed?: {
-    clips?: VtE1Clip[];
-    durationSec?: number;
-  };
-  /** Optional preview slot — pass the same renderer the desktop uses. */
+  seed?: { clips?: VtE1Clip[]; durationSec?: number };
   renderPreview?: (info: { widthPx: number; heightPx: number }) => React.ReactNode;
-  /** If provided, wires the internal store to an external editor state so
-   *  desktop and mobile can share edits. Advanced consumers only. */
   externalStore?: EditorStore;
-  /** Force a specific layout regardless of viewport (useful for testing). */
   layout?: 'auto' | 'portrait' | 'landscape';
+  /** Video/project ratio. This is intentionally independent from how the phone is held. */
+  compositionAspect?: CompositionAspect;
+  onCompositionAspectChange?: (aspect: CompositionAspect) => void;
 }
 
 export const MobileEditor: React.FC<MobileEditorProps> = ({
@@ -39,6 +27,8 @@ export const MobileEditor: React.FC<MobileEditorProps> = ({
   renderPreview,
   externalStore,
   layout = 'auto',
+  compositionAspect: controlledAspect,
+  onCompositionAspectChange,
 }) => {
   const internal = useEditorState(seed);
   const store = externalStore ?? internal;
@@ -46,37 +36,66 @@ export const MobileEditor: React.FC<MobileEditorProps> = ({
   const rootRef = React.useRef<HTMLDivElement>(null);
   useSuppressBrowserZoom(rootRef);
 
-  const chosen: 'portrait' | 'landscape' =
-    layout === 'auto' ? viewport.orientation : layout;
+  const [localAspect, setLocalAspect] = React.useState<CompositionAspect>('portrait');
+  const compositionAspect = controlledAspect ?? localAspect;
+  const setCompositionAspect = React.useCallback((next: CompositionAspect) => {
+    if (controlledAspect === undefined) setLocalAspect(next);
+    onCompositionAspectChange?.(next);
+  }, [controlledAspect, onCompositionAspectChange]);
+
+  const chosen: 'portrait' | 'landscape' = layout === 'auto' ? viewport.orientation : layout;
+  const aspectValue = compositionAspect === 'portrait' ? 9 / 16 : 16 / 9;
 
   return (
     <div
       ref={rootRef}
+      data-phone-orientation={chosen}
+      data-composition-aspect={compositionAspect}
       style={{
-        width: '100%',
-        height: '100dvh',
-        overflow: 'hidden',
-        background: '#020617',
-        WebkitTapHighlightColor: 'transparent',
+        position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden',
+        background: '#020617', WebkitTapHighlightColor: 'transparent',
       }}
     >
       {chosen === 'portrait' ? (
-        <PortraitLayout store={store} renderPreview={renderPreview} height={viewport.height} />
+        <PortraitLayout store={store} renderPreview={renderPreview} height={viewport.height} compositionAspect={aspectValue} />
       ) : (
-        <LandscapeLayout store={store} renderPreview={renderPreview} height={viewport.height} />
+        <LandscapeLayout store={store} renderPreview={renderPreview} height={viewport.height} compositionAspect={aspectValue} />
       )}
+
+      <div
+        role="group"
+        aria-label="Video aspect ratio"
+        style={{
+          position: 'absolute', top: 8, right: 8, zIndex: 80, display: 'flex', gap: 3,
+          padding: 3, background: '#fff', border: '2px solid #111', borderRadius: 6,
+          boxShadow: '2px 2px 0 rgba(0,0,0,.35)',
+        }}
+      >
+        {(['portrait', 'landscape'] as CompositionAspect[]).map((ratio) => {
+          const active = compositionAspect === ratio;
+          return (
+            <button
+              key={ratio}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setCompositionAspect(ratio)}
+              style={{
+                height: 28, minWidth: 46, padding: '0 7px', border: '2px solid #111', borderRadius: 4,
+                background: active ? '#36E0F6' : '#fff', color: '#111', fontSize: 9,
+                fontWeight: 900, lineHeight: 1, cursor: 'pointer',
+              }}
+            >
+              {ratio === 'portrait' ? '9:16' : '16:9'}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
 
-/* ------------------------------------------------------------------ */
-/* ResponsiveEditorShell — swaps between mobile & desktop editors      */
-/* ------------------------------------------------------------------ */
-
 export interface ResponsiveEditorShellProps extends MobileEditorProps {
-  /** Desktop editor to fall back to on wider viewports. */
   desktop: React.ReactElement;
-  /** Force one side regardless of viewport. */
   mode?: 'auto' | 'mobile' | 'desktop';
 }
 
