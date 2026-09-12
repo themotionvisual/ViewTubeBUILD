@@ -3,6 +3,7 @@ import { EditorStore } from '../state/editorState';
 import { PreviewPane } from '../components/PreviewPane';
 import { TransportBar } from '../components/TransportBar';
 import { TimelineStrip } from '../components/TimelineStrip';
+import { MiniTimelineMap } from '../components/MiniTimelineMap';
 import { PanelSheet } from '../components/PanelSheet';
 import { ToolDock } from '../components/ToolDock';
 import { ContextMenu, ContextMenuItem } from '../components/ContextMenu';
@@ -36,7 +37,7 @@ export const PortraitLayout: React.FC<PortraitLayoutProps> = ({ store, renderPre
   return (
     <div ref={rootRef} style={{
       position: 'relative', width: '100%', height: containerHeight, background: '#020617', color: '#f8fafc',
-      display: 'grid', gridTemplateRows: `${previewHeight}px 52px 58px minmax(0, 1fr)`, gap: 4, padding: 4,
+      display: 'grid', gridTemplateRows: `${previewHeight}px 52px 58px minmax(0, 1fr) 48px`, gap: 4, padding: 4,
       paddingBottom: 66, boxSizing: 'border-box', overflow: 'hidden', touchAction: 'manipulation',
     }}>
       <div style={{ minHeight: 0, minWidth: 0, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
@@ -51,6 +52,7 @@ export const PortraitLayout: React.FC<PortraitLayoutProps> = ({ store, renderPre
           onClipContextMenu={(clip, at) => setMenu({ items: clipMenuFor(clip), at, title: String(clip.id) })}
           onEmptyContextMenu={(at) => setMenu({ items: emptyMenu, at, title: 'Timeline' })} />
       </div>
+      <MiniTimelineMap store={store} />
       <PanelSheet store={store} render={renderPanelBody} containerHeight={containerHeight} />
       {menu && <ContextMenu {...menu} onDismiss={() => setMenu(null)} />}
     </div>
