@@ -1,7 +1,7 @@
 /* Canonical ViewTube MAIN TOOLBOX authority.
  * Main toolboxes must remain visually distinct from nested SubToolboxes.
- * This file is intentionally scoped to data-vt-toolbox-level="main" so the
- * widget and subtoolbox systems cannot resize the level-0 application shell.
+ * Component/module geometry is inherited from the owning shell rather than
+ * recreated by feature-local CSS.
  */
 [data-vt-toolbox][data-vt-toolbox-level="main"] {
   --vt-toolbox-header-height: 80px;
@@ -9,23 +9,22 @@
   --vt-toolbox-radius: 16px;
   --vt-toolbox-shadow-offset: 10px;
   --vt-toolbox-title-size: 26px;
-
+  --vt-toolbox-component-stroke: 3px;
+  --vt-toolbox-component-radius: 8px;
+  --vt-toolbox-component-shadow: 4px;
+  --vt-toolbox-component-compact: 32px;
+  --vt-toolbox-component-standard: 48px;
+  --vt-toolbox-component-action: 60px;
   border-width: 5px !important;
   border-style: solid !important;
   border-color: #000 !important;
   border-radius: 16px !important;
 }
 
-/* Every production main-toolbox treatment uses the large level-0 header.
- * Accordion is deliberately excluded below because it is legacy/reference
- * compatibility; production nested sections belong to SubToolbox instead.
- */
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
   height: 80px !important;
   min-height: 80px !important;
-  border-bottom-width: 5px !important;
-  border-bottom-style: solid !important;
-  border-bottom-color: #000 !important;
+  border-bottom: 5px solid #000 !important;
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
@@ -34,9 +33,7 @@
   height: 80px !important;
   flex: 0 0 80px !important;
   aspect-ratio: 1 / 1 !important;
-  border-right-width: 5px !important;
-  border-right-style: solid !important;
-  border-right-color: #000 !important;
+  border-right: 5px solid #000 !important;
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
@@ -45,9 +42,51 @@
   font-weight: 1000 !important;
 }
 
-/* Preserve the intentionally smaller compatibility accordion treatment only.
- * It must not become the visual contract for ToolboxScaffold or page tools.
- */
+/* Main toolbox content establishes the level-1 module contract. */
+[data-vt-toolbox][data-vt-toolbox-level="main"] > div > div > main,
+[data-vt-toolbox][data-vt-toolbox-level="main"] .vt-main-toolbox-content {
+  --vt-level1-stroke: 4px;
+  --vt-level1-radius: 12px;
+  --vt-level1-shadow: 6px;
+  --vt-inner-stroke: 3px;
+  --vt-inner-radius: 8px;
+  --vt-inner-shadow: 4px;
+}
+
+/* Reusable first-level module surfaces match the SubToolbox hierarchy. */
+[data-vt-toolbox][data-vt-toolbox-level="main"] .vt-level1-surface {
+  border-width: var(--vt-level1-stroke, 4px) !important;
+  border-style: solid !important;
+  border-color: #000 !important;
+  border-radius: var(--vt-level1-radius, 12px) !important;
+  box-shadow: var(--vt-level1-shadow, 6px) var(--vt-level1-shadow, 6px) 0 0 var(--vt-level1-shadow-color, var(--vt-toolbox-shadow-color, rgb(0 0 0 / .35))) !important;
+}
+
+/* Interior modules/components share the 3/8/4 primitive contract. */
+[data-vt-toolbox][data-vt-toolbox-level="main"] .vt-inner-surface {
+  border-width: var(--vt-inner-stroke, 3px) !important;
+  border-style: solid !important;
+  border-color: #000 !important;
+  border-radius: var(--vt-inner-radius, 8px) !important;
+  box-shadow: var(--vt-inner-shadow, 4px) var(--vt-inner-shadow, 4px) 0 0 var(--vt-subtoolbox-shadow, var(--vt-toolbox-shadow-color, rgb(0 0 0 / .3))) !important;
+}
+
+/* Production nested sections are always SubToolbox-sized. */
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] {
+  --vt-subtoolbox-stroke: 4px;
+  --vt-subtoolbox-radius: 12px;
+  --vt-subtoolbox-shadow-offset: 6px;
+  --vt-subtoolbox-header-height: 56px;
+  --vt-subtoolbox-title-size: 20px;
+  box-sizing: border-box;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
+  min-height: 56px;
+}
+
+/* Compatibility accordion is level-1 only; never let its geometry become the
+ * default ToolboxScaffold treatment. */
 [data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="accordion"] {
   --vt-toolbox-header-height: 56px;
   --vt-toolbox-radius: 12px;
@@ -56,10 +95,33 @@
   border-radius: 12px !important;
 }
 
-/* Main owns only its own frame. Nested production SubToolboxes keep their
- * independent 56/4/12/6 contract from subtoolbox-system.css. */
-[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] {
-  box-sizing: border-box;
+/* Common split-left controls use a square rail equal to their own height. */
+[data-vt-toolbox-level="sub"] [data-vt-split-left] {
+  min-height: 56px;
+  height: 56px;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  padding: 0;
+  font-size: 20px;
+  font-weight: 900;
+}
+[data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-rail] {
+  width: 56px;
+  min-width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 4px solid #000;
+}
+[data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-label] {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  padding-inline: 12px;
 }
 
 @media (max-width: 767px) {
@@ -67,5 +129,18 @@
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
+  }
+
+  /* Main Toolboxes stay level-0 size on phones; only nested components compact. */
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
+    height: 80px !important;
+    min-height: 80px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
+    width: 80px !important;
+    min-width: 80px !important;
+    height: 80px !important;
+    flex-basis: 80px !important;
   }
 }
