@@ -1,4 +1,5 @@
 import { runBrainTurn, type RunBrainTurnInput } from "../BrainOrchestrator"
+import { defaultBrainModelGateway } from "./BrainModelGateway"
 import type {
  BrainRuntimeMetadata,
  BrainRuntimeRequest,
@@ -16,7 +17,7 @@ const toLegacyInput = (input: BrainRuntimeRequest): RunBrainTurnInput => ({
  recentTurns: input.recentTurns,
  history: input.history,
  allowModel: input.allowModel,
- modelGenerator: input.modelGenerator,
+ modelGenerator: input.modelGenerator || defaultBrainModelGateway.generateStructuredResponse,
  nicheResolver: input.nicheResolver,
  currentResearcher: input.currentResearcher,
 })
@@ -34,9 +35,10 @@ export const buildBrainRuntimeMetadata = (
 /**
  * Canonical additive entry point for creator-facing Brain tasks.
  *
- * Phase 1 deliberately delegates to the existing BrainOrchestrator so current
- * creator behavior, fallbacks, validation, learning, and persistence remain
- * unchanged while surfaces migrate to one shared runtime boundary.
+ * Phase 1 deliberately delegates orchestration to the existing BrainOrchestrator
+ * so creator behavior, validation, repair, fallbacks, learning, and persistence
+ * remain unchanged. Structured generation is injected through BrainModelGateway,
+ * establishing the provider-neutral seam without changing the current provider.
  */
 export const runBrainTask = async (
  input: BrainRuntimeRequest,
