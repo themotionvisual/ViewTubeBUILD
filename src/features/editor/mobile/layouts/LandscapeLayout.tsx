@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { EditorStore } from '../state/editorState';
 import { PreviewPane } from '../components/PreviewPane';
 import { TransportBar } from '../components/TransportBar';
-import { TimelineStrip } from '../components/TimelineStrip';
+import { TimelineStrip, type TimelineViewport } from '../components/TimelineStrip';
 import { MiniTimelineMap } from '../components/MiniTimelineMap';
 import { PanelSheet } from '../components/PanelSheet';
 import { ToolDock } from '../components/ToolDock';
@@ -20,6 +20,8 @@ export interface LandscapeLayoutProps {
 export const LandscapeLayout: React.FC<LandscapeLayoutProps> = ({ store, renderPreview, height, compositionAspect = 16 / 9 }) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<{ items: ContextMenuItem[]; at: { x: number; y: number }; title?: string } | null>(null);
+  const [timelineViewport, setTimelineViewport] = useState<TimelineViewport>({ startSec: 0, endSec: 0 });
+  const [scrollToSec, setScrollToSec] = useState(0);
   const containerHeight = height ?? (typeof window !== 'undefined' ? window.innerHeight : 480);
   const isPortraitVideo = compositionAspect < 1;
 
@@ -48,11 +50,22 @@ export const LandscapeLayout: React.FC<LandscapeLayoutProps> = ({ store, renderP
       </div>
       <div style={{ gridColumn: 2 }}><TransportBar store={store} compact /></div>
       <div style={{ gridColumn: 2, minHeight: 0, overflow: 'hidden' }}>
-        <TimelineStrip store={store}
+        <TimelineStrip
+          store={store}
+          scrollToSec={scrollToSec}
+          onViewportChange={setTimelineViewport}
           onClipContextMenu={(clip, at) => setMenu({ items: clipMenuFor(clip), at, title: String(clip.id) })}
-          onEmptyContextMenu={(at) => setMenu({ items: emptyMenu, at, title: 'Timeline' })} />
+          onEmptyContextMenu={(at) => setMenu({ items: emptyMenu, at, title: 'Timeline' })}
+        />
       </div>
-      <div style={{ gridColumn: 2 }}><MiniTimelineMap store={store} height={44} /></div>
+      <div style={{ gridColumn: 2 }}>
+        <MiniTimelineMap
+          store={store}
+          height={44}
+          viewport={timelineViewport}
+          onViewportNavigate={setScrollToSec}
+        />
+      </div>
       <PanelSheet store={store} render={renderPanelBody} containerHeight={containerHeight} />
       {menu && <ContextMenu {...menu} onDismiss={() => setMenu(null)} />}
     </div>
