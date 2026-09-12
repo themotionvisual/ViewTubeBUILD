@@ -34,15 +34,15 @@ export const CrownLiveBrain: React.FC = () => {
         <Metric label="Memory signals" value={memorySignals} detail="Journal entries, follow-ups and micro-polls currently present in Workspace Brain state." />
         <Metric label="Context coverage" value={`${contextSignals}/4`} detail="Channel profile, recent metrics, core concept and target niche context currently available." />
         <Metric label="Auth bridge" value={authState.isAuthenticated ? "ready" : "offline"} detail={authState.channelName || authState.channelHandle || "No legacy Brain auth/channel identity is currently populated."} />
-        <Metric label="Creative state" value={brain.storyboardState.scenes.length} detail={`Storyboard scenes. Thumbnail variations: ${brain.thumbnailState.variations.length}. SEO results: ${brain.seoState.results.length}.`} />
+        <Metric label="Creative state" value={brain.storyboardState.scenes.length} detail={`Storyboard scenes. Thumbnail variations: ${brain.thumbnailState.variations?.length ?? 0}. SEO results: ${brain.seoState.results.length}.`} />
       </div>
       <div className={`${cardClass} p-5 lg:col-span-2`}>
         <div className="flex items-center gap-2"><FolderKanban size={18} /><h3 className="text-lg font-black uppercase">Current context summary</h3></div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl border-[2px] border-black bg-[#d7fff2] p-3"><div className="text-[9px] font-black uppercase text-black/45">Core concept</div><div className="mt-1 text-xs font-black">{brain.coreConcept || "Not set"}</div></div>
           <div className="rounded-xl border-[2px] border-black bg-[#ffefae] p-3"><div className="text-[9px] font-black uppercase text-black/45">Target niche</div><div className="mt-1 text-xs font-black">{brain.targetNiche || "Not set"}</div></div>
-          <div className="rounded-xl border-[2px] border-black bg-[#f1dcff] p-3"><div className="text-[9px] font-black uppercase text-black/45">Research results</div><div className="mt-1 text-xs font-black">{brain.researchLabState.results.length}</div></div>
-          <div className="rounded-xl border-[2px] border-black bg-[#ffd9e3] p-3"><div className="text-[9px] font-black uppercase text-black/45">Calendar events</div><div className="mt-1 text-xs font-black">{brain.calendarState.events.length}</div></div>
+          <div className="rounded-xl border-[2px] border-black bg-[#f1dcff] p-3"><div className="text-[9px] font-black uppercase text-black/45">Research results</div><div className="mt-1 text-xs font-black">{brain.researchLabState.results?.length ?? 0}</div></div>
+          <div className="rounded-xl border-[2px] border-black bg-[#ffd9e3] p-3"><div className="text-[9px] font-black uppercase text-black/45">Calendar events</div><div className="mt-1 text-xs font-black">{brain.calendarState.events?.length ?? 0}</div></div>
         </div>
       </div>
     </section>

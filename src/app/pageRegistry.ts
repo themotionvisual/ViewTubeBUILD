@@ -128,7 +128,6 @@ export const PAGE_REGISTRY: readonly PageRegistryEntry[] = Object.freeze([
  { path: "/thumbnail-studio", title: "Thumbnail Studio", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/algorithm-architect", title: "Algorithm Architect", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/storyboard-studio", title: "Storyboard Studio", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
- { path: "/brain-controls", title: "Brain Controls", section: "system", navigationVisibility: "hidden", lifecycle: "unclassified", description: "Brain engine controls surface (added on main without a registry entry)." },
  { path: "/tools", title: "Internal Tools", section: "system", navigationVisibility: "hidden", lifecycle: "lab", description: "Index of the internal super-tool prototypes." },
  { path: "/tools/:toolId", title: "Internal Tool", section: "system", navigationVisibility: "hidden", lifecycle: "lab", description: "One internal super-tool prototype, resolved by id." },
  { path: "/audit", title: "Audit", section: "system", navigationVisibility: "hidden", lifecycle: "lab" },

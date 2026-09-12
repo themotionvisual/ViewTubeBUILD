@@ -6,6 +6,11 @@ import {
  type Schema,
 } from "@google/genai"
 import { AspectRatio, ImageSize } from "@/types"
+import {
+ isSurprisingSubstitution,
+ resolveModelForCapability,
+ type ModelResolution,
+} from "./brain/modelRouting"
 import type {
  SeoResult,
  MediaAnalysisResult,
@@ -657,17 +662,36 @@ export const getActiveModel = (
   | "audio"
   | "tts"
   | "live" = "text",
-): string => {
+): string => resolveActiveModel(capability).served
+
+/**
+ * Same routing as `getActiveModel`, but reports what the creator asked for alongside what
+ * is actually served. Use this wherever the served model needs to be recorded — traces,
+ * evals, cost attribution — because a measurement taken against an unknown model cannot
+ * be compared against any other measurement.
+ *
+ * The HYBRID STRATEGY (MAY 2026) routing policy is preserved exactly; this only makes it
+ * legible. Whether a creator's preference *should* override the text policy is a product
+ * decision, deliberately not changed here.
+ */
+export const resolveActiveModel = (
+ capability: Parameters<typeof getActiveModel>[0] = "text",
+): ModelResolution => {
  const { modelPreference } = getAiSettings()
- const selected = toCanonicalModel(modelPreference)
- 
- // HYBRID STRATEGY (MAY 2026)
- if (capability === "thinking" || capability === "analysis") return "gemini-3.1-pro-preview"
- if (capability === "image") return "gemini-3.1-flash-image-preview"
- if (capability === "video" || capability === "audio") return "gemini-3-flash-preview"
- if (capability === "fast-text" || capability === "text") return "gemini-3.1-flash-lite"
- 
- return selected
+ const resolution = resolveModelForCapability({
+  preference: toCanonicalModel(modelPreference),
+  capability,
+ })
+ if (isSurprisingSubstitution(resolution)) {
+  emitModelFallbackEvent({
+   sourceModel: resolution.requested,
+   fallbackModel: resolution.served,
+   reason: "capability_policy_override",
+   tool: `capability:${capability}`,
+   effectiveModel: resolution.served,
+  })
+ }
+ return resolution
 }
 
 // --- HARBOR PILOT: RELIABILITY HELPERS ---

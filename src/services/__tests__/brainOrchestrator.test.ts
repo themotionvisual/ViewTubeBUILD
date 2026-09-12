@@ -254,7 +254,11 @@ describe("BrainOrchestrator", () => {
   const evaluation = validateBrainResponse({ response, snapshot })
 
   expect(evaluation.passed).toBe(false)
-  expect(evaluation.unsupportedNumbers).toEqual(expect.arrayContaining(["83%", "999999"]))
+  // A fabricated count blocks delivery; a percentage that is merely not present in
+  // evidence is recorded but does not, because it is often a legitimate computation.
+  expect(evaluation.unsupportedNumbers).toEqual(expect.arrayContaining(["999999"]))
+  expect(evaluation.unverifiedDerivedNumbers).toEqual(expect.arrayContaining(["83%"]))
+  expect(evaluation.repairReasons.join(" ")).toContain("999999")
  })
 
  it("rejects channel-specific advice that does not answer an audience-language task", () => {

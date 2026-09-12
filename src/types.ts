@@ -1397,7 +1397,14 @@ export interface BrainAnswerEvaluation {
  }
  passed: boolean
  repairReasons: string[]
+ /** Counts and magnitudes absent from the evidence pack. These block delivery. */
  unsupportedNumbers: string[]
+ /**
+  * Percentages and rates not directly present in evidence. Usually a legitimate
+  * computation, so these are recorded for observability rather than forcing repair.
+  * Expected to approach zero once statistics are computed into the evidence pack.
+  */
+ unverifiedDerivedNumbers: string[]
  similarTurnIds: string[]
 }
 

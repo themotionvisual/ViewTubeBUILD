@@ -30,6 +30,7 @@ import {
  type StructuredBrainModelOutput,
 } from "../gemini"
 import { buildBrainContextPack } from "./BrainContextBroker"
+import { auditNumericClaims, type NumericAudit } from "./numericClaims"
 import {
  inferBrainIntent,
  selectBrainCapabilities,
@@ -77,22 +78,17 @@ const responseText = (response: CreatorBrainResponse): string => [
  ...response.actions,
 ].join(" ")
 
-const unsupportedNumbers = (
+const auditResponseNumbers = (
  response: CreatorBrainResponse,
  snapshot: AIBrainContextSnapshot,
-): string[] => {
- const known = JSON.stringify({
+): NumericAudit => auditNumericClaims({
+ text: responseText(response),
+ evidence: {
   channel: snapshot.channel,
   profile: snapshot.inferredProfile,
   evidence: snapshot.evidencePack,
- }).replace(/,/g, "")
- const matches = responseText(response).match(/\b\d[\d,]*(?:\.\d+)?%?(?![\w])/g) || []
- return Array.from(new Set(matches.filter((value) => {
-  const normalized = value.replace(/,/g, "")
-  if (["1", "2", "3", "4", "5", "7", "30", "60", "90"].includes(normalized)) return false
-  return !known.includes(normalized)
- })))
-}
+ },
+})
 
 export const validateBrainResponse = (input: {
  response: CreatorBrainResponse
@@ -134,7 +130,9 @@ export const validateBrainResponse = (input: {
   .map((turn) => ({ id: turn.id, score: similarity(text, turn.assistantText || turn.response?.keyInsight || "") }))
   .filter((item) => item.score >= 0.68)
  const novelty = Math.max(0, Math.round(100 - (similar[0]?.score || 0) * 100))
- const invented = unsupportedNumbers(input.response, input.snapshot)
+ const numeric = auditResponseNumbers(input.response, input.snapshot)
+ const invented = numeric.fabricated.map((claim) => claim.token)
+ const unverifiedDerived = numeric.unverifiedDerived.map((claim) => claim.token)
  const modeMatches = !input.expectedMode || input.response.mode === input.expectedMode
  const answerContent = [
   input.response.keyInsight,
@@ -153,7 +151,7 @@ export const validateBrainResponse = (input: {
   creatorSpecificity < 55 ? "Answer does not use available channel-specific evidence." : "",
   actionability < 55 ? "Answer lacks a concrete creator action." : "",
   novelty < 35 ? "Answer is too similar to a recent response." : "",
-  !isContentDraft && invented.length ? "Answer contains numbers that are not present in the evidence pack." : "",
+  !isContentDraft && invented.length ? `Answer states figures absent from the evidence pack: ${invented.join(", ")}. Use only supplied evidence.` : "",
   !modeMatches ? `Answer mode ${input.response.mode} does not match the requested ${input.expectedMode} task.` : "",
   !audienceTaskAnswered ? "Answer the audience-language task with an audience finding, concrete language guidance, and an evidence boundary." : "",
  ].filter(Boolean)
@@ -164,6 +162,7 @@ export const validateBrainResponse = (input: {
   passed: average >= 58 && repairReasons.length === 0,
   repairReasons,
   unsupportedNumbers: invented,
+  unverifiedDerivedNumbers: unverifiedDerived,
   similarTurnIds: similar.map((item) => item.id),
  }
 }
