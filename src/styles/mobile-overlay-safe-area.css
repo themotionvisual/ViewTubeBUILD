@@ -1,0 +1,16 @@
+/*
+ * Fixed creator-workspace overlays live in viewport coordinates, while the
+ * mobile navigation occupies its own 70px shell row. Without an explicit
+ * offset, a fixed inset-0 project drawer starts behind the navigation and its
+ * title/actions are hidden. Keep these overlays inside the usable app surface.
+ */
+.vt-adaptive-shell[data-layout="mobile"] [aria-label$="project details"],
+.vt-adaptive-shell[data-layout="mobile"] [aria-label="Create project"] {
+  top: 70px;
+}
+
+/* Preserve the full remaining viewport and scrolling area after the offset. */
+.vt-adaptive-shell[data-layout="mobile"] [aria-label$="project details"] > aside {
+  height: 100%;
+  max-height: calc(100dvh - 70px);
+}
