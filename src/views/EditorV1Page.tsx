@@ -31,14 +31,14 @@ const EditorUiMenu: React.FC<{legacyMode:EditorFrontendMode;onLegacyModeChange:(
 const EditorV1Page:React.FC=()=>{
   const forced=React.useMemo(()=>{if(typeof window==='undefined')return 'auto' as const;const v=new URLSearchParams(window.location.search).get('editor');return v==='mobile'||v==='desktop'?v:'auto' as const},[]);
   const [frontendMode,setFrontendMode]=React.useState<EditorFrontendMode>(()=>readEditorFrontendMode());
-  const [interfaceChoice,setInterfaceChoice]=React.useState<EditorFrontend>('auto');
+  const [interfaceChoice,setInterfaceChoice]=React.useState<EditorFrontend>('mobile');
   const [layoutChoice,setLayoutChoice]=React.useState<EditorLayoutChoice>('auto');
   const [compositionAspect,setCompositionAspect]=React.useState<CompositionAspect>('portrait');
   const restoredMobileProject=React.useMemo(()=>mobileSeedFromBridgeSnapshot(readEditorProjectBridgeSnapshot()),[]);
   const mobileStore=useEditorState(restoredMobileProject);
   const switchFrontend=React.useCallback((next:EditorFrontendMode)=>{writeEditorFrontendMode(next);setFrontendMode(next)},[]);
   const legacyShellMode=editorHostModeFor(frontendMode,forced);
-  const shellMode=interfaceChoice==='auto'?legacyShellMode:interfaceChoice;
+  const shellMode=forced==='desktop'?'desktop':forced==='mobile'?'mobile':interfaceChoice==='auto'?legacyShellMode:interfaceChoice;
   React.useEffect(()=>{if(shellMode!=='mobile')return;writeEditorProjectBridgeSnapshot('mobile',mobileStore.state.project)},[shellMode,mobileStore.state.project]);
   return <section data-editor-frontend={frontendMode} data-editor-interface={interfaceChoice} data-editor-layout={layoutChoice} data-editor-aspect={compositionAspect} className="relative h-full min-h-0 w-full overflow-hidden bg-[#111] flex flex-col rounded-[10px] border-[2px] border-black landscape:max-[932px]:border-0 landscape:max-[932px]:rounded-none max-[560px]:border-0 max-[560px]:rounded-none"><EditorUiMenu legacyMode={frontendMode} onLegacyModeChange={switchFrontend} frontend={interfaceChoice} onFrontendChange={setInterfaceChoice} layout={layoutChoice} onLayoutChange={setLayoutChoice} aspect={compositionAspect} onAspectChange={setCompositionAspect}/><EditorRouteBoundary><ResponsiveEditorShell mode={shellMode} desktop={<VTE1Editor/>} externalStore={mobileStore} layout={layoutChoice} compositionAspect={compositionAspect} onCompositionAspectChange={setCompositionAspect} showViewSwitcher={false}/></EditorRouteBoundary></section>;
 };
