@@ -36,14 +36,15 @@ describe("SubToolbox", () => {
   expect(html).toContain("isolation:isolate")
  })
 
- it("renders one bottom edge when collapsed and one content seam when open", () => {
+ it("keeps one permanent divider while content slides beneath it", () => {
   const closed = renderShell(false)
   const open = renderShell(true)
 
-  expect(closed).toContain("border-bottom:0 solid transparent")
+  expect(closed).toContain("border-bottom:var(--vt-subtoolbox-stroke, 4px) solid black")
   expect(open).toContain("border-bottom:var(--vt-subtoolbox-stroke, 4px) solid black")
-  expect(closed).not.toContain("margin-top:-4px")
-  expect(open).not.toContain("margin-top:-4px")
+  expect(closed).toContain("margin-top:calc(var(--vt-subtoolbox-stroke, 4px) * -1)")
+  expect(open).toContain("margin-top:calc(var(--vt-subtoolbox-stroke, 4px) * -1)")
+  expect(closed).toContain("duration-300 ease-out motion-reduce:transition-none")
  })
 
  it("is collapsible by default and keeps the canonical arrow", () => {
@@ -65,7 +66,7 @@ describe("SubToolbox", () => {
 })
 
 describe("ToolboxScaffold", () => {
- it("does not double the bottom stroke when collapsed", () => {
+ it("keeps the Mini Toolbox Lab divider during collapse", () => {
   const html = renderToStaticMarkup(
    <ToolboxScaffold
     title="Thumbnail"
@@ -81,7 +82,8 @@ describe("ToolboxScaffold", () => {
   expect(html).toContain('data-vt-toolbox-level="main"')
   expect(html).toContain("text-[26px]")
   expect(html).toContain("padding-inline:var(--vt-toolbox-content-inline-padding, 10px)")
-  expect(html).toContain("border-bottom:0 solid transparent")
-  expect(html).not.toContain("margin-top:-5px")
+  expect(html).toContain("border-bottom:var(--vt-toolbox-stroke, 5px) solid black")
+  expect(html).toContain("margin-top:calc(var(--vt-toolbox-stroke, 5px) * -1)")
+  expect(html).toContain("duration-300 ease-out motion-reduce:transition-none")
  })
 })

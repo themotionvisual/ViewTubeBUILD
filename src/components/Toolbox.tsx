@@ -15,7 +15,8 @@ export const CONTROL_SHELL = {
   shadowOffset: 6,
   transition: "duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
 } as const;
-const SHELL_COLLAPSE_TRANSITION = "duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)]";
+const SHELL_COLLAPSE_TRANSITION = "duration-300 ease-out motion-reduce:transition-none";
+const SHELL_COLLAPSE_DURATION_MS = 300;
 const MAIN_TOOLBOX_STROKE = 5;
 const MAIN_TOOLBOX_SHADOW = 10;
 const SUB_TOOLBOX_STROKE = 4;
@@ -142,6 +143,18 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   const subPaletteCursorRef = useRef(0);
   const controlled = typeof isOpen === 'boolean';
   const open = controlled ? Boolean(isOpen) : internalOpen;
+  const [keepClosingContentMounted, setKeepClosingContentMounted] = useState(open);
+
+  useEffect(() => {
+    if (open || !unmountWhenClosed) {
+      setKeepClosingContentMounted(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setKeepClosingContentMounted(false), SHELL_COLLAPSE_DURATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [open, unmountWhenClosed]);
+
+  const shouldRenderContent = !unmountWhenClosed || open || keepClosingContentMounted;
 
   const setOpen = () => {
     if (onToggle) {
@@ -244,9 +257,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           style={{
             ...headerStyle,
             height: `${headerHeight}px`,
-            borderBottom: open || showHelpRail
-              ? `var(--vt-toolbox-stroke, ${stroke}px) solid black`
-              : "0 solid transparent",
+            borderBottom: `var(--vt-toolbox-stroke, ${stroke}px) solid black`,
           }}
         >
           <div className="flex items-center h-full flex-1">
@@ -339,10 +350,10 @@ export const Toolbox: React.FC<ToolboxProps> = ({
 
         <div
           className={`grid transition-[grid-template-rows,opacity] ${collapseTransitionClass} ${fillAvailable ? 'flex-1 min-h-0' : ''} ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
-          style={{ marginTop: 0 }}
+          style={{ marginTop: `calc(var(--vt-toolbox-stroke, ${stroke}px) * -1)` }}
         >
           <div className={`overflow-hidden min-h-0 ${fillAvailable ? 'h-full' : ''}`}>
-            {(!unmountWhenClosed || open) && (
+            {shouldRenderContent && (
               <main
                 className={`flex-1 min-h-0 bg-white vt-main-toolbox-content ${fillAvailable ? 'h-full' : ''} ${finalContentClass}`}
                 style={
@@ -559,6 +570,18 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   const [showHelpRail, setShowHelpRail] = useState(false);
   const controlled = typeof isOpen === 'boolean';
   const open = controlled ? Boolean(isOpen) : internalOpen;
+  const [keepClosingContentMounted, setKeepClosingContentMounted] = useState(open);
+
+  useEffect(() => {
+    if (open || !unmountOnClose) {
+      setKeepClosingContentMounted(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setKeepClosingContentMounted(false), SHELL_COLLAPSE_DURATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [open, unmountOnClose]);
+
+  const shouldRenderContent = !unmountOnClose || open || keepClosingContentMounted;
 
   const setOpen = () => {
     if (onToggle) {
@@ -621,10 +644,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           height: `var(--vt-subtoolbox-header-height, ${CONTROL_SHELL.headerHeight}px)`,
           minHeight: `var(--vt-subtoolbox-header-height, ${CONTROL_SHELL.headerHeight}px)`,
           backgroundColor: headerHex,
-          borderBottom:
-            open || showHelpRail
-              ? `var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_INNER_STROKE}px) solid black`
-              : "0 solid transparent",
+          borderBottom: `var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_INNER_STROKE}px) solid black`,
           borderTopLeftRadius: `calc(var(--vt-subtoolbox-radius, ${SUB_TOOLBOX_RADIUS}px) - var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_STROKE}px))`,
           borderTopRightRadius: `calc(var(--vt-subtoolbox-radius, ${SUB_TOOLBOX_RADIUS}px) - var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_STROKE}px))`,
           overflow: "hidden",
@@ -685,10 +705,10 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
 
       <div
         className={`grid transition-[grid-template-rows] ${SHELL_COLLAPSE_TRANSITION} ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden"}`}
-        style={{ marginTop: 0 }}
+        style={{ marginTop: `calc(var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_INNER_STROKE}px) * -1)` }}
       >
         <div className={`${overflowVisible ? "" : "overflow-hidden"} min-h-0`}>
-          {(!unmountOnClose || open) && <main
+          {shouldRenderContent && <main
             className={`bg-white w-full text-black flex flex-col transition-opacity vt-subtoolbox-content ${resolvedContentClassName} ${SHELL_COLLAPSE_TRANSITION} ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             style={{
               ...contentSizeStyle,
