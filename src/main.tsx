@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import './styles/toolbox-system.css'
 import './styles/mobile-overlay-safe-area.css'
 // Install developer-console error/rejection capture before anything else runs.
 // Verbose request and long-task diagnostics stay disabled for normal users.
