@@ -1,9 +1,85 @@
 /**
- * Canonical geometry, typography, spacing, color and motion contract for every
- * ViewTube subtoolbox. Consumer components should select a primitive/recipe;
- * they should not recreate these values with local utility classes.
+ * Canonical ViewTube toolbox/subtoolbox primitive contract.
+ *
+ * Architecture: TOKENS -> PRIMITIVE -> COMPONENT -> COMPOSITION -> TOOL.
+ * Consumers select semantic recipes and must not recreate geometry locally.
+ * All layout geometry follows the 4px grid; 2/3/4px strokes are deliberate
+ * optical exceptions. Color is intentionally independent from geometry.
  */
+
+export const SUBTOOLBOX_GRID = 4 as const
+
+export const SUBTOOLBOX_SIZE_RECIPES = {
+  xs: {
+    height: 18,
+    fontSize: 8,
+    iconSize: 10,
+    radius: 4,
+    stroke: 2,
+    shadowOffset: 2,
+    paddingX: 4,
+    gap: 4,
+  },
+  sm: {
+    height: 24,
+    fontSize: 10,
+    iconSize: 12,
+    radius: 4,
+    stroke: 2,
+    shadowOffset: 2,
+    paddingX: 8,
+    gap: 4,
+  },
+  md: {
+    height: 32,
+    fontSize: 12,
+    iconSize: 16,
+    radius: 8,
+    stroke: 3,
+    shadowOffset: 4,
+    paddingX: 8,
+    gap: 8,
+  },
+  lg: {
+    height: 48,
+    fontSize: 14,
+    iconSize: 20,
+    radius: 8,
+    stroke: 4,
+    shadowOffset: 4,
+    paddingX: 12,
+    gap: 8,
+  },
+} as const
+
+export type SubToolboxPrimitiveSize = keyof typeof SUBTOOLBOX_SIZE_RECIPES
+export type SubToolboxStyle = "primary" | "secondary" | "tertiary"
+
+export const SUBTOOLBOX_STYLE_RECIPES = {
+  primary: {
+    surface: "accent",
+    foreground: "black",
+    emptySurface: "white",
+    shadowStrength: 0.5,
+  },
+  secondary: {
+    surface: "white",
+    foreground: "black",
+    emptySurface: "white",
+    shadowStrength: 0.5,
+  },
+  tertiary: {
+    surface: "soft-accent",
+    foreground: "black",
+    emptySurface: "white",
+    shadowStrength: 0.35,
+  },
+} as const
+
 export const SUBTOOLBOX_TOKENS = {
+  grid: SUBTOOLBOX_GRID,
+  sizes: SUBTOOLBOX_SIZE_RECIPES,
+  styles: SUBTOOLBOX_STYLE_RECIPES,
   shell: {
     headerHeight: 56,
     stroke: 4,
@@ -15,7 +91,7 @@ export const SUBTOOLBOX_TOKENS = {
   compactShell: {
     headerHeight: 44,
     stroke: 3,
-    radius: 10,
+    radius: 8,
     shadowOffset: 4,
     iconSize: 24,
   },
@@ -25,28 +101,34 @@ export const SUBTOOLBOX_TOKENS = {
     shadowOffset: 4,
   },
   spacing: {
+    micro: 4,
     dense: 8,
     standard: 12,
     section: 16,
     large: 24,
   },
+  /** Compatibility aliases. New primitives should use `sizes`. */
   controlHeight: {
-    compact: 32,
-    standard: 48,
+    compact: SUBTOOLBOX_SIZE_RECIPES.md.height,
+    standard: SUBTOOLBOX_SIZE_RECIPES.lg.height,
     action: 60,
   },
   typography: {
-    label: 10,
-    control: 14,
+    micro: SUBTOOLBOX_SIZE_RECIPES.xs.fontSize,
+    label: SUBTOOLBOX_SIZE_RECIPES.sm.fontSize,
+    control: SUBTOOLBOX_SIZE_RECIPES.lg.fontSize,
     action: 20,
     title: 20,
     toolboxTitle: 26,
     weight: 900,
   },
   motion: {
-    controlMs: 180,
-    collapseMs: 300,
-    easing: "ease-out",
+    instantMs: 0,
+    interactionMs: 180,
+    componentMs: 300,
+    collapseMs: 600,
+    expressiveMs: 1000,
+    easing: "cubic-bezier(0.4,0,0.2,1)",
   },
 } as const
 
@@ -60,11 +142,12 @@ export const CONTROL_SHELL = {
   railSize: SUBTOOLBOX_TOKENS.shell.headerHeight,
   contentOffset: SUBTOOLBOX_TOKENS.shell.headerHeight,
   shadowOffset: SUBTOOLBOX_TOKENS.shell.shadowOffset,
-  transition: "duration-[180ms] ease-out motion-reduce:transition-none",
+  transition: "duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none",
 } as const
 
+/** One canonical layout transition for every toolbox/subtoolbox collapse. */
 export const SUBTOOLBOX_COLLAPSE_TRANSITION =
-  "duration-300 ease-out motion-reduce:transition-none"
+  "duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none"
 
 export const resolveSubtoolboxMinHeight = (
   openUnits: number,
@@ -78,6 +161,7 @@ export const resolveSubtoolboxMinHeight = (
   return Math.max(0, computed)
 }
 
-export type SubToolboxControlSize = keyof typeof SUBTOOLBOX_TOKENS.controlHeight
+/** Legacy names remain during migration; semantic sizes are preferred. */
+export type SubToolboxControlSize = "compact" | "standard" | "action"
 export type SubToolboxLayoutDensity = "dense" | "standard" | "comfortable"
 export type SubToolboxState = "loading" | "ready" | "empty" | "blocked" | "stale" | "error"
