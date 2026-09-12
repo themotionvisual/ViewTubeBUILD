@@ -14,7 +14,7 @@
   --vt-toolbox-component-shadow: 4px;
   --vt-toolbox-component-compact: 32px;
   --vt-toolbox-component-standard: 48px;
-  --vt-toolbox-component-action: 60px;
+  --vt-toolbox-component-action: 56px;
   border-width: 5px !important;
   border-style: solid !important;
   border-color: #000 !important;
@@ -95,33 +95,53 @@
   border-radius: 12px !important;
 }
 
-/* Common split-left controls use a square rail equal to their own height. */
-[data-vt-toolbox-level="sub"] [data-vt-split-left] {
-  min-height: 56px;
-  height: 56px;
+/* Split-left module actions are peers of a collapsed SubToolbox: same 56px
+ * height, 4px shell stroke, 12px radius and 20px title typography. */
+[data-vt-toolbox-level="sub"] [data-vt-split-left],
+[data-vt-toolbox-level="sub"] .vt-split-left-module-action {
+  min-height: 56px !important;
+  height: 56px !important;
+  border-width: 4px !important;
+  border-style: solid !important;
+  border-color: #000 !important;
+  border-radius: 12px !important;
   display: flex;
   align-items: stretch;
   overflow: hidden;
-  padding: 0;
-  font-size: 20px;
-  font-weight: 900;
+  padding: 0 !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
 }
-[data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-rail] {
-  width: 56px;
-  min-width: 56px;
-  height: 56px;
-  flex: 0 0 56px;
+[data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-rail],
+[data-vt-toolbox-level="sub"] .vt-split-left-module-action > :first-child {
+  width: 56px !important;
+  min-width: 56px !important;
+  height: 56px !important;
+  flex: 0 0 56px !important;
+  aspect-ratio: 1 / 1 !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-right: 4px solid #000;
+  border-right: 4px solid #000 !important;
 }
-[data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-label] {
+[data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-label],
+[data-vt-toolbox-level="sub"] .vt-split-left-module-action > :last-child {
   min-width: 0;
   flex: 1 1 auto;
   display: flex;
   align-items: center;
+  justify-content: center;
   padding-inline: 12px;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+}
+
+/* The compatibility grid action component currently emits no data attribute;
+ * constrain its direct button geometry inside the reference/action sections
+ * until all consumers move to the typed primitive marker. */
+[data-vt-toolbox-level="sub"] button[style*="height: 56px"] {
+  max-height: 56px;
 }
 
 @media (max-width: 767px) {
