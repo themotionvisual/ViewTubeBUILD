@@ -42,7 +42,7 @@ finished, regardless of how good the prose looks.
 
 Read before changing generation code:
 
-- `src/services/gemini.ts` — the ~65 existing generators and the model client
+- `src/services/gemini.ts` — the 60 existing generators and the model client
 - `src/services/prompts.ts` — existing system prompts
 - `src/services/brain/BrainCapabilityRegistry.ts` — the `content-generation` capability
 - `src/services/analytics-canon/README.md` — the canonical read rule
@@ -53,8 +53,8 @@ Read before changing generation code:
 ### 1. Never add a bare generator
 
 The dominant anti-pattern in this repository is a standalone exported function that builds
-a template string, calls the model, and returns markdown. There are ~65 of them. Do not
-add the 66th.
+a template string, calls the model, and returns markdown. There are 60 of them. Do not
+add the 61st.
 
 A new asset type is a **strategy registered with `AssetGenerator`**, supplying only:
 

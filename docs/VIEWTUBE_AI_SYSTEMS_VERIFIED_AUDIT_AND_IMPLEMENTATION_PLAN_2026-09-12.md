@@ -22,7 +22,7 @@ However, its current-state ratings were derived from reading module names and ty
 | "Strong feature: unsupported-number detection" | Implemented as a substring test against `JSON.stringify(...)`, which admits most invented figures (see §2.4). |
 | "Intelligence Hub integration — 65%" | The Intelligence Hub is a **second, separate reasoning stack** (4,065 LOC) that is the *only* surface actually grounded in canonical analytics. |
 
-The correction matters because it changes the plan. The 09-11 doc concludes the main task is *consolidation of working systems*. The verified position is that ViewTube has **a well-designed skeleton with several load-bearing connections never made**, plus a large body of generation code that was never brought under the architecture at all. Consolidation is still right — but it must be preceded by wiring, and the plan must account for ~65 ungoverned generators the previous audit did not mention.
+The correction matters because it changes the plan. The 09-11 doc concludes the main task is *consolidation of working systems*. The verified position is that ViewTube has **a well-designed skeleton with several load-bearing connections never made**, plus a large body of generation code that was never brought under the architecture at all. Consolidation is still right — but it must be preceded by wiring, and the plan must account for 60 ungoverned generators the previous audit did not mention.
 
 ---
 
@@ -123,7 +123,7 @@ A repository-wide search for `BrainTrace`, `turnTrace` or `traceId` returns **no
 
 ## 3. The generation layer is outside the architecture entirely
 
-The 2026-09-11 audit does not mention `src/services/gemini.ts`. It is **4,885 lines** and exports roughly **65 independent generator functions**:
+The 2026-09-11 audit does not mention `src/services/gemini.ts`. It is **4,885 lines** and exports **60 independent generator functions**:
 
 ```
 generateScript            generateStoryboard         generateHook
@@ -165,7 +165,7 @@ export const generateCommunityPosts = async (schedule, channelData, brain?: any)
 }
 ```
 
-What this means, and it applies to all ~65:
+What this means, and it applies to all 60:
 
 - **No context broker.** An unbounded string is interpolated into a template.
 - **No evidence.** `channelData` is whatever the calling component happened to have.
@@ -179,9 +179,9 @@ The Brain's own `content-generation` capability (`BrainCapabilityRegistry.ts:18`
 
 **There is no style or voice model anywhere in the codebase.** Searches for `voiceProfile`, `styleProfile`, `StyleModel`, `toneProfile`, `writingStyle`, `creatorVoice` return zero matches in `src/`. The user's requirement that output be "customizable, unique and loyal to the user's intended and previous content styles and production quality" currently has **no implementation surface at all**. This is a greenfield gap, not a partial one.
 
-### 3.1 Prompts are ~20 independent monoliths
+### 3.1 Prompts are 49 independent monoliths
 
-`src/services/prompts.ts` is 1,040 lines of standalone system prompts — `SCULPTING_ENGINE_SYSTEM_PROMPT`, `DATA_ANALYSIS_SYSTEM_PROMPT`, `KEYWORD_ANALYSIS_SYSTEM_PROMPT`, `HOOK_GENERATION_SYSTEM_PROMPT`, `STRATEGY_CHAT_SYSTEM_PROMPT`, `ALGORITHM_DIAGNOSIS_SYSTEM_PROMPT`, and so on. There is no shared constitution, no composition, and exactly one version constant in the file (`CHANNEL_ORACLE_PROMPT_VERSION`, `:153`). Rules are restated per prompt and drift independently.
+`src/services/prompts.ts` is 1,040 lines holding 49 standalone system prompts — `SCULPTING_ENGINE_SYSTEM_PROMPT`, `DATA_ANALYSIS_SYSTEM_PROMPT`, `KEYWORD_ANALYSIS_SYSTEM_PROMPT`, `HOOK_GENERATION_SYSTEM_PROMPT`, `STRATEGY_CHAT_SYSTEM_PROMPT`, `ALGORITHM_DIAGNOSIS_SYSTEM_PROMPT`, and so on. There is no shared constitution, no composition, and exactly one version constant in the file (`CHANNEL_ORACLE_PROMPT_VERSION`, `:153`). Rules are restated per prompt and drift independently.
 
 ### 3.2 Model access is client-side
 
@@ -281,7 +281,7 @@ Findings from current public guidance, mapped onto ViewTube's specific gaps.
 The governing idea is to find "the smallest possible set of high-signal tokens that maximize the likelihood of some desired outcome" — deliberately designing what the model sees on every call rather than maximizing what it is given ([Anthropic](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents), [Sourcegraph](https://sourcegraph.com/blog/context-engineering)). ViewTube's 24,000-character fixed clip is the wrong axis: it is simultaneously too small for real analytics and too undifferentiated to be high-signal. The fix is retrieval and ranking, not a bigger cap.
 
 ### Tools
-2026 practice is to curate a small set of high-signal, semantically meaningful tools per agent and expose the long tail through search rather than registering everything ([Anthropic](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents), [MLflow](https://mlflow.org/articles/ai-agent-tool-use-best-practices-for-practitioners/)). This directly validates the 09-11 doc's recommendation of semantic capabilities (`analyze_video_performance`, `build_launch_plan`) over exposing 65 generator functions. It also implies the generators should become the *implementation* behind a dozen or so tools, not the tool surface itself.
+2026 practice is to curate a small set of high-signal, semantically meaningful tools per agent and expose the long tail through search rather than registering everything ([Anthropic](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents), [MLflow](https://mlflow.org/articles/ai-agent-tool-use-best-practices-for-practitioners/)). This directly validates the 09-11 doc's recommendation of semantic capabilities (`analyze_video_performance`, `build_launch_plan`) over exposing 60 generator functions. It also implies the generators should become the *implementation* behind a dozen or so tools, not the tool surface itself.
 
 ### Evals
 Evaluating an agent is not evaluating a chat response: agents act over turns, use tools and mutate state, and fail in ways invisible if you only grade the final message. Practice is to combine deterministic code graders (assert on resulting state), model-based judges (natural-language quality), and human calibration — never a single channel ([Anthropic via Arize](https://arize.com/blog/anthropic-tips-how-to-build-evals-you-can-trust/), [ai-eval.org](https://ai-eval.org/post/anthropic-demystifying-evals-for-ai-agents), [LangChain](https://www.langchain.com/blog/agent-evaluation-readiness-checklist)). ViewTube's `validateBrainResponse` is a single lexical channel — the weakest of the three.
@@ -438,7 +438,7 @@ Everything durable depends on getting model access server-side.
 
 **1.1 Add `api/ai/[...path].mjs`** following the existing `api/youtube/` proxy pattern. Responsibilities: hold provider keys server-side; authenticate the ViewTube session; enforce per-plan rate limits and budget caps (wire to `billingEntitlement.ts` and `subscriptionPlans.ts`); cache identical requests; write an audit record per call; return `{ output, usage, modelRequested, modelServed, cacheHit, traceId }`.
 
-**1.2 Replace `getAiClient()`.** `gemini.ts:465` becomes a thin client that posts to the gateway. Keep the function signature so the ~65 generators keep compiling — this is the change that lets Phase 3 proceed without a rewrite. Retain the browser-key path only as an explicit "bring your own key" developer mode, clearly labelled and off by default.
+**1.2 Replace `getAiClient()`.** `gemini.ts:465` becomes a thin client that posts to the gateway. Keep the function signature so the 60 generators keep compiling — this is the change that lets Phase 3 proceed without a rewrite. Retain the browser-key path only as an explicit "bring your own key" developer mode, clearly labelled and off by default.
 
 **1.3 Persist traces server-side.** New Neon tables: `ai_trace`, `ai_claim`, `ai_evidence_ref`, `ai_cost`. Use the existing Vercel-Neon integration; note the 10-database-branch cap documented in `CLAUDE.md` when creating preview branches.
 
@@ -487,7 +487,7 @@ BrainRequest(kind:"asset", assetType)
   → persist Asset + BrainTrace + Recommendation record
 ```
 
-**3.3 Migrate the ~65 generators.** Do **not** rewrite them all at once. Convert each to an `AssetGenerator` strategy that supplies its schema and task instruction while inheriting evidence, style, evaluation and tracing. Order by creator value:
+**3.3 Migrate the 60 generators.** Do **not** rewrite them all at once. Convert each to an `AssetGenerator` strategy that supplies its schema and task instruction while inheriting evidence, style, evaluation and tracing. Order by creator value:
 
 1. `generateScript`, `generateHook`, `generateStoryboard`
 2. `generateSeoData`, `generateTagSuggestions`, `rewriteTitle`, `generateEducationalTimestampQuestions`
@@ -634,7 +634,7 @@ A marketplace search across agent-evaluation, prompt-engineering, observability,
 
 Following `viewtube-skill-authoring` (define trigger, responsibility, non-goals, sources, procedure, verification, handoff) and `viewtube-skill-finder`'s rule that the smallest existing skill set should own a task before new skills are created. Two gaps had no owner:
 
-- **`viewtube-creator-asset-generation`** — governs Phase 3. No existing skill owns AI asset generation quality: `viewtube-prince-forge` owns the editor/render/publish pipeline, and `viewtube-prince-brain` owns reasoning and memory, but neither owns the evidence-grounded, style-faithful generation path or the ~65 generators in `gemini.ts`.
+- **`viewtube-creator-asset-generation`** — governs Phase 3. No existing skill owns AI asset generation quality: `viewtube-prince-forge` owns the editor/render/publish pipeline, and `viewtube-prince-brain` owns reasoning and memory, but neither owns the evidence-grounded, style-faithful generation path or the 60 generators in `gemini.ts`.
 - **`viewtube-brain-eval-harness`** — governs Phase 6. `viewtube-verification-chancellor` verifies *mission completion*, not *AI output quality*; no skill owns golden datasets, grader mixes or eval release gates.
 
 Deliberately **not** created, to avoid skill sprawl: an AI-gateway skill (belongs to `viewtube-youtube-auth-api-stabilization`'s proxy rules plus `viewtube-prince-brain`), and a statistics skill (belongs to `viewtube-prince-observatory`'s analytics-canon ownership).
@@ -672,8 +672,8 @@ grep -rn "styleProfile\|voiceProfile\|StyleModel" src --include=*.ts --include=*
 | Lexical evaluation | `brain/BrainOrchestrator.ts:97-169,256` |
 | Canon bypass | `aiBrainCommandInterface.ts:35`; `analytics-canon/README.md` |
 | Bridge unreachable | `brain/BrainAnalyticsEvidence.ts` (not in module closure) |
-| 65 ungoverned generators | `gemini.ts` (4,885 LOC) |
-| Client-side keys | `gemini.ts:440-450,465` |
+| 60 ungoverned generators | `gemini.ts` (4,885 LOC) |
+| Client-side keys | `gemini.ts:440-450,465,472`; `context/GeminiKeyContext.tsx:49` |
 | Silent model downgrade | `gemini.ts:334-405` |
 | Zero outcome writers | `brain/BrainOutcomeLedger.ts:47`; `viewTubeEvaluationLedger.ts:12,18,24` |
 | Empty ledger UI | `components/ViewTubeLearningLedger.tsx:2` |
