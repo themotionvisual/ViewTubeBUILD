@@ -1,5 +1,6 @@
 export * from "./types"
 export * from "./communityPostStore"
+export * from "./communityCampaign"
 export * from "./useCreatorEngagementContext"
 export * from "./useCommunityPostController"
 export * from "./useCommentResponderController"
