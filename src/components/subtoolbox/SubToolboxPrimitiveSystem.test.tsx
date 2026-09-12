@@ -2,7 +2,7 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "./SubToolboxLayouts"
-import { SubToolboxButton, SubToolboxInput, SubToolboxStatePanel, SubToolboxTextArea } from "./SubToolboxPrimitives"
+import { SubToolboxButton, SubToolboxFileTarget, SubToolboxInput, SubToolboxMetric, SubToolboxOutputCard, SubToolboxStatePanel, SubToolboxTextArea } from "./SubToolboxPrimitives"
 import { CONTROL_SHELL, SUBTOOLBOX_TOKENS, resolveSubtoolboxMinHeight } from "./tokens"
 
 describe("Subtoolbox Primitive System", () => {
@@ -26,6 +26,9 @@ describe("Subtoolbox Primitive System", () => {
           <SubToolboxButton size="action" tone="success">Create</SubToolboxButton>
         </SubToolboxActions>
         <SubToolboxStatePanel state="error" message="Try again." />
+        <SubToolboxMetric label="Views" value="1,000" accentColor="#00ccff" />
+        <SubToolboxOutputCard title="Description" accentColor="#ccff00">Output</SubToolboxOutputCard>
+        <SubToolboxFileTarget label="Upload video" />
       </SubToolboxStack>,
     )
 
@@ -35,5 +38,8 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("vt-subtoolbox-button is-compact is-accent is-selected")
     expect(html).toContain('data-subtoolbox-state="error"')
     expect(html).toContain('role="alert"')
+    expect(html).toContain("vt-subtoolbox-metric")
+    expect(html).toContain("vt-subtoolbox-output")
+    expect(html).toContain("vt-subtoolbox-file-target")
   })
 })

@@ -27,24 +27,24 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: var(--vt-subtoolbox-gap);
+  gap: var(--vt-subtoolbox-gap, 12px);
 }
 
 .vt-subtoolbox-stack.is-dense,
 .vt-subtoolbox-grid.is-dense {
-  gap: var(--vt-subtoolbox-gap-dense);
+  gap: var(--vt-subtoolbox-gap-dense, 8px);
 }
 
 .vt-subtoolbox-stack.is-comfortable,
 .vt-subtoolbox-grid.is-comfortable {
-  gap: var(--vt-subtoolbox-section-gap);
+  gap: var(--vt-subtoolbox-section-gap, 16px);
 }
 
 .vt-subtoolbox-grid {
   display: grid;
   min-width: 0;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
-  gap: var(--vt-subtoolbox-gap);
+  gap: var(--vt-subtoolbox-gap, 12px);
 }
 
 .vt-subtoolbox-grid.is-compact { grid-template-columns: repeat(auto-fit, minmax(min(100%, 112px), 1fr)); }
@@ -54,11 +54,12 @@
   display: grid;
   min-width: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--vt-subtoolbox-gap);
+  gap: var(--vt-subtoolbox-gap, 12px);
 }
 
 .vt-subtoolbox-actions.has-1-columns { grid-template-columns: minmax(0, 1fr); }
 .vt-subtoolbox-actions.has-3-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.vt-subtoolbox-actions.has-4-columns { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
 .vt-subtoolbox-label,
 .vt-subtoolbox-section-label {
@@ -73,19 +74,19 @@
 .vt-subtoolbox-input {
   width: 100%;
   min-width: 0;
-  min-height: var(--vt-subtoolbox-control-standard);
+  min-height: var(--vt-subtoolbox-control-standard, 48px);
   appearance: none;
-  border: var(--vt-subtoolbox-inner-stroke) solid #000;
-  border-radius: var(--vt-subtoolbox-inner-radius);
+  border: var(--vt-subtoolbox-inner-stroke, 3px) solid #000;
+  border-radius: var(--vt-subtoolbox-inner-radius, 8px);
   background: color-mix(in srgb, var(--vt-subtoolbox-fill, #f6f6f6) 16%, #fff);
-  box-shadow: var(--vt-subtoolbox-inner-shadow) var(--vt-subtoolbox-inner-shadow) 0 0 var(--vt-subtoolbox-shadow, rgb(0 0 0 / 0.25));
+  box-shadow: var(--vt-subtoolbox-inner-shadow, 4px) var(--vt-subtoolbox-inner-shadow, 4px) 0 0 var(--vt-subtoolbox-shadow, rgb(115 222 255 / 0.45));
   color: #000;
   font: inherit;
   font-size: 14px;
   font-weight: 800;
   line-height: 1.3;
   padding: 10px 12px;
-  transition: background-color var(--vt-subtoolbox-motion-control) ease-out, box-shadow var(--vt-subtoolbox-motion-control) ease-out, transform var(--vt-subtoolbox-motion-control) ease-out;
+  transition: background-color var(--vt-subtoolbox-motion-control, 180ms) ease-out, box-shadow var(--vt-subtoolbox-motion-control, 180ms) ease-out, transform var(--vt-subtoolbox-motion-control, 180ms) ease-out;
 }
 
 .vt-subtoolbox-input:focus-visible,
@@ -119,11 +120,11 @@
   min-width: 0;
   align-items: center;
   justify-content: center;
-  gap: var(--vt-subtoolbox-gap-dense);
-  border: var(--vt-subtoolbox-inner-stroke) solid #000;
-  border-radius: var(--vt-subtoolbox-inner-radius);
+  gap: var(--vt-subtoolbox-gap-dense, 8px);
+  border: var(--vt-subtoolbox-inner-stroke, 3px) solid #000;
+  border-radius: var(--vt-subtoolbox-inner-radius, 8px);
   background: var(--vt-subtoolbox-button-fill);
-  box-shadow: var(--vt-subtoolbox-inner-shadow) var(--vt-subtoolbox-inner-shadow) 0 0 var(--vt-subtoolbox-shadow, rgb(0 0 0 / 0.25));
+  box-shadow: var(--vt-subtoolbox-inner-shadow, 4px) var(--vt-subtoolbox-inner-shadow, 4px) 0 0 var(--vt-subtoolbox-shadow, rgb(115 222 255 / 0.45));
   color: #000;
   cursor: pointer;
   font-weight: 900;
@@ -131,19 +132,20 @@
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
-  transition: filter var(--vt-subtoolbox-motion-control) ease-out, transform var(--vt-subtoolbox-motion-control) ease-out, box-shadow var(--vt-subtoolbox-motion-control) ease-out;
+  transition: filter var(--vt-subtoolbox-motion-control, 180ms) ease-out, transform var(--vt-subtoolbox-motion-control, 180ms) ease-out, box-shadow var(--vt-subtoolbox-motion-control, 180ms) ease-out;
 }
 
-.vt-subtoolbox-button.is-compact { min-height: var(--vt-subtoolbox-control-compact); padding: 6px 8px; font-size: 10px; }
-.vt-subtoolbox-button.is-standard { min-height: var(--vt-subtoolbox-control-standard); padding: 8px 12px; font-size: 14px; }
-.vt-subtoolbox-button.is-action { min-height: var(--vt-subtoolbox-control-action); padding: 10px 16px; font-size: 20px; }
+.vt-subtoolbox-button.is-compact { min-height: var(--vt-subtoolbox-control-compact, 32px); padding: 6px 8px; font-size: 10px; }
+.vt-subtoolbox-button.is-standard { min-height: var(--vt-subtoolbox-control-standard, 48px); padding: 8px 12px; font-size: 14px; }
+.vt-subtoolbox-button.is-action { min-height: var(--vt-subtoolbox-control-action, 60px); padding: 10px 16px; font-size: 20px; }
 .vt-subtoolbox-button.is-neutral { --vt-subtoolbox-button-fill: #fff; }
+.vt-subtoolbox-button.is-ink { --vt-subtoolbox-button-fill: #000; color: #fff; }
 .vt-subtoolbox-button.is-danger { --vt-subtoolbox-button-fill: #ff77d6; }
 .vt-subtoolbox-button.is-warning { --vt-subtoolbox-button-fill: #ffe357; }
 .vt-subtoolbox-button.is-success { --vt-subtoolbox-button-fill: #57f15c; }
 .vt-subtoolbox-button.is-selected { --vt-subtoolbox-button-fill: #ffe357; }
 .vt-subtoolbox-button:hover:not(:disabled) { filter: brightness(0.97); transform: translateY(1px); }
-.vt-subtoolbox-button:active:not(:disabled) { box-shadow: none; transform: translate(var(--vt-subtoolbox-inner-shadow), var(--vt-subtoolbox-inner-shadow)); }
+.vt-subtoolbox-button:active:not(:disabled) { box-shadow: none; transform: translate(var(--vt-subtoolbox-inner-shadow, 4px), var(--vt-subtoolbox-inner-shadow, 4px)); }
 .vt-subtoolbox-button:disabled { cursor: not-allowed; filter: grayscale(0.5); opacity: 0.5; }
 .vt-subtoolbox-button-icon { display: inline-grid; flex: 0 0 auto; place-items: center; }
 .vt-subtoolbox-button-label { min-width: 0; overflow-wrap: anywhere; }
@@ -151,16 +153,126 @@
 .vt-subtoolbox-surface,
 .vt-subtoolbox-state {
   min-width: 0;
-  border: var(--vt-subtoolbox-inner-stroke) solid #000;
-  border-radius: var(--vt-subtoolbox-inner-radius);
+  border: var(--vt-subtoolbox-inner-stroke, 3px) solid #000;
+  border-radius: var(--vt-subtoolbox-inner-radius, 8px);
   background: #fff;
-  box-shadow: var(--vt-subtoolbox-inner-shadow) var(--vt-subtoolbox-inner-shadow) 0 0 var(--vt-subtoolbox-shadow, rgb(0 0 0 / 0.25));
-  padding: var(--vt-subtoolbox-section-gap);
+  box-shadow: var(--vt-subtoolbox-inner-shadow, 4px) var(--vt-subtoolbox-inner-shadow, 4px) 0 0 var(--vt-subtoolbox-shadow, rgb(115 222 255 / 0.45));
+  padding: var(--vt-subtoolbox-section-gap, 16px);
 }
 
 .vt-subtoolbox-surface.is-subtle { background: color-mix(in srgb, var(--vt-subtoolbox-fill, #fff9e8) 10%, #fff); }
 .vt-subtoolbox-surface.is-accent { background: color-mix(in srgb, var(--vt-subtoolbox-fill, #73deff) 28%, #fff); }
 .vt-subtoolbox-surface.is-scroll { max-height: 224px; overflow: auto; }
+
+.vt-subtoolbox-metric {
+  display: grid;
+  min-height: 106px;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  padding: 0;
+}
+
+.vt-subtoolbox-metric-label {
+  display: grid;
+  min-height: 28px;
+  place-items: center;
+  border-bottom: 2px solid #000;
+  background: var(--vt-subtoolbox-card-fill, var(--vt-subtoolbox-fill, #73deff));
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.vt-subtoolbox-metric-value {
+  display: grid;
+  place-items: center;
+  padding: var(--vt-subtoolbox-gap-dense, 8px);
+  font-size: 28px;
+  font-weight: 1000;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-align: center;
+}
+
+.vt-subtoolbox-output {
+  min-width: 0;
+  overflow: hidden;
+  border: var(--vt-subtoolbox-inner-stroke, 3px) solid #000;
+  border-radius: var(--vt-subtoolbox-inner-radius, 8px);
+  background: #fff;
+  box-shadow: var(--vt-subtoolbox-inner-shadow, 4px) var(--vt-subtoolbox-inner-shadow, 4px) 0 0 color-mix(in srgb, var(--vt-subtoolbox-card-fill, var(--vt-subtoolbox-fill, #73deff)) 45%, transparent);
+}
+
+.vt-subtoolbox-output-header {
+  display: flex;
+  min-height: var(--vt-subtoolbox-control-standard, 48px);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vt-subtoolbox-gap, 12px);
+  border-bottom: var(--vt-subtoolbox-inner-stroke, 3px) solid #000;
+  background: var(--vt-subtoolbox-card-fill, var(--vt-subtoolbox-fill, #73deff));
+  padding: var(--vt-subtoolbox-gap-dense, 8px) var(--vt-subtoolbox-gap, 12px);
+}
+
+.vt-subtoolbox-output-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--vt-subtoolbox-gap-dense, 8px);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.vt-subtoolbox-output-badge {
+  border-radius: 4px;
+  background: #000;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 3px 6px;
+}
+
+.vt-subtoolbox-output-body { padding: var(--vt-subtoolbox-section-gap, 16px); }
+.vt-subtoolbox-output.is-scroll .vt-subtoolbox-output-body { max-height: 400px; overflow: auto; }
+
+.vt-subtoolbox-file-target { display: flex; padding: var(--vt-subtoolbox-gap-dense, 8px); }
+.vt-subtoolbox-file-target-button {
+  display: flex;
+  width: 100%;
+  min-height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vt-subtoolbox-gap, 12px);
+  border: 2px dashed color-mix(in srgb, #000 35%, transparent);
+  border-radius: calc(var(--vt-subtoolbox-inner-radius, 8px) - 2px);
+  background: color-mix(in srgb, var(--vt-subtoolbox-fill, #73deff) 12%, #fff);
+  color: #000;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.05;
+  padding: var(--vt-subtoolbox-section-gap, 16px);
+  text-align: center;
+  text-transform: uppercase;
+  transition: background-color var(--vt-subtoolbox-motion-control, 180ms) ease-out, transform var(--vt-subtoolbox-motion-control, 180ms) ease-out;
+}
+.vt-subtoolbox-file-target-button:hover { background: color-mix(in srgb, var(--vt-subtoolbox-fill, #73deff) 22%, #fff); }
+.vt-subtoolbox-file-target-button:active { transform: translateY(1px); }
+.vt-subtoolbox-file-target-button:focus-visible { outline: 3px solid var(--vt-subtoolbox-fill, #00ccff); outline-offset: 3px; }
+.vt-subtoolbox-file-target-icon {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border: 2px solid #000;
+  border-radius: 50%;
+  background: #fff;
+}
 
 .vt-subtoolbox-state { font-size: 12px; font-weight: 900; text-transform: uppercase; }
 .vt-subtoolbox-state.is-error,
@@ -170,6 +282,7 @@
 
 @container vt-subtoolbox (max-width: 420px) {
   .vt-subtoolbox-actions.has-3-columns,
+  .vt-subtoolbox-actions.has-4-columns,
   .vt-subtoolbox-grid:not(.is-compact) { grid-template-columns: minmax(0, 1fr); }
 }
 

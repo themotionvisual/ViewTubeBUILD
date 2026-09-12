@@ -1,47 +1,284 @@
-import React, { useState, useEffect } from "react"
-import { Sparkles, Copy, Check, Type, FileText, Zap, BarChart3, Upload } from "lucide-react"
-import { generateSeoData, hasGeminiKey } from "../services/gemini"
-import type { SeoResult } from "../types"
+import React, { useEffect, useState } from "react"
+import { BarChart3, Check, Copy, FileText, Sparkles, Type, Upload, Zap } from "lucide-react"
 import JSZip from "jszip"
 import { useBrain } from "../context/useBrain"
-import { ToolboxScaffold, SubToolbox, StandardUploadBox, StandardTextArea, StandardInput, SubToolboxGridActionButton } from "../components/Toolbox"
-import { sheetsService } from "../services/sheetsService"
+import { generateSeoData, hasGeminiKey } from "../services/gemini"
 import { nexusSyncService } from "../services/nexusSyncService"
-import { PostActionReflection } from "../components/PostActionReflection"
-import { getToolboxPaletteColors } from "../styles/toolboxPalette"
-import { hexToRgba } from "../components/ToolboxUISystem"
+import { sheetsService } from "../services/sheetsService"
+import type { SeoResult } from "../types"
 import BrainLiveToolInbox from "../components/brain/BrainLiveToolInbox"
+import { PostActionReflection } from "../components/PostActionReflection"
+import { SubToolbox, SubToolboxGridActionButton, ToolboxScaffold } from "../components/Toolbox"
+import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "../components/subtoolbox/SubToolboxLayouts"
+import {
+  SubToolboxButton,
+  SubToolboxFileTarget,
+  SubToolboxInput,
+  SubToolboxLinkButton,
+  SubToolboxOutputCard,
+  SubToolboxStatePanel,
+  SubToolboxTextArea,
+} from "../components/subtoolbox/SubToolboxPrimitives"
+import { hexToRgba } from "../components/ToolboxUISystem"
+import { getToolboxPaletteColors } from "../styles/toolboxPalette"
 
-const CopyBox: React.FC<{ label:string; content:string; multiline?:boolean; headerColor?:string; icon?:React.ReactNode }> = ({label,content,multiline=false,headerColor="bg-[#ccff00]",icon}) => {
- const [copied,setCopied]=useState(false)
- const handleCopy=()=>{navigator.clipboard.writeText(content);setCopied(true);setTimeout(()=>setCopied(false),2000)}
- return <div className="bg-white border-[4px] border-black rounded-2xl shadow-[6px_6px_0px_0px_black] overflow-hidden flex flex-col h-full transform hover:-translate-y-1 transition-transform"><div className={`p-4 border-b-[4px] border-black flex items-center justify-between ${headerColor}`}><div className="flex items-center gap-3">{icon}<span className="font-black uppercase tracking-tighter text-lg">{label}</span></div><button onClick={handleCopy} className="bg-black text-white p-2 rounded-lg hover:scale-110 active:scale-95 transition-all">{copied?<Check size={18}/>:<Copy size={18}/>}</button></div><div className="p-6 overflow-auto max-h-[400px]">{multiline?<div className="font-mono text-sm leading-relaxed whitespace-pre-wrap">{content}</div>:<div className="font-black text-2xl tracking-tight">{content}</div>}</div></div>
+const CopyBox: React.FC<{
+  label: string
+  content: string
+  multiline?: boolean
+  accentColor?: string
+  icon?: React.ReactNode
+}> = ({ label, content, multiline = false, accentColor = "#ccff00", icon }) => {
+  const [copied, setCopied] = useState(false)
+  const handleCopy = () => {
+    void navigator.clipboard.writeText(content)
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <SubToolboxOutputCard
+      title={label}
+      icon={icon}
+      accentColor={accentColor}
+      scroll
+      action={
+        <SubToolboxButton aria-label={`Copy ${label}`} size="compact" tone="ink" icon={copied ? <Check size={18} /> : <Copy size={18} />} onClick={handleCopy} className="!w-10 shrink-0" />
+      }
+    >
+      <div className={multiline ? "whitespace-pre-wrap font-mono text-sm leading-relaxed" : "text-xl font-black tracking-tight"}>{content}</div>
+    </SubToolboxOutputCard>
+  )
 }
 
-const ConsolidatedCopyBox: React.FC<{label:string;items:string[];headerColor?:string;icon?:React.ReactNode}> = ({label,items,headerColor="bg-[#00d2ff]",icon}) => {
- const [copiedIndex,setCopiedIndex]=useState<number|null>(null)
- const handleCopy=(text:string,index:number)=>{navigator.clipboard.writeText(text);setCopiedIndex(index);setTimeout(()=>setCopiedIndex(null),2000)}
- if(!items?.length)return null
- return <div className="bg-white border-[4px] border-black rounded-2xl shadow-[6px_6px_0px_0px_black] overflow-hidden flex flex-col h-full transform hover:-translate-y-1 transition-transform"><div className={`p-4 border-b-[4px] border-black flex items-center justify-between ${headerColor}`}><div className="flex items-center gap-3">{icon}<span className="font-black uppercase tracking-tighter text-lg">{label}</span></div><span className="bg-black text-white text-[10px] font-black px-2 py-0.5 rounded-full">{items.length}</span></div><div className="divide-y-2 divide-black/5 overflow-auto max-h-[400px]">{items.map((item,idx)=><div key={idx} className="p-4 flex items-start gap-4 hover:bg-gray-50 group transition-colors"><span className="font-black text-black/20 group-hover:text-black mt-1">{idx+1}</span><div className="flex-1 font-bold text-sm leading-tight">{item}</div><button onClick={()=>handleCopy(item,idx)} className="opacity-0 group-hover:opacity-100 p-2 bg-black text-white rounded-lg transition-all">{copiedIndex===idx?<Check size={14}/>:<Copy size={14}/>}</button></div>)}</div></div>
+const ConsolidatedCopyBox: React.FC<{
+  label: string
+  items: string[]
+  accentColor?: string
+  icon?: React.ReactNode
+}> = ({ label, items, accentColor = "#00d2ff", icon }) => {
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+  const handleCopy = (text: string, index: number) => {
+    void navigator.clipboard.writeText(text)
+    setCopiedIndex(index)
+    window.setTimeout(() => setCopiedIndex(null), 2000)
+  }
+
+  if (!items.length) return null
+
+  return (
+    <SubToolboxOutputCard title={label} icon={icon} accentColor={accentColor} badge={items.length} scroll>
+      <SubToolboxStack density="dense">
+        {items.map((item, index) => (
+          <div key={`${index}-${item}`} className="flex items-start gap-3 border-b-2 border-black/10 pb-2 last:border-0 last:pb-0">
+            <span className="mt-2 font-black text-black/25">{index + 1}</span>
+            <div className="min-w-0 flex-1 py-2 text-sm font-bold leading-tight">{item}</div>
+            <SubToolboxButton aria-label={`Copy title option ${index + 1}`} size="compact" tone="ink" icon={copiedIndex === index ? <Check size={14} /> : <Copy size={14} />} onClick={() => handleCopy(item, index)} className="!w-10 shrink-0" />
+          </div>
+        ))}
+      </SubToolboxStack>
+    </SubToolboxOutputCard>
+  )
 }
 
-interface VideoPublisherProps { embedded?:boolean; collapsible?:boolean; isOpenInitial?:boolean; paletteIndex?:number }
-const VideoPublisher:React.FC<VideoPublisherProps>=({embedded=false,collapsible=false,isOpenInitial=true,paletteIndex})=>{
- const basePalette=paletteIndex??0
- const generateAssetsPalette=getToolboxPaletteColors(basePalette+3)
- const {brain,updateBrain,registerProvider,unregisterProvider,setSeoState,authState}=useBrain()
- const [loading,setLoading]=useState(false),[result,setResult]=useState<SeoResult|null>(null),[isExporting,setIsExporting]=useState(false),[isSyncing,setIsSyncing]=useState(false),[exportUrl,setExportUrl]=useState<string|null>(null)
- const [concept,setConcept]=useState(brain.coreConcept),[niche,setNiche]=useState(brain.targetNiche),[audience,setAudience]=useState(""),[script,setScript]=useState(""),[videoLength,setVideoLength]=useState("10:00"),[channelHandle,setChannelHandle]=useState("https://youtube.com/@yourchannel"),[resourceLinks,setResourceLinks]=useState(""),[durationStats,setDurationStats]=useState("Avg. Views")
- const [formatMode,setFormatMode]=useState<"longform"|"shorts">("longform"),[scopeMode,setScopeMode]=useState<"single"|"bulk">("single"),[isOpen,setIsOpen]=useState(isOpenInitial),[missingFields,setMissingFields]=useState({concept:false,niche:false}),[insightsImported,setInsightsImported]=useState(false)
- useEffect(()=>{registerProvider("VIDEO_PUBLISHER");return()=>unregisterProvider("VIDEO_PUBLISHER")},[])
- const applyPrefill=(payload:Record<string,unknown>)=>{const p=payload as any;if(p.concept)setConcept(String(p.concept));if(p.niche)setNiche(String(p.niche));if(p.audience)setAudience(String(p.audience));if(p.script)setScript(String(p.script));if(p.videoLength)setVideoLength(String(p.videoLength));if(p.channelHandle)setChannelHandle(String(p.channelHandle));if(p.formatMode==="shorts"||p.formatMode==="longform")setFormatMode(p.formatMode);const insights=[p.analysis,p.strategicAnalysis,p.resourceLinks].filter(Boolean).join("\n\n");if(insights)setResourceLinks(prev=>[prev,insights].filter(Boolean).join("\n\n"));setInsightsImported(true)}
- useEffect(()=>{const onInsights=(event:Event)=>applyPrefill((event as CustomEvent<any>).detail||{});window.addEventListener("vt_media_analysis_insights_ready",onInsights as EventListener);try{const cached=localStorage.getItem("vt_video_publisher_prefill");if(cached)applyPrefill(JSON.parse(cached))}catch{}return()=>window.removeEventListener("vt_media_analysis_insights_ready",onInsights as EventListener)},[])
- const handleGenerate=async()=>{if(!concept||!niche){setMissingFields({concept:!concept,niche:!niche});return}setLoading(true);try{updateBrain({coreConcept:concept,targetNiche:niche});const data=await generateSeoData(concept,niche,script,"",videoLength,channelHandle,resourceLinks,formatMode==="longform"?"Longform":"Shorts",undefined,brain);setResult(data);setSeoState({winningTitle:data.titleSets[0].title,winningKeywords:data.tags.split(",").map(k=>k.trim()).slice(0,5),descriptionDraft:data.description})}catch(e:any){console.error(e);alert(`SEO Protocols failed: ${e.message}`)}finally{setLoading(false)}}
- const handleExport=async()=>{if(!result)return;setIsExporting(true);try{const exportRes=await sheetsService.exportSeoResult(concept,result);setExportUrl(exportRes.spreadsheetUrl)}catch(e){console.error(e);alert("Sheets Export failed. Check connection.")}finally{setIsExporting(false)}}
- const handleSyncToDrive=async()=>{if(!result)return;setIsSyncing(true);try{await nexusSyncService.syncSeoToDrive(concept,result);alert("SEO Assets synced to Cloud Vault!")}catch(e:any){console.error(e);alert(`Cloud Sync failed: ${e.message}`)}finally{setIsSyncing(false)}}
- const handleDownloadZip=async()=>{if(!result)return;const zip=new JSZip();zip.file("seo_report.txt",`VIEW TUBE SEO REPORT\nConcept: ${concept}\n\nTITLES:\n${result.titleSets.map(t=>t.title).join("\n")}\n\nDESCRIPTION:\n${result.description}`);const content=await zip.generateAsync({type:"blob"});const url=URL.createObjectURL(content);const a=document.createElement("a");a.href=url;a.download=`viewtube_seo_${Date.now()}.zip`;a.click()}
- return <ToolboxScaffold title="VIDEO PUBLISHER" subtitle="Create SEO optimized titles, descriptions, tags + more for all your new + published content" icon={<Zap size={40} strokeWidth={3} className="text-black"/>} headerColor="bg-[#CCFF00]" iconBoxColor="bg-[#00FF99]" paletteIndex={paletteIndex} collapsible={collapsible} isOpen={isOpen} onToggle={()=>setIsOpen(!isOpen)} embedded={embedded} helpText="Create a full metadata package for your video. Generate titles, descriptions, tags, and packaging prompts from your concept." shellClassName="animate-fade-in" contentClassName={embedded?"p-0":"p-8"} headerActions={<div className="flex gap-3 mr-2 my-auto"><div className="flex bg-white border-[4px] border-black p-1 rounded-xl shadow-[3px_3px_0px_0px_black] h-12"><button onClick={e=>{e.stopPropagation();setFormatMode("longform")}} className={`px-4 text-[11px] font-[1000] uppercase rounded-lg ${formatMode==="longform"?"bg-black text-white":"text-black/40"}`}>Longform</button><button onClick={e=>{e.stopPropagation();setFormatMode("shorts")}} className={`px-4 text-[11px] font-[1000] uppercase rounded-lg ${formatMode==="shorts"?"bg-black text-white":"text-black/40"}`}>Shorts</button></div></div>}>
- {!result?<div className="space-y-6"><BrainLiveToolInbox destinationToolId="video-publisher" channelId={(authState as any)?.channelId ?? null} onPrefill={applyPrefill}/>{insightsImported&&<div className="p-3 border-[3px] border-black rounded-xl bg-[#CCFF00] text-[11px] font-black uppercase tracking-wide">Incoming Brain/tool context loaded into Video Publisher. Review before generating or publishing.</div>}<div className="grid grid-cols-1 xl:grid-cols-2 gap-4"><SubToolbox title="Video Upload" icon={<Upload size={20} strokeWidth={3}/>} collapsible isOpenInitial><StandardUploadBox label="DROP FILES OR CLICK TO UPLOAD\\nUpload Video" minHeight="220px" iconBgColor="#FF3399"/></SubToolbox><SubToolbox title="Video Script" icon={<FileText size={20} strokeWidth={3}/>} collapsible isOpenInitial shellClassName="h-full" contentClassName="p-5 h-full flex flex-col"><StandardTextArea value={script} onChange={e=>setScript(e.target.value)} placeholder="Paste your script here..." sizeMode="fill" className="text-base"/></SubToolbox></div><SubToolbox title="Video Info" icon={<Sparkles size={20} strokeWidth={3}/>} collapsible isOpenInitial><div className="grid grid-cols-1 md:grid-cols-3 gap-4"><StandardInput value={concept} onChange={e=>setConcept(e.target.value)} placeholder="Video concept"/><StandardInput value={niche} onChange={e=>setNiche(e.target.value)} placeholder="Target niche"/><StandardInput value={audience} onChange={e=>setAudience(e.target.value)} placeholder="Intended audience"/></div><div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4"><StandardInput value={videoLength} onChange={e=>setVideoLength(e.target.value)} placeholder="10:45"/><StandardInput value={channelHandle} onChange={e=>setChannelHandle(e.target.value)} placeholder="Channel URL"/><StandardInput value={durationStats} onChange={e=>setDurationStats(e.target.value)} placeholder="Current stats"/></div><div className="mt-4"><StandardInput value={resourceLinks} onChange={e=>setResourceLinks(e.target.value)} placeholder="Description links / imported context"/></div></SubToolbox>{!hasGeminiKey()?<button onClick={()=>window.location.href="/settings"} className="w-full bg-black text-[#FFFF61] border-[4px] border-black h-14 rounded-xl font-[1000] uppercase text-lg">Missing AI Key: Connect in Settings</button>:<SubToolboxGridActionButton onClick={handleGenerate} disabled={loading} tone="yellow" surfaceColor={generateAssetsPalette.header} controlColor={generateAssetsPalette.icon} shadowColor={hexToRgba(generateAssetsPalette.header,.45)} iconName="zap" showIconSection label={loading?"Generating...":"Generate All Assets"}/>}</div>:<div className="space-y-8"><div className="flex gap-3"><button onClick={()=>setResult(null)} className="border-[3px] border-black rounded-xl px-4 py-2 font-black uppercase">Back</button><button onClick={handleExport} disabled={isExporting} className="border-[3px] border-black rounded-xl px-4 py-2 font-black uppercase bg-[#00d2ff]">Export</button><button onClick={handleSyncToDrive} disabled={isSyncing} className="border-[3px] border-black rounded-xl px-4 py-2 font-black uppercase bg-[#ccff00]">Vault</button><button onClick={handleDownloadZip} className="border-[3px] border-black rounded-xl px-4 py-2 font-black uppercase bg-[#ffdd00]">ZIP</button></div><ConsolidatedCopyBox label="Title Options" items={result.titleSets.map(t=>t.title)} headerColor="bg-[#ff4d6f]" icon={<Type size={20}/>}/><CopyBox label="Description" content={result.description} multiline headerColor="bg-[#00d2ff]" icon={<FileText size={20}/>}/><CopyBox label="Tags" content={result.tags} multiline headerColor="bg-[#ccff00]" icon={<BarChart3 size={20}/>}/>{exportUrl&&<a href={exportUrl} target="_blank" rel="noreferrer" className="font-black underline">Open exported sheet</a>}<PostActionReflection toolId="VIDEO_PUBLISHER"/></div>}
- </ToolboxScaffold>
+interface VideoPublisherProps {
+  embedded?: boolean
+  collapsible?: boolean
+  isOpenInitial?: boolean
+  paletteIndex?: number
 }
+
+const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, collapsible = false, isOpenInitial = true, paletteIndex }) => {
+  const basePalette = paletteIndex ?? 0
+  const generateAssetsPalette = getToolboxPaletteColors(basePalette + 3)
+  const { brain, updateBrain, registerProvider, unregisterProvider, setSeoState, authState } = useBrain()
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<SeoResult | null>(null)
+  const [isExporting, setIsExporting] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [exportUrl, setExportUrl] = useState<string | null>(null)
+  const [concept, setConcept] = useState(brain.coreConcept)
+  const [niche, setNiche] = useState(brain.targetNiche)
+  const [audience, setAudience] = useState("")
+  const [script, setScript] = useState("")
+  const [videoLength, setVideoLength] = useState("10:00")
+  const [channelHandle, setChannelHandle] = useState("https://youtube.com/@yourchannel")
+  const [resourceLinks, setResourceLinks] = useState("")
+  const [durationStats, setDurationStats] = useState("Avg. Views")
+  const [formatMode, setFormatMode] = useState<"longform" | "shorts">("longform")
+  const [isOpen, setIsOpen] = useState(isOpenInitial)
+  const [missingFields, setMissingFields] = useState({ concept: false, niche: false })
+  const [insightsImported, setInsightsImported] = useState(false)
+
+  useEffect(() => {
+    registerProvider("VIDEO_PUBLISHER")
+    return () => unregisterProvider("VIDEO_PUBLISHER")
+  }, [])
+
+  const applyPrefill = (payload: Record<string, unknown>) => {
+    const prefill = payload as Record<string, any>
+    if (prefill.concept) setConcept(String(prefill.concept))
+    if (prefill.niche) setNiche(String(prefill.niche))
+    if (prefill.audience) setAudience(String(prefill.audience))
+    if (prefill.script) setScript(String(prefill.script))
+    if (prefill.videoLength) setVideoLength(String(prefill.videoLength))
+    if (prefill.channelHandle) setChannelHandle(String(prefill.channelHandle))
+    if (prefill.formatMode === "shorts" || prefill.formatMode === "longform") setFormatMode(prefill.formatMode)
+    const insights = [prefill.analysis, prefill.strategicAnalysis, prefill.resourceLinks].filter(Boolean).join("\n\n")
+    if (insights) setResourceLinks((previous) => [previous, insights].filter(Boolean).join("\n\n"))
+    setInsightsImported(true)
+  }
+
+  useEffect(() => {
+    const onInsights = (event: Event) => applyPrefill((event as CustomEvent<Record<string, unknown>>).detail || {})
+    window.addEventListener("vt_media_analysis_insights_ready", onInsights as EventListener)
+    try {
+      const cached = localStorage.getItem("vt_video_publisher_prefill")
+      if (cached) applyPrefill(JSON.parse(cached))
+    } catch {
+      // Ignore malformed legacy prefill data.
+    }
+    return () => window.removeEventListener("vt_media_analysis_insights_ready", onInsights as EventListener)
+  }, [])
+
+  const handleGenerate = async () => {
+    if (!concept || !niche) {
+      setMissingFields({ concept: !concept, niche: !niche })
+      return
+    }
+    setLoading(true)
+    try {
+      updateBrain({ coreConcept: concept, targetNiche: niche })
+      const data = await generateSeoData(concept, niche, script, "", videoLength, channelHandle, resourceLinks, formatMode === "longform" ? "Longform" : "Shorts", undefined, brain)
+      setResult(data)
+      setSeoState({ winningTitle: data.titleSets[0].title, winningKeywords: data.tags.split(",").map((keyword) => keyword.trim()).slice(0, 5), descriptionDraft: data.description })
+    } catch (error: any) {
+      console.error(error)
+      alert(`SEO Protocols failed: ${error.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleExport = async () => {
+    if (!result) return
+    setIsExporting(true)
+    try {
+      const exportResult = await sheetsService.exportSeoResult(concept, result)
+      setExportUrl(exportResult.spreadsheetUrl)
+    } catch (error) {
+      console.error(error)
+      alert("Sheets Export failed. Check connection.")
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleSyncToDrive = async () => {
+    if (!result) return
+    setIsSyncing(true)
+    try {
+      await nexusSyncService.syncSeoToDrive(concept, result)
+      alert("SEO Assets synced to Cloud Vault!")
+    } catch (error: any) {
+      console.error(error)
+      alert(`Cloud Sync failed: ${error.message}`)
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
+  const handleDownloadZip = async () => {
+    if (!result) return
+    const zip = new JSZip()
+    zip.file("seo_report.txt", `VIEW TUBE SEO REPORT\nConcept: ${concept}\n\nTITLES:\n${result.titleSets.map((title) => title.title).join("\n")}\n\nDESCRIPTION:\n${result.description}`)
+    const content = await zip.generateAsync({ type: "blob" })
+    const url = URL.createObjectURL(content)
+    const anchor = document.createElement("a")
+    anchor.href = url
+    anchor.download = `viewtube_seo_${Date.now()}.zip`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <ToolboxScaffold
+      title="VIDEO PUBLISHER"
+      subtitle="Create SEO optimized titles, descriptions, tags + more for all your new + published content"
+      icon={<Zap size={40} strokeWidth={3} className="text-black" />}
+      headerColor="bg-[#CCFF00]"
+      iconBoxColor="bg-[#00FF99]"
+      paletteIndex={paletteIndex}
+      collapsible={collapsible}
+      isOpen={isOpen}
+      onToggle={() => setIsOpen(!isOpen)}
+      embedded={embedded}
+      helpText="Create a full metadata package for your video. Generate titles, descriptions, tags, and packaging prompts from your concept."
+      shellClassName="animate-fade-in"
+      contentClassName={embedded ? "p-0" : "p-8"}
+      headerActions={
+        <SubToolboxActions
+          columns={2}
+          className="mr-2 w-[210px]"
+          aria-label="Video format"
+          style={{
+            ["--vt-subtoolbox-fill" as string]: "#CCFF00",
+            ["--vt-subtoolbox-shadow" as string]: hexToRgba("#CCFF00", 0.45),
+          }}
+        >
+          <SubToolboxButton size="compact" tone={formatMode === "longform" ? "ink" : "neutral"} selected={formatMode === "longform"} aria-pressed={formatMode === "longform"} onClick={(event) => { event.stopPropagation(); setFormatMode("longform") }}>Longform</SubToolboxButton>
+          <SubToolboxButton size="compact" tone={formatMode === "shorts" ? "ink" : "neutral"} selected={formatMode === "shorts"} aria-pressed={formatMode === "shorts"} onClick={(event) => { event.stopPropagation(); setFormatMode("shorts") }}>Shorts</SubToolboxButton>
+        </SubToolboxActions>
+      }
+    >
+      {!result ? (
+        <SubToolboxStack density="comfortable">
+          <BrainLiveToolInbox destinationToolId="video-publisher" channelId={(authState as any)?.channelId ?? null} onPrefill={applyPrefill} />
+          {insightsImported ? <SubToolboxStatePanel state="ready" message="Incoming Brain/tool context loaded. Review before generating or publishing." /> : null}
+          <SubToolboxGrid minItemWidth="wide">
+            <SubToolbox title="Video Upload" icon={<Upload size={20} strokeWidth={3} />} collapsible isOpenInitial shellClassName="h-full">
+              <SubToolboxFileTarget label={<>Drop files or click to upload<br />Upload video</>} icon={<Upload size={28} strokeWidth={3} />} minHeight={220} />
+            </SubToolbox>
+            <SubToolbox title="Video Script" icon={<FileText size={20} strokeWidth={3} />} collapsible isOpenInitial shellClassName="h-full" contentClassName="h-full">
+              <SubToolboxTextArea aria-label="Video script" value={script} onChange={(event) => setScript(event.target.value)} placeholder="Paste your script here..." height="fill" className="text-base" />
+            </SubToolbox>
+          </SubToolboxGrid>
+          <SubToolbox title="Video Info" icon={<Sparkles size={20} strokeWidth={3} />} collapsible isOpenInitial>
+            <SubToolboxStack>
+              <SubToolboxGrid minItemWidth="compact">
+                <SubToolboxInput aria-label="Video concept" aria-invalid={missingFields.concept} value={concept} onChange={(event) => setConcept(event.target.value)} placeholder="Video concept" />
+                <SubToolboxInput aria-label="Target niche" aria-invalid={missingFields.niche} value={niche} onChange={(event) => setNiche(event.target.value)} placeholder="Target niche" />
+                <SubToolboxInput aria-label="Intended audience" value={audience} onChange={(event) => setAudience(event.target.value)} placeholder="Intended audience" />
+                <SubToolboxInput aria-label="Video length" value={videoLength} onChange={(event) => setVideoLength(event.target.value)} placeholder="10:45" />
+                <SubToolboxInput aria-label="Channel URL" value={channelHandle} onChange={(event) => setChannelHandle(event.target.value)} placeholder="Channel URL" />
+                <SubToolboxInput aria-label="Current statistics" value={durationStats} onChange={(event) => setDurationStats(event.target.value)} placeholder="Current stats" />
+              </SubToolboxGrid>
+              <SubToolboxInput aria-label="Description links or imported context" value={resourceLinks} onChange={(event) => setResourceLinks(event.target.value)} placeholder="Description links / imported context" />
+            </SubToolboxStack>
+          </SubToolbox>
+          {!hasGeminiKey() ? (
+            <SubToolboxButton size="action" tone="warning" onClick={() => { window.location.href = "/settings" }}>Missing AI Key: Connect in Settings</SubToolboxButton>
+          ) : (
+            <SubToolboxGridActionButton onClick={handleGenerate} disabled={loading} tone="yellow" surfaceColor={generateAssetsPalette.header} controlColor={generateAssetsPalette.icon} shadowColor={hexToRgba(generateAssetsPalette.header, 0.45)} iconName="zap" showIconSection label={loading ? "Generating..." : "Generate All Assets"} />
+          )}
+        </SubToolboxStack>
+      ) : (
+        <SubToolboxStack density="comfortable">
+          <SubToolboxActions columns={4}>
+            <SubToolboxButton tone="neutral" onClick={() => setResult(null)}>Back</SubToolboxButton>
+            <SubToolboxButton disabled={isExporting} onClick={handleExport}>{isExporting ? "Exporting…" : "Export"}</SubToolboxButton>
+            <SubToolboxButton tone="success" disabled={isSyncing} onClick={handleSyncToDrive}>{isSyncing ? "Syncing…" : "Vault"}</SubToolboxButton>
+            <SubToolboxButton tone="warning" onClick={handleDownloadZip}>ZIP</SubToolboxButton>
+          </SubToolboxActions>
+          <ConsolidatedCopyBox label="Title Options" items={result.titleSets.map((title) => title.title)} accentColor="#ff4d6f" icon={<Type size={20} />} />
+          <CopyBox label="Description" content={result.description} multiline accentColor="#00d2ff" icon={<FileText size={20} />} />
+          <CopyBox label="Tags" content={result.tags} multiline accentColor="#ccff00" icon={<BarChart3 size={20} />} />
+          {exportUrl ? <SubToolboxLinkButton href={exportUrl} target="_blank" rel="noreferrer">Open exported sheet</SubToolboxLinkButton> : null}
+          <PostActionReflection toolId="VIDEO_PUBLISHER" />
+        </SubToolboxStack>
+      )}
+    </ToolboxScaffold>
+  )
+}
+
 export default VideoPublisher

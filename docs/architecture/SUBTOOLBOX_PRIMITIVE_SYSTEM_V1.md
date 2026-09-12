@@ -37,11 +37,16 @@ support.
 
 ## Migration waves
 
-1. Foundation, Thumbnail Studio baseline and Community Posts.
-2. Video Manager and Video Publisher.
-3. Script Architect, Actionable Tactics and Content/Media Analysis.
-4. Project Studio, Publishing Architect and Storyboard Studio.
-5. Analytics modules, system statistics and remaining consumers.
+1. Complete — foundation, Thumbnail Studio baseline and Community Posts.
+2. Complete — Video Manager and Video Publisher.
+3. Planned — Script Architect, Actionable Tactics and Content/Media Analysis.
+4. Planned — Project Studio, Publishing Architect and Storyboard Studio.
+5. Planned — analytics modules, system statistics and remaining consumers.
+
+Wave 2 also promoted three repeated patterns into the authority layer:
+`SubToolboxMetric`, `SubToolboxOutputCard`, and `SubToolboxFileTarget`. Video
+tools no longer import the legacy `StandardInput`, `StandardTextArea`, or
+`SubToolboxInnerActionButton` APIs for subtoolbox interiors.
 
 Each wave replaces raw framed inputs/buttons, local widths, local typography,
 local shadows and layout media queries with primitives and container recipes.

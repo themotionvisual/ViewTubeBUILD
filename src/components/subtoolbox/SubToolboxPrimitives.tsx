@@ -1,7 +1,7 @@
 import React from "react"
 import type { SubToolboxControlSize, SubToolboxState } from "./tokens"
 
-type PrimitiveTone = "accent" | "neutral" | "danger" | "warning" | "success"
+type PrimitiveTone = "accent" | "neutral" | "ink" | "danger" | "warning" | "success"
 
 const classes = (...values: Array<string | false | null | undefined>) => values.filter(Boolean).join(" ")
 
@@ -76,14 +76,84 @@ export const SubToolboxLinkButton: React.FC<React.AnchorHTMLAttributes<HTMLAncho
   </a>
 )
 
-export const SubToolboxSurface: React.FC<{
+export const SubToolboxSurface: React.FC<React.HTMLAttributes<HTMLDivElement> & {
   tone?: "white" | "subtle" | "accent"
   scroll?: boolean
-  className?: string
   children: React.ReactNode
-}> = ({ tone = "white", scroll = false, className, children }) => (
-  <div className={classes("vt-subtoolbox-surface", `is-${tone}`, scroll && "is-scroll", className)}>{children}</div>
+}> = ({ tone = "white", scroll = false, className, children, ...props }) => (
+  <div className={classes("vt-subtoolbox-surface", `is-${tone}`, scroll && "is-scroll", className)} {...props}>{children}</div>
 )
+
+export const SubToolboxMetric: React.FC<{
+  label: React.ReactNode
+  value: React.ReactNode
+  accentColor?: string
+  className?: string
+}> = ({ label, value, accentColor, className }) => (
+  <SubToolboxSurface
+    className={classes("vt-subtoolbox-metric", className)}
+    style={accentColor ? { ["--vt-subtoolbox-card-fill" as string]: accentColor } : undefined}
+  >
+    <div className="vt-subtoolbox-metric-label">{label}</div>
+    <div className="vt-subtoolbox-metric-value">{value}</div>
+  </SubToolboxSurface>
+)
+
+export const SubToolboxOutputCard: React.FC<Omit<React.HTMLAttributes<HTMLElement>, "title"> & {
+  title: React.ReactNode
+  icon?: React.ReactNode
+  accentColor?: string
+  badge?: React.ReactNode
+  action?: React.ReactNode
+  scroll?: boolean
+  children: React.ReactNode
+}> = ({ title, icon, accentColor, badge, action, scroll = false, className, children, style, ...props }) => (
+  <article
+    className={classes("vt-subtoolbox-output", scroll && "is-scroll", className)}
+    style={{
+      ...style,
+      ...(accentColor ? { ["--vt-subtoolbox-card-fill" as string]: accentColor } : {}),
+    }}
+    {...props}
+  >
+    <header className="vt-subtoolbox-output-header">
+      <div className="vt-subtoolbox-output-title">
+        {icon ? <span aria-hidden="true">{icon}</span> : null}
+        <span>{title}</span>
+      </div>
+      {action ?? (badge ? <span className="vt-subtoolbox-output-badge">{badge}</span> : null)}
+    </header>
+    <div className="vt-subtoolbox-output-body">{children}</div>
+  </article>
+)
+
+export const SubToolboxFileTarget: React.FC<{
+  label: React.ReactNode
+  icon?: React.ReactNode
+  accept?: string
+  multiple?: boolean
+  minHeight?: number
+  onFiles?: (files: FileList | null) => void
+  className?: string
+}> = ({ label, icon, accept, multiple = false, minHeight = 220, onFiles, className }) => {
+  const inputRef = React.useRef<HTMLInputElement>(null)
+  return (
+    <SubToolboxSurface className={classes("vt-subtoolbox-file-target", className)} style={{ minHeight }}>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        multiple={multiple}
+        className="hidden"
+        onChange={(event) => onFiles?.(event.target.files)}
+      />
+      <button type="button" className="vt-subtoolbox-file-target-button" onClick={() => inputRef.current?.click()}>
+        {icon ? <span className="vt-subtoolbox-file-target-icon" aria-hidden="true">{icon}</span> : null}
+        <span>{label}</span>
+      </button>
+    </SubToolboxSurface>
+  )
+}
 
 const DEFAULT_STATE_COPY: Record<SubToolboxState, string> = {
   loading: "Loading…",

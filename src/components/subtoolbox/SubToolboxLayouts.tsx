@@ -21,7 +21,7 @@ export const SubToolboxGrid: React.FC<React.HTMLAttributes<HTMLDivElement> & {
 )
 
 export const SubToolboxActions: React.FC<React.HTMLAttributes<HTMLDivElement> & {
-  columns?: 1 | 2 | 3
+  columns?: 1 | 2 | 3 | 4
   className?: string
   children: React.ReactNode
 }> = ({ columns = 2, className, children, ...props }) => (
