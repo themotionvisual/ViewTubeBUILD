@@ -52,7 +52,7 @@ describe("AlgorithmMonitoringSchedule", () => {
 
   expect(schedule.checkpoints.every((checkpoint) =>
    checkpoint.metrics.includes("qualified_views") && checkpoint.metrics.includes("watch_quality"),
-  ).toBe(true)
+  )).toBe(true)
   expect(schedule.checkpoints.map((checkpoint) => checkpoint.role)).toEqual([
    "observe",
    "observe",
