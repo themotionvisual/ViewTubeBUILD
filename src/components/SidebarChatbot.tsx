@@ -12,7 +12,7 @@ import {
  resumeAIBrainThread,
  sanitizeCreatorFacingBrainCopy,
 } from "../services/aiBrainConversationStore"
-import { runBrainTurn } from "../services/brain/BrainOrchestrator"
+import { runBrainTask } from "../services/brain/runtime/BrainRuntime"
 import {
  readBrainUserControls,
  setActiveBrainControlChannel,
@@ -51,7 +51,7 @@ export const SidebarChatbot: React.FC = () => {
   channelConnection,
   brainMemory: controls.personalization ? getBrainMemory() : null,
   recentConversationTurns: controls.personalization ? turns : [],
- }), [brain, authState, channelConnection, turns, controls.personalization])
+ }), [brain, authState, channelConnection, turns, controls.personalization, getBrainMemory])
  const growthContext = useMemo(() => buildCreatorGrowthContext(snapshot, turns, []), [snapshot, turns])
 
  const restore = async () => {
@@ -119,7 +119,7 @@ export const SidebarChatbot: React.FC = () => {
     recentConversationTurns: controls.personalization ? turns : [],
     creatorGrowthContext: growthContext,
    })
-   const systemPrompt = `${baseSystemPrompt}\n\nCURRENT VIEWTUBE SURFACE CONTEXT\n${JSON.stringify({
+   const visibleContext = {
     route: surface.route,
     projectId: selection?.projectId ?? surface.projectId,
     videoId: selection?.videoId ?? surface.videoId,
@@ -136,9 +136,13 @@ export const SidebarChatbot: React.FC = () => {
     matchingSuperTools: surface.superToolIds,
     sourcesOfTruth: surface.sourceOfTruth,
     blockedCapabilities: surface.blockedCapabilities,
-   }, null, 2)}\nUse this surface context to understand references such as "this chart", "this project", "this comment", "this video", or "this tool". Never use a blocked capability. Treat selected-item context as current UI context, not automatically as durable channel memory.`
+   }
+   const systemPrompt = `${baseSystemPrompt}\n\nCURRENT VIEWTUBE SURFACE CONTEXT\n${JSON.stringify(visibleContext, null, 2)}\nUse this surface context to understand references such as "this chart", "this project", "this comment", "this video", or "this tool". Never use a blocked capability. Treat selected-item context as current UI context, not automatically as durable channel memory.`
 
-   const result = await runBrainTurn({
+   const result = await runBrainTask({
+    surface: "sidebar-chatbot",
+    projectId: selection?.projectId ?? surface.projectId ?? null,
+    visibleContext,
     channelId,
     userText,
     snapshot,
