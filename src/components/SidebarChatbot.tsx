@@ -9,9 +9,14 @@ import {
 } from "../services/aiBrainCommandInterface"
 import {
  buildCreatorGrowthContext,
- resumeAIBrainThread,
  sanitizeCreatorFacingBrainCopy,
 } from "../services/aiBrainConversationStore"
+import {
+ buildBrainConversationHistory,
+ loadBrainConversationState,
+ notifyBrainConversationChanged,
+ subscribeBrainConversationChanges,
+} from "../services/brain/BrainConversationController"
 import { runBrainTask } from "../services/brain/runtime/BrainRuntime"
 import {
  readBrainUserControls,
@@ -56,10 +61,9 @@ export const SidebarChatbot: React.FC = () => {
 
  const restore = async () => {
   try {
-   const resumed = await resumeAIBrainThread(channelId)
-   const latestFirst = resumed.turns.slice().reverse()
-   setTurns(latestFirst)
-   setActiveTurn(latestFirst.find((turn) => turn.response && turn.metadata?.source !== "feedback") || null)
+   const state = await loadBrainConversationState(channelId)
+   setTurns(state.turns)
+   setActiveTurn(state.latestVisibleTurn)
   } catch (error) {
    console.warn("[SidebarCopilot] Shared thread unavailable:", error)
   }
@@ -69,6 +73,9 @@ export const SidebarChatbot: React.FC = () => {
   setActiveBrainControlChannel(channelId)
   setControls(readBrainUserControls(channelId))
   void restore()
+  return subscribeBrainConversationChanges(channelId, () => {
+   void restore()
+  })
  }, [channelId])
 
  useEffect(() => {
@@ -149,14 +156,16 @@ export const SidebarChatbot: React.FC = () => {
     systemPrompt,
     growthContext,
     recentTurns: controls.personalization ? turns : [],
-    history: controls.personalization ? turns.slice(0, 4).reverse().flatMap((turn) => [
-     { role: "user", parts: [{ text: turn.userText }] },
-     { role: "model", parts: [{ text: turn.assistantText }] },
-    ]) : [],
+    history: controls.personalization ? buildBrainConversationHistory(turns) : [],
     allowModel: hasGeminiKey(),
    })
    setActiveTurn(result.turn)
    await restore()
+   notifyBrainConversationChanged({
+    channelId,
+    source: "sidebar-chatbot",
+    turnId: result.turn.id,
+   })
   } catch (error) {
    console.warn("[SidebarCopilot] Response unavailable:", error)
    setInput(userText)
