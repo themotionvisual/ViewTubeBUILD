@@ -1,5 +1,6 @@
 import React from "react"
 import "./toolboxWidgetSystem.css"
+import "./widgetControlOwnership.css"
 import "./widgetArchetypeResponsive.css"
 import "./widgetShellOwnership.css"
 import "./widgetScrollbar.css"
