@@ -8,7 +8,14 @@ export const VT_SYNC_DISABLE_PERFORMANCE_HUB_API_SYNC_FLAG = "VITE_DISABLE_PERFO
 export const VT_SYNC_DISABLE_PERFORMANCE_HUB_API_SYNC_KEY = "vt_disable_performance_hub_api_sync" as const
 export const VT_SYNC_LOCAL_SNAPSHOT_KEY = "vt_sync_local_snapshot" as const
 export const VT_SYNC_LOCAL_DB_NAME = "ViewTubeVtSyncLocalDB" as const
-export const VT_SYNC_LOCAL_DB_VERSION = 1 as const
+/**
+ * v2 adds the analytics window to dataset record identity. Before it, dataset
+ * records were keyed by channel+dataset alone, so storing a second window
+ * overwrote the first (and the cleanup pass deleted it outright). The v2
+ * upgrade backfills existing records as window:"lifetime", which is what they
+ * always were.
+ */
+export const VT_SYNC_LOCAL_DB_VERSION = 2 as const
 export const VT_SYNC_LOCAL_STORE_NAMES = {
  channelIndex: "channel_index",
  videoInventory: "video_inventory",
@@ -319,6 +326,12 @@ export type VtSyncDatasetRawReportRecord = {
  /** The connected channel that owns this diagnostic report. */
  channelId?: string
  datasetId: string
+ /**
+  * Window this report covers. Part of the record's identity: without it a
+  * second window overwrites the first. Absent on pre-v2 records, which the
+  * schema upgrade backfills as "lifetime".
+  */
+ window?: VtSyncAnalyticsWindow
  phase: string
  capturedAt: string
  columns: string[]
@@ -332,6 +345,8 @@ export type VtSyncDatasetTableRowsRecord = {
  /** The connected channel that owns these rows. Required for safe recovery. */
  channelId?: string
  datasetId: string
+ /** See VtSyncDatasetRawReportRecord.window. */
+ window?: VtSyncAnalyticsWindow
  phase: string
  capturedAt: string
  rows: Array<Record<string, unknown>>
