@@ -1,74 +1,66 @@
-import React, { useState } from "react";
-import { CalendarDays, Columns3, LayoutList, PanelsTopLeft } from "lucide-react";
-import ProjectKanbanWorkspace from "../components/projects/ProjectKanbanWorkspace";
-import { ProjectStudio } from "../components/ProjectStudio";
-import StoryboardStudio from "./StoryboardStudio";
-import PublishingScheduleArchitect from "./PublishingScheduleArchitect";
-
-type ProjectsView = "board" | "calendar" | "studio" | "storyboard";
-
-const PROJECT_VIEWS: Array<{ id: ProjectsView; label: string; icon: React.ComponentType<{ size?: number }> }> = [
-  { id: "board", label: "Board", icon: Columns3 },
-  { id: "calendar", label: "Calendar", icon: CalendarDays },
-  { id: "studio", label: "Studio", icon: LayoutList },
-  { id: "storyboard", label: "Storyboard", icon: PanelsTopLeft },
-];
+import React from "react"
+import { CalendarDays, Columns3, FolderKanban, PanelsTopLeft } from "lucide-react"
+import ProjectKanbanWorkspace from "../components/projects/ProjectKanbanWorkspace"
+import ProjectsToolboxModule from "../components/projects/ProjectsToolboxModule"
+import { ProjectStudio } from "../components/ProjectStudio"
+import StoryboardStudio from "./StoryboardStudio"
+import PublishingScheduleArchitect from "./PublishingScheduleArchitect"
 
 /**
- * User-facing Projects workspace.
- *
- * Planning surfaces share the existing persisted project records, but only one
- * major workspace is mounted at a time. This keeps Projects compact on phones
- * and prevents the board, calendar, studio, and storyboard from becoming one
- * extremely long page.
+ * Projects is a toolbox workspace: each creator tool is an independent level-0
+ * Toolbox module. The canonical Toolbox shell owns the large 5px stroke,
+ * palette shadow, header/icon geometry and collapse behavior. Tool internals
+ * remain below that shell and can be migrated to SubToolbox primitives without
+ * changing the page architecture again.
  */
-const ProjectCalendarPage: React.FC = () => {
-  const [view, setView] = useState<ProjectsView>("board");
+const ProjectCalendarPage: React.FC = () => (
+ <div className="mx-auto flex max-w-[1800px] flex-col gap-6 pb-24">
+  <section id="project-kanban" className="scroll-mt-[86px]">
+   <ProjectsToolboxModule
+    title="Project Board"
+    subtitle="Move projects from idea to published"
+    icon={<Columns3 />}
+    paletteIndex={0}
+   >
+    <ProjectKanbanWorkspace />
+   </ProjectsToolboxModule>
+  </section>
 
-  return (
-    <div className="mx-auto flex max-w-[1800px] flex-col gap-3 pb-24">
-      <nav
-        aria-label="Projects workspace views"
-        className="sticky top-[70px] z-30 grid grid-cols-4 overflow-hidden rounded-[10px] border-[3px] border-black bg-white shadow-[4px_4px_0_rgba(0,0,0,0.16)] md:static"
-      >
-        {PROJECT_VIEWS.map(({ id, label, icon: Icon }, index) => {
-          const active = view === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={active}
-              onClick={() => setView(id)}
-              className={`flex min-h-11 items-center justify-center gap-1.5 px-2 text-[9px] font-[1000] uppercase tracking-[-0.01em] transition-colors sm:text-[10px] ${index ? "border-l-[2px] border-black" : ""} ${active ? "bg-[#CCFF00]" : "bg-white hover:bg-black/5"}`}
-            >
-              <Icon size={14} />
-              <span>{label}</span>
-            </button>
-          );
-        })}
-      </nav>
+  <section id="publishing-schedule" className="scroll-mt-[86px]">
+   <ProjectsToolboxModule
+    title="Publishing Schedule"
+    subtitle="Plan deadlines, production dates and publishing"
+    icon={<CalendarDays />}
+    paletteIndex={3}
+   >
+    <PublishingScheduleArchitect collapsible={false} isOpenInitial paletteIndex={3} />
+   </ProjectsToolboxModule>
+  </section>
 
-      <main className="min-w-0">
-        {view === "board" ? (
-          <div id="project-kanban" className="scroll-mt-[126px]">
-            <ProjectKanbanWorkspace />
-          </div>
-        ) : null}
+  <section id="project-studio" className="scroll-mt-[86px]">
+   <ProjectsToolboxModule
+    title="Project Studio"
+    subtitle="Build and manage the working project"
+    icon={<FolderKanban />}
+    paletteIndex={6}
+    isOpenInitial={false}
+   >
+    <ProjectStudio />
+   </ProjectsToolboxModule>
+  </section>
 
-        {view === "calendar" ? (
-          <div id="publishing-schedule" className="scroll-mt-[126px]">
-            <PublishingScheduleArchitect collapsible={false} isOpenInitial paletteIndex={3} />
-          </div>
-        ) : null}
+  <section id="storyboard-studio" className="scroll-mt-[86px]">
+   <ProjectsToolboxModule
+    title="Storyboard Studio"
+    subtitle="Plan scenes, sequences and visual structure"
+    icon={<PanelsTopLeft />}
+    paletteIndex={9}
+    isOpenInitial={false}
+   >
+    <StoryboardStudio collapsible={false} isOpenInitial paletteIndex={1} />
+   </ProjectsToolboxModule>
+  </section>
+ </div>
+)
 
-        {view === "studio" ? <ProjectStudio /> : null}
-
-        {view === "storyboard" ? (
-          <StoryboardStudio collapsible={false} isOpenInitial paletteIndex={1} />
-        ) : null}
-      </main>
-    </div>
-  );
-};
-
-export default ProjectCalendarPage;
+export default ProjectCalendarPage
