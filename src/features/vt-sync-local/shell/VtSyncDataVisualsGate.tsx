@@ -1,7 +1,13 @@
-import React, { lazy, Suspense, useState } from "react"
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react"
 import { ChartNoAxesCombined } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
-import type { VtSyncSnapshot } from "../adapters/contracts"
+import {
+ loadVtSyncManualImports,
+ loadVtSyncPersistedApiRows,
+ mergeVtSyncManualImportsIntoSnapshot,
+ mergeVtSyncPersistedApiRowsIntoSnapshot,
+ type VtSyncSnapshot,
+} from ".."
 
 const PrimaryVisuals = lazy(() => import("./VtSyncDataVisualsToolbox").then((module) => ({
  default: module.VtSyncPrimaryVisualsContent,
@@ -19,9 +25,47 @@ const VisualLoadingState = () => (
  </div>
 )
 
+const hasSnapshotData = (value: VtSyncSnapshot) =>
+ value.source !== "empty"
+ || (value.videos?.length || 0) > 0
+ || (value.trafficSources?.length || 0) > 0
+ || (value.trafficByDay?.length || 0) > 0
+ || (value.dailyMetrics?.length || 0) > 0
+ || (value.monthlyMetrics?.length || 0) > 0
+ || (value.geography?.length || 0) > 0
+
 export const VtSyncDataVisualsGate: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snapshot }) => {
  const [isOpen1, setIsOpen1] = useState(false)
  const [isOpen2, setIsOpen2] = useState(false)
+ const [tableSnapshot, setTableSnapshot] = useState<VtSyncSnapshot>(snapshot)
+
+ useEffect(() => {
+  let cancelled = false
+  setTableSnapshot(snapshot)
+
+  const hydrateFromTables = async () => {
+   try {
+    const [manualImports, persistedApiRows] = await Promise.all([
+     loadVtSyncManualImports(snapshot.channelId),
+     loadVtSyncPersistedApiRows(snapshot.channelId),
+    ])
+    if (cancelled) return
+    const withApiRows = mergeVtSyncPersistedApiRowsIntoSnapshot(snapshot, persistedApiRows)
+    const withAllRows = mergeVtSyncManualImportsIntoSnapshot(withApiRows, manualImports)
+    if (hasSnapshotData(withAllRows) || !hasSnapshotData(snapshot)) setTableSnapshot(withAllRows)
+   } catch {
+    if (!cancelled) setTableSnapshot(snapshot)
+   }
+  }
+
+  void hydrateFromTables()
+  return () => { cancelled = true }
+ }, [snapshot])
+
+ const visualSnapshot = useMemo(
+  () => hasSnapshotData(tableSnapshot) ? tableSnapshot : snapshot,
+  [snapshot, tableSnapshot],
+ )
 
  return (
   <div className="vt-sync-data-visuals flex flex-col gap-6">
@@ -39,7 +83,7 @@ export const VtSyncDataVisualsGate: React.FC<{ snapshot: VtSyncSnapshot }> = ({ 
     contentClassName="bg-[#f4f1eb] p-6">
     {isOpen1 ? (
      <Suspense fallback={<VisualLoadingState />}>
-      <PrimaryVisuals snapshot={snapshot} />
+      <PrimaryVisuals snapshot={visualSnapshot} />
      </Suspense>
     ) : null}
    </ToolboxScaffold>
@@ -58,7 +102,7 @@ export const VtSyncDataVisualsGate: React.FC<{ snapshot: VtSyncSnapshot }> = ({ 
     contentClassName="bg-[#f4f1eb] p-6">
     {isOpen2 ? (
      <Suspense fallback={<VisualLoadingState />}>
-      <SecondaryVisuals snapshot={snapshot} />
+      <SecondaryVisuals snapshot={visualSnapshot} />
      </Suspense>
     ) : null}
    </ToolboxScaffold>
