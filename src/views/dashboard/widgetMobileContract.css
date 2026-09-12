@@ -1,0 +1,90 @@
+/* ViewTube Mobile Widget Contract
+   Phone geometry is owned here, after the canonical shell layers.
+   Desktop width state remains persisted; phones only override its rendered geometry. */
+
+@layer widgets {
+  @media (max-width: 767px) {
+    .dashboard-barrier {
+      --vt-mobile-widget-gap: 8px;
+      --vt-mobile-widget-gutter: 8px;
+      --vt-mobile-height-short: 150px;
+      --vt-mobile-height-medium: 250px;
+      --vt-mobile-height-tall: 350px;
+      --vt-mobile-height-xtall: 450px;
+      --vt-mobile-height-massive: 850px;
+    }
+
+    /* Every widget is one complete dashboard row on a phone. Persisted desktop
+       W buckets are deliberately not mutated. */
+    .dashboard-barrier .vt-dash-cell {
+      grid-column: 1 / -1;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      justify-self: stretch;
+    }
+
+    /* Height buckets are contracts, not content suggestions. Equal H values
+       therefore produce equal outer geometry regardless of widget contents. */
+    .dashboard-barrier .vt-dash-cell.vt-height-short:not(.is-collapsed) { height: var(--vt-mobile-height-short); }
+    .dashboard-barrier .vt-dash-cell.vt-height-medium:not(.is-collapsed) { height: var(--vt-mobile-height-medium); }
+    .dashboard-barrier .vt-dash-cell.vt-height-tall:not(.is-collapsed) { height: var(--vt-mobile-height-tall); }
+    .dashboard-barrier .vt-dash-cell.vt-height-xtall:not(.is-collapsed) { height: var(--vt-mobile-height-xtall); }
+    .dashboard-barrier .vt-dash-cell.vt-height-massive:not(.is-collapsed) { height: var(--vt-mobile-height-massive); }
+
+    .dashboard-barrier .vt-dash-cell:not(.is-collapsed),
+    .dashboard-barrier .vt-dash-cell:not(.is-collapsed) > *,
+    .dashboard-barrier .vt-dash-cell:not(.is-collapsed) .vt-widget {
+      min-height: 0;
+      max-height: 100%;
+    }
+
+    .dashboard-barrier .vt-dash-cell:not(.is-collapsed) .vt-widget {
+      width: 100%;
+      height: 100%;
+    }
+
+    .dashboard-barrier .vt-widget-content,
+    .dashboard-barrier .vt-widget-body {
+      min-width: 0;
+      min-height: 0;
+    }
+
+    /* The shell stays fixed to H. Content that cannot recompose within that
+       budget remains reachable inside the widget rather than growing the shell. */
+    .dashboard-barrier .vt-widget-body {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-gutter: stable;
+    }
+
+    .dashboard-barrier .vt-widget-body > * {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    /* Safe intrinsic grids: no child may re-inflate the full-width mobile row. */
+    .dashboard-barrier .widget-kpi-grid,
+    .dashboard-barrier .widget-grid,
+    .dashboard-barrier [data-widget-grid] {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .dashboard-barrier .widget-kpi-grid > *,
+    .dashboard-barrier .widget-grid > *,
+    .dashboard-barrier [data-widget-grid] > * {
+      min-width: 0;
+    }
+
+    /* Width controls describe persisted desktop geometry, so they are not useful
+       while the phone override is active. Height controls remain available. */
+    .dashboard-barrier .widget-edit-resize-grid > :nth-child(1),
+    .dashboard-barrier .widget-edit-resize-grid > :nth-child(2) {
+      opacity: .45;
+      pointer-events: none;
+    }
+  }
+}
