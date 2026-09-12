@@ -1,9 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const runBrainTurn = vi.hoisted(() => vi.fn())
+const gatewayGenerate = vi.hoisted(() => vi.fn())
 
 vi.mock("../BrainOrchestrator", () => ({
  runBrainTurn,
+}))
+
+vi.mock("../runtime/BrainModelGateway", () => ({
+ defaultBrainModelGateway: {
+  generateStructuredResponse: gatewayGenerate,
+ },
 }))
 
 import {
@@ -15,6 +22,7 @@ import {
 describe("BrainRuntime", () => {
  beforeEach(() => {
   runBrainTurn.mockReset()
+  gatewayGenerate.mockReset()
  })
 
  it("delegates creator behavior to the existing orchestrator without forwarding additive runtime-only fields", async () => {
@@ -57,7 +65,7 @@ describe("BrainRuntime", () => {
    recentTurns: [],
    history: [],
    allowModel: true,
-   modelGenerator: undefined,
+   modelGenerator: gatewayGenerate,
    nicheResolver: undefined,
    currentResearcher: undefined,
   })
@@ -71,6 +79,23 @@ describe("BrainRuntime", () => {
     hasVisibleContext: true,
    },
   })
+ })
+
+ it("preserves an explicitly injected model generator for tests and specialized callers", async () => {
+  const explicitGenerator = vi.fn()
+  runBrainTurn.mockResolvedValue({ turn: { id: "turn-1" } })
+
+  await runBrainTask({
+   userText: "test",
+   snapshot: {} as any,
+   systemPrompt: "system",
+   growthContext: {} as any,
+   modelGenerator: explicitGenerator as any,
+  })
+
+  expect(runBrainTurn).toHaveBeenCalledWith(expect.objectContaining({
+   modelGenerator: explicitGenerator,
+  }))
  })
 
  it("builds bounded deterministic runtime metadata", () => {
