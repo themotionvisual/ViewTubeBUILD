@@ -104,27 +104,43 @@ grep -rn "vt-sync-local/upstream/tableRegistry" src --include=*.ts --include=*.t
 # 6. Widgets calling generators directly
 grep -rl "services/gemini" src/views/dashboard/widgets/ | wc -l
 
-# 7. Browser-bound AI state
-grep -rho 'localStorage\.\(get\|set\)Item("[^"]*"' src --include=*.ts --include=*.tsx \
-  | sed 's/.*("//' | sort -u | wc -l
+# 7. Browser-bound state: how many modules own it directly.
+#    Counts modules, not key strings. An earlier version of this check grepped for inline
+#    localStorage string literals and undercounted by roughly 4x, because the common pattern
+#    is `const STORAGE_KEY = "..."` followed by `localStorage.getItem(STORAGE_KEY)`. Modules
+#    is also the metric that matters: the goal is fewer owners of browser-local state.
+grep -rl "localStorage\." src --include=*.ts --include=*.tsx | grep -v "\.test\." | wc -l
+grep -rl "localStorage\." src/services/brain --include=*.ts | grep -v "\.test\." | wc -l
 
 # 8. Prompt sprawl
 grep -c "^export const .*_PROMPT\|^export const .*_INSTRUCTIONS" src/services/prompts.ts
 ```
 
-### Ratchet baseline — 2026-09-12
+### Ratchet baseline
 
-| Metric | Baseline | Target | Direction |
-|---|---:|---:|---|
-| Unreachable modules (`src/`) | 146 / 732 | < 40 | ↓ |
-| Unreachable brain modules | 21 / 52 | 0 (excl. fixtures) | ↓ |
-| Ledger writers missing | 2 stores | 0 | ↓ |
-| Ungoverned generators (`gemini.ts`) | 60 | 0 | ↓ |
-| `new GoogleGenAI` call sites | 2, both client-side | 1, gateway only | ↓ |
-| Canon bypasses outside `analytics-canon` | 1 | 0 | ↓ |
-| Widgets calling generators directly | 10 / 52 | 0 | ↓ |
-| localStorage AI keys | 37 | < 10 | ↓ |
-| Standalone prompts (`prompts.ts`) | 49 | 1 constitution + task instructions | ↓ |
+Two columns: the audit baseline, and the last recorded run. Record every run.
+
+| Metric | 09-12 audit | 09-12 after Phase 0 + slice | Target | Direction |
+|---|---:|---:|---:|---|
+| Unreachable modules (`src/`) | 146 / 732 | 146 / 742 | < 40 | ↓ |
+| Unreachable brain modules (excl. fixtures) | 14 | 14 | 0 | ↓ |
+| Stores with no write caller | 2 | **1** | 0 | ↓ |
+| Ungoverned generators (`gemini.ts`) | 60 | 60 | 0 | ↓ |
+| `new GoogleGenAI` call sites | 2, both client-side | 2 | 1, gateway only | ↓ |
+| Canon bypasses outside `analytics-canon` | 1 | 1 | 0 | ↓ |
+| Widgets calling generators directly | 10 / 52 | 10 / 52 | 0 | ↓ |
+| Modules owning browser-local state | — | 103 (12 in `brain/`) | < 40 | ↓ |
+| Standalone prompts (`prompts.ts`) | 49 | 49 | 1 constitution + task instructions | ↓ |
+| Asset types through `AssetGenerator` | 0 | **1** (community_post) | all | ↑ |
+
+**Known regression, owned.** The community-post slice added four browser-local stores
+(traces, style profiles, generated assets, asset outcomes). That moves the browser-local
+metric in the wrong direction on purpose: each is shaped for server persistence and behind an
+interface, and Phase 1 moves them. If Phase 1 lands and they are still browser-local, that is
+a real failure, not an accepted cost. Re-check at every Phase 1 review.
+
+`recordBrainOutcome` now has write callers, so `ChannelIntelligence` receives real input for
+the first time. `viewTubeEvaluationLedger` is still writer-less and remains the open one.
 
 Record each run's numbers. A metric that rises is a regression and needs a named owner and a date, not a note.
 

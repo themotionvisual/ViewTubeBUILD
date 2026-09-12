@@ -37,6 +37,13 @@ export const SendToMenu: React.FC<Props> = ({ packet, compact = false, onSend })
   if (!target) return
   persistViewTubeActionPacket({ ...packet, suggestedTargets: [targetId, ...packet.suggestedTargets.filter((id) => id !== targetId)] })
   recordWorkflowPreferenceSignal({ sourceToolId: packet.sourceToolId, payloadKind: packet.payloadKind, targetToolId: targetId, accepted: true, channelId: packet.channelId, projectId: packet.projectId })
+  // Skip-above: targets ranked higher than the chosen one were shown more prominently and
+  // passed over, which is a real negative preference. Targets ranked below may never have
+  // been looked at, so they are left unscored rather than penalised. Without this, only
+  // positives were ever recorded and the ranking could not demote a bad suggestion.
+  for (const skipped of ranked.slice(0, ranked.findIndex((tool) => tool.id === targetId))) {
+   recordWorkflowPreferenceSignal({ sourceToolId: packet.sourceToolId, payloadKind: packet.payloadKind, targetToolId: skipped.id, accepted: false, channelId: packet.channelId, projectId: packet.projectId })
+  }
   appendViewTubeAuditEvent({ action: "internal-tool-handoff", allowed: true, reason: `${packet.sourceToolId} → ${targetId}`, metadata: { packetId: packet.id, payloadKind: packet.payloadKind } })
   setSentTo(target.label)
   onSend?.(targetId, packet)
