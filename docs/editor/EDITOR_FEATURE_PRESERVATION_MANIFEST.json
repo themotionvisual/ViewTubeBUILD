@@ -1,8 +1,15 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "created": "2026-09-12",
   "integrationBranch": "feat/editor-canonical-unification-2026-09-11",
   "base": {"branch":"main","sha":"8c2a21d9fe2523ec8ca2fe8be5ea78b7a1abf659"},
+  "visualBaseline": {
+    "commit":"763cc59b3c55dae41171a1f27f87fe66bd9c354b",
+    "preservedSnapshotPath":"src/features/editor/VT_E1_LinkedClassic.jsx",
+    "hostMode":"linked-classic",
+    "authority":"visual acceptance only",
+    "note":"Main explicitly identifies this as the exact VT_E1.jsx snapshot from the linked Vercel deployment."
+  },
   "policy": {
     "mainIsFunctionalAuthority": true,
     "deploymentIsVisualAcceptanceAuthority": true,
@@ -12,22 +19,24 @@
   },
   "sources": [
     {"ref":"main","role":"functional/integration authority"},
-    {"ref":"feat/vt-e1-unification-2026-08-27","role":"editor unification/mobile/shared-store candidate"},
+    {"ref":"763cc59b3c55dae41171a1f27f87fe66bd9c354b","role":"exact deployment visual baseline"},
+    {"ref":"feat/vt-e1-unification-2026-08-27","role":"editor unification/shared-store candidate"},
     {"ref":"codex/vt-e1-renderer-v2","role":"render hardening reference"},
     {"ref":"codex/vt-e1-temporal-envelope","role":"timeline temporal-contract reference"}
   ],
   "features": [
-    {"id":"route.editor-v1","area":"shell","path":"src/views/EditorV1Page.tsx","status":"KEEP FROM MAIN","acceptance":"Preserve current route/mode wiring while replacing visual shell incrementally."},
-    {"id":"desktop.vt-e1","area":"shell","path":"src/features/editor/VT_E1.jsx","status":"MERGE","acceptance":"Use current Main architecture and behavior underneath the locked visual baseline; do not wholesale cherry-pick historical VT_E1.jsx."},
-    {"id":"desktop.vt-e1-style","area":"shell","path":"src/features/editor/VT_E1.css","status":"MERGE","acceptance":"Rebuild shell/layout/clip/transition/panel/control styling to visual acceptance target without replacing state/API behavior."},
+    {"id":"route.editor-v1","area":"shell","path":"src/views/EditorV1Page.tsx","status":"KEEP FROM MAIN","acceptance":"Preserve route boundary, current-main/linked-classic switcher, responsive host and forced mobile/desktop query mode."},
+    {"id":"visual.linked-classic-snapshot","area":"shell","path":"src/features/editor/VT_E1_LinkedClassic.jsx","source":"763cc59b3c55dae41171a1f27f87fe66bd9c354b","status":"REFERENCE ONLY","acceptance":"Use as exact visual/layout acceptance source. Never turn this preserved snapshot into the new functional authority."},
+    {"id":"desktop.vt-e1","area":"shell","path":"src/features/editor/VT_E1.jsx","status":"MERGE","acceptance":"Current Main behavior stays authoritative while its shell is brought to visual parity with the linked-classic baseline."},
+    {"id":"desktop.vt-e1-style","area":"shell","path":"src/features/editor/VT_E1.css","status":"MERGE","acceptance":"Separate layout/interaction selectors from material styling before visual changes; do not alter hit geometry or semantic state through CSS porting."},
+    {"id":"frontend.mode","area":"shell","path":"src/features/editor/editorFrontendMode.ts","status":"KEEP FROM MAIN","acceptance":"Keep current-main and linked-classic test modes through integration so visual A/B comparison remains available."},
     {"id":"timeline.contract","area":"timeline","path":"src/shared/vtE1TimelineContract.*","status":"KEEP FROM MAIN","acceptance":"Canonical preview/render timing remains owned here; preserve tests and temporal behavior."},
     {"id":"timeline.operations","area":"timeline","path":"src/shared/vtE1TimelineOperations.js","status":"KEEP FROM MAIN","acceptance":"Canonical timeline mutation math remains owned here."},
-    {"id":"timeline.temporal-envelope","area":"timeline","source":"codex/vt-e1-temporal-envelope","status":"REFERENCE ONLY","acceptance":"Audit its 6-line VT_E1 change and timeline-contract tests against Main before porting anything."},
+    {"id":"timeline.temporal-envelope","area":"timeline","source":"codex/vt-e1-temporal-envelope","status":"REFERENCE ONLY","acceptance":"Audit branch-only VT_E1 delta and timeline-contract tests against Main before selective port."},
     {"id":"clips.core","area":"clips-trimming","path":"src/features/editor/VT_E1.jsx","status":"KEEP FROM MAIN","acceptance":"Preserve add/update/move/trim/split/duplicate/delete and invisible trim-target interaction geometry."},
-    {"id":"transitions.presentation","area":"transitions","path":"src/features/editor/render/transitionPresentations.tsx","source":"feat/vt-e1-unification-2026-08-27","status":"PORT","acceptance":"Port only after reconciling with Main transition/runtime behavior and visual baseline."},
-    {"id":"captions.shared","area":"audio-media-text","path":"src/features/editor/shared/captions.ts","source":"feat/vt-e1-unification-2026-08-27","status":"PORT","acceptance":"Reconcile with Main Remotion captions engine before integration."},
-    {"id":"store.contract","area":"timeline","path":"src/features/editor/shared/editorStoreContract.ts","source":"feat/vt-e1-unification-2026-08-27","status":"PORT","acceptance":"Adopt as desktop/mobile UI-runtime boundary after mapping Main state; mutation math and render timing remain in shared timeline modules."},
-    {"id":"mobile.shell","area":"mobile","path":"src/features/editor/mobile/","status":"MERGE","acceptance":"Preserve portrait/landscape, <1024 responsive shell, >=44px targets, panel system and standalone capability while migrating toward shared store."},
+    {"id":"transitions.presentation","area":"transitions","path":"src/features/editor/render/transitionPresentations.tsx","status":"KEEP FROM MAIN","acceptance":"Main now contains transition presentations; preserve and reconcile their visual representation with the baseline rather than re-porting the old branch copy."},
+    {"id":"store.contract","area":"timeline","path":"src/features/editor/shared/editorStoreContract.ts","source":"feat/vt-e1-unification-2026-08-27","status":"PORT","acceptance":"Adopt as desktop/mobile UI-runtime boundary only after mapping Main state; mutation math and render timing remain in shared timeline modules."},
+    {"id":"mobile.shell","area":"mobile","path":"src/features/editor/mobile/","status":"KEEP FROM MAIN","acceptance":"Preserve portrait/landscape, <1024 responsive shell, >=44px targets, panel system and standalone capability while migrating toward shared store."},
     {"id":"mobile.gestures","area":"mobile","path":"src/features/editor/mobile/hooks/gestures.ts","status":"KEEP FROM MAIN","acceptance":"Preserve timeline pinch zoom, preview pinch zoom, drag scrub, clip move/trim, clip/empty long press, panel swipe and vertical sheet resize."},
     {"id":"mobile.reducer","area":"mobile","path":"src/features/editor/mobile/state/editorState.ts","status":"SUPERSEDED","acceptance":"Keep behavior during migration, then supersede duplicate ownership only after shared store parity proves clips/tracks/transitions/playback/zoom/selection/panels/50-step undo-redo."},
     {"id":"preview.renderer-slot","area":"preview","path":"src/features/editor/mobile/components/PreviewPane.tsx","status":"KEEP FROM MAIN","acceptance":"Preserve renderer slot and interactive fallback; converge desktop/mobile preview on canonical timing."},
@@ -38,11 +47,10 @@
     {"id":"render.worker","area":"render-export","path":"src/server/vt-e1-render-server.mjs","status":"KEEP FROM MAIN","acceptance":"Preserve long-running render worker contract and restart queue recovery."},
     {"id":"render.final-mp4","area":"render-export","path":"docs/vt-e1-render-worker.md","status":"KEEP FROM MAIN","acceptance":"Final MP4 via Remotion VTE1Renderer remains canonical; MOV/WebM are FFmpeg transcodes; browser preview capture is never parity-final."},
     {"id":"renderer-v2-branch","area":"render-export","source":"codex/vt-e1-renderer-v2","status":"REFERENCE ONLY","acceptance":"Main already contains render-worker architecture; audit branch-only hardening/tests before any selective port."},
-    {"id":"video-package.production","area":"video-package-handoff","path":"src/services/video-package/contracts.ts","status":"KEEP FROM MAIN","acceptance":"Preserve vaultAssetIds, timelineId, editorHandoff and renderIds lifecycle."},
-    {"id":"visual.deployment-baseline","area":"shell","status":"REFERENCE ONLY","acceptance":"Chosen editor deployment is visual authority for layout, timeline, clips, transitions, panels, controls, spacing and overall visual language; implementation must not replace Main functional authority."}
+    {"id":"video-package.production","area":"video-package-handoff","path":"src/services/video-package/contracts.ts","status":"KEEP FROM MAIN","acceptance":"Preserve vaultAssetIds, timelineId, editorHandoff and renderIds lifecycle."}
   ],
   "gates": [
-    {"after":"shell","checks":["route parity","mode parity","visual baseline screenshots desktop/mobile"]},
+    {"after":"shell","checks":["route boundary parity","frontend A/B switcher preserved","forced mobile/desktop mode preserved","linked-classic visual parity desktop/mobile"]},
     {"after":"timeline","checks":["playhead","zoom","selection","timeline contract tests","undo-redo"]},
     {"after":"clips-trimming","checks":["add","move","trim","split","duplicate","delete","track lock/mute/hide"]},
     {"after":"transitions","checks":["add/remove","presentation parity","render timing parity"]},
