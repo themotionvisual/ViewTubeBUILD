@@ -31,7 +31,7 @@ const EditorUiMenu: React.FC<{legacyMode:EditorFrontendMode;onLegacyModeChange:(
 const EditorV1Page:React.FC=()=>{
   const forced=React.useMemo(()=>{if(typeof window==='undefined')return 'auto' as const;const v=new URLSearchParams(window.location.search).get('editor');return v==='mobile'||v==='desktop'?v:'auto' as const},[]);
   const [frontendMode,setFrontendMode]=React.useState<EditorFrontendMode>(()=>readEditorFrontendMode());
-  const [interfaceChoice,setInterfaceChoice]=React.useState<EditorFrontend>('auto');
+  const [interfaceChoice,setInterfaceChoice]=React.useState<EditorFrontend>('mobile');
   const [layoutChoice,setLayoutChoice]=React.useState<EditorLayoutChoice>('auto');
   const [compositionAspect,setCompositionAspect]=React.useState<CompositionAspect>('portrait');
   const restoredMobileProject=React.useMemo(()=>mobileSeedFromBridgeSnapshot(readEditorProjectBridgeSnapshot()),[]);
