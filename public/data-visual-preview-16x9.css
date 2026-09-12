@@ -1,0 +1,37 @@
+/* Scoped 16:9 preview-canvas contract for selected ViewTube data visuals.
+   The module/toolbox shell remains unconstrained; only the chart preview body
+   receives the ratio. JS marks selected visual cards with data-vt-preview-16x9. */
+[data-vt-preview-16x9] [data-vt-chart-body] {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: 16 / 9 !important;
+  overflow: hidden !important;
+}
+
+[data-vt-preview-16x9] [data-vt-chart-body] > * {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+}
+
+[data-vt-preview-16x9] [data-vt-chart-body] .recharts-responsive-container,
+[data-vt-preview-16x9] [data-vt-chart-body] .recharts-wrapper,
+[data-vt-preview-16x9] [data-vt-chart-body] svg,
+[data-vt-preview-16x9] [data-vt-chart-body] canvas {
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+/* Compact narrow canvases without changing the 16:9 geometry. */
+@media (max-width: 767px) {
+  [data-vt-preview-16x9] [data-vt-chart-body] {
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  [data-vt-preview-16x9] [data-vt-chart-body] [class*="min-h-["] {
+    min-height: 0 !important;
+  }
+}
