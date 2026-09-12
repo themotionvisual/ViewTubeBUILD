@@ -1,0 +1,167 @@
+/* Canonical editor shell pass.
+ * IMPORTANT: every rule is scoped to current-main so the linked-classic
+ * deployment snapshot remains an untouched visual acceptance control.
+ * This file changes material/chrome only; timeline geometry and interaction
+ * ownership remain in VT_E1.jsx and shared timeline modules.
+ */
+[data-editor-frontend="current-main"] .vt-editor-shell {
+  --vt-shell-ink: #111;
+  --vt-shell-paper: #fff;
+  --vt-shell-soft: #f0f0f4;
+  --vt-shell-blue: #2d8cff;
+  background: var(--vt-shell-ink) !important;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .outer-frame,
+[data-editor-frontend="current-main"] .vt-editor-shell .neo-card {
+  border-color: #111 !important;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-controller-module,
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-preview-module,
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-timeline-module {
+  background: #fff;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Controls retain their handlers/inline semantic colors; this only normalizes
+   the linked-deployment material language around them. */
+[data-editor-frontend="current-main"] .vt-editor-shell .neo-btn,
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-shell-tools-menu-row {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 2px solid #000 !important;
+  border-radius: 7px !important;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.18) !important;
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .neo-btn::before,
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-shell-tools-menu-row::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 40%;
+  pointer-events: none;
+  background: rgba(255,255,255,.28);
+  z-index: 0;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .neo-btn > *,
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-shell-tools-menu-row > * {
+  position: relative;
+  z-index: 1;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .neo-btn:not(.dock-btn):not(:disabled):hover,
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-shell-tools-menu-row:hover {
+  transform: translate(-1px,-1px);
+  box-shadow: 3px 3px 0 rgba(0,0,0,.24), 0 0 10px rgba(45,140,255,.18) !important;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .neo-btn:not(.dock-btn):not(:disabled):active {
+  transform: translate(1px,1px);
+  box-shadow: none !important;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .neo-btn:focus-visible,
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-shell-tools-menu-row:focus-visible {
+  outline: 3px solid var(--vt-shell-blue);
+  outline-offset: 2px;
+}
+
+/* Timeline toolbar visual normalization. Dimensions are deliberately unchanged. */
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-timeline-toolbar {
+  position: relative;
+  z-index: 60;
+  overflow: visible;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-timeline-toolbar .neo-btn:not(.vt-timeline-status-pill),
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-timeline-toolbar .vt-time-readout {
+  border: 2px solid #000 !important;
+  border-radius: 7px !important;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.18) !important;
+}
+
+/* Preserve the exact clip material used by the accepted deployment while
+   leaving the invisible 10px trim targets and clip math untouched. */
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-timeline-clip {
+  isolation: isolate;
+  overflow: hidden;
+  border: 2px solid #000 !important;
+  border-radius: 7px !important;
+  background: linear-gradient(135deg,var(--vt-clip-color),var(--vt-clip-gradient-end,#528FFA)) !important;
+  box-shadow: 2px 2px 0 rgba(17,17,17,.18) !important;
+  color: #111;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-timeline-clip::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 40%;
+  pointer-events: none;
+  background: rgba(255,255,255,.28);
+  z-index: 1;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-timeline-clip.is-selected-primary {
+  box-shadow: inset 0 0 0 2px #fff,0 0 14px 3px rgba(45,140,255,.65),2px 2px 0 rgba(0,0,0,.18) !important;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-timeline-clip.is-selected-secondary {
+  outline: 2px solid var(--vt-shell-blue);
+  outline-offset: 0;
+  box-shadow: 0 0 12px rgba(45,140,255,.6) !important;
+}
+
+/* Transition seams remain one shared-time interval. Only presentation is
+   normalized here; transition timing/validation is untouched. */
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-timeline-seam {
+  border: 2px solid rgba(17,17,17,.78) !important;
+  border-radius: 6px;
+  background: rgba(255,255,255,.11) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-timeline-seam.is-selected {
+  border-color: var(--vt-shell-blue) !important;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.88),0 0 13px 3px rgba(45,140,255,.66),inset 0 1px 0 rgba(255,255,255,.72);
+}
+
+/* Preview shell follows the accepted white-stage composition. The actual
+   composition stage transform/crop/render logic remains owned by VT_E1.jsx. */
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-preview-module,
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-preview-viewport {
+  background: #fff !important;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-composition-stage {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+[data-editor-frontend="current-main"] .vt-editor-shell--portrait .vt-composition-stage {
+  aspect-ratio: 9 / 16;
+}
+
+/* Keep panel menus visually above the shell without changing their DOM or
+   event behavior. */
+[data-editor-frontend="current-main"] .vt-editor-shell .vt-shell-tools-menu {
+  z-index: 240;
+  border: 3px solid #111;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 6px 6px 0 #111;
+}
+
+@media (max-width: 1023px) {
+  [data-editor-frontend="current-main"] .vt-editor-shell .neo-btn {
+    touch-action: manipulation;
+  }
+}
