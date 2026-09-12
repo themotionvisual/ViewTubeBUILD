@@ -54,14 +54,20 @@ import {
  Settings,
 } from "lucide-react"
 import {
- StandardInput,
- StandardTextArea,
  SubToolboxGridActionButton,
- SubToolboxInnerActionButton,
  ToolboxScaffold,
  SubToolbox,
  SubToolboxDropdownTopTitleControl,
 } from "../components/Toolbox"
+import { SubToolboxActions, SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../components/subtoolbox/SubToolboxLayouts"
+import {
+ SubToolboxButton,
+ SubToolboxFieldLabel,
+ SubToolboxInput,
+ SubToolboxMetric,
+ SubToolboxSurface,
+ SubToolboxTextArea,
+} from "../components/subtoolbox/SubToolboxPrimitives"
 import { getToolboxPaletteColors } from "../styles/toolboxPalette"
 import { hexToRgba } from "../components/ToolboxUISystem"
 
@@ -814,49 +820,49 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    key: "views",
    label: "Views",
    value: formatViews(String(selectedVideoMetrics.views || 0)),
-   tone: "bg-[#40C6E9]",
+   accentColor: "#40C6E9",
   },
   {
    key: "watch",
    label: "Watch Hrs",
    value: selectedVideoMetrics.watchHours.toFixed(2),
-   tone: "bg-[#B9FF58]",
+   accentColor: "#B9FF58",
   },
   {
    key: "likes",
    label: "Likes",
    value: formatViews(String(selectedVideoMetrics.likes || 0)),
-   tone: "bg-[#FF83EA]",
+   accentColor: "#FF83EA",
   },
   {
    key: "comments",
    label: "Comments",
    value: formatViews(String(selectedVideoMetrics.comments || 0)),
-   tone: "bg-[#FFFF61]",
+   accentColor: "#FFFF61",
   },
   {
    key: "shares",
    label: "Shares",
    value: formatViews(String(selectedVideoMetrics.shares || 0)),
-   tone: "bg-[#FFB570]",
+   accentColor: "#FFB570",
   },
   {
    key: "revenue",
    label: "Revenue",
    value: `$${selectedVideoMetrics.revenue.toFixed(2)}`,
-   tone: "bg-[#4FFF5B]",
+   accentColor: "#4FFF5B",
   },
   {
    key: "length",
    label: "Length",
    value: formatDuration(videoStats?.duration || "0"),
-   tone: "bg-[#FFE357]",
+   accentColor: "#FFE357",
   },
   {
    key: "end-screen",
    label: "End Screen %",
    value: `${selectedVideoMetrics.endScreenClickRate.toFixed(1)}%`,
-   tone: "bg-[#9CEBFF]",
+   accentColor: "#9CEBFF",
   },
   ]
 
@@ -1278,43 +1284,33 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         collapsible
         isOpenInitial={true}
         shellClassName="h-full"
-        contentClassName="p-4 h-full flex flex-col gap-4"
+        contentClassName="h-full"
        >
-        <div className="space-y-2">
-         <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">Title</label>
-         <StandardInput
+        <SubToolboxStack>
+         <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="video-manager-title">Title</SubToolboxFieldLabel>}>
+         <SubToolboxInput
+          id="video-manager-title"
           value={editTitle}
           onChange={(e) => setEditTitle(e.target.value)}
-          className="w-full"
           placeholder="TITLE..."
          />
-        </div>
+         </SubToolboxSection>
 
-        <div className="space-y-2">
-         <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">Video Stats</label>
-         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <SubToolboxSection label="Video Stats">
+         <SubToolboxGrid minItemWidth="compact">
           {kpiCards.map((card) => (
-           <div
+           <SubToolboxMetric
             key={card.key}
-            className="rounded-xl border-[3px] border-black bg-white shadow-[2px_2px_0px_0px_black] overflow-hidden flex flex-col min-h-[106px]"
-           >
-            <div className={`py-1 border-b-[2px] border-black ${card.tone} shrink-0 flex items-center justify-center`}>
-             <span className="text-[10px] font-black uppercase tracking-[0.1em] text-black">
-              {card.label}
-             </span>
-            </div>
-            <div className="px-2 py-2 flex-1 flex flex-col items-center justify-center text-center">
-             <span className="font-[1000] text-[28px] leading-none tracking-tighter">{card.value}</span>
-            </div>
-           </div>
+            label={card.label}
+            value={card.value}
+            accentColor={card.accentColor}
+           />
           ))}
-         </div>
-        </div>
+         </SubToolboxGrid>
+        </SubToolboxSection>
 
-        <div className="space-y-2">
-         <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">Publishing Controls</label>
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
+        <SubToolboxSection label="Publishing Controls">
+         <SubToolboxGrid minItemWidth="compact">
            <SubToolboxDropdownTopTitleControl
             label="PRIVACY"
             value={editPrivacy}
@@ -1327,9 +1323,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
             tone="green"
             borderWidth={3}
            />
-          </div>
-
-          <div className="space-y-2">
            <SubToolboxDropdownTopTitleControl
             label="CATEGORY"
             value={selectedCategoryLabel}
@@ -1338,9 +1331,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
             tone="green"
             borderWidth={3}
            />
-          </div>
-
-          <div className="space-y-2">
            <SubToolboxDropdownTopTitleControl
             label="PLAYLISTS"
             value={selectedPlaylistIds.length === 0 ? "NONE SELECTED" : `${selectedPlaylistIds.length} LINKED`}
@@ -1351,9 +1341,9 @@ const VideoManager: React.FC<VideoManagerProps> = ({
             tone="green"
             borderWidth={3}
            />
-          </div>
-         </div>
-        </div>
+         </SubToolboxGrid>
+        </SubToolboxSection>
+        </SubToolboxStack>
        </SubToolbox>
 
        <SubToolbox
@@ -1362,14 +1352,14 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         collapsible
         isOpenInitial={true}
         shellClassName="h-full"
-        contentClassName="p-4 h-full flex flex-col"
+        contentClassName="h-full"
        >
-        <div className="space-y-2 h-full flex flex-col">
+        <SubToolboxStack className="h-full">
          <div className="flex items-center justify-between gap-3 px-1">
           <span className="text-[10px] font-black uppercase tracking-[0.12em] text-black/50 ml-auto">Drag + Drop to Replace</span>
          </div>
-         <div
-          className={`relative rounded-xl border-[4px] border-dashed flex-1 flex flex-col items-center justify-center p-4 transition-all overflow-hidden min-h-[220px] ${isDraggingThumbnail ? "border-[#FF83EA] bg-[#FF83EA]/10" : "border-black/20 bg-gray-50"}`}
+         <SubToolboxSurface
+          className={`relative flex min-h-[220px] flex-1 flex-col items-center justify-center overflow-hidden !p-3 transition-colors ${isDraggingThumbnail ? "!bg-[#FF83EA]/10" : "!bg-gray-50"}`}
           onDragOver={(e) => {
            e.preventDefault()
            setIsDraggingThumbnail(true)
@@ -1388,20 +1378,26 @@ const VideoManager: React.FC<VideoManagerProps> = ({
              className="w-full h-full object-cover rounded-lg"
             />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 rounded-lg backdrop-blur-sm">
-             <button
+             <SubToolboxButton
+              aria-label="Replace thumbnail"
               onClick={() => fileInputRef.current?.click()}
-              className="bg-[#FFFF61] p-4 rounded-xl border-[4px] border-black hover:scale-110 transition-transform">
-              <Upload size={24} strokeWidth={3} />
-             </button>
+              size="compact"
+              tone="warning"
+              icon={<Upload size={20} strokeWidth={3} />}
+              className="!w-12"
+             />
              {thumbnailPreview && (
-              <button
+              <SubToolboxButton
+               aria-label="Remove replacement thumbnail"
                onClick={() => {
                 setThumbnailFile(null)
                 setThumbnailPreview(null)
                }}
-               className="bg-[#FF83EA] text-white p-4 rounded-xl border-[4px] border-black hover:scale-110 transition-transform">
-               <Trash2 size={24} strokeWidth={3} />
-              </button>
+               size="compact"
+               tone="danger"
+               icon={<Trash2 size={20} strokeWidth={3} />}
+               className="!w-12"
+              />
              )}
             </div>
            </div>
@@ -1411,16 +1407,17 @@ const VideoManager: React.FC<VideoManagerProps> = ({
             <p className="font-black uppercase text-sm text-black/40">Drag Image Here</p>
            </div>
           )}
-         </div>
-        </div>
+         </SubToolboxSurface>
+        </SubToolboxStack>
        </SubToolbox>
       </div>
 
       <SubToolbox title="Description" icon={<AlignLeft size={18} strokeWidth={3} />} collapsible isOpenInitial={true}>
-       <StandardTextArea
+       <SubToolboxTextArea
+        aria-label="Video description"
         value={editDescription}
         onChange={(e) => setEditDescription(e.target.value)}
-        className="h-80 text-base vm-scrollless"
+        className="!min-h-80 text-base vm-scrollless"
         placeholder="DESCRIPTION..."
        />
       </SubToolbox>
@@ -1431,29 +1428,25 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        isOpen={isTagsExpanded}
        onToggle={() => setIsTagsExpanded((prev) => !prev)}
       >
-       <div>
-        <div className="p-6 bg-white space-y-6">
-           <div className="flex gap-4">
-            <StandardInput
+       <SubToolboxStack density="comfortable">
+           <SubToolboxActions columns={2}>
+            <SubToolboxInput
+             aria-label="Add video tag"
              value={tagInput}
              onChange={(e) => setTagInput(e.target.value)}
              onKeyDown={(e) => e.key === "Enter" && handleAddTag(tagInput)}
-             className="flex-1"
              placeholder="ADD TAG..."
              maxLength={MAX_TAG_CHARS}
             />
-            <div className="w-[168px]">
-            <SubToolboxInnerActionButton
+            <SubToolboxButton
               onClick={() => handleAddTag(tagInput)}
               disabled={[...editTags.split(",").map((t) => t.trim()).filter(Boolean), tagInput.trim()].filter(Boolean).join(", ").length > MAX_TAG_CHARS}
-              className="!transition-none hover:!translate-y-0 active:!translate-y-0"
-              label={addTagButtonLabel}
-             />
-            </div>
-           </div>
+            >
+             {addTagButtonLabel}
+            </SubToolboxButton>
+           </SubToolboxActions>
            
-           <div
-            className={`relative w-full border-[3px] border-black rounded-2xl bg-white p-3 pb-9 flex flex-wrap gap-2 content-start min-h-[132px] shadow-[3px_3px_0px_0px_var(--vt-subtoolbox-shadow,rgba(0,0,0,0.28))]`}>
+           <SubToolboxSurface className="relative flex min-h-[132px] w-full flex-wrap content-start gap-2 !pb-9">
             {editTags ? (
              editTags
               .split(",")
@@ -1477,31 +1470,30 @@ const VideoManager: React.FC<VideoManagerProps> = ({
             <span className="absolute right-3 bottom-2 text-[11px] font-black uppercase tracking-[0.08em] text-black/55">
              {editTags.length}/{MAX_TAG_CHARS}
             </span>
-           </div>
+           </SubToolboxSurface>
 
-           <div className="pt-2">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-4">
-             <SubToolboxInnerActionButton
+           <SubToolboxStack>
+            <SubToolboxActions columns={2}>
+             <SubToolboxButton
+             size="action"
              onClick={handleGenerateTags}
              disabled={isGeneratingTags || editTags.length >= MAX_TAG_CHARS}
-             className="!transition-none hover:!translate-y-0 active:!translate-y-0"
-             label={isGeneratingTags ? "Scanning Market..." : "Generate High Ranking Video Tags"}
-             />
-             <button
+             >
+              {isGeneratingTags ? "Scanning Market..." : "Generate High Ranking Video Tags"}
+             </SubToolboxButton>
+             <SubToolboxButton
               type="button"
+              size="action"
+              tone="neutral"
               onClick={handleRankTags}
               disabled={isAnalyzingTags || !editTags}
-              className="h-[60px] px-4 rounded-[16px] border-[3px] border-black bg-white text-black text-[12px] font-black uppercase tracking-[0.08em] disabled:opacity-50 disabled:cursor-not-allowed"
              >
               {isAnalyzingTags ? "Ranking..." : existingTagAnalysis.length > 0 ? "View Rankings" : "Rank Tags"}
-             </button>
-            </div>
+             </SubToolboxButton>
+            </SubToolboxActions>
             {suggestedTags.length > 0 && (
-             <div className="space-y-4">
-              <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">
-               Ranked Suggestions
-              </label>
-              <div className="flex flex-wrap gap-2 p-6 border-[4px] border-black rounded-xl bg-white shadow-[inset_0_4px_10px_rgba(0,0,0,0.05)]">
+             <SubToolboxSection label="Ranked Suggestions">
+              <SubToolboxSurface className="flex flex-wrap gap-2">
                {suggestedTags.map((st) => (
                 <TagBadge
                  key={st.tag}
@@ -1512,12 +1504,11 @@ const VideoManager: React.FC<VideoManagerProps> = ({
                  analysis={st}
                 />
                ))}
-              </div>
-             </div>
+              </SubToolboxSurface>
+             </SubToolboxSection>
             )}
-           </div>
-        </div>
-       </div>
+           </SubToolboxStack>
+       </SubToolboxStack>
       </SubToolbox>
 
       {/* End Tag Manager removed as it is now integrated into Video Details */}

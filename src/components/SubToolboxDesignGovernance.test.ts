@@ -7,6 +7,8 @@ const productionSubtoolboxConsumers = [
  "src/components/ProjectStudio.tsx",
  "src/views/ActionableTactics.tsx",
  "src/views/MediaAnalyzer.tsx",
+ "src/views/VideoManager.tsx",
+ "src/views/VideoPublisher.tsx",
  "src/views/StoryboardStudio.tsx",
  "src/views/supertools/SuperToolPrototypeWorkspace.tsx",
 ]
@@ -62,5 +64,24 @@ describe("subtoolbox design governance", () => {
   expect(chartModule).toContain('data-vt-subtoolbox-module="true"')
   expect(chartModule).toContain('borderBottom: `var(--vt-subtoolbox-stroke')
   expect(chartModule).not.toContain('const headerBorderClass = collapsible && !internalOpen')
+ })
+
+ it("certifies the video-tool migration wave on canonical interior primitives", () => {
+  const manager = source("src/views/VideoManager.tsx")
+  const publisher = source("src/views/VideoPublisher.tsx")
+  const registry = source("src/components/subtoolbox/registry.ts")
+
+  for (const contents of [manager, publisher]) {
+   expect(contents).not.toContain("StandardInput")
+   expect(contents).not.toContain("StandardTextArea")
+   expect(contents).not.toContain("SubToolboxInnerActionButton")
+   expect(contents).toContain("SubToolboxInput")
+   expect(contents).toContain("SubToolboxStack")
+  }
+
+  expect(manager).toContain("SubToolboxMetric")
+  expect(publisher).toContain("SubToolboxOutputCard")
+  expect(publisher).toContain("SubToolboxFileTarget")
+  expect(registry).toContain('{ id: 2, status: "complete", surfaces: ["VideoManager", "VideoPublisher"] }')
  })
 })
