@@ -1,0 +1,60 @@
+/* Container-responsive archetype ownership.
+   Imported after the legacy toolbox sheet during migration so composition can
+   move away from viewport rules without rewriting widget implementations. */
+@layer archetypes {
+  .dashboard-widget-slot {
+    --vt-archetype-gap: var(--vt-gap-2, 8px);
+    --vt-archetype-pad: var(--vt-gap-2, 8px);
+  }
+
+  .widget-kpi-grid,
+  .widget-form-stack,
+  .widget-segmented-deck,
+  .widget-item-rail,
+  .widget-bar-stack {
+    min-width: 0;
+    gap: var(--vt-archetype-gap);
+  }
+
+  .widget-kpi-grid { display:grid; grid-template-columns:repeat(var(--vt-kpi-columns,4),minmax(0,1fr)); }
+  .widget-form-stack,.widget-segmented-deck,.widget-item-rail,.widget-bar-stack { display:flex; flex-direction:column; }
+  .widget-form-stack,.widget-segmented-deck { min-height:0; height:100%; }
+  .widget-item-rail { overflow:auto; }
+
+  /* Generic chart/table/media contracts let existing widgets opt in without
+     hard-coded viewport breakpoints. */
+  :is(.widget-chart,.widget-chart-canvas,.chart-container,.recharts-responsive-container) { min-width:0; min-height:0; }
+  :is(.widget-table,.widget-data-table,.widget-table-wrap) { min-width:0; overflow:auto; }
+  :is(.widget-media-grid,.widget-thumbnail-grid,.image-generator-style-grid) { display:grid; min-width:0; gap:var(--vt-archetype-gap); }
+  :is(.widget-media-frame,.widget-video-frame,.widget-thumbnail-frame,.image-generator-preview) { min-width:0; overflow:hidden; }
+
+  @container vt-widget (max-width: 420px) {
+    .dashboard-widget-slot { --vt-archetype-gap:4px; --vt-archetype-pad:4px; }
+    .widget-kpi-grid { --vt-kpi-columns:1; }
+    :is(.widget-media-grid,.widget-thumbnail-grid,.image-generator-style-grid) { grid-template-columns:1fr; }
+    :is(.widget-form-row,.widget-control-row,.widget-filter-row) { display:grid; grid-template-columns:1fr; gap:4px; }
+    :is(.widget-table,.widget-data-table) { font-size:8px; }
+    :is(.widget-chart-legend,.recharts-legend-wrapper) { font-size:8px; }
+  }
+
+  @container vt-widget (min-width:421px) and (max-width:720px) {
+    .dashboard-widget-slot { --vt-archetype-gap:8px; --vt-archetype-pad:8px; }
+    .widget-kpi-grid { --vt-kpi-columns:2; }
+    :is(.widget-media-grid,.widget-thumbnail-grid,.image-generator-style-grid) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    :is(.widget-form-row,.widget-control-row,.widget-filter-row) { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  }
+
+  @container vt-widget (min-width:721px) {
+    .dashboard-widget-slot { --vt-archetype-gap:12px; --vt-archetype-pad:12px; }
+    .widget-kpi-grid { --vt-kpi-columns:4; }
+    :is(.widget-media-grid,.widget-thumbnail-grid,.image-generator-style-grid) { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  }
+
+  /* Height buckets alter density rather than changing widget semantics. */
+  .vt-height-short .widget-item-rail { max-height:100%; }
+  .vt-height-short :is(.widget-secondary-detail,.widget-expanded-detail) { display:none; }
+  .vt-height-medium :is(.widget-chart,.widget-chart-canvas) { min-height:120px; }
+  .vt-height-tall :is(.widget-chart,.widget-chart-canvas) { min-height:180px; }
+  .vt-height-xtall :is(.widget-chart,.widget-chart-canvas) { min-height:240px; }
+  .vt-height-massive :is(.widget-chart,.widget-chart-canvas) { min-height:320px; }
+}
