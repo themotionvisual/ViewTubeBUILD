@@ -9,7 +9,7 @@ import PublishingScheduleArchitect from "./PublishingScheduleArchitect";
  *
  * Each major project tool remains its own toolbox module. We deliberately do
  * not turn the tools into page-level tabs: Board, Scheduling, Project Studio,
- * and Storyboard should retain their own headers, colored identities, collapse
+ * and Storyboard retain their own headers, colored identities, collapse
  * controls, borders, shadows, and independent toolbox composition.
  */
 const ProjectCalendarPage: React.FC = () => {
@@ -20,7 +20,7 @@ const ProjectCalendarPage: React.FC = () => {
       </section>
 
       <section id="publishing-schedule" className="scroll-mt-[86px]" aria-label="Publishing schedule toolbox">
-        <PublishingScheduleArchitect collapsible isOpenInitial={false} paletteIndex={3} />
+        <PublishingScheduleArchitect collapsible isOpenInitial paletteIndex={3} />
       </section>
 
       <section id="project-studio" className="scroll-mt-[86px]" aria-label="Project studio toolbox">
