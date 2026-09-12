@@ -1,0 +1,137 @@
+/* ViewTube portrait editing workspace
+ * 16:9 desktop workspace containing a true 9:16 composition preview.
+ * Layout-only overrides: editor state, timeline behavior and render contracts stay owned by VT_E1.
+ */
+
+.vt-editor-shell--portrait {
+  --vt-portrait-gap: 4px;
+  --vt-portrait-inspector: clamp(220px, 25vw, 320px);
+  --vt-portrait-track-h: 32px;
+  --vt-portrait-minimap-h: 72px;
+  gap: var(--vt-portrait-gap) !important;
+  padding: 4px !important;
+  overflow: hidden !important;
+}
+
+/* Upper workspace: preview owns the available area; inspector remains visible at right. */
+.vt-editor-shell--portrait .vt-preview-module {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.vt-editor-shell--portrait .vt-preview-viewport {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+/* Portrait content never stretches to the shape of the desktop workspace. */
+.vt-editor-shell--portrait .vt-composition-stage {
+  aspect-ratio: 9 / 16 !important;
+  width: auto !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* Remove dashboard-like air from editor-only modules. */
+.vt-editor-shell--portrait .vt-controller-module,
+.vt-editor-shell--portrait .vt-preview-module,
+.vt-editor-shell--portrait .vt-timeline-module {
+  margin: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+.vt-editor-shell--portrait .vt-controller-module {
+  padding: 4px !important;
+  gap: 4px !important;
+  overflow: auto !important;
+}
+
+.vt-editor-shell--portrait .vt-controller-module > * {
+  margin-block: 0 !important;
+}
+
+/* Dense transport and timeline controls. */
+.vt-editor-shell--portrait .vt-timeline-toolbar {
+  min-height: 32px !important;
+  padding: 2px 4px !important;
+  gap: 3px !important;
+}
+
+.vt-editor-shell--portrait .vt-timeline-toolbar .neo-btn:not(.vt-timeline-status-pill) {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
+  border-radius: 4px !important;
+}
+
+/* Short editing layers: maximize simultaneous preview + timeline visibility. */
+.vt-editor-shell--portrait .vt-timeline-module {
+  overflow: hidden !important;
+}
+
+.vt-editor-shell--portrait .vt-timeline-track,
+.vt-editor-shell--portrait .vt-track-row,
+.vt-editor-shell--portrait [data-timeline-track] {
+  min-height: var(--vt-portrait-track-h) !important;
+  height: var(--vt-portrait-track-h) !important;
+}
+
+.vt-editor-shell--portrait .vt-timeline-clip {
+  min-height: 24px !important;
+  height: 26px !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+.vt-editor-shell--portrait .vt-timeline-clip * {
+  line-height: 1.05 !important;
+}
+
+/* Larger persistent overview map. */
+.vt-editor-shell--portrait .vt-mini-timeline,
+.vt-editor-shell--portrait .vt-timeline-minimap,
+.vt-editor-shell--portrait [data-timeline-minimap] {
+  min-height: var(--vt-portrait-minimap-h) !important;
+  height: var(--vt-portrait-minimap-h) !important;
+  padding: 5px !important;
+  margin: 0 !important;
+}
+
+/* Tight 16:9 desktop composition. Existing shell grid remains authoritative;
+   these rules only normalize spacing and keep all three work zones visible. */
+@media (min-width: 901px) {
+  .vt-editor-shell--portrait {
+    height: 100% !important;
+    max-height: 100% !important;
+  }
+
+  .vt-editor-shell--portrait .vt-preview-module,
+  .vt-editor-shell--portrait .vt-controller-module {
+    align-self: stretch !important;
+  }
+}
+
+/* Narrow screens retain the compact language without forcing the desktop split. */
+@media (max-width: 900px) {
+  .vt-editor-shell--portrait {
+    --vt-portrait-gap: 3px;
+    --vt-portrait-track-h: 30px;
+    --vt-portrait-minimap-h: 64px;
+    padding: 3px !important;
+  }
+
+  .vt-editor-shell--portrait .vt-preview-viewport,
+  .vt-editor-shell--portrait .vt-controller-module {
+    padding: 3px !important;
+  }
+}
