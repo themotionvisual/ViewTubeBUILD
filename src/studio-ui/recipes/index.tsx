@@ -1,5 +1,5 @@
 import React from "react"
-import { Link2, Search } from "lucide-react"
+import { Link2 } from "lucide-react"
 import { SubToolboxSection, SubToolboxStack } from "../layouts"
 import { StudioDropdown } from "../primitives/StudioDropdown"
 import { StudioButton, StudioInput, StudioSearchInput, StudioTextArea } from "../primitives/StudioControls"
