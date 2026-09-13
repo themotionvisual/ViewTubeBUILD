@@ -1,67 +1,21 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "headers": [
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
-    },
-    {
-      "source": "/(.*)\\.(png|jpg|jpeg|gif|svg|webp|avif|ico|woff2?)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=2592000, immutable" }
-      ]
-    },
-    {
-      "source": "/",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/index.html",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
-    }
+    { "source": "/assets/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
+    { "source": "/(.*)\\.(png|jpg|jpeg|gif|svg|webp|avif|ico|woff2?)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000, immutable" }] },
+    { "source": "/", "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }] },
+    { "source": "/index.html", "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }] }
   ],
   "rewrites": [
-    {
-      "source": "/api/auth-start",
-      "destination": "/api/auth?__vt_auth_operation=start"
-    },
-    {
-      "source": "/api/auth/google/start",
-      "destination": "/api/auth?__vt_auth_operation=start"
-    },
-    {
-      "source": "/api/auth-callback",
-      "destination": "/api/auth?__vt_auth_operation=callback"
-    },
-    {
-      "source": "/api/auth/google/callback",
-      "destination": "/api/auth?__vt_auth_operation=callback"
-    },
-    {
-      "source": "/api/auth-session",
-      "destination": "/api/auth?__vt_auth_operation=session"
-    },
-    {
-      "source": "/api/auth/session",
-      "destination": "/api/auth?__vt_auth_operation=session"
-    },
-    {
-      "source": "/api/auth-logout",
-      "destination": "/api/auth?__vt_auth_operation=logout"
-    },
-    {
-      "source": "/api/auth/logout",
-      "destination": "/api/auth?__vt_auth_operation=logout"
-    },
-    {
-      "source": "/((?!assets/|api/|_vercel/|.*\\.(?:js|mjs|css|map|json|txt|xml|woff|woff2|ttf|otf|eot|png|jpg|jpeg|gif|svg|ico|webp|avif|mp4|webm|mp3|wav|ogg|pdf)$).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/api/auth-start", "destination": "/api/auth?__vt_auth_operation=start" },
+    { "source": "/api/auth/google/start", "destination": "/api/auth?__vt_auth_operation=start" },
+    { "source": "/api/auth-callback", "destination": "/api/auth?__vt_auth_operation=callback" },
+    { "source": "/api/auth/google/callback", "destination": "/api/auth?__vt_auth_operation=callback" },
+    { "source": "/api/auth-session", "destination": "/api/auth?__vt_auth_operation=session" },
+    { "source": "/api/auth/session", "destination": "/api/auth?__vt_auth_operation=session" },
+    { "source": "/api/auth-logout", "destination": "/api/auth?__vt_auth_operation=logout" },
+    { "source": "/api/auth/logout", "destination": "/api/auth?__vt_auth_operation=logout" },
+    { "source": "/api/youtube/:path*", "destination": "/api/youtube?__vt_youtube_path=:path*" },
+    { "source": "/((?!assets/|api/|_vercel/|.*\\.(?:js|mjs|css|map|json|txt|xml|woff|woff2|ttf|otf|eot|png|jpg|jpeg|gif|svg|ico|webp|avif|mp4|webm|mp3|wav|ogg|pdf)$).*)", "destination": "/index.html" }
   ]
 }
