@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import {
+  BarChart3,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -9,13 +10,13 @@ import {
   Layers3,
   Menu,
   MousePointerClick,
+  Settings,
   Sparkles,
   Upload,
+  Video,
 } from "lucide-react"
 import {
   SubToolbox,
-  SubToolboxDropdownControl,
-  SubToolboxDropdownTopTitleControl,
   SubToolboxGridActionButton,
   SubToolboxInnerActionButton,
   ToolboxScaffold,
@@ -28,16 +29,19 @@ import {
   SubToolboxFieldLabel,
   SubToolboxFileTarget,
   SubToolboxInput,
-  SubToolboxMetric,
   SubToolboxOutputCard,
   SubToolboxRadio,
-  SubToolboxSplitActionButton,
   SubToolboxStatePanel,
   SubToolboxSurface,
   SubToolboxTag,
   SubToolboxTextArea,
   SubToolboxToggle,
 } from "./subtoolbox/SubToolboxPrimitives"
+import {
+  SubToolboxKpiCard,
+  SubToolboxSplitButton,
+  SubToolboxSplitDropdown,
+} from "./subtoolbox/SubToolboxSplitPrimitives"
 import type { SubToolboxState } from "./subtoolbox/tokens"
 import { hexToRgba } from "./ToolboxUISystem"
 import { getToolboxPaletteColors, VT_SPECTRUM_PALETTE_06 } from "../styles/toolboxPalette"
@@ -81,9 +85,9 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
   const [paletteIndex, setPaletteIndex] = useState(initialPaletteIndex)
   const [textValue, setTextValue] = useState("Napoleon at Austerlitz")
   const [description, setDescription] = useState("A production-ready description uses the same field geometry everywhere.")
-  const [privacy, setPrivacy] = useState("PUBLIC")
+  const [privacy, setPrivacy] = useState("public")
   const [format, setFormat] = useState("longform")
-  const [destinations, setDestinations] = useState<string[]>(["youtube"])
+  const [dataset, setDataset] = useState("videos")
   const [selectedState, setSelectedState] = useState<SubToolboxState>("ready")
   const [connectedPreview, setConnectedPreview] = useState(false)
   const [microToggle, setMicroToggle] = useState(true)
@@ -91,17 +95,12 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
   const [uploadedFile, setUploadedFile] = useState("No file selected")
   const [copied, setCopied] = useState(false)
   const palette = getToolboxPaletteColors(paletteIndex)
+  const childPalette = getToolboxPaletteColors(paletteIndex + 4)
   const primitiveContextStyle = {
     ["--vt-subtoolbox-fill" as string]: palette.header,
     ["--vt-subtoolbox-shadow" as string]: hexToRgba(palette.header, 0.45),
   }
   const show = (category: ReferenceCategory) => activeCategory === "all" || activeCategory === category
-
-  const toggleDestination = (value: string) => {
-    setDestinations((current) => current.includes(value)
-      ? current.filter((item) => item !== value)
-      : [...current, value])
-  }
 
   const copyOutput = async () => {
     await navigator.clipboard.writeText(description)
@@ -156,15 +155,6 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
                   <SubToolbox title="Standard Subtoolbox" icon={<Layers3 />} paletteIndex={paletteIndex + 7} collapsible={false} openUnits={1}><p className="text-sm font-bold">56px header · 4px stroke · 12px radius · 6px colored shadow · 20px title</p></SubToolbox>
                   <SubToolbox title="Compact Subtoolbox" icon={<Layers3 />} paletteIndex={paletteIndex + 8} collapsible={false} openUnits={1} heightMode="compact"><p className="text-sm font-bold">44px header · 3px stroke · 10px radius · 4px colored shadow · 20px title</p></SubToolbox>
                 </SubToolboxGrid>
-                <SubToolboxSection label="Control Geometry">
-                  <SubToolboxGrid minItemWidth="compact">
-                    <SubToolboxButton size="micro" tone="neutral">26px Micro</SubToolboxButton>
-                    <SubToolboxButton size="compact" tone="neutral">32px Compact</SubToolboxButton>
-                    <SubToolboxButton tone="accent">48px Standard</SubToolboxButton>
-                    <SubToolboxButton size="action" tone="success">56px Action</SubToolboxButton>
-                  </SubToolboxGrid>
-                  <p className="text-[10px] font-black uppercase opacity-60">26 + 4 gap + 26 = 56px collapsed Subtoolbox height.</p>
-                </SubToolboxSection>
               </SubToolboxStack>
             </SubToolbox>
           ) : null}
@@ -172,19 +162,19 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
           {show("actions") ? (
             <SubToolbox title="Buttons + Split Left" icon={<MousePointerClick />} paletteIndex={paletteIndex + 2} collapsible isOpenInitial>
               <SubToolboxStack density="comfortable">
-                <SubToolboxSection label="Main Toolbox Default · Split Left">
+                <SubToolboxSection label="Canonical Split Left · Master Data Tables Pattern">
+                  <SubToolboxGrid minItemWidth="wide">
+                    <SubToolboxSplitButton icon={<Settings size={21} strokeWidth={3} />} railColor={childPalette.icon} labelColor={childPalette.header}>Settings</SubToolboxSplitButton>
+                    <SubToolboxSplitButton icon={<Check size={21} strokeWidth={3} />} railColor={childPalette.icon} labelColor={childPalette.header} selected>Selected · Reversed</SubToolboxSplitButton>
+                  </SubToolboxGrid>
+                  <p className="text-[10px] font-black uppercase opacity-60">48px square icon rail, 3px structural divider, parent color pair, colored shadow. Selected state reverses the pair.</p>
+                </SubToolboxSection>
+                <SubToolboxSection label="Legacy Tone Gallery · migration reference">
                   <SubToolboxGrid minItemWidth="wide">
                     {ACTION_TONES.map((tone) => <SubToolboxGridActionButton key={tone} label={tone} iconName="zap" tone={tone} showIconSection onClick={() => {}} />)}
                   </SubToolboxGrid>
                 </SubToolboxSection>
-                <SubToolboxSection label="Head + Tail">
-                  <SubToolboxGrid minItemWidth="wide">
-                    <SubToolboxSplitActionButton variant="head" icon={<Check size={20} strokeWidth={3} />}>Head</SubToolboxSplitActionButton>
-                    <SubToolboxSplitActionButton variant="tail" icon={<Clipboard size={20} strokeWidth={3} />}>Tail</SubToolboxSplitActionButton>
-                  </SubToolboxGrid>
-                  <p className="text-[10px] font-black uppercase opacity-60">Head: accent icon rail + white title. Tail: white icon rail + accent title. Both stay 56px and do not grow when labels wrap.</p>
-                </SubToolboxSection>
-                <SubToolboxSection label="Inside Subtoolbox Default · No Icon · 1px Thinner">
+                <SubToolboxSection label="Inside Subtoolbox Default · No Icon">
                   <SubToolboxGrid minItemWidth="wide">
                     <SubToolboxInnerActionButton label="Generate" tone="cyan" onClick={() => {}} />
                     <SubToolboxInnerActionButton label="Publish" tone="green" onClick={() => {}} />
@@ -200,7 +190,6 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
                     <SubToolboxBadge>Badge</SubToolboxBadge>
                     <SubToolboxTag selected={microTag} onClick={() => setMicroTag((value) => !value)}>Tag</SubToolboxTag>
                   </div>
-                  <p className="text-[10px] font-black uppercase opacity-60">Selectable controls flip between parent accent fill and white while retaining the same height, stroke family and typography.</p>
                 </SubToolboxSection>
                 <SubToolboxSection label="Primitive Button Tones"><SubToolboxGrid minItemWidth="compact">{PRIMITIVE_TONES.map((tone) => <SubToolboxButton key={tone} tone={tone}>{tone}</SubToolboxButton>)}</SubToolboxGrid></SubToolboxSection>
               </SubToolboxStack>
@@ -224,13 +213,53 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
           {show("dropdowns") ? (
             <SubToolbox title="Dropdown Menus + Video Selector" icon={<Menu />} paletteIndex={paletteIndex + 4} collapsible isOpenInitial overflowVisible>
               <SubToolboxStack density="comfortable">
-                <SubToolboxGrid minItemWidth="wide">
-                  <SubToolboxDropdownControl label="Privacy" value={privacy} options={["PUBLIC", "UNLISTED", "PRIVATE"]} onChange={setPrivacy} tone="orange" />
-                  <SubToolboxDropdownTopTitleControl label="Format" value={format.toUpperCase()} options={[{ value: "longform", label: "LONGFORM" }, { value: "shorts", label: "SHORTS" }, { value: "live", label: "LIVE" }]} onChange={setFormat} tone="cyan" />
-                  <SubToolboxDropdownTopTitleControl label="Destinations" value={`${destinations.length} SELECTED`} options={[{ value: "youtube", label: "YOUTUBE" }, { value: "shorts", label: "SHORTS FEED" }, { value: "community", label: "COMMUNITY" }]} onChange={toggleDestination} multiSelect selectedValues={destinations} tone="green" />
-                </SubToolboxGrid>
+                <SubToolboxSection label="Split Left Dropdown · Master Data Tables Default">
+                  <SubToolboxGrid minItemWidth="wide">
+                    <SubToolboxSplitDropdown
+                      ariaLabel="Dataset"
+                      icon={<Layers3 size={21} strokeWidth={3} />}
+                      railColor={childPalette.icon}
+                      labelColor={childPalette.header}
+                      value={dataset}
+                      options={[
+                        { value: "videos", label: "Videos", icon: <Video size={19} strokeWidth={3} /> },
+                        { value: "playlists", label: "Playlists", icon: <Layers3 size={19} strokeWidth={3} /> },
+                        { value: "formats", label: "Formats", icon: <Layers3 size={19} strokeWidth={3} /> },
+                        { value: "retention", label: "Retentions", icon: <BarChart3 size={19} strokeWidth={3} /> },
+                      ]}
+                      onChange={setDataset}
+                    />
+                    <SubToolboxSplitDropdown
+                      ariaLabel="Privacy"
+                      icon={<Settings size={21} strokeWidth={3} />}
+                      railColor={childPalette.icon}
+                      labelColor={childPalette.header}
+                      value={privacy}
+                      options={[
+                        { value: "public", label: "Public" },
+                        { value: "unlisted", label: "Unlisted" },
+                        { value: "private", label: "Private" },
+                      ]}
+                      onChange={setPrivacy}
+                    />
+                    <SubToolboxSplitDropdown
+                      ariaLabel="Format"
+                      icon={<Video size={21} strokeWidth={3} />}
+                      railColor={childPalette.icon}
+                      labelColor={childPalette.header}
+                      value={format}
+                      options={[
+                        { value: "longform", label: "Longform" },
+                        { value: "shorts", label: "Shorts" },
+                        { value: "live", label: "Live" },
+                      ]}
+                      onChange={setFormat}
+                    />
+                  </SubToolboxGrid>
+                  <p className="text-[10px] font-black uppercase opacity-60">Open menus are separate rounded modules: 5px below the trigger, full top and bottom corner radius, 3px black stroke and matching colored shadow.</p>
+                </SubToolboxSection>
                 <SubToolboxSection label="Connection-Aware Video Selector">
-                  <SubToolboxButton size="action" tone={connectedPreview ? "success" : "accent"} onClick={() => setConnectedPreview((current) => !current)}>{connectedPreview ? "SELECT VIDEO · CHANNEL CONNECTED" : "CONNECT YOUR YOUTUBE CHANNEL TO LOAD VIDEOS"}</SubToolboxButton>
+                  <SubToolboxSplitButton icon={<Video size={21} strokeWidth={3} />} railColor={childPalette.icon} labelColor={childPalette.header} selected={connectedPreview} onClick={() => setConnectedPreview((current) => !current)}>{connectedPreview ? "Select Video · Channel Connected" : "Connect YouTube Channel"}</SubToolboxSplitButton>
                 </SubToolboxSection>
               </SubToolboxStack>
             </SubToolbox>
@@ -239,7 +268,13 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
           {show("content") ? (
             <SubToolbox title="Outputs + Data Surfaces" icon={<FileOutput />} paletteIndex={paletteIndex + 5} collapsible isOpenInitial>
               <SubToolboxStack density="comfortable">
-                <SubToolboxGrid minItemWidth="compact"><SubToolboxMetric label="Views" value="48.2K" accentColor="#36E0F6" /><SubToolboxMetric label="AVP" value="72%" accentColor="#C0F240" /><SubToolboxMetric label="CTR" value="4.8%" accentColor="#FFDA47" /><SubToolboxMetric label="Revenue" value="$84" accentColor="#3FEE56" /></SubToolboxGrid>
+                <SubToolboxSection label="Canonical KPI Cards · Master Data Tables Pattern">
+                  <SubToolboxGrid minItemWidth="compact">
+                    <SubToolboxKpiCard label="Rows" value="494" sublabel="Visible Records" icon={<BarChart3 size={17} strokeWidth={3} />} accentColor="#FF5D8F" railColor="#C0F240" />
+                    <SubToolboxKpiCard label="Total Revenue" value="$478.05" sublabel="Avg $0.97" icon={<BarChart3 size={17} strokeWidth={3} />} accentColor="#FF806E" railColor="#3FEE56" />
+                    <SubToolboxKpiCard label="Ad Revenue" value="$294.70" sublabel="Avg $0.60" icon={<BarChart3 size={17} strokeWidth={3} />} accentColor="#FFB158" railColor="#55DCC2" />
+                  </SubToolboxGrid>
+                </SubToolboxSection>
                 <SubToolboxGrid minItemWidth="wide"><SubToolboxSurface tone="white"><strong className="text-xs font-black uppercase">White Surface</strong><p className="mt-2 text-sm font-bold">Default readable content.</p></SubToolboxSurface><SubToolboxSurface tone="subtle"><strong className="text-xs font-black uppercase">Subtle Surface</strong><p className="mt-2 text-sm font-bold">Low-emphasis grouping.</p></SubToolboxSurface><SubToolboxSurface tone="accent"><strong className="text-xs font-black uppercase">Accent Surface</strong><p className="mt-2 text-sm font-bold">Highlighted information.</p></SubToolboxSurface></SubToolboxGrid>
                 <SubToolboxOutputCard title="Generated Description" icon={<FileOutput size={18} />} accentColor={palette.header} action={<div className="flex items-center gap-2"><span className="rounded-[4px] bg-black px-2 py-1 text-[9px] font-black uppercase text-white">Ready</span><SubToolboxButton aria-label="Copy generated description" size="compact" tone="ink" icon={copied ? <Check size={16} /> : <Clipboard size={16} />} onClick={copyOutput} className="!w-10" /></div>}><p className="whitespace-pre-wrap text-sm font-bold leading-relaxed">{description}</p></SubToolboxOutputCard>
                 <SubToolboxSection label="Canonical Tight Reveal Upload · responsive 16:9"><SubToolboxFileTarget label={uploadedFile} icon={<Upload size={28} strokeWidth={3} />} accept="video/*,image/*" onFiles={(files) => setUploadedFile(files?.[0]?.name || "No file selected")} /></SubToolboxSection>
@@ -265,7 +300,7 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
 
           <SubToolboxSurface tone="subtle" className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-[10px] font-black uppercase tracking-wider">Studio Hub Component Library v2 · canonical production reference</span>
-            <span className="text-[10px] font-black uppercase opacity-55">80/56/44 hierarchy · 26/32/48/56 controls · Head/Tail · 12 palettes · mobile full width</span>
+            <span className="text-[10px] font-black uppercase opacity-55">80/56/44 hierarchy · 26/32/48/56 controls · split-left dropdowns · KPI cards · 12 palettes · mobile full width</span>
           </SubToolboxSurface>
         </SubToolboxStack>
       </ToolboxScaffold>
