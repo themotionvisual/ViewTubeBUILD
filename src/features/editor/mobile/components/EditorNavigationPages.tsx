@@ -3,50 +3,19 @@ import type { EditorStore } from '../state/editorState';
 import { TemplateLibraryPanel } from './TemplateLibraryPanel';
 import { renderPanelBody } from './PanelBodies';
 
-export type EditorNavPage = 'select'|'media'|'text'|'audio'|'transitions'|'effects'|'templates'|'export'|'settings';
-export interface EditorSettingsModel {
-  frontend: 'auto'|'mobile'|'desktop';
-  layout: 'auto'|'portrait'|'landscape';
-  aspect: 'portrait'|'landscape';
-  style: string;
-  styleOptions: Array<{id:string;label:string;shortLabel?:string}>;
-  onFrontend:(value:'auto'|'mobile'|'desktop')=>void;
-  onLayout:(value:'auto'|'portrait'|'landscape')=>void;
-  onAspect:(value:'portrait'|'landscape')=>void;
-  onStyle:(value:string)=>void;
-}
-
-const CYAN='#36E0F6', INK='#248b99';
-const card:React.CSSProperties={border:`2px solid ${INK}`,borderRadius:6,background:'#fff',padding:8,boxShadow:'2px 2px 0 rgba(54,224,246,.22)'};
+export type EditorNavPage='select'|'media'|'text'|'audio'|'transitions'|'effects'|'templates'|'export'|'settings';
+export interface EditorSettingsModel{frontend:'auto'|'mobile'|'desktop';layout:'auto'|'portrait'|'landscape';aspect:'portrait'|'landscape';style:string;styleOptions:Array<{id:string;label:string;shortLabel?:string}>;onFrontend:(v:'auto'|'mobile'|'desktop')=>void;onLayout:(v:'auto'|'portrait'|'landscape')=>void;onAspect:(v:'portrait'|'landscape')=>void;onStyle:(v:string)=>void}
+const CYAN='#36E0F6',INK='#248b99',YELLOW='#FFFF61';
+const card:React.CSSProperties={border:`2px solid ${INK}`,borderRadius:6,background:'#fff',padding:8,boxShadow:'2px 2px 0 rgba(54,224,246,.22)',marginBottom:6};
 const title:React.CSSProperties={fontSize:9,fontWeight:900,textTransform:'uppercase',letterSpacing:.7,marginBottom:6};
 const button:React.CSSProperties={minHeight:30,border:`2px solid ${INK}`,borderRadius:5,background:'#fff',color:'#000',fontSize:9,fontWeight:900,textTransform:'uppercase',padding:'5px 8px'};
 const field:React.CSSProperties={width:'100%',height:30,border:`2px solid ${INK}`,borderRadius:5,background:'#fff',color:'#000',fontSize:10,fontWeight:800,padding:'0 7px',boxSizing:'border-box'};
-
 const Section:React.FC<React.PropsWithChildren<{name:string}>>=({name,children})=><section style={card}><div style={title}>{name}</div>{children}</section>;
 const Grid:React.FC<React.PropsWithChildren<{cols?:number}>>=({cols=2,children})=><div style={{display:'grid',gridTemplateColumns:`repeat(${cols},minmax(0,1fr))`,gap:5}}>{children}</div>;
-
-function Inspector({store}:{store:EditorStore}){
- const clip=store.selectedClips[0];
- if(!clip)return <Section name="Selection"><div style={{fontSize:10,fontWeight:800,opacity:.55}}>Select a clip in the timeline to inspect and edit it.</div></Section>;
- return <><Section name="Clip"><div style={{fontSize:12,fontWeight:900,overflow:'hidden',textOverflow:'ellipsis'}}>{String(clip.id)}</div><div style={{fontSize:9,opacity:.55}}>{clip.start.toFixed(2)}s → {clip.end.toFixed(2)}s · {(clip.end-clip.start).toFixed(2)}s</div></Section><Section name="Edit"><Grid><button style={button} onClick={()=>store.dispatch({type:'splitClipAtPlayhead',id:clip.id})}>Split</button><button style={button} onClick={()=>store.dispatch({type:'duplicateClip',id:clip.id})}>Duplicate</button><button style={button} onClick={()=>store.dispatch({type:'openPanel',id:'trim'})}>Trim</button><button style={{...button,background:'#FA618A'}} onClick={()=>store.dispatch({type:'deleteClips',ids:[clip.id]})}>Delete</button></Grid></Section><Section name="Timing"><Grid><label style={{fontSize:8,fontWeight:900}}>START<input style={field} value={clip.start.toFixed(2)} readOnly/></label><label style={{fontSize:8,fontWeight:900}}>END<input style={field} value={clip.end.toFixed(2)} readOnly/></label></Grid></Section><Section name="Desktop-equivalent modules"><Grid><button style={button}>Transform</button><button style={button}>Opacity</button><button style={button}>Crop / Mask</button><button style={button}>Speed</button><button style={button}>Blend</button><button style={button}>Advanced</button></Grid></Section></>;
-}
-function Media({store}:{store:EditorStore}){return <><Section name="Media Library"><input style={field} placeholder="Search project media"/><Grid><button style={{...button,background:CYAN}}>+ Import</button><button style={button}>Record</button><button style={button}>Vault</button><button style={button}>Uploads</button></Grid></Section><Section name="Project assets"><div style={{fontSize:10,fontWeight:800}}>{store.state.project.clips.length} timeline clips</div><div style={{fontSize:9,opacity:.55}}>Media added here uses the same project/timeline state as the desktop editor.</div></Section></>}
+const FeatureGrid:React.FC<{items:string[]}>=({items})=><Grid cols={3}>{items.map(x=><button key={x} style={button}>{x}</button>)}</Grid>;
+function Inspector({store}:{store:EditorStore}){const clip=store.selectedClips[0];return <>{!clip?<Section name="Selection"><div style={{fontSize:10,fontWeight:800,opacity:.55}}>Select a clip to expose its editing controls.</div></Section>:<><Section name="Clip"><b>{String(clip.id)}</b><div style={{fontSize:9,opacity:.55}}>{clip.start.toFixed(2)}s → {clip.end.toFixed(2)}s</div></Section><Section name="Quick Edit"><Grid><button style={button} onClick={()=>store.dispatch({type:'splitClipAtPlayhead',id:clip.id})}>Split</button><button style={button} onClick={()=>store.dispatch({type:'duplicateClip',id:clip.id})}>Duplicate</button><button style={button} onClick={()=>store.dispatch({type:'openPanel',id:'trim'})}>Trim</button><button style={{...button,background:'#FA618A'}} onClick={()=>store.dispatch({type:'deleteClips',ids:[clip.id]})}>Delete</button></Grid></Section></>}<Section name="Transform"><FeatureGrid items={['Position','Scale','Rotate','Anchor','Crop','Mask']}/></Section><Section name="Appearance"><FeatureGrid items={['Opacity','Blend','Border','Shadow','Corner','Background']}/></Section><Section name="Timing"><FeatureGrid items={['Speed','Reverse','Freeze','Duration','In point','Out point']}/></Section></>}
+function Media({store}:{store:EditorStore}){return <><Section name="Media Library"><input style={field} placeholder="Search project media"/><Grid><button style={{...button,background:CYAN}}>+ Import</button><button style={button}>Record</button><button style={button}>Vault</button><button style={button}>Uploads</button></Grid></Section><Section name="Create / Capture"><FeatureGrid items={['Camera','Screen','Voice','Photo','Color','Gradient']}/></Section><Section name="Project Assets"><b>{store.state.project.clips.length} timeline clips</b><FeatureGrid items={['Video','Images','Audio','Favorites','Recent','Unused']}/></Section></>}
 function ToolPage({tool,store}:{tool:'text'|'audio'|'transitions'|'effects'|'export';store:EditorStore}){return <div style={{color:'#000'}}>{renderPanelBody(tool,store)}</div>}
-function Settings({model}:{model?:EditorSettingsModel}){
- if(!model)return <Section name="Editor Settings"><div style={{fontSize:10}}>Editor display settings are controlled by the host.</div></Section>;
- const Seg=<T extends string>({value,items,onChange}:{value:T;items:Array<[T,string]>;onChange:(v:T)=>void})=><div style={{display:'grid',gridTemplateColumns:`repeat(${items.length},1fr)`,gap:4}}>{items.map(([v,l])=><button key={v} style={{...button,background:value===v?CYAN:'#fff'}} onClick={()=>onChange(v)}>{l}</button>)}</div>;
- return <><Section name="Interface"><Seg value={model.frontend} onChange={model.onFrontend} items={[["auto","Auto"],["mobile","Mobile"],["desktop","Desktop"]]}/></Section><Section name="Layout"><Seg value={model.layout} onChange={model.onLayout} items={[["auto","Auto"],["portrait","Upright"],["landscape","Sideways"]]}/></Section><Section name="Video"><Seg value={model.aspect} onChange={model.onAspect} items={[["portrait","9:16"],["landscape","16:9"]]}/></Section><Section name="Editor Style"><Grid>{model.styleOptions.map(option=><button key={option.id} style={{...button,background:model.style===option.id?'#FFFF61':'#fff'}} onClick={()=>model.onStyle(option.id)}>{option.shortLabel||option.label}</button>)}</Grid></Section><Section name="Playback"><Grid><button style={button}>Snapping</button><button style={button}>Safe Areas</button><button style={button}>Guides</button><button style={button}>Performance</button></Grid></Section></>;
-}
-
-export const EditorNavigationPage:React.FC<{page:EditorNavPage;store:EditorStore;settings?:EditorSettingsModel}>=({page,store,settings})=>{
- if(page==='select')return <Inspector store={store}/>;
- if(page==='media')return <Media store={store}/>;
- if(page==='templates')return <TemplateLibraryPanel store={store}/>;
- if(page==='settings')return <Settings model={settings}/>;
- return <ToolPage tool={page} store={store}/>;
-};
-
-export const EDITOR_NAV_ITEMS:Array<{id:EditorNavPage;label:string;icon:string}>=[
- {id:'select',label:'Select',icon:'≡'},{id:'media',label:'Media',icon:'▣'},{id:'text',label:'Text',icon:'T'},{id:'audio',label:'Audio',icon:'♫'},
- {id:'transitions',label:'Transitions',icon:'⋈'},{id:'effects',label:'Effects',icon:'✧'},{id:'templates',label:'Templates',icon:'▦'},{id:'export',label:'Export',icon:'⇧'},{id:'settings',label:'Settings',icon:'⚙'},
-];
+function Settings({model}:{model?:EditorSettingsModel}){if(!model)return <Section name="Editor Settings">Host-controlled settings.</Section>;const Seg=<T extends string>({value,items,onChange}:{value:T;items:Array<[T,string]>;onChange:(v:T)=>void})=><div style={{display:'grid',gridTemplateColumns:`repeat(${items.length},1fr)`,gap:4}}>{items.map(([v,l])=><button key={v} style={{...button,background:value===v?CYAN:'#fff'}} onClick={()=>onChange(v)}>{l}</button>)}</div>;return <><Section name="Interface"><Seg value={model.frontend} onChange={model.onFrontend} items={[["auto","Auto"],["mobile","Mobile"],["desktop","Desktop"]]}/></Section><Section name="Layout"><Seg value={model.layout} onChange={model.onLayout} items={[["auto","Auto"],["portrait","Upright"],["landscape","Sideways"]]}/></Section><Section name="Video"><Seg value={model.aspect} onChange={model.onAspect} items={[["portrait","9:16"],["landscape","16:9"]]}/></Section><Section name="Editor Style"><Grid>{model.styleOptions.map(o=><button key={o.id} style={{...button,background:model.style===o.id?YELLOW:'#fff'}} onClick={()=>model.onStyle(o.id)}>{o.shortLabel||o.label}</button>)}</Grid></Section><Section name="Timeline"><FeatureGrid items={['Snapping','Magnet','Ripple','Markers','Waveforms','Thumbnails']}/></Section><Section name="Preview"><FeatureGrid items={['Safe Areas','Guides','Grid','Fit','100%','Quality']}/></Section><Section name="Editing"><FeatureGrid items={['Undo','Redo','Autosave','Gestures','Haptics','Keyboard']}/></Section><Section name="Performance"><FeatureGrid items={['Proxy','Cache','Draft','Preload','FPS','Diagnostics']}/></Section></>}
+export const EditorNavigationPage:React.FC<{page:EditorNavPage;store:EditorStore;settings?:EditorSettingsModel}>=({page,store,settings})=>{if(page==='select')return <Inspector store={store}/>;if(page==='media')return <Media store={store}/>;if(page==='templates')return <TemplateLibraryPanel store={store}/>;if(page==='settings')return <Settings model={settings}/>;return <ToolPage tool={page} store={store}/>};
+export const EDITOR_NAV_ITEMS:Array<{id:EditorNavPage;label:string;icon:string}>=[{id:'select',label:'Select',icon:'⌖'},{id:'media',label:'Media',icon:'▣'},{id:'text',label:'Text',icon:'T'},{id:'audio',label:'Audio',icon:'♫'},{id:'transitions',label:'Transitions',icon:'⋈'},{id:'effects',label:'Effects',icon:'✧'},{id:'templates',label:'Templates',icon:'▦'},{id:'export',label:'Export',icon:'⇧'},{id:'settings',label:'Settings',icon:'⚙'}];
