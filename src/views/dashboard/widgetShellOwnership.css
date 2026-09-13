@@ -4,7 +4,7 @@
 @layer widgets {
   .dashboard-barrier {
     --vt-shell-overflow-x: hidden;
-    --vt-widget-collapse-duration: 300ms;
+    --vt-widget-collapse-duration: 600ms;
     --vt-widget-collapse-easing: ease-out;
   }
 
