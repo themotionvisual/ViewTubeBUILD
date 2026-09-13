@@ -6,15 +6,15 @@ export const EDITOR_FRONTEND_STORAGE_KEY = 'viewtube.editor.frontend-mode.v1';
 export const EDITOR_FRONTEND_MODES = [
   {
     id: 'current-main' as const,
-    label: 'Current Main',
-    shortLabel: 'CURRENT',
-    description: 'Responsive ViewTube host: touch-first mobile editor on narrow viewports and canonical VT_E1 on desktop.',
+    label: 'Component Style',
+    shortLabel: 'COMPONENT',
+    description: 'Canonical ViewTube component-style editor with the light neo-brutalist shell, responsive mobile workspace, and mini timeline map.',
   },
   {
     id: 'linked-classic' as const,
-    label: 'Linked Branch',
-    shortLabel: 'LINKED',
-    description: 'Classic direct VT_E1 host used by the linked deployment, backed by the same canonical VT_E1 engine as current main.',
+    label: 'Classic Editor',
+    shortLabel: 'CLASSIC',
+    description: 'Classic direct VT_E1 host, backed by the same canonical VT_E1 editing engine.',
   },
 ] as const;
 
@@ -29,8 +29,8 @@ export function resolveEditorFrontendMode({
   queryValue?: unknown;
   storedValue?: unknown;
 }): EditorFrontendMode {
-  if (queryValue === 'linked' || queryValue === 'linked-classic') return 'linked-classic';
-  if (queryValue === 'current' || queryValue === 'current-main') return 'current-main';
+  if (queryValue === 'linked' || queryValue === 'linked-classic' || queryValue === 'classic') return 'linked-classic';
+  if (queryValue === 'current' || queryValue === 'current-main' || queryValue === 'component' || queryValue === 'component-style') return 'current-main';
   return normalizeEditorFrontendMode(storedValue);
 }
 
