@@ -36,7 +36,7 @@ const ProjectCalendarPage: React.FC = () => (
 
   <section id="storyboard-studio" className="scroll-mt-[86px]">
    <ProjectsToolboxModule title="Storyboard Studio" subtitle="Plan scenes, sequences and visual structure" icon={<PanelsTopLeft />} paletteIndex={9} isOpenInitial={false}>
-    <StoryboardStudio collapsible={false} isOpenInitial paletteIndex={1} />
+    <StoryboardStudio embedded collapsible={false} isOpenInitial paletteIndex={1} />
    </ProjectsToolboxModule>
   </section>
  </div>
