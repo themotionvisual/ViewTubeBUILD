@@ -23,10 +23,24 @@ export type {
 } from "./primitives/StudioControls"
 export { StudioDropdown } from "./primitives/StudioDropdown"
 export type { StudioDropdownOption, StudioDropdownProps } from "./primitives/StudioDropdown"
-
 export {
   SubToolboxActions,
   SubToolboxGrid,
+  SubToolboxMetrics,
+  SubToolboxScroll,
   SubToolboxSection,
+  SubToolboxSplit,
   SubToolboxStack,
-} from "../components/subtoolbox/SubToolboxLayouts"
+} from "./layouts"
+export {
+  MetadataEditorRecipe,
+  SearchResultsRecipe,
+  VideoSelectorRecipe,
+  STUDIO_RECIPE_IDS,
+} from "./recipes"
+export type {
+  MetadataEditorRecipeProps,
+  StudioRecipeId,
+  VideoSelectorRecipeProps,
+} from "./recipes"
+export { StudioHubCertification } from "./StudioHubCertification"
