@@ -1,7 +1,6 @@
 /* Master Data Tables — dense responsive presentation layer.
    Structural display state remains owned by VtSyncToolboxDataTable.tsx. */
 
-/* Center settings in the viewport instead of anchoring it to the toolbar button. */
 .vt-sync-toolbox-table .vt-sync-settings-panel {
   position: fixed;
   z-index: 10020;
@@ -15,61 +14,54 @@
   overscroll-behavior: contain;
 }
 
-/* Keep the table/scroll/footer boundary visually explicit. */
 .vt-sync-toolbox-table .vt-sync-scrollbar-row {
   border-bottom: 4px solid var(--vt-ink);
 }
 
-/* Footer is one terse operational status sentence. Remove explanatory copy. */
+/* Compact provenance footer: fixed 3-column grid, max 3 visual rows, no horizontal scrolling. */
 .vt-sync-toolbox-table .vt-sync-table-footer {
-  min-height: 30px;
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
   gap: 0;
-  padding: 0 10px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  padding: 0;
+  overflow: hidden;
   border-top: 0;
   background: var(--vt-footer-color, #ffda47);
-  white-space: nowrap;
+  white-space: normal;
 }
 .vt-sync-toolbox-table .vt-sync-table-footer > span {
   min-width: 0;
-  flex: 0 0 auto;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 3px;
-  padding: 0;
+  padding: 5px 7px;
   border: 0;
+  border-right: 1px solid rgb(0 0 0 / .32);
+  border-bottom: 1px solid rgb(0 0 0 / .24);
   font-size: 8px;
-  line-height: 1;
+  line-height: 1.05;
   font-weight: 900;
-  letter-spacing: .04em;
+  letter-spacing: .035em;
+  text-align: center;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
-.vt-sync-toolbox-table .vt-sync-table-footer > span::after {
-  content: " · ";
-  padding: 0 5px;
-  font-weight: 1000;
-}
-.vt-sync-toolbox-table .vt-sync-table-footer > span:last-child::after { content: none; }
+.vt-sync-toolbox-table .vt-sync-table-footer > span:nth-child(3n) { border-right: 0; }
+.vt-sync-toolbox-table .vt-sync-table-footer > span::after { content: none !important; }
 
-/* Eliminate the long module description and loading explanation entirely. */
+/* Long explanatory prose and loading copy never belong in the status footer. */
 .vt-sync-toolbox-table .vt-sync-table-footer-purpose,
 .vt-sync-toolbox-table .vt-sync-table-footer-loading {
   display: none !important;
 }
-.vt-sync-toolbox-table .vt-sync-table-footer-table { order: 1; }
-.vt-sync-toolbox-table .vt-sync-table-footer-provenance:nth-of-type(7) { order: 2; }
-.vt-sync-toolbox-table .vt-sync-table-footer-provenance:nth-of-type(6) { order: 3; }
-.vt-sync-toolbox-table .vt-sync-table-footer-columns { order: 4; }
-.vt-sync-toolbox-table .vt-sync-table-footer-coverage { order: 5; }
-.vt-sync-toolbox-table .vt-sync-table-footer-provenance:nth-of-type(8) { order: 6; }
-.vt-sync-toolbox-table .vt-sync-table-footer-provenance:last-child { order: 7; }
-.vt-sync-toolbox-table .vt-sync-table-footer-provenance b { margin-right: 1px; }
+.vt-sync-toolbox-table .vt-sync-table-footer-provenance b {
+  flex: 0 0 auto;
+  margin-right: 1px;
+}
 
-/* Search/actions remain one dense control rail and use one geometry family. */
 .vt-sync-toolbox-table .vt-sync-toolbar {
   gap: 6px;
   flex-wrap: nowrap;
@@ -93,8 +85,6 @@
 .vt-sync-toolbox-table .vt-sync-toolbar-settings > .vt-sync-toolbar-action { width: auto; }
 .vt-sync-toolbox-table .vt-sync-search { flex: 1 1 280px; min-width: 180px; }
 
-/* Effects are compact sections. Once TSX owns master feature switches, subordinate
-   options collapse completely when the feature is disabled. */
 .vt-sync-toolbox-table .vt-sync-effect-settings > section { gap: 6px; }
 .vt-sync-toolbox-table .vt-sync-effect-master {
   display: flex;
@@ -106,7 +96,6 @@
   display: none;
 }
 
-/* URL/navigation columns are deliberately secondary. Covers current URL-key naming. */
 .vt-sync-toolbox-table .vt-sync-data-table :is(th,td)[data-column-key="url"],
 .vt-sync-toolbox-table .vt-sync-data-table :is(th,td)[data-column-key="videoUrl"],
 .vt-sync-toolbox-table .vt-sync-data-table :is(th,td)[data-column-key="playlistUrl"],
@@ -141,9 +130,23 @@
     min-height: 32px;
     flex: 1 0 160px;
   }
+
+  /* Phone footer: seven short facts fit into three rows (3 + 3 + 1).
+     The final status item spans the last row so nothing needs horizontal scroll. */
   .vt-sync-toolbox-table .vt-sync-table-footer {
-    min-height: 28px;
-    padding: 0 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    max-height: 78px;
   }
-  .vt-sync-toolbox-table .vt-sync-table-footer > span { font-size: 7px; }
+  .vt-sync-toolbox-table .vt-sync-table-footer > span {
+    min-height: 24px;
+    padding: 4px 3px;
+    font-size: 6.5px;
+    line-height: 1.05;
+    letter-spacing: .02em;
+  }
+  .vt-sync-toolbox-table .vt-sync-table-footer > span:last-child:nth-child(3n + 1) {
+    grid-column: 1 / -1;
+    border-right: 0;
+  }
 }
