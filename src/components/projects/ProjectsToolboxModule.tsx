@@ -10,14 +10,7 @@ type ProjectsToolboxModuleProps = {
  isOpenInitial?: boolean
 }
 
-/**
- * Canonical level-0 Projects toolbox.
- *
- * The level-0 Toolbox owns the only tool title/header and exterior geometry.
- * Legacy project tools may still render a presentation wrapper and a first header;
- * those are presentation-only and are flattened here while their functional
- * controls, subtoolboxes, boards, calendars and dialogs remain intact.
- */
+/** Canonical level-0 Projects toolbox: one exterior shell, then subtoolboxes/components. */
 const ProjectsToolboxModule: React.FC<ProjectsToolboxModuleProps> = ({
  title,
  subtitle,
@@ -38,7 +31,7 @@ const ProjectsToolboxModule: React.FC<ProjectsToolboxModuleProps> = ({
   outerClassName="w-full"
  >
   <div
-   className="min-w-0 [&>div]:!rounded-none [&>div]:!border-0 [&>div]:!shadow-none [&>div>header:first-child]:!hidden"
+   className="min-w-0 [&>div]:!rounded-none [&>div]:!border-0 [&>div]:!shadow-none [&>div]:!max-w-none [&>div]:!mx-0 [&>div]:!mb-0 [&>div>header:first-child]:!hidden [&_[data-vt-legacy-tool-header='true']]:!hidden"
    data-vt-project-toolbox-content="true"
    data-vt-project-level="main-toolbox"
   >
