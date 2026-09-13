@@ -7,13 +7,22 @@ export type { StudioConnectionState, StudioDataState, StudioStateSnapshot } from
 export { isStudioCapabilityAvailable } from "./states"
 export {
   StudioButton,
+  StudioIconButton,
   StudioInput,
   StudioNumberInput,
   StudioSearchInput,
   StudioSelect,
+  StudioSplitLeftButton,
   StudioTextArea,
 } from "./primitives/StudioControls"
-export type { StudioButtonProps, StudioControlTone } from "./primitives/StudioControls"
+export type {
+  StudioButtonProps,
+  StudioControlTone,
+  StudioIconButtonProps,
+  StudioSplitLeftButtonProps,
+} from "./primitives/StudioControls"
+export { StudioDropdown } from "./primitives/StudioDropdown"
+export type { StudioDropdownOption, StudioDropdownProps } from "./primitives/StudioDropdown"
 
 export {
   SubToolboxActions,
