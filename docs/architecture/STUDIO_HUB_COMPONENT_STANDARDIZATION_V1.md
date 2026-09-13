@@ -1,6 +1,8 @@
 # Studio Hub Component Standardization V1
 
-Status: implementation authority for the Studio Hub migration branch.
+> **Authority notice (2026-09-13):** The consolidated governing resource is [`VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`](./VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md). This file remains the Studio Hub implementation/migration specialization. If geometry, motion, accessibility, responsive, state or certification rules conflict, reconcile against the Master Resource and current canonical code rather than creating a second authority.
+
+Status: implementation reference for Studio Hub migration.
 
 ## Governing rule
 
@@ -10,14 +12,7 @@ Feature components choose primitives. Feature components do not redefine primiti
 
 ## Canonical hierarchy
 
-| Level | Height | Stroke | Radius | Shadow | Primary type |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Main Toolbox | 80px header | 5px | 16px | 10px | 26px |
-| Subtoolbox | 56px | 4px | 12px | 6px | 20px |
-| Compact Subtoolbox | 44px | 3px | 10px | 4px | 20px |
-| Interior Component | 32 / 48 / 56px | 3px | 8px | 4px | 10 / 14 / 20px |
-
-No Studio Hub feature may redefine these dimensions except through an explicitly documented exception.
+Use the semantic T0/T1/T2/T3 hierarchy and exact geometry defined by the Master Resource. Existing legacy level names may remain temporarily in code but do not own separate dimensions.
 
 ## Target architecture
 
@@ -32,11 +27,11 @@ src/studio-ui/
   index.ts
 ```
 
-`STUDIO_TOKENS` owns toolbox, subtoolbox, compactSubtoolbox, component, typography, spacing, radius, stroke, shadow, motion, and breakpoints. Existing `src/components/subtoolbox/tokens.ts` is the current geometry authority and should be migrated/bridged rather than duplicated.
+`src/components/subtoolbox/tokens.ts` remains current geometry authority. Any Studio token layer must bridge/map it rather than duplicate geometry.
 
 ## CSS ownership
 
-Studio Hub owns scoped selectors rooted at `[data-vt-toolbox]`, `[data-vt-subtoolbox]`, and `[data-vt-studio-control]`. Analytics widgets remain independently rooted and must not style Studio Hub controls. Avoid generic input/select/textarea/button selectors crossing these boundaries.
+Studio Hub controls require an explicit ownership boundary. Analytics widgets remain independently rooted and must not style Studio Hub controls. Avoid generic `input`, `select`, `textarea`, or `button` selectors crossing system boundaries.
 
 Target style ownership:
 
@@ -50,86 +45,73 @@ widget-control-system.css
 
 ## Canonical control family
 
-Input, textarea, select/dropdown, search, number input, toggle, checkbox, radio, slider, progress, segmented control, primary/secondary/icon/split-left buttons, tag, badge, KPI card, information card, scroll/results surfaces, table, empty/error/loading/success/connection states, and upload target.
+Input, textarea, select/dropdown, search, number input, toggle, checkbox, radio, switch, slider, progress, segmented control, primary/secondary/icon/split-left buttons, Analytics-style split-left dropdown, tag, badge, KPI/stat card, information/output card, scroll/results surfaces, table, state panels, Guide Subtoolbox and Tight Reveal upload.
 
-Controls use registered sizes only: compact 32px, standard 48px, action 56px.
-
-### Fields
-
-Standard field: 48px high, 3px black structural border, 8px radius, 14px/800 type, light parent-accent tint, 4px accent shadow. Focus preserves the black border and adds a 3px parent-accent outline plus colored shadow. Textareas use the same contract with registered content heights.
+Controls use only registered structural levels/sizes. Feature JSX does not invent structural pixel values.
 
 ### Dropdowns
 
-Closed trigger and open menu are one visual component. Menu inherits parent accent, structural stroke, radius family, shadow, typography and registered row height. Connection affects data/behavior, not primitive appearance.
+Closed trigger and open menu are one visual component. Menu inherits structural level, accent, stroke, radius family, shadow, typography and registered row height. The Analytics-style split-left dropdown splits only the left rail, with the small label above the arrow and one uninterrupted value region.
 
-### Buttons
+### Buttons / split-left
 
-Geometry is independent from semantics. Sizes are compact/standard/action; appearances are primary, secondary, neutral, danger, warning, success, disabled, selected and loading.
+Geometry is independent from semantics. The leading rail is always H x H and its divider equals the component structural stroke. Head/Tail fill relationships and all supported levels are defined by the Master Resource.
 
-### Split-left
+### Loose controls
 
-The leading icon rail is always H x H. Its divider equals the component structural stroke. Accent is inherited. Subtoolbox split-left actions use collapsed Subtoolbox height and title typography.
+Checkbox, radio, switch, toggle and peer binary controls are loose by default; they do not require enclosing cards. Their visual geometry is level-owned and their interaction/accessibility states follow the Master Resource.
 
 ### Tags
 
-Canonical compact tags use the established A-Z spectrum mapped through the ViewTube 12-color palette: 20px family, 8px/900 uppercase, 2px stroke, 4px radius, translucent accent fill and matching shadow. Interaction states: available `+`, selected `x`, removable `-`.
+Canonical tags use palette inheritance, compact information/action anatomy and documented add/selected/remove states. Exact geometry comes from current canonical tokens rather than page-local CSS.
 
 ### Upload
 
-Tight Reveal #05 is the canonical Studio Hub upload target. Recipes: 16:9 video, 9:16 video, 1:1 image, thumbnail, document, audio and generic file. One primitive owns interaction and styling.
+Tight Reveal #05 is the canonical Studio Hub upload target. Recipes: 16:9 video, 9:16 video, 1:1 image, thumbnail, document, audio and generic file. It replaces dashed legacy drop zones and does not restore the removed legacy black outer stroke.
 
 ## Layout primitives
 
-`SubToolboxStack`, `SubToolboxGrid`, `SubToolboxActions`, `SubToolboxSection`, `SubToolboxSplit`, `SubToolboxScroll`, and `SubToolboxMetrics` own composition. Registered recipes: 1/2/3/4 columns, auto-fit, 50/50, 1/3+2/3, media+details, metrics and actions.
-
-Responsive collapse belongs to layouts, not feature JSX. Phone widths use full-width Main Toolboxes and full available-width Subtoolboxes. Grids collapse 4->2->1, 3->2->1, 2->1. Registered-height controls do not grow merely because children wrap; scroll internally where appropriate and never scroll headers.
+`SubToolboxStack`, `SubToolboxGrid`, `SubToolboxActions`, `SubToolboxSection`, `SubToolboxSplit`, `SubToolboxScroll`, and `SubToolboxMetrics` own composition. Responsive collapse belongs to layouts, not feature JSX. Phone level-0 modules are full width; long content is bounded; headers never scroll.
 
 ## State contracts
 
-```ts
-export type StudioDataState = 'idle' | 'loading' | 'ready' | 'empty' | 'error'
-export type StudioConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnect_required'
-```
+Connection state and data state remain independent. Disconnected tools keep their real Toolbox/Subtoolbox composition visible. API-dependent controls become connection-aware. Never equate empty data with disconnected authentication.
 
-Disconnected tools keep their real Toolbox/Subtoolbox composition visible. API-dependent controls become connection-aware. Never equate empty data with disconnected authentication.
+## Motion
 
-## Palette inheritance
+The older blanket 300ms shell-collapse rule is superseded by the Master Resource: current Toolbox shell/module/disclosure direction is 600ms ease-out, while micro-interactions remain faster (normally 150-300ms). Reduced-motion behavior is required. Production tokens/tests still require reconciliation where older 300ms values remain.
 
-Main Toolbox palette assignment -> Subtoolbox palette assignment -> component accent inheritance -> derived focus/shadow/state. The existing ViewTube 12-color spectrum remains authoritative. Feature children do not hardcode tool-specific colors.
+## Accessibility
+
+Every interactive Studio primitive must satisfy the Master Resource accessibility contract: keyboard operation, visible focus, correct native/ARIA semantics, non-color-only selected state, reduced motion, labels for icon-only controls and usable mobile hit targets.
 
 ## Reference-library certification
 
-The UI Reference Library is the certification surface. It must exercise SHELLS, LAYOUTS, INPUTS, BUTTONS, DROPDOWNS, SPLIT LEFT, TAGS, UPLOAD, METRICS, DATA STATES, CONNECTION STATES and MOBILE across hierarchy levels, 12 colors and idle/hover/focus/active/selected/disabled/loading/error/empty/disconnected states.
+The UI Reference Library is the certification surface. It must exercise shells, layouts, inputs, buttons, dropdowns, split-left families, loose binary controls, tags, upload, metrics, data states, connection states and mobile behavior across supported levels and palettes.
 
-A primitive is not production-ready until it passes this surface.
+A primitive is not `VERIFIED` until production code, Reference Library, responsive behavior, accessibility and regression coverage align.
 
-## Recipes
+## Migration waves
 
-Canonical repeated compositions: `VIDEO_SELECTOR`, `TEXT_GENERATOR`, `MEDIA_UPLOAD`, `TAG_EDITOR`, `METRIC_STRIP`, `SEARCH_RESULTS`, `ASSET_SELECTOR`, `CONNECTION_REQUIRED`, `PUBLISH_ACTIONS`, `AI_GENERATOR`, `METADATA_EDITOR`.
-
-## Migration matrix
-
-Audit Video Manager, Video Publisher, Comment Responder, Community Posts, Thumbnail Studio, Media Analyzer, Pre-Launch Priming, Hook Generator, Actionable Tactics, Script Architect, End-Screen Architect, UI Reference Library and every other Studio Hub tool for current shell/controls, legacy CSS, hardcoded geometry/colors, connection gates, custom fields/dropdowns/uploads/buttons/states, canonical replacement and migration risk. Classify each item as CANONICAL, MIGRATE, LEGACY COMPATIBILITY, EXCEPTION or REMOVE.
-
-## Waves
-
-1. Foundations: audit, tokens, CSS isolation, primitive contracts, reference library.
-2. Inputs: fields, textarea, dropdown, search, toggles; begin with Community Posts.
-3. Buttons/actions: compact, standard, action, icon, split-left.
-4. Uploads/tags: Tight Reveal and spectrum tags.
-5. Video Manager: canonical controls plus disconnected-preview behavior.
-6. Comment Responder + Video Publisher: connection/data state separation.
-7. Remaining Studio Hub tools one at a time.
-8. Legacy cleanup only after all consumers migrate.
+1. Freeze token/semantic-level authority and CSS isolation.
+2. Complete/certify Reference Library.
+3. Reconcile motion and palette authority.
+4. Complete fields/dropdowns/split-left/loose binary controls.
+5. Uploads/tags/Guide Subtoolbox.
+6. Thumbnail Studio acceptance migration.
+7. Video Manager disconnected-preview normalization.
+8. Comment Responder + Video Publisher state separation.
+9. Remaining Studio Hub tools one at a time.
+10. Legacy cleanup only after consumers migrate.
 
 ## Enforcement
 
-Add a Studio Hub presentation audit that reports suspicious feature-local `border-[4px]`, `border-[5px]`, arbitrary `rounded-*`, `shadow-*`, `h-[...]`, `min-h-[...]`, hardcoded hex colors and `border-dashed`. These are review triggers, not blanket syntax bans.
+Presentation audits should flag suspicious feature-local structural borders, arbitrary radii/shadows/heights, hardcoded palette values and dashed upload frames. These are review triggers, not blanket syntax bans.
 
 ## Definition of done
 
-A new Studio Hub tool can be composed from `ToolboxScaffold`, `SubToolbox`, canonical layouts and Studio controls and automatically receives correct hierarchy, sizing, typography, palette inheritance, focus/shadows, responsive behavior, data states and connection behavior without feature-specific presentation CSS.
+A Studio Hub tool can be composed from canonical Toolbox/Subtoolbox shells, layouts and primitives and automatically receives correct hierarchy, sizing, typography, palette inheritance, focus/shadows, responsive behavior, accessibility, data states and connection behavior without feature-specific presentation geometry.
 
 ## Execution safety
 
-Do not mass-rewrite. Audit -> freeze tokens -> isolate CSS -> complete/certify reference library -> migrate one component family -> migrate one tool -> remove legacy CSS last. Run typecheck, focused tests, CSS checks, build and mobile/browser verification after each wave. Do not merge this branch to main until the migration slice is verified.
+Do not mass-rewrite. Audit -> freeze tokens -> isolate CSS -> certify Reference Library -> migrate one component family -> migrate one tool -> remove legacy CSS last. Preserve feature behavior and verify desktop/mobile/open/closed/data/disconnected states after each wave.
