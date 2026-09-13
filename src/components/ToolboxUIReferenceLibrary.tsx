@@ -37,16 +37,17 @@ import type { SubToolboxState } from "./subtoolbox/tokens"
 import { hexToRgba } from "./ToolboxUISystem"
 import { getToolboxPaletteColors, VT_SPECTRUM_PALETTE_06 } from "../styles/toolboxPalette"
 
-type ReferenceCategory = "all" | "shells" | "actions" | "fields" | "dropdowns" | "content" | "states"
+type ReferenceCategory = "all" | "hierarchy" | "actions" | "fields" | "dropdowns" | "content" | "states" | "recipes"
 
 const CATEGORIES: Array<{ id: ReferenceCategory; label: string }> = [
   { id: "all", label: "All" },
-  { id: "shells", label: "Shells" },
+  { id: "hierarchy", label: "Hierarchy" },
   { id: "actions", label: "Buttons" },
   { id: "fields", label: "Fields" },
   { id: "dropdowns", label: "Menus" },
   { id: "content", label: "Outputs" },
   { id: "states", label: "States" },
+  { id: "recipes", label: "Recipes" },
 ]
 
 const PALETTE_NAMES = [
@@ -57,6 +58,7 @@ const PALETTE_NAMES = [
 const ACTION_TONES = ["pink", "orange", "yellow", "green", "cyan", "blue", "purple"] as const
 const PRIMITIVE_TONES = ["accent", "neutral", "ink", "danger", "warning", "success"] as const
 const DATA_STATES: SubToolboxState[] = ["loading", "ready", "empty", "blocked", "stale", "error"]
+const RECIPE_NAMES = ["Video Selector", "Metadata Editor", "Tag Editor", "Media Upload", "Metric Strip", "Publish Actions"] as const
 
 export interface ToolboxUIReferenceLibraryProps {
   collapsible?: boolean
@@ -78,6 +80,7 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
   const [format, setFormat] = useState("longform")
   const [destinations, setDestinations] = useState<string[]>(["youtube"])
   const [selectedState, setSelectedState] = useState<SubToolboxState>("ready")
+  const [connectedPreview, setConnectedPreview] = useState(false)
   const [uploadedFile, setUploadedFile] = useState("No file selected")
   const [copied, setCopied] = useState(false)
   const palette = getToolboxPaletteColors(paletteIndex)
@@ -101,42 +104,20 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
   return (
     <div id="toolbox-ui-library" className="scroll-mt-24">
       <ToolboxScaffold
-        title="Toolbox UI Library"
-        subtitle="Canonical toolbox shells, subtoolboxes, controls, outputs, states, and interaction patterns"
+        title="Studio Hub Component Library"
+        subtitle="Canonical hierarchy, controls, states, recipes, responsive behavior, and 12-color inheritance"
         icon={<Layers3 size={40} strokeWidth={3} />}
         paletteIndex={paletteIndex}
         collapsible={collapsible}
         isOpen={isOpen}
         onToggle={() => setIsOpen((current) => !current)}
         unmountWhenClosed
-        helpText="A live production component library for building every Studio Hub toolbox from the same tokens, geometry, palette, and behavior."
+        helpText="Studio Hub Component Library v2 is the certification surface for production toolbox UI. Feature tools choose canonical primitives and recipes instead of redefining geometry."
         headerActions={
           <div className="flex items-center gap-2" style={primitiveContextStyle}>
-            <SubToolboxButton
-              size="compact"
-              tone="neutral"
-              aria-label="Previous toolbox palette"
-              icon={<ChevronLeft size={16} strokeWidth={3} />}
-              className="!w-9"
-              onClick={(event) => {
-                event.stopPropagation()
-                setPaletteIndex((current) => (current + 11) % 12)
-              }}
-            />
-            <span className="hidden min-w-16 text-center text-[9px] font-black uppercase sm:block">
-              {PALETTE_NAMES[paletteIndex]}
-            </span>
-            <SubToolboxButton
-              size="compact"
-              tone="neutral"
-              aria-label="Next toolbox palette"
-              icon={<ChevronRight size={16} strokeWidth={3} />}
-              className="!w-9"
-              onClick={(event) => {
-                event.stopPropagation()
-                setPaletteIndex((current) => (current + 1) % 12)
-              }}
-            />
+            <SubToolboxButton size="compact" tone="neutral" aria-label="Previous toolbox palette" icon={<ChevronLeft size={16} strokeWidth={3} />} className="!w-9" onClick={(event) => { event.stopPropagation(); setPaletteIndex((current) => (current + 11) % 12) }} />
+            <span className="hidden min-w-16 text-center text-[9px] font-black uppercase sm:block">{PALETTE_NAMES[paletteIndex]}</span>
+            <SubToolboxButton size="compact" tone="neutral" aria-label="Next toolbox palette" icon={<ChevronRight size={16} strokeWidth={3} />} className="!w-9" onClick={(event) => { event.stopPropagation(); setPaletteIndex((current) => (current + 1) % 12) }} />
           </div>
         }
       >
@@ -144,88 +125,48 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
           <SubToolboxSurface tone="subtle">
             <SubToolboxStack density="dense">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <strong className="text-xs font-black uppercase tracking-wider">Reference Category</strong>
-                <span className="text-[9px] font-black uppercase opacity-50">Production components · 12 palettes</span>
+                <strong className="text-xs font-black uppercase tracking-wider">Studio Hub Certification Surface</strong>
+                <span className="text-[9px] font-black uppercase opacity-50">4 levels · 12 palettes · mobile-first</span>
               </div>
-              <SubToolboxGrid minItemWidth="compact" density="dense" aria-label="Toolbox reference category">
+              <SubToolboxGrid minItemWidth="compact" density="dense" aria-label="Studio Hub reference category">
                 {CATEGORIES.map((category) => (
-                  <SubToolboxButton
-                    key={category.id}
-                    size="compact"
-                    tone={activeCategory === category.id ? "ink" : "neutral"}
-                    selected={activeCategory === category.id}
-                    aria-pressed={activeCategory === category.id}
-                    onClick={() => setActiveCategory(category.id)}
-                  >
-                    {category.label}
-                  </SubToolboxButton>
+                  <SubToolboxButton key={category.id} size="compact" tone={activeCategory === category.id ? "ink" : "neutral"} selected={activeCategory === category.id} aria-pressed={activeCategory === category.id} onClick={() => setActiveCategory(category.id)}>{category.label}</SubToolboxButton>
                 ))}
               </SubToolboxGrid>
               <div className="flex flex-wrap gap-1" aria-label="ViewTube toolbox palette">
                 {VT_SPECTRUM_PALETTE_06.map((color, index) => (
-                  <button
-                    key={color}
-                    type="button"
-                    aria-label={`Use ${PALETTE_NAMES[index]} palette`}
-                    aria-pressed={paletteIndex === index}
-                    onClick={() => setPaletteIndex(index)}
-                    className="h-6 w-6 rounded-[4px] border-2 border-black transition-transform hover:-translate-y-0.5 aria-pressed:scale-110"
-                    style={{ backgroundColor: color }}
-                  />
+                  <button key={color} type="button" aria-label={`Use ${PALETTE_NAMES[index]} palette`} aria-pressed={paletteIndex === index} onClick={() => setPaletteIndex(index)} className="h-6 w-6 rounded-[4px] border-2 border-black transition-transform hover:-translate-y-0.5 aria-pressed:scale-110" style={{ backgroundColor: color }} />
                 ))}
               </div>
             </SubToolboxStack>
           </SubToolboxSurface>
 
-          {show("shells") ? (
-            <SubToolbox
-              title="Shell System"
-              subtitle="Permanent divider, colored transparent shadow, matching header radii, and 300ms collapse"
-              icon={<Layers3 />}
-              paletteIndex={paletteIndex + 1}
-              collapsible
-              isOpenInitial
-              helpText="The standard shell is the default nested module. Compact mode reduces stroke, radius, shadow, and header height together."
-            >
-              <SubToolboxGrid minItemWidth="wide">
-                <SubToolbox title="Standard Module" icon={<Layers3 />} paletteIndex={paletteIndex + 7} collapsible={false} openUnits={1}>
-                  <p className="text-sm font-bold">56px header · 4px stroke · 12px radius · 6px colored shadow</p>
-                </SubToolbox>
-                <SubToolbox title="Compact Module" icon={<Layers3 />} paletteIndex={paletteIndex + 8} collapsible={false} openUnits={1} heightMode="compact">
-                  <p className="text-sm font-bold">44px header · 3px stroke · 10px radius · 4px colored shadow</p>
-                </SubToolbox>
-              </SubToolboxGrid>
+          {show("hierarchy") ? (
+            <SubToolbox title="Canonical Hierarchy" subtitle="Main Toolbox → Subtoolbox → Compact Subtoolbox → Interior Component" icon={<Layers3 />} paletteIndex={paletteIndex + 1} collapsible isOpenInitial>
+              <SubToolboxStack>
+                <SubToolboxSurface tone="accent"><strong className="text-sm font-black uppercase">Main Toolbox</strong><p className="mt-1 text-xs font-bold">80px header · 5px stroke · 16px radius · 10px colored shadow · 26px title</p></SubToolboxSurface>
+                <SubToolboxGrid minItemWidth="wide">
+                  <SubToolbox title="Standard Subtoolbox" icon={<Layers3 />} paletteIndex={paletteIndex + 7} collapsible={false} openUnits={1}><p className="text-sm font-bold">56px header · 4px stroke · 12px radius · 6px colored shadow · 20px title</p></SubToolbox>
+                  <SubToolbox title="Compact Subtoolbox" icon={<Layers3 />} paletteIndex={paletteIndex + 8} collapsible={false} openUnits={1} heightMode="compact"><p className="text-sm font-bold">44px header · 3px stroke · 10px radius · 4px colored shadow · 20px title</p></SubToolbox>
+                </SubToolboxGrid>
+                <SubToolboxSection label="Interior Control Sizes">
+                  <SubToolboxGrid minItemWidth="compact">
+                    <SubToolboxButton size="compact" tone="neutral">32px Compact</SubToolboxButton>
+                    <SubToolboxButton tone="accent">48px Standard</SubToolboxButton>
+                    <SubToolboxButton size="action" tone="success">56px Action</SubToolboxButton>
+                  </SubToolboxGrid>
+                </SubToolboxSection>
+              </SubToolboxStack>
             </SubToolbox>
           ) : null}
 
           {show("actions") ? (
             <SubToolbox title="Buttons + Split Left" icon={<MousePointerClick />} paletteIndex={paletteIndex + 2} collapsible isOpenInitial>
               <SubToolboxStack density="comfortable">
-                <SubToolboxSection label="Primitive Button Tones">
-                  <SubToolboxGrid minItemWidth="compact">
-                    {PRIMITIVE_TONES.map((tone) => (
-                      <SubToolboxButton key={tone} tone={tone}>{tone}</SubToolboxButton>
-                    ))}
-                  </SubToolboxGrid>
-                </SubToolboxSection>
-                <SubToolboxSection label="Split-Left Module Actions · 4px">
-                  <SubToolboxGrid minItemWidth="wide">
-                    {ACTION_TONES.map((tone) => (
-                      <SubToolboxGridActionButton key={tone} label={tone} iconName="zap" tone={tone} showIconSection onClick={() => {}} />
-                    ))}
-                  </SubToolboxGrid>
-                </SubToolboxSection>
-                <SubToolboxSection label="Split-Left Interior Actions · 3px">
-                  <SubToolboxGrid minItemWidth="wide">
-                    <SubToolboxInnerActionButton label="Generate" iconName="sparkles" tone="cyan" showIconSection onClick={() => {}} />
-                    <SubToolboxInnerActionButton label="Publish" iconName="check" tone="green" showIconSection onClick={() => {}} />
-                    <SubToolboxInnerActionButton label="Disabled" iconName="archive" tone="purple" showIconSection disabled onClick={() => {}} />
-                  </SubToolboxGrid>
-                </SubToolboxSection>
-                <SubToolboxActions columns={2}>
-                  <SubToolboxButton size="action" tone="success" icon={<Check size={20} />}>Primary Action</SubToolboxButton>
-                  <SubToolboxButton size="action" tone="neutral" icon={<Clipboard size={20} />}>Secondary Action</SubToolboxButton>
-                </SubToolboxActions>
+                <SubToolboxSection label="Primitive Button Tones"><SubToolboxGrid minItemWidth="compact">{PRIMITIVE_TONES.map((tone) => <SubToolboxButton key={tone} tone={tone}>{tone}</SubToolboxButton>)}</SubToolboxGrid></SubToolboxSection>
+                <SubToolboxSection label="Split-Left Module Actions · square icon rail"><SubToolboxGrid minItemWidth="wide">{ACTION_TONES.map((tone) => <SubToolboxGridActionButton key={tone} label={tone} iconName="zap" tone={tone} showIconSection onClick={() => {}} />)}</SubToolboxGrid></SubToolboxSection>
+                <SubToolboxSection label="Split-Left Interior Actions"><SubToolboxGrid minItemWidth="wide"><SubToolboxInnerActionButton label="Generate" iconName="sparkles" tone="cyan" showIconSection onClick={() => {}} /><SubToolboxInnerActionButton label="Publish" iconName="check" tone="green" showIconSection onClick={() => {}} /><SubToolboxInnerActionButton label="Disabled" iconName="archive" tone="purple" showIconSection disabled onClick={() => {}} /></SubToolboxGrid></SubToolboxSection>
+                <SubToolboxActions columns={2}><SubToolboxButton size="action" tone="success" icon={<Check size={20} />}>Primary Action</SubToolboxButton><SubToolboxButton size="action" tone="neutral" icon={<Clipboard size={20} />}>Secondary Action</SubToolboxButton></SubToolboxActions>
               </SubToolboxStack>
             </SubToolbox>
           ) : null}
@@ -234,41 +175,28 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
             <SubToolbox title="Fields + Text Inputs" icon={<FormInput />} paletteIndex={paletteIndex + 3} collapsible isOpenInitial>
               <SubToolboxStack>
                 <SubToolboxGrid minItemWidth="wide">
-                  <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-title">Standard Input</SubToolboxFieldLabel>}>
-                    <SubToolboxInput id="toolbox-library-title" value={textValue} onChange={(event) => setTextValue(event.target.value)} />
-                  </SubToolboxSection>
-                  <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-search">Search Input</SubToolboxFieldLabel>}>
-                    <SubToolboxInput id="toolbox-library-search" type="search" placeholder="Search videos…" />
-                  </SubToolboxSection>
-                  <SubToolboxSection label="Invalid State">
-                    <SubToolboxInput aria-label="Invalid field example" aria-invalid="true" value="Required value" readOnly />
-                  </SubToolboxSection>
-                  <SubToolboxSection label="Disabled State">
-                    <SubToolboxInput aria-label="Disabled field example" value="Unavailable" disabled readOnly />
-                  </SubToolboxSection>
+                  <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-title">Standard Input</SubToolboxFieldLabel>}><SubToolboxInput id="toolbox-library-title" value={textValue} onChange={(event) => setTextValue(event.target.value)} /></SubToolboxSection>
+                  <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-search">Search Input</SubToolboxFieldLabel>}><SubToolboxInput id="toolbox-library-search" type="search" placeholder="Search videos…" /></SubToolboxSection>
+                  <SubToolboxSection label="Invalid State"><SubToolboxInput aria-label="Invalid field example" aria-invalid="true" value="Required value" readOnly /></SubToolboxSection>
+                  <SubToolboxSection label="Disabled State"><SubToolboxInput aria-label="Disabled field example" value="Unavailable" disabled readOnly /></SubToolboxSection>
                 </SubToolboxGrid>
-                <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-copy">Text Area</SubToolboxFieldLabel>}>
-                  <SubToolboxTextArea id="toolbox-library-copy" value={description} onChange={(event) => setDescription(event.target.value)} />
-                </SubToolboxSection>
+                <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-copy">Text Area</SubToolboxFieldLabel>}><SubToolboxTextArea id="toolbox-library-copy" value={description} onChange={(event) => setDescription(event.target.value)} /></SubToolboxSection>
               </SubToolboxStack>
             </SubToolbox>
           ) : null}
 
           {show("dropdowns") ? (
-            <SubToolbox title="Dropdown Menus" icon={<Menu />} paletteIndex={paletteIndex + 4} collapsible isOpenInitial overflowVisible>
+            <SubToolbox title="Dropdown Menus + Video Selector" icon={<Menu />} paletteIndex={paletteIndex + 4} collapsible isOpenInitial overflowVisible>
               <SubToolboxStack density="comfortable">
                 <SubToolboxGrid minItemWidth="wide">
                   <SubToolboxDropdownControl label="Privacy" value={privacy} options={["PUBLIC", "UNLISTED", "PRIVATE"]} onChange={setPrivacy} tone="orange" />
                   <SubToolboxDropdownTopTitleControl label="Format" value={format.toUpperCase()} options={[{ value: "longform", label: "LONGFORM" }, { value: "shorts", label: "SHORTS" }, { value: "live", label: "LIVE" }]} onChange={setFormat} tone="cyan" />
                   <SubToolboxDropdownTopTitleControl label="Destinations" value={`${destinations.length} SELECTED`} options={[{ value: "youtube", label: "YOUTUBE" }, { value: "shorts", label: "SHORTS FEED" }, { value: "community", label: "COMMUNITY" }]} onChange={toggleDestination} multiSelect selectedValues={destinations} tone="green" />
-                  <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-native-select">Compact Select</SubToolboxFieldLabel>}>
-                    <SubToolboxSelect id="toolbox-library-native-select" value={privacy} onChange={(event) => setPrivacy(event.target.value)}>
-                      <option>PUBLIC</option>
-                      <option>UNLISTED</option>
-                      <option>PRIVATE</option>
-                    </SubToolboxSelect>
-                  </SubToolboxSection>
+                  <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-native-select">Compact Select</SubToolboxFieldLabel>}><SubToolboxSelect id="toolbox-library-native-select" value={privacy} onChange={(event) => setPrivacy(event.target.value)}><option>PUBLIC</option><option>UNLISTED</option><option>PRIVATE</option></SubToolboxSelect></SubToolboxSection>
                 </SubToolboxGrid>
+                <SubToolboxSection label="Connection-Aware Video Selector">
+                  <SubToolboxButton size="action" tone={connectedPreview ? "success" : "accent"} onClick={() => setConnectedPreview((current) => !current)}>{connectedPreview ? "SELECT VIDEO · CHANNEL CONNECTED" : "CONNECT YOUR YOUTUBE CHANNEL TO LOAD VIDEOS"}</SubToolboxButton>
+                </SubToolboxSection>
               </SubToolboxStack>
             </SubToolbox>
           ) : null}
@@ -276,55 +204,33 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
           {show("content") ? (
             <SubToolbox title="Outputs + Data Surfaces" icon={<FileOutput />} paletteIndex={paletteIndex + 5} collapsible isOpenInitial>
               <SubToolboxStack density="comfortable">
-                <SubToolboxGrid minItemWidth="compact">
-                  <SubToolboxMetric label="Views" value="48.2K" accentColor="#36E0F6" />
-                  <SubToolboxMetric label="AVP" value="72%" accentColor="#C0F240" />
-                  <SubToolboxMetric label="CTR" value="4.8%" accentColor="#FFDA47" />
-                  <SubToolboxMetric label="Revenue" value="$84" accentColor="#3FEE56" />
-                </SubToolboxGrid>
-                <SubToolboxGrid minItemWidth="wide">
-                  <SubToolboxSurface tone="white"><strong className="text-xs font-black uppercase">White Surface</strong><p className="mt-2 text-sm font-bold">Default readable content.</p></SubToolboxSurface>
-                  <SubToolboxSurface tone="subtle"><strong className="text-xs font-black uppercase">Subtle Surface</strong><p className="mt-2 text-sm font-bold">Low-emphasis grouping.</p></SubToolboxSurface>
-                  <SubToolboxSurface tone="accent"><strong className="text-xs font-black uppercase">Accent Surface</strong><p className="mt-2 text-sm font-bold">Highlighted information.</p></SubToolboxSurface>
-                </SubToolboxGrid>
-                <SubToolboxOutputCard
-                  title="Generated Description"
-                  icon={<FileOutput size={18} />}
-                  accentColor={palette.header}
-                  action={
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-[4px] bg-black px-2 py-1 text-[9px] font-black uppercase text-white">Ready</span>
-                      <SubToolboxButton aria-label="Copy generated description" size="compact" tone="ink" icon={copied ? <Check size={16} /> : <Clipboard size={16} />} onClick={copyOutput} className="!w-10" />
-                    </div>
-                  }
-                >
-                  <p className="whitespace-pre-wrap text-sm font-bold leading-relaxed">{description}</p>
-                </SubToolboxOutputCard>
-                <SubToolboxFileTarget label={uploadedFile} icon={<Upload size={28} strokeWidth={3} />} accept="video/*,image/*" onFiles={(files) => setUploadedFile(files?.[0]?.name || "No file selected")} />
+                <SubToolboxGrid minItemWidth="compact"><SubToolboxMetric label="Views" value="48.2K" accentColor="#36E0F6" /><SubToolboxMetric label="AVP" value="72%" accentColor="#C0F240" /><SubToolboxMetric label="CTR" value="4.8%" accentColor="#FFDA47" /><SubToolboxMetric label="Revenue" value="$84" accentColor="#3FEE56" /></SubToolboxGrid>
+                <SubToolboxGrid minItemWidth="wide"><SubToolboxSurface tone="white"><strong className="text-xs font-black uppercase">White Surface</strong><p className="mt-2 text-sm font-bold">Default readable content.</p></SubToolboxSurface><SubToolboxSurface tone="subtle"><strong className="text-xs font-black uppercase">Subtle Surface</strong><p className="mt-2 text-sm font-bold">Low-emphasis grouping.</p></SubToolboxSurface><SubToolboxSurface tone="accent"><strong className="text-xs font-black uppercase">Accent Surface</strong><p className="mt-2 text-sm font-bold">Highlighted information.</p></SubToolboxSurface></SubToolboxGrid>
+                <SubToolboxOutputCard title="Generated Description" icon={<FileOutput size={18} />} accentColor={palette.header} action={<div className="flex items-center gap-2"><span className="rounded-[4px] bg-black px-2 py-1 text-[9px] font-black uppercase text-white">Ready</span><SubToolboxButton aria-label="Copy generated description" size="compact" tone="ink" icon={copied ? <Check size={16} /> : <Clipboard size={16} />} onClick={copyOutput} className="!w-10" /></div>}><p className="whitespace-pre-wrap text-sm font-bold leading-relaxed">{description}</p></SubToolboxOutputCard>
+                <SubToolboxSection label="Canonical Tight Reveal Upload · responsive 16:9"><SubToolboxFileTarget label={uploadedFile} icon={<Upload size={28} strokeWidth={3} />} accept="video/*,image/*" onFiles={(files) => setUploadedFile(files?.[0]?.name || "No file selected")} /></SubToolboxSection>
               </SubToolboxStack>
             </SubToolbox>
           ) : null}
 
           {show("states") ? (
-            <SubToolbox title="Interaction + Data States" icon={<Sparkles />} paletteIndex={paletteIndex + 6} collapsible isOpenInitial>
+            <SubToolbox title="Interaction + Data + Connection States" icon={<Sparkles />} paletteIndex={paletteIndex + 6} collapsible isOpenInitial>
               <SubToolboxStack>
-                <SubToolboxGrid minItemWidth="compact" density="dense" aria-label="State preview">
-                  {DATA_STATES.map((state) => (
-                    <SubToolboxButton key={state} size="compact" tone={selectedState === state ? "ink" : "neutral"} selected={selectedState === state} aria-pressed={selectedState === state} onClick={() => setSelectedState(state)}>{state}</SubToolboxButton>
-                  ))}
-                </SubToolboxGrid>
-                <SubToolboxStatePanel
-                  state={selectedState}
-                  message={selectedState === "ready" ? "The canonical toolbox component system is ready." : undefined}
-                  action={(selectedState === "blocked" || selectedState === "error") ? <SubToolboxButton size="compact" tone="neutral" onClick={() => setSelectedState("ready")}>Recover</SubToolboxButton> : undefined}
-                />
+                <SubToolboxGrid minItemWidth="compact" density="dense" aria-label="State preview">{DATA_STATES.map((state) => <SubToolboxButton key={state} size="compact" tone={selectedState === state ? "ink" : "neutral"} selected={selectedState === state} aria-pressed={selectedState === state} onClick={() => setSelectedState(state)}>{state}</SubToolboxButton>)}</SubToolboxGrid>
+                <SubToolboxStatePanel state={selectedState} message={selectedState === "ready" ? "The canonical Studio Hub component system is ready." : undefined} action={(selectedState === "blocked" || selectedState === "error") ? <SubToolboxButton size="compact" tone="neutral" onClick={() => setSelectedState("ready")}>Recover</SubToolboxButton> : undefined} />
+                <SubToolboxGrid minItemWidth="wide"><SubToolboxSurface tone="subtle"><strong className="text-xs font-black uppercase">Disconnected</strong><p className="mt-2 text-sm font-bold">Keep the complete tool visible. Connection gates data and actions, not layout.</p></SubToolboxSurface><SubToolboxSurface tone="accent"><strong className="text-xs font-black uppercase">Connected</strong><p className="mt-2 text-sm font-bold">Hydrate the same composition with channel data without swapping the interface.</p></SubToolboxSurface></SubToolboxGrid>
               </SubToolboxStack>
             </SubToolbox>
           ) : null}
 
+          {show("recipes") ? (
+            <SubToolbox title="Studio Hub Recipes" subtitle="Reusable compositions built only from certified primitives" icon={<Sparkles />} paletteIndex={paletteIndex + 7} collapsible isOpenInitial>
+              <SubToolboxGrid minItemWidth="wide">{RECIPE_NAMES.map((recipe, index) => <SubToolboxSurface key={recipe} tone={index % 3 === 0 ? "accent" : index % 3 === 1 ? "subtle" : "white"}><strong className="text-xs font-black uppercase">{recipe}</strong><p className="mt-2 text-sm font-bold">Canonical recipe · responsive · palette-aware · state-aware</p></SubToolboxSurface>)}</SubToolboxGrid>
+            </SubToolbox>
+          ) : null}
+
           <SubToolboxSurface tone="subtle" className="flex flex-wrap items-center justify-between gap-3">
-            <span className="text-[10px] font-black uppercase tracking-wider">Toolbox UI Library v1 · canonical Studio Hub reference</span>
-            <span className="text-[10px] font-black uppercase opacity-55">4px shell · 3px interior · 12/8px radii · colored shadows</span>
+            <span className="text-[10px] font-black uppercase tracking-wider">Studio Hub Component Library v2 · canonical production reference</span>
+            <span className="text-[10px] font-black uppercase opacity-55">80/56/44px hierarchy · 32/48/56px controls · 12 palettes · mobile full width</span>
           </SubToolboxSurface>
         </SubToolboxStack>
       </ToolboxScaffold>
