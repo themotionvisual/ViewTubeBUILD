@@ -31,7 +31,6 @@ import {
   SubToolboxMetric,
   SubToolboxOutputCard,
   SubToolboxRadio,
-  SubToolboxSelect,
   SubToolboxSplitActionButton,
   SubToolboxStatePanel,
   SubToolboxSurface,
@@ -229,7 +228,6 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
                   <SubToolboxDropdownControl label="Privacy" value={privacy} options={["PUBLIC", "UNLISTED", "PRIVATE"]} onChange={setPrivacy} tone="orange" />
                   <SubToolboxDropdownTopTitleControl label="Format" value={format.toUpperCase()} options={[{ value: "longform", label: "LONGFORM" }, { value: "shorts", label: "SHORTS" }, { value: "live", label: "LIVE" }]} onChange={setFormat} tone="cyan" />
                   <SubToolboxDropdownTopTitleControl label="Destinations" value={`${destinations.length} SELECTED`} options={[{ value: "youtube", label: "YOUTUBE" }, { value: "shorts", label: "SHORTS FEED" }, { value: "community", label: "COMMUNITY" }]} onChange={toggleDestination} multiSelect selectedValues={destinations} tone="green" />
-                  <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-native-select">26px Micro Select</SubToolboxFieldLabel>}><SubToolboxSelect id="toolbox-library-native-select" controlSize="micro" value={privacy} onChange={(event) => setPrivacy(event.target.value)}><option>PUBLIC</option><option>UNLISTED</option><option>PRIVATE</option></SubToolboxSelect></SubToolboxSection>
                 </SubToolboxGrid>
                 <SubToolboxSection label="Connection-Aware Video Selector">
                   <SubToolboxButton size="action" tone={connectedPreview ? "success" : "accent"} onClick={() => setConnectedPreview((current) => !current)}>{connectedPreview ? "SELECT VIDEO · CHANNEL CONNECTED" : "CONNECT YOUR YOUTUBE CHANNEL TO LOAD VIDEOS"}</SubToolboxButton>
