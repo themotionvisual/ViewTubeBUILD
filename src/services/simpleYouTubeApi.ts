@@ -259,14 +259,16 @@ export const fetchSimpleVideoBundle = async (videoId: string): Promise<{
   stats: SimpleVideoStats;
   raw: any;
 }> => {
-  let raw: any;
-  try {
-    raw = await fetchSimpleOwnedVideo(videoId);
-  } catch (error) {
-    const cached = videoInventoryRawCache.get(videoId);
-    if (!cached) throw error;
-    raw = cached;
+  const cached = videoInventoryRawCache.get(videoId);
+  if (cached) {
+    return {
+      details: toSimpleVideoDetails(cached),
+      stats: toSimpleVideoStats(cached),
+      raw: cached,
+    };
   }
+
+  const raw = await fetchSimpleOwnedVideo(videoId);
   return {
     details: toSimpleVideoDetails(raw),
     stats: toSimpleVideoStats(raw),
