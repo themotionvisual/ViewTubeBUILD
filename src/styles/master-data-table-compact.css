@@ -14,11 +14,8 @@
   overscroll-behavior: contain;
 }
 
-.vt-sync-toolbox-table .vt-sync-scrollbar-row {
-  border-bottom: 4px solid var(--vt-ink);
-}
+.vt-sync-toolbox-table .vt-sync-scrollbar-row { border-bottom: 4px solid var(--vt-ink); }
 
-/* Compact provenance footer: fixed 3-column grid, max 3 visual rows, no horizontal scrolling. */
 .vt-sync-toolbox-table .vt-sync-table-footer {
   min-height: 0;
   display: grid;
@@ -55,7 +52,6 @@
 .vt-sync-toolbox-table .vt-sync-table-footer-loading { display: none !important; }
 .vt-sync-toolbox-table .vt-sync-table-footer-provenance b { flex: 0 0 auto; margin-right: 1px; }
 
-/* Toolbar is allowed to wrap instead of forcing controls to collide on narrow screens. */
 .vt-sync-toolbox-table .vt-sync-toolbar {
   position: relative;
   z-index: 90;
@@ -81,7 +77,6 @@
 .vt-sync-toolbox-table .vt-sync-toolbar-settings > .vt-sync-toolbar-action { width: auto; }
 .vt-sync-toolbox-table .vt-sync-search { flex: 1 1 280px; min-width: 180px; }
 
-/* Import/export menus must float above the table, never be clipped by the toolbar/table viewport. */
 .vt-sync-toolbox-table .vt-sync-transfer-menu {
   position: relative;
   z-index: 150;
@@ -120,42 +115,76 @@
   .vt-sync-toolbox-table .vt-sync-settings-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
   .vt-sync-toolbox-table .vt-sync-effect-settings { grid-template-columns: 1fr; }
 
-  /* Search gets its own row. Actions flow below it without overlap. */
+  /* Deterministic phone toolbar: search / filters / transfer+settings. */
   .vt-sync-toolbox-table .vt-sync-toolbar {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-auto-flow: row;
     align-items: stretch;
     gap: 6px;
+    width: 100%;
     padding: 7px 8px 10px;
     overflow: visible;
   }
+
   .vt-sync-toolbox-table .vt-sync-search {
-    order: -10;
-    flex: 1 0 100%;
+    grid-column: 1 / -1;
+    grid-row: 1;
     width: 100%;
     min-width: 0;
     min-height: 32px;
   }
+
+  /* Format/filter controls share one compact rail beneath search. */
+  .vt-sync-toolbox-table .vt-sync-video-filter-wrapper,
+  .vt-sync-toolbox-table .vt-sync-toolbar > .vt-sync-toolbar-action:not(.vt-sync-toolbar-settings > .vt-sync-toolbar-action) {
+    min-width: 0;
+  }
+  .vt-sync-toolbox-table .vt-sync-video-filter-wrapper {
+    grid-column: span 3;
+  }
+
   .vt-sync-toolbox-table .vt-sync-toolbar-action {
+    width: 100%;
+    min-width: 0;
     height: 32px;
     min-height: 32px;
     max-width: 100%;
     grid-template-columns: 32px minmax(0, 1fr);
+    border-radius: 7px;
     font-size: 8px;
+    filter: drop-shadow(2px 2px 0 var(--vt-action-shadow));
   }
   .vt-sync-toolbox-table .vt-sync-toolbar-action > strong {
-    padding: 0 6px;
-    font-size: 9px;
+    min-width: 0;
+    padding: 0 5px;
+    overflow: hidden;
+    font-size: 8px;
     line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .vt-sync-toolbox-table .vt-sync-transfer-menu {
-    flex: 1 1 calc(50% - 3px);
-    width: calc(50% - 3px);
+  .vt-sync-toolbox-table .vt-sync-toolbar-action > span {
+    width: 32px;
+    min-width: 32px;
   }
-  .vt-sync-toolbox-table .vt-sync-transfer-menu > summary {
-    width: 100%;
-  }
+  .vt-sync-toolbox-table .vt-sync-toolbar-action > span svg { width: 16px; height: 16px; }
 
-  /* On phones the menu is viewport-fixed, so table overflow can never crop it. */
+  /* Import, Export and Settings form a stable final three-control row. */
+  .vt-sync-toolbox-table .vt-sync-transfer-menu {
+    grid-column: span 2;
+    width: 100%;
+    min-width: 0;
+  }
+  .vt-sync-toolbox-table .vt-sync-transfer-menu > summary { width: 100%; }
+  .vt-sync-toolbox-table .vt-sync-toolbar-settings {
+    grid-column: span 2;
+    width: 100%;
+    min-width: 0;
+  }
+  .vt-sync-toolbox-table .vt-sync-toolbar-settings > .vt-sync-toolbar-action { width: 100%; }
+
+  /* Menus become viewport overlays so the table cannot clip them. */
   .vt-sync-toolbox-table .vt-sync-transfer-popover {
     position: fixed;
     top: 50%;
