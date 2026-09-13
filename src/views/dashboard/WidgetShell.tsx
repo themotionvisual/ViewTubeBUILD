@@ -14,7 +14,7 @@ export interface WidgetDragHandleBindings {
 }
 
 const WidgetDragHandleContext = createContext<WidgetDragHandleBindings>({ disabled: true })
-const WIDGET_COLLAPSE_DURATION_MS = 300
+const WIDGET_COLLAPSE_DURATION_MS = 600
 
 export const WidgetDragHandleProvider: React.FC<WidgetDragHandleBindings & { children: React.ReactNode }> = ({ children, ...bindings }) => (
  <WidgetDragHandleContext.Provider value={bindings}>{children}</WidgetDragHandleContext.Provider>
