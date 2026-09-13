@@ -3,14 +3,12 @@ import { Archive, CheckSquare, ExternalLink, FileText, Image, MessageSquare, Spa
 import { SubToolbox, SubToolboxDropdownControl, SubToolboxGridActionButton, SubToolboxInnerActionButton } from "./Toolbox"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "./subtoolbox/SubToolboxLayouts"
 import {
- SubToolboxButton,
  SubToolboxFieldLabel,
- SubToolboxInput,
  SubToolboxLinkButton,
  SubToolboxStatePanel,
  SubToolboxSurface,
- SubToolboxTextArea,
 } from "./subtoolbox/SubToolboxPrimitives"
+import { StudioButton, StudioInput, StudioSearchInput, StudioTextArea } from "../studio-ui"
 import { useCommunityPostController, useCreatorEngagementContext, type CommunityPostType } from "../features/creator-engagement"
 
 const POST_TYPES: Array<{ id: CommunityPostType; label: string; icon: React.ComponentType<{ size?: number }> }> = [
@@ -30,7 +28,7 @@ export const CommunityPostGenerator: React.FC = () => {
    <SubToolbox title="Post Workspace" icon={<MessageSquare />} collapsible isOpenInitial>
     <SubToolboxStack>
     <SubToolboxGrid minItemWidth="compact" density="dense" aria-label="Post type">
-     {POST_TYPES.map(({ id, label, icon: Icon }) => <SubToolboxButton key={id} size="compact" tone="neutral" selected={post.postType === id} onClick={() => post.setPostType(id)} icon={<Icon size={15} />}>{label}</SubToolboxButton>)}
+     {POST_TYPES.map(({ id, label, icon: Icon }) => <StudioButton key={id} sizeVariant="compact" tone="neutral" aria-pressed={post.postType === id} onClick={() => post.setPostType(id)}><Icon size={15} aria-hidden="true" />{label}</StudioButton>)}
     </SubToolboxGrid>
     <SubToolboxActions columns={2} aria-label="Community post mode">
      <SubToolboxInnerActionButton label="Write" iconName="edit" tone={post.mode === "write" ? "pink" : "cyan"} onClick={() => post.setMode("write")} />
@@ -42,7 +40,7 @@ export const CommunityPostGenerator: React.FC = () => {
    <SubToolbox title={post.mode === "write" ? "Write Post" : "AI Creator"} icon={<Sparkles />} collapsible isOpenInitial>
     <SubToolboxStack>
     <SubToolboxFieldLabel htmlFor="community-post-copy">{post.mode === "write" ? "Post Copy" : "Creation Prompt"}</SubToolboxFieldLabel>
-    <SubToolboxTextArea id="community-post-copy" name="communityPostCopy" value={post.mode === "write" ? post.content : post.prompt} onChange={(event) => post.mode === "write" ? post.setContent(event.target.value) : post.setPrompt(event.target.value)} placeholder={post.mode === "write" ? "Write your community post…" : "Describe the community post you want to create…"} />
+    <StudioTextArea id="community-post-copy" name="communityPostCopy" value={post.mode === "write" ? post.content : post.prompt} onChange={(event) => post.mode === "write" ? post.setContent(event.target.value) : post.setPrompt(event.target.value)} placeholder={post.mode === "write" ? "Write your community post…" : "Describe the community post you want to create…"} />
     {post.mode === "create" && <SubToolboxDropdownControl label="Writing Style" value={post.style} options={["Educational", "Conversational", "Hype", "Question", "Announcement"]} onChange={post.setStyle} tone="yellow" />}
     <SubToolboxGridActionButton label={post.isGenerating ? "Working…" : post.mode === "write" ? "Refine Post" : "Generate Post"} iconName="sparkles" tone="pink" disabled={post.isGenerating || !(post.mode === "write" ? post.content.trim() : post.prompt.trim())} onClick={post.mode === "write" ? post.refine : post.generate} />
     </SubToolboxStack>
@@ -50,8 +48,8 @@ export const CommunityPostGenerator: React.FC = () => {
 
    {post.postType.includes("poll") && <SubToolbox title="Poll Options" icon={<CheckSquare />} collapsible isOpenInitial>
     <SubToolboxGrid minItemWidth="wide">{post.pollOptions.map((option, index) => <SubToolboxSection key={index} label={<SubToolboxFieldLabel htmlFor={`community-poll-${index}`}>Option {index + 1}</SubToolboxFieldLabel>}>
-     <SubToolboxInput id={`community-poll-${index}`} name={`communityPollOption${index + 1}`} value={option} onChange={(event) => post.setPollOption(index, event.target.value)} placeholder={`Option ${index + 1}…`} />
-     {post.postType === "image-poll" && <><input ref={(node) => { pollInputs.current[index] = node }} className="hidden" type="file" accept="image/*" onChange={(event) => post.applyImageFile(event.target.files?.[0], index)} /><SubToolboxButton size="compact" onClick={() => pollInputs.current[index]?.click()} icon={<Upload size={14} />}>{post.imagePollUrls[index] ? "Replace Image" : "Add Image"}</SubToolboxButton></>}
+     <StudioInput id={`community-poll-${index}`} name={`communityPollOption${index + 1}`} value={option} onChange={(event) => post.setPollOption(index, event.target.value)} placeholder={`Option ${index + 1}…`} />
+     {post.postType === "image-poll" && <><input ref={(node) => { pollInputs.current[index] = node }} className="hidden" type="file" accept="image/*" onChange={(event) => post.applyImageFile(event.target.files?.[0], index)} /><StudioButton sizeVariant="compact" onClick={() => pollInputs.current[index]?.click()}><Upload size={14} aria-hidden="true" />{post.imagePollUrls[index] ? "Replace Image" : "Add Image"}</StudioButton></>}
     </SubToolboxSection>)}</SubToolboxGrid>
    </SubToolbox>}
   </div>
@@ -61,8 +59,8 @@ export const CommunityPostGenerator: React.FC = () => {
     <SubToolboxStack>
     <input ref={imageInput} className="hidden" type="file" accept="image/*" onChange={(event) => post.applyImageFile(event.target.files?.[0])} />
     <SubToolboxFieldLabel htmlFor="community-image-url">Image URL</SubToolboxFieldLabel>
-    <SubToolboxInput id="community-image-url" name="communityImageUrl" type="url" value={post.imageUrl} onChange={(event) => post.setImageUrl(event.target.value)} placeholder="https://example.com/image.jpg…" />
-    <SubToolboxButton onClick={() => imageInput.current?.click()} icon={<Upload size={17} />}>Browse Files</SubToolboxButton>
+    <StudioInput id="community-image-url" name="communityImageUrl" type="url" value={post.imageUrl} onChange={(event) => post.setImageUrl(event.target.value)} placeholder="https://example.com/image.jpg…" />
+    <StudioButton onClick={() => imageInput.current?.click()}><Upload size={17} aria-hidden="true" />Browse Files</StudioButton>
     {post.imageUrl && <img src={post.imageUrl} alt="Community post preview" width={640} height={360} className="mt-4 w-full aspect-video object-cover border-[3px] border-black rounded-[8px]" />}
     </SubToolboxStack>
    </SubToolbox>}
@@ -70,8 +68,8 @@ export const CommunityPostGenerator: React.FC = () => {
    {post.postType === "video" && <SubToolbox title="Linked Video" icon={<Video />} collapsible isOpenInitial>
     <SubToolboxStack>
     <SubToolboxFieldLabel htmlFor="community-video-search">Search Videos</SubToolboxFieldLabel>
-    <SubToolboxInput id="community-video-search" name="communityVideoSearch" type="search" autoComplete="off" value={post.videoSearch} onChange={(event) => post.setVideoSearch(event.target.value)} placeholder="Search titles or video IDs…" />
-    <SubToolboxSurface scroll><SubToolboxSection>{post.filteredVideos.map((video) => <SubToolboxButton type="button" key={video.videoId} size="compact" tone="neutral" selected={post.selectedVideoId === video.videoId} onClick={() => post.setSelectedVideoId(video.videoId)}>{video.title || video.videoId}</SubToolboxButton>)}{!post.filteredVideos.length && <SubToolboxStatePanel state="empty" message="No videos found." />}</SubToolboxSection></SubToolboxSurface>
+    <StudioSearchInput id="community-video-search" name="communityVideoSearch" autoComplete="off" value={post.videoSearch} onChange={(event) => post.setVideoSearch(event.target.value)} placeholder="Search titles or video IDs…" />
+    <SubToolboxSurface scroll><SubToolboxSection>{post.filteredVideos.map((video) => <StudioButton type="button" key={video.videoId} sizeVariant="compact" tone="neutral" aria-pressed={post.selectedVideoId === video.videoId} onClick={() => post.setSelectedVideoId(video.videoId)}>{video.title || video.videoId}</StudioButton>)}{!post.filteredVideos.length && <SubToolboxStatePanel state="empty" message="No videos found." />}</SubToolboxSection></SubToolboxSurface>
     </SubToolboxStack>
    </SubToolbox>}
 
