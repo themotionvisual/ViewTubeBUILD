@@ -23,12 +23,11 @@ describe("simpleYouTubeApi video inventory cache", () => {
    status: { privacyStatus: "public" },
   }
 
-  const fetchMock = vi.fn().mockResolvedValue(
-   new Response(JSON.stringify({ items: [inventoryItem] }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-   }),
-  )
+  const fetchMock = vi.fn().mockResolvedValue({
+   ok: true,
+   status: 200,
+   json: async () => ({ items: [inventoryItem] }),
+  })
   vi.stubGlobal("fetch", fetchMock)
 
   await fetchSimpleVideoInventory()
