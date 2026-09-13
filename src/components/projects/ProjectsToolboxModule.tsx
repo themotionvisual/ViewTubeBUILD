@@ -13,10 +13,10 @@ type ProjectsToolboxModuleProps = {
 /**
  * Canonical level-0 Projects toolbox.
  *
- * Projects tools historically shipped with their own framed presentation shell.
- * When mounted here that produced a Toolbox -> module-shell -> tool composition.
- * The Projects page owns the presentation shell now: the immediate child is
- * deliberately flattened while all of the tool's functional interior UI stays intact.
+ * The level-0 Toolbox owns the only tool title/header and exterior geometry.
+ * Legacy project tools may still render a presentation wrapper and a first header;
+ * those are presentation-only and are flattened here while their functional
+ * controls, subtoolboxes, boards, calendars and dialogs remain intact.
  */
 const ProjectsToolboxModule: React.FC<ProjectsToolboxModuleProps> = ({
  title,
@@ -38,7 +38,7 @@ const ProjectsToolboxModule: React.FC<ProjectsToolboxModuleProps> = ({
   outerClassName="w-full"
  >
   <div
-   className="min-w-0 [&>div]:!rounded-none [&>div]:!border-0 [&>div]:!shadow-none"
+   className="min-w-0 [&>div]:!rounded-none [&>div]:!border-0 [&>div]:!shadow-none [&>div>header:first-child]:!hidden"
    data-vt-project-toolbox-content="true"
    data-vt-project-level="main-toolbox"
   >
