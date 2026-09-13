@@ -68,6 +68,12 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
  }, [context.videoAssets])
 
  const refresh = useCallback(async () => {
+  if (!context.connected) {
+   setLoading(false)
+   setError(null)
+   setThreads([])
+   return
+  }
   const generation = ++requestGeneration.current
   requestAbort.current?.abort()
   const abortController = new AbortController()
@@ -87,12 +93,15 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
   } finally {
    if (generation === requestGeneration.current) setLoading(false)
   }
- }, [context.channelId, syncMetadata])
+ }, [context.connected, syncMetadata])
 
  useEffect(() => {
   if (!context.connected) {
+   requestGeneration.current += 1
+   requestAbort.current?.abort()
+   setLoading(false)
    setThreads([])
-   setError("Connect your YouTube channel to load comments.")
+   setError(null)
    return
   }
   void refresh()
