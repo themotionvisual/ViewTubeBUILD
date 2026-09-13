@@ -11,7 +11,8 @@ import {
 } from "../types"
 import { useBrain } from "../context/useBrain"
 import { CustomIcon } from "./CustomIcon"
-import { SubToolbox, StandardUploadBox, StandardTextArea } from "./Toolbox"
+import { SubToolbox, StandardTextArea } from "./Toolbox"
+import { SubToolboxFileTarget } from "./subtoolbox/SubToolboxPrimitives"
 import { StandardButton } from "./StandardButton"
 import { PostActionReflection } from "./PostActionReflection"
 
@@ -74,19 +75,14 @@ const LayoutPreview = ({ type, selected, onClick }: { type: string, selected: bo
 export const EndScreenTool: React.FC = () => {
   const { brain } = useBrain()
 
-  // Loading States
   const [genLoading, setGenLoading] = useState(false)
   const [conceptLoading, setConceptLoading] = useState(false)
-
-  // Core States
   const [prompt, setPrompt] = useState("")
   const [largeText, setLargeText] = useState("")
   const [smallText, setSmallText] = useState("")
   const [generatedImage, setGeneratedImage] = useState<string | null>(null)
   const [history, setHistory] = useState<ThumbnailHistoryItem[]>([])
   const [selectedLayout, setSelectedLayout] = useState<string>("2 Videos")
-
-  // Advanced States
   const [selectedStyles, setSelectedStyles] = useState<string[]>([])
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([])
   const [palette, setPalette] = useState<string[]>([
@@ -183,7 +179,6 @@ export const EndScreenTool: React.FC = () => {
 
   return (
     <div className="w-full animate-fade-in bg-white relative">
-      {/* Generated History Bar */}
       {history.length > 0 && (
         <div className="w-full mb-8 flex gap-6 overflow-x-auto pb-4 custom-scrollbar">
           {history.map((item) => (
@@ -205,7 +200,6 @@ export const EndScreenTool: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch h-full">
-        {/* Column 1: Controls */}
         <div className="flex flex-col h-full gap-6">
           <SubToolbox
             collapsible
@@ -328,11 +322,12 @@ export const EndScreenTool: React.FC = () => {
             title="Images"
             icon={<CustomIcon name="image" size={20} />}>
             <div className="space-y-4">
-              <StandardUploadBox
-                label="DROP FILES OR CLICK TO UPLOAD\nUpload Reference Images"
-                minHeight="112px"
-                iconBgColor="#00CCFF"
-                onUpload={(files) => {
+              <SubToolboxFileTarget
+                label="Upload Reference Images"
+                icon={<CustomIcon name="image" size={30} />}
+                accept="image/*"
+                multiple
+                onFiles={(files) => {
                   if (files) {
                     const news = Array.from(files).map((f) => ({
                       id: crypto.randomUUID(),
@@ -372,7 +367,6 @@ export const EndScreenTool: React.FC = () => {
           </SubToolbox>
         </div>
 
-        {/* Column 2: Canvas */}
         <div className="flex flex-col h-full gap-6 min-h-0">
           <div className="flex-1 min-h-0 w-full border-[2px] border-black bg-[#f1f5f9] rounded-[48px] shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-8 overflow-hidden transition-all duration-700">
             {generatedImage ? (

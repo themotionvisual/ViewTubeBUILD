@@ -8,9 +8,12 @@ import {
  SubToolboxStatePanel,
  SubToolboxSurface,
 } from "./subtoolbox/SubToolboxPrimitives"
-import { StudioButton, StudioInput, StudioSearchInput, StudioTextArea } from "../studio-ui"
+import { StudioButton, StudioInput, StudioSearchInput, StudioSplitLeftButton, StudioTextArea } from "../studio-ui"
+import { getToolboxPaletteColors } from "../styles/toolboxPalette"
+import { hexToRgba } from "./ToolboxUISystem"
 import { useCommunityPostController, useCreatorEngagementContext, type CommunityPostType } from "../features/creator-engagement"
 
+const POST_WORKSPACE_PALETTE_INDEX = 4
 const POST_TYPES: Array<{ id: CommunityPostType; label: string; icon: React.ComponentType<{ size?: number }> }> = [
  { id: "text", label: "Text", icon: FileText }, { id: "image", label: "Image", icon: Image },
  { id: "poll", label: "Poll", icon: CheckSquare }, { id: "image-poll", label: "Image Poll", icon: MessageSquare },
@@ -22,13 +25,31 @@ export const CommunityPostGenerator: React.FC = () => {
  const post = useCommunityPostController(context)
  const imageInput = useRef<HTMLInputElement>(null)
  const pollInputs = useRef<Array<HTMLInputElement | null>>([])
+ const postWorkspacePalette = getToolboxPaletteColors(POST_WORKSPACE_PALETTE_INDEX)
 
  return <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start w-full px-0 py-4 sm:py-6 lg:py-8 bg-white">
   <div className="flex flex-col gap-6 min-w-0">
-   <SubToolbox title="Post Workspace" icon={<MessageSquare />} collapsible isOpenInitial>
+   <SubToolbox title="Post Workspace" icon={<MessageSquare />} paletteIndex={POST_WORKSPACE_PALETTE_INDEX} collapsible isOpenInitial>
     <SubToolboxStack>
     <SubToolboxGrid minItemWidth="compact" density="dense" aria-label="Post type">
-     {POST_TYPES.map(({ id, label, icon: Icon }) => <StudioButton key={id} sizeVariant="compact" tone="neutral" aria-pressed={post.postType === id} onClick={() => post.setPostType(id)}><Icon size={15} aria-hidden="true" />{label}</StudioButton>)}
+     {POST_TYPES.map(({ id, label, icon: Icon }) => {
+      const active = post.postType === id
+      const bodyColor = active ? postWorkspacePalette.icon : postWorkspacePalette.header
+      const railColor = active ? postWorkspacePalette.header : postWorkspacePalette.icon
+      return <StudioSplitLeftButton
+       key={id}
+       sizeVariant="standard"
+       selected={active}
+       aria-pressed={active}
+       icon={<Icon size={18} aria-hidden="true" />}
+       railColor={railColor}
+       onClick={() => post.setPostType(id)}
+       style={{
+        ["--vt-studio-control-accent" as string]: bodyColor,
+        ["--vt-studio-control-shadow-color" as string]: hexToRgba(bodyColor, 0.45),
+       }}
+      >{label}</StudioSplitLeftButton>
+     })}
     </SubToolboxGrid>
     <SubToolboxActions columns={2} aria-label="Community post mode">
      <SubToolboxInnerActionButton label="Write" iconName="edit" tone={post.mode === "write" ? "pink" : "cyan"} onClick={() => post.setMode("write")} />
