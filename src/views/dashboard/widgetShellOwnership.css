@@ -4,6 +4,8 @@
 @layer widgets {
   .dashboard-barrier {
     --vt-shell-overflow-x: hidden;
+    --vt-widget-collapse-duration: 600ms;
+    --vt-widget-collapse-easing: ease-out;
   }
 
   .vt-widget {
@@ -27,6 +29,32 @@
     flex:0 0 var(--header-height);
     min-width:0;
     min-height:var(--header-height);
+  }
+
+  .vt-widget-collapse-region {
+    display:grid;
+    flex:1 1 auto;
+    min-width:0;
+    min-height:0;
+    grid-template-rows:1fr;
+    opacity:1;
+    transition:
+      grid-template-rows var(--vt-widget-collapse-duration) var(--vt-widget-collapse-easing),
+      opacity var(--vt-widget-collapse-duration) var(--vt-widget-collapse-easing);
+  }
+
+  .vt-widget-collapse-region.is-closed {
+    grid-template-rows:0fr;
+    opacity:0;
+    flex-basis:0;
+  }
+
+  .vt-widget-collapse-inner {
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    min-height:0;
+    overflow:hidden;
   }
 
   .vt-widget-content {
@@ -59,4 +87,8 @@
   .vt-full-bleed { margin-inline:calc(-1 * var(--widget-content-inset)); width:auto; }
   .vt-full-bleed-bottom { margin-inline:calc(-1 * var(--widget-content-inset)); margin-bottom:calc(-1 * var(--widget-content-inset)); width:auto; }
   .vt-full-bleed-top { margin-inline:calc(-1 * var(--widget-content-inset)); margin-top:calc(-1 * var(--widget-content-inset)); width:auto; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vt-widget-collapse-region { transition:none; }
+  }
 }

@@ -1,4 +1,4 @@
-import React, { createContext, useState } from "react"
+import React, { createContext, useEffect, useState } from "react"
 import { CircleQuestionMark, Eye, GripVertical, Layers, Minus, Plus, Settings2, Trash2 } from "lucide-react"
 import { VTLottie } from "../../components/VTLottie"
 import { cn } from "../../lib/utils"
@@ -14,6 +14,7 @@ export interface WidgetDragHandleBindings {
 }
 
 const WidgetDragHandleContext = createContext<WidgetDragHandleBindings>({ disabled: true })
+const WIDGET_COLLAPSE_DURATION_MS = 600
 
 export const WidgetDragHandleProvider: React.FC<WidgetDragHandleBindings & { children: React.ReactNode }> = ({ children, ...bindings }) => (
  <WidgetDragHandleContext.Provider value={bindings}>{children}</WidgetDragHandleContext.Provider>
@@ -33,8 +34,20 @@ export const WidgetShell: React.FC<{
  aiCost?: number; aiDisabled?: boolean; aiDisabledReason?: string
 }> = ({ widget, instance, editMode, canEdit, onToggleCollapse = () => {}, onCycleSize = () => {}, onDecSize = () => {}, onCycleHeight = () => {}, onDecHeight = () => {}, onRemove = () => {}, children, icon, headerContent, contentLayout = "inset", hasAI, onRegenerate, aiCost, aiDisabled, aiDisabledReason }) => {
  const [isSubtitleOpen, setIsSubtitleOpen] = useState(false)
+ const [keepClosingContentMounted, setKeepClosingContentMounted] = useState(!instance.collapsed)
  const description = WIDGET_DESCRIPTIONS[widget.id] || { short: "INTERACTIVE SOURCE PREVIEW RETAINED AS IDEA-BANK.", detailed: "View raw data streams and historical references before promoting components to the main dashboard." }
  const handleShowAllWidgets = () => { const layout = loadDashboardLayout(); if (layout.hidden.length === 0) return; saveDashboardLayout({ ...layout, hidden: [] }); window.location.reload() }
+
+ useEffect(() => {
+  if (!instance.collapsed) {
+   setKeepClosingContentMounted(true)
+   return
+  }
+  const timer = window.setTimeout(() => setKeepClosingContentMounted(false), WIDGET_COLLAPSE_DURATION_MS)
+  return () => window.clearTimeout(timer)
+ }, [instance.collapsed])
+
+ const shouldRenderContent = !instance.collapsed || keepClosingContentMounted
 
  return <div className={cn("vt-widget", instance.collapsed ? "is-collapsed" : "open")} style={{ "--widget-color": widget.headerColor, "--widget-icon-rail-color": widget.iconRailColor } as React.CSSProperties} data-responsive-mode={widget.responsiveMode} data-widget-width={instance.size} data-widget-height={instance.height}>
   <div className="vt-widget-header">
@@ -54,7 +67,13 @@ export const WidgetShell: React.FC<{
     </div>
    </div>
   </div>
-  {!instance.collapsed && <div className={`widget-subtitle ${isSubtitleOpen?'open':''}`}><div className="widget-subtitle-content" style={{flexDirection:"column",alignItems:"flex-start",gap:"2px"}}><div style={{fontWeight:900,textTransform:"uppercase",fontSize:"12px",lineHeight:1.2}}>{description.short}</div><div style={{fontWeight:600,fontSize:"11px",opacity:.7,lineHeight:1.3,textTransform:"none"}}>{description.detailed}</div></div></div>}
-  {!instance.collapsed && <div className="vt-widget-content"><div className={cn("vt-widget-body",contentLayout==="flush"&&"vt-widget-body--flush")} onPointerDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()}>{widget.id==="system-micro-stack"&&<button type="button" className="vt-button" onClick={handleShowAllWidgets} style={{width:"100%",minHeight:"34px",fontSize:"9px",marginBottom:"8px",background:"#fff"}}><Eye size={14} aria-hidden="true"/>SHOW ALL WIDGETS</button>}{children}</div></div>}
+  <div className={cn("vt-widget-collapse-region", instance.collapsed ? "is-closed" : "is-open")}>
+   <div className="vt-widget-collapse-inner">
+    {shouldRenderContent && <>
+     <div className={`widget-subtitle ${isSubtitleOpen?'open':''}`}><div className="widget-subtitle-content" style={{flexDirection:"column",alignItems:"flex-start",gap:"2px"}}><div style={{fontWeight:900,textTransform:"uppercase",fontSize:"12px",lineHeight:1.2}}>{description.short}</div><div style={{fontWeight:600,fontSize:"11px",opacity:.7,lineHeight:1.3,textTransform:"none"}}>{description.detailed}</div></div></div>
+     <div className="vt-widget-content"><div className={cn("vt-widget-body",contentLayout==="flush"&&"vt-widget-body--flush")} onPointerDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()}>{widget.id==="system-micro-stack"&&<button type="button" className="vt-button" onClick={handleShowAllWidgets} style={{width:"100%",minHeight:"34px",fontSize:"9px",marginBottom:"8px",background:"#fff"}}><Eye size={14} aria-hidden="true"/>SHOW ALL WIDGETS</button>}{children}</div></div>
+    </>}
+   </div>
+  </div>
  </div>
 }
