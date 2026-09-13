@@ -79,7 +79,7 @@ export const SubToolboxFileTarget: React.FC<{ label: React.ReactNode; icon?: Rea
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = React.useState(false)
   const choose = () => inputRef.current?.click()
-  return <SubToolboxSurface className={classes("vt-subtoolbox-file-target", "vt-upload-tight-reveal", dragging && "is-dragging", className)} style={{ minHeight }}>
+  return <SubToolboxSurface className={classes("vt-subtoolbox-file-target", "vt-upload-tight-reveal", dragging && "is-dragging", className)} style={{ minHeight, border: 0 }}>
     <input ref={inputRef} type="file" accept={accept} multiple={multiple} className="hidden" onChange={(event) => onFiles?.(event.target.files)} />
     <button type="button" className="vt-subtoolbox-file-target-button" onClick={choose} onDragEnter={(e) => { e.preventDefault(); setDragging(true) }} onDragOver={(e) => { e.preventDefault(); setDragging(true) }} onDragLeave={(e) => { e.preventDefault(); setDragging(false) }} onDrop={(e) => { e.preventDefault(); setDragging(false); onFiles?.(e.dataTransfer.files) }}>
       <span className="vt-upload-tight-reveal-layers" aria-hidden="true">{[7,6,5,4,3,2,1].map((layer) => <span key={layer} className={`vt-upload-tight-reveal-layer is-l${layer}`} />)}</span>
