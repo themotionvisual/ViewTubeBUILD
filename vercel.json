@@ -32,7 +32,15 @@
       "destination": "/api/auth?__vt_auth_operation=start"
     },
     {
+      "source": "/api/auth/google/start",
+      "destination": "/api/auth?__vt_auth_operation=start"
+    },
+    {
       "source": "/api/auth-callback",
+      "destination": "/api/auth?__vt_auth_operation=callback"
+    },
+    {
+      "source": "/api/auth/google/callback",
       "destination": "/api/auth?__vt_auth_operation=callback"
     },
     {
@@ -40,7 +48,15 @@
       "destination": "/api/auth?__vt_auth_operation=session"
     },
     {
+      "source": "/api/auth/session",
+      "destination": "/api/auth?__vt_auth_operation=session"
+    },
+    {
       "source": "/api/auth-logout",
+      "destination": "/api/auth?__vt_auth_operation=logout"
+    },
+    {
+      "source": "/api/auth/logout",
       "destination": "/api/auth?__vt_auth_operation=logout"
     },
     {
