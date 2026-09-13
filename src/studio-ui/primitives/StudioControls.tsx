@@ -51,14 +51,17 @@ export interface StudioButtonProps extends React.ButtonHTMLAttributes<HTMLButton
   sizeVariant?: StudioControlSize
   tone?: StudioControlTone
   loading?: boolean
+  selected?: boolean
 }
 
 export const StudioButton = React.forwardRef<HTMLButtonElement, StudioButtonProps>(
-  ({ sizeVariant = "standard", tone = "accent", loading = false, disabled, children, type = "button", ...props }, ref) => (
+  ({ sizeVariant = "standard", tone = "accent", loading = false, selected = false, disabled, children, type = "button", ...props }, ref) => (
     <button
       ref={ref}
       type={type}
       {...withStudioAttrs(sizeVariant, tone)}
+      data-selected={selected || undefined}
+      aria-pressed={props["aria-pressed"] ?? (selected || undefined)}
       aria-busy={loading || undefined}
       disabled={disabled || loading}
       {...props}
@@ -68,3 +71,31 @@ export const StudioButton = React.forwardRef<HTMLButtonElement, StudioButtonProp
   ),
 )
 StudioButton.displayName = "StudioButton"
+
+export interface StudioIconButtonProps extends Omit<StudioButtonProps, "children"> {
+  icon: React.ReactNode
+  label: string
+}
+
+export const StudioIconButton = React.forwardRef<HTMLButtonElement, StudioIconButtonProps>(
+  ({ icon, label, ...props }, ref) => (
+    <StudioButton ref={ref} aria-label={label} data-icon-only="true" {...props}>
+      <span aria-hidden="true" data-vt-studio-button-icon>{icon}</span>
+    </StudioButton>
+  ),
+)
+StudioIconButton.displayName = "StudioIconButton"
+
+export interface StudioSplitLeftButtonProps extends StudioButtonProps {
+  icon: React.ReactNode
+}
+
+export const StudioSplitLeftButton = React.forwardRef<HTMLButtonElement, StudioSplitLeftButtonProps>(
+  ({ icon, children, sizeVariant = "action", ...props }, ref) => (
+    <StudioButton ref={ref} sizeVariant={sizeVariant} data-split-left="true" {...props}>
+      <span aria-hidden="true" data-vt-studio-split-rail>{icon}</span>
+      <span data-vt-studio-split-label>{children}</span>
+    </StudioButton>
+  ),
+)
+StudioSplitLeftButton.displayName = "StudioSplitLeftButton"
