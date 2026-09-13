@@ -1,0 +1,150 @@
+/* Master Data Tables — dense responsive presentation layer.
+   Structural display state remains owned by VtSyncToolboxDataTable.tsx. */
+
+/* Center settings in the viewport instead of anchoring it to the toolbar button. */
+.vt-sync-toolbox-table .vt-sync-settings-panel {
+  position: fixed;
+  z-index: 10020;
+  top: 50%;
+  left: 50%;
+  right: auto;
+  width: min(620px, calc(100vw - 28px));
+  max-height: min(82dvh, 760px);
+  transform: translate(-50%, -50%);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* Keep the table/scroll/footer boundary visually explicit. */
+.vt-sync-toolbox-table .vt-sync-scrollbar-row {
+  border-bottom: 4px solid var(--vt-ink);
+}
+
+/* The footer is status chrome, not another content panel. */
+.vt-sync-toolbox-table .vt-sync-table-footer {
+  min-height: 0;
+  display: flex;
+  grid-template-rows: none;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border-top: 0;
+  background: var(--vt-footer-color, #ffda47);
+}
+.vt-sync-toolbox-table .vt-sync-table-footer > span,
+.vt-sync-toolbox-table .vt-sync-table-footer-insight,
+.vt-sync-toolbox-table .vt-sync-table-footer-provenance {
+  min-width: 0;
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 9px;
+  border-top: 0;
+  border-right: 2px solid rgba(10,10,10,.55);
+  border-bottom: 2px solid rgba(10,10,10,.3);
+  font-size: 8px;
+  line-height: 1.1;
+  letter-spacing: .025em;
+}
+.vt-sync-toolbox-table .vt-sync-table-footer-purpose {
+  flex: 2 1 280px;
+  max-width: 420px;
+  font-weight: 850;
+  text-transform: none;
+}
+.vt-sync-toolbox-table .vt-sync-table-footer-table { flex: 0 1 150px; }
+.vt-sync-toolbox-table .vt-sync-table-footer-coverage { flex: 1 1 190px; }
+.vt-sync-toolbox-table .vt-sync-table-footer-columns { flex: 1 1 170px; }
+.vt-sync-toolbox-table .vt-sync-table-footer-loading { flex: 1 1 160px; }
+.vt-sync-toolbox-table .vt-sync-table-footer-provenance b { margin-right: 2px; }
+
+/* Search/actions remain one dense control rail and use one geometry family. */
+.vt-sync-toolbox-table .vt-sync-toolbar {
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.vt-sync-toolbox-table .vt-sync-toolbar-action {
+  flex: 0 0 auto;
+  height: 36px;
+  min-height: 36px;
+  grid-template-columns: 36px minmax(0, 1fr);
+  border-radius: 8px;
+  font-size: 10px;
+  filter: drop-shadow(3px 3px 0 var(--vt-action-shadow));
+}
+.vt-sync-toolbox-table .vt-sync-toolbar-action > span { min-width: 0; }
+.vt-sync-toolbox-table .vt-sync-toolbar-action > span svg { width: 18px; height: 18px; }
+.vt-sync-toolbox-table .vt-sync-toolbar-action > strong { padding: 0 8px; }
+.vt-sync-toolbox-table .vt-sync-toolbar-settings { flex: 0 0 auto; }
+.vt-sync-toolbox-table .vt-sync-toolbar-settings > .vt-sync-toolbar-action { width: auto; }
+.vt-sync-toolbox-table .vt-sync-search { flex: 1 1 280px; min-width: 180px; }
+
+/* Effects are compact sections. Once TSX owns master feature switches, subordinate
+   options collapse completely when the feature is disabled. */
+.vt-sync-toolbox-table .vt-sync-effect-settings > section { gap: 6px; }
+.vt-sync-toolbox-table .vt-sync-effect-master {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.vt-sync-toolbox-table .vt-sync-effect-settings > section:not(.is-enabled) > :not(.vt-sync-effect-master) {
+  display: none;
+}
+
+/* URL/navigation columns are deliberately secondary. Covers current URL-key naming. */
+.vt-sync-toolbox-table .vt-sync-data-table :is(th,td)[data-column-key="url"],
+.vt-sync-toolbox-table .vt-sync-data-table :is(th,td)[data-column-key="videoUrl"],
+.vt-sync-toolbox-table .vt-sync-data-table :is(th,td)[data-column-key="playlistUrl"],
+.vt-sync-toolbox-table .vt-sync-data-table :is(th,td)[data-column-key="channelUrl"] {
+  width: 92px !important;
+  min-width: 92px !important;
+  max-width: 92px !important;
+}
+
+@media (max-width: 620px) {
+  .vt-sync-toolbox-table .vt-sync-settings-panel {
+    width: calc(100vw - 20px);
+    max-height: calc(100dvh - 28px);
+    padding: 10px;
+  }
+  .vt-sync-toolbox-table .vt-sync-settings-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .vt-sync-toolbox-table .vt-sync-effect-settings { grid-template-columns: 1fr; }
+  .vt-sync-toolbox-table .vt-sync-toolbar {
+    gap: 5px;
+    padding: 7px 8px;
+  }
+  .vt-sync-toolbox-table .vt-sync-toolbar-action {
+    height: 32px;
+    min-height: 32px;
+    grid-template-columns: 32px minmax(0, 1fr);
+    font-size: 8px;
+  }
+  .vt-sync-toolbox-table .vt-sync-search {
+    min-height: 32px;
+    flex: 1 0 160px;
+  }
+  .vt-sync-toolbox-table .vt-sync-table-footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .vt-sync-toolbox-table .vt-sync-table-footer > span,
+  .vt-sync-toolbox-table .vt-sync-table-footer-insight,
+  .vt-sync-toolbox-table .vt-sync-table-footer-provenance {
+    padding: 5px 7px;
+    font-size: 7px;
+  }
+  .vt-sync-toolbox-table .vt-sync-table-footer-purpose {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
+}
