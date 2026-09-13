@@ -78,17 +78,113 @@ button[data-vt-studio-control] {
   line-height: 1;
   padding: 8px 12px;
   text-transform: uppercase;
+  transition: filter 180ms ease-out, transform 180ms ease-out, box-shadow 180ms ease-out;
 }
 
 button[data-vt-studio-control][data-size="compact"] { font-size: 10px; padding: 6px 8px; }
 button[data-vt-studio-control][data-size="action"] { font-size: 20px; padding: 10px 16px; }
+button[data-vt-studio-control]:hover:not(:disabled) { filter: brightness(.97); transform: translateY(1px); }
+button[data-vt-studio-control]:active:not(:disabled) { box-shadow: none; transform: translate(var(--vt-studio-control-shadow), var(--vt-studio-control-shadow)); }
 button[data-vt-studio-control]:focus-visible { outline: 3px solid var(--vt-studio-control-accent); outline-offset: 3px; }
 button[data-vt-studio-control]:disabled { cursor: not-allowed; filter: grayscale(.5); opacity: .5; }
+button[data-vt-studio-control][data-selected="true"] { box-shadow: 0 0 0 3px #000, var(--vt-studio-control-shadow) var(--vt-studio-control-shadow) 0 0 var(--vt-studio-control-shadow-color); }
+button[data-vt-studio-control][data-icon-only="true"] { width: var(--vt-studio-control-height); flex: 0 0 var(--vt-studio-control-height); padding: 0; }
+
+[data-vt-studio-button-icon] { display: grid; place-items: center; }
+
+button[data-vt-studio-control][data-split-left="true"] {
+  display: grid;
+  grid-template-columns: var(--vt-studio-control-height) minmax(0, 1fr);
+  width: 100%;
+  min-height: var(--vt-studio-control-height);
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+}
+
+[data-vt-studio-split-rail] {
+  display: grid;
+  width: var(--vt-studio-control-height);
+  height: var(--vt-studio-control-height);
+  place-items: center;
+  align-self: stretch;
+  border-right: var(--vt-studio-control-stroke) solid #000;
+  background: color-mix(in srgb, var(--vt-studio-control-accent) 82%, #fff);
+}
+
+[data-vt-studio-split-label] {
+  min-width: 0;
+  padding: 0 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 [data-vt-studio-control][data-tone="neutral"] { --vt-studio-control-accent: #fff; }
 [data-vt-studio-control][data-tone="danger"] { --vt-studio-control-accent: #ff7ac8; }
 [data-vt-studio-control][data-tone="warning"] { --vt-studio-control-accent: #ffda47; }
 [data-vt-studio-control][data-tone="success"] { --vt-studio-control-accent: #3fee56; }
+
+.vt-studio-dropdown {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+button[data-vt-studio-control][data-dropdown-trigger="true"] {
+  width: 100%;
+  justify-content: space-between;
+  background: color-mix(in srgb, var(--vt-studio-control-accent) 16%, #fff);
+  text-align: left;
+}
+
+[data-vt-studio-dropdown-value] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vt-studio-dropdown-menu {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  max-height: 280px;
+  overflow-y: auto;
+  border: var(--vt-studio-control-stroke, 3px) solid #000;
+  border-radius: var(--vt-studio-control-radius, 8px);
+  background: #fff;
+  box-shadow: var(--vt-studio-control-shadow, 4px) var(--vt-studio-control-shadow, 4px) 0 0 var(--vt-studio-control-shadow-color, rgb(0 0 0 / .3));
+  padding: 4px;
+}
+
+.vt-studio-dropdown-option {
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  align-items: center;
+  border: 0;
+  border-radius: calc(var(--vt-studio-control-radius, 8px) - 3px);
+  background: #fff;
+  color: #000;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 8px 10px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.vt-studio-dropdown-option + .vt-studio-dropdown-option { border-top: 2px solid #000; border-radius: 0; }
+.vt-studio-dropdown-option[data-active="true"],
+.vt-studio-dropdown-option[data-selected="true"] { background: color-mix(in srgb, var(--vt-studio-control-accent, #36e0f6) 22%, #fff); }
+.vt-studio-dropdown-option:disabled { cursor: not-allowed; opacity: .45; }
+
+@media (max-width: 767px) {
+  .vt-studio-dropdown-menu { max-height: min(280px, 45vh); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   [data-vt-studio-control] { transition-duration: .01ms !important; }
