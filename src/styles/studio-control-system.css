@@ -182,8 +182,43 @@ button[data-vt-studio-control][data-dropdown-trigger="true"] {
 .vt-studio-dropdown-option[data-selected="true"] { background: color-mix(in srgb, var(--vt-studio-control-accent, #36e0f6) 22%, #fff); }
 .vt-studio-dropdown-option:disabled { cursor: not-allowed; opacity: .45; }
 
+[data-vt-studio-layout="split"] {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+[data-vt-studio-layout="split"][data-ratio="1/2"] { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+[data-vt-studio-layout="split"][data-ratio="2/1"] { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+
+[data-vt-studio-layout="scroll"] {
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+[data-vt-studio-layout="scroll"][data-max-height="compact"] { max-height: 160px; }
+[data-vt-studio-layout="scroll"][data-max-height="standard"] { max-height: 280px; }
+[data-vt-studio-layout="scroll"][data-max-height="large"] { max-height: 440px; }
+
+[data-vt-studio-layout="metrics"] {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(var(--vt-studio-metric-columns, 4), minmax(0, 1fr));
+  gap: 12px;
+}
+[data-vt-studio-layout="metrics"][data-columns="2"] { --vt-studio-metric-columns: 2; }
+[data-vt-studio-layout="metrics"][data-columns="3"] { --vt-studio-metric-columns: 3; }
+[data-vt-studio-layout="metrics"][data-columns="4"] { --vt-studio-metric-columns: 4; }
+[data-vt-studio-layout="metrics"][data-columns="6"] { --vt-studio-metric-columns: 6; }
+
+@media (max-width: 900px) {
+  [data-vt-studio-layout="metrics"] { --vt-studio-metric-columns: 2; }
+}
+
 @media (max-width: 767px) {
   .vt-studio-dropdown-menu { max-height: min(280px, 45vh); }
+  [data-vt-studio-layout="split"] { grid-template-columns: minmax(0, 1fr); }
+  [data-vt-studio-layout="metrics"] { --vt-studio-metric-columns: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
