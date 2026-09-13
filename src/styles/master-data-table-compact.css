@@ -20,46 +20,54 @@
   border-bottom: 4px solid var(--vt-ink);
 }
 
-/* The footer is status chrome, not another content panel. */
+/* Footer is one terse operational status sentence. Remove explanatory copy. */
 .vt-sync-toolbox-table .vt-sync-table-footer {
-  min-height: 0;
+  min-height: 30px;
   display: flex;
-  grid-template-rows: none;
-  flex-wrap: wrap;
-  align-items: stretch;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: 0;
-  padding: 0;
+  padding: 0 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
   border-top: 0;
   background: var(--vt-footer-color, #ffda47);
+  white-space: nowrap;
 }
-.vt-sync-toolbox-table .vt-sync-table-footer > span,
-.vt-sync-toolbox-table .vt-sync-table-footer-insight,
-.vt-sync-toolbox-table .vt-sync-table-footer-provenance {
+.vt-sync-toolbox-table .vt-sync-table-footer > span {
   min-width: 0;
-  flex: 0 1 auto;
-  display: flex;
-  flex-direction: row;
+  flex: 0 0 auto;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 9px;
-  border-top: 0;
-  border-right: 2px solid rgba(10,10,10,.55);
-  border-bottom: 2px solid rgba(10,10,10,.3);
+  gap: 3px;
+  padding: 0;
+  border: 0;
   font-size: 8px;
-  line-height: 1.1;
-  letter-spacing: .025em;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
 }
-.vt-sync-toolbox-table .vt-sync-table-footer-purpose {
-  flex: 2 1 280px;
-  max-width: 420px;
-  font-weight: 850;
-  text-transform: none;
+.vt-sync-toolbox-table .vt-sync-table-footer > span::after {
+  content: " · ";
+  padding: 0 5px;
+  font-weight: 1000;
 }
-.vt-sync-toolbox-table .vt-sync-table-footer-table { flex: 0 1 150px; }
-.vt-sync-toolbox-table .vt-sync-table-footer-coverage { flex: 1 1 190px; }
-.vt-sync-toolbox-table .vt-sync-table-footer-columns { flex: 1 1 170px; }
-.vt-sync-toolbox-table .vt-sync-table-footer-loading { flex: 1 1 160px; }
-.vt-sync-toolbox-table .vt-sync-table-footer-provenance b { margin-right: 2px; }
+.vt-sync-toolbox-table .vt-sync-table-footer > span:last-child::after { content: none; }
+
+/* Eliminate the long module description and loading explanation entirely. */
+.vt-sync-toolbox-table .vt-sync-table-footer-purpose,
+.vt-sync-toolbox-table .vt-sync-table-footer-loading {
+  display: none !important;
+}
+.vt-sync-toolbox-table .vt-sync-table-footer-table { order: 1; }
+.vt-sync-toolbox-table .vt-sync-table-footer-provenance:nth-of-type(7) { order: 2; }
+.vt-sync-toolbox-table .vt-sync-table-footer-provenance:nth-of-type(6) { order: 3; }
+.vt-sync-toolbox-table .vt-sync-table-footer-columns { order: 4; }
+.vt-sync-toolbox-table .vt-sync-table-footer-coverage { order: 5; }
+.vt-sync-toolbox-table .vt-sync-table-footer-provenance:nth-of-type(8) { order: 6; }
+.vt-sync-toolbox-table .vt-sync-table-footer-provenance:last-child { order: 7; }
+.vt-sync-toolbox-table .vt-sync-table-footer-provenance b { margin-right: 1px; }
 
 /* Search/actions remain one dense control rail and use one geometry family. */
 .vt-sync-toolbox-table .vt-sync-toolbar {
@@ -134,17 +142,8 @@
     flex: 1 0 160px;
   }
   .vt-sync-toolbox-table .vt-sync-table-footer {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: 28px;
+    padding: 0 8px;
   }
-  .vt-sync-toolbox-table .vt-sync-table-footer > span,
-  .vt-sync-toolbox-table .vt-sync-table-footer-insight,
-  .vt-sync-toolbox-table .vt-sync-table-footer-provenance {
-    padding: 5px 7px;
-    font-size: 7px;
-  }
-  .vt-sync-toolbox-table .vt-sync-table-footer-purpose {
-    grid-column: 1 / -1;
-    max-width: none;
-  }
+  .vt-sync-toolbox-table .vt-sync-table-footer > span { font-size: 7px; }
 }
