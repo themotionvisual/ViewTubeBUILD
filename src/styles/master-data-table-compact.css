@@ -51,21 +51,17 @@
 }
 .vt-sync-toolbox-table .vt-sync-table-footer > span:nth-child(3n) { border-right: 0; }
 .vt-sync-toolbox-table .vt-sync-table-footer > span::after { content: none !important; }
-
-/* Long explanatory prose and loading copy never belong in the status footer. */
 .vt-sync-toolbox-table .vt-sync-table-footer-purpose,
-.vt-sync-toolbox-table .vt-sync-table-footer-loading {
-  display: none !important;
-}
-.vt-sync-toolbox-table .vt-sync-table-footer-provenance b {
-  flex: 0 0 auto;
-  margin-right: 1px;
-}
+.vt-sync-toolbox-table .vt-sync-table-footer-loading { display: none !important; }
+.vt-sync-toolbox-table .vt-sync-table-footer-provenance b { flex: 0 0 auto; margin-right: 1px; }
 
+/* Toolbar is allowed to wrap instead of forcing controls to collide on narrow screens. */
 .vt-sync-toolbox-table .vt-sync-toolbar {
+  position: relative;
+  z-index: 90;
   gap: 6px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  overflow: visible;
   padding-top: 8px;
   padding-bottom: 8px;
 }
@@ -81,20 +77,30 @@
 .vt-sync-toolbox-table .vt-sync-toolbar-action > span { min-width: 0; }
 .vt-sync-toolbox-table .vt-sync-toolbar-action > span svg { width: 18px; height: 18px; }
 .vt-sync-toolbox-table .vt-sync-toolbar-action > strong { padding: 0 8px; }
-.vt-sync-toolbox-table .vt-sync-toolbar-settings { flex: 0 0 auto; }
+.vt-sync-toolbox-table .vt-sync-toolbar-settings { position: relative; flex: 0 0 auto; }
 .vt-sync-toolbox-table .vt-sync-toolbar-settings > .vt-sync-toolbar-action { width: auto; }
 .vt-sync-toolbox-table .vt-sync-search { flex: 1 1 280px; min-width: 180px; }
 
+/* Import/export menus must float above the table, never be clipped by the toolbar/table viewport. */
+.vt-sync-toolbox-table .vt-sync-transfer-menu {
+  position: relative;
+  z-index: 150;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.vt-sync-toolbox-table .vt-sync-transfer-menu[open] { z-index: 10040; }
+.vt-sync-toolbox-table .vt-sync-transfer-popover {
+  z-index: 10050;
+  top: calc(100% + 5px);
+  width: min(330px, calc(100vw - 24px));
+  max-height: min(55dvh, 420px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .vt-sync-toolbox-table .vt-sync-effect-settings > section { gap: 6px; }
-.vt-sync-toolbox-table .vt-sync-effect-master {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.vt-sync-toolbox-table .vt-sync-effect-settings > section:not(.is-enabled) > :not(.vt-sync-effect-master) {
-  display: none;
-}
+.vt-sync-toolbox-table .vt-sync-effect-master { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.vt-sync-toolbox-table .vt-sync-effect-settings > section:not(.is-enabled) > :not(.vt-sync-effect-master) { display: none; }
 
 .vt-sync-toolbox-table .vt-sync-data-table :is(th,td)[data-column-key="url"],
 .vt-sync-toolbox-table .vt-sync-data-table :is(th,td)[data-column-key="videoUrl"],
@@ -111,28 +117,58 @@
     max-height: calc(100dvh - 28px);
     padding: 10px;
   }
-  .vt-sync-toolbox-table .vt-sync-settings-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-  }
+  .vt-sync-toolbox-table .vt-sync-settings-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
   .vt-sync-toolbox-table .vt-sync-effect-settings { grid-template-columns: 1fr; }
+
+  /* Search gets its own row. Actions flow below it without overlap. */
   .vt-sync-toolbox-table .vt-sync-toolbar {
-    gap: 5px;
-    padding: 7px 8px;
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    padding: 7px 8px 10px;
+    overflow: visible;
+  }
+  .vt-sync-toolbox-table .vt-sync-search {
+    order: -10;
+    flex: 1 0 100%;
+    width: 100%;
+    min-width: 0;
+    min-height: 32px;
   }
   .vt-sync-toolbox-table .vt-sync-toolbar-action {
     height: 32px;
     min-height: 32px;
+    max-width: 100%;
     grid-template-columns: 32px minmax(0, 1fr);
     font-size: 8px;
   }
-  .vt-sync-toolbox-table .vt-sync-search {
-    min-height: 32px;
-    flex: 1 0 160px;
+  .vt-sync-toolbox-table .vt-sync-toolbar-action > strong {
+    padding: 0 6px;
+    font-size: 9px;
+    line-height: 1;
+  }
+  .vt-sync-toolbox-table .vt-sync-transfer-menu {
+    flex: 1 1 calc(50% - 3px);
+    width: calc(50% - 3px);
+  }
+  .vt-sync-toolbox-table .vt-sync-transfer-menu > summary {
+    width: 100%;
   }
 
-  /* Phone footer: seven short facts fit into three rows (3 + 3 + 1).
-     The final status item spans the last row so nothing needs horizontal scroll. */
+  /* On phones the menu is viewport-fixed, so table overflow can never crop it. */
+  .vt-sync-toolbox-table .vt-sync-transfer-popover {
+    position: fixed;
+    top: 50%;
+    left: 50% !important;
+    right: auto !important;
+    width: calc(100vw - 28px);
+    max-width: 420px;
+    max-height: min(62dvh, 460px);
+    transform: translate(-50%, -50%);
+    border-radius: 10px;
+    box-shadow: 7px 7px 0 var(--vt-ink);
+  }
+
   .vt-sync-toolbox-table .vt-sync-table-footer {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     width: 100%;
