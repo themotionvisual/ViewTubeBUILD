@@ -25,12 +25,16 @@ export const SUBTOOLBOX_TOKENS = {
     shadowOffset: 4,
   },
   spacing: {
+    micro: 4,
     dense: 8,
     standard: 12,
     section: 16,
     large: 24,
   },
   controlHeight: {
+    // Two micro controls plus one 4px gap equal one collapsed standard
+    // SubToolbox header: 26 + 4 + 26 = 56.
+    micro: 26,
     compact: 32,
     standard: 48,
     // Level-1/module actions align exactly with a collapsed standard
@@ -38,6 +42,7 @@ export const SUBTOOLBOX_TOKENS = {
     action: 56,
   },
   typography: {
+    micro: 9,
     label: 10,
     control: 14,
     action: 20,

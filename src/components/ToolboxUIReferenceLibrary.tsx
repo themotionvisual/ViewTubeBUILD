@@ -20,18 +20,23 @@ import {
   SubToolboxInnerActionButton,
   ToolboxScaffold,
 } from "./Toolbox"
-import { SubToolboxActions, SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "./subtoolbox/SubToolboxLayouts"
+import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "./subtoolbox/SubToolboxLayouts"
 import {
+  SubToolboxBadge,
   SubToolboxButton,
+  SubToolboxCheckbox,
   SubToolboxFieldLabel,
   SubToolboxFileTarget,
   SubToolboxInput,
   SubToolboxMetric,
   SubToolboxOutputCard,
-  SubToolboxSelect,
+  SubToolboxRadio,
+  SubToolboxSplitActionButton,
   SubToolboxStatePanel,
   SubToolboxSurface,
+  SubToolboxTag,
   SubToolboxTextArea,
+  SubToolboxToggle,
 } from "./subtoolbox/SubToolboxPrimitives"
 import type { SubToolboxState } from "./subtoolbox/tokens"
 import { hexToRgba } from "./ToolboxUISystem"
@@ -81,6 +86,8 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
   const [destinations, setDestinations] = useState<string[]>(["youtube"])
   const [selectedState, setSelectedState] = useState<SubToolboxState>("ready")
   const [connectedPreview, setConnectedPreview] = useState(false)
+  const [microToggle, setMicroToggle] = useState(true)
+  const [microTag, setMicroTag] = useState(true)
   const [uploadedFile, setUploadedFile] = useState("No file selected")
   const [copied, setCopied] = useState(false)
   const palette = getToolboxPaletteColors(paletteIndex)
@@ -149,12 +156,14 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
                   <SubToolbox title="Standard Subtoolbox" icon={<Layers3 />} paletteIndex={paletteIndex + 7} collapsible={false} openUnits={1}><p className="text-sm font-bold">56px header · 4px stroke · 12px radius · 6px colored shadow · 20px title</p></SubToolbox>
                   <SubToolbox title="Compact Subtoolbox" icon={<Layers3 />} paletteIndex={paletteIndex + 8} collapsible={false} openUnits={1} heightMode="compact"><p className="text-sm font-bold">44px header · 3px stroke · 10px radius · 4px colored shadow · 20px title</p></SubToolbox>
                 </SubToolboxGrid>
-                <SubToolboxSection label="Interior Control Sizes">
+                <SubToolboxSection label="Control Geometry">
                   <SubToolboxGrid minItemWidth="compact">
+                    <SubToolboxButton size="micro" tone="neutral">26px Micro</SubToolboxButton>
                     <SubToolboxButton size="compact" tone="neutral">32px Compact</SubToolboxButton>
                     <SubToolboxButton tone="accent">48px Standard</SubToolboxButton>
                     <SubToolboxButton size="action" tone="success">56px Action</SubToolboxButton>
                   </SubToolboxGrid>
+                  <p className="text-[10px] font-black uppercase opacity-60">26 + 4 gap + 26 = 56px collapsed Subtoolbox height.</p>
                 </SubToolboxSection>
               </SubToolboxStack>
             </SubToolbox>
@@ -163,10 +172,37 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
           {show("actions") ? (
             <SubToolbox title="Buttons + Split Left" icon={<MousePointerClick />} paletteIndex={paletteIndex + 2} collapsible isOpenInitial>
               <SubToolboxStack density="comfortable">
+                <SubToolboxSection label="Main Toolbox Default · Split Left">
+                  <SubToolboxGrid minItemWidth="wide">
+                    {ACTION_TONES.map((tone) => <SubToolboxGridActionButton key={tone} label={tone} iconName="zap" tone={tone} showIconSection onClick={() => {}} />)}
+                  </SubToolboxGrid>
+                </SubToolboxSection>
+                <SubToolboxSection label="Head + Tail">
+                  <SubToolboxGrid minItemWidth="wide">
+                    <SubToolboxSplitActionButton variant="head" icon={<Check size={20} strokeWidth={3} />}>Head</SubToolboxSplitActionButton>
+                    <SubToolboxSplitActionButton variant="tail" icon={<Clipboard size={20} strokeWidth={3} />}>Tail</SubToolboxSplitActionButton>
+                  </SubToolboxGrid>
+                  <p className="text-[10px] font-black uppercase opacity-60">Head: accent icon rail + white title. Tail: white icon rail + accent title. Both stay 56px and do not grow when labels wrap.</p>
+                </SubToolboxSection>
+                <SubToolboxSection label="Inside Subtoolbox Default · No Icon · 1px Thinner">
+                  <SubToolboxGrid minItemWidth="wide">
+                    <SubToolboxInnerActionButton label="Generate" tone="cyan" onClick={() => {}} />
+                    <SubToolboxInnerActionButton label="Publish" tone="green" onClick={() => {}} />
+                    <SubToolboxInnerActionButton label="Disabled" tone="purple" disabled onClick={() => {}} />
+                  </SubToolboxGrid>
+                </SubToolboxSection>
+                <SubToolboxSection label="Micro Control Family · 26px">
+                  <div className="flex flex-wrap items-center gap-1">
+                    <SubToolboxButton size="micro" tone="accent">Button</SubToolboxButton>
+                    <SubToolboxCheckbox label="Check" defaultChecked />
+                    <SubToolboxToggle label="Toggle" pressed={microToggle} onClick={() => setMicroToggle((value) => !value)} />
+                    <SubToolboxRadio label="Radio" name="library-radio" defaultChecked />
+                    <SubToolboxBadge>Badge</SubToolboxBadge>
+                    <SubToolboxTag selected={microTag} onClick={() => setMicroTag((value) => !value)}>Tag</SubToolboxTag>
+                  </div>
+                  <p className="text-[10px] font-black uppercase opacity-60">Selectable controls flip between parent accent fill and white while retaining the same height, stroke family and typography.</p>
+                </SubToolboxSection>
                 <SubToolboxSection label="Primitive Button Tones"><SubToolboxGrid minItemWidth="compact">{PRIMITIVE_TONES.map((tone) => <SubToolboxButton key={tone} tone={tone}>{tone}</SubToolboxButton>)}</SubToolboxGrid></SubToolboxSection>
-                <SubToolboxSection label="Split-Left Module Actions · square icon rail"><SubToolboxGrid minItemWidth="wide">{ACTION_TONES.map((tone) => <SubToolboxGridActionButton key={tone} label={tone} iconName="zap" tone={tone} showIconSection onClick={() => {}} />)}</SubToolboxGrid></SubToolboxSection>
-                <SubToolboxSection label="Split-Left Interior Actions"><SubToolboxGrid minItemWidth="wide"><SubToolboxInnerActionButton label="Generate" iconName="sparkles" tone="cyan" showIconSection onClick={() => {}} /><SubToolboxInnerActionButton label="Publish" iconName="check" tone="green" showIconSection onClick={() => {}} /><SubToolboxInnerActionButton label="Disabled" iconName="archive" tone="purple" showIconSection disabled onClick={() => {}} /></SubToolboxGrid></SubToolboxSection>
-                <SubToolboxActions columns={2}><SubToolboxButton size="action" tone="success" icon={<Check size={20} />}>Primary Action</SubToolboxButton><SubToolboxButton size="action" tone="neutral" icon={<Clipboard size={20} />}>Secondary Action</SubToolboxButton></SubToolboxActions>
               </SubToolboxStack>
             </SubToolbox>
           ) : null}
@@ -175,12 +211,12 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
             <SubToolbox title="Fields + Text Inputs" icon={<FormInput />} paletteIndex={paletteIndex + 3} collapsible isOpenInitial>
               <SubToolboxStack>
                 <SubToolboxGrid minItemWidth="wide">
-                  <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-title">Standard Input</SubToolboxFieldLabel>}><SubToolboxInput id="toolbox-library-title" value={textValue} onChange={(event) => setTextValue(event.target.value)} /></SubToolboxSection>
+                  <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-micro-title">26px Micro Input</SubToolboxFieldLabel>}><SubToolboxInput id="toolbox-library-micro-title" controlSize="micro" value={textValue} onChange={(event) => setTextValue(event.target.value)} /></SubToolboxSection>
+                  <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-title">48px Standard Input</SubToolboxFieldLabel>}><SubToolboxInput id="toolbox-library-title" value={textValue} onChange={(event) => setTextValue(event.target.value)} /></SubToolboxSection>
                   <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-search">Search Input</SubToolboxFieldLabel>}><SubToolboxInput id="toolbox-library-search" type="search" placeholder="Search videos…" /></SubToolboxSection>
                   <SubToolboxSection label="Invalid State"><SubToolboxInput aria-label="Invalid field example" aria-invalid="true" value="Required value" readOnly /></SubToolboxSection>
-                  <SubToolboxSection label="Disabled State"><SubToolboxInput aria-label="Disabled field example" value="Unavailable" disabled readOnly /></SubToolboxSection>
                 </SubToolboxGrid>
-                <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-copy">Text Area</SubToolboxFieldLabel>}><SubToolboxTextArea id="toolbox-library-copy" value={description} onChange={(event) => setDescription(event.target.value)} /></SubToolboxSection>
+                <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-copy">Text Area · subtle idle fill → white + thick accent focus</SubToolboxFieldLabel>}><SubToolboxTextArea id="toolbox-library-copy" value={description} onChange={(event) => setDescription(event.target.value)} /></SubToolboxSection>
               </SubToolboxStack>
             </SubToolbox>
           ) : null}
@@ -192,7 +228,6 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
                   <SubToolboxDropdownControl label="Privacy" value={privacy} options={["PUBLIC", "UNLISTED", "PRIVATE"]} onChange={setPrivacy} tone="orange" />
                   <SubToolboxDropdownTopTitleControl label="Format" value={format.toUpperCase()} options={[{ value: "longform", label: "LONGFORM" }, { value: "shorts", label: "SHORTS" }, { value: "live", label: "LIVE" }]} onChange={setFormat} tone="cyan" />
                   <SubToolboxDropdownTopTitleControl label="Destinations" value={`${destinations.length} SELECTED`} options={[{ value: "youtube", label: "YOUTUBE" }, { value: "shorts", label: "SHORTS FEED" }, { value: "community", label: "COMMUNITY" }]} onChange={toggleDestination} multiSelect selectedValues={destinations} tone="green" />
-                  <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="toolbox-library-native-select">Compact Select</SubToolboxFieldLabel>}><SubToolboxSelect id="toolbox-library-native-select" value={privacy} onChange={(event) => setPrivacy(event.target.value)}><option>PUBLIC</option><option>UNLISTED</option><option>PRIVATE</option></SubToolboxSelect></SubToolboxSection>
                 </SubToolboxGrid>
                 <SubToolboxSection label="Connection-Aware Video Selector">
                   <SubToolboxButton size="action" tone={connectedPreview ? "success" : "accent"} onClick={() => setConnectedPreview((current) => !current)}>{connectedPreview ? "SELECT VIDEO · CHANNEL CONNECTED" : "CONNECT YOUR YOUTUBE CHANNEL TO LOAD VIDEOS"}</SubToolboxButton>
@@ -230,7 +265,7 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
 
           <SubToolboxSurface tone="subtle" className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-[10px] font-black uppercase tracking-wider">Studio Hub Component Library v2 · canonical production reference</span>
-            <span className="text-[10px] font-black uppercase opacity-55">80/56/44px hierarchy · 32/48/56px controls · 12 palettes · mobile full width</span>
+            <span className="text-[10px] font-black uppercase opacity-55">80/56/44 hierarchy · 26/32/48/56 controls · Head/Tail · 12 palettes · mobile full width</span>
           </SubToolboxSurface>
         </SubToolboxStack>
       </ToolboxScaffold>
