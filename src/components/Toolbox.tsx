@@ -15,7 +15,7 @@ export const CONTROL_SHELL = {
   shadowOffset: 6,
   transition: "duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
 } as const;
-const SHELL_COLLAPSE_TRANSITION = "duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)]";
+const SHELL_COLLAPSE_TRANSITION = "duration-300 ease-out";
 const MAIN_TOOLBOX_STROKE = 5;
 const MAIN_TOOLBOX_SHADOW = 10;
 const SUB_TOOLBOX_STROKE = 4;
@@ -205,6 +205,13 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     : SHELL_COLLAPSE_TRANSITION;
   
   const headerHeight = variant === 'accordion' ? 56 : 80;
+  // Seam contract. The header's bottom border IS the divider, so nothing below
+  // it may overlap it: the blocks that follow start flush at the border's
+  // bottom edge. Previously the help rail and the content each pulled up by one
+  // stroke (a 10px overlap that also changed depth the instant `open` flipped),
+  // and WebKit composites the fading content above the non-composited z-20
+  // header — painting the divider out for the whole collapse animation.
+  const seamMargin = "0px";
   const paletteCycleContextValue = useMemo<PaletteCycleContextValue>(() => {
     return {
       mainPaletteIndex: paletteIndex ?? null,
@@ -299,13 +306,13 @@ export const Toolbox: React.FC<ToolboxProps> = ({
 
         {(subtitle || helpText || (helpGuide && helpGuide.length > 0)) && (
           <div
-            className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            className={`grid transition-[grid-template-rows,opacity] ${SHELL_COLLAPSE_TRANSITION} ${
               showHelpRail ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
             }`}
-            style={{ marginTop: open ? `-${stroke}px` : "0px" }}
+            style={{ marginTop: seamMargin }}
           >
             <div className="overflow-hidden min-h-0">
-              <div className={`bg-white px-6 py-3 ${open ? "border-b-[4px] border-black" : ""}`}>
+              <div className="bg-white px-6 py-3 border-b-[4px] border-black">
                 {(helpText || subtitle) && (
                   typeof (helpText || subtitle) === "string" ? (
                     <p className="text-[11px] font-black uppercase tracking-[0.14em] text-black/55">
@@ -333,7 +340,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
 
         <div
           className={`grid transition-[grid-template-rows,opacity] ${collapseTransitionClass} ${fillAvailable ? 'flex-1 min-h-0' : ''} ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
-          style={{ marginTop: showHelpRail ? "0px" : `-${stroke}px` }}
+          style={{ marginTop: seamMargin }}
         >
           <div className={`overflow-hidden min-h-0 ${fillAvailable ? 'h-full' : ''}`}>
             {(!unmountWhenClosed || open) && (
@@ -577,6 +584,9 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   const minInnerHeight = resolveSubtoolboxMinHeight(openUnits, heightMode);
 
   const contentSizeStyle = heightMode === "compact" ? undefined : { minHeight: `${Math.max(0, minInnerHeight)}px` };
+  // Same seam contract as Toolbox above: the header border is the divider and
+  // nothing below it overlaps it.
+  const subSeamMargin = "0px";
 
   const finalIcon = React.isValidElement(icon)
     ? React.cloneElement(icon as React.ReactElement<any>, { size: 40, strokeWidth: 1.75 })
@@ -611,10 +621,9 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           height: `${CONTROL_SHELL.headerHeight}px`,
           minHeight: `${CONTROL_SHELL.headerHeight}px`,
           backgroundColor: headerHex,
-          borderBottom:
-            open || showHelpRail
-              ? `${SUB_TOOLBOX_INNER_STROKE}px solid black`
-              : "0 solid transparent",
+          // Always drawn. Toggling this on `open` removed the divider for the
+          // whole collapse animation — the defect this contract exists to prevent.
+          borderBottom: `${SUB_TOOLBOX_INNER_STROKE}px solid black`,
           borderTopLeftRadius: `${SUB_TOOLBOX_RADIUS - SUB_TOOLBOX_STROKE}px`,
           borderTopRightRadius: `${SUB_TOOLBOX_RADIUS - SUB_TOOLBOX_STROKE}px`,
           overflow: "hidden",
@@ -656,10 +665,10 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
 
       {(subtitle || helpText) && (
         <div
-          className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          className={`grid transition-[grid-template-rows,opacity] ${SHELL_COLLAPSE_TRANSITION} ${
             showHelpRail ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
           }`}
-          style={{ marginTop: 0 }}
+          style={{ marginTop: subSeamMargin }}
         >
           <div className="overflow-hidden min-h-0">
             <div className="bg-white border-b-[3px] border-black px-4 py-2">
@@ -675,7 +684,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
 
       <div
         className={`grid transition-[grid-template-rows] ${SHELL_COLLAPSE_TRANSITION} ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden"}`}
-        style={{ marginTop: 0 }}
+        style={{ marginTop: subSeamMargin }}
       >
         <div className={`${overflowVisible ? "" : "overflow-hidden"} min-h-0`}>
           <main

@@ -33,13 +33,24 @@ describe("SubToolbox", () => {
   expect(html).toContain("isolation:isolate")
  })
 
- it("renders one bottom edge when collapsed and one content seam when open", () => {
+ it("keeps the divider under the title band in both states", () => {
   const closed = renderShell(false)
   const open = renderShell(true)
 
-  expect(closed).toContain("border-bottom:0 solid transparent")
+  // The header border is the divider. It is permanent: toggling it on `open`
+  // removed the line for the whole collapse animation.
+  expect(closed).toContain("border-bottom:4px solid black")
   expect(open).toContain("border-bottom:4px solid black")
-  expect(closed).not.toContain("margin-top:-4px")
-  expect(open).not.toContain("margin-top:-4px")
+ })
+
+ it("lets nothing below the header overlap the divider", () => {
+  const closed = renderShell(false)
+  const open = renderShell(true)
+
+  // A negative seam pulls the content over the border, and WebKit composites
+  // the fading content above the header — which paints the divider out.
+  for (const html of [closed, open]) {
+   expect(html).not.toMatch(/margin-top:-\d/)
+  }
  })
 })
