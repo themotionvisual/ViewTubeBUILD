@@ -12,6 +12,7 @@ import {
   BASE_URL,
 } from "./youtubeApiClient"
 import { getAccessToken } from "../auth/authSession"
+import { COMPARABLE_WINDOWS, resolveWindowRange } from "../analytics/windows"
 import { parseDurationSeconds, getFirstThreeSentences } from "../dataUtils"
 import {
  fetchShortsPlaylistIds,
@@ -1443,20 +1444,13 @@ export const syncCoreLifetimeData = async (
     if (coreChannelAnalytics) {
       const successfulMetrics = Array.from(successfulMetricsSet).join(",");
 
-      const windows = {
-        day28: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
-        day90: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
-        day365: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
-      }
+      // Keyed by canonical window ids ("7d", "28d", ...). These previously read
+      // "day28"/"day90"/"day365", which no canonical lookup could ever match,
+      // and omitted 7d entirely.
       await Promise.all(
-        Object.entries(windows).map(async ([window, start]) => {
-          const url = `${ANALYTICS_URL}/reports?ids=channel==MINE&startDate=${start}&endDate=${endDateStr}&metrics=${successfulMetrics}`
+        COMPARABLE_WINDOWS.map(async (window) => {
+          const range = resolveWindowRange({ window })
+          const url = `${ANALYTICS_URL}/reports?ids=channel==MINE&startDate=${range.startDate}&endDate=${range.endDate}&metrics=${successfulMetrics}`
           const res = await proxyFetch(url, {
             headers: { Authorization: `Bearer ${token}` },
           })

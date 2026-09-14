@@ -85,19 +85,27 @@ export const syncRetentionSeries = async (
  videoIds: string[],
  syncRunId: string,
  opts: {
+  /** @deprecated single-window form; prefer `windows`. */
   window?: AnalyticsWindow
+  windows?: AnalyticsWindow[]
   filters?: CanonicalRetentionFilterSet
  } = {},
 ): Promise<{
  series: CanonicalRetentionSeries[]
  audit: CanonicalRawAuditEntry[]
 }> => {
- const window = opts.window || "lifetime"
+ // Retention costs one request per video per window, so it stays the narrowest
+ // sink in the system. The default is deliberately still a single window —
+ // callers that want more must ask for them explicitly.
+ const windows = opts.windows?.length
+  ? opts.windows
+  : [opts.window || ("lifetime" as AnalyticsWindow)]
  const filters = opts.filters || {}
- const { startDate, endDate } = getWindowRange(window)
  const series: CanonicalRetentionSeries[] = []
  const audit: CanonicalRawAuditEntry[] = []
 
+ for (const window of windows) {
+ const { startDate, endDate } = getWindowRange(window)
  for (const videoId of videoIds) {
   const filterSet = [buildRetentionVideoFilter(videoId), ...buildRetentionFilters(filters)]
   try {
@@ -178,6 +186,7 @@ export const syncRetentionSeries = async (
     },
    })
   }
+ }
  }
 
  return { series, audit }

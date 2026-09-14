@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest"
 import type { VtSyncSnapshot, VtSyncVideoItem } from "../../features/vt-sync-local/adapters/contracts"
 import {
  filterCanonicalRowsByWindow,
+ filterRowsByUploadRecency,
  getCanonicalRowsFromVtSync,
  getMetricSummaryFromVtSync,
  getWindowTotalsFromVtSync,
@@ -142,32 +143,92 @@ describe("projectVtSyncVideoToCanonicalRow", () => {
  })
 })
 
-describe("filterCanonicalRowsByWindow", () => {
+describe("filterRowsByUploadRecency", () => {
+ const project = (v: VtSyncVideoItem) => projectVtSyncVideoToCanonicalRow(v)
+
  it("returns every row for 'lifetime'", () => {
-  const rows = [makeVideo("a", 1), makeVideo("b", 400)].map(
-   projectVtSyncVideoToCanonicalRow,
-  )
-  expect(filterCanonicalRowsByWindow(rows, "lifetime")).toHaveLength(2)
+  const rows = [makeVideo("a", 1), makeVideo("b", 400)].map(project)
+  expect(filterRowsByUploadRecency(rows, "lifetime")).toHaveLength(2)
  })
 
- it("filters by day window", () => {
+ it("filters by publish date, not by metric window", () => {
   const rows = [
    makeVideo("today", 0),
    makeVideo("last-week", 6),
    makeVideo("last-month", 30),
    makeVideo("last-year", 300),
-  ].map(projectVtSyncVideoToCanonicalRow)
-  expect(filterCanonicalRowsByWindow(rows, "7d")).toHaveLength(2)
-  expect(filterCanonicalRowsByWindow(rows, "28d")).toHaveLength(2)
-  expect(filterCanonicalRowsByWindow(rows, "90d")).toHaveLength(3)
-  expect(filterCanonicalRowsByWindow(rows, "365d")).toHaveLength(4)
+  ].map(project)
+  expect(filterRowsByUploadRecency(rows, "7d")).toHaveLength(2)
+  expect(filterRowsByUploadRecency(rows, "28d")).toHaveLength(2)
+  expect(filterRowsByUploadRecency(rows, "90d")).toHaveLength(3)
+  expect(filterRowsByUploadRecency(rows, "365d")).toHaveLength(4)
  })
 
  it("drops rows with an unparseable uploadDate", () => {
-  const bad = [{ ...makeVideo("bad", 0), publishedAt: "not-a-date" }].map(
-   projectVtSyncVideoToCanonicalRow as (v: VtSyncVideoItem) => ReturnType<typeof projectVtSyncVideoToCanonicalRow>,
-  )
-  expect(filterCanonicalRowsByWindow(bad, "7d")).toHaveLength(0)
+  const bad = [{ ...makeVideo("bad", 0), publishedAt: "not-a-date" }].map(project)
+  expect(filterRowsByUploadRecency(bad, "7d")).toHaveLength(0)
+ })
+
+ it("stays available under the deprecated alias", () => {
+  expect(filterCanonicalRowsByWindow).toBe(filterRowsByUploadRecency)
+ })
+})
+
+describe("window provenance", () => {
+ it("tags lifetime-only rows as a fallback, never as the window's own data", () => {
+  // VT-SYNC fetches video analytics from 2000-01-01, so a snapshot today has
+  // lifetime metrics only. The projector must mark them as a stand-in.
+  const row = projectVtSyncVideoToCanonicalRow(makeVideo("recent", 5, { views: 1000 }), "28d")
+  expect(row.window).toBe("28d")
+  expect(row.windowSource).toBe("lifetime_fallback")
+ })
+
+ it("returns no rows for a window with no real data, rather than lifetime values", () => {
+  // Consumers gate on rowCount, so [] lets them fall through to a genuinely
+  // windowed source instead of rendering lifetime numbers as 28d numbers.
+  const snap = makeSnapshot([makeVideo("recent", 5, { views: 1000 })])
+  expect(getCanonicalRowsFromVtSync(snap, "28d")).toEqual([])
+ })
+
+ it("reads real per-window metrics when the engine has them", () => {
+  const video = {
+   ...makeVideo("v", 400, { views: 5000 }),
+   metricsByWindow: { "28d": { views: 120 } },
+  } as VtSyncVideoItem
+  const row = projectVtSyncVideoToCanonicalRow(video, "28d")
+  expect(row.windowSource).toBe("window_exact")
+  expect(row.metrics.views.value).toBe(120)
+ })
+
+ it("keeps an older video whose metrics accrued inside the window", () => {
+  // The upload-date filter dropped these entirely — a video published two
+  // years ago still earns views in the last 28 days.
+  const snap = makeSnapshot([
+   {
+    ...makeVideo("old-but-active", 400, { views: 5000 }),
+    metricsByWindow: { "28d": { views: 300 } },
+   } as VtSyncVideoItem,
+  ])
+  const rows = getCanonicalRowsFromVtSync(snap, "28d")
+  expect(rows).toHaveLength(1)
+  expect(rows[0].metrics.views.value).toBe(300)
+ })
+
+ it("does not mix real window rows with lifetime-fallback rows", () => {
+  const snap = makeSnapshot([
+   {
+    ...makeVideo("windowed", 400, { views: 5000 }),
+    metricsByWindow: { "28d": { views: 300 } },
+   } as VtSyncVideoItem,
+   makeVideo("lifetime-only", 2, { views: 99 }),
+  ])
+  const rows = getCanonicalRowsFromVtSync(snap, "28d")
+  expect(rows.map((r) => r.id)).toEqual(["windowed"])
+ })
+
+ it("returns every row for lifetime regardless of publish date", () => {
+  const snap = makeSnapshot([makeVideo("new", 1), makeVideo("ancient", 4000)])
+  expect(getCanonicalRowsFromVtSync(snap, "lifetime")).toHaveLength(2)
  })
 })
 
@@ -182,14 +243,17 @@ describe("getCanonicalRowsFromVtSync + snapshot integration", () => {
   expect(getCanonicalRowsFromVtSync(snap, "28d")).toEqual([])
  })
 
- it("projects and filters in one call", () => {
+ it("returns [] for a window with no per-window data", () => {
   const snap = makeSnapshot([
    makeVideo("recent", 5),
    makeVideo("old", 100),
   ])
-  const rows = getCanonicalRowsFromVtSync(snap, "28d")
-  expect(rows).toHaveLength(1)
-  expect(rows[0].id).toBe("recent")
+  expect(getCanonicalRowsFromVtSync(snap, "28d")).toEqual([])
+ })
+
+ it("still returns every row for lifetime", () => {
+  const snap = makeSnapshot([makeVideo("recent", 5), makeVideo("old", 100)])
+  expect(getCanonicalRowsFromVtSync(snap, "lifetime")).toHaveLength(2)
  })
 })
 

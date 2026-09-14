@@ -41,6 +41,7 @@ import { ytApiQueue } from "../utils/RequestQueue"
 import {
  ANALYTICS_WINDOWS,
  type AnalyticsWindow,
+ resolveWindowRange,
  canonicalMetricOrder,
  getMetricByAliases,
  readYouTubeAnalyticsCache,
@@ -138,16 +139,6 @@ const DEFAULT_VIDEO_SYNC_BATCH_STATE: VideoSyncBatchState = {
  lastBatchCount: 0,
 }
 
-const WINDOW_DAY_LOOKBACK: Record<
- Exclude<AnalyticsWindow, "lifetime">,
- number
-> = {
- "7d": 7,
- "28d": 28,
- "90d": 90,
- "365d": 365,
-}
-
 type SyncMergePolicy = "merge" | "latest_only"
 
 export interface GA4AnalyticsData {
@@ -225,18 +216,15 @@ export class SyncCoordinator {
    AnalyticsWindow,
    { startDate: string; endDate: string }
   >
-  const end = this.toIsoDate(endDate)
+  const channelPublishedAt = this.toIsoDate(lifetimeStart)
 
   ANALYTICS_WINDOWS.forEach((window) => {
-   if (window === "lifetime") {
-    ranges[window] = { startDate: this.toIsoDate(lifetimeStart), endDate: end }
-    return
-   }
-
-   const days = WINDOW_DAY_LOOKBACK[window]
-   const start = new Date(endDate)
-   start.setDate(start.getDate() - (days - 1))
-   ranges[window] = { startDate: this.toIsoDate(start), endDate: end }
+   const { startDate, endDate: rangeEnd } = resolveWindowRange({
+    window,
+    channelPublishedAt,
+    endDate,
+   })
+   ranges[window] = { startDate, endDate: rangeEnd }
   })
 
   return ranges
@@ -744,16 +732,19 @@ export class SyncCoordinator {
     cacheData.channelLifetimeSummary = coreSyncResult.channelLifetimeSummary
 
     if (coreSyncResult.windowedAnalytics) {
+      // These used to be assigned onto cacheData directly, which put them at the
+      // top level while every reader (Selectors.resolveWindowTotals) looks them
+      // up inside cacheData.ledger. Combined with the old day28/day90/day365
+      // key names, the windowed channel totals were written but never readable.
       for (const [window, report] of Object.entries(coreSyncResult.windowedAnalytics)) {
-        cacheData[`youtube_analytics_v2::channel::::${window}`] = {
+        cacheData = upsertLedgerEntry(cacheData, {
           source: "youtube_analytics_v2",
           context: "channel",
           dimensions: [],
           metrics: [...CHANNEL_LIFETIME_METRICS],
-          window,
+          window: window as AnalyticsWindow,
           payload: report,
-          syncedAt: new Date().toISOString()
-        }
+        })
       }
     }
 

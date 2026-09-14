@@ -12,8 +12,9 @@ import {
  toMetricNumber,
 } from "./query"
 import { buildMetricValue } from "./normalizers/video"
+import { ANALYTICS_WINDOWS } from "../analytics/windows"
 
-const GEOGRAPHY_WINDOWS: AnalyticsWindow[] = ["lifetime", "365d", "90d", "28d"]
+const GEOGRAPHY_WINDOWS: AnalyticsWindow[] = ANALYTICS_WINDOWS
 const GEOGRAPHY_METRICS = [
  "views",
  "estimatedMinutesWatched",
