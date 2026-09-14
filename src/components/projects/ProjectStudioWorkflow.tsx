@@ -1,0 +1,94 @@
+import React, { useState } from "react"
+import { CheckSquare, Plus, Sparkles, Target, Video } from "lucide-react"
+import type { Project } from "../../types"
+import { useBrain } from "../../context/useBrain"
+import { generateProjectStrategy, generateStoryboard } from "../../services/gemini"
+import { SubToolbox } from "../Toolbox"
+import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../subtoolbox/SubToolboxLayouts"
+import { SubToolboxBadge, SubToolboxButton, SubToolboxCheckbox, SubToolboxInput, SubToolboxStatePanel, SubToolboxSurface } from "../subtoolbox/SubToolboxPrimitives"
+
+const ProjectStudioWorkflow: React.FC<{ project: Project }> = ({ project }) => {
+  const { brain, updateProject } = useBrain()
+  const [taskDraft, setTaskDraft] = useState("")
+  const [strategyBusy, setStrategyBusy] = useState(false)
+  const [storyboardBusy, setStoryboardBusy] = useState(false)
+  const [error, setError] = useState("")
+
+  const addTask = () => {
+    const text = taskDraft.trim()
+    if (!text) return
+    updateProject(project.id, { tasks: [...(project.tasks || []), { id: `pt-${Date.now()}`, text, completed: false }] })
+    setTaskDraft("")
+  }
+
+  const toggleTask = (taskId: string) => updateProject(project.id, {
+    tasks: (project.tasks || []).map((task) => task.id === taskId ? { ...task, completed: !task.completed } : task),
+  })
+
+  const generateStrategy = async () => {
+    setStrategyBusy(true)
+    setError("")
+    try {
+      const plan = await generateProjectStrategy(project.concept || project.name, project.niche || brain.targetNiche, project.description || "Channel audience", brain)
+      updateProject(project.id, { plan })
+    } catch (cause) {
+      console.error("Failed to generate project strategy", cause)
+      setError("Strategy generation could not complete. Check the AI connection and try again.")
+    } finally {
+      setStrategyBusy(false)
+    }
+  }
+
+  const generateVisualStoryboard = async () => {
+    if (!project.script) return
+    setStoryboardBusy(true)
+    setError("")
+    try {
+      updateProject(project.id, { storyboard: await generateStoryboard(project.script) })
+    } catch (cause) {
+      console.error("Failed to generate storyboard", cause)
+      setError("Storyboard generation could not complete. Check the AI connection and try again.")
+    } finally {
+      setStoryboardBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <SubToolbox title="PROJECT CHECKLIST" subtitle="Production tasks for the selected project" icon={<CheckSquare />} paletteIndex={8} collapsible isOpenInitial openUnits={4}>
+        <SubToolboxStack density="dense">
+          <SubToolboxSection label="Add next step">
+            <SubToolboxGrid minItemWidth="wide" density="dense">
+              <SubToolboxInput value={taskDraft} onChange={(event) => setTaskDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") addTask() }} placeholder="Add project task…" aria-label="New project task" />
+              <SubToolboxButton tone="ink" icon={<Plus size={14} />} onClick={addTask}>Add task</SubToolboxButton>
+            </SubToolboxGrid>
+          </SubToolboxSection>
+          <SubToolboxSection label="Current tasks">
+            {(project.tasks || []).length ? <SubToolboxStack density="dense">{(project.tasks || []).map((task) => <SubToolboxSurface key={task.id} tone="subtle"><SubToolboxCheckbox checked={task.completed} onChange={() => toggleTask(task.id)} label={<span className={task.completed ? "line-through opacity-40" : ""}>{task.text}</span>} /></SubToolboxSurface>)}</SubToolboxStack> : <SubToolboxStatePanel state="empty" message="No project tasks yet. Add the next production step above." />}
+          </SubToolboxSection>
+        </SubToolboxStack>
+      </SubToolbox>
+
+      <SubToolbox title="STRATEGY ENGINE" subtitle="Generate and refine this project's production strategy" icon={<Target />} paletteIndex={9} collapsible isOpenInitial openUnits={5}>
+        <SubToolboxStack density="comfortable">
+          <SubToolboxGrid minItemWidth="wide" density="dense">
+            {(["topic", "description", "length", "audience"] as const).map((field) => <SubToolboxInput key={field} value={String(project.plan?.[field] || "")} onChange={(event) => updateProject(project.id, { plan: { concept: project.plan?.concept || project.concept || "", niche: project.plan?.niche || project.niche || "", ...project.plan, [field]: event.target.value } })} placeholder={`Specify ${field}…`} aria-label={`Strategy ${field}`} />)}
+          </SubToolboxGrid>
+          <SubToolboxButton tone="accent" icon={<Sparkles size={16} />} disabled={strategyBusy} onClick={generateStrategy}>{strategyBusy ? "Generating strategy" : "Generate production strategy"}</SubToolboxButton>
+          {strategyBusy ? <SubToolboxStatePanel state="loading" message="Building project strategy from the project brief and AI Brain context…" /> : null}
+          {error ? <SubToolboxStatePanel state="error" message={error} /> : null}
+        </SubToolboxStack>
+      </SubToolbox>
+
+      <SubToolbox title="VISUAL STORYBOARD" subtitle="Map the project script into a visual production sequence" icon={<Video />} paletteIndex={10} collapsible isOpenInitial openUnits={5}>
+        <SubToolboxStack density="comfortable">
+          {project.storyboard?.length ? <SubToolboxGrid minItemWidth="wide" density="dense">{project.storyboard.map((scene, index) => <SubToolboxSurface key={scene.id || index} tone="subtle"><SubToolboxStack density="dense"><strong className="text-[12px] font-black uppercase">{scene.name || `Scene ${index + 1}`}</strong><div className="flex flex-wrap gap-2"><SubToolboxBadge>{scene.durationEstimate || 0}s</SubToolboxBadge><SubToolboxBadge>{scene.emotionScore || 0}% energy</SubToolboxBadge></div></SubToolboxStack></SubToolboxSurface>)}</SubToolboxGrid> : <SubToolboxStatePanel state="empty" message="No storyboard exists yet. Add a script, then map its visuals." />}
+          <SubToolboxButton tone="accent" icon={<Sparkles size={16} />} disabled={storyboardBusy || !project.script} onClick={generateVisualStoryboard}>{storyboardBusy ? "Mapping storyboard" : "Map visuals from script"}</SubToolboxButton>
+          {storyboardBusy ? <SubToolboxStatePanel state="loading" message="Mapping the project script into storyboard scenes…" /> : null}
+        </SubToolboxStack>
+      </SubToolbox>
+    </>
+  )
+}
+
+export default ProjectStudioWorkflow
