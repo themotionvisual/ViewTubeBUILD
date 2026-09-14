@@ -1,25 +1,90 @@
 /**
- * Canonical geometry, typography, spacing, color and motion contract for every
- * ViewTube subtoolbox. Consumer components should select a primitive/recipe;
- * they should not recreate these values with local utility classes.
+ * ViewTube Toolbox UI V35 token authority.
  *
- * There is one SubToolbox shell style. The former separate compactShell
- * geometry is intentionally removed: compact content may change layout density,
- * but it must not create a second SubToolbox header/stroke/radius system.
+ * Structural level owns geometry. Component families own anatomy/behavior.
+ * Feature consumers must not recreate these values locally.
+ * Compact is retired as a structural/component level: canonical controls use
+ * L0 / L1 / L2. Toolbox remains a separate top-level shell.
  */
-export const SUBTOOLBOX_TOKENS = {
-  shell: {
-    headerHeight: 44,
+
+export const VT_SPECTRUM_PALETTE = [
+  "#FA618A",
+  "#FF7F6B",
+  "#FFA85C",
+  "#FFDA47",
+  "#C0F240",
+  "#3FEE56",
+  "#4EE4BE",
+  "#36E0F6",
+  "#528FFA",
+  "#A467F4",
+  "#F55EFC",
+  "#FF7AC8",
+] as const
+
+export type ToolboxUiLevel = "toolbox" | "l0" | "l1" | "l2"
+export type ToolboxControlLevel = Exclude<ToolboxUiLevel, "toolbox">
+
+export const TOOLBOX_LEVEL_DNA = {
+  toolbox: {
+    height: 80,
+    stroke: 5,
+    radius: 16,
+    shadowOffset: 10,
+    titleSize: 26,
+  },
+  l0: {
+    height: 56,
     stroke: 4,
     radius: 12,
     shadowOffset: 6,
     titleSize: 22,
-    iconSize: 32,
   },
-  interior: {
+  l1: {
+    height: 48,
     stroke: 3,
     radius: 8,
     shadowOffset: 4,
+    titleSize: 18,
+  },
+  l2: {
+    height: 32,
+    stroke: 2,
+    radius: 6,
+    shadowOffset: 2,
+    titleSize: 12,
+  },
+} as const
+
+/**
+ * Explicit opposite-palette pairing. These are real palette colors, not
+ * opacity-derived variants. Index i pairs with the index returned here.
+ */
+export const TOOLBOX_OPPOSITE_PAIR_INDEX = [
+  6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5,
+] as const
+
+export const getToolboxColorPair = (index: number) => {
+  const normalized = ((index % VT_SPECTRUM_PALETTE.length) + VT_SPECTRUM_PALETTE.length) % VT_SPECTRUM_PALETTE.length
+  return {
+    rail: VT_SPECTRUM_PALETTE[normalized],
+    body: VT_SPECTRUM_PALETTE[TOOLBOX_OPPOSITE_PAIR_INDEX[normalized]],
+  }
+}
+
+export const SUBTOOLBOX_TOKENS = {
+  shell: {
+    headerHeight: TOOLBOX_LEVEL_DNA.l0.height,
+    stroke: TOOLBOX_LEVEL_DNA.l0.stroke,
+    radius: TOOLBOX_LEVEL_DNA.l0.radius,
+    shadowOffset: TOOLBOX_LEVEL_DNA.l0.shadowOffset,
+    titleSize: TOOLBOX_LEVEL_DNA.l0.titleSize,
+    iconSize: 36,
+  },
+  interior: {
+    stroke: TOOLBOX_LEVEL_DNA.l1.stroke,
+    radius: TOOLBOX_LEVEL_DNA.l1.radius,
+    shadowOffset: TOOLBOX_LEVEL_DNA.l1.shadowOffset,
   },
   spacing: {
     micro: 4,
@@ -29,22 +94,27 @@ export const SUBTOOLBOX_TOKENS = {
     large: 24,
   },
   controlHeight: {
-    // Two paired controls plus one 4px gap equal one collapsed SubToolbox:
-    // 20 + 4 + 20 = 44.
-    micro: 20,
-    compact: 32,
-    standard: 48,
-    // Level-1/module actions align exactly with the single SubToolbox shell.
-    action: 44,
+    l2: TOOLBOX_LEVEL_DNA.l2.height,
+    l1: TOOLBOX_LEVEL_DNA.l1.height,
+    l0: TOOLBOX_LEVEL_DNA.l0.height,
   },
   typography: {
-    micro: 9,
-    label: 10,
-    control: 14,
-    action: 22,
-    title: 22,
-    toolboxTitle: 28,
-    weight: 900,
+    l2: TOOLBOX_LEVEL_DNA.l2.titleSize,
+    l1: TOOLBOX_LEVEL_DNA.l1.titleSize,
+    l0: TOOLBOX_LEVEL_DNA.l0.titleSize,
+    toolbox: TOOLBOX_LEVEL_DNA.toolbox.titleSize,
+    weight: 1000,
+    letterSpacingEm: -0.055,
+    uppercaseChrome: true,
+  },
+  elevation: {
+    shadowOpacity: 0.42,
+    flatFamilies: ["slider", "range", "toggle", "switch", "checkbox", "radio", "progress", "divider"] as const,
+  },
+  focus: {
+    inward: true,
+    focusedFieldFill: "#FFFFFF",
+    caretUsesAccent: true,
   },
   motion: {
     controlMs: 180,
@@ -53,16 +123,15 @@ export const SUBTOOLBOX_TOKENS = {
   },
 } as const
 
-/** Compatibility geometry for existing Toolbox controls while consumers move
- * to the typed primitives. It is derived from the single token authority. */
+/** Compatibility geometry while existing consumers migrate to level props. */
 export const CONTROL_SHELL = {
   headerHeight: SUBTOOLBOX_TOKENS.shell.headerHeight,
-  height: SUBTOOLBOX_TOKENS.controlHeight.action,
-  stroke: SUBTOOLBOX_TOKENS.shell.stroke,
-  radius: SUBTOOLBOX_TOKENS.interior.radius,
-  railSize: SUBTOOLBOX_TOKENS.shell.headerHeight,
-  contentOffset: SUBTOOLBOX_TOKENS.shell.headerHeight,
-  shadowOffset: SUBTOOLBOX_TOKENS.shell.shadowOffset,
+  height: TOOLBOX_LEVEL_DNA.l0.height,
+  stroke: TOOLBOX_LEVEL_DNA.l0.stroke,
+  radius: TOOLBOX_LEVEL_DNA.l0.radius,
+  railSize: TOOLBOX_LEVEL_DNA.l0.height,
+  contentOffset: TOOLBOX_LEVEL_DNA.l0.height,
+  shadowOffset: TOOLBOX_LEVEL_DNA.l0.shadowOffset,
   transition: "duration-[180ms] ease-out motion-reduce:transition-none",
 } as const
 
@@ -71,13 +140,22 @@ export const SUBTOOLBOX_COLLAPSE_TRANSITION =
 
 export const resolveSubtoolboxMinHeight = (
   openUnits: number,
-  _heightMode: "standard" | "compact",
+  _heightMode?: "standard" | "compact",
 ) => {
   const gap = SUBTOOLBOX_TOKENS.spacing.large
-  const overhead = SUBTOOLBOX_TOKENS.controlHeight.action
-  return Math.max(0, openUnits * SUBTOOLBOX_TOKENS.controlHeight.action + (openUnits - 1) * gap - overhead)
+  const overhead = TOOLBOX_LEVEL_DNA.l0.height
+  return Math.max(0, openUnits * TOOLBOX_LEVEL_DNA.l0.height + (openUnits - 1) * gap - overhead)
 }
 
-export type SubToolboxControlSize = keyof typeof SUBTOOLBOX_TOKENS.controlHeight
+export type SubToolboxControlSize = ToolboxControlLevel
 export type SubToolboxLayoutDensity = "dense" | "standard" | "comfortable"
-export type SubToolboxState = "loading" | "ready" | "empty" | "blocked" | "stale" | "error"
+export type SubToolboxState =
+  | "loading"
+  | "ready"
+  | "empty"
+  | "filtered-empty"
+  | "disconnected"
+  | "blocked"
+  | "stale"
+  | "permission"
+  | "error"
