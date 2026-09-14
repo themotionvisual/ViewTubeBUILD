@@ -129,6 +129,12 @@ export type YouTubeSyncOptions = {
   * the enrichment-mode default (all segment datasets during a segments pass).
   */
  segmentDatasets?: SegmentDatasetId[]
+ /**
+  * Analytics windows to sync for the segment datasets. Lifetime always runs and
+  * is added implicitly; each additional window is another full pass over the
+  * selected datasets, so omitting this keeps the original single-pass cost.
+  */
+ windows?: AnalyticsWindow[]
 }
 
 const DEFAULT_VIDEO_SYNC_BATCH_STATE: VideoSyncBatchState = {
@@ -451,6 +457,7 @@ export class SyncCoordinator {
   endDate: string,
   targetVideoIds: string[],
   selected: SegmentDatasetId[],
+  window: AnalyticsWindow = "lifetime",
  ): Promise<void> {
   const wanted = new Set(selected)
 
@@ -467,9 +474,12 @@ export class SyncCoordinator {
     dimensions,
     metrics: (report.columnHeaders || []).map((header: any) => header.name),
     payload: report,
-    window: "lifetime",
+    window,
    }))
-   cacheData[cacheKey] = report
+   // The flat cache key is lifetime by contract: it is what the master tables
+   // read when they are not window-aware. Windowed reports live in the ledger
+   // only, keyed by window, so they cannot be mistaken for all-time values.
+   if (window === "lifetime") cacheData[cacheKey] = report
   }
 
   const run = async (
@@ -1627,24 +1637,35 @@ export class SyncCoordinator {
 
    if (shouldSyncSegmentDatasets) {
     try {
-     this.emitSyncStatus({
-      ...syncStatusBase,
-      phase: "syncing",
-      completedAt: null,
-      lastError: null,
-      stages: [
-       "Fetching segment datasets",
-       segmentSelection.join(", "),
-      ],
-     })
-     await this.syncSegmentDatasets(
-      cacheData,
-      profile.id,
-      startDate,
-      endDate,
-      targetVideoIds,
-      segmentSelection,
-     )
+     // Lifetime always runs; additional windows only when the caller asked.
+     // Each is a full pass over the selected segment datasets, so an
+     // unspecified options.windows keeps the original single-pass cost.
+     const segmentWindows: AnalyticsWindow[] = [
+      "lifetime",
+      ...(options?.windows || []).filter((window: AnalyticsWindow) => window !== "lifetime"),
+     ]
+     for (const segmentWindow of segmentWindows) {
+      this.emitSyncStatus({
+       ...syncStatusBase,
+       phase: "syncing",
+       completedAt: null,
+       lastError: null,
+       stages: [
+        "Fetching segment datasets",
+        `${segmentSelection.join(", ")} (${segmentWindow})`,
+       ],
+      })
+      const segmentRange = windowRanges[segmentWindow] || { startDate, endDate }
+      await this.syncSegmentDatasets(
+       cacheData,
+       profile.id,
+       segmentRange.startDate,
+       segmentRange.endDate,
+       targetVideoIds,
+       segmentSelection,
+       segmentWindow,
+      )
+     }
     } catch (e: any) {
      console.error("Segment datasets sync ERROR:", e?.message || e)
     }

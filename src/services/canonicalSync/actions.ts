@@ -1,4 +1,5 @@
-import type { CanonicalSyncOverview } from "./contracts"
+import type { AnalyticsWindow, CanonicalSyncOverview } from "./contracts"
+import { ANALYTICS_WINDOWS } from "../analytics/windows"
 import type { CanonicalOperatorPhaseId } from "./operatorPhases"
 import {
  runCanonicalPhaseOneSync,
@@ -86,6 +87,12 @@ export type CanonicalActionDefinition = {
  readiness: CanonicalActionReadiness
  helperText: string
  scope: "full_history" | "family_only" | "validation_only" | "targeted"
+ /**
+  * Windows this family can actually produce. Viewer cohorts are limited by the
+  * Analytics API itself; daily metrics are day-grained and derive their windows
+  * rather than fetching them.
+  */
+ supportedWindows?: AnalyticsWindow[]
  dropdownOptions?: Array<{
   id: CanonicalActionDropdownOption
   label: string
@@ -166,6 +173,8 @@ export const buildCanonicalActionDefinitions = (
     ? `${Number(overview?.channelDailyRowCount || 0).toLocaleString()} canonical daily rows stored`
     : "Full channel-history daily sync",
   scope: "full_history",
+  // Day-grained: its windows are derived from stored history, not fetched.
+  supportedWindows: ["lifetime"],
  },
  {
   id: "traffic",
@@ -269,6 +278,8 @@ export const buildCanonicalActionDefinitions = (
     ? `${Number(overview?.metricCoverage.viewerCohortsCount || 0).toLocaleString()} videos already have cohort metrics`
     : "Cohort sync stays separate from the audience segment sink",
   scope: "family_only",
+  // YouTube Analytics supports the cohort metrics on these windows only.
+  supportedWindows: ["7d", "28d", "90d"],
  },
  {
   id: "playlists",
@@ -350,6 +361,7 @@ export const runCanonicalOperatorAction = async (
 export const runCanonicalAction = async (
  actionId: CanonicalActionId,
  dropdownOption?: CanonicalActionDropdownOption,
+ windows: AnalyticsWindow[] = ANALYTICS_WINDOWS,
 ): Promise<CanonicalSyncOverview> => {
  if (activeRuns.has(actionId)) {
   throw new Error(`Sync family ${actionId} already running.`)
@@ -360,7 +372,7 @@ export const runCanonicalAction = async (
    case "default_sync":
     return await runCanonicalDefaultSync()
    case "video_metrics":
-    return await runCanonicalVideoMetricsSync()
+    return await runCanonicalVideoMetricsSync(windows)
    case "daily_metrics":
     return await runCanonicalDailyMetricsSync()
    case "traffic":
@@ -370,19 +382,19 @@ export const runCanonicalAction = async (
     await runCanonicalTrafficSync()
     return await getCanonicalSyncOverview()
    case "audience":
-    return await runCanonicalAudienceSync()
+    return await runCanonicalAudienceSync(windows)
    case "demographics":
-    return await runCanonicalDemographicsSync()
+    return await runCanonicalDemographicsSync(windows)
    case "geography":
-    return await runCanonicalGeographySync()
+    return await runCanonicalGeographySync(windows)
    case "revenue_monetization":
-    return await runCanonicalRevenueSync()
+    return await runCanonicalRevenueSync(windows)
    case "viewer_cohorts":
-    return await runCanonicalViewerCohortSync()
+    return await runCanonicalViewerCohortSync(windows)
    case "playlists":
-    return await runCanonicalPlaylistSync()
+    return await runCanonicalPlaylistSync(windows)
    case "retention":
-    return await runCanonicalRetentionSync()
+    return await runCanonicalRetentionSync(undefined, windows)
    case "test_sync":
     return await runCanonicalTestSync()
    default:

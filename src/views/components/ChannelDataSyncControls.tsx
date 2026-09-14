@@ -6,6 +6,11 @@ import {
 } from "../../services/analytics/SyncPipeline"
 import { CSV_MAJOR_FAMILY_STYLES } from "../../services/csvTaxonomy"
 import {
+ ANALYTICS_WINDOWS,
+ WINDOW_SHORT_LABELS,
+ type AnalyticsWindow,
+} from "../../services/analytics/windows"
+import {
  SEGMENT_DATASET_IDS,
  type SegmentDatasetId,
 } from "../../services/SyncCoordinator"
@@ -14,6 +19,7 @@ type SyncOptions = {
  batchMode?: "initial" | "next"
  enrichmentMode?: "core" | "video_metrics" | "traffic" | "segments" | "all"
  segmentDatasets?: SegmentDatasetId[]
+ windows?: AnalyticsWindow[]
 }
 
 // Per-dataset controls ported from the VT-SYNC SyncControllerModal. Each entry
@@ -194,6 +200,17 @@ export const ChannelDataSyncControls: React.FC<ChannelDataSyncControlsProps> = (
  lastSyncComplete,
  globalSyncData,
 }) => {
+ // Lifetime always runs and is added by the coordinator; these are the extra
+ // windows, each of which is another full pass over the selected datasets.
+ const [windows, setWindows] = React.useState<AnalyticsWindow[]>(["lifetime"])
+
+ const toggleWindow = (window: AnalyticsWindow) => {
+  if (window === "lifetime") return
+  setWindows((current) => current.includes(window)
+   ? current.filter((entry) => entry !== window)
+   : [...current, window])
+ }
+
  const runAction = (config: ActionButtonConfig) => {
   if (config.label === "Load Next 250 Videos") {
    return globalSyncData({ batchMode: "next" })
@@ -202,6 +219,7 @@ export const ChannelDataSyncControls: React.FC<ChannelDataSyncControlsProps> = (
   return globalSyncData({
    batchMode: row?.batchMode,
    enrichmentMode: row?.enrichmentMode,
+   windows,
   })
  }
 
@@ -224,6 +242,35 @@ export const ChannelDataSyncControls: React.FC<ChannelDataSyncControlsProps> = (
     <p className="text-[12px] font-bold leading-5 text-black/65 max-w-[980px]">
      Use the core sync first, then add the exact families you need. CSV uploads can still enrich metrics that the main sync path does not expose directly.
     </p>
+    <div className="flex flex-wrap items-center gap-2 pt-1">
+     <span className="text-[10px] font-[1000] uppercase tracking-[0.18em] text-black/45">
+      Time Windows
+     </span>
+     {ANALYTICS_WINDOWS.map((window) => {
+      const active = windows.includes(window)
+      const locked = window === "lifetime"
+      return (
+       <button
+        key={window}
+        type="button"
+        data-sync-window={window}
+        aria-pressed={active}
+        disabled={locked}
+        title={locked ? "Lifetime always syncs" : undefined}
+        onClick={() => toggleWindow(window)}
+        className={`border-[3px] border-black rounded-full px-3 py-1 text-[10px] font-[1000] uppercase tracking-[0.14em] transition-all ${
+         active ? "bg-[#C0F240] text-black" : "bg-white text-black/55"
+        } ${locked ? "opacity-70 cursor-default" : "hover:-translate-y-0.5"}`}>
+        {WINDOW_SHORT_LABELS[window]}
+       </button>
+      )
+     })}
+     <span className="text-[10px] font-bold text-black/45">
+      {windows.length <= 1
+       ? "Lifetime only"
+       : `${windows.length - 1} extra window${windows.length === 2 ? "" : "s"} — each is another pass over the selected datasets`}
+     </span>
+    </div>
    </div>
 
    <div className="mt-4 grid grid-cols-1 xl:grid-cols-4 gap-4">

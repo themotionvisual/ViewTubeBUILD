@@ -1275,10 +1275,24 @@ export const runCanonicalShadowSync = async (): Promise<CanonicalSyncOverview> =
 }
 }
 
-export const runCanonicalVideoMetricsSync = async (): Promise<
+/**
+ * Viewer cohort metrics exist only for 7d/28d/90d in YouTube Analytics, so a
+ * caller's window list is intersected rather than forwarded. Forwarding 365d
+ * would make the module emit window_not_supported rows for a window nobody
+ * meaningfully asked cohorts for.
+ */
+const cohortWindowsFrom = (windows: AnalyticsWindow[]): AnalyticsWindow[] => {
+ const supported: AnalyticsWindow[] = ["7d", "28d", "90d"]
+ const intersection = supported.filter((window) => windows.includes(window))
+ return intersection.length ? intersection : supported
+}
+
+export const runCanonicalVideoMetricsSync = async (
+ windows: AnalyticsWindow[] = ANALYTICS_WINDOWS,
+): Promise<
  CanonicalSyncOverview
 > => {
- let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
+ let syncRun = buildFamilySyncRun("pending", windows, {
   channel_bootstrap: "pending",
   channel_window: "pending",
   video_inventory: "pending",
@@ -1312,7 +1326,7 @@ export const runCanonicalVideoMetricsSync = async (): Promise<
   }
   await putCanonicalSyncRun(syncRun)
 
-  const metrics = await syncVideoMetrics(channel.channelId, inventory.records, syncRun.id)
+  const metrics = await syncVideoMetrics(channel.channelId, inventory.records, syncRun.id, windows)
   await putCanonicalVideoRecords(metrics.records, "video_metrics", "analytics_api")
   await putCanonicalRawAuditEntries(metrics.audit)
   syncRun = {
@@ -1322,7 +1336,7 @@ export const runCanonicalVideoMetricsSync = async (): Promise<
   }
   await putCanonicalSyncRun(syncRun)
 
-  const cohorts = await syncViewerCohorts(channel.channelId, metrics.records, syncRun.id)
+  const cohorts = await syncViewerCohorts(channel.channelId, metrics.records, syncRun.id, cohortWindowsFrom(windows))
   await putCanonicalVideoRecords(cohorts.records, "viewer_cohorts", "analytics_api")
   await putCanonicalRawAuditEntries(cohorts.audit)
   syncRun = {
@@ -1395,10 +1409,12 @@ export const runCanonicalDailyMetricsSync = async (): Promise<
  }
 }
 
-export const runCanonicalAudienceSync = async (): Promise<
+export const runCanonicalAudienceSync = async (
+ windows: AnalyticsWindow[] = ANALYTICS_WINDOWS,
+): Promise<
  CanonicalSyncOverview
 > => {
- let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
+ let syncRun = buildFamilySyncRun("pending", windows, {
  channel_bootstrap: "pending",
  audience_segments: "pending",
   demographics_sync: "pending",
@@ -1413,7 +1429,7 @@ export const runCanonicalAudienceSync = async (): Promise<
   }
   await putCanonicalSyncRun(syncRun)
   const inventory = await ensureCanonicalInventory(channel.channelId, syncRun.id)
-  const result = await syncAudienceSegmentRows(channel.channelId, inventory, syncRun.id)
+  const result = await syncAudienceSegmentRows(channel.channelId, inventory, syncRun.id, windows)
   await putCanonicalAudienceSplits(result.rows)
   await putCanonicalRawAuditEntries(result.audit)
   syncRun = {
@@ -1423,7 +1439,7 @@ export const runCanonicalAudienceSync = async (): Promise<
   }
   await putCanonicalSyncRun(syncRun)
 
-  const demoResult = await syncDemographicRows(channel.channelId, inventory, syncRun.id)
+  const demoResult = await syncDemographicRows(channel.channelId, inventory, syncRun.id, windows)
   await putCanonicalAudienceSplits(demoResult.rows)
   await putCanonicalRawAuditEntries(demoResult.audit)
   syncRun = {
@@ -1443,10 +1459,12 @@ export const runCanonicalAudienceSync = async (): Promise<
  }
 }
 
-export const runCanonicalDemographicsSync = async (): Promise<
+export const runCanonicalDemographicsSync = async (
+ windows: AnalyticsWindow[] = ANALYTICS_WINDOWS,
+): Promise<
  CanonicalSyncOverview
 > => {
- let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
+ let syncRun = buildFamilySyncRun("pending", windows, {
   channel_bootstrap: "pending",
   demographics_sync: "pending",
  })
@@ -1480,10 +1498,12 @@ export const runCanonicalDemographicsSync = async (): Promise<
  }
 }
 
-export const runCanonicalGeographySync = async (): Promise<
+export const runCanonicalGeographySync = async (
+ windows: AnalyticsWindow[] = ANALYTICS_WINDOWS,
+): Promise<
  CanonicalSyncOverview
 > => {
- let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
+ let syncRun = buildFamilySyncRun("pending", windows, {
   channel_bootstrap: "pending",
   geography_sync: "pending",
  })
@@ -1497,7 +1517,7 @@ export const runCanonicalGeographySync = async (): Promise<
   }
   await putCanonicalSyncRun(syncRun)
   const inventory = await ensureCanonicalInventory(channel.channelId, syncRun.id)
-  const result = await syncGeographyRows(channel.channelId, inventory, syncRun.id)
+  const result = await syncGeographyRows(channel.channelId, inventory, syncRun.id, windows)
   await putCanonicalGeographyRows(result.rows)
   await putCanonicalRawAuditEntries(result.audit)
   syncRun = {
@@ -1517,10 +1537,12 @@ export const runCanonicalGeographySync = async (): Promise<
  }
 }
 
-export const runCanonicalRevenueSync = async (): Promise<
+export const runCanonicalRevenueSync = async (
+ windows: AnalyticsWindow[] = ANALYTICS_WINDOWS,
+): Promise<
  CanonicalSyncOverview
 > => {
- let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
+ let syncRun = buildFamilySyncRun("pending", windows, {
   channel_bootstrap: "pending",
   video_inventory: "pending",
   video_metrics: "pending",
@@ -1543,7 +1565,7 @@ export const runCanonicalRevenueSync = async (): Promise<
    stageStatus: { ...syncRun.stageStatus, video_inventory: "complete" },
   }
   await putCanonicalSyncRun(syncRun)
-  const result = await syncRevenueMetrics(channel.channelId, inventory, syncRun.id)
+  const result = await syncRevenueMetrics(channel.channelId, inventory, syncRun.id, windows)
   await putCanonicalVideoRecords(result.records, "video_metrics", "analytics_api")
   await putCanonicalRawAuditEntries(result.audit)
   syncRun = {
@@ -1563,7 +1585,9 @@ export const runCanonicalRevenueSync = async (): Promise<
  }
 }
 
-export const runCanonicalViewerCohortSync = async (): Promise<
+export const runCanonicalViewerCohortSync = async (
+ windows: AnalyticsWindow[] = ANALYTICS_WINDOWS,
+): Promise<
  CanonicalSyncOverview
 > => {
  let syncRun = buildFamilySyncRun("pending", ["7d", "28d", "90d"], {
@@ -1580,7 +1604,7 @@ export const runCanonicalViewerCohortSync = async (): Promise<
   }
   await putCanonicalSyncRun(syncRun)
   const inventory = await ensureCanonicalInventory(channel.channelId, syncRun.id)
-  const result = await syncViewerCohorts(channel.channelId, inventory, syncRun.id)
+  const result = await syncViewerCohorts(channel.channelId, inventory, syncRun.id, cohortWindowsFrom(windows))
   await putCanonicalVideoRecords(result.records, "viewer_cohorts", "analytics_api")
   await putCanonicalRawAuditEntries(result.audit)
   syncRun = {
@@ -1600,10 +1624,12 @@ export const runCanonicalViewerCohortSync = async (): Promise<
  }
 }
 
-export const runCanonicalPlaylistSync = async (): Promise<
+export const runCanonicalPlaylistSync = async (
+ windows: AnalyticsWindow[] = ANALYTICS_WINDOWS,
+): Promise<
  CanonicalSyncOverview
 > => {
- let syncRun = buildFamilySyncRun("pending", ANALYTICS_WINDOWS, {
+ let syncRun = buildFamilySyncRun("pending", windows, {
   channel_bootstrap: "pending",
   playlist_sync: "pending",
  })
@@ -1616,7 +1642,7 @@ export const runCanonicalPlaylistSync = async (): Promise<
    stageStatus: { ...syncRun.stageStatus, channel_bootstrap: "complete" },
   }
   await putCanonicalSyncRun(syncRun)
-  const result = await syncPlaylists(channel.channelId, syncRun.id)
+  const result = await syncPlaylists(channel.channelId, syncRun.id, windows)
   await putCanonicalPlaylistRecords(result.playlists)
   await putCanonicalPlaylistWindowSummaries(result.summaries)
   await putCanonicalRawAuditEntries(result.audit)
