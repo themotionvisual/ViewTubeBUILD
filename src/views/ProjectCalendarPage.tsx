@@ -1,6 +1,6 @@
 import React from "react"
 import { CalendarDays, Columns3, FolderKanban, PanelsTopLeft, Workflow } from "lucide-react"
-import ProjectKanbanWorkspace from "../components/projects/ProjectKanbanWorkspace"
+import EmbeddedProjectKanbanWorkspace from "../components/projects/EmbeddedProjectKanbanWorkspace"
 import ProjectsToolboxModule from "../components/projects/ProjectsToolboxModule"
 import ContentAssetEngine from "../components/projects/ContentAssetEngine"
 import { ProjectStudio } from "../components/ProjectStudio"
@@ -12,7 +12,7 @@ const ProjectCalendarPage: React.FC = () => (
  <div className="mx-auto flex max-w-[1800px] flex-col gap-6 pb-24">
   <section id="project-kanban" className="scroll-mt-[86px]">
    <ProjectsToolboxModule title="Project Board" subtitle="Move projects from idea to published" icon={<Columns3 />} paletteIndex={0}>
-    <ProjectKanbanWorkspace />
+    <EmbeddedProjectKanbanWorkspace />
    </ProjectsToolboxModule>
   </section>
 
