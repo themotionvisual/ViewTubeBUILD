@@ -4,7 +4,7 @@ import ProjectKanbanWorkspace from "../components/projects/ProjectKanbanWorkspac
 import ProjectsToolboxModule from "../components/projects/ProjectsToolboxModule"
 import ContentAssetEngine from "../components/projects/ContentAssetEngine"
 import ChannelPlanningSubtoolboxes from "../components/projects/ChannelPlanningSubtoolboxes"
-import { ProjectStudio } from "../components/ProjectStudio"
+import ProjectStudioCanonical from "../components/projects/ProjectStudioCanonical"
 import StoryboardStudio from "./StoryboardStudio"
 import PublishingScheduleArchitect from "./PublishingScheduleArchitect"
 
@@ -37,7 +37,7 @@ const ProjectCalendarPage: React.FC = () => (
 
   <section id="project-studio" className="scroll-mt-[86px]">
    <ProjectsToolboxModule title="Project Studio" subtitle="Build and manage the working project" icon={<FolderKanban />} paletteIndex={6} isOpenInitial={false}>
-    <ProjectStudio />
+    <ProjectStudioCanonical />
    </ProjectsToolboxModule>
   </section>
 
