@@ -8,10 +8,7 @@ import type {
  VtSyncCategoryGroup,
  VtSyncDatasetFreshness,
 } from "../adapters/contracts"
-import {
- vtSyncCategoryIsWindowFetchable,
- VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS,
-} from "../adapters/windowDerivation"
+import { planVtSyncWindows } from "../adapters/windowBudget"
 import {
  ANALYTICS_WINDOWS,
  WINDOW_SHORT_LABELS,
@@ -104,21 +101,16 @@ export const VtSyncControllerPanel: React.FC<{
   return sortedVideos.filter((video) => video.title.toLowerCase().includes(query))
  }, [sortedVideos, videoSearch])
 
- const windowCost = useMemo(() => {
-  // Three disjoint groups, counted separately. Previously this lumped
-  // unwindowed categories in with the derived ones (claiming channel identity
-  // "derives its windows for free") and charged per window for categories the
-  // engine never loops — so the estimate was wrong in both directions.
-  const fetched = selected.filter(vtSyncCategoryIsWindowFetchable)
-  const derived = selected.filter((id) => VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(id))
-  const extraWindows = selectedWindows.filter((window) => window !== "lifetime").length
-  return {
-   fetchedCount: fetched.length,
-   derivedCount: derived.length,
-   extraRequests: fetched.length * extraWindows,
-   extraWindows,
-  }
- }, [selected, selectedWindows])
+ // The same model the engine enforces during the run. If these diverge, the
+ // number shown before the run is a lie.
+ const windowPlan = useMemo(
+  () => planVtSyncWindows({
+   categoryIds: selected,
+   windows: selectedWindows,
+   videoCount: videos.length,
+  }),
+  [selected, selectedWindows, videos.length],
+ )
 
  const toggleWindow = (window: VtSyncAnalyticsWindow) => {
   // Lifetime is not deselectable while the flat snapshot fields alias it.
@@ -342,13 +334,20 @@ export const VtSyncControllerPanel: React.FC<{
      })}
     </div>
     <p className="m-0 text-[11px] font-semibold leading-snug text-[#9ca3af]">
-     {windowCost.extraWindows === 0
+     {windowPlan.estimate.extraWindowCount === 0
       ? `Lifetime only — ${selected.length} dataset${selected.length === 1 ? "" : "s"} selected.`
-      : `${windowCost.fetchedCount} windowed dataset${windowCost.fetchedCount === 1 ? "" : "s"} x ${windowCost.extraWindows} extra window${windowCost.extraWindows === 1 ? "" : "s"} = ~${windowCost.extraRequests} additional request${windowCost.extraRequests === 1 ? "" : "s"}.`}
-     {windowCost.derivedCount > 0
-      ? ` ${windowCost.derivedCount} day-grained dataset${windowCost.derivedCount === 1 ? "" : "s"} derive their windows for free.`
+      : `${windowPlan.estimate.fetchedCategoryCount} windowed dataset${windowPlan.estimate.fetchedCategoryCount === 1 ? "" : "s"} x ${windowPlan.estimate.extraWindowCount} extra window${windowPlan.estimate.extraWindowCount === 1 ? "" : "s"} = ~${windowPlan.estimate.extraRequests} additional request${windowPlan.estimate.extraRequests === 1 ? "" : "s"}.`}
+     {windowPlan.estimate.derivedCategoryCount > 0
+      ? ` ${windowPlan.estimate.derivedCategoryCount} day-grained dataset${windowPlan.estimate.derivedCategoryCount === 1 ? "" : "s"} derive their windows for free.`
       : ""}
     </p>
+    {windowPlan.deferred.length > 0 ? (
+     <p className="m-0 mt-1 text-[11px] font-bold leading-snug text-[#f0a868]">
+      Over the {windowPlan.estimate.budget}-request budget —{" "}
+      {windowPlan.deferred.map((window) => WINDOW_SHORT_LABELS[window]).join(", ")}{" "}
+      will be deferred to a later run. Deselect datasets or windows to fit them in.
+     </p>
+    ) : null}
    </div>
 
    <div className="overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0d0d0d]">

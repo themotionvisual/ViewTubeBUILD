@@ -82,8 +82,18 @@ describe("engine window-loop invariants", () => {
  })
 
  it("always includes lifetime, because the flat snapshot fields alias it", () => {
-  const match = engineSource.match(/const aggregateWindows[^\n]*\n[^\n]*\n[^\n]*/)
+  const match = engineSource.match(/const requestedWindows[^\n]*\n[^\n]*\n[^\n]*/)
   expect(match?.[0]).toContain('"lifetime"')
+ })
+
+ it("runs only the windows the budget plan allows", () => {
+  expect(engineSource).toContain("const windowPlan = planVtSyncWindows({")
+  expect(engineSource).toContain("const aggregateWindows = windowPlan.windows")
+ })
+
+ it("reports deferred windows as partial rather than dropping them silently", () => {
+  expect(engineSource).toContain('phase: "window_budget"')
+  expect(engineSource).toContain("deferredWindows,")
  })
 
  it("skips day/month-grained categories on non-lifetime windows", () => {

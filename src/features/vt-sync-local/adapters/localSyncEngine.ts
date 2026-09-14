@@ -47,6 +47,7 @@ import type {
 } from "./contracts"
 import { ANALYTICS_WINDOWS, WINDOW_DAYS } from "../../../services/analytics/windows"
 import { VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS } from "./windowDerivation"
+import { planVtSyncWindows } from "./windowBudget"
 
 export const VT_SYNC_SERVER_ACCOUNT_TOKEN = "__viewtube_server_account_session__"
 export const VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE = 25
@@ -2030,9 +2031,18 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
  // Aggregate datasets cost one request per window, so an unspecified run stays
  // at lifetime — same requests, same quota as before windows existed. Lifetime
  // is always included: the flat snapshot fields still alias it.
- const aggregateWindows: VtSyncAnalyticsWindow[] = selectedWindows?.length
+ const requestedWindows: VtSyncAnalyticsWindow[] = selectedWindows?.length
   ? [...new Set<VtSyncAnalyticsWindow>(["lifetime", ...selectedWindows])]
   : ["lifetime"]
+ // Trim to what the run can afford. Degrades to fewer windows rather than
+ // failing; deferred windows are reported as pending, not as errors.
+ const windowPlan = planVtSyncWindows({
+  categoryIds: selectedCategories,
+  windows: requestedWindows,
+  videoCount: previousSnapshot.videos?.length || 0,
+ })
+ const aggregateWindows = windowPlan.windows
+ const deferredWindows = windowPlan.deferred
  const visibleSelectedCategories = filterVtSyncVisibleCategoryIds(selectedCategories)
  const hiddenRequestedCategories = selectedCategories.filter((categoryId) => !visibleSelectedCategories.includes(categoryId))
  const selected = new Set(visibleSelectedCategories)
@@ -2075,13 +2085,35 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   bundles_failed: [],
   diagnostics: [],
  }
+ if (deferredWindows.length) {
+  // Deferred, not failed. The run still succeeds; these windows simply were not
+  // affordable this time and stay unsynced until a later run asks for fewer.
+  manifest.diagnostics = [
+   ...(manifest.diagnostics || []),
+   {
+    phase: "window_budget",
+    categoryId: "window_budget",
+    status: "partial",
+    deferredWindows,
+    syncedWindows: aggregateWindows,
+    estimatedExtraRequests: windowPlan.estimate.extraRequests,
+    budget: windowPlan.estimate.budget,
+    error: `Deferred ${deferredWindows.join(", ")} to stay within the ${windowPlan.estimate.budget}-request window budget.`,
+   },
+  ]
+ }
  if (hiddenRequestedCategories.length) {
-  manifest.diagnostics = hiddenRequestedCategories.map((categoryId) => ({
-   phase: "category_visibility_guard",
-   categoryId,
-   status: "disabled_unvalidated",
-   reason: VT_SYNC_DISABLED_UNVALIDATED_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.disabledReason || "Hidden from the successful-only VT Sync pass.",
-  }))
+  // Append: assigning here would discard any diagnostic recorded before this
+  // point (the window budget entry above is the first such case).
+  manifest.diagnostics = [
+   ...(manifest.diagnostics || []),
+   ...hiddenRequestedCategories.map((categoryId) => ({
+    phase: "category_visibility_guard",
+    categoryId,
+    status: "disabled_unvalidated",
+    reason: VT_SYNC_DISABLED_UNVALIDATED_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.disabledReason || "Hidden from the successful-only VT Sync pass.",
+   })),
+  ]
  }
  let snapshot: VtSyncSnapshot = {
   ...previousSnapshot,

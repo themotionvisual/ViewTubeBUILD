@@ -71,11 +71,21 @@ describe("time window controller options", () => {
   startCalls.forEach((call) => expect(call).toContain("selectedWindows"))
  })
 
- it("excludes derived datasets from the request-cost estimate", () => {
+ it("estimates cost with the same model the engine enforces", () => {
+  // A separate estimate here would let the number shown before a run differ
+  // from the one applied during it.
   const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
-  // Three disjoint groups: fetched costs per window, derived is free, and
-  // unwindowed belongs to neither.
-  expect(source).toContain("selected.filter(vtSyncCategoryIsWindowFetchable)")
-  expect(source).toContain("VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(id)")
+  const engineSource = readFileSync(
+   new URL("../adapters/localSyncEngine.ts", import.meta.url),
+   "utf8",
+  )
+  expect(source).toContain("planVtSyncWindows({")
+  expect(engineSource).toContain("planVtSyncWindows({")
+ })
+
+ it("warns when the selection would defer windows", () => {
+  const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
+  expect(source).toContain("windowPlan.deferred.length > 0")
+  expect(source).toContain("will be deferred to a later run")
  })
 })
