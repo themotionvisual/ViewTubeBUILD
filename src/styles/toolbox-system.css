@@ -1,20 +1,19 @@
-/* Canonical ViewTube MAIN TOOLBOX authority.
- * Main toolboxes must remain visually distinct from nested SubToolboxes.
- * Component/module geometry is inherited from the owning shell rather than
- * recreated by feature-local CSS.
+/* Canonical ViewTube Toolbox hierarchy authority.
+ * One main Toolbox shell and one SubToolbox shell. Geometry is owned here/tokens,
+ * never recreated by feature-local CSS.
  */
 [data-vt-toolbox][data-vt-toolbox-level="main"] {
-  --vt-toolbox-header-height: 72px;
+  --vt-toolbox-header-height: 56px;
   --vt-toolbox-stroke: 5px;
   --vt-toolbox-radius: 16px;
   --vt-toolbox-shadow-offset: 10px;
-  --vt-toolbox-title-size: 24px;
+  --vt-toolbox-title-size: 28px;
   --vt-toolbox-component-stroke: 3px;
   --vt-toolbox-component-radius: 8px;
   --vt-toolbox-component-shadow: 4px;
   --vt-toolbox-component-compact: 32px;
   --vt-toolbox-component-standard: 48px;
-  --vt-toolbox-component-action: 52px;
+  --vt-toolbox-component-action: 44px;
   border-width: 5px !important;
   border-style: solid !important;
   border-color: #000 !important;
@@ -22,17 +21,16 @@
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-  height: 72px !important;
-  min-height: 72px !important;
+  height: 56px !important;
+  min-height: 56px !important;
   border-bottom: 0 !important;
 }
 
-/* Open-shell divider begins after the square icon rail. This deliberately
- * prevents the thin horizontal rule from appearing underneath the icon box. */
+/* Open-shell divider begins after the square icon rail: never underline the icon box. */
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header::after {
   content: "";
   position: absolute;
-  left: 72px;
+  left: 56px;
   right: 0;
   bottom: 0;
   height: 5px;
@@ -42,18 +40,23 @@
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-  width: 72px !important;
-  min-width: 72px !important;
-  height: 72px !important;
-  flex: 0 0 72px !important;
+  width: 56px !important;
+  min-width: 56px !important;
+  height: 56px !important;
+  flex: 0 0 56px !important;
   aspect-ratio: 1 / 1 !important;
   border-right: 5px solid #000 !important;
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
-  font-size: 24px !important;
+  font-size: 28px !important;
   line-height: 1 !important;
   font-weight: 1000 !important;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header svg {
+  max-width: 36px;
+  max-height: 36px;
 }
 
 /* Main toolbox content establishes the level-1 module contract. */
@@ -67,7 +70,6 @@
   --vt-inner-shadow: 4px;
 }
 
-/* Reusable first-level module surfaces match the SubToolbox hierarchy. */
 [data-vt-toolbox][data-vt-toolbox-level="main"] .vt-level1-surface {
   border-width: var(--vt-level1-stroke, 4px) !important;
   border-style: solid !important;
@@ -76,7 +78,6 @@
   box-shadow: var(--vt-level1-shadow, 6px) var(--vt-level1-shadow, 6px) 0 0 var(--vt-level1-shadow-color, var(--vt-toolbox-shadow-color, rgb(0 0 0 / .35))) !important;
 }
 
-/* Interior modules/components share the 3/8/4 primitive contract. */
 [data-vt-toolbox][data-vt-toolbox-level="main"] .vt-inner-surface {
   border-width: var(--vt-inner-stroke, 3px) !important;
   border-style: solid !important;
@@ -85,26 +86,26 @@
   box-shadow: var(--vt-inner-shadow, 4px) var(--vt-inner-shadow, 4px) 0 0 var(--vt-subtoolbox-shadow, var(--vt-toolbox-shadow-color, rgb(0 0 0 / .3))) !important;
 }
 
-/* Production nested sections are always SubToolbox-sized. */
+/* There is one production SubToolbox shell. The former compact shell style is removed. */
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] {
   --vt-subtoolbox-stroke: 4px;
   --vt-subtoolbox-radius: 12px;
   --vt-subtoolbox-shadow-offset: 6px;
-  --vt-subtoolbox-header-height: 52px;
-  --vt-subtoolbox-title-size: 18px;
+  --vt-subtoolbox-header-height: 44px;
+  --vt-subtoolbox-title-size: 22px;
   box-sizing: border-box;
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
-  height: 52px !important;
-  min-height: 52px !important;
+  height: 44px !important;
+  min-height: 44px !important;
   border-bottom: 0 !important;
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header::after {
   content: "";
   position: absolute;
-  left: 52px;
+  left: 44px;
   right: 0;
   bottom: 0;
   height: 4px;
@@ -113,22 +114,25 @@
   z-index: 30;
 }
 
-/* Compatibility accordion is level-1 only; never let its geometry become the
- * default ToolboxScaffold treatment. */
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header svg {
+  max-width: 28px;
+  max-height: 28px;
+}
+
+/* Compatibility accordion resolves to the same single SubToolbox geometry. */
 [data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="accordion"] {
-  --vt-toolbox-header-height: 52px;
+  --vt-toolbox-header-height: 44px;
   --vt-toolbox-radius: 12px;
-  --vt-toolbox-title-size: 18px;
+  --vt-toolbox-title-size: 22px;
   border-width: 4px !important;
   border-radius: 12px !important;
 }
 
-/* Split-left module actions are peers of a collapsed SubToolbox: same 52px
- * height, 4px shell stroke, 12px radius and 18px title typography. */
+/* Split-left module actions are peers of a collapsed SubToolbox. */
 [data-vt-toolbox-level="sub"] [data-vt-split-left],
 [data-vt-toolbox-level="sub"] .vt-split-left-module-action {
-  min-height: 52px !important;
-  height: 52px !important;
+  min-height: 44px !important;
+  height: 44px !important;
   border-width: 4px !important;
   border-style: solid !important;
   border-color: #000 !important;
@@ -137,16 +141,16 @@
   align-items: stretch;
   overflow: hidden;
   padding: 0 !important;
-  font-size: 18px !important;
+  font-size: 22px !important;
   font-weight: 900 !important;
   line-height: 1 !important;
 }
 [data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-rail],
 [data-vt-toolbox-level="sub"] .vt-split-left-module-action > :first-child {
-  width: 52px !important;
-  min-width: 52px !important;
-  height: 52px !important;
-  flex: 0 0 52px !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  flex: 0 0 44px !important;
   aspect-ratio: 1 / 1 !important;
   display: flex;
   align-items: center;
@@ -161,15 +165,14 @@
   align-items: center;
   justify-content: center;
   padding-inline: 12px;
-  font-size: 18px !important;
+  font-size: 22px !important;
   font-weight: 900 !important;
 }
 
-/* The compatibility grid action component currently emits no data attribute;
- * constrain its direct button geometry inside the reference/action sections
- * until all consumers move to the typed primitive marker. */
-[data-vt-toolbox-level="sub"] button[style*="height: 56px"] {
-  max-height: 52px;
+/* Compatibility grid actions that still carry historical inline heights are capped to T1. */
+[data-vt-toolbox-level="sub"] button[style*="height: 56px"],
+[data-vt-toolbox-level="sub"] button[style*="height: 52px"] {
+  max-height: 44px;
 }
 
 @media (max-width: 767px) {
@@ -179,16 +182,15 @@
     min-width: 0 !important;
   }
 
-  /* Main Toolboxes remain T0 on phones; the canonical T0 header is now 72px. */
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-    height: 72px !important;
-    min-height: 72px !important;
+    height: 56px !important;
+    min-height: 56px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-    width: 72px !important;
-    min-width: 72px !important;
-    height: 72px !important;
-    flex-basis: 72px !important;
+    width: 56px !important;
+    min-width: 56px !important;
+    height: 56px !important;
+    flex-basis: 56px !important;
   }
 }
