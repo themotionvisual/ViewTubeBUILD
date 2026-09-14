@@ -1,0 +1,69 @@
+/* Master Data overlay hardening — presentation-only safety layer.
+ * Keeps dataset and transfer menus above the table without changing Toolbox geometry.
+ * Structural React portals remain the preferred long-term owner for transfer menus.
+ */
+.vt-sync-toolbox-table .vt-sync-category-rail,
+.vt-sync-toolbox-table .vt-sync-toolbar,
+.vt-sync-toolbox-table .vt-sync-toolbox-content-inner {
+  isolation: auto;
+}
+
+/* Dataset menus are already fixed-position in the canonical table stylesheet.
+ * Preserve a visible air gap, complete rounded shell, and viewport-bounded body. */
+.vt-sync-toolbox-table .vt-sync-subset-menu {
+  z-index: 2147482500 !important;
+  border-radius: 10px !important;
+  overflow: auto !important;
+  max-height: min(58dvh, 430px) !important;
+  overscroll-behavior: contain;
+  box-shadow: 6px 6px 0 var(--vt-ink, #000);
+  transform: translateY(7px) !important;
+}
+.vt-sync-toolbox-table .vt-sync-subset-menu > button:first-child {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+.vt-sync-toolbox-table .vt-sync-subset-menu > button:last-child {
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+/* Transfer menus must never disappear behind the split table. Desktop/tablet
+ * stays trigger-anchored; phone compositions use a bounded dialog-like surface. */
+.vt-sync-toolbox-table .vt-sync-transfer-menu[open] {
+  z-index: 2147482600 !important;
+}
+.vt-sync-toolbox-table .vt-sync-transfer-popover {
+  z-index: 2147482700 !important;
+  margin-top: 6px;
+  border-radius: 10px !important;
+  overflow: auto;
+  overscroll-behavior: contain;
+  box-shadow: 6px 6px 0 var(--vt-ink, #000);
+}
+
+@media (max-width: 620px) {
+  .vt-sync-toolbox-table .vt-sync-transfer-popover {
+    position: fixed !important;
+    inset: 50% auto auto 50% !important;
+    width: calc(100vw - 28px) !important;
+    max-width: 420px !important;
+    max-height: min(62dvh, 460px) !important;
+    margin: 0 !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}
+
+@media (max-width: 930px) and (orientation: landscape) and (max-height: 520px) {
+  .vt-sync-toolbox-table .vt-sync-transfer-popover {
+    position: fixed !important;
+    inset: 50% auto auto 50% !important;
+    width: min(460px, calc(100vw - 40px)) !important;
+    max-height: calc(100svh - 32px) !important;
+    margin: 0 !important;
+    transform: translate(-50%, -50%) !important;
+  }
+  .vt-sync-toolbox-table .vt-sync-subset-menu {
+    max-height: calc(100svh - 32px) !important;
+  }
+}
