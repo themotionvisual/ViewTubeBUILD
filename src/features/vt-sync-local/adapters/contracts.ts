@@ -390,6 +390,17 @@ export type VtSyncSnapshot = VtSyncChannelIdentity & {
  snapshotId: string
  capturedAt: string
  selectedTimeWindow?: VtSyncAnalyticsWindow
+ /**
+  * Aggregate dataset rows for non-lifetime windows, keyed window -> datasetId.
+  *
+  * The flat snapshot fields (geography, devices, demographics, ...) keep
+  * holding LIFETIME rows so every existing reader stays correct while
+  * consumers migrate one at a time. Absent means "not synced for that window",
+  * which is not the same as an empty result and must not render as zero.
+  */
+ datasetsByWindow?: Partial<
+  Record<VtSyncAnalyticsWindow, Record<string, Array<Record<string, unknown>>>>
+ >
  channelTotals?: VtSyncChannelTotals | null
  videos: VtSyncVideoItem[]
  dailyMetrics: VtSyncDailyMetricRow[]
