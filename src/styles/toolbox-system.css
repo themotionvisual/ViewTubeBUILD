@@ -26,11 +26,13 @@
   border-bottom: 0 !important;
 }
 
-/* Open-shell divider begins after the square icon rail: never underline the icon box. */
+/* The divider runs the full header width, icon rail included: one continuous
+   rule of the level stroke, matching the MiniToolbox reference header. Starting
+   it after the rail left the icon box with a visibly thinner bottom edge. */
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header::after {
   content: "";
   position: absolute;
-  left: 56px;
+  left: 0;
   right: 0;
   bottom: 0;
   height: 5px;
@@ -105,7 +107,7 @@
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header::after {
   content: "";
   position: absolute;
-  left: 44px;
+  left: 0;
   right: 0;
   bottom: 0;
   height: 4px;
@@ -192,5 +194,102 @@
     min-width: 56px !important;
     height: 56px !important;
     flex-basis: 56px !important;
+  }
+}
+
+/* ==========================================================================
+   Mobile header geometry — one authority, level-owned.
+
+   On a phone the header is sized to its own title rather than to the desktop
+   rhythm: the row is only a little taller than the title's cap height, and the
+   square icon rail follows the row height so the rail stays square. Stroke,
+   radius and shadow are already reduced for mobile elsewhere; the divider
+   follows the reduced stroke so it still reads as one continuous rule across
+   the full width, icon rail included.
+
+   These selectors match the specificity of the desktop rules above on purpose
+   — geometry for a level lives in one place, not spread across feature CSS.
+   ========================================================================== */
+@media (max-width: 767px) {
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) {
+    --vt-toolbox-header-height: 36px;
+    --vt-toolbox-title-size: 22px;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
+    height: 36px !important;
+    min-height: 36px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header::after {
+    height: var(--vt-toolbox-stroke, 3px);
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    height: 36px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
+    font-size: 22px !important;
+    line-height: 1 !important;
+  }
+
+  /* Right-hand cluster: the 64px desktop hit columns would eat a phone row. */
+  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > div:last-child > * {
+    width: 34px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > div:last-child span {
+    width: 24px !important;
+    height: 24px !important;
+    box-shadow: 2px 2px 0 0 #000 !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > div:last-child svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  /* SubToolbox — same treatment one level down. */
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"],
+  [data-vt-toolbox-level="sub"],
+  [data-vt-subtoolbox-module="true"] {
+    --vt-subtoolbox-header-height: 30px;
+    --vt-subtoolbox-title-size: 16px;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
+    height: 30px !important;
+    min-height: 30px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header::after {
+    height: var(--vt-subtoolbox-stroke, 3px);
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child {
+    width: 30px !important;
+    min-width: 30px !important;
+    flex-basis: 30px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header svg {
+    width: 18px !important;
+    height: 18px !important;
+    max-width: 18px;
+    max-height: 18px;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header h3 {
+    font-size: 16px !important;
+    line-height: 1 !important;
   }
 }

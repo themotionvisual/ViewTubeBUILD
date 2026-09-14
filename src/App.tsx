@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useSyncExternalStore } from "react"
 import { BrowserRouter, useLocation } from "react-router-dom"
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { GlobalDataProvider } from "./context/GlobalDataContext"
@@ -11,7 +11,7 @@ import { AppRoutes } from "./app/AppRoutes"
 import { ScrollToTop } from "./app/ScrollToTop"
 import { DiagnosticOverlay } from "./app/DiagnosticOverlay"
 import { recordBootPhase } from "./app/onScreenDiagnostics"
-import { isDeveloperDiagnosticsEnabled } from "./services/diagnostics"
+import { isDiagnosticOverlayEnabled, subscribeDiagnosticOverlay } from "./services/diagnostics"
 import { SimpleAuthProvider } from "./auth/AuthProvider"
 
 const DARK_THEME_CSS = `
@@ -56,9 +56,14 @@ const DARK_THEME_CSS = `
 function AppInner() {
  const location = useLocation()
  const isBareRoute = location.pathname.startsWith("/render-bench")
- // Diagnostics are intentionally visible by default during the current
- // auth/API stabilization period. ?vtDiagnostics=0 is the explicit opt-out.
- const showDiag = useMemo(() => isDeveloperDiagnosticsEnabled(), [])
+ // The diagnostic panel is opt-in from Navigation → Diagnostics (or
+ // ?vtDiagnostics=1). useSyncExternalStore so flipping the toggle shows and
+ // hides the panel immediately instead of waiting for a reload.
+ const showDiag = useSyncExternalStore(
+  subscribeDiagnosticOverlay,
+  isDiagnosticOverlayEnabled,
+  () => false,
+ )
 
  if (isBareRoute) {
   return (

@@ -72,7 +72,7 @@ export const GlobalBrainSidecar: React.FC = () => {
     <button
      type="button"
      onClick={() => setShowControls(true)}
-     className="fixed bottom-4 right-4 z-[130] inline-flex items-center gap-2 rounded-[10px] border-[3px] border-black bg-[#FFDA47] px-3 py-2 text-[9px] font-[1000] uppercase shadow-[4px_4px_0_0_#000]"
+     className="fixed bottom-4 right-4 z-[130] hidden md:inline-flex items-center gap-2 rounded-[10px] border-[3px] border-black bg-[#FFDA47] px-3 py-2 text-[9px] font-[1000] uppercase shadow-[4px_4px_0_0_#000]"
      aria-label="Open Brain controls"
     >
      <Brain size={15} />Brain Off · Controls
@@ -91,7 +91,7 @@ export const GlobalBrainSidecar: React.FC = () => {
    <button
     type="button"
     onClick={() => setOpenState(true)}
-    className="fixed bottom-4 right-4 z-[130] inline-flex items-center gap-2 rounded-[12px] border-[3px] border-black bg-[#C0F240] px-4 py-3 text-[10px] font-[1000] uppercase shadow-[5px_5px_0_0_#000] transition hover:-translate-y-0.5"
+    className="fixed bottom-4 right-4 z-[130] hidden md:inline-flex items-center gap-2 rounded-[12px] border-[3px] border-black bg-[#C0F240] px-4 py-3 text-[10px] font-[1000] uppercase shadow-[5px_5px_0_0_#000] transition hover:-translate-y-0.5"
     aria-label="Open ViewTube Brain"
    >
     <Brain size={17} />Brain

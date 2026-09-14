@@ -82,6 +82,44 @@ export const isDeveloperDiagnosticsEnabled = (): boolean => {
  try { return window.localStorage.getItem("vt_diagnostics_disabled") !== "1" } catch { return true }
 }
 
+/**
+ * Overlay visibility is a separate, explicitly opt-in flag from the recording
+ * buffer above. The buffer keeps filling (it is a cheap in-memory ring, and a
+ * user who turns the overlay on wants the history that led to the problem),
+ * but the on-screen panel stays hidden until someone asks for it from the
+ * navigation menu. It used to default to on, which put a DIAG panel over the
+ * top-left of every phone session.
+ */
+const OVERLAY_STORAGE_KEY = "vt_diagnostics_overlay"
+const overlayListeners = new Set<() => void>()
+
+export const isDiagnosticOverlayEnabled = (): boolean => {
+ if (typeof window === "undefined") return false
+ const params = new URLSearchParams(window.location.search)
+ const paramValue = params.get("vtDiagnostics")
+ if (paramValue === "1") {
+  try { window.localStorage.setItem(OVERLAY_STORAGE_KEY, "1") } catch { /* no-op */ }
+  return true
+ }
+ if (paramValue === "0") {
+  try { window.localStorage.setItem(OVERLAY_STORAGE_KEY, "0") } catch { /* no-op */ }
+  return false
+ }
+ try { return window.localStorage.getItem(OVERLAY_STORAGE_KEY) === "1" } catch { return false }
+}
+
+export const setDiagnosticOverlayEnabled = (enabled: boolean): void => {
+ if (typeof window === "undefined") return
+ try { window.localStorage.setItem(OVERLAY_STORAGE_KEY, enabled ? "1" : "0") } catch { /* no-op */ }
+ overlayListeners.forEach((listener) => listener())
+}
+
+/** Subscribe to overlay-visibility changes. Returns an unsubscribe function. */
+export const subscribeDiagnosticOverlay = (listener: () => void): (() => void) => {
+ overlayListeners.add(listener)
+ return () => { overlayListeners.delete(listener) }
+}
+
 const flushConsoleSummary = () => {
  consoleFlushTimer = null
  if (!isDeveloperDiagnosticsEnabled()) return

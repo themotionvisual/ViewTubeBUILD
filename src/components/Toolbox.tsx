@@ -246,9 +246,9 @@ export const Toolbox: React.FC<ToolboxProps> = ({
             borderBottom: `var(--vt-toolbox-stroke, ${stroke}px) solid black`,
           }}
         >
-          <div className="flex items-center h-full flex-1">
+          <div className="flex items-center h-full flex-1 min-w-0">
             <div
-              className={`${iconBoxColor} flex items-center justify-center transition-all`}
+              className={`${iconBoxColor} flex items-center justify-center transition-all shrink-0`}
               style={{
                 ...iconStyle,
                 height: '100%',
@@ -259,7 +259,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               {resolvedIcon}
             </div>
 
-            <div className={`flex flex-col pl-4 justify-center pointer-events-none select-none`}>
+            <div className={`flex flex-col pl-4 justify-center min-w-0 pointer-events-none select-none`}>
               {variant === 'accordion' ? (
                 <h3 className="text-[20px] font-[900] uppercase tracking-tighter leading-none mt-0.5">{title}</h3>
               ) : (
@@ -269,7 +269,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           </div>
 
           <div
-            className={`flex items-center ${variant === 'accordion' ? 'gap-3 pr-4' : 'gap-6 pr-6'} h-full`}
+            className={`flex items-center shrink-0 ${variant === 'accordion' ? 'gap-3 pr-4' : 'gap-6 pr-6'} h-full`}
             onClick={(event) => event.stopPropagation()}
           >
             {headerActions}
@@ -636,19 +636,19 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           overflow: "hidden",
         }}
       >
-        <div className="flex items-center h-full flex-1">
+        <div className="flex items-center h-full flex-1 min-w-0">
           <IconRail backgroundColor={iconBg} stroke={SUB_TOOLBOX_INNER_STROKE}>
             <div className="text-black">{finalIcon}</div>
           </IconRail>
 
-          <div className="flex items-center pl-2.5 h-full pointer-events-none select-none">
-            <h3 className="font-[900] uppercase tracking-tighter leading-none text-[length:var(--vt-subtoolbox-title-size,20px)]">
+          <div className="flex items-center pl-2.5 h-full min-w-0 pointer-events-none select-none">
+            <h3 className="min-w-0 truncate font-[900] uppercase tracking-tighter leading-none text-[length:var(--vt-subtoolbox-title-size,20px)]">
               {title}
             </h3>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 pr-3 h-full" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-2 pr-3 h-full shrink-0" onClick={e => e.stopPropagation()}>
           {actionButton}
           {collapsible && (subtitle || helpText) && (
             <button

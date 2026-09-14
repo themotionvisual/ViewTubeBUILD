@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import {
+  Activity,
   ChevronDown,
   ChevronsLeft,
   ChevronsRight,
@@ -11,6 +12,11 @@ import {
   X,
 } from "lucide-react"
 import { NavIcon } from "./navIcons"
+import {
+  isDiagnosticOverlayEnabled,
+  setDiagnosticOverlayEnabled,
+  subscribeDiagnosticOverlay,
+} from "../../services/diagnostics"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import { useBrain } from "../../context/useBrain"
@@ -269,6 +275,13 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   })
   const [mobile, setMobile] = useState(isMobileViewport)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  // Diagnostics visibility lives in one store so the menu switch and the
+  // overlay agree without a reload.
+  const diagnosticsOn = useSyncExternalStore(
+    subscribeDiagnosticOverlay,
+    isDiagnosticOverlayEnabled,
+    () => false,
+  )
   const [accountOpen, setAccountOpen] = useState(false)
   const [geminiSettingsOpen, setGeminiSettingsOpen] = useState(false)
   const [announcement, setAnnouncement] = useState("")
@@ -679,6 +692,19 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
               >
                 <div className="vt-adaptive-nav__drawer-head"><strong>Navigation</strong><button type="button" onClick={() => setDrawerOpen(false)} aria-label="Close navigation"><X aria-hidden="true" /></button></div>
                 {renderPrimaryNavigation(true)}
+                <div className="vt-adaptive-nav__drawer-tools">
+                  <button
+                    type="button"
+                    className="vt-adaptive-nav__diagnostics-toggle"
+                    role="switch"
+                    aria-checked={diagnosticsOn}
+                    onClick={() => setDiagnosticOverlayEnabled(!diagnosticsOn)}
+                  >
+                    <Activity aria-hidden="true" />
+                    <span className="vt-adaptive-nav__diagnostics-label">Diagnostics</span>
+                    <span className="vt-adaptive-nav__diagnostics-state" aria-hidden="true">{diagnosticsOn ? "On" : "Off"}</span>
+                  </button>
+                </div>
               </div>
             </div>
           ) : null}

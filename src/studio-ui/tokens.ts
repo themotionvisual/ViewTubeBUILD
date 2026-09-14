@@ -22,11 +22,13 @@ export const STUDIO_TOKENS = {
     shadowOffset: SUBTOOLBOX_TOKENS.shell.shadowOffset,
     titleSize: SUBTOOLBOX_TOKENS.shell.titleSize,
   },
+  // There is one SubToolbox shell style. These keys are retained as aliases for
+  // existing consumers; they intentionally resolve to the same canonical shell.
   compactSubtoolbox: {
-    headerHeight: SUBTOOLBOX_TOKENS.compactShell.headerHeight,
-    stroke: SUBTOOLBOX_TOKENS.compactShell.stroke,
-    radius: SUBTOOLBOX_TOKENS.compactShell.radius,
-    shadowOffset: SUBTOOLBOX_TOKENS.compactShell.shadowOffset,
+    headerHeight: SUBTOOLBOX_TOKENS.shell.headerHeight,
+    stroke: SUBTOOLBOX_TOKENS.shell.stroke,
+    radius: SUBTOOLBOX_TOKENS.shell.radius,
+    shadowOffset: SUBTOOLBOX_TOKENS.shell.shadowOffset,
     titleSize: SUBTOOLBOX_TOKENS.typography.title,
   },
   component: {
@@ -56,21 +58,21 @@ export const STUDIO_TOKENS = {
   radius: {
     toolbox: 16,
     subtoolbox: SUBTOOLBOX_TOKENS.shell.radius,
-    compactSubtoolbox: SUBTOOLBOX_TOKENS.compactShell.radius,
+    compactSubtoolbox: SUBTOOLBOX_TOKENS.shell.radius,
     component: SUBTOOLBOX_TOKENS.interior.radius,
     tag: 4,
   },
   stroke: {
     toolbox: 5,
     subtoolbox: SUBTOOLBOX_TOKENS.shell.stroke,
-    compactSubtoolbox: SUBTOOLBOX_TOKENS.compactShell.stroke,
+    compactSubtoolbox: SUBTOOLBOX_TOKENS.shell.stroke,
     component: SUBTOOLBOX_TOKENS.interior.stroke,
     tag: 2,
   },
   shadow: {
     toolbox: 10,
     subtoolbox: SUBTOOLBOX_TOKENS.shell.shadowOffset,
-    compactSubtoolbox: SUBTOOLBOX_TOKENS.compactShell.shadowOffset,
+    compactSubtoolbox: SUBTOOLBOX_TOKENS.shell.shadowOffset,
     component: SUBTOOLBOX_TOKENS.interior.shadowOffset,
   },
   motion: {

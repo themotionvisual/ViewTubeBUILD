@@ -340,6 +340,13 @@ Editor interaction/timeline controls are a separate system. Reuse tokens selecti
 | 2026-09-14 | Projects page-level view switcher is not the accepted composition; major Projects tools return to separate T0 Toolboxes | CURRENT |
 | 2026-09-14 | Project Board duplicate inner shell is migration debt, not a new geometry authority | MIGRATE |
 | 2026-09-14 | Projects consumer changes require Reference Library certification before VERIFIED status | REFERENCE UPDATE REQUIRED |
+| 2026-09-14 | `studio-ui/tokens.ts` referenced the deleted `SUBTOOLBOX_TOKENS.compactShell`, throwing on every Studio Hub render; compact aliases now resolve to the single canonical shell | REGRESSION FIXED |
+| 2026-09-14 | Header divider spans the full header width, icon rail included; the rail is no longer exempted from the level stroke | CURRENT |
+| 2026-09-14 | Phone header geometry is sized to its own title: T0 36px/22px, T1 30px/16px, square rail follows row height | CURRENT |
+| 2026-09-14 | Toolbox/SubToolbox header title columns carry `min-w-0`; flex `min-width:auto` was overflowing the phone viewport and pushing header controls off screen | REGRESSION FIXED |
+| 2026-09-14 | Landscape edge-rail navigation keys off the shell's own mobile breakpoint (760px) instead of a separate `max-height: 560px` guess | REGRESSION FIXED |
+| 2026-09-14 | Diagnostic overlay is opt-in from Navigation → Diagnostics; floating DIAG and Brain launchers do not render on phones | CURRENT |
+| 2026-09-14 | Reference Library certification for the phone header geometry above is still outstanding | REFERENCE UPDATE REQUIRED |
 
 ## 24. Document editing protocol
 
