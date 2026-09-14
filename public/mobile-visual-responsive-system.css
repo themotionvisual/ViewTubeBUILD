@@ -34,6 +34,15 @@
  html body .vt-toolbox [data-controller-root] > *{height:30px!important;min-height:30px!important;max-height:30px!important;min-width:0!important;width:auto!important;padding-inline:4px!important;font-size:9px!important;line-height:1!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;border-right:2px solid #000!important;border-bottom:2px solid #000!important}
  html body .vt-toolbox [data-controller-root] > *:nth-child(2n){border-right:0!important}
 
+ /* Channel Progress owns four dense controller rows. Keep the title untouched,
+  * but let its controller become a full-width 2x2 composition with every custom
+  * row allowed to use its internal split geometry. This removes the VIEWS/ONE/Y M
+  * collisions without changing the shared Toolbox/Subtoolbox height tokens. */
+ html body .vt-toolbox [data-vt-subtoolbox-module]:has([data-channel-progress-controls]) > div:first-child > div:last-child:has([data-controller-root]){overflow:visible!important}
+ html body .vt-toolbox [data-channel-progress-controls][data-controller-root]{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-rows:34px!important;gap:0!important}
+ html body .vt-toolbox [data-channel-progress-controls][data-controller-root] > *{height:34px!important;min-height:34px!important;max-height:34px!important;padding-inline:0!important;font-size:10px!important;overflow:visible!important;text-overflow:clip!important}
+ html body .vt-toolbox [data-channel-progress-controls] [class*="h-[30px]"]{height:34px!important;min-height:34px!important}
+
  /* Heat Matrix is the reference spatial visual. Keep the evidence at 16:9;
   * suppress legacy 300px child minimums that previously produced the tall
   * portrait composition visible on viewtube.live. */
@@ -60,6 +69,13 @@
  html body .vt-toolbox [data-controller-root]{display:flex!important;flex-direction:row!important;width:max-content!important;min-width:100%!important;max-width:none!important;height:100%!important;min-height:44px!important;border-left:0!important;overflow:visible!important}
  html body .vt-toolbox [data-controller-root] > *{flex:1 0 112px!important;width:auto!important;min-width:112px!important;height:100%!important;min-height:44px!important;max-height:none!important;padding-inline:5px!important;border-bottom:0!important;border-right:2px solid #000!important;font-size:9px!important;line-height:1!important;overflow:hidden!important;white-space:nowrap!important}
  html body .vt-toolbox [data-controller-root] > *:last-child{border-right:0!important}
+
+ /* Channel Progress uses a wider, explicit four-control rail in short landscape.
+  * Each control keeps enough width for its real label and the custom split rows
+  * remain internally composed instead of being squeezed into generic 112px cells. */
+ html body .vt-toolbox [data-channel-progress-controls][data-controller-root]{display:grid!important;grid-template-columns:150px 150px 142px 190px!important;grid-auto-flow:column!important;width:max-content!important;min-width:632px!important;height:100%!important;min-height:44px!important}
+ html body .vt-toolbox [data-channel-progress-controls][data-controller-root] > *{width:auto!important;min-width:0!important;max-width:none!important;height:100%!important;min-height:44px!important;padding-inline:0!important;font-size:10px!important;overflow:visible!important;text-overflow:clip!important}
+ html body .vt-toolbox [data-vt-subtoolbox-module]:has([data-channel-progress-controls]) > div:first-child > div:last-child:has([data-controller-root]){width:min(60vw,500px)!important;max-width:60vw!important;overflow-x:auto!important;overflow-y:hidden!important}
 }
 
 @container (max-width:479px){[data-vt-visual-density="adaptive"]{--vt-visual-label-density:compact;--vt-visual-control-density:compact}}
