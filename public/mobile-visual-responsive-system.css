@@ -24,6 +24,16 @@
  [data-vt-visual-frame][data-vt-portrait-controls="menu"] [data-vt-visual-controls]::-webkit-scrollbar,
  [data-vt-visual-frame] [data-vt-metric-strip]::-webkit-scrollbar{display:none}
 
+ /* Analytics module controllers get their own full-width rail below the title.
+  * This intentionally overrides the older perf.css 170px 2x2 grid, which
+  * collided with Channel Progress labels and controls on narrow phones. */
+ html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child{flex-direction:column!important;align-items:stretch!important}
+ html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child > div:last-child:has([data-controller-root]){width:100%!important;max-width:100%!important;border-top:4px solid #000!important;border-left:0!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none}
+ html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child > div:last-child:has([data-controller-root])::-webkit-scrollbar{display:none}
+ html body .vt-toolbox [data-controller-root]{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-flow:row!important;grid-auto-rows:30px!important;width:100%!important;min-width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;max-height:none!important;border-left:0!important;overflow:visible!important}
+ html body .vt-toolbox [data-controller-root] > *{height:30px!important;min-height:30px!important;max-height:30px!important;min-width:0!important;width:auto!important;padding-inline:4px!important;font-size:9px!important;line-height:1!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;border-right:2px solid #000!important;border-bottom:2px solid #000!important}
+ html body .vt-toolbox [data-controller-root] > *:nth-child(2n){border-right:0!important}
+
  /* Heat Matrix is the reference spatial visual. Keep the evidence at 16:9;
   * suppress legacy 300px child minimums that previously produced the tall
   * portrait composition visible on viewtube.live. */
@@ -42,6 +52,14 @@
  [data-vt-visual-frame][data-vt-landscape-aspect="1:1"] [data-vt-chart-body]{width:min(100%,calc(100svh - 88px))!important;aspect-ratio:1!important;margin-inline:auto}
  [data-vt-visual-frame][data-vt-landscape-aspect="natural"] [data-vt-chart-body]{width:100%!important;aspect-ratio:auto!important}
  [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]>*,[data-vt-visual-frame="heat-matrix"] [data-vt-chart-body] .min-h-\[300px\]{min-height:0!important;height:100%!important;max-height:100%!important}
+
+ /* Short landscape keeps the title and controller as siblings, but controller
+  * rows become a single compact horizontal rail instead of a squeezed 2x2. */
+ html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child{flex-direction:row!important;align-items:stretch!important}
+ html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child > div:last-child:has([data-controller-root]){width:min(52vw,430px)!important;max-width:52vw!important;border-top:0!important;border-left:4px solid #000!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none}
+ html body .vt-toolbox [data-controller-root]{display:flex!important;flex-direction:row!important;width:max-content!important;min-width:100%!important;max-width:none!important;height:100%!important;min-height:44px!important;border-left:0!important;overflow:visible!important}
+ html body .vt-toolbox [data-controller-root] > *{flex:1 0 112px!important;width:auto!important;min-width:112px!important;height:100%!important;min-height:44px!important;max-height:none!important;padding-inline:5px!important;border-bottom:0!important;border-right:2px solid #000!important;font-size:9px!important;line-height:1!important;overflow:hidden!important;white-space:nowrap!important}
+ html body .vt-toolbox [data-controller-root] > *:last-child{border-right:0!important}
 }
 
 @container (max-width:479px){[data-vt-visual-density="adaptive"]{--vt-visual-label-density:compact;--vt-visual-control-density:compact}}
