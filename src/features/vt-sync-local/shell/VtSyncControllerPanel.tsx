@@ -3,7 +3,16 @@ import { CheckSquare, ChevronDown, ChevronRight, RefreshCw, ShieldCheck, Square 
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
 import { RetroRivets } from "./VtSyncRetroChrome"
-import type { VtSyncCategoryGroup, VtSyncDatasetFreshness } from "../adapters/contracts"
+import type {
+ VtSyncAnalyticsWindow,
+ VtSyncCategoryGroup,
+ VtSyncDatasetFreshness,
+} from "../adapters/contracts"
+import { vtSyncCategoryCostsPerWindow } from "../adapters/windowDerivation"
+import {
+ ANALYTICS_WINDOWS,
+ WINDOW_SHORT_LABELS,
+} from "../../../services/analytics/windows"
 import { selectVtSyncBaseRetentionVideos } from "../adapters/retentionSelection"
 // QW#2 — classify LOGIN_ABORTED / AbortError / popup-closed rejections so
 // mid-flow user cancels don't propagate as unhandled promise rejections.
@@ -55,10 +64,14 @@ export const VtSyncControllerPanel: React.FC<{
  activeContentOwnerId?: string | null
  onSelectContentOwner?: (ownerId: string) => Promise<void>
  onLogin: () => Promise<void>
- onStartSync: (categoryIds: string[], retentionVideoIds?: string[], forceFullVideoMetadata?: boolean) => Promise<void>
+ onStartSync: (categoryIds: string[], retentionVideoIds?: string[], forceFullVideoMetadata?: boolean, windows?: VtSyncAnalyticsWindow[]) => Promise<void>
 }> = ({ isAuthenticated, isSyncing, videos, activeCategoryIds = [], queuedCategoryIds = [], datasetFreshness, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
  const [selected, setSelected] = useState<string[]>(() => getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))
  const [retentionVideoIds, setRetentionVideoIds] = useState<string[]>([])
+ // Lifetime only by default: every extra window costs one request per aggregate
+ // dataset, so the cost is opted into rather than defaulted into. Lifetime is
+ // always on because the stored dataset rows still key off it.
+ const [selectedWindows, setSelectedWindows] = useState<VtSyncAnalyticsWindow[]>(["lifetime"])
  const [videoSearch, setVideoSearch] = useState("")
  const [openGroups, setOpenGroups] = useState<Set<VtSyncCategoryGroup>>(
   () => new Set(["channel"]),
@@ -87,6 +100,26 @@ export const VtSyncControllerPanel: React.FC<{
   if (!query) return sortedVideos
   return sortedVideos.filter((video) => video.title.toLowerCase().includes(query))
  }, [sortedVideos, videoSearch])
+
+ const windowCost = useMemo(() => {
+  const perWindowCategories = selected.filter(vtSyncCategoryCostsPerWindow)
+  const derivedCount = selected.length - perWindowCategories.length
+  const extraWindows = selectedWindows.filter((window) => window !== "lifetime").length
+  return {
+   perWindowCategories: perWindowCategories.length,
+   derivedCount,
+   extraRequests: perWindowCategories.length * extraWindows,
+   extraWindows,
+  }
+ }, [selected, selectedWindows])
+
+ const toggleWindow = (window: VtSyncAnalyticsWindow) => {
+  // Lifetime is not deselectable while the flat snapshot fields alias it.
+  if (window === "lifetime") return
+  setSelectedWindows((current) => current.includes(window)
+   ? current.filter((entry) => entry !== window)
+   : [...current, window])
+ }
 
  const toggleMany = (ids: string[]) => {
   setSelected((current) => {
@@ -130,7 +163,7 @@ export const VtSyncControllerPanel: React.FC<{
    // Post-login auth check — user may have cancelled mid-flow.
    if (!isAuthenticated) return
   }
-  await onStartSync(expandVtSyncCategoryDependencies(filterVtSyncVisibleCategoryIds(selected)), retentionEnabled ? retentionVideoIds : undefined)
+  await onStartSync(expandVtSyncCategoryDependencies(filterVtSyncVisibleCategoryIds(selected)), retentionEnabled ? retentionVideoIds : undefined, false, selectedWindows)
  }
 
  const startCategories = async (categoryIds: string[], includeRetentionVideoIds = false, forceFullVideoMetadata = false) => {
@@ -142,7 +175,7 @@ export const VtSyncControllerPanel: React.FC<{
    if (!isAuthenticated) return
   }
   const expanded = expandVtSyncCategoryDependencies(categoryIds)
-  await onStartSync(expanded, includeRetentionVideoIds ? retentionVideoIds : undefined, forceFullVideoMetadata)
+  await onStartSync(expanded, includeRetentionVideoIds ? retentionVideoIds : undefined, forceFullVideoMetadata, selectedWindows)
  }
 
  // Track category-specific completion
@@ -270,6 +303,45 @@ export const VtSyncControllerPanel: React.FC<{
       {contentOwners.map((owner) => <option key={owner.id} value={owner.id}>{owner.displayName}</option>)}
      </select>
     </label> : null}
+   </div>
+
+   <div className="mb-4 rounded-[14px] border-[3px] border-black bg-[#0d0d0d] p-3">
+    <div className="mb-2 flex flex-wrap items-center gap-2">
+     <span className="text-[11px] font-[1000] uppercase tracking-tight text-white">Time Windows</span>
+     {ANALYTICS_WINDOWS.map((window) => {
+      const active = selectedWindows.includes(window)
+      const locked = window === "lifetime"
+      return (
+       <button
+        key={window}
+        type="button"
+        onClick={() => toggleWindow(window)}
+        data-window={window}
+        aria-pressed={active}
+        disabled={locked}
+        title={locked ? "Lifetime is always synced" : undefined}
+        className="vt-retro-switch"
+        style={{
+         "--tone": active ? "#C0F240" : "#6b7280",
+         "--tone-light": active ? "#e4ffa8" : "#9ca3af",
+         opacity: locked ? 0.75 : 1,
+         cursor: locked ? "default" : "pointer",
+        } as React.CSSProperties}
+       >
+        <span className="vt-retro-switch-led" />
+        {WINDOW_SHORT_LABELS[window]}
+       </button>
+      )
+     })}
+    </div>
+    <p className="m-0 text-[11px] font-semibold leading-snug text-[#9ca3af]">
+     {windowCost.extraWindows === 0
+      ? `Lifetime only — ${selected.length} dataset${selected.length === 1 ? "" : "s"} selected.`
+      : `${windowCost.perWindowCategories} dataset${windowCost.perWindowCategories === 1 ? "" : "s"} x ${windowCost.extraWindows} extra window${windowCost.extraWindows === 1 ? "" : "s"} = ~${windowCost.extraRequests} additional request${windowCost.extraRequests === 1 ? "" : "s"}.`}
+     {windowCost.derivedCount > 0
+      ? ` ${windowCost.derivedCount} day-grained dataset${windowCost.derivedCount === 1 ? "" : "s"} derive their windows for free.`
+      : ""}
+    </p>
    </div>
 
    <div className="overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0d0d0d]">

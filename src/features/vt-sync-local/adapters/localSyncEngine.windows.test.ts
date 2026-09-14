@@ -86,10 +86,10 @@ describe("engine window-loop invariants", () => {
   expect(match?.[0]).toContain('"lifetime"')
  })
 
- it("skips the month-grained creator_content_type on non-lifetime windows", () => {
+ it("skips day/month-grained categories on non-lifetime windows", () => {
   // Class A: fetched once over lifetime, windows derived from its months.
   expect(engineSource).toContain(
-   'if (categoryId === "creator_content_type" && segmentWindow !== "lifetime") continue',
+   'if (segmentWindow !== "lifetime" && VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)) continue',
   )
  })
 

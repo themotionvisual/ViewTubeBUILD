@@ -46,6 +46,7 @@ import type {
  VtSyncVideoItem,
 } from "./contracts"
 import { ANALYTICS_WINDOWS, resolveWindowRange } from "../../../services/analytics/windows"
+import { VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS } from "./windowDerivation"
 
 export const VT_SYNC_SERVER_ACCOUNT_TOKEN = "__viewtube_server_account_session__"
 export const VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE = 25
@@ -2775,11 +2776,10 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    const segmentStartDate = vtSyncWindowStartDate(segmentWindow, channelStartDate)
    for (const [categoryId, field, dimensions, metrics, sort, filters = "", maxResults = 200] of segmentRuns) {
     if (!shouldSync(selected, categoryId)) continue
-    // creator_content_type is month-grained (class A): it is fetched once over
-    // lifetime and its windows are derived from those months, so looping it
-    // per window would buy nothing and cost a full month-paginated sweep each
-    // time.
-    if (categoryId === "creator_content_type" && segmentWindow !== "lifetime") continue
+    // Day/month-grained categories are fetched once over lifetime and their
+    // windows are derived from that history, so looping them per window would
+    // buy nothing and cost a full paginated sweep each time.
+    if (segmentWindow !== "lifetime" && VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)) continue
     const usesCompleteContract = categoryId === "creator_content_type" || categoryId === "geography_country"
     let result: BundleResult
     if (usesCompleteContract) {

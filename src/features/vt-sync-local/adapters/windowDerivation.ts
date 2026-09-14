@@ -200,3 +200,35 @@ export const deriveVtSyncWindowRows = (input: {
   sourceRowCount: groupRows.length,
  }))
 }
+
+
+/**
+ * Categories whose windows are DERIVED from stored day/month history rather
+ * than fetched. Selecting extra windows costs them nothing, so the controller
+ * must not count them when estimating request cost, and the engine must not
+ * loop them.
+ */
+export const VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS = new Set([
+ "daily_metrics",
+ "monthly_metrics",
+ "traffic_day",
+ "creator_content_type",
+ "revenue_source",
+])
+
+/**
+ * Categories that carry no window at all — identity and inventory data, plus
+ * retention, which is keyed by elapsed-time ratio and stays deliberately
+ * narrow because it costs one request per video.
+ */
+export const VT_SYNC_UNWINDOWED_CATEGORY_IDS = new Set([
+ "channel_metadata",
+ "uploads_playlist",
+ "video_metadata",
+ "retention",
+])
+
+/** True when adding a window to this category costs additional API requests. */
+export const vtSyncCategoryCostsPerWindow = (categoryId: string): boolean =>
+ !VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId) &&
+ !VT_SYNC_UNWINDOWED_CATEGORY_IDS.has(categoryId)
