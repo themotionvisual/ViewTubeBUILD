@@ -7,6 +7,12 @@
 [data-vt-visual-frame][data-vt-desktop-aspect="16:9"] [data-vt-chart-body]{aspect-ratio:16/9}
 [data-vt-visual-frame][data-vt-desktop-aspect="1:1"] [data-vt-chart-body]{aspect-ratio:1}
 
+/* Channel Progress currently has one distinctive first controller row: the
+ * CHANNEL / PROGRESS TOTALS split uses --vt-controller-prev. Scope its mobile
+ * composition through that existing markup so no generic Toolbox geometry is
+ * changed and no extra React-only identification hook is required. */
+:root{--vt-channel-progress-controller-selector-version:1}
+
 /* ModuleFrame still carries a desktop inline height. For registered responsive
  * visuals the frame contract, not that legacy inline value, owns phone height. */
 @media (max-width:767px) and (orientation:portrait){
@@ -17,16 +23,11 @@
  [data-vt-visual-frame][data-vt-portrait-aspect="natural"] [data-vt-chart-body]{aspect-ratio:auto!important}
  [data-vt-visual-frame] [data-vt-chart-body]>*,[data-vt-preview-16x9] [data-vt-chart-body]>*,[data-vt-preview-canvas-16x9]>*{min-height:0!important;height:100%!important;max-height:100%!important}
 
- /* Compact portrait chrome. Controllers/KPIs stay one row and swipe rather
-  * than forcing the header or module to grow vertically. */
  [data-vt-visual-frame][data-vt-portrait-controls="menu"] [data-vt-visual-controls],
  [data-vt-visual-frame] [data-vt-metric-strip]{max-width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
  [data-vt-visual-frame][data-vt-portrait-controls="menu"] [data-vt-visual-controls]::-webkit-scrollbar,
  [data-vt-visual-frame] [data-vt-metric-strip]::-webkit-scrollbar{display:none}
 
- /* Analytics module controllers get their own full-width rail below the title.
-  * This intentionally overrides the older perf.css 170px 2x2 grid, which
-  * collided with Channel Progress labels and controls on narrow phones. */
  html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child{flex-direction:column!important;align-items:stretch!important}
  html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child > div:last-child:has([data-controller-root]){width:100%!important;max-width:100%!important;border-top:4px solid #000!important;border-left:0!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none}
  html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child > div:last-child:has([data-controller-root])::-webkit-scrollbar{display:none}
@@ -34,9 +35,11 @@
  html body .vt-toolbox [data-controller-root] > *{height:30px!important;min-height:30px!important;max-height:30px!important;min-width:0!important;width:auto!important;padding-inline:4px!important;font-size:9px!important;line-height:1!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;border-right:2px solid #000!important;border-bottom:2px solid #000!important}
  html body .vt-toolbox [data-controller-root] > *:nth-child(2n){border-right:0!important}
 
- /* Heat Matrix is the reference spatial visual. Keep the evidence at 16:9;
-  * suppress legacy 300px child minimums that previously produced the tall
-  * portrait composition visible on viewtube.live. */
+ /* Channel Progress: four controls become a readable full-width 2x2. */
+ html body .vt-toolbox [data-controller-root]:has(.bg-\[var\(--vt-controller-prev\)\]){grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-rows:34px!important;gap:0!important;overflow:visible!important}
+ html body .vt-toolbox [data-controller-root]:has(.bg-\[var\(--vt-controller-prev\)\]) > *{height:34px!important;min-height:34px!important;max-height:34px!important;padding-inline:0!important;font-size:10px!important;overflow:visible!important;text-overflow:clip!important}
+ html body .vt-toolbox [data-vt-subtoolbox-module]:has([data-controller-root] .bg-\[var\(--vt-controller-prev\)\]) > div:first-child > div:last-child:has([data-controller-root]){overflow:visible!important}
+
  [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]{aspect-ratio:16/9!important;height:auto!important;min-height:0!important;overflow:hidden!important}
  [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body] .min-h-\[300px\],
  [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body] .min-h-\[292px\]{min-height:0!important;height:100%!important}
@@ -53,13 +56,16 @@
  [data-vt-visual-frame][data-vt-landscape-aspect="natural"] [data-vt-chart-body]{width:100%!important;aspect-ratio:auto!important}
  [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]>*,[data-vt-visual-frame="heat-matrix"] [data-vt-chart-body] .min-h-\[300px\]{min-height:0!important;height:100%!important;max-height:100%!important}
 
- /* Short landscape keeps the title and controller as siblings, but controller
-  * rows become a single compact horizontal rail instead of a squeezed 2x2. */
  html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child{flex-direction:row!important;align-items:stretch!important}
  html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child > div:last-child:has([data-controller-root]){width:min(52vw,430px)!important;max-width:52vw!important;border-top:0!important;border-left:4px solid #000!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none}
  html body .vt-toolbox [data-controller-root]{display:flex!important;flex-direction:row!important;width:max-content!important;min-width:100%!important;max-width:none!important;height:100%!important;min-height:44px!important;border-left:0!important;overflow:visible!important}
  html body .vt-toolbox [data-controller-root] > *{flex:1 0 112px!important;width:auto!important;min-width:112px!important;height:100%!important;min-height:44px!important;max-height:none!important;padding-inline:5px!important;border-bottom:0!important;border-right:2px solid #000!important;font-size:9px!important;line-height:1!important;overflow:hidden!important;white-space:nowrap!important}
  html body .vt-toolbox [data-controller-root] > *:last-child{border-right:0!important}
+
+ /* Channel Progress: explicit wide rail; scrolling is owned by the controller wrapper. */
+ html body .vt-toolbox [data-controller-root]:has(.bg-\[var\(--vt-controller-prev\)\]){display:grid!important;grid-template-columns:150px 150px 142px 190px!important;grid-auto-flow:column!important;width:max-content!important;min-width:632px!important;height:100%!important;min-height:44px!important}
+ html body .vt-toolbox [data-controller-root]:has(.bg-\[var\(--vt-controller-prev\)\]) > *{width:auto!important;min-width:0!important;max-width:none!important;height:100%!important;min-height:44px!important;padding-inline:0!important;font-size:10px!important;overflow:visible!important;text-overflow:clip!important}
+ html body .vt-toolbox [data-vt-subtoolbox-module]:has([data-controller-root] .bg-\[var\(--vt-controller-prev\)\]) > div:first-child > div:last-child:has([data-controller-root]){width:min(60vw,500px)!important;max-width:60vw!important;overflow-x:auto!important;overflow-y:hidden!important}
 }
 
 @container (max-width:479px){[data-vt-visual-density="adaptive"]{--vt-visual-label-density:compact;--vt-visual-control-density:compact}}
