@@ -3,6 +3,7 @@ import { Check, ChevronDown, ChevronUp, FileVideo2, Search } from "lucide-react"
 import { WIDGET_BADGE_SPECTRUM, WidgetSelect, WidgetSplitButton, type WidgetBadgeSpectrumName, type WidgetBadgeTone, type WidgetSelectOption } from "./WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone as PrimitiveTone } from "./widgetPrimitiveSystem"
+import "./widgetVideoSelectButtonScroll.css"
 
 export type WidgetControlHeight = WidgetPrimitiveSize
 export type WidgetPrimitiveTone = PrimitiveTone
