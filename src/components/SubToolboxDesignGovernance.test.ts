@@ -29,7 +29,7 @@ describe("subtoolbox design governance", () => {
 
   expect(responsiveCss).not.toMatch(/\.vt-toolbox\[data-vt-toolbox\][^{]*\{[^}]*currentColor/s)
   expect(responsiveCss).not.toContain('--vt-subtoolbox-shadow-offset')
-  expect(systemCss).toContain('--vt-subtoolbox-shadow-offset: 4px')
+  expect(systemCss).toMatch(/--vt-subtoolbox-shadow-offset:\s*4px/)
   expect(systemCss).toContain('[data-vt-toolbox-level="sub"]')
  })
 
@@ -39,7 +39,7 @@ describe("subtoolbox design governance", () => {
 
   expect(tokenSource).toContain('radius: 8')
   expect(tokenSource).toContain('radius: 12')
-  expect(systemCss).toContain('--vt-subtoolbox-inner-radius: 8px')
+  expect(systemCss).toMatch(/--vt-subtoolbox-inner-radius:\s*8px/)
   expect(systemCss).toContain('var(--vt-subtoolbox-shadow')
  })
 

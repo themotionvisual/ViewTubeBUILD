@@ -15,7 +15,13 @@ const imageGeneratorSource = readFileSync(new URL("../widgets/ImageGeneratorWidg
 const dataEditSource = readFileSync(new URL("../widgets/DataEditWidget.tsx", import.meta.url), "utf8")
 const keywordEngineSource = readFileSync(new URL("../widgets/KeywordEngineWidget.tsx", import.meta.url), "utf8")
 const commentResponderSource = readFileSync(new URL("../widgets/CommentReplyWidget.tsx", import.meta.url), "utf8")
-const widgetRendererSource = readFileSync(new URL("../WidgetRenderer.tsx", import.meta.url), "utf8")
+// WidgetRenderer.tsx is a delegating wrapper; the widget bodies it used to
+// hold live in WidgetRendererBase.tsx. Read both so the contract holds
+// wherever a body currently sits.
+const widgetRendererSource = [
+  readFileSync(new URL("../WidgetRenderer.tsx", import.meta.url), "utf8"),
+  readFileSync(new URL("../WidgetRendererBase.tsx", import.meta.url), "utf8"),
+].join("\n")
 const verificationExplainerSource = readFileSync(
   new URL("../widgets/VerificationExplainerWidget.tsx", import.meta.url),
   "utf8",

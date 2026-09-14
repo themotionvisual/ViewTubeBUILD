@@ -7,11 +7,19 @@ import { CONTROL_SHELL, SUBTOOLBOX_TOKENS, resolveSubtoolboxMinHeight } from "./
 
 describe("Subtoolbox Primitive System", () => {
   it("derives compatibility geometry from the single token source", () => {
-    expect(CONTROL_SHELL.height).toBe(SUBTOOLBOX_TOKENS.controlHeight.action)
-    expect(CONTROL_SHELL.radius).toBe(SUBTOOLBOX_TOKENS.interior.radius)
+    // Compatibility geometry mirrors the L0 shell, not the interior.
+    expect(CONTROL_SHELL.height).toBe(SUBTOOLBOX_TOKENS.controlHeight.l0)
+    expect(CONTROL_SHELL.radius).toBe(SUBTOOLBOX_TOKENS.shell.radius)
+    // Interior stays strictly below the shell on every axis it shares.
     expect(SUBTOOLBOX_TOKENS.interior.radius).toBeLessThan(SUBTOOLBOX_TOKENS.shell.radius)
     expect(SUBTOOLBOX_TOKENS.interior.shadowOffset).toBeLessThan(SUBTOOLBOX_TOKENS.shell.shadowOffset)
-    expect(resolveSubtoolboxMinHeight(3, "compact")).toBe(144)
+    // Control heights descend with the level.
+    expect(SUBTOOLBOX_TOKENS.controlHeight.l2).toBeLessThan(SUBTOOLBOX_TOKENS.controlHeight.l1)
+    expect(SUBTOOLBOX_TOKENS.controlHeight.l1).toBeLessThan(SUBTOOLBOX_TOKENS.controlHeight.l0)
+    // openUnits * L0 + gaps - one header's overhead.
+    expect(resolveSubtoolboxMinHeight(3)).toBe(160)
+    // There is one shell style: heightMode no longer changes the result.
+    expect(resolveSubtoolboxMinHeight(3, "compact")).toBe(resolveSubtoolboxMinHeight(3, "standard"))
   })
 
   it("renders typed fields, actions, layouts and states", () => {

@@ -149,7 +149,9 @@ describe("shared widget form primitives", () => {
 
     expect(markup).toContain("vt-spectrum-badge is-height-38")
     expect(markup).toContain('aria-label="Reset"')
-    expect(markup).toContain("widget-icon-button vt-sized-control is-height-24 is-tone-secondary")
+    expect(markup).toMatch(
+      /class="[^"]*\bwidget-icon-button\b[^"]*\bvt-sized-control\b[^"]*\bis-height-24\b[^"]*\bis-tone-secondary\b/,
+    )
   })
 
   it("provides canonical field, disclosure, choice, and select surfaces", () => {

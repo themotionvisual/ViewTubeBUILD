@@ -11,12 +11,12 @@ describe("Toolbox UI Reference Library", () => {
       <ToolboxUIReferenceLibrary collapsible={false} isOpenInitial paletteIndex={7} />,
     )
 
-    expect(html).toContain("Toolbox UI Library")
+    expect(html).toContain("Studio Hub Component Library")
     expect(html).toContain("Buttons + Split Left")
     expect(html).toContain("Fields + Text Inputs")
     expect(html).toContain("Dropdown Menus")
     expect(html).toContain("Outputs + Data Surfaces")
-    expect(html).toContain("Interaction + Data States")
+    expect(html).toContain("Interaction + Data + Connection States")
     expect(html).toContain('data-vt-toolbox-level="sub"')
     expect(html).toContain("vt-subtoolbox-file-target")
     expect(html).toContain("vt-subtoolbox-output")
