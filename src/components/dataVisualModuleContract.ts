@@ -24,3 +24,5 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
 export type RegisteredDataVisualModuleId = keyof typeof DATA_VISUAL_MODULE_CONTRACTS
 
 export const dataVisualModuleContract = (id: RegisteredDataVisualModuleId): DataVisualModuleCanvasContract => DATA_VISUAL_MODULE_CONTRACTS[id]
+
+export const isRegisteredDataVisualModuleId = (id: string): id is RegisteredDataVisualModuleId => id in DATA_VISUAL_MODULE_CONTRACTS
