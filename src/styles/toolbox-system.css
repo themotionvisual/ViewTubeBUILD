@@ -4,17 +4,17 @@
  * recreated by feature-local CSS.
  */
 [data-vt-toolbox][data-vt-toolbox-level="main"] {
-  --vt-toolbox-header-height: 80px;
+  --vt-toolbox-header-height: 72px;
   --vt-toolbox-stroke: 5px;
   --vt-toolbox-radius: 16px;
   --vt-toolbox-shadow-offset: 10px;
-  --vt-toolbox-title-size: 26px;
+  --vt-toolbox-title-size: 24px;
   --vt-toolbox-component-stroke: 3px;
   --vt-toolbox-component-radius: 8px;
   --vt-toolbox-component-shadow: 4px;
   --vt-toolbox-component-compact: 32px;
   --vt-toolbox-component-standard: 48px;
-  --vt-toolbox-component-action: 56px;
+  --vt-toolbox-component-action: 52px;
   border-width: 5px !important;
   border-style: solid !important;
   border-color: #000 !important;
@@ -22,22 +22,36 @@
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-  height: 80px !important;
-  min-height: 80px !important;
-  border-bottom: 5px solid #000 !important;
+  height: 72px !important;
+  min-height: 72px !important;
+  border-bottom: 0 !important;
+}
+
+/* Open-shell divider begins after the square icon rail. This deliberately
+ * prevents the thin horizontal rule from appearing underneath the icon box. */
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header::after {
+  content: "";
+  position: absolute;
+  left: 72px;
+  right: 0;
+  bottom: 0;
+  height: 5px;
+  background: #000;
+  pointer-events: none;
+  z-index: 30;
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-  width: 80px !important;
-  min-width: 80px !important;
-  height: 80px !important;
-  flex: 0 0 80px !important;
+  width: 72px !important;
+  min-width: 72px !important;
+  height: 72px !important;
+  flex: 0 0 72px !important;
   aspect-ratio: 1 / 1 !important;
   border-right: 5px solid #000 !important;
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
-  font-size: 26px !important;
+  font-size: 24px !important;
   line-height: 1 !important;
   font-weight: 1000 !important;
 }
@@ -76,31 +90,45 @@
   --vt-subtoolbox-stroke: 4px;
   --vt-subtoolbox-radius: 12px;
   --vt-subtoolbox-shadow-offset: 6px;
-  --vt-subtoolbox-header-height: 56px;
-  --vt-subtoolbox-title-size: 20px;
+  --vt-subtoolbox-header-height: 52px;
+  --vt-subtoolbox-title-size: 18px;
   box-sizing: border-box;
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
-  min-height: 56px;
+  height: 52px !important;
+  min-height: 52px !important;
+  border-bottom: 0 !important;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header::after {
+  content: "";
+  position: absolute;
+  left: 52px;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: #000;
+  pointer-events: none;
+  z-index: 30;
 }
 
 /* Compatibility accordion is level-1 only; never let its geometry become the
  * default ToolboxScaffold treatment. */
 [data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="accordion"] {
-  --vt-toolbox-header-height: 56px;
+  --vt-toolbox-header-height: 52px;
   --vt-toolbox-radius: 12px;
-  --vt-toolbox-title-size: 20px;
+  --vt-toolbox-title-size: 18px;
   border-width: 4px !important;
   border-radius: 12px !important;
 }
 
-/* Split-left module actions are peers of a collapsed SubToolbox: same 56px
- * height, 4px shell stroke, 12px radius and 20px title typography. */
+/* Split-left module actions are peers of a collapsed SubToolbox: same 52px
+ * height, 4px shell stroke, 12px radius and 18px title typography. */
 [data-vt-toolbox-level="sub"] [data-vt-split-left],
 [data-vt-toolbox-level="sub"] .vt-split-left-module-action {
-  min-height: 56px !important;
-  height: 56px !important;
+  min-height: 52px !important;
+  height: 52px !important;
   border-width: 4px !important;
   border-style: solid !important;
   border-color: #000 !important;
@@ -109,16 +137,16 @@
   align-items: stretch;
   overflow: hidden;
   padding: 0 !important;
-  font-size: 20px !important;
+  font-size: 18px !important;
   font-weight: 900 !important;
   line-height: 1 !important;
 }
 [data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-rail],
 [data-vt-toolbox-level="sub"] .vt-split-left-module-action > :first-child {
-  width: 56px !important;
-  min-width: 56px !important;
-  height: 56px !important;
-  flex: 0 0 56px !important;
+  width: 52px !important;
+  min-width: 52px !important;
+  height: 52px !important;
+  flex: 0 0 52px !important;
   aspect-ratio: 1 / 1 !important;
   display: flex;
   align-items: center;
@@ -133,7 +161,7 @@
   align-items: center;
   justify-content: center;
   padding-inline: 12px;
-  font-size: 20px !important;
+  font-size: 18px !important;
   font-weight: 900 !important;
 }
 
@@ -141,7 +169,7 @@
  * constrain its direct button geometry inside the reference/action sections
  * until all consumers move to the typed primitive marker. */
 [data-vt-toolbox-level="sub"] button[style*="height: 56px"] {
-  max-height: 56px;
+  max-height: 52px;
 }
 
 @media (max-width: 767px) {
@@ -151,16 +179,16 @@
     min-width: 0 !important;
   }
 
-  /* Main Toolboxes stay level-0 size on phones; only nested components compact. */
+  /* Main Toolboxes remain T0 on phones; the canonical T0 header is now 72px. */
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-    height: 80px !important;
-    min-height: 80px !important;
+    height: 72px !important;
+    min-height: 72px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-    width: 80px !important;
-    min-width: 80px !important;
-    height: 80px !important;
-    flex-basis: 80px !important;
+    width: 72px !important;
+    min-width: 72px !important;
+    height: 72px !important;
+    flex-basis: 72px !important;
   }
 }
