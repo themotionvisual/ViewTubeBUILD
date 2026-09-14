@@ -1,11 +1,11 @@
 import React from "react"
 import { CalendarDays, Columns3, FolderKanban, PanelsTopLeft, Workflow } from "lucide-react"
 import EmbeddedProjectKanbanWorkspace from "../components/projects/EmbeddedProjectKanbanWorkspace"
+import EmbeddedPublishingSchedule from "../components/projects/EmbeddedPublishingSchedule"
+import EmbeddedProjectStudio from "../components/projects/EmbeddedProjectStudio"
 import ProjectsToolboxModule from "../components/projects/ProjectsToolboxModule"
 import ContentAssetEngine from "../components/projects/ContentAssetEngine"
-import { ProjectStudio } from "../components/ProjectStudio"
 import StoryboardStudio from "./StoryboardStudio"
-import PublishingScheduleArchitect from "./PublishingScheduleArchitect"
 
 /** Projects is a toolbox workspace: each creator tool is an independent level-0 Toolbox module. */
 const ProjectCalendarPage: React.FC = () => (
@@ -24,13 +24,13 @@ const ProjectCalendarPage: React.FC = () => (
 
   <section id="publishing-schedule" className="scroll-mt-[86px]">
    <ProjectsToolboxModule title="Publishing Schedule" subtitle="Plan deadlines, production dates and publishing" icon={<CalendarDays />} paletteIndex={3}>
-    <PublishingScheduleArchitect collapsible={false} isOpenInitial paletteIndex={3} />
+    <EmbeddedPublishingSchedule />
    </ProjectsToolboxModule>
   </section>
 
   <section id="project-studio" className="scroll-mt-[86px]">
    <ProjectsToolboxModule title="Project Studio" subtitle="Build and manage the working project" icon={<FolderKanban />} paletteIndex={6} isOpenInitial={false}>
-    <ProjectStudio />
+    <EmbeddedProjectStudio />
    </ProjectsToolboxModule>
   </section>
 
