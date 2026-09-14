@@ -32,7 +32,29 @@ export const VT_SYNC_COST_MODEL = {
  completeContractCategoryIds: new Set(["creator_content_type", "geography_country"]),
  /** sharing_service and traffic details paginate */
  paginatedMaxPages: 4,
- paginatedCategoryIds: new Set(["sharing_service"]),
+ paginatedCategoryIds: new Set([
+  "sharing_service",
+  "traffic_overview",
+  "advertising",
+  "ext_websites",
+  "hashtags",
+  "traffic_notification",
+  "traffic_subscribers",
+  "other_features",
+  "search_terms",
+  "traffic_end_screen",
+  "sound_pages",
+  "traffic_video_remixes",
+  "traffic_campaign_card",
+ ]),
+ /**
+  * Traffic details whose rows name a video or channel trigger an extra Data API
+  * lookup to resolve titles, so they cost more than their pages alone.
+  */
+ enrichedCategoryIds: new Set(["suggested_videos", "channel_pages", "traffic_watch_with"]),
+ enrichmentRequests: 2,
+ /** Playlist analytics paginates deeply (200/page, up to 50 pages). */
+ playlistMaxPages: 6,
 } as const
 
 /**
@@ -70,6 +92,10 @@ export const vtSyncCategoryRequestCost = (
  if (categoryId === "channel_totals") return VT_SYNC_COST_MODEL.metricBundles
  if (VT_SYNC_COST_MODEL.completeContractCategoryIds.has(categoryId)) {
   return VT_SYNC_COST_MODEL.metricBundles
+ }
+ if (categoryId === "playlists_analytics") return VT_SYNC_COST_MODEL.playlistMaxPages
+ if (VT_SYNC_COST_MODEL.enrichedCategoryIds.has(categoryId)) {
+  return VT_SYNC_COST_MODEL.paginatedMaxPages + VT_SYNC_COST_MODEL.enrichmentRequests
  }
  if (VT_SYNC_COST_MODEL.paginatedCategoryIds.has(categoryId)) {
   return VT_SYNC_COST_MODEL.paginatedMaxPages

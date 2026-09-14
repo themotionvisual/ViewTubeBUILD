@@ -212,3 +212,34 @@ describe("video analytics window loop", () => {
   expect(engineSource).toContain('datasetId: "videos",\n     window: videoWindow,')
  })
 })
+
+describe("traffic and playlist window loops", () => {
+ it("loops traffic details over approved windows from their own start date", () => {
+  expect(engineSource).toContain("for (const trafficWindow of aggregateWindows) {")
+  expect(engineSource).toContain("const trafficStartDate = vtSyncWindowStartDate(trafficWindow, channelStartDate)")
+  expect(engineSource).toContain("startDate: trafficStartDate,")
+ })
+
+ it("keeps the flat trafficDetails array and legacy fields lifetime-only", () => {
+  // Tables and visuals read those as lifetime; a windowed write there would
+  // relabel a 28-day figure as all-time.
+  expect(engineSource).toContain("const isLifetimeTraffic = trafficWindow === \"lifetime\"")
+  expect(engineSource).toContain("if (isLifetimeTraffic) {")
+  expect(engineSource).toContain("// Windowed traffic rows never touch trafficDetails or the legacy fields;")
+ })
+
+ it("loops playlists but fetches their window-invariant metadata once", () => {
+  expect(engineSource).toContain("for (const playlistWindow of aggregateWindows) {")
+  expect(engineSource).toContain("id: `playlists_analytics_${playlistWindow}`")
+  // Metadata fetch must sit OUTSIDE the window loop.
+  const metadataIndex = engineSource.indexOf("const playlistMetadata = await getPlaylistMetadata(token)")
+  const loopIndex = engineSource.indexOf("for (const playlistWindow of aggregateWindows) {")
+  expect(metadataIndex).toBeGreaterThan(-1)
+  expect(metadataIndex).toBeLessThan(loopIndex)
+ })
+
+ it("tags traffic and playlist persistence with their window", () => {
+  expect(engineSource).toContain("datasetId: categoryId, window: trafficWindow")
+  expect(engineSource).toContain('datasetId: "playlists", window: playlistWindow')
+ })
+})

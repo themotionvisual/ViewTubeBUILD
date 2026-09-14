@@ -130,3 +130,35 @@ describe("window planning under budget", () => {
   expect(plan.estimate.budget).toBe(VT_SYNC_DEFAULT_WINDOW_REQUEST_BUDGET)
  })
 })
+
+describe("traffic and playlist costs", () => {
+ it("charges paginated traffic details their page ceiling", () => {
+  expect(vtSyncCategoryRequestCost("search_terms", 0)).toBe(4)
+ })
+
+ it("charges enriched traffic details more, because they resolve titles too", () => {
+  // suggested_videos and channel_pages make Data API lookups on top of paging.
+  expect(vtSyncCategoryRequestCost("suggested_videos", 0)).toBeGreaterThan(
+   vtSyncCategoryRequestCost("search_terms", 0),
+  )
+ })
+
+ it("charges playlists for their deeper pagination", () => {
+  expect(vtSyncCategoryRequestCost("playlists_analytics", 0)).toBeGreaterThan(4)
+ })
+
+ it("makes a full traffic selection expensive enough to trigger deferral", () => {
+  const trafficCategories = [
+   "traffic_overview", "advertising", "ext_websites", "hashtags",
+   "search_terms", "suggested_videos", "channel_pages", "sound_pages",
+  ]
+  const plan = planVtSyncWindows({
+   categoryIds: trafficCategories,
+   windows: ["lifetime", "7d", "28d", "90d", "365d"],
+   budget: 60,
+  })
+  expect(plan.deferred.length).toBeGreaterThan(0)
+  expect(plan.windows).toContain("lifetime")
+  expect(plan.windows).toContain("28d")
+ })
+})

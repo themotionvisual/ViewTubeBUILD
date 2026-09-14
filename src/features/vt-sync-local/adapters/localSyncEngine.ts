@@ -2718,6 +2718,13 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    let rowsWritten = 0
    let trafficPartial = false
    const completeDetailSourceTypes = new Set<string>()
+   // Traffic details are the second most expensive family: paginated, and the
+   // video/channel ones make enrichment calls on top. Only the approved windows
+   // run, and only the lifetime pass writes the flat trafficDetails array and
+   // its legacy projections — those are lifetime by contract.
+   for (const trafficWindow of aggregateWindows) {
+   const trafficStartDate = vtSyncWindowStartDate(trafficWindow, channelStartDate)
+   const isLifetimeTraffic = trafficWindow === "lifetime"
    for (const [trafficIndex, { id: categoryId, field, sourceType, enrichType }] of selectedTraffic.entries()) {
     const currentQueryLabel = VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.label || categoryId.replace(/_/g, " ")
     const nextCategoryId = selectedTraffic[trafficIndex + 1]?.id
@@ -2737,7 +2744,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
       ? { rows: null, columns: [], status: 403, error: "Campaign Cards require a verified and selected YouTube Content Owner." }
       : await runTrafficDetailAnalyticsBundle({
        token,
-       id: categoryId,
+       id: `${categoryId}_${trafficWindow}`,
        metrics: ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"],
        dimensions: "insightTrafficSourceDetail",
        ids: categoryId === "traffic_campaign_card" && contentOwnerId ? `contentOwner==${contentOwnerId}` : "channel==MINE",
@@ -2745,17 +2752,17 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
         ? `channel==${snapshot.channelId};insightTrafficSourceType==${sourceType}`
         : `insightTrafficSourceType==${sourceType}`,
        sort: "-views",
-       startDate: channelStartDate,
+       startDate: trafficStartDate,
        pageSize: VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE,
       })
      : await runAnalyticsBundle({
        token,
-       id: categoryId,
+       id: `${categoryId}_${trafficWindow}`,
        metrics: ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"],
        dimensions: "insightTrafficSourceType",
        sort: "-views",
        maxResults: 200,
-       startDate: channelStartDate,
+       startDate: trafficStartDate,
       })
     const mappedRows = await enrichTrafficDetailRows(token, mapTraffic(result.rows, sourceType ? "insightTrafficSourceDetail" : "insightTrafficSourceType"), enrichType)
     const detailRows = sourceType ? mappedRows.map((row) => ({
@@ -2764,23 +2771,35 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      detail: String(row.insightTrafficSourceDetail || row.term || row.source || ""),
      coverageStatus: result.error ? "partial" : "complete" as const,
     })) : []
-    if (sourceType) {
-     const previousDetails = snapshot.trafficDetails.filter((row) => row.sourceType !== sourceType)
-     // A complete response is authoritative for this source only. Partial data is additive.
-     snapshot.trafficDetails = result.error
-      ? mergeVtSyncRowsPreservingDefined(snapshot.trafficDetails as Array<Record<string, any>>, detailRows, (row) => `${row.sourceType || ""}::${row.detail || row.insightTrafficSourceDetail || ""}`) as VtSyncSnapshot["trafficDetails"]
-      : [...previousDetails, ...detailRows] as VtSyncSnapshot["trafficDetails"]
-     if (!result.error && result.rows) completeDetailSourceTypes.add(sourceType)
-    }
-    if (field) {
-     const previousRows = Array.isArray((snapshot as any)[field]) ? (snapshot as any)[field] as Record<string, any>[] : []
-     ;(snapshot as any)[field] = sourceType && !result.error && result.rows
-      ? mappedRows
-      : mergeVtSyncRowsPreservingDefined(
-       previousRows,
-       mappedRows,
-       (row) => metricRowKey(row, sourceType ? "insightTrafficSourceDetail" : "insightTrafficSourceType"),
-      )
+    if (isLifetimeTraffic) {
+     if (sourceType) {
+      const previousDetails = snapshot.trafficDetails.filter((row) => row.sourceType !== sourceType)
+      // A complete response is authoritative for this source only. Partial data is additive.
+      snapshot.trafficDetails = result.error
+       ? mergeVtSyncRowsPreservingDefined(snapshot.trafficDetails as Array<Record<string, any>>, detailRows, (row) => `${row.sourceType || ""}::${row.detail || row.insightTrafficSourceDetail || ""}`) as VtSyncSnapshot["trafficDetails"]
+       : [...previousDetails, ...detailRows] as VtSyncSnapshot["trafficDetails"]
+      if (!result.error && result.rows) completeDetailSourceTypes.add(sourceType)
+     }
+     if (field) {
+      const previousRows = Array.isArray((snapshot as any)[field]) ? (snapshot as any)[field] as Record<string, any>[] : []
+      ;(snapshot as any)[field] = sourceType && !result.error && result.rows
+       ? mappedRows
+       : mergeVtSyncRowsPreservingDefined(
+        previousRows,
+        mappedRows,
+        (row) => metricRowKey(row, sourceType ? "insightTrafficSourceDetail" : "insightTrafficSourceType"),
+       )
+     }
+    } else {
+     // Windowed traffic rows never touch trafficDetails or the legacy fields;
+     // both are lifetime by contract and read by tables and visuals as such.
+     snapshot = writeWindowedDataset(
+      snapshot,
+      trafficWindow,
+      (field as string) || categoryId,
+      categoryId,
+      sourceType ? detailRows : mappedRows,
+     )
     }
     rowsWritten += mappedRows.length
     const categoryComplete = !!result.rows && !result.error
@@ -2802,8 +2821,8 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      ]
     }
     addManifestResult(manifest, categoryId, categoryComplete, result.rows?.length || 0, result.columns, result.error)
-    if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: categoryId, phase: "traffic_sync", rawRows: result.rows, tableRows: sourceType ? detailRows : mappedRows, columns: result.columns })
-    markFreshness(
+    if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: categoryId, window: trafficWindow, phase: "traffic_sync", rawRows: result.rows, tableRows: sourceType ? detailRows : mappedRows, columns: result.columns })
+    if (isLifetimeTraffic) markFreshness(
      [categoryId],
      categoryId,
      mappedRows.length,
@@ -2816,6 +2835,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     )
     commitSnapshot()
     await sleep(150)
+   }
    }
    updatePhase(progress, "traffic", { status: trafficPartial ? "partial" : "complete", rows: rowsWritten, currentQueryLabel: undefined, nextQueryLabel: undefined, message: undefined, completedAt: new Date().toISOString() }, onProgress)
    // Compatibility projection for existing table tabs and visual consumers. The canonical
@@ -3198,13 +3218,18 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    const playlistMetadata = await getPlaylistMetadata(token)
    const playlistMetadataById = new Map(playlistMetadata.map((playlist) => [playlist.id, playlist]))
    addManifestResult(manifest, "playlists_metadata", true, playlistMetadata.length, ["snippet", "contentDetails", "status"])
+   // Playlist metadata is window-invariant and fetched once above; only the
+   // analytics pass repeats per window.
+   let playlistPartial = false
+   for (const playlistWindow of aggregateWindows) {
+   const isLifetimePlaylist = playlistWindow === "lifetime"
    const result = await runPaginatedAnalyticsBundle({
     token,
-    id: "playlists_analytics",
+    id: `playlists_analytics_${playlistWindow}`,
     metrics: ["playlistViews", "playlistEstimatedMinutesWatched", "playlistStarts", "averageTimeInPlaylist", "playlistSaves"],
     dimensions: "playlist",
     sort: "-playlistViews",
-    startDate: channelStartDate,
+    startDate: vtSyncWindowStartDate(playlistWindow, channelStartDate),
     pageSize: 200,
     maxPages: 50,
    })
@@ -3230,18 +3255,28 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
       viewsPerPlaylistStart: numberOrZero(row.playlistStarts) > 0 ? numberOrZero(row.playlistViews) / numberOrZero(row.playlistStarts) : 0,
      }
     })
-   snapshot = {
-    ...snapshot,
-    playlistsData: mergeVtSyncRowsPreservingDefined(
-     snapshot.playlistsData as Array<Record<string, any>>,
-     mappedPlaylists,
-     (row) => String(row.playlistId || row.playlist || ""),
-    ) as VtSyncSnapshot["playlistsData"],
+   const mergedPlaylists = mergeVtSyncRowsPreservingDefined(
+    readWindowedDataset(snapshot, playlistWindow, "playlistsData", "playlists_analytics"),
+    mappedPlaylists,
+    (row) => String(row.playlistId || row.playlist || ""),
+   )
+   snapshot = writeWindowedDataset(
+    snapshot,
+    playlistWindow,
+    "playlistsData",
+    "playlists_analytics",
+    mergedPlaylists,
+   )
+   if (!result.rows || result.error) playlistPartial = true
+   addManifestResult(manifest, isLifetimePlaylist ? "playlists_analytics" : `playlists_analytics_${playlistWindow}`, !!result.rows, result.rows?.length || 0, result.columns, result.error)
+   if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "playlists", window: playlistWindow, phase: "playlists_analytics", rawRows: result.rows, tableRows: mergedPlaylists, columns: result.columns })
+   if (isLifetimePlaylist) {
+    markFreshness(["playlists"], "playlists_analytics", result.rows?.length || 0, result.rows ? "synced" : "failed")
    }
-   addManifestResult(manifest, "playlists_analytics", !!result.rows, result.rows?.length || 0, result.columns, result.error)
-   if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "playlists", phase: "playlists_analytics", rawRows: result.rows, tableRows: snapshot.playlistsData as Array<Record<string, unknown>>, columns: result.columns })
-   markFreshness(["playlists"], "playlists_analytics", result.rows?.length || 0, result.rows ? "synced" : "failed")
-   updatePhase(progress, "playlists_analytics", { status: result.rows ? (result.error ? "partial" : "complete") : "failed", rows: result.rows?.length || 0, error: result.error, completedAt: new Date().toISOString() }, onProgress)
+   commitSnapshot()
+   if (playlistWindow !== aggregateWindows[aggregateWindows.length - 1]) await sleep(150)
+   }
+   updatePhase(progress, "playlists_analytics", { status: playlistPartial ? "partial" : "complete", completedAt: new Date().toISOString() }, onProgress)
    commitSnapshot()
   }
 
