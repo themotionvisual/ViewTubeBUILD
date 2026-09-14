@@ -4,7 +4,11 @@ import type {
  VtSyncTableDefinition,
 } from "./contracts"
 import { resolveWindowRange } from "../../../services/analytics/windows"
-import { filterRowsToRange } from "./windowDerivation"
+import {
+ filterRowsToRange,
+ vtSyncCategoryIsWindowFetchable,
+ VT_SYNC_MONTH_GRAINED_TABLE_IDS,
+} from "./windowDerivation"
 import {
  filterVtSyncVideos,
  readVtSyncPrivacyFilters,
@@ -781,7 +785,16 @@ export const aggregateVtSyncTimeRows = (rows: Row[], mode: "weekly" | "monthly")
  * history to that date range — no aggregation, and no extra API call. A daily
  * table at 28d is the last 28 daily rows, not one summed row.
  */
-const DATE_FILTERED_TABLE_IDS = new Set(["daily", "traffic_day", "monthly"])
+const DATE_FILTERED_TABLE_IDS = new Set([
+ "daily",
+ "traffic_day",
+ "monthly",
+ // revenue_source is fetched day-grained and is in the engine's don't-loop set,
+ // so its window has to be derived here or nothing would ever produce one.
+ "revenue",
+ // creator_content_type is month-grained and likewise never looped.
+ "creator",
+])
 
 /**
  * Rows for a table in one window.
@@ -923,9 +936,16 @@ export type VtSyncTableWindowResolution = {
   *  - "lifetime"       — the stored lifetime rows (default, unchanged behavior)
   *  - "derived"        — filtered from stored day/month history, no API cost
   *  - "window_exact"   — rows synced for this window specifically
-  *  - "not_synced"     — this window has not been synced for this dataset
+  *  - "not_synced"     — syncable for this window, but not synced yet
+ *  - "lifetime_only"  — this dataset has no windowed form at all; re-syncing
+ *                       cannot change that, so never tell the user to try
+ */
+ source: "lifetime" | "derived" | "window_exact" | "not_synced" | "lifetime_only"
+ /**
+  * Grain the derived rows came from. "month" means the range was widened to
+  * whole overlapping months and the figure covers more than the window names.
   */
- source: "lifetime" | "derived" | "window_exact" | "not_synced"
+ derivedGrain?: "day" | "month"
 }
 
 /**
@@ -935,6 +955,26 @@ export type VtSyncTableWindowResolution = {
  * data for that window reports "not_synced" with no rows, so the table can say
  * so rather than showing lifetime numbers under a window heading.
  */
+/**
+ * Can this table ever show a non-lifetime window, and how?
+ *
+ *  - "date_filtered"  day-grained source rows, filtered to the window
+ *  - "week_rollup"    weekly buckets rebuilt from window-filtered daily rows
+ *  - "per_window_row" the source already stores one row per window
+ *  - "fetched"        the engine can sync this dataset per window
+ *  - "lifetime_only"  no window is possible; the control must say so rather
+ *                     than telling the user to re-sync, which can never help
+ */
+export const vtSyncTableWindowCapability = (
+ table: VtSyncTableDefinition,
+): "date_filtered" | "week_rollup" | "per_window_row" | "fetched" | "lifetime_only" => {
+ if (table.id === "channel_totals") return "per_window_row"
+ if (table.id === "weekly") return "week_rollup"
+ if (DATE_FILTERED_TABLE_IDS.has(table.id)) return "date_filtered"
+ if ((table.categoryIds || []).some(vtSyncCategoryIsWindowFetchable)) return "fetched"
+ return "lifetime_only"
+}
+
 export const resolveVtSyncTableRowsForWindow = (
  snapshot: VtSyncSnapshot,
  table: VtSyncTableDefinition,
@@ -945,25 +985,53 @@ export const resolveVtSyncTableRowsForWindow = (
   return { rows: tableRows(snapshot, table, privacyFilters), window, source: "lifetime" }
  }
 
- // channel_totals already stores one row per window; select rather than filter.
- if (table.id === "channel_totals") {
-  const all = tableRows(snapshot, table, privacyFilters)
-  const label = VT_SYNC_CHANNEL_TOTAL_WINDOW_LABELS[window]
-  const rows = all.filter((row) => String(row.window || "") === label)
-  return { rows, window, source: rows.length ? "window_exact" : "not_synced" }
- }
+ const range = resolveWindowRange({ window })
+ const capability = vtSyncTableWindowCapability(table)
 
- if (DATE_FILTERED_TABLE_IDS.has(table.id) || table.id === "weekly") {
-  const all = tableRows(snapshot, table, privacyFilters)
-  const range = resolveWindowRange({ window })
-  const rows = filterRowsToRange(all, range.startDate, range.endDate) as Row[]
-  return { rows, window, source: "derived" }
- }
+ switch (capability) {
+  case "per_window_row": {
+   const all = tableRows(snapshot, table, privacyFilters)
+   const label = VT_SYNC_CHANNEL_TOTAL_WINDOW_LABELS[window]
+   const rows = all.filter((row) => String(row.window || "") === label)
+   return { rows, window, source: rows.length ? "window_exact" : "not_synced" }
+  }
 
- const windowed = windowedSourceRows(snapshot, table, window)
- if (!windowed) return { rows: [], window, source: "not_synced" }
- const rows = normalizeVtSyncTableRows(table.id, windowed)
- return { rows, window, source: "window_exact" }
+  case "date_filtered": {
+   // Filter the SOURCE rows, then normalize. Normalizing first would compute
+   // share/percentage columns against lifetime denominators, so a 7d view
+   // would show shares summing to a fraction of a percent.
+   const raw = sourceRows(snapshot, table, privacyFilters)
+   const filtered = filterRowsToRange(raw, range.startDate, range.endDate) as Row[]
+   return {
+    rows: normalizeVtSyncTableRows(table.id, filtered),
+    window,
+    source: "derived",
+    derivedGrain: VT_SYNC_MONTH_GRAINED_TABLE_IDS.has(table.id) ? "month" : "day",
+   }
+  }
+
+  case "week_rollup": {
+   // Weekly rows are keyed "2026-W38", which never compares inside a
+   // YYYY-MM-DD range — filtering them directly always yields nothing.
+   // Rebuild the buckets from the window's daily rows instead.
+   const daily = filterRowsToRange(
+    (snapshot.dailyMetrics || []) as Row[],
+    range.startDate,
+    range.endDate,
+   ) as Row[]
+   const rows = normalizeVtSyncTableRows(table.id, aggregateVtSyncTimeRows(daily, "weekly"))
+   return { rows, window, source: "derived", derivedGrain: "day" }
+  }
+
+  case "fetched": {
+   const windowed = windowedSourceRows(snapshot, table, window)
+   if (!windowed) return { rows: [], window, source: "not_synced" }
+   return { rows: normalizeVtSyncTableRows(table.id, windowed), window, source: "window_exact" }
+  }
+
+  default:
+   return { rows: [], window, source: "lifetime_only" }
+ }
 }
 
 export const tableRows = (

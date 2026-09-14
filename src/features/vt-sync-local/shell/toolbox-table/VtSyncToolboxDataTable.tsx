@@ -62,6 +62,7 @@ import {
  getVtSyncContentTypeLabel,
  normalizeVtSyncTableRows,
  resolveVtSyncTableRowsForWindow,
+ vtSyncTableWindowCapability,
 } from "../../adapters/tableData"
 import type { VtSyncAnalyticsWindow } from "../../adapters/contracts"
 import {
@@ -101,6 +102,7 @@ import {
  buildVtSyncDeviceOsGroups,
  buildVtSyncAlphabeticSpectrumLibrary,
  buildVtSyncTableViewModel,
+ maskVtSyncUnavailableRetentionMetrics,
  clampVtSyncColumnWidth,
  exportVtSyncTableCsv,
  findVtSyncTable,
@@ -1182,6 +1184,17 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
   setRowLimit(VT_SYNC_ROW_BATCH_SIZE)
  }
 
+ const tableWindowCapability = useMemo(
+  () => vtSyncTableWindowCapability(table),
+  [table],
+ )
+ useEffect(() => {
+  // Switching to a lifetime-only table while a window is selected would strand
+  // the view on an empty table; fall back rather than showing nothing.
+  if (tableWindowCapability === "lifetime_only" && tableWindow !== "lifetime") {
+   setTableWindow("lifetime")
+  }
+ }, [tableWindowCapability, tableWindow])
  const windowResolution = useMemo(
   () => resolveVtSyncTableRowsForWindow(snapshot, table, tableWindow, activePrivacyFilters),
   [snapshot, table, tableWindow, activePrivacyFilters],
@@ -1189,8 +1202,22 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
  const sourceRows = useMemo(() => {
   // Traffic × Day imports are already merged by the page owner. Other imports
   // are supplemented here for immediate post-import feedback.
-  const importedRows = table.id === "traffic_day" ? undefined : imported[table.id]
-  const snapshotRows = windowResolution.rows
+  //
+  // Manual CSV imports are lifetime exports, so they are only merged on the
+  // lifetime view. Merging them into a windowed view would put lifetime rows
+  // under a window heading — and, worse, under the "not synced for this
+  // window" banner.
+  const importedRows =
+   table.id === "traffic_day" || tableWindow !== "lifetime"
+    ? undefined
+    : imported[table.id]
+  // Window resolution bypasses buildVtSyncTableViewModel, so the retention
+  // availability mask has to be applied here or failed retention rows show
+  // their stale cached metrics.
+  const snapshotRows = maskVtSyncUnavailableRetentionMetrics(
+   table.id,
+   windowResolution.rows,
+  )
   return resolveAnalyticsTableRows({
    tableId: table.id,
    snapshot,
@@ -1198,7 +1225,7 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
    importedRows,
    privacyFilters: activePrivacyFilters,
   })
- }, [activePrivacyFilters, imported, snapshot, table, windowResolution])
+ }, [activePrivacyFilters, imported, snapshot, table, tableWindow, windowResolution])
  const trafficDayReference = useMemo(() => {
   const trafficDayTable = findVtSyncTable("traffic_day")
   return {
@@ -5653,13 +5680,18 @@ const retentionDisplayColumns = useMemo(() => {
       <span className="vt-sync-window-rail-label">Window</span>
       {ANALYTICS_WINDOWS.map((window) => {
        const isActive = tableWindow === window
+       // A lifetime-only table gets its non-lifetime chips disabled rather than
+       // rendering a chip that can only ever produce an apology.
+       const unavailable = window !== "lifetime" && tableWindowCapability === "lifetime_only"
        return (
         <button
          key={window}
          type="button"
          data-table-window={window}
          aria-pressed={isActive}
-         className={`vt-sync-window-chip ${isActive ? "is-active" : ""}`}
+         disabled={unavailable}
+         title={unavailable ? "This dataset is lifetime-only" : undefined}
+         className={`vt-sync-window-chip ${isActive ? "is-active" : ""} ${unavailable ? "is-unavailable" : ""}`}
          onClick={() => setTableWindow(window)}>
          {WINDOW_SHORT_LABELS[window]}
         </button>
@@ -5667,13 +5699,21 @@ const retentionDisplayColumns = useMemo(() => {
       })}
       {windowResolution.source === "derived" ? (
        <span className="vt-sync-window-note">
-        Derived from stored daily history
+        {windowResolution.derivedGrain === "month"
+         ? "Derived from monthly history — covers whole months overlapping this window"
+         : "Derived from stored daily history"}
        </span>
       ) : null}
       {windowResolution.source === "not_synced" ? (
        <span className="vt-sync-window-note is-warning">
         Not synced for {WINDOW_LABELS[tableWindow]} — run a sync with this
         window selected in the controller above.
+       </span>
+      ) : null}
+      {windowResolution.source === "lifetime_only" ? (
+       <span className="vt-sync-window-note is-warning">
+        This dataset is lifetime-only — it has no {WINDOW_LABELS[tableWindow]}
+        form, so syncing will not add one.
        </span>
       ) : null}
      </nav>

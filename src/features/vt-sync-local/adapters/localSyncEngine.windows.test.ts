@@ -99,8 +99,39 @@ describe("engine window-loop invariants", () => {
   expect(engineSource).toContain('datasetId: "shares", window: shareWindow')
  })
 
- it("derives each window's start date from the shared resolver", () => {
+ it("derives each window's start date from one helper", () => {
   expect(engineSource).toContain("const segmentStartDate = vtSyncWindowStartDate(segmentWindow, channelStartDate)")
   expect(engineSource).not.toContain("daysAgo(Number(window.replace")
+ })
+
+ it("pairs the window start with the engine's own end date basis", () => {
+  // reportEndDate() is daysAgo(1), a LOCAL date key. A UTC-derived start paired
+  // with it yields a 6- or 8-day "7d" window depending on timezone and hour.
+  // Both ends must come from the same basis: daysAgo(N) .. daysAgo(1) = N days.
+  expect(engineSource).toContain("daysAgo(WINDOW_DAYS[window])")
+  expect(engineSource).not.toContain("resolveWindowRange({ window }).startDate")
+ })
+})
+
+describe("window length is exactly N days", () => {
+ // Mirrors the engine's own arithmetic: start = daysAgo(N), end = daysAgo(1).
+ const toLocalDateKey = (date: Date) => {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+ }
+ const daysAgo = (days: number) => {
+  const date = new Date()
+  date.setDate(date.getDate() - days)
+  return toLocalDateKey(date)
+ }
+ const inclusiveDays = (start: string, end: string) =>
+  Math.round(
+   (Date.parse(`${end}T00:00:00`) - Date.parse(`${start}T00:00:00`)) / 86_400_000,
+  ) + 1
+
+ it.each([7, 28, 90, 365])("covers exactly %i inclusive days", (days) => {
+  expect(inclusiveDays(daysAgo(days), daysAgo(1))).toBe(days)
  })
 })

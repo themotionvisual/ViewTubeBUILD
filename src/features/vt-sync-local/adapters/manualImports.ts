@@ -288,6 +288,12 @@ export const toVtSyncPersistedApiState = (records: VtSyncDatasetTableRowsRecord[
  for (const record of records) {
   if (record.provenance !== "api" || !Array.isArray(record.rows) || !record.rows.length) continue
   if (channelId && record.channelId !== channelId) continue
+  // Lifetime records only. The flat snapshot fields this state hydrates are
+  // lifetime by contract, and a windowed record always has a later capturedAt
+  // than the lifetime pass that preceded it in the same run — so without this
+  // guard a 28d sync would silently republish 28-day rows as lifetime data to
+  // every table and visual reading those fields.
+  if ((record.window || "lifetime") !== "lifetime") continue
   const tableId = getVtSyncTableIdForDataset(record.datasetId); if (!tableId) continue
   const previousCapturedAt = state.capturedAtByTableId[tableId]
   if (previousCapturedAt && record.capturedAt < previousCapturedAt) continue

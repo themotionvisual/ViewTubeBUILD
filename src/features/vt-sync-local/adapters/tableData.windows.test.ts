@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { resolveVtSyncTableRowsForWindow } from "./tableData"
+import {
+ resolveVtSyncTableRowsForWindow,
+ vtSyncTableWindowCapability,
+} from "./tableData"
 import { VT_SYNC_TABLE_DEFINITIONS } from "../upstream/tableRegistry"
 import { DEFAULT_VT_SYNC_PRIVACY_FILTERS } from "./privacyPolicy"
 import type { VtSyncSnapshot } from "./contracts"
@@ -101,5 +104,82 @@ describe("table rows per window", () => {
   expect(result.source).toBe("window_exact")
   expect(result.rows).toHaveLength(1)
   expect(String(result.rows[0].window)).toContain("28d")
+ })
+})
+
+
+describe("window capability is honest about what a re-sync can fix", () => {
+ it("classifies a lifetime-only dataset as such, not as merely unsynced", () => {
+  // The distinction matters: "not synced" tells the user to re-sync, which for
+  // these tables could never work. Only datasets the engine actually loops per
+  // window may report not_synced.
+  const table = findVtSyncTable("videos")
+  expect(vtSyncTableWindowCapability(table)).toBe("lifetime_only")
+  const snapshot = snapshotWith({ videos: [{ id: "v", title: "t" }] as never })
+  const result = resolveVtSyncTableRowsForWindow(
+   snapshot, table, "28d", DEFAULT_VT_SYNC_PRIVACY_FILTERS,
+  )
+  expect(result.source).toBe("lifetime_only")
+  expect(result.rows).toEqual([])
+ })
+
+ it("classifies a window-fetchable dataset as fetched", () => {
+  expect(vtSyncTableWindowCapability(findVtSyncTable("geography"))).toBe("fetched")
+ })
+
+ it("classifies day-grained and week-rollup tables as derivable", () => {
+  expect(vtSyncTableWindowCapability(findVtSyncTable("daily"))).toBe("date_filtered")
+  expect(vtSyncTableWindowCapability(findVtSyncTable("weekly"))).toBe("week_rollup")
+ })
+})
+
+describe("weekly rollup", () => {
+ it("returns rows for a window instead of always being empty", () => {
+  // Week keys are "2026-W38" and never compare inside a YYYY-MM-DD range, so
+  // filtering week rows directly always produced nothing. The buckets must be
+  // rebuilt from the window's daily rows.
+  const range = resolveWindowRange({ window: "28d" })
+  const table = findVtSyncTable("weekly")
+  const snapshot = snapshotWith({
+   dailyMetrics: [
+    { date: range.endDate, views: 10, watchTime: 1 },
+    { date: "2019-01-01", views: 9999, watchTime: 99 },
+   ] as never,
+  })
+  const result = resolveVtSyncTableRowsForWindow(
+   snapshot, table, "28d", DEFAULT_VT_SYNC_PRIVACY_FILTERS,
+  )
+  expect(result.source).toBe("derived")
+  expect(result.rows.length).toBeGreaterThan(0)
+  // The 2019 row is outside the window and must not be rolled up.
+  const totalViews = result.rows.reduce(
+   (sum, row) => sum + (typeof row.views === "number" ? row.views : 0), 0,
+  )
+  expect(totalViews).toBe(10)
+ })
+})
+
+describe("derived grain labelling", () => {
+ it("marks month-grained derivation, which covers more than the window names", () => {
+  const table = findVtSyncTable("monthly")
+  const snapshot = snapshotWith({
+   monthlyMetrics: [{ month: new Date().toISOString().slice(0, 7), views: 5 }] as never,
+  })
+  const result = resolveVtSyncTableRowsForWindow(
+   snapshot, table, "7d", DEFAULT_VT_SYNC_PRIVACY_FILTERS,
+  )
+  if (result.source === "derived") expect(result.derivedGrain).toBe("month")
+ })
+
+ it("marks day-grained derivation as day", () => {
+  const range = resolveWindowRange({ window: "7d" })
+  const table = findVtSyncTable("daily")
+  const snapshot = snapshotWith({
+   dailyMetrics: [{ date: range.endDate, views: 3 }] as never,
+  })
+  const result = resolveVtSyncTableRowsForWindow(
+   snapshot, table, "7d", DEFAULT_VT_SYNC_PRIVACY_FILTERS,
+  )
+  expect(result.derivedGrain).toBe("day")
  })
 })

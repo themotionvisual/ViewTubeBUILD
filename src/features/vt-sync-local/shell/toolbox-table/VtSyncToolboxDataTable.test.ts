@@ -1643,13 +1643,16 @@ describe("data table time window control", () => {
 
  it("resolves rows through the window-aware path instead of the lifetime-only one", () => {
   expect(componentSource).toContain("resolveVtSyncTableRowsForWindow(snapshot, table, tableWindow, activePrivacyFilters)")
-  expect(componentSource).toContain("const snapshotRows = windowResolution.rows")
+  // Window-resolved rows bypass buildVtSyncTableViewModel, so the retention
+  // availability mask has to be reapplied on this path.
+  expect(componentSource).toContain("maskVtSyncUnavailableRetentionMetrics(")
+  expect(componentSource).toContain("windowResolution.rows,")
  })
 
  it("recomputes rows when the window changes", () => {
   // A stale dependency array here would silently keep showing the old window.
   expect(componentSource).toContain(
-   "[activePrivacyFilters, imported, snapshot, table, windowResolution]",
+   "[activePrivacyFilters, imported, snapshot, table, tableWindow, windowResolution]",
   )
   expect(componentSource).toContain("[snapshot, table, tableWindow, activePrivacyFilters]")
  })

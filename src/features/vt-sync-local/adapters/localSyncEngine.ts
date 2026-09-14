@@ -45,7 +45,7 @@ import type {
  VtSyncVideoInventoryRecord,
  VtSyncVideoItem,
 } from "./contracts"
-import { ANALYTICS_WINDOWS, resolveWindowRange } from "../../../services/analytics/windows"
+import { ANALYTICS_WINDOWS, WINDOW_DAYS } from "../../../services/analytics/windows"
 import { VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS } from "./windowDerivation"
 
 export const VT_SYNC_SERVER_ACCOUNT_TOKEN = "__viewtube_server_account_session__"
@@ -250,13 +250,25 @@ export const readWindowedDataset = (
  return Array.isArray(existing) ? (existing as Array<Record<string, any>>) : []
 }
 
+/**
+ * Start date for a VT-SYNC window.
+ *
+ * Deliberately computed from this engine's own `daysAgo` basis rather than the
+ * shared UTC resolver, because it must pair with `reportEndDate()`, which is
+ * `daysAgo(1)`. Mixing a UTC-derived start with a local-derived end produces a
+ * window of 6 or 8 days depending on the viewer's timezone and the hour — the
+ * exact off-by-one the window work set out to remove.
+ *
+ *   start = daysAgo(N), end = daysAgo(1)  ->  exactly N inclusive days.
+ *
+ * The window VOCABULARY still comes from the shared module (WINDOW_DAYS); only
+ * the date basis is local, and only so that the two ends agree.
+ */
 const vtSyncWindowStartDate = (
  window: VtSyncAnalyticsWindow,
  lifetimeStartDate: string,
 ): string =>
- window === "lifetime"
-  ? lifetimeStartDate
-  : resolveWindowRange({ window }).startDate
+ window === "lifetime" ? lifetimeStartDate : daysAgo(WINDOW_DAYS[window])
 // Fallback lifetime start date for calls made before the channel's actual sign-up date
 // (snapshot.channelPublishedAt) is known, e.g. if channel_metadata wasn't synced this run.
 const VT_SYNC_LIFETIME_START_DATE = "2000-01-01"

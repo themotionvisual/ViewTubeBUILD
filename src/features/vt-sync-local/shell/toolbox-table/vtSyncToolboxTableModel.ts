@@ -1030,23 +1030,36 @@ export const VT_SYNC_COMPACT_PIN_TABLE_IDS = new Set(["videos", "playlists", "da
 export const findVtSyncTable = (id: string): VtSyncTableDefinition =>
  VT_SYNC_VISIBLE_TABLE_DEFINITIONS.find((table) => table.id === id) || VT_SYNC_VISIBLE_TABLE_DEFINITIONS[0]
 
+/**
+ * Hide retention metrics a row did not actually return.
+ *
+ * A failed retention fetch leaves availability empty; without this mask the row
+ * renders whatever stale cached metrics it still carries. Must be applied to
+ * ANY retention row path, including window-resolved rows.
+ */
+export const maskVtSyncUnavailableRetentionMetrics = (
+ tableId: string,
+ rows: Array<Record<string, any>>,
+): Array<Record<string, any>> => {
+ if (tableId !== "retentions") return rows
+ return rows.map((row) => {
+  if (!Array.isArray(row.retentionMetricAvailability)) return row
+  const available = new Set(row.retentionMetricAvailability.map(String))
+  const visible = { ...row }
+  VT_SYNC_RETENTION_METRICS.forEach((metric) => {
+   if (!available.has(metric)) delete visible[metric]
+  })
+  return visible
+ })
+}
+
 export const buildVtSyncTableViewModel = (
  snapshot: VtSyncSnapshot,
  table: VtSyncTableDefinition,
  privacyFilters?: VtSyncPrivacyFilters,
 ) => {
  const rows = tableRows(snapshot, table, privacyFilters)
- const visibleRows = table.id === "retentions"
-  ? rows.map((row) => {
-   if (!Array.isArray(row.retentionMetricAvailability)) return row
-   const available = new Set(row.retentionMetricAvailability.map(String))
-   const visible = { ...row }
-   VT_SYNC_RETENTION_METRICS.forEach((metric) => {
-    if (!available.has(metric)) delete visible[metric]
-   })
-   return visible
-  })
-  : rows
+ const visibleRows = maskVtSyncUnavailableRetentionMetrics(table.id, rows)
  return { table, rows: visibleRows, columns: table.columns }
 }
 

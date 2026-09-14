@@ -73,6 +73,9 @@ describe("time window controller options", () => {
 
  it("excludes derived datasets from the request-cost estimate", () => {
   const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
-  expect(source).toContain("selected.filter(vtSyncCategoryCostsPerWindow)")
+  // Three disjoint groups: fetched costs per window, derived is free, and
+  // unwindowed belongs to neither.
+  expect(source).toContain("selected.filter(vtSyncCategoryIsWindowFetchable)")
+  expect(source).toContain("VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(id)")
  })
 })

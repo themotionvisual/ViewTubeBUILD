@@ -232,3 +232,46 @@ export const VT_SYNC_UNWINDOWED_CATEGORY_IDS = new Set([
 export const vtSyncCategoryCostsPerWindow = (categoryId: string): boolean =>
  !VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId) &&
  !VT_SYNC_UNWINDOWED_CATEGORY_IDS.has(categoryId)
+
+
+/**
+ * Categories the engine actually fetches per window (the "class B" aggregate
+ * datasets its window loops cover). Kept next to the derived/unwindowed sets so
+ * the three stay exhaustive and a table can be told, truthfully, whether a
+ * window is reachable for it at all.
+ *
+ * Must mirror localSyncEngine's window loops. A category absent from all three
+ * sets is treated as not window-fetchable, which is the safe direction: the UI
+ * says "lifetime only" instead of promising a sync that would never fill it.
+ */
+export const VT_SYNC_WINDOW_FETCHABLE_CATEGORY_IDS = new Set([
+ // segments loop
+ "audience_demographics",
+ "demographics_age",
+ "demographics_gender",
+ "audience_watch_behavior",
+ "new_returning_viewers",
+ "formats_subscriber_status",
+ "geography_country",
+ "geography_city",
+ "geography_province",
+ "geography_dma",
+ "device_type",
+ "operating_system",
+ "playback_location",
+ "subscription_status",
+ // revenue / sharing loop
+ "ad_type",
+ "sharing_service",
+])
+
+export const vtSyncCategoryIsWindowFetchable = (categoryId: string): boolean =>
+ VT_SYNC_WINDOW_FETCHABLE_CATEGORY_IDS.has(categoryId)
+
+/**
+ * Tables whose stored rows are MONTH-grained. A month-derived window includes
+ * every month overlapping the range, so a 7d view of month data is an
+ * approximation covering far more than 7 days — callers must label it as such
+ * rather than presenting it as the window's own figure.
+ */
+export const VT_SYNC_MONTH_GRAINED_TABLE_IDS = new Set(["monthly", "creator"])

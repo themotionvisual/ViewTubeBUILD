@@ -8,7 +8,10 @@ import type {
  VtSyncCategoryGroup,
  VtSyncDatasetFreshness,
 } from "../adapters/contracts"
-import { vtSyncCategoryCostsPerWindow } from "../adapters/windowDerivation"
+import {
+ vtSyncCategoryIsWindowFetchable,
+ VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS,
+} from "../adapters/windowDerivation"
 import {
  ANALYTICS_WINDOWS,
  WINDOW_SHORT_LABELS,
@@ -102,13 +105,17 @@ export const VtSyncControllerPanel: React.FC<{
  }, [sortedVideos, videoSearch])
 
  const windowCost = useMemo(() => {
-  const perWindowCategories = selected.filter(vtSyncCategoryCostsPerWindow)
-  const derivedCount = selected.length - perWindowCategories.length
+  // Three disjoint groups, counted separately. Previously this lumped
+  // unwindowed categories in with the derived ones (claiming channel identity
+  // "derives its windows for free") and charged per window for categories the
+  // engine never loops — so the estimate was wrong in both directions.
+  const fetched = selected.filter(vtSyncCategoryIsWindowFetchable)
+  const derived = selected.filter((id) => VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(id))
   const extraWindows = selectedWindows.filter((window) => window !== "lifetime").length
   return {
-   perWindowCategories: perWindowCategories.length,
-   derivedCount,
-   extraRequests: perWindowCategories.length * extraWindows,
+   fetchedCount: fetched.length,
+   derivedCount: derived.length,
+   extraRequests: fetched.length * extraWindows,
    extraWindows,
   }
  }, [selected, selectedWindows])
@@ -337,7 +344,7 @@ export const VtSyncControllerPanel: React.FC<{
     <p className="m-0 text-[11px] font-semibold leading-snug text-[#9ca3af]">
      {windowCost.extraWindows === 0
       ? `Lifetime only — ${selected.length} dataset${selected.length === 1 ? "" : "s"} selected.`
-      : `${windowCost.perWindowCategories} dataset${windowCost.perWindowCategories === 1 ? "" : "s"} x ${windowCost.extraWindows} extra window${windowCost.extraWindows === 1 ? "" : "s"} = ~${windowCost.extraRequests} additional request${windowCost.extraRequests === 1 ? "" : "s"}.`}
+      : `${windowCost.fetchedCount} windowed dataset${windowCost.fetchedCount === 1 ? "" : "s"} x ${windowCost.extraWindows} extra window${windowCost.extraWindows === 1 ? "" : "s"} = ~${windowCost.extraRequests} additional request${windowCost.extraRequests === 1 ? "" : "s"}.`}
      {windowCost.derivedCount > 0
       ? ` ${windowCost.derivedCount} day-grained dataset${windowCost.derivedCount === 1 ? "" : "s"} derive their windows for free.`
       : ""}

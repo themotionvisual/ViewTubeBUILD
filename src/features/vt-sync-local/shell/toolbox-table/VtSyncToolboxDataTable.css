@@ -94,6 +94,8 @@
 .vt-sync-window-chip:hover { transform: translate(-1px, -1px); }
 .vt-sync-window-chip.is-active { background: #C0F240; filter: drop-shadow(4px 4px 0 rgba(10, 10, 10, .9)); }
 .vt-sync-window-chip:focus-visible { outline: 4px solid var(--vt-ink); outline-offset: 2px; }
+.vt-sync-window-chip.is-unavailable { opacity: .4; cursor: not-allowed; }
+.vt-sync-window-chip.is-unavailable:hover { transform: none; }
 .vt-sync-window-note { flex: 1 1 240px; min-width: 0; font-size: 11px; font-weight: 700; line-height: 1.35; color: #4b5563; }
 .vt-sync-window-note.is-warning { color: #b4530f; }
 .vt-sync-toolbox-table.is-dark .vt-sync-window-chip { background: #111; color: #eee; }
