@@ -5,12 +5,12 @@
  */
 export const SUBTOOLBOX_TOKENS = {
   shell: {
-    headerHeight: 56,
+    headerHeight: 52,
     stroke: 4,
     radius: 12,
     shadowOffset: 6,
-    titleSize: 20,
-    iconSize: 40,
+    titleSize: 18,
+    iconSize: 36,
   },
   compactShell: {
     headerHeight: 44,
@@ -32,22 +32,22 @@ export const SUBTOOLBOX_TOKENS = {
     large: 24,
   },
   controlHeight: {
-    // Two micro controls plus one 4px gap equal one collapsed standard
-    // SubToolbox header: 26 + 4 + 26 = 56.
-    micro: 26,
+    // Two paired controls plus one 4px gap equal one collapsed standard
+    // SubToolbox header: 24 + 4 + 24 = 52.
+    micro: 24,
     compact: 32,
     standard: 48,
     // Level-1/module actions align exactly with a collapsed standard
     // SubToolbox. They must never be taller than the module they belong to.
-    action: 56,
+    action: 52,
   },
   typography: {
     micro: 9,
     label: 10,
     control: 14,
-    action: 20,
-    title: 20,
-    toolboxTitle: 26,
+    action: 18,
+    title: 18,
+    toolboxTitle: 24,
     weight: 900,
   },
   motion: {
