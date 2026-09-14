@@ -50,7 +50,8 @@ export interface SubToolboxSplitDropdownProps {
   value: string
   options: SubToolboxSplitDropdownOption[]
   onChange: (value: string) => void
-  icon: React.ReactNode
+  icon?: React.ReactNode
+  railLabel?: React.ReactNode
   ariaLabel: string
   railColor?: string
   labelColor?: string
@@ -62,6 +63,7 @@ export const SubToolboxSplitDropdown: React.FC<SubToolboxSplitDropdownProps> = (
   options,
   onChange,
   icon,
+  railLabel = "SET",
   ariaLabel,
   railColor,
   labelColor,
@@ -102,9 +104,11 @@ export const SubToolboxSplitDropdown: React.FC<SubToolboxSplitDropdownProps> = (
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
       >
-        <span className="vt-subtoolbox-split-dropdown-rail" aria-hidden="true">{icon}</span>
+        <span className="vt-subtoolbox-split-dropdown-rail" aria-hidden="true">
+          <span className="vt-subtoolbox-split-dropdown-rail-label">{railLabel}</span>
+          <span className="vt-subtoolbox-split-dropdown-rail-arrow"><ChevronDown size={18} strokeWidth={3.4} /></span>
+        </span>
         <span className="vt-subtoolbox-split-dropdown-label">{selected?.label ?? value}</span>
-        <span className="vt-subtoolbox-split-dropdown-chevron" aria-hidden="true"><ChevronDown size={20} strokeWidth={3.4} /></span>
       </button>
       {open ? (
         <div className="vt-subtoolbox-split-dropdown-menu" role="listbox" aria-label={ariaLabel}>
