@@ -5,6 +5,7 @@ import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../subtoolbo
 import {
   SubToolboxBadge,
   SubToolboxButton,
+  SubToolboxCheckbox,
   SubToolboxInput,
   SubToolboxStatePanel,
   SubToolboxSurface,
@@ -33,7 +34,13 @@ const ChannelPlanningList: React.FC<{ kind: ChannelPlanningKind }> = ({ kind }) 
   const addText = (text: string, category = "Growth") => {
     const value = text.trim()
     if (!value) return
-    saveItems([...items, { id: `${isTodo ? "ct" : "cg"}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, text: value, completed: false, ...(isTodo ? {} : { category }) }])
+    if (items.some((item) => item.text.trim().toLowerCase() === value.toLowerCase())) return
+    saveItems([...items, {
+      id: `${isTodo ? "ct" : "cg"}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      text: value,
+      completed: false,
+      ...(isTodo ? {} : { category }),
+    }])
     setDraft("")
   }
   const toggle = (id: string) => saveItems(items.map((item) => item.id === id ? { ...item, completed: !item.completed } : item))
@@ -42,7 +49,9 @@ const ChannelPlanningList: React.FC<{ kind: ChannelPlanningKind }> = ({ kind }) 
     setGenerating(true)
     setError("")
     try {
-      setSuggestions(await generateChannelPlanningSuggestions(kind, brain))
+      const generated = await generateChannelPlanningSuggestions(kind, brain)
+      const existing = new Set(items.map((item) => item.text.trim().toLowerCase()))
+      setSuggestions(generated.filter((item) => !existing.has(item.text.trim().toLowerCase())))
     } catch (cause) {
       console.error(`Failed to generate channel ${kind} suggestions`, cause)
       setError("AI Brain planning could not complete. Check the AI connection and try again.")
@@ -80,25 +89,35 @@ const ChannelPlanningList: React.FC<{ kind: ChannelPlanningKind }> = ({ kind }) 
             <SubToolboxStack density="dense">
               {items.map((item) => (
                 <SubToolboxSurface key={item.id} tone="subtle">
-                  <button type="button" onClick={() => toggle(item.id)} className="flex w-full items-center justify-between gap-3 text-left">
-                    <span className={`text-[12px] font-black uppercase ${item.completed ? "line-through opacity-40" : ""}`}>{item.text}</span>
-                    <span className="flex shrink-0 items-center gap-2">
-                      {!isTodo && item.category ? <SubToolboxBadge>{item.category}</SubToolboxBadge> : null}
-                      <span aria-hidden="true">{item.completed ? "✓" : "○"}</span>
-                    </span>
-                  </button>
+                  <div className="flex w-full items-center justify-between gap-3">
+                    <SubToolboxCheckbox
+                      checked={Boolean(item.completed)}
+                      onChange={() => toggle(item.id)}
+                      label={<span className={item.completed ? "line-through opacity-40" : ""}>{item.text}</span>}
+                    />
+                    {!isTodo && item.category ? <SubToolboxBadge>{item.category}</SubToolboxBadge> : null}
+                  </div>
                 </SubToolboxSurface>
               ))}
             </SubToolboxStack>
-          ) : <SubToolboxStatePanel state="empty" title={isTodo ? "No channel tasks" : "No channel goals"} description={isTodo ? "Add one manually or generate channel-specific actions from the AI Brain." : "Add one manually or generate measurable goals from the AI Brain."} />}
+          ) : (
+            <SubToolboxStatePanel
+              state="empty"
+              message={isTodo ? "No channel tasks yet. Add one manually or generate channel-specific actions from the AI Brain." : "No channel goals yet. Add one manually or generate measurable goals from the AI Brain."}
+            />
+          )}
         </SubToolboxSection>
 
         <SubToolboxSection label="AI Brain suggestions">
           <SubToolboxStack density="dense">
-            <SubToolboxButton tone="accent" icon={<Sparkles size={16} />} loading={generating} disabled={generating} onClick={generate}>
+            <SubToolboxButton tone="accent" icon={<Sparkles size={16} />} disabled={generating} onClick={generate}>
               {generating ? "Consulting AI Brain" : isTodo ? "Generate channel tasks" : "Generate channel goals"}
             </SubToolboxButton>
-            {error ? <SubToolboxStatePanel state="error" title="Generation unavailable" description={error} /> : null}
+            {generating ? <SubToolboxStatePanel state="loading" message="Reading channel profile, current plans, and AI Brain knowledge…" /> : null}
+            {error ? <SubToolboxStatePanel state="error" message={error} /> : null}
+            {!generating && !error && suggestions.length === 0 ? (
+              <SubToolboxStatePanel state="ready" message="Generation uses the current channel profile plus AI Brain identity, content DNA, performance, future-state, and strategic context." />
+            ) : null}
             {suggestions.map((suggestion, index) => (
               <SubToolboxSurface key={`${suggestion.text}-${index}`} tone="accent">
                 <SubToolboxStack density="dense">
