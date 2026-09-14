@@ -42,7 +42,7 @@ export const EDITOR_CAPABILITIES: EditorCapability[] = [
   {id:'effects.color',category:'effects',label:'Color',status:'planned',selection:['video','overlay']},
   {id:'effects.blur',category:'effects',label:'Blur',status:'planned',selection:['video','overlay']},
   {id:'templates.library',category:'templates',label:'Template Library',status:'active'},
-  {id:'export.render',category:'export',label:'Render Video',status:'available'},
+  {id:'export.render',category:'export',label:'Render Video',status:'active',action:'createRenderJob'},
   {id:'settings.timeline',category:'settings',label:'Timeline Settings',status:'available'},
   {id:'settings.preview',category:'settings',label:'Preview Settings',status:'available'},
   {id:'settings.performance',category:'settings',label:'Performance',status:'available'},
