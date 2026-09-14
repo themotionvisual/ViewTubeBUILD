@@ -1,0 +1,9 @@
+/*
+ * Canonical Toolbox/Subtoolbox stylesheet entry point.
+ *
+ * Consumers should import this entry rather than reaching into the individual
+ * system files. Keeping the imports together makes Toolbox ownership explicit
+ * and allows the application bootstrap to stop owning component-system CSS.
+ */
+@import "./toolbox-system.css";
+@import "./subtoolbox-system.css";
