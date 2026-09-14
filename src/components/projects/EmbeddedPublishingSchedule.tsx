@@ -3,8 +3,9 @@ import PublishingScheduleArchitect from "../../views/PublishingScheduleArchitect
 
 /**
  * Transitional adapter while the scheduler receives a native embedded contract.
- * Projects owns T0. On phone layouts the dense month/week grids are hidden and
- * the agenda surface becomes the primary schedule composition.
+ * Projects owns T0. Phone layouts remove the 840px desktop minimums and collapse
+ * seven-column calendar surfaces vertically so the scheduler stays usable without
+ * page-level horizontal overflow. Native agenda-first selection remains follow-up work.
  */
 const EmbeddedPublishingSchedule: React.FC = () => (
  <div className="vt-projects-embedded-schedule min-w-0">
