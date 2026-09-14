@@ -263,6 +263,8 @@ export const VT_SYNC_WINDOW_FETCHABLE_CATEGORY_IDS = new Set([
  // revenue / sharing loop
  "ad_type",
  "sharing_service",
+ // per-video pass; stored on video.metricsByWindow rather than datasetsByWindow
+ "videos_analytics",
 ])
 
 export const vtSyncCategoryIsWindowFetchable = (categoryId: string): boolean =>

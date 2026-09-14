@@ -1730,6 +1730,39 @@ export const mergeVideoAnalyticsRows = (
 const mergeVideoAnalytics = (videos: VtSyncVideoItem[], analyticsRows: Record<string, any>[]) =>
  mergeVideoAnalyticsRows(videos, analyticsRows, "full")
 
+/**
+ * Merge per-video analytics for ONE non-lifetime window into
+ * `video.metricsByWindow[window]`.
+ *
+ * Kept separate from the lifetime merge on purpose: `video.metrics` is lifetime
+ * by contract and every existing reader assumes that. Writing a window's values
+ * there would republish, say, 28-day views as the video's lifetime total.
+ *
+ * Windows do not merge into each other either — each window's map is built from
+ * that window's rows alone, because the metric keys carry no window and blending
+ * them would silently mix date ranges.
+ */
+export const mergeVideoWindowAnalyticsRows = (
+ videos: VtSyncVideoItem[],
+ analyticsRows: Record<string, any>[],
+ window: VtSyncAnalyticsWindow,
+): VtSyncVideoItem[] => {
+ if (window === "lifetime") return mergeVideoAnalyticsRows(videos, analyticsRows, "full")
+ const byId = new Map(analyticsRows.map((row) => [String(row.video || row.videoId || ""), row]))
+ return videos.map((video) => {
+  const stats = byId.get(video.id)
+  if (!stats) return video
+  const previous = video.metricsByWindow?.[window]
+  return {
+   ...video,
+   metricsByWindow: {
+    ...(video.metricsByWindow || {}),
+    [window]: mergeMetricAssignments(previous, stats, FULL_VIDEO_METRIC_ASSIGNMENTS),
+   },
+  }
+ })
+}
+
 const mergeLongFormatCardMetrics = (videos: VtSyncVideoItem[], analyticsRows: Record<string, any>[]) =>
  mergeVideoAnalyticsRows(videos, analyticsRows, "long_format_cards")
 
@@ -2310,12 +2343,17 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
 
   if (shouldSync(selected, "videos_analytics") && snapshot.videos.length > 0) {
    updatePhase(progress, "videos_analytics", { status: "running", startedAt: new Date().toISOString() }, onProgress)
-   const analyticsMap: Record<string, Record<string, any>> = {}
    let rowsWritten = 0
    let failures = 0
    const videoAnalyticsIds = snapshot.videos.map((video) => video.id).filter(Boolean)
    const videoColumns = new Set<string>()
    const videoBundleDiagnostics: Array<Record<string, unknown>> = []
+   // The heaviest block in the engine: batches x bundles x windows. It runs
+   // only the windows planVtSyncWindows approved, and each window's rows are
+   // accumulated separately so no window's values leak into another.
+   for (const videoWindow of aggregateWindows) {
+   const videoWindowStartDate = vtSyncWindowStartDate(videoWindow, channelStartDate)
+   const analyticsMap: Record<string, Record<string, any>> = {}
    for (let index = 0; index < videoAnalyticsIds.length; index += VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE) {
     const chunk = videoAnalyticsIds.slice(index, index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE)
     const batchIndex = index / VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE
@@ -2323,13 +2361,13 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     for (const bundle of DAILY_ANALYTICS_METRIC_BUNDLES) {
      const bundleResult = await runAnalyticsBundleWithMetricSplit({
       token,
-      id: `video_stats_${batchIndex}_${bundle.id}`,
+      id: `video_stats_${videoWindow}_${batchIndex}_${bundle.id}`,
       metrics: [...bundle.metrics],
       dimensions: "video",
       sort: "",
       maxResults: 0,
       filters: `video==${chunk.join(",")}`,
-      startDate: "2000-01-01",
+      startDate: videoWindowStartDate,
       allowFallback: false,
      })
      bundleResult.columns.forEach((column) => videoColumns.add(column))
@@ -2337,7 +2375,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      if (!bundleResult.rows || bundleResult.error) failures += 1
      addManifestResult(
       manifest,
-      `video_stats_${batchIndex}_${bundle.id}`,
+      `video_stats_${videoWindow}_${batchIndex}_${bundle.id}`,
       !!bundleResult.rows,
       bundleResult.rows?.length || 0,
       ["video", ...bundle.metrics],
@@ -2350,7 +2388,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
       bundleId: bundle.id,
       requestedMetrics: bundle.metrics,
       result: bundleResult,
-      context: { batch: batchIndex },
+      context: { batch: batchIndex, window: videoWindow },
      }))
      if (bundle !== DAILY_ANALYTICS_METRIC_BUNDLES[DAILY_ANALYTICS_METRIC_BUNDLES.length - 1]) await sleep(75)
     }
@@ -2366,24 +2404,34 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
       analyticsMap[videoId] = mergeVtSyncDefinedFields(analyticsMap[videoId], row)
      })
      rowsWritten = Object.keys(analyticsMap).length
-     snapshot = { ...snapshot, videos: mergeVideoAnalytics(snapshot.videos, Object.values(analyticsMap)) }
-     updatePhase(progress, "videos_analytics", { status: "running", rows: rowsWritten, message: `Merged ${Math.min(index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE, videoAnalyticsIds.length)} of ${videoAnalyticsIds.length} video analytics rows.` }, onProgress)
+     snapshot = {
+      ...snapshot,
+      videos: mergeVideoWindowAnalyticsRows(
+       snapshot.videos,
+       Object.values(analyticsMap),
+       videoWindow,
+      ),
+     }
+     updatePhase(progress, "videos_analytics", { status: "running", rows: rowsWritten, message: `Merged ${Math.min(index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE, videoAnalyticsIds.length)} of ${videoAnalyticsIds.length} video analytics rows (${videoWindow}).` }, onProgress)
      commitSnapshot()
     }
     if (index + VT_SYNC_VIDEO_ANALYTICS_BATCH_SIZE < videoAnalyticsIds.length) await sleep(300)
    }
-   manifest.diagnostics = [...(manifest.diagnostics || []), ...videoBundleDiagnostics]
    if (Object.keys(analyticsMap).length) {
     await persistDatasetRows({
      runId,
      channelId: snapshot.channelId || undefined,
      datasetId: "videos",
+     window: videoWindow,
      phase: "videos_analytics",
      rawRows: Object.values(analyticsMap),
      tableRows: normalizeVtSyncVideoTableRows(snapshot.videos as unknown as Array<Record<string, unknown>>),
      columns: [...videoColumns],
     })
    }
+   if (videoWindow !== aggregateWindows[aggregateWindows.length - 1]) await sleep(300)
+   }
+   manifest.diagnostics = [...(manifest.diagnostics || []), ...videoBundleDiagnostics]
 
    const longIds = snapshot.videos.filter((video) => video.format === "long").map((video) => video.id)
    const longRows: Record<string, any>[] = []

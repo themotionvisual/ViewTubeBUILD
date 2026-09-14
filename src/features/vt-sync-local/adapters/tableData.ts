@@ -961,13 +961,15 @@ export type VtSyncTableWindowResolution = {
  *  - "date_filtered"  day-grained source rows, filtered to the window
  *  - "week_rollup"    weekly buckets rebuilt from window-filtered daily rows
  *  - "per_window_row" the source already stores one row per window
+ *  - "video_window"   per-video metrics live on video.metricsByWindow
  *  - "fetched"        the engine can sync this dataset per window
  *  - "lifetime_only"  no window is possible; the control must say so rather
  *                     than telling the user to re-sync, which can never help
  */
 export const vtSyncTableWindowCapability = (
  table: VtSyncTableDefinition,
-): "date_filtered" | "week_rollup" | "per_window_row" | "fetched" | "lifetime_only" => {
+): "date_filtered" | "week_rollup" | "per_window_row" | "video_window" | "fetched" | "lifetime_only" => {
+ if (table.id === "videos") return "video_window"
  if (table.id === "channel_totals") return "per_window_row"
  if (table.id === "weekly") return "week_rollup"
  if (DATE_FILTERED_TABLE_IDS.has(table.id)) return "date_filtered"
@@ -989,6 +991,21 @@ export const resolveVtSyncTableRowsForWindow = (
  const capability = vtSyncTableWindowCapability(table)
 
  switch (capability) {
+  case "video_window": {
+   // Per-video windowed metrics are stored on the video itself, not in
+   // datasetsByWindow. Project each video through its window map; a video with
+   // no data for the window is omitted rather than shown with lifetime values.
+   const windowedVideos = (snapshot.videos || [])
+    .filter((video) => video.metricsByWindow?.[window])
+    .map((video) => ({ ...video, metrics: video.metricsByWindow?.[window] }))
+   if (!windowedVideos.length) return { rows: [], window, source: "not_synced" }
+   return {
+    rows: normalizeVtSyncVideoTableRows(windowedVideos as Array<Row>, privacyFilters),
+    window,
+    source: "window_exact",
+   }
+  }
+
   case "per_window_row": {
    const all = tableRows(snapshot, table, privacyFilters)
    const label = VT_SYNC_CHANNEL_TOTAL_WINDOW_LABELS[window]

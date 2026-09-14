@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
-import { readWindowedDataset, writeWindowedDataset } from "./localSyncEngine"
-import type { VtSyncSnapshot } from "./contracts"
+import {
+ mergeVideoWindowAnalyticsRows,
+ readWindowedDataset,
+ writeWindowedDataset,
+} from "./localSyncEngine"
+import type { VtSyncSnapshot, VtSyncVideoItem } from "./contracts"
 
 const engineSource = readFileSync(new URL("./localSyncEngine.ts", import.meta.url), "utf8")
 
@@ -143,5 +147,68 @@ describe("window length is exactly N days", () => {
 
  it.each([7, 28, 90, 365])("covers exactly %i inclusive days", (days) => {
   expect(inclusiveDays(daysAgo(days), daysAgo(1))).toBe(days)
+ })
+})
+
+describe("per-video window merge", () => {
+ const video = (overrides: Partial<VtSyncVideoItem> = {}): VtSyncVideoItem => ({
+  id: "v1",
+  title: "V",
+  metrics: { views: 5000 },
+  ...overrides,
+ })
+
+ it("writes a window's values to metricsByWindow, never over lifetime metrics", () => {
+  // video.metrics is lifetime by contract; writing 28d there would republish
+  // 28-day views as the video's lifetime total everywhere it is read.
+  const [merged] = mergeVideoWindowAnalyticsRows(
+   [video()],
+   [{ video: "v1", views: 120 }],
+   "28d",
+  )
+  expect(merged.metrics?.views).toBe(5000)
+  expect(merged.metricsByWindow?.["28d"]?.views).toBe(120)
+ })
+
+ it("keeps windows separate from each other", () => {
+  let videos = [video()]
+  videos = mergeVideoWindowAnalyticsRows(videos, [{ video: "v1", views: 120 }], "28d")
+  videos = mergeVideoWindowAnalyticsRows(videos, [{ video: "v1", views: 30 }], "7d")
+  expect(videos[0].metricsByWindow?.["28d"]?.views).toBe(120)
+  expect(videos[0].metricsByWindow?.["7d"]?.views).toBe(30)
+ })
+
+ it("still merges lifetime into the lifetime metrics map", () => {
+  const [merged] = mergeVideoWindowAnalyticsRows(
+   [video({ metrics: {} })],
+   [{ video: "v1", views: 777 }],
+   "lifetime",
+  )
+  expect(merged.metrics?.views).toBe(777)
+  expect(merged.metricsByWindow).toBeUndefined()
+ })
+
+ it("leaves a video untouched when the window returned no row for it", () => {
+  const [merged] = mergeVideoWindowAnalyticsRows([video()], [], "28d")
+  expect(merged.metricsByWindow).toBeUndefined()
+  expect(merged.metrics?.views).toBe(5000)
+ })
+})
+
+describe("video analytics window loop", () => {
+ it("fetches each approved window from its own start date", () => {
+  expect(engineSource).toContain("const videoWindowStartDate = vtSyncWindowStartDate(videoWindow, channelStartDate)")
+  expect(engineSource).toContain("startDate: videoWindowStartDate,")
+  // The hardcoded lifetime literal must be gone from the per-video pass.
+  expect(engineSource).not.toContain('id: `video_stats_${batchIndex}_${bundle.id}`')
+ })
+
+ it("accumulates each window separately so values cannot leak between them", () => {
+  expect(engineSource).toContain("for (const videoWindow of aggregateWindows) {")
+  expect(engineSource).toContain("mergeVideoWindowAnalyticsRows(")
+ })
+
+ it("persists per-video rows under their window", () => {
+  expect(engineSource).toContain('datasetId: "videos",\n     window: videoWindow,')
  })
 })

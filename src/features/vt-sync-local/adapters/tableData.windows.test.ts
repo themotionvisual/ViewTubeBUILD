@@ -113,13 +113,50 @@ describe("window capability is honest about what a re-sync can fix", () => {
   // The distinction matters: "not synced" tells the user to re-sync, which for
   // these tables could never work. Only datasets the engine actually loops per
   // window may report not_synced.
-  const table = findVtSyncTable("videos")
+  // retention is in the unwindowed set: one request per video, deliberately narrow.
+  const table = findVtSyncTable("retentions")
   expect(vtSyncTableWindowCapability(table)).toBe("lifetime_only")
-  const snapshot = snapshotWith({ videos: [{ id: "v", title: "t" }] as never })
+  const result = resolveVtSyncTableRowsForWindow(
+   snapshotWith({}), table, "28d", DEFAULT_VT_SYNC_PRIVACY_FILTERS,
+  )
+  expect(result.source).toBe("lifetime_only")
+  expect(result.rows).toEqual([])
+ })
+
+ it("reads per-video windowed metrics from the video itself", () => {
+  const table = findVtSyncTable("videos")
+  expect(vtSyncTableWindowCapability(table)).toBe("video_window")
+  const snapshot = snapshotWith({
+   videos: [
+    {
+     id: "windowed",
+     title: "Windowed",
+     publishedAt: "2024-01-01T00:00:00Z",
+     metrics: { views: 5000 },
+     metricsByWindow: { "28d": { views: 120 } },
+    },
+    { id: "lifetime-only", title: "Lifetime only", publishedAt: "2024-01-01T00:00:00Z", metrics: { views: 900 } },
+   ] as never,
+  })
   const result = resolveVtSyncTableRowsForWindow(
    snapshot, table, "28d", DEFAULT_VT_SYNC_PRIVACY_FILTERS,
   )
-  expect(result.source).toBe("lifetime_only")
+  expect(result.source).toBe("window_exact")
+  // Only the video with 28d data appears, carrying its 28d value — never the
+  // lifetime figure, and never the video that has no 28d data at all.
+  expect(result.rows).toHaveLength(1)
+  expect(result.rows[0].views).toBe(120)
+ })
+
+ it("reports not_synced for videos when no window pass has run", () => {
+  const table = findVtSyncTable("videos")
+  const snapshot = snapshotWith({
+   videos: [{ id: "v", title: "t", publishedAt: "2024-01-01T00:00:00Z", metrics: { views: 900 } }] as never,
+  })
+  const result = resolveVtSyncTableRowsForWindow(
+   snapshot, table, "28d", DEFAULT_VT_SYNC_PRIVACY_FILTERS,
+  )
+  expect(result.source).toBe("not_synced")
   expect(result.rows).toEqual([])
  })
 
