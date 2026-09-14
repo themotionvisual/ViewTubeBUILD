@@ -25,6 +25,7 @@ import type {
  MetricSummary,
  WindowTotals,
 } from "./contracts"
+import { windowDayCount } from "../analytics/windows"
 
 // --- Full set of canonical metric keys the adapter emits -----------------
 // Kept as a runtime array so the "unavailable-defaults" record can be
@@ -147,8 +148,19 @@ const inferFormat = (video: VtSyncVideoItem): CanonicalVideoRow["format"] => {
  */
 export const projectVtSyncVideoToCanonicalRow = (
  video: VtSyncVideoItem,
+ window: AnalyticsWindow = "lifetime",
 ): CanonicalVideoRow => {
- const metrics = (video.metrics || {}) as Record<string, number | null | undefined>
+ const windowed = video.metricsByWindow?.[window]
+ const lifetime = video.metrics
+ // Real per-window values when the engine has them; otherwise lifetime values
+ // clearly tagged as a stand-in. What must never happen is lifetime numbers
+ // presented as the requested window's numbers with no marker.
+ const source: NonNullable<CanonicalVideoRow["windowSource"]> =
+  windowed ? "window_exact" : lifetime ? "lifetime_fallback" : "unavailable"
+ const metrics = (windowed || lifetime || {}) as Record<
+  string,
+  number | null | undefined
+ >
  const durationSeconds = Number(
   (video as unknown as { durationSec?: number }).durationSec ?? 0,
  )
@@ -188,6 +200,8 @@ export const projectVtSyncVideoToCanonicalRow = (
   apiPresent: true,
   csvPresent: false,
   metrics: cells,
+  window,
+  windowSource: source,
   originalData: video as unknown as Record<string, unknown>,
  }
 
@@ -196,19 +210,17 @@ export const projectVtSyncVideoToCanonicalRow = (
 
 // --- Window filtering ----------------------------------------------------
 
-const WINDOW_TO_DAYS: Record<AnalyticsWindow, number | null> = {
- "7d": 7,
- "28d": 28,
- "90d": 90,
- "365d": 365,
- lifetime: null,
-}
-
-export const filterCanonicalRowsByWindow = (
+/**
+ * Keep rows for videos PUBLISHED inside the window.
+ *
+ * This is an upload-recency filter — "which videos are new" — not a metric
+ * window. It says nothing about the period a row's metrics cover.
+ */
+export const filterRowsByUploadRecency = (
  rows: CanonicalVideoRow[],
  window: AnalyticsWindow,
 ): CanonicalVideoRow[] => {
- const days = WINDOW_TO_DAYS[window]
+ const days = windowDayCount(window)
  if (days === null) return rows
  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
  return rows.filter((row) => {
@@ -218,15 +230,48 @@ export const filterCanonicalRowsByWindow = (
  })
 }
 
+/**
+ * @deprecated Misleading name for an upload-date filter: it never windowed
+ * metrics. Use `filterRowsByUploadRecency` when you want recently published
+ * videos, or `getCanonicalRowsFromVtSync` for windowed metric rows.
+ */
+export const filterCanonicalRowsByWindow = filterRowsByUploadRecency
+
 // --- Top-level selectors -------------------------------------------------
 
+/**
+ * Canonical rows for a window.
+ *
+ * When the snapshot carries real per-window metrics, every video with data for
+ * that window is returned with `windowSource: "window_exact"` — no upload-date
+ * filtering, because a video published two years ago still accrues views in
+ * the last 28 days.
+ *
+ * VT-SYNC does not fetch per-window video metrics yet (videos_analytics runs
+ * from 2000-01-01), so for a non-lifetime window this returns [] until the
+ * engine window loops land. Consumers that gate on row count then fall through
+ * to a genuinely windowed source rather than rendering lifetime values under a
+ * window heading. Use `filterRowsByUploadRecency` if you actually want
+ * recently published videos.
+ */
 export const getCanonicalRowsFromVtSync = (
  snapshot: VtSyncSnapshot | null | undefined,
  window: AnalyticsWindow,
 ): CanonicalVideoRow[] => {
  if (!snapshot || !Array.isArray(snapshot.videos)) return []
- const all = snapshot.videos.map(projectVtSyncVideoToCanonicalRow)
- return filterCanonicalRowsByWindow(all, window)
+ const rows = snapshot.videos.map((video) =>
+  projectVtSyncVideoToCanonicalRow(video, window),
+ )
+ if (window === "lifetime") return rows
+
+ const windowed = rows.filter((row) => row.windowSource === "window_exact")
+ if (windowed.length > 0) return windowed
+
+ // No real data for this window. Return nothing rather than lifetime values
+ // wearing the window's name: an empty result lets consumers fall through to a
+ // genuinely windowed source (Selectors.getMetricSummary reads the windowed
+ // channel ledger), whereas a populated-but-wrong result silently wins.
+ return []
 }
 
 // --- Metric aggregation --------------------------------------------------

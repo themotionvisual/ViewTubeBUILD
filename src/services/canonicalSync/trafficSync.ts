@@ -14,8 +14,9 @@ import {
  type NormalizedTrafficRow,
  type TrafficDiagnosticEntry,
 } from "../youtube/trafficAnalyticsSync"
+import { ANALYTICS_WINDOWS } from "../analytics/windows"
 
-const TRAFFIC_WINDOWS: AnalyticsWindow[] = ["lifetime", "365d", "90d", "28d"]
+const TRAFFIC_WINDOWS: AnalyticsWindow[] = ANALYTICS_WINDOWS
 
 const TRAFFIC_METRIC_KEYS = [
  "views",

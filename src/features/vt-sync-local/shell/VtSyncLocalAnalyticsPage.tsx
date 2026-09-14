@@ -8,6 +8,7 @@ import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
 import {
  getVtSyncSnapshot,
  runVtSyncLocalSync,
+ type VtSyncAnalyticsWindow,
  type VtSyncDatasetFreshness,
  type VtSyncLocalSyncProgress,
  type VtSyncSnapshot,
@@ -670,7 +671,7 @@ const refreshManualImports = useCallback(async (payload?: {
  const controllerPanelRef = useRef<HTMLDivElement | null>(null)
  const progressPanelRef = useRef<HTMLDivElement | null>(null)
  const syncRequestActiveRef = useRef(false)
- const syncQueueRef = useRef<Array<{ categoryIds: string[]; retentionVideoIds?: string[]; forceFullVideoMetadata?: boolean }>>([])
+ const syncQueueRef = useRef<Array<{ categoryIds: string[]; retentionVideoIds?: string[]; forceFullVideoMetadata?: boolean; windows?: VtSyncAnalyticsWindow[] }>>([])
  const [queuedCategoryIds, setQueuedCategoryIds] = useState<string[]>([])
 
  const publishSyncProgress = useCallback((next: VtSyncLocalSyncProgress) => {
@@ -786,6 +787,7 @@ const refreshManualImports = useCallback(async (payload?: {
     selectedCategories: requestedCategoryIds,
     retentionVideoIds: request.retentionVideoIds,
     forceFullVideoMetadata: request.forceFullVideoMetadata,
+    selectedWindows: request.windows,
     contentOwnerId: account.snapshot.google.activeContentOwnerId || undefined,
     previousSnapshot: snapshotRef.current,
    onProgress: publishSyncProgress,
@@ -816,9 +818,14 @@ const refreshManualImports = useCallback(async (payload?: {
   }
  }
 
- const startSync = async (categoryIds: string[], retentionVideoIds?: string[], forceFullVideoMetadata = false) => {
+ const startSync = async (
+  categoryIds: string[],
+  retentionVideoIds?: string[],
+  forceFullVideoMetadata = false,
+  windows?: VtSyncAnalyticsWindow[],
+ ) => {
   const requestedCategoryIds = expandVtSyncCategoryDependencies(categoryIds)
-  syncQueueRef.current.push({ categoryIds: requestedCategoryIds, retentionVideoIds, forceFullVideoMetadata })
+  syncQueueRef.current.push({ categoryIds: requestedCategoryIds, retentionVideoIds, forceFullVideoMetadata, windows })
   updateQueuedCategories()
   void runQueuedSyncs()
  }

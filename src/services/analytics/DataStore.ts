@@ -1,5 +1,20 @@
 // --- BEGIN canonicalAnalyticsStore.ts ---
 
+import type {
+ AnalyticsWindow,
+ ComparableAnalyticsWindow,
+ AnalyticsPeriod,
+} from "./windows"
+import {
+ ANALYTICS_WINDOWS,
+ COMPARABLE_WINDOWS,
+ WINDOW_DAYS,
+ WINDOW_LABELS,
+ WINDOW_SHORT_LABELS,
+ latestCompleteAnalyticsDate,
+ resolveWindowRange,
+} from "./windows"
+
 export type CanonicalMetricAvailability = "available" | "unavailable"
 
 export interface CanonicalMetricValue {
@@ -291,15 +306,19 @@ export const buildCanonicalMetricValue = (
 // --- END canonicalAnalyticsStore.ts ---
 
 // --- BEGIN analyticsContract.ts ---
-export type AnalyticsWindow = "7d" | "28d" | "90d" | "365d" | "lifetime"
-
-export const ANALYTICS_WINDOWS: AnalyticsWindow[] = [
- "lifetime",
- "365d",
- "90d",
- "28d",
- "7d",
-]
+// The window vocabulary lives in ./windows — the single source of truth shared
+// by canonicalSync, vt-sync-local and SyncCoordinator. Re-exported here so the
+// many existing `from "../analytics/DataStore"` imports keep working.
+export type { AnalyticsWindow, ComparableAnalyticsWindow, AnalyticsPeriod }
+export {
+ ANALYTICS_WINDOWS,
+ COMPARABLE_WINDOWS,
+ WINDOW_DAYS,
+ WINDOW_LABELS,
+ WINDOW_SHORT_LABELS,
+ latestCompleteAnalyticsDate,
+ resolveWindowRange,
+}
 
 export type MetricStatus = "actual" | "derived" | "unavailable"
 export type MetricSource = "api" | "csv_table" | "ga4" | "hybrid"
@@ -455,6 +474,17 @@ export interface CanonicalVideoRow {
  rowMatchConfidence?: CanonicalRowMatchConfidence
  sourceMode: MetricSource
  metrics: Record<CanonicalMetricKey, MetricCell>
+ /** The window `metrics` actually represents. */
+ window?: AnalyticsWindow
+ /**
+  * Where `metrics` came from relative to the requested window:
+  *  - "window_exact"     — real per-window values for the requested window
+  *  - "lifetime_fallback"— no per-window values exist yet, so these are
+  *                         LIFETIME values standing in. Never present them as
+  *                         the requested window's numbers without saying so.
+  *  - "unavailable"      — no values for this window and no usable fallback
+  */
+ windowSource?: "window_exact" | "lifetime_fallback" | "unavailable"
  originalData?: Record<string, unknown>
  supplementalData?: Record<string, unknown>
 }

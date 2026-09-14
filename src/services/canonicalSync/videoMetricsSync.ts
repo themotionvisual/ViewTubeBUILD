@@ -5,8 +5,9 @@ import type {
  CanonicalVideoRecord,
 } from "./contracts"
 import { buildMetricValue, mergeMetricWindows } from "./normalizers/video"
+import { ANALYTICS_WINDOWS, isoDate, resolveWindowRange } from "../analytics/windows"
 
-const supportedWindows: AnalyticsWindow[] = ["lifetime", "365d", "90d", "28d"]
+const supportedWindows: AnalyticsWindow[] = ANALYTICS_WINDOWS
 const DEPRECATED_ANNOTATION_METRICS = new Set([
  "annotationClickThroughRate",
  "annotationCloseRate",
@@ -20,32 +21,26 @@ const DEPRECATED_ANNOTATION_METRICS = new Set([
 export const shouldPersistCanonicalAnalyticsMetric = (metricKey: string): boolean =>
  !DEPRECATED_ANNOTATION_METRICS.has(metricKey)
 
-const isoDate = (date: Date): string => date.toISOString().split("T")[0]
-
 const VIDEO_METRIC_KEY_ALIASES: Record<string, string> = {
  estimatedRedPartnerRevenue: "estimatedYouTubePremiumRevenue",
 }
 
+/**
+ * Video lifetime starts at the earliest upload rather than the channel's
+ * publishedAt, so the shared resolver is given that date as the clamp.
+ */
 const getWindowRange = (
  window: AnalyticsWindow,
  records: CanonicalVideoRecord[],
 ): { startDate: string; endDate: string } => {
- const endDate = new Date()
- if (window === "lifetime") {
-  const earliestPublishedAt = records
-   .map((record) => new Date(record.publishedAt))
-   .filter((date) => !Number.isNaN(date.getTime()))
-   .sort((left, right) => left.getTime() - right.getTime())[0]
-  return {
-   startDate: isoDate(earliestPublishedAt || new Date("2000-01-01T00:00:00Z")),
-   endDate: isoDate(endDate),
-  }
- }
- const lookback =
-  window === "365d" ? 365 : window === "90d" ? 90 : window === "28d" ? 28 : 7
- const startDate = new Date(endDate)
- startDate.setDate(startDate.getDate() - (lookback - 1))
- return { startDate: isoDate(startDate), endDate: isoDate(endDate) }
+ const earliestPublishedAt = records
+  .map((record) => new Date(record.publishedAt))
+  .filter((date) => !Number.isNaN(date.getTime()))
+  .sort((left, right) => left.getTime() - right.getTime())[0]
+ return resolveWindowRange({
+  window,
+  channelPublishedAt: earliestPublishedAt ? isoDate(earliestPublishedAt) : null,
+ })
 }
 
 const rowsToObjects = (payload: any): Record<string, unknown>[] => {

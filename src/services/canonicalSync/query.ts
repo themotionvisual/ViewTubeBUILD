@@ -3,7 +3,8 @@ import {
  proxyFetch,
  refreshTokenIfExpired,
 } from "../youtube/youtubeApiClient"
-import type { AnalyticsWindow } from "./contracts"
+import type { AnalyticsWindow, AnalyticsPeriod } from "./contracts"
+import { isoDate, resolveWindowRange } from "../analytics/windows"
 import { reportDiagnostic } from "../diagnostics"
 import {
  sanitizeAnalyticsMetrics,
@@ -22,21 +23,30 @@ type AnalyticsQueryParams = {
  startIndex?: number
 }
 
-export const isoDate = (date: Date): string => date.toISOString().split("T")[0]
+export { isoDate }
 
+/**
+ * Resolve a canonical window to an Analytics date range.
+ *
+ * Delegates to the shared resolver so every dataset ends its window on the
+ * last COMPLETE analytics day. This previously ended at `new Date()`, which
+ * always included today's partial row — a rounding error at 365d, but up to a
+ * 14% understatement at 7d, and it made these datasets disagree with the
+ * channel window summaries that already resolved the range correctly.
+ *
+ * Pass `channelPublishedAt` where the caller has it so lifetime starts at the
+ * channel's first day and short windows on a young channel report
+ * `coverage: "partial"` instead of silently covering less time than their name.
+ */
 export const getWindowRange = (
  window: AnalyticsWindow,
-): { startDate: string; endDate: string } => {
- const endDate = new Date()
- if (window === "lifetime") {
-  return { startDate: "2000-01-01", endDate: isoDate(endDate) }
- }
- const lookback =
-  window === "365d" ? 365 : window === "90d" ? 90 : window === "28d" ? 28 : 7
- const startDate = new Date(endDate)
- startDate.setDate(startDate.getDate() - (lookback - 1))
- return { startDate: isoDate(startDate), endDate: isoDate(endDate) }
-}
+ options: {
+  period?: AnalyticsPeriod
+  channelPublishedAt?: string | null
+  endDate?: Date
+ } = {},
+): { startDate: string; endDate: string; coverage: "complete" | "partial" } =>
+ resolveWindowRange({ window, ...options })
 
 const buildAnalyticsUrl = ({
  ids = "channel==MINE",

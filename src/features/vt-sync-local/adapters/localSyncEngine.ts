@@ -45,6 +45,8 @@ import type {
  VtSyncVideoInventoryRecord,
  VtSyncVideoItem,
 } from "./contracts"
+import { ANALYTICS_WINDOWS, resolveWindowRange } from "../../../services/analytics/windows"
+import { VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS } from "./windowDerivation"
 
 export const VT_SYNC_SERVER_ACCOUNT_TOKEN = "__viewtube_server_account_session__"
 export const VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE = 25
@@ -97,6 +99,15 @@ export type VtSyncLocalSyncOptions = {
  forceFullVideoMetadata?: boolean
  /** Verified, explicitly selected CMS owner. Never inferred or combined. */
  contentOwnerId?: string
+ /**
+  * Windows to sync for aggregate ("class B") datasets. Defaults to lifetime
+  * only, which is exactly what this engine did before windows existed, so an
+  * unchanged caller sees unchanged behavior and unchanged quota.
+  *
+  * Day-grained ("class A") datasets ignore this: their windows are derived
+  * from stored lifetime history at read time and cost no extra requests.
+  */
+ selectedWindows?: VtSyncAnalyticsWindow[]
  onProgress?: (progress: VtSyncLocalSyncProgress) => void
  onSnapshotCommit?: (snapshot: VtSyncSnapshot) => void
 }
@@ -187,6 +198,65 @@ const daysBetweenInclusive = (startDate: string, endDate: string) =>
  Math.max(1, Math.floor((parseDateKey(endDate).getTime() - parseDateKey(startDate).getTime()) / 86_400_000) + 1)
 // YouTube Analytics data for "today" is usually incomplete; report through yesterday instead.
 const reportEndDate = () => daysAgo(1)
+/**
+ * Start date for a VT-SYNC window, from the shared resolver so this engine,
+ * canonicalSync and SyncCoordinator all bound a window identically. Both the
+ * direct channel-totals query and the daily-derived fallback must call this —
+ * if they disagree, the fallback silently covers a different range than the
+ * number it is filling in for.
+ */
+/**
+ * Store aggregate rows for one window on the snapshot.
+ *
+ * Lifetime rows stay on the flat legacy field so every existing reader keeps
+ * working unchanged; other windows go into datasetsByWindow. Rows are never
+ * merged across windows — the row keys carry no window, so blending them would
+ * mix date ranges under one key.
+ */
+export const writeWindowedDataset = (
+ snapshot: VtSyncSnapshot,
+ window: VtSyncAnalyticsWindow,
+ legacyField: string,
+ datasetId: string,
+ rows: Array<Record<string, unknown>>,
+): VtSyncSnapshot => {
+ if (window === "lifetime") {
+  return { ...snapshot, [legacyField]: rows } as VtSyncSnapshot
+ }
+ return {
+  ...snapshot,
+  datasetsByWindow: {
+   ...(snapshot.datasetsByWindow || {}),
+   [window]: {
+    ...(snapshot.datasetsByWindow?.[window] || {}),
+    [datasetId]: rows,
+   },
+  },
+ }
+}
+
+/** Previously stored rows for a dataset in one window. */
+export const readWindowedDataset = (
+ snapshot: VtSyncSnapshot,
+ window: VtSyncAnalyticsWindow,
+ legacyField: string,
+ datasetId: string,
+): Array<Record<string, any>> => {
+ if (window === "lifetime") {
+  const existing = (snapshot as any)[legacyField]
+  return Array.isArray(existing) ? existing : []
+ }
+ const existing = snapshot.datasetsByWindow?.[window]?.[datasetId]
+ return Array.isArray(existing) ? (existing as Array<Record<string, any>>) : []
+}
+
+const vtSyncWindowStartDate = (
+ window: VtSyncAnalyticsWindow,
+ lifetimeStartDate: string,
+): string =>
+ window === "lifetime"
+  ? lifetimeStartDate
+  : resolveWindowRange({ window }).startDate
 // Fallback lifetime start date for calls made before the channel's actual sign-up date
 // (snapshot.channelPublishedAt) is known, e.g. if channel_metadata wasn't synced this run.
 const VT_SYNC_LIFETIME_START_DATE = "2000-01-01"
@@ -1055,6 +1125,7 @@ const persistDatasetRows = async ({
  runId,
  channelId,
  datasetId,
+ window = "lifetime",
  phase,
  rawRows,
  tableRows,
@@ -1064,6 +1135,11 @@ const persistDatasetRows = async ({
  runId: string
  channelId?: string
  datasetId: string
+ /**
+  * Window these rows cover. Part of the stored record's identity — omitting it
+  * means "lifetime", which is what every caller meant before windows existed.
+  */
+ window?: VtSyncAnalyticsWindow
  phase: string
  rawRows?: Array<Record<string, unknown>> | null
  tableRows?: Array<Record<string, unknown>> | null
@@ -1077,6 +1153,7 @@ const persistDatasetRows = async ({
     runId,
     channelId,
     datasetId,
+    window,
     phase,
     capturedAt,
     columns: columns || [],
@@ -1089,6 +1166,7 @@ const persistDatasetRows = async ({
     runId,
     channelId,
     datasetId,
+    window,
     phase,
     capturedAt,
     rows: tableRows,
@@ -1719,7 +1797,7 @@ const analyticsBundleDiagnostic = ({
 })
 
 const channelTotalsForWindow = async (token: string, window: VtSyncAnalyticsWindow, lifetimeStartDate: string) => {
- const startDate = window === "lifetime" ? lifetimeStartDate : daysAgo(Number(window.replace("d", "")))
+ const startDate = vtSyncWindowStartDate(window, lifetimeStartDate)
  const bundles = VT_SYNC_ANALYTICS_METRIC_BUNDLES
  const results: BundleResult[] = []
  for (const bundle of bundles) {
@@ -1839,7 +1917,7 @@ const fillMissingChannelTotalsFromDaily = (
 ) => {
  if (!totals || !dailyRows.length) return totals
  const endDate = reportEndDate()
- const windows: VtSyncAnalyticsWindow[] = ["7d", "28d", "90d", "365d", "lifetime"]
+ const windows: VtSyncAnalyticsWindow[] = ANALYTICS_WINDOWS
  const next = { ...(totals as Record<string, any>) }
  // The undimensioned channel-totals query does not reliably aggregate card and
  // playlist-save metrics (YouTube returns them missing or as 0), so the
@@ -1854,7 +1932,7 @@ const fillMissingChannelTotalsFromDaily = (
   "cardTeaserClicks",
  ])
  windows.forEach((window) => {
-  const startDate = window === "lifetime" ? lifetimeStartDate : daysAgo(Number(window.replace("d", "")))
+  const startDate = vtSyncWindowStartDate(window, lifetimeStartDate)
   const rows = dailyRows.filter((row) => {
    const date = String(row.date || row.day || "")
    return date >= startDate && date <= endDate
@@ -1936,7 +2014,13 @@ const fillMissingChannelTotalsFromDaily = (
  return next as VtSyncSnapshot["channelTotals"]
 }
 
-export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSnapshot, retentionVideoIds, forceFullVideoMetadata = false, contentOwnerId, onProgress, onSnapshotCommit }: VtSyncLocalSyncOptions): Promise<VtSyncSnapshot> => {
+export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSnapshot, retentionVideoIds, forceFullVideoMetadata = false, contentOwnerId, selectedWindows, onProgress, onSnapshotCommit }: VtSyncLocalSyncOptions): Promise<VtSyncSnapshot> => {
+ // Aggregate datasets cost one request per window, so an unspecified run stays
+ // at lifetime — same requests, same quota as before windows existed. Lifetime
+ // is always included: the flat snapshot fields still alias it.
+ const aggregateWindows: VtSyncAnalyticsWindow[] = selectedWindows?.length
+  ? [...new Set<VtSyncAnalyticsWindow>(["lifetime", ...selectedWindows])]
+  : ["lifetime"]
  const visibleSelectedCategories = filterVtSyncVisibleCategoryIds(selectedCategories)
  const hiddenRequestedCategories = selectedCategories.filter((categoryId) => !visibleSelectedCategories.includes(categoryId))
  const selected = new Set(visibleSelectedCategories)
@@ -2295,7 +2379,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   if (shouldSync(selected, "channel_totals")) {
    updatePhase(progress, "channel_totals", { status: "running", startedAt: new Date().toISOString() }, onProgress)
    const previousChannelTotals = snapshot.channelTotals as Record<string, any> | null
-   const windows: VtSyncAnalyticsWindow[] = ["7d", "28d", "90d", "365d", "lifetime"]
+   const windows: VtSyncAnalyticsWindow[] = ANALYTICS_WINDOWS
    const totalsEntries: Array<readonly [VtSyncAnalyticsWindow, Awaited<ReturnType<typeof channelTotalsForWindow>>]> = []
    for (const window of windows) {
     totalsEntries.push([window, await channelTotalsForWindow(token, window, channelStartDate)] as const)
@@ -2688,8 +2772,14 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     ["playback_location", "playbackLocations", "insightPlaybackLocationType", ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"], "-views"],
     ["subscription_status", "subscriptionStatuses", "subscribedStatus", ["views", "redViews", "estimatedMinutesWatched", "estimatedRedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"], "-views"],
    ]
+   for (const segmentWindow of aggregateWindows) {
+   const segmentStartDate = vtSyncWindowStartDate(segmentWindow, channelStartDate)
    for (const [categoryId, field, dimensions, metrics, sort, filters = "", maxResults = 200] of segmentRuns) {
     if (!shouldSync(selected, categoryId)) continue
+    // Day/month-grained categories are fetched once over lifetime and their
+    // windows are derived from that history, so looping them per window would
+    // buy nothing and cost a full paginated sweep each time.
+    if (segmentWindow !== "lifetime" && VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)) continue
     const usesCompleteContract = categoryId === "creator_content_type" || categoryId === "geography_country"
     let result: BundleResult
     if (usesCompleteContract) {
@@ -2714,13 +2804,13 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
        })
        : await runAnalyticsBundleWithMetricSplit({
        token,
-       id: `${categoryId}_${bundle.id}`,
+       id: `${categoryId}_${segmentWindow}_${bundle.id}`,
        metrics: [...bundle.metrics],
        dimensions,
        sort,
        maxResults,
        filters,
-       startDate: channelStartDate,
+       startDate: segmentStartDate,
        allowFallback: false,
       })
       bundleResults.push(bundleResult)
@@ -2732,6 +2822,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
         bundleId: bundle.id,
         requestedMetrics: bundleMetrics,
         result: bundleResult,
+        context: { window: segmentWindow },
        }),
       ]
       if (bundle !== VT_SYNC_ANALYTICS_METRIC_BUNDLES[VT_SYNC_ANALYTICS_METRIC_BUNDLES.length - 1]) await sleep(100)
@@ -2747,7 +2838,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      }
      if (!result.rows?.length && bundleResults.every((bundle) => !bundle.rows)) result.rows = null
     } else {
-     result = await runAnalyticsBundle({ token, id: `${categoryId}_core`, metrics: [...metrics], dimensions, sort, maxResults, filters, startDate: channelStartDate, allowFallback: false })
+     result = await runAnalyticsBundle({ token, id: `${categoryId}_${segmentWindow}_core`, metrics: [...metrics], dimensions, sort, maxResults, filters, startDate: segmentStartDate, allowFallback: false })
     }
     if (!result.rows || result.error) segmentsPartial = true
     const attemptedMetrics = categoryId === "creator_content_type"
@@ -2759,27 +2850,35 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     const mappedRows = categoryId === "creator_content_type"
      ? aggregateVtSyncCreatorContentTypeRows(rawRows)
      : mapSegmentRows(result.rows, dimensions.split(",").pop() || dimensions)
-    const previousRows = Array.isArray((snapshot as any)[field]) ? (snapshot as any)[field] as Record<string, any>[] : []
+    // Merge within a window only. Blending rows across windows would silently
+    // mix date ranges under one row key — the merge key has no window in it.
+    const isLifetime = segmentWindow === "lifetime"
+    const previousRows = readWindowedDataset(snapshot, segmentWindow, field as string, categoryId)
     const completedRows = mergeVtSyncRowsPreservingDefined(
      previousRows,
      mappedRows,
      vtSyncSegmentRowKey,
     )
-    ;(snapshot as any)[field] = completedRows
+    snapshot = writeWindowedDataset(snapshot, segmentWindow, field as string, categoryId, completedRows)
     rowsWritten += result.rows?.length || 0
     addManifestResult(
      manifest,
-     categoryId,
+     isLifetime ? categoryId : `${categoryId}_${segmentWindow}`,
      !!result.rows && !result.error && !missingMetrics.length,
      result.rows?.length || 0,
      [dimensions, ...attemptedMetrics],
      result.error,
      result.columns,
     )
-    if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: categoryId, phase: "segments", rawRows, tableRows: completedRows, columns: result.columns })
-    markFreshness([categoryId], categoryId, completedRows.length, result.rows ? (result.error || missingMetrics.length ? "partial" : "synced") : "failed", missingMetrics)
+    if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: categoryId, window: segmentWindow, phase: "segments", rawRows, tableRows: completedRows, columns: result.columns })
+    // Freshness is keyed by category with no window dimension, so it keeps
+    // tracking the lifetime pass. Per-window outcomes are in the manifest.
+    if (isLifetime) {
+     markFreshness([categoryId], categoryId, completedRows.length, result.rows ? (result.error || missingMetrics.length ? "partial" : "synced") : "failed", missingMetrics)
+    }
     commitSnapshot()
     await sleep(150)
+   }
    }
    updatePhase(progress, "segments", { status: segmentsPartial ? "partial" : "complete", rows: rowsWritten, completedAt: new Date().toISOString() }, onProgress)
    commitSnapshot()
@@ -2790,21 +2889,24 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    let rowsWritten = 0
    let segmentPartial = false
    if (shouldSync(selected, "ad_type")) {
-    const result = await runAnalyticsBundle({ token, id: "ad_type", metrics: ["grossRevenue", "cpm", "adImpressions"], dimensions: "adType", sort: "-grossRevenue", maxResults: 50, startDate: channelStartDate })
-    if (!result.rows || result.error) segmentPartial = true
-    snapshot = {
-     ...snapshot,
-     adTypes: mergeVtSyncRowsPreservingDefined(
-      snapshot.adTypes as Array<Record<string, any>>,
+    for (const adWindow of aggregateWindows) {
+     const result = await runAnalyticsBundle({ token, id: `ad_type_${adWindow}`, metrics: ["grossRevenue", "cpm", "adImpressions"], dimensions: "adType", sort: "-grossRevenue", maxResults: 50, startDate: vtSyncWindowStartDate(adWindow, channelStartDate) })
+     if (!result.rows || result.error) segmentPartial = true
+     const merged = mergeVtSyncRowsPreservingDefined(
+      readWindowedDataset(snapshot, adWindow, "adTypes", "ad_type"),
       result.rows || [],
       (row) => String(row.adType || row.term || ""),
-     ) as VtSyncSnapshot["adTypes"],
+     )
+     snapshot = writeWindowedDataset(snapshot, adWindow, "adTypes", "ad_type", merged)
+     rowsWritten += result.rows?.length || 0
+     addManifestResult(manifest, adWindow === "lifetime" ? "ad_type" : `ad_type_${adWindow}`, !!result.rows, result.rows?.length || 0, result.columns, result.error)
+     if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "ads", window: adWindow, phase: "ad_type", rawRows: result.rows, tableRows: result.rows, columns: result.columns })
+     if (adWindow === "lifetime") {
+      markFreshness(["ad_type"], "ad_type", result.rows?.length || 0, result.rows ? "synced" : "failed")
+     }
+     commitSnapshot()
+     await sleep(150)
     }
-    rowsWritten += result.rows?.length || 0
-    addManifestResult(manifest, "ad_type", !!result.rows, result.rows?.length || 0, result.columns, result.error)
-    if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "ads", phase: "ad_type", rawRows: result.rows, tableRows: result.rows, columns: result.columns })
-    markFreshness(["ad_type"], "ad_type", result.rows?.length || 0, result.rows ? "synced" : "failed")
-    commitSnapshot()
    }
    if (shouldSync(selected, "revenue_source")) {
     const previousRevenueRows = snapshot.revenueSource as Array<Record<string, any>>
@@ -2856,49 +2958,53 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     commitSnapshot()
    }
    if (shouldSync(selected, "sharing_service")) {
-    const result = await runPaginatedAnalyticsBundle({
-     token,
-     id: "sharing_service",
-     metrics: ["shares"],
-     dimensions: "sharingService",
-     sort: "-shares",
-     startDate: channelStartDate,
-     pageSize: VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE,
-     maxPages: VT_SYNC_PAGINATED_REPORT_MAX_PAGES,
-    })
-    if (!result.rows || result.error) segmentPartial = true
-    const mappedSharingRows = (result.rows || []).map((row) => ({
-      sharingService: row.sharingService,
-      term: row.sharingService,
-      shares: numberOrZero(row.shares),
-    }))
-    snapshot = {
-     ...snapshot,
-     sharingService: mergeVtSyncRowsPreservingDefined(
-      snapshot.sharingService as Array<Record<string, any>>,
+    for (const shareWindow of aggregateWindows) {
+     const result = await runPaginatedAnalyticsBundle({
+      token,
+      id: `sharing_service_${shareWindow}`,
+      metrics: ["shares"],
+      dimensions: "sharingService",
+      sort: "-shares",
+      startDate: vtSyncWindowStartDate(shareWindow, channelStartDate),
+      pageSize: VT_SYNC_TRAFFIC_DETAIL_PAGE_SIZE,
+      maxPages: VT_SYNC_PAGINATED_REPORT_MAX_PAGES,
+     })
+     if (!result.rows || result.error) segmentPartial = true
+     const mappedSharingRows = (result.rows || []).map((row) => ({
+       sharingService: row.sharingService,
+       term: row.sharingService,
+       shares: numberOrZero(row.shares),
+     }))
+     const mergedSharingRows = mergeVtSyncRowsPreservingDefined(
+      readWindowedDataset(snapshot, shareWindow, "sharingService", "sharing_service"),
       mappedSharingRows,
       (row) => String(row.sharingService || row.term || ""),
-     ) as VtSyncSnapshot["sharingService"],
+     )
+     snapshot = writeWindowedDataset(snapshot, shareWindow, "sharingService", "sharing_service", mergedSharingRows)
+     rowsWritten += result.rows?.length || 0
+     if (result.pageDiagnostics?.length) {
+      manifest.diagnostics = [
+       ...(manifest.diagnostics || []),
+       {
+        phase: "sharing_service",
+        categoryId: "sharing_service",
+        window: shareWindow,
+        requestedRows: result.rows?.length || 0,
+        returnedRows: result.rows?.length || 0,
+        pagination: result.pageDiagnostics,
+        status: result.error ? "partial" : "inspected",
+        error: result.error,
+       },
+      ]
+     }
+     addManifestResult(manifest, shareWindow === "lifetime" ? "sharing_service" : `sharing_service_${shareWindow}`, !!result.rows, result.rows?.length || 0, result.columns, result.error)
+     if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "shares", window: shareWindow, phase: "sharing_service", rawRows: result.rows, tableRows: mergedSharingRows, columns: result.columns })
+     if (shareWindow === "lifetime") {
+      markFreshness(["shares"], "sharing_service", result.rows?.length || 0, result.rows ? (result.error ? "partial" : "synced") : "failed", result.error ? [result.error] : [])
+     }
+     commitSnapshot()
+     await sleep(150)
     }
-    rowsWritten += result.rows?.length || 0
-    if (result.pageDiagnostics?.length) {
-     manifest.diagnostics = [
-      ...(manifest.diagnostics || []),
-      {
-       phase: "sharing_service",
-       categoryId: "sharing_service",
-       requestedRows: result.rows?.length || 0,
-       returnedRows: result.rows?.length || 0,
-       pagination: result.pageDiagnostics,
-       status: result.error ? "partial" : "inspected",
-       error: result.error,
-      },
-     ]
-    }
-    addManifestResult(manifest, "sharing_service", !!result.rows, result.rows?.length || 0, result.columns, result.error)
-    if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "shares", phase: "sharing_service", rawRows: result.rows, tableRows: snapshot.sharingService as Array<Record<string, unknown>>, columns: result.columns })
-    markFreshness(["shares"], "sharing_service", result.rows?.length || 0, result.rows ? (result.error ? "partial" : "synced") : "failed", result.error ? [result.error] : [])
-    commitSnapshot()
    }
    updatePhase(progress, "segments", { status: segmentPartial ? "partial" : "complete", rows: rowsWritten, completedAt: new Date().toISOString() }, onProgress)
    commitSnapshot()

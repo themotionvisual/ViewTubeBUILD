@@ -14,8 +14,9 @@ import {
  getCanonicalOwnerId,
  getCanonicalOwnerModeEnabled,
 } from "./storage"
+import { ANALYTICS_WINDOWS } from "../analytics/windows"
 
-const OWNER_WINDOWS: AnalyticsWindow[] = ["lifetime", "365d", "90d", "28d"]
+const OWNER_WINDOWS: AnalyticsWindow[] = ANALYTICS_WINDOWS
 const OWNER_METRICS = [
  "videoThumbnailImpressions",
  "videoThumbnailImpressionsClickRate",

@@ -1,11 +1,21 @@
-export type VtSyncAnalyticsWindow = "7d" | "28d" | "90d" | "365d" | "lifetime"
+// One window vocabulary across the whole app. Aliased rather than redeclared so
+// vt-sync-local and canonicalSync cannot drift apart again.
+export type { AnalyticsWindow as VtSyncAnalyticsWindow } from "../../../services/analytics/windows"
+import type { AnalyticsWindow as VtSyncAnalyticsWindow } from "../../../services/analytics/windows"
 
 export const VT_SYNC_LOCAL_ANALYTICS_FLAG = "VITE_USE_VT_SYNC_LOCAL_ANALYTICS" as const
 export const VT_SYNC_DISABLE_PERFORMANCE_HUB_API_SYNC_FLAG = "VITE_DISABLE_PERFORMANCE_HUB_API_SYNC" as const
 export const VT_SYNC_DISABLE_PERFORMANCE_HUB_API_SYNC_KEY = "vt_disable_performance_hub_api_sync" as const
 export const VT_SYNC_LOCAL_SNAPSHOT_KEY = "vt_sync_local_snapshot" as const
 export const VT_SYNC_LOCAL_DB_NAME = "ViewTubeVtSyncLocalDB" as const
-export const VT_SYNC_LOCAL_DB_VERSION = 1 as const
+/**
+ * v2 adds the analytics window to dataset record identity. Before it, dataset
+ * records were keyed by channel+dataset alone, so storing a second window
+ * overwrote the first (and the cleanup pass deleted it outright). The v2
+ * upgrade backfills existing records as window:"lifetime", which is what they
+ * always were.
+ */
+export const VT_SYNC_LOCAL_DB_VERSION = 2 as const
 export const VT_SYNC_LOCAL_STORE_NAMES = {
  channelIndex: "channel_index",
  videoInventory: "video_inventory",
@@ -138,7 +148,17 @@ export type VtSyncVideoItem = {
  definition?: string
  caption?: string
  descriptionSnippet?: string
+ /**
+  * LIFETIME per-video metrics. VT-SYNC fetches video analytics from
+  * 2000-01-01, so this map is lifetime regardless of any selected window.
+  */
  metrics?: VtSyncVideoMetric
+ /**
+  * Real per-window metrics, populated once the engine loops windows for the
+  * videos_analytics phase. Absent today; consumers must treat a missing entry
+  * as "no data for that window" rather than silently reading `metrics`.
+  */
+ metricsByWindow?: Partial<Record<VtSyncAnalyticsWindow, VtSyncVideoMetric>>
  /** Per-field source of the currently displayed metric value. */
  metricProvenance?: Record<string, "youtube_data_v3" | "youtube_analytics_v2">
 }
@@ -306,6 +326,12 @@ export type VtSyncDatasetRawReportRecord = {
  /** The connected channel that owns this diagnostic report. */
  channelId?: string
  datasetId: string
+ /**
+  * Window this report covers. Part of the record's identity: without it a
+  * second window overwrites the first. Absent on pre-v2 records, which the
+  * schema upgrade backfills as "lifetime".
+  */
+ window?: VtSyncAnalyticsWindow
  phase: string
  capturedAt: string
  columns: string[]
@@ -319,6 +345,8 @@ export type VtSyncDatasetTableRowsRecord = {
  /** The connected channel that owns these rows. Required for safe recovery. */
  channelId?: string
  datasetId: string
+ /** See VtSyncDatasetRawReportRecord.window. */
+ window?: VtSyncAnalyticsWindow
  phase: string
  capturedAt: string
  rows: Array<Record<string, unknown>>
@@ -362,6 +390,17 @@ export type VtSyncSnapshot = VtSyncChannelIdentity & {
  snapshotId: string
  capturedAt: string
  selectedTimeWindow?: VtSyncAnalyticsWindow
+ /**
+  * Aggregate dataset rows for non-lifetime windows, keyed window -> datasetId.
+  *
+  * The flat snapshot fields (geography, devices, demographics, ...) keep
+  * holding LIFETIME rows so every existing reader stays correct while
+  * consumers migrate one at a time. Absent means "not synced for that window",
+  * which is not the same as an empty result and must not render as zero.
+  */
+ datasetsByWindow?: Partial<
+  Record<VtSyncAnalyticsWindow, Record<string, Array<Record<string, unknown>>>>
+ >
  channelTotals?: VtSyncChannelTotals | null
  videos: VtSyncVideoItem[]
  dailyMetrics: VtSyncDailyMetricRow[]

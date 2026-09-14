@@ -9,10 +9,54 @@ import {
  type VtSyncLocalDbStoreName,
  type VtSyncSyncRunRecord,
  type VtSyncVideoInventoryRecord,
+ type VtSyncAnalyticsWindow,
 } from "./contracts"
 
 const hasIndexedDb = (): boolean =>
  typeof indexedDB !== "undefined" && typeof indexedDB.open === "function"
+
+/**
+ * Rewrite pre-v2 dataset records under window-qualified ids, tagging them
+ * "lifetime". Runs inside the versionchange transaction, so it either fully
+ * applies or the upgrade fails and the old database is left untouched.
+ */
+const backfillDatasetWindowsToLifetime = (tx: IDBTransaction): void => {
+ const stores = [
+  VT_SYNC_LOCAL_STORE_NAMES.datasetRawReports,
+  VT_SYNC_LOCAL_STORE_NAMES.datasetTableRows,
+ ] as const
+ stores.forEach((storeName) => {
+  if (!tx.objectStoreNames.contains(storeName)) return
+  const store = tx.objectStore(storeName)
+  const cursorRequest = store.openCursor()
+  cursorRequest.onsuccess = () => {
+   const cursor = cursorRequest.result
+   if (!cursor) return
+   const record = cursor.value as Record<string, unknown>
+   if (record && record.window === undefined) {
+    const migrated = { ...record, window: "lifetime" as const }
+    const kind = storeName === VT_SYNC_LOCAL_STORE_NAMES.datasetRawReports ? "raw" : "table"
+    const nextId = String(record.id || "").startsWith("latest_api::")
+     ? latestDatasetRecordId(
+        record.channelId as string | undefined,
+        String(record.datasetId || ""),
+        kind,
+        "lifetime",
+       )
+     : String(record.id)
+    if (nextId === record.id) {
+     cursor.update(migrated)
+    } else {
+     // Put under the new key first, then drop the old one, so an interrupted
+     // upgrade can never leave the record missing from both keys.
+     store.put({ ...migrated, id: nextId })
+     cursor.delete()
+    }
+   }
+   cursor.continue()
+  }
+ })
+}
 
 export const buildVtSyncInventoryId = (channelId: string, videoId: string): string =>
  `${channelId}::${videoId}`
@@ -24,11 +68,19 @@ export const openVtSyncLocalDb = async (): Promise<IDBDatabase> =>
    return
   }
   const request = indexedDB.open(VT_SYNC_LOCAL_DB_NAME, VT_SYNC_LOCAL_DB_VERSION)
-  request.onupgradeneeded = () => {
+  request.onupgradeneeded = (event) => {
    const db = request.result
    Object.values(VT_SYNC_LOCAL_STORE_NAMES).forEach((storeName) => {
     if (!db.objectStoreNames.contains(storeName)) db.createObjectStore(storeName, { keyPath: "id" })
    })
+   const oldVersion = (event as IDBVersionChangeEvent).oldVersion
+   // v1 -> v2: window becomes part of dataset record identity. Existing
+   // records predate any window loop, so every one of them is lifetime data.
+   // Re-key them rather than dropping them: a user who has synced should not
+   // have to re-sync to keep what they already have.
+   if (oldVersion >= 1 && oldVersion < 2 && request.transaction) {
+    backfillDatasetWindowsToLifetime(request.transaction)
+   }
   }
   request.onsuccess = () => resolve(request.result)
   request.onerror = () => reject(request.error || new Error("Failed to open VT Sync local database."))
@@ -127,8 +179,17 @@ const deleteMany = async (storeName: VtSyncLocalDbStoreName, ids: string[]): Pro
  })
 }
 
-const latestDatasetRecordId = (channelId: string | undefined, datasetId: string, kind: "raw" | "table") =>
- `latest_api::${encodeURIComponent(channelId || "unscoped")}::${encodeURIComponent(datasetId)}::${kind}`
+/**
+ * Identity for the newest API-owned record of a dataset. The window is part of
+ * the key: without it, syncing 28d would overwrite the lifetime record.
+ */
+const latestDatasetRecordId = (
+ channelId: string | undefined,
+ datasetId: string,
+ kind: "raw" | "table",
+ window: VtSyncAnalyticsWindow = "lifetime",
+) =>
+ `latest_api::${encodeURIComponent(channelId || "unscoped")}::${encodeURIComponent(datasetId)}::${encodeURIComponent(window)}::${kind}`
 
 const getById = async <T>(storeName: VtSyncLocalDbStoreName, id: string): Promise<T | null> => {
  const result = await withStore<T>(storeName, "readonly", (store) => store.get(id))
@@ -242,15 +303,20 @@ export const deleteVtSyncDatasetRawReport = async (id: string): Promise<void> =>
 export const replaceLatestVtSyncDatasetRawReport = async (
  record: Omit<VtSyncDatasetRawReportRecord, "id">,
 ): Promise<void> => {
- const id = latestDatasetRecordId(record.channelId, record.datasetId, "raw")
- await putVtSyncDatasetRawReport({ ...record, id })
+ const window = record.window || "lifetime"
+ const id = latestDatasetRecordId(record.channelId, record.datasetId, "raw", window)
+ await putVtSyncDatasetRawReport({ ...record, window, id })
  const records = await listVtSyncDatasetRawReports()
  await deleteMany(
   VT_SYNC_LOCAL_STORE_NAMES.datasetRawReports,
   records
    .filter((candidate) => candidate.id !== id
     && candidate.source !== "local_import"
-    && candidate.datasetId === record.datasetId && (
+    && candidate.datasetId === record.datasetId
+    // Supersede only the SAME window. Without this a 28d sync would delete the
+    // lifetime report for the same dataset.
+    && (candidate.window || "lifetime") === window
+    && (
     candidate.channelId === record.channelId || candidate.channelId === undefined
    ))
    .map((candidate) => candidate.id),
@@ -271,8 +337,9 @@ export const deleteVtSyncDatasetTableRows = async (id: string): Promise<void> =>
 export const replaceLatestVtSyncDatasetTableRows = async (
  record: Omit<VtSyncDatasetTableRowsRecord, "id" | "provenance">,
 ): Promise<void> => {
- const id = latestDatasetRecordId(record.channelId, record.datasetId, "table")
- await putVtSyncDatasetTableRows({ ...record, id, provenance: "api" })
+ const window = record.window || "lifetime"
+ const id = latestDatasetRecordId(record.channelId, record.datasetId, "table", window)
+ await putVtSyncDatasetTableRows({ ...record, window, id, provenance: "api" })
  const records = await listVtSyncDatasetTableRows()
  await deleteMany(
   VT_SYNC_LOCAL_STORE_NAMES.datasetTableRows,
@@ -280,6 +347,8 @@ export const replaceLatestVtSyncDatasetTableRows = async (
    .filter((candidate) => candidate.id !== id
     && candidate.provenance === "api"
     && candidate.datasetId === record.datasetId
+    // Same-window only — see replaceLatestVtSyncDatasetRawReport.
+    && (candidate.window || "lifetime") === window
     && (candidate.channelId === record.channelId || candidate.channelId === undefined))
    .map((candidate) => candidate.id),
  )

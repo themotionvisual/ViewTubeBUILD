@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest"
 
 import {
  VT_SYNC_LOCAL_DB_NAME,
+ VT_SYNC_LOCAL_DB_VERSION,
  VT_SYNC_LOCAL_STORE_NAMES,
 } from "./contracts"
 import {
@@ -31,11 +32,11 @@ afterEach(async () => {
 })
 
 describe("VT Sync local IndexedDB repository", () => {
- it("creates the v1 schema with VT Sync-only stores", async () => {
+ it("creates the current schema with VT Sync-only stores", async () => {
   const db = await openVtSyncLocalDb()
 
   expect(db.name).toBe(VT_SYNC_LOCAL_DB_NAME)
-  expect(db.version).toBe(1)
+  expect(db.version).toBe(VT_SYNC_LOCAL_DB_VERSION)
   Object.values(VT_SYNC_LOCAL_STORE_NAMES).forEach((storeName) => {
    expect(db.objectStoreNames.contains(storeName)).toBe(true)
   })
@@ -243,4 +244,175 @@ describe("VT Sync local IndexedDB repository", () => {
    expect.objectContaining({ channelId: "channel-b", videoId: "shared-video" }),
   ])
  })
+})
+
+describe("dataset window identity (v2)", () => {
+ const base = {
+  runId: "run-1",
+  channelId: "UC123",
+  datasetId: "geography_country",
+  phase: "segments",
+  capturedAt: "2026-09-12T00:00:00.000Z",
+  columns: ["country", "views"],
+  source: "youtube_analytics_v2" as const,
+ }
+
+ it("keeps one record per window instead of overwriting", async () => {
+  await replaceLatestVtSyncDatasetRawReport({
+   ...base,
+   window: "lifetime",
+   rows: [{ country: "US", views: 1000 }],
+  })
+  await replaceLatestVtSyncDatasetRawReport({
+   ...base,
+   window: "28d",
+   rows: [{ country: "US", views: 40 }],
+  })
+
+  const records = await listVtSyncDatasetRawReports()
+  expect(records).toHaveLength(2)
+  expect(records.find((r) => r.window === "lifetime")?.rows).toEqual([
+   { country: "US", views: 1000 },
+  ])
+  expect(records.find((r) => r.window === "28d")?.rows).toEqual([
+   { country: "US", views: 40 },
+  ])
+ })
+
+ it("supersedes only the same window on a re-sync", async () => {
+  await replaceLatestVtSyncDatasetRawReport({
+   ...base,
+   window: "lifetime",
+   rows: [{ country: "US", views: 1000 }],
+  })
+  await replaceLatestVtSyncDatasetRawReport({
+   ...base,
+   window: "28d",
+   rows: [{ country: "US", views: 40 }],
+  })
+  await replaceLatestVtSyncDatasetRawReport({
+   ...base,
+   window: "28d",
+   rows: [{ country: "US", views: 55 }],
+  })
+
+  const records = await listVtSyncDatasetRawReports()
+  expect(records).toHaveLength(2)
+  expect(records.find((r) => r.window === "28d")?.rows).toEqual([
+   { country: "US", views: 55 },
+  ])
+  expect(records.find((r) => r.window === "lifetime")?.rows).toEqual([
+   { country: "US", views: 1000 },
+  ])
+ })
+
+ it("defaults an untagged write to lifetime", async () => {
+  await replaceLatestVtSyncDatasetRawReport({ ...base, rows: [{ country: "US" }] })
+  const [record] = await listVtSyncDatasetRawReports()
+  expect(record.window).toBe("lifetime")
+ })
+
+ it("keeps table rows per window too", async () => {
+  await replaceLatestVtSyncDatasetTableRows({
+   ...base,
+   window: "lifetime",
+   rows: [{ country: "US", views: 1000 }],
+  })
+  await replaceLatestVtSyncDatasetTableRows({
+   ...base,
+   window: "7d",
+   rows: [{ country: "US", views: 9 }],
+  })
+  const records = await listVtSyncDatasetTableRows()
+  expect(records).toHaveLength(2)
+  expect(records.map((r) => r.window).sort()).toEqual(["7d", "lifetime"])
+ })
+})
+
+describe("v1 -> v2 upgrade", () => {
+ const deleteDatabase = (): Promise<void> =>
+  new Promise((resolve, reject) => {
+   const request = indexedDB.deleteDatabase(VT_SYNC_LOCAL_DB_NAME)
+   request.onsuccess = () => resolve()
+   request.onerror = () => reject(request.error)
+   request.onblocked = () => resolve()
+  })
+
+ /**
+  * Write a v1-shaped database directly, bypassing the current repository.
+  * Earlier tests leave the database at the current version, so it has to be
+  * removed before a v1 open is possible.
+  */
+ const seedV1Database = async (records: Array<Record<string, unknown>>): Promise<void> => {
+  await deleteDatabase()
+  return new Promise((resolve, reject) => {
+   const request = indexedDB.open(VT_SYNC_LOCAL_DB_NAME, 1)
+   request.onupgradeneeded = () => {
+    const db = request.result
+    Object.values(VT_SYNC_LOCAL_STORE_NAMES).forEach((storeName) => {
+     if (!db.objectStoreNames.contains(storeName)) {
+      db.createObjectStore(storeName, { keyPath: "id" })
+     }
+    })
+   }
+   request.onsuccess = () => {
+    const db = request.result
+    const tx = db.transaction(VT_SYNC_LOCAL_STORE_NAMES.datasetRawReports, "readwrite")
+    const store = tx.objectStore(VT_SYNC_LOCAL_STORE_NAMES.datasetRawReports)
+    records.forEach((record) => store.put(record))
+    tx.oncomplete = () => {
+     db.close()
+     resolve()
+    }
+    tx.onerror = () => reject(tx.error)
+   }
+   request.onerror = () => reject(request.error)
+  })
+ }
+
+ it("backfills pre-v2 records as lifetime without losing them", async () => {
+  await seedV1Database([
+   {
+    // v1 id shape: no window segment.
+    id: "latest_api::UC123::geography_country::raw",
+    runId: "old-run",
+    channelId: "UC123",
+    datasetId: "geography_country",
+    phase: "segments",
+    capturedAt: "2026-09-01T00:00:00.000Z",
+    columns: ["country", "views"],
+    rows: [{ country: "US", views: 1234 }],
+    source: "youtube_analytics_v2",
+   },
+  ])
+
+  const db = await openVtSyncLocalDb()
+  expect(db.version).toBe(2)
+
+  const records = await listVtSyncDatasetRawReports()
+  expect(records).toHaveLength(1)
+  // The data survived the upgrade, now tagged as what it always was.
+  expect(records[0].window).toBe("lifetime")
+  expect(records[0].rows).toEqual([{ country: "US", views: 1234 }])
+  // And it was re-keyed, so a later lifetime sync supersedes it rather than
+  // sitting alongside it as a duplicate.
+  expect(records[0].id).toBe("latest_api::UC123::geography_country::lifetime::raw")
+
+  await replaceLatestVtSyncDatasetRawReport({
+   runId: "new-run",
+   channelId: "UC123",
+   datasetId: "geography_country",
+   window: "lifetime",
+   phase: "segments",
+   capturedAt: "2026-09-12T00:00:00.000Z",
+   columns: ["country", "views"],
+   rows: [{ country: "US", views: 9999 }],
+   source: "youtube_analytics_v2",
+  })
+
+  const afterResync = await listVtSyncDatasetRawReports()
+  expect(afterResync).toHaveLength(1)
+  expect(afterResync[0].rows).toEqual([{ country: "US", views: 9999 }])
+ })
+
 })
