@@ -20,10 +20,11 @@ describe("SubToolbox split-left primitives", () => {
     expect(html).toContain("is-selected")
   })
 
-  it("renders a split-left dropdown trigger with listbox semantics", () => {
+  it("renders the canonical split-left dropdown trigger with a split rail and uninterrupted value region", () => {
     const html = renderToStaticMarkup(
       <SubToolboxSplitDropdown
         ariaLabel="Dataset"
+        railLabel="SET"
         icon={<Settings />}
         value="videos"
         options={[{ value: "videos", label: "Videos" }, { value: "playlists", label: "Playlists" }]}
@@ -31,7 +32,16 @@ describe("SubToolbox split-left primitives", () => {
       />,
     )
     expect(html).toContain("aria-haspopup=\"listbox\"")
+    expect(html).toContain("aria-expanded=\"false\"")
     expect(html).toContain("vt-subtoolbox-split-dropdown-trigger")
+    expect(html).toContain("vt-subtoolbox-split-dropdown-rail")
+    expect(html).toContain("vt-subtoolbox-split-dropdown-rail-label")
+    expect(html).toContain(">SET<")
+    expect(html).toContain("vt-subtoolbox-split-dropdown-rail-arrow")
+    expect(html).toContain("vt-subtoolbox-split-dropdown-label")
+    expect(html).toContain(">Videos<")
+    expect(html).not.toContain("vt-subtoolbox-split-dropdown-chevron")
+    expect(html).not.toContain("role=\"listbox\"")
   })
 
   it("renders the KPI card using the split header pattern", () => {
