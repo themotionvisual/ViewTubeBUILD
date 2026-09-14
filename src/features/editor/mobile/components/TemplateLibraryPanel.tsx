@@ -1,8 +1,8 @@
 import React, {useMemo, useState} from 'react';
 import type {EditorStore} from '../state/editorState';
-import {filterTemplateCatalog, templateCatalog} from '../../../editor-design-library/catalog';
-import type {TemplateCategory, TemplateDefinition} from '../../../editor-design-library/core/schema';
-import {templateToTimelineClip} from '../../../editor-design-library/integration/timelineAdapter';
+import {filterTemplateCatalog, templateCatalog} from '../../../../editor-design-library/catalog';
+import type {TemplateCategory, TemplateDefinition} from '../../../../editor-design-library/core/schema';
+import {templateToTimelineClip} from '../../../../editor-design-library/integration/timelineAdapter';
 
 interface Props {store: EditorStore}
 const categories: Array<{label:string; value?:TemplateCategory}> = [{label:'All'},{label:'Text',value:'text'},{label:'Graphics',value:'graphic'},{label:'Scenes',value:'scene'}];
