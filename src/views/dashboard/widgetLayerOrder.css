@@ -1,4 +1,8 @@
-/* Canonical dashboard cascade order.
-   Import this before every dashboard stylesheet so lazy widget modules cannot
-   create or reorder cascade layers after the mobile contract has loaded. */
-@layer tokens, reset, shell-grid, primitives, archetypes, widgets, utilities, accessibility;
+/* Canonical ViewTube cascade ownership order.
+ *
+ * This file is loaded by the Dashboard entry point today and defines the
+ * application-wide ordering contract that Toolbox/Page/Editor entry points
+ * can join without specificity escalation. Existing dashboard layer names are
+ * retained so this migration does not reorder current widget rendering.
+ */
+@layer reset, foundation, app, toolbox, pages, tokens, shell-grid, primitives, archetypes, widgets, editor, utilities, accessibility;
