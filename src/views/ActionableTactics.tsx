@@ -7,7 +7,6 @@ import {
  Sparkles,
  Settings,
  Copy,
- Check,
  ChevronUp,
 } from "lucide-react"
 import Markdown from "react-markdown"
@@ -21,10 +20,17 @@ import { useBrain } from "../context/useBrain"
 import { CustomIcon } from "../components/CustomIcon"
 import {
  ToolboxScaffold,
- Toolbox,
+ SubToolbox,
 } from "../components/Toolbox"
-import { toolboxSystem, toolboxActionButton } from "../components/toolboxSystem"
+import { toolboxSystem } from "../components/toolboxSystem"
 import { PostActionReflection } from "../components/PostActionReflection"
+import {
+ StudioButton,
+ StudioInput,
+ StudioSearchInput,
+ StudioSelect,
+ StudioTextArea,
+} from "../studio-ui"
 
 // --- Sub-components ---
 
@@ -176,10 +182,6 @@ const ActionableTactics: React.FC<{
    t.whyItWorks.toLowerCase().includes(filterText.toLowerCase()),
  )
 
- // Custom style to remove shadow as requested
- const tacticInputBase =
-  "w-full p-3 border-[3px] border-black rounded-xl font-bold text-sm outline-none transition-colors bg-white focus:bg-gray-50"
-
  return (
   <ToolboxScaffold
    title="Tactics Engine"
@@ -195,8 +197,7 @@ const ActionableTactics: React.FC<{
     <div className={toolboxSystem.shellRow}>
      {/* Left Column: Input Form */}
      <div className={toolboxSystem.inputColumn}>
-      <Toolbox
-       variant="sub"
+      <SubToolbox
        title="Strategy Params"
        icon={<Settings size={20} />}
        headerColor="bg-[#CCFF00]"
@@ -206,8 +207,7 @@ const ActionableTactics: React.FC<{
        <div className="space-y-3 p-1">
         <div className="space-y-1">
          <label className={toolboxSystem.label}>Niche</label>
-         <input
-          className={tacticInputBase}
+         <StudioInput
           value={input.niche}
           onChange={(e) => setInput({ ...input, niche: e.target.value })}
           placeholder="e.g. Tech Reviews"
@@ -215,8 +215,7 @@ const ActionableTactics: React.FC<{
         </div>
         <div className="space-y-1">
          <label className={toolboxSystem.label}>Topic</label>
-         <input
-          className={tacticInputBase}
+         <StudioInput
           value={input.topic}
           onChange={(e) => setInput({ ...input, topic: e.target.value })}
           placeholder="Video subject?"
@@ -224,8 +223,7 @@ const ActionableTactics: React.FC<{
         </div>
         <div className="space-y-1">
          <label className={toolboxSystem.label}>Audience</label>
-         <input
-          className={tacticInputBase}
+         <StudioInput
           value={input.audience}
           onChange={(e) => setInput({ ...input, audience: e.target.value })}
           placeholder="Who are they?"
@@ -233,16 +231,14 @@ const ActionableTactics: React.FC<{
         </div>
         <div className="space-y-1">
          <label className={toolboxSystem.label}>Video Length</label>
-         <input
-          className={tacticInputBase}
+         <StudioInput
           value={input.videoLength}
           onChange={(e) => setInput({ ...input, videoLength: e.target.value })}
          />
         </div>
         <div className="space-y-1">
          <label className={toolboxSystem.label}>Constraints</label>
-         <textarea
-          className={`${tacticInputBase} h-16 resize-none`}
+         <StudioTextArea
           value={input.avoidTopics}
           onChange={(e) => setInput({ ...input, avoidTopics: e.target.value })}
           placeholder="e.g. No clickbait..."
@@ -250,8 +246,7 @@ const ActionableTactics: React.FC<{
         </div>
         <div className="space-y-1">
          <label className={toolboxSystem.label}>AI Mode</label>
-         <select
-          className={tacticInputBase}
+         <StudioSelect
           value={input.systemInstructionId}
           onChange={(e) =>
            setInput({ ...input, systemInstructionId: e.target.value })
@@ -261,21 +256,22 @@ const ActionableTactics: React.FC<{
             {id.replace("-", " ").toUpperCase()}
            </option>
           ))}
-         </select>
+         </StudioSelect>
         </div>
-        <button
+        <StudioButton
+         className="w-full"
+         sizeVariant="action"
          onClick={handleGenerate}
-         disabled={loading}
-         className={toolboxActionButton("bg-[#CCFF00]")}>
+         loading={loading}>
          {loading ? (
           <Loader2 className="animate-spin" size={20} />
          ) : (
           <Zap size={20} className="fill-black" />
          )}
          {loading ? "Analyzing..." : "Gen 20 Tactics"}
-        </button>
+        </StudioButton>
        </div>
-       </Toolbox>
+      </SubToolbox>
      </div>
 
      {/* Right Column: Tactics List */}
@@ -289,17 +285,16 @@ const ActionableTactics: React.FC<{
        </div>
        {tactics.length > 0 && (
         <div className="flex items-center gap-4">
-         <div className="relative">
+         <div className="relative w-48">
           <Search
-           className="absolute left-3 top-1/2 -translate-y-1/2 text-black/30"
+           className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-black/30"
            size={16}
           />
-          <input
-           type="text"
+          <StudioSearchInput
            placeholder="FILTER..."
            value={filterText}
            onChange={(e) => setFilterText(e.target.value)}
-           className="bg-gray-100 border-[3px] border-black rounded-lg pl-10 pr-4 py-2 font-black text-[10px] uppercase focus:bg-white outline-none transition-all w-48"
+           className="pl-10 text-[10px] uppercase"
           />
          </div>
         </div>
@@ -317,10 +312,10 @@ const ActionableTactics: React.FC<{
           setToast={setToast}
          />
         ))}
-        
+
         {/* Brain Reflection UI */}
         <div className="mt-8 animate-in slide-in-from-bottom-4 duration-700">
-          <PostActionReflection toolId="ACTIONABLE_TACTICS" />
+         <PostActionReflection toolId="ACTIONABLE_TACTICS" />
         </div>
        </div>
       ) : (

@@ -36,6 +36,7 @@ export { LandscapeLayout } from './layouts/LandscapeLayout';
 export { PreviewPane } from './components/PreviewPane';
 export { TransportBar } from './components/TransportBar';
 export { TimelineStrip } from './components/TimelineStrip';
+export { MiniTimelineMap } from './components/MiniTimelineMap';
 export { PanelSheet } from './components/PanelSheet';
 export { ToolDock } from './components/ToolDock';
 export { ContextMenu } from './components/ContextMenu';

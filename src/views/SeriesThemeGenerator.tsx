@@ -1,6 +1,7 @@
 import React from "react"
 import { CalendarDays, GitBranchPlus, Map, Radar, Repeat2, Shapes } from "lucide-react"
 import InternalSuperToolWorkbench, {
+ type InternalToolProps,
  type InternalWorkbenchConfig,
 } from "./supertools/InternalSuperToolWorkbench"
 
@@ -234,8 +235,8 @@ const config: InternalWorkbenchConfig = {
  }),
 }
 
-const SeriesThemeGenerator: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => (
- <InternalSuperToolWorkbench config={config} embedded={embedded} />
+const SeriesThemeGenerator: React.FC<InternalToolProps> = (props) => (
+ <InternalSuperToolWorkbench config={config} {...props} />
 )
 
 export default SeriesThemeGenerator

@@ -1,75 +1,75 @@
-/* Exact visual-height contract for sized widget primitives.
-   The dashboard's general mobile accessibility layer raises unsized controls to
-   44px. Sized primitives are an explicit visual system and must remain exactly
-   18 / 24 / 32 / 38px even on mobile. */
+@layer tokens, reset, shell-grid, primitives, archetypes, widgets, utilities, accessibility;
 
-:where(.dashboard-barrier) .vt-widget-body .vt-button.vt-sized-control,
-:where(.dashboard-barrier) .vt-widget-body .widget-action.vt-sized-control,
-:where(.dashboard-barrier) .vt-widget-body .widget-split-button.vt-sized-control,
-:where(.dashboard-barrier) .vt-widget-body .widget-select-trigger.vt-sized-control,
-:where(.dashboard-barrier) .vt-widget-body .widget-text-input.vt-sized-control,
-:where(.dashboard-barrier) .vt-widget-body .widget-video-select-trigger.vt-sized-control {
-  box-sizing: border-box;
-  height: var(--vt-primitive-height);
-  min-height: var(--vt-primitive-height);
-  max-height: var(--vt-primitive-height);
+@layer tokens {
+ :root { --vt-u:4px; --vt-gap-1:4px; --vt-gap-2:8px; --vt-gap-3:12px; --vt-gap-4:16px; --vt-gap-5:20px; --vt-gap-6:24px; --vt-gap-8:32px; --vt-ink:#111; --vt-paper:#fff; --vt-shadow-alpha:50%; --vt-motion-fast:90ms; }
+ .is-height-18 { --vt-primitive-height:18px; --vt-primitive-font:8px; --vt-primitive-radius:2px; --vt-primitive-shadow:2px; }
+ .is-height-24 { --vt-primitive-height:24px; --vt-primitive-font:10px; --vt-primitive-radius:3px; --vt-primitive-shadow:2px; }
+ .is-height-32 { --vt-primitive-height:32px; --vt-primitive-font:12px; --vt-primitive-radius:4px; --vt-primitive-shadow:3px; }
+ .is-height-38 { --vt-primitive-height:38px; --vt-primitive-font:16px; --vt-primitive-radius:6px; --vt-primitive-shadow:4px; }
 }
 
-/* Radix select triggers and ordinary buttons have additional mobile rules in
-   toolboxWidgetSystem.css. Keep the explicit lattice authoritative. */
-@media (max-width: 767px) {
-  :where(.dashboard-barrier) .vt-widget-body .vt-button.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body button.vt-button.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body .widget-action.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body .widget-split-button.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body .widget-select-trigger.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body button.widget-select-trigger.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body .widget-text-input.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body input.widget-text-input.vt-sized-control,
-  :where(.dashboard-barrier) .vt-widget-body .widget-video-select-trigger.vt-sized-control {
-    height: var(--vt-primitive-height);
-    min-height: var(--vt-primitive-height);
-    max-height: var(--vt-primitive-height);
-  }
+@layer shell-grid {
+ /* Width is now intrinsic to the dashboard grid at every viewport. No md breakpoint silently forces full width. */
+ .dashboard-widget-slot { container-type:inline-size; container-name:vt-widget; min-width:0; }
+ .dashboard-widget-slot.vt-size-full { grid-column:span 24/span 24; }
+ .dashboard-widget-slot.vt-size-three-quarters { grid-column:span 18/span 18; }
+ .dashboard-widget-slot.vt-size-two-thirds { grid-column:span 16/span 16; }
+ .dashboard-widget-slot.vt-size-half { grid-column:span 12/span 12; }
+ .dashboard-widget-slot.vt-size-between { grid-column:span 10/span 10; }
+ .dashboard-widget-slot.vt-size-third { grid-column:span 8/span 8; }
+ .dashboard-widget-slot.vt-size-companion { grid-column:span 7/span 7; }
+ .dashboard-widget-slot.vt-size-quarter { grid-column:span 6/span 6; }
+
+ /* Height remains a named bucket but scales with the widget's allocated width to avoid quarter/full receiving identical composition space. */
+ .dashboard-widget-slot.vt-height-short { --vt-widget-base-h:150px; --vt-widget-ratio-h:22cqi; }
+ .dashboard-widget-slot.vt-height-medium { --vt-widget-base-h:250px; --vt-widget-ratio-h:34cqi; }
+ .dashboard-widget-slot.vt-height-tall { --vt-widget-base-h:350px; --vt-widget-ratio-h:46cqi; }
+ .dashboard-widget-slot.vt-height-xtall { --vt-widget-base-h:450px; --vt-widget-ratio-h:58cqi; }
+ .dashboard-widget-slot.vt-height-massive { --vt-widget-base-h:850px; --vt-widget-ratio-h:92cqi; }
+ .dashboard-widget-slot:not(.is-collapsed) { height:clamp(calc(var(--vt-widget-base-h) * .72),var(--vt-widget-ratio-h),var(--vt-widget-base-h)); }
+ .dashboard-widget-slot.is-collapsed { height:48px; }
+ .dashboard-widget-slot > * { min-width:0; min-height:0; }
+ .dashboard-widget-slot .vt-widget { width:100%; height:100%; }
+ .dashboard-widget-slot .vt-widget-content,.dashboard-widget-slot .vt-widget-body { min-width:0; min-height:0; }
+
+ /* Composition reacts to actual widget allocation, not the browser viewport. */
+ @container vt-widget (max-width:420px) {
+  .vt-widget-body { --vt-composition-columns:1; --vt-composition-gap:4px; }
+  .vt-widget-body :is(.widget-reference-variants,.widget-reference-square-variants) { grid-template-columns:1fr; gap:4px; }
+  .vt-widget-header .header-extra { display:none !important; }
+ }
+ @container vt-widget (min-width:421px) and (max-width:720px) {
+  .vt-widget-body { --vt-composition-columns:2; --vt-composition-gap:8px; }
+  .vt-widget-body :is(.widget-reference-variants,.widget-reference-square-variants) { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+ }
+ @container vt-widget (min-width:721px) {
+  .vt-widget-body { --vt-composition-columns:4; --vt-composition-gap:12px; }
+  .vt-widget-body :is(.widget-reference-variants,.widget-reference-square-variants) { grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+ }
 }
 
-/* Explicit values prevent inherited/mobile custom-property changes from
-   changing the four canonical sizes. */
-:where(.dashboard-barrier) .vt-widget-body .is-height-18.vt-sized-control {
-  --vt-primitive-height: 18px;
-  height: 18px;
-  min-height: 18px;
-  max-height: 18px;
-}
-:where(.dashboard-barrier) .vt-widget-body .is-height-24.vt-sized-control {
-  --vt-primitive-height: 24px;
-  height: 24px;
-  min-height: 24px;
-  max-height: 24px;
-}
-:where(.dashboard-barrier) .vt-widget-body .is-height-32.vt-sized-control {
-  --vt-primitive-height: 32px;
-  height: 32px;
-  min-height: 32px;
-  max-height: 32px;
-}
-:where(.dashboard-barrier) .vt-widget-body .is-height-38.vt-sized-control {
-  --vt-primitive-height: 38px;
-  height: 38px;
-  min-height: 38px;
-  max-height: 38px;
+@layer primitives {
+ .vt-sized-control { box-sizing:border-box; height:var(--vt-primitive-height); min-height:var(--vt-primitive-height); max-height:var(--vt-primitive-height); border-radius:var(--vt-primitive-radius); font-size:var(--vt-primitive-font); font-weight:1000; line-height:1; }
+ .vt-sized-control :is(span,strong,small,button,input) { font-size:inherit; font-weight:inherit; }
+ .vt-sized-control:is(.vt-button,.widget-action,.widget-split-button,.widget-select-trigger,.widget-text-input,.widget-video-select-trigger) { padding-block:0; transition:transform var(--vt-motion-fast) ease,box-shadow var(--vt-motion-fast) ease,background-color var(--vt-motion-fast) ease; }
+ .vt-sized-control:is(.vt-button,.widget-split-button,.widget-select-trigger,.widget-video-select-trigger) { box-shadow:var(--vt-primitive-shadow) var(--vt-primitive-shadow) 0 color-mix(in srgb,var(--widget-color,#34cdea) var(--vt-shadow-alpha),transparent); }
+ .vt-sized-control:is(.vt-button,.widget-split-button,.widget-select-trigger,.widget-video-select-trigger):hover:not(:disabled) { transform:translate(1px,1px); box-shadow:calc(var(--vt-primitive-shadow) - 1px) calc(var(--vt-primitive-shadow) - 1px) 0 color-mix(in srgb,var(--widget-color,#34cdea) var(--vt-shadow-alpha),transparent); }
+ .vt-sized-control:is(.vt-button,.widget-split-button,.widget-select-trigger,.widget-video-select-trigger):active:not(:disabled) { transform:translate(var(--vt-primitive-shadow),var(--vt-primitive-shadow)); box-shadow:none; }
+ .vt-sized-control.is-default,[data-tone="default"].vt-sized-control { background:var(--vt-paper); color:var(--vt-ink); border-color:var(--vt-ink); }
+ .vt-sized-control.is-primary,[data-tone="primary"].vt-sized-control { background:var(--widget-color,#34cdea); color:var(--vt-ink); border-color:var(--vt-ink); }
+ .vt-sized-control.is-secondary,[data-tone="secondary"].vt-sized-control { background:color-mix(in srgb,var(--widget-color,#34cdea) 18%,white); color:var(--vt-ink); border-color:var(--widget-color,#34cdea); }
+ .widget-select-content.vt-sized-control { height:auto; min-height:0; max-height:min(340px,calc(var(--vt-primitive-height) * 9)); overflow-y:auto; }
+ .widget-select-content.vt-sized-control :is(.widget-select-item,.widget-select-scroll) { box-sizing:border-box; height:var(--vt-primitive-height); min-height:var(--vt-primitive-height); font:inherit; }
+ .widget-video-select-menu.vt-sized-control { height:auto; min-height:calc(var(--vt-primitive-height) * 5 + 40px); max-height:calc(var(--vt-primitive-height) * 8 + 40px); overflow-y:auto; padding:var(--vt-gap-1); gap:var(--vt-gap-1); font:inherit; }
+ .widget-video-select-menu .widget-video-select-option { box-sizing:border-box; height:var(--vt-primitive-height); min-height:var(--vt-primitive-height); grid-template-columns:calc((var(--vt-primitive-height) - 8px) * 1.7778) minmax(0,1fr); gap:var(--vt-gap-1); padding:2px 4px; border-radius:var(--vt-primitive-radius); font:inherit; overflow:hidden; align-items:center; }
+ .widget-video-select-menu .widget-video-select-option img { width:calc((var(--vt-primitive-height) - 8px) * 1.7778); height:calc(var(--vt-primitive-height) - 8px); aspect-ratio:16/9; object-fit:cover; border-radius:max(1px,calc(var(--vt-primitive-radius) - 1px)); }
+ .widget-video-select-option-copy { min-width:0; gap:0; overflow:hidden; }
+ .widget-video-select-option-copy strong { display:block; font:inherit; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+ .widget-video-select-option-copy small { display:block; font-size:max(7px,calc(var(--vt-primitive-font) - 2px)); font-weight:1000; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+ .widget-video-select-menu:is(.is-height-18,.is-height-24) .widget-video-select-option-copy small { display:none; }
 }
 
-/* 18px remains a special micro style: filled, borderless, shadowless. */
-:where(.dashboard-barrier) .vt-widget-body .is-height-18.vt-sized-control {
-  border-width: 0;
-  border-style: none;
-  box-shadow: none;
-}
-
-/* Prevent generic button/select padding from visually inflating or clipping the
-   lattice. Internal anatomy owns spacing for these primitives. */
-:where(.dashboard-barrier) .vt-widget-body .vt-button.vt-sized-control,
-:where(.dashboard-barrier) .vt-widget-body .widget-select-trigger.vt-sized-control {
-  padding-block: 0;
-}
+@layer archetypes { .widget-upload-frame { width:100%; aspect-ratio:16/9; min-height:0; height:auto; padding:var(--vt-gap-2); border:2px solid; border-top-color:var(--widget-color,#34cdea); border-right-color:var(--widget-border,var(--vt-ink)); border-bottom-color:var(--widget-color,#34cdea); border-left-color:var(--widget-border,var(--vt-ink)); border-radius:var(--widget-control-radius,8px); background:color-mix(in srgb,var(--widget-color,#34cdea) 10%,white); box-sizing:border-box; align-content:center; justify-items:center; } .widget-upload-frame::before { content:none; } }
+@layer widgets { .widget-edit-menu-popover { gap:var(--vt-gap-2); } .widget-edit-dimensions { display:grid; grid-template-columns:1fr 1fr; gap:var(--vt-gap-1); padding:var(--vt-gap-2); border-bottom:2px solid var(--vt-ink); font-size:10px; font-weight:1000; } .widget-edit-resize-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--vt-gap-1); } .widget-edit-resize-grid .widget-edit-action { min-width:32px; justify-content:center; padding:0 4px; font-size:10px; font-weight:1000; } .widget-reference-header-controls > .widget-header-toggle:first-child { display:none; } }
+@layer utilities { .vt-grid-4 { display:grid; gap:var(--vt-gap-1); } .vt-grid-8 { display:grid; gap:var(--vt-gap-2); } .vt-stack-4 { display:flex; flex-direction:column; gap:var(--vt-gap-1); } .vt-stack-8 { display:flex; flex-direction:column; gap:var(--vt-gap-2); } }
+@layer accessibility { @media (max-width:767px) { .vt-sized-control { height:var(--vt-primitive-height); min-height:var(--vt-primitive-height); max-height:var(--vt-primitive-height); } } }

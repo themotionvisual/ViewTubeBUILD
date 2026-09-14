@@ -1,0 +1,49 @@
+/* ViewTube mobile data-visual responsive contract.
+ * The canvas is constrained; chart content adapts inside it.
+ */
+[data-vt-visual-card],[data-vt-visual-module],[data-vt-visual-frame]{container-type:inline-size;min-width:0;max-width:100%}
+[data-vt-visual-card] [data-vt-chart-body],[data-vt-visual-module] [data-vt-chart-body],[data-vt-visual-frame] [data-vt-chart-body]{box-sizing:border-box;min-width:0;max-width:100%;overflow:hidden}
+[data-vt-visual-card] [data-vt-chart-body] svg,[data-vt-visual-card] [data-vt-chart-body] canvas,[data-vt-visual-module] [data-vt-chart-body] svg,[data-vt-visual-module] [data-vt-chart-body] canvas,[data-vt-visual-frame] [data-vt-chart-body] svg,[data-vt-visual-frame] [data-vt-chart-body] canvas{max-width:100%;max-height:100%}
+[data-vt-visual-frame][data-vt-desktop-aspect="16:9"] [data-vt-chart-body]{aspect-ratio:16/9}
+[data-vt-visual-frame][data-vt-desktop-aspect="1:1"] [data-vt-chart-body]{aspect-ratio:1}
+
+/* ModuleFrame still carries a desktop inline height. For registered responsive
+ * visuals the frame contract, not that legacy inline value, owns phone height. */
+@media (max-width:767px) and (orientation:portrait){
+ [data-vt-visual-card],[data-vt-visual-module],[data-vt-visual-frame]{width:100%!important;min-width:0!important;max-width:100%!important;grid-column:1/-1!important;align-self:start}
+ [data-vt-visual-frame] [data-vt-chart-body]{width:100%!important;height:auto!important;min-height:0!important;max-height:none!important}
+ [data-vt-visual-frame][data-vt-portrait-aspect="16:9"] [data-vt-chart-body],[data-vt-preview-16x9] [data-vt-chart-body],[data-vt-preview-canvas-16x9]{aspect-ratio:16/9!important;height:auto!important;min-height:0!important;max-height:none!important}
+ [data-vt-visual-frame][data-vt-portrait-aspect="1:1"] [data-vt-chart-body]{aspect-ratio:1!important}
+ [data-vt-visual-frame][data-vt-portrait-aspect="natural"] [data-vt-chart-body]{aspect-ratio:auto!important}
+ [data-vt-visual-frame] [data-vt-chart-body]>*,[data-vt-preview-16x9] [data-vt-chart-body]>*,[data-vt-preview-canvas-16x9]>*{min-height:0!important;height:100%!important;max-height:100%!important}
+
+ /* Compact portrait chrome. Controllers/KPIs stay one row and swipe rather
+  * than forcing the header or module to grow vertically. */
+ [data-vt-visual-frame][data-vt-portrait-controls="menu"] [data-vt-visual-controls],
+ [data-vt-visual-frame] [data-vt-metric-strip]{max-width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+ [data-vt-visual-frame][data-vt-portrait-controls="menu"] [data-vt-visual-controls]::-webkit-scrollbar,
+ [data-vt-visual-frame] [data-vt-metric-strip]::-webkit-scrollbar{display:none}
+
+ /* Heat Matrix is the reference spatial visual. Keep the evidence at 16:9;
+  * suppress legacy 300px child minimums that previously produced the tall
+  * portrait composition visible on viewtube.live. */
+ [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]{aspect-ratio:16/9!important;height:auto!important;min-height:0!important;overflow:hidden!important}
+ [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body] .min-h-\[300px\],
+ [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body] .min-h-\[292px\]{min-height:0!important;height:100%!important}
+ [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body] [class*="legend"]{max-height:25%;overflow:hidden}
+}
+
+/* Phone landscape becomes a wide evidence workspace. Use available height as
+ * the limiting dimension so the module does not disappear below browser UI. */
+@media (max-height:540px) and (orientation:landscape){
+ [data-vt-visual-card],[data-vt-visual-module],[data-vt-visual-frame]{width:100%;min-width:0;max-width:100%}
+ [data-vt-visual-frame] [data-vt-chart-body]{min-height:0!important}
+ [data-vt-visual-frame][data-vt-landscape-aspect="16:9"] [data-vt-chart-body],[data-vt-preview-16x9] [data-vt-chart-body],[data-vt-preview-canvas-16x9]{width:min(100%,calc((100svh - 88px)*16/9))!important;aspect-ratio:16/9!important;height:auto!important;min-height:0!important;max-height:calc(100svh - 88px)!important;margin-inline:auto}
+ [data-vt-visual-frame][data-vt-landscape-aspect="1:1"] [data-vt-chart-body]{width:min(100%,calc(100svh - 88px))!important;aspect-ratio:1!important;margin-inline:auto}
+ [data-vt-visual-frame][data-vt-landscape-aspect="natural"] [data-vt-chart-body]{width:100%!important;aspect-ratio:auto!important}
+ [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]>*,[data-vt-visual-frame="heat-matrix"] [data-vt-chart-body] .min-h-\[300px\]{min-height:0!important;height:100%!important;max-height:100%!important}
+}
+
+@container (max-width:479px){[data-vt-visual-density="adaptive"]{--vt-visual-label-density:compact;--vt-visual-control-density:compact}}
+@container (min-width:720px){[data-vt-visual-density="adaptive"]{--vt-visual-label-density:full;--vt-visual-control-density:normal}}
+@media (prefers-reduced-motion:reduce){[data-vt-visual-card] *,[data-vt-visual-module] *,[data-vt-visual-frame] *{scroll-behavior:auto!important}}

@@ -4,35 +4,24 @@ import { CustomIcon } from './CustomIcon';
 import { getToolboxPaletteColors } from '../styles/toolboxPalette';
 import { hexToRgba, AnimatedToggleIcon } from './ToolboxUISystem';
 import { ChevronDown, CircleQuestionMark, Cloud, Zap } from 'lucide-react';
+import {
+  CONTROL_SHELL,
+  SUBTOOLBOX_COLLAPSE_TRANSITION,
+  SUBTOOLBOX_TOKENS,
+  resolveSubtoolboxMinHeight,
+} from './subtoolbox/tokens';
 
-// Canonical shell tokens shared by SubToolbox, DropdownControl, and ActionControlButton.
-export const CONTROL_SHELL = {
-  headerHeight: 56, // Header block height; 56 + 4px stroke seam = 60px control rhythm.
-  height: 60,
-  stroke: 4,
-  radius: 16,
-  railSize: 56,
-  shadowOffset: 6,
-  transition: "duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
-} as const;
+export { CONTROL_SHELL } from './subtoolbox/tokens';
+
+const SHELL_COLLAPSE_TRANSITION = SUBTOOLBOX_COLLAPSE_TRANSITION;
+const SHELL_COLLAPSE_DURATION_MS = SUBTOOLBOX_TOKENS.motion.collapseMs;
 const MAIN_TOOLBOX_STROKE = 5;
 const MAIN_TOOLBOX_SHADOW = 10;
-const SUB_TOOLBOX_STROKE = 4;
-const SUB_TOOLBOX_SHADOW = 6;
-const SUB_TOOLBOX_INNER_STROKE = 4;
-const SUB_TOOLBOX_INNER_SHADOW = 4;
-
-const resolveSubtoolboxMinHeight = (
-  openUnits: number,
-  heightMode: "standard" | "compact"
-) => {
-  // Target total = openUnits * 60 + (openUnits-1) * 24
-  const gap = 24;
-  const overhead = 60; // 56 header + 2px top + 2px bottom (approx)
-  const computed = openUnits * 60 + (openUnits - 1) * gap - overhead;
-  if (heightMode === "compact") return Math.max(0, Math.min(computed, 144));
-  return Math.max(0, computed);
-};
+const SUB_TOOLBOX_STROKE = SUBTOOLBOX_TOKENS.shell.stroke;
+const SUB_TOOLBOX_SHADOW = SUBTOOLBOX_TOKENS.shell.shadowOffset;
+const SUB_TOOLBOX_RADIUS = SUBTOOLBOX_TOKENS.shell.radius;
+const SUB_TOOLBOX_INNER_STROKE = SUBTOOLBOX_TOKENS.shell.stroke;
+const SUB_TOOLBOX_INNER_SHADOW = SUBTOOLBOX_TOKENS.interior.shadowOffset;
 
 interface IconRailProps {
   backgroundColor: string;
@@ -44,9 +33,9 @@ const IconRail: React.FC<IconRailProps> = ({ backgroundColor, stroke = 2, childr
   <div
     className="h-full flex items-center justify-center shrink-0 transition-all duration-500"
     style={{
-      width: `${CONTROL_SHELL.headerHeight}px`,
+      width: `var(--vt-subtoolbox-header-height, ${CONTROL_SHELL.headerHeight}px)`,
       backgroundColor,
-      borderRight: `${stroke}px solid black`,
+      borderRight: `var(--vt-subtoolbox-stroke, ${stroke}px) solid black`,
     }}
   >
     {children}
@@ -140,6 +129,18 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   const subPaletteCursorRef = useRef(0);
   const controlled = typeof isOpen === 'boolean';
   const open = controlled ? Boolean(isOpen) : internalOpen;
+  const [keepClosingContentMounted, setKeepClosingContentMounted] = useState(open);
+
+  useEffect(() => {
+    if (open || !unmountWhenClosed) {
+      setKeepClosingContentMounted(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setKeepClosingContentMounted(false), SHELL_COLLAPSE_DURATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [open, unmountWhenClosed]);
+
+  const shouldRenderContent = !unmountWhenClosed || open || keepClosingContentMounted;
 
   const setOpen = () => {
     if (onToggle) {
@@ -159,13 +160,13 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   const shadowColor = hardShadow ? 'rgba(0,0,0,1)' : (headerHex ? hexToRgba(headerHex, 0.45) : 'rgba(0,0,0,0.45)');
   const shadowOffset = MAIN_TOOLBOX_SHADOW;
   
-  // Stroke hierarchy: Scaffold = 4, Accordion = 3, Sub = 2
+  // Toolbox owns the level-0 shell. Nested production sections use SubToolbox.
   const stroke = MAIN_TOOLBOX_STROKE;
   const radius = variant === 'accordion' ? 12 : 16;
   const finalContentClass = useMemo(() => {
     if (contentClassName) return contentClassName;
-    if (variant === 'accordion') return 'p-6 bg-white text-black';
-    return embedded ? 'p-0' : 'p-8';
+    if (variant === 'accordion') return 'py-6 px-[10px] bg-white text-black';
+    return embedded ? 'p-0' : 'py-8 px-[10px]';
   }, [contentClassName, variant, embedded]);
 
   const resolvedIcon = useMemo(() => {
@@ -197,10 +198,10 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     );
   }
 
-  const frameClass = `w-full bg-white overflow-hidden flex flex-col relative ${fillAvailable ? 'h-full min-h-0' : ''} ${outerClassName}`;
+  const frameClass = `vt-toolbox w-full bg-white overflow-hidden flex flex-col relative ${fillAvailable ? 'h-full min-h-0' : ''} ${outerClassName}`;
   const collapseTransitionClass = disableCollapseAnimation
     ? "duration-0 ease-linear"
-    : "duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)]";
+    : SHELL_COLLAPSE_TRANSITION;
   
   const headerHeight = variant === 'accordion' ? 56 : 80;
   const paletteCycleContextValue = useMemo<PaletteCycleContextValue>(() => {
@@ -223,13 +224,17 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     <PaletteCycleContext.Provider value={paletteCycleContextValue}>
       <div className={`w-full ${fillAvailable ? 'h-full min-h-0' : ''} ${shellClassName} ${outerClassName}`}>
         <div
+          data-vt-toolbox
+          data-vt-toolbox-level="main"
+          data-vt-toolbox-variant={variant}
           className={frameClass}
           style={{
-            border: `${stroke}px solid black`,
-            borderRadius: `${radius}px`,
+            border: `var(--vt-toolbox-stroke, ${stroke}px) solid black`,
+            borderRadius: `var(--vt-toolbox-radius, ${radius}px)`,
             isolation: 'isolate',
             contain: 'content',
-            boxShadow: `${shadowOffset}px ${shadowOffset}px 0px 0px ${shadowColor}`
+            boxShadow: `var(--vt-toolbox-shadow-offset, ${shadowOffset}px) var(--vt-toolbox-shadow-offset, ${shadowOffset}px) 0 0 var(--vt-toolbox-shadow-color)`,
+            ["--vt-toolbox-shadow-color" as any]: shadowColor,
           }}
         >
         <header
@@ -238,7 +243,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           style={{
             ...headerStyle,
             height: `${headerHeight}px`,
-            borderBottom: `${stroke}px solid black`
+            borderBottom: `var(--vt-toolbox-stroke, ${stroke}px) solid black`,
           }}
         >
           <div className="flex items-center h-full flex-1">
@@ -248,7 +253,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
                 ...iconStyle,
                 height: '100%',
                 width: `${headerHeight}px`,
-                borderRight: `${stroke}px solid black`
+                borderRight: `var(--vt-toolbox-stroke, ${stroke}px) solid black`
               }}
             >
               {resolvedIcon}
@@ -256,9 +261,9 @@ export const Toolbox: React.FC<ToolboxProps> = ({
 
             <div className={`flex flex-col pl-4 justify-center pointer-events-none select-none`}>
               {variant === 'accordion' ? (
-                <h3 className="text-[32px] font-[900] uppercase tracking-tighter leading-none mt-0.5">{title}</h3>
+                <h3 className="text-[20px] font-[900] uppercase tracking-tighter leading-none mt-0.5">{title}</h3>
               ) : (
-                <h1 className="max-w-full truncate text-[24px] font-[1000] uppercase leading-none mt-1 sm:text-[36px] xl:text-[50px]">{title}</h1>
+                <h1 className="max-w-full truncate text-[26px] font-[1000] uppercase leading-none mt-1">{title}</h1>
               )}
             </div>
           </div>
@@ -300,7 +305,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
             className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               showHelpRail ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
             }`}
-            style={{ marginTop: open ? `-${stroke}px` : "0px" }}
+            style={{ marginTop: 0 }}
           >
             <div className="overflow-hidden min-h-0">
               <div className={`bg-white px-6 py-3 ${open ? "border-b-[4px] border-black" : ""}`}>
@@ -331,10 +336,10 @@ export const Toolbox: React.FC<ToolboxProps> = ({
 
         <div
           className={`grid transition-[grid-template-rows,opacity] ${collapseTransitionClass} ${fillAvailable ? 'flex-1 min-h-0' : ''} ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
-          style={{ marginTop: showHelpRail ? "0px" : `-${stroke}px` }}
+          style={{ marginTop: `calc(var(--vt-toolbox-stroke, ${stroke}px) * -1)` }}
         >
           <div className={`overflow-hidden min-h-0 ${fillAvailable ? 'h-full' : ''}`}>
-            {(!unmountWhenClosed || open) && (
+            {shouldRenderContent && (
               <main
                 className={`flex-1 min-h-0 bg-white vt-main-toolbox-content ${fillAvailable ? 'h-full' : ''} ${finalContentClass}`}
                 style={
@@ -342,6 +347,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
                     ["--vt-level1-stroke" as any]: "4px",
                     ["--vt-level1-shadow" as any]: "6px",
                     ["--vt-level1-shadow-color" as any]: headerHex ? hexToRgba(headerHex, 0.45) : "rgba(0,0,0,0.35)",
+                    ...(embedded ? {} : { paddingInline: "var(--vt-toolbox-content-inline-padding, 10px)" }),
                   } as React.CSSProperties
                 }
               >
@@ -358,6 +364,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
 
 // --- Canonical wrapper exports (consolidated UI system) ---
 
+/** @deprecated Reference-library compatibility only. Production nested modules use SubToolbox. */
 interface AccordionContainerProps {
   title: string;
   subtitle?: string;
@@ -481,7 +488,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     fillAvailable={fillAvailable}
     outerClassName={outerClassName}
     shellClassName={shellClassName}
-    contentClassName={contentClassName || (embedded ? "p-0" : "p-8")}
+    contentClassName={contentClassName || (embedded ? "p-0" : "py-8 px-[10px]")}
     headerActions={headerActions}
     indicator={collapsible ? "symbols" : "none"}
     disableCollapseAnimation={disableCollapseAnimation}
@@ -528,7 +535,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   actionButton,
   contentClassName,
   shellClassName = "",
-  collapsible = false,
+  collapsible = true,
   isOpen,
   isOpenInitial = true,
   onToggle,
@@ -549,6 +556,18 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   const [showHelpRail, setShowHelpRail] = useState(false);
   const controlled = typeof isOpen === 'boolean';
   const open = controlled ? Boolean(isOpen) : internalOpen;
+  const [keepClosingContentMounted, setKeepClosingContentMounted] = useState(open);
+
+  useEffect(() => {
+    if (open || !unmountOnClose) {
+      setKeepClosingContentMounted(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setKeepClosingContentMounted(false), SHELL_COLLAPSE_DURATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [open, unmountOnClose]);
+
+  const shouldRenderContent = !unmountOnClose || open || keepClosingContentMounted;
 
   const setOpen = () => {
     if (onToggle) {
@@ -562,13 +581,20 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   const palette = effectivePaletteIndex !== undefined && effectivePaletteIndex !== null
     ? getToolboxPaletteColors(effectivePaletteIndex)
     : null;
-  const headerHex = palette?.header ?? extractHexFromBgClass(headerColor) ?? "#00CCFF";
+  const inlineHeaderColor =
+    typeof headerStyle?.backgroundColor === "string" ? headerStyle.backgroundColor : null;
+  const headerHex = palette?.header ?? inlineHeaderColor ?? extractHexFromBgClass(headerColor) ?? "#00CCFF";
   const iconBg = palette?.icon ?? headerHex;
-  
-  const shadowColor = hexToRgba(headerHex, 0.5);
+
+  // Match the parent toolbox contract: the shadow is a translucent version of
+  // the visible title/header color, never the legacy solid-black shadow.
+  const shadowColor = headerHex.startsWith("#")
+    ? hexToRgba(headerHex, 0.5)
+    : `color-mix(in srgb, ${headerHex} 50%, transparent)`;
   const minInnerHeight = resolveSubtoolboxMinHeight(openUnits, heightMode);
 
   const contentSizeStyle = heightMode === "compact" ? undefined : { minHeight: `${Math.max(0, minInnerHeight)}px` };
+  const resolvedContentClassName = contentClassName || "p-4";
 
   const finalIcon = React.isValidElement(icon)
     ? React.cloneElement(icon as React.ReactElement<any>, { size: 40, strokeWidth: 1.75 })
@@ -577,22 +603,37 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   return (
     <div
       data-vt-toolbox
-      className={`vt-toolbox w-full bg-white relative flex flex-col transition-all duration-300 ${collapsible && !open ? "self-start" : ""} ${overflowVisible ? "" : "overflow-hidden"} ${shellClassName}`}
+      data-vt-subtoolbox="true"
+      data-vt-toolbox-level="sub"
+      data-state={open ? "open" : "closed"}
+      className={`vt-toolbox w-full relative flex flex-col transition-all ${SHELL_COLLAPSE_TRANSITION} ${collapsible && !open ? "self-start" : ""} ${shellClassName}`}
       style={{
-        border: `${SUB_TOOLBOX_STROKE}px solid black`,
-        borderRadius: `16px`,
-        boxShadow: `${SUB_TOOLBOX_SHADOW}px ${SUB_TOOLBOX_SHADOW}px 0px 0px ${shadowColor}`,
+        borderRadius: `var(--vt-subtoolbox-radius, ${SUB_TOOLBOX_RADIUS}px)`,
+        boxShadow: `var(--vt-subtoolbox-shadow-offset, ${SUB_TOOLBOX_SHADOW}px) var(--vt-subtoolbox-shadow-offset, ${SUB_TOOLBOX_SHADOW}px) 0 0 var(--vt-subtoolbox-shell-shadow)`,
+        ["--vt-subtoolbox-header" as any]: headerHex,
+        ["--vt-subtoolbox-shell-shadow" as any]: shadowColor,
       }}
     >
+      <div
+        className={`w-full bg-white relative flex flex-col flex-1 min-h-0 ${overflowVisible ? "" : "overflow-hidden"}`}
+        style={{
+          border: `var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_STROKE}px) solid black`,
+          borderRadius: `var(--vt-subtoolbox-radius, ${SUB_TOOLBOX_RADIUS}px)`,
+          isolation: "isolate",
+        }}
+      >
       <header
-        className={`flex items-center justify-between select-none relative z-20 group ${collapsible ? 'cursor-pointer' : ''}`}
+        className={`flex items-center justify-between select-none relative z-20 group ${textColor} ${collapsible ? 'cursor-pointer' : ''}`}
         onClick={collapsible ? setOpen : undefined}
         style={{
-          height: `${CONTROL_SHELL.headerHeight}px`,
-          minHeight: `${CONTROL_SHELL.headerHeight}px`,
-          backgroundColor: headerHex,
-          borderBottom: `${SUB_TOOLBOX_INNER_STROKE}px solid black`,
           ...headerStyle,
+          height: `var(--vt-subtoolbox-header-height, ${CONTROL_SHELL.headerHeight}px)`,
+          minHeight: `var(--vt-subtoolbox-header-height, ${CONTROL_SHELL.headerHeight}px)`,
+          backgroundColor: headerHex,
+          borderBottom: `var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_INNER_STROKE}px) solid black`,
+          borderTopLeftRadius: `calc(var(--vt-subtoolbox-radius, ${SUB_TOOLBOX_RADIUS}px) - var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_STROKE}px))`,
+          borderTopRightRadius: `calc(var(--vt-subtoolbox-radius, ${SUB_TOOLBOX_RADIUS}px) - var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_STROKE}px))`,
+          overflow: "hidden",
         }}
       >
         <div className="flex items-center h-full flex-1">
@@ -601,7 +642,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           </IconRail>
 
           <div className="flex items-center pl-2.5 h-full pointer-events-none select-none">
-            <h3 className="font-[900] uppercase tracking-tighter text-black leading-none text-[32px] sm:text-[36px] md:text-[40px]">
+            <h3 className="font-[900] uppercase tracking-tighter leading-none text-[length:var(--vt-subtoolbox-title-size,20px)]">
               {title}
             </h3>
           </div>
@@ -616,7 +657,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
               className="group h-full flex items-center justify-center transition-all hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px]"
               aria-label="Toggle subtoolbox help"
             >
-              <span className="inline-flex items-center justify-center w-8 h-8 border-[3px] border-black rounded-full bg-white shadow-[4px_4px_0px_0px_black] transition-all group-active:shadow-[2px_2px_0px_0px_black]">
+              <span className="inline-flex items-center justify-center w-8 h-8 border-[3px] border-black rounded-full bg-white shadow-[4px_4px_0px_0px_var(--vt-subtoolbox-shell-shadow)] transition-all group-active:shadow-[2px_2px_0px_0px_var(--vt-subtoolbox-shell-shadow)]">
                 <CircleQuestionMark size={18} strokeWidth={2.6} />
               </span>
             </button>
@@ -634,7 +675,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             showHelpRail ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
           }`}
-          style={{ marginTop: `-${SUB_TOOLBOX_INNER_STROKE}px` }}
+          style={{ marginTop: 0 }}
         >
           <div className="overflow-hidden min-h-0">
             <div className="bg-white border-b-[3px] border-black px-4 py-2">
@@ -649,24 +690,25 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
       )}
 
       <div
-        className={`grid transition-[grid-template-rows] ${CONTROL_SHELL.transition} ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden"}`}
-        style={{ marginTop: `-${SUB_TOOLBOX_INNER_STROKE}px` }}
+        className={`grid transition-[grid-template-rows] ${SHELL_COLLAPSE_TRANSITION} ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden"}`}
+        style={{ marginTop: `calc(var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_INNER_STROKE}px) * -1)` }}
       >
         <div className={`${overflowVisible ? "" : "overflow-hidden"} min-h-0`}>
-          <main
-            className={`bg-white w-full p-4 text-black flex flex-col transition-opacity vt-subtoolbox-content ${CONTROL_SHELL.transition} ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+          {shouldRenderContent && <main
+            className={`bg-white w-full text-black flex flex-col transition-opacity vt-subtoolbox-content ${resolvedContentClassName} ${SHELL_COLLAPSE_TRANSITION} ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             style={{
               ...contentSizeStyle,
               // Provide parent accent to all inner controls via CSS vars
               ["--vt-subtoolbox-fill" as any]: headerHex,
-              ["--vt-subtoolbox-shadow" as any]: hexToRgba(headerHex, 0.45),
-              ["--vt-inner-stroke" as any]: "3px",
-              ["--vt-inner-shadow" as any]: "4px",
+              ["--vt-subtoolbox-shadow" as any]: shadowColor,
+              ["--vt-inner-stroke" as any]: `${SUBTOOLBOX_TOKENS.interior.stroke}px`,
+              ["--vt-inner-shadow" as any]: `${SUBTOOLBOX_TOKENS.interior.shadowOffset}px`,
             }}
           >
             {children}
-          </main>
+          </main>}
         </div>
+      </div>
       </div>
     </div>
   );
@@ -691,10 +733,10 @@ export const StandardUploadBox: React.FC<StandardUploadBoxProps> = ({
 
   return (
     <div
-      className="w-full border-[3px] border-black bg-white rounded-2xl flex-1 flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+      className="w-full border-[3px] border-black bg-white rounded-[8px] flex-1 flex flex-col items-center justify-center p-3 relative overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
       style={{
         minHeight,
-        boxShadow: `${SUB_TOOLBOX_INNER_SHADOW}px ${SUB_TOOLBOX_INNER_SHADOW}px 0px 0px rgba(0,0,0,0.35)`,
+        boxShadow: `${SUB_TOOLBOX_INNER_SHADOW}px ${SUB_TOOLBOX_INNER_SHADOW}px 0px 0px var(--vt-subtoolbox-shadow, rgba(0,0,0,0.25))`,
       }}
     >
       <input
@@ -706,7 +748,7 @@ export const StandardUploadBox: React.FC<StandardUploadBoxProps> = ({
       />
       <div
         onClick={() => inputRef.current?.click()}
-        className="w-full h-full border-[3px] border-[#9ca3af] border-dashed rounded-2xl bg-gray-100 flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-gray-200 transition-colors"
+        className="w-full h-full border-[3px] border-[#9ca3af] border-dashed rounded-[6px] bg-gray-100 flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-gray-200 transition-colors"
       >
         <div className="w-16 h-16 mt-2 border-[3px] border-black rounded-full bg-white flex items-center justify-center">
           {icon || <Zap size={32} strokeWidth={2.5} className="text-black" style={{ color: iconBgColor }} />}
@@ -870,7 +912,7 @@ export const SubToolboxDropdownControl: React.FC<SubToolboxDropdownControlProps>
           });
         }}
         className={`group w-full border-[3px] border-black overflow-hidden transition-[border-radius] ${CONTROL_SHELL.transition} block appearance-none p-0 ${
-          open ? "rounded-t-[16px] rounded-b-none" : "rounded-[16px]"
+          open ? "rounded-t-[8px] rounded-b-none" : "rounded-[8px]"
         }`}
         style={{
           backgroundColor: resolvedSurface,
@@ -893,7 +935,7 @@ export const SubToolboxDropdownControl: React.FC<SubToolboxDropdownControlProps>
       {open && menuRect &&
         createPortal(
           <div
-            className="border-x-[3px] border-b-[3px] border-black rounded-b-[16px] overflow-hidden bg-white"
+            className="border-x-[3px] border-b-[3px] border-black rounded-b-[8px] overflow-hidden bg-white"
             style={{
               position: "fixed",
               left: menuRect.left,
@@ -986,7 +1028,7 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
           });
         }}
         className={`group w-full border-black overflow-hidden transition-[border-radius] ${CONTROL_SHELL.transition} block appearance-none p-0 ${
-          open ? "rounded-t-[16px] rounded-b-none" : "rounded-[16px]"
+          open ? "rounded-t-[8px] rounded-b-none" : "rounded-[8px]"
         } ${borderClass}`}
         style={{
           backgroundColor: resolvedSurface,
@@ -1009,7 +1051,7 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
       {open && menuRect &&
         createPortal(
           <div
-            className={`${borderClass} border-black rounded-b-[16px] overflow-hidden bg-white`}
+            className={`${borderClass} border-black rounded-b-[8px] overflow-hidden bg-white`}
             style={{
               position: "fixed",
               left: menuRect.left,
@@ -1103,7 +1145,7 @@ const SubToolboxRefineButtonBase: React.FC<SubToolboxRefineButtonStyleProps> = (
       onMouseDown={() => setIsPressing(true)}
       onMouseUp={() => setIsPressing(false)}
       disabled={disabled}
-      className={`w-full rounded-[16px] overflow-hidden transition-all shrink-0 flex items-center justify-center appearance-none p-0 hover:translate-y-[1.5px] active:translate-y-[3px] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${className}`}
+      className={`w-full rounded-[8px] overflow-hidden transition-all shrink-0 flex items-center justify-center appearance-none p-0 hover:translate-y-[1.5px] active:translate-y-[3px] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${className}`}
       style={{
         height: `${CONTROL_SHELL.height}px`,
         backgroundColor: resolvedSurface,

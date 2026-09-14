@@ -82,7 +82,7 @@ describe("assistantIntelligenceSystem", () => {
   expect(normalized?.generationId).toBeNull()
   expect(normalized?.workflowId).toBeNull()
   expect(normalized?.targetRoute).toBe(
-   "/data-transparency?internalTool=workflow-chain-builder&commandActionId=manual-1",
+   "/tools/workflow-chain-builder?commandActionId=manual-1",
   )
  })
 
@@ -114,10 +114,10 @@ describe("assistantIntelligenceSystem", () => {
 
  it("resolves command routes through existing target tool routes", () => {
   expect(resolveBrainCommandRoute("creator-canvas-os", "cmd-1")).toBe(
-   "/data-transparency?internalTool=creator-canvas-os&commandActionId=cmd-1",
+   "/tools/creator-canvas-os?commandActionId=cmd-1",
   )
   expect(resolveBrainCommandRoute("brain-command-center", "cmd-2")).toBe(
-   "/data-transparency?internalTool=brain-command-center&commandActionId=cmd-2",
+   "/tools/brain-command-center?commandActionId=cmd-2",
   )
  })
 
@@ -137,7 +137,7 @@ describe("assistantIntelligenceSystem", () => {
   expect(action.assistantRequest).toBe("generate a hook and content idea")
   expect(action.assistantResponse).toBe("Use Creator Canvas OS.")
   expect(action.targetRoute).toBe(
-   `/data-transparency?internalTool=creator-canvas-os&commandActionId=${action.id}`,
+   `/tools/creator-canvas-os?commandActionId=${action.id}`,
   )
  })
 })

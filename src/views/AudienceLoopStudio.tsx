@@ -1,6 +1,7 @@
 import React from "react"
 import { FileText, MessageSquareText, MessagesSquare, Radar, ScanSearch, Users } from "lucide-react"
 import InternalSuperToolWorkbench, {
+ type InternalToolProps,
  type InternalWorkbenchConfig,
 } from "./supertools/InternalSuperToolWorkbench"
 
@@ -260,8 +261,8 @@ const config: InternalWorkbenchConfig = {
  }),
 }
 
-const AudienceLoopStudio: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => (
- <InternalSuperToolWorkbench config={config} embedded={embedded} />
+const AudienceLoopStudio: React.FC<InternalToolProps> = (props) => (
+ <InternalSuperToolWorkbench config={config} {...props} />
 )
 
 export default AudienceLoopStudio

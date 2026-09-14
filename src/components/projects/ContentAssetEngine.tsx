@@ -1,0 +1,67 @@
+import React, { useEffect, useMemo, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { Archive, BookOpen, Boxes, Clapperboard, FileText, Image, Lightbulb, Mic2, PackageCheck, Search, Sparkles } from "lucide-react"
+import { SubToolbox } from "../Toolbox"
+import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../subtoolbox/SubToolboxLayouts"
+import { SubToolboxBadge, SubToolboxButton, SubToolboxSelect, SubToolboxStatePanel, SubToolboxSurface } from "../subtoolbox/SubToolboxPrimitives"
+import { useBrain } from "../../context/useBrain"
+import type { Project } from "../../types"
+
+type SectionState={count:number;status:string;route:string;detail:string}
+type SectionDescriptor={id:string;title:string;subtitle:string;icon:React.ElementType;derive:(project:Project,brain:any)=>SectionState}
+
+const hasText=(value:unknown)=>typeof value==="string"&&value.trim().length>0
+const truthyCount=(values:unknown[])=>values.filter(value=>Array.isArray(value)?value.length>0:hasText(value)||Boolean(value)).length
+const statusFor=(count:number,readyAt=1)=>count>=readyAt?"READY":count>0?"IN PROGRESS":"EMPTY"
+
+const SECTIONS:SectionDescriptor[]=[
+ {id:"concept",title:"Concept & Brief",subtitle:"Promise, angle, audience and production objective",icon:Lightbulb,derive:p=>{const count=truthyCount([p.concept,p.plan?.concept,p.niche,p.plan?.niche,p.plan?.audience,p.plan?.hook]);return{count,status:statusFor(count,3),route:"/projects",detail:"Project concept, niche, audience, hook and planning brief."}}},
+ {id:"research",title:"Research & Evidence",subtitle:"Sources, claims, notes and evidence connections",icon:Search,derive:(p,b)=>{const projectEvidence=Array.isArray(p.plan?.references)?p.plan.references.length:0;const research=Array.isArray(b.researchLabState?.results)?b.researchLabState.results.length:0;const count=projectEvidence+research;return{count,status:statusFor(count),route:"/research-lab",detail:"Research Lab results and project-linked references available to this build."}}},
+ {id:"script",title:"Script",subtitle:"Hook, sections, narration and revisions",icon:FileText,derive:p=>{const count=hasText(p.script)?1:0;return{count,status:statusFor(count),route:"/script-architect",detail:count?"Project script is attached to this content build.":"No project script is attached yet."}}},
+ {id:"storyboard",title:"Storyboard & Visual Plan",subtitle:"Scenes, shot direction and visual structure",icon:Clapperboard,derive:p=>{const count=Array.isArray(p.storyboard)?p.storyboard.length:0;return{count,status:statusFor(count),route:"/storyboard-studio",detail:count?`${count} storyboard scene${count===1?"":"s"} attached to this project.`:"No storyboard scenes are attached yet."}}},
+ {id:"media",title:"Media Assets",subtitle:"Images, video, graphics and generated media",icon:Image,derive:p=>{const count=(p.storyboard||[]).filter(scene=>hasText(scene.imageUrl)).length+(hasText(p.thumbnailUrl)?1:0);return{count,status:statusFor(count),route:"/vault",detail:"Canonical media remains Vault-owned; the Asset Engine reports project-linked media without duplicating it."}}},
+ {id:"audio",title:"Audio",subtitle:"Voice, music, sound effects and mix assets",icon:Mic2,derive:p=>{const count=(p.storyboard||[]).filter(scene=>hasText(scene.voiceoverUrl)).length;return{count,status:statusFor(count),route:"/vault",detail:"Voiceover and audio assets stay canonical in Vault and are surfaced here by project linkage."}}},
+ {id:"packaging",title:"Packaging",subtitle:"Titles, thumbnails, description and experiments",icon:Boxes,derive:(p,b)=>{const count=truthyCount([p.videoTitle,p.thumbnailUrl,p.description,p.tags,b.seoState?.winningTitle,b.seoState?.descriptionDraft]);return{count,status:statusFor(count,3),route:"/thumbnail-studio",detail:"Title, thumbnail, description and tag packaging for this build."}}},
+ {id:"edit",title:"Edit & Timeline",subtitle:"Editor handoff, sequence state and render package",icon:Sparkles,derive:p=>{const count=(p.storyboard||[]).length>0||hasText(p.script)?1:0;return{count,status:count?"READY FOR HANDOFF":"EMPTY",route:"/editor",detail:"Open the editor with this project as the production context."}}},
+ {id:"publishing",title:"Publishing Package",subtitle:"Metadata, schedule, checks and final handoff",icon:PackageCheck,derive:p=>{const count=truthyCount([p.publishDate,p.videoTitle,p.description,p.tags]);return{count,status:statusFor(count,4),route:"/video-publisher",detail:"Publishing metadata and schedule readiness derived from the canonical project."}}},
+ {id:"learning",title:"Performance & Learning",subtitle:"Post-publish evidence, findings and reusable lessons",icon:BookOpen,derive:(p,b)=>{const count=Array.isArray(b.channelyticsState?.topPerformers)?b.channelyticsState.topPerformers.length:0;return{count,status:count?"CONNECTED":"WAITING",route:"/channelytics",detail:"Analytics-owned performance evidence can feed reusable learning back into this build."}}},
+]
+
+const ContentAssetEngine:React.FC=()=>{
+ const {brain}=useBrain()
+ const navigate=useNavigate()
+ const projects=Array.isArray(brain.projects)?brain.projects:[]
+ const [buildId,setBuildId]=useState<string>(brain.activeProjectId||projects[0]?.id||"")
+
+ useEffect(()=>{
+  if(buildId&&projects.some(project=>project.id===buildId))return
+  setBuildId(brain.activeProjectId||projects[0]?.id||"")
+ },[brain.activeProjectId,buildId,projects])
+
+ const build=useMemo(()=>projects.find(project=>project.id===buildId)||null,[buildId,projects])
+ const sections=useMemo(()=>build?SECTIONS.map(section=>({...section,state:section.derive(build,brain)})):[],[brain,build])
+ const ready=sections.filter(section=>["READY","CONNECTED","READY FOR HANDOFF"].includes(section.state.status)).length
+ const progress=sections.length?Math.round((ready/sections.length)*100):0
+
+ if(!build)return <SubToolboxStatePanel state="empty" message="NO CONTENT BUILDS YET — CREATE A PROJECT TO START THE ASSET ENGINE." action={<SubToolboxButton onClick={()=>navigate("/projects")}>OPEN PROJECT STUDIO</SubToolboxButton>}/>
+
+ return <SubToolboxStack density="comfortable">
+  <SubToolboxSurface tone="subtle">
+   <SubToolboxGrid minItemWidth="wide">
+    <SubToolboxSection label="ACTIVE CONTENT BUILD"><SubToolboxSelect value={buildId} onChange={event=>setBuildId(event.target.value)}>{projects.map(project=><option key={project.id} value={project.id}>{project.videoTitle||project.name}</option>)}</SubToolboxSelect></SubToolboxSection>
+    <SubToolboxSection label="PIPELINE READINESS"><div className="flex min-h-12 items-center gap-3"><SubToolboxBadge>{build.status||"PROJECT"}</SubToolboxBadge><strong className="text-sm font-black uppercase">{progress}% READY</strong><div className="h-3 min-w-20 flex-1 border-2 border-black bg-white"><div className="h-full bg-black" style={{width:`${progress}%`}}/></div></div></SubToolboxSection>
+   </SubToolboxGrid>
+  </SubToolboxSurface>
+
+  <SubToolboxGrid minItemWidth="wide">
+   {sections.map((section,index)=>{const Icon=section.icon;return <SubToolbox key={section.id} title={section.title} subtitle={section.subtitle} icon={<Icon/>} paletteIndex={index+2} isOpenInitial={index===0} openUnits={2}>
+    <SubToolboxStack density="compact">
+     <div className="flex flex-wrap items-center gap-2"><SubToolboxBadge>{section.state.status}</SubToolboxBadge><SubToolboxBadge>{section.state.count} ITEMS</SubToolboxBadge></div>
+     {section.state.count===0?<SubToolboxStatePanel state={section.state.status==="WAITING"?"stale":"empty"} message={section.state.detail}/>:<SubToolboxSurface tone="subtle"><p className="text-[10px] font-black uppercase opacity-70">{section.state.detail}</p></SubToolboxSurface>}
+     <SubToolboxGrid minItemWidth="compact"><SubToolboxButton size="compact" onClick={()=>navigate(section.state.route)}>OPEN TOOL</SubToolboxButton><SubToolboxButton size="compact" tone="neutral" onClick={()=>navigate("/vault")}>OPEN VAULT</SubToolboxButton></SubToolboxGrid>
+    </SubToolboxStack>
+   </SubToolbox>})}
+  </SubToolboxGrid>
+ </SubToolboxStack>
+}
+export default ContentAssetEngine

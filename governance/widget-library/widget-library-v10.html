@@ -1,0 +1,1572 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>ViewTubeX Widget Library · v10</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;700&family=Manrope:wght@400;500;700;900&display=swap">
+
+<style>
+/* ══════════════════════════════════════════════════════════════════════════
+   ViewTubeX Widget Library v10 — brutalist light-mode only, matches actual
+   dashboard chrome: 3 px black borders, hard widget-color drop shadows,
+   saturated hue panels, uppercase Archivo Black display, Manrope body.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --ground:  #ececef;      /* dashboard barrier gray */
+  --surface: #ffffff;
+  --ink:     #1a1a2e;
+  --ink-2:   #40445a;
+  --muted:   #5a627a;
+  --faint:   #98a0b3;
+  --rule:    #d4d7e0;
+  --line:    #1a1a2e;
+
+  /* Spectrum palette · VT_SPECTRUM_PALETTE_06 */
+  --hue-rose:    #FA618A;
+  --hue-coral:   #FF7F6B;
+  --hue-orange:  #FFA85C;
+  --hue-yellow:  #FFDA47;
+  --hue-lime:    #C0F240;
+  --hue-green:   #3FEE56;
+  --hue-teal:    #4EE4BE;
+  --hue-cyan:    #36E0F6;
+  --hue-royal:   #528FFA;
+  --hue-purple:  #A467F4;
+  --hue-magenta: #F55EFC;
+  --hue-pink:    #FF7AC8;
+
+  --f-display: "Archivo Black", "Impact", "Franklin Gothic Bold", system-ui, sans-serif;
+  --f-body:    "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:    "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; min-width: 0; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 40px) clamp(16px, 4vw, 32px) 96px;
+}
+
+/* ═══════════════════ MASTHEAD ═══════════════════ */
+
+header.masthead {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: end;
+  padding: 24px;
+  margin-bottom: 32px;
+  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 0 var(--ink);
+}
+.masthead h1 {
+  font-family: var(--f-display);
+  font-size: clamp(32px, 5vw, 64px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  margin: 0 0 8px;
+  text-wrap: balance;
+  color: var(--ink);
+}
+.masthead .sub {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+  max-inline-size: 60ch;
+}
+.masthead .sub b { color: var(--ink); font-weight: 700; }
+.meta-strip {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: flex-end;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-family: var(--f-display);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.chip .dot {
+  inline-size: 8px; block-size: 8px;
+  border-radius: 999px;
+  background: var(--hue-green);
+  border: 1.5px solid var(--ink);
+}
+.chip.solid { background: var(--hue-yellow); }
+
+nav.section-nav {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-bottom: 32px;
+  padding: 10px;
+  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 0 var(--ink);
+}
+nav.section-nav a {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  color: var(--ink);
+  text-decoration: none;
+  font-family: var(--f-display);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: transform 90ms linear, box-shadow 90ms linear;
+}
+nav.section-nav a:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 0 var(--ink);
+}
+nav.section-nav a .num {
+  font-family: var(--f-mono);
+  color: var(--muted);
+  font-size: 10px;
+}
+
+/* ═══════════════════ SECTION HEADS ═══════════════════ */
+
+section {
+  margin-bottom: 56px;
+  scroll-margin-top: 24px;
+}
+
+.section-head {
+  display: grid;
+  grid-template-columns: 68px 1fr auto;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 3px solid var(--ink);
+}
+
+.section-head .num {
+  font-family: var(--f-display);
+  font-size: 56px;
+  color: var(--ink);
+  line-height: 0.85;
+  letter-spacing: -0.03em;
+}
+.section-head h2 {
+  font-family: var(--f-display);
+  font-size: clamp(24px, 3.4vw, 34px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.section-head .kind {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  justify-self: end;
+  text-align: right;
+}
+
+.section-lead {
+  color: var(--ink-2);
+  font-size: 14px;
+  max-inline-size: 70ch;
+  margin: 0 0 24px;
+  padding-left: 84px;
+}
+.section-lead code {
+  padding: 1px 6px;
+  background: color-mix(in srgb, var(--hue-yellow) 40%, var(--surface));
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* ═══════════════════ UPLOAD FRAMES GRID ═══════════════════ */
+
+.frames-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.frame-card {
+  --hue: var(--hue-cyan);
+  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 40px 1fr auto;
+  box-shadow: 3px 3px 0 0 var(--hue);
+  transition: transform 120ms linear, box-shadow 120ms linear;
+}
+.frame-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 0 var(--hue);
+}
+
+.frame-card .card-head {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-bottom: 3px solid var(--ink);
+  background: var(--hue);
+  color: var(--ink);
+}
+.frame-card .card-head .num {
+  font-family: var(--f-display);
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.frame-card .card-head .name {
+  font-family: var(--f-display);
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.frame-card .card-head .swatch {
+  padding: 3px 8px;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.frame-stage {
+  padding: 24px;
+  min-height: 200px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--hue) 6%, var(--surface));
+}
+
+.frame-card .card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 10px 14px;
+  border-top: 2px solid var(--ink);
+  background: var(--surface);
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--ink-2);
+}
+.frame-card .card-foot b {
+  color: var(--ink);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── The frame itself, common surface ─────────────────────── */
+.frame {
+  inline-size: 100%;
+  aspect-ratio: 16 / 9;
+  max-inline-size: 280px;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--hue) 55%, var(--ink));
+  font-family: var(--f-display);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  position: relative;
+  cursor: pointer;
+  transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.frame:hover { transform: translateY(-2px); }
+.frame .icon {
+  inline-size: 36px; block-size: 36px;
+  display: block;
+  margin: 0 auto 8px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.frame .caption { display: block; text-align: center; opacity: 0.85; }
+
+/* 01 · Neo-brutalist double inset ring (Round-08 default) */
+.frame.f01 {
+  background: color-mix(in srgb, var(--hue) 12%, var(--surface));
+  border-radius: 8px;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--hue) 30%, var(--surface)),
+    inset 0 0 0 3px color-mix(in srgb, var(--hue) 12%, var(--surface)),
+    inset 0 0 0 5px color-mix(in srgb, var(--hue) 55%, var(--surface));
+}
+
+/* 02 · Bold single stroke + hard drop shadow */
+.frame.f02 {
+  background: color-mix(in srgb, var(--hue) 10%, var(--surface));
+  border: 3px solid var(--ink);
+  border-radius: 6px;
+  box-shadow: 4px 4px 0 0 var(--hue);
+}
+
+/* 03 · Corner brackets only */
+.frame.f03 {
+  background: color-mix(in srgb, var(--hue) 8%, var(--surface));
+  border: 0;
+  --brk: var(--ink);
+  --brklen: 24px;
+  background-image:
+    linear-gradient(to right,  var(--brk) 3px, transparent 3px),
+    linear-gradient(to bottom, var(--brk) 3px, transparent 3px),
+    linear-gradient(to right,  var(--brk) 3px, transparent 3px),
+    linear-gradient(to bottom, var(--brk) 3px, transparent 3px),
+    linear-gradient(to left,   var(--brk) 3px, transparent 3px),
+    linear-gradient(to bottom, var(--brk) 3px, transparent 3px),
+    linear-gradient(to left,   var(--brk) 3px, transparent 3px),
+    linear-gradient(to top,    var(--brk) 3px, transparent 3px),
+    linear-gradient(color-mix(in srgb, var(--hue) 8%, var(--surface)),
+                    color-mix(in srgb, var(--hue) 8%, var(--surface)));
+  background-size:
+    var(--brklen) 3px, 3px var(--brklen),
+    var(--brklen) 3px, 3px var(--brklen),
+    var(--brklen) 3px, 3px var(--brklen),
+    var(--brklen) 3px, 3px var(--brklen), 100% 100%;
+  background-position:
+    0 0, 0 0,
+    100% 0, 100% 0,
+    0 100%, 0 100%,
+    100% 100%, 100% 100%, 0 0;
+  background-repeat: no-repeat;
+}
+
+/* 04 · Screen-door diagonal stripes */
+.frame.f04 {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      color-mix(in srgb, var(--hue) 26%, var(--surface)) 0 8px,
+      color-mix(in srgb, var(--hue) 12%, var(--surface)) 8px 16px
+    );
+  border: 3px solid var(--ink);
+  border-radius: 6px;
+}
+
+/* 05 · Concentric squares */
+.frame.f05 {
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  padding: 8px;
+}
+.frame.f05::before {
+  content: "";
+  position: absolute; inset: 8px;
+  border: 2px solid color-mix(in srgb, var(--ink) 55%, var(--surface));
+  border-radius: 4px;
+  pointer-events: none;
+}
+.frame.f05::after {
+  content: "";
+  position: absolute; inset: 16px;
+  border: 1px solid color-mix(in srgb, var(--ink) 35%, var(--surface));
+  border-radius: 3px;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--hue) 12%, var(--surface));
+}
+.frame.f05 .cap-inner { position: relative; z-index: 1; display: grid; place-items: center; }
+
+/* 06 · Ripple pulse */
+.frame.f06 {
+  background: color-mix(in srgb, var(--hue) 14%, var(--surface));
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+}
+.frame.f06::before {
+  content: "";
+  position: absolute; inset: 50%;
+  inline-size: 20px; block-size: 20px;
+  translate: -50% -50%;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--hue) 70%, transparent);
+  animation: pulse 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+@keyframes pulse {
+  0%   { inline-size: 20px; block-size: 20px; opacity: 0.85; }
+  100% { inline-size: 380px; block-size: 380px; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .frame.f06::before { animation: none; }
+}
+
+/* 07 · Split panel */
+.frame.f07 {
+  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 6px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 32% 1fr;
+  overflow: hidden;
+}
+.frame.f07 > .band {
+  background: var(--hue);
+  color: var(--ink);
+  display: grid; place-items: center;
+  font-size: 11px;
+  border-right: 3px solid var(--ink);
+}
+.frame.f07 > .zone {
+  display: grid; place-items: center;
+  color: color-mix(in srgb, var(--hue) 50%, var(--ink));
+}
+
+/* 08 · Grid dot pattern */
+.frame.f08 {
+  background:
+    radial-gradient(circle at center, color-mix(in srgb, var(--hue) 60%, var(--ink)) 1.5px, transparent 1.8px)
+      0 0 / 14px 14px,
+    color-mix(in srgb, var(--hue) 8%, var(--surface));
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+}
+
+/* 09 · Icon-forward hero */
+.frame.f09 {
+  background: color-mix(in srgb, var(--hue) 10%, var(--surface));
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  color: color-mix(in srgb, var(--hue) 65%, var(--ink));
+}
+.frame.f09 .icon { inline-size: 56px; block-size: 56px; margin-bottom: 10px; }
+.frame.f09 .caption { font-size: 10px; }
+
+/* 10 · Filled swatch */
+.frame.f10 {
+  background: var(--hue);
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  color: color-mix(in srgb, var(--hue) 12%, var(--ink));
+  box-shadow: 4px 4px 0 0 var(--ink);
+}
+
+/* ═══════════════════ COMPONENT LIBRARY ═══════════════════ */
+
+.lib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.lib-card {
+  --hue: var(--hue-royal);
+  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 3px 3px 0 0 var(--hue);
+  display: grid;
+  grid-template-rows: 38px 1fr;
+}
+
+.lib-card .lib-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 0 14px;
+  background: var(--hue);
+  border-bottom: 3px solid var(--ink);
+  color: var(--ink);
+}
+.lib-card .lib-head strong {
+  font-family: var(--f-display);
+  font-size: 13px;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+}
+.lib-card .lib-head .tag {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.lib-card .lib-body {
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.lib-card .lib-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-height: 40px;
+}
+.lib-card .lib-note {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--muted);
+  padding: 6px 8px;
+  background: color-mix(in srgb, var(--hue) 5%, var(--surface));
+  border-radius: 3px;
+}
+
+/* ── Split button ────────────────────────────────────────── */
+.demo-split {
+  --hue: var(--hue-royal);
+  display: inline-flex; align-items: stretch;
+  block-size: 38px;
+  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 7px;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  box-shadow: 2px 2px 0 0 color-mix(in srgb, var(--hue) 55%, transparent);
+}
+.demo-split.primary { background: var(--hue); color: var(--ink); }
+.demo-split .g {
+  display: grid; place-items: center;
+  padding: 0 10px;
+  border-right: 3px solid var(--ink);
+}
+.demo-split .g svg {
+  inline-size: 24px; block-size: 24px;
+  stroke: currentColor; stroke-width: 2; fill: none;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.demo-split .l { padding: 0 14px; align-self: center; }
+
+/* ── Square icon button ──────────────────────────────────── */
+.demo-icon-btn {
+  --hue: var(--hue-magenta);
+  display: inline-grid; place-items: center;
+  inline-size: 38px; block-size: 38px;
+  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 7px;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 0 color-mix(in srgb, var(--hue) 55%, transparent);
+  transition: transform 90ms linear, box-shadow 90ms linear;
+}
+.demo-icon-btn:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 0 color-mix(in srgb, var(--hue) 55%, transparent); }
+.demo-icon-btn:active { transform: translate(2px, 2px); box-shadow: none; }
+.demo-icon-btn.primary { background: var(--hue); }
+.demo-icon-btn.sm { inline-size: 28px; block-size: 28px; }
+.demo-icon-btn.lg { inline-size: 48px; block-size: 48px; }
+.demo-icon-btn svg {
+  inline-size: 28px; block-size: 28px;
+  stroke: currentColor; stroke-width: 2; fill: none;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.demo-icon-btn.sm svg { inline-size: 20px; block-size: 20px; }
+.demo-icon-btn.lg svg { inline-size: 32px; block-size: 32px; }
+
+/* ── Glyph choice: circle radio + square checkbox ─────────── */
+.demo-glyph {
+  --hue: var(--hue-lime);
+  display: inline-flex; align-items: center;
+  gap: 10px;
+  block-size: 38px;
+  padding: 0 12px;
+  background: color-mix(in srgb, var(--hue) 22%, var(--surface));
+  border: 3px solid var(--ink);
+  border-radius: 7px;
+  font-family: var(--f-display);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink);
+  box-shadow: 2px 2px 0 0 color-mix(in srgb, var(--hue) 55%, transparent);
+}
+.demo-glyph.off { background: var(--surface); }
+.demo-glyph.micro {
+  block-size: 28px; padding: 0 10px; font-size: 10px; gap: 8px;
+  border-width: 2px;
+  border-radius: 5px;
+}
+.demo-glyph .glyph {
+  inline-size: 18px; block-size: 18px;
+  border: 2px solid var(--ink);
+  background: var(--surface);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.demo-glyph.circle .glyph { border-radius: 999px; }
+.demo-glyph.square .glyph { border-radius: 3px; }
+.demo-glyph.micro .glyph { inline-size: 14px; block-size: 14px; }
+.demo-glyph .glyph::after {
+  content: "";
+  inline-size: 9px; block-size: 9px;
+  background: transparent;
+}
+.demo-glyph.circle .glyph::after { border-radius: 999px; }
+.demo-glyph.square .glyph::after { border-radius: 1px; }
+.demo-glyph.micro .glyph::after { inline-size: 7px; block-size: 7px; }
+.demo-glyph:not(.off) .glyph::after { background: var(--ink); }
+
+/* ── Split badges ─────────────────────────────────────────── */
+.demo-split-badge {
+  --hue: var(--hue-orange);
+  display: inline-flex; align-items: stretch;
+  block-size: 32px;
+  border: 3px solid var(--ink);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--hue) 24%, var(--surface));
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  box-shadow: 2px 2px 0 0 color-mix(in srgb, var(--hue) 55%, transparent);
+}
+.demo-split-badge .g {
+  display: grid; place-items: center;
+  padding: 0 10px;
+  border-right: 3px solid var(--ink);
+  background: var(--hue);
+}
+.demo-split-badge .g svg {
+  inline-size: 20px; block-size: 20px;
+  stroke: currentColor; stroke-width: 2; fill: none;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.demo-split-badge .l { padding: 0 12px; align-self: center; }
+
+/* ── Micro toggle (round-10 segmented) ───────────────────── */
+.demo-micro-toggle {
+  --hue: var(--hue-teal);
+  display: inline-flex;
+  block-size: 28px;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 2px 2px 0 0 color-mix(in srgb, var(--hue) 55%, transparent);
+}
+.demo-micro-toggle button {
+  padding: 0 12px;
+  border: 0; background: transparent;
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-size: 10px; letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-right: 1.5px solid color-mix(in srgb, var(--ink) 20%, transparent);
+}
+.demo-micro-toggle button:last-child { border-right: 0; }
+.demo-micro-toggle button.on {
+  background: var(--hue);
+  color: var(--ink);
+}
+
+/* ── Dropdown ─────────────────────────────────────────────── */
+.demo-dropdown {
+  --hue: var(--hue-purple);
+  display: grid;
+  grid-template-rows: 38px auto;
+  gap: 6px;
+  inline-size: 100%;
+  max-inline-size: 240px;
+}
+.demo-dropdown .trigger {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 0 12px;
+  background: var(--hue);
+  border: 3px solid var(--ink);
+  border-radius: 7px;
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-size: 12px; letter-spacing: 0.02em;
+  text-transform: uppercase;
+  box-shadow: 2px 2px 0 0 color-mix(in srgb, var(--hue) 55%, transparent);
+}
+.demo-dropdown .trigger svg {
+  inline-size: 18px; block-size: 18px;
+  stroke: currentColor; stroke-width: 2; fill: none;
+}
+.demo-dropdown .menu {
+  background: var(--surface);
+  border: 3px solid var(--hue);
+  border-radius: 7px;
+  padding: 4px;
+  box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--hue) 55%, transparent);
+}
+.demo-dropdown .menu .row {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 4px;
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-size: 12px; letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.demo-dropdown .menu .row.hi {
+  background: color-mix(in srgb, var(--hue) 25%, var(--surface));
+  color: var(--ink);
+}
+
+/* ── Asset frame ──────────────────────────────────────────── */
+.demo-asset {
+  --hue: var(--hue-cyan);
+  display: grid;
+  grid-template-columns: 30% 1fr;
+  gap: 10px;
+  padding: 8px;
+  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: 2px 2px 0 0 color-mix(in srgb, var(--hue) 55%, transparent);
+  min-width: 0;
+}
+.demo-asset.lg {
+  border-width: 3px;
+  padding: 12px;
+  gap: 14px;
+  box-shadow: 3px 3px 0 0 var(--hue);
+}
+.demo-asset.sm { padding: 6px; gap: 8px; }
+.demo-asset .m {
+  aspect-ratio: 16 / 9;
+  background: color-mix(in srgb, var(--hue) 32%, var(--surface));
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  display: grid; place-items: center;
+  color: color-mix(in srgb, var(--hue) 60%, var(--ink));
+  min-width: 0;
+}
+.demo-asset .m svg {
+  inline-size: 24px; block-size: 24px;
+  stroke: currentColor; stroke-width: 2; fill: none;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.demo-asset.sm .m svg { inline-size: 18px; block-size: 18px; }
+.demo-asset.lg .m svg { inline-size: 28px; block-size: 28px; }
+.demo-asset .st { min-width: 0; display: flex; flex-direction: column; gap: 3px; justify-content: center; }
+.demo-asset .st .t {
+  font-family: var(--f-display);
+  font-size: 13px; letter-spacing: -0.005em;
+  text-transform: uppercase;
+  color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.demo-asset.lg .st .t { font-size: 15px; }
+.demo-asset.sm .st .t { font-size: 11px; }
+.demo-asset .st .s {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.demo-asset.sm .st .s { display: none; }
+
+/* ═══════════════════ WIDGET LAYOUTS ═══════════════════ */
+
+.layouts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.layout-card {
+  --hue: var(--hue-cyan);
+  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 3px 3px 0 0 var(--hue);
+  display: grid;
+  grid-template-rows: 38px 1fr auto;
+}
+
+.layout-card .lh {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  background: var(--hue);
+  border-bottom: 3px solid var(--ink);
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-size: 12px;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+}
+.layout-card .lh .lg-icon svg {
+  inline-size: 20px; block-size: 20px;
+  stroke: currentColor; stroke-width: 2; fill: none;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.layout-card .lh .toggle {
+  display: inline-flex;
+  block-size: 22px;
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.layout-card .lh .toggle span {
+  padding: 0 8px;
+  align-self: center;
+  font-family: var(--f-display);
+  font-size: 9px;
+  color: var(--ink);
+  border-right: 1.5px solid color-mix(in srgb, var(--ink) 25%, transparent);
+}
+.layout-card .lh .toggle span:last-child { border-right: 0; }
+.layout-card .lh .toggle span.on { background: var(--ink); color: var(--hue); }
+
+.layout-card .lb {
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+  color: var(--ink);
+  min-height: 150px;
+}
+
+.layout-card .lf {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--hue) 12%, var(--surface));
+  border-top: 3px solid var(--ink);
+}
+.layout-card .lf .pri,
+.layout-card .lf .sec {
+  display: inline-flex; align-items: stretch;
+  block-size: 30px;
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  overflow: hidden;
+  font-family: var(--f-display);
+  font-size: 10px; letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.layout-card .lf .pri { background: var(--hue); }
+.layout-card .lf .sec { background: var(--surface); }
+.layout-card .lf .pri .g,
+.layout-card .lf .sec .g {
+  display: grid; place-items: center;
+  padding: 0 7px;
+  border-right: 2px solid var(--ink);
+}
+.layout-card .lf .pri .g svg,
+.layout-card .lf .sec .g svg {
+  inline-size: 16px; block-size: 16px;
+  stroke: currentColor; stroke-width: 2; fill: none;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.layout-card .lf .l { padding: 0 10px; align-self: center; }
+
+.layout-card .lb .row {
+  display: grid; grid-template-columns: 40px 1fr auto;
+  gap: 8px; align-items: center;
+  padding: 5px 8px;
+  background: color-mix(in srgb, var(--hue) 8%, var(--surface));
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--ink);
+}
+.layout-card .lb .row .t { font-weight: 700; color: var(--ink); font-family: var(--f-display); font-size: 10px; }
+.layout-card .lb .row .m {
+  block-size: 6px;
+  background: color-mix(in srgb, var(--hue) 55%, var(--surface));
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+}
+.layout-card .lb .row .p {
+  font-family: var(--f-display); font-size: 11px;
+  color: var(--ink);
+}
+
+.layout-card .lb .countdown {
+  font-family: var(--f-display);
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  padding: 8px 0 4px;
+  color: var(--ink);
+}
+.layout-card .lb .check {
+  display: grid; grid-template-columns: 18px 1fr; gap: 8px;
+  align-items: center;
+  font-family: var(--f-mono); font-size: 10px;
+  padding: 4px 6px;
+  border-radius: 3px;
+}
+.layout-card .lb .check .box {
+  inline-size: 18px; block-size: 18px;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  background: var(--surface);
+  display: grid; place-items: center;
+  font-family: var(--f-display);
+  font-size: 11px;
+  color: var(--ink);
+}
+.layout-card .lb .check.done .box { background: var(--hue); }
+.layout-card .lb .check.done .box::before { content: "✓"; }
+.layout-card .lb .heat {
+  display: grid; grid-template-columns: 88px 1fr;
+  gap: 8px; align-items: center;
+  padding: 3px 4px;
+  font-family: var(--f-mono); font-size: 10px;
+  color: var(--ink);
+}
+.layout-card .lb .heat .cells {
+  display: grid; grid-template-columns: repeat(20, 1fr); gap: 1.5px;
+}
+.layout-card .lb .heat .cells i {
+  block-size: 10px; border-radius: 1px;
+  background: color-mix(in srgb, var(--hue) var(--h, 20%), var(--surface));
+  border: 1px solid var(--ink);
+}
+.layout-card .lb .radar {
+  display: grid; place-items: center;
+  block-size: 100%;
+}
+.layout-card .lb .radar svg { inline-size: 100%; max-inline-size: 160px; }
+
+/* ═══════════════════ FOOTER SPEC ═══════════════════ */
+
+.foot-spec {
+  margin-top: 56px;
+  padding: 24px;
+  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  box-shadow: 3px 3px 0 0 var(--ink);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+.foot-spec b { color: var(--ink); font-weight: 700; }
+.foot-spec dt {
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid var(--ink);
+}
+.foot-spec dl { margin: 0; font-family: var(--f-mono); font-size: 11px; color: var(--ink-2); }
+.foot-spec dd { margin: 0 0 4px; }
+</style>
+
+<div class="page">
+
+  <!-- ═══════════════════ MASTHEAD ═══════════════════ -->
+  <header class="masthead">
+    <div>
+      <h1>Widget Library v10</h1>
+      <div class="sub">
+        <b>ViewTubeX</b> · Rounds 08 + 09 + 10 · <b>10 upload frame variants</b>, uniform 24 px icon
+        system, circle + square glyph choices, spectrum split badges, asset frame ladder, and
+        5 Round-08 widget layouts.
+      </div>
+    </div>
+    <div class="meta-strip">
+      <span class="chip"><span class="dot"></span>Round 10 · shipped</span>
+      <span class="chip">2026-01-08</span>
+      <span class="chip solid">--widget-color driven</span>
+    </div>
+  </header>
+
+  <!-- ═══════════════════ JUMP NAV ═══════════════════ -->
+  <nav class="section-nav" aria-label="Sections">
+    <a href="#frames"><span class="num">01</span>Upload frames</a>
+    <a href="#icons"><span class="num">02</span>Icon system</a>
+    <a href="#glyphs"><span class="num">03</span>Glyph choices</a>
+    <a href="#badges"><span class="num">04</span>Badges</a>
+    <a href="#toggles"><span class="num">05</span>Toggles + dropdown</a>
+    <a href="#assets"><span class="num">06</span>Asset frames</a>
+    <a href="#layouts"><span class="num">07</span>Widget layouts</a>
+  </nav>
+
+  <!-- ═══════════════════ 01 · UPLOAD FRAMES ═══════════════════ -->
+  <section id="frames">
+    <div class="section-head">
+      <span class="num">01</span>
+      <h2>Ten upload frame designs</h2>
+      <span class="kind">.widget-media-upload-frame</span>
+    </div>
+    <p class="section-lead">
+      Every frame renders on <code>--widget-color</code> tokens — the badge in each card header is
+      the palette slot that variant reads. All rings are inset; nothing bleeds past its own box.
+      Aspect defaults to 16 : 9; shape variants (<code>square</code>, <code>portrait</code>,
+      <code>avatar</code>) come from the same primitive.
+    </p>
+
+    <div class="frames-grid">
+
+      <article class="frame-card" style="--hue: var(--hue-cyan);">
+        <div class="card-head"><span class="num">01</span><span class="name">Double inset ring</span><span class="swatch">cyan</span></div>
+        <div class="frame-stage">
+          <div class="frame f01"><div><svg class="icon" viewBox="0 0 24 24"><path d="M12 3v13"/><path d="m7 8 5-5 5 5"/><path d="M3 20h18"/></svg><span class="caption">Drop or browse</span></div></div>
+        </div>
+        <div class="card-foot"><span><b>Round-08 default</b></span><span>Aspect 16 : 9</span><span>Inset rings 1/3/5 px</span></div>
+      </article>
+
+      <article class="frame-card" style="--hue: var(--hue-rose);">
+        <div class="card-head"><span class="num">02</span><span class="name">Bold stroke + shadow</span><span class="swatch">rose</span></div>
+        <div class="frame-stage">
+          <div class="frame f02"><div><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span class="caption">Choose thumbnail</span></div></div>
+        </div>
+        <div class="card-foot"><span><b>Neo-brutalist max</b></span><span>3 px border</span><span>4 px offset shadow</span></div>
+      </article>
+
+      <article class="frame-card" style="--hue: var(--hue-lime);">
+        <div class="card-head"><span class="num">03</span><span class="name">Corner brackets</span><span class="swatch">lime</span></div>
+        <div class="frame-stage">
+          <div class="frame f03"><div><svg class="icon" viewBox="0 0 24 24"><path d="M14 3h7v7"/><path d="M10 21H3v-7"/><path d="M21 3l-8 8"/><path d="M3 21l8-8"/></svg><span class="caption">Frame target</span></div></div>
+        </div>
+        <div class="card-foot"><span><b>Editorial · viewfinder</b></span><span>4 L-brackets</span><span>3 × 24 px</span></div>
+      </article>
+
+      <article class="frame-card" style="--hue: var(--hue-yellow);">
+        <div class="card-head"><span class="num">04</span><span class="name">Screen-door stripes</span><span class="swatch">yellow</span></div>
+        <div class="frame-stage">
+          <div class="frame f04"><div><svg class="icon" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M3 12h18"/></svg><span class="caption">Add media</span></div></div>
+        </div>
+        <div class="card-foot"><span><b>Loud utility signal</b></span><span>45° stripes</span><span>8 px pitch</span></div>
+      </article>
+
+      <article class="frame-card" style="--hue: var(--hue-magenta);">
+        <div class="card-head"><span class="num">05</span><span class="name">Concentric squares</span><span class="swatch">magenta</span></div>
+        <div class="frame-stage">
+          <div class="frame f05"><div class="cap-inner"><div><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg><span class="caption">Nested target</span></div></div></div>
+        </div>
+        <div class="card-foot"><span><b>Diagrammatic</b></span><span>3 nested insets</span></div>
+      </article>
+
+      <article class="frame-card" style="--hue: var(--hue-teal);">
+        <div class="card-head"><span class="num">06</span><span class="name">Ripple pulse</span><span class="swatch">teal</span></div>
+        <div class="frame-stage">
+          <div class="frame f06"><div><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3"/><path d="M12 18v3"/><path d="M3 12h3"/><path d="M18 12h3"/></svg><span class="caption">Live drop zone</span></div></div>
+        </div>
+        <div class="card-foot"><span><b>Live upload target</b></span><span>Center pulse · 2.4 s</span><span>Reduced-motion safe</span></div>
+      </article>
+
+      <article class="frame-card" style="--hue: var(--hue-royal);">
+        <div class="card-head"><span class="num">07</span><span class="name">Split panel</span><span class="swatch">royal</span></div>
+        <div class="frame-stage">
+          <div class="frame f07">
+            <div class="band">16 : 9</div>
+            <div class="zone"><div><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="m8 6-2-3"/><path d="m16 6 2-3"/></svg><span class="caption">Video source</span></div></div>
+          </div>
+        </div>
+        <div class="card-foot"><span><b>Format-forward</b></span><span>30 / 70 asymmetric</span></div>
+      </article>
+
+      <article class="frame-card" style="--hue: var(--hue-purple);">
+        <div class="card-head"><span class="num">08</span><span class="name">Dot grid</span><span class="swatch">purple</span></div>
+        <div class="frame-stage">
+          <div class="frame f08"><div><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="caption">Choose tile</span></div></div>
+        </div>
+        <div class="card-foot"><span><b>Grid-aware</b></span><span>Radial dots · 14 px</span></div>
+      </article>
+
+      <article class="frame-card" style="--hue: var(--hue-orange);">
+        <div class="card-head"><span class="num">09</span><span class="name">Icon-forward hero</span><span class="swatch">orange</span></div>
+        <div class="frame-stage">
+          <div class="frame f09"><div><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><span class="caption">Upload asset</span></div></div>
+        </div>
+        <div class="card-foot"><span><b>Onboarding-friendly</b></span><span>56 px icon</span></div>
+      </article>
+
+      <article class="frame-card" style="--hue: var(--hue-pink);">
+        <div class="card-head"><span class="num">10</span><span class="name">Filled swatch</span><span class="swatch">pink</span></div>
+        <div class="frame-stage">
+          <div class="frame f10"><div><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg><span class="caption">Fill the block</span></div></div>
+        </div>
+        <div class="card-foot"><span><b>Loudest brand read</b></span><span>Solid widget-color</span></div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════ 02 · ICON SYSTEM ═══════════════════ -->
+  <section id="icons">
+    <div class="section-head">
+      <span class="num">02</span>
+      <h2>Uniform icon system + square icon button</h2>
+      <span class="kind">Script Studio baseline · 24 / 28 / 18 / 32 px</span>
+    </div>
+    <p class="section-lead">
+      One canonical rule sets every icon in every control primitive. Default <code>24 px</code>
+      (Script Studio baseline), icon-only <code>28 px</code>, compact <code>18 px</code>, hero
+      <code>32 px</code>. All render at <code>stroke-width: 2</code>, round joins, currentColor.
+      Square icon buttons carry uniform widget-color drop shadow.
+    </p>
+
+    <div class="lib-grid">
+
+      <div class="lib-card" style="--hue: var(--hue-royal);">
+        <div class="lib-head"><strong>Split buttons</strong><span class="tag">primary / soft</span></div>
+        <div class="lib-body">
+          <div class="lib-row">
+            <span class="demo-split primary"><span class="g"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="l">Save changes</span></span>
+            <span class="demo-split"><span class="g"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 5v11"/></svg></span><span class="l">Publish</span></span>
+          </div>
+          <div class="lib-note">Icon 24 px · stroke-width 2 · round joins</div>
+        </div>
+      </div>
+
+      <div class="lib-card" style="--hue: var(--hue-magenta);">
+        <div class="lib-head"><strong>Square icon buttons</strong><span class="tag">sm 28 / md 38 / lg 48 px</span></div>
+        <div class="lib-body">
+          <div class="lib-row">
+            <button class="demo-icon-btn sm" aria-label="Copy"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>
+            <button class="demo-icon-btn" aria-label="Edit"><svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+            <button class="demo-icon-btn primary" aria-label="Save"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>
+            <button class="demo-icon-btn lg" aria-label="Play"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>
+          </div>
+          <div class="lib-note">Shadow: 2 px widget-color · translate on hover</div>
+        </div>
+      </div>
+
+      <div class="lib-card" style="--hue: var(--hue-orange);">
+        <div class="lib-head"><strong>Icon-only .vt-button</strong><span class="tag">Script Studio row</span></div>
+        <div class="lib-body">
+          <div class="lib-row">
+            <button class="demo-icon-btn" aria-label="Bold"><svg viewBox="0 0 24 24"><path d="M6 4h8a4 4 0 0 1 0 8H6z"/><path d="M6 12h9a4 4 0 0 1 0 8H6z"/></svg></button>
+            <button class="demo-icon-btn" aria-label="Italic"><svg viewBox="0 0 24 24"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+            <button class="demo-icon-btn" aria-label="Underline"><svg viewBox="0 0 24 24"><path d="M6 3v7a6 6 0 0 0 12 0V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg></button>
+            <button class="demo-icon-btn" aria-label="Link"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+            <button class="demo-icon-btn" aria-label="Image"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></button>
+          </div>
+          <div class="lib-note">28 px icons in 38 px squares · uniform widget-color drop shadow</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════ 03 · GLYPH CHOICES ═══════════════════ -->
+  <section id="glyphs">
+    <div class="section-head">
+      <span class="num">03</span>
+      <h2>Circle radios + square checkboxes</h2>
+      <span class="kind">WidgetGlyphGroup</span>
+    </div>
+    <p class="section-lead">
+      Two shapes × two sizes. Circle for mutually-exclusive selection (radio semantics), square
+      for independent toggles (checkbox semantics). Large scale matches uniform toggle
+      (<code>38 px</code>); micro scale matches the redesigned <code>MicroToggle</code>
+      (<code>28 px</code>).
+    </p>
+
+    <div class="lib-grid">
+      <div class="lib-card" style="--hue: var(--hue-lime);">
+        <div class="lib-head"><strong>Circle · large</strong><span class="tag">radio · 38 px</span></div>
+        <div class="lib-body">
+          <div class="lib-row">
+            <span class="demo-glyph circle"><span class="glyph"></span>Draft</span>
+            <span class="demo-glyph circle off"><span class="glyph"></span>Scheduled</span>
+            <span class="demo-glyph circle off"><span class="glyph"></span>Publish</span>
+          </div>
+        </div>
+      </div>
+      <div class="lib-card" style="--hue: var(--hue-lime);">
+        <div class="lib-head"><strong>Square · large</strong><span class="tag">checkbox · 38 px</span></div>
+        <div class="lib-body">
+          <div class="lib-row">
+            <span class="demo-glyph square"><span class="glyph"></span>Subscribers</span>
+            <span class="demo-glyph square"><span class="glyph"></span>Community</span>
+            <span class="demo-glyph square off"><span class="glyph"></span>Email digest</span>
+          </div>
+        </div>
+      </div>
+      <div class="lib-card" style="--hue: var(--hue-green);">
+        <div class="lib-head"><strong>Circle · micro</strong><span class="tag">radio · 28 px</span></div>
+        <div class="lib-body">
+          <div class="lib-row">
+            <span class="demo-glyph circle micro"><span class="glyph"></span>New</span>
+            <span class="demo-glyph circle micro off"><span class="glyph"></span>Top</span>
+            <span class="demo-glyph circle micro off"><span class="glyph"></span>Hot</span>
+          </div>
+        </div>
+      </div>
+      <div class="lib-card" style="--hue: var(--hue-green);">
+        <div class="lib-head"><strong>Square · micro</strong><span class="tag">checkbox · 28 px</span></div>
+        <div class="lib-body">
+          <div class="lib-row">
+            <span class="demo-glyph square micro"><span class="glyph"></span>Drafts</span>
+            <span class="demo-glyph square micro off"><span class="glyph"></span>Live</span>
+            <span class="demo-glyph square micro"><span class="glyph"></span>Scheduled</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ 04 · BADGES ═══════════════════ -->
+  <section id="badges">
+    <div class="section-head">
+      <span class="num">04</span>
+      <h2>Split badges · spectrum</h2>
+      <span class="kind">WidgetSplitBadge · 12 spectrum tones</span>
+    </div>
+    <p class="section-lead">
+      Non-clickable icon-plus-label pill. Icon slot uses the tone hue as fill; label sits on the
+      tinted body. All 12 spectrum slots represented.
+    </p>
+
+    <div class="lib-card" style="--hue: var(--hue-orange);">
+      <div class="lib-head"><strong>All 12 spectrum tones</strong><span class="tag">rose → pink</span></div>
+      <div class="lib-body">
+        <div class="lib-row" style="gap: 10px;">
+          <span class="demo-split-badge" style="--hue: var(--hue-rose);"><span class="g"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg></span><span class="l">Live</span></span>
+          <span class="demo-split-badge" style="--hue: var(--hue-coral);"><span class="g"><svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></span><span class="l">Flagged</span></span>
+          <span class="demo-split-badge" style="--hue: var(--hue-orange);"><span class="g"><svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 13L2 9z"/></svg></span><span class="l">1st place</span></span>
+          <span class="demo-split-badge" style="--hue: var(--hue-yellow);"><span class="g"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="l">Hot</span></span>
+          <span class="demo-split-badge" style="--hue: var(--hue-lime);"><span class="g"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></span><span class="l">+184 %</span></span>
+          <span class="demo-split-badge" style="--hue: var(--hue-green);"><span class="g"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="l">Verified</span></span>
+          <span class="demo-split-badge" style="--hue: var(--hue-teal);"><span class="g"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><span class="l">On target</span></span>
+          <span class="demo-split-badge" style="--hue: var(--hue-cyan);"><span class="g"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></span><span class="l">Award</span></span>
+          <span class="demo-split-badge" style="--hue: var(--hue-royal);"><span class="g"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span><span class="l">Saved</span></span>
+          <span class="demo-split-badge" style="--hue: var(--hue-purple);"><span class="g"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A5.5 5.5 0 0 1 12 4a5.5 5.5 0 0 1 8 6.2c0 7.3-8 11.8-8 11.8z"/></svg></span><span class="l">Loved</span></span>
+          <span class="demo-split-badge" style="--hue: var(--hue-magenta);"><span class="g"><svg viewBox="0 0 24 24"><polygon points="12 2 15 8.5 22 9 17 14 18 21 12 17.5 6 21 7 14 2 9 9 8.5 12 2"/></svg></span><span class="l">Featured</span></span>
+          <span class="demo-split-badge" style="--hue: var(--hue-pink);"><span class="g"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span class="l">Notified</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ 05 · TOGGLES + DROPDOWN ═══════════════════ -->
+  <section id="toggles">
+    <div class="section-head">
+      <span class="num">05</span>
+      <h2>Micro toggle · dropdown menu</h2>
+      <span class="kind">Round-10 · segmented + widget-color stroke</span>
+    </div>
+    <p class="section-lead">
+      The 28 px micro toggle is redesigned as a segmented bar with hard dividers — visually
+      distinct from the sliding-pill uniform toggle. Dropdown menus (Radix Select portal) now
+      inherit the widget-color as a 3 px stroke plus matching drop shadow.
+    </p>
+
+    <div class="lib-grid">
+      <div class="lib-card" style="--hue: var(--hue-teal);">
+        <div class="lib-head"><strong>Micro toggle · segmented</strong><span class="tag">28 px · widget-color fill</span></div>
+        <div class="lib-body">
+          <div class="lib-row">
+            <span class="demo-micro-toggle"><button>24 h</button><button class="on">7 d</button><button>30 d</button></span>
+            <span class="demo-micro-toggle"><button class="on">↑</button><button>↓</button></span>
+            <span class="demo-micro-toggle"><button>Meta</button><button class="on">Audio</button><button>Visuals</button></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lib-card" style="--hue: var(--hue-purple);">
+        <div class="lib-head"><strong>Dropdown · open</strong><span class="tag">widget-color 3 px stroke</span></div>
+        <div class="lib-body">
+          <div class="demo-dropdown">
+            <span class="trigger">
+              <span>Public · anyone can watch</span>
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+            <div class="menu">
+              <div class="row">Public</div>
+              <div class="row hi">Unlisted</div>
+              <div class="row">Private</div>
+              <div class="row">Scheduled</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ 06 · ASSET FRAMES ═══════════════════ -->
+  <section id="assets">
+    <div class="section-head">
+      <span class="num">06</span>
+      <h2>Unified asset frame · sm / md / lg</h2>
+      <span class="kind">WidgetAssetFrame · replaces 3 legacy cards</span>
+    </div>
+    <p class="section-lead">
+      One primitive covers what used to be three separate cards
+      (<code>widget-asset-card-thumb</code>, <code>kpi-video-card</code>,
+      <code>comment-video-card</code>). Sm is a compact chip for channel manager, md is the
+      default row, lg carries the heavier kpi chrome (3 px border + widget-color drop shadow).
+    </p>
+
+    <div class="lib-grid">
+      <div class="lib-card" style="--hue: var(--hue-cyan);">
+        <div class="lib-head"><strong>Sm · channel manager</strong><span class="tag">title only</span></div>
+        <div class="lib-body">
+          <div class="demo-asset sm">
+            <div class="m"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+            <div class="st"><span class="t">Waterloo Ep 4</span></div>
+          </div>
+          <div class="demo-asset sm">
+            <div class="m"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/></svg></div>
+            <div class="st"><span class="t">Prussian March</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="lib-card" style="--hue: var(--hue-cyan);">
+        <div class="lib-head"><strong>Md · default</strong><span class="tag">title + subtitle</span></div>
+        <div class="lib-body">
+          <div class="demo-asset">
+            <div class="m"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
+            <div class="st"><span class="t">Waterloo · Ep. 4</span><span class="s">Published · 12 days ago</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="lib-card" style="--hue: var(--hue-cyan);">
+        <div class="lib-head"><strong>Lg · kpi + comment</strong><span class="tag">heavier chrome</span></div>
+        <div class="lib-body">
+          <div class="demo-asset lg">
+            <div class="m"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="m8 6-2-3"/><path d="m16 6 2-3"/></svg></div>
+            <div class="st"><span class="t">Cinematic Waterloo</span><span class="s">128 K views · +12 % vs 30-d avg</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ 07 · WIDGET LAYOUTS ═══════════════════ -->
+  <section id="layouts">
+    <div class="section-head">
+      <span class="num">07</span>
+      <h2>Round-08 widget layouts · mini reference</h2>
+      <span class="kind">5 new widgets · third-width default</span>
+    </div>
+    <p class="section-lead">
+      Each widget defaults to a third-width bucket. All five share the same header-toggle chrome
+      plus subtle footer with split-button primary + soft actions.
+    </p>
+
+    <div class="layouts-grid">
+
+      <article class="layout-card" style="--hue: var(--hue-rose);">
+        <div class="lh">
+          <span class="lg-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span>
+          <span>Chapter Auto-Splitter</span>
+          <span class="toggle"><span class="on">Detect</span><span>Edit</span><span>Apply</span></span>
+        </div>
+        <div class="lb">
+          <div class="row"><span class="t">00:00</span><span class="m" style="width: 62%;"></span><span class="p">98 %</span></div>
+          <div class="row"><span class="t">02:41</span><span class="m" style="width: 54%;"></span><span class="p">91 %</span></div>
+          <div class="row"><span class="t">06:58</span><span class="m" style="width: 46%;"></span><span class="p">84 %</span></div>
+          <div class="row"><span class="t">11:04</span><span class="m" style="width: 38%;"></span><span class="p">76 %</span></div>
+        </div>
+        <div class="lf">
+          <span class="sec"><span class="g"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></span><span class="l">Re-detect</span></span>
+          <span class="pri"><span class="g"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span><span class="l">Preview</span></span>
+        </div>
+      </article>
+
+      <article class="layout-card" style="--hue: var(--hue-magenta);">
+        <div class="lh">
+          <span class="lg-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          <span>Sentiment Map</span>
+          <span class="toggle"><span class="on">Map</span><span>Clusters</span></span>
+        </div>
+        <div class="lb">
+          <div class="heat"><span>Praise · 411</span>
+            <div class="cells">
+              <i style="--h: 28%"></i><i style="--h: 42%"></i><i style="--h: 65%"></i><i style="--h: 80%"></i><i style="--h: 58%"></i><i style="--h: 42%"></i><i style="--h: 65%"></i><i style="--h: 80%"></i><i style="--h: 42%"></i><i style="--h: 65%"></i><i style="--h: 80%"></i><i style="--h: 42%"></i><i style="--h: 28%"></i><i style="--h: 42%"></i><i style="--h: 65%"></i><i style="--h: 42%"></i><i style="--h: 65%"></i><i style="--h: 80%"></i><i style="--h: 80%"></i><i style="--h: 65%"></i>
+            </div>
+          </div>
+          <div class="heat"><span>Question · 218</span>
+            <div class="cells">
+              <i style="--h: 16%"></i><i style="--h: 26%"></i><i style="--h: 42%"></i><i style="--h: 42%"></i><i style="--h: 65%"></i><i style="--h: 26%"></i><i style="--h: 42%"></i><i style="--h: 42%"></i><i style="--h: 65%"></i><i style="--h: 42%"></i><i style="--h: 65%"></i><i style="--h: 26%"></i><i style="--h: 42%"></i><i style="--h: 65%"></i><i style="--h: 26%"></i><i style="--h: 42%"></i><i style="--h: 42%"></i><i style="--h: 65%"></i><i style="--h: 42%"></i><i style="--h: 26%"></i>
+            </div>
+          </div>
+          <div class="heat"><span>Critique · 87</span>
+            <div class="cells">
+              <i style="--h: 10%"></i><i style="--h: 10%"></i><i style="--h: 26%"></i><i style="--h: 26%"></i><i style="--h: 42%"></i><i style="--h: 26%"></i><i style="--h: 26%"></i><i style="--h: 26%"></i><i style="--h: 42%"></i><i style="--h: 26%"></i><i style="--h: 10%"></i><i style="--h: 26%"></i><i style="--h: 42%"></i><i style="--h: 26%"></i><i style="--h: 26%"></i><i style="--h: 42%"></i><i style="--h: 26%"></i><i style="--h: 26%"></i><i style="--h: 26%"></i><i style="--h: 10%"></i>
+            </div>
+          </div>
+          <div class="heat"><span>Off-topic · 62</span>
+            <div class="cells">
+              <i style="--h: 8%"></i><i style="--h: 16%"></i><i style="--h: 8%"></i><i style="--h: 16%"></i><i style="--h: 8%"></i><i style="--h: 16%"></i><i style="--h: 8%"></i><i style="--h: 16%"></i><i style="--h: 16%"></i><i style="--h: 8%"></i><i style="--h: 16%"></i><i style="--h: 8%"></i><i style="--h: 16%"></i><i style="--h: 8%"></i><i style="--h: 16%"></i><i style="--h: 16%"></i><i style="--h: 8%"></i><i style="--h: 16%"></i><i style="--h: 8%"></i><i style="--h: 16%"></i>
+            </div>
+          </div>
+          <div class="heat"><span>Hostile · 12</span>
+            <div class="cells">
+              <i style="--h: 5%"></i><i style="--h: 5%"></i><i style="--h: 5%"></i><i style="--h: 5%"></i><i style="--h: 5%"></i><i style="--h: 16%"></i><i style="--h: 5%"></i><i style="--h: 5%"></i><i style="--h: 16%"></i><i style="--h: 5%"></i><i style="--h: 5%"></i><i style="--h: 5%"></i><i style="--h: 16%"></i><i style="--h: 5%"></i><i style="--h: 5%"></i><i style="--h: 16%"></i><i style="--h: 5%"></i><i style="--h: 5%"></i><i style="--h: 5%"></i><i style="--h: 5%"></i>
+            </div>
+          </div>
+        </div>
+        <div class="lf">
+          <span class="sec"><span class="g"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><polygon points="22 8 16 12 22 16 22 8"/></svg></span><span class="l">Change</span></span>
+          <span class="pri"><span class="g"><svg viewBox="0 0 24 24"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg></span><span class="l">Reply cluster</span></span>
+        </div>
+      </article>
+
+      <article class="layout-card" style="--hue: var(--hue-cyan);">
+        <div class="lh">
+          <span class="lg-icon"><svg viewBox="0 0 24 24"><path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"/><path d="M4 6l16 16"/><circle cx="12" cy="12" r="10"/></svg></span>
+          <span>Trend Radar</span>
+          <span class="toggle"><span>7 d</span><span class="on">30 d</span><span>90 d</span></span>
+        </div>
+        <div class="lb">
+          <div class="radar">
+            <svg viewBox="0 0 200 200">
+              <g fill="none" stroke="var(--ink)" opacity="0.6">
+                <circle cx="100" cy="100" r="30" stroke-width="1.5"/>
+                <circle cx="100" cy="100" r="55" stroke-width="1"/>
+                <circle cx="100" cy="100" r="80" stroke-width="1"/>
+                <circle cx="100" cy="100" r="94" stroke-width="2.5"/>
+                <line x1="6"   y1="100" x2="194" y2="100"/>
+                <line x1="100" y1="6"   x2="100" y2="194"/>
+              </g>
+              <path d="M 100 100 L 100 6 A 94 94 0 0 1 178 148 Z"
+                    fill="var(--hue)" stroke="var(--ink)" stroke-width="2" opacity="0.7"/>
+              <g fill="var(--ink)" stroke="var(--ink)" stroke-width="1.5">
+                <circle cx="132" cy="78" r="6"/>
+                <circle cx="118" cy="52" r="4"/>
+                <circle cx="156" cy="118" r="7"/>
+                <circle cx="82"  cy="70" r="4"/>
+                <circle cx="128" cy="152" r="5"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div class="lf">
+          <span class="sec"><span class="g"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="l">Niche</span></span>
+          <span class="pri"><span class="g"><svg viewBox="0 0 24 24"><polygon points="12 2 15 8.5 22 9 17 14 18 21 12 17.5 6 21 7 14 2 9 9 8.5 12 2"/></svg></span><span class="l">Draft ideas</span></span>
+        </div>
+      </article>
+
+      <article class="layout-card" style="--hue: var(--hue-yellow);">
+        <div class="lh">
+          <span class="lg-icon"><svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/><line x1="10" y1="14" x2="21" y2="3"/><path d="M17 3h4v4"/></svg></span>
+          <span>Thumbnail A/B</span>
+          <span class="toggle"><span class="on">Live</span><span>History</span></span>
+        </div>
+        <div class="lb">
+          <div class="row"><span class="t">A</span><span class="m" style="width: 40%;"></span><span class="p">6.2 %</span></div>
+          <div class="row"><span class="t">B</span><span class="m" style="width: 82%; background: var(--hue);"></span><span class="p">9.8 %</span></div>
+          <div class="row"><span class="t">C</span><span class="m" style="width: 52%;"></span><span class="p">7.4 %</span></div>
+          <div class="row" style="background: color-mix(in srgb, var(--hue) 22%, var(--surface));"><span class="t">Conf</span><span class="m" style="width: 78%; background: var(--ink);"></span><span class="p">78 %</span></div>
+        </div>
+        <div class="lf">
+          <span class="sec"><span class="g"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span class="l">Extend 24 h</span></span>
+          <span class="pri"><span class="g"><svg viewBox="0 0 24 24"><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/><path d="M4 22h16"/><path d="M10 14v3"/><path d="M14 14v3"/></svg></span><span class="l">Promote B</span></span>
+        </div>
+      </article>
+
+      <article class="layout-card" style="--hue: var(--hue-green);">
+        <div class="lh">
+          <span class="lg-icon"><svg viewBox="0 0 24 24"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/></svg></span>
+          <span>Live Prep</span>
+          <span class="toggle"><span class="on">Prep</span><span>Rundown</span></span>
+        </div>
+        <div class="lb">
+          <div class="countdown">01 : 45 : 04</div>
+          <div class="check done"><span class="box"></span><span>Title + tags saved</span></div>
+          <div class="check done"><span class="box"></span><span>Thumbnail uploaded</span></div>
+          <div class="check done"><span class="box"></span><span>Chapters drafted</span></div>
+          <div class="check"><span class="box"></span><span>End-screens placed</span></div>
+          <div class="check"><span class="box"></span><span>Mods notified</span></div>
+        </div>
+        <div class="lf">
+          <span class="pri" style="grid-column: 1 / -1;"><span class="g"><svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></span><span class="l">Go live</span></span>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════ FOOTER SPEC ═══════════════════ -->
+  <footer class="foot-spec">
+    <div>
+      <dt>Icon system</dt>
+      <dl>
+        <dd><b>--widget-control-icon-size</b> 24 px default</dd>
+        <dd><b>-sm</b> 18 px · compact controls</dd>
+        <dd><b>-lg</b> 28 px · icon-only</dd>
+        <dd><b>-hero</b> 32 px · large buttons</dd>
+        <dd><b>stroke-width</b> 2 · joins round</dd>
+      </dl>
+    </div>
+    <div>
+      <dt>Drop shadow</dt>
+      <dl>
+        <dd><b>--widget-shadow-1</b> 1 px offset</dd>
+        <dd><b>--widget-shadow-2</b> 2 px offset · default</dd>
+        <dd><b>--widget-shadow-3</b> 3 px offset · heavy</dd>
+        <dd>Color = 50 % widget-color, 50 % transparent</dd>
+      </dl>
+    </div>
+    <div>
+      <dt>Sizing tokens</dt>
+      <dl>
+        <dd>Control heights: 24 / 32 / 38 px</dd>
+        <dd>Atom row 40 px · col 88 px</dd>
+        <dd>Atom gap 8 px · stroke 2 px</dd>
+        <dd>Container-queried density bands</dd>
+      </dl>
+    </div>
+    <div>
+      <dt>Rounds shipped</dt>
+      <dl>
+        <dd><b>Round 08</b> 5 widgets + upload shapes</dd>
+        <dd><b>Round 09</b> Interior grid + reflex</dd>
+        <dd><b>Round 10</b> Icon system + glyphs + assets</dd>
+      </dl>
+    </div>
+  </footer>
+
+</div>
+
+</body></html>

@@ -716,6 +716,7 @@ INSTRUCTIONS:
 5. URGENCY: If mentioning a video or milestone, make it feel exclusive or time-sensitive.
 6. CONTEXT: Integrate information about recent uploads or upcoming plans to make the post feel relevant to the channel's current journey.
 7. FORMAT: Return only the refined text. No meta-commentary.
+8. LINKS: When the draft context provides a required linked-video URL, reproduce that exact URL in the finished post. Never write placeholders such as [LINK], [VIDEO LINK], or [LINK TO VIDEO].
 `;
 
 export const COMMENT_REPLY_SYSTEM_PROMPT = `

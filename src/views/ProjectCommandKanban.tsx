@@ -1,6 +1,7 @@
 import React from "react"
 import { AlertTriangle, Boxes, CalendarClock, CheckSquare, Milestone, Route } from "lucide-react"
 import InternalSuperToolWorkbench, {
+ type InternalToolProps,
  type InternalWorkbenchConfig,
 } from "./supertools/InternalSuperToolWorkbench"
 
@@ -274,8 +275,8 @@ const config: InternalWorkbenchConfig = {
  }),
 }
 
-const ProjectCommandKanban: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => (
- <InternalSuperToolWorkbench config={config} embedded={embedded} />
+const ProjectCommandKanban: React.FC<InternalToolProps> = (props) => (
+ <InternalSuperToolWorkbench config={config} {...props} />
 )
 
 export default ProjectCommandKanban

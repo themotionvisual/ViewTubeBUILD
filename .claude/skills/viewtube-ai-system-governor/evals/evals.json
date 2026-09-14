@@ -1,0 +1,35 @@
+{
+  "skill_name": "viewtube-ai-system-governor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add an AI tool that reads all analytics tables and tells the creator what to do.",
+      "expected_output": "Uses Evidence Planner and analytics-canon, rejects all-table context dumping, defines evaluation and outcome trace.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Save every useful thing the Brain notices directly to the Channel Profile.",
+      "expected_output": "Separates observation, candidate, governance and durable Profile; blocks direct promotion.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Create another script generator for the Studio Hub.",
+      "expected_output": "Routes through Creator Asset Engine and BrainRuntime, uses style/profile context, stores provenance and defines outcome attribution.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Let users ask an analytics chart what caused a spike.",
+      "expected_output": "Uses WidgetIntelligenceContext, canonical evidence and uncertainty; avoids unsupported causal claims.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Call the model provider SDK directly from a new Brain page.",
+      "expected_output": "Routes through ModelGateway and requires prompt/version/eval tracking.",
+      "files": []
+    }
+  ]
+}

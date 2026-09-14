@@ -1,90 +1,20 @@
 import React from "react";
 import VTE1Editor from "../features/editor/VT_E1.jsx";
-import { ResponsiveEditorShell } from "../features/editor/mobile";
-
-interface EditorRouteBoundaryState {
-  error: Error | null;
-}
-
-class EditorRouteBoundary extends React.Component<React.PropsWithChildren, EditorRouteBoundaryState> {
-  state: EditorRouteBoundaryState = { error: null };
-
-  static getDerivedStateFromError(error: Error): EditorRouteBoundaryState {
-    return { error };
-  }
-
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error("[VT_E1] Editor route failed to render", error, info);
-  }
-
-  render() {
-    if (!this.state.error) return this.props.children;
-
-    return (
-      <section className="flex h-full min-h-[520px] w-full items-center justify-center rounded-[10px] border-[4px] border-black bg-[#f0f0f4] p-6">
-        <div className="max-w-3xl rounded-[14px] border-[4px] border-black bg-white p-6 shadow-[8px_8px_0_#000]">
-          <div className="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-black/60">
-            VT_E1 Route Boundary
-          </div>
-          <h1 className="mb-3 text-3xl font-black uppercase leading-none">
-            Editor failed to load
-          </h1>
-          <p className="mb-4 text-sm font-bold leading-6">
-            The ViewTube shell is running, but the VT_E1 editor component threw during mount. This fallback replaces the previous blank iframe panel so the failure is visible.
-          </p>
-          <pre className="max-h-56 overflow-auto rounded-[10px] border-[3px] border-black bg-[#fff7f7] p-3 text-xs font-bold text-[#7a1010]">
-            {this.state.error.message || String(this.state.error)}
-          </pre>
-          <button
-            className="mt-4 rounded-[10px] border-[3px] border-black bg-[#40C6E9] px-4 py-2 text-xs font-black uppercase shadow-[4px_4px_0_#000]"
-            onClick={() => this.setState({ error: null })}
-            type="button"
-          >
-            Retry Editor
-          </button>
-        </div>
-      </section>
-    );
-  }
-}
-
-/**
- * VT_E1 editor host.
- *
- * `ResponsiveEditorShell` picks the layout by viewport:
- *   - < 1024px wide  → mobile editor (portrait or landscape branch)
- *   - ≥ 1024px wide  → desktop VT_E1
- *
- * The desktop path keeps the framed "card" look; on landscape phones and
- * short viewports we drop the border/rounded corners so whichever editor is
- * hosting gets every pixel. A URL flag lets contributors force either mode
- * for testing without spinning up a real phone (?editor=mobile / ?editor=desktop).
- */
-const EditorV1Page: React.FC = () => {
-  const forced = React.useMemo(() => {
-    if (typeof window === "undefined") return "auto" as const;
-    const v = new URLSearchParams(window.location.search).get("editor");
-    if (v === "mobile" || v === "desktop") return v;
-    return "auto" as const;
-  }, []);
-
-  return (
-    <section
-      className="
-        h-full min-h-0 w-full overflow-hidden bg-[#111] flex flex-col
-        rounded-[10px] border-[2px] border-black
-        landscape:max-[932px]:border-0 landscape:max-[932px]:rounded-none
-        max-[560px]:border-0 max-[560px]:rounded-none
-      "
-    >
-      <EditorRouteBoundary>
-        <ResponsiveEditorShell
-          mode={forced}
-          desktop={<VTE1Editor />}
-        />
-      </EditorRouteBoundary>
-    </section>
-  );
+import { ResponsiveEditorShell, useEditorState } from "../features/editor/mobile";
+import type { CompositionAspect } from "../features/editor/mobile/MobileEditor";
+import type { EditorFrontend, EditorLayoutChoice } from "../features/editor/mobile/components/EditorViewSwitcher";
+import type { EditorSettingsModel } from "../features/editor/mobile/components/EditorNavigationPages";
+import { EDITOR_FRONTEND_MODES, editorHostModeFor, readEditorFrontendMode, writeEditorFrontendMode, type EditorFrontendMode } from "../features/editor/editorFrontendMode";
+import { readEditorProjectBridgeSnapshot, writeEditorProjectBridgeSnapshot } from "../features/editor/editorProjectBridge";
+import { mobileSeedFromBridgeSnapshot } from "../features/editor/editorDesktopBridgeRuntime";
+interface EditorRouteBoundaryState{error:Error|null}
+class EditorRouteBoundary extends React.Component<React.PropsWithChildren,EditorRouteBoundaryState>{state:EditorRouteBoundaryState={error:null};static getDerivedStateFromError(error:Error){return{error}}componentDidCatch(error:Error,info:React.ErrorInfo){console.error('[VT_E1] Editor route failed to render',error,info)}render(){if(!this.state.error)return this.props.children;return <section className="flex h-full min-h-[520px] w-full items-center justify-center border-[4px] border-black bg-[#f0f0f4] p-6"><div className="max-w-3xl border-[4px] border-black bg-white p-6"><h1 className="text-2xl font-black uppercase">Editor failed to load</h1><pre className="mt-3 max-h-56 overflow-auto text-xs">{this.state.error.message}</pre><button className="mt-4 border-[3px] border-black bg-[#40C6E9] px-4 py-2 text-xs font-black uppercase" onClick={()=>this.setState({error:null})}>Retry Editor</button></div></section>}}
+const EditorV1Page:React.FC=()=>{
+ const forced=React.useMemo(()=>{if(typeof window==='undefined')return 'auto' as const;const v=new URLSearchParams(window.location.search).get('editor');return v==='mobile'||v==='desktop'?v:'auto' as const},[]);
+ const [frontendMode,setFrontendMode]=React.useState<EditorFrontendMode>(()=>readEditorFrontendMode()); const [interfaceChoice,setInterfaceChoice]=React.useState<EditorFrontend>('mobile'); const [layoutChoice,setLayoutChoice]=React.useState<EditorLayoutChoice>('auto'); const [compositionAspect,setCompositionAspect]=React.useState<CompositionAspect>('portrait');
+ const restoredMobileProject=React.useMemo(()=>mobileSeedFromBridgeSnapshot(readEditorProjectBridgeSnapshot()),[]); const mobileStore=useEditorState(restoredMobileProject); const switchFrontend=React.useCallback((next:EditorFrontendMode)=>{writeEditorFrontendMode(next);setFrontendMode(next)},[]); const legacyShellMode=editorHostModeFor(frontendMode,forced); const shellMode=forced==='desktop'?'desktop':forced==='mobile'?'mobile':interfaceChoice==='auto'?legacyShellMode:interfaceChoice;
+ React.useEffect(()=>{if(shellMode!=='mobile')return;writeEditorProjectBridgeSnapshot('mobile',mobileStore.state.project)},[shellMode,mobileStore.state.project]);
+ const editorSettings=React.useMemo<EditorSettingsModel>(()=>({frontend:interfaceChoice,layout:layoutChoice,aspect:compositionAspect,style:frontendMode,styleOptions:EDITOR_FRONTEND_MODES.map(x=>({id:x.id,label:x.label,shortLabel:x.shortLabel})),onFrontend:setInterfaceChoice,onLayout:setLayoutChoice,onAspect:setCompositionAspect,onStyle:(value)=>switchFrontend(value as EditorFrontendMode)}),[interfaceChoice,layoutChoice,compositionAspect,frontendMode,switchFrontend]);
+ return <section data-editor-frontend={frontendMode} data-editor-interface={interfaceChoice} data-editor-layout={layoutChoice} data-editor-aspect={compositionAspect} className="relative h-full min-h-0 w-full overflow-hidden bg-[#f3f3f3] flex flex-col max-[560px]:border-0"><EditorRouteBoundary><ResponsiveEditorShell mode={shellMode} desktop={<VTE1Editor/>} externalStore={mobileStore} layout={layoutChoice} compositionAspect={compositionAspect} onCompositionAspectChange={setCompositionAspect} editorSettings={editorSettings}/></EditorRouteBoundary></section>;
 };
-
 export default EditorV1Page;

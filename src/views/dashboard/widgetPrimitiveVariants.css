@@ -484,9 +484,11 @@
   }
 }
 
-@container vt-widget (max-width: 360px) {
+/* A phone-width reference widget needs one complete comparison column.
+   Two columns leave less than one control height for split-left label bays. */
+@container vt-widget (max-width: 420px) {
   .widget-reference-variants {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

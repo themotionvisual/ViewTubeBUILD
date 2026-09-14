@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { ChevronDown, ChevronRight, Bolt, SlidersHorizontal, Sparkles, ShieldCheck } from "lucide-react"
-import { CONTROL_SHELL, hexToRgba } from "./ToolboxUISystem"
+import { hexToRgba } from "./ToolboxUISystem"
+import { CONTROL_SHELL } from "./subtoolbox/tokens"
 
 type RailShellProps = {
  icon: React.ReactNode

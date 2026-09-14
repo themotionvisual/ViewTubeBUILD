@@ -1,91 +1,524 @@
-import React, { useEffect, useMemo, useState } from "react"
-import { BarChart3, Brain, Database, ExternalLink, MessageSquare, Package, Radar, RefreshCw, Send, Settings2, ShieldCheck, Sparkles, Target } from "lucide-react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
+import {
+ BarChart3,
+ Brain,
+ Database,
+ ExternalLink,
+ FolderKanban,
+ MessageSquare,
+ Package,
+ Radar,
+ RefreshCw,
+ Send,
+ Settings2,
+ ShieldCheck,
+ Sparkles,
+ Target,
+} from "lucide-react"
 import { Link } from "react-router-dom"
 import { WidgetShell } from "../WidgetShell"
+import {
+ WidgetBadge,
+ WidgetFooter,
+ WidgetHeaderToggle,
+ WidgetScrollArea,
+} from "../WidgetPrimitives"
+import {
+ WidgetIconButton,
+ WidgetLeftSplitButton,
+ WidgetTextInput,
+ WidgetToggleSwitch,
+} from "../WidgetPrimitiveExtensions"
 import type { CommonWidgetProps } from "../types"
 import type { DashboardData } from "../useDashboardData"
 import { useBrain } from "../../../context/useBrain"
 import { hasGeminiKey } from "../../../services/gemini"
-import { buildAIBrainContextSnapshot, buildAIBrainSystemPrompt } from "../../../services/aiBrainCommandInterface"
+import {
+ buildAIBrainContextSnapshot,
+ buildAIBrainSystemPrompt,
+} from "../../../services/aiBrainCommandInterface"
 import { buildCreatorGrowthContext } from "../../../services/aiBrainConversationStore"
-import { runBrainTurn } from "../../../services/brain/BrainOrchestrator"
-import { readBrainUserControls, setActiveBrainControlChannel, type BrainUserControls } from "../../../services/brain/BrainUserControls"
-import { readBrainEngineControls, type BrainEngineControls } from "../../../services/brain/BrainEngineControls"
-import { readAlgorithmIntelligenceForBrain, type AlgorithmIntelligenceAccessResult } from "../../../services/brain/AlgorithmIntelligenceAccess"
+import {
+ buildBrainConversationHistory,
+ loadBrainConversationState,
+ notifyBrainConversationChanged,
+ subscribeBrainConversationChanges,
+} from "../../../services/brain/BrainConversationController"
+import { runBrainTask } from "../../../services/brain/runtime/BrainRuntime"
+import {
+ readBrainUserControls,
+ setActiveBrainControlChannel,
+ writeBrainUserControls,
+ type BrainUserControls,
+} from "../../../services/brain/BrainUserControls"
+import {
+ readBrainEngineControls,
+ writeBrainEngineControls,
+ type BrainEngineControls,
+} from "../../../services/brain/BrainEngineControls"
+import {
+ readAlgorithmIntelligenceForBrain,
+ type AlgorithmIntelligenceAccessResult,
+} from "../../../services/brain/AlgorithmIntelligenceAccess"
 import type { AlgorithmIntelligencePortfolio } from "../../../services/brain/AlgorithmIntelligenceOrchestrator"
 import { searchVaultForBrain } from "../../../services/brain/BrainVaultAdapter"
 import type { AIBrainConversationTurn } from "../../../types"
+import "./BrainHubWidget.css"
 
-interface BrainHubWidgetProps extends CommonWidgetProps { data: DashboardData }
-type Tab="chat"|"intelligence"|"evidence"|"packages"
+interface BrainHubWidgetProps extends CommonWidgetProps {
+ data: DashboardData
+}
 
-const pill=(active:boolean,color:string):React.CSSProperties=>({border:"2px solid color-mix(in srgb, var(--widget-color) 72%, #45172a)",background:active?color:"#fff",color:"color-mix(in srgb, var(--widget-color) 54%, #45172a)",borderRadius:6,height:24,padding:"0 7px",fontSize:8,fontWeight:1000,textTransform:"uppercase",cursor:"pointer"})
+type MainPage = "chat" | "controls"
+type ChatPage = "conversation" | "intelligence" | "evidence" | "packages"
+
+type EvidenceItem = {
+ id: string
+ label?: string
+ source?: string
+ detail?: string
+}
+
+const MAIN_PAGES = [
+ { id: "chat", label: "Chat" },
+ { id: "controls", label: "Controls" },
+] as const
+
+const CHAT_PAGES: readonly {
+ id: ChatPage
+ label: string
+ icon: React.ReactNode
+}[] = [
+ { id: "conversation", label: "Chat", icon: <MessageSquare /> },
+ { id: "intelligence", label: "Intel", icon: <Target /> },
+ { id: "evidence", label: "Evidence", icon: <Database /> },
+ { id: "packages", label: "Packages", icon: <Package /> },
+]
 
 export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...common }) => {
- const { brain, authState, channelConnection, getBrainMemory }=useBrain()
- const channelId=authState.channelId||authState.channelHandle||null
- const [tab,setTab]=useState<Tab>("chat")
- const [input,setInput]=useState("")
- const [busy,setBusy]=useState(false)
- const [turns,setTurns]=useState<AIBrainConversationTurn[]>([])
- const [answer,setAnswer]=useState<AIBrainConversationTurn|null>(null)
- const [controls,setControls]=useState<BrainUserControls>(()=>readBrainUserControls(channelId))
- const [engines,setEngines]=useState<BrainEngineControls>(()=>readBrainEngineControls(channelId))
- const [portfolio,setPortfolio]=useState<AlgorithmIntelligencePortfolio|null>(null)
- const [intelStatus,setIntelStatus]=useState<string>("Not loaded")
+ const { brain, authState, channelConnection, getBrainMemory } = useBrain()
+ const channelId = authState.channelId || authState.channelHandle || null
 
- useEffect(()=>{
+ const [mainPage, setMainPage] = useState<MainPage>("chat")
+ const [chatPage, setChatPage] = useState<ChatPage>("conversation")
+ const [input, setInput] = useState("")
+ const [busy, setBusy] = useState(false)
+ const [hydratingConversation, setHydratingConversation] = useState(true)
+ const [error, setError] = useState<string | null>(null)
+ const [turns, setTurns] = useState<AIBrainConversationTurn[]>([])
+ const [answer, setAnswer] = useState<AIBrainConversationTurn | null>(null)
+ const [controls, setControls] = useState<BrainUserControls>(() => readBrainUserControls(channelId))
+ const [engines, setEngines] = useState<BrainEngineControls>(() => readBrainEngineControls(channelId))
+ const [portfolio, setPortfolio] = useState<AlgorithmIntelligencePortfolio | null>(null)
+ const [intelStatus, setIntelStatus] = useState("Not loaded")
+
+ const restoreConversation = useCallback(async () => {
+  try {
+   const state = await loadBrainConversationState(channelId)
+   setTurns(state.turns)
+   setAnswer(state.latestVisibleTurn)
+  } catch (caught) {
+   console.warn("[BrainHubWidget] shared thread unavailable", caught)
+  } finally {
+   setHydratingConversation(false)
+  }
+ }, [channelId])
+
+ useEffect(() => {
   setActiveBrainControlChannel(channelId)
   setControls(readBrainUserControls(channelId))
   setEngines(readBrainEngineControls(channelId))
-  const refresh=()=>{setControls(readBrainUserControls(channelId));setEngines(readBrainEngineControls(channelId))}
-  window.addEventListener("vt_brain_user_controls_changed",refresh)
-  window.addEventListener("vt_brain_engine_controls_changed",refresh)
-  return()=>{window.removeEventListener("vt_brain_user_controls_changed",refresh);window.removeEventListener("vt_brain_engine_controls_changed",refresh)}
- },[channelId])
 
- const snapshot=useMemo(()=>buildAIBrainContextSnapshot({brain,authState,channelConnection,brainMemory:controls.personalization?getBrainMemory():null,recentConversationTurns:controls.personalization?turns:[]}),[brain,authState,channelConnection,controls.personalization,turns,getBrainMemory])
- const growthContext=useMemo(()=>buildCreatorGrowthContext(snapshot,turns,[]),[snapshot,turns])
- const packages=useMemo(()=>controls.allowVault&&engines.videoPackages?searchVaultForBrain({query:"package",limit:8}):{assets:[],evidence:[]},[controls.allowVault,engines.videoPackages,answer])
- const evidence=(((snapshot.evidencePack as any)?.items)||[]).slice(0,engines.maxEvidenceItems)
+  const refresh = () => {
+   setControls(readBrainUserControls(channelId))
+   setEngines(readBrainEngineControls(channelId))
+  }
 
- const loadIntelligence=async()=>{
-  if(!channelId||!controls.enabled||!controls.allowAnalytics){setIntelStatus("Analytics access disabled");return}
+  window.addEventListener("vt_brain_user_controls_changed", refresh)
+  window.addEventListener("vt_brain_engine_controls_changed", refresh)
+  return () => {
+   window.removeEventListener("vt_brain_user_controls_changed", refresh)
+   window.removeEventListener("vt_brain_engine_controls_changed", refresh)
+  }
+ }, [channelId])
+
+ useEffect(() => {
+  setHydratingConversation(true)
+  void restoreConversation()
+  return subscribeBrainConversationChanges(channelId, () => {
+   void restoreConversation()
+  })
+ }, [channelId, restoreConversation])
+
+ const snapshot = useMemo(
+  () => buildAIBrainContextSnapshot({
+   brain,
+   authState,
+   channelConnection,
+   brainMemory: controls.personalization ? getBrainMemory() : null,
+   recentConversationTurns: controls.personalization ? turns : [],
+  }),
+  [brain, authState, channelConnection, controls.personalization, turns, getBrainMemory],
+ )
+
+ const growthContext = useMemo(
+  () => buildCreatorGrowthContext(snapshot, turns, []),
+  [snapshot, turns],
+ )
+
+ const packages = useMemo(
+  () => controls.allowVault && engines.videoPackages
+   ? searchVaultForBrain({ query: "package", limit: 8 })
+   : { assets: [], evidence: [] },
+  [controls.allowVault, engines.videoPackages, answer],
+ )
+
+ const evidence = useMemo(() => {
+  const items = ((snapshot.evidencePack as { items?: EvidenceItem[] } | undefined)?.items || [])
+  return items.slice(0, engines.maxEvidenceItems)
+ }, [snapshot.evidencePack, engines.maxEvidenceItems])
+
+ const updateUserControl = <K extends keyof BrainUserControls>(key: K, value: BrainUserControls[K]) => {
+  const next = writeBrainUserControls({ ...controls, [key]: value }, channelId)
+  setControls(next)
+ }
+
+ const updateEngineControl = <K extends keyof BrainEngineControls>(key: K, value: BrainEngineControls[K]) => {
+  const next = writeBrainEngineControls({ ...engines, [key]: value }, channelId)
+  setEngines(next)
+ }
+
+ const loadIntelligence = async () => {
+  if (!channelId || !controls.enabled || !controls.allowAnalytics) {
+   setIntelStatus("Analytics access disabled")
+   return
+  }
+
   setIntelStatus("Building portfolio…")
-  const result:AlgorithmIntelligenceAccessResult<AlgorithmIntelligencePortfolio>=await readAlgorithmIntelligenceForBrain({channelId})
-  if(result.status==="ok"){setPortfolio(result.value);setIntelStatus("Ready")}else setIntelStatus(result.message)
+  const result: AlgorithmIntelligenceAccessResult<AlgorithmIntelligencePortfolio> =
+   await readAlgorithmIntelligenceForBrain({ channelId })
+
+  if (result.status === "ok") {
+   setPortfolio(result.value)
+   setIntelStatus("Ready")
+  } else {
+   setIntelStatus(result.message)
+  }
  }
 
- const send=async()=>{
-  const text=input.trim();if(!text||busy||!controls.enabled)return
-  setInput("");setBusy(true)
-  try{
-   if(engines.channelIntelligence&&!portfolio) await loadIntelligence()
-   const system=buildAIBrainSystemPrompt({brain,authState,channelConnection,brainMemory:controls.personalization?getBrainMemory():null,recentConversationTurns:controls.personalization?turns:[]})+`\n\nBRAIN COMMAND WIDGET POLICY\nAnalytics=${controls.allowAnalytics}; Projects=${controls.allowProjects}; Vault=${controls.allowVault}; Publisher=${controls.allowPublisher}; ApprovalRequired=${controls.externalActionsRequireApproval}.\nEngine policy: channelIntelligence=${engines.channelIntelligence}; anomalyIntelligence=${engines.anomalyIntelligence}; opportunityIntelligence=${engines.opportunityIntelligence}; algorithmPriming=${engines.algorithmPriming}; videoPackages=${engines.videoPackages}.\nNever claim an engine supplied evidence when it is disabled or absent. External write/publish actions remain explicit approval-aware handoffs.`
-   const result=await runBrainTurn({channelId,userText:text,snapshot,systemPrompt:system,growthContext,recentTurns:controls.personalization?turns:[],history:controls.personalization?turns.slice(0,4).reverse().flatMap(t=>[{role:"user",parts:[{text:t.userText}]},{role:"model",parts:[{text:t.assistantText}]}]):[],allowModel:hasGeminiKey()})
-   setAnswer(result.turn);setTurns(v=>[result.turn,...v].slice(0,12))
-  }catch(error){console.warn("[BrainHubWidget] turn failed",error);setInput(text)}finally{setBusy(false)}
+ const send = async () => {
+  const text = input.trim()
+  if (!text || busy || !controls.enabled) return
+
+  setInput("")
+  setError(null)
+  setBusy(true)
+
+  try {
+   if (engines.channelIntelligence && !portfolio) await loadIntelligence()
+
+   const systemPrompt = buildAIBrainSystemPrompt({
+    brain,
+    authState,
+    channelConnection,
+    brainMemory: controls.personalization ? getBrainMemory() : null,
+    recentConversationTurns: controls.personalization ? turns : [],
+   }) + `\n\nBRAIN HUB WIDGET POLICY\nAnalytics=${controls.allowAnalytics}; Projects=${controls.allowProjects}; Vault=${controls.allowVault}; Publisher=${controls.allowPublisher}; ApprovalRequired=${controls.externalActionsRequireApproval}.\nEngine policy: channelIntelligence=${engines.channelIntelligence}; anomalyIntelligence=${engines.anomalyIntelligence}; opportunityIntelligence=${engines.opportunityIntelligence}; algorithmPriming=${engines.algorithmPriming}; videoPackages=${engines.videoPackages}.\nNever claim an engine supplied evidence when it is disabled or absent. External write or publish actions remain explicit approval-aware handoffs.`
+
+   const result = await runBrainTask({
+    surface: "brain-hub-widget",
+    channelId,
+    userText: text,
+    snapshot,
+    systemPrompt,
+    growthContext,
+    recentTurns: controls.personalization ? turns : [],
+    history: controls.personalization ? buildBrainConversationHistory(turns) : [],
+    allowModel: hasGeminiKey(),
+    visibleContext: {
+     dashboardWidget: "brain-hub",
+     mainPage,
+     chatPage,
+     evidenceCount: evidence.length,
+     intelligenceReady: Boolean(portfolio),
+    },
+    artifactRefs: packages.assets.map((asset) => asset.id),
+    requestedOutput: "creator-facing Brain answer with evidence and next actions",
+   })
+
+   setAnswer(result.turn)
+   await restoreConversation()
+   notifyBrainConversationChanged({
+    channelId,
+    source: "brain-hub-widget",
+    turnId: result.turn.id,
+   })
+   setChatPage("conversation")
+  } catch (caught) {
+   console.warn("[BrainHubWidget] turn failed", caught)
+   setError("Brain could not complete that request. Your prompt was preserved.")
+   setInput(text)
+  } finally {
+   setBusy(false)
+  }
  }
 
- const tabs:[Tab,string,React.ComponentType<{size?:number}>][]=[["chat","Chat",MessageSquare],["intelligence","Intel",Target],["evidence","Evidence",Database],["packages","Packages",Package]]
- return <WidgetShell {...common} icon={<Brain size={22}/>}>
-  <div style={{display:"flex",flexDirection:"column",height:"100%",minHeight:0,gap:7,color:"color-mix(in srgb, var(--widget-color) 52%, #3b1020)"}}>
-   <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4}}>{tabs.map(([id,label,Icon])=><button key={id} onClick={()=>setTab(id)} style={pill(tab===id,"color-mix(in srgb, var(--widget-color) 42%, white)")}><Icon size={10}/>{label}</button>)}</div>
-   <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:4}}>
-    {[{l:"Analytics",on:controls.allowAnalytics,i:BarChart3},{l:"Anomaly",on:engines.anomalyIntelligence,i:Radar},{l:"Priming",on:engines.algorithmPriming,i:Target},{l:"Packages",on:engines.videoPackages&&controls.allowVault,i:Package}].map(({l,on,i:Icon})=><div key={l} style={{border:"1.5px solid currentColor",borderRadius:5,padding:"3px 5px",background:on?"color-mix(in srgb, var(--widget-color) 18%, white)":"#f3f3f3",opacity:on?1:.45}}><Icon size={9}/><b style={{display:"block",fontSize:7,textTransform:"uppercase"}}>{l}</b></div>)}
-   </div>
+ const headerContent = (
+  <WidgetHeaderToggle
+   label="Brain workspace"
+   value={mainPage}
+   items={MAIN_PAGES}
+   onChange={setMainPage}
+  />
+ )
 
-   <div style={{flex:1,minHeight:0,overflow:"auto",border:"2px solid currentColor",borderRadius:8,background:"#fff",padding:8}}>
-    {tab==="chat"&&<div>
-     {answer?.response?<><div style={{fontSize:8,fontWeight:1000,textTransform:"uppercase",opacity:.45}}>Brain answer · {answer.response.confidence}</div><p style={{fontSize:11,fontWeight:850,lineHeight:1.35,margin:"5px 0"}}>{answer.response.keyInsight}</p><div style={{display:"flex",gap:4,flexWrap:"wrap"}}><span style={pill(true,"#b9f536")}>{answer.response.evidenceIds?.length||0} evidence</span><span style={pill(true,"#34cdea")}>{answer.response.modules?.length||0} modules</span></div></>:<div style={{display:"grid",placeItems:"center",minHeight:100,textAlign:"center"}}><div><Sparkles size={22}/><b style={{display:"block",fontSize:12,textTransform:"uppercase"}}>Brain Command</b><small style={{fontSize:9,fontWeight:700}}>Ask about analytics, evidence, packages, anomalies, opportunities, priming or next actions.</small></div></div>}
-    </div>}
-    {tab==="intelligence"&&<div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><b style={{fontSize:10,textTransform:"uppercase"}}>Algorithm Intelligence Portfolio</b><button onClick={()=>void loadIntelligence()} style={pill(true,"#ffe04e")}><RefreshCw size={9}/> Refresh</button></div><small style={{fontSize:8,fontWeight:800}}>{intelStatus}</small>{portfolio&&<div style={{display:"grid",gap:5,marginTop:7}}><div style={{fontSize:9,fontWeight:900}}>CHANNEL PATTERNS · {portfolio.channelIntelligence.patterns.length}</div><div style={{fontSize:9,fontWeight:900}}>ANOMALY SIGNALS · {portfolio.anomalySignals.length}</div><div style={{fontSize:9,fontWeight:900}}>OPPORTUNITIES · {portfolio.opportunitySignals.length}</div><div style={{fontSize:9,fontWeight:900}}>RECOMMENDATIONS · {portfolio.recommendations.length}</div><div style={{fontSize:9,fontWeight:900}}>PRIMING · {portfolio.primingPlan?portfolio.primingPlan.steps.length+" steps":"Needs project context"}</div>{portfolio.primaryRecommendation&&<div style={{padding:6,border:"2px solid currentColor",borderRadius:6,background:"#ffe04e55"}}><small style={{fontSize:7,fontWeight:1000}}>PRIMARY</small><b style={{display:"block",fontSize:10}}>{portfolio.primaryRecommendation.title}</b></div>}</div>}</div>}
-    {tab==="evidence"&&<div><b style={{fontSize:10,textTransform:"uppercase"}}>Analytics + Evidence Access</b><p style={{fontSize:8,fontWeight:700,opacity:.6}}>Showing {evidence.length} of the bounded Brain evidence pack.</p><div style={{display:"grid",gap:4}}>{evidence.map((item:any)=><div key={item.id} style={{borderLeft:"4px solid var(--widget-color)",padding:"4px 6px",background:"color-mix(in srgb,var(--widget-color) 8%,white)"}}><b style={{display:"block",fontSize:8}}>{item.label||item.id}</b><small style={{fontSize:7}}>{item.source||"evidence"}{item.detail?` · ${item.detail}`:""}</small></div>)}</div></div>}
-    {tab==="packages"&&<div><b style={{fontSize:10,textTransform:"uppercase"}}>Video Packages + Vault</b><p style={{fontSize:8,fontWeight:700,opacity:.6}}>{controls.allowVault&&engines.videoPackages?`${packages.assets.length} matching package assets`:`Package access disabled in Brain Controls.`}</p><div style={{display:"grid",gap:4}}>{packages.assets.map(asset=><div key={asset.id} style={{padding:5,border:"2px solid currentColor",borderRadius:6}}><b style={{display:"block",fontSize:8}}>{asset.name}</b><small style={{fontSize:7}}>{asset.kind} · {asset.projectName||"No project"} · {asset.source}</small></div>)}</div></div>}
-   </div>
+ return (
+  <WidgetShell {...common} icon={<Brain size={22} />} headerContent={headerContent}>
+   <div className="brain-hub-widget">
+    {mainPage === "chat" ? (
+     <>
+      <div className="brain-hub-context-row" aria-label="Brain context status">
+       <WidgetBadge tone="rose">{hydratingConversation ? "Restoring" : "Ready"}</WidgetBadge>
+       <WidgetBadge tone="cyan">{channelId ? "Channel" : "No channel"}</WidgetBadge>
+       <WidgetBadge tone="yellow">{evidence.length} evidence</WidgetBadge>
+       <WidgetBadge tone="purple">{portfolio ? "Intel ready" : "Intel idle"}</WidgetBadge>
+       {turns.length ? <WidgetBadge tone="green">{turns.length} turns</WidgetBadge> : null}
+       {controls.externalActionsRequireApproval ? <WidgetBadge tone="royal">Approval gated</WidgetBadge> : null}
+      </div>
 
-   <div style={{display:"grid",gridTemplateColumns:"1fr 34px",gap:5}}><input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")void send()}} disabled={!controls.enabled} placeholder={controls.enabled?"Ask Brain…":"Brain disabled"} style={{height:32,border:"2px solid currentColor",borderRadius:7,padding:"0 8px",fontSize:10,fontWeight:800,outline:"none",minWidth:0}}/><button onClick={()=>void send()} disabled={!input.trim()||busy||!controls.enabled} style={{height:32,border:"2px solid currentColor",borderRadius:7,background:"#b9f536",display:"grid",placeItems:"center",opacity:busy?0.55:1}} aria-label="Send"><Send size={13}/></button></div>
-   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:5}}><span style={{fontSize:7,fontWeight:1000,textTransform:"uppercase",opacity:.5}}><ShieldCheck size={9} style={{display:"inline"}}/> {controls.externalActionsRequireApproval?"Approval gated":"Approval policy relaxed"}</span><Link to="/brain-controls" style={{...pill(true,"color-mix(in srgb,var(--widget-color) 24%,white)"),display:"inline-flex",alignItems:"center",gap:3,textDecoration:"none"}}><Settings2 size={9}/> Controls <ExternalLink size={8}/></Link></div>
-  </div>
- </WidgetShell>
+      <div className="brain-hub-nav" role="navigation" aria-label="Brain chat views">
+       {CHAT_PAGES.map((page) => (
+        <WidgetLeftSplitButton
+         key={page.id}
+         icon={page.icon}
+         height={32}
+         tone={chatPage === page.id ? "primary" : "default"}
+         width="full"
+         onClick={() => setChatPage(page.id)}
+        >
+         {page.label}
+        </WidgetLeftSplitButton>
+       ))}
+      </div>
+
+      <WidgetScrollArea ariaLabel="Brain workspace" className="brain-hub-scroll">
+       <div className="brain-hub-panel">
+        {chatPage === "conversation" ? (
+         <div className="brain-hub-conversation">
+          {answer?.response ? (
+           <article className="brain-hub-answer">
+            <header>
+             <span>ViewTube Brain</span>
+             <span>{answer.response.confidence}</span>
+            </header>
+            <div className="brain-hub-answer-copy">
+             <strong>{answer.response.keyInsight}</strong>
+             <div className="brain-hub-answer-badges">
+              <WidgetBadge tone="cyan">{answer.response.evidenceIds?.length || 0} evidence</WidgetBadge>
+              <WidgetBadge tone="purple">{answer.response.modules?.length || 0} modules</WidgetBadge>
+              {turns.length > 1 ? <WidgetBadge tone="orange">Shared thread</WidgetBadge> : null}
+              {controls.externalActionsRequireApproval ? <WidgetBadge tone="green">Approval gated</WidgetBadge> : null}
+             </div>
+            </div>
+           </article>
+          ) : hydratingConversation ? (
+           <div className="brain-hub-empty">
+            <RefreshCw aria-hidden="true" />
+            <strong>Restoring Brain thread</strong>
+            <span>Loading the same durable conversation used by the Sidebar and full Brain workspace.</span>
+           </div>
+          ) : (
+           <div className="brain-hub-empty">
+            <Sparkles aria-hidden="true" />
+            <strong>Brain Command</strong>
+            <span>Ask about analytics, evidence, anomalies, opportunities, priming, packages or next actions.</span>
+           </div>
+          )}
+          {error ? <div className="brain-hub-error" role="alert">{error}</div> : null}
+         </div>
+        ) : null}
+
+        {chatPage === "intelligence" ? (
+         <div className="brain-hub-stack">
+          <div className="brain-hub-section-head">
+           <div>
+            <strong>Algorithm Intelligence</strong>
+            <span>{intelStatus}</span>
+           </div>
+           <WidgetIconButton
+            icon={<RefreshCw />}
+            label="Refresh algorithm intelligence"
+            height={32}
+            tone="secondary"
+            onClick={() => void loadIntelligence()}
+           />
+          </div>
+
+          <div className="brain-hub-kpis">
+           <div><BarChart3 /><strong>{portfolio?.channelIntelligence.patterns.length || 0}</strong><span>patterns</span></div>
+           <div><Radar /><strong>{portfolio?.anomalySignals.length || 0}</strong><span>anomalies</span></div>
+           <div><Target /><strong>{portfolio?.opportunitySignals.length || 0}</strong><span>opportunities</span></div>
+          </div>
+
+          {portfolio?.primaryRecommendation ? (
+           <div className="brain-hub-recommendation">
+            <WidgetBadge tone="yellow">Primary</WidgetBadge>
+            <strong>{portfolio.primaryRecommendation.title}</strong>
+           </div>
+          ) : null}
+         </div>
+        ) : null}
+
+        {chatPage === "evidence" ? (
+         <div className="brain-hub-stack">
+          <div className="brain-hub-section-head">
+           <div>
+            <strong>Evidence used</strong>
+            <span>Showing {evidence.length} of {engines.maxEvidenceItems} allowed items</span>
+           </div>
+          </div>
+          <div className="brain-hub-evidence-list">
+           {evidence.length ? evidence.map((item, index) => (
+            <div className="brain-hub-evidence-row" key={item.id}>
+             <span className="brain-hub-evidence-index">{index + 1}</span>
+             <span>
+              <strong>{item.label || item.id}</strong>
+              <small>{item.source || "evidence"}{item.detail ? ` · ${item.detail}` : ""}</small>
+             </span>
+            </div>
+           )) : <div className="brain-hub-empty compact">No bounded evidence is available for the current snapshot.</div>}
+          </div>
+         </div>
+        ) : null}
+
+        {chatPage === "packages" ? (
+         <div className="brain-hub-stack">
+          <div className="brain-hub-section-head">
+           <div>
+            <strong>Video Packages + Vault</strong>
+            <span>{controls.allowVault && engines.videoPackages ? `${packages.assets.length} matching assets` : "Package access disabled"}</span>
+           </div>
+          </div>
+          <div className="brain-hub-package-list">
+           {packages.assets.length ? packages.assets.map((asset) => (
+            <div className="brain-hub-package-row" key={asset.id}>
+             <Package aria-hidden="true" />
+             <span><strong>{asset.name}</strong><small>{asset.kind} · {asset.projectName || "No project"} · {asset.source}</small></span>
+            </div>
+           )) : <div className="brain-hub-empty compact">No matching package assets are available.</div>}
+          </div>
+         </div>
+        ) : null}
+       </div>
+      </WidgetScrollArea>
+
+      <WidgetFooter className="brain-hub-footer">
+       <div className="brain-hub-composer">
+        <WidgetTextInput
+         value={input}
+         onChange={(event) => setInput(event.currentTarget.value)}
+         onKeyDown={(event) => {
+          if (event.key === "Enter") void send()
+         }}
+         disabled={!controls.enabled || busy || hydratingConversation}
+         placeholder={controls.enabled ? "Ask Brain…" : "Brain disabled"}
+         height={32}
+         tone="default"
+        />
+        <WidgetIconButton
+         icon={<Send />}
+         label="Send to Brain"
+         height={32}
+         tone="primary"
+         disabled={!input.trim() || busy || hydratingConversation || !controls.enabled}
+         onClick={() => void send()}
+        />
+       </div>
+       <div className="brain-hub-footer-meta">
+        <span><ShieldCheck aria-hidden="true" /> {controls.externalActionsRequireApproval ? "Approval gated" : "Approval policy relaxed"}</span>
+        <span>{busy ? "Brain working…" : hydratingConversation ? "Restoring thread…" : "Enter to send"}</span>
+       </div>
+      </WidgetFooter>
+     </>
+    ) : (
+     <WidgetScrollArea ariaLabel="Brain controls" className="brain-hub-scroll controls">
+      <div className="brain-hub-controls">
+       <div className="brain-hub-control-badges">
+        <WidgetBadge tone="purple">Brain controls</WidgetBadge>
+        <WidgetBadge tone="green">Personalized</WidgetBadge>
+        <WidgetBadge tone="royal">Approval-aware</WidgetBadge>
+       </div>
+
+       <section className="brain-hub-control-section">
+        <h3>Access + memory</h3>
+        <ControlRow label="Brain enabled" detail="Allow creator-facing Brain requests.">
+         <WidgetToggleSwitch checked={controls.enabled} onChange={(value) => updateUserControl("enabled", value)} label="Brain enabled" height={32} tone="primary" />
+        </ControlRow>
+        <ControlRow label="Personalization" detail="Use creator memory and recent conversation context.">
+         <WidgetToggleSwitch checked={controls.personalization} onChange={(value) => updateUserControl("personalization", value)} label="Brain personalization" height={32} tone="primary" />
+        </ControlRow>
+        <ControlRow label="Analytics evidence" detail="Allow canonical channel analytics evidence.">
+         <WidgetToggleSwitch checked={controls.allowAnalytics} onChange={(value) => updateUserControl("allowAnalytics", value)} label="Analytics evidence" height={32} tone="primary" />
+        </ControlRow>
+        <ControlRow label="Projects" detail="Allow project state and planning context.">
+         <WidgetToggleSwitch checked={controls.allowProjects} onChange={(value) => updateUserControl("allowProjects", value)} label="Projects access" height={32} tone="primary" />
+        </ControlRow>
+        <ControlRow label="Vault" detail="Allow asset and package context.">
+         <WidgetToggleSwitch checked={controls.allowVault} onChange={(value) => updateUserControl("allowVault", value)} label="Vault access" height={32} tone="primary" />
+        </ControlRow>
+        <ControlRow label="Publisher" detail="Allow publishing handoffs; writes remain approval-aware.">
+         <WidgetToggleSwitch checked={controls.allowPublisher} onChange={(value) => updateUserControl("allowPublisher", value)} label="Publisher access" height={32} tone="primary" />
+        </ControlRow>
+        <ControlRow label="Require approval" detail="Keep external writes and publish actions gated.">
+         <WidgetToggleSwitch checked={controls.externalActionsRequireApproval} onChange={(value) => updateUserControl("externalActionsRequireApproval", value)} label="Require approval for external actions" height={32} tone="primary" />
+        </ControlRow>
+       </section>
+
+       <section className="brain-hub-control-section">
+        <h3>Intelligence engines</h3>
+        <ControlRow label="Channel Intelligence" detail="Use durable channel-specific patterns.">
+         <WidgetToggleSwitch checked={engines.channelIntelligence} onChange={(value) => updateEngineControl("channelIntelligence", value)} label="Channel Intelligence" height={32} tone="secondary" />
+        </ControlRow>
+        <ControlRow label="Anomaly Intelligence" detail="Observe unusual changes without collapsing into priming.">
+         <WidgetToggleSwitch checked={engines.anomalyIntelligence} onChange={(value) => updateEngineControl("anomalyIntelligence", value)} label="Anomaly Intelligence" height={32} tone="secondary" />
+        </ControlRow>
+        <ControlRow label="Opportunity Intelligence" detail="Find strategically useful openings.">
+         <WidgetToggleSwitch checked={engines.opportunityIntelligence} onChange={(value) => updateEngineControl("opportunityIntelligence", value)} label="Opportunity Intelligence" height={32} tone="secondary" />
+        </ControlRow>
+        <ControlRow label="Algorithm Priming" detail="Plan proactive pre-launch through sustain actions.">
+         <WidgetToggleSwitch checked={engines.algorithmPriming} onChange={(value) => updateEngineControl("algorithmPriming", value)} label="Algorithm Priming" height={32} tone="secondary" />
+        </ControlRow>
+        <ControlRow label="Video Packages" detail="Allow package and Vault-assisted creator outputs.">
+         <WidgetToggleSwitch checked={engines.videoPackages} onChange={(value) => updateEngineControl("videoPackages", value)} label="Video Packages" height={32} tone="secondary" />
+        </ControlRow>
+       </section>
+
+       <div className="brain-hub-control-actions">
+        <WidgetLeftSplitButton icon={<Settings2 />} height={32} tone="secondary" width="full" onClick={() => setMainPage("chat")}>Return to Brain</WidgetLeftSplitButton>
+        <Link to="/ai-brain" className="brain-hub-link-button">
+         <FolderKanban aria-hidden="true" />
+         <span>Open full Brain</span>
+         <ExternalLink aria-hidden="true" />
+        </Link>
+       </div>
+      </div>
+     </WidgetScrollArea>
+    )}
+   </div>
+  </WidgetShell>
+ )
 }
+
+const ControlRow: React.FC<{
+ label: string
+ detail: string
+ children: React.ReactNode
+}> = ({ label, detail, children }) => (
+ <div className="brain-hub-control-row">
+  <span>
+   <strong>{label}</strong>
+   <small>{detail}</small>
+  </span>
+  {children}
+ </div>
+)

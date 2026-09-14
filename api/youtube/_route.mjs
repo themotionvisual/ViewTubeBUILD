@@ -10,7 +10,8 @@ const json = (res, status, payload) => {
 export const routeSimpleYouTube = async (req, res) => {
   const method = String(req.method || "GET").toUpperCase();
   const parsedUrl = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
-  const pathname = parsedUrl.pathname.replace(/\/$/, "") || "/";
+  const routedPath = String(parsedUrl.searchParams.get("__vt_youtube_path") || "").replace(/^\/+|\/+$/g, "");
+  const pathname = routedPath ? `/api/youtube/${routedPath}` : (parsedUrl.pathname.replace(/\/$/, "") || "/");
 
   try {
     if (method === "POST" && pathname === "/api/youtube/analytics/query") {

@@ -4,6 +4,9 @@ import { StandardButton } from "./StandardButton"
 import { StandardInput } from "./StandardInput"
 import { StandardDropdown } from "./StandardDropdown"
 import { StandardKPI } from "./StandardKPI"
+import { CONTROL_SHELL } from "./subtoolbox/tokens"
+
+export { CONTROL_SHELL } from "./subtoolbox/tokens"
 
 import {
  ChevronDown,
@@ -165,10 +168,6 @@ type ActionControlButtonProps = {
  shadowColor?: string
 }
 
-// Universal subtoolbox-sized control geometry.
-// Any subtoolbox-row control should read these tokens rather than define local sizes/corners.
-const HEAD_HEIGHT = 56 // Header block height; 56 + 4px stroke seam = 60px control rhythm.
-
 const ROW_CONTROL_THEMES = {
  orange: {
   surface: "#FCAF57",
@@ -190,18 +189,6 @@ const ROW_CONTROL_THEMES = {
   control: "#C9F830",
   shadow: "#24D3FF",
  },
-} as const
-
-// Canonical shell tokens shared by SubToolbox, DropdownControl, and ActionControlButton.
-export const CONTROL_SHELL = {
- headerHeight: HEAD_HEIGHT,
- height: 60,
- stroke: 4,
- radius: 16,
- railSize: HEAD_HEIGHT,
- contentOffset: HEAD_HEIGHT,
- shadowOffset: 6,
- transition: "duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
 } as const
 
 const CONFIG: SystemConfig = {
@@ -460,7 +447,10 @@ const IconRail: React.FC<IconRailProps> = ({ backgroundColor, children }) => {
  )
 }
 
-export const SubToolbox: React.FC<SubToolboxProps> = ({
+// Preview-only legacy shell retained for the component laboratory. Production
+// toolboxes must import SubToolbox from "./Toolbox", which owns the canonical
+// palette-derived shadow, 16px radius and collapse-seam behavior.
+const LegacySubToolboxPreview: React.FC<SubToolboxProps> = ({
  title,
 
  icon: Icon,
@@ -1728,7 +1718,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
          <div
           className="flex flex-col h-full justify-start"
           style={{ gap: `${CONFIG.gap}px` }}>
-          <SubToolbox
+          <LegacySubToolboxPreview
            title="CONCEPT"
            icon={Lightbulb}
            headerBg={studioRow0Pair.header}
@@ -1752,9 +1742,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
              </button>
             </div>
            </div>
-          </SubToolbox>
+          </LegacySubToolboxPreview>
 
-          <SubToolbox
+          <LegacySubToolboxPreview
            title="STYLES"
            icon={Grid3X3}
            headerBg={studioRow1Pair.header}
@@ -1776,9 +1766,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
              </button>
             ))}
            </div>
-          </SubToolbox>
+          </LegacySubToolboxPreview>
 
-          <SubToolbox
+          <LegacySubToolboxPreview
            title="TEXT"
            icon={Type}
            headerBg={studioRow2Pair.header}
@@ -1800,9 +1790,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
              className="w-full bg-gray-50 border-[4px] border-black rounded-xl p-4 font-black uppercase text-lg focus:bg-white focus:border-[#00CCFF] outline-none transition-all"
             />
            </div>
-          </SubToolbox>
+          </LegacySubToolboxPreview>
 
-          <SubToolbox
+          <LegacySubToolboxPreview
            title="IMAGES"
            icon={ImagePlus}
            headerBg={studioRow3Pair.header}
@@ -1842,9 +1832,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
              </div>
             </button>
            </div>
-          </SubToolbox>
+          </LegacySubToolboxPreview>
 
-          <SubToolbox
+          <LegacySubToolboxPreview
            title="PALETTE"
            icon={Palette}
            headerBg={studioRow4Pair.header}
@@ -1889,7 +1879,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
              </div>
             ))}
            </div>
-          </SubToolbox>
+          </LegacySubToolboxPreview>
          </div>
 
          <div
@@ -2017,7 +2007,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
         className={`bg-[#f5f5f5] w-full p-6 md:p-8 text-black transition-opacity duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${isSubtoolboxesGalleryOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
          {/* 1. STANDARD COMPONENTS */}
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="STANDARD"
           icon={Zap}
           headerBg="#CCFF00"
@@ -2035,8 +2025,8 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
            />
            <StandardKPI label="Engagement" value="95%" />
           </div>
-         </SubToolbox>
-         <SubToolbox
+         </LegacySubToolboxPreview>
+         <LegacySubToolboxPreview
           title="STANDARD"
           icon={Zap}
           headerBg="#CCFF00"
@@ -2054,10 +2044,10 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
            />
            <StandardKPI label="Engagement" value="95%" />
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
          {/* 1. MEDIA ANALYTICS */}
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="OVERVIEW"
           icon={Eye}
           headerBg="#FFE357"
@@ -2101,9 +2091,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             </>
            )}
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="TRENDS"
           icon={TrendingUp}
           headerBg="#C9F830"
@@ -2122,9 +2112,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             />
            )}
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="ENGAGEMENT"
           icon={Activity}
           headerBg="#FF7497"
@@ -2154,9 +2144,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             </div>
            </MiniModule>
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="BUTTONS"
           icon={Wrench}
           headerBg="#FF3399"
@@ -2227,10 +2217,10 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             ⚡ Large Action
            </button>
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
          {/* 2. CONTENT STRATEGY */}
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="CONCEPT"
           icon={Lightbulb}
           headerBg="#24D3FF"
@@ -2256,9 +2246,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             />
            </div>
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="STYLES"
           icon={Grid3X3}
           headerBg="#C9F830"
@@ -2276,9 +2266,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             </button>
            ))}
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="TEXT"
           icon={Type}
           headerBg="#FFE357"
@@ -2297,9 +2287,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             className="w-full h-[56px] px-4 font-black uppercase text-sm rounded-2xl outline-none border-[4px] bg-white border-black text-black"
            />
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="TAGS"
           icon={Tag}
           headerBg="#FCAF57"
@@ -2309,10 +2299,10 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
           openUnits={3}
           config={CONFIG}>
           <TagInput tags={galTags} onChange={setGalTags} />
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
          {/* 3. SYSTEM OPS */}
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="RESOURCES"
           icon={Cpu}
           headerBg="#00D2FF"
@@ -2354,9 +2344,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             </div>
            </MiniModule>
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="SECURITY"
           icon={Shield}
           headerBg="#FF7497"
@@ -2388,9 +2378,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             <Keycap>PRO</Keycap>
            </div>
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="NETWORK"
           icon={Wifi}
           headerBg="#FCAF57"
@@ -2428,9 +2418,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             color="#00D2FF"
            />
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="STORAGE"
           icon={Database}
           headerBg="#24D3FF"
@@ -2466,7 +2456,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             </button>
            </div>
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
         </div>
        </main>
       </div>
@@ -2514,7 +2504,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
        <main
         className={`bg-[#f5f5f5] w-full p-6 md:p-8 text-black transition-opacity duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${isPackScaffoldOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="MEDIA"
           icon={MonitorPlay}
           headerBg="#24D3FF"
@@ -2547,9 +2537,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             Timeline + Markers
            </div>
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="DATA"
           icon={Search}
           headerBg="#C9F830"
@@ -2577,9 +2567,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             </div>
            ))}
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="SCHEDULE"
           icon={Bell}
           headerBg="#FFB158"
@@ -2596,9 +2586,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             </div>
            ))}
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="STATES"
           icon={ImagePlus}
           headerBg="#FF7497"
@@ -2614,7 +2604,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
             Alert: Action Required
            </div>
           </div>
-         </SubToolbox>
+         </LegacySubToolboxPreview>
         </div>
        </main>
       </div>
@@ -4715,7 +4705,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
         <div
          className="grid grid-cols-1 lg:grid-cols-2"
          style={{ gap: `${CONFIG.gap}px` }}>
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="CORE RULES"
           icon={Lightbulb}
           headerBg="#FFE357"
@@ -4725,9 +4715,9 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
           openUnits={6}
           config={CONFIG}>
           <RuleList items={RULES} />
-         </SubToolbox>
+         </LegacySubToolboxPreview>
 
-         <SubToolbox
+         <LegacySubToolboxPreview
           title="RATIO MAP"
           icon={Grid3X3}
           headerBg="#FF7497"
@@ -4737,7 +4727,7 @@ const ToolboxUISystem: React.FC<ToolboxUISystemProps> = ({ mode = "full" }) => {
           openUnits={6}
           config={CONFIG}>
           <RuleList items={RATIO_RULES} />
-         </SubToolbox>
+         </LegacySubToolboxPreview>
         </div>
        </div>
       </div>

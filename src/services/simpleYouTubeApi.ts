@@ -30,7 +30,6 @@ export const postSimpleCommentReply = async (parentId: string, text: string) => 
   return readApiJson(response);
 };
 
-
 export const fetchAllSimpleCommentThreads = async (maxResults = 100) => {
   const items: any[] = [];
   let pageToken = "";
@@ -76,7 +75,6 @@ export const markSimpleCommentAsSpam = async (id: string) => {
   return readApiJson(response);
 };
 
-
 export const fetchSimpleOwnedVideos = async () => {
   const response = await fetch("/api/youtube/videos", {
     credentials: "include",
@@ -105,7 +103,6 @@ export const patchSimpleOwnedVideo = async (
   });
   return readApiJson(response);
 };
-
 
 export interface SimplePlaylist {
   id: string;
@@ -170,7 +167,6 @@ export const setSimpleVideoThumbnail = async (videoId: string, file: File) => {
   });
   return readApiJson(response);
 };
-
 
 export interface SimpleVideoSnippet {
   videoId: string;
@@ -237,12 +233,19 @@ export const toSimpleVideoStats = (item: any): SimpleVideoStats => ({
   tags: Array.isArray(item?.snippet?.tags) ? item.snippet.tags.map(String) : [],
 });
 
+const videoInventoryRawCache = new Map<string, any>();
+
 export const fetchSimpleVideoInventory = async (): Promise<{
   videos: SimpleVideoSnippet[];
   rawItems: any[];
 }> => {
   const payload = await fetchSimpleOwnedVideos();
   const rawItems = Array.isArray(payload?.items) ? payload.items : [];
+  videoInventoryRawCache.clear();
+  for (const item of rawItems) {
+    const id = String(item?.id || "");
+    if (id) videoInventoryRawCache.set(id, item);
+  }
   return {
     videos: rawItems
       .map(toSimpleVideoSnippet)
@@ -256,6 +259,15 @@ export const fetchSimpleVideoBundle = async (videoId: string): Promise<{
   stats: SimpleVideoStats;
   raw: any;
 }> => {
+  const cached = videoInventoryRawCache.get(videoId);
+  if (cached) {
+    return {
+      details: toSimpleVideoDetails(cached),
+      stats: toSimpleVideoStats(cached),
+      raw: cached,
+    };
+  }
+
   const raw = await fetchSimpleOwnedVideo(videoId);
   return {
     details: toSimpleVideoDetails(raw),
@@ -263,7 +275,6 @@ export const fetchSimpleVideoBundle = async (videoId: string): Promise<{
     raw,
   };
 };
-
 
 export interface SimpleAnalyticsQuery {
   ids?: string;
@@ -331,7 +342,6 @@ export const fetchSimpleReportingReports = async (
 export const simpleReportingDownloadUrl = (jobId: string, reportId: string) =>
   `/api/youtube/reporting/jobs/${encodeURIComponent(jobId)}/reports/${encodeURIComponent(reportId)}/download`;
 
-
 export interface SimpleSingleVideoAnalytics {
   shares: string;
   averageViewPercentage: string;
@@ -382,7 +392,6 @@ export const fetchSimpleSingleVideoAnalytics = async (
     estimatedRevenue: Number.isFinite(revenue) ? revenue.toFixed(2) : "0.00",
   };
 };
-
 
 export const deleteSimpleReportingJob = async (jobId: string) => {
   const response = await fetch(`/api/youtube/reporting/jobs/${encodeURIComponent(jobId)}`, {

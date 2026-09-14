@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { generatePerfectReply, recommendVideoForComment } from "../../services/gemini"
-import { fetchVideoSnippetDetails } from "../../services/youtubeService"
-import { fetchAllSimpleCommentThreads, postSimpleCommentReply } from "../../services/simpleYouTubeApi"
+import { fetchAllSimpleCommentThreads, fetchSimpleOwnedVideo, postSimpleCommentReply, toSimpleVideoDetails } from "../../services/simpleYouTubeApi"
 import { readBrainUserControls } from "../../services/brain/BrainUserControls"
 import type { CommentResponderController, CommentResponderTab, CreatorEngagementContext } from "./types"
 
@@ -52,15 +51,29 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
   if (!missing.length) return
   missing.forEach((id) => metadataInFlight.current.add(id))
   try {
-   const details = await fetchVideoSnippetDetails(missing)
+   const entries = await Promise.all(missing.map(async (id) => {
+    try {
+     const raw = await fetchSimpleOwnedVideo(id)
+     const detail = toSimpleVideoDetails(raw)
+     return [id, detail] as const
+    } catch (cause) {
+     console.warn(`[CommentResponder] Metadata sync failed for ${id}`, cause)
+     return null
+    }
+   }))
+   const details = Object.fromEntries(entries.filter((entry): entry is readonly [string, any] => Boolean(entry)))
    fetchedRef.current = { ...fetchedRef.current, ...details }
    setFetchedVideoData((current) => ({ ...current, ...details }))
-  } catch (cause) {
-   console.warn("[CommentResponder] Metadata sync failed", cause)
   } finally { missing.forEach((id) => metadataInFlight.current.delete(id)) }
  }, [context.videoAssets])
 
  const refresh = useCallback(async () => {
+  if (!context.connected) {
+   setLoading(false)
+   setError(null)
+   setThreads([])
+   return
+  }
   const generation = ++requestGeneration.current
   requestAbort.current?.abort()
   const abortController = new AbortController()
@@ -80,12 +93,15 @@ export const useCommentResponderController = (context: CreatorEngagementContext)
   } finally {
    if (generation === requestGeneration.current) setLoading(false)
   }
- }, [context.channelId, syncMetadata])
+ }, [context.connected, syncMetadata])
 
  useEffect(() => {
   if (!context.connected) {
+   requestGeneration.current += 1
+   requestAbort.current?.abort()
+   setLoading(false)
    setThreads([])
-   setError("Connect your YouTube channel to load comments.")
+   setError(null)
    return
   }
   void refresh()

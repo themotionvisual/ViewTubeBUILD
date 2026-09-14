@@ -1,0 +1,148 @@
+/* ViewTube Mobile Widget Contract
+   Phone geometry is owned here, after the canonical shell layers.
+   Desktop width state remains persisted; phones only override its rendered geometry. */
+
+@layer widgets {
+  @media (max-width: 767px) {
+    .dashboard-barrier {
+      --vt-mobile-widget-gap: 8px;
+      --vt-mobile-widget-gutter: 8px;
+      --vt-mobile-height-short: 150px;
+      --vt-mobile-height-medium: 250px;
+      --vt-mobile-height-tall: 350px;
+      --vt-mobile-height-xtall: 450px;
+      --vt-mobile-height-massive: 850px;
+    }
+
+    .dashboard-barrier .vt-dash-cell {
+      grid-column: 1 / -1;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      justify-self: stretch;
+    }
+
+    .dashboard-barrier .vt-dash-cell.vt-height-short:not(.is-collapsed) { height: var(--vt-mobile-height-short); }
+    .dashboard-barrier .vt-dash-cell.vt-height-medium:not(.is-collapsed) { height: var(--vt-mobile-height-medium); }
+    .dashboard-barrier .vt-dash-cell.vt-height-tall:not(.is-collapsed) { height: var(--vt-mobile-height-tall); }
+    .dashboard-barrier .vt-dash-cell.vt-height-xtall:not(.is-collapsed) { height: var(--vt-mobile-height-xtall); }
+    .dashboard-barrier .vt-dash-cell.vt-height-massive:not(.is-collapsed) { height: var(--vt-mobile-height-massive); }
+
+    .dashboard-barrier .vt-dash-cell:not(.is-collapsed),
+    .dashboard-barrier .vt-dash-cell:not(.is-collapsed) > *,
+    .dashboard-barrier .vt-dash-cell:not(.is-collapsed) .vt-widget {
+      min-height: 0;
+      max-height: 100%;
+    }
+
+    .dashboard-barrier .vt-dash-cell:not(.is-collapsed) .vt-widget {
+      width: 100%;
+      height: 100%;
+    }
+
+    .dashboard-barrier .vt-widget-content,
+    .dashboard-barrier .vt-widget-body {
+      min-width: 0;
+      min-height: 0;
+    }
+
+    /* Phase 2 overflow policy. The shell never grows beyond H. Widgets that
+       already own a WidgetScrollArea keep that as their scroll viewport; the
+       body is only the safety fallback for older/content-heavy widgets. */
+    .dashboard-barrier .vt-widget-body {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-gutter: stable;
+    }
+
+    .dashboard-barrier .vt-widget-body:has(.widget-scroll-controller) {
+      overflow-y: hidden;
+      scrollbar-gutter: auto;
+    }
+
+    .dashboard-barrier .vt-widget-body > * {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    /* Shared mobile composition registry. Internal layouts recompose according
+       to available component width; these rules do not change primitive style. */
+    .dashboard-barrier .widget-kpi-grid,
+    .dashboard-barrier .widget-grid,
+    .dashboard-barrier [data-widget-grid] {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .dashboard-barrier .widget-kpi-grid > *,
+    .dashboard-barrier .widget-grid > *,
+    .dashboard-barrier [data-widget-grid] > * {
+      min-width: 0;
+    }
+
+    .dashboard-barrier .widget-kpi-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-barrier .widget-form-stack,
+    .dashboard-barrier .widget-segmented-deck,
+    .dashboard-barrier .widget-workflow-main {
+      min-width: 0;
+      min-height: 0;
+      max-width: 100%;
+    }
+
+    /* Reference Library = canonical SCROLL example. Its shell obeys H while
+       its existing WidgetScrollArea owns the long component catalogue. */
+    .dashboard-barrier [data-widget-id="ui-reference-library"] .vt-widget-body {
+      overflow: hidden;
+    }
+
+    .dashboard-barrier [data-widget-id="ui-reference-library"] .widget-scroll-controller {
+      min-height: 0;
+      height: 100%;
+      max-height: 100%;
+    }
+
+    /* Dense reference matrices become two columns on normal phones and one on
+       very narrow containers via the widget's own container-query layer. */
+    .dashboard-barrier [data-widget-id="ui-reference-library"] .widget-reference-family,
+    .dashboard-barrier [data-widget-id="ui-reference-library"] .widget-reference-variants,
+    .dashboard-barrier [data-widget-id="ui-reference-library"] .widget-reference-square-variants {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    /* Channel Overview = ADAPT example: preserve a useful two-up KPI matrix,
+       then stack dense secondary layouts rather than allowing horizontal growth. */
+    .dashboard-barrier [data-widget-id="channel-overview"] .channel-overview-main {
+      min-width: 0;
+      min-height: 0;
+      max-width: 100%;
+    }
+
+    .dashboard-barrier [data-widget-id="channel-overview"] .widget-kpi-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-barrier [data-widget-id="channel-overview"] :is(.grid-cols-3, .grid-cols-4, .grid-cols-5, .grid-cols-6) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-barrier .widget-edit-resize-grid > :nth-child(1),
+    .dashboard-barrier .widget-edit-resize-grid > :nth-child(2) {
+      opacity: .45;
+      pointer-events: none;
+    }
+  }
+
+  @media (max-width: 359px) {
+    .dashboard-barrier .widget-kpi-grid,
+    .dashboard-barrier [data-widget-id="channel-overview"] .widget-kpi-grid,
+    .dashboard-barrier [data-widget-id="channel-overview"] :is(.grid-cols-3, .grid-cols-4, .grid-cols-5, .grid-cols-6) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}

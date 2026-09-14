@@ -1,0 +1,4 @@
+/* Canonical dashboard cascade order.
+   Import this before every dashboard stylesheet so lazy widget modules cannot
+   create or reorder cascade layers after the mobile contract has loaded. */
+@layer tokens, reset, shell-grid, primitives, archetypes, widgets, utilities, accessibility;

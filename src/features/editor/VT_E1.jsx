@@ -3,6 +3,7 @@ import './VT_E1.css';
 window.__VT_E1_STANDALONE_BUILD__ = false;
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import JSZip from 'jszip';
+import { useDesktopProjectBridge } from './useDesktopProjectBridge';
 import {
   SHORTS_EXTRACTOR_DEFAULT_CONFIG as SHARED_SHORTS_EXTRACTOR_DEFAULT_CONFIG,
   SHORTS_EXTRACTOR_ASPECTS as SHARED_SHORTS_EXTRACTOR_ASPECTS,
@@ -2969,6 +2970,7 @@ import {
 
     const App = () => {
       const [project, setProject] = useState(() => normalizeProject(defaultProject()));
+      useDesktopProjectBridge({ project, setProject, normalizeProject });
       const [featureFlags, setFeatureFlags] = useState(() => ({ ...FEATURE_FLAGS_DEFAULT }));
       const [editorMode] = useState('pro');
       const [shortcuts, setShortcuts] = useState(() => ({ ...DEFAULT_SHORTCUTS }));

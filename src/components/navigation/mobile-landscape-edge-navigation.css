@@ -1,0 +1,156 @@
+/* Landscape-phone navigation: remove the 70px ViewTube top bar and turn the
+   existing mobile drawer into a left-edge peek rail. The DOM and route links
+   stay canonical; only the mobile-landscape presentation changes. */
+@media (orientation: landscape) and (max-height: 560px) and (pointer: coarse) {
+  .vt-adaptive-shell[data-layout="mobile"] {
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr) !important;
+  }
+
+  .vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-nav--mobile {
+    position: fixed;
+    z-index: 170;
+    top: 0;
+    left: 0;
+    display: block;
+    width: 34px;
+    height: 100dvh;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  /* The old hamburger becomes a full-height invisible touch target. Tapping
+     anywhere near the exposed button tips opens the labelled rail. */
+  .vt-adaptive-nav--mobile .vt-adaptive-nav__mobile-control {
+    position: absolute;
+    inset: 0;
+    width: 42px !important;
+    height: 100% !important;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    opacity: 0;
+    pointer-events: auto;
+    touch-action: manipulation;
+  }
+
+  /* Remove the logo/account top-bar chrome in landscape. Account remains
+     available from normal account destinations; it no longer consumes the
+     phone's scarce vertical canvas. */
+  .vt-adaptive-nav--mobile > .vt-adaptive-nav__logo,
+  .vt-adaptive-nav--mobile > .vt-adaptive-nav__account-trigger,
+  .vt-adaptive-nav--mobile > .vt-adaptive-nav__account-menu {
+    display: none !important;
+  }
+
+  .vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main,
+  .vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main--editor,
+  .vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-main--brain {
+    grid-area: 1 / 1 !important;
+    padding-top: 6px;
+  }
+
+  /* Drawer backdrop becomes transparent so opening navigation does not block
+     or dim the working canvas. */
+  .vt-adaptive-nav__drawer-backdrop {
+    inset: 0;
+    z-index: 165;
+    align-items: flex-start;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  .vt-adaptive-nav__drawer {
+    position: absolute;
+    top: max(8px, env(safe-area-inset-top));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: 0;
+    width: min(205px, 36vw);
+    height: auto;
+    padding: 4px 8px 4px 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    pointer-events: auto;
+  }
+
+  .vt-adaptive-nav__drawer-head { display: none; }
+
+  .vt-adaptive-nav__drawer-links {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(3px, 1.1vh, 6px);
+    padding: 0;
+    overflow: visible;
+  }
+
+  .vt-adaptive-nav__drawer-links .vt-adaptive-nav__link {
+    width: 100%;
+    height: clamp(31px, 8.5vh, 40px);
+    min-height: 31px;
+    justify-content: flex-start;
+    gap: 7px;
+    margin-left: -12px;
+    padding: 0 10px 0 18px;
+    border: 3px solid #000;
+    border-left: 0;
+    border-radius: 0 var(--vt-nav-radius) var(--vt-nav-radius) 0;
+    font-size: clamp(10px, 2.4vh, 14px);
+    font-weight: 1000;
+    letter-spacing: -.035em;
+    box-shadow: 3px 3px 0 color-mix(in srgb, var(--vt-nav-color) 55%, #000);
+    transform: translateX(0);
+    transition: transform 180ms cubic-bezier(.2,.8,.2,1), box-shadow 180ms ease;
+  }
+
+  .vt-adaptive-nav__drawer-links .vt-adaptive-nav__icon {
+    display: inline-flex;
+    width: 19px;
+    height: 19px;
+    flex: 0 0 19px;
+  }
+
+  .vt-adaptive-nav__drawer-links .vt-adaptive-nav__link-label {
+    display: block;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+  }
+
+  .vt-adaptive-nav__drawer-links .vt-adaptive-nav__link.active {
+    transform: translateX(5px);
+  }
+
+  /* Closed-state previews. The drawer DOM is absent when closed, so these
+     eight coloured tabs provide the requested physical navigation tips. */
+  .vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-nav--mobile::after {
+    content: "";
+    position: fixed;
+    z-index: -1;
+    top: 50%;
+    left: 0;
+    width: 24px;
+    height: min(72vh, 300px);
+    transform: translateY(-50%);
+    border-radius: 0 7px 7px 0;
+    background:
+      linear-gradient(#fa618a 0 0) 0 0/18px 10% no-repeat,
+      linear-gradient(#ffb158 0 0) 0 14%/23px 10% no-repeat,
+      linear-gradient(#ffea00 0 0) 0 28%/16px 10% no-repeat,
+      linear-gradient(#42ff68 0 0) 0 42%/21px 10% no-repeat,
+      linear-gradient(#2ed2e6 0 0) 0 56%/18px 10% no-repeat,
+      linear-gradient(#528ffa 0 0) 0 70%/23px 10% no-repeat,
+      linear-gradient(#b14aed 0 0) 0 84%/17px 10% no-repeat,
+      linear-gradient(#e950f7 0 0) 0 100%/21px 10% no-repeat;
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vt-adaptive-nav__drawer-links .vt-adaptive-nav__link { transition: none !important; }
+}

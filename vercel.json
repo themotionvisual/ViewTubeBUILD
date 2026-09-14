@@ -32,7 +32,15 @@
       "destination": "/api/auth?__vt_auth_operation=start"
     },
     {
+      "source": "/api/auth/google/start",
+      "destination": "/api/auth?__vt_auth_operation=start"
+    },
+    {
       "source": "/api/auth-callback",
+      "destination": "/api/auth?__vt_auth_operation=callback"
+    },
+    {
+      "source": "/api/auth/google/callback",
       "destination": "/api/auth?__vt_auth_operation=callback"
     },
     {
@@ -40,8 +48,20 @@
       "destination": "/api/auth?__vt_auth_operation=session"
     },
     {
+      "source": "/api/auth/session",
+      "destination": "/api/auth?__vt_auth_operation=session"
+    },
+    {
       "source": "/api/auth-logout",
       "destination": "/api/auth?__vt_auth_operation=logout"
+    },
+    {
+      "source": "/api/auth/logout",
+      "destination": "/api/auth?__vt_auth_operation=logout"
+    },
+    {
+      "source": "/api/youtube/:path*",
+      "destination": "/api/youtube?__vt_youtube_path=:path*"
     },
     {
       "source": "/((?!assets/|api/|_vercel/|.*\\.(?:js|mjs|css|map|json|txt|xml|woff|woff2|ttf|otf|eot|png|jpg|jpeg|gif|svg|ico|webp|avif|mp4|webm|mp3|wav|ogg|pdf)$).*)",
