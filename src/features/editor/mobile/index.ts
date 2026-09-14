@@ -42,3 +42,5 @@ export { ToolDock } from './components/ToolDock';
 export { ContextMenu } from './components/ContextMenu';
 export type { ContextMenuItem, ContextMenuProps } from './components/ContextMenu';
 export { PanelBodies, renderPanelBody } from './components/PanelBodies';
+export { EditorFeatureManifest } from './components/EditorFeatureManifest';
+export type { EditorFeatureManifestProps } from './components/EditorFeatureManifest';
