@@ -1,28 +1,15 @@
 import React from "react"
-import "./widgetLayerOrder.css"
-import "./toolboxWidgetSystem.css"
-import "./widgetPrimitiveSystem.css"
-import "./widgetPrimitiveVariants.css"
-import "./widgetPrimitiveExactHeights.css"
-import "./widgetPrimitiveTones.css"
-import "./widgetMatrixPrimitives.css"
-import "./widgetControlOwnership.css"
-import "./widgetArchetypeResponsive.css"
-import "./widgetShellOwnership.css"
-import "./widgetScrollbar.css"
-import "./widgetMobileContract.css"
+import "./widget-entry.css"
 
 /**
- * DashboardBarrier — containment boundary for dashboard design tokens.
- * Cascade ownership now migrates through explicit low-specificity layers rather
- * than adding stronger `.dashboard-barrier` selectors or new `!important`s.
+ * DashboardBarrier — containment boundary for the Dashboard/Widget design system.
  *
- * All dashboard CSS entry points are imported here in canonical order. Widget
- * implementations must not import shared CSS lazily because a late stylesheet
- * can reorder layers and restore desktop spans/heights over the phone contract.
+ * The Widget system owns its stylesheet entry point independently of Toolbox,
+ * Subtoolbox and page CSS. Keep this boundary as a low-specificity scope root;
+ * do not use it to escalate selector specificity or add new !important rules.
  */
 export const DashboardBarrier: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="dashboard-barrier" style={{ isolation:"isolate", contain:"layout style paint" }}>
+  <div className="dashboard-barrier vtw-dashboard" style={{ isolation:"isolate", contain:"layout style paint" }}>
     {children}
   </div>
 )
