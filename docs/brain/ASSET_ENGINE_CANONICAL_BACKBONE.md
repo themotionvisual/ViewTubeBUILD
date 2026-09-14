@@ -71,7 +71,7 @@ Evidence / Research
   → Visual Plan / B-roll / Storyboard
   → Thumbnail / Image / Media
   → Metadata / Community / Shorts
-  → Editor Package / Publish Package
+  → Editor Package / Publishing Package
   → Published Video
   → Analytics / Audience Response
   → Evaluation
@@ -79,6 +79,132 @@ Evidence / Research
 ```
 
 Every node may link to multiple parent assets and evidence references. This permits branching variants without losing lineage.
+
+## Video Package — Publishing Package subtoolbox
+
+Every Video Package and Asset Engine video workflow should expose a dedicated `Publishing Package` subtoolbox. It is the canonical collection of YouTube-facing metadata and publishing configuration for the video. The same package should be consumed by Video Manager and Publisher rather than maintaining disconnected copies of these values.
+
+### Packaging
+
+- title
+- thumbnail
+- alternate title / thumbnail variants
+- selected/final title and thumbnail
+
+### Metadata
+
+- description
+- tags
+- YouTube category choice
+- chapters / timestamps
+- time-marked educational questions when the Education category requires them
+- audience setting / Made for Kids designation
+- video language
+- title / description language
+- caption / subtitle status and linked caption asset
+
+### Discovery, routing and in-video navigation
+
+- end-screen frame/layout
+- end-screen link choices
+- related video selection
+- playlist selection(s)
+- timestamped cards / in-video routing plan
+- card destination videos or playlists
+
+### Publishing
+
+- publishing date and time
+- timezone
+- visibility: private / unlisted / public / scheduled
+- Premiere configuration where supported
+
+### Audience activation
+
+- pinned comment
+- related community posts
+
+### Field state and provenance
+
+Publishing fields should support `Missing → Draft → Generated → Edited → Approved → Final → Published` state. Where available, retain source/provenance, generation record, selected variant, creator edits, evidence references and the final value actually sent to YouTube. This lets evaluation distinguish generated candidates from the asset that was truly published.
+
+## SEO and Entity Intelligence
+
+SEO/entity intelligence is a separate intelligence section feeding the Publishing Package rather than another publishing form. It should preserve:
+
+- primary topic and topical entities
+- target search concepts / queries
+- audience vocabulary
+- script-context terms and entities
+- historical metadata evidence
+- recommended title/description/tag/search strategy
+- evidence and confidence behind recommendations
+
+The Publishing Package consumes approved outputs from this section while retaining their evidence and provenance.
+
+## Publish Readiness
+
+Add a dedicated readiness section/status surface for each Video Package. It should evaluate the package without duplicating the fields themselves.
+
+Examples:
+
+- readiness score such as `12/15 READY`
+- missing / incomplete / unapproved publishing fields
+- missing thumbnail or invalid final asset
+- missing end screen, cards, playlists or audience settings
+- missing category-specific requirements
+- unresolved scheduling / visibility settings
+- warnings versus hard blockers
+- one-click navigation to the incomplete source section
+
+Readiness is a validation layer, not a second metadata store.
+
+## Launch and Priming Package
+
+Maintain launch/priming as its own package connected to the video and Publishing Package. It can contain:
+
+- pre-publish community post
+- launch community post
+- Shorts teaser / derivative
+- pinned-comment strategy
+- audience priming actions
+- early post-launch actions
+- sustain actions
+- timing/dependency relationships to the scheduled publish time
+
+Each launch asset remains an Asset Engine artifact with its own identity and provenance.
+
+## Experiment and Variant System
+
+Experiments belong in the Experiment Engine and should reference Publishing Package assets rather than live inside the publishing metadata form. Support experiments such as:
+
+- title A/B or multivariate variants
+- thumbnail A/B or multivariate variants
+- title × thumbnail packaging combinations
+- publishing-time tests
+- metadata / discovery strategy tests
+- launch/priming tests
+
+Record hypothesis, variant identities, selected/used variant, valid comparison window, target metrics, confidence and result. The final Publishing Package points to the variant actually used.
+
+## Post-Publish Evaluation Contract
+
+Every Video Package should be able to carry an evaluation contract before publication. The contract tells Outcome/Evaluation what to measure after publication without turning the Publishing Package into an analytics dashboard.
+
+Possible evaluation targets include:
+
+- CTR / impressions
+- Browse and Suggested reach
+- opening retention
+- average percentage viewed / average view duration
+- subscriber conversion
+- search performance
+- related-video / end-screen routing
+- playlist contribution
+- community / launch response
+- experiment-specific target metrics
+
+Support checkpoint windows such as `1h`, `6h`, `24h`, `72h`, `7d` and longer windows when appropriate. Evaluation results link back to the exact published asset identities and then feed governed learning.
 
 ## Brain integration
 
@@ -126,10 +252,10 @@ Durable asset workflows should carry, when available:
 4. Projects and project workflow assets.
 5. Script, Hook, Thumbnail, Community and Metadata tools.
 6. Storyboard and Editor packages.
-7. Publisher and Video Manager handoffs.
-8. Outcome/Evaluation attribution.
-9. Experiment variants and Learning candidates.
-10. Remove superseded direct cross-tool blob/prefill pathways only after parity tests.
+7. Publishing Package, Publisher and Video Manager handoffs.
+8. Publish Readiness and Launch/Priming connections.
+9. Experiment variants and Outcome/Evaluation attribution.
+10. Learning candidates and removal of superseded direct cross-tool blob/prefill pathways only after parity tests.
 
 ## Acceptance tests
 
@@ -137,6 +263,9 @@ Durable asset workflows should carry, when available:
 - A Brain-generated script can be handed to Projects → Storyboard → Editor without re-entry or lost provenance.
 - A Vault image can be handed to Community or Editor with one stable asset identity.
 - A title/thumbnail variant can be identified later as the actually used version and evaluated against valid metrics.
+- A Publishing Package contains the approved YouTube-facing metadata, routing, scheduling, audience, language/caption and card configuration for its video.
+- Publish Readiness detects missing or unresolved requirements without creating duplicate metadata.
+- Launch/Priming, Experiment and Evaluation systems reference the same canonical video/package assets.
 - A tool receiving an ActionPacket can resolve the underlying Vault asset and its lineage.
 - Missing evidence remains missing; the Asset Engine never fabricates evidence.
 - Publishing, destructive edits and consequential external communication remain approval-gated.
@@ -144,3 +273,5 @@ Durable asset workflows should carry, when available:
 ## Implementation status
 
 Phase A foundation is implemented on the integration branch with `src/services/assetEngine.ts`. It wraps the existing generation, Vault and ActionPacket systems instead of creating a competing store or transport layer.
+
+The Publishing Package, SEO/Entity Intelligence, Publish Readiness, Launch/Priming, Experiment references and Post-Publish Evaluation Contract are now defined as canonical architecture requirements. Their UI and service-schema implementation remains part of the next integration phases.
