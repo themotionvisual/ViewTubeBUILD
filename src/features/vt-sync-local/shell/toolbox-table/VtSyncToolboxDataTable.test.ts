@@ -1619,3 +1619,54 @@ describe("VT Sync toolbox data table", () => {
   expect(rows.every((row) => row.formatWatchTimeShare === undefined)).toBe(true)
  })
 })
+
+describe("data table time window control", () => {
+ const componentSource = readFileSync(
+  new URL("./VtSyncToolboxDataTable.tsx", import.meta.url),
+  "utf8",
+ )
+ const styleSource = readFileSync(
+  new URL("./VtSyncToolboxDataTable.css", import.meta.url),
+  "utf8",
+ )
+
+ it("renders a chip for every canonical window rather than a hand-written list", () => {
+  expect(componentSource).toContain("ANALYTICS_WINDOWS.map((window) =>")
+  expect(componentSource).toContain("WINDOW_SHORT_LABELS[window]")
+ })
+
+ it("opens on lifetime, so the default view is unchanged", () => {
+  expect(componentSource).toContain(
+   'useState<VtSyncAnalyticsWindow>("lifetime")',
+  )
+ })
+
+ it("resolves rows through the window-aware path instead of the lifetime-only one", () => {
+  expect(componentSource).toContain("resolveVtSyncTableRowsForWindow(snapshot, table, tableWindow, activePrivacyFilters)")
+  expect(componentSource).toContain("const snapshotRows = windowResolution.rows")
+ })
+
+ it("recomputes rows when the window changes", () => {
+  // A stale dependency array here would silently keep showing the old window.
+  expect(componentSource).toContain(
+   "[activePrivacyFilters, imported, snapshot, table, windowResolution]",
+  )
+  expect(componentSource).toContain("[snapshot, table, tableWindow, activePrivacyFilters]")
+ })
+
+ it("tells the user when a window has not been synced, rather than showing an empty table", () => {
+  expect(componentSource).toContain('windowResolution.source === "not_synced"')
+  expect(componentSource).toContain("Not synced for")
+ })
+
+ it("marks derived windows so a free result is not mistaken for a synced one", () => {
+  expect(componentSource).toContain('windowResolution.source === "derived"')
+  expect(componentSource).toContain("Derived from stored daily history")
+ })
+
+ it("styles the rail in both themes and at phone width", () => {
+  expect(styleSource).toContain(".vt-sync-window-rail")
+  expect(styleSource).toContain(".vt-sync-toolbox-table.is-dark .vt-sync-window-chip")
+  expect(styleSource).toMatch(/@media \(max-width: 640px\)[\s\S]*\.vt-sync-window-rail/)
+ })
+})

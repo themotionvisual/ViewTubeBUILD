@@ -58,7 +58,17 @@ import {
  listVtSyncDatasetTableRows,
  putVtSyncDatasetTableRows,
 } from "../../adapters/localDbRepository"
-import { getVtSyncContentTypeLabel, normalizeVtSyncTableRows } from "../../adapters/tableData"
+import {
+ getVtSyncContentTypeLabel,
+ normalizeVtSyncTableRows,
+ resolveVtSyncTableRowsForWindow,
+} from "../../adapters/tableData"
+import type { VtSyncAnalyticsWindow } from "../../adapters/contracts"
+import {
+ ANALYTICS_WINDOWS,
+ WINDOW_LABELS,
+ WINDOW_SHORT_LABELS,
+} from "../../../../services/analytics/windows"
 import {
  formatVtSyncDurationSeconds,
  formatVtSyncFullMonthValue,
@@ -955,6 +965,10 @@ export const VtSyncToolboxDataTable: React.FC<{
  )
  const [viewId, setViewId] = useState(initialWorkspaceState.viewId)
  const [tableId, setTableId] = useState(initialWorkspaceState.tableId)
+ // Which window this table is being viewed at. Lifetime keeps today's exact
+ // behavior; other windows resolve through resolveVtSyncTableRowsForWindow,
+ // which never substitutes lifetime rows for a window it has no data for.
+ const [tableWindow, setTableWindow] = useState<VtSyncAnalyticsWindow>("lifetime")
  const table = findVtSyncTable(tableId)
  const category =
   VT_SYNC_TOOLBOX_CATEGORIES.find((item) => item.id === categoryId) ||
@@ -1168,11 +1182,15 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
   setRowLimit(VT_SYNC_ROW_BATCH_SIZE)
  }
 
+ const windowResolution = useMemo(
+  () => resolveVtSyncTableRowsForWindow(snapshot, table, tableWindow, activePrivacyFilters),
+  [snapshot, table, tableWindow, activePrivacyFilters],
+ )
  const sourceRows = useMemo(() => {
   // Traffic × Day imports are already merged by the page owner. Other imports
   // are supplemented here for immediate post-import feedback.
   const importedRows = table.id === "traffic_day" ? undefined : imported[table.id]
-  const snapshotRows = buildVtSyncTableViewModel(snapshot, table, activePrivacyFilters).rows
+  const snapshotRows = windowResolution.rows
   return resolveAnalyticsTableRows({
    tableId: table.id,
    snapshot,
@@ -1180,7 +1198,7 @@ const [localPrivacyFilters, setLocalPrivacyFilters] =
    importedRows,
    privacyFilters: activePrivacyFilters,
   })
- }, [activePrivacyFilters, imported, snapshot, table])
+ }, [activePrivacyFilters, imported, snapshot, table, windowResolution])
  const trafficDayReference = useMemo(() => {
   const trafficDayTable = findVtSyncTable("traffic_day")
   return {
@@ -5629,6 +5647,35 @@ const retentionDisplayColumns = useMemo(() => {
         </div>
        )
       })}
+     </nav>
+
+     <nav className="vt-sync-window-rail" aria-label="Time window">
+      <span className="vt-sync-window-rail-label">Window</span>
+      {ANALYTICS_WINDOWS.map((window) => {
+       const isActive = tableWindow === window
+       return (
+        <button
+         key={window}
+         type="button"
+         data-table-window={window}
+         aria-pressed={isActive}
+         className={`vt-sync-window-chip ${isActive ? "is-active" : ""}`}
+         onClick={() => setTableWindow(window)}>
+         {WINDOW_SHORT_LABELS[window]}
+        </button>
+       )
+      })}
+      {windowResolution.source === "derived" ? (
+       <span className="vt-sync-window-note">
+        Derived from stored daily history
+       </span>
+      ) : null}
+      {windowResolution.source === "not_synced" ? (
+       <span className="vt-sync-window-note is-warning">
+        Not synced for {WINDOW_LABELS[tableWindow]} — run a sync with this
+        window selected in the controller above.
+       </span>
+      ) : null}
      </nav>
 
      <section
