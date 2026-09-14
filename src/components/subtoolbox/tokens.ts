@@ -2,22 +2,19 @@
  * Canonical geometry, typography, spacing, color and motion contract for every
  * ViewTube subtoolbox. Consumer components should select a primitive/recipe;
  * they should not recreate these values with local utility classes.
+ *
+ * There is one SubToolbox shell style. The former separate compactShell
+ * geometry is intentionally removed: compact content may change layout density,
+ * but it must not create a second SubToolbox header/stroke/radius system.
  */
 export const SUBTOOLBOX_TOKENS = {
   shell: {
-    headerHeight: 56,
+    headerHeight: 44,
     stroke: 4,
     radius: 12,
     shadowOffset: 6,
-    titleSize: 20,
-    iconSize: 40,
-  },
-  compactShell: {
-    headerHeight: 44,
-    stroke: 3,
-    radius: 10,
-    shadowOffset: 4,
-    iconSize: 24,
+    titleSize: 22,
+    iconSize: 32,
   },
   interior: {
     stroke: 3,
@@ -32,22 +29,21 @@ export const SUBTOOLBOX_TOKENS = {
     large: 24,
   },
   controlHeight: {
-    // Two micro controls plus one 4px gap equal one collapsed standard
-    // SubToolbox header: 26 + 4 + 26 = 56.
-    micro: 26,
+    // Two paired controls plus one 4px gap equal one collapsed SubToolbox:
+    // 20 + 4 + 20 = 44.
+    micro: 20,
     compact: 32,
     standard: 48,
-    // Level-1/module actions align exactly with a collapsed standard
-    // SubToolbox. They must never be taller than the module they belong to.
-    action: 56,
+    // Level-1/module actions align exactly with the single SubToolbox shell.
+    action: 44,
   },
   typography: {
     micro: 9,
     label: 10,
     control: 14,
-    action: 20,
-    title: 20,
-    toolboxTitle: 26,
+    action: 22,
+    title: 22,
+    toolboxTitle: 28,
     weight: 900,
   },
   motion: {
@@ -75,14 +71,11 @@ export const SUBTOOLBOX_COLLAPSE_TRANSITION =
 
 export const resolveSubtoolboxMinHeight = (
   openUnits: number,
-  heightMode: "standard" | "compact",
+  _heightMode: "standard" | "compact",
 ) => {
   const gap = SUBTOOLBOX_TOKENS.spacing.large
   const overhead = SUBTOOLBOX_TOKENS.controlHeight.action
-  const computed = openUnits * SUBTOOLBOX_TOKENS.controlHeight.action + (openUnits - 1) * gap - overhead
-
-  if (heightMode === "compact") return Math.max(0, Math.min(computed, 144))
-  return Math.max(0, computed)
+  return Math.max(0, openUnits * SUBTOOLBOX_TOKENS.controlHeight.action + (openUnits - 1) * gap - overhead)
 }
 
 export type SubToolboxControlSize = keyof typeof SUBTOOLBOX_TOKENS.controlHeight
