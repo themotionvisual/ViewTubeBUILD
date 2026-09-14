@@ -1,8 +1,9 @@
 import React from "react"
-import { CalendarDays, Columns3, FolderKanban, PanelsTopLeft, Workflow } from "lucide-react"
+import { CalendarDays, Columns3, FolderKanban, PanelsTopLeft, Target, Workflow } from "lucide-react"
 import ProjectKanbanWorkspace from "../components/projects/ProjectKanbanWorkspace"
 import ProjectsToolboxModule from "../components/projects/ProjectsToolboxModule"
 import ContentAssetEngine from "../components/projects/ContentAssetEngine"
+import ChannelPlanningSubtoolboxes from "../components/projects/ChannelPlanningSubtoolboxes"
 import { ProjectStudio } from "../components/ProjectStudio"
 import StoryboardStudio from "./StoryboardStudio"
 import PublishingScheduleArchitect from "./PublishingScheduleArchitect"
@@ -13,6 +14,12 @@ const ProjectCalendarPage: React.FC = () => (
   <section id="project-kanban" className="scroll-mt-[86px]">
    <ProjectsToolboxModule title="Project Board" subtitle="Move projects from idea to published" icon={<Columns3 />} paletteIndex={0}>
     <ProjectKanbanWorkspace />
+   </ProjectsToolboxModule>
+  </section>
+
+  <section id="channel-planning" className="scroll-mt-[86px]">
+   <ProjectsToolboxModule title="Channel Planning" subtitle="Turn your channel profile and AI Brain knowledge into focused tasks and measurable goals" icon={<Target />} paletteIndex={2}>
+    <ChannelPlanningSubtoolboxes />
    </ProjectsToolboxModule>
   </section>
 
