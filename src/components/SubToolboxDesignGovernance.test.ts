@@ -47,7 +47,7 @@ describe("subtoolbox design governance", () => {
   const toolboxSource = source("src/components/Toolbox.tsx")
   const tokenSource = source("src/components/subtoolbox/tokens.ts")
 
-  expect(tokenSource).toContain('duration-300 ease-out motion-reduce:transition-none')
+  expect(tokenSource).toContain('collapseMs: 300')
   expect(toolboxSource).toContain('borderBottom: `var(--vt-toolbox-stroke, ${stroke}px) solid black`')
   expect(toolboxSource).toContain('borderBottom: `var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_INNER_STROKE}px) solid black`')
   expect(toolboxSource).toContain('SHELL_COLLAPSE_DURATION_MS = SUBTOOLBOX_TOKENS.motion.collapseMs')
@@ -64,6 +64,34 @@ describe("subtoolbox design governance", () => {
   expect(chartModule).toContain('data-vt-subtoolbox-module="true"')
   expect(chartModule).toContain('borderBottom: `var(--vt-subtoolbox-stroke')
   expect(chartModule).not.toContain('const headerBorderClass = collapsible && !internalOpen')
+ })
+
+ it("certifies the structural level authority and CSS bridge", () => {
+  const tokenSource = source("src/components/subtoolbox/tokens.ts")
+  const authoritySource = source("src/components/subtoolbox/levelAuthority.ts")
+  const systemCss = source("src/styles/toolbox-system.css")
+
+  for (const level of ["toolbox", "l0", "compact", "l1", "l2"]) {
+   expect(tokenSource).toContain(`${level}: {`)
+  }
+  expect(tokenSource).toContain("export type ToolboxStructuralLevel")
+  expect(tokenSource).toContain("getToolboxLevelTokens")
+  expect(authoritySource).toContain("TOOLBOX_LEVEL_TOKENS")
+  expect(authoritySource).toContain("getToolboxLevelCssVariables")
+  expect(authoritySource).toContain("getToolboxLevelStyle")
+  expect(authoritySource).toContain("getSquareRailStyle")
+  expect(systemCss).toContain('--vt-toolbox-header-height: 80px')
+  expect(systemCss).toContain('--vt-subtoolbox-header-height: 56px')
+ })
+
+ it("keeps the documented level equations exact", () => {
+  const tokenSource = source("src/components/subtoolbox/tokens.ts")
+
+  expect(tokenSource).toContain("micro: 26")
+  expect(tokenSource).toContain("compact: TOOLBOX_LEVEL_TOKENS.l2.height")
+  expect(tokenSource).toContain("standard: TOOLBOX_LEVEL_TOKENS.l1.height")
+  expect(tokenSource).toContain("action: TOOLBOX_LEVEL_TOKENS.l0.height")
+  expect(tokenSource).toContain("26 + 4 + 26 = 56")
  })
 
  it("certifies the video-tool migration wave on canonical interior primitives", () => {
