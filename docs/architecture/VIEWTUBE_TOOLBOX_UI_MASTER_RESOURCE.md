@@ -1,7 +1,7 @@
 # ViewTube Toolbox UI Master Resource
 
 **Status:** Living design-system authority  
-**Updated:** 2026-09-13  
+**Updated:** 2026-09-14  
 **Scope:** Toolbox, Subtoolbox, Studio Hub controls, reusable layouts, states, responsive behavior, certification, migration, audits and page-specific exceptions.
 
 This document consolidates the uploaded **ViewTube Toolbox UI Master Resource Reference COMPLETE** with the existing `STUDIO_HUB_COMPONENT_STANDARDIZATION_V1.md`, `SUBTOOLBOX_PRIMITIVE_SYSTEM_V1.md`, and `STUDIO_HUB_MIGRATION_MATRIX_V1.md`. Those files remain useful historical/implementation references, but this file is the first document to consult when rules overlap.
@@ -153,9 +153,17 @@ State rules:
 
 ## 11. Motion authority
 
-**Resolved 2026-09-13:** shell/module/disclosure open-close motion uses **600ms ease-out** in the current Toolbox direction. Micro-interactions such as hover, focus, toggle/thumb feedback and menu-row feedback should remain faster, normally **150-300ms**. Reduced-motion mode removes nonessential animation.
+**MOTION AUTHORITY CONFLICT — REQUIRES RECONCILIATION.** Do not normalize unrelated motion durations from documentation alone.
 
-This supersedes the older blanket 300ms shell-collapse rule in `SUBTOOLBOX_PRIMITIVE_SYSTEM_V1.md`. Code tokens, reference examples and regression tests must be reconciled together; do not leave mixed shell durations.
+Verified current production Subtoolbox token evidence in `src/components/subtoolbox/tokens.ts` is:
+
+- control feedback: `180ms`
+- Subtoolbox collapse/open: `300ms ease-out`
+- `SUBTOOLBOX_COLLAPSE_TRANSITION`: `duration-300 ease-out`
+
+A newer documented direction proposed `600ms` shell/module disclosure motion, but this is **not currently the production Subtoolbox token authority**. Therefore the previous statement that 600ms had already superseded the 300ms production rule is itself **SUPERSEDED / CORRECTED** by this audit. Widget motion, Toolbox motion, Subtoolbox motion and dropdown motion remain separate authorities until code, Reference Library and tests are deliberately reconciled.
+
+Reduced-motion mode remains required.
 
 ## 12. Responsive contract
 
@@ -166,32 +174,18 @@ This supersedes the older blanket 300ms shell-collapse rule in `SUBTOOLBOX_PRIMI
 - headers never scroll
 - long content uses bounded internal scrolling
 - wide operational surfaces use semantic mobile modes rather than only `overflow-x:auto`
-- Kanban: one-lane mobile mode
-- calendar/schedule: agenda/day-first mobile mode
+- Kanban: one-lane mobile mode is the target; current Projects implementation still requires migration/verification
+- calendar/schedule: agenda/day-first mobile mode is the target; current implementation still requires migration/verification
 - inspector: bounded desktop side panel, full-screen mobile sheet
 - data tables/timelines: preserve essential controls and provide designed narrow-screen navigation
 
 ## 13. Accessibility contract
 
-Every canonical interactive primitive must support:
-
-- keyboard navigation and logical tab order
-- visible `:focus-visible`
-- Enter/Space semantics appropriate to role
-- native control semantics where practical
-- correct ARIA for custom menu/disclosure/switch behavior
-- `disabled` vs `aria-disabled` used intentionally
-- readable labels for icon-only actions
-- selected/on state not communicated by color alone
-- sufficient contrast across palette/state combinations
-- reduced-motion behavior
-- mobile touch interaction with usable hit targets; small visual controls may use a larger invisible hit area without changing structural visual geometry
+Every canonical interactive primitive must support keyboard navigation, logical tab order, visible `:focus-visible`, appropriate Enter/Space semantics, native control semantics where practical, correct ARIA for custom menu/disclosure/switch behavior, intentional `disabled` vs `aria-disabled`, readable icon-action labels, non-color-only selected state, sufficient contrast, reduced motion and usable mobile touch targets.
 
 ## 14. Grid/layout authority
 
-Use the canonical layout recipes before page-local `grid-template-columns`.
-
-Preferred spacing: 4, 8, 12, 16, 24px. Alignment is edge-based: peer strokes, rails, baselines and shadow offsets visually align. Avoid double padding from parent shell + child surface. Collapse columns rather than shrinking controls below their structural level.
+Use canonical layout recipes before page-local `grid-template-columns`. Preferred spacing: 4, 8, 12, 16, 24px. Alignment is edge-based: peer strokes, rails, baselines and shadow offsets visually align. Avoid double padding from parent shell + child surface. Collapse columns rather than shrinking controls below their structural level.
 
 ## 15. Implementation authority / repo map
 
@@ -211,28 +205,9 @@ Legacy/quarantine files are reference-only and must not become a second authorit
 
 ## 16. Coded primitives <-> Reference Library certification
 
-A primitive is complete only when code and library demonstrate the same named contract.
+A primitive is complete only when code and library demonstrate the same named contract. Certification requires the same production export/token path where practical, every supported structural level, relevant states, palette inheritance, desktop/mobile behavior, geometry comparison, keyboard/accessibility behavior, a real production caller and regression coverage.
 
-Certification requires:
-
-1. same production export/token path wherever practical
-2. every supported structural level
-3. relevant state rows
-4. palette inheritance examples
-5. desktop and mobile behavior
-6. geometry comparison: height, stroke, divider, radius, shadow, rail, type, gap, padding
-7. keyboard/accessibility behavior
-8. real production caller identified or migrated
-9. visual regression coverage
-
-Status vocabulary:
-
-- `PROPOSED` - idea/audit recommendation
-- `DESIGNED` - approved reference contract, not necessarily coded
-- `IMPLEMENTING` - active branch work
-- `IMPLEMENTED` - canonical production code exists
-- `VERIFIED` - desktop/mobile/states/reference/tests aligned
-- `SUPERSEDED` - historical decision retained but no longer authoritative
+Status vocabulary: `CANONICAL`, `IMPLEMENTED`, `VERIFIED`, `MIGRATE`, `LEGACY COMPATIBILITY`, `EXCEPTION`, `PLANNED`, `SUPERSEDED`, `REMOVE`, `REGRESSION / OPEN ISSUE`. Existing `PROPOSED`, `DESIGNED` and `IMPLEMENTING` labels may remain as descriptive aliases but must not imply verification.
 
 ## 17. Certification ledger
 
@@ -241,21 +216,22 @@ Status vocabulary:
 | Toolbox/Subtoolbox shells | yes | yes | partial | partial | required | IMPLEMENTED |
 | Standard buttons | yes | yes | partial | partial | required | IMPLEMENTED |
 | Split-left actions | yes | yes | partial | partial | required | IMPLEMENTED |
-| Analytics split-left dropdown | partial/design | reference direction | required | required | required | DESIGNED / MIGRATE |
+| Analytics split-left dropdown | partial/design | reference direction | required | required | required | MIGRATE |
 | Inputs/Textareas | yes | yes | partial | partial | required | IMPLEMENTED |
-| Checkbox/Radio/Switch/Toggle | yes/partial | expanding | required | required | required | IMPLEMENTING |
+| Checkbox/Radio/Switch/Toggle | yes/partial | expanding | required | required | required | IMPLEMENTED / MIGRATE |
 | Tags/Badges | yes | yes | partial | partial | required | IMPLEMENTED |
 | Tight Reveal upload | yes | yes | partial | partial | required | IMPLEMENTED |
-| Guide Subtoolbox | not fully canonical | designed | required | required | required | DESIGNED |
+| Guide Subtoolbox | not fully canonical | designed | required | required | required | PLANNED / MIGRATE |
 | State panels | yes | yes | partial | partial | required | IMPLEMENTED |
+| Projects T0 tool composition | yes | update required | unverified | partial | required | IMPLEMENTED / REFERENCE UPDATE REQUIRED |
 
 Update this ledger whenever implementation status changes.
 
 ## 18. Current audit findings
 
-**High:** historical CSS pathways can style similar controls; Toolbox hierarchy has regressed; split-left composition/divider thickness has regressed; mobile modules have become half-width; height systems have produced runaway content; embedded child tools can create duplicate Toolbox shells.
+**High:** historical CSS pathways can style similar controls; Toolbox hierarchy has regressed; split-left composition/divider thickness has regressed; mobile modules have become half-width; height systems have produced runaway content; embedded child tools can create duplicate Toolbox shells; Project Board still contains feature-local shell geometry inside its canonical T0 Toolbox.
 
-**Medium:** dropdown open states can diverge from triggers; `.vt-input-standard` can compete with Toolbox primitives; palette tokens require verification; standalone prototypes may outrun production; page-local compatibility CSS can become permanent.
+**Medium:** dropdown open states can diverge from triggers; `.vt-input-standard` can compete with Toolbox primitives; palette tokens require verification; standalone prototypes may outrun production; page-local compatibility CSS can become permanent; motion documentation and production Subtoolbox tokens currently disagree.
 
 Required direction: token authority, CSS isolation, bounded layouts, explicit embedded/bare API, one canonical open-menu recipe, responsive semantic modes, visual regression fixtures and controlled migration waves.
 
@@ -265,10 +241,10 @@ Required direction: token authority, CSS isolation, bounded layouts, explicit em
 Primary certification/migration target. Reference Library must show all canonical primitives, levels and states. Migrate one real tool after each primitive-family change.
 
 ### Analytics / Master Data Tables
-Canonical visual reference for Analytics-style split-left dropdown anatomy. Extract the reusable anatomy without importing Analytics business logic or leaking widget CSS.
+Canonical visual reference for Analytics-style split-left dropdown anatomy. Extract reusable anatomy without importing Analytics business logic or leaking widget CSS.
 
 ### Video Manager
-Disconnected state must preserve the full UI. Remove replacement-screen behavior; selectors/actions become connection-aware. Preserve business logic.
+Disconnected state must preserve the full UI. Connection gates data/actions, not the normal tool interface.
 
 ### Comment Responder
 Persistent shell + explicit disconnected/data states. Do not conflate no comments with no connection.
@@ -280,7 +256,17 @@ Normalize geometry only while preserving publishing behavior.
 Primary acceptance-test candidate for nested modules, inputs, actions, uploads and collapsed sections.
 
 ### Projects
-Project is persistent context; tools are views/actions on it. Exactly one visible T0 title per tool. Child tools begin with Subtoolboxes/surfaces/primitives. Shared Project Inspector and shared Calendar Engine are target architecture. Kanban and calendar require semantic mobile modes.
+**CURRENT STATE:** creator-facing Project Board and Publishing Schedule exist. Project Board, Publishing Schedule, Project Studio and Storyboard Studio are intended to be independent T0 Toolbox modules. The temporary page-level Board/Calendar/Studio/Storyboard switcher from PR #164 is **SUPERSEDED** by the separate-Toolbox composition.
+
+**IMPLEMENTED:** creator-facing Kanban foundation (PR #158) and publishing calendar (PR #159) were merged. The Projects composition was subsequently restored to separate T0 Toolbox modules in the later main-line work discussed in this handoff.
+
+**REGRESSION / OPEN ISSUE:** Project Board still contains a bespoke inner outer-shell/header treatment inside the canonical Toolbox. Feature-local `4px` border, `14px` radius and `8px` shadow values must not be promoted to system authority. They are migration debt.
+
+**NEXT SAFE MIGRATION:** preserve all Kanban data/drag/filter/detail behavior; remove only duplicate exterior chrome; move search/filter/action groups and appropriate functional sections onto canonical T1/T2 primitives. Audit Publishing Schedule, Project Studio and Storyboard for the same double-shell pattern before changing them.
+
+**MOBILE:** the 70px project-overlay safe-area correction is an implementation-specific compatibility fix, not a global geometry rule. One-lane Kanban and agenda/day-first scheduling remain planned/uncertified.
+
+**CERTIFICATION:** REFERENCE LIBRARY UPDATE REQUIRED. Do not mark Projects Toolbox composition VERIFIED until desktop/mobile, open/closed and relevant state behavior are visually tested.
 
 ### Creator Vault / Asset Engine
 Use canonical shells, upload, tags and bounded grids. Workspace project identity should synchronize while standalone fallback remains safe.
@@ -299,9 +285,10 @@ Editor interaction/timeline controls are a separate system. Reuse tokens selecti
 7. Video Manager disconnected-preview normalization
 8. Comment Responder + Video Publisher state separation
 9. Analytics cross-reference without CSS leakage
-10. Projects/Vault hierarchy + responsive modes
-11. application-wide legacy geometry audit
-12. remove compatibility CSS only after consumers migrate
+10. Projects: remove duplicate inner shells and migrate internals without feature loss
+11. Projects/Vault responsive semantic modes
+12. application-wide legacy geometry audit
+13. remove compatibility CSS only after consumers migrate
 
 ## 21. New primitive checklist
 
@@ -328,13 +315,14 @@ Editor interaction/timeline controls are a separate system. Reuse tokens selecti
 - [ ] gaps derive from 4px
 - [ ] paired controls satisfy parent-height equation
 - [ ] open state preserves trigger geometry
-- [ ] correct 600ms shell/disclosure motion or approved micro duration
+- [ ] motion uses the actual authority for that system; do not assume 300ms or 600ms globally
 - [ ] mobile structural module becomes full width
 - [ ] content remains bounded
 - [ ] disconnected/loading/empty/error preserve shell
 - [ ] keyboard/focus/ARIA behavior verified
 - [ ] canonical primitive used instead of one-off CSS
 - [ ] widget/editor CSS cannot leak into Toolbox system
+- [ ] exactly one visible T0 shell/title per tool
 
 ## 23. Adjustment / decision log
 
@@ -347,9 +335,11 @@ Editor interaction/timeline controls are a separate system. Reuse tokens selecti
 | 2026-09-13 | Split-left dropdown matches Analytics anatomy: label above arrow, only left rail split | DESIGNED / MIGRATE |
 | 2026-09-13 | Tight Reveal is canonical upload; no dashed treatment or legacy black outer stroke | IMPLEMENTED |
 | 2026-09-13 | Semantic T0/T1/T2/T3 vocabulary added while preserving legacy mappings | DEFINED |
-| 2026-09-13 | 600ms shell/module open-close supersedes blanket 300ms rule; micro interactions remain 150-300ms | DEFINED / CODE RECONCILIATION REQUIRED |
-| 2026-09-13 | Accessibility and certification contracts promoted to system-level requirements | DEFINED |
-| 2026-09-13 | Existing Studio Hub/Subtoolbox docs consolidated under this authority | CURRENT |
+| 2026-09-13 | 600ms shell/module open-close documented as direction | SUPERSEDED / CONFLICT FOUND |
+| 2026-09-14 | Production Subtoolbox tokens verified at 300ms collapse and 180ms control; motion systems must be reconciled explicitly | REGRESSION / OPEN ISSUE |
+| 2026-09-14 | Projects page-level view switcher is not the accepted composition; major Projects tools return to separate T0 Toolboxes | CURRENT |
+| 2026-09-14 | Project Board duplicate inner shell is migration debt, not a new geometry authority | MIGRATE |
+| 2026-09-14 | Projects consumer changes require Reference Library certification before VERIFIED status | REFERENCE UPDATE REQUIRED |
 
 ## 24. Document editing protocol
 
@@ -358,7 +348,7 @@ This file is authority, not a scratchpad.
 - stable reusable rules belong in numbered sections
 - page exceptions belong in page notes/audits, not global geometry
 - every production rule change gets a dated decision entry
-- prototype-only work remains `DESIGNED`
+- prototype-only work remains explicitly non-production
 - retain superseded history instead of silently erasing it
 - when code and docs disagree, inspect canonical source and log reconciliation
 - new primitives must update code, registry, Reference Library, responsive examples, tests and this resource
@@ -368,6 +358,32 @@ This file is authority, not a scratchpad.
 ## 25. Definition of done
 
 A Toolbox UI migration is complete only when hierarchy, geometry, color inheritance, state behavior, accessibility, motion, mobile composition and business functionality are verified; the Reference Library uses the same canonical primitive; visual/regression checks pass; no competing geometry authority is introduced; and this document's ledger/log/page notes are updated.
+
+## 26. Projects conversation implementation evidence — 2026-09-14
+
+| Finding | Classification | Evidence / status |
+| --- | --- | --- |
+| Creator-facing Kanban replaces developer-facing Project Command workbench | IMPLEMENTED | PR #158; canonical project records retained with workspace metadata layer |
+| Creator publishing calendar with Month/Week/Agenda + unscheduled backlog | IMPLEMENTED | PR #159; uses `Project.publishDate` |
+| Page-level Board/Calendar/Studio/Storyboard switcher | SUPERSEDED | PR #164 merged that composition; later accepted direction restored separate Toolbox modules |
+| Project Board, Publishing Schedule, Project Studio, Storyboard Studio as separate T0 modules | IMPLEMENTED | Main-line composition direction; preserve as current Projects hierarchy |
+| Duplicate Project Board custom shell/header | MIGRATE / OPEN ISSUE | Remove presentation shell only; preserve behavior |
+| `fix/projects-toolbox-internal-hierarchy` | PLANNED | Dedicated cleanup branch was created from an earlier main; reconcile with current main before writing because main advanced |
+| Projects mobile overlay top offset | LEGACY COMPATIBILITY / EXCEPTION | 70px mobile shell accommodation; do not globalize without overlay-system audit |
+| Projects Reference Library examples | REFERENCE UPDATE REQUIRED | Consumer composition changed without corresponding certification pass |
+
+### Repository snapshot for this update
+
+- Repository: `themotionvisual/ViewTubeBUILD`
+- Main inspected before this edit: `844a708f63e86ce52980a079d2c5907c0b710e41` (merge PR #207)
+- PR #158: merged Projects Kanban foundation
+- PR #159: merged creator publishing calendar
+- PR #164: merged temporary compact workspace switcher; composition is now **SUPERSEDED**
+- Current cleanup work must be rebased/reconciled from current main before further implementation; do not overwrite newer main work.
+
+### Handoff rule
+
+For the next Projects UI pass: keep each major Projects tool as one T0 Toolbox; never nest a second main-style shell/title inside it; use T1/T2/T3 primitives for internal functional groups; preserve all business/data behavior; do not globalize feature-local geometry or the 70px overlay compatibility rule; verify mobile/open/closed/states; then update the Reference Library and this ledger before marking the migration VERIFIED.
 
 ## Related resources
 
