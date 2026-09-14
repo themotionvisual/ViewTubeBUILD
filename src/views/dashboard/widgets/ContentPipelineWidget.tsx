@@ -27,8 +27,8 @@ export const ContentPipelineWidget: React.FC<CommonWidgetProps & { data: Dashboa
             {index < STAGES.length - 1 ? <span className="vt-pipeline-stage__arrow">→</span> : null}
           </div>)}
         </div>
-        <div className="vt-pipeline-focus"><span>NEXT QUEUE</span><strong>{data.todayTasks[0]?.title || data.todayTasks[0]?.label || "NO TASK SCHEDULED"}</strong></div>
-        <button className="vt-new-widget__action" type="button" onClick={() => onNavigate?.("/projects")}>OPEN PROJECTS</button>
+        <div className="vt-pipeline-focus"><span>NEXT QUEUE</span><strong>{data.todayTasks[0]?.text || "NO TASK SCHEDULED"}</strong></div>
+        <button className="vt-new-widget__action" type="button" onClick={() => onNavigate?.("/project-calendar")}>OPEN PROJECTS</button>
       </div>
     </WidgetShell>
   )
