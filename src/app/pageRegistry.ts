@@ -104,6 +104,7 @@ export const PAGE_REGISTRY: readonly PageRegistryEntry[] = Object.freeze([
  { path: "/bench/:benchId", title: "Bench", section: "reference", navigationVisibility: "hidden", lifecycle: "lab" },
  { path: "/render-bench/reference-studio", title: "Render Bench — Reference Studio", section: "reference", navigationVisibility: "hidden", lifecycle: "lab" },
  { path: "/render-bench/reference-studio/:tabId", title: "Render Bench — Reference Studio (tab)", section: "reference", navigationVisibility: "hidden", lifecycle: "lab" },
+ { path: "/render-bench/data-visual-audit", title: "Render Bench — Data Visual Mobile Audit", section: "reference", navigationVisibility: "hidden", lifecycle: "lab", description: "Deterministic Data Visual canvas audit bench used by the mobile screenshot harness." },
  { path: "/render-bench/:benchId", title: "Render Bench", section: "reference", navigationVisibility: "hidden", lifecycle: "lab" },
  { path: "/user-guide", title: "User Guide", section: "system", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/about", title: "About", section: "system", navigationVisibility: "drawer", lifecycle: "production" },

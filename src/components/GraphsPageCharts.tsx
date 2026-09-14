@@ -13,6 +13,8 @@ import type { CsvFileWithTag } from "../types"
 import { CustomIcon } from "./CustomIcon"
 import { AnalyticsVisualIcon } from "./AnalyticsVisualIcon"
 import { StableChartFrame } from "./StableChartFrame"
+import { DataVisualCanvas } from "./DataVisualCanvas"
+import { useDataVisualDensityBudget } from "./dataVisualCanvasGeometry"
 import {
  VIEWTUBE_CARTESIAN,
  ViewTubeScatterBubble,
@@ -1520,6 +1522,8 @@ const SHORTS_RETENTION_COUNT_VALUES = [10, 25, 50, 75, 100, 150, 200]
 type ShortsFormatFilter = "all" | "shorts" | "longform"
 
 export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visualStyle }) => {
+ // Canvas geometry comes from the registered `shorts-retention` contract; this
+ // module keeps header, controls and the legend strip.
  const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
  const [sortMetric, setSortMetric] = useState<"avd" | "estIncome" | "dur" | "views" | "watchHours">("avd")
  const [modeMenuOpen, setModeMenuOpen] = useState(false)
@@ -1648,7 +1652,7 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
     icon: visualShellIcon(visualStyle, "video"),
    }}
    theme={visualShellTheme(visualStyle, "#FF82B0", "#26C7EC")}
-   layout={{ moduleMinHeight: "420px", moduleWidth: "100%" }}
+   layout={{ moduleMinHeight: "0px", moduleWidth: "100%" }}
    controlBox={{
     count: cd.points.length,
     countUnit: "VIDEOS",
@@ -1693,10 +1697,10 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
     />
    }
   >
-   <div className="min-h-[400px] w-full min-w-0 max-w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
-    <div className="h-[400px] min-h-[400px] flex flex-col overflow-hidden">
-     <div className="h-[360px] min-h-[360px] relative shrink-0 overflow-visible">
-      <StableChartFrame minHeightClassName="min-h-[360px]">
+   <DataVisualCanvas id="shorts-retention" className="bg-white">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
+     <div className="relative min-h-0 flex-1 overflow-visible">
+      <StableChartFrame minHeightClassName="min-h-0">
        <ScatterChart
        className="[&_svg]:outline-none [&_svg]:overflow-visible [&_*:focus]:outline-none [&_*:focus-visible]:outline-none"
        margin={viewTubeCartesianMargin("scatter")}
@@ -1766,7 +1770,11 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
       </ScatterChart>
      </StableChartFrame>
      </div>
-     <div className="h-[40px] min-h-[40px] shrink-0 px-[22px] grid grid-cols-[minmax(0,1fr)_minmax(190px,auto)_minmax(0,1fr)] gap-x-10 items-start pt-1 pointer-events-none bg-white">
+     <div
+      /* Legend keys stay at full size and the strip scrolls sideways on a
+         narrow canvas, rather than the keys being clipped mid-label. */
+      className="h-[40px] min-h-[40px] shrink-0 overflow-x-auto px-[22px] grid grid-cols-[minmax(max-content,1fr)_minmax(190px,auto)_minmax(max-content,1fr)] gap-x-10 items-start pt-1 bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      data-vt-data-visual-secondary="compact">
       <div className="min-w-0 flex items-center gap-2 justify-self-end">
         <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Revenue</span>
         <div className="w-[155px] h-6 border-[2px] border-[#45DDB0] rounded-[2px] bg-gradient-to-r from-[#24BCFF] via-[#45DDB0] to-[#66FF8A]" />
@@ -1788,7 +1796,7 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
       </div>
      </div>
     </div>
-   </div>
+   </DataVisualCanvas>
   </SubToolboxChartModule>
  )
 }
@@ -2025,6 +2033,9 @@ const ENGAGEMENT_METRICS = [
 const ENGAGEMENT_PULSE_COUNT_OPTIONS = [10, 15, 20, 25, 50]
 
 export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle }) => {
+ // Phone compositions plot fewer videos rather than the same 25 crushed into a
+ // few hundred pixels; the count control still reaches the full range.
+ const { bucket: engagementBucket, budget: engagementPointBudget } = useDataVisualDensityBudget("engagement-pulse", 25)
  const [sortMetric, setSortMetric] = useState<string>("likes")
  const [mode, setMode] = useState<"top-performing" | "most-recent">("most-recent")
  const [format, setFormat] = useState<"shorts" | "longform" | "combined">("combined")
@@ -2063,12 +2074,13 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
     ? sortedByMetric([...mapped].sort((a, b) => b.uploadTs - a.uploadTs).slice(0, selectedCount))
     : sortedByMetric(mapped)
 
-  return sorted.slice(0, selectedCount).map((d, i) => ({
+  const plotted = engagementBucket === "desktop" ? selectedCount : Math.min(selectedCount, engagementPointBudget)
+  return sorted.slice(0, plotted).map((d, i) => ({
    ...d,
    idx: i,
    name: String(i + 1),
   }))
- }, [data, sortMetric, mode, format, selectedCount])
+ }, [data, sortMetric, mode, format, selectedCount, engagementBucket, engagementPointBudget])
 
  // Fixed dual-axis: LEFT = comments/shares/subs, RIGHT = likes (always).
  // Both sides use the shared nice-scale generator so ticks are rounded,
@@ -2137,7 +2149,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
     headerStyle: "subtoolbox",
    }}
    theme={visualShellTheme(visualStyle, "#FFB158", "#FF7497")}
-   layout={{ moduleMinHeight: "420px", moduleWidth: "100%" }}
+   layout={{ moduleMinHeight: "0px", moduleWidth: "100%" }}
    activeContext={{
     title: activeRow?.title?.toUpperCase().slice(0, 40) || "SELECT VIDEO",
     stats: ENGAGEMENT_METRICS.map((metric) => ({
@@ -2230,9 +2242,9 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
    }
   >
    <HeroIntroBoundary visualId="engagement-pulse" replayKey={animKey}>
-   <div className="min-h-[400px] w-full bg-white p-0 overflow-hidden flex flex-col">
-    <div className="h-[400px] relative">
-     <StableChartFrame minHeightClassName="min-h-[400px]">
+   <DataVisualCanvas id="engagement-pulse" className="bg-white">
+    <div className="relative h-full min-h-0 w-full">
+     <StableChartFrame minHeightClassName="min-h-0">
        <LineChart
         data={cd}
         margin={{ top: 10, right: 38, bottom: 10, left: 38 }}
@@ -2312,7 +2324,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
        </LineChart>
      </StableChartFrame>
     </div>
-   </div>
+   </DataVisualCanvas>
   </HeroIntroBoundary>
   </SubToolboxChartModule>
  )
@@ -4848,6 +4860,20 @@ const buildTrafficAxisTicks = (start: number, end: number, sectioned: boolean): 
  return ticks
 }
 
+/**
+ * Thins an ordered tick list down to a simultaneous-label budget, always
+ * keeping the first and last tick. Phone compositions show fewer dates rather
+ * than the same dates printed small enough to collide.
+ */
+const thinAxisTicks = (ticks: number[], budget: number): number[] => {
+ if (budget <= 1 || ticks.length <= budget) return ticks
+ const step = Math.ceil(ticks.length / budget)
+ const thinned = ticks.filter((_, index) => index % step === 0)
+ const last = ticks[ticks.length - 1]
+ if (thinned[thinned.length - 1] !== last) thinned.push(last)
+ return thinned
+}
+
 export const buildTrafficSourceDailyTimeline = (
  rows: Array<Record<string, unknown>>,
  options: {
@@ -4877,6 +4903,9 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  data,
  trafficByDay,
 }) => {
+ // Canvas geometry belongs to the registered contract; this module keeps the
+ // chrome and reduces its own label density per composition.
+ const { budget: trafficAxisTickBudget } = useDataVisualDensityBudget("traffic-source-evolution", 8)
  const ds = useMemo(() => buildExpansionDatasets(data), [data])
  const [selectedFormat, setSelectedFormat] = useState<DistributionFormatKey>("videos")
  const [selectedWindow, setSelectedWindow] = useState<DistributionWindowKey>("180d")
@@ -4953,10 +4982,13 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  const timelineStart = selectedWindow === "lifetime"
   ? earliestTimestamp
   : trafficWindowThreshold(selectedWindow)
- const axisTicks = buildTrafficAxisTicks(
-  timelineStart,
-  timelineEnd,
-  TRAFFIC_SECTIONED_AXIS_WINDOWS.has(selectedWindow),
+ const axisTicks = thinAxisTicks(
+  buildTrafficAxisTicks(
+   timelineStart,
+   timelineEnd,
+   TRAFFIC_SECTIONED_AXIS_WINDOWS.has(selectedWindow),
+  ),
+  trafficAxisTickBudget,
  )
  const windowTotals = trafficTimeline.reduce((acc, bucket) => {
   keys.forEach((key) => {
@@ -5121,7 +5153,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    heroVisualId="traffic-source-evolution"
    header={{ title: "TRAFFIC SOURCE EVOLUTION", subtitle: "SOURCE MIX OVER TIME", icon: <CustomIcon name="analytics" size={18} />, headerStyle: "subtoolbox" }}
    theme={{ headerBandBg: "#B8FF2C", iconBlockBg: "#24D3FF", shadowColor: "rgba(184,255,44,0.45)" }}
-   layout={{ moduleMinHeight: "470px", moduleWidth: "100%" }}
+   layout={{ moduleMinHeight: "0px", moduleWidth: "100%" }}
   controllerRows={controllerRows}
    activeContext={{
     title: activeContextTitle,
@@ -5132,10 +5164,10 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    }}
   >
    <HeroIntroBoundary visualId="traffic-source-evolution" replayKey={`${selectedWindow}-${visibleKeys.join("|")}`}>
-   <div className="h-full min-h-[470px] w-full overflow-hidden bg-[#090b16]">
+   <DataVisualCanvas id="traffic-source-evolution" className="bg-[#090b16]">
     {visibleKeys.length === 0 ? <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} /> : (
-     <div className="flex h-full flex-col justify-center gap-2">
-      <div className="flex h-[462px] flex-col overflow-hidden bg-[#050814]">
+     <div className="flex h-full min-h-0 flex-col justify-center">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#050814]">
        <div
         ref={hoverHostRef}
         className="relative min-h-0 w-full flex-1"
@@ -5251,7 +5283,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
       </div>
      </div>
     )}
-   </div>
+   </DataVisualCanvas>
   </HeroIntroBoundary>
   </SubToolboxChartModule>
  )

@@ -8,14 +8,21 @@ export interface DataVisualCanvasProps {
  children: React.ReactNode
 }
 
-/** Canvas-only boundary for source-native Data Visual modules. */
+/**
+ * Canvas-only boundary for registered Data Visual modules.
+ *
+ * Resolves the module's registered canvas contract — family, aspect, density
+ * and overflow policy — and hands geometry to `VisualCanvasViewport`. The
+ * emitted attributes are the contract surface CSS and renderers read; nothing
+ * here inspects a module title.
+ */
 export const DataVisualCanvas: React.FC<DataVisualCanvasProps> = ({ id, className, children }) => {
  const contract = dataVisualModuleContract(id)
- const overflowClass = contract.overflow === "scroll" ? "overflow-auto" : contract.overflow === "natural" ? "overflow-visible" : "overflow-hidden"
+
  return (
   <VisualCanvasViewport id={contract.id} family={contract.family} aspect={contract.canvasAspect} className={className}>
    <div
-    className={`h-full min-h-0 w-full min-w-0 ${overflowClass}`}
+    className="h-full min-h-0 w-full min-w-0"
     data-vt-data-visual-module={id}
     data-vt-data-visual-density={contract.density ?? "normal"}
     data-vt-data-visual-overflow={contract.overflow ?? "clip"}

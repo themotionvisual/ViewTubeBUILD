@@ -15,6 +15,11 @@
    legacy performance overrides so this layer remains the visual authority. */
 @import "./styles/subtoolbox-system.css";
 
+/* Canonical Data Visual canvas geometry. Loaded last of the visual layers so
+   the viewport boundary is the final authority on canvas geometry for migrated
+   Data Visual modules; unmigrated modules keep their legacy rules. */
+@import "./styles/data-visual-canvas.css";
+
 html,
 body,
 #root {

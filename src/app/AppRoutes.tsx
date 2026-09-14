@@ -32,6 +32,7 @@ const ReferenceStudio = lazy(() => import("../views/ReferenceStudio"))
 const ResearchLabToolbox = lazy(() => import("../views/ResearchLabToolbox"))
 const BenchExplorer = lazy(() => import("../views/bench/BenchExplorer"))
 const StandaloneBench = lazy(() => import("../views/bench/StandaloneBench"))
+const DataVisualMobileAudit = lazy(() => import("../views/bench/DataVisualMobileAudit"))
 const EditorV1Page = lazy(() => import("../views/EditorV1Page"))
 const ProjectCalendarPage = lazy(() => import("../views/ProjectCalendarPage"))
 const DataTransparencyCenter = lazy(() => import("../views/DataTransparencyCenter"))
@@ -143,6 +144,9 @@ export const AppRoutes: React.FC = () => {
      element={<Navigate to="/render-bench/reference-studio/toolbox-system" replace />}
     />
     <Route path="/render-bench/reference-studio/:tabId" element={<ReferenceStudio />} />
+    {/* Bare, deterministic Data Visual canvas audit bench. Declared before the
+        catch-all bench route so it resolves to its own view. */}
+    <Route path="/render-bench/data-visual-audit" element={<DataVisualMobileAudit />} />
     <Route path="/render-bench/:benchId" element={<StandaloneBench />} />
     <Route path="/user-guide" element={<UserGuide />} />
     <Route path="/about" element={<About />} />

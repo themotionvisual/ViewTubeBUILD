@@ -1,0 +1,221 @@
+/*
+ * Canonical Data Visual canvas geometry.
+ * ---------------------------------------------------------------------------
+ * Ownership contract (one owner per concern):
+ *
+ *   DATA VISUAL MODULE  -> header, title, controls, metrics, legend, explanation
+ *   DataVisualCanvas    -> registered identity, family, density, overflow policy
+ *   VisualCanvasViewport-> width, aspect ratio, bounded height, orientation
+ *   Renderer            -> drawing only; fills the viewport it is handed
+ *
+ * Everything in this file styles the *viewport* layer. Module chrome keeps its
+ * own rules elsewhere, and renderers must not reintroduce a height of their
+ * own. Legacy fixed-height rules (perf.css, mobile-visual-responsive-system.css,
+ * data-visual-preview-16x9.css, per-renderer inline heights) stay in place for
+ * unmigrated modules and are stood down per-module by the
+ * `[data-vt-data-visual-canvas-owned]` marker at the bottom of this file.
+ */
+
+/* ── 1. Mobile-first module layout ─────────────────────────────────────────── */
+
+[data-vt-data-visual-module-root] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── 2. Canvas aspect system ───────────────────────────────────────────────── */
+
+[data-vt-visual-canvas] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
+  container-type: inline-size;
+}
+
+[data-vt-visual-canvas][data-vt-visual-aspect="16:9"] {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+[data-vt-visual-canvas][data-vt-visual-aspect="1:1"] {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+[data-vt-visual-canvas][data-vt-visual-aspect="natural"] {
+  aspect-ratio: auto;
+  height: auto;
+}
+
+/* The renderer fills the canvas it is handed; it never sets its own height. */
+[data-vt-visual-canvas]:not([data-vt-visual-aspect="natural"]) > * {
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+}
+
+[data-vt-visual-canvas] svg,
+[data-vt-visual-canvas] canvas {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+[data-vt-visual-canvas] canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── 3. Overflow contract ──────────────────────────────────────────────────── */
+
+[data-vt-data-visual-overflow="clip"] { overflow: hidden; }
+[data-vt-data-visual-overflow="scroll"] { overflow: auto; }
+[data-vt-data-visual-overflow="natural"] { overflow: visible; }
+
+/* ── 4. Internal plot, separate from the outer canvas ──────────────────────── */
+
+/*
+ * The plot host is a size container so the plot can be sized against BOTH the
+ * available width and the available height. Sizing a square from height alone
+ * (`height: 100%; width: auto`) silently loses its ratio the moment `max-width`
+ * clamps it — which is exactly what happens to a radial plot in a narrow
+ * landscape column.
+ */
+[data-vt-data-visual-plot-host] {
+  container-type: size;
+}
+
+[data-vt-data-visual-plot] {
+  margin-inline: auto;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+[data-vt-data-visual-plot][data-vt-data-visual-plot-aspect="1:1"] {
+  aspect-ratio: 1 / 1;
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+}
+
+[data-vt-data-visual-plot][data-vt-data-visual-plot-aspect="16:9"] {
+  aspect-ratio: 16 / 9;
+  width: min(100cqw, calc(100cqh * 16 / 9));
+  height: auto;
+}
+
+/* ── 5. Portrait phone ─────────────────────────────────────────────────────── */
+
+@media (orientation: portrait) and (max-width: 768px) {
+  [data-vt-data-visual-module-root] {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  [data-vt-visual-canvas] {
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+  }
+}
+
+/* ── 6. Landscape phone ────────────────────────────────────────────────────── */
+/*
+ * Limited vertical space: preserve the aspect ratio and fit the viewport by
+ * bounding the canvas against the dynamic viewport height minus module chrome,
+ * never by distorting or cropping the evidence area. `dvh` is used so the
+ * mobile URL bar collapsing does not resize the canvas mid-scroll.
+ */
+
+/*
+ * Module chrome reserved above/below the evidence canvas on phone landscape.
+ * Declared on the root so a canvas can resolve it even when it is rendered
+ * outside a module frame (previews, the audit bench).
+ */
+:root {
+  --visual-mobile-chrome-height: 88px;
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  [data-vt-visual-canvas][data-vt-visual-aspect="16:9"] {
+    width: min(100%, calc((100dvh - var(--visual-mobile-chrome-height)) * 16 / 9));
+    max-height: calc(100dvh - var(--visual-mobile-chrome-height));
+    margin-inline: auto;
+  }
+
+  [data-vt-visual-canvas][data-vt-visual-aspect="1:1"] {
+    width: min(100%, calc(100dvh - var(--visual-mobile-chrome-height)));
+    max-height: calc(100dvh - var(--visual-mobile-chrome-height));
+    margin-inline: auto;
+  }
+
+  /* Secondary chrome compacts before the evidence canvas gives up any area. */
+  [data-vt-data-visual-module-root] [data-vt-data-visual-secondary="compact"] {
+    max-height: 30%;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+}
+
+/* ── 7. Legacy height-ownership stand-down (per migrated module only) ──────── */
+/*
+ * A module opts in by marking its chart body `data-vt-data-visual-canvas-owned`.
+ * From that point the viewport owns geometry and every legacy rule that also
+ * tried to own it — inline pixel heights, `min-h-[...]` utilities, the preview
+ * and mobile-responsive stylesheets — is neutralised for that module alone.
+ * Unmigrated modules keep their legacy behaviour untouched.
+ */
+
+[data-vt-chart-body][data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned],
+[data-vt-visual-frame] [data-vt-chart-body][data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned],
+[data-vt-preview-16x9] [data-vt-chart-body][data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned] {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  width: 100% !important;
+  overflow: visible !important;
+}
+
+/*
+ * The repeated marker attribute is deliberate: the legacy sheets target
+ * `[data-vt-visual-frame] [data-vt-chart-body] > *` with `!important`, so the
+ * stand-down needs strictly higher specificity to win regardless of the order
+ * in which the stylesheets happen to load.
+ */
+[data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned] [class*="min-h-["],
+[data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned] [class*="max-h-["] {
+  min-height: 0 !important;
+}
+
+[data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned] > * {
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+}
+
+/*
+ * Inside an owned body the viewport is the geometry authority again. Its own
+ * width / aspect-ratio / max-height rules (sections 2 and 6) are deliberately
+ * NOT restated here: the legacy sheets exclude owned bodies, so there is
+ * nothing left to out-shout and exactly one owner of canvas geometry.
+ */
+[data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned] [data-vt-visual-canvas]:not([data-vt-visual-aspect="natural"]) > * {
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+}
+
+
+/* ── 8. No page-level horizontal overflow ──────────────────────────────────── */
+
+[data-vt-data-visual-module-root],
+[data-vt-data-visual-module-root] [data-vt-chart-body] {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
