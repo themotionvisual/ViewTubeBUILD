@@ -380,6 +380,32 @@ meant to be comparable. Heat Matrix now registers rows only; its column count
 is an outcome of tile scale and the tile floor, and the renderer keeps its own
 minimum-visible-columns constant.
 
+**The landscape chrome reservation was wrong, and it hid everything else.**
+`--visual-mobile-chrome-height` shipped as a flat 88px guess. Real chrome runs
+165-197px, so the canvas was bounded against space the module did not have and
+the module ran off a 375px-tall landscape screen: 476px of module on a 375px
+viewport. It is now measured per module and published on the module root, and a
+landscape module fits its screen. This also forced two density decisions that
+only became visible once the canvas was honestly sized: the publish clock folds
+to 12 hour bands in landscape as well as portrait, and Clock Burst drops to one
+radial panel on BOTH phone compositions, because a two-panel split leaves each
+legend rail too narrow to carry a source name.
+
+**The audit harness was capturing frames that did not match their captions.**
+Screenshotting seven stacked visuals from one page produced element captures
+taken against bounding boxes computed before Playwright scrolled — and the hero
+intro that fires on scroll resized the module underneath. One frame showed
+Traffic Source Evolution's chart under the Engagement Pulse caption while the
+numbers beside it were correct. Each visual is now captured on its own page
+load (`?only=<id>`): nothing above it to shift, nothing to scroll. Anything
+below the fold also went unpainted, which is why that defect looked like blank
+space rather than a wrong frame.
+
+**`scripts/build-data-visual-contact-sheets.mjs`** lays each viewport's visuals
+out on one sheet with their measured canvas box and any failure printed
+underneath, because 35 separate PNGs are not reviewable in practice — and every
+defect in this section was found by eye, after the numbers had already passed.
+
 **Open for review:** Heat Matrix portrait now draws ~16 columns of 18px tiles
 rather than the 7-9 columns of larger tiles in section 3.3. Tile edge follows
 the mark scale (36 -> 18, the same halving applied everywhere), and how many

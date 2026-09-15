@@ -24,14 +24,15 @@ export interface VisualCanvasViewportProps {
  * what a canvas measures in each orientation. Renderer migrations should use
  * this boundary instead of title matching or a fixed parent pixel height.
  */
-export const VisualCanvasViewport: React.FC<VisualCanvasViewportProps> = ({
+export const VisualCanvasViewport = React.forwardRef<HTMLDivElement, VisualCanvasViewportProps>(({
  id,
  family,
  aspect = "16:9",
  className,
  children,
-}) => (
+}, ref) => (
  <div
+  ref={ref}
   className={className}
   data-vt-visual-canvas={id}
   data-vt-visual-family={family}
@@ -40,4 +41,6 @@ export const VisualCanvasViewport: React.FC<VisualCanvasViewportProps> = ({
  >
   {children}
  </div>
-)
+))
+
+VisualCanvasViewport.displayName = "VisualCanvasViewport"

@@ -2563,6 +2563,10 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
  // neither readable, so the second panel becomes reachable through a switch
  // instead of being shrunk or dropped.
  const panelBudget = useDataVisualPanelBudget("clock-radial-burst", 2)
+ // In a narrow side rail the per-row unit caption crowds the source name out
+ // entirely. The metric is already named in the header and the context bar, so
+ // the caption is what gives way — not the name of the source itself.
+ const railShowsUnit = bucket === "desktop"
  const singlePanel = panelBudget <= 1
  const [activePanel, setActivePanel] = useState<"sources" | "detail">("sources")
  const showSourcesPanel = !singlePanel || activePanel === "sources"
@@ -2741,8 +2745,8 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
       : "grid min-h-0 w-full flex-1 grid-cols-[0.8fr_1fr_1fr_0.8fr] gap-1 bg-[#000000] p-1"}>
     {showSourcesPanel && (
     <div
-     className={`flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5 ${portraitComposition ? "overflow-y-auto" : ""}`}
-     data-vt-data-visual-secondary="compact"
+     className="flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5"
+     data-vt-data-visual-secondary="rail"
      style={portraitComposition && !singlePanel ? { order: 3 } : undefined}>
      <div className="mb-1 flex items-center">
       <div className="min-w-0 flex-1">
@@ -2766,9 +2770,9 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
          </span>
          <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-1 bg-[#111321] px-1.5 py-0 text-black">
           <span className="block truncate text-[14px] font-black uppercase leading-tight" style={{ color: slice.color }}>{slice.label}</span>
-          <div className="text-right shrink-0">
+          <div className="text-right shrink-0" data-vt-rail-value>
            <span className="block text-[12px] font-black text-white">{formatClockBurstMetricValue(slice.value, metric)}</span>
-           <span className="block text-[9px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span>
+           {railShowsUnit ? <span className="block text-[9px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span> : null}
           </div>
          </span>
         </button>
@@ -2837,8 +2841,8 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
 
     {showDetailPanel && (
     <div
-     className={`flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5 ${portraitComposition ? "overflow-y-auto" : ""}`}
-     data-vt-data-visual-secondary="compact"
+     className="flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5"
+     data-vt-data-visual-secondary="rail"
      style={portraitComposition && !singlePanel ? { order: 4 } : undefined}>
      <div className="mb-1 flex items-center">
       <div className="min-w-0 flex-1">
@@ -2858,9 +2862,9 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
          </span>
          <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-1 bg-[#111321] px-1.5 py-0 text-black">
           <span className="block truncate text-[13px] font-black uppercase leading-tight" style={{ color: row.color }}>{label}</span>
-          <div className="text-right shrink-0">
+          <div className="text-right shrink-0" data-vt-rail-value>
            <span className="block text-[11px] font-black text-white">{formatClockBurstMetricValue(row.value, metric)}</span>
-           <span className="block text-[9px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span>
+           {railShowsUnit ? <span className="block text-[9px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span> : null}
           </div>
          </span>
         </div>

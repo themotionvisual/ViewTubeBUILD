@@ -317,17 +317,25 @@ const run = async () => {
    })
    await context.clock.setFixedTime(FIXED_CLOCK)
    const page = await context.newPage()
-   const url = `${base}${auditPath}`
-   const response = await page.goto(url, { waitUntil: "networkidle", timeout: 60_000 })
-   if (!response || response.status() >= 400) {
-    failures.push(`${viewport.label}: ${url} returned ${response ? response.status() : "no response"}`)
+
+   const openBench = async (query) => {
+    const url = `${base}${auditPath}${query}`
+    const response = await page.goto(url, { waitUntil: "networkidle", timeout: 60_000 })
+    if (!response || response.status() >= 400) {
+     failures.push(`${viewport.label}: ${url} returned ${response ? response.status() : "no response"}`)
+     return false
+    }
+    await page.waitForSelector("[data-vt-audit-visual]", { timeout: 30_000 })
+    // Hero intros are time-based and resize their module as they play; let them
+    // settle so a measurement and the frame beside it describe the same layout.
+    await page.waitForTimeout(2_500)
+    return true
+   }
+
+   if (!(await openBench(""))) {
     await context.close()
     continue
    }
-
-   await page.waitForSelector("[data-vt-audit-visual]", { timeout: 30_000 })
-   // Intro animations are time-based; let them settle so frames are comparable.
-   await page.waitForTimeout(2_500)
 
    // The bench page publishes the registered contracts, so the harness asserts
    // against the same source of truth the renderers read — no second copy.
@@ -336,27 +344,47 @@ const run = async () => {
     failures.push(`${viewport.label}: audit bench published no Data Visual contracts`)
    }
 
-   const measurements = await measure(page)
+   const registeredIds = (await measure(page)).visuals.map((visual) => visual.id)
    const entries = []
 
-   if (measurements.pageScrollWidth > measurements.pageClientWidth + 1) {
-    failures.push(`${viewport.label}: page scrolls horizontally (${measurements.pageScrollWidth} > ${measurements.pageClientWidth})`)
-   }
+   /*
+    * Each visual is captured on its own page load (`?only=<id>`).
+    *
+    * Capturing them from one stacked page looked cheaper, but an element
+    * screenshot there is taken against a bounding box computed before
+    * Playwright scrolls — and the hero intro that fires on scroll resizes the
+    * module underneath it. The result was frames showing the WRONG visual's
+    * content while the numbers beside them were correct. A screenshot that
+    * cannot be trusted is worse than no screenshot, so each visual now gets a
+    * page containing only itself: nothing above it to shift, nothing to scroll.
+    */
+   for (const id of registeredIds) {
+    if (!(await openBench(`&only=${encodeURIComponent(id)}`))) continue
 
-   for (const visual of measurements.visuals) {
-    const file = path.join(dir, `${visual.id}.png`)
-    const locator = page.locator(`[data-vt-audit-visual="${visual.id}"]`)
-    try {
-     await locator.screenshot({ path: file })
-    } catch (error) {
-     failures.push(`${viewport.label}/${visual.id}: screenshot failed — ${error.message}`)
+    const isolated = await measure(page)
+    const visual = isolated.visuals.find((entry) => entry.id === id)
+    if (!visual) {
+     failures.push(`${viewport.label}/${id}: did not render in isolation`)
      continue
     }
+
+    if (isolated.pageScrollWidth > isolated.pageClientWidth + 1) {
+     failures.push(`${viewport.label}/${id}: page scrolls horizontally (${isolated.pageScrollWidth} > ${isolated.pageClientWidth})`)
+    }
+
+    const file = path.join(dir, `${id}.png`)
+    try {
+     await page.locator(`[data-vt-audit-visual="${id}"]`).screenshot({ path: file })
+    } catch (error) {
+     failures.push(`${viewport.label}/${id}: screenshot failed — ${error.message}`)
+     continue
+    }
+
     const visualFailures = checkVisual(visual, viewport, contracts)
     failures.push(...visualFailures)
     entries.push({
      ...visual,
-     markInteraction: contracts[visual.id]?.markInteraction ?? "discrete",
+     markInteraction: contracts[id]?.markInteraction ?? "discrete",
      file,
      failures: visualFailures,
     })

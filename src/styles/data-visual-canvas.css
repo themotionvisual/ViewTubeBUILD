@@ -153,11 +153,42 @@
     margin-inline: auto;
   }
 
-  /* Secondary chrome compacts before the evidence canvas gives up any area. */
+  /*
+   * Secondary content compacts before the evidence canvas gives up any area —
+   * but only when it is stacked ABOVE or BELOW the plot, where it genuinely
+   * competes for the plot's height.
+   *
+   * `compact` is a horizontal strip (a legend row, a top-windows rail): cap it
+   * and let it scroll sideways. `rail` is a column sitting BESIDE the plot: it
+   * costs the plot no height at all, so capping it would only clip it — it
+   * scrolls vertically at full height instead.
+   */
   [data-vt-data-visual-module-root] [data-vt-data-visual-secondary="compact"] {
     max-height: 30%;
     overflow-x: auto;
     overflow-y: hidden;
+  }
+}
+
+/* A side rail is never height-capped; it scrolls within whatever height the
+   canvas gives it, in every composition. */
+[data-vt-data-visual-secondary="rail"] {
+  max-height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  container-type: inline-size;
+}
+
+/*
+ * A rail narrow enough that the value would crowd out the label drops the
+ * value instead. The share badge on the left still carries the magnitude, so
+ * what is lost is the least, not the most, informative part of the row — and
+ * this keys on the rail's own width, so it holds in any composition.
+ */
+@container (max-width: 132px) {
+  [data-vt-rail-value] {
+    display: none;
   }
 }
 

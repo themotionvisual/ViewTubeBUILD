@@ -1,5 +1,6 @@
 import React from "react"
 import { VisualCanvasViewport } from "./VisualCanvasViewport"
+import { usePublishedChromeHeight } from "./dataVisualCanvasGeometry"
 import { dataVisualModuleContract, type RegisteredDataVisualModuleId } from "./dataVisualModuleContract"
 
 export interface DataVisualCanvasProps {
@@ -18,9 +19,13 @@ export interface DataVisualCanvasProps {
  */
 export const DataVisualCanvas: React.FC<DataVisualCanvasProps> = ({ id, className, children }) => {
  const contract = dataVisualModuleContract(id)
+ const canvasRef = React.useRef<HTMLDivElement | null>(null)
+ // The landscape height clamp needs this module's real chrome height, not a
+ // flat guess, or the canvas sizes itself against space the module has not got.
+ usePublishedChromeHeight(canvasRef)
 
  return (
-  <VisualCanvasViewport id={contract.id} family={contract.family} aspect={contract.canvasAspect} className={className}>
+  <VisualCanvasViewport ref={canvasRef} id={contract.id} family={contract.family} aspect={contract.canvasAspect} className={className}>
    <div
     className="h-full min-h-0 w-full min-w-0"
     data-vt-data-visual-module={id}

@@ -150,7 +150,10 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
   plotAspect: "natural",
   density: "dense",
   overflow: "clip",
-  densityProfile: { desktop: 24, landscape: 24, portrait: 12 },
+  // Hour bands. Landscape folds to 12 alongside portrait: once chrome is
+  // measured honestly the landscape canvas is ~330px wide, and 24 columns of
+  // hour labels cannot be drawn there above the legibility floor.
+  densityProfile: { desktop: 24, landscape: 12, portrait: 12 },
   // 7 day rows x 12+ hour bands; read by colour, hover names the slot.
   markInteraction: "field",
  },
@@ -162,9 +165,10 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
   density: "compact",
   overflow: "clip",
   densityProfile: { desktop: 12, landscape: 10, portrait: 7 },
-  // Portrait shows one donut plus its own legend, switchable — halving two
-  // donuts to fit would make neither readable.
-  panelBudget: { desktop: 2, landscape: 2, portrait: 1 },
+  // One donut plus its own legend on any phone, switchable. Once module chrome
+  // is measured honestly the landscape canvas is ~400x225, where two panels
+  // leave each legend rail too narrow to carry a source name at all.
+  panelBudget: { desktop: 2, landscape: 1, portrait: 1 },
   // A 5% wedge cannot be 24px in a phone-sized donut at any density. The
   // wedge is a field mark read by angle and colour; the legend row beside it
   // is the full-width accessible picker for the same source.

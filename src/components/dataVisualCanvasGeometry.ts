@@ -195,6 +195,57 @@ export const useVisualCanvasBox = (ref: React.RefObject<HTMLElement | null>): Vi
 }
 
 /**
+ * Publishes the module's real chrome height as `--visual-mobile-chrome-height`
+ * on its module root.
+ *
+ * The landscape rule bounds the evidence canvas against
+ * `100dvh - var(--visual-mobile-chrome-height)`. That variable shipped as a
+ * flat 88px guess, but real chrome — header, controller rows, the metric strip,
+ * a footer — runs 150-185px depending on the module, so the canvas was sized
+ * against space the module did not have and pushed itself off a short
+ * landscape screen.
+ *
+ * Chrome height is measured as "the module minus the canvas". That reads
+ * circular, but chrome sizes itself from its own content and never from the
+ * canvas, so one correction settles it; the epsilon guard stops a sub-pixel
+ * loop either way.
+ */
+export const usePublishedChromeHeight = (canvasRef: React.RefObject<HTMLElement | null>): void => {
+ React.useEffect(() => {
+  const canvas = canvasRef.current
+  if (!canvas || typeof ResizeObserver === "undefined") return
+  const root = canvas.closest<HTMLElement>("[data-vt-data-visual-module-root]")
+  if (!root) return
+
+  let frame = 0
+  let published = Number.NaN
+
+  const sync = () => {
+   if (frame) cancelAnimationFrame(frame)
+   frame = requestAnimationFrame(() => {
+    if (!canvas.isConnected || !root.isConnected) return
+    const chrome = root.getBoundingClientRect().height - canvas.getBoundingClientRect().height
+    if (!Number.isFinite(chrome) || chrome < 0) return
+    const next = Math.round(chrome)
+    if (Number.isFinite(published) && Math.abs(next - published) <= 2) return
+    published = next
+    root.style.setProperty("--visual-mobile-chrome-height", `${next}px`)
+   })
+  }
+
+  const observer = new ResizeObserver(sync)
+  observer.observe(root)
+  observer.observe(canvas)
+  sync()
+  return () => {
+   if (frame) cancelAnimationFrame(frame)
+   observer.disconnect()
+   root.style.removeProperty("--visual-mobile-chrome-height")
+  }
+ }, [canvasRef])
+}
+
+/**
  * Keeps a native `<canvas>` backing store in step with its CSS box and the
  * device pixel ratio. The element is sized by CSS (`width/height: 100%`); this
  * hook only owns the backing store and the drawing transform.

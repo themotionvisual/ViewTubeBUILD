@@ -104,9 +104,11 @@ describe("mark scale, floors and budgets", () => {
   expect(dataVisualDefaultSelection("heat-matrix", "desktop")).toBe(8)
  })
 
- it("shows one radial panel at a time on a portrait phone", () => {
+ it("shows one radial panel at a time on any phone", () => {
+  // Both phone canvases leave a two-panel split too narrow for a legend rail
+  // to carry a source name; the second panel moves behind a switch instead.
   expect(dataVisualPanelBudget("clock-radial-burst", "portrait")).toBe(1)
-  expect(dataVisualPanelBudget("clock-radial-burst", "landscape")).toBe(2)
+  expect(dataVisualPanelBudget("clock-radial-burst", "landscape")).toBe(1)
   expect(dataVisualPanelBudget("clock-radial-burst", "desktop")).toBe(2)
  })
 
