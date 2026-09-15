@@ -1,6 +1,12 @@
 import React from "react"
 import {
+ dataVisualDefaultSelection,
  dataVisualDensityBudget,
+ dataVisualMarkScale,
+ dataVisualPanelBudget,
+ dataVisualSeriesBudget,
+ scaleMark,
+ type DataVisualMarkFloor,
  type DataVisualViewportBucket,
  type RegisteredDataVisualModuleId,
 } from "./dataVisualModuleContract"
@@ -50,6 +56,99 @@ export const useDataVisualDensityBudget = (
 ): { bucket: DataVisualViewportBucket; budget: number } => {
  const bucket = useDataVisualViewportBucket()
  return { bucket, budget: dataVisualDensityBudget(id, bucket) ?? fallback }
+}
+
+/**
+ * Mark-geometry multiplier for the active composition.
+ *
+ * Pair it with `scaleMark` so every scaled value clamps to its legibility or
+ * touch floor: `scaleMark(32, markScale, "bubbleRadius")`.
+ */
+export const useDataVisualMarkScale = (id: RegisteredDataVisualModuleId): number => {
+ const bucket = useDataVisualViewportBucket()
+ return dataVisualMarkScale(id, bucket)
+}
+
+/**
+ * Convenience pairing of the multiplier with a bound `scale` helper, so a
+ * renderer scales several dimensions without repeating the floor names.
+ */
+export const useDataVisualMarks = (
+ id: RegisteredDataVisualModuleId,
+): {
+ bucket: DataVisualViewportBucket
+ markScale: number
+ scale: (base: number, floor: DataVisualMarkFloor | number) => number
+} => {
+ const bucket = useDataVisualViewportBucket()
+ const markScale = dataVisualMarkScale(id, bucket)
+ return {
+  bucket,
+  markScale,
+  scale: (base, floor) => scaleMark(base, markScale, floor),
+ }
+}
+
+/**
+ * Where the module's count control should start in the active composition.
+ * Falls back to the module's own desktop default when nothing is registered.
+ */
+export const useDataVisualDefaultSelection = (
+ id: RegisteredDataVisualModuleId,
+ fallback: number,
+): number => {
+ const bucket = useDataVisualViewportBucket()
+ return dataVisualDefaultSelection(id, bucket) ?? fallback
+}
+
+/**
+ * Count state that opens at the composition default and then respects the
+ * reader.
+ *
+ * The module starts at whatever the contract registers for the active
+ * composition — Engagement Pulse opens on 10 videos in portrait rather than 25.
+ * Once the reader moves the control, their choice is theirs: rotating the
+ * phone will not silently overwrite it. Only an untouched control re-picks the
+ * default when the composition changes.
+ */
+export const useDataVisualSelection = (
+ id: RegisteredDataVisualModuleId,
+ fallback: number,
+): [number, (next: number) => void] => {
+ const bucket = useDataVisualViewportBucket()
+ const resolved = dataVisualDefaultSelection(id, bucket) ?? fallback
+ const [value, setValue] = React.useState(resolved)
+ const touched = React.useRef(false)
+
+ React.useEffect(() => {
+  if (touched.current) return
+  setValue(resolved)
+ }, [resolved])
+
+ const select = React.useCallback((next: number) => {
+  touched.current = true
+  setValue(next)
+ }, [])
+
+ return [value, select]
+}
+
+/** How many sub-panels this canvas may draw at once. */
+export const useDataVisualPanelBudget = (
+ id: RegisteredDataVisualModuleId,
+ fallback: number,
+): number => {
+ const bucket = useDataVisualViewportBucket()
+ return dataVisualPanelBudget(id, bucket) ?? fallback
+}
+
+/** How many simultaneous series / metric traces this canvas may draw. */
+export const useDataVisualSeriesBudget = (
+ id: RegisteredDataVisualModuleId,
+ fallback: number,
+): number => {
+ const bucket = useDataVisualViewportBucket()
+ return dataVisualSeriesBudget(id, bucket) ?? fallback
 }
 
 export interface VisualCanvasBox {

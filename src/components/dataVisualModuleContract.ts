@@ -20,11 +20,71 @@ export type DataVisualViewportBucket = "desktop" | "landscape" | "portrait"
  * data stays reachable through the module's declared overflow behaviour
  * (horizontal data navigation, pagination or range selection).
  */
-export interface DataVisualDensityProfile {
+export interface DataVisualOrientationProfile {
  desktop: number
  landscape: number
  portrait: number
 }
+
+/** @deprecated Kept as the original name of the shared per-orientation shape. */
+export type DataVisualDensityProfile = DataVisualOrientationProfile
+
+/**
+ * Default per-orientation multiplier applied to mark geometry — bubble radii,
+ * stroke widths, bar thickness, tile edges, marker radii.
+ *
+ * Density (how many marks) and scale (how big each mark is) are independent
+ * decisions. A canvas that is correctly bounded still reads as a blob if it
+ * draws desktop-sized marks into a phone-sized box.
+ *
+ * Portrait is the "halve it" instruction generalised; landscape sits between
+ * because the landscape canvas is roughly 1.5x the portrait canvas area.
+ */
+export const DEFAULT_DATA_VISUAL_MARK_SCALE: DataVisualOrientationProfile = {
+ desktop: 1,
+ landscape: 0.6,
+ portrait: 0.5,
+}
+
+/**
+ * Legibility and touch floors. Scaling is a multiplier, not a licence to draw
+ * marks nobody can read or hit, so every scaled value clamps to its floor.
+ *
+ * When a density budget and a floor cannot both be satisfied, **density gives
+ * way** — draw fewer marks, never smaller ones than these.
+ */
+export const DATA_VISUAL_MARK_FLOORS = {
+ /** Minimum hit area for an interactive mark, in CSS px (may exceed the visible mark). */
+ touchTarget: 24,
+ /** Below this a hairline disappears on low-DPR phones. */
+ strokeWidth: 1.5,
+ /** Below this the uppercase heavy faces stop resolving. */
+ fontSize: 8,
+ /** Below this a heat tile reads as noise rather than as one video. */
+ tileEdge: 10,
+ /** Below this a bubble is a dot and its area stops encoding anything. */
+ bubbleRadius: 2,
+} as const
+
+export type DataVisualMarkFloor = keyof typeof DATA_VISUAL_MARK_FLOORS
+
+/**
+ * How a reader interacts with this module's primary marks.
+ *
+ * - `discrete` — each mark is a tap target in its own right (a treemap tile, a
+ *   legend chip). The touch floor applies: if marks cannot be 24px and meet
+ *   the density budget, density gives way.
+ * - `field` — the mark is one cell in a dense field read primarily by colour
+ *   or position (a heat matrix tile, a publish-clock slot, a scatter point).
+ *   Per-mark tapping is a progressive enhancement over hover/focus and the
+ *   active-context readout, so the touch floor does not apply — forcing 24px
+ *   cells on a 7-day x 12-band clock would destroy the pattern the visual
+ *   exists to show.
+ *
+ * `field` is an explicit, recorded decision rather than an oversight: a module
+ * that omits this is treated as `discrete` and must meet the floor.
+ */
+export type DataVisualMarkInteraction = "discrete" | "field"
 
 export interface DataVisualModuleCanvasContract {
  id: string
@@ -39,7 +99,28 @@ export interface DataVisualModuleCanvasContract {
  plotAspect?: VisualCanvasAspect
  density?: DataVisualModuleDensity
  overflow?: DataVisualModuleOverflow
- densityProfile?: DataVisualDensityProfile
+ /** How many simultaneous primary marks may be drawn. */
+ densityProfile?: DataVisualOrientationProfile
+ /**
+  * How big each mark is drawn, as a multiplier on the renderer's desktop
+  * geometry. Omit to take `DEFAULT_DATA_VISUAL_MARK_SCALE`.
+  */
+ markScale?: DataVisualOrientationProfile
+ /**
+  * Where the module's own count control starts in each composition. This is a
+  * canvas-driven default, not a control redesign: the control keeps its full
+  * range and the reader can still reach every value.
+  */
+ defaultSelection?: DataVisualOrientationProfile
+ /**
+  * How many sub-panels share one canvas — side-by-side plots, stacked plot
+  * rows. A panel that does not fit becomes reachable (a switch), never clipped.
+  */
+ panelBudget?: DataVisualOrientationProfile
+ /** How many simultaneous series / metric traces may be drawn. */
+ seriesBudget?: DataVisualOrientationProfile
+ /** Whether each mark is its own tap target, or one cell in a dense field. */
+ markInteraction?: DataVisualMarkInteraction
 }
 
 export const DATA_VISUAL_MODULE_CONTRACTS = {
@@ -49,7 +130,12 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
   canvasAspect: "16:9",
   density: "normal",
   overflow: "clip",
-  densityProfile: { desktop: 10, landscape: 8, portrait: 5 },
+  // Both in videos: the control opens at `defaultSelection` and cannot be
+  // pushed past `densityProfile`, so the two never disagree on screen.
+  densityProfile: { desktop: 200, landscape: 100, portrait: 50 },
+  defaultSelection: { desktop: 100, landscape: 50, portrait: 25 },
+  // Overlapping scatter points; the nearest-point readout is the tap affordance.
+  markInteraction: "field",
  },
  /**
   * Production renderer is a 24-hour x 7-day publish grid, not a radial dial,
@@ -65,6 +151,8 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
   density: "dense",
   overflow: "clip",
   densityProfile: { desktop: 24, landscape: 24, portrait: 12 },
+  // 7 day rows x 12+ hour bands; read by colour, hover names the slot.
+  markInteraction: "field",
  },
  "clock-radial-burst": {
   id: "clock-radial-burst",
@@ -74,6 +162,13 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
   density: "compact",
   overflow: "clip",
   densityProfile: { desktop: 12, landscape: 10, portrait: 7 },
+  // Portrait shows one donut plus its own legend, switchable — halving two
+  // donuts to fit would make neither readable.
+  panelBudget: { desktop: 2, landscape: 2, portrait: 1 },
+  // A 5% wedge cannot be 24px in a phone-sized donut at any density. The
+  // wedge is a field mark read by angle and colour; the legend row beside it
+  // is the full-width accessible picker for the same source.
+  markInteraction: "field",
  },
  "heat-matrix": {
   id: "heat-matrix",
@@ -81,7 +176,15 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
   canvasAspect: "16:9",
   density: "dense",
   overflow: "clip",
-  densityProfile: { desktop: 18, landscape: 14, portrait: 8 },
+  // One tile per video in a dense field; hover/lock drives the readout.
+  markInteraction: "field",
+  /**
+   * Tile rows: the grid is 8 deep on desktop and 4 deep on a portrait phone.
+   * No `densityProfile` here on purpose — the tile edge is set by mark scale
+   * and the tile floor, and how many columns that yields is an outcome, not a
+   * cap. The renderer keeps its own minimum-visible-columns constant.
+   */
+  defaultSelection: { desktop: 8, landscape: 6, portrait: 4 },
  },
  "traffic-source-evolution": {
   id: "traffic-source-evolution",
@@ -90,6 +193,7 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
   density: "normal",
   overflow: "clip",
   densityProfile: { desktop: 8, landscape: 6, portrait: 4 },
+  seriesBudget: { desktop: 8, landscape: 6, portrait: 4 },
  },
  "engagement-pulse": {
   id: "engagement-pulse",
@@ -97,7 +201,12 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
   canvasAspect: "16:9",
   density: "normal",
   overflow: "clip",
-  densityProfile: { desktop: 12, landscape: 9, portrait: 6 },
+  // The count control governs how many videos are plotted; the cap exists only
+  // so an extreme choice cannot be drawn past legibility. It must never sit
+  // below `defaultSelection`, or the control and the plot would disagree.
+  densityProfile: { desktop: 50, landscape: 25, portrait: 20 },
+  defaultSelection: { desktop: 25, landscape: 15, portrait: 10 },
+  seriesBudget: { desktop: 4, landscape: 4, portrait: 3 },
  },
  "content-treemap": {
   id: "content-treemap",
@@ -106,6 +215,8 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
   density: "dense",
   overflow: "clip",
   densityProfile: { desktop: 12, landscape: 9, portrait: 6 },
+  // Each pillar is a button the reader taps to drill in.
+  markInteraction: "discrete",
  },
 } as const satisfies Record<string, DataVisualModuleCanvasContract>
 
@@ -123,3 +234,41 @@ export const dataVisualDensityBudget = (
  id: RegisteredDataVisualModuleId,
  bucket: DataVisualViewportBucket,
 ): number | undefined => dataVisualModuleContract(id).densityProfile?.[bucket]
+
+/** Mark-geometry multiplier for a module, falling back to the shared default. */
+export const dataVisualMarkScale = (
+ id: RegisteredDataVisualModuleId,
+ bucket: DataVisualViewportBucket,
+): number => dataVisualModuleContract(id).markScale?.[bucket] ?? DEFAULT_DATA_VISUAL_MARK_SCALE[bucket]
+
+export const dataVisualDefaultSelection = (
+ id: RegisteredDataVisualModuleId,
+ bucket: DataVisualViewportBucket,
+): number | undefined => dataVisualModuleContract(id).defaultSelection?.[bucket]
+
+export const dataVisualPanelBudget = (
+ id: RegisteredDataVisualModuleId,
+ bucket: DataVisualViewportBucket,
+): number | undefined => dataVisualModuleContract(id).panelBudget?.[bucket]
+
+/** Whether the touch floor applies to this module's marks. */
+export const dataVisualMarkInteraction = (
+ id: RegisteredDataVisualModuleId,
+): DataVisualMarkInteraction => dataVisualModuleContract(id).markInteraction ?? "discrete"
+
+export const dataVisualSeriesBudget = (
+ id: RegisteredDataVisualModuleId,
+ bucket: DataVisualViewportBucket,
+): number | undefined => dataVisualModuleContract(id).seriesBudget?.[bucket]
+
+/**
+ * Scale one mark dimension and clamp it to its floor.
+ *
+ * The single place rounding and clamping happen, so no renderer re-derives a
+ * floor and none of them drift apart.
+ */
+export const scaleMark = (base: number, scale: number, floor: DataVisualMarkFloor | number): number => {
+ const limit = typeof floor === "number" ? floor : DATA_VISUAL_MARK_FLOORS[floor]
+ if (!Number.isFinite(base) || base <= 0) return base
+ return Math.max(limit, base * scale)
+}

@@ -89,8 +89,16 @@ import { CustomIcon } from "./CustomIcon"
 import { StableChartFrame } from "./StableChartFrame"
 import { DataVisualCanvas } from "./DataVisualCanvas"
 import { DataVisualPlot } from "./DataVisualPlot"
+import { DATA_VISUAL_MARK_FLOORS } from "./dataVisualModuleContract"
 import type { RegisteredDataVisualModuleId } from "./dataVisualModuleContract"
-import { useDataVisualDensityBudget, useDataVisualViewportBucket, useVisualCanvasBox } from "./dataVisualCanvasGeometry"
+import {
+ useDataVisualDensityBudget,
+ useDataVisualMarks,
+ useDataVisualPanelBudget,
+ useDataVisualSelection,
+ useDataVisualViewportBucket,
+ useVisualCanvasBox,
+} from "./dataVisualCanvasGeometry"
 import type { SubToolboxChartModuleProps } from "./SubToolboxChartModule"
 import {
  getVtVisualHeaderColorPair,
@@ -2551,6 +2559,18 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
  // them as a compact, scrollable strip. No information is removed.
  const bucket = useDataVisualViewportBucket()
  const portraitComposition = bucket === "portrait"
+ // A portrait canvas fits one radial plot, not two. Halving both would make
+ // neither readable, so the second panel becomes reachable through a switch
+ // instead of being shrunk or dropped.
+ const panelBudget = useDataVisualPanelBudget("clock-radial-burst", 2)
+ const singlePanel = panelBudget <= 1
+ const [activePanel, setActivePanel] = useState<"sources" | "detail">("sources")
+ const showSourcesPanel = !singlePanel || activePanel === "sources"
+ const showDetailPanel = !singlePanel || activePanel === "detail"
+ // No mark scale here on purpose: the donut is a fixed-viewBox SVG, so its
+ // slices and labels already scale with the plot box. Giving the single
+ // portrait panel the full canvas width is what enlarges the marks; applying a
+ // multiplier on top would shrink an already-correct drawing twice.
  const [selectedKind, setSelectedKind] = useState<TrafficFocusKind>("search")
  const [hoveredDonutSliceKey, setHoveredDonutSliceKey] = useState<string | null>(null)
  const [hoveredDonutSlice, setHoveredDonutSlice] = useState<{ label: string; views: number; color: string; share: number; scope: string } | null>(null)
@@ -2688,16 +2708,42 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
 
  return (
   <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#000000] text-white">
+   {singlePanel ? (
+    <div className="flex shrink-0 items-stretch gap-1 px-1 pt-1" role="tablist" aria-label="Clock burst panel">
+     {([
+      { key: "sources" as const, label: "SOURCES" },
+      { key: "detail" as const, label: detailLabel },
+     ]).map((panel) => {
+      const isActive = activePanel === panel.key
+      return (
+       <button
+        key={panel.key}
+        type="button"
+        role="tab"
+        aria-selected={isActive}
+        onClick={() => setActivePanel(panel.key)}
+        className={`min-h-[28px] flex-1 truncate rounded-[8px] border-[2px] border-black px-2 text-[10px] font-[1000] uppercase tracking-[0.08em] ${isActive ? "bg-[#FFE35A] text-black" : "bg-[#111321] text-white/70"}`}>
+        {panel.label}
+       </button>
+      )
+     })}
+    </div>
+   ) : null}
    <div
-    className={portraitComposition
-     // Two thirds of the canvas stay with the evidence plots; the legends take
-     // the remaining third and scroll, so chrome gives way before the canvas.
-     ? "grid min-h-0 w-full flex-1 grid-cols-2 grid-rows-[minmax(0,2fr)_minmax(0,1fr)] gap-1 bg-[#000000] p-1"
-     : "grid min-h-0 w-full flex-1 grid-cols-[0.8fr_1fr_1fr_0.8fr] gap-1 bg-[#000000] p-1"}>
+    className={singlePanel
+     // Side by side, not stacked: the canvas is wide and short, so giving the
+     // plot the full height makes its slices as large as the canvas allows.
+     ? "grid min-h-0 w-full flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-1 bg-[#000000] p-1"
+     : portraitComposition
+      // Two thirds of the canvas stay with the evidence plots; the legends take
+      // the remaining third and scroll, so chrome gives way before the canvas.
+      ? "grid min-h-0 w-full flex-1 grid-cols-2 grid-rows-[minmax(0,2fr)_minmax(0,1fr)] gap-1 bg-[#000000] p-1"
+      : "grid min-h-0 w-full flex-1 grid-cols-[0.8fr_1fr_1fr_0.8fr] gap-1 bg-[#000000] p-1"}>
+    {showSourcesPanel && (
     <div
      className={`flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5 ${portraitComposition ? "overflow-y-auto" : ""}`}
      data-vt-data-visual-secondary="compact"
-     style={portraitComposition ? { order: 3 } : undefined}>
+     style={portraitComposition && !singlePanel ? { order: 3 } : undefined}>
      <div className="mb-1 flex items-center">
       <div className="min-w-0 flex-1">
        <div className="truncate text-[14px] font-black uppercase tracking-[0.04em] text-white">Traffic sources</div>
@@ -2707,7 +2753,14 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
       {overviewSlicesVisible.map((slice, index) => {
        const share = (slice.value / totalValue) * 100
        return (
-        <div key={`${slice.kind}-${slice.label}-${index}`} className="flex w-full items-stretch overflow-hidden rounded-[6px] border border-black text-left shadow-[1px_1px_0px_0px_rgba(0,0,0,0.22)]">
+        <button
+         key={`${slice.kind}-${slice.label}-${index}`}
+         type="button"
+         aria-pressed={activeKind === slice.kind}
+         onClick={() => setSelectedKind(slice.kind)}
+         /* The legend row is the accessible picker for its source: a full-width
+            target every reader can hit, where a 5% donut wedge never can be. */
+         className="flex w-full items-stretch overflow-hidden rounded-[6px] border border-black text-left shadow-[1px_1px_0px_0px_rgba(0,0,0,0.22)]">
          <span className="flex w-[32px] shrink-0 items-center justify-center px-0.5 text-center text-[12px] font-[1000] uppercase leading-none tracking-[-0.04em] text-black" style={{ background: slice.color }}>
           {formatClockBurstShare(share)}
          </span>
@@ -2718,15 +2771,18 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
            <span className="block text-[9px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span>
           </div>
          </span>
-        </div>
+        </button>
        )
       })}
      </div>
     </div>
+    )}
 
+    {showSourcesPanel && (
     <div
      className="min-h-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-0"
-     style={portraitComposition ? { order: 1 } : undefined}>
+     data-vt-data-visual-panel="sources"
+     style={portraitComposition && !singlePanel ? { order: 1 } : undefined}>
      <div className="h-full min-h-0 overflow-hidden rounded-[12px] border-[2px] border-black bg-[#050814] p-0">
       <DataVisualPlot id="clock-radial-burst">
       {renderDonut({
@@ -2746,10 +2802,13 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
       </DataVisualPlot>
      </div>
     </div>
+    )}
 
+    {showDetailPanel && (
     <div
      className="min-h-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-0"
-     style={portraitComposition ? { order: 2 } : undefined}>
+     data-vt-data-visual-panel="detail"
+     style={portraitComposition && !singlePanel ? { order: 2 } : undefined}>
      <div className="h-full min-h-0 overflow-hidden rounded-[12px] border-[2px] border-black bg-[#050814] p-0">
       <DataVisualPlot id="clock-radial-burst">
       {detailSlices.length > 0 ? (
@@ -2774,11 +2833,13 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
       </DataVisualPlot>
      </div>
     </div>
+    )}
 
+    {showDetailPanel && (
     <div
      className={`flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5 ${portraitComposition ? "overflow-y-auto" : ""}`}
      data-vt-data-visual-secondary="compact"
-     style={portraitComposition ? { order: 4 } : undefined}>
+     style={portraitComposition && !singlePanel ? { order: 4 } : undefined}>
      <div className="mb-1 flex items-center">
       <div className="min-w-0 flex-1">
        <div className="truncate text-[14px] font-black uppercase tracking-[0.04em] text-white">{detailLabel}</div>
@@ -2812,6 +2873,7 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
       ) : null}
      </div>
     </div>
+    )}
    </div>
   </div>
  )
@@ -3448,9 +3510,22 @@ const formatDuration = (seconds: number): string => {
  return `${m}:${s.toString().padStart(2, "0")}`
 }
 
+/** Tile rows the matrix is drawn at; the contract picks one per composition. */
+type HeatMatrixRowCount = 4 | 5 | 6 | 8
+
+const HEAT_MATRIX_ROW_COUNTS: readonly HeatMatrixRowCount[] = [4, 5, 6, 8]
+
+/** Columns the tile edge is sized to keep on screen at once. */
+const HEAT_MATRIX_MIN_VISIBLE_COLUMNS = 18
+
+/** Snaps a registered row count onto the depths the tile grid supports. */
+const heatMatrixRows = (value: number): HeatMatrixRowCount =>
+ HEAT_MATRIX_ROW_COUNTS.reduce((closest, candidate) =>
+  Math.abs(candidate - value) < Math.abs(closest - value) ? candidate : closest)
+
 const ThermalImagingModuleInner: React.FC<{
  displayVideos: any[]
- rows: 5 | 8
+ rows: HeatMatrixRowCount
  hoveredIdx: number | null
  lockedIdx: number | null
  chronologicalMode: boolean
@@ -3482,14 +3557,20 @@ const ThermalImagingModuleInner: React.FC<{
  // box says how much room those columns and rows actually have. The tile edge
  // is the smaller of the two constraints so tiles stay square and the grid
  // neither overflows its canvas nor renders unreadably small marks.
- const { bucket, budget: columnBudget } = useDataVisualDensityBudget("heat-matrix", 18)
+ // How many columns must fit at once. This is a minimum the tile edge is sized
+ // against, not a cap: once the tile hits its scale and floor, however many
+ // columns fit is the answer, and the rest stay reachable by scrolling.
+ const columnBudget = HEAT_MATRIX_MIN_VISIBLE_COLUMNS
+ const { scale: scaleHeatMark } = useDataVisualMarks("heat-matrix")
  const canvasBox = useVisualCanvasBox(containerRef)
 
  const GAP = 2
- const ROWS = bucket === "portrait" ? Math.min(rows, 5) : rows
+ // Row depth is the module's registered composition default (4 rows on a
+ // portrait phone), so it is one decision in one place rather than a clamp here.
+ const ROWS = rows
  const cols = Math.ceil(displayVideos.length / ROWS)
  const TILE = useMemo(() => {
-  const preferred = rows === 5 ? 58 : 36
+  const preferred = scaleHeatMark(rows <= 5 ? 58 : 36, "tileEdge")
   if (canvasBox.width < 1 || canvasBox.height < 1) return preferred
   // `useVisualCanvasBox` reports the border box; the scroller carries `p-2`.
   const SCROLLER_PADDING = 16
@@ -3498,7 +3579,7 @@ const ThermalImagingModuleInner: React.FC<{
   const fromHeight = Math.floor((innerHeight - (ROWS - 1) * GAP) / ROWS)
   const fromWidth = Math.floor((innerWidth - (columnBudget - 1) * GAP) / columnBudget)
   return Math.max(10, Math.min(preferred, fromHeight, fromWidth))
- }, [canvasBox.width, canvasBox.height, ROWS, columnBudget, rows])
+ }, [canvasBox.width, canvasBox.height, ROWS, columnBudget, rows, scaleHeatMark])
 
  // In chronological view only, keep the video with the highest selected-metric
  // value visually identifiable even though the tiles themselves are date-ordered.
@@ -3933,7 +4014,9 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
  const [metric, setMetric] = useState<ThermalMetricKey>("views")
  const [formatFilter, setFormatFilter] = useState<"all" | "shorts" | "long">("all")
  const [orderMode, setOrderMode] = useState<"chrono" | "rank">("chrono")
- const [rowCount, setRowCount] = useState<5 | 8>(8)
+ // 8 rows on desktop, 6 in landscape, 4 on a portrait phone.
+ const [registeredRowCount] = useDataVisualSelection("heat-matrix", 8)
+ const rowCount = heatMatrixRows(registeredRowCount)
 
  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
  const [lockedIdx, setLockedIdx] = useState<number | null>(null)
@@ -5048,8 +5131,12 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
      {rects.length === 0 ? <Empty label="No keyword pillars available for the current filters." /> : rects.map((rect) => {
       const tiny = rect.w < 52 || rect.h < 30
       const small = rect.w < 118 || rect.h < 58
-      const titleSize = treemapFontSize(rect.label, rect.w, rect.h, tiny ? 5 : 7, drilled ? 20 : 26)
-      const statSize = treemapFontSize(rect.sub, rect.w, rect.h * 0.45, 7, 15)
+      // Labels ellipsise rather than shrink past the legibility floor, and a
+      // tile too small to carry a second line drops the stat instead of
+      // printing it at 7px. Colour and hover still carry the value.
+      const titleSize = treemapFontSize(rect.label, rect.w, rect.h, DATA_VISUAL_MARK_FLOORS.fontSize, drilled ? 20 : 26)
+      const statSize = treemapFontSize(rect.sub, rect.w, rect.h * 0.45, DATA_VISUAL_MARK_FLOORS.fontSize, 15)
+      const fitsStatLine = !tiny && rect.h >= 44 && rect.w >= 70
       return (
        <button
         key={rect.key}
@@ -5074,8 +5161,8 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
         >
          {rect.label}
         </span>
-        {!tiny && (
-         <span className="font-[1000] uppercase leading-tight tracking-[0.02em]" style={{ fontSize: statSize }}>
+        {fitsStatLine && (
+         <span className="overflow-hidden text-ellipsis whitespace-nowrap font-[1000] uppercase leading-tight tracking-[0.02em]" style={{ fontSize: statSize }}>
           {rect.sub}
          </span>
         )}

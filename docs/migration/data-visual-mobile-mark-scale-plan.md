@@ -322,9 +322,9 @@ Each phase is independently shippable and leaves unmigrated modules untouched.
 
 | Phase | Work | Why this order |
 | --- | --- | --- |
-| **1** | Contract fields, `scaleMark`, the four hooks, floors table, unit tests | Nothing else can be expressed until the vocabulary exists |
-| **2** | Harness mark assertions + `mark-metrics.json` | Land the ruler before moving anything, so phase 3+ is measured, not asserted |
-| **3** | Already-migrated modules: Shorts Retention, Engagement Pulse, Heat Matrix, Clock Burst, Content Treemap, Traffic Source Evolution | Contract already wired; lowest risk; proves the vocabulary |
+| **1** | ✅ Contract fields, `scaleMark`, the hooks, floors table, unit tests | Nothing else can be expressed until the vocabulary exists |
+| **2** | ✅ Harness mark assertions + `mark-metrics.json` | Land the ruler before moving anything, so phase 3+ is measured, not asserted |
+| **3** | ✅ Already-migrated modules: Shorts Retention, Engagement Pulse, Heat Matrix, Clock Burst, Content Treemap, Traffic Source Evolution | Contract already wired; lowest risk; proves the vocabulary |
 | **4** | Publish Optimal Clock SVG port | Isolated rendering change, own PR — easiest to review and revert alone |
 | **5** | Channel Vital Signs + Channel Progress: canvas migration, then mark scale | Two steps in one module each; migrate first, verify, then scale |
 | **6** | Shared-renderer sweep via `createModule`, `VideoScatter`, `HeatGrid`, `Donut`, `TrafficBars` | Highest leverage, but only once the pattern is proven on named modules |
@@ -349,3 +349,39 @@ For every Data Visual, at 375 × 667, 390 × 844, 667 × 375, 844 × 390 and
 
 Preserve the ViewTube visual design. Do not redesign module chrome, controllers
 or headers while implementing this.
+
+---
+
+## 8. What phases 1-3 changed against this plan
+
+Three things the plan did not anticipate, all found by running the harness:
+
+**`markInteraction` was added to the contract.** The touch floor as originally
+written failed every dense-field visual, including ones where per-mark tapping
+is an enhancement rather than the primary read. Enforcing it literally would
+have forced a 4-row publish clock and destroyed the weekly pattern the visual
+exists to show. Modules now declare `discrete` (each mark is its own target —
+the floor applies) or `field` (read by colour or position, with hover/focus and
+the active-context readout carrying the value). `field` is an explicit recorded
+decision; omitting it means the floor applies.
+
+**Clock Burst's donut wedges are `field`, and its legend rows became buttons.**
+A 5% wedge cannot reach 24px in a phone-sized donut at any density, so the
+legend row beside it — full width, always tappable — is now the accessible
+picker for the same source.
+
+**Two contract fields could contradict each other.** Engagement Pulse opened at
+`defaultSelection: 10` but was clamped by `densityProfile: 6`, so the control
+read "10" while the plot drew 6. The count control now governs outright,
+`densityProfile` is a cap that must never sit below `defaultSelection`, and a
+test enforces that. The same check exposed Heat Matrix registering columns in
+`densityProfile` and rows in `defaultSelection` — two different units in fields
+meant to be comparable. Heat Matrix now registers rows only; its column count
+is an outcome of tile scale and the tile floor, and the renderer keeps its own
+minimum-visible-columns constant.
+
+**Open for review:** Heat Matrix portrait now draws ~16 columns of 18px tiles
+rather than the 7-9 columns of larger tiles in section 3.3. Tile edge follows
+the mark scale (36 -> 18, the same halving applied everywhere), and how many
+columns that yields follows from it. It reads well, but it is denser than the
+original target — say so and the column minimum can be lowered instead.

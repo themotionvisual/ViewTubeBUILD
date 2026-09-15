@@ -14,7 +14,12 @@ import { CustomIcon } from "./CustomIcon"
 import { AnalyticsVisualIcon } from "./AnalyticsVisualIcon"
 import { StableChartFrame } from "./StableChartFrame"
 import { DataVisualCanvas } from "./DataVisualCanvas"
-import { useDataVisualDensityBudget } from "./dataVisualCanvasGeometry"
+import {
+ useDataVisualDensityBudget,
+ useDataVisualMarks,
+ useDataVisualSelection,
+ useDataVisualSeriesBudget,
+} from "./dataVisualCanvasGeometry"
 import {
  VIEWTUBE_CARTESIAN,
  ViewTubeScatterBubble,
@@ -268,29 +273,52 @@ const EngagementKeyItem: React.FC<{ label: string; tone: string }> = ({ label, t
  </div>
 )
 
-const EngagementSelectedDot: React.FC<any> = ({ cx, cy, stroke }) => {
+const EngagementSelectedDot: React.FC<any> = ({ cx, cy, stroke, radius = 6, dotStrokeWidth = 3 }) => {
  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return null
- return <circle cx={cx} cy={cy} r={6} fill="#FFFFFF" stroke={stroke} strokeWidth={3} />
+ return <circle cx={cx} cy={cy} r={radius} fill="#FFFFFF" stroke={stroke} strokeWidth={dotStrokeWidth} />
 }
 
-const EngagementHoverDot: React.FC<any> = ({ cx, cy, stroke, metricIndex = 0 }) => {
+const EngagementHoverDot: React.FC<any> = ({ cx, cy, stroke, metricIndex = 0, radius = 6, dotStrokeWidth = 3 }) => {
  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return null
  return (
   <circle
    cx={cx}
    cy={cy}
-   r={6}
+   r={radius}
    fill="#FFFFFF"
    stroke={stroke}
-   strokeWidth={3}
+   strokeWidth={dotStrokeWidth}
    className="engagement-hover-dot"
    style={{ animationDelay: `${metricIndex * 200}ms` }}
   />
  )
 }
 
-const EngagementLeftAxisLabel: React.FC<{ viewBox?: { x: number; y: number; width: number; height: number } }> = ({ viewBox }) => {
+/**
+ * Rotated axis title listing the left-hand metrics.
+ *
+ * The label runs along the plot's HEIGHT, so on a short phone plot the full
+ * "SUBSCRIBERS • COMMENTS • SHARES" runs past both ends and gets clipped. It
+ * drops names from the end until what remains fits, rather than overflowing.
+ */
+const EngagementLeftAxisLabel: React.FC<{
+ viewBox?: { x: number; y: number; width: number; height: number }
+ fontSize?: number
+ metrics?: ReadonlyArray<{ label: string; color: string }>
+}> = ({ viewBox, fontSize = 14, metrics }) => {
  if (!viewBox) return null
+ const entries = metrics ?? [
+  { label: "SUBSCRIBERS", color: VT_VISUAL_METRIC_COLORS.subscribers },
+  { label: "COMMENTS", color: VT_VISUAL_METRIC_COLORS.comments },
+  { label: "SHARES", color: VT_VISUAL_METRIC_COLORS.shares },
+ ]
+ // Rough advance width for the heavy uppercase face, including the separators.
+ const runLength = (list: typeof entries) =>
+  list.reduce((sum, entry) => sum + entry.label.length, 0) * fontSize * 0.68
+  + Math.max(0, list.length - 1) * fontSize * 1.1
+ const fitted = entries.slice()
+ while (fitted.length > 1 && runLength(fitted) > viewBox.height) fitted.pop()
+
  const x = viewBox.x - 24
  const y = viewBox.y + viewBox.height / 2
  return (
@@ -298,19 +326,23 @@ const EngagementLeftAxisLabel: React.FC<{ viewBox?: { x: number; y: number; widt
    <text
     textAnchor="middle"
     dominantBaseline="middle"
-    style={{ fontWeight: 1000, fontSize: 14, letterSpacing: "0.08em" }}
+    style={{ fontWeight: 1000, fontSize, letterSpacing: "0.08em" }}
    >
-    <tspan fill={VT_VISUAL_METRIC_COLORS.subscribers}>SUBSCRIBERS</tspan>
-    <tspan fill="#000000"> • </tspan>
-    <tspan fill={VT_VISUAL_METRIC_COLORS.comments}>COMMENTS</tspan>
-    <tspan fill="#000000"> • </tspan>
-    <tspan fill={VT_VISUAL_METRIC_COLORS.shares}>SHARES</tspan>
+    {fitted.map((entry, index) => (
+     <React.Fragment key={entry.label}>
+      {index > 0 ? <tspan fill="#000000"> • </tspan> : null}
+      <tspan fill={entry.color}>{entry.label}</tspan>
+     </React.Fragment>
+    ))}
    </text>
   </g>
  )
 }
 
-const EngagementRightAxisLabel: React.FC<{ viewBox?: { x: number; y: number; width: number; height: number } }> = ({ viewBox }) => {
+const EngagementRightAxisLabel: React.FC<{
+ viewBox?: { x: number; y: number; width: number; height: number }
+ fontSize?: number
+}> = ({ viewBox, fontSize = 15 }) => {
  if (!viewBox) return null
  const x = viewBox.x + viewBox.width + 24
  const y = viewBox.y + viewBox.height / 2
@@ -319,7 +351,7 @@ const EngagementRightAxisLabel: React.FC<{ viewBox?: { x: number; y: number; wid
    <text
     textAnchor="middle"
     dominantBaseline="middle"
-    style={{ fontWeight: 1000, fontSize: 15, letterSpacing: "0.08em", fill: VT_VISUAL_METRIC_COLORS.likes }}
+    style={{ fontWeight: 1000, fontSize, letterSpacing: "0.08em", fill: VT_VISUAL_METRIC_COLORS.likes }}
    >
     LIKES
    </text>
@@ -1530,7 +1562,10 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
  const [activeKey, setActiveKey] = useState<string | null>(null)
  const [hoveredBubbleKey, setHoveredBubbleKey] = useState<string | null>(null)
  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
- const [selectedCount, setSelectedCount] = useState(100)
+ // Opens on 25 videos in portrait, 50 in landscape, 100 on desktop — then the
+ // reader's own choice sticks. Bubble geometry scales with the composition.
+ const [selectedCount, setSelectedCount] = useDataVisualSelection("shorts-retention", 100)
+ const { scale: scaleShortsMark } = useDataVisualMarks("shorts-retention")
  const rafMouseRef = useRef<number | null>(null)
  const pendingMouseRef = useRef<{ x: number; y: number } | null>(null)
  const cycleCount = (dir: 1 | -1) => {
@@ -1576,7 +1611,10 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
   const revenuePercentiles = buildTieAwarePercentiles(
    top.map((d) => d.revenueAvailable ? d.estIncome : null),
   )
-  const viewRadii = buildLinearAreaBubbleRadii(top.map((d) => d.views), { minRadius: 4, maxRadius: 36 })
+  const viewRadii = buildLinearAreaBubbleRadii(top.map((d) => d.views), {
+   minRadius: scaleShortsMark(4, "bubbleRadius"),
+   maxRadius: scaleShortsMark(36, "bubbleRadius"),
+  })
 
   // Exponential outlier: top/bottom 7% occupy the palette edges alone
   const expPos = (t: number | null): number | null => {
@@ -1606,7 +1644,7 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
    durationScale,
    avdScale,
   }
- }, [data, mode, sortMetric, selectedCount])
+ }, [data, mode, sortMetric, selectedCount, scaleShortsMark])
 
  useEffect(() => {
   if (cd.points.length === 0) { setActiveKey(null); return }
@@ -2035,11 +2073,13 @@ const ENGAGEMENT_PULSE_COUNT_OPTIONS = [10, 15, 20, 25, 50]
 export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle }) => {
  // Phone compositions plot fewer videos rather than the same 25 crushed into a
  // few hundred pixels; the count control still reaches the full range.
- const { bucket: engagementBucket, budget: engagementPointBudget } = useDataVisualDensityBudget("engagement-pulse", 25)
+ const { scale: scaleEngagementMark } = useDataVisualMarks("engagement-pulse")
+ const engagementSeriesBudget = useDataVisualSeriesBudget("engagement-pulse", ENGAGEMENT_METRICS.length)
  const [sortMetric, setSortMetric] = useState<string>("likes")
  const [mode, setMode] = useState<"top-performing" | "most-recent">("most-recent")
  const [format, setFormat] = useState<"shorts" | "longform" | "combined">("combined")
- const [selectedCount, setSelectedCount] = useState(25)
+ // Opens on 10 videos in portrait, 15 in landscape, 25 on desktop.
+ const [selectedCount, setSelectedCount] = useDataVisualSelection("engagement-pulse", 25)
  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
  const [animKey, setAnimKey] = useState(0)
  const [rankMenuOpen, setRankMenuOpen] = useState(false)
@@ -2074,13 +2114,16 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
     ? sortedByMetric([...mapped].sort((a, b) => b.uploadTs - a.uploadTs).slice(0, selectedCount))
     : sortedByMetric(mapped)
 
-  const plotted = engagementBucket === "desktop" ? selectedCount : Math.min(selectedCount, engagementPointBudget)
-  return sorted.slice(0, plotted).map((d, i) => ({
+  // The count control governs outright. `defaultSelection` already opens the
+  // module at a readable value for this composition, so clamping on top would
+  // plot 6 while the control reads 10 — two knobs contradicting each other in
+  // front of the reader.
+  return sorted.slice(0, selectedCount).map((d, i) => ({
    ...d,
    idx: i,
    name: String(i + 1),
   }))
- }, [data, sortMetric, mode, format, selectedCount, engagementBucket, engagementPointBudget])
+ }, [data, sortMetric, mode, format, selectedCount])
 
  // Fixed dual-axis: LEFT = comments/shares/subs, RIGHT = likes (always).
  // Both sides use the shared nice-scale generator so ticks are rounded,
@@ -2122,6 +2165,21 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
   const remaining = preferredOrder.filter((key) => key !== sortMetric)
   return [sortMetric, ...remaining]
  }, [sortMetric])
+
+ // Portrait plots three traces rather than four. The metric being sorted on is
+ // always one of them, so the reader never loses the series they chose.
+ const plottedMetrics = useMemo(
+  () => renderOrder.slice(0, Math.max(1, engagementSeriesBudget)),
+  [renderOrder, engagementSeriesBudget],
+ )
+
+ // The left axis names only the metrics actually plotted on it.
+ const leftAxisLabelMetrics = useMemo(
+  () => ENGAGEMENT_METRICS
+   .filter((metric) => metric.key !== "likes" && plottedMetrics.includes(metric.key))
+   .map((metric) => ({ label: metric.label, color: metric.color })),
+  [plottedMetrics],
+ )
 
  const animationMetaByMetric = useMemo(() => {
   const map: Record<string, { beginMs: number; durationMs: number; phase: "primary" | "secondary" }> = {}
@@ -2274,7 +2332,13 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
           />
          )}
          label={{
-          content: (props: any) => <EngagementLeftAxisLabel {...props} />,
+          content: (props: any) => (
+           <EngagementLeftAxisLabel
+            {...props}
+            fontSize={scaleEngagementMark(14, "fontSize")}
+            metrics={leftAxisLabelMetrics}
+           />
+          ),
          }}
         />
         <YAxis
@@ -2290,11 +2354,13 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
           />
          )}
          label={{
-          content: (props: any) => <EngagementRightAxisLabel {...props} />,
+          content: (props: any) => (
+           <EngagementRightAxisLabel {...props} fontSize={scaleEngagementMark(15, "fontSize")} />
+          ),
          }}
         />
         <g key={animKey}>
-         {ENGAGEMENT_METRICS.map((m, i) => (
+         {ENGAGEMENT_METRICS.filter((m) => plottedMetrics.includes(m.key)).map((m, i) => (
           <Line
            key={`${m.key}-${animKey}`}
            yAxisId={m.key === "likes" ? "right" : "left"}
@@ -2302,12 +2368,25 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
            dataKey={m.key}
            name={m.label}
            stroke={m.color}
-           strokeWidth={m.key === sortMetric ? 5 : 3}
+           strokeWidth={scaleEngagementMark(m.key === sortMetric ? 5 : 3, "strokeWidth")}
            dot={m.key === sortMetric
-            ? (props: any) => <EngagementSelectedDot {...props} stroke={m.color} />
+            ? (props: any) => (
+             <EngagementSelectedDot
+              {...props}
+              stroke={m.color}
+              radius={scaleEngagementMark(6, "bubbleRadius")}
+              dotStrokeWidth={scaleEngagementMark(3, "strokeWidth")}
+             />
+            )
             : false}
            activeDot={(props: any) => (
-            <EngagementHoverDot {...props} stroke={m.color} metricIndex={i} />
+            <EngagementHoverDot
+             {...props}
+             stroke={m.color}
+             metricIndex={i}
+             radius={scaleEngagementMark(6, "bubbleRadius")}
+             dotStrokeWidth={scaleEngagementMark(3, "strokeWidth")}
+            />
            )}
            isAnimationActive
            animationBegin={animationMetaByMetric[m.key]?.beginMs ?? 0}
@@ -4408,11 +4487,16 @@ const trafficSourceTone = (source: string, fallbackIndex: number): string => {
 }
 
 const trafficSourceSubtitleLabel = (source: string): string => {
+ if (source === TRAFFIC_OTHER_KEY) return "OTHER"
  const normalized = normalizeTrafficSourceKey(source)
  return TRAFFIC_SOURCE_SHORT_LABELS[normalized] || trafficSourceDisplayName(source).toUpperCase()
 }
 
+/** Synthetic key for the band that carries every source below the budget. */
+const TRAFFIC_OTHER_KEY = "__vt_other_sources__"
+
 const trafficSourceLegendLabel = (source: string): string => {
+ if (source === TRAFFIC_OTHER_KEY) return "Other sources"
  const normalized = normalizeTrafficSourceKey(source)
  if (normalized === "YT_OTHER_PAGE") return "YouTube Features"
  return trafficSourceDisplayName(source)
@@ -4906,6 +4990,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  // Canvas geometry belongs to the registered contract; this module keeps the
  // chrome and reduces its own label density per composition.
  const { budget: trafficAxisTickBudget } = useDataVisualDensityBudget("traffic-source-evolution", 8)
+ const trafficSeriesBudget = useDataVisualSeriesBudget("traffic-source-evolution", 8)
  const ds = useMemo(() => buildExpansionDatasets(data), [data])
  const [selectedFormat, setSelectedFormat] = useState<DistributionFormatKey>("videos")
  const [selectedWindow, setSelectedWindow] = useState<DistributionWindowKey>("180d")
@@ -4996,7 +5081,27 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
   })
   return acc
  }, {} as Record<string, number>)
- const visibleKeys = keys.filter((key) => (windowTotals[key] || 0) > 0)
+ const presentKeys = useMemo(
+  () => keys.filter((key) => (windowTotals[key] || 0) > 0),
+  [keys, windowTotals],
+ )
+ // Phone compositions plot fewer bands. The smallest sources fold into one
+ // OTHER band rather than being dropped, so the stack still totals 100% and no
+ // traffic goes missing from the picture.
+ const { keys: visibleKeys, folded: foldedTrafficKeys } = useMemo(() => {
+  const ranked = [...presentKeys].sort((a, b) => (windowTotals[b] || 0) - (windowTotals[a] || 0))
+  if (ranked.length <= trafficSeriesBudget) return { keys: ranked, folded: [] as string[] }
+  const kept = ranked.slice(0, Math.max(1, trafficSeriesBudget - 1))
+  return { keys: [...kept, TRAFFIC_OTHER_KEY], folded: ranked.slice(kept.length) }
+ }, [presentKeys, trafficSeriesBudget, windowTotals])
+
+ const plottedAreaData = useMemo(() => {
+  if (foldedTrafficKeys.length === 0) return areaData
+  return areaData.map((row) => ({
+   ...row,
+   [TRAFFIC_OTHER_KEY]: foldedTrafficKeys.reduce((sum, key) => sum + (Number(row[key]) || 0), 0),
+  }))
+ }, [areaData, foldedTrafficKeys])
  const visibleSourceMeta = visibleKeys.map((key, index) => ({
   key,
   tone: trafficRankTone(index),
@@ -5177,7 +5282,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
        <StableChartFrame minHeightClassName="min-h-0">
           <AreaChart
           className="tse-plot"
-          data={areaData}
+          data={plottedAreaData}
           margin={{ top: 18, right: 0, left: 0, bottom: 0 }}
          >
           <Customized component={TrafficPlotClipDefs} />

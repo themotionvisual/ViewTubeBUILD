@@ -25,7 +25,7 @@ const stubMatchMedia = (matching: string[]) => {
 const renderBudget = (): { bucket: string; budget: number } => {
  const captured = { bucket: "", budget: 0 }
  const Probe: React.FC = () => {
-  const resolved = useDataVisualDensityBudget("heat-matrix", 99)
+  const resolved = useDataVisualDensityBudget("traffic-source-evolution", 99)
   React.useEffect(() => {
    captured.bucket = resolved.bucket
    captured.budget = resolved.budget
@@ -44,19 +44,38 @@ const renderBudget = (): { bucket: string; budget: number } => {
 afterEach(() => { vi.unstubAllGlobals() })
 
 describe("useDataVisualDensityBudget", () => {
+ it("falls back when a module registers no density profile", () => {
+  // Heat Matrix deliberately registers none: its column count is an outcome of
+  // tile scale and the tile floor, not a cap.
+  stubMatchMedia([])
+  let captured = 0
+  const Probe: React.FC = () => {
+   const { budget } = useDataVisualDensityBudget("heat-matrix", 99)
+   React.useEffect(() => { captured = budget }, [budget])
+   return null
+  }
+  const container = document.createElement("div")
+  document.body.appendChild(container)
+  const root = createRoot(container)
+  act(() => { root.render(<Probe />) })
+  act(() => { root.unmount() })
+  container.remove()
+  expect(captured).toBe(99)
+ })
+
  it("uses the desktop budget when neither phone query matches", () => {
   stubMatchMedia([])
-  expect(renderBudget()).toEqual({ bucket: "desktop", budget: 18 })
+  expect(renderBudget()).toEqual({ bucket: "desktop", budget: 8 })
  })
 
  it("uses the portrait budget on a portrait phone", () => {
   stubMatchMedia([DATA_VISUAL_PORTRAIT_QUERY])
-  expect(renderBudget()).toEqual({ bucket: "portrait", budget: 8 })
+  expect(renderBudget()).toEqual({ bucket: "portrait", budget: 4 })
  })
 
  it("uses the landscape budget on a short landscape phone", () => {
   stubMatchMedia([DATA_VISUAL_LANDSCAPE_QUERY])
-  expect(renderBudget()).toEqual({ bucket: "landscape", budget: 14 })
+  expect(renderBudget()).toEqual({ bucket: "landscape", budget: 6 })
  })
 
  it("prefers the landscape composition when a device reports both", () => {

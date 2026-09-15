@@ -35,12 +35,17 @@ const outRoot = process.env.AUDIT_OUT_DIR || "artifacts/data-visual-mobile-audit
 // default in this app and would otherwise cover every screenshot.
 const auditPath = "/render-bench/data-visual-audit?vtDiagnostics=0"
 
+/**
+ * `bucket` mirrors the composition the app itself resolves from its media
+ * queries (`dataVisualCanvasGeometry.ts`), so the harness asserts against the
+ * same profile the renderer used rather than re-deriving one.
+ */
 const VIEWPORTS = [
- { label: "portrait-375x667", width: 375, height: 667, orientation: "portrait" },
- { label: "portrait-390x844", width: 390, height: 844, orientation: "portrait" },
- { label: "landscape-667x375", width: 667, height: 375, orientation: "landscape" },
- { label: "landscape-844x390", width: 844, height: 390, orientation: "landscape" },
- { label: "desktop-1440x900", width: 1440, height: 900, orientation: "landscape" },
+ { label: "portrait-375x667", width: 375, height: 667, orientation: "portrait", bucket: "portrait" },
+ { label: "portrait-390x844", width: 390, height: 844, orientation: "portrait", bucket: "portrait" },
+ { label: "landscape-667x375", width: 667, height: 375, orientation: "landscape", bucket: "landscape" },
+ { label: "landscape-844x390", width: 844, height: 390, orientation: "landscape", bucket: "landscape" },
+ { label: "desktop-1440x900", width: 1440, height: 900, orientation: "landscape", bucket: "desktop" },
 ]
 
 /**
@@ -56,7 +61,24 @@ const ASPECT_TOLERANCE = 0.04
 /** A canvas taller than this share of the viewport is runaway height. */
 const MAX_CANVAS_VIEWPORT_SHARE = 1.05
 
+/** One decimal place, null-safe — keeps the metrics file diffable. */
+const round = (value) => (typeof value === "number" && Number.isFinite(value) ? Math.round(value * 10) / 10 : value)
+
 const expectedRatio = (aspect) => (aspect === "16:9" ? 16 / 9 : aspect === "1:1" ? 1 : null)
+
+/**
+ * Mark floors, mirrored from `dataVisualModuleContract.ts`. Scaling a mark is a
+ * multiplier, not a licence to draw something nobody can read or hit, so the
+ * harness enforces the same floors the renderers clamp to. Desktop is exempt
+ * from the touch floor — it has a pointer.
+ */
+const MARK_FLOORS = {
+ touchTarget: 24,
+ fontSize: 8,
+}
+
+/** Tolerance for sub-pixel rounding when comparing against a floor. */
+const FLOOR_EPSILON = 0.5
 
 /**
  * Some sandboxes ship a pinned Chromium that does not match the build this
@@ -69,6 +91,76 @@ if (process.env.CHROMIUM_EXECUTABLE_PATH) launchOptions.executablePath = process
 
 const measure = async (page) =>
  page.evaluate(() => {
+  const visible = (element) => {
+   const rect = element.getBoundingClientRect()
+   if (rect.width < 0.5 || rect.height < 0.5) return false
+   const style = getComputedStyle(element)
+   return style.visibility !== "hidden" && style.display !== "none" && Number(style.opacity) > 0.01
+  }
+
+  /**
+   * Mark geometry inside one canvas.
+   *
+   * Interactive marks are found by behaviour rather than by tag, so this works
+   * across SVG marks, DOM tiles and recharts symbols alike: anything inside the
+   * canvas that a reader can tap — `cursor: pointer`, a button, or a focusable
+   * element. Primary marks are counted only where the renderer opts in with
+   * `data-vt-mark`, so an un-annotated module reports null instead of a guess.
+   */
+  const measureMarks = (canvas) => {
+   const all = Array.from(canvas.querySelectorAll("*"))
+
+   const isInteractive = (element) => {
+    if (!visible(element)) return false
+    if (element.tagName === "BUTTON") return true
+    if (element.hasAttribute("tabindex") && element.getAttribute("tabindex") !== "-1") return true
+    return getComputedStyle(element).cursor === "pointer"
+   }
+   // `cursor: pointer` inherits, so a slice's percentage label looks interactive
+   // while the real tap target is the slice around it. Measure the OUTERMOST
+   // interactive element in each chain — the box a finger actually hits.
+   const interactive = all.filter((element) => {
+    if (!isInteractive(element)) return false
+    for (let parent = element.parentElement; parent && parent !== canvas; parent = parent.parentElement) {
+     if (isInteractive(parent)) return false
+    }
+    return true
+   })
+   const interactiveBoxes = interactive.map((element) => {
+    const rect = element.getBoundingClientRect()
+    return { width: rect.width, height: rect.height, edge: Math.min(rect.width, rect.height) }
+   })
+
+   const fontSizes = all
+    .filter((element) => visible(element)
+     && Array.from(element.childNodes).some((node) => node.nodeType === 3 && node.textContent.trim().length > 0))
+    .map((element) => Number.parseFloat(getComputedStyle(element).fontSize))
+    .filter((size) => Number.isFinite(size) && size > 0)
+
+   const annotated = all.filter((element) => element.hasAttribute("data-vt-mark") && visible(element))
+   const radii = Array.from(canvas.querySelectorAll("circle"))
+    .filter(visible)
+    .map((circle) => Number.parseFloat(circle.getAttribute("r") || "0"))
+    .filter((radius) => Number.isFinite(radius) && radius > 0)
+    .sort((a, b) => a - b)
+
+   const panels = Array.from(canvas.querySelectorAll("[data-vt-data-visual-panel]")).filter(visible)
+
+   return {
+    interactiveCount: interactiveBoxes.length,
+    smallestInteractiveEdge: interactiveBoxes.length
+     ? Math.min(...interactiveBoxes.map((box) => box.edge))
+     : null,
+    smallestFontSize: fontSizes.length ? Math.min(...fontSizes) : null,
+    markCount: annotated.length > 0 ? annotated.length : null,
+    markKinds: Array.from(new Set(annotated.map((element) => element.getAttribute("data-vt-mark")))).sort(),
+    panelCount: panels.length > 0 ? panels.length : null,
+    circleRadii: radii.length
+     ? { min: radii[0], median: radii[Math.floor(radii.length / 2)], max: radii[radii.length - 1], count: radii.length }
+     : null,
+   }
+  }
+
   const doc = document.documentElement
   const sections = Array.from(document.querySelectorAll("[data-vt-audit-visual]"))
   return {
@@ -96,12 +188,13 @@ const measure = async (page) =>
      plot: plotRect ? { width: plotRect.width, height: plotRect.height } : null,
      sectionScrollWidth: section.scrollWidth,
      sectionClientWidth: section.clientWidth,
+     marks: canvas ? measureMarks(canvas) : null,
     }
    }),
   }
  })
 
-const checkVisual = (visual, viewport) => {
+const checkVisual = (visual, viewport, contracts) => {
  const failures = []
  const label = `${viewport.label}/${visual.id}`
 
@@ -155,6 +248,53 @@ const checkVisual = (visual, viewport) => {
   failures.push(`${label}: module declares CLIP but scrolls horizontally (${visual.sectionScrollWidth} > ${visual.sectionClientWidth})`)
  }
 
+ failures.push(...checkMarks(visual, viewport, label, contracts))
+
+ return failures
+}
+
+/**
+ * Mark-level assertions.
+ *
+ * The canvas checks above prove the box is right; these prove what is drawn
+ * inside it is readable and reachable. Where a density budget and a floor
+ * cannot both hold, density is what must give — so a budget breach and a floor
+ * breach are both failures, and the messages say which knob to turn.
+ */
+const checkMarks = (visual, viewport, label, contracts) => {
+ const failures = []
+ const marks = visual.marks
+ if (!marks) return failures
+
+ const bucket = viewport.bucket
+ const contract = contracts[visual.id]
+
+ // Dense-field modules declare `markInteraction: "field"`: the mark is read by
+ // colour or position and tapping it is an enhancement over hover/focus and the
+ // active-context readout, so the touch floor would force a density that
+ // destroys the pattern. The size is still recorded in mark-metrics.json.
+ const fieldMarks = contract?.markInteraction === "field"
+ if (!fieldMarks
+  && bucket !== "desktop"
+  && marks.smallestInteractiveEdge !== null
+  && marks.smallestInteractiveEdge + FLOOR_EPSILON < MARK_FLOORS.touchTarget) {
+  failures.push(`${label}: smallest tap target is ${marks.smallestInteractiveEdge.toFixed(1)}px, below the ${MARK_FLOORS.touchTarget}px touch floor — reduce density rather than mark size`)
+ }
+
+ if (marks.smallestFontSize !== null && marks.smallestFontSize + FLOOR_EPSILON < MARK_FLOORS.fontSize) {
+  failures.push(`${label}: smallest rendered text is ${marks.smallestFontSize.toFixed(1)}px, below the ${MARK_FLOORS.fontSize}px legibility floor`)
+ }
+
+ const densityBudget = contract?.densityProfile?.[bucket]
+ if (marks.markCount !== null && densityBudget !== undefined && marks.markCount > densityBudget) {
+  failures.push(`${label}: drew ${marks.markCount} primary marks against a density budget of ${densityBudget}`)
+ }
+
+ const panelBudget = contract?.panelBudget?.[bucket]
+ if (marks.panelCount !== null && panelBudget !== undefined && marks.panelCount > panelBudget) {
+  failures.push(`${label}: drew ${marks.panelCount} panels against a panel budget of ${panelBudget}`)
+ }
+
  return failures
 }
 
@@ -189,6 +329,13 @@ const run = async () => {
    // Intro animations are time-based; let them settle so frames are comparable.
    await page.waitForTimeout(2_500)
 
+   // The bench page publishes the registered contracts, so the harness asserts
+   // against the same source of truth the renderers read — no second copy.
+   const contracts = await page.evaluate(() => window.__VT_DATA_VISUAL_CONTRACTS__ || {})
+   if (Object.keys(contracts).length === 0) {
+    failures.push(`${viewport.label}: audit bench published no Data Visual contracts`)
+   }
+
    const measurements = await measure(page)
    const entries = []
 
@@ -205,9 +352,14 @@ const run = async () => {
      failures.push(`${viewport.label}/${visual.id}: screenshot failed — ${error.message}`)
      continue
     }
-    const visualFailures = checkVisual(visual, viewport)
+    const visualFailures = checkVisual(visual, viewport, contracts)
     failures.push(...visualFailures)
-    entries.push({ ...visual, file, failures: visualFailures })
+    entries.push({
+     ...visual,
+     markInteraction: contracts[visual.id]?.markInteraction ?? "discrete",
+     file,
+     failures: visualFailures,
+    })
    }
 
    manifest.viewports.push({ ...viewport, visuals: entries })
@@ -220,6 +372,42 @@ const run = async () => {
  manifest.capturedAt = new Date().toISOString()
  manifest.failures = failures
  await fs.writeFile(path.join(outRoot, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`)
+
+ // Mark metrics travel as their own small, diffable file: a change in mark
+ // density or size shows up as a reviewable diff instead of being spotted by
+ // eye across 35 screenshots.
+ const markMetrics = {
+  capturedAt: manifest.capturedAt,
+  floors: MARK_FLOORS,
+  viewports: manifest.viewports.map((entry) => ({
+   viewport: entry.label,
+   bucket: entry.bucket,
+   visuals: entry.visuals.map((visual) => ({
+    id: visual.id,
+    canvas: visual.canvas ? { width: round(visual.canvas.width), height: round(visual.canvas.height) } : null,
+    ...(visual.marks
+     ? {
+      markInteraction: visual.markInteraction,
+      interactiveCount: visual.marks.interactiveCount,
+      smallestInteractiveEdge: round(visual.marks.smallestInteractiveEdge),
+      smallestFontSize: round(visual.marks.smallestFontSize),
+      markCount: visual.marks.markCount,
+      markKinds: visual.marks.markKinds,
+      panelCount: visual.marks.panelCount,
+      circleRadii: visual.marks.circleRadii
+       ? {
+        count: visual.marks.circleRadii.count,
+        min: round(visual.marks.circleRadii.min),
+        median: round(visual.marks.circleRadii.median),
+        max: round(visual.marks.circleRadii.max),
+       }
+       : null,
+     }
+     : {}),
+   })),
+  })),
+ }
+ await fs.writeFile(path.join(outRoot, "mark-metrics.json"), `${JSON.stringify(markMetrics, null, 2)}\n`)
 
  const captured = manifest.viewports.reduce((sum, viewport) => sum + viewport.visuals.length, 0)
  console.log(`Captured ${captured} Data Visual screenshots across ${manifest.viewports.length} viewports into ${outRoot}`)

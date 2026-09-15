@@ -47,6 +47,13 @@ const AUDIT_MODULES: AuditEntry[] = [
 
 const DataVisualMobileAudit: React.FC = () => {
  const visualProps = React.useMemo(() => buildDataVisualAuditProps() as TubeExplorerVisualProps, [])
+
+ // Publish the registered contracts so the audit harness asserts against the
+ // same source of truth the renderers read, instead of keeping a second copy.
+ React.useEffect(() => {
+  ;(window as unknown as Record<string, unknown>).__VT_DATA_VISUAL_CONTRACTS__ = DATA_VISUAL_MODULE_CONTRACTS
+ }, [])
+
  const only = new URLSearchParams(window.location.search).get("only")
  const entries = only ? AUDIT_MODULES.filter((entry) => entry.id === only) : AUDIT_MODULES
 
