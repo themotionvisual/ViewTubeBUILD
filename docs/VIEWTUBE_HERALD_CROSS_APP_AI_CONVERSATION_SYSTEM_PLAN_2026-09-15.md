@@ -126,7 +126,7 @@ $ git for-each-ref refs/remotes/origin | wc -l   → 2
 
 Only `main` and the working branch exist locally. **Any recon design that reads local refs will silently return "no prior art" and be wrong every time.** Recon must use `git ls-remote`, the GitHub API, and bounded `git fetch --depth=1 origin <branch>` on shortlisted candidates only.
 
-### O5 — The canonical Task Index lives outside the repo
+### O5 — The canonical Task Index lives outside the repo ✅ **RESOLVED 2026-09-15 — see §13**
 
 `scripts/generate-crown-today-snapshot.mjs` accepts `--task-index=<path>` and degrades to *"Supplied canonical Task Index path is unavailable in this checkout."* Chronology has no in-repo anchor. Needs a decision (see §9 D1).
 
@@ -428,8 +428,7 @@ CLAIMED   · effort estimates in §8 (judgement, not measurement)
           · that H2's JSONL ledger suffices before H5's graph
           · that the tier table matches how you actually work
 
-UNKNOWN   · where the canonical Task Index lives (O5)
-          · which applications beyond Claude Code and Codex you use in practice
+UNKNOWN   · which applications beyond Claude Code and Codex you use in practice
           · whether `gh-aw` has left technical preview
 
 CHANGED   docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md  (new)
@@ -453,10 +452,13 @@ CHANGED   docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.
 
 | # | Decision | Options | Recommendation |
 |---|---|---|---|
-| D1 | Where does the canonical Task Index live? (O5) | (a) bring into repo under `docs/herald/` (b) keep external, pass `--task-index=` (c) derive from exchange records | **(a)** — chronology needs an in-repo anchor or it degrades in every fresh clone |
+| D1 | ~~Where does the canonical Task Index live?~~ **RESOLVED** — `/Users/cwb/Downloads/viewtube/ViewTube-Task-Index.html`, schema 15, 1,598 tasks. See §13 | — | Superseded by D5–D7 below |
 | D2 | Which applications are in scope? | Claude Code + Codex only / + Cursor + Gemini / + Copilot + Replit | `AGENTS.md` covers unknown tools at near-zero cost — generate it regardless |
 | D3 | Contract enforcement strength | advisory / deterministic block check / model-graded | **deterministic first** (H3); model-graded only after O7 is resolved |
 | D4 | Do H0 as part of this work or as its own PR? | bundled / separate | **separate, first** — it is a repo-wide correctness fix, valuable even if Herald is never built |
+| D5 | How does the Task Index become writable by agents? (O9/O10) | keep browser-only / JSON sidecar in repo / full migration to repo | **JSON sidecar** — the HTML already round-trips via `encodeState()`/`applyImported()`; see §13.4 |
+| D6 | Which of the two uploaded reference docs is authoritative? (O12) | memory reference / Task Index backend reference | **Task Index backend reference** — it names `themotionvisual/ViewTubeBUILD`; the memory doc's `viewtubeX` paths are stale |
+| D7 | Reconcile status vocabularies now or at H3? (O11) | now / H3 | **now** — it is a half-page mapping (§13.3) and every later phase depends on it |
 
 ---
 
@@ -474,3 +476,149 @@ git check-ignore -v .claude/skills/new-skill/SKILL.md      # ignored
 ls scripts/generate-oracle-skill-pack.mjs                  # missing
 test -f .git/shallow && echo SHALLOW                       # SHALLOW
 ```
+
+---
+
+# §13 ADDENDUM — Task Index reconciliation (2026-09-15)
+
+Three sources were supplied after the plan was drafted: the `viewtube-task-index-ai-efficient-manager` skill, the condensed memory reference, and `ViewTube-Task-Index5.html` (schema 15, 563 KB). They resolve **O5/D1** and change the plan materially.
+
+## 13.1 What the Task Index actually is
+
+| Property | Value | Source |
+|---|---|---|
+| Canonical path | `/Users/cwb/Downloads/viewtube/ViewTube-Task-Index.html` | `AI_BACKEND_REFERENCE.locations` |
+| **Project repo** | **`themotionvisual/ViewTubeBUILD`** | same — **this repo is confirmed canonical** |
+| Schema | 15 (`CANONICAL_SCHEMA_VERSION`) | HTML |
+| Tasks | **1,598** across **35 modules** | `"id":` / `"moduleId":` counts |
+| Seeded status | 1,003 Not Started · 415 Started · 52 Nearly Finished · 43 Finished · 85 Urgent | `initialStatus` distribution |
+| Statuses 5–7 in use | **none** — Needs Clarification, Deferred, Needs Debugging all zero | same |
+| Quick Wins | 64 of 1,598 | `defaultQuickWin` |
+| Legacy reconciliation | 228 aliases merged from the retired ViewTubeX ledger, 2026-08-28 | `mergeLog` |
+| Known comparison branches | **3** (`viewtube-live-deployment`, `branch-check`, `fix/progress-visual-time-windows`) | `locations` |
+
+It is a genuinely sophisticated instrument: hidden `AI_BACKEND_REFERENCE`, an editable embedded skill, a debug-log channel, a session change log, and an `encodeState()`/`applyImported()` JSON round-trip.
+
+**This is major prior art for Herald.** Its golden rule — *"Spend AI context once, save the useful conclusion and exact pointer, and make the next agent start from that cache"* — is Herald's LEDGER and RECON cache, already specified. §2 PRIOR-ART missed it only because the file is not in the repository.
+
+## 13.2 New obstacles — the cache was designed well and is empty
+
+### O9 — The AI continuity cache holds almost no evidence ⚠️ **this is the decisive finding**
+
+```
+taskRefs entries                     230   (14.4% of 1,598 tasks)
+  ├─ legacyLedgerCodes/Marker/Source 228   ← one-time migration breadcrumbs, 2026-08-28
+  └─ real evidence (paths+evidence)    2   ← 0.13% of tasks
+prescribed shape coverage: paths 2 · branches 0 · artifacts 0 · evidence 2 · remaining 0 · lastChecked 0
+aiDebugLog entries                     0
+tasks at status 7 (Needs Debugging)    0
+```
+
+The skill devotes an entire section to the DEBUG LOG mechanism. **It has never been used once.** 228 of the 230 cache entries are migration residue from a single day; only two carry the `{paths, branches, artifacts, evidence, remaining, lastChecked}` shape the skill prescribes.
+
+**Why this matters more than any other finding in this document:** the exact system you are asking me to build has already been designed, correctly, and it did not get written to. Not because the design was wrong — the design is good — but because **the write path is a manual browser action**: open the HTML, click a badge, type, click Save Changes, drive a native save dialog. An agent in Claude Code or Codex cannot do that. So "cache expensive discoveries immediately" stayed an instruction and never became a behaviour.
+
+**The lesson Herald must absorb:** *a continuity cache that requires a human gesture will be empty.* Herald's ledger and recon cache must be **plain file appends an agent performs as part of finishing a turn** — or Herald will reproduce this outcome exactly.
+
+### O10 — The Task Index has never been saved, and all live state is in one browser
+
+```
+<script id="vt-embedded-snapshot">{"v":15,"savedAt":null}</script>
+```
+
+`savedAt` is `null`: the self-contained save has never run. Every status change, badge, note and code snippet you have made lives only in `localStorage` on one browser on one machine.
+
+**Consequences:** clearing site data loses all task progress; no agent in any application can read current status; the seeded 43-Finished figure is the 2026-08-28 baseline, not today's truth; and the "saved HTML is the preferred handoff artifact" workflow described in the skill has never actually executed.
+
+This is the single highest-severity item in this document — above even O1 — because it is unrecoverable rather than merely inconvenient.
+
+### O11 — Four status vocabularies now coexist
+
+Task Index 8-state · Crown `complete/partial/blocked` · Herald `PROVEN/CLAIMED/UNKNOWN` · Herald `T0/T1/T2`. Resolved in §13.3 — they turn out to be orthogonal axes, not rivals.
+
+### O12 — The two uploaded reference documents contradict each other
+
+| Claim | Memory reference | Task Index backend reference | Reality |
+|---|---|---|---|
+| Active repo | `/Users/cwb/Downloads/viewtube/viewtubeX` | `themotionvisual/ViewTubeBUILD` | **ViewTubeBUILD** |
+| Repo skills | `docs/skills/<skill>/SKILL.md` | — | `.claude/skills/` + `skills/` — `docs/skills/` does not exist here |
+| Installed skills | `/Users/cwb/.codex/skills/` | — | `.codex/skills/` holds 2 drifted mirrors |
+
+The memory reference is stale. It is still valuable — its **FAILURE → FIX INDEX** is the best artifact in either file — but its paths must not be trusted. Notably that index already contains *"Canonical docs missing from Git → verify tracked path/ignore rules; deliberately force-add only when appropriate"* — **you have already been bitten by O1 and recorded the fix**, which is strong independent confirmation.
+
+### O13 — Branch knowledge covers 3 of 335
+
+`knownComparisonBranches` lists three. RECON (§5.4) is the fix.
+
+## 13.3 Reconciling the four vocabularies
+
+They measure different things. Keep all four; define the mapping once.
+
+| Axis | Vocabulary | Authority | Scope |
+|---|---|---|---|
+| **Task lifecycle** | 8-state (Not Started → Needs Debugging) | **Task Index — sole authority** | durable, per `vt-####` |
+| **Mission outcome** | `complete / partial / blocked` | Crown | per mission record |
+| **Evidence quality** | `PROVEN / CLAIMED / UNKNOWN` | Herald §9 | per response |
+| **Response depth** | `T0 / T1 / T2` | Herald | per turn |
+
+**Binding rules:**
+- Adopt the Task Index's 9-level `sourcePriority` verbatim as Herald's evidence ladder — do not invent a tenth. Map: **PROVEN** = levels 1–3 (runtime/test, canonical main code, git history); **CLAIMED** = 4–7 (user correction, task index, active branch, artifact); **UNKNOWN** = 8–9 (conversation, memory/inference).
+- **A task may not move to Finished on CLAIMED evidence.** This makes the existing rule *"never infer completion from a plan or a passing build alone"* mechanically checkable.
+- `Nearly Finished` ⇔ mission `partial`. `Needs Debugging` ⇔ mission `blocked`.
+- Herald **never writes task status**. `viewtube-herald-scribe` proposes; the Task Authority role disposes. This preserves "never create a second task/status ledger."
+
+## 13.4 Plan changes
+
+### New phase H0.5 — Rescue the Task Index *(1 day, now the highest-priority phase)*
+
+Runs **before** H1. Ordered by severity:
+
+1. **Export current live state today.** Open the Task Index, use the existing export, commit the JSON to `docs/herald/task-index/state-2026-09-15.json`. This removes the O10 total-loss risk in about five minutes and is worth doing before reading the rest of this plan.
+2. **Commit the HTML itself** to `docs/herald/task-index/` (needs the H0 `.gitignore` fix first — allow-list `docs/herald/**`).
+3. **Add `scripts/task-index.mjs`** with `read`, `set-status`, `add-ref`, `append-debug`, `export`, `import` subcommands operating on the JSON sidecar. The HTML already implements the `encodeState()`/`applyImported()` round-trip at schema 15, so this is a small adapter, **not new architecture**.
+4. **Wire `generate-crown-today-snapshot.mjs --task-index=`** to the committed sidecar. Its documented degradation path — *"Supplied canonical Task Index path is unavailable in this checkout"* — then stops firing.
+
+**Gate:** an agent in a fresh clone can read a task's status and append a debug entry with no browser involved.
+
+### Changes to existing phases
+
+- **H1** — add `agent/skills/viewtube-task-index-ai-efficient-manager/` (the uploaded skill, currently loaded by nothing in this repo) and `agent/reference/failure-fix-index.md` (extracted from the memory reference, paths corrected per O12) to the distribution source.
+- **H2 RECON** — must read the Task Index sidecar as a first-class source. With 1,598 tasks and 335 branches, "has this already been built?" is most often answerable from the ledger alone, at near-zero cost. Seed `knownComparisonBranches` from RECON output (O13).
+- **H2 LEDGER** — re-scoped. **Herald's ledger is conversation chronology, keyed by `vt-####`; it is not a task ledger.** Every entry gains a `taskIds: []` field joining it to the Task Index. The write path is an unconditional file append at turn end — per O9, this is the whole design.
+- **H4** — evaluate the `ViewTube-Kingdom-Pack` (recorded in the memory reference as *"30 portable skills + workflows/mirrors validated offline"*) before writing `herald-sync.mjs`. That is prior art for the DISTRIBUTOR, and it may already be most of it.
+
+### Revised phase order
+
+```
+H0    .gitignore fix                    ½ day   prerequisite
+H0.5  Rescue the Task Index             1 day   ← highest severity (O10 is unrecoverable)
+H1    Contracts + distribution          2–3 d
+H2    RECON + LEDGER                    3–5 d
+H3    Enforcement + evals               2–3 d
+H4    Automation                        3–5 d
+H5    Optional depth                    —
+```
+
+## 13.5 Status of this addendum
+
+```
+PROVEN    · projectRepo = themotionvisual/ViewTubeBUILD        [AI_BACKEND_REFERENCE.locations]
+          · 1,598 tasks / 35 modules / schema 15               [key counts]
+          · seeded status split 1003/415/52/43/85; 5–7 unused  [initialStatus distribution]
+          · taskRefs 230, of which 228 legacy, 2 real evidence [key-frequency scan]
+          · aiDebugLog empty                                   [parsed JSON]
+          · savedAt = null — never saved                       [vt-embedded-snapshot tag]
+          · knownComparisonBranches = 3 of 335                 [parsed JSON]
+          · memory reference paths contradict backend ref      [both files vs this checkout]
+
+CLAIMED   · that localStorage still holds richer live state than the seed
+            (likely, but unverifiable from here — only your browser can confirm)
+          · H0.5 effort estimate
+
+UNKNOWN   · current true status of the 1,598 tasks
+          · whether ViewTube-Kingdom-Pack still exists at the recorded path
+```
+
+## 13.6 The one thing to do first
+
+**Export the Task Index state and commit it.** Everything else in this plan can wait a week. `savedAt: null` against 1,598 tasks held in a single browser profile is an unrecoverable-loss risk that costs five minutes to retire.
