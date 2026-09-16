@@ -567,7 +567,7 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
     title: "VIDEO VALUE MATRIX",
-    subtitle: `TOP ${selectedCount} ${mode === "most-recent" ? "RECENT" : "PERFORMING"} ${selectedFormat === "All" ? "VIDEOS" : selectedFormat.toUpperCase() + " FORM"}`,
+    subtitle: "Each video placed by click-through rate against retention; bubble size is reach.",
     icon: <CustomIcon name="target" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -827,7 +827,7 @@ export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
    title: "REVENUE DISTRIBUTION",
-    subtitle: `TOP ${cd.length} • ${getDistributionFormatLabel(selectedFormat)} • ${getDistributionWindowLabel(selectedWindow)}`,
+    subtitle: "Share of estimated revenue carried by each of the ranked videos.",
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
     titleClassName: "text-[clamp(18px,2vw,30px)] leading-[.9]",
@@ -953,7 +953,7 @@ export const AgeGenderAudienceModule: React.FC<GChartProps> = ({ demographicRows
  <SubToolboxChartModule
  header={{
  title: "AGE × GENDER",
- subtitle: "VIEWER % SUNBURST · INNER=GENDER · OUTER=AGE",
+ subtitle: "Viewer share as a sunburst — inner ring is gender, outer ring is age band.",
  icon: <CustomIcon name="analytics" size={18} />,
  headerStyle: "subtoolbox",
  titleClassName: "text-[clamp(18px,2vw,30px)] leading-[.9]",
@@ -1126,7 +1126,7 @@ export const WatchTimeDistribution: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
    title: "WATCH TIME DISTRIBUTION",
-    subtitle: `TOP ${cd.length} • ${getDistributionFormatLabel(selectedFormat)} • ${getDistributionWindowLabel(selectedWindow)}`,
+    subtitle: "Share of watch time carried by each of the ranked videos.",
     icon: <CustomIcon name="calendar" size={18} />,
     headerStyle: "subtoolbox",
     titleClassName: "text-[clamp(18px,2vw,30px)] leading-[.9]",
@@ -1204,7 +1204,7 @@ export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
    title: "SUBSCRIBERS GAINED",
-    subtitle: `TOP ${cd.length} • ${getDistributionFormatLabel(selectedFormat)} • ${getDistributionWindowLabel(selectedWindow)}`,
+    subtitle: "Subscribers gained by each of the ranked videos.",
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
     titleClassName: "text-[clamp(18px,2vw,30px)] leading-[.9]",
@@ -1280,7 +1280,7 @@ export const TopPerformersTrio: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
-   header={{ title: "TOP PERFORMERS TRIO", subtitle: "REVENUE \u2022 WATCH HOURS \u2022 SUBSCRIBERS", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "TOP PERFORMERS TRIO", subtitle: "Strongest videos by revenue, watch hours and subscribers, side by side.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#FF7497", iconBlockBg: "#FF83EA", shadowColor: "rgba(255,116,151,0.45)" }}
    activeContext={{ title: "TOP 10 PER METRIC", stats: [{ label: "VIDEOS", value: "10", tone: "pink" }] }}
   >
@@ -1410,7 +1410,7 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
  return (
   <SubToolboxChartModule
    heroVisualId="shorts-retention"
-   header={{ title: "SHORTS RETENTION", subtitle: "AVD (s) \u00d7 DURATION \u00b7 BUBBLE = VIEWS", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "SHORTS RETENTION", subtitle: "Each Short placed by length against average view duration; bubble size is views.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#33FF99", shadowColor: "rgba(204,255,0,0.45)" }}
    activeContext={{
     title: `${cd.points.length} SHOWN \u00b7 TOP AVD ${cd.avdScale.domain[1]}s`,
@@ -1924,7 +1924,7 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
     title: "ALGORITHM TRIGGER",
-    subtitle: `TOP ${selectedCount} ${mode === "most-recent" ? "RECENT" : "PERFORMING"} BY ${sortMetric.toUpperCase()}`,
+    subtitle: "Each video placed by click-through rate against impressions.",
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -2208,7 +2208,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
    heroVisualId="engagement-pulse"
    header={{
    title: "ENGAGEMENT PULSE",
-   subtitle: `TOP ${cd.length} ${mode === "most-recent" ? "RECENT" : "PERFORMING"} BY ${sortLabel}`,
+   subtitle: "Likes, comments and shares traced across the ranked videos.",
     icon: visualShellIcon(visualStyle, "sparkles"),
     headerStyle: "subtoolbox",
    }}
@@ -2509,7 +2509,7 @@ export const EngagementMap: React.FC<GChartProps> = ({ data }) => {
  const top = cd[0]
  return (
   <SubToolboxChartModule
-   header={{ title: "ENGAGEMENT MAP", subtitle: "LIKES \u00b7 COMMENTS \u00b7 SHARES", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "ENGAGEMENT MAP", subtitle: "Likes, comments and shares plotted together for each video.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#FF9900", iconBlockBg: "#FFB158", shadowColor: "rgba(255,153,0,0.45)" }}
    activeContext={{
     title: top?.name?.toUpperCase() || "NO DATA",
@@ -2697,7 +2697,7 @@ export const GoldenRatioRadar: React.FC<GChartProps> = ({ data }) => {
  }, [data])
  return (
   <SubToolboxChartModule
-   header={{ title: "GOLDEN RATIO RADAR", subtitle: "CTR \u00b7 AVP \u00b7 LIKES \u00b7 CMTS \u00b7 SHARES \u00b7 SUBS", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "GOLDEN RATIO RADAR", subtitle: "Six performance axes drawn as one shape, so a video's balance reads at a glance.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#00E5FF", iconBlockBg: "#0088FF", shadowColor: "rgba(0,229,255,0.45)" }}
    activeContext={{ title: "CHANNEL AVERAGES", stats: [
     { label: "CTR", value: `${rd[0]?.A ?? 0}%`, tone: "cyan" },
@@ -2729,7 +2729,7 @@ export const HookEffectiveness: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
     title: "HOOK EFFECTIVENESS",
-    subtitle: "30-SECOND RETENTION",
+    subtitle: "How much of the first 30 seconds each video holds.",
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -2895,7 +2895,7 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
     title: "GROWTH PULSE",
-    subtitle: "PERIOD AMOUNT • RUNNING TOTAL",
+    subtitle: "Per-period totals with the running cumulative line above them.",
     icon: <CustomIcon name="analytics" size={18} />,
    }}
    theme={{
@@ -3064,7 +3064,7 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
    heroVisualId="format-dominance"
    header={{
     title: "FORMAT DOMINANCE",
-    subtitle: `DATA: FORMATS • ${contentTypeTotals ? "CREATOR CONTENT TYPE" : "VIDEO CATALOG FALLBACK"} • HOW EACH FORMAT DRIVES CORE METRICS`,
+    subtitle: "How each format splits the channel's core metrics.",
     headerStyle: "subtoolbox",
     icon: <CustomIcon name="layers" size={18} />,
    }}
@@ -3272,7 +3272,7 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
     <SubToolboxChartModule
       header={{
         title: "REVENUE EFFICIENCY",
-        subtitle: "WATCH HOURS × EST. REVENUE",
+        subtitle: "Each video placed by watch hours against estimated revenue.",
         headerStyle: "subtoolbox",
         icon: <CustomIcon name="analytics" size={18} />,
       }}
@@ -4173,7 +4173,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
       heroVisualId="channel-progress"
       header={{
         title: "CHANNEL PROGRESS",
-        subtitle: `DATA: ${usesMonthlyGrain ? "MONTHLY STATS" : "DAILY STATS"} • ${viewMode === "progress" ? "OVERALL" : "WINDOW CHANGE"} • RAW METRICS`,
+        subtitle: "Per-period totals with the cumulative growth line above them.",
         icon: visualShellIcon(visualStyle, "calendar"),
       }}
       theme={visualShellTheme(visualStyle, "#FF82B0", "#26C7EC")}
@@ -5382,7 +5382,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  return (
   <SubToolboxChartModule
    heroVisualId="traffic-source-evolution"
-   header={{ title: "TRAFFIC SOURCE EVOLUTION", subtitle: "SOURCE MIX OVER TIME", icon: <CustomIcon name="analytics" size={18} />, headerStyle: "subtoolbox" }}
+   header={{ title: "TRAFFIC SOURCE EVOLUTION", subtitle: "How the share of each traffic source moves across the selected window.", icon: <CustomIcon name="analytics" size={18} />, headerStyle: "subtoolbox" }}
    theme={{ headerBandBg: "#B8FF2C", iconBlockBg: "#24D3FF", shadowColor: "rgba(184,255,44,0.45)" }}
    layout={{ moduleMinHeight: "0px", moduleWidth: "100%" }}
    footer={
@@ -5540,7 +5540,7 @@ export const KeywordTreemapModule: React.FC<GChartProps & { renderBare?: boolean
  )
  if (renderBare) return body
  return (
-  <SubToolboxChartModule header={{ title: "KEYWORD TREEMAP", subtitle: "TITLE TOKEN REACH WEIGHTING", icon: <CustomIcon name="target" size={18} /> }} theme={{ headerBandBg: "#00E5FF", iconBlockBg: "#FF7497", shadowColor: "rgba(0,229,255,0.45)" }}>
+  <SubToolboxChartModule header={{ title: "KEYWORD TREEMAP", subtitle: "Title words sized by the reach of the videos that use them.", icon: <CustomIcon name="target" size={18} /> }} theme={{ headerBandBg: "#00E5FF", iconBlockBg: "#FF7497", shadowColor: "rgba(0,229,255,0.45)" }}>
    {body}
   </SubToolboxChartModule>
  )
@@ -5941,7 +5941,7 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
    heroVisualId="keyword-venn"
    header={{
     title: "KEYWORD VENN",
-    subtitle: "MASTER TABLE TITLE OVERLAP × LIVE PERFORMANCE STATS",
+    subtitle: "Title terms that overlap, blocked out by the reach they share.",
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -6394,7 +6394,7 @@ export const UploadTimeHeatmapModule: React.FC<GChartProps & { renderBare?: bool
  if (renderBare) return body
  return (
   <SubToolboxChartModule
-   header={{ title: "UPLOAD TIME HEATMAP", subtitle: "WEEKDAY × HOUR DENSITY", icon: <CustomIcon name="calendar" size={18} /> }}
+   header={{ title: "UPLOAD TIME HEATMAP", subtitle: "Which weekday and hour combinations carry the most uploads and views.", icon: <CustomIcon name="calendar" size={18} /> }}
    theme={{ headerBandBg: "#FFEA00", iconBlockBg: "#24D3FF", shadowColor: "rgba(255,234,0,0.45)" }}>
    {body}
   </SubToolboxChartModule>
@@ -6406,7 +6406,7 @@ export const ConversionFunnelModule: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
-   header={{ title: "CONVERSION FUNNEL", subtitle: "IMPRESSIONS TO SUBSCRIBERS", icon: <CustomIcon name="target" size={18} /> }}
+   header={{ title: "CONVERSION FUNNEL", subtitle: "Impressions narrowing through views, engagement and watch hours to subscribers.", icon: <CustomIcon name="target" size={18} /> }}
    theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#FF82B0", shadowColor: "rgba(204,255,0,0.45)" }}>
    <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
     {ds.funnelStages.every((stage) => stage.value <= 0) ? (
@@ -6458,7 +6458,7 @@ export const PerformanceGaugesModule: React.FC<GChartProps & { renderBare?: bool
  if (renderBare) return body
  return (
   <SubToolboxChartModule
-   header={{ title: "PERFORMANCE GAUGES", subtitle: "CORE HEALTH SNAPSHOT", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "PERFORMANCE GAUGES", subtitle: "Core channel rates read against their targets as dials.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#F5E44D", iconBlockBg: "#F06D98", shadowColor: "rgba(245,228,77,0.45)" }}>
    {body}
   </SubToolboxChartModule>
@@ -6470,7 +6470,7 @@ export const LissajousWebModule: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
-   header={{ title: "LISSAJOUS WEB", subtitle: "CTR × AVP PERFORMANCE SIGNATURE", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "LISSAJOUS WEB", subtitle: "Click-through rate against average percentage viewed, traced as one signature.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#B14AED", iconBlockBg: "#24D3FF", shadowColor: "rgba(180,74,237,0.45)" }}>
    <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
     {ds.lissajous.length === 0 ? (
@@ -6529,7 +6529,7 @@ export const OrbitalModule: React.FC<GChartProps & { renderBare?: boolean }> = (
  if (renderBare) return body
  return (
   <SubToolboxChartModule
-   header={{ title: "ORBITAL", subtitle: "CONTENT CATEGORIES AS PLANETARY ORBITS", icon: <CustomIcon name="target" size={18} /> }}
+   header={{ title: "ORBITAL", subtitle: "Content categories as orbits — distance is value score, size is reach.", icon: <CustomIcon name="target" size={18} /> }}
    theme={{ headerBandBg: "#FF9900", iconBlockBg: "#B14AED", shadowColor: "rgba(180,74,237,0.45)" }}>
    {body}
   </SubToolboxChartModule>
@@ -6642,7 +6642,7 @@ export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
-   header={{ title: "CUSTOM SCATTER", subtitle: "FULLY CONFIGURABLE BUBBLE PLOT · 4 AXES", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "CUSTOM SCATTER", subtitle: "A bubble plot you choose all four axes for: X, Y, size and colour.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#FF9900", shadowColor: "rgba(204,255,0,0.45)" }}
    layout={{ moduleMinHeight: "480px", moduleWidth: "100%" }}
    controlBox={{
@@ -6824,7 +6824,7 @@ export const SignalMatrixModule: React.FC<GChartProps> = ({ data }) => {
 
   return (
    <SubToolboxChartModule
-    header={{ title: "SIGNAL MATRIX", subtitle: "KEYWORD × METRIC HEATMAP · CLICK COLUMN TO SORT", icon: <CustomIcon name="analytics" size={18} /> }}
+    header={{ title: "SIGNAL MATRIX", subtitle: "Keywords against metrics as a heat grid; click a column to re-sort.", icon: <CustomIcon name="analytics" size={18} /> }}
     theme={{ headerBandBg: "#C0F240", iconBlockBg: "#3FEE56", shadowColor: "rgba(192,242,64,0.5)" }}
     layout={{ moduleWidth: "100%" }}
     controllerRows={[

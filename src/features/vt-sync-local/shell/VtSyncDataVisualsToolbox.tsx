@@ -49,6 +49,7 @@ import {
 } from "../../../styles/toolboxPalette"
 import { getVtSyncVisualStyle } from "../../../styles/vtSyncVisualStyles"
 import { buildVtSyncVisualGridBlocks, shouldVtSyncVisualStartOpen } from "./vtSyncVisualGridModel"
+import { dataVisualSourceTables } from "./dataVisualSourceTables"
 
 type VtSyncVisualModuleDefinition = VtSyncVisualModuleSpec & {
  group: "core" | "tube-explorer" | "vt2"
@@ -124,26 +125,6 @@ const VT2_MODULES: LegacyVisualModuleDefinition[] = [
  { id: "vt2-multi-metric-timeline", group: "vt2", delayMs: 280, render: ({ data, dailyMetrics }) => <MultiMetricTimelineModule data={data} dailyMetrics={dailyMetrics} /> },
 ]
 
-const sourceTablesForVisual = (id: string): readonly string[] => {
- if (id === "combo-channel-progress") return ["daily", "monthly", "videos"]
- if (id === "format-comparison-donuts") return ["creator", "videos"]
- if (id === "tube-explorer-clock-radial-burst") return ["traffic_overview", "traffic_details"]
- if (id.startsWith("vt2-weekly-sparklines")) return ["daily"]
- if (id.startsWith("vt2-revenue-mosaic")) return ["videos"]
- if (id.startsWith("vt2-search-term-gravity")) return ["traffic", "search"]
- if (id.startsWith("vt2-video-fingerprint")) return ["videos"]
- if (id.startsWith("vt2-channel-big-bang")) return ["daily"]
- if (id.startsWith("vt2-trajectory-forecaster")) return ["daily"]
- if (id.startsWith("vt2-multi-metric-timeline")) return ["daily"]
- if (id.includes("traffic")) return ["traffic", "traffic_day"]
- if (id.includes("format") || id.includes("shorts-vs-longs")) return ["creator", "videos"]
- if (id.includes("keyword") || id.includes("word-network")) return ["videos", "search"]
- if (id.includes("publish") || id.includes("upload-time")) return ["videos", "daily"]
- if (id.includes("age-gender") || id.includes("audience")) return ["demographics"]
- if (id.includes("revenue")) return ["videos", "ads"]
- if (id.includes("subscriber")) return ["videos", "subs"]
- return ["videos"]
-}
 
 const controlsForVisual = (id: string): VtSyncVisualModuleSpec["controls"] => {
  if (id.includes("word-network"))
@@ -298,7 +279,7 @@ const VISUAL_MODULES: VtSyncVisualModuleDefinition[] = ALL_LEGACY_VISUAL_MODULES
  id: module.id,
  group: module.group,
  delayMs: module.delayMs,
- sourceTableIds: sourceTablesForVisual(module.id),
+ sourceTableIds: dataVisualSourceTables(module.id),
  iconKey: VT_SYNC_VISUAL_ICON_REGISTRY[module.id] || "analytics",
  headerColorPair: getVtVisualHeaderColorPair(index),
  activeMetricKeys: activeMetricKeysForVisual(module.id),

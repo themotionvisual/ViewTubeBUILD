@@ -3,8 +3,9 @@ import React, { createContext, useContext, useMemo } from "react"
 const VtSyncVisualDataSourceContext = createContext("")
 
 const SOURCE_TABLE_LABELS: Record<string, string> = {
- videos: "Videos", daily: "Daily Stats", traffic_day: "Traffic × Day", channel_totals: "Channel Totals",
+ videos: "Videos", daily: "Daily Stats", monthly: "Monthly Stats", traffic_day: "Traffic × Day", channel_totals: "Channel Totals",
  traffic: "Traffic Sources", traffic_overview: "Traffic Overview", traffic_details: "Traffic Details", demographics: "Demographics", geography: "Geography",
+ creator: "Content Types", imported_csv: "Imported CSVs",
  revenue: "Revenue", ads: "Ad Types", playlists: "Playlists", retention: "Audience Retention", audience: "Audience",
 }
 

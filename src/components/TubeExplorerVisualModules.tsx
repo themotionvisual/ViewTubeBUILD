@@ -6149,11 +6149,7 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
    heroVisualId="title-keyword-network"
    shellMode="standard"
    title="TITLE WORD NETWORK"
-   subtitle={selectedRoots.length >= 2
-    ? `${selectedRoots.length} WORDS SELECTED · ${selSharedVideos} SHARED VIDEOS · ${selectionEdges.length} CONNECTIONS BETWEEN THEM`
-    : hoveredNode
-    ? `"${hoveredNode.id.toUpperCase()}" · ${hoveredConnections} CO-WORDS · ${hoveredNode.videoCount} VIDEOS · AVG RET ${hoveredNode.avgAvp.toFixed(0)}% · AVG DUR ${(hoveredNode.avgDurSec / 60).toFixed(1)}m`
-    : `WORDS SIZE ${metric.toUpperCase()} · LINE THICKNESS = SHARED VIDEOS · SIMILAR COLOR = RELATED CLUSTER`}
+   subtitle="Title words linked by the videos they share; word size is the selected metric."
    iconKey={networkStyle.iconKey}
    headerColorPair={networkHeaderPair}
    activeContext={{

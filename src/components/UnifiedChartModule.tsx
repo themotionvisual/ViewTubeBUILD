@@ -124,7 +124,7 @@ export const UnifiedChartModule: React.FC<UnifiedChartModuleProps> = ({
             >
               {title}
             </span>
-            <span className="block text-[13px] font-black opacity-75 uppercase tracking-[0.16em] mt-1 truncate">
+            <span className="mt-1 line-clamp-2 block text-[13px] font-black uppercase leading-[1.15] tracking-[0.16em] opacity-75">
               {resolvedSubtitle}
             </span>
           </div>

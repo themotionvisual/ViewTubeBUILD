@@ -140,7 +140,7 @@ export const RevenueMosaicModule: React.FC<TubeExplorerVisualProps> = ({ data })
       titleBg={palette.titleBg}
       bodyBg={palette.bodyBg}
       title="Revenue Mosaic"
-      subtitle="TILE AREA = SELECTED METRIC · TILE COLOR = CPM VALUE (COOL=LOW · WARM=HIGH)"
+      subtitle="One tile per video — area is the selected metric, colour is CPM from cool to warm."
       controlBlock={
         <SlabControl
           cfg={{

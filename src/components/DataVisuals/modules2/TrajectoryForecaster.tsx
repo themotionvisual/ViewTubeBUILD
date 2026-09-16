@@ -450,7 +450,7 @@ export const TrajectoryForecasterModule: React.FC<TubeExplorerVisualProps> = ({
       icon={<TrendingUp size={44} strokeWidth={2.5} />}
       iconBg={palette.hue[1]}
       titleBg={palette.hue[1]}
-      subtitle={`FORECAST HORIZON: ${forecastPeriods} ${periodLabel.toUpperCase()}S · SCENARIOS BUILT FROM MULTI-WINDOW LINEAR REGRESSION`}
+      subtitle="Best, base and worst cases for where the channel lands if the trend holds."
       controlBlock={
         <SlabControl
           cfg={{
