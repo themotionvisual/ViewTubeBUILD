@@ -25,14 +25,24 @@ const VisualLoadingState = () => (
  </div>
 )
 
-const hasSnapshotData = (value: VtSyncSnapshot) =>
- value.source !== "empty"
- || (value.videos?.length || 0) > 0
- || (value.trafficSources?.length || 0) > 0
- || (value.trafficByDay?.length || 0) > 0
- || (value.dailyMetrics?.length || 0) > 0
- || (value.monthlyMetrics?.length || 0) > 0
- || (value.geography?.length || 0) > 0
+/**
+ * Does this snapshot carry ANY imported or synced rows?
+ *
+ * Deliberately generic rather than a hand-written list of seven datasets. The
+ * snapshot has dozens of tables, and naming a few of them meant an import of
+ * anything else — demographics, search terms, cities, a traffic detail table —
+ * looked like "no data", so the hydrated snapshot was thrown away and the
+ * creator's own import never reached the visuals. Any populated array, or any
+ * populated `tableExports` bucket, counts.
+ */
+const hasSnapshotData = (value: VtSyncSnapshot): boolean => {
+ if (value.source !== "empty") return true
+ for (const entry of Object.values(value as unknown as Record<string, unknown>)) {
+  if (Array.isArray(entry) && entry.length > 0) return true
+ }
+ const exports = (value.tableExports || {}) as Record<string, unknown>
+ return Object.values(exports).some((rows) => Array.isArray(rows) && rows.length > 0)
+}
 
 export const VtSyncDataVisualsGate: React.FC<{ snapshot: VtSyncSnapshot }> = ({ snapshot }) => {
  const [isOpen1, setIsOpen1] = useState(false)

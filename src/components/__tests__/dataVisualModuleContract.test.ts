@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import {
  DATA_VISUAL_MARK_FLOORS,
@@ -7,9 +9,11 @@ import {
  DEFAULT_DATA_VISUAL_MARK_SCALE,
  dataVisualDefaultSelection,
  dataVisualDensityBudget,
+ dataVisualMarkInteraction,
  dataVisualMarkScale,
  dataVisualModuleContract,
  dataVisualPanelBudget,
+ dataVisualSeriesBudget,
  isRegisteredDataVisualModuleId,
  scaleMark,
  type DataVisualViewportBucket,
@@ -154,5 +158,45 @@ describe("landscape aspect policy", () => {
   for (const id of Object.keys(DATA_VISUAL_MODULE_CONTRACTS) as Array<keyof typeof DATA_VISUAL_MODULE_CONTRACTS>) {
    expect(dataVisualModuleContract(id).canvasAspect).toBe("16:9")
   }
+ })
+})
+
+describe("channel progress composition", () => {
+ it("thins panels and overlaid series before it thins the canvas", () => {
+  // A landscape phone can carry two stacked bands; a portrait phone shows one
+  // plot at a time and switches with the metric control instead of shrinking
+  // four plots into a strip each.
+  expect(dataVisualPanelBudget("channel-progress", "desktop")).toBe(4)
+  expect(dataVisualPanelBudget("channel-progress", "landscape")).toBe(2)
+  expect(dataVisualPanelBudget("channel-progress", "portrait")).toBe(1)
+
+  // Every extra overlaid metric divides the bar width, so the overlay is
+  // capped before the bars stop being readable.
+  expect(dataVisualSeriesBudget("channel-progress", "desktop")).toBe(5)
+  expect(dataVisualSeriesBudget("channel-progress", "landscape")).toBe(3)
+  expect(dataVisualSeriesBudget("channel-progress", "portrait")).toBe(2)
+ })
+
+ it("reads hover off the plot, so the touch floor does not apply", () => {
+  // At five metrics a 24px touch minimum would make the PHONE bar wider than
+  // the desktop bar it is meant to be a reduction of.
+  expect(dataVisualMarkInteraction("channel-progress")).toBe("field")
+ })
+
+ it("carries no height of its own once the canvas owns geometry", () => {
+  const source = readFileSync(
+   join(process.cwd(), "src/components/GraphsPageCharts.tsx"),
+   "utf8",
+  )
+  const module = source.slice(
+   source.indexOf("export const ComboChannelProgress"),
+   source.indexOf("type TrafficTimelinePoint"),
+  )
+  expect(module).toContain('<DataVisualCanvas id="channel-progress">')
+  for (const legacyHeight of ["min-h-[400px]", "h-[400px]", "h-[420px]", 'minHeightClassName="min-h-[360px]"']) {
+   expect(module, `channel progress still sets ${legacyHeight}`).not.toContain(legacyHeight)
+  }
+  // Keys belong to the module's bottom section, not to the evidence canvas.
+  expect(module).toContain("data-vt-data-visual-guides")
  })
 })

@@ -4,6 +4,7 @@ import {
  type RegisteredDataVisualModuleId,
 } from "../../components/dataVisualModuleContract"
 import {
+ ComboChannelProgress,
  EngagementLinesModule,
  ShortsRetentionWidgetModule,
  TrafficSourceEvolutionModule,
@@ -43,6 +44,7 @@ const AUDIT_MODULES: AuditEntry[] = [
  { id: "content-treemap", title: "Content Treemap", render: (props) => <TubeExplorerContentTreemap {...props} /> },
  { id: "traffic-source-evolution", title: "Traffic Source Evolution", render: (props) => <TrafficSourceEvolutionModule {...props} /> },
  { id: "engagement-pulse", title: "Engagement Pulse", render: (props) => <EngagementLinesModule {...props} /> },
+ { id: "channel-progress", title: "Channel Progress", render: (props) => <ComboChannelProgress {...props} /> },
 ]
 
 const DataVisualMobileAudit: React.FC = () => {

@@ -419,10 +419,25 @@ const VtSyncDataVisualsContent: React.FC<{
 }> = ({ snapshot, modules }) => {
  const visualData = useMemo(() => buildVtSyncVisualPropsData(snapshot), [snapshot])
 
+/*
+  * Whether ANY table has arrived — used for a banner, never as a gate.
+  *
+  * This used to hide every module behind one all-or-nothing check on three
+  * datasets (videos, traffic, geography). A creator who imported only Daily
+  * Stats got a blank page even though Channel Progress, Engagement Pulse and
+  * the rest of the daily-driven modules had everything they needed, and a
+  * creator with no channel connected could not see what the visuals even are.
+  * Every module already renders its own empty state for the table IT needs, so
+  * the grid renders unconditionally and each module speaks for itself.
+  */
  const hasRenderableData =
   visualData.rows.length > 0 ||
   visualData.canonicalContext.trafficRows.length > 0 ||
-  visualData.canonicalContext.geographyRows.length > 0
+  visualData.canonicalContext.geographyRows.length > 0 ||
+  visualData.trafficByDay.length > 0 ||
+  visualData.dailyMetrics.length > 0 ||
+  visualData.monthlyMetrics.length > 0 ||
+  visualData.canonicalContext.demographicRows.length > 0
 
  const renderedVisualBlocks = useMemo(() => {
   return buildVtSyncVisualGridBlocks(modules)
@@ -459,11 +474,15 @@ const VtSyncDataVisualsContent: React.FC<{
    </div>
 
    {!hasRenderableData ? (
-    <div className="flex items-center justify-center rounded-[20px] border-[4px] border-dashed border-black bg-white p-16 text-center text-xl font-black uppercase tracking-[0.14em] text-black/35">
+    <div className="mb-6 rounded-[20px] border-[4px] border-dashed border-black bg-white p-6 text-center text-sm font-black uppercase tracking-[0.14em] text-black/40">
      Sync or import Annalytics tables to populate data visuals.
+     <span className="mt-2 block text-[11px] tracking-[0.1em] text-black/30">
+      Every module below is live — each one fills in as its table arrives.
+     </span>
     </div>
-   ) : (
-    <div className="flex flex-col gap-8">
+   ) : null}
+
+   <div className="flex flex-col gap-8">
      {renderedVisualBlocks.map((block) => (
       <React.Fragment
        key={block.type === "module" ? block.module.id : block.modules.map(({ module }) => module.id).join("-")}>
@@ -511,8 +530,7 @@ const VtSyncDataVisualsContent: React.FC<{
        )}
       </React.Fragment>
      ))}
-    </div>
-   )}
+   </div>
   </>
  )
 }

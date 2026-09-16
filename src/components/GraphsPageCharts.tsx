@@ -17,8 +17,10 @@ import { DataVisualCanvas } from "./DataVisualCanvas"
 import {
  useDataVisualDensityBudget,
  useDataVisualMarks,
+ useDataVisualPanelBudget,
  useDataVisualSelection,
  useDataVisualSeriesBudget,
+ useDataVisualViewportBucket,
  useVisualCanvasBox,
 } from "./dataVisualCanvasGeometry"
 import {
@@ -3533,6 +3535,26 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
   const [layoutMode, setLayoutMode] = useState<"overlay" | "individual">("overlay")
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
+  // Composition, from the registered contract: how thick a mark may be drawn,
+  // how many per-metric panels may be stacked, and how many metrics may share
+  // one plot. The canvas owns the height, so a phone already gets a shorter
+  // plot; these keep the marks INSIDE it from being desktop-sized.
+  const progressBucket = useDataVisualViewportBucket()
+  const { scale: scaleProgressMark } = useDataVisualMarks("channel-progress")
+  const progressPanelBudget = useDataVisualPanelBudget("channel-progress", 4)
+  const progressSeriesBudget = useDataVisualSeriesBudget("channel-progress", 5)
+  const plotHostRef = useRef<HTMLDivElement | null>(null)
+  const progressPlotBox = useVisualCanvasBox(plotHostRef)
+  /**
+   * Height of one plot, measured rather than assumed. In the per-metric grid
+   * the panels split the canvas, so each one gets its share.
+   */
+  const progressPlotHeight = (isIndividualGrid: boolean) => {
+    const measured = progressPlotBox.height
+    if (!(measured > 1)) return isIndividualGrid ? 285 : 340
+    return isIndividualGrid ? measured / Math.max(1, visiblePanelRows) : measured
+  }
+
   const METRIC_OPTIONS = [
     { value: "subscribersGained", label: "SUBSCRIBERS", tone: VT_VISUAL_METRIC_COLORS.subscribers, isRevenue: false },
     { value: "revenue", label: "REVENUE", tone: VT_VISUAL_METRIC_COLORS.revenue, isRevenue: true },
@@ -3705,10 +3727,13 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
 
   const periodRangeLabel = useMemo(() => {
     if (chartData.length === 0) return "NO PERIOD RANGE"
-    const start = chartData[0]?.start
-    const end = chartData[chartData.length - 1]?.end
-    if (!(start instanceof Date) || !(end instanceof Date)) return "NO PERIOD RANGE"
-    return formatRange(start, end)
+    // Buckets carry epoch milliseconds, not Date objects — the old
+    // `instanceof Date` guard was never true, so the module printed
+    // "NO PERIOD RANGE" over a plot that had a perfectly good range.
+    const start = Number(chartData[0]?.start)
+    const end = Number(chartData[chartData.length - 1]?.end)
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return "NO PERIOD RANGE"
+    return formatRange(new Date(start), new Date(end))
   }, [chartData])
 
   const hoveredPeriod = hoveredIdx !== null ? chartData[hoveredIdx] ?? null : null
@@ -3728,8 +3753,8 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     : null
   const activePeriodLabel = hoveredPeriod
    ? usesMonthlyGrain
-    ? hoveredPeriod.start.toLocaleDateString(undefined, { month: "long", year: "numeric" }).toUpperCase()
-    : formatRange(hoveredPeriod.start, hoveredPeriod.end)
+    ? new Date(Number(hoveredPeriod.start)).toLocaleDateString(undefined, { month: "long", year: "numeric" }).toUpperCase()
+    : formatRange(new Date(Number(hoveredPeriod.start)), new Date(Number(hoveredPeriod.end)))
    : periodRangeLabel
 
   const channelProgressTooltip = ({ active, payload }: any) => {
@@ -3768,7 +3793,24 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     )
   }
 
-  const activeMetrics = METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value))
+  /*
+   * Metrics actually drawn. The control still owns WHICH metrics are selected;
+   * the series budget owns how many of them may share one canvas, so a phone
+   * plots the reader's top choices rather than slicing the bar width five ways.
+   */
+  const activeMetrics = METRIC_OPTIONS
+    .filter((option) => selectedMetrics.includes(option.value))
+    .slice(0, Math.max(1, progressSeriesBudget))
+  /*
+   * Panels the grid layout may stack at once, and the rows they occupy. Beyond
+   * one panel the grid is 2x2 on desktop; a landscape phone stacks two bands
+   * and a portrait phone shows one plot at a time.
+   */
+  const visiblePanels = activeMetrics.slice(0, Math.max(1, progressPanelBudget))
+  const useIndividualGrid = layoutMode === "individual" && visiblePanels.length > 1
+  const visiblePanelRows = !useIndividualGrid
+    ? 1
+    : visiblePanels.length <= 2 ? visiblePanels.length : 2
 
   const CustomCandle = (props: any) => {
     const { x, y, width, height, payload, optionKey } = props
@@ -3812,6 +3854,15 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     // Every selected metric still gets its own hidden pair of axes so metrics with
     // wildly different units can overlay without flattening each other. Only the
     // first selected metric exposes tick labels on the left/right edges.
+    /*
+     * Rotated axis titles are a guide, and a guide only earns its place when
+     * the plot has room for it. In the per-metric grid each panel already
+     * carries a coloured metric label, and the titles are longer than a
+     * landscape panel is tall — they collided across stacked panels. On a
+     * portrait phone they cost a sixth of the plot width on each side, and the
+     * legend under the canvas already names the metric.
+     */
+    const showAxisTitles = !isIndividualGrid && progressBucket !== "portrait"
     const getPeriodAxisId = (metricKey: string) => `period-axis-${metricKey}`
     const getTotalAxisId = (metricKey: string) => `total-axis-${metricKey}`
 
@@ -3939,7 +3990,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
                     tick={(props: any) => (
                       <ViewTubeYAxisTick {...props} orientation="left" formatter={metricFormatter} />
                     )}
-                    label={isPrimary ? {
+                    label={isPrimary && showAxisTitles ? {
                       content: (props: any) => (
                         <ViewTubeYAxisTitle {...props} title={`${option.label} PERIOD`} orientation="left" />
                       ),
@@ -3955,7 +4006,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
                     tick={(props: any) => (
                       <ViewTubeYAxisTick {...props} orientation="right" formatter={metricFormatter} />
                     )}
-                    label={isPrimary ? {
+                    label={isPrimary && showAxisTitles ? {
                       content: (props: any) => (
                         <ViewTubeYAxisTitle {...props} title={`${option.label} TOTAL`} orientation="right" />
                       ),
@@ -3984,7 +4035,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
                     }
                   />
                 )}
-                label={idx < 2 ? {
+                label={idx < 2 && showAxisTitles ? {
                   content: (props: any) => (
                     <ViewTubeYAxisTitle {...props} title={`${option.label} DELTA`} orientation={orientation} />
                   ),
@@ -4001,30 +4052,39 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
           const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
           const metricCount = Math.max(1, metricsToRender.length)
           const isTwoMetricOverlay = metricCount === 2 && !isIndividualGrid
-          const darkLineWidth =
-            metricCount === 1 ? 8 :
-            metricCount === 2 ? 6 :
-            metricCount === 3 ? 4.5 :
-            metricCount === 4 ? 3.5 : 3
-          const lightLineWidth =
+          const lightLineWidth = scaleProgressMark(
             metricCount === 1 ? 5 :
             metricCount === 2 ? 4 :
             metricCount === 3 ? 3 :
-            metricCount === 4 ? 2.5 : 2
-          const dotRadius =
+            metricCount === 4 ? 2.5 : 2,
+            "strokeWidth",
+          )
+          const dotRadius = scaleProgressMark(
             metricCount === 1 ? 6 :
             metricCount === 2 ? 5 :
             metricCount === 3 ? 4.5 :
-            metricCount === 4 ? 4 : 3.5
-          const dotStrokeWidth = metricCount <= 2 ? 3 : metricCount === 3 ? 2.5 : 2
+            metricCount === 4 ? 4 : 3.5,
+            "bubbleRadius",
+          )
+          const dotStrokeWidth = scaleProgressMark(
+            metricCount <= 2 ? 3 : metricCount === 3 ? 2.5 : 2,
+            "strokeWidth",
+          )
           const activeDotRadius = dotRadius + 1
-          const barSize = isIndividualGrid
-            ? 28
-            : metricsToRender.length === 1
-              ? 46
-              : metricsToRender.length === 2
-                ? 23
-                : Math.max(3, Math.floor((48 - (metricsToRender.length - 1) * 2) / metricsToRender.length))
+          // Bar thickness is a mark, so it scales with the composition. The
+          // floor is 3px rather than the touch floor: this is a hover field,
+          // and a 24px minimum at five metrics would draw a PHONE bar wider
+          // than the desktop bar it is supposed to be a reduction of.
+          const barSize = scaleProgressMark(
+            isIndividualGrid
+              ? 28
+              : metricsToRender.length === 1
+                ? 46
+                : metricsToRender.length === 2
+                  ? 23
+                  : Math.max(3, Math.floor((48 - (metricsToRender.length - 1) * 2) / metricsToRender.length)),
+            3,
+          )
 
           if (viewMode === "delta") {
             return (
@@ -4061,7 +4121,11 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
                 // A 10–12px minimum keeps very small non-zero periods visible.
                 // At the normal Channel Progress plot heights this is roughly
                 // 3.5%+ of the usable chart area.
-                minPointSize={getRelativeBarMinPointSize(isIndividualGrid ? 285 : 340)}
+                // Keyed to the plot the canvas actually handed us. The old
+                // constants (285 / 340) were desktop guesses, so on a phone
+                // canvas a third of a 203px plot was reserved for bars that
+                // carry almost no value.
+                minPointSize={getRelativeBarMinPointSize(progressPlotHeight(isIndividualGrid))}
               />
 
               {/* Cumulative line uses the light metric tone only. */}
@@ -4072,25 +4136,25 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
                 name={`${option.label} TOTAL`}
                 className={`channel-progress-line-${option.value}`}
                 stroke={lightTone}
-                strokeWidth={isTwoMetricOverlay ? 4 : lightLineWidth}
+                strokeWidth={isTwoMetricOverlay ? scaleProgressMark(4, "strokeWidth") : lightLineWidth}
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 isAnimationActive={false}
                 dot={{
-                  r: isTwoMetricOverlay ? 5 : dotRadius,
+                  r: isTwoMetricOverlay ? scaleProgressMark(5, "bubbleRadius") : dotRadius,
                   fill: lightTone,
                   stroke: darkTone,
-                  strokeWidth: isTwoMetricOverlay ? 2 : dotStrokeWidth,
+                  strokeWidth: isTwoMetricOverlay ? scaleProgressMark(2, "strokeWidth") : dotStrokeWidth,
                   style: {
                     transition:
                       "r 350ms cubic-bezier(0.22, 1, 0.36, 1), stroke-width 350ms ease, fill 350ms ease",
                   },
                 }}
                 activeDot={{
-                  r: isTwoMetricOverlay ? 6 : activeDotRadius,
+                  r: isTwoMetricOverlay ? scaleProgressMark(6, "bubbleRadius") : activeDotRadius,
                   fill: lightTone,
                   stroke: darkTone,
-                  strokeWidth: isTwoMetricOverlay ? 2.5 : dotStrokeWidth,
+                  strokeWidth: isTwoMetricOverlay ? scaleProgressMark(2.5, "strokeWidth") : dotStrokeWidth,
                   style: {
                     transition:
                       "r 750ms cubic-bezier(0.22, 1, 0.36, 1), stroke-width 750ms ease, fill 750ms ease",
@@ -4113,6 +4177,8 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         icon: visualShellIcon(visualStyle, "calendar"),
       }}
       theme={visualShellTheme(visualStyle, "#FF82B0", "#26C7EC")}
+      // The canvas owns height now, so the shell contributes none of its own.
+      layout={{ moduleMinHeight: "0px", moduleWidth: "100%" }}
       controllerWidth={300}
       controllerRows={[
         {
@@ -4252,59 +4318,70 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         stats: hoveredStats || selectedWindowStats,
       }}
       footer={
-        <InsightMarquee
-          chartInsight="Cumulative growth tracking identifies the long-term compound value of your content periods."
-          personalInsight="Toggle CANDLE DELTA to analyze period-over-period performance gains or losses."
-        />
+        <>
+          {/* Keys live in the bottom section, never inside the evidence canvas. */}
+          <div data-vt-data-visual-guides>
+            <div className="flex flex-row flex-nowrap items-center gap-3 overflow-x-auto bg-white px-2 py-1.5">
+              {activeMetrics.map((option) => {
+                const lightTone = mixChannelProgressTone(option.tone, "#FFFFFF", 0.38)
+                const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
+                return (
+                  <div key={option.value} className="flex shrink-0 items-center gap-1.5">
+                    <span className="h-[10px] w-[18px] shrink-0 border border-black" style={{ background: lightTone, borderColor: darkTone }} />
+                    <span className="h-[3px] w-[18px] shrink-0" style={{ background: darkTone }} />
+                    <span className="whitespace-nowrap text-[9px] font-[1000] uppercase tracking-[0.04em] text-black">{option.label}</span>
+                  </div>
+                )
+              })}
+              {activeMetrics.length < selectedMetrics.length ? (
+                <span className="shrink-0 whitespace-nowrap text-[9px] font-[1000] uppercase tracking-[0.04em] text-black/40">
+                  +{selectedMetrics.length - activeMetrics.length} hidden
+                </span>
+              ) : null}
+            </div>
+          </div>
+          <InsightMarquee
+            chartInsight="Cumulative growth tracking identifies the long-term compound value of your content periods."
+            personalInsight="Toggle CANDLE DELTA to analyze period-over-period performance gains or losses."
+          />
+        </>
       }
     >
       <HeroIntroBoundary
         visualId="channel-progress"
         replayKey={`${viewMode}-${layoutMode}-${timeRange}-${selectedMetrics.join("|")}-${chartData.length}`}
-        className="px-1 pt-2 pb-4 min-h-[400px] relative overflow-visible"
+        className="relative"
       >
-        {layoutMode === "individual" && activeMetrics.length > 1 ? (
-          <div className={`grid gap-1 h-[420px] ${activeMetrics.length === 2 ? 'grid-cols-1 grid-rows-2' : 'grid-cols-2 grid-rows-2'}`}>
-            {activeMetrics.map((metricOpt, metricIndex) => {
-              const isBottomChart =
-                activeMetrics.length === 2
-                  ? metricIndex === activeMetrics.length - 1
-                  : metricIndex >= Math.max(0, activeMetrics.length - 2)
-              return (
-                <div key={metricOpt.value} className="relative h-full min-h-0 bg-white">
-                  <div className="absolute top-0 left-2 z-10 text-[9px] font-black uppercase tracking-wider" style={{ color: metricOpt.tone }}>
-                    {metricOpt.label}
-                  </div>
-                  <StableChartFrame minHeightClassName="h-full">
-                    {renderChartForMetrics([metricOpt], true, isBottomChart)}
-                  </StableChartFrame>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div className="h-[400px]">
-            <StableChartFrame minHeightClassName="min-h-[360px]">
-              {renderChartForMetrics(activeMetrics, false)}
-            </StableChartFrame>
-          </div>
-        )}
-
-        {layoutMode !== "individual" ? (
-        <div className="pointer-events-none absolute bottom-0 left-[14px] right-[14px] flex h-8 items-center justify-center gap-3 overflow-hidden bg-white/90 px-2">
-          {activeMetrics.map((option) => {
-            const lightTone = mixChannelProgressTone(option.tone, "#FFFFFF", 0.38)
-            const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
-            return (
-              <div key={option.value} className="flex min-w-0 items-center gap-1.5">
-                <span className="h-[10px] w-[18px] shrink-0 border border-black" style={{ background: lightTone, borderColor: darkTone }} />
-                <span className="h-[3px] w-[18px] shrink-0" style={{ background: darkTone }} />
-                <span className="truncate text-[9px] font-[1000] uppercase tracking-[0.04em] text-black">{option.label}</span>
+        <DataVisualCanvas id="channel-progress">
+          <div ref={plotHostRef} className="h-full min-h-0 w-full min-w-0 bg-white">
+            {useIndividualGrid ? (
+              <div
+                className={`grid h-full min-h-0 gap-1 ${visiblePanelRows === 1 ? "grid-cols-1 grid-rows-1" : visiblePanels.length <= 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-2 grid-rows-2"}`}
+              >
+                {visiblePanels.map((metricOpt, metricIndex) => {
+                  const isBottomChart =
+                    visiblePanels.length <= 2
+                      ? metricIndex === visiblePanels.length - 1
+                      : metricIndex >= Math.max(0, visiblePanels.length - 2)
+                  return (
+                    <div key={metricOpt.value} className="relative h-full min-h-0 bg-white">
+                      <div className="absolute top-0 left-2 z-10 text-[9px] font-black uppercase tracking-wider" style={{ color: metricOpt.tone }}>
+                        {metricOpt.label}
+                      </div>
+                      <StableChartFrame minHeightClassName="min-h-0">
+                        {renderChartForMetrics([metricOpt], true, isBottomChart)}
+                      </StableChartFrame>
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
-        </div>
-        ) : null}
+            ) : (
+              <StableChartFrame minHeightClassName="min-h-0">
+                {renderChartForMetrics(activeMetrics, false)}
+              </StableChartFrame>
+            )}
+          </div>
+        </DataVisualCanvas>
       </HeroIntroBoundary>
     </SubToolboxChartModule>
   )
