@@ -1,7 +1,7 @@
 import React from "react"
-import ProjectStudioCanonical from "./ProjectStudioCanonical"
+import { ProjectStudio } from "../ProjectStudio"
 
-/** Projects-page Project Studio uses the canonical Subtoolbox composition directly. */
-const EmbeddedProjectStudio: React.FC = () => <ProjectStudioCanonical />
+/** Projects-page Project Studio restores the original calendar, project creation and production composition. */
+const EmbeddedProjectStudio: React.FC = () => <ProjectStudio />
 
 export default EmbeddedProjectStudio
