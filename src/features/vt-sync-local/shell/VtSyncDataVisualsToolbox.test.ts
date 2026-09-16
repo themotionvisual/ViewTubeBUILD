@@ -279,8 +279,17 @@ describe("VT-SYNC data visual module registry", () => {
  it("registers source tables, controls, footer contracts, and one shared visual frame", () => {
   expect(source).toContain("export const VT_SYNC_VISUAL_MODULE_REGISTRY")
   expect(source).toContain("sourceTableIds: dataVisualSourceTables(module.id)")
- expect(source).toContain("controls: controlsForVisual(module.id)")
-  expect(source).toContain("controllerSpec: controllerSpecForVisual(module.id)")
+  /*
+   * The registry no longer describes controllers. `controllerSpec` and
+   * `controls` were populated with `noop` handlers and never rendered —
+   * `VtSyncVisualFrame` reads `sourceTableIds`, the icon and the colour pairs,
+   * and nothing else — so they were a second, fictional description of every
+   * controller with nothing keeping it in step with the real one.
+   */
+  expect(source).not.toContain("controllerSpecForVisual")
+  expect(source).not.toContain("controlsForVisual")
+  expect(frameSource).not.toContain("controllerSpec")
+  expect(frameSource).not.toContain("VtSyncVisualControlSpec")
   expect(source).toContain("shellMode: shellModeForVisual(module.group)")
   expect(visualStyleSource).toContain("export const VT_SYNC_VISUAL_STYLE_REGISTRY")
   expect(source).toContain("export const VT_SYNC_VISUAL_ICON_REGISTRY")
@@ -291,7 +300,6 @@ describe("VT-SYNC data visual module registry", () => {
   expect(visualStyleSource).not.toContain("paletteIndex")
   expect(source).toContain('insight: "Calculated from the active VT-SYNC table registry."')
   expect(frameSource).toContain("export type VtSyncVisualModuleSpec")
-  expect(frameSource).toContain("controllerSpec")
   expect(frameSource).toContain("shellMode")
   expect(frameSource).toContain("export const VtSyncVisualFrame")
   expect(frameSource).toContain("React.createElement(spec.renderer, {")
@@ -310,9 +318,10 @@ describe("VT-SYNC data visual module registry", () => {
  })
 
  it("keeps unified visual controller and icon metadata in the registry", () => {
-  expect(source).toContain('type: "metricMultiSelect"')
-  expect(source).toContain('type: "statement"')
-  expect(source).toContain('type: "toggle"')
+  // The controller row types that used to be asserted here belonged to the
+  // registry's mock `controllerSpec`, not to any controller a creator saw. The
+  // real ones are authored by the modules and recorded in
+  // `dataVisualControllerShape.test.tsx`.
   expect(source).toContain('"tube-explorer-barcode-fingerprint"')
   expect(source).toContain('"vt2-multi-metric-timeline"')
   expect(visualStyleSource).toContain('"tube-explorer-barcode-fingerprint": { iconKey: "database" }')

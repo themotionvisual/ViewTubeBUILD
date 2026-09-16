@@ -45,7 +45,6 @@ import { Vt2ThemeContext, type Vt2ThemeMode } from "../../../components/DataVisu
 import {
  getVtVisualControllerColors,
  getVtVisualHeaderColorPair,
- VT_VISUAL_METRIC_COLORS,
 } from "../../../styles/toolboxPalette"
 import { getVtSyncVisualStyle } from "../../../styles/vtSyncVisualStyles"
 import { buildVtSyncVisualGridBlocks, shouldVtSyncVisualStartOpen } from "./vtSyncVisualGridModel"
@@ -126,25 +125,6 @@ const VT2_MODULES: LegacyVisualModuleDefinition[] = [
 ]
 
 
-const controlsForVisual = (id: string): VtSyncVisualModuleSpec["controls"] => {
- if (id.includes("word-network"))
-  return [
-   { id: "metric", label: "Metric", kind: "select" },
-   { id: "word-limit", label: "Words", kind: "count" },
-  ]
- if (id.includes("format"))
-  return [
-   { id: "window", label: "Window", kind: "select" },
-   { id: "aggregation", label: "Average / Total", kind: "toggle" },
-  ]
- if (id.includes("engagement"))
-  return [
-   { id: "count", label: "Videos", kind: "count" },
-   { id: "format", label: "Format", kind: "select" },
-   { id: "ranking", label: "Ranked By", kind: "select" },
-  ]
- return []
-}
 
 const iconKeyForVisual = (id: string): string => getVtSyncVisualStyle(id).iconKey
 
@@ -166,13 +146,6 @@ const dimensionKeysForVisual = (id: string): readonly string[] => {
  return ["video"]
 }
 
-const controllerExplanationForVisual = (id: string): string => {
- if (id.includes("barcode")) return "Ranked video bars by the selected metric and format."
- if (id.includes("multi-metric")) return "Selected metrics over the chosen channel or video time window."
- if (id.includes("combo-channel-progress")) return "Daily Stats drive channel metrics; the Videos catalog supplies only upload counts."
- if (id.includes("engagement")) return "Newest or top videos grouped by engagement metric."
- return "Visualization generated from the active VT-SYNC table snapshot."
-}
 
 const canvasFitModeForVisual = (id: string): VtSyncVisualModuleSpec["canvasFitMode"] => {
  if (id.includes("barcode") || id.includes("multi-metric")) return "fillWidth"
@@ -185,79 +158,6 @@ const shellModeForVisual = (group: VtSyncVisualModuleDefinition["group"]): VtSyn
  return "standard"
 }
 
-const noop = () => undefined
-
-const controllerSpecForVisual = (id: string): VtSyncVisualModuleSpec["controllerSpec"] => {
- if (id.includes("barcode")) {
-  return {
-   rows: [
-    { type: "number", value: 80, bgTone: VT_VISUAL_METRIC_COLORS.revenue, fgTone: "#000000", onPrev: noop, onNext: noop },
-    {
-     type: "dropdown",
-     value: "top:all",
-     options: [
-      { label: "GREATEST | ALL", value: "top:all" },
-      { label: "LATEST | SHORTS", value: "recent:shorts" },
-     ],
-     onSelect: noop,
-     bgTone: VT_VISUAL_METRIC_COLORS.views,
-     fgTone: "#000000",
-    },
-    {
-     type: "dropdown",
-     value: "views",
-     options: [
-      { label: "RANKED BY: VIEWS", value: "views" },
-      { label: "RANKED BY: LIKES", value: "likes" },
-     ],
-     onSelect: noop,
-     bgTone: VT_VISUAL_METRIC_COLORS.likes,
-     fgTone: "#000000",
-    },
-   ],
-  }
- }
-
- if (id.includes("multi-metric")) {
-  return {
-   denseLegacy: true,
-   rows: [
-    { type: "number", value: 12, bgTone: VT_VISUAL_METRIC_COLORS.engagedViews, fgTone: "#000000", onPrev: noop, onNext: noop },
-    { type: "toggle", value: "WEEKS", options: ["WEEKS", "MONTHS"], onSelect: noop, bgTone: VT_VISUAL_METRIC_COLORS.views, fgTone: "#000000" },
-    { type: "statement", value: "CHANNEL OVERLAY", bgTone: "#000000", fgTone: VT_VISUAL_METRIC_COLORS.engagedViews },
-    {
-     type: "metricMultiSelect",
-     selectedValues: ["views", "subscribers"],
-     options: [
-      { label: "VIEWS", value: "views", color: VT_VISUAL_METRIC_COLORS.views },
-      { label: "SUBS", value: "subscribers", color: VT_VISUAL_METRIC_COLORS.subscribers },
-      { label: "LIKES", value: "likes", color: VT_VISUAL_METRIC_COLORS.likes },
-      { label: "RPM", value: "rpm", color: VT_VISUAL_METRIC_COLORS.rpm },
-     ],
-     onToggleValue: noop,
-     bgTone: "#FFFFFF",
-     fgTone: "#000000",
-    },
-   ],
-  }
- }
-
- if (id.includes("combo-channel-progress")) {
-  return {
-   rows: [
-    { type: "statement", value: "CHANNEL TOTALS", bgTone: "#000000", fgTone: VT_VISUAL_METRIC_COLORS.views },
-    { type: "dropdown", value: "views", options: [{ label: "VIEWS", value: "views" }, { label: "LIKES", value: "likes" }], onSelect: noop, bgTone: VT_VISUAL_METRIC_COLORS.views, fgTone: "#000000" },
-    { type: "toggle", value: "1 YEAR", options: ["90 DAYS", "6 MONTHS", "1 YEAR"], onSelect: noop, bgTone: VT_VISUAL_METRIC_COLORS.watchTime, fgTone: "#000000" },
-   ],
-  }
- }
-
- return {
-  rows: [
-   { type: "statement", value: controllerExplanationForVisual(id), bgTone: "#000000", fgTone: VT_VISUAL_METRIC_COLORS.likes },
-  ],
- }
-}
 
 const visualRenderer = (
  render: LegacyVisualModuleDefinition["render"],
@@ -284,11 +184,8 @@ const VISUAL_MODULES: VtSyncVisualModuleDefinition[] = ALL_LEGACY_VISUAL_MODULES
  headerColorPair: getVtVisualHeaderColorPair(index),
  activeMetricKeys: activeMetricKeysForVisual(module.id),
  dimensionKeys: dimensionKeysForVisual(module.id),
- controllerExplanation: controllerExplanationForVisual(module.id),
- controllerSpec: controllerSpecForVisual(module.id),
  canvasFitMode: canvasFitModeForVisual(module.id),
  shellMode: shellModeForVisual(module.group),
- controls: controlsForVisual(module.id),
  footer: {
   insight: "Calculated from the active VT-SYNC table registry.",
   legend: [],

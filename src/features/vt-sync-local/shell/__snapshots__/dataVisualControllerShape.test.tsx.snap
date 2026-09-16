@@ -1,0 +1,455 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Data Visual controller shape > matches the recorded shape for every registered visual 1`] = `
+{
+  "age-gender-audience": [],
+  "algorithm-trigger": [
+    {
+      "density": "normal",
+      "rows": "number,dropdown,label",
+      "width": "195",
+    },
+  ],
+  "combo-channel-progress": [
+    {
+      "density": "normal",
+      "rows": "custom,metricMultiSelect,text,custom",
+      "width": "300",
+    },
+  ],
+  "conversion-funnel": [],
+  "custom-scatter": [
+    {
+      "density": "normal",
+      "rows": "dropdown,dropdown,dropdown,dropdown",
+      "width": "234",
+    },
+  ],
+  "engagement-lines": [
+    {
+      "density": "normal",
+      "rows": "custom",
+      "width": "195",
+    },
+  ],
+  "format-comparison-donuts": [
+    {
+      "density": "normal",
+      "rows": "number,label,toggle",
+      "width": "236",
+    },
+  ],
+  "growth-pulse": [
+    {
+      "density": "normal",
+      "rows": "label,dropdown,text",
+      "width": "236",
+    },
+  ],
+  "hook-effectiveness": [
+    {
+      "density": "normal",
+      "rows": "number,label,label",
+      "width": "195",
+    },
+  ],
+  "keyword-treemap": [],
+  "keyword-venn": [
+    {
+      "density": "normal",
+      "rows": "label,label,toggle,dropdown",
+      "width": "400",
+    },
+  ],
+  "lissajous-web": [],
+  "orbital": [],
+  "performance-gauges": [],
+  "revenue-distribution": [
+    {
+      "density": "normal",
+      "rows": "custom,dropdown",
+      "width": "210",
+    },
+  ],
+  "revenue-efficiency": [
+    {
+      "density": "normal",
+      "rows": "number,split,dropdown",
+      "width": "262",
+    },
+  ],
+  "shorts-retention-widget": [
+    {
+      "density": "normal",
+      "rows": "number,dropdown,label",
+      "width": "195",
+    },
+  ],
+  "signal-matrix": [
+    {
+      "density": "normal",
+      "rows": "dropdown",
+      "width": "215",
+    },
+  ],
+  "subscribers-gained": [
+    {
+      "density": "normal",
+      "rows": "custom,dropdown",
+      "width": "210",
+    },
+  ],
+  "top-performers-trio": [],
+  "traffic-source-evolution": [
+    {
+      "density": "normal",
+      "rows": "label,dropdown,dropdown",
+      "width": "259",
+    },
+  ],
+  "tube-explorer-barcode-fingerprint": [
+    {
+      "density": "compact",
+      "rows": "number,split,dropdown",
+      "width": "262",
+    },
+  ],
+  "tube-explorer-beeswarm-like-rate": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-bubble-universe": [
+    {
+      "density": "compact",
+      "rows": "text,number,dropdown,dropdown,dropdown",
+      "width": "234",
+    },
+  ],
+  "tube-explorer-calendar-heat-signature": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-channel-health-radar": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-channel-vital-signs": [
+    {
+      "density": "compact",
+      "rows": "number,text,metricMultiSelect",
+      "width": "238",
+    },
+  ],
+  "tube-explorer-chrono-spiral": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-clock-radial-burst": [
+    {
+      "density": "compact",
+      "rows": "dropdown",
+      "width": "238",
+    },
+  ],
+  "tube-explorer-content-dna-gel": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-content-donut": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-content-treemap": [
+    {
+      "density": "compact",
+      "rows": "number,text,text",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-contour-density-map": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-conversion-funnel": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-duration-retention-scatter": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-ecg-vitals-monitor": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-emission-spectrum": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-engagement-radar": [
+    {
+      "density": "compact",
+      "rows": "number,text,dropdown",
+      "width": "297",
+    },
+  ],
+  "tube-explorer-keyword-treemap": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-keyword-venn-chart": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-like-rate-waveform": [
+    {
+      "density": "compact",
+      "rows": "text,text,number,dropdown",
+      "width": "252",
+    },
+  ],
+  "tube-explorer-lissajous-web": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-orbital-system": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-perfection-quadrant": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-performance-gauges": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-performance-waveform": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-publish-optimal-clock": [
+    {
+      "density": "compact",
+      "rows": "label,dropdown,dropdown",
+      "width": "242",
+    },
+  ],
+  "tube-explorer-retention-curve-atlas": [
+    {
+      "density": "compact",
+      "rows": "text,number,dropdown",
+      "width": "239",
+    },
+  ],
+  "tube-explorer-retention-mosaic": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-revenue-efficiency-map": [
+    {
+      "density": "compact",
+      "rows": "text,number,dropdown,dropdown,dropdown",
+      "width": "234",
+    },
+  ],
+  "tube-explorer-revenue-forecast": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-revenue-waterfall": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-sankey-river-delta": [
+    {
+      "density": "compact",
+      "rows": "number,number,dropdown",
+      "width": "232",
+    },
+  ],
+  "tube-explorer-seasonality-radar": [
+    {
+      "density": "compact",
+      "rows": "text,label,dropdown",
+      "width": "224",
+    },
+  ],
+  "tube-explorer-shorts-vs-longs": [
+    {
+      "density": "compact",
+      "rows": "number,text,label",
+      "width": "236",
+    },
+  ],
+  "tube-explorer-stalactite-drip": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-sub-net-flow": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-subscriber-waterfall": [
+    {
+      "density": "compact",
+      "rows": "number,split,text",
+      "width": "236",
+    },
+  ],
+  "tube-explorer-thermal-heatmap-grid": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-thermal-imaging": [
+    {
+      "density": "compact",
+      "rows": "dropdown,dropdown,dropdown",
+      "width": "307",
+    },
+  ],
+  "tube-explorer-title-word-network": [
+    {
+      "density": "normal",
+      "rows": "number,label,dropdown",
+      "width": "202",
+    },
+  ],
+  "tube-explorer-traffic-day-river-delta": [
+    {
+      "density": "compact",
+      "rows": "number,label,text",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-traffic-evolution": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-upload-heatmap": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-us-state-dot-map": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-video-value-matrix": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "tube-explorer-views-subs-growth-quadrant": [
+    {
+      "density": "compact",
+      "rows": "number,label",
+      "width": "220",
+    },
+  ],
+  "upload-time-heatmap": [],
+  "video-value-matrix": [
+    {
+      "density": "normal",
+      "rows": "number,dropdown,dropdown,label",
+      "width": "195",
+    },
+  ],
+  "vt2-channel-big-bang": [],
+  "vt2-multi-metric-timeline": [],
+  "vt2-revenue-mosaic": [],
+  "vt2-search-term-gravity": [],
+  "vt2-trajectory-forecaster": [],
+  "vt2-video-fingerprint": [],
+  "vt2-weekly-sparklines": [],
+  "watch-time-distribution": [
+    {
+      "density": "normal",
+      "rows": "custom,dropdown",
+      "width": "210",
+    },
+  ],
+}
+`;

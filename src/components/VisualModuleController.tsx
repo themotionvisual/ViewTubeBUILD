@@ -608,6 +608,17 @@ export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ 
   return (
     <div 
       data-controller-root
+      /*
+       * The controller's resolved shape, published for tests rather than for
+       * CSS. Row order, row count, width and density are the four things the
+       * unification plan changes, and they are all decided above this point —
+       * partly by the module, partly by whichever shell it was rendered
+       * through. Emitting them here is the only place they can be observed
+       * together, after every hand has been on them.
+       */
+      data-vt-controller-rows={displayRows.map((row) => row.type).join(",")}
+      data-vt-controller-width={computedWidth}
+      data-vt-controller-density={density}
       className="flex flex-col h-full overflow-hidden shrink-0 border-l-[4px] border-l-black relative"
       style={{ width: computedWidth }}
     >

@@ -20,6 +20,7 @@ import { createRoot } from "react-dom/client"
 import { act } from "react-dom/test-utils"
 
 import { VT_SYNC_VISUAL_MODULE_REGISTRY } from "./VtSyncDataVisualsToolbox"
+import type { VtSyncVisualProps } from "./VtSyncVisualFrame"
 
 const EMPTY_PROPS = {
  data: [],
@@ -32,7 +33,7 @@ const EMPTY_PROPS = {
  geographyRows: [],
  demographicRows: [],
  contentTypeRows: [],
-} as unknown as Parameters<(typeof VT_SYNC_VISUAL_MODULE_REGISTRY)[number]["renderer"]>[0]
+} as unknown as VtSyncVisualProps
 
 describe("Data Visual modules with no data", () => {
  it("registers modules to render", () => {
