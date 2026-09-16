@@ -14,7 +14,7 @@ const parse = (raw: string): ProjectPlanningSuggestion[] => {
 }
 
 export const generateProjectPlanningSuggestions = async (kind: ProjectPlanningKind, project: Project, brain: WorkspaceBrain) => {
- const prompt = `Generate 5 ${kind === "todo" ? "actionable production tasks" : "measurable project goals"} for this specific ViewTube project.\nPROJECT: ${JSON.stringify({name:project.name,status:project.status,publishDate:project.publishDate,concept:project.concept,niche:project.niche,description:project.description,script:project.script,plan:project.plan,tasks:project.tasks,goals:project.goals})}\nCHANNEL CONTEXT: ${JSON.stringify({targetNiche:brain.targetNiche,channelProfile:brain.channelProfile})}\nReturn ONLY JSON array objects with text, category, rationale, evidence.`
+ const prompt = `Generate 5 ${kind === "todo" ? "actionable production tasks" : "measurable project goals"} for this specific ViewTube project.\nPROJECT: ${JSON.stringify({name:project.name,status:project.status,publishDate:project.publishDate,concept:project.concept,niche:project.niche,description:project.description,script:project.script,plan:project.plan,tasks:project.tasks,goals:project.plan?.projectGoals||[]})}\nCHANNEL CONTEXT: ${JSON.stringify({targetNiche:brain.targetNiche,channelProfile:brain.channelProfile})}\nReturn ONLY JSON array objects with text, category, rationale, evidence.`
  const raw = await getComplexAdvice(prompt, "Use the supplied project and channel context as authoritative. Keep every suggestion specific to this project. Return only JSON.")
  return parse(raw)
 }
