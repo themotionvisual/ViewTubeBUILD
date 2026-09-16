@@ -13,6 +13,14 @@ import type { CsvFileWithTag } from "../types"
 import { CustomIcon } from "./CustomIcon"
 import { AnalyticsVisualIcon } from "./AnalyticsVisualIcon"
 import { StableChartFrame } from "./StableChartFrame"
+import { DataVisualCanvas } from "./DataVisualCanvas"
+import {
+ useDataVisualDensityBudget,
+ useDataVisualMarks,
+ useDataVisualSelection,
+ useDataVisualSeriesBudget,
+ useVisualCanvasBox,
+} from "./dataVisualCanvasGeometry"
 import {
  VIEWTUBE_CARTESIAN,
  ViewTubeScatterBubble,
@@ -266,29 +274,52 @@ const EngagementKeyItem: React.FC<{ label: string; tone: string }> = ({ label, t
  </div>
 )
 
-const EngagementSelectedDot: React.FC<any> = ({ cx, cy, stroke }) => {
+const EngagementSelectedDot: React.FC<any> = ({ cx, cy, stroke, radius = 6, dotStrokeWidth = 3 }) => {
  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return null
- return <circle cx={cx} cy={cy} r={6} fill="#FFFFFF" stroke={stroke} strokeWidth={3} />
+ return <circle cx={cx} cy={cy} r={radius} fill="#FFFFFF" stroke={stroke} strokeWidth={dotStrokeWidth} />
 }
 
-const EngagementHoverDot: React.FC<any> = ({ cx, cy, stroke, metricIndex = 0 }) => {
+const EngagementHoverDot: React.FC<any> = ({ cx, cy, stroke, metricIndex = 0, radius = 6, dotStrokeWidth = 3 }) => {
  if (!Number.isFinite(cx) || !Number.isFinite(cy)) return null
  return (
   <circle
    cx={cx}
    cy={cy}
-   r={6}
+   r={radius}
    fill="#FFFFFF"
    stroke={stroke}
-   strokeWidth={3}
+   strokeWidth={dotStrokeWidth}
    className="engagement-hover-dot"
    style={{ animationDelay: `${metricIndex * 200}ms` }}
   />
  )
 }
 
-const EngagementLeftAxisLabel: React.FC<{ viewBox?: { x: number; y: number; width: number; height: number } }> = ({ viewBox }) => {
+/**
+ * Rotated axis title listing the left-hand metrics.
+ *
+ * The label runs along the plot's HEIGHT, so on a short phone plot the full
+ * "SUBSCRIBERS • COMMENTS • SHARES" runs past both ends and gets clipped. It
+ * drops names from the end until what remains fits, rather than overflowing.
+ */
+const EngagementLeftAxisLabel: React.FC<{
+ viewBox?: { x: number; y: number; width: number; height: number }
+ fontSize?: number
+ metrics?: ReadonlyArray<{ label: string; color: string }>
+}> = ({ viewBox, fontSize = 14, metrics }) => {
  if (!viewBox) return null
+ const entries = metrics ?? [
+  { label: "SUBSCRIBERS", color: VT_VISUAL_METRIC_COLORS.subscribers },
+  { label: "COMMENTS", color: VT_VISUAL_METRIC_COLORS.comments },
+  { label: "SHARES", color: VT_VISUAL_METRIC_COLORS.shares },
+ ]
+ // Rough advance width for the heavy uppercase face, including the separators.
+ const runLength = (list: typeof entries) =>
+  list.reduce((sum, entry) => sum + entry.label.length, 0) * fontSize * 0.68
+  + Math.max(0, list.length - 1) * fontSize * 1.1
+ const fitted = entries.slice()
+ while (fitted.length > 1 && runLength(fitted) > viewBox.height) fitted.pop()
+
  const x = viewBox.x - 24
  const y = viewBox.y + viewBox.height / 2
  return (
@@ -296,19 +327,23 @@ const EngagementLeftAxisLabel: React.FC<{ viewBox?: { x: number; y: number; widt
    <text
     textAnchor="middle"
     dominantBaseline="middle"
-    style={{ fontWeight: 1000, fontSize: 14, letterSpacing: "0.08em" }}
+    style={{ fontWeight: 1000, fontSize, letterSpacing: "0.08em" }}
    >
-    <tspan fill={VT_VISUAL_METRIC_COLORS.subscribers}>SUBSCRIBERS</tspan>
-    <tspan fill="#000000"> • </tspan>
-    <tspan fill={VT_VISUAL_METRIC_COLORS.comments}>COMMENTS</tspan>
-    <tspan fill="#000000"> • </tspan>
-    <tspan fill={VT_VISUAL_METRIC_COLORS.shares}>SHARES</tspan>
+    {fitted.map((entry, index) => (
+     <React.Fragment key={entry.label}>
+      {index > 0 ? <tspan fill="#000000"> • </tspan> : null}
+      <tspan fill={entry.color}>{entry.label}</tspan>
+     </React.Fragment>
+    ))}
    </text>
   </g>
  )
 }
 
-const EngagementRightAxisLabel: React.FC<{ viewBox?: { x: number; y: number; width: number; height: number } }> = ({ viewBox }) => {
+const EngagementRightAxisLabel: React.FC<{
+ viewBox?: { x: number; y: number; width: number; height: number }
+ fontSize?: number
+}> = ({ viewBox, fontSize = 15 }) => {
  if (!viewBox) return null
  const x = viewBox.x + viewBox.width + 24
  const y = viewBox.y + viewBox.height / 2
@@ -317,7 +352,7 @@ const EngagementRightAxisLabel: React.FC<{ viewBox?: { x: number; y: number; wid
    <text
     textAnchor="middle"
     dominantBaseline="middle"
-    style={{ fontWeight: 1000, fontSize: 15, letterSpacing: "0.08em", fill: VT_VISUAL_METRIC_COLORS.likes }}
+    style={{ fontWeight: 1000, fontSize, letterSpacing: "0.08em", fill: VT_VISUAL_METRIC_COLORS.likes }}
    >
     LIKES
    </text>
@@ -1520,13 +1555,18 @@ const SHORTS_RETENTION_COUNT_VALUES = [10, 25, 50, 75, 100, 150, 200]
 type ShortsFormatFilter = "all" | "shorts" | "longform"
 
 export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visualStyle }) => {
+ // Canvas geometry comes from the registered `shorts-retention` contract; this
+ // module keeps header, controls and the legend strip.
  const [mode, setMode] = useState<"top-performing" | "most-recent">("top-performing")
  const [sortMetric, setSortMetric] = useState<"avd" | "estIncome" | "dur" | "views" | "watchHours">("avd")
  const [modeMenuOpen, setModeMenuOpen] = useState(false)
  const [activeKey, setActiveKey] = useState<string | null>(null)
  const [hoveredBubbleKey, setHoveredBubbleKey] = useState<string | null>(null)
  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
- const [selectedCount, setSelectedCount] = useState(100)
+ // Opens on 25 videos in portrait, 50 in landscape, 100 on desktop — then the
+ // reader's own choice sticks. Bubble geometry scales with the composition.
+ const [selectedCount, setSelectedCount] = useDataVisualSelection("shorts-retention", 100)
+ const { scale: scaleShortsMark } = useDataVisualMarks("shorts-retention")
  const rafMouseRef = useRef<number | null>(null)
  const pendingMouseRef = useRef<{ x: number; y: number } | null>(null)
  const cycleCount = (dir: 1 | -1) => {
@@ -1572,7 +1612,10 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
   const revenuePercentiles = buildTieAwarePercentiles(
    top.map((d) => d.revenueAvailable ? d.estIncome : null),
   )
-  const viewRadii = buildLinearAreaBubbleRadii(top.map((d) => d.views), { minRadius: 4, maxRadius: 36 })
+  const viewRadii = buildLinearAreaBubbleRadii(top.map((d) => d.views), {
+   minRadius: scaleShortsMark(4, "bubbleRadius"),
+   maxRadius: scaleShortsMark(36, "bubbleRadius"),
+  })
 
   // Exponential outlier: top/bottom 7% occupy the palette edges alone
   const expPos = (t: number | null): number | null => {
@@ -1602,7 +1645,7 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
    durationScale,
    avdScale,
   }
- }, [data, mode, sortMetric, selectedCount])
+ }, [data, mode, sortMetric, selectedCount, scaleShortsMark])
 
  useEffect(() => {
   if (cd.points.length === 0) { setActiveKey(null); return }
@@ -1648,7 +1691,7 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
     icon: visualShellIcon(visualStyle, "video"),
    }}
    theme={visualShellTheme(visualStyle, "#FF82B0", "#26C7EC")}
-   layout={{ moduleMinHeight: "420px", moduleWidth: "100%" }}
+   layout={{ moduleMinHeight: "0px", moduleWidth: "100%" }}
    controlBox={{
     count: cd.points.length,
     countUnit: "VIDEOS",
@@ -1684,19 +1727,47 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
     { label: "VIEWS", tone: "white" },
    ]}
    footer={
-    <InsightMarquee
-     mode="insight-lock"
-     segments={[
-      { badge: "Chart Insight", text: generalInsight, badgeTone: "cyan" },
-      { badge: "Personal Insight", text: shortsInsight, badgeTone: "lime" },
-     ]}
-    />
+    /* Keys live in the bottom section, never inside the evidence canvas. */
+    <div data-vt-data-visual-guides>
+     <div
+      /* Legend keys stay at full size and the strip scrolls sideways on a
+         narrow canvas, rather than the keys being clipped mid-label. */
+      className="h-[40px] min-h-[40px] shrink-0 overflow-x-auto px-[22px] grid grid-cols-[minmax(max-content,1fr)_minmax(190px,auto)_minmax(max-content,1fr)] gap-x-10 items-start pt-1 bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      data-vt-data-visual-secondary="compact">
+      <div className="min-w-0 flex items-center gap-2 justify-self-end">
+        <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Revenue</span>
+        <div className="w-[155px] h-6 border-[2px] border-[#45DDB0] rounded-[2px] bg-gradient-to-r from-[#24BCFF] via-[#45DDB0] to-[#66FF8A]" />
+      </div>
+      <div className="min-w-0 justify-self-center flex items-center gap-3 whitespace-nowrap px-5">
+        <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
+        <span className="uppercase tracking-[0.1em] text-black" style={{ fontWeight: 1000, fontSize: 14 }}>Duration</span>
+        <span className="text-black font-[1000] text-[16px] leading-none">▶</span>
+      </div>
+      <div className="min-w-0 flex items-center gap-2 justify-self-start">
+        <div className="flex items-center justify-between w-[115px]">
+          <span className="w-2 aspect-square shrink-0 rounded-full bg-[#24BCFF] opacity-[0.75]" />
+          <span className="w-3 aspect-square shrink-0 rounded-full bg-[#2FC8EF] opacity-[0.75]" />
+          <span className="w-4 aspect-square shrink-0 rounded-full bg-[#3AD4DF] opacity-[0.75]" />
+          <span className="w-5 aspect-square shrink-0 rounded-full bg-[#45DDB0] opacity-[0.75]" />
+          <span className="w-6 aspect-square shrink-0 rounded-full bg-[#66FF8A] opacity-[0.75]" />
+        </div>
+        <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Views</span>
+      </div>
+     </div>
+     <InsightMarquee
+      mode="insight-lock"
+      segments={[
+       { badge: "Chart Insight", text: generalInsight, badgeTone: "cyan" },
+       { badge: "Personal Insight", text: shortsInsight, badgeTone: "lime" },
+      ]}
+     />
+    </div>
    }
   >
-   <div className="min-h-[400px] w-full min-w-0 max-w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
-    <div className="h-[400px] min-h-[400px] flex flex-col overflow-hidden">
-     <div className="h-[360px] min-h-[360px] relative shrink-0 overflow-visible">
-      <StableChartFrame minHeightClassName="min-h-[360px]">
+   <DataVisualCanvas id="shorts-retention" className="bg-white">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
+     <div className="relative min-h-0 flex-1 overflow-visible">
+      <StableChartFrame minHeightClassName="min-h-0">
        <ScatterChart
        className="[&_svg]:outline-none [&_svg]:overflow-visible [&_*:focus]:outline-none [&_*:focus-visible]:outline-none"
        margin={viewTubeCartesianMargin("scatter")}
@@ -1766,29 +1837,8 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
       </ScatterChart>
      </StableChartFrame>
      </div>
-     <div className="h-[40px] min-h-[40px] shrink-0 px-[22px] grid grid-cols-[minmax(0,1fr)_minmax(190px,auto)_minmax(0,1fr)] gap-x-10 items-start pt-1 pointer-events-none bg-white">
-      <div className="min-w-0 flex items-center gap-2 justify-self-end">
-        <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Revenue</span>
-        <div className="w-[155px] h-6 border-[2px] border-[#45DDB0] rounded-[2px] bg-gradient-to-r from-[#24BCFF] via-[#45DDB0] to-[#66FF8A]" />
-      </div>
-      <div className="min-w-0 justify-self-center flex items-center gap-3 whitespace-nowrap px-5">
-        <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
-        <span className="uppercase tracking-[0.1em] text-black" style={{ fontWeight: 1000, fontSize: 14 }}>Duration</span>
-        <span className="text-black font-[1000] text-[16px] leading-none">▶</span>
-      </div>
-      <div className="min-w-0 flex items-center gap-2 justify-self-start">
-        <div className="flex items-center justify-between w-[115px]">
-          <span className="w-2 aspect-square shrink-0 rounded-full bg-[#24BCFF] opacity-[0.75]" />
-          <span className="w-3 aspect-square shrink-0 rounded-full bg-[#2FC8EF] opacity-[0.75]" />
-          <span className="w-4 aspect-square shrink-0 rounded-full bg-[#3AD4DF] opacity-[0.75]" />
-          <span className="w-5 aspect-square shrink-0 rounded-full bg-[#45DDB0] opacity-[0.75]" />
-          <span className="w-6 aspect-square shrink-0 rounded-full bg-[#66FF8A] opacity-[0.75]" />
-        </div>
-        <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Views</span>
-      </div>
-     </div>
     </div>
-   </div>
+   </DataVisualCanvas>
   </SubToolboxChartModule>
  )
 }
@@ -2025,10 +2075,15 @@ const ENGAGEMENT_METRICS = [
 const ENGAGEMENT_PULSE_COUNT_OPTIONS = [10, 15, 20, 25, 50]
 
 export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle }) => {
+ // Phone compositions plot fewer videos rather than the same 25 crushed into a
+ // few hundred pixels; the count control still reaches the full range.
+ const { scale: scaleEngagementMark } = useDataVisualMarks("engagement-pulse")
+ const engagementSeriesBudget = useDataVisualSeriesBudget("engagement-pulse", ENGAGEMENT_METRICS.length)
  const [sortMetric, setSortMetric] = useState<string>("likes")
  const [mode, setMode] = useState<"top-performing" | "most-recent">("most-recent")
  const [format, setFormat] = useState<"shorts" | "longform" | "combined">("combined")
- const [selectedCount, setSelectedCount] = useState(25)
+ // Opens on 10 videos in portrait, 15 in landscape, 25 on desktop.
+ const [selectedCount, setSelectedCount] = useDataVisualSelection("engagement-pulse", 25)
  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
  const [animKey, setAnimKey] = useState(0)
  const [rankMenuOpen, setRankMenuOpen] = useState(false)
@@ -2063,6 +2118,10 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
     ? sortedByMetric([...mapped].sort((a, b) => b.uploadTs - a.uploadTs).slice(0, selectedCount))
     : sortedByMetric(mapped)
 
+  // The count control governs outright. `defaultSelection` already opens the
+  // module at a readable value for this composition, so clamping on top would
+  // plot 6 while the control reads 10 — two knobs contradicting each other in
+  // front of the reader.
   return sorted.slice(0, selectedCount).map((d, i) => ({
    ...d,
    idx: i,
@@ -2111,6 +2170,21 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
   return [sortMetric, ...remaining]
  }, [sortMetric])
 
+ // Portrait plots three traces rather than four. The metric being sorted on is
+ // always one of them, so the reader never loses the series they chose.
+ const plottedMetrics = useMemo(
+  () => renderOrder.slice(0, Math.max(1, engagementSeriesBudget)),
+  [renderOrder, engagementSeriesBudget],
+ )
+
+ // The left axis names only the metrics actually plotted on it.
+ const leftAxisLabelMetrics = useMemo(
+  () => ENGAGEMENT_METRICS
+   .filter((metric) => metric.key !== "likes" && plottedMetrics.includes(metric.key))
+   .map((metric) => ({ label: metric.label, color: metric.color })),
+  [plottedMetrics],
+ )
+
  const animationMetaByMetric = useMemo(() => {
   const map: Record<string, { beginMs: number; durationMs: number; phase: "primary" | "secondary" }> = {}
   renderOrder.forEach((metricKey, idx) => {
@@ -2137,7 +2211,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
     headerStyle: "subtoolbox",
    }}
    theme={visualShellTheme(visualStyle, "#FFB158", "#FF7497")}
-   layout={{ moduleMinHeight: "420px", moduleWidth: "100%" }}
+   layout={{ moduleMinHeight: "0px", moduleWidth: "100%" }}
    activeContext={{
     title: activeRow?.title?.toUpperCase().slice(0, 40) || "SELECT VIDEO",
     stats: ENGAGEMENT_METRICS.map((metric) => ({
@@ -2230,9 +2304,9 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
    }
   >
    <HeroIntroBoundary visualId="engagement-pulse" replayKey={animKey}>
-   <div className="min-h-[400px] w-full bg-white p-0 overflow-hidden flex flex-col">
-    <div className="h-[400px] relative">
-     <StableChartFrame minHeightClassName="min-h-[400px]">
+   <DataVisualCanvas id="engagement-pulse" className="bg-white">
+    <div className="relative h-full min-h-0 w-full">
+     <StableChartFrame minHeightClassName="min-h-0">
        <LineChart
         data={cd}
         margin={{ top: 10, right: 38, bottom: 10, left: 38 }}
@@ -2262,7 +2336,13 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
           />
          )}
          label={{
-          content: (props: any) => <EngagementLeftAxisLabel {...props} />,
+          content: (props: any) => (
+           <EngagementLeftAxisLabel
+            {...props}
+            fontSize={scaleEngagementMark(14, "fontSize")}
+            metrics={leftAxisLabelMetrics}
+           />
+          ),
          }}
         />
         <YAxis
@@ -2278,11 +2358,13 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
           />
          )}
          label={{
-          content: (props: any) => <EngagementRightAxisLabel {...props} />,
+          content: (props: any) => (
+           <EngagementRightAxisLabel {...props} fontSize={scaleEngagementMark(15, "fontSize")} />
+          ),
          }}
         />
         <g key={animKey}>
-         {ENGAGEMENT_METRICS.map((m, i) => (
+         {ENGAGEMENT_METRICS.filter((m) => plottedMetrics.includes(m.key)).map((m, i) => (
           <Line
            key={`${m.key}-${animKey}`}
            yAxisId={m.key === "likes" ? "right" : "left"}
@@ -2290,12 +2372,25 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
            dataKey={m.key}
            name={m.label}
            stroke={m.color}
-           strokeWidth={m.key === sortMetric ? 5 : 3}
+           strokeWidth={scaleEngagementMark(m.key === sortMetric ? 5 : 3, "strokeWidth")}
            dot={m.key === sortMetric
-            ? (props: any) => <EngagementSelectedDot {...props} stroke={m.color} />
+            ? (props: any) => (
+             <EngagementSelectedDot
+              {...props}
+              stroke={m.color}
+              radius={scaleEngagementMark(6, "bubbleRadius")}
+              dotStrokeWidth={scaleEngagementMark(3, "strokeWidth")}
+             />
+            )
             : false}
            activeDot={(props: any) => (
-            <EngagementHoverDot {...props} stroke={m.color} metricIndex={i} />
+            <EngagementHoverDot
+             {...props}
+             stroke={m.color}
+             metricIndex={i}
+             radius={scaleEngagementMark(6, "bubbleRadius")}
+             dotStrokeWidth={scaleEngagementMark(3, "strokeWidth")}
+            />
            )}
            isAnimationActive
            animationBegin={animationMetaByMetric[m.key]?.beginMs ?? 0}
@@ -2312,7 +2407,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
        </LineChart>
      </StableChartFrame>
     </div>
-   </div>
+   </DataVisualCanvas>
   </HeroIntroBoundary>
   </SubToolboxChartModule>
  )
@@ -4396,11 +4491,16 @@ const trafficSourceTone = (source: string, fallbackIndex: number): string => {
 }
 
 const trafficSourceSubtitleLabel = (source: string): string => {
+ if (source === TRAFFIC_OTHER_KEY) return "OTHER"
  const normalized = normalizeTrafficSourceKey(source)
  return TRAFFIC_SOURCE_SHORT_LABELS[normalized] || trafficSourceDisplayName(source).toUpperCase()
 }
 
+/** Synthetic key for the band that carries every source below the budget. */
+const TRAFFIC_OTHER_KEY = "__vt_other_sources__"
+
 const trafficSourceLegendLabel = (source: string): string => {
+ if (source === TRAFFIC_OTHER_KEY) return "Other sources"
  const normalized = normalizeTrafficSourceKey(source)
  if (normalized === "YT_OTHER_PAGE") return "YouTube Features"
  return trafficSourceDisplayName(source)
@@ -4718,56 +4818,83 @@ const TRAFFIC_MONTH_LABELS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "
 /** Long-range windows get month sections with week-1..4 subdivisions instead of a dense day scale. */
 const TRAFFIC_SECTIONED_AXIS_WINDOWS = new Set<DistributionWindowKey>(["90d", "180d", "365d", "lifetime"])
 
-/** Week 1 starts on the 1st (shown as the month dash); weeks 2-4 get the shorter dashes. */
-const TRAFFIC_WEEK_START_DAYS = [8, 15, 22]
-
-type TrafficAxisTickKind = "month" | "week" | null
-
-const trafficAxisTickKind = (bucket: string | number): TrafficAxisTickKind => {
- const parsed = typeof bucket === "number" ? new Date(bucket) : new Date(bucket)
- if (!Number.isFinite(parsed.getTime())) return null
- const day = parsed.getDate()
- if (day === 1) return "month"
- return TRAFFIC_WEEK_START_DAYS.includes(day) ? "week" : null
+/** Month boundaries inside a window — the only ticks the sectioned axis labels. */
+const buildTrafficMonthTicks = (start: number, end: number): number[] => {
+ const ticks: number[] = []
+ const cursor = new Date(start)
+ cursor.setHours(0, 0, 0, 0)
+ cursor.setDate(1)
+ while (cursor.getTime() <= end) {
+  const tick = cursor.getTime()
+  if (tick >= start) ticks.push(tick)
+  cursor.setMonth(cursor.getMonth() + 1, 1)
+ }
+ return ticks
 }
 
-const TrafficSectionedAxisTick: React.FC<{
- x?: number
- y?: number
- payload?: { value?: string | number }
- index?: number
-}> = ({ x = 0, y = 0, payload, index = 0 }) => {
- const bucket = payload?.value ?? ""
- const kind = trafficAxisTickKind(bucket)
- // The first visible month sits against the Y axis even when it is not the
- // first data bucket, so use both the tick index and plot position.
- if (!kind || index === 0 || x <= 76) return <g />
- const parsed = typeof bucket === "number" ? new Date(bucket) : new Date(bucket)
- const isMonth = kind === "month"
- return (
-  <g transform={`translate(${x},${y})`}>
-   {isMonth ? (
-    <text x={0} y={-13} textAnchor="middle" fill="#000000" fontSize={13} fontWeight={1000}>
-     {TRAFFIC_MONTH_LABELS[parsed.getMonth()]}
-    </text>
-   ) : null}
-  </g>
- )
-}
+/**
+ * Half the widest month label, near enough: a centred label closer than this to
+ * the left edge would be clipped, so it is dropped instead of drawn cut off.
+ */
+const TRAFFIC_AXIS_LABEL_EDGE_GUARD = 16
 
-const TrafficPercentAxisTick: React.FC<{
- x?: number
- y?: number
- payload?: { value?: number }
-}> = ({ x = 0, y = 0, payload }) => {
- const value = Number(payload?.value)
- if (![25, 50, 75].includes(value)) return <g />
+/** The share gridlines the overlay labels; the 0 and 100 edges are unlabelled. */
+const TRAFFIC_PERCENT_GUIDES = [25, 50, 75] as const
+
+/**
+ * Axis labels drawn OVER the plot rather than in a gutter beside it.
+ *
+ * Recharts reserves layout space for every axis it renders, and that reserved
+ * space was what held the evidence off the left and bottom edges of its canvas.
+ * Both axes are therefore hidden — they still define the scales the areas and
+ * the grid are drawn against — and their labels are re-drawn here from the same
+ * domains, in black, on top of the visual.
+ *
+ * The plot fills the chart box exactly (zero margins, no visible axes), so the
+ * measured host box IS the plot area and positions can be computed directly
+ * from the time domain rather than read out of Recharts internals.
+ */
+const TrafficAxisOverlay: React.FC<{
+ width: number
+ height: number
+ ticks: number[]
+ timelineStart: number
+ timelineEnd: number
+ sectioned: boolean
+}> = ({ width, height, ticks, timelineStart, timelineEnd, sectioned }) => {
+ if (width < 1 || height < 1 || timelineEnd <= timelineStart) return null
+ const span = timelineEnd - timelineStart
  return (
-  <g transform={`translate(${x},${y})`}>
-   <text x={8} y={4} textAnchor="start" fill="#000000" fontSize={10} fontWeight={1000}>
-    {value}
-   </text>
-  </g>
+  <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+   {TRAFFIC_PERCENT_GUIDES.map((value) => (
+    <span
+     key={value}
+     className="absolute -translate-y-1/2 text-[10px] font-black leading-none text-black"
+     style={{ left: TRAFFIC_AXIS_LABEL_EDGE_GUARD / 2, top: height * (1 - value / 100) }}
+    >
+     {value}
+    </span>
+   ))}
+   {ticks.map((tick) => {
+    const label = sectioned
+     ? TRAFFIC_MONTH_LABELS[new Date(tick).getMonth()]
+     : formatTrafficDayAxisLabel(tick)
+    if (!label) return null
+    const x = ((tick - timelineStart) / span) * width
+    // A centred label this close to an edge would be drawn cut in half, so it
+    // is dropped rather than shifted off the boundary it is marking.
+    if (x < TRAFFIC_AXIS_LABEL_EDGE_GUARD || x > width - TRAFFIC_AXIS_LABEL_EDGE_GUARD) return null
+    return (
+     <span
+      key={tick}
+      className={`absolute -translate-x-1/2 font-black leading-none text-black ${sectioned ? "text-[13px]" : "text-[10px]"}`}
+      style={{ left: x, bottom: 6 }}
+     >
+      {label}
+     </span>
+    )
+   })}
+  </div>
  )
 }
 
@@ -4848,6 +4975,20 @@ const buildTrafficAxisTicks = (start: number, end: number, sectioned: boolean): 
  return ticks
 }
 
+/**
+ * Thins an ordered tick list down to a simultaneous-label budget, always
+ * keeping the first and last tick. Phone compositions show fewer dates rather
+ * than the same dates printed small enough to collide.
+ */
+const thinAxisTicks = (ticks: number[], budget: number): number[] => {
+ if (budget <= 1 || ticks.length <= budget) return ticks
+ const step = Math.ceil(ticks.length / budget)
+ const thinned = ticks.filter((_, index) => index % step === 0)
+ const last = ticks[ticks.length - 1]
+ if (thinned[thinned.length - 1] !== last) thinned.push(last)
+ return thinned
+}
+
 export const buildTrafficSourceDailyTimeline = (
  rows: Array<Record<string, unknown>>,
  options: {
@@ -4877,11 +5018,17 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  data,
  trafficByDay,
 }) => {
+ // Canvas geometry belongs to the registered contract; this module keeps the
+ // chrome and reduces its own label density per composition.
+ const { budget: trafficAxisTickBudget } = useDataVisualDensityBudget("traffic-source-evolution", 8)
+ const trafficSeriesBudget = useDataVisualSeriesBudget("traffic-source-evolution", 8)
  const ds = useMemo(() => buildExpansionDatasets(data), [data])
  const [selectedFormat, setSelectedFormat] = useState<DistributionFormatKey>("videos")
  const [selectedWindow, setSelectedWindow] = useState<DistributionWindowKey>("180d")
  const [hoveredBucketKey, setHoveredBucketKey] = useState<string | null>(null)
  const hoverHostRef = useRef<HTMLDivElement | null>(null)
+ // With zero margins and both axes hidden, the host box IS the plot area.
+ const plotBox = useVisualCanvasBox(hoverHostRef)
  const hoverLineRef = useRef<HTMLDivElement | null>(null)
  const hoverLabelRef = useRef<HTMLDivElement | null>(null)
  const hoverFrameRef = useRef<number | null>(null)
@@ -4953,10 +5100,13 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  const timelineStart = selectedWindow === "lifetime"
   ? earliestTimestamp
   : trafficWindowThreshold(selectedWindow)
- const axisTicks = buildTrafficAxisTicks(
-  timelineStart,
-  timelineEnd,
-  TRAFFIC_SECTIONED_AXIS_WINDOWS.has(selectedWindow),
+ const axisTicks = thinAxisTicks(
+  buildTrafficAxisTicks(
+   timelineStart,
+   timelineEnd,
+   TRAFFIC_SECTIONED_AXIS_WINDOWS.has(selectedWindow),
+  ),
+  trafficAxisTickBudget,
  )
  const windowTotals = trafficTimeline.reduce((acc, bucket) => {
   keys.forEach((key) => {
@@ -4964,7 +5114,27 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
   })
   return acc
  }, {} as Record<string, number>)
- const visibleKeys = keys.filter((key) => (windowTotals[key] || 0) > 0)
+ const presentKeys = useMemo(
+  () => keys.filter((key) => (windowTotals[key] || 0) > 0),
+  [keys, windowTotals],
+ )
+ // Phone compositions plot fewer bands. The smallest sources fold into one
+ // OTHER band rather than being dropped, so the stack still totals 100% and no
+ // traffic goes missing from the picture.
+ const { keys: visibleKeys, folded: foldedTrafficKeys } = useMemo(() => {
+  const ranked = [...presentKeys].sort((a, b) => (windowTotals[b] || 0) - (windowTotals[a] || 0))
+  if (ranked.length <= trafficSeriesBudget) return { keys: ranked, folded: [] as string[] }
+  const kept = ranked.slice(0, Math.max(1, trafficSeriesBudget - 1))
+  return { keys: [...kept, TRAFFIC_OTHER_KEY], folded: ranked.slice(kept.length) }
+ }, [presentKeys, trafficSeriesBudget, windowTotals])
+
+ const plottedAreaData = useMemo(() => {
+  if (foldedTrafficKeys.length === 0) return areaData
+  return areaData.map((row) => ({
+   ...row,
+   [TRAFFIC_OTHER_KEY]: foldedTrafficKeys.reduce((sum, key) => sum + (Number(row[key]) || 0), 0),
+  }))
+ }, [areaData, foldedTrafficKeys])
  const visibleSourceMeta = visibleKeys.map((key, index) => ({
   key,
   tone: trafficRankTone(index),
@@ -5003,6 +5173,22 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
   return () => overlay.remove()
  }, [hoveredSourceKey, visibleKeySignature])
  const useSectionedAxis = TRAFFIC_SECTIONED_AXIS_WINDOWS.has(selectedWindow)
+ /*
+  * The labelled ticks are their own list. `axisTicks` carries the week markers
+  * too, and thinning THAT list to a phone's label budget struck every month
+  * boundary out of it by stride — leaving the axis labelless rather than merely
+  * sparse. The overlay thins the month boundaries themselves, so whatever
+  * survives the budget is something a reader can take a date off.
+  */
+ const axisLabelTicks = useMemo(
+  () => thinAxisTicks(
+   useSectionedAxis
+    ? buildTrafficMonthTicks(timelineStart, timelineEnd)
+    : buildTrafficAxisTicks(timelineStart, timelineEnd, false),
+   trafficAxisTickBudget,
+  ),
+  [useSectionedAxis, timelineStart, timelineEnd, trafficAxisTickBudget],
+ )
  // The legend is a fixed roster: charted sources first in stack order so swatch
  // colours line up with the bands, then whatever this window did not chart.
  const chartedCanonicalKeys = new Set(visibleKeys.map(trafficSourceCanonicalKey))
@@ -5121,7 +5307,32 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    heroVisualId="traffic-source-evolution"
    header={{ title: "TRAFFIC SOURCE EVOLUTION", subtitle: "SOURCE MIX OVER TIME", icon: <CustomIcon name="analytics" size={18} />, headerStyle: "subtoolbox" }}
    theme={{ headerBandBg: "#B8FF2C", iconBlockBg: "#24D3FF", shadowColor: "rgba(184,255,44,0.45)" }}
-   layout={{ moduleMinHeight: "470px", moduleWidth: "100%" }}
+   layout={{ moduleMinHeight: "0px", moduleWidth: "100%" }}
+   footer={
+    /* Keys live in the bottom section, never inside the evidence canvas. */
+    <div data-vt-data-visual-guides>
+     <div className="shrink-0 select-none bg-black px-2 py-1.5 overflow-x-auto">
+      <div className="flex flex-row flex-nowrap items-center justify-between gap-2 min-w-full">
+       {legendSourceMeta.map((entry) => (
+        <div key={entry.key} className="flex shrink-0 items-center gap-1">
+         <span
+          className="h-[14px] w-[14px] shrink-0 rounded-[1px] border border-black"
+          style={{ background: entry.tone, opacity: entry.charted ? 1 : 0.35 }}
+         />
+         <span
+          className="flex flex-col text-left text-[8px] font-black uppercase leading-[9px] tracking-[0.03em] whitespace-nowrap"
+          style={{ color: entry.tone, opacity: entry.charted ? 1 : 0.45 }}
+         >
+          {trafficSourceLegendLines(entry.legendLabel).map((line, lineIndex) => (
+           <span key={`${line}-${lineIndex}`} className="block">{line}</span>
+          ))}
+         </span>
+        </div>
+       ))}
+      </div>
+     </div>
+    </div>
+   }
   controllerRows={controllerRows}
    activeContext={{
     title: activeContextTitle,
@@ -5132,10 +5343,13 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    }}
   >
    <HeroIntroBoundary visualId="traffic-source-evolution" replayKey={`${selectedWindow}-${visibleKeys.join("|")}`}>
-   <div className="h-full min-h-[470px] w-full overflow-hidden bg-[#090b16]">
+   {/* The surface is painted full width so the 16:9 canvas letterbox reads as
+       part of the preview rather than as white bands beside it. */}
+   <div className="w-full min-w-0 bg-[#090b16]">
+   <DataVisualCanvas id="traffic-source-evolution">
     {visibleKeys.length === 0 ? <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} /> : (
-     <div className="flex h-full flex-col justify-center gap-2">
-      <div className="flex h-[462px] flex-col overflow-hidden bg-[#050814]">
+     <div className="flex h-full min-h-0 flex-col justify-center">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#050814]">
        <div
         ref={hoverHostRef}
         className="relative min-h-0 w-full flex-1"
@@ -5145,8 +5359,11 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
        <StableChartFrame minHeightClassName="min-h-0">
           <AreaChart
           className="tse-plot"
-          data={areaData}
-          margin={{ top: 18, right: 0, left: 0, bottom: 0 }}
+          data={plottedAreaData}
+          // No gutters on any side: the axis labels are drawn OVER the plot
+          // (see the tick components), so reserving a margin for them would
+          // only inset the evidence from the canvas it was given.
+          margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
          >
           <Customized component={TrafficPlotClipDefs} />
           <CartesianGrid
@@ -5163,10 +5380,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
             domain={[timelineStart, timelineEnd]}
             ticks={axisTicks}
             interval={0}
-            height={30}
-            tick={<TrafficSectionedAxisTick />}
-            tickLine={false}
-            axisLine={false}
+            hide
            />
           ) : (
            <XAxis
@@ -5175,22 +5389,14 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
             scale="time"
             domain={[timelineStart, timelineEnd]}
             ticks={axisTicks}
-            height={30}
-            tickFormatter={formatTrafficDayAxisLabel}
-            tick={{ fontSize: 10, fontWeight: 1000, fill: "#000000", dy: -8 }}
-            axisLine={false}
-            tickLine={false}
+            hide
            />
           )}
           <YAxis
-           width={44}
-           tickMargin={0}
-           tick={<TrafficPercentAxisTick />}
            domain={[0, 100]}
-           ticks={[25, 50, 75]}
+           ticks={[...TRAFFIC_PERCENT_GUIDES]}
            allowDataOverflow
-           axisLine={false}
-           tickLine={false}
+           hide
           />
           {visibleKeys.map((k, sourceIndex) => {
            const tone = trafficRankTone(sourceIndex)
@@ -5217,6 +5423,14 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
           })}
          </AreaChart>
        </StableChartFrame>
+        <TrafficAxisOverlay
+         width={plotBox.width}
+         height={plotBox.height}
+         ticks={axisLabelTicks}
+         timelineStart={timelineStart}
+         timelineEnd={timelineEnd}
+         sectioned={useSectionedAxis}
+        />
         <div
          ref={hoverLineRef}
          aria-hidden="true"
@@ -5228,29 +5442,10 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
          className="pointer-events-none absolute left-0 top-0 whitespace-nowrap text-[10px] font-black uppercase tracking-[0.08em] text-white opacity-0"
         />
        </div>
-       <div className="shrink-0 select-none bg-black px-2 py-1.5 overflow-x-auto">
-        <div className="flex flex-row flex-nowrap items-center justify-between gap-2 min-w-full">
-         {legendSourceMeta.map((entry) => (
-          <div key={entry.key} className="flex shrink-0 items-center gap-1">
-           <span
-            className="h-[14px] w-[14px] shrink-0 rounded-[1px] border border-black"
-            style={{ background: entry.tone, opacity: entry.charted ? 1 : 0.35 }}
-           />
-           <span
-            className="flex flex-col text-left text-[8px] font-black uppercase leading-[9px] tracking-[0.03em] whitespace-nowrap"
-            style={{ color: entry.tone, opacity: entry.charted ? 1 : 0.45 }}
-           >
-            {trafficSourceLegendLines(entry.legendLabel).map((line, lineIndex) => (
-             <span key={`${line}-${lineIndex}`} className="block">{line}</span>
-            ))}
-           </span>
-          </div>
-         ))}
-        </div>
-       </div>
       </div>
      </div>
     )}
+   </DataVisualCanvas>
    </div>
   </HeroIntroBoundary>
   </SubToolboxChartModule>

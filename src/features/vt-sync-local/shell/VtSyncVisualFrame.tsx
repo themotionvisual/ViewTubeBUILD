@@ -131,6 +131,7 @@ export const VtSyncVisualFrame: React.FC<{
  return (
   <div
    data-vt-visual-frame={spec.id}
+   data-vt-data-visual-module-root={spec.id}
    data-vt-visual-density="adaptive"
    data-vt-canvas-fit={spec.canvasFitMode ?? "balanced"}
    data-vt-height-policy={spec.heightPolicy ?? "preserveRatio"}

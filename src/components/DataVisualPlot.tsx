@@ -8,25 +8,27 @@ export interface DataVisualPlotProps {
 }
 
 /**
- * Optional inner plot boundary for Data Visual modules. Radial modules can
- * preserve a square plot inside a wide evidence canvas without making the
- * complete module or outer canvas square.
+ * Internal plot boundary for Data Visual modules. The outer canvas aspect and
+ * the internal plot aspect are separate concepts: a radial module keeps a
+ * square plot centred inside a wide evidence canvas without the module or the
+ * canvas ever becoming square. Geometry lives in `data-visual-canvas.css`.
  */
 export const DataVisualPlot: React.FC<DataVisualPlotProps> = ({ id, className, children }) => {
  const { plotAspect } = dataVisualModuleContract(id)
- const aspectRatio = plotAspect === "16:9" ? "16 / 9" : plotAspect === "1:1" ? "1 / 1" : undefined
 
  return (
   <div
-   className={`mx-auto h-full min-h-0 max-h-full max-w-full ${className ?? ""}`.trim()}
-   data-vt-data-visual-plot={id}
-   data-vt-data-visual-plot-aspect={plotAspect ?? "natural"}
-   style={{
-    aspectRatio,
-    width: aspectRatio ? "auto" : "100%",
-   }}
+   className={`flex h-full min-h-0 w-full min-w-0 items-center justify-center ${className ?? ""}`.trim()}
+   data-vt-data-visual-plot-host={id}
   >
-   {children}
+   <div
+    className="min-h-0 min-w-0"
+    data-vt-data-visual-plot={id}
+    data-vt-data-visual-plot-aspect={plotAspect ?? "natural"}
+    style={plotAspect === "natural" || !plotAspect ? { width: "100%", height: "100%" } : undefined}
+   >
+    {children}
+   </div>
   </div>
  )
 }
