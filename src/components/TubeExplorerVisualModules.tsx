@@ -251,8 +251,16 @@ const ModuleFrame: React.FC<{
   * down for this module alone. Unmigrated modules keep the legacy behaviour.
   */
  canvasModuleId?: RegisteredDataVisualModuleId
+ /**
+  * Guides, keys, legends and how-to-read notes.
+  *
+  * These belong to the module's bottom section, never inside the evidence
+  * canvas: anything rendered inside the canvas is taking space away from the
+  * thing the canvas exists to show.
+  */
+ legend?: React.ReactNode
  children: React.ReactNode
-}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, heroVisualId, insightDark = false, canvasModuleId, children }) => {
+}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, heroVisualId, insightDark = false, canvasModuleId, legend, children }) => {
  const resolvedStyle = visualStyle ?? resolveVtSyncVisualStyle(title)
  const normalizedActiveContext = useMemo(
   () => {
@@ -302,7 +310,14 @@ const ModuleFrame: React.FC<{
    isOpenInitial,
    layout: shellLayout,
    metricBadges: badges,
-   footer: insight ? <span className="font-black uppercase tracking-[0.08em]">{insight}</span> : undefined,
+   footer: legend || insight
+    ? (
+     <div className="flex flex-col gap-1" data-vt-data-visual-guides>
+      {legend}
+      {insight ? <span className="font-black uppercase tracking-[0.08em]">{insight}</span> : null}
+     </div>
+    )
+    : undefined,
   }}
  >
   <div
@@ -2440,11 +2455,6 @@ const PublishOptimalClockRenderer: React.FC<{
  onHover?: (cell: PublishClockCell | null) => void
 }> = ({ cells, metricLabel, formatValue, hoveredKey, hourStep = 1, onHover }) => {
  if (cells.every((cell) => cell.uploads === 0)) return <Empty label="Video publication times are missing — run Video Metadata sync to populate the publish clock" />
- const topWindows = [...cells]
-  .filter((cell) => cell.uploads > 0)
-  .sort((a, b) => b.value - a.value)
-  .slice(0, 3)
-
  // Portrait folds the 24 hourly columns into 12 two-hour bands: the same data,
  // fewer simultaneous marks, instead of 24 columns squeezed under 6px each.
  const columnHours = PUBLISH_CLOCK_HOURS.filter((hour) => hour % hourStep === 0)
@@ -2519,36 +2529,57 @@ const PublishOptimalClockRenderer: React.FC<{
     </div>
    </div>
 
-   <div className="mt-2 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1 border-t border-white/10">
-    <div
-     className="flex min-w-[150px] flex-1 items-center gap-2 overflow-x-auto text-[9px] font-black uppercase [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-     data-vt-data-visual-secondary="compact">
-     <span className="text-white/40">Top windows:</span>
-     {topWindows.map((cell, index) => (
-      <div key={publishClockCellKey(cell)} className="shrink-0 border border-white/30 px-2 py-1 rounded bg-black flex flex-col items-center justify-center text-center leading-none">
-       <span className="text-[10px] font-[1000] text-white">#{index + 1} {PUBLISH_CLOCK_DAYS[cell.dayIndex].substring(0, 3).toUpperCase()}</span>
-       <span className="text-[9px] font-[900] text-white/80">
-        {hourStep > 1
-         ? `${formatClockHour(cell.hour)}–${formatClockHour((cell.hour + hourStep) % 24)}`.toUpperCase()
-         : formatClockHour(cell.hour).toUpperCase()}
-       </span>
-      </div>
-     ))}
-    </div>
-    <div className="flex shrink-0 items-center gap-3">
-     <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/50">COLD</span>
-     <div
-      className="h-5 shrink-0 rounded-[2px] border-[1px] border-white/90"
-      /* The ramp is the key to reading the grid, so it stays — it just narrows
-         with the canvas instead of pushing the top-window chips off-screen. */
-      style={{
-       width: "min(140px, 22cqw)",
-       background: PUBLISH_CLOCK_GRADIENT,
-      }}
-     />
-     <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/50">HOT</span>
-    </div>
+  </div>
+ )
+}
+
+/**
+ * Publish clock guides: the top publishing windows and the cold-to-hot ramp.
+ *
+ * The bottom section, not the canvas — inside, they were competing with the
+ * day x hour grid for the only vertical space the grid has.
+ */
+const PublishOptimalClockGuides: React.FC<{
+ cells: PublishClockCell[]
+ hourStep: number
+}> = ({ cells, hourStep }) => {
+ const topWindows = [...cells]
+  .filter((cell) => cell.uploads > 0)
+  .sort((a, b) => b.value - a.value)
+  .slice(0, 3)
+ if (topWindows.length === 0) return null
+ return (
+  <div className="bg-[#000000] text-white" data-vt-data-visual-guides>
+  <div className="mt-2 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1 border-t border-white/10">
+   <div
+    className="flex min-w-[150px] flex-1 items-center gap-2 overflow-x-auto text-[9px] font-black uppercase [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    data-vt-data-visual-secondary="compact">
+    <span className="text-white/40">Top windows:</span>
+    {topWindows.map((cell, index) => (
+     <div key={publishClockCellKey(cell)} className="shrink-0 border border-white/30 px-2 py-1 rounded bg-black flex flex-col items-center justify-center text-center leading-none">
+      <span className="text-[10px] font-[1000] text-white">#{index + 1} {PUBLISH_CLOCK_DAYS[cell.dayIndex].substring(0, 3).toUpperCase()}</span>
+      <span className="text-[9px] font-[900] text-white/80">
+       {hourStep > 1
+        ? `${formatClockHour(cell.hour)}–${formatClockHour((cell.hour + hourStep) % 24)}`.toUpperCase()
+        : formatClockHour(cell.hour).toUpperCase()}
+      </span>
+     </div>
+    ))}
    </div>
+   <div className="flex shrink-0 items-center gap-3">
+    <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/50">COLD</span>
+    <div
+     className="h-5 shrink-0 rounded-[2px] border-[1px] border-white/90"
+     /* The ramp is the key to reading the grid, so it stays — it just narrows
+        with the canvas instead of pushing the top-window chips off-screen. */
+     style={{
+      width: "min(140px, 22cqw)",
+      background: PUBLISH_CLOCK_GRADIENT,
+     }}
+    />
+    <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/50">HOT</span>
+   </div>
+  </div>
   </div>
  )
 }
@@ -3527,6 +3558,224 @@ const heatMatrixRows = (value: number): HeatMatrixRowCount =>
  HEAT_MATRIX_ROW_COUNTS.reduce((closest, candidate) =>
   Math.abs(candidate - value) < Math.abs(closest - value) ? candidate : closest)
 
+/**
+ * Heat Matrix guides: the track scrollbar, the metric stepper, the cold-to-hot
+ * ramp and the how-to-read note.
+ *
+ * These live in the module's bottom section rather than inside the canvas.
+ * Inside, they were taking roughly a third of the evidence area from the tile
+ * field the visual exists to show. The scroller they drive is passed in.
+ */
+const HeatMatrixGuides: React.FC<{
+ scrollerRef: React.RefObject<HTMLDivElement | null>
+ headerColorPair: { icon: string; title: string }
+}> = ({ scrollerRef, headerColorPair }) => {
+ const containerRef = scrollerRef
+ const trackRef = useRef<HTMLDivElement>(null)
+ const [thumbWidth, setThumbWidth] = useState(60)
+ const [thumbLeft, setThumbLeft] = useState(0)
+
+ const updateThumb = useCallback(() => {
+  const el = containerRef.current
+  const tr = trackRef.current
+  if (!el || !tr) return
+  const scrollWidth = el.scrollWidth
+  const clientWidth = el.clientWidth
+  const trackWidth = tr.clientWidth
+  if (scrollWidth <= clientWidth) {
+   setThumbWidth(trackWidth)
+   setThumbLeft(0)
+   return
+  }
+  const ratio = clientWidth / scrollWidth
+  const calculatedThumbWidth = Math.max(20, trackWidth * ratio)
+  setThumbWidth(calculatedThumbWidth)
+  const maxScroll = scrollWidth - clientWidth
+  const maxThumbLeft = trackWidth - calculatedThumbWidth
+  const currentScroll = el.scrollLeft
+  setThumbLeft(maxScroll > 0 ? (currentScroll / maxScroll) * maxThumbLeft : 0)
+ }, [containerRef])
+
+ useEffect(() => {
+  const el = containerRef.current
+  if (!el) return
+  updateThumb()
+  el.addEventListener("scroll", updateThumb, { passive: true })
+  window.addEventListener("resize", updateThumb)
+  return () => {
+   el.removeEventListener("scroll", updateThumb)
+   window.removeEventListener("resize", updateThumb)
+  }
+ }, [updateThumb])
+
+ const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const el = containerRef.current
+  const tr = trackRef.current
+  if (!el || !tr) return
+  const rect = tr.getBoundingClientRect()
+  const clickX = e.clientX - rect.left
+  const ratio = clickX / rect.width
+  el.scrollTo({ left: ratio * (el.scrollWidth - el.clientWidth), behavior: 'smooth' })
+ }
+
+ const handleThumbPointerDown = (e: React.PointerEvent<HTMLSpanElement>) => {
+  e.preventDefault()
+  e.stopPropagation()
+  
+  const startX = e.clientX
+  const el = containerRef.current
+  const tr = trackRef.current
+  if (!el || !tr) return
+
+  const scrollStart = el.scrollLeft
+  const maxThumbTravel = tr.clientWidth - thumbWidth
+  if (maxThumbTravel <= 0) return
+
+  const maxScroll = el.scrollWidth - el.clientWidth
+
+  const onPointerMove = (moveEvent: PointerEvent) => {
+   const deltaX = moveEvent.clientX - startX
+   const deltaScroll = (deltaX / maxThumbTravel) * maxScroll
+   el.scrollLeft = scrollStart + deltaScroll
+  }
+
+  const onPointerUp = () => {
+   window.removeEventListener("pointermove", onPointerMove)
+   window.removeEventListener("pointerup", onPointerUp)
+  }
+
+  window.addEventListener("pointermove", onPointerMove)
+  window.addEventListener("pointerup", onPointerUp)
+ }
+
+ useEffect(() => {
+  const el = containerRef.current
+  if (!el) return
+  updateThumb()
+  el.addEventListener("scroll", updateThumb, { passive: true })
+  window.addEventListener("resize", updateThumb)
+  return () => {
+   el.removeEventListener("scroll", updateThumb)
+   window.removeEventListener("resize", updateThumb)
+  }
+ }, [containerRef, updateThumb])
+
+ return (
+  <div className="flex flex-col" data-vt-data-visual-guides>
+  <div className="flex items-center justify-between gap-3 border-t-[3px] border-black bg-[#080816] px-3 py-1.5 shrink-0">
+   <div className="flex-1 flex items-center min-w-0 pr-2">
+    <div
+     className="w-full flex items-stretch overflow-hidden border-[3px] border-black"
+     style={{
+      height: 30,
+      background: headerColorPair.title,
+     }}
+    >
+     <button
+      type="button"
+      aria-label="Previous metric group"
+      onClick={() => {
+       if (containerRef.current) containerRef.current.scrollBy({ left: -180, behavior: 'smooth' })
+      }}
+      className="flex items-center justify-center border-r-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
+      style={{
+       width: 30,
+       height: "100%",
+       background: headerColorPair.icon,
+       borderRadius: 0,
+      }}
+     >
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left" aria-hidden="true">
+       <path d="m15 18-6-6 6-6"></path>
+      </svg>
+     </button>
+
+     <div
+      ref={trackRef}
+      onClick={handleTrackClick}
+      className="relative flex-1 cursor-pointer touch-none"
+      style={{
+       margin: "3px 6px",
+       borderRadius: 999,
+       background: "#000000",
+      }}
+     >
+      <span
+       className="absolute overflow-hidden pointer-events-none"
+       style={{
+        inset: 2,
+        borderRadius: 999,
+       }}
+      >
+       <span
+        className="absolute top-0 bottom-0 pointer-events-auto cursor-grab active:cursor-grabbing hover:brightness-110"
+        onPointerDown={handleThumbPointerDown}
+        style={{
+         left: `${thumbLeft}px`,
+         width: `${thumbWidth}px`,
+         borderRadius: 999,
+         background: headerColorPair.title,
+         border: 0,
+         minWidth: 20,
+        }}
+       />
+      </span>
+     </div>
+
+     <button
+      type="button"
+      aria-label="Next metric group"
+      onClick={() => {
+       if (containerRef.current) containerRef.current.scrollBy({ left: 180, behavior: 'smooth' })
+      }}
+      className="flex items-center justify-center border-l-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
+      style={{
+       width: 30,
+       height: "100%",
+       background: headerColorPair.icon,
+       borderRadius: 0,
+      }}
+     >
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right" aria-hidden="true">
+       <path d="m9 18 6-6-6-6"></path>
+      </svg>
+     </button>
+    </div>
+   </div>
+
+
+   {/* Legend Spectrum Bar */}
+   <div className="flex items-center gap-2 shrink-0 h-[30px]">
+    <span className="text-[10px] font-[1000] uppercase tracking-[0.15em] text-[#F3F4F6]/60 shrink-0">COLD</span>
+    <div
+     className="h-6 w-[180px] shrink-0 rounded-[4px] border-[1.5px] border-white/80"
+     style={{
+      background: HEAT_GRADIENT,
+      boxShadow: "0 0 8px rgba(250,97,138,0.4)",
+     }}
+    />
+    <span className="text-[10px] font-[1000] uppercase tracking-[0.15em] text-[#F3F4F6]/60 shrink-0">HOT</span>
+    <span className="ml-2 text-[9px] font-[1000] uppercase tracking-[0.1em] text-[#F3F4F6]/40 shrink-0">RANK RELATIVE</span>
+   </div>
+  </div>
+
+  {/* Footer Marquee / Insight. Declared secondary: it compacts and scrolls
+      before the evidence grid gives up any of the canvas. */}
+  <div
+   className="max-h-[22%] shrink-0 overflow-y-auto border-t-[3px] border-black px-3 py-1.5 bg-[#080816]"
+   data-vt-data-visual-secondary="compact">
+   <p className="text-[9px] font-[900] uppercase tracking-[0.06em] text-[#F3F4F6]/40 leading-tight">
+    <span className="text-[#F3F4F6]/70 font-[1000]">HOW TO READ:</span>{" "}
+    Each pixel = one video. Color = performance rank vs. channel average—not raw numbers.
+    Bottom <span className="text-[#528FFA]">75%</span> are cold blue; only top{" "}
+    <span className="text-[#FA618A]">25%</span> earn warm colors.
+    Switch metric dropdown to re-rank instantly. Click pixel to lock stats.
+   </p>
+  </div>
+  </div>
+ )
+}
+
 const ThermalImagingModuleInner: React.FC<{
  displayVideos: any[]
  rows: HeatMatrixRowCount
@@ -3538,6 +3787,8 @@ const ThermalImagingModuleInner: React.FC<{
  onClickTile: (idx: number) => void
  heatColor: (t: number) => string
  headerColorPair?: { icon: string; title: string }
+ /** Owned by the module so the guides in its bottom section can scroll this. */
+ scrollerRef: React.RefObject<HTMLDivElement | null>
 }> = ({
  displayVideos,
  rows,
@@ -3548,13 +3799,10 @@ const ThermalImagingModuleInner: React.FC<{
  onMouseLeaveTile,
  onClickTile,
  heatColor,
- headerColorPair = { icon: "#FFB158", title: "#FF7497" },
+ scrollerRef,
 }) => {
- const containerRef = useRef<HTMLDivElement>(null)
- const trackRef = useRef<HTMLDivElement>(null)
+ const containerRef = scrollerRef
  const tileRefs = useRef<Array<HTMLDivElement | null>>([])
- const [thumbWidth, setThumbWidth] = useState(60)
- const [thumbLeft, setThumbLeft] = useState(0)
 
  // Density is a composition decision, not a scale factor: the contract says how
  // many columns may be on screen at once in this orientation, and the canvas
@@ -3738,78 +3986,7 @@ const ThermalImagingModuleInner: React.FC<{
   }
  }, [ROWS, cols, displayVideos.length, heatWaveKey])
 
- const updateThumb = useCallback(() => {
-  const el = containerRef.current
-  const tr = trackRef.current
-  if (!el || !tr) return
-  const scrollWidth = el.scrollWidth
-  const clientWidth = el.clientWidth
-  const trackWidth = tr.clientWidth
-  if (scrollWidth <= clientWidth) {
-   setThumbWidth(trackWidth)
-   setThumbLeft(0)
-   return
-  }
-  const ratio = clientWidth / scrollWidth
-  const calculatedThumbWidth = Math.max(20, trackWidth * ratio)
-  setThumbWidth(calculatedThumbWidth)
-  const maxScroll = scrollWidth - clientWidth
-  const maxThumbLeft = trackWidth - calculatedThumbWidth
-  const currentScroll = el.scrollLeft
-  setThumbLeft(maxScroll > 0 ? (currentScroll / maxScroll) * maxThumbLeft : 0)
- }, [])
 
- useEffect(() => {
-  const el = containerRef.current
-  if (!el) return
-  updateThumb()
-  el.addEventListener("scroll", updateThumb, { passive: true })
-  window.addEventListener("resize", updateThumb)
-  return () => {
-   el.removeEventListener("scroll", updateThumb)
-   window.removeEventListener("resize", updateThumb)
-  }
- }, [updateThumb])
-
- const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
-  const el = containerRef.current
-  const tr = trackRef.current
-  if (!el || !tr) return
-  const rect = tr.getBoundingClientRect()
-  const clickX = e.clientX - rect.left
-  const ratio = clickX / rect.width
-  el.scrollTo({ left: ratio * (el.scrollWidth - el.clientWidth), behavior: 'smooth' })
- }
-
- const handleThumbPointerDown = (e: React.PointerEvent<HTMLSpanElement>) => {
-  e.preventDefault()
-  e.stopPropagation()
-  
-  const startX = e.clientX
-  const el = containerRef.current
-  const tr = trackRef.current
-  if (!el || !tr) return
-
-  const scrollStart = el.scrollLeft
-  const maxThumbTravel = tr.clientWidth - thumbWidth
-  if (maxThumbTravel <= 0) return
-
-  const maxScroll = el.scrollWidth - el.clientWidth
-
-  const onPointerMove = (moveEvent: PointerEvent) => {
-   const deltaX = moveEvent.clientX - startX
-   const deltaScroll = (deltaX / maxThumbTravel) * maxScroll
-   el.scrollLeft = scrollStart + deltaScroll
-  }
-
-  const onPointerUp = () => {
-   window.removeEventListener("pointermove", onPointerMove)
-   window.removeEventListener("pointerup", onPointerUp)
-  }
-
-  window.addEventListener("pointermove", onPointerMove)
-  window.addEventListener("pointerup", onPointerUp)
- }
 
  if (displayVideos.length === 0) return <Empty label="No videos match the selected filters" />
 
@@ -3897,117 +4074,6 @@ const ThermalImagingModuleInner: React.FC<{
     </div>
    </div>
 
-  {/* Combined Scrollbar + Legend Spectrum Row */}
-   <div className="flex items-center justify-between gap-3 border-t-[3px] border-black bg-[#080816] px-3 py-1.5 shrink-0">
-    <div className="flex-1 flex items-center min-w-0 pr-2">
-     <div
-      className="w-full flex items-stretch overflow-hidden border-[3px] border-black"
-      style={{
-       height: 30,
-       background: headerColorPair.title,
-      }}
-     >
-      <button
-       type="button"
-       aria-label="Previous metric group"
-       onClick={() => {
-        if (containerRef.current) containerRef.current.scrollBy({ left: -180, behavior: 'smooth' })
-       }}
-       className="flex items-center justify-center border-r-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
-       style={{
-        width: 30,
-        height: "100%",
-        background: headerColorPair.icon,
-        borderRadius: 0,
-       }}
-      >
-       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left" aria-hidden="true">
-        <path d="m15 18-6-6 6-6"></path>
-       </svg>
-      </button>
-
-      <div
-       ref={trackRef}
-       onClick={handleTrackClick}
-       className="relative flex-1 cursor-pointer touch-none"
-       style={{
-        margin: "3px 6px",
-        borderRadius: 999,
-        background: "#000000",
-       }}
-      >
-       <span
-        className="absolute overflow-hidden pointer-events-none"
-        style={{
-         inset: 2,
-         borderRadius: 999,
-        }}
-       >
-        <span
-         className="absolute top-0 bottom-0 pointer-events-auto cursor-grab active:cursor-grabbing hover:brightness-110"
-         onPointerDown={handleThumbPointerDown}
-         style={{
-          left: `${thumbLeft}px`,
-          width: `${thumbWidth}px`,
-          borderRadius: 999,
-          background: headerColorPair.title,
-          border: 0,
-          minWidth: 20,
-         }}
-        />
-       </span>
-      </div>
-
-      <button
-       type="button"
-       aria-label="Next metric group"
-       onClick={() => {
-        if (containerRef.current) containerRef.current.scrollBy({ left: 180, behavior: 'smooth' })
-       }}
-       className="flex items-center justify-center border-l-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
-       style={{
-        width: 30,
-        height: "100%",
-        background: headerColorPair.icon,
-        borderRadius: 0,
-       }}
-      >
-       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right" aria-hidden="true">
-        <path d="m9 18 6-6-6-6"></path>
-       </svg>
-      </button>
-     </div>
-    </div>
-
-
-    {/* Legend Spectrum Bar */}
-    <div className="flex items-center gap-2 shrink-0 h-[30px]">
-     <span className="text-[10px] font-[1000] uppercase tracking-[0.15em] text-[#F3F4F6]/60 shrink-0">COLD</span>
-     <div
-      className="h-6 w-[180px] shrink-0 rounded-[4px] border-[1.5px] border-white/80"
-      style={{
-       background: HEAT_GRADIENT,
-       boxShadow: "0 0 8px rgba(250,97,138,0.4)",
-      }}
-     />
-     <span className="text-[10px] font-[1000] uppercase tracking-[0.15em] text-[#F3F4F6]/60 shrink-0">HOT</span>
-     <span className="ml-2 text-[9px] font-[1000] uppercase tracking-[0.1em] text-[#F3F4F6]/40 shrink-0">RANK RELATIVE</span>
-    </div>
-   </div>
-
-   {/* Footer Marquee / Insight. Declared secondary: it compacts and scrolls
-       before the evidence grid gives up any of the canvas. */}
-   <div
-    className="max-h-[22%] shrink-0 overflow-y-auto border-t-[3px] border-black px-3 py-1.5 bg-[#080816]"
-    data-vt-data-visual-secondary="compact">
-    <p className="text-[9px] font-[900] uppercase tracking-[0.06em] text-[#F3F4F6]/40 leading-tight">
-     <span className="text-[#F3F4F6]/70 font-[1000]">HOW TO READ:</span>{" "}
-     Each pixel = one video. Color = performance rank vs. channel average—not raw numbers.
-     Bottom <span className="text-[#528FFA]">75%</span> are cold blue; only top{" "}
-     <span className="text-[#FA618A]">25%</span> earn warm colors.
-     Switch metric dropdown to re-rank instantly. Click pixel to lock stats.
-    </p>
-   </div>
   </div>
  )
 }
@@ -4021,6 +4087,9 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
  // 8 rows on desktop, 6 in landscape, 4 on a portrait phone.
  const [registeredRowCount] = useDataVisualSelection("heat-matrix", 8)
  const rowCount = heatMatrixRows(registeredRowCount)
+ // The tile track lives in the canvas; the scrollbar that drives it lives in
+ // the bottom section, so the module owns the ref that joins them.
+ const tileScrollerRef = useRef<HTMLDivElement | null>(null)
 
  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
  const [lockedIdx, setLockedIdx] = useState<number | null>(null)
@@ -4171,6 +4240,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
    color="#FFB158"
    canvasModuleId="heat-matrix"
    stableChartFrame={false}
+   legend={<HeatMatrixGuides scrollerRef={tileScrollerRef} headerColorPair={props.visualStyle?.headerColorPair ?? { icon: "#FFB158", title: "#FF7497" }} />}
    flushShell
    insightDark
    collapsible={props.collapsible}
@@ -4222,6 +4292,7 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
     <HeroIntroBoundary visualId="heat-matrix" className="h-full min-h-0 w-full min-w-0" replayKey={`${metric}-${formatFilter}-${orderMode}-${rowCount}`}>
      <div className="relative h-full w-full bg-[#0a0a1a]">
       <ThermalImagingModuleInner
+       scrollerRef={tileScrollerRef}
        displayVideos={displayVideos}
        rows={rowCount}
        hoveredIdx={hoveredIdx}
@@ -5719,6 +5790,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
    color="#CCFF00"
    canvasModuleId="publish-optimal-clock"
    stableChartFrame={false}
+   legend={<PublishOptimalClockGuides cells={cells} hourStep={hourStep} />}
    flushShell
    insightDark
    collapsible={props.collapsible}

@@ -298,6 +298,68 @@ const checkMarks = (visual, viewport, label, contracts) => {
  return failures
 }
 
+/**
+ * Captures one visual, including whatever sits below the fold.
+ *
+ * A module is deliberately allowed to be taller than a landscape phone screen:
+ * the canvas and the chrome above it fit, and the bottom section (guides, keys,
+ * legends) scrolls. Chromium only rasterises what has actually been on screen,
+ * so an element screenshot of a taller-than-viewport module comes back blank
+ * below the fold — which silently turns "I did not look" into "there was
+ * nothing there". Instead the module is photographed a screenful at a time and
+ * the strips are stitched back together at full resolution.
+ */
+const captureVisual = async (browser, page, viewport, id, file) => {
+ const locator = page.locator(`[data-vt-audit-visual="${id}"]`)
+ const box = await locator.boundingBox()
+ if (!box) throw new Error("element has no box")
+ if (box.height <= viewport.height) {
+  await locator.screenshot({ path: file })
+  return
+ }
+
+ const sliceCount = Math.ceil(box.height / viewport.height)
+ const slices = []
+ for (let index = 0; index < sliceCount; index += 1) {
+  // The bench scrolls inside its own container, not the document, so move the
+  // element by the delta between where its top currently is and where this
+  // strip wants it — then read the offset back rather than assuming a position.
+  const wanted = -Math.min(index * viewport.height, box.height - viewport.height)
+  const offset = await page.evaluate(({ selector, wantedTop }) => {
+   const element = document.querySelector(selector)
+   if (!element) return 0
+   const scroller = element.closest("[data-vt-data-visual-audit]") || document.scrollingElement
+   scroller.scrollTop += element.getBoundingClientRect().top - wantedTop
+   return element.getBoundingClientRect().top
+  }, { selector: `[data-vt-audit-visual="${id}"]`, wantedTop: wanted })
+  await page.waitForTimeout(350)
+  slices.push({ buffer: await page.screenshot(), offset })
+ }
+
+ const html = `<!doctype html><meta charset="utf-8"><style>
+  body { margin: 0; background: #fff }
+  #sheet { position: relative; width: ${box.width}px; height: ${box.height}px; overflow: hidden }
+  #sheet img { position: absolute; width: ${viewport.width}px; height: ${viewport.height}px; left: ${-box.x}px }
+ </style><div id="sheet">${
+  // Each strip shows the page from its own scroll position. The element's top
+  // sat at `offset` in that viewport, so the strip belongs at `-offset` in a
+  // sheet whose origin is the element's top-left corner.
+  slices.map((slice) => `<img style="top:${-slice.offset}px" src="data:image/png;base64,${slice.buffer.toString("base64")}" />`).join("")
+ }</div>`
+
+ const context = await browser.newContext({
+  viewport: { width: Math.ceil(box.width), height: Math.ceil(box.height) },
+  deviceScaleFactor: 2,
+ })
+ try {
+  const stitcher = await context.newPage()
+  await stitcher.setContent(html, { waitUntil: "load" })
+  await stitcher.locator("#sheet").screenshot({ path: file })
+ } finally {
+  await context.close()
+ }
+}
+
 const run = async () => {
  await fs.mkdir(outRoot, { recursive: true })
  const browser = await chromium.launch(launchOptions)
@@ -374,7 +436,7 @@ const run = async () => {
 
     const file = path.join(dir, `${id}.png`)
     try {
-     await page.locator(`[data-vt-audit-visual="${id}"]`).screenshot({ path: file })
+     await captureVisual(browser, page, viewport, id, file)
     } catch (error) {
      failures.push(`${viewport.label}/${id}: screenshot failed — ${error.message}`)
      continue

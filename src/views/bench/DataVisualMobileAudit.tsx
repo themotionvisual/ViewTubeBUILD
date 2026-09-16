@@ -59,7 +59,10 @@ const DataVisualMobileAudit: React.FC = () => {
 
  return (
   <div
-   className="min-h-screen w-full min-w-0 max-w-full overflow-x-hidden bg-[#e5e5e5]"
+   /* Its own scroll container: `html, body, #root` are pinned to 100% height,
+      so a module taller than the viewport would otherwise be unreachable —
+      which is exactly the case this bench exists to photograph. */
+   className="h-screen w-full min-w-0 max-w-full overflow-y-auto overflow-x-hidden bg-[#e5e5e5]"
    data-vt-data-visual-audit="root"
    data-vt-audit-module-count={entries.length}
   >

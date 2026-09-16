@@ -1726,13 +1726,41 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
     { label: "VIEWS", tone: "white" },
    ]}
    footer={
-    <InsightMarquee
-     mode="insight-lock"
-     segments={[
-      { badge: "Chart Insight", text: generalInsight, badgeTone: "cyan" },
-      { badge: "Personal Insight", text: shortsInsight, badgeTone: "lime" },
-     ]}
-    />
+    /* Keys live in the bottom section, never inside the evidence canvas. */
+    <div data-vt-data-visual-guides>
+     <div
+      /* Legend keys stay at full size and the strip scrolls sideways on a
+         narrow canvas, rather than the keys being clipped mid-label. */
+      className="h-[40px] min-h-[40px] shrink-0 overflow-x-auto px-[22px] grid grid-cols-[minmax(max-content,1fr)_minmax(190px,auto)_minmax(max-content,1fr)] gap-x-10 items-start pt-1 bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      data-vt-data-visual-secondary="compact">
+      <div className="min-w-0 flex items-center gap-2 justify-self-end">
+        <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Revenue</span>
+        <div className="w-[155px] h-6 border-[2px] border-[#45DDB0] rounded-[2px] bg-gradient-to-r from-[#24BCFF] via-[#45DDB0] to-[#66FF8A]" />
+      </div>
+      <div className="min-w-0 justify-self-center flex items-center gap-3 whitespace-nowrap px-5">
+        <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
+        <span className="uppercase tracking-[0.1em] text-black" style={{ fontWeight: 1000, fontSize: 14 }}>Duration</span>
+        <span className="text-black font-[1000] text-[16px] leading-none">▶</span>
+      </div>
+      <div className="min-w-0 flex items-center gap-2 justify-self-start">
+        <div className="flex items-center justify-between w-[115px]">
+          <span className="w-2 aspect-square shrink-0 rounded-full bg-[#24BCFF] opacity-[0.75]" />
+          <span className="w-3 aspect-square shrink-0 rounded-full bg-[#2FC8EF] opacity-[0.75]" />
+          <span className="w-4 aspect-square shrink-0 rounded-full bg-[#3AD4DF] opacity-[0.75]" />
+          <span className="w-5 aspect-square shrink-0 rounded-full bg-[#45DDB0] opacity-[0.75]" />
+          <span className="w-6 aspect-square shrink-0 rounded-full bg-[#66FF8A] opacity-[0.75]" />
+        </div>
+        <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Views</span>
+      </div>
+     </div>
+     <InsightMarquee
+      mode="insight-lock"
+      segments={[
+       { badge: "Chart Insight", text: generalInsight, badgeTone: "cyan" },
+       { badge: "Personal Insight", text: shortsInsight, badgeTone: "lime" },
+      ]}
+     />
+    </div>
    }
   >
    <DataVisualCanvas id="shorts-retention" className="bg-white">
@@ -1807,31 +1835,6 @@ export const ShortsRetentionWidgetModule: React.FC<GChartProps> = ({ data, visua
         }} />
       </ScatterChart>
      </StableChartFrame>
-     </div>
-     <div
-      /* Legend keys stay at full size and the strip scrolls sideways on a
-         narrow canvas, rather than the keys being clipped mid-label. */
-      className="h-[40px] min-h-[40px] shrink-0 overflow-x-auto px-[22px] grid grid-cols-[minmax(max-content,1fr)_minmax(190px,auto)_minmax(max-content,1fr)] gap-x-10 items-start pt-1 bg-white [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      data-vt-data-visual-secondary="compact">
-      <div className="min-w-0 flex items-center gap-2 justify-self-end">
-        <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Revenue</span>
-        <div className="w-[155px] h-6 border-[2px] border-[#45DDB0] rounded-[2px] bg-gradient-to-r from-[#24BCFF] via-[#45DDB0] to-[#66FF8A]" />
-      </div>
-      <div className="min-w-0 justify-self-center flex items-center gap-3 whitespace-nowrap px-5">
-        <span className="text-black font-[1000] text-[16px] leading-none">◀</span>
-        <span className="uppercase tracking-[0.1em] text-black" style={{ fontWeight: 1000, fontSize: 14 }}>Duration</span>
-        <span className="text-black font-[1000] text-[16px] leading-none">▶</span>
-      </div>
-      <div className="min-w-0 flex items-center gap-2 justify-self-start">
-        <div className="flex items-center justify-between w-[115px]">
-          <span className="w-2 aspect-square shrink-0 rounded-full bg-[#24BCFF] opacity-[0.75]" />
-          <span className="w-3 aspect-square shrink-0 rounded-full bg-[#2FC8EF] opacity-[0.75]" />
-          <span className="w-4 aspect-square shrink-0 rounded-full bg-[#3AD4DF] opacity-[0.75]" />
-          <span className="w-5 aspect-square shrink-0 rounded-full bg-[#45DDB0] opacity-[0.75]" />
-          <span className="w-6 aspect-square shrink-0 rounded-full bg-[#66FF8A] opacity-[0.75]" />
-        </div>
-        <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Views</span>
-      </div>
      </div>
     </div>
    </DataVisualCanvas>
@@ -5259,6 +5262,31 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    header={{ title: "TRAFFIC SOURCE EVOLUTION", subtitle: "SOURCE MIX OVER TIME", icon: <CustomIcon name="analytics" size={18} />, headerStyle: "subtoolbox" }}
    theme={{ headerBandBg: "#B8FF2C", iconBlockBg: "#24D3FF", shadowColor: "rgba(184,255,44,0.45)" }}
    layout={{ moduleMinHeight: "0px", moduleWidth: "100%" }}
+   footer={
+    /* Keys live in the bottom section, never inside the evidence canvas. */
+    <div data-vt-data-visual-guides>
+     <div className="shrink-0 select-none bg-black px-2 py-1.5 overflow-x-auto">
+      <div className="flex flex-row flex-nowrap items-center justify-between gap-2 min-w-full">
+       {legendSourceMeta.map((entry) => (
+        <div key={entry.key} className="flex shrink-0 items-center gap-1">
+         <span
+          className="h-[14px] w-[14px] shrink-0 rounded-[1px] border border-black"
+          style={{ background: entry.tone, opacity: entry.charted ? 1 : 0.35 }}
+         />
+         <span
+          className="flex flex-col text-left text-[8px] font-black uppercase leading-[9px] tracking-[0.03em] whitespace-nowrap"
+          style={{ color: entry.tone, opacity: entry.charted ? 1 : 0.45 }}
+         >
+          {trafficSourceLegendLines(entry.legendLabel).map((line, lineIndex) => (
+           <span key={`${line}-${lineIndex}`} className="block">{line}</span>
+          ))}
+         </span>
+        </div>
+       ))}
+      </div>
+     </div>
+    </div>
+   }
   controllerRows={controllerRows}
    activeContext={{
     title: activeContextTitle,
@@ -5269,7 +5297,10 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
    }}
   >
    <HeroIntroBoundary visualId="traffic-source-evolution" replayKey={`${selectedWindow}-${visibleKeys.join("|")}`}>
-   <DataVisualCanvas id="traffic-source-evolution" className="bg-[#090b16]">
+   {/* The surface is painted full width so the 16:9 canvas letterbox reads as
+       part of the preview rather than as white bands beside it. */}
+   <div className="w-full min-w-0 bg-[#090b16]">
+   <DataVisualCanvas id="traffic-source-evolution">
     {visibleKeys.length === 0 ? <EmptyState missing={ds.diagnostics.missing} rows={ds.diagnostics.rows} /> : (
      <div className="flex h-full min-h-0 flex-col justify-center">
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#050814]">
@@ -5365,30 +5396,11 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
          className="pointer-events-none absolute left-0 top-0 whitespace-nowrap text-[10px] font-black uppercase tracking-[0.08em] text-white opacity-0"
         />
        </div>
-       <div className="shrink-0 select-none bg-black px-2 py-1.5 overflow-x-auto">
-        <div className="flex flex-row flex-nowrap items-center justify-between gap-2 min-w-full">
-         {legendSourceMeta.map((entry) => (
-          <div key={entry.key} className="flex shrink-0 items-center gap-1">
-           <span
-            className="h-[14px] w-[14px] shrink-0 rounded-[1px] border border-black"
-            style={{ background: entry.tone, opacity: entry.charted ? 1 : 0.35 }}
-           />
-           <span
-            className="flex flex-col text-left text-[8px] font-black uppercase leading-[9px] tracking-[0.03em] whitespace-nowrap"
-            style={{ color: entry.tone, opacity: entry.charted ? 1 : 0.45 }}
-           >
-            {trafficSourceLegendLines(entry.legendLabel).map((line, lineIndex) => (
-             <span key={`${line}-${lineIndex}`} className="block">{line}</span>
-            ))}
-           </span>
-          </div>
-         ))}
-        </div>
-       </div>
       </div>
      </div>
     )}
    </DataVisualCanvas>
+   </div>
   </HeroIntroBoundary>
   </SubToolboxChartModule>
  )

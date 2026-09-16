@@ -205,10 +205,13 @@ export const useVisualCanvasBox = (ref: React.RefObject<HTMLElement | null>): Vi
  * against space the module did not have and pushed itself off a short
  * landscape screen.
  *
- * Chrome height is measured as "the module minus the canvas". That reads
- * circular, but chrome sizes itself from its own content and never from the
- * canvas, so one correction settles it; the epsilon guard stops a sub-pixel
- * loop either way.
+ * Only the chrome ABOVE the canvas is reserved — header, controller rows, the
+ * metric strip. The bottom section (legends, keys, the how-to-read note) is
+ * deliberately excluded: counting it made every module's evidence area shrink
+ * in proportion to how much it explained itself, which is backwards. Engagement
+ * Pulse, with the longest insight line, ended up with the smallest canvas on
+ * the screen. The canvas and everything above it fit the viewport; the bottom
+ * section sits below and scrolls.
  */
 export const usePublishedChromeHeight = (canvasRef: React.RefObject<HTMLElement | null>): void => {
  React.useEffect(() => {
@@ -224,7 +227,7 @@ export const usePublishedChromeHeight = (canvasRef: React.RefObject<HTMLElement 
    if (frame) cancelAnimationFrame(frame)
    frame = requestAnimationFrame(() => {
     if (!canvas.isConnected || !root.isConnected) return
-    const chrome = root.getBoundingClientRect().height - canvas.getBoundingClientRect().height
+    const chrome = canvas.getBoundingClientRect().top - root.getBoundingClientRect().top
     if (!Number.isFinite(chrome) || chrome < 0) return
     const next = Math.round(chrome)
     if (Number.isFinite(published) && Math.abs(next - published) <= 2) return
