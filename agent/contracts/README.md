@@ -9,6 +9,13 @@ Edit these files. Everything else is generated.
 | `herald-workflow.md` | Turn loop, thread loop, gates, the nine workflows, skip rules |
 | `status-vocabulary.md` | The four status axes and how they bind |
 
+## Registry — `agent/registry/`
+
+| File | Defines |
+|---|---|
+| `capabilities.md` | On-file inventory of the eight capability surfaces. Read before §6 LEVERAGE-IN |
+| `candidates.md` | Every recommendation ever made, with a verdict. Read and append in §7 LEVERAGE-OUT |
+
 ## Distribution
 
 ```

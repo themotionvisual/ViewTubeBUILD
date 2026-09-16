@@ -57,14 +57,50 @@ Verified blockers only, each with the command that proved it. Always check:
 - Is the writer lock for these paths free?
 - Is `lint:runtime` debt going to mask a real failure?
 
-### §6 LEVERAGE-IN — T1, T2
-Existing repo scripts, skills, components and functions to reuse. Check `package.json`
-scripts, `.claude/skills/`, `scripts/`, `src/components/ui/` before writing anything new.
-Two `npm run` entries point at missing files — verify before trusting.
+### §6 LEVERAGE-IN — what we already have — T1, T2
 
-### §7 LEVERAGE-OUT — T2
-External repos or packages worth adopting, each with a verification status. Never
-recommend from memory alone; verify the repo exists and note when it was checked.
+Before writing anything, check **all eight capability surfaces**. Consult
+`agent/registry/capabilities.md` first — it is the on-file inventory and is far cheaper
+than rediscovering it.
+
+| Surface | Where | Ask |
+|---|---|---|
+| **Skills** | `.claude/skills/` (19), `skills-lock.json` (60 external), built-ins | does a skill already own this? |
+| **Sub-agents** | `Explore`, `Plan`, `general-purpose`, `claude-code-guide` | should this fan out instead of running inline? |
+| **Slash commands** | `.claude/commands/` | is this a repeatable ritual worth a command? |
+| **Hooks** | `.claude/settings.json` | should this be enforced rather than remembered? |
+| **MCP servers** | github · Neon · Vercel · Replit · Google Drive · vidIQ · Claude Code Remote · Claude Docs | is there a tool for this already connected? |
+| **Scripts** | `scripts/` (28) | has someone automated this? |
+| **npm tasks** | `package.json` (38) | ⚠️ two entries point at missing files — verify before trusting |
+| **CI workflows** | `.github/workflows/` (4) | does a gate already cover this? |
+
+Name what you will reuse. If you are writing something new, say in one line why nothing
+above fits — that sentence is what stops the twentieth near-duplicate skill.
+
+### §7 LEVERAGE-OUT — what we should add — T2
+
+Recommend capabilities worth adopting, across the same taxonomy — not just repositories:
+
+- **a skill** (repo-local, or from `skills-lock.json` sources)
+- **a sub-agent** for work that should fan out or run isolated
+- **a slash command** for a ritual you have now performed twice
+- **a hook** for a rule that keeps being forgotten
+- **an MCP server** for a system being driven by hand
+- **a plugin** bundling several of the above
+- **an external repository** or package
+- **a CI workflow** for a check being run manually
+
+Each recommendation carries: what it gives this specific task · fit (**adopt now** /
+evaluate / defer) · caution · verification status and date.
+
+**Never recommend from memory alone.** Verify the thing exists before naming it; a wrong
+repo name costs more trust than an omitted recommendation.
+
+**Recommendations go on file.** Append every one to `agent/registry/candidates.md` with its
+date, the thread that raised it, and its fit verdict. A recommendation made only in chat is
+made again next month and adopted neither time — the same failure mode as the empty cache.
+Before recommending, read that file: if it is already listed, cite the existing entry and
+either advance its verdict or leave it alone.
 
 ### §8 PLAN — always
 Ordered steps with exact paths, exact commands, and the tests that will prove it.
