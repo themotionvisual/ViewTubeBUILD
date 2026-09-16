@@ -14,7 +14,8 @@ Edit these files. Everything else is generated.
 | File | Defines |
 |---|---|
 | `capabilities.md` | On-file inventory of the eight capability surfaces. Read before §6 LEVERAGE-IN |
-| `candidates.md` | Every recommendation ever made, with a verdict. Read and append in §7 LEVERAGE-OUT |
+| `candidates.md` | Every recommendation ever made, with a verdict. Read and append in §8 LEVERAGE-OUT |
+| `references.md` | Documents, artifacts, standalone HTML and folder sets, classified by authority. Read before §7 REFERENCES |
 
 ## Distribution
 

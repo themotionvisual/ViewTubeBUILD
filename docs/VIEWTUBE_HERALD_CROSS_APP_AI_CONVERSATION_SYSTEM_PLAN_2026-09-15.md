@@ -211,6 +211,11 @@ You never have to write a good prompt. You write what you want; Herald writes th
 
 ### 5.3 HERALD-OUT — the response contract (R2–R10)
 
+> **Canonical text now lives in `agent/contracts/herald-out.md`.** It has since grown to
+> twelve blocks — a REFERENCES block was inserted at §7, shifting the later numbers. The
+> table below is the original rationale and is deliberately not kept in sync; read the
+> contract file for current truth.
+
 Eleven blocks, tiered so small work stays small.
 
 | § | Block | T0 | T1 | T2 | Answers |

@@ -6,7 +6,7 @@ Four vocabularies coexist. They measure different things. Keep all four; never c
 |---|---|---|---|
 | **Task lifecycle** | 8-state | **Task Index — sole authority** | durable, per `vt-####` |
 | **Mission outcome** | `complete` / `partial` / `blocked` | Crown | per mission record |
-| **Evidence quality** | `PROVEN` / `CLAIMED` / `UNKNOWN` | Herald §9 | per response |
+| **Evidence quality** | `PROVEN` / `CLAIMED` / `UNKNOWN` | Herald §10 | per response |
 | **Response depth** | `T0` / `T1` / `T2` | Herald | per turn |
 
 ## Task lifecycle — the 8 states

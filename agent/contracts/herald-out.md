@@ -14,16 +14,16 @@ Mechanical, not discretionary:
 
 | Tier | When | Blocks required |
 |---|---|---|
-| **T0** | No `src/` change, ≤1 file, reversible in one command | 1, 8, 9 |
-| **T1** | *Default.* Any `src/`/`server/`/`api/` change, or any new file | 1, 2, 3, 5, 6, 8, 9, 10 |
-| **T2** | Crosses ≥2 canonical owners · adds a subsystem · changes a schema or contract · touches auth, billing, publishing or OAuth | all 11 |
+| **T0** | No `src/` change, ≤1 file, reversible in one command | 1, 9, 10 |
+| **T1** | *Default.* Any `src/`/`server/`/`api/` change, or any new file | 1, 2, 3, 5, 6, 7, 9, 10, 11 |
+| **T2** | Crosses ≥2 canonical owners · adds a subsystem · changes a schema or contract · touches auth, billing, publishing or OAuth | all 12 |
 
 When torn between two tiers, take the higher one. A T2 response to a T0 ask is waste;
 a T0 response to a T2 ask is how production breaks.
 
 ---
 
-## 2. The eleven blocks
+## 2. The twelve blocks
 
 ### §1 READBACK — always
 ```
@@ -44,7 +44,8 @@ Search order: Task Index (1,598 tasks) → `.viewtube/herald/recon/` cache → `
 `EXISTS` and `FAILED-BEFORE` stop the work. Report and ask; do not rebuild.
 
 ### §3 OWNER — T1, T2
-Name the canonical owner of every path you will touch. If two owners appear, it is T2.
+Name the canonical owner of every path you will touch. `docs/migration/reference/VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json`
+lists 28 systems with owner, status, dependencies and integration rule — start there. If two owners appear, it is T2.
 If you cannot name an owner, stop and ask — do not guess.
 
 ### §4 BETTER-PATH — T2
@@ -77,7 +78,41 @@ than rediscovering it.
 Name what you will reuse. If you are writing something new, say in one line why nothing
 above fits — that sentence is what stops the twentieth near-duplicate skill.
 
-### §7 LEVERAGE-OUT — what we should add — T2
+### §7 REFERENCES — what to read — T1, T2
+
+Name the documents, artifacts, standalone HTML files and folder sets that inform this work.
+Check `agent/registry/references.md` first.
+
+**Classify every reference by authority.** This is the whole point of the block:
+
+| Class | Means | Proves |
+|---|---|---|
+| **canonical** | current owner doc, schema, registry | how it is supposed to work |
+| **prototype** | workbench / TSX / standalone HTML | an idea was explored — **nothing about runtime** |
+| **demo** | presentation artifact | what was shown, not what ships |
+| **recovery** | preservation pack, patch, snapshot | what existed before |
+| **quarantined** | `_quarantine/**` | what was removed, and often *why it failed* |
+| **superseded** | dated doc a newer one replaced | history; do not plan from it |
+
+*Never treat prototype or demo behaviour as canonical runtime behaviour.* A matching
+filename proves nothing. State what each reference does **not** establish.
+
+Cite the exact path and a one-line reason. Link; never paste the contents into the
+conversation — a reference the reader must be told about in full is a reference you have
+turned into context bloat.
+
+Where the reference is a folder set (`governance/canonical-code-pack/`,
+`docs/migration/reference/`, `_quarantine/performance-workflow/`), name the folder and its
+entry point (`README_FIRST.md`, `MANIFEST.md`) rather than listing files.
+
+**Quarantine is a first-class source.** "We tried that and quarantined it" is a real and
+frequent answer, and it is faster than rediscovering the failure.
+
+**Missing references go on file.** If you needed something that was not indexed, append it
+to `agent/registry/references.md` with its class. If you could not find something that
+should exist, record the gap there too.
+
+### §8 LEVERAGE-OUT — what we should add — T2
 
 Recommend capabilities worth adopting, across the same taxonomy — not just repositories:
 
@@ -102,11 +137,11 @@ made again next month and adopted neither time — the same failure mode as the 
 Before recommending, read that file: if it is already listed, cite the existing entry and
 either advance its verdict or leave it alone.
 
-### §8 PLAN — always
+### §9 PLAN — always
 Ordered steps with exact paths, exact commands, and the tests that will prove it.
 No prose where a command will do.
 
-### §9 STATUS — always
+### §10 STATUS — always
 ```
 STATUS    complete | partial | blocked
 PROVEN    <what a command actually demonstrated — include the command>
@@ -117,10 +152,10 @@ CHANGED   <paths>
 Never merge these three. *Plans are not code; code is not integration; integration is not
 verified runtime; preview is not production.*
 
-### §10 KNOW — T1, T2
+### §11 KNOW — T1, T2
 Useful things the user did not ask about. Omit the block rather than pad it.
 
-### §11 LEDGER — T2
+### §12 LEDGER — T2
 Thread id, related prior turns, task ids touched.
 
 ---

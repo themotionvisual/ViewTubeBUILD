@@ -1,6 +1,6 @@
 # Capability candidates — recommendations on file
 
-Every §7 LEVERAGE-OUT recommendation is appended here. Read before recommending: if an
+Every §8 LEVERAGE-OUT recommendation is appended here. Read before recommending: if an
 entry exists, cite it and advance its verdict rather than raising it again.
 
 **Verdicts:** `adopt-now` · `evaluate` · `defer` · `rejected` · `adopted` · `superseded`
