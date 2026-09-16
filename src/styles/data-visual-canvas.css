@@ -141,13 +141,34 @@
 }
 
 @media (orientation: landscape) and (max-height: 560px) {
-  [data-vt-visual-canvas][data-vt-visual-aspect="16:9"] {
+  /*
+   * Default: the canvas FILLS the space it is given rather than holding a
+   * ratio. A landscape phone is wide and short, so a fixed 16:9 makes height
+   * the binding constraint and leaves a third of the module width unused on
+   * either side of the evidence. Here width is what is going spare, so the
+   * canvas takes all of it and the ratio falls out.
+   *
+   * The 4:1 ceiling only stops a pathologically wide, short screen from
+   * reducing the canvas to a slit — it clears both target landscape viewports,
+   * so on a real phone the canvas fills the module edge to edge.
+   */
+  [data-vt-visual-canvas][data-vt-canvas-landscape-aspect="fill"] {
+    --vt-landscape-canvas-height: calc(100dvh - var(--visual-mobile-chrome-height));
+    width: min(100%, calc(var(--vt-landscape-canvas-height) * 4));
+    height: var(--vt-landscape-canvas-height);
+    max-height: var(--vt-landscape-canvas-height);
+    aspect-ratio: auto;
+    margin-inline: auto;
+  }
+
+  /* A module that opts out holds its ratio and letterboxes instead. */
+  [data-vt-visual-canvas][data-vt-canvas-landscape-aspect="16:9"] {
     width: min(100%, calc((100dvh - var(--visual-mobile-chrome-height)) * 16 / 9));
     max-height: calc(100dvh - var(--visual-mobile-chrome-height));
     margin-inline: auto;
   }
 
-  [data-vt-visual-canvas][data-vt-visual-aspect="1:1"] {
+  [data-vt-visual-canvas][data-vt-canvas-landscape-aspect="1:1"] {
     width: min(100%, calc(100dvh - var(--visual-mobile-chrome-height)));
     max-height: calc(100dvh - var(--visual-mobile-chrome-height));
     margin-inline: auto;
@@ -223,7 +244,10 @@
   min-height: 0 !important;
 }
 
-[data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned] > * {
+/* The canvas is excluded: this rule exists to neutralise legacy heights on
+   whatever the chart body wraps, but the canvas IS the geometry owner and must
+   keep the height its own rules give it. */
+[data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned][data-vt-data-visual-canvas-owned] > *:not([data-vt-visual-canvas]) {
   height: auto !important;
   max-height: none !important;
   min-height: 0 !important;

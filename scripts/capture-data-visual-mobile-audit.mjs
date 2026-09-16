@@ -181,6 +181,10 @@ const measure = async (page) =>
      hasCanvas: Boolean(canvas),
      canvasId: canvas ? canvas.getAttribute("data-vt-visual-canvas") : null,
      renderedAspect: canvas ? canvas.getAttribute("data-vt-visual-aspect") : null,
+     landscapeAspect: canvas ? canvas.getAttribute("data-vt-canvas-landscape-aspect") : null,
+     // The box the canvas actually has to fill — its own parent, so container
+     // padding and borders are not counted as width the canvas failed to take.
+     availableWidth: canvas && canvas.parentElement ? canvas.parentElement.clientWidth : null,
      overflowPolicy: module ? module.getAttribute("data-vt-data-visual-overflow") : null,
      plotAspect: plot ? plot.getAttribute("data-vt-data-visual-plot-aspect") : null,
      section: { width: sectionRect.width, height: sectionRect.height },
@@ -220,13 +224,26 @@ const checkVisual = (visual, viewport, contracts) => {
   failures.push(`${label}: canvas is ${canvas.width.toFixed(1)}px wide in a ${viewport.width}px viewport`)
  }
 
- // Declared aspect is the aspect the browser actually produced.
- const ratio = expectedRatio(visual.declaredAspect)
- if (ratio) {
-  const actual = canvas.width / canvas.height
-  const drift = Math.abs(actual - ratio) / ratio
-  if (drift > ASPECT_TOLERANCE) {
-   failures.push(`${label}: canvas ratio ${actual.toFixed(3)} drifted ${(drift * 100).toFixed(1)}% from ${visual.declaredAspect}`)
+ /*
+  * On a landscape phone a canvas may declare that it FILLS its box rather than
+  * holding a ratio, so there the contract to check is "did it actually take the
+  * width that was going spare", not "did it keep 16:9".
+  */
+ const fillsLandscape = viewport.bucket === "landscape" && visual.landscapeAspect === "fill"
+ if (fillsLandscape) {
+  const available = Math.min(visual.availableWidth ?? canvas.width, canvas.height * 4)
+  if (canvas.width + 1 < available) {
+   failures.push(`${label}: canvas is ${canvas.width.toFixed(1)}px wide but ${available.toFixed(1)}px was available — it is meant to fill, not letterbox`)
+  }
+ } else {
+  // Declared aspect is the aspect the browser actually produced.
+  const ratio = expectedRatio(visual.declaredAspect)
+  if (ratio) {
+   const actual = canvas.width / canvas.height
+   const drift = Math.abs(actual - ratio) / ratio
+   if (drift > ASPECT_TOLERANCE) {
+    failures.push(`${label}: canvas ratio ${actual.toFixed(3)} drifted ${(drift * 100).toFixed(1)}% from ${visual.declaredAspect}`)
+   }
   }
  }
 

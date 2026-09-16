@@ -86,6 +86,24 @@ export type DataVisualMarkFloor = keyof typeof DATA_VISUAL_MARK_FLOORS
  */
 export type DataVisualMarkInteraction = "discrete" | "field"
 
+/**
+ * What the canvas does with its aspect ratio on a phone in landscape.
+ *
+ * - `"fill"` — take the module's full width and whatever height is left under
+ *   the chrome, and let the ratio fall out of that. A landscape phone is wide
+ *   and short: holding a fixed 16:9 there makes height the binding constraint
+ *   and leaves a third of the module width unused on either side of the
+ *   evidence.
+ * - a fixed aspect — hold that ratio and letterbox, for a visual whose reading
+ *   genuinely depends on its proportions.
+ *
+ * Portrait and desktop always hold `canvasAspect`; only landscape is fluid,
+ * and only there is the width actually going spare.
+ */
+export type DataVisualLandscapeAspect = VisualCanvasAspect | "fill"
+
+export const DEFAULT_LANDSCAPE_ASPECT: DataVisualLandscapeAspect = "fill"
+
 export interface DataVisualModuleCanvasContract {
  id: string
  family: VisualCanvasFamily
@@ -121,6 +139,8 @@ export interface DataVisualModuleCanvasContract {
  seriesBudget?: DataVisualOrientationProfile
  /** Whether each mark is its own tap target, or one cell in a dense field. */
  markInteraction?: DataVisualMarkInteraction
+ /** Landscape-phone aspect policy. Defaults to filling the available box. */
+ landscapeAspect?: DataVisualLandscapeAspect
 }
 
 export const DATA_VISUAL_MODULE_CONTRACTS = {
@@ -150,10 +170,10 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
   plotAspect: "natural",
   density: "dense",
   overflow: "clip",
-  // Hour bands. Landscape folds to 12 alongside portrait: once chrome is
-  // measured honestly the landscape canvas is ~330px wide, and 24 columns of
-  // hour labels cannot be drawn there above the legibility floor.
-  densityProfile: { desktop: 24, landscape: 12, portrait: 12 },
+  // Hour bands. Landscape carries all 24 again: once the canvas fills the
+  // module width instead of holding 16:9, it is ~810px wide, which draws 24
+  // hour labels well clear of the legibility floor. Portrait still folds to 12.
+  densityProfile: { desktop: 24, landscape: 24, portrait: 12 },
   // 7 day rows x 12+ hour bands; read by colour, hover names the slot.
   markInteraction: "field",
  },
@@ -254,6 +274,11 @@ export const dataVisualPanelBudget = (
  id: RegisteredDataVisualModuleId,
  bucket: DataVisualViewportBucket,
 ): number | undefined => dataVisualModuleContract(id).panelBudget?.[bucket]
+
+/** Landscape-phone aspect policy for a module. */
+export const dataVisualLandscapeAspect = (
+ id: RegisteredDataVisualModuleId,
+): DataVisualLandscapeAspect => dataVisualModuleContract(id).landscapeAspect ?? DEFAULT_LANDSCAPE_ASPECT
 
 /** Whether the touch floor applies to this module's marks. */
 export const dataVisualMarkInteraction = (

@@ -7,6 +7,11 @@ export interface VisualCanvasViewportProps {
  id: string
  family: VisualCanvasFamily
  aspect?: VisualCanvasAspect
+ /**
+  * What the canvas does with its ratio on a landscape phone. `"fill"` takes the
+  * full width and whatever height is left; a fixed aspect letterboxes instead.
+  */
+ landscapeAspect?: VisualCanvasAspect | "fill"
  className?: string
  children: React.ReactNode
 }
@@ -28,6 +33,7 @@ export const VisualCanvasViewport = React.forwardRef<HTMLDivElement, VisualCanva
  id,
  family,
  aspect = "16:9",
+ landscapeAspect = "fill",
  className,
  children,
 }, ref) => (
@@ -37,6 +43,7 @@ export const VisualCanvasViewport = React.forwardRef<HTMLDivElement, VisualCanva
   data-vt-visual-canvas={id}
   data-vt-visual-family={family}
   data-vt-visual-aspect={aspect}
+  data-vt-canvas-landscape-aspect={landscapeAspect}
   style={{ touchAction: "pan-y" }}
  >
   {children}

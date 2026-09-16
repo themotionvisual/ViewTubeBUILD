@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 import {
  DATA_VISUAL_MARK_FLOORS,
  DATA_VISUAL_MODULE_CONTRACTS,
+ DEFAULT_LANDSCAPE_ASPECT,
+ dataVisualLandscapeAspect,
  DEFAULT_DATA_VISUAL_MARK_SCALE,
  dataVisualDefaultSelection,
  dataVisualDensityBudget,
@@ -134,6 +136,23 @@ describe("the contract cannot contradict itself", () => {
    for (const bucket of BUCKETS) {
     expect(defaultSelection[bucket], `${id} ${bucket}`).toBeLessThanOrEqual(densityProfile[bucket])
    }
+  }
+ })
+})
+
+describe("landscape aspect policy", () => {
+ it("fills the box by default rather than holding a ratio", () => {
+  // A landscape phone is wide and short. Holding 16:9 there makes height the
+  // binding constraint and leaves a third of the module width unused.
+  expect(DEFAULT_LANDSCAPE_ASPECT).toBe("fill")
+  for (const id of Object.keys(DATA_VISUAL_MODULE_CONTRACTS) as Array<keyof typeof DATA_VISUAL_MODULE_CONTRACTS>) {
+   expect(dataVisualLandscapeAspect(id), `${id}`).toBe("fill")
+  }
+ })
+
+ it("still holds the registered aspect for portrait and desktop", () => {
+  for (const id of Object.keys(DATA_VISUAL_MODULE_CONTRACTS) as Array<keyof typeof DATA_VISUAL_MODULE_CONTRACTS>) {
+   expect(dataVisualModuleContract(id).canvasAspect).toBe("16:9")
   }
  })
 })

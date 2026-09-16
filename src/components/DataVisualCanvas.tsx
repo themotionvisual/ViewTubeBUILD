@@ -1,7 +1,11 @@
 import React from "react"
 import { VisualCanvasViewport } from "./VisualCanvasViewport"
 import { usePublishedChromeHeight } from "./dataVisualCanvasGeometry"
-import { dataVisualModuleContract, type RegisteredDataVisualModuleId } from "./dataVisualModuleContract"
+import {
+ dataVisualLandscapeAspect,
+ dataVisualModuleContract,
+ type RegisteredDataVisualModuleId,
+} from "./dataVisualModuleContract"
 
 export interface DataVisualCanvasProps {
  id: RegisteredDataVisualModuleId
@@ -25,7 +29,14 @@ export const DataVisualCanvas: React.FC<DataVisualCanvasProps> = ({ id, classNam
  usePublishedChromeHeight(canvasRef)
 
  return (
-  <VisualCanvasViewport ref={canvasRef} id={contract.id} family={contract.family} aspect={contract.canvasAspect} className={className}>
+  <VisualCanvasViewport
+   ref={canvasRef}
+   id={contract.id}
+   family={contract.family}
+   aspect={contract.canvasAspect}
+   landscapeAspect={dataVisualLandscapeAspect(id)}
+   className={className}
+  >
    <div
     className="h-full min-h-0 w-full min-w-0"
     data-vt-data-visual-module={id}

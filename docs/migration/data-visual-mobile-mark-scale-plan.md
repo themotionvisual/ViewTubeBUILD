@@ -406,6 +406,16 @@ out on one sheet with their measured canvas box and any failure printed
 underneath, because 35 separate PNGs are not reviewable in practice — and every
 defect in this section was found by eye, after the numbers had already passed.
 
+**The landscape canvas no longer holds a fixed ratio.** A landscape phone is
+wide and short: holding 16:9 there made height the binding constraint and left
+a third of the module width unused on either side of the evidence. Landscape
+now defaults to `landscapeAspect: "fill"` — full module width, whatever height
+is left under the chrome, ratio falling out of that — with a 4:1 ceiling that
+only guards against a pathologically wide screen. Portrait and desktop still
+hold `canvasAspect`. Landscape canvases went from 316-420px wide to the full
+812px at 844x390, and the publish clock carries all 24 hour columns there again
+rather than folding to 12.
+
 **Open for review:** Heat Matrix portrait now draws ~16 columns of 18px tiles
 rather than the 7-9 columns of larger tiles in section 3.3. Tile edge follows
 the mark scale (36 -> 18, the same halving applied everywhere), and how many
