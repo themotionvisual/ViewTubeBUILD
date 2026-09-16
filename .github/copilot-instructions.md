@@ -18,8 +18,8 @@ canonical; this one is a summary.
 | Tier | When | Include |
 |---|---|---|
 | **T0** | no `src/` change, ≤1 file, one-command revert | readback · plan · status |
-| **T1** | *default* — any `src/`, `server/`, `api/` change, or any new file | + prior-art · owner · obstacles · what to reuse · references · what you did not verify |
-| **T2** | ≥2 owners · new subsystem · schema/contract change · auth, billing, publishing, OAuth | + simpler alternative considered · external recommendations · thread record |
+| **T1** | *default* — any `src/`, `server/`, `api/` change, or any new file | + prior-art · owner · obstacles · what to reuse · references · **repos & tools worth adopting** · what you did not verify |
+| **T2** | ≥2 owners · new subsystem · schema/contract change · auth, billing, publishing, OAuth | + simpler alternative considered · fuller recommendations · thread record |
 
 ## Always
 
@@ -32,9 +32,19 @@ canonical; this one is a summary.
   believe but did not run, and what stays unknown.
 - **Show UI changes.** Capture the built app at 1440×1000, and 390×844 for anything
   touching mobile geometry. A UI change with no capture is `partial`, never `complete`.
-- **Recommend on file.** Append capability recommendations to
-  `agent/registry/candidates.md` — read it first so a listed candidate is advanced rather
-  than raised again.
+- **Suggest GitHub repositories and tools — every T1 and T2 answer.** Name one to three
+  concrete things that would help *this specific task*: a repository, library, action,
+  skill pack or reference implementation first; then a skill, sub-agent, slash command,
+  hook, MCP server or CI workflow. Give fit (`adopt-now` / `evaluate` / `defer`) and what
+  it gives this task.
+  - **Cannot verify it exists? Recommend it anyway, marked `unverified`, with the check
+    command** (`gh repo view owner/repo`). Never stay silent because you could not browse —
+    an omitted recommendation helps nobody, a labelled one costs a ten-second check.
+  - **No browsing at all?** Recommend from `agent/registry/candidates.md`, which holds
+    entries already verified on a stated date. Read it first either way, so a listed
+    candidate is advanced rather than raised again; append new ones with their date and
+    verdict.
+  - Saying "nothing worth adding here" is fine — as one explicit line, never as silence.
 
 ## Never
 

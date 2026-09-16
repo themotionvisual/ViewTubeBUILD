@@ -3,6 +3,10 @@
 Every §8 LEVERAGE-OUT recommendation is appended here. Read before recommending: if an
 entry exists, cite it and advance its verdict rather than raising it again.
 
+**This file is the no-browsing fallback.** Every entry was verified against GitHub on the
+date shown, so an agent with no network access can recommend from it and still be accurate.
+Prefer citing a row here over staying silent.
+
 **Verdicts:** `adopt-now` · `evaluate` · `defer` · `rejected` · `adopted` · `superseded`
 
 | Date | Candidate | Kind | For | Verdict | Notes |

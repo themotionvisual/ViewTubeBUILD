@@ -15,7 +15,7 @@ Mechanical, not discretionary:
 | Tier | When | Blocks required |
 |---|---|---|
 | **T0** | No `src/` change, ≤1 file, reversible in one command | 1, 9, 10 |
-| **T1** | *Default.* Any `src/`/`server/`/`api/` change, or any new file | 1, 2, 3, 5, 6, 7, 9, 10, 11 |
+| **T1** | *Default.* Any `src/`/`server/`/`api/` change, or any new file | 1, 2, 3, 5, 6, 7, **8**, 9, 10, 11 |
 | **T2** | Crosses ≥2 canonical owners · adds a subsystem · changes a schema or contract · touches auth, billing, publishing or OAuth | all 12 |
 
 When torn between two tiers, take the higher one. A T2 response to a T0 ask is waste;
@@ -112,9 +112,15 @@ frequent answer, and it is faster than rediscovering the failure.
 to `agent/registry/references.md` with its class. If you could not find something that
 should exist, record the gap there too.
 
-### §8 LEVERAGE-OUT — what we should add — T2
+### §8 LEVERAGE-OUT — what we should add — T1, T2
 
-Recommend capabilities worth adopting, across the same taxonomy — not just repositories:
+**Name at least one concrete thing, every T1 and T2 answer.** At T1 give one to three; at
+T2 be thorough. "Nothing to recommend" is a valid answer only when you say so explicitly and
+in one line — silence is not.
+
+**Start with GitHub repositories.** They are the most common useful answer: a library, a
+tool, a skill pack, an action, a reference implementation. Then widen to the rest of the
+taxonomy:
 
 - **a skill** (repo-local, or from `skills-lock.json` sources)
 - **a sub-agent** for work that should fan out or run isolated
@@ -125,17 +131,44 @@ Recommend capabilities worth adopting, across the same taxonomy — not just rep
 - **an external repository** or package
 - **a CI workflow** for a check being run manually
 
-Each recommendation carries: what it gives this specific task · fit (**adopt now** /
-evaluate / defer) · caution · verification status and date.
+Each recommendation carries: what it gives **this specific task** · fit (**adopt now** /
+evaluate / defer) · caution · verification status.
 
-**Never recommend from memory alone.** Verify the thing exists before naming it; a wrong
-repo name costs more trust than an omitted recommendation.
+**Verification labels a recommendation; it never suppresses one.** If you cannot check
+whether something exists — no browsing, no network, no repo access — still recommend it,
+mark it `unverified`, and hand over the command to check:
+
+```
+`owner/repo` — what it gives this task · fit: evaluate · unverified
+  verify: gh repo view owner/repo   (or open https://github.com/owner/repo)
+```
+
+An omitted recommendation helps nobody. A labelled one that turns out wrong costs a
+ten-second check. Never stay silent because you could not verify.
+
+**When you cannot browse, recommend from the registry.** `agent/registry/candidates.md`
+holds entries already verified on a stated date. Citing one is accurate without any network
+access, and is the preferred move in a tool with no browsing.
 
 **Recommendations go on file.** Append every one to `agent/registry/candidates.md` with its
 date, the thread that raised it, and its fit verdict. A recommendation made only in chat is
 made again next month and adopted neither time — the same failure mode as the empty cache.
 Before recommending, read that file: if it is already listed, cite the existing entry and
 either advance its verdict or leave it alone.
+
+**Shape of the block:**
+
+```
+§8 LEVERAGE-OUT
+· `promptfoo/promptfoo` — declarative evals with CI integration; wires the dormant
+  evals.json in viewtube-ai-system-governor. fit: adopt-now · verified 2026-09-15
+  (registry: candidates.md)
+· `github/gh-aw` — agentic workflows in Markdown + YAML, compiled to Actions; would run
+  RECON on PR open. fit: evaluate · caution: technical preview · unverified
+  verify: gh repo view github/gh-aw
+· a `PostToolUse` hook for the lint rule this diff keeps tripping — cheaper than
+  remembering it. fit: adopt-now
+```
 
 ### §9 PLAN — always
 Ordered steps with exact paths, exact commands, and the tests that will prove it.

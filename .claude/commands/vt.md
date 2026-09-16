@@ -33,7 +33,13 @@ Report the verdict: `NOVEL` · `PARTIAL` · `EXISTS (<ref>)` · `FAILED-BEFORE (
 Name the canonical owner of every path you will touch.
 `docs/migration/reference/VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json` lists 28 systems.
 
-## 5. Answer in the tier's blocks
+## 5. Recommend something concrete
+Name one to three GitHub repositories or tools that would help **this specific task**, with
+fit (`adopt-now` / `evaluate` / `defer`). Read `agent/registry/candidates.md` first — cite
+an existing entry rather than re-raising it. Cannot verify a repo exists? Recommend it
+marked `unverified` with `gh repo view owner/repo`. Never omit for lack of verification.
+
+## 6. Answer in the tier's blocks
 Per `herald-out.md`. Always separate `PROVEN` / `CLAIMED` / `UNKNOWN`, and never propose
 `Finished` on CLAIMED evidence.
 
