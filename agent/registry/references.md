@@ -90,9 +90,24 @@ Integrity is gated by `npm run check:quarantine`.
 | `docs/migration/reference/VIEWTUBE_UNDEPLOYED_SYSTEMS_INDEX_2026-08-27.json` | **empty** — 0 entries; do not rely on it |
 | The uploaded condensed memory reference | its `viewtubeX` and `docs/skills/` paths are stale — see plan O12. Its **FAILURE → FIX INDEX** remains valuable |
 
+## Local corpus — outside this repo
+
+Hundreds of standalone HTML files, plans and audits live in local folders. They are **not**
+catalogued by hand and never will be: `.viewtube/herald/index/` holds a derived index built
+by `herald-scan.mjs`, queried with `herald-find` (design: plan §15, phase H2.5).
+
+Configure roots once in `agent/registry/corpus-roots.json` (template:
+`corpus-roots.example.json`). Classification is derived from path and filename by
+`classifyLane()`, reused from `scripts/reorganize-html-docs.mjs`. Relatedness comes from
+`vt-####` task ids and symbol references, not embeddings.
+
+Until that index exists, local material is **unsearchable from any agent session** and the
+entries below marked *external, unverified* stay unverified.
+
 ## Known gaps
 
 - The Task Index is not committed anywhere in this repo (plan O10).
-- No index exists for the 21 standalone HTML files; this registry is the first.
+- No index exists for the 21 standalone HTML files in-repo, nor the local corpus; this
+  registry is the first, and plan §15 is the mechanism.
 - `docs/*` is gitignored except `docs/migration/**`. Most docs here were force-added, so
   **a new doc added without `git add -f` will not be tracked** (plan O1).

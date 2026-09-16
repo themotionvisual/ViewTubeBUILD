@@ -23,3 +23,5 @@ entry exists, cite it and advance its verdict rather than raising it again.
 | 2026-09-16 | `viewtube-herald-recon` sub-agent | sub-agent | wrap `Explore` over 335 branches | `evaluate` | H2 |
 | 2026-09-16 | `ViewTube-Kingdom-Pack` | skill pack | 30 portable skills + mirrors | `evaluate` | prior art for DISTRIBUTOR; verify it still exists |
 | 2026-09-16 | `skills-lock.json` supply-chain audit | process | 60 external skills, never reviewed | `adopt-now` | one pass; they execute as instructions |
+| 2026-09-16 | `scripts/reorganize-html-docs.mjs` | internal | derived classification + hash dedup for the local corpus | `adopt-now` | **already built**; extract `classifyLane`/`hashFile` into `scripts/lib/corpus.mjs` and reuse read-only (plan §15) |
+| 2026-09-16 | embeddings / vector store for corpus search | approach | fuzzy semantic retrieval | `defer` | identifier linking via `vt-####` answers the common case exactly, free and incrementally (plan §15.9) |

@@ -787,3 +787,166 @@ The workflow engine lands in **H2**, alongside RECON and LEDGER:
 | `scripts/herald-audit.mjs` | Gate enforcement (G1, G4, G5) — extends the H3 auditor |
 
 Net new code is modest: thread files are JSON, locks are files with timestamps, gates are assertions. The design work — which stages, which gates, which skips — is what this section contains, and it is the part that would otherwise have been improvised differently in each application.
+
+---
+
+# §15 LOCAL CORPUS DISCOVERY — finding related material without cataloguing it
+
+**Problem.** Hundreds of standalone HTML files, plans and audits live in local folders
+outside the repo. They must be findable by relevance, and pre-classifying them by hand is
+not acceptable — nor would it survive, since the corpus keeps growing.
+
+**Governing principle:** *classification is derived and lazy, never authored.* You never
+categorise anything. The index infers everything from signals already present in the path,
+the filename and the first few kilobytes. You correct only what you notice is wrong.
+
+## 15.1 Prior art — half of this exists
+
+`scripts/reorganize-html-docs.mjs` (601 lines) already does the hard part:
+
+| Capability | Function |
+|---|---|
+| Derived lane classification from path/filename regex | `classifyLane()` — editors · dashboards · charts · maps · ui-ux · api-samples · data-tables · storyboards · misc |
+| Version-family grouping (`copy 2`, `(5) copy 8`, `_V1`) | `descriptiveSlug()` + `normalizeSlug()` |
+| Content hashing and exact-duplicate detection | `hashFile()` |
+| Duplicate quarantine with CSV logs and rollback | `quarantineDestination()`, `writeCsv()` |
+| Runtime-protection guards | `collectProtectedRuntimeHtml()` |
+
+It already scans `/Users/cwb/Downloads/viewtube` and organises into `docs/html_hub/<lane>/`.
+
+**Extend it; do not rewrite it.** Four gaps:
+
+1. It **moves files**. Discovery must be strictly read-only.
+2. **HTML only.** The corpus is also `.md`, `.json`, `.patch`, `.zip`, images.
+3. **No query interface** — it reorganises, it does not answer questions.
+4. **No relatedness linking** between files.
+
+## 15.2 Progressive disclosure — four tiers, each cheaper than reading
+
+The corpus is never read in full. Each tier runs only on what survives the one before.
+
+| Tier | Cost | Reads | Produces |
+|---|---|---|---|
+| **T0 Census** | seconds for 10k files | **nothing** | path · size · mtime · ext · folder |
+| **T1 Fingerprint** | ~10 KB/file | first 8 KB + last 2 KB | title/`<h1>` · content hash · lane · family slug · generator markers |
+| **T2 Join keys** | one pass | bounded scan | `vt-####` ids · symbol refs · referenced filenames · dates |
+| **T3 Deep read** | full file | only top-K of a live query | actual content |
+
+T0 and T1 answer "what exists". T2 answers "what is related". T3 runs on perhaps five files
+per question.
+
+## 15.3 The trick — identifiers are better than semantics here
+
+This corpus has a **built-in join key**. Task IDs are `vt-####`, there are 1,598 of them,
+and they appear inside plans, audits, HTML artifacts and commit messages alike.
+
+A file mentioning `vt-2841` is *definitionally* related to that task. That is
+precision-1 linking from a grep — no embeddings, no categorisation, no model call.
+
+Four identifier families carry most of the signal:
+
+| Family | Examples | Yields |
+|---|---|---|
+| **Task IDs** | `vt-2841` | exact task ↔ document links |
+| **Symbols** | `VT_E1` · `SubToolbox` · `WidgetShell` · `VT-SYNC` · `toolboxPalette` | subsystem membership |
+| **Referenced filenames** | a plan naming `ViewTube-Promo-100-Source-Frames.html` | document ↔ document edges |
+| **Dates** | `2026-08-30` in names and bodies | work-session clustering |
+
+Together these form a link graph built from greps. Embeddings stay a **Tier 4 option**,
+justified only if identifier linking proves insufficient — not assumed up front.
+
+## 15.4 Relatedness ranking
+
+For a query or a seed file, rank candidates by:
+
+1. **Shared task ID** — strongest
+2. **Identical content hash** — duplicate; collapse, do not list twice
+3. **Same family slug** — version sibling (`copy 2`, `_V1`)
+4. **Title / filename token overlap**
+5. **Shared symbol references**
+6. **Referenced-by edges** — another document names this one
+7. **Folder co-location**
+8. **mtime proximity** — work clusters in sessions; files touched the same afternoon usually belong together
+
+Every result states **why it matched**, so a wrong match is visibly wrong rather than
+mysteriously ranked.
+
+## 15.5 Query interface
+
+```bash
+herald-find "channel progress mobile"          # term query
+herald-find --task vt-2841                     # everything touching a task
+herald-find --like docs/MOBILE_VISUAL_QA_MATRIX.md   # "related somehow" — seed a file, get neighbours
+herald-find --since 2026-06 --lane dashboards --class prototype
+herald-find --dupes                            # exact and near duplicates
+```
+
+`--like` is the direct answer to *"find documents that are related somehow"*: give it any
+file and it walks the link graph outward.
+
+Results are capped and classified using §7 REFERENCES classes, so the response contract can
+consume them directly.
+
+## 15.6 Mechanics
+
+**Roots, configured once** — `agent/registry/corpus-roots.json`: a handful of top-level
+directories plus ignore globs (`node_modules`, `.git`, `Library`, caches). This is the only
+manual input the system ever needs, and it is folder-level, not file-level.
+
+**Index location** — `.viewtube/herald/index/{census,fingerprints,links}.jsonl`.
+Metadata only; roughly 200 bytes per file, so ~1 MB at 5,000 files.
+
+**Commit the index.** It contains no file contents, and committing it means a *remote*
+session with no filesystem access can still see what exists locally. Had this existed,
+`ViewTube-Kingdom-Pack` would not have been an unverifiable rumour in §13.5.
+
+**Incremental** — the census is keyed on `(path, size, mtime)`. Unchanged files skip T1 and
+T2 entirely, so a daily rescan costs seconds rather than minutes.
+
+**Read-only, always.** Unlike the organiser, discovery never moves, renames or deletes.
+Reorganisation stays a separate, deliberate, logged operation.
+
+**Never index secrets.** Skip `.env*`, `*.pem`, `id_rsa*`, `credentials*`, `*.key`; redact
+token-shaped strings from fingerprints. Same rule the Task Index backend reference already
+carries.
+
+**Corrections are lazy overrides.** When a derived lane is wrong, add one line to
+`agent/registry/corpus-overrides.json`. Applied at query time. You will write a handful of
+these, not hundreds — and only for files you actually hit.
+
+## 15.7 What this gets you on day one
+
+Before any relatedness query, the first scan alone produces:
+
+- **A duplicate census.** `toolbox_data_tables (5) copy 8.html` implies large near-duplicate
+  families. The existing organiser already found exact duplicates worth quarantining; across
+  hundreds of files this typically removes a third of the corpus from consideration.
+- **A version map** — which of six similarly named files is newest, largest, and referenced
+  by other documents.
+- **An orphan list** — files no document references and no task mentions. Strong candidates
+  for archive.
+- **Task coverage** — which of the 1,598 tasks have supporting local material and which have
+  none.
+
+## 15.8 Phasing
+
+Lands as **H2.5**, after RECON exists (it shares the ranking code) and before automation.
+
+| Step | Work | Output |
+|---|---|---|
+| 1 | `herald-scan.mjs` T0+T1, importing `classifyLane`/`hashFile`/`descriptiveSlug` from the organiser | census + fingerprints |
+| 2 | Extract those helpers into `scripts/lib/corpus.mjs` so both scripts share one classifier | no duplicate logic |
+| 3 | T2 join-key extraction | link graph |
+| 4 | `herald-find.mjs` + `--like` | query interface |
+| 5 | Wire into RECON step 1 so prior-art search covers local material, not just the repo | §2 PRIOR-ART gets stronger |
+
+**Gate:** `herald-find --task vt-2841` returns the correct local documents, and a full
+rescan of the corpus completes in under 60 seconds warm.
+
+## 15.9 Why not just use embeddings
+
+Considered and deferred. Embeddings need an API budget, a vector store, chunking decisions
+and re-embedding on every change — and they would answer *worse* than a `vt-####` grep for
+the most common question, "what else touches this task". Identifier linking is exact,
+explainable, free and incremental. Revisit only when a real query fails that identifiers
+cannot serve.

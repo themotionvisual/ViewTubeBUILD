@@ -1,0 +1,25 @@
+{
+  "_comment": "Copy to corpus-roots.json and correct the paths. Folder-level only - never list individual files. Roots are the one manual input the discovery system needs.",
+  "schemaVersion": "viewtube.herald.corpus-roots.v1",
+  "roots": [
+    { "path": "/Users/cwb/Downloads/viewtube",        "label": "workspace",   "depth": 6 },
+    { "path": "/Users/cwb/Downloads/viewtube/docs",   "label": "parent-docs", "depth": 6 },
+    { "path": "/Users/cwb/ViewTube-branch-check",     "label": "branch-check","depth": 4 },
+    { "path": "/Users/cwb/Downloads/viewtube/ViewTube-Kingdom-Pack", "label": "kingdom-pack", "depth": 4 }
+  ],
+  "ignore": [
+    "**/node_modules/**", "**/.git/**", "**/Library/**", "**/.cache/**",
+    "**/dist/**", "**/build/**", "**/.venv/**", "**/__pycache__/**",
+    "**/.DS_Store", "**/*.zip", "**/*.mp4", "**/*.mov"
+  ],
+  "neverIndex": [
+    "**/.env*", "**/*.pem", "**/id_rsa*", "**/credentials*", "**/*.key",
+    "**/*secret*", "**/*token*"
+  ],
+  "extensions": [".html", ".md", ".json", ".patch", ".tsx", ".ts", ".jsx", ".txt", ".csv"],
+  "fingerprint": { "headBytes": 8192, "tailBytes": 2048 },
+  "joinKeys": {
+    "taskId": "vt-\\d{4,}",
+    "symbols": ["VT_E1", "VT-SYNC", "SubToolbox", "WidgetShell", "ToolboxScaffold", "toolboxPalette", "analytics-canon", "auth-canon"]
+  }
+}
