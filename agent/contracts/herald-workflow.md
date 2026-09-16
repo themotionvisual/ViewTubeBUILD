@@ -39,7 +39,7 @@ re-running recon, not re-deriving the owner. Typically under 2 KB.
 | **G1** Prior-art | RECON → PLAN | no plan without a recon verdict |
 | **G2** Owner | PLAN → EXECUTE | canonical owner named; writer lock held |
 | **G3** Approval | PLAN → EXECUTE | T2 needs explicit creator approval |
-| **G4** Evidence | VERIFY → RECORD | `complete` requires PROVEN (levels 1–3) |
+| **G4** Evidence | VERIFY → RECORD | `complete` requires PROVEN (levels 1–3); a UI change with no capture is `partial` |
 | **G5** Record | end of turn | ledger line written |
 
 A writer lock older than 24h is stale; any app may break it, and must record that it did.
@@ -51,8 +51,8 @@ A writer lock older than 24h is stale; any app may break it, and must record tha
 | RECON | ORIENT → RECON → REPORT | dossier has a verdict | recon dossier |
 | AUDIT | ORIENT → RECON → ACT(read-only) → REPORT | every finding has an evidence level | `VT_RECEIPT` |
 | PLAN | ORIENT → RECON → PLAN → REPORT | creator approval (G3) | `VT_MISSION` + `VT_WORK_ORDER` |
-| BUILD | full loop | focused tests + typecheck + build green | `VT_RECEIPT` |
-| FIX | ORIENT → RECON → ACT → VERIFY | reproduced → fixed → proved | `VT_RECEIPT` + debug-log entry |
+| BUILD | full loop | focused tests + typecheck + build green **+ visual evidence if UI changed** | `VT_RECEIPT` |
+| FIX | ORIENT → RECON → ACT → VERIFY | reproduced → fixed → proved; **before/after shots for visible fixes** | `VT_RECEIPT` + debug-log entry |
 | VERIFY | ORIENT → ACT → REPORT | evidence gathered independently | `VT_RECEIPT` |
 | DOCUMENT | ORIENT → ACT → REPORT | doc committed **and tracked** | `VT_ARTIFACT_RECORD` |
 | DECIDE | ORIENT → RECON → REPORT | creator decision recorded | `VT_DECISION` |
@@ -72,6 +72,7 @@ tested/changed → observed result → likely cause / next step
 | RECON | cache <24h **and** `origin/main` unmoved **and** topic unchanged | verb is PLAN, DECIDE, RECOVER |
 | ROUTE | thread holds a valid unexpired lock | paths outside the lock |
 | VERIFY | T0 only | any `src/`, `server/`, `api/` change |
+| VISUAL capture | non-UI diffs only | anything touching components, views, CSS, widgets or charts |
 | RECORD | never | — |
 
 The two cheapest steps are the two that may never be skipped, because they are what make

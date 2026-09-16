@@ -70,6 +70,24 @@ Audit: `audit-quick-wins` · `audit-studio-ui-drift` · `dashboard-baseline-repo
 both reference files that do not exist. Do not treat `package.json` as a capability map
 without checking.
 
+## Visual evidence — Playwright, already wired
+
+| Asset | Note |
+|---|---|
+| `scripts/capture-phase5-built-ui.mjs` | Playwright capture; canonical viewports **desktop 1440×1000** and **mobile 390×844**; detects Vercel auth walls and 404s; writes `manifest.json`; exits 2 if nothing rendered |
+| `.github/workflows/phase5-built-ui-screenshots.yml` | builds the branch, serves it, captures, uploads as a GitHub artifact |
+| `.github/workflows/user-guide-v2-screenshots.yml` | user-guide captures |
+| `.github/workflows/phone-branch-preview.yml` | deploys a chosen branch to a Pages preview slot for phone inspection |
+| Vercel preview URL | every pushed branch gets one (see `CLAUDE.md`) |
+| Chromium + Playwright | preinstalled in remote sessions (`PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`); never run `playwright install` |
+| `run` skill | launches the app to see a change working |
+
+Phone contract: below **768px** every `.vt-dash-cell` spans the full 24-column row. Height
+buckets S 150 · M 250 · L 350 · XL 450 · XXL 850. Capture mobile at **390×844**.
+
+⚠️ `artifacts/` is gitignored — deliver images in the reply or the PR; keep the JSON
+manifest with the receipt.
+
 ## CI workflows — 4
 
 `release-gates.yml` (source-governance · focused-contracts · full-suite · static-quality ·

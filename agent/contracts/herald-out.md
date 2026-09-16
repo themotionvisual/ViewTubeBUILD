@@ -148,9 +148,43 @@ PROVEN    <what a command actually demonstrated — include the command>
 CLAIMED   <what I believe but did not run>
 UNKNOWN   <what stays unverified, and why>
 CHANGED   <paths>
+VISUAL    <file> · <route> · <viewport> · <branch@sha> · live|fixture · auth|anon
 ```
-Never merge these three. *Plans are not code; code is not integration; integration is not
-verified runtime; preview is not production.*
+Never merge PROVEN, CLAIMED and UNKNOWN. *Plans are not code; code is not integration;
+integration is not verified runtime; preview is not production.*
+
+#### VISUAL — show the change, don't describe it
+
+**Required whenever the diff touches** `src/components/**` · `src/views/**` ·
+`src/features/**` UI · any `.css` · widget, toolbox, dashboard or chart files · user-visible
+copy. Attach the image in the reply; on a PR, post it to the PR.
+
+**Not required** for `server/`, `api/`, `scripts/`, types, tests or docs — a screenshot of
+unchanged UI is noise.
+
+| Change | Minimum |
+|---|---|
+| Any visible change | desktop **1440×1000** |
+| Mobile geometry, responsive, widget height/width | **plus** phone **390×844** — non-negotiable |
+| Modifying existing UI | **before/after pair**, same route and viewport |
+| Chart or data visual | include the empty, loading and error states |
+
+**A screenshot only counts as evidence (ladder level 1) when it is the built app.**
+State route, viewport, branch@sha, auth state, and whether data is live or fixture.
+
+These do **not** count, and must be labelled per §7 REFERENCES:
+- a standalone HTML prototype or demo — class `prototype`/`demo`, proves nothing about runtime
+- a capture that hit an auth wall, a 404, or an error boundary
+- a design mock or a hand-drawn layout
+- a desktop shot standing in for a mobile claim
+
+Capture with `scripts/capture-phase5-built-ui.mjs` (Playwright; already handles Vercel auth
+walls, records `manifest.json`, exits non-zero when nothing rendered), or against the
+branch's Vercel preview URL. Images land in `artifacts/` — which is gitignored, so deliver
+them in the reply or the PR and keep the JSON manifest with the receipt.
+
+**If you changed UI and did not capture it, say so in UNKNOWN.** "Looks right" is not
+evidence, and a UI change with no visual is `partial`, never `complete`.
 
 ### §11 KNOW — T1, T2
 Useful things the user did not ask about. Omit the block rather than pad it.

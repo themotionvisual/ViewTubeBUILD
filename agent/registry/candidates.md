@@ -25,3 +25,5 @@ entry exists, cite it and advance its verdict rather than raising it again.
 | 2026-09-16 | `skills-lock.json` supply-chain audit | process | 60 external skills, never reviewed | `adopt-now` | one pass; they execute as instructions |
 | 2026-09-16 | `scripts/reorganize-html-docs.mjs` | internal | derived classification + hash dedup for the local corpus | `adopt-now` | **already built**; extract `classifyLane`/`hashFile` into `scripts/lib/corpus.mjs` and reuse read-only (plan §15) |
 | 2026-09-16 | embeddings / vector store for corpus search | approach | fuzzy semantic retrieval | `defer` | identifier linking via `vt-####` answers the common case exactly, free and incrementally (plan §15.9) |
+| 2026-09-16 | `scripts/herald-shot.mjs` | internal | capture any route/viewport on demand for the VISUAL block | `adopt-now` | thin wrapper over `capture-phase5-built-ui.mjs`; reuse its auth-wall detection and manifest format |
+| 2026-09-16 | before/after diff images | internal | make UI regressions obvious at a glance | `evaluate` | pairs with `dashboard-style-snapshot.mjs`, which already snapshots styles |
