@@ -93,7 +93,6 @@ import { DATA_VISUAL_MARK_FLOORS } from "./dataVisualModuleContract"
 import type { RegisteredDataVisualModuleId } from "./dataVisualModuleContract"
 import {
  useDataVisualDensityBudget,
- useDataVisualMarks,
  useDataVisualPanelBudget,
  useDataVisualSelection,
  useDataVisualViewportBucket,
@@ -3550,8 +3549,12 @@ type HeatMatrixRowCount = 4 | 5 | 6 | 8
 
 const HEAT_MATRIX_ROW_COUNTS: readonly HeatMatrixRowCount[] = [4, 5, 6, 8]
 
-/** Columns the tile edge is sized to keep on screen at once. */
-const HEAT_MATRIX_MIN_VISIBLE_COLUMNS = 18
+/**
+ * Columns the tile edge is sized to keep on screen at once. The track scrolls
+ * horizontally, so this is only a readability guard against a handful of huge
+ * tiles filling the canvas — it is not what sizes the grid. Height is.
+ */
+const HEAT_MATRIX_MIN_VISIBLE_COLUMNS = 8
 
 /** Snaps a registered row count onto the depths the tile grid supports. */
 const heatMatrixRows = (value: number): HeatMatrixRowCount =>
@@ -3813,7 +3816,6 @@ const ThermalImagingModuleInner: React.FC<{
  // against, not a cap: once the tile hits its scale and floor, however many
  // columns fit is the answer, and the rest stay reachable by scrolling.
  const columnBudget = HEAT_MATRIX_MIN_VISIBLE_COLUMNS
- const { scale: scaleHeatMark } = useDataVisualMarks("heat-matrix")
  const canvasBox = useVisualCanvasBox(containerRef)
 
  const GAP = 2
@@ -3822,16 +3824,25 @@ const ThermalImagingModuleInner: React.FC<{
  const ROWS = rows
  const cols = Math.ceil(displayVideos.length / ROWS)
  const TILE = useMemo(() => {
-  const preferred = scaleHeatMark(rows <= 5 ? 58 : 36, "tileEdge")
-  if (canvasBox.width < 1 || canvasBox.height < 1) return preferred
+  // Before the canvas has been measured, fall back to the tile floor rather
+  // than to a guess that would be corrected a frame later.
+  if (canvasBox.width < 1 || canvasBox.height < 1) return DATA_VISUAL_MARK_FLOORS.tileEdge
   // `useVisualCanvasBox` reports the border box; the scroller carries `p-2`.
   const SCROLLER_PADDING = 16
   const innerHeight = canvasBox.height - SCROLLER_PADDING
   const innerWidth = canvasBox.width - SCROLLER_PADDING
+  // The canvas sizes the tile, and nothing else does. There is deliberately no
+  // preferred edge and no mark scaling on top: the compositions already reduce
+  // density by dropping rows, and a cap over that is what left the grid
+  // occupying a third of the canvas it had been handed.
+  //
+  // Height binds — every row has to fit, and together they should reach the
+  // bottom edge. Width does not, because the track scrolls sideways; it only
+  // enforces the minimum column count above.
   const fromHeight = Math.floor((innerHeight - (ROWS - 1) * GAP) / ROWS)
   const fromWidth = Math.floor((innerWidth - (columnBudget - 1) * GAP) / columnBudget)
-  return Math.max(10, Math.min(preferred, fromHeight, fromWidth))
- }, [canvasBox.width, canvasBox.height, ROWS, columnBudget, rows, scaleHeatMark])
+  return Math.max(DATA_VISUAL_MARK_FLOORS.tileEdge, Math.min(fromHeight, fromWidth))
+ }, [canvasBox.width, canvasBox.height, ROWS, columnBudget])
 
  // In chronological view only, keep the video with the highest selected-metric
  // value visually identifiable even though the tiles themselves are date-ordered.
@@ -4021,7 +4032,7 @@ const ThermalImagingModuleInner: React.FC<{
    {/* Grid container */}
    <div className="flex flex-1 min-h-0 overflow-hidden">
     <div
-     className="flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-x-auto overflow-y-hidden p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+     className="flex min-h-0 min-w-0 flex-1 items-center overflow-x-auto overflow-y-hidden p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
      ref={containerRef}
      data-vt-data-visual-overflow="scroll"
      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -4035,6 +4046,10 @@ const ThermalImagingModuleInner: React.FC<{
        gap: GAP,
        width: cols * TILE + (cols - 1) * GAP,
        height: ROWS * TILE + (ROWS - 1) * GAP,
+       // Centres the grid while it is narrower than the scroller, and — unlike
+       // `justify-content: center` — keeps the first column reachable once the
+       // track overflows.
+       marginInline: "auto",
       }}
      >
       {displayVideos.map((v, i) => {

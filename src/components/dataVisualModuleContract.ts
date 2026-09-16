@@ -204,11 +204,15 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
   markInteraction: "field",
   /**
    * Tile rows: the grid is 8 deep on desktop and 4 deep on a portrait phone.
-   * No `densityProfile` here on purpose — the tile edge is set by mark scale
-   * and the tile floor, and how many columns that yields is an outcome, not a
-   * cap. The renderer keeps its own minimum-visible-columns constant.
+   * No `densityProfile` here on purpose — the tile edge is set by the canvas
+   * height and the tile floor, and how many columns that yields is an outcome,
+   * not a cap. The renderer keeps its own minimum-visible-columns constant.
+   *
+   * Landscape is 5, not 6: the landscape canvas is very wide and very short, so
+   * a sixth row costs every tile height it cannot win back in width, and the
+   * grid ends up a narrow band adrift in a wide canvas.
    */
-  defaultSelection: { desktop: 8, landscape: 6, portrait: 4 },
+  defaultSelection: { desktop: 8, landscape: 5, portrait: 4 },
  },
  "traffic-source-evolution": {
   id: "traffic-source-evolution",

@@ -19,6 +19,7 @@ import {
  useDataVisualMarks,
  useDataVisualSelection,
  useDataVisualSeriesBudget,
+ useVisualCanvasBox,
 } from "./dataVisualCanvasGeometry"
 import {
  VIEWTUBE_CARTESIAN,
@@ -4817,56 +4818,83 @@ const TRAFFIC_MONTH_LABELS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "
 /** Long-range windows get month sections with week-1..4 subdivisions instead of a dense day scale. */
 const TRAFFIC_SECTIONED_AXIS_WINDOWS = new Set<DistributionWindowKey>(["90d", "180d", "365d", "lifetime"])
 
-/** Week 1 starts on the 1st (shown as the month dash); weeks 2-4 get the shorter dashes. */
-const TRAFFIC_WEEK_START_DAYS = [8, 15, 22]
-
-type TrafficAxisTickKind = "month" | "week" | null
-
-const trafficAxisTickKind = (bucket: string | number): TrafficAxisTickKind => {
- const parsed = typeof bucket === "number" ? new Date(bucket) : new Date(bucket)
- if (!Number.isFinite(parsed.getTime())) return null
- const day = parsed.getDate()
- if (day === 1) return "month"
- return TRAFFIC_WEEK_START_DAYS.includes(day) ? "week" : null
+/** Month boundaries inside a window — the only ticks the sectioned axis labels. */
+const buildTrafficMonthTicks = (start: number, end: number): number[] => {
+ const ticks: number[] = []
+ const cursor = new Date(start)
+ cursor.setHours(0, 0, 0, 0)
+ cursor.setDate(1)
+ while (cursor.getTime() <= end) {
+  const tick = cursor.getTime()
+  if (tick >= start) ticks.push(tick)
+  cursor.setMonth(cursor.getMonth() + 1, 1)
+ }
+ return ticks
 }
 
-const TrafficSectionedAxisTick: React.FC<{
- x?: number
- y?: number
- payload?: { value?: string | number }
- index?: number
-}> = ({ x = 0, y = 0, payload, index = 0 }) => {
- const bucket = payload?.value ?? ""
- const kind = trafficAxisTickKind(bucket)
- // The first visible month sits against the Y axis even when it is not the
- // first data bucket, so use both the tick index and plot position.
- if (!kind || index === 0 || x <= 76) return <g />
- const parsed = typeof bucket === "number" ? new Date(bucket) : new Date(bucket)
- const isMonth = kind === "month"
- return (
-  <g transform={`translate(${x},${y})`}>
-   {isMonth ? (
-    <text x={0} y={-13} textAnchor="middle" fill="#000000" fontSize={13} fontWeight={1000}>
-     {TRAFFIC_MONTH_LABELS[parsed.getMonth()]}
-    </text>
-   ) : null}
-  </g>
- )
-}
+/**
+ * Half the widest month label, near enough: a centred label closer than this to
+ * the left edge would be clipped, so it is dropped instead of drawn cut off.
+ */
+const TRAFFIC_AXIS_LABEL_EDGE_GUARD = 16
 
-const TrafficPercentAxisTick: React.FC<{
- x?: number
- y?: number
- payload?: { value?: number }
-}> = ({ x = 0, y = 0, payload }) => {
- const value = Number(payload?.value)
- if (![25, 50, 75].includes(value)) return <g />
+/** The share gridlines the overlay labels; the 0 and 100 edges are unlabelled. */
+const TRAFFIC_PERCENT_GUIDES = [25, 50, 75] as const
+
+/**
+ * Axis labels drawn OVER the plot rather than in a gutter beside it.
+ *
+ * Recharts reserves layout space for every axis it renders, and that reserved
+ * space was what held the evidence off the left and bottom edges of its canvas.
+ * Both axes are therefore hidden — they still define the scales the areas and
+ * the grid are drawn against — and their labels are re-drawn here from the same
+ * domains, in black, on top of the visual.
+ *
+ * The plot fills the chart box exactly (zero margins, no visible axes), so the
+ * measured host box IS the plot area and positions can be computed directly
+ * from the time domain rather than read out of Recharts internals.
+ */
+const TrafficAxisOverlay: React.FC<{
+ width: number
+ height: number
+ ticks: number[]
+ timelineStart: number
+ timelineEnd: number
+ sectioned: boolean
+}> = ({ width, height, ticks, timelineStart, timelineEnd, sectioned }) => {
+ if (width < 1 || height < 1 || timelineEnd <= timelineStart) return null
+ const span = timelineEnd - timelineStart
  return (
-  <g transform={`translate(${x},${y})`}>
-   <text x={8} y={4} textAnchor="start" fill="#000000" fontSize={10} fontWeight={1000}>
-    {value}
-   </text>
-  </g>
+  <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+   {TRAFFIC_PERCENT_GUIDES.map((value) => (
+    <span
+     key={value}
+     className="absolute -translate-y-1/2 text-[10px] font-black leading-none text-black"
+     style={{ left: TRAFFIC_AXIS_LABEL_EDGE_GUARD / 2, top: height * (1 - value / 100) }}
+    >
+     {value}
+    </span>
+   ))}
+   {ticks.map((tick) => {
+    const label = sectioned
+     ? TRAFFIC_MONTH_LABELS[new Date(tick).getMonth()]
+     : formatTrafficDayAxisLabel(tick)
+    if (!label) return null
+    const x = ((tick - timelineStart) / span) * width
+    // A centred label this close to an edge would be drawn cut in half, so it
+    // is dropped rather than shifted off the boundary it is marking.
+    if (x < TRAFFIC_AXIS_LABEL_EDGE_GUARD || x > width - TRAFFIC_AXIS_LABEL_EDGE_GUARD) return null
+    return (
+     <span
+      key={tick}
+      className={`absolute -translate-x-1/2 font-black leading-none text-black ${sectioned ? "text-[13px]" : "text-[10px]"}`}
+      style={{ left: x, bottom: 6 }}
+     >
+      {label}
+     </span>
+    )
+   })}
+  </div>
  )
 }
 
@@ -4999,6 +5027,8 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  const [selectedWindow, setSelectedWindow] = useState<DistributionWindowKey>("180d")
  const [hoveredBucketKey, setHoveredBucketKey] = useState<string | null>(null)
  const hoverHostRef = useRef<HTMLDivElement | null>(null)
+ // With zero margins and both axes hidden, the host box IS the plot area.
+ const plotBox = useVisualCanvasBox(hoverHostRef)
  const hoverLineRef = useRef<HTMLDivElement | null>(null)
  const hoverLabelRef = useRef<HTMLDivElement | null>(null)
  const hoverFrameRef = useRef<number | null>(null)
@@ -5143,6 +5173,22 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
   return () => overlay.remove()
  }, [hoveredSourceKey, visibleKeySignature])
  const useSectionedAxis = TRAFFIC_SECTIONED_AXIS_WINDOWS.has(selectedWindow)
+ /*
+  * The labelled ticks are their own list. `axisTicks` carries the week markers
+  * too, and thinning THAT list to a phone's label budget struck every month
+  * boundary out of it by stride — leaving the axis labelless rather than merely
+  * sparse. The overlay thins the month boundaries themselves, so whatever
+  * survives the budget is something a reader can take a date off.
+  */
+ const axisLabelTicks = useMemo(
+  () => thinAxisTicks(
+   useSectionedAxis
+    ? buildTrafficMonthTicks(timelineStart, timelineEnd)
+    : buildTrafficAxisTicks(timelineStart, timelineEnd, false),
+   trafficAxisTickBudget,
+  ),
+  [useSectionedAxis, timelineStart, timelineEnd, trafficAxisTickBudget],
+ )
  // The legend is a fixed roster: charted sources first in stack order so swatch
  // colours line up with the bands, then whatever this window did not chart.
  const chartedCanonicalKeys = new Set(visibleKeys.map(trafficSourceCanonicalKey))
@@ -5314,7 +5360,10 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
           <AreaChart
           className="tse-plot"
           data={plottedAreaData}
-          margin={{ top: 18, right: 0, left: 0, bottom: 0 }}
+          // No gutters on any side: the axis labels are drawn OVER the plot
+          // (see the tick components), so reserving a margin for them would
+          // only inset the evidence from the canvas it was given.
+          margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
          >
           <Customized component={TrafficPlotClipDefs} />
           <CartesianGrid
@@ -5331,10 +5380,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
             domain={[timelineStart, timelineEnd]}
             ticks={axisTicks}
             interval={0}
-            height={30}
-            tick={<TrafficSectionedAxisTick />}
-            tickLine={false}
-            axisLine={false}
+            hide
            />
           ) : (
            <XAxis
@@ -5343,22 +5389,14 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
             scale="time"
             domain={[timelineStart, timelineEnd]}
             ticks={axisTicks}
-            height={30}
-            tickFormatter={formatTrafficDayAxisLabel}
-            tick={{ fontSize: 10, fontWeight: 1000, fill: "#000000", dy: -8 }}
-            axisLine={false}
-            tickLine={false}
+            hide
            />
           )}
           <YAxis
-           width={44}
-           tickMargin={0}
-           tick={<TrafficPercentAxisTick />}
            domain={[0, 100]}
-           ticks={[25, 50, 75]}
+           ticks={[...TRAFFIC_PERCENT_GUIDES]}
            allowDataOverflow
-           axisLine={false}
-           tickLine={false}
+           hide
           />
           {visibleKeys.map((k, sourceIndex) => {
            const tone = trafficRankTone(sourceIndex)
@@ -5385,6 +5423,14 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
           })}
          </AreaChart>
        </StableChartFrame>
+        <TrafficAxisOverlay
+         width={plotBox.width}
+         height={plotBox.height}
+         ticks={axisLabelTicks}
+         timelineStart={timelineStart}
+         timelineEnd={timelineEnd}
+         sectioned={useSectionedAxis}
+        />
         <div
          ref={hoverLineRef}
          aria-hidden="true"

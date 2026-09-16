@@ -56,10 +56,10 @@ describe("Data Visual module canvas contracts", () => {
  })
 
  it("gives the heat matrix a shallower grid on a phone", () => {
-  // Rows, not columns: the tile edge follows mark scale and the tile floor, so
-  // how many columns fit is an outcome rather than a registered cap.
+  // Rows, not columns: the tile edge follows the canvas height and the tile
+  // floor, so how many columns fit is an outcome rather than a registered cap.
   expect(dataVisualDefaultSelection("heat-matrix", "desktop")).toBe(8)
-  expect(dataVisualDefaultSelection("heat-matrix", "landscape")).toBe(6)
+  expect(dataVisualDefaultSelection("heat-matrix", "landscape")).toBe(5)
   expect(dataVisualDefaultSelection("heat-matrix", "portrait")).toBe(4)
   expect(dataVisualModuleContract("heat-matrix").densityProfile).toBeUndefined()
  })
