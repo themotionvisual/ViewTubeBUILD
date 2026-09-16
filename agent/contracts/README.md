@@ -1,5 +1,8 @@
 # ViewTube agent contracts — canonical source
 
+**Starting a conversation in ChatGPT, Gemini or anywhere without repo access?**
+Paste [`agent/START-PROMPT.md`](../START-PROMPT.md) as your first message.
+
 Edit these files. Everything else is generated.
 
 | File | Defines |
@@ -8,6 +11,7 @@ Edit these files. Everything else is generated.
 | `herald-out.md` | **The response process** — tiers, the 11 blocks, evidence ladder, hard rules |
 | `herald-workflow.md` | Turn loop, thread loop, gates, the nine workflows, skip rules |
 | `status-vocabulary.md` | The four status axes and how they bind |
+| `herald-artifacts.md` | **Where artifacts are saved and how versions are organised** — canonical loose, variants nested, screenshots rolled up |
 | `activation.md` | **How an agent comes to use any of this** — the five mechanisms and what belongs in each |
 
 ## Registry — `agent/registry/`

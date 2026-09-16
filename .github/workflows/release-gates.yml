@@ -40,6 +40,8 @@ jobs:
       # Agent contracts and per-tool skill trees are generated from agent/.
       # Fails if any target drifted from its source, or a skill lacks valid frontmatter.
       - run: npm run check:agent-sync
+      # Conversation artifacts: canonical version loose, variants nested, indexes current.
+      - run: npm run check:artifacts
 
   focused_contracts:
     name: focused-contracts

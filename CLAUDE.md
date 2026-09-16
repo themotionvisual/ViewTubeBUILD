@@ -8,7 +8,9 @@ this repo. Keep it short. Longer notes belong in `docs/` or per-feature READMEs.
 ## Agent contracts — read before non-trivial work
 
 Full contract: `agent/contracts/` (start at `README.md`). Load `herald-out.md` before any
-task that changes `src/`, `server/` or `api/`, or that adds a file.
+task that changes `src/`, `server/` or `api/`, or that adds a file. Artifacts, screenshots
+and versioned files go to `docs/herald/artifacts/` under `herald-artifacts.md`.
+To start a conversation in another tool, paste `agent/START-PROMPT.md`.
 
 Four rules that apply even when you do not load it:
 

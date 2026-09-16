@@ -10,7 +10,7 @@ Regenerate with `node scripts/herald-capabilities.mjs` once it exists (phase H1)
 | Skills | ✅ **in use** | **20** sourced from `agent/skills/`, generated into `.claude/` and `.codex/` · 60 external · built-ins |
 | MCP servers | ✅ **in use** | 8 connected |
 | CI workflows | ✅ **in use** | 4 · `check:agent-sync` gates contract drift |
-| Scripts | ✅ **in use** | 29 · no dead npm references |
+| Scripts | ✅ **in use** | 30 · no dead npm references · `herald-sync`, `herald-artifacts` |
 | Hooks | ✅ **in use** | `PostToolUse` gitignore guard · `Stop` ledger append |
 | Slash commands | ✅ **in use** | `/vt` — intake + recon before answering |
 | Permissions | ✅ **in use** | read-only allowlist in `.claude/settings.json` |

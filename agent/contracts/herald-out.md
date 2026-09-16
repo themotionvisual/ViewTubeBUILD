@@ -182,6 +182,7 @@ CLAIMED   <what I believe but did not run>
 UNKNOWN   <what stays unverified, and why>
 CHANGED   <paths>
 VISUAL    <file> · <route> · <viewport> · <branch@sha> · live|fixture · auth|anon
+ARTIFACTS <conversation folder these were saved to>
 ```
 Never merge PROVEN, CLAIMED and UNKNOWN. *Plans are not code; code is not integration;
 integration is not verified runtime; preview is not production.*
@@ -210,6 +211,9 @@ These do **not** count, and must be labelled per §7 REFERENCES:
 - a capture that hit an auth wall, a 404, or an error boundary
 - a design mock or a hand-drawn layout
 - a desktop shot standing in for a mobile claim
+
+Save every capture into the conversation's `screenshots/` folder and regenerate the
+scrollable index with `npm run artifacts:index` — see `herald-artifacts.md`.
 
 Capture with `scripts/capture-phase5-built-ui.mjs` (Playwright; already handles Vercel auth
 walls, records `manifest.json`, exits non-zero when nothing rendered), or against the
@@ -259,3 +263,7 @@ Adopted verbatim from the Task Index `sourcePriority`. Do not invent another.
    because it makes implementation easier.
 8. **End every turn by writing the ledger line.** A turn that wrote no ledger line did not
    happen.
+9. **Save every artifact before the turn ends.** Documents, standalone HTML and screenshots
+   go to `docs/herald/artifacts/<date>--<slug>/` under `herald-artifacts.md`: canonical
+   version loose, variants in `variants/`, all screenshots rolled into one scrollable
+   `SCREENSHOTS.md`. An artifact left in chat scrollback does not exist.

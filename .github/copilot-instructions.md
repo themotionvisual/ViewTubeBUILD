@@ -8,6 +8,11 @@ Cross-tool instructions. Codex, Cursor, Gemini, Copilot and any agent following 
 Repository: `themotionvisual/ViewTubeBUILD`. `main` is production and auto-deploys to
 viewtube.live. Never commit to `main`; branch, push, open a PR.
 
+## Starting a fresh conversation elsewhere
+
+If this file is all you have, it is enough. For the fuller self-contained version to paste
+into ChatGPT or any tool without repo access, use `agent/START-PROMPT.md`.
+
 ## Before non-trivial work
 
 Read `agent/contracts/README.md`, then `agent/contracts/herald-out.md`. Those files are
@@ -32,6 +37,18 @@ canonical; this one is a summary.
   believe but did not run, and what stays unknown.
 - **Show UI changes.** Capture the built app at 1440×1000, and 390×844 for anything
   touching mobile geometry. A UI change with no capture is `partial`, never `complete`.
+- **Save every artifact before the turn ends** — nothing stays only in chat. Everything a
+  conversation produces goes to `docs/herald/artifacts/<YYYY-MM-DD>--<slug>/`:
+  - documents and standalone HTML in `documents/`; screenshots in `screenshots/`
+  - **all screenshots also embedded inline in one scrollable `SCREENSHOTS.md`**, each with
+    route · viewport · branch@sha · live/fixture · auth
+  - **two or more versions of the same thing → a folder named for it, with the chosen best
+    version loose in that folder and every other variant inside `variants/`.** Pick the
+    canonical by explicit decision first, else most recent, else largest, and record the
+    reason in `VERSIONS.md`. Never delete a variant.
+  - regenerate the indexes with `npm run artifacts:index`; never hand-edit `README.md` or
+    `SCREENSHOTS.md`
+  - full rules: `agent/contracts/herald-artifacts.md`
 - **Suggest GitHub repositories and tools — every T1 and T2 answer.** Name one to three
   concrete things that would help *this specific task*: a repository, library, action,
   skill pack or reference implementation first; then a skill, sub-agent, slash command,
@@ -83,6 +100,8 @@ Two `package.json` entries reference files that do not exist
 | Need | Path |
 |---|---|
 | Response contract | `agent/contracts/herald-out.md` |
+| Saving & organising artifacts | `agent/contracts/herald-artifacts.md` |
+| Saved artifacts | `docs/herald/artifacts/` |
 | Conversation workflow, gates | `agent/contracts/herald-workflow.md` |
 | What tools exist | `agent/registry/capabilities.md` |
 | What docs and artifacts exist | `agent/registry/references.md` |
