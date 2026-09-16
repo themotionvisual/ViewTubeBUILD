@@ -43,12 +43,13 @@ export const AnomalyRadarWidget: React.FC<CommonWidgetProps & { data: DashboardD
   })
 
   return (
-    <WidgetShell {...common} icon={<Radar size={22} />}>
+    <WidgetShell {...common} icon={<Radar size={22} />} helpContent={
+      <WidgetInstrument archetype="radar" label="SIGNAL RADAR" summary="CURRENT DAY AGAINST 27-DAY BASELINE">
+        <InstrumentSignals signals={radarSignals} />
+        <InstrumentExplanation purpose="Detect meaningful changes before they disappear into averages." process="The latest day is compared with the preceding daily baseline; changes at or above 25% become signals." result="Open Analytics to identify the videos and sources responsible for the change." />
+      </WidgetInstrument>
+    }>
       <div className="vt-new-widget vt-anomaly-radar">
-        <WidgetInstrument archetype="radar" label="SIGNAL RADAR" summary="CURRENT DAY AGAINST 27-DAY BASELINE">
-          <InstrumentSignals signals={radarSignals} />
-          <InstrumentExplanation purpose="Detect meaningful changes before they disappear into averages." process="The latest day is compared with the preceding daily baseline; changes at or above 25% become signals." result="Open Analytics to identify the videos and sources responsible for the change." />
-        </WidgetInstrument>
         <div className="vt-radar-summary"><strong>{anomalies.length}</strong><span>SIGNALS OUTSIDE BASELINE</span></div>
         <WidgetScrollArea ariaLabel="Anomaly signals" className="vt-radar-list">
           {anomalies.length ? anomalies.map((item) => <div className="vt-radar-row" key={item.label}>

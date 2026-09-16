@@ -29,10 +29,10 @@ export const WidgetShell: React.FC<{
  widget: WidgetDefinition; instance: WidgetInstanceState; editMode: boolean; canEdit: boolean
  onToggleCollapse?: () => void; onCycleSize?: () => void; onDecSize?: () => void
  onCycleHeight?: () => void; onDecHeight?: () => void; onRemove?: () => void
- children: React.ReactNode; icon?: React.ReactNode; headerContent?: React.ReactNode
+ children: React.ReactNode; icon?: React.ReactNode; headerContent?: React.ReactNode; helpContent?: React.ReactNode
  contentLayout?: "inset" | "flush"; hasAI?: boolean; onRegenerate?: () => void
  aiCost?: number; aiDisabled?: boolean; aiDisabledReason?: string
-}> = ({ widget, instance, editMode, canEdit, onToggleCollapse = () => {}, onCycleSize = () => {}, onDecSize = () => {}, onCycleHeight = () => {}, onDecHeight = () => {}, onRemove = () => {}, children, icon, headerContent, contentLayout = "inset", hasAI, onRegenerate, aiCost, aiDisabled, aiDisabledReason }) => {
+}> = ({ widget, instance, editMode, canEdit, onToggleCollapse = () => {}, onCycleSize = () => {}, onDecSize = () => {}, onCycleHeight = () => {}, onDecHeight = () => {}, onRemove = () => {}, children, icon, headerContent, helpContent, contentLayout = "inset", hasAI, onRegenerate, aiCost, aiDisabled, aiDisabledReason }) => {
  const [isSubtitleOpen, setIsSubtitleOpen] = useState(false)
  const [keepClosingContentMounted, setKeepClosingContentMounted] = useState(!instance.collapsed)
  const description = WIDGET_DESCRIPTIONS[widget.id] || { short: "INTERACTIVE SOURCE PREVIEW RETAINED AS IDEA-BANK.", detailed: "View raw data streams and historical references before promoting components to the main dashboard." }
@@ -70,7 +70,7 @@ export const WidgetShell: React.FC<{
   <div className={cn("vt-widget-collapse-region", instance.collapsed ? "is-closed" : "is-open")}>
    <div className="vt-widget-collapse-inner">
     {shouldRenderContent && <>
-     <div className={`widget-subtitle ${isSubtitleOpen?'open':''}`}><div className="widget-subtitle-content" style={{flexDirection:"column",alignItems:"flex-start",gap:"2px"}}><div style={{fontWeight:900,textTransform:"uppercase",fontSize:"12px",lineHeight:1.2}}>{description.short}</div><div style={{fontWeight:600,fontSize:"11px",opacity:.7,lineHeight:1.3,textTransform:"none"}}>{description.detailed}</div></div></div>
+     <div className={`widget-subtitle ${isSubtitleOpen?'open':''}`}><div className="widget-subtitle-content" style={{flexDirection:"column",alignItems:"stretch",gap:"8px"}}><div><div style={{fontWeight:900,textTransform:"uppercase",fontSize:"12px",lineHeight:1.2}}>{description.short}</div><div style={{fontWeight:600,fontSize:"11px",opacity:.7,lineHeight:1.3,textTransform:"none"}}>{description.detailed}</div></div>{helpContent ? <div className="widget-help-guide">{helpContent}</div> : null}</div></div>
      <div className="vt-widget-content"><div className={cn("vt-widget-body",contentLayout==="flush"&&"vt-widget-body--flush")} onPointerDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()}>{widget.id==="system-micro-stack"&&<button type="button" className="vt-button" onClick={handleShowAllWidgets} style={{width:"100%",minHeight:"34px",fontSize:"9px",marginBottom:"8px",background:"#fff"}}><Eye size={14} aria-hidden="true"/>SHOW ALL WIDGETS</button>}{children}</div></div>
     </>}
    </div>

@@ -55,7 +55,6 @@
   height: 2px;
   background: var(--instrument-ink);
 }
-:where(.dashboard-barrier) .widget-instrument__stages button,
 :where(.dashboard-barrier) .widget-instrument__stages li > div {
   position: relative;
   z-index: 1;
@@ -76,15 +75,12 @@
 :where(.dashboard-barrier) .widget-instrument__stages span { display: grid; align-content: center; gap: 1px; padding: 4px 5px; min-width: 0; }
 :where(.dashboard-barrier) .widget-instrument__stages strong { overflow: hidden; font-size: 8px; font-weight: 1000; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 :where(.dashboard-barrier) .widget-instrument__stages small { overflow: hidden; font-size: 7px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
-:where(.dashboard-barrier) .widget-instrument__stages li[data-state="active"] button,
 :where(.dashboard-barrier) .widget-instrument__stages li[data-state="active"] > div { background: var(--instrument-pop); transform: translateY(-2px); }
-:where(.dashboard-barrier) .widget-instrument__stages li[data-state="complete"] button,
 :where(.dashboard-barrier) .widget-instrument__stages li[data-state="complete"] > div { background: color-mix(in srgb, #58e58b 55%, white); }
-:where(.dashboard-barrier) .widget-instrument__stages li[data-state="warning"] button,
 :where(.dashboard-barrier) .widget-instrument__stages li[data-state="warning"] > div { background: color-mix(in srgb, #ffb158 62%, white); }
 
 :where(.dashboard-barrier) .widget-instrument__signals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-:where(.dashboard-barrier) .widget-instrument__signals button {
+:where(.dashboard-barrier) .widget-instrument__signals > div {
   display: grid;
   min-width: 0;
   min-height: 44px;
@@ -94,13 +90,12 @@
   border-radius: 50% 50% 8px 8px;
   background: color-mix(in srgb, var(--instrument-pop) calc(var(--instrument-intensity) * 70%), white);
 }
-:where(.dashboard-barrier) .widget-instrument__signals button:disabled { opacity: 1; }
-:where(.dashboard-barrier) .widget-instrument__signals button[data-selected="true"] { outline: 3px solid var(--instrument-pop); outline-offset: 2px; }
+:where(.dashboard-barrier) .widget-instrument__signals > div[data-selected="true"] { outline: 3px solid var(--instrument-pop); outline-offset: 2px; }
 :where(.dashboard-barrier) .widget-instrument__signals span { overflow: hidden; font-size: 7px; font-weight: 1000; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 :where(.dashboard-barrier) .widget-instrument__signals strong { font-size: 14px; font-weight: 1000; }
 
 :where(.dashboard-barrier) .widget-instrument__explanation { border-top: 2px solid var(--instrument-ink); background: white; }
-:where(.dashboard-barrier) .widget-instrument__explanation summary { padding: 6px 8px; cursor: pointer; font-size: 8px; font-weight: 1000; list-style-position: inside; }
+:where(.dashboard-barrier) .widget-instrument__explanation-title { display: block; padding: 6px 8px; font-size: 8px; font-weight: 1000; }
 :where(.dashboard-barrier) .widget-instrument__explanation dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0 8px 8px; }
 :where(.dashboard-barrier) .widget-instrument__explanation dl > div { padding: 5px; border-radius: 6px; background: var(--instrument-soft); }
 :where(.dashboard-barrier) .widget-instrument__explanation dt { font-size: 7px; font-weight: 1000; }

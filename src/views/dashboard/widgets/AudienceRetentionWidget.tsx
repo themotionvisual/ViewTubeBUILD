@@ -22,8 +22,16 @@ export const AudienceRetentionWidget = ({ widget, instance, editMode, onToggleCo
  const pathData = "M 0 10 C 10 10, 20 50, 30 50 C 60 60, 80 70, 95 85 L 100 85"
 
  return (
-  <WidgetShell {...common} icon={<TrendingDown size={22} />}>
+  <WidgetShell {...common} icon={<TrendingDown size={22} />} helpContent={
    <WidgetInstrument archetype="lens" label="RETENTION LENS" summary="FOLLOW VIEWER HOLD ACROSS THE VIDEO">
+    <InstrumentSignals signals={[
+     { id: "open", label: "Opening", value: "HOOK", direction: "neutral", intensity: 1 },
+     { id: "average", label: "Middle", value: "HOLD", direction: "down", intensity: .5 },
+     { id: "end", label: "End screen", value: "EXIT", direction: "down", intensity: .2 },
+    ]} />
+    <InstrumentExplanation purpose="Explain where viewer attention is retained or lost." process="The lens follows the retention curve from the opening hook through the end screen." result="Investigate sharp drops and use them to improve pacing, structure and future hooks." />
+   </WidgetInstrument>
+  }>
    <div
     style={{
      display: "flex",
@@ -105,14 +113,7 @@ export const AudienceRetentionWidget = ({ widget, instance, editMode, onToggleCo
       }}
      />
     </div>
-    <InstrumentSignals signals={[
-     { id: "open", label: "Opening", value: "100%", direction: "neutral", intensity: 1 },
-     { id: "average", label: "Average", value: "42.5%", direction: "down", intensity: .425 },
-     { id: "end", label: "End screen", value: "15%", direction: "down", intensity: .15 },
-    ]} />
-    <InstrumentExplanation purpose="Show where viewer attention is retained or lost." process="The lens follows the retention curve from the opening hook through the end screen." result="Investigate sharp drops and use them to improve pacing, structure and future hooks." />
    </div>
-   </WidgetInstrument>
   </WidgetShell>
  )
 }
