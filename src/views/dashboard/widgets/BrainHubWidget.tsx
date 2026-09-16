@@ -274,7 +274,17 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
  )
 
  return (
-  <WidgetShell {...common} icon={<Brain size={22} />} headerContent={headerContent}>
+  <WidgetShell {...common} icon={<Brain size={22} />} headerContent={headerContent} helpContent={
+   <WidgetInstrument archetype="ooda" label="BRAIN OODA CORE" summary="EVIDENCE INTO A GOVERNED NEXT ACTION" compact>
+    <InstrumentStages stages={[
+     { id: "observe", label: "Observe", detail: "Collect evidence" },
+     { id: "orient", label: "Orient", detail: "Find patterns" },
+     { id: "decide", label: "Decide", detail: "Form advice" },
+     { id: "act", label: "Act", detail: "Request approval" },
+    ]} />
+    <InstrumentExplanation purpose="Explain how the Brain turns channel evidence into advice." process="It observes evidence, orients around patterns, decides on an insight, then returns any external action to you for approval." result="A traceable recommendation whose evidence and permissions remain visible." />
+   </WidgetInstrument>
+  }>
    <div className="brain-hub-widget">
     {mainPage === "chat" ? (
      <>
@@ -286,16 +296,6 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
        {turns.length ? <WidgetBadge tone="green">{turns.length} turns</WidgetBadge> : null}
        {controls.externalActionsRequireApproval ? <WidgetBadge tone="royal">Approval gated</WidgetBadge> : null}
       </div>
-
-      <WidgetInstrument archetype="ooda" label="BRAIN OODA CORE" summary="EVIDENCE INTO A GOVERNED NEXT ACTION" compact>
-       <InstrumentStages stages={[
-        { id: "observe", label: "Observe", detail: `${evidence.length} evidence`, state: evidence.length ? "complete" : "warning" },
-        { id: "orient", label: "Orient", detail: portfolio ? "Patterns ready" : "Waiting", state: portfolio ? "complete" : "idle" },
-        { id: "decide", label: "Decide", detail: answer?.response ? "Insight ready" : "Ask Brain", state: answer?.response ? "complete" : "active" },
-        { id: "act", label: "Act", detail: controls.externalActionsRequireApproval ? "Approval gated" : "User controlled", state: controls.enabled ? "active" : "blocked" },
-       ]} activeId={answer?.response ? "act" : "decide"} />
-       <InstrumentExplanation purpose="Expose how the Brain turns channel evidence into advice." process="Observe evidence, orient around patterns, decide on an insight, then hand an approved action back to you." result="A traceable recommendation whose evidence and permissions remain visible." />
-      </WidgetInstrument>
 
       <div className="brain-hub-nav" role="navigation" aria-label="Brain chat views">
        {CHAT_PAGES.map((page) => (

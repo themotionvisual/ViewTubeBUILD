@@ -38,6 +38,7 @@ const instance: WidgetInstanceState = {
 const renderShell = (
  contentLayout?: "inset" | "flush",
  instanceOverride: Partial<WidgetInstanceState> = {},
+ helpContent?: React.ReactNode,
 ) => renderToStaticMarkup(
  <WidgetShell
   widget={widget}
@@ -45,6 +46,7 @@ const renderShell = (
   editMode={false}
   canEdit={false}
   contentLayout={contentLayout}
+  helpContent={helpContent}
  >
   <div>Content</div>
  </WidgetShell>,
@@ -64,6 +66,15 @@ describe("WidgetShell content layout", () => {
 
   expect(markup).toContain('class="vt-widget is-collapsed"')
   expect(markup).toContain('aria-expanded="false"')
-  expect(markup).not.toContain("Content")
+ expect(markup).not.toContain("Content")
+ })
+
+ it("places explanatory guides in the question-mark information region, outside the widget body", () => {
+  const markup = renderShell(undefined, {}, <section data-testid="guide">How it works</section>)
+  const guideIndex = markup.indexOf('data-testid="guide"')
+
+  expect(markup).toContain('class="widget-help-guide"')
+  expect(guideIndex).toBeGreaterThan(markup.indexOf('class="widget-subtitle'))
+  expect(guideIndex).toBeLessThan(markup.indexOf('class="vt-widget-content"'))
  })
 })
