@@ -1,0 +1,119 @@
+:where(.dashboard-barrier) .widget-instrument {
+  --instrument-ink: color-mix(in srgb, var(--widget-color) 74%, #32165e);
+  --instrument-soft: color-mix(in srgb, var(--widget-color) 24%, white);
+  --instrument-pop: var(--widget-icon-rail-color, var(--widget-color));
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  color: var(--instrument-ink);
+  border: 3px solid var(--instrument-ink);
+  border-radius: 12px;
+  background: var(--instrument-soft);
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--widget-color) 32%, transparent);
+  overflow: hidden;
+}
+
+:where(.dashboard-barrier) .widget-instrument__heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 4px 8px;
+  border-bottom: 2px solid var(--instrument-ink);
+  background: color-mix(in srgb, var(--widget-color) 54%, white);
+}
+
+:where(.dashboard-barrier) .widget-instrument__heading strong,
+:where(.dashboard-barrier) .widget-instrument__heading span {
+  font-weight: 1000;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+:where(.dashboard-barrier) .widget-instrument__heading strong { font-size: 12px; }
+:where(.dashboard-barrier) .widget-instrument__heading span { font-size: 8px; text-align: right; max-width: 22ch; }
+:where(.dashboard-barrier) .widget-instrument__model { display: grid; gap: 8px; min-height: 0; padding: 8px; }
+
+:where(.dashboard-barrier) .widget-instrument__stages {
+  display: grid;
+  grid-template-columns: repeat(var(--instrument-stage-count, 4), minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+:where(.dashboard-barrier) .widget-instrument__stages li { position: relative; min-width: 0; }
+:where(.dashboard-barrier) .widget-instrument__stages li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: calc(100% - 1px);
+  width: 8px;
+  height: 2px;
+  background: var(--instrument-ink);
+}
+:where(.dashboard-barrier) .widget-instrument__stages button,
+:where(.dashboard-barrier) .widget-instrument__stages li > div {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: stretch;
+  width: 100%;
+  min-height: 38px;
+  padding: 0;
+  overflow: hidden;
+  color: var(--instrument-ink);
+  border: 2px solid currentColor;
+  border-radius: 8px;
+  background: white;
+  text-align: left;
+}
+:where(.dashboard-barrier) .widget-instrument__stages b { display: grid; place-items: center; background: var(--instrument-ink); color: white; font-size: 11px; }
+:where(.dashboard-barrier) .widget-instrument__stages span { display: grid; align-content: center; gap: 1px; padding: 4px 5px; min-width: 0; }
+:where(.dashboard-barrier) .widget-instrument__stages strong { overflow: hidden; font-size: 8px; font-weight: 1000; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+:where(.dashboard-barrier) .widget-instrument__stages small { overflow: hidden; font-size: 7px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+:where(.dashboard-barrier) .widget-instrument__stages li[data-state="active"] button,
+:where(.dashboard-barrier) .widget-instrument__stages li[data-state="active"] > div { background: var(--instrument-pop); transform: translateY(-2px); }
+:where(.dashboard-barrier) .widget-instrument__stages li[data-state="complete"] button,
+:where(.dashboard-barrier) .widget-instrument__stages li[data-state="complete"] > div { background: color-mix(in srgb, #58e58b 55%, white); }
+:where(.dashboard-barrier) .widget-instrument__stages li[data-state="warning"] button,
+:where(.dashboard-barrier) .widget-instrument__stages li[data-state="warning"] > div { background: color-mix(in srgb, #ffb158 62%, white); }
+
+:where(.dashboard-barrier) .widget-instrument__signals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+:where(.dashboard-barrier) .widget-instrument__signals button {
+  display: grid;
+  min-width: 0;
+  min-height: 44px;
+  padding: 5px;
+  color: var(--instrument-ink);
+  border: 2px solid currentColor;
+  border-radius: 50% 50% 8px 8px;
+  background: color-mix(in srgb, var(--instrument-pop) calc(var(--instrument-intensity) * 70%), white);
+}
+:where(.dashboard-barrier) .widget-instrument__signals button:disabled { opacity: 1; }
+:where(.dashboard-barrier) .widget-instrument__signals button[data-selected="true"] { outline: 3px solid var(--instrument-pop); outline-offset: 2px; }
+:where(.dashboard-barrier) .widget-instrument__signals span { overflow: hidden; font-size: 7px; font-weight: 1000; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+:where(.dashboard-barrier) .widget-instrument__signals strong { font-size: 14px; font-weight: 1000; }
+
+:where(.dashboard-barrier) .widget-instrument__explanation { border-top: 2px solid var(--instrument-ink); background: white; }
+:where(.dashboard-barrier) .widget-instrument__explanation summary { padding: 6px 8px; cursor: pointer; font-size: 8px; font-weight: 1000; list-style-position: inside; }
+:where(.dashboard-barrier) .widget-instrument__explanation dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0 8px 8px; }
+:where(.dashboard-barrier) .widget-instrument__explanation dl > div { padding: 5px; border-radius: 6px; background: var(--instrument-soft); }
+:where(.dashboard-barrier) .widget-instrument__explanation dt { font-size: 7px; font-weight: 1000; }
+:where(.dashboard-barrier) .widget-instrument__explanation dd { margin: 2px 0 0; font-size: 8px; font-weight: 750; line-height: 1.2; }
+
+@container vt-widget (max-width: 430px) {
+  :where(.dashboard-barrier) .widget-instrument__heading { grid-template-columns: 1fr; }
+  :where(.dashboard-barrier) .widget-instrument__heading span { text-align: left; max-width: none; }
+  :where(.dashboard-barrier) .widget-instrument__stages { grid-template-columns: 1fr 1fr; }
+  :where(.dashboard-barrier) .widget-instrument__stages li::after { display: none; }
+  :where(.dashboard-barrier) .widget-instrument__explanation dl { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.dashboard-barrier) .widget-instrument * { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+}

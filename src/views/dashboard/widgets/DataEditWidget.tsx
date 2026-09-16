@@ -37,6 +37,7 @@ import {
  type WidgetSelectOption as SelectOption,
 } from "../WidgetPrimitives"
 import { WidgetShell } from "../WidgetShell"
+import { InstrumentExplanation, InstrumentStages, WidgetInstrument } from "../instruments/WidgetInstrument"
 import { buildVideoAssetOptions } from "./videoAssetOptions"
 import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
 
@@ -326,6 +327,17 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
 
  return (
   <div className="widget-workspace">
+   {mode === "upload" ? (
+    <WidgetInstrument archetype="launch" label="UPLOAD LAUNCH GANTRY" summary="PREPARE, CLEAR AND PUBLISH" compact>
+     <InstrumentStages stages={[
+      { id: "details", label: "Package", detail: videoFile ? "Video loaded" : "Add video", state: videoFile ? "complete" : "active" },
+      { id: "options", label: "Configure", detail: title.trim() ? "Metadata ready" : "Needs title", state: title.trim() ? "complete" : "warning" },
+      { id: "ads", label: "Clearance", detail: noneOfTheAbove ? "Declared" : "Review ads", state: noneOfTheAbove ? "complete" : "idle" },
+      { id: "publish", label: "Launch", detail: saving ? "Publishing" : saved ? "Published" : privacyStatus, state: saved ? "complete" : saving ? "active" : "idle" },
+     ]} activeId={saving || saved ? "publish" : page} onSelect={(stage) => { if (stage !== "publish") setPage(stage as WorkspacePage) }} />
+     <InstrumentExplanation purpose="Keep every required upload decision visible as one launch sequence." process="Build the video package, configure audience options, declare ad suitability, then publish." result="A complete YouTube upload with explicit metadata, visibility and safety decisions." />
+    </WidgetInstrument>
+   ) : null}
    {mode === "manage" ? (
     <section className="video-manager-selection" aria-label="Published video selection">
      <input className="vt-input" value={videoSearch} onChange={(event) => setVideoSearch(event.target.value)} aria-label="Search published videos" placeholder="Search videos…" />
