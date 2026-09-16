@@ -5,6 +5,25 @@ this repo. Keep it short. Longer notes belong in `docs/` or per-feature READMEs.
 
 ---
 
+## Agent contracts — read before non-trivial work
+
+Full contract: `agent/contracts/` (start at `README.md`). Load `herald-out.md` before any
+task that changes `src/`, `server/` or `api/`, or that adds a file.
+
+Four rules that apply even when you do not load it:
+
+1. **`.gitignore` is deny-by-default** (`/*` at line 2). New files under `docs/`,
+   `.claude/`, `.viewtube/`, `agent/` and the repo root are **silently untracked**. Run
+   `git check-ignore -v <path>` before assuming a commit captured your work; `git add -f`
+   when it did not.
+2. **Never write task status.** `ViewTube-Task-Index.html` is the sole task authority.
+   Propose a status with evidence; the Task Authority disposes.
+3. **Separate proven from claimed.** Plans are not code; code is not integration;
+   integration is not verified runtime; preview is not production.
+4. **Check before you build.** 335 remote branches and 1,598 tasks exist. Search
+   `agent/registry/references.md`, `docs/`, `_quarantine/` and `git ls-remote` — the clone
+   is shallow, so local refs will wrongly tell you nothing exists.
+
 ## Deployment topology
 
 ```
