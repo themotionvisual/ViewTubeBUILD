@@ -622,3 +622,163 @@ UNKNOWN   · current true status of the 1,598 tasks
 ## 13.6 The one thing to do first
 
 **Export the Task Index state and commit it.** Everything else in this plan can wait a week. `savedAt: null` against 1,598 tasks held in a single browser profile is an unrecoverable-loss risk that costs five minutes to retire.
+
+---
+
+# §14 THE CONVERSATION WORKFLOW SYSTEM
+
+§5 defined the contracts and components. This section defines the **runtime**: what actually happens, in order, in every conversation — and how one conversation continues in a different application a week later.
+
+Three nested loops:
+
+- **14.1 Turn loop** — the inner cycle, every single turn.
+- **14.2 Thread loop** — the outer cycle, intent → verified outcome, spanning apps and days.
+- **14.3 Named workflows** — the nine verbs, each with required stages and an exit gate.
+
+## 14.1 The turn loop — seven steps, every turn, every application
+
+```
+┌─ 1 ORIENT ──── read thread file + ledger tail + task refs        (cheap, cached)
+│  2 INTAKE ──── raw ask → HERALD-IN brief; assign verb + tier
+│  3 RECON ───── prior-art check, cache-first                      (skippable: §14.4)
+│  4 ROUTE ───── canonical owner + smallest skill set + writer lock
+│  5 ACT ─────── do the work
+│  6 REPORT ──── emit the tier's required blocks
+└─ 7 RECORD ──── append ledger · update task refs · release lock   (UNCONDITIONAL)
+```
+
+**Steps 1 and 7 are the system.** Everything else is ordinary agent work that any competent model already does. O9 proved that the cache which is written "when it seems worth it" is empty after a year — so step 7 is not a recommendation, it is the definition of a completed turn. A turn that produced output but wrote no ledger line **did not happen**, and the next turn's step 1 will not see it.
+
+Step 1 is what makes this cheap. It reads a bounded thread file, not a transcript: typically under 2 KB against a conversation that may have cost 200 KB to produce. That is the "spend AI context once" rule applied to conversations rather than to tasks.
+
+## 14.2 The thread loop — a conversation as a durable state machine
+
+A **thread** is one intent pursued to a verified outcome. It survives across applications, sessions and days.
+
+```mermaid
+stateDiagram-v2
+    [*] --> INTENT
+    INTENT --> RECON
+    RECON --> PLAN: novel / partial
+    RECON --> [*]: EXISTS - answer from prior art
+    PLAN --> EXECUTE: G3 approval (T2 only)
+    EXECUTE --> VERIFY
+    VERIFY --> EXECUTE: evidence below PROVEN
+    VERIFY --> RECORD: G4 evidence gate passed
+    RECORD --> [*]
+    EXECUTE --> BLOCKED: conflict / missing authority
+    BLOCKED --> PLAN: decision recorded
+```
+
+This is Crown's seven-stage lifecycle with the gates made explicit and the `EXISTS` short-circuit added — the branch that stops duplicated work before it starts.
+
+### The thread file
+
+```
+.viewtube/herald/threads/<threadId>.json
+{
+  "threadId": "th-2026-09-16-brain-evidence",
+  "verb": "BUILD", "tier": "T2", "stage": "EXECUTE",
+  "taskIds": ["vt-2841", "vt-2842"],
+  "missionId": "VT-MISSION-BRAIN-evidence-tool-connection",
+  "owner": "Brain Runtime",
+  "writerLock": { "paths": ["src/services/brain/**"], "app": "claude-code", "ts": "..." },
+  "reconRef": ".viewtube/herald/recon/brain-evidence.json",
+  "openQuestions": ["does analytics-canon expose per-window grain?"],
+  "nextAction": "wire evidence refs into ToolContextPack, then focused tests",
+  "entries": ["led-0412", "led-0417", "led-0431"],
+  "lastApp": "codex", "lastTs": "2026-09-16T11:04:02Z"
+}
+```
+
+**Resuming a thread in a different application is reading this file.** Not re-reading a transcript, not re-running recon, not re-deriving the owner. That single property is what "interconnected and chronological across applications" actually means in practice.
+
+### The five gates
+
+| Gate | Blocks | Rule | Enforced by |
+|---|---|---|---|
+| **G1 Prior-art** | `RECON → PLAN` | No plan without a recon verdict | `herald-audit.mjs` |
+| **G2 Owner** | `PLAN → EXECUTE` | Canonical owner named; writer lock acquired | lock file |
+| **G3 Approval** | `PLAN → EXECUTE` | T2 requires explicit creator approval | human |
+| **G4 Evidence** | `VERIFY → RECORD` | `complete` requires PROVEN (`sourcePriority` 1–3) | `herald-audit.mjs` |
+| **G5 Record** | end of every turn | Ledger line written | turn definition |
+
+G2 makes Crown's "one writer per path" a mechanism instead of an aspiration. The lock is a file with a timestamp; a lock older than 24h is stale and any app may break it, recording that it did so. Without this, "one writer per path" is a rule nothing can enforce across four applications running concurrently.
+
+G4 is where §13.3's mapping earns its keep: `Nearly Finished` is the honest status when implementation exists but evidence sits at level 4–7, and the gate makes that non-negotiable rather than a judgement call.
+
+## 14.3 The nine named workflows
+
+Each verb fixes its own stages, tier floor, exit gate and output record. This is what makes responses predictable across applications.
+
+| Verb | Stages | Tier floor | Exit gate | Record written |
+|---|---|:--:|---|---|
+| **RECON** | ORIENT → RECON → REPORT | T1 | Dossier written with a verdict | recon dossier |
+| **AUDIT** | ORIENT → RECON → ACT(read-only) → REPORT | T1 | Every finding carries an evidence level | `VT_RECEIPT` |
+| **PLAN** | ORIENT → RECON → PLAN → REPORT | T2 | Creator approval (G3) | `VT_MISSION` + `VT_WORK_ORDER` |
+| **BUILD** | full loop | T1 | Focused tests + typecheck + build green | `VT_RECEIPT` |
+| **FIX** | ORIENT → RECON → ACT → VERIFY | T1 | Reproduced → fixed → proved, in that order | `VT_RECEIPT` + debug-log entry |
+| **VERIFY** | ORIENT → ACT → REPORT | T1 | Evidence gathered independently of the implementer | `VT_RECEIPT` |
+| **DOCUMENT** | ORIENT → ACT → REPORT | T0 | Doc committed and tracked (beware O1) | `VT_ARTIFACT_RECORD` |
+| **DECIDE** | ORIENT → RECON → REPORT | T2 | Creator decision recorded | `VT_DECISION` |
+| **RECOVER** | ORIENT → RECON → ACT → VERIFY | T2 | Rollback reference preserved before any change | `VT_RECEIPT` + `VT_DECISION` |
+
+**FIX deserves its ordering called out.** `reproduce → fix → prove` is the sequence, and the debug-log entry is mandatory — written in the format the Task Index skill already specifies:
+
+```
+tested/changed → observed result → likely cause / next step
+```
+
+That channel currently has zero entries (O9). Making it a required output of the FIX workflow, written by script rather than by browser click, is what will finally populate it.
+
+## 14.4 When to skip work — the conservation rules
+
+The workflow is only streamlined if steps can be skipped safely. Each skip is conditional and auditable:
+
+| Step | Skippable when | Never skip when |
+|---|---|---|
+| **ORIENT** | never | — |
+| **INTAKE** | Continuing a thread whose brief is unchanged | New intent, or the tier would change |
+| **RECON** | Cache fresh (<24h) **and** `origin/main` unmoved **and** topic unchanged | Verb is PLAN, DECIDE or RECOVER |
+| **ROUTE** | Thread already holds a valid, unexpired writer lock | Paths outside the existing lock |
+| **VERIFY** | T0 only | Any `src/`, `server/` or `api/` change |
+| **RECORD** | never | — |
+
+The asymmetry is deliberate: the two steps that cost almost nothing (ORIENT, RECORD) are the two that may never be skipped, because they are what make every *other* step skippable next time.
+
+## 14.5 Worked example — one thread across three applications
+
+```
+Mon  Claude Code  INTAKE  "the retention widget looks wrong on mobile"
+                  RECON   → PARTIAL: branch fix/channel-progress-mobile-controller
+                            (2026-09-14) touched this; docs/MOBILE_VISUAL_QA_MATRIX.md
+                  ROUTE   → viewtube-mobile-widget-system; lock src/components/widgets/**
+                  REPORT  T1: prior art found, proposes reusing the height-bucket contract
+                  RECORD  led-0412 · thread th-2026-09-16-retention-mobile · stage RECON
+
+Tue  Codex       ORIENT  reads thread file — no re-recon, no re-derivation  (~1.8 KB)
+                  ACT     implements against the existing contract
+                  REPORT  T1, evidence CLAIMED (focused tests green, no device QA)
+                  RECORD  led-0417 · stage EXECUTE · nextAction "mobile browser QA"
+
+Thu  Claude Code  ORIENT  reads thread file
+                  ACT     device QA → passes
+                  VERIFY  G4: evidence now PROVEN (runtime)
+                  RECORD  led-0431 · VT_RECEIPT · proposes vt-2841 → Finished
+                          (Task Authority disposes — Herald never writes status)
+```
+
+Tuesday's session spent roughly 2 KB to inherit Monday's entire context. Without the thread file it would have re-run recon across 335 branches, or — far more likely, and what happens today — skipped recon and rebuilt something that already existed.
+
+## 14.6 Implementation impact
+
+The workflow engine lands in **H2**, alongside RECON and LEDGER:
+
+| File | Purpose |
+|---|---|
+| `agent/contracts/herald-workflow.md` | This section, as distributed contract text |
+| `scripts/herald-thread.mjs` | `open · read · advance · lock · unlock · close` |
+| `.viewtube/herald/threads/` | Thread state files |
+| `scripts/herald-audit.mjs` | Gate enforcement (G1, G4, G5) — extends the H3 auditor |
+
+Net new code is modest: thread files are JSON, locks are files with timestamps, gates are assertions. The design work — which stages, which gates, which skips — is what this section contains, and it is the part that would otherwise have been improvised differently in each application.
