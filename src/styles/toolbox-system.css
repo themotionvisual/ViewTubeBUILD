@@ -26,11 +26,11 @@
   border-bottom: 0 !important;
 }
 
-/* Open-shell divider begins after the square icon rail: never underline the icon box. */
+/* Expanded shell divider spans the full header, including beneath the square icon rail. */
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header::after {
   content: "";
   position: absolute;
-  left: 56px;
+  left: 0;
   right: 0;
   bottom: 0;
   height: 5px;
@@ -102,10 +102,11 @@
   border-bottom: 0 !important;
 }
 
+/* SubToolbox uses the same full-width expanded-header divider law at its own stroke width. */
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header::after {
   content: "";
   position: absolute;
-  left: 44px;
+  left: 0;
   right: 0;
   bottom: 0;
   height: 4px;
