@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { WidgetShell } from "../WidgetShell"
+import { InstrumentExplanation, InstrumentStages, WidgetInstrument } from "../instruments/WidgetInstrument"
 import {
  WidgetBadge,
  WidgetFooter,
@@ -285,6 +286,16 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
        {turns.length ? <WidgetBadge tone="green">{turns.length} turns</WidgetBadge> : null}
        {controls.externalActionsRequireApproval ? <WidgetBadge tone="royal">Approval gated</WidgetBadge> : null}
       </div>
+
+      <WidgetInstrument archetype="ooda" label="BRAIN OODA CORE" summary="EVIDENCE INTO A GOVERNED NEXT ACTION" compact>
+       <InstrumentStages stages={[
+        { id: "observe", label: "Observe", detail: `${evidence.length} evidence`, state: evidence.length ? "complete" : "warning" },
+        { id: "orient", label: "Orient", detail: portfolio ? "Patterns ready" : "Waiting", state: portfolio ? "complete" : "idle" },
+        { id: "decide", label: "Decide", detail: answer?.response ? "Insight ready" : "Ask Brain", state: answer?.response ? "complete" : "active" },
+        { id: "act", label: "Act", detail: controls.externalActionsRequireApproval ? "Approval gated" : "User controlled", state: controls.enabled ? "active" : "blocked" },
+       ]} activeId={answer?.response ? "act" : "decide"} />
+       <InstrumentExplanation purpose="Expose how the Brain turns channel evidence into advice." process="Observe evidence, orient around patterns, decide on an insight, then hand an approved action back to you." result="A traceable recommendation whose evidence and permissions remain visible." />
+      </WidgetInstrument>
 
       <div className="brain-hub-nav" role="navigation" aria-label="Brain chat views">
        {CHAT_PAGES.map((page) => (

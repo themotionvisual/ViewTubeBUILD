@@ -20,6 +20,7 @@ import {
   type ThumbnailTitleLayout,
 } from "./commentResponderUtils"
 import { useCommentResponderController, useCreatorEngagementContext } from "../../../features/creator-engagement"
+import { InstrumentExplanation, InstrumentStages, WidgetInstrument } from "../instruments/WidgetInstrument"
 
 const htmlDecode = (input: string) => {
   const doc = new DOMParser().parseFromString(input, "text/html")
@@ -360,6 +361,16 @@ export const CommentReplyWidget = ({
             {error}
           </div>
         )}
+
+        <WidgetInstrument archetype="conversation" label="CONVERSATION PATH" summary="COMMENT TO MEANINGFUL REPLY" compact>
+          <InstrumentStages stages={[
+            { id: "listen", label: "Listen", detail: currentThread ? "Comment selected" : "Waiting", state: currentThread ? "complete" : "active" },
+            { id: "draft", label: "Compose", detail: activeReplyText.trim() ? "Reply ready" : "Draft reply", state: activeReplyText.trim() ? "complete" : currentThread ? "active" : "idle" },
+            { id: "connect", label: "Connect", detail: "Optional video", state: "idle" },
+            { id: "reply", label: "Respond", detail: canPostReply ? "Ready to post" : "Reconnect", state: canPostReply && activeReplyText.trim() ? "active" : "blocked" },
+          ]} activeId={activeReplyText.trim() ? "reply" : currentThread ? "draft" : "listen"} />
+          <InstrumentExplanation purpose="Turn audience comments into visible, intentional engagement." process="Read the selected comment, compose or refine a reply, optionally connect a relevant video, then post." result="A useful conversation branch that can strengthen the viewer relationship and session depth." />
+        </WidgetInstrument>
 
         <WidgetScrollArea ariaLabel="Comment responder conversation" edge="inset" className="comment-responder-scroll-area" enabled={tab === "history"}>
           {loading && allThreads.length === 0 ? (
