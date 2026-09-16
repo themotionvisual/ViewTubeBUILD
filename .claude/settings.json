@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/guard-gitignore.mjs",
+            "timeout": 10,
+            "statusMessage": "Checking gitignore…"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/ledger-append.mjs",
+            "timeout": 15,
+            "statusMessage": "Writing ledger line…"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git ls-remote:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git for-each-ref:*)",
+      "Bash(git cherry:*)",
+      "Bash(npm run check:*)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run test:focused)",
+      "Bash(node scripts/herald-sync.mjs:*)"
+    ]
+  }
+}

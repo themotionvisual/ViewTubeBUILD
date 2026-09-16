@@ -66,13 +66,13 @@ than rediscovering it.
 
 | Surface | Where | Ask |
 |---|---|---|
-| **Skills** | `.claude/skills/` (19), `skills-lock.json` (60 external), built-ins | does a skill already own this? |
+| **Skills** | `agent/skills/` (20 — source), `skills-lock.json` (60 external), built-ins | does a skill already own this? |
 | **Sub-agents** | `Explore`, `Plan`, `general-purpose`, `claude-code-guide` | should this fan out instead of running inline? |
-| **Slash commands** | `.claude/commands/` | is this a repeatable ritual worth a command? |
-| **Hooks** | `.claude/settings.json` | should this be enforced rather than remembered? |
+| **Slash commands** | `.claude/commands/` (`/vt`) | is this a repeatable ritual worth a command? |
+| **Hooks** | `.claude/settings.json` (gitignore guard, ledger) | should this be enforced rather than remembered? |
 | **MCP servers** | github · Neon · Vercel · Replit · Google Drive · vidIQ · Claude Code Remote · Claude Docs | is there a tool for this already connected? |
-| **Scripts** | `scripts/` (28) | has someone automated this? |
-| **npm tasks** | `package.json` (38) | ⚠️ two entries point at missing files — verify before trusting |
+| **Scripts** | `scripts/` (29) | has someone automated this? |
+| **npm tasks** | `package.json` (38) | `agent:sync` distributes the contract |
 | **CI workflows** | `.github/workflows/` (4) | does a gate already cover this? |
 
 Name what you will reuse. If you are writing something new, say in one line why nothing

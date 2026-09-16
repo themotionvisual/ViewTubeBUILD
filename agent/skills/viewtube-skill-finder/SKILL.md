@@ -1,0 +1,12 @@
+---
+name: viewtube-skill-finder
+description: Find the smallest existing ViewTube skill set that can own a task before new skills are created.
+---
+
+# VIEWTUBE SKILL FINDER
+
+1. Search `.claude/skills`, current architecture docs, and the target code owners.
+2. Rank candidate skills by trigger match, canonical ownership, evidence access, and verification fit.
+3. Prefer one lead skill plus one reviewer; avoid loading every skill.
+4. If no current skill fits, return a gap statement with the exact missing responsibility and recommend a new skill boundary.
+5. Output: lead skill, supporting skill(s), evidence to read, files/owners, handoff path, and why alternatives were rejected.

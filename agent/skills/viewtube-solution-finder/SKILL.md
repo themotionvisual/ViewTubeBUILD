@@ -1,0 +1,18 @@
+---
+name: viewtube-solution-finder
+description: Find the simplest source-grounded solution to a ViewTube problem before adding a new subsystem or abstraction.
+---
+
+# VIEWTUBE SOLUTION FINDER
+
+Use for architecture, debugging and consolidation questions where several implementation paths are plausible.
+
+## Method
+1. Define the observable problem and success condition.
+2. Inspect current main owners, recent migration references, existing skills and tests.
+3. Generate at least three solution classes: reuse/repair, consolidate/migrate, and new implementation.
+4. Compare them by scope, reversibility, ownership fit, migration cost, runtime risk and verification cost.
+5. Prefer the smallest solution that satisfies acceptance without duplicating ownership.
+6. Return a recommended path, rejected alternatives, exact owners/files to inspect, and the verification plan.
+
+Do not optimize for novelty. Optimize for ViewTube coherence and preserved working behavior.

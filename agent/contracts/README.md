@@ -20,17 +20,20 @@ Edit these files. Everything else is generated.
 
 ## Distribution
 
+Sources live under `agent/`. Everything below is **generated — never edit a target**.
+
 ```
-agent/contracts/  ──  node scripts/herald-sync.mjs  ──▶  AGENTS.md
-                                                         .claude/skills/
-                                                         .codex/skills/
-                                                         .cursor/rules/
-                                                         GEMINI.md
-                                                         .github/copilot-instructions.md
+agent/AGENTS.md   ──┐                        AGENTS.md
+agent/skills/ (20)  ├─ npm run agent:sync ─▶ GEMINI.md
+agent/targets.json ─┘                        .github/copilot-instructions.md
+                                             .cursor/rules/viewtube.mdc
+                                             .claude/skills/**
+                                             .codex/skills/**
 ```
 
-`herald-sync.mjs --check` fails on drift. It is not built yet (phase H1) — until it is,
-the generated copies will drift, exactly as `.codex/` already has (103 and 115 diff lines).
+`npm run check:agent-sync` fails on drift and runs in CI under `source-governance`.
+It also refuses any `SKILL.md` without valid `name`/`description` frontmatter, or whose
+`name` does not match its directory — the defect that kept one skill unloadable.
 
 ## Rationale
 
@@ -39,7 +42,7 @@ Full plan, findings and phasing:
 
 ## Note on tracking
 
-`.gitignore` is deny-by-default (`/*` at line 2). These files required `git add -f`.
-Until phase H0 adds `!/agent/` and `!/agent/**` to the allow-list, **every new file here
-will be silently untracked**. Verify with `git check-ignore -v <path>` before assuming a
-commit captured your work.
+`.gitignore` is deny-by-default (`/*` at line 2), but `agent/`, `AGENTS.md`, `.viewtube/`,
+`docs/herald/` and the four `.claude/` agent surfaces are now allow-listed, so files here
+track normally. Elsewhere the trap still applies: a `PostToolUse` hook warns when a written
+path is ignored, and `git check-ignore -v <path>` is the manual check.

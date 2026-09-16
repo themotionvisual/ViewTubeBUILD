@@ -1,0 +1,78 @@
+# AGENTS.md — ViewTube
+
+Cross-tool instructions. Codex, Cursor, Gemini, Copilot and any agent following the
+[AGENTS.md](https://agents.md/) convention read this file automatically.
+
+Repository: `themotionvisual/ViewTubeBUILD`. `main` is production and auto-deploys to
+viewtube.live. Never commit to `main`; branch, push, open a PR.
+
+## Before non-trivial work
+
+Read `agent/contracts/README.md`, then `agent/contracts/herald-out.md`. Those files are
+canonical; this one is a summary.
+
+## Respond in tiers
+
+| Tier | When | Include |
+|---|---|---|
+| **T0** | no `src/` change, ≤1 file, one-command revert | readback · plan · status |
+| **T1** | *default* — any `src/`, `server/`, `api/` change, or any new file | + prior-art · owner · obstacles · what to reuse · references · what you did not verify |
+| **T2** | ≥2 owners · new subsystem · schema/contract change · auth, billing, publishing, OAuth | + simpler alternative considered · external recommendations · thread record |
+
+## Always
+
+- **Restate the ask** before working: intent, assumptions, non-goals.
+- **Check whether it already exists.** 335 remote branches, 1,598 tasks, 79 docs, a
+  `_quarantine/` of prior attempts. Start at `agent/registry/references.md`.
+- **Name the canonical owner** of every path you touch.
+  `docs/migration/reference/VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json` lists 28 systems.
+- **Separate proven from claimed.** State the command that proved each claim, what you
+  believe but did not run, and what stays unknown.
+- **Show UI changes.** Capture the built app at 1440×1000, and 390×844 for anything
+  touching mobile geometry. A UI change with no capture is `partial`, never `complete`.
+- **Recommend on file.** Append capability recommendations to
+  `agent/registry/candidates.md` — read it first so a listed candidate is advanced rather
+  than raised again.
+
+## Never
+
+- **Never write task status.** `ViewTube-Task-Index.html` is the sole authority. Propose;
+  the Task Authority disposes. Do not create a second ledger.
+- **Never assume a commit captured your work.** `.gitignore` is deny-by-default (`/*` at
+  line 2). New files under `docs/`, `.claude/`, `.viewtube/`, `agent/` and the repo root are
+  silently untracked. Verify with `git check-ignore -v <path>`, then `git add -f`.
+- **Never read local refs for branch history.** Agent clones are shallow — only `main` and
+  the working branch exist. Use `git ls-remote --heads origin`.
+- **Never treat a prototype or demo as runtime evidence.** A matching filename proves
+  nothing. Classify references: canonical · prototype · demo · recovery · quarantined ·
+  superseded.
+- **Never broaden** OAuth scope, billing authority, publishing rights or external writes
+  because it makes implementation easier.
+- **Never have two writers on one path** at the same time.
+
+## Verify
+
+```bash
+npm run typecheck
+npm run test:focused
+npm run build
+npm run check:architecture
+```
+
+`npm run lint:runtime` reports ~1,800 pre-existing errors on `main`. That is inherited debt,
+not your regression — isolate it, do not chase it.
+
+Two `package.json` entries reference files that do not exist
+(`generate:oracle-skill-pack`, `generate:analytics-sync-backlog`). Do not treat
+`package.json` as a capability inventory without checking.
+
+## Where things are
+
+| Need | Path |
+|---|---|
+| Response contract | `agent/contracts/herald-out.md` |
+| Conversation workflow, gates | `agent/contracts/herald-workflow.md` |
+| What tools exist | `agent/registry/capabilities.md` |
+| What docs and artifacts exist | `agent/registry/references.md` |
+| Architecture and constitution | `docs/architecture/` |
+| Rationale for all of the above | `docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md` |

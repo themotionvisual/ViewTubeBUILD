@@ -15,6 +15,15 @@
 !/tests/
 !/.github/
 !/governance/
+!/agent/
+!/agent/**
+!/.claude/
+!/.viewtube/
+!/.viewtube/**
+!/.codex/
+!/.codex/**
+!/skills/
+!/skills/**
 # Repo-authored docs (migration guides, phase plans). Only /docs/migration/
 # is tracked; other subtrees under /docs/ are user-download reference
 # material and remain ignored by the docs/* rule further down.
@@ -35,6 +44,7 @@
 !/.env.billing.example
 !/.vercelignore
 !/skills-lock.json
+!/AGENTS.md
 
 # -------------------------------------------------------------------
 # IGNORE-LIST: Standard ignores within the allowed directories
@@ -62,6 +72,9 @@ docs/*
 # Repo-authored migration guides — see docs/migration/README.md.
 !docs/migration/
 !docs/migration/**
+# Herald agent-system docs (plan, task-index sidecar, corpus index).
+!docs/herald/
+!docs/herald/**
 _quarantine/
 _migration_hub/
 sources/
@@ -81,7 +94,16 @@ src/remove_subtoolbox*.py
 .account/
 .billing/
 .agents/
-.claude/
+.claude/*
+!.claude/skills/
+!.claude/skills/**
+!.claude/settings.json
+!.claude/commands/
+!.claude/commands/**
+!.claude/agents/
+!.claude/agents/**
+!.claude/hooks/
+!.claude/hooks/**
 .codex_versions/
 .worktrees/
 .aider.tags.cache.v4/

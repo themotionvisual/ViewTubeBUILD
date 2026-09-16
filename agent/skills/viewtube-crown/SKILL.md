@@ -1,0 +1,29 @@
+---
+name: viewtube-crown
+description: Coordinate ViewTube product intent and engineering execution across the Kingdom KING and Republic EMPEROR systems. Use for cross-domain missions that span plans/artifacts and production code; do not use for isolated copy edits.
+---
+
+# VIEWTUBE CROWN · Two sovereigns, one constitution
+
+The creator is sovereign. KING governs desired state; EMPEROR governs executable state.
+
+## Authority split
+- **KINGDOM / KING**: creator intent, mission, product architecture, UX meaning, plans, artifacts, acceptance criteria, tradeoffs.
+- **REPUBLIC / EMPEROR**: repository inspection, work orders, implementation, tests, services, deployment, runtime receipts.
+- **Shared bridge**: Grand Artifact Compiler + Crown protocol records.
+- **Task/artifact reconciliation**: `viewtube-task-artifact-bridge` reads canonical Task Index/artifact sources but does not change their authority.
+
+## Required sequence
+1. Read `docs/architecture/VIEWTUBE_CROWN_MAIN_AUDIT_2026-09-11.md`, `VIEWTUBE_CROWN_INTEGRATION_SYSTEM.md`, and the current phase document.
+2. Discover current canonical owners in the target checkout before choosing a writer.
+3. Use `viewtube-skill-finder` before inventing another specialist; prefer current repo skills and owners.
+4. Create a `VT_MISSION` record: objective, non-goals, owners, evidence, authorization, acceptance, rollback.
+5. Use `viewtube-docs-grill` and `viewtube-solution-finder` when the plan depends on historical docs, recovery material or competing approaches.
+6. Route product/plan work to KING-side roles and executable work to EMPEROR-side roles.
+7. Never assign two writers to the same path. Use reviewers across boundaries instead.
+8. Record explicit `VT_DECISION`, `VT_HANDOFF` or `VT_CONFLICT` records when a boundary choice matters.
+9. Require `VT_RECEIPT` evidence for changed capability; code existence is not completion.
+10. Use `viewtube-task-artifact-bridge` to reconcile verified outcomes into task/artifact references in read-only mode. A separate Task Authority action is required for any canonical status mutation.
+
+## Completion
+Return `complete`, `partial`, or `blocked` with changed paths, evidence, tests, runtime/deploy state, rollback, unresolved decisions, task/artifact links, and next action.

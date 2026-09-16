@@ -3,22 +3,23 @@
 Read this before proposing anything new. Verified 2026-09-16 against this checkout.
 Regenerate with `node scripts/herald-capabilities.mjs` once it exists (phase H1).
 
-## Surface coverage — 3 of 8 in use
+## Surface coverage — 7 of 8 in use
 
 | Surface | State | Notes |
 |---|---|---|
-| Skills | ✅ **in use** | 19 repo · 60 external · built-ins |
+| Skills | ✅ **in use** | **20** sourced from `agent/skills/`, generated into `.claude/` and `.codex/` · 60 external · built-ins |
 | MCP servers | ✅ **in use** | 8 connected |
-| CI workflows | ✅ **in use** | 4 |
-| Scripts | ⚠️ **partial** | 28 present; 2 npm entries point at missing files |
-| Sub-agents | ❌ **unused** | 6 types available, 0 project-defined |
-| Slash commands | ❌ **unused** | `.claude/commands/` does not exist |
-| Hooks | ❌ **unused** | `.claude/settings.json` does not exist |
-| Permissions | ❌ **unused** | no allowlist — every tool call prompts |
+| CI workflows | ✅ **in use** | 4 · `check:agent-sync` gates contract drift |
+| Scripts | ✅ **in use** | 29 · no dead npm references |
+| Hooks | ✅ **in use** | `PostToolUse` gitignore guard · `Stop` ledger append |
+| Slash commands | ✅ **in use** | `/vt` — intake + recon before answering |
+| Permissions | ✅ **in use** | read-only allowlist in `.claude/settings.json` |
+| Sub-agents | ❌ **unused** | 6 types available, 0 project-defined — `Explore` is the natural RECON executor |
 
-`.claude/` currently contains only `skills/`. Five of the eight surfaces are untouched, and
-three of them are exactly the ones that would make the Herald contract self-enforcing
-rather than self-reported.
+`.claude/` now holds `skills/`, `settings.json`, `hooks/` and `commands/`. The two hooks are
+what make the contract self-enforcing rather than self-reported: the guard catches the
+deny-by-default `.gitignore` at write time, and the `Stop` hook writes the ledger line
+without anyone remembering to.
 
 ## Skills
 
@@ -31,8 +32,12 @@ rather than self-reported.
 | Discipline | `viewtube-skill-finder` · `viewtube-solution-finder` · `viewtube-docs-grill` · `viewtube-skill-authoring` · `viewtube-verification-chancellor` |
 | Domain | `viewtube-ai-system-governor` · `viewtube-widget-dashboard` · `viewtube-mobile-widget-system` · `viewtube-toolbox-builder` · `youtube-api-expert` |
 
-**Orphaned** — `skills/viewtube-youtube-auth-api-stabilization/` is loaded by nothing.
-`skills/viewtube-toolbox-builder/` duplicates the `.claude/` copy byte-for-byte.
+**Source of truth is `agent/skills/` (20).** `.claude/skills/` and `.codex/skills/` are
+generated — never edit them; edit the source and run `npm run agent:sync`.
+`viewtube-youtube-auth-api-stabilization` was loaded by nothing because it had **no YAML
+frontmatter**; it now has valid frontmatter and is live. The byte-identical duplicate under
+`skills/` is gone. `herald-sync` refuses to generate from a SKILL.md whose frontmatter is
+missing, or whose `name` does not match its directory.
 
 **External (60)** — `skills-lock.json`, hash-pinned, from 12 third-party GitHub accounts:
 `mattpocock/skills` (29) · `ZeroPointRepo/youtube-skills` (12) ·
@@ -66,9 +71,8 @@ Release: `release-preflight` · `release-status` · `release-smoke` · `release-
 Audit: `audit-quick-wins` · `audit-studio-ui-drift` · `dashboard-baseline-report` ·
 `check-css-parse` · `privacy-audit-src.sh`
 
-⚠️ **Dead npm entries** — `generate:oracle-skill-pack` and `generate:analytics-sync-backlog`
-both reference files that do not exist. Do not treat `package.json` as a capability map
-without checking.
+Both dead entries (`generate:oracle-skill-pack`, `generate:analytics-sync-backlog`) have
+been removed. `npm run agent:sync` / `check:agent-sync` distribute and gate the contract.
 
 ## Visual evidence — Playwright, already wired
 
@@ -97,11 +101,11 @@ production-build · local-smoke) · `phone-branch-preview.yml` ·
 ⚠️ `static-quality` fails on ~1,800 pre-existing lint errors; admin-bypass is the norm.
 Any new gate must be green on `main` at merge or it inherits that irrelevance.
 
-## Highest-value gaps
+## Remaining gaps
 
-1. **A `Stop` hook** appending the ledger line. This is the fix for the root cause of the
-   empty cache: it makes turn-loop step 7 mechanical instead of remembered. Use the
-   `update-config` skill to add it.
-2. **A `/vt` slash command** running intake + recon before an answer is drafted.
-3. **A permission allowlist** in `.claude/settings.json` — use `fewer-permission-prompts`.
-4. **A `viewtube-herald-recon` sub-agent** wrapping `Explore` over the branch corpus.
+1. **A `viewtube-herald-recon` sub-agent** wrapping `Explore` over the 335-branch corpus (H2).
+2. **`scripts/herald-shot.mjs`** *(not built)* — on-demand capture of an arbitrary route for the VISUAL
+   block; `capture-phase5-built-ui.mjs` has a fixed six-target list.
+3. **Corpus discovery** (`herald-scan` / `herald-find`) for the local file corpus — plan §15.
+4. **Thread files and gate enforcement** (`herald-thread`, `herald-audit`) — plan §14.6.
+5. **An audit of the 60 external skills** in `skills-lock.json`; they execute as instructions.

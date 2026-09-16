@@ -96,8 +96,8 @@ Hundreds of standalone HTML files, plans and audits live in local folders. They 
 catalogued by hand and never will be: `.viewtube/herald/index/` holds a derived index built
 by `herald-scan.mjs`, queried with `herald-find` (design: plan §15, phase H2.5).
 
-Configure roots once in `agent/registry/corpus-roots.json` (template:
-`corpus-roots.example.json`). Classification is derived from path and filename by
+Configure roots once by copying `corpus-roots.example.json` to
+`agent/registry/corpus-roots.json` — **the copy does not exist yet**; only the template does. Classification is derived from path and filename by
 `classifyLane()`, reused from `scripts/reorganize-html-docs.mjs`. Relatedness comes from
 `vt-####` task ids and symbol references, not embeddings.
 

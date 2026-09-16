@@ -24,7 +24,9 @@ Skills           on demand      — the full contract, loaded when relevant
 Slash commands   on request     — rituals the user invokes deliberately
 ```
 
-**Current state (2026-09-16):** 2 and 3 are live. 1, 4 and 5 are not built.
+**Current state (2026-09-16):** 1, 2, 3 and 5 are live — hooks (gitignore guard + ledger
+append), `CLAUDE.md`, `AGENTS.md` and `/vt`. Skills (4) load the contract on demand. Only
+project sub-agents remain unbuilt.
 
 ## What belongs where
 
@@ -72,4 +74,5 @@ Three reasons this repo already demonstrates:
 3. **Self-reported compliance decays.** The contract holds because the model chose to follow
    it. Hooks are the only mechanism that removes the choice.
 
-Mechanisms 2 and 3 tell an agent the system exists. Only mechanism 1 makes it true.
+Mechanisms 2 and 3 tell an agent the system exists. Mechanism 1 makes it true — and it is
+now in place for the two rules that were most often forgotten.

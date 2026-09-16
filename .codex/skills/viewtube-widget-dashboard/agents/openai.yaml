@@ -1,5 +1,0 @@
-interface:
-  display_name: "ViewTube Widget Dashboard"
-  short_description: "Build and optimize ViewTube dashboard widgets"
-  brand_color: "#16D1E8"
-  default_prompt: "Use $viewtube-widget-dashboard to audit or build a ViewTube widget with the canonical shell, primitives, responsive grid, data states, and performance checks."
