@@ -252,7 +252,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           onClick={isCollapsible ? setOpen : undefined}
           style={{
             ...headerStyle,
-            minHeight: `${headerHeight}px`,
+            minHeight: `var(--vt-toolbox-header-height, ${headerHeight}px)`,
             borderBottom: `var(--vt-toolbox-stroke, ${stroke}px) solid black`,
           }}
         >
@@ -262,7 +262,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               style={{
                 ...iconStyle,
                 height: '100%',
-                width: `${headerHeight}px`,
+                width: `var(--vt-toolbox-header-height, ${headerHeight}px)`,
                 borderRight: `var(--vt-toolbox-stroke, ${stroke}px) solid black`
               }}
             >
@@ -273,7 +273,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               {variant === 'accordion' ? (
                 <h3 className="text-[20px] font-[900] uppercase tracking-tighter leading-none mt-0.5">{title}</h3>
               ) : (
-                <h1 className="vt-toolbox-title max-w-full text-[26px] font-[1000] uppercase leading-[1.04] mt-1">{title}</h1>
+                <h1 className="vt-toolbox-title min-w-0 max-w-full font-[1000] uppercase leading-[1.04] text-[length:var(--vt-toolbox-title-size,26px)]">{title}</h1>
               )}
             </div>
           </div>
