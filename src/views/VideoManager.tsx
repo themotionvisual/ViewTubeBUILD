@@ -27,7 +27,6 @@ import { StandardButton } from "../components/NativeUIKit"
 import type { TagSuggestion } from "../services/gemini"
 import {
  X,
- Loader2,
  Plus,
  Tag,
  FileVideo,
@@ -238,6 +237,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
      ...(videoDetails ?? {}),
     } as VideoSnippet & Partial<VideoDetails>)
   : null
+ const catalogLoading = connected && videoListLoadState === "loading" && videos.length === 0 && !selectedVideo
 
  useEffect(() => {
   const channelId = auth.session.channel?.id || ""
@@ -665,17 +665,24 @@ const VideoManager: React.FC<VideoManagerProps> = ({
 
     {connected && videoListLoadState === "idle" && !hasLoadedInitialData ? (
      <div className="h-[500px] flex flex-col items-center justify-center gap-5 font-black uppercase text-3xl tracking-tighter text-black/30"><Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />Ready To Load Channel Catalog<button onClick={() => void loadInitialData(true)} disabled={loading} className="bg-[#CCFF00] text-black px-8 py-4 rounded-xl border-[4px] border-black shadow-[6px_6px_0px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-sm">{loading ? "Loading..." : "Load Channel Catalog"}</button></div>
-    ) : connected && videoListLoadState === "loading" && videos.length === 0 && !selectedVideo ? (
-     <div className="h-[500px] flex flex-col items-center justify-center font-black uppercase text-2xl text-black/20 animate-pulse"><Loader2 size={48} className="mb-4 animate-spin" />Connecting Video Catalog...</div>
     ) : connected && videoListLoadState === "error" && videos.length === 0 ? (
      <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]"><div className="w-24 h-24 bg-[#ffb158] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black]"><AlertCircle size={48} className="text-black" /></div><div className="space-y-4 max-w-lg"><h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">Sync Failed</h2><p className="text-black/60 font-bold uppercase text-xs tracking-widest leading-relaxed">{error || "We couldn't load your YouTube assets. Try reload, or reconnect your channel in Settings."}</p><button onClick={() => void loadInitialData(true)} disabled={loading} className="inline-block w-full bg-[#CCFF00] border-[4px] border-black rounded-xl p-5 font-black uppercase text-xl text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all mt-4 disabled:opacity-50">{loading ? "Retrying..." : "Retry Catalog Load"}</button></div></div>
     ) : connected && videoListLoadState === "empty" ? (
      <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]"><div className="w-24 h-24 bg-[#FF3399] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black] -rotate-12"><FileVideo size={48} className="text-[#CCFF00]" /></div><div className="space-y-4 max-w-lg"><h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">Zero Assets Detected</h2><p className="text-black/50 font-bold uppercase text-xs tracking-widest leading-relaxed">Your YouTube channel is connected, but we couldn't detect any videos. Upload your first video to YouTube to unlock the full power of Creator OS Pro.</p><a href="https://studio.youtube.com" target="_blank" rel="noopener noreferrer" className="inline-block w-full bg-[#CCFF00] border-[4px] border-black rounded-xl p-5 font-black uppercase text-xl text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all mt-4">Open YouTube Studio</a><button onClick={() => void loadInitialData(true)} disabled={loading} className="inline-block w-full bg-white border-[4px] border-black rounded-xl p-4 font-black uppercase text-sm text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50">{loading ? "Reloading..." : "Reload Assets"}</button></div></div>
-    ) : (selectedVideo || !connected) ? (
+    ) : (selectedVideo || !connected || catalogLoading) ? (
      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="relative z-20 space-y-2">
        <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">Choose Video</label>
-       {connected ? (
+       {catalogLoading ? (
+        <SubToolboxSplitButton
+         icon={<FileVideo size={20} strokeWidth={3} />}
+         railColor={chooseVideoPalette.icon}
+         labelColor={chooseVideoPalette.header}
+         disabled
+        >
+         LOADING YOUR YOUTUBE VIDEO CATALOG…
+        </SubToolboxSplitButton>
+       ) : connected ? (
         <SubToolboxSplitDropdown
          value={selectedVideoId || ""}
          options={selectorOptions}
@@ -701,7 +708,8 @@ const VideoManager: React.FC<VideoManagerProps> = ({
          aria-label="Search videos"
          value={videoSearchQuery}
          onChange={(event) => setVideoSearchQuery(event.target.value)}
-         placeholder="SEARCH VIDEOS..."
+         placeholder={catalogLoading ? "LOADING VIDEOS..." : "SEARCH VIDEOS..."}
+         disabled={catalogLoading}
         />
        )}
       </div>
@@ -709,13 +717,13 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
        <SubToolbox title="Video Details" icon={<Settings size={20} strokeWidth={3} />} collapsible isOpenInitial={true} shellClassName="h-full" contentClassName="h-full">
         <SubToolboxStack>
-         <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="video-manager-title">Title</SubToolboxFieldLabel>}><SubToolboxInput id="video-manager-title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder={connected ? "TITLE..." : "CONNECT CHANNEL TO LOAD TITLE"} disabled={!connected} /></SubToolboxSection>
+         <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="video-manager-title">Title</SubToolboxFieldLabel>}><SubToolboxInput id="video-manager-title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder={!connected ? "CONNECT CHANNEL TO LOAD TITLE" : catalogLoading ? "LOADING VIDEO TITLE..." : "TITLE..."} disabled={!connected || !selectedVideo} /></SubToolboxSection>
          <SubToolboxSection label="Video Stats"><SubToolboxGrid minItemWidth="compact">{kpiCards.map((card) => <SubToolboxMetric key={card.key} label={card.label} value={card.value} accentColor={card.accentColor} />)}</SubToolboxGrid></SubToolboxSection>
          <SubToolboxSection label="Publishing Controls">
           <SubToolboxGrid minItemWidth="compact">
            <SubToolboxDropdownTopTitleControl label="PRIVACY" value={editPrivacy} options={[{ value: "public", label: "public" }, { value: "unlisted", label: "unlisted" }, { value: "private", label: "private" }]} onChange={setEditPrivacy} tone="green" borderWidth={3} />
            <SubToolboxDropdownTopTitleControl label="CATEGORY" value={selectedCategoryLabel} options={categoryOptions.map((option) => ({ value: option.value, label: option.label }))} onChange={setEditCategoryId} tone="green" borderWidth={3} />
-           <SubToolboxDropdownTopTitleControl label="PLAYLISTS" value={!connected ? "CONNECT CHANNEL" : selectedPlaylistIds.length === 0 ? "NONE SELECTED" : `${selectedPlaylistIds.length} LINKED`} options={userPlaylists.map((playlist) => ({ value: playlist.id, label: playlist.title }))} onChange={togglePlaylist} multiSelect selectedValues={selectedPlaylistIds} tone="green" borderWidth={3} />
+           <SubToolboxDropdownTopTitleControl label="PLAYLISTS" value={!connected ? "CONNECT CHANNEL" : catalogLoading ? "LOADING..." : selectedPlaylistIds.length === 0 ? "NONE SELECTED" : `${selectedPlaylistIds.length} LINKED`} options={userPlaylists.map((playlist) => ({ value: playlist.id, label: playlist.title }))} onChange={togglePlaylist} multiSelect selectedValues={selectedPlaylistIds} tone="green" borderWidth={3} />
           </SubToolboxGrid>
          </SubToolboxSection>
         </SubToolboxStack>
@@ -723,12 +731,12 @@ const VideoManager: React.FC<VideoManagerProps> = ({
 
        <SubToolbox title="Thumbnail" icon={<ImageIcon size={20} strokeWidth={3} />} collapsible isOpenInitial={true} shellClassName="h-full" contentClassName="h-full">
         <SubToolboxStack className="h-full">
-         <div className="flex items-center justify-between gap-3 px-1"><span className="text-[10px] font-black uppercase tracking-[0.12em] text-black/50 ml-auto">{connected ? "Drag + Drop to Replace" : "Connect Channel to Load Thumbnail"}</span></div>
-         <SubToolboxSurface className={`relative flex min-h-[220px] flex-1 flex-col items-center justify-center overflow-hidden !p-3 transition-colors ${isDraggingThumbnail ? "!bg-[#FF83EA]/10" : "!bg-gray-50"}`} onDragOver={(e) => { if (!connected) return; e.preventDefault(); setIsDraggingThumbnail(true) }} onDragLeave={() => setIsDraggingThumbnail(false)} onDrop={(e) => { if (!connected) return; e.preventDefault(); setIsDraggingThumbnail(false); if (e.dataTransfer.files[0]) handleThumbnailChange(e.dataTransfer.files[0]) }}>
+         <div className="flex items-center justify-between gap-3 px-1"><span className="text-[10px] font-black uppercase tracking-[0.12em] text-black/50 ml-auto">{!connected ? "Connect Channel to Load Thumbnail" : catalogLoading ? "Loading Thumbnail" : "Drag + Drop to Replace"}</span></div>
+         <SubToolboxSurface className={`relative flex min-h-[220px] flex-1 flex-col items-center justify-center overflow-hidden !p-3 transition-colors ${isDraggingThumbnail ? "!bg-[#FF83EA]/10" : "!bg-gray-50"}`} onDragOver={(e) => { if (!connected || !selectedVideo) return; e.preventDefault(); setIsDraggingThumbnail(true) }} onDragLeave={() => setIsDraggingThumbnail(false)} onDrop={(e) => { if (!connected || !selectedVideo) return; e.preventDefault(); setIsDraggingThumbnail(false); if (e.dataTransfer.files[0]) handleThumbnailChange(e.dataTransfer.files[0]) }}>
           {thumbnailPreview || selectedVideo?.thumbnail ? (
            <div className="relative w-full aspect-video group"><img src={thumbnailPreview || selectedVideo?.thumbnail} alt="Preview" className="w-full h-full object-cover rounded-lg" /><div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 rounded-lg backdrop-blur-sm"><SubToolboxButton aria-label="Replace thumbnail" onClick={() => fileInputRef.current?.click()} size="compact" tone="warning" icon={<Upload size={20} strokeWidth={3} />} className="!w-12" />{thumbnailPreview && <SubToolboxButton aria-label="Remove replacement thumbnail" onClick={() => { setThumbnailFile(null); setThumbnailPreview(null) }} size="compact" tone="danger" icon={<Trash2 size={20} strokeWidth={3} />} className="!w-12" />}</div></div>
           ) : (
-           <div className="text-center"><Upload size={48} className="mx-auto mb-4 text-black/20" /><p className="font-black uppercase text-sm text-black/40">{connected ? "Drag Image Here" : "Thumbnail Preview"}</p></div>
+           <div className="text-center"><Upload size={48} className="mx-auto mb-4 text-black/20" /><p className="font-black uppercase text-sm text-black/40">{!connected ? "Thumbnail Preview" : catalogLoading ? "Loading Thumbnail..." : "Select a Video to Load Thumbnail"}</p></div>
           )}
          </SubToolboxSurface>
         </SubToolboxStack>
@@ -736,30 +744,30 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       </div>
 
       <SubToolbox title="Description" icon={<AlignLeft size={18} strokeWidth={3} />} collapsible isOpenInitial={true}>
-       <SubToolboxTextArea aria-label="Video description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="!min-h-80 text-base vm-scrollless" placeholder={connected ? "DESCRIPTION..." : "CONNECT CHANNEL TO LOAD DESCRIPTION"} disabled={!connected} />
+       <SubToolboxTextArea aria-label="Video description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="!min-h-80 text-base vm-scrollless" placeholder={!connected ? "CONNECT CHANNEL TO LOAD DESCRIPTION" : catalogLoading ? "LOADING DESCRIPTION..." : "DESCRIPTION..."} disabled={!connected || !selectedVideo} />
       </SubToolbox>
 
       <SubToolbox title="Video Tags" icon={<Tag size={20} strokeWidth={3} />} collapsible isOpen={isTagsExpanded} onToggle={() => setIsTagsExpanded((prev) => !prev)}>
        <SubToolboxStack density="comfortable">
-        <SubToolboxActions columns={2}><SubToolboxInput aria-label="Add video tag" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddTag(tagInput)} placeholder={connected ? "ADD TAG..." : "CONNECT CHANNEL TO LOAD TAGS"} maxLength={MAX_TAG_CHARS} disabled={!connected} /><SubToolboxButton onClick={() => handleAddTag(tagInput)} disabled={!connected || [...editTags.split(",").map((t) => t.trim()).filter(Boolean), tagInput.trim()].filter(Boolean).join(", ").length > MAX_TAG_CHARS}>{tagInput.split(",").map((t) => t.trim()).filter(Boolean).length <= 1 ? "Add Tag" : "Add Tags"}</SubToolboxButton></SubToolboxActions>
+        <SubToolboxActions columns={2}><SubToolboxInput aria-label="Add video tag" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddTag(tagInput)} placeholder={!connected ? "CONNECT CHANNEL TO LOAD TAGS" : catalogLoading ? "LOADING TAGS..." : "ADD TAG..."} maxLength={MAX_TAG_CHARS} disabled={!connected || !selectedVideo} /><SubToolboxButton onClick={() => handleAddTag(tagInput)} disabled={!connected || !selectedVideo || [...editTags.split(",").map((t) => t.trim()).filter(Boolean), tagInput.trim()].filter(Boolean).join(", ").length > MAX_TAG_CHARS}>{tagInput.split(",").map((t) => t.trim()).filter(Boolean).length <= 1 ? "Add Tag" : "Add Tags"}</SubToolboxButton></SubToolboxActions>
         <SubToolboxSurface className="relative flex min-h-[132px] w-full flex-wrap content-start gap-2 !pb-9">
-         {editTags ? editTags.split(",").map((t) => t.trim()).filter(Boolean).map((t) => <TagBadge key={t} tag={t} onRemove={() => handleRemoveTag(t)} analysis={existingTagAnalysis.find((a) => a.tag.toLowerCase() === t.toLowerCase())} />) : <p className="text-black/30 font-black uppercase text-sm w-full text-center py-6">{connected ? "No tags populated..." : "Connect channel to load tags"}</p>}
+         {editTags ? editTags.split(",").map((t) => t.trim()).filter(Boolean).map((t) => <TagBadge key={t} tag={t} onRemove={() => handleRemoveTag(t)} analysis={existingTagAnalysis.find((a) => a.tag.toLowerCase() === t.toLowerCase())} />) : <p className="text-black/30 font-black uppercase text-sm w-full text-center py-6">{!connected ? "Connect channel to load tags" : catalogLoading ? "Loading tags..." : "No tags populated..."}</p>}
          <span className="absolute right-3 bottom-2 text-[11px] font-black uppercase tracking-[0.08em] text-black/55">{editTags.length}/{MAX_TAG_CHARS}</span>
         </SubToolboxSurface>
-        <SubToolboxStack><SubToolboxActions columns={2}><SubToolboxButton size="action" onClick={handleGenerateTags} disabled={!connected || isGeneratingTags || editTags.length >= MAX_TAG_CHARS}>{isGeneratingTags ? "Scanning Market..." : "Generate High Ranking Video Tags"}</SubToolboxButton><SubToolboxButton type="button" size="action" tone="neutral" onClick={handleRankTags} disabled={!connected || isAnalyzingTags || !editTags}>{isAnalyzingTags ? "Ranking..." : existingTagAnalysis.length > 0 ? "View Rankings" : "Rank Tags"}</SubToolboxButton></SubToolboxActions>{suggestedTags.length > 0 && <SubToolboxSection label="Ranked Suggestions"><SubToolboxSurface className="flex flex-wrap gap-2">{suggestedTags.map((st) => <TagBadge key={st.tag} tag={st.tag} isSuggested isAdded={editTags.toLowerCase().includes(st.tag.toLowerCase())} onAdd={() => handleAddTag(st.tag, st)} analysis={st} />)}</SubToolboxSurface></SubToolboxSection>}</SubToolboxStack>
+        <SubToolboxStack><SubToolboxActions columns={2}><SubToolboxButton size="action" onClick={handleGenerateTags} disabled={!connected || !selectedVideo || isGeneratingTags || editTags.length >= MAX_TAG_CHARS}>{isGeneratingTags ? "Scanning Market..." : "Generate High Ranking Video Tags"}</SubToolboxButton><SubToolboxButton type="button" size="action" tone="neutral" onClick={handleRankTags} disabled={!connected || !selectedVideo || isAnalyzingTags || !editTags}>{isAnalyzingTags ? "Ranking..." : existingTagAnalysis.length > 0 ? "View Rankings" : "Rank Tags"}</SubToolboxButton></SubToolboxActions>{suggestedTags.length > 0 && <SubToolboxSection label="Ranked Suggestions"><SubToolboxSurface className="flex flex-wrap gap-2">{suggestedTags.map((st) => <TagBadge key={st.tag} tag={st.tag} isSuggested isAdded={editTags.toLowerCase().includes(st.tag.toLowerCase())} onAdd={() => handleAddTag(st.tag, st)} analysis={st} />)}</SubToolboxSurface></SubToolboxSection>}</SubToolboxStack>
        </SubToolboxStack>
       </SubToolbox>
 
       <SubToolboxGridActionButton
        onClick={connected ? handleSave : () => auth.login("/video-manager")}
-       disabled={connected ? saving : auth.loading}
+       disabled={connected ? saving || !selectedVideoId : auth.loading}
        tone="blue"
        surfaceColor={updateDetailsPalette.header}
        controlColor={updateDetailsPalette.icon}
        shadowColor={hexToRgba(updateDetailsPalette.header, 0.45)}
        iconName="settings"
        showIconSection
-       label={!connected ? connectionLabel : saving ? "Transmitting to Server..." : "Update Video Details"}
+       label={!connected ? connectionLabel : catalogLoading ? "Loading Video Catalog..." : saving ? "Transmitting to Server..." : "Update Video Details"}
       />
      </div>
     ) : (
