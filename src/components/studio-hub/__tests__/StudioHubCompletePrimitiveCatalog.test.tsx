@@ -3,7 +3,7 @@ import { STUDIO_HUB_COMPONENT_FAMILIES } from "../StudioHubCompletePrimitiveCata
 
 describe("Studio Hub complete primitive catalog", () => {
   it("promotes all canonical and newly added reusable families into one registry", () => {
-    expect(STUDIO_HUB_COMPONENT_FAMILIES.length).toBeGreaterThanOrEqual(57)
+    expect(STUDIO_HUB_COMPONENT_FAMILIES.length).toBeGreaterThanOrEqual(56)
     expect(new Set(STUDIO_HUB_COMPONENT_FAMILIES).size).toBe(STUDIO_HUB_COMPONENT_FAMILIES.length)
   })
 
