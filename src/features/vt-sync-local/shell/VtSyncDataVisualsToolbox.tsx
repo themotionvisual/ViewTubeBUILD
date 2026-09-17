@@ -30,7 +30,15 @@ import {
 import type { VtSyncSnapshot } from "../adapters/contracts"
 import { buildVtSyncVisualPropsData } from "../adapters/visualData"
 import {
+ isVtSyncWindowEmpty,
+ projectVtSyncSnapshotToWindow,
+} from "../adapters/windowProjection"
+import type { VtSyncAnalyticsWindow } from "../adapters/contracts"
+import { vtSyncTableWindowCapability } from "../adapters/tableData"
+import { VT_SYNC_TABLE_DEFINITIONS } from "../upstream/tableRegistry"
+import {
  VtSyncVisualFrame,
+ type VtSyncVisualControlSpec,
  type VtSyncVisualModuleSpec,
  type VtSyncVisualProps,
 } from "./VtSyncVisualFrame"
@@ -145,24 +153,46 @@ const sourceTablesForVisual = (id: string): readonly string[] => {
  return ["videos"]
 }
 
+const WINDOW_CONTROL: VtSyncVisualControlSpec = {
+ id: "window",
+ label: "Window",
+ kind: "select",
+}
+
+/**
+ * Does this visual read anything a window can change?
+ *
+ * Derived from the visual's own source tables via the table classifier rather
+ * than a name heuristic — so a visual gets the control exactly when its data
+ * can actually differ by window, and the two cannot drift apart.
+ */
+const visualSupportsWindows = (id: string): boolean =>
+ sourceTablesForVisual(id).some((tableId) => {
+  const table = VT_SYNC_TABLE_DEFINITIONS.find((entry) => entry.id === tableId)
+  return table ? vtSyncTableWindowCapability(table) !== "lifetime_only" : false
+ })
+
 const controlsForVisual = (id: string): VtSyncVisualModuleSpec["controls"] => {
+ const windowControl = visualSupportsWindows(id) ? [WINDOW_CONTROL] : []
  if (id.includes("word-network"))
   return [
+   ...windowControl,
    { id: "metric", label: "Metric", kind: "select" },
    { id: "word-limit", label: "Words", kind: "count" },
   ]
  if (id.includes("format"))
   return [
-   { id: "window", label: "Window", kind: "select" },
+   ...windowControl,
    { id: "aggregation", label: "Average / Total", kind: "toggle" },
   ]
  if (id.includes("engagement"))
   return [
+   ...windowControl,
    { id: "count", label: "Videos", kind: "count" },
    { id: "format", label: "Format", kind: "select" },
    { id: "ranking", label: "Ranked By", kind: "select" },
   ]
- return []
+ return windowControl
 }
 
 const iconKeyForVisual = (id: string): string => getVtSyncVisualStyle(id).iconKey
@@ -417,7 +447,19 @@ const VtSyncDataVisualsContent: React.FC<{
  snapshot: VtSyncSnapshot
  modules: VtSyncVisualModuleDefinition[]
 }> = ({ snapshot, modules }) => {
- const visualData = useMemo(() => buildVtSyncVisualPropsData(snapshot), [snapshot])
+ // One window selection for the whole visual surface. Per-module state would be
+ // 49 places for it to disagree, and could not answer "show me everything at 28d".
+ const [visualWindow, setVisualWindow] = useState<VtSyncAnalyticsWindow>("lifetime")
+ const projection = useMemo(
+  () => projectVtSyncSnapshotToWindow(snapshot, visualWindow),
+  [snapshot, visualWindow],
+ )
+ const visualData = useMemo(
+  () => buildVtSyncVisualPropsData(projection.snapshot),
+  [projection.snapshot],
+ )
+ // A visual is unavailable when the selected window produced nothing at all.
+ const windowUnavailable = isVtSyncWindowEmpty(projection.coverage)
 
  const hasRenderableData =
   visualData.rows.length > 0 ||
@@ -482,6 +524,9 @@ const VtSyncDataVisualsContent: React.FC<{
            collapsible: true,
            isOpenInitial: shouldVtSyncVisualStartOpen(block.module.id, block.index),
           }}
+          window={visualWindow}
+          onWindowChange={setVisualWindow}
+          windowUnavailable={windowUnavailable}
          />
         </RevealOnView>
        ) : (
@@ -503,6 +548,9 @@ const VtSyncDataVisualsContent: React.FC<{
               collapsible: true,
               isOpenInitial: shouldVtSyncVisualStartOpen(module.id, index),
              }}
+             window={visualWindow}
+             onWindowChange={setVisualWindow}
+             windowUnavailable={windowUnavailable}
             />
            </div>
           </RevealOnView>

@@ -39,3 +39,43 @@
   overscroll-behavior: contain;
  }
 }
+
+/* ---- Data visual time-window control -------------------------------------
+   Rendered once by VtSyncVisualFrame for any module declaring the "window"
+   control, rather than each of the 49 modules building its own picker. */
+.vt-visual-window-control {
+ display: flex;
+ flex-wrap: wrap;
+ align-items: center;
+ gap: 6px;
+ padding: 0 0 8px;
+}
+.vt-visual-window-chip {
+ min-height: 26px;
+ padding: 3px 10px;
+ border: 2px solid #0a0a0a;
+ border-radius: 7px;
+ background: #fff;
+ color: #0a0a0a;
+ cursor: pointer;
+ font-size: 10px;
+ font-weight: 1000;
+ letter-spacing: .08em;
+ text-transform: uppercase;
+ transition: transform .12s ease, background-color .12s ease;
+}
+.vt-visual-window-chip:hover { transform: translate(-1px, -1px); }
+.vt-visual-window-chip.is-active { background: #C0F240; }
+.vt-visual-window-chip:focus-visible { outline: 3px solid #0a0a0a; outline-offset: 2px; }
+.vt-visual-window-note {
+ flex: 1 1 200px;
+ min-width: 0;
+ font-size: 10px;
+ font-weight: 700;
+ line-height: 1.3;
+ color: #b4530f;
+}
+@media (max-width: 640px) {
+ .vt-visual-window-control { gap: 4px; padding-bottom: 6px; }
+ .vt-visual-window-chip { padding: 3px 8px; }
+}

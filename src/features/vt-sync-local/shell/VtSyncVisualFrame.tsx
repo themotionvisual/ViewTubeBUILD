@@ -3,6 +3,12 @@ import { AnalyticsVisualStyleProvider } from "../../../components/AnalyticsVisua
 import type { ControllerRow } from "../../../components/VisualModuleController"
 import type { TubeExplorerVisualProps } from "../../../components/TubeExplorerVisualModules"
 import { VtSyncVisualDataSourceProvider } from "./VtSyncVisualDataSourceContext"
+import type { VtSyncAnalyticsWindow } from "../adapters/contracts"
+import {
+ ANALYTICS_WINDOWS,
+ WINDOW_LABELS,
+ WINDOW_SHORT_LABELS,
+} from "../../../services/analytics/windows"
 
 export type VtSyncVisualControlSpec = {
  id: string
@@ -71,6 +77,12 @@ export type VtSyncVisualModuleSpec = {
  responsive?: VtSyncVisualResponsiveSpec
  shellMode: VtSyncVisualShellMode
  controls: readonly VtSyncVisualControlSpec[]
+ /**
+  * Windows this visual can answer. Omit for "all". A window-invariant module
+  * (channel identity, lifetime-only subjects) should list only "lifetime" so the
+  * frame hides the control rather than offering a dead choice.
+  */
+ supportedWindows?: readonly VtSyncAnalyticsWindow[]
  footer: {
   insight: string
   legend: readonly VtSyncLegendSpec[]
@@ -121,7 +133,22 @@ const responsiveValue = (state: VtSyncVisualResponsiveState | undefined, key: ke
 export const VtSyncVisualFrame: React.FC<{
  spec: VtSyncVisualModuleSpec
  visualProps: VtSyncVisualProps
-}> = ({ spec, visualProps }) => {
+ /** Current window, when the surface offers the control. */
+ window?: VtSyncAnalyticsWindow
+ onWindowChange?: (window: VtSyncAnalyticsWindow) => void
+ /** Set when this visual has no rows for the selected window. */
+ windowUnavailable?: boolean
+}> = ({ spec, visualProps, window, onWindowChange, windowUnavailable = false }) => {
+ // The window control is declared per module in spec.controls and rendered
+ // here, once, rather than each of the 49 modules building its own picker.
+ const declaresWindowControl = spec.controls.some(
+  (control) => control.id === "window" && control.kind === "select",
+ )
+ const offered = (spec.supportedWindows || ANALYTICS_WINDOWS).filter(
+  (candidate) => ANALYTICS_WINDOWS.includes(candidate),
+ )
+ const showWindowControl =
+  declaresWindowControl && !!onWindowChange && offered.length > 1
  const responsive = {
   portrait: { ...DEFAULT_RESPONSIVE.portrait, ...spec.responsive?.portrait },
   landscape: { ...DEFAULT_RESPONSIVE.landscape, ...spec.responsive?.landscape },
@@ -145,6 +172,26 @@ export const VtSyncVisualFrame: React.FC<{
    data-vt-landscape-explanation={responsiveValue(responsive.landscape, "explanation", "collapsed")}
    style={{ minWidth: 0, maxWidth: "100%" }}
   >
+   {showWindowControl ? (
+    <div className="vt-visual-window-control" role="group" aria-label="Time window">
+     {offered.map((candidate) => (
+      <button
+       key={candidate}
+       type="button"
+       data-visual-window={candidate}
+       aria-pressed={window === candidate}
+       className={`vt-visual-window-chip ${window === candidate ? "is-active" : ""}`}
+       onClick={() => onWindowChange?.(candidate)}>
+       {WINDOW_SHORT_LABELS[candidate]}
+      </button>
+     ))}
+     {windowUnavailable && window && window !== "lifetime" ? (
+      <span className="vt-visual-window-note" role="status">
+       No {WINDOW_LABELS[window]} data — sync this window to populate it
+      </span>
+     ) : null}
+    </div>
+   ) : null}
    <VtSyncVisualDataSourceProvider sourceTableIds={spec.sourceTableIds}>
     <AnalyticsVisualStyleProvider
      value={{

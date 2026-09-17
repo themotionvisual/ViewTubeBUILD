@@ -8,7 +8,9 @@ import {
 } from "./privacyPolicy"
 
 type Row = Record<string, unknown>
-type AnalyticsWindow = "7d" | "28d" | "90d" | "365d" | "lifetime"
+// Vocabulary comes from the shared module; this file previously redeclared it,
+// a fourth copy the window unification missed.
+import type { AnalyticsWindow } from "../../../services/analytics/windows"
 type MetricSource = "api" | "csv_table"
 type CanonicalMetricKey =
  | "views"
