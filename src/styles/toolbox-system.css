@@ -26,9 +26,7 @@
   border-bottom: 0 !important;
 }
 
-/* The divider runs the full header width, icon rail included: one continuous
-   rule of the level stroke, matching the MiniToolbox reference header. Starting
-   it after the rail left the icon box with a visibly thinner bottom edge. */
+/* Expanded shell divider spans the full header, including beneath the square icon rail. */
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header::after {
   content: "";
   position: absolute;
@@ -104,6 +102,7 @@
   border-bottom: 0 !important;
 }
 
+/* SubToolbox uses the same full-width expanded-header divider law at its own stroke width. */
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header::after {
   content: "";
   position: absolute;

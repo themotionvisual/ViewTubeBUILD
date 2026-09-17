@@ -20,6 +20,7 @@ import {
   type ThumbnailTitleLayout,
 } from "./commentResponderUtils"
 import { useCommentResponderController, useCreatorEngagementContext } from "../../../features/creator-engagement"
+import { InstrumentExplanation, InstrumentStages, WidgetInstrument } from "../instruments/WidgetInstrument"
 
 const htmlDecode = (input: string) => {
   const doc = new DOMParser().parseFromString(input, "text/html")
@@ -346,7 +347,17 @@ export const CommentReplyWidget = ({
   ) : null
 
   return (
-    <WidgetShell {...common} contentLayout="flush" headerContent={headerContent} icon={<MessageSquare size={22} />}>
+    <WidgetShell {...common} contentLayout="flush" headerContent={headerContent} icon={<MessageSquare size={22} />} helpContent={
+      <WidgetInstrument archetype="conversation" label="CONVERSATION PATH" summary="COMMENT TO MEANINGFUL REPLY" compact>
+        <InstrumentStages stages={[
+          { id: "listen", label: "Listen", detail: "Read the comment" },
+          { id: "draft", label: "Compose", detail: "Draft or refine" },
+          { id: "connect", label: "Connect", detail: "Add a video" },
+          { id: "reply", label: "Respond", detail: "Review and post" },
+        ]} />
+        <InstrumentExplanation purpose="Explain how comments become intentional engagement." process="Read the selected comment, compose or refine a reply, optionally connect a relevant video, then post." result="A useful conversation branch that can strengthen the viewer relationship and session depth." />
+      </WidgetInstrument>
+    }>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: 0, minHeight: 0 }}>
         {inboundImageUrl && (
           <div style={{ border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", borderRadius: "8px", padding: "6px 8px", margin: "10px 10px 0", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>

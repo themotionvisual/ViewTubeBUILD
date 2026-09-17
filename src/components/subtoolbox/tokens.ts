@@ -27,14 +27,14 @@ export type ToolboxControlLevel = Exclude<ToolboxUiLevel, "toolbox">
 
 export const TOOLBOX_LEVEL_DNA = {
   toolbox: {
-    height: 80,
+    height: 56,
     stroke: 5,
     radius: 16,
     shadowOffset: 10,
-    titleSize: 26,
+    titleSize: 28,
   },
   l0: {
-    height: 56,
+    height: 44,
     stroke: 4,
     radius: 12,
     shadowOffset: 6,
@@ -79,7 +79,7 @@ export const SUBTOOLBOX_TOKENS = {
     radius: TOOLBOX_LEVEL_DNA.l0.radius,
     shadowOffset: TOOLBOX_LEVEL_DNA.l0.shadowOffset,
     titleSize: TOOLBOX_LEVEL_DNA.l0.titleSize,
-    iconSize: 36,
+    iconSize: 32,
   },
   interior: {
     stroke: TOOLBOX_LEVEL_DNA.l1.stroke,

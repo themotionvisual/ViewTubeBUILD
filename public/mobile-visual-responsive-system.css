@@ -1,47 +1,76 @@
 /* ViewTube mobile data-visual responsive contract.
  * The canvas is constrained; chart content adapts inside it.
+ *
+ * Chart bodies marked `data-vt-data-visual-canvas-owned` have migrated to the
+ * Data Visual canvas contract, where VisualCanvasViewport is the single
+ * geometry owner. Every height/aspect rule below excludes them so the two
+ * systems never both size the same canvas. Unmigrated modules are unaffected.
  */
 [data-vt-visual-card],[data-vt-visual-module],[data-vt-visual-frame]{container-type:inline-size;min-width:0;max-width:100%}
 [data-vt-visual-card] [data-vt-chart-body],[data-vt-visual-module] [data-vt-chart-body],[data-vt-visual-frame] [data-vt-chart-body]{box-sizing:border-box;min-width:0;max-width:100%;overflow:hidden}
 [data-vt-visual-card] [data-vt-chart-body] svg,[data-vt-visual-card] [data-vt-chart-body] canvas,[data-vt-visual-module] [data-vt-chart-body] svg,[data-vt-visual-module] [data-vt-chart-body] canvas,[data-vt-visual-frame] [data-vt-chart-body] svg,[data-vt-visual-frame] [data-vt-chart-body] canvas{max-width:100%;max-height:100%}
-[data-vt-visual-frame][data-vt-desktop-aspect="16:9"] [data-vt-chart-body]{aspect-ratio:16/9}
-[data-vt-visual-frame][data-vt-desktop-aspect="1:1"] [data-vt-chart-body]{aspect-ratio:1}
+[data-vt-visual-frame][data-vt-desktop-aspect="16:9"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]){aspect-ratio:16/9}
+[data-vt-visual-frame][data-vt-desktop-aspect="1:1"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]){aspect-ratio:1}
+
+/* Channel Progress currently has one distinctive first controller row: the
+ * CHANNEL / PROGRESS TOTALS split uses --vt-controller-prev. Scope its mobile
+ * composition through that existing markup so no generic Toolbox geometry is
+ * changed and no extra React-only identification hook is required. */
+:root{--vt-channel-progress-controller-selector-version:1}
 
 /* ModuleFrame still carries a desktop inline height. For registered responsive
  * visuals the frame contract, not that legacy inline value, owns phone height. */
 @media (max-width:767px) and (orientation:portrait){
  [data-vt-visual-card],[data-vt-visual-module],[data-vt-visual-frame]{width:100%!important;min-width:0!important;max-width:100%!important;grid-column:1/-1!important;align-self:start}
- [data-vt-visual-frame] [data-vt-chart-body]{width:100%!important;height:auto!important;min-height:0!important;max-height:none!important}
- [data-vt-visual-frame][data-vt-portrait-aspect="16:9"] [data-vt-chart-body],[data-vt-preview-16x9] [data-vt-chart-body],[data-vt-preview-canvas-16x9]{aspect-ratio:16/9!important;height:auto!important;min-height:0!important;max-height:none!important}
- [data-vt-visual-frame][data-vt-portrait-aspect="1:1"] [data-vt-chart-body]{aspect-ratio:1!important}
- [data-vt-visual-frame][data-vt-portrait-aspect="natural"] [data-vt-chart-body]{aspect-ratio:auto!important}
- [data-vt-visual-frame] [data-vt-chart-body]>*,[data-vt-preview-16x9] [data-vt-chart-body]>*,[data-vt-preview-canvas-16x9]>*{min-height:0!important;height:100%!important;max-height:100%!important}
+ [data-vt-visual-frame] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]){width:100%!important;height:auto!important;min-height:0!important;max-height:none!important}
+ [data-vt-visual-frame][data-vt-portrait-aspect="16:9"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]),[data-vt-preview-16x9] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]),[data-vt-preview-canvas-16x9]{aspect-ratio:16/9!important;height:auto!important;min-height:0!important;max-height:none!important}
+ [data-vt-visual-frame][data-vt-portrait-aspect="1:1"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]){aspect-ratio:1!important}
+ [data-vt-visual-frame][data-vt-portrait-aspect="natural"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]){aspect-ratio:auto!important}
+ [data-vt-visual-frame] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned])>*,[data-vt-preview-16x9] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned])>*,[data-vt-preview-canvas-16x9]>*{min-height:0!important;height:100%!important;max-height:100%!important}
 
- /* Compact portrait chrome. Controllers/KPIs stay one row and swipe rather
-  * than forcing the header or module to grow vertically. */
  [data-vt-visual-frame][data-vt-portrait-controls="menu"] [data-vt-visual-controls],
  [data-vt-visual-frame] [data-vt-metric-strip]{max-width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
  [data-vt-visual-frame][data-vt-portrait-controls="menu"] [data-vt-visual-controls]::-webkit-scrollbar,
  [data-vt-visual-frame] [data-vt-metric-strip]::-webkit-scrollbar{display:none}
 
- /* Heat Matrix is the reference spatial visual. Keep the evidence at 16:9;
-  * suppress legacy 300px child minimums that previously produced the tall
-  * portrait composition visible on viewtube.live. */
- [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]{aspect-ratio:16/9!important;height:auto!important;min-height:0!important;overflow:hidden!important}
- [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body] .min-h-\[300px\],
- [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body] .min-h-\[292px\]{min-height:0!important;height:100%!important}
- [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body] [class*="legend"]{max-height:25%;overflow:hidden}
+ html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child{flex-direction:column!important;align-items:stretch!important}
+ html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child > div:last-child:has([data-controller-root]){width:100%!important;max-width:100%!important;border-top:4px solid #000!important;border-left:0!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none}
+ html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child > div:last-child:has([data-controller-root])::-webkit-scrollbar{display:none}
+ html body .vt-toolbox [data-controller-root]{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-flow:row!important;grid-auto-rows:30px!important;width:100%!important;min-width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;max-height:none!important;border-left:0!important;overflow:visible!important}
+ html body .vt-toolbox [data-controller-root] > *{height:30px!important;min-height:30px!important;max-height:30px!important;min-width:0!important;width:auto!important;padding-inline:4px!important;font-size:9px!important;line-height:1!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;border-right:2px solid #000!important;border-bottom:2px solid #000!important}
+ html body .vt-toolbox [data-controller-root] > *:nth-child(2n){border-right:0!important}
+
+ /* Channel Progress: four controls become a readable full-width 2x2. */
+ html body .vt-toolbox [data-controller-root]:has(.bg-\[var\(--vt-controller-prev\)\]){grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-rows:34px!important;gap:0!important;overflow:visible!important}
+ html body .vt-toolbox [data-controller-root]:has(.bg-\[var\(--vt-controller-prev\)\]) > *{height:34px!important;min-height:34px!important;max-height:34px!important;padding-inline:0!important;font-size:10px!important;overflow:visible!important;text-overflow:clip!important}
+ html body .vt-toolbox [data-vt-subtoolbox-module]:has([data-controller-root] .bg-\[var\(--vt-controller-prev\)\]) > div:first-child > div:last-child:has([data-controller-root]){overflow:visible!important}
+
+ [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]){aspect-ratio:16/9!important;height:auto!important;min-height:0!important;overflow:hidden!important}
+ [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]) .min-h-\[300px\],
+ [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]) .min-h-\[292px\]{min-height:0!important;height:100%!important}
+ [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]) [class*="legend"]{max-height:25%;overflow:hidden}
 }
 
 /* Phone landscape becomes a wide evidence workspace. Use available height as
  * the limiting dimension so the module does not disappear below browser UI. */
 @media (max-height:540px) and (orientation:landscape){
  [data-vt-visual-card],[data-vt-visual-module],[data-vt-visual-frame]{width:100%;min-width:0;max-width:100%}
- [data-vt-visual-frame] [data-vt-chart-body]{min-height:0!important}
- [data-vt-visual-frame][data-vt-landscape-aspect="16:9"] [data-vt-chart-body],[data-vt-preview-16x9] [data-vt-chart-body],[data-vt-preview-canvas-16x9]{width:min(100%,calc((100svh - 88px)*16/9))!important;aspect-ratio:16/9!important;height:auto!important;min-height:0!important;max-height:calc(100svh - 88px)!important;margin-inline:auto}
- [data-vt-visual-frame][data-vt-landscape-aspect="1:1"] [data-vt-chart-body]{width:min(100%,calc(100svh - 88px))!important;aspect-ratio:1!important;margin-inline:auto}
- [data-vt-visual-frame][data-vt-landscape-aspect="natural"] [data-vt-chart-body]{width:100%!important;aspect-ratio:auto!important}
- [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]>*,[data-vt-visual-frame="heat-matrix"] [data-vt-chart-body] .min-h-\[300px\]{min-height:0!important;height:100%!important;max-height:100%!important}
+ [data-vt-visual-frame] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]){min-height:0!important}
+ [data-vt-visual-frame][data-vt-landscape-aspect="16:9"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]),[data-vt-preview-16x9] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]),[data-vt-preview-canvas-16x9]{width:min(100%,calc((100svh - 88px)*16/9))!important;aspect-ratio:16/9!important;height:auto!important;min-height:0!important;max-height:calc(100svh - 88px)!important;margin-inline:auto}
+ [data-vt-visual-frame][data-vt-landscape-aspect="1:1"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]){width:min(100%,calc(100svh - 88px))!important;aspect-ratio:1!important;margin-inline:auto}
+ [data-vt-visual-frame][data-vt-landscape-aspect="natural"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]){width:100%!important;aspect-ratio:auto!important}
+ [data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned])>*,[data-vt-visual-frame="heat-matrix"] [data-vt-chart-body]:not([data-vt-data-visual-canvas-owned]) .min-h-\[300px\]{min-height:0!important;height:100%!important;max-height:100%!important}
+
+ html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child{flex-direction:row!important;align-items:stretch!important}
+ html body .vt-toolbox [data-vt-subtoolbox-module] > div:first-child > div:last-child:has([data-controller-root]){width:min(52vw,430px)!important;max-width:52vw!important;border-top:0!important;border-left:4px solid #000!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none}
+ html body .vt-toolbox [data-controller-root]{display:flex!important;flex-direction:row!important;width:max-content!important;min-width:100%!important;max-width:none!important;height:100%!important;min-height:44px!important;border-left:0!important;overflow:visible!important}
+ html body .vt-toolbox [data-controller-root] > *{flex:1 0 112px!important;width:auto!important;min-width:112px!important;height:100%!important;min-height:44px!important;max-height:none!important;padding-inline:5px!important;border-bottom:0!important;border-right:2px solid #000!important;font-size:9px!important;line-height:1!important;overflow:hidden!important;white-space:nowrap!important}
+ html body .vt-toolbox [data-controller-root] > *:last-child{border-right:0!important}
+
+ /* Channel Progress: explicit wide rail; scrolling is owned by the controller wrapper. */
+ html body .vt-toolbox [data-controller-root]:has(.bg-\[var\(--vt-controller-prev\)\]){display:grid!important;grid-template-columns:150px 150px 142px 190px!important;grid-auto-flow:column!important;width:max-content!important;min-width:632px!important;height:100%!important;min-height:44px!important}
+ html body .vt-toolbox [data-controller-root]:has(.bg-\[var\(--vt-controller-prev\)\]) > *{width:auto!important;min-width:0!important;max-width:none!important;height:100%!important;min-height:44px!important;padding-inline:0!important;font-size:10px!important;overflow:visible!important;text-overflow:clip!important}
+ html body .vt-toolbox [data-vt-subtoolbox-module]:has([data-controller-root] .bg-\[var\(--vt-controller-prev\)\]) > div:first-child > div:last-child:has([data-controller-root]){width:min(60vw,500px)!important;max-width:60vw!important;overflow-x:auto!important;overflow-y:hidden!important}
 }
 
 @container (max-width:479px){[data-vt-visual-density="adaptive"]{--vt-visual-label-density:compact;--vt-visual-control-density:compact}}

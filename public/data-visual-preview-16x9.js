@@ -22,9 +22,15 @@
     return requestedTitles.some((title) => normalized.includes(title))
   }
 
+  /* A chart body that has migrated to the Data Visual canvas contract already
+     has one geometry owner (VisualCanvasViewport). This legacy title-matching
+     pass must not become a second one, so it skips those bodies entirely. */
+  const CANVAS_OWNED = "[data-vt-data-visual-canvas-owned]"
+  const isCanvasOwned = (body) => body instanceof HTMLElement && body.matches(CANVAS_OWNED)
+
   const markCard = (card) => {
     if (!(card instanceof HTMLElement)) return
-    const chartBodies = card.querySelectorAll("[data-vt-chart-body]")
+    const chartBodies = Array.from(card.querySelectorAll("[data-vt-chart-body]")).filter((body) => !isCanvasOwned(body))
     if (!chartBodies.length || !matchesRequestedTitle(card.textContent)) return
     card.setAttribute("data-vt-preview-16x9", "")
     chartBodies.forEach((body) => body.setAttribute("data-vt-preview-canvas-16x9", ""))
@@ -37,6 +43,7 @@
 
     root.querySelectorAll?.("[data-vt-chart-body]").forEach((body) => {
       if (!(body instanceof HTMLElement) || body.hasAttribute("data-vt-preview-canvas-16x9")) return
+      if (isCanvasOwned(body)) return
       let ancestor = body.parentElement
       for (let depth = 0; ancestor && depth < 7; depth += 1, ancestor = ancestor.parentElement) {
         if (matchesRequestedTitle(ancestor.textContent)) {

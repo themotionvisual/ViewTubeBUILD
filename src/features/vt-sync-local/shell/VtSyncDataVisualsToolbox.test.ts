@@ -413,7 +413,10 @@ describe("VT-SYNC data visual module registry", () => {
  })
 
  it("keeps the requested subject-specific visual interactions in their custom renderers", () => {
-  expect(graphSource).toContain("TrafficPercentAxisTick")
+  // The percent and month labels are drawn over the plot by this overlay, not
+  // by a Recharts axis tick — an axis would reserve a gutter and inset the
+  // evidence from the canvas edge.
+  expect(graphSource).toContain("TrafficAxisOverlay")
   expect(graphSource).toContain('if (normalized === "YT_OTHER_PAGE") return "YouTube Features"')
   expect(graphSource).toContain("EngagementHoverDot")
   expect(graphSource).toContain("leaderSignature")

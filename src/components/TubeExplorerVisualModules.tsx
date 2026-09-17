@@ -87,6 +87,17 @@ import { AnalyticsVisualShell } from "./AnalyticsVisualShell"
 import { normalizeHeatMatrixContext } from "./analyticsVisualContextStyle"
 import { CustomIcon } from "./CustomIcon"
 import { StableChartFrame } from "./StableChartFrame"
+import { DataVisualCanvas } from "./DataVisualCanvas"
+import { DataVisualPlot } from "./DataVisualPlot"
+import { DATA_VISUAL_MARK_FLOORS } from "./dataVisualModuleContract"
+import type { RegisteredDataVisualModuleId } from "./dataVisualModuleContract"
+import {
+ useDataVisualDensityBudget,
+ useDataVisualPanelBudget,
+ useDataVisualSelection,
+ useDataVisualViewportBucket,
+ useVisualCanvasBox,
+} from "./dataVisualCanvasGeometry"
 import type { SubToolboxChartModuleProps } from "./SubToolboxChartModule"
 import {
  getVtVisualHeaderColorPair,
@@ -229,8 +240,26 @@ const ModuleFrame: React.FC<{
   * consistent as new dark-canvas visuals get added.
   */
  insightDark?: boolean
+ /**
+  * Opt this module into the canonical Data Visual canvas contract.
+  *
+  * When set, `DataVisualCanvas` + `VisualCanvasViewport` own canvas geometry
+  * and this frame stops owning it: the fixed `height` prop, the shell's body
+  * min/preferred heights and the legacy `min-h-[300px]` floor are all dropped,
+  * and the chart body is marked so the legacy compatibility stylesheets stand
+  * down for this module alone. Unmigrated modules keep the legacy behaviour.
+  */
+ canvasModuleId?: RegisteredDataVisualModuleId
+ /**
+  * Guides, keys, legends and how-to-read notes.
+  *
+  * These belong to the module's bottom section, never inside the evidence
+  * canvas: anything rendered inside the canvas is taking space away from the
+  * thing the canvas exists to show.
+  */
+ legend?: React.ReactNode
  children: React.ReactNode
-}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, heroVisualId, insightDark = false, children }) => {
+}> = ({ title, subtitle, count, icon = "analytics", color = "#C9FF18", badges = [], activeContext, controllerRows, visualStyle, insight, height = 320, flushShell = false, stableChartFrame = true, collapsible = false, isOpenInitial = true, heroVisualId, insightDark = false, canvasModuleId, legend, children }) => {
  const resolvedStyle = visualStyle ?? resolveVtSyncVisualStyle(title)
  const normalizedActiveContext = useMemo(
   () => {
@@ -247,6 +276,16 @@ const ModuleFrame: React.FC<{
  const headerPair = visualStyle?.headerColorPair ?? headerPairForColor(color)
  const resolvedIcon = visualStyle?.iconKey ?? resolvedStyle.iconKey ?? icon
  const boundedHeight = `${height}px`
+ const canvasOwned = Boolean(canvasModuleId)
+ // One height owner: either the canvas contract or the legacy fixed body.
+ const shellLayout = canvasOwned
+  ? { bodyMinHeight: "0px", bodyPreferredHeight: "auto", heightPolicy: "preserveRatio" as const }
+  : {
+   chartHeight: height,
+   bodyMinHeight: boundedHeight,
+   bodyPreferredHeight: boundedHeight,
+   heightPolicy: flushShell ? ("fillWidth" as const) : ("fixedBody" as const),
+  }
  return (
  <AnalyticsVisualShell
   shellMode="standard"
@@ -268,25 +307,43 @@ const ModuleFrame: React.FC<{
   standard={{
    collapsible,
    isOpenInitial,
-   layout: { chartHeight: height, bodyMinHeight: `${height}px`, bodyPreferredHeight: `${height}px`, heightPolicy: flushShell ? "fillWidth" : "fixedBody" },
+   layout: shellLayout,
    metricBadges: badges,
-   footer: insight ? <span className="font-black uppercase tracking-[0.08em]">{insight}</span> : undefined,
+   footer: legend || insight
+    ? (
+     <div className="flex flex-col gap-1" data-vt-data-visual-guides>
+      {legend}
+      {insight ? <span className="font-black uppercase tracking-[0.08em]">{insight}</span> : null}
+     </div>
+    )
+    : undefined,
   }}
  >
   <div
    className={
-    flushShell
-     ? `mx-auto h-full w-full max-w-none ${insightDark ? "bg-[#0a0a1a]" : ""}`
-     : `mx-auto w-full max-w-[1080px] border-[3px] border-black p-2 ${insightDark ? "bg-[#0a0a1a]" : "bg-white"}`
+    canvasOwned
+     ? `mx-auto w-full min-w-0 max-w-full ${flushShell ? "" : "border-[3px] border-black p-2"} ${insightDark ? "bg-[#0a0a1a]" : flushShell ? "" : "bg-white"}`
+     : flushShell
+      ? `mx-auto h-full w-full max-w-none ${insightDark ? "bg-[#0a0a1a]" : ""}`
+      : `mx-auto w-full max-w-[1080px] border-[3px] border-black p-2 ${insightDark ? "bg-[#0a0a1a]" : "bg-white"}`
    }
-   /* Mobile responsive height: chart body uses a natural 16/10 aspect ratio
-      up to the desktop `boundedHeight`, and never taller than 70vh on any
-      viewport. Prevents the "too tall in both orientations" mobile look
-      that made every visual eat the entire screen. See styles/perf.css for
-      the media-query rules. */
+   /* Legacy path only: the chart body carries a desktop pixel height capped by
+      the media-query rules in styles/perf.css and
+      public/mobile-visual-responsive-system.css. A canvas-owned module carries
+      no height here at all — `data-vt-data-visual-canvas-owned` stands those
+      sheets down and VisualCanvasViewport owns the geometry instead. */
    data-vt-chart-body
-   style={{ height: boundedHeight, '--vt-chart-max-height': boundedHeight } as React.CSSProperties}>
-   {stableChartFrame ? (
+   data-vt-data-visual-canvas-owned={canvasOwned ? "" : undefined}
+   style={canvasOwned ? undefined : ({ height: boundedHeight, '--vt-chart-max-height': boundedHeight } as React.CSSProperties)}>
+   {canvasModuleId ? (
+    <DataVisualCanvas id={canvasModuleId}>
+     {stableChartFrame ? (
+      <StableChartFrame minHeightClassName="min-h-0">{children}</StableChartFrame>
+     ) : (
+      <div className="h-full min-h-0 w-full">{children}</div>
+     )}
+    </DataVisualCanvas>
+   ) : stableChartFrame ? (
     <StableChartFrame minHeightClassName="min-h-[300px]">{children}</StableChartFrame>
    ) : (
     <div className="h-full min-h-[300px] w-full">{children}</div>
@@ -2392,22 +2449,28 @@ const PublishOptimalClockRenderer: React.FC<{
  metricLabel: string
  formatValue: (value: number) => string
  hoveredKey: string | null
+ /** Hours folded into one column. 1 = a 24-column grid, 2 = 12 two-hour bands. */
+ hourStep?: number
  onHover?: (cell: PublishClockCell | null) => void
-}> = ({ cells, metricLabel, formatValue, hoveredKey, onHover }) => {
+}> = ({ cells, metricLabel, formatValue, hoveredKey, hourStep = 1, onHover }) => {
  if (cells.every((cell) => cell.uploads === 0)) return <Empty label="Video publication times are missing — run Video Metadata sync to populate the publish clock" />
- const topWindows = [...cells]
-  .filter((cell) => cell.uploads > 0)
-  .sort((a, b) => b.value - a.value)
-  .slice(0, 3)
+ // Portrait folds the 24 hourly columns into 12 two-hour bands: the same data,
+ // fewer simultaneous marks, instead of 24 columns squeezed under 6px each.
+ const columnHours = PUBLISH_CLOCK_HOURS.filter((hour) => hour % hourStep === 0)
+ const columnCount = columnHours.length
+ // Folded columns are narrow, so the axis switches to a single-letter meridiem
+ // ("2A" rather than "2AM") instead of letting the labels collide.
+ const columnLabel = (hour: number) =>
+  hourStep > 1 ? formatClockHour(hour).replace(/([AP])M$/, "$1") : formatClockHour(hour)
 
  return (
-  <div className="flex h-full flex-col overflow-hidden bg-[#000000] p-2 text-white">
+  <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-[#000000] p-2 text-white">
    <div className="flex flex-1 min-h-0 flex-col">
     <div className="flex pl-[48px] pr-1 pb-1">
-     <div className="grid flex-1 gap-[2px]" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}>
-      {PUBLISH_CLOCK_HOURS.map((hour) => (
-       <span key={hour} className="text-center text-[9px] font-[1000] text-white/60">
-        {formatClockHour(hour)}
+     <div className="grid flex-1 gap-[2px]" style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
+      {columnHours.map((hour) => (
+       <span key={hour} className="overflow-hidden text-center text-[9px] font-[1000] leading-none text-white/60">
+        {columnLabel(hour)}
        </span>
       ))}
      </div>
@@ -2422,10 +2485,10 @@ const PublishOptimalClockRenderer: React.FC<{
       ))}
      </div>
 
-     <div className="grid flex-1 gap-[2px]" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))", gridTemplateRows: "repeat(7, minmax(0, 1fr))" }}>
+     <div className="grid min-h-0 flex-1 gap-[2px]" style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`, gridTemplateRows: "repeat(7, minmax(0, 1fr))" }}>
       {cells.map((cell) => {
        if (cell.uploads === 0) {
-        return <div key={publishClockCellKey(cell)} className="min-h-[14px]" />
+        return <div key={publishClockCellKey(cell)} className="min-h-0" />
        }
        const isHovered = hoveredKey === publishClockCellKey(cell)
        const dayStr = PUBLISH_CLOCK_DAYS[cell.dayIndex].substring(0, 3).toUpperCase()
@@ -2433,7 +2496,7 @@ const PublishOptimalClockRenderer: React.FC<{
        return (
         <div
          key={publishClockCellKey(cell)}
-         className="relative flex min-h-[14px] flex-col items-center justify-center overflow-hidden leading-none select-none"
+         className="relative flex min-h-0 flex-col items-center justify-center overflow-hidden leading-none select-none"
          tabIndex={0}
          role="img"
          aria-label={`${PUBLISH_CLOCK_DAYS[cell.dayIndex]} ${cell.hour}:00 · ${formatValue(cell.value)} ${metricLabel.toLowerCase()} · ${cell.uploads} uploads`}
@@ -2465,32 +2528,83 @@ const PublishOptimalClockRenderer: React.FC<{
     </div>
    </div>
 
-   <div className="mt-2 flex shrink-0 items-center justify-between gap-4 px-2 py-1 border-t border-white/10">
-    <div className="flex min-w-0 items-center gap-2 text-[9px] font-black uppercase">
-     <span className="text-white/40">Top windows:</span>
-     {topWindows.map((cell, index) => (
-      <div key={publishClockCellKey(cell)} className="border border-white/30 px-2 py-1 rounded bg-black flex flex-col items-center justify-center text-center leading-none">
-       <span className="text-[10px] font-[1000] text-white">#{index + 1} {PUBLISH_CLOCK_DAYS[cell.dayIndex].substring(0, 3).toUpperCase()}</span>
-       <span className="text-[9px] font-[900] text-white/80">{formatClockHour(cell.hour).toUpperCase()}</span>
-      </div>
-     ))}
-    </div>
-    <div className="flex shrink-0 items-center gap-3">
-     <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/50">COLD</span>
-     <div
-      className="h-5 w-[140px] shrink-0 rounded-[2px] border-[1px] border-white/90"
-      style={{
-       background: PUBLISH_CLOCK_GRADIENT,
-      }}
-     />
-     <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/50">HOT</span>
-    </div>
+  </div>
+ )
+}
+
+/**
+ * Publish clock guides: the top publishing windows and the cold-to-hot ramp.
+ *
+ * The bottom section, not the canvas — inside, they were competing with the
+ * day x hour grid for the only vertical space the grid has.
+ */
+const PublishOptimalClockGuides: React.FC<{
+ cells: PublishClockCell[]
+ hourStep: number
+}> = ({ cells, hourStep }) => {
+ const topWindows = [...cells]
+  .filter((cell) => cell.uploads > 0)
+  .sort((a, b) => b.value - a.value)
+  .slice(0, 3)
+ if (topWindows.length === 0) return null
+ return (
+  <div className="bg-[#000000] text-white" data-vt-data-visual-guides>
+  <div className="mt-2 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1 border-t border-white/10">
+   <div
+    className="flex min-w-[150px] flex-1 items-center gap-2 overflow-x-auto text-[9px] font-black uppercase [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    data-vt-data-visual-secondary="compact">
+    <span className="text-white/40">Top windows:</span>
+    {topWindows.map((cell, index) => (
+     <div key={publishClockCellKey(cell)} className="shrink-0 border border-white/30 px-2 py-1 rounded bg-black flex flex-col items-center justify-center text-center leading-none">
+      <span className="text-[10px] font-[1000] text-white">#{index + 1} {PUBLISH_CLOCK_DAYS[cell.dayIndex].substring(0, 3).toUpperCase()}</span>
+      <span className="text-[9px] font-[900] text-white/80">
+       {hourStep > 1
+        ? `${formatClockHour(cell.hour)}–${formatClockHour((cell.hour + hourStep) % 24)}`.toUpperCase()
+        : formatClockHour(cell.hour).toUpperCase()}
+      </span>
+     </div>
+    ))}
    </div>
+   <div className="flex shrink-0 items-center gap-3">
+    <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/50">COLD</span>
+    <div
+     className="h-5 shrink-0 rounded-[2px] border-[1px] border-white/90"
+     /* The ramp is the key to reading the grid, so it stays — it just narrows
+        with the canvas instead of pushing the top-window chips off-screen. */
+     style={{
+      width: "min(140px, 22cqw)",
+      background: PUBLISH_CLOCK_GRADIENT,
+     }}
+    />
+    <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.12em] text-white/50">HOT</span>
+   </div>
+  </div>
   </div>
  )
 }
 
 const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; metric: ClockBurstMetricKey }> = ({ dataset, metric }) => {
+ // Portrait is a sibling composition, not a scaled desktop: the two radial
+ // plots take the evidence canvas and the source/detail legends move below
+ // them as a compact, scrollable strip. No information is removed.
+ const bucket = useDataVisualViewportBucket()
+ const portraitComposition = bucket === "portrait"
+ // A portrait canvas fits one radial plot, not two. Halving both would make
+ // neither readable, so the second panel becomes reachable through a switch
+ // instead of being shrunk or dropped.
+ const panelBudget = useDataVisualPanelBudget("clock-radial-burst", 2)
+ // In a narrow side rail the per-row unit caption crowds the source name out
+ // entirely. The metric is already named in the header and the context bar, so
+ // the caption is what gives way — not the name of the source itself.
+ const railShowsUnit = bucket === "desktop"
+ const singlePanel = panelBudget <= 1
+ const [activePanel, setActivePanel] = useState<"sources" | "detail">("sources")
+ const showSourcesPanel = !singlePanel || activePanel === "sources"
+ const showDetailPanel = !singlePanel || activePanel === "detail"
+ // No mark scale here on purpose: the donut is a fixed-viewBox SVG, so its
+ // slices and labels already scale with the plot box. Giving the single
+ // portrait panel the full canvas width is what enlarges the marks; applying a
+ // multiplier on top would shrink an already-correct drawing twice.
  const [selectedKind, setSelectedKind] = useState<TrafficFocusKind>("search")
  const [hoveredDonutSliceKey, setHoveredDonutSliceKey] = useState<string | null>(null)
  const [hoveredDonutSlice, setHoveredDonutSlice] = useState<{ label: string; views: number; color: string; share: number; scope: string } | null>(null)
@@ -2628,36 +2742,83 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
 
  return (
   <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#000000] text-white">
-   <div className="grid min-h-0 flex-1 grid-cols-[0.8fr_1fr_1fr_0.8fr] gap-1 bg-[#000000] p-1 w-full">
-    <div className="flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5">
+   {singlePanel ? (
+    <div className="flex shrink-0 items-stretch gap-1 px-1 pt-1" role="tablist" aria-label="Clock burst panel">
+     {([
+      { key: "sources" as const, label: "SOURCES" },
+      { key: "detail" as const, label: detailLabel },
+     ]).map((panel) => {
+      const isActive = activePanel === panel.key
+      return (
+       <button
+        key={panel.key}
+        type="button"
+        role="tab"
+        aria-selected={isActive}
+        onClick={() => setActivePanel(panel.key)}
+        className={`min-h-[28px] flex-1 truncate rounded-[8px] border-[2px] border-black px-2 text-[10px] font-[1000] uppercase tracking-[0.08em] ${isActive ? "bg-[#FFE35A] text-black" : "bg-[#111321] text-white/70"}`}>
+        {panel.label}
+       </button>
+      )
+     })}
+    </div>
+   ) : null}
+   <div
+    className={singlePanel
+     // Side by side, not stacked: the canvas is wide and short, so giving the
+     // plot the full height makes its slices as large as the canvas allows.
+     ? "grid min-h-0 w-full flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-1 bg-[#000000] p-1"
+     : portraitComposition
+      // Two thirds of the canvas stay with the evidence plots; the legends take
+      // the remaining third and scroll, so chrome gives way before the canvas.
+      ? "grid min-h-0 w-full flex-1 grid-cols-2 grid-rows-[minmax(0,2fr)_minmax(0,1fr)] gap-1 bg-[#000000] p-1"
+      : "grid min-h-0 w-full flex-1 grid-cols-[0.8fr_1fr_1fr_0.8fr] gap-1 bg-[#000000] p-1"}>
+    {showSourcesPanel && (
+    <div
+     className="flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5"
+     data-vt-data-visual-secondary="rail"
+     style={portraitComposition && !singlePanel ? { order: 3 } : undefined}>
      <div className="mb-1 flex items-center">
       <div className="min-w-0 flex-1">
        <div className="truncate text-[14px] font-black uppercase tracking-[0.04em] text-white">Traffic sources</div>
       </div>
      </div>
-     <div className="grid min-h-0 flex-1 auto-rows-[minmax(25px,28px)] content-start gap-0.5 overflow-hidden">
+     <div className="grid min-h-0 flex-1 auto-rows-[minmax(25px,28px)] content-start gap-0.5 overflow-y-auto">
       {overviewSlicesVisible.map((slice, index) => {
        const share = (slice.value / totalValue) * 100
        return (
-        <div key={`${slice.kind}-${slice.label}-${index}`} className="flex w-full items-stretch overflow-hidden rounded-[6px] border border-black text-left shadow-[1px_1px_0px_0px_rgba(0,0,0,0.22)]">
+        <button
+         key={`${slice.kind}-${slice.label}-${index}`}
+         type="button"
+         aria-pressed={activeKind === slice.kind}
+         onClick={() => setSelectedKind(slice.kind)}
+         /* The legend row is the accessible picker for its source: a full-width
+            target every reader can hit, where a 5% donut wedge never can be. */
+         className="flex w-full items-stretch overflow-hidden rounded-[6px] border border-black text-left shadow-[1px_1px_0px_0px_rgba(0,0,0,0.22)]">
          <span className="flex w-[32px] shrink-0 items-center justify-center px-0.5 text-center text-[12px] font-[1000] uppercase leading-none tracking-[-0.04em] text-black" style={{ background: slice.color }}>
           {formatClockBurstShare(share)}
          </span>
          <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-1 bg-[#111321] px-1.5 py-0 text-black">
           <span className="block truncate text-[14px] font-black uppercase leading-tight" style={{ color: slice.color }}>{slice.label}</span>
-          <div className="text-right shrink-0">
+          <div className="text-right shrink-0" data-vt-rail-value>
            <span className="block text-[12px] font-black text-white">{formatClockBurstMetricValue(slice.value, metric)}</span>
-           <span className="block text-[9px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span>
+           {railShowsUnit ? <span className="block text-[9px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span> : null}
           </div>
          </span>
-        </div>
+        </button>
        )
       })}
      </div>
     </div>
+    )}
 
-    <div className="min-h-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-0">
+    {showSourcesPanel && (
+    <div
+     className="min-h-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-0"
+     data-vt-data-visual-panel="sources"
+     style={portraitComposition && !singlePanel ? { order: 1 } : undefined}>
      <div className="h-full min-h-0 overflow-hidden rounded-[12px] border-[2px] border-black bg-[#050814] p-0">
+      <DataVisualPlot id="clock-radial-burst">
       {renderDonut({
        width: 380,
        height: 360,
@@ -2672,11 +2833,18 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
        centerLabelMain: detailLabel,
        centerLabelBottom: "BURST",
       })}
+      </DataVisualPlot>
      </div>
     </div>
+    )}
 
-    <div className="min-h-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-0">
+    {showDetailPanel && (
+    <div
+     className="min-h-0 overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-0"
+     data-vt-data-visual-panel="detail"
+     style={portraitComposition && !singlePanel ? { order: 2 } : undefined}>
      <div className="h-full min-h-0 overflow-hidden rounded-[12px] border-[2px] border-black bg-[#050814] p-0">
+      <DataVisualPlot id="clock-radial-burst">
       {detailSlices.length > 0 ? (
        renderDonut({
         width: 380,
@@ -2696,16 +2864,22 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
         No detail rows available
        </div>
       )}
+      </DataVisualPlot>
      </div>
     </div>
+    )}
 
-    <div className="flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5">
+    {showDetailPanel && (
+    <div
+     className="flex min-h-0 flex-col overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0a0a1a] p-1.5"
+     data-vt-data-visual-secondary="rail"
+     style={portraitComposition && !singlePanel ? { order: 4 } : undefined}>
      <div className="mb-1 flex items-center">
       <div className="min-w-0 flex-1">
        <div className="truncate text-[14px] font-black uppercase tracking-[0.04em] text-white">{detailLabel}</div>
       </div>
      </div>
-     <div className="grid min-h-0 flex-1 auto-rows-[minmax(25px,28px)] content-start gap-0.5 overflow-hidden">
+     <div className="grid min-h-0 flex-1 auto-rows-[minmax(25px,28px)] content-start gap-0.5 overflow-y-auto">
       {detailRowsVisible.map((row, index) => {
        const share = (row.value / detailTotal) * 100
        const label = formatDonutSourceLabel(row.label)
@@ -2718,9 +2892,9 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
          </span>
          <span className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-1 bg-[#111321] px-1.5 py-0 text-black">
           <span className="block truncate text-[13px] font-black uppercase leading-tight" style={{ color: row.color }}>{label}</span>
-          <div className="text-right shrink-0">
+          <div className="text-right shrink-0" data-vt-rail-value>
            <span className="block text-[11px] font-black text-white">{formatClockBurstMetricValue(row.value, metric)}</span>
-           <span className="block text-[9px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span>
+           {railShowsUnit ? <span className="block text-[9px] font-black uppercase tracking-[0.08em] text-white/65">{metricOption.shortLabel}</span> : null}
           </div>
          </span>
         </div>
@@ -2733,6 +2907,7 @@ const ClockRadialBurstRenderer: React.FC<{ dataset: TubeExplorerVisualDataset; m
       ) : null}
      </div>
     </div>
+    )}
    </div>
   </div>
  )
@@ -3369,9 +3544,244 @@ const formatDuration = (seconds: number): string => {
  return `${m}:${s.toString().padStart(2, "0")}`
 }
 
+/** Tile rows the matrix is drawn at; the contract picks one per composition. */
+type HeatMatrixRowCount = 4 | 5 | 6 | 8
+
+const HEAT_MATRIX_ROW_COUNTS: readonly HeatMatrixRowCount[] = [4, 5, 6, 8]
+
+/**
+ * Columns the tile edge is sized to keep on screen at once. The track scrolls
+ * horizontally, so this is only a readability guard against a handful of huge
+ * tiles filling the canvas — it is not what sizes the grid. Height is.
+ */
+const HEAT_MATRIX_MIN_VISIBLE_COLUMNS = 8
+
+/** Snaps a registered row count onto the depths the tile grid supports. */
+const heatMatrixRows = (value: number): HeatMatrixRowCount =>
+ HEAT_MATRIX_ROW_COUNTS.reduce((closest, candidate) =>
+  Math.abs(candidate - value) < Math.abs(closest - value) ? candidate : closest)
+
+/**
+ * Heat Matrix guides: the track scrollbar, the metric stepper, the cold-to-hot
+ * ramp and the how-to-read note.
+ *
+ * These live in the module's bottom section rather than inside the canvas.
+ * Inside, they were taking roughly a third of the evidence area from the tile
+ * field the visual exists to show. The scroller they drive is passed in.
+ */
+const HeatMatrixGuides: React.FC<{
+ scrollerRef: React.RefObject<HTMLDivElement | null>
+ headerColorPair: { icon: string; title: string }
+}> = ({ scrollerRef, headerColorPair }) => {
+ const containerRef = scrollerRef
+ const trackRef = useRef<HTMLDivElement>(null)
+ const [thumbWidth, setThumbWidth] = useState(60)
+ const [thumbLeft, setThumbLeft] = useState(0)
+
+ const updateThumb = useCallback(() => {
+  const el = containerRef.current
+  const tr = trackRef.current
+  if (!el || !tr) return
+  const scrollWidth = el.scrollWidth
+  const clientWidth = el.clientWidth
+  const trackWidth = tr.clientWidth
+  if (scrollWidth <= clientWidth) {
+   setThumbWidth(trackWidth)
+   setThumbLeft(0)
+   return
+  }
+  const ratio = clientWidth / scrollWidth
+  const calculatedThumbWidth = Math.max(20, trackWidth * ratio)
+  setThumbWidth(calculatedThumbWidth)
+  const maxScroll = scrollWidth - clientWidth
+  const maxThumbLeft = trackWidth - calculatedThumbWidth
+  const currentScroll = el.scrollLeft
+  setThumbLeft(maxScroll > 0 ? (currentScroll / maxScroll) * maxThumbLeft : 0)
+ }, [containerRef])
+
+ useEffect(() => {
+  const el = containerRef.current
+  if (!el) return
+  updateThumb()
+  el.addEventListener("scroll", updateThumb, { passive: true })
+  window.addEventListener("resize", updateThumb)
+  return () => {
+   el.removeEventListener("scroll", updateThumb)
+   window.removeEventListener("resize", updateThumb)
+  }
+ }, [updateThumb])
+
+ const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const el = containerRef.current
+  const tr = trackRef.current
+  if (!el || !tr) return
+  const rect = tr.getBoundingClientRect()
+  const clickX = e.clientX - rect.left
+  const ratio = clickX / rect.width
+  el.scrollTo({ left: ratio * (el.scrollWidth - el.clientWidth), behavior: 'smooth' })
+ }
+
+ const handleThumbPointerDown = (e: React.PointerEvent<HTMLSpanElement>) => {
+  e.preventDefault()
+  e.stopPropagation()
+  
+  const startX = e.clientX
+  const el = containerRef.current
+  const tr = trackRef.current
+  if (!el || !tr) return
+
+  const scrollStart = el.scrollLeft
+  const maxThumbTravel = tr.clientWidth - thumbWidth
+  if (maxThumbTravel <= 0) return
+
+  const maxScroll = el.scrollWidth - el.clientWidth
+
+  const onPointerMove = (moveEvent: PointerEvent) => {
+   const deltaX = moveEvent.clientX - startX
+   const deltaScroll = (deltaX / maxThumbTravel) * maxScroll
+   el.scrollLeft = scrollStart + deltaScroll
+  }
+
+  const onPointerUp = () => {
+   window.removeEventListener("pointermove", onPointerMove)
+   window.removeEventListener("pointerup", onPointerUp)
+  }
+
+  window.addEventListener("pointermove", onPointerMove)
+  window.addEventListener("pointerup", onPointerUp)
+ }
+
+ useEffect(() => {
+  const el = containerRef.current
+  if (!el) return
+  updateThumb()
+  el.addEventListener("scroll", updateThumb, { passive: true })
+  window.addEventListener("resize", updateThumb)
+  return () => {
+   el.removeEventListener("scroll", updateThumb)
+   window.removeEventListener("resize", updateThumb)
+  }
+ }, [containerRef, updateThumb])
+
+ return (
+  <div className="flex flex-col" data-vt-data-visual-guides>
+  <div className="flex items-center justify-between gap-3 border-t-[3px] border-black bg-[#080816] px-3 py-1.5 shrink-0">
+   <div className="flex-1 flex items-center min-w-0 pr-2">
+    <div
+     className="w-full flex items-stretch overflow-hidden border-[3px] border-black"
+     style={{
+      height: 30,
+      background: headerColorPair.title,
+     }}
+    >
+     <button
+      type="button"
+      aria-label="Previous metric group"
+      onClick={() => {
+       if (containerRef.current) containerRef.current.scrollBy({ left: -180, behavior: 'smooth' })
+      }}
+      className="flex items-center justify-center border-r-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
+      style={{
+       width: 30,
+       height: "100%",
+       background: headerColorPair.icon,
+       borderRadius: 0,
+      }}
+     >
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left" aria-hidden="true">
+       <path d="m15 18-6-6 6-6"></path>
+      </svg>
+     </button>
+
+     <div
+      ref={trackRef}
+      onClick={handleTrackClick}
+      className="relative flex-1 cursor-pointer touch-none"
+      style={{
+       margin: "3px 6px",
+       borderRadius: 999,
+       background: "#000000",
+      }}
+     >
+      <span
+       className="absolute overflow-hidden pointer-events-none"
+       style={{
+        inset: 2,
+        borderRadius: 999,
+       }}
+      >
+       <span
+        className="absolute top-0 bottom-0 pointer-events-auto cursor-grab active:cursor-grabbing hover:brightness-110"
+        onPointerDown={handleThumbPointerDown}
+        style={{
+         left: `${thumbLeft}px`,
+         width: `${thumbWidth}px`,
+         borderRadius: 999,
+         background: headerColorPair.title,
+         border: 0,
+         minWidth: 20,
+        }}
+       />
+      </span>
+     </div>
+
+     <button
+      type="button"
+      aria-label="Next metric group"
+      onClick={() => {
+       if (containerRef.current) containerRef.current.scrollBy({ left: 180, behavior: 'smooth' })
+      }}
+      className="flex items-center justify-center border-l-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
+      style={{
+       width: 30,
+       height: "100%",
+       background: headerColorPair.icon,
+       borderRadius: 0,
+      }}
+     >
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right" aria-hidden="true">
+       <path d="m9 18 6-6-6-6"></path>
+      </svg>
+     </button>
+    </div>
+   </div>
+
+
+   {/* Legend Spectrum Bar */}
+   <div className="flex items-center gap-2 shrink-0 h-[30px]">
+    <span className="text-[10px] font-[1000] uppercase tracking-[0.15em] text-[#F3F4F6]/60 shrink-0">COLD</span>
+    <div
+     className="h-6 w-[180px] shrink-0 rounded-[4px] border-[1.5px] border-white/80"
+     style={{
+      background: HEAT_GRADIENT,
+      boxShadow: "0 0 8px rgba(250,97,138,0.4)",
+     }}
+    />
+    <span className="text-[10px] font-[1000] uppercase tracking-[0.15em] text-[#F3F4F6]/60 shrink-0">HOT</span>
+    <span className="ml-2 text-[9px] font-[1000] uppercase tracking-[0.1em] text-[#F3F4F6]/40 shrink-0">RANK RELATIVE</span>
+   </div>
+  </div>
+
+  {/* Footer Marquee / Insight. Declared secondary: it compacts and scrolls
+      before the evidence grid gives up any of the canvas. */}
+  <div
+   className="max-h-[22%] shrink-0 overflow-y-auto border-t-[3px] border-black px-3 py-1.5 bg-[#080816]"
+   data-vt-data-visual-secondary="compact">
+   <p className="text-[9px] font-[900] uppercase tracking-[0.06em] text-[#F3F4F6]/40 leading-tight">
+    <span className="text-[#F3F4F6]/70 font-[1000]">HOW TO READ:</span>{" "}
+    Each pixel = one video. Color = performance rank vs. channel average—not raw numbers.
+    Bottom <span className="text-[#528FFA]">75%</span> are cold blue; only top{" "}
+    <span className="text-[#FA618A]">25%</span> earn warm colors.
+    Switch metric dropdown to re-rank instantly. Click pixel to lock stats.
+   </p>
+  </div>
+  </div>
+ )
+}
+
 const ThermalImagingModuleInner: React.FC<{
  displayVideos: any[]
- rows: 5 | 8
+ rows: HeatMatrixRowCount
  hoveredIdx: number | null
  lockedIdx: number | null
  chronologicalMode: boolean
@@ -3380,6 +3790,8 @@ const ThermalImagingModuleInner: React.FC<{
  onClickTile: (idx: number) => void
  heatColor: (t: number) => string
  headerColorPair?: { icon: string; title: string }
+ /** Owned by the module so the guides in its bottom section can scroll this. */
+ scrollerRef: React.RefObject<HTMLDivElement | null>
 }> = ({
  displayVideos,
  rows,
@@ -3390,18 +3802,47 @@ const ThermalImagingModuleInner: React.FC<{
  onMouseLeaveTile,
  onClickTile,
  heatColor,
- headerColorPair = { icon: "#FFB158", title: "#FF7497" },
+ scrollerRef,
 }) => {
- const containerRef = useRef<HTMLDivElement>(null)
- const trackRef = useRef<HTMLDivElement>(null)
+ const containerRef = scrollerRef
  const tileRefs = useRef<Array<HTMLDivElement | null>>([])
- const [thumbWidth, setThumbWidth] = useState(60)
- const [thumbLeft, setThumbLeft] = useState(0)
 
+ // Density is a composition decision, not a scale factor: the contract says how
+ // many columns may be on screen at once in this orientation, and the canvas
+ // box says how much room those columns and rows actually have. The tile edge
+ // is the smaller of the two constraints so tiles stay square and the grid
+ // neither overflows its canvas nor renders unreadably small marks.
+ // How many columns must fit at once. This is a minimum the tile edge is sized
+ // against, not a cap: once the tile hits its scale and floor, however many
+ // columns fit is the answer, and the rest stay reachable by scrolling.
+ const columnBudget = HEAT_MATRIX_MIN_VISIBLE_COLUMNS
+ const canvasBox = useVisualCanvasBox(containerRef)
+
+ const GAP = 2
+ // Row depth is the module's registered composition default (4 rows on a
+ // portrait phone), so it is one decision in one place rather than a clamp here.
  const ROWS = rows
  const cols = Math.ceil(displayVideos.length / ROWS)
- const TILE = rows === 5 ? 58 : 36
- const GAP = 2
+ const TILE = useMemo(() => {
+  // Before the canvas has been measured, fall back to the tile floor rather
+  // than to a guess that would be corrected a frame later.
+  if (canvasBox.width < 1 || canvasBox.height < 1) return DATA_VISUAL_MARK_FLOORS.tileEdge
+  // `useVisualCanvasBox` reports the border box; the scroller carries `p-2`.
+  const SCROLLER_PADDING = 16
+  const innerHeight = canvasBox.height - SCROLLER_PADDING
+  const innerWidth = canvasBox.width - SCROLLER_PADDING
+  // The canvas sizes the tile, and nothing else does. There is deliberately no
+  // preferred edge and no mark scaling on top: the compositions already reduce
+  // density by dropping rows, and a cap over that is what left the grid
+  // occupying a third of the canvas it had been handed.
+  //
+  // Height binds — every row has to fit, and together they should reach the
+  // bottom edge. Width does not, because the track scrolls sideways; it only
+  // enforces the minimum column count above.
+  const fromHeight = Math.floor((innerHeight - (ROWS - 1) * GAP) / ROWS)
+  const fromWidth = Math.floor((innerWidth - (columnBudget - 1) * GAP) / columnBudget)
+  return Math.max(DATA_VISUAL_MARK_FLOORS.tileEdge, Math.min(fromHeight, fromWidth))
+ }, [canvasBox.width, canvasBox.height, ROWS, columnBudget])
 
  // In chronological view only, keep the video with the highest selected-metric
  // value visually identifiable even though the tiles themselves are date-ordered.
@@ -3556,83 +3997,12 @@ const ThermalImagingModuleInner: React.FC<{
   }
  }, [ROWS, cols, displayVideos.length, heatWaveKey])
 
- const updateThumb = useCallback(() => {
-  const el = containerRef.current
-  const tr = trackRef.current
-  if (!el || !tr) return
-  const scrollWidth = el.scrollWidth
-  const clientWidth = el.clientWidth
-  const trackWidth = tr.clientWidth
-  if (scrollWidth <= clientWidth) {
-   setThumbWidth(trackWidth)
-   setThumbLeft(0)
-   return
-  }
-  const ratio = clientWidth / scrollWidth
-  const calculatedThumbWidth = Math.max(20, trackWidth * ratio)
-  setThumbWidth(calculatedThumbWidth)
-  const maxScroll = scrollWidth - clientWidth
-  const maxThumbLeft = trackWidth - calculatedThumbWidth
-  const currentScroll = el.scrollLeft
-  setThumbLeft(maxScroll > 0 ? (currentScroll / maxScroll) * maxThumbLeft : 0)
- }, [])
 
- useEffect(() => {
-  const el = containerRef.current
-  if (!el) return
-  updateThumb()
-  el.addEventListener("scroll", updateThumb, { passive: true })
-  window.addEventListener("resize", updateThumb)
-  return () => {
-   el.removeEventListener("scroll", updateThumb)
-   window.removeEventListener("resize", updateThumb)
-  }
- }, [updateThumb])
-
- const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
-  const el = containerRef.current
-  const tr = trackRef.current
-  if (!el || !tr) return
-  const rect = tr.getBoundingClientRect()
-  const clickX = e.clientX - rect.left
-  const ratio = clickX / rect.width
-  el.scrollTo({ left: ratio * (el.scrollWidth - el.clientWidth), behavior: 'smooth' })
- }
-
- const handleThumbPointerDown = (e: React.PointerEvent<HTMLSpanElement>) => {
-  e.preventDefault()
-  e.stopPropagation()
-  
-  const startX = e.clientX
-  const el = containerRef.current
-  const tr = trackRef.current
-  if (!el || !tr) return
-
-  const scrollStart = el.scrollLeft
-  const maxThumbTravel = tr.clientWidth - thumbWidth
-  if (maxThumbTravel <= 0) return
-
-  const maxScroll = el.scrollWidth - el.clientWidth
-
-  const onPointerMove = (moveEvent: PointerEvent) => {
-   const deltaX = moveEvent.clientX - startX
-   const deltaScroll = (deltaX / maxThumbTravel) * maxScroll
-   el.scrollLeft = scrollStart + deltaScroll
-  }
-
-  const onPointerUp = () => {
-   window.removeEventListener("pointermove", onPointerMove)
-   window.removeEventListener("pointerup", onPointerUp)
-  }
-
-  window.addEventListener("pointermove", onPointerMove)
-  window.addEventListener("pointerup", onPointerUp)
- }
 
  if (displayVideos.length === 0) return <Empty label="No videos match the selected filters" />
 
  return (
-  <div className="flex flex-col overflow-hidden" style={{ background: "#080816" }}>
+  <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden" style={{ background: "#080816" }}>
    <style>{`
     @keyframes vt-heat-rank-one-pulse {
       0%, 100% { background-color: var(--vt-heat-color); }
@@ -3662,8 +4032,9 @@ const ThermalImagingModuleInner: React.FC<{
    {/* Grid container */}
    <div className="flex flex-1 min-h-0 overflow-hidden">
     <div
-     className="flex-1 overflow-x-auto overflow-y-hidden p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+     className="flex min-h-0 min-w-0 flex-1 items-center overflow-x-auto overflow-y-hidden p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
      ref={containerRef}
+     data-vt-data-visual-overflow="scroll"
      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
     >
      <div
@@ -3675,6 +4046,10 @@ const ThermalImagingModuleInner: React.FC<{
        gap: GAP,
        width: cols * TILE + (cols - 1) * GAP,
        height: ROWS * TILE + (ROWS - 1) * GAP,
+       // Centres the grid while it is narrower than the scroller, and — unlike
+       // `justify-content: center` — keeps the first column reachable once the
+       // track overflows.
+       marginInline: "auto",
       }}
      >
       {displayVideos.map((v, i) => {
@@ -3714,114 +4089,6 @@ const ThermalImagingModuleInner: React.FC<{
     </div>
    </div>
 
-  {/* Combined Scrollbar + Legend Spectrum Row */}
-   <div className="flex items-center justify-between gap-3 border-t-[3px] border-black bg-[#080816] px-3 py-1.5 shrink-0">
-    <div className="flex-1 flex items-center min-w-0 pr-2">
-     <div
-      className="w-full flex items-stretch overflow-hidden border-[3px] border-black"
-      style={{
-       height: 30,
-       background: headerColorPair.title,
-      }}
-     >
-      <button
-       type="button"
-       aria-label="Previous metric group"
-       onClick={() => {
-        if (containerRef.current) containerRef.current.scrollBy({ left: -180, behavior: 'smooth' })
-       }}
-       className="flex items-center justify-center border-r-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
-       style={{
-        width: 30,
-        height: "100%",
-        background: headerColorPair.icon,
-        borderRadius: 0,
-       }}
-      >
-       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left" aria-hidden="true">
-        <path d="m15 18-6-6 6-6"></path>
-       </svg>
-      </button>
-
-      <div
-       ref={trackRef}
-       onClick={handleTrackClick}
-       className="relative flex-1 cursor-pointer touch-none"
-       style={{
-        margin: "3px 6px",
-        borderRadius: 999,
-        background: "#000000",
-       }}
-      >
-       <span
-        className="absolute overflow-hidden pointer-events-none"
-        style={{
-         inset: 2,
-         borderRadius: 999,
-        }}
-       >
-        <span
-         className="absolute top-0 bottom-0 pointer-events-auto cursor-grab active:cursor-grabbing hover:brightness-110"
-         onPointerDown={handleThumbPointerDown}
-         style={{
-          left: `${thumbLeft}px`,
-          width: `${thumbWidth}px`,
-          borderRadius: 999,
-          background: headerColorPair.title,
-          border: 0,
-          minWidth: 20,
-         }}
-        />
-       </span>
-      </div>
-
-      <button
-       type="button"
-       aria-label="Next metric group"
-       onClick={() => {
-        if (containerRef.current) containerRef.current.scrollBy({ left: 180, behavior: 'smooth' })
-       }}
-       className="flex items-center justify-center border-l-[3px] border-black cursor-pointer shrink-0 transition-opacity hover:opacity-90 active:opacity-75"
-       style={{
-        width: 30,
-        height: "100%",
-        background: headerColorPair.icon,
-        borderRadius: 0,
-       }}
-      >
-       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right" aria-hidden="true">
-        <path d="m9 18 6-6-6-6"></path>
-       </svg>
-      </button>
-     </div>
-    </div>
-
-
-    {/* Legend Spectrum Bar */}
-    <div className="flex items-center gap-2 shrink-0 h-[30px]">
-     <span className="text-[10px] font-[1000] uppercase tracking-[0.15em] text-[#F3F4F6]/60 shrink-0">COLD</span>
-     <div
-      className="h-6 w-[180px] shrink-0 rounded-[4px] border-[1.5px] border-white/80"
-      style={{
-       background: HEAT_GRADIENT,
-       boxShadow: "0 0 8px rgba(250,97,138,0.4)",
-      }}
-     />
-     <span className="text-[10px] font-[1000] uppercase tracking-[0.15em] text-[#F3F4F6]/60 shrink-0">HOT</span>
-     <span className="ml-2 text-[9px] font-[1000] uppercase tracking-[0.1em] text-[#F3F4F6]/40 shrink-0">RANK RELATIVE</span>
-    </div>
-   </div>
-
-   {/* Footer Marquee / Insight */}
-   <div className="border-t-[3px] border-black px-3 py-1.5 bg-[#080816] shrink-0">
-    <p className="text-[9px] font-[900] uppercase tracking-[0.06em] text-[#F3F4F6]/40 leading-tight">
-     <span className="text-[#F3F4F6]/70 font-[1000]">HOW TO READ:</span>{" "}
-     Each pixel = one video. Color = performance rank vs. channel average—not raw numbers.
-     Bottom <span className="text-[#528FFA]">75%</span> are cold blue; only top{" "}
-     <span className="text-[#FA618A]">25%</span> earn warm colors.
-     Switch metric dropdown to re-rank instantly. Click pixel to lock stats.
-    </p>
-   </div>
   </div>
  )
 }
@@ -3832,7 +4099,12 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
  const [metric, setMetric] = useState<ThermalMetricKey>("views")
  const [formatFilter, setFormatFilter] = useState<"all" | "shorts" | "long">("all")
  const [orderMode, setOrderMode] = useState<"chrono" | "rank">("chrono")
- const [rowCount, setRowCount] = useState<5 | 8>(8)
+ // 8 rows on desktop, 6 in landscape, 4 on a portrait phone.
+ const [registeredRowCount] = useDataVisualSelection("heat-matrix", 8)
+ const rowCount = heatMatrixRows(registeredRowCount)
+ // The tile track lives in the canvas; the scrollbar that drives it lives in
+ // the bottom section, so the module owns the ref that joins them.
+ const tileScrollerRef = useRef<HTMLDivElement | null>(null)
 
  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
  const [lockedIdx, setLockedIdx] = useState<number | null>(null)
@@ -3981,7 +4253,9 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
    subtitle="Ranks each video as a pixel by the selected metric and format."
    count={displayVideos.length}
    color="#FFB158"
-   height={420}
+   canvasModuleId="heat-matrix"
+   stableChartFrame={false}
+   legend={<HeatMatrixGuides scrollerRef={tileScrollerRef} headerColorPair={props.visualStyle?.headerColorPair ?? { icon: "#FFB158", title: "#FF7497" }} />}
    flushShell
    insightDark
    collapsible={props.collapsible}
@@ -4030,9 +4304,10 @@ export const TubeExplorerThermalImaging: React.FC<TubeExplorerVisualProps> = (pr
      },
    ]}
    >
-    <HeroIntroBoundary visualId="heat-matrix" replayKey={`${metric}-${formatFilter}-${orderMode}-${rowCount}`}>
+    <HeroIntroBoundary visualId="heat-matrix" className="h-full min-h-0 w-full min-w-0" replayKey={`${metric}-${formatFilter}-${orderMode}-${rowCount}`}>
      <div className="relative h-full w-full bg-[#0a0a1a]">
       <ThermalImagingModuleInner
+       scrollerRef={tileScrollerRef}
        displayVideos={displayVideos}
        rows={rowCount}
        hoveredIdx={hoveredIdx}
@@ -4760,10 +5035,23 @@ const buildTreemapPillars = (
 
 const TREEMAP_PILLAR_COUNTS = [8, 12, 16, 24, 0] as const
 /** Explicit stage height: h-full cannot resolve reliably inside StableChartFrame's ResponsiveContainer. */
-const TREEMAP_STAGE_HEIGHT = 452
+/**
+ * Fallback stage height for the first frame only. The canvas contract owns the
+ * real geometry once `VisualCanvasViewport` has measured itself; this constant
+ * exists so the treemap layout has a non-zero box before that happens.
+ */
+const TREEMAP_STAGE_FALLBACK_HEIGHT = 452
+
+/**
+ * Average advance width of the tile font (Archivo Black, uppercase, weight
+ * 1000) as a fraction of its em size. The previous 0.58 estimate was tuned for
+ * a lighter face and under-measured every label, which clipped pillar names
+ * mid-word once tiles got narrow on a phone.
+ */
+const TREEMAP_LABEL_EM_WIDTH = 0.72
 
 const treemapFontSize = (text: string, width: number, height: number, min: number, max: number): number => {
- const widthFit = (Math.max(0, width) - 12) / Math.max(1, text.length * 0.58)
+ const widthFit = (Math.max(0, width) - 12) / Math.max(1, text.length * TREEMAP_LABEL_EM_WIDTH)
  const heightFit = Math.max(0, height) * 0.3
  return Math.max(min, Math.min(max, Math.floor(widthFit), Math.floor(heightFit)))
 }
@@ -4775,12 +5063,21 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
  const [countIndex, setCountIndex] = useState(1)
  const [drillWord, setDrillWord] = useState<string | null>(null)
  const [hovered, setHovered] = useState<{ label: string; value: number; sub: string } | null>(null)
- const [box, setBox] = useState({ width: 0, height: TREEMAP_STAGE_HEIGHT })
+ const [box, setBox] = useState({ width: 0, height: TREEMAP_STAGE_FALLBACK_HEIGHT })
  const stageRef = useRef<HTMLDivElement | null>(null)
 
  const metric = TREEMAP_METRICS[metricIndex]
  const formatMode = VITAL_FORMAT_MODES[formatIndex]
- const pillarLimit = TREEMAP_PILLAR_COUNTS[countIndex]
+ const selectedPillarLimit = TREEMAP_PILLAR_COUNTS[countIndex]
+ // Phone compositions show fewer pillars rather than the same pillars rendered
+ // too small to label; the rest stay reachable through the count control and
+ // the drill-in interaction.
+ const { bucket: treemapBucket, budget: pillarBudget } = useDataVisualDensityBudget("content-treemap", 12)
+ const pillarLimit = treemapBucket === "desktop"
+  ? selectedPillarLimit
+  : selectedPillarLimit === 0
+   ? pillarBudget
+   : Math.min(selectedPillarLimit, pillarBudget)
 
  /**
   * The stage sits inside StableChartFrame, which mounts children only after it
@@ -4795,7 +5092,7 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
    const node = stageRef.current
    if (node) {
     const width = node.clientWidth
-    const height = node.clientHeight || TREEMAP_STAGE_HEIGHT
+    const height = node.clientHeight || TREEMAP_STAGE_FALLBACK_HEIGHT
     if (width > 0) {
      setBox((current) => (current.width === width && current.height === height ? current : { width, height }))
      if (!observer && typeof ResizeObserver !== "undefined") {
@@ -4820,7 +5117,7 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
 
  const pillars = useMemo(() => {
   const all = buildTreemapPillars(scoped, metric.key)
-  return pillarLimit === 0 ? all : all.slice(0, pillarLimit)
+  return pillarLimit <= 0 ? all : all.slice(0, pillarLimit)
  }, [metric.key, pillarLimit, scoped])
 
  const drilled = drillWord ? pillars.find((pillar) => pillar.word === drillWord) || null : null
@@ -4880,7 +5177,8 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
    subtitle="Pillar area map · area = selected metric · click a pillar to zoom in."
    count={scoped.length}
    color="#FFB570"
-   height={480}
+   canvasModuleId="content-treemap"
+   stableChartFrame={false}
    flushShell
    insightDark
    collapsible={props.collapsible}
@@ -4892,7 +5190,7 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
    controllerRows={[
     {
      type: "number",
-     value: drilled ? String(drilled.videos.length) : pillarLimit === 0 ? String(pillars.length) : String(Math.min(pillarLimit, pillars.length)),
+     value: drilled ? String(drilled.videos.length) : String(pillars.length),
      onPrev: () => { setCountIndex((i) => (i + TREEMAP_PILLAR_COUNTS.length - 1) % TREEMAP_PILLAR_COUNTS.length); setDrillWord(null) },
      onNext: () => { setCountIndex((i) => (i + 1) % TREEMAP_PILLAR_COUNTS.length); setDrillWord(null) },
      bgTone: "#FFEA00",
@@ -4918,13 +5216,17 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
     },
    ]}
   >
-   <div className="relative w-full overflow-hidden bg-[#0a0a1a] p-2" style={{ height: TREEMAP_STAGE_HEIGHT }}>
+   <div className="relative h-full min-h-0 w-full min-w-0 overflow-hidden bg-[#0a0a1a] p-2">
     <div ref={stageRef} className="relative h-full w-full">
      {rects.length === 0 ? <Empty label="No keyword pillars available for the current filters." /> : rects.map((rect) => {
       const tiny = rect.w < 52 || rect.h < 30
       const small = rect.w < 118 || rect.h < 58
-      const titleSize = treemapFontSize(rect.label, rect.w, rect.h, tiny ? 5 : 7, drilled ? 20 : 26)
-      const statSize = treemapFontSize(rect.sub, rect.w, rect.h * 0.45, 7, 15)
+      // Labels ellipsise rather than shrink past the legibility floor, and a
+      // tile too small to carry a second line drops the stat instead of
+      // printing it at 7px. Colour and hover still carry the value.
+      const titleSize = treemapFontSize(rect.label, rect.w, rect.h, DATA_VISUAL_MARK_FLOORS.fontSize, drilled ? 20 : 26)
+      const statSize = treemapFontSize(rect.sub, rect.w, rect.h * 0.45, DATA_VISUAL_MARK_FLOORS.fontSize, 15)
+      const fitsStatLine = !tiny && rect.h >= 44 && rect.w >= 70
       return (
        <button
         key={rect.key}
@@ -4944,13 +5246,13 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
         title={`${rect.label} · ${rect.sub}`}
        >
         <span
-         className="block max-w-full overflow-hidden whitespace-nowrap font-[1000] uppercase leading-none tracking-[-0.02em]"
+         className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-[1000] uppercase leading-none tracking-[-0.02em]"
          style={{ fontSize: titleSize }}
         >
          {rect.label}
         </span>
-        {!tiny && (
-         <span className="font-[1000] uppercase leading-tight tracking-[0.02em]" style={{ fontSize: statSize }}>
+        {fitsStatLine && (
+         <span className="overflow-hidden text-ellipsis whitespace-nowrap font-[1000] uppercase leading-tight tracking-[0.02em]" style={{ fontSize: statSize }}>
           {rect.sub}
          </span>
         )}
@@ -5406,6 +5708,12 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
 
  const option = PUBLISH_CLOCK_METRICS.find((entry) => entry.key === metric) || PUBLISH_CLOCK_METRICS[0]
 
+ // Portrait phones get 12 two-hour bands instead of 24 hourly columns. The
+ // aggregation happens here, before ranking, so the colour ramp still ranks
+ // whatever is actually drawn.
+ const { budget: clockColumnBudget } = useDataVisualDensityBudget("publish-optimal-clock", 24)
+ const hourStep = clockColumnBudget >= 24 ? 1 : 2
+
  const { cells, scopedCount } = useMemo(() => {
   const scoped = dataset.videos.filter((video) => {
    if (!hasPrecisePublishTimestamp(video.uploadDate)) return false
@@ -5420,7 +5728,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
   scoped.forEach((video) => {
    const date = new Date(video.uploadDate)
    if (Number.isNaN(date.getTime())) return
-   const bucket = buckets[date.getDay()]?.[date.getHours()]
+   const bucket = buckets[date.getDay()]?.[Math.floor(date.getHours() / hourStep) * hourStep]
    if (!bucket) return
    bucket.total += metric === "uploads" ? 1 : Number(video[metric as keyof TubeExplorerVideoPoint]) || 0
    bucket.uploads += 1
@@ -5431,7 +5739,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
    bucket.revenue += video.revenue
   })
 
-  const flat: PublishClockCell[] = buckets.flatMap((hoursRow, dayIndex) => hoursRow.map((bucket, hour) => ({
+  const flat: PublishClockCell[] = buckets.flatMap((hoursRow, dayIndex) => hoursRow.flatMap((bucket, hour) => (hour % hourStep !== 0 ? [] : [{
    dayIndex,
    hour,
    value: option.average && bucket.uploads > 0 ? bucket.total / bucket.uploads : bucket.total,
@@ -5442,7 +5750,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
    likes: bucket.likes,
    revenue: bucket.revenue,
    rank: 0,
-  })))
+  }])))
 
   // Rank against populated cells only, so a handful of busy slots cannot flatten the rest.
   const populated = flat.filter((cell) => cell.uploads > 0).sort((a, b) => a.value - b.value)
@@ -5455,15 +5763,20 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
    cells: flat.map((cell) => ({ ...cell, rank: rankByKey.get(publishClockCellKey(cell)) ?? 0 })),
    scopedCount: scoped.length,
   }
- }, [dataset.videos, formatFilter, metric, option])
+ }, [dataset.videos, formatFilter, metric, option, hourStep])
 
  const best = cells.reduce<PublishClockCell | null>(
   (top, cell) => (cell.uploads > 0 && (!top || cell.value > top.value) ? cell : top),
   null,
  )
  const activeCell = hovered || best
- const slotLabel = (cell: PublishClockCell | null) =>
-  cell ? `${PUBLISH_CLOCK_DAYS[cell.dayIndex]} ${String(cell.hour).padStart(2, "0")}:00` : "—"
+ const slotLabel = (cell: PublishClockCell | null) => {
+  if (!cell) return "—"
+  const start = `${String(cell.hour).padStart(2, "0")}:00`
+  if (hourStep === 1) return `${PUBLISH_CLOCK_DAYS[cell.dayIndex]} ${start}`
+  const end = `${String((cell.hour + hourStep) % 24).padStart(2, "0")}:00`
+  return `${PUBLISH_CLOCK_DAYS[cell.dayIndex]} ${start}–${end}`
+ }
 
  // Window rollups back the strip when nothing is hovered, so it always reads as a summary.
  const windowTotals = cells.reduce(
@@ -5490,7 +5803,9 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
    subtitle="Day and time cells for upload performance."
    count={scopedCount}
    color="#CCFF00"
-   height={420}
+   canvasModuleId="publish-optimal-clock"
+   stableChartFrame={false}
+   legend={<PublishOptimalClockGuides cells={cells} hourStep={hourStep} />}
    flushShell
    insightDark
    collapsible={props.collapsible}
@@ -5538,6 +5853,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
     cells={cells}
     metricLabel={option.label}
     formatValue={option.format}
+    hourStep={hourStep}
     hoveredKey={hovered ? publishClockCellKey(hovered) : null}
     onHover={setHovered}
    />
@@ -5740,13 +6056,14 @@ export const TubeExplorerClockRadialBurst: React.FC<TubeExplorerVisualProps> = (
      fgTone: "#000000",
     },
    ]}
-   height={460}
+   canvasModuleId="clock-radial-burst"
+   stableChartFrame={false}
    flushShell
    insightDark
    collapsible={props.collapsible}
    isOpenInitial={props.isOpenInitial}
   >
-   <HeroIntroBoundary visualId="clockburst" replayKey={metric}>
+   <HeroIntroBoundary visualId="clockburst" className="h-full min-h-0 w-full min-w-0" replayKey={metric}>
     <ClockRadialBurstRenderer dataset={dataset} metric={metric} />
    </HeroIntroBoundary>
   </ModuleFrame>

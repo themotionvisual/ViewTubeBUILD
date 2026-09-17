@@ -1,0 +1,62 @@
+name: Data Visual Mobile Audit
+
+# Screenshots plus canvas-contract assertions for the migrated Data Visual
+# modules. The job fails when a visual breaks its registered canvas contract
+# (wrong aspect, runaway height, page-level horizontal overflow, a radial plot
+# that stopped being square), and uploads the rendered screenshots either way so
+# a change can be inspected rather than assumed.
+
+on:
+  push:
+    branches:
+      - claude/viewtube-data-visual-responsive-qyk8rp
+  pull_request:
+    paths:
+      - 'src/components/DataVisual*'
+      - 'src/components/VisualCanvasViewport.tsx'
+      - 'src/components/dataVisual*'
+      - 'src/components/TubeExplorerVisualModules.tsx'
+      - 'src/components/GraphsPageCharts.tsx'
+      - 'src/styles/data-visual-canvas.css'
+      - 'public/data-visual-preview-16x9.*'
+      - 'public/mobile-visual-responsive-system.css'
+      - 'src/views/bench/DataVisualMobileAudit.tsx'
+      - 'src/views/bench/dataVisualAuditFixture.ts'
+      - 'scripts/capture-data-visual-mobile-audit.mjs'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Build exact branch
+        run: npm run build
+      - name: Start local ViewTube preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/viewtube-preview.log 2>&1 &
+          echo $! > /tmp/viewtube-preview.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/viewtube-preview.log
+          exit 1
+      - name: Capture and verify every Data Visual canvas
+        env:
+          PREVIEW_URL: http://127.0.0.1:4173
+        run: node scripts/capture-data-visual-mobile-audit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: data-visual-mobile-audit
+          path: artifacts/data-visual-mobile-audit
+          if-no-files-found: error
+          retention-days: 14

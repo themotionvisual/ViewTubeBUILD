@@ -1,6 +1,7 @@
 import React from "react"
 import { WidgetShell } from "../WidgetShell"
 import { TrendingDown } from "lucide-react"
+import { InstrumentExplanation, InstrumentSignals, WidgetInstrument } from "../instruments/WidgetInstrument"
 
 export const AudienceRetentionWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove }: any) => {
  const common = {
@@ -21,7 +22,16 @@ export const AudienceRetentionWidget = ({ widget, instance, editMode, onToggleCo
  const pathData = "M 0 10 C 10 10, 20 50, 30 50 C 60 60, 80 70, 95 85 L 100 85"
 
  return (
-  <WidgetShell {...common} icon={<TrendingDown size={22} />}>
+  <WidgetShell {...common} icon={<TrendingDown size={22} />} helpContent={
+   <WidgetInstrument archetype="lens" label="RETENTION LENS" summary="FOLLOW VIEWER HOLD ACROSS THE VIDEO">
+    <InstrumentSignals signals={[
+     { id: "open", label: "Opening", value: "HOOK", direction: "neutral", intensity: 1 },
+     { id: "average", label: "Middle", value: "HOLD", direction: "down", intensity: .5 },
+     { id: "end", label: "End screen", value: "EXIT", direction: "down", intensity: .2 },
+    ]} />
+    <InstrumentExplanation purpose="Explain where viewer attention is retained or lost." process="The lens follows the retention curve from the opening hook through the end screen." result="Investigate sharp drops and use them to improve pacing, structure and future hooks." />
+   </WidgetInstrument>
+  }>
    <div
     style={{
      display: "flex",

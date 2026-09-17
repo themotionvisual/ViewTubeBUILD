@@ -37,6 +37,7 @@ import {
  type WidgetSelectOption as SelectOption,
 } from "../WidgetPrimitives"
 import { WidgetShell } from "../WidgetShell"
+import { InstrumentExplanation, InstrumentStages, WidgetInstrument } from "../instruments/WidgetInstrument"
 import { buildVideoAssetOptions } from "./videoAssetOptions"
 import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
 
@@ -518,7 +519,16 @@ const VideoMetadataWorkspace = ({ mode, data }: { mode: WorkflowMode; data: Dash
 }
 
 const VideoWorkflowWidget = ({ mode, data, ...common }: WidgetProps & { mode: WorkflowMode }) => (
- <WidgetShell {...common} icon={mode === "upload" ? <UploadCloud size={22} /> : <Pencil size={22} />}>
+ <WidgetShell {...common} icon={mode === "upload" ? <UploadCloud size={22} /> : <Pencil size={22} />} helpContent={mode === "upload" ?
+  <WidgetInstrument archetype="launch" label="UPLOAD LAUNCH GANTRY" summary="PREPARE, CLEAR AND PUBLISH" compact>
+   <InstrumentStages stages={[
+    { id: "details", label: "Package", detail: "Add video details" },
+    { id: "options", label: "Configure", detail: "Set the audience" },
+    { id: "ads", label: "Clearance", detail: "Review suitability" },
+    { id: "publish", label: "Launch", detail: "Confirm and publish" },
+   ]} />
+   <InstrumentExplanation purpose="Explain the decisions required for a complete upload." process="Build the video package, configure audience options, declare ad suitability, then publish." result="A YouTube upload with explicit metadata, visibility and safety decisions." />
+  </WidgetInstrument> : undefined}>
   <VideoMetadataWorkspace mode={mode} data={data} />
  </WidgetShell>
 )

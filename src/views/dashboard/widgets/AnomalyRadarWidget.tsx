@@ -2,6 +2,7 @@ import React, { useMemo } from "react"
 import { Radar } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
 import { WidgetScrollArea } from "../WidgetPrimitives"
+import { InstrumentExplanation, InstrumentSignals, WidgetInstrument } from "../instruments/WidgetInstrument"
 import type { DashboardData } from "../useDashboardData"
 import type { CommonWidgetProps } from "../types"
 
@@ -24,14 +25,33 @@ export const AnomalyRadarWidget: React.FC<CommonWidgetProps & { data: DashboardD
       const current = values[0] || 0
       const delta = baseline > 0 ? ((current - baseline) / baseline) * 100 : 0
       return Math.abs(delta) >= 25 ? [{ label, delta, current }] : []
-    }).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+    }).sort((a: { delta: number }, b: { delta: number }) => Math.abs(b.delta) - Math.abs(a.delta))
   }, [data.dailySeries])
+  const radarSignals = [
+    ["views", "VIEWS", "Views"],
+    ["subscribers", "SUBSCRIBERS", "Subscribers"],
+    ["revenue", "REVENUE", "Revenue"],
+  ].map(([id, anomalyLabel, label]) => {
+    const anomaly = anomalies.find((item) => item.label === anomalyLabel)
+    return {
+      id,
+      label,
+      value: anomaly ? `${anomaly.delta > 0 ? "+" : ""}${anomaly.delta.toFixed(0)}%` : "CLEAR",
+      direction: anomaly ? (anomaly.delta < 0 ? "down" as const : "up" as const) : "neutral" as const,
+      intensity: Math.min(1, Math.abs(anomaly?.delta || 0) / 100),
+    }
+  })
 
   return (
-    <WidgetShell {...common} icon={<Radar size={22} />}>
+    <WidgetShell {...common} icon={<Radar size={22} />} helpContent={
+      <WidgetInstrument archetype="radar" label="SIGNAL RADAR" summary="CURRENT DAY AGAINST 27-DAY BASELINE">
+        <InstrumentSignals signals={radarSignals} />
+        <InstrumentExplanation purpose="Detect meaningful changes before they disappear into averages." process="The latest day is compared with the preceding daily baseline; changes at or above 25% become signals." result="Open Analytics to identify the videos and sources responsible for the change." />
+      </WidgetInstrument>
+    }>
       <div className="vt-new-widget vt-anomaly-radar">
         <div className="vt-radar-summary"><strong>{anomalies.length}</strong><span>SIGNALS OUTSIDE BASELINE</span></div>
-        <WidgetScrollArea className="vt-radar-list">
+        <WidgetScrollArea ariaLabel="Anomaly signals" className="vt-radar-list">
           {anomalies.length ? anomalies.map((item) => <div className="vt-radar-row" key={item.label}>
             <span className="vt-radar-dot" data-direction={item.delta >= 0 ? "up" : "down"} />
             <div><strong>{item.label}</strong><small>{item.delta >= 0 ? "SPIKE" : "DROP"} VS RECENT BASELINE</small></div>
