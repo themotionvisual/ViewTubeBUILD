@@ -11,6 +11,18 @@ describe("Video Manager canonical Studio Hub contract", () => {
   expect(source).toContain("RECONNECT YOUR YOUTUBE CHANNEL TO LOAD VIDEOS")
  })
 
+ it("keeps the normal workspace mounted while the connected catalog loads", () => {
+  expect(source).toContain('const catalogLoading = connected && videoListLoadState === "loading"')
+  expect(source).toContain("selectedVideo || !connected || catalogLoading")
+  expect(source).toContain("LOADING YOUR YOUTUBE VIDEO CATALOG…")
+  expect(source).not.toContain("Connecting Video Catalog...")
+ })
+
+ it("does not enable data-bound edits before a video is selected", () => {
+  expect(source).toContain("disabled={!connected || !selectedVideo}")
+  expect(source).toContain("disabled={connected ? saving || !selectedVideoId : auth.loading}")
+ })
+
  it("uses the canonical split-left selector family", () => {
   expect(source).toContain("SubToolboxSplitDropdown")
   expect(source).toContain("SubToolboxSplitButton")

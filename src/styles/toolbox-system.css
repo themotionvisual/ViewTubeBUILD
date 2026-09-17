@@ -23,7 +23,9 @@
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
   height: 56px !important;
   min-height: 56px !important;
+  max-height: 56px !important;
   border-bottom: 0 !important;
+  overflow: hidden !important;
 }
 
 /* Expanded shell divider spans the full header, including beneath the square icon rail. */
@@ -39,6 +41,11 @@
   z-index: 30;
 }
 
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
   width: 56px !important;
   min-width: 56px !important;
@@ -48,15 +55,42 @@
   border-right: 5px solid #000 !important;
 }
 
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :nth-child(2) {
+  min-width: 0 !important;
+  padding-left: 4px !important;
+  padding-right: 2px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
+  display: -webkit-box !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   font-size: 28px !important;
-  line-height: 1 !important;
+  line-height: .82 !important;
   font-weight: 1000 !important;
 }
 
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :last-child {
+  flex: 0 0 auto !important;
+  min-width: max-content !important;
+  gap: 4px !important;
+  padding-right: 4px !important;
+}
+
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header svg {
-  max-width: 36px;
-  max-height: 36px;
+  width: 28px !important;
+  height: 28px !important;
+  max-width: 28px !important;
+  max-height: 28px !important;
+  stroke-width: 2 !important;
 }
 
 /* Main toolbox content establishes the level-1 module contract. */
@@ -99,7 +133,9 @@
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
   height: 44px !important;
   min-height: 44px !important;
+  max-height: 44px !important;
   border-bottom: 0 !important;
+  overflow: hidden !important;
 }
 
 /* SubToolbox uses the same full-width expanded-header divider law at its own stroke width. */
@@ -115,9 +151,55 @@
   z-index: 30;
 }
 
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :nth-child(2) {
+  min-width: 0 !important;
+  padding-left: 4px !important;
+  padding-right: 2px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header h3 {
+  display: -webkit-box !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 22px !important;
+  line-height: .82 !important;
+  font-weight: 900 !important;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :last-child {
+  flex: 0 0 auto !important;
+  min-width: max-content !important;
+  gap: 2px !important;
+  padding-right: 2px !important;
+}
+
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header svg {
-  max-width: 28px;
-  max-height: 28px;
+  width: 28px !important;
+  height: 28px !important;
+  max-width: 28px !important;
+  max-height: 28px !important;
+  stroke-width: 2 !important;
+}
+
+/* A small edge inset prevents first/last child borders and shadows from striking the shell edge. */
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] .vt-subtoolbox-content {
+  box-sizing: border-box;
+  padding-left: max(2px, var(--vt-subtoolbox-content-inline-inset, 2px)) !important;
+  padding-right: max(2px, var(--vt-subtoolbox-content-inline-inset, 2px)) !important;
+  padding-bottom: max(2px, var(--vt-subtoolbox-content-bottom-inset, 2px)) !important;
 }
 
 /* Compatibility accordion resolves to the same single SubToolbox geometry. */
@@ -144,7 +226,7 @@
   padding: 0 !important;
   font-size: 22px !important;
   font-weight: 900 !important;
-  line-height: 1 !important;
+  line-height: .82 !important;
 }
 [data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-rail],
 [data-vt-toolbox-level="sub"] .vt-split-left-module-action > :first-child {
@@ -165,9 +247,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-inline: 12px;
+  padding-inline: 4px;
   font-size: 22px !important;
   font-weight: 900 !important;
+  line-height: .82 !important;
 }
 
 /* Compatibility grid actions that still carry historical inline heights are capped to T1. */
@@ -186,6 +269,7 @@
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
     height: 56px !important;
     min-height: 56px !important;
+    max-height: 56px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
@@ -193,5 +277,10 @@
     min-width: 56px !important;
     height: 56px !important;
     flex-basis: 56px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :last-child {
+    gap: 2px !important;
+    padding-right: 2px !important;
   }
 }
