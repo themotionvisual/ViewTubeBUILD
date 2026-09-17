@@ -18,6 +18,9 @@ const SKIP_DIRS = new Set([
 ]);
 const QUARANTINE_CHECKER_ALLOWLIST = new Set([
   path.join(ROOT, 'scripts', 'check-src-governance.mjs'),
+  // Searches _quarantine as a prior-art source rather than importing from it: "we tried
+  // that and quarantined it" is a real recon answer. Reads filenames only.
+  path.join(ROOT, 'scripts', 'herald-brief.mjs'),
 ]);
 
 function walk(dir, out = []) {

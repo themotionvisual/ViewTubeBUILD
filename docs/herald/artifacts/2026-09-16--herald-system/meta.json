@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "viewtube.herald.conversation.v1",
+  "name": "herald system",
+  "app": "Claude Code (web)",
+  "status": "in-progress",
+  "branch": "claude/iewtuve-ai-system-aedxj4",
+  "summary": "Built the Herald cross-application conversation system: contracts, registries, skill distribution, hooks, artifact organisation",
+  "taskIds": [],
+  "referenced": [
+    "docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md",
+    "agent/contracts/"
+  ]
+}

@@ -42,6 +42,8 @@ jobs:
       - run: npm run check:agent-sync
       # Conversation artifacts: canonical version loose, variants nested, indexes current.
       - run: npm run check:artifacts
+      # Conversation log: every folder has meta.json and the table is current.
+      - run: npm run check:log
 
   focused_contracts:
     name: focused-contracts

@@ -26,6 +26,17 @@ for this entire conversation.
   `git ls-remote --heads origin` for branch history — local refs will wrongly say nothing
   exists.
 
+## Save my usage — start from the cache
+
+Before re-deriving anything, run `npm run brief -- <topic words>`. It returns prior
+conversations on the topic, matching branches out of 343, and registry hits, in one small
+pack. If you cannot run commands, ask me to paste its output. Spend the context once, keep
+the conclusion, and do not re-read five registries to rediscover it.
+
+Other ways not to waste my usage: prefer a script over a model call when a script can
+answer; cite a path instead of pasting the file; read a range (`sed -n '40,80p'`) instead of
+a whole file; and never re-run a search whose answer is already in the conversation log.
+
 ## How to answer
 
 Pick a tier, then include its blocks. When torn, take the higher tier.
@@ -54,6 +65,25 @@ Pick a tier, then include its blocks. When torn, take the higher tier.
    exists? Recommend it anyway marked `unverified` with `gh repo view owner/repo`. **Never
    stay silent because you could not check.** "Nothing worth adding" is fine as one explicit
    line.
+   Also **propose what to build and what to retire**:
+   - A durable artifact when the work suggests one — most often a **standalone HTML file**.
+     They work well here: one file, everything inline, no build, opens offline forever. Good
+     ones carry a self-describing header with date and source, the **data as a JSON block
+     near the top** so it can be regenerated, search/filter/sort past ~20 rows, state in
+     `localStorage` **plus explicit export/import** (never storage alone — that is how the
+     Task Index ended up with a year of state in one browser), phone width at 390px, real
+     buttons and visible focus, and a footer stating provenance and what it does not cover.
+     Also consider: an **audit** (method, scope, what you could not check, evidence per
+     finding), a **reference document** once a question has been answered twice, a
+     **research artifact** recording the question, method and answer *including null
+     results*, or a **skill** once guidance has repeated across three conversations.
+   - One thing worth **retiring**: two skills whose descriptions overlap enough that the
+     model picks arbitrarily → merge; a doc describing an architecture that no longer exists
+     → mark superseded; a reference whose paths no longer resolve → correct or remove; research
+     since disproved → annotate, never silently delete; a branch with no unique content
+     (`git cherry origin/main <branch>` shows no `+`) → close. **Propose; never delete
+     unilaterally**, and never destroy the only record of a failure.
+
 9. **PLAN** — ordered steps, exact paths, exact commands, and the tests that prove it.
 10. **STATUS** —
     ```
@@ -64,6 +94,7 @@ Pick a tier, then include its blocks. When torn, take the higher tier.
     CHANGED   paths
     VISUAL    file · route · viewport · branch@sha · live|fixture · auth|anon
     ARTIFACTS the conversation folder things were saved to
+    LOG       conversation-log row updated: yes | n/a
     ```
     Never merge PROVEN / CLAIMED / UNKNOWN. Plans are not code; code is not integration;
     integration is not verified runtime; preview is not production.
@@ -121,6 +152,35 @@ docs/herald/artifacts/<YYYY-MM-DD>--<short-slug>/
 
 If you have no filesystem access, still produce the files as clearly-labelled blocks with
 their exact intended paths, so I can drop them straight in.
+
+## Log this conversation
+
+One row per conversation lives in `docs/herald/CONVERSATION-LOG.md`: name, which AI app you
+are, start and last-worked dates, whether it finished, the branch the work is on, one line
+on the important work done, and every document, HTML file and screenshot created, used or
+referenced.
+
+You do not edit that table — it is generated, so two conversations never touch the same
+lines. Instead keep `meta.json` current in the conversation folder and rebuild:
+
+```bash
+npm run log:init docs/herald/artifacts/<folder>     # once, creates meta.json
+node scripts/herald-log.mjs set docs/herald/artifacts/<folder> \
+  app="ChatGPT" status=in-progress summary="one line on the important work"
+npm run log:build
+```
+
+Status is `in-progress` · `finished` · `blocked` · `abandoned`. Dates, branch and the
+artifact list are derived from git and disk, so they cannot go stale — you supply the name,
+app, status and summary only.
+
+## Maintaining this system
+
+If I ask you to change the process itself, read `agent/contracts/herald-maintenance.md`
+first. In short: `agent/` is the source and `AGENTS.md`, `GEMINI.md`, `.cursor/`,
+`.claude/skills/` and `.codex/skills/` are **generated** — editing a generated file is
+silently overwritten. After any change run `npm run agent:sync && npm run doctor`.
+`doctor` is also the right first move whenever this process seems not to be working.
 
 ## Where the full rules live
 

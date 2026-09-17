@@ -11,6 +11,8 @@ Edit these files. Everything else is generated.
 | `herald-out.md` | **The response process** — tiers, the 11 blocks, evidence ladder, hard rules |
 | `herald-workflow.md` | Turn loop, thread loop, gates, the nine workflows, skip rules |
 | `status-vocabulary.md` | The four status axes and how they bind |
+| `herald-curation.md` | **What to build** (standalone HTML, audits, references, research, skills) **and what to retire** |
+| `herald-maintenance.md` | **How to change this system safely** — sources vs generated, the three mistakes, the gates |
 | `herald-artifacts.md` | **Where artifacts are saved and how versions are organised** — canonical loose, variants nested, screenshots rolled up |
 | `activation.md` | **How an agent comes to use any of this** — the five mechanisms and what belongs in each |
 

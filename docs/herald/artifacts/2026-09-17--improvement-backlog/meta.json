@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "viewtube.herald.conversation.v1",
+  "name": "improvement backlog",
+  "app": "Claude Code (web)",
+  "status": "finished",
+  "branch": "claude/iewtuve-ai-system-aedxj4",
+  "summary": "Produced a 50-item improvement backlog for the conversation system, grouped by theme with effort estimates",
+  "taskIds": [],
+  "referenced": []
+}

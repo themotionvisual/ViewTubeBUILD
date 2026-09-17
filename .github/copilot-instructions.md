@@ -37,6 +37,21 @@ canonical; this one is a summary.
   believe but did not run, and what stays unknown.
 - **Show UI changes.** Capture the built app at 1440×1000, and 390×844 for anything
   touching mobile geometry. A UI change with no capture is `partial`, never `complete`.
+- **Start from the cache.** `npm run brief -- <topic>` returns prior conversations, matching
+  branches and registry hits in one small pack. Use it before re-deriving anything — it is
+  the cheapest way to avoid burning usage on what is already known.
+- **Propose what to build and what to retire.** Offer a durable artifact when the work
+  suggests one — **a standalone HTML file** (single file, everything inline, works offline,
+  data as JSON near the top, search/filter, export as well as `localStorage`, phone width),
+  an audit, a reference doc, a research artifact, a skill. And flag one thing worth
+  retiring: skills to merge, docs describing an architecture that no longer exists,
+  references whose paths no longer resolve, research since disproved. Propose, never delete
+  unilaterally. See `agent/contracts/herald-curation.md`.
+- **Log the conversation.** Keep `meta.json` in the conversation folder current and run
+  `npm run log:build`; `docs/herald/CONVERSATION-LOG.md` is one row per conversation — name,
+  app, dates, status, branch, work done, and every document and screenshot.
+- **Changing this system itself?** Read `agent/contracts/herald-maintenance.md` first, edit
+  `agent/` never the generated targets, then `npm run agent:sync && npm run doctor`.
 - **Save every artifact before the turn ends** — nothing stays only in chat. Everything a
   conversation produces goes to `docs/herald/artifacts/<YYYY-MM-DD>--<slug>/`:
   - documents and standalone HTML in `documents/`; screenshots in `screenshots/`
@@ -102,6 +117,9 @@ Two `package.json` entries reference files that do not exist
 |---|---|
 | Response contract | `agent/contracts/herald-out.md` |
 | Saving & organising artifacts | `agent/contracts/herald-artifacts.md` |
+| What to build and what to retire | `agent/contracts/herald-curation.md` |
+| Changing the system safely | `agent/contracts/herald-maintenance.md` |
+| Every conversation, one row | `docs/herald/CONVERSATION-LOG.md` |
 | Saved artifacts | `docs/herald/artifacts/` |
 | Conversation workflow, gates | `agent/contracts/herald-workflow.md` |
 | What tools exist | `agent/registry/capabilities.md` |

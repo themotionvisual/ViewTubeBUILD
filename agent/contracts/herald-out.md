@@ -170,6 +170,15 @@ either advance its verdict or leave it alone.
   remembering it. fit: adopt-now
 ```
 
+#### Also propose what to build, and what to retire
+
+Beyond tools, offer durable artifacts when the work suggests one — **a standalone HTML
+file**, an audit, a reference document, a research artifact, a skill. And flag one thing
+worth **retiring**: overlapping skills to merge, a doc describing an architecture that no
+longer exists, a reference whose paths no longer resolve, research since disproved, a branch
+with no unique content. Propose; never unilaterally delete. One retirement per conversation
+is enough. Full guidance: `herald-curation.md`.
+
 ### §9 PLAN — always
 Ordered steps with exact paths, exact commands, and the tests that will prove it.
 No prose where a command will do.
@@ -183,6 +192,7 @@ UNKNOWN   <what stays unverified, and why>
 CHANGED   <paths>
 VISUAL    <file> · <route> · <viewport> · <branch@sha> · live|fixture · auth|anon
 ARTIFACTS <conversation folder these were saved to>
+LOG       <conversation-log row updated: yes | n/a>
 ```
 Never merge PROVEN, CLAIMED and UNKNOWN. *Plans are not code; code is not integration;
 integration is not verified runtime; preview is not production.*
@@ -263,7 +273,13 @@ Adopted verbatim from the Task Index `sourcePriority`. Do not invent another.
    because it makes implementation easier.
 8. **End every turn by writing the ledger line.** A turn that wrote no ledger line did not
    happen.
-9. **Save every artifact before the turn ends.** Documents, standalone HTML and screenshots
+9. **Start from the cache, not from scratch.** Run `npm run brief -- <topic>` before
+   re-deriving what is already known: prior conversations, matching branches, registry
+   entries. Spend the context once and reuse the conclusion.
+10. **Log the conversation.** Keep `meta.json` current in the conversation folder and run
+   `npm run log:build`, so `docs/herald/CONVERSATION-LOG.md` shows what happened, where it
+   is saved and whether it finished.
+11. **Save every artifact before the turn ends.** Documents, standalone HTML and screenshots
    go to `docs/herald/artifacts/<date>--<slug>/` under `herald-artifacts.md`: canonical
    version loose, variants in `variants/`, all screenshots rolled into one scrollable
    `SCREENSHOTS.md`. An artifact left in chat scrollback does not exist.
