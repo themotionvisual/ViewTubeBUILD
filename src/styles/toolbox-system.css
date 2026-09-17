@@ -8,6 +8,8 @@
   --vt-toolbox-radius: 16px;
   --vt-toolbox-shadow-offset: 10px;
   --vt-toolbox-title-size: 28px;
+  --vt-toolbox-header-icon-size: 28px;
+  --vt-toolbox-header-icon-stroke: 2px;
   --vt-toolbox-component-stroke: 3px;
   --vt-toolbox-component-radius: 8px;
   --vt-toolbox-component-shadow: 4px;
@@ -23,7 +25,9 @@
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
   height: 56px !important;
   min-height: 56px !important;
+  max-height: 56px !important;
   border-bottom: 0 !important;
+  overflow: hidden;
 }
 
 /* Expanded shell divider spans the full header, including beneath the square icon rail. */
@@ -39,6 +43,11 @@
   z-index: 30;
 }
 
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child {
+  min-width: 0 !important;
+  overflow: hidden;
+}
+
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
   width: 56px !important;
   min-width: 56px !important;
@@ -48,15 +57,42 @@
   border-right: 5px solid #000 !important;
 }
 
-[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
-  font-size: 28px !important;
-  line-height: 1 !important;
-  font-weight: 1000 !important;
+/* Title region stays inside the fixed header and yields to actions before wrapping. */
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :nth-child(2) {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  padding-left: 8px !important;
+  padding-right: 2px !important;
+  margin: 0 !important;
+  overflow: hidden;
 }
 
-[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header svg {
-  max-width: 36px;
-  max-height: 36px;
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
+  display: -webkit-box !important;
+  width: 100%;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  font-size: 28px !important;
+  line-height: .82 !important;
+  font-weight: 1000 !important;
+  margin: 0 !important;
+  padding: 1px 0 !important;
+}
+
+/* One header-icon visual contract for Toolbox and SubToolbox rails. Lucide is the
+ * production vector family; CustomIcon callers are constrained to the same box/stroke. */
+[data-vt-toolbox][data-vt-toolbox-level="main"] > header > :first-child > :first-child svg,
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child svg {
+  width: var(--vt-toolbox-header-icon-size) !important;
+  height: var(--vt-toolbox-header-icon-size) !important;
+  max-width: var(--vt-toolbox-header-icon-size) !important;
+  max-height: var(--vt-toolbox-header-icon-size) !important;
+  stroke-width: var(--vt-toolbox-header-icon-stroke) !important;
 }
 
 /* Main toolbox content establishes the level-1 module contract. */
@@ -99,7 +135,9 @@
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
   height: 44px !important;
   min-height: 44px !important;
+  max-height: 44px !important;
   border-bottom: 0 !important;
+  overflow: hidden;
 }
 
 /* SubToolbox uses the same full-width expanded-header divider law at its own stroke width. */
@@ -115,9 +153,49 @@
   z-index: 30;
 }
 
-[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header svg {
-  max-width: 28px;
-  max-height: 28px;
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child {
+  min-width: 0 !important;
+  overflow: hidden;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :nth-child(2) {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  padding-left: 6px !important;
+  padding-right: 2px !important;
+  margin: 0 !important;
+  overflow: hidden;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header h3 {
+  display: -webkit-box !important;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden !important;
+  white-space: normal !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  font-size: 22px !important;
+  line-height: .82 !important;
+  margin: 0 !important;
+  padding: 1px 0 !important;
+}
+
+/* Keep action/toggle rails visible; titles shrink/wrap before these controls do. */
+[data-vt-toolbox][data-vt-toolbox-level="main"] > header > :last-child,
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :last-child {
+  flex: 0 0 auto !important;
+  min-width: max-content;
+}
+
+/* SubToolbox body-edge safety inset: tiny by design so existing component grids keep
+ * their geometry while strokes, buttons and fields no longer impact the shell edge. */
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] .vt-subtoolbox-content {
+  box-sizing: border-box;
+  padding-left: max(2px, var(--vt-subtoolbox-content-inset, 2px)) !important;
+  padding-right: max(2px, var(--vt-subtoolbox-content-inset, 2px)) !important;
+  padding-bottom: max(2px, var(--vt-subtoolbox-content-inset, 2px)) !important;
 }
 
 /* Compatibility accordion resolves to the same single SubToolbox geometry. */
@@ -186,6 +264,7 @@
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
     height: 56px !important;
     min-height: 56px !important;
+    max-height: 56px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
@@ -193,5 +272,15 @@
     min-width: 56px !important;
     height: 56px !important;
     flex-basis: 56px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > :last-child {
+    gap: 2px !important;
+    padding-right: 2px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :last-child {
+    gap: 2px !important;
+    padding-right: 2px !important;
   }
 }
