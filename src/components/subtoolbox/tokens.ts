@@ -57,6 +57,37 @@ export const TOOLBOX_LEVEL_DNA = {
 } as const
 
 /**
+ * Fixed-height responsive header contract. Titles may consume at most two
+ * tight lines; action rails never shrink. Toolbox and SubToolbox header icons
+ * share one visual box/stroke contract even when the glyph source differs.
+ */
+export const TOOLBOX_HEADER_DNA = {
+  toolbox: {
+    height: TOOLBOX_LEVEL_DNA.toolbox.height,
+    titleSize: TOOLBOX_LEVEL_DNA.toolbox.titleSize,
+    titleLineHeight: 0.82,
+    titleMaxLines: 2,
+    titleInlinePadding: 4,
+    actionGap: 4,
+    actionEndPadding: 4,
+    iconSize: 28,
+    iconStroke: 2,
+  },
+  subtoolbox: {
+    height: TOOLBOX_LEVEL_DNA.l0.height,
+    titleSize: TOOLBOX_LEVEL_DNA.l0.titleSize,
+    titleLineHeight: 0.82,
+    titleMaxLines: 2,
+    titleInlinePadding: 4,
+    actionGap: 2,
+    actionEndPadding: 2,
+    iconSize: 28,
+    iconStroke: 2,
+    contentEdgeInset: 2,
+  },
+} as const
+
+/**
  * Explicit opposite-palette pairing. These are real palette colors, not
  * opacity-derived variants. Index i pairs with the index returned here.
  */
@@ -79,7 +110,11 @@ export const SUBTOOLBOX_TOKENS = {
     radius: TOOLBOX_LEVEL_DNA.l0.radius,
     shadowOffset: TOOLBOX_LEVEL_DNA.l0.shadowOffset,
     titleSize: TOOLBOX_LEVEL_DNA.l0.titleSize,
-    iconSize: 32,
+    iconSize: TOOLBOX_HEADER_DNA.subtoolbox.iconSize,
+    iconStroke: TOOLBOX_HEADER_DNA.subtoolbox.iconStroke,
+    titleLineHeight: TOOLBOX_HEADER_DNA.subtoolbox.titleLineHeight,
+    titleMaxLines: TOOLBOX_HEADER_DNA.subtoolbox.titleMaxLines,
+    contentEdgeInset: TOOLBOX_HEADER_DNA.subtoolbox.contentEdgeInset,
   },
   interior: {
     stroke: TOOLBOX_LEVEL_DNA.l1.stroke,
