@@ -19,6 +19,16 @@ const MAIN_TOOLBOX_STROKE = 5;
 const MAIN_TOOLBOX_SHADOW = 10;
 const SUB_TOOLBOX_STROKE = SUBTOOLBOX_TOKENS.shell.stroke;
 const SUB_TOOLBOX_SHADOW = SUBTOOLBOX_TOKENS.shell.shadowOffset;
+/**
+ * One icon contract for every header rail. Size is level-owned; stroke is the
+ * same number at both levels and `absoluteStrokeWidth` stops it scaling with
+ * the glyph, so a 24px toolbox icon and a 20px subtoolbox icon draw the same
+ * weight of line. Caller-supplied size/strokeWidth are deliberately overridden:
+ * call sites were passing 2.5, 2.7 and 3 interchangeably.
+ */
+export const TOOLBOX_ICON_PROPS = { size: 26, strokeWidth: 2.25, absoluteStrokeWidth: true } as const;
+export const SUBTOOLBOX_ICON_PROPS = { size: 20, strokeWidth: 2.25, absoluteStrokeWidth: true } as const;
+
 const SUB_TOOLBOX_RADIUS = SUBTOOLBOX_TOKENS.shell.radius;
 const SUB_TOOLBOX_INNER_STROKE = SUBTOOLBOX_TOKENS.shell.stroke;
 const SUB_TOOLBOX_INNER_SHADOW = SUBTOOLBOX_TOKENS.interior.shadowOffset;
@@ -171,10 +181,10 @@ export const Toolbox: React.FC<ToolboxProps> = ({
 
   const resolvedIcon = useMemo(() => {
     if (React.isValidElement(icon)) {
-      return React.cloneElement(icon as React.ReactElement<any>, { size: 56, strokeWidth: 2.0 });
+      return React.cloneElement(icon as React.ReactElement<any>, TOOLBOX_ICON_PROPS);
     }
     if (icon) return icon;
-    if (iconName) return <CustomIcon name={iconName} size={56} strokeWidth={2.0} />;
+    if (iconName) return <CustomIcon name={iconName} size={TOOLBOX_ICON_PROPS.size} />;
     return null;
   }, [icon, iconName]);
 
@@ -242,7 +252,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           onClick={isCollapsible ? setOpen : undefined}
           style={{
             ...headerStyle,
-            height: `${headerHeight}px`,
+            minHeight: `${headerHeight}px`,
             borderBottom: `var(--vt-toolbox-stroke, ${stroke}px) solid black`,
           }}
         >
@@ -263,7 +273,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               {variant === 'accordion' ? (
                 <h3 className="text-[20px] font-[900] uppercase tracking-tighter leading-none mt-0.5">{title}</h3>
               ) : (
-                <h1 className="max-w-full truncate text-[26px] font-[1000] uppercase leading-none mt-1">{title}</h1>
+                <h1 className="vt-toolbox-title max-w-full text-[26px] font-[1000] uppercase leading-[1.04] mt-1">{title}</h1>
               )}
             </div>
           </div>
@@ -597,8 +607,8 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   const resolvedContentClassName = contentClassName || "p-4";
 
   const finalIcon = React.isValidElement(icon)
-    ? React.cloneElement(icon as React.ReactElement<any>, { size: 40, strokeWidth: 1.75 })
-    : (typeof icon === 'string' ? <CustomIcon name={icon} size={40} strokeWidth={1.75} /> : icon);
+    ? React.cloneElement(icon as React.ReactElement<any>, SUBTOOLBOX_ICON_PROPS)
+    : (typeof icon === 'string' ? <CustomIcon name={icon} size={SUBTOOLBOX_ICON_PROPS.size} /> : icon);
 
   return (
     <div
@@ -627,7 +637,6 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
         onClick={collapsible ? setOpen : undefined}
         style={{
           ...headerStyle,
-          height: `var(--vt-subtoolbox-header-height, ${CONTROL_SHELL.headerHeight}px)`,
           minHeight: `var(--vt-subtoolbox-header-height, ${CONTROL_SHELL.headerHeight}px)`,
           backgroundColor: headerHex,
           borderBottom: `var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_INNER_STROKE}px) solid black`,
@@ -642,7 +651,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           </IconRail>
 
           <div className="flex items-center pl-2.5 h-full min-w-0 pointer-events-none select-none">
-            <h3 className="min-w-0 truncate font-[900] uppercase tracking-tighter leading-none text-[length:var(--vt-subtoolbox-title-size,20px)]">
+            <h3 className="vt-subtoolbox-title min-w-0 font-[900] uppercase tracking-tighter leading-[1.04] text-[length:var(--vt-subtoolbox-title-size,20px)]">
               {title}
             </h3>
           </div>
@@ -693,7 +702,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
         className={`grid transition-[grid-template-rows] ${SHELL_COLLAPSE_TRANSITION} ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden"}`}
         style={{ marginTop: `calc(var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_INNER_STROKE}px) * -1)` }}
       >
-        <div className={`${overflowVisible ? "" : "overflow-hidden"} min-h-0`}>
+        <div className={`vt-subtoolbox-inset ${overflowVisible ? "" : "overflow-hidden"} min-h-0`}>
           {shouldRenderContent && <main
             className={`bg-white w-full text-black flex flex-col transition-opacity vt-subtoolbox-content ${resolvedContentClassName} ${SHELL_COLLAPSE_TRANSITION} ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             style={{

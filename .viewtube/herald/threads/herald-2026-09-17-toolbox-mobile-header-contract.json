@@ -1,0 +1,24 @@
+{
+  "threadId": "herald-2026-09-17-toolbox-mobile-header-contract",
+  "verb": "FIX",
+  "tier": "T2",
+  "stage": "VERIFY",
+  "taskIds": [],
+  "missionId": null,
+  "owner": "ViewTube Design / Widget System (shared tokens + shells) · Studio Hub Toolboxes · Video Assets / Video Catalog",
+  "writerLock": {
+    "paths": ["src/components/Toolbox.tsx", "src/styles/toolbox-system.css", "src/views/VideoManager.tsx"],
+    "acquired": "2026-09-17T16:47:58Z",
+    "holder": "claude-code"
+  },
+  "reconRef": null,
+  "openQuestions": [
+    "Rail is 36x41 not square when a phone title wraps to two lines; keeping it stretched preserves the split-left divider. Needs a design call.",
+    "'Studio Hub Component Library' (28 chars, longest title in the app) still clips at two lines on a 390px phone.",
+    "CustomIcon renders <img> from SVG assets, so stroke width cannot be normalised for the ~18 call sites still using it."
+  ],
+  "nextAction": "Creator review of the two-line rail deviation; then migrate remaining CustomIcon header icons to lucide.",
+  "entries": 1,
+  "lastApp": "claude-code",
+  "lastTs": "2026-09-17T16:47:58Z"
+}

@@ -611,6 +611,11 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   </div>
  )
 
+ // The catalog can still be arriving while the tool is fully usable. Keep the
+ // default layout mounted and say so on the selector instead of replacing the
+ // whole tool body with an empty box.
+ const catalogLoading = connected && videoListLoadState === "loading" && videos.length === 0 && !selectedVideo
+
  const selectorOptions = videos.map((video) => ({
   value: video.videoId,
   label: <span className="block min-w-0 truncate font-black uppercase">{video.title}</span>,
@@ -665,17 +670,25 @@ const VideoManager: React.FC<VideoManagerProps> = ({
 
     {connected && videoListLoadState === "idle" && !hasLoadedInitialData ? (
      <div className="h-[500px] flex flex-col items-center justify-center gap-5 font-black uppercase text-3xl tracking-tighter text-black/30"><Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />Ready To Load Channel Catalog<button onClick={() => void loadInitialData(true)} disabled={loading} className="bg-[#CCFF00] text-black px-8 py-4 rounded-xl border-[4px] border-black shadow-[6px_6px_0px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-sm">{loading ? "Loading..." : "Load Channel Catalog"}</button></div>
-    ) : connected && videoListLoadState === "loading" && videos.length === 0 && !selectedVideo ? (
-     <div className="h-[500px] flex flex-col items-center justify-center font-black uppercase text-2xl text-black/20 animate-pulse"><Loader2 size={48} className="mb-4 animate-spin" />Connecting Video Catalog...</div>
     ) : connected && videoListLoadState === "error" && videos.length === 0 ? (
      <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]"><div className="w-24 h-24 bg-[#ffb158] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black]"><AlertCircle size={48} className="text-black" /></div><div className="space-y-4 max-w-lg"><h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">Sync Failed</h2><p className="text-black/60 font-bold uppercase text-xs tracking-widest leading-relaxed">{error || "We couldn't load your YouTube assets. Try reload, or reconnect your channel in Settings."}</p><button onClick={() => void loadInitialData(true)} disabled={loading} className="inline-block w-full bg-[#CCFF00] border-[4px] border-black rounded-xl p-5 font-black uppercase text-xl text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all mt-4 disabled:opacity-50">{loading ? "Retrying..." : "Retry Catalog Load"}</button></div></div>
     ) : connected && videoListLoadState === "empty" ? (
      <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]"><div className="w-24 h-24 bg-[#FF3399] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black] -rotate-12"><FileVideo size={48} className="text-[#CCFF00]" /></div><div className="space-y-4 max-w-lg"><h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">Zero Assets Detected</h2><p className="text-black/50 font-bold uppercase text-xs tracking-widest leading-relaxed">Your YouTube channel is connected, but we couldn't detect any videos. Upload your first video to YouTube to unlock the full power of Creator OS Pro.</p><a href="https://studio.youtube.com" target="_blank" rel="noopener noreferrer" className="inline-block w-full bg-[#CCFF00] border-[4px] border-black rounded-xl p-5 font-black uppercase text-xl text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all mt-4">Open YouTube Studio</a><button onClick={() => void loadInitialData(true)} disabled={loading} className="inline-block w-full bg-white border-[4px] border-black rounded-xl p-4 font-black uppercase text-sm text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50">{loading ? "Reloading..." : "Reload Assets"}</button></div></div>
-    ) : (selectedVideo || !connected) ? (
+    ) : (selectedVideo || !connected || catalogLoading) ? (
      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="relative z-20 space-y-2">
        <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">Choose Video</label>
-       {connected ? (
+       {connected && catalogLoading ? (
+        <SubToolboxSplitButton
+         icon={<Loader2 size={20} strokeWidth={3} className="animate-spin" />}
+         aria-label="Connecting video catalog"
+         railColor={chooseVideoPalette.icon}
+         labelColor={chooseVideoPalette.header}
+         disabled
+        >
+         Connecting video catalog…
+        </SubToolboxSplitButton>
+       ) : connected ? (
         <SubToolboxSplitDropdown
          value={selectedVideoId || ""}
          options={selectorOptions}

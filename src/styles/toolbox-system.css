@@ -217,7 +217,6 @@
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-    height: 36px !important;
     min-height: 36px !important;
   }
 
@@ -237,9 +236,12 @@
     height: 20px !important;
   }
 
+  /* Two lines only help if two lines actually hold the title. On a 390px phone
+     the rail, gutter and control cluster leave ~196px, so 22px left long names
+     ellipsised even after wrapping. */
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
-    font-size: 22px !important;
-    line-height: 1 !important;
+    font-size: 18px !important;
+    line-height: 1.04 !important;
   }
 
   /* Right-hand cluster: the 64px desktop hit columns would eat a phone row. */
@@ -267,7 +269,6 @@
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
-    height: 30px !important;
     min-height: 30px !important;
   }
 
@@ -292,4 +293,97 @@
     font-size: 16px !important;
     line-height: 1 !important;
   }
+}
+
+/* ==========================================================================
+   Title wrapping, icon contract and sub-toolbox inset.
+
+   Titles take up to two lines rather than truncating, so a phone in portrait
+   shows the whole title and the header controls keep their room. Headers are
+   therefore min-height, not height: a wrapped title grows the row instead of
+   colliding with the toggle.
+   ========================================================================== */
+.vt-toolbox-title,
+.vt-subtoolbox-title,
+[data-vt-toolbox-level="main"] > header h1.vt-toolbox-title,
+[data-vt-toolbox-level="main"] > header h3.vt-subtoolbox-title,
+[data-vt-toolbox-level="sub"] > div > header h3.vt-subtoolbox-title {
+  white-space: normal !important;
+  text-overflow: clip !important;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header,
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
+  height: auto !important;
+  align-items: stretch;
+}
+
+/* The square rail tracks the row it sits in, so it stays square when the row
+   grows for a second line. */
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child,
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child {
+  height: auto !important;
+  align-self: stretch;
+}
+
+/* One icon size per level. These previously fought the size the shell clones
+   onto the element, so the rendered glyph did not match the contract. */
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child svg {
+  width: 26px !important;
+  height: 26px !important;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child svg {
+  width: 20px !important;
+  height: 20px !important;
+  max-width: 20px;
+  max-height: 20px;
+}
+
+/* Sub-toolbox interior inset. Lives on the wrapper because contentClassName
+   replaces <main>'s padding wholesale — several call sites pass p-0, which put
+   their controls hard against the shell stroke. */
+.vt-subtoolbox-inset {
+  padding: 2px;
+}
+
+@media (max-width: 767px) {
+  /* Phone headers keep their compact floor but may still grow to two lines. */
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
+    min-height: 36px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
+    min-height: 30px !important;
+  }
+
+  /* Phone icon sizes sit here so they win over the level defaults above. */
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child svg {
+    width: 18px !important;
+    height: 18px !important;
+    max-width: 18px;
+    max-height: 18px;
+  }
+}
+
+/* When a two-line title grows the row the rail keeps its column width and
+   stretches, so the split-left divider still spans the full header. It is then
+   a tall panel rather than a square: recorded as a deviation from the
+   "rail width = row height" rule, which assumes a single-line row. */
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child,
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child {
+  align-self: stretch;
+  flex: 0 0 auto;
 }
