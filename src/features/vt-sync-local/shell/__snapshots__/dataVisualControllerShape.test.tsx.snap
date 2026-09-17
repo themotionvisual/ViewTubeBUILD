@@ -36,7 +36,7 @@ exports[`Data Visual controller shape > matches the recorded shape for every reg
     {
       "density": "normal",
       "rows": "number,label,toggle",
-      "width": "236",
+      "width": "239",
     },
   ],
   "growth-pulse": [
@@ -75,7 +75,7 @@ exports[`Data Visual controller shape > matches the recorded shape for every reg
     {
       "density": "normal",
       "rows": "number,split,dropdown",
-      "width": "262",
+      "width": "282",
     },
   ],
   "shorts-retention-widget": [
@@ -111,7 +111,7 @@ exports[`Data Visual controller shape > matches the recorded shape for every reg
     {
       "density": "compact",
       "rows": "number,split,dropdown",
-      "width": "262",
+      "width": "282",
     },
   ],
   "tube-explorer-beeswarm-like-rate": [
@@ -146,7 +146,7 @@ exports[`Data Visual controller shape > matches the recorded shape for every reg
     {
       "density": "compact",
       "rows": "number,text,metricMultiSelect",
-      "width": "238",
+      "width": "247",
     },
   ],
   "tube-explorer-chrono-spiral": [
@@ -335,14 +335,14 @@ exports[`Data Visual controller shape > matches the recorded shape for every reg
     {
       "density": "compact",
       "rows": "text,label,dropdown",
-      "width": "224",
+      "width": "229",
     },
   ],
   "tube-explorer-shorts-vs-longs": [
     {
       "density": "compact",
       "rows": "number,text,label",
-      "width": "236",
+      "width": "239",
     },
   ],
   "tube-explorer-stalactite-drip": [
@@ -363,7 +363,7 @@ exports[`Data Visual controller shape > matches the recorded shape for every reg
     {
       "density": "compact",
       "rows": "number,split,text",
-      "width": "236",
+      "width": "282",
     },
   ],
   "tube-explorer-thermal-heatmap-grid": [

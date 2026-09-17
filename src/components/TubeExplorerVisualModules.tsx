@@ -4906,6 +4906,7 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
      type: "text",
      labelPrefix: "RANKED BY",
      value: activeDef.label,
+     widthValues: WATERFALL_METRICS.map((metric) => metric.label),
      onPrev: () => { setMetricIndex((i) => (i + WATERFALL_METRICS.length - 1) % WATERFALL_METRICS.length); setHovered(null) },
      onNext: () => { setMetricIndex((i) => (i + 1) % WATERFALL_METRICS.length); setHovered(null) },
      bgTone: activeDef.tone,
@@ -4964,6 +4965,7 @@ export const TubeExplorerShortsVsLongs: React.FC<TubeExplorerVisualProps> = (pro
      type: "text",
      labelPrefix: "SHOW AS",
      value: average ? "AVERAGE" : "TOTAL",
+     widthValues: ["AVERAGE", "TOTAL"],
      onPrev: () => setAverage((current) => !current),
      onNext: () => setAverage((current) => !current),
      bgTone: "#FF7497",
@@ -4987,6 +4989,9 @@ const TREEMAP_METRICS: Array<{ key: TreemapMetricKey; label: string; format: (va
  { key: "watchHours", label: "WATCH TIME", format: (value) => `${compact(value)}h` },
  { key: "revenue", label: "REVENUE", format: (value) => `$${value.toFixed(2)}` },
 ]
+
+/** Every metric name the treemap's stat cards can carry, so they never resize. */
+const TREEMAP_METRIC_LABELS = TREEMAP_METRICS.map((entry) => entry.label)
 
 type TreemapPillar = {
  word: string
@@ -5160,14 +5165,14 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
 
  const stats = hovered
   ? [
-   { label: metric.label, value: metric.format(hovered.value), tone: "lime" as const, lockTone: true, compact: true },
-   { label: drilled ? "VIDEO STATS" : "VIDEOS", value: hovered.sub, tone: "cyan" as const, lockTone: true, compact: true },
+   { label: metric.label, value: metric.format(hovered.value), tone: "lime" as const, lockTone: true, compact: true, labelWidthValues: TREEMAP_METRIC_LABELS },
+   { label: drilled ? "VIDEO STATS" : "VIDEOS", value: hovered.sub, tone: "cyan" as const, lockTone: true, compact: true, labelWidthValues: ["VIDEO STATS", "VIDEOS"] },
    { label: "SHARE", value: `${((hovered.value / scopeTotal) * 100).toFixed(1)}%`, tone: "pink" as const, lockTone: true, compact: true },
   ]
   : [
    { label: "PILLARS", value: String(pillars.length), tone: "lime" as const, lockTone: true, compact: true },
    { label: "VIDEOS", value: compact(drilled ? drilled.videos.length : scoped.length), tone: "cyan" as const, lockTone: true, compact: true },
-   { label: metric.label, value: metric.format(scopeTotal), tone: "yellow" as const, lockTone: true, compact: true },
+   { label: metric.label, value: metric.format(scopeTotal), tone: "yellow" as const, lockTone: true, compact: true, labelWidthValues: TREEMAP_METRIC_LABELS },
   ]
 
  return (
@@ -5209,6 +5214,7 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
      type: "text",
      labelPrefix: "RANKED BY",
      value: metric.label,
+     widthValues: TREEMAP_METRICS.map((entry) => entry.label),
      onPrev: () => setMetricIndex((i) => (i + TREEMAP_METRICS.length - 1) % TREEMAP_METRICS.length),
      onNext: () => setMetricIndex((i) => (i + 1) % TREEMAP_METRICS.length),
      bgTone: "#FF7497",
@@ -5453,6 +5459,7 @@ export const TubeExplorerRevenueEfficiencyMap: React.FC<TubeExplorerVisualProps>
      type: "text",
      labelPrefix: "FROM",
      value: formatMode.label,
+     widthValues: VITAL_FORMAT_MODES.map((mode) => mode.label),
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
      bgTone: "#FFB570",
@@ -5509,6 +5516,7 @@ export const TubeExplorerLikeRateWaveform: React.FC<TubeExplorerVisualProps> = (
      type: "text",
      labelPrefix: "FROM",
      value: formatMode.label,
+     widthValues: VITAL_FORMAT_MODES.map((mode) => mode.label),
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
      bgTone: "#00E5FF",
@@ -5517,6 +5525,7 @@ export const TubeExplorerLikeRateWaveform: React.FC<TubeExplorerVisualProps> = (
      type: "text",
      labelPrefix: "ORDERED",
      value: order === "recent" ? "NEWEST" : "TOP",
+     widthValues: ["NEWEST", "TOP"],
      onPrev: () => setOrder((current) => current === "recent" ? "top" : "recent"),
      onNext: () => setOrder((current) => current === "recent" ? "top" : "recent"),
      bgTone: "#FFFF61",
@@ -5569,6 +5578,7 @@ export const TubeExplorerSeasonalityRadar: React.FC<TubeExplorerVisualProps> = (
      type: "text",
      labelPrefix: "FROM",
      value: formatMode.label,
+     widthValues: VITAL_FORMAT_MODES.map((mode) => mode.label),
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
      bgTone: "#00E5FF",
@@ -5622,6 +5632,7 @@ export const TubeExplorerSearchBubbleUniverse: React.FC<TubeExplorerVisualProps>
      type: "text",
      labelPrefix: "FROM",
      value: formatMode.label,
+     widthValues: VITAL_FORMAT_MODES.map((mode) => mode.label),
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
      bgTone: "#42FF68",
@@ -5682,6 +5693,7 @@ export const TubeExplorerRetentionCurveAtlas: React.FC<TubeExplorerVisualProps> 
      type: "text",
      labelPrefix: "FROM",
      value: formatMode.label,
+     widthValues: VITAL_FORMAT_MODES.map((mode) => mode.label),
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
      bgTone: "#FF83EA",
@@ -5917,6 +5929,7 @@ export const TubeExplorerTrafficDayRiverDelta: React.FC<TubeExplorerVisualProps>
      type: "text",
      labelPrefix: "ACROSS",
      value: grainSpec.label,
+     widthValues: RIVER_GRAINS.map((grain) => grain.label),
      onPrev: () => { setGrainIndex((i) => (i + RIVER_GRAINS.length - 1) % RIVER_GRAINS.length); setHighlight(null); setHovered(null) },
      onNext: () => { setGrainIndex((i) => (i + 1) % RIVER_GRAINS.length); setHighlight(null); setHovered(null) },
      bgTone: "#000000",

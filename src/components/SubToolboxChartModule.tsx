@@ -54,6 +54,10 @@ export interface SubToolboxStat {
   compact?: boolean
   /** Minimum card width. Longer labels may expand beyond this value. */
   minWidth?: number
+  /** Every label this card can show, so changing a setting never resizes it. */
+  labelWidthValues?: readonly string[]
+  /** Every value this card can show, when the value is what moves. */
+  valueWidthValues?: readonly string[]
 }
 
 export interface SubToolboxMetricBadge {

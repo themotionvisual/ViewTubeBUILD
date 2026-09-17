@@ -2922,6 +2922,7 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
       type: "text",
       labelPrefix: "PAST",
       value: TIME_RANGE_OPTIONS.find((o) => o.value === timeRange)?.label || timeRange,
+      widthValues: TIME_RANGE_OPTIONS.map((option) => option.label),
       onPrev: () => {
        const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
        setTimeRange(TIME_RANGE_OPTIONS[(idx - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value)
@@ -4235,6 +4236,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         {
           type: "text",
           value: TIME_RANGE_OPTIONS.find((o) => o.value === timeRange)?.label || timeRange,
+          widthValues: TIME_RANGE_OPTIONS.map((option) => option.label),
           onPrev: () => {
             const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
             setTimeRange(TIME_RANGE_OPTIONS[(idx - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value)
