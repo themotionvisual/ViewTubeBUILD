@@ -43,8 +43,13 @@ the same thing exists, promote it to a family folder:
 
 1. **Explicitly decided best** — the creator said so. Record the reason in `VERSIONS.md`.
    This beats everything below.
-2. **Most recent** — by content date, not file mtime, which copying destroys.
-3. **Largest** — the tie-break when two are same-day and no decision was recorded.
+2. **Most recent** — by a date in the filename, not file mtime, which copying destroys.
+3. **Highest version number** — `V3` supersedes `V1`, `copy 8` supersedes `copy 2`, even
+   when the files are the same size.
+4. **Largest** — the last tie-break.
+
+`group` applies 2–4 automatically and records which rule it used. When it guesses wrong,
+`promote` overrides it and you replace the note in `VERSIONS.md` with the real reason.
 
 Never delete a variant to tidy up. Superseded is not worthless: a variant often records why
 an approach was abandoned, which is the single most expensive thing to rediscover.
@@ -103,11 +108,18 @@ purpose, so the folder is legible without opening anything.
 ## Commands
 
 ```bash
-node scripts/herald-artifacts.mjs init <slug>            # create the conversation folder
-node scripts/herald-artifacts.mjs promote <family> <file> # make <file> canonical
+node scripts/herald-artifacts.mjs init <slug>             # create the conversation folder
+node scripts/herald-artifacts.mjs save <file...> [--to c] # file things in (images -> screenshots/)
+node scripts/herald-artifacts.mjs group [<folder>]        # detect version families and organise them
+node scripts/herald-artifacts.mjs promote <family> <file> # override the canonical choice
 node scripts/herald-artifacts.mjs index [<folder>]        # regenerate README + SCREENSHOTS
 node scripts/herald-artifacts.mjs check                   # validate the convention
 ```
+
+`group` reads loose files in `documents/`, works out which are versions of the same thing —
+handling `copy`, `copy 2`, `(5)`, `_V1`, `v1.2`, embedded dates and `final/latest/draft`
+suffixes — and builds the family folder for any name with two or more versions. A name with
+one version is left loose, so folders only appear where they earn their place.
 
 `check` runs in CI and fails when a family has no canonical file loose, when variants sit
 outside `variants/`, or when a generated index is stale.

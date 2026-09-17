@@ -35,6 +35,7 @@
     "agent:sync": "node scripts/herald-sync.mjs",
     "check:agent-sync": "node scripts/herald-sync.mjs --check",
     "artifacts:index": "node scripts/herald-artifacts.mjs index",
+    "artifacts:group": "node scripts/herald-artifacts.mjs group",
     "check:artifacts": "node scripts/herald-artifacts.mjs check",
     "check:architecture": "npm run check:quarantine && npm run check:src-governance && npm run typecheck",
     "check:privacy-src": "bash scripts/privacy-audit-src.sh",

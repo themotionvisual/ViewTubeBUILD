@@ -46,8 +46,9 @@ canonical; this one is a summary.
     version loose in that folder and every other variant inside `variants/`.** Pick the
     canonical by explicit decision first, else most recent, else largest, and record the
     reason in `VERSIONS.md`. Never delete a variant.
-  - regenerate the indexes with `npm run artifacts:index`; never hand-edit `README.md` or
-    `SCREENSHOTS.md`
+  - `npm run artifacts:group` finds versions of the same thing among loose files and builds
+    the folder for you; regenerate indexes with `npm run artifacts:index` and never
+    hand-edit `README.md` or `SCREENSHOTS.md`
   - full rules: `agent/contracts/herald-artifacts.md`
 - **Suggest GitHub repositories and tools — every T1 and T2 answer.** Name one to three
   concrete things that would help *this specific task*: a repository, library, action,

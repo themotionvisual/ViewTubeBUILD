@@ -113,6 +113,8 @@ docs/herald/artifacts/<YYYY-MM-DD>--<short-slug>/
 - **Never delete a variant.** A superseded version often records why an approach failed.
 - **All screenshots roll up into one `SCREENSHOTS.md`** so I can scroll the whole set at
   once, locally or on GitHub, each with route · viewport · branch@sha · live/fixture · auth.
+- `node scripts/herald-artifacts.mjs group` detects versions of the same thing among loose
+  files — `copy 2`, `(5)`, `_V1`, dates, `final`/`draft` — and builds the folder for you.
 - Never hand-edit `README.md` or `SCREENSHOTS.md` — regenerate with
   `node scripts/herald-artifacts.mjs index`.
 - No secrets in screenshots. Crop or redact tokens, keys and personal data.
