@@ -237,6 +237,9 @@ const VideoManager: React.FC<VideoManagerProps> = ({
      ...(videoDetails ?? {}),
     } as VideoSnippet & Partial<VideoDetails>)
   : null
+ // The catalog can still be arriving while the tool is fully usable. Keep the
+ // default layout mounted and say so on the selector instead of replacing the
+ // whole tool body with an empty box.
  const catalogLoading = connected && videoListLoadState === "loading" && videos.length === 0 && !selectedVideo
 
  useEffect(() => {

@@ -80,7 +80,9 @@ describe("ToolboxScaffold", () => {
   )
 
   expect(html).toContain('data-vt-toolbox-level="main"')
-  expect(html).toContain("text-[26px]")
+  // The title size is token-driven so the phone override can shrink it; 26px
+  // stays the desktop default.
+  expect(html).toContain("text-[length:var(--vt-toolbox-title-size,26px)]")
   expect(html).toContain("padding-inline:var(--vt-toolbox-content-inline-padding, 10px)")
   expect(html).toContain("border-bottom:var(--vt-toolbox-stroke, 5px) solid black")
   expect(html).toContain("margin-top:calc(var(--vt-toolbox-stroke, 5px) * -1)")

@@ -284,3 +284,159 @@
     padding-right: 2px !important;
   }
 }
+
+/* ==========================================================================
+   Title wrapping, icon contract and sub-toolbox inset.
+
+   A header row is a fixed height owned by its level. A title that does not fit
+   on one line takes a second line inside that same row rather than growing it,
+   so the square icon rail stays square and the toggle cluster keeps its place.
+   The row's height therefore sets the largest title that can be shown on two
+   lines, and each level's phone title size is derived from its own floor.
+   ========================================================================== */
+
+/* perf.css asserts `white-space: nowrap !important` on every header title, which
+   defeats the two-line clamp the level rules above ask for. Re-assert wrapping
+   on the title classes themselves so the clamp is what actually renders. */
+.vt-toolbox-title,
+.vt-subtoolbox-title,
+[data-vt-toolbox-level="main"] > header h1.vt-toolbox-title,
+[data-vt-toolbox-level="main"] > header h3.vt-subtoolbox-title,
+[data-vt-toolbox-level="sub"] > div > header h3.vt-subtoolbox-title {
+  white-space: normal !important;
+  text-overflow: clip !important;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+/* One icon size per level. These previously fought the size the shell clones
+   onto the element, so the rendered glyph did not match the contract. */
+[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child svg {
+  width: 26px !important;
+  height: 26px !important;
+  max-width: 26px !important;
+  max-height: 26px !important;
+}
+
+[data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child svg {
+  width: 20px !important;
+  height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+}
+
+/* Sub-toolbox interior inset. Lives on the wrapper because contentClassName
+   replaces <main>'s padding wholesale — several call sites pass p-0, which put
+   their controls hard against the shell stroke. */
+.vt-subtoolbox-inset {
+  padding: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Phone geometry. The row is only a little taller than its title, the rail
+   follows the row so it stays square, and the title size is chosen so two
+   lines still fit inside the row.
+   -------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) {
+    --vt-toolbox-header-height: 36px;
+    --vt-toolbox-title-size: 15px;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    height: 36px !important;
+    flex-basis: 36px !important;
+  }
+
+  /* Two lines only help if two lines hold the title. The longest name in the
+     hub is "Studio Hub Component Library"; at 15px it fits two lines in the
+     width a 360px phone leaves once the rail, gutter and toggle cluster are
+     taken out, and 15px at the .82 leading the level sets is 25px for two
+     lines, inside the 36px row. */
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
+    font-size: 15px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child svg {
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+  }
+
+  /* Right-hand cluster: the 64px desktop hit columns would eat a phone row.
+     30px still clears the 24px control the column holds, and hands the
+     difference back to the title. */
+  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > div:last-child > * {
+    width: 30px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > div:last-child span {
+    width: 24px !important;
+    height: 24px !important;
+    box-shadow: 2px 2px 0 0 #000 !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > div:last-child svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  /* SubToolbox — same treatment one level down. */
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"],
+  [data-vt-toolbox-level="sub"],
+  [data-vt-subtoolbox-module="true"] {
+    --vt-subtoolbox-header-height: 30px;
+    --vt-subtoolbox-title-size: 15px;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child {
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+    height: 30px !important;
+    flex-basis: 30px !important;
+  }
+
+  /* 15px × .82 × 2 = 25px, inside the 30px row. */
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header h3 {
+    font-size: 15px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header svg,
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child svg {
+    width: 18px !important;
+    height: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+  }
+
+  /* The divider follows the reduced phone stroke so it still reads as one
+     continuous rule across the full width, icon rail included. */
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header::after {
+    height: var(--vt-toolbox-stroke, 3px);
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header::after {
+    height: var(--vt-subtoolbox-stroke, 3px);
+  }
+}

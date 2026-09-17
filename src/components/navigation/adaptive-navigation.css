@@ -1107,3 +1107,49 @@
     grid-area: 1 / 1;
   }
 }
+
+/* Drawer tools — developer switches that belong in the menu rather than as
+   floating chrome over the page. */
+.vt-adaptive-nav__drawer-tools {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 3px solid #000;
+}
+
+.vt-adaptive-nav__diagnostics-toggle {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border: 3px solid #000;
+  border-radius: var(--vt-nav-radius, 10px);
+  background: #fff;
+  box-shadow: 3px 3px 0 0 #000;
+  font-size: 12px;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+}
+
+.vt-adaptive-nav__diagnostics-toggle svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.vt-adaptive-nav__diagnostics-label { flex: 1 1 auto; text-align: left; }
+
+.vt-adaptive-nav__diagnostics-state {
+  padding: 2px 8px;
+  border: 2px solid #000;
+  border-radius: 999px;
+  background: #e6e8ec;
+  font-size: 10px;
+}
+
+.vt-adaptive-nav__diagnostics-toggle[aria-checked="true"] { background: #c0f240; }
+.vt-adaptive-nav__diagnostics-toggle[aria-checked="true"] .vt-adaptive-nav__diagnostics-state { background: #fff; }
+.vt-adaptive-nav__diagnostics-toggle:active { box-shadow: 1px 1px 0 0 #000; transform: translate(2px, 2px); }

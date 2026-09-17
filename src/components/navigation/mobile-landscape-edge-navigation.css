@@ -1,7 +1,12 @@
 /* Landscape-phone navigation: remove the 70px ViewTube top bar and turn the
    existing mobile drawer into a left-edge peek rail. The DOM and route links
    stay canonical; only the mobile-landscape presentation changes. */
-@media (orientation: landscape) and (max-height: 560px) and (pointer: coarse) {
+/* Keyed to the same breakpoint the shell uses to switch to the mobile drawer
+   (MOBILE_QUERY, max-width: 760px). The previous `max-height: 560px` test was
+   a separate guess about phone size: any landscape phone that the shell treats
+   as mobile but that reports a taller viewport got the portrait drawer laid
+   over the landscape canvas instead of the edge rail. */
+@media (orientation: landscape) and (max-width: 760px) and (pointer: coarse) {
   .vt-adaptive-shell[data-layout="mobile"] {
     grid-template: minmax(0, 1fr) / minmax(0, 1fr) !important;
   }
@@ -58,7 +63,7 @@
     inset: 0;
     z-index: 165;
     align-items: flex-start;
-    background: transparent;
+    background: transparent !important;
     pointer-events: none;
   }
 
@@ -72,12 +77,12 @@
     padding: 4px 8px 4px 0;
     overflow: visible;
     border: 0;
-    background: transparent;
-    box-shadow: none;
+    background: transparent !important;
+    box-shadow: none !important;
     pointer-events: auto;
   }
 
-  .vt-adaptive-nav__drawer-head { display: none; }
+  .vt-adaptive-nav__drawer-head { display: none !important; }
 
   .vt-adaptive-nav__drawer-links {
     display: flex;

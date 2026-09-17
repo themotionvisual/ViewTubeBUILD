@@ -253,6 +253,13 @@ Editor timeline controls are a separate system. Reuse tokens selectively; do not
 | 2026-09-14 | T1 paired-height equation becomes 20 + 4 + 20 = 44 | CANONICAL |
 | 2026-09-14 | Projects page-level switcher is not accepted composition | SUPERSEDED |
 | 2026-09-14 | Project Board duplicate inner shell is migration debt | MIGRATE |
+| 2026-09-14 | `studio-ui/tokens.ts` still read the `compactShell` geometry removed by PR #215, so `STUDIO_TOKENS` threw on load and every Studio Hub render failed; compact aliases now resolve to the single canonical shell | REGRESSION FIXED |
+| 2026-09-14 | Header divider spans the full header width, icon rail included | CURRENT |
+| 2026-09-14 | Phone header geometry sized to its own title: T0 36px/22px, T1 30px/16px, square rail follows row height | CURRENT |
+| 2026-09-14 | Toolbox/SubToolbox title columns carry `min-w-0`; flex `min-width:auto` was overflowing the phone viewport | REGRESSION FIXED |
+| 2026-09-14 | Landscape edge-rail navigation keys off the shell's own 760px mobile breakpoint, not a separate `max-height: 560px` test | REGRESSION FIXED |
+| 2026-09-14 | Diagnostic overlay is opt-in from Navigation → Diagnostics; DIAG and Brain launchers do not render on phones | CURRENT |
+| 2026-09-14 | Reference Library certification for the phone header geometry above is outstanding | REFERENCE UPDATE REQUIRED |
 
 ## 24. Document editing protocol
 

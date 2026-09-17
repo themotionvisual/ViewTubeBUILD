@@ -15,6 +15,11 @@
 !/tests/
 !/.github/
 !/governance/
+# Herald conversation runtime. The ledger and thread files are appended by an
+# agent at the end of every turn; if they need `git add -f` they will silently
+# never be committed, which is the exact failure the Herald plan documents (O9).
+!/.viewtube/
+!/agent/
 # Repo-authored docs (migration guides, phase plans). Only /docs/migration/
 # is tracked; other subtrees under /docs/ are user-download reference
 # material and remain ignored by the docs/* rule further down.

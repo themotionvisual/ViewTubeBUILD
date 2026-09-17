@@ -14,7 +14,7 @@ describe("application menu governance", () => {
   })
 
   it("keeps the dashboard controls toggle in the Settings widget", () => {
-    const renderer = read("src/views/dashboard/WidgetRenderer.tsx")
+    const renderer = read("src/views/dashboard/WidgetRendererBase.tsx")
     expect(renderer).toContain('widget.id === "system-micro-stack"')
     expect(renderer).toContain("SHOW DASHBOARD CONTROLS")
     expect(renderer).toContain("HIDE DASHBOARD CONTROLS")
