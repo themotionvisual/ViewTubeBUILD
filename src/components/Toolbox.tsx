@@ -186,8 +186,9 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   const radius = variant === 'accordion' ? 12 : 16;
   const finalContentClass = useMemo(() => {
     if (contentClassName) return contentClassName;
-    if (variant === 'accordion') return 'py-6 px-[10px] bg-white text-black';
-    return embedded ? 'p-0' : 'py-8 px-[10px]';
+    if (embedded) return 'p-0';
+    if (variant === 'accordion') return 'p-1 flex flex-col gap-1 bg-white text-black';
+    return 'p-1 flex flex-col gap-1';
   }, [contentClassName, variant, embedded]);
 
   const resolvedIcon = useMemo(() => {
@@ -378,7 +379,13 @@ export const Toolbox: React.FC<ToolboxProps> = ({
                     ["--vt-level1-stroke" as any]: "4px",
                     ["--vt-level1-shadow" as any]: "6px",
                     ["--vt-level1-shadow-color" as any]: headerHex ? hexToRgba(headerHex, 0.45) : "rgba(0,0,0,0.35)",
-                    ...(embedded ? {} : { paddingInline: "var(--vt-toolbox-content-inline-padding, 10px)" }),
+                    ...(embedded ? {} : {
+                      paddingTop: "var(--vt-toolbox-content-padding, 4px)",
+                      paddingRight: "var(--vt-toolbox-content-padding, 4px)",
+                      paddingBottom: "var(--vt-toolbox-content-padding, 4px)",
+                      paddingLeft: "var(--vt-toolbox-content-padding, 4px)",
+                      gap: "var(--vt-toolbox-content-gap, 4px)",
+                    }),
                   } as React.CSSProperties
                 }
               >
@@ -521,7 +528,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     fillAvailable={fillAvailable}
     outerClassName={outerClassName}
     shellClassName={shellClassName}
-    contentClassName={contentClassName || (embedded ? "p-0" : "py-8 px-[10px]")}
+    contentClassName={contentClassName || (embedded ? "p-0" : "p-1 flex flex-col gap-1")}
     headerActions={headerActions}
     indicator={collapsible ? "symbols" : "none"}
     disableCollapseAnimation={disableCollapseAnimation}
