@@ -546,7 +546,8 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
               <div className="flex flex-col gap-2">
                 <div className="w-full">
                   <WidgetMediaUploadFrame
-                    icon={<ImagePlus size={24} />}
+                    aspect="16:9"
+                    icon={<ImagePlus />}
                     title="THUMBNAIL"
                     detail="Drop an image file here"
                     hasValue={hasThumbnail}
@@ -559,7 +560,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                 </WidgetMediaUploadAction>
               </div>
               <WidgetDropzone
-                icon={<UploadCloud size={24} />}
+                icon={<UploadCloud />}
                 title="SOURCE VIDEO FILE"
                 detail="Drag & drop .MP4, .MOV, or click to browse"
                 onClick={() => {}}
