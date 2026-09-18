@@ -29,3 +29,15 @@
 @container vt-subtoolbox (max-width:420px){.vt-subtoolbox-actions.has-3-columns,.vt-subtoolbox-actions.has-4-columns,.vt-subtoolbox-grid:not(.is-compact){grid-template-columns:minmax(0,1fr)}.vt-subtoolbox-actions{gap:8px}.vt-subtoolbox-split-action-title{font-size:18px}}
 @media(max-width:900px){[data-vt-toolbox-level="sub"],[data-vt-subtoolbox-module="true"]{--vt-subtoolbox-stroke:3px;--vt-subtoolbox-radius:10px;--vt-subtoolbox-shadow-offset:4px;--vt-subtoolbox-header-height:44px}[data-vt-toolbox-level="sub"]>div>header h3{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}[data-vt-toolbox-level="sub"]>div>header svg{width:24px;height:24px}[data-vt-toolbox-level="sub"]>div>header>div:last-child{gap:4px;padding-right:6px}.vt-upload-tight-reveal .vt-subtoolbox-file-target-icon{width:58px;height:58px}.vt-upload-tight-reveal .vt-subtoolbox-file-target-icon svg{width:32px;height:32px}.vt-upload-tight-reveal-label{font-size:16px}.vt-upload-tight-reveal-center{padding:24px}}
 @media(prefers-reduced-motion:reduce){.vt-subtoolbox-button,.vt-subtoolbox-input,.vt-subtoolbox-binary,.vt-subtoolbox-chip,.vt-subtoolbox-split-action,.vt-upload-tight-reveal-layer{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+
+/* Component-library migration bridge.
+ * Level geometry comes from COMPONENT_LEVEL_DNA via inline CSS variables.
+ * This keeps the canonical Tooltip visually identical to the frozen catalog
+ * while removing its L0/L1/L2 pixel values from the catalog renderer. */
+.vt-subtoolbox-tooltip[data-vt-control-level]{
+  --vt-tooltip-h:var(--vt-component-height);
+  --vt-tooltip-stroke:var(--vt-component-stroke);
+  --vt-tooltip-radius:var(--vt-component-radius);
+  --vt-tooltip-font:var(--vt-component-font-size);
+}
