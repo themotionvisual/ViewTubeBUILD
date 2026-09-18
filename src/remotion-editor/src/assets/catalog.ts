@@ -6,6 +6,7 @@ import type {
   MotionIntensity,
   VisualFamily,
 } from './types';
+import { createAssetParameterSchema } from './schemas';
 
 export const defaultAssetProps: AssetVisualProps = {
   primaryColor: '#F4F0E8',
@@ -204,6 +205,7 @@ const makeStill = (seed: Seed, index: number): AssetDefinition => ({
   supportedRatios,
   previewFrame: 0,
   controls: commonAssetControls,
+  schema: createAssetParameterSchema({ ...defaultAssetProps, seed: 100 + index * 13 }),
   defaults: { ...defaultAssetProps, seed: 100 + index * 13 },
   safeAreas: baseSafeAreas,
   recommendedUses: seed.uses,
@@ -231,6 +233,11 @@ const makeMotion = (seed: MotionSeed, index: number): AssetDefinition => {
     supportedRatios,
     previewFrame: Math.max(0, Math.round(durationInFrames * 0.4)),
     controls: motionAssetControls,
+    schema: createAssetParameterSchema({
+      ...defaultAssetProps,
+      seed: 1000 + index * 29,
+      intensity: seed.intensity === 'SUBTLE' ? 0.55 : seed.intensity === 'AMBIENT' ? 0.8 : seed.intensity === 'MODERATE' ? 1.1 : 1.45,
+    }),
     defaults: {
       ...defaultAssetProps,
       seed: 1000 + index * 29,
