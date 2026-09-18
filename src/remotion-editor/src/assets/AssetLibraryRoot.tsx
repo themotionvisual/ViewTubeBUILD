@@ -2,6 +2,7 @@ import React from 'react';
 import { Composition, Folder, Still } from 'remotion';
 import { AssetContactSheet, ASSET_SHEET_COUNT } from './AssetContactSheet';
 import { AssetRenderer } from './AssetRenderer';
+import { AssetGallery } from './AssetGallery';
 import { motionAssets, staticAssets } from './catalog';
 
 export const AssetLibraryRoot: React.FC = () => (
@@ -32,6 +33,17 @@ export const AssetLibraryRoot: React.FC = () => (
           defaultProps={{ assetId: asset.id }}
         />
       ))}
+    </Folder>
+
+    <Folder name="Asset-Library-Development">
+      <Composition
+        id="AssetGallery"
+        component={AssetGallery}
+        durationInFrames={360}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
     </Folder>
 
     <Folder name="Asset-Library-Review">
