@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import { AssetRenderer } from './assets';
+import type { AssetDefinition, AssetVisualProps } from './assets/types';
 import { AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, interpolate, spring, useCurrentFrame } from 'remotion';
 import {
   getShortsCropStyle as getSharedShortsCropStyle,
@@ -10,7 +12,7 @@ import {
   validateTransitionSeam as sharedValidateTransitionSeam,
 } from '../../shared/vtE1TimelineContract.js';
 
-type LayerType = 'text' | 'shape' | 'media' | 'audio' | 'svg-overlay' | 'generative-shape';
+type LayerType = 'text' | 'shape' | 'media' | 'audio' | 'svg-overlay' | 'generative-shape' | 'remotion-asset';
 
 type VTLayer = {
   id: string;
@@ -22,8 +24,11 @@ type VTLayer = {
 
 type VTClip = {
   id: string;
-  layerId: string;
+  layerId?: string;
   trackId: string;
+  clipType?: string;
+  remotionAssetId?: AssetDefinition['id'];
+  remotionAssetProps?: Partial<AssetVisualProps>;
   start: number;
   end: number;
   sourceInSec?: number;
@@ -72,6 +77,39 @@ type RenderJob = {
 
 type Props = {
   renderJob?: RenderJob;
+};
+
+const normalizeRemotionAssetProject = (
+  source: NonNullable<RenderJob['project']>,
+): NonNullable<RenderJob['project']> => {
+  const baseLayers = Array.isArray(source.layers) ? source.layers : [];
+  const knownLayerIds = new Set(baseLayers.map((layer) => layer.id));
+  const synthesizedLayers: VTLayer[] = [];
+
+  const clips = (Array.isArray(source.clips) ? source.clips : []).map((clip) => {
+    if (clip.clipType !== 'remotion-asset' || !clip.remotionAssetId) return clip;
+    const layerId = clip.layerId || `remotion-asset-layer-${clip.id}`;
+    if (!knownLayerIds.has(layerId)) {
+      synthesizedLayers.push({
+        id: layerId,
+        type: 'remotion-asset',
+        trackId: clip.trackId,
+        visible: true,
+        payload: {
+          assetId: clip.remotionAssetId,
+          ...(clip.remotionAssetProps || {}),
+        },
+      });
+      knownLayerIds.add(layerId);
+    }
+    return { ...clip, layerId };
+  });
+
+  return {
+    ...source,
+    layers: [...baseLayers, ...synthesizedLayers],
+    clips,
+  };
 };
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -495,8 +533,13 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
   const fps = Number(renderJob?.compositionMeta?.fps || 30);
   const width = Number(renderJob?.compositionMeta?.width || 1280);
   const height = Number(renderJob?.compositionMeta?.height || 720);
-  const background = String(renderJob?.project?.meta?.chromaEnabled ? renderJob?.project?.meta?.chromaColor || '#00ff00' : '#111111');
-  const project = renderJob?.project || { meta: {}, tracks: [], layers: [], clips: [], transitions: [] };
+  const project = useMemo(
+    () => normalizeRemotionAssetProject(
+      renderJob?.project || { meta: {}, tracks: [], layers: [], clips: [], transitions: [] },
+    ),
+    [renderJob?.project],
+  );
+  const background = String(project.meta?.chromaEnabled ? project.meta?.chromaColor || '#00ff00' : '#111111');
   const tracks = useMemo(() => sortTracks(Array.isArray(project.tracks) ? project.tracks : []), [project]);
   const orderedTrackIds = tracks.map((track) => track.id);
   const activeTrackIds = useMemo(() => {
@@ -611,6 +654,23 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
           return (
             <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
               {renderGenerativeShape(payload, commonStyle, localFrame, fps)}
+            </Sequence>
+          );
+        }
+
+        if (layer.type === 'remotion-asset') {
+          const assetId = String(payload.assetId || 'static-001') as AssetDefinition['id'];
+          const assetProps = payload as Partial<AssetVisualProps>;
+          return (
+            <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
+              <div style={commonStyle}>
+                <AssetRenderer
+                  {...assetProps}
+                  assetId={assetId}
+                  layoutWidth={layerWidth}
+                  layoutHeight={layerHeight}
+                />
+              </div>
             </Sequence>
           );
         }

@@ -11,3 +11,4 @@ export * from './integration/types';
 export * from './integration/legacyTemplateAliases';
 export * from './integration/vtE1Adapter';
 export * from './integration/timelineAdapter';
+export * from './integration/remotionAssetAdapter';

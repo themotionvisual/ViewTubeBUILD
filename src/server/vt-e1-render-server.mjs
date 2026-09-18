@@ -31,7 +31,7 @@ const PERSISTENT_STORAGE = String(process.env.VT_E1_RENDER_PERSISTENT_STORAGE ||
 const RENDER_JOB_SCHEMA_VERSION = 'RemotionRenderJobV1';
 const SVG_RENDER_JOB_SCHEMA_VERSION = 'SvgFrameRenderJobV1';
 const SVG_ZIP_RENDER_JOB_SCHEMA_VERSION = 'SvgFrameZipRenderJobV1';
-const SUPPORTED_LAYER_TYPES = new Set(['text', 'shape', 'media', 'audio', 'svg-overlay', 'generative-shape']);
+const SUPPORTED_LAYER_TYPES = new Set(['text', 'shape', 'media', 'audio', 'svg-overlay', 'generative-shape', 'remotion-asset']);
 
 let activeJobId = null;
 
@@ -389,6 +389,14 @@ const validateRenderPayload = (payload) => {
         errors.push(`Layer ${layer?.payload?.layerName || layer?.id || 'unknown'} is missing generative shape data.`);
       }
     }
+    if (layer?.type === 'remotion-asset') {
+      const assetId = String(layer?.payload?.assetId || '');
+      const match = assetId.match(/^(static|motion)-(\d{3})$/);
+      const index = match ? Number(match[2]) : 0;
+      if (!match || index < 1 || index > 50) {
+        errors.push(`Layer ${layer?.payload?.layerName || layer?.id || 'unknown'} has invalid Remotion asset id '${assetId || 'missing'}'.`);
+      }
+    }
     if ((layer?.type === 'media' || layer?.type === 'audio') && isBlockedAssetUrl(layer?.payload?.mediaUrl)) {
       errors.push(`Layer ${layer?.payload?.layerName || layer?.id || 'unknown'} needs a stable media URL. Blob/data URLs cannot be rendered on the server.`);
     }
@@ -397,7 +405,18 @@ const validateRenderPayload = (payload) => {
   clips.forEach((clip) => {
     const start = Number(clip?.start);
     const end = Number(clip?.end);
-    if (!layerIds.has(clip?.layerId)) errors.push(`Clip ${clip?.id || 'unknown'} references missing layer '${clip?.layerId || 'unknown'}'.`);
+    const isClipOwnedRemotionAsset = clip?.clipType === 'remotion-asset';
+    if (!isClipOwnedRemotionAsset && !layerIds.has(clip?.layerId)) {
+      errors.push(`Clip ${clip?.id || 'unknown'} references missing layer '${clip?.layerId || 'unknown'}'.`);
+    }
+    if (isClipOwnedRemotionAsset) {
+      const assetId = String(clip?.remotionAssetId || '');
+      const match = assetId.match(/^(static|motion)-(\d{3})$/);
+      const index = match ? Number(match[2]) : 0;
+      if (!match || index < 1 || index > 50) {
+        errors.push(`Clip ${clip?.id || 'unknown'} has invalid Remotion asset id '${assetId || 'missing'}'.`);
+      }
+    }
     if (!trackIds.has(clip?.trackId)) errors.push(`Clip ${clip?.id || 'unknown'} references missing track '${clip?.trackId || 'unknown'}'.`);
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
       errors.push(`Clip ${clip?.id || 'unknown'} has invalid timing.`);
@@ -464,6 +483,15 @@ const validateSvgFramePayload = (payload) => {
     }
     if ((layer?.type === 'audio' || layer?.type === 'media') && isBlockedAssetUrl(mediaUrl)) {
       errors.push(`${name}: needs a stable media URL after asset staging.`);
+    }
+  });
+  clips.forEach((clip) => {
+    if (clip?.clipType !== 'remotion-asset') return;
+    const name = clip?.remotionAssetId || clip?.id || 'Remotion asset';
+    if (policy === 'exact-svg') {
+      errors.push(`${name}: Remotion asset clips require the Remotion render path.`);
+    } else {
+      warnings.push(`${name}: Remotion asset clip will fall back to Remotion MP4.`);
     }
   });
   if (!clips.length) warnings.push('timeline has no clips.');

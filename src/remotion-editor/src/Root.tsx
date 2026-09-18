@@ -3,6 +3,7 @@ import React from 'react';
 import { Composition } from 'remotion';
 import { MyComposition } from './Composition';
 import { DemoComposition, DEMO_DURATION_IN_FRAMES } from './engine/examples/DemoComposition';
+import { AssetLibraryRoot } from './assets';
 
 type CompositionMeta = {
   fps: number;
@@ -74,6 +75,7 @@ export const RemotionRoot: React.FC = () => {
         }}
       />
       {/* Engine demo — showcases the 100-feature engine live in the studio. */}
+      <AssetLibraryRoot />
       <Composition
         id="EngineDemo"
         component={DemoComposition}
