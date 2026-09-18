@@ -295,6 +295,18 @@ describe("spectrum tone classes", () => {
     new URL("../widgetMatrixPrimitives.css", import.meta.url),
     "utf8",
   )
+  const variantsCss = readFileSync(
+    new URL("../widgetPrimitiveVariants.css", import.meta.url),
+    "utf8",
+  )
+
+  it("keeps split-left and compact control rails as exact visible squares", () => {
+    const innerSize = "calc(var(--vt-primitive-height) - var(--vt-primitive-stroke, 0px) - var(--vt-primitive-stroke, 0px))"
+    expect(matrixCss).toContain(`--vt-primitive-inner-size: ${innerSize}`)
+    expect(matrixCss).toContain("width: var(--vt-primitive-inner-size)")
+    expect(matrixCss).toContain("flex: 0 0 var(--vt-primitive-inner-size)")
+    expect(variantsCss).toContain("grid-template-columns: var(--vt-primitive-inner-size) minmax(0, 1fr)")
+  })
 
   it("defines every spectrum slot the primitives can emit", () => {
     for (const name of WIDGET_BADGE_SPECTRUM) {
