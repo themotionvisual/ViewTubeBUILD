@@ -24,7 +24,7 @@
   --vt-primitive-height: var(--vt-control-h-24);
   --vt-primitive-stroke: 2px;
   --vt-primitive-radius: 4px;
-  --vt-primitive-font: 9px;
+  --vt-primitive-font: 14px;
 }
 
 .vt-control-height-32,
@@ -32,7 +32,7 @@
   --vt-primitive-height: var(--vt-control-h-32);
   --vt-primitive-stroke: 2px;
   --vt-primitive-radius: 6px;
-  --vt-primitive-font: 11px;
+  --vt-primitive-font: 18px;
 }
 
 .vt-control-height-38,
@@ -40,7 +40,7 @@
   --vt-primitive-height: var(--vt-control-h-38);
   --vt-primitive-stroke: 2px;
   --vt-primitive-radius: 7px;
-  --vt-primitive-font: 12px;
+  --vt-primitive-font: 22px;
 }
 
 .widget-action.vt-sized-control,
@@ -49,6 +49,8 @@
 .widget-text-input.vt-sized-control,
 .widget-video-select-trigger.vt-sized-control,
 .vt-button.vt-sized-control {
+  /* Compatibility lattice mirrors widgetPrimitiveSystem.css. This file loads
+     later in the dashboard cascade, so it must never downgrade --vt-primitive-font. */
   box-sizing: border-box;
   height: var(--vt-primitive-height, 32px) !important;
   min-height: var(--vt-primitive-height, 32px) !important;
