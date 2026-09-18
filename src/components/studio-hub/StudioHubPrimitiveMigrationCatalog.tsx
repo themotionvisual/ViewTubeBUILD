@@ -1,17 +1,48 @@
 import React from "react"
-import { Lightbulb } from "lucide-react"
+import { Lightbulb, Minus, Plus, Settings2 } from "lucide-react"
 import {
   HardcodedGenericControl,
   STUDIO_HUB_COMPONENT_FAMILIES,
   type StudioHubComponentLevel,
 } from "./StudioHubCompletePrimitiveCatalog"
-import { SubToolboxTooltip } from "../subtoolbox/SubToolboxPrimitives"
+import {
+  SubToolboxBadge,
+  SubToolboxButton,
+  SubToolboxCheckControl,
+  SubToolboxIconButton,
+  SubToolboxInput,
+  SubToolboxRadioControl,
+  SubToolboxSegmentedToggle,
+  SubToolboxStatusBadge,
+  SubToolboxStepper,
+  SubToolboxTag,
+  SubToolboxTextArea,
+  SubToolboxToggleSwitch,
+  SubToolboxTooltip,
+} from "../subtoolbox/SubToolboxPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import "./studio-hub-complete-primitive-catalog.css"
 
 const LEVELS: StudioHubComponentLevel[] = ["l0", "l1", "l2"]
 
-export const STUDIO_HUB_MIGRATED_FAMILIES = ["Tooltip"] as const
+export const STUDIO_HUB_MIGRATED_FAMILIES = [
+  "Primary Button",
+  "Secondary Button",
+  "Neutral Button",
+  "Destructive Button",
+  "Square Icon Button",
+  "Text Input",
+  "Textarea",
+  "Stepper",
+  "Toggle",
+  "Checkbox",
+  "Radio",
+  "Segmented Choice",
+  "Tag",
+  "Badge",
+  "Status Badge",
+  "Tooltip",
+] as const
 
 const pair = (index: number) => ({
   a: VT_SPECTRUM_PALETTE_06[index % 12],
@@ -31,11 +62,51 @@ const PrimitiveMigrationControl: React.FC<{
   const levelOffset = level === "l0" ? 0 : level === "l1" ? 2 : 4
   const colors = pair(paletteIndex + levelOffset)
   const style = { "--pair-a": colors.a, "--pair-b": colors.b } as React.CSSProperties
+  const [stepperValue, setStepperValue] = React.useState(5)
+  const [toggleOn, setToggleOn] = React.useState(true)
+  const [checkboxOn, setCheckboxOn] = React.useState(true)
+  const [radioOn, setRadioOn] = React.useState(true)
+  const [segmentChoice, setSegmentChoice] = React.useState("A")
 
-  // Wave 01: Tooltip is the first family moved out of the catalog-specific
-  // renderer and into the canonical primitive/CSS system. Every other family
-  // intentionally falls back to the frozen hardcoded renderer until its own
-  // visual parity pass is certified.
+  // Wave 02: these families are now rendered by production primitives + shared
+  // CSS. All remaining families deliberately fall back to the frozen catalog
+  // renderer until visual parity is certified.
+  if (name === "Primary Button" || name === "Secondary Button" || name === "Neutral Button" || name === "Destructive Button") {
+    return <SubToolboxButton level={level} style={style}>{name.replace(" Button", "")}</SubToolboxButton>
+  }
+  if (name === "Square Icon Button") {
+    return <SubToolboxIconButton level={level} style={style} icon={<Settings2 />} ariaLabel="Settings" />
+  }
+  if (name === "Text Input") {
+    return <SubToolboxInput level={level} style={style} type="text" defaultValue="TEXT INPUT" />
+  }
+  if (name === "Textarea") {
+    return <SubToolboxTextArea level={level} style={style} defaultValue="DESCRIPTION" />
+  }
+  if (name === "Stepper") {
+    return <SubToolboxStepper level={level} style={style} value={stepperValue} decreaseIcon={<Minus />} increaseIcon={<Plus />} onDecrease={() => setStepperValue((value) => value - 1)} onIncrease={() => setStepperValue((value) => value + 1)} />
+  }
+  if (name === "Toggle") {
+    return <SubToolboxToggleSwitch level={level} style={style} pressed={toggleOn} aria-label="Toggle" onClick={() => setToggleOn((value) => !value)} />
+  }
+  if (name === "Checkbox") {
+    return <SubToolboxCheckControl level={level} style={style} checked={checkboxOn} aria-label="Checkbox" onClick={() => setCheckboxOn((value) => !value)} />
+  }
+  if (name === "Radio") {
+    return <SubToolboxRadioControl level={level} style={style} checked={radioOn} aria-label="Radio" onClick={() => setRadioOn((value) => !value)} />
+  }
+  if (name === "Segmented Choice") {
+    return <SubToolboxSegmentedToggle level={level} style={{ ...style, ["--vt-segment-count" as string]: 3 }} options={[{ value: "A", label: "A" }, { value: "B", label: "B" }, { value: "C", label: "C" }]} value={segmentChoice} onValueChange={setSegmentChoice} />
+  }
+  if (name === "Tag") {
+    return <SubToolboxTag level={level} style={style}>NAPOLEON</SubToolboxTag>
+  }
+  if (name === "Badge") {
+    return <SubToolboxBadge level={level} style={style}>BADGE</SubToolboxBadge>
+  }
+  if (name === "Status Badge") {
+    return <SubToolboxStatusBadge level={level} style={style}>READY</SubToolboxStatusBadge>
+  }
   if (name === "Tooltip") {
     return <SubToolboxTooltip level={level} forceOpen content="TOOLTIP" style={style} />
   }
