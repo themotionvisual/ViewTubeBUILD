@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "./SubToolboxLayouts"
 import { SubToolboxButton, SubToolboxFileTarget, SubToolboxInput, SubToolboxMetric, SubToolboxOutputCard, SubToolboxStatePanel, SubToolboxTextArea } from "./SubToolboxPrimitives"
-import { CONTROL_SHELL, SUBTOOLBOX_TOKENS, resolveSubtoolboxMinHeight } from "./tokens"
+import { CONTROL_SHELL, SUBTOOLBOX_STATES, SUBTOOLBOX_TOKENS, TOOLBOX_LEVEL_DNA, resolveSubtoolboxMinHeight } from "./tokens"
 
 describe("Subtoolbox Primitive System", () => {
   it("derives compatibility geometry from the single token source", () => {
@@ -14,12 +14,8 @@ describe("Subtoolbox Primitive System", () => {
     expect(SUBTOOLBOX_TOKENS.interior.radius).toBeLessThan(SUBTOOLBOX_TOKENS.shell.radius)
     expect(SUBTOOLBOX_TOKENS.interior.shadowOffset).toBeLessThan(SUBTOOLBOX_TOKENS.shell.shadowOffset)
     // Control heights descend with the level.
-    // NOTE: l1 (48) is currently TALLER than l0 (44) in TOOLBOX_LEVEL_DNA after
-    // "restore 56/44 header authority in V35" (32db8dc) — a level-1 control
-    // taller than the level-0 shell it nests inside. Reported to the Design /
-    // Widget System owner rather than changed here; the l1 < l0 assertion is
-    // withheld until that value is settled.
     expect(SUBTOOLBOX_TOKENS.controlHeight.l2).toBeLessThan(SUBTOOLBOX_TOKENS.controlHeight.l1)
+    expect(SUBTOOLBOX_TOKENS.controlHeight.l1).toBeLessThan(SUBTOOLBOX_TOKENS.controlHeight.l0)
     // openUnits * L0 + gaps - one header's overhead. Derived from the tokens so
     // it tracks TOOLBOX_LEVEL_DNA instead of going stale on every retune.
     const l0 = SUBTOOLBOX_TOKENS.controlHeight.l0
@@ -27,6 +23,33 @@ describe("Subtoolbox Primitive System", () => {
     expect(resolveSubtoolboxMinHeight(3)).toBe(3 * l0 + 2 * gap - l0)
     // There is one shell style: heightMode no longer changes the result.
     expect(resolveSubtoolboxMinHeight(3, "compact")).toBe(resolveSubtoolboxMinHeight(3, "standard"))
+  })
+
+  // 32db8dc lowered two levels of the ladder and left a third behind, which put
+  // a level-1 control above the level-0 shell for weeks without failing a gate.
+  // Assert the whole ladder, not one pair, so the next retune cannot repeat it.
+  it("keeps every level-owned axis strictly descending", () => {
+    const ladder = ["toolbox", "l0", "l1", "l2"] as const
+    const axes = ["height", "stroke", "radius", "shadowOffset", "titleSize"] as const
+    for (const axis of axes) {
+      for (let i = 1; i < ladder.length; i += 1) {
+        const outer = TOOLBOX_LEVEL_DNA[ladder[i - 1]][axis]
+        const inner = TOOLBOX_LEVEL_DNA[ladder[i]][axis]
+        expect(
+          inner,
+          `${ladder[i]}.${axis} (${inner}) must sit below ${ladder[i - 1]}.${axis} (${outer})`,
+        ).toBeLessThan(outer)
+      }
+    }
+  })
+
+  it("gives every declared subtoolbox state default copy", () => {
+    // The Record is typed, but a missing key renders an empty panel rather than
+    // failing the build, so assert the rendered output instead of the type.
+    for (const state of SUBTOOLBOX_STATES) {
+      const html = renderToStaticMarkup(<SubToolboxStatePanel state={state} />)
+      expect(html, `${state} has no default copy`).toMatch(/<p>\s*\S/)
+    }
   })
 
   it("renders typed fields, actions, layouts and states", () => {

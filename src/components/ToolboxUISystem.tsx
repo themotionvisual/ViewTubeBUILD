@@ -386,9 +386,12 @@ const resolveSubtoolboxMinHeight = (
 
  // Overhead  = container top border + header (including its own borderBottom) + container bottom border
 
- //           = stroke + HEAD_HEIGHT + stroke = 4 + 56 + 4 = 64
+ //           = stroke + header height + stroke
 
- const overhead = HEAD_HEIGHT + config.stroke * 2
+ // The header height is the level's own token, not a literal: 32db8dc moved it
+ // and the literal here was left behind, which is how it came to be undefined.
+
+ const overhead = CONTROL_SHELL.headerHeight + config.stroke * 2
 
  const computed =
   openUnits * config.baseHeight + (openUnits - 1) * config.gap - overhead

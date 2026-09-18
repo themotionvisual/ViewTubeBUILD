@@ -41,7 +41,11 @@ export const TOOLBOX_LEVEL_DNA = {
     titleSize: 22,
   },
   l1: {
-    height: 48,
+    // 32db8dc lowered toolbox 80 -> 56 and l0 56 -> 44 but left l1 at 48,
+    // which made a level-1 control taller than the level-0 shell it nests
+    // inside. 38 restores the strictly descending ladder at the ratio l1 held
+    // to l0 before that commit (48/56 ~= 38/44).
+    height: 38,
     stroke: 3,
     radius: 8,
     shadowOffset: 4,
@@ -184,13 +188,21 @@ export const resolveSubtoolboxMinHeight = (
 
 export type SubToolboxControlSize = ToolboxControlLevel
 export type SubToolboxLayoutDensity = "dense" | "standard" | "comfortable"
-export type SubToolboxState =
-  | "loading"
-  | "ready"
-  | "empty"
-  | "filtered-empty"
-  | "disconnected"
-  | "blocked"
-  | "stale"
-  | "permission"
-  | "error"
+/**
+ * The state list is a runtime value, not just a union, so a gate can iterate it.
+ * A state declared here but missing from a consumer's Record renders an empty
+ * panel rather than failing the build — three of them did.
+ */
+export const SUBTOOLBOX_STATES = [
+  "loading",
+  "ready",
+  "empty",
+  "filtered-empty",
+  "disconnected",
+  "blocked",
+  "stale",
+  "permission",
+  "error",
+] as const
+
+export type SubToolboxState = (typeof SUBTOOLBOX_STATES)[number]
