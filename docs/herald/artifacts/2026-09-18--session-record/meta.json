@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "viewtube.herald.conversation.v1",
+  "name": "session record",
+  "app": "Claude Code (web)",
+  "status": "in-progress",
+  "branch": "claude/iewtuve-ai-system-aedxj4",
+  "summary": "Built, debugged and then began rewriting the cross-application AI conversation system; 18 commits, no runtime changes",
+  "taskIds": [],
+  "referenced": []
+}

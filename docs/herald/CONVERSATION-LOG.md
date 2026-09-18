@@ -6,12 +6,13 @@ One row per AI conversation. Each row is generated from that conversation folder
 `meta.json` plus what is actually on disk and in git, so artifact lists cannot go stale
 and no two conversations edit the same lines.
 
-**2 conversations.** Full detail is in each folder's README.
+**3 conversations.** Full detail is in each folder's README.
 
 | Conversation | App | Started | Last worked | Status | Branch | Work done | Documents, HTML & screenshots |
 |---|---|---|---|---|---|---|---|
 | [herald system](./artifacts/2026-09-16--herald-system/) | Claude Code (web) | 2026-09-16 | 2026-09-17 | 🔶 in progress | `claude/iewtuve-ai-system-aedxj4` | Built the Herald cross-application conversation system: contracts, registries, skill distribution, hooks, artifact organisation | `widget-library--2026-09-16--v12-matrix.html` (+2)<br>_ref:_ `docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md`, `agent/contracts/` |
 | [improvement backlog](./artifacts/2026-09-17--improvement-backlog/) | Claude Code (web) | 2026-09-17 | 2026-09-17 | ✅ finished | `claude/iewtuve-ai-system-aedxj4` | Produced a 50-item improvement backlog for the conversation system, grouped by theme with effort estimates | `50-IMPROVEMENT-IDEAS.md` |
+| [session record](./artifacts/2026-09-18--session-record/) | Claude Code (web) | 2026-09-18 | 2026-09-18 | 🔶 in progress | `claude/iewtuve-ai-system-aedxj4` | Built, debugged and then began rewriting the cross-application AI conversation system; 18 commits, no runtime changes | `SESSION-RECORD.txt` |
 
 ---
 

@@ -1,0 +1,312 @@
+================================================================================
+ VIEWTUBE AI CONVERSATION SYSTEM — SESSION RECORD
+ Claude Code (web) · 2026-09-15 to 2026-09-18
+ Branch: claude/iewtuve-ai-system-aedxj4 · Repo: themotionvisual/ViewTubeBUILD
+================================================================================
+
+WHAT THIS IS
+  A reconstruction of the session written from the working context: every
+  request, what was found, what was built, what broke, and what is still open.
+  It is NOT a verbatim transcript. Commit hashes, file paths and measured
+  numbers are exact; the wording of requests is paraphrased.
+
+================================================================================
+ 1. THE ARC, IN ORDER
+================================================================================
+
+ TURN   YOU ASKED FOR                          WHAT HAPPENED
+ ----   -----------------------------------    --------------------------------
+  1     A plan for a system that makes all      Surveyed the repo. Found most of
+        ViewTube AI conversations powerful,     it already existed. Wrote a
+        informed, non-duplicative,              476-line plan.
+        chronological, cross-application.
+  2     (uploaded Task Index + memory ref +     Resolved where the Task Index
+        ViewTube-Task-Index5.html)              lives. Found its cache empty and
+                                                that it had never been saved.
+  3     "What is the workflow system for        Specified the turn loop, thread
+        the conversations?"                     loop, five gates, nine workflows.
+  4     "Where is the document with the         It did not exist. Built the five
+        process for the response?"              contract files.
+  5     Recommend skills/workflows/plugins/     Widened recommendations to eight
+        agents on file too                      capability surfaces + a registry.
+  6     Also recommend documents, artifacts,    Added the REFERENCES block and a
+        standalone HTML, folder sets            classified reference registry.
+  7     Find related local files without        Designed corpus discovery using
+        cataloguing hundreds of them first      identifier joins, not embeddings.
+  8     Show screenshots after code edits       Added the VISUAL evidence rule.
+  9     "How do you tell an AI to use the       Nothing loaded the contracts.
+        system?"                                Added CLAUDE.md + AGENTS.md.
+ 10     "Fix the gaps and bugs"                 Fixed 4 defect classes, found 2
+                                                more while fixing.
+ 11     Repos are not being suggested in        Three causes, all mine. Fixed.
+        ChatGPT
+ 12     Save/organise artifacts; screenshots    Built the artifact system and the
+        in one scrollable doc; version          version-folder rule.
+        folders; a start prompt
+ 13     "Go on"                                 Audited my own work, found a bug,
+                                                added save + group.
+ 14     50 improvement ideas                    Delivered, saved to the repo.
+ 15     Usage saving, curation, self-           Built herald-brief, herald-doctor,
+        maintenance, a conversation log         curation + maintenance contracts,
+                                                and the conversation log.
+ 16     "Stop wasting usage. Look at            Measured it. 6,663 token floor.
+        caveman."                               Cut 63%.
+ 17     One-page description                    docs/herald/README.md
+ 18     Breakdown of the response templates     Found a contradiction I had just
+                                                introduced. Fixed it.
+ 19     "Too complicated, unnatural, too        Accepted. Produced 50 plain-English
+        hardcoded, should work in any repo"     candidates for a rewrite.
+ 20     Required + optional sections;           Made the template DATA with a
+        agents propose, you approve             propose/approve workflow.
+
+================================================================================
+ 2. WHAT WAS FOUND (all verified by command, not assumed)
+================================================================================
+
+ REPO SCALE
+   343 remote branches            git ls-remote --heads origin | wc -l
+   1,598 tasks / 35 modules       ViewTube-Task-Index5.html
+   79 docs, 34 quarantined files, 21 standalone HTML files in repo
+   60 external skills from 12 third-party GitHub accounts (skills-lock.json)
+
+ THE FIVE FINDINGS THAT MATTERED MOST
+
+ [1] .gitignore is deny-by-default and silently drops new files.
+     `/*` at line 2. New files under docs/, .claude/, .viewtube/, agent/ and
+     the repo root were untracked — the commit succeeds and captures nothing.
+     Hit it SIX times before fixing it. Your own FAILURE->FIX INDEX already
+     recorded this, so it had bitten before.
+     FIXED: allow-list added; a PostToolUse hook now warns at write time.
+
+ [2] The Task Index has never been saved.
+     <script id="vt-embedded-snapshot">{"v":15,"savedAt":null}</script>
+     All live status for 1,598 tasks exists only in localStorage in one
+     browser profile. Clearing site data loses it.
+     STILL OPEN — only you can do this. Export and commit the state.
+
+ [3] The AI continuity cache was designed well and is empty.
+     230 taskRefs, of which 228 are one-time migration breadcrumbs from a
+     single day. Only 2 carry real evidence (0.13%). aiDebugLog: 0 entries.
+     The design was sound; the write path was a manual browser gesture, so it
+     never ran. THIS SHAPED EVERYTHING AFTER IT.
+
+ [4] Cross-tool skill copies had fully drifted.
+     .codex/ vs .claude/: 103 and 115 diff lines. Coverage was 19 Claude
+     skills, 2 divergent Codex skills, 0 for Cursor/Gemini/Copilot.
+     FIXED: one source, generated targets, drift fails CI. Now 0 and 0.
+
+ [5] The system itself was burning usage.
+     6,663 tokens charged before the first useful word; ~200k input tokens
+     across a 30-turn conversation purely re-reading itself.
+     FIXED: 2,422 tokens, gated by check:cost.
+
+ SMALLER FINDINGS
+   - 2 npm scripts pointed at files that do not exist (removed)
+   - skills/viewtube-toolbox-builder was a byte-identical duplicate (removed)
+   - viewtube-youtube-auth-api-stabilization had NO YAML frontmatter, which is
+     why nothing ever loaded it (fixed; now live)
+   - youtube-api-expert declared name: youtube-mcp, inherited from the upstream
+     project it is vendored from (fixed; body references left alone)
+   - VIEWTUBE_UNDEPLOYED_SYSTEMS_INDEX.json is EMPTY despite its name
+   - VIEWTUBE_SYSTEM_REGISTRY.json has 28 systems with owners — genuinely useful
+   - /codebase-audit-pre-push is referenced by CLAUDE.md but does not exist
+   - The clone is SHALLOW: only main + working branch. Local refs lie about
+     branch history. Always use git ls-remote.
+
+================================================================================
+ 3. BUGS I INTRODUCED AND CAUGHT
+================================================================================
+
+ Worth recording because the pattern repeats: each was found by testing or
+ re-reading, not by being careful the first time.
+
+ a) promote moved VERSIONS.md into variants/ — it demoted the record of the
+    choice. Cause: "which files are artifacts" decided ad-hoc in 3 places.
+    Fixed with one shared definition, not a patch to one call site.
+
+ b) Ledger recorded renames as the literal string "old -> new" instead of a
+    path. Fixed by parsing NUL-delimited git output.
+
+ c) The git helper called .trim(), which ate the leading status space of the
+    FIRST porcelain record and shifted its path by one character. So the first
+    changed file was always recorded wrong.
+
+ d) Editor_V1 and Editor_V3 did not group, because \b fails before V when
+    preceded by "_" (a word character) — exactly how those files are named.
+
+ e) Editor_V1 then beat Editor_V3 as canonical, because equal sizes fell
+    through to mtime. Version numbers now outrank size.
+
+ f) My own lean cut re-optionalised the repo-recommendation block, silently
+    undoing the fix from four turns earlier. Caught by reading the contract
+    back to you. The lean rule now records that block as its one permanent
+    exception, WITH THE REASON.
+
+ g) check:cost rejected my own one-page overview at 2,520 vs 2,500 tokens.
+    Trimmed instead of raising the budget.
+
+================================================================================
+ 4. WHAT EXISTS NOW
+================================================================================
+
+ SOURCE (edit these)
+   agent/template.json          the template AS DATA — 6 required + 16 optional
+                                response sections, 5 + 6 plan sections, 7 rules
+   agent/TEMPLATE.md            generated from the above
+   agent/AGENTS.md              cross-tool brief
+   agent/START-PROMPT.md        paste into any AI tool (2.8 KB)
+   agent/START-PROMPT-FULL.md   the long form, when you want the full spec
+   agent/contracts/             out · in · workflow · artifacts · curation ·
+                                maintenance · activation · status-vocabulary
+   agent/registry/              capabilities · references · candidates
+   agent/skills/                20 skills (single source)
+   agent/proposals/             section proposals awaiting your approval
+   agent/targets.json           where things get distributed
+
+ GENERATED (never edit)
+   AGENTS.md · GEMINI.md · .github/copilot-instructions.md ·
+   .cursor/rules/viewtube.mdc · .claude/skills/** · .codex/skills/**
+
+ ENFORCEMENT
+   .claude/settings.json        hooks + a read-only permission allowlist
+   .claude/hooks/               gitignore guard (PostToolUse), ledger (Stop)
+   .claude/commands/vt.md       /vt
+
+ TOOLS
+   herald-sync          distribute contracts to every tool; --check fails on drift
+   herald-artifacts     init · save · group · promote · index · check
+   herald-log           one row per conversation, generated from meta.json + git
+   herald-brief         context pack for a topic — RUN THIS BEFORE RE-DERIVING
+   herald-doctor        is the machinery actually on? 20 checks
+   herald-cost          what the system costs before any work happens
+   agent-template       list · render · propose · pending · approve · reject
+
+ GATES (all passing, in CI under source-governance)
+   check:template · check:agent-sync · check:artifacts · check:log ·
+   check:cost · check:quarantine · check:src-governance
+
+ OUTPUT
+   docs/herald/README.md            one-page description
+   docs/herald/CONVERSATION-LOG.md  one row per conversation
+   docs/herald/artifacts/           what conversations produced
+   docs/herald/GIT-PLAYBOOK.md      git reference moved out of CLAUDE.md
+
+================================================================================
+ 5. THE TEMPLATE AS IT STANDS
+================================================================================
+
+ ALWAYS
+   TASK        one sentence, your words
+   DONE WHEN   the observable result · checked by: <command>
+   ALREADY?    new | partly done <where> | already exists <where> | tried before
+   FILES       exact paths to create / edit / delete
+   PLAN        1. … 2. … 3. …
+   NET         +lines / -lines  (adding only? say what you considered removing)
+
+ ONLY WHEN THE TRIGGER IS TRUE — one line, no heading, omitted otherwise
+   better idea · tools · docs · branches · reduce · risk · prototype · owner ·
+   tests · rollback · cost · skill · task id · saved · retire · unfinished
+
+ PLAN FILES
+   required: goal · done when · steps (checkboxes) · before -> after · status
+   optional: prior work · references · decisions · risks · reduction · follow-ups
+
+ RULES
+   1. A section appears only if it changes what you do next. No "N/A" padding.
+   2. Prefer removing code to adding it. Shared component before a new one.
+   3. Quarantine before deleting. Record how to restore.
+   4. Separate what was RUN and OBSERVED from what is merely believed.
+   5. Link to files; never paste them into the conversation.
+   6. A prototype or demo proves nothing about what actually runs.
+
+ EVIDENCE LADDER
+   PROVEN   runtime/test · canonical main code · git history
+   CLAIMED  user correction · task index · active branch · artifact
+   UNKNOWN  conversation · memory
+   A task never reaches "Finished" below PROVEN.
+
+ PROPOSING A SECTION
+   node scripts/agent-template.mjs propose --new   -> fill in the shape
+   npm run template:pending                        -> what awaits approval
+   node scripts/agent-template.mjs approve <id>    -> your call
+   A proposal needs a "why" naming a CONCRETE OBSERVED FAILURE, not a hunch.
+   Rejections keep their record so the idea is not re-proposed.
+
+================================================================================
+ 6. COMMITS
+================================================================================
+
+ dd48ae9  2026-09-15  plan the cross-application conversation system
+ 0c11597  2026-09-15  reconcile the plan with the canonical Task Index
+ e5a8e4e  2026-09-15  specify the conversation workflow system
+ 12f36fb  2026-09-16  add the canonical contract documents
+ df9f04e  2026-09-16  recommend capabilities across all eight surfaces, on file
+ dfd71ec  2026-09-16  add a REFERENCES block and the reference registry
+ 748b7ad  2026-09-16  design local corpus discovery without manual cataloguing
+ 17f22df  2026-09-16  require visual evidence for user-visible changes
+ 7633bd3  2026-09-16  activate the contracts in Claude Code and every other tool
+ 4bbcaa2  2026-09-16  close the gaps and defects
+ 70ae619  2026-09-16  make repository recommendations actually happen
+ 0519d61  2026-09-16  save and organise conversation artifacts, add a start prompt
+ 4e43223  2026-09-17  repair promote, add save + group
+ 9548cd7  2026-09-17  add a 50-item improvement backlog
+ bcdffe9  2026-09-17  usage saving, curation, self-maintenance, conversation log
+ cd4b148  2026-09-18  cut the context floor 63%, add a one-page overview
+ 1941961  2026-09-18  stop the lean cut re-optionalising repo recommendations
+ d80bec3  2026-09-18  make the template editable data, with a proposal workflow
+
+ 18 commits. Zero files under src/, server/ or api/ — no runtime behaviour
+ changed anywhere in this session.
+
+================================================================================
+ 7. STILL OPEN
+================================================================================
+
+ YOURS (I cannot do these)
+   [ ] Export the Task Index state and commit it. savedAt is still null.
+       1,598 tasks in one browser profile. Five minutes. Unrecoverable if lost.
+   [ ] Open /hooks once, or restart, so the hooks load. They are schema-valid
+       and pipe-tested but were never proven to FIRE — the settings watcher
+       only sees settings.json if it existed at session start.
+   [ ] Open the PR. 18 commits, no runtime files, merges cleanly.
+   [ ] Confirm whether /codebase-audit-pre-push still exists.
+
+ DESIGNED BUT NOT BUILT
+   - RECON: prior-art search across 343 branches. Still done by hand, which
+     means in practice it is not done.
+   - Block-presence telemetry. The system cannot tell whether it is being
+     followed. You found the repo-recommendation failure by noticing it
+     yourself — that is currently the only detection mechanism.
+   - Corpus discovery (herald-scan / herald-find) for local folders.
+   - Thread files and gate enforcement.
+   - herald-shot for capturing arbitrary routes.
+   - Audit of the 60 external skills; they execute as instructions.
+
+ THE REWRITE YOU ASKED FOR
+   Agreed direction: portable to any repo, plain English, no invented
+   vocabulary, one folder, one install command, no config file.
+   template.json is the piece that carries over cleanly. Everything named
+   "Herald" and every ViewTube-specific path does not.
+
+================================================================================
+ 8. WHAT I GOT WRONG
+================================================================================
+
+ Recorded because it is the most useful part of this file.
+
+ - I built for thoroughness with no cost ceiling, and you had to tell me twice
+   before I measured it. The measurement took one script and should have been
+   the first thing, not the sixteenth.
+ - I answered "the system is too complex" by adding documents, more than once.
+ - I invented vocabulary — Herald, LEVERAGE-OUT, T1/T2, canonical owner — that
+   means nothing to anyone who did not watch it being built.
+ - I hardcoded ViewTube paths into something you wanted portable.
+ - Twice I wrote a rule whose failure mode was silence: "verify before
+   recommending" made saying nothing the compliant answer, and gating a block
+   to a rare tier made it never fire.
+ - Every single one of these was found by YOU using the system, not by me
+   reviewing it. That is the argument for telemetry over more contract text.
+
+================================================================================
+ END
+================================================================================
