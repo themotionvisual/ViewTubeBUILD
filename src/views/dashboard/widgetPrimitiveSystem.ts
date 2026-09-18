@@ -21,9 +21,9 @@ export interface WidgetPrimitiveOptions {
 
 export const WIDGET_PRIMITIVE_SIZE_TOKENS = {
   18: { height: 18, font: 8, radius: 2, stroke: 0, shadow: 0, paddingX: 4, gap: 2, icon: 12, iconStroke: 2 },
-  24: { height: 24, font: 14, radius: 3, stroke: 2, shadow: 2, paddingX: 6, gap: 4, icon: 17, iconStroke: 2.25 },
-  32: { height: 32, font: 18, radius: 4, stroke: 2, shadow: 3, paddingX: 8, gap: 4, icon: 23, iconStroke: 2.5 },
-  38: { height: 38, font: 22, radius: 6, stroke: 2, shadow: 4, paddingX: 12, gap: 6, icon: 28, iconStroke: 2.75 },
+  24: { height: 24, font: 16, radius: 3, stroke: 2, shadow: 2, paddingX: 6, gap: 4, icon: 18, iconStroke: 2.25 },
+  32: { height: 32, font: 21, radius: 4, stroke: 2, shadow: 3, paddingX: 8, gap: 4, icon: 24, iconStroke: 2.5 },
+  38: { height: 38, font: 26, radius: 6, stroke: 2, shadow: 4, paddingX: 12, gap: 6, icon: 29, iconStroke: 2.75 },
 } as const
 
 export function widgetPrimitiveClasses({ size=32, tone="default", state="default", shape="control", width="auto", interactive=false }: WidgetPrimitiveOptions = {}) {
