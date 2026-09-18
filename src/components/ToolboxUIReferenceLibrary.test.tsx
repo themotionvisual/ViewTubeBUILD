@@ -6,20 +6,37 @@ import { describe, expect, it } from "vitest"
 import { ToolboxUIReferenceLibrary } from "./ToolboxUIReferenceLibrary"
 
 describe("Toolbox UI Reference Library", () => {
-  it("renders the production toolbox families inside the canonical shell", () => {
+  it("mounts the complete canonical component catalog inside the production toolbox shell", () => {
     const html = renderToStaticMarkup(
       <ToolboxUIReferenceLibrary collapsible={false} isOpenInitial paletteIndex={7} />,
     )
 
     expect(html).toContain("Studio Hub Component Library")
-    expect(html).toContain("Buttons + Split Left")
-    expect(html).toContain("Fields + Text Inputs")
-    expect(html).toContain("Dropdown Menus")
-    expect(html).toContain("Outputs + Data Surfaces")
-    expect(html).toContain("Interaction + Data + Connection States")
-    expect(html).toContain('data-vt-toolbox-level="sub"')
-    expect(html).toContain("vt-subtoolbox-file-target")
-    expect(html).toContain("vt-subtoolbox-output")
+    expect(html).toContain("Complete Component + Primitive Catalog")
+    expect(html).toContain("Split Search")
+    expect(html).toContain("Toggle")
+    expect(html).toContain("Settings Switch")
+    expect(html).toContain("Checkbox")
+    expect(html).toContain("Radio")
+    expect(html).toContain("Slider")
+    expect(html).toContain("Range Slider")
+    expect(html).toContain("Popover")
+    expect(html).toContain("Pagination")
+    expect(html).toContain("Vault Landscape Asset")
+    expect(html).toContain("Vault Portrait Asset")
+    expect(html).toContain("Vault Audio Asset")
+    expect(html).toContain("Vault Document Asset")
+    expect(html).toContain("Knob Dial")
+    expect(html).toContain("Controller Switch")
+    expect(html).toContain("LED Light")
+    expect(html).toContain('data-vt-toolbox-level="main"')
+  })
+
+  it("restores the 80px main toolbox header authority instead of inheriting subtoolbox height", () => {
+    const source = readFileSync(resolve(process.cwd(), "src/components/ToolboxUIReferenceLibrary.tsx"), "utf8")
+    expect(source).toContain('--vt-toolbox-header-height: 80px !important')
+    expect(source).toContain('height: 80px !important')
+    expect(source).toContain('width: 80px !important')
   })
 
   it("is lazy-mounted as a single Studio Hub toolbox", () => {
