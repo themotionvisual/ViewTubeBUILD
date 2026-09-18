@@ -12,7 +12,6 @@ import {
 import type { AssetCompositionProps, AssetDefinition, AssetVisualProps } from './types';
 
 const range = (count: number) => Array.from({ length: Math.max(0, count) }, (_, index) => index);
-const pct = (value: number) => `${value}%`;
 const TAU = Math.PI * 2;
 
 const resolveProps = (
