@@ -46,6 +46,11 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   const [value, setValue] = useState(5)
   const [toggleOn, setToggleOn] = useState(true)
   const [switchOn, setSwitchOn] = useState(true)
+  const [sliderValue, setSliderValue] = useState(62)
+  const [rangeLow, setRangeLow] = useState(22)
+  const [rangeHigh, setRangeHigh] = useState(76)
+  const [scrollPos, setScrollPos] = useState(18)
+  const [page, setPage] = useState(2)
   const style = { "--pair-a": colors.a, "--pair-b": colors.b } as React.CSSProperties
   const icon = <Settings2 aria-hidden="true" />
 
@@ -61,7 +66,8 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   if (name === "Split Search") return <div className={`vt-catalog-split-field is-${level}`} style={style}><span><Search /></span><input aria-label="Search" placeholder="SEARCH" /></div>
   if (name === "Input Action") return <div className={`vt-catalog-split-field is-${level}`} style={style}><span><Plus /></span><input aria-label="Add item" placeholder="ADD ITEM" /></div>
   if (name === "Stepper") return <div className={`vt-catalog-stepper is-${level}`} style={style}><button type="button" aria-label="Decrease" onClick={() => setValue(v => v - 1)}><Minus /></button><strong>{value}</strong><button type="button" aria-label="Increase" onClick={() => setValue(v => v + 1)}><Plus /></button></div>
-  if (name === "Slider" || name === "Range Slider") return <div className={`vt-catalog-slider is-${level} ${name === "Range Slider" ? "is-range" : ""}`} style={style}><span className="track"/><span className="fill"/><i className="handle h1"/>{name === "Range Slider" ? <i className="handle h2"/> : null}</div>
+  if (name === "Slider") return <div className={`vt-catalog-slider is-${level}`} style={style}><button type="button" className="rail" aria-label="Reset slider" onClick={() => setSliderValue(62)}><ChevronRight/></button><div className="slider-center"><input aria-label="Slider value" type="range" min="0" max="100" value={sliderValue} onChange={e => setSliderValue(Number(e.target.value))}/></div><output>{sliderValue}</output></div>
+  if (name === "Range Slider") return <div className={`vt-catalog-range is-${level}`} style={style}><button type="button" className="rail" aria-label="Reset range" onClick={() => { setRangeLow(22); setRangeHigh(76) }}><SlidersHorizontal/></button><div className="range-center"><div className="range-track"><span className="range-fill" style={{left:`${rangeLow}%`,right:`${100-rangeHigh}%`}}/></div><input aria-label="Range minimum" type="range" min="0" max="100" value={rangeLow} onChange={e => setRangeLow(Math.min(Number(e.target.value), rangeHigh - 1))}/><input aria-label="Range maximum" type="range" min="0" max="100" value={rangeHigh} onChange={e => setRangeHigh(Math.max(Number(e.target.value), rangeLow + 1))}/></div><output>{rangeLow}–{rangeHigh}</output></div>
   if (name === "Toggle") return <button type="button" className={`vt-catalog-toggle is-${level} ${toggleOn ? "is-on" : ""}`} style={style} aria-pressed={toggleOn} aria-label="Toggle" onClick={() => setToggleOn(v => !v)}><span /></button>
   if (name === "Settings Switch") return <button type="button" className={`vt-catalog-switch is-${level} ${switchOn ? "is-on" : ""}`} style={style} aria-pressed={switchOn} onClick={() => setSwitchOn(v => !v)}><span /></button>
   if (name === "Checkbox") return <SubToolboxCheckbox label="Check" defaultChecked />
@@ -82,12 +88,12 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   if (name === "Popover") return <div className={`vt-catalog-popover is-${level}`} style={style}><header><Menu/>Options<button><X/></button></header><p>Popover content</p></div>
   if (name === "Disclosure") return <div className={`vt-catalog-disclosure is-${level}`} style={style}><header><Plus/>Advanced<ChevronRight/></header><p>Disclosure content</p></div>
   if (name === "Divider") return <hr className={`vt-catalog-divider is-${level}`} style={style}/>
-  if (name === "Horizontal Scrollbar") return <div className={`vt-catalog-hscroll is-${level}`} style={style}><button><ChevronLeft/></button><span><i/></span><button><ChevronRight/></button></div>
-  if (name === "Vertical Scrollbar") return <div className={`vt-catalog-vscroll is-${level}`} style={style}><button><ChevronDown/></button><span><i/></span><button><ChevronDown/></button></div>
+  if (name === "Horizontal Scrollbar") return <div className={`vt-catalog-hscroll is-${level}`} style={style}><button type="button" aria-label="Scroll left" onClick={() => setScrollPos(v => Math.max(0,v-10))}><ChevronLeft/></button><span><i style={{left:`${scrollPos}%`}}/></span><button type="button" aria-label="Scroll right" onClick={() => setScrollPos(v => Math.min(58,v+10))}><ChevronRight/></button></div>
+  if (name === "Vertical Scrollbar") return <div className={`vt-catalog-vscroll is-${level}`} style={style}><button type="button" aria-label="Scroll up" onClick={() => setScrollPos(v => Math.max(0,v-10))}><ChevronDown className="up"/></button><span><i style={{top:`${scrollPos}%`}}/></span><button type="button" aria-label="Scroll down" onClick={() => setScrollPos(v => Math.min(58,v+10))}><ChevronDown/></button></div>
   if (name === "Disabled Button") return <button disabled className={`vt-catalog-button is-${level} is-disabled`}>Disabled</button>
   if (name === "Disabled Split Button") return <button disabled className={`vt-catalog-disabled-split is-${level}`}><span>{icon}</span><b>Disabled</b></button>
   if (name === "Upload Frame") return <div className={`vt-catalog-upload is-${level}`} style={style}><Upload/><b>Drop or choose file</b></div>
-  if (name === "Pagination") return <div className={`vt-catalog-pagination is-${level}`} style={style}><button><ChevronLeft/></button><button>1</button><button>2</button><button><ChevronRight/></button></div>
+  if (name === "Pagination") return <div className={`vt-catalog-pagination is-${level}`} style={style}><button type="button" aria-label="Previous page" onClick={() => setPage(v => Math.max(1,v-1))}><ChevronLeft/></button>{[1,2,3].map(p => <button type="button" key={p} className={page===p ? "is-on" : ""} aria-current={page===p ? "page" : undefined} onClick={() => setPage(p)}>{p}</button>)}<button type="button" aria-label="Next page" onClick={() => setPage(v => Math.min(3,v+1))}><ChevronRight/></button></div>
   if (name.startsWith("Vault ")) {
     const Icon = name.includes("Landscape") || name.includes("Portrait") ? Image : name.includes("Audio") ? Music : FileText
     return <div className={`vt-catalog-asset is-${level} ${name.includes("Portrait") ? "is-portrait" : ""}`} style={style}><header><Icon/><b>{name.replace("Vault ","")}</b></header><div className="preview"><Icon/></div><footer><span>ASSET</span><button><X/></button></footer></div>
