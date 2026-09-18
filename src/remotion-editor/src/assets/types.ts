@@ -102,6 +102,13 @@ export interface AssetVisualProps {
   reducedMotion: boolean;
 }
 
+export interface AssetParameterSchema {
+  parse(input: unknown): AssetVisualProps;
+  safeParse(input: unknown):
+    | { success: true; data: AssetVisualProps }
+    | { success: false; error: Error };
+}
+
 export interface AssetDefinition {
   id: `static-${string}` | `motion-${string}`;
   name: string;
@@ -122,6 +129,7 @@ export interface AssetDefinition {
   supportedRatios: readonly AspectRatioKey[];
   previewFrame: number;
   controls: readonly AssetControlSpec[];
+  schema: AssetParameterSchema;
   defaults: AssetVisualProps;
   safeAreas: SafeAreaMetadata;
   recommendedUses: readonly string[];
