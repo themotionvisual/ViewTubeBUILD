@@ -4,8 +4,7 @@ import {EditorStore,useEditorState} from './state/editorState';
 import {useSuppressBrowserZoom} from './hooks/gestures';
 import {useViewport} from './hooks/useViewport';
 import {usePlaybackClock} from './hooks/usePlaybackClock';
-import {PortraitLayout} from './layouts/PortraitLayout';
-import {LandscapeLayout} from './layouts/LandscapeLayout';
+import {MobileWorkspaceLayout} from './layouts/MobileWorkspaceLayout';
 import type {EditorSettingsModel} from './components/EditorNavigationPages';
 import type {VtE1Clip} from '../../../shared/vtE1TimelineContract';
 
@@ -68,7 +67,7 @@ export const MobileEditor:React.FC<MobileEditorProps>=({
     data-workspace-mode={workspaceMode}
     style={{position:'relative',width:'100%',height:'100dvh',minWidth:0,minHeight:0,overflow:'hidden',background:'#f3f3f3',WebkitTapHighlightColor:'transparent'}}
   >
-    {chosen==='portrait'?<PortraitLayout {...common}/>:<LandscapeLayout {...common}/>}
+    <MobileWorkspaceLayout orientation={chosen} {...common}/>
   </div>;
 };
 
