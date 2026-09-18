@@ -35,7 +35,7 @@ import {
  selectBrainCapabilities,
  shouldUseCurrentGrounding,
 } from "./BrainCapabilityRegistry"
-import { resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"\nimport { buildBrainStatisticsIntelligence } from "./BrainStatisticsBridge"
+import { resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"\nimport { buildBrainStatisticsIntelligence } from "./BrainStatisticsBridge"\nimport { buildBrainAudienceIntelligence } from "./BrainAudienceBridge"
 import {
  cacheCurrentNicheResearch,
  readCachedCurrentNicheResearch,
