@@ -1,6 +1,6 @@
 import React from "react"
 import {
-  Check, ChevronDown, ChevronRight, Circle, FileText, Image, Lightbulb,
+  Check, ChevronDown, ChevronLeft, ChevronRight, Circle, FileText, Image, Lightbulb,
   Menu, Minus, MoreHorizontal, Music, Plus, Search, Settings2, SlidersHorizontal,
   Upload, Video, X,
 } from "lucide-react"
