@@ -86,3 +86,22 @@
  .vt-spectrum-badge.is-height-32 > span,
  .vt-spectrum-badge.is-height-38 > span { font-size:inherit; font-weight:inherit; line-height:1; }
 }
+
+
+@layer primitives {
+ /* Phase 3 readable control scale: preserve 18px micro, make the larger three
+    classes visibly fill their available height. */
+ .is-height-24 { --vt-primitive-font:16px; --vt-primitive-icon:18px; }
+ .is-height-32 { --vt-primitive-font:21px; --vt-primitive-icon:24px; }
+ .is-height-38 { --vt-primitive-font:26px; --vt-primitive-icon:29px; }
+
+ .widget-split-button.vt-sized-control .widget-split-button-label,
+ .widget-split-badge-label,
+ .widget-search-input > input,
+ .widget-stepper,
+ .widget-pagination {
+   font-size:var(--vt-primitive-font) !important;
+   font-weight:1000 !important;
+   line-height:1 !important;
+ }
+}
