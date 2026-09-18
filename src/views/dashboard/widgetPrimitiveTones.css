@@ -6,24 +6,24 @@
 .widget-progress-bar.is-tone-default {
   --vt-tone-bg: #fff;
   --vt-tone-fill: color-mix(in srgb, var(--widget-color, #34cdea) 54%, white);
-  --vt-tone-ink: var(--widget-ink, var(--widget-border, #222));
-  --vt-tone-stroke: var(--widget-border, var(--widget-ink, #222));
+  --vt-tone-ink: var(--widget-ink, var(--widget-border, var(--widget-ink, #243247)));
+  --vt-tone-stroke: var(--widget-border, var(--widget-ink, #243247));
 }
 
 .vt-sized-control.is-tone-primary,
 .widget-progress-bar.is-tone-primary {
   --vt-tone-bg: var(--widget-color, #34cdea);
   --vt-tone-fill: var(--widget-color, #34cdea);
-  --vt-tone-ink: var(--widget-ink, var(--widget-border, #222));
-  --vt-tone-stroke: var(--widget-border, var(--widget-ink, #222));
+  --vt-tone-ink: var(--widget-ink, var(--widget-border, var(--widget-ink, #243247)));
+  --vt-tone-stroke: var(--widget-border, var(--widget-ink, #243247));
 }
 
 .vt-sized-control.is-tone-secondary,
 .widget-progress-bar.is-tone-secondary {
   --vt-tone-bg: color-mix(in srgb, var(--widget-color, #34cdea) 22%, white);
   --vt-tone-fill: color-mix(in srgb, var(--widget-color, #34cdea) 72%, white);
-  --vt-tone-ink: var(--widget-ink, var(--widget-border, #222));
-  --vt-tone-stroke: color-mix(in srgb, var(--widget-color, #34cdea) 78%, var(--widget-ink, #222));
+  --vt-tone-ink: var(--widget-ink, var(--widget-border, var(--widget-ink, #243247)));
+  --vt-tone-stroke: color-mix(in srgb, var(--widget-color, #34cdea) 78%, var(--widget-ink, #243247));
 }
 
 .vt-button.vt-sized-control,
@@ -54,8 +54,8 @@
 /* Secondary glyphs use the same ink as their visible outline. More-specific
    white-on-color icon treatments below intentionally override this. */
 .vt-sized-control.is-tone-secondary svg {
-  color: var(--vt-tone-stroke, var(--widget-border, #222));
-  stroke: var(--vt-tone-stroke, var(--widget-border, #222));
+  color: var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247)));
+  stroke: var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247)));
 }
 
 /* 18px controls are always filled, borderless and shadowless, with a distinct
@@ -104,13 +104,13 @@
 .widget-split-button.is-left-split.is-icon-color-on-light .widget-split-button-icon,
 .widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-icon {
   background: color-mix(in srgb, var(--widget-color, #34cdea) 14%, white) !important;
-  color: var(--vt-tone-stroke, var(--widget-border, #222)) !important;
+  color: var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247))) !important;
 }
 
 .widget-split-button.is-left-split.is-icon-color-on-light .widget-split-button-icon svg,
 .widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-icon svg {
-  stroke: var(--vt-tone-stroke, var(--widget-border, #222)) !important;
-  color: var(--vt-tone-stroke, var(--widget-border, #222)) !important;
+  stroke: var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247))) !important;
+  color: var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247))) !important;
 }
 
 /* 18px split controls keep no separator stroke, regardless of icon mode. */
