@@ -70,20 +70,20 @@ export const TOOLBOX_HEADER_DNA = {
     titleInlinePadding: 4,
     actionGap: 4,
     actionEndPadding: 4,
-    iconSize: 26,
-    iconStroke: 2,
+    iconSize: 34,
+    iconStroke: 3.1,
   },
   subtoolbox: {
-    height: TOOLBOX_LEVEL_DNA.l0.height,
+    height: 44,
     titleSize: TOOLBOX_LEVEL_DNA.l0.titleSize,
     titleLineHeight: 0.82,
     titleMaxLines: 2,
     titleInlinePadding: 4,
     actionGap: 2,
     actionEndPadding: 2,
-    iconSize: 20,
-    iconStroke: 2,
-    contentEdgeInset: 2,
+    iconSize: 28,
+    iconStroke: 3.1,
+    contentEdgeInset: 4,
   },
 } as const
 
@@ -105,7 +105,7 @@ export const getToolboxColorPair = (index: number) => {
 
 export const SUBTOOLBOX_TOKENS = {
   shell: {
-    headerHeight: TOOLBOX_LEVEL_DNA.l0.height,
+    headerHeight: TOOLBOX_HEADER_DNA.subtoolbox.height,
     stroke: TOOLBOX_LEVEL_DNA.l0.stroke,
     radius: TOOLBOX_LEVEL_DNA.l0.radius,
     shadowOffset: TOOLBOX_LEVEL_DNA.l0.shadowOffset,
