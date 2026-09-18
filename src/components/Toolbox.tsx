@@ -26,8 +26,8 @@ const SUB_TOOLBOX_SHADOW = SUBTOOLBOX_TOKENS.shell.shadowOffset;
  * weight of line. Caller-supplied size/strokeWidth are deliberately overridden:
  * call sites were passing 2.5, 2.7 and 3 interchangeably.
  */
-export const TOOLBOX_ICON_PROPS = { size: 26, strokeWidth: 2.25, absoluteStrokeWidth: true } as const;
-export const SUBTOOLBOX_ICON_PROPS = { size: 20, strokeWidth: 2.25, absoluteStrokeWidth: true } as const;
+export const TOOLBOX_ICON_PROPS = { size: 34, strokeWidth: 3.1, absoluteStrokeWidth: true } as const;
+export const SUBTOOLBOX_ICON_PROPS = { size: 28, strokeWidth: 3.1, absoluteStrokeWidth: true } as const;
 
 const SUB_TOOLBOX_RADIUS = SUBTOOLBOX_TOKENS.shell.radius;
 const SUB_TOOLBOX_INNER_STROKE = SUBTOOLBOX_TOKENS.shell.stroke;
@@ -225,7 +225,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     ? "duration-0 ease-linear"
     : SHELL_COLLAPSE_TRANSITION;
   
-  const headerHeight = variant === 'accordion' ? 48 : 56;
+  const headerHeight = variant === 'accordion' ? 44 : 56;
   const paletteCycleContextValue = useMemo<PaletteCycleContextValue>(() => {
     return {
       mainPaletteIndex: paletteIndex ?? null,
