@@ -34,6 +34,7 @@ import {
  projectVtSyncSnapshotToWindow,
 } from "../adapters/windowProjection"
 import type { VtSyncAnalyticsWindow } from "../adapters/contracts"
+import { useAnalyticsWindow } from "../../../services/analytics-canon/AnalyticsViewContext"
 import { vtSyncTableWindowCapability } from "../adapters/tableData"
 import { VT_SYNC_TABLE_DEFINITIONS } from "../upstream/tableRegistry"
 import {
@@ -447,9 +448,10 @@ const VtSyncDataVisualsContent: React.FC<{
  snapshot: VtSyncSnapshot
  modules: VtSyncVisualModuleDefinition[]
 }> = ({ snapshot, modules }) => {
- // One window selection for the whole visual surface. Per-module state would be
- // 49 places for it to disagree, and could not answer "show me everything at 28d".
- const [visualWindow, setVisualWindow] = useState<VtSyncAnalyticsWindow>("lifetime")
+ // One window selection for the whole visual surface, shared with the table and
+ // the Brain gate. Per-module state would be 49 places for it to disagree, and
+ // could not answer "show me everything at 28d".
+ const [visualWindow, setVisualWindow] = useAnalyticsWindow("lifetime")
  const projection = useMemo(
   () => projectVtSyncSnapshotToWindow(snapshot, visualWindow),
   [snapshot, visualWindow],

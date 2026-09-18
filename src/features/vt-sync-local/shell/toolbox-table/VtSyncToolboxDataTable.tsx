@@ -65,6 +65,7 @@ import {
  vtSyncTableWindowCapability,
 } from "../../adapters/tableData"
 import type { VtSyncAnalyticsWindow } from "../../adapters/contracts"
+import { useAnalyticsWindow } from "../../../../services/analytics-canon/AnalyticsViewContext"
 import {
  ANALYTICS_WINDOWS,
  WINDOW_LABELS,
@@ -967,10 +968,12 @@ export const VtSyncToolboxDataTable: React.FC<{
  )
  const [viewId, setViewId] = useState(initialWorkspaceState.viewId)
  const [tableId, setTableId] = useState(initialWorkspaceState.tableId)
- // Which window this table is being viewed at. Lifetime keeps today's exact
- // behavior; other windows resolve through resolveVtSyncTableRowsForWindow,
- // which never substitutes lifetime rows for a window it has no data for.
- const [tableWindow, setTableWindow] = useState<VtSyncAnalyticsWindow>("lifetime")
+ // Which window this table is being viewed at. Shared with the visuals and the
+ // Brain gate through AnalyticsViewProvider; falls back to local state when the
+ // table is rendered standalone. Lifetime keeps today's exact behavior; other
+ // windows resolve through resolveVtSyncTableRowsForWindow, which never
+ // substitutes lifetime rows for a window it has no data for.
+ const [tableWindow, setTableWindow] = useAnalyticsWindow("lifetime")
  const table = findVtSyncTable(tableId)
  const category =
   VT_SYNC_TOOLBOX_CATEGORIES.find((item) => item.id === categoryId) ||

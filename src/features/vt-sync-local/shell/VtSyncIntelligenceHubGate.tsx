@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useCallback, useEffect, useState } from "react"
 import { BrainCircuit } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
+import { useAnalyticsWindow } from "../../../services/analytics-canon/AnalyticsViewContext"
 import { buildCanonicalIntelligenceEvidence } from "../../../services/analytics-canon"
 import type { VtSyncSnapshot } from "../adapters/contracts"
 
@@ -25,11 +26,16 @@ export const VtSyncIntelligenceHubGate: React.FC<{ snapshot: VtSyncSnapshot }> =
   return () => window.removeEventListener("hashchange", openFromHash)
  }, [])
 
+ // Brain evidence follows the same selection as the table and visuals. It used
+ // to read snapshot.selectedTimeWindow, which is written once at snapshot
+ // creation and never changed — so the Brain's "selected window" was a constant
+ // no user could influence.
+ const [viewWindow] = useAnalyticsWindow("28d")
  const buildEvidence = useCallback(() => buildCanonicalIntelligenceEvidence(snapshot, {
-  window: snapshot.selectedTimeWindow || "28d",
+  window: viewWindow,
   maximumRowsPerDataset: 8,
   maximumCharacters: 24_000,
- }), [snapshot])
+ }), [snapshot, viewWindow])
 
  return (
   <div id="intelligence" className="scroll-mt-24">
@@ -55,7 +61,7 @@ export const VtSyncIntelligenceHubGate: React.FC<{ snapshot: VtSyncSnapshot }> =
         channelId: snapshot.channelId || null,
         channelName: snapshot.channelName || null,
         snapshotId: snapshot.snapshotId,
-        selectedWindow: snapshot.selectedTimeWindow || "28d",
+        selectedWindow: viewWindow,
         capturedAt: snapshot.capturedAt,
        }}
        dataSources={["vt-sync", "analytics-canon", "ai-brain"]}

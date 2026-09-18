@@ -1636,9 +1636,9 @@ describe("data table time window control", () => {
  })
 
  it("opens on lifetime, so the default view is unchanged", () => {
-  expect(componentSource).toContain(
-   'useState<VtSyncAnalyticsWindow>("lifetime")',
-  )
+  // Now sourced from the shared analytics view selection, falling back to local
+  // state when the table is rendered standalone.
+  expect(componentSource).toContain('useAnalyticsWindow("lifetime")')
  })
 
  it("resolves rows through the window-aware path instead of the lifetime-only one", () => {

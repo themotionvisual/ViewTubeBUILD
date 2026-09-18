@@ -47,6 +47,7 @@ import { buildVtSyncCreatorHeroModel, VtSyncCreatorHero } from "./VtSyncCreatorH
 import { VtSyncToolboxDataTable } from "./toolbox-table/VtSyncToolboxDataTable"
 import { VtSyncDataVisualsGate } from "./VtSyncDataVisualsGate"
 import { VtSyncIntelligenceHubGate } from "./VtSyncIntelligenceHubGate"
+import { AnalyticsViewProvider } from "../../../services/analytics-canon/AnalyticsViewContext"
 import "./VtSyncLocalAnalyticsPage.css"
 import { RetroLcd, RetroLedRow, RetroRivets, type RetroLedSpec } from "./VtSyncRetroChrome"
 import {
@@ -831,6 +832,9 @@ const refreshManualImports = useCallback(async (payload?: {
  }
 
  return (
+  // One window selection for the whole analytics page: the data table, the data
+  // visuals and the Brain evidence gate all read it, so they cannot disagree.
+  <AnalyticsViewProvider initialWindow="lifetime">
   <div className="vt-sync-local-page min-h-screen bg-[#f3f4f6] px-4 py-6 text-black sm:px-6 lg:px-8">
    <div className="mx-auto max-w-[1500px] space-y-6">
     <VtSyncCreatorHero
@@ -901,6 +905,7 @@ const refreshManualImports = useCallback(async (payload?: {
     <VtSyncDataVisualsGate snapshot={consumerSnapshot} />
    </div>
   </div>
+  </AnalyticsViewProvider>
  )
 }
 
