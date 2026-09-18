@@ -544,7 +544,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             {sectionHeading("5. Media Uploaders", "Upload + dropzone primitives")}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
               <div className="flex flex-col gap-2">
-                <div className="h-[120px] w-full">
+                <div className="w-full">
                   <WidgetMediaUploadFrame
                     icon={<ImagePlus size={24} />}
                     title="THUMBNAIL"
