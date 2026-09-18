@@ -35,9 +35,17 @@ describe("Toolbox UI Reference Library", () => {
     expect(html).toContain('data-vt-toolbox-level="main"')
   })
 
-  it("keeps Tooltip as the first primitive-owned migration family while all other families fall back to the frozen renderer", () => {
+  it("migrates the first 16 families through canonical primitives while retaining a frozen fallback", () => {
     const source = readFileSync(resolve(process.cwd(), "src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx"), "utf8")
-    expect(source).toContain('STUDIO_HUB_MIGRATED_FAMILIES = ["Tooltip"]')
+    for (const family of [
+      "Primary Button", "Secondary Button", "Neutral Button", "Destructive Button",
+      "Square Icon Button", "Text Input", "Textarea", "Stepper", "Toggle",
+      "Checkbox", "Radio", "Segmented Choice", "Tag", "Badge", "Status Badge", "Tooltip",
+    ]) expect(source).toContain(`"${family}"`)
+    expect(source).toContain("<SubToolboxButton")
+    expect(source).toContain("<SubToolboxInput")
+    expect(source).toContain("<SubToolboxStepper")
+    expect(source).toContain("<SubToolboxSegmentedToggle")
     expect(source).toContain("<SubToolboxTooltip")
     expect(source).toContain("<HardcodedGenericControl")
   })
