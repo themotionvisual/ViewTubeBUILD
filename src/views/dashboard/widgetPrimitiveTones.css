@@ -120,39 +120,19 @@
 }
 
 /* ── Icon scale ratios ─────────────────────────────────────────
-   Larger controls now scale the icon with the bay instead of leaving the
-   Lucide glyph visually undersized. */
-.widget-split-button.is-left-split.is-height-18 .widget-split-button-icon svg,
-.widget-video-select-trigger.is-height-18 .widget-video-select-trigger-icon svg,
-.widget-video-select-trigger.is-height-18 .widget-video-select-trigger-chevron svg {
-  width: 14px !important;
-  height: 14px !important;
+   All split/video glyphs consume the same canonical icon tokens as square
+   primitives. The chevron is intentionally slightly calmer. */
+.widget-split-button.is-left-split .widget-split-button-icon svg,
+.widget-video-select-trigger .widget-video-select-trigger-icon svg {
+  width: var(--vt-primitive-icon) !important;
+  height: var(--vt-primitive-icon) !important;
+  stroke-width: var(--vt-primitive-icon-stroke) !important;
 }
-
-.widget-split-button.is-left-split.is-height-24 .widget-split-button-icon svg,
-.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-icon svg,
-.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-chevron svg {
-  width: 18px !important;
-  height: 18px !important;
+.widget-video-select-trigger .widget-video-select-trigger-chevron svg {
+  width: calc(var(--vt-primitive-icon) * .78) !important;
+  height: calc(var(--vt-primitive-icon) * .78) !important;
+  stroke-width: var(--vt-primitive-icon-stroke) !important;
 }
-
-.widget-split-button.is-left-split.is-height-32 .widget-split-button-icon svg,
-.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-icon svg,
-.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-chevron svg {
-  width: 25px !important;
-  height: 25px !important;
-}
-
-.widget-split-button.is-left-split.is-height-38 .widget-split-button-icon svg,
-.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-icon svg,
-.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-chevron svg {
-  width: 30px !important;
-  height: 30px !important;
-}
-
-/* Keep chevrons slightly calmer than primary icon bays. */
-.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-chevron svg { width: 20px !important; height: 20px !important; }
-.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-chevron svg { width: 23px !important; height: 23px !important; }
 
 /* ── Progress tone anatomy ───────────────────────────────────── */
 .widget-progress-bar.is-tone-default {

@@ -87,7 +87,7 @@
 :where(.dashboard-barrier) .widget-text-input.vt-sized-control:focus,
 :where(.dashboard-barrier) .widget-text-input.vt-sized-control:focus-visible {
   outline: none;
-  border-color: var(--widget-color, #000) !important;
+  border-color: var(--widget-color, #34cdea) !important;
   background: color-mix(in srgb, var(--widget-color, #fff) 18%, white) !important;
 }
 
@@ -289,7 +289,7 @@
 /* Portalled selects mirror the closed trigger's exact surface and outline. */
 .widget-select-content.vt-sized-control {
   border-width: var(--vt-primitive-stroke, 2px);
-  border-color: var(--widget-select-stroke, var(--widget-select-ink, #222));
+  border-color: var(--widget-select-stroke, var(--widget-select-ink, var(--widget-ink, #243247)));
   border-radius: var(--vt-primitive-radius, 7px);
   background: var(--widget-select-surface, #fff);
 }

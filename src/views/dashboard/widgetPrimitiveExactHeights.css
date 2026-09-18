@@ -2,10 +2,10 @@
 
 @layer tokens {
  :root { --vt-u:4px; --vt-gap-1:4px; --vt-gap-2:8px; --vt-gap-3:12px; --vt-gap-4:16px; --vt-gap-5:20px; --vt-gap-6:24px; --vt-gap-8:32px; --vt-ink:var(--widget-ink,#243247); --vt-paper:#fff; --vt-shadow-alpha:50%; --vt-motion-fast:90ms; }
- .is-height-18 { --vt-primitive-height:18px; --vt-primitive-font:8px; --vt-primitive-radius:2px; --vt-primitive-shadow:2px; }
- .is-height-24 { --vt-primitive-height:24px; --vt-primitive-font:14px; --vt-primitive-radius:3px; --vt-primitive-shadow:2px; }
- .is-height-32 { --vt-primitive-height:32px; --vt-primitive-font:18px; --vt-primitive-radius:4px; --vt-primitive-shadow:3px; }
- .is-height-38 { --vt-primitive-height:38px; --vt-primitive-font:22px; --vt-primitive-radius:6px; --vt-primitive-shadow:4px; }
+ .is-height-18 { --vt-primitive-height:18px; --vt-primitive-font:8px; --vt-primitive-radius:2px; --vt-primitive-shadow:2px; --vt-primitive-icon:12px; --vt-primitive-icon-stroke:2; }
+ .is-height-24 { --vt-primitive-height:24px; --vt-primitive-font:14px; --vt-primitive-radius:3px; --vt-primitive-shadow:2px; --vt-primitive-icon:17px; --vt-primitive-icon-stroke:2.25; }
+ .is-height-32 { --vt-primitive-height:32px; --vt-primitive-font:18px; --vt-primitive-radius:4px; --vt-primitive-shadow:3px; --vt-primitive-icon:23px; --vt-primitive-icon-stroke:2.5; }
+ .is-height-38 { --vt-primitive-height:38px; --vt-primitive-font:22px; --vt-primitive-radius:6px; --vt-primitive-shadow:4px; --vt-primitive-icon:28px; --vt-primitive-icon-stroke:2.75; }
 }
 
 @layer shell-grid {

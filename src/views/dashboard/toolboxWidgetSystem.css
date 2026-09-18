@@ -2470,7 +2470,7 @@ stroke-width: 2px;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  border: var(--widget-module-stroke) dashed var(--widget-border);
+  border: var(--widget-module-stroke) solid var(--widget-border);
   border-radius: var(--widget-control-radius);
   background: color-mix(in srgb, var(--widget-color) 12%, #fff);
   color: var(--widget-border);
@@ -2593,13 +2593,14 @@ stroke-width: 2px;
 
 .widget-dropzone {
   width: 100%;
-  min-height: 66px;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 28px;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   padding: 9px 12px;
-  border: var(--widget-module-stroke) dashed var(--widget-border);
+  border: var(--widget-module-stroke) solid var(--widget-border);
   border-radius: var(--widget-control-radius);
   background: color-mix(in srgb, var(--widget-color) 12%, #fff);
   color: var(--widget-border);
@@ -7755,3 +7756,32 @@ textarea.vt-textarea {
   font-weight: 800;
   opacity: 0.55;
 }
+
+
+/* Canonical media intake contract: solid, translucent, aspect-ratio based.
+   Upload surfaces are media frames, never button-height dashed strips. */
+:where(.dashboard-barrier) .widget-media-upload-frame,
+:where(.dashboard-barrier) .widget-dropzone {
+  width: 100%;
+  aspect-ratio: var(--widget-upload-aspect, 16 / 9);
+  min-height: 0;
+  height: auto;
+  border-style: solid;
+  background: color-mix(in srgb, var(--widget-color) 12%, transparent);
+  box-sizing: border-box;
+}
+:where(.dashboard-barrier) .widget-media-upload.is-square .widget-media-upload-frame,
+:where(.dashboard-barrier) .widget-dropzone.is-square {
+  --widget-upload-aspect: 1 / 1;
+}
+:where(.dashboard-barrier) .widget-dropzone {
+  grid-template-columns: minmax(0, 1fr);
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+}
+:where(.dashboard-barrier) .widget-dropzone-icon svg {
+  width: clamp(24px, 12%, 42px);
+  height: auto;
+}
+:where(.dashboard-barrier) .widget-dropzone-end { display: none; }
