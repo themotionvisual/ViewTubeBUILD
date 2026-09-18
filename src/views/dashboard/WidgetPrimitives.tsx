@@ -742,3 +742,33 @@ export const WidgetAlphabeticalTag: React.FC<{
     {label}
   </WidgetBadge>
 )
+
+
+// Canonical sized-control API.
+// Implementations remain in WidgetPrimitiveExtensions during the compatibility
+// phase; consumers import them from WidgetPrimitives so this file is the single
+// public primitive surface. The compatibility module can be collapsed after
+// direct-extension imports reach zero.
+export {
+  WidgetSizedButton,
+  WidgetLeftSplitButton,
+  WidgetTextInput,
+  WidgetSizedSelect,
+  WidgetVideoSelect,
+  WidgetProgressBar,
+  WidgetIconButton,
+  WidgetIconBadge,
+  WidgetStepper,
+  WidgetPagination,
+  WidgetLeftSplitBadge,
+  WidgetSearchInput,
+  WidgetLiveBadge,
+  WidgetSpectrumFillBadge,
+  WidgetToggleSwitch,
+  WidgetRadio,
+  WidgetCheckbox,
+  widgetControlHeightClass,
+  type WidgetControlHeight,
+  type WidgetPrimitiveTone,
+  type WidgetSplitIconStyle,
+} from "./WidgetPrimitiveExtensions"

@@ -32,8 +32,6 @@ import {
   WidgetSwitch,
   WidgetTag,
   WidgetTooltip,
-} from "../WidgetPrimitives"
-import {
   WidgetCheckbox,
   WidgetIconBadge,
   WidgetIconButton,
@@ -54,8 +52,8 @@ import {
   type WidgetControlHeight,
   type WidgetPrimitiveTone,
   type WidgetSplitIconStyle,
-} from "../WidgetPrimitiveExtensions"
-import { WIDGET_BADGE_SPECTRUM } from "../WidgetPrimitives"
+  WIDGET_BADGE_SPECTRUM,
+} from "../WidgetPrimitives"
 import { getDashboardWidgetPaletteColors } from "../../../styles/toolboxPalette"
 
 type ReferenceCategory =

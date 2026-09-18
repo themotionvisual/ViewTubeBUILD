@@ -24,8 +24,8 @@ import {
   WidgetWorkflowMain,
   WIDGET_BADGE_SPECTRUM,
   resolveAlphabeticalSpectrumSlot,
+  WidgetIconButton,
 } from "../WidgetPrimitives"
-import { WidgetIconButton } from "../WidgetPrimitiveExtensions"
 import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
 import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"
 

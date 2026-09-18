@@ -23,13 +23,11 @@ import {
  WidgetFooter,
  WidgetHeaderToggle,
  WidgetScrollArea,
-} from "../WidgetPrimitives"
-import {
  WidgetIconButton,
  WidgetLeftSplitButton,
  WidgetTextInput,
  WidgetToggleSwitch,
-} from "../WidgetPrimitiveExtensions"
+} from "../WidgetPrimitives"
 import type { CommonWidgetProps } from "../types"
 import type { DashboardData } from "../useDashboardData"
 import { useBrain } from "../../../context/useBrain"
