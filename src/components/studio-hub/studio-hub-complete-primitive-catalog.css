@@ -23,3 +23,51 @@
   transition-duration:80ms;
 }
 @media (prefers-reduced-motion:reduce){.vt-complete-catalog :is(.vt-catalog-button,.vt-catalog-icon-button){transition:none}}
+
+/* Certification parity: L0 is the large structural control level; L1 and L2 step down. */
+.vt-catalog-demo.is-l0{--h:56px;--stroke:4px;--radius:12px;--fs:24px}
+.vt-catalog-demo.is-l1{--h:48px;--stroke:3px;--radius:8px;--fs:18px}
+.vt-catalog-demo.is-l2{--h:32px;--stroke:2px;--radius:6px;--fs:12px}
+
+/* Certification fields own their state visuals; legacy input focus/glow rules must not leak in. */
+.vt-complete-catalog .vt-catalog-field{
+  box-sizing:border-box!important;width:100%!important;height:var(--h)!important;min-height:var(--h)!important;
+  border:var(--stroke) solid #000!important;border-radius:var(--radius)!important;
+  outline:0!important;padding:0 12px!important;
+  background:color-mix(in srgb,var(--pair-a) 50%,white)!important;
+  color:#000!important;box-shadow:none!important;
+  font-family:var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif))!important;
+  font-size:var(--fs)!important;font-weight:1000!important;letter-spacing:-.055em!important;line-height:.9!important;text-transform:uppercase!important;
+  caret-color:var(--pair-a)!important;
+  transition:background 180ms ease-out,box-shadow 180ms ease-out!important;
+}
+.vt-complete-catalog .vt-catalog-field:focus{
+  background:#fff!important;outline:0!important;
+  box-shadow:inset 0 0 0 var(--stroke) var(--pair-a),0 0 0 calc(var(--stroke) + 3px) color-mix(in srgb,var(--pair-a) 48%,transparent)!important;
+}
+.vt-complete-catalog .vt-catalog-textarea{height:calc(var(--h)*1.65)!important;min-height:calc(var(--h)*1.65)!important;padding:12px!important;resize:vertical!important}
+
+/* Loose toggle: no wrapper/module, no border, no shadow. Same opposite-pair logic as standalone authority. */
+.vt-complete-catalog .vt-catalog-toggle{
+  position:relative;display:block;width:calc(var(--h)*1.72);height:var(--h);padding:0;border:0!important;
+  border-radius:999px;background:var(--pair-a);box-shadow:none!important;outline:0;touch-action:manipulation;
+}
+.vt-complete-catalog .vt-catalog-toggle>span{
+  position:absolute;top:8%;left:5%;height:84%;aspect-ratio:1;border-radius:50%;background:var(--pair-b);
+  transform:translateX(0);transition:transform 180ms ease-out;
+}
+.vt-complete-catalog .vt-catalog-toggle.is-on>span{transform:translateX(calc(var(--h)*.72))}
+.vt-complete-catalog .vt-catalog-toggle:focus-visible,.vt-complete-catalog .vt-catalog-switch:focus-visible{outline:3px solid var(--pair-b);outline-offset:3px}
+
+/* Settings switch shares level height but retains its distinct rounded-rectangle anatomy. */
+.vt-complete-catalog .vt-catalog-switch{
+  position:relative;height:var(--h);width:calc(var(--h)*1.72);border:0!important;border-radius:calc(var(--radius)*1.1);
+  padding:0;background:var(--pair-a);box-shadow:none!important;display:block;
+}
+.vt-complete-catalog .vt-catalog-switch span{
+  position:absolute;top:10%;left:7%;height:80%;aspect-ratio:.82;border-radius:calc(var(--radius)*.72);background:var(--pair-b);
+  transform:translateX(0);transition:transform 180ms ease-out;
+}
+.vt-complete-catalog .vt-catalog-switch.is-on span{transform:translateX(calc(var(--h)*.72))}
+
+@media (prefers-reduced-motion:reduce){.vt-complete-catalog .vt-catalog-toggle>span,.vt-complete-catalog .vt-catalog-switch span{transition:none}}
