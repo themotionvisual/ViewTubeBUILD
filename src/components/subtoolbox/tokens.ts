@@ -27,25 +27,21 @@ export type ToolboxControlLevel = Exclude<ToolboxUiLevel, "toolbox">
 
 export const TOOLBOX_LEVEL_DNA = {
   toolbox: {
-    height: 56,
+    height: 80,
     stroke: 5,
     radius: 16,
     shadowOffset: 10,
-    titleSize: 28,
+    titleSize: 26,
   },
   l0: {
-    height: 44,
+    height: 56,
     stroke: 4,
     radius: 12,
     shadowOffset: 6,
-    titleSize: 22,
+    titleSize: 20,
   },
   l1: {
-    // 32db8dc lowered toolbox 80 -> 56 and l0 56 -> 44 but left l1 at 48,
-    // which made a level-1 control taller than the level-0 shell it nests
-    // inside. 38 restores the strictly descending ladder at the ratio l1 held
-    // to l0 before that commit (48/56 ~= 38/44).
-    height: 38,
+    height: 48,
     stroke: 3,
     radius: 8,
     shadowOffset: 4,
@@ -74,7 +70,7 @@ export const TOOLBOX_HEADER_DNA = {
     titleInlinePadding: 4,
     actionGap: 4,
     actionEndPadding: 4,
-    iconSize: 28,
+    iconSize: 26,
     iconStroke: 2,
   },
   subtoolbox: {
@@ -85,7 +81,7 @@ export const TOOLBOX_HEADER_DNA = {
     titleInlinePadding: 4,
     actionGap: 2,
     actionEndPadding: 2,
-    iconSize: 28,
+    iconSize: 20,
     iconStroke: 2,
     contentEdgeInset: 2,
   },
@@ -208,11 +204,9 @@ export const SUBTOOLBOX_CONTROL_SIZES = ["micro", "compact", "standard", "action
 export type SubToolboxControlSize = (typeof SUBTOOLBOX_CONTROL_SIZES)[number]
 
 /**
- * The bridge between the two ladders, for callers that hold a structural level
- * and need a control size. Descending levels map to descending sizes; the pixel
- * values do not line up, because the CSS ladder is not derived from
- * TOOLBOX_LEVEL_DNA. That is the open reconciliation, and this map is the one
- * place it has to be resolved when it is taken.
+ * Bridge structural levels to the legacy size-class names used by the primitive
+ * stylesheet. Geometry authority lives in TOOLBOX_LEVEL_DNA; callers should not
+ * infer pixel height from the legacy size label.
  *
  * Callers previously passed a level straight through as a size. It typechecked,
  * because the two types were aliased, and rendered `is-l0` — a class the
