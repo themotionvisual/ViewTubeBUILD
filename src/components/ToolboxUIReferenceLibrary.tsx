@@ -108,7 +108,7 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
           </div>
         }
       >
-        <StudioHubCompletePrimitiveCatalog />
+        <StudioHubCompletePrimitiveCatalog paletteIndex={paletteIndex} />
       </ToolboxScaffold>
     </div>
   )
