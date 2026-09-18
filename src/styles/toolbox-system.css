@@ -127,15 +127,15 @@
   --vt-subtoolbox-stroke: 4px;
   --vt-subtoolbox-radius: 12px;
   --vt-subtoolbox-shadow-offset: 6px;
-  --vt-subtoolbox-header-height: 48px;
+  --vt-subtoolbox-header-height: 44px;
   --vt-subtoolbox-title-size: 20px;
   box-sizing: border-box;
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
-  height: 48px !important;
-  min-height: 48px !important;
-  max-height: 48px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
   border-bottom: 0 !important;
   overflow: hidden !important;
 }
@@ -199,14 +199,14 @@
 /* A small edge inset prevents first/last child borders and shadows from striking the shell edge. */
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] .vt-subtoolbox-content {
   box-sizing: border-box;
-  padding-left: max(2px, var(--vt-subtoolbox-content-inline-inset, 2px)) !important;
-  padding-right: max(2px, var(--vt-subtoolbox-content-inline-inset, 2px)) !important;
-  padding-bottom: max(2px, var(--vt-subtoolbox-content-bottom-inset, 2px)) !important;
+  padding-left: max(4px, var(--vt-subtoolbox-content-inline-inset, 4px)) !important;
+  padding-right: max(4px, var(--vt-subtoolbox-content-inline-inset, 4px)) !important;
+  padding-bottom: max(4px, var(--vt-subtoolbox-content-bottom-inset, 4px)) !important;
 }
 
 /* Compatibility accordion resolves to the same single SubToolbox geometry. */
 [data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="accordion"] {
-  --vt-toolbox-header-height: 48px;
+  --vt-toolbox-header-height: 44px;
   --vt-toolbox-radius: 12px;
   --vt-toolbox-title-size: 20px;
   border-width: 4px !important;
@@ -318,24 +318,26 @@
 /* One icon size per level. These previously fought the size the shell clones
    onto the element, so the rendered glyph did not match the contract. */
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child svg {
-  width: 26px !important;
-  height: 26px !important;
-  max-width: 26px !important;
-  max-height: 26px !important;
+  width: 34px !important;
+  height: 34px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+  stroke-width: 3.1px !important;
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child svg {
-  width: 20px !important;
-  height: 20px !important;
-  max-width: 20px !important;
-  max-height: 20px !important;
+  width: 28px !important;
+  height: 28px !important;
+  max-width: 28px !important;
+  max-height: 28px !important;
+  stroke-width: 3.1px !important;
 }
 
 /* Sub-toolbox interior inset. Lives on the wrapper because contentClassName
    replaces <main>'s padding wholesale — several call sites pass p-0, which put
    their controls hard against the shell stroke. */
 .vt-subtoolbox-inset {
-  padding: 2px;
+  padding: 4px;
 }
 
 /* --------------------------------------------------------------------------
@@ -368,10 +370,11 @@
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child svg {
-    width: 26px !important;
-    height: 26px !important;
-    max-width: 26px !important;
-    max-height: 26px !important;
+    width: 34px !important;
+    height: 34px !important;
+    max-width: 34px !important;
+    max-height: 34px !important;
+    stroke-width: 3.1px !important;
   }
 
   /* Keep action hit areas compact on phones without shrinking the shell itself. */
@@ -393,22 +396,22 @@
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"],
   [data-vt-toolbox-level="sub"],
   [data-vt-subtoolbox-module="true"] {
-    --vt-subtoolbox-header-height: 48px;
+    --vt-subtoolbox-header-height: 44px;
     --vt-subtoolbox-title-size: 20px;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
-    height: 48px !important;
-    min-height: 48px !important;
-    max-height: 48px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child {
-    width: 48px !important;
-    min-width: 48px !important;
-    max-width: 48px !important;
-    height: 48px !important;
-    flex-basis: 48px !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    height: 44px !important;
+    flex-basis: 44px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header h3 {
@@ -417,10 +420,11 @@
 
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header svg,
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child svg {
-    width: 20px !important;
-    height: 20px !important;
-    max-width: 20px !important;
-    max-height: 20px !important;
+    width: 28px !important;
+    height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    stroke-width: 3.1px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header::after {
@@ -463,4 +467,14 @@
 /* Collapsed SubToolbox uses its outer shell bottom stroke; hide the header divider to avoid a doubled seam. */
 [data-vt-toolbox-level="sub"][data-state="closed"] > div > header::after{
   display:none!important;
+}
+
+/* Interior safety inset: all Toolbox and SubToolbox bodies keep 4px clearance
+   from their structural frame so child modules never collide with shell strokes. */
+[data-vt-toolbox][data-vt-toolbox-level="main"] .vt-main-toolbox-content{
+  padding:4px!important;
+  gap:4px!important;
+}
+[data-vt-toolbox-level="sub"] .vt-subtoolbox-inset{
+  padding:4px!important;
 }
