@@ -31,7 +31,7 @@ const PERSISTENT_STORAGE = String(process.env.VT_E1_RENDER_PERSISTENT_STORAGE ||
 const RENDER_JOB_SCHEMA_VERSION = 'RemotionRenderJobV1';
 const SVG_RENDER_JOB_SCHEMA_VERSION = 'SvgFrameRenderJobV1';
 const SVG_ZIP_RENDER_JOB_SCHEMA_VERSION = 'SvgFrameZipRenderJobV1';
-const SUPPORTED_LAYER_TYPES = new Set(['text', 'shape', 'media', 'audio', 'svg-overlay', 'generative-shape']);
+const SUPPORTED_LAYER_TYPES = new Set(['text', 'shape', 'media', 'audio', 'svg-overlay', 'generative-shape', 'remotion-asset']);
 
 let activeJobId = null;
 
@@ -387,6 +387,14 @@ const validateRenderPayload = (payload) => {
       const hasBlobs = Array.isArray(cfg.blobs);
       if (!hasElements && !hasBlobs) {
         errors.push(`Layer ${layer?.payload?.layerName || layer?.id || 'unknown'} is missing generative shape data.`);
+      }
+    }
+    if (layer?.type === 'remotion-asset') {
+      const assetId = String(layer?.payload?.assetId || '');
+      const match = assetId.match(/^(static|motion)-(\d{3})$/);
+      const index = match ? Number(match[2]) : 0;
+      if (!match || index < 1 || index > 50) {
+        errors.push(`Layer ${layer?.payload?.layerName || layer?.id || 'unknown'} has invalid Remotion asset id '${assetId || 'missing'}'.`);
       }
     }
     if ((layer?.type === 'media' || layer?.type === 'audio') && isBlockedAssetUrl(layer?.payload?.mediaUrl)) {
