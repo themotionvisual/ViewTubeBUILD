@@ -823,3 +823,38 @@
   color:var(--tag-text)!important;
   font-size:calc(var(--fs)*.78)!important;font-weight:1000!important;
 }
+
+
+/* Hardcoded exact Tooltip baseline.
+   Intentionally duplicates the approved standalone Tooltip appearance so the
+   frozen comparison toolbox does not depend on production primitive CSS. */
+.vt-complete-catalog .vt-hardcoded-tooltip{
+  position:relative;display:inline-grid;place-items:center;
+  padding-top:calc(var(--h)*1.48);isolation:isolate;
+}
+.vt-complete-catalog .vt-hardcoded-tooltip>button{
+  width:var(--h);height:var(--h);padding:0;border:0;border-radius:calc(var(--radius)*.75);
+  background:var(--pair-a);color:#000;display:grid;place-items:center;cursor:help;
+  font:1000 calc(var(--fs)*1.15)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.055em;
+}
+.vt-complete-catalog .vt-hardcoded-tooltip-bubble{
+  position:absolute;left:50%;bottom:calc(var(--h) + var(--h)*.26);z-index:30;transform:translateX(-50%);
+  min-width:max-content;padding:calc(var(--h)*.18) calc(var(--h)*.30);
+  border:var(--stroke) solid #000;border-radius:var(--radius);
+  background:var(--pair-a);color:#000;
+  font:1000 var(--fs)/.9 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.055em;text-transform:uppercase;
+  box-shadow:calc(var(--stroke) + 2px) calc(var(--stroke) + 2px) 0 color-mix(in srgb,var(--pair-a) 35%,transparent);
+}
+.vt-complete-catalog .vt-hardcoded-tooltip-bubble:before,
+.vt-complete-catalog .vt-hardcoded-tooltip-bubble:after{
+  content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);width:0;height:0;
+}
+.vt-complete-catalog .vt-hardcoded-tooltip-bubble:before{
+  border-left:calc(var(--h)*.18) solid transparent;border-right:calc(var(--h)*.18) solid transparent;border-top:calc(var(--h)*.18) solid #000;
+}
+.vt-complete-catalog .vt-hardcoded-tooltip-bubble:after{
+  margin-top:calc(var(--stroke)*-1);
+  border-left:calc(var(--h)*.13) solid transparent;border-right:calc(var(--h)*.13) solid transparent;border-top:calc(var(--h)*.13) solid var(--pair-a);
+}
