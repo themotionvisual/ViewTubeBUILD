@@ -24,7 +24,7 @@
   --vt-primitive-height: var(--vt-control-h-24);
   --vt-primitive-stroke: 2px;
   --vt-primitive-radius: 4px;
-  --vt-primitive-font: 14px;
+  --vt-primitive-font: 16px;
 }
 
 .vt-control-height-32,
@@ -32,7 +32,7 @@
   --vt-primitive-height: var(--vt-control-h-32);
   --vt-primitive-stroke: 2px;
   --vt-primitive-radius: 6px;
-  --vt-primitive-font: 18px;
+  --vt-primitive-font: 21px;
 }
 
 .vt-control-height-38,
@@ -40,7 +40,7 @@
   --vt-primitive-height: var(--vt-control-h-38);
   --vt-primitive-stroke: 2px;
   --vt-primitive-radius: 7px;
-  --vt-primitive-font: 22px;
+  --vt-primitive-font: 26px;
 }
 
 .widget-action.vt-sized-control,
@@ -499,4 +499,33 @@
   .widget-video-select-trigger-chevron {
     transition: none;
   }
+}
+
+
+/* Canonical split-left geometry and readable scale. The icon bay is square
+   inside the outer stroke, while the label uses the canonical type token. */
+.widget-reference-family .widget-split-button.is-left-split {
+  width: 100%;
+  min-width: 0;
+}
+.widget-split-button.is-left-split {
+  grid-template-columns: calc(var(--vt-primitive-height) - 4px) minmax(0, 1fr);
+}
+.widget-split-button.is-left-split .widget-split-button-icon {
+  width: calc(var(--vt-primitive-height) - 4px);
+  min-width: calc(var(--vt-primitive-height) - 4px);
+}
+.widget-split-button.is-left-split.is-height-18 {
+  grid-template-columns: var(--vt-primitive-height) minmax(0, 1fr);
+}
+.widget-split-button.is-left-split.is-height-18 .widget-split-button-icon {
+  width: var(--vt-primitive-height);
+  min-width: var(--vt-primitive-height);
+}
+.widget-split-button.is-left-split .widget-split-button-label {
+  min-width: 0;
+  padding-inline: max(8px, calc(var(--vt-primitive-height) * .3));
+  font-size: var(--vt-primitive-font) !important;
+  font-weight: 1000 !important;
+  line-height: 1 !important;
 }
