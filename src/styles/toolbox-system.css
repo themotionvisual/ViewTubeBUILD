@@ -3,7 +3,7 @@
  * never recreated by feature-local CSS.
  */
 [data-vt-toolbox][data-vt-toolbox-level="main"] {
-  --vt-toolbox-header-height: 56px;
+  --vt-toolbox-header-height: 80px;
   --vt-toolbox-stroke: 5px;
   --vt-toolbox-radius: 16px;
   --vt-toolbox-shadow-offset: 10px;
@@ -21,9 +21,9 @@
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-  height: 56px !important;
-  min-height: 56px !important;
-  max-height: 56px !important;
+  height: 80px !important;
+  min-height: 80px !important;
+  max-height: 80px !important;
   border-bottom: 0 !important;
   overflow: hidden !important;
 }
@@ -47,10 +47,10 @@
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-  width: 56px !important;
-  min-width: 56px !important;
-  height: 56px !important;
-  flex: 0 0 56px !important;
+  width: 80px !important;
+  min-width: 80px !important;
+  height: 80px !important;
+  flex: 0 0 80px !important;
   aspect-ratio: 1 / 1 !important;
   border-right: 5px solid #000 !important;
 }
@@ -73,7 +73,7 @@
   white-space: normal !important;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  font-size: 28px !important;
+  font-size: 26px !important;
   line-height: .82 !important;
   font-weight: 1000 !important;
 }
@@ -267,16 +267,16 @@
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-    height: 56px !important;
-    min-height: 56px !important;
-    max-height: 56px !important;
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-    width: 56px !important;
-    min-width: 56px !important;
-    height: 56px !important;
-    flex-basis: 56px !important;
+    width: 80px !important;
+    min-width: 80px !important;
+    height: 80px !important;
+    flex-basis: 80px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :last-child {

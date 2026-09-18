@@ -117,7 +117,7 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
     const Icon = name.includes("Landscape") || name.includes("Portrait") ? Image : name.includes("Audio") ? Music : FileText
     return <div className={`vt-catalog-asset is-${level} ${name.includes("Portrait") ? "is-portrait" : ""}`} style={style}><header><Icon/><b>{name.replace("Vault ","")}</b></header><div className="preview"><Icon/></div><footer><span>ASSET</span><button><X/></button></footer></div>
   }
-  if (name === "Knob Dial") return <div className={`vt-catalog-knob is-${level}`} style={style}><span><i/></span><b>72</b></div>
+  if (name === "Knob Dial") return <div className={`vt-catalog-knob is-${level}`} style={style}><span className="knob-face"><i/><em>72</em></span><b className="knob-value">72</b></div>
   if (name === "Controller Switch") return <button className={`vt-catalog-controller-switch is-${level}`} style={style}><span/><b>ON</b></button>
   if (name === "LED Light") return <div className={`vt-catalog-led is-${level}`} style={style}><i/><b>ACTIVE</b></div>
   if (name === "Alphabetical Spectrum Tags") return <div className="vt-catalog-spectrum-row">{Array.from({length:26},(_,i)=>String.fromCharCode(65+i)).map((letter, i) => <span key={letter} className={`vt-alpha-tag is-${level}`} style={{"--alpha-h":`${(i * 360) / 26}`} as React.CSSProperties}>{letter} · TAG</span>)}</div>
