@@ -128,8 +128,9 @@
 
 /* Community Post-derived split-left anatomy: a dedicated left action/icon bay. */
 .widget-split-button.is-left-split {
+  --vt-primitive-inner-size: calc(var(--vt-primitive-height, 32px) - var(--vt-primitive-stroke, 0px) - var(--vt-primitive-stroke, 0px));
   display: inline-grid;
-  grid-template-columns: var(--vt-primitive-height, 32px) minmax(0, 1fr);
+  grid-template-columns: var(--vt-primitive-inner-size) minmax(0, 1fr);
   align-items: stretch;
   padding: 0 !important;
   overflow: hidden;
@@ -138,8 +139,12 @@
 }
 
 .widget-split-button.is-left-split .widget-split-button-icon {
-  width: var(--vt-primitive-height, 32px);
+  box-sizing: border-box;
+  width: var(--vt-primitive-inner-size);
+  min-width: var(--vt-primitive-inner-size);
+  max-width: var(--vt-primitive-inner-size);
   height: 100%;
+  margin: 0;
   display: grid;
   place-items: center;
   border-right: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247)));
@@ -177,9 +182,10 @@
 }
 
 .widget-video-select-trigger {
+  --vt-primitive-inner-size: calc(var(--vt-primitive-height, 32px) - var(--vt-primitive-stroke, 0px) - var(--vt-primitive-stroke, 0px));
   width: 100%;
   display: grid;
-  grid-template-columns: var(--vt-primitive-height, 32px) minmax(0, 1fr) var(--vt-primitive-height, 32px);
+  grid-template-columns: var(--vt-primitive-inner-size) minmax(0, 1fr) var(--vt-primitive-inner-size);
   align-items: stretch;
   padding: 0 !important;
   overflow: hidden;
@@ -190,6 +196,13 @@
 
 .widget-video-select-trigger-icon,
 .widget-video-select-trigger-chevron {
+  box-sizing: border-box;
+  width: var(--vt-primitive-inner-size);
+  min-width: var(--vt-primitive-inner-size);
+  max-width: var(--vt-primitive-inner-size);
+  height: 100%;
+  margin: 0;
+  padding: 0;
   display: grid;
   place-items: center;
 }
