@@ -1,0 +1,9 @@
+{
+  "name": "Data Visual controller unification — phases 0–4",
+  "app": "Claude Code",
+  "status": "in-progress",
+  "branch": "claude/viewtube-data-visual-responsive-qyk8rp",
+  "summary": "Migrated 7 Data Visual modules onto the canvas contract, made the grid render with no data, replaced the guessed source-table registry with an explicit one, and landed controller-unification phases 0, 1 and 4.",
+  "started": "2026-09-16",
+  "lastWorked": "2026-09-18"
+}

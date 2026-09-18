@@ -98,21 +98,22 @@ describe("Data Visual controller shape", () => {
  })
 
  it("shows the four-row cap is latent rather than active", () => {
-  // `AnalyticsVisualShell.normalizedRows` only injects a `statement` row and
-  // truncates to four when a `controllerExplanation` is present; with none it
-  // returns early and does neither. No registered visual supplies one today,
-  // so no controller carries a statement row and two visuals already render
-  // five. Phase 4 can therefore drop the truncation without changing what any
-  // creator currently sees — and if that stops being true, this fails first.
+  // The cap only ever applied when a `controllerExplanation` was present —
+  // `normalizedRows` returned early otherwise — and no registered visual
+  // supplies one, so it never fired: no controller carries a statement row and
+  // two already render five. That is why phase 4 could drop it without changing
+  // what any creator sees. The assertions stay as the guard on that premise.
   const allRows = Object.values(shapes).flat()
   expect(allRows.filter((shape) => shape.rows.includes("statement"))).toEqual([])
   expect(Math.max(...allRows.map((shape) => shape.rows.split(",").length))).toBe(5)
  })
 
- it("records which visuals have their authored row order rewritten", () => {
-  // These six author their dropdowns FIRST and the shell moves them last.
-  // Phase 4 hands ordering back to the module, so this is the exact set whose
-  // controller changes — and the set that has to be re-authored with it.
+ it("keeps the order the six re-authored visuals were already showing", () => {
+  // The shell used to move every dropdown to the end of the list, so these six
+  // authored their dropdowns first and rendered them last. Phase 4 deleted the
+  // reorder and re-authored the six to the order they were already showing, so
+  // the authority moved and the pixels did not. These are the rows that would
+  // change if either half of that pair were undone.
   const REORDERED_BY_THE_SHELL = {
    "tube-explorer-revenue-efficiency-map": "text,number,dropdown,dropdown,dropdown",
    "tube-explorer-bubble-universe": "text,number,dropdown,dropdown,dropdown",

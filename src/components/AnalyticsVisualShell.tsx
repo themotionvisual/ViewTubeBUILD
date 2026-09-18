@@ -47,25 +47,34 @@ const normalizedRows = (
   controllerSpec: VisualControllerSpec | undefined,
   controllerExplanation: string | undefined,
 ): readonly ControllerRow[] | undefined => {
+  /*
+   * Row ORDER is the module's, not the shell's.
+   *
+   * This used to move every dropdown, multi-select and ranked-by row to the end
+   * of the list, so six modules that authored their dropdowns first silently
+   * rendered them last. The order they now author is the order that renders;
+   * the six were re-authored to the order they were already showing, so this
+   * moves the authority without moving the pixels.
+   *
+   * The four-row cap went with it. It only ever applied when a
+   * `controllerExplanation` was present — `normalizedRows` returned early
+   * otherwise — and no registered visual supplies one, so it never fired. Left
+   * in place it would silently drop the fifth row of the first module that did.
+   * Row budgets belong to the per-orientation controller profile (phase 5),
+   * where a dropped row is still reachable rather than gone.
+   */
   const rows = controllerSpec?.rows ?? []
-  const orderedRows = [
-    ...rows.filter((row) => row.type !== "dropdown" && row.type !== "metricMultiSelect" && row.type !== "rankedBy"),
-    ...rows.filter((row) => row.type === "dropdown" || row.type === "metricMultiSelect" || row.type === "rankedBy"),
+  if (!controllerExplanation) return rows.length > 0 ? [...rows] : undefined
+  if (rows.some((row) => row.type === "statement")) return [...rows]
+  return [
+    {
+      type: "statement" as const,
+      value: controllerExplanation,
+      bgTone: "#000000",
+      fgTone: "#CCFF00",
+    },
+    ...rows,
   ]
-  if (!controllerExplanation) return orderedRows.length > 0 ? orderedRows : undefined
-  const hasStatement = orderedRows.some((row) => row.type === "statement")
-  const nextRows = hasStatement
-    ? orderedRows
-    : [
-        {
-          type: "statement" as const,
-          value: controllerExplanation,
-          bgTone: "#000000",
-          fgTone: "#CCFF00",
-        },
-        ...orderedRows,
-      ]
-  return nextRows.slice(0, controllerSpec?.denseLegacy ? undefined : 4)
 }
 
 export const AnalyticsVisualShell: React.FC<AnalyticsVisualShellProps> = ({

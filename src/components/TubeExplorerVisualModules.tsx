@@ -5452,9 +5452,6 @@ export const TubeExplorerRevenueEfficiencyMap: React.FC<TubeExplorerVisualProps>
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "PLOT", value: xMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setXMetric(value as VideoPlotMetricKey), bgTone: "#00E5FF" },
-    { type: "dropdown", labelPrefix: "VERSUS", value: yMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setYMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
-    { type: "dropdown", labelPrefix: "SIZE", value: sizeMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setSizeMetric(value as VideoPlotMetricKey), bgTone: "#FFFF61" },
     {
      type: "text",
      labelPrefix: "FROM",
@@ -5472,7 +5469,9 @@ export const TubeExplorerRevenueEfficiencyMap: React.FC<TubeExplorerVisualProps>
      bgTone: "#42FF68",
      isBig: false,
     },
-   ]}
+    { type: "dropdown", labelPrefix: "PLOT", value: xMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setXMetric(value as VideoPlotMetricKey), bgTone: "#00E5FF" },
+    { type: "dropdown", labelPrefix: "VERSUS", value: yMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setYMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
+    { type: "dropdown", labelPrefix: "SIZE", value: sizeMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setSizeMetric(value as VideoPlotMetricKey), bgTone: "#FFFF61" },]}
   >
    <RevenueEfficiencyMapRenderer dataset={dataset} xMetric={xMetric} yMetric={yMetric} sizeMetric={sizeMetric} formatMode={formatMode.value} limit={limit} />
   </ModuleFrame>
@@ -5511,7 +5510,6 @@ export const TubeExplorerLikeRateWaveform: React.FC<TubeExplorerVisualProps> = (
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "TRACKING", value: metric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
     {
      type: "text",
      labelPrefix: "FROM",
@@ -5538,7 +5536,7 @@ export const TubeExplorerLikeRateWaveform: React.FC<TubeExplorerVisualProps> = (
      bgTone: "#42FF68",
      isBig: false,
     },
-   ]}
+    { type: "dropdown", labelPrefix: "TRACKING", value: metric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },]}
   >
    <LikeRateWaveformRenderer dataset={dataset} metric={metric} formatMode={formatMode.value} order={order} limit={limit} />
   </ModuleFrame>
@@ -5573,7 +5571,6 @@ export const TubeExplorerSeasonalityRadar: React.FC<TubeExplorerVisualProps> = (
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "BY", value: metric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setMetric(value as VideoPlotMetricKey), bgTone: "#FFFF61" },
     {
      type: "text",
      labelPrefix: "FROM",
@@ -5584,7 +5581,7 @@ export const TubeExplorerSeasonalityRadar: React.FC<TubeExplorerVisualProps> = (
      bgTone: "#00E5FF",
     },
     { type: "label", value: "ACROSS 7 WEEKDAYS", bgTone: "#000000", fgTone: "#FFFF61" },
-   ]}
+    { type: "dropdown", labelPrefix: "BY", value: metric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setMetric(value as VideoPlotMetricKey), bgTone: "#FFFF61" },]}
   >
    <div className="h-full bg-[#0a0a1a]">
     <SeasonalityRadarRenderer dataset={dataset} metric={metric} formatMode={formatMode.value} />
@@ -5625,9 +5622,6 @@ export const TubeExplorerSearchBubbleUniverse: React.FC<TubeExplorerVisualProps>
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "PLOT", value: xMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setXMetric(value as VideoPlotMetricKey), bgTone: "#00E5FF" },
-    { type: "dropdown", labelPrefix: "VERSUS", value: yMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setYMetric(value as VideoPlotMetricKey), bgTone: "#579AFF" },
-    { type: "dropdown", labelPrefix: "SIZE", value: sizeMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setSizeMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
     {
      type: "text",
      labelPrefix: "FROM",
@@ -5645,7 +5639,9 @@ export const TubeExplorerSearchBubbleUniverse: React.FC<TubeExplorerVisualProps>
      bgTone: "#FFFF61",
      isBig: false,
     },
-   ]}
+    { type: "dropdown", labelPrefix: "PLOT", value: xMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setXMetric(value as VideoPlotMetricKey), bgTone: "#00E5FF" },
+    { type: "dropdown", labelPrefix: "VERSUS", value: yMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setYMetric(value as VideoPlotMetricKey), bgTone: "#579AFF" },
+    { type: "dropdown", labelPrefix: "SIZE", value: sizeMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setSizeMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },]}
   >
    <BubbleUniverseRenderer dataset={dataset} xMetric={xMetric} yMetric={yMetric} sizeMetric={sizeMetric} formatMode={formatMode.value} limit={limit} />
   </ModuleFrame>
@@ -5688,7 +5684,6 @@ export const TubeExplorerRetentionCurveAtlas: React.FC<TubeExplorerVisualProps> 
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "RANKED BY", value: sortMetric, options: RETENTION_SORT_OPTIONS, onSelect: (value) => setSortMetric(value as VideoPlotMetricKey), bgTone: "#579AFF" },
     {
      type: "text",
      labelPrefix: "FROM",
@@ -5706,7 +5701,7 @@ export const TubeExplorerRetentionCurveAtlas: React.FC<TubeExplorerVisualProps> 
      bgTone: "#FFFF61",
      isBig: false,
     },
-   ]}
+    { type: "dropdown", labelPrefix: "RANKED BY", value: sortMetric, options: RETENTION_SORT_OPTIONS, onSelect: (value) => setSortMetric(value as VideoPlotMetricKey), bgTone: "#579AFF" },]}
   >
    <RetentionCurveAtlasRenderer dataset={dataset} sortMetric={sortMetric} formatMode={formatMode.value} limit={limit} />
   </ModuleFrame>
@@ -5838,6 +5833,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
     ],
    }}
    controllerRows={[
+    { type: "label", value: `${scopedCount} VIDEOS`, bgTone: "#000000", fgTone: "#FFEA00" },
     {
      type: "dropdown",
      labelPrefix: "BY",
@@ -5857,9 +5853,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
      ],
      onSelect: (value) => setFormatFilter(value as "all" | "shorts" | "long"),
      bgTone: "#FF7497",
-    },
-    { type: "label", value: `${scopedCount} VIDEOS`, bgTone: "#000000", fgTone: "#FFEA00" },
-   ]}
+    },]}
   >
    <PublishOptimalClockRenderer
     cells={cells}
