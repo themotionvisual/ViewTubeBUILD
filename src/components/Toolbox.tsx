@@ -202,12 +202,12 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   if (variant === 'header') {
     return (
       <header
-        className={`${headerColor} ${textColor} h-[80px] flex items-center justify-between px-0 overflow-hidden border-b-[5px] border-black rounded-t-2xl mb-0 select-none ${outerClassName}`}
+        className={`${headerColor} ${textColor} h-[56px] flex items-center justify-between px-0 overflow-hidden border-b-[5px] border-black rounded-t-2xl mb-0 select-none ${outerClassName}`}
         style={headerStyle}
       >
         <div className="flex items-center h-full">
           <div
-            className={`${iconBoxColor} h-full w-[80px] flex items-center justify-center border-r-[5px] border-black flex-shrink-0`}
+            className={`${iconBoxColor} h-full w-[56px] flex items-center justify-center border-r-[5px] border-black flex-shrink-0`}
             style={iconStyle}
           >
             {resolvedIcon}
@@ -224,7 +224,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     ? "duration-0 ease-linear"
     : SHELL_COLLAPSE_TRANSITION;
   
-  const headerHeight = variant === 'accordion' ? 56 : 80;
+  const headerHeight = variant === 'accordion' ? 48 : 56;
   const paletteCycleContextValue = useMemo<PaletteCycleContextValue>(() => {
     return {
       mainPaletteIndex: paletteIndex ?? null,
@@ -308,24 +308,24 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               <button
                 type="button"
                 onClick={() => setShowHelpRail((prev) => !prev)}
-                className="group h-full flex items-center justify-center cursor-pointer transition-all hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px]"
-                style={{ width: variant === "accordion" ? "48px" : "64px" }}
+                className="group h-full flex items-center justify-center cursor-pointer transition-all hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px]" data-vt-toolbox-help="true"
+                style={{ width: variant === "accordion" ? "40px" : "44px" }}
                 aria-label="Toggle toolbox help"
               >
-                <span className="inline-flex items-center justify-center w-9 h-9 border-[3px] border-black rounded-full bg-white shadow-[4px_4px_0px_0px_black] transition-all group-active:shadow-[2px_2px_0px_0px_black]">
-                  <CircleQuestionMark size={variant === 'accordion' ? 20 : 22} strokeWidth={2.6} />
+                <span className="inline-flex items-center justify-center w-10 h-10 border-[3px] border-black rounded-full bg-white shadow-[4px_4px_0px_0px_black] transition-all group-active:shadow-[2px_2px_0px_0px_black]">
+                  <CircleQuestionMark size={variant === 'accordion' ? 22 : 24} strokeWidth={2.6} />
                 </span>
               </button>
             )}
             {indicator === 'symbols' && isCollapsible && (
               <div
                 onClick={setOpen}
-                className="h-full flex items-center justify-center cursor-pointer"
+                className="h-full flex items-center justify-center cursor-pointer" data-vt-toolbox-toggle="true"
                 style={{ 
-                  width: variant === "accordion" ? "48px" : "64px"
+                  width: variant === "accordion" ? "40px" : "44px"
                 }}
               >
-                <AnimatedToggleIcon open={open} size={variant === 'accordion' ? 32 : 44} />
+                <AnimatedToggleIcon open={open} size={variant === 'accordion' ? 34 : 38} />
               </div>
             )}
           </div>
@@ -687,17 +687,17 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
             <button
               type="button"
               onClick={() => setShowHelpRail((prev) => !prev)}
-              className="group h-full flex items-center justify-center transition-all hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px]"
+              className="group h-full flex items-center justify-center transition-all hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px]" data-vt-subtoolbox-help="true"
               aria-label="Toggle subtoolbox help"
             >
-              <span className="inline-flex items-center justify-center w-8 h-8 border-[3px] border-black rounded-full bg-white shadow-[4px_4px_0px_0px_var(--vt-subtoolbox-shell-shadow)] transition-all group-active:shadow-[2px_2px_0px_0px_var(--vt-subtoolbox-shell-shadow)]">
-                <CircleQuestionMark size={18} strokeWidth={2.6} />
+              <span className="inline-flex items-center justify-center w-9 h-9 border-[3px] border-black rounded-full bg-white shadow-[4px_4px_0px_0px_var(--vt-subtoolbox-shell-shadow)] transition-all group-active:shadow-[2px_2px_0px_0px_var(--vt-subtoolbox-shell-shadow)]">
+                <CircleQuestionMark size={22} strokeWidth={2.6} />
               </span>
             </button>
           )}
           {collapsible && (
-            <div className="h-full flex items-center justify-center" onClick={setOpen}>
-              <AnimatedToggleIcon open={open} size={28} />
+            <div className="h-full flex items-center justify-center" data-vt-subtoolbox-toggle="true" onClick={setOpen}>
+              <AnimatedToggleIcon open={open} size={34} />
             </div>
           )}
         </div>
