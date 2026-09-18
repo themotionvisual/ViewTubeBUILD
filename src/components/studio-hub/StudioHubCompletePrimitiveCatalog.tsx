@@ -53,6 +53,8 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   const [page, setPage] = useState(2)
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [disclosureOpen, setDisclosureOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState<string | null>(null)
+  const [menuChoice, setMenuChoice] = useState("OPTION 1")
   const style = { "--pair-a": colors.a, "--pair-b": colors.b } as React.CSSProperties
   const icon = <Settings2 aria-hidden="true" />
 
@@ -60,9 +62,20 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
     return <button className={`vt-catalog-button is-${level}`} style={style}>{name.replace(" Button", "")}</button>
   if (name === "Square Icon Button") return <button aria-label="Settings" className={`vt-catalog-icon-button is-${level}`} style={style}>{icon}</button>
   if (name === "Split Left Button" || name === "Head Tail Action") return <SubToolboxSplitButton icon={name === "Head Tail Action" ? <ChevronRight /> : icon} railColor={colors.a} labelColor={colors.b}>{name === "Head Tail Action" ? "Action" : "Settings"}</SubToolboxSplitButton>
-  if (name === "Split Menu") return <SubToolboxSplitDropdown ariaLabel="Split menu" icon={<Menu />} railColor={colors.a} labelColor={colors.b} value="one" options={[{value:"one",label:"Videos"},{value:"two",label:"Assets"}]} onChange={() => {}} />
-  if (name === "Dropdown" || name === "Select Menu") return <button className={`vt-catalog-select is-${level}`} style={style}><span>{name === "Dropdown" ? "Menu" : "Select"}</span><ChevronDown /></button>
-  if (name === "Context Menu") return <button className={`vt-catalog-icon-button is-${level}`} style={style} aria-label="More options"><MoreHorizontal /></button>
+  if (name === "Split Menu" || name === "Dropdown" || name === "Select Menu" || name === "Context Menu") {
+    const key = `${name}-${level}-${index}`
+    const split = name === "Split Menu"
+    const context = name === "Context Menu"
+    return <div className={`vt-catalog-menu ${split ? "is-split" : ""} ${context ? "is-context" : ""} is-${level}`} style={style}>
+      <button type="button" className="menu-trigger" aria-haspopup="menu" aria-expanded={menuOpen === key} onClick={() => setMenuOpen(menuOpen === key ? null : key)}>
+        {split ? <span className="menu-rail"><Menu /></span> : null}
+        {context ? <MoreHorizontal /> : <span className="menu-label"><b>{name === "Dropdown" ? "MENU" : menuChoice}</b><ChevronDown /></span>}
+      </button>
+      {menuOpen === key ? <div className="menu-panel" role="menu">
+        {["OPTION 1","OPTION 2","OPTION 3"].map(option => <button type="button" role="menuitem" key={option} className={menuChoice === option ? "is-selected" : ""} onClick={() => { setMenuChoice(option); setMenuOpen(null) }}>{option}</button>)}
+      </div> : null}
+    </div>
+  }
   if (name === "Text Input" || name === "Number Field") return <SubToolboxInput className={`vt-catalog-field is-${level}`} style={style} type={name === "Number Field" ? "number" : "text"} defaultValue={name === "Number Field" ? "25" : "TEXT INPUT"} />
   if (name === "Textarea") return <SubToolboxTextArea className={`vt-catalog-field vt-catalog-textarea is-${level}`} style={style} defaultValue="DESCRIPTION" />
   if (name === "Split Search") return <div className={`vt-catalog-split-field is-${level}`} style={style}><span><Search /></span><input aria-label="Search" placeholder="SEARCH" /></div>
