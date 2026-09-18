@@ -1,5 +1,7 @@
 export { AssetRenderer, AssetThumbnail } from './AssetRenderer';
 export { AssetLibraryRoot } from './AssetLibraryRoot';
+export { AssetGallery } from './AssetGallery';
+export { createAssetParameterSchema } from './schemas';
 export { AssetContactSheet, ASSET_SHEET_COUNT, ASSETS_PER_SHEET } from './AssetContactSheet';
 export {
   assetRegistry,
@@ -40,6 +42,7 @@ export type {
   LoopBehavior,
   MotionCycleMode,
   AssetControlSpec,
+  AssetParameterSchema,
   SafeAreaMetadata,
 } from './types';
 export type { CreateAssetTimelineObjectOptions, EditorAssetLayerPayload } from './editorAdapter';
