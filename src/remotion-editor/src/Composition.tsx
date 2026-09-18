@@ -623,7 +623,12 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
           return (
             <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
               <div style={commonStyle}>
-                <AssetRenderer {...assetProps} assetId={assetId} />
+                <AssetRenderer
+                  {...assetProps}
+                  assetId={assetId}
+                  layoutWidth={layerWidth}
+                  layoutHeight={layerHeight}
+                />
               </div>
             </Sequence>
           );
