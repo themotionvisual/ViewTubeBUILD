@@ -12,8 +12,11 @@ import {verticalSceneTemplates} from './templates/verticalScenes';
 import {youtuberOpenerTemplates} from './templates/youtuberOpeners';
 import {youtuberUtilityTemplates} from './templates/youtuberUtility';
 import {premiumUtilityTemplates} from './templates/premiumUtility';
+import {backgroundTemplates,patternTemplates} from './templates/backgroundPatterns';
 
 export const templateCatalog: TemplateDefinition[] = normalizeTemplateCatalog([
+  ...backgroundTemplates,
+  ...patternTemplates,
   ...textTemplates,
   ...graphicTemplates,
   ...sceneTemplates,
