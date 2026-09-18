@@ -4,6 +4,7 @@ import {readClipVisualTransform} from '../state/editorState';
 import {TemplateLibraryPanel} from './TemplateLibraryPanel';
 import {renderPanelBody} from './PanelBodies';
 import {EditorFeatureManifest} from './EditorFeatureManifest';
+import {EditorViewSwitcher} from './EditorViewSwitcher';
 import {capabilitiesForCategory,type EditorCapabilityStatus} from '../../editorCapabilities';
 
 export type EditorNavPage='select'|'media'|'text'|'audio'|'graphics'|'effects'|'transitions'|'templates'|'export'|'settings';
@@ -81,8 +82,7 @@ function Clips({store,onNavigate}:{store:EditorStore;onNavigate?:(page:EditorNav
 function Settings({model}:{model?:EditorSettingsModel}){
   if(!model)return <><Section name="Editor Settings">Host-controlled settings.</Section><Section name="Feature System"><EditorFeatureManifest compact category="settings"/></Section></>;
   return <>
-    <Section name="Interface"><Grid cols={3}>{(['auto','mobile','desktop']as const).map(v=><button key={v} style={{...button,background:model.frontend===v?CYAN:'#fff'}} onClick={()=>model.onFrontend(v)}>{v}</button>)}</Grid></Section>
-    <Section name="Phone Layout"><b>Automatic · follows device orientation</b></Section>
+    <Section name="Interface & Phone Layout"><EditorViewSwitcher frontend={model.frontend} layout={model.layout??'auto'} onFrontend={model.onFrontend} onLayout={model.onLayout??(()=>{})}/></Section>
     <Section name="Video"><Grid>{(['portrait','landscape']as const).map(v=><button key={v} style={{...button,background:model.aspect===v?CYAN:'#fff'}} onClick={()=>model.onAspect(v)}>{v==='portrait'?'9:16':'16:9'}</button>)}</Grid></Section>
     <Section name="Editor Style"><Grid>{model.styleOptions.map(o=><button key={o.id} style={{...button,background:model.style===o.id?YELLOW:'#fff'}} onClick={()=>model.onStyle(o.id)}>{o.shortLabel||o.label}</button>)}</Grid></Section>
     <Section name="Feature System"><EditorFeatureManifest compact category="settings"/></Section>
