@@ -19,6 +19,9 @@ Blocks describe *what* to cover. This describes *how much*. When they conflict, 
 - Numbers over adjectives. "343 branches" not "a large number of branches".
 - Cite a path; never paste the file.
 - **A block with nothing to say is one line or omitted — never padded to look thorough.**
+- Exception: **§8 always appears at T1 and T2.** "Nothing worth adding here" is a valid
+  one-line answer; omitting the block is not. It was reported missing in real use because
+  an earlier draft made silence the compliant response.
 - Stop when done.
 
 A thorough answer nobody reads costs the same as a thorough answer that helps. Length is a
@@ -33,7 +36,7 @@ Mechanical, not discretionary:
 | Tier | When | Blocks required |
 |---|---|---|
 | **T0** | No `src/` change, ≤1 file, reversible in one command | **1, 10** — two lines total |
-| **T1** | *Default.* Any `src`/`server`/`api` change, or any new file | **1, 2, 9, 10** + any of 3–8, 11 that earns its place |
+| **T1** | *Default.* Any `src`/`server`/`api` change, or any new file | **1, 2, 8, 9, 10** + any of 3–7, 11 that earns its place |
 | **T2** | Crosses ≥2 canonical owners · adds a subsystem · changes a schema or contract · touches auth, billing, publishing or OAuth | all 12 |
 
 When torn between two tiers, take the higher one — **but adding a block you have nothing
@@ -72,7 +75,7 @@ Search order: Task Index (1,598 tasks) → `.viewtube/herald/recon/` cache → `
 
 `EXISTS` and `FAILED-BEFORE` stop the work. Report and ask; do not rebuild.
 
-### §3 OWNER — T1, T2
+### §3 OWNER — T1 *(when the owner is not obvious)*, T2
 Name the canonical owner of every path you will touch. `docs/migration/reference/VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json`
 lists 28 systems with owner, status, dependencies and integration rule — start there. If two owners appear, it is T2.
 If you cannot name an owner, stop and ask — do not guess.
@@ -81,13 +84,13 @@ If you cannot name an owner, stop and ask — do not guess.
 The simpler route you considered and why it loses. If the simpler route wins, say so and
 take it.
 
-### §5 OBSTACLES — T1, T2
+### §5 OBSTACLES — T1 *(when one exists)*, T2
 Verified blockers only, each with the command that proved it. Always check:
 - `.gitignore` is deny-by-default — will this new file be silently dropped? (`git check-ignore -v <path>`)
 - Is the writer lock for these paths free?
 - Is `lint:runtime` debt going to mask a real failure?
 
-### §6 LEVERAGE-IN — what we already have — T1, T2
+### §6 LEVERAGE-IN — what we already have — T1 *(when reusing or when writing something new)*, T2
 
 Before writing anything, check **all eight capability surfaces**. Consult
 `agent/registry/capabilities.md` first — it is the on-file inventory and is far cheaper
@@ -107,7 +110,7 @@ than rediscovering it.
 Name what you will reuse. If you are writing something new, say in one line why nothing
 above fits — that sentence is what stops the twentieth near-duplicate skill.
 
-### §7 REFERENCES — what to read — T1, T2
+### §7 REFERENCES — what to read — T1 *(when a reference matters)*, T2
 
 Name the documents, artifacts, standalone HTML files and folder sets that inform this work.
 Check `agent/registry/references.md` first.
@@ -141,7 +144,7 @@ frequent answer, and it is faster than rediscovering the failure.
 to `agent/registry/references.md` with its class. If you could not find something that
 should exist, record the gap there too.
 
-### §8 LEVERAGE-OUT — what we should add — T1, T2
+### §8 LEVERAGE-OUT — what we should add — **T1 required**, T2
 
 **Name at least one concrete thing, every T1 and T2 answer.** At T1 give one to three; at
 T2 be thorough. "Nothing to recommend" is a valid answer only when you say so explicitly and
@@ -262,7 +265,7 @@ them in the reply or the PR and keep the JSON manifest with the receipt.
 **If you changed UI and did not capture it, say so in UNKNOWN.** "Looks right" is not
 evidence, and a UI change with no visual is `partial`, never `complete`.
 
-### §11 KNOW — T1, T2
+### §11 KNOW — T1 *(only when you have something)*, T2
 Useful things the user did not ask about. Omit the block rather than pad it.
 
 ### §12 LEDGER — T2
