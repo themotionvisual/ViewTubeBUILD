@@ -20,7 +20,7 @@ const resolveProps = (
 ): AssetVisualProps => asset.schema.parse({
   ...asset.defaults,
   ...Object.fromEntries(
-    Object.entries(input).filter(([key, value]) => key !== 'assetId' && value !== undefined),
+    Object.entries(input).filter(([key, value]) => !['assetId', 'layoutWidth', 'layoutHeight'].includes(key) && value !== undefined),
   ),
 });
 
@@ -446,7 +446,10 @@ export const AssetRenderer: React.FC<AssetCompositionProps> = (input) => {
   const asset = getAssetDefinition(input.assetId);
   const props = resolveProps(asset, input);
   const frame = useCurrentFrame();
-  const { fps, width, height } = useVideoConfig();
+  const videoConfig = useVideoConfig();
+  const fps = videoConfig.fps;
+  const width = Math.max(1, Number(input.layoutWidth ?? videoConfig.width));
+  const height = Math.max(1, Number(input.layoutHeight ?? videoConfig.height));
   const ratio = aspectRatioLayout(width, height);
   const previewProgress = asset.type === 'motion'
     ? asset.previewFrame / Math.max(1, asset.durationInFrames)
