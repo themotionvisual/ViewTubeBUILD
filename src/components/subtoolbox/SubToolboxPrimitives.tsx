@@ -67,6 +67,35 @@ export const SubToolboxBadge: React.FC<React.HTMLAttributes<HTMLSpanElement> & {
 
 export const SubToolboxTag: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { selected?: boolean }> = ({ selected = false, className, children, type = "button", ...props }) => <button type={type} className={classes("vt-subtoolbox-chip", "is-tag", selected && "is-active", className)} aria-pressed={selected} {...props}>{children}</button>
 
+export type SubToolboxTooltipLevel = "l0" | "l1" | "l2"
+
+export interface SubToolboxTooltipProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, "content"> {
+  content?: React.ReactNode
+  level?: SubToolboxTooltipLevel
+  forceOpen?: boolean
+  triggerLabel?: React.ReactNode
+  triggerAriaLabel?: string
+}
+
+export const SubToolboxTooltip: React.FC<SubToolboxTooltipProps> = ({
+  content = "TOOLTIP",
+  level = "l0",
+  forceOpen = false,
+  triggerLabel = "?",
+  triggerAriaLabel = "Show tooltip",
+  className,
+  style,
+  ...props
+}) => {
+  const tooltipId = React.useId()
+  return (
+    <span className={classes("vt-subtoolbox-tooltip", `is-${level}`, forceOpen && "is-open", className)} style={style} {...props}>
+      <button type="button" className="vt-subtoolbox-tooltip-trigger" aria-label={triggerAriaLabel} aria-describedby={tooltipId}>{triggerLabel}</button>
+      <span id={tooltipId} role="tooltip" className="vt-subtoolbox-tooltip-bubble">{content}</span>
+    </span>
+  )
+}
+
 export const SubToolboxSurface: React.FC<React.HTMLAttributes<HTMLDivElement> & { tone?: "white" | "subtle" | "accent"; scroll?: boolean; children: React.ReactNode }> = ({ tone = "white", scroll = false, className, children, ...props }) => <div className={classes("vt-subtoolbox-surface", `is-${tone}`, scroll && "is-scroll", className)} {...props}>{children}</div>
 
 export const SubToolboxMetric: React.FC<{ label: React.ReactNode; value: React.ReactNode; accentColor?: string; className?: string }> = ({ label, value, accentColor, className }) => <SubToolboxSurface className={classes("vt-subtoolbox-metric", className)} style={accentColor ? { ["--vt-subtoolbox-card-fill" as string]: accentColor } : undefined}><div className="vt-subtoolbox-metric-label">{label}</div><div className="vt-subtoolbox-metric-value">{value}</div></SubToolboxSurface>
