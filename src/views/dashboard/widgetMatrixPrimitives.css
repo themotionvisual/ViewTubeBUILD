@@ -36,6 +36,19 @@
   flex: 0 0 auto;
 }
 
+/* Compound controls own their internal cells. The base .vt-primitive adds
+   horizontal padding and gap for ordinary buttons; on steppers, pagination,
+   split badges and search controls that padding/gap appears as the unwanted
+   empty strips visible beside square bays. Reset both here. */
+.widget-stepper,
+.widget-pagination,
+.widget-split-badge,
+.widget-search-input {
+  padding: 0 !important;
+  gap: 0 !important;
+  justify-content: flex-start;
+}
+
 /* ── Square icon button / badge ─────────────────────────────── */
 .widget-icon-button,
 .widget-icon-badge {
@@ -551,6 +564,23 @@
   line-height: 1 !important;
 }
 
+/* Selection marks stay inside the widget palette, but are deliberately
+   lighter than ViewTube Ink. Primary controls use a pale tint for contrast
+   against their filled surface; default/secondary controls use a stronger
+   widget-color tint. */
+.widget-radio.is-tone-default,
+.widget-checkbox.is-tone-default {
+  --vt-selection-mark: color-mix(in srgb, var(--widget-color, #34cdea) 84%, white);
+}
+.widget-radio.is-tone-primary,
+.widget-checkbox.is-tone-primary {
+  --vt-selection-mark: color-mix(in srgb, var(--widget-color, #34cdea) 34%, white);
+}
+.widget-radio.is-tone-secondary,
+.widget-checkbox.is-tone-secondary {
+  --vt-selection-mark: color-mix(in srgb, var(--widget-color, #34cdea) 74%, white);
+}
+
 /* Radio selection is drawn independently of the tone fill so it can never
    disappear when foreground/background colors coincide. */
 .widget-radio { position: relative; }
@@ -562,7 +592,7 @@
   position: absolute;
   inset: 24%;
   border-radius: 50%;
-  background: var(--widget-ink, #243247) !important;
+  background: var(--vt-selection-mark, color-mix(in srgb, var(--widget-color, #34cdea) 78%, white)) !important;
   opacity: 1 !important;
   z-index: 2;
   pointer-events: none;
@@ -584,7 +614,7 @@
   width: 66%;
   height: max(3px, calc(var(--vt-primitive-height) * .12));
   border-radius: 999px;
-  background: var(--widget-ink, #243247) !important;
+  background: var(--vt-selection-mark, color-mix(in srgb, var(--widget-color, #34cdea) 78%, white)) !important;
   z-index: 2;
   pointer-events: none;
 }
