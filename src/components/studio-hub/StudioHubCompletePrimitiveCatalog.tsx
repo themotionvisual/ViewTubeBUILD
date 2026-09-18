@@ -5,13 +5,11 @@ import {
   Upload, Video, X,
 } from "lucide-react"
 import {
-  SubToolboxBadge, SubToolboxButton, SubToolboxFileTarget, SubToolboxInput,
-  SubToolboxTag, SubToolboxTextArea,
+  SubToolboxFileTarget, SubToolboxInput, SubToolboxTextArea,
 } from "../subtoolbox/SubToolboxPrimitives"
 import {
-  SubToolboxKpiCard, SubToolboxSplitButton, SubToolboxSplitDropdown,
+  SubToolboxSplitButton,
 } from "../subtoolbox/SubToolboxSplitPrimitives"
-import { CONTROL_SIZE_FOR_LEVEL } from "../subtoolbox/tokens"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import "./studio-hub-complete-primitive-catalog.css"
 
@@ -60,13 +58,18 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   const [disclosureOpen, setDisclosureOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState<string | null>(null)
   const [menuChoice, setMenuChoice] = useState("OPTION 1")
+  const [segmentChoice, setSegmentChoice] = useState("A")
+  const [selectableTagOn, setSelectableTagOn] = useState(true)
+  const [tagEditorOpen, setTagEditorOpen] = useState(false)
+  const [tagDraft, setTagDraft] = useState("")
+  const [editorTags, setEditorTags] = useState(["HISTORY"])
   const style = { "--pair-a": colors.a, "--pair-b": colors.b } as React.CSSProperties
   const icon = <Settings2 aria-hidden="true" />
 
   if (name === "Primary Button" || name === "Secondary Button" || name === "Neutral Button" || name === "Destructive Button")
     return <button className={`vt-catalog-button is-${level}`} style={style}>{name.replace(" Button", "")}</button>
   if (name === "Square Icon Button") return <button aria-label="Settings" className={`vt-catalog-icon-button is-${level}`} style={style}>{icon}</button>
-  if (name === "Split Left Button" || name === "Head Tail Action") return <SubToolboxSplitButton icon={name === "Head Tail Action" ? <ChevronRight /> : icon} railColor={colors.a} labelColor={colors.b}>{name === "Head Tail Action" ? "Action" : "Settings"}</SubToolboxSplitButton>
+  if (name === "Split Left Button" || name === "Head Tail Action") return <SubToolboxSplitButton className={`vt-catalog-split-primitive is-${level}`} style={style} icon={name === "Head Tail Action" ? <ChevronRight /> : icon} railColor={colors.a} labelColor={colors.b}>{name === "Head Tail Action" ? "Action" : "Settings"}</SubToolboxSplitButton>
   if (name === "Split Menu" || name === "Dropdown" || name === "Select Menu" || name === "Context Menu") {
     const key = `${name}-${level}-${index}`
     const split = name === "Split Menu"
@@ -77,7 +80,7 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
         {context ? <MoreHorizontal /> : <span className="menu-label"><b>{name === "Dropdown" ? "MENU" : menuChoice}</b><ChevronDown /></span>}
       </button>
       {menuOpen === key ? <div className="menu-panel" role="menu">
-        {["OPTION 1","OPTION 2","OPTION 3"].map(option => <button type="button" role="menuitem" key={option} className={menuChoice === option ? "is-selected" : ""} onClick={() => { setMenuChoice(option); setMenuOpen(null) }}>{option}</button>)}
+        {["OPTION 1","OPTION 2","OPTION 3"].map(option => <button type="button" role="menuitem" key={option} className={`${split ? "is-split-option" : ""} ${menuChoice === option ? "is-selected" : ""}`} onClick={() => { setMenuChoice(option); setMenuOpen(null) }}>{split ? <><span className="menu-option-rail"><Menu /></span><span className="menu-option-label">{option}</span></> : <span className="menu-option-label">{option}</span>}</button>)}
       </div> : null}
     </div>
   }
@@ -86,22 +89,26 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   if (name === "Split Search") return <div className={`vt-catalog-split-field is-${level}`} style={style}><span><Search /></span><input aria-label="Search" placeholder="SEARCH" /></div>
   if (name === "Input Action") return <div className={`vt-catalog-split-field is-${level}`} style={style}><span><Plus /></span><input aria-label="Add item" placeholder="ADD ITEM" /></div>
   if (name === "Stepper") return <div className={`vt-catalog-stepper is-${level}`} style={style}><button type="button" aria-label="Decrease" onClick={() => setValue(v => v - 1)}><Minus /></button><strong>{value}</strong><button type="button" aria-label="Increase" onClick={() => setValue(v => v + 1)}><Plus /></button></div>
-  if (name === "Slider") return <div className={`vt-catalog-slider is-${level}`} style={style}><button type="button" className="rail" aria-label="Reset slider" onClick={() => setSliderValue(62)}><ChevronRight/></button><div className="slider-center"><input aria-label="Slider value" type="range" min="0" max="100" value={sliderValue} onChange={e => setSliderValue(Number(e.target.value))}/></div><output>{sliderValue}</output></div>
+  if (name === "Slider") return <div className={`vt-catalog-slider is-${level}`} style={style}><button type="button" className="rail" aria-label="Reset slider" onClick={() => setSliderValue(62)}><span className="slider-glyph" aria-hidden="true">S</span></button><div className="slider-center"><input aria-label="Slider value" type="range" min="0" max="100" value={sliderValue} style={{"--pct":`${sliderValue}%`} as React.CSSProperties} onChange={e => setSliderValue(Number(e.target.value))}/></div><output>{sliderValue}</output></div>
   if (name === "Range Slider") return <div className={`vt-catalog-range is-${level}`} style={style}><button type="button" className="rail" aria-label="Reset range" onClick={() => { setRangeLow(22); setRangeHigh(76) }}><SlidersHorizontal/></button><div className="range-center"><div className="range-track"><span className="range-fill" style={{left:`${rangeLow}%`,right:`${100-rangeHigh}%`}}/></div><input aria-label="Range minimum" type="range" min="0" max="100" value={rangeLow} onChange={e => setRangeLow(Math.min(Number(e.target.value), rangeHigh - 1))}/><input aria-label="Range maximum" type="range" min="0" max="100" value={rangeHigh} onChange={e => setRangeHigh(Math.max(Number(e.target.value), rangeLow + 1))}/></div><output>{rangeLow}–{rangeHigh}</output></div>
   if (name === "Toggle") return <button type="button" className={`vt-catalog-toggle is-${level} ${toggleOn ? "is-on" : ""}`} style={style} aria-pressed={toggleOn} aria-label="Toggle" onClick={() => setToggleOn(v => !v)}><span /></button>
   if (name === "Settings Switch") return <button type="button" className={`vt-catalog-switch is-${level} ${switchOn ? "is-on" : ""}`} style={style} aria-pressed={switchOn} onClick={() => setSwitchOn(v => !v)}><span /></button>
   if (name === "Checkbox") return <button type="button" className={`vt-catalog-checkbox is-${level} ${checkboxOn ? "is-on" : ""}`} style={style} aria-label="Checkbox" aria-pressed={checkboxOn} onClick={() => setCheckboxOn(v => !v)}><span /></button>
   if (name === "Radio") return <button type="button" className={`vt-catalog-radio is-${level} ${radioOn ? "is-on" : ""}`} style={style} aria-label="Radio" aria-pressed={radioOn} onClick={() => setRadioOn(v => !v)}><span /></button>
-  if (name === "Segmented Choice") return <div className={`vt-catalog-segmented is-${level}`} style={style}><button>A</button><button>B</button><button>C</button></div>
-  if (name === "Button Group") return <div className="vt-catalog-button-group"><SubToolboxButton size={CONTROL_SIZE_FOR_LEVEL[level]}>One</SubToolboxButton><SubToolboxButton size={CONTROL_SIZE_FOR_LEVEL[level]}>Two</SubToolboxButton></div>
-  if (name === "Tag") return <SubToolboxTag>Napoleon</SubToolboxTag>
+  if (name === "Segmented Choice") return <div className={`vt-catalog-segmented is-${level}`} style={style}>{["A","B","C"].map(choice => <button type="button" key={choice} className={segmentChoice === choice ? "is-active" : ""} aria-pressed={segmentChoice === choice} onClick={() => setSegmentChoice(choice)}>{choice}</button>)}</div>
+  if (name === "Button Group") return <div className={`vt-catalog-button-group is-${level}`} style={style}><button type="button">ONE</button><button type="button">TWO</button></div>
+  if (name === "Tag") return <span className={`vt-catalog-tag is-${level}`} style={style}>NAPOLEON</span>
   if (name === "Removable Tag") return <span className={`vt-spectrum-tag is-${level}`} style={style}>Napoleon <button aria-label="Remove"><X /></button></span>
-  if (name === "Selectable Tag") return <SubToolboxTag selected><Check /> Selected</SubToolboxTag>
-  if (name === "Tag Editor") return <div className="vt-catalog-tag-editor"><span className={`vt-spectrum-tag is-${level}`} style={style}>History <button><X /></button></span><button className="add"><Plus /></button></div>
+  if (name === "Selectable Tag") return <button type="button" className={`vt-catalog-selectable-tag is-${level} ${selectableTagOn ? "is-selected" : ""}`} style={style} aria-pressed={selectableTagOn} onClick={() => setSelectableTagOn(v => !v)}>{selectableTagOn ? <Check /> : <Plus />}<span>{selectableTagOn ? "SELECTED" : "SELECT"}</span></button>
+  if (name === "Tag Editor") return <div className={`vt-catalog-tag-editor is-${level} ${tagEditorOpen ? "is-editing" : ""}`} style={style}>
+    <div className="tag-editor-tags">{editorTags.map(tag => <span key={tag} className={`vt-spectrum-tag is-${level}`}>{tag}<button type="button" aria-label={`Remove ${tag}`} onClick={() => setEditorTags(tags => tags.filter(item => item !== tag))}><X /></button></span>)}</div>
+    {tagEditorOpen ? <><input aria-label="New tag" value={tagDraft} placeholder="ADD TAG" onChange={e => setTagDraft(e.target.value.toUpperCase())} onKeyDown={e => { if (e.key === "Enter" && tagDraft.trim()) { setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) } }} /><button type="button" className="submit" aria-label="Save tag" onClick={() => { if (tagDraft.trim()) setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) }}><Check /></button></> : <button type="button" className="add" aria-label="Add tag" onClick={() => setTagEditorOpen(true)}><Plus /></button>}
+  </div>
   if (name === "Badge") return <span className={`vt-catalog-fill-badge is-${level}`} style={style}>BADGE</span>
   if (name === "Status Badge") return <span className={`vt-status-badge is-${level}`} style={style}><i/>Ready</span>
-  if (name === "Progress Bar" || name === "Progress Value") return <div className={`vt-catalog-progress is-${level}`} style={style}><span style={{width:"68%"}} />{name === "Progress Value" ? <b>68%</b> : null}</div>
-  if (name === "KPI") return <SubToolboxKpiCard label="Views" value="12.4K" accentColor={colors.a} />
+  if (name === "Progress Bar") return <div className={`vt-catalog-progress-stack is-${level}`} style={style}><div className="vt-catalog-progress is-rounded"><span style={{width:"68%"}} /></div><div className="vt-catalog-progress is-rect"><span style={{width:"68%"}} /></div></div>
+  if (name === "Progress Value") return <div className={`vt-catalog-progress-value is-${level}`} style={style}><div className="bar"><span style={{width:"68%"}} /></div><output>68%</output></div>
+  if (name === "KPI") return <div className={`vt-catalog-kpi is-${level}`} style={style}><header>VIEWS</header><div className="kpi-canvas"><strong>12.4K</strong></div></div>
   if (name === "Stat Card" || name === "Data Stats Module") return <div className={`vt-catalog-stat is-${level}`} style={style}><small>{name === "Data Stats Module" ? "TOTAL VIEWS" : "WATCH TIME"}</small><strong>{name === "Data Stats Module" ? "128,442" : "4,820H"}</strong><span>+12.4%</span></div>
   if (name === "Metric Strip") return <div className={`vt-catalog-metric-strip is-${level}`} style={style}><b>VIEWS 12K</b><b>CTR 5.8%</b><b>AVP 72%</b></div>
   if (name === "Tooltip") return <div className={`vt-catalog-tooltip-demo is-${level}`} style={style}><button type="button" aria-describedby={`tip-${level}-${index}`}>?</button><div role="tooltip" id={`tip-${level}-${index}`} className="vt-catalog-tooltip">TOOLTIP</div></div>
@@ -120,7 +127,7 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   }
   if (name === "Knob Dial") return <div className={`vt-catalog-knob is-${level}`} style={style}><span className="knob-face"><i/><em>72</em></span><b className="knob-value">72</b></div>
   if (name === "Controller Switch") return <button className={`vt-catalog-controller-switch is-${level}`} style={style}><span/><b>ON</b></button>
-  if (name === "LED Light") return <div className={`vt-catalog-led is-${level}`} style={style}><i/><b>ACTIVE</b></div>
+  if (name === "LED Light") return <div className={`vt-catalog-led is-${level} is-active`} style={style}><i/><b>ACTIVE</b></div>
   if (name === "Alphabetical Spectrum Tags") return <div className="vt-catalog-spectrum-row">{Array.from({length:26},(_,i)=>String.fromCharCode(65+i)).map((letter, i) => <span key={letter} className={`vt-alpha-tag is-${level}`} style={{"--alpha-h":`${(i * 360) / 26}`} as React.CSSProperties}>{letter} · TAG</span>)}</div>
   if (name === "Icon Rail Control") return <div className={`vt-catalog-icon-rail is-${level}`} style={style}><span><SlidersHorizontal/></span><b>Control</b></div>
   if (name === "Two Color Data Stats") return <div className={`vt-variant-stat vt-stat-two is-${level}`} style={style}><span>VIEWS</span><strong>128K</strong><small>+12.4%</small></div>

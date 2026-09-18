@@ -1,4 +1,4 @@
-.vt-complete-catalog{display:grid;gap:16px}.vt-complete-catalog *{box-sizing:border-box}.vt-complete-catalog-heading{border:4px solid #000;border-radius:12px;padding:12px;background:#fff;box-shadow:6px 6px 0 color-mix(in srgb,#36e0f6 42%,transparent)}.vt-complete-catalog-heading>div{display:flex;gap:8px;align-items:center}.vt-complete-catalog-heading h2,.vt-catalog-family h3{margin:0;text-transform:uppercase;font-weight:1000;letter-spacing:-.055em;line-height:.9}.vt-complete-catalog-heading p{margin:4px 0 0;font-weight:800}.vt-complete-catalog-heading>strong{display:block;margin-top:8px;font-size:11px}.vt-complete-catalog-grid{display:grid;gap:16px}.vt-catalog-family{border:4px solid #000;border-radius:12px;padding:12px;background:#fff;box-shadow:6px 6px 0 color-mix(in srgb,#4ee4be 42%,transparent)}.vt-catalog-family h3{font-size:22px;display:flex;gap:8px}.vt-catalog-family h3 span{opacity:.45}.vt-catalog-levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}.vt-catalog-demo{min-width:0;border:3px solid #000;border-radius:8px;padding:8px;background:#fff}.vt-catalog-demo:before{content:attr(data-level);display:block;text-transform:uppercase;font-size:10px;font-weight:1000;margin-bottom:6px}.vt-catalog-demo.is-l0{--h:44px;--stroke:4px;--radius:12px;--fs:22px}.vt-catalog-demo.is-l1{--h:48px;--stroke:3px;--radius:8px;--fs:18px}.vt-catalog-demo.is-l2{--h:32px;--stroke:2px;--radius:6px;--fs:12px}.vt-catalog-button,.vt-catalog-select,.vt-catalog-icon-button,.vt-catalog-split-field,.vt-catalog-stepper,.vt-catalog-segmented,.vt-catalog-disabled-split,.vt-catalog-icon-rail{height:var(--h);border:var(--stroke) solid #000;border-radius:var(--radius);font-size:var(--fs);font-weight:1000;letter-spacing:-.055em;text-transform:uppercase;background:var(--pair-a,#36e0f6);color:#000}.vt-catalog-button{width:100%;display:grid;place-items:center;padding:0 10px;box-shadow:calc(var(--stroke) + 2px) calc(var(--stroke) + 2px) 0 color-mix(in srgb,var(--pair-b,#ff7f6b) 42%,transparent)}.vt-catalog-icon-button{aspect-ratio:1;width:var(--h);padding:0;display:grid;place-items:center}.vt-catalog-icon-button svg{width:54%;height:54%;stroke-width:3}.vt-catalog-select{width:100%;display:grid;grid-template-columns:1fr var(--h);align-items:center;padding-left:10px}.vt-catalog-select svg{justify-self:center}.vt-catalog-split-field{display:grid;grid-template-columns:var(--h) 1fr;overflow:hidden;background:var(--pair-b)}.vt-catalog-split-field>span{display:grid;place-items:center;background:var(--pair-a);border-right:var(--stroke) solid #000}.vt-catalog-split-field input{min-width:0;border:0;outline:0;background:color-mix(in srgb,var(--pair-b) 34%,white);padding:0 10px;font:inherit;text-transform:uppercase;caret-color:var(--pair-a)}.vt-catalog-split-field input:focus{background:#fff;box-shadow:inset 0 0 0 var(--stroke) var(--pair-a)}.vt-catalog-stepper{display:grid;grid-template-columns:var(--h) 1fr var(--h);overflow:hidden;background:var(--pair-b)}.vt-catalog-stepper button{border:0;background:var(--pair-a);display:grid;place-items:center}.vt-catalog-stepper button:first-child{border-right:var(--stroke) solid #000}.vt-catalog-stepper button:last-child{border-left:var(--stroke) solid #000}.vt-catalog-stepper strong{display:grid;place-items:center}.vt-catalog-slider{height:var(--h);position:relative;display:flex;align-items:center;padding:0 calc(var(--h)*.18)}.vt-catalog-slider .track,.vt-catalog-slider .fill{position:absolute;height:calc(var(--h)*.28);border:var(--stroke) solid #000;border-radius:999px;left:8%;right:8%;background:var(--pair-b)}.vt-catalog-slider .fill{right:38%;background:var(--pair-a)}.vt-catalog-slider .handle{position:absolute;left:58%;width:calc(var(--h)*.25);height:calc(var(--h)*.72);border:var(--stroke) solid #000;border-radius:999px;background:var(--pair-a)}.vt-catalog-slider.is-range .h1{left:28%}.vt-catalog-slider.is-range .h2{left:68%}.vt-catalog-switch{height:calc(var(--h)*.64);width:calc(var(--h)*1.35);border:0;border-radius:calc(var(--radius)*.72);padding:3px;background:var(--pair-a);display:flex;align-items:center;justify-content:flex-end}.vt-catalog-switch span{height:calc(100% - 2px);aspect-ratio:1;border-radius:calc(var(--radius)*.55);background:var(--pair-b)}.vt-catalog-segmented{display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden}.vt-catalog-segmented button{border:0;border-right:var(--stroke) solid #000;background:var(--pair-b);font:inherit}.vt-catalog-segmented button:first-child{background:var(--pair-a)}.vt-catalog-segmented button:last-child{border-right:0}.vt-catalog-button-group{display:flex;flex-wrap:wrap;gap:4px}.vt-spectrum-tag,.vt-status-badge,.vt-alpha-tag{display:inline-flex;align-items:center;gap:5px;border-radius:999px;background:var(--pair-a);font-weight:1000;text-transform:uppercase;letter-spacing:-.035em;padding:3px 4px 3px 9px}.vt-spectrum-tag button{border:0;border-radius:50%;background:var(--pair-b);display:grid;place-items:center;padding:2px}.vt-spectrum-tag svg{width:1em;height:1em;stroke-width:4}.vt-status-badge{padding-right:9px}.vt-status-badge i{width:.72em;height:.72em;border-radius:50%;background:var(--pair-b)}.vt-catalog-progress{height:calc(var(--h)*.5);border:var(--stroke) solid #000;border-radius:999px;overflow:hidden;position:relative;background:var(--pair-b)}.vt-catalog-progress span{display:block;height:100%;background:var(--pair-a)}.vt-catalog-progress b{position:absolute;inset:0;display:grid;place-items:center;font-size:10px}.vt-catalog-stat{border:var(--stroke) solid #000;border-radius:var(--radius);padding:8px;background:var(--pair-b);display:grid;grid-template-columns:1fr auto;gap:2px 8px}.vt-catalog-stat small{font-weight:1000}.vt-catalog-stat strong{font-size:calc(var(--fs)*1.45);line-height:.9}.vt-catalog-stat span{grid-column:2;grid-row:1/3;align-self:center;background:var(--pair-a);border-radius:999px;padding:4px;font-weight:1000}.vt-catalog-metric-strip{display:grid;grid-template-columns:repeat(3,1fr);border:var(--stroke) solid #000;border-radius:var(--radius);overflow:hidden}.vt-catalog-metric-strip b{padding:7px;background:var(--pair-b);border-right:var(--stroke) solid #000;font-size:11px}.vt-catalog-metric-strip b:nth-child(2){background:var(--pair-a)}.vt-catalog-metric-strip b:last-child{border:0}.vt-catalog-tooltip{display:inline-block;border:var(--stroke) solid #000;border-radius:var(--radius);background:var(--pair-a);padding:6px 9px;font-weight:1000}.vt-catalog-popover,.vt-catalog-disclosure{border:var(--stroke) solid #000;border-radius:var(--radius);overflow:hidden}.vt-catalog-popover header,.vt-catalog-disclosure header{min-height:var(--h);display:grid;grid-template-columns:var(--h) 1fr var(--h);align-items:center;background:var(--pair-b);border-bottom:var(--stroke) solid #000;font-weight:1000;text-transform:uppercase}.vt-catalog-popover header>svg,.vt-catalog-disclosure header>svg{justify-self:center}.vt-catalog-popover header button{height:100%;border:0;border-left:var(--stroke) solid #000;background:var(--pair-a);display:grid;place-items:center}.vt-catalog-popover p,.vt-catalog-disclosure p{margin:0;padding:10px;font-weight:800}.vt-catalog-divider{border:0;border-top:var(--stroke) solid var(--pair-a);margin:calc(var(--h)*.5) 0}.vt-catalog-hscroll{height:var(--h);display:grid;grid-template-columns:var(--h) 1fr var(--h);align-items:center}.vt-catalog-hscroll button,.vt-catalog-vscroll button{height:100%;border:var(--stroke) solid #000;background:var(--pair-a);display:grid;place-items:center}.vt-catalog-hscroll span,.vt-catalog-vscroll span{height:calc(var(--h)*.34);background:var(--pair-b);border:var(--stroke) solid #000;position:relative}.vt-catalog-hscroll span i{position:absolute;left:20%;width:38%;height:100%;background:var(--pair-a)}.vt-catalog-vscroll{height:calc(var(--h)*3);width:var(--h);display:grid;grid-template-rows:var(--h) 1fr var(--h)}.vt-catalog-vscroll span{height:auto;width:calc(var(--h)*.34);justify-self:center}.vt-catalog-vscroll span i{position:absolute;top:20%;height:38%;width:100%;background:var(--pair-a)}.vt-catalog-button.is-disabled,.vt-catalog-disabled-split{filter:grayscale(1);opacity:.48;box-shadow:none}.vt-catalog-disabled-split{display:grid;grid-template-columns:var(--h) 1fr;overflow:hidden}.vt-catalog-disabled-split span{display:grid;place-items:center;border-right:var(--stroke) solid #000}.vt-catalog-disabled-split b{display:grid;place-items:center}.vt-catalog-upload{min-height:calc(var(--h)*2.4);border:var(--stroke) solid #000;border-radius:var(--radius);background:repeating-linear-gradient(135deg,var(--pair-a) 0 8px,var(--pair-b) 8px 16px);display:grid;place-items:center;align-content:center;gap:5px;text-transform:uppercase}.vt-catalog-pagination{display:flex;gap:4px}.vt-catalog-pagination button{width:var(--h);height:var(--h);border:var(--stroke) solid #000;border-radius:var(--radius);background:var(--pair-a);font-weight:1000}.vt-catalog-asset{border:var(--stroke) solid #000;border-radius:var(--radius);overflow:hidden;background:#fff}.vt-catalog-asset header,.vt-catalog-asset footer{min-height:calc(var(--h)*.65);display:flex;align-items:center;gap:5px;padding:4px 7px;background:var(--pair-a);font-weight:1000;text-transform:uppercase}.vt-catalog-asset .preview{aspect-ratio:16/9;display:grid;place-items:center;background:var(--pair-b)}.vt-catalog-asset.is-portrait .preview{aspect-ratio:9/16;max-height:180px}.vt-catalog-asset footer{justify-content:space-between;background:#fff}.vt-catalog-asset footer button{border:0;background:var(--pair-b);border-radius:50%;display:grid;place-items:center}.vt-catalog-knob{display:flex;align-items:center;gap:8px}.vt-catalog-knob>span{width:var(--h);height:var(--h);border:var(--stroke) solid #000;border-radius:50%;background:var(--pair-a);position:relative}.vt-catalog-knob i{position:absolute;width:var(--stroke);height:34%;left:50%;top:8%;background:#000;border-radius:999px}.vt-catalog-controller-switch{height:var(--h);border:var(--stroke) solid #000;border-radius:var(--radius);background:var(--pair-b);display:flex;align-items:center;gap:8px;padding:4px 9px;font-weight:1000}.vt-catalog-controller-switch span{height:70%;aspect-ratio:1;border-radius:50%;background:var(--pair-a);border:var(--stroke) solid #000}.vt-catalog-led{display:flex;align-items:center;gap:7px;font-weight:1000}.vt-catalog-led i{width:calc(var(--h)*.42);height:calc(var(--h)*.42);border-radius:50%;background:var(--pair-a);box-shadow:0 0 0 4px color-mix(in srgb,var(--pair-a) 28%,transparent)}.vt-catalog-spectrum-row{display:flex;flex-wrap:wrap;gap:4px}.vt-alpha-tag{--pair-a:var(--alpha);background:color-mix(in srgb,var(--alpha) 28%,white);border:2px solid var(--alpha);color:color-mix(in srgb,var(--alpha) 70%,#000);padding:3px 7px}.vt-catalog-icon-rail{display:grid;grid-template-columns:var(--h) 1fr;overflow:hidden;background:var(--pair-b)}.vt-catalog-icon-rail span{display:grid;place-items:center;background:var(--pair-a);border-right:var(--stroke) solid #000}.vt-catalog-icon-rail b{display:grid;place-items:center}.vt-complete-catalog .vt-subtoolbox-binary,.vt-complete-catalog .vt-subtoolbox-chip{width:max-content;max-width:100%}@media(max-width:900px){.vt-catalog-levels{grid-template-columns:1fr}}@media(max-width:520px){.vt-complete-catalog-heading h2{font-size:20px}.vt-catalog-family{padding:8px}.vt-catalog-family h3{font-size:18px}.vt-catalog-demo{padding:7px}}
+.vt-complete-catalog{display:grid;gap:16px}.vt-complete-catalog *{box-sizing:border-box}.vt-complete-catalog-heading{border:4px solid #000;border-radius:12px;padding:12px;background:#fff;box-shadow:6px 6px 0 color-mix(in srgb,#36e0f6 42%,transparent)}.vt-complete-catalog-heading>div{display:flex;gap:8px;align-items:center}.vt-complete-catalog-heading h2,.vt-catalog-family h3{margin:0;text-transform:uppercase;font-weight:1000;letter-spacing:-.055em;line-height:.9}.vt-complete-catalog-heading p{margin:4px 0 0;font-weight:800}.vt-complete-catalog-heading>strong{display:block;margin-top:8px;font-size:11px}.vt-complete-catalog-grid{display:grid;gap:16px}.vt-catalog-family{border:4px solid #000;border-radius:12px;padding:12px;background:#fff;box-shadow:6px 6px 0 color-mix(in srgb,#4ee4be 42%,transparent)}.vt-catalog-family h3{font-size:22px;display:flex;gap:8px}.vt-catalog-family h3 span{opacity:.45}.vt-catalog-levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}.vt-catalog-demo{min-width:0;border:3px solid #000;border-radius:8px;padding:8px;background:#fff}.vt-catalog-demo:before{content:attr(data-level);display:block;text-transform:uppercase;font-size:10px;font-weight:1000;margin-bottom:6px}.vt-catalog-demo.is-l0{--h:56px;--stroke:4px;--radius:12px;--fs:24px}.vt-catalog-demo.is-l1{--h:48px;--stroke:3px;--radius:8px;--fs:18px}.vt-catalog-demo.is-l2{--h:32px;--stroke:2px;--radius:6px;--fs:12px}.vt-catalog-button,.vt-catalog-select,.vt-catalog-icon-button,.vt-catalog-split-field,.vt-catalog-stepper,.vt-catalog-segmented,.vt-catalog-disabled-split,.vt-catalog-icon-rail{height:var(--h);border:var(--stroke) solid #000;border-radius:var(--radius);font-size:var(--fs);font-weight:1000;letter-spacing:-.055em;text-transform:uppercase;background:var(--pair-a,#36e0f6);color:#000}.vt-catalog-button{width:100%;display:grid;place-items:center;padding:0 10px;box-shadow:calc(var(--stroke) + 2px) calc(var(--stroke) + 2px) 0 color-mix(in srgb,var(--pair-b,#ff7f6b) 42%,transparent)}.vt-catalog-icon-button{aspect-ratio:1;width:var(--h);padding:0;display:grid;place-items:center}.vt-catalog-icon-button svg{width:54%;height:54%;stroke-width:3}.vt-catalog-select{width:100%;display:grid;grid-template-columns:1fr var(--h);align-items:center;padding-left:10px}.vt-catalog-select svg{justify-self:center}.vt-catalog-split-field{display:grid;grid-template-columns:var(--h) 1fr;overflow:hidden;background:var(--pair-b)}.vt-catalog-split-field>span{display:grid;place-items:center;background:var(--pair-a);border-right:var(--stroke) solid #000}.vt-catalog-split-field input{min-width:0;border:0;outline:0;background:color-mix(in srgb,var(--pair-b) 34%,white);padding:0 10px;font:inherit;text-transform:uppercase;caret-color:var(--pair-a)}.vt-catalog-split-field input:focus{background:#fff;box-shadow:inset 0 0 0 var(--stroke) var(--pair-a)}.vt-catalog-stepper{display:grid;grid-template-columns:var(--h) 1fr var(--h);overflow:hidden;background:var(--pair-b)}.vt-catalog-stepper button{border:0;background:var(--pair-a);display:grid;place-items:center}.vt-catalog-stepper button:first-child{border-right:var(--stroke) solid #000}.vt-catalog-stepper button:last-child{border-left:var(--stroke) solid #000}.vt-catalog-stepper strong{display:grid;place-items:center}.vt-catalog-slider{height:var(--h);position:relative;display:flex;align-items:center;padding:0 calc(var(--h)*.18)}.vt-catalog-slider .track,.vt-catalog-slider .fill{position:absolute;height:calc(var(--h)*.28);border:var(--stroke) solid #000;border-radius:999px;left:8%;right:8%;background:var(--pair-b)}.vt-catalog-slider .fill{right:38%;background:var(--pair-a)}.vt-catalog-slider .handle{position:absolute;left:58%;width:calc(var(--h)*.25);height:calc(var(--h)*.72);border:var(--stroke) solid #000;border-radius:999px;background:var(--pair-a)}.vt-catalog-slider.is-range .h1{left:28%}.vt-catalog-slider.is-range .h2{left:68%}.vt-catalog-switch{height:calc(var(--h)*.64);width:calc(var(--h)*1.35);border:0;border-radius:calc(var(--radius)*.72);padding:3px;background:var(--pair-a);display:flex;align-items:center;justify-content:flex-end}.vt-catalog-switch span{height:calc(100% - 2px);aspect-ratio:1;border-radius:calc(var(--radius)*.55);background:var(--pair-b)}.vt-catalog-segmented{display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden}.vt-catalog-segmented button{border:0;border-right:var(--stroke) solid #000;background:var(--pair-b);font:inherit}.vt-catalog-segmented button:first-child{background:var(--pair-a)}.vt-catalog-segmented button:last-child{border-right:0}.vt-catalog-button-group{display:flex;flex-wrap:wrap;gap:4px}.vt-spectrum-tag,.vt-status-badge,.vt-alpha-tag{display:inline-flex;align-items:center;gap:5px;border-radius:999px;background:var(--pair-a);font-weight:1000;text-transform:uppercase;letter-spacing:-.035em;padding:3px 4px 3px 9px}.vt-spectrum-tag button{border:0;border-radius:50%;background:var(--pair-b);display:grid;place-items:center;padding:2px}.vt-spectrum-tag svg{width:1em;height:1em;stroke-width:4}.vt-status-badge{padding-right:9px}.vt-status-badge i{width:.72em;height:.72em;border-radius:50%;background:var(--pair-b)}.vt-catalog-progress{height:calc(var(--h)*.5);border:var(--stroke) solid #000;border-radius:999px;overflow:hidden;position:relative;background:var(--pair-b)}.vt-catalog-progress span{display:block;height:100%;background:var(--pair-a)}.vt-catalog-progress b{position:absolute;inset:0;display:grid;place-items:center;font-size:10px}.vt-catalog-stat{border:var(--stroke) solid #000;border-radius:var(--radius);padding:8px;background:var(--pair-b);display:grid;grid-template-columns:1fr auto;gap:2px 8px}.vt-catalog-stat small{font-weight:1000}.vt-catalog-stat strong{font-size:calc(var(--fs)*1.45);line-height:.9}.vt-catalog-stat span{grid-column:2;grid-row:1/3;align-self:center;background:var(--pair-a);border-radius:999px;padding:4px;font-weight:1000}.vt-catalog-metric-strip{display:grid;grid-template-columns:repeat(3,1fr);border:var(--stroke) solid #000;border-radius:var(--radius);overflow:hidden}.vt-catalog-metric-strip b{padding:7px;background:var(--pair-b);border-right:var(--stroke) solid #000;font-size:11px}.vt-catalog-metric-strip b:nth-child(2){background:var(--pair-a)}.vt-catalog-metric-strip b:last-child{border:0}.vt-catalog-tooltip{display:inline-block;border:var(--stroke) solid #000;border-radius:var(--radius);background:var(--pair-a);padding:6px 9px;font-weight:1000}.vt-catalog-popover,.vt-catalog-disclosure{border:var(--stroke) solid #000;border-radius:var(--radius);overflow:hidden}.vt-catalog-popover header,.vt-catalog-disclosure header{min-height:var(--h);display:grid;grid-template-columns:var(--h) 1fr var(--h);align-items:center;background:var(--pair-b);border-bottom:var(--stroke) solid #000;font-weight:1000;text-transform:uppercase}.vt-catalog-popover header>svg,.vt-catalog-disclosure header>svg{justify-self:center}.vt-catalog-popover header button{height:100%;border:0;border-left:var(--stroke) solid #000;background:var(--pair-a);display:grid;place-items:center}.vt-catalog-popover p,.vt-catalog-disclosure p{margin:0;padding:10px;font-weight:800}.vt-catalog-divider{border:0;border-top:var(--stroke) solid var(--pair-a);margin:calc(var(--h)*.5) 0}.vt-catalog-hscroll{height:var(--h);display:grid;grid-template-columns:var(--h) 1fr var(--h);align-items:center}.vt-catalog-hscroll button,.vt-catalog-vscroll button{height:100%;border:var(--stroke) solid #000;background:var(--pair-a);display:grid;place-items:center}.vt-catalog-hscroll span,.vt-catalog-vscroll span{height:calc(var(--h)*.34);background:var(--pair-b);border:var(--stroke) solid #000;position:relative}.vt-catalog-hscroll span i{position:absolute;left:20%;width:38%;height:100%;background:var(--pair-a)}.vt-catalog-vscroll{height:calc(var(--h)*3);width:var(--h);display:grid;grid-template-rows:var(--h) 1fr var(--h)}.vt-catalog-vscroll span{height:auto;width:calc(var(--h)*.34);justify-self:center}.vt-catalog-vscroll span i{position:absolute;top:20%;height:38%;width:100%;background:var(--pair-a)}.vt-catalog-button.is-disabled,.vt-catalog-disabled-split{filter:grayscale(1);opacity:.48;box-shadow:none}.vt-catalog-disabled-split{display:grid;grid-template-columns:var(--h) 1fr;overflow:hidden}.vt-catalog-disabled-split span{display:grid;place-items:center;border-right:var(--stroke) solid #000}.vt-catalog-disabled-split b{display:grid;place-items:center}.vt-catalog-upload{min-height:calc(var(--h)*2.4);border:var(--stroke) solid #000;border-radius:var(--radius);background:repeating-linear-gradient(135deg,var(--pair-a) 0 8px,var(--pair-b) 8px 16px);display:grid;place-items:center;align-content:center;gap:5px;text-transform:uppercase}.vt-catalog-pagination{display:flex;gap:4px}.vt-catalog-pagination button{width:var(--h);height:var(--h);border:var(--stroke) solid #000;border-radius:var(--radius);background:var(--pair-a);font-weight:1000}.vt-catalog-asset{border:var(--stroke) solid #000;border-radius:var(--radius);overflow:hidden;background:#fff}.vt-catalog-asset header,.vt-catalog-asset footer{min-height:calc(var(--h)*.65);display:flex;align-items:center;gap:5px;padding:4px 7px;background:var(--pair-a);font-weight:1000;text-transform:uppercase}.vt-catalog-asset .preview{aspect-ratio:16/9;display:grid;place-items:center;background:var(--pair-b)}.vt-catalog-asset.is-portrait .preview{aspect-ratio:9/16;max-height:180px}.vt-catalog-asset footer{justify-content:space-between;background:#fff}.vt-catalog-asset footer button{border:0;background:var(--pair-b);border-radius:50%;display:grid;place-items:center}.vt-catalog-knob{display:flex;align-items:center;gap:8px}.vt-catalog-knob>span{width:var(--h);height:var(--h);border:var(--stroke) solid #000;border-radius:50%;background:var(--pair-a);position:relative}.vt-catalog-knob i{position:absolute;width:var(--stroke);height:34%;left:50%;top:8%;background:#000;border-radius:999px}.vt-catalog-controller-switch{height:var(--h);border:var(--stroke) solid #000;border-radius:var(--radius);background:var(--pair-b);display:flex;align-items:center;gap:8px;padding:4px 9px;font-weight:1000}.vt-catalog-controller-switch span{height:70%;aspect-ratio:1;border-radius:50%;background:var(--pair-a);border:var(--stroke) solid #000}.vt-catalog-led{display:flex;align-items:center;gap:7px;font-weight:1000}.vt-catalog-led i{width:calc(var(--h)*.42);height:calc(var(--h)*.42);border-radius:50%;background:var(--pair-a);box-shadow:0 0 0 4px color-mix(in srgb,var(--pair-a) 28%,transparent)}.vt-catalog-spectrum-row{display:flex;flex-wrap:wrap;gap:4px}.vt-alpha-tag{--pair-a:var(--alpha);background:color-mix(in srgb,var(--alpha) 28%,white);border:2px solid var(--alpha);color:color-mix(in srgb,var(--alpha) 70%,#000);padding:3px 7px}.vt-catalog-icon-rail{display:grid;grid-template-columns:var(--h) 1fr;overflow:hidden;background:var(--pair-b)}.vt-catalog-icon-rail span{display:grid;place-items:center;background:var(--pair-a);border-right:var(--stroke) solid #000}.vt-catalog-icon-rail b{display:grid;place-items:center}.vt-complete-catalog .vt-subtoolbox-binary,.vt-complete-catalog .vt-subtoolbox-chip{width:max-content;max-width:100%}@media(max-width:900px){.vt-catalog-levels{grid-template-columns:1fr}}@media(max-width:520px){.vt-complete-catalog-heading h2{font-size:20px}.vt-catalog-family{padding:8px}.vt-catalog-family h3{font-size:18px}.vt-catalog-demo{padding:7px}}
 
 /* Certification Wave 01 — buttons 1–5 use the same touch/press motion contract as the mature split controls. */
 .vt-complete-catalog :is(.vt-catalog-button,.vt-catalog-icon-button){
@@ -43,7 +43,7 @@
 }
 .vt-complete-catalog .vt-catalog-field:focus{
   background:#fff!important;outline:0!important;
-  box-shadow:inset 0 0 0 var(--stroke) var(--pair-a),0 0 0 calc(var(--stroke) + 3px) color-mix(in srgb,var(--pair-a) 48%,transparent)!important;
+  box-shadow:inset 0 0 0 var(--stroke) var(--pair-a)!important;
 }
 .vt-complete-catalog .vt-catalog-textarea{height:calc(var(--h)*1.65)!important;min-height:calc(var(--h)*1.65)!important;padding:12px!important;resize:vertical!important}
 
@@ -84,8 +84,9 @@
 .vt-complete-catalog :is(.vt-catalog-slider,.vt-catalog-range)>.rail svg{width:48%;height:48%;stroke:#000;stroke-width:3.5}
 .vt-complete-catalog :is(.vt-catalog-slider,.vt-catalog-range)>output{
  height:100%;display:grid;place-items:center;border-left:var(--stroke) solid #000;background:var(--pair-a);
- font:1000 var(--fs)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));letter-spacing:-.055em;
+ font:1000 var(--fs)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));letter-spacing:-.055em;white-space:nowrap;min-width:max(var(--h),5ch);
 }
+.vt-complete-catalog .vt-catalog-range{grid-template-columns:var(--h) minmax(0,1fr) max(calc(var(--h)*1.45),5ch)}
 .vt-complete-catalog .slider-center,.vt-complete-catalog .range-center{position:relative;display:grid;align-items:center;min-width:0;padding:0 10px}
 .vt-complete-catalog .vt-catalog-slider input[type=range]{
  appearance:none;-webkit-appearance:none;width:100%;height:calc(var(--h)*.58);margin:0;background:transparent;touch-action:pan-y;
@@ -180,7 +181,7 @@
  background:color-mix(in srgb,var(--pair-b) 50%,white);caret-color:var(--pair-a);
  transition:background 180ms ease-out,box-shadow 180ms ease-out;
 }
-.vt-complete-catalog .vt-catalog-split-field:focus-within{box-shadow:0 0 0 calc(var(--stroke) + 3px) color-mix(in srgb,var(--pair-a) 48%,transparent)!important}
+.vt-complete-catalog .vt-catalog-split-field:focus-within{box-shadow:none!important}
 .vt-complete-catalog .vt-catalog-split-field input:focus{background:#fff!important;box-shadow:inset 0 0 0 var(--stroke) var(--pair-a)!important}
 
 /* Settings switch: exact symmetric inset at both travel endpoints. */
@@ -333,4 +334,492 @@
  color:var(--alpha-deep)!important;
  font-size:calc(var(--fs)*.78)!important;
  font-weight:1000!important;
+}
+
+/* ==========================================================================
+   COMPONENT LIBRARY CERTIFICATION WAVE 04
+   Source-aligned corrections from the standalone Toolbox library + Widget tag
+   reference. Geometry is level-owned; interactions are real, not static demos.
+   ========================================================================== */
+
+/* 06 / 07 — Split Left + Head/Tail: exact-square rail, level type and icon DNA. */
+.vt-complete-catalog .vt-catalog-split-primitive{
+  width:100%!important;
+  height:var(--h)!important;
+  min-height:var(--h)!important;
+  border-width:var(--stroke)!important;
+  border-radius:var(--radius)!important;
+  font:1000 var(--fs)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+  letter-spacing:-.055em!important;
+}
+.vt-complete-catalog .vt-catalog-split-primitive .vt-subtoolbox-split-button-rail{
+  width:var(--h)!important;min-width:var(--h)!important;max-width:var(--h)!important;
+  height:var(--h)!important;flex:0 0 var(--h)!important;padding:0!important;
+  border-right-width:var(--stroke)!important;display:grid!important;place-items:center!important;
+}
+.vt-complete-catalog .vt-catalog-split-primitive .vt-subtoolbox-split-button-label{
+  min-width:0!important;display:grid!important;place-items:center!important;
+  padding:0 calc(var(--h)*.16)!important;font:inherit!important;
+}
+.vt-complete-catalog .vt-catalog-split-primitive svg,
+.vt-complete-catalog .vt-catalog-stepper svg,
+.vt-complete-catalog .vt-catalog-pagination svg{
+  width:calc(var(--h)*.55)!important;height:calc(var(--h)*.55)!important;
+  stroke-width:3.25!important;
+}
+.vt-complete-catalog .is-l0.vt-catalog-split-primitive svg,
+.vt-complete-catalog .vt-catalog-demo.is-l0 .vt-catalog-stepper svg,
+.vt-complete-catalog .vt-catalog-demo.is-l0 .vt-catalog-pagination svg{stroke-width:3.75!important}
+.vt-complete-catalog .is-l1.vt-catalog-split-primitive svg,
+.vt-complete-catalog .vt-catalog-demo.is-l1 .vt-catalog-stepper svg,
+.vt-complete-catalog .vt-catalog-demo.is-l1 .vt-catalog-pagination svg{stroke-width:3.4!important}
+.vt-complete-catalog .is-l2.vt-catalog-split-primitive svg,
+.vt-complete-catalog .vt-catalog-demo.is-l2 .vt-catalog-stepper svg,
+.vt-complete-catalog .vt-catalog-demo.is-l2 .vt-catalog-pagination svg{stroke-width:3!important}
+
+/* 08–10 — menus: centered labels/options; split-menu options repeat the split rail. */
+.vt-complete-catalog .vt-catalog-menu .menu-panel button{
+  min-height:var(--h)!important;padding:0!important;
+  display:grid!important;place-items:center!important;text-align:center!important;
+  font:1000 var(--fs)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+  letter-spacing:-.055em!important;
+}
+.vt-complete-catalog .vt-catalog-menu .menu-panel button:not(.is-split-option){
+  grid-template-columns:1fr!important;
+}
+.vt-complete-catalog .vt-catalog-menu .menu-panel .is-split-option{
+  grid-template-columns:var(--h) minmax(0,1fr)!important;
+}
+.vt-complete-catalog .vt-catalog-menu .menu-option-rail{
+  width:var(--h);height:100%;display:grid;place-items:center;
+  background:var(--pair-a);border-right:var(--stroke) solid #000;
+}
+.vt-complete-catalog .vt-catalog-menu .menu-option-rail svg{
+  width:52%;height:52%;stroke-width:3.4;
+}
+.vt-complete-catalog .vt-catalog-menu .menu-option-label{
+  width:100%;height:100%;display:grid;place-items:center;text-align:center;
+}
+.vt-complete-catalog .vt-catalog-menu .menu-label{
+  justify-content:center!important;text-align:center!important;
+}
+.vt-complete-catalog .vt-catalog-menu .menu-label>b{
+  width:100%;padding:0!important;text-align:center!important;
+}
+
+/* 12–17 — one field-state contract.
+   Plain fields use pair-A as the inset/caret color and pair-B as focus glow.
+   Split-left fields invert the body contract: pair-A rail + pair-B field.
+   Rest = 50% tint with a fully opaque inset color.
+   Focus = white interior + retained inset + dense-to-soft opposite-pair glow. */
+.vt-complete-catalog .vt-catalog-field{
+  --field-accent:var(--pair-a);
+  --field-glow:var(--pair-b);
+  font:1000 var(--fs)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+  letter-spacing:-.055em!important;text-transform:uppercase;
+  color:#000!important;caret-color:var(--field-accent)!important;
+  background:color-mix(in srgb,var(--field-accent) 50%,white)!important;
+  box-shadow:inset 0 0 0 var(--stroke) var(--field-accent)!important;
+}
+.vt-complete-catalog .vt-catalog-field:focus{
+  background:#fff!important;
+  box-shadow:
+    inset 0 0 0 var(--stroke) var(--field-accent),
+    0 0 3px calc(var(--stroke)*.75) color-mix(in srgb,var(--field-glow) 78%,transparent),
+    0 0 calc(var(--h)*.20) calc(var(--stroke)*1.1) color-mix(in srgb,var(--field-glow) 48%,transparent),
+    0 0 calc(var(--h)*.42) calc(var(--stroke)*.25) color-mix(in srgb,var(--field-glow) 24%,transparent)!important;
+}
+.vt-complete-catalog .vt-catalog-split-field{
+  --field-accent:var(--pair-b);
+  --field-glow:var(--pair-a);
+  box-shadow:none!important;
+  background:var(--pair-b)!important;
+}
+.vt-complete-catalog .vt-catalog-split-field>span{
+  background:var(--pair-a)!important;
+  border-right:var(--stroke) solid #000!important;
+}
+.vt-complete-catalog .vt-catalog-split-field input{
+  font:1000 var(--fs)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+  letter-spacing:-.055em!important;text-transform:uppercase;
+  color:#000!important;caret-color:var(--field-accent)!important;
+  background:color-mix(in srgb,var(--field-accent) 50%,white)!important;
+  box-shadow:inset 0 0 0 var(--stroke) var(--field-accent)!important;
+}
+.vt-complete-catalog .vt-catalog-split-field:focus-within{
+  box-shadow:
+    0 0 3px calc(var(--stroke)*.75) color-mix(in srgb,var(--field-glow) 78%,transparent),
+    0 0 calc(var(--h)*.20) calc(var(--stroke)*1.1) color-mix(in srgb,var(--field-glow) 48%,transparent),
+    0 0 calc(var(--h)*.42) calc(var(--stroke)*.25) color-mix(in srgb,var(--field-glow) 24%,transparent)!important;
+}
+.vt-complete-catalog .vt-catalog-split-field input:focus{
+  background:#fff!important;
+  box-shadow:inset 0 0 0 var(--stroke) var(--field-accent)!important;
+}
+.vt-complete-catalog :is(.vt-catalog-field,.vt-catalog-split-field input)::placeholder{
+  color:#8b8b8b!important;opacity:1!important;
+  font:1000 var(--fs)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+  letter-spacing:-.055em!important;text-transform:uppercase!important;
+}
+.vt-complete-catalog .vt-catalog-split-field>span svg{
+  width:calc(var(--h)*.52);height:calc(var(--h)*.52);stroke-width:3.4;
+}
+.vt-complete-catalog .vt-catalog-stepper button svg{
+  width:calc(var(--h)*.52)!important;height:calc(var(--h)*.52)!important;
+}
+
+/* 18 / 19 — V26 slider authority.
+   Square primary-color rail + opposite-color body + square primary-color value rail.
+   Track is a compact white slot with black inset edge; handles are centered circles
+   with no extra border/shadow. Range reuses the same anatomy with two handles. */
+.vt-complete-catalog .vt-catalog-slider,
+.vt-complete-catalog .vt-catalog-range{
+  --slider-color:var(--pair-a);
+  --slider-opposite:var(--pair-b);
+  --slider-track:max(8px,calc(var(--h)*.208));
+  --slider-thumb:max(16px,calc(var(--h)*.46));
+  --slider-track-stroke:2px;
+  width:100%!important;height:var(--h)!important;
+  display:grid!important;grid-template-columns:var(--h) minmax(0,1fr) var(--h)!important;
+  padding:0!important;border:var(--stroke) solid #000!important;border-radius:var(--radius)!important;
+  overflow:hidden!important;background:var(--slider-opposite)!important;
+  box-shadow:none!important;align-items:stretch!important;
+}
+.vt-complete-catalog :is(.vt-catalog-slider,.vt-catalog-range)>.rail,
+.vt-complete-catalog :is(.vt-catalog-slider,.vt-catalog-range)>output{
+  width:var(--h)!important;height:100%!important;min-width:var(--h)!important;
+  padding:0!important;border:0!important;border-radius:0!important;
+  background:var(--slider-color)!important;box-shadow:none!important;
+  display:grid!important;place-items:center!important;
+  font:1000 calc(var(--fs)*.72)/.8 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+  letter-spacing:-.055em!important;white-space:nowrap!important;
+}
+.vt-complete-catalog :is(.vt-catalog-slider,.vt-catalog-range)>.rail{
+  border-right:var(--stroke) solid #000!important;
+}
+.vt-complete-catalog :is(.vt-catalog-slider,.vt-catalog-range)>output{
+  border-left:var(--stroke) solid #000!important;
+}
+.vt-complete-catalog .vt-catalog-slider .slider-glyph{
+  font:1000 calc(var(--fs)*.78)/.8 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+}
+.vt-complete-catalog :is(.slider-center,.range-center){
+  position:relative!important;min-width:0!important;height:100%!important;
+  display:grid!important;align-items:center!important;
+  padding:0 calc(var(--h)*.18)!important;background:var(--slider-opposite)!important;
+}
+
+/* Single slider: this mirrors the standalone V26 input itself as the slot. */
+.vt-complete-catalog .vt-catalog-slider input[type=range]{
+  appearance:none!important;-webkit-appearance:none!important;
+  width:100%!important;height:var(--slider-track)!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:999px!important;
+  background:linear-gradient(to right,var(--slider-color) 0 var(--pct),#fff var(--pct) 100%)!important;
+  box-shadow:inset 0 0 0 var(--slider-track-stroke) #000!important;
+}
+.vt-complete-catalog .vt-catalog-slider input[type=range]::-webkit-slider-runnable-track{
+  height:var(--slider-track)!important;background:transparent!important;border:0!important;
+}
+.vt-complete-catalog .vt-catalog-slider input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none!important;
+  width:var(--slider-thumb)!important;height:var(--slider-thumb)!important;
+  margin-top:calc((var(--slider-track) - var(--slider-thumb))/2)!important;
+  border:0!important;border-radius:50%!important;background:var(--slider-color)!important;
+  box-shadow:none!important;
+}
+.vt-complete-catalog .vt-catalog-slider input[type=range]::-moz-range-track{
+  height:var(--slider-track)!important;background:transparent!important;border:0!important;
+}
+.vt-complete-catalog .vt-catalog-slider input[type=range]::-moz-range-thumb{
+  width:var(--slider-thumb)!important;height:var(--slider-thumb)!important;
+  border:0!important;border-radius:50%!important;background:var(--slider-color)!important;
+  box-shadow:none!important;
+}
+
+/* Dual range: same centered slot and circular handle DNA, two independent thumbs. */
+.vt-complete-catalog .vt-catalog-range .range-track{
+  position:absolute!important;left:calc(var(--h)*.18)!important;right:calc(var(--h)*.18)!important;top:50%!important;
+  height:var(--slider-track)!important;transform:translateY(-50%)!important;
+  border:0!important;border-radius:999px!important;background:#fff!important;
+  box-shadow:inset 0 0 0 var(--slider-track-stroke) #000!important;overflow:hidden!important;
+}
+.vt-complete-catalog .vt-catalog-range .range-track:after{
+  content:"";position:absolute;inset:0;border-radius:inherit;
+  box-shadow:inset 0 0 0 var(--slider-track-stroke) #000;pointer-events:none;
+}
+.vt-complete-catalog .vt-catalog-range .range-fill{
+  position:absolute!important;top:0!important;bottom:0!important;background:var(--slider-color)!important;
+}
+.vt-complete-catalog .vt-catalog-range input[type=range]{
+  position:absolute!important;left:calc(var(--h)*.18)!important;right:calc(var(--h)*.18)!important;top:50%!important;
+  width:calc(100% - (var(--h)*.36))!important;height:var(--slider-thumb)!important;
+  transform:translateY(-50%)!important;
+  appearance:none!important;-webkit-appearance:none!important;
+  margin:0!important;padding:0!important;background:transparent!important;pointer-events:none!important;
+}
+.vt-complete-catalog .vt-catalog-range input[type=range]::-webkit-slider-runnable-track{
+  height:var(--slider-track)!important;background:transparent!important;border:0!important;
+}
+.vt-complete-catalog .vt-catalog-range input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none!important;
+  width:var(--slider-thumb)!important;height:var(--slider-thumb)!important;
+  margin-top:calc((var(--slider-track) - var(--slider-thumb))/2)!important;
+  border:0!important;border-radius:50%!important;background:var(--slider-color)!important;
+  box-shadow:none!important;pointer-events:auto!important;
+}
+.vt-complete-catalog .vt-catalog-range input[type=range]::-moz-range-track{
+  height:var(--slider-track)!important;background:transparent!important;border:0!important;
+}
+.vt-complete-catalog .vt-catalog-range input[type=range]::-moz-range-thumb{
+  width:var(--slider-thumb)!important;height:var(--slider-thumb)!important;
+  border:0!important;border-radius:50%!important;background:var(--slider-color)!important;
+  box-shadow:none!important;pointer-events:auto!important;
+}
+
+/* 20 / 21 — OFF state is the same family color at 50% opacity. */
+.vt-complete-catalog .vt-catalog-toggle:not(.is-on),
+.vt-complete-catalog .vt-catalog-switch:not(.is-on){
+  background:color-mix(in srgb,var(--pair-a) 50%,transparent)!important;
+}
+
+/* 22 — exact level-aware checkbox; X uses the opposite pair color. */
+.vt-complete-catalog .vt-catalog-checkbox{
+  width:calc(var(--h)*.68)!important;height:calc(var(--h)*.68)!important;
+  min-width:calc(var(--h)*.68)!important;min-height:calc(var(--h)*.68)!important;
+  background:var(--pair-a)!important;
+}
+.vt-complete-catalog .vt-catalog-checkbox span{
+  width:84%!important;height:84%!important;
+}
+.vt-complete-catalog .vt-catalog-checkbox span:before,
+.vt-complete-catalog .vt-catalog-checkbox span:after{
+  background:var(--pair-b)!important;height:max(4px,calc(var(--stroke)*1.55))!important;border-radius:999px!important;
+}
+
+/* 24 — segmented choices are real toggles. */
+.vt-complete-catalog .vt-catalog-segmented button{
+  background:var(--pair-b)!important;
+  font:1000 var(--fs)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+}
+.vt-complete-catalog .vt-catalog-segmented button.is-active{background:var(--pair-a)!important}
+
+/* 25 — grouped actions inherit level height/type instead of primitive defaults. */
+.vt-complete-catalog .vt-catalog-button-group{
+  display:inline-grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;
+}
+.vt-complete-catalog .vt-catalog-button-group button{
+  height:var(--h);min-width:calc(var(--h)*1.5);padding:0 calc(var(--h)*.22);
+  border:var(--stroke) solid #000;border-radius:var(--radius);background:var(--pair-a);
+  font:1000 var(--fs)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.055em;
+}
+
+/* 26–29 — level-aware tags and functional tag editor. */
+.vt-complete-catalog :is(.vt-catalog-tag,.vt-spectrum-tag,.vt-catalog-selectable-tag){
+  --tag-h:calc(var(--h)*.58);min-height:var(--tag-h);height:var(--tag-h);
+  display:inline-flex;align-items:center;justify-content:center;gap:calc(var(--tag-h)*.12);
+  padding:0 calc(var(--tag-h)*.34);border:var(--stroke) solid var(--pair-a);
+  border-radius:999px;background:color-mix(in srgb,var(--pair-a) 34%,white);
+  color:var(--pair-a);font:1000 calc(var(--fs)*.72)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.035em;text-transform:uppercase;
+}
+.vt-complete-catalog .vt-spectrum-tag{padding-right:calc(var(--tag-h)*.10)}
+.vt-complete-catalog .vt-spectrum-tag button{
+  width:calc(var(--tag-h)*.72);height:calc(var(--tag-h)*.72);padding:0;
+  border:0;border-radius:50%;background:var(--pair-b);display:grid;place-items:center;
+}
+.vt-complete-catalog .vt-spectrum-tag button svg{width:62%;height:62%;stroke-width:4}
+.vt-complete-catalog .vt-catalog-selectable-tag{
+  cursor:pointer;background:color-mix(in srgb,var(--pair-b) 30%,white);border-color:var(--pair-b);color:var(--pair-b);
+}
+.vt-complete-catalog .vt-catalog-selectable-tag.is-selected{
+  background:var(--pair-a);border-color:var(--pair-a);color:var(--pair-b);
+}
+.vt-complete-catalog .vt-catalog-selectable-tag svg{width:calc(var(--tag-h)*.5);height:calc(var(--tag-h)*.5);stroke-width:4}
+.vt-complete-catalog .vt-catalog-tag-editor{
+  min-height:var(--h);display:flex;align-items:center;flex-wrap:wrap;gap:6px;
+  padding:4px;border:var(--stroke) solid #000;border-radius:var(--radius);
+  background:color-mix(in srgb,var(--pair-b) 20%,white);
+}
+.vt-complete-catalog .tag-editor-tags{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.vt-complete-catalog .vt-catalog-tag-editor>input{
+  min-width:6ch;flex:1 1 90px;height:calc(var(--h)*.68);border:var(--stroke) solid #000;border-radius:calc(var(--radius)*.65);
+  background:color-mix(in srgb,var(--pair-a) 50%,white);box-shadow:inset 0 0 0 var(--stroke) var(--pair-a);
+  padding:0 8px;outline:0;caret-color:var(--pair-a);
+  font:1000 calc(var(--fs)*.78)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));text-transform:uppercase;
+}
+.vt-complete-catalog .vt-catalog-tag-editor>input:focus{
+  background:#fff;box-shadow:inset 0 0 0 var(--stroke) var(--pair-a),0 0 calc(var(--h)*.22) color-mix(in srgb,var(--pair-b) 62%,transparent);
+}
+.vt-complete-catalog .vt-catalog-tag-editor>.add,
+.vt-complete-catalog .vt-catalog-tag-editor>.submit{
+  width:calc(var(--h)*.68);height:calc(var(--h)*.68);padding:0;border:var(--stroke) solid #000;border-radius:calc(var(--radius)*.65);
+  display:grid;place-items:center;background:var(--pair-a);
+}
+.vt-complete-catalog .vt-catalog-tag-editor>.submit{background:var(--pair-b)}
+.vt-complete-catalog .vt-catalog-tag-editor>:is(.add,.submit) svg{width:55%;height:55%;stroke-width:4}
+
+
+/* Preserve the previous solid removable/editor tag face while retaining the
+   new level sizing and editor behavior. */
+.vt-complete-catalog .vt-spectrum-tag{
+  border:0!important;
+  background:var(--pair-a)!important;
+  color:#000!important;
+  box-shadow:none!important;
+}
+.vt-complete-catalog .vt-spectrum-tag button{
+  background:var(--pair-b)!important;
+}
+/* 30 / 31 — distinct badge DNA at each level. */
+.vt-complete-catalog .vt-catalog-fill-badge,
+.vt-complete-catalog .vt-status-badge{
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  padding:0 8px;border-radius:5px;font-weight:1000;text-transform:uppercase;letter-spacing:-.035em;
+}
+.vt-complete-catalog .vt-catalog-demo.is-l0 :is(.vt-catalog-fill-badge,.vt-status-badge){height:28px;font-size:14px}
+.vt-complete-catalog .vt-catalog-demo.is-l1 :is(.vt-catalog-fill-badge,.vt-status-badge){height:24px;font-size:12px}
+.vt-complete-catalog .vt-catalog-demo.is-l2 :is(.vt-catalog-fill-badge,.vt-status-badge){height:18px;font-size:9px}
+
+/* 32 — both rounded and rectangular progress anatomy. */
+.vt-complete-catalog .vt-catalog-progress-stack{display:grid;gap:7px;width:100%}
+.vt-complete-catalog .vt-catalog-progress{
+  width:100%;height:calc(var(--h)*.42);border:var(--stroke) solid #000;overflow:hidden;background:var(--pair-b);
+}
+.vt-complete-catalog .vt-catalog-progress.is-rounded{border-radius:999px}
+.vt-complete-catalog .vt-catalog-progress.is-rect{border-radius:calc(var(--radius)*.4)}
+.vt-complete-catalog .vt-catalog-progress span{height:100%;display:block;background:var(--pair-a)}
+
+/* 33 — standalone-library progress + value composition. */
+.vt-complete-catalog .vt-catalog-progress-value{
+  width:100%;height:var(--h);display:grid;grid-template-columns:minmax(0,1fr) max(var(--h),4.5ch);
+  border:var(--stroke) solid #000;border-radius:var(--radius);overflow:hidden;background:#fff;
+}
+.vt-complete-catalog .vt-catalog-progress-value .bar{
+  padding:calc(var(--h)*.17);display:flex;align-items:center;background:#fff;
+}
+.vt-complete-catalog .vt-catalog-progress-value .bar:before{
+  content:"";position:absolute;
+}
+.vt-complete-catalog .vt-catalog-progress-value .bar span{
+  width:68%;height:calc(var(--h)*.30);border:var(--stroke) solid #000;border-radius:999px;background:var(--pair-a);
+}
+.vt-complete-catalog .vt-catalog-progress-value output{
+  border-left:var(--stroke) solid #000;background:var(--pair-b);display:grid;place-items:center;
+  font:1000 var(--fs)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+}
+
+/* 34 — KPI card fills its white canvas and scales by level. */
+.vt-complete-catalog .vt-catalog-kpi{
+  width:100%;border:var(--stroke) solid #000;border-radius:var(--radius);overflow:hidden;
+  box-shadow:calc(var(--stroke) + 2px) calc(var(--stroke) + 2px) 0 color-mix(in srgb,var(--pair-b) 42%,transparent);
+}
+.vt-complete-catalog .vt-catalog-kpi>header{
+  height:var(--h);display:grid;place-items:center;background:var(--pair-a);
+  border-bottom:var(--stroke) solid #000;
+  font:1000 var(--fs)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.055em;
+}
+.vt-complete-catalog .vt-catalog-kpi .kpi-canvas{
+  min-height:calc(var(--h)*1.65);display:grid;place-items:center;background:#fff;
+}
+.vt-complete-catalog .vt-catalog-kpi .kpi-canvas strong{
+  font:1000 calc(var(--fs)*2.35)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.065em;
+}
+
+/* 37 / 61 — correct connected-spout tooltip anatomy above the trigger. */
+.vt-complete-catalog .vt-catalog-tooltip-demo{
+  position:relative;display:inline-grid;place-items:center;padding-top:calc(var(--h)*1.48)!important;
+}
+.vt-complete-catalog .vt-catalog-tooltip-demo>button{
+  width:var(--h);height:var(--h);padding:0;border:0;border-radius:calc(var(--radius)*.75);
+  background:var(--pair-a);display:grid;place-items:center;
+  font:1000 calc(var(--fs)*1.15)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+}
+.vt-complete-catalog .vt-catalog-tooltip{
+  position:absolute!important;left:50%!important;bottom:calc(var(--h) + calc(var(--h)*.26))!important;top:auto!important;
+  transform:translateX(-50%)!important;
+  min-width:max-content;padding:calc(var(--h)*.18) calc(var(--h)*.30)!important;
+  border:var(--stroke) solid #000!important;border-radius:var(--radius)!important;
+  background:var(--pair-b)!important;color:#000!important;
+  font:1000 var(--fs)/.9 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+  letter-spacing:-.055em!important;
+  box-shadow:calc(var(--stroke) + 2px) calc(var(--stroke) + 2px) 0 color-mix(in srgb,var(--pair-a) 42%,transparent)!important;
+}
+.vt-complete-catalog .vt-catalog-tooltip:before,
+.vt-complete-catalog .vt-catalog-tooltip:after{
+  content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);
+  width:0;height:0;pointer-events:none;
+}
+.vt-complete-catalog .vt-catalog-tooltip:before{
+  border-left:calc(var(--h)*.18) solid transparent;
+  border-right:calc(var(--h)*.18) solid transparent;
+  border-top:calc(var(--h)*.18) solid #000;
+}
+.vt-complete-catalog .vt-catalog-tooltip:after{
+  margin-top:calc(var(--stroke)*-1);
+  border-left:calc(var(--h)*.13) solid transparent;
+  border-right:calc(var(--h)*.13) solid transparent;
+  border-top:calc(var(--h)*.13) solid var(--pair-b);
+}
+.vt-complete-catalog .vt-catalog-tooltip-demo.is-v31 .vt-catalog-tooltip{
+  background:var(--pair-a)!important;
+  box-shadow:3px 3px 0 color-mix(in srgb,var(--pair-b) 42%,transparent)!important;
+}
+.vt-complete-catalog .vt-catalog-tooltip-demo.is-v31 .vt-catalog-tooltip:after{border-top-color:var(--pair-a)}
+.vt-complete-catalog .vt-catalog-tooltip-demo.is-dark .vt-catalog-tooltip{
+  background:#080808!important;color:#fff!important;border-color:#080808!important;box-shadow:none!important;
+}
+.vt-complete-catalog .vt-catalog-tooltip-demo.is-dark .vt-catalog-tooltip:before{border-top-color:#080808}
+.vt-complete-catalog .vt-catalog-tooltip-demo.is-dark .vt-catalog-tooltip:after{border-top-color:#080808}
+
+/* 39 — disclosure level type + no doubled bottom seam when collapsed. */
+.vt-complete-catalog .vt-catalog-disclosure .disclosure-head{
+  height:var(--h);font:1000 var(--fs)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.055em;
+}
+.vt-complete-catalog .vt-catalog-disclosure:not(.is-open) .disclosure-head{border-bottom:0!important}
+.vt-complete-catalog .vt-catalog-disclosure .disclosure-head svg{
+  width:calc(var(--h)*.5);height:calc(var(--h)*.5);stroke-width:3.4;
+}
+
+/* 47 — centered, level-scaled pagination arrows. */
+.vt-complete-catalog .vt-catalog-pagination button{
+  display:grid!important;place-items:center!important;padding:0!important;
+  min-width:var(--h)!important;width:var(--h)!important;height:var(--h)!important;
+  font:1000 var(--fs)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+}
+.vt-complete-catalog .vt-catalog-pagination button svg{
+  width:calc(var(--h)*.58)!important;height:calc(var(--h)*.58)!important;
+}
+
+/* 54 — active LED radiates a transparent pulse ring. */
+.vt-complete-catalog .vt-catalog-led i{
+  position:relative;isolation:isolate;
+}
+.vt-complete-catalog .vt-catalog-led.is-active i:before{
+  content:"";position:absolute;inset:-2px;border-radius:50%;
+  background:color-mix(in srgb,var(--pair-a) 42%,transparent);
+  z-index:-1;animation:vt-led-pulse 1.8s ease-out infinite;
+}
+@keyframes vt-led-pulse{
+  0%{transform:scale(.9);opacity:.78}
+  70%,100%{transform:scale(2.35);opacity:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .vt-complete-catalog .vt-catalog-led.is-active i:before{animation:none;opacity:.28;transform:scale(1.45)}
+}
+
+/* 55 — three-color chromatic tag recipe: stroke / fill / text are all
+   different hues; none is mixed with black. Widget-library reference uses
+   chromatic stroke + translucent fill, extended here with a separate text hue. */
+.vt-complete-catalog .vt-alpha-tag{
+  --tag-stroke:hsl(var(--alpha-h) 88% 58%);
+  --tag-fill-base:hsl(calc(var(--alpha-h) + 28) 88% 64%);
+  --tag-text:hsl(calc(var(--alpha-h) + 326) 92% 38%);
+  border-color:var(--tag-stroke)!important;
+  background:color-mix(in srgb,var(--tag-fill-base) 35%,white)!important;
+  color:var(--tag-text)!important;
+  font-size:calc(var(--fs)*.78)!important;font-weight:1000!important;
 }
