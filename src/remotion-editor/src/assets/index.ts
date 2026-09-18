@@ -30,6 +30,7 @@ export {
   loopRotation,
 } from './motion';
 export { createAssetTimelineObject } from './editorAdapter';
+export { validateAssetLibrary, assertAssetLibraryIntegrity } from './validation';
 export type {
   AssetDefinition,
   AssetCompositionProps,
@@ -46,3 +47,5 @@ export type {
   SafeAreaMetadata,
 } from './types';
 export type { CreateAssetTimelineObjectOptions, EditorAssetLayerPayload } from './editorAdapter';
+
+export type { ValidationCheck, AssetLibraryValidationReport } from './validation';
