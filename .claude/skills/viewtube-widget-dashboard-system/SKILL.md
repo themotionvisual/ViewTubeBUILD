@@ -26,7 +26,7 @@ Read the relevant references before changing code:
 - `references/data-integration-certification.md`
 - `references/css-management-and-deployment.md`
 
-Also inspect current canonical implementation: `WidgetRegistry.ts`, `WidgetRenderer.tsx`, `WidgetShell.tsx`, `WidgetPrimitives.tsx`, `WidgetPrimitiveExtensions.tsx`, `tokens.ts`, widget primitive CSS layers, responsive/mobile contracts, and the UI Reference Library widget.
+Also inspect current canonical implementation: `WidgetRegistry.ts`, `WidgetRenderer.tsx`, `WidgetShell.tsx`, `WidgetPrimitives.tsx` (canonical public API; `WidgetPrimitiveExtensions.tsx` is temporary compatibility implementation), `tokens.ts`, widget primitive CSS layers, responsive/mobile contracts, and the UI Reference Library widget.
 
 ## Universal build sequence
 

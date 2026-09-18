@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 
 const mobileCss = readFileSync(new URL("../widgetMobileContract.css", import.meta.url), "utf8")
 const barrierSource = readFileSync(new URL("../DashboardBarrier.tsx", import.meta.url), "utf8")
-const extensionSource = readFileSync(new URL("../WidgetPrimitiveExtensions.tsx", import.meta.url), "utf8")
+const primitiveSource = readFileSync(new URL("../WidgetPrimitives.tsx", import.meta.url), "utf8")
 const variantCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
 
 describe("mobile widget geometry contract", () => {
@@ -32,8 +32,8 @@ describe("mobile widget geometry contract", () => {
     for (let index = 1; index < imports.length; index += 1) {
       expect(barrierSource.indexOf(imports[index])).toBeGreaterThan(barrierSource.indexOf(imports[index - 1]))
     }
-    expect(extensionSource).not.toContain('import "./widgetPrimitive')
-    expect(extensionSource).not.toContain('import "./widgetMatrixPrimitives.css"')
+    expect(primitiveSource).not.toContain('import "./widgetPrimitive')
+    expect(primitiveSource).not.toContain('import "./widgetMatrixPrimitives.css"')
   })
 
   it("stacks reference-library comparison variants before split-left labels become unusable", () => {
