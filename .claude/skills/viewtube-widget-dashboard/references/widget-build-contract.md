@@ -30,7 +30,7 @@ Use these canonical building blocks instead of recreating them:
 - `WidgetSelect` / `WidgetSizedSelect`
 - `WidgetSizedButton`, `WidgetLeftSplitButton`
 - `WidgetTextInput`
-- video and other domain selectors from `WidgetPrimitiveExtensions`
+- video and other domain selectors from the canonical `WidgetPrimitives` public API
 
 If a needed pattern repeats in two or more widgets, promote it to a primitive or archetype recipe. If it is feature-specific, keep it beside the widget.
 
