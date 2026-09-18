@@ -302,9 +302,18 @@
   height: 55%;
   border-radius: 999px;
   background: transparent;
-  transition: background 160ms ease;
+  box-shadow: inset 0 0 0 0 var(--vt-tone-fill, var(--widget-color, #34cdea));
+  transform: scale(.2);
+  opacity: 0;
+  transition: background 120ms ease, transform 120ms ease, opacity 120ms ease;
 }
-.widget-radio.is-checked .widget-radio-dot { background: var(--vt-tone-fill, var(--widget-color, #34cdea)); }
+.widget-radio.is-checked .widget-radio-dot,
+.widget-radio[aria-checked="true"] .widget-radio-dot {
+  background: var(--vt-tone-fill, var(--widget-color, #34cdea)) !important;
+  box-shadow: inset 0 0 0 999px var(--vt-tone-fill, var(--widget-color, #34cdea));
+  transform: scale(1);
+  opacity: 1;
+}
 .widget-checkbox.is-checked { background: var(--vt-tone-fill, var(--widget-color, #34cdea)); }
 .widget-checkbox > svg {
   width: var(--vt-primitive-icon);

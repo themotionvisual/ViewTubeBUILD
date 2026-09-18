@@ -177,6 +177,7 @@ export const WidgetSection: React.FC<{
 export const WidgetDivider: React.FC<{
   edge?: "content" | "full"
   className?: string
+  aspect?: "16:9" | "1:1"
 }> = ({ edge = "content", className = "" }) => (
   <hr className={`widget-divider is-${edge} ${className}`.trim()} />
 )
@@ -623,11 +624,12 @@ export const WidgetMediaUploadFrame: React.FC<{
   onBrowse,
   onDropFile,
   className = "",
+  aspect = "16:9",
 }) => {
   const [isDragging, setIsDragging] = useState(false)
 
   return (
-    <section className={`widget-media-upload ${actionLabel ? "has-action" : ""} ${hasValue ? "has-value" : ""} ${isDragging ? "is-dragging" : ""} ${className}`.trim()}>
+    <section className={`widget-media-upload is-aspect-${aspect === "1:1" ? "square" : "video"} ${actionLabel ? "has-action" : ""} ${hasValue ? "has-value" : ""} ${isDragging ? "is-dragging" : ""} ${className}`.trim()}>
       {actionLabel ? <WidgetMediaUploadAction onClick={onBrowse}>{actionLabel}</WidgetMediaUploadAction> : null}
       <button
         type="button"

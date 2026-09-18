@@ -7785,3 +7785,63 @@ textarea.vt-textarea {
   height: auto;
 }
 :where(.dashboard-barrier) .widget-dropzone-end { display: none; }
+
+
+/* Upload Frame v2 — media geometry owns the frame. No stacked action strip,
+   no dashed legacy dropzone, no fixed button-like height. */
+:where(.dashboard-barrier) .widget-media-upload {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+:where(.dashboard-barrier) .widget-media-upload-frame,
+:where(.dashboard-barrier) .widget-dropzone {
+  position: relative;
+  width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, var(--widget-ink, #243247)) !important;
+  border-radius: var(--widget-module-radius, 8px);
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 14%, transparent) !important;
+  box-shadow: var(--widget-module-shadow, 4px) var(--widget-module-shadow, 4px) 0 color-mix(in srgb, var(--widget-color, #34cdea) 34%, transparent);
+  box-sizing: border-box;
+}
+:where(.dashboard-barrier) .widget-media-upload.is-aspect-square .widget-media-upload-frame,
+:where(.dashboard-barrier) .widget-dropzone.is-square {
+  aspect-ratio: 1 / 1;
+}
+:where(.dashboard-barrier) .widget-media-upload-empty,
+:where(.dashboard-barrier) .widget-dropzone {
+  place-content: center;
+  place-items: center;
+  justify-items: center;
+  text-align: center;
+}
+:where(.dashboard-barrier) .widget-media-upload-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 12px;
+}
+:where(.dashboard-barrier) .widget-media-upload-copy,
+:where(.dashboard-barrier) .widget-dropzone-copy {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+:where(.dashboard-barrier) .widget-media-upload-icon svg,
+:where(.dashboard-barrier) .widget-dropzone-icon svg {
+  width: clamp(28px, 10cqw, 48px);
+  height: auto;
+}
+:where(.dashboard-barrier) .widget-media-upload-action {
+  width: auto !important;
+  min-width: 0;
+  margin: 0 0 8px;
+}
