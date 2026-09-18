@@ -482,7 +482,6 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   <WidgetRadio
                     height={height}
                     tone={tone}
-                    name={`matrix-radio-${height}`}
                     label={`Select ${tone}`}
                     checked={matrixRadio === tone}
                     onChange={() => setMatrixRadio(tone)}
