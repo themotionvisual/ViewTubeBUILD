@@ -272,7 +272,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("1. Standard Controls", "Default / Primary / Secondary")}
             <p className="text-[10px] font-bold uppercase opacity-60">
-              Every component family uses the same three monochromatic color styles at 18 / 24 / 32 / 38px. Canonical type scale: 18px → 8px, 24px → 14px, 32px → 18px, 38px → 22px, all at weight 1000. 18px controls stay filled, borderless and shadowless; larger controls use a 2px stroke.
+              Every component family uses the same three monochromatic color styles at 18 / 24 / 32 / 38px. Canonical type scale: 18px → 8px, 24px → 16px, 32px → 21px, 38px → 26px, all at weight 1000. 18px controls stay filled, borderless and shadowless; larger controls use a 2px stroke.
             </p>
 
             <div className="widget-reference-family">
@@ -479,24 +479,20 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             </div>
 
             <div className="widget-reference-family">
-              {familyHeading("Spectrum Fill Badges", "12 colors · borderless · white text")}
+              {familyHeading("Spectrum Fill Badges", "12 unique fills · 18/24px · white text")}
               <div className="widget-reference-variants">
-                {WIDGET_BADGE_SPECTRUM.map((name) => (
-                  <div className="widget-reference-variant" key={name}>
-                    <small>{name}</small>
-                    <WidgetSpectrumFillBadge spectrum={name} height={24}>
-                      {name}
-                    </WidgetSpectrumFillBadge>
-                  </div>
-                ))}
+                {WIDGET_BADGE_SPECTRUM.map((name, index) => {
+                  const height = index % 2 === 0 ? 18 : 24
+                  return (
+                    <div className="widget-reference-variant" key={name}>
+                      <small>{name} · {height}px</small>
+                      <WidgetSpectrumFillBadge spectrum={name} height={height}>
+                        {name}
+                      </WidgetSpectrumFillBadge>
+                    </div>
+                  )
+                })}
               </div>
-              <SizeVariants>
-                {(height) => (
-                  <WidgetSpectrumFillBadge spectrum="royal" height={height}>
-                    Badge
-                  </WidgetSpectrumFillBadge>
-                )}
-              </SizeVariants>
             </div>
 
             <div className="widget-reference-family">
@@ -548,7 +544,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
 
         {(activeCategory === "all" || activeCategory === "tags") && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("4. Alphabetical Spectrum Tags", "A–Z mapped across all 12 colors")}
+            {sectionHeading("4. Infinite Spectrum Tags", "A–Z receives 26 distinct continuous-spectrum hues")}
             <div className="widget-reference-family">
               {familyHeading("Canonical Spectrum", "12 explicit palette slots")}
               <div className="flex flex-wrap gap-1">
@@ -558,7 +554,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
               </div>
             </div>
             <div className="widget-reference-family">
-              {familyHeading("Alphabetical Mapping", "First letter chooses a stable spectrum slot")}
+              {familyHeading("Alphabetical Mapping", "Every A–Z tag receives a distinct continuous-spectrum hue")}
               <div className="flex flex-wrap gap-1">
                 {ALPHABET.map((letter) => <WidgetAlphabeticalTag key={letter} label={letter} />)}
               </div>
