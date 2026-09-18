@@ -76,7 +76,7 @@
 .widget-text-input.vt-sized-control {
   width: 100%;
   padding-inline: 9px;
-  color: var(--widget-ink, var(--widget-border, #222));
+  color: var(--widget-ink, var(--widget-border, var(--widget-ink, #243247)));
   caret-color: currentColor;
 }
 
@@ -109,11 +109,11 @@
   border: 0 !important;
   box-shadow: none !important;
   background: color-mix(in srgb, var(--widget-color, #34cdea) 48%, white) !important;
-  color: var(--widget-ink, var(--widget-border, #222));
+  color: var(--widget-ink, var(--widget-border, var(--widget-ink, #243247)));
 }
 
 .widget-text-input.is-height-18::placeholder {
-  color: color-mix(in srgb, var(--widget-ink, #222) 64%, transparent);
+  color: color-mix(in srgb, var(--widget-ink, #243247) 64%, transparent);
   opacity: 1;
 }
 
@@ -132,7 +132,7 @@
   padding: 0 !important;
   overflow: hidden;
   background: #fff;
-  color: var(--widget-ink, var(--widget-border, #222));
+  color: var(--widget-ink, var(--widget-border, var(--widget-ink, #243247)));
 }
 
 .widget-split-button.is-left-split .widget-split-button-icon {
@@ -140,7 +140,7 @@
   height: 100%;
   display: grid;
   place-items: center;
-  border-right: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, currentColor));
+  border-right: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247)));
   background: color-mix(in srgb, var(--widget-color, #34cdea) 74%, white);
 }
 
@@ -182,7 +182,7 @@
   padding: 0 !important;
   overflow: hidden;
   background: color-mix(in srgb, var(--widget-color, #34cdea) 58%, white);
-  color: var(--widget-ink, var(--widget-border, #222));
+  color: var(--widget-ink, var(--widget-border, var(--widget-ink, #243247)));
   cursor: pointer;
 }
 
@@ -194,7 +194,7 @@
 
 .widget-video-select-trigger-icon {
   background: color-mix(in srgb, var(--widget-color, #34cdea) 82%, white);
-  border-right: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, currentColor));
+  border-right: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247)));
 }
 
 .widget-video-select-trigger.is-height-18 .widget-video-select-trigger-icon {
@@ -254,8 +254,8 @@
   overflow: auto;
   padding: 7px;
   background: var(--vt-tone-bg, #fff);
-  color: var(--vt-tone-ink, var(--widget-ink, #222));
-  border: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, #222));
+  color: var(--vt-tone-ink, var(--widget-ink, #243247));
+  border: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247)));
   border-radius: var(--vt-primitive-radius, 7px);
   box-shadow: 4px 4px 0 color-mix(in srgb, var(--widget-color, #34cdea) 45%, transparent);
 }
@@ -275,10 +275,10 @@
   gap: 8px;
   align-items: center;
   padding: 5px;
-  border: 2px solid color-mix(in srgb, var(--widget-border, #222) 72%, transparent);
+  border: 2px solid color-mix(in srgb, var(--widget-border, var(--widget-ink, #243247)) 72%, transparent);
   border-radius: var(--vt-primitive-radius, 7px);
   background: color-mix(in srgb, var(--vt-tone-bg, #fff) 86%, white);
-  color: var(--vt-tone-ink, var(--widget-ink, var(--widget-border, #222)));
+  color: var(--vt-tone-ink, var(--widget-ink, var(--widget-border, var(--widget-ink, #243247))));
   text-align: left;
   cursor: pointer;
 }
@@ -345,7 +345,7 @@
   border: var(--vt-primitive-stroke, 2px) solid var(--widget-border, var(--widget-ink, currentColor)) !important;
   border-radius: var(--vt-primitive-radius, 4px);
   background: color-mix(in srgb, var(--widget-color, #34cdea) 12%, white);
-  color: var(--widget-ink, var(--widget-border, #222));
+  color: var(--widget-ink, var(--widget-border, var(--widget-ink, #243247)));
 }
 
 .widget-progress-bar-fill {
