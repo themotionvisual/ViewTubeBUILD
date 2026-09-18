@@ -17,12 +17,12 @@ const TAU = Math.PI * 2;
 const resolveProps = (
   asset: AssetDefinition,
   input: AssetCompositionProps,
-): AssetVisualProps => ({
+): AssetVisualProps => asset.schema.parse({
   ...asset.defaults,
   ...Object.fromEntries(
     Object.entries(input).filter(([key, value]) => key !== 'assetId' && value !== undefined),
   ),
-}) as AssetVisualProps;
+});
 
 const WavePath: React.FC<{
   y: number;
