@@ -711,6 +711,25 @@ export const resolveAlphabeticalSpectrumSlot = (label: string): number => {
   return Math.round(((firstLetter.charCodeAt(0) - 65) * 11) / 25)
 }
 
+/** Continuous spectrum mapping for tags. A-Z receives 26 distinct hues rather
+ * than collapsing into the 12 named palette slots. Non-alphabetic labels use a
+ * deterministic full-label hash so the spectrum remains effectively unbounded. */
+export const resolveAlphabeticalSpectrumHue = (label: string): string => {
+  const normalized = label.trim().toUpperCase()
+  const firstLetter = normalized.match(/[A-Z]/)?.[0]
+  if (firstLetter && normalized.length === 1) {
+    const index = firstLetter.charCodeAt(0) - 65
+    return `hsl(${(index * 360) / 26} 82% 61%)`
+  }
+  let hash = 2166136261
+  for (let i = 0; i < normalized.length; i += 1) {
+    hash ^= normalized.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  const hue = ((hash >>> 0) % 360000) / 1000
+  return `hsl(${hue} 82% 61%)`
+}
+
 export const WidgetBadge: React.FC<{
   tone?: WidgetBadgeTone
   status?: WidgetBadgeStatus
@@ -736,15 +755,19 @@ export const WidgetAlphabeticalTag: React.FC<{
   tone?: WidgetBadgeTone
   height?: WidgetBadgeHeight
   className?: string
-}> = ({ label, tone, height = 18, className = "" }) => (
-  <WidgetBadge
-    tone={tone ?? resolveAlphabeticalSpectrumSlot(label)}
-    height={height}
-    className={`is-alphabetical ${className}`.trim()}
-  >
-    {label}
-  </WidgetBadge>
-)
+}> = ({ label, tone, height = 18, className = "" }) => {
+  if (tone !== undefined) {
+    return <WidgetBadge tone={tone} height={height} className={`is-alphabetical ${className}`.trim()}>{label}</WidgetBadge>
+  }
+  return (
+    <span
+      className={`vt-spectrum-badge is-height-${height} is-alphabetical ${className}`.trim()}
+      style={{ ["--vt-spectrum-badge-stroke" as string]: resolveAlphabeticalSpectrumHue(label) }}
+    >
+      <span>{label}</span>
+    </span>
+  )
+}
 
 
 // Canonical sized-control API.
