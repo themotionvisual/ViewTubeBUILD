@@ -507,3 +507,88 @@
 @media (prefers-reduced-motion: reduce) {
   .widget-toast-dismiss:hover { transform: none; }
 }
+
+
+/* Reference-library contract repair: square inner split bays, visible state
+   glyphs, and canonical typography for compound controls. */
+.widget-split-badge-icon,
+.widget-search-input-icon {
+  width: calc(var(--vt-primitive-height) - 4px) !important;
+  min-width: calc(var(--vt-primitive-height) - 4px) !important;
+  height: calc(var(--vt-primitive-height) - 4px) !important;
+  flex: 0 0 calc(var(--vt-primitive-height) - 4px) !important;
+}
+.is-height-18 > .widget-split-badge-icon,
+.is-height-18 > .widget-search-input-icon {
+  width: var(--vt-primitive-height) !important;
+  min-width: var(--vt-primitive-height) !important;
+  height: var(--vt-primitive-height) !important;
+  flex-basis: var(--vt-primitive-height) !important;
+}
+
+.widget-stepper-step,
+.widget-pagination-page {
+  box-sizing: border-box;
+  width: calc(var(--vt-primitive-height) - 4px);
+  min-width: calc(var(--vt-primitive-height) - 4px) !important;
+  padding-inline: 0;
+  flex: 0 0 calc(var(--vt-primitive-height) - 4px);
+}
+.is-height-18 > .widget-stepper-step,
+.is-height-18 > .widget-pagination-page {
+  width: var(--vt-primitive-height);
+  min-width: var(--vt-primitive-height) !important;
+  flex-basis: var(--vt-primitive-height);
+}
+
+.widget-split-badge-label,
+.widget-search-input > input,
+.widget-stepper,
+.widget-pagination,
+.widget-spectrum-fill-badge {
+  font-size: var(--vt-primitive-font) !important;
+  font-weight: 1000 !important;
+  line-height: 1 !important;
+}
+
+/* Radio selection is drawn independently of the tone fill so it can never
+   disappear when foreground/background colors coincide. */
+.widget-radio { position: relative; }
+.widget-radio.is-checked .widget-radio-dot,
+.widget-radio[aria-checked="true"] .widget-radio-dot { opacity: 0 !important; }
+.widget-radio.is-checked::after,
+.widget-radio[aria-checked="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 24%;
+  border-radius: 50%;
+  background: var(--widget-ink, #243247) !important;
+  opacity: 1 !important;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Checked boxes use a large thick rounded X, rendered in CSS so nested SVG
+   rules cannot suppress it. */
+.widget-checkbox { position: relative; }
+.widget-checkbox.is-checked > svg,
+.widget-checkbox[aria-checked="true"] > svg { display: none !important; }
+.widget-checkbox.is-checked::before,
+.widget-checkbox.is-checked::after,
+.widget-checkbox[aria-checked="true"]::before,
+.widget-checkbox[aria-checked="true"]::after {
+  content: "";
+  position: absolute;
+  left: 17%;
+  top: 44%;
+  width: 66%;
+  height: max(3px, calc(var(--vt-primitive-height) * .12));
+  border-radius: 999px;
+  background: var(--widget-ink, #243247) !important;
+  z-index: 2;
+  pointer-events: none;
+}
+.widget-checkbox.is-checked::before,
+.widget-checkbox[aria-checked="true"]::before { transform: rotate(45deg); }
+.widget-checkbox.is-checked::after,
+.widget-checkbox[aria-checked="true"]::after { transform: rotate(-45deg); }
