@@ -51,6 +51,8 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   const [rangeHigh, setRangeHigh] = useState(76)
   const [scrollPos, setScrollPos] = useState(18)
   const [page, setPage] = useState(2)
+  const [popoverOpen, setPopoverOpen] = useState(false)
+  const [disclosureOpen, setDisclosureOpen] = useState(false)
   const style = { "--pair-a": colors.a, "--pair-b": colors.b } as React.CSSProperties
   const icon = <Settings2 aria-hidden="true" />
 
@@ -84,9 +86,9 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   if (name === "KPI") return <SubToolboxKpiCard label="Views" value="12.4K" accentColor={colors.a} />
   if (name === "Stat Card" || name === "Data Stats Module") return <div className={`vt-catalog-stat is-${level}`} style={style}><small>{name === "Data Stats Module" ? "TOTAL VIEWS" : "WATCH TIME"}</small><strong>{name === "Data Stats Module" ? "128,442" : "4,820H"}</strong><span>+12.4%</span></div>
   if (name === "Metric Strip") return <div className={`vt-catalog-metric-strip is-${level}`} style={style}><b>VIEWS 12K</b><b>CTR 5.8%</b><b>AVP 72%</b></div>
-  if (name === "Tooltip") return <div className={`vt-catalog-tooltip is-${level}`} style={style}>TOOLTIP</div>
-  if (name === "Popover") return <div className={`vt-catalog-popover is-${level}`} style={style}><header><Menu/>Options<button><X/></button></header><p>Popover content</p></div>
-  if (name === "Disclosure") return <div className={`vt-catalog-disclosure is-${level}`} style={style}><header><Plus/>Advanced<ChevronRight/></header><p>Disclosure content</p></div>
+  if (name === "Tooltip") return <div className={`vt-catalog-tooltip-demo is-${level}`} style={style}><button type="button" aria-describedby={`tip-${level}-${index}`}>?</button><div role="tooltip" id={`tip-${level}-${index}`} className="vt-catalog-tooltip">TOOLTIP</div></div>
+  if (name === "Popover") return <div className={`vt-catalog-popover-demo is-${level}`} style={style}><button type="button" className="popover-trigger" aria-expanded={popoverOpen} onClick={() => setPopoverOpen(v => !v)}><Menu/><span>OPTIONS</span></button>{popoverOpen ? <div className="vt-catalog-popover" role="dialog" aria-label="Options"><header><Menu/><b>OPTIONS</b><button type="button" aria-label="Close" onClick={() => setPopoverOpen(false)}><X/></button></header><p>POPOVER CONTENT</p></div> : null}</div>
+  if (name === "Disclosure") return <div className={`vt-catalog-disclosure is-${level} ${disclosureOpen ? "is-open" : ""}`} style={style}><button type="button" className="disclosure-head" aria-expanded={disclosureOpen} onClick={() => setDisclosureOpen(v => !v)}><Plus/><b>ADVANCED</b><ChevronRight className="chevron"/></button>{disclosureOpen ? <p>DISCLOSURE CONTENT</p> : null}</div>
   if (name === "Divider") return <hr className={`vt-catalog-divider is-${level}`} style={style}/>
   if (name === "Horizontal Scrollbar") return <div className={`vt-catalog-hscroll is-${level}`} style={style}><button type="button" aria-label="Scroll left" onClick={() => setScrollPos(v => Math.max(0,v-10))}><ChevronLeft/></button><span><i style={{left:`${scrollPos}%`}}/></span><button type="button" aria-label="Scroll right" onClick={() => setScrollPos(v => Math.min(58,v+10))}><ChevronRight/></button></div>
   if (name === "Vertical Scrollbar") return <div className={`vt-catalog-vscroll is-${level}`} style={style}><button type="button" aria-label="Scroll up" onClick={() => setScrollPos(v => Math.max(0,v-10))}><ChevronDown className="up"/></button><span><i style={{top:`${scrollPos}%`}}/></span><button type="button" aria-label="Scroll down" onClick={() => setScrollPos(v => Math.min(58,v+10))}><ChevronDown/></button></div>
