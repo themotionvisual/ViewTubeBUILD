@@ -355,3 +355,70 @@
   white-space: nowrap;
   border: 0;
 }
+
+
+/* ── 2026-09 reference-library geometry/state correction ─────
+   Split bays are square INSIDE the outer stroke. Pagination/stepper cells use
+   the same inner square, eliminating the phantom strip/gap visible on mobile. */
+.widget-split-badge-icon,
+.widget-search-input-icon {
+  width: calc(var(--vt-primitive-height) - 4px);
+  min-width: calc(var(--vt-primitive-height) - 4px);
+  height: calc(var(--vt-primitive-height) - 4px);
+  flex-basis: calc(var(--vt-primitive-height) - 4px);
+}
+.is-height-18 > .widget-split-badge-icon,
+.is-height-18 > .widget-search-input-icon {
+  width: var(--vt-primitive-height);
+  min-width: var(--vt-primitive-height);
+  height: var(--vt-primitive-height);
+  flex-basis: var(--vt-primitive-height);
+}
+.widget-stepper-step,
+.widget-pagination-page {
+  box-sizing: border-box;
+  width: calc(var(--vt-primitive-height) - 4px);
+  min-width: calc(var(--vt-primitive-height) - 4px);
+  padding-inline: 0;
+  flex: 0 0 calc(var(--vt-primitive-height) - 4px);
+}
+.is-height-18 > .widget-stepper-step,
+.is-height-18 > .widget-pagination-page {
+  width: var(--vt-primitive-height);
+  min-width: var(--vt-primitive-height);
+  flex-basis: var(--vt-primitive-height);
+}
+
+/* Checked radios use the ink/stroke rather than the surface fill. This keeps
+   the dot visible in every tone even when the control fill matches the accent. */
+.widget-radio.is-checked .widget-radio-dot,
+.widget-radio[aria-checked="true"] .widget-radio-dot {
+  width: 58%;
+  height: 58%;
+  background: var(--vt-tone-stroke, var(--widget-ink, #243247));
+  box-shadow: none;
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Checkbox state is a large, rounded-end X rather than a check mark. */
+.widget-checkbox.is-checked {
+  background: var(--vt-tone-fill, var(--widget-color, #34cdea));
+}
+.widget-checkbox.is-checked > svg {
+  width: 72%;
+  height: 72%;
+  stroke-width: 3.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Matrix labels always consume the canonical height typography. */
+.widget-split-badge-label,
+.widget-search-input > input,
+.widget-stepper,
+.widget-pagination,
+.widget-spectrum-fill-badge {
+  font-size: var(--vt-primitive-font);
+  font-weight: 1000;
+}
