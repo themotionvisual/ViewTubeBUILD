@@ -6,7 +6,7 @@ import type {
 import type { AIBrainContextSnapshot } from "../aiBrainCommandInterface"
 import { buildBrainTaskInstruction, resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
 import { buildRelevantNicheKnowledgeContext } from "./NicheKnowledge"
-import { readBrainUserControls } from "./BrainUserControls"\nimport type { StatisticsIntelligenceSnapshot } from "./StatisticsIntelligence"
+import { readBrainUserControls } from "./BrainUserControls"\nimport type { StatisticsIntelligenceSnapshot } from "./StatisticsIntelligence"\nimport type { AudienceIntelligenceSnapshot } from "./AudienceIntelligence"
 
 const clip = (value: string, maximum: number): string => value.slice(0, Math.max(0, maximum))
 
@@ -69,6 +69,15 @@ export const buildBrainContextPack = (input: {
   : ""
  if (controls.allowAnalytics && input.statisticsIntelligence && !statistics) omittedSections.push("statistics_intelligence_overflow")
 
+ const audience = controls.allowAnalytics && input.audienceIntelligence
+  ? clip([
+    "confidence=" + input.audienceIntelligence.confidence + "; window=" + input.audienceIntelligence.selectedWindow,
+    ...input.audienceIntelligence.signals.slice(0, 16).map((signal) => signal.kind + " | " + signal.label + " | " + JSON.stringify(signal.metrics) + " | evidence=" + (signal.evidenceRef || "none")),
+    ...input.audienceIntelligence.missingEvidence.map((id) => "Missing audience dataset: " + id),
+    ...input.audienceIntelligence.evidenceBoundary.map((rule) => "Boundary: " + rule),
+   ].join("\n"), 4200)
+  : ""
+
  const knowledge = clip(buildRelevantNicheKnowledgeContext(input.nicheKnowledge || null, input.userText, 2200), 2200)
  const research = clip(input.currentResearch || "", 1800)
  const taskInstruction = buildBrainTaskInstruction(resolveBrainTaskProfile(input.userText))
@@ -84,7 +93,7 @@ export const buildBrainContextPack = (input: {
  const sections = [
   system,
   controlInstruction,
-  "\nCHANNEL EVIDENCE\n" + evidence,\n  statistics ? "\nDETERMINISTIC STATISTICS INTELLIGENCE\n" + statistics : "",
+  "\nCHANNEL EVIDENCE\n" + evidence,\n  statistics ? "\nDETERMINISTIC STATISTICS INTELLIGENCE\n" + statistics : "",\n  audience ? "\nAUDIENCE INTELLIGENCE\n" + audience : "",
   memory ? "\nCONFIRMED CREATOR CONTEXT\n" + memory : "",
   clippedConversation ? "\nRECENT CONVERSATION\n" + clippedConversation : "",
   knowledge ? "\nPUBLIC NICHE KNOWLEDGE\n" + knowledge : "",
@@ -102,7 +111,7 @@ export const buildBrainContextPack = (input: {
   budget: {
    maximumCharacters,
    systemCharacters: system.length,
-   evidenceCharacters: evidence.length + statistics.length,
+   evidenceCharacters: evidence.length + statistics.length + audience.length,
    memoryCharacters: memory.length,
    knowledgeCharacters: knowledge.length + research.length,
    conversationCharacters: clippedConversation.length,
