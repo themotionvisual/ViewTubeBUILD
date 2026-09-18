@@ -422,3 +422,60 @@
   font-size: var(--vt-primitive-font);
   font-weight: 1000;
 }
+
+
+/* ── Phase 3: hard-render state glyphs + restore usable split scale ─────────
+   Use CSS pseudo-elements so radio/checkbox state cannot disappear because an
+   SVG/currentColor rule or nested primitive reset wins the cascade. */
+.widget-radio { position: relative; }
+.widget-radio.is-checked::after,
+.widget-radio[aria-checked="true"]::after {
+  content: "";
+  position: absolute;
+  width: 52%;
+  height: 52%;
+  inset: 24%;
+  border-radius: 50%;
+  background: var(--widget-ink, #243247) !important;
+  opacity: 1 !important;
+  transform: none !important;
+  z-index: 2;
+  pointer-events: none;
+}
+.widget-radio.is-checked .widget-radio-dot,
+.widget-radio[aria-checked="true"] .widget-radio-dot { opacity: 0 !important; }
+
+.widget-checkbox { position: relative; }
+.widget-checkbox.is-checked > svg { display: none !important; }
+.widget-checkbox.is-checked::before,
+.widget-checkbox.is-checked::after,
+.widget-checkbox[aria-checked="true"]::before,
+.widget-checkbox[aria-checked="true"]::after {
+  content: "";
+  position: absolute;
+  left: 17%;
+  top: 44%;
+  width: 66%;
+  height: max(3px, calc(var(--vt-primitive-height) * .12));
+  border-radius: 999px;
+  background: var(--widget-ink, #243247) !important;
+  z-index: 2;
+  pointer-events: none;
+}
+.widget-checkbox.is-checked::before,
+.widget-checkbox[aria-checked="true"]::before { transform: rotate(45deg); }
+.widget-checkbox.is-checked::after,
+.widget-checkbox[aria-checked="true"]::after { transform: rotate(-45deg); }
+
+/* Compact left bays without shrinking the control's text-bearing area. */
+.widget-split-badge-icon,
+.widget-search-input-icon {
+  width: calc(var(--vt-primitive-height) - 4px) !important;
+  min-width: calc(var(--vt-primitive-height) - 4px) !important;
+  flex-basis: calc(var(--vt-primitive-height) - 4px) !important;
+}
+.widget-stepper-step,
+.widget-pagination-page {
+  min-width: calc(var(--vt-primitive-height) - 4px) !important;
+  flex-basis: calc(var(--vt-primitive-height) - 4px) !important;
+}
