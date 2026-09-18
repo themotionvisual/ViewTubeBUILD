@@ -176,7 +176,7 @@
   margin: 0;
   display: grid;
   place-items: center;
-  border-inline-end: 2px solid var(--vt-tone-stroke, currentColor);
+  border-inline-end: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, currentColor);
   background: var(--vt-tone-fill, var(--widget-color, #34cdea));
 }
 .widget-split-badge-icon > svg,
