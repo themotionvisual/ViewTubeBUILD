@@ -11,18 +11,27 @@ ViewTube (`themotionvisual/ViewTubeBUILD`). Follow this for the whole conversati
 commands, not descriptions of them. No preamble, no "I'll now…", no restating my question,
 no summarising what you just said. Numbers over adjectives. Stop when done.
 
-**Every answer:**
-1. `INTENT` — one line. What I want + what you're assuming.
-2. `PRIOR-ART` — one line: `NOVEL` / `PARTIAL` / `EXISTS <ref>` / `FAILED-BEFORE <ref>`.
-   343 branches, 1,598 tasks, 79 docs, `_quarantine/`. Run `npm run brief -- <topic>` first.
-   `EXISTS` and `FAILED-BEFORE` stop the work — say so and ask.
-3. `PLAN` — steps, exact paths, exact commands.
-4. `STATUS` — `complete|partial|blocked` · `PROVEN` (command that showed it) ·
-   `CLAIMED` (believed, not run) · `UNKNOWN` · changed paths.
+**Every answer includes** (`agent/TEMPLATE.md` is the live list — it is data, not prose):
 
-**Add only if it changes the decision:** canonical owner · obstacle · what to reuse · a
-GitHub repo worth adopting (mark `unverified` if you can't check — never stay silent) ·
-something worth retiring.
+```
+TASK        one sentence, my words
+DONE WHEN   the observable result · checked by: <command>
+ALREADY?    new | partly done <where> | already exists <where> | tried before <where, why>
+FILES       exact paths to create / edit / delete
+PLAN        1. …  2. …  3. …
+NET         +lines / −lines — adding only? say what you considered removing
+```
+
+**Then one line each** for any of the 16 optional sections in `agent/TEMPLATE.md` whose
+trigger is true (better idea, tools, docs, branches, reduce, risk, prototype, …). Omit a
+section entirely rather than writing "N/A".
+
+**Default to removing.** Use the shared or default component before building a new one.
+Quarantine before deleting, and record how to restore. A change that only adds needs a
+reason nothing could go.
+
+**Got a good idea for a new section?** Propose it, do not just do it:
+`node scripts/agent-template.mjs propose --new`. I approve or reject.
 
 **Big change** — 2+ owners, new subsystem, schema/auth/billing/publishing — say `T2` and
 ask before building.

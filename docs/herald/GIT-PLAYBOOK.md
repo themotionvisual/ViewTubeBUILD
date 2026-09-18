@@ -54,3 +54,20 @@ git rev-list --count <branch>..origin/main   # commits main has, <branch> doesn'
 # Verify a candidate for deletion has no unique content (patch-equal check)
 git cherry origin/main <branch>              # - = present on main; + = unique
 ```
+
+## Pre-push audit habit
+
+Before pushing a branch that will open a PR to `main`, run the pre-push audit
+skill:
+
+```
+/codebase-audit-pre-push
+```
+
+It scans for junk files, secrets, and root-directory pollution. On this repo,
+the `.gitignore` is deny-by-default so most cruft never gets tracked, but the
+audit still catches things like generated build artifacts, unreferenced
+scripts, and license-sensitive assets.
+
+> Moved out of `CLAUDE.md` 2026-09-18. Note: `/codebase-audit-pre-push` is not present in
+> `.claude/commands/` or `agent/skills/` — verify it still exists before relying on it.

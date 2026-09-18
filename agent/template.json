@@ -1,0 +1,238 @@
+{
+  "version": 1,
+  "_comment": "The response and planning template, as data. Edit this file (or use scripts/agent-template.mjs), then run `npm run template:render`. Everything human-readable is generated from here.",
+  "response": {
+    "required": [
+      {
+        "id": "task",
+        "label": "TASK",
+        "desc": "Restate the task in one plain sentence, in the user's words.",
+        "example": "Add rate limiting to the upload endpoint."
+      },
+      {
+        "id": "done-when",
+        "label": "DONE WHEN",
+        "desc": "The observable thing that will be true, and how it gets checked.",
+        "example": "Uploads over 10/min return 429 · checked by: npm run test:upload"
+      },
+      {
+        "id": "already",
+        "label": "ALREADY?",
+        "desc": "Whether this was built before: new | partly done | already exists | tried and stopped.",
+        "example": "partly done — middleware/rateLimit.ts exists, not wired to uploads",
+        "integrates": [
+          "task-index",
+          "master-index"
+        ]
+      },
+      {
+        "id": "files",
+        "label": "FILES",
+        "desc": "Exact paths to create, edit or delete.",
+        "example": "edit routes/upload.ts · edit middleware/rateLimit.ts"
+      },
+      {
+        "id": "plan",
+        "label": "PLAN",
+        "desc": "Numbered steps with the commands that prove each one.",
+        "example": "1. Wire limiter  2. Add 429 test  3. npm run test:upload"
+      },
+      {
+        "id": "net",
+        "label": "NET",
+        "desc": "Lines added vs removed. Adding only? Say what was considered for removal.",
+        "example": "+42 / −118 (removed the duplicate limiter)"
+      }
+    ],
+    "optional": [
+      {
+        "id": "better-idea",
+        "label": "BETTER IDEA",
+        "when": "a simpler route exists than the one asked for",
+        "desc": "The simpler route and why it might win."
+      },
+      {
+        "id": "tools",
+        "label": "TOOLS",
+        "when": "an existing library or tool would do this job",
+        "desc": "2–3 GitHub projects, what each gives THIS task, marked unverified if unchecked."
+      },
+      {
+        "id": "docs",
+        "label": "DOCS",
+        "when": "a document, spec, audit or design file matters here",
+        "desc": "Files to read, each marked current / outdated / prototype / demo, and what it does not prove.",
+        "integrates": [
+          "artifacts",
+          "master-index"
+        ]
+      },
+      {
+        "id": "branches",
+        "label": "BRANCHES",
+        "when": "branches or PRs relate to this task",
+        "desc": "Related branches and closed PRs with dates — what was tried before."
+      },
+      {
+        "id": "reduce",
+        "label": "REDUCE",
+        "when": "duplicates, unused code or near-copies were found",
+        "desc": "What can be merged, quarantined or deleted instead of added to."
+      },
+      {
+        "id": "risk",
+        "label": "RISK",
+        "when": "a real blocker was verified",
+        "desc": "The blocker and the command that proved it."
+      },
+      {
+        "id": "prototype",
+        "label": "PROTOTYPE",
+        "when": "seeing it beats reading about it",
+        "desc": "A small standalone HTML file or demo worth building first, and what it should leave out."
+      },
+      {
+        "id": "owner",
+        "label": "OWNER",
+        "when": "it is unclear which part of the codebase owns these files",
+        "desc": "Who or what owns each path, so two changes do not collide."
+      },
+      {
+        "id": "tests",
+        "label": "TESTS",
+        "when": "the changed files have tests, or conspicuously do not",
+        "desc": "Which tests cover this, or that none do."
+      },
+      {
+        "id": "rollback",
+        "label": "ROLLBACK",
+        "when": "the change is hard to undo",
+        "desc": "How to reverse it."
+      },
+      {
+        "id": "cost",
+        "label": "COST",
+        "when": "the work is large or open-ended",
+        "desc": "Rough effort and where it might overrun."
+      },
+      {
+        "id": "skill",
+        "label": "SKILL",
+        "when": "the same guidance has come up three times",
+        "desc": "A reusable skill, rule or command worth saving.",
+        "integrates": [
+          "skills"
+        ]
+      },
+      {
+        "id": "task-link",
+        "label": "TASK",
+        "when": "this maps to a tracked task id",
+        "desc": "The task id, and the status being proposed with its evidence.",
+        "integrates": [
+          "task-index"
+        ]
+      },
+      {
+        "id": "artifacts",
+        "label": "SAVED",
+        "when": "files, docs or screenshots were produced",
+        "desc": "Where they were saved.",
+        "integrates": [
+          "artifacts"
+        ]
+      },
+      {
+        "id": "retire",
+        "label": "RETIRE",
+        "when": "something outdated, duplicated or wrong was noticed",
+        "desc": "One thing worth deleting, merging or correcting."
+      },
+      {
+        "id": "unfinished",
+        "label": "UNFINISHED",
+        "when": "work remains",
+        "desc": "What is left and what would unblock it."
+      }
+    ]
+  },
+  "plan": {
+    "required": [
+      {
+        "id": "goal",
+        "label": "Goal",
+        "desc": "One sentence: what this task achieves."
+      },
+      {
+        "id": "done-when",
+        "label": "Done when",
+        "desc": "The observable result and the command that checks it."
+      },
+      {
+        "id": "steps",
+        "label": "Steps",
+        "desc": "Checkboxes, ticked as work proceeds."
+      },
+      {
+        "id": "before-after",
+        "label": "Before → After",
+        "desc": "Real evidence: behaviour, line counts, screenshots."
+      },
+      {
+        "id": "status",
+        "label": "Status",
+        "desc": "in progress | finished | blocked | abandoned, plus branch and date."
+      }
+    ],
+    "optional": [
+      {
+        "id": "prior-work",
+        "label": "Prior work",
+        "when": "earlier attempts exist",
+        "desc": "Branches, PRs and files from previous attempts."
+      },
+      {
+        "id": "references",
+        "label": "References",
+        "when": "documents inform the work",
+        "desc": "Docs, audits, designs — with what each does not prove.",
+        "integrates": [
+          "artifacts"
+        ]
+      },
+      {
+        "id": "decisions",
+        "label": "Decisions",
+        "when": "a choice was made between options",
+        "desc": "What was chosen and why the alternative lost."
+      },
+      {
+        "id": "risks",
+        "label": "Risks",
+        "when": "something could go wrong",
+        "desc": "What might break and the early warning sign."
+      },
+      {
+        "id": "reduction",
+        "label": "Reduction",
+        "when": "code was removed, merged or quarantined",
+        "desc": "What went, where it went, and how to restore it."
+      },
+      {
+        "id": "follow-ups",
+        "label": "Follow-ups",
+        "when": "work is deliberately deferred",
+        "desc": "What was left out on purpose."
+      }
+    ]
+  },
+  "rules": [
+    "A section appears only if it changes what the user does next. No empty headings, no 'N/A', no padding.",
+    "Required sections always appear. Optional sections appear when their 'when' is true.",
+    "Prefer removing code to adding it. Use the shared or default component before building a new one.",
+    "Quarantine before deleting. Record where it came from and how to restore it.",
+    "Separate what you ran and observed from what you believe but did not run.",
+    "Link to files; do not paste them into the conversation.",
+    "A prototype or demo proves nothing about what actually runs."
+  ]
+}

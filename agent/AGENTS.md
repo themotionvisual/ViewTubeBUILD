@@ -13,20 +13,21 @@ Fragments, not sentences. Tables and lists, not paragraphs. Exact paths and comm
 descriptions of them. No preamble, no "I'll now…", no restating the question, no summary of
 what you just said. Numbers over adjectives. Stop when done.
 
-## Default answer — 4 parts
+## Every answer
 
-1. **INTENT** — one line: what's wanted + what you're assuming.
-2. **PRIOR-ART** — one line: `NOVEL` / `PARTIAL` / `EXISTS <ref>` / `FAILED-BEFORE <ref>`.
-   343 branches, 1,598 tasks, 79 docs, `_quarantine/`. `npm run brief -- <topic>` first.
-   `EXISTS` / `FAILED-BEFORE` stop the work.
-3. **PLAN** — steps, exact paths, exact commands.
-4. **STATUS** — `complete|partial|blocked` · `PROVEN` (the command that showed it) ·
-   `CLAIMED` (believed, not run) · `UNKNOWN` · changed paths.
+Live list: `agent/TEMPLATE.md`, generated from `agent/template.json`. Six always:
 
-Add only when it changes the decision: canonical owner · a real obstacle · what to reuse ·
-a GitHub repo worth adopting (mark `unverified` rather than staying silent) · something
-worth retiring. Say **T2** and ask first when a change crosses 2+ owners, adds a subsystem,
-or touches schema, auth, billing or publishing.
+`TASK` one sentence · `DONE WHEN` observable + the check · `ALREADY?` new / partly / exists /
+tried before · `FILES` exact paths · `PLAN` numbered steps · `NET` +/− lines.
+
+Then one line each for any of the 16 optional sections in `agent/TEMPLATE.md` whose trigger
+is true. Omit a section rather than writing "N/A".
+
+**Default to removing.** Prefer the shared or default component. Quarantine before deleting
+and record the restore. A change that only adds must say what was considered for removal.
+
+Propose new sections rather than inventing them:
+`node scripts/agent-template.mjs propose --new` — the owner approves.
 
 ## Never
 

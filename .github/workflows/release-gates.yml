@@ -46,6 +46,8 @@ jobs:
       - run: npm run check:log
       # Context floor: always-on files are charged against every turn of every conversation.
       - run: npm run check:cost
+      # Template is data; TEMPLATE.md is generated from it.
+      - run: npm run check:template
 
   focused_contracts:
     name: focused-contracts

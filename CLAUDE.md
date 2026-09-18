@@ -7,17 +7,15 @@ this repo. Keep it short. Longer notes belong in `docs/` or per-feature READMEs.
 
 ## Agent contracts
 
-Overview: [`docs/herald/README.md`](docs/herald/README.md). Load `agent/contracts/`,
-`agent/registry/` on demand only. `npm run brief -- <topic>` before re-deriving.
-
-Answer **lean** — fragments, tables, exact paths. No preamble, no restating the ask.
-Default: intent · prior-art verdict · plan · status (proven vs claimed). More only if it
-changes the decision.
+Overview [`docs/herald/README.md`](docs/herald/README.md) · sections `agent/TEMPLATE.md` ·
+detail `agent/contracts/`, `agent/registry/` (on demand only).
+`npm run brief -- <topic>` before re-deriving. Answer lean; omit a section rather than pad it.
 
 1. **`.gitignore` is deny-by-default** — `git check-ignore -v <path>` before believing a commit.
 2. **Never write task status** — `ViewTube-Task-Index.html` is sole authority; propose only.
 3. **Proven ≠ claimed** — code existing ≠ integrated ≠ verified ≠ deployed.
 4. **Check first** — 343 branches, 1,598 tasks; `git ls-remote`, the clone is shallow.
+5. **Default to removing** — shared component over new one; quarantine before delete.
 
 ## Deployment topology
 
@@ -68,20 +66,6 @@ local :5173  →  feature branch  →  PR  →  main  →  Vercel  →  viewtube
 4. **Local ↔ production alignment = the PR merge.** To separate them again,
    just cut a new feature branch. Local can drift as far as you want; the
    moment you want the drift live, open a PR.
-
-## Pre-push audit habit
-
-Before pushing a branch that will open a PR to `main`, run the pre-push audit
-skill:
-
-```
-/codebase-audit-pre-push
-```
-
-It scans for junk files, secrets, and root-directory pollution. On this repo,
-the `.gitignore` is deny-by-default so most cruft never gets tracked, but the
-audit still catches things like generated build artifacts, unreferenced
-scripts, and license-sensitive assets.
 
 ## Known lint debt (2026-08-23)
 
