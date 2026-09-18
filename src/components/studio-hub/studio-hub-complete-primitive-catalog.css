@@ -280,3 +280,13 @@
 /* Alphabetical tags use a continuous 360° hue wheel: A–Z each gets a unique color. */
 .vt-complete-catalog .vt-alpha-tag{--alpha:hsl(var(--alpha-h) 82% 62%);background:color-mix(in srgb,var(--alpha) 18%,white)!important;border-color:var(--alpha)!important;color:color-mix(in srgb,var(--alpha) 78%,#000)!important;font-size:calc(var(--fs)*.68)!important;line-height:1!important;white-space:nowrap}
 .vt-complete-catalog .vt-catalog-spectrum-row{display:flex!important;flex-wrap:wrap!important;gap:6px!important}
+
+/* Toolbox authority correction: V31 #37 tooltip anatomy and original 22/23 colors. */
+.vt-complete-catalog .vt-catalog-tooltip-demo{position:relative;display:inline-grid;place-items:center;padding-top:calc(var(--h)*1.15)}
+.vt-complete-catalog .vt-catalog-tooltip{left:50%!important;right:auto!important;top:auto!important;bottom:calc(100% - var(--h)*1.02)!important;transform:translateX(-50%)!important;background:var(--pair-b)!important;color:#000!important;border:var(--stroke) solid #000!important;border-radius:var(--radius)!important;box-shadow:calc(var(--stroke) + 2px) calc(var(--stroke) + 2px) 0 color-mix(in srgb,var(--pair-a) 42%,transparent)!important}
+.vt-complete-catalog .vt-catalog-tooltip:before{right:auto!important;left:50%!important;top:100%!important;width:calc(var(--h)*.24)!important;height:calc(var(--h)*.24)!important;background:var(--pair-b)!important;border:0!important;border-right:var(--stroke) solid #000!important;border-bottom:var(--stroke) solid #000!important;transform:translate(-50%,-48%) rotate(45deg)!important;box-sizing:border-box}
+.vt-complete-catalog .vt-catalog-checkbox{background:var(--pair-b)!important;border-radius:0!important}
+.vt-complete-catalog .vt-catalog-radio{background:var(--pair-b)!important;border-radius:50%!important}
+.vt-complete-catalog .vt-catalog-checkbox span{width:82%!important;height:82%!important}
+.vt-complete-catalog .vt-catalog-checkbox span:before,.vt-complete-catalog .vt-catalog-checkbox span:after{width:132%!important;height:max(4px,calc(var(--stroke)*1.55))!important;background:#000!important;border-radius:999px!important}
+.vt-complete-catalog .vt-catalog-radio span{background:var(--pair-a)!important}
