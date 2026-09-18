@@ -130,3 +130,31 @@
 .vt-complete-catalog .vt-catalog-pagination{display:inline-grid;grid-auto-flow:column;height:var(--h);border:var(--stroke) solid #000;border-radius:var(--radius);overflow:hidden;background:var(--pair-b)}
 .vt-complete-catalog .vt-catalog-pagination button{min-width:var(--h);height:100%;padding:0 calc(var(--h)*.18);border:0;border-right:var(--stroke) solid #000;border-radius:0;background:var(--pair-b);box-shadow:none;font:1000 var(--fs)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))}
 .vt-complete-catalog .vt-catalog-pagination button:last-child{border-right:0}.vt-complete-catalog .vt-catalog-pagination button:first-child,.vt-complete-catalog .vt-catalog-pagination button:last-child,.vt-complete-catalog .vt-catalog-pagination button.is-on{background:var(--pair-a)}
+
+/* V35 parity: Stepper is one continuous three-cell control. */
+.vt-complete-catalog .vt-catalog-stepper{display:grid;grid-template-columns:var(--h) 1fr var(--h);height:var(--h);border:var(--stroke) solid #000;border-radius:var(--radius);overflow:hidden;background:var(--pair-b)}
+.vt-complete-catalog .vt-catalog-stepper button{width:var(--h);height:100%;padding:0;border:0;border-radius:0;background:var(--pair-a);box-shadow:none;display:grid;place-items:center;font-size:calc(var(--fs)*1.45);font-weight:1000}
+.vt-complete-catalog .vt-catalog-stepper button:first-child{border-right:var(--stroke) solid #000}.vt-complete-catalog .vt-catalog-stepper button:last-child{border-left:var(--stroke) solid #000}
+.vt-complete-catalog .vt-catalog-stepper strong{display:grid;place-items:center;font:1000 calc(var(--fs)*1.25)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));letter-spacing:-.055em}
+
+/* Tooltip: colored V35 surface, black structural stroke/type, palette-only shadow. */
+.vt-complete-catalog .vt-catalog-tooltip-demo{position:relative;display:inline-grid;place-items:center}
+.vt-complete-catalog .vt-catalog-tooltip-demo>button{width:var(--h);height:var(--h);padding:0;border:var(--stroke) solid #000;border-radius:50%;background:var(--pair-a);font-size:var(--fs);font-weight:1000;box-shadow:calc(var(--stroke) + 2px) calc(var(--stroke) + 2px) 0 color-mix(in srgb,var(--pair-b) 42%,transparent)}
+.vt-complete-catalog .vt-catalog-tooltip{position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);z-index:5;white-space:nowrap;padding:calc(var(--h)*.18) calc(var(--h)*.28);border:var(--stroke) solid #000;border-radius:var(--radius);background:var(--pair-b);color:#000;font:1000 var(--fs)/.9 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));letter-spacing:-.055em;box-shadow:calc(var(--stroke) + 2px) calc(var(--stroke) + 2px) 0 color-mix(in srgb,var(--pair-a) 42%,transparent);opacity:0;pointer-events:none;transition:opacity 120ms ease-out}
+.vt-complete-catalog .vt-catalog-tooltip-demo:is(:hover,:focus-within) .vt-catalog-tooltip{opacity:1}
+.vt-complete-catalog .vt-catalog-tooltip:before{content:"";position:absolute;right:100%;top:50%;width:10px;height:10px;background:var(--pair-b);border-left:var(--stroke) solid #000;border-bottom:var(--stroke) solid #000;transform:translate(6px,-50%) rotate(45deg)}
+
+/* Popover: split header icon rail | title | square close rail, with required title divider. */
+.vt-complete-catalog .vt-catalog-popover-demo{position:relative;display:inline-block}
+.vt-complete-catalog .popover-trigger{height:var(--h);display:flex;align-items:center;gap:8px;padding:0 12px;border:var(--stroke) solid #000;border-radius:var(--radius);background:var(--pair-a);font-size:var(--fs);font-weight:1000}
+.vt-complete-catalog .vt-catalog-popover{position:absolute;top:calc(100% + 8px);left:0;z-index:10;width:min(320px,72vw);border:var(--stroke) solid #000;border-radius:var(--radius);overflow:hidden;background:#fff;box-shadow:calc(var(--stroke) + 3px) calc(var(--stroke) + 3px) 0 color-mix(in srgb,var(--pair-a) 42%,transparent)}
+.vt-complete-catalog .vt-catalog-popover header{height:var(--h);display:grid;grid-template-columns:var(--h) 1fr var(--h);align-items:center;background:var(--pair-b);border-bottom:var(--stroke) solid #000}
+.vt-complete-catalog .vt-catalog-popover header>svg{width:52%;height:52%;justify-self:center}.vt-complete-catalog .vt-catalog-popover header>b{padding:0 10px;font-size:var(--fs);letter-spacing:-.055em}
+.vt-complete-catalog .vt-catalog-popover header>button{height:100%;width:var(--h);padding:0;border:0;border-left:var(--stroke) solid #000;border-radius:0;background:var(--pair-a);box-shadow:none;display:grid;place-items:center}
+.vt-complete-catalog .vt-catalog-popover header>button svg{width:48%;height:48%;stroke-width:4}.vt-complete-catalog .vt-catalog-popover p{margin:0;padding:14px;font-weight:900}
+
+/* Disclosure: colored title section with divider; content only exists when expanded. */
+.vt-complete-catalog .vt-catalog-disclosure{border:var(--stroke) solid #000;border-radius:var(--radius);overflow:hidden;background:#fff}
+.vt-complete-catalog .disclosure-head{width:100%;height:var(--h);display:grid;grid-template-columns:var(--h) 1fr var(--h);align-items:center;padding:0;border:0;border-radius:0;background:var(--pair-b);box-shadow:none;border-bottom:var(--stroke) solid #000}
+.vt-complete-catalog .disclosure-head>svg:first-child{justify-self:center}.vt-complete-catalog .disclosure-head>b{text-align:left;font-size:var(--fs);letter-spacing:-.055em}.vt-complete-catalog .disclosure-head .chevron{justify-self:center;transition:transform 180ms ease-out}.vt-complete-catalog .vt-catalog-disclosure.is-open .chevron{transform:rotate(90deg)}
+.vt-complete-catalog .vt-catalog-disclosure p{margin:0;padding:14px;font-weight:900}
