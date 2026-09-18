@@ -235,7 +235,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("1. Standard Controls", "Default / Primary / Secondary")}
             <p className="text-[10px] font-bold uppercase opacity-60">
-              Every component family uses the same three monochromatic color styles at 18 / 24 / 32 / 38px. 18px controls stay filled, borderless and shadowless; larger controls use a 2px stroke.
+              Every component family uses the same three monochromatic color styles at 18 / 24 / 32 / 38px. Canonical type scale: 18px → 8px, 24px → 14px, 32px → 18px, 38px → 22px, all at weight 1000. 18px controls stay filled, borderless and shadowless; larger controls use a 2px stroke.
             </p>
 
             <div className="widget-reference-family">
