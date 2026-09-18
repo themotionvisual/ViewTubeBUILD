@@ -1,0 +1,23 @@
+{
+  "thread": "herald-2026-09-17-widget-dashboard-skill-consolidation",
+  "verb": "BUILD",
+  "tier": "T2",
+  "stage": "VERIFY",
+  "taskIds": [],
+  "missionId": null,
+  "owner": "viewtube-widget-dashboard-system",
+  "writerLock": "skill/widget-dashboard-system-2026-09-17",
+  "reconRef": "main skill/widget/dashboard authorities + certification/optimization docs",
+  "openQuestions": [
+    "Complete repo-wide consumer search before retiring predecessor skills",
+    "Decide final Claude/Codex routing shape after parity review"
+  ],
+  "nextAction": "Verify branch diff and consumer references; expand reconciliation before requesting deletion approval",
+  "entries": [
+    "ORIENT ledger 2026-09-17 and Herald workflow",
+    "RECON existing skill-authoring/widget/mobile/certification authorities",
+    "BUILD canonical skill package and reconciliation/evals"
+  ],
+  "lastApp": "chatgpt",
+  "lastTs": "2026-09-17T20:40:00-04:00"
+}
