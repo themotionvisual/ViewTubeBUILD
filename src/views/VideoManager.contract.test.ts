@@ -44,6 +44,8 @@ describe("Video Manager canonical Studio Hub contract", () => {
   expect(toolboxCss).toContain("-webkit-line-clamp: 2")
   expect(toolboxCss).toContain("line-height: .82 !important")
   expect(toolboxCss).toContain("padding-left: max(2px, var(--vt-subtoolbox-content-inline-inset, 2px)) !important")
+  expect(toolboxCss).toContain("--vt-toolbox-content-padding: 4px")
+  expect(toolboxCss).toContain("--vt-toolbox-content-gap: 4px")
  })
 
  it("uses the canonical split-left selector family", () => {
