@@ -103,32 +103,8 @@
   }
 }
 @media (max-width: 900px) and (orientation: landscape) {
-  [data-vt-toolbox-level="main"] > header {
-    height: 80px !important;
-    min-height: 80px !important;
-  }
-  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child {
-    width: 80px !important;
-    min-width: 80px !important;
-    max-width: 80px !important;
-  }
-  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child svg {
-    width: 26px !important;
-    height: 26px !important;
-  }
-  [data-vt-toolbox-level="main"] > header h1,
-  [data-vt-toolbox-level="main"] > header h3 {
-    font-size: 26px !important;
-    letter-spacing: -0.055em !important;
-    line-height: .82 !important;
-    white-space: normal !important;
-    overflow: hidden !important;
-    text-overflow: clip !important;
-  }
-  [data-vt-toolbox-level="main"] {
-    --vt-toolbox-stroke: 5px;
-    --vt-toolbox-radius: 16px;
-    --vt-toolbox-shadow-offset: 10px;
+  .vt-toolbox [class~="min-h-[80px]"] {
+    min-height: 36px !important;
   }
 }
 
@@ -282,40 +258,23 @@
        caps. The visuals themselves may still be tall on some pages;
        users scroll the page, not each card. */
 @media (max-width: 767px) and (orientation: portrait) {
-  [data-vt-toolbox-level="main"] > header {
-    height: 80px !important;
-    min-height: 80px !important;
+  [data-vt-chart-body]:not([data-vt-chart-body-fixed]) {
+    /* Was: max-height: 28svh. Now: no cap — let content decide. */
+    max-height: none !important;
   }
-  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child {
-    width: 80px !important;
-    min-width: 80px !important;
-    max-width: 80px !important;
+  [data-vt-chart-body] [class*="min-h-["] {
+    min-height: 0 !important;
   }
-  [data-vt-toolbox-level="main"] > header > div:first-child > div:first-child svg {
-    width: 26px !important;
-    height: 26px !important;
+  .vt-toolbox:not([data-vt-toolbox-uncapped]) {
+    max-height: none !important;
+    overflow: visible !important;
   }
-  [data-vt-toolbox-level="main"] > header h1,
-  [data-vt-toolbox-level="main"] > header h3 {
-    font-size: 26px !important;
-    letter-spacing: -0.055em !important;
-    line-height: .82 !important;
-    white-space: normal !important;
-    overflow: hidden !important;
-    text-overflow: clip !important;
-  }
-  [data-vt-toolbox-level="main"] > header > div:last-child {
-    padding-right: 4px !important;
-    gap: 2px !important;
-  }
-  [data-vt-toolbox-level="main"] {
-    --vt-toolbox-stroke: 5px;
-    --vt-toolbox-radius: 16px;
-    --vt-toolbox-shadow-offset: 10px;
-  }
-  .flex.flex-col > .mb-10 > h2.text-7xl {
-    font-size: 40px !important;
-    line-height: 1 !important;
+  [data-vt-visual-card] {
+    max-height: none !important;
+    overflow: visible !important;
+    /* Keep a modest reserved height for offscreen cards so the scrollbar
+       doesn't lie about page length, but not so much it blocks 2-3-per-screen. */
+    contain-intrinsic-size: 260px !important;
   }
 }
 @media (max-width: 900px) and (orientation: landscape) {
