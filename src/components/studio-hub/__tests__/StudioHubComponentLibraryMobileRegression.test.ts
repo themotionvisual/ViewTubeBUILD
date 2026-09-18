@@ -22,6 +22,17 @@ describe("Studio Hub Component Library mobile regression", () => {
     expect(library).toContain('--vt-toolbox-shadow-offset: 10px !important')
   })
 
+  it("keeps the primitive comparison track on shared component DNA", () => {
+    const tokens = read("src/components/subtoolbox/tokens.ts")
+    const primitives = read("src/components/subtoolbox/SubToolboxPrimitives.tsx")
+    const migration = read("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
+    expect(tokens).toContain("COMPONENT_LEVEL_DNA")
+    expect(tokens).toContain("getComponentLevelCssVars")
+    expect(primitives).toContain("data-vt-control-level")
+    expect(migration).toContain("STUDIO_HUB_MIGRATED_FAMILIES")
+    expect(migration).toContain("SubToolboxSegmentedToggle")
+  })
+
   it("keeps the requested missing families in the canonical registry", () => {
     const catalog = read("src/components/studio-hub/StudioHubCompletePrimitiveCatalog.tsx")
     for (const family of [
