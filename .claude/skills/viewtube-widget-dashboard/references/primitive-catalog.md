@@ -3,8 +3,7 @@
 Read this before writing markup or CSS inside a widget. If a primitive here does the job,
 use it — do not recreate it.
 
-Exports live in `src/views/dashboard/WidgetPrimitives.tsx` and
-`src/views/dashboard/WidgetPrimitiveExtensions.tsx`. Verified 2026-09-11.
+Canonical consumer imports live in `src/views/dashboard/WidgetPrimitives.tsx`. `WidgetPrimitiveExtensions.tsx` is a temporary compatibility/implementation module and must not be used by new widget consumers. Updated 2026-09-17.
 
 ## Structure
 
