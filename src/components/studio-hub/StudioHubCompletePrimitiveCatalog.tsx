@@ -48,6 +48,8 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   const [value, setValue] = useState(5)
   const [toggleOn, setToggleOn] = useState(true)
   const [switchOn, setSwitchOn] = useState(true)
+  const [checkboxOn, setCheckboxOn] = useState(true)
+  const [radioOn, setRadioOn] = useState(true)
   const [sliderValue, setSliderValue] = useState(62)
   const [rangeLow, setRangeLow] = useState(22)
   const [rangeHigh, setRangeHigh] = useState(76)
@@ -87,15 +89,15 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   if (name === "Range Slider") return <div className={`vt-catalog-range is-${level}`} style={style}><button type="button" className="rail" aria-label="Reset range" onClick={() => { setRangeLow(22); setRangeHigh(76) }}><SlidersHorizontal/></button><div className="range-center"><div className="range-track"><span className="range-fill" style={{left:`${rangeLow}%`,right:`${100-rangeHigh}%`}}/></div><input aria-label="Range minimum" type="range" min="0" max="100" value={rangeLow} onChange={e => setRangeLow(Math.min(Number(e.target.value), rangeHigh - 1))}/><input aria-label="Range maximum" type="range" min="0" max="100" value={rangeHigh} onChange={e => setRangeHigh(Math.max(Number(e.target.value), rangeLow + 1))}/></div><output>{rangeLow}–{rangeHigh}</output></div>
   if (name === "Toggle") return <button type="button" className={`vt-catalog-toggle is-${level} ${toggleOn ? "is-on" : ""}`} style={style} aria-pressed={toggleOn} aria-label="Toggle" onClick={() => setToggleOn(v => !v)}><span /></button>
   if (name === "Settings Switch") return <button type="button" className={`vt-catalog-switch is-${level} ${switchOn ? "is-on" : ""}`} style={style} aria-pressed={switchOn} onClick={() => setSwitchOn(v => !v)}><span /></button>
-  if (name === "Checkbox") return <button type="button" className={`vt-catalog-checkbox is-${level}`} style={style} aria-label="Checkbox" aria-pressed="true"><span /></button>
-  if (name === "Radio") return <button type="button" className={`vt-catalog-radio is-${level}`} style={style} aria-label="Radio" aria-pressed="true"><span /></button>
+  if (name === "Checkbox") return <button type="button" className={`vt-catalog-checkbox is-${level} ${checkboxOn ? "is-on" : ""}`} style={style} aria-label="Checkbox" aria-pressed={checkboxOn} onClick={() => setCheckboxOn(v => !v)}><span /></button>
+  if (name === "Radio") return <button type="button" className={`vt-catalog-radio is-${level} ${radioOn ? "is-on" : ""}`} style={style} aria-label="Radio" aria-pressed={radioOn} onClick={() => setRadioOn(v => !v)}><span /></button>
   if (name === "Segmented Choice") return <div className={`vt-catalog-segmented is-${level}`} style={style}><button>A</button><button>B</button><button>C</button></div>
   if (name === "Button Group") return <div className="vt-catalog-button-group"><SubToolboxButton size={level}>One</SubToolboxButton><SubToolboxButton size={level}>Two</SubToolboxButton></div>
   if (name === "Tag") return <SubToolboxTag>Napoleon</SubToolboxTag>
   if (name === "Removable Tag") return <span className={`vt-spectrum-tag is-${level}`} style={style}>Napoleon <button aria-label="Remove"><X /></button></span>
   if (name === "Selectable Tag") return <SubToolboxTag selected><Check /> Selected</SubToolboxTag>
   if (name === "Tag Editor") return <div className="vt-catalog-tag-editor"><span className={`vt-spectrum-tag is-${level}`} style={style}>History <button><X /></button></span><button className="add"><Plus /></button></div>
-  if (name === "Badge") return <SubToolboxBadge>Badge</SubToolboxBadge>
+  if (name === "Badge") return <span className={`vt-catalog-fill-badge is-${level}`} style={style}>BADGE</span>
   if (name === "Status Badge") return <span className={`vt-status-badge is-${level}`} style={style}><i/>Ready</span>
   if (name === "Progress Bar" || name === "Progress Value") return <div className={`vt-catalog-progress is-${level}`} style={style}><span style={{width:"68%"}} />{name === "Progress Value" ? <b>68%</b> : null}</div>
   if (name === "KPI") return <SubToolboxKpiCard label="Views" value="12.4K" accentColor={colors.a} />
@@ -118,7 +120,7 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   if (name === "Knob Dial") return <div className={`vt-catalog-knob is-${level}`} style={style}><span><i/></span><b>72</b></div>
   if (name === "Controller Switch") return <button className={`vt-catalog-controller-switch is-${level}`} style={style}><span/><b>ON</b></button>
   if (name === "LED Light") return <div className={`vt-catalog-led is-${level}`} style={style}><i/><b>ACTIVE</b></div>
-  if (name === "Alphabetical Spectrum Tags") return <div className="vt-catalog-spectrum-row">{["A","F","K","P","U","Z"].map((letter, i) => <span key={letter} className={`vt-alpha-tag is-${level}`} style={{"--alpha":VT_SPECTRUM_PALETTE_06[(i*2)%12]} as React.CSSProperties}>{letter} · TAG</span>)}</div>
+  if (name === "Alphabetical Spectrum Tags") return <div className="vt-catalog-spectrum-row">{Array.from({length:26},(_,i)=>String.fromCharCode(65+i)).map((letter, i) => <span key={letter} className={`vt-alpha-tag is-${level}`} style={{"--alpha-h":`${(i * 360) / 26}`} as React.CSSProperties}>{letter} · TAG</span>)}</div>
   if (name === "Icon Rail Control") return <div className={`vt-catalog-icon-rail is-${level}`} style={style}><span><SlidersHorizontal/></span><b>Control</b></div>
   if (name === "Two Color Data Stats") return <div className={`vt-variant-stat vt-stat-two is-${level}`} style={style}><span>VIEWS</span><strong>128K</strong><small>+12.4%</small></div>
   if (name === "Monochrome Data Stats") return <div className={`vt-variant-stat vt-stat-mono is-${level}`} style={style}><span>WATCH TIME</span><strong>4.8K</strong><small>+8.2%</small></div>
