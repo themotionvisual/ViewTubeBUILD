@@ -25,6 +25,29 @@ export const VT_SPECTRUM_PALETTE = [
 export type ToolboxUiLevel = "toolbox" | "l0" | "l1" | "l2"
 export type ToolboxControlLevel = Exclude<ToolboxUiLevel, "toolbox">
 
+export const COMPONENT_LEVEL_DNA = {
+  l0: { height: 56, stroke: 4, radius: 12, shadowOffset: 6, fontSize: 24 },
+  l1: { height: 48, stroke: 3, radius: 8, shadowOffset: 5, fontSize: 18 },
+  l2: { height: 32, stroke: 2, radius: 6, shadowOffset: 4, fontSize: 12 },
+} as const satisfies Record<ToolboxControlLevel, {
+  height: number
+  stroke: number
+  radius: number
+  shadowOffset: number
+  fontSize: number
+}>
+
+export const getComponentLevelCssVars = (level: ToolboxControlLevel) => {
+  const dna = COMPONENT_LEVEL_DNA[level]
+  return {
+    "--vt-component-height": `${dna.height}px`,
+    "--vt-component-stroke": `${dna.stroke}px`,
+    "--vt-component-radius": `${dna.radius}px`,
+    "--vt-component-shadow-offset": `${dna.shadowOffset}px`,
+    "--vt-component-font-size": `${dna.fontSize}px`,
+  } as const
+}
+
 export const TOOLBOX_LEVEL_DNA = {
   toolbox: {
     height: 56,
