@@ -2,6 +2,7 @@ import * as Select from "@radix-ui/react-select"
 import React, { useCallback, useEffect, useId, useRef, useState } from "react"
 import { AlertTriangle, Ban, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock3, Inbox, LoaderCircle, RotateCw, X } from "lucide-react"
 import type { WidgetDataState } from "./types"
+import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone } from "./widgetPrimitiveSystem"
 import { resolveWidgetViewportSegment } from "./widgetScrollGeometry"
 
 export interface WidgetScrollAreaProps {
@@ -267,9 +268,19 @@ export const WidgetMetric: React.FC<{
 
 export const WidgetActionButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & {
   tone?: "primary" | "neutral" | "danger"
-}> = ({ className = "", tone = "neutral", type = "button", ...props }) => (
-  <button type={type} className={`widget-action is-${tone} ${className}`.trim()} {...props} />
-)
+  height?: WidgetPrimitiveSize
+  primitiveTone?: WidgetPrimitiveTone
+}> = ({ className = "", tone = "neutral", height = 32, primitiveTone, type = "button", ...props }) => {
+  const resolvedTone: WidgetPrimitiveTone = primitiveTone ?? (tone === "primary" ? "primary" : tone === "danger" ? "secondary" : "default")
+  return (
+    <button
+      type={type}
+      data-action-tone={tone}
+      className={`widget-action is-${tone} ${widgetSizedControlClasses(height, resolvedTone)} vt-interactive ${className}`.trim()}
+      {...props}
+    />
+  )
+}
 
 export const WidgetSplitButton: React.FC<
   Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
@@ -282,7 +293,7 @@ export const WidgetSplitButton: React.FC<
 > = ({ icon, children, tone = "neutral", size = "medium", width = "auto", className = "", type = "button", ...props }) => (
   <button
     type={type}
-    className={`widget-split-button is-${tone} is-${size} is-${width} ${className}`.trim()}
+    className={`widget-split-button is-${tone} is-${size} is-${width} vt-interactive ${className}`.trim()}
     {...props}
   >
     <span className="widget-split-button-icon" aria-hidden="true">{icon}</span>
