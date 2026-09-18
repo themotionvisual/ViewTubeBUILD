@@ -1,126 +1,54 @@
 # AGENTS.md — ViewTube
 
-Cross-tool instructions. Codex, Cursor, Gemini, Copilot and any agent following the
-[AGENTS.md](https://agents.md/) convention read this file automatically.
+Cross-tool instructions ([AGENTS.md](https://agents.md/)). Repo: `themotionvisual/ViewTubeBUILD`.
+`main` is production and auto-deploys — branch, PR, never commit to `main`.
 
-Repository: `themotionvisual/ViewTubeBUILD`. `main` is production and auto-deploys to
-viewtube.live. Never commit to `main`; branch, push, open a PR.
+One-page overview: `docs/herald/README.md`. Full spec on demand: `agent/contracts/` (out · in · workflow · artifacts · curation ·
+maintenance). Registries: `agent/registry/` (capabilities · references · candidates).
+**Do not load them by default.**
 
-## Starting a fresh conversation elsewhere
+## Answer lean
 
-If this file is all you have, it is enough. For the fuller self-contained version to paste
-into ChatGPT or any tool without repo access, use `agent/START-PROMPT.md`.
+Fragments, not sentences. Tables and lists, not paragraphs. Exact paths and commands, not
+descriptions of them. No preamble, no "I'll now…", no restating the question, no summary of
+what you just said. Numbers over adjectives. Stop when done.
 
-## Before non-trivial work
+## Default answer — 4 parts
 
-Read `agent/contracts/README.md`, then `agent/contracts/herald-out.md`. Those files are
-canonical; this one is a summary.
+1. **INTENT** — one line: what's wanted + what you're assuming.
+2. **PRIOR-ART** — one line: `NOVEL` / `PARTIAL` / `EXISTS <ref>` / `FAILED-BEFORE <ref>`.
+   343 branches, 1,598 tasks, 79 docs, `_quarantine/`. `npm run brief -- <topic>` first.
+   `EXISTS` / `FAILED-BEFORE` stop the work.
+3. **PLAN** — steps, exact paths, exact commands.
+4. **STATUS** — `complete|partial|blocked` · `PROVEN` (the command that showed it) ·
+   `CLAIMED` (believed, not run) · `UNKNOWN` · changed paths.
 
-## Respond in tiers
-
-| Tier | When | Include |
-|---|---|---|
-| **T0** | no `src/` change, ≤1 file, one-command revert | readback · plan · status |
-| **T1** | *default* — any `src/`, `server/`, `api/` change, or any new file | + prior-art · owner · obstacles · what to reuse · references · **repos & tools worth adopting** · what you did not verify |
-| **T2** | ≥2 owners · new subsystem · schema/contract change · auth, billing, publishing, OAuth | + simpler alternative considered · fuller recommendations · thread record |
-
-## Always
-
-- **Restate the ask** before working: intent, assumptions, non-goals.
-- **Check whether it already exists.** 335 remote branches, 1,598 tasks, 79 docs, a
-  `_quarantine/` of prior attempts. Start at `agent/registry/references.md`.
-- **Name the canonical owner** of every path you touch.
-  `docs/migration/reference/VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json` lists 28 systems.
-- **Separate proven from claimed.** State the command that proved each claim, what you
-  believe but did not run, and what stays unknown.
-- **Show UI changes.** Capture the built app at 1440×1000, and 390×844 for anything
-  touching mobile geometry. A UI change with no capture is `partial`, never `complete`.
-- **Start from the cache.** `npm run brief -- <topic>` returns prior conversations, matching
-  branches and registry hits in one small pack. Use it before re-deriving anything — it is
-  the cheapest way to avoid burning usage on what is already known.
-- **Propose what to build and what to retire.** Offer a durable artifact when the work
-  suggests one — **a standalone HTML file** (single file, everything inline, works offline,
-  data as JSON near the top, search/filter, export as well as `localStorage`, phone width),
-  an audit, a reference doc, a research artifact, a skill. And flag one thing worth
-  retiring: skills to merge, docs describing an architecture that no longer exists,
-  references whose paths no longer resolve, research since disproved. Propose, never delete
-  unilaterally. See `agent/contracts/herald-curation.md`.
-- **Log the conversation.** Keep `meta.json` in the conversation folder current and run
-  `npm run log:build`; `docs/herald/CONVERSATION-LOG.md` is one row per conversation — name,
-  app, dates, status, branch, work done, and every document and screenshot.
-- **Changing this system itself?** Read `agent/contracts/herald-maintenance.md` first, edit
-  `agent/` never the generated targets, then `npm run agent:sync && npm run doctor`.
-- **Save every artifact before the turn ends** — nothing stays only in chat. Everything a
-  conversation produces goes to `docs/herald/artifacts/<YYYY-MM-DD>--<slug>/`:
-  - documents and standalone HTML in `documents/`; screenshots in `screenshots/`
-  - **all screenshots also embedded inline in one scrollable `SCREENSHOTS.md`**, each with
-    route · viewport · branch@sha · live/fixture · auth
-  - **two or more versions of the same thing → a folder named for it, with the chosen best
-    version loose in that folder and every other variant inside `variants/`.** Pick the
-    canonical by explicit decision first, else most recent, else largest, and record the
-    reason in `VERSIONS.md`. Never delete a variant.
-  - `npm run artifacts:group` finds versions of the same thing among loose files and builds
-    the folder for you; regenerate indexes with `npm run artifacts:index` and never
-    hand-edit `README.md` or `SCREENSHOTS.md`
-  - full rules: `agent/contracts/herald-artifacts.md`
-- **Suggest GitHub repositories and tools — every T1 and T2 answer.** Name one to three
-  concrete things that would help *this specific task*: a repository, library, action,
-  skill pack or reference implementation first; then a skill, sub-agent, slash command,
-  hook, MCP server or CI workflow. Give fit (`adopt-now` / `evaluate` / `defer`) and what
-  it gives this task.
-  - **Cannot verify it exists? Recommend it anyway, marked `unverified`, with the check
-    command** (`gh repo view owner/repo`). Never stay silent because you could not browse —
-    an omitted recommendation helps nobody, a labelled one costs a ten-second check.
-  - **No browsing at all?** Recommend from `agent/registry/candidates.md`, which holds
-    entries already verified on a stated date. Read it first either way, so a listed
-    candidate is advanced rather than raised again; append new ones with their date and
-    verdict.
-  - Saying "nothing worth adding here" is fine — as one explicit line, never as silence.
+Add only when it changes the decision: canonical owner · a real obstacle · what to reuse ·
+a GitHub repo worth adopting (mark `unverified` rather than staying silent) · something
+worth retiring. Say **T2** and ask first when a change crosses 2+ owners, adds a subsystem,
+or touches schema, auth, billing or publishing.
 
 ## Never
 
-- **Never write task status.** `ViewTube-Task-Index.html` is the sole authority. Propose;
-  the Task Authority disposes. Do not create a second ledger.
-- **Never assume a commit captured your work.** `.gitignore` is deny-by-default (`/*` at
-  line 2). New files under `docs/`, `.claude/`, `.viewtube/`, `agent/` and the repo root are
-  silently untracked. Verify with `git check-ignore -v <path>`, then `git add -f`.
-- **Never read local refs for branch history.** Agent clones are shallow — only `main` and
-  the working branch exist. Use `git ls-remote --heads origin`.
-- **Never treat a prototype or demo as runtime evidence.** A matching filename proves
-  nothing. Classify references: canonical · prototype · demo · recovery · quarantined ·
-  superseded.
-- **Never broaden** OAuth scope, billing authority, publishing rights or external writes
-  because it makes implementation easier.
-- **Never have two writers on one path** at the same time.
+- Write task status — `ViewTube-Task-Index.html` is the only authority. Propose.
+- Assume a commit saved it — `.gitignore` is deny-by-default; `git check-ignore -v <path>`.
+- Read local refs for branch history — the clone is shallow; `git ls-remote --heads origin`.
+- Call it `Finished` on unproven evidence. Code existing ≠ integrated ≠ verified ≠ deployed.
+- Treat a prototype or demo as runtime evidence.
+- Broaden OAuth scope, billing, publishing or external writes for convenience.
+
+## Always
+
+- **UI change** → capture the built app at 1440×1000, plus 390×844 for mobile geometry.
+  No capture = `partial`, never `complete`.
+- **Artifacts** → `docs/herald/artifacts/<date>--<slug>/`. Two versions of one thing = a
+  folder: best loose, rest in `variants/`. Screenshots roll into `SCREENSHOTS.md`.
+  `npm run artifacts:group` does the sorting.
+- **Log it** → keep `meta.json` current, `npm run log:build`.
+- **Changing this system?** `agent/contracts/herald-maintenance.md` first. Edit `agent/`,
+  never the generated targets, then `npm run agent:sync && npm run doctor`.
 
 ## Verify
 
-```bash
-npm run typecheck
-npm run test:focused
-npm run build
-npm run check:architecture
-```
-
-`npm run lint:runtime` reports ~1,800 pre-existing errors on `main`. That is inherited debt,
-not your regression — isolate it, do not chase it.
-
-Two `package.json` entries reference files that do not exist
-(`generate:oracle-skill-pack`, `generate:analytics-sync-backlog`). Do not treat
-`package.json` as a capability inventory without checking.
-
-## Where things are
-
-| Need | Path |
-|---|---|
-| Response contract | `agent/contracts/herald-out.md` |
-| Saving & organising artifacts | `agent/contracts/herald-artifacts.md` |
-| What to build and what to retire | `agent/contracts/herald-curation.md` |
-| Changing the system safely | `agent/contracts/herald-maintenance.md` |
-| Every conversation, one row | `docs/herald/CONVERSATION-LOG.md` |
-| Saved artifacts | `docs/herald/artifacts/` |
-| Conversation workflow, gates | `agent/contracts/herald-workflow.md` |
-| What tools exist | `agent/registry/capabilities.md` |
-| What docs and artifacts exist | `agent/registry/references.md` |
-| Architecture and constitution | `docs/architecture/` |
-| Rationale for all of the above | `docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md` |
+`npm run typecheck` · `test:focused` · `build` · `check:architecture`.
+`lint:runtime` has ~1,800 pre-existing errors on `main` — inherited debt, isolate it.

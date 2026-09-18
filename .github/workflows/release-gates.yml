@@ -44,6 +44,8 @@ jobs:
       - run: npm run check:artifacts
       # Conversation log: every folder has meta.json and the table is current.
       - run: npm run check:log
+      # Context floor: always-on files are charged against every turn of every conversation.
+      - run: npm run check:cost
 
   focused_contracts:
     name: focused-contracts

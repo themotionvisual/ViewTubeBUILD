@@ -83,6 +83,16 @@ never throw on malformed input. Add npm entries, then wire `check:*` into
 on `main`.** A gate that is red on arrival teaches everyone to ignore gates, which is
 already true of `static-quality` and its ~1,800 lint errors.
 
+## The context budget
+
+`npm run check:cost` fails when the always-on floor exceeds 2,500 tokens. That floor is
+charged against **every turn of every conversation**, so a 1 KB addition to `AGENTS.md` or
+`CLAUDE.md` costs ~250 tokens × every turn × every conversation, forever.
+
+Before adding to an always-on file, ask whether it can live on-demand instead. The system
+measured 6,663 tokens at its worst, roughly 200k input tokens across a 30-turn
+conversation, purely re-reading itself. Adding is the default failure mode here.
+
 ## The bar for contract changes
 
 A change here alters every future conversation in every tool. Before proposing one:

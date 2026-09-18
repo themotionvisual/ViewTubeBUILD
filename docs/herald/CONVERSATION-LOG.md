@@ -10,7 +10,7 @@ and no two conversations edit the same lines.
 
 | Conversation | App | Started | Last worked | Status | Branch | Work done | Documents, HTML & screenshots |
 |---|---|---|---|---|---|---|---|
-| [herald system](./artifacts/2026-09-16--herald-system/) | Claude Code (web) | 2026-09-16 | 2026-09-16 | 🔶 in progress | `claude/iewtuve-ai-system-aedxj4` | Built the Herald cross-application conversation system: contracts, registries, skill distribution, hooks, artifact organisation | `widget-library--2026-09-16--v12-matrix.html` (+2)<br>_ref:_ `docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md`, `agent/contracts/` |
+| [herald system](./artifacts/2026-09-16--herald-system/) | Claude Code (web) | 2026-09-16 | 2026-09-17 | 🔶 in progress | `claude/iewtuve-ai-system-aedxj4` | Built the Herald cross-application conversation system: contracts, registries, skill distribution, hooks, artifact organisation | `widget-library--2026-09-16--v12-matrix.html` (+2)<br>_ref:_ `docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md`, `agent/contracts/` |
 | [improvement backlog](./artifacts/2026-09-17--improvement-backlog/) | Claude Code (web) | 2026-09-17 | 2026-09-17 | ✅ finished | `claude/iewtuve-ai-system-aedxj4` | Produced a 50-item improvement backlog for the conversation system, grouped by theme with effort estimates | `50-IMPROVEMENT-IDEAS.md` |
 
 ---

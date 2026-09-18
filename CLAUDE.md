@@ -5,26 +5,19 @@ this repo. Keep it short. Longer notes belong in `docs/` or per-feature READMEs.
 
 ---
 
-## Agent contracts — read before non-trivial work
+## Agent contracts
 
-Full contract: `agent/contracts/` (start at `README.md`). Load `herald-out.md` before any
-task that changes `src/`, `server/` or `api/`, or that adds a file. Artifacts, screenshots
-and versioned files go to `docs/herald/artifacts/` under `herald-artifacts.md`.
-To start a conversation in another tool, paste `agent/START-PROMPT.md`.
+Overview: [`docs/herald/README.md`](docs/herald/README.md). Load `agent/contracts/`,
+`agent/registry/` on demand only. `npm run brief -- <topic>` before re-deriving.
 
-Four rules that apply even when you do not load it:
+Answer **lean** — fragments, tables, exact paths. No preamble, no restating the ask.
+Default: intent · prior-art verdict · plan · status (proven vs claimed). More only if it
+changes the decision.
 
-1. **`.gitignore` is deny-by-default** (`/*` at line 2). New files under `docs/`,
-   `.claude/`, `.viewtube/`, `agent/` and the repo root are **silently untracked**. Run
-   `git check-ignore -v <path>` before assuming a commit captured your work; `git add -f`
-   when it did not.
-2. **Never write task status.** `ViewTube-Task-Index.html` is the sole task authority.
-   Propose a status with evidence; the Task Authority disposes.
-3. **Separate proven from claimed.** Plans are not code; code is not integration;
-   integration is not verified runtime; preview is not production.
-4. **Check before you build.** 335 remote branches and 1,598 tasks exist. Search
-   `agent/registry/references.md`, `docs/`, `_quarantine/` and `git ls-remote` — the clone
-   is shallow, so local refs will wrongly tell you nothing exists.
+1. **`.gitignore` is deny-by-default** — `git check-ignore -v <path>` before believing a commit.
+2. **Never write task status** — `ViewTube-Task-Index.html` is sole authority; propose only.
+3. **Proven ≠ claimed** — code existing ≠ integrated ≠ verified ≠ deployed.
+4. **Check first** — 343 branches, 1,598 tasks; `git ls-remote`, the clone is shallow.
 
 ## Deployment topology
 
@@ -76,42 +69,6 @@ local :5173  →  feature branch  →  PR  →  main  →  Vercel  →  viewtube
    just cut a new feature branch. Local can drift as far as you want; the
    moment you want the drift live, open a PR.
 
-## Loss-safety pattern for big consolidations
-
-When multiple branches or long-lived local edits are being merged and any of
-them might introduce regressions, always create these three refs first so
-nothing can be lost, and mention them in the PR body:
-
-```bash
-# 1. Tag the current main so you can always roll back
-git tag pre-<name>-$(date +%Y-%m-%d) origin/main
-
-# 2. Branch pointer at the current HEAD of your work
-git branch snapshot/pre-<name>-HEAD-$(date +%Y-%m-%d)
-
-# 3. Preserve any uncommitted WT changes as a durable ref (won't be lost by
-#    stash pop, reset, or checkout)
-SNAP=$(git stash create "pre-<name> local edits $(date +%Y-%m-%d)")
-git update-ref refs/snapshots/local-edits-$(date +%Y-%m-%d) "$SNAP"
-```
-
-`refs/snapshots/*` are custom refs that don't show up in `git branch` /
-`git tag` listings but stay reachable — perfect for "just in case" backups.
-
-## Common pitfalls this workflow avoids
-
-- **Dev server on main during a merge**: files thrash under Vite while you're
-  cherry-picking, causing HMR errors and dev-server confusion. Always work on
-  a feature branch so your dev server sees a stable target.
-- **`git add -A` sweeping unrelated WIP**: name the exact paths you're
-  committing. If a stray WIP file is in the WT, snapshot it first (see above)
-  before doing anything that could stage everything.
-- **`git checkout <ref> -- <path>` also stages**: it updates both the index
-  and the working tree. Follow with `git reset HEAD -- <path>` if you want
-  the file in the WT but unstaged.
-- **Vite `server.fs.deny` on odd filenames**: `!!!Foo:Bar.svg` etc. fail in
-  CI even when they load locally. Keep asset filenames simple ASCII.
-
 ## Pre-push audit habit
 
 Before pushing a branch that will open a PR to `main`, run the pre-push audit
@@ -135,17 +92,7 @@ is paid down in its own dedicated PR, expect `static-quality` on the release
 gates to fail — and admin-bypass on merges is the current norm. Fix a slice
 of the debt any time you're editing a file for another reason.
 
-## Reference commands
+## Git playbook
 
-```bash
-# Enumerate branches by recency, remote-side
-git for-each-ref --sort=-committerdate \
-  --format='%(committerdate:short) %(refname:short)' refs/remotes/origin
-
-# Compute ahead/behind vs main
-git rev-list --count origin/main..<branch>   # commits <branch> has, main doesn't
-git rev-list --count <branch>..origin/main   # commits main has, <branch> doesn't
-
-# Verify a candidate for deletion has no unique content (patch-equal check)
-git cherry origin/main <branch>              # - = present on main; + = unique
-```
+Loss-safety refs before a big consolidation, the pitfalls this workflow avoids, and the
+branch-comparison commands: [`docs/herald/GIT-PLAYBOOK.md`](docs/herald/GIT-PLAYBOOK.md).

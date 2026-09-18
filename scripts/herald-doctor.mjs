@@ -62,7 +62,7 @@ ignored.length ? bad('gitignore allow-list', `${ignored.join(', ')} would be sil
                : ok('gitignore allow-list', 'agent paths track normally');
 
 // --- gates
-for (const t of ['check:agent-sync', 'check:artifacts', 'check:log']) {
+for (const t of ['check:agent-sync', 'check:artifacts', 'check:log', 'check:cost']) {
   try { execFileSync('npm', ['run', t, '--silent'], { cwd: ROOT, stdio: 'ignore' }); ok(`gate: ${t}`); }
   catch { bad(`gate: ${t}`, 'failing — run it to see why'); }
 }

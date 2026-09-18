@@ -40,6 +40,7 @@
     "log:init": "node scripts/herald-log.mjs init",
     "log:build": "node scripts/herald-log.mjs build",
     "check:log": "node scripts/herald-log.mjs check",
+    "check:cost": "node scripts/herald-cost.mjs",
     "brief": "node scripts/herald-brief.mjs",
     "doctor": "node scripts/herald-doctor.mjs",
     "check:architecture": "npm run check:quarantine && npm run check:src-governance && npm run typecheck",

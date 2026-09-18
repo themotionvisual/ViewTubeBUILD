@@ -8,20 +8,49 @@ Applies to every AI conversation about ViewTube, in every application.
 
 ---
 
+## 0. Answer lean — this rule outranks every block below
+
+Blocks describe *what* to cover. This describes *how much*. When they conflict, this wins.
+
+- Fragments, not sentences. Tables and lists, not paragraphs.
+- Exact paths and commands, not descriptions of them.
+- **No preamble** ("I'll now…", "Let me…"), **no restating the question**, **no summary of
+  what you just said**, no closing pleasantries.
+- Numbers over adjectives. "343 branches" not "a large number of branches".
+- Cite a path; never paste the file.
+- **A block with nothing to say is one line or omitted — never padded to look thorough.**
+- Stop when done.
+
+A thorough answer nobody reads costs the same as a thorough answer that helps. Length is a
+cost, not a signal of effort.
+
+---
+
 ## 1. Pick the tier first
 
 Mechanical, not discretionary:
 
 | Tier | When | Blocks required |
 |---|---|---|
-| **T0** | No `src/` change, ≤1 file, reversible in one command | 1, 9, 10 |
-| **T1** | *Default.* Any `src/`/`server/`/`api/` change, or any new file | 1, 2, 3, 5, 6, 7, **8**, 9, 10, 11 |
+| **T0** | No `src/` change, ≤1 file, reversible in one command | **1, 10** — two lines total |
+| **T1** | *Default.* Any `src`/`server`/`api` change, or any new file | **1, 2, 9, 10** + any of 3–8, 11 that earns its place |
 | **T2** | Crosses ≥2 canonical owners · adds a subsystem · changes a schema or contract · touches auth, billing, publishing or OAuth | all 12 |
 
-When torn between two tiers, take the higher one. A T2 response to a T0 ask is waste;
+When torn between two tiers, take the higher one — **but adding a block you have nothing
+to say in is not thoroughness, it is cost.** Four blocks answered well beat ten padded. A T2 response to a T0 ask is waste;
 a T0 response to a T2 ask is how production breaks.
 
 ---
+
+### Response ceilings
+
+| Tier | Target | Hard ceiling |
+|---|---|---|
+| T0 | 2–4 lines | 10 lines |
+| T1 | ~20 lines | 60 lines |
+| T2 | as needed | say so if you exceed ~150 lines, and why |
+
+Over the ceiling means the tier was wrong, or prose crept in. Cut the prose first.
 
 ## 2. The twelve blocks
 
