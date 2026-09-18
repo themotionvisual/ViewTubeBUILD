@@ -137,6 +137,9 @@ export interface AssetDefinition {
 
 export interface AssetCompositionProps extends Partial<AssetVisualProps> {
   assetId: AssetDefinition['id'];
+  /** Optional layout dimensions for embedded previews that differ from the parent composition. */
+  layoutWidth?: number;
+  layoutHeight?: number;
 }
 
 export type AssetRendererComponent = ComponentType<AssetCompositionProps>;
