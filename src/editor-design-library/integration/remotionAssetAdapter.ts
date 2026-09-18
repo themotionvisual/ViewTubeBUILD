@@ -26,13 +26,13 @@ export function remotionAssetToTimelineClip(
   options: RemotionAssetClipOptions,
 ): VtE1Clip {
   const asset = getAssetDefinition(assetId);
-  const start = Math.max(0, Number(options.startSec || 0));
+  const requestedStart = Number(options.startSec);
+  const start = Math.max(0, Number.isFinite(requestedStart) ? requestedStart : 0);
+  const defaultDuration = asset.type === 'motion' ? asset.recommendedDurationSeconds : 5;
+  const requestedDuration = Number(options.durationSec ?? defaultDuration);
   const duration = Math.max(
     0.05,
-    Number(
-      options.durationSec
-      ?? (asset.type === 'motion' ? asset.recommendedDurationSeconds : 5),
-    ),
+    Number.isFinite(requestedDuration) ? requestedDuration : defaultDuration,
   );
   const clipId = options.clipId || defaultClipId(asset.id);
 
