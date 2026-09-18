@@ -2,6 +2,7 @@ import React,{useState}from'react';
 import type{EditorStore}from'../state/editorState';
 import{EditorFeatureManifest}from'./EditorFeatureManifest';
 import{EditorControlManifest}from'./EditorControlManifest';
+import{EditorCreativeWorkspace}from'./EditorCreativeWorkspace';
 import{EditorNavigationPage,type EditorNavPage,type EditorSettingsModel,EDITOR_NAV_ITEMS}from'./EditorNavigationPages';
 import type{EditorCapabilityCategory}from'../../editorCapabilities';
 
@@ -15,7 +16,7 @@ export const EditorFeaturePages:React.FC<{store:EditorStore;settings?:EditorSett
   <nav aria-label="Editor pages" style={{display:'flex',gap:3,overflowX:'auto',paddingBottom:2}}>{EDITOR_NAV_ITEMS.map(item=><button key={item.id} onClick={()=>setPage(item.id)} aria-pressed={page===item.id} style={{flex:'0 0 auto',minHeight:36,minWidth:52,border:`2px solid ${INK}`,borderRadius:5,background:page===item.id?CYAN:'#fff',fontSize:7,fontWeight:900,textTransform:'uppercase',boxShadow:'2px 2px 0 rgba(54,224,246,.25)'}}><span style={{display:'block',fontSize:12}}>{item.icon}</span>{item.label}</button>)}</nav>
   <div style={{display:'grid',gridTemplateColumns:'minmax(0,1.25fr) minmax(132px,.75fr)',gap:4,minHeight:0,minWidth:0}}>
    <main style={{minHeight:0,overflow:'auto',border:`3px solid ${INK}`,borderRadius:7,background:'#fff',padding:6}}><EditorNavigationPage page={page} store={store} settings={settings}/></main>
-   <aside aria-label={`${page} feature map`} style={{minHeight:0,overflow:'auto',display:'grid',alignContent:'start',gap:5}}>{category&&<><EditorControlManifest store={store} category={category}/><EditorFeatureManifest compact category={category}/></>}</aside>
+   <aside aria-label={`${page} feature map`} style={{minHeight:0,overflow:'auto',display:'grid',alignContent:'start',gap:5}}>{category&&<><EditorCreativeWorkspace store={store} category={category}/><EditorControlManifest store={store} category={category}/><EditorFeatureManifest compact category={category}/></>}</aside>
   </div>
  </div>;
 };
