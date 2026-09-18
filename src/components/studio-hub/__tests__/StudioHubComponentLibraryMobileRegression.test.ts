@@ -5,10 +5,13 @@ import { describe, expect, it } from "vitest"
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
 
 describe("Studio Hub Component Library mobile regression", () => {
-  it("mounts the complete catalog from the production library toolbox", () => {
+  it("mounts frozen and primitive-migration catalogs from the production library wrapper", () => {
     const library = read("src/components/ToolboxUIReferenceLibrary.tsx")
     expect(library).toContain('import { StudioHubCompletePrimitiveCatalog }')
-    expect(library).toContain("<StudioHubCompletePrimitiveCatalog />")
+    expect(library).toContain('import { StudioHubPrimitiveMigrationCatalog }')
+    expect(library).toContain("<StudioHubCompletePrimitiveCatalog paletteIndex={paletteIndex} />")
+    expect(library).toContain("<StudioHubPrimitiveMigrationCatalog paletteIndex={paletteIndex} />")
+    expect(library).toContain('data-vt-library-track={track}')
   })
 
   it("keeps main toolbox geometry larger than subtoolbox geometry", () => {
