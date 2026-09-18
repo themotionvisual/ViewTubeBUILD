@@ -4,7 +4,7 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "./SubToolboxLayouts"
-import { SubToolboxButton, SubToolboxFileTarget, SubToolboxInput, SubToolboxMetric, SubToolboxOutputCard, SubToolboxStatePanel, SubToolboxTextArea } from "./SubToolboxPrimitives"
+import { SubToolboxButton, SubToolboxFileTarget, SubToolboxInput, SubToolboxMetric, SubToolboxOutputCard, SubToolboxStatePanel, SubToolboxTextArea, SubToolboxTooltip } from "./SubToolboxPrimitives"
 import { CONTROL_SHELL, SUBTOOLBOX_CONTROL_SIZES, SUBTOOLBOX_STATES, SUBTOOLBOX_TOKENS, TOOLBOX_LEVEL_DNA, resolveSubtoolboxMinHeight } from "./tokens"
 
 describe("Subtoolbox Primitive System", () => {
@@ -91,6 +91,7 @@ describe("Subtoolbox Primitive System", () => {
         <SubToolboxMetric label="Views" value="1,000" accentColor="#00ccff" />
         <SubToolboxOutputCard title="Description" accentColor="#ccff00">Output</SubToolboxOutputCard>
         <SubToolboxFileTarget label="Upload video" />
+        <SubToolboxTooltip level="l1" forceOpen content="Tooltip" />
       </SubToolboxStack>,
     )
 
@@ -103,5 +104,7 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("vt-subtoolbox-metric")
     expect(html).toContain("vt-subtoolbox-output")
     expect(html).toContain("vt-subtoolbox-file-target")
+    expect(html).toContain("vt-subtoolbox-tooltip is-l1 is-open")
+    expect(html).toContain('role="tooltip"')
   })
 })
