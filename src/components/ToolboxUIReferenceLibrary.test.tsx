@@ -6,13 +6,16 @@ import { describe, expect, it } from "vitest"
 import { ToolboxUIReferenceLibrary } from "./ToolboxUIReferenceLibrary"
 
 describe("Toolbox UI Reference Library", () => {
-  it("mounts the complete canonical component catalog inside the production toolbox shell", () => {
+  it("mounts frozen and primitive-migration catalogs in matching production toolbox shells", () => {
     const html = renderToStaticMarkup(
       <ToolboxUIReferenceLibrary collapsible={false} isOpenInitial paletteIndex={7} />,
     )
 
-    expect(html).toContain("Studio Hub Component Library")
-    expect(html).toContain("Complete Component + Primitive Catalog")
+    expect(html).toContain("Studio Hub Component Library — Hardcoded")
+    expect(html).toContain("Studio Hub Component Library — Primitive")
+    expect(html.match(/Complete Component \+ Primitive Catalog/g)).toHaveLength(2)
+    expect(html).toContain('data-vt-library-track="hardcoded"')
+    expect(html).toContain('data-vt-library-track="primitive"')
     expect(html).toContain("Split Search")
     expect(html).toContain("Toggle")
     expect(html).toContain("Settings Switch")
@@ -32,6 +35,13 @@ describe("Toolbox UI Reference Library", () => {
     expect(html).toContain('data-vt-toolbox-level="main"')
   })
 
+  it("keeps Tooltip as the first primitive-owned migration family while all other families fall back to the frozen renderer", () => {
+    const source = readFileSync(resolve(process.cwd(), "src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx"), "utf8")
+    expect(source).toContain('STUDIO_HUB_MIGRATED_FAMILIES = ["Tooltip"]')
+    expect(source).toContain("<SubToolboxTooltip")
+    expect(source).toContain("<HardcodedGenericControl")
+  })
+
   it("restores the 80px main toolbox header authority instead of inheriting subtoolbox height", () => {
     const source = readFileSync(resolve(process.cwd(), "src/components/ToolboxUIReferenceLibrary.tsx"), "utf8")
     expect(source).toContain('--vt-toolbox-header-height: 80px !important')
@@ -39,7 +49,7 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).toContain('width: 80px !important')
   })
 
-  it("is lazy-mounted as a single Studio Hub toolbox", () => {
+  it("is lazy-mounted once while the library component renders both comparison tracks", () => {
     const studioHub = readFileSync(resolve(process.cwd(), "src/views/StudioHub.tsx"), "utf8")
 
     expect(studioHub).toContain('React.lazy(() => import("../components/ToolboxUIReferenceLibrary"))')
