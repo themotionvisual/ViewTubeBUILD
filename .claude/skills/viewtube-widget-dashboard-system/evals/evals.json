@@ -1,0 +1,10 @@
+{
+  "skill": "viewtube-widget-dashboard-system",
+  "evals": [
+    {"name":"new-widget","prompt":"Create a new dashboard widget with a custom creator workflow.","must":["define creator job before styling","reuse WidgetShell and production primitives","declare W/H and states","use palette tokens","verify mobile and certification"]},
+    {"name":"migrate-widget","prompt":"Standardize an existing custom widget that has private controls and CSS.","must":["preserve specialized functional component","map private controls to primitives","fix highest shared CSS owner","preserve ID/data behavior","capture before/after visual evidence"]},
+    {"name":"library-promotion","prompt":"A useful control exists only in the UI Reference Library.","must":["promote implementation to production primitive layer","make library consume production primitive","avoid duplicate implementations"]},
+    {"name":"mobile-overflow","prompt":"A half-width desktop widget overflows on a phone.","must":["phone full width","preserve persisted desktop width","deterministic height","FIT ADAPT or SCROLL","fix shared owner before widget patch"]},
+    {"name":"legacy-cleanup","prompt":"Delete the old widget skills now that the new skill exists.","must":["reconcile unique rules","search consumers","migrate references","verify Claude/Codex routing","require creator-approved destructive deletion gate"]}
+  ]
+}
