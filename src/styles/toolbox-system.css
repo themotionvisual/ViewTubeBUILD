@@ -47,10 +47,10 @@
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-  width: 48px !important;
-  min-width: 48px !important;
-  height: 48px !important;
-  flex: 0 0 48px !important;
+  width: 56px !important;
+  min-width: 56px !important;
+  height: 56px !important;
+  flex: 0 0 56px !important;
   aspect-ratio: 1 / 1 !important;
   border-right: 5px solid #000 !important;
 }
@@ -204,7 +204,7 @@
 
 /* Compatibility accordion resolves to the same single SubToolbox geometry. */
 [data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="accordion"] {
-  --vt-toolbox-header-height: 56px;
+  --vt-toolbox-header-height: 48px;
   --vt-toolbox-radius: 12px;
   --vt-toolbox-title-size: 20px;
   border-width: 4px !important;
@@ -230,10 +230,10 @@
 }
 [data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-rail],
 [data-vt-toolbox-level="sub"] .vt-split-left-module-action > :first-child {
-  width: 56px !important;
-  min-width: 56px !important;
-  height: 56px !important;
-  flex: 0 0 56px !important;
+  width: 48px !important;
+  min-width: 48px !important;
+  height: 48px !important;
+  flex: 0 0 48px !important;
   aspect-ratio: 1 / 1 !important;
   display: flex;
   align-items: center;
