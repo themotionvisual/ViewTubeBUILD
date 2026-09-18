@@ -185,7 +185,7 @@ const motionSeeds: readonly MotionSeed[] = [
 const pad = (value: number) => String(value).padStart(3, '0');
 
 const makeStill = (seed: Seed, index: number): AssetDefinition => ({
-  id: `static-${pad(index + 1)}`,
+  id: `static-${pad(index + 1)}` as AssetDefinition['id'],
   name: seed.name,
   type: 'static',
   category: seed.category,
@@ -212,7 +212,7 @@ const makeStill = (seed: Seed, index: number): AssetDefinition => ({
 const makeMotion = (seed: MotionSeed, index: number): AssetDefinition => {
   const durationInFrames = Math.round(seed.seconds * 30);
   return {
-    id: `motion-${pad(index + 1)}`,
+    id: `motion-${pad(index + 1)}` as AssetDefinition['id'],
     name: seed.name,
     type: 'motion',
     category: seed.category,
