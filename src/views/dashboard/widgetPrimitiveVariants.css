@@ -523,3 +523,18 @@
   font-weight: 1000;
   line-height: 1;
 }
+
+
+/* Phase 3 split-left sizing. Keep the compact icon bay, but make the control
+   and label occupy the available reference-library width instead of reading
+   like a micro control. */
+.widget-reference-family .widget-split-button.is-left-split {
+  width:100%;
+  min-width:0;
+}
+.widget-split-button.is-left-split .widget-split-button-label {
+  min-width:0;
+  padding-inline:max(8px, calc(var(--vt-primitive-height) * .3));
+  font-size:var(--vt-primitive-font) !important;
+  font-weight:1000 !important;
+}
