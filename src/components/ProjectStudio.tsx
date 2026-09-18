@@ -36,7 +36,7 @@ interface LocalDayTask {
 
 const PROJECT_COLORS = ['#ff3399', '#ccff00', '#00ccff', '#ffdd00', '#9933FF', '#FF9900'];
 
-export const ProjectStudio: React.FC = () => {
+export const ProjectStudio: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
     const { brain, addProject, updateProject, setChannelHub } = useBrain();
     const [isMainToolOpen, setIsMainToolOpen] = useState(true);
     const [viewContext, setViewContext] = useState<'channel' | 'projects'>('channel');
@@ -296,7 +296,8 @@ export const ProjectStudio: React.FC = () => {
             onToggle={() => setIsMainToolOpen((open) => !open)}
             headerActions={projectPlanningActions}
             contentClassName="p-0"
-            shellClassName="w-full max-w-[1400px] mx-auto mb-40"
+            chrome={embedded ? "none" : "full"}
+            shellClassName={embedded ? "" : "w-full max-w-[1400px] mx-auto mb-40"}
         >
                 <div className="flex flex-col">
                     {/* 2. Content Calendar & Daily Planner */}

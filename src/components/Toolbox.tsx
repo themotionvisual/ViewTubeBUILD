@@ -104,6 +104,16 @@ interface ToolboxProps {
   fillAvailable?: boolean;
   /** Solid black shell shadow instead of the default header-tinted 45%-opacity shadow. */
   hardShadow?: boolean;
+  /**
+   * "none" renders the children with no shell, header, border, radius, shadow or
+   * collapse control — for a tool mounted inside another tool's shell, where a
+   * second level-0 frame would duplicate the host's own title and chrome.
+   *
+   * `embedded` does not do this: it only drops the content padding. Projects
+   * relied on arbitrary-variant `!important` overrides to strip the inner shell
+   * instead, which could not reach a nested frame and left two visible titles.
+   */
+  chrome?: "full" | "none";
 }
 
 export const Toolbox: React.FC<ToolboxProps> = ({
@@ -133,6 +143,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   disableCollapseAnimation = false,
   fillAvailable = false,
   hardShadow = false,
+  chrome = "full",
 }) => {
   const [internalOpen, setInternalOpen] = useState(isOpenInitial);
   const [showHelpRail, setShowHelpRail] = useState(false);
@@ -229,6 +240,16 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           : paletteIndex + subPaletteCursorRef.current,
     };
   }, [paletteIndex]);
+
+  if (chrome === "none") {
+    // No shell: the host tool already owns the frame, header and collapse.
+    // The palette context still flows so nested subtoolboxes keep cycling.
+    return (
+      <PaletteCycleContext.Provider value={paletteCycleContextValue}>
+        <div className={`w-full min-w-0 ${fillAvailable ? "h-full min-h-0" : ""} ${outerClassName}`}>{children}</div>
+      </PaletteCycleContext.Provider>
+    );
+  }
 
   return (
     <PaletteCycleContext.Provider value={paletteCycleContextValue}>
@@ -452,6 +473,7 @@ interface ToolboxScaffoldProps {
   helpText?: React.ReactNode;
   helpGuide?: string[];
   hardShadow?: boolean;
+  chrome?: "full" | "none";
 }
 
 export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
@@ -479,6 +501,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
   helpText,
   helpGuide,
   hardShadow = false,
+  chrome = "full",
 }) => (
   <Toolbox
     variant="scaffold"
@@ -506,6 +529,7 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     helpText={helpText}
     helpGuide={helpGuide}
     hardShadow={hardShadow}
+    chrome={chrome}
   >
     {children}
   </Toolbox>

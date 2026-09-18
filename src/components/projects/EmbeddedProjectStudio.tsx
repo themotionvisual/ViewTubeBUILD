@@ -4,6 +4,6 @@ import ProjectPlanningSubtoolboxes from "./ProjectPlanningSubtoolboxes"
 import { SubToolboxStack } from "../subtoolbox/SubToolboxLayouts"
 
 /** Restored original Project Studio plus project-specific planning controls. */
-const EmbeddedProjectStudio: React.FC = () => <SubToolboxStack density="comfortable"><ProjectStudio /><ProjectPlanningSubtoolboxes /></SubToolboxStack>
+const EmbeddedProjectStudio: React.FC = () => <SubToolboxStack density="comfortable"><ProjectStudio embedded /><ProjectPlanningSubtoolboxes /></SubToolboxStack>
 
 export default EmbeddedProjectStudio
