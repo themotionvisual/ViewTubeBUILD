@@ -40,8 +40,8 @@ const DemoShell: React.FC<{ level: Level; children: React.ReactNode }> = ({ leve
   <div className={`vt-catalog-demo is-${level}`} data-level={level}>{children}</div>
 )
 
-const GenericControl: React.FC<{ name: string; level: Level; index: number }> = ({ name, level, index }) => {
-  const colors = pair(index)
+const GenericControl: React.FC<{ name: string; level: Level; index: number; paletteIndex: number }> = ({ name, level, index, paletteIndex }) => {
+  const colors = pair(paletteIndex)
   const style = { "--pair-a": colors.a, "--pair-b": colors.b } as React.CSSProperties
   const icon = <Settings2 aria-hidden="true" />
 
@@ -96,8 +96,10 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number }> = 
   return <Circle />
 }
 
-export const StudioHubCompletePrimitiveCatalog: React.FC = () => (
-  <section className="vt-complete-catalog" aria-labelledby="studio-hub-complete-catalog-title">
+export interface StudioHubCompletePrimitiveCatalogProps { paletteIndex?: number }
+
+export const StudioHubCompletePrimitiveCatalog: React.FC<StudioHubCompletePrimitiveCatalogProps> = ({ paletteIndex = 7 }) => (
+  <section className="vt-complete-catalog" aria-labelledby="studio-hub-complete-catalog-title" data-palette-index={paletteIndex}>
     <header className="vt-complete-catalog-heading">
       <div><Lightbulb/><div><h2 id="studio-hub-complete-catalog-title">Complete Component + Primitive Catalog</h2><p>Every reusable Studio Hub family rendered at L0, L1 and L2. Compact is retired.</p></div></div>
       <strong>{STUDIO_HUB_COMPONENT_FAMILIES.length} FAMILIES · {STUDIO_HUB_COMPONENT_FAMILIES.length * LEVELS.length} EXAMPLES</strong>
@@ -107,7 +109,7 @@ export const StudioHubCompletePrimitiveCatalog: React.FC = () => (
         <article className="vt-catalog-family" key={name}>
           <h3><span>{String(index + 1).padStart(2,"0")}</span>{name}</h3>
           <div className="vt-catalog-levels">
-            {LEVELS.map(level => <DemoShell level={level} key={level}><GenericControl name={name} level={level} index={index}/></DemoShell>)}
+            {LEVELS.map(level => <DemoShell level={level} key={level}><GenericControl name={name} level={level} index={index} paletteIndex={paletteIndex}/></DemoShell>)}
           </div>
         </article>
       ))}
