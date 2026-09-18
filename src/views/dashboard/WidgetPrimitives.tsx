@@ -766,6 +766,7 @@ export {
   WidgetSearchInput,
   WidgetLiveBadge,
   WidgetSpectrumFillBadge,
+  WidgetToast,
   WidgetToggleSwitch,
   WidgetRadio,
   WidgetCheckbox,

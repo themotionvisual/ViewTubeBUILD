@@ -30,8 +30,20 @@ const ProjectsToolboxModule: React.FC<ProjectsToolboxModuleProps> = ({
   contentClassName="bg-white p-0"
   outerClassName="w-full"
  >
+  {/*
+   * A tool mounted here renders its body only: this module owns the level-0
+   * frame, header and collapse. Tools opt in with chrome="none" rather than
+   * having their shell stripped from the outside.
+   *
+   * This wrapper used to carry eight `!important` arbitrary-variant overrides.
+   * Measured in Chromium, two of them matched nothing anywhere on the page
+   * (`[&>div>header:first-child]:!hidden` and the legacy-header selector, whose
+   * attribute no source sets), and the rest could only reach a direct child —
+   * so the nested frames inside Project Studio and Storyboard Studio kept their
+   * headers, and Storyboard Studio showed its title twice.
+   */}
   <div
-   className="min-w-0 [&>div]:!rounded-none [&>div]:!border-0 [&>div]:!shadow-none [&>div]:!max-w-none [&>div]:!mx-0 [&>div]:!mb-0 [&>div>header:first-child]:!hidden [&_[data-vt-legacy-tool-header='true']]:!hidden"
+   className="min-w-0"
    data-vt-project-toolbox-content="true"
    data-vt-project-level="main-toolbox"
   >

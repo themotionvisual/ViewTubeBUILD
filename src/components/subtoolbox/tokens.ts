@@ -41,7 +41,11 @@ export const TOOLBOX_LEVEL_DNA = {
     titleSize: 22,
   },
   l1: {
-    height: 48,
+    // 32db8dc lowered toolbox 80 -> 56 and l0 56 -> 44 but left l1 at 48,
+    // which made a level-1 control taller than the level-0 shell it nests
+    // inside. 38 restores the strictly descending ladder at the ratio l1 held
+    // to l0 before that commit (48/56 ~= 38/44).
+    height: 38,
     stroke: 3,
     radius: 8,
     shadowOffset: 4,
@@ -182,15 +186,59 @@ export const resolveSubtoolboxMinHeight = (
   return Math.max(0, openUnits * TOOLBOX_LEVEL_DNA.l0.height + (openUnits - 1) * gap - overhead)
 }
 
-export type SubToolboxControlSize = ToolboxControlLevel
+/**
+ * Control size is a component variant, not a structural level. It names the
+ * `.vt-subtoolbox-button.is-*` rules in subtoolbox-system.css, which run
+ * micro 26px / compact 32px / standard 48px / action 56px.
+ *
+ * This was previously aliased to ToolboxControlLevel ("l0" | "l1" | "l2"),
+ * which conflated the two ideas: it made the component's own defaults
+ * (size = "standard", size = "action") invalid against their declared type,
+ * could not express "action" at all, and put ~20 call sites permanently in
+ * error while rendering correctly. The sibling props in SubToolboxPrimitives
+ * are already typed as the literal unions their CSS implements; this now
+ * matches them.
+ *
+ * Reconciling the two ladders — deriving the CSS custom properties from
+ * TOOLBOX_LEVEL_DNA, or retiring one naming for the other — is a separate
+ * decision. Until it is taken, the type describes what ships.
+ */
+export const SUBTOOLBOX_CONTROL_SIZES = ["micro", "compact", "standard", "action"] as const
+
+export type SubToolboxControlSize = (typeof SUBTOOLBOX_CONTROL_SIZES)[number]
+
+/**
+ * The bridge between the two ladders, for callers that hold a structural level
+ * and need a control size. Descending levels map to descending sizes; the pixel
+ * values do not line up, because the CSS ladder is not derived from
+ * TOOLBOX_LEVEL_DNA. That is the open reconciliation, and this map is the one
+ * place it has to be resolved when it is taken.
+ *
+ * Callers previously passed a level straight through as a size. It typechecked,
+ * because the two types were aliased, and rendered `is-l0` — a class the
+ * stylesheet does not define — so those controls shipped unstyled.
+ */
+export const CONTROL_SIZE_FOR_LEVEL: Record<ToolboxControlLevel, SubToolboxControlSize> = {
+  l0: "standard",
+  l1: "compact",
+  l2: "micro",
+}
 export type SubToolboxLayoutDensity = "dense" | "standard" | "comfortable"
-export type SubToolboxState =
-  | "loading"
-  | "ready"
-  | "empty"
-  | "filtered-empty"
-  | "disconnected"
-  | "blocked"
-  | "stale"
-  | "permission"
-  | "error"
+/**
+ * The state list is a runtime value, not just a union, so a gate can iterate it.
+ * A state declared here but missing from a consumer's Record renders an empty
+ * panel rather than failing the build — three of them did.
+ */
+export const SUBTOOLBOX_STATES = [
+  "loading",
+  "ready",
+  "empty",
+  "filtered-empty",
+  "disconnected",
+  "blocked",
+  "stale",
+  "permission",
+  "error",
+] as const
+
+export type SubToolboxState = (typeof SUBTOOLBOX_STATES)[number]

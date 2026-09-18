@@ -1,7 +1,10 @@
+import { readFileSync } from "node:fs"
 import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import {
+  WidgetLeftSplitBadge,
+  WidgetToast,
   WidgetAlphabeticalTag,
   WidgetBadge,
   WidgetChoice,
@@ -276,5 +279,69 @@ describe("shared widget form primitives", () => {
 
     expect(markup).toContain("widget-split-button-icon")
     expect(markup).toContain("widget-split-button-label")
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════
+// A primitive that emits `is-<something>` as a class name renders
+// unstyled when the stylesheet has no matching rule, and nothing
+// fails: not the build, not the types, not a render assertion.
+// WidgetSpectrumFillBadge shipped that way — it emitted
+// is-spectrum-rose … is-spectrum-pink while the CSS defined none
+// of them, so all twelve painted the same royal fallback.
+// ═══════════════════════════════════════════════════════════════
+describe("spectrum tone classes", () => {
+  const matrixCss = readFileSync(
+    new URL("../widgetMatrixPrimitives.css", import.meta.url),
+    "utf8",
+  )
+
+  it("defines every spectrum slot the primitives can emit", () => {
+    for (const name of WIDGET_BADGE_SPECTRUM) {
+      expect(
+        matrixCss.includes(`.widget-spectrum-fill-badge.is-spectrum-${name}`),
+        `no fill-badge rule for is-spectrum-${name}`,
+      ).toBe(true)
+      expect(
+        matrixCss.includes(`.widget-split-badge.is-spectrum-${name}`),
+        `no split-badge rule for is-spectrum-${name}`,
+      ).toBe(true)
+      // The toast takes `spectrum` too. Leaving it out of the selector list
+      // is exactly how the fill badge came to render a uniform fallback.
+      expect(
+        matrixCss.includes(`.widget-toast.is-spectrum-${name}`),
+        `no toast rule for is-spectrum-${name}`,
+      ).toBe(true)
+    }
+  })
+
+  it("keeps those rules on the palette", () => {
+    // CSS cannot import the TS token, so assert the hexes agree here
+    // rather than letting the two drift silently.
+    WIDGET_BADGE_SPECTRUM.forEach((name, index) => {
+      const rule = new RegExp(
+        `\\.widget-split-badge\\.is-spectrum-${name}\\s*\\{[^}]*--vt-tone-fill:\\s*(#[0-9A-Fa-f]{6})`,
+      )
+      const hex = matrixCss.match(rule)?.[1]
+      expect(hex?.toUpperCase(), `is-spectrum-${name} hue`).toBe(
+        VT_SPECTRUM_PALETTE_06[index].toUpperCase(),
+      )
+    })
+  })
+
+  it("renders a spectrum split badge and a semantic toast", () => {
+    const badge = renderToStaticMarkup(
+      <WidgetLeftSplitBadge spectrum="teal" icon={<span />}>On target</WidgetLeftSplitBadge>,
+    )
+    expect(badge).toContain("is-spectrum-teal")
+    expect(badge).toContain("widget-split-badge-icon")
+
+    // Status must not be carried by hue alone: it sets a data attribute
+    // and an assertive live region for the two urgent states.
+    const danger = renderToStaticMarkup(<WidgetToast status="danger" title="Scope missing" />)
+    expect(danger).toContain('data-widget-toast-status="danger"')
+    expect(danger).toContain('role="alert"')
+    const info = renderToStaticMarkup(<WidgetToast status="neutral" title="Heads up" />)
+    expect(info).toContain('role="status"')
   })
 })

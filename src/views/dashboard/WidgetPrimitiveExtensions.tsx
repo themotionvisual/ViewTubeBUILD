@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from "react"
-import { Check, ChevronDown, ChevronUp, FileVideo2, Search } from "lucide-react"
-import { WIDGET_BADGE_SPECTRUM, WidgetSelect, WidgetSplitButton, type WidgetBadgeSpectrumName, type WidgetBadgeTone, type WidgetSelectOption } from "./WidgetPrimitives"
+import { AlertTriangle, Check, ChevronDown, ChevronUp, FileVideo2, Info, OctagonAlert, Search, X } from "lucide-react"
+import { WIDGET_BADGE_SPECTRUM, WidgetSelect, WidgetSplitButton, resolveBadgeHue, type WidgetBadgeSpectrumName, type WidgetBadgeStatus, type WidgetBadgeTone, type WidgetSelectOption } from "./WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone as PrimitiveTone } from "./widgetPrimitiveSystem"
 import "./widgetVideoSelectButtonScroll.css"
@@ -27,7 +27,13 @@ export const WidgetIconButton:React.FC<Omit<React.ButtonHTMLAttributes<HTMLButto
 export const WidgetIconBadge:React.FC<{icon:React.ReactNode;label?:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;className?:string}> = ({icon,label,height=32,tone="default",className=""}) => <span role={label?"img":undefined} aria-label={label} aria-hidden={label?undefined:true} className={`widget-icon-badge vt-shape-square ${primitiveClass(height,tone)} ${className}`.trim()}><span className="widget-icon-button-glyph">{icon}</span></span>
 export const WidgetStepper:React.FC<{value:number;onChange:(value:number)=>void;min?:number;max?:number;step?:number;label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;className?:string}> = ({value,onChange,min=0,max=99,step=1,label,height=32,tone="default",className=""}) => {const clamp=(n:number)=>Math.max(min,Math.min(max,n));return <div className={`widget-stepper ${primitiveClass(height,tone)} ${className}`.trim()} role="group" aria-label={label}><button type="button" className="widget-stepper-step" aria-label={`Decrease ${label}`} disabled={value<=min} onClick={()=>onChange(clamp(value-step))}>−</button><span className="widget-stepper-value" aria-live="polite">{value}</span><button type="button" className="widget-stepper-step" aria-label={`Increase ${label}`} disabled={value>=max} onClick={()=>onChange(clamp(value+step))}>+</button></div>}
 export const WidgetPagination:React.FC<{page:number;pageCount:number;onChange:(page:number)=>void;label?:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;className?:string}> = ({page,pageCount,onChange,label="Pagination",height=32,tone="default",className=""}) => {const pages=useMemo(()=>{if(pageCount<=5)return Array.from({length:pageCount},(_,i)=>i+1);const start=Math.max(1,Math.min(page-2,pageCount-4));return Array.from({length:5},(_,i)=>start+i)},[page,pageCount]);return <div className={`widget-pagination ${primitiveClass(height,tone)} ${className}`.trim()} role="navigation" aria-label={label}>{pages.map(entry=><button key={entry} type="button" className={`widget-pagination-page ${entry===page?"is-active":""}`.trim()} aria-current={entry===page?"page":undefined} aria-label={`Page ${entry}`} onClick={()=>onChange(entry)}>{entry}</button>)}</div>}
-export const WidgetLeftSplitBadge:React.FC<{icon:React.ReactNode;children:React.ReactNode;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;iconStyle?:WidgetSplitIconStyle;className?:string}> = ({icon,children,height=32,tone="default",iconStyle="white-on-color",className=""}) => <span className={`widget-split-badge is-left-split ${primitiveClass(height,tone)} is-icon-${iconStyle} ${className}`.trim()}><span className="widget-split-badge-icon" aria-hidden="true">{icon}</span><span className="widget-split-badge-label">{children}</span></span>
+/**
+ * Split-left badge. `spectrum` picks one of the twelve VT_SPECTRUM_PALETTE_06
+ * slots for the icon bay and body tint; without it the badge follows the
+ * widget's own colour through the tone tokens, which is the existing
+ * behaviour and stays the default.
+ */
+export const WidgetLeftSplitBadge:React.FC<{icon:React.ReactNode;children:React.ReactNode;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;spectrum?:WidgetBadgeSpectrumName;iconStyle?:WidgetSplitIconStyle;className?:string}> = ({icon,children,height=32,tone="default",spectrum,iconStyle="white-on-color",className=""}) => <span className={`widget-split-badge is-left-split ${primitiveClass(height,tone)} ${spectrum?`is-spectrum-${spectrum}`:""} is-icon-${iconStyle} ${className}`.trim().replace(/\s+/g," ")}><span className="widget-split-badge-icon" aria-hidden="true">{icon}</span><span className="widget-split-badge-label">{children}</span></span>
 export const WidgetSearchInput:React.FC<Omit<React.InputHTMLAttributes<HTMLInputElement>,"type">&{label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;iconStyle?:WidgetSplitIconStyle}> = ({label,height=32,tone="default",iconStyle="white-on-color",className="",...props}) => <label className={`widget-search-input is-left-split ${primitiveClass(height,tone)} is-icon-${iconStyle} ${className}`.trim()}><span className="widget-search-input-icon" aria-hidden="true"><Search strokeWidth={2.5}/></span><span className="vt-visually-hidden">{label}</span><input type="search" aria-label={label} {...props}/></label>
 export const WidgetLiveBadge:React.FC<{children?:React.ReactNode;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;className?:string}> = ({children="Live",height=24,tone="primary",className=""}) => <span className={`widget-live-badge ${primitiveClass(height,tone)} ${className}`.trim()}><span className="widget-live-badge-dot" aria-hidden="true"/><span>{children}</span></span>
 
@@ -37,5 +43,58 @@ export const WidgetRadio:React.FC<{checked:boolean;onChange:()=>void;label:strin
 export const WidgetCheckbox:React.FC<{checked:boolean;onChange:(checked:boolean)=>void;label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;disabled?:boolean;className?:string}> = ({checked,onChange,label,height=24,tone="default",disabled=false,className=""}) => <button type="button" role="checkbox" aria-checked={checked} aria-label={label} disabled={disabled} className={`widget-checkbox vt-shape-square ${primitiveClass(height,tone)} ${checked?"is-checked":""} ${className}`.trim()} onClick={()=>onChange(!checked)}>{checked?<Check aria-hidden="true"/>:null}</button>
 
 export const WidgetAlphabeticalTag:React.FC<{letter:string;children?:React.ReactNode;selected?:boolean;removable?:boolean;onClick?:()=>void;className?:string}> = ({letter,children,selected=false,removable=false,onClick,className=""}) => {const normalized=letter.trim().slice(0,1).toUpperCase();const index=Math.max(0,Math.min(25,normalized.charCodeAt(0)-65));const color=VT_SPECTRUM_PALETTE_06[Math.round((index/25)*(VT_SPECTRUM_PALETTE_06.length-1))]||VT_SPECTRUM_PALETTE_06[0];const content=<><span>{children??normalized}</span><span className="widget-alpha-tag-action" aria-hidden="true">{removable?"−":selected?"×":"+"}</span></>;const style={"--widget-alpha-color":color} as React.CSSProperties;return onClick?<button type="button" className={`widget-alpha-tag ${selected?"is-selected":""} ${removable?"is-removable":""} ${className}`.trim()} style={style} onClick={onClick}>{content}</button>:<span className={`widget-alpha-tag ${selected?"is-selected":""} ${removable?"is-removable":""} ${className}`.trim()} style={style}>{content}</span>}
+/**
+ * Toast / alert. One bar with an icon bay, a title, optional detail and an
+ * optional dismiss.
+ *
+ * `status` carries the meaning (positive / warning / danger / neutral) and
+ * resolves to a spectrum slot through resolveBadgeHue, so an alert can never
+ * introduce a colour from outside VT_SPECTRUM_PALETTE_06. `spectrum` overrides
+ * the hue for catalogue and non-semantic use without changing the icon.
+ *
+ * Status is not carried by colour alone: each status has its own glyph, and
+ * a danger or warning toast announces itself assertively.
+ */
+/** Module-private: the `icon` prop is the public override. */
+const WIDGET_TOAST_ICONS: Record<WidgetBadgeStatus, React.ReactNode> = {
+  positive: <Check aria-hidden="true" />,
+  warning: <AlertTriangle aria-hidden="true" />,
+  danger: <OctagonAlert aria-hidden="true" />,
+  neutral: <Info aria-hidden="true" />,
+}
+
+export const WidgetToast: React.FC<{
+  title: React.ReactNode
+  detail?: React.ReactNode
+  status?: WidgetBadgeStatus
+  spectrum?: WidgetBadgeSpectrumName
+  icon?: React.ReactNode
+  onDismiss?: () => void
+  dismissLabel?: string
+  className?: string
+}> = ({ title, detail, status = "neutral", spectrum, icon, onDismiss, dismissLabel = "Dismiss", className = "" }) => {
+  const urgent = status === "danger" || status === "warning"
+  return (
+    <div
+      className={`widget-toast ${spectrum ? `is-spectrum-${spectrum}` : ""} is-${status} ${className}`.trim().replace(/\s+/g, " ")}
+      data-widget-toast-status={status}
+      role={urgent ? "alert" : "status"}
+      aria-live={urgent ? "assertive" : "polite"}
+      style={spectrum ? undefined : ({ "--widget-toast-hue": resolveBadgeHue(undefined, status) } as React.CSSProperties)}
+    >
+      <span className="widget-toast-icon" aria-hidden="true">{icon ?? WIDGET_TOAST_ICONS[status]}</span>
+      <div className="widget-toast-body">
+        <div className="widget-toast-title">{title}</div>
+        {detail ? <div className="widget-toast-detail">{detail}</div> : null}
+      </div>
+      {onDismiss ? (
+        <button type="button" className="widget-toast-dismiss" aria-label={dismissLabel} onClick={onDismiss}>
+          <X aria-hidden="true" />
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
 export { WIDGET_BADGE_SPECTRUM }
 export type { WidgetBadgeTone }

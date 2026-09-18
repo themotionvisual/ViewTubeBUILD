@@ -11,6 +11,7 @@ import {
 import {
   SubToolboxKpiCard, SubToolboxSplitButton, SubToolboxSplitDropdown,
 } from "../subtoolbox/SubToolboxSplitPrimitives"
+import { CONTROL_SIZE_FOR_LEVEL } from "../subtoolbox/tokens"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import "./studio-hub-complete-primitive-catalog.css"
 
@@ -92,7 +93,7 @@ const GenericControl: React.FC<{ name: string; level: Level; index: number; pale
   if (name === "Checkbox") return <button type="button" className={`vt-catalog-checkbox is-${level} ${checkboxOn ? "is-on" : ""}`} style={style} aria-label="Checkbox" aria-pressed={checkboxOn} onClick={() => setCheckboxOn(v => !v)}><span /></button>
   if (name === "Radio") return <button type="button" className={`vt-catalog-radio is-${level} ${radioOn ? "is-on" : ""}`} style={style} aria-label="Radio" aria-pressed={radioOn} onClick={() => setRadioOn(v => !v)}><span /></button>
   if (name === "Segmented Choice") return <div className={`vt-catalog-segmented is-${level}`} style={style}><button>A</button><button>B</button><button>C</button></div>
-  if (name === "Button Group") return <div className="vt-catalog-button-group"><SubToolboxButton size={level}>One</SubToolboxButton><SubToolboxButton size={level}>Two</SubToolboxButton></div>
+  if (name === "Button Group") return <div className="vt-catalog-button-group"><SubToolboxButton size={CONTROL_SIZE_FOR_LEVEL[level]}>One</SubToolboxButton><SubToolboxButton size={CONTROL_SIZE_FOR_LEVEL[level]}>Two</SubToolboxButton></div>
   if (name === "Tag") return <SubToolboxTag>Napoleon</SubToolboxTag>
   if (name === "Removable Tag") return <span className={`vt-spectrum-tag is-${level}`} style={style}>Napoleon <button aria-label="Remove"><X /></button></span>
   if (name === "Selectable Tag") return <SubToolboxTag selected><Check /> Selected</SubToolboxTag>

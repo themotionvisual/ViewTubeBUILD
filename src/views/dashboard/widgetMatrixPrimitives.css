@@ -355,3 +355,155 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* ── 12-slot spectrum tones ─────────────────────────────────────
+   One class per VT_SPECTRUM_PALETTE_06 slot. These drive both the
+   borderless fill badge and the split-left badge's icon bay, so a
+   spectrum choice reads the same on every primitive that takes one.
+
+   WidgetSpectrumFillBadge has always emitted `is-spectrum-<name>`,
+   but nothing defined those classes and nothing set
+   --widget-spectrum-fill, so all twelve rendered the same royal
+   fallback. A gate in WidgetPrimitives.test.tsx now asserts every
+   spectrum name has a rule here and that the hex matches the
+   palette, since CSS cannot import the TS token.
+   ─────────────────────────────────────────────────────────────── */
+.widget-spectrum-fill-badge.is-spectrum-rose,
+.widget-toast.is-spectrum-rose,
+.widget-split-badge.is-spectrum-rose { --widget-spectrum-fill: #FA618A; --vt-tone-fill: #FA618A; }
+.widget-spectrum-fill-badge.is-spectrum-coral,
+.widget-toast.is-spectrum-coral,
+.widget-split-badge.is-spectrum-coral { --widget-spectrum-fill: #FF7F6B; --vt-tone-fill: #FF7F6B; }
+.widget-spectrum-fill-badge.is-spectrum-orange,
+.widget-toast.is-spectrum-orange,
+.widget-split-badge.is-spectrum-orange { --widget-spectrum-fill: #FFA85C; --vt-tone-fill: #FFA85C; }
+.widget-spectrum-fill-badge.is-spectrum-yellow,
+.widget-toast.is-spectrum-yellow,
+.widget-split-badge.is-spectrum-yellow { --widget-spectrum-fill: #FFDA47; --vt-tone-fill: #FFDA47; }
+.widget-spectrum-fill-badge.is-spectrum-lime,
+.widget-toast.is-spectrum-lime,
+.widget-split-badge.is-spectrum-lime { --widget-spectrum-fill: #C0F240; --vt-tone-fill: #C0F240; }
+.widget-spectrum-fill-badge.is-spectrum-green,
+.widget-toast.is-spectrum-green,
+.widget-split-badge.is-spectrum-green { --widget-spectrum-fill: #3FEE56; --vt-tone-fill: #3FEE56; }
+.widget-spectrum-fill-badge.is-spectrum-teal,
+.widget-toast.is-spectrum-teal,
+.widget-split-badge.is-spectrum-teal { --widget-spectrum-fill: #4EE4BE; --vt-tone-fill: #4EE4BE; }
+.widget-spectrum-fill-badge.is-spectrum-cyan,
+.widget-toast.is-spectrum-cyan,
+.widget-split-badge.is-spectrum-cyan { --widget-spectrum-fill: #36E0F6; --vt-tone-fill: #36E0F6; }
+.widget-spectrum-fill-badge.is-spectrum-royal,
+.widget-toast.is-spectrum-royal,
+.widget-split-badge.is-spectrum-royal { --widget-spectrum-fill: #528FFA; --vt-tone-fill: #528FFA; }
+.widget-spectrum-fill-badge.is-spectrum-purple,
+.widget-toast.is-spectrum-purple,
+.widget-split-badge.is-spectrum-purple { --widget-spectrum-fill: #A467F4; --vt-tone-fill: #A467F4; }
+.widget-spectrum-fill-badge.is-spectrum-magenta,
+.widget-toast.is-spectrum-magenta,
+.widget-split-badge.is-spectrum-magenta { --widget-spectrum-fill: #F55EFC; --vt-tone-fill: #F55EFC; }
+.widget-spectrum-fill-badge.is-spectrum-pink,
+.widget-toast.is-spectrum-pink,
+.widget-split-badge.is-spectrum-pink { --widget-spectrum-fill: #FF7AC8; --vt-tone-fill: #FF7AC8; }
+
+/* A spectrum split badge tints its body with its own hue rather than
+   the widget colour, so the twelve read as a set. */
+.widget-toast[class*="is-spectrum-"] { --widget-toast-hue: var(--vt-tone-fill); }
+
+.widget-split-badge[class*="is-spectrum-"] {
+  background: color-mix(in srgb, var(--vt-tone-fill) 22%, #fff);
+}
+
+/* ── Toast / alert ──────────────────────────────────────────────
+   Icon bay, body (title + optional detail), optional dismiss.
+   Not a .vt-sized-control: a toast wraps to its content, so the
+   exact-height lattice must not own its box. Semantic statuses map
+   onto spectrum slots via resolveBadgeHue, so an alert never
+   introduces a colour outside the palette.
+   ─────────────────────────────────────────────────────────────── */
+.widget-toast {
+  --widget-toast-hue: var(--widget-color, #34cdea);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 2px solid var(--vt-tone-stroke, var(--widget-ink, #243247));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--widget-toast-hue) 16%, #fff);
+  color: var(--widget-ink, #243247);
+  box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--widget-toast-hue) 55%, transparent);
+  font-family: inherit;
+}
+.widget-toast-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  border: 2px solid var(--vt-tone-stroke, var(--widget-ink, #243247));
+  border-radius: 6px;
+  background: var(--widget-toast-hue);
+  color: var(--widget-ink, #243247);
+}
+.widget-toast-icon > svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.widget-toast-body { min-width: 0; }
+.widget-toast-title {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.widget-toast-detail {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  opacity: 0.75;
+  overflow-wrap: anywhere;
+}
+.widget-toast-dismiss {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid var(--vt-tone-stroke, var(--widget-ink, #243247));
+  border-radius: 5px;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+}
+.widget-toast-dismiss > svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+}
+.widget-toast-dismiss:hover { filter: brightness(0.96); transform: translate(1px, 1px); }
+
+/* A phone-width widget gives the copy the whole row. */
+@container vt-widget (max-width: 380px) {
+  .widget-toast { gap: 8px; padding: 8px 10px; }
+  .widget-toast-icon { width: 28px; min-width: 28px; height: 28px; }
+  .widget-toast-icon > svg { width: 16px; height: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .widget-toast-dismiss:hover { transform: none; }
+}

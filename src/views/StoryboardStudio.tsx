@@ -395,7 +395,8 @@ const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
       isOpen={isOpen}
       onToggle={() => setIsOpen(!isOpen)}
       embedded={embedded}
-      shellClassName="animate-fade-in"
+      chrome={embedded ? "none" : "full"}
+      shellClassName={embedded ? "" : "animate-fade-in"}
       contentClassName={embedded ? "p-0" : "p-8"}
     >
       <BrainLiveToolInbox
