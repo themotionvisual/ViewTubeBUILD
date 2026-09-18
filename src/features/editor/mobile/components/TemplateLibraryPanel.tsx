@@ -5,7 +5,7 @@ import type {TemplateCategory, TemplateDefinition} from '../../../../editor-desi
 import {templateToTimelineClip} from '../../../../editor-design-library/integration/timelineAdapter';
 
 interface Props {store: EditorStore}
-const categories: Array<{label:string; value?:TemplateCategory}> = [{label:'All'},{label:'Text',value:'text'},{label:'Graphics',value:'graphic'},{label:'Scenes',value:'scene'}];
+const categories: Array<{label:string; value?:TemplateCategory}> = [{label:'All'},{label:'Backgrounds',value:'background'},{label:'Patterns',value:'pattern'},{label:'Text',value:'text'},{label:'Graphics',value:'graphic'},{label:'Scenes',value:'scene'}];
 
 const TemplateCard:React.FC<{template:TemplateDefinition; onAdd:()=>void}> = ({template,onAdd}) => {
   const accent = template.palette?.[0] ?? '#34cdea';
