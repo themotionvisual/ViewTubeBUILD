@@ -18,6 +18,7 @@ export interface MobileEditorProps{
   compositionAspect?:CompositionAspect;
   onCompositionAspectChange?:(aspect:CompositionAspect)=>void;
   editorSettings?:EditorSettingsModel;
+  layout?:'auto'|'portrait'|'landscape';
   showViewSwitcher?:boolean;
   workspaceMode?:MobileWorkspaceMode;
   onWorkspaceModeChange?:(mode:MobileWorkspaceMode)=>void;
@@ -29,6 +30,7 @@ export const MobileEditor:React.FC<MobileEditorProps>=({
   externalStore,
   compositionAspect:controlledAspect,
   editorSettings,
+  layout='auto',
   workspaceMode:controlledWorkspaceMode,
   onWorkspaceModeChange,
 })=>{
@@ -48,7 +50,7 @@ export const MobileEditor:React.FC<MobileEditorProps>=({
     else setLocalWorkspaceMode(mode);
   },[onWorkspaceModeChange]);
 
-  const chosen=viewport.orientation;
+  const chosen=layout==='auto'?viewport.orientation:layout;
   const aspectValue=compositionAspect==='portrait'?9/16:16/9;
   const common={
     store,
