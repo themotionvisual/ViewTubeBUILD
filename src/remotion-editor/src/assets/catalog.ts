@@ -4,6 +4,7 @@ import type {
   AssetDefinition,
   AssetVisualProps,
   MotionIntensity,
+  SafeAreaMetadata,
   VisualFamily,
 } from './types';
 import { createAssetParameterSchema } from './schemas';
@@ -54,13 +55,54 @@ export const motionAssetControls: readonly AssetControlSpec[] = [
 ];
 
 const supportedRatios = ['16:9', '9:16', '1:1', '4:5'] as const;
-const baseSafeAreas = {
+const baseSafeAreas: SafeAreaMetadata = {
   safeTitleRegion: { x: 0.1, y: 0.12, width: 0.8, height: 0.28 },
   safeSubtitleRegion: { x: 0.1, y: 0.68, width: 0.8, height: 0.15 },
   safeImageRegion: { x: 0.08, y: 0.08, width: 0.84, height: 0.84 },
   visualFocusRegion: { x: 0.2, y: 0.2, width: 0.6, height: 0.6 },
-  edgeActivity: 'medium' as const,
-  centerActivity: 'medium' as const,
+  edgeActivity: 'medium',
+  centerActivity: 'medium',
+};
+
+const safeAreasFor = (family: VisualFamily): SafeAreaMetadata => {
+  if (['frame-system', 'reveal', 'chromatic', 'light-streaks'].includes(family)) {
+    return {
+      ...baseSafeAreas,
+      safeTitleRegion: { x: 0.18, y: 0.18, width: 0.64, height: 0.25 },
+      safeSubtitleRegion: { x: 0.18, y: 0.67, width: 0.64, height: 0.13 },
+      edgeActivity: 'high',
+      centerActivity: 'low',
+    };
+  }
+  if (['editorial', 'kinetic-layout', 'split-screen'].includes(family)) {
+    return {
+      ...baseSafeAreas,
+      safeTitleRegion: { x: 0.08, y: 0.1, width: 0.48, height: 0.28 },
+      safeSubtitleRegion: { x: 0.08, y: 0.7, width: 0.5, height: 0.14 },
+      visualFocusRegion: { x: 0.46, y: 0.28, width: 0.46, height: 0.46 },
+      edgeActivity: 'medium',
+      centerActivity: 'medium',
+    };
+  }
+  if (['hud', 'technical', 'orbit-system', 'rings', 'spiral', 'tunnel'].includes(family)) {
+    return {
+      ...baseSafeAreas,
+      safeTitleRegion: { x: 0.08, y: 0.08, width: 0.4, height: 0.2 },
+      safeSubtitleRegion: { x: 0.08, y: 0.75, width: 0.46, height: 0.12 },
+      visualFocusRegion: { x: 0.28, y: 0.24, width: 0.52, height: 0.52 },
+      centerActivity: 'high',
+    };
+  }
+  if (['particles', 'star-field', 'gradient-field', 'radial-light'].includes(family)) {
+    return {
+      ...baseSafeAreas,
+      safeTitleRegion: { x: 0.13, y: 0.22, width: 0.74, height: 0.24 },
+      safeSubtitleRegion: { x: 0.17, y: 0.64, width: 0.66, height: 0.14 },
+      edgeActivity: 'low',
+      centerActivity: 'medium',
+    };
+  }
+  return baseSafeAreas;
 };
 
 type Seed = {
@@ -207,7 +249,7 @@ const makeStill = (seed: Seed, index: number): AssetDefinition => ({
   controls: commonAssetControls,
   schema: createAssetParameterSchema({ ...defaultAssetProps, seed: 100 + index * 13 }),
   defaults: { ...defaultAssetProps, seed: 100 + index * 13 },
-  safeAreas: baseSafeAreas,
+  safeAreas: safeAreasFor(seed.family),
   recommendedUses: seed.uses,
 });
 
@@ -243,7 +285,7 @@ const makeMotion = (seed: MotionSeed, index: number): AssetDefinition => {
       seed: 1000 + index * 29,
       intensity: seed.intensity === 'SUBTLE' ? 0.55 : seed.intensity === 'AMBIENT' ? 0.8 : seed.intensity === 'MODERATE' ? 1.1 : 1.45,
     },
-    safeAreas: baseSafeAreas,
+    safeAreas: safeAreasFor(seed.family),
     recommendedUses: seed.uses,
   };
 };
