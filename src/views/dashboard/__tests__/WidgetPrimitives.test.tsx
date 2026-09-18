@@ -27,6 +27,7 @@ import {
   WidgetWorkflowMain,
   WIDGET_BADGE_SPECTRUM,
   resolveAlphabeticalSpectrumSlot,
+  resolveAlphabeticalSpectrumHue,
   WidgetIconButton,
 } from "../WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
@@ -140,6 +141,11 @@ describe("shared widget form primitives", () => {
     VT_SPECTRUM_PALETTE_06.forEach((hue) => {
       expect(markup).toContain(`--vt-spectrum-badge-stroke:${hue}`)
     })
+  })
+
+  it("assigns A-Z distinct continuous-spectrum hues", () => {
+    const hues = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(resolveAlphabeticalSpectrumHue)
+    expect(new Set(hues).size).toBe(26)
   })
 
   it("applies the shared height contract to badges and square icon buttons", () => {

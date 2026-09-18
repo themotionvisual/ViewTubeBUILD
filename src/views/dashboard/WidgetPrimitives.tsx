@@ -614,6 +614,7 @@ export const WidgetMediaUploadFrame: React.FC<{
   onBrowse: () => void
   onDropFile?: (file: File | undefined) => void
   className?: string
+  aspect?: "16:9" | "1:1"
 }> = ({
   icon,
   title,
@@ -710,6 +711,28 @@ export const resolveAlphabeticalSpectrumSlot = (label: string): number => {
   return Math.round(((firstLetter.charCodeAt(0) - 65) * 11) / 25)
 }
 
+/** Continuous tag spectrum: A-Z receive 26 distinct hues. Arbitrary labels
+ * use a deterministic full-label hash across hue/saturation/lightness so the
+ * system is not limited to the twelve named palette slots. */
+export const resolveAlphabeticalSpectrumHue = (label: string): string => {
+  const normalized = label.trim().toUpperCase()
+  const singleLetter = normalized.match(/^[A-Z]$/)?.[0]
+  if (singleLetter) {
+    const index = singleLetter.charCodeAt(0) - 65
+    return `hsl(${(index * 360) / 26} 82% 61%)`
+  }
+  let hash = 2166136261
+  for (let i = 0; i < normalized.length; i += 1) {
+    hash ^= normalized.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  const value = hash >>> 0
+  const hue = (value % 360000) / 1000
+  const saturation = 72 + ((value >>> 9) % 19)
+  const lightness = 52 + ((value >>> 17) % 15)
+  return `hsl(${hue} ${saturation}% ${lightness}%)`
+}
+
 export const WidgetBadge: React.FC<{
   tone?: WidgetBadgeTone
   status?: WidgetBadgeStatus
@@ -735,15 +758,23 @@ export const WidgetAlphabeticalTag: React.FC<{
   tone?: WidgetBadgeTone
   height?: WidgetBadgeHeight
   className?: string
-}> = ({ label, tone, height = 18, className = "" }) => (
-  <WidgetBadge
-    tone={tone ?? resolveAlphabeticalSpectrumSlot(label)}
-    height={height}
-    className={`is-alphabetical ${className}`.trim()}
-  >
-    {label}
-  </WidgetBadge>
-)
+}> = ({ label, tone, height = 18, className = "" }) => {
+  if (tone !== undefined) {
+    return (
+      <WidgetBadge tone={tone} height={height} className={`is-alphabetical ${className}`.trim()}>
+        {label}
+      </WidgetBadge>
+    )
+  }
+  return (
+    <span
+      className={`vt-spectrum-badge is-height-${height} is-alphabetical ${className}`.trim()}
+      style={{ ["--vt-spectrum-badge-stroke" as string]: resolveAlphabeticalSpectrumHue(label) }}
+    >
+      <span>{label}</span>
+    </span>
+  )
+}
 
 
 // Canonical sized-control API.
