@@ -1,6 +1,15 @@
 import React, { useMemo, useState } from "react"
 import {
+  Award,
+  Bell,
+  BadgeCheck,
+  Bookmark,
   Check,
+  Circle,
+  Flag,
+  Flame,
+  Gem,
+  Heart,
   ImagePlus,
   Layers,
   Plus,
@@ -8,6 +17,8 @@ import {
   Save,
   Sparkles,
   Star,
+  Target,
+  TrendingUp,
   UploadCloud,
 } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
@@ -36,6 +47,7 @@ import {
   WidgetIconBadge,
   WidgetIconButton,
   WidgetLeftSplitBadge,
+  WidgetToast,
   WidgetLeftSplitButton,
   WidgetLiveBadge,
   WidgetPagination,
@@ -53,6 +65,7 @@ import {
   type WidgetPrimitiveTone,
   type WidgetSplitIconStyle,
   WIDGET_BADGE_SPECTRUM,
+  type WidgetBadgeSpectrumName,
 } from "../WidgetPrimitives"
 import { getDashboardWidgetPaletteColors } from "../../../styles/toolboxPalette"
 
@@ -66,8 +79,33 @@ type ReferenceCategory =
   | "navigation"
   | "matrix"
   | "states"
+  | "alerts"
 
 const CONTROL_HEIGHTS: WidgetControlHeight[] = [18, 24, 32, 38]
+
+/** One toast per semantic status, so the catalogue shows every glyph. */
+const TOAST_SAMPLES: { status: "positive" | "warning" | "danger" | "neutral"; title: string; detail: string }[] = [
+  { status: "positive", title: "Video published", detail: "Live on the channel a moment ago" },
+  { status: "warning", title: "Deadline in 2 hours", detail: "Scheduled upload has no thumbnail yet" },
+  { status: "danger", title: "Auth scope missing", detail: "Reconnect the channel to publish" },
+  { status: "neutral", title: "Brain flagged 3 clusters", detail: "Open the sentiment map to reply" },
+]
+
+/** The twelve spectrum slots, each with a distinct glyph. */
+const SPLIT_BADGE_SAMPLES: { spectrum: WidgetBadgeSpectrumName; label: string; icon: React.ReactNode }[] = [
+  { spectrum: "rose", label: "Live", icon: <Circle strokeWidth={2.5} /> },
+  { spectrum: "coral", label: "Flagged", icon: <Flag strokeWidth={2.5} /> },
+  { spectrum: "orange", label: "1st place", icon: <Gem strokeWidth={2.5} /> },
+  { spectrum: "yellow", label: "Hot", icon: <Flame strokeWidth={2.5} /> },
+  { spectrum: "lime", label: "+184%", icon: <TrendingUp strokeWidth={2.5} /> },
+  { spectrum: "green", label: "Verified", icon: <BadgeCheck strokeWidth={2.5} /> },
+  { spectrum: "teal", label: "On target", icon: <Target strokeWidth={2.5} /> },
+  { spectrum: "cyan", label: "Award", icon: <Award strokeWidth={2.5} /> },
+  { spectrum: "royal", label: "Saved", icon: <Bookmark strokeWidth={2.5} /> },
+  { spectrum: "purple", label: "Loved", icon: <Heart strokeWidth={2.5} /> },
+  { spectrum: "magenta", label: "Featured", icon: <Star strokeWidth={2.5} /> },
+  { spectrum: "pink", label: "Notified", icon: <Bell strokeWidth={2.5} /> },
+]
 const CONTROL_TONES: WidgetPrimitiveTone[] = ["default", "primary", "secondary"]
 const REFERENCE_PALETTE_NAMES = [
   "ROSE", "CORAL", "ORANGE", "YELLOW", "LIME", "GREEN",
@@ -175,6 +213,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
         { id: "media", label: "MEDIA" },
         { id: "navigation", label: "NAV" },
         { id: "states", label: "STATES" },
+        { id: "alerts", label: "ALERTS" },
       ]}
       onChange={(value) => setActiveCategory(value as ReferenceCategory)}
     />
@@ -445,7 +484,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                 {WIDGET_BADGE_SPECTRUM.map((name) => (
                   <div className="widget-reference-variant" key={name}>
                     <small>{name}</small>
-                    <WidgetSpectrumFillBadge tone={name} height={24}>
+                    <WidgetSpectrumFillBadge spectrum={name} height={24}>
                       {name}
                     </WidgetSpectrumFillBadge>
                   </div>
@@ -453,7 +492,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
               </div>
               <SizeVariants>
                 {(height) => (
-                  <WidgetSpectrumFillBadge tone="royal" height={height}>
+                  <WidgetSpectrumFillBadge spectrum="royal" height={height}>
                     Badge
                   </WidgetSpectrumFillBadge>
                 )}
@@ -482,7 +521,6 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   <WidgetRadio
                     height={height}
                     tone={tone}
-                    name={`matrix-radio-${height}`}
                     label={`Select ${tone}`}
                     checked={matrixRadio === tone}
                     onChange={() => setMatrixRadio(tone)}
@@ -532,6 +570,70 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   <div className="widget-reference-variant" key={height}>
                     <small>{height}px</small>
                     <WidgetBadge height={height} tone={index * 3}>{height}px Badge</WidgetBadge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </WidgetSection>
+        )}
+
+        {(activeCategory === "all" || activeCategory === "alerts") && (
+          <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
+            {sectionHeading("10. Alerts + Split Badges", "Toasts and the 12-slot split-left set")}
+            <div className="widget-reference-family">
+              {familyHeading("Toasts", "Status carries a glyph as well as a hue")}
+              <div className="flex flex-col gap-2">
+                {TOAST_SAMPLES.map((sample) => (
+                  <WidgetToast
+                    key={sample.status}
+                    status={sample.status}
+                    title={sample.title}
+                    detail={sample.detail}
+                    onDismiss={() => undefined}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="widget-reference-family">
+              {familyHeading("Spectrum Toasts", "Same bar on any of the 12 slots")}
+              <div className="flex flex-col gap-2">
+                {WIDGET_BADGE_SPECTRUM.slice(0, 3).map((spectrum) => (
+                  <WidgetToast
+                    key={spectrum}
+                    spectrum={spectrum}
+                    title={`${spectrum} alert`}
+                    detail="Non-semantic hue for catalogue and per-widget use"
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="widget-reference-family">
+              {familyHeading("Split-Left Badges", "All 12 spectrum slots")}
+              <div className="flex flex-wrap gap-2">
+                {SPLIT_BADGE_SAMPLES.map((sample) => (
+                  <WidgetLeftSplitBadge
+                    key={sample.spectrum}
+                    spectrum={sample.spectrum}
+                    icon={sample.icon}
+                  >
+                    {sample.label}
+                  </WidgetLeftSplitBadge>
+                ))}
+              </div>
+            </div>
+            <div className="widget-reference-family">
+              {familyHeading("Split Badge Heights", "Icon bay tracks the control height")}
+              <div className="widget-reference-variants">
+                {CONTROL_HEIGHTS.map((height, index) => (
+                  <div className="widget-reference-variant" key={height}>
+                    <small>{height}px</small>
+                    <WidgetLeftSplitBadge
+                      height={height}
+                      spectrum={WIDGET_BADGE_SPECTRUM[index * 3]}
+                      icon={<Check strokeWidth={2.5} />}
+                    >
+                      {height}px
+                    </WidgetLeftSplitBadge>
                   </div>
                 ))}
               </div>
