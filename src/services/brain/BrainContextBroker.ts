@@ -6,7 +6,7 @@ import type {
 import type { AIBrainContextSnapshot } from "../aiBrainCommandInterface"
 import { buildBrainTaskInstruction, resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
 import { buildRelevantNicheKnowledgeContext } from "./NicheKnowledge"
-import { readBrainUserControls } from "./BrainUserControls"
+import { readBrainUserControls } from "./BrainUserControls"\nimport type { StatisticsIntelligenceSnapshot } from "./StatisticsIntelligence"
 
 const clip = (value: string, maximum: number): string => value.slice(0, Math.max(0, maximum))
 
@@ -59,6 +59,16 @@ export const buildBrainContextPack = (input: {
   : "Analytics evidence access is disabled by the creator in Brain User Controls. Do not infer private channel metrics or quote stored analytics values."
  if (!controls.allowAnalytics) omittedSections.push("analytics_access_disabled")
 
+ const statistics = controls.allowAnalytics && input.statisticsIntelligence
+  ? clip([
+    `confidence=${input.statisticsIntelligence.confidence}; coverage=${Math.round(input.statisticsIntelligence.coverageRatio * 100)}%; window=${input.statisticsIntelligence.selectedWindow}`,
+    ...input.statisticsIntelligence.metrics.slice(0, 18).map((metric) =>
+     `${metric.datasetId}.${metric.metric}: n=${metric.count}; sum=${metric.sum}; avg=${metric.average}; min=${metric.minimum}; max=${metric.maximum}; evidence=${metric.evidenceRef || "none"}`),
+    ...input.statisticsIntelligence.limitations.map((value) => `Limitation: ${value}`),
+   ].join("\n"), 4200)
+  : ""
+ if (controls.allowAnalytics && input.statisticsIntelligence && !statistics) omittedSections.push("statistics_intelligence_overflow")
+
  const knowledge = clip(buildRelevantNicheKnowledgeContext(input.nicheKnowledge || null, input.userText, 2200), 2200)
  const research = clip(input.currentResearch || "", 1800)
  const taskInstruction = buildBrainTaskInstruction(resolveBrainTaskProfile(input.userText))
@@ -74,7 +84,7 @@ export const buildBrainContextPack = (input: {
  const sections = [
   system,
   controlInstruction,
-  "\nCHANNEL EVIDENCE\n" + evidence,
+  "\nCHANNEL EVIDENCE\n" + evidence,\n  statistics ? "\nDETERMINISTIC STATISTICS INTELLIGENCE\n" + statistics : "",
   memory ? "\nCONFIRMED CREATOR CONTEXT\n" + memory : "",
   clippedConversation ? "\nRECENT CONVERSATION\n" + clippedConversation : "",
   knowledge ? "\nPUBLIC NICHE KNOWLEDGE\n" + knowledge : "",
@@ -92,7 +102,7 @@ export const buildBrainContextPack = (input: {
   budget: {
    maximumCharacters,
    systemCharacters: system.length,
-   evidenceCharacters: evidence.length,
+   evidenceCharacters: evidence.length + statistics.length,
    memoryCharacters: memory.length,
    knowledgeCharacters: knowledge.length + research.length,
    conversationCharacters: clippedConversation.length,
