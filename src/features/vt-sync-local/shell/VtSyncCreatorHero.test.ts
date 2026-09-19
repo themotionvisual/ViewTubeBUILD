@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
 import { normalizeVtSyncSnapshot } from "../adapters/snapshot"
+import { VT_SYNC_SYNC_UNITS } from "../upstream/syncUnitRegistry"
 import { buildVtSyncCreatorHeroModel, VtSyncCreatorHero } from "./VtSyncCreatorHero"
 
 const snapshotWith = (overrides: Record<string, unknown> = {}) => normalizeVtSyncSnapshot({
@@ -70,7 +71,39 @@ describe("VT-SYNC creator intelligence hero", () => {
   })).toMatchObject({ status: "syncing", action: "progress", actionLabel: "View live progress" })
  })
 
- it("uses missing values instead of manufactured zeros and orders the six newest visible videos", () => {
+ it("counts user-facing sync units instead of child queries and marks only the exact shared-phase category as running", () => {
+  const snapshot = snapshotWith()
+  const model = buildVtSyncCreatorHeroModel({
+   authReady: true,
+   snapshot,
+   visibleVideos: snapshot.videos,
+   progress: {
+    runId: "traffic-run",
+    startedAt: "2026-09-19T12:00:00.000Z",
+    status: "running",
+    requestedCategoryIds: ["search_terms", "ext_websites"],
+    phases: [{
+     id: "traffic",
+     label: "Traffic Details",
+     status: "running",
+     rows: 10,
+     currentCategoryId: "search_terms",
+     nextCategoryId: "ext_websites",
+    }],
+    categoryStates: {
+     search_terms: { categoryId: "search_terms", status: "running", rows: 10 },
+     ext_websites: { categoryId: "ext_websites", status: "pending", rows: 0 },
+    },
+   },
+  })
+
+  expect(model.datasetsTotalCount).toBe(VT_SYNC_SYNC_UNITS.length)
+  expect(model.coverage.filter((item) => item.status === "running").map((item) => item.id))
+   .toEqual(["traffic_detail_search_terms"])
+  expect(model.coverage.find((item) => item.id === "traffic_detail_ext_websites")?.status).not.toBe("running")
+ })
+
+  it("uses missing values instead of manufactured zeros and orders the six newest visible videos", () => {
   const empty = normalizeVtSyncSnapshot({ source: "empty", snapshotId: "empty", capturedAt: "2026-07-28T08:00:00.000Z" })
   const emptyModel = buildVtSyncCreatorHeroModel({
    authReady: true,
