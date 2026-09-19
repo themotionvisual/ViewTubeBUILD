@@ -131,25 +131,33 @@ describe("Video Director dual-surface architecture", () => {
   })
 
 
-  it("keeps the Dashboard Video Director in its compact 24px execution profile", () => {
+  it("keeps the Dashboard Video Director composition stable with targeted adaptive 24px controls", () => {
     const widget = read("src/views/dashboard/widgets/video-director/VideoDirectorWidget.tsx")
     const css = read("src/views/dashboard/widgets/video-director/videoDirectorWidget.css")
     const primitiveCss = read("src/views/dashboard/widgetPrimitiveExactHeights.css")
-    const shell = read("src/views/dashboard/WidgetShell.tsx")
 
     expect(widget).toContain('className="widget-header-toggle vtdw-header-studio"')
     expect(widget).toContain("STUDIO ↗")
-    expect(widget).toContain('controlDensity="compact"')
+    expect(widget).toContain('textFit = "adaptive"')
+    expect(widget).not.toContain('controlDensity="compact"')
     expect(widget).not.toContain("height={38}")
     expect(widget).not.toContain("height={32}")
-    expect(shell).toContain('controlDensity?: "default" | "compact"')
-    expect(shell).toContain("data-control-density={controlDensity}")
-    expect(primitiveCss).toContain('.vt-widget[data-control-density="compact"] .is-height-24')
-    expect(primitiveCss).toContain("--vt-primitive-font:10px")
-    expect(primitiveCss).toContain("--vt-primitive-font:12px")
-    expect(primitiveCss).toContain("--vt-primitive-font:16px")
-    expect(css).not.toContain("min-height:44px")
+
+    expect(css).toContain('data-widget-height="tall"')
+    expect(css).toContain('data-widget-height="xtall"')
+    expect(css).toContain('data-widget-height="massive"')
     expect(css).toContain("grid-template-columns:repeat(4,minmax(0,1fr))")
+    expect(css).toContain("grid-template-columns:repeat(2,minmax(0,1fr))")
+    expect(css).toContain("@media (pointer:coarse) and (orientation:landscape) and (max-height:500px)")
+    expect(css).toContain(".vtdw-category-shortcuts{display:none!important}")
+    expect(css).toContain("width:min(100%,calc(var(--vtdw-signature-h) * 1.7778))")
+    expect(css).not.toContain(".vtdw-field-grid{grid-template-columns:1fr}")
+    expect(css).not.toContain(".vtdw-variation-grid{grid-template-columns:1fr}")
+    expect(css).not.toContain(".vtdw-shot-strip{grid-template-columns:repeat(2")
+
+    expect(primitiveCss).toContain(".vt-widget-header .header-extra:not(:has(.widget-header-toggle))")
+    expect(primitiveCss).toContain(".vt-widget-header .header-extra:has(.widget-header-toggle)")
+    expect(primitiveCss).not.toContain(".vt-widget-header .header-extra { display:none !important; }")
   })
 
 })
