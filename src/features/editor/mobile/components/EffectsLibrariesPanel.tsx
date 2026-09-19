@@ -3,9 +3,9 @@ import {
   Aperture,Boxes,Minus,Plus,RotateCcw,Search,Settings2,Sparkles,WandSparkles,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
-import {assetRegistry} from '../../../remotion-editor/src/assets/catalog';
-import {createAssetTimelineObject} from '../../../remotion-editor/src/assets/editorAdapter';
-import type {AssetDefinition} from '../../../remotion-editor/src/assets/types';
+import {assetRegistry} from '../../../../remotion-editor/src/assets/catalog';
+import {createAssetTimelineObject} from '../../../../remotion-editor/src/assets/editorAdapter';
+import type {AssetDefinition} from '../../../../remotion-editor/src/assets/types';
 
 const INK='#248b99',CYAN='#36E0F6',YELLOW='#FFFF61',PINK='#FA618A';
 const card:React.CSSProperties={border:`2px solid ${INK}`,borderRadius:7,background:'#fff',padding:7,marginBottom:7,boxShadow:'2px 2px 0 rgba(54,224,246,.22)'};
