@@ -1,6 +1,6 @@
 /** Fluid mobile preview with selection-aware direct manipulation. */
 import React,{useEffect,useMemo,useRef,useState} from 'react';
-import {type EditorStore,readClipVisualTransform} from '../state/editorState';
+import {type ClipVisualTransform,type EditorStore,readClipVisualTransform} from '../state/editorState';
 import {useDragScrub,usePinchZoom} from '../hooks/gestures';
 import {TemplateCanvasRenderer} from '../../../../editor-design-library/integration/TemplateCanvasRenderer';
 import {MobileProjectPreview} from './MobileProjectPreview';
@@ -51,7 +51,7 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
   const updateLayer=(patch:Record<string,unknown>)=>{
     if(selectedLayer)dispatch({type:'updateLayerPayload',id:selectedLayer.id,patch});
   };
-  const updateClip=(patch:Parameters<typeof dispatch>[0] extends never?never:any)=>{
+  const updateClip=(patch:Partial<ClipVisualTransform>)=>{
     if(selected)dispatch({type:'updateClipTransform',id:selected.id,patch});
   };
 
