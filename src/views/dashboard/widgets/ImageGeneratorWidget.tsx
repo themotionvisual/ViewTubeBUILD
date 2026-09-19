@@ -147,11 +147,11 @@ export const ImageGeneratorWidget = ({
         </div>
 
         {!hasGeminiKey() ? (
-          <WidgetSizedButton height={32} tone="secondary" onClick={() => (window.location.href = "/settings")}>
+          <WidgetSizedButton height={24} tone="secondary" className="image-generator-key-action" onClick={() => (window.location.href = "/settings")}>
             Missing API Key: Open Settings
           </WidgetSizedButton>
         ) : (
-          <WidgetSizedButton height={32} tone="primary" onClick={handleGenerate} disabled={isGenerating || !finalPrompt}>
+          <WidgetSizedButton height={32} tone="primary" className="image-generator-generate-action" onClick={handleGenerate} disabled={isGenerating || !finalPrompt}>
             <Sparkles /> {isGenerating ? "Generating..." : "Generate Image"}
           </WidgetSizedButton>
         )}
