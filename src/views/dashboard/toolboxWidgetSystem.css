@@ -979,14 +979,12 @@
 :where(.dashboard-barrier) .ai-journal-category-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
+  gap: var(--widget-component-gap);
 }
 
 :where(.dashboard-barrier) .ai-journal-category-grid .vt-button {
   width: 100%;
   min-width: 0;
-  padding-inline: 3px !important;
-  font-size: 10px !important;
 }
 
 :where(.dashboard-barrier) .daily-oracle-list {
@@ -1060,11 +1058,6 @@
   justify-content: space-between;
 }
 
-:where(.dashboard-barrier) .ai-journal-card .vt-button {
-  height: 28px !important;
-  min-height: 28px !important;
-}
-
 :where(.dashboard-barrier) .ai-journal-poll-input {
   width: 72px;
   height: 28px !important;
@@ -1073,7 +1066,24 @@
 
 :where(.dashboard-barrier) .ai-journal-refill {
   width: 100%;
-  border-style: dashed;
+}
+
+
+/* AI Journal keeps canonical control type/height and reflows the category
+   matrix instead of compressing labels until they collide. */
+@container vt-widget (max-width: 560px) {
+  :where(.dashboard-barrier) .ai-journal-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :where(.dashboard-barrier) .ai-journal-card.is-poll {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  :where(.dashboard-barrier) .ai-journal-card.is-poll > .flex {
+    width: 100%;
+  }
 }
 
 :where(.dashboard-barrier) .widget-card-row {
