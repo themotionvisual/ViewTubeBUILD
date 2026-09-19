@@ -978,11 +978,11 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                               </span>
                             </button>
                             <div className="flex gap-1">
-                              <StudioButton sizeVariant="micro" tone="neutral" disabled={index === 0} onClick={() => setProject((current) => reorderVideoDirectorShot(current, shot.id, -1))}>↑</StudioButton>
-                              <StudioButton sizeVariant="micro" tone="neutral" disabled={index === project.shots.length - 1} onClick={() => setProject((current) => reorderVideoDirectorShot(current, shot.id, 1))}>↓</StudioButton>
-                              <StudioButton sizeVariant="micro" tone="neutral" onClick={() => setProject((current) => duplicateVideoDirectorShot(current, shot.id))}>＋</StudioButton>
+                              <StudioButton sizeVariant="compact" tone="neutral" disabled={index === 0} onClick={() => setProject((current) => reorderVideoDirectorShot(current, shot.id, -1))}>↑</StudioButton>
+                              <StudioButton sizeVariant="compact" tone="neutral" disabled={index === project.shots.length - 1} onClick={() => setProject((current) => reorderVideoDirectorShot(current, shot.id, 1))}>↓</StudioButton>
+                              <StudioButton sizeVariant="compact" tone="neutral" onClick={() => setProject((current) => duplicateVideoDirectorShot(current, shot.id))}>＋</StudioButton>
                               <StudioButton
-                                sizeVariant="micro"
+                                sizeVariant="compact"
                                 tone="danger"
                                 onClick={() => {
                                   setProject((current) => removeVideoDirectorShot(current, shot.id))
