@@ -11,3 +11,4 @@ export * from "./dependencyEngine"
 
 export * from "./promptCompiler"
 export * from "./providerRouter"
+export * from "./jobClient"
