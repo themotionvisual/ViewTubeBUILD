@@ -36,6 +36,11 @@ CREATE TABLE IF NOT EXISTS viewtube_video_director_jobs (
   variant_id TEXT,
   idempotency_key TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'queued',
+  stage TEXT NOT NULL DEFAULT 'queued',
+  progress NUMERIC NOT NULL DEFAULT 0,
+  progress_message TEXT,
+  preview_asset_uri TEXT,
+  event_log JSONB NOT NULL DEFAULT '[]',
   priority INTEGER NOT NULL DEFAULT 0,
   request JSONB NOT NULL,
   provider_plan JSONB NOT NULL DEFAULT '{}',
@@ -57,6 +62,11 @@ CREATE TABLE IF NOT EXISTS viewtube_video_director_jobs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE viewtube_video_director_jobs ADD COLUMN IF NOT EXISTS stage TEXT NOT NULL DEFAULT 'queued';
+ALTER TABLE viewtube_video_director_jobs ADD COLUMN IF NOT EXISTS progress NUMERIC NOT NULL DEFAULT 0;
+ALTER TABLE viewtube_video_director_jobs ADD COLUMN IF NOT EXISTS progress_message TEXT;
+ALTER TABLE viewtube_video_director_jobs ADD COLUMN IF NOT EXISTS preview_asset_uri TEXT;
+ALTER TABLE viewtube_video_director_jobs ADD COLUMN IF NOT EXISTS event_log JSONB NOT NULL DEFAULT '[]';
 CREATE UNIQUE INDEX IF NOT EXISTS viewtube_video_director_jobs_user_idempotency
   ON viewtube_video_director_jobs(viewtube_user_id, idempotency_key);
 CREATE INDEX IF NOT EXISTS viewtube_video_director_jobs_queue
@@ -131,6 +141,11 @@ const normalizeJob = (value) => {
     variantId: asString(raw.variantId || raw.variant_id) || null,
     idempotencyKey: asString(raw.idempotencyKey || raw.idempotency_key),
     status: JOB_STATUSES.has(status) ? status : "queued",
+    stage: asString(raw.stage, status || "queued") || "queued",
+    progress: Math.max(0, Math.min(1, asFiniteNumber(raw.progress, 0))),
+    progressMessage: asString(raw.progressMessage || raw.progress_message) || null,
+    previewAssetUri: asString(raw.previewAssetUri || raw.preview_asset_uri) || null,
+    eventLog: asJsonArray(raw.eventLog || raw.event_log).slice(-100),
     priority: Math.trunc(asFiniteNumber(raw.priority, 0)),
     request: asJsonObject(raw.request),
     providerPlan: asJsonObject(raw.providerPlan || raw.provider_plan),
@@ -391,6 +406,76 @@ export const heartbeatVideoDirectorJob = async (jobId, workerId) => {
   return result.rows[0] ? rowToJob(result.rows[0]) : null;
 };
 
+export const updateVideoDirectorJobProgress = async (jobId, workerId, {
+  stage,
+  progress,
+  message = null,
+  previewAssetUri = null,
+  metadata = {},
+} = {}) => {
+  await ensureInit();
+  const resolvedStage = asString(stage, "running") || "running";
+  const resolvedProgress = Math.max(0, Math.min(1, asFiniteNumber(progress, 0)));
+  const resolvedMessage = asString(message) || null;
+  const event = {
+    ts: nowIso(),
+    stage: resolvedStage,
+    progress: resolvedProgress,
+    message: resolvedMessage,
+    metadata: asJsonObject(metadata),
+  };
+
+  if (!pool) {
+    return updateFileDb(async (db) => {
+      const current = db.jobs[jobId];
+      if (!current) return null;
+      const job = normalizeJob(current);
+      if (job.lockedBy !== workerId || !["running", "post-processing"].includes(job.status)) {
+        return null;
+      }
+      job.stage = resolvedStage;
+      job.progress = resolvedProgress;
+      job.progressMessage = resolvedMessage;
+      if (previewAssetUri) job.previewAssetUri = asString(previewAssetUri);
+      job.eventLog = [...job.eventLog, event].slice(-100);
+      job.heartbeatAt = event.ts;
+      job.updatedAt = event.ts;
+      db.jobs[job.id] = job;
+      return job;
+    });
+  }
+
+  const eventArray = JSON.stringify([event]);
+  const result = await pool.query(
+    `UPDATE viewtube_video_director_jobs
+     SET stage = $3,
+         progress = $4,
+         progress_message = $5,
+         preview_asset_uri = COALESCE($6, preview_asset_uri),
+         event_log = CASE
+           WHEN jsonb_array_length(event_log) >= 100
+             THEN (event_log - 0) || $7::jsonb
+           ELSE event_log || $7::jsonb
+         END,
+         heartbeat_at = NOW(),
+         updated_at = NOW()
+     WHERE id = $1
+       AND locked_by = $2
+       AND status IN ('running','post-processing')
+     RETURNING *`,
+    [
+      String(jobId),
+      String(workerId),
+      resolvedStage,
+      resolvedProgress,
+      resolvedMessage,
+      previewAssetUri ? String(previewAssetUri) : null,
+      eventArray,
+    ],
+  );
+  return result.rows[0] ? rowToJob(result.rows[0]) : null;
+};
+
 export const markVideoDirectorJobPostProcessing = async (jobId, workerId, patch = {}) => {
   await ensureInit();
   const providerJobId = asString(patch.providerJobId) || null;
@@ -437,6 +522,9 @@ export const completeVideoDirectorJob = async (jobId, workerId, {
         return null;
       }
       job.status = "completed";
+      job.stage = "completed";
+      job.progress = 1;
+      job.progressMessage = "Generation completed.";
       job.outputAssetIds = asJsonArray(outputAssetIds).map(String);
       job.actualCredits = actualCredits;
       job.providerJobId = providerJobId || job.providerJobId;
@@ -452,6 +540,9 @@ export const completeVideoDirectorJob = async (jobId, workerId, {
   const result = await pool.query(
     `UPDATE viewtube_video_director_jobs
      SET status = 'completed',
+         stage = 'completed',
+         progress = 1,
+         progress_message = 'Generation completed.',
          output_asset_ids = $3::jsonb,
          actual_credits = $4,
          provider_job_id = COALESCE($5, provider_job_id),
@@ -494,6 +585,8 @@ export const failVideoDirectorJob = async (jobId, workerId, {
       }
       const exhausted = job.attemptCount >= job.maxAttempts;
       job.status = exhausted ? "dead-letter" : "queued";
+      job.stage = exhausted ? "dead-letter" : "retry-wait";
+      job.progressMessage = errorMessage;
       job.lastError = errorMessage;
       job.failureMetadata = asJsonObject(failureMetadata);
       job.availableAt = new Date(Date.now() + delayMs).toISOString();
@@ -509,6 +602,8 @@ export const failVideoDirectorJob = async (jobId, workerId, {
   const result = await pool.query(
     `UPDATE viewtube_video_director_jobs
      SET status = CASE WHEN attempt_count >= max_attempts THEN 'dead-letter' ELSE 'queued' END,
+         stage = CASE WHEN attempt_count >= max_attempts THEN 'dead-letter' ELSE 'retry-wait' END,
+         progress_message = $3,
          last_error = $3,
          failure_metadata = $4::jsonb,
          available_at = NOW() + ($5 * INTERVAL '1 millisecond'),
@@ -619,6 +714,8 @@ export const finalizeCancelledVideoDirectorJob = async (jobId, workerId, {
         return null;
       }
       job.status = "cancelled";
+      job.stage = "cancelled";
+      job.progressMessage = "Generation cancelled.";
       job.cancelRequested = true;
       job.providerJobId = asString(providerJobId) || job.providerJobId;
       job.failureMetadata = { ...job.failureMetadata, ...failureMetadata };
@@ -634,6 +731,8 @@ export const finalizeCancelledVideoDirectorJob = async (jobId, workerId, {
   const result = await pool.query(
     `UPDATE viewtube_video_director_jobs
      SET status = 'cancelled',
+         stage = 'cancelled',
+         progress_message = 'Generation cancelled.',
          cancel_requested = TRUE,
          provider_job_id = COALESCE($3, provider_job_id),
          failure_metadata = failure_metadata || $4::jsonb,
