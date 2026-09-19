@@ -244,23 +244,22 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
       }}
     >
       <div style={{position:'relative',width:totalPx+LABEL_WIDTH,minHeight:Math.max(bodyHeight,1)}}>
-        <Ruler
-          pxPerSec={zoom}
-          durationSec={state.project.durationSec}
-          onSeek={sec=>{
-            dispatch({type:'setPlaying',playing:false});
-            dispatch({type:'setPlayhead',sec});
-          }}
-        />
+        <Ruler pxPerSec={zoom} durationSec={state.project.durationSec}/>
+        <PrecisionScrub store={store} pxPerSec={zoom} labelWidth={LABEL_WIDTH} scrollRef={scrollRef}/>
         <div style={{position:'relative',paddingTop:TIMELINE_HEADER_HEIGHT}}>
           {tracks.map((track,index)=><TrackRow
             key={track.id}
             track={track}
             store={store}
-            clips={clipsOnTrack(track.id)}
+            clips={focusedCompound?focusedChildren.filter(clip=>clip.trackId===track.id||focusedCompound.trackId===track.id):clipsOnTrack(track.id)}
             pxPerSec={zoom}
             totalPx={totalPx}
             y={index*TIMELINE_TRACK_HEIGHT}
+            snap={snap}
+            fps={fps}
+            readOnly={Boolean(focusedCompound)}
+            focusParentId={focusedCompound?.id}
+            onOpenCompound={setCompoundFocusId}
             onClipContextMenu={onClipContextMenu}
             onEmptyContextMenu={onEmptyContextMenu}
           />)}
@@ -271,28 +270,59 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
   </div>;
 };
 
-const Ruler:React.FC<{pxPerSec:number;durationSec:number;onSeek:(sec:number)=>void}>=({
-  pxPerSec,durationSec,onSeek,
-})=>{
+const Ruler:React.FC<{pxPerSec:number;durationSec:number}>=({pxPerSec,durationSec})=>{
   const spacing=useMemo(()=>Math.max(.1,Math.round((90/pxPerSec)*10)/10),[pxPerSec]);
   const ticks:number[]=[];
   for(let time=0;time<=durationSec;time+=spacing)ticks.push(+time.toFixed(2));
-  return <div
-    onPointerDown={event=>{
-      const rect=event.currentTarget.getBoundingClientRect();
-      const sec=Math.max(0,Math.min(durationSec,(event.clientX-rect.left)/Math.max(4,pxPerSec)));
-      onSeek(sec);
-    }}
-    style={{
-      position:'sticky',top:0,height:TIMELINE_HEADER_HEIGHT,background:'#fff',zIndex:2,
-      marginLeft:LABEL_WIDTH,borderBottom:`2px solid ${INK}`,cursor:'crosshair',
-      touchAction:'pan-x',
-    }}
-  >
+  return <div style={{
+    position:'sticky',top:0,height:28,background:'#fff',zIndex:2,
+    marginLeft:LABEL_WIDTH,borderBottom:`1.5px solid ${INK}`,pointerEvents:'none',
+  }}>
     {ticks.map(time=><div key={time} style={{
       position:'absolute',left:time*pxPerSec,top:0,bottom:0,paddingLeft:4,
-      borderLeft:'1px solid rgba(0,0,0,.25)',fontSize:9,fontWeight:900,
+      borderLeft:'1px solid rgba(36,139,153,.35)',fontSize:8,fontWeight:900,
     }}>{time}s</div>)}
+  </div>;
+};
+
+const PrecisionScrub:React.FC<{
+  store:EditorStore;
+  pxPerSec:number;
+  labelWidth:number;
+  scrollRef:React.RefObject<HTMLDivElement|null>;
+}>=({store,pxPerSec,labelWidth,scrollRef})=>{
+  const active=useRef<{id:number;x:number;y:number;sec:number}|null>(null);
+  const[factor,setFactor]=useState(1);
+  return <div
+    aria-label="Precision timeline scrub strip"
+    onPointerDown={event=>{
+      event.stopPropagation();
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+      const rect=event.currentTarget.getBoundingClientRect();
+      const timelineX=(event.clientX-rect.left)+(scrollRef.current?.scrollLeft??0)-labelWidth;
+      const sec=clamp(timelineX/Math.max(4,pxPerSec),0,store.state.project.durationSec);
+      store.dispatch({type:'setPlaying',playing:false});
+      store.dispatch({type:'setPlayhead',sec});
+      active.current={id:event.pointerId,x:event.clientX,y:event.clientY,sec};
+      setFactor(1);
+    }}
+    onPointerMove={event=>{
+      const current=active.current;
+      if(!current||current.id!==event.pointerId)return;
+      const dy=Math.abs(event.clientY-current.y);
+      const nextFactor=dy>62?.05:dy>30?.25:1;
+      setFactor(nextFactor);
+      store.dispatch({type:'setPlayhead',sec:current.sec+((event.clientX-current.x)/Math.max(4,pxPerSec))*nextFactor});
+    }}
+    onPointerUp={()=>{active.current=null;setFactor(1)}}
+    onPointerCancel={()=>{active.current=null;setFactor(1)}}
+    style={{
+      position:'sticky',top:28,zIndex:3,height:20,marginLeft:LABEL_WIDTH,
+      borderBottom:`2px solid ${INK}`,background:'rgba(54,224,246,.12)',
+      touchAction:'none',cursor:'ew-resize',
+    }}
+  >
+    <div style={{position:'absolute',right:4,top:4,fontSize:7,fontWeight:1000,opacity:.62}}>SCRUB {factor}×</div>
   </div>;
 };
 
