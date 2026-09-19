@@ -114,7 +114,16 @@ describe("VT-SYNC unified progress rows", () => {
   expect(rows.find((row) => row.category.id === "suggested_videos")?.displayStatus).toBe("pending")
  })
 
- it("does not relabel a completed sibling as queued while its shared phase keeps running", () => {
+ it("shows a follow-up queued request as pending without calling it running", () => {
+  const rows = buildVtSyncUnifiedProgressRows(null, undefined, ["search_terms"])
+  expect(rows.find((row) => row.category.id === "search_terms")).toMatchObject({
+   displayStatus: "pending",
+   message: "Queued behind the current sync request.",
+  })
+  expect(getVtSyncActiveCategoryIds(null)).toEqual([])
+ })
+
+  it("does not relabel a completed sibling as queued while its shared phase keeps running", () => {
   const progress: VtSyncLocalSyncProgress = {
    runId: "traffic-run",
    startedAt: "2026-09-19T12:00:00.000Z",
