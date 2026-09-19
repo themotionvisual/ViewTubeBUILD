@@ -18,7 +18,7 @@ describe("VT-SYNC unified progress rows", () => {
  it("uses the creator-facing hero and routes its actions through the existing account and sync paths", () => {
   expect(pageSource).toContain("<VtSyncCreatorHero")
   expect(pageSource).toContain("void startSync(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))")
-  expect(pageSource.match(/scrollToPanel\(controllerPanelRef\.current\)/g)).toHaveLength(2)
+  expect(pageSource.match(/scrollToPanel\(syncToolboxRef\.current\)/g)).toHaveLength(2)
   expect(pageSource).not.toContain("progressPanelRef")
   expect(pageSource).not.toContain("VT-SYNC Tools Page")
   expect(pageSource).not.toContain("NO CANONICAL WRITES")
