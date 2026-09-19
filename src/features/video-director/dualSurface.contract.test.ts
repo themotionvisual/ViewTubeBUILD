@@ -67,4 +67,39 @@ describe("Video Director dual-surface architecture", () => {
     expect(source).toContain("DirectorWidgetAudioStage")
     expect(source).toContain("DirectorWidgetProviderRoute")
   })
+
+  it("keeps signature directing concepts paired across Widget and Studio implementations", () => {
+    const widget = read("src/views/dashboard/widgets/video-director/VideoDirectorWidgetComponents.tsx")
+    const studioCore = read("src/views/video-director/StudioDirectorSignatureControls.tsx")
+    const studioAdvanced = read("src/views/video-director/StudioDirectorAdvancedSignatureControls.tsx")
+    const contracts = read("src/features/video-director/signatureContracts.ts")
+
+    const concepts = [
+      "Lens",
+      "Mood",
+      "Composition",
+      "Lighting",
+      "Pacing",
+      "Audio",
+      "CameraPath",
+      "FocusDepth",
+      "Texture",
+      "Transition",
+      "Music",
+      "Caption",
+      "Reference",
+      "Continuity",
+      "Negative",
+    ]
+
+    for (const concept of concepts) {
+      expect(widget).toContain(concept)
+      expect(studioCore + studioAdvanced).toContain(concept)
+    }
+
+    expect(contracts).toContain("DirectorLensControlProps")
+    expect(contracts).toContain("DirectorCameraPathProps")
+    expect(contracts).toContain("DirectorContinuityLedgerProps")
+  })
+
 })
