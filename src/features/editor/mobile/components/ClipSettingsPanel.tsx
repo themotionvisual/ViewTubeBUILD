@@ -1,5 +1,5 @@
 import React,{useEffect,useRef} from 'react';
-import {Circle,RectangleHorizontal,Sparkles,Upload,Video} from 'lucide-react';
+import {AudioLines,Circle,ImageIcon,LayoutTemplate,Minus,Plus,RectangleHorizontal,Type,Video} from 'lucide-react';
 import type {EditorLayer,EditorStore} from '../state/editorState';
 import type {EditorNavPage} from './EditorNavigationPages';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
@@ -40,14 +40,14 @@ const valueInput:React.CSSProperties={
 };
 
 const stepperButton:React.CSSProperties={
-  width:28,minWidth:28,height:28,border:`2px solid ${INK}`,borderRadius:6,
-  background:CYAN,color:'#111',fontSize:15,fontWeight:1000,lineHeight:1,
+  width:24,minWidth:24,height:26,border:`2px solid ${INK}`,borderRadius:6,
+  background:CYAN,color:'#111',fontSize:13,fontWeight:1000,lineHeight:1,
   display:'grid',placeItems:'center',padding:0,touchAction:'none',userSelect:'none',
   boxShadow:'2px 2px 0 rgba(36,139,153,.22)',cursor:'pointer',
 };
 
 const stepperValue:React.CSSProperties={
-  minWidth:0,height:28,borderTop:`2px solid ${INK}`,borderBottom:`2px solid ${INK}`,
+  minWidth:0,height:26,borderTop:`2px solid ${INK}`,borderBottom:`2px solid ${INK}`,
   background:'#fff',display:'grid',placeItems:'center',fontSize:10,fontWeight:1000,
   fontVariantNumeric:'tabular-nums',letterSpacing:'-.02em',padding:'0 5px',boxSizing:'border-box',
 };
@@ -252,7 +252,7 @@ const HoldStepper:React.FC<HoldStepperProps>=({
   const decimals=precision??(step<.01?3:step<1?2:0);
   const display=`${Number(value.toFixed(decimals))}${suffix}`;
 
-  return <div style={{width:126,marginBottom:8}}>
+  return <div style={{width:'min(108px,100%)',maxWidth:'100%',marginBottom:7}}>
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:6,marginBottom:3}}>
       <span style={{fontSize:8,fontWeight:1000,textTransform:'uppercase',opacity:.72,lineHeight:1}}>{label}</span>
       {onKeyframe?<button
@@ -264,9 +264,9 @@ const HoldStepper:React.FC<HoldStepperProps>=({
           color:'#111',fontSize:13,fontWeight:1000,lineHeight:1,display:'grid',placeItems:'center',
           opacity:keyframeState==='attached'?.72:1,
         }}
-      >○</button>:null}
+      ><Circle size={10}/></button>:null}
     </div>
-    <div style={{display:'grid',gridTemplateColumns:'28px 70px 28px',alignItems:'stretch',width:'126px'}}>
+    <div style={{display:'grid',gridTemplateColumns:'24px minmax(52px,60px) 24px',alignItems:'stretch',width:'108px',maxWidth:'100%'}}>
       <button
         aria-label={`Decrease ${label}`}
         style={{...stepperButton,background:CYAN,borderTopRightRadius:0,borderBottomRightRadius:0}}
@@ -274,7 +274,7 @@ const HoldStepper:React.FC<HoldStepperProps>=({
         onPointerUp={stop}
         onPointerCancel={stop}
         onLostPointerCapture={stop}
-      >−</button>
+      ><Minus size={13}/></button>
       <div aria-live="polite" style={stepperValue}>{display}</div>
       <button
         aria-label={`Increase ${label}`}
@@ -283,7 +283,7 @@ const HoldStepper:React.FC<HoldStepperProps>=({
         onPointerUp={stop}
         onPointerCancel={stop}
         onLostPointerCapture={stop}
-      >+</button>
+      ><Plus size={13}/></button>
     </div>
   </div>;
 };
@@ -339,7 +339,7 @@ const ColorControl:React.FC<{
           color:BLACK,background:state==='active'?BLUE:state==='attached'?'#a8caff':'#fff',borderRadius:999,
           width:18,height:18,display:'inline-flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto',
         }}
-      >○</button>
+      ><Circle size={10}/></button>
     </div>
   </label>;
 };
@@ -347,11 +347,11 @@ const ColorControl:React.FC<{
 function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:(page:EditorNavPage)=>void}){
   const clip=store.selectedClips[0];
   const layer=store.selectedLayer;
-  if(!clip)return <div style={{width:196,border:`2px solid ${BLACK}`,borderRadius:7,padding:8,background:'#fff',fontSize:9,fontWeight:900,textTransform:'uppercase'}}>Select a clip in the timeline or Project Clips list to edit every clip setting.</div>;
+  if(!clip)return <div style={{width:'100%',minWidth:0,border:`2px solid ${BLACK}`,borderRadius:7,padding:8,background:'#fff',fontSize:9,fontWeight:900,textTransform:'uppercase'}}>Select a clip in the timeline or Project Clips list to edit every clip setting.</div>;
 
   if(!layer){
     const isTemplate=(clip as VtE1Clip&{clipType?:string}).clipType==='design-template';
-    return <div style={{width:196,border:`2px solid ${BLACK}`,borderRadius:7,padding:8,background:'#fff',fontSize:9,fontWeight:900}}>
+    return <div style={{width:'100%',minWidth:0,border:`2px solid ${BLACK}`,borderRadius:7,padding:8,background:'#fff',fontSize:9,fontWeight:900}}>
       <div style={{textTransform:'uppercase',marginBottom:6}}>{String(clip.id)}</div>
       <div style={{opacity:.65,marginBottom:8}}>{isTemplate?'This design-template clip is edited in Templates.':'This legacy clip has no linked VT_E1 layer payload yet.'}</div>
       {isTemplate?<button style={{...miniButton,width:'100%',background:PURPLE,color:'#fff'}} onClick={()=>onNavigate?.('templates')}>Open Templates</button>:null}
@@ -368,7 +368,7 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
   const audioVolume=number(payload.volume,.6);
   const audioRate=number(payload.playbackRate,1);
 
-  return <div style={{width:196,minWidth:196}}>
+  return <div style={{width:'100%',minWidth:0,maxWidth:196}}>
     <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:4,alignItems:'center',marginBottom:8}}>
       <div style={{minWidth:0}}>
         <div style={{fontSize:9,fontWeight:900,textTransform:'uppercase',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{String(payload.layerName||clip.id)}</div>
@@ -412,7 +412,7 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
     <div style={sectionLabel}>TRANSFORM + TIMING</div>
     {SETTINGS.map(def=><SettingRow key={def.prop} def={def} payload={payload} clip={clip} store={store} onPatch={patch}/>)}
 
-    <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:8,width:196,marginTop:3}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:6,width:'100%',minWidth:0,marginTop:3}}>
       <div style={{gridColumn:'1/-1',...sectionLabel,marginBottom:0}}>APPEARANCE</div>
       <ColorControl label="Fill" prop="fillColor" payload={payload} clip={clip} store={store} onPatch={patch}/>
       <ColorControl label="Stroke" prop="strokeColor" payload={payload} clip={clip} store={store} onPatch={patch}/>
@@ -464,18 +464,18 @@ export const ClipSettingsPanel:React.FC<{store:EditorStore;onNavigate?:(page:Edi
   const videoRef=useRef<HTMLInputElement>(null);
   const audioRef=useRef<HTMLInputElement>(null);
 
-  return <div style={{minWidth:196,width:'100%',display:'grid',alignContent:'start',justifyItems:'start'}}>
+  return <div style={{minWidth:0,width:'100%',maxWidth:'100%',display:'grid',alignContent:'start',justifyItems:'stretch',overflowX:'hidden'}}>
     <div style={{
       boxSizing:'border-box',border:`2px solid ${BLACK}`,padding:12,position:'relative',
-      background:'#fff',borderRadius:8,width:220,minWidth:220,overflow:'visible',
+      background:'#fff',borderRadius:8,width:'100%',minWidth:0,maxWidth:220,overflow:'hidden',
     }}>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:8,width:196,marginBottom:12}}>
-        <button style={{...addButtonBase,background:MAGENTA}} onClick={()=>createLayerClip(store,'text')}>TEXT</button>
-        <button style={{...addButtonBase,background:ORANGE}} onClick={()=>createLayerClip(store,'shape')}><RectangleHorizontal size={14}/>SHAPE</button>
-        <button style={{...addButtonBase,background:YELLOW}} onClick={()=>imageRef.current?.click()}><Circle size={14}/>IMAGE</button>
-        <button style={{...addButtonBase,background:GREEN}} onClick={()=>videoRef.current?.click()}><Video size={14}/>VIDEO</button>
-        <button style={{...addButtonBase,background:BLUE}} onClick={()=>audioRef.current?.click()}><Upload size={14}/>AUDIO</button>
-        <button style={{...addButtonBase,background:PURPLE,color:'#fff'}} onClick={()=>onNavigate?.('templates')}><Sparkles size={14}/>TEMPLATE</button>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:5,width:'100%',minWidth:0,marginBottom:10}}>
+        <button style={{...addButtonBase,background:MAGENTA,width:'100%',minWidth:0,padding:'4px'}} onClick={()=>createLayerClip(store,'text')}><Type size={13}/>TEXT</button>
+        <button style={{...addButtonBase,background:ORANGE,width:'100%',minWidth:0,padding:'4px'}} onClick={()=>createLayerClip(store,'shape')}><RectangleHorizontal size={13}/>SHAPE</button>
+        <button style={{...addButtonBase,background:YELLOW,width:'100%',minWidth:0,padding:'4px'}} onClick={()=>imageRef.current?.click()}><ImageIcon size={13}/>IMAGE</button>
+        <button style={{...addButtonBase,background:GREEN,width:'100%',minWidth:0,padding:'4px'}} onClick={()=>videoRef.current?.click()}><Video size={13}/>VIDEO</button>
+        <button style={{...addButtonBase,background:BLUE,width:'100%',minWidth:0,padding:'4px'}} onClick={()=>audioRef.current?.click()}><AudioLines size={13}/>AUDIO</button>
+        <button style={{...addButtonBase,background:PURPLE,color:'#fff',width:'100%',minWidth:0,padding:'4px'}} onClick={()=>onNavigate?.('templates')}><LayoutTemplate size={13}/>TEMPLATE</button>
       </div>
 
       <input ref={imageRef} type="file" accept="image/*" hidden onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void addFileClip(store,file,'image')}}/>
@@ -485,7 +485,7 @@ export const ClipSettingsPanel:React.FC<{store:EditorStore;onNavigate?:(page:Edi
       <SelectedClipSettings store={store} onNavigate={onNavigate}/>
     </div>
 
-    <div style={{boxSizing:'border-box',border:`2px solid ${BLACK}`,padding:8,background:'#fff',borderRadius:8,width:220,minWidth:220,marginTop:8}}>
+    <div style={{boxSizing:'border-box',border:`2px solid ${BLACK}`,padding:8,background:'#fff',borderRadius:8,width:'100%',minWidth:0,maxWidth:220,marginTop:8,overflow:'hidden'}}>
       <div style={{fontSize:10,fontWeight:900,textTransform:'uppercase',marginBottom:6}}>PROJECT CLIPS</div>
       <div style={{display:'grid',gap:4,maxHeight:140,overflow:'auto'}}>
         {store.state.project.clips.map(clip=>{
