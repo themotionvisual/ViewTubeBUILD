@@ -524,7 +524,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
           <SubToolboxToggle pressed={activePayload.exactLock} label="Exact palette lock" onClick={() => setCategoryField(activeCategoryId, "exactLock", !activePayload.exactLock)} />
           <SubToolboxActions columns={2}>
             <SubToolboxInnerActionButton label="Extract From Asset" iconName="image" tone="cyan" disabled />
-            <SubToolboxInnerActionButton label="Use Channel Palette" iconName="palette" tone="purple" disabled />
+            <SubToolboxInnerActionButton label="Use Channel Palette" iconName="paint-bucket" tone="purple" disabled />
           </SubToolboxActions>
         </SubToolboxStack>
 
@@ -669,7 +669,20 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
       case "visual-effects":
         return <SubToolboxStack>
           <SubToolboxGrid minItemWidth="compact">
-            {["Fog", "Snow", "Dust", "Bloom", "Lens Flare", "Grain", "Deflicker", "Stabilize"].map((label) => <SubToolboxTag key={label} selected={activePayload.effects.some((effect: any) => effect.type === label.toLowerCase().replace(" ", "-"))}>{label}</SubToolboxTag>)}
+            {["Fog", "Snow", "Dust", "Bloom", "Lens Flare", "Grain", "Deflicker", "Stabilize"].map((label) => {
+              const type = label.toLowerCase().replace(" ", "-")
+              const selected = activePayload.effects.some((effect: any) => effect.type === type)
+              return <SubToolboxTag
+                key={label}
+                selected={selected}
+                onClick={() => {
+                  const effects = selected
+                    ? activePayload.effects.filter((effect: any) => effect.type !== type)
+                    : [...activePayload.effects, { id: `fx-${type}-${Date.now().toString(36)}`, type, intensity: 0.5, startSeconds: 0, blendMode: "normal" }]
+                  setCategoryField(activeCategoryId, "effects", effects)
+                }}
+              >{label}</SubToolboxTag>
+            })}
           </SubToolboxGrid>
           <SubToolboxSurface tone="subtle"><MutedNote>Effects are deterministic post-processing layers whenever possible, rather than permanent prompt text.</MutedNote></SubToolboxSurface>
         </SubToolboxStack>
@@ -917,7 +930,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                 <SubToolboxActions columns={2}>
                   <SubToolboxGridActionButton
                     label="Save Draft"
-                    iconName="archive"
+                    iconName="database"
                     tone="yellow"
                     onClick={() => {
                       saveVideoDirectorDraft(project.name, project)
