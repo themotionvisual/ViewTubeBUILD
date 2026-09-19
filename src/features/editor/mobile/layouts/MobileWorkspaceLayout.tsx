@@ -1,11 +1,11 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import type {EditorStore} from '../state/editorState';
-import {PreviewPane} from '../components/PreviewPane';
+import {PREVIEW_TRANSPORT_HEIGHT,PreviewPane} from '../components/PreviewPane';
 import {TimelineStrip,type TimelineViewport} from '../components/TimelineStrip';
 import {MiniTimelineMap} from '../components/MiniTimelineMap';
 import {ContextMenu,type ContextMenuItem} from '../components/ContextMenu';
 import {EDITOR_NAV_ITEMS,EditorNavigationPage,type EditorNavPage,type EditorSettingsModel} from '../components/EditorNavigationPages';
-import {EditorQuickActions,pageForSelection} from '../components/EditorQuickActions';
+import {pageForSelection} from '../components/EditorQuickActions';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
 import type {MobileWorkspaceMode} from '../MobileEditor';
 
@@ -51,9 +51,14 @@ const FitPreview:React.FC<{
     const width=Math.max(0,bounds.width);
     const height=Math.max(0,bounds.height);
     if(!width||!height)return {width:'100%',height:'100%'} as React.CSSProperties;
-    const availableAspect=width/height;
-    if(availableAspect>aspect)return {height:'100%',width:Math.max(1,height*aspect)};
-    return {width:'100%',height:Math.max(1,width/aspect)};
+    const canvasHeight=Math.max(1,height-PREVIEW_TRANSPORT_HEIGHT);
+    const availableAspect=width/canvasHeight;
+    if(availableAspect>aspect){
+      const canvasWidth=Math.max(1,canvasHeight*aspect);
+      return {width:canvasWidth,height:canvasHeight+PREVIEW_TRANSPORT_HEIGHT};
+    }
+    const canvasWidth=width;
+    return {width:canvasWidth,height:Math.max(1,canvasWidth/aspect)+PREVIEW_TRANSPORT_HEIGHT};
   },[bounds,aspect]);
 
   return <div
@@ -64,7 +69,7 @@ const FitPreview:React.FC<{
       overscrollBehavior:'contain',boxSizing:'border-box',
     }}
   >
-    <div style={{...fit,aspectRatio:String(aspect),minWidth:0,minHeight:0,flex:'0 0 auto'}}>
+    <div style={{...fit,minWidth:0,minHeight:0,flex:'0 0 auto'}}>
       <PreviewPane store={store} renderPreview={renderPreview} aspect={aspect}/>
     </div>
   </div>;
@@ -126,7 +131,6 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
       display:'grid',gap:3,alignContent:'start',
     }}>
       <div style={{display:'flex',gap:3,minWidth:'max-content',overflow:'visible'}}>
-        <button style={{...navButton(false),background:CYAN,minWidth:44,fontSize:14}} onClick={()=>store.dispatch({type:'togglePlaying'})} aria-label={store.state.playing?'Pause':'Play'}>{store.state.playing?'Ⅱ':'▶'}</button>
         {EDITOR_NAV_ITEMS.map(item=><button key={item.id} style={navButton(page===item.id)} onClick={()=>openPage(item.id)}><span style={{fontSize:11}}>{item.icon}</span><span>{item.label}</span></button>)}
       </div>
       <div style={{display:'flex',gap:3,minWidth:'max-content',alignItems:'center'}}>
@@ -134,7 +138,9 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
         <span style={{width:1,height:22,background:INK,opacity:.35,flex:'0 0 auto'}}/>
         <button style={{...navButton(showTimeline),minWidth:34,minHeight:28}} onClick={()=>setShowTimeline(v=>!v)}>TL</button>
         <button style={{...navButton(showMap),minWidth:38,minHeight:28}} onClick={()=>setShowMap(v=>!v)}>MAP</button>
-        <span style={{fontSize:8,fontWeight:900,whiteSpace:'nowrap',padding:'0 4px'}}>{store.state.playheadSec.toFixed(2)}s / {store.state.project.durationSec.toFixed(2)}s</span>
+        <span style={{width:1,height:22,background:INK,opacity:.35,flex:'0 0 auto'}}/>
+        <button style={{...navButton(false),minWidth:44,minHeight:28,opacity:store.canUndo?1:.4}} disabled={!store.canUndo} onClick={()=>store.dispatch({type:'undo'})}>Undo</button>
+        <button style={{...navButton(false),minWidth:44,minHeight:28,opacity:store.canRedo?1:.4}} disabled={!store.canRedo} onClick={()=>store.dispatch({type:'redo'})}>Redo</button>
       </div>
     </div>
   </section>;
@@ -143,7 +149,6 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     width:'100%',height:'100%',minWidth:0,minHeight:0,display:'flex',flexDirection:'column',
     background:'#fff',border:`3px solid ${INK}`,borderRadius:7,padding:4,boxSizing:'border-box',overflow:'hidden',
   }}>
-    <EditorQuickActions store={store} onOpenPage={openPage}/>
     <div style={{
       minWidth:0,minHeight:0,overflow:'auto',WebkitOverflowScrolling:'touch',
       overscrollBehavior:'contain',flex:1,paddingRight:1,
