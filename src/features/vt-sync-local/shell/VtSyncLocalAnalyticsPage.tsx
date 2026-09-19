@@ -123,8 +123,8 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
  const [expandedUnitIds, setExpandedUnitIds] = useState<Set<string>>(() => new Set())
  const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(() => new Set([VT_SYNC_GROUP_ORDER[0]]))
  const unifiedRows = useMemo(
-  () => buildVtSyncUnifiedProgressRows(progress, datasetFreshness),
-  [datasetFreshness, progress],
+  () => buildVtSyncUnifiedProgressRows(progress, datasetFreshness, queuedCategoryIds),
+  [datasetFreshness, progress, queuedCategoryIds],
  )
  const datasetRows = useMemo(
   () => unifiedRows.map(({ phaseLabel: _phaseLabel, displayStatus: _displayStatus, displayRows: _displayRows, message: _message, syncUnitLabel: _syncUnitLabel, syncUnitId: _syncUnitId, ...row }) => row),
