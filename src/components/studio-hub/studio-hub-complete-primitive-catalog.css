@@ -241,12 +241,6 @@
 .vt-complete-catalog .vt-dashboard-pill-row{display:flex;flex-wrap:wrap;gap:6px}.vt-complete-catalog .vt-dashboard-pill-row span{display:inline-flex;align-items:center;min-height:calc(var(--h)*.48);padding:0 calc(var(--h)*.2);border:var(--stroke) solid #000;border-radius:999px;background:var(--pair-a);font-size:calc(var(--fs)*.62);font-weight:1000;letter-spacing:-.045em}
 .vt-complete-catalog .vt-spectrum-tag{border-radius:999px!important}.vt-complete-catalog .vt-spectrum-tag>button{border-radius:50%!important}
 
-.vt-complete-catalog .vt-upload-two-color{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border:var(--stroke) solid #000;border-radius:var(--radius);background:var(--pair-b);isolation:isolate}
-.vt-complete-catalog .vt-upload-two-color .upload-bands{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}.vt-complete-catalog .vt-upload-two-color .upload-bands i{position:absolute;border:var(--stroke) solid #000;border-radius:inherit;background:var(--pair-a);transition:inset 300ms ease-out,background 300ms ease-out}.vt-complete-catalog .vt-upload-two-color .upload-bands i:nth-child(1){inset:5%}.vt-complete-catalog .vt-upload-two-color .upload-bands i:nth-child(2){inset:10%;background:var(--pair-b)}.vt-complete-catalog .vt-upload-two-color .upload-bands i:nth-child(3){inset:15%}.vt-complete-catalog .vt-upload-two-color .upload-bands i:nth-child(4){inset:20%;background:var(--pair-b)}.vt-complete-catalog .vt-upload-two-color .upload-bands i:nth-child(5){inset:25%}.vt-complete-catalog .vt-upload-two-color .upload-bands i:nth-child(6){inset:30%;background:var(--pair-b)}
-.vt-complete-catalog .vt-upload-two-color .upload-core{position:absolute;inset:35%;z-index:2;display:grid;place-items:center;align-content:center;gap:4px;background:var(--pair-a);border:var(--stroke) solid #000;border-radius:calc(var(--radius)*.7);font-size:calc(var(--fs)*.62);font-weight:1000;letter-spacing:-.055em;text-align:center}.vt-complete-catalog .vt-upload-two-color .upload-core svg{width:calc(var(--h)*.55);height:calc(var(--h)*.55);stroke-width:3}
-@media (hover:hover) and (pointer:fine){.vt-complete-catalog .vt-upload-two-color:hover .upload-bands i:nth-child(odd){background:var(--pair-b)}.vt-complete-catalog .vt-upload-two-color:hover .upload-bands i:nth-child(even){background:var(--pair-a)}}
-@media (prefers-reduced-motion:reduce){.vt-complete-catalog .vt-upload-two-color .upload-bands i{transition:none}}
-
 /* Certification Wave 03 — mobile screenshot corrections. */
 /* Canonical control typography is owned by component height, including imported split controls. */
 .vt-complete-catalog .vt-catalog-demo.is-l0{--fs:24px}
@@ -857,4 +851,72 @@
 .vt-complete-catalog .vt-hardcoded-tooltip-bubble:after{
   margin-top:calc(var(--stroke)*-1);
   border-left:calc(var(--h)*.13) solid transparent;border-right:calc(var(--h)*.13) solid transparent;border-top:calc(var(--h)*.13) solid var(--pair-a);
+}
+
+
+/* ==========================================================================
+   USER-CERTIFIED CORRECTIONS — tooltip, knob, alphabetical tags.
+   ========================================================================== */
+
+/* #37 Tooltip keeps the approved standalone shape, but is closed by default.
+   Hover and keyboard focus reveal it; the tooltip does not reserve open-state
+   interaction or pointer events when hidden. */
+.vt-complete-catalog .vt-hardcoded-tooltip-bubble{
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity 120ms ease-out,visibility 120ms ease-out;
+}
+.vt-complete-catalog .vt-hardcoded-tooltip:is(:hover,:focus-within) .vt-hardcoded-tooltip-bubble{
+  opacity:1;visibility:visible;
+}
+
+/* #52 Knob Dial: larger two-colour dial with a real native range input layered
+   over the circular face. Mouse/touch drag and keyboard arrows all update it. */
+.vt-complete-catalog .vt-catalog-knob{
+  --knob-size:calc(var(--h)*1.9);
+  display:inline-grid!important;justify-items:center!important;gap:calc(var(--h)*.14)!important;
+  min-width:calc(var(--knob-size) + var(--stroke)*2)!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face{
+  width:var(--knob-size)!important;height:var(--knob-size)!important;
+  border:var(--stroke) solid #000!important;border-radius:50%!important;
+  background:conic-gradient(from 225deg,color-mix(in srgb,var(--pair-a) 22%,white) 0 75%,#fff 75% 100%)!important;
+  box-shadow:calc(var(--stroke) + 2px) calc(var(--stroke) + 2px) 0 color-mix(in srgb,var(--pair-a) 38%,transparent)!important;
+  position:relative!important;display:grid!important;place-items:center!important;overflow:visible!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face:before{
+  content:"";position:absolute;inset:calc(var(--stroke)*1.7);border-radius:50%;
+  background:var(--pair-a);box-shadow:inset 0 0 0 calc(var(--stroke)*1.25) color-mix(in srgb,var(--pair-b) 72%,white);
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face:after{
+  content:"";position:absolute;inset:16%;border-radius:50%;background:var(--pair-b);z-index:1;
+  box-shadow:inset 0 0 0 var(--stroke) #000;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face i{
+  position:absolute!important;z-index:3!important;left:50%!important;top:19%!important;
+  width:max(4px,calc(var(--stroke)*1.25))!important;height:22%!important;border-radius:999px!important;background:#000!important;
+  transform-origin:50% 141%!important;transform:translateX(-50%) rotate(var(--vt-knob-angle))!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face em{
+  position:relative!important;z-index:3!important;font-style:normal!important;
+  font-size:calc(var(--fs)*1.35)!important;font-weight:1000!important;letter-spacing:-.06em!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face input[type=range]{
+  position:absolute;inset:0;z-index:5;width:100%;height:100%;margin:0;opacity:0;cursor:grab;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face input[type=range]:active{cursor:grabbing}
+.vt-complete-catalog .vt-catalog-knob .knob-face:focus-within{
+  outline:calc(var(--stroke)*.75) solid var(--pair-b);outline-offset:4px;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-value{
+  font-size:calc(var(--fs)*.72)!important;font-weight:1000!important;letter-spacing:.04em!important;text-transform:uppercase!important;
+}
+
+/* #55 Alphabetical spectrum tags use the canonical twelve palette slots.
+   Stroke and text are the exact slot colour; the fill is its 35% tint. */
+.vt-complete-catalog .vt-alpha-tag{
+  background:color-mix(in srgb,var(--alpha) 35%,white)!important;
+  border-color:var(--alpha)!important;
+  color:var(--alpha)!important;
+  font-size:calc(var(--fs)*.72)!important;font-weight:1000!important;
+  line-height:1!important;white-space:nowrap!important;
 }
