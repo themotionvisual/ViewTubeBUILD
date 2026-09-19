@@ -373,6 +373,9 @@ export type VtSyncDatasetFreshness = Record<string, {
  status?: "synced" | "partial" | "placeholder" | "stale" | "failed"
  rows?: number
  updatedAt?: string
+ startedAt?: string
+ completedAt?: string
+ durationMs?: number
  missingMetrics?: string[]
 }>
 
