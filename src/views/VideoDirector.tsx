@@ -104,6 +104,9 @@ import {
   saveVideoDirectorDraft,
   saveVideoDirectorRecipe,
   setVideoDirectorScopedCategoryField,
+  setVideoDirectorVariantAllowedCategories,
+  setVideoDirectorVariantCategoryAllowed,
+  setVideoDirectorVariantStrength,
   toggleVideoDirectorScopedCategoryLock,
   type VideoDirectorCategoryGroup,
   type VideoDirectorCategoryId,
@@ -531,6 +534,9 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
   const lockedCount = VIDEO_DIRECTOR_CATEGORY_REGISTRY.filter(
     (definition) => project.categories[definition.id].locked,
   ).length
+  const matrixVariant = activeScope.type === "variant"
+    ? project.variants.find((variant) => variant.id === activeScope.id) ?? project.variants[0]
+    : project.variants[0]
 
   const renderCategoryEditor = () => {
     switch (activeCategoryId) {
@@ -1220,6 +1226,118 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                   </SubToolboxSurface>
                 ) : null}
                 <MutedNote>Suggestions can modify Auto, provider-default, recipe, or earlier AI-directed fields. User, shot, and variant overrides remain protected.</MutedNote>
+              </SubToolboxStack>
+            </SubToolbox>
+
+            <SubToolbox title="Variation Matrix" icon={<Grid2X2 />} collapsible isOpenInitial={project.mode === "variations"}>
+              <SubToolboxStack>
+                {project.variants.length ? (
+                  <>
+                    <SubToolboxSection label={<SubToolboxFieldLabel>Active Variation</SubToolboxFieldLabel>}>
+                      <SubToolboxGrid minItemWidth="compact" density="dense">
+                        {project.variants.map((variant, index) => (
+                          <StudioButton
+                            key={variant.id}
+                            sizeVariant="standard"
+                            tone="neutral"
+                            selected={matrixVariant?.id === variant.id}
+                            onClick={() => setScopeKey(`variant:${variant.id}`)}
+                          >
+                            {String.fromCharCode(65 + index)}
+                          </StudioButton>
+                        ))}
+                      </SubToolboxGrid>
+                    </SubToolboxSection>
+                    {matrixVariant ? (
+                      <>
+                        <SelectField
+                          label="Variation Strength"
+                          value={matrixVariant.variationStrength}
+                          options={["subtle", "balanced", "radical"]}
+                          onChange={(value) => setProject((current) =>
+                            setVideoDirectorVariantStrength(
+                              current,
+                              matrixVariant.id,
+                              value as "subtle" | "balanced" | "radical",
+                            ),
+                          )}
+                        />
+                        <SubToolboxActions columns={2}>
+                          <StudioButton
+                            sizeVariant="compact"
+                            tone="neutral"
+                            onClick={() => setProject((current) =>
+                              setVideoDirectorVariantAllowedCategories(
+                                current,
+                                matrixVariant.id,
+                                VIDEO_DIRECTOR_CATEGORY_REGISTRY
+                                  .filter((definition) => definition.variationSupport)
+                                  .map((definition) => definition.id),
+                              ),
+                            )}
+                          >
+                            Allow All
+                          </StudioButton>
+                          <StudioButton
+                            sizeVariant="compact"
+                            tone="neutral"
+                            onClick={() => setProject((current) =>
+                              setVideoDirectorVariantAllowedCategories(current, matrixVariant.id, []),
+                            )}
+                          >
+                            Clear All
+                          </StudioButton>
+                        </SubToolboxActions>
+                        {VIDEO_DIRECTOR_CATEGORY_GROUPS.map((group) => {
+                          const definitions = VIDEO_DIRECTOR_CATEGORY_REGISTRY.filter(
+                            (definition) => definition.group === group && definition.variationSupport,
+                          )
+                          if (!definitions.length) return null
+                          return (
+                            <SubToolboxSection
+                              key={group}
+                              label={<SubToolboxFieldLabel>{GROUP_LABEL[group]}</SubToolboxFieldLabel>}
+                            >
+                              <SubToolboxGrid minItemWidth="compact" density="dense">
+                                {definitions.map((definition) => {
+                                  const allowed = matrixVariant.allowedCategories.includes(definition.id)
+                                  const locked = project.categories[definition.id].locked
+                                  return (
+                                    <StudioButton
+                                      key={definition.id}
+                                      sizeVariant="compact"
+                                      tone={locked ? "warning" : "neutral"}
+                                      selected={allowed && !locked}
+                                      disabled={locked}
+                                      title={locked ? "This project category is locked." : definition.purpose}
+                                      onClick={() => setProject((current) =>
+                                        setVideoDirectorVariantCategoryAllowed(
+                                          current,
+                                          matrixVariant.id,
+                                          definition.id,
+                                          !allowed,
+                                        ),
+                                      )}
+                                    >
+                                      {allowed ? "●" : "○"} {definition.shortLabel}
+                                    </StudioButton>
+                                  )
+                                })}
+                              </SubToolboxGrid>
+                            </SubToolboxSection>
+                          )
+                        })}
+                        <MutedNote>
+                          Only selected categories may be intentionally varied. Project-locked categories remain fixed even if previously allowed.
+                        </MutedNote>
+                      </>
+                    ) : null}
+                  </>
+                ) : (
+                  <SubToolboxSurface tone="subtle">
+                    <MutedNote>Build Variants to create A/B/C directing lanes, then choose which categories each lane is allowed to change.</MutedNote>
+                  </SubToolboxSurface>
+                )}
               </SubToolboxStack>
             </SubToolbox>
 
