@@ -10,14 +10,18 @@ import {
   SubToolboxCheckControl,
   SubToolboxColorPicker,
   SubToolboxDataTable,
+  SubToolboxDialog,
+  SubToolboxDrawer,
   SubToolboxFieldLabel,
   SubToolboxIconButton,
   SubToolboxInput,
   SubToolboxKnob,
   SubToolboxLinkButton,
+  SubToolboxLoader,
   SubToolboxMediaCard,
   SubToolboxMenu,
   SubToolboxMetric,
+  SubToolboxCalendar,
   SubToolboxOutputCard,
   SubToolboxProgressBar,
   SubToolboxProgressValue,
@@ -28,6 +32,7 @@ import {
   SubToolboxSegmentedToggle,
   SubToolboxSelectableListRow,
   SubToolboxSelectableTag,
+  SubToolboxSkeleton,
   SubToolboxSettingsSwitch,
   SubToolboxSlider,
   SubToolboxSplitField,
@@ -41,6 +46,7 @@ import {
   SubToolboxTag,
   SubToolboxTagEditor,
   SubToolboxTextArea,
+  SubToolboxToast,
   SubToolboxToggleSwitch,
   SubToolboxTooltip,
 } from "../subtoolbox/SubToolboxPrimitives"
@@ -103,6 +109,12 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Tabs",
   "Alert",
   "Step Indicator",
+  "Dialog",
+  "Drawer",
+  "Calendar",
+  "Loader",
+  "Skeleton",
+  "Toast",
 ] as const
 
 const pair = (index: number) => ({
@@ -141,6 +153,10 @@ const PrimitiveMigrationControl: React.FC<{
   const [rowSelected, setRowSelected] = React.useState(false)
   const [tabValue, setTabValue] = React.useState("A")
   const [reorderItems, setReorderItems] = React.useState(["HOOK", "PROOF", "CTA"])
+  const [dialogOpen, setDialogOpen] = React.useState(false)
+  const [drawerOpen, setDrawerOpen] = React.useState(false)
+  const [selectedDay, setSelectedDay] = React.useState(19)
+  const [toastVisible, setToastVisible] = React.useState(true)
 
   // Primitive track rule: only production primitives + shared CSS render here.
   // Unmigrated hardcoded families remain exclusively in the frozen baseline.
@@ -283,6 +299,26 @@ const PrimitiveMigrationControl: React.FC<{
   }
   if (name === "Step Indicator") {
     return <SubToolboxStepIndicator level={level} style={{ ...style, ["--vt-step-count" as string]: 3 }} steps={[{ label: "SCRIPT", state: "complete" }, { label: "VISUALS", state: "active" }, { label: "EXPORT", state: "upcoming" }]} />
+  }
+  if (name === "Dialog") {
+    return <SubToolboxDialog level={level} style={style} open={dialogOpen} onOpenChange={setDialogOpen} title="CONFIRM">Dialog content uses the same level DNA.</SubToolboxDialog>
+  }
+  if (name === "Drawer") {
+    return <SubToolboxDrawer level={level} style={style} open={drawerOpen} onOpenChange={setDrawerOpen} title="DETAILS">Drawer content.</SubToolboxDrawer>
+  }
+  if (name === "Calendar") {
+    return <SubToolboxCalendar level={level} style={style} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+  }
+  if (name === "Loader") {
+    return <SubToolboxLoader level={level} style={style} variant="spinner" label="LOADING" />
+  }
+  if (name === "Skeleton") {
+    return <SubToolboxSkeleton level={level} style={style} lines={3} />
+  }
+  if (name === "Toast") {
+    return toastVisible
+      ? <SubToolboxToast level={level} style={style} tone="success" title="SAVED" detail="Changes are ready." onDismiss={() => setToastVisible(false)} />
+      : <SubToolboxButton level={level} style={style} onClick={() => setToastVisible(true)}>SHOW TOAST</SubToolboxButton>
   }
 
   return null
