@@ -1,5 +1,5 @@
 import React from "react"
-import type { DirectorAudioStageProps, DirectorCompositionControlProps, DirectorLensControlProps, DirectorLightingControlProps, DirectorMoodControlProps, DirectorPacingControlProps, DirectorProviderRouteProps, DirectorShotStripProps } from "../../../../features/video-director/signatureContracts"
+import type { DirectorAudioStageProps, DirectorCameraPathProps, DirectorCaptionPreviewProps, DirectorCompositionControlProps, DirectorContinuityLedgerProps, DirectorFocusDepthProps, DirectorLensControlProps, DirectorLightingControlProps, DirectorMoodControlProps, DirectorNegativeBankProps, DirectorPacingControlProps, DirectorProviderRouteProps, DirectorReferenceBoardProps, DirectorShotStripProps, DirectorTextureStackProps, DirectorTransitionBridgeProps, DirectorMusicBeatProps } from "../../../../features/video-director/signatureContracts"
 
 export const DirectorWidgetLensVisual: React.FC<DirectorLensControlProps> = ({ focalLength, aperture }) => {
   const fieldWidth = Math.max(20, Math.min(88, 92 - Math.log2(Math.max(1, focalLength) / 14) * 17))
@@ -100,5 +100,91 @@ export const DirectorWidgetProviderRoute: React.FC<DirectorProviderRouteProps> =
     <span className="vtdw-route-node">{provider || "PROVIDER"}</span>
     <span className="vtdw-route-line">→</span>
     <span className="vtdw-route-node">{model || "MODEL"}</span>
+  </div>
+)
+
+
+export const DirectorWidgetCameraPath: React.FC<DirectorCameraPathProps> = ({ type, speed, panDegrees, tiltDegrees, orbitDegrees }) => (
+  <div className="vtdw-signature vtdw-camera-path" aria-label="Camera movement path">
+    <div className="vtdw-path-grid" aria-hidden="true" />
+    <span className="vtdw-camera-origin">CAM</span>
+    <span className="vtdw-camera-target" style={{ transform: `translate(${Math.max(-46, Math.min(46, panDegrees / 4))}px,${Math.max(-34, Math.min(34, -tiltDegrees / 3))}px)` }}>◎</span>
+    <span className="vtdw-camera-arc" style={{ transform: `rotate(${Math.max(-70, Math.min(70, orbitDegrees / 3))}deg)` }} />
+    <div className="vtdw-signature-stats"><strong>{type.toUpperCase()}</strong><span>{Math.round(speed * 100)}% SPEED</span><span>{panDegrees}° PAN</span></div>
+  </div>
+)
+
+export const DirectorWidgetFocusDepth: React.FC<DirectorFocusDepthProps> = ({ mode, focusDistanceMeters, depthStrength, bokeh }) => (
+  <div className="vtdw-signature vtdw-focus-depth" aria-label="Focus and depth preview">
+    <span className="vtdw-focus-plane is-near" />
+    <span className="vtdw-focus-plane is-mid" style={{ opacity: Math.max(.35, 1 - depthStrength * .5) }} />
+    <span className="vtdw-focus-plane is-far" style={{ filter: `blur(${Math.round(bokeh * 5)}px)` }} />
+    <span className="vtdw-focus-marker">FOCUS</span>
+    <div className="vtdw-signature-stats"><strong>{mode.toUpperCase()}</strong><span>{focusDistanceMeters}M</span><span>{Math.round(depthStrength * 100)}% DEPTH</span></div>
+  </div>
+)
+
+export const DirectorWidgetTextureStack: React.FC<DirectorTextureStackProps> = ({ grain, halation, bloom, vignette, filmStock }) => (
+  <div className="vtdw-signature vtdw-texture-stack" aria-label="Film texture stack">
+    {[["GRAIN",grain],["HALATION",halation],["BLOOM",bloom],["VIGNETTE",vignette]].map(([label,value],index)=>(
+      <div className="vtdw-texture-layer" key={String(label)} style={{ transform:`translateY(${index*9}px)` }}>
+        <strong>{label}</strong><span>{value}%</span>
+      </div>
+    ))}
+    <div className="vtdw-signature-stats"><strong>{filmStock || "DIGITAL CLEAN"}</strong><span>STACKED FX</span></div>
+  </div>
+)
+
+export const DirectorWidgetTransitionBridge: React.FC<DirectorTransitionBridgeProps> = ({ type, durationFrames, matchMotion }) => (
+  <div className="vtdw-signature vtdw-transition" aria-label="Transition bridge preview">
+    <div className="vtdw-transition-clip is-left">A</div>
+    <div className="vtdw-transition-bridge">{type.toUpperCase()}</div>
+    <div className="vtdw-transition-clip is-right">B</div>
+    <div className="vtdw-signature-stats"><strong>{durationFrames} FRAMES</strong><span>{matchMotion ? "MOTION MATCH" : "FREE MOTION"}</span></div>
+  </div>
+)
+
+export const DirectorWidgetMusicBeat: React.FC<DirectorMusicBeatProps> = ({ bpm, intensity, beatSync }) => (
+  <div className="vtdw-signature vtdw-music" aria-label="Music beat preview">
+    <div className="vtdw-waveform" aria-hidden="true">{Array.from({length:24}).map((_,i)=><span key={i} style={{height:`${18 + ((i*13)%44)}%`}} />)}</div>
+    <div className="vtdw-beat-line">{Array.from({length:8}).map((_,i)=><i key={i} />)}</div>
+    <div className="vtdw-signature-stats"><strong>{bpm} BPM</strong><span>{Math.round(intensity*100)}% INTENSITY</span><span>{beatSync.toUpperCase()}</span></div>
+  </div>
+)
+
+export const DirectorWidgetCaptionPreview: React.FC<DirectorCaptionPreviewProps> = ({ position, animation, maxWordsPerLine, burnIn }) => (
+  <div className="vtdw-signature vtdw-caption" aria-label="Caption preview">
+    <span className="vtdw-caption-safe" />
+    <span className={`vtdw-caption-line is-${position}`}>CAPTION PREVIEW</span>
+    <div className="vtdw-signature-stats"><strong>{position.toUpperCase()}</strong><span>{animation.toUpperCase()}</span><span>{maxWordsPerLine} WORDS · {burnIn?"BURN IN":"SIDECAR"}</span></div>
+  </div>
+)
+
+export const DirectorWidgetReferenceBoard: React.FC<DirectorReferenceBoardProps> = ({ referenceCount, seed, lockSeed, variationNoise }) => (
+  <div className="vtdw-signature vtdw-reference-board" aria-label="Reference weighting board">
+    <div className="vtdw-reference-tiles">
+      {Array.from({length:Math.max(3,Math.min(6,referenceCount||3))}).map((_,i)=><span key={i}>{i<referenceCount?`REF ${i+1}`:"＋"}</span>)}
+    </div>
+    <div className="vtdw-signature-stats"><strong>{referenceCount} REFERENCES</strong><span>{lockSeed?"LOCKED":"FREE"} SEED {seed??"AUTO"}</span><span>{Math.round(variationNoise*100)}% NOISE</span></div>
+  </div>
+)
+
+export const DirectorWidgetContinuityLedger: React.FC<DirectorContinuityLedgerProps> = ({ entityCount, identityStrength, wardrobeStrength, environmentStrength }) => (
+  <div className="vtdw-signature vtdw-continuity" aria-label="Continuity ledger">
+    <div className="vtdw-continuity-rows">
+      {[["IDENTITY",identityStrength],["WARDROBE",wardrobeStrength],["ENVIRONMENT",environmentStrength]].map(([label,value])=>(
+        <div key={String(label)}><strong>{label}</strong><span><i style={{width:`${Number(value)*100}%`}} /></span><b>{Math.round(Number(value)*100)}%</b></div>
+      ))}
+    </div>
+    <div className="vtdw-signature-stats"><strong>{entityCount} ENTITIES</strong><span>CONTINUITY LEDGER</span></div>
+  </div>
+)
+
+export const DirectorWidgetNegativeBank: React.FC<DirectorNegativeBankProps> = ({ tagCount, enforcement, freeText }) => (
+  <div className="vtdw-signature vtdw-negative-bank" aria-label="Negative constraint bank">
+    <div className="vtdw-negative-chips">
+      {Array.from({length:Math.max(3,Math.min(8,tagCount||3))}).map((_,i)=><span key={i}>{i<tagCount?`EXCLUDE ${i+1}`:"EMPTY"}</span>)}
+    </div>
+    <div className="vtdw-signature-stats"><strong>{enforcement.toUpperCase()}</strong><span>{tagCount} TAGS</span><span>{freeText.trim()?"CUSTOM NOTE":"NO NOTE"}</span></div>
   </div>
 )
