@@ -118,12 +118,53 @@ type VtSyncQueuedRequest = {
  windows?: VtSyncAnalyticsWindow[]
 }
 
+const VT_SYNC_QUEUE_STORAGE_KEY = "viewtube_vt_sync_queue_v1"
+
 const vtSyncQueueRequestKey = (request: VtSyncQueuedRequest): string => JSON.stringify({
  categoryIds: [...new Set(request.categoryIds)].sort(),
  retentionVideoIds: [...new Set(request.retentionVideoIds || [])].sort(),
  forceFullVideoMetadata: Boolean(request.forceFullVideoMetadata),
  windows: [...new Set(request.windows || ["lifetime"])].sort(),
 })
+
+const readPersistedVtSyncQueue = (): VtSyncQueuedRequest[] => {
+ if (typeof window === "undefined") return []
+ try {
+  const parsed = JSON.parse(window.sessionStorage.getItem(VT_SYNC_QUEUE_STORAGE_KEY) || "[]")
+  if (!Array.isArray(parsed)) return []
+  return parsed.flatMap((entry): VtSyncQueuedRequest[] => {
+   if (!entry || typeof entry !== "object" || !Array.isArray(entry.categoryIds)) return []
+   const categoryIds = entry.categoryIds.filter((id: unknown): id is string => typeof id === "string")
+   if (!categoryIds.length) return []
+   const retentionVideoIds = Array.isArray(entry.retentionVideoIds)
+    ? entry.retentionVideoIds.filter((id: unknown): id is string => typeof id === "string")
+    : undefined
+   const windows = Array.isArray(entry.windows)
+    ? entry.windows.filter((window: unknown): window is VtSyncAnalyticsWindow =>
+      typeof window === "string" && ["lifetime", "365d", "90d", "28d", "7d"].includes(window),
+     )
+    : undefined
+   return [{
+    categoryIds,
+    retentionVideoIds,
+    forceFullVideoMetadata: Boolean(entry.forceFullVideoMetadata),
+    windows,
+   }]
+  })
+ } catch {
+  return []
+ }
+}
+
+const persistVtSyncQueue = (queue: VtSyncQueuedRequest[]) => {
+ if (typeof window === "undefined") return
+ try {
+  if (queue.length) window.sessionStorage.setItem(VT_SYNC_QUEUE_STORAGE_KEY, JSON.stringify(queue))
+  else window.sessionStorage.removeItem(VT_SYNC_QUEUE_STORAGE_KEY)
+ } catch {
+  // Queue remains usable in memory when sessionStorage is blocked.
+ }
+}
 
 const writeClipboardText = async (text: string) => {
  if (navigator.clipboard?.writeText) {
@@ -713,8 +754,10 @@ const refreshManualImports = useCallback(async (payload?: {
  const progressPanelRef = useRef<HTMLDivElement | null>(null)
  const syncRequestActiveRef = useRef(false)
  const activeSyncRequestKeyRef = useRef<string | null>(null)
- const syncQueueRef = useRef<VtSyncQueuedRequest[]>([])
- const [queuedCategoryIds, setQueuedCategoryIds] = useState<string[]>([])
+ const syncQueueRef = useRef<VtSyncQueuedRequest[]>(readPersistedVtSyncQueue())
+ const [queuedCategoryIds, setQueuedCategoryIds] = useState<string[]>(() =>
+  [...new Set(syncQueueRef.current.flatMap((request) => request.categoryIds))],
+ )
  const controllerActiveCategoryIds = useMemo(
   () => getVtSyncActiveCategoryIds(syncProgress),
   [syncProgress],
@@ -804,6 +847,7 @@ const refreshManualImports = useCallback(async (payload?: {
  }
 
  const updateQueuedCategories = () => {
+  persistVtSyncQueue(syncQueueRef.current)
   setQueuedCategoryIds([...new Set(syncQueueRef.current.flatMap((request) => request.categoryIds))])
  }
 
