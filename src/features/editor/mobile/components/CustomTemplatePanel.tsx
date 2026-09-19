@@ -1,10 +1,11 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
-import {ArrowRight,Check,LayoutTemplate,Play,Save,Search,Star} from 'lucide-react';
+import {ArrowRight,Check,Copy,LayoutTemplate,Pencil,Play,RotateCcw,Save,Search,Star} from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {templateCatalog} from '../../../../editor-design-library/catalog';
 import type {TemplateDefinition,TemplateElement,TemplateStyleConfig} from '../../../../editor-design-library/core/schema';
 import {templateToTimelineClip} from '../../../../editor-design-library/integration/timelineAdapter';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
+import {ContextMenu,type ContextMenuItem} from './ContextMenu';
 
 const INK='#248b99',CYAN='#36E0F6';
 const card:React.CSSProperties={border:`2px solid ${INK}`,borderRadius:7,background:'#fff',padding:7,marginBottom:7,boxShadow:'2px 2px 0 rgba(54,224,246,.22)'};
@@ -57,6 +58,7 @@ function editableElements(template?:TemplateDefinition){
 export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
   const[query,setQuery]=useState('');
   const[selectedElementId,setSelectedElementId]=useState<string|null>(null);
+  const[elementMenu,setElementMenu]=useState<{element:TemplateElement;at:{x:number;y:number}}|null>(null);
   const editorRef=useRef<HTMLDivElement>(null);
   const clip=selectedTemplateClip(store);
   const template=clip?.templateDefinition;
@@ -87,6 +89,24 @@ export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
     if(!clip)return;
     patchOverrides({content:{[element.id]:value}});
   };
+  const resetElement=(element:TemplateElement)=>{
+    if(!clip)return;
+    const content={...(clip.templateOverrides?.content??{})};
+    delete content[element.id];
+    store.dispatch({type:'updateClip',id:clip.id,patch:{templateOverrides:{...(clip.templateOverrides??{}),content}} as Partial<VtE1Clip>});
+  };
+  const duplicateElement=(element:TemplateElement)=>{
+    if(!clip||!template)return;
+    const copy:TemplateElement={...element,id:`${element.id}_copy_${Date.now().toString(36)}`,name:`${element.name} Copy`,x:element.x+20,y:element.y+20};
+    const definition:TemplateDefinition={...template,elements:[...template.elements,copy]};
+    store.dispatch({type:'updateClip',id:clip.id,patch:{templateDefinition:definition} as Partial<VtE1Clip>});
+    setSelectedElementId(copy.id);
+  };
+  const elementMenuItems=(element:TemplateElement):ContextMenuItem[]=>[
+    {label:'Edit',icon:<Pencil size={13}/>,onSelect:()=>{setSelectedElementId(element.id);requestAnimationFrame(()=>editorRef.current?.scrollIntoView({behavior:'smooth',block:'nearest'}))}},
+    {label:'Duplicate',icon:<Copy size={13}/>,onSelect:()=>duplicateElement(element)},
+    {label:'Reset',icon:<RotateCcw size={13}/>,onSelect:()=>resetElement(element)},
+  ];
   const colors=(clip?.templateOverrides?.style?.colors??template?.style?.colors??{}) as Partial<TemplateStyleConfig['colors']>;
 
   return <div style={{width:'100%',minWidth:0,overflowX:'hidden'}}>
@@ -123,6 +143,10 @@ export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
               key={element.id}
               title={`Edit ${element.name}`}
               aria-label={`Select template element ${element.name}`}
+              onContextMenu={event=>{
+                event.preventDefault();event.stopPropagation();
+                setElementMenu({element,at:{x:event.clientX,y:event.clientY}});
+              }}
               onClick={()=>{
                 setSelectedElementId(element.id);
                 requestAnimationFrame(()=>editorRef.current?.scrollIntoView({behavior:'smooth',block:'nearest'}));
@@ -178,5 +202,12 @@ export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
         }}><Save size={13}/>Save Custom Template</button>
       </>}
     </section>
+    {elementMenu?<ContextMenu
+      items={elementMenuItems(elementMenu.element)}
+      at={elementMenu.at}
+      title={elementMenu.element.name}
+      layout="tray"
+      onDismiss={()=>setElementMenu(null)}
+    />:null}
   </div>;
 };
