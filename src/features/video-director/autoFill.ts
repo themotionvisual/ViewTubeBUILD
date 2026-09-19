@@ -245,6 +245,9 @@ export const autoFillVideoDirectorProject = async ({
   contextProvider?: () => Promise<ContextPacket>
   recordSignal?: boolean
 }): Promise<VideoDirectorAutoFillResult> => {
+  if (!gateway.generateJsonObject) {
+    throw new Error("The active Brain model gateway does not support structured tool plans.")
+  }
   const context = await contextProvider()
   const request = buildVideoDirectorAutoFillRequest(project, context)
   const raw = await gateway.generateJsonObject(request)
