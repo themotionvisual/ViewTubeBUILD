@@ -41,6 +41,9 @@ import { VtSyncIntelligenceHubGate } from "./VtSyncIntelligenceHubGate"
 import "./VtSyncLocalAnalyticsPage.css"
 import { claimVtSyncSyncRequest } from "./vtSyncProgressModel"
 
+const EMPTY_MANUAL_IMPORTS: VtSyncManualImportState = { rowsByTableId: {}, capturedAtByTableId: {} }
+const EMPTY_PERSISTED_API_ROWS: VtSyncPersistedApiState = { rowsByTableId: {}, capturedAtByTableId: {} }
+
 type VtSyncQueuedRequest = {
  categoryIds: string[]
  retentionVideoIds?: string[]
