@@ -417,48 +417,104 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
     })
   }, [])
 
+  const scopeOptions = useMemo(() => listVideoDirectorScopeOptions(project), [project])
+  const activeScope = useMemo<VideoDirectorScope>(
+    () => parseVideoDirectorScopeKey(scopeKey, project),
+    [scopeKey, project],
+  )
+
+  useEffect(() => {
+    if (scopeOptions.some((option) => option.key === scopeKey)) return
+    setScopeKey("project")
+  }, [scopeKey, scopeOptions])
+
+  const setProjectCategoryField = useCallback((
+    categoryId: VideoDirectorCategoryId,
+    field: string,
+    value: unknown,
+  ) => {
+    setProject((current) => applyVideoDirectorConflicts(
+      setVideoDirectorScopedCategoryField({
+        project: current,
+        categoryId,
+        field,
+        value,
+        scope: { type: "project" },
+      }),
+    ))
+  }, [])
+
   const setCategoryField = useCallback((
     categoryId: VideoDirectorCategoryId,
     field: string,
     value: unknown,
   ) => {
-    mutateProject((draft) => {
-      const state = draft.categories[categoryId] as any
-      state.payload[field] = value
-      state.fieldSources[field] = "user"
-    })
-  }, [mutateProject])
+    setProject((current) => applyVideoDirectorConflicts(
+      setVideoDirectorScopedCategoryField({
+        project: current,
+        categoryId,
+        field,
+        value,
+        scope: activeScope,
+      }),
+    ))
+  }, [activeScope])
 
   const resetCategory = useCallback((categoryId: VideoDirectorCategoryId) => {
-    mutateProject((draft) => {
-      const defaults = createDefaultVideoDirectorCategories()
-      ;(draft.categories as any)[categoryId] = structuredClone(defaults[categoryId])
-    })
-    setNotice(`${VIDEO_DIRECTOR_CATEGORY_BY_ID[categoryId].label} reset to Auto.`)
-  }, [mutateProject])
+    if (activeScope.type === "project") {
+      mutateProject((draft) => {
+        const defaults = createDefaultVideoDirectorCategories()
+        ;(draft.categories as any)[categoryId] = structuredClone(defaults[categoryId])
+      })
+      setNotice(`${VIDEO_DIRECTOR_CATEGORY_BY_ID[categoryId].label} reset to Auto.`)
+      return
+    }
+
+    setProject((current) => applyVideoDirectorConflicts(
+      resetVideoDirectorScopedCategory({
+        project: current,
+        categoryId,
+        scope: activeScope,
+      }),
+    ))
+    setNotice(`${VIDEO_DIRECTOR_CATEGORY_BY_ID[categoryId].label} override cleared for this scope.`)
+  }, [activeScope, mutateProject])
 
   const toggleCategoryLock = useCallback((categoryId: VideoDirectorCategoryId) => {
-    mutateProject((draft) => {
-      draft.categories[categoryId].locked = !draft.categories[categoryId].locked
-    })
-  }, [mutateProject])
+    setProject((current) => applyVideoDirectorConflicts(
+      toggleVideoDirectorScopedCategoryLock({
+        project: current,
+        categoryId,
+        scope: activeScope,
+      }),
+    ))
+  }, [activeScope])
 
   const compiledPacket = useMemo(() => compileSemanticDirectorPacket(project), [project])
 
   const activeCategoryId = project.activeCategoryId
   const activeDefinition = VIDEO_DIRECTOR_CATEGORY_BY_ID[activeCategoryId]
-  const activeState = project.categories[activeCategoryId]
-  const activeStatus = statusForProject(project, activeCategoryId)
+  const activeState = useMemo(
+    () => resolveVideoDirectorScopedCategoryState(project, activeCategoryId, activeScope),
+    [activeCategoryId, activeScope, project],
+  )
+  const activeStatus = deriveVideoDirectorCategoryStatus(activeState)
   const activePayload = activeState.payload as any
 
+  const scopedCategoryOptionLabel = useCallback((categoryId: VideoDirectorCategoryId) => {
+    const definition = VIDEO_DIRECTOR_CATEGORY_BY_ID[categoryId]
+    const state = resolveVideoDirectorScopedCategoryState(project, categoryId, activeScope)
+    return `${STATUS_SYMBOL[deriveVideoDirectorCategoryStatus(state)]} ${definition.label}`
+  }, [activeScope, project])
+
   const categoryOptions = useMemo(
-    () => VIDEO_DIRECTOR_CATEGORY_REGISTRY.map((definition) => categoryOptionLabel(project, definition.id)),
-    [project],
+    () => VIDEO_DIRECTOR_CATEGORY_REGISTRY.map((definition) => scopedCategoryOptionLabel(definition.id)),
+    [scopedCategoryOptionLabel],
   )
 
   const onCategoryOptionChange = (option: string) => {
     const definition = VIDEO_DIRECTOR_CATEGORY_REGISTRY.find(
-      (candidate) => option === categoryOptionLabel(project, candidate.id),
+      (candidate) => option === scopedCategoryOptionLabel(candidate.id),
     )
     if (!definition) return
     mutateProject((draft) => { draft.activeCategoryId = definition.id })
