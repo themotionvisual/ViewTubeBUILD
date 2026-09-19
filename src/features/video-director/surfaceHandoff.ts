@@ -1,7 +1,5 @@
-import {
-  VIDEO_DIRECTOR_CATEGORY_IDS,
-  type VideoDirectorCategoryId,
-} from "./categoryRegistry"
+import { VIDEO_DIRECTOR_CATEGORY_IDS } from "./categoryRegistry"
+import type { VideoDirectorCategoryId } from "./categorySchemas"
 
 const VIDEO_DIRECTOR_HANDOFF_KEY = "viewtube.video-director.surface-handoff.v1"
 
