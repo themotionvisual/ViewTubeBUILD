@@ -1,16 +1,11 @@
 import { readFileSync } from "node:fs"
-import React from "react"
-import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import type { VtSyncDatasetFreshness } from "../adapters/contracts"
 import type { VtSyncLocalSyncProgress } from "../adapters/localSyncEngine"
-import { VT_SYNC_GROUP_ORDER } from "../upstream/syncUnitRegistry"
-import {
- ProgressRail,
-} from "./VtSyncLocalAnalyticsPage"
 import {
  buildVtSyncUnifiedProgressRows,
+ buildVtSyncUnifiedUnitViewModels,
  claimVtSyncSyncRequest,
  getVtSyncActiveCategoryIds,
  getVtSyncPendingCategoryIds,
@@ -18,25 +13,26 @@ import {
 } from "./vtSyncProgressModel"
 
 const pageSource = readFileSync(new URL("./VtSyncLocalAnalyticsPage.tsx", import.meta.url), "utf8")
-const pageCss = readFileSync(new URL("./VtSyncLocalAnalyticsPage.css", import.meta.url), "utf8")
 
 describe("VT-SYNC unified progress rows", () => {
  it("uses the creator-facing hero and routes its actions through the existing account and sync paths", () => {
   expect(pageSource).toContain("<VtSyncCreatorHero")
   expect(pageSource).toContain("void startSync(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))")
-  expect(pageSource).toContain("scrollToPanel(controllerPanelRef.current)")
-  expect(pageSource).toContain("scrollToPanel(progressPanelRef.current)")
+  expect(pageSource.match(/scrollToPanel\(controllerPanelRef\.current\)/g)).toHaveLength(2)
+  expect(pageSource).not.toContain("progressPanelRef")
   expect(pageSource).not.toContain("VT-SYNC Tools Page")
   expect(pageSource).not.toContain("NO CANONICAL WRITES")
   expect(pageSource).not.toContain("VtSyncStatCard")
  })
 
- it("measures the controller and constrains the progress toolbox to the same desktop height", () => {
-  expect(pageSource).toContain("new ResizeObserver(updateHeight)")
-  expect(pageSource).toContain("--vt-sync-controller-height")
-  expect(pageSource).toContain("fillAvailable")
-  expect(pageSource).toContain("min-h-0 flex-1 overflow-auto")
-  expect(pageCss).toContain("height: var(--vt-sync-controller-height, auto)")
+ it("renders one unified controller + progress toolbox instead of two synchronized panels", () => {
+  expect(pageSource.match(/<VtSyncControllerPanel/g)).toHaveLength(1)
+  expect(pageSource).toContain("progress={syncProgress}")
+  expect(pageSource).toContain("queuedCategoryIds={queuedCategoryIds}")
+  expect(pageSource).toContain("videoCatalogCoverage={videoCatalogProjection.coverage}")
+  expect(pageSource).not.toContain("<ProgressRail")
+  expect(pageSource).not.toContain("--vt-sync-controller-height")
+  expect(pageSource).not.toContain("new ResizeObserver(updateHeight)")
  })
 
  it("does not consume a queued request before authorization is ready and dedupes equivalent jobs", () => {
@@ -166,36 +162,40 @@ describe("VT-SYNC unified progress rows", () => {
    .find((row) => row.category.id === "search_terms")?.displayStatus).toBe("synced")
  })
 
-  it("groups progress datasets into the same collapsible categories as the controller", () => {
-  const markup = renderToStaticMarkup(React.createElement(ProgressRail, { progress: null }))
-  VT_SYNC_GROUP_ORDER.forEach((group) => {
-   expect(markup).toContain(`id="vt-sync-progress-group-${group}"`)
+ it("builds one user-facing unit model that carries status, timing, issues, rows, and child queries together", () => {
+  const units = buildVtSyncUnifiedUnitViewModels(null, {
+   channel_metadata: {
+    runId: "channel-run",
+    phase: "channel_metadata",
+    status: "synced",
+    source: "current_run",
+    rows: 1,
+    updatedAt: "2026-09-19T12:00:04.000Z",
+    startedAt: "2026-09-19T12:00:00.000Z",
+    completedAt: "2026-09-19T12:00:04.000Z",
+    durationMs: 4000,
+   },
+   channel_totals: {
+    runId: "channel-run",
+    phase: "channel_totals",
+    status: "synced",
+    source: "current_run",
+    rows: 5,
+    updatedAt: "2026-09-19T12:00:08.000Z",
+    startedAt: "2026-09-19T12:00:04.000Z",
+    completedAt: "2026-09-19T12:00:08.000Z",
+    durationMs: 4000,
+   },
   })
-  expect(markup.match(/aria-expanded="true"/g)).toHaveLength(1)
-  expect(markup).toContain("Now syncing")
-  expect(markup).toContain("Next queued query")
- })
-
- it("reports the video catalog authority instead of summing child-query rows", () => {
-  const markup = renderToStaticMarkup(React.createElement(ProgressRail, {
-   progress: null,
-   datasetFreshness: {
-    videos: { status: "synced", source: "current_run", rows: 1_446 },
-    uploads_playlist: { status: "synced", source: "current_run", rows: 1_446 },
-    video_metadata: { status: "partial", source: "current_run", rows: 1_442 },
-    videos_analytics: { status: "synced", source: "current_run", rows: 1_388 },
-   },
-   videoCatalogCoverage: {
-    catalogTotal: 1_446,
-    metadataAvailable: 1_442,
-    analyticsAvailable: 1_388,
-    importOnly: 0,
-    unresolvedImports: 0,
-   },
-  }))
-
-  expect(markup).toContain("1,446 videos · metadata 1,442 · analytics 1,388")
-  expect(markup).not.toContain("4,276 rows")
+  const channel = units.find((unit) => unit.id === "channel_overview_windows")
+  expect(channel).toMatchObject({
+   status: "synced",
+   displayRows: 6,
+   issueCount: 0,
+   lastSyncedAt: "2026-09-19T12:00:08.000Z",
+  })
+  expect(channel?.rows).toHaveLength(2)
+  expect(channel?.durationMs).toBeGreaterThanOrEqual(4000)
  })
 
  it("uses live phase state only for datasets requested by the active run", () => {
