@@ -29,6 +29,9 @@ type DatasetStatusRow = {
  status: string
  rows: number
  updatedAt?: string
+ startedAt?: string
+ completedAt?: string
+ durationMs?: number
  runId?: string
  missingMetrics: string[]
  source: string
@@ -45,6 +48,9 @@ const summarizeDatasetFreshness = (
    status: "never",
    rows: 0,
    updatedAt: undefined,
+   startedAt: undefined,
+   completedAt: undefined,
+   durationMs: undefined,
    runId: undefined,
    missingMetrics: [],
    source: sourceApiLabel(category.sourceApi),
@@ -66,6 +72,9 @@ const summarizeDatasetFreshness = (
   status,
   rows: Math.max(...entries.map((entry) => entry.rows || 0)),
   updatedAt,
+  startedAt: latestEntry?.startedAt,
+  completedAt: latestEntry?.completedAt || latestEntry?.updatedAt,
+  durationMs: latestEntry?.durationMs,
   runId: latestEntry?.runId,
   missingMetrics: entries.flatMap((entry) => entry.missingMetrics || []),
   source: sourceApiLabel(category.sourceApi),
@@ -142,6 +151,136 @@ export const buildVtSyncUnifiedProgressRows = (
        : stored.missingMetrics.length
       ? `Missing: ${stored.missingMetrics.join(", ")}`
       : stored.updatedAt ? "Stored dataset is available." : "This dataset has not been synced yet.",
+  }
+ })
+}
+
+export type VtSyncUnifiedUnitViewModel = {
+ id: string
+ label: string
+ description: string
+ group: string
+ tableId: string
+ tableCategoryId: string
+ categoryIds: string[]
+ defaultEnabled: boolean
+ refreshPolicy: string
+ rows: VtSyncUnifiedProgressRow[]
+ status: string
+ displayRows: number
+ issueCount: number
+ issues: VtSyncUnifiedProgressRow[]
+ startedAt?: string
+ completedAt?: string
+ lastSyncedAt?: string
+ durationMs?: number
+ sourceLabels: string[]
+}
+
+const latestIso = (values: Array<string | undefined>): string | undefined =>
+ values
+  .filter((value): value is string => Boolean(value && Number.isFinite(new Date(value).getTime())))
+  .sort((left, right) => new Date(right).getTime() - new Date(left).getTime())[0]
+
+const earliestIso = (values: Array<string | undefined>): string | undefined =>
+ values
+  .filter((value): value is string => Boolean(value && Number.isFinite(new Date(value).getTime())))
+  .sort((left, right) => new Date(left).getTime() - new Date(right).getTime())[0]
+
+export const buildVtSyncUnifiedUnitViewModels = (
+ progress: VtSyncLocalSyncProgress | null,
+ datasetFreshness?: VtSyncDatasetFreshness,
+ queuedCategoryIds: string[] = [],
+ syncError?: string,
+): VtSyncUnifiedUnitViewModel[] => {
+ const unifiedRows = buildVtSyncUnifiedProgressRows(progress, datasetFreshness, queuedCategoryIds)
+ const currentOrLatestPhaseId = [...(progress?.phases || [])]
+  .filter((phase) => phase.startedAt)
+  .sort((left, right) => String(right.startedAt).localeCompare(String(left.startedAt)))[0]?.id
+
+ return VT_SYNC_SYNC_UNITS.map((unit) => {
+  const rows = unifiedRows.filter((row) => row.syncUnitId === unit.id)
+  const statuses = rows.map((row) => row.displayStatus)
+  const status = statuses.includes("running") ? "running"
+   : statuses.includes("pending") ? "pending"
+   : statuses.includes("failed") ? "failed"
+   : statuses.includes("partial") ? "partial"
+   : statuses.length > 0 && statuses.every((entry) => entry === "synced" || entry === "complete") ? "synced"
+   : statuses.includes("skipped") ? "skipped"
+   : statuses.includes("stale") ? "stale"
+   : "never"
+
+  const issues = rows.filter((row) =>
+   row.displayStatus === "failed"
+   || row.displayStatus === "partial"
+   || /reconnect|required|missing|failed|error/i.test(row.message),
+  )
+  const ownsLatestPhase = unit.categoryIds.some((categoryId) => {
+   const category = VT_SYNC_CATEGORY_OPTIONS.find((entry) => entry.id === categoryId)
+   return category?.runtimePhaseId === currentOrLatestPhaseId
+  })
+  if (syncError && ownsLatestPhase) {
+   issues.push({
+    category: {
+     id: "sync_error",
+     label: "Sync connection",
+     description: "Current sync connection error.",
+     isCore: false,
+     group: unit.group as any,
+     phase: currentOrLatestPhaseId || "sync",
+     runtimePhaseId: currentOrLatestPhaseId || "sync",
+     sourceApi: "derived",
+     quotaClass: "free_cached",
+     defaultEnabled: false,
+     canonicalTargets: [],
+    },
+    status: "failed",
+    rows: 0,
+    updatedAt: undefined,
+    startedAt: undefined,
+    completedAt: undefined,
+    durationMs: undefined,
+    runId: progress?.runId,
+    missingMetrics: [],
+    source: "Runtime",
+    syncUnitId: unit.id,
+    syncUnitLabel: unit.label,
+    phaseLabel: currentOrLatestPhaseId || "Sync",
+    displayStatus: "failed",
+    displayRows: 0,
+    message: syncError,
+   })
+  }
+
+  const liveStates = unit.categoryIds
+   .map((categoryId) => progress?.categoryStates?.[categoryId])
+   .filter(Boolean)
+  const startedAt = earliestIso([
+   ...liveStates.map((state) => state?.startedAt),
+   ...rows.map((row) => row.startedAt),
+  ])
+  const completedAt = latestIso([
+   ...liveStates.map((state) => state?.completedAt),
+   ...rows.map((row) => row.completedAt),
+  ])
+  const lastSyncedAt = latestIso(rows.map((row) => row.updatedAt))
+  const storedDurations = rows.map((row) => row.durationMs).filter((value): value is number => typeof value === "number" && Number.isFinite(value))
+  const durationMs = startedAt
+   ? Math.max(0, new Date(status === "running" ? Date.now() : completedAt || lastSyncedAt || startedAt).getTime() - new Date(startedAt).getTime())
+   : storedDurations.length ? Math.max(...storedDurations) : undefined
+
+  return {
+   ...unit,
+   rows,
+   status,
+   displayRows: rows.reduce((sum, row) => sum + row.displayRows, 0),
+   issueCount: issues.length,
+   issues,
+   startedAt,
+   completedAt,
+   lastSyncedAt,
+   durationMs,
+   sourceLabels: [...new Set(rows.map((row) => row.source).filter(Boolean))],
   }
  })
 }
