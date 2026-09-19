@@ -46,6 +46,8 @@ describe("VT-SYNC unified progress rows", () => {
   expect(queueShift).toBeGreaterThan(tokenGuard)
   expect(pageSource).toContain("vtSyncQueueRequestKey")
   expect(pageSource).toContain("alreadyActive || alreadyQueued")
+  expect(pageSource).toContain("readPersistedVtSyncQueue")
+  expect(pageSource).toContain("persistVtSyncQueue(syncQueueRef.current)")
  })
 
   it("synchronously rejects a second active sync request", () => {
