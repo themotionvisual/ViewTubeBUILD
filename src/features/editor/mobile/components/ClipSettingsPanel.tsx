@@ -40,14 +40,14 @@ const valueInput:React.CSSProperties={
 };
 
 const stepperButton:React.CSSProperties={
-  width:34,minWidth:34,height:30,border:`2px solid ${INK}`,borderRadius:6,
-  background:'#fff',color:'#111',fontSize:16,fontWeight:1000,lineHeight:1,
+  width:28,minWidth:28,height:28,border:`2px solid ${INK}`,borderRadius:6,
+  background:CYAN,color:'#111',fontSize:15,fontWeight:1000,lineHeight:1,
   display:'grid',placeItems:'center',padding:0,touchAction:'none',userSelect:'none',
   boxShadow:'2px 2px 0 rgba(36,139,153,.22)',cursor:'pointer',
 };
 
 const stepperValue:React.CSSProperties={
-  minWidth:0,height:30,borderTop:`2px solid ${INK}`,borderBottom:`2px solid ${INK}`,
+  minWidth:0,height:28,borderTop:`2px solid ${INK}`,borderBottom:`2px solid ${INK}`,
   background:'#fff',display:'grid',placeItems:'center',fontSize:10,fontWeight:1000,
   fontVariantNumeric:'tabular-nums',letterSpacing:'-.02em',padding:'0 5px',boxSizing:'border-box',
 };
@@ -252,7 +252,7 @@ const HoldStepper:React.FC<HoldStepperProps>=({
   const decimals=precision??(step<.01?3:step<1?2:0);
   const display=`${Number(value.toFixed(decimals))}${suffix}`;
 
-  return <div style={{width:196,marginBottom:8}}>
+  return <div style={{width:126,marginBottom:8}}>
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:6,marginBottom:3}}>
       <span style={{fontSize:8,fontWeight:1000,textTransform:'uppercase',opacity:.72,lineHeight:1}}>{label}</span>
       {onKeyframe?<button
@@ -266,10 +266,10 @@ const HoldStepper:React.FC<HoldStepperProps>=({
         }}
       >○</button>:null}
     </div>
-    <div style={{display:'grid',gridTemplateColumns:'34px minmax(0,1fr) 34px',alignItems:'stretch',width:'100%'}}>
+    <div style={{display:'grid',gridTemplateColumns:'28px 70px 28px',alignItems:'stretch',width:'126px'}}>
       <button
         aria-label={`Decrease ${label}`}
-        style={{...stepperButton,borderTopRightRadius:0,borderBottomRightRadius:0}}
+        style={{...stepperButton,background:CYAN,borderTopRightRadius:0,borderBottomRightRadius:0}}
         onPointerDown={e=>start(-1,e)}
         onPointerUp={stop}
         onPointerCancel={stop}
