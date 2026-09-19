@@ -502,10 +502,9 @@ export const SubToolboxKnob: React.FC<SubToolboxKnobProps> = ({
           <strong>{clamped}</strong>
         </span>
       </div>
-      <div className="vt-subtoolbox-knob-controls">
-        <button type="button" aria-label="Decrease value" onClick={() => emit(clamped - step)}>−</button>
+      <div className="vt-subtoolbox-knob-readout">
         <b className="vt-subtoolbox-knob-label">{label}</b>
-        <button type="button" aria-label="Increase value" onClick={() => emit(clamped + step)}>+</button>
+        <output>{clamped}</output>
       </div>
     </div>
   )
