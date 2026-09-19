@@ -118,6 +118,21 @@ const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, 
   </label>
 )
 
+const DirectorButton: React.FC<React.ComponentProps<typeof WidgetSizedButton>> = ({
+  textFit = "adaptive",
+  ...props
+}) => <WidgetSizedButton textFit={textFit} {...props} />
+
+const DirectorActionButton: React.FC<React.ComponentProps<typeof WidgetActionButton>> = ({
+  textFit = "adaptive",
+  ...props
+}) => <WidgetActionButton textFit={textFit} {...props} />
+
+const DirectorSelect: React.FC<React.ComponentProps<typeof WidgetSizedSelect>> = ({
+  textFit = "adaptive",
+  ...props
+}) => <WidgetSizedSelect textFit={textFit} {...props} />
+
 export const VideoDirectorWidget: React.FC<
   CommonWidgetProps & { data: DashboardData; onNavigate?: (to: string) => void }
 > = ({ onNavigate, ...common }) => {
@@ -410,12 +425,12 @@ export const VideoDirectorWidget: React.FC<
         <Field label="Objective"><WidgetTextInput height={24} value={activePayload.objective} onChange={(e)=>setScopedField(activeCategoryId,"objective",e.currentTarget.value)} /></Field>
         <Field label="Audience"><WidgetTextInput height={24} value={activePayload.audience} onChange={(e)=>setScopedField(activeCategoryId,"audience",e.currentTarget.value)} /></Field>
         <Field label="Concepts"><WidgetStepper height={24} value={activePayload.conceptCount} min={1} max={12} label="Concept count" onChange={(value)=>setScopedField(activeCategoryId,"conceptCount",value)} /></Field>
-        <Field label="Variation"><WidgetSizedSelect height={24} value={activePayload.variationStrength} label="Variation strength" options={["subtle","balanced","radical"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"variationStrength",value)} /></Field>
+        <Field label="Variation"><DirectorSelect height={24} value={activePayload.variationStrength} label="Variation strength" options={["subtle","balanced","radical"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"variationStrength",value)} /></Field>
       </div>
     }
     if (activeCategoryId === "visual-style") {
       return <div className="vtdw-field-grid">
-        <Field label="Medium"><WidgetSizedSelect height={24} value={activePayload.medium} label="Visual medium" options={["auto","cinematic","documentary","commercial","animation","illustration","archival","experimental"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"medium",value)} /></Field>
+        <Field label="Medium"><DirectorSelect height={24} value={activePayload.medium} label="Visual medium" options={["auto","cinematic","documentary","commercial","animation","illustration","archival","experimental"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"medium",value)} /></Field>
         <Field label="Period / Era"><WidgetTextInput height={24} value={activePayload.period} onChange={(e)=>setScopedField(activeCategoryId,"period",e.currentTarget.value)} /></Field>
         <Field label="Realism %"><WidgetTextInput height={24} type="number" min={0} max={100} value={Math.round(activePayload.realism*100)} onChange={(e)=>setScopedField(activeCategoryId,"realism",finite(e.currentTarget.value,activePayload.realism*100)/100)} /></Field>
         <Field label="Stylization %"><WidgetTextInput height={24} type="number" min={0} max={100} value={Math.round(activePayload.stylization*100)} onChange={(e)=>setScopedField(activeCategoryId,"stylization",finite(e.currentTarget.value,activePayload.stylization*100)/100)} /></Field>
@@ -423,7 +438,7 @@ export const VideoDirectorWidget: React.FC<
     }
     if (activeCategoryId === "camera-movement") {
       return <div className="vtdw-field-grid">
-        <Field label="Movement"><WidgetSizedSelect height={24} value={activePayload.type} label="Camera movement" options={["auto","static","pan","tilt","dolly","truck","pedestal","orbit","crane","drone","handheld","steadicam","pov"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"type",value)} /></Field>
+        <Field label="Movement"><DirectorSelect height={24} value={activePayload.type} label="Camera movement" options={["auto","static","pan","tilt","dolly","truck","pedestal","orbit","crane","drone","handheld","steadicam","pov"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"type",value)} /></Field>
         <Field label="Speed %"><WidgetTextInput height={24} type="number" min={0} max={100} value={Math.round(activePayload.speed*100)} onChange={(e)=>setScopedField(activeCategoryId,"speed",finite(e.currentTarget.value,activePayload.speed*100)/100)} /></Field>
         <Field label="Pan °"><WidgetTextInput height={24} type="number" min={-360} max={360} value={activePayload.panDegrees} onChange={(e)=>setScopedField(activeCategoryId,"panDegrees",finite(e.currentTarget.value,activePayload.panDegrees))} /></Field>
         <Field label="Orbit °"><WidgetTextInput height={24} type="number" min={-360} max={360} value={activePayload.orbitDegrees} onChange={(e)=>setScopedField(activeCategoryId,"orbitDegrees",finite(e.currentTarget.value,activePayload.orbitDegrees))} /></Field>
@@ -431,7 +446,7 @@ export const VideoDirectorWidget: React.FC<
     }
     if (activeCategoryId === "focus-depth") {
       return <div className="vtdw-field-grid">
-        <Field label="Focus Mode"><WidgetSizedSelect height={24} value={activePayload.mode} label="Focus mode" options={["auto","deep","shallow","subject-lock","rack-focus","custom"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"mode",value)} /></Field>
+        <Field label="Focus Mode"><DirectorSelect height={24} value={activePayload.mode} label="Focus mode" options={["auto","deep","shallow","subject-lock","rack-focus","custom"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"mode",value)} /></Field>
         <Field label="Focus Distance"><WidgetTextInput height={24} type="number" min={0.05} step={0.1} value={activePayload.focusDistanceMeters} onChange={(e)=>setScopedField(activeCategoryId,"focusDistanceMeters",finite(e.currentTarget.value,activePayload.focusDistanceMeters))} /></Field>
         <Field label="Depth %"><WidgetTextInput height={24} type="number" min={0} max={100} value={Math.round(activePayload.depthStrength*100)} onChange={(e)=>setScopedField(activeCategoryId,"depthStrength",finite(e.currentTarget.value,activePayload.depthStrength*100)/100)} /></Field>
         <Field label="Bokeh %"><WidgetTextInput height={24} type="number" min={0} max={100} value={Math.round(activePayload.bokeh*100)} onChange={(e)=>setScopedField(activeCategoryId,"bokeh",finite(e.currentTarget.value,activePayload.bokeh*100)/100)} /></Field>
@@ -439,7 +454,7 @@ export const VideoDirectorWidget: React.FC<
     }
     if (activeCategoryId === "perspective-capture") {
       return <div className="vtdw-field-grid">
-        <Field label="Capture Rig"><WidgetSizedSelect height={24} value={activePayload.rig} label="Capture rig" options={["auto","tripod","shoulder","phone-pov","security-camera","drone","bodycam","dashcam","webcam","action-camera","helmet-cam"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"rig",value)} /></Field>
+        <Field label="Capture Rig"><DirectorSelect height={24} value={activePayload.rig} label="Capture rig" options={["auto","tripod","shoulder","phone-pov","security-camera","drone","bodycam","dashcam","webcam","action-camera","helmet-cam"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"rig",value)} /></Field>
         <Field label="Camera Height"><WidgetTextInput height={24} type="number" min={0} step={0.1} value={activePayload.cameraHeightMeters} onChange={(e)=>setScopedField(activeCategoryId,"cameraHeightMeters",finite(e.currentTarget.value,activePayload.cameraHeightMeters))} /></Field>
         <Field label="FOV °"><WidgetTextInput height={24} type="number" min={1} max={179} value={activePayload.fieldOfViewDegrees} onChange={(e)=>setScopedField(activeCategoryId,"fieldOfViewDegrees",finite(e.currentTarget.value,activePayload.fieldOfViewDegrees))} /></Field>
         <Field label="First Person"><WidgetToggleSwitch height={24} checked={activePayload.firstPerson} onChange={(checked)=>setScopedField(activeCategoryId,"firstPerson",checked)} label="First person" /></Field>
@@ -466,7 +481,7 @@ export const VideoDirectorWidget: React.FC<
     }
     if (activeCategoryId === "shot-structure") {
       return <div className="vtdw-field-grid">
-        <Field label="Structure"><WidgetSizedSelect height={24} value={activePayload.mode} label="Shot structure" options={["single-take","auto-multi-shot","manual-storyboard","montage","interview-broll","narrative-sequence","trailer","product-demo","explainer"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"mode",value)} /></Field>
+        <Field label="Structure"><DirectorSelect height={24} value={activePayload.mode} label="Shot structure" options={["single-take","auto-multi-shot","manual-storyboard","montage","interview-broll","narrative-sequence","trailer","product-demo","explainer"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"mode",value)} /></Field>
         <Field label="Shot Count"><WidgetStepper height={24} value={activePayload.shotCount} min={1} max={100} label="Shot count" onChange={(value)=>setScopedField(activeCategoryId,"shotCount",value)} /></Field>
         <Field label="Average Shot"><WidgetTextInput height={24} type="number" min={0.25} step={0.25} value={activePayload.averageShotSeconds} onChange={(e)=>setScopedField(activeCategoryId,"averageShotSeconds",finite(e.currentTarget.value,activePayload.averageShotSeconds))} /></Field>
         <Field label="Continuity %"><WidgetTextInput height={24} type="number" min={0} max={100} value={Math.round(activePayload.continuityStrength*100)} onChange={(e)=>setScopedField(activeCategoryId,"continuityStrength",finite(e.currentTarget.value,activePayload.continuityStrength*100)/100)} /></Field>
@@ -474,7 +489,7 @@ export const VideoDirectorWidget: React.FC<
     }
     if (activeCategoryId === "transitions") {
       return <div className="vtdw-field-grid">
-        <Field label="Transition"><WidgetSizedSelect height={24} value={activePayload.defaultType} label="Transition type" options={["cut","crossfade","match-cut","dip","wipe","optical-bridge","custom"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"defaultType",value)} /></Field>
+        <Field label="Transition"><DirectorSelect height={24} value={activePayload.defaultType} label="Transition type" options={["cut","crossfade","match-cut","dip","wipe","optical-bridge","custom"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"defaultType",value)} /></Field>
         <Field label="Frames"><WidgetStepper height={24} value={activePayload.durationFrames} min={0} max={240} label="Transition frames" onChange={(value)=>setScopedField(activeCategoryId,"durationFrames",value)} /></Field>
         <Field label="Match Motion"><WidgetToggleSwitch height={24} checked={activePayload.matchMotion} onChange={(checked)=>setScopedField(activeCategoryId,"matchMotion",checked)} label="Match motion" /></Field>
       </div>
@@ -482,14 +497,14 @@ export const VideoDirectorWidget: React.FC<
     if (activeCategoryId === "speed-motion") {
       return <div className="vtdw-field-grid">
         <Field label="Playback Rate"><WidgetTextInput height={24} type="number" min={0.05} max={20} step={0.05} value={activePayload.playbackRate} onChange={(e)=>setScopedField(activeCategoryId,"playbackRate",finite(e.currentTarget.value,activePayload.playbackRate))} /></Field>
-        <Field label="Interpolation"><WidgetSizedSelect height={24} value={activePayload.interpolation} label="Interpolation" options={["none","optical-flow","rife","film"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"interpolation",value)} /></Field>
+        <Field label="Interpolation"><DirectorSelect height={24} value={activePayload.interpolation} label="Interpolation" options={["none","optical-flow","rife","film"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"interpolation",value)} /></Field>
         <Field label="Motion Blur %"><WidgetTextInput height={24} type="number" min={0} max={100} value={Math.round(activePayload.motionBlur*100)} onChange={(e)=>setScopedField(activeCategoryId,"motionBlur",finite(e.currentTarget.value,activePayload.motionBlur*100)/100)} /></Field>
       </div>
     }
     if (activeCategoryId === "voice-dialogue") {
       return <div className="vtdw-field-grid">
         <Field label="Voice"><WidgetToggleSwitch height={24} checked={activePayload.enabled} onChange={(checked)=>setScopedField(activeCategoryId,"enabled",checked)} label="Enable voice" /></Field>
-        <Field label="Source"><WidgetSizedSelect height={24} value={activePayload.source} label="Voice source" options={["auto","generated","upload","recorded"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"source",value)} /></Field>
+        <Field label="Source"><DirectorSelect height={24} value={activePayload.source} label="Voice source" options={["auto","generated","upload","recorded"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"source",value)} /></Field>
         <Field label="Speaking Rate"><WidgetTextInput height={24} type="number" min={0.5} max={2} step={0.05} value={activePayload.speakingRate} onChange={(e)=>setScopedField(activeCategoryId,"speakingRate",finite(e.currentTarget.value,activePayload.speakingRate))} /></Field>
         <Field label="Expressiveness %"><WidgetTextInput height={24} type="number" min={0} max={100} value={Math.round(activePayload.expressiveness*100)} onChange={(e)=>setScopedField(activeCategoryId,"expressiveness",finite(e.currentTarget.value,activePayload.expressiveness*100)/100)} /></Field>
       </div>
@@ -498,7 +513,7 @@ export const VideoDirectorWidget: React.FC<
       return <div className="vtdw-field-grid">
         <Field label="Music"><WidgetToggleSwitch height={24} checked={activePayload.enabled} onChange={(checked)=>setScopedField(activeCategoryId,"enabled",checked)} label="Enable music" /></Field>
         <Field label="BPM"><WidgetTextInput height={24} type="number" min={20} max={300} value={activePayload.bpm} onChange={(e)=>setScopedField(activeCategoryId,"bpm",finite(e.currentTarget.value,activePayload.bpm))} /></Field>
-        <Field label="Beat Sync"><WidgetSizedSelect height={24} value={activePayload.beatSync} label="Beat sync" options={["off","quarter","half","bar","drops","auto"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"beatSync",value)} /></Field>
+        <Field label="Beat Sync"><DirectorSelect height={24} value={activePayload.beatSync} label="Beat sync" options={["off","quarter","half","bar","drops","auto"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"beatSync",value)} /></Field>
         <Field label="Intensity %"><WidgetTextInput height={24} type="number" min={0} max={100} value={Math.round(activePayload.intensity*100)} onChange={(e)=>setScopedField(activeCategoryId,"intensity",finite(e.currentTarget.value,activePayload.intensity*100)/100)} /></Field>
       </div>
     }
@@ -511,8 +526,8 @@ export const VideoDirectorWidget: React.FC<
     if (activeCategoryId === "captions") {
       return <div className="vtdw-field-grid">
         <Field label="Captions"><WidgetToggleSwitch height={24} checked={activePayload.enabled} onChange={(checked)=>setScopedField(activeCategoryId,"enabled",checked)} label="Enable captions" /></Field>
-        <Field label="Position"><WidgetSizedSelect height={24} value={activePayload.position} label="Caption position" options={["top","upper-third","center","lower-third","bottom"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"position",value)} /></Field>
-        <Field label="Animation"><WidgetSizedSelect height={24} value={activePayload.animation} label="Caption animation" options={["none","word-pop","karaoke","fade","slide","custom"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"animation",value)} /></Field>
+        <Field label="Position"><DirectorSelect height={24} value={activePayload.position} label="Caption position" options={["top","upper-third","center","lower-third","bottom"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"position",value)} /></Field>
+        <Field label="Animation"><DirectorSelect height={24} value={activePayload.animation} label="Caption animation" options={["none","word-pop","karaoke","fade","slide","custom"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"animation",value)} /></Field>
         <Field label="Burn In"><WidgetToggleSwitch height={24} checked={activePayload.burnIn} onChange={(checked)=>setScopedField(activeCategoryId,"burnIn",checked)} label="Burn captions" /></Field>
       </div>
     }
@@ -530,15 +545,15 @@ export const VideoDirectorWidget: React.FC<
     }
     if (activeCategoryId === "negative-constraints") {
       return <div className="vtdw-field-grid">
-        <Field label="Enforcement"><WidgetSizedSelect height={24} value={activePayload.enforcement} label="Constraint enforcement" options={["advisory","standard","strict"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"enforcement",value)} /></Field>
+        <Field label="Enforcement"><DirectorSelect height={24} value={activePayload.enforcement} label="Constraint enforcement" options={["advisory","standard","strict"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"enforcement",value)} /></Field>
         <Field label="Negative Note"><WidgetTextInput height={24} value={activePayload.freeText} onChange={(e)=>setScopedField(activeCategoryId,"freeText",e.currentTarget.value)} /></Field>
       </div>
     }
     return (
       <div className="vtdw-field-grid">
-        <WidgetSizedButton height={24} tone="secondary" onClick={openStudio}>
+        <DirectorButton height={24} tone="secondary" onClick={openStudio}>
           OPEN FULL {activeDefinition.shortLabel.toUpperCase()} CONTROLS
-        </WidgetSizedButton>
+        </DirectorButton>
         <WidgetBadge>{activeDefinition.group.toUpperCase()}</WidgetBadge>
       </div>
     )
@@ -549,7 +564,7 @@ export const VideoDirectorWidget: React.FC<
       <WidgetSection>
         <div className="vtdw-mode-row">
           {MODES.map((mode) => (
-            <WidgetSizedButton
+            <DirectorButton
               key={mode.id}
               height={24}
               tone={project.mode === mode.id ? "primary" : "default"}
@@ -557,7 +572,7 @@ export const VideoDirectorWidget: React.FC<
               onClick={() => commit(VideoDirectorProjectSchema.parse({ ...project, mode: mode.id }))}
             >
               {mode.label}
-            </WidgetSizedButton>
+            </DirectorButton>
           ))}
         </div>
       </WidgetSection>
@@ -573,7 +588,7 @@ export const VideoDirectorWidget: React.FC<
             />
           </Field>
           <Field label="Edit Scope">
-            <WidgetSizedSelect
+            <DirectorSelect
               height={24}
               value={scopeKey}
               label="Video Director edit scope"
@@ -583,12 +598,9 @@ export const VideoDirectorWidget: React.FC<
           </Field>
         </div>
         <div className="vtdw-quick-row">
-          <WidgetActionButton tone="primary" height={24} disabled={autoFillLoading} onClick={() => void runAutoFill()}>
+          <DirectorActionButton tone="primary" height={24} disabled={autoFillLoading} onClick={() => void runAutoFill()}>
             <Sparkles size={15} aria-hidden="true" /> {autoFillLoading ? "DIRECTING…" : "AUTO-FILL DIRECTOR"}
-          </WidgetActionButton>
-          <WidgetSizedButton height={24} tone="secondary" onClick={openStudio}>
-            <ExternalLink size={14} aria-hidden="true" /> OPEN STUDIO
-          </WidgetSizedButton>
+          </DirectorActionButton>
         </div>
       </WidgetSection>
 
@@ -598,8 +610,9 @@ export const VideoDirectorWidget: React.FC<
             <strong>{STATUS_SYMBOL[activeStatus]} {activeDefinition.label}</strong>
             <small>{activeDefinition.purpose}</small>
           </div>
-          <WidgetSizedSelect
+          <DirectorSelect
             height={24}
+            className="vtdw-category-select"
             value={activeCategoryId}
             label="Director category"
             options={categoryOptions}
@@ -611,13 +624,13 @@ export const VideoDirectorWidget: React.FC<
       <WidgetSection>{renderSignature()}</WidgetSection>
       <WidgetSection>{renderPrimaryControls()}</WidgetSection>
 
-      <WidgetSection>
+      <WidgetSection className="vtdw-category-shortcuts">
         <div className="vtdw-category-strip" aria-label="Director category quick switch">
           {VIDEO_DIRECTOR_CATEGORY_REGISTRY.map((definition) => {
             const state = resolveVideoDirectorScopedCategoryState(project, definition.id, activeScope)
             const status = deriveVideoDirectorCategoryStatus(state)
             return (
-              <WidgetSizedButton
+              <DirectorButton
                 key={definition.id}
                 height={24}
                 tone={definition.id === activeCategoryId ? "primary" : "default"}
@@ -625,7 +638,7 @@ export const VideoDirectorWidget: React.FC<
                 title={definition.label}
               >
                 {STATUS_SYMBOL[status]} {definition.shortLabel}
-              </WidgetSizedButton>
+              </DirectorButton>
             )
           })}
         </div>
@@ -640,7 +653,7 @@ export const VideoDirectorWidget: React.FC<
       </WidgetSection>
       <WidgetSection>
         <div className="vtdw-quick-row">
-          <WidgetActionButton
+          <DirectorActionButton
             tone="primary"
             height={24}
             onClick={() => {
@@ -649,16 +662,16 @@ export const VideoDirectorWidget: React.FC<
             }}
           >
             BUILD / SYNC STORYBOARD
-          </WidgetActionButton>
-          <WidgetSizedButton height={24} tone="secondary" onClick={openStudio}>EDIT SHOTS IN STUDIO</WidgetSizedButton>
+          </DirectorActionButton>
+          <DirectorButton height={24} tone="secondary" onClick={openStudio}>EDIT SHOTS IN STUDIO</DirectorButton>
         </div>
       </WidgetSection>
       <WidgetSection>
         <div className="vtdw-summary-row">
           {project.shots.map((shot, index) => (
-            <WidgetSizedButton key={shot.id} height={24} tone={scopeKey === `shot:${shot.id}` ? "primary" : "default"} onClick={() => { setScopeKey(`shot:${shot.id}`); setPage("direct") }}>
+            <DirectorButton key={shot.id} height={24} tone={scopeKey === `shot:${shot.id}` ? "primary" : "default"} onClick={() => { setScopeKey(`shot:${shot.id}`); setPage("direct") }}>
               {String(index + 1).padStart(2, "0")} · {shot.durationSeconds.toFixed(1)}S
-            </WidgetSizedButton>
+            </DirectorButton>
           ))}
         </div>
       </WidgetSection>
@@ -669,7 +682,7 @@ export const VideoDirectorWidget: React.FC<
     <>
       <WidgetSection>
         <div className="vtdw-quick-row">
-          <WidgetActionButton
+          <DirectorActionButton
             tone="primary"
             height={24}
             onClick={() => {
@@ -680,11 +693,11 @@ export const VideoDirectorWidget: React.FC<
             }}
           >
             BUILD VARIANTS
-          </WidgetActionButton>
+          </DirectorActionButton>
           {project.variants.map((variant, index) => (
-            <WidgetSizedButton key={variant.id} height={24} tone={selectedVariant?.id === variant.id ? "primary" : "default"} onClick={() => setVariantId(variant.id)}>
+            <DirectorButton key={variant.id} height={24} tone={selectedVariant?.id === variant.id ? "primary" : "default"} onClick={() => setVariantId(variant.id)}>
               {String.fromCharCode(65 + index)}
-            </WidgetSizedButton>
+            </DirectorButton>
           ))}
         </div>
       </WidgetSection>
@@ -693,7 +706,7 @@ export const VideoDirectorWidget: React.FC<
           <WidgetSection>
             <div className="vtdw-field-grid">
               <Field label="Variation Strength">
-                <WidgetSizedSelect
+                <DirectorSelect
                   height={24}
                   value={selectedVariant.variationStrength}
                   label="Variation strength"
@@ -717,7 +730,7 @@ export const VideoDirectorWidget: React.FC<
                 const allowed = selectedVariant.allowedCategories.includes(definition.id)
                 const locked = project.categories[definition.id].locked
                 return (
-                  <WidgetSizedButton
+                  <DirectorButton
                     key={definition.id}
                     height={24}
                     tone={allowed ? "primary" : "default"}
@@ -726,7 +739,7 @@ export const VideoDirectorWidget: React.FC<
                     title={locked ? "Project category is locked." : definition.purpose}
                   >
                     {allowed ? "●" : "○"} {definition.shortLabel}
-                  </WidgetSizedButton>
+                  </DirectorButton>
                 )
               })}
             </div>
@@ -745,13 +758,13 @@ export const VideoDirectorWidget: React.FC<
       <WidgetSection>
         <div className="vtdw-field-grid">
           <Field label="Aspect Ratio">
-            <WidgetSizedSelect height={24} value={output.aspectRatio} label="Aspect ratio" options={["21:9","16:9","4:3","1:1","3:4","9:16","custom"].map((value) => ({ value, label: value }))} onChange={(value) => setProjectField("generation-output", "aspectRatio", value)} />
+            <DirectorSelect height={24} value={output.aspectRatio} label="Aspect ratio" options={["21:9","16:9","4:3","1:1","3:4","9:16","custom"].map((value) => ({ value, label: value }))} onChange={(value) => setProjectField("generation-output", "aspectRatio", value)} />
           </Field>
           <Field label="Resolution">
-            <WidgetSizedSelect height={24} value={output.resolution} label="Resolution" options={["480p","720p","1080p","2k","4k"].map((value) => ({ value, label: value.toUpperCase() }))} onChange={(value) => setProjectField("generation-output", "resolution", value)} />
+            <DirectorSelect height={24} value={output.resolution} label="Resolution" options={["480p","720p","1080p","2k","4k"].map((value) => ({ value, label: value.toUpperCase() }))} onChange={(value) => setProjectField("generation-output", "resolution", value)} />
           </Field>
           <Field label="Quality">
-            <WidgetSizedSelect height={24} value={output.quality} label="Quality" options={["draft","preview","final"].map((value) => ({ value, label: value.toUpperCase() }))} onChange={(value) => setProjectField("generation-output", "quality", value)} />
+            <DirectorSelect height={24} value={output.quality} label="Quality" options={["draft","preview","final"].map((value) => ({ value, label: value.toUpperCase() }))} onChange={(value) => setProjectField("generation-output", "quality", value)} />
           </Field>
           <Field label="Outputs">
             <WidgetStepper height={24} value={output.outputs} min={1} max={24} label="Output count" onChange={(value) => setProjectField("generation-output", "outputs", value)} />
@@ -760,11 +773,11 @@ export const VideoDirectorWidget: React.FC<
       </WidgetSection>
       <WidgetSection>
         <div className="vtdw-summary-row">
-          <WidgetSizedButton height={24} tone="secondary" onClick={() => {
+          <DirectorButton height={24} tone="secondary" onClick={() => {
             const packet = compileSemanticDirectorPacket(project)
             setNotice(`PLAN READY · ${packet.prompt.split("\n").length} DIRECTING LINES · PROVIDER EXECUTION STILL GATED.`)
-          }}>PREVIEW PLAN</WidgetSizedButton>
-          <WidgetSizedButton height={24} tone="secondary" disabled={jobsLoading} onClick={() => void refreshJobs()}>{jobsLoading ? "REFRESHING…" : "REFRESH JOBS"}</WidgetSizedButton>
+          }}>PREVIEW PLAN</DirectorButton>
+          <DirectorButton height={24} tone="secondary" disabled={jobsLoading} onClick={() => void refreshJobs()}>{jobsLoading ? "REFRESHING…" : "REFRESH JOBS"}</DirectorButton>
         </div>
       </WidgetSection>
       {jobs.length ? <WidgetSection>
@@ -775,7 +788,7 @@ export const VideoDirectorWidget: React.FC<
               <strong>{job.stage}</strong>
               <WidgetProgressBar height={24} value={Math.round(job.progress * 100)} label="Progress" />
               {(job.status === "queued" || job.status === "running" || job.status === "post-processing") ? (
-                <WidgetSizedButton height={24} tone="secondary" onClick={async () => { await cancelVideoDirectorJob(job.id); await refreshJobs() }}>CANCEL</WidgetSizedButton>
+                <DirectorButton height={24} tone="secondary" onClick={async () => { await cancelVideoDirectorJob(job.id); await refreshJobs() }}>CANCEL</DirectorButton>
               ) : null}
             </div>
           ))}
@@ -796,7 +809,7 @@ export const VideoDirectorWidget: React.FC<
       aiDisabledReason="Add a brief before Auto-Fill Director."
       helpContent={<span>Compact Video Director execution surface. All project state is shared with Studio Hub.</span>}
       headerContent={
-        <WidgetSizedButton
+        <DirectorButton
           height={24}
           tone="secondary"
           className="widget-header-toggle vtdw-header-studio"
@@ -805,10 +818,9 @@ export const VideoDirectorWidget: React.FC<
           title="Open Video Director in Studio Hub"
         >
           STUDIO ↗
-        </WidgetSizedButton>
+        </DirectorButton>
       }
       contentLayout="flush"
-      controlDensity="compact"
     >
       <div className="vt-video-director-widget">
         <WidgetWorkflowMain>
@@ -816,12 +828,12 @@ export const VideoDirectorWidget: React.FC<
             <div className="vtdw-topline">
               <div className="vtdw-page-row" role="tablist" aria-label="Video Director pages">
                 {PAGES.map((item) => (
-                  <WidgetSizedButton key={item.id} height={24} tone={page === item.id ? "primary" : "default"} aria-pressed={page === item.id} onClick={() => setPage(item.id)}>
+                  <DirectorButton key={item.id} height={24} tone={page === item.id ? "primary" : "default"} aria-pressed={page === item.id} onClick={() => setPage(item.id)}>
                     {item.label}
-                  </WidgetSizedButton>
+                  </DirectorButton>
                 ))}
               </div>
-              <WidgetBadge>{project.name || "UNTITLED"}</WidgetBadge>
+              <WidgetBadge className="vtdw-project-badge">{project.name || "UNTITLED"}</WidgetBadge>
             </div>
           </WidgetSection>
           <WidgetScrollArea ariaLabel="Video Director workflow" edge="full">
@@ -835,12 +847,9 @@ export const VideoDirectorWidget: React.FC<
               <strong>{output.outputs} VIDEO{output.outputs === 1 ? "" : "S"} · {project.categories["timing-pacing"].payload.durationSeconds}S · {output.aspectRatio}</strong>
               <span>{activeScope.type.toUpperCase()} · {STATUS_SYMBOL[activeStatus]} {activeDefinition.shortLabel} · {output.providerMode === "auto" ? "AUTO ROUTE" : output.providerId || "MANUAL ROUTE"}</span>
             </div>
-            <WidgetSizedButton height={24} tone="secondary" onClick={openStudio}>
-              OPEN STUDIO
-            </WidgetSizedButton>
-            <WidgetActionButton className="vtdw-generate" tone="primary" height={24} disabled title="Provider quote, credit reservation and production adapter are still gated.">
+            <DirectorActionButton className="vtdw-generate" tone="primary" height={24} disabled title="Provider quote, credit reservation and production adapter are still gated.">
               GENERATE
-            </WidgetActionButton>
+            </DirectorActionButton>
           </div>
         </WidgetFooter>
       </div>
