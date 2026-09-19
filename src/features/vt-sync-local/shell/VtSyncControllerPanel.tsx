@@ -8,6 +8,7 @@ import type {
  VtSyncCategoryGroup,
  VtSyncDatasetFreshness,
 } from "../adapters/contracts"
+import type { VtSyncLocalSyncCategoryProgress } from "../adapters/localSyncEngine"
 import { vtSyncCategoryCostsPerWindow } from "../adapters/windowDerivation"
 import {
  ANALYTICS_WINDOWS,
@@ -62,13 +63,14 @@ export const VtSyncControllerPanel: React.FC<{
  activeRunId?: string
  activeCategoryIds?: string[]
  queuedCategoryIds?: string[]
+ categoryExecutionStates?: Record<string, VtSyncLocalSyncCategoryProgress>
  datasetFreshness?: VtSyncDatasetFreshness
  contentOwners?: Array<{ id: string; displayName: string }>
  activeContentOwnerId?: string | null
  onSelectContentOwner?: (ownerId: string) => Promise<void>
  onLogin: () => Promise<void>
  onStartSync: (categoryIds: string[], retentionVideoIds?: string[], forceFullVideoMetadata?: boolean, windows?: VtSyncAnalyticsWindow[]) => Promise<void>
-}> = ({ isAuthenticated, isSyncing, videos, activeRunId, activeCategoryIds = [], queuedCategoryIds = [], datasetFreshness, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
+}> = ({ isAuthenticated, isSyncing, videos, activeRunId, activeCategoryIds = [], queuedCategoryIds = [], categoryExecutionStates, datasetFreshness, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
  const [selected, setSelected] = useState<string[]>(() => getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))
  const [retentionVideoIds, setRetentionVideoIds] = useState<string[]>([])
  // Lifetime only by default: every extra window costs one request per aggregate
@@ -186,6 +188,15 @@ export const VtSyncControllerPanel: React.FC<{
   if (categoryIds.some((id) => activeCategorySet.has(id))) return "running"
   if (categoryIds.some((id) => queuedCategorySet.has(id))) return "queued"
   if (!activeRunId) return "idle"
+
+  const liveStates = categoryIds
+   .map((id) => categoryExecutionStates?.[id])
+   .filter(Boolean) as VtSyncLocalSyncCategoryProgress[]
+  if (liveStates.length > 0) {
+   if (liveStates.some((entry) => entry.status === "failed")) return "failed"
+   if (liveStates.some((entry) => entry.status === "partial" || entry.status === "skipped")) return "partial"
+   if (liveStates.length === categoryIds.length && liveStates.every((entry) => entry.status === "complete")) return "complete"
+  }
 
   const currentRunEntries = categoryIds
    .map((id) => categoryFreshness(datasetFreshness, id))
