@@ -10,6 +10,7 @@ import {ClipSettingsPanel} from './ClipSettingsPanel';
 import {ProjectSettingsPanel} from './ProjectSettingsPanel';
 import {EffectsLibrariesPanel} from './EffectsLibrariesPanel';
 import {CustomTemplatePanel} from './CustomTemplatePanel';
+import {ExportRenderPanel} from './ExportRenderPanel';
 import {capabilitiesForCategory,type EditorCapabilityStatus} from '../../editorCapabilities';
 
 export type EditorNavPage='project'|'select'|'media'|'text'|'audio'|'graphics'|'effects'|'transitions'|'templates'|'custom-templates'|'export'|'settings';
@@ -76,6 +77,7 @@ export const EditorNavigationPage:React.FC<{page:EditorNavPage;store:EditorStore
   if(page==='effects')return <EffectsLibrariesPanel store={store}/>;
   if(page==='templates')return <TemplateLibraryPanel store={store}/>;
   if(page==='custom-templates')return <CustomTemplatePanel store={store}/>;
+  if(page==='export')return <ExportRenderPanel store={store}/>;
   if(page==='settings')return <Settings model={settings}/>;
   return <div>{renderPanelBody(page,store)}</div>;
 };
