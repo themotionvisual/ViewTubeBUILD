@@ -2714,6 +2714,15 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      nextQueryLabel,
      message: `Syncing ${currentQueryLabel}.`,
     }, onProgress)
+    updateCategoryState(progress, categoryId, {
+     status: "running",
+     rows: 0,
+     startedAt: new Date().toISOString(),
+     completedAt: undefined,
+     currentWindow: "lifetime",
+     message: `Syncing ${currentQueryLabel}.`,
+     error: undefined,
+    }, onProgress)
     // insightTrafficSourceDetail rejects maxResults values above ~25 with a garbled 500
     // (FIELD_UNKNOWN_VALUE on max-results) instead of a clean error, so page through it in
     // chunks of 25 until YouTube returns the final short/empty page instead of requesting a larger page directly.
@@ -2799,6 +2808,14 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
        ? [`No ${sourceType || "traffic overview"} rows returned by YouTube Analytics.`]
        : [],
     )
+    updateCategoryState(progress, categoryId, {
+     status: !result.rows ? "failed" : result.error || mappedRows.length === 0 ? "partial" : "complete",
+     rows: mappedRows.length,
+     completedAt: new Date().toISOString(),
+     currentWindow: "lifetime",
+     message: result.error || (mappedRows.length === 0 ? "YouTube Analytics returned no rows." : `${mappedRows.length.toLocaleString()} rows synced.`),
+     error: result.error,
+    }, onProgress)
     commitSnapshot()
     await sleep(150)
    }
@@ -2852,6 +2869,8 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    const selectedSegmentCategoryIds = segmentRuns
     .map(([categoryId]) => categoryId)
     .filter((categoryId) => shouldSync(selected, categoryId))
+   const segmentCategoryRows = new Map<string, number>()
+   const segmentCategoryIssues = new Set<string>()
    for (const segmentWindow of aggregateWindows) {
    const segmentStartDate = vtSyncWindowStartDate(segmentWindow, channelStartDate)
    for (const [categoryId, field, dimensions, metrics, sort, filters = "", maxResults = 200] of segmentRuns) {
@@ -2873,6 +2892,15 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      currentQueryLabel,
      nextQueryLabel,
      message: `Syncing ${currentQueryLabel} · ${segmentWindow}.`,
+    }, onProgress)
+    updateCategoryState(progress, categoryId, {
+     status: "running",
+     rows: segmentCategoryRows.get(categoryId) || 0,
+     startedAt: progress.categoryStates?.[categoryId]?.startedAt || new Date().toISOString(),
+     completedAt: undefined,
+     currentWindow: segmentWindow,
+     message: `Syncing ${currentQueryLabel} · ${segmentWindow}.`,
+     error: undefined,
     }, onProgress)
     const usesCompleteContract = categoryId === "creator_content_type" || categoryId === "geography_country"
     let result: BundleResult
@@ -2970,6 +2998,23 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     if (isLifetime) {
      markFreshness([categoryId], categoryId, completedRows.length, result.rows ? (result.error || missingMetrics.length ? "partial" : "synced") : "failed", missingMetrics)
     }
+    const categoryRows = (segmentCategoryRows.get(categoryId) || 0) + (result.rows?.length || 0)
+    segmentCategoryRows.set(categoryId, categoryRows)
+    if (!result.rows || result.error || missingMetrics.length) segmentCategoryIssues.add(categoryId)
+    const finalWindowForCategory = VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)
+     || segmentWindow === aggregateWindows[aggregateWindows.length - 1]
+    updateCategoryState(progress, categoryId, {
+     status: finalWindowForCategory
+      ? categoryRows === 0 ? "failed" : segmentCategoryIssues.has(categoryId) ? "partial" : "complete"
+      : "pending",
+     rows: categoryRows,
+     completedAt: finalWindowForCategory ? new Date().toISOString() : undefined,
+     currentWindow: segmentWindow,
+     message: finalWindowForCategory
+      ? `${categoryRows.toLocaleString()} rows synced across requested windows.`
+      : `${segmentWindow} complete; waiting for the next requested window.`,
+     error: result.error,
+    }, onProgress)
     commitSnapshot()
     await sleep(150)
    }
