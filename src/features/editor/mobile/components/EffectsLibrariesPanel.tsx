@@ -28,6 +28,7 @@ const FX_DEFS=[
 const DEFAULT_FX_ORDER=FX_DEFS.map(def=>def.key);
 const FAVORITES_KEY='viewtube.editor.asset-favorites.v1';
 const RECENTS_KEY='viewtube.editor.asset-recents.v1';
+const FX_PRESETS_KEY='viewtube.editor.fx-presets.v1';
 
 const CLIP_PRESETS=[
   {name:'Clean',patch:{blur:0,saturation:1,brightness:1,hue:0,opacity:1}},
@@ -44,6 +45,10 @@ function ClipEffects({store}:{store:EditorStore}){
   if(!clip||!layer)return <section style={card}><div style={{fontSize:10,fontWeight:1000,textTransform:'uppercase'}}>Clip FX</div><div style={{fontSize:9,fontWeight:800,opacity:.6,marginTop:5}}>Select a text, shape, image, video, audio-visual, or generated layer clip.</div></section>;
   const payload=layer.payload??{};
   const patch=(next:Record<string,unknown>)=>store.dispatch({type:'updateLayerPayload',id:layer.id,patch:next});
+  const[userPresets,setUserPresets]=useState<Array<{name:string;patch:Record<string,unknown>}>>(()=>{
+    if(typeof window==='undefined')return[];
+    try{const raw=JSON.parse(localStorage.getItem(FX_PRESETS_KEY)||'[]');return Array.isArray(raw)?raw.slice(0,12):[]}catch{return[]}
+  });
   const number=(key:string,fallback:number)=>Number.isFinite(Number(payload[key]))?Number(payload[key]):fallback;
   const bypass=Boolean(payload.fxBypass);
   const disabled=(payload.fxDisabled&&typeof payload.fxDisabled==='object'?payload.fxDisabled:{}) as Record<string,boolean>;
@@ -79,6 +84,17 @@ function ClipEffects({store}:{store:EditorStore}){
         {CLIP_PRESETS.map(preset=><button key={preset.name} style={btn(false)} onClick={()=>patch({...preset.patch,fxBypass:false,fxDisabled:{}})}>{preset.name}</button>)}
       </div>
       <button style={{...btn(false),width:'100%',marginTop:5}} onClick={()=>patch({blur:0,saturation:1,brightness:1,hue:0,opacity:1,fxBypass:false,fxDisabled:{},fxOrder:DEFAULT_FX_ORDER})}><RotateCcw size={12}/>Reset FX</button>
+      <button style={{...btn(true),width:'100%',marginTop:5}} onClick={()=>{
+        const preset={name:`FX ${userPresets.length+1}`,patch:{
+          blur:number('blur',0),saturation:number('saturation',1),brightness:number('brightness',1),hue:number('hue',0),opacity:number('opacity',1),
+          fxBypass:false,fxDisabled:{...disabled},fxOrder:[...order],
+        }};
+        const next=[preset,...userPresets].slice(0,12);
+        setUserPresets(next);if(typeof window!=='undefined')localStorage.setItem(FX_PRESETS_KEY,JSON.stringify(next));
+      }}>Save FX Preset</button>
+      {userPresets.length?<div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:3,marginTop:4}}>
+        {userPresets.slice(0,6).map((preset,index)=><button key={preset.name+index} style={{...btn(false),minWidth:0,overflow:'hidden',textOverflow:'ellipsis'}} onClick={()=>patch(preset.patch)}>{preset.name}</button>)}
+      </div>:null}
     </section>
     <section style={card}>
       <div style={{fontSize:9,fontWeight:1000,textTransform:'uppercase',marginBottom:6}}>Adjust</div>
@@ -134,6 +150,7 @@ function iconForAsset(asset:AssetDefinition){
 function VisualEffects({store}:{store:EditorStore}){
   const[kind,setKind]=useState<'all'|'static'|'motion'>('all');
   const[collection,setCollection]=useState<'all'|'favorites'|'recent'>('all');
+  const[category,setCategory]=useState<string>('all');
   const[query,setQuery]=useState('');
   const[favorites,setFavorites]=useState<string[]>(()=>{
     if(typeof window==='undefined')return[];
@@ -145,11 +162,12 @@ function VisualEffects({store}:{store:EditorStore}){
   });
   const filtered=useMemo(()=>assetRegistry.filter(asset=>{
     if(kind!=='all'&&asset.type!==kind)return false;
+    if(category!=='all'&&asset.category!==category)return false;
     if(collection==='favorites'&&!favorites.includes(asset.id))return false;
     if(collection==='recent'&&!recent.includes(asset.id))return false;
     const hay=[asset.name,asset.category,asset.family,...asset.tags].join(' ').toLowerCase();
     return hay.includes(query.trim().toLowerCase());
-  }).sort((a,b)=>collection==='recent'?recent.indexOf(a.id)-recent.indexOf(b.id):a.name.localeCompare(b.name)),[kind,collection,query,favorites,recent]);
+  }).sort((a,b)=>collection==='recent'?recent.indexOf(a.id)-recent.indexOf(b.id):a.name.localeCompare(b.name)),[kind,category,collection,query,favorites,recent]);
   const toggleFavorite=(id:string)=>{
     const next=favorites.includes(id)?favorites.filter(item=>item!==id):[id,...favorites];
     setFavorites(next);if(typeof window!=='undefined')localStorage.setItem(FAVORITES_KEY,JSON.stringify(next));
@@ -185,6 +203,15 @@ function VisualEffects({store}:{store:EditorStore}){
       <button style={btn(collection==='favorites')} onClick={()=>setCollection('favorites')}><Heart size={10}/>Favorites</button>
       <button style={btn(collection==='recent')} onClick={()=>setCollection('recent')}><History size={10}/>Recent</button>
     </div>
+    <select
+      aria-label="Visual effect category"
+      value={category}
+      onChange={event=>setCategory(event.target.value)}
+      style={{width:'100%',height:28,border:`2px solid ${INK}`,borderRadius:5,background:'#fff',fontSize:8,fontWeight:1000,textTransform:'uppercase',padding:'0 6px',marginBottom:5}}
+    >
+      <option value="all">All categories</option>
+      {Array.from(new Set(assetRegistry.map(asset=>asset.category))).sort().map(value=><option key={value} value={value}>{value}</option>)}
+    </select>
     <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:5,maxHeight:360,overflowY:'auto',overflowX:'hidden'}}>
       {filtered.map(asset=><div key={asset.id} style={{
         minWidth:0,border:`2px solid ${INK}`,borderRadius:6,background:'#fff',padding:5,textAlign:'left',
