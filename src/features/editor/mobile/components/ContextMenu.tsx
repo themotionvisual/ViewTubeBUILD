@@ -75,7 +75,7 @@ export const ContextMenu:React.FC<ContextMenuProps>=({items,at,onDismiss,title})
         width:'100%',padding:'7px 8px',borderRadius:4,border:`1.5px solid ${INK}`,
         marginTop:index?3:0,background:'#fff',color:item.destructive?'#b91c1c':'#000',
         fontSize:10,fontWeight:900,textAlign:'left',cursor:item.disabled?'not-allowed':'pointer',
-        opacity:item.disabled?.4:1,touchAction:'manipulation',boxSizing:'border-box',
+        opacity:item.disabled ? .4 : 1,touchAction:'manipulation',boxSizing:'border-box',
       }}
       onPointerEnter={event=>{if(!item.disabled)event.currentTarget.style.background=CYAN}}
       onPointerLeave={event=>{event.currentTarget.style.background='#fff'}}
