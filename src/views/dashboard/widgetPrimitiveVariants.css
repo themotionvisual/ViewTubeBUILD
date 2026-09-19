@@ -529,3 +529,15 @@
   font-weight: 1000 !important;
   line-height: 1 !important;
 }
+
+
+.widget-reference-adaptive-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--vt-gap-1, 4px);
+  width: 100%;
+}
+.widget-reference-adaptive-grid > .vt-sized-control {
+  width: 100%;
+  min-width: 0;
+}
