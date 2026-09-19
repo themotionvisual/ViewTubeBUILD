@@ -20,6 +20,11 @@ export const VideoDirectorRemoteJobSchema = z.object({
     "dead-letter",
     "cancelled",
   ]),
+  stage: z.string(),
+  progress: z.number().min(0).max(1),
+  progressMessage: z.string().nullable(),
+  previewAssetUri: z.string().nullable(),
+  eventLog: z.array(z.record(z.string(), z.unknown())),
   priority: z.number(),
   request: z.record(z.string(), z.unknown()),
   providerPlan: z.record(z.string(), z.unknown()),
@@ -212,3 +217,43 @@ export const cancelVideoDirectorJob = async (
 export const isTerminalVideoDirectorJobStatus = (
   status: VideoDirectorRemoteJob["status"],
 ) => status === "completed" || status === "failed" || status === "dead-letter" || status === "cancelled"
+
+
+export interface WatchVideoDirectorJobOptions {
+  intervalMs?: number
+  signal?: AbortSignal
+  onUpdate?: (job: VideoDirectorRemoteJob) => void
+}
+
+export const watchVideoDirectorJob = async (
+  jobId: string,
+  {
+    intervalMs = 1_500,
+    signal,
+    onUpdate,
+  }: WatchVideoDirectorJobOptions = {},
+): Promise<VideoDirectorRemoteJob> => {
+  const wait = (ms: number) => new Promise<void>((resolve, reject) => {
+    const timer = window.setTimeout(resolve, ms)
+    if (!signal) return
+    const onAbort = () => {
+      window.clearTimeout(timer)
+      reject(new DOMException("Video Director job watch aborted.", "AbortError"))
+    }
+    if (signal.aborted) {
+      onAbort()
+      return
+    }
+    signal.addEventListener("abort", onAbort, { once: true })
+  })
+
+  while (true) {
+    if (signal?.aborted) {
+      throw new DOMException("Video Director job watch aborted.", "AbortError")
+    }
+    const job = await getVideoDirectorJob(jobId, signal)
+    onUpdate?.(job)
+    if (isTerminalVideoDirectorJobStatus(job.status)) return job
+    await wait(Math.max(250, intervalMs))
+  }
+}
