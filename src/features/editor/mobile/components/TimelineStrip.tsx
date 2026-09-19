@@ -13,6 +13,8 @@ export interface TimelineStripProps{
   store:EditorStore;
   height?:React.CSSProperties['height'];
   onClipContextMenu?:(clip:VtE1Clip,at:{x:number;y:number})=>void;
+  onTrackContextMenu?:(track:EditorStore['state']['project']['tracks'][number],at:{x:number;y:number})=>void;
+  onKeyframeContextMenu?:(clip:VtE1Clip,keyframeId:string,at:{x:number;y:number})=>void;
   onEmptyContextMenu?:(at:{x:number;y:number})=>void;
   onViewportChange?:(viewport:TimelineViewport)=>void;
   scrollToSec?:number;
@@ -74,7 +76,7 @@ const compoundChildren=(clip:VtE1Clip)=>{
 };
 
 export const TimelineStrip:React.FC<TimelineStripProps>=({
-  store,height,onClipContextMenu,onEmptyContextMenu,onViewportChange,scrollToSec,
+  store,height,onClipContextMenu,onTrackContextMenu,onKeyframeContextMenu,onEmptyContextMenu,onViewportChange,scrollToSec,
   actionLabelsVisible=true,onToggleActionLabels,
 })=>{
   const{state,dispatch,clipsOnTrack}=store;
@@ -276,6 +278,8 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
             focusParentId={focusedCompound?.id}
             onOpenCompound={setCompoundFocusId}
             onClipContextMenu={onClipContextMenu}
+            onTrackContextMenu={onTrackContextMenu}
+            onKeyframeContextMenu={onKeyframeContextMenu}
             onEmptyContextMenu={onEmptyContextMenu}
           />)}
         </div>
@@ -356,8 +360,10 @@ const TrackRow:React.FC<{
   focusParentId?:string;
   onOpenCompound?:(id:string)=>void;
   onClipContextMenu?:TimelineStripProps['onClipContextMenu'];
+  onTrackContextMenu?:TimelineStripProps['onTrackContextMenu'];
+  onKeyframeContextMenu?:TimelineStripProps['onKeyframeContextMenu'];
   onEmptyContextMenu?:TimelineStripProps['onEmptyContextMenu'];
-}>=({track,clips,pxPerSec,totalPx,y,rowHeight,selectedClip,showKeyframeLane=false,store,snap,readOnly=false,focusParentId,onOpenCompound,onClipContextMenu,onEmptyContextMenu})=>{
+}>=({track,clips,pxPerSec,totalPx,y,rowHeight,selectedClip,showKeyframeLane=false,store,snap,readOnly=false,focusParentId,onOpenCompound,onClipContextMenu,onTrackContextMenu,onKeyframeContextMenu,onEmptyContextMenu})=>{
   const{state,dispatch}=store;
   const rowColor=track.kind==='audio'?'#4EE4BE':track.kind==='overlay'?'#528FFA':track.kind==='caption'?'#FFDA47':'#FA618A';
   const selected=state.selection.trackId===track.id;
@@ -373,6 +379,12 @@ const TrackRow:React.FC<{
   return <div data-vt-track-id={track.id} style={{position:'absolute',top:y,left:0,right:0,height:rowHeight,display:'flex'}}>
     <div
       onClick={()=>!readOnly&&dispatch({type:'selectTrack',id:track.id})}
+      onContextMenu={event=>{
+        if(readOnly)return;
+        event.preventDefault();event.stopPropagation();
+        dispatch({type:'selectTrack',id:track.id});
+        onTrackContextMenu?.(track,{x:event.clientX,y:event.clientY});
+      }}
       style={{
         position:'sticky',left:0,width:LABEL_WIDTH,background:selected?CYAN:'#fff',
         zIndex:2,borderRight:`2px solid ${INK}`,borderBottom:`1px solid ${INK}`,
@@ -435,12 +447,12 @@ const TrackRow:React.FC<{
           onContextMenu={onClipContextMenu}
         />)}
       </div>
-      {showKeyframeLane&&selectedClip&&!readOnly?<KeyframeLane clip={selectedClip} store={store} pxPerSec={pxPerSec} top={TIMELINE_TRACK_HEIGHT}/>:null}
+      {showKeyframeLane&&selectedClip&&!readOnly?<KeyframeLane clip={selectedClip} store={store} pxPerSec={pxPerSec} top={TIMELINE_TRACK_HEIGHT} onContextMenu={onKeyframeContextMenu}/>:null}
     </div>
   </div>;
 };
 
-const KeyframeLane:React.FC<{clip:VtE1Clip;store:EditorStore;pxPerSec:number;top:number}>=({clip,store,pxPerSec,top})=>{
+const KeyframeLane:React.FC<{clip:VtE1Clip;store:EditorStore;pxPerSec:number;top:number;onContextMenu?:TimelineStripProps['onKeyframeContextMenu']}>=({clip,store,pxPerSec,top,onContextMenu})=>{
   const frames=((clip.keyframes??[]) as TimelineKeyframe[]).filter(frame=>frame.id&&Number.isFinite(Number(frame.offsetSec??0)));
   const[selected,setSelected]=useState<string[]>([]);
   const[preview,setPreview]=useState<Record<string,number>>({});
@@ -477,6 +489,11 @@ const KeyframeLane:React.FC<{clip:VtE1Clip;store:EditorStore;pxPerSec:number;top
         key={id}
         title={`${Object.keys(frame.values??{}).join(', ')||'keyframe'} · ${String(frame.interp??'linear')}`}
         aria-label={`Keyframe ${index+1}`}
+        onContextMenu={event=>{
+          event.preventDefault();event.stopPropagation();
+          if(!selected.includes(id))setSelected([id]);
+          onContextMenu?.(clip,id,{x:event.clientX,y:event.clientY});
+        }}
         onPointerDown={event=>{
           event.stopPropagation();event.currentTarget.setPointerCapture?.(event.pointerId);
           const timer=window.setTimeout(()=>setSelected(current=>current.includes(id)?current.filter(item=>item!==id):[...current,id]),420);
