@@ -1,8 +1,8 @@
 /** Phone timeline with touch-arbitrated select/move/trim, keyframes and collision-safe tracks. */
 import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {
-  AlertTriangle,EyeOff,ListPlus,LocateFixed,LockKeyhole,Minus,Plus,
-  SkipBack,SkipForward,Trash2,Type,VolumeX,
+  AlertTriangle,EyeOff,Frames,Layers3,ListPlus,LocateFixed,LockKeyhole,Magnet,Minus,Plus,
+  SkipBack,SkipForward,StepBack,StepForward,Trash2,Type,VolumeX,X,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {useLongPress,usePinchZoom} from '../hooks/gestures';
@@ -21,10 +21,13 @@ export interface TimelineStripProps{
 }
 
 type TimelineKeyframe={id?:string;offsetSec?:number;mode?:string;values?:Record<string,unknown>};
-type ClipGestureMode='pending'|'move'|'trim-left'|'trim-right'|'longpress';
+type ClipGestureMode='pending'|'move'|'trim-left'|'trim-right'|'longpress'|'multi';
+type SnapStrength='off'|'soft'|'strong';
+type NavMode='all'|'clip'|'keyframe'|'transition'|'frame';
+type SnapKinds={edges:boolean;keyframes:boolean;playhead:boolean;seconds:boolean;transitions:boolean};
 
 export const TIMELINE_TRACK_HEIGHT=44;
-export const TIMELINE_HEADER_HEIGHT=28;
+export const TIMELINE_HEADER_HEIGHT=48;
 export const timelinePreferredHeight=(visibleTracks:number)=>TIMELINE_HEADER_HEIGHT+Math.max(1,visibleTracks)*TIMELINE_TRACK_HEIGHT+14;
 
 const LABEL_WIDTH=82;
@@ -35,8 +38,40 @@ const PINK='#FA618A';
 const EDGE_TOUCH_PX=32;
 const MOVE_THRESHOLD_PX=9;
 const LONG_PRESS_MS=460;
+const SNAP_STORAGE='viewtube.mobile.timeline.snap.v2';
 
 const overlaps=(a:VtE1Clip,b:VtE1Clip)=>a.trackId===b.trackId&&a.start<b.end&&a.end>b.start;
+
+const clamp=(value:number,min:number,max:number)=>Math.max(min,Math.min(max,value));
+const readSnap=()=>{
+  if(typeof window==='undefined')return{strength:'soft' as SnapStrength,kinds:{edges:true,keyframes:true,playhead:true,seconds:true,transitions:true} as SnapKinds};
+  try{
+    const raw=JSON.parse(localStorage.getItem(SNAP_STORAGE)||'{}');
+    return{strength:(['off','soft','strong'].includes(raw.strength)?raw.strength:'soft') as SnapStrength,kinds:{edges:true,keyframes:true,playhead:true,seconds:true,transitions:true,...raw.kinds} as SnapKinds};
+  }catch{return{strength:'soft' as SnapStrength,kinds:{edges:true,keyframes:true,playhead:true,seconds:true,transitions:true} as SnapKinds}}
+};
+const snapTime=(value:number,targets:number[],strength:SnapStrength,zoom:number)=>{
+  if(strength==='off')return value;
+  const threshold=(strength==='strong'?20:10)/Math.max(4,zoom);
+  let best=value,distance=Infinity;
+  for(const target of targets){const d=Math.abs(target-value);if(d<=threshold&&d<distance){best=target;distance=d}}
+  return best;
+};
+const snapMoveStart=(value:number,duration:number,targets:number[],strength:SnapStrength,zoom:number)=>{
+  const start=snapTime(value,targets,strength,zoom);
+  const end=snapTime(value+duration,targets,strength,zoom)-duration;
+  return Math.abs(start-value)<=Math.abs(end-value)?start:end;
+};
+const groupColor=(groupId:string)=>{
+  const colors=['#36E0F6','#FA618A','#FFDA47','#4EE4BE','#528FFA','#C86BFA','#FF9B54'];
+  let hash=0;for(let i=0;i<groupId.length;i++)hash=(hash*31+groupId.charCodeAt(i))|0;
+  return colors[Math.abs(hash)%colors.length];
+};
+const compoundChildren=(clip:VtE1Clip)=>{
+  const children=(clip as VtE1Clip&{compoundChildren?:Array<VtE1Clip&{relativeStart?:number;relativeEnd?:number}>}).compoundChildren;
+  if(!Array.isArray(children))return[];
+  return children.map((child,index)=>({...child,id:clip.id+'::child::'+index,start:clip.start+Number(child.relativeStart??0),end:clip.start+Number(child.relativeEnd??Math.max(.1,child.end-child.start))} as VtE1Clip));
+};
 
 export const TimelineStrip:React.FC<TimelineStripProps>=({
   store,height,onClipContextMenu,onEmptyContextMenu,onViewportChange,scrollToSec,
