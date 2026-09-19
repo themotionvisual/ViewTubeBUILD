@@ -253,3 +253,26 @@
   font:1000 calc(var(--vt-component-font-size)*2.35)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
   letter-spacing:-.065em;
 }
+
+
+/* ==========================================================================
+   COMPONENT LIBRARY CORRECTION — split-left square parity.
+   Split Left Button must use the same exact square rail geometry as Split Menu.
+   ========================================================================== */
+.vt-subtoolbox-split-button.has-component-level{
+  grid-template-columns:var(--vt-component-height) minmax(0,1fr);
+}
+.vt-subtoolbox-split-button.has-component-level .vt-subtoolbox-split-button-rail{
+  width:var(--vt-component-height);
+  min-width:var(--vt-component-height);
+  max-width:var(--vt-component-height);
+  height:var(--vt-component-height);
+  min-height:var(--vt-component-height);
+  aspect-ratio:1/1;
+  padding:0;
+  place-self:stretch;
+}
+.vt-subtoolbox-split-button.has-component-level .vt-subtoolbox-split-button-rail,
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-rail{
+  box-sizing:border-box;
+}
