@@ -115,7 +115,7 @@ export const SubToolboxToggle: React.FC<React.ButtonHTMLAttributes<HTMLButtonEle
 
 export const SubToolboxBadge: React.FC<React.HTMLAttributes<HTMLSpanElement> & { active?: boolean; level?: ToolboxControlLevel }> = ({ active = true, level, className, children, style, ...props }) => <span data-vt-control-level={level} style={withComponentLevelStyle(level, style)} className={classes("vt-subtoolbox-chip", "is-badge", level && "has-component-level", active && "is-active", className)} {...props}>{children}</span>
 
-export const SubToolboxTag: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { selected?: boolean; level?: ToolboxControlLevel }> = ({ selected = false, level, className, children, type = "button", style, ...props }) => <button type={type} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} className={classes("vt-subtoolbox-chip", "is-tag", level && "has-component-level", selected && "is-active", className)} aria-pressed={selected} {...props}>{children}</button>
+export const SubToolboxTag: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { selected?: boolean; level?: ToolboxControlLevel; variant?: "standard" | "dashboard-pill" }> = ({ selected = false, level, variant = "standard", className, children, type = "button", style, ...props }) => <button type={type} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} className={classes("vt-subtoolbox-chip", "is-tag", `is-${variant}`, level && "has-component-level", selected && "is-active", className)} aria-pressed={selected} {...props}>{children}</button>
 
 export type SubToolboxTooltipLevel = ToolboxControlLevel
 
@@ -123,6 +123,7 @@ export interface SubToolboxTooltipProps extends Omit<React.HTMLAttributes<HTMLSp
   content?: React.ReactNode
   level?: SubToolboxTooltipLevel
   forceOpen?: boolean
+  variant?: "default" | "dark" | "color"
   triggerLabel?: React.ReactNode
   triggerAriaLabel?: string
 }
@@ -131,6 +132,7 @@ export const SubToolboxTooltip: React.FC<SubToolboxTooltipProps> = ({
   content = "TOOLTIP",
   level = "l0",
   forceOpen = false,
+  variant = "default",
   triggerLabel = "?",
   triggerAriaLabel = "Show tooltip",
   className,
@@ -139,7 +141,7 @@ export const SubToolboxTooltip: React.FC<SubToolboxTooltipProps> = ({
 }) => {
   const tooltipId = React.useId()
   return (
-    <span className={classes("vt-subtoolbox-tooltip", `is-${level}`, forceOpen && "is-open", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
+    <span className={classes("vt-subtoolbox-tooltip", `is-${level}`, `is-${variant}`, forceOpen && "is-open", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
       <button type="button" className="vt-subtoolbox-tooltip-trigger" aria-label={triggerAriaLabel} aria-describedby={tooltipId}>{triggerLabel}</button>
       <span id={tooltipId} role="tooltip" className="vt-subtoolbox-tooltip-bubble">{content}</span>
     </span>
@@ -1043,6 +1045,33 @@ export const SubToolboxTree: React.FC<SubToolboxTreeProps> = ({ level = "l0", no
   })
   return <div className={classes("vt-subtoolbox-tree", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} role="tree" {...props}>{renderNodes(nodes)}</div>
 }
+
+export interface SubToolboxAspectRatioFrameProps extends React.HTMLAttributes<HTMLDivElement> {
+  level?: ToolboxControlLevel
+  ratio?: "16:9" | "9:16" | "1:1"
+  label?: React.ReactNode
+  children?: React.ReactNode
+}
+export const SubToolboxAspectRatioFrame: React.FC<SubToolboxAspectRatioFrameProps> = ({ level = "l0", ratio = "16:9", label, children, className, style, ...props }) => (
+  <div className={classes("vt-subtoolbox-aspect-frame", className)} data-vt-control-level={level} data-ratio={ratio} style={withComponentLevelStyle(level, style)} {...props}>
+    <div className="vt-subtoolbox-aspect-frame-canvas">{children}</div>
+    {label ? <strong className="vt-subtoolbox-aspect-frame-label">{label}</strong> : null}
+  </div>
+)
+
+export interface SubToolboxToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
+  level?: ToolboxControlLevel
+  leading?: React.ReactNode
+  trailing?: React.ReactNode
+  children?: React.ReactNode
+}
+export const SubToolboxToolbar: React.FC<SubToolboxToolbarProps> = ({ level = "l0", leading, trailing, children, className, style, ...props }) => (
+  <div className={classes("vt-subtoolbox-toolbar", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} role="toolbar" {...props}>
+    {leading ? <div className="vt-subtoolbox-toolbar-leading">{leading}</div> : null}
+    <div className="vt-subtoolbox-toolbar-main">{children}</div>
+    {trailing ? <div className="vt-subtoolbox-toolbar-trailing">{trailing}</div> : null}
+  </div>
+)
 
 export const SubToolboxSurface: React.FC<React.HTMLAttributes<HTMLDivElement> & { tone?: "white" | "subtle" | "accent"; scroll?: boolean; children: React.ReactNode; level?: ToolboxControlLevel }> = ({ tone = "white", scroll = false, level, className, children, style, ...props }) => <div data-vt-control-level={level} style={withComponentLevelStyle(level, style)} className={classes("vt-subtoolbox-surface", `is-${tone}`, scroll && "is-scroll", level && "has-component-level", className)} {...props}>{children}</div>
 
