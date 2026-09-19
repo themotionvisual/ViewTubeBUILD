@@ -66,7 +66,7 @@ function defaultPayload(type:'text'|'shape'|'media'|'audio',index:number):Payloa
     fontSize:type==='text'?44:24,fontFamily:'Outfit',textAlign:'center',
     shape:type==='shape'?'rect':'rect',
     mediaUrl:'',mediaName:'',mediaKind:type==='audio'?'audio':'',
-    fit:'cover',volume:type==='audio'?.6:1,muted:false,audioSrcType:type==='audio'?'file':'',
+    fit:'cover',volume:type==='audio' ? 0.6 : 1,muted:false,audioSrcType:type==='audio'?'file':'',
     effects:[],
   };
 }
