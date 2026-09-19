@@ -45,7 +45,19 @@ describe("Video Director Studio Hub contract", () => {
     }
   })
 
-  it("keeps provider execution disabled until the persistent provider layer is wired", () => {
+
+  it("exposes Brain Auto-Fill and scoped directing controls without a parallel editor", () => {
+    const source = readFileSync(resolve(process.cwd(), "src/views/VideoDirector.tsx"), "utf8")
+
+    expect(source).toContain("Auto-Fill Director")
+    expect(source).toContain("Storyboard & Scope")
+    expect(source).toContain("Variation Matrix")
+    expect(source).toContain("Edit Scope")
+    expect(source).toContain("setVideoDirectorScopedCategoryField")
+    expect(source).toContain("autoFillVideoDirectorProject")
+  })
+
+  it("keeps provider execution disabled until a production provider adapter and server-authoritative credit preflight are wired", () => {
     const source = readFileSync(resolve(process.cwd(), "src/views/VideoDirector.tsx"), "utf8")
 
     expect(source).toContain("Generate — Provider Layer Next")
