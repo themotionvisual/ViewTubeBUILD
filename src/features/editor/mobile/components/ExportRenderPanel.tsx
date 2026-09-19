@@ -26,9 +26,15 @@ export const ExportRenderPanel:React.FC<{store:EditorStore}>=({store})=>{
     client.capabilities().then(response=>{
       if(!live)return;
       const raw=(response.capabilities?.supportedFormats??['mp4']) as unknown;
-      const formats=Array.isArray(raw)?raw.filter(value=>['mp4','mov','webm'].includes(String(value))) as RenderOutputFormat[]:['mp4'];
-      setSupported(formats.length?formats:['mp4']);
-      setSelected(current=>current.filter(format=>formats.includes(format)).length?current.filter(format=>formats.includes(format)):['mp4']);
+      const formats:RenderOutputFormat[]=Array.isArray(raw)
+        ?raw.map(value=>String(value)).filter((value):value is RenderOutputFormat=>value==='mp4'||value==='mov'||value==='webm')
+        :['mp4'];
+      const available:RenderOutputFormat[]=formats.length?formats:['mp4'];
+      setSupported(available);
+      setSelected(current=>{
+        const retained=current.filter(format=>available.includes(format));
+        return retained.length?retained:['mp4'];
+      });
       setReady(response.ready);
       setStatus(response.ready?'Renderer ready':`Renderer ${response.status||'unavailable'}`);
     }).catch(reason=>{
