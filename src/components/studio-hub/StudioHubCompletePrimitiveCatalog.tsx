@@ -65,9 +65,21 @@ export const HardcodedGenericControl: React.FC<{ name: string; level: Level; ind
   const [tagEditorOpen, setTagEditorOpen] = useState(false)
   const [tagDraft, setTagDraft] = useState("")
   const [editorTags, setEditorTags] = useState(["HISTORY"])
+  const [searchQuery, setSearchQuery] = useState("NAPOLEON")
+  const [actionDraft, setActionDraft] = useState("NEW ITEM")
   const [knobValue, setKnobValue] = useState(72)
   const style = { "--pair-a": colors.a, "--pair-b": colors.b } as React.CSSProperties
   const icon = <Settings2 aria-hidden="true" />
+
+  const updateHardcodedKnobFromPointer = (element: HTMLElement, clientX: number, clientY: number) => {
+    const rect = element.getBoundingClientRect()
+    const dx = clientX - (rect.left + rect.width / 2)
+    const dy = clientY - (rect.top + rect.height / 2)
+    let degrees = Math.atan2(dx, -dy) * 180 / Math.PI
+    if (degrees < 0) degrees += 360
+    const swept = degrees >= 225 ? degrees - 360 : degrees <= 135 ? degrees : degrees < 180 ? 135 : -135
+    setKnobValue(Math.min(100, Math.max(0, Math.round(((swept + 135) / 270) * 100))))
+  }
 
   if (name === "Primary Button" || name === "Secondary Button" || name === "Neutral Button" || name === "Destructive Button")
     return <button className={`vt-catalog-button is-${level}`} style={style}>{name.replace(" Button", "")}</button>
@@ -89,8 +101,8 @@ export const HardcodedGenericControl: React.FC<{ name: string; level: Level; ind
   }
   if (name === "Text Input" || name === "Number Field") return <SubToolboxInput className={`vt-catalog-field is-${level}`} style={style} type={name === "Number Field" ? "number" : "text"} defaultValue={name === "Number Field" ? "25" : "TEXT INPUT"} />
   if (name === "Textarea") return <SubToolboxTextArea className={`vt-catalog-field vt-catalog-textarea is-${level}`} style={style} defaultValue="DESCRIPTION" />
-  if (name === "Split Search") return <div className={`vt-catalog-split-field is-${level}`} style={style}><span><Search /></span><input aria-label="Search" placeholder="SEARCH" /></div>
-  if (name === "Input Action") return <div className={`vt-catalog-split-field is-${level}`} style={style}><span><Plus /></span><input aria-label="Add item" placeholder="ADD ITEM" /></div>
+  if (name === "Split Search") return <div className={`vt-catalog-split-field is-search has-action is-${level}`} style={style}><span><Search /></span><input aria-label="Search" placeholder="SEARCH" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} /><button type="button" className="field-action" aria-label="Clear search" onClick={() => setSearchQuery("")}><X /></button></div>
+  if (name === "Input Action") return <div className={`vt-catalog-split-field is-action has-action is-${level}`} style={style}><input aria-label="Add item" placeholder="ADD ITEM" value={actionDraft} onChange={e => setActionDraft(e.target.value)} /><button type="button" className="field-action" aria-label="Add item" onClick={() => setActionDraft("")}><Plus /></button></div>
   if (name === "Stepper") return <div className={`vt-catalog-stepper is-${level}`} style={style}><button type="button" aria-label="Decrease" onClick={() => setValue(v => v - 1)}><Minus /></button><strong>{value}</strong><button type="button" aria-label="Increase" onClick={() => setValue(v => v + 1)}><Plus /></button></div>
   if (name === "Slider") return <div className={`vt-catalog-slider is-${level}`} style={style}><button type="button" className="rail" aria-label="Reset slider" onClick={() => setSliderValue(62)}><span className="slider-glyph" aria-hidden="true">S</span></button><div className="slider-center"><input aria-label="Slider value" type="range" min="0" max="100" value={sliderValue} style={{"--pct":`${sliderValue}%`} as React.CSSProperties} onChange={e => setSliderValue(Number(e.target.value))}/></div><output>{sliderValue}</output></div>
   if (name === "Range Slider") return <div className={`vt-catalog-range is-${level}`} style={style}><button type="button" className="rail" aria-label="Reset range" onClick={() => { setRangeLow(22); setRangeHigh(76) }}><SlidersHorizontal/></button><div className="range-center"><div className="range-track"><span className="range-fill" style={{left:`${rangeLow}%`,right:`${100-rangeHigh}%`}}/></div><input aria-label="Range minimum" type="range" min="0" max="100" value={rangeLow} onChange={e => setRangeLow(Math.min(Number(e.target.value), rangeHigh - 1))}/><input aria-label="Range maximum" type="range" min="0" max="100" value={rangeHigh} onChange={e => setRangeHigh(Math.max(Number(e.target.value), rangeLow + 1))}/></div><output>{rangeLow}–{rangeHigh}</output></div>
@@ -104,13 +116,17 @@ export const HardcodedGenericControl: React.FC<{ name: string; level: Level; ind
   if (name === "Removable Tag") return <span className={`vt-spectrum-tag is-${level}`} style={style}>Napoleon <button aria-label="Remove"><X /></button></span>
   if (name === "Selectable Tag") return <button type="button" className={`vt-catalog-selectable-tag is-${level} ${selectableTagOn ? "is-selected" : ""}`} style={style} aria-pressed={selectableTagOn} onClick={() => setSelectableTagOn(v => !v)}>{selectableTagOn ? <Check /> : <Plus />}<span>{selectableTagOn ? "SELECTED" : "SELECT"}</span></button>
   if (name === "Tag Editor") return <div className={`vt-catalog-tag-editor is-${level} ${tagEditorOpen ? "is-editing" : ""}`} style={style}>
-    <div className="tag-editor-tags">{editorTags.map(tag => <span key={tag} className={`vt-spectrum-tag is-${level}`}>{tag}<button type="button" aria-label={`Remove ${tag}`} onClick={() => setEditorTags(tags => tags.filter(item => item !== tag))}><X /></button></span>)}</div>
-    {tagEditorOpen ? <><input aria-label="New tag" value={tagDraft} placeholder="ADD TAG" onChange={e => setTagDraft(e.target.value.toUpperCase())} onKeyDown={e => { if (e.key === "Enter" && tagDraft.trim()) { setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) } }} /><button type="button" className="submit" aria-label="Save tag" onClick={() => { if (tagDraft.trim()) setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) }}><Check /></button></> : <button type="button" className="add" aria-label="Add tag" onClick={() => setTagEditorOpen(true)}><Plus /></button>}
+    <strong className="tag-editor-label">TAGS</strong>
+    <div className="tag-editor-tags">
+      {editorTags.map(tag => <span key={tag} className={`vt-spectrum-tag is-${level}`} style={{"--tag-color":getAlphabeticalSpectrumColor(tag)} as React.CSSProperties}>{tag}<button type="button" aria-label={`Remove ${tag}`} onClick={() => setEditorTags(tags => tags.filter(item => item !== tag))}><X /></button></span>)}
+      {!tagEditorOpen ? <button type="button" className="add" aria-label="Add tag" onClick={() => setTagEditorOpen(true)}><Plus /></button> : null}
+    </div>
+    {tagEditorOpen ? <div className="tag-editor-entry"><input autoFocus aria-label="New tag" value={tagDraft} placeholder="ADD TAG" onChange={e => setTagDraft(e.target.value.toUpperCase())} onKeyDown={e => { if (e.key === "Enter" && tagDraft.trim()) { if (!editorTags.includes(tagDraft.trim())) setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) } if (e.key === "Escape") { setTagDraft(""); setTagEditorOpen(false) } }} /><button type="button" className="submit" aria-label="Save tag" onClick={() => { if (tagDraft.trim() && !editorTags.includes(tagDraft.trim())) setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) }}><Check /></button></div> : null}
   </div>
   if (name === "Badge") return <span className={`vt-catalog-fill-badge is-${level}`} style={style}>BADGE</span>
   if (name === "Status Badge") return <span className={`vt-status-badge is-${level}`} style={style}><i/>Ready</span>
   if (name === "Progress Bar") return <div className={`vt-catalog-progress-stack is-${level}`} style={style}><div className="vt-catalog-progress is-rounded"><span style={{width:"68%"}} /></div><div className="vt-catalog-progress is-rect"><span style={{width:"68%"}} /></div></div>
-  if (name === "Progress Value") return <div className={`vt-catalog-progress-value is-${level}`} style={style}><div className="bar"><span style={{width:"68%"}} /></div><output>68%</output></div>
+  if (name === "Progress Value") return <div className={`vt-catalog-progress-value is-${level}`} style={style} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={68}><div className="bar"><span className="fill" style={{width:"68%"}} /><strong>SYNC</strong></div><output>68%</output></div>
   if (name === "KPI") return <div className={`vt-catalog-kpi is-${level}`} style={style}><header>VIEWS</header><div className="kpi-canvas"><strong>12.4K</strong></div></div>
   if (name === "Stat Card" || name === "Data Stats Module") return <div className={`vt-catalog-stat is-${level}`} style={style}><small>{name === "Data Stats Module" ? "TOTAL VIEWS" : "WATCH TIME"}</small><strong>{name === "Data Stats Module" ? "128,442" : "4,820H"}</strong><span>+12.4%</span></div>
   if (name === "Metric Strip") return <div className={`vt-catalog-metric-strip is-${level}`} style={style}><b>VIEWS 12K</b><b>CTR 5.8%</b><b>AVP 72%</b></div>
@@ -130,9 +146,22 @@ export const HardcodedGenericControl: React.FC<{ name: string; level: Level; ind
   }
   if (name === "Knob Dial") {
     const knobAngle = -135 + (knobValue / 100) * 270
-    return <div className={`vt-catalog-knob is-${level}`} style={{...style,"--vt-knob-angle":`${knobAngle}deg`} as React.CSSProperties}>
-      <span className="knob-face"><i/><em>{knobValue}</em><input type="range" min="0" max="100" value={knobValue} aria-label="Knob value" onChange={e => setKnobValue(Number(e.target.value))}/></span>
-      <b className="knob-value">VALUE</b>
+    return <div className={`vt-catalog-knob is-${level}`} style={{...style,"--vt-knob-angle":`${knobAngle}deg`,"--vt-knob-sweep":`${knobValue*.75}%`} as React.CSSProperties}>
+      <span
+        className="knob-face"
+        role="slider"
+        tabIndex={0}
+        aria-label="Knob value"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={knobValue}
+        onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); updateHardcodedKnobFromPointer(e.currentTarget, e.clientX, e.clientY) }}
+        onPointerMove={e => { if (e.currentTarget.hasPointerCapture(e.pointerId)) updateHardcodedKnobFromPointer(e.currentTarget, e.clientX, e.clientY) }}
+        onPointerUp={e => { if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId) }}
+        onWheel={e => { e.preventDefault(); setKnobValue(v => Math.min(100, Math.max(0, v + (e.deltaY < 0 ? 1 : -1)))) }}
+        onKeyDown={e => { if (e.key === "ArrowUp" || e.key === "ArrowRight") { e.preventDefault(); setKnobValue(v => Math.min(100,v+1)) } if (e.key === "ArrowDown" || e.key === "ArrowLeft") { e.preventDefault(); setKnobValue(v => Math.max(0,v-1)) } if (e.key === "Home") setKnobValue(0); if (e.key === "End") setKnobValue(100) }}
+      ><span className="knob-arc"/><i/><em>{knobValue}</em></span>
+      <div className="knob-controls"><button type="button" aria-label="Decrease value" onClick={() => setKnobValue(v => Math.max(0,v-1))}>−</button><b className="knob-value">VALUE</b><button type="button" aria-label="Increase value" onClick={() => setKnobValue(v => Math.min(100,v+1))}>+</button></div>
     </div>
   }
   if (name === "Controller Switch") return <button className={`vt-catalog-controller-switch is-${level}`} style={style}><span/><b>ON</b></button>
