@@ -1,21 +1,37 @@
-# Primitives, color, layout
+# Primitives, color, and layout — compatibility summary
 
-Production primitives own geometry and states. UI Reference Library must import/render those same primitives. Promote useful library-only controls into production before using them as canonical.
+This short file remains for older links. The detailed current authority is:
 
-Target component ladder: 18/24/32/38px. Frozen token baseline from certification: strokes 4/3/2px; radii 16/12/8px; gaps 24/12/8px; shadow offset 6px; base transition 180ms. Re-read current tokens before editing because code may supersede this snapshot.
+- `primitives-tokens-color.md`
+- `composition-mathematics-and-resizing.md`
+- `design-doctrine-and-utility.md`
 
-Use the 12-color widget palette and ViewTube Ink rather than pure black. Components inherit palette context. Widgets stay mostly monochromatic; extra colors encode status/category/comparison/anomaly/selection or other meaning. Preserve A-Z spectrum tag/badge behavior where applicable.
+Production primitives own reusable geometry and interaction states. The UI Reference Library must render those same primitives.
 
-Macro grid: 24 columns. Width buckets: quarter 6, companion 7, third 8, between 10, half 12, two-thirds 16, three-quarters 18, full 24. Heights: short 150, medium 250, tall 350, xtall 450, massive 850. On phone every widget is full width; persisted desktop width survives. Use container responsiveness internally and page media queries for macro layout.
+Current component ladder: 18 / 24 / 32 / 38px.
 
-Use FIT, ADAPT, or SCROLL. Shell height is deterministic; overflow belongs to explicit bounded content.
-## Adaptive 24px text fit
-The canonical 24px control remains 16px type by default. For dense button rows that must preserve their established column/row geometry across portrait and landscape, use the production primitive's adaptive text-fit mode rather than changing the grid. Adaptive 24px controls scale continuously from 16px down to 10px against the widget container.
+Current production type/icon values should be read from `widgetPrimitiveSystem.ts`; as of 2026-09-19 the intended type scale is approximately 8 / 16 / 21 / 26px.
 
-Authoring contract:
-- `textFit="adaptive"` on supported canonical primitives.
-- Resulting class: `vt-text-fit-adaptive`.
-- Scope: 24px controls only.
-- Range: 16px → 10px.
-- Prefer text fitting before adding mobile-only rows or columns when the existing composition remains usable.
-- Header mode toggles remain visible on portrait widgets and compact their own typography/width before being removed.
+Dashboard macro tokens remain based on 4/3/2px strokes, 16/12/8px radii, 24/12/8px gaps, 6px shadow offset, and 180ms base transition unless current code supersedes them.
+
+Use the 12-color spectrum and ViewTube Ink rather than pure black in the widget system. Widgets are predominantly monochromatic; additional colors must communicate meaning.
+
+Macro grid: 24 columns. Width buckets: quarter 6, companion 7, third 8, between 10, half 12, two-thirds 16, three-quarters 18, full 24. Height buckets: short 150, medium 250, tall 350, xtall 450, massive 850.
+
+Use FIT / ADAPT / SCROLL intentionally.
+
+### Adaptive 24px text fit
+
+A canonical 24px control may opt into adaptive type to preserve dense row geometry.
+
+- `textFit="adaptive"`
+- control remains 24px high;
+- type scales from 16px toward 10px;
+- complete words must remain visible;
+- do not use ellipsis/cropping as fitting.
+
+### Header rule
+
+Primary widget header mode/page toggles remain visible in portrait. They may compact, but they are not removed simply because the widget becomes narrow.
+
+Widget titles remain the canonical title size and may wrap to two lines. They never shrink or ellipsize to save header room.
