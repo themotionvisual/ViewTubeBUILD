@@ -30,9 +30,9 @@ export const WidgetShell: React.FC<{
  onToggleCollapse?: () => void; onCycleSize?: () => void; onDecSize?: () => void
  onCycleHeight?: () => void; onDecHeight?: () => void; onRemove?: () => void
  children: React.ReactNode; icon?: React.ReactNode; headerContent?: React.ReactNode; helpContent?: React.ReactNode
- contentLayout?: "inset" | "flush"; hasAI?: boolean; onRegenerate?: () => void
+ contentLayout?: "inset" | "flush"; controlDensity?: "default" | "compact"; hasAI?: boolean; onRegenerate?: () => void
  aiCost?: number; aiDisabled?: boolean; aiDisabledReason?: string
-}> = ({ widget, instance, editMode, canEdit, onToggleCollapse = () => {}, onCycleSize = () => {}, onDecSize = () => {}, onCycleHeight = () => {}, onDecHeight = () => {}, onRemove = () => {}, children, icon, headerContent, helpContent, contentLayout = "inset", hasAI, onRegenerate, aiCost, aiDisabled, aiDisabledReason }) => {
+}> = ({ widget, instance, editMode, canEdit, onToggleCollapse = () => {}, onCycleSize = () => {}, onDecSize = () => {}, onCycleHeight = () => {}, onDecHeight = () => {}, onRemove = () => {}, children, icon, headerContent, helpContent, contentLayout = "inset", controlDensity = "default", hasAI, onRegenerate, aiCost, aiDisabled, aiDisabledReason }) => {
  const [isSubtitleOpen, setIsSubtitleOpen] = useState(false)
  const [keepClosingContentMounted, setKeepClosingContentMounted] = useState(!instance.collapsed)
  const description = WIDGET_DESCRIPTIONS[widget.id] || { short: "INTERACTIVE SOURCE PREVIEW RETAINED AS IDEA-BANK.", detailed: "View raw data streams and historical references before promoting components to the main dashboard." }
@@ -49,7 +49,7 @@ export const WidgetShell: React.FC<{
 
  const shouldRenderContent = !instance.collapsed || keepClosingContentMounted
 
- return <div className={cn("vt-widget", instance.collapsed ? "is-collapsed" : "open")} style={{ "--widget-color": widget.headerColor, "--widget-icon-rail-color": widget.iconRailColor } as React.CSSProperties} data-responsive-mode={widget.responsiveMode} data-widget-width={instance.size} data-widget-height={instance.height}>
+ return <div className={cn("vt-widget", instance.collapsed ? "is-collapsed" : "open")} style={{ "--widget-color": widget.headerColor, "--widget-icon-rail-color": widget.iconRailColor } as React.CSSProperties} data-responsive-mode={widget.responsiveMode} data-control-density={controlDensity} data-widget-width={instance.size} data-widget-height={instance.height}>
   <div className="vt-widget-header">
    <div className="left"><div className="icon-rail">{icon || <Layers size={22}/>}</div><span className="title">{widget.title}</span></div>
    {headerContent && <div className="header-extra" onClick={e=>e.stopPropagation()} onPointerDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()} style={{flex:1,display:"flex",justifyContent:"center"}}>{headerContent}</div>}
