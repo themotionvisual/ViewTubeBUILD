@@ -25,6 +25,7 @@ describe("VT-SYNC controller accordion", () => {
   expect(markup).toContain('id="vt-sync-controller-group-time" hidden=""')
   expect(markup.match(/id="vt-sync-controller-group-[^"]+"/g)).toHaveLength(groupCount)
   expect(markup).toContain("SYNC ALL")
+  expect(markup).toContain("Copy Summary")
  })
 })
 
