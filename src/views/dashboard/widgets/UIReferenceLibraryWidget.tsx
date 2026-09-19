@@ -286,6 +286,17 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
               />
             </div>
 
+            <div className="widget-reference-family">
+              {familyHeading("Adaptive 24px Text Fit", "16px → 10px · preserves row geometry")}
+              <div className="widget-reference-adaptive-grid">
+                {["Educational", "Community", "Cyberpunk", "Vintage"].map((label) => (
+                  <WidgetSizedButton key={label} height={24} tone="default" textFit="adaptive">
+                    {label}
+                  </WidgetSizedButton>
+                ))}
+              </div>
+            </div>
+
             {splitFamily("white-on-color", "Split Left Buttons", "White icon / colored bay")}
             {splitFamily("color-on-light", "Split Left Buttons", "Colored icon / light bay")}
 
