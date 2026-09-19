@@ -116,4 +116,18 @@ describe("Video Director dual-surface architecture", () => {
     expect(contracts).toContain("DirectorContinuityLedgerProps")
   })
 
+
+  it("preserves selected category and scope when handing Dashboard work into Studio", () => {
+    const dashboard = read("src/views/dashboard/widgets/video-director/VideoDirectorWidget.tsx")
+    const studio = read("src/views/VideoDirector.tsx")
+    const handoff = read("src/features/video-director/surfaceHandoff.ts")
+
+    expect(dashboard).toContain("writeVideoDirectorSurfaceHandoff")
+    expect(dashboard).toContain('target: "studio"')
+    expect(studio).toContain('readVideoDirectorSurfaceHandoff("studio")')
+    expect(studio).toContain("clearVideoDirectorSurfaceHandoff")
+    expect(handoff).toContain("categoryId")
+    expect(handoff).toContain("scopeKey")
+  })
+
 })
