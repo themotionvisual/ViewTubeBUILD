@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { Image as ImageIcon, Send, Sparkles } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
-import { WidgetFooter, WidgetHeaderToggle, WidgetWorkflowMain } from "../WidgetPrimitives"
+import { WidgetFooter, WidgetHeaderToggle, WidgetWorkflowMain, WidgetSizedButton } from "../WidgetPrimitives"
 import { AspectRatio, ImageSize } from "../../../types"
 import { generateEndScreenImage, generateThumbnail, hasGeminiKey } from "../../../services/gemini"
 
@@ -134,25 +134,26 @@ export const ImageGeneratorWidget = ({
 
         <div className="image-generator-style-grid" aria-label="Image styles">
           {STYLE_OPTIONS.map((style) => (
-            <button
+            <WidgetSizedButton
               key={style}
+              height={24}
+              tone={selectedStyles.includes(style) ? "primary" : "default"}
               onClick={() => toggleStyle(style)}
-              className={`vt-button${selectedStyles.includes(style) ? " is-selected" : ""}`}
               aria-pressed={selectedStyles.includes(style)}
             >
               {style}
-            </button>
+            </WidgetSizedButton>
           ))}
         </div>
 
         {!hasGeminiKey() ? (
-          <button className="vt-button" style={{ height: "34px" }} onClick={() => (window.location.href = "/settings")}>
+          <WidgetSizedButton height={32} tone="secondary" onClick={() => (window.location.href = "/settings")}>
             Missing API Key: Open Settings
-          </button>
+          </WidgetSizedButton>
         ) : (
-          <button className="vt-button primary" style={{ height: "34px" }} onClick={handleGenerate} disabled={isGenerating || !finalPrompt}>
-            <Sparkles size={14} /> {isGenerating ? "Generating..." : "Generate Image"}
-          </button>
+          <WidgetSizedButton height={32} tone="primary" onClick={handleGenerate} disabled={isGenerating || !finalPrompt}>
+            <Sparkles /> {isGenerating ? "Generating..." : "Generate Image"}
+          </WidgetSizedButton>
         )}
 
         <div className="image-generator-preview">
@@ -166,18 +167,18 @@ export const ImageGeneratorWidget = ({
       </WidgetWorkflowMain>
         <WidgetFooter divider={false} className="image-generator-footer">
         <div className="image-generator-send-grid">
-          <button className="vt-button" aria-label="Send image to Community Post" onClick={() => sendToWidget("community-post")} disabled={!generatedImage}>
-            <Send size={12} /> Community
-          </button>
-          <button className="vt-button" aria-label="Send image to Comment Responder" onClick={() => sendToWidget("comment-replier")} disabled={!generatedImage}>
-            <Send size={12} /> Comments
-          </button>
-          <button className="vt-button" aria-label="Send image to Thumbnail AI" onClick={() => sendToWidget("thumb-ai")} disabled={!generatedImage}>
-            <Send size={12} /> Thumb AI
-          </button>
-          <button className="vt-button" aria-label="Send image to Video Uploader" onClick={() => sendToWidget("video-uploader")} disabled={!generatedImage}>
-            <Send size={12} /> Uploader
-          </button>
+          <WidgetSizedButton height={24} tone="default" aria-label="Send image to Community Post" onClick={() => sendToWidget("community-post")} disabled={!generatedImage}>
+            <Send /> Community
+          </WidgetSizedButton>
+          <WidgetSizedButton height={24} tone="default" aria-label="Send image to Comment Responder" onClick={() => sendToWidget("comment-replier")} disabled={!generatedImage}>
+            <Send /> Comments
+          </WidgetSizedButton>
+          <WidgetSizedButton height={24} tone="default" aria-label="Send image to Thumbnail AI" onClick={() => sendToWidget("thumb-ai")} disabled={!generatedImage}>
+            <Send /> Thumb AI
+          </WidgetSizedButton>
+          <WidgetSizedButton height={24} tone="default" aria-label="Send image to Video Uploader" onClick={() => sendToWidget("video-uploader")} disabled={!generatedImage}>
+            <Send /> Uploader
+          </WidgetSizedButton>
         </div>
         {lastTarget ? <span className="widget-action-status">Sent to: {lastTarget}</span> : null}
         </WidgetFooter>
