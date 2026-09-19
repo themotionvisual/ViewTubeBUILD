@@ -57,6 +57,7 @@ export const VtSyncControllerPanel: React.FC<{
  isAuthenticated: boolean
  isSyncing: boolean
  videos: VtSyncRetentionVideoOption[]
+ activeRunId?: string
  activeCategoryIds?: string[]
  queuedCategoryIds?: string[]
  datasetFreshness?: VtSyncDatasetFreshness
@@ -65,7 +66,7 @@ export const VtSyncControllerPanel: React.FC<{
  onSelectContentOwner?: (ownerId: string) => Promise<void>
  onLogin: () => Promise<void>
  onStartSync: (categoryIds: string[], retentionVideoIds?: string[], forceFullVideoMetadata?: boolean, windows?: VtSyncAnalyticsWindow[]) => Promise<void>
-}> = ({ isAuthenticated, isSyncing, videos, activeCategoryIds = [], queuedCategoryIds = [], datasetFreshness, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
+}> = ({ isAuthenticated, isSyncing, videos, activeRunId, activeCategoryIds = [], queuedCategoryIds = [], datasetFreshness, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
  const [selected, setSelected] = useState<string[]>(() => getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))
  const [retentionVideoIds, setRetentionVideoIds] = useState<string[]>([])
  // Lifetime only by default: every extra window costs one request per aggregate
@@ -178,67 +179,52 @@ export const VtSyncControllerPanel: React.FC<{
   await onStartSync(expanded, includeRetentionVideoIds ? retentionVideoIds : undefined, forceFullVideoMetadata, selectedWindows)
  }
 
- // Track category-specific completion
- const previousActiveCategoryIdsRef = useRef<string[]>([])
- const [categoryCompleted, setCategoryCompleted] = useState<Record<string, boolean>>({})
+ const resolveExecutionStatus = (categoryIds: string[]): "idle" | "queued" | "running" | "complete" | "partial" | "failed" => {
+  if (categoryIds.some((id) => activeCategorySet.has(id))) return "running"
+  if (categoryIds.some((id) => queuedCategorySet.has(id))) return "queued"
+  if (!activeRunId) return "idle"
 
- React.useEffect(() => {
-  const activeSet = new Set(activeCategoryIds)
-  const justCompleted: string[] = []
-  previousActiveCategoryIdsRef.current.forEach((id) => {
-   if (!activeSet.has(id)) {
-    justCompleted.push(id)
-   }
-  })
-  previousActiveCategoryIdsRef.current = activeCategoryIds
+  const currentRunEntries = categoryIds
+   .map((id) => categoryFreshness(datasetFreshness, id))
+   .filter((entry) => entry?.runId === activeRunId)
 
-  if (justCompleted.length > 0) {
-   setCategoryCompleted((current) => {
-    const next = { ...current }
-    justCompleted.forEach((id) => {
-     next[id] = true
-    })
-    return next
-   })
-
-   const timer = setTimeout(() => {
-    setCategoryCompleted((current) => {
-     const next = { ...current }
-     justCompleted.forEach((id) => {
-      delete next[id]
-     })
-     return next
-    })
-   }, 5000)
-   return () => clearTimeout(timer)
-  }
-
- }, [activeCategoryIds])
+  if (currentRunEntries.some((entry) => entry?.status === "failed")) return "failed"
+  if (currentRunEntries.some((entry) => entry?.status === "partial")) return "partial"
+  if (currentRunEntries.length === categoryIds.length && currentRunEntries.every((entry) => entry?.status === "synced")) return "complete"
+  return "idle"
+ }
 
  const renderCategorySlideSwitch = ({
   label,
-  active,
-  queued,
-  completed,
+  status,
   onClick,
   disabled,
  }: {
   label: string
-  active: boolean
-  queued?: boolean
-  completed: boolean
+  status: "idle" | "queued" | "running" | "complete" | "partial" | "failed"
   onClick: () => void
   disabled?: boolean
  }) => {
   const statusClass =
-   active ? "is-syncing"
-   : queued ? "is-waiting"
-   : completed ? "is-completed"
+   status === "running" ? "is-syncing"
+   : status === "queued" ? "is-waiting"
+   : status === "complete" ? "is-completed"
+   : status === "partial" ? "is-partial"
+   : status === "failed" ? "is-failed"
    : ""
+  const statusLabel =
+   status === "running" ? "RUNNING"
+   : status === "queued" ? "QUEUED"
+   : status === "complete" ? "DONE"
+   : status === "partial" ? "PARTIAL"
+   : status === "failed" ? "FAILED"
+   : label
+  const isBusyState = status === "running" || status === "queued"
 
   return (
    <div
-    className={`vt-retro-pcb-group is-category-action ${active || completed || queued ? "is-active" : ""} ${statusClass}`}
+    className={`vt-retro-pcb-group is-category-action ${status !== "idle" ? "is-active" : ""} ${statusClass}`}
+    data-sync-status={status}
     style={
      {
       "--active-col": "var(--led-green)",
@@ -249,12 +235,12 @@ export const VtSyncControllerPanel: React.FC<{
     <div className="vt-retro-pcb-controls">
      <button
       type="button"
-      disabled={disabled}
+      disabled={disabled || isBusyState}
       onClick={onClick}
       className="switch-hitbox"
-      aria-pressed={active}
-      title={`${active ? "Running" : queued ? "Queued" : "Start"} Sync`}
-      aria-label={`${active ? "Running" : queued ? "Queued" : "Start"} Sync`}
+      aria-pressed={status === "running"}
+      title={`${statusLabel} Sync`}
+      aria-label={`${statusLabel} Sync`}
      >
       <div className="sw-slide-housing">
        <div className="sw-slide-track">
@@ -266,7 +252,7 @@ export const VtSyncControllerPanel: React.FC<{
       </div>
      </button>
     </div>
-    <div className="comp-label">{active ? "RUNNING" : queued ? "QUEUED" : completed ? "DONE" : label}</div>
+    <div className="comp-label">{statusLabel}</div>
    </div>
   )
  }
@@ -336,10 +322,10 @@ export const VtSyncControllerPanel: React.FC<{
     </div>
     <p className="m-0 text-[11px] font-semibold leading-snug text-[#9ca3af]">
      {windowCost.extraWindows === 0
-      ? `Lifetime only — ${selected.length} dataset${selected.length === 1 ? "" : "s"} selected.`
-      : `${windowCost.perWindowCategories} dataset${windowCost.perWindowCategories === 1 ? "" : "s"} x ${windowCost.extraWindows} extra window${windowCost.extraWindows === 1 ? "" : "s"} = ~${windowCost.extraRequests} additional request${windowCost.extraRequests === 1 ? "" : "s"}.`}
+      ? `Lifetime only — ${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selected.length} underlying quer${selected.length === 1 ? "y" : "ies"}.`
+      : `${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selected.length} underlying quer${selected.length === 1 ? "y" : "ies"}. ${windowCost.perWindowCategories} windowed quer${windowCost.perWindowCategories === 1 ? "y" : "ies"} × ${windowCost.extraWindows} extra window${windowCost.extraWindows === 1 ? "" : "s"} = ~${windowCost.extraRequests} additional request${windowCost.extraRequests === 1 ? "" : "s"}.`}
      {windowCost.derivedCount > 0
-      ? ` ${windowCost.derivedCount} day-grained dataset${windowCost.derivedCount === 1 ? "" : "s"} derive their windows for free.`
+      ? ` ${windowCost.derivedCount} day-grained quer${windowCost.derivedCount === 1 ? "y" : "ies"} derive their windows without extra window requests.`
       : ""}
     </p>
    </div>
@@ -349,9 +335,7 @@ export const VtSyncControllerPanel: React.FC<{
      const expanded = openGroups.has(group)
      const contentId = `vt-sync-controller-group-${group}`
      const groupCategoryIds = [...new Set(units.flatMap((unit) => unit.categoryIds))]
-     const groupActive = groupCategoryIds.some((id) => activeCategorySet.has(id))
-     const groupQueued = groupCategoryIds.some((id) => queuedCategorySet.has(id))
-     const groupCompleted = groupCategoryIds.some((id) => categoryCompleted[id])
+     const groupStatus = resolveExecutionStatus(groupCategoryIds)
      return (
       <section key={group} className="border-b-[3px] border-black bg-[#0d0d0d] last:border-b-0">
        <div className="flex items-stretch" style={{ backgroundColor: GROUP_COLORS[group] }}>
@@ -378,9 +362,7 @@ export const VtSyncControllerPanel: React.FC<{
         <div className={`grid shrink-0 place-items-center border-l-[3px] border-black px-2 py-1 ${expanded ? "border-b-[2px]" : ""}`}>
          {renderCategorySlideSwitch({
           label: "SYNC ALL",
-          active: groupActive,
-          queued: groupQueued,
-          completed: groupCompleted,
+          status: groupStatus,
           onClick: () => void startCategories(groupCategoryIds, units.some((unit) => unit.id === "retention")),
          })}
         </div>
@@ -389,7 +371,7 @@ export const VtSyncControllerPanel: React.FC<{
          <div className="divide-y-[2px] divide-black">
           {units.map((unit) => {
            const checked = unit.categoryIds.every((id) => selectedSet.has(id))
-           const active = unit.categoryIds.some((id) => activeCategorySet.has(id))
+           const unitStatus = resolveExecutionStatus(unit.categoryIds)
            const hasPriorData = unit.categoryIds.some((id) => {
             const entry = categoryFreshness(datasetFreshness, id)
             return Boolean(entry?.status && entry.status !== "failed")
@@ -409,16 +391,16 @@ export const VtSyncControllerPanel: React.FC<{
                {unit.id === "video_catalog" ? <button type="button" onClick={() => void startCategories(unit.categoryIds, false, true)} className="ml-1.5 rounded border border-black bg-[#FFDA47] px-1 py-px text-[7px] font-black uppercase leading-none shadow-[1px_1px_0_0_#000]">Full refresh</button> : null}
               </span>
              </span>
-             <span className="min-w-0 truncate text-[9px] font-black uppercase leading-tight tracking-[0.02em] text-black/70 max-lg:col-span-2 max-lg:col-start-2" title={unit.description}>
+             <span className="min-w-0 truncate text-[9px] font-black uppercase leading-tight tracking-[0.02em] text-black/70 max-lg:col-start-2 max-lg:col-span-1 max-lg:row-start-2" title={unit.description}>
               {unit.description}
              </span>
-             {renderCategorySlideSwitch({
-              label: hasPriorData ? "UPDATE" : "FULL SYNC",
-              active,
-              queued: unit.categoryIds.some((id) => queuedCategorySet.has(id)),
-              completed: unit.categoryIds.some((id) => categoryCompleted[id]),
-              onClick: () => void startCategories(unit.categoryIds),
-             })}
+             <div className="col-start-4 self-center justify-self-end max-lg:col-start-3 max-lg:row-span-2 max-lg:row-start-1">
+              {renderCategorySlideSwitch({
+               label: hasPriorData ? "UPDATE" : "FULL SYNC",
+               status: unitStatus,
+               onClick: () => void startCategories(unit.categoryIds),
+              })}
+             </div>
             </div>
            )
           })}
