@@ -901,7 +901,7 @@ const refreshManualImports = useCallback(async (payload?: {
     snapshotId: next.snapshotId,
     categories: requestedCategoryIds,
     manifest: next.syncManifest,
-    note: "Local Annalytics page sync only. No canonical sink or Performance Hub writes.",
+    note: "Local Analytics page sync only. No canonical sink or Performance Hub writes.",
    })
   } catch (error) {
    if (isGoogleReconnectRequiredError(error)) {
