@@ -1,5 +1,5 @@
 import React from "react"
-import { Check, ChevronDown, ChevronRight, Lightbulb, Menu, Minus, MoreHorizontal, Plus, Search, Settings2, SlidersHorizontal, X } from "lucide-react"
+import { Check, ChevronDown, ChevronRight, FileText, Image, Lightbulb, Menu, Minus, MoreHorizontal, Music, Plus, Search, Settings2, SlidersHorizontal, Upload, X } from "lucide-react"
 import { type StudioHubComponentLevel } from "./StudioHubCompletePrimitiveCatalog"
 import {
   SubToolboxAlert,
@@ -13,12 +13,14 @@ import {
   SubToolboxButtonGroup,
   SubToolboxCheckControl,
   SubToolboxColorPicker,
+  SubToolboxDataStats,
   SubToolboxDataTable,
   SubToolboxDialog,
   SubToolboxDisclosure,
   SubToolboxDivider,
   SubToolboxDrawer,
   SubToolboxFieldLabel,
+  SubToolboxFileTarget,
   SubToolboxIconButton,
   SubToolboxInput,
   SubToolboxKnob,
@@ -28,6 +30,7 @@ import {
   SubToolboxMenu,
   SubToolboxMeter,
   SubToolboxMetric,
+  SubToolboxMetricStrip,
   SubToolboxCalendar,
   SubToolboxHoverCard,
   SubToolboxOutputCard,
@@ -40,6 +43,7 @@ import {
   SubToolboxRemovableTag,
   SubToolboxReorderRow,
   SubToolboxSegmentedToggle,
+  SubToolboxScrollbar,
   SubToolboxSelectableListRow,
   SubToolboxSelectableTag,
   SubToolboxSkeleton,
@@ -63,6 +67,8 @@ import {
   SubToolboxToast,
   SubToolboxToggleSwitch,
   SubToolboxTooltip,
+  SubToolboxTree,
+  SubToolboxVaultAsset,
 } from "../subtoolbox/SubToolboxPrimitives"
 import { SubToolboxKpiCard, SubToolboxSplitButton, SubToolboxSplitDropdown } from "../subtoolbox/SubToolboxSplitPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
@@ -143,6 +149,16 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Breadcrumb",
   "Carousel",
   "Command Palette",
+  "Metric Strip",
+  "Horizontal Scrollbar",
+  "Vertical Scrollbar",
+  "Data Stats Module",
+  "Upload Frame",
+  "Vault Landscape Asset",
+  "Vault Portrait Asset",
+  "Vault Audio Asset",
+  "Vault Document Asset",
+  "Tree View",
 ] as const
 
 const pair = (index: number) => ({
@@ -188,6 +204,8 @@ const PrimitiveMigrationControl: React.FC<{
   const [page, setPage] = React.useState(2)
   const [controllerOn, setControllerOn] = React.useState(true)
   const [carouselIndex, setCarouselIndex] = React.useState(0)
+  const [scrollPos, setScrollPos] = React.useState(30)
+  const [vaultSelected, setVaultSelected] = React.useState(true)
 
   // Primitive track rule: only production primitives + shared CSS render here.
   // Unmigrated hardcoded families remain exclusively in the frozen baseline.
@@ -392,6 +410,29 @@ const PrimitiveMigrationControl: React.FC<{
   }
   if (name === "Command Palette") {
     return <SubToolboxCommandPalette level={level} style={style} items={[{ id: "script", label: "SCRIPT ARCHITECT", keywords: "write outline" }, { id: "thumb", label: "THUMBNAIL STUDIO", keywords: "image packaging" }, { id: "publish", label: "VIDEO PUBLISHER", keywords: "upload metadata" }]} />
+  }
+  if (name === "Metric Strip") {
+    return <SubToolboxMetricStrip level={level} style={style} items={[{ label: "VIEWS", value: "12K" }, { label: "CTR", value: "5.8%" }, { label: "AVP", value: "72%" }]} />
+  }
+  if (name === "Horizontal Scrollbar") {
+    return <SubToolboxScrollbar level={level} style={style} orientation="horizontal" value={scrollPos} onValueChange={setScrollPos} />
+  }
+  if (name === "Vertical Scrollbar") {
+    return <SubToolboxScrollbar level={level} style={style} orientation="vertical" value={scrollPos} onValueChange={setScrollPos} decrementIcon="↑" incrementIcon="↓" />
+  }
+  if (name === "Data Stats Module") {
+    return <SubToolboxDataStats level={level} style={style} label="TOTAL VIEWS" value="128,442" delta="+12.4%" variant="standard" />
+  }
+  if (name === "Upload Frame") {
+    return <SubToolboxFileTarget level={level} style={style} label="DROP OR CHOOSE FILE" icon={<Upload />} minHeight={level === "l0" ? 176 : level === "l1" ? 144 : 112} />
+  }
+  if (name.startsWith("Vault ")) {
+    const kind = name.includes("Landscape") ? "landscape" : name.includes("Portrait") ? "portrait" : name.includes("Audio") ? "audio" : "document"
+    const Icon = kind === "audio" ? Music : kind === "document" ? FileText : Image
+    return <SubToolboxVaultAsset level={level} style={style} kind={kind} title={name.replace("Vault ","")} icon={<Icon />} tags="ASSET" notes="NOTES" selected={vaultSelected} onSelectedChange={setVaultSelected} removeIcon={<X />} />
+  }
+  if (name === "Tree View") {
+    return <SubToolboxTree level={level} style={style} defaultOpenIds={["root"]} nodes={[{ id: "root", label: "PROJECT", children: [{ id: "script", label: "SCRIPT" }, { id: "assets", label: "ASSETS", children: [{ id: "thumb", label: "THUMBNAIL" }, { id: "audio", label: "AUDIO" }] }] }]} />
   }
 
   return null
