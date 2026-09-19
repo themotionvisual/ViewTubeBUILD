@@ -80,6 +80,7 @@ import {
   applyVideoDirectorConflicts,
   applyVideoDirectorRecipe,
   applyVideoDirectorSuggestion,
+  buildVideoDirectorStoryboard,
   cancelVideoDirectorJob,
   createDefaultVideoDirectorCategories,
   createEmptyVideoDirectorProject,
@@ -88,12 +89,22 @@ import {
   createVideoDirectorProjectRecipe,
   compileSemanticDirectorPacket,
   deriveVideoDirectorCategoryStatus,
+  duplicateVideoDirectorShot,
+  ensureVideoDirectorVariants,
   evaluateVideoDirectorSuggestions,
   listVideoDirectorJobs,
+  listVideoDirectorScopeOptions,
+  parseVideoDirectorScopeKey,
   readVideoDirectorRecipeLibrary,
   readVideoDirectorState,
+  removeVideoDirectorShot,
+  reorderVideoDirectorShot,
+  resetVideoDirectorScopedCategory,
+  resolveVideoDirectorScopedCategoryState,
   saveVideoDirectorDraft,
   saveVideoDirectorRecipe,
+  setVideoDirectorScopedCategoryField,
+  toggleVideoDirectorScopedCategoryLock,
   type VideoDirectorCategoryGroup,
   type VideoDirectorCategoryId,
   type VideoDirectorCategoryStatus,
@@ -101,6 +112,7 @@ import {
   type VideoDirectorProject,
   type VideoDirectorRecipe,
   type VideoDirectorRemoteJob,
+  type VideoDirectorScope,
 } from "../features/video-director"
 
 export interface VideoDirectorProps {
@@ -354,6 +366,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
   const [notice, setNotice] = useState("")
   const [recipeName, setRecipeName] = useState("")
   const [inspectorView, setInspectorView] = useState<"prompt" | "json">("prompt")
+  const [scopeKey, setScopeKey] = useState("project")
   const [recipes, setRecipes] = useState<VideoDirectorRecipe[]>(() => readVideoDirectorRecipeLibrary())
   const [jobs, setJobs] = useState<VideoDirectorRemoteJob[]>([])
   const [jobsLoading, setJobsLoading] = useState(false)
