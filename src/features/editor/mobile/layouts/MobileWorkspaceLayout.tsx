@@ -1,7 +1,7 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {
-  Activity,AudioLines,CircleHelp,Columns2,Combine,Copy,Focus,Group,LayoutTemplate,Map as MapIcon,
-  Maximize2,PanelRight,Palette,Pencil,Redo2,Rows3,ScanSearch,Scissors,Trash2,Type,Undo2,Ungroup,Zap,
+  Activity,AudioLines,CircleHelp,Command,Columns2,Combine,Copy,EyeOff,Focus,Group,LayoutTemplate,LockKeyhole,Map as MapIcon,
+  Maximize2,PanelRight,Palette,Pencil,Redo2,Rows3,ScanSearch,Scissors,Trash2,Type,Undo2,Ungroup,VolumeX,Zap,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {PREVIEW_TRANSPORT_HEIGHT,PreviewPane} from '../components/PreviewPane';
@@ -13,6 +13,8 @@ import {pageForSelection} from '../components/EditorQuickActions';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
 import type {MobileWorkspaceMode} from '../MobileEditor';
 import {TouchEditorGuide} from '../components/TouchEditorGuide';
+import {MobileCommandPalette,type MobileEditorCommand} from '../components/MobileCommandPalette';
+import {EditorCoachOverlay,type EditorCoachStep} from '../components/EditorCoachOverlay';
 import {WorkspaceDivider} from './WorkspaceDivider';
 import {WORKSPACE_PRESETS,presetPatch,useMobileWorkspacePreferences,type WorkspaceFocus} from './mobileWorkspacePreferences';
 
@@ -88,11 +90,14 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   workspaceMode,onWorkspaceModeChange,
 })=>{
   const rootRef=useRef<HTMLDivElement>(null);
-  const[menu,setMenu]=useState<{items:ContextMenuItem[];at:{x:number;y:number};title?:string}|null>(null);
+  const[menu,setMenu]=useState<{items:ContextMenuItem[];at:{x:number;y:number};title?:string;layout?:'list'|'tray'}|null>(null);
   const[page,setPage]=useState<EditorNavPage>('media');
   const[timelineViewport,setTimelineViewport]=useState<TimelineViewport>({startSec:0,endSec:0});
   const[scrollToSec,setScrollToSec]=useState(0);
   const[showGuide,setShowGuide]=useState(false);
+  const[showCoach,setShowCoach]=useState(false);
+  const[showCommands,setShowCommands]=useState(false);
+  const previewPress=useRef<{pointerId:number;x:number;y:number;timer:number|null}|null>(null);
 
   const containerHeight=height??(typeof window!=='undefined'?window.innerHeight:(orientation==='portrait'?800:480));
   const isPortraitVideo=compositionAspect<1;
@@ -203,7 +208,39 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     {label:'Open templates',icon:<LayoutTemplate size={14}/>,onSelect:()=>{setPage('templates');onWorkspaceModeChange('edit')}},
   ],[onWorkspaceModeChange]);
 
-  const navigationRow=<section style={{
+  const trackMenuFor=(track:EditorStore['state']['project']['tracks'][number]):ContextMenuItem[]=>[
+    {label:track.muted?'Unmute':'Mute',icon:<VolumeX size={14}/>,onSelect:()=>store.dispatch({type:'muteTrack',id:track.id})},
+    {label:track.locked?'Unlock':'Lock',icon:<LockKeyhole size={14}/>,onSelect:()=>store.dispatch({type:'lockTrack',id:track.id})},
+    {label:'Hide',icon:<EyeOff size={14}/>,onSelect:()=>store.dispatch({type:'hideTrack',id:track.id})},
+    {label:'Inspect',icon:<ScanSearch size={14}/>,onSelect:()=>{store.dispatch({type:'selectTrack',id:track.id});openPage('select')}},
+    {label:'Delete empty',icon:<Trash2 size={14}/>,destructive:true,disabled:store.clipsOnTrack(track.id).length>0||store.state.project.tracks.length<=1,onSelect:()=>store.dispatch({type:'removeTrack',id:track.id})},
+  ];
+
+  const keyframeMenuFor=(clip:VtE1Clip,keyframeId:string):ContextMenuItem[]=>{
+    const frame=(clip.keyframes??[]).find(keyframe=>String(keyframe.id??'')===keyframeId);
+    const modes=['linear','easeIn','easeOut','easeInOut','springy','bell'];
+    const current=String((frame as {interp?:unknown}|undefined)?.interp??'linear');
+    const next=modes[(modes.indexOf(current)+1)%modes.length];
+    return[
+      {label:'Go to keyframe',icon:<Focus size={14}/>,onSelect:()=>{
+        store.dispatch({type:'setPlaying',playing:false});
+        store.dispatch({type:'setPlayhead',sec:clip.start+Number(frame?.offsetSec??0)});
+      }},
+      {label:'Duplicate',icon:<Copy size={14}/>,onSelect:()=>store.dispatch({type:'duplicateClipKeyframes',clipId:clip.id,keyframeIds:[keyframeId]})},
+      {label:`Ease: ${next}`,icon:<Activity size={14}/>,onSelect:()=>store.dispatch({type:'setClipKeyframeInterpolation',clipId:clip.id,keyframeIds:[keyframeId],interp:next})},
+      {label:'Delete',icon:<Trash2 size={14}/>,destructive:true,onSelect:()=>store.dispatch({type:'deleteClipKeyframes',clipId:clip.id,keyframeIds:[keyframeId]})},
+    ];
+  };
+
+  const previewMenu=():ContextMenuItem[]=>[
+    {label:'Focus preview',icon:<Maximize2 size={14}/>,onSelect:()=>patchPrefs({focus:'preview'})},
+    {label:'Inspect clip',icon:<ScanSearch size={14}/>,disabled:!selected,onSelect:()=>openPage('select')},
+    {label:'Clip settings',icon:<Rows3 size={14}/>,disabled:!selected,onSelect:()=>openPage('media')},
+    {label:'Effects',icon:<Activity size={14}/>,disabled:!selected,onSelect:()=>openPage('effects')},
+    {label:'Reset transform',icon:<Focus size={14}/>,disabled:!selected,onSelect:()=>selected&&store.dispatch({type:'resetClipTransform',id:selected.id})},
+  ];
+
+  const navigationRow=<section data-guide-id="navigation" style={{
     width:'100%',height:'100%',minWidth:0,minHeight:0,padding:3,
     background:'#fff',border:`3px solid ${INK}`,borderRadius:7,
     boxSizing:'border-box',overflow:'hidden',
@@ -228,10 +265,11 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     {key:'edit-ui',label:'Edit UI',icon:<PanelRight size={13}/>,enabled:true,active:workspaceMode==='edit',onClick:()=>onWorkspaceModeChange('edit')},
     {key:'timeline',label:'Timeline',icon:<Rows3 size={13}/>,enabled:true,active:showTimeline,onClick:()=>patchPrefs({showTimeline:!showTimeline})},
     {key:'map',label:'Map',icon:<MapIcon size={13}/>,enabled:true,active:showMap,onClick:()=>patchPrefs({showMap:!showMap})},
-    {key:'guide',label:'Guide',icon:<CircleHelp size={13}/>,enabled:true,onClick:()=>setShowGuide(true)},
+    {key:'command',label:'Commands',icon:<Command size={13}/>,enabled:true,onClick:()=>setShowCommands(true)},
+    {key:'guide',label:'Guide',icon:<CircleHelp size={13}/>,enabled:true,onClick:()=>setShowCoach(true)},
   ];
 
-  const actionRow=<section style={{
+  const actionRow=<section data-guide-id="actions" style={{
     width:'100%',height:'100%',minWidth:0,minHeight:0,padding:3,
     background:'#fff',border:`3px solid ${INK}`,borderRadius:7,
     boxSizing:'border-box',overflow:'hidden',
@@ -269,6 +307,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   ><Maximize2 size={12}/></button>:null;
 
   const pageSurface=<section
+    data-guide-id="inspector"
     onDoubleClick={()=>setFocus('inspector')}
     style={{
       position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,display:'flex',flexDirection:'column',
@@ -286,6 +325,32 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   </section>;
 
   const previewSurface=<section
+    data-guide-id="preview"
+    onContextMenu={event=>{
+      event.preventDefault();
+      setMenu({items:previewMenu(),at:{x:event.clientX,y:event.clientY},title:'Preview',layout:'tray'});
+    }}
+    onPointerDownCapture={event=>{
+      if(event.pointerType!=='touch')return;
+      const current={pointerId:event.pointerId,x:event.clientX,y:event.clientY,timer:null as number|null};
+      current.timer=window.setTimeout(()=>{
+        setMenu({items:previewMenu(),at:{x:current.x,y:current.y},title:'Preview',layout:'tray'});
+        if(typeof navigator!=='undefined'&&'vibrate' in navigator)(navigator as Navigator&{vibrate:(value:number)=>boolean}).vibrate(12);
+      },520);
+      previewPress.current=current;
+    }}
+    onPointerMoveCapture={event=>{
+      const current=previewPress.current;if(!current||current.pointerId!==event.pointerId)return;
+      if(Math.hypot(event.clientX-current.x,event.clientY-current.y)>9){
+        if(current.timer!=null)window.clearTimeout(current.timer);previewPress.current=null;
+      }
+    }}
+    onPointerUpCapture={()=>{
+      const current=previewPress.current;if(current?.timer!=null)window.clearTimeout(current.timer);previewPress.current=null;
+    }}
+    onPointerCancelCapture={()=>{
+      const current=previewPress.current;if(current?.timer!=null)window.clearTimeout(current.timer);previewPress.current=null;
+    }}
     onDoubleClick={()=>setFocus('preview')}
     style={{
       position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden',
@@ -329,6 +394,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
       :normalMainSurface;
 
   const timeline=(showTimeline||focus==='timeline')?<div
+    data-guide-id="timeline"
     onDoubleClick={()=>setFocus('timeline')}
     style={{position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}
   >
@@ -358,14 +424,16 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
       height="100%"
       scrollToSec={scrollToSec}
       onViewportChange={setTimelineViewport}
-      onClipContextMenu={(clip,at)=>setMenu({items:clipMenuFor(clip),at,title:String(clip.id)})}
-      onEmptyContextMenu={at=>setMenu({items:emptyMenu,at,title:'Timeline'})}
+      onClipContextMenu={(clip,at)=>setMenu({items:clipMenuFor(clip),at,title:String(clip.id),layout:'tray'})}
+      onTrackContextMenu={(track,at)=>setMenu({items:trackMenuFor(track),at,title:track.name,layout:'tray'})}
+      onKeyframeContextMenu={(clip,keyframeId,at)=>setMenu({items:keyframeMenuFor(clip,keyframeId),at,title:'Keyframe',layout:'tray'})}
+      onEmptyContextMenu={at=>setMenu({items:emptyMenu,at,title:'Timeline',layout:'tray'})}
       actionLabelsVisible={showActionLabels}
       onToggleActionLabels={()=>patchPrefs({showActionLabels:!showActionLabels})}
     />
   </div>:null;
 
-  const map=showMap?<div style={{width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}>
+  const map=showMap?<div data-guide-id="map" style={{width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}>
     <MiniTimelineMap store={store} height="100%" viewport={timelineViewport} onViewportNavigate={setScrollToSec}/>
   </div>:null;
 
@@ -379,7 +447,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
       ...(showMap?[`${MAP_HEIGHT}px`]:[]),
     ].join(' ');
 
-  const presetBar=focus?null:<div style={{
+  const presetBar=focus?null:<div data-guide-id="presets" style={{
     position:'absolute',top:7,left:7,zIndex:60,display:'grid',
     gridTemplateColumns:'repeat(6,24px)',gap:2,padding:2,
     border:`2px solid ${INK}`,borderRadius:6,background:'rgba(255,255,255,.92)',
@@ -396,6 +464,25 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     >{presetIcons[item.id]}</button>)}
   </div>;
 
+  const commands:MobileEditorCommand[]=[
+    {id:'undo',label:'Undo',group:'Edit',icon:<Undo2 size={12}/>,disabled:!store.canUndo,run:()=>store.dispatch({type:'undo'})},
+    {id:'redo',label:'Redo',group:'Edit',icon:<Redo2 size={12}/>,disabled:!store.canRedo,run:()=>store.dispatch({type:'redo'})},
+    {id:'split',label:'Split at playhead',group:'Edit',icon:<Scissors size={12}/>,disabled:!selected||selectedCompound,run:()=>selected&&store.dispatch({type:'splitClipAtPlayhead',id:selected.id})},
+    {id:'duplicate',label:'Duplicate clip',group:'Edit',icon:<Copy size={12}/>,disabled:!selected,run:()=>selected&&store.dispatch({type:'duplicateClip',id:selected.id})},
+    {id:'delete',label:'Delete selection',group:'Edit',icon:<Trash2 size={12}/>,disabled:!selectedIds.length,run:()=>store.dispatch({type:'deleteClips',ids:selectedIds})},
+    {id:'group',label:selectedGroupId?'Ungroup clips':'Group clips',group:'Edit',icon:selectedGroupId?<Ungroup size={12}/>:<Group size={12}/>,disabled:selectedGroupId?!selectedIds.length:selectedIds.length<2,run:()=>selectedGroupId?store.dispatch({type:'ungroupClips',ids:selectedIds}):store.dispatch({type:'groupClips',ids:selectedIds})},
+    {id:'combine',label:selectedCompound?'Uncombine clip':'Combine clips',group:'Edit',icon:<Combine size={12}/>,disabled:!selectedCompound&&!canCombine,run:()=>selectedCompound&&selected?store.dispatch({type:'uncombineClip',id:selected.id}):store.dispatch({type:'combineClips',ids:selectedIds})},
+    ...EDITOR_NAV_ITEMS.map(item=>({id:'page-'+item.id,label:'Open '+item.label,group:'Pages',icon:item.icon,active:page===item.id,keywords:['page','panel'],run:()=>openPage(item.id)})),
+    {id:'timeline',label:showTimeline?'Hide Timeline':'Show Timeline',group:'Workspace',icon:<Rows3 size={12}/>,active:showTimeline,run:()=>patchPrefs({showTimeline:!showTimeline})},
+    {id:'map',label:showMap?'Hide Map':'Show Map',group:'Workspace',icon:<MapIcon size={12}/>,active:showMap,run:()=>patchPrefs({showMap:!showMap})},
+    {id:'focus-preview',label:'Focus Preview',group:'Workspace',icon:<Maximize2 size={12}/>,active:focus==='preview',run:()=>patchPrefs({focus:'preview'})},
+    {id:'focus-inspector',label:'Focus Inspector',group:'Workspace',icon:<PanelRight size={12}/>,active:focus==='inspector',run:()=>patchPrefs({focus:'inspector'})},
+    {id:'focus-timeline',label:'Focus Timeline',group:'Workspace',icon:<Rows3 size={12}/>,active:focus==='timeline',run:()=>patchPrefs({focus:'timeline',showTimeline:true})},
+    {id:'restore',label:'Restore Full Workspace',group:'Workspace',icon:<Focus size={12}/>,disabled:!focus,run:()=>patchPrefs({focus:null})},
+    {id:'coach',label:'Start Interactive Guide',group:'Help',icon:<CircleHelp size={12}/>,run:()=>setShowCoach(true)},
+    {id:'full-guide',label:'Open Full Touch Guide',group:'Help',icon:<CircleHelp size={12}/>,run:()=>setShowGuide(true)},
+  ];
+
   const occupancyStrip=<div style={{
     position:'absolute',right:7,bottom:7,zIndex:70,display:'flex',gap:3,
   }}>
@@ -404,8 +491,16 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     {focus?<button title="Restore workspace" aria-label="Restore workspace" onClick={()=>patchPrefs({focus:null})} style={{...toolbarButton(true,false),width:26,height:26}}><Focus size={12}/></button>:null}
   </div>;
 
+  const prepareCoachStep=(step:EditorCoachStep)=>{
+    if(step.target==='timeline')patchPrefs({showTimeline:true,focus:null});
+    if(step.target==='map')patchPrefs({showMap:true,focus:null});
+    if(step.target==='inspector')patchPrefs({focus:null});
+    if(step.target==='preview')patchPrefs({focus:null});
+  };
+
   return <div
     ref={rootRef}
+    data-guide-id="workspace"
     onPointerDownCapture={rootPointerDown}
     onPointerMoveCapture={rootPointerMove}
     onPointerUpCapture={rootPointerEnd}
@@ -429,6 +524,12 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     {presetBar}
     {occupancyStrip}
     {menu?<ContextMenu {...menu} onDismiss={()=>setMenu(null)}/>:null}
-    {showGuide?<TouchEditorGuide onClose={()=>setShowGuide(false)}/>:null}
+    {showCommands?<MobileCommandPalette commands={commands} onClose={()=>setShowCommands(false)}/>:null}
+    {showCoach?<EditorCoachOverlay
+      onClose={()=>setShowCoach(false)}
+      onStepChange={prepareCoachStep}
+      onOpenFullGuide={()=>{setShowCoach(false);setShowGuide(true)}}
+    />:null}
+    {showGuide?<TouchEditorGuide onClose={()=>setShowGuide(false)} onStartCoach={()=>{setShowGuide(false);setShowCoach(true)}}/>:null}
   </div>;
 };
