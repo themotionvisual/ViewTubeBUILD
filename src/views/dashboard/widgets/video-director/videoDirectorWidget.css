@@ -43,7 +43,9 @@
 .vtdw-mode-row,.vtdw-page-row,.vtdw-category-strip{overflow-x:auto;scrollbar-width:none}.vtdw-mode-row::-webkit-scrollbar,.vtdw-page-row::-webkit-scrollbar,.vtdw-category-strip::-webkit-scrollbar{display:none}
 .vtdw-page-row{padding:0 0 2px}.vtdw-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
 .vtdw-field{display:flex;flex-direction:column;gap:4px;min-width:0}.vtdw-field>span{font-size:8px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;opacity:.58}
-.vtdw-category-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}.vtdw-category-copy{min-width:0}.vtdw-category-copy strong,.vtdw-category-copy small{display:block}.vtdw-category-copy strong{font-size:13px;font-weight:1000;text-transform:uppercase}.vtdw-category-copy small{font-size:9px;line-height:1.25;opacity:.56}
+.vtdw-category-head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(118px,.75fr);gap:8px;align-items:center}.vtdw-category-copy{min-width:0}.vtdw-category-copy strong,.vtdw-category-copy small{display:block}.vtdw-category-copy strong{font-size:13px;font-weight:1000;text-transform:uppercase}.vtdw-category-copy small{font-size:9px;line-height:1.25;opacity:.56}
+.vtdw-category-head .vtdw-category-select{width:100%;min-width:0}
+.vtdw-signature-stats{font-size:clamp(6px,1.8cqi,8px)!important}.vtdw-signature-stats strong{font-size:clamp(8px,2.2cqi,10px)!important}
 .vtdw-signature{position:relative;min-height:145px;border:3px solid currentColor;border-radius:12px;background:color-mix(in srgb,var(--widget-color,#fff) 9%,#fff);overflow:hidden}
 .vtdw-signature-stats{position:absolute;left:8px;right:8px;bottom:7px;display:grid;grid-template-columns:1fr auto auto;gap:8px;font-size:8px;font-weight:950;text-transform:uppercase}.vtdw-signature-stats strong{font-size:10px}
 .vtdw-lens{display:grid;place-items:center}.vtdw-lens-frame{position:absolute;top:14%;bottom:26%;left:50%;transform:translateX(-50%);border:3px solid currentColor;border-radius:10px}.vtdw-lens-frame.is-outer{width:88%;opacity:.22}.vtdw-lens-frame.is-fov{opacity:.72}.vtdw-crosshair{font-size:34px;font-weight:600}
