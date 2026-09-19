@@ -15,12 +15,13 @@ const btn=(active=false):React.CSSProperties=>({
 });
 const field:React.CSSProperties={width:'100%',height:30,border:`2px solid ${INK}`,borderRadius:5,boxSizing:'border-box',padding:'0 7px',fontSize:9,fontWeight:900,background:'#fff'};
 
+type TemplateStyleOverrides=Partial<Omit<TemplateStyleConfig,'colors'>>&{colors?:Partial<TemplateStyleConfig['colors']>};
 type TemplateClip=VtE1Clip&{
   clipType?:string;
   templateDefinition?:TemplateDefinition;
   templateOverrides?:{
     content?:Record<string,unknown>;
-    style?:Partial<TemplateStyleConfig>;
+    style?:TemplateStyleOverrides;
   };
 };
 
@@ -127,7 +128,7 @@ export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
         <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:5}}>
           {(['primary','accent','foreground','background'] as const).map(key=><label key={key} style={{fontSize:8,fontWeight:1000,textTransform:'uppercase'}}>
             {key}
-            <input type="color" value={String(colors[key]??(key==='background'?'#ffffff':'#171717'))} onChange={e=>patchOverrides({style:{colors:{[key]:e.target.value} as Partial<TemplateStyleConfig['colors']>}})} style={{...field,padding:3,height:34}}/>
+            <input type="color" value={String(colors[key]??(key==='background'?'#ffffff':'#171717'))} onChange={e=>patchOverrides({style:{colors:{[key]:e.target.value}}})} style={{...field,padding:3,height:34}}/>
           </label>)}
         </div>
         <button style={{...btn(true),width:'100%',marginTop:7}} onClick={()=>{
