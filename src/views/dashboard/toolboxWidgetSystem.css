@@ -327,27 +327,27 @@
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(140px, 1fr);
   gap: var(--widget-component-gap);
-  align-items: stretch;
-  height: var(--image-generator-copy-height);
+  align-items: start;
   min-height: var(--image-generator-copy-height);
-  max-height: var(--image-generator-copy-height);
 }
 
 :where(.dashboard-barrier) .image-generator-copy-grid > .vt-textarea {
   width: 100%;
-  height: 100% !important;
-  min-height: 0 !important;
-  max-height: 100%;
+  height: var(--image-generator-copy-height) !important;
+  min-height: var(--image-generator-copy-height) !important;
+  max-height: none;
   box-sizing: border-box;
-  resize: none;
+  resize: vertical;
+  align-self: start;
 }
 
 :where(.dashboard-barrier) .image-generator-text-fields {
   min-width: 0;
-  height: 100%;
+  height: var(--image-generator-copy-height);
   display: grid;
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--widget-component-gap);
+  align-self: start;
 }
 :where(.dashboard-barrier) .image-generator-text-fields .vt-input {
   width: 100%;
