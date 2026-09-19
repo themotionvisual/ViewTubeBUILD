@@ -84,9 +84,11 @@ export type VtSyncUnifiedProgressRow = ReturnType<typeof summarizeDatasetFreshne
 export const buildVtSyncUnifiedProgressRows = (
  progress: VtSyncLocalSyncProgress | null,
  datasetFreshness?: VtSyncDatasetFreshness,
+ queuedCategoryIds: string[] = [],
 ): VtSyncUnifiedProgressRow[] => {
  const liveByPhase = new Map((progress?.phases || []).map((phase) => [phase.id, phase]))
  const requested = new Set(progress?.requestedCategoryIds || [])
+ const externallyQueued = new Set(queuedCategoryIds)
  const requestedPhaseCounts = new Map<string, number>()
  VT_SYNC_CATEGORY_OPTIONS.forEach((category) => {
   if (!requested.has(category.id)) return
@@ -113,6 +115,8 @@ export const buildVtSyncUnifiedProgressRows = (
    if (sameRunStored) displayStatus = stored.status
    else if (live.status === "pending" || live.status === "running") displayStatus = "pending"
    else displayStatus = live.status
+  } else if (externallyQueued.has(category.id)) {
+   displayStatus = "pending"
   }
 
   return {
@@ -126,7 +130,9 @@ export const buildVtSyncUnifiedProgressRows = (
     ? live!.error || live!.message || (terminalFailedPhase ? "Sync ended before this query completed." : live!.status === "pending" ? "Waiting for prerequisite phases." : "Sync is active.")
     : requestedInRun && live && !sameRunStored && (live.status === "pending" || live.status === "running")
      ? "Queued behind the currently executing query."
-     : stored.missingMetrics.length
+     : externallyQueued.has(category.id)
+      ? "Queued behind the current sync request."
+      : stored.missingMetrics.length
       ? `Missing: ${stored.missingMetrics.join(", ")}`
       : stored.updatedAt ? "Stored dataset is available." : "This dataset has not been synced yet.",
   }
