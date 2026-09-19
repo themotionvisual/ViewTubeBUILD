@@ -29,6 +29,7 @@ type DatasetStatusRow = {
  status: string
  rows: number
  updatedAt?: string
+ runId?: string
  missingMetrics: string[]
  source: string
 }
@@ -44,6 +45,7 @@ const summarizeDatasetFreshness = (
    status: "never",
    rows: 0,
    updatedAt: undefined,
+   runId: undefined,
    missingMetrics: [],
    source: sourceApiLabel(category.sourceApi),
   }
@@ -56,11 +58,15 @@ const summarizeDatasetFreshness = (
   (latest, entry) => (entry.updatedAt && (!latest || entry.updatedAt > latest) ? entry.updatedAt : latest),
   undefined,
  )
+ const latestEntry = [...entries]
+  .filter((entry) => entry.updatedAt)
+  .sort((left, right) => String(right.updatedAt).localeCompare(String(left.updatedAt)))[0] || entries[0]
  return {
   category,
   status,
   rows: Math.max(...entries.map((entry) => entry.rows || 0)),
   updatedAt,
+  runId: latestEntry?.runId,
   missingMetrics: entries.flatMap((entry) => entry.missingMetrics || []),
   source: sourceApiLabel(category.sourceApi),
  }
@@ -90,22 +96,39 @@ export const buildVtSyncUnifiedProgressRows = (
   const syncUnit = VT_SYNC_SYNC_UNITS.find((unit) => unit.categoryIds.includes(category.id))
   const stored = summarizeDatasetFreshness(datasetFreshness, category)
   const live = liveByPhase.get(category.runtimePhaseId)
-  const isRunPhase = Boolean(progress && requested.has(category.id) && live)
-  const hasDedicatedLiveRowCount = requestedPhaseCounts.get(category.runtimePhaseId) === 1
-  const terminalFailedPhase = Boolean(progress?.status === "failed" && live?.status === "running")
-  const displayStatus = isRunPhase ? (terminalFailedPhase ? "failed" : live!.status) : stored.status
+  const requestedInRun = Boolean(progress && requested.has(category.id))
+  const hasDedicatedLivePhase = requestedPhaseCounts.get(category.runtimePhaseId) === 1
+  const isExactLiveCategory = Boolean(
+   requestedInRun
+   && live
+   && (live.currentCategoryId ? live.currentCategoryId === category.id : hasDedicatedLivePhase),
+  )
+  const sameRunStored = Boolean(progress && stored.runId === progress.runId)
+  const terminalFailedPhase = Boolean(progress?.status === "failed" && isExactLiveCategory && live?.status === "running")
+  let displayStatus = stored.status
+
+  if (isExactLiveCategory) {
+   displayStatus = terminalFailedPhase ? "failed" : live!.status
+  } else if (requestedInRun && live) {
+   if (sameRunStored) displayStatus = stored.status
+   else if (live.status === "pending" || live.status === "running") displayStatus = "pending"
+   else displayStatus = live.status
+  }
+
   return {
    ...stored,
    syncUnitId: syncUnit?.id || category.id,
    syncUnitLabel: syncUnit?.label || category.label,
    phaseLabel: live?.label || category.phase.replace(/_/g, " "),
    displayStatus,
-   displayRows: isRunPhase && hasDedicatedLiveRowCount ? live!.rows : stored.rows,
-   message: isRunPhase
+   displayRows: isExactLiveCategory && hasDedicatedLivePhase ? live!.rows : stored.rows,
+   message: isExactLiveCategory
     ? live!.error || live!.message || (terminalFailedPhase ? "Sync ended before this query completed." : live!.status === "pending" ? "Waiting for prerequisite phases." : "Sync is active.")
-    : stored.missingMetrics.length
-     ? `Missing: ${stored.missingMetrics.join(", ")}`
-     : stored.updatedAt ? "Stored dataset is available." : "This dataset has not been synced yet.",
+    : requestedInRun && live && !sameRunStored && (live.status === "pending" || live.status === "running")
+     ? "Queued behind the currently executing query."
+     : stored.missingMetrics.length
+      ? `Missing: ${stored.missingMetrics.join(", ")}`
+      : stored.updatedAt ? "Stored dataset is available." : "This dataset has not been synced yet.",
   }
  })
 }
@@ -114,6 +137,48 @@ export const claimVtSyncSyncRequest = (lock: { current: boolean }): boolean => {
  if (lock.current) return false
  lock.current = true
  return true
+}
+
+export const getVtSyncActiveCategoryIds = (
+ progress: VtSyncLocalSyncProgress | null,
+): string[] => {
+ if (!progress || progress.status !== "running") return []
+ const requested = new Set(progress.requestedCategoryIds)
+ const runningPhase = progress.phases.find((phase) => phase.status === "running")
+ if (!runningPhase) return []
+ if (runningPhase.currentCategoryId && requested.has(runningPhase.currentCategoryId)) {
+  return [runningPhase.currentCategoryId]
+ }
+ const candidates = VT_SYNC_CATEGORY_OPTIONS
+  .filter((category) => requested.has(category.id) && category.runtimePhaseId === runningPhase.id)
+  .map((category) => category.id)
+ // A shared phase without an exact current category must not light every sibling.
+ return candidates.length === 1 ? candidates : []
+}
+
+export const getVtSyncPendingCategoryIds = (
+ progress: VtSyncLocalSyncProgress | null,
+ datasetFreshness?: VtSyncDatasetFreshness,
+ queuedCategoryIds: string[] = [],
+): string[] => {
+ const pending = new Set(queuedCategoryIds)
+ if (!progress || progress.status !== "running") return [...pending]
+
+ const active = new Set(getVtSyncActiveCategoryIds(progress))
+ const phaseById = new Map(progress.phases.map((phase) => [phase.id, phase]))
+ progress.requestedCategoryIds.forEach((categoryId) => {
+  if (active.has(categoryId)) return
+  const category = VT_SYNC_CATEGORY_OPTIONS.find((entry) => entry.id === categoryId)
+  if (!category) return
+  const freshness = datasetFreshness?.[categoryId]
+   || Object.values(datasetFreshness || {}).find((entry) => entry.phase === categoryId)
+  const completedThisRun = freshness?.runId === progress.runId
+   && ["synced", "partial", "failed"].includes(String(freshness.status || ""))
+  if (completedThisRun) return
+  const phase = phaseById.get(category.runtimePhaseId)
+  if (phase && (phase.status === "pending" || phase.status === "running")) pending.add(categoryId)
+ })
+ return [...pending]
 }
 
 export const getVtSyncProgressQueueSummary = (
