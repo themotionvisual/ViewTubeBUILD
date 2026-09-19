@@ -1,4 +1,5 @@
 import React from 'react';
+import {AudioLines,Film,ImageIcon,LayoutTemplate,ScanSearch,Settings,Shapes,Shuffle,SlidersHorizontal,Type,Upload} from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {readClipVisualTransform} from '../state/editorState';
 import {TemplateLibraryPanel} from './TemplateLibraryPanel';
@@ -57,7 +58,7 @@ function Clips({store,onNavigate}:{store:EditorStore;onNavigate?:(page:EditorNav
 function Settings({model}:{model?:EditorSettingsModel}){
   if(!model)return <><Section name="Editor Settings">Host-controlled settings.</Section><Section name="Feature System"><EditorFeatureManifest compact category="settings"/></Section></>;
   return <>
-    <Section name="Site"><button style={{...button,width:'100%',background:CYAN}} onClick={()=>model.onBackToSite?.()}>← Back to Site</button></Section>
+    <Section name="Site"><button style={{...button,width:'100%',background:CYAN,display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}} onClick={()=>model.onBackToSite?.()}><Upload size={14} style={{transform:'rotate(-90deg)'}}/>Back to Site</button></Section>
     <Section name="Interface & Phone Layout"><EditorViewSwitcher frontend={model.frontend} layout={model.layout??'auto'} onFrontend={model.onFrontend} onLayout={model.onLayout??(()=>{})}/></Section>
     <Section name="Video"><Grid>{(['portrait','landscape']as const).map(v=><button key={v} style={{...button,background:model.aspect===v?CYAN:'#fff'}} onClick={()=>model.onAspect(v)}>{v==='portrait'?'9:16':'16:9'}</button>)}</Grid></Section>
     <Section name="Editor Style"><Grid>{model.styleOptions.map(o=><button key={o.id} style={{...button,background:model.style===o.id?YELLOW:'#fff'}} onClick={()=>model.onStyle(o.id)}>{o.shortLabel||o.label}</button>)}</Grid></Section>
@@ -74,15 +75,15 @@ export const EditorNavigationPage:React.FC<{page:EditorNavPage;store:EditorStore
   return <div>{renderPanelBody(page,store)}</div>;
 };
 
-export const EDITOR_NAV_ITEMS:Array<{id:EditorNavPage;label:string;icon:string}>=[
-  {id:'media',label:'Clips',icon:'▣'},
-  {id:'select',label:'Inspect',icon:'⌖'},
-  {id:'text',label:'Text',icon:'T'},
-  {id:'audio',label:'Audio',icon:'♫'},
-  {id:'graphics',label:'Graphics',icon:'◆'},
-  {id:'effects',label:'Effects',icon:'✧'},
-  {id:'transitions',label:'Transitions',icon:'⋈'},
-  {id:'templates',label:'Templates',icon:'▦'},
-  {id:'export',label:'Export',icon:'⇧'},
-  {id:'settings',label:'Settings',icon:'⚙'},
+export const EDITOR_NAV_ITEMS:Array<{id:EditorNavPage;label:string;icon:React.ReactNode}>=[
+  {id:'media',label:'Clips',icon:<Film size={13}/>},
+  {id:'select',label:'Inspect',icon:<ScanSearch size={13}/>},
+  {id:'text',label:'Text',icon:<Type size={13}/>},
+  {id:'audio',label:'Audio',icon:<AudioLines size={13}/>},
+  {id:'graphics',label:'Graphics',icon:<Shapes size={13}/>},
+  {id:'effects',label:'Effects',icon:<SlidersHorizontal size={13}/>},
+  {id:'transitions',label:'Transitions',icon:<Shuffle size={13}/>},
+  {id:'templates',label:'Templates',icon:<LayoutTemplate size={13}/>},
+  {id:'export',label:'Export',icon:<Upload size={13}/>},
+  {id:'settings',label:'Settings',icon:<Settings size={13}/>},
 ];
