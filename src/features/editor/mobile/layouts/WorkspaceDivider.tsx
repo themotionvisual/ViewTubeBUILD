@@ -38,14 +38,14 @@ export const WorkspaceDivider:React.FC<{
       position:'absolute',
       zIndex:30,
       ...(axis==='x'
-        ?{left:\`calc(\${value*100}% - 7px)\`,top:0,bottom:0,width:14,cursor:'col-resize'}
-        :{top:\`calc(\${value*100}% - 7px)\`,left:0,right:0,height:14,cursor:'row-resize'}),
+        ?{left:`calc(${value*100}% - 7px)`,top:0,bottom:0,width:14,cursor:'col-resize'}
+        :{top:`calc(${value*100}% - 7px)`,left:0,right:0,height:14,cursor:'row-resize'}),
       display:'grid',placeItems:'center',touchAction:'none',
     }}
   >
     <span style={{
       width:axis==='x'?10:28,height:axis==='x'?28:10,
-      border:\`2px solid \${INK}\`,borderRadius:5,background:CYAN,
+      border:`2px solid ${INK}`,borderRadius:5,background:CYAN,
       display:'grid',placeItems:'center',boxShadow:'2px 2px 0 rgba(36,139,153,.22)',
     }}>
       {axis==='x'?<GripVertical size={10}/>:<GripHorizontal size={10}/>}
