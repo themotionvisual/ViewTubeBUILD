@@ -16,12 +16,13 @@ export interface ContextMenuProps{
   at:{x:number;y:number};
   onDismiss:()=>void;
   title?:string;
+  layout?:'list'|'tray';
 }
 
 const CYAN='#36E0F6';
 const INK='#248b99';
 
-export const ContextMenu:React.FC<ContextMenuProps>=({items,at,onDismiss,title})=>{
+export const ContextMenu:React.FC<ContextMenuProps>=({items,at,onDismiss,title,layout='list'})=>{
   const ref=useRef<HTMLDivElement>(null);
   const[pos,setPos]=useState(at);
 
@@ -66,7 +67,33 @@ export const ContextMenu:React.FC<ContextMenuProps>=({items,at,onDismiss,title})
       textTransform:'uppercase',letterSpacing:.6,borderBottom:`2px solid ${INK}`,
       marginBottom:4,background:CYAN,
     }}>{title}</div>:null}
-    {items.map((item,index)=>item.swatches?<div
+    {layout==='tray'?<div style={{display:'grid',gridTemplateColumns:'repeat(4,minmax(0,1fr))',gap:4}}>
+      {items.map((item,index)=>item.swatches?<div
+        key={`${item.label}-${index}`}
+        role="group"
+        aria-label={item.label}
+        style={{gridColumn:'1/-1',padding:'4px',border:`1.5px solid ${INK}`,borderRadius:4,display:'grid',gridTemplateColumns:`repeat(${item.swatches.length},minmax(0,1fr))`,gap:4}}
+      >
+        {item.swatches.map(option=><button key={option.value} aria-label={`${item.label}: ${option.label}`} title={option.label} onClick={()=>{option.onSelect();onDismiss()}} style={{width:'100%',aspectRatio:'1',border:`2px solid ${INK}`,borderRadius:4,background:option.value,padding:0}}/>)}
+      </div>:<button
+        key={`${item.label}-${index}`}
+        role="menuitem"
+        title={item.label}
+        aria-label={item.label}
+        disabled={item.disabled}
+        onClick={()=>{item.onSelect?.();onDismiss()}}
+        style={{
+          aspectRatio:'1',minWidth:0,border:`1.5px solid ${INK}`,borderRadius:5,
+          background:item.destructive?'#fff0f2':'#fff',color:item.destructive?'#b91c1c':'#111',
+          display:'grid',gridTemplateRows:'20px minmax(0,1fr)',placeItems:'center',
+          padding:'4px 2px',fontSize:6,fontWeight:1000,textTransform:'uppercase',
+          opacity:item.disabled?.35:1,overflow:'hidden',
+        }}
+      >
+        <span style={{display:'grid',placeItems:'center'}}>{item.swatch?<i style={{width:14,height:14,borderRadius:3,background:item.swatch,border:`1.5px solid ${INK}`}}/>:item.icon}</span>
+        <span style={{maxWidth:'100%',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.label}</span>
+      </button>)}
+    </div>:items.map((item,index)=>item.swatches?<div
       key={`${item.label}-${index}`}
       role="group"
       aria-label={item.label}
