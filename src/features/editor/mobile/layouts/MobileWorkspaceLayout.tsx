@@ -123,7 +123,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     {label:'Inspect',icon:<ScanSearch size={14}/>,onSelect:()=>{setPage('select');onWorkspaceModeChange('edit')}},
     {label:'Split at playhead',icon:<Scissors size={14}/>,onSelect:()=>store.dispatch({type:'splitClipAtPlayhead',id:clip.id})},
     {label:'Duplicate',icon:<Copy size={14}/>,onSelect:()=>store.dispatch({type:'duplicateClip',id:clip.id})},
-    ...CLIP_COLORS.map(color=>({label:`Clip color: ${color.label}`,swatch:color.value,onSelect:()=>setClipColor(clip,color.value)})),
+    {label:'Clip color',swatches:CLIP_COLORS.map(color=>({label:color.label,value:color.value,onSelect:()=>setClipColor(clip,color.value)}))},
     {label:'Delete',icon:<Trash2 size={14}/>,destructive:true,onSelect:()=>store.dispatch({type:'deleteClips',ids:[clip.id]})},
   ];
   const emptyMenu=useMemo<ContextMenuItem[]>(()=>[
