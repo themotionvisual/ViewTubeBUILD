@@ -1,9 +1,7 @@
 import React from "react"
+import type { DirectorAudioStageProps, DirectorCompositionControlProps, DirectorLensControlProps, DirectorLightingControlProps, DirectorMoodControlProps, DirectorPacingControlProps, DirectorProviderRouteProps, DirectorShotStripProps } from "../../../../features/video-director/signatureContracts"
 
-export const DirectorWidgetLensVisual: React.FC<{
-  focalLength: number
-  aperture: number
-}> = ({ focalLength, aperture }) => {
+export const DirectorWidgetLensVisual: React.FC<DirectorLensControlProps> = ({ focalLength, aperture }) => {
   const fieldWidth = Math.max(20, Math.min(88, 92 - Math.log2(Math.max(1, focalLength) / 14) * 17))
   return (
     <div className="vtdw-signature vtdw-lens" aria-label={`Lens preview: ${focalLength} millimeter at f/${aperture}`}>
@@ -15,10 +13,7 @@ export const DirectorWidgetLensVisual: React.FC<{
   )
 }
 
-export const DirectorWidgetMoodVisual: React.FC<{
-  horizontal: number
-  vertical: number
-}> = ({ horizontal, vertical }) => (
+export const DirectorWidgetMoodVisual: React.FC<DirectorMoodControlProps> = ({ horizontal, vertical }) => (
   <div className="vtdw-signature vtdw-mood" aria-label="Emotion and tone quadrant">
     <span className="vtdw-axis is-x" aria-hidden="true" />
     <span className="vtdw-axis is-y" aria-hidden="true" />
@@ -35,12 +30,7 @@ export const DirectorWidgetMoodVisual: React.FC<{
   </div>
 )
 
-export const DirectorWidgetCompositionVisual: React.FC<{
-  subjectX: number
-  subjectY: number
-  horizonY: number
-  safeZones: boolean
-}> = ({ subjectX, subjectY, horizonY, safeZones }) => (
+export const DirectorWidgetCompositionVisual: React.FC<DirectorCompositionControlProps> = ({ subjectX, subjectY, horizonY, safeZones }) => (
   <div className="vtdw-signature vtdw-composition" aria-label="Composition framing preview">
     <span className="vtdw-grid-line is-v1" /><span className="vtdw-grid-line is-v2" />
     <span className="vtdw-grid-line is-h1" /><span className="vtdw-grid-line is-h2" />
@@ -50,11 +40,7 @@ export const DirectorWidgetCompositionVisual: React.FC<{
   </div>
 )
 
-export const DirectorWidgetLightingVisual: React.FC<{
-  azimuth: number
-  elevation: number
-  temperatureK: number
-}> = ({ azimuth, elevation, temperatureK }) => {
+export const DirectorWidgetLightingVisual: React.FC<DirectorLightingControlProps> = ({ azimuth, elevation, temperatureK }) => {
   const x = 50 + Math.sin((azimuth * Math.PI) / 180) * 34
   const y = 50 - Math.sin((elevation * Math.PI) / 180) * 34
   const light = temperatureK < 4500 ? "#ffb35e" : temperatureK > 7000 ? "#a9d8ff" : "#fff0b4"
@@ -67,11 +53,7 @@ export const DirectorWidgetLightingVisual: React.FC<{
   )
 }
 
-export const DirectorWidgetPacingVisual: React.FC<{
-  duration: number
-  hook: number
-  hold: number
-}> = ({ duration, hook, hold }) => {
+export const DirectorWidgetPacingVisual: React.FC<DirectorPacingControlProps> = ({ duration, hook, hold }) => {
   const safeDuration = Math.max(1, duration)
   const hookPct = Math.min(100, (hook / safeDuration) * 100)
   const holdPct = Math.min(100, (hold / safeDuration) * 100)
@@ -87,10 +69,7 @@ export const DirectorWidgetPacingVisual: React.FC<{
   )
 }
 
-export const DirectorWidgetAudioStage: React.FC<{
-  width: number
-  targetLufs: number
-}> = ({ width, targetLufs }) => (
+export const DirectorWidgetAudioStage: React.FC<DirectorAudioStageProps> = ({ width, targetLufs }) => (
   <div className="vtdw-signature vtdw-audio" aria-label="Spatial audio placement preview">
     <div className="vtdw-audio-grid" aria-hidden="true" />
     <span className="vtdw-audio-node is-left">SFX</span>
@@ -100,9 +79,7 @@ export const DirectorWidgetAudioStage: React.FC<{
   </div>
 )
 
-export const DirectorWidgetShotStrip: React.FC<{
-  shots: Array<{ id: string; label: string; durationSeconds: number; enabled: boolean }>
-}> = ({ shots }) => (
+export const DirectorWidgetShotStrip: React.FC<DirectorShotStripProps> = ({ shots }) => (
   <div className="vtdw-shot-strip" aria-label="Storyboard shot strip">
     {shots.length ? shots.map((shot, index) => (
       <div className={`vtdw-shot ${shot.enabled ? "" : "is-disabled"}`} key={shot.id}>
@@ -114,11 +91,7 @@ export const DirectorWidgetShotStrip: React.FC<{
   </div>
 )
 
-export const DirectorWidgetProviderRoute: React.FC<{
-  mode: string
-  provider?: string | null
-  model?: string | null
-}> = ({ mode, provider, model }) => (
+export const DirectorWidgetProviderRoute: React.FC<DirectorProviderRouteProps> = ({ mode, provider, model }) => (
   <div className="vtdw-provider-route" aria-label="Provider routing preview">
     <span className="vtdw-route-node">VIDEO DNA</span>
     <span className="vtdw-route-line">→</span>
