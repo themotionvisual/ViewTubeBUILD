@@ -394,6 +394,135 @@ export const VideoDirectorWidget: React.FC<
         <Field label="Target LUFS"><WidgetTextInput height={32} type="number" min={-40} max={-5} value={activePayload.targetLufs} onChange={(event) => setScopedField(activeCategoryId, "targetLufs", finite(event.currentTarget.value, activePayload.targetLufs))} /></Field>
       </div>
     }
+    if (activeCategoryId === "concept-direction") {
+      return <div className="vtdw-field-grid">
+        <Field label="Objective"><WidgetTextInput height={32} value={activePayload.objective} onChange={(e)=>setScopedField(activeCategoryId,"objective",e.currentTarget.value)} /></Field>
+        <Field label="Audience"><WidgetTextInput height={32} value={activePayload.audience} onChange={(e)=>setScopedField(activeCategoryId,"audience",e.currentTarget.value)} /></Field>
+        <Field label="Concepts"><WidgetStepper height={32} value={activePayload.conceptCount} min={1} max={12} label="Concept count" onChange={(value)=>setScopedField(activeCategoryId,"conceptCount",value)} /></Field>
+        <Field label="Variation"><WidgetSizedSelect height={32} value={activePayload.variationStrength} label="Variation strength" options={["subtle","balanced","radical"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"variationStrength",value)} /></Field>
+      </div>
+    }
+    if (activeCategoryId === "visual-style") {
+      return <div className="vtdw-field-grid">
+        <Field label="Medium"><WidgetSizedSelect height={32} value={activePayload.medium} label="Visual medium" options={["auto","cinematic","documentary","commercial","animation","illustration","archival","experimental"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"medium",value)} /></Field>
+        <Field label="Period / Era"><WidgetTextInput height={32} value={activePayload.period} onChange={(e)=>setScopedField(activeCategoryId,"period",e.currentTarget.value)} /></Field>
+        <Field label="Realism %"><WidgetTextInput height={32} type="number" min={0} max={100} value={Math.round(activePayload.realism*100)} onChange={(e)=>setScopedField(activeCategoryId,"realism",finite(e.currentTarget.value,activePayload.realism*100)/100)} /></Field>
+        <Field label="Stylization %"><WidgetTextInput height={32} type="number" min={0} max={100} value={Math.round(activePayload.stylization*100)} onChange={(e)=>setScopedField(activeCategoryId,"stylization",finite(e.currentTarget.value,activePayload.stylization*100)/100)} /></Field>
+      </div>
+    }
+    if (activeCategoryId === "camera-movement") {
+      return <div className="vtdw-field-grid">
+        <Field label="Movement"><WidgetSizedSelect height={32} value={activePayload.type} label="Camera movement" options={["auto","static","pan","tilt","dolly","truck","pedestal","orbit","crane","drone","handheld","steadicam","pov"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"type",value)} /></Field>
+        <Field label="Speed %"><WidgetTextInput height={32} type="number" min={0} max={100} value={Math.round(activePayload.speed*100)} onChange={(e)=>setScopedField(activeCategoryId,"speed",finite(e.currentTarget.value,activePayload.speed*100)/100)} /></Field>
+        <Field label="Pan °"><WidgetTextInput height={32} type="number" min={-360} max={360} value={activePayload.panDegrees} onChange={(e)=>setScopedField(activeCategoryId,"panDegrees",finite(e.currentTarget.value,activePayload.panDegrees))} /></Field>
+        <Field label="Orbit °"><WidgetTextInput height={32} type="number" min={-360} max={360} value={activePayload.orbitDegrees} onChange={(e)=>setScopedField(activeCategoryId,"orbitDegrees",finite(e.currentTarget.value,activePayload.orbitDegrees))} /></Field>
+      </div>
+    }
+    if (activeCategoryId === "focus-depth") {
+      return <div className="vtdw-field-grid">
+        <Field label="Focus Mode"><WidgetSizedSelect height={32} value={activePayload.mode} label="Focus mode" options={["auto","deep","shallow","subject-lock","rack-focus","custom"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"mode",value)} /></Field>
+        <Field label="Focus Distance"><WidgetTextInput height={32} type="number" min={0.05} step={0.1} value={activePayload.focusDistanceMeters} onChange={(e)=>setScopedField(activeCategoryId,"focusDistanceMeters",finite(e.currentTarget.value,activePayload.focusDistanceMeters))} /></Field>
+        <Field label="Depth %"><WidgetTextInput height={32} type="number" min={0} max={100} value={Math.round(activePayload.depthStrength*100)} onChange={(e)=>setScopedField(activeCategoryId,"depthStrength",finite(e.currentTarget.value,activePayload.depthStrength*100)/100)} /></Field>
+        <Field label="Bokeh %"><WidgetTextInput height={32} type="number" min={0} max={100} value={Math.round(activePayload.bokeh*100)} onChange={(e)=>setScopedField(activeCategoryId,"bokeh",finite(e.currentTarget.value,activePayload.bokeh*100)/100)} /></Field>
+      </div>
+    }
+    if (activeCategoryId === "perspective-capture") {
+      return <div className="vtdw-field-grid">
+        <Field label="Capture Rig"><WidgetSizedSelect height={32} value={activePayload.rig} label="Capture rig" options={["auto","tripod","shoulder","phone-pov","security-camera","drone","bodycam","dashcam","webcam","action-camera","helmet-cam"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"rig",value)} /></Field>
+        <Field label="Camera Height"><WidgetTextInput height={32} type="number" min={0} step={0.1} value={activePayload.cameraHeightMeters} onChange={(e)=>setScopedField(activeCategoryId,"cameraHeightMeters",finite(e.currentTarget.value,activePayload.cameraHeightMeters))} /></Field>
+        <Field label="FOV °"><WidgetTextInput height={32} type="number" min={1} max={179} value={activePayload.fieldOfViewDegrees} onChange={(e)=>setScopedField(activeCategoryId,"fieldOfViewDegrees",finite(e.currentTarget.value,activePayload.fieldOfViewDegrees))} /></Field>
+        <Field label="First Person"><WidgetToggleSwitch height={32} checked={activePayload.firstPerson} onChange={(checked)=>setScopedField(activeCategoryId,"firstPerson",checked)} label="First person" /></Field>
+      </div>
+    }
+    if (activeCategoryId === "color-palette") {
+      return <div className="vtdw-field-grid">
+        <Field label="Dominance %"><WidgetTextInput height={32} type="number" min={0} max={100} value={Math.round(activePayload.dominance*100)} onChange={(e)=>setScopedField(activeCategoryId,"dominance",finite(e.currentTarget.value,activePayload.dominance*100)/100)} /></Field>
+        <Field label="Exact Lock"><WidgetToggleSwitch height={32} checked={activePayload.exactLock} onChange={(checked)=>setScopedField(activeCategoryId,"exactLock",checked)} label="Exact palette lock" /></Field>
+      </div>
+    }
+    if (activeCategoryId === "grade-exposure") {
+      return <div className="vtdw-field-grid">
+        <Field label="Exposure EV"><WidgetTextInput height={32} type="number" min={-5} max={5} step={0.1} value={activePayload.exposureEv} onChange={(e)=>setScopedField(activeCategoryId,"exposureEv",finite(e.currentTarget.value,activePayload.exposureEv))} /></Field>
+        <Field label="Contrast"><WidgetTextInput height={32} type="number" min={-100} max={100} value={activePayload.contrast} onChange={(e)=>setScopedField(activeCategoryId,"contrast",finite(e.currentTarget.value,activePayload.contrast))} /></Field>
+        <Field label="Temperature"><WidgetTextInput height={32} type="number" min={1000} max={20000} value={activePayload.temperatureK} onChange={(e)=>setScopedField(activeCategoryId,"temperatureK",finite(e.currentTarget.value,activePayload.temperatureK))} /></Field>
+        <Field label="Saturation %"><WidgetTextInput height={32} type="number" min={0} max={200} value={activePayload.saturation} onChange={(e)=>setScopedField(activeCategoryId,"saturation",finite(e.currentTarget.value,activePayload.saturation))} /></Field>
+      </div>
+    }
+    if (activeCategoryId === "texture-film") {
+      return <div className="vtdw-field-grid">
+        {["grain","halation","bloom","vignette"].map(field=><Field key={field} label={field}><WidgetTextInput height={32} type="number" min={0} max={100} value={activePayload[field]} onChange={(e)=>setScopedField(activeCategoryId,field,finite(e.currentTarget.value,activePayload[field]))} /></Field>)}
+      </div>
+    }
+    if (activeCategoryId === "shot-structure") {
+      return <div className="vtdw-field-grid">
+        <Field label="Structure"><WidgetSizedSelect height={32} value={activePayload.mode} label="Shot structure" options={["single-take","auto-multi-shot","manual-storyboard","montage","interview-broll","narrative-sequence","trailer","product-demo","explainer"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"mode",value)} /></Field>
+        <Field label="Shot Count"><WidgetStepper height={32} value={activePayload.shotCount} min={1} max={100} label="Shot count" onChange={(value)=>setScopedField(activeCategoryId,"shotCount",value)} /></Field>
+        <Field label="Average Shot"><WidgetTextInput height={32} type="number" min={0.25} step={0.25} value={activePayload.averageShotSeconds} onChange={(e)=>setScopedField(activeCategoryId,"averageShotSeconds",finite(e.currentTarget.value,activePayload.averageShotSeconds))} /></Field>
+        <Field label="Continuity %"><WidgetTextInput height={32} type="number" min={0} max={100} value={Math.round(activePayload.continuityStrength*100)} onChange={(e)=>setScopedField(activeCategoryId,"continuityStrength",finite(e.currentTarget.value,activePayload.continuityStrength*100)/100)} /></Field>
+      </div>
+    }
+    if (activeCategoryId === "transitions") {
+      return <div className="vtdw-field-grid">
+        <Field label="Transition"><WidgetSizedSelect height={32} value={activePayload.defaultType} label="Transition type" options={["cut","crossfade","match-cut","dip","wipe","optical-bridge","custom"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"defaultType",value)} /></Field>
+        <Field label="Frames"><WidgetStepper height={32} value={activePayload.durationFrames} min={0} max={240} label="Transition frames" onChange={(value)=>setScopedField(activeCategoryId,"durationFrames",value)} /></Field>
+        <Field label="Match Motion"><WidgetToggleSwitch height={32} checked={activePayload.matchMotion} onChange={(checked)=>setScopedField(activeCategoryId,"matchMotion",checked)} label="Match motion" /></Field>
+      </div>
+    }
+    if (activeCategoryId === "speed-motion") {
+      return <div className="vtdw-field-grid">
+        <Field label="Playback Rate"><WidgetTextInput height={32} type="number" min={0.05} max={20} step={0.05} value={activePayload.playbackRate} onChange={(e)=>setScopedField(activeCategoryId,"playbackRate",finite(e.currentTarget.value,activePayload.playbackRate))} /></Field>
+        <Field label="Interpolation"><WidgetSizedSelect height={32} value={activePayload.interpolation} label="Interpolation" options={["none","optical-flow","rife","film"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"interpolation",value)} /></Field>
+        <Field label="Motion Blur %"><WidgetTextInput height={32} type="number" min={0} max={100} value={Math.round(activePayload.motionBlur*100)} onChange={(e)=>setScopedField(activeCategoryId,"motionBlur",finite(e.currentTarget.value,activePayload.motionBlur*100)/100)} /></Field>
+      </div>
+    }
+    if (activeCategoryId === "voice-dialogue") {
+      return <div className="vtdw-field-grid">
+        <Field label="Voice"><WidgetToggleSwitch height={32} checked={activePayload.enabled} onChange={(checked)=>setScopedField(activeCategoryId,"enabled",checked)} label="Enable voice" /></Field>
+        <Field label="Source"><WidgetSizedSelect height={32} value={activePayload.source} label="Voice source" options={["auto","generated","upload","recorded"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"source",value)} /></Field>
+        <Field label="Speaking Rate"><WidgetTextInput height={32} type="number" min={0.5} max={2} step={0.05} value={activePayload.speakingRate} onChange={(e)=>setScopedField(activeCategoryId,"speakingRate",finite(e.currentTarget.value,activePayload.speakingRate))} /></Field>
+        <Field label="Expressiveness %"><WidgetTextInput height={32} type="number" min={0} max={100} value={Math.round(activePayload.expressiveness*100)} onChange={(e)=>setScopedField(activeCategoryId,"expressiveness",finite(e.currentTarget.value,activePayload.expressiveness*100)/100)} /></Field>
+      </div>
+    }
+    if (activeCategoryId === "music") {
+      return <div className="vtdw-field-grid">
+        <Field label="Music"><WidgetToggleSwitch height={32} checked={activePayload.enabled} onChange={(checked)=>setScopedField(activeCategoryId,"enabled",checked)} label="Enable music" /></Field>
+        <Field label="BPM"><WidgetTextInput height={32} type="number" min={20} max={300} value={activePayload.bpm} onChange={(e)=>setScopedField(activeCategoryId,"bpm",finite(e.currentTarget.value,activePayload.bpm))} /></Field>
+        <Field label="Beat Sync"><WidgetSizedSelect height={32} value={activePayload.beatSync} label="Beat sync" options={["off","quarter","half","bar","drops","auto"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"beatSync",value)} /></Field>
+        <Field label="Intensity %"><WidgetTextInput height={32} type="number" min={0} max={100} value={Math.round(activePayload.intensity*100)} onChange={(e)=>setScopedField(activeCategoryId,"intensity",finite(e.currentTarget.value,activePayload.intensity*100)/100)} /></Field>
+      </div>
+    }
+    if (activeCategoryId === "sound-effects") {
+      return <div className="vtdw-field-grid">
+        <Field label="SFX"><WidgetToggleSwitch height={32} checked={activePayload.enabled} onChange={(checked)=>setScopedField(activeCategoryId,"enabled",checked)} label="Enable sound effects" /></Field>
+        <Field label="Auto Events"><WidgetToggleSwitch height={32} checked={activePayload.autoDetectEvents} onChange={(checked)=>setScopedField(activeCategoryId,"autoDetectEvents",checked)} label="Auto detect events" /></Field>
+      </div>
+    }
+    if (activeCategoryId === "captions") {
+      return <div className="vtdw-field-grid">
+        <Field label="Captions"><WidgetToggleSwitch height={32} checked={activePayload.enabled} onChange={(checked)=>setScopedField(activeCategoryId,"enabled",checked)} label="Enable captions" /></Field>
+        <Field label="Position"><WidgetSizedSelect height={32} value={activePayload.position} label="Caption position" options={["top","upper-third","center","lower-third","bottom"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"position",value)} /></Field>
+        <Field label="Animation"><WidgetSizedSelect height={32} value={activePayload.animation} label="Caption animation" options={["none","word-pop","karaoke","fade","slide","custom"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"animation",value)} /></Field>
+        <Field label="Burn In"><WidgetToggleSwitch height={32} checked={activePayload.burnIn} onChange={(checked)=>setScopedField(activeCategoryId,"burnIn",checked)} label="Burn captions" /></Field>
+      </div>
+    }
+    if (activeCategoryId === "references-seeds") {
+      return <div className="vtdw-field-grid">
+        <Field label="Seed"><WidgetTextInput height={32} type="number" min={0} max={2147483647} value={activePayload.seed ?? 0} onChange={(e)=>setScopedField(activeCategoryId,"seed",Math.round(finite(e.currentTarget.value,activePayload.seed ?? 0)))} /></Field>
+        <Field label="Lock Seed"><WidgetToggleSwitch height={32} checked={activePayload.lockSeed} onChange={(checked)=>setScopedField(activeCategoryId,"lockSeed",checked)} label="Lock seed" /></Field>
+        <Field label="Variation Noise %"><WidgetTextInput height={32} type="number" min={0} max={100} value={Math.round(activePayload.variationNoise*100)} onChange={(e)=>setScopedField(activeCategoryId,"variationNoise",finite(e.currentTarget.value,activePayload.variationNoise*100)/100)} /></Field>
+      </div>
+    }
+    if (activeCategoryId === "consistency-continuity") {
+      return <div className="vtdw-field-grid">
+        {([["identityStrength","Identity"],["wardrobeStrength","Wardrobe"],["environmentStrength","Environment"],["colorContinuity","Color"]] as const).map(([field,label])=><Field key={field} label={label+" %"}><WidgetTextInput height={32} type="number" min={0} max={100} value={Math.round(activePayload[field]*100)} onChange={(e)=>setScopedField(activeCategoryId,field,finite(e.currentTarget.value,activePayload[field]*100)/100)} /></Field>)}
+      </div>
+    }
+    if (activeCategoryId === "negative-constraints") {
+      return <div className="vtdw-field-grid">
+        <Field label="Enforcement"><WidgetSizedSelect height={32} value={activePayload.enforcement} label="Constraint enforcement" options={["advisory","standard","strict"].map(value=>({value,label:value.toUpperCase()}))} onChange={(value)=>setScopedField(activeCategoryId,"enforcement",value)} /></Field>
+        <Field label="Negative Note"><WidgetTextInput height={32} value={activePayload.freeText} onChange={(e)=>setScopedField(activeCategoryId,"freeText",e.currentTarget.value)} /></Field>
+      </div>
+    }
     return (
       <div className="vtdw-field-grid">
         <WidgetSizedButton height={32} tone="secondary" onClick={() => onNavigate?.("/studio#video-director")}>
