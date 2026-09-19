@@ -628,13 +628,60 @@ const Playhead:React.FC<{playheadSec:number;pxPerSec:number;height:number}>=({pl
   <div style={{position:'absolute',top:-6,left:-5,width:12,height:12,background:CYAN,border:'2px solid #000',transform:'rotate(45deg)'}}/>
 </div>;
 
-const PlayheadControls:React.FC<{onPrevious:()=>void;onCenter:()=>void;onNext:()=>void}>=({onPrevious,onCenter,onNext})=><div
+const NavigatorButton:React.FC<{direction:-1|1;onClick:()=>void;onLongPress:()=>void}>=({direction,onClick,onLongPress})=>{
+  const timer=useRef<number|null>(null);
+  const fired=useRef(false);
+  const stop=()=>{if(timer.current!=null){window.clearTimeout(timer.current);timer.current=null}};
+  return <button
+    title={direction<0?'Previous edit point':'Next edit point'}
+    aria-label={direction<0?'Previous edit point':'Next edit point'}
+    onPointerDown={()=>{fired.current=false;stop();timer.current=window.setTimeout(()=>{fired.current=true;onLongPress()},420)}}
+    onPointerUp={()=>{stop();if(!fired.current)onClick()}}
+    onPointerCancel={stop}
+    style={headerBtn('#fff')}
+  >{direction<0?<SkipBack size={10}/>:<SkipForward size={10}/>}</button>;
+};
+
+const PlayheadControls:React.FC<{
+  navMode:NavMode;
+  onPrevious:()=>void;onCenter:()=>void;onNext:()=>void;
+  onFrameBack:()=>void;onFrameForward:()=>void;onOpenNavigator:()=>void;
+}>=({navMode,onPrevious,onCenter,onNext,onFrameBack,onFrameForward,onOpenNavigator})=><div
   aria-label="Timeline playhead navigation"
-  style={{position:'absolute',top:3,left:4,zIndex:4,width:LABEL_WIDTH-8,display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:2,background:'#fff'}}
+  style={{position:'absolute',top:3,left:4,zIndex:7,width:LABEL_WIDTH-8,display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:1,background:'#fff'}}
 >
-  <button title="Previous edit point or keyframe" aria-label="Previous edit point or keyframe" onClick={onPrevious} style={headerBtn('#fff')}><SkipBack size={12}/></button>
-  <button title="Center timeline on playhead" aria-label="Center timeline on playhead" onClick={onCenter} style={headerBtn(YELLOW)}><LocateFixed size={12}/></button>
-  <button title="Next edit point or keyframe" aria-label="Next edit point or keyframe" onClick={onNext} style={headerBtn('#fff')}><SkipForward size={12}/></button>
+  <button title="Previous frame" aria-label="Previous frame" onClick={onFrameBack} style={headerBtn('#fff')}><StepBack size={9}/></button>
+  <NavigatorButton direction={-1} onClick={onPrevious} onLongPress={onOpenNavigator}/>
+  <button title={'Center playhead · '+navMode} aria-label="Center timeline on playhead" onClick={onCenter} onContextMenu={event=>{event.preventDefault();onOpenNavigator()}} style={headerBtn(YELLOW)}><LocateFixed size={9}/></button>
+  <NavigatorButton direction={1} onClick={onNext} onLongPress={onOpenNavigator}/>
+  <button title="Next frame" aria-label="Next frame" onClick={onFrameForward} style={headerBtn('#fff')}><StepForward size={9}/></button>
+</div>;
+
+const NavigatorPicker:React.FC<{mode:NavMode;onChange:(mode:NavMode)=>void}>=({mode,onChange})=><div style={{
+  position:'absolute',top:26,left:4,zIndex:30,padding:3,display:'grid',gridTemplateColumns:'repeat(5,auto)',gap:2,
+  border:`2px solid ${INK}`,borderRadius:5,background:'#fff',boxShadow:'2px 2px 0 rgba(54,224,246,.3)',
+}}>
+  {(['all','clip','keyframe','transition','frame'] as NavMode[]).map(item=><button key={item} onClick={()=>onChange(item)} style={{...headerBtn(mode===item?CYAN:'#fff'),padding:'0 5px',fontSize:7,textTransform:'uppercase'}}>{item}</button>)}
+</div>;
+
+const SnapPicker:React.FC<{
+  snap:{strength:SnapStrength;kinds:SnapKinds};
+  onChange:(value:{strength:SnapStrength;kinds:SnapKinds})=>void;
+  onClose:()=>void;
+}>=({snap,onChange,onClose})=><div style={{
+  position:'absolute',top:26,right:4,zIndex:30,padding:5,width:178,
+  border:`2px solid ${INK}`,borderRadius:6,background:'#fff',boxShadow:'2px 2px 0 rgba(54,224,246,.3)',
+}}>
+  <div style={{display:'grid',gridTemplateColumns:'1fr 22px',alignItems:'center',marginBottom:4}}>
+    <b style={{fontSize:8,textTransform:'uppercase'}}>Magnetic Snap</b>
+    <button aria-label="Close snap settings" onClick={onClose} style={headerBtn('#fff')}><X size={10}/></button>
+  </div>
+  <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:2,marginBottom:4}}>
+    {(['off','soft','strong'] as SnapStrength[]).map(value=><button key={value} onClick={()=>onChange({...snap,strength:value})} style={{...headerBtn(snap.strength===value?CYAN:'#fff'),fontSize:7,textTransform:'uppercase'}}>{value}</button>)}
+  </div>
+  <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:2}}>
+    {(Object.keys(snap.kinds) as Array<keyof SnapKinds>).map(key=><button key={key} onClick={()=>onChange({...snap,kinds:{...snap.kinds,[key]:!snap.kinds[key]}})} style={{...headerBtn(snap.kinds[key]?YELLOW:'#fff'),fontSize:7,textTransform:'uppercase'}}>{key}</button>)}
+  </div>
 </div>;
 
 const ZoomControls:React.FC<{pxPerSec:number;onZoom:(value:number)=>void}>=({pxPerSec,onZoom})=><div style={{
