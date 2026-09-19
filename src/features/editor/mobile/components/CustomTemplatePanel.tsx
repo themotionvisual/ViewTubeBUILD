@@ -1,10 +1,11 @@
-import React,{useMemo,useState} from 'react';
-import {ArrowRight,Check,LayoutTemplate,Play,Save,Search,Star} from 'lucide-react';
+import React,{useEffect,useMemo,useRef,useState} from 'react';
+import {ArrowRight,Check,Copy,LayoutTemplate,Pencil,Play,RotateCcw,Save,Search,Star} from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {templateCatalog} from '../../../../editor-design-library/catalog';
 import type {TemplateDefinition,TemplateElement,TemplateStyleConfig} from '../../../../editor-design-library/core/schema';
 import {templateToTimelineClip} from '../../../../editor-design-library/integration/timelineAdapter';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
+import {ContextMenu,type ContextMenuItem} from './ContextMenu';
 
 const INK='#248b99',CYAN='#36E0F6';
 const card:React.CSSProperties={border:`2px solid ${INK}`,borderRadius:7,background:'#fff',padding:7,marginBottom:7,boxShadow:'2px 2px 0 rgba(54,224,246,.22)'};
@@ -56,8 +57,16 @@ function editableElements(template?:TemplateDefinition){
 
 export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
   const[query,setQuery]=useState('');
+  const[selectedElementId,setSelectedElementId]=useState<string|null>(null);
+  const[elementMenu,setElementMenu]=useState<{element:TemplateElement;at:{x:number;y:number}}|null>(null);
+  const editorRef=useRef<HTMLDivElement>(null);
   const clip=selectedTemplateClip(store);
   const template=clip?.templateDefinition;
+  const editables=useMemo(()=>editableElements(template),[template]);
+  useEffect(()=>{
+    setSelectedElementId(current=>current&&editables.some(element=>element.id===current)?current:(editables[0]?.id??null));
+  },[clip?.id,template?.id,editables.length]);
+
   const items=useMemo(()=>{
     const q=query.trim().toLowerCase();
     return templateCatalog.filter(item=>item.customizable!==false&&(!q||[item.name,item.category,...item.tags].join(' ').toLowerCase().includes(q)));
@@ -80,6 +89,24 @@ export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
     if(!clip)return;
     patchOverrides({content:{[element.id]:value}});
   };
+  const resetElement=(element:TemplateElement)=>{
+    if(!clip)return;
+    const content={...(clip.templateOverrides?.content??{})};
+    delete content[element.id];
+    store.dispatch({type:'updateClip',id:clip.id,patch:{templateOverrides:{...(clip.templateOverrides??{}),content}} as Partial<VtE1Clip>});
+  };
+  const duplicateElement=(element:TemplateElement)=>{
+    if(!clip||!template)return;
+    const copy:TemplateElement={...element,id:`${element.id}_copy_${Date.now().toString(36)}`,name:`${element.name} Copy`,x:element.x+20,y:element.y+20};
+    const definition:TemplateDefinition={...template,elements:[...template.elements,copy]};
+    store.dispatch({type:'updateClip',id:clip.id,patch:{templateDefinition:definition} as Partial<VtE1Clip>});
+    setSelectedElementId(copy.id);
+  };
+  const elementMenuItems=(element:TemplateElement):ContextMenuItem[]=>[
+    {label:'Edit',icon:<Pencil size={13}/>,onSelect:()=>{setSelectedElementId(element.id);requestAnimationFrame(()=>editorRef.current?.scrollIntoView({behavior:'smooth',block:'nearest'}))}},
+    {label:'Duplicate',icon:<Copy size={13}/>,onSelect:()=>duplicateElement(element)},
+    {label:'Reset',icon:<RotateCcw size={13}/>,onSelect:()=>resetElement(element)},
+  ];
   const colors=(clip?.templateOverrides?.style?.colors??template?.style?.colors??{}) as Partial<TemplateStyleConfig['colors']>;
 
   return <div style={{width:'100%',minWidth:0,overflowX:'hidden'}}>
@@ -101,8 +128,45 @@ export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
       <div style={{fontSize:10,fontWeight:1000,textTransform:'uppercase',marginBottom:6}}>Selected Template</div>
       {!clip||!template?<div style={{fontSize:9,fontWeight:800,opacity:.6}}>Add or select a design-template clip to customize its text, icons, and colors.</div>:<>
         <div style={{fontSize:9,fontWeight:1000,marginBottom:7}}>{template.name}</div>
-        <div style={{display:'grid',gap:6}}>
-          {editableElements(template).map(element=>{
+        <div style={{
+          position:'relative',width:'100%',aspectRatio:`${Math.max(1,template.width)} / ${Math.max(1,template.height)}`,
+          border:`2px solid ${INK}`,borderRadius:6,background:String(colors.background??template.background??'#fff'),
+          overflow:'hidden',marginBottom:6,
+        }}>
+          {editables.map(element=>{
+            const left=(element.x/Math.max(1,template.width))*100;
+            const top=(element.y/Math.max(1,template.height))*100;
+            const width=(element.width/Math.max(1,template.width))*100;
+            const height=(element.height/Math.max(1,template.height))*100;
+            const active=selectedElementId===element.id;
+            return <button
+              key={element.id}
+              title={`Edit ${element.name}`}
+              aria-label={`Select template element ${element.name}`}
+              onContextMenu={event=>{
+                event.preventDefault();event.stopPropagation();
+                setElementMenu({element,at:{x:event.clientX,y:event.clientY}});
+              }}
+              onClick={()=>{
+                setSelectedElementId(element.id);
+                requestAnimationFrame(()=>editorRef.current?.scrollIntoView({behavior:'smooth',block:'nearest'}));
+              }}
+              style={{
+                position:'absolute',left:`${left}%`,top:`${top}%`,width:`${Math.max(5,width)}%`,height:`${Math.max(5,height)}%`,
+                transform:`rotate(${Number(element.rotation??0)}deg)`,transformOrigin:'top left',
+                border:`2px solid ${active?CYAN:INK}`,borderRadius:3,
+                background:active?'rgba(54,224,246,.22)':'rgba(255,255,255,.08)',
+                padding:0,color:String(colors.foreground??'#111'),fontSize:6,fontWeight:1000,
+                overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',
+              }}
+            >{element.type==='text'?String((clip.templateOverrides?.content?.[element.id] as Record<string,unknown>|undefined)?.text??element.text??element.name):element.name}</button>;
+          })}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:3,marginBottom:6}}>
+          {editables.map(element=><button key={element.id} style={{...btn(selectedElementId===element.id),minWidth:0,overflow:'hidden',textOverflow:'ellipsis'}} onClick={()=>setSelectedElementId(element.id)}>{element.name}</button>)}
+        </div>
+        <div ref={editorRef} style={{display:'grid',gap:6}}>
+          {editables.filter(element=>!selectedElementId||element.id===selectedElementId).map(element=>{
             const raw=clip.templateOverrides?.content?.[element.id];
             const record=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw as Record<string,unknown>:null;
             if(element.type==='text'){
@@ -138,5 +202,12 @@ export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
         }}><Save size={13}/>Save Custom Template</button>
       </>}
     </section>
+    {elementMenu?<ContextMenu
+      items={elementMenuItems(elementMenu.element)}
+      at={elementMenu.at}
+      title={elementMenu.element.name}
+      layout="tray"
+      onDismiss={()=>setElementMenu(null)}
+    />:null}
   </div>;
 };

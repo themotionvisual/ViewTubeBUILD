@@ -1,8 +1,8 @@
 /** Phone timeline with touch-arbitrated select/move/trim, keyframes and collision-safe tracks. */
 import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {
-  AlertTriangle,EyeOff,Layers3,ListPlus,LocateFixed,LockKeyhole,Magnet,Minus,Plus,
-  SkipBack,SkipForward,StepBack,StepForward,Trash2,Type,VolumeX,X,
+  AlertTriangle,Copy,EyeOff,GripVertical,Layers3,ListPlus,LocateFixed,LockKeyhole,Magnet,Minus,Plus,
+  SkipBack,SkipForward,SlidersHorizontal,StepBack,StepForward,Trash2,Type,VolumeX,X,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {useLongPress,usePinchZoom} from '../hooks/gestures';
@@ -13,6 +13,8 @@ export interface TimelineStripProps{
   store:EditorStore;
   height?:React.CSSProperties['height'];
   onClipContextMenu?:(clip:VtE1Clip,at:{x:number;y:number})=>void;
+  onTrackContextMenu?:(track:EditorStore['state']['project']['tracks'][number],at:{x:number;y:number})=>void;
+  onKeyframeContextMenu?:(clip:VtE1Clip,keyframeId:string,at:{x:number;y:number})=>void;
   onEmptyContextMenu?:(at:{x:number;y:number})=>void;
   onViewportChange?:(viewport:TimelineViewport)=>void;
   scrollToSec?:number;
@@ -20,7 +22,7 @@ export interface TimelineStripProps{
   onToggleActionLabels?:()=>void;
 }
 
-type TimelineKeyframe={id?:string;offsetSec?:number;mode?:string;values?:Record<string,unknown>};
+type TimelineKeyframe={id?:string;offsetSec?:number;mode?:string;values?:Record<string,unknown>;interp?:string};
 type ClipGestureMode='pending'|'move'|'trim-left'|'trim-right'|'longpress'|'multi';
 type SnapStrength='off'|'soft'|'strong';
 type NavMode='all'|'clip'|'keyframe'|'transition'|'frame';
@@ -74,7 +76,7 @@ const compoundChildren=(clip:VtE1Clip)=>{
 };
 
 export const TimelineStrip:React.FC<TimelineStripProps>=({
-  store,height,onClipContextMenu,onEmptyContextMenu,onViewportChange,scrollToSec,
+  store,height,onClipContextMenu,onTrackContextMenu,onKeyframeContextMenu,onEmptyContextMenu,onViewportChange,scrollToSec,
   actionLabelsVisible=true,onToggleActionLabels,
 })=>{
   const{state,dispatch,clipsOnTrack}=store;
@@ -179,7 +181,20 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
   const focusedCompound=compoundFocusId?state.project.clips.find(clip=>clip.id===compoundFocusId):undefined;
   const focusedChildren=focusedCompound?compoundChildren(focusedCompound):[];
   const tracks=state.project.tracks.filter(track=>!track.hidden).filter(track=>!focusedCompound||track.id===focusedCompound.trackId);
-  const bodyHeight=tracks.length*TIMELINE_TRACK_HEIGHT+TIMELINE_HEADER_HEIGHT+8;
+  const trackRows=useMemo(()=>{
+    let y=0;
+    return tracks.map(track=>{
+      const clips=focusedCompound?focusedChildren.filter(clip=>clip.trackId===track.id||focusedCompound.trackId===track.id):clipsOnTrack(track.id);
+      const hasSelected=clips.some(clip=>state.selection.clipIds.includes(clip.id));
+      const selectedClip=clips.find(clip=>state.selection.clipIds.includes(clip.id));
+      const hasKeyframes=Boolean(selectedClip&&(selectedClip.keyframes??[]).length);
+      const height=focusedCompound?TIMELINE_TRACK_HEIGHT:clips.length===0?24:hasSelected?(hasKeyframes?72:54):TIMELINE_TRACK_HEIGHT;
+      const row={track,clips,y,height,selectedClip,hasKeyframes};
+      y+=height;
+      return row;
+    });
+  },[tracks,focusedCompound,focusedChildren,state.selection.clipIds,clipsOnTrack,state.project.clips]);
+  const bodyHeight=trackRows.reduce((sum,row)=>sum+row.height,0)+TIMELINE_HEADER_HEIGHT+8;
   const hasOverlaps=!focusedCompound&&state.project.clips.some((clip,index,all)=>all.some((other,otherIndex)=>otherIndex>index&&overlaps(clip,other)));
 
   return <div style={{
@@ -247,19 +262,24 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
         <Ruler pxPerSec={zoom} durationSec={state.project.durationSec}/>
         <PrecisionScrub store={store} pxPerSec={zoom} labelWidth={LABEL_WIDTH} scrollRef={scrollRef}/>
         <div style={{position:'relative',paddingTop:TIMELINE_HEADER_HEIGHT}}>
-          {tracks.map((track,index)=><TrackRow
-            key={track.id}
-            track={track}
+          {trackRows.map(row=><TrackRow
+            key={row.track.id}
+            track={row.track}
             store={store}
-            clips={focusedCompound?focusedChildren.filter(clip=>clip.trackId===track.id||focusedCompound.trackId===track.id):clipsOnTrack(track.id)}
+            clips={row.clips}
             pxPerSec={zoom}
             totalPx={totalPx}
-            y={index*TIMELINE_TRACK_HEIGHT}
+            y={row.y}
+            rowHeight={row.height}
+            selectedClip={row.selectedClip}
+            showKeyframeLane={row.hasKeyframes}
             snap={snap}
             readOnly={Boolean(focusedCompound)}
             focusParentId={focusedCompound?.id}
             onOpenCompound={setCompoundFocusId}
             onClipContextMenu={onClipContextMenu}
+            onTrackContextMenu={onTrackContextMenu}
+            onKeyframeContextMenu={onKeyframeContextMenu}
             onEmptyContextMenu={onEmptyContextMenu}
           />)}
         </div>
@@ -332,13 +352,18 @@ const TrackRow:React.FC<{
   pxPerSec:number;
   totalPx:number;
   y:number;
+  rowHeight:number;
+  selectedClip?:VtE1Clip;
+  showKeyframeLane?:boolean;
   snap:{strength:SnapStrength;kinds:SnapKinds};
   readOnly?:boolean;
   focusParentId?:string;
   onOpenCompound?:(id:string)=>void;
   onClipContextMenu?:TimelineStripProps['onClipContextMenu'];
+  onTrackContextMenu?:TimelineStripProps['onTrackContextMenu'];
+  onKeyframeContextMenu?:TimelineStripProps['onKeyframeContextMenu'];
   onEmptyContextMenu?:TimelineStripProps['onEmptyContextMenu'];
-}>=({track,clips,pxPerSec,totalPx,y,store,snap,readOnly=false,focusParentId,onOpenCompound,onClipContextMenu,onEmptyContextMenu})=>{
+}>=({track,clips,pxPerSec,totalPx,y,rowHeight,selectedClip,showKeyframeLane=false,store,snap,readOnly=false,focusParentId,onOpenCompound,onClipContextMenu,onTrackContextMenu,onKeyframeContextMenu,onEmptyContextMenu})=>{
   const{state,dispatch}=store;
   const rowColor=track.kind==='audio'?'#4EE4BE':track.kind==='overlay'?'#528FFA':track.kind==='caption'?'#FFDA47':'#FA618A';
   const selected=state.selection.trackId===track.id;
@@ -347,17 +372,42 @@ const TrackRow:React.FC<{
     ms:450,
   });
   const removable=!readOnly&&clips.length===0&&state.project.tracks.length>1;
+  const reorder=useRef<{pointerId:number}|null>(null);
+  const trackIndex=state.project.tracks.findIndex(item=>item.id===track.id);
+  const finishReorder=()=>{reorder.current=null};
 
-  return <div style={{position:'absolute',top:y,left:0,right:0,height:TIMELINE_TRACK_HEIGHT,display:'flex'}}>
+  return <div data-vt-track-id={track.id} style={{position:'absolute',top:y,left:0,right:0,height:rowHeight,display:'flex'}}>
     <div
       onClick={()=>!readOnly&&dispatch({type:'selectTrack',id:track.id})}
+      onContextMenu={event=>{
+        if(readOnly)return;
+        event.preventDefault();event.stopPropagation();
+        dispatch({type:'selectTrack',id:track.id});
+        onTrackContextMenu?.(track,{x:event.clientX,y:event.clientY});
+      }}
       style={{
         position:'sticky',left:0,width:LABEL_WIDTH,background:selected?CYAN:'#fff',
         zIndex:2,borderRight:`2px solid ${INK}`,borderBottom:`1px solid ${INK}`,
-        display:'grid',gridTemplateColumns:'1fr auto',alignItems:'center',gap:2,
+        display:'grid',gridTemplateColumns:'16px minmax(0,1fr) auto',alignItems:'center',gap:2,
         padding:'0 4px',fontSize:8,fontWeight:900,textTransform:'uppercase',
       }}
     >
+      {!readOnly?<button
+        title="Drag to reorder track"
+        aria-label="Drag to reorder track"
+        onPointerDown={event=>{event.stopPropagation();reorder.current={pointerId:event.pointerId};event.currentTarget.setPointerCapture?.(event.pointerId)}}
+        onPointerMove={event=>{
+          if(reorder.current?.pointerId!==event.pointerId)return;
+          const node=(document.elementFromPoint(event.clientX,event.clientY) as HTMLElement|null)?.closest?.('[data-vt-track-id]') as HTMLElement|null;
+          const targetId=node?.dataset.vtTrackId;
+          if(!targetId||targetId===track.id)return;
+          const toIndex=state.project.tracks.findIndex(item=>item.id===targetId);
+          if(toIndex>=0&&toIndex!==trackIndex)dispatch({type:'reorderTrack',id:track.id,toIndex});
+        }}
+        onPointerUp={finishReorder}
+        onPointerCancel={finishReorder}
+        style={{...miniBtn('#fff'),width:15,height:21,touchAction:'none'}}
+      ><GripVertical size={9}/></button>:<span/>}
       <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{readOnly?'Compound':track.name}</span>
       {!readOnly?<div style={{display:'grid',gridTemplateColumns:'repeat(4,17px)',gap:2}}>
         <button title={track.muted?'Unmute track':'Mute track'} aria-label={track.muted?'Unmute track':'Mute track'}
@@ -381,21 +431,99 @@ const TrackRow:React.FC<{
         borderBottom:`1px solid ${INK}`,touchAction:'pan-x pan-y',
       }}
     >
-      {clips.map(clip=><ClipBlock
-        key={clip.id}
-        clip={clip}
-        selected={state.selection.clipIds.includes(clip.id)}
-        color={rowColor}
-        pxPerSec={pxPerSec}
-        store={store}
-        siblings={clips}
-        snap={snap}
-        readOnly={readOnly}
-        focusParentId={focusParentId}
-        onOpenCompound={onOpenCompound}
-        onContextMenu={onClipContextMenu}
-      />)}
+      <div style={{position:'absolute',left:0,right:0,top:0,height:Math.min(TIMELINE_TRACK_HEIGHT,rowHeight)}}>
+        {clips.map(clip=><ClipBlock
+          key={clip.id}
+          clip={clip}
+          selected={state.selection.clipIds.includes(clip.id)}
+          color={rowColor}
+          pxPerSec={pxPerSec}
+          store={store}
+          siblings={clips}
+          snap={snap}
+          readOnly={readOnly}
+          focusParentId={focusParentId}
+          onOpenCompound={onOpenCompound}
+          onContextMenu={onClipContextMenu}
+        />)}
+      </div>
+      {showKeyframeLane&&selectedClip&&!readOnly?<KeyframeLane clip={selectedClip} store={store} pxPerSec={pxPerSec} top={TIMELINE_TRACK_HEIGHT} onContextMenu={onKeyframeContextMenu}/>:null}
     </div>
+  </div>;
+};
+
+const KeyframeLane:React.FC<{clip:VtE1Clip;store:EditorStore;pxPerSec:number;top:number;onContextMenu?:TimelineStripProps['onKeyframeContextMenu']}>=({clip,store,pxPerSec,top,onContextMenu})=>{
+  const frames=((clip.keyframes??[]) as TimelineKeyframe[]).filter(frame=>frame.id&&Number.isFinite(Number(frame.offsetSec??0)));
+  const[selected,setSelected]=useState<string[]>([]);
+  const[preview,setPreview]=useState<Record<string,number>>({});
+  const drag=useRef<{id:string;pointerId:number;x:number;offset:number;moved:boolean;timer:number|null}|null>(null);
+  const duration=Math.max(.001,clip.end-clip.start);
+  useEffect(()=>setSelected(current=>current.filter(id=>frames.some(frame=>String(frame.id)===id))),[clip.keyframes]);
+  const properties=useMemo(()=>Array.from(new Set(frames.flatMap(frame=>Object.keys(frame.values??{})))).slice(0,5),[clip.keyframes]);
+  const cycleInterp=()=>{
+    const ids=selected.length?selected:frames[0]?.id?[String(frames[0].id)]:[];
+    if(!ids.length)return;
+    const source=frames.find(frame=>ids.includes(String(frame.id)));
+    const order=['linear','easeIn','easeOut','easeInOut','springy','bell'];
+    const next=order[(order.indexOf(String(source?.interp??'linear'))+1)%order.length];
+    store.dispatch({type:'setClipKeyframeInterpolation',clipId:clip.id,keyframeIds:ids,interp:next});
+  };
+  return <div
+    aria-label="Expanded keyframe lane"
+    onClick={event=>event.stopPropagation()}
+    style={{position:'absolute',left:0,right:0,top,height:28,borderTop:`1.5px solid ${INK}`,background:'rgba(54,224,246,.08)',overflow:'hidden'}}
+  >
+    <div style={{position:'sticky',left:0,zIndex:5,width:LABEL_WIDTH,height:'100%',borderRight:`2px solid ${INK}`,background:'#fff',display:'grid',gridTemplateColumns:'1fr repeat(3,18px)',alignItems:'center',gap:2,padding:'0 3px',boxSizing:'border-box'}}>
+      <span style={{fontSize:6,fontWeight:1000,textTransform:'uppercase',overflow:'hidden',textOverflow:'ellipsis'}}>{properties.join(' · ')||'Keyframes'}</span>
+      <button title="Duplicate selected keyframes" aria-label="Duplicate selected keyframes" disabled={!selected.length} onClick={()=>store.dispatch({type:'duplicateClipKeyframes',clipId:clip.id,keyframeIds:selected})} style={{...miniBtn(CYAN),opacity:selected.length?1:.35}}><Copy size={9}/></button>
+      <button title="Cycle interpolation" aria-label="Cycle selected keyframe interpolation" disabled={!selected.length} onClick={cycleInterp} style={{...miniBtn(YELLOW),opacity:selected.length?1:.35}}><SlidersHorizontal size={9}/></button>
+      <button title="Delete selected keyframes" aria-label="Delete selected keyframes" disabled={!selected.length} onClick={()=>{store.dispatch({type:'deleteClipKeyframes',clipId:clip.id,keyframeIds:selected});setSelected([])}} style={{...miniBtn(PINK),opacity:selected.length?1:.35}}><Trash2 size={9}/></button>
+    </div>
+    {frames.map((frame,index)=>{
+      const id=String(frame.id);
+      const offset=preview[id]??Number(frame.offsetSec??0);
+      const x=(clip.start+offset)*pxPerSec;
+      const active=selected.includes(id);
+      const mode=String(frame.mode??'circle');
+      return <button
+        key={id}
+        title={`${Object.keys(frame.values??{}).join(', ')||'keyframe'} · ${String(frame.interp??'linear')}`}
+        aria-label={`Keyframe ${index+1}`}
+        onContextMenu={event=>{
+          event.preventDefault();event.stopPropagation();
+          if(!selected.includes(id))setSelected([id]);
+          onContextMenu?.(clip,id,{x:event.clientX,y:event.clientY});
+        }}
+        onPointerDown={event=>{
+          event.stopPropagation();event.currentTarget.setPointerCapture?.(event.pointerId);
+          const timer=window.setTimeout(()=>setSelected(current=>current.includes(id)?current.filter(item=>item!==id):[...current,id]),420);
+          drag.current={id,pointerId:event.pointerId,x:event.clientX,offset,moved:false,timer};
+          if(!active&&!event.shiftKey)setSelected([id]);
+        }}
+        onPointerMove={event=>{
+          const current=drag.current;if(!current||current.id!==id||current.pointerId!==event.pointerId)return;
+          const dx=event.clientX-current.x;if(Math.abs(dx)>5){current.moved=true;if(current.timer!=null){window.clearTimeout(current.timer);current.timer=null}}
+          if(current.moved)setPreview(values=>({...values,[id]:clamp(current.offset+dx/Math.max(4,pxPerSec),0,duration)}));
+        }}
+        onPointerUp={event=>{
+          const current=drag.current;if(!current||current.pointerId!==event.pointerId)return;
+          if(current.timer!=null)window.clearTimeout(current.timer);
+          const next=preview[id]??current.offset;
+          if(current.moved)store.dispatch({type:'moveClipKeyframe',clipId:clip.id,keyframeId:id,offsetSec:next});
+          else if(active&&event.shiftKey)setSelected(items=>items.filter(item=>item!==id));
+          setPreview(values=>{const copy={...values};delete copy[id];return copy});
+          drag.current=null;
+        }}
+        onPointerCancel={()=>{const current=drag.current;if(current?.timer!=null)window.clearTimeout(current.timer);drag.current=null;setPreview(values=>{const copy={...values};delete copy[id];return copy})}}
+        style={{
+          position:'absolute',left:x,top:'50%',transform:'translate(-50%,-50%)',
+          width:mode==='diamond'?11:10,height:mode==='diamond'?11:10,border:`2px solid ${INK}`,
+          borderRadius:mode==='diamond'?2:99,background:active?CYAN:'#fff',
+          padding:0,touchAction:'none',zIndex:4,
+          ...(mode==='diamond'?{transform:'translate(-50%,-50%) rotate(45deg)'}:{}),
+        }}
+      />;
+    })}
   </div>;
 };
 

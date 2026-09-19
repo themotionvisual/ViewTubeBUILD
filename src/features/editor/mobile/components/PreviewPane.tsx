@@ -41,6 +41,8 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
   }|null>(null);
   const rotateRef=useRef<{angle:number;layerRotation:number;clipRotation:number}|null>(null);
   const snapBackRef=useRef(0);
+  const[motionPreview,setMotionPreview]=useState<Record<string,{x:number;y:number}>>({});
+  const motionDragRef=useRef<{id:string;pointerId:number;clientX:number;clientY:number;x:number;y:number}|null>(null);
 
   useEffect(()=>{
     const node=surfaceRef.current;
@@ -57,6 +59,25 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
     ()=>selected?resolveClipPreviewGeometry(store,selected):null,
     [selected,selectedLayer?.payload,state.playheadSec,state.project,state.selection.clipIds],
   );
+
+  const motionPoints=useMemo(()=>{
+    if(!selected||!geometry)return[];
+    const baseX=Number(selectedLayer?.payload?.x??visual?.x??0);
+    const baseY=Number(selectedLayer?.payload?.y??visual?.y??0);
+    return(selected.keyframes??[])
+      .filter(keyframe=>keyframe.id&&keyframe.values&&(
+        Object.prototype.hasOwnProperty.call(keyframe.values,'x')
+        ||Object.prototype.hasOwnProperty.call(keyframe.values,'y')
+      ))
+      .map(keyframe=>{
+        const id=String(keyframe.id);
+        const preview=motionPreview[id];
+        const x=preview?.x??Number(keyframe.values?.x??baseX);
+        const y=preview?.y??Number(keyframe.values?.y??baseY);
+        return{id,x,y,offsetSec:Number(keyframe.offsetSec??0)};
+      })
+      .sort((a,b)=>a.offsetSec-b.offsetSec);
+  },[selected,geometry,selectedLayer?.payload,visual?.x,visual?.y,motionPreview]);
 
   const updateLayer=(patch:Record<string,unknown>)=>{
     if(selectedLayer)dispatch({type:'updateLayerPayload',id:selectedLayer.id,patch});
@@ -135,6 +156,57 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
     >
       {renderPreview?renderPreview(size):<MobileProjectPreview store={store}/>}
       <TemplateCanvasRenderer clips={expandCompoundClips(state.project.clips)} playheadSec={state.playheadSec}/>
+
+      {geometry&&motionPoints.length>1?<svg
+        aria-label="Motion path"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        style={{position:'absolute',inset:0,width:'100%',height:'100%',zIndex:12,pointerEvents:'none',overflow:'visible'}}
+      >
+        <polyline
+          points={motionPoints.map(point=>`${50+(point.x/geometry.projectWidth)*100},${50+(point.y/geometry.projectHeight)*100}`).join(' ')}
+          fill="none"
+          stroke={CYAN}
+          strokeWidth="0.7"
+          strokeDasharray="2 1"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>:null}
+      {geometry?motionPoints.map((point,index)=>{
+        const left=50+(point.x/geometry.projectWidth)*100;
+        const top=50+(point.y/geometry.projectHeight)*100;
+        return <button
+          key={point.id}
+          title={`Motion keyframe ${index+1}`}
+          aria-label={`Drag motion keyframe ${index+1}`}
+          onPointerDown={event=>{
+            event.stopPropagation();event.currentTarget.setPointerCapture?.(event.pointerId);
+            motionDragRef.current={id:point.id,pointerId:event.pointerId,clientX:event.clientX,clientY:event.clientY,x:point.x,y:point.y};
+          }}
+          onPointerMove={event=>{
+            const active=motionDragRef.current;if(!active||active.id!==point.id||active.pointerId!==event.pointerId)return;
+            event.stopPropagation();
+            const x=active.x+((event.clientX-active.clientX)/Math.max(1,size.widthPx))*geometry.projectWidth;
+            const y=active.y+((event.clientY-active.clientY)/Math.max(1,size.heightPx))*geometry.projectHeight;
+            setMotionPreview(current=>({...current,[point.id]:{x,y}}));
+          }}
+          onPointerUp={event=>{
+            const active=motionDragRef.current;if(!active||active.id!==point.id)return;
+            event.stopPropagation();
+            const final=motionPreview[point.id]??{x:point.x,y:point.y};
+            if(selected)dispatch({type:'updateClipKeyframeValues',clipId:selected.id,keyframeId:point.id,patch:{x:final.x,y:final.y}});
+            setMotionPreview(current=>{const next={...current};delete next[point.id];return next});
+            motionDragRef.current=null;
+          }}
+          onPointerCancel={()=>{setMotionPreview(current=>{const next={...current};delete next[point.id];return next});motionDragRef.current=null}}
+          style={{
+            position:'absolute',left:`${left}%`,top:`${top}%`,zIndex:18,
+            width:14,height:14,transform:'translate(-50%,-50%) rotate(45deg)',
+            border:`2px solid ${INK}`,borderRadius:2,background:index===0?YELLOW:CYAN,
+            padding:0,touchAction:'none',boxShadow:'0 0 0 2px rgba(255,255,255,.8)',
+          }}
+        />;
+      }):null}
 
       {selected&&visual&&geometry&&frameStyle?<div
         aria-label="Selected clip transform"

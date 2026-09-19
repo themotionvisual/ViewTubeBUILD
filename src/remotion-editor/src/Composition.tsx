@@ -229,16 +229,25 @@ const evaluatePayloadAtFrame = (
 };
 
 const layerFilter = (payload: Record<string, unknown>) => {
-  const blur = Math.max(0, Number(payload.blur || 0));
-  const saturation = Math.max(0, Number(payload.saturation ?? 1));
-  const brightness = Math.max(0, Number(payload.brightness ?? 1));
-  const hue = Number(payload.hue || 0);
-  return [
-    blur ? `blur(${blur}px)` : '',
-    `saturate(${saturation})`,
-    `brightness(${brightness})`,
-    hue ? `hue-rotate(${hue}deg)` : '',
-  ].filter(Boolean).join(' ');
+  if (Boolean(payload.fxBypass)) return '';
+  const disabled = payload.fxDisabled && typeof payload.fxDisabled === 'object'
+    ? payload.fxDisabled as Record<string, boolean>
+    : {};
+  const order = Array.isArray(payload.fxOrder)
+    ? payload.fxOrder.map(String)
+    : ['blur', 'saturation', 'brightness', 'hue'];
+  const filters: Record<string, string> = {
+    blur: Math.max(0, Number(payload.blur || 0)) ? `blur(${Math.max(0, Number(payload.blur || 0))}px)` : '',
+    saturation: `saturate(${Math.max(0, Number(payload.saturation ?? 1))})`,
+    brightness: `brightness(${Math.max(0, Number(payload.brightness ?? 1))})`,
+    hue: Number(payload.hue || 0) ? `hue-rotate(${Number(payload.hue || 0)}deg)` : '',
+  };
+  const known = ['blur', 'saturation', 'brightness', 'hue'];
+  return [...order.filter(key => known.includes(key)), ...known.filter(key => !order.includes(key))]
+    .filter(key => !disabled[key])
+    .map(key => filters[key])
+    .filter(Boolean)
+    .join(' ');
 };
 
 const getShortsRenderConfig = (payload: Record<string, unknown>, sourceSeconds: number) => {
@@ -548,7 +557,8 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
         const top = (height / 2) + Number(payload.y || 0);
         const scale = Number(payload.scale || 1);
         const rotation = Number(payload.rotation || 0);
-        const opacity = clamp(Number(payload.opacity ?? 1), 0, 1);
+        const fxDisabled = payload.fxDisabled && typeof payload.fxDisabled === 'object' ? payload.fxDisabled as Record<string, boolean> : {};
+        const opacity = Boolean(payload.fxBypass) || fxDisabled.opacity ? 1 : clamp(Number(payload.opacity ?? 1), 0, 1);
         const zIndex = Math.max(1, orderedTrackIds.indexOf(layer.trackId) + 1);
         const commonStyle: React.CSSProperties = {
           position: 'absolute',

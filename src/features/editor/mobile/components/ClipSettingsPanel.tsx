@@ -1,8 +1,9 @@
-import React,{useEffect,useRef} from 'react';
-import {AudioLines,Circle,ImageIcon,LayoutTemplate,Minus,Plus,RectangleHorizontal,Type,Video} from 'lucide-react';
+import React,{useMemo,useRef,useState} from 'react';
+import {AudioLines,Circle,ImageIcon,LayoutTemplate,RectangleHorizontal,Save,Type,Video} from 'lucide-react';
 import type {EditorLayer,EditorStore} from '../state/editorState';
 import type {EditorNavPage} from './EditorNavigationPages';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
+import {AcceleratingStepper as HoldStepper,LinkToggle,RotationDial,XYJoystick} from './MobileEditorPrimitives';
 
 const BLACK='#111111';
 const MAGENTA='#ff00ff';
@@ -13,6 +14,13 @@ const BLUE='#579aff';
 const PURPLE='#cc00ff';
 const INK='#248b99';
 const CYAN='#36E0F6';
+const CLIP_TYPE_COLORS:Record<string,string>={
+  text:MAGENTA,shape:ORANGE,image:YELLOW,media:GREEN,video:GREEN,audio:BLUE,
+  'design-template':PURPLE,'remotion-asset':CYAN,compound:CYAN,
+};
+const CLIP_COLOR_CHOICES=[CYAN,MAGENTA,YELLOW,GREEN,BLUE,PURPLE,ORANGE];
+const RECENT_COLORS_KEY='viewtube.editor.recent-colors.v1';
+const CONTROL_PRESETS_KEY='viewtube.editor.control-presets.v1';
 
 type Payload=Record<string,unknown>;
 
@@ -37,19 +45,6 @@ const valueInput:React.CSSProperties={
   boxSizing:'border-box',border:`2px solid ${INK}`,margin:0,padding:'2px 6px',
   fontWeight:800,fontSize:9,color:'inherit',background:'#fff',borderRadius:6,textAlign:'center',
   minWidth:36,width:'100%',height:24,caretColor:INK,outline:'none',
-};
-
-const stepperButton:React.CSSProperties={
-  width:24,minWidth:24,height:26,border:`2px solid ${INK}`,borderRadius:6,
-  background:CYAN,color:'#111',fontSize:13,fontWeight:1000,lineHeight:1,
-  display:'grid',placeItems:'center',padding:0,touchAction:'none',userSelect:'none',
-  boxShadow:'2px 2px 0 rgba(36,139,153,.22)',cursor:'pointer',
-};
-
-const stepperValue:React.CSSProperties={
-  minWidth:0,height:26,borderTop:`2px solid ${INK}`,borderBottom:`2px solid ${INK}`,
-  background:'#fff',display:'grid',placeItems:'center',fontSize:10,fontWeight:1000,
-  fontVariantNumeric:'tabular-nums',letterSpacing:'-.02em',padding:'0 5px',boxSizing:'border-box',
 };
 
 const clamp=(value:number,min:number,max:number)=>Math.max(min,Math.min(max,value));
@@ -194,100 +189,6 @@ function keyframeState(clip:VtE1Clip,prop:string,playheadSec:number){
   return active?'active' as const:'attached' as const;
 }
 
-interface HoldStepperProps{
-  label:string;
-  value:number;
-  min:number;
-  max:number;
-  step:number;
-  onChange:(value:number)=>void;
-  keyframeState?:'none'|'attached'|'active';
-  onKeyframe?:()=>void;
-  suffix?:string;
-  precision?:number;
-}
-
-const HoldStepper:React.FC<HoldStepperProps>=({
-  label,value,min,max,step,onChange,keyframeState='none',onKeyframe,suffix='',precision,
-})=>{
-  const valueRef=useRef(value);
-  const timerRef=useRef<number|null>(null);
-  const holdStartRef=useRef(0);
-  valueRef.current=value;
-
-  const stop=()=>{
-    if(timerRef.current!=null){
-      window.clearTimeout(timerRef.current);
-      timerRef.current=null;
-    }
-  };
-
-  useEffect(()=>stop,[]);
-
-  const nudge=(direction:-1|1,elapsed=0)=>{
-    const multiplier=elapsed>=2800?10:elapsed>=1700?5:elapsed>=900?2:1;
-    const next=clamp(valueRef.current+(direction*step*multiplier),min,max);
-    const decimals=precision??(step<.01?3:step<1?2:0);
-    const snapped=Number(next.toFixed(decimals));
-    valueRef.current=snapped;
-    onChange(snapped);
-  };
-
-  const schedule=(direction:-1|1)=>{
-    const elapsed=performance.now()-holdStartRef.current;
-    nudge(direction,elapsed);
-    const interval=Math.max(42,210-(elapsed/18));
-    timerRef.current=window.setTimeout(()=>schedule(direction),interval);
-  };
-
-  const start=(direction:-1|1,event:React.PointerEvent<HTMLButtonElement>)=>{
-    event.preventDefault();
-    event.currentTarget.setPointerCapture?.(event.pointerId);
-    stop();
-    holdStartRef.current=performance.now();
-    nudge(direction,0);
-    timerRef.current=window.setTimeout(()=>schedule(direction),340);
-  };
-
-  const decimals=precision??(step<.01?3:step<1?2:0);
-  const display=`${Number(value.toFixed(decimals))}${suffix}`;
-
-  return <div style={{width:'min(108px,100%)',maxWidth:'100%',marginBottom:7}}>
-    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:6,marginBottom:3}}>
-      <span style={{fontSize:8,fontWeight:1000,textTransform:'uppercase',opacity:.72,lineHeight:1}}>{label}</span>
-      {onKeyframe?<button
-        title={`Add circle keyframe for ${label}`}
-        onClick={onKeyframe}
-        style={{
-          width:18,height:18,border:`2px solid ${INK}`,borderRadius:99,padding:0,
-          background:keyframeState==='active'?BLUE:keyframeState==='attached'?'#a8caff':'#fff',
-          color:'#111',fontSize:13,fontWeight:1000,lineHeight:1,display:'grid',placeItems:'center',
-          opacity:keyframeState==='attached'?.72:1,
-        }}
-      ><Circle size={10}/></button>:null}
-    </div>
-    <div style={{display:'grid',gridTemplateColumns:'24px minmax(52px,60px) 24px',alignItems:'stretch',width:'108px',maxWidth:'100%'}}>
-      <button
-        aria-label={`Decrease ${label}`}
-        style={{...stepperButton,background:CYAN,borderTopRightRadius:0,borderBottomRightRadius:0}}
-        onPointerDown={e=>start(-1,e)}
-        onPointerUp={stop}
-        onPointerCancel={stop}
-        onLostPointerCapture={stop}
-      ><Minus size={13}/></button>
-      <div aria-live="polite" style={stepperValue}>{display}</div>
-      <button
-        aria-label={`Increase ${label}`}
-        style={{...stepperButton,background:CYAN,borderTopLeftRadius:0,borderBottomLeftRadius:0}}
-        onPointerDown={e=>start(1,e)}
-        onPointerUp={stop}
-        onPointerCancel={stop}
-        onLostPointerCapture={stop}
-      ><Plus size={13}/></button>
-    </div>
-  </div>;
-};
-
 const SettingRow:React.FC<{
   def:SettingDef;
   payload:Payload;
@@ -312,6 +213,7 @@ const SettingRow:React.FC<{
     precision={def.step<1?2:0}
     suffix={def.prop==='opacity'?'%':''}
     onChange={commit}
+    defaultValue={def.toDisplay?def.toDisplay(def.fallback):def.fallback}
     keyframeState={state}
     onKeyframe={()=>store.dispatch({type:'addClipKeyframeValue',clipId:clip.id,prop:def.prop,value:raw})}
   />;
@@ -345,6 +247,16 @@ const ColorControl:React.FC<{
 };
 
 function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:(page:EditorNavPage)=>void}){
+  const[linkedSize,setLinkedSize]=useState(true);
+  const[colorScope,setColorScope]=useState<'selected'|'group'|'track'>('selected');
+  const[recentColors,setRecentColors]=useState<string[]>(()=>{
+    if(typeof window==='undefined')return[];
+    try{const raw=JSON.parse(localStorage.getItem(RECENT_COLORS_KEY)||'[]');return Array.isArray(raw)?raw.slice(0,7):[]}catch{return[]}
+  });
+  const[controlPresets,setControlPresets]=useState<Array<{name:string;payload:Payload}>>(()=>{
+    if(typeof window==='undefined')return[];
+    try{const raw=JSON.parse(localStorage.getItem(CONTROL_PRESETS_KEY)||'[]');return Array.isArray(raw)?raw.slice(0,12):[]}catch{return[]}
+  });
   const clip=store.selectedClips[0];
   const layer=store.selectedLayer;
   if(!clip)return <div style={{width:'100%',minWidth:0,border:`2px solid ${BLACK}`,borderRadius:7,padding:8,background:'#fff',fontSize:9,fontWeight:900,textTransform:'uppercase'}}>Select a clip in the timeline or Project Clips list to edit every clip setting.</div>;
@@ -367,6 +279,32 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
   const isAudio=type==='audio';
   const audioVolume=number(payload.volume,.6);
   const audioRate=number(payload.playbackRate,1);
+  const widthValue=number(payload.width,100),heightValue=number(payload.height,100);
+  const xValue=number(payload.x,0),yValue=number(payload.y,0),rotationValue=number(payload.rotation,0);
+  const ratio=widthValue>0?heightValue/widthValue:1;
+  const clipKind=String((clip as VtE1Clip&{clipType?:unknown}).clipType??payload.mediaKind??layer.type??'clip');
+  const automaticClipColor=CLIP_TYPE_COLORS[clipKind]??CLIP_TYPE_COLORS[type]??CYAN;
+  const rememberColor=(color:string)=>{
+    const next=[color,...recentColors.filter(item=>item.toLowerCase()!==color.toLowerCase())].slice(0,7);
+    setRecentColors(next);
+    if(typeof window!=='undefined')localStorage.setItem(RECENT_COLORS_KEY,JSON.stringify(next));
+  };
+  const applyTimelineColor=(color:string)=>{
+    const groupId=String((clip as VtE1Clip&{groupId?:unknown}).groupId??'');
+    const ids=colorScope==='track'
+      ?store.state.project.clips.filter(item=>item.trackId===clip.trackId).map(item=>item.id)
+      :colorScope==='group'&&groupId
+        ?store.state.project.clips.filter(item=>String((item as VtE1Clip&{groupId?:unknown}).groupId??'')===groupId).map(item=>item.id)
+        :store.state.selection.clipIds.length?store.state.selection.clipIds:[clip.id];
+    ids.forEach(id=>store.dispatch({type:'updateClip',id,patch:{uiColor:color} as Partial<VtE1Clip>}));
+    rememberColor(color);
+  };
+  const saveControlPreset=()=>{
+    const entry={name:String(payload.layerName??type)+' Preset',payload:{...payload}};
+    const next=[entry,...controlPresets].slice(0,12);
+    setControlPresets(next);
+    if(typeof window!=='undefined')localStorage.setItem(CONTROL_PRESETS_KEY,JSON.stringify(next));
+  };
 
   return <div style={{width:'100%',minWidth:0,maxWidth:196}}>
     <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:4,alignItems:'center',marginBottom:8}}>
@@ -386,6 +324,7 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
       step={.05}
       precision={2}
       suffix="s"
+      defaultValue={0}
       onChange={sec=>store.dispatch({type:'trimClip',id:clip.id,side:'left',sec})}
     />
     <HoldStepper
@@ -396,6 +335,7 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
       step={.05}
       precision={2}
       suffix="s"
+      defaultValue={Math.min(store.state.project.durationSec,clip.start+4)}
       onChange={sec=>store.dispatch({type:'trimClip',id:clip.id,side:'right',sec})}
     />
     <HoldStepper
@@ -406,11 +346,56 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
       step={.05}
       precision={2}
       suffix="s"
+      defaultValue={4}
       onChange={duration=>store.dispatch({type:'trimClip',id:clip.id,side:'right',sec:clip.start+duration})}
     />
 
     <div style={sectionLabel}>TRANSFORM + TIMING</div>
-    {SETTINGS.map(def=><SettingRow key={def.prop} def={def} payload={payload} clip={clip} store={store} onPatch={patch}/>)}
+    <div style={{display:'grid',gridTemplateColumns:'92px 76px',gap:8,alignItems:'start',marginBottom:8}}>
+      <div>
+        <div style={{fontSize:8,fontWeight:1000,textTransform:'uppercase',marginBottom:3}}>Position Pad</div>
+        <XYJoystick x={xValue} y={yValue} range={500} onChange={value=>patch(value)} onReset={()=>patch({x:0,y:0})}/>
+      </div>
+      <div>
+        <div style={{fontSize:8,fontWeight:1000,textTransform:'uppercase',marginBottom:3}}>Rotation</div>
+        <RotationDial value={rotationValue} onChange={rotation=>patch({rotation})} onReset={()=>patch({rotation:0})}/>
+      </div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,104px))',gap:'0 6px',alignItems:'start'}}>
+      {SETTINGS.filter(def=>!['x','y','rotation','width','height'].includes(def.prop)).map(def=><SettingRow key={def.prop} def={def} payload={payload} clip={clip} store={store} onPatch={patch}/>)}
+      <HoldStepper label="WIDTH" value={widthValue} min={1} max={5000} step={1} defaultValue={100} precision={0}
+        rightSlot={<LinkToggle linked={linkedSize} onChange={setLinkedSize} label="dimensions"/>}
+        keyframeState={keyframeState(clip,'width',store.state.playheadSec)}
+        onKeyframe={()=>store.dispatch({type:'addClipKeyframeValue',clipId:clip.id,prop:'width',value:widthValue})}
+        onChange={width=>patch(linkedSize?{width,height:Math.max(1,width*ratio)}:{width})}/>
+      <HoldStepper label="HEIGHT" value={heightValue} min={1} max={5000} step={1} defaultValue={100} precision={0}
+        keyframeState={keyframeState(clip,'height',store.state.playheadSec)}
+        onKeyframe={()=>store.dispatch({type:'addClipKeyframeValue',clipId:clip.id,prop:'height',value:heightValue})}
+        onChange={height=>patch(linkedSize?{height,width:Math.max(1,height/Math.max(.001,ratio))}:{height})}/>
+    </div>
+
+    <div style={sectionLabel}>TIMELINE COLOR</div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:3,marginBottom:5}}>
+      {(['selected','group','track'] as const).map(scope=><button key={scope} style={{...miniButton,minHeight:24,padding:'2px 3px',background:colorScope===scope?CYAN:'#fff'}} onClick={()=>setColorScope(scope)}>{scope}</button>)}
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(8,minmax(0,1fr))',gap:3,marginBottom:5}}>
+      <button title="Automatic color for clip type" aria-label="Automatic clip type color" onClick={()=>applyTimelineColor(automaticClipColor)} style={{aspectRatio:'1',border:`2px solid ${INK}`,borderRadius:4,background:automaticClipColor,padding:0,boxShadow:'inset 0 0 0 2px #fff'}}/>
+      {CLIP_COLOR_CHOICES.map(color=><button key={color} title={color} aria-label={`Clip color ${color}`} onClick={()=>applyTimelineColor(color)} style={{aspectRatio:'1',border:`2px solid ${INK}`,borderRadius:4,background:color,padding:0}}/>)}
+    </div>
+    {recentColors.length?<div style={{display:'grid',gridTemplateColumns:'repeat(8,minmax(0,1fr))',gap:3,marginBottom:5}}>
+      {recentColors.map(color=><button key={color} title={`Recent ${color}`} onClick={()=>applyTimelineColor(color)} style={{aspectRatio:'1',border:`2px solid ${INK}`,borderRadius:4,background:color,padding:0}}/>)}
+      <label title="Custom clip color" style={{aspectRatio:'1',border:`2px solid ${INK}`,borderRadius:4,overflow:'hidden',position:'relative'}}>
+        <input type="color" defaultValue={String((clip as VtE1Clip&{uiColor?:string}).uiColor??automaticClipColor)} onChange={e=>applyTimelineColor(e.target.value)} style={{position:'absolute',inset:-8,width:'calc(100% + 16px)',height:'calc(100% + 16px)',border:0,padding:0}}/>
+      </label>
+    </div>:<label style={{display:'block',width:26,height:26,border:`2px solid ${INK}`,borderRadius:4,overflow:'hidden',position:'relative',marginBottom:5}}>
+      <input type="color" defaultValue={automaticClipColor} onChange={e=>applyTimelineColor(e.target.value)} style={{position:'absolute',inset:-8,width:42,height:42,border:0,padding:0}}/>
+    </label>}
+
+    <div style={sectionLabel}>CONTROL PRESETS</div>
+    <button style={{...miniButton,width:'100%',display:'inline-flex',alignItems:'center',justifyContent:'center',gap:4,background:CYAN,marginBottom:4}} onClick={saveControlPreset}><Save size={11}/>Save Current Controls</button>
+    {controlPresets.length?<div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:3,marginBottom:7}}>
+      {controlPresets.slice(0,6).map((preset,index)=><button key={preset.name+index} style={{...miniButton,minWidth:0,overflow:'hidden',textOverflow:'ellipsis'}} onClick={()=>patch(preset.payload)}>{preset.name}</button>)}
+    </div>:null}
 
     <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:6,width:'100%',minWidth:0,marginTop:3}}>
       <div style={{gridColumn:'1/-1',...sectionLabel,marginBottom:0}}>APPEARANCE</div>

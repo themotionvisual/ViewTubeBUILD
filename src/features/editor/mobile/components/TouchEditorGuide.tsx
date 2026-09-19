@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  CircleHelp,Combine,Download,Hand,Layers3,MoveHorizontal,Scissors,SlidersHorizontal,
+  CircleHelp,Combine,Download,Hand,Layers3,MoveHorizontal,Play,Scissors,SlidersHorizontal,
   Sparkles,SquareStack,Target,Type,X,
 } from 'lucide-react';
 
@@ -19,7 +19,7 @@ const sections=[
   {icon:<Download size={14}/>,title:'Projects and export',text:'Project lets you start, save, load, import, or export project JSON. Export can render MP4, MOV, WebM, or any supported combination of the three.'},
 ] as const;
 
-export const TouchEditorGuide:React.FC<{onClose:()=>void}>=({onClose})=><div
+export const TouchEditorGuide:React.FC<{onClose:()=>void;onStartCoach?:()=>void}>=({onClose,onStartCoach})=><div
   role="dialog"
   aria-modal="true"
   aria-label="Touch editor guide"
@@ -32,6 +32,10 @@ export const TouchEditorGuide:React.FC<{onClose:()=>void}>=({onClose})=><div
       <button aria-label="Close guide" onClick={onClose} style={{width:30,height:30,border:`2px solid ${INK}`,borderRadius:5,background:'#fff',display:'grid',placeItems:'center',padding:0}}><X size={15}/></button>
     </header>
     <div style={{overflowY:'auto',overflowX:'hidden',padding:7,WebkitOverflowScrolling:'touch'}}>
+      {onStartCoach?<button
+        onClick={onStartCoach}
+        style={{width:'100%',height:34,border:`2px solid ${INK}`,borderRadius:6,background:CYAN,display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6,fontSize:9,fontWeight:1000,textTransform:'uppercase',marginBottom:7}}
+      ><Play size={13}/>Start Interactive Guide</button>:null}
       <div style={{display:'grid',gap:6}}>
         {sections.map(section=><section key={section.title} style={{border:`2px solid ${INK}`,borderRadius:6,padding:7,background:'#fff'}}>
           <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>{section.icon}<b style={{fontSize:9,fontWeight:1000,textTransform:'uppercase'}}>{section.title}</b></div>
