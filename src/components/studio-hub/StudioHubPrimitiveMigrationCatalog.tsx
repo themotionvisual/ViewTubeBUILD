@@ -2,26 +2,42 @@ import React from "react"
 import { Check, ChevronDown, ChevronRight, Lightbulb, Menu, Minus, MoreHorizontal, Plus, Search, Settings2, SlidersHorizontal, X } from "lucide-react"
 import { type StudioHubComponentLevel } from "./StudioHubCompletePrimitiveCatalog"
 import {
+  SubToolboxAlert,
+  SubToolboxAlphabeticalSpectrumTags,
   SubToolboxBadge,
   SubToolboxButton,
   SubToolboxButtonGroup,
   SubToolboxCheckControl,
+  SubToolboxColorPicker,
+  SubToolboxDataTable,
+  SubToolboxFieldLabel,
   SubToolboxIconButton,
   SubToolboxInput,
+  SubToolboxKnob,
+  SubToolboxLinkButton,
+  SubToolboxMediaCard,
   SubToolboxMenu,
+  SubToolboxMetric,
+  SubToolboxOutputCard,
   SubToolboxProgressBar,
   SubToolboxProgressValue,
   SubToolboxRadioControl,
   SubToolboxRangeSlider,
   SubToolboxRemovableTag,
+  SubToolboxReorderRow,
   SubToolboxSegmentedToggle,
+  SubToolboxSelectableListRow,
   SubToolboxSelectableTag,
   SubToolboxSettingsSwitch,
   SubToolboxSlider,
   SubToolboxSplitField,
+  SubToolboxStatePanel,
   SubToolboxStatCard,
   SubToolboxStatusBadge,
+  SubToolboxStepIndicator,
   SubToolboxStepper,
+  SubToolboxSurface,
+  SubToolboxTabs,
   SubToolboxTag,
   SubToolboxTagEditor,
   SubToolboxTextArea,
@@ -71,6 +87,22 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "KPI",
   "Stat Card",
   "Tooltip",
+  "Knob Dial",
+  "Alphabetical Spectrum Tags",
+  "Field Label",
+  "Surface",
+  "State Panel",
+  "Output Card",
+  "Metric",
+  "Link Button",
+  "Data Table",
+  "Color Picker",
+  "Media Card",
+  "Selectable List Row",
+  "Reorderable Row",
+  "Tabs",
+  "Alert",
+  "Step Indicator",
 ] as const
 
 const pair = (index: number) => ({
@@ -103,6 +135,12 @@ const PrimitiveMigrationControl: React.FC<{
   const [rangeHigh, setRangeHigh] = React.useState(76)
   const [selectableTagOn, setSelectableTagOn] = React.useState(false)
   const [editorTags, setEditorTags] = React.useState(["NAPOLEON", "CAVALRY"])
+  const [knobValue, setKnobValue] = React.useState(72)
+  const [colorValue, setColorValue] = React.useState("#36E0F6")
+  const [mediaSelected, setMediaSelected] = React.useState(true)
+  const [rowSelected, setRowSelected] = React.useState(false)
+  const [tabValue, setTabValue] = React.useState("A")
+  const [reorderItems, setReorderItems] = React.useState(["HOOK", "PROOF", "CTA"])
 
   // Primitive track rule: only production primitives + shared CSS render here.
   // Unmigrated hardcoded families remain exclusively in the frozen baseline.
@@ -194,7 +232,57 @@ const PrimitiveMigrationControl: React.FC<{
     return <SubToolboxStatCard level={level} style={style} label="WATCH TIME" value="4,820H" delta="+12.4%" />
   }
   if (name === "Tooltip") {
-    return <SubToolboxTooltip level={level} forceOpen content="TOOLTIP" style={style} />
+    return <SubToolboxTooltip level={level} content="TOOLTIP" style={style} />
+  }
+  if (name === "Knob Dial") {
+    return <SubToolboxKnob level={level} style={style} value={knobValue} onValueChange={setKnobValue} label="VALUE" />
+  }
+  if (name === "Alphabetical Spectrum Tags") {
+    return <SubToolboxAlphabeticalSpectrumTags level={level} />
+  }
+  if (name === "Field Label") {
+    return <SubToolboxFieldLabel level={level} style={style}>VIDEO TITLE</SubToolboxFieldLabel>
+  }
+  if (name === "Surface") {
+    return <SubToolboxSurface level={level} style={style} tone="accent"><strong>SURFACE</strong></SubToolboxSurface>
+  }
+  if (name === "State Panel") {
+    return <SubToolboxStatePanel level={level} style={style} state="ready" message="Ready to generate." />
+  }
+  if (name === "Output Card") {
+    return <SubToolboxOutputCard level={level} style={style} title="DESCRIPTION" accentColor={colors.a} badge="READY">Reusable generated output.</SubToolboxOutputCard>
+  }
+  if (name === "Metric") {
+    return <SubToolboxMetric level={level} style={style} label="VIEWS" value="12.4K" accentColor={colors.a} />
+  }
+  if (name === "Link Button") {
+    return <SubToolboxLinkButton level={level} style={style} href="#toolbox-ui-library-primitive" icon={<ChevronRight />}>OPEN</SubToolboxLinkButton>
+  }
+  if (name === "Data Table") {
+    const rows = [{ metric: "Views", value: "12.4K" }, { metric: "CTR", value: "5.8%" }]
+    return <SubToolboxDataTable level={level} style={style} columns={[{ key: "metric", label: "METRIC" }, { key: "value", label: "VALUE", align: "right" }]} rows={rows} />
+  }
+  if (name === "Color Picker") {
+    return <SubToolboxColorPicker level={level} style={style} value={colorValue} onValueChange={setColorValue} label="ACCENT" />
+  }
+  if (name === "Media Card") {
+    return <SubToolboxMediaCard level={level} style={style} title="AUSTERLITZ" meta="16:9 · READY" preview={<div style={{ width: "100%", height: "100%", background: colors.a }} />} selected={mediaSelected} onClick={() => setMediaSelected((value) => !value)} />
+  }
+  if (name === "Selectable List Row") {
+    return <SubToolboxSelectableListRow level={level} style={style} title="DRAFT 01" detail="UPDATED NOW" leading={<span>01</span>} trailing={<ChevronRight />} selected={rowSelected} onClick={() => setRowSelected((value) => !value)} />
+  }
+  if (name === "Reorderable Row") {
+    const first = reorderItems[0] ?? "HOOK"
+    return <SubToolboxReorderRow level={level} style={style} title={first} detail="SECTION 01" disableUp onMoveDown={() => setReorderItems((items) => items.length > 1 ? [items[1], items[0], ...items.slice(2)] : items)} onRemove={() => setReorderItems((items) => items.slice(1))} />
+  }
+  if (name === "Tabs") {
+    return <SubToolboxTabs level={level} style={{ ...style, ["--vt-tab-count" as string]: 3 }} items={[{ value: "A", label: "EDIT" }, { value: "B", label: "PREVIEW" }, { value: "C", label: "DATA" }]} value={tabValue} onValueChange={setTabValue} />
+  }
+  if (name === "Alert") {
+    return <SubToolboxAlert level={level} style={style} tone="success" icon={<Check />} title="READY" detail="Primitive connected" />
+  }
+  if (name === "Step Indicator") {
+    return <SubToolboxStepIndicator level={level} style={{ ...style, ["--vt-step-count" as string]: 3 }} steps={[{ label: "SCRIPT", state: "complete" }, { label: "VISUALS", state: "active" }, { label: "EXPORT", state: "upcoming" }]} />
   }
 
   return null
