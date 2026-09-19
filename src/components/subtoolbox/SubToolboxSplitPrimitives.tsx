@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react"
+import { getComponentLevelCssVars } from "./tokens"
+import type { ToolboxControlLevel } from "./tokens"
 import { ChevronDown } from "lucide-react"
 import "../../styles/subtoolbox-split-primitives.css"
 
@@ -10,6 +12,7 @@ export interface SubToolboxSplitButtonProps extends React.ButtonHTMLAttributes<H
   selected?: boolean
   railColor?: string
   labelColor?: string
+  level?: ToolboxControlLevel
 }
 
 export const SubToolboxSplitButton: React.FC<SubToolboxSplitButtonProps> = ({
@@ -18,6 +21,7 @@ export const SubToolboxSplitButton: React.FC<SubToolboxSplitButtonProps> = ({
   selected = false,
   railColor,
   labelColor,
+  level,
   className,
   style,
   type = "button",
@@ -25,10 +29,12 @@ export const SubToolboxSplitButton: React.FC<SubToolboxSplitButtonProps> = ({
 }) => (
   <button
     type={type}
-    className={classes("vt-subtoolbox-split-button", selected && "is-selected", className)}
+    data-vt-control-level={level}
+    className={classes("vt-subtoolbox-split-button", level && "has-component-level", selected && "is-selected", className)}
     aria-pressed={props["aria-pressed"] ?? (selected || undefined)}
     style={{
       ...style,
+      ...(level ? getComponentLevelCssVars(level) : {}),
       ...(railColor ? { ["--vt-split-rail" as string]: railColor } : {}),
       ...(labelColor ? { ["--vt-split-label" as string]: labelColor } : {}),
     }}
@@ -56,6 +62,7 @@ export interface SubToolboxSplitDropdownProps {
   railColor?: string
   labelColor?: string
   className?: string
+  level?: ToolboxControlLevel
 }
 
 export const SubToolboxSplitDropdown: React.FC<SubToolboxSplitDropdownProps> = ({
@@ -68,6 +75,7 @@ export const SubToolboxSplitDropdown: React.FC<SubToolboxSplitDropdownProps> = (
   railColor,
   labelColor,
   className,
+  level,
 }) => {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -90,12 +98,13 @@ export const SubToolboxSplitDropdown: React.FC<SubToolboxSplitDropdownProps> = (
   }, [open])
 
   const style = {
+    ...(level ? getComponentLevelCssVars(level) : {}),
     ...(railColor ? { ["--vt-split-rail" as string]: railColor } : {}),
     ...(labelColor ? { ["--vt-split-label" as string]: labelColor } : {}),
   } as React.CSSProperties
 
   return (
-    <div ref={rootRef} className={classes("vt-subtoolbox-split-dropdown", open && "is-open", className)} style={style}>
+    <div ref={rootRef} data-vt-control-level={level} className={classes("vt-subtoolbox-split-dropdown", level && "has-component-level", open && "is-open", className)} style={style}>
       <button
         type="button"
         className="vt-subtoolbox-split-dropdown-trigger"
@@ -146,6 +155,7 @@ export interface SubToolboxKpiCardProps extends React.HTMLAttributes<HTMLElement
   icon?: React.ReactNode
   accentColor?: string
   railColor?: string
+  level?: ToolboxControlLevel
 }
 
 export const SubToolboxKpiCard: React.FC<SubToolboxKpiCardProps> = ({
@@ -155,14 +165,17 @@ export const SubToolboxKpiCard: React.FC<SubToolboxKpiCardProps> = ({
   icon,
   accentColor,
   railColor,
+  level,
   className,
   style,
   ...props
 }) => (
   <article
-    className={classes("vt-subtoolbox-kpi-card", className)}
+    data-vt-control-level={level}
+    className={classes("vt-subtoolbox-kpi-card", level && "has-component-level", className)}
     style={{
       ...style,
+      ...(level ? getComponentLevelCssVars(level) : {}),
       ...(accentColor ? { ["--vt-kpi-accent" as string]: accentColor } : {}),
       ...(railColor ? { ["--vt-kpi-rail" as string]: railColor } : {}),
     }}

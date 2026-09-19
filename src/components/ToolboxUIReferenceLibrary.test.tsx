@@ -6,13 +6,16 @@ import { describe, expect, it } from "vitest"
 import { ToolboxUIReferenceLibrary } from "./ToolboxUIReferenceLibrary"
 
 describe("Toolbox UI Reference Library", () => {
-  it("mounts the complete canonical component catalog inside the production toolbox shell", () => {
+  it("mounts frozen and primitive-migration catalogs in matching production toolbox shells", () => {
     const html = renderToStaticMarkup(
       <ToolboxUIReferenceLibrary collapsible={false} isOpenInitial paletteIndex={7} />,
     )
 
-    expect(html).toContain("Studio Hub Component Library")
-    expect(html).toContain("Complete Component + Primitive Catalog")
+    expect(html).toContain("Studio Hub Component Library — Hardcoded")
+    expect(html).toContain("Studio Hub Component Library — Primitive")
+    expect(html.match(/Complete Component \+ Primitive Catalog/g)).toHaveLength(2)
+    expect(html).toContain('data-vt-library-track="hardcoded"')
+    expect(html).toContain('data-vt-library-track="primitive"')
     expect(html).toContain("Split Search")
     expect(html).toContain("Toggle")
     expect(html).toContain("Settings Switch")
@@ -32,6 +35,49 @@ describe("Toolbox UI Reference Library", () => {
     expect(html).toContain('data-vt-toolbox-level="main"')
   })
 
+  it("renders only real primitive families and includes the correction + discovery wave", () => {
+    const source = readFileSync(resolve(process.cwd(), "src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx"), "utf8")
+    for (const family of [
+      "Primary Button", "Secondary Button", "Neutral Button", "Destructive Button",
+      "Square Icon Button", "Split Left Button", "Head Tail Action", "Split Menu",
+      "Dropdown", "Select Menu", "Context Menu", "Text Input", "Textarea",
+      "Split Search", "Number Field", "Input Action", "Stepper", "Slider",
+      "Range Slider", "Toggle", "Settings Switch", "Checkbox", "Radio",
+      "Segmented Choice", "Button Group", "Tag", "Removable Tag", "Selectable Tag",
+      "Tag Editor", "Badge", "Status Badge", "Progress Bar", "Progress Value",
+      "KPI", "Stat Card", "Tooltip", "Knob Dial", "Alphabetical Spectrum Tags",
+      "Field Label", "Surface", "State Panel", "Output Card", "Metric", "Link Button",
+      "Data Table", "Color Picker", "Media Card", "Selectable List Row", "Reorderable Row",
+      "Tabs", "Alert", "Step Indicator", "Dialog", "Drawer", "Calendar",
+      "Loader", "Skeleton", "Toast",
+    ]) expect(source).toContain(`"${family}"`)
+    expect(source).not.toContain("HardcodedGenericControl")
+    expect(source).not.toContain("hardcoded-fallback")
+    expect(source).toContain("STUDIO_HUB_MIGRATED_FAMILIES.map")
+    expect(source).toContain("<SubToolboxSplitButton")
+    expect(source).toContain("<SubToolboxSplitDropdown")
+    expect(source).toContain("<SubToolboxMenu")
+    expect(source).toContain("<SubToolboxSplitField")
+    expect(source).toContain("<SubToolboxSlider")
+    expect(source).toContain("<SubToolboxRangeSlider")
+    expect(source).toContain("<SubToolboxTagEditor")
+    expect(source).toContain("<SubToolboxProgressBar")
+    expect(source).toContain("<SubToolboxKpiCard")
+    expect(source).toContain("<SubToolboxKnob")
+    expect(source).toContain("<SubToolboxAlphabeticalSpectrumTags")
+    expect(source).toContain("<SubToolboxDataTable")
+    expect(source).toContain("<SubToolboxColorPicker")
+    expect(source).toContain("<SubToolboxMediaCard")
+    expect(source).toContain("<SubToolboxStepIndicator")
+    expect(source).toContain("<SubToolboxDialog")
+    expect(source).toContain("<SubToolboxDrawer")
+    expect(source).toContain("<SubToolboxCalendar")
+    expect(source).toContain("<SubToolboxLoader")
+    expect(source).toContain("<SubToolboxSkeleton")
+    expect(source).toContain("<SubToolboxToast")
+    expect(source).not.toContain("forceOpen content=\"TOOLTIP\"")
+  })
+
   it("restores the 80px main toolbox header authority instead of inheriting subtoolbox height", () => {
     const source = readFileSync(resolve(process.cwd(), "src/components/ToolboxUIReferenceLibrary.tsx"), "utf8")
     expect(source).toContain('--vt-toolbox-header-height: 80px !important')
@@ -39,7 +85,7 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).toContain('width: 80px !important')
   })
 
-  it("is lazy-mounted as a single Studio Hub toolbox", () => {
+  it("is lazy-mounted once while the library component renders both comparison tracks", () => {
     const studioHub = readFileSync(resolve(process.cwd(), "src/views/StudioHub.tsx"), "utf8")
 
     expect(studioHub).toContain('React.lazy(() => import("../components/ToolboxUIReferenceLibrary"))')

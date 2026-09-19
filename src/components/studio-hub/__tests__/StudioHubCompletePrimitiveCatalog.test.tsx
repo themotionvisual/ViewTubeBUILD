@@ -17,6 +17,12 @@ describe("Studio Hub complete primitive catalog", () => {
     ]))
   })
 
+  it("removes the rejected two-color upload family while keeping the corrected knob and spectrum families", () => {
+    expect(STUDIO_HUB_COMPONENT_FAMILIES).not.toContain("Two Color Upload Frame")
+    expect(STUDIO_HUB_COMPONENT_FAMILIES).toContain("Knob Dial")
+    expect(STUDIO_HUB_COMPONENT_FAMILIES).toContain("Alphabetical Spectrum Tags")
+  })
+
   it("keeps the canonical three-level component sizing model", () => {
     const canonicalLevels = ["l0", "l1", "l2"]
     expect(canonicalLevels).toEqual(["l0", "l1", "l2"])
