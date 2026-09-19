@@ -1,8 +1,8 @@
 /** Phone timeline with touch-arbitrated select/move/trim, keyframes and collision-safe tracks. */
 import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {
-  AlertTriangle,EyeOff,Layers3,ListPlus,LocateFixed,LockKeyhole,Magnet,Minus,Plus,
-  SkipBack,SkipForward,StepBack,StepForward,Trash2,Type,VolumeX,X,
+  AlertTriangle,Copy,EyeOff,GripVertical,Layers3,ListPlus,LocateFixed,LockKeyhole,Magnet,Minus,Plus,
+  SkipBack,SkipForward,SlidersHorizontal,StepBack,StepForward,Trash2,Type,VolumeX,X,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {useLongPress,usePinchZoom} from '../hooks/gestures';
@@ -179,7 +179,20 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
   const focusedCompound=compoundFocusId?state.project.clips.find(clip=>clip.id===compoundFocusId):undefined;
   const focusedChildren=focusedCompound?compoundChildren(focusedCompound):[];
   const tracks=state.project.tracks.filter(track=>!track.hidden).filter(track=>!focusedCompound||track.id===focusedCompound.trackId);
-  const bodyHeight=tracks.length*TIMELINE_TRACK_HEIGHT+TIMELINE_HEADER_HEIGHT+8;
+  const trackRows=useMemo(()=>{
+    let y=0;
+    return tracks.map(track=>{
+      const clips=focusedCompound?focusedChildren.filter(clip=>clip.trackId===track.id||focusedCompound.trackId===track.id):clipsOnTrack(track.id);
+      const hasSelected=clips.some(clip=>state.selection.clipIds.includes(clip.id));
+      const selectedClip=clips.find(clip=>state.selection.clipIds.includes(clip.id));
+      const hasKeyframes=Boolean(selectedClip&&(selectedClip.keyframes??[]).length);
+      const height=focusedCompound?TIMELINE_TRACK_HEIGHT:clips.length===0?24:hasSelected?(hasKeyframes?72:54):TIMELINE_TRACK_HEIGHT;
+      const row={track,clips,y,height,selectedClip,hasKeyframes};
+      y+=height;
+      return row;
+    });
+  },[tracks,focusedCompound,focusedChildren,state.selection.clipIds,clipsOnTrack,state.project.clips]);
+  const bodyHeight=trackRows.reduce((sum,row)=>sum+row.height,0)+TIMELINE_HEADER_HEIGHT+8;
   const hasOverlaps=!focusedCompound&&state.project.clips.some((clip,index,all)=>all.some((other,otherIndex)=>otherIndex>index&&overlaps(clip,other)));
 
   return <div style={{
@@ -247,14 +260,17 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
         <Ruler pxPerSec={zoom} durationSec={state.project.durationSec}/>
         <PrecisionScrub store={store} pxPerSec={zoom} labelWidth={LABEL_WIDTH} scrollRef={scrollRef}/>
         <div style={{position:'relative',paddingTop:TIMELINE_HEADER_HEIGHT}}>
-          {tracks.map((track,index)=><TrackRow
-            key={track.id}
-            track={track}
+          {trackRows.map(row=><TrackRow
+            key={row.track.id}
+            track={row.track}
             store={store}
-            clips={focusedCompound?focusedChildren.filter(clip=>clip.trackId===track.id||focusedCompound.trackId===track.id):clipsOnTrack(track.id)}
+            clips={row.clips}
             pxPerSec={zoom}
             totalPx={totalPx}
-            y={index*TIMELINE_TRACK_HEIGHT}
+            y={row.y}
+            rowHeight={row.height}
+            selectedClip={row.selectedClip}
+            showKeyframeLane={row.hasKeyframes}
             snap={snap}
             readOnly={Boolean(focusedCompound)}
             focusParentId={focusedCompound?.id}
