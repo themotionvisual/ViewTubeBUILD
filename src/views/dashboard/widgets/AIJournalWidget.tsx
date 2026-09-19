@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { WidgetScrollArea, WidgetSection } from "../WidgetPrimitives"
+import { WidgetScrollArea, WidgetSection, WidgetSizedButton, WidgetIconButton } from "../WidgetPrimitives"
 import { BookOpen, Send, Sparkles, Zap, Check, Plus } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
 import {
@@ -82,15 +82,15 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
         <WidgetSection className="ai-journal-entry-section">
           <div className="ai-journal-category-grid" role="group" aria-label="Journal category">
             {CATEGORIES.map(({ id, label }) => (
-              <button
+              <WidgetSizedButton
                 key={id}
-                type="button"
-                className={`vt-button ${category === id ? "primary" : ""}`.trim()}
+                height={24}
+                tone={category === id ? "primary" : "default"}
                 aria-pressed={category === id}
                 onClick={() => setCategory(id)}
               >
                 {label}
-              </button>
+              </WidgetSizedButton>
             ))}
           </div>
           
@@ -101,14 +101,16 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
               placeholder="What's on your mind? Visions, goals, style updates..."
               className="vt-textarea ai-journal-textarea"
             />
-            <button
+            <WidgetSizedButton
+              height={32}
+              tone="primary"
               onClick={handleSubmit}
               disabled={isSubmitting || !content.trim()}
-              className="vt-button primary ai-journal-submit"
+              className="ai-journal-submit"
             >
-              <Send size={14} />
+              <Send />
               Save entry
-            </button>
+            </WidgetSizedButton>
           </div>
         </WidgetSection>
 
@@ -139,15 +141,17 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
                         }
                       }}
                     />
-                    <button 
+                    <WidgetIconButton
+                      height={24}
+                      tone="primary"
+                      label="Save reflection reply"
+                      className="flex-shrink-0"
+                      icon={<Plus />}
                       onClick={(e) => {
                         const input = (e.currentTarget.previousSibling as HTMLInputElement)
                         answerFollowUp(f.id, input.value || "Acknowledged")
                       }}
-                      className="vt-button primary is-icon-only flex-shrink-0"
-                    >
-                      <Plus size={14} />
-                    </button>
+                    />
                   </div>
                 </div>
               ))}
@@ -172,18 +176,12 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
                 <div className="flex gap-1">
                   {p.type === 'binary' ? (
                     <>
-                      <button 
-                        onClick={() => answerMicroPoll(p.id, "Yes")}
-                        className="vt-button"
-                      >
+                      <WidgetSizedButton height={24} tone="default" onClick={() => answerMicroPoll(p.id, "Yes")}>
                         YES
-                      </button>
-                      <button 
-                        onClick={() => answerMicroPoll(p.id, "No")}
-                        className="vt-button"
-                      >
+                      </WidgetSizedButton>
+                      <WidgetSizedButton height={24} tone="default" onClick={() => answerMicroPoll(p.id, "No")}>
                         NO
-                      </button>
+                      </WidgetSizedButton>
                     </>
                   ) : (
                     <div className="flex gap-1 items-center">
@@ -195,12 +193,13 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
                           if (e.key === 'Enter') answerMicroPoll(p.id, (e.target as HTMLInputElement).value)
                         }}
                       />
-                      <button 
-                         onClick={() => answerMicroPoll(p.id, "Answered")}
-                         className="vt-button primary is-icon-only"
-                      >
-                        <Check size={10} />
-                      </button>
+                      <WidgetIconButton
+                        height={24}
+                        tone="primary"
+                        label="Submit poll answer"
+                        icon={<Check />}
+                        onClick={() => answerMicroPoll(p.id, "Answered")}
+                      />
                     </div>
                   )}
                 </div>
@@ -208,12 +207,14 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
             ))}
             
             {pendingPolls.length === 0 && !isGeneratingPulse && (
-              <button 
+              <WidgetSizedButton
+                height={24}
+                tone="secondary"
                 onClick={refreshPulse}
-                className="vt-button ai-journal-refill"
+                className="ai-journal-refill"
               >
                 Refill the Pulse
-              </button>
+              </WidgetSizedButton>
             )}
           </div>
         </div>
