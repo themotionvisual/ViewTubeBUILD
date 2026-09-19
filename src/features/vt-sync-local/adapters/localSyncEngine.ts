@@ -3028,6 +3028,8 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    let rowsWritten = 0
    let segmentPartial = false
    const revenueSegmentIds = ["ad_type", "revenue_source", "sharing_service"].filter((categoryId) => shouldSync(selected, categoryId))
+   const revenueCategoryRows = new Map<string, number>()
+   const revenueCategoryIssues = new Set<string>()
    const publishRevenueSegment = (categoryId: string, window: VtSyncAnalyticsWindow = "lifetime") => {
     const index = revenueSegmentIds.indexOf(categoryId)
     const nextCategoryId = revenueSegmentIds[index + 1]
@@ -3042,6 +3044,15 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      currentQueryLabel,
      nextQueryLabel,
      message: `Syncing ${currentQueryLabel} · ${window}.`,
+    }, onProgress)
+    updateCategoryState(progress, categoryId, {
+     status: "running",
+     rows: revenueCategoryRows.get(categoryId) || 0,
+     startedAt: progress.categoryStates?.[categoryId]?.startedAt || new Date().toISOString(),
+     completedAt: undefined,
+     currentWindow: window,
+     message: `Syncing ${currentQueryLabel} · ${window}.`,
+     error: undefined,
     }, onProgress)
    }
    if (shouldSync(selected, "ad_type")) {
@@ -3059,8 +3070,22 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      addManifestResult(manifest, adWindow === "lifetime" ? "ad_type" : `ad_type_${adWindow}`, !!result.rows, result.rows?.length || 0, result.columns, result.error)
      if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "ads", window: adWindow, phase: "ad_type", rawRows: result.rows, tableRows: result.rows, columns: result.columns })
      if (adWindow === "lifetime") {
-      markFreshness(["ad_type"], "ad_type", result.rows?.length || 0, result.rows ? "synced" : "failed")
+      markFreshness(["ad_type"], "ad_type", result.rows?.length || 0, result.rows ? (result.error ? "partial" : "synced") : "failed", result.error ? [result.error] : [])
      }
+     const adRows = (revenueCategoryRows.get("ad_type") || 0) + (result.rows?.length || 0)
+     revenueCategoryRows.set("ad_type", adRows)
+     if (!result.rows || result.error) revenueCategoryIssues.add("ad_type")
+     const finalAdWindow = adWindow === aggregateWindows[aggregateWindows.length - 1]
+     updateCategoryState(progress, "ad_type", {
+      status: finalAdWindow
+       ? adRows === 0 ? "failed" : revenueCategoryIssues.has("ad_type") ? "partial" : "complete"
+       : "pending",
+      rows: adRows,
+      completedAt: finalAdWindow ? new Date().toISOString() : undefined,
+      currentWindow: adWindow,
+      message: finalAdWindow ? `${adRows.toLocaleString()} rows synced across requested windows.` : `${adWindow} complete; waiting for the next requested window.`,
+      error: result.error,
+     }, onProgress)
      commitSnapshot()
      await sleep(150)
     }
@@ -3113,6 +3138,16 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "revenue", phase: "revenue_source", rawRows: result.rows, tableRows: snapshot.revenueSource as Array<Record<string, unknown>>, columns: result.columns })
     const revenueMissingMetrics = ["estimatedRevenue", "estimatedAdRevenue", "estimatedRedPartnerRevenue"].filter((metric) => !result.columns.includes(metric))
     markFreshness(["revenue"], "revenue_source", completeRevenueRows.length, result.rows ? (result.error || revenueMissingMetrics.length ? "partial" : "synced") : "failed", revenueMissingMetrics)
+    revenueCategoryRows.set("revenue_source", completeRevenueRows.length)
+    if (!result.rows || result.error || revenueMissingMetrics.length) revenueCategoryIssues.add("revenue_source")
+    updateCategoryState(progress, "revenue_source", {
+     status: !result.rows ? "failed" : revenueCategoryIssues.has("revenue_source") ? "partial" : "complete",
+     rows: completeRevenueRows.length,
+     completedAt: new Date().toISOString(),
+     currentWindow: "lifetime",
+     message: result.error || `${completeRevenueRows.length.toLocaleString()} revenue rows synced.`,
+     error: result.error,
+    }, onProgress)
     commitSnapshot()
    }
    if (shouldSync(selected, "sharing_service")) {
@@ -3161,6 +3196,20 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      if (shareWindow === "lifetime") {
       markFreshness(["shares"], "sharing_service", result.rows?.length || 0, result.rows ? (result.error ? "partial" : "synced") : "failed", result.error ? [result.error] : [])
      }
+     const shareRows = (revenueCategoryRows.get("sharing_service") || 0) + (result.rows?.length || 0)
+     revenueCategoryRows.set("sharing_service", shareRows)
+     if (!result.rows || result.error) revenueCategoryIssues.add("sharing_service")
+     const finalShareWindow = shareWindow === aggregateWindows[aggregateWindows.length - 1]
+     updateCategoryState(progress, "sharing_service", {
+      status: finalShareWindow
+       ? shareRows === 0 ? "failed" : revenueCategoryIssues.has("sharing_service") ? "partial" : "complete"
+       : "pending",
+      rows: shareRows,
+      completedAt: finalShareWindow ? new Date().toISOString() : undefined,
+      currentWindow: shareWindow,
+      message: finalShareWindow ? `${shareRows.toLocaleString()} rows synced across requested windows.` : `${shareWindow} complete; waiting for the next requested window.`,
+      error: result.error,
+     }, onProgress)
      commitSnapshot()
      await sleep(150)
     }
