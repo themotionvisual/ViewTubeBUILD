@@ -148,6 +148,10 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
   acc[row.status] = (acc[row.status] || 0) + 1
   return acc
  }, {})
+ const liveStatusTally = visibleUnifiedRows.reduce<Record<string, number>>((acc, row) => {
+  acc[row.displayStatus] = (acc[row.displayStatus] || 0) + 1
+  return acc
+ }, {})
  const datasetTotalRows = datasetRows.reduce((sum, row) => sum + row.rows, 0)
  const progressUnits = useMemo(() => VT_SYNC_SYNC_UNITS.map((unit) => {
   const rows = visibleUnifiedRows.filter((row) => row.syncUnitId === unit.id)
@@ -250,8 +254,10 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
   const duration = seconds >= 60 ? `${Math.floor(seconds / 60)}m ${seconds % 60}s` : `${seconds}s`
   return `${new Date(startedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} · ${completedAt ? "completed" : "running"} · ${duration}`
  }
+ const queuedCount = (liveStatusTally.pending || 0) + queuedCategoryIds.length
  const syncLeds: RetroLedSpec[] = [
   { id: "live", label: progress?.status === "running" ? "Live sync in progress" : "No active sync", tone: "#36E0F6", lit: progress?.status === "running", pulse: true },
+  { id: "queued", label: `${queuedCount} datasets queued or pending`, tone: "#FFDA47", lit: queuedCount > 0 },
   { id: "synced", label: `${datasetTally.synced || 0} datasets synced`, tone: "#3FEE56", lit: (datasetTally.synced || 0) > 0 },
   { id: "partial", label: `${datasetTally.partial || 0} datasets partial`, tone: "#FFDA47", lit: (datasetTally.partial || 0) > 0 },
   { id: "failed", label: `${datasetTally.failed || 0} datasets failed`, tone: "#FA618A", lit: (datasetTally.failed || 0) > 0 },
@@ -277,7 +283,7 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
    ].join("\n")),
   ]
   const lines = progress ? [
-   "ViewTube Annalytics Progress Summary",
+   "ViewTube Analytics Progress Summary",
    `Run ID: ${progress.runId}`,
    `Started: ${new Date(progress.startedAt).toLocaleString()}`,
    `Status: ${syncStatusLabel(progress.status)}`,
@@ -285,7 +291,7 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
    "",
    ...datasetLines,
   ] : [
-   "ViewTube Annalytics Progress Summary",
+   "ViewTube Analytics Progress Summary",
    "Status: No active sync yet.",
    "Next step: Choose datasets in YouTube Data Sync, then start a sync.",
    ...datasetLines,
@@ -350,6 +356,7 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b-[3px] border-black bg-[#161616] px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] text-white">
      {[
       ["Live", progress?.status === "running" ? 1 : 0, "#36E0F6"],
+      ["Queued", queuedCount, "#FFDA47"],
       ["Synced", datasetTally.synced || 0, "#3FEE56"],
       ["Partial", datasetTally.partial || 0, "#FFDA47"],
       ["Failed", datasetTally.failed || 0, "#FA618A"],
