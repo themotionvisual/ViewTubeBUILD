@@ -48,7 +48,8 @@ describe("Toolbox UI Reference Library", () => {
       "KPI", "Stat Card", "Tooltip", "Knob Dial", "Alphabetical Spectrum Tags",
       "Field Label", "Surface", "State Panel", "Output Card", "Metric", "Link Button",
       "Data Table", "Color Picker", "Media Card", "Selectable List Row", "Reorderable Row",
-      "Tabs", "Alert", "Step Indicator",
+      "Tabs", "Alert", "Step Indicator", "Dialog", "Drawer", "Calendar",
+      "Loader", "Skeleton", "Toast",
     ]) expect(source).toContain(`"${family}"`)
     expect(source).not.toContain("HardcodedGenericControl")
     expect(source).not.toContain("hardcoded-fallback")
@@ -68,6 +69,12 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).toContain("<SubToolboxColorPicker")
     expect(source).toContain("<SubToolboxMediaCard")
     expect(source).toContain("<SubToolboxStepIndicator")
+    expect(source).toContain("<SubToolboxDialog")
+    expect(source).toContain("<SubToolboxDrawer")
+    expect(source).toContain("<SubToolboxCalendar")
+    expect(source).toContain("<SubToolboxLoader")
+    expect(source).toContain("<SubToolboxSkeleton")
+    expect(source).toContain("<SubToolboxToast")
     expect(source).not.toContain("forceOpen content=\"TOOLTIP\"")
   })
 
