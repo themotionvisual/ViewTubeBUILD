@@ -137,6 +137,55 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const selectedGroupId=selectedClips.map(clip=>String((clip as VtE1Clip&{groupId?:unknown}).groupId??'')).find(Boolean)??'';
   const selectedCompound=selectedClips.length===1&&String((selectedClips[0] as VtE1Clip&{clipType?:unknown}).clipType??'')==='compound';
   const canCombine=selectedClips.length>=2&&selectedClips.every(clip=>clip.trackId===selectedClips[0].trackId);
+  const touchPoints=useRef(new Map<number,{x:number;y:number}>());
+  const touchPeak=useRef(0);
+  const touchStartedAt=useRef(0);
+  const touchMoved=useRef(false);
+  const timelineResize=useRef<{y:number;scale:number}|null>(null);
+
+  const setFocus=(next:WorkspaceFocus)=>patchPrefs({focus:focus===next?null:next});
+  const applyPreset=(id:(typeof WORKSPACE_PRESETS)[number]['id'])=>{
+    const next=presetPatch(id);
+    patchPrefs(next);
+    if(next.lastPage&&EDITOR_NAV_ITEMS.some(item=>item.id===next.lastPage))setPage(next.lastPage as EditorNavPage);
+    if(id==='timeline')onWorkspaceModeChange('split');
+    else if(id==='edit')onWorkspaceModeChange('split');
+  };
+
+  const presetIcons={
+    edit:<Pencil size={11}/>,
+    animate:<Activity size={11}/>,
+    audio:<AudioLines size={11}/>,
+    color:<Palette size={11}/>,
+    template:<LayoutTemplate size={11}/>,
+    timeline:<Rows3 size={11}/>,
+  } as const;
+
+  const rootPointerDown=(event:React.PointerEvent<HTMLDivElement>)=>{
+    if(event.pointerType!=='touch')return;
+    if(touchPoints.current.size===0){
+      touchStartedAt.current=event.timeStamp;
+      touchPeak.current=0;
+      touchMoved.current=false;
+    }
+    touchPoints.current.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    touchPeak.current=Math.max(touchPeak.current,touchPoints.current.size);
+  };
+  const rootPointerMove=(event:React.PointerEvent<HTMLDivElement>)=>{
+    const start=touchPoints.current.get(event.pointerId);
+    if(!start)return;
+    if(Math.hypot(event.clientX-start.x,event.clientY-start.y)>10)touchMoved.current=true;
+  };
+  const rootPointerEnd=(event:React.PointerEvent<HTMLDivElement>)=>{
+    if(event.pointerType!=='touch')return;
+    touchPoints.current.delete(event.pointerId);
+    if(touchPoints.current.size)return;
+    const elapsed=event.timeStamp-touchStartedAt.current;
+    if(!touchMoved.current&&elapsed<360){
+      if(touchPeak.current===2&&store.canUndo)store.dispatch({type:'undo'});
+      if(touchPeak.current>=3&&store.canRedo)store.dispatch({type:'redo'});
+    }
+  };
 
   const setClipColor=(clip:VtE1Clip,color:string)=>store.dispatch({
     type:'updateClip',id:clip.id,patch:{uiColor:color} as Partial<VtE1Clip>,
@@ -209,11 +258,26 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     </button>)}
   </section>
 
-  const pageSurface=<section style={{
-    width:'100%',height:'100%',minWidth:0,minHeight:0,display:'flex',flexDirection:'column',
-    background:'#fff',border:`3px solid ${INK}`,borderRadius:7,padding:4,
-    boxSizing:'border-box',overflow:'hidden',
-  }}>
+  const moduleFocusButton=(kind:WorkspaceFocus)=>kind?<button
+    title={focus===kind?'Restore workspace':\`Focus \${kind}\`}
+    aria-label={focus===kind?'Restore workspace':\`Focus \${kind}\`}
+    onClick={event=>{event.stopPropagation();setFocus(kind)}}
+    style={{
+      position:'absolute',top:3,right:3,zIndex:20,width:24,height:24,
+      border:\`2px solid \${INK}\`,borderRadius:5,background:focus===kind?YELLOW:'#fff',
+      display:'grid',placeItems:'center',padding:0,
+    }}
+  ><Maximize2 size={12}/></button>:null;
+
+  const pageSurface=<section
+    onDoubleClick={()=>setFocus('inspector')}
+    style={{
+      position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,display:'flex',flexDirection:'column',
+      background:'#fff',border:\`3px solid \${INK}\`,borderRadius:7,padding:4,
+      boxSizing:'border-box',overflow:'hidden',
+    }}
+  >
+    {moduleFocusButton('inspector')}
     <div style={{
       minWidth:0,minHeight:0,overflowY:'auto',overflowX:'hidden',
       WebkitOverflowScrolling:'touch',overscrollBehavior:'contain',flex:1,paddingRight:1,
@@ -222,51 +286,74 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     </div>
   </section>;
 
-  const previewSurface=<section style={{
-    width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden',
-    background:'#fff',border:`3px solid ${INK}`,borderRadius:7,padding:3,boxSizing:'border-box',
-  }}>
+  const previewSurface=<section
+    onDoubleClick={()=>setFocus('preview')}
+    style={{
+      position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden',
+      background:'#fff',border:\`3px solid \${INK}\`,borderRadius:7,padding:3,boxSizing:'border-box',
+    }}
+  >
+    {moduleFocusButton('preview')}
     <FitPreview store={store} renderPreview={renderPreview} aspect={compositionAspect}/>
   </section>;
 
-  const regularSplitTemplate=orientation==='portrait'
-    ?{gridTemplateColumns:'minmax(0,1fr)',gridTemplateRows:isPortraitVideo?'minmax(0,4fr) minmax(0,6fr)':'minmax(0,3fr) minmax(0,7fr)'}
-    :{gridTemplateRows:'minmax(0,1fr)',gridTemplateColumns:isPortraitVideo?'minmax(0,3fr) minmax(0,7fr)':'minmax(0,5fr) minmax(0,5fr)'};
+  const splitHorizontal=<div style={{
+    position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,
+    display:'grid',gap:4,
+    gridTemplateColumns:\`minmax(0,\${prefs.mainSplit}fr) minmax(0,\${1-prefs.mainSplit}fr)\`,
+    overflow:'hidden',
+  }}>
+    {previewSurface}{pageSurface}
+    <WorkspaceDivider axis="x" value={prefs.mainSplit} onChange={mainSplit=>patchPrefs({mainSplit})}/>
+  </div>;
 
-  const regularMainSurface=workspaceMode==='edit'
+  const splitVertical=<div style={{
+    position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,
+    display:'grid',gap:4,
+    gridTemplateRows:\`minmax(0,\${prefs.mainSplit}fr) minmax(0,\${1-prefs.mainSplit}fr)\`,
+    overflow:'hidden',
+  }}>
+    {pageSurface}{previewSurface}
+    <WorkspaceDivider axis="y" value={prefs.mainSplit} onChange={mainSplit=>patchPrefs({mainSplit})}/>
+  </div>;
+
+  const normalMainSurface=workspaceMode==='edit'
     ?pageSurface
-    :<div style={{width:'100%',height:'100%',minWidth:0,minHeight:0,display:'grid',gap:4,...regularSplitTemplate}}>
-      {previewSurface}{pageSurface}
-    </div>;
-
-  const portraitMainSurface=workspaceMode==='edit'
-    ?pageSurface
-    :<div style={{
-      width:'100%',height:'100%',minWidth:0,minHeight:0,display:'grid',gap:4,
-      gridTemplateRows:'minmax(0,1fr)',gridTemplateColumns:'minmax(0,52fr) minmax(0,48fr)',overflow:'hidden',
-    }}>
-      {previewSurface}{pageSurface}
-    </div>;
-
-  const portraitLandscapeMainSurface=workspaceMode==='edit'
-    ?pageSurface
-    :<div style={{
-      width:'100%',height:'100%',minWidth:0,minHeight:0,display:'grid',gap:4,
-      gridTemplateColumns:'minmax(0,1fr)',
-      gridTemplateRows:`minmax(0,1fr) calc((100vw - 14px) * ${1/compositionAspect} + ${PREVIEW_TRANSPORT_HEIGHT+8}px)`,
-      overflow:'hidden',
-    }}>
-      {pageSurface}
-      {previewSurface}
-    </div>;
-
-  const mainSurface=portraitPhonePortraitVideo
-    ?portraitMainSurface
     :orientation==='portrait'&&!isPortraitVideo
-      ?portraitLandscapeMainSurface
-      :regularMainSurface;
+      ?splitVertical
+      :splitHorizontal;
 
-  const timeline=showTimeline?<div style={{width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}>
+  const mainSurface=focus==='preview'
+    ?previewSurface
+    :focus==='inspector'
+      ?pageSurface
+      :normalMainSurface;
+
+  const timeline=showTimeline?<div
+    onDoubleClick={()=>setFocus('timeline')}
+    style={{position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}
+  >
+    {moduleFocusButton('timeline')}
+    <div
+      role="separator"
+      aria-label="Resize timeline"
+      onPointerDown={event=>{
+        event.stopPropagation();
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        timelineResize.current={y:event.clientY,scale:prefs.timelineScale};
+      }}
+      onPointerMove={event=>{
+        const active=timelineResize.current;
+        if(!active)return;
+        patchPrefs({timelineScale:active.scale+(active.y-event.clientY)/120});
+      }}
+      onPointerUp={()=>{timelineResize.current=null}}
+      onPointerCancel={()=>{timelineResize.current=null}}
+      style={{
+        position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',zIndex:25,
+        width:34,height:12,display:'grid',placeItems:'start center',touchAction:'none',
+      }}
+    ><span style={{width:24,height:5,border:`1.5px solid ${INK}`,borderRadius:4,background:CYAN}}/></div>
     <TimelineStrip
       store={store}
       height="100%"
@@ -275,7 +362,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
       onClipContextMenu={(clip,at)=>setMenu({items:clipMenuFor(clip),at,title:String(clip.id)})}
       onEmptyContextMenu={at=>setMenu({items:emptyMenu,at,title:'Timeline'})}
       actionLabelsVisible={showActionLabels}
-      onToggleActionLabels={()=>patchPrefs({showActionLabels:!showActionLabels})
+      onToggleActionLabels={()=>patchPrefs({showActionLabels:!showActionLabels})}
     />
   </div>:null;
 
@@ -283,16 +370,49 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     <MiniTimelineMap store={store} height="100%" viewport={timelineViewport} onViewportNavigate={setScrollToSec}/>
   </div>:null;
 
-  const rows=[
-    'minmax(0,1fr)',
-    `${NAV_ROW_HEIGHT}px`,
-    `${showActionLabels?40:34}px`,
-    ...(showTimeline?[`${timelineHeight}px`]:[]),
-    ...(showMap?[`${MAP_HEIGHT}px`]:[]),
-  ].join(' ');
+  const rows=focus==='timeline'
+    ?['0px','0px','0px','minmax(0,1fr)'].join(' ')
+    :focus==='preview'||focus==='inspector'
+      ?['minmax(0,1fr)','0px','0px'].join(' ')
+      :[
+        'minmax(0,1fr)',
+        `${NAV_ROW_HEIGHT}px`,
+        `${showActionLabels?40:34}px`,
+        ...(showTimeline?[`${timelineHeight}px`]:[]),
+        ...(showMap?[`${MAP_HEIGHT}px`]:[]),
+      ].join(' ');
+
+  const presetBar=focus?null:<div style={{
+    position:'absolute',top:7,left:7,zIndex:60,display:'grid',
+    gridTemplateColumns:'repeat(6,24px)',gap:2,padding:2,
+    border:`2px solid ${INK}`,borderRadius:6,background:'rgba(255,255,255,.92)',
+  }}>
+    {WORKSPACE_PRESETS.map(item=><button
+      key={item.id}
+      title={item.label}
+      aria-label={`Workspace preset: ${item.label}`}
+      onClick={()=>applyPreset(item.id)}
+      style={{
+        width:24,height:24,border:`1.5px solid ${INK}`,borderRadius:4,
+        background:prefs.preset===item.id?CYAN:'#fff',padding:0,display:'grid',placeItems:'center',
+      }}
+    >{presetIcons[item.id]}</button>)}
+  </div>;
+
+  const occupancyStrip=<div style={{
+    position:'absolute',right:7,bottom:7,zIndex:70,display:'flex',gap:3,
+  }}>
+    {!showTimeline&&focus==null?<button title="Restore timeline" aria-label="Restore timeline" onClick={()=>patchPrefs({showTimeline:true})} style={{...toolbarButton(false,false),width:26,height:26}}><Rows3 size={12}/></button>:null}
+    {!showMap&&focus==null?<button title="Restore map" aria-label="Restore map" onClick={()=>patchPrefs({showMap:true})} style={{...toolbarButton(false,false),width:26,height:26}}><MapIcon size={12}/></button>:null}
+    {focus?<button title="Restore workspace" aria-label="Restore workspace" onClick={()=>patchPrefs({focus:null})} style={{...toolbarButton(true,false),width:26,height:26}}><Focus size={12}/></button>:null}
+  </div>;
 
   return <div
     ref={rootRef}
+    onPointerDownCapture={rootPointerDown}
+    onPointerMoveCapture={rootPointerMove}
+    onPointerUpCapture={rootPointerEnd}
+    onPointerCancelCapture={rootPointerEnd}
     data-layout={`${orientation}-phone-${isPortraitVideo?'portrait':'landscape'}-video`}
     data-workspace-mode={workspaceMode}
     data-timeline-visible={showTimeline?'true':'false'}
@@ -304,11 +424,13 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
       gridTemplateColumns:'minmax(0,1fr)',gridTemplateRows:rows,
     }}
   >
-    <div style={{width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}>{mainSurface}</div>
-    {navigationRow}
-    {actionRow}
-    {timeline}
-    {map}
+    {focus!=='timeline'?<div style={{width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}>{mainSurface}</div>:null}
+    {!focus?navigationRow:null}
+    {!focus?actionRow:null}
+    {focus==='timeline'||(!focus&&showTimeline)?timeline:null}
+    {!focus&&showMap?map:null}
+    {presetBar}
+    {occupancyStrip}
     {menu?<ContextMenu {...menu} onDismiss={()=>setMenu(null)}/>:null}
     {showGuide?<TouchEditorGuide onClose={()=>setShowGuide(false)}/>:null}
   </div>;
