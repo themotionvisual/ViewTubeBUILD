@@ -245,13 +245,9 @@ export const VtSyncControllerPanel: React.FC<{
   if (!iso) return "—"
   const value = new Date(iso)
   if (!Number.isFinite(value.getTime())) return "—"
-  const today = new Date()
-  const sameDay = value.getFullYear() === today.getFullYear()
-   && value.getMonth() === today.getMonth()
-   && value.getDate() === today.getDate()
-  return sameDay
-   ? value.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-   : value.toLocaleDateString([], { month: "numeric", day: "numeric" })
+  const date = value.toLocaleDateString([], { month: "numeric", day: "numeric" })
+  const time = value.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+  return `${date} ${time}`
  }
 
  const compactRows = (value: number) => value >= 1_000_000
