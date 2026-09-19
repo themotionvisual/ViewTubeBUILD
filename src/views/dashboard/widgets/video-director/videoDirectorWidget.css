@@ -1,23 +1,6 @@
 
-/* Video Director owns a deliberately denser execution profile than the global
-   primitive ladder. Geometry stays canonical at 24px; only local typography
-   and spacing are condensed so the widget can preserve four-up mode/page rows. */
-.vt-video-director-widget .vt-sized-control.is-height-24,
-.vt-video-director-widget .widget-action.is-height-24,
-.vt-video-director-widget .widget-stepper.is-height-24,
-.vt-video-director-widget .widget-toggle-switch.is-height-24 {
-  --vt-primitive-font:10px;
-  font-size:10px !important;
-  letter-spacing:0 !important;
-  line-height:1 !important;
-}
-.vt-video-director-widget .vt-sized-control.is-height-24 :is(span,strong,small,button,input),
-.vt-video-director-widget .widget-action.is-height-24 :is(span,strong,small) {
-  font-size:10px !important;
-  line-height:1 !important;
-}
+/* Video Director composition rules layered on top of the shared compact density. */
 .vt-video-director-widget .vt-sized-control:is(.vt-button,.widget-action,.widget-select-trigger,.widget-text-input) {
-  min-width:0;
   padding-inline:5px !important;
   overflow:hidden;
 }
@@ -33,32 +16,16 @@
   gap:4px;
 }
 .vt-video-director-widget .vtdw-mode-row > *,
-.vt-video-director-widget .vtdw-page-row > * {
-  flex:1 1 0;
-  min-width:0;
-}
+.vt-video-director-widget .vtdw-page-row > *,
 .vt-video-director-widget .vtdw-quick-row > * {
   flex:1 1 0;
   min-width:0;
 }
-.vt-video-director-widget .vtdw-field-grid {
-  gap:6px;
-}
-.vt-video-director-widget .vtdw-field {
-  gap:2px;
-}
-.vt-video-director-widget .vtdw-field > span {
-  font-size:7px;
-  line-height:1;
-}
-.vt-video-director-widget .vtdw-category-copy strong {
-  font-size:11px;
-  line-height:1;
-}
-.vt-video-director-widget .vtdw-category-copy small {
-  font-size:8px;
-  line-height:1.12;
-}
+.vt-video-director-widget .vtdw-field-grid { gap:6px; }
+.vt-video-director-widget .vtdw-field { gap:2px; }
+.vt-video-director-widget .vtdw-field > span { font-size:7px; line-height:1; }
+.vt-video-director-widget .vtdw-category-copy strong { font-size:11px; line-height:1; }
+.vt-video-director-widget .vtdw-category-copy small { font-size:8px; line-height:1.12; }
 .vtdw-header-studio {
   width:auto !important;
   min-width:66px !important;
@@ -75,12 +42,8 @@
     overflow:visible;
   }
   .vt-video-director-widget .vtdw-mode-row > *,
-  .vt-video-director-widget .vtdw-page-row > * {
-    width:100%;
-  }
-  .vt-video-director-widget .vtdw-field-grid {
-    grid-template-columns:minmax(0,1fr);
-  }
+  .vt-video-director-widget .vtdw-page-row > * { width:100%; }
+  .vt-video-director-widget .vtdw-field-grid { grid-template-columns:minmax(0,1fr); }
   .vtdw-header-studio {
     min-width:58px !important;
     max-width:68px !important;
@@ -88,6 +51,8 @@
     padding-inline:4px !important;
   }
 }
+
+
 
 .vt-video-director-widget{height:100%;min-width:0;min-height:0;display:flex;flex-direction:column;color:var(--widget-border,currentColor)}
 .vtdw-topline{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
