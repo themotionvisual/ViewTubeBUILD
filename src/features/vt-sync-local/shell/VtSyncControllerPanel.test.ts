@@ -28,6 +28,39 @@ describe("VT-SYNC controller accordion", () => {
  })
 })
 
+describe("VT-SYNC execution status controls", () => {
+ it("keeps a stored successful unit visibly done between runs", () => {
+  const markup = renderToStaticMarkup(React.createElement(VtSyncControllerPanel, {
+   isAuthenticated: true,
+   isSyncing: false,
+   videos: [],
+   datasetFreshness: {
+    daily_metrics: {
+     runId: "previous-run",
+     phase: "daily_metrics",
+     status: "synced",
+     source: "current_run",
+     rows: 365,
+     updatedAt: "2026-09-19T12:00:00.000Z",
+    },
+   },
+   onLogin: vi.fn(async () => undefined),
+   onStartSync: vi.fn(async () => undefined),
+  }))
+  expect(markup).toContain('data-sync-status="complete"')
+  expect(markup).toContain(">DONE<")
+ })
+
+ it("pins every dataset execution control to the right-side grid column on narrow layouts", () => {
+  const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
+  expect(source).toContain("col-start-4")
+  expect(source).toContain("max-lg:col-start-3")
+  expect(source).toContain("max-lg:row-span-2")
+  expect(source).toContain("<RetroSyncExecutionSwitch")
+ })
+
+})
+
 describe("time window controller options", () => {
  const render = () => renderToStaticMarkup(React.createElement(VtSyncControllerPanel, {
   isAuthenticated: true,
