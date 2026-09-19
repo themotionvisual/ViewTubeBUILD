@@ -104,9 +104,8 @@ const PrimitiveMigrationControl: React.FC<{
   const [selectableTagOn, setSelectableTagOn] = React.useState(false)
   const [editorTags, setEditorTags] = React.useState(["NAPOLEON", "CAVALRY"])
 
-  // Wave 02: these families are now rendered by production primitives + shared
-  // CSS. All remaining families deliberately fall back to the frozen catalog
-  // renderer until visual parity is certified.
+  // Primitive track rule: only production primitives + shared CSS render here.
+  // Unmigrated hardcoded families remain exclusively in the frozen baseline.
   if (name === "Primary Button" || name === "Secondary Button" || name === "Neutral Button" || name === "Destructive Button") {
     return <SubToolboxButton level={level} style={style}>{name.replace(" Button", "")}</SubToolboxButton>
   }
