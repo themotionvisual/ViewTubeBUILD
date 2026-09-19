@@ -1187,3 +1187,135 @@
   font-size:calc(var(--fs)*.66)!important;
   letter-spacing:.045em!important;
 }
+
+
+/* ==========================================================================
+   USER CORRECTION V2 — exact field parity + borderless action tags + dial V2.
+   ========================================================================== */
+
+/* Split Search and Input Action match the hardcoded Text Input/Textarea states:
+   tinted default, white focus, colored inset focus stroke. */
+.vt-complete-catalog .vt-catalog-split-field input{
+  background:color-mix(in srgb,var(--pair-a) 50%,white)!important;
+  color:#000!important;
+  caret-color:var(--pair-a)!important;
+  box-shadow:none!important;
+  font:1000 var(--fs)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+  letter-spacing:-.055em!important;
+  text-transform:uppercase!important;
+}
+.vt-complete-catalog .vt-catalog-split-field input::placeholder{
+  color:#8b8b8b!important;opacity:1!important;font:inherit!important;text-transform:uppercase!important;
+}
+.vt-complete-catalog .vt-catalog-split-field input:focus{
+  background:#fff!important;
+  outline:0!important;
+  box-shadow:inset 0 0 0 var(--stroke) var(--pair-a)!important;
+}
+
+/* Any tag whose body is itself actionable or contains an action is borderless. */
+.vt-complete-catalog .vt-spectrum-tag:has(button),
+.vt-complete-catalog .vt-catalog-selectable-tag,
+.vt-complete-catalog .vt-catalog-tag-editor .vt-spectrum-tag{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+.vt-complete-catalog .vt-spectrum-tag:has(button)>button,
+.vt-complete-catalog .vt-catalog-tag-editor .vt-spectrum-tag>button{
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+
+/* Knob Dial V2 — one colored body, one needle, one compact value readout. */
+.vt-complete-catalog .vt-catalog-knob{
+  --knob-size:calc(var(--h)*2.15)!important;
+  display:inline-grid!important;
+  justify-items:center!important;
+  gap:calc(var(--h)*.14)!important;
+  min-width:var(--knob-size)!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face{
+  position:relative!important;
+  width:var(--knob-size)!important;
+  height:var(--knob-size)!important;
+  border:var(--stroke) solid #000!important;
+  border-radius:50%!important;
+  display:grid!important;
+  place-items:center!important;
+  touch-action:none!important;
+  cursor:grab!important;
+  outline:none!important;
+  background:
+    conic-gradient(from 225deg,
+      var(--pair-a) 0 var(--vt-knob-sweep),
+      color-mix(in srgb,var(--pair-a) 20%,white) var(--vt-knob-sweep) 75%,
+      #fff 75% 100%)!important;
+  box-shadow:calc(var(--stroke) + 2px) calc(var(--stroke) + 2px) 0 color-mix(in srgb,var(--pair-b) 42%,transparent)!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face:before{
+  content:"";
+  position:absolute!important;
+  inset:16%!important;
+  border-radius:50%!important;
+  background:var(--pair-b)!important;
+  box-shadow:inset 0 0 0 var(--stroke) #000!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face:after{
+  content:"";
+  position:absolute;
+  left:50%;top:50%;
+  width:calc(var(--h)*.18);height:calc(var(--h)*.18);
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:#000;
+  z-index:5;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-arc{display:none!important}
+.vt-complete-catalog .vt-catalog-knob .knob-face em{display:none!important}
+.vt-complete-catalog .vt-catalog-knob .knob-face i{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:max(4px,calc(var(--stroke)*1.1))!important;
+  height:42%!important;
+  border-radius:999px!important;
+  background:#000!important;
+  transform-origin:50% 100%!important;
+  transform:translate(-50%,-100%) rotate(var(--vt-knob-angle))!important;
+  z-index:4!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face:focus-visible{
+  outline:calc(var(--stroke)*.9) solid var(--pair-b)!important;
+  outline-offset:5px!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-readout{
+  width:var(--knob-size)!important;
+  min-height:calc(var(--h)*.62)!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  overflow:hidden!important;
+  border:var(--stroke) solid #000!important;
+  border-radius:calc(var(--radius)*.72)!important;
+  background:#fff!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-value{
+  padding:0 calc(var(--h)*.15)!important;
+  text-align:left!important;
+  font-size:calc(var(--fs)*.64)!important;
+  font-weight:1000!important;
+  letter-spacing:.045em!important;
+  text-transform:uppercase!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-readout output{
+  height:100%!important;
+  min-width:calc(var(--h)*.76)!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0 calc(var(--h)*.12)!important;
+  border-left:var(--stroke) solid #000!important;
+  background:var(--pair-a)!important;
+  font:1000 calc(var(--fs)*.82)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+}
