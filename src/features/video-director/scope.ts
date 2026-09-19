@@ -150,6 +150,37 @@ export const setVideoDirectorScopedCategoryField = <K extends VideoDirectorCateg
   return VideoDirectorProjectSchema.parse(project)
 }
 
+export const toggleVideoDirectorScopedCategoryLock = ({
+  project: projectInput,
+  categoryId,
+  scope,
+}: {
+  project: VideoDirectorProject
+  categoryId: VideoDirectorCategoryId
+  scope: VideoDirectorScope
+}): VideoDirectorProject => {
+  const project = structuredClone(VideoDirectorProjectSchema.parse(projectInput))
+
+  if (scope.type === "project") {
+    project.categories[categoryId].locked = !project.categories[categoryId].locked
+    project.updatedAt = new Date().toISOString()
+    return VideoDirectorProjectSchema.parse(project)
+  }
+
+  const node = scopedNode(project, scope)
+  if (!node) return project
+
+  const existing = node.categoryOverrides[categoryId]
+  const state = existing
+    ? structuredClone(existing)
+    : structuredClone(project.categories[categoryId])
+  state.locked = !state.locked
+  ;(node.categoryOverrides as Record<string, unknown>)[categoryId] =
+    VideoDirectorCategoryStateSchemas[categoryId].parse(state)
+  project.updatedAt = new Date().toISOString()
+  return VideoDirectorProjectSchema.parse(project)
+}
+
 export const resetVideoDirectorScopedCategory = ({
   project: projectInput,
   categoryId,
