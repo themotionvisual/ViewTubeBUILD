@@ -2,7 +2,7 @@ export const WIDGET_PRIMITIVE_SIZES = [18, 24, 32, 38] as const
 export type WidgetPrimitiveSize = (typeof WIDGET_PRIMITIVE_SIZES)[number]
 
 export const WIDGET_PRIMITIVE_TONES = ["default", "primary", "secondary"] as const
-export type WidgetPrimitiveTone = (typeof WIDGET_PRIMITIVE_TONES)[number]
+export type WidgetPrimitiveTone = (typeof WIDGET_PRIMITIVE_TONES)[number]\nexport type WidgetPrimitiveTextFit = "fixed" | "adaptive"
 
 export const WIDGET_PRIMITIVE_STATES = ["default", "selected", "active", "loading", "disabled", "success", "warning", "danger", "info"] as const
 export type WidgetPrimitiveState = (typeof WIDGET_PRIMITIVE_STATES)[number]
@@ -30,4 +30,10 @@ export function widgetPrimitiveClasses({ size=32, tone="default", state="default
   return ["vt-primitive", `vt-size-${size}`, `vt-tone-${tone}`, `vt-shape-${shape}`, width === "full" && "vt-width-full", state !== "default" && `vt-state-${state}`, interactive && "vt-interactive"].filter(Boolean).join(" ")
 }
 
-export function widgetSizedControlClasses(\n  size: WidgetPrimitiveSize = 32,\n  tone: WidgetPrimitiveTone = "default",\n  textFit: WidgetPrimitiveTextFit = "fixed",\n) {\n  return `${widgetPrimitiveClasses({ size, tone })} vt-sized-control is-height-${size} is-tone-${tone}${textFit === "adaptive" ? " vt-text-fit-adaptive" : ""}`\n}
+export function widgetSizedControlClasses(
+  size: WidgetPrimitiveSize = 32,
+  tone: WidgetPrimitiveTone = "default",
+  textFit: WidgetPrimitiveTextFit = "fixed",
+) {
+  return `${widgetPrimitiveClasses({ size, tone })} vt-sized-control is-height-${size} is-tone-${tone}${textFit === "adaptive" ? " vt-text-fit-adaptive" : ""}`
+}
