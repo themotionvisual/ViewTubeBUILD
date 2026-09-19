@@ -36,7 +36,36 @@
  @container vt-widget (max-width:420px) {
   .vt-widget-body { --vt-composition-columns:1; --vt-composition-gap:4px; }
   .vt-widget-body :is(.widget-reference-variants,.widget-reference-square-variants) { grid-template-columns:1fr; gap:4px; }
-  .vt-widget-header .header-extra { display:none !important; }
+
+  /* Required header controls survive portrait. Nonessential extras may hide,
+     but a primary toggle/action never disappears to make room for the title. */
+  .vt-widget-header .header-extra:not(:has(.widget-header-toggle)) { display:none !important; }
+  .vt-widget-header .header-extra:has(.widget-header-toggle) {
+    display:flex !important;
+    flex:0 1 108px !important;
+    min-width:72px;
+    max-width:36%;
+    overflow:hidden;
+    justify-content:center !important;
+  }
+  .vt-widget-header:has(.header-extra .widget-header-toggle) .left {
+    flex:1 1 auto;
+    min-width:0;
+    max-width:48%;
+  }
+  .vt-widget-header:has(.header-extra .widget-header-toggle) .title {
+    display:block;
+    height:auto;
+    max-height:calc(var(--widget-type-title) * 1.9);
+    padding-right:4px;
+    font-size:var(--widget-type-title) !important;
+    line-height:.9;
+    white-space:normal !important;
+    overflow:hidden;
+    text-overflow:clip !important;
+    overflow-wrap:normal;
+    word-break:normal;
+  }
  }
  @container vt-widget (min-width:421px) and (max-width:720px) {
   .vt-widget-body { --vt-composition-columns:2; --vt-composition-gap:8px; }
