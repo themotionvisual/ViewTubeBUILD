@@ -4,6 +4,7 @@ import { ToolboxScaffold } from "./Toolbox"
 import { SubToolboxButton } from "./subtoolbox/SubToolboxPrimitives"
 import { getToolboxPaletteColors } from "../styles/toolboxPalette"
 import { StudioHubCompletePrimitiveCatalog } from "./studio-hub/StudioHubCompletePrimitiveCatalog"
+import { StudioHubPrimitiveMigrationCatalog } from "./studio-hub/StudioHubPrimitiveMigrationCatalog"
 
 const PALETTE_NAMES = [
   "Rose", "Coral", "Orange", "Yellow", "Lime", "Green",
@@ -16,32 +17,110 @@ export interface ToolboxUIReferenceLibraryProps {
   paletteIndex?: number
 }
 
+type LibraryTrack = "hardcoded" | "primitive"
+
+interface ComponentLibraryTrackProps {
+  track: LibraryTrack
+  collapsible: boolean
+  isOpenInitial: boolean
+  paletteIndex: number
+  onPaletteIndexChange: (index: number) => void
+}
+
+const ComponentLibraryTrack: React.FC<ComponentLibraryTrackProps> = ({
+  track,
+  collapsible,
+  isOpenInitial,
+  paletteIndex,
+  onPaletteIndexChange,
+}) => {
+  const [isOpen, setIsOpen] = useState(isOpenInitial)
+  const palette = getToolboxPaletteColors(paletteIndex)
+  const primitiveContextStyle = {
+    ["--vt-subtoolbox-fill" as string]: palette.header,
+  } as React.CSSProperties
+  const isHardcoded = track === "hardcoded"
+
+  return (
+    <div
+      id={isHardcoded ? "toolbox-ui-library-hardcoded" : "toolbox-ui-library-primitive"}
+      className="scroll-mt-24 vt-studio-hub-component-library"
+      data-vt-library-track={track}
+    >
+      <ToolboxScaffold
+        title={isHardcoded
+          ? "Studio Hub Component Library — Hardcoded"
+          : "Studio Hub Component Library — Primitive"}
+        subtitle={isHardcoded
+          ? "Frozen visual baseline. Component anatomy remains hardcoded for comparison."
+          : "Migration surface. Families move one-by-one to canonical primitives and shared CSS."}
+        icon={<Layers3 size={40} strokeWidth={3} />}
+        paletteIndex={paletteIndex}
+        collapsible={collapsible}
+        isOpen={isOpen}
+        onToggle={() => setIsOpen((current) => !current)}
+        unmountWhenClosed
+        helpText={isHardcoded
+          ? "Frozen baseline used only to compare visual parity while the production primitive system is migrated."
+          : "Primitive migration copy. A family is moved only after it can match the frozen baseline through shared tokens, primitives and CSS."}
+        headerActions={
+          <div className="flex items-center gap-1" style={primitiveContextStyle}>
+            <SubToolboxButton
+              size="compact"
+              tone="neutral"
+              aria-label="Previous toolbox palette"
+              icon={<ChevronLeft size={16} strokeWidth={3} />}
+              className="!w-9"
+              onClick={(event) => {
+                event.stopPropagation()
+                onPaletteIndexChange((paletteIndex + 11) % 12)
+              }}
+            />
+            <span className="hidden min-w-14 text-center text-[9px] font-black uppercase sm:block">
+              {PALETTE_NAMES[paletteIndex]}
+            </span>
+            <SubToolboxButton
+              size="compact"
+              tone="neutral"
+              aria-label="Next toolbox palette"
+              icon={<ChevronRight size={16} strokeWidth={3} />}
+              className="!w-9"
+              onClick={(event) => {
+                event.stopPropagation()
+                onPaletteIndexChange((paletteIndex + 1) % 12)
+              }}
+            />
+          </div>
+        }
+      >
+        {isHardcoded
+          ? <StudioHubCompletePrimitiveCatalog paletteIndex={paletteIndex} />
+          : <StudioHubPrimitiveMigrationCatalog paletteIndex={paletteIndex} />}
+      </ToolboxScaffold>
+    </div>
+  )
+}
+
 /**
- * Production certification surface for the Studio Hub UI system.
+ * Dual-track Studio Hub UI certification surface.
  *
- * This component intentionally renders the complete canonical catalog rather
- * than maintaining a second hand-authored subset of primitives. New reusable
- * families belong in StudioHubCompletePrimitiveCatalog and therefore appear in
- * this toolbox automatically.
+ * HARD-CODED remains frozen as a visual baseline.
+ * PRIMITIVE is the migration surface. Families move there one at a time and
+ * must stay visually aligned with the baseline before their catalog-specific
+ * anatomy/CSS is retired.
  */
 export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps> = ({
   collapsible = true,
   isOpenInitial = false,
   paletteIndex: initialPaletteIndex = 7,
 }) => {
-  const [isOpen, setIsOpen] = useState(isOpenInitial)
   const [paletteIndex, setPaletteIndex] = useState(initialPaletteIndex)
-  const palette = getToolboxPaletteColors(paletteIndex)
-  const primitiveContextStyle = {
-    ["--vt-subtoolbox-fill" as string]: palette.header,
-  } as React.CSSProperties
 
   return (
-    <div id="toolbox-ui-library" className="scroll-mt-24 vt-studio-hub-component-library">
+    <div id="toolbox-ui-library" className="space-y-6" data-vt-library-comparison="true">
       {/*
-        Hierarchy repair: toolbox-system.css had regressed the main level to
-        56px, making top-level toolboxes visually identical to subtoolboxes.
-        Main Toolbox authority is 80/5/16/10; nested SubToolbox remains 56px.
+        Preserve the existing Component Library shell geometry for both tracks.
+        The dual-track migration changes ownership, not appearance.
       */}
       <style>{`
         .vt-studio-hub-component-library [data-vt-toolbox][data-vt-toolbox-level="main"] {
@@ -68,48 +147,20 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
         }
       `}</style>
 
-      <ToolboxScaffold
-        title="Studio Hub Component Library"
-        subtitle="Complete canonical component, primitive, size, state, palette, asset and controller certification surface"
-        icon={<Layers3 size={40} strokeWidth={3} />}
-        paletteIndex={paletteIndex}
+      <ComponentLibraryTrack
+        track="hardcoded"
         collapsible={collapsible}
-        isOpen={isOpen}
-        onToggle={() => setIsOpen((current) => !current)}
-        unmountWhenClosed
-        helpText="The Studio Hub Component Library is the production authority. Every reusable family is rendered at L0, L1 and L2. Feature tools consume these primitives instead of redefining their geometry."
-        headerActions={
-          <div className="flex items-center gap-1" style={primitiveContextStyle}>
-            <SubToolboxButton
-              size="compact"
-              tone="neutral"
-              aria-label="Previous toolbox palette"
-              icon={<ChevronLeft size={16} strokeWidth={3} />}
-              className="!w-9"
-              onClick={(event) => {
-                event.stopPropagation()
-                setPaletteIndex((current) => (current + 11) % 12)
-              }}
-            />
-            <span className="hidden min-w-14 text-center text-[9px] font-black uppercase sm:block">
-              {PALETTE_NAMES[paletteIndex]}
-            </span>
-            <SubToolboxButton
-              size="compact"
-              tone="neutral"
-              aria-label="Next toolbox palette"
-              icon={<ChevronRight size={16} strokeWidth={3} />}
-              className="!w-9"
-              onClick={(event) => {
-                event.stopPropagation()
-                setPaletteIndex((current) => (current + 1) % 12)
-              }}
-            />
-          </div>
-        }
-      >
-        <StudioHubCompletePrimitiveCatalog paletteIndex={paletteIndex} />
-      </ToolboxScaffold>
+        isOpenInitial={isOpenInitial}
+        paletteIndex={paletteIndex}
+        onPaletteIndexChange={setPaletteIndex}
+      />
+      <ComponentLibraryTrack
+        track="primitive"
+        collapsible={collapsible}
+        isOpenInitial={isOpenInitial}
+        paletteIndex={paletteIndex}
+        onPaletteIndexChange={setPaletteIndex}
+      />
     </div>
   )
 }
