@@ -1062,3 +1062,116 @@
 .vt-subtoolbox-knob-label{
   text-align:center;font-size:calc(var(--vt-component-font-size)*.70);letter-spacing:.06em
 }
+
+
+/* ==========================================================================
+   COMPONENT LIBRARY CORRECTION — field parity, borderless action tags,
+   simplified tactile dial.
+   ========================================================================== */
+
+/* Split Search + Input Action editable areas inherit the exact same default
+   and focus treatment as component-level Text Input / Textarea. */
+.vt-subtoolbox-split-field input{
+  --field-accent:var(--pair-a,#36e0f6);
+  --field-glow:var(--pair-b,#ff7f6b);
+  background:color-mix(in srgb,var(--field-accent) 50%,white)!important;
+  color:#000!important;
+  caret-color:var(--field-accent)!important;
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) var(--field-accent)!important;
+  transition:background 180ms ease-out,box-shadow 180ms ease-out!important;
+}
+.vt-subtoolbox-split-field input:focus{
+  background:#fff!important;
+  outline:0!important;
+  box-shadow:
+    inset 0 0 0 var(--vt-component-stroke) var(--field-accent),
+    0 0 3px calc(var(--vt-component-stroke)*.75) color-mix(in srgb,var(--field-glow) 78%,transparent),
+    0 0 calc(var(--vt-component-height)*.20) calc(var(--vt-component-stroke)*1.1) color-mix(in srgb,var(--field-glow) 48%,transparent),
+    0 0 calc(var(--vt-component-height)*.42) calc(var(--vt-component-stroke)*.25) color-mix(in srgb,var(--field-glow) 24%,transparent)!important;
+}
+
+/* Tags that contain controls are fill-defined, never outline-defined. */
+.vt-subtoolbox-removable-tag,
+.vt-subtoolbox-selectable-tag{
+  border:0!important;
+  box-shadow:none!important;
+}
+.vt-subtoolbox-removable-tag{
+  background:color-mix(in srgb,var(--vt-tag-color,var(--pair-a,#36e0f6)) 35%,white)!important;
+  color:var(--vt-tag-color,var(--pair-a,#36e0f6))!important;
+}
+.vt-subtoolbox-removable-tag button{
+  border:0!important;
+  box-shadow:none!important;
+}
+.vt-subtoolbox-selectable-tag{
+  background:color-mix(in srgb,var(--pair-b,#ff7f6b) 30%,white)!important;
+  color:var(--pair-b,#ff7f6b)!important;
+}
+.vt-subtoolbox-selectable-tag.is-selected{
+  background:color-mix(in srgb,var(--pair-a,#36e0f6) 38%,white)!important;
+  color:var(--pair-a,#36e0f6)!important;
+}
+
+/* 52 Knob Dial — reduce nested-ring clutter. One strong outer dial, one clean
+   face, a legible needle, and small fill-only adjustment controls. */
+.vt-subtoolbox-knob{
+  --vt-knob-size:calc(var(--vt-component-height)*2.25);
+  gap:calc(var(--vt-component-height)*.12);
+  min-width:var(--vt-knob-size);
+}
+.vt-subtoolbox-knob-dial{
+  width:var(--vt-knob-size);height:var(--vt-knob-size);
+  border:var(--vt-component-stroke) solid #000;
+  border-radius:50%;
+  background:
+    conic-gradient(from 225deg,
+      var(--vt-knob-ring) 0 var(--vt-knob-sweep),
+      color-mix(in srgb,var(--vt-knob-ring) 16%,white) var(--vt-knob-sweep) 75%,
+      #fff 75% 100%);
+  box-shadow:var(--vt-component-shadow-offset) var(--vt-component-shadow-offset) 0 color-mix(in srgb,var(--vt-knob-face) 42%,transparent);
+}
+.vt-subtoolbox-knob-dial:before{
+  inset:13%;
+  border-radius:50%;
+  background:var(--vt-knob-face);
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) #000;
+}
+.vt-subtoolbox-knob-arc{display:none}
+.vt-subtoolbox-knob-face{
+  width:54%;height:54%;
+  background:#fff;
+  box-shadow:none;
+  border:0;
+}
+.vt-subtoolbox-knob-face strong{
+  font-size:calc(var(--vt-component-font-size)*1.48);
+  line-height:1;
+}
+.vt-subtoolbox-knob-pointer{
+  left:50%;top:50%;
+  width:max(4px,calc(var(--vt-component-stroke)*1.15));
+  height:45%;
+  border-radius:999px;
+  background:#000;
+  transform-origin:50% 100%;
+  transform:translate(-50%,-100%) rotate(var(--vt-knob-angle));
+}
+.vt-subtoolbox-knob-controls{
+  width:var(--vt-knob-size);
+  grid-template-columns:calc(var(--vt-component-height)*.52) minmax(0,1fr) calc(var(--vt-component-height)*.52);
+  gap:calc(var(--vt-component-height)*.10);
+}
+.vt-subtoolbox-knob-controls>button{
+  height:calc(var(--vt-component-height)*.52);
+  border:0;
+  border-radius:calc(var(--vt-component-radius)*.58);
+  box-shadow:none;
+  background:var(--vt-knob-ring);
+  font-size:calc(var(--vt-component-font-size)*.82);
+}
+.vt-subtoolbox-knob-controls>button:last-child{background:var(--vt-knob-face)}
+.vt-subtoolbox-knob-label{
+  font-size:calc(var(--vt-component-font-size)*.66);
+  letter-spacing:.045em;
+}
