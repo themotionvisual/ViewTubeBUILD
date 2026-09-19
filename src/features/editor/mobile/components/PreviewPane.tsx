@@ -6,6 +6,7 @@ import {useDragScrub,usePinchZoom} from '../hooks/gestures';
 import {TemplateCanvasRenderer} from '../../../../editor-design-library/integration/TemplateCanvasRenderer';
 import {MobileProjectPreview} from './MobileProjectPreview';
 import {resolveClipPreviewGeometry} from './mobilePreviewGeometry';
+import {expandCompoundClips} from '../../../../shared/vtE1CompoundClips.js';
 
 export interface PreviewPaneProps{
   store:EditorStore;
@@ -133,7 +134,7 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
       }}
     >
       {renderPreview?renderPreview(size):<MobileProjectPreview store={store}/>}
-      <TemplateCanvasRenderer clips={state.project.clips} playheadSec={state.playheadSec}/>
+      <TemplateCanvasRenderer clips={expandCompoundClips(state.project.clips)} playheadSec={state.playheadSec}/>
 
       {selected&&visual&&geometry&&frameStyle?<div
         aria-label="Selected clip transform"
