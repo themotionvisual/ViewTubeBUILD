@@ -173,6 +173,22 @@ export const getPaletteColor = (index: number) => {
   return TOOLBOX_PALETTE[normalized];
 };
 
+
+/**
+ * Canonical A–Z mapping for Toolbox tags.
+ * Letters advance monotonically from the first spectrum slot to the last while
+ * preserving the twelve explicit ViewTube palette colors. This intentionally
+ * does not synthesize 26 independent HSL hues.
+ */
+export const resolveAlphabeticalSpectrumSlot = (label: string): number => {
+  const firstLetter = label.trim().toUpperCase().match(/[A-Z]/)?.[0];
+  if (!firstLetter) return 0;
+  return Math.round(((firstLetter.charCodeAt(0) - 65) * (VT_SPECTRUM_PALETTE_06.length - 1)) / 25);
+};
+
+export const getAlphabeticalSpectrumColor = (label: string): string =>
+  VT_SPECTRUM_PALETTE_06[resolveAlphabeticalSpectrumSlot(label)];
+
 export const getNavPaletteColor = (index: number) => {
   const len = VT_NAV_PALETTE_06.length;
   const normalized = normalizePaletteIndex(index, len);
