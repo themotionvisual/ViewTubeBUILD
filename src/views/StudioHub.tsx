@@ -14,6 +14,7 @@ import { CommentResponder } from "../components/CommentResponder"
 import { EndScreenTool } from "../components/EndScreenTool"
 
 const ToolboxUIReferenceLibrary = React.lazy(() => import("../components/ToolboxUIReferenceLibrary"))
+const VideoDirector = React.lazy(() => import("./VideoDirector"))
 
 const StudioHub: React.FC = () => {
  const [states, setStates] = useState({
@@ -44,6 +45,9 @@ const StudioHub: React.FC = () => {
 
     {/* Natively Supported Tools */}
     <VideoManager collapsible isOpenInitial={true} paletteIndex={0} />
+    <React.Suspense fallback={null}>
+     <VideoDirector collapsible isOpenInitial={false} paletteIndex={11} />
+    </React.Suspense>
     <VideoPublisher collapsible isOpenInitial={false} paletteIndex={1} />
     <MediaAnalyzer collapsible isOpenInitial={false} paletteIndex={2} />
     <ThumbnailStudio collapsible isOpenInitial={false} paletteIndex={3} />
