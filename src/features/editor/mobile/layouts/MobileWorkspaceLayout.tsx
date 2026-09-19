@@ -28,6 +28,48 @@ const navButton=(active:boolean):React.CSSProperties=>({
   lineHeight:1,flex:'0 0 auto',
 });
 
+const FitPreview:React.FC<{
+  store:EditorStore;
+  renderPreview?:MobileWorkspaceLayoutProps['renderPreview'];
+  aspect:number;
+}>=({store,renderPreview,aspect})=>{
+  const hostRef=useRef<HTMLDivElement>(null);
+  const [bounds,setBounds]=useState({width:0,height:0});
+
+  useEffect(()=>{
+    const node=hostRef.current;
+    if(!node)return;
+    const measure=()=>setBounds({width:node.clientWidth,height:node.clientHeight});
+    measure();
+    if(typeof ResizeObserver==='undefined')return;
+    const observer=new ResizeObserver(measure);
+    observer.observe(node);
+    return()=>observer.disconnect();
+  },[]);
+
+  const fit=useMemo(()=>{
+    const width=Math.max(0,bounds.width);
+    const height=Math.max(0,bounds.height);
+    if(!width||!height)return {width:'100%',height:'100%'} as React.CSSProperties;
+    const availableAspect=width/height;
+    if(availableAspect>aspect)return {height:'100%',width:Math.max(1,height*aspect)};
+    return {width:'100%',height:Math.max(1,width/aspect)};
+  },[bounds,aspect]);
+
+  return <div
+    ref={hostRef}
+    style={{
+      width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'auto',
+      display:'grid',placeItems:'center',WebkitOverflowScrolling:'touch',
+      overscrollBehavior:'contain',boxSizing:'border-box',
+    }}
+  >
+    <div style={{...fit,aspectRatio:String(aspect),minWidth:0,minHeight:0,flex:'0 0 auto'}}>
+      <PreviewPane store={store} renderPreview={renderPreview} aspect={aspect}/>
+    </div>
+  </div>;
+};
+
 export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   orientation,store,renderPreview,height,compositionAspect=16/9,editorSettings,
   workspaceMode,onWorkspaceModeChange,
@@ -53,8 +95,6 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
 
   const containerHeight=height??(typeof window!=='undefined'?window.innerHeight:(orientation==='portrait'?800:480));
   const isPortraitVideo=compositionAspect<1;
-  const timelineHeight=orientation==='portrait'?112:78;
-  const mapHeight=orientation==='portrait'?42:38;
 
   const clipMenuFor=(clip:VtE1Clip):ContextMenuItem[]=>[
     {label:'Inspect',onSelect:()=>{setPage('select');onWorkspaceModeChange('edit')}},
@@ -68,20 +108,31 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     {label:'Open templates',onSelect:()=>{setPage('templates');onWorkspaceModeChange('edit')}},
   ],[onWorkspaceModeChange]);
 
+  const navHeight=orientation==='portrait'
+    ?'clamp(72px, 11dvh, 94px)'
+    :'clamp(64px, 18dvh, 80px)';
+
   const topChrome=<section style={{
-    background:'#fff',border:`3px solid ${INK}`,borderRadius:7,padding:4,
-    display:'grid',gap:3,minWidth:0,minHeight:0,overflow:'hidden',
+    width:'100%',height:'100%',minWidth:0,minHeight:0,
+    background:'#fff',border:`3px solid ${INK}`,borderRadius:7,
+    boxSizing:'border-box',overflow:'hidden',
   }}>
-    <div style={{display:'flex',gap:3,minWidth:0,overflowX:'auto',overflowY:'hidden',scrollbarWidth:'thin'}}>
-      <button style={{...navButton(false),background:CYAN,minWidth:44,fontSize:14}} onClick={()=>store.dispatch({type:'togglePlaying'})} aria-label={store.state.playing?'Pause':'Play'}>{store.state.playing?'Ⅱ':'▶'}</button>
-      {EDITOR_NAV_ITEMS.map(item=><button key={item.id} style={navButton(page===item.id)} onClick={()=>openPage(item.id)}><span style={{fontSize:11}}>{item.icon}</span><span>{item.label}</span></button>)}
-    </div>
-    <div style={{display:'flex',gap:3,minWidth:0,overflowX:'auto',alignItems:'center'}}>
-      {(['preview','edit','split'] as const).map(mode=><button key={mode} style={{...navButton(workspaceMode===mode),minWidth:58,minHeight:28}} onClick={()=>onWorkspaceModeChange(mode)}>{mode}</button>)}
-      <span style={{width:1,height:22,background:INK,opacity:.35,flex:'0 0 auto'}}/>
-      <button style={{...navButton(showTimeline),minWidth:34,minHeight:28}} onClick={()=>setShowTimeline(v=>!v)}>TL</button>
-      <button style={{...navButton(showMap),minWidth:38,minHeight:28}} onClick={()=>setShowMap(v=>!v)}>MAP</button>
-      <span style={{marginLeft:'auto',fontSize:8,fontWeight:900,whiteSpace:'nowrap'}}>{store.state.playheadSec.toFixed(2)}s / {store.state.project.durationSec.toFixed(2)}s</span>
+    <div style={{
+      width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'auto',
+      WebkitOverflowScrolling:'touch',overscrollBehavior:'contain',padding:4,boxSizing:'border-box',
+      display:'grid',gap:3,alignContent:'start',
+    }}>
+      <div style={{display:'flex',gap:3,minWidth:'max-content',overflow:'visible'}}>
+        <button style={{...navButton(false),background:CYAN,minWidth:44,fontSize:14}} onClick={()=>store.dispatch({type:'togglePlaying'})} aria-label={store.state.playing?'Pause':'Play'}>{store.state.playing?'Ⅱ':'▶'}</button>
+        {EDITOR_NAV_ITEMS.map(item=><button key={item.id} style={navButton(page===item.id)} onClick={()=>openPage(item.id)}><span style={{fontSize:11}}>{item.icon}</span><span>{item.label}</span></button>)}
+      </div>
+      <div style={{display:'flex',gap:3,minWidth:'max-content',alignItems:'center'}}>
+        {(['preview','edit','split'] as const).map(mode=><button key={mode} style={{...navButton(workspaceMode===mode),minWidth:58,minHeight:28}} onClick={()=>onWorkspaceModeChange(mode)}>{mode}</button>)}
+        <span style={{width:1,height:22,background:INK,opacity:.35,flex:'0 0 auto'}}/>
+        <button style={{...navButton(showTimeline),minWidth:34,minHeight:28}} onClick={()=>setShowTimeline(v=>!v)}>TL</button>
+        <button style={{...navButton(showMap),minWidth:38,minHeight:28}} onClick={()=>setShowMap(v=>!v)}>MAP</button>
+        <span style={{fontSize:8,fontWeight:900,whiteSpace:'nowrap',padding:'0 4px'}}>{store.state.playheadSec.toFixed(2)}s / {store.state.project.durationSec.toFixed(2)}s</span>
+      </div>
     </div>
   </section>;
 
@@ -90,41 +141,46 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     background:'#fff',border:`3px solid ${INK}`,borderRadius:7,padding:4,boxSizing:'border-box',overflow:'hidden',
   }}>
     <EditorQuickActions store={store} onOpenPage={openPage}/>
-    <div style={{minHeight:0,overflowY:'auto',overflowX:'hidden',WebkitOverflowScrolling:'touch',flex:1,paddingRight:1}}>
+    <div style={{
+      minWidth:0,minHeight:0,overflow:'auto',WebkitOverflowScrolling:'touch',
+      overscrollBehavior:'contain',flex:1,paddingRight:1,
+    }}>
       <EditorNavigationPage page={page} store={store} settings={editorSettings} onNavigate={openPage}/>
     </div>
   </section>;
 
   const previewSurface=<section style={{
-    width:'100%',height:'100%',minWidth:0,minHeight:0,display:'grid',placeItems:'center',
+    width:'100%',height:'100%',minWidth:0,minHeight:0,
     overflow:'hidden',background:'#fff',border:`3px solid ${INK}`,borderRadius:7,padding:3,boxSizing:'border-box',
   }}>
-    <div style={isPortraitVideo
-      ?{height:'100%',maxHeight:'100%',width:'auto',maxWidth:'100%',aspectRatio:String(compositionAspect)}
-      :{width:'100%',maxWidth:'100%',height:'auto',maxHeight:'100%',aspectRatio:String(compositionAspect)}
-    }>
-      <PreviewPane store={store} renderPreview={renderPreview} aspect={compositionAspect}/>
-    </div>
+    <FitPreview store={store} renderPreview={renderPreview} aspect={compositionAspect}/>
   </section>;
+
+  const splitTemplate=orientation==='portrait'
+    ?{
+      gridTemplateColumns:'minmax(0,1fr)',
+      gridTemplateRows:isPortraitVideo?'minmax(0,4fr) minmax(0,6fr)':'minmax(0,3fr) minmax(0,7fr)',
+    }
+    :{
+      gridTemplateRows:'minmax(0,1fr)',
+      gridTemplateColumns:isPortraitVideo?'minmax(0,3fr) minmax(0,7fr)':'minmax(0,5fr) minmax(0,5fr)',
+    };
 
   const mainSurface=workspaceMode==='preview'
     ?previewSurface
     :workspaceMode==='edit'
       ?pageSurface
       :<div style={{
-        width:'100%',height:'100%',minWidth:0,minHeight:0,display:'grid',gap:4,
-        ...(orientation==='portrait'
-          ?{gridTemplateRows:isPortraitVideo?'minmax(180px,42%) minmax(0,1fr)':'minmax(110px,34%) minmax(0,1fr)',gridTemplateColumns:'minmax(0,1fr)'}
-          :{gridTemplateColumns:isPortraitVideo?'minmax(180px,42%) minmax(0,1fr)':'minmax(0,58%) minmax(220px,42%)',gridTemplateRows:'minmax(0,1fr)'}),
+        width:'100%',height:'100%',minWidth:0,minHeight:0,display:'grid',gap:4,...splitTemplate,
       }}>
         {previewSurface}
         {pageSurface}
       </div>;
 
-  const timeline=showTimeline?<div style={{minHeight:0,overflow:'hidden'}}>
+  const timeline=showTimeline?<div style={{width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}>
     <TimelineStrip
       store={store}
-      height={timelineHeight}
+      height="100%"
       scrollToSec={scrollToSec}
       onViewportChange={setTimelineViewport}
       onClipContextMenu={(clip,at)=>setMenu({items:clipMenuFor(clip),at,title:String(clip.id)})}
@@ -132,21 +188,33 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     />
   </div>:null;
 
-  const map=showMap?<MiniTimelineMap store={store} height={mapHeight} viewport={timelineViewport} onViewportNavigate={setScrollToSec}/>:null;
+  const map=showMap?<div style={{width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}>
+    <MiniTimelineMap store={store} height="100%" viewport={timelineViewport} onViewportNavigate={setScrollToSec}/>
+  </div>:null;
+
+  const contentWeight=workspaceMode==='edit'?7:6;
+  const rows=[
+    navHeight,
+    `minmax(0,${contentWeight}fr)`,
+    ...(showTimeline?['minmax(0,3fr)']:[]),
+    ...(showMap?['minmax(0,1fr)']:[]),
+  ].join(' ');
 
   return <div
     ref={rootRef}
     data-layout={`${orientation}-phone-${isPortraitVideo?'portrait':'landscape'}-video`}
     data-workspace-mode={workspaceMode}
+    data-timeline-visible={showTimeline?'true':'false'}
+    data-map-visible={showMap?'true':'false'}
     style={{
-      position:'relative',width:'100%',height:containerHeight,minWidth:0,minHeight:0,
-      background:'#f3f3f3',color:'#000',display:'grid',gap:4,padding:4,paddingBottom:6,
-      boxSizing:'border-box',overflow:'hidden',touchAction:'manipulation',
-      gridTemplateRows:`auto minmax(0,1fr)${showTimeline?` ${timelineHeight}px`:''}${showMap?` ${mapHeight}px`:''}`,
+      position:'relative',width:'100%',height:containerHeight,maxWidth:'100%',maxHeight:'100%',
+      minWidth:0,minHeight:0,background:'#f3f3f3',color:'#000',display:'grid',gap:4,
+      padding:4,paddingBottom:6,boxSizing:'border-box',overflow:'hidden',touchAction:'manipulation',
+      gridTemplateColumns:'minmax(0,1fr)',gridTemplateRows:rows,
     }}
   >
     {topChrome}
-    <div style={{minWidth:0,minHeight:0,overflow:'hidden'}}>{mainSurface}</div>
+    <div style={{width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}>{mainSurface}</div>
     {timeline}
     {map}
     {menu&&<ContextMenu {...menu} onDismiss={()=>setMenu(null)}/>}
