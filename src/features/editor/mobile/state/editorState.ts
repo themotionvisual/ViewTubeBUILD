@@ -49,6 +49,8 @@ export type EditorAction=
   |{type:'setPlaying';playing:boolean}
   |{type:'togglePlaying'}
   |{type:'setPlaybackRate';rate:number}
+  |{type:'replaceProject';project:Partial<EditorProject>}
+  |{type:'updateProjectMeta';patch:Record<string,unknown>}
   |{type:'setZoom';pxPerSec:number}
   |{type:'selectClip';id:string;additive?:boolean}
   |{type:'selectTrack';id:string|null}
@@ -183,6 +185,25 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
       return{...state,playing:!state.playing};
     case'setPlaybackRate':
       return{...state,playbackRate:Math.max(.1,Math.min(4,action.rate))};
+    case'replaceProject':{
+      const next=initialState(action.project).project;
+      return{
+        ...state,
+        project:next,
+        playheadSec:0,
+        playing:false,
+        selection:emptySelection,
+        history:{past:[],future:[]},
+      };
+    }
+    case'updateProjectMeta':
+      return withHistory(state,{
+        ...state,
+        project:{
+          ...state.project,
+          meta:{...((state.project.meta??{}) as Record<string,unknown>),...action.patch},
+        },
+      });
     case'setZoom':
       return{...state,zoomPxPerSec:Math.max(4,Math.min(400,action.pxPerSec))};
     case'selectClip':{
