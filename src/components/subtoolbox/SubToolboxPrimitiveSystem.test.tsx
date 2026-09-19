@@ -67,6 +67,21 @@ describe("Subtoolbox Primitive System", () => {
     }
   })
 
+  it("keeps the corrected split/tag/field/knob visual contracts in canonical CSS", () => {
+    const css = readFileSync(resolve(process.cwd(), "src/styles/subtoolbox-system.css"), "utf8")
+    const splitCss = readFileSync(resolve(process.cwd(), "src/styles/subtoolbox-split-primitives.css"), "utf8")
+
+    expect(splitCss).toContain("split-left square parity")
+    expect(splitCss).toContain("aspect-ratio:1/1")
+    expect(css).toContain("field parity, borderless action tags")
+    expect(css).toContain("--field-accent:var(--pair-a")
+    expect(css).toContain(".vt-subtoolbox-removable-tag,")
+    expect(css).toContain(".vt-subtoolbox-selectable-tag{")
+    expect(css).toContain("border:0!important")
+    expect(css).toContain("--vt-knob-size:calc(var(--vt-component-height)*2.25)")
+    expect(css).toContain(".vt-subtoolbox-knob-arc{display:none}")
+  })
+
   it("gives every declared subtoolbox state default copy", () => {
     // The Record is typed, but a missing key renders an empty panel rather than
     // failing the build, so assert the rendered output instead of the type.
