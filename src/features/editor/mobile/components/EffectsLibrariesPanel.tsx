@@ -1,11 +1,12 @@
-import React,{useEffect,useMemo,useRef,useState} from 'react';
+import React,{useMemo,useState} from 'react';
 import {
-  Aperture,Boxes,Minus,Plus,RotateCcw,Search,Settings2,Sparkles,WandSparkles,
+  Aperture,ArrowDown,ArrowUp,Boxes,Eye,EyeOff,RotateCcw,Search,Settings2,Sparkles,WandSparkles,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {assetRegistry} from '../../../../remotion-editor/src/assets/catalog';
 import {createAssetTimelineObject} from '../../../../remotion-editor/src/assets/editorAdapter';
 import type {AssetDefinition} from '../../../../remotion-editor/src/assets/types';
+import {AcceleratingStepper as HoldStepper} from './MobileEditorPrimitives';
 
 const INK='#248b99',CYAN='#36E0F6',YELLOW='#FFFF61',PINK='#FA618A';
 const card:React.CSSProperties={border:`2px solid ${INK}`,borderRadius:7,background:'#fff',padding:7,marginBottom:7,boxShadow:'2px 2px 0 rgba(54,224,246,.22)'};
@@ -16,41 +17,6 @@ const btn=(active=false):React.CSSProperties=>({
 });
 
 function uid(prefix:string){return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`}
-
-const HoldStepper:React.FC<{
-  label:string;value:number;min:number;max:number;step:number;precision?:number;
-  onChange:(value:number)=>void;
-}>=({label,value,min,max,step,precision=2,onChange})=>{
-  const timer=useRef<number|null>(null);
-  const start=useRef(0);
-  const valueRef=useRef(value);
-  valueRef.current=value;
-  const stop=()=>{if(timer.current!=null){window.clearTimeout(timer.current);timer.current=null}};
-  useEffect(()=>stop,[]);
-  const nudge=(dir:-1|1,elapsed=0)=>{
-    const mult=elapsed>2800?10:elapsed>1700?5:elapsed>900?2:1;
-    const next=Math.max(min,Math.min(max,valueRef.current+dir*step*mult));
-    const fixed=Number(next.toFixed(precision));
-    valueRef.current=fixed;onChange(fixed);
-  };
-  const repeat=(dir:-1|1)=>{
-    const elapsed=performance.now()-start.current;
-    nudge(dir,elapsed);
-    timer.current=window.setTimeout(()=>repeat(dir),Math.max(42,210-elapsed/18));
-  };
-  const begin=(dir:-1|1,e:React.PointerEvent<HTMLButtonElement>)=>{
-    e.preventDefault();e.currentTarget.setPointerCapture?.(e.pointerId);stop();
-    start.current=performance.now();nudge(dir,0);timer.current=window.setTimeout(()=>repeat(dir),340);
-  };
-  return <div style={{width:'100%',maxWidth:136,marginBottom:6}}>
-    <div style={{fontSize:8,fontWeight:1000,textTransform:'uppercase',marginBottom:2}}>{label}</div>
-    <div style={{display:'grid',gridTemplateColumns:'26px minmax(48px,1fr) 26px'}}>
-      <button style={{...btn(true),minHeight:26,padding:0,borderTopRightRadius:0,borderBottomRightRadius:0}} onPointerDown={e=>begin(-1,e)} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}><Minus size={12}/></button>
-      <div style={{height:26,borderTop:`2px solid ${INK}`,borderBottom:`2px solid ${INK}`,display:'grid',placeItems:'center',fontSize:9,fontWeight:1000,boxSizing:'border-box'}}>{value.toFixed(precision)}</div>
-      <button style={{...btn(true),minHeight:26,padding:0,borderTopLeftRadius:0,borderBottomLeftRadius:0}} onPointerDown={e=>begin(1,e)} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}><Plus size={12}/></button>
-    </div>
-  </div>;
-};
 
 const CLIP_PRESETS=[
   {name:'Clean',patch:{blur:0,saturation:1,brightness:1,hue:0,opacity:1}},
