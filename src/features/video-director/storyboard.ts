@@ -1,8 +1,6 @@
 import {
   VideoDirectorProjectSchema,
   type VideoDirectorProject,
-  type VideoDirectorShotSchema,
-  type VideoDirectorVariantSchema,
 } from "./projectSchema"
 
 const makeId = (prefix: string) =>
