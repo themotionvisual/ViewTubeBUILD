@@ -109,7 +109,12 @@ describe("widget uniformity migrations", () => {
   it("routes redesigned controls through shared primitives and classes", () => {
     expect(aiJournalSource).toContain("ai-journal-category-grid")
     expect(aiJournalSource).toContain("ai-journal-card")
+    expect(aiJournalSource).toContain("<WidgetSizedButton")
+    expect(aiJournalSource).toContain("<WidgetIconButton")
+    expect(aiJournalSource).not.toContain('className="vt-button')
     expect(imageGeneratorSource).toContain("headerContent={templateToggle}")
+    expect(imageGeneratorSource).toContain("<WidgetSizedButton")
+    expect(imageGeneratorSource).not.toContain('className="vt-button')
     expect(imageGeneratorSource).toContain("image-generator-style-grid")
     expect(imageGeneratorSource).toContain("image-generator-copy-grid")
     expect(imageGeneratorSource).toContain("image-generator-preview")
