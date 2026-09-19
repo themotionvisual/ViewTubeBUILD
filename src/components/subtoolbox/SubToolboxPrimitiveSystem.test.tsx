@@ -4,7 +4,7 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "./SubToolboxLayouts"
-import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAspectRatioFrame, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataStats, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxMeter, SubToolboxMetric, SubToolboxMetricStrip, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxScrollbar, SubToolboxStatePanel, SubToolboxTag, SubToolboxTextArea, SubToolboxToolbar, SubToolboxTooltip, SubToolboxTree, SubToolboxVaultAsset } from "./SubToolboxPrimitives"
+import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAspectRatioFrame, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataStats, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxMeter, SubToolboxMetric, SubToolboxMetricStrip, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxScrollbar, SubToolboxSplitField, SubToolboxStatePanel, SubToolboxTag, SubToolboxTagEditor, SubToolboxTextArea, SubToolboxToolbar, SubToolboxTooltip, SubToolboxTree, SubToolboxVaultAsset, SubToolboxProgressValue } from "./SubToolboxPrimitives"
 import { CONTROL_SHELL, SUBTOOLBOX_CONTROL_SIZES, SUBTOOLBOX_STATES, SUBTOOLBOX_TOKENS, TOOLBOX_LEVEL_DNA, resolveSubtoolboxMinHeight } from "./tokens"
 
 describe("Subtoolbox Primitive System", () => {
@@ -93,6 +93,10 @@ describe("Subtoolbox Primitive System", () => {
         <SubToolboxFileTarget label="Upload video" />
         <SubToolboxTooltip level="l1" forceOpen content="Tooltip" />
         <SubToolboxKnob level="l1" value={72} onValueChange={() => undefined} />
+        <SubToolboxSplitField level="l1" variant="search" icon="S" actionIcon="X" inputProps={{ "aria-label": "Search", defaultValue: "Napoleon" }} />
+        <SubToolboxSplitField level="l1" variant="action" actionIcon="+" inputProps={{ "aria-label": "Add item", defaultValue: "Item" }} />
+        <SubToolboxTagEditor level="l1" tags={["HISTORY"]} onTagsChange={() => undefined} />
+        <SubToolboxProgressValue level="l1" value={68} label="Sync" />
         <SubToolboxAlphabeticalSpectrumTags level="l2" />
         <SubToolboxDataTable
           level="l2"
@@ -138,9 +142,15 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("vt-subtoolbox-tooltip is-l1 is-open")
     expect(html).toContain('role="tooltip"')
     expect(html).toContain("vt-subtoolbox-knob")
-    expect(html).toContain('type="range"')
+    expect(html).toContain('role="slider"')
+    expect(html).toContain("vt-subtoolbox-knob-controls")
     expect(html).toContain("A · TAG")
     expect(html).toContain("Z · TAG")
+    expect(html).toContain("vt-subtoolbox-split-field is-search has-action")
+    expect(html).toContain("vt-subtoolbox-split-field is-action has-action")
+    expect(html).toContain("vt-subtoolbox-tag-editor-label")
+    expect(html).toContain('role="progressbar"')
+    expect(html).toContain(">SYNC<")
     expect(html).toContain("vt-subtoolbox-data-table")
     expect(html).toContain("vt-subtoolbox-popover")
     expect(html).toContain("vt-subtoolbox-disclosure")
