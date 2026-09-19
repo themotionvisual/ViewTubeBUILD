@@ -2,7 +2,7 @@ import * as Select from "@radix-ui/react-select"
 import React, { useCallback, useEffect, useId, useRef, useState } from "react"
 import { AlertTriangle, Ban, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock3, Inbox, LoaderCircle, RotateCw, X } from "lucide-react"
 import type { WidgetDataState } from "./types"
-import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone } from "./widgetPrimitiveSystem"
+import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone, type WidgetPrimitiveTextFit } from "./widgetPrimitiveSystem"
 import { resolveWidgetViewportSegment } from "./widgetScrollGeometry"
 
 export interface WidgetScrollAreaProps {
