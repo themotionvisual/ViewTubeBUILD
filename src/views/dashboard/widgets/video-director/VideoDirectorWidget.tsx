@@ -64,6 +64,21 @@ import {
   DirectorWidgetTextureStack,
   DirectorWidgetTransitionBridge,
 } from "./VideoDirectorWidgetComponents"
+import {
+  DirectorWidgetConceptDeck,
+  DirectorWidgetDialogueLane,
+  DirectorWidgetEffectsStack,
+  DirectorWidgetGradeBoard,
+  DirectorWidgetOutputCard,
+  DirectorWidgetOverlayStack,
+  DirectorWidgetPaletteBoard,
+  DirectorWidgetPerspectiveRig,
+  DirectorWidgetSfxLane,
+  DirectorWidgetShotStructure,
+  DirectorWidgetSpeedCurve,
+  DirectorWidgetStyleDeck,
+  DirectorWidgetTitleCanvas,
+} from "./VideoDirectorWidgetMoreComponents"
 import "./videoDirectorWidget.css"
 
 type Page = "direct" | "storyboard" | "variations" | "generate"
@@ -255,7 +270,7 @@ export const VideoDirectorWidget: React.FC<
       return <DirectorWidgetAudioStage width={activePayload.spatialWidth} targetLufs={activePayload.targetLufs} />
     }
     if (activeCategoryId === "generation-output") {
-      return <DirectorWidgetProviderRoute mode={activePayload.providerMode} provider={activePayload.providerId} model={activePayload.modelId} />
+      return <div className="flex flex-col gap-2"><DirectorWidgetOutputCard ratio={activePayload.aspectRatio} resolution={activePayload.resolution} quality={activePayload.quality} outputs={activePayload.outputs} nativeAudio={activePayload.generateAudio} upscale={activePayload.upscale} hdr={activePayload.hdr} /><DirectorWidgetProviderRoute mode={activePayload.providerMode} provider={activePayload.providerId} model={activePayload.modelId} /></div>
     }
     if (activeCategoryId === "camera-movement") {
       return <DirectorWidgetCameraPath type={activePayload.type} speed={activePayload.speed} panDegrees={activePayload.panDegrees} tiltDegrees={activePayload.tiltDegrees} orbitDegrees={activePayload.orbitDegrees} />
@@ -283,6 +298,42 @@ export const VideoDirectorWidget: React.FC<
     }
     if (activeCategoryId === "negative-constraints") {
       return <DirectorWidgetNegativeBank tagCount={activePayload.tags.length} enforcement={activePayload.enforcement} freeText={activePayload.freeText} />
+    }
+    if (activeCategoryId === "concept-direction") {
+      return <DirectorWidgetConceptDeck objective={activePayload.objective} audience={activePayload.audience} treatment={activePayload.treatment} conceptCount={activePayload.conceptCount} variationStrength={activePayload.variationStrength} />
+    }
+    if (activeCategoryId === "visual-style") {
+      return <DirectorWidgetStyleDeck medium={activePayload.medium} period={activePayload.period} realism={activePayload.realism} stylization={activePayload.stylization} descriptorCount={activePayload.descriptors.length} recipeCount={activePayload.recipeIds.length} />
+    }
+    if (activeCategoryId === "perspective-capture") {
+      return <DirectorWidgetPerspectiveRig rig={activePayload.rig} cameraHeightMeters={activePayload.cameraHeightMeters} pitchDegrees={activePayload.pitchDegrees} yawDegrees={activePayload.yawDegrees} fieldOfViewDegrees={activePayload.fieldOfViewDegrees} firstPerson={activePayload.firstPerson} />
+    }
+    if (activeCategoryId === "color-palette") {
+      return <DirectorWidgetPaletteBoard colors={activePayload.colors} exactLock={activePayload.exactLock} />
+    }
+    if (activeCategoryId === "grade-exposure") {
+      return <DirectorWidgetGradeBoard exposureEv={activePayload.exposureEv} contrast={activePayload.contrast} highlights={activePayload.highlights} shadows={activePayload.shadows} temperatureK={activePayload.temperatureK} saturation={activePayload.saturation} />
+    }
+    if (activeCategoryId === "shot-structure") {
+      return <DirectorWidgetShotStructure mode={activePayload.mode} shotCount={activePayload.shotCount} averageShotSeconds={activePayload.averageShotSeconds} continuityStrength={activePayload.continuityStrength} />
+    }
+    if (activeCategoryId === "speed-motion") {
+      return <DirectorWidgetSpeedCurve playbackRate={activePayload.playbackRate} interpolation={activePayload.interpolation} motionBlur={activePayload.motionBlur} pointCount={activePayload.speedCurve.length} />
+    }
+    if (activeCategoryId === "voice-dialogue") {
+      return <DirectorWidgetDialogueLane enabled={activePayload.enabled} source={activePayload.source} language={activePayload.language} speakingRate={activePayload.speakingRate} expressiveness={activePayload.expressiveness} scriptLength={activePayload.script.length} />
+    }
+    if (activeCategoryId === "sound-effects") {
+      return <DirectorWidgetSfxLane enabled={activePayload.enabled} cueCount={activePayload.cues.length} autoDetectEvents={activePayload.autoDetectEvents} />
+    }
+    if (activeCategoryId === "text-titles") {
+      return <DirectorWidgetTitleCanvas overlayCount={activePayload.overlays.length} safeMargins={activePayload.safeMargins} />
+    }
+    if (activeCategoryId === "stickers-overlays") {
+      return <DirectorWidgetOverlayStack itemCount={activePayload.items.length} />
+    }
+    if (activeCategoryId === "visual-effects") {
+      return <DirectorWidgetEffectsStack effects={activePayload.effects} />
     }
     return (
       <div className="vtdw-signature vtdw-pacing">
