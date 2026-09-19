@@ -4,7 +4,7 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "./SubToolboxLayouts"
-import { SubToolboxAlphabeticalSpectrumTags, SubToolboxButton, SubToolboxDataTable, SubToolboxFileTarget, SubToolboxInput, SubToolboxKnob, SubToolboxMetric, SubToolboxOutputCard, SubToolboxStatePanel, SubToolboxTextArea, SubToolboxTooltip } from "./SubToolboxPrimitives"
+import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxMeter, SubToolboxMetric, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxStatePanel, SubToolboxTextArea, SubToolboxTooltip } from "./SubToolboxPrimitives"
 import { CONTROL_SHELL, SUBTOOLBOX_CONTROL_SIZES, SUBTOOLBOX_STATES, SUBTOOLBOX_TOKENS, TOOLBOX_LEVEL_DNA, resolveSubtoolboxMinHeight } from "./tokens"
 
 describe("Subtoolbox Primitive System", () => {
@@ -99,6 +99,18 @@ describe("Subtoolbox Primitive System", () => {
           columns={[{ key: "metric", label: "Metric" }, { key: "value", label: "Value" }]}
           rows={[{ metric: "Views", value: "100" }]}
         />
+        <SubToolboxPopover level="l2" trigger="Options">Popover body</SubToolboxPopover>
+        <SubToolboxDisclosure level="l2" title="Advanced">Disclosure body</SubToolboxDisclosure>
+        <SubToolboxPagination level="l2" page={2} pages={3} />
+        <SubToolboxControllerSwitch level="l2" pressed />
+        <SubToolboxLed level="l2" active label="Active" />
+        <SubToolboxHoverCard level="l2" trigger="Hover" content="Details" />
+        <SubToolboxMeter level="l2" value={73} label="Quality" />
+        <SubToolboxAvatar level="l2" name="View Tube" meta="Creator" />
+        <SubToolboxNameValueList level="l2" items={[{ name: "Views", value: "100" }]} />
+        <SubToolboxBreadcrumb level="l2" items={[{ label: "Studio" }, { label: "Tool" }]} />
+        <SubToolboxCarousel level="l2" items={["One", "Two"]} />
+        <SubToolboxCommandPalette level="l2" items={[{ id: "one", label: "One" }]} />
       </SubToolboxStack>,
     )
 
@@ -118,5 +130,17 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("A · TAG")
     expect(html).toContain("Z · TAG")
     expect(html).toContain("vt-subtoolbox-data-table")
+    expect(html).toContain("vt-subtoolbox-popover")
+    expect(html).toContain("vt-subtoolbox-disclosure")
+    expect(html).toContain("vt-subtoolbox-pagination")
+    expect(html).toContain("vt-subtoolbox-controller-switch")
+    expect(html).toContain("vt-subtoolbox-led")
+    expect(html).toContain("vt-subtoolbox-hover-card")
+    expect(html).toContain("vt-subtoolbox-meter")
+    expect(html).toContain("vt-subtoolbox-avatar")
+    expect(html).toContain("vt-subtoolbox-name-value")
+    expect(html).toContain("vt-subtoolbox-breadcrumb")
+    expect(html).toContain("vt-subtoolbox-carousel")
+    expect(html).toContain("vt-subtoolbox-command")
   })
 })
