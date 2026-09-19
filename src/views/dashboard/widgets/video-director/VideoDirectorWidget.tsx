@@ -39,6 +39,7 @@ import {
   setVideoDirectorVariantStrength,
   subscribeVideoDirectorState,
   writeVideoDirectorState,
+  writeVideoDirectorSurfaceHandoff,
   type VideoDirectorCategoryId,
   type VideoDirectorMode,
   type VideoDirectorProject,
@@ -185,6 +186,16 @@ export const VideoDirectorWidget: React.FC<
       scope: { type: "project" },
     }))
   }, [commit, project])
+
+  const openStudio = useCallback(() => {
+    writeVideoDirectorSurfaceHandoff({
+      categoryId: project.activeCategoryId,
+      scopeKey,
+      source: "dashboard",
+      target: "studio",
+    })
+    onNavigate?.("/studio#video-director")
+  }, [onNavigate, project.activeCategoryId, scopeKey])
 
   const selectCategory = useCallback((categoryId: VideoDirectorCategoryId) => {
     commit(VideoDirectorProjectSchema.parse({ ...project, activeCategoryId: categoryId }))
@@ -525,7 +536,7 @@ export const VideoDirectorWidget: React.FC<
     }
     return (
       <div className="vtdw-field-grid">
-        <WidgetSizedButton height={32} tone="secondary" onClick={() => onNavigate?.("/studio#video-director")}>
+        <WidgetSizedButton height={32} tone="secondary" onClick={openStudio}>
           OPEN FULL {activeDefinition.shortLabel.toUpperCase()} CONTROLS
         </WidgetSizedButton>
         <WidgetBadge>{activeDefinition.group.toUpperCase()}</WidgetBadge>
@@ -575,7 +586,7 @@ export const VideoDirectorWidget: React.FC<
           <WidgetActionButton tone="primary" height={38} disabled={autoFillLoading} onClick={() => void runAutoFill()}>
             <Sparkles size={15} aria-hidden="true" /> {autoFillLoading ? "DIRECTING…" : "AUTO-FILL DIRECTOR"}
           </WidgetActionButton>
-          <WidgetSizedButton height={38} tone="secondary" onClick={() => onNavigate?.("/studio#video-director")}>
+          <WidgetSizedButton height={38} tone="secondary" onClick={openStudio}>
             <ExternalLink size={14} aria-hidden="true" /> OPEN STUDIO
           </WidgetSizedButton>
         </div>
@@ -639,7 +650,7 @@ export const VideoDirectorWidget: React.FC<
           >
             BUILD / SYNC STORYBOARD
           </WidgetActionButton>
-          <WidgetSizedButton height={38} tone="secondary" onClick={() => onNavigate?.("/studio#video-director")}>EDIT SHOTS IN STUDIO</WidgetSizedButton>
+          <WidgetSizedButton height={38} tone="secondary" onClick={openStudio}>EDIT SHOTS IN STUDIO</WidgetSizedButton>
         </div>
       </WidgetSection>
       <WidgetSection>
@@ -811,7 +822,7 @@ export const VideoDirectorWidget: React.FC<
               <strong>{output.outputs} VIDEO{output.outputs === 1 ? "" : "S"} · {project.categories["timing-pacing"].payload.durationSeconds}S · {output.aspectRatio}</strong>
               <span>{activeScope.type.toUpperCase()} · {STATUS_SYMBOL[activeStatus]} {activeDefinition.shortLabel} · {output.providerMode === "auto" ? "AUTO ROUTE" : output.providerId || "MANUAL ROUTE"}</span>
             </div>
-            <WidgetSizedButton height={38} tone="secondary" onClick={() => onNavigate?.("/studio#video-director")}>
+            <WidgetSizedButton height={38} tone="secondary" onClick={openStudio}>
               OPEN STUDIO
             </WidgetSizedButton>
             <WidgetActionButton className="vtdw-generate" tone="primary" height={38} disabled title="Provider quote, credit reservation and production adapter are still gated.">
