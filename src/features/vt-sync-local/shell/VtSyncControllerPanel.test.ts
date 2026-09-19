@@ -59,6 +59,14 @@ describe("time window controller options", () => {
   expect(render()).toContain("Lifetime only")
  })
 
+ it("labels visible dataset units separately from underlying child queries", () => {
+  const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
+  expect(source).toContain("selectedUnitCount")
+  expect(source).toContain("selectedQueryCount")
+  expect(source).toContain("underlying quer")
+  expect(source).not.toContain('selected.length} dataset')
+ })
+
  it("tells the user which datasets derive their windows for free", () => {
   // The recommended default selection includes daily stats, which is derived.
   expect(render()).toContain("derive their windows for free")
