@@ -12,6 +12,7 @@ import {EffectsLibrariesPanel} from './EffectsLibrariesPanel';
 import {CustomTemplatePanel} from './CustomTemplatePanel';
 import {ExportRenderPanel} from './ExportRenderPanel';
 import {capabilitiesForCategory,type EditorCapabilityStatus} from '../../editorCapabilities';
+import {AcceleratingStepper} from './MobileEditorPrimitives';
 
 export type EditorNavPage='project'|'select'|'media'|'text'|'audio'|'graphics'|'effects'|'transitions'|'templates'|'custom-templates'|'export'|'settings';
 
@@ -37,7 +38,8 @@ const Section:React.FC<React.PropsWithChildren<{name:string}>>=({name,children})
 const Grid:React.FC<React.PropsWithChildren<{cols?:number}>>=({cols=2,children})=><div style={{display:'grid',gridTemplateColumns:`repeat(${cols},minmax(0,1fr))`,gap:5}}>{children}</div>;
 const statusLabel:Record<EditorCapabilityStatus,string>={active:'ACTIVE',available:'AVAILABLE',planned:'PLANNED'};
 const CapabilityGrid=({category}:{category:'edit'|'media'|'settings'})=><Grid>{capabilitiesForCategory(category).map(c=><div key={c.id} style={{...button,opacity:c.status==='planned'?.5:1}}>{c.label}<div style={{fontSize:6}}>{statusLabel[c.status]}</div></div>)}</Grid>;
-const NumberField=({label,value,step=.01,onChange}:{label:string;value:number;step?:number;onChange:(n:number)=>void})=><label style={{fontSize:8,fontWeight:900}}>{label}<input type="number" step={step} style={field} value={Number(value.toFixed(3))} onChange={e=>{const n=Number(e.target.value);if(Number.isFinite(n))onChange(n)}}/></label>;
+const StepperField=({label,value,min=-5000,max=5000,step=.01,defaultValue=0,onChange}:{label:string;value:number;min?:number;max?:number;step?:number;defaultValue?:number;onChange:(n:number)=>void})=>
+  <AcceleratingStepper label={label} value={value} min={min} max={max} step={step} defaultValue={defaultValue} precision={step<1?2:0} onChange={onChange}/>;
 
 function Inspector({store}:{store:EditorStore}){
   const clip=store.selectedClips[0];
@@ -49,8 +51,8 @@ function Inspector({store}:{store:EditorStore}){
   const v=readClipVisualTransform(clip),set=(patch:any)=>store.dispatch({type:'updateClipTransform',id:clip.id,patch});
   return <>
     <Section name="Clip"><b>{String(clip.id)}</b><div>{clip.start.toFixed(2)}s → {clip.end.toFixed(2)}s · {store.trackById(clip.trackId)?.kind??'clip'}</div></Section>
-    <Section name="Transform"><Grid><NumberField label="X" value={v.x} step={1} onChange={x=>set({x})}/><NumberField label="Y" value={v.y} step={1} onChange={y=>set({y})}/><NumberField label="SCALE X" value={v.scaleX} onChange={scaleX=>set({scaleX})}/><NumberField label="SCALE Y" value={v.scaleY} onChange={scaleY=>set({scaleY})}/><NumberField label="ROTATION" value={v.rotation} step={1} onChange={rotation=>set({rotation})}/><NumberField label="OPACITY" value={v.opacity} onChange={opacity=>set({opacity})}/></Grid><button style={{...button,width:'100%',marginTop:5}} onClick={()=>store.dispatch({type:'resetClipTransform',id:clip.id})}>Reset Transform</button></Section>
-    <Section name="Crop"><Grid><NumberField label="LEFT" value={v.cropLeft} onChange={cropLeft=>set({cropLeft})}/><NumberField label="RIGHT" value={v.cropRight} onChange={cropRight=>set({cropRight})}/><NumberField label="TOP" value={v.cropTop} onChange={cropTop=>set({cropTop})}/><NumberField label="BOTTOM" value={v.cropBottom} onChange={cropBottom=>set({cropBottom})}/></Grid></Section>
+    <Section name="Transform"><Grid><StepperField label="X" value={v.x} step={1} defaultValue={0} onChange={x=>set({x})}/><StepperField label="Y" value={v.y} step={1} defaultValue={0} onChange={y=>set({y})}/><StepperField label="SCALE X" value={v.scaleX} min={.05} max={10} step={.01} defaultValue={1} onChange={scaleX=>set({scaleX})}/><StepperField label="SCALE Y" value={v.scaleY} min={.05} max={10} step={.01} defaultValue={1} onChange={scaleY=>set({scaleY})}/><StepperField label="ROTATION" value={v.rotation} min={-3600} max={3600} step={1} defaultValue={0} onChange={rotation=>set({rotation})}/><StepperField label="OPACITY" value={v.opacity} min={0} max={1} step={.01} defaultValue={1} onChange={opacity=>set({opacity})}/></Grid><button style={{...button,width:'100%',marginTop:5}} onClick={()=>store.dispatch({type:'resetClipTransform',id:clip.id})}>Reset Transform</button></Section>
+    <Section name="Crop"><Grid><StepperField label="LEFT" value={v.cropLeft} min={0} max={.95} step={.01} defaultValue={0} onChange={cropLeft=>set({cropLeft})}/><StepperField label="RIGHT" value={v.cropRight} min={0} max={.95} step={.01} defaultValue={0} onChange={cropRight=>set({cropRight})}/><StepperField label="TOP" value={v.cropTop} min={0} max={.95} step={.01} defaultValue={0} onChange={cropTop=>set({cropTop})}/><StepperField label="BOTTOM" value={v.cropBottom} min={0} max={.95} step={.01} defaultValue={0} onChange={cropBottom=>set({cropBottom})}/></Grid></Section>
   </>;
 }
 
