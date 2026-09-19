@@ -29,6 +29,7 @@ import {
   resolveAlphabeticalSpectrumSlot,
   resolveAlphabeticalSpectrumHue,
   WidgetIconButton,
+  WidgetSizedButton,
 } from "../WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
 import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"
@@ -121,6 +122,23 @@ describe("WidgetStatePanel", () => {
     expect(markup).toContain('role="alert"')
     expect(markup).toContain("Analytics could not be loaded.")
     expect(markup).toContain("Try again")
+  })
+})
+
+describe("adaptive sized-control typography", () => {
+  it("marks 24px controls for opt-in 16-to-10 text fitting", () => {
+    const markup = renderToStaticMarkup(
+      <WidgetSizedButton height={24} textFit="adaptive">Educational</WidgetSizedButton>,
+    )
+    expect(markup).toContain("is-height-24")
+    expect(markup).toContain("vt-text-fit-adaptive")
+  })
+
+  it("keeps fixed typography as the default", () => {
+    const markup = renderToStaticMarkup(
+      <WidgetSizedButton height={24}>Educational</WidgetSizedButton>,
+    )
+    expect(markup).not.toContain("vt-text-fit-adaptive")
   })
 })
 
