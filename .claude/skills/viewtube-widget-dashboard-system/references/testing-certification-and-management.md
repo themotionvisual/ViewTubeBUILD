@@ -405,3 +405,46 @@ Before saying “done”:
 - [ ] visible evidence captured;
 - [ ] docs/references updated;
 - [ ] branch current enough to merge safely.
+
+
+## 27. Shared-change blast-radius gate
+
+If one widget change touches:
+
+- `WidgetShell`;
+- `widgetPrimitive*`;
+- shared mobile CSS;
+- dashboard grid CSS;
+- common title/header rules;
+
+then the PR must explicitly verify at least one unrelated representative widget for the affected invariant.
+
+A one-widget fix is not allowed to regress shared behavior.
+
+## 28. Rendered responsive evidence beats source-string evidence
+
+Source-contract tests can prove that a selector or prop exists. They cannot prove:
+
+- a label is fully visible;
+- a header action is actually on screen;
+- a title is not visually clipped;
+- a signature canvas is not too tall in landscape;
+- a footer remains reachable;
+- duplicated navigation is not wasting space.
+
+For complex widgets, certification requires rendered visual evidence in addition to source tests.
+
+Minimum mobile fixtures:
+
+- 390×844 portrait;
+- approximately 844×390 landscape.
+
+Also verify declared minimum/default/maximum widget dimensions and at least one asymmetric width × height allocation.
+
+## 29. Responsive-owner consolidation gate
+
+After iterative mobile fixes, search for repeated/contradictory breakpoints and selectors.
+
+Consolidate duplicate ownership where practical.
+
+Do not certify a widget while obsolete narrow-state rules remain in the same stylesheet merely because later selectors happen to override them.
