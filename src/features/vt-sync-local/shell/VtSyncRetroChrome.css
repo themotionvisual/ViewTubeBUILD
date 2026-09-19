@@ -369,6 +369,34 @@
     text-shadow: 0 0 4px rgba(59,107,255, 0.3);
 }
 
+/* Partial state: amber LED, switch stays at rest so status is not confused with action state. */
+.vt-retro-pcb-group.is-partial .led-rim {
+    background: linear-gradient(135deg, #666 0%, #2a2a2a 30%, rgba(255,218,71, 0.45) 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.4), 0 0 10px rgba(255,218,71,0.2);
+}
+.vt-retro-pcb-group.is-partial .led-bulb {
+    background: #FFDA47;
+    box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.6), 0 0 12px #FFDA47, 0 0 20px rgba(255,218,71,0.4);
+}
+.vt-retro-pcb-group.is-partial .comp-label {
+    color: #FFDA47;
+    text-shadow: 0 0 4px rgba(255,218,71,0.3);
+}
+
+/* Failed state: red/pink LED, switch stays at rest and remains retryable. */
+.vt-retro-pcb-group.is-failed .led-rim {
+    background: linear-gradient(135deg, #666 0%, #2a2a2a 30%, rgba(250,97,138, 0.45) 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.4), 0 0 10px rgba(250,97,138,0.2);
+}
+.vt-retro-pcb-group.is-failed .led-bulb {
+    background: #FA618A;
+    box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.6), 0 0 12px #FA618A, 0 0 20px rgba(250,97,138,0.4);
+}
+.vt-retro-pcb-group.is-failed .comp-label {
+    color: #FA618A;
+    text-shadow: 0 0 4px rgba(250,97,138,0.3);
+}
+
 @media (prefers-reduced-motion: reduce) {
  .vt-retro-led.is-pulse.is-lit { animation: none; }
  .vt-retro-switch,
