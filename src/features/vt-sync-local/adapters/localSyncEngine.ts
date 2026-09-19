@@ -3024,7 +3024,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   }
 
   if (["ad_type", "revenue_source", "sharing_service"].some((id) => shouldSync(selected, id))) {
-   updatePhase(progress, "segments", { status: "running", startedAt: new Date().toISOString(), message: "Running revenue and sharing segments." }, onProgress)
+   updatePhase(progress, "segments", { status: "running", startedAt: new Date().toISOString(), completedAt: undefined, message: "Running revenue and sharing segments." }, onProgress)
    let rowsWritten = 0
    let segmentPartial = false
    const revenueSegmentIds = ["ad_type", "revenue_source", "sharing_service"].filter((categoryId) => shouldSync(selected, categoryId))
