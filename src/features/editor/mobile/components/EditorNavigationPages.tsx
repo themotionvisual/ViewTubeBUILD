@@ -1,5 +1,5 @@
 import React from 'react';
-import {AudioLines,Film,ImageIcon,LayoutTemplate,ScanSearch,Settings,Shapes,Shuffle,SlidersHorizontal,Type,Upload} from 'lucide-react';
+import {AudioLines,Film,LayoutTemplate,ScanSearch,Settings,Shapes,Shuffle,SlidersHorizontal,Type,Upload} from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {readClipVisualTransform} from '../state/editorState';
 import {TemplateLibraryPanel} from './TemplateLibraryPanel';
