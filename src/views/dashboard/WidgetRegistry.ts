@@ -53,4 +53,5 @@ export const WIDGET_DESCRIPTIONS: Record<string, { short: string; detailed: stri
  "anomaly-radar": { short: "DETECT UNUSUAL PERFORMANCE SPIKES AND DROPS.", detailed: "Compare recent performance against baseline behavior to surface meaningful changes in views, subscribers, revenue, and related signals." },
  "content-pipeline": { short: "FOLLOW CONTENT FROM IDEA THROUGH PUBLISH.", detailed: "See the current production pulse across ideation, build, ready, and published stages and jump directly into Projects." },
  "audience-requests": { short: "TURN VIEWER REQUESTS INTO CONTENT OPPORTUNITIES.", detailed: "Surface recurring audience questions and requests, preserve their evidence, and route promising ideas into the production workflow." },
+ "video-director": { short: "DIRECT GENERATED VIDEO FROM ONE SHARED VIDEO DNA SYSTEM.", detailed: "Use the compact Dashboard execution surface for briefs, scoped Director settings, storyboard shots, variation permissions, generation planning, queue progress, and direct handoff to the expanded Studio Hub Video Director." },
 }
