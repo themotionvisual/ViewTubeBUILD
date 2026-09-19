@@ -81,6 +81,7 @@ export type EditorAction=
   |{type:'hideTrack';id:string;hidden?:boolean}
   |{type:'addTrack';kind:TrackKind;name?:string}
   |{type:'removeTrack';id:string}
+  |{type:'resolveTrackOverlaps';trackId?:string}
   |{type:'addTransition';transition:VtE1Transition}
   |{type:'removeTransition';id:string}
   |{type:'undo'}
@@ -432,6 +433,23 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
       if(hasClips||state.project.tracks.length<=1)return state;
       const tracks=state.project.tracks.filter(track=>track.id!==action.id);
       return withHistory(state,{...state,project:{...state.project,tracks},selection:state.selection.trackId===action.id?emptySelection:state.selection});
+    }
+    case'resolveTrackOverlaps':{
+      const targetTracks=action.trackId?[action.trackId]:state.project.tracks.map(track=>track.id);
+      const next=[...state.project.clips];
+      for(const trackId of targetTracks){
+        const ordered=next.filter(clip=>clip.trackId===trackId).sort((a,b)=>a.start-b.start);
+        let cursor=0;
+        for(const clip of ordered){
+          const duration=Math.max(MIN_CLIP_DURATION,clip.end-clip.start);
+          const start=Math.max(cursor,clip.start);
+          const index=next.findIndex(item=>item.id===clip.id);
+          if(index>=0)next[index]={...clip,start,end:start+duration};
+          cursor=start+duration;
+        }
+      }
+      const durationSec=Math.max(state.project.durationSec,...next.map(clip=>clip.end));
+      return withHistory(state,{...state,project:{...state.project,clips:next,durationSec}});
     }
     case'addTransition':
       return withHistory(state,{...state,project:{...state.project,transitions:[...(state.project.transitions??[]),action.transition]}});
