@@ -96,3 +96,24 @@ test("completion clears the worker lease and persists output metadata", async ()
   assert.equal(completed.providerJobId, "provider-job-1");
   assert.equal(completed.lockedBy, null);
 });
+
+test("progress snapshots survive refresh-style reads with bounded event history", async () => {
+  const job = await enqueue({ idempotencyKey: "progress" });
+  const claimed = await store.claimNextVideoDirectorJob("worker-a");
+
+  await store.updateVideoDirectorJobProgress(claimed.id, "worker-a", {
+    stage: "rendering",
+    progress: 0.42,
+    message: "Rendering frame sequence",
+    previewAssetUri: "https://example.test/preview.jpg",
+    metadata: { provider: "mock" },
+  });
+
+  const reloaded = await store.getVideoDirectorJob(job.id);
+  assert.equal(reloaded.stage, "rendering");
+  assert.equal(reloaded.progress, 0.42);
+  assert.equal(reloaded.progressMessage, "Rendering frame sequence");
+  assert.equal(reloaded.previewAssetUri, "https://example.test/preview.jpg");
+  assert.equal(reloaded.eventLog.length, 1);
+  assert.equal(reloaded.eventLog[0].metadata.provider, "mock");
+});
