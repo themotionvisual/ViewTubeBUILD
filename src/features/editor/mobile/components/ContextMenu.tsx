@@ -5,7 +5,8 @@ export interface ContextMenuItem{
   label:string;
   icon?:React.ReactNode;
   swatch?:string;
-  onSelect:()=>void;
+  swatches?:Array<{label:string;value:string;onSelect:()=>void}>;
+  onSelect?:()=>void;
   destructive?:boolean;
   disabled?:boolean;
 }
@@ -65,11 +66,33 @@ export const ContextMenu:React.FC<ContextMenuProps>=({items,at,onDismiss,title})
       textTransform:'uppercase',letterSpacing:.6,borderBottom:`2px solid ${INK}`,
       marginBottom:4,background:CYAN,
     }}>{title}</div>:null}
-    {items.map((item,index)=><button
+    {items.map((item,index)=>item.swatches?<div
+      key={`${item.label}-${index}`}
+      role="group"
+      aria-label={item.label}
+      style={{
+        width:'100%',padding:'5px',borderRadius:4,border:`1.5px solid ${INK}`,
+        marginTop:index?3:0,background:'#fff',boxSizing:'border-box',
+        display:'grid',gridTemplateColumns:`repeat(${item.swatches.length},minmax(0,1fr))`,gap:4,
+      }}
+    >
+      {item.swatches.map(option=><button
+        key={option.value}
+        type="button"
+        aria-label={`Clip color: ${option.label}`}
+        title={option.label}
+        onClick={()=>{option.onSelect();onDismiss()}}
+        style={{
+          width:'100%',aspectRatio:'1 / 1',minWidth:0,borderRadius:4,
+          border:`2px solid ${INK}`,background:option.value,padding:0,
+          boxSizing:'border-box',touchAction:'manipulation',
+        }}
+      />)}
+    </div>:<button
       key={`${item.label}-${index}`}
       role="menuitem"
       disabled={item.disabled}
-      onClick={()=>{item.onSelect();onDismiss()}}
+      onClick={()=>{item.onSelect?.();onDismiss()}}
       style={{
         display:'grid',gridTemplateColumns:'22px minmax(0,1fr)',alignItems:'center',gap:8,
         width:'100%',padding:'7px 8px',borderRadius:4,border:`1.5px solid ${INK}`,
@@ -83,7 +106,7 @@ export const ContextMenu:React.FC<ContextMenuProps>=({items,at,onDismiss,title})
       <span style={{width:20,height:20,display:'grid',placeItems:'center'}}>
         {item.swatch?<span style={{
           width:14,height:14,borderRadius:3,background:item.swatch,
-          border:'1.5px solid #111',boxSizing:'border-box',
+          border:`1.5px solid ${INK}`,boxSizing:'border-box',
         }}/>:item.icon??null}
       </span>
       <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.label}</span>
