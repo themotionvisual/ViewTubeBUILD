@@ -589,8 +589,8 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
           </SubToolboxGrid>
           <SubToolboxToggle pressed={activePayload.exactLock} label="Exact palette lock" onClick={() => setCategoryField(activeCategoryId, "exactLock", !activePayload.exactLock)} />
           <SubToolboxActions columns={2}>
-            <SubToolboxInnerActionButton label="Extract From Asset" iconName="image" tone="cyan" disabled />
-            <SubToolboxInnerActionButton label="Use Channel Palette" iconName="paint-bucket" tone="purple" disabled />
+            <SubToolboxInnerActionButton label="Extract From Asset" iconName="image" tone="cyan" onClick={() => {}} disabled />
+            <SubToolboxInnerActionButton label="Use Channel Palette" iconName="paint-bucket" tone="purple" onClick={() => {}} disabled />
           </SubToolboxActions>
         </SubToolboxStack>
 
