@@ -529,3 +529,54 @@
   font-weight: 1000 !important;
   line-height: 1 !important;
 }
+
+
+.widget-reference-adaptive-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--vt-gap-1, 4px);
+  width: 100%;
+}
+.widget-reference-adaptive-grid > .vt-sized-control {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* Final adaptive text-fit ownership.
+   This file is unlayered and loads after the base size lattice, so the adaptive
+   variable cannot be reset back to the fixed 16px value by later compatibility
+   rules. Geometry stays 24px; only type/icon/gap/padding compress. */
+.vt-sized-control.is-height-24.vt-text-fit-adaptive {
+  --vt-primitive-font: clamp(10px, 2.8cqi, 16px);
+  --vt-font: var(--vt-primitive-font);
+  --vt-primitive-icon: clamp(12px, 2.8cqi, 18px);
+  --vt-primitive-gap: clamp(1px, .7cqi, 4px);
+  font-size: var(--vt-primitive-font) !important;
+  gap: var(--vt-primitive-gap) !important;
+  padding-inline: clamp(2px, .8cqi, 6px) !important;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.vt-sized-control.is-height-24.vt-text-fit-adaptive > svg,
+.vt-sized-control.is-height-24.vt-text-fit-adaptive .widget-icon-button-glyph > svg,
+.vt-sized-control.is-height-24.vt-text-fit-adaptive .widget-split-button-icon svg {
+  width: var(--vt-primitive-icon) !important;
+  height: var(--vt-primitive-icon) !important;
+}
+
+.vt-sized-control.is-height-24.vt-text-fit-adaptive :is(
+  span,
+  strong,
+  small,
+  .widget-split-button-label,
+  .widget-split-badge-label,
+  .widget-header-stepper-value
+) {
+  font-size: inherit !important;
+  white-space: nowrap !important;
+  overflow: visible;
+  text-overflow: clip;
+}

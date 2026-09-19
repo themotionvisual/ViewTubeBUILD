@@ -315,41 +315,45 @@
 :where(.dashboard-barrier) .image-generator-style-grid .vt-button {
   width: 100%;
   min-width: 0;
-  height: var(--widget-control-height) !important;
-  min-height: var(--widget-control-height) !important;
-  padding-inline: 5px !important;
   overflow: hidden;
-  font-size: clamp(10px, 0.95vw, 12px) !important;
   letter-spacing: 0 !important;
-  line-height: 1.05;
   white-space: normal;
+  overflow-wrap: anywhere;
   text-wrap: balance;
 }
 
 :where(.dashboard-barrier) .image-generator-copy-grid {
+  --image-generator-copy-height: clamp(108px, 18cqw, 132px);
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(140px, 1fr);
   gap: var(--widget-component-gap);
-  align-items: stretch;
+  align-items: start;
+  min-height: var(--image-generator-copy-height);
 }
 
 :where(.dashboard-barrier) .image-generator-copy-grid > .vt-textarea {
-  height: 100%;
-  min-height: calc((var(--widget-control-height, 32px) * 2) + var(--widget-component-gap, 8px));
+  width: 100%;
+  height: var(--image-generator-copy-height) !important;
+  min-height: var(--image-generator-copy-height) !important;
+  max-height: none;
   box-sizing: border-box;
-  resize: none;
+  resize: vertical;
+  align-self: start;
 }
 
 :where(.dashboard-barrier) .image-generator-text-fields {
   min-width: 0;
+  height: var(--image-generator-copy-height);
   display: grid;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--widget-component-gap);
-  height: 100%;
+  align-self: start;
 }
 :where(.dashboard-barrier) .image-generator-text-fields .vt-input {
+  width: 100%;
   height: 100% !important;
   min-height: 0 !important;
+  max-height: 100%;
   box-sizing: border-box;
 }
 
@@ -371,15 +375,17 @@
 :where(.dashboard-barrier) .image-generator-send-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
+  gap: var(--widget-component-gap);
 }
 
 :where(.dashboard-barrier) .image-generator-send-grid .vt-button {
+  width: 100%;
   min-width: 0;
-  height: 30px !important;
-  min-height: 30px !important;
-  padding-inline: 3px !important;
-  font-size: 10px !important;
+}
+
+:where(.dashboard-barrier) .image-generator-key-action,
+:where(.dashboard-barrier) .image-generator-generate-action {
+  width: 100%;
 }
 
 :where(.dashboard-barrier) .image-generator-workspace { gap: var(--widget-component-gap); }
@@ -387,21 +393,37 @@
 :where(.dashboard-barrier) .image-generator-footer {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 4px;
+  gap: var(--widget-component-gap);
   padding-block: 6px;
 }
 :where(.dashboard-barrier) .image-generator-footer .image-generator-send-grid { width: 100%; }
-:where(.dashboard-barrier) .image-generator-footer .vt-button {
-  min-height: var(--widget-control-height) !important;
-  height: var(--widget-control-height) !important;
-  font-size: var(--widget-control-font-size) !important;
-}
 :where(.dashboard-barrier) .widget-action-status {
   color: var(--widget-border);
   font-size: var(--widget-type-label);
   font-weight: 900;
   text-align: center;
   text-transform: uppercase;
+}
+
+/* Image Generator responds to the widget container, not the device viewport.
+   Mobile landscape gets two rows of four style choices; portrait gets two
+   columns so canonical 24px controls never have to shrink their type. */
+@container vt-widget (max-width: 900px) {
+  :where(.dashboard-barrier) .image-generator-style-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@container vt-widget (max-width: 560px) {
+  :where(.dashboard-barrier) .image-generator-copy-grid {
+    --image-generator-copy-height: clamp(108px, 31cqw, 124px);
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, .95fr);
+  }
+
+  :where(.dashboard-barrier) .image-generator-style-grid .vt-button,
+  :where(.dashboard-barrier) .image-generator-send-grid .vt-button {
+    min-width: 0;
+  }
 }
 
 /* Community Post: one compact shared-control matrix for every authoring mode. */
@@ -952,14 +974,12 @@
 :where(.dashboard-barrier) .ai-journal-category-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
+  gap: var(--widget-component-gap);
 }
 
 :where(.dashboard-barrier) .ai-journal-category-grid .vt-button {
   width: 100%;
   min-width: 0;
-  padding-inline: 3px !important;
-  font-size: 10px !important;
 }
 
 :where(.dashboard-barrier) .daily-oracle-list {
@@ -1033,11 +1053,6 @@
   justify-content: space-between;
 }
 
-:where(.dashboard-barrier) .ai-journal-card .vt-button {
-  height: 28px !important;
-  min-height: 28px !important;
-}
-
 :where(.dashboard-barrier) .ai-journal-poll-input {
   width: 72px;
   height: 28px !important;
@@ -1046,7 +1061,20 @@
 
 :where(.dashboard-barrier) .ai-journal-refill {
   width: 100%;
-  border-style: dashed;
+}
+
+
+/* AI Journal keeps the four-column category matrix and lets the canonical
+   24px adaptive text-fit primitive reduce type before layout geometry changes. */
+@container vt-widget (max-width: 560px) {
+  :where(.dashboard-barrier) .ai-journal-card.is-poll {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  :where(.dashboard-barrier) .ai-journal-card.is-poll > .flex {
+    width: 100%;
+  }
 }
 
 :where(.dashboard-barrier) .widget-card-row {
@@ -1457,13 +1485,67 @@
 
 @container (max-width: 460px) {
   :where(.dashboard-barrier) .vt-widget-header .title {
+    display: block;
+    height: auto;
+    max-height: calc(var(--widget-type-title) * 1.9);
     padding-left: 7px;
-    line-height: 1;
+    padding-right: 4px;
+    font-size: var(--widget-type-title) !important;
+    line-height: .9;
+    white-space: normal !important;
+    overflow: hidden;
+    text-overflow: clip !important;
+    overflow-wrap: normal;
+    word-break: normal;
   }
 
   :where(.dashboard-barrier) .header-extra,
   :where(.dashboard-barrier) .widget-ai-cost-chip {
     display: none !important;
+  }
+
+  /* Header mode toggles remain visible in portrait. They compress before the
+     title or action rail is removed. Non-toggle extras may still hide. */
+  :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) {
+    display: flex !important;
+    flex: 1 1 120px !important;
+    min-width: 86px;
+    max-width: 44%;
+    overflow: hidden;
+    justify-content: center !important;
+  }
+
+  :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) .left {
+    flex: 1 1 42%;
+    max-width: 42%;
+  }
+
+  :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) .title {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) .widget-header-toggle {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: 28px;
+    padding-inline: 2px;
+  }
+
+  :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) .widget-header-toggle button {
+    min-width: 0;
+    padding-inline: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(8px, 2.4cqw, 10px);
+  }
+
+  :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) > .toggle {
+    flex: 0 0 auto;
+    gap: 4px;
+    padding-right: 5px;
   }
 
   :where(.dashboard-barrier) .vt-widget-body {
@@ -1482,6 +1564,19 @@
 :where(.dashboard-barrier) [data-widget-id="image-generator"] .header-extra {
   display: flex !important;
   flex: 0 0 auto !important;
+}
+
+@container (max-width: 460px) {
+  /* Final portrait ownership: widget header toggles stay mounted even when
+     widget-specific header rules appear later in the cascade. */
+  :where(.dashboard-barrier) [data-widget-id] .header-extra:has(.widget-header-toggle) {
+    display: flex !important;
+    flex: 1 1 120px !important;
+    min-width: 86px;
+    max-width: 44%;
+    overflow: hidden;
+    justify-content: center !important;
+  }
 }
 
 @container (max-width: 460px) {
@@ -5000,18 +5095,7 @@ textarea.vt-textarea {
   }
 }
 
-/* Image styles preserve the shared control typography while retaining one row. */
-:where(.dashboard-barrier) [data-widget-id="image-generator"] .image-generator-style-grid .vt-button {
-  padding-inline: 4px !important;
-  font-size: clamp(10px, 0.82vw, 12px) !important;
-  letter-spacing: 0 !important;
-}
-
 @container (max-width: 560px) {
-  :where(.dashboard-barrier) .image-generator-copy-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(118px, 0.72fr);
-  }
-
   :where(.dashboard-barrier) .widget-workflow-toolbar {
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) 36px;
   }

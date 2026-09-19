@@ -804,5 +804,6 @@ export {
   widgetControlHeightClass,
   type WidgetControlHeight,
   type WidgetPrimitiveTone,
+  type WidgetTextFit,
   type WidgetSplitIconStyle,
 } from "./WidgetPrimitiveExtensions"

@@ -5,6 +5,7 @@ const mobileCss = readFileSync(new URL("../widgetMobileContract.css", import.met
 const barrierSource = readFileSync(new URL("../DashboardBarrier.tsx", import.meta.url), "utf8")
 const primitiveSource = readFileSync(new URL("../WidgetPrimitives.tsx", import.meta.url), "utf8")
 const variantCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
+const widgetSystemCss = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
 
 describe("mobile widget geometry contract", () => {
   it("loads the phone contract after the canonical shell layers", () => {
@@ -39,6 +40,37 @@ describe("mobile widget geometry contract", () => {
   it("stacks reference-library comparison variants before split-left labels become unusable", () => {
     expect(variantCss).toContain("@container vt-widget (max-width: 420px)")
     expect(variantCss).toContain("grid-template-columns: minmax(0, 1fr);")
+  })
+
+  it("keeps Image Generator button geometry stable while adaptive 24px type fits the row", () => {
+    expect(widgetSystemCss).toContain("@container vt-widget (max-width: 900px)")
+    expect(widgetSystemCss).toContain("@container vt-widget (max-width: 560px)")
+    expect(widgetSystemCss).toContain(".image-generator-style-grid")
+    expect(widgetSystemCss).toContain("grid-template-columns: repeat(4, minmax(0, 1fr));")
+    expect(widgetSystemCss).not.toContain(".image-generator-style-grid,\n  :where(.dashboard-barrier) .image-generator-send-grid {\n    grid-template-columns: repeat(2")
+    expect(widgetSystemCss).toContain("--image-generator-copy-height:")
+    expect(widgetSystemCss).toContain("resize: vertical;")
+    expect(widgetSystemCss).toContain("height: var(--image-generator-copy-height) !important;")
+    expect(widgetSystemCss).toContain("height: var(--image-generator-copy-height);")
+  })
+
+  it("keeps AI Journal categories at four columns on narrow widgets", () => {
+    expect(widgetSystemCss).toContain("AI Journal keeps the four-column category matrix")
+    expect(widgetSystemCss).toContain(".ai-journal-category-grid")
+    expect(widgetSystemCss).toContain("grid-template-columns: repeat(4, minmax(0, 1fr));")
+  })
+
+  it("keeps header toggles visible in portrait widget headers", () => {
+    expect(widgetSystemCss).toContain(".header-extra:has(.widget-header-toggle)")
+    expect(widgetSystemCss).toContain("display: flex !important;")
+    expect(widgetSystemCss).toContain(".vt-widget-header:has(.header-extra .widget-header-toggle)")
+  })
+
+  it("keeps portrait module titles full-size, two-line capable, and never ellipsized", () => {
+    expect(widgetSystemCss).toContain("font-size: var(--widget-type-title) !important;")
+    expect(widgetSystemCss).toContain("white-space: normal !important;")
+    expect(widgetSystemCss).toContain("text-overflow: clip !important;")
+    expect(widgetSystemCss).not.toContain("font-size: clamp(11px, 3.4cqw, var(--widget-type-title));")
   })
 
   it("forces every phone widget to one complete dashboard row without mutating persisted width state", () => {
