@@ -1,5 +1,5 @@
 import React from 'react';
-import {AudioLines,Film,LayoutTemplate,ScanSearch,Settings as SettingsIcon,Shapes,Shuffle,SlidersHorizontal,Type,Upload} from 'lucide-react';
+import {AudioLines,Film,FolderKanban,LayoutTemplate,ScanSearch,Settings as SettingsIcon,Shapes,Shuffle,SlidersHorizontal,Type,Upload,WandSparkles} from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {readClipVisualTransform} from '../state/editorState';
 import {TemplateLibraryPanel} from './TemplateLibraryPanel';
@@ -7,9 +7,12 @@ import {renderPanelBody} from './PanelBodies';
 import {EditorFeatureManifest} from './EditorFeatureManifest';
 import {EditorViewSwitcher} from './EditorViewSwitcher';
 import {ClipSettingsPanel} from './ClipSettingsPanel';
+import {ProjectSettingsPanel} from './ProjectSettingsPanel';
+import {EffectsLibrariesPanel} from './EffectsLibrariesPanel';
+import {CustomTemplatePanel} from './CustomTemplatePanel';
 import {capabilitiesForCategory,type EditorCapabilityStatus} from '../../editorCapabilities';
 
-export type EditorNavPage='select'|'media'|'text'|'audio'|'graphics'|'effects'|'transitions'|'templates'|'export'|'settings';
+export type EditorNavPage='project'|'select'|'media'|'text'|'audio'|'graphics'|'effects'|'transitions'|'templates'|'custom-templates'|'export'|'settings';
 
 export interface EditorSettingsModel{
   frontend:'auto'|'mobile'|'desktop';
@@ -66,15 +69,19 @@ function Settings({model}:{model?:EditorSettingsModel}){
 }
 
 export const EditorNavigationPage:React.FC<{page:EditorNavPage;store:EditorStore;settings?:EditorSettingsModel;onNavigate?:(page:EditorNavPage)=>void}>=({page,store,settings,onNavigate})=>{
+  if(page==='project')return <ProjectSettingsPanel store={store}/>;
   if(page==='select')return <Inspector store={store}/>;
   if(page==='media')return <Clips store={store} onNavigate={onNavigate}/>;
   if(page==='graphics')return <TemplateLibraryPanel store={store} initialCategory="graphic" title="Graphics & SVG"/>;
+  if(page==='effects')return <EffectsLibrariesPanel store={store}/>;
   if(page==='templates')return <TemplateLibraryPanel store={store}/>;
+  if(page==='custom-templates')return <CustomTemplatePanel store={store}/>;
   if(page==='settings')return <Settings model={settings}/>;
   return <div>{renderPanelBody(page,store)}</div>;
 };
 
 export const EDITOR_NAV_ITEMS:Array<{id:EditorNavPage;label:string;icon:React.ReactNode}>=[
+  {id:'project',label:'Project',icon:<FolderKanban size={13}/>},
   {id:'media',label:'Clips',icon:<Film size={13}/>},
   {id:'select',label:'Inspect',icon:<ScanSearch size={13}/>},
   {id:'text',label:'Text',icon:<Type size={13}/>},
@@ -83,6 +90,7 @@ export const EDITOR_NAV_ITEMS:Array<{id:EditorNavPage;label:string;icon:React.Re
   {id:'effects',label:'Effects',icon:<SlidersHorizontal size={13}/>},
   {id:'transitions',label:'Transitions',icon:<Shuffle size={13}/>},
   {id:'templates',label:'Templates',icon:<LayoutTemplate size={13}/>},
+  {id:'custom-templates',label:'Custom',icon:<WandSparkles size={13}/>},
   {id:'export',label:'Export',icon:<Upload size={13}/>},
   {id:'settings',label:'Settings',icon:<SettingsIcon size={13}/>},
 ];
