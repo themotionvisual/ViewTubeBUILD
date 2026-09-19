@@ -1,4 +1,4 @@
-/** Fluid mobile preview with selection-aware direct manipulation. */
+/** Fluid mobile preview with selection-aware direct manipulation and one transport surface. */
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {type ClipVisualTransform,type EditorStore,readClipVisualTransform} from '../state/editorState';
 import {useDragScrub,usePinchZoom} from '../hooks/gestures';
@@ -14,7 +14,15 @@ export interface PreviewPaneProps{
   showScrubHint?:boolean;
 }
 
-const CYAN='#36E0F6',INK='#248b99';
+export const PREVIEW_TRANSPORT_HEIGHT=36;
+const CYAN='#36E0F6',INK='#248b99',YELLOW='#FFFF61';
+
+const transportButton=(active=false):React.CSSProperties=>({
+  height:28,minWidth:38,border:`2px solid ${INK}`,borderRadius:5,
+  background:active?CYAN:'#fff',color:'#111',fontSize:11,fontWeight:1000,
+  padding:'0 8px',display:'grid',placeItems:'center',touchAction:'manipulation',
+  boxShadow:'2px 2px 0 rgba(36,139,153,.18)',
+});
 
 export const PreviewPane:React.FC<PreviewPaneProps>=({
   store,renderPreview,aspect=16/9,className,showScrubHint=true,
@@ -30,7 +38,7 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
     clipX:number;clipY:number;
   }|null>(null);
   const rotateRef=useRef<{angle:number;layerRotation:number;clipRotation:number}|null>(null);
-  const tapStart=useRef<{x:number;y:number;t:number}|null>(null);
+  const snapBackRef=useRef(0);
 
   useEffect(()=>{
     const node=surfaceRef.current;
@@ -69,18 +77,10 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
         const layerScale=geometry.scaleX/Math.max(.0001,visual.scaleX);
         updateLayer({scale:Math.max(.01,layerScale*delta)});
       }else{
-        updateClip({
-          scaleX:visual.scaleX*delta,
-          scaleY:visual.scaleY*delta,
-        });
+        updateClip({scaleX:visual.scaleX*delta,scaleY:visual.scaleY*delta});
       }
     },
   });
-
-  const small:React.CSSProperties={
-    height:24,minWidth:28,border:'2px solid #000',borderRadius:4,
-    background:'#fff',fontSize:8,fontWeight:900,padding:'0 5px',
-  };
 
   const frameStyle:React.CSSProperties|undefined=geometry?{
     position:'absolute',
@@ -97,138 +97,133 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
     boxSizing:'border-box',
   }:undefined;
 
+  const togglePlay=()=>{
+    if(!state.playing)snapBackRef.current=state.playheadSec;
+    dispatch({type:'togglePlaying'});
+  };
+  const seekBy=(delta:number)=>dispatch({
+    type:'setPlayhead',
+    sec:Math.max(0,Math.min(state.project.durationSec,state.playheadSec+delta)),
+  });
+  const snapBack=()=>{
+    dispatch({type:'setPlaying',playing:false});
+    dispatch({type:'setPlayhead',sec:Math.max(0,Math.min(state.project.durationSec,snapBackRef.current))});
+  };
+
   return <div
     className={className}
     data-aspect={aspect}
     style={{
       position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,
-      background:'#000',overflow:'hidden',borderRadius:6,
+      background:'#fff',overflow:'hidden',borderRadius:6,
+      display:'grid',gridTemplateRows:`minmax(0,1fr) ${PREVIEW_TRANSPORT_HEIGHT}px`,
     }}
   >
     <div
       ref={surfaceRef}
-      onPointerDown={e=>{
-        tapStart.current={x:e.clientX,y:e.clientY,t:e.timeStamp};
-        handlers.onPointerDown(e);
-        scrub.onPointerDown(e);
-      }}
+      onPointerDown={e=>{handlers.onPointerDown(e);scrub.onPointerDown(e)}}
       onPointerMove={e=>{handlers.onPointerMove(e);scrub.onPointerMove(e)}}
-      onPointerUp={e=>{
-        handlers.onPointerUp(e);
-        scrub.onPointerUp(e);
-        if(
-          tapStart.current
-          &&Math.abs(e.clientX-tapStart.current.x)<8
-          &&Math.abs(e.clientY-tapStart.current.y)<8
-          &&e.timeStamp-tapStart.current.t<250
-        )dispatch({type:'togglePlaying'});
-        tapStart.current=null;
-      }}
-      onPointerCancel={e=>{
-        handlers.onPointerCancel(e);
-        scrub.onPointerCancel(e);
-        tapStart.current=null;
-      }}
+      onPointerUp={e=>{handlers.onPointerUp(e);scrub.onPointerUp(e)}}
+      onPointerCancel={e=>{handlers.onPointerCancel(e);scrub.onPointerCancel(e)}}
       style={{
-        position:'absolute',inset:0,background:'#111',touchAction:'none',
-        userSelect:'none',display:'grid',placeItems:'center',
+        position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,
+        background:'#111',touchAction:'none',userSelect:'none',
+        display:'grid',placeItems:'center',overflow:'hidden',
       }}
     >
       {renderPreview?renderPreview(size):<MobileProjectPreview store={store}/>}
       <TemplateCanvasRenderer clips={state.project.clips} playheadSec={state.playheadSec}/>
-    </div>
 
-    {selected&&visual&&geometry&&frameStyle?<div
-      aria-label="Selected clip transform"
-      onPointerDown={e=>{
-        e.stopPropagation();
-        e.currentTarget.setPointerCapture(e.pointerId);
-        dragRef.current={
-          clientX:e.clientX,
-          clientY:e.clientY,
-          layerX:geometry.x-visual.x,
-          layerY:geometry.y-visual.y,
-          clipX:visual.x,
-          clipY:visual.y,
-        };
-      }}
-      onPointerMove={e=>{
-        const drag=dragRef.current;
-        if(!drag)return;
-        e.stopPropagation();
-        const dxProject=(e.clientX-drag.clientX)/Math.max(1,size.widthPx)*geometry.projectWidth;
-        const dyProject=(e.clientY-drag.clientY)/Math.max(1,size.heightPx)*geometry.projectHeight;
-        if(selectedLayer){
-          updateLayer({x:drag.layerX+dxProject,y:drag.layerY+dyProject});
-        }else{
-          updateClip({x:drag.clipX+dxProject,y:drag.clipY+dyProject});
-        }
-      }}
-      onPointerUp={e=>{e.stopPropagation();dragRef.current=null}}
-      onPointerCancel={e=>{e.stopPropagation();dragRef.current=null}}
-      style={frameStyle}
-    >
-      <Handle pos="nw"/>
-      <Handle pos="ne"/>
-      <Handle pos="sw"/>
-      <Handle pos="se"/>
-      <div
-        aria-label="Rotate selected clip"
+      {selected&&visual&&geometry&&frameStyle?<div
+        aria-label="Selected clip transform"
         onPointerDown={e=>{
           e.stopPropagation();
-          const rect=(e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
-          const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
-          rotateRef.current={
-            angle:Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI,
-            layerRotation:geometry.rotation-visual.rotation,
-            clipRotation:visual.rotation,
-          };
           e.currentTarget.setPointerCapture(e.pointerId);
+          dragRef.current={
+            clientX:e.clientX,
+            clientY:e.clientY,
+            layerX:geometry.x-visual.x,
+            layerY:geometry.y-visual.y,
+            clipX:visual.x,
+            clipY:visual.y,
+          };
         }}
         onPointerMove={e=>{
-          const rotation=rotateRef.current;
-          if(!rotation)return;
+          const drag=dragRef.current;
+          if(!drag)return;
           e.stopPropagation();
-          const rect=(e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
-          const angle=Math.atan2(
-            e.clientY-(rect.top+rect.height/2),
-            e.clientX-(rect.left+rect.width/2),
-          )*180/Math.PI;
-          const delta=angle-rotation.angle;
-          if(selectedLayer)updateLayer({rotation:rotation.layerRotation+delta});
-          else updateClip({rotation:rotation.clipRotation+delta});
+          const dxProject=(e.clientX-drag.clientX)/Math.max(1,size.widthPx)*geometry.projectWidth;
+          const dyProject=(e.clientY-drag.clientY)/Math.max(1,size.heightPx)*geometry.projectHeight;
+          if(selectedLayer)updateLayer({x:drag.layerX+dxProject,y:drag.layerY+dyProject});
+          else updateClip({x:drag.clipX+dxProject,y:drag.clipY+dyProject});
         }}
-        onPointerUp={e=>{e.stopPropagation();rotateRef.current=null}}
-        onPointerCancel={e=>{e.stopPropagation();rotateRef.current=null}}
-        style={{
-          position:'absolute',left:'50%',top:-25,transform:'translateX(-50%)',
-          width:16,height:16,borderRadius:8,border:'2px solid #000',
-          background:'#FFFF61',touchAction:'none',
-        }}
-      />
-    </div>:null}
+        onPointerUp={e=>{e.stopPropagation();dragRef.current=null}}
+        onPointerCancel={e=>{e.stopPropagation();dragRef.current=null}}
+        style={frameStyle}
+      >
+        <Handle pos="nw"/><Handle pos="ne"/><Handle pos="sw"/><Handle pos="se"/>
+        <div
+          aria-label="Rotate selected clip"
+          onPointerDown={e=>{
+            e.stopPropagation();
+            const rect=(e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
+            const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+            rotateRef.current={
+              angle:Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI,
+              layerRotation:geometry.rotation-visual.rotation,
+              clipRotation:visual.rotation,
+            };
+            e.currentTarget.setPointerCapture(e.pointerId);
+          }}
+          onPointerMove={e=>{
+            const rotation=rotateRef.current;
+            if(!rotation)return;
+            e.stopPropagation();
+            const rect=(e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
+            const angle=Math.atan2(
+              e.clientY-(rect.top+rect.height/2),
+              e.clientX-(rect.left+rect.width/2),
+            )*180/Math.PI;
+            const delta=angle-rotation.angle;
+            if(selectedLayer)updateLayer({rotation:rotation.layerRotation+delta});
+            else updateClip({rotation:rotation.clipRotation+delta});
+          }}
+          onPointerUp={e=>{e.stopPropagation();rotateRef.current=null}}
+          onPointerCancel={e=>{e.stopPropagation();rotateRef.current=null}}
+          style={{
+            position:'absolute',left:'50%',top:-25,transform:'translateX(-50%)',
+            width:16,height:16,borderRadius:8,border:'2px solid #000',
+            background:YELLOW,touchAction:'none',
+          }}
+        />
+      </div>:null}
 
-    <div style={{
-      position:'absolute',top:5,left:6,padding:'2px 5px',borderRadius:4,
-      background:'rgba(0,0,0,.6)',color:'#fff',fontSize:8,fontWeight:800,pointerEvents:'none',
-    }}>{formatTime(state.playheadSec)} / {formatTime(state.project.durationSec)}</div>
+      <div style={{
+        position:'absolute',top:5,left:6,padding:'2px 5px',borderRadius:4,
+        background:'rgba(0,0,0,.6)',color:'#fff',fontSize:8,fontWeight:800,pointerEvents:'none',
+      }}>{formatTime(state.playheadSec)} / {formatTime(state.project.durationSec)}</div>
 
-    {selected?<div style={{position:'absolute',top:5,right:5,display:'flex',gap:3}}>
-      <button style={{...small,background:CYAN}} onClick={e=>{e.stopPropagation();dispatch({type:'splitClipAtPlayhead',id:selected.id})}}>SPLIT</button>
-      <button style={small} onClick={e=>{e.stopPropagation();dispatch({type:'resetClipTransform',id:selected.id})}}>RESET</button>
-      <button style={{...small,background:'#FA618A'}} onClick={e=>{e.stopPropagation();dispatch({type:'deleteClips',ids:[selected.id]})}}>DEL</button>
-    </div>:null}
+      {showScrubHint&&state.playheadSec===0&&!state.playing?<div style={{
+        position:'absolute',bottom:5,left:'50%',transform:'translateX(-50%)',
+        padding:'2px 6px',borderRadius:999,background:'rgba(0,0,0,.55)',
+        color:'#fff',fontSize:8,fontWeight:700,pointerEvents:'none',whiteSpace:'nowrap',
+      }}>Scrub · pinch · drag</div>:null}
+    </div>
 
-    {!state.playing?<div style={{
-      position:'absolute',width:42,height:42,borderRadius:21,background:'rgba(0,0,0,.5)',
-      display:'grid',placeItems:'center',color:'#fff',pointerEvents:'none',opacity:.75,
-    }}>▶</div>:null}
-
-    {showScrubHint&&state.playheadSec===0&&!state.playing?<div style={{
-      position:'absolute',bottom:5,left:'50%',transform:'translateX(-50%)',
-      padding:'2px 6px',borderRadius:999,background:'rgba(0,0,0,.55)',
-      color:'#fff',fontSize:8,fontWeight:700,pointerEvents:'none',whiteSpace:'nowrap',
-    }}>Tap · scrub · pinch · drag</div>:null}
+    <div
+      aria-label="Preview transport"
+      style={{
+        width:'100%',height:PREVIEW_TRANSPORT_HEIGHT,minWidth:0,
+        display:'grid',gridTemplateColumns:'repeat(4,minmax(0,1fr))',
+        gap:3,padding:3,boxSizing:'border-box',
+        background:'#fff',borderTop:`2px solid ${INK}`,
+      }}
+    >
+      <button style={transportButton()} onClick={()=>seekBy(-1)} aria-label="Rewind one second" title="Rewind 1 second">«</button>
+      <button style={transportButton(state.playing)} onClick={togglePlay} aria-label={state.playing?'Pause':'Play'} title={state.playing?'Pause':'Play'}>{state.playing?'Ⅱ':'▶'}</button>
+      <button style={transportButton()} onClick={()=>seekBy(1)} aria-label="Fast forward one second" title="Fast forward 1 second">»</button>
+      <button style={{...transportButton(),background:YELLOW}} onClick={snapBack} aria-label="Snap back to playback start" title="Snap back to playback start">↶</button>
+    </div>
   </div>;
 };
 
