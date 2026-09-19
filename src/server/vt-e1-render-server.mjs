@@ -31,7 +31,7 @@ const PERSISTENT_STORAGE = String(process.env.VT_E1_RENDER_PERSISTENT_STORAGE ||
 const RENDER_JOB_SCHEMA_VERSION = 'RemotionRenderJobV1';
 const SVG_RENDER_JOB_SCHEMA_VERSION = 'SvgFrameRenderJobV1';
 const SVG_ZIP_RENDER_JOB_SCHEMA_VERSION = 'SvgFrameZipRenderJobV1';
-const SUPPORTED_LAYER_TYPES = new Set(['text', 'shape', 'media', 'audio', 'svg-overlay', 'generative-shape']);
+const SUPPORTED_LAYER_TYPES = new Set(['text', 'shape', 'media', 'audio', 'svg-overlay', 'generative-shape', 'remotion-asset']);
 
 let activeJobId = null;
 
