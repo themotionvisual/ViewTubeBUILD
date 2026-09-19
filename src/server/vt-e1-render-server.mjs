@@ -6,6 +6,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
 import { chromium } from 'playwright';
+import { expandCompoundClips } from '../shared/vtE1CompoundClips.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -322,7 +323,7 @@ const validateRenderPayload = (payload) => {
   const compositionMeta = payload?.compositionMeta || {};
   const tracks = Array.isArray(project?.tracks) ? project.tracks : [];
   const layers = Array.isArray(project?.layers) ? project.layers : [];
-  const clips = Array.isArray(project?.clips) ? project.clips : [];
+  const clips = expandCompoundClips(Array.isArray(project?.clips) ? project.clips : []);
   const transitions = Array.isArray(project?.transitions) ? project.transitions : [];
   const layerIds = new Set(layers.map((layer) => layer.id));
   const trackIds = new Set(tracks.map((track) => track.id));
