@@ -101,7 +101,7 @@ export type VtSyncLocalSyncProgress = {
  requestId?: string
  requestedCategoryIds: string[]
  phases: VtSyncLocalSyncPhase[]
- categoryStates: Record<string, VtSyncLocalSyncCategoryProgress>
+ categoryStates?: Record<string, VtSyncLocalSyncCategoryProgress>
 }
 
 export type VtSyncLocalSyncOptions = {
@@ -1109,7 +1109,7 @@ const publishProgress = (
  onProgress?.({
   ...progress,
   phases: [...progress.phases],
-  categoryStates: { ...progress.categoryStates },
+  categoryStates: { ...(progress.categoryStates || {}) },
  })
 }
 
@@ -1119,7 +1119,7 @@ const updateCategoryState = (
  patch: Partial<VtSyncLocalSyncCategoryProgress>,
  onProgress?: (progress: VtSyncLocalSyncProgress) => void,
 ) => {
- const current = progress.categoryStates[categoryId] || {
+ const current = progress.categoryStates?.[categoryId] || {
   categoryId,
   status: "pending" as VtSyncLocalSyncPhaseStatus,
   rows: 0,
@@ -1147,7 +1147,7 @@ const updatePhase = (
  )
  if (matchingCategoryIds.length === 1) {
   const categoryId = matchingCategoryIds[0]
-  const current = progress.categoryStates[categoryId] || { categoryId, status: "pending" as VtSyncLocalSyncPhaseStatus, rows: 0 }
+  const current = progress.categoryStates?.[categoryId] || { categoryId, status: "pending" as VtSyncLocalSyncPhaseStatus, rows: 0 }
   progress.categoryStates = {
    ...progress.categoryStates,
    [categoryId]: {
