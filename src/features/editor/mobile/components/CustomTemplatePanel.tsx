@@ -1,4 +1,4 @@
-import React,{useMemo,useState} from 'react';
+import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {ArrowRight,Check,LayoutTemplate,Play,Save,Search,Star} from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {templateCatalog} from '../../../../editor-design-library/catalog';
@@ -56,8 +56,15 @@ function editableElements(template?:TemplateDefinition){
 
 export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
   const[query,setQuery]=useState('');
+  const[selectedElementId,setSelectedElementId]=useState<string|null>(null);
+  const editorRef=useRef<HTMLDivElement>(null);
   const clip=selectedTemplateClip(store);
   const template=clip?.templateDefinition;
+  const editables=useMemo(()=>editableElements(template),[template]);
+  useEffect(()=>{
+    setSelectedElementId(current=>current&&editables.some(element=>element.id===current)?current:(editables[0]?.id??null));
+  },[clip?.id,template?.id,editables.length]);
+
   const items=useMemo(()=>{
     const q=query.trim().toLowerCase();
     return templateCatalog.filter(item=>item.customizable!==false&&(!q||[item.name,item.category,...item.tags].join(' ').toLowerCase().includes(q)));
@@ -101,8 +108,41 @@ export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
       <div style={{fontSize:10,fontWeight:1000,textTransform:'uppercase',marginBottom:6}}>Selected Template</div>
       {!clip||!template?<div style={{fontSize:9,fontWeight:800,opacity:.6}}>Add or select a design-template clip to customize its text, icons, and colors.</div>:<>
         <div style={{fontSize:9,fontWeight:1000,marginBottom:7}}>{template.name}</div>
-        <div style={{display:'grid',gap:6}}>
-          {editableElements(template).map(element=>{
+        <div style={{
+          position:'relative',width:'100%',aspectRatio:`${Math.max(1,template.width)} / ${Math.max(1,template.height)}`,
+          border:`2px solid ${INK}`,borderRadius:6,background:String(colors.background??template.background??'#fff'),
+          overflow:'hidden',marginBottom:6,
+        }}>
+          {editables.map(element=>{
+            const left=(element.x/Math.max(1,template.width))*100;
+            const top=(element.y/Math.max(1,template.height))*100;
+            const width=(element.width/Math.max(1,template.width))*100;
+            const height=(element.height/Math.max(1,template.height))*100;
+            const active=selectedElementId===element.id;
+            return <button
+              key={element.id}
+              title={`Edit ${element.name}`}
+              aria-label={`Select template element ${element.name}`}
+              onClick={()=>{
+                setSelectedElementId(element.id);
+                requestAnimationFrame(()=>editorRef.current?.scrollIntoView({behavior:'smooth',block:'nearest'}));
+              }}
+              style={{
+                position:'absolute',left:`${left}%`,top:`${top}%`,width:`${Math.max(5,width)}%`,height:`${Math.max(5,height)}%`,
+                transform:`rotate(${Number(element.rotation??0)}deg)`,transformOrigin:'top left',
+                border:`2px solid ${active?CYAN:INK}`,borderRadius:3,
+                background:active?'rgba(54,224,246,.22)':'rgba(255,255,255,.08)',
+                padding:0,color:String(colors.foreground??'#111'),fontSize:6,fontWeight:1000,
+                overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',
+              }}
+            >{element.type==='text'?String((clip.templateOverrides?.content?.[element.id] as Record<string,unknown>|undefined)?.text??element.text??element.name):element.name}</button>;
+          })}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:3,marginBottom:6}}>
+          {editables.map(element=><button key={element.id} style={{...btn(selectedElementId===element.id),minWidth:0,overflow:'hidden',textOverflow:'ellipsis'}} onClick={()=>setSelectedElementId(element.id)}>{element.name}</button>)}
+        </div>
+        <div ref={editorRef} style={{display:'grid',gap:6}}>
+          {editables.filter(element=>!selectedElementId||element.id===selectedElementId).map(element=>{
             const raw=clip.templateOverrides?.content?.[element.id];
             const record=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw as Record<string,unknown>:null;
             if(element.type==='text'){
