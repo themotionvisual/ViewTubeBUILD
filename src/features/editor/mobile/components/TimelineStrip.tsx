@@ -348,13 +348,16 @@ const TrackRow:React.FC<{
   pxPerSec:number;
   totalPx:number;
   y:number;
+  rowHeight:number;
+  selectedClip?:VtE1Clip;
+  showKeyframeLane?:boolean;
   snap:{strength:SnapStrength;kinds:SnapKinds};
   readOnly?:boolean;
   focusParentId?:string;
   onOpenCompound?:(id:string)=>void;
   onClipContextMenu?:TimelineStripProps['onClipContextMenu'];
   onEmptyContextMenu?:TimelineStripProps['onEmptyContextMenu'];
-}>=({track,clips,pxPerSec,totalPx,y,store,snap,readOnly=false,focusParentId,onOpenCompound,onClipContextMenu,onEmptyContextMenu})=>{
+}>=({track,clips,pxPerSec,totalPx,y,rowHeight,selectedClip,showKeyframeLane=false,store,snap,readOnly=false,focusParentId,onOpenCompound,onClipContextMenu,onEmptyContextMenu})=>{
   const{state,dispatch}=store;
   const rowColor=track.kind==='audio'?'#4EE4BE':track.kind==='overlay'?'#528FFA':track.kind==='caption'?'#FFDA47':'#FA618A';
   const selected=state.selection.trackId===track.id;
@@ -363,17 +366,36 @@ const TrackRow:React.FC<{
     ms:450,
   });
   const removable=!readOnly&&clips.length===0&&state.project.tracks.length>1;
+  const reorder=useRef<{pointerId:number}|null>(null);
+  const trackIndex=state.project.tracks.findIndex(item=>item.id===track.id);
+  const finishReorder=()=>{reorder.current=null};
 
-  return <div style={{position:'absolute',top:y,left:0,right:0,height:TIMELINE_TRACK_HEIGHT,display:'flex'}}>
+  return <div data-vt-track-id={track.id} style={{position:'absolute',top:y,left:0,right:0,height:rowHeight,display:'flex'}}>
     <div
       onClick={()=>!readOnly&&dispatch({type:'selectTrack',id:track.id})}
       style={{
         position:'sticky',left:0,width:LABEL_WIDTH,background:selected?CYAN:'#fff',
         zIndex:2,borderRight:`2px solid ${INK}`,borderBottom:`1px solid ${INK}`,
-        display:'grid',gridTemplateColumns:'1fr auto',alignItems:'center',gap:2,
+        display:'grid',gridTemplateColumns:'16px minmax(0,1fr) auto',alignItems:'center',gap:2,
         padding:'0 4px',fontSize:8,fontWeight:900,textTransform:'uppercase',
       }}
     >
+      {!readOnly?<button
+        title="Drag to reorder track"
+        aria-label="Drag to reorder track"
+        onPointerDown={event=>{event.stopPropagation();reorder.current={pointerId:event.pointerId};event.currentTarget.setPointerCapture?.(event.pointerId)}}
+        onPointerMove={event=>{
+          if(reorder.current?.pointerId!==event.pointerId)return;
+          const node=(document.elementFromPoint(event.clientX,event.clientY) as HTMLElement|null)?.closest?.('[data-vt-track-id]') as HTMLElement|null;
+          const targetId=node?.dataset.vtTrackId;
+          if(!targetId||targetId===track.id)return;
+          const toIndex=state.project.tracks.findIndex(item=>item.id===targetId);
+          if(toIndex>=0&&toIndex!==trackIndex)dispatch({type:'reorderTrack',id:track.id,toIndex});
+        }}
+        onPointerUp={finishReorder}
+        onPointerCancel={finishReorder}
+        style={{...miniBtn('#fff'),width:15,height:21,touchAction:'none'}}
+      ><GripVertical size={9}/></button>:<span/>}
       <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{readOnly?'Compound':track.name}</span>
       {!readOnly?<div style={{display:'grid',gridTemplateColumns:'repeat(4,17px)',gap:2}}>
         <button title={track.muted?'Unmute track':'Mute track'} aria-label={track.muted?'Unmute track':'Mute track'}
@@ -397,20 +419,23 @@ const TrackRow:React.FC<{
         borderBottom:`1px solid ${INK}`,touchAction:'pan-x pan-y',
       }}
     >
-      {clips.map(clip=><ClipBlock
-        key={clip.id}
-        clip={clip}
-        selected={state.selection.clipIds.includes(clip.id)}
-        color={rowColor}
-        pxPerSec={pxPerSec}
-        store={store}
-        siblings={clips}
-        snap={snap}
-        readOnly={readOnly}
-        focusParentId={focusParentId}
-        onOpenCompound={onOpenCompound}
-        onContextMenu={onClipContextMenu}
-      />)}
+      <div style={{position:'absolute',left:0,right:0,top:0,height:Math.min(TIMELINE_TRACK_HEIGHT,rowHeight)}}>
+        {clips.map(clip=><ClipBlock
+          key={clip.id}
+          clip={clip}
+          selected={state.selection.clipIds.includes(clip.id)}
+          color={rowColor}
+          pxPerSec={pxPerSec}
+          store={store}
+          siblings={clips}
+          snap={snap}
+          readOnly={readOnly}
+          focusParentId={focusParentId}
+          onOpenCompound={onOpenCompound}
+          onContextMenu={onClipContextMenu}
+        />)}
+      </div>
+      {showKeyframeLane&&selectedClip&&!readOnly?<KeyframeLane clip={selectedClip} store={store} pxPerSec={pxPerSec} top={TIMELINE_TRACK_HEIGHT}/>:null}
     </div>
   </div>;
 };
