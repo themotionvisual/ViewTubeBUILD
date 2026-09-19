@@ -140,6 +140,21 @@ import {
   StudioDirectorTextureStack,
   StudioDirectorTransitionBridge,
 } from "./video-director/StudioDirectorAdvancedSignatureControls"
+import {
+  StudioDirectorConceptDeck,
+  StudioDirectorDialogueLane,
+  StudioDirectorEffectsStack,
+  StudioDirectorGradeBoard,
+  StudioDirectorOutputCard,
+  StudioDirectorOverlayStack,
+  StudioDirectorPaletteBoard,
+  StudioDirectorPerspectiveRig,
+  StudioDirectorSfxLane,
+  StudioDirectorShotStructure,
+  StudioDirectorSpeedCurve,
+  StudioDirectorStyleDeck,
+  StudioDirectorTitleCanvas,
+} from "./video-director/StudioDirectorMoreSignatureControls"
 
 export interface VideoDirectorProps {
   embedded?: boolean
@@ -470,6 +485,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
     switch (activeCategoryId) {
       case "concept-direction":
         return <SubToolboxStack>
+          <StudioDirectorConceptDeck objective={activePayload.objective} audience={activePayload.audience} treatment={activePayload.treatment} conceptCount={activePayload.conceptCount} variationStrength={activePayload.variationStrength} />
           <TextField label="Creative Brief" value={activePayload.brief} multiline placeholder="What should ViewTube direct?" onChange={(value) => setCategoryField(activeCategoryId, "brief", value)} />
           <SubToolboxGrid minItemWidth="wide">
             <TextField label="Objective" value={activePayload.objective} placeholder="Educate, tease, sell, explain…" onChange={(value) => setCategoryField(activeCategoryId, "objective", value)} />
@@ -482,6 +498,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "visual-style":
         return <SubToolboxStack>
+          <StudioDirectorStyleDeck medium={activePayload.medium} period={activePayload.period} realism={activePayload.realism} stylization={activePayload.stylization} descriptorCount={activePayload.descriptors.length} recipeCount={activePayload.recipeIds.length} />
           <SelectField label="Medium" value={activePayload.medium} options={["auto", "cinematic", "documentary", "commercial", "animation", "illustration", "archival", "experimental"]} onChange={(value) => setCategoryField(activeCategoryId, "medium", value)} />
           <NumberField label="Realism" value={activePayload.realism * 100} min={0} max={100} unit="%" onChange={(value) => setCategoryField(activeCategoryId, "realism", value / 100)} />
           <NumberField label="Stylization" value={activePayload.stylization * 100} min={0} max={100} unit="%" onChange={(value) => setCategoryField(activeCategoryId, "stylization", value / 100)} />
@@ -554,6 +571,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "perspective-capture":
         return <SubToolboxStack>
+          <StudioDirectorPerspectiveRig rig={activePayload.rig} cameraHeightMeters={activePayload.cameraHeightMeters} pitchDegrees={activePayload.pitchDegrees} yawDegrees={activePayload.yawDegrees} fieldOfViewDegrees={activePayload.fieldOfViewDegrees} firstPerson={activePayload.firstPerson} />
           <SelectField label="Capture Rig" value={activePayload.rig} options={["auto", "tripod", "shoulder", "phone-pov", "security-camera", "drone", "bodycam", "dashcam", "webcam", "action-camera", "helmet-cam"]} onChange={(value) => setCategoryField(activeCategoryId, "rig", value)} />
           <SubToolboxGrid>
             <NumberField label="Camera Height" value={activePayload.cameraHeightMeters} min={0} max={10000} step={0.1} unit="m" onChange={(value) => setCategoryField(activeCategoryId, "cameraHeightMeters", value)} />
@@ -567,7 +585,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "color-palette":
         return <SubToolboxStack>
-          <StudioDirectorPaletteVisual colors={activePayload.colors} exactLock={activePayload.exactLock} />
+          <StudioDirectorPaletteBoard colors={activePayload.colors} exactLock={activePayload.exactLock} />
           <SubToolboxGrid minItemWidth="compact">
             {activePayload.colors.map((color: string, index: number) => <StudioInput key={index} type="color" value={color} aria-label={`Palette color ${index + 1}`} onChange={(event) => {
               const next = [...activePayload.colors]
@@ -583,7 +601,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
         </SubToolboxStack>
 
       case "grade-exposure":
-        return <SubToolboxStack><SubToolboxGrid>
+        return <SubToolboxStack><StudioDirectorGradeBoard exposureEv={activePayload.exposureEv} contrast={activePayload.contrast} highlights={activePayload.highlights} shadows={activePayload.shadows} temperatureK={activePayload.temperatureK} saturation={activePayload.saturation} /><SubToolboxGrid>
           <NumberField label="Exposure" value={activePayload.exposureEv} min={-5} max={5} step={0.1} unit="EV" onChange={(value) => setCategoryField(activeCategoryId, "exposureEv", value)} />
           <NumberField label="Contrast" value={activePayload.contrast} min={-100} max={100} onChange={(value) => setCategoryField(activeCategoryId, "contrast", value)} />
           <NumberField label="Highlights" value={activePayload.highlights} min={-100} max={100} onChange={(value) => setCategoryField(activeCategoryId, "highlights", value)} />
@@ -627,6 +645,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "shot-structure":
         return <SubToolboxStack>
+          <StudioDirectorShotStructure mode={activePayload.mode} shotCount={activePayload.shotCount} averageShotSeconds={activePayload.averageShotSeconds} continuityStrength={activePayload.continuityStrength} />
           <SelectField label="Structure" value={activePayload.mode} options={["single-take", "auto-multi-shot", "manual-storyboard", "montage", "interview-broll", "narrative-sequence", "trailer", "product-demo", "explainer"]} onChange={(value) => setCategoryField(activeCategoryId, "mode", value)} />
           <SubToolboxGrid>
             <NumberField label="Shot Count" value={activePayload.shotCount} min={1} max={100} onChange={(value) => setCategoryField(activeCategoryId, "shotCount", Math.round(value))} />
@@ -645,7 +664,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
         </SubToolboxGrid><SubToolboxToggle pressed={activePayload.matchMotion} label="Match motion across cuts" onClick={() => setCategoryField(activeCategoryId, "matchMotion", !activePayload.matchMotion)} /></SubToolboxStack>
 
       case "speed-motion":
-        return <SubToolboxStack><SubToolboxGrid>
+        return <SubToolboxStack><StudioDirectorSpeedCurve playbackRate={activePayload.playbackRate} interpolation={activePayload.interpolation} motionBlur={activePayload.motionBlur} pointCount={activePayload.speedCurve.length} /><SubToolboxGrid>
           <NumberField label="Playback Rate" value={activePayload.playbackRate} min={0.05} max={20} step={0.05} unit="×" onChange={(value) => setCategoryField(activeCategoryId, "playbackRate", value)} />
           <SelectField label="Interpolation" value={activePayload.interpolation} options={["none", "optical-flow", "rife", "film"]} onChange={(value) => setCategoryField(activeCategoryId, "interpolation", value)} />
           <NumberField label="Motion Blur" value={Math.round(activePayload.motionBlur * 100)} min={0} max={100} unit="%" onChange={(value) => setCategoryField(activeCategoryId, "motionBlur", value / 100)} />
@@ -653,6 +672,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "voice-dialogue":
         return <SubToolboxStack>
+          <StudioDirectorDialogueLane enabled={activePayload.enabled} source={activePayload.source} language={activePayload.language} speakingRate={activePayload.speakingRate} expressiveness={activePayload.expressiveness} scriptLength={activePayload.script.length} />
           <SubToolboxToggle pressed={activePayload.enabled} label="Enable voice / dialogue" onClick={() => setCategoryField(activeCategoryId, "enabled", !activePayload.enabled)} />
           <SelectField label="Source" value={activePayload.source} options={["auto", "generated", "upload", "recorded"]} onChange={(value) => setCategoryField(activeCategoryId, "source", value)} />
           <TextField label="Script" value={activePayload.script} multiline placeholder="Paste narration or dialogue…" onChange={(value) => setCategoryField(activeCategoryId, "script", value)} />
@@ -679,6 +699,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "sound-effects":
         return <SubToolboxStack>
+          <StudioDirectorSfxLane enabled={activePayload.enabled} cueCount={activePayload.cues.length} autoDetectEvents={activePayload.autoDetectEvents} />
           <SubToolboxToggle pressed={activePayload.enabled} label="Enable sound effects" onClick={() => setCategoryField(activeCategoryId, "enabled", !activePayload.enabled)} />
           <SubToolboxToggle pressed={activePayload.autoDetectEvents} label="Auto-detect scene events" onClick={() => setCategoryField(activeCategoryId, "autoDetectEvents", !activePayload.autoDetectEvents)} />
           <SubToolboxSurface tone="subtle"><MutedNote>{activePayload.cues.length} timed cue{activePayload.cues.length === 1 ? "" : "s"} configured. Cue editor arrives with the storyboard timeline.</MutedNote></SubToolboxSurface>
@@ -711,19 +732,21 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "text-titles":
         return <SubToolboxStack>
-          <StudioDirectorCompositionVisual subjectX={0.5} subjectY={0.72} horizonY={0.5} safeZones={activePayload.safeMargins} />
+          <StudioDirectorTitleCanvas overlayCount={activePayload.overlays.length} safeMargins={activePayload.safeMargins} />
           <SubToolboxToggle pressed={activePayload.safeMargins} label="Title-safe margins" onClick={() => setCategoryField(activeCategoryId, "safeMargins", !activePayload.safeMargins)} />
           <SubToolboxSurface tone="subtle"><MutedNote>{activePayload.overlays.length} text overlay{activePayload.overlays.length === 1 ? "" : "s"} configured. Direct manipulation connects to the ViewTube Editor overlay canvas.</MutedNote></SubToolboxSurface>
         </SubToolboxStack>
 
       case "stickers-overlays":
         return <SubToolboxStack>
+          <StudioDirectorOverlayStack itemCount={activePayload.items.length} />
           <SubToolboxFileTarget icon={<ImagePlus size={30} />} label="Add Overlay Asset" accept="image/*,.svg" onFiles={() => setNotice("File intake UI is ready; Vault/object-storage binding follows the asset phase.")} />
           <SubToolboxSurface tone="subtle"><MutedNote>{activePayload.items.length} overlay layer{activePayload.items.length === 1 ? "" : "s"} in this scope.</MutedNote></SubToolboxSurface>
         </SubToolboxStack>
 
       case "visual-effects":
         return <SubToolboxStack>
+          <StudioDirectorEffectsStack effects={activePayload.effects} />
           <SubToolboxGrid minItemWidth="compact">
             {["Fog", "Snow", "Dust", "Bloom", "Lens Flare", "Grain", "Deflicker", "Stabilize"].map((label) => {
               const type = label.toLowerCase().replace(" ", "-")
@@ -779,7 +802,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "generation-output":
         return <SubToolboxStack>
-          <StudioDirectorOutputFrame ratio={activePayload.aspectRatio} quality={activePayload.quality} outputs={activePayload.outputs} />
+          <StudioDirectorOutputCard ratio={activePayload.aspectRatio} resolution={activePayload.resolution} quality={activePayload.quality} outputs={activePayload.outputs} nativeAudio={activePayload.generateAudio} upscale={activePayload.upscale} hdr={activePayload.hdr} />
           <SubToolboxGrid>
             <SelectField label="Provider Routing" value={activePayload.providerMode} options={["auto", "manual"]} onChange={(value) => setCategoryField(activeCategoryId, "providerMode", value)} />
             <SelectField label="Quality" value={activePayload.quality} options={["draft", "preview", "final"]} onChange={(value) => setCategoryField(activeCategoryId, "quality", value)} />
