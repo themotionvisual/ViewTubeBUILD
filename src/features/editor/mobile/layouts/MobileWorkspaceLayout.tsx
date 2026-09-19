@@ -82,6 +82,10 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const [timelineViewport,setTimelineViewport]=useState<TimelineViewport>({startSec:0,endSec:0});
   const [scrollToSec,setScrollToSec]=useState(0);
 
+  const containerHeight=height??(typeof window!=='undefined'?window.innerHeight:(orientation==='portrait'?800:480));
+  const isPortraitVideo=compositionAspect<1;
+  const portraitPhonePortraitVideo=orientation==='portrait'&&isPortraitVideo;
+
   const selectionKey=`${store.state.selection.clipIds.join(',')}|${store.state.selection.trackId??''}|${store.state.selection.transitionId??''}`;
   useEffect(()=>{
     const contextual=pageForSelection(store);
@@ -90,11 +94,10 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
 
   const openPage=(next:EditorNavPage)=>{
     setPage(next);
-    if(workspaceMode==='preview')onWorkspaceModeChange('edit');
+    // In the tall 9:16 phone layout the tool page already owns the right rail,
+    // so changing tools must not hide the large left preview.
+    if(workspaceMode==='preview'&&!portraitPhonePortraitVideo)onWorkspaceModeChange('edit');
   };
-
-  const containerHeight=height??(typeof window!=='undefined'?window.innerHeight:(orientation==='portrait'?800:480));
-  const isPortraitVideo=compositionAspect<1;
 
   const clipMenuFor=(clip:VtE1Clip):ContextMenuItem[]=>[
     {label:'Inspect',onSelect:()=>{setPage('select');onWorkspaceModeChange('edit')}},
@@ -156,7 +159,17 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     <FitPreview store={store} renderPreview={renderPreview} aspect={compositionAspect}/>
   </section>;
 
-  const splitTemplate=orientation==='portrait'
+  const rightEditorRail=<div style={{
+    width:'100%',height:'100%',minWidth:0,minHeight:0,display:'grid',gap:4,
+    gridTemplateColumns:'minmax(0,1fr)',
+    gridTemplateRows:'minmax(74px,22%) minmax(0,1fr)',
+    overflow:'hidden',
+  }}>
+    {topChrome}
+    {pageSurface}
+  </div>;
+
+  const regularSplitTemplate=orientation==='portrait'
     ?{
       gridTemplateColumns:'minmax(0,1fr)',
       gridTemplateRows:isPortraitVideo?'minmax(0,4fr) minmax(0,6fr)':'minmax(0,3fr) minmax(0,7fr)',
@@ -166,16 +179,35 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
       gridTemplateColumns:isPortraitVideo?'minmax(0,3fr) minmax(0,7fr)':'minmax(0,5fr) minmax(0,5fr)',
     };
 
-  const mainSurface=workspaceMode==='preview'
+  const regularMainSurface=workspaceMode==='preview'
     ?previewSurface
     :workspaceMode==='edit'
       ?pageSurface
       :<div style={{
-        width:'100%',height:'100%',minWidth:0,minHeight:0,display:'grid',gap:4,...splitTemplate,
+        width:'100%',height:'100%',minWidth:0,minHeight:0,display:'grid',gap:4,...regularSplitTemplate,
       }}>
         {previewSurface}
         {pageSurface}
       </div>;
+
+  // Portrait phone + portrait composition gets a dedicated editor geometry:
+  // preview flush-left and as tall as the available main region allows, while
+  // all navigation/tool pages live in one full-height rail on the right.
+  const portraitMainSurface=workspaceMode==='edit'
+    ?rightEditorRail
+    :<div style={{
+      width:'100%',height:'100%',minWidth:0,minHeight:0,display:'grid',gap:4,
+      gridTemplateRows:'minmax(0,1fr)',
+      gridTemplateColumns:workspaceMode==='preview'
+        ?'minmax(0,62fr) minmax(0,38fr)'
+        :'minmax(0,52fr) minmax(0,48fr)',
+      overflow:'hidden',
+    }}>
+      {previewSurface}
+      {rightEditorRail}
+    </div>;
+
+  const mainSurface=portraitPhonePortraitVideo?portraitMainSurface:regularMainSurface;
 
   const timeline=showTimeline?<div style={{width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}>
     <TimelineStrip
@@ -193,12 +225,18 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   </div>:null;
 
   const contentWeight=workspaceMode==='edit'?7:6;
-  const rows=[
+  const regularRows=[
     navHeight,
     `minmax(0,${contentWeight}fr)`,
     ...(showTimeline?['minmax(0,3fr)']:[]),
     ...(showMap?['minmax(0,1fr)']:[]),
   ].join(' ');
+  const portraitRows=[
+    'minmax(0,6fr)',
+    ...(showTimeline?['minmax(0,3fr)']:[]),
+    ...(showMap?['minmax(0,1fr)']:[]),
+  ].join(' ');
+  const rows=portraitPhonePortraitVideo?portraitRows:regularRows;
 
   return <div
     ref={rootRef}
@@ -213,7 +251,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
       gridTemplateColumns:'minmax(0,1fr)',gridTemplateRows:rows,
     }}
   >
-    {topChrome}
+    {!portraitPhonePortraitVideo&&topChrome}
     <div style={{width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}>{mainSurface}</div>
     {timeline}
     {map}
