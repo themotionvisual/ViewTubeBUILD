@@ -80,6 +80,7 @@ import {
   applyVideoDirectorConflicts,
   applyVideoDirectorRecipe,
   applyVideoDirectorSuggestion,
+  cancelVideoDirectorJob,
   createDefaultVideoDirectorCategories,
   createEmptyVideoDirectorProject,
   createVideoDirectorAutosaveController,
@@ -88,6 +89,7 @@ import {
   compileSemanticDirectorPacket,
   deriveVideoDirectorCategoryStatus,
   evaluateVideoDirectorSuggestions,
+  listVideoDirectorJobs,
   readVideoDirectorRecipeLibrary,
   readVideoDirectorState,
   saveVideoDirectorDraft,
@@ -98,6 +100,7 @@ import {
   type VideoDirectorMode,
   type VideoDirectorProject,
   type VideoDirectorRecipe,
+  type VideoDirectorRemoteJob,
 } from "../features/video-director"
 
 export interface VideoDirectorProps {
@@ -352,6 +355,9 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
   const [recipeName, setRecipeName] = useState("")
   const [inspectorView, setInspectorView] = useState<"prompt" | "json">("prompt")
   const [recipes, setRecipes] = useState<VideoDirectorRecipe[]>(() => readVideoDirectorRecipeLibrary())
+  const [jobs, setJobs] = useState<VideoDirectorRemoteJob[]>([])
+  const [jobsLoading, setJobsLoading] = useState(false)
+  const [jobsUnavailable, setJobsUnavailable] = useState(false)
   const autosave = useMemo(() => createVideoDirectorAutosaveController(350), [])
 
   useEffect(() => {
@@ -359,6 +365,35 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
   }, [autosave, project])
 
   useEffect(() => () => autosave.flush(), [autosave])
+
+  const refreshJobs = useCallback(async () => {
+    setJobsLoading(true)
+    try {
+      const remote = await listVideoDirectorJobs({ projectId: project.id, limit: 24 })
+      setJobs(remote)
+      setJobsUnavailable(false)
+    } catch (error: any) {
+      if (error?.status === 401) {
+        setJobs([])
+        setJobsUnavailable(true)
+      } else {
+        setNotice(error instanceof Error ? error.message : "Could not load Video Director jobs.")
+      }
+    } finally {
+      setJobsLoading(false)
+    }
+  }, [project.id])
+
+  useEffect(() => {
+    if (!open) return
+    void refreshJobs()
+  }, [open, refreshJobs])
+
+  useEffect(() => {
+    if (!open || !jobs.some((job) => job.status === "queued" || job.status === "running" || job.status === "post-processing")) return
+    const timer = window.setInterval(() => { void refreshJobs() }, 4_000)
+    return () => window.clearInterval(timer)
+  }, [jobs, open, refreshJobs])
 
   const mutateProject = useCallback((mutator: (draft: VideoDirectorProject) => void) => {
     setProject((current) => {
@@ -901,6 +936,79 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
               <SubToolboxStack>
                 <MutedNote>Optional categories do not reduce readiness. Only unresolved blockers and invalid generation requirements should prevent execution.</MutedNote>
                 {notice ? <SubToolboxSurface tone="subtle" role="status">{notice}</SubToolboxSurface> : null}
+              </SubToolboxStack>
+            </SubToolbox>
+
+            <SubToolbox title={`Job Queue · ${jobs.length}`} icon={<Activity />} collapsible isOpenInitial={false}>
+              <SubToolboxStack>
+                <div className="flex items-center justify-between gap-2">
+                  <MutedNote>Persistent server queue for this Video Director project.</MutedNote>
+                  <StudioButton
+                    sizeVariant="compact"
+                    tone="neutral"
+                    loading={jobsLoading}
+                    onClick={() => { void refreshJobs() }}
+                  >
+                    Refresh
+                  </StudioButton>
+                </div>
+                {jobsUnavailable ? (
+                  <SubToolboxSurface tone="subtle">
+                    <MutedNote>Sign in to ViewTube to access durable generation jobs.</MutedNote>
+                  </SubToolboxSurface>
+                ) : null}
+                {!jobsUnavailable && !jobs.length && !jobsLoading ? (
+                  <SubToolboxSurface tone="subtle">
+                    <MutedNote>No generation jobs have been submitted for this project yet.</MutedNote>
+                  </SubToolboxSurface>
+                ) : null}
+                <div className="flex flex-col gap-2">
+                  {jobs.map((job) => {
+                    const active = job.status === "queued" || job.status === "running" || job.status === "post-processing"
+                    return (
+                      <SubToolboxSurface key={job.id} tone={job.status === "dead-letter" || job.status === "failed" ? "accent" : "white"}>
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-start">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-1">
+                              <SubToolboxBadge>{job.status}</SubToolboxBadge>
+                              <SubToolboxBadge>{Math.round(job.progress * 100)}%</SubToolboxBadge>
+                              {job.providerId ? <SubToolboxBadge>{job.providerId}</SubToolboxBadge> : null}
+                              {job.modelId ? <SubToolboxBadge>{job.modelId}</SubToolboxBadge> : null}
+                            </div>
+                            <strong className="block mt-2 text-[12px] font-black uppercase truncate">{job.stage}</strong>
+                            <p className="mt-1 text-[10px] font-bold opacity-60">{job.progressMessage || "Waiting for the next worker update."}</p>
+                            <div className="mt-2 h-3 border-[2px] border-current rounded-full overflow-hidden bg-white" aria-label={`${Math.round(job.progress * 100)} percent complete`}>
+                              <span className="block h-full bg-current opacity-40" style={{ width: `${Math.round(job.progress * 100)}%` }} />
+                            </div>
+                            <div className="mt-2 text-[9px] font-black uppercase opacity-50">
+                              Attempt {job.attemptCount}/{job.maxAttempts} · {job.eventLog.length} event{job.eventLog.length === 1 ? "" : "s"}
+                            </div>
+                            {job.previewAssetUri ? (
+                              <img src={job.previewAssetUri} alt="Generation preview" className="mt-2 w-full max-h-40 object-cover border-[2px] border-current rounded-[8px]" />
+                            ) : null}
+                          </div>
+                          {active ? (
+                            <StudioButton
+                              sizeVariant="compact"
+                              tone="danger"
+                              onClick={async () => {
+                                try {
+                                  await cancelVideoDirectorJob(job.id)
+                                  setNotice("Cancellation requested.")
+                                  await refreshJobs()
+                                } catch (error) {
+                                  setNotice(error instanceof Error ? error.message : "Could not cancel generation.")
+                                }
+                              }}
+                            >
+                              Cancel
+                            </StudioButton>
+                          ) : null}
+                        </div>
+                      </SubToolboxSurface>
+                    )
+                  })}
+                </div>
               </SubToolboxStack>
             </SubToolbox>
 
