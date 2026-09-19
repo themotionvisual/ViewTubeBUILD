@@ -199,7 +199,15 @@ describe("VT-SYNC unified progress rows", () => {
   expect(channel?.durationMs).toBeGreaterThanOrEqual(4000)
  })
 
- it("uses live phase state only for datasets requested by the active run", () => {
+ it("treats a partially populated compound dataset as partial rather than never", () => {
+  const units = buildVtSyncUnifiedUnitViewModels(null, {
+   uploads_playlist: { phase: "uploads_playlist", status: "synced", source: "current_run", rows: 1446, updatedAt: "2026-09-19T12:00:00.000Z" },
+   video_metadata: { phase: "video_metadata", status: "placeholder", source: "placeholder", rows: 1400, updatedAt: "2026-09-19T12:01:00.000Z", missingMetrics: ["statistics"] },
+  })
+  expect(units.find((unit) => unit.id === "video_catalog")?.status).toBe("partial")
+ })
+
+  it("uses live phase state only for datasets requested by the active run", () => {
   const freshness: VtSyncDatasetFreshness = {
    traffic_overview: {
     runId: "stored-run",
