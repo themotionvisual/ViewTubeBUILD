@@ -52,6 +52,9 @@ describe("Toolbox UI Reference Library", () => {
       "Loader", "Skeleton", "Toast", "Popover", "Disclosure", "Divider",
       "Pagination", "Controller Switch", "LED Light", "Icon Rail Control", "Hover Card",
       "Meter", "Avatar", "Name Value List", "Breadcrumb", "Carousel", "Command Palette",
+      "Metric Strip", "Horizontal Scrollbar", "Vertical Scrollbar", "Data Stats Module",
+      "Upload Frame", "Vault Landscape Asset", "Vault Portrait Asset", "Vault Audio Asset",
+      "Vault Document Asset", "Tree View",
     ]) expect(source).toContain(`"${family}"`)
     expect(source).not.toContain("HardcodedGenericControl")
     expect(source).not.toContain("hardcoded-fallback")
@@ -89,6 +92,12 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).toContain("<SubToolboxBreadcrumb")
     expect(source).toContain("<SubToolboxCarousel")
     expect(source).toContain("<SubToolboxCommandPalette")
+    expect(source).toContain("<SubToolboxMetricStrip")
+    expect(source).toContain("<SubToolboxScrollbar")
+    expect(source).toContain("<SubToolboxDataStats")
+    expect(source).toContain("<SubToolboxFileTarget")
+    expect(source).toContain("<SubToolboxVaultAsset")
+    expect(source).toContain("<SubToolboxTree")
     expect(source).not.toContain("forceOpen content=\"TOOLTIP\"")
   })
 
