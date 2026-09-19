@@ -808,6 +808,7 @@ export const VideoDirectorWidget: React.FC<
         </WidgetSizedButton>
       }
       contentLayout="flush"
+      controlDensity="compact"
     >
       <div className="vt-video-director-widget">
         <WidgetWorkflowMain>
