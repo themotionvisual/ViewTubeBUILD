@@ -4,7 +4,7 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "./SubToolboxLayouts"
-import { SubToolboxButton, SubToolboxFileTarget, SubToolboxInput, SubToolboxMetric, SubToolboxOutputCard, SubToolboxStatePanel, SubToolboxTextArea, SubToolboxTooltip } from "./SubToolboxPrimitives"
+import { SubToolboxAlphabeticalSpectrumTags, SubToolboxButton, SubToolboxDataTable, SubToolboxFileTarget, SubToolboxInput, SubToolboxKnob, SubToolboxMetric, SubToolboxOutputCard, SubToolboxStatePanel, SubToolboxTextArea, SubToolboxTooltip } from "./SubToolboxPrimitives"
 import { CONTROL_SHELL, SUBTOOLBOX_CONTROL_SIZES, SUBTOOLBOX_STATES, SUBTOOLBOX_TOKENS, TOOLBOX_LEVEL_DNA, resolveSubtoolboxMinHeight } from "./tokens"
 
 describe("Subtoolbox Primitive System", () => {
@@ -92,6 +92,13 @@ describe("Subtoolbox Primitive System", () => {
         <SubToolboxOutputCard title="Description" accentColor="#ccff00">Output</SubToolboxOutputCard>
         <SubToolboxFileTarget label="Upload video" />
         <SubToolboxTooltip level="l1" forceOpen content="Tooltip" />
+        <SubToolboxKnob level="l1" value={72} onValueChange={() => undefined} />
+        <SubToolboxAlphabeticalSpectrumTags level="l2" />
+        <SubToolboxDataTable
+          level="l2"
+          columns={[{ key: "metric", label: "Metric" }, { key: "value", label: "Value" }]}
+          rows={[{ metric: "Views", value: "100" }]}
+        />
       </SubToolboxStack>,
     )
 
@@ -106,5 +113,10 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("vt-subtoolbox-file-target")
     expect(html).toContain("vt-subtoolbox-tooltip is-l1 is-open")
     expect(html).toContain('role="tooltip"')
+    expect(html).toContain("vt-subtoolbox-knob")
+    expect(html).toContain('type="range"')
+    expect(html).toContain("A · TAG")
+    expect(html).toContain("Z · TAG")
+    expect(html).toContain("vt-subtoolbox-data-table")
   })
 })
