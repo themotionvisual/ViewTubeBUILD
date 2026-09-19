@@ -606,3 +606,6 @@ export const VtSyncControllerPanel: React.FC<{
   </ToolboxScaffold>
  )
 }
+
+/** Canonical combined Sync Controller + Progress toolbox. */
+export const VtSyncUnifiedSyncToolbox = VtSyncControllerPanel
