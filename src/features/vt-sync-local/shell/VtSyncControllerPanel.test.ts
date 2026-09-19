@@ -53,7 +53,8 @@ describe("VT-SYNC execution status controls", () => {
 
  it("uses one compact telemetry row with the controller pinned to the far right", () => {
   const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
-  expect(source).toContain("grid-cols-[minmax(260px,1fr)_72px_64px_94px_46px_70px_108px]")
+  expect(source).toContain("grid-cols-[minmax(210px,1fr)_58px_54px_88px_34px_58px_96px]")
+  expect(source).toContain("min-w-[600px]")
   expect(source).toContain("sticky right-0")
   expect(source).toContain("<span>Status</span><span>Time</span><span>Last sync</span>")
   expect(source).toContain("<span className=\"text-center\">!</span>")
