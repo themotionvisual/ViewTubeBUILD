@@ -11,6 +11,9 @@ import {
   duplicateVideoDirectorShot,
   ensureVideoDirectorVariants,
   reorderVideoDirectorShot,
+  setVideoDirectorVariantAllowedCategories,
+  setVideoDirectorVariantCategoryAllowed,
+  setVideoDirectorVariantStrength,
 } from "./storyboard"
 import { createEmptyVideoDirectorProject } from "./projectSchema"
 
@@ -84,5 +87,34 @@ describe("Video Director storyboard", () => {
     const copiedId = project.shots[1].id
     project = reorderVideoDirectorShot(project, copiedId, 1)
     expect(project.shots.find((shot) => shot.id === copiedId)?.order).toBe(2)
+  })
+})
+
+
+describe("Video Director variation matrix", () => {
+  it("tracks allowed categories independently for each variant", () => {
+    let project = ensureVideoDirectorVariants(createEmptyVideoDirectorProject(), 2)
+    const [a, b] = project.variants
+
+    project = setVideoDirectorVariantCategoryAllowed(project, a.id, "camera-lens", true)
+    project = setVideoDirectorVariantCategoryAllowed(project, a.id, "color-palette", true)
+    project = setVideoDirectorVariantCategoryAllowed(project, b.id, "music", true)
+
+    expect(project.variants[0].allowedCategories.sort()).toEqual(["camera-lens", "color-palette"])
+    expect(project.variants[1].allowedCategories).toEqual(["music"])
+  })
+
+  it("can replace a variant matrix and change its strength without touching siblings", () => {
+    let project = ensureVideoDirectorVariants(createEmptyVideoDirectorProject(), 2)
+    const [a, b] = project.variants
+
+    project = setVideoDirectorVariantAllowedCategories(project, a.id, ["composition", "camera-movement"])
+    project = setVideoDirectorVariantStrength(project, a.id, "radical")
+
+    expect(project.variants[0].variationStrength).toBe("radical")
+    expect(project.variants[0].allowedCategories.sort()).toEqual(["camera-movement", "composition"])
+    expect(project.variants[1].variationStrength).toBe("balanced")
+    expect(project.variants[1].allowedCategories).toEqual([])
+    expect(project.variants[1].id).toBe(b.id)
   })
 })
