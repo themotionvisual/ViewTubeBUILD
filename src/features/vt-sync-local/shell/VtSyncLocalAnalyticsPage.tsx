@@ -915,6 +915,7 @@ const refreshManualImports = useCallback(async (payload?: {
        activeRunId={syncProgress?.runId}
        activeCategoryIds={controllerActiveCategoryIds}
        queuedCategoryIds={controllerQueuedCategoryIds}
+       categoryExecutionStates={syncProgress?.categoryStates}
        datasetFreshness={mergedSnapshot.datasetFreshness}
        contentOwners={account.snapshot.google.contentOwners}
        activeContentOwnerId={account.snapshot.google.activeContentOwnerId}
