@@ -286,3 +286,35 @@ When a reusable component is missing:
 7. migrate consumers.
 
 If it is unique to one creator job, keep it as a widget-specific signature/compound component built from canonical primitives.
+
+
+## Density is not fitting
+
+Do not use a widget-wide density override as a substitute for control-level adaptive text.
+
+A complex widget may need different densities simultaneously:
+
+- compact page/mode navigation;
+- standard form inputs;
+- larger signature controls;
+- expanded preview/output surfaces.
+
+Apply density to a deliberate region or composition state.
+
+Use `textFit="adaptive"` on the controls/groups whose labels actually need fitting.
+
+Never use broad `overflow:hidden` / `text-overflow:clip` to simulate successful fitting.
+
+## Adaptive action buttons
+
+Canonical action buttons should support the same adaptive text-fit contract as ordinary sized buttons when they use the 24px geometry.
+
+Long primary labels such as generation/build actions should fit through the primitive API rather than private widget CSS.
+
+## Visual size versus interaction size
+
+A 24px ViewTube control does not automatically become a 44px visible control on coarse pointers if that destroys the composition.
+
+Visual geometry and acquisition target are separate concerns.
+
+When larger touch acquisition is required, use an intentional hit-area mechanism that does not alter visible primitive height or overlap neighboring actions ambiguously.
