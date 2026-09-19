@@ -36,8 +36,10 @@ export const MiniTimelineMap: React.FC<MiniTimelineMapProps> = ({
 }) => {
   const { state, dispatch, clipsOnTrack } = store;
   const ref = useRef<HTMLDivElement>(null);
-  const dragMode = useRef<'seek' | 'viewport' | null>(null);
+  const dragMode = useRef<'seek'|'viewport'|'resize-left'|'resize-right'|'pinch'|null>(null);
   const viewportGrabOffsetSec = useRef(0);
+  const pointers = useRef(new Map<number,{x:number;y:number}>());
+  const pinchStart = useRef<{distance:number;zoom:number;centerSec:number;widthSec:number}|null>(null);
   const duration = Math.max(0.001, state.project.durationSec);
   const tracks = useMemo(() => state.project.tracks.filter((track) => !track.hidden), [state.project.tracks]);
 
@@ -75,7 +77,29 @@ export const MiniTimelineMap: React.FC<MiniTimelineMapProps> = ({
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     event.currentTarget.setPointerCapture?.(event.pointerId);
+    pointers.current.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(pointers.current.size===2){
+      const values=[...pointers.current.values()];
+      const distance=Math.hypot(values[1].x-values[0].x,values[1].y-values[0].y);
+      pinchStart.current={
+        distance:Math.max(1,distance),
+        zoom:state.zoomPxPerSec,
+        centerSec:(secFromClientX(values[0].x)+secFromClientX(values[1].x))/2,
+        widthSec:Math.max(.05,viewportWidthSec),
+      };
+      dragMode.current='pinch';
+      return;
+    }
     const pointerSec = secFromClientX(event.clientX);
+    const edgeHit=Math.max(.08,viewportWidthSec*.12);
+    if(onViewportNavigate&&Math.abs(pointerSec-viewportStart)<=edgeHit){
+      dragMode.current='resize-left';
+      return;
+    }
+    if(onViewportNavigate&&Math.abs(pointerSec-viewportEnd)<=edgeHit){
+      dragMode.current='resize-right';
+      return;
+    }
     if (onViewportNavigate && viewportContains(pointerSec)) {
       dragMode.current = 'viewport';
       viewportGrabOffsetSec.current = pointerSec - viewportStart;
@@ -87,13 +111,36 @@ export const MiniTimelineMap: React.FC<MiniTimelineMapProps> = ({
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if(pointers.current.has(event.pointerId))pointers.current.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(dragMode.current==='pinch'&&pointers.current.size>=2&&pinchStart.current){
+      const values=[...pointers.current.values()].slice(0,2);
+      const distance=Math.max(1,Math.hypot(values[1].x-values[0].x,values[1].y-values[0].y));
+      const scale=distance/pinchStart.current.distance;
+      const zoom=Math.max(4,Math.min(400,pinchStart.current.zoom*scale));
+      dispatch({type:'setZoom',pxPerSec:zoom});
+      const nextWidth=pinchStart.current.widthSec*(pinchStart.current.zoom/zoom);
+      onViewportNavigate?.(clamp(pinchStart.current.centerSec-nextWidth/2,0,Math.max(0,duration-nextWidth)));
+      return;
+    }
     if (!dragMode.current) return;
-    if (dragMode.current === 'viewport') navigateViewportFromClientX(event.clientX);
-    else seekFromClientX(event.clientX);
+    if (dragMode.current === 'viewport')navigateViewportFromClientX(event.clientX);
+    else if(dragMode.current==='resize-left'){
+      const pointer=clamp(secFromClientX(event.clientX),0,viewportEnd-.05);
+      const nextWidth=Math.max(.05,viewportEnd-pointer);
+      dispatch({type:'setZoom',pxPerSec:state.zoomPxPerSec*(viewportWidthSec/nextWidth)});
+      onViewportNavigate?.(pointer);
+    }else if(dragMode.current==='resize-right'){
+      const pointer=clamp(secFromClientX(event.clientX),viewportStart+.05,duration);
+      const nextWidth=Math.max(.05,pointer-viewportStart);
+      dispatch({type:'setZoom',pxPerSec:state.zoomPxPerSec*(viewportWidthSec/nextWidth)});
+      onViewportNavigate?.(viewportStart);
+    }else seekFromClientX(event.clientX);
   };
 
-  const endPointer = () => {
-    dragMode.current = null;
+  const endPointer = (event?:React.PointerEvent<HTMLDivElement>) => {
+    if(event)pointers.current.delete(event.pointerId);
+    if(pointers.current.size<2)pinchStart.current=null;
+    if(pointers.current.size===0)dragMode.current=null;
   };
 
   return (
@@ -142,11 +189,14 @@ export const MiniTimelineMap: React.FC<MiniTimelineMapProps> = ({
       <div
         aria-hidden="true"
         style={{
-          position: 'absolute', left: `${viewportLeftPct}%`, width: `${viewportPct}%`, top: 2, bottom: 2,
-          border: '2px solid #111', borderRadius: 3, background: 'rgba(255,255,255,.20)',
-          boxSizing: 'border-box', pointerEvents: 'none', boxShadow: '0 0 0 1px rgba(54,224,246,.75) inset',
+          position:'absolute',left:`${viewportLeftPct}%`,width:`${viewportPct}%`,top:2,bottom:2,
+          border:'2px solid #248b99',borderRadius:3,background:'rgba(255,255,255,.20)',
+          boxSizing:'border-box',pointerEvents:'none',boxShadow:'0 0 0 1px rgba(54,224,246,.75) inset',
         }}
-      />
+      >
+        <i style={{position:'absolute',left:-3,top:'25%',bottom:'25%',width:5,borderRadius:2,background:'#36E0F6',border:'1px solid #248b99'}}/>
+        <i style={{position:'absolute',right:-3,top:'25%',bottom:'25%',width:5,borderRadius:2,background:'#36E0F6',border:'1px solid #248b99'}}/>
+      </div>
       <div aria-hidden="true" style={{ position: 'absolute', left: `calc(${playheadPct}% - 1px)`, top: 0, bottom: 0, width: 2, background: '#111', pointerEvents: 'none' }} />
     </div>
   );
