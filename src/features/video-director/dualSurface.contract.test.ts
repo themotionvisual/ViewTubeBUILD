@@ -130,4 +130,19 @@ describe("Video Director dual-surface architecture", () => {
     expect(handoff).toContain("scopeKey")
   })
 
+
+  it("keeps the Dashboard Video Director in its compact 24px execution profile", () => {
+    const widget = read("src/views/dashboard/widgets/video-director/VideoDirectorWidget.tsx")
+    const css = read("src/views/dashboard/widgets/video-director/videoDirectorWidget.css")
+
+    expect(widget).toContain('className="widget-header-toggle vtdw-header-studio"')
+    expect(widget).toContain("STUDIO ↗")
+    expect(widget).not.toContain("height={38}")
+    expect(widget).not.toContain("height={32}")
+    expect(css).toContain("--vt-primitive-font:10px")
+    expect(css).toContain("font-size:10px !important")
+    expect(css).not.toContain("min-height:44px")
+    expect(css).toContain("grid-template-columns:repeat(4,minmax(0,1fr))")
+  })
+
 })
