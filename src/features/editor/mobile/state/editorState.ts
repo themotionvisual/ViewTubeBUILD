@@ -209,8 +209,17 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
       return{...state,panel:{...state.panel,height:Math.max(.15,Math.min(1,action.height))}};
     case'setPanelId':
       return{...state,panel:{...state.panel,id:action.id}};
-    case'addClip':
-      return withHistory(state,{...state,project:{...state.project,clips:[...state.project.clips,action.clip]}});
+    case'addClip':{
+      const placed=placeClipAfterCollisions(state.project.clips,action.clip);
+      return withHistory(state,{
+        ...state,
+        project:{
+          ...state.project,
+          clips:[...state.project.clips,placed],
+          durationSec:Math.max(state.project.durationSec,placed.end),
+        },
+      });
+    }
     case'addLayerClip':{
       const placed=placeClipAfterCollisions(state.project.clips,action.clip);
       return withHistory(state,{
@@ -397,7 +406,7 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
       const copyId=makeId(`${c.id}_dup`);
       const sourceLayer=state.project.layers.find(l=>l.id===String(c.layerId??''));
       const copyLayer=sourceLayer?cloneLayer(sourceLayer,makeId('layer')):null;
-      const copy:VtE1Clip={
+      const rawCopy:VtE1Clip={
         ...c,
         id:copyId,
         layerId:copyLayer?.id??c.layerId,
@@ -405,6 +414,7 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
         end:c.end+d,
         keyframes:(c.keyframes??[]).map(k=>({...k,id:makeId('kf'),values:{...((k.values??{}) as Record<string,unknown>)}})),
       };
+      const copy=placeClipAfterCollisions(state.project.clips,rawCopy);
       return withHistory(state,{
         ...state,
         project:{
