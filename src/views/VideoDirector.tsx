@@ -129,6 +129,17 @@ import {
   StudioDirectorPacingVisual,
   StudioDirectorPaletteVisual,
 } from "./video-director/StudioDirectorSignatureControls"
+import {
+  StudioDirectorCameraPath,
+  StudioDirectorCaptionPreview,
+  StudioDirectorContinuityLedger,
+  StudioDirectorFocusDepth,
+  StudioDirectorMusicBeat,
+  StudioDirectorNegativeBank,
+  StudioDirectorReferenceBoard,
+  StudioDirectorTextureStack,
+  StudioDirectorTransitionBridge,
+} from "./video-director/StudioDirectorAdvancedSignatureControls"
 
 export interface VideoDirectorProps {
   embedded?: boolean
@@ -517,7 +528,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "camera-movement":
         return <SubToolboxStack>
-          <StudioDirectorLensVisual focalLength={project.categories["camera-lens"].payload.focalLengthMm} aperture={project.categories["camera-lens"].payload.aperture} movement={activePayload.type} />
+          <StudioDirectorCameraPath type={activePayload.type} speed={activePayload.speed} panDegrees={activePayload.panDegrees} tiltDegrees={activePayload.tiltDegrees} orbitDegrees={activePayload.orbitDegrees} />
           <SelectField label="Movement" value={activePayload.type} options={["auto", "static", "pan", "tilt", "dolly", "truck", "pedestal", "orbit", "crane", "drone", "handheld", "steadicam", "pov"]} onChange={(value) => setCategoryField(activeCategoryId, "type", value)} />
           <SubToolboxGrid>
             <NumberField label="Speed" value={Math.round(activePayload.speed * 100)} min={0} max={100} unit="%" onChange={(value) => setCategoryField(activeCategoryId, "speed", value / 100)} />
@@ -531,6 +542,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "focus-depth":
         return <SubToolboxStack>
+          <StudioDirectorFocusDepth mode={activePayload.mode} focusDistanceMeters={activePayload.focusDistanceMeters} depthStrength={activePayload.depthStrength} bokeh={activePayload.bokeh} />
           <SelectField label="Focus Mode" value={activePayload.mode} options={["auto", "deep", "shallow", "subject-lock", "rack-focus", "custom"]} onChange={(value) => setCategoryField(activeCategoryId, "mode", value)} />
           <SubToolboxGrid>
             <NumberField label="Focus Distance" value={activePayload.focusDistanceMeters} min={0.05} max={100000} step={0.1} unit="m" onChange={(value) => setCategoryField(activeCategoryId, "focusDistanceMeters", value)} />
@@ -583,7 +595,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
         </SubToolboxGrid></SubToolboxStack>
 
       case "texture-film":
-        return <SubToolboxStack><SubToolboxGrid>
+        return <SubToolboxStack><StudioDirectorTextureStack grain={activePayload.grain} halation={activePayload.halation} bloom={activePayload.bloom} vignette={activePayload.vignette} filmStock={activePayload.filmStock} /><SubToolboxGrid>
           {["grain", "halation", "bloom", "vignette", "scratches", "dust", "gateWeave", "chromaticAberration"].map((field) => <NumberField key={field} label={field.replace(/([A-Z])/g, " $1")} value={activePayload[field]} min={0} max={100} unit="%" onChange={(value) => setCategoryField(activeCategoryId, field, value)} />)}
           <NumberField label="Sharpness" value={activePayload.sharpness} min={-100} max={100} onChange={(value) => setCategoryField(activeCategoryId, "sharpness", value)} />
         </SubToolboxGrid><TextField label="Film Stock / Texture Recipe" value={activePayload.filmStock} placeholder="Fine 35mm, 16mm newsreel…" onChange={(value) => setCategoryField(activeCategoryId, "filmStock", value)} /></SubToolboxStack>
@@ -626,7 +638,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
         </SubToolboxStack>
 
       case "transitions":
-        return <SubToolboxStack><SubToolboxGrid>
+        return <SubToolboxStack><StudioDirectorTransitionBridge type={activePayload.defaultType} durationFrames={activePayload.durationFrames} matchMotion={activePayload.matchMotion} /><SubToolboxGrid>
           <SelectField label="Default Transition" value={activePayload.defaultType} options={["cut", "crossfade", "match-cut", "dip", "wipe", "optical-bridge", "custom"]} onChange={(value) => setCategoryField(activeCategoryId, "defaultType", value)} />
           <NumberField label="Duration" value={activePayload.durationFrames} min={0} max={240} unit="frames" onChange={(value) => setCategoryField(activeCategoryId, "durationFrames", Math.round(value))} />
           <NumberField label="Audio Crossfade" value={activePayload.audioCrossfadeMs} min={0} max={10000} unit="ms" onChange={(value) => setCategoryField(activeCategoryId, "audioCrossfadeMs", Math.round(value))} />
@@ -653,6 +665,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "music":
         return <SubToolboxStack>
+          <StudioDirectorMusicBeat bpm={activePayload.bpm} intensity={activePayload.intensity} beatSync={activePayload.beatSync} />
           <SubToolboxToggle pressed={activePayload.enabled} label="Enable music" onClick={() => setCategoryField(activeCategoryId, "enabled", !activePayload.enabled)} />
           <SelectField label="Source" value={activePayload.source} options={["auto", "generated", "upload", "library"]} onChange={(value) => setCategoryField(activeCategoryId, "source", value)} />
           <TextField label="Music Brief" value={activePayload.prompt} multiline placeholder="Describe score, instrumentation, arc…" onChange={(value) => setCategoryField(activeCategoryId, "prompt", value)} />
@@ -685,6 +698,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "captions":
         return <SubToolboxStack>
+          <StudioDirectorCaptionPreview position={activePayload.position} animation={activePayload.animation} maxWordsPerLine={activePayload.maxWordsPerLine} burnIn={activePayload.burnIn} />
           <SubToolboxToggle pressed={activePayload.enabled} label="Enable captions" onClick={() => setCategoryField(activeCategoryId, "enabled", !activePayload.enabled)} />
           <SubToolboxGrid>
             <SelectField label="Source" value={activePayload.source} options={["auto", "transcription", "script", "upload"]} onChange={(value) => setCategoryField(activeCategoryId, "source", value)} />
@@ -731,6 +745,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "references-seeds":
         return <SubToolboxStack>
+          <StudioDirectorReferenceBoard referenceCount={activePayload.references.length} seed={activePayload.seed} lockSeed={activePayload.lockSeed} variationNoise={activePayload.variationNoise} />
           <SubToolboxFileTarget icon={<Upload size={30} />} label="Add Visual / Audio Reference" accept="image/*,video/*,audio/*" onFiles={() => setNotice("Reference file intake selected; direct object-storage upload is a later backend slice.")} />
           <SubToolboxGrid>
             <NumberField label="Seed" value={activePayload.seed ?? 0} min={0} max={2147483647} onChange={(value) => setCategoryField(activeCategoryId, "seed", Math.round(value))} />
@@ -742,6 +757,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "consistency-continuity":
         return <SubToolboxStack>
+          <StudioDirectorContinuityLedger entityCount={activePayload.entities.length} identityStrength={activePayload.identityStrength} wardrobeStrength={activePayload.wardrobeStrength} environmentStrength={activePayload.environmentStrength} />
           <SubToolboxGrid>
             <NumberField label="Identity" value={Math.round(activePayload.identityStrength * 100)} min={0} max={100} unit="%" onChange={(value) => setCategoryField(activeCategoryId, "identityStrength", value / 100)} />
             <NumberField label="Wardrobe" value={Math.round(activePayload.wardrobeStrength * 100)} min={0} max={100} unit="%" onChange={(value) => setCategoryField(activeCategoryId, "wardrobeStrength", value / 100)} />
@@ -753,6 +769,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "negative-constraints":
         return <SubToolboxStack>
+          <StudioDirectorNegativeBank tagCount={activePayload.tags.length} enforcement={activePayload.enforcement} freeText={activePayload.freeText} />
           <SelectField label="Enforcement" value={activePayload.enforcement} options={["advisory", "standard", "strict"]} onChange={(value) => setCategoryField(activeCategoryId, "enforcement", value)} />
           <TextField label="Negative Instructions" value={activePayload.freeText} multiline placeholder="No modern objects, no fantasy armor, no graphic gore…" onChange={(value) => setCategoryField(activeCategoryId, "freeText", value)} />
           <SubToolboxGrid minItemWidth="compact">
