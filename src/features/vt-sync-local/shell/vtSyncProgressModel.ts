@@ -98,6 +98,7 @@ export const buildVtSyncUnifiedProgressRows = (
   const syncUnit = VT_SYNC_SYNC_UNITS.find((unit) => unit.categoryIds.includes(category.id))
   const stored = summarizeDatasetFreshness(datasetFreshness, category)
   const live = liveByPhase.get(category.runtimePhaseId)
+  const categoryLive = progress?.categoryStates?.[category.id]
   const requestedInRun = Boolean(progress && requested.has(category.id))
   const hasDedicatedLivePhase = requestedPhaseCounts.get(category.runtimePhaseId) === 1
   const isExactLiveCategory = Boolean(
@@ -109,7 +110,11 @@ export const buildVtSyncUnifiedProgressRows = (
   const terminalFailedPhase = Boolean(progress?.status === "failed" && isExactLiveCategory && live?.status === "running")
   let displayStatus = stored.status
 
-  if (isExactLiveCategory) {
+  if (externallyQueued.has(category.id) && progress?.status !== "running") {
+   displayStatus = "pending"
+  } else if (requestedInRun && categoryLive) {
+   displayStatus = categoryLive.status
+  } else if (isExactLiveCategory) {
    displayStatus = terminalFailedPhase ? "failed" : live!.status
   } else if (requestedInRun && live) {
    if (sameRunStored) displayStatus = stored.status
@@ -125,14 +130,16 @@ export const buildVtSyncUnifiedProgressRows = (
    syncUnitLabel: syncUnit?.label || category.label,
    phaseLabel: live?.label || category.phase.replace(/_/g, " "),
    displayStatus,
-   displayRows: isExactLiveCategory && hasDedicatedLivePhase ? live!.rows : stored.rows,
-   message: isExactLiveCategory
-    ? live!.error || live!.message || (terminalFailedPhase ? "Sync ended before this query completed." : live!.status === "pending" ? "Waiting for prerequisite phases." : "Sync is active.")
-    : requestedInRun && live && !sameRunStored && (live.status === "pending" || live.status === "running")
-     ? "Queued behind the currently executing query."
-     : externallyQueued.has(category.id)
-      ? "Queued behind the current sync request."
-      : stored.missingMetrics.length
+   displayRows: requestedInRun && categoryLive ? categoryLive.rows : isExactLiveCategory && hasDedicatedLivePhase ? live!.rows : stored.rows,
+   message: requestedInRun && categoryLive
+    ? categoryLive.error || categoryLive.message || (categoryLive.status === "pending" ? "Queued behind the currently executing query." : categoryLive.status === "running" ? "Sync is active." : "Current run state recorded.")
+    : isExactLiveCategory
+     ? live!.error || live!.message || (terminalFailedPhase ? "Sync ended before this query completed." : live!.status === "pending" ? "Waiting for prerequisite phases." : "Sync is active.")
+     : requestedInRun && live && !sameRunStored && (live.status === "pending" || live.status === "running")
+      ? "Queued behind the currently executing query."
+      : externallyQueued.has(category.id)
+       ? "Queued behind the current sync request."
+       : stored.missingMetrics.length
       ? `Missing: ${stored.missingMetrics.join(", ")}`
       : stored.updatedAt ? "Stored dataset is available." : "This dataset has not been synced yet.",
   }
@@ -150,6 +157,10 @@ export const getVtSyncActiveCategoryIds = (
 ): string[] => {
  if (!progress || progress.status !== "running") return []
  const requested = new Set(progress.requestedCategoryIds)
+ const runningCategories = Object.values(progress.categoryStates || {})
+  .filter((state) => state.status === "running" && requested.has(state.categoryId))
+  .map((state) => state.categoryId)
+ if (runningCategories.length > 0) return runningCategories
  const runningPhase = progress.phases.find((phase) => phase.status === "running")
  if (!runningPhase) return []
  if (runningPhase.currentCategoryId && requested.has(runningPhase.currentCategoryId)) {
@@ -171,6 +182,12 @@ export const getVtSyncPendingCategoryIds = (
  if (!progress || progress.status !== "running") return [...pending]
 
  const active = new Set(getVtSyncActiveCategoryIds(progress))
+ if (progress.categoryStates && Object.keys(progress.categoryStates).length > 0) {
+  Object.values(progress.categoryStates).forEach((state) => {
+   if (state.status === "pending" && !active.has(state.categoryId)) pending.add(state.categoryId)
+  })
+  return [...pending]
+ }
  const phaseById = new Map(progress.phases.map((phase) => [phase.id, phase]))
  progress.requestedCategoryIds.forEach((categoryId) => {
   if (active.has(categoryId)) return
