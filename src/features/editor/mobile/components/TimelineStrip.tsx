@@ -2,7 +2,7 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {
   AlertTriangle,EyeOff,ListPlus,LocateFixed,LockKeyhole,Minus,Plus,
-  SkipBack,SkipForward,Trash2,VolumeX,
+  SkipBack,SkipForward,Trash2,Type,VolumeX,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {useLongPress,usePinchZoom} from '../hooks/gestures';
@@ -16,6 +16,8 @@ export interface TimelineStripProps{
   onEmptyContextMenu?:(at:{x:number;y:number})=>void;
   onViewportChange?:(viewport:TimelineViewport)=>void;
   scrollToSec?:number;
+  actionLabelsVisible?:boolean;
+  onToggleActionLabels?:()=>void;
 }
 
 type TimelineKeyframe={id?:string;offsetSec?:number;mode?:string;values?:Record<string,unknown>};
@@ -38,6 +40,7 @@ const overlaps=(a:VtE1Clip,b:VtE1Clip)=>a.trackId===b.trackId&&a.start<b.end&&a.
 
 export const TimelineStrip:React.FC<TimelineStripProps>=({
   store,height,onClipContextMenu,onEmptyContextMenu,onViewportChange,scrollToSec,
+  actionLabelsVisible=true,onToggleActionLabels,
 })=>{
   const{state,dispatch,clipsOnTrack}=store;
   const zoom=state.zoomPxPerSec;
@@ -136,6 +139,12 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
         onClick={()=>dispatch({type:'addTrack',kind:'overlay'})}
         style={headerBtn(CYAN)}
       ><ListPlus size={12}/></button>
+      {onToggleActionLabels?<button
+        title={actionLabelsVisible?'Hide action button labels':'Show action button labels'}
+        aria-label={actionLabelsVisible?'Hide action button labels':'Show action button labels'}
+        onClick={onToggleActionLabels}
+        style={headerBtn(actionLabelsVisible?CYAN:'#fff')}
+      ><Type size={12}/></button>:null}
       {hasOverlaps?<button
         title="Resolve overlapping clips"
         aria-label="Resolve overlapping clips"
@@ -313,11 +322,13 @@ const ClipBlock:React.FC<{
   const begin=(event:React.PointerEvent<HTMLDivElement>)=>{
     if(event.pointerType==='mouse'&&event.button!==0)return;
     event.stopPropagation();
-    dispatch({type:'selectClip',id:clip.id});
     const rect=event.currentTarget.getBoundingClientRect();
     const localX=event.clientX-rect.left;
     const edge=Math.min(EDGE_TOUCH_PX,Math.max(12,rect.width*.3));
     const mode:ClipGestureMode=localX<=edge?'trim-left':localX>=rect.width-edge?'trim-right':'pending';
+    const hadSelection=store.state.selection.clipIds.length>0;
+    const alreadySelected=store.state.selection.clipIds.includes(clip.id);
+    if(mode!=='pending'||!hadSelection||alreadySelected)dispatch({type:'selectClip',id:clip.id});
     event.currentTarget.setPointerCapture?.(event.pointerId);
     const next={
       pointerId:event.pointerId,mode,startX:event.clientX,startY:event.clientY,
@@ -330,6 +341,8 @@ const ClipBlock:React.FC<{
         active.mode='longpress';
         active.longPressFired=true;
         setGestureMode('longpress');
+        const currentSelection=store.state.selection.clipIds;
+        dispatch({type:'selectClip',id:clip.id,additive:currentSelection.length>0&&!currentSelection.includes(clip.id)});
         if(typeof navigator!=='undefined'&&'vibrate' in navigator){
           (navigator as Navigator&{vibrate:(pattern:number|number[])=>boolean}).vibrate(15);
         }
@@ -355,6 +368,7 @@ const ClipBlock:React.FC<{
         return;
       }
       active.mode='move';
+      dispatch({type:'selectClip',id:clip.id});
       setGestureMode('move');
     }
 
@@ -375,6 +389,7 @@ const ClipBlock:React.FC<{
     const active=gesture.current;
     if(!active||active.pointerId!==event.pointerId)return;
     event.stopPropagation();
+    if(active.mode==='pending'&&!active.longPressFired)dispatch({type:'selectClip',id:clip.id});
     clearGesture();
   };
 
