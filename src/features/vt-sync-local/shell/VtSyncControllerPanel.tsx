@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from "react"
 import { CheckSquare, ChevronDown, ChevronRight, RefreshCw, ShieldCheck, Square } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
-import { RetroRivets } from "./VtSyncRetroChrome"
+import { RetroRivets, RetroSyncExecutionSwitch } from "./VtSyncRetroChrome"
 import type {
  VtSyncAnalyticsWindow,
  VtSyncCategoryGroup,
@@ -197,68 +197,7 @@ export const VtSyncControllerPanel: React.FC<{
   return "idle"
  }
 
- const renderCategorySlideSwitch = ({
-  label,
-  status,
-  onClick,
-  disabled,
- }: {
-  label: string
-  status: "idle" | "queued" | "running" | "complete" | "partial" | "failed"
-  onClick: () => void
-  disabled?: boolean
- }) => {
-  const statusClass =
-   status === "running" ? "is-syncing"
-   : status === "queued" ? "is-waiting"
-   : status === "complete" ? "is-completed"
-   : status === "partial" ? "is-partial"
-   : status === "failed" ? "is-failed"
-   : ""
-  const statusLabel =
-   status === "running" ? "RUNNING"
-   : status === "queued" ? "QUEUED"
-   : status === "complete" ? "DONE"
-   : status === "partial" ? "PARTIAL"
-   : status === "failed" ? "FAILED"
-   : label
-  const isBusyState = status === "running" || status === "queued"
 
-  return (
-   <div
-    className={`vt-retro-pcb-group is-category-action ${status === "running" ? "is-active" : ""} ${statusClass}`}
-    data-sync-status={status}
-    style={
-     {
-      "--active-col": "var(--led-green)",
-      "--active-col-rgb": "var(--led-green-rgb)",
-     } as React.CSSProperties
-    }
-   >
-    <div className="vt-retro-pcb-controls">
-     <button
-      type="button"
-      disabled={disabled || isBusyState}
-      onClick={onClick}
-      className="switch-hitbox"
-      aria-pressed={status === "running"}
-      title={`${statusLabel} Sync`}
-      aria-label={`${statusLabel} Sync`}
-     >
-      <div className="sw-slide-housing">
-       <div className="sw-slide-track">
-        <div className="sw-slide-nub" />
-       </div>
-       <div className="led-rim" aria-hidden="true">
-        <div className="led-bulb" />
-       </div>
-      </div>
-     </button>
-    </div>
-    <div className="comp-label">{statusLabel}</div>
-   </div>
-  )
- }
 
  return (
   <ToolboxScaffold
@@ -363,11 +302,11 @@ export const VtSyncControllerPanel: React.FC<{
         </button>
         </h3>
         <div className={`grid shrink-0 place-items-center border-l-[3px] border-black px-2 py-1 ${expanded ? "border-b-[2px]" : ""}`}>
-         {renderCategorySlideSwitch({
-          label: "SYNC ALL",
-          status: groupStatus,
-          onClick: () => void startCategories(groupCategoryIds, units.some((unit) => unit.id === "retention")),
-         })}
+         <RetroSyncExecutionSwitch
+          idleLabel="SYNC ALL"
+          status={groupStatus}
+          onClick={() => void startCategories(groupCategoryIds, units.some((unit) => unit.id === "retention"))}
+         />
         </div>
        </div>
        <div id={contentId} hidden={!expanded}>
@@ -398,11 +337,11 @@ export const VtSyncControllerPanel: React.FC<{
               {unit.description}
              </span>
              <div className="col-start-4 self-center justify-self-end max-lg:col-start-3 max-lg:row-span-2 max-lg:row-start-1">
-              {renderCategorySlideSwitch({
-               label: hasPriorData ? "UPDATE" : "FULL SYNC",
-               status: unitStatus,
-               onClick: () => void startCategories(unit.categoryIds),
-              })}
+              <RetroSyncExecutionSwitch
+               idleLabel={hasPriorData ? "UPDATE" : "FULL SYNC"}
+               status={unitStatus}
+               onClick={() => void startCategories(unit.categoryIds)}
+              />
              </div>
             </div>
            )
