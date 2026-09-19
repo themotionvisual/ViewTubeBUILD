@@ -60,7 +60,6 @@ export const VtSyncControllerPanel: React.FC<{
  isAuthenticated: boolean
  isSyncing: boolean
  videos: VtSyncRetentionVideoOption[]
- activeRunId?: string
  activeCategoryIds?: string[]
  queuedCategoryIds?: string[]
  categoryExecutionStates?: Record<string, VtSyncLocalSyncCategoryProgress>
@@ -70,7 +69,7 @@ export const VtSyncControllerPanel: React.FC<{
  onSelectContentOwner?: (ownerId: string) => Promise<void>
  onLogin: () => Promise<void>
  onStartSync: (categoryIds: string[], retentionVideoIds?: string[], forceFullVideoMetadata?: boolean, windows?: VtSyncAnalyticsWindow[]) => Promise<void>
-}> = ({ isAuthenticated, isSyncing, videos, activeRunId, activeCategoryIds = [], queuedCategoryIds = [], categoryExecutionStates, datasetFreshness, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
+}> = ({ isAuthenticated, isSyncing, videos, activeCategoryIds = [], queuedCategoryIds = [], categoryExecutionStates, datasetFreshness, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
  const [selected, setSelected] = useState<string[]>(() => getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))
  const [retentionVideoIds, setRetentionVideoIds] = useState<string[]>([])
  // Lifetime only by default: every extra window costs one request per aggregate
