@@ -13,7 +13,8 @@ import { CommunityPostGenerator } from "../components/CommunityPostGenerator"
 import { CommentResponder } from "../components/CommentResponder"
 import { EndScreenTool } from "../components/EndScreenTool"
 
-const ToolboxUIReferenceLibrary = React.lazy(() => import("../components/ToolboxUIReferenceLibrary"))\nconst VideoDirector = React.lazy(() => import("./VideoDirector"))
+const ToolboxUIReferenceLibrary = React.lazy(() => import("../components/ToolboxUIReferenceLibrary"))
+const VideoDirector = React.lazy(() => import("./VideoDirector"))
 
 const StudioHub: React.FC = () => {
  const [states, setStates] = useState({
