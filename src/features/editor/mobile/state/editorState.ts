@@ -78,6 +78,10 @@ export type EditorAction=
   |{type:'deleteClips';ids:string[]}
   |{type:'rippleDeleteClips';ids:string[]}
   |{type:'duplicateClip';id:string}
+  |{type:'groupClips';ids:string[]}
+  |{type:'ungroupClips';ids:string[]}
+  |{type:'combineClips';ids:string[]}
+  |{type:'uncombineClip';id:string}
   |{type:'muteTrack';id:string;muted?:boolean}
   |{type:'lockTrack';id:string;locked?:boolean}
   |{type:'hideTrack';id:string;hidden?:boolean}
@@ -207,11 +211,14 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
     case'setZoom':
       return{...state,zoomPxPerSec:Math.max(4,Math.min(400,action.pxPerSec))};
     case'selectClip':{
-      const clipIds=action.additive
-        ?(state.selection.clipIds.includes(action.id)
-          ?state.selection.clipIds.filter(id=>id!==action.id)
-          :[...state.selection.clipIds,action.id])
+      const clicked=state.project.clips.find(clip=>clip.id===action.id);
+      const groupId=clicked?String((clicked as VtE1Clip&{groupId?:unknown}).groupId??''):'';
+      const grouped=groupId
+        ?state.project.clips.filter(clip=>String((clip as VtE1Clip&{groupId?:unknown}).groupId??'')===groupId).map(clip=>clip.id)
         :[action.id];
+      const clipIds=action.additive
+        ?Array.from(new Set([...state.selection.clipIds,...grouped]))
+        :grouped;
       return{...state,selection:{...emptySelection,clipIds}};
     }
     case'selectTrack':
@@ -446,6 +453,66 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
         },
         selection:{...emptySelection,clipIds:[copy.id]},
       });
+    }
+    case'groupClips':{
+      const ids=Array.from(new Set(action.ids)).filter(id=>state.project.clips.some(clip=>clip.id===id));
+      if(ids.length<2)return state;
+      const groupId=makeId('group');
+      const clips=state.project.clips.map(clip=>ids.includes(clip.id)?{...clip,groupId}:clip);
+      return withHistory(state,{...state,project:{...state.project,clips},selection:{...emptySelection,clipIds:ids}});
+    }
+    case'ungroupClips':{
+      const ids=new Set(action.ids);
+      const clips=state.project.clips.map(clip=>ids.has(clip.id)?{...clip,groupId:undefined}:clip);
+      return withHistory(state,{...state,project:{...state.project,clips}});
+    }
+    case'combineClips':{
+      const ids=Array.from(new Set(action.ids));
+      const selected=state.project.clips.filter(clip=>ids.includes(clip.id)).sort((a,b)=>a.start-b.start);
+      if(selected.length<2)return state;
+      const trackId=selected[0].trackId;
+      if(selected.some(clip=>clip.trackId!==trackId))return state;
+      const start=Math.min(...selected.map(clip=>clip.start));
+      const end=Math.max(...selected.map(clip=>clip.end));
+      const compoundId=makeId('compound');
+      const compoundChildren=selected.map(clip=>({
+        ...clip,
+        relativeStart:clip.start-start,
+        relativeEnd:clip.end-start,
+      }));
+      const compound:VtE1Clip={
+        id:compoundId,trackId,start,end,clipType:'compound',
+        compoundChildren,uiColor:'#36E0F6',groupId:undefined,
+      };
+      const removed=new Set(ids);
+      const clips=[...state.project.clips.filter(clip=>!removed.has(clip.id)),compound];
+      return withHistory(state,{
+        ...state,
+        project:{
+          ...state.project,
+          clips,
+          transitions:withoutTransitionsForClips(state.project.transitions,ids),
+        },
+        selection:{...emptySelection,clipIds:[compoundId]},
+      });
+    }
+    case'uncombineClip':{
+      const compound=state.project.clips.find(clip=>clip.id===action.id) as (VtE1Clip&{compoundChildren?:Array<VtE1Clip&{relativeStart?:number;relativeEnd?:number}>})|undefined;
+      if(!compound||compound.clipType!=='compound'||!Array.isArray(compound.compoundChildren))return state;
+      const children=compound.compoundChildren.map((child,index)=>{
+        const relativeStart=Number(child.relativeStart??0);
+        const relativeEnd=Number(child.relativeEnd??(child.end-child.start));
+        return{
+          ...child,
+          id:state.project.clips.some(existing=>existing.id===child.id&&existing.id!==compound.id)?makeId(`uncombined_${index}`):child.id,
+          start:compound.start+relativeStart,
+          end:compound.start+relativeEnd,
+          relativeStart:undefined,
+          relativeEnd:undefined,
+        } as VtE1Clip;
+      });
+      const clips=state.project.clips.flatMap(clip=>clip.id===compound.id?children:[clip]);
+      return withHistory(state,{...state,project:{...state.project,clips},selection:{...emptySelection,clipIds:children.map(child=>child.id)}});
     }
     case'muteTrack':
       return{...state,project:{...state.project,tracks:state.project.tracks.map(t=>t.id===action.id?{...t,muted:action.muted??!t.muted}:t)}};
