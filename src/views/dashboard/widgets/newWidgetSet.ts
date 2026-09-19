@@ -1,4 +1,4 @@
-import type React from "react"
+import React from "react"
 import type { WidgetDefinitionBase } from "../types"
 import { getDashboardWidgetPaletteColors } from "../../../styles/toolboxPalette"
 import { ChannelProgressWidget } from "./ChannelProgressWidget"
@@ -6,8 +6,9 @@ import { NextBestActionWidget } from "./NextBestActionWidget"
 import { AnomalyRadarWidget } from "./AnomalyRadarWidget"
 import { ContentPipelineWidget } from "./ContentPipelineWidget"
 import { AudienceRequestsWidget } from "./AudienceRequestsWidget"
-import { VideoDirectorWidget } from "./video-director/VideoDirectorWidget"
 import "./newWidgetSet.css"
+
+const VideoDirectorWidget = React.lazy(() => import("./video-director/VideoDirectorWidget"))
 
 export const NEW_WIDGET_DEFINITIONS: WidgetDefinitionBase[] = [
   { id: "channel-progress", title: "Channel Progress", subtitle: "Trajectory against current channel targets", category: "analytics", defaultSize: "half", minSize: "third", maxSize: "full", defaultHeight: "medium", minHeight: "short", maxHeight: "tall", ...getDashboardWidgetPaletteColors(55), dependency: ["youtube_analytics_v2"], status: "prototype" },
