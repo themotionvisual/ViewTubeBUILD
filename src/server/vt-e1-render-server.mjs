@@ -6,6 +6,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
 import { chromium } from 'playwright';
+import { expandCompoundClips } from '../shared/vtE1CompoundClips.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,7 +32,7 @@ const PERSISTENT_STORAGE = String(process.env.VT_E1_RENDER_PERSISTENT_STORAGE ||
 const RENDER_JOB_SCHEMA_VERSION = 'RemotionRenderJobV1';
 const SVG_RENDER_JOB_SCHEMA_VERSION = 'SvgFrameRenderJobV1';
 const SVG_ZIP_RENDER_JOB_SCHEMA_VERSION = 'SvgFrameZipRenderJobV1';
-const SUPPORTED_LAYER_TYPES = new Set(['text', 'shape', 'media', 'audio', 'svg-overlay', 'generative-shape']);
+const SUPPORTED_LAYER_TYPES = new Set(['text', 'shape', 'media', 'audio', 'svg-overlay', 'generative-shape', 'remotion-asset']);
 
 let activeJobId = null;
 
@@ -322,7 +323,7 @@ const validateRenderPayload = (payload) => {
   const compositionMeta = payload?.compositionMeta || {};
   const tracks = Array.isArray(project?.tracks) ? project.tracks : [];
   const layers = Array.isArray(project?.layers) ? project.layers : [];
-  const clips = Array.isArray(project?.clips) ? project.clips : [];
+  const clips = expandCompoundClips(Array.isArray(project?.clips) ? project.clips : []);
   const transitions = Array.isArray(project?.transitions) ? project.transitions : [];
   const layerIds = new Set(layers.map((layer) => layer.id));
   const trackIds = new Set(tracks.map((track) => track.id));
@@ -397,7 +398,8 @@ const validateRenderPayload = (payload) => {
   clips.forEach((clip) => {
     const start = Number(clip?.start);
     const end = Number(clip?.end);
-    if (!layerIds.has(clip?.layerId)) errors.push(`Clip ${clip?.id || 'unknown'} references missing layer '${clip?.layerId || 'unknown'}'.`);
+    const designTemplateClip = clip?.clipType === 'design-template' && clip?.templateDefinition;
+    if (!designTemplateClip && !layerIds.has(clip?.layerId)) errors.push(`Clip ${clip?.id || 'unknown'} references missing layer '${clip?.layerId || 'unknown'}'.`);
     if (!trackIds.has(clip?.trackId)) errors.push(`Clip ${clip?.id || 'unknown'} references missing track '${clip?.trackId || 'unknown'}'.`);
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
       errors.push(`Clip ${clip?.id || 'unknown'} has invalid timing.`);

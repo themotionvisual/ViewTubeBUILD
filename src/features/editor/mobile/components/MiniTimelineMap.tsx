@@ -4,7 +4,7 @@ import type { TimelineViewport } from './TimelineStrip';
 
 export interface MiniTimelineMapProps {
   store: EditorStore;
-  height?: number;
+  height?: React.CSSProperties['height'];
   ariaLabel?: string;
   viewport?: TimelineViewport;
   onViewportNavigate?: (startSec: number) => void;
@@ -122,12 +122,12 @@ export const MiniTimelineMap: React.FC<MiniTimelineMapProps> = ({
         }
       }}
       style={{
-        position: 'relative', height, minHeight: height, border: '2px solid #111', borderRadius: 5,
+        position: 'relative', width: '100%', maxWidth: '100%', height, maxHeight: '100%', minWidth: 0, minHeight: 0, border: '2px solid #111', borderRadius: 5,
         background: '#fff', padding: '4px 5px', display: 'grid', alignContent: 'center', gap: 2,
-        overflow: 'hidden', cursor: 'ew-resize', touchAction: 'none', boxSizing: 'border-box', userSelect: 'none',
+        overflow: 'auto', cursor: 'ew-resize', touchAction: 'none', boxSizing: 'border-box', userSelect: 'none', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain',
       }}
     >
-      {tracks.slice(0, 5).map((track) => (
+      {tracks.map((track) => (
         <div key={track.id} style={{ position: 'relative', height: 5, background: 'rgba(17,17,17,.07)', overflow: 'hidden' }}>
           {clipsOnTrack(track.id).map((clip) => {
             const left = clamp((clip.start / duration) * 100, 0, 100);

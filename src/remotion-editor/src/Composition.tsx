@@ -1,16 +1,20 @@
 import React, { useMemo } from 'react';
+import { AssetRenderer } from './assets';
+import { TemplateCanvasRenderer } from '../../editor-design-library/integration/TemplateCanvasRenderer';
+import type { AssetDefinition, AssetVisualProps } from './assets/types';
 import { AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, interpolate, spring, useCurrentFrame } from 'remotion';
 import {
   getShortsCropStyle as getSharedShortsCropStyle,
   interpolateShortsConfig as interpolateSharedShortsConfig,
 } from '../../shared/vtE1Shorts';
+import { expandCompoundClips } from '../../shared/vtE1CompoundClips.js';
 import {
   sourceTimeAtTimelineSec as sharedSourceTimeAtTimelineSec,
   transitionWindowFor as sharedTransitionWindowFor,
   validateTransitionSeam as sharedValidateTransitionSeam,
 } from '../../shared/vtE1TimelineContract.js';
 
-type LayerType = 'text' | 'shape' | 'media' | 'audio' | 'svg-overlay' | 'generative-shape';
+type LayerType = 'text' | 'shape' | 'media' | 'audio' | 'svg-overlay' | 'generative-shape' | 'remotion-asset';
 
 type VTLayer = {
   id: string;
@@ -508,20 +512,32 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
     return new Set(activeTracks.filter((track) => track.visible !== false).map((track) => track.id));
   }, [tracks]);
   const layers = Array.isArray(project.layers) ? project.layers : [];
-  const clips = Array.isArray(project.clips) ? project.clips : [];
+  const clips = expandCompoundClips(Array.isArray(project.clips) ? project.clips : []);
   const currentSec = frame / Math.max(1, fps);
 
   return (
     <AbsoluteFill style={{ backgroundColor: background, overflow: 'hidden' }}>
       {[...clips].sort((a, b) => Number(a.start || 0) - Number(b.start || 0)).map((clip) => {
         const layer = layers.find((entry) => entry.id === clip.layerId);
-        if (!layer || layer.visible === false) return null;
-        if (activeTrackIds && !activeTrackIds.has(layer.trackId)) return null;
-        const basePayload = (layer.payload || {}) as Record<string, unknown>;
-
         const bounds = sequenceBoundsForClip(project, clip);
         const from = toFrame(bounds.startSec, fps);
         const durationInFrames = Math.max(1, toFrame(Math.max(0, bounds.endSec - bounds.startSec), fps));
+
+        if (String((clip as VTClip & {clipType?:string}).clipType || '') === 'design-template' && (clip as VTClip & {templateDefinition?:unknown}).templateDefinition) {
+          if (activeTrackIds && !activeTrackIds.has(clip.trackId)) return null;
+          const zIndex = Math.max(1, orderedTrackIds.indexOf(clip.trackId) + 1);
+          return (
+            <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
+              <div style={{position:'absolute',inset:0,zIndex}}>
+                <TemplateCanvasRenderer clips={[clip as unknown as import('../../shared/vtE1TimelineContract').VtE1Clip]} playheadSec={currentSec}/>
+              </div>
+            </Sequence>
+          );
+        }
+
+        if (!layer || layer.visible === false) return null;
+        if (activeTrackIds && !activeTrackIds.has(layer.trackId)) return null;
+        const basePayload = (layer.payload || {}) as Record<string, unknown>;
         const localFrame = Math.max(0, toFrame(Math.max(0, currentSec - Number(clip.start || 0)), fps));
         const payload = evaluatePayloadAtFrame(basePayload, clip, localFrame, fps);
         const clipTransition = (project.transitions || []).find((entry) => entry.leftClipId === clip.id || entry.rightClipId === clip.id);
@@ -611,6 +627,23 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
           return (
             <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
               {renderGenerativeShape(payload, commonStyle, localFrame, fps)}
+            </Sequence>
+          );
+        }
+
+        if (layer.type === 'remotion-asset') {
+          const assetId = String(payload.assetId || 'static-001') as AssetDefinition['id'];
+          const assetProps = payload as Partial<AssetVisualProps>;
+          return (
+            <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
+              <div style={commonStyle}>
+                <AssetRenderer
+                  {...assetProps}
+                  assetId={assetId}
+                  layoutWidth={layerWidth}
+                  layoutHeight={layerHeight}
+                />
+              </div>
             </Sequence>
           );
         }
