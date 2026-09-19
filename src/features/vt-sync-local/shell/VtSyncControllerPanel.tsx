@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from "react"
-import { CheckSquare, ChevronDown, ChevronRight, RefreshCw, ShieldCheck, Square } from "lucide-react"
+import { CheckSquare, ChevronDown, ChevronRight, Copy, RefreshCw, ShieldCheck, Square } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
 import { RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
@@ -84,6 +84,7 @@ export const VtSyncControllerPanel: React.FC<{
   () => new Set(["channel"]),
  )
  const [expandedUnitIds, setExpandedUnitIds] = useState<Set<string>>(() => new Set())
+ const [copyStatus, setCopyStatus] = useState("")
  const unitGroups = useMemo(() => buildUnitGroups(Boolean(activeContentOwnerId)), [activeContentOwnerId])
  const availableUnits = useMemo(() => unitGroups.flatMap((entry) => entry.units), [unitGroups])
  const unifiedUnitModels = useMemo(
@@ -256,6 +257,42 @@ export const VtSyncControllerPanel: React.FC<{
    ? `${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1)}K`
    : value.toLocaleString()
 
+ const copySyncSummary = async () => {
+  const text = [
+   "ViewTube Sync Control + Progress",
+   `Now: ${queueSummary.currentLabel} — ${queueSummary.currentMessage}`,
+   `Next: ${queueSummary.nextLabel} — ${queueSummary.nextMessage}`,
+   `Selected: ${selectedUnitCount} datasets · ${selectedQueryCount} underlying queries`,
+   "",
+   ...unifiedUnitModels.map((unit) => [
+    unit.label,
+    `Status: ${shortStatus(unit.status)}`,
+    `Duration: ${formatDuration(unit.durationMs)}`,
+    `Last sync: ${unit.lastSyncedAt ? new Date(unit.lastSyncedAt).toLocaleString() : "Never"}`,
+    `Issues: ${unit.issueCount}`,
+    `Rows: ${unit.displayRows.toLocaleString()}`,
+   ].join(" · ")),
+  ].join("\n")
+  try {
+   if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text)
+   } else {
+    const textarea = document.createElement("textarea")
+    textarea.value = text
+    textarea.setAttribute("readonly", "true")
+    textarea.style.position = "fixed"
+    textarea.style.left = "-9999px"
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand("copy")
+    document.body.removeChild(textarea)
+   }
+   setCopyStatus("Copied")
+  } catch {
+   setCopyStatus("Copy failed")
+  }
+ }
+
 
  return (
   <ToolboxScaffold
@@ -277,10 +314,12 @@ export const VtSyncControllerPanel: React.FC<{
       <div className="min-w-0 border-r-[2px] border-black bg-[#36E0F6] px-2.5 py-1.5 sm:col-span-2">
        <span className="block text-[8px] font-black uppercase tracking-[0.1em] text-black/55">Now</span>
        <strong className="block truncate text-[12px] font-[1000] uppercase leading-tight">{queueSummary.currentLabel}</strong>
+       <span className="block truncate text-[7px] font-bold uppercase tracking-[0.03em] text-black/50">{queueSummary.currentMessage}</span>
       </div>
       <div className="min-w-0 bg-[#FFDA47] px-2.5 py-1.5 sm:border-r-[2px] sm:border-black">
        <span className="block text-[8px] font-black uppercase tracking-[0.1em] text-black/55">Next</span>
        <strong className="block truncate text-[11px] font-[1000] uppercase leading-tight">{queueSummary.nextLabel}</strong>
+       <span className="block truncate text-[7px] font-bold uppercase tracking-[0.03em] text-black/50">{queueSummary.nextMessage}</span>
       </div>
       <div className="min-w-0 border-l-[2px] border-black bg-[#f4f4f4] px-2.5 py-1.5 sm:border-l-0">
        <span className="block text-[8px] font-black uppercase tracking-[0.1em] text-black/55">Last update</span>
@@ -316,6 +355,10 @@ export const VtSyncControllerPanel: React.FC<{
       <button type="button" onClick={() => setSelected(availableUnits.filter((unit) => unit.defaultEnabled).flatMap((unit) => unit.categoryIds))} className="vt-retro-switch" style={{ "--tone": "#FFDA47", "--tone-light": "#fff3b0" } as React.CSSProperties}><span className="vt-retro-switch-led" />Core</button>
       <button type="button" onClick={() => setSelected(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))} className="vt-retro-switch" style={{ "--tone": "#36E0F6", "--tone-light": "#b9f2ff" } as React.CSSProperties}><span className="vt-retro-switch-led" />Recommended</button>
       <button type="button" onClick={() => setSelected([])} className="vt-retro-switch"><span className="vt-retro-switch-led" />Clear</button>
+      <button type="button" onClick={() => { void copySyncSummary() }} className="vt-retro-switch" style={{ "--tone": "#F55EFC", "--tone-light": "#ffd6f7" } as React.CSSProperties}>
+       <Copy className="h-3.5 w-3.5" aria-hidden="true" />{copyStatus || "Copy Summary"}
+      </button>
+      <span className="sr-only" aria-live="polite">{copyStatus}</span>
       {contentOwners.length > 0 ? <label className="vt-retro-switch">
        <span className="vt-retro-switch-led" />Owner
        <select
