@@ -1175,3 +1175,156 @@
   font-size:calc(var(--vt-component-font-size)*.66);
   letter-spacing:.045em;
 }
+
+
+/* ==========================================================================
+   COMPONENT LIBRARY CORRECTION V2 — exact field-state parity + clean dial.
+   ========================================================================== */
+
+/* Split Search and Input Action use the same field treatment as the canonical
+   component-level Text Input/Textarea. */
+.vt-subtoolbox-split-field input{
+  box-sizing:border-box!important;
+  background:color-mix(in srgb,var(--pair-a,#36e0f6) 50%,white)!important;
+  color:#000!important;
+  caret-color:var(--pair-a,#36e0f6)!important;
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) var(--pair-a,#36e0f6)!important;
+  font:1000 var(--vt-component-font-size)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+  letter-spacing:-.055em!important;
+  text-transform:uppercase!important;
+}
+.vt-subtoolbox-split-field input::placeholder{
+  color:#8b8b8b!important;opacity:1!important;font:inherit!important;text-transform:uppercase!important;
+}
+.vt-subtoolbox-split-field input:focus{
+  background:#fff!important;
+  outline:0!important;
+  box-shadow:
+    inset 0 0 0 var(--vt-component-stroke) var(--pair-a,#36e0f6),
+    0 0 3px calc(var(--vt-component-stroke)*.75) color-mix(in srgb,var(--pair-b,#ff7f6b) 78%,transparent),
+    0 0 calc(var(--vt-component-height)*.20) calc(var(--vt-component-stroke)*1.1) color-mix(in srgb,var(--pair-b,#ff7f6b) 48%,transparent),
+    0 0 calc(var(--vt-component-height)*.42) calc(var(--vt-component-stroke)*.25) color-mix(in srgb,var(--pair-b,#ff7f6b) 24%,transparent)!important;
+}
+
+/* Borderless tags: the tag color/fill does the visual work. */
+.vt-subtoolbox-removable-tag,
+.vt-subtoolbox-selectable-tag,
+.vt-subtoolbox-tag-editor .vt-subtoolbox-removable-tag{
+  border:0!important;
+  outline:0;
+  box-shadow:none!important;
+}
+.vt-subtoolbox-removable-tag button,
+.vt-subtoolbox-tag-editor .vt-subtoolbox-removable-tag button{
+  border:0!important;
+  outline:0;
+  box-shadow:none!important;
+}
+.vt-subtoolbox-selectable-tag:focus-visible,
+.vt-subtoolbox-removable-tag button:focus-visible{
+  outline:3px solid color-mix(in srgb,var(--pair-b,#ff7f6b) 72%,transparent)!important;
+  outline-offset:2px!important;
+}
+
+/* Knob Dial V2: one bold body, one center cap, one needle, one readout.
+   No stacked concentric rings and no +/- button row. */
+.vt-subtoolbox-knob{
+  --vt-knob-size:calc(var(--vt-component-height)*2.15);
+  display:inline-grid;
+  justify-items:center;
+  gap:calc(var(--vt-component-height)*.14);
+  min-width:var(--vt-knob-size);
+}
+.vt-subtoolbox-knob-dial{
+  position:relative;
+  width:var(--vt-knob-size);
+  height:var(--vt-knob-size);
+  border:var(--vt-component-stroke) solid #000;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  touch-action:none;
+  cursor:grab;
+  outline:none;
+  background:
+    conic-gradient(from 225deg,
+      var(--pair-a,#36e0f6) 0 var(--vt-knob-sweep),
+      color-mix(in srgb,var(--pair-a,#36e0f6) 20%,white) var(--vt-knob-sweep) 75%,
+      #fff 75% 100%);
+  box-shadow:var(--vt-component-shadow-offset) var(--vt-component-shadow-offset) 0 color-mix(in srgb,var(--pair-b,#ff7f6b) 42%,transparent);
+}
+.vt-subtoolbox-knob-dial:before{
+  content:"";
+  position:absolute;
+  inset:16%;
+  border-radius:50%;
+  background:var(--pair-b,#ff7f6b);
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) #000;
+}
+.vt-subtoolbox-knob-dial:after{
+  content:"";
+  position:absolute;
+  left:50%;top:50%;
+  width:calc(var(--vt-component-height)*.18);
+  height:calc(var(--vt-component-height)*.18);
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:#000;
+  z-index:4;
+}
+.vt-subtoolbox-knob-arc{display:none!important}
+.vt-subtoolbox-knob-face{
+  position:absolute;
+  inset:16%;
+  width:auto;
+  height:auto;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  box-shadow:none;
+  z-index:2;
+}
+.vt-subtoolbox-knob-face strong{display:none}
+.vt-subtoolbox-knob-pointer{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:max(4px,calc(var(--vt-component-stroke)*1.1));
+  height:42%;
+  border-radius:999px;
+  background:#000;
+  transform-origin:50% 100%;
+  transform:translate(-50%,-100%) rotate(var(--vt-knob-angle));
+  z-index:3;
+}
+.vt-subtoolbox-knob-dial:focus-visible{
+  outline:calc(var(--vt-component-stroke)*.9) solid var(--pair-b,#ff7f6b);
+  outline-offset:5px;
+}
+.vt-subtoolbox-knob-readout{
+  width:var(--vt-knob-size);
+  min-height:calc(var(--vt-component-height)*.62);
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  overflow:hidden;
+  border:var(--vt-component-stroke) solid #000;
+  border-radius:calc(var(--vt-component-radius)*.72);
+  background:#fff;
+}
+.vt-subtoolbox-knob-readout .vt-subtoolbox-knob-label{
+  padding:0 calc(var(--vt-component-height)*.15);
+  font:1000 calc(var(--vt-component-font-size)*.64)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:.045em;
+  text-transform:uppercase;
+}
+.vt-subtoolbox-knob-readout output{
+  height:100%;
+  min-width:calc(var(--vt-component-height)*.76);
+  display:grid;
+  place-items:center;
+  padding:0 calc(var(--vt-component-height)*.12);
+  border-left:var(--vt-component-stroke) solid #000;
+  background:var(--pair-a,#36e0f6);
+  font:1000 calc(var(--vt-component-font-size)*.82)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+}
