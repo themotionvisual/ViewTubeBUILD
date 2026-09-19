@@ -1,5 +1,5 @@
 import React from 'react';
-import {AudioLines,Film,LayoutTemplate,ScanSearch,Settings,Shapes,Shuffle,SlidersHorizontal,Type,Upload} from 'lucide-react';
+import {AudioLines,Film,LayoutTemplate,ScanSearch,Settings as SettingsIcon,Shapes,Shuffle,SlidersHorizontal,Type,Upload} from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {readClipVisualTransform} from '../state/editorState';
 import {TemplateLibraryPanel} from './TemplateLibraryPanel';
@@ -85,5 +85,5 @@ export const EDITOR_NAV_ITEMS:Array<{id:EditorNavPage;label:string;icon:React.Re
   {id:'transitions',label:'Transitions',icon:<Shuffle size={13}/>},
   {id:'templates',label:'Templates',icon:<LayoutTemplate size={13}/>},
   {id:'export',label:'Export',icon:<Upload size={13}/>},
-  {id:'settings',label:'Settings',icon:<Settings size={13}/>},
+  {id:'settings',label:'Settings',icon:<SettingsIcon size={13}/>},
 ];
