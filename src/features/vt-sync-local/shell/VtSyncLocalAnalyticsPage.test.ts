@@ -26,11 +26,12 @@ describe("VT-SYNC unified progress rows", () => {
  })
 
  it("renders one unified controller + progress toolbox instead of two synchronized panels", () => {
-  expect(pageSource.match(/<VtSyncControllerPanel/g)).toHaveLength(1)
+  expect(pageSource.match(/<VtSyncUnifiedSyncToolbox/g)).toHaveLength(1)
   expect(pageSource).toContain("progress={syncProgress}")
   expect(pageSource).toContain("queuedCategoryIds={queuedCategoryIds}")
   expect(pageSource).toContain("videoCatalogCoverage={videoCatalogProjection.coverage}")
   expect(pageSource).not.toContain("<ProgressRail")
+  expect(pageSource).not.toContain("<VtSyncControllerPanel")
   expect(pageSource).not.toContain("--vt-sync-controller-height")
   expect(pageSource).not.toContain("new ResizeObserver(updateHeight)")
  })
