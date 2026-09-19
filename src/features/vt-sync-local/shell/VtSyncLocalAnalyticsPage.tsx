@@ -340,7 +340,7 @@ const refreshManualImports = useCallback(async (payload?: {
  const [syncError, setSyncError] = useState<string>("")
  const [busy, setBusy] = useState(false)
  const [authTick, setAuthTick] = useState(0)
- const controllerPanelRef = useRef<HTMLDivElement | null>(null)
+ const syncToolboxRef = useRef<HTMLDivElement | null>(null)
  const syncRequestActiveRef = useRef(false)
  const activeSyncRequestKeyRef = useRef<string | null>(null)
  const syncQueueRef = useRef<VtSyncQueuedRequest[]>(readPersistedVtSyncQueue())
@@ -515,11 +515,11 @@ const refreshManualImports = useCallback(async (payload?: {
      model={creatorHeroModel}
      onConnect={() => { void login() }}
      onRecommendedSync={() => { void startSync(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds)) }}
-     onChooseDatasets={() => scrollToPanel(controllerPanelRef.current)}
-     onViewProgress={() => scrollToPanel(controllerPanelRef.current)}
+     onChooseDatasets={() => scrollToPanel(syncToolboxRef.current)}
+     onViewProgress={() => scrollToPanel(syncToolboxRef.current)}
     />
 
-    <section ref={controllerPanelRef} className="min-w-0">
+    <section ref={syncToolboxRef} className="min-w-0">
      <VtSyncUnifiedSyncToolbox
       isAuthenticated={authReady}
       isSyncing={busy}
