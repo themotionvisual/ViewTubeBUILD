@@ -25,7 +25,7 @@ export const TOOLBOX_COMPONENT_REGISTRY = [
   "field-label", "surface", "state-panel", "output-card", "metric", "link-button",
   "data-table", "color-picker", "media-card", "selectable-list-row", "reorderable-row",
   "tabs", "alert", "step-indicator", "dialog", "drawer", "calendar", "loader", "skeleton", "toast",
-  "hover-card", "meter", "avatar", "name-value-list", "breadcrumb", "carousel", "command-palette",
+  "hover-card", "meter", "avatar", "name-value-list", "breadcrumb", "carousel", "command-palette", "tree-view", "aspect-ratio-frame", "toolbar",
 ] as const
 
 export type ToolboxComponentFamily = (typeof TOOLBOX_COMPONENT_REGISTRY)[number]

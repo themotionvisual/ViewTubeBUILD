@@ -52,6 +52,11 @@ describe("Toolbox UI Reference Library", () => {
       "Loader", "Skeleton", "Toast", "Popover", "Disclosure", "Divider",
       "Pagination", "Controller Switch", "LED Light", "Icon Rail Control", "Hover Card",
       "Meter", "Avatar", "Name Value List", "Breadcrumb", "Carousel", "Command Palette",
+      "Metric Strip", "Horizontal Scrollbar", "Vertical Scrollbar", "Data Stats Module",
+      "Upload Frame", "Vault Landscape Asset", "Vault Portrait Asset", "Vault Audio Asset",
+      "Vault Document Asset", "Tree View", "Disabled Button", "Disabled Split Button",
+      "Two Color Data Stats", "Monochrome Data Stats", "Tiny Data Stats", "Tooltip Dark",
+      "Tooltip Color", "Dashboard Pill Tags", "Aspect Ratio Frame", "Toolbar",
     ]) expect(source).toContain(`"${family}"`)
     expect(source).not.toContain("HardcodedGenericControl")
     expect(source).not.toContain("hardcoded-fallback")
@@ -89,6 +94,20 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).toContain("<SubToolboxBreadcrumb")
     expect(source).toContain("<SubToolboxCarousel")
     expect(source).toContain("<SubToolboxCommandPalette")
+    expect(source).toContain("<SubToolboxMetricStrip")
+    expect(source).toContain("<SubToolboxScrollbar")
+    expect(source).toContain("<SubToolboxDataStats")
+    expect(source).toContain("<SubToolboxFileTarget")
+    expect(source).toContain("<SubToolboxVaultAsset")
+    expect(source).toContain("<SubToolboxTree")
+    expect(source).toContain("variant=\"dark\"")
+    expect(source).toContain("variant=\"color\"")
+    expect(source).toContain("variant=\"dashboard-pill\"")
+    expect(source).toContain("variant=\"two-color\"")
+    expect(source).toContain("variant=\"monochrome\"")
+    expect(source).toContain("variant=\"tiny\"")
+    expect(source).toContain("<SubToolboxAspectRatioFrame")
+    expect(source).toContain("<SubToolboxToolbar")
     expect(source).not.toContain("forceOpen content=\"TOOLTIP\"")
   })
 
