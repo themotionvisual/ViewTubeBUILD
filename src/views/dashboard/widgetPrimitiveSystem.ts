@@ -2,7 +2,8 @@ export const WIDGET_PRIMITIVE_SIZES = [18, 24, 32, 38] as const
 export type WidgetPrimitiveSize = (typeof WIDGET_PRIMITIVE_SIZES)[number]
 
 export const WIDGET_PRIMITIVE_TONES = ["default", "primary", "secondary"] as const
-export type WidgetPrimitiveTone = (typeof WIDGET_PRIMITIVE_TONES)[number]\nexport type WidgetPrimitiveTextFit = "fixed" | "adaptive"
+export type WidgetPrimitiveTone = (typeof WIDGET_PRIMITIVE_TONES)[number]
+export type WidgetPrimitiveTextFit = "fixed" | "adaptive"
 
 export const WIDGET_PRIMITIVE_STATES = ["default", "selected", "active", "loading", "disabled", "success", "warning", "danger", "info"] as const
 export type WidgetPrimitiveState = (typeof WIDGET_PRIMITIVE_STATES)[number]
