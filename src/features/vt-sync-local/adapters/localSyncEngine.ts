@@ -72,6 +72,9 @@ export type VtSyncLocalSyncPhase = {
  reconnectRequired?: boolean
  requestId?: string
  skippedReason?: string
+ currentCategoryId?: string
+ nextCategoryId?: string
+ currentWindow?: VtSyncAnalyticsWindow
  currentQueryLabel?: string
  nextQueryLabel?: string
 }
@@ -2633,6 +2636,9 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      ? VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === nextCategoryId)?.label || nextCategoryId.replace(/_/g, " ")
      : undefined
     updatePhase(progress, "traffic", {
+     currentCategoryId: categoryId,
+     nextCategoryId,
+     currentWindow: "lifetime",
      currentQueryLabel,
      nextQueryLabel,
      message: `Syncing ${currentQueryLabel}.`,
@@ -2725,7 +2731,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     commitSnapshot()
     await sleep(150)
    }
-   updatePhase(progress, "traffic", { status: trafficPartial ? "partial" : "complete", rows: rowsWritten, currentQueryLabel: undefined, nextQueryLabel: undefined, message: undefined, completedAt: new Date().toISOString() }, onProgress)
+   updatePhase(progress, "traffic", { status: trafficPartial ? "partial" : "complete", rows: rowsWritten, currentCategoryId: undefined, nextCategoryId: undefined, currentWindow: undefined, currentQueryLabel: undefined, nextQueryLabel: undefined, message: undefined, completedAt: new Date().toISOString() }, onProgress)
    // Compatibility projection for existing table tabs and visual consumers. The canonical
    // trafficDetails dataset remains the write authority.
    const legacyDetailFields: Record<string, keyof VtSyncSnapshot> = {
@@ -2772,6 +2778,9 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     ["playback_location", "playbackLocations", "insightPlaybackLocationType", ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"], "-views"],
     ["subscription_status", "subscriptionStatuses", "subscribedStatus", ["views", "redViews", "estimatedMinutesWatched", "estimatedRedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"], "-views"],
    ]
+   const selectedSegmentCategoryIds = segmentRuns
+    .map(([categoryId]) => categoryId)
+    .filter((categoryId) => shouldSync(selected, categoryId))
    for (const segmentWindow of aggregateWindows) {
    const segmentStartDate = vtSyncWindowStartDate(segmentWindow, channelStartDate)
    for (const [categoryId, field, dimensions, metrics, sort, filters = "", maxResults = 200] of segmentRuns) {
@@ -2780,6 +2789,20 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     // windows are derived from that history, so looping them per window would
     // buy nothing and cost a full paginated sweep each time.
     if (segmentWindow !== "lifetime" && VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)) continue
+    const currentSegmentIndex = selectedSegmentCategoryIds.indexOf(categoryId)
+    const nextCategoryId = selectedSegmentCategoryIds[currentSegmentIndex + 1]
+    const currentQueryLabel = VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.label || categoryId.replace(/_/g, " ")
+    const nextQueryLabel = nextCategoryId
+     ? VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === nextCategoryId)?.label || nextCategoryId.replace(/_/g, " ")
+     : undefined
+    updatePhase(progress, "segments", {
+     currentCategoryId: categoryId,
+     nextCategoryId,
+     currentWindow: segmentWindow,
+     currentQueryLabel,
+     nextQueryLabel,
+     message: `Syncing ${currentQueryLabel} · ${segmentWindow}.`,
+    }, onProgress)
     const usesCompleteContract = categoryId === "creator_content_type" || categoryId === "geography_country"
     let result: BundleResult
     if (usesCompleteContract) {
@@ -2880,7 +2903,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     await sleep(150)
    }
    }
-   updatePhase(progress, "segments", { status: segmentsPartial ? "partial" : "complete", rows: rowsWritten, completedAt: new Date().toISOString() }, onProgress)
+   updatePhase(progress, "segments", { status: segmentsPartial ? "partial" : "complete", rows: rowsWritten, currentCategoryId: undefined, nextCategoryId: undefined, currentWindow: undefined, currentQueryLabel: undefined, nextQueryLabel: undefined, message: undefined, completedAt: new Date().toISOString() }, onProgress)
    commitSnapshot()
   }
 
@@ -2888,8 +2911,26 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    updatePhase(progress, "segments", { status: "running", startedAt: new Date().toISOString(), message: "Running revenue and sharing segments." }, onProgress)
    let rowsWritten = 0
    let segmentPartial = false
+   const revenueSegmentIds = ["ad_type", "revenue_source", "sharing_service"].filter((categoryId) => shouldSync(selected, categoryId))
+   const publishRevenueSegment = (categoryId: string, window: VtSyncAnalyticsWindow = "lifetime") => {
+    const index = revenueSegmentIds.indexOf(categoryId)
+    const nextCategoryId = revenueSegmentIds[index + 1]
+    const currentQueryLabel = VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.label || categoryId.replace(/_/g, " ")
+    const nextQueryLabel = nextCategoryId
+     ? VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === nextCategoryId)?.label || nextCategoryId.replace(/_/g, " ")
+     : undefined
+    updatePhase(progress, "segments", {
+     currentCategoryId: categoryId,
+     nextCategoryId,
+     currentWindow: window,
+     currentQueryLabel,
+     nextQueryLabel,
+     message: `Syncing ${currentQueryLabel} · ${window}.`,
+    }, onProgress)
+   }
    if (shouldSync(selected, "ad_type")) {
     for (const adWindow of aggregateWindows) {
+     publishRevenueSegment("ad_type", adWindow)
      const result = await runAnalyticsBundle({ token, id: `ad_type_${adWindow}`, metrics: ["grossRevenue", "cpm", "adImpressions"], dimensions: "adType", sort: "-grossRevenue", maxResults: 50, startDate: vtSyncWindowStartDate(adWindow, channelStartDate) })
      if (!result.rows || result.error) segmentPartial = true
      const merged = mergeVtSyncRowsPreservingDefined(
@@ -2909,6 +2950,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     }
    }
    if (shouldSync(selected, "revenue_source")) {
+    publishRevenueSegment("revenue_source")
     const previousRevenueRows = snapshot.revenueSource as Array<Record<string, any>>
     const result = await runLifetimeDateWindowBundle({ token, id: "revenue_source", metrics: ["estimatedRevenue", "estimatedAdRevenue", "estimatedRedPartnerRevenue"], dimensions: "day", sort: "-day", startDate: channelStartDate, allowFallback: false, splitOnFailure: true })
     if (!result.rows || result.error) segmentPartial = true
@@ -2959,6 +3001,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    }
    if (shouldSync(selected, "sharing_service")) {
     for (const shareWindow of aggregateWindows) {
+     publishRevenueSegment("sharing_service", shareWindow)
      const result = await runPaginatedAnalyticsBundle({
       token,
       id: `sharing_service_${shareWindow}`,
@@ -3006,7 +3049,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      await sleep(150)
     }
    }
-   updatePhase(progress, "segments", { status: segmentPartial ? "partial" : "complete", rows: rowsWritten, completedAt: new Date().toISOString() }, onProgress)
+   updatePhase(progress, "segments", { status: segmentPartial ? "partial" : "complete", rows: rowsWritten, currentCategoryId: undefined, nextCategoryId: undefined, currentWindow: undefined, currentQueryLabel: undefined, nextQueryLabel: undefined, message: undefined, completedAt: new Date().toISOString() }, onProgress)
    commitSnapshot()
   }
 
