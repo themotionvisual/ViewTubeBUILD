@@ -3566,6 +3566,25 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
       : "This phase was skipped after the sync stopped.",
     }
    : phase)
+  progress.categoryStates = Object.fromEntries(Object.entries(progress.categoryStates || {}).map(([categoryId, state]) => [
+   categoryId,
+   state.status === "running"
+    ? {
+      ...state,
+      status: "failed" as VtSyncLocalSyncPhaseStatus,
+      completedAt,
+      error: error instanceof Error ? error.message : String(error),
+      message: googleFailure?.reconnectRequired ? "Reconnect Google to retry this dataset." : "The sync stopped while this dataset was running.",
+     }
+    : state.status === "pending"
+     ? {
+       ...state,
+       status: "skipped" as VtSyncLocalSyncPhaseStatus,
+       completedAt,
+       message: googleFailure?.reconnectRequired ? "Reconnect Google before this dataset can run." : "Skipped after the sync stopped.",
+      }
+     : state,
+  ]))
   publishProgress(progress, onProgress)
   throw error
  }
