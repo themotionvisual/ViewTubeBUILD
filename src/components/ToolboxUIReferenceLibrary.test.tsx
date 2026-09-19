@@ -35,19 +35,30 @@ describe("Toolbox UI Reference Library", () => {
     expect(html).toContain('data-vt-toolbox-level="main"')
   })
 
-  it("migrates the first 16 families through canonical primitives while retaining a frozen fallback", () => {
+  it("renders only real primitive families in the migration toolbox and includes 20 additional migrations", () => {
     const source = readFileSync(resolve(process.cwd(), "src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx"), "utf8")
     for (const family of [
       "Primary Button", "Secondary Button", "Neutral Button", "Destructive Button",
-      "Square Icon Button", "Text Input", "Textarea", "Stepper", "Toggle",
-      "Checkbox", "Radio", "Segmented Choice", "Tag", "Badge", "Status Badge", "Tooltip",
+      "Square Icon Button", "Split Left Button", "Head Tail Action", "Split Menu",
+      "Dropdown", "Select Menu", "Context Menu", "Text Input", "Textarea",
+      "Split Search", "Number Field", "Input Action", "Stepper", "Slider",
+      "Range Slider", "Toggle", "Settings Switch", "Checkbox", "Radio",
+      "Segmented Choice", "Button Group", "Tag", "Removable Tag", "Selectable Tag",
+      "Tag Editor", "Badge", "Status Badge", "Progress Bar", "Progress Value",
+      "KPI", "Stat Card", "Tooltip",
     ]) expect(source).toContain(`"${family}"`)
-    expect(source).toContain("<SubToolboxButton")
-    expect(source).toContain("<SubToolboxInput")
-    expect(source).toContain("<SubToolboxStepper")
-    expect(source).toContain("<SubToolboxSegmentedToggle")
-    expect(source).toContain("<SubToolboxTooltip")
-    expect(source).toContain("<HardcodedGenericControl")
+    expect(source).not.toContain("HardcodedGenericControl")
+    expect(source).not.toContain("hardcoded-fallback")
+    expect(source).toContain("STUDIO_HUB_MIGRATED_FAMILIES.map")
+    expect(source).toContain("<SubToolboxSplitButton")
+    expect(source).toContain("<SubToolboxSplitDropdown")
+    expect(source).toContain("<SubToolboxMenu")
+    expect(source).toContain("<SubToolboxSplitField")
+    expect(source).toContain("<SubToolboxSlider")
+    expect(source).toContain("<SubToolboxRangeSlider")
+    expect(source).toContain("<SubToolboxTagEditor")
+    expect(source).toContain("<SubToolboxProgressBar")
+    expect(source).toContain("<SubToolboxKpiCard")
   })
 
   it("restores the 80px main toolbox header authority instead of inheriting subtoolbox height", () => {
