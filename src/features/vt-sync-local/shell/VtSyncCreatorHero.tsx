@@ -12,6 +12,7 @@ import {
 
 import {
  VT_SYNC_CATEGORY_OPTIONS,
+ VT_SYNC_SYNC_UNITS,
  type VtSyncDatasetFreshness,
  type VtSyncLocalSyncProgress,
  type VtSyncSnapshot,
@@ -130,13 +131,41 @@ export const buildVtSyncCreatorHeroModel = ({
  syncError?: string
 }): VtSyncCreatorHeroModel => {
  const freshness = snapshot.datasetFreshness || {}
- const runningIds = new Set(progress?.status === "running" ? progress.requestedCategoryIds : [])
- const coverage = VT_SYNC_CATEGORY_OPTIONS.map((category) => {
+ const runningIds = new Set<string>()
+ if (progress?.status === "running") {
+  const categoryStates = Object.values(progress.categoryStates || {})
+  categoryStates
+   .filter((state) => state.status === "running")
+   .forEach((state) => runningIds.add(state.categoryId))
+
+  if (runningIds.size === 0) {
+   const runningPhase = progress.phases.find((phase) => phase.status === "running")
+   if (runningPhase?.currentCategoryId) {
+    runningIds.add(runningPhase.currentCategoryId)
+   } else if (runningPhase) {
+    const candidates = progress.requestedCategoryIds.filter((categoryId) =>
+     VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.runtimePhaseId === runningPhase.id,
+    )
+    if (candidates.length === 1) runningIds.add(candidates[0])
+   }
+  }
+ }
+ const categoryCoverage = new Map(VT_SYNC_CATEGORY_OPTIONS.map((category) => {
   const entry = categoryFreshness(freshness, category.id)
+  return [category.id, normalizeCoverageStatus(entry?.status, runningIds.has(category.id))] as const
+ }))
+ const coverage = VT_SYNC_SYNC_UNITS.map((unit) => {
+  const statuses = unit.categoryIds.map((categoryId) => categoryCoverage.get(categoryId) || "never")
+  const status: VtSyncCreatorCoverageItem["status"] = statuses.includes("running") ? "running"
+   : statuses.includes("failed") ? "failed"
+   : statuses.includes("partial") ? "partial"
+   : statuses.every((entry) => entry === "synced") ? "synced"
+   : statuses.includes("stale") ? "stale"
+   : "never"
   return {
-   id: category.id,
-   label: category.label,
-   status: normalizeCoverageStatus(entry?.status, runningIds.has(category.id)),
+   id: unit.id,
+   label: unit.label,
+   status,
   }
  })
  const tallies = coverage.reduce<Record<VtSyncCreatorCoverageItem["status"], number>>((result, item) => {
