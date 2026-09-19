@@ -17,7 +17,7 @@ export interface BrainJsonGenerationInput {
 
 export interface BrainModelGateway {
  generateStructuredResponse(input: BrainStructuredGenerationInput): Promise<StructuredBrainModelOutput>
- generateJsonObject(input: BrainJsonGenerationInput): Promise<unknown>
+ generateJsonObject?(input: BrainJsonGenerationInput): Promise<unknown>
 }
 
 /**
