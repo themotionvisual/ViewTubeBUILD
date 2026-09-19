@@ -93,6 +93,22 @@
   grid-template: 70px minmax(0, 1fr) / minmax(0, 1fr);
 }
 
+/* Mobile editor owns the whole viewport. Global ViewTube chrome moves into
+   the editor Settings page as a Back to Site action so the composition and
+   controls can use the full phone canvas. */
+.vt-adaptive-shell[data-layout="mobile"][data-editor-chromeless="true"] {
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+}
+.vt-adaptive-shell[data-layout="mobile"][data-editor-chromeless="true"] > .vt-adaptive-main--editor {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 .vt-adaptive-nav {
   position: relative;
   z-index: 120;
