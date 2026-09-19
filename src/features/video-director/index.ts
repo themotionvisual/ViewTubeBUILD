@@ -4,4 +4,4 @@ export * from "./projectSchema"
 export * from "./projectStore"
 export * from "./history"
 export * from "./generationContracts"
-export * from "./conflictEngine"
+export * from "./conflictEngine"\nexport * from "./recipeStore"\n
