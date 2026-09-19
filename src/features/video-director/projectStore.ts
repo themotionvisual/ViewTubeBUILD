@@ -179,6 +179,26 @@ export const writeVideoDirectorState = (project: VideoDirectorProject): boolean 
   return true
 }
 
+export const subscribeVideoDirectorState = (
+  listener: (project: VideoDirectorProject | null) => void,
+): (() => void) => {
+  if (typeof window === "undefined") return () => {}
+
+  const notify = () => listener(readVideoDirectorState())
+  const onStorage = (event: StorageEvent) => {
+    if (event.key !== VIDEO_DIRECTOR_STATE_KEY) return
+    notify()
+  }
+
+  window.addEventListener(VIDEO_DIRECTOR_CHANGED_EVENT, notify)
+  window.addEventListener("storage", onStorage)
+
+  return () => {
+    window.removeEventListener(VIDEO_DIRECTOR_CHANGED_EVENT, notify)
+    window.removeEventListener("storage", onStorage)
+  }
+}
+
 export const clearVideoDirectorState = (): void => {
   if (!canUseStorage()) return
   localStorage.removeItem(VIDEO_DIRECTOR_STATE_KEY)
