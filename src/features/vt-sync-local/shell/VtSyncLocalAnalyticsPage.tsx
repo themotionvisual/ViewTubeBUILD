@@ -52,6 +52,8 @@ import { RetroLcd, RetroLedRow, RetroRivets, type RetroLedSpec } from "./VtSyncR
 import {
  buildVtSyncUnifiedProgressRows,
  claimVtSyncSyncRequest,
+ getVtSyncActiveCategoryIds,
+ getVtSyncPendingCategoryIds,
  getVtSyncProgressQueueSummary,
  type VtSyncUnifiedProgressRow,
 } from "./vtSyncProgressModel"
@@ -673,6 +675,14 @@ const refreshManualImports = useCallback(async (payload?: {
  const syncRequestActiveRef = useRef(false)
  const syncQueueRef = useRef<Array<{ categoryIds: string[]; retentionVideoIds?: string[]; forceFullVideoMetadata?: boolean; windows?: VtSyncAnalyticsWindow[] }>>([])
  const [queuedCategoryIds, setQueuedCategoryIds] = useState<string[]>([])
+ const controllerActiveCategoryIds = useMemo(
+  () => getVtSyncActiveCategoryIds(syncProgress),
+  [syncProgress],
+ )
+ const controllerQueuedCategoryIds = useMemo(
+  () => getVtSyncPendingCategoryIds(syncProgress, mergedSnapshot.datasetFreshness, queuedCategoryIds),
+  [mergedSnapshot.datasetFreshness, queuedCategoryIds, syncProgress],
+ )
 
  const publishSyncProgress = useCallback((next: VtSyncLocalSyncProgress) => {
   pendingSyncProgressRef.current = next
@@ -846,8 +856,9 @@ const refreshManualImports = useCallback(async (payload?: {
       <VtSyncControllerPanel
        isAuthenticated={authReady}
        isSyncing={busy}
-       activeCategoryIds={syncProgress?.status === "running" ? syncProgress.requestedCategoryIds : []}
-       queuedCategoryIds={queuedCategoryIds}
+       activeRunId={syncProgress?.runId}
+       activeCategoryIds={controllerActiveCategoryIds}
+       queuedCategoryIds={controllerQueuedCategoryIds}
        datasetFreshness={mergedSnapshot.datasetFreshness}
        contentOwners={account.snapshot.google.contentOwners}
        activeContentOwnerId={account.snapshot.google.activeContentOwnerId}
@@ -872,7 +883,7 @@ const refreshManualImports = useCallback(async (payload?: {
      >
       <ProgressRail
        progress={syncProgress}
-       datasetFreshness={snapshot.datasetFreshness}
+       datasetFreshness={mergedSnapshot.datasetFreshness}
        syncError={syncError}
        queuedCategoryIds={queuedCategoryIds}
        videoCatalogCoverage={videoCatalogProjection.coverage}
