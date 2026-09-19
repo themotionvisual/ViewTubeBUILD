@@ -415,11 +415,6 @@
 }
 
 @container vt-widget (max-width: 560px) {
-  :where(.dashboard-barrier) .image-generator-style-grid,
-  :where(.dashboard-barrier) .image-generator-send-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   :where(.dashboard-barrier) .image-generator-copy-grid {
     --image-generator-copy-height: clamp(108px, 31cqw, 124px);
     grid-template-columns: minmax(0, 1.45fr) minmax(0, .95fr);
@@ -1069,13 +1064,9 @@
 }
 
 
-/* AI Journal keeps canonical control type/height and reflows the category
-   matrix instead of compressing labels until they collide. */
+/* AI Journal keeps the four-column category matrix and lets the canonical
+   24px adaptive text-fit primitive reduce type before layout geometry changes. */
 @container vt-widget (max-width: 560px) {
-  :where(.dashboard-barrier) .ai-journal-category-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   :where(.dashboard-barrier) .ai-journal-card.is-poll {
     align-items: stretch;
     flex-direction: column;
@@ -1501,6 +1492,53 @@
   :where(.dashboard-barrier) .header-extra,
   :where(.dashboard-barrier) .widget-ai-cost-chip {
     display: none !important;
+  }
+
+  /* Header mode toggles remain visible in portrait. They compress before the
+     title or action rail is removed. Non-toggle extras may still hide. */
+  :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) {
+    display: flex !important;
+    flex: 1 1 120px !important;
+    min-width: 86px;
+    max-width: 44%;
+    overflow: hidden;
+    justify-content: center !important;
+  }
+
+  :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) .left {
+    flex: 1 1 42%;
+    max-width: 42%;
+  }
+
+  :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) .title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(11px, 3.4cqw, var(--widget-type-title));
+  }
+
+  :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) .widget-header-toggle {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: 28px;
+    padding-inline: 2px;
+  }
+
+  :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) .widget-header-toggle button {
+    min-width: 0;
+    padding-inline: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(8px, 2.4cqw, 10px);
+  }
+
+  :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) > .toggle {
+    flex: 0 0 auto;
+    gap: 4px;
+    padding-right: 5px;
   }
 
   :where(.dashboard-barrier) .vt-widget-body {
