@@ -67,6 +67,10 @@ export type EditorAction=
   |{type:'updateLayerPayload';id:string;patch:Record<string,unknown>}
   |{type:'setLayerVisible';id:string;visible:boolean}
   |{type:'addClipKeyframeValue';clipId:string;prop:string;value:unknown}
+  |{type:'moveClipKeyframe';clipId:string;keyframeId:string;offsetSec:number}
+  |{type:'duplicateClipKeyframes';clipId:string;keyframeIds:string[];offsetDeltaSec?:number}
+  |{type:'deleteClipKeyframes';clipId:string;keyframeIds:string[]}
+  |{type:'setClipKeyframeInterpolation';clipId:string;keyframeIds:string[];interp:string}
   |{type:'updateClipTransform';id:string;patch:Partial<ClipVisualTransform>}
   |{type:'resetClipTransform';id:string}
   |{type:'moveClip';id:string;deltaSec:number}
@@ -87,6 +91,7 @@ export type EditorAction=
   |{type:'hideTrack';id:string;hidden?:boolean}
   |{type:'addTrack';kind:TrackKind;name?:string}
   |{type:'removeTrack';id:string}
+  |{type:'reorderTrack';id:string;toIndex:number}
   |{type:'resolveTrackOverlaps';trackId?:string}
   |{type:'addTransition';transition:VtE1Transition}
   |{type:'removeTransition';id:string}
@@ -328,6 +333,50 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
       });
       return withHistory(state,{...state,project:{...state.project,clips}});
     }
+    case'moveClipKeyframe':{
+      const clips=state.project.clips.map(clip=>{
+        if(clip.id!==action.clipId)return clip;
+        const duration=Math.max(0,clip.end-clip.start);
+        const keyframes=(clip.keyframes??[]).map(keyframe=>String(keyframe.id??'')===action.keyframeId
+          ?{...keyframe,offsetSec:Math.max(0,Math.min(duration,action.offsetSec))}
+          :keyframe
+        ).sort((a,b)=>Number(a.offsetSec??0)-Number(b.offsetSec??0));
+        return{...clip,keyframes};
+      });
+      return withHistory(state,{...state,project:{...state.project,clips}});
+    }
+    case'duplicateClipKeyframes':{
+      const ids=new Set(action.keyframeIds);
+      const clips=state.project.clips.map(clip=>{
+        if(clip.id!==action.clipId)return clip;
+        const duration=Math.max(.01,clip.end-clip.start);
+        const source=(clip.keyframes??[]).filter(keyframe=>ids.has(String(keyframe.id??'')));
+        if(!source.length)return clip;
+        const delta=action.offsetDeltaSec??Math.min(.25,duration*.05);
+        const copies=source.map(keyframe=>({
+          ...keyframe,
+          id:makeId('kf'),
+          offsetSec:Math.max(0,Math.min(duration,Number(keyframe.offsetSec??0)+delta)),
+          values:{...((keyframe.values??{}) as Record<string,unknown>)},
+        }));
+        return{...clip,keyframes:[...(clip.keyframes??[]),...copies].sort((a,b)=>Number(a.offsetSec??0)-Number(b.offsetSec??0))};
+      });
+      return withHistory(state,{...state,project:{...state.project,clips}});
+    }
+    case'deleteClipKeyframes':{
+      const ids=new Set(action.keyframeIds);
+      const clips=state.project.clips.map(clip=>clip.id!==action.clipId?clip:{
+        ...clip,keyframes:(clip.keyframes??[]).filter(keyframe=>!ids.has(String(keyframe.id??''))),
+      });
+      return withHistory(state,{...state,project:{...state.project,clips}});
+    }
+    case'setClipKeyframeInterpolation':{
+      const ids=new Set(action.keyframeIds);
+      const clips=state.project.clips.map(clip=>clip.id!==action.clipId?clip:{
+        ...clip,keyframes:(clip.keyframes??[]).map(keyframe=>ids.has(String(keyframe.id??''))?{...keyframe,interp:action.interp}:keyframe),
+      });
+      return withHistory(state,{...state,project:{...state.project,clips}});
+    }
     case'updateClipTransform':{
       const clips=state.project.clips.map(c=>{
         if(c.id!==action.id)return c;
@@ -555,6 +604,16 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
       if(hasClips||state.project.tracks.length<=1)return state;
       const tracks=state.project.tracks.filter(track=>track.id!==action.id);
       return withHistory(state,{...state,project:{...state.project,tracks},selection:state.selection.trackId===action.id?emptySelection:state.selection});
+    }
+    case'reorderTrack':{
+      const from=state.project.tracks.findIndex(track=>track.id===action.id);
+      if(from<0)return state;
+      const to=Math.max(0,Math.min(state.project.tracks.length-1,action.toIndex));
+      if(from===to)return state;
+      const tracks=[...state.project.tracks];
+      const[moved]=tracks.splice(from,1);
+      tracks.splice(to,0,moved);
+      return withHistory(state,{...state,project:{...state.project,tracks}});
     }
     case'resolveTrackOverlaps':{
       const targetTracks=action.trackId?[action.trackId]:state.project.tracks.map(track=>track.id);
