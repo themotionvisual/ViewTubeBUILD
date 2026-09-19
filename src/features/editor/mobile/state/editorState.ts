@@ -68,6 +68,7 @@ export type EditorAction=
   |{type:'updateClipTransform';id:string;patch:Partial<ClipVisualTransform>}
   |{type:'resetClipTransform';id:string}
   |{type:'moveClip';id:string;deltaSec:number}
+  |{type:'moveClipTo';id:string;startSec:number}
   |{type:'trimClip';id:string;side:'left'|'right';sec:number}
   |{type:'splitClipAtPlayhead';id:string}
   |{type:'slipClip';id:string;deltaSec:number;sourceDurationSec?:number}
@@ -78,6 +79,8 @@ export type EditorAction=
   |{type:'muteTrack';id:string;muted?:boolean}
   |{type:'lockTrack';id:string;locked?:boolean}
   |{type:'hideTrack';id:string;hidden?:boolean}
+  |{type:'addTrack';kind:TrackKind;name?:string}
+  |{type:'removeTrack';id:string}
   |{type:'addTransition';transition:VtE1Transition}
   |{type:'removeTransition';id:string}
   |{type:'undo'}
@@ -102,6 +105,45 @@ const makeId=(prefix:string)=>`${prefix}_${Date.now().toString(36)}_${Math.rando
 const cloneLayer=(layer:EditorLayer,id:string):EditorLayer=>({
   ...layer,id,payload:{...(layer.payload??{})},
 });
+
+const MIN_CLIP_DURATION=.1;
+const clipsOnSameTrack=(clips:VtE1Clip[],clip:VtE1Clip)=>
+  clips.filter(other=>other.id!==clip.id&&other.trackId===clip.trackId).sort((a,b)=>a.start-b.start);
+
+function orderedNeighbors(clips:VtE1Clip[],clip:VtE1Clip){
+  const siblings=clipsOnSameTrack(clips,clip);
+  const before=siblings.filter(other=>other.start<clip.start).at(-1);
+  const after=siblings.find(other=>other.start>clip.start);
+  return{before,after};
+}
+
+function clampClipMoveStart(clips:VtE1Clip[],clip:VtE1Clip,desiredStart:number,projectDuration:number){
+  const duration=Math.max(MIN_CLIP_DURATION,clip.end-clip.start);
+  const{before,after}=orderedNeighbors(clips,clip);
+  const minStart=Math.max(0,before?.end??0);
+  const maxByNeighbor=(after?.start??Math.max(projectDuration,desiredStart+duration))-duration;
+  const maxStart=Math.max(minStart,maxByNeighbor);
+  return Math.max(minStart,Math.min(desiredStart,maxStart));
+}
+
+function clampTrimEdge(clips:VtE1Clip[],clip:VtE1Clip,side:'left'|'right',desired:number,projectDuration:number){
+  const{before,after}=orderedNeighbors(clips,clip);
+  if(side==='left'){
+    return Math.max(before?.end??0,Math.min(desired,clip.end-MIN_CLIP_DURATION));
+  }
+  return Math.min(after?.start??projectDuration,Math.max(desired,clip.start+MIN_CLIP_DURATION));
+}
+
+function placeClipAfterCollisions(clips:VtE1Clip[],clip:VtE1Clip){
+  const duration=Math.max(MIN_CLIP_DURATION,clip.end-clip.start);
+  const siblings=clips.filter(other=>other.trackId===clip.trackId).sort((a,b)=>a.start-b.start);
+  let start=Math.max(0,clip.start);
+  for(const other of siblings){
+    if(start+duration<=other.start)break;
+    if(start<other.end&&start+duration>other.start)start=other.end;
+  }
+  return{...clip,start,end:start+duration};
+}
 
 export function initialState(project?:Partial<EditorProject>):EditorState{
   const p:EditorProject={
@@ -168,17 +210,19 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
       return{...state,panel:{...state.panel,id:action.id}};
     case'addClip':
       return withHistory(state,{...state,project:{...state.project,clips:[...state.project.clips,action.clip]}});
-    case'addLayerClip':
+    case'addLayerClip':{
+      const placed=placeClipAfterCollisions(state.project.clips,action.clip);
       return withHistory(state,{
         ...state,
         project:{
           ...state.project,
           layers:[...state.project.layers,action.layer],
-          clips:[...state.project.clips,action.clip],
-          durationSec:Math.max(state.project.durationSec,Number(action.clip.end||0)),
+          clips:[...state.project.clips,placed],
+          durationSec:Math.max(state.project.durationSec,Number(placed.end||0)),
         },
-        selection:{...emptySelection,clipIds:[action.clip.id]},
+        selection:{...emptySelection,clipIds:[placed.id]},
       });
+    }
     case'updateClip':
       return withHistory(state,{
         ...state,
@@ -265,19 +309,28 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
     case'resetClipTransform':
       return editorReducer(state,{type:'updateClipTransform',id:action.id,patch:DEFAULT_CLIP_VISUAL_TRANSFORM});
     case'moveClip':{
-      const clips=state.project.clips.map(c=>{
-        if(c.id!==action.id)return c;
-        const d=c.end-c.start,start=Math.max(0,c.start+action.deltaSec);
-        return{...c,start,end:start+d};
-      });
+      const clip=state.project.clips.find(c=>c.id===action.id);
+      if(!clip)return state;
+      const duration=clip.end-clip.start;
+      const start=clampClipMoveStart(state.project.clips,clip,clip.start+action.deltaSec,state.project.durationSec);
+      const clips=state.project.clips.map(c=>c.id===clip.id?{...c,start,end:start+duration}:c);
+      return withHistory(state,{...state,project:{...state.project,clips}});
+    }
+    case'moveClipTo':{
+      const clip=state.project.clips.find(c=>c.id===action.id);
+      if(!clip)return state;
+      const duration=clip.end-clip.start;
+      const start=clampClipMoveStart(state.project.clips,clip,action.startSec,state.project.durationSec);
+      const clips=state.project.clips.map(c=>c.id===clip.id?{...c,start,end:start+duration}:c);
       return withHistory(state,{...state,project:{...state.project,clips}});
     }
     case'trimClip':{
+      const clip=state.project.clips.find(c=>c.id===action.id);
+      if(!clip)return state;
+      const edge=clampTrimEdge(state.project.clips,clip,action.side,action.sec,state.project.durationSec);
       const clips=state.project.clips.map(c=>c.id!==action.id
         ?c
-        :action.side==='left'
-          ?{...c,start:Math.min(c.end-.1,Math.max(0,action.sec))}
-          :{...c,end:Math.max(c.start+.1,Math.min(state.project.durationSec,action.sec))}
+        :action.side==='left'?{...c,start:edge}:{...c,end:edge}
       );
       return withHistory(state,{...state,project:{...state.project,clips}});
     }
@@ -368,6 +421,18 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
       return{...state,project:{...state.project,tracks:state.project.tracks.map(t=>t.id===action.id?{...t,locked:action.locked??!t.locked}:t)}};
     case'hideTrack':
       return{...state,project:{...state.project,tracks:state.project.tracks.map(t=>t.id===action.id?{...t,hidden:action.hidden??!t.hidden}:t)}};
+    case'addTrack':{
+      const id=makeId(`track_${action.kind}`);
+      const ordinal=state.project.tracks.filter(track=>track.kind===action.kind).length+1;
+      const track:Track={id,name:action.name??`${action.kind[0].toUpperCase()}${action.kind.slice(1)} ${ordinal}`,kind:action.kind};
+      return withHistory(state,{...state,project:{...state.project,tracks:[...state.project.tracks,track]},selection:{...emptySelection,trackId:id}});
+    }
+    case'removeTrack':{
+      const hasClips=state.project.clips.some(clip=>clip.trackId===action.id);
+      if(hasClips||state.project.tracks.length<=1)return state;
+      const tracks=state.project.tracks.filter(track=>track.id!==action.id);
+      return withHistory(state,{...state,project:{...state.project,tracks},selection:state.selection.trackId===action.id?emptySelection:state.selection});
+    }
     case'addTransition':
       return withHistory(state,{...state,project:{...state.project,transitions:[...(state.project.transitions??[]),action.transition]}});
     case'removeTransition':
