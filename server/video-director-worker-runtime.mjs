@@ -7,6 +7,7 @@ import {
   getVideoDirectorJob,
   heartbeatVideoDirectorJob,
   markVideoDirectorJobPostProcessing,
+  updateVideoDirectorJobProgress,
 } from "./video-director-job-store.mjs";
 
 const TERMINAL_PROVIDER_STATES = new Set(["completed", "failed", "cancelled"]);
@@ -112,6 +113,11 @@ const validateProviderJob = (value, context) => {
     status,
     outputAssetIds: Array.isArray(value.outputAssetIds) ? value.outputAssetIds.map(String) : [],
     actualCredits: value.actualCredits ?? null,
+    progress: Number.isFinite(Number(value.progress))
+      ? Math.max(0, Math.min(1, Number(value.progress)))
+      : undefined,
+    previewAssetUri: value.previewAssetUri ? String(value.previewAssetUri) : null,
+    message: value.message ? String(value.message) : null,
     errorCode: value.errorCode ? String(value.errorCode) : null,
     errorMessage: value.errorMessage ? String(value.errorMessage) : null,
     metadata: value.metadata && typeof value.metadata === "object" ? value.metadata : {},
@@ -146,6 +152,13 @@ const attemptProvider = async ({
   let providerJobId = null;
 
   try {
+    await updateVideoDirectorJobProgress(job.id, workerId, {
+      stage: "submitting",
+      progress: 0.05,
+      message: `Submitting to ${route.providerId} / ${route.modelId}…`,
+      metadata: { providerId: route.providerId, modelId: route.modelId },
+    });
+
     const submissionRaw = await adapter.submit({
       request: job.request,
       modelId: route.modelId,
@@ -160,6 +173,17 @@ const attemptProvider = async ({
       providerId: route.providerId,
       modelId: route.modelId,
       providerJobId,
+    });
+    await updateVideoDirectorJobProgress(job.id, workerId, {
+      stage: submission.status === "completed" ? "provider-complete" : "rendering",
+      progress: submission.progress ?? (submission.status === "completed" ? 0.9 : 0.1),
+      message: submission.message || (
+        submission.status === "completed"
+          ? "Provider render completed."
+          : "Provider accepted the generation job."
+      ),
+      previewAssetUri: submission.previewAssetUri,
+      metadata: { providerId: route.providerId, modelId: route.modelId, providerJobId },
     });
 
     if (submission.status === "completed") {
@@ -211,6 +235,13 @@ const attemptProvider = async ({
         signal: controller.signal,
       });
       const snapshot = validateProviderJob(snapshotRaw, `${route.providerId}.getJob()`);
+      await updateVideoDirectorJobProgress(job.id, workerId, {
+        stage: snapshot.status === "post-processing" ? "provider-post-processing" : "rendering",
+        progress: snapshot.progress ?? 0.5,
+        message: snapshot.message || `${route.providerId}: ${snapshot.status}`,
+        previewAssetUri: snapshot.previewAssetUri,
+        metadata: { providerId: route.providerId, modelId: route.modelId, providerJobId },
+      });
       if (!TERMINAL_PROVIDER_STATES.has(snapshot.status)) continue;
       return snapshot;
     }
@@ -306,6 +337,13 @@ export const runNextVideoDirectorJob = async ({
 
       await markVideoDirectorJobPostProcessing(job.id, resolvedWorkerId, {
         providerJobId: providerJob.providerJobId || null,
+      });
+      await updateVideoDirectorJobProgress(job.id, resolvedWorkerId, {
+        stage: "post-processing",
+        progress: 0.94,
+        message: "Provider render accepted; preparing ViewTube output assets.",
+        previewAssetUri: providerJob.previewAssetUri,
+        metadata: { providerId: route.providerId, modelId: route.modelId },
       });
 
       const completed = await completeVideoDirectorJob(job.id, resolvedWorkerId, {
