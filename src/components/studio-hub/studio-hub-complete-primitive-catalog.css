@@ -1067,3 +1067,123 @@
 .vt-complete-catalog .vt-catalog-knob .knob-value{
   text-align:center!important;font-size:calc(var(--fs)*.70)!important;font-weight:1000!important;letter-spacing:.06em!important;text-transform:uppercase!important
 }
+
+
+/* ==========================================================================
+   USER CORRECTION WAVE — split-left parity, borderless control-tags,
+   textarea field-state parity, simplified dial.
+   ========================================================================== */
+
+/* Split Left Button uses the same exact square left rail as Split Menu. */
+.vt-complete-catalog .vt-catalog-split-primitive{
+  grid-template-columns:var(--h) minmax(0,1fr)!important;
+}
+.vt-complete-catalog .vt-catalog-split-primitive .vt-subtoolbox-split-button-rail{
+  width:var(--h)!important;
+  min-width:var(--h)!important;
+  max-width:var(--h)!important;
+  height:var(--h)!important;
+  min-height:var(--h)!important;
+  aspect-ratio:1/1!important;
+  padding:0!important;
+  place-self:stretch!important;
+  box-sizing:border-box!important;
+}
+
+/* Split Search + Input Action match Textarea/Text Input default + focus states. */
+.vt-complete-catalog .vt-catalog-split-field input{
+  background:color-mix(in srgb,var(--pair-a) 50%,white)!important;
+  color:#000!important;
+  caret-color:var(--pair-a)!important;
+  box-shadow:inset 0 0 0 var(--stroke) var(--pair-a)!important;
+}
+.vt-complete-catalog .vt-catalog-split-field input:focus{
+  background:#fff!important;
+  outline:0!important;
+  box-shadow:inset 0 0 0 var(--stroke) var(--pair-a)!important;
+}
+
+/* Removable/selectable/editor tags are fill-defined. No outline stroke. */
+.vt-complete-catalog .vt-spectrum-tag:has(button),
+.vt-complete-catalog .vt-catalog-selectable-tag{
+  border:0!important;
+  box-shadow:none!important;
+}
+.vt-complete-catalog .vt-spectrum-tag:has(button)>button,
+.vt-complete-catalog .vt-catalog-selectable-tag{
+  box-shadow:none!important;
+}
+.vt-complete-catalog .vt-catalog-tag-editor .vt-spectrum-tag{
+  border:0!important;
+  background:color-mix(in srgb,var(--tag-color) 35%,white)!important;
+  color:var(--tag-color)!important;
+}
+.vt-complete-catalog .vt-catalog-tag-editor .vt-spectrum-tag>button{
+  border:0!important;
+  background:var(--tag-color)!important;
+}
+.vt-complete-catalog .vt-catalog-selectable-tag{
+  background:color-mix(in srgb,var(--pair-b) 30%,white)!important;
+  color:var(--pair-b)!important;
+}
+.vt-complete-catalog .vt-catalog-selectable-tag.is-selected{
+  background:color-mix(in srgb,var(--pair-a) 38%,white)!important;
+  color:var(--pair-a)!important;
+}
+
+/* Knob Dial — one readable instrument instead of stacked concentric rings. */
+.vt-complete-catalog .vt-catalog-knob{
+  --knob-size:calc(var(--h)*2.25)!important;
+  gap:calc(var(--h)*.12)!important;
+  min-width:var(--knob-size)!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face{
+  width:var(--knob-size)!important;
+  height:var(--knob-size)!important;
+  border:var(--stroke) solid #000!important;
+  border-radius:50%!important;
+  background:
+    conic-gradient(from 225deg,
+      var(--pair-a) 0 var(--vt-knob-sweep),
+      color-mix(in srgb,var(--pair-a) 16%,white) var(--vt-knob-sweep) 75%,
+      #fff 75% 100%)!important;
+  box-shadow:calc(var(--stroke) + 2px) calc(var(--stroke) + 2px) 0 color-mix(in srgb,var(--pair-b) 42%,transparent)!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face:before{
+  inset:13%!important;
+  background:var(--pair-b)!important;
+  box-shadow:inset 0 0 0 var(--stroke) #000!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-arc{display:none!important}
+.vt-complete-catalog .vt-catalog-knob .knob-face em{
+  z-index:4!important;
+  width:54%!important;height:54%!important;
+  display:grid!important;place-items:center!important;
+  border-radius:50%!important;background:#fff!important;
+  box-shadow:none!important;
+  font-size:calc(var(--fs)*1.48)!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-face i{
+  z-index:5!important;
+  left:50%!important;top:50%!important;
+  width:max(4px,calc(var(--stroke)*1.15))!important;
+  height:45%!important;
+  transform-origin:50% 100%!important;
+  transform:translate(-50%,-100%) rotate(var(--vt-knob-angle))!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-controls{
+  width:var(--knob-size)!important;
+  grid-template-columns:calc(var(--h)*.52) minmax(0,1fr) calc(var(--h)*.52)!important;
+  gap:calc(var(--h)*.10)!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-controls>button{
+  height:calc(var(--h)*.52)!important;
+  border:0!important;
+  border-radius:calc(var(--radius)*.58)!important;
+  box-shadow:none!important;
+  font-size:calc(var(--fs)*.82)!important;
+}
+.vt-complete-catalog .vt-catalog-knob .knob-value{
+  font-size:calc(var(--fs)*.66)!important;
+  letter-spacing:.045em!important;
+}
