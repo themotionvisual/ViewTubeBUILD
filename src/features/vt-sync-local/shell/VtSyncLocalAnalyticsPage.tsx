@@ -171,10 +171,6 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
   acc[row.status] = (acc[row.status] || 0) + 1
   return acc
  }, {})
- const liveStatusTally = visibleUnifiedRows.reduce<Record<string, number>>((acc, row) => {
-  acc[row.displayStatus] = (acc[row.displayStatus] || 0) + 1
-  return acc
- }, {})
  const datasetTotalRows = datasetRows.reduce((sum, row) => sum + row.rows, 0)
  const progressUnits = useMemo(() => VT_SYNC_SYNC_UNITS.map((unit) => {
   const rows = visibleUnifiedRows.filter((row) => row.syncUnitId === unit.id)
