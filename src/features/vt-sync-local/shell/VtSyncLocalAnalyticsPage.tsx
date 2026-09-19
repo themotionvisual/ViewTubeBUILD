@@ -221,6 +221,10 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
    isOpenByState,
   }
  }), [progress?.phases, syncError, videoCatalogCoverage, visibleUnifiedRows])
+ const unitTally = progressUnits.reduce<Record<string, number>>((acc, unit) => {
+  acc[unit.status] = (acc[unit.status] || 0) + 1
+  return acc
+ }, {})
  const progressGroups = useMemo(() => VT_SYNC_GROUP_ORDER.map((group, index) => {
   const units = progressUnits.filter((unit) => unit.group === group)
   const statuses = units.map((unit) => unit.status)
@@ -277,24 +281,24 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
   const duration = seconds >= 60 ? `${Math.floor(seconds / 60)}m ${seconds % 60}s` : `${seconds}s`
   return `${new Date(startedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} · ${completedAt ? "completed" : "running"} · ${duration}`
  }
- const queuedCount = (liveStatusTally.pending || 0) + queuedCategoryIds.length
+ const queuedCount = unitTally.pending || 0
  const syncLeds: RetroLedSpec[] = [
   { id: "live", label: progress?.status === "running" ? "Live sync in progress" : "No active sync", tone: "#36E0F6", lit: progress?.status === "running", pulse: true },
-  { id: "queued", label: `${queuedCount} datasets queued or pending`, tone: "#FFDA47", lit: queuedCount > 0 },
-  { id: "synced", label: `${datasetTally.synced || 0} datasets synced`, tone: "#3FEE56", lit: (datasetTally.synced || 0) > 0 },
-  { id: "partial", label: `${datasetTally.partial || 0} datasets partial`, tone: "#FFDA47", lit: (datasetTally.partial || 0) > 0 },
-  { id: "failed", label: `${datasetTally.failed || 0} datasets failed`, tone: "#FA618A", lit: (datasetTally.failed || 0) > 0 },
+  { id: "queued", label: `${queuedCount} dataset units queued or pending`, tone: "#FFDA47", lit: queuedCount > 0 },
+  { id: "synced", label: `${unitTally.synced || 0} dataset units synced`, tone: "#3FEE56", lit: (unitTally.synced || 0) > 0 },
+  { id: "partial", label: `${unitTally.partial || 0} dataset units partial`, tone: "#FFDA47", lit: (unitTally.partial || 0) > 0 },
+  { id: "failed", label: `${unitTally.failed || 0} dataset units failed`, tone: "#FA618A", lit: (unitTally.failed || 0) > 0 },
  ]
  const copyProgressSummary = async () => {
   const datasetLines = [
    "",
-   "Stored dataset status",
+   "Stored underlying query status",
    `Latest dataset update: ${formatRelativeTime(latestDatasetAt)}`,
    `Stored rows shown by dataset cards: ${datasetTotalRows.toLocaleString()}`,
-   `Successes: ${(datasetTally.synced || 0).toLocaleString()}`,
-   `Partials: ${(datasetTally.partial || 0).toLocaleString()}`,
-   `Failures: ${(datasetTally.failed || 0).toLocaleString()}`,
-   `Never synced: ${(datasetTally.never || 0).toLocaleString()}`,
+   `Synced queries: ${(datasetTally.synced || 0).toLocaleString()}`,
+   `Partial queries: ${(datasetTally.partial || 0).toLocaleString()}`,
+   `Failed queries: ${(datasetTally.failed || 0).toLocaleString()}`,
+   `Never-synced queries: ${(datasetTally.never || 0).toLocaleString()}`,
    "",
    ...visibleUnifiedRows.map((row) => [
     `- ${row.category.label}`,
@@ -380,10 +384,10 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
      {[
       ["Live", progress?.status === "running" ? 1 : 0, "#36E0F6"],
       ["Queued", queuedCount, "#FFDA47"],
-      ["Synced", datasetTally.synced || 0, "#3FEE56"],
-      ["Partial", datasetTally.partial || 0, "#FFDA47"],
-      ["Failed", datasetTally.failed || 0, "#FA618A"],
-      ["Never", datasetTally.never || 0, "#9aa0ab"],
+      ["Synced", unitTally.synced || 0, "#3FEE56"],
+      ["Partial", unitTally.partial || 0, "#FFDA47"],
+      ["Failed", unitTally.failed || 0, "#FA618A"],
+      ["Never", unitTally.never || 0, "#9aa0ab"],
      ].map(([label, value, tone]) => (
       <span key={String(label)} className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full border border-black" style={{ backgroundColor: String(tone), boxShadow: `0 0 5px ${String(tone)}` }} />{label} <b className="font-mono text-[11px]" style={{ color: String(tone) }}>{Number(value).toLocaleString()}</b></span>
      ))}
@@ -435,7 +439,7 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
              <span className="grid h-4 w-4 shrink-0 place-items-center rounded border border-black bg-white" aria-hidden="true">{expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}</span>
              <span className="truncate">{unit.label}</span>
             </span>
-            <span className="ml-[22px] mt-1 block truncate text-[8px] font-bold uppercase leading-none tracking-[0.05em] text-black/50">{unit.id === "video_catalog" && videoCatalogCoverage ? `${videoCatalogCoverage.catalogTotal.toLocaleString()} videos · metadata ${videoCatalogCoverage.metadataAvailable.toLocaleString()} · analytics ${videoCatalogCoverage.analyticsAvailable.toLocaleString()}` : `${unit.rows.length} dataset${unit.rows.length === 1 ? "" : "s"} · ${unit.displayRows.toLocaleString()} rows`} · {syncStatusLabel(unit.status)} · {unit.issues.length ? `${unit.issues.length} issue${unit.issues.length === 1 ? "" : "s"}` : "clear"} · {unit.completedAt ? formatRelativeTime(unit.completedAt) : unit.startedAt ? "in progress" : "not run"}</span>
+            <span className="ml-[22px] mt-1 block truncate text-[8px] font-bold uppercase leading-none tracking-[0.05em] text-black/50">{unit.id === "video_catalog" && videoCatalogCoverage ? `${videoCatalogCoverage.catalogTotal.toLocaleString()} videos · metadata ${videoCatalogCoverage.metadataAvailable.toLocaleString()} · analytics ${videoCatalogCoverage.analyticsAvailable.toLocaleString()}` : `${unit.rows.length} quer${unit.rows.length === 1 ? "y" : "ies"} · ${unit.displayRows.toLocaleString()} rows`} · {syncStatusLabel(unit.status)} · {unit.issues.length ? `${unit.issues.length} issue${unit.issues.length === 1 ? "" : "s"}` : "clear"} · {unit.completedAt ? formatRelativeTime(unit.completedAt) : unit.startedAt ? "in progress" : "not run"}</span>
            </button>
            <div className="grid place-items-center border-l-[2px] border-black px-2 py-1">
             <RetroSyncExecutionSwitch
