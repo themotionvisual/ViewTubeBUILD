@@ -49,6 +49,9 @@ describe("mobile widget geometry contract", () => {
     expect(widgetSystemCss).toContain("grid-template-columns: repeat(4, minmax(0, 1fr));")
     expect(widgetSystemCss).toContain("grid-template-columns: repeat(2, minmax(0, 1fr));")
     expect(widgetSystemCss).toContain("--image-generator-copy-height:")
+    expect(widgetSystemCss).toContain("resize: vertical;")
+    expect(widgetSystemCss).toContain("height: var(--image-generator-copy-height) !important;")
+    expect(widgetSystemCss).toContain("height: var(--image-generator-copy-height);")
     expect(widgetSystemCss).not.toContain("Image styles preserve the shared control typography while retaining one row")
   })
 
