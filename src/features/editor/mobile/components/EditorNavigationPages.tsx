@@ -19,6 +19,7 @@ export interface EditorSettingsModel{
   onLayout?:(v:'auto'|'portrait'|'landscape')=>void;
   onAspect:(v:'portrait'|'landscape')=>void;
   onStyle:(v:string)=>void;
+  onBackToSite?:()=>void;
 }
 
 const CYAN='#36E0F6',INK='#248b99',YELLOW='#FFFF61',PINK='#FA618A';
@@ -82,6 +83,7 @@ function Clips({store,onNavigate}:{store:EditorStore;onNavigate?:(page:EditorNav
 function Settings({model}:{model?:EditorSettingsModel}){
   if(!model)return <><Section name="Editor Settings">Host-controlled settings.</Section><Section name="Feature System"><EditorFeatureManifest compact category="settings"/></Section></>;
   return <>
+    <Section name="Site"><button style={{...button,width:'100%',background:CYAN}} onClick={()=>model.onBackToSite?.()}>← Back to Site</button></Section>
     <Section name="Interface & Phone Layout"><EditorViewSwitcher frontend={model.frontend} layout={model.layout??'auto'} onFrontend={model.onFrontend} onLayout={model.onLayout??(()=>{})}/></Section>
     <Section name="Video"><Grid>{(['portrait','landscape']as const).map(v=><button key={v} style={{...button,background:model.aspect===v?CYAN:'#fff'}} onClick={()=>model.onAspect(v)}>{v==='portrait'?'9:16':'16:9'}</button>)}</Grid></Section>
     <Section name="Editor Style"><Grid>{model.styleOptions.map(o=><button key={o.id} style={{...button,background:model.style===o.id?YELLOW:'#fff'}} onClick={()=>model.onStyle(o.id)}>{o.shortLabel||o.label}</button>)}</Grid></Section>
