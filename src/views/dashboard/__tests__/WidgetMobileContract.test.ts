@@ -5,6 +5,7 @@ const mobileCss = readFileSync(new URL("../widgetMobileContract.css", import.met
 const barrierSource = readFileSync(new URL("../DashboardBarrier.tsx", import.meta.url), "utf8")
 const primitiveSource = readFileSync(new URL("../WidgetPrimitives.tsx", import.meta.url), "utf8")
 const variantCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
+const widgetSystemCss = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
 
 describe("mobile widget geometry contract", () => {
   it("loads the phone contract after the canonical shell layers", () => {
@@ -39,6 +40,22 @@ describe("mobile widget geometry contract", () => {
   it("stacks reference-library comparison variants before split-left labels become unusable", () => {
     expect(variantCss).toContain("@container vt-widget (max-width: 420px)")
     expect(variantCss).toContain("grid-template-columns: minmax(0, 1fr);")
+  })
+
+  it("reflows Image Generator controls instead of shrinking primitive typography", () => {
+    expect(widgetSystemCss).toContain("@container vt-widget (max-width: 900px)")
+    expect(widgetSystemCss).toContain("@container vt-widget (max-width: 560px)")
+    expect(widgetSystemCss).toContain(".image-generator-style-grid")
+    expect(widgetSystemCss).toContain("grid-template-columns: repeat(4, minmax(0, 1fr));")
+    expect(widgetSystemCss).toContain("grid-template-columns: repeat(2, minmax(0, 1fr));")
+    expect(widgetSystemCss).toContain("--image-generator-copy-height:")
+    expect(widgetSystemCss).not.toContain("Image styles preserve the shared control typography while retaining one row")
+  })
+
+  it("reflows AI Journal category controls to two columns on narrow widgets", () => {
+    expect(widgetSystemCss).toContain("AI Journal keeps canonical control type/height")
+    expect(widgetSystemCss).toContain(".ai-journal-category-grid")
+    expect(widgetSystemCss).toContain("grid-template-columns: repeat(2, minmax(0, 1fr));")
   })
 
   it("forces every phone widget to one complete dashboard row without mutating persisted width state", () => {
