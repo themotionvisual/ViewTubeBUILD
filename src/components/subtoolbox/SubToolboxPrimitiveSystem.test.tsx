@@ -78,7 +78,7 @@ describe("Subtoolbox Primitive System", () => {
     expect(css).toContain(".vt-subtoolbox-removable-tag,")
     expect(css).toContain(".vt-subtoolbox-selectable-tag{")
     expect(css).toContain("border:0!important")
-    expect(css).toContain("--vt-knob-size:calc(var(--vt-component-height)*2.25)")
+    expect(css).toContain("--vt-knob-size:calc(var(--vt-component-height)*2.15)")
     expect(css).toContain(".vt-subtoolbox-knob-arc{display:none}")
   })
 
@@ -146,7 +146,7 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain('role="tooltip"')
     expect(html).toContain("vt-subtoolbox-knob")
     expect(html).toContain('role="slider"')
-    expect(html).toContain("vt-subtoolbox-knob-controls")
+    expect(html).toContain("vt-subtoolbox-knob-readout")
     expect(html).toContain("A · TAG")
     expect(html).toContain("Z · TAG")
     expect(html).toContain("vt-subtoolbox-split-field is-search has-action")
