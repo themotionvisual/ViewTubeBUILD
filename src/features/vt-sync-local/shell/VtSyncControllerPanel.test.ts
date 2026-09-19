@@ -69,7 +69,7 @@ describe("time window controller options", () => {
 
  it("tells the user which datasets derive their windows for free", () => {
   // The recommended default selection includes daily stats, which is derived.
-  expect(render()).toContain("derive their windows for free")
+  expect(render()).toContain("derive their windows without extra window requests")
  })
 
  it("passes the selected windows to both sync entry points", () => {
