@@ -890,7 +890,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                   value={project.categories["concept-direction"].payload.brief}
                   multiline
                   placeholder="Describe the video you want ViewTube to direct…"
-                  onChange={(value) => setCategoryField("concept-direction", "brief", value)}
+                  onChange={(value) => setProjectCategoryField("concept-direction", "brief", value)}
                 />
                 <SubToolboxGrid minItemWidth="compact" density="dense" aria-label="Video Director mode">
                   {MODE_OPTIONS.map(({ id, label, icon: Icon }) => (
@@ -914,22 +914,110 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                     max={3600}
                     step={0.5}
                     unit="sec"
-                    onChange={(value) => setCategoryField("timing-pacing", "durationSeconds", value)}
+                    onChange={(value) => setProjectCategoryField("timing-pacing", "durationSeconds", value)}
                   />
                   <SelectField
                     label="Ratio"
                     value={project.categories["generation-output"].payload.aspectRatio}
                     options={["16:9", "9:16", "1:1", "21:9", "4:3", "3:4", "custom"]}
-                    onChange={(value) => setCategoryField("generation-output", "aspectRatio", value)}
+                    onChange={(value) => setProjectCategoryField("generation-output", "aspectRatio", value)}
                   />
                   <NumberField
                     label="Outputs"
                     value={project.categories["generation-output"].payload.outputs}
                     min={1}
                     max={24}
-                    onChange={(value) => setCategoryField("generation-output", "outputs", Math.round(value))}
+                    onChange={(value) => setProjectCategoryField("generation-output", "outputs", Math.round(value))}
                   />
                 </SubToolboxGrid>
+              </SubToolboxStack>
+            </SubToolbox>
+
+            <SubToolbox title="Storyboard & Scope" icon={<Layers3 />} collapsible isOpenInitial={project.mode !== "single"}>
+              <SubToolboxStack>
+                <SubToolboxActions columns={2}>
+                  <StudioButton
+                    sizeVariant="standard"
+                    tone="neutral"
+                    onClick={() => {
+                      setProject((current) => applyVideoDirectorConflicts(buildVideoDirectorStoryboard(current)))
+                      setNotice("Storyboard synchronized to the current duration and shot structure.")
+                    }}
+                  >
+                    Build Storyboard
+                  </StudioButton>
+                  <StudioButton
+                    sizeVariant="standard"
+                    tone="neutral"
+                    onClick={() => {
+                      const requested = Math.max(2, project.categories["generation-output"].payload.outputs)
+                      setProject((current) => applyVideoDirectorConflicts(ensureVideoDirectorVariants(current, requested)))
+                      setNotice(`${requested} variation slots are ready.`)
+                    }}
+                  >
+                    Build Variants
+                  </StudioButton>
+                </SubToolboxActions>
+
+                {project.shots.length ? (
+                  <SubToolboxSection label={<SubToolboxFieldLabel>Shots</SubToolboxFieldLabel>}>
+                    <div className="flex flex-col gap-2">
+                      {[...project.shots].sort((a, b) => a.order - b.order).map((shot, index) => (
+                        <SubToolboxSurface key={shot.id} tone={scopeKey === `shot:${shot.id}` ? "accent" : "subtle"}>
+                          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
+                            <button
+                              type="button"
+                              className="min-w-0 text-left"
+                              onClick={() => setScopeKey(`shot:${shot.id}`)}
+                            >
+                              <strong className="block text-[12px] font-black uppercase truncate">
+                                {String(index + 1).padStart(2, "0")} · {shot.label}
+                              </strong>
+                              <span className="block text-[9px] font-black uppercase opacity-50">
+                                {shot.startSeconds.toFixed(2)}s → {(shot.startSeconds + shot.durationSeconds).toFixed(2)}s · {Object.keys(shot.categoryOverrides).length} override categor{Object.keys(shot.categoryOverrides).length === 1 ? "y" : "ies"}
+                              </span>
+                            </button>
+                            <div className="flex gap-1">
+                              <StudioButton sizeVariant="micro" tone="neutral" disabled={index === 0} onClick={() => setProject((current) => reorderVideoDirectorShot(current, shot.id, -1))}>↑</StudioButton>
+                              <StudioButton sizeVariant="micro" tone="neutral" disabled={index === project.shots.length - 1} onClick={() => setProject((current) => reorderVideoDirectorShot(current, shot.id, 1))}>↓</StudioButton>
+                              <StudioButton sizeVariant="micro" tone="neutral" onClick={() => setProject((current) => duplicateVideoDirectorShot(current, shot.id))}>＋</StudioButton>
+                              <StudioButton
+                                sizeVariant="micro"
+                                tone="danger"
+                                onClick={() => {
+                                  setProject((current) => removeVideoDirectorShot(current, shot.id))
+                                  if (scopeKey === `shot:${shot.id}`) setScopeKey("project")
+                                }}
+                              >×</StudioButton>
+                            </div>
+                          </div>
+                        </SubToolboxSurface>
+                      ))}
+                    </div>
+                  </SubToolboxSection>
+                ) : (
+                  <SubToolboxSurface tone="subtle">
+                    <MutedNote>Build the storyboard to create shot scopes from the current duration and Shot Structure settings.</MutedNote>
+                  </SubToolboxSurface>
+                )}
+
+                {project.variants.length ? (
+                  <SubToolboxSection label={<SubToolboxFieldLabel>Variations</SubToolboxFieldLabel>}>
+                    <SubToolboxGrid minItemWidth="compact" density="dense">
+                      {project.variants.map((variant, index) => (
+                        <StudioButton
+                          key={variant.id}
+                          sizeVariant="standard"
+                          tone="neutral"
+                          selected={scopeKey === `variant:${variant.id}`}
+                          onClick={() => setScopeKey(`variant:${variant.id}`)}
+                        >
+                          {String.fromCharCode(65 + index)} · {variant.variationStrength}
+                        </StudioButton>
+                      ))}
+                    </SubToolboxGrid>
+                  </SubToolboxSection>
+                ) : null}
               </SubToolboxStack>
             </SubToolbox>
 
@@ -942,14 +1030,27 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
               actionButton={<SubToolboxBadge>{STATUS_SYMBOL[activeStatus]} {STATUS_LABEL[activeStatus]}</SubToolboxBadge>}
             >
               <SubToolboxStack>
-                <SubToolboxDropdownControl
-                  label="Active Category"
-                  value={categoryOptionLabel(project, activeCategoryId)}
-                  options={categoryOptions}
-                  onChange={onCategoryOptionChange}
-                  tone="purple"
-                />
+                <SubToolboxGrid>
+                  <SubToolboxDropdownControl
+                    label="Edit Scope"
+                    value={scopeOptions.find((option) => option.key === scopeKey)?.label || "PROJECT"}
+                    options={scopeOptions.map((option) => option.label)}
+                    onChange={(label) => {
+                      const option = scopeOptions.find((candidate) => candidate.label === label)
+                      setScopeKey(option?.key || "project")
+                    }}
+                    tone="cyan"
+                  />
+                  <SubToolboxDropdownControl
+                    label="Active Category"
+                    value={scopedCategoryOptionLabel(activeCategoryId)}
+                    options={categoryOptions}
+                    onChange={onCategoryOptionChange}
+                    tone="purple"
+                  />
+                </SubToolboxGrid>
                 <div className="flex flex-wrap items-center gap-2">
+                  <SubToolboxBadge>{activeScope.type === "project" ? "PROJECT" : activeScope.type === "shot" ? "SHOT OVERRIDE" : "VARIANT OVERRIDE"}</SubToolboxBadge>
                   <SubToolboxBadge>{GROUP_LABEL[activeDefinition.group]}</SubToolboxBadge>
                   <SubToolboxBadge>{activeDefinition.compoundComponent}</SubToolboxBadge>
                   {activeState.locked ? <SubToolboxBadge>Locked</SubToolboxBadge> : null}
@@ -977,6 +1078,8 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                   <StudioButton
                     sizeVariant="standard"
                     tone="neutral"
+                    disabled={activeScope.type !== "project"}
+                    title={activeScope.type !== "project" ? "Save scoped overrides as recipes in the upcoming scoped-recipe pass." : undefined}
                     onClick={() => {
                       const recipe = createVideoDirectorCategoryRecipe({
                         project,
