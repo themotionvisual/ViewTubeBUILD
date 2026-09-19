@@ -1,7 +1,7 @@
 /** Phone timeline with touch-arbitrated select/move/trim, keyframes and collision-safe tracks. */
 import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {
-  AlertTriangle,EyeOff,Frames,Layers3,ListPlus,LocateFixed,LockKeyhole,Magnet,Minus,Plus,
+  AlertTriangle,EyeOff,Layers3,ListPlus,LocateFixed,LockKeyhole,Magnet,Minus,Plus,
   SkipBack,SkipForward,StepBack,StepForward,Trash2,Type,VolumeX,X,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
@@ -256,7 +256,6 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
             totalPx={totalPx}
             y={index*TIMELINE_TRACK_HEIGHT}
             snap={snap}
-            fps={fps}
             readOnly={Boolean(focusedCompound)}
             focusParentId={focusedCompound?.id}
             onOpenCompound={setCompoundFocusId}
@@ -334,13 +333,12 @@ const TrackRow:React.FC<{
   totalPx:number;
   y:number;
   snap:{strength:SnapStrength;kinds:SnapKinds};
-  fps:number;
   readOnly?:boolean;
   focusParentId?:string;
   onOpenCompound?:(id:string)=>void;
   onClipContextMenu?:TimelineStripProps['onClipContextMenu'];
   onEmptyContextMenu?:TimelineStripProps['onEmptyContextMenu'];
-}>=({track,clips,pxPerSec,totalPx,y,store,snap,fps,readOnly=false,focusParentId,onOpenCompound,onClipContextMenu,onEmptyContextMenu})=>{
+}>=({track,clips,pxPerSec,totalPx,y,store,snap,readOnly=false,focusParentId,onOpenCompound,onClipContextMenu,onEmptyContextMenu})=>{
   const{state,dispatch}=store;
   const rowColor=track.kind==='audio'?'#4EE4BE':track.kind==='overlay'?'#528FFA':track.kind==='caption'?'#FFDA47':'#FA618A';
   const selected=state.selection.trackId===track.id;
@@ -392,7 +390,6 @@ const TrackRow:React.FC<{
         store={store}
         siblings={clips}
         snap={snap}
-        fps={fps}
         readOnly={readOnly}
         focusParentId={focusParentId}
         onOpenCompound={onOpenCompound}
