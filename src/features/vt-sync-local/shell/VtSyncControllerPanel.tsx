@@ -25,6 +25,8 @@ import {
  VT_SYNC_GROUP_LABELS,
  VT_SYNC_GROUP_ORDER,
  VT_SYNC_SYNC_UNITS,
+ countVtSyncSelectedUnits,
+ countVtSyncUnderlyingQueries,
  getVtSyncDefaultUnitIds,
  getVtSyncUnitCategoryIds,
 } from "../upstream/syncUnitRegistry"
@@ -81,7 +83,8 @@ export const VtSyncControllerPanel: React.FC<{
  const availableUnits = useMemo(() => unitGroups.flatMap((entry) => entry.units), [unitGroups])
  const groupHeaderRefs = useRef(new Map<VtSyncCategoryGroup, HTMLButtonElement>())
  const selectedSet = useMemo(() => new Set(selected), [selected])
- const selectedUnitCount = useMemo(() => availableUnits.filter((unit) => unit.categoryIds.every((id) => selectedSet.has(id))).length, [availableUnits, selectedSet])
+ const selectedUnitCount = useMemo(() => countVtSyncSelectedUnits(selected, availableUnits), [availableUnits, selected])
+ const selectedQueryCount = useMemo(() => countVtSyncUnderlyingQueries(selected), [selected])
  const retentionSelectedSet = useMemo(() => new Set(retentionVideoIds), [retentionVideoIds])
  const retentionEnabled = selectedSet.has("retention")
  const activeCategorySet = useMemo(() => new Set(activeCategoryIds), [activeCategoryIds])
@@ -322,8 +325,8 @@ export const VtSyncControllerPanel: React.FC<{
     </div>
     <p className="m-0 text-[11px] font-semibold leading-snug text-[#9ca3af]">
      {windowCost.extraWindows === 0
-      ? `Lifetime only — ${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selected.length} underlying quer${selected.length === 1 ? "y" : "ies"}.`
-      : `${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selected.length} underlying quer${selected.length === 1 ? "y" : "ies"}. ${windowCost.perWindowCategories} windowed quer${windowCost.perWindowCategories === 1 ? "y" : "ies"} × ${windowCost.extraWindows} extra window${windowCost.extraWindows === 1 ? "" : "s"} = ~${windowCost.extraRequests} additional request${windowCost.extraRequests === 1 ? "" : "s"}.`}
+      ? `Lifetime only — ${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selectedQueryCount} underlying quer${selectedQueryCount === 1 ? "y" : "ies"}.`
+      : `${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selectedQueryCount} underlying quer${selectedQueryCount === 1 ? "y" : "ies"}. ${windowCost.perWindowCategories} windowed quer${windowCost.perWindowCategories === 1 ? "y" : "ies"} × ${windowCost.extraWindows} extra window${windowCost.extraWindows === 1 ? "" : "s"} = ~${windowCost.extraRequests} additional request${windowCost.extraRequests === 1 ? "" : "s"}.`}
      {windowCost.derivedCount > 0
       ? ` ${windowCost.derivedCount} day-grained quer${windowCost.derivedCount === 1 ? "y" : "ies"} derive their windows without extra window requests.`
       : ""}
