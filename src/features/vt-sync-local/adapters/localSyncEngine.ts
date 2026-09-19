@@ -2163,6 +2163,13 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   missingMetrics: string[] = [],
  ) => {
   const updatedAt = new Date().toISOString()
+  const categoryRuntime = progress.categoryStates?.[phase]
+  const runtimePhaseId = VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === phase)?.runtimePhaseId || phase
+  const phaseRuntime = progress.phases.find((entry) => entry.id === runtimePhaseId)
+  const syncStartedAt = categoryRuntime?.startedAt || phaseRuntime?.startedAt
+  const durationMs = syncStartedAt
+   ? Math.max(0, new Date(updatedAt).getTime() - new Date(syncStartedAt).getTime())
+   : undefined
   snapshot = {
    ...snapshot,
    datasetFreshness: {
@@ -2174,6 +2181,9 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      status,
      rows,
      updatedAt,
+     startedAt: syncStartedAt,
+     completedAt: updatedAt,
+     durationMs,
      missingMetrics,
     }])),
    },
