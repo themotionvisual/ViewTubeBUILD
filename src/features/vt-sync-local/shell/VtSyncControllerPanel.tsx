@@ -432,8 +432,8 @@ export const VtSyncControllerPanel: React.FC<{
 
         <div id={contentId} hidden={!expanded}>
          <div className="overflow-x-auto custom-scrollbar">
-          <div className="min-w-[760px]">
-           <div className="grid h-[26px] grid-cols-[minmax(260px,1fr)_72px_64px_94px_46px_70px_108px] items-center border-b-[2px] border-black bg-[#161616] px-2 text-[8px] font-black uppercase tracking-[0.08em] text-white/75">
+          <div className="min-w-[600px]">
+           <div className="grid h-[26px] grid-cols-[minmax(210px,1fr)_58px_54px_88px_34px_58px_96px] items-center border-b-[2px] border-black bg-[#161616] px-2 text-[8px] font-black uppercase tracking-[0.08em] text-white/75">
             <span>Dataset</span><span>Status</span><span>Time</span><span>Last sync</span><span className="text-center">!</span><span className="text-right">Rows</span><span className="text-center">Sync</span>
            </div>
 
@@ -446,7 +446,7 @@ export const VtSyncControllerPanel: React.FC<{
             const unitContentId = `vt-sync-unified-unit-${unit.id}`
             return (
              <article key={unit.id} className="border-b-[2px] border-black last:border-b-0">
-              <div className={`grid min-h-[48px] grid-cols-[minmax(260px,1fr)_72px_64px_94px_46px_70px_108px] items-stretch px-2 ${checked ? "bg-white" : "bg-[#f1f1f1] text-black/50"}`}>
+              <div className={`grid min-h-[48px] grid-cols-[minmax(210px,1fr)_58px_54px_88px_34px_58px_96px] items-stretch px-2 ${checked ? "bg-white" : "bg-[#f1f1f1] text-black/50"}`}>
                <div className="sticky left-0 z-[2] flex min-w-0 items-center gap-1.5 bg-inherit pr-1">
                 <button
                  type="button"
