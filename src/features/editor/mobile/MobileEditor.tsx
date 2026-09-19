@@ -9,7 +9,7 @@ import type {EditorSettingsModel} from './components/EditorNavigationPages';
 import type {VtE1Clip} from '../../../shared/vtE1TimelineContract';
 
 export type CompositionAspect='portrait'|'landscape';
-export type MobileWorkspaceMode='preview'|'edit'|'split';
+export type MobileWorkspaceMode='edit'|'split';
 
 export interface MobileEditorProps{
   seed?:{clips?:VtE1Clip[];durationSec?:number};
