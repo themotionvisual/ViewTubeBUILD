@@ -1,7 +1,7 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {
-  CircleHelp,Columns2,Combine,Copy,Group,LayoutTemplate,Map as MapIcon,PanelRight,Redo2,Rows3,
-  ScanSearch,Scissors,Trash2,Type,Undo2,Ungroup,Zap,
+  Activity,AudioLines,CircleHelp,Columns2,Combine,Copy,Focus,Group,LayoutTemplate,Map as MapIcon,
+  Maximize2,PanelRight,Palette,Pencil,Redo2,Rows3,ScanSearch,Scissors,Trash2,Type,Undo2,Ungroup,Zap,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {PREVIEW_TRANSPORT_HEIGHT,PreviewPane} from '../components/PreviewPane';
@@ -13,6 +13,8 @@ import {pageForSelection} from '../components/EditorQuickActions';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
 import type {MobileWorkspaceMode} from '../MobileEditor';
 import {TouchEditorGuide} from '../components/TouchEditorGuide';
+import {WorkspaceDivider} from './WorkspaceDivider';
+import {WORKSPACE_PRESETS,presetPatch,useMobileWorkspacePreferences,type WorkspaceFocus} from './mobileWorkspacePreferences';
 
 export interface MobileWorkspaceLayoutProps{
   orientation:'portrait'|'landscape';
@@ -88,26 +90,47 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const rootRef=useRef<HTMLDivElement>(null);
   const[menu,setMenu]=useState<{items:ContextMenuItem[];at:{x:number;y:number};title?:string}|null>(null);
   const[page,setPage]=useState<EditorNavPage>('media');
-  const[showTimeline,setShowTimeline]=useState(true);
-  const[showMap,setShowMap]=useState(false);
   const[timelineViewport,setTimelineViewport]=useState<TimelineViewport>({startSec:0,endSec:0});
   const[scrollToSec,setScrollToSec]=useState(0);
-  const[showActionLabels,setShowActionLabels]=useState(false);
   const[showGuide,setShowGuide]=useState(false);
 
   const containerHeight=height??(typeof window!=='undefined'?window.innerHeight:(orientation==='portrait'?800:480));
   const isPortraitVideo=compositionAspect<1;
   const portraitPhonePortraitVideo=orientation==='portrait'&&isPortraitVideo;
+  const[prefs,patchPrefs]=useMobileWorkspacePreferences(orientation,isPortraitVideo);
+  const showTimeline=prefs.showTimeline;
+  const showMap=prefs.showMap;
+  const showActionLabels=prefs.showActionLabels;
+  const focus=prefs.focus;
   const visibleTrackCount=store.state.project.tracks.filter(track=>!track.hidden).length;
-  const timelineHeight=Math.min(timelinePreferredHeight(visibleTrackCount),Math.max(96,containerHeight*.38));
+  const timelineHeight=Math.min(timelinePreferredHeight(visibleTrackCount)*prefs.timelineScale,Math.max(96,containerHeight*.52));
 
   const selectionKey=`${store.state.selection.clipIds.join(',')}|${store.state.selection.trackId??''}|${store.state.selection.transitionId??''}`;
   useEffect(()=>{
     const contextual=pageForSelection(store);
-    if(contextual)setPage(contextual);
+    const clip=store.selectedClips[0] as (VtE1Clip&{clipType?:unknown})|undefined;
+    const layer=store.selectedLayer;
+    let next:EditorNavPage|undefined=contextual;
+    if(clip?.clipType==='design-template')next='custom-templates';
+    else if(layer?.type==='text')next='text';
+    else if(layer?.type==='audio')next='audio';
+    else if(layer?.type==='shape')next='graphics';
+    else if(layer?.type==='remotion-asset')next='effects';
+    if(next){
+      setPage(next);
+      patchPrefs({lastPage:next});
+    }
   },[selectionKey]);
 
-  const openPage=(next:EditorNavPage)=>setPage(next);
+  const openPage=(next:EditorNavPage)=>{
+    setPage(next);
+    patchPrefs({lastPage:next});
+  };
+  useEffect(()=>{
+    const valid=EDITOR_NAV_ITEMS.some(item=>item.id===prefs.lastPage);
+    if(valid)setPage(prefs.lastPage as EditorNavPage);
+  },[orientation,isPortraitVideo]);
+
   const selected=store.selectedClips[0];
   const selectedIds=store.state.selection.clipIds;
   const selectedClips=store.selectedClips;
@@ -155,8 +178,8 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     {key:'combine',label:selectedCompound?'Uncombine':'Combine',icon:<Combine size={13}/>,enabled:selectedCompound||canCombine,onClick:()=>selectedCompound&&selected?store.dispatch({type:'uncombineClip',id:selected.id}):store.dispatch({type:'combineClips',ids:selectedIds})},
     {key:'split-ui',label:'Split UI',icon:<Columns2 size={13}/>,enabled:true,active:workspaceMode==='split',onClick:()=>onWorkspaceModeChange('split')},
     {key:'edit-ui',label:'Edit UI',icon:<PanelRight size={13}/>,enabled:true,active:workspaceMode==='edit',onClick:()=>onWorkspaceModeChange('edit')},
-    {key:'timeline',label:'Timeline',icon:<Rows3 size={13}/>,enabled:true,active:showTimeline,onClick:()=>setShowTimeline(value=>!value)},
-    {key:'map',label:'Map',icon:<MapIcon size={13}/>,enabled:true,active:showMap,onClick:()=>setShowMap(value=>!value)},
+    {key:'timeline',label:'Timeline',icon:<Rows3 size={13}/>,enabled:true,active:showTimeline,onClick:()=>patchPrefs({showTimeline:!showTimeline})},
+    {key:'map',label:'Map',icon:<MapIcon size={13}/>,enabled:true,active:showMap,onClick:()=>patchPrefs({showMap:!showMap})},
     {key:'guide',label:'Guide',icon:<CircleHelp size={13}/>,enabled:true,onClick:()=>setShowGuide(true)},
   ];
 
@@ -252,7 +275,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
       onClipContextMenu={(clip,at)=>setMenu({items:clipMenuFor(clip),at,title:String(clip.id)})}
       onEmptyContextMenu={at=>setMenu({items:emptyMenu,at,title:'Timeline'})}
       actionLabelsVisible={showActionLabels}
-      onToggleActionLabels={()=>setShowActionLabels(value=>!value)}
+      onToggleActionLabels={()=>patchPrefs({showActionLabels:!showActionLabels})
     />
   </div>:null;
 
