@@ -1,5 +1,6 @@
 /** Fluid mobile preview with selection-aware direct manipulation and one transport surface. */
 import React,{useEffect,useMemo,useRef,useState} from 'react';
+import {FastForward,Pause,Play,Rewind,RotateCcw} from 'lucide-react';
 import {type ClipVisualTransform,type EditorStore,readClipVisualTransform} from '../state/editorState';
 import {useDragScrub,usePinchZoom} from '../hooks/gestures';
 import {TemplateCanvasRenderer} from '../../../../editor-design-library/integration/TemplateCanvasRenderer';
@@ -219,10 +220,10 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
         background:'#fff',borderTop:`2px solid ${INK}`,
       }}
     >
-      <button style={transportButton()} onClick={()=>seekBy(-1)} aria-label="Rewind one second" title="Rewind 1 second">«</button>
-      <button style={transportButton(state.playing)} onClick={togglePlay} aria-label={state.playing?'Pause':'Play'} title={state.playing?'Pause':'Play'}>{state.playing?'Ⅱ':'▶'}</button>
-      <button style={transportButton()} onClick={()=>seekBy(1)} aria-label="Fast forward one second" title="Fast forward 1 second">»</button>
-      <button style={{...transportButton(),background:YELLOW}} onClick={snapBack} aria-label="Snap back to playback start" title="Snap back to playback start">↶</button>
+      <button style={transportButton()} onClick={()=>seekBy(-1)} aria-label="Rewind one second" title="Rewind 1 second"><Rewind size={15}/></button>
+      <button style={transportButton(state.playing)} onClick={togglePlay} aria-label={state.playing?'Pause':'Play'} title={state.playing?'Pause':'Play'}>{state.playing?<Pause size={15}/>:<Play size={15}/>}</button>
+      <button style={transportButton()} onClick={()=>seekBy(1)} aria-label="Fast forward one second" title="Fast forward 1 second"><FastForward size={15}/></button>
+      <button style={{...transportButton(),background:YELLOW}} onClick={snapBack} aria-label="Snap back to playback start" title="Snap back to playback start"><RotateCcw size={15}/></button>
     </div>
   </div>;
 };
