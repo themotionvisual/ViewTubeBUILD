@@ -37,6 +37,64 @@ export const RetroLcd: React.FC<{ tone: string; children: React.ReactNode; class
  </span>
 )
 
+export type RetroSyncExecutionStatus = "idle" | "queued" | "running" | "complete" | "partial" | "failed"
+
+export const RetroSyncExecutionSwitch: React.FC<{
+ status: RetroSyncExecutionStatus
+ idleLabel: string
+ onClick?: () => void
+ disabled?: boolean
+}> = ({ status, idleLabel, onClick, disabled = false }) => {
+ const statusClass =
+  status === "running" ? "is-syncing"
+  : status === "queued" ? "is-waiting"
+  : status === "complete" ? "is-completed"
+  : status === "partial" ? "is-partial"
+  : status === "failed" ? "is-failed"
+  : ""
+ const statusLabel =
+  status === "running" ? "RUNNING"
+  : status === "queued" ? "QUEUED"
+  : status === "complete" ? "DONE"
+  : status === "partial" ? "PARTIAL"
+  : status === "failed" ? "FAILED"
+  : idleLabel
+ const isBusyState = status === "running" || status === "queued"
+
+ return (
+  <div
+   className={`vt-retro-pcb-group is-category-action ${status === "running" ? "is-active" : ""} ${statusClass}`}
+   data-sync-status={status}
+   style={{
+    "--active-col": "var(--led-green)",
+    "--active-col-rgb": "var(--led-green-rgb)",
+   } as React.CSSProperties}
+  >
+   <div className="vt-retro-pcb-controls">
+    <button
+     type="button"
+     disabled={disabled || isBusyState || !onClick}
+     onClick={onClick}
+     className="switch-hitbox"
+     aria-pressed={status === "running"}
+     title={`${statusLabel} Sync`}
+     aria-label={`${statusLabel} Sync`}
+    >
+     <div className="sw-slide-housing">
+      <div className="sw-slide-track">
+       <div className="sw-slide-nub" />
+      </div>
+      <div className="led-rim" aria-hidden="true">
+       <div className="led-bulb" />
+      </div>
+     </div>
+    </button>
+   </div>
+   <div className="comp-label">{statusLabel}</div>
+  </div>
+ )
+}
+
 export const RetroVuMeter: React.FC<{ tone: string; percent: number }> = ({ tone, percent }) => (
  <span
   className="vt-retro-vu"

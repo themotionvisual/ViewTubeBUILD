@@ -72,8 +72,22 @@ export type VtSyncLocalSyncPhase = {
  reconnectRequired?: boolean
  requestId?: string
  skippedReason?: string
+ currentCategoryId?: string
+ nextCategoryId?: string
+ currentWindow?: VtSyncAnalyticsWindow
  currentQueryLabel?: string
  nextQueryLabel?: string
+}
+
+export type VtSyncLocalSyncCategoryProgress = {
+ categoryId: string
+ status: VtSyncLocalSyncPhaseStatus
+ rows: number
+ startedAt?: string
+ completedAt?: string
+ message?: string
+ error?: string
+ currentWindow?: VtSyncAnalyticsWindow
 }
 
 export type VtSyncLocalSyncProgress = {
@@ -87,6 +101,7 @@ export type VtSyncLocalSyncProgress = {
  requestId?: string
  requestedCategoryIds: string[]
  phases: VtSyncLocalSyncPhase[]
+ categoryStates?: Record<string, VtSyncLocalSyncCategoryProgress>
 }
 
 export type VtSyncLocalSyncOptions = {
@@ -1087,6 +1102,35 @@ const runTrafficDetailAnalyticsBundle = async (
  return paginated
 }
 
+const publishProgress = (
+ progress: VtSyncLocalSyncProgress,
+ onProgress?: (progress: VtSyncLocalSyncProgress) => void,
+) => {
+ onProgress?.({
+  ...progress,
+  phases: [...progress.phases],
+  categoryStates: { ...(progress.categoryStates || {}) },
+ })
+}
+
+const updateCategoryState = (
+ progress: VtSyncLocalSyncProgress,
+ categoryId: string,
+ patch: Partial<VtSyncLocalSyncCategoryProgress>,
+ onProgress?: (progress: VtSyncLocalSyncProgress) => void,
+) => {
+ const current = progress.categoryStates?.[categoryId] || {
+  categoryId,
+  status: "pending" as VtSyncLocalSyncPhaseStatus,
+  rows: 0,
+ }
+ progress.categoryStates = {
+  ...progress.categoryStates,
+  [categoryId]: { ...current, ...patch, categoryId },
+ }
+ publishProgress(progress, onProgress)
+}
+
 const updatePhase = (
  progress: VtSyncLocalSyncProgress,
  phaseId: string,
@@ -1094,7 +1138,32 @@ const updatePhase = (
  onProgress?: (progress: VtSyncLocalSyncProgress) => void,
 ) => {
  progress.phases = progress.phases.map((phase) => phase.id === phaseId ? { ...phase, ...patch } : phase)
- onProgress?.({ ...progress, phases: [...progress.phases] })
+
+ // Dedicated runtime phases map one-to-one to a user-visible category. Keep
+ // those category states in lockstep automatically. Shared traffic/segments
+ // phases publish their exact child category explicitly inside their loops.
+ const matchingCategoryIds = progress.requestedCategoryIds.filter((categoryId) =>
+  VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.runtimePhaseId === phaseId,
+ )
+ if (matchingCategoryIds.length === 1) {
+  const categoryId = matchingCategoryIds[0]
+  const current = progress.categoryStates?.[categoryId] || { categoryId, status: "pending" as VtSyncLocalSyncPhaseStatus, rows: 0 }
+  progress.categoryStates = {
+   ...progress.categoryStates,
+   [categoryId]: {
+    ...current,
+    categoryId,
+    status: patch.status ?? current.status,
+    rows: patch.rows ?? current.rows,
+    startedAt: patch.startedAt ?? current.startedAt,
+    completedAt: patch.completedAt ?? current.completedAt,
+    message: patch.message ?? current.message,
+    error: patch.error ?? current.error,
+    currentWindow: patch.currentWindow ?? current.currentWindow,
+   },
+  }
+ }
+ publishProgress(progress, onProgress)
 }
 
 const addManifestResult = (
@@ -2047,8 +2116,13 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   status: "running",
   requestedCategoryIds: visibleSelectedCategories,
   phases: phaseIds.map(([id, label]) => ({ id, label, status: "pending", rows: 0 })),
+  categoryStates: Object.fromEntries(visibleSelectedCategories.map((categoryId) => [categoryId, {
+   categoryId,
+   status: "pending" as VtSyncLocalSyncPhaseStatus,
+   rows: 0,
+  }])),
  }
- onProgress?.(progress)
+ publishProgress(progress, onProgress)
 
  const manifest: VtSyncSyncManifest = {
   run_id: runId,
@@ -2089,6 +2163,13 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   missingMetrics: string[] = [],
  ) => {
   const updatedAt = new Date().toISOString()
+  const categoryRuntime = progress.categoryStates?.[phase]
+  const runtimePhaseId = VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === phase)?.runtimePhaseId || phase
+  const phaseRuntime = progress.phases.find((entry) => entry.id === runtimePhaseId)
+  const syncStartedAt = categoryRuntime?.startedAt || phaseRuntime?.startedAt
+  const durationMs = syncStartedAt
+   ? Math.max(0, new Date(updatedAt).getTime() - new Date(syncStartedAt).getTime())
+   : undefined
   snapshot = {
    ...snapshot,
    datasetFreshness: {
@@ -2100,6 +2181,9 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      status,
      rows,
      updatedAt,
+     startedAt: syncStartedAt,
+     completedAt: updatedAt,
+     durationMs,
      missingMetrics,
     }])),
    },
@@ -2633,9 +2717,21 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      ? VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === nextCategoryId)?.label || nextCategoryId.replace(/_/g, " ")
      : undefined
     updatePhase(progress, "traffic", {
+     currentCategoryId: categoryId,
+     nextCategoryId,
+     currentWindow: "lifetime",
      currentQueryLabel,
      nextQueryLabel,
      message: `Syncing ${currentQueryLabel}.`,
+    }, onProgress)
+    updateCategoryState(progress, categoryId, {
+     status: "running",
+     rows: 0,
+     startedAt: new Date().toISOString(),
+     completedAt: undefined,
+     currentWindow: "lifetime",
+     message: `Syncing ${currentQueryLabel}.`,
+     error: undefined,
     }, onProgress)
     // insightTrafficSourceDetail rejects maxResults values above ~25 with a garbled 500
     // (FIELD_UNKNOWN_VALUE on max-results) instead of a clean error, so page through it in
@@ -2722,10 +2818,18 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
        ? [`No ${sourceType || "traffic overview"} rows returned by YouTube Analytics.`]
        : [],
     )
+    updateCategoryState(progress, categoryId, {
+     status: !result.rows ? "failed" : result.error || mappedRows.length === 0 ? "partial" : "complete",
+     rows: mappedRows.length,
+     completedAt: new Date().toISOString(),
+     currentWindow: "lifetime",
+     message: result.error || (mappedRows.length === 0 ? "YouTube Analytics returned no rows." : `${mappedRows.length.toLocaleString()} rows synced.`),
+     error: result.error,
+    }, onProgress)
     commitSnapshot()
     await sleep(150)
    }
-   updatePhase(progress, "traffic", { status: trafficPartial ? "partial" : "complete", rows: rowsWritten, currentQueryLabel: undefined, nextQueryLabel: undefined, message: undefined, completedAt: new Date().toISOString() }, onProgress)
+   updatePhase(progress, "traffic", { status: trafficPartial ? "partial" : "complete", rows: rowsWritten, currentCategoryId: undefined, nextCategoryId: undefined, currentWindow: undefined, currentQueryLabel: undefined, nextQueryLabel: undefined, message: undefined, completedAt: new Date().toISOString() }, onProgress)
    // Compatibility projection for existing table tabs and visual consumers. The canonical
    // trafficDetails dataset remains the write authority.
    const legacyDetailFields: Record<string, keyof VtSyncSnapshot> = {
@@ -2772,6 +2876,11 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     ["playback_location", "playbackLocations", "insightPlaybackLocationType", ["views", "estimatedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"], "-views"],
     ["subscription_status", "subscriptionStatuses", "subscribedStatus", ["views", "redViews", "estimatedMinutesWatched", "estimatedRedMinutesWatched", "averageViewDuration", "averageViewPercentage", "engagedViews"], "-views"],
    ]
+   const selectedSegmentCategoryIds = segmentRuns
+    .map(([categoryId]) => categoryId)
+    .filter((categoryId) => shouldSync(selected, categoryId))
+   const segmentCategoryRows = new Map<string, number>()
+   const segmentCategoryIssues = new Set<string>()
    for (const segmentWindow of aggregateWindows) {
    const segmentStartDate = vtSyncWindowStartDate(segmentWindow, channelStartDate)
    for (const [categoryId, field, dimensions, metrics, sort, filters = "", maxResults = 200] of segmentRuns) {
@@ -2780,6 +2889,29 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     // windows are derived from that history, so looping them per window would
     // buy nothing and cost a full paginated sweep each time.
     if (segmentWindow !== "lifetime" && VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)) continue
+    const currentSegmentIndex = selectedSegmentCategoryIds.indexOf(categoryId)
+    const nextCategoryId = selectedSegmentCategoryIds[currentSegmentIndex + 1]
+    const currentQueryLabel = VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.label || categoryId.replace(/_/g, " ")
+    const nextQueryLabel = nextCategoryId
+     ? VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === nextCategoryId)?.label || nextCategoryId.replace(/_/g, " ")
+     : undefined
+    updatePhase(progress, "segments", {
+     currentCategoryId: categoryId,
+     nextCategoryId,
+     currentWindow: segmentWindow,
+     currentQueryLabel,
+     nextQueryLabel,
+     message: `Syncing ${currentQueryLabel} · ${segmentWindow}.`,
+    }, onProgress)
+    updateCategoryState(progress, categoryId, {
+     status: "running",
+     rows: segmentCategoryRows.get(categoryId) || 0,
+     startedAt: progress.categoryStates?.[categoryId]?.startedAt || new Date().toISOString(),
+     completedAt: undefined,
+     currentWindow: segmentWindow,
+     message: `Syncing ${currentQueryLabel} · ${segmentWindow}.`,
+     error: undefined,
+    }, onProgress)
     const usesCompleteContract = categoryId === "creator_content_type" || categoryId === "geography_country"
     let result: BundleResult
     if (usesCompleteContract) {
@@ -2876,20 +3008,66 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     if (isLifetime) {
      markFreshness([categoryId], categoryId, completedRows.length, result.rows ? (result.error || missingMetrics.length ? "partial" : "synced") : "failed", missingMetrics)
     }
+    const categoryRows = (segmentCategoryRows.get(categoryId) || 0) + (result.rows?.length || 0)
+    segmentCategoryRows.set(categoryId, categoryRows)
+    if (!result.rows || result.error || missingMetrics.length) segmentCategoryIssues.add(categoryId)
+    const finalWindowForCategory = VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)
+     || segmentWindow === aggregateWindows[aggregateWindows.length - 1]
+    updateCategoryState(progress, categoryId, {
+     status: finalWindowForCategory
+      ? categoryRows === 0 ? "failed" : segmentCategoryIssues.has(categoryId) ? "partial" : "complete"
+      : "pending",
+     rows: categoryRows,
+     completedAt: finalWindowForCategory ? new Date().toISOString() : undefined,
+     currentWindow: segmentWindow,
+     message: finalWindowForCategory
+      ? `${categoryRows.toLocaleString()} rows synced across requested windows.`
+      : `${segmentWindow} complete; waiting for the next requested window.`,
+     error: result.error,
+    }, onProgress)
     commitSnapshot()
     await sleep(150)
    }
    }
-   updatePhase(progress, "segments", { status: segmentsPartial ? "partial" : "complete", rows: rowsWritten, completedAt: new Date().toISOString() }, onProgress)
+   updatePhase(progress, "segments", { status: segmentsPartial ? "partial" : "complete", rows: rowsWritten, currentCategoryId: undefined, nextCategoryId: undefined, currentWindow: undefined, currentQueryLabel: undefined, nextQueryLabel: undefined, message: undefined, completedAt: new Date().toISOString() }, onProgress)
    commitSnapshot()
   }
 
   if (["ad_type", "revenue_source", "sharing_service"].some((id) => shouldSync(selected, id))) {
-   updatePhase(progress, "segments", { status: "running", startedAt: new Date().toISOString(), message: "Running revenue and sharing segments." }, onProgress)
+   updatePhase(progress, "segments", { status: "running", startedAt: new Date().toISOString(), completedAt: undefined, message: "Running revenue and sharing segments." }, onProgress)
    let rowsWritten = 0
    let segmentPartial = false
+   const revenueSegmentIds = ["ad_type", "revenue_source", "sharing_service"].filter((categoryId) => shouldSync(selected, categoryId))
+   const revenueCategoryRows = new Map<string, number>()
+   const revenueCategoryIssues = new Set<string>()
+   const publishRevenueSegment = (categoryId: string, window: VtSyncAnalyticsWindow = "lifetime") => {
+    const index = revenueSegmentIds.indexOf(categoryId)
+    const nextCategoryId = revenueSegmentIds[index + 1]
+    const currentQueryLabel = VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.label || categoryId.replace(/_/g, " ")
+    const nextQueryLabel = nextCategoryId
+     ? VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === nextCategoryId)?.label || nextCategoryId.replace(/_/g, " ")
+     : undefined
+    updatePhase(progress, "segments", {
+     currentCategoryId: categoryId,
+     nextCategoryId,
+     currentWindow: window,
+     currentQueryLabel,
+     nextQueryLabel,
+     message: `Syncing ${currentQueryLabel} · ${window}.`,
+    }, onProgress)
+    updateCategoryState(progress, categoryId, {
+     status: "running",
+     rows: revenueCategoryRows.get(categoryId) || 0,
+     startedAt: progress.categoryStates?.[categoryId]?.startedAt || new Date().toISOString(),
+     completedAt: undefined,
+     currentWindow: window,
+     message: `Syncing ${currentQueryLabel} · ${window}.`,
+     error: undefined,
+    }, onProgress)
+   }
    if (shouldSync(selected, "ad_type")) {
     for (const adWindow of aggregateWindows) {
+     publishRevenueSegment("ad_type", adWindow)
      const result = await runAnalyticsBundle({ token, id: `ad_type_${adWindow}`, metrics: ["grossRevenue", "cpm", "adImpressions"], dimensions: "adType", sort: "-grossRevenue", maxResults: 50, startDate: vtSyncWindowStartDate(adWindow, channelStartDate) })
      if (!result.rows || result.error) segmentPartial = true
      const merged = mergeVtSyncRowsPreservingDefined(
@@ -2902,13 +3080,28 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      addManifestResult(manifest, adWindow === "lifetime" ? "ad_type" : `ad_type_${adWindow}`, !!result.rows, result.rows?.length || 0, result.columns, result.error)
      if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "ads", window: adWindow, phase: "ad_type", rawRows: result.rows, tableRows: result.rows, columns: result.columns })
      if (adWindow === "lifetime") {
-      markFreshness(["ad_type"], "ad_type", result.rows?.length || 0, result.rows ? "synced" : "failed")
+      markFreshness(["ad_type"], "ad_type", result.rows?.length || 0, result.rows ? (result.error ? "partial" : "synced") : "failed", result.error ? [result.error] : [])
      }
+     const adRows = (revenueCategoryRows.get("ad_type") || 0) + (result.rows?.length || 0)
+     revenueCategoryRows.set("ad_type", adRows)
+     if (!result.rows || result.error) revenueCategoryIssues.add("ad_type")
+     const finalAdWindow = adWindow === aggregateWindows[aggregateWindows.length - 1]
+     updateCategoryState(progress, "ad_type", {
+      status: finalAdWindow
+       ? adRows === 0 ? "failed" : revenueCategoryIssues.has("ad_type") ? "partial" : "complete"
+       : "pending",
+      rows: adRows,
+      completedAt: finalAdWindow ? new Date().toISOString() : undefined,
+      currentWindow: adWindow,
+      message: finalAdWindow ? `${adRows.toLocaleString()} rows synced across requested windows.` : `${adWindow} complete; waiting for the next requested window.`,
+      error: result.error,
+     }, onProgress)
      commitSnapshot()
      await sleep(150)
     }
    }
    if (shouldSync(selected, "revenue_source")) {
+    publishRevenueSegment("revenue_source")
     const previousRevenueRows = snapshot.revenueSource as Array<Record<string, any>>
     const result = await runLifetimeDateWindowBundle({ token, id: "revenue_source", metrics: ["estimatedRevenue", "estimatedAdRevenue", "estimatedRedPartnerRevenue"], dimensions: "day", sort: "-day", startDate: channelStartDate, allowFallback: false, splitOnFailure: true })
     if (!result.rows || result.error) segmentPartial = true
@@ -2955,10 +3148,21 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
     if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "revenue", phase: "revenue_source", rawRows: result.rows, tableRows: snapshot.revenueSource as Array<Record<string, unknown>>, columns: result.columns })
     const revenueMissingMetrics = ["estimatedRevenue", "estimatedAdRevenue", "estimatedRedPartnerRevenue"].filter((metric) => !result.columns.includes(metric))
     markFreshness(["revenue"], "revenue_source", completeRevenueRows.length, result.rows ? (result.error || revenueMissingMetrics.length ? "partial" : "synced") : "failed", revenueMissingMetrics)
+    revenueCategoryRows.set("revenue_source", completeRevenueRows.length)
+    if (!result.rows || result.error || revenueMissingMetrics.length) revenueCategoryIssues.add("revenue_source")
+    updateCategoryState(progress, "revenue_source", {
+     status: !result.rows ? "failed" : revenueCategoryIssues.has("revenue_source") ? "partial" : "complete",
+     rows: completeRevenueRows.length,
+     completedAt: new Date().toISOString(),
+     currentWindow: "lifetime",
+     message: result.error || `${completeRevenueRows.length.toLocaleString()} revenue rows synced.`,
+     error: result.error,
+    }, onProgress)
     commitSnapshot()
    }
    if (shouldSync(selected, "sharing_service")) {
     for (const shareWindow of aggregateWindows) {
+     publishRevenueSegment("sharing_service", shareWindow)
      const result = await runPaginatedAnalyticsBundle({
       token,
       id: `sharing_service_${shareWindow}`,
@@ -3002,11 +3206,25 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      if (shareWindow === "lifetime") {
       markFreshness(["shares"], "sharing_service", result.rows?.length || 0, result.rows ? (result.error ? "partial" : "synced") : "failed", result.error ? [result.error] : [])
      }
+     const shareRows = (revenueCategoryRows.get("sharing_service") || 0) + (result.rows?.length || 0)
+     revenueCategoryRows.set("sharing_service", shareRows)
+     if (!result.rows || result.error) revenueCategoryIssues.add("sharing_service")
+     const finalShareWindow = shareWindow === aggregateWindows[aggregateWindows.length - 1]
+     updateCategoryState(progress, "sharing_service", {
+      status: finalShareWindow
+       ? shareRows === 0 ? "failed" : revenueCategoryIssues.has("sharing_service") ? "partial" : "complete"
+       : "pending",
+      rows: shareRows,
+      completedAt: finalShareWindow ? new Date().toISOString() : undefined,
+      currentWindow: shareWindow,
+      message: finalShareWindow ? `${shareRows.toLocaleString()} rows synced across requested windows.` : `${shareWindow} complete; waiting for the next requested window.`,
+      error: result.error,
+     }, onProgress)
      commitSnapshot()
      await sleep(150)
     }
    }
-   updatePhase(progress, "segments", { status: segmentPartial ? "partial" : "complete", rows: rowsWritten, completedAt: new Date().toISOString() }, onProgress)
+   updatePhase(progress, "segments", { status: segmentPartial ? "partial" : "complete", rows: rowsWritten, currentCategoryId: undefined, nextCategoryId: undefined, currentWindow: undefined, currentQueryLabel: undefined, nextQueryLabel: undefined, message: undefined, completedAt: new Date().toISOString() }, onProgress)
    commitSnapshot()
   }
 
@@ -3311,7 +3529,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   commitSnapshot()
   progress.status = manifest.bundles_failed?.length ? "partial" : "complete"
   progress.completedAt = completedAt
-  onProgress?.({ ...progress, phases: [...progress.phases] })
+  publishProgress(progress, onProgress)
   return snapshot
  } catch (error) {
   const completedAt = new Date().toISOString()
@@ -3358,7 +3576,26 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
       : "This phase was skipped after the sync stopped.",
     }
    : phase)
-  onProgress?.({ ...progress, phases: [...progress.phases] })
+  progress.categoryStates = Object.fromEntries(Object.entries(progress.categoryStates || {}).map(([categoryId, state]) => [
+   categoryId,
+   state.status === "running"
+    ? {
+      ...state,
+      status: "failed" as VtSyncLocalSyncPhaseStatus,
+      completedAt,
+      error: error instanceof Error ? error.message : String(error),
+      message: googleFailure?.reconnectRequired ? "Reconnect Google to retry this dataset." : "The sync stopped while this dataset was running.",
+     }
+    : state.status === "pending"
+     ? {
+       ...state,
+       status: "skipped" as VtSyncLocalSyncPhaseStatus,
+       completedAt,
+       message: googleFailure?.reconnectRequired ? "Reconnect Google before this dataset can run." : "Skipped after the sync stopped.",
+      }
+     : state,
+  ]))
+  publishProgress(progress, onProgress)
   throw error
  }
 }

@@ -20,7 +20,7 @@ export const TOOLBOX_COMPONENT_REGISTRY = [
   "progress-bar", "progress-value", "kpi", "stat-card", "metric-strip", "tooltip",
   "popover", "disclosure", "divider", "horizontal-scrollbar", "data-stats-module",
   "disabled-button", "disabled-split-button", "upload-frame", "pagination",
-  "vertical-scrollbar", "vault-asset-modules", "knob-dial", "sink-controller-switch",
+  "vertical-scrollbar", "vault-asset-modules", "knob-dial", "controller-switch",
   "led-light", "alphabetical-spectrum-tags", "icon-rail-control",
   "field-label", "surface", "state-panel", "output-card", "metric", "link-button",
   "data-table", "color-picker", "media-card", "selectable-list-row", "reorderable-row",

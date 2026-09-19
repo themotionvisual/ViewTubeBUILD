@@ -9,7 +9,7 @@ import {
  getVtSyncDefaultCategoryIds,
  getVtSyncVisibleCategoryIds,
 } from "./syncCategoryRegistry"
-import { VT_SYNC_SYNC_UNITS } from "./syncUnitRegistry"
+import { VT_SYNC_SYNC_UNITS, countVtSyncSelectedUnits, countVtSyncUnderlyingQueries } from "./syncUnitRegistry"
 import { VT_SYNC_TABLE_CATEGORIES, VT_SYNC_TABLE_DEFINITIONS } from "./tableRegistry"
 import { getVtSyncAvailableTrafficDetailSources, VT_SYNC_TRAFFIC_DETAIL_SOURCES } from "./trafficDetailRegistry"
 
@@ -74,7 +74,19 @@ describe("VT Sync category registry", () => {
   ])
  })
 
- it("maps every controller sync unit to a table category and supported child categories", () => {
+ it("keeps user-facing dataset counts separate from underlying query counts", () => {
+  const selectedCategoryIds = VT_SYNC_SYNC_UNITS.flatMap((unit) => unit.categoryIds)
+  const unitCount = countVtSyncSelectedUnits(selectedCategoryIds)
+  const queryCount = countVtSyncUnderlyingQueries(selectedCategoryIds)
+
+  expect(unitCount).toBe(VT_SYNC_SYNC_UNITS.length)
+  expect(queryCount).toBeGreaterThan(unitCount)
+  // Two compound units account for the three extra child queries:
+  // Channel Overview + Windows (+1) and Video Catalog & Analytics (+2).
+  expect(queryCount - unitCount).toBe(3)
+ })
+
+  it("maps every controller sync unit to a table category and supported child categories", () => {
   const tableCategoryIds = new Set(VT_SYNC_TABLE_CATEGORIES.map((category) => category.id))
   const visibleCategoryIds = new Set(VT_SYNC_CATEGORY_OPTIONS.map((category) => category.id))
  expect(VT_SYNC_SYNC_UNITS.every((unit) => tableCategoryIds.has(unit.tableCategoryId))).toBe(true)

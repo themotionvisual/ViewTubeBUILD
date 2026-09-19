@@ -79,3 +79,16 @@ VT_SYNC_SYNC_UNITS.push(...getVtSyncAvailableTrafficDetailSources().map(({ categ
 
 export const getVtSyncDefaultUnitIds = () => VT_SYNC_SYNC_UNITS.filter((entry) => entry.defaultEnabled).map((entry) => entry.id)
 export const getVtSyncUnitCategoryIds = (unitId: string) => VT_SYNC_SYNC_UNITS.find((entry) => entry.id === unitId)?.categoryIds || []
+
+/** User-facing dataset counts are sync-unit counts, not internal child-query counts. */
+export const countVtSyncSelectedUnits = (
+ categoryIds: string[],
+ units: VtSyncSyncUnitDefinition[] = VT_SYNC_SYNC_UNITS,
+): number => {
+ const selected = new Set(categoryIds)
+ return units.filter((entry) => entry.categoryIds.every((categoryId) => selected.has(categoryId))).length
+}
+
+/** Underlying query count is kept separate so compound dataset units do not inflate the dataset label. */
+export const countVtSyncUnderlyingQueries = (categoryIds: string[]): number =>
+ new Set(categoryIds).size
