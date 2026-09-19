@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { AssetRenderer } from './assets';
+import { TemplateCanvasRenderer } from '../../editor-design-library/integration/TemplateCanvasRenderer';
 import type { AssetDefinition, AssetVisualProps } from './assets/types';
 import { AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, interpolate, spring, useCurrentFrame } from 'remotion';
 import {
@@ -518,13 +519,25 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
     <AbsoluteFill style={{ backgroundColor: background, overflow: 'hidden' }}>
       {[...clips].sort((a, b) => Number(a.start || 0) - Number(b.start || 0)).map((clip) => {
         const layer = layers.find((entry) => entry.id === clip.layerId);
-        if (!layer || layer.visible === false) return null;
-        if (activeTrackIds && !activeTrackIds.has(layer.trackId)) return null;
-        const basePayload = (layer.payload || {}) as Record<string, unknown>;
-
         const bounds = sequenceBoundsForClip(project, clip);
         const from = toFrame(bounds.startSec, fps);
         const durationInFrames = Math.max(1, toFrame(Math.max(0, bounds.endSec - bounds.startSec), fps));
+
+        if (String((clip as VTClip & {clipType?:string}).clipType || '') === 'design-template' && (clip as VTClip & {templateDefinition?:unknown}).templateDefinition) {
+          if (activeTrackIds && !activeTrackIds.has(clip.trackId)) return null;
+          const zIndex = Math.max(1, orderedTrackIds.indexOf(clip.trackId) + 1);
+          return (
+            <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
+              <div style={{position:'absolute',inset:0,zIndex}}>
+                <TemplateCanvasRenderer clips={[clip as unknown as import('../../shared/vtE1TimelineContract').VtE1Clip]} playheadSec={currentSec}/>
+              </div>
+            </Sequence>
+          );
+        }
+
+        if (!layer || layer.visible === false) return null;
+        if (activeTrackIds && !activeTrackIds.has(layer.trackId)) return null;
+        const basePayload = (layer.payload || {}) as Record<string, unknown>;
         const localFrame = Math.max(0, toFrame(Math.max(0, currentSec - Number(clip.start || 0)), fps));
         const payload = evaluatePayloadAtFrame(basePayload, clip, localFrame, fps);
         const clipTransition = (project.transitions || []).find((entry) => entry.leftClipId === clip.id || entry.rightClipId === clip.id);
