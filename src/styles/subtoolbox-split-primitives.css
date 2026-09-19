@@ -176,3 +176,80 @@
   .vt-subtoolbox-split-button-label,
   .vt-subtoolbox-split-dropdown-label { font-size: 12px; }
 }
+
+
+/* Component-level parity mode used by the shared Component Library and any
+   production consumer that supplies L0/L1/L2. Geometry is token-derived. */
+.vt-subtoolbox-split-button.has-component-level{
+  height:var(--vt-component-height);
+  grid-template-columns:var(--vt-component-height) minmax(0,1fr);
+  border-width:var(--vt-component-stroke);
+  border-radius:var(--vt-component-radius);
+  filter:drop-shadow(var(--vt-component-shadow-offset) var(--vt-component-shadow-offset) 0 var(--vt-split-shadow));
+}
+.vt-subtoolbox-split-button.has-component-level .vt-subtoolbox-split-button-rail{
+  width:var(--vt-component-height);min-width:var(--vt-component-height);
+  border-right-width:var(--vt-component-stroke);
+}
+.vt-subtoolbox-split-button.has-component-level .vt-subtoolbox-split-button-label{
+  padding:0 calc(var(--vt-component-height)*.16);
+  font:1000 var(--vt-component-font-size)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.055em;
+}
+.vt-subtoolbox-split-button.has-component-level svg{width:55%;height:55%;stroke-width:3.4}
+.vt-subtoolbox-split-button.has-component-level[data-vt-control-level="l0"] svg{stroke-width:3.75}
+.vt-subtoolbox-split-button.has-component-level[data-vt-control-level="l2"] svg{stroke-width:3}
+
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-trigger{
+  height:var(--vt-component-height);
+  grid-template-columns:var(--vt-component-height) minmax(0,1fr);
+  border-width:var(--vt-component-stroke);
+  border-radius:var(--vt-component-radius);
+  filter:drop-shadow(var(--vt-component-shadow-offset) var(--vt-component-shadow-offset) 0 var(--vt-split-shadow));
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-rail{
+  width:var(--vt-component-height);min-width:var(--vt-component-height);
+  grid-template-rows:1fr 1fr;border-right-width:var(--vt-component-stroke);
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-label{
+  padding:0 calc(var(--vt-component-height)*.16);
+  font:1000 var(--vt-component-font-size)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.055em;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-menu{
+  top:calc(100% + 5px);border-width:var(--vt-component-stroke);
+  border-radius:var(--vt-component-radius);
+  filter:drop-shadow(var(--vt-component-shadow-offset) var(--vt-component-shadow-offset) 0 var(--vt-split-shadow));
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option{
+  min-height:var(--vt-component-height);
+  grid-template-columns:var(--vt-component-height) minmax(0,1fr);
+  border-bottom-width:var(--vt-component-stroke);
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option-rail{border-right-width:var(--vt-component-stroke)}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option-label{
+  padding:0 calc(var(--vt-component-height)*.16);
+  font:1000 var(--vt-component-font-size)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.055em;
+}
+
+.vt-subtoolbox-kpi-card.has-component-level{
+  border-width:var(--vt-component-stroke);
+  border-radius:var(--vt-component-radius);
+  box-shadow:var(--vt-component-shadow-offset) var(--vt-component-shadow-offset) 0 color-mix(in srgb,var(--pair-b,var(--vt-kpi-accent)) 42%,transparent);
+}
+.vt-subtoolbox-kpi-card.has-component-level .vt-subtoolbox-kpi-header{
+  min-height:var(--vt-component-height);border-bottom-width:var(--vt-component-stroke);
+  grid-template-columns:1fr;background:var(--pair-a,var(--vt-kpi-accent));
+}
+.vt-subtoolbox-kpi-card.has-component-level .vt-subtoolbox-kpi-label{
+  font:1000 var(--vt-component-font-size)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.055em;
+}
+.vt-subtoolbox-kpi-card.has-component-level .vt-subtoolbox-kpi-body{
+  min-height:calc(var(--vt-component-height)*1.65);background:#fff;
+}
+.vt-subtoolbox-kpi-card.has-component-level .vt-subtoolbox-kpi-value{
+  font:1000 calc(var(--vt-component-font-size)*2.35)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.065em;
+}
