@@ -15,10 +15,10 @@ const STYLE_OPTIONS = [
   "Clickbait",
   "Cinematic",
   "Minimalist",
-  "Neon/Cyberpunk",
+  "Cyberpunk",
   "Vibrant",
-  "Dark & Moody",
-  "Retro/Vintage",
+  "Spooky",
+  "Vintage",
 ]
 
 export const ImageGeneratorWidget = ({
