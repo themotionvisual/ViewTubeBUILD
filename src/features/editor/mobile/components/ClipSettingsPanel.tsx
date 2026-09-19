@@ -1,4 +1,4 @@
-import React,{useMemo,useRef} from 'react';
+import React,{useEffect,useRef} from 'react';
 import {Circle,RectangleHorizontal,Sparkles,Upload,Video} from 'lucide-react';
 import type {EditorLayer,EditorStore} from '../state/editorState';
 import type {EditorNavPage} from './EditorNavigationPages';
@@ -11,10 +11,8 @@ const YELLOW='#ffff61';
 const GREEN='#00ff00';
 const BLUE='#579aff';
 const PURPLE='#cc00ff';
-const TRACK='#cc00ff';
-const THUMB='#7a267a';
-const THUMB_EDGE='#d88dff';
-const THUMB_SHADOW='#a12988';
+const INK='#248b99';
+const CYAN='#36E0F6';
 
 type Payload=Record<string,unknown>;
 
@@ -36,9 +34,22 @@ const sectionLabel:React.CSSProperties={
 };
 
 const valueInput:React.CSSProperties={
-  boxSizing:'border-box',border:'2px solid var(--widget-color,#000)',margin:0,padding:'2px 6px',
+  boxSizing:'border-box',border:`2px solid ${INK}`,margin:0,padding:'2px 6px',
   fontWeight:800,fontSize:9,color:'inherit',background:'#fff',borderRadius:6,textAlign:'center',
-  minWidth:36,width:'100%',height:24,caretColor:'var(--widget-color,#000)',outline:'none',
+  minWidth:36,width:'100%',height:24,caretColor:INK,outline:'none',
+};
+
+const stepperButton:React.CSSProperties={
+  width:34,minWidth:34,height:30,border:`2px solid ${INK}`,borderRadius:6,
+  background:'#fff',color:'#111',fontSize:16,fontWeight:1000,lineHeight:1,
+  display:'grid',placeItems:'center',padding:0,touchAction:'none',userSelect:'none',
+  boxShadow:'2px 2px 0 rgba(36,139,153,.22)',cursor:'pointer',
+};
+
+const stepperValue:React.CSSProperties={
+  minWidth:0,height:30,borderTop:`2px solid ${INK}`,borderBottom:`2px solid ${INK}`,
+  background:'#fff',display:'grid',placeItems:'center',fontSize:10,fontWeight:1000,
+  fontVariantNumeric:'tabular-nums',letterSpacing:'-.02em',padding:'0 5px',boxSizing:'border-box',
 };
 
 const clamp=(value:number,min:number,max:number)=>Math.max(min,Math.min(max,value));
@@ -183,6 +194,100 @@ function keyframeState(clip:VtE1Clip,prop:string,playheadSec:number){
   return active?'active' as const:'attached' as const;
 }
 
+interface HoldStepperProps{
+  label:string;
+  value:number;
+  min:number;
+  max:number;
+  step:number;
+  onChange:(value:number)=>void;
+  keyframeState?:'none'|'attached'|'active';
+  onKeyframe?:()=>void;
+  suffix?:string;
+  precision?:number;
+}
+
+const HoldStepper:React.FC<HoldStepperProps>=({
+  label,value,min,max,step,onChange,keyframeState='none',onKeyframe,suffix='',precision,
+})=>{
+  const valueRef=useRef(value);
+  const timerRef=useRef<number|null>(null);
+  const holdStartRef=useRef(0);
+  valueRef.current=value;
+
+  const stop=()=>{
+    if(timerRef.current!=null){
+      window.clearTimeout(timerRef.current);
+      timerRef.current=null;
+    }
+  };
+
+  useEffect(()=>stop,[]);
+
+  const nudge=(direction:-1|1,elapsed=0)=>{
+    const multiplier=elapsed>=2800?10:elapsed>=1700?5:elapsed>=900?2:1;
+    const next=clamp(valueRef.current+(direction*step*multiplier),min,max);
+    const decimals=precision??(step<.01?3:step<1?2:0);
+    const snapped=Number(next.toFixed(decimals));
+    valueRef.current=snapped;
+    onChange(snapped);
+  };
+
+  const schedule=(direction:-1|1)=>{
+    const elapsed=performance.now()-holdStartRef.current;
+    nudge(direction,elapsed);
+    const interval=Math.max(42,210-(elapsed/18));
+    timerRef.current=window.setTimeout(()=>schedule(direction),interval);
+  };
+
+  const start=(direction:-1|1,event:React.PointerEvent<HTMLButtonElement>)=>{
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    stop();
+    holdStartRef.current=performance.now();
+    nudge(direction,0);
+    timerRef.current=window.setTimeout(()=>schedule(direction),340);
+  };
+
+  const decimals=precision??(step<.01?3:step<1?2:0);
+  const display=`${Number(value.toFixed(decimals))}${suffix}`;
+
+  return <div style={{width:196,marginBottom:8}}>
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:6,marginBottom:3}}>
+      <span style={{fontSize:8,fontWeight:1000,textTransform:'uppercase',opacity:.72,lineHeight:1}}>{label}</span>
+      {onKeyframe?<button
+        title={`Add circle keyframe for ${label}`}
+        onClick={onKeyframe}
+        style={{
+          width:18,height:18,border:`2px solid ${INK}`,borderRadius:99,padding:0,
+          background:keyframeState==='active'?BLUE:keyframeState==='attached'?'#a8caff':'#fff',
+          color:'#111',fontSize:13,fontWeight:1000,lineHeight:1,display:'grid',placeItems:'center',
+          opacity:keyframeState==='attached'?.72:1,
+        }}
+      >○</button>:null}
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'34px minmax(0,1fr) 34px',alignItems:'stretch',width:'100%'}}>
+      <button
+        aria-label={`Decrease ${label}`}
+        style={{...stepperButton,borderTopRightRadius:0,borderBottomRightRadius:0}}
+        onPointerDown={e=>start(-1,e)}
+        onPointerUp={stop}
+        onPointerCancel={stop}
+        onLostPointerCapture={stop}
+      >−</button>
+      <div aria-live="polite" style={stepperValue}>{display}</div>
+      <button
+        aria-label={`Increase ${label}`}
+        style={{...stepperButton,background:CYAN,borderTopLeftRadius:0,borderBottomLeftRadius:0}}
+        onPointerDown={e=>start(1,e)}
+        onPointerUp={stop}
+        onPointerCancel={stop}
+        onLostPointerCapture={stop}
+      >+</button>
+    </div>
+  </div>;
+};
+
 const SettingRow:React.FC<{
   def:SettingDef;
   payload:Payload;
@@ -192,84 +297,24 @@ const SettingRow:React.FC<{
 }>=({def,payload,clip,store,onPatch})=>{
   const raw=number(payload[def.prop],def.fallback);
   const display=def.toDisplay?def.toDisplay(raw):raw;
-  const ratio=clamp((display-def.min)/Math.max(.0001,def.max-def.min),0,1);
   const state=keyframeState(clip,def.prop,store.state.playheadSec);
-  const trackRef=useRef<HTMLDivElement>(null);
-
   const commit=(nextDisplay:number)=>{
     const snapped=Math.round(clamp(nextDisplay,def.min,def.max)/def.step)*def.step;
-    const value=def.fromDisplay?def.fromDisplay(snapped):snapped;
-    onPatch({[def.prop]:value});
+    const next=def.fromDisplay?def.fromDisplay(snapped):snapped;
+    onPatch({[def.prop]:next});
   };
-  const fromPointer=(clientX:number)=>{
-    const rect=trackRef.current?.getBoundingClientRect();
-    if(!rect)return;
-    const next=def.min+clamp((clientX-rect.left)/Math.max(1,rect.width),0,1)*(def.max-def.min);
-    commit(next);
-  };
-
-  return <div style={{display:'grid',gridTemplateColumns:'82px 110px',alignItems:'end',gap:4,width:196,marginBottom:8}}>
-    <div style={{display:'flex',alignItems:'center',gap:6,justifySelf:'start',width:70}}>
-      <div
-        ref={trackRef}
-        onPointerDown={event=>{
-          event.currentTarget.setPointerCapture?.(event.pointerId);
-          fromPointer(event.clientX);
-        }}
-        onPointerMove={event=>{if(event.currentTarget.hasPointerCapture?.(event.pointerId))fromPointer(event.clientX)}}
-        style={{
-          boxSizing:'border-box',border:`2px solid ${BLACK}`,margin:0,padding:0,
-          background:`linear-gradient(180deg,#ffffff5c,#fff0 55%),${TRACK}`,
-          borderRadius:999,flex:'1 1 auto',height:18,position:'relative',
-          boxShadow:'0 -2px inset rgba(17,17,17,.18)',touchAction:'none',
-        }}
-      >
-        <button
-          aria-label={`Set ${def.label} minimum`}
-          onPointerDown={e=>e.stopPropagation()}
-          onDoubleClick={e=>{e.stopPropagation();commit(def.min)}}
-          style={{position:'absolute',left:3,top:'50%',transform:'translateY(-50%)',width:6,height:6,border:0,borderRadius:99,background:BLACK,padding:0}}
-        />
-        <div style={{
-          boxSizing:'border-box',border:`2px solid ${THUMB_EDGE}`,cursor:'pointer',
-          background:THUMB,borderRadius:2,width:16,height:28,display:'flex',
-          position:'absolute',top:'50%',left:`${ratio*100}%`,transform:'translate(-50%,-50%)',
-          boxShadow:`0 0 0 4px ${THUMB_SHADOW}`,pointerEvents:'none',
-        }}>
-          <div style={{margin:'auto',background:THUMB_EDGE,borderRadius:2,width:2,height:10}}/>
-        </div>
-        <button
-          aria-label={`Set ${def.label} maximum`}
-          onPointerDown={e=>e.stopPropagation()}
-          onDoubleClick={e=>{e.stopPropagation();commit(def.max)}}
-          style={{position:'absolute',right:3,top:'50%',transform:'translateY(-50%)',width:6,height:6,border:0,borderRadius:99,background:BLACK,padding:0}}
-        />
-      </div>
-      <button
-        title={`Add circle keyframe for ${def.label}`}
-        onClick={()=>store.dispatch({type:'addClipKeyframeValue',clipId:clip.id,prop:def.prop,value:raw})}
-        style={{
-          boxSizing:'border-box',border:`2px solid ${BLACK}`,margin:0,padding:0,fontWeight:900,
-          fontSize:14,lineHeight:1,color:BLACK,background:state==='active'?BLUE:state==='attached'?'#a8caff':'#fff',
-          borderRadius:999,touchAction:'manipulation',cursor:'pointer',justifyContent:'center',
-          alignItems:'center',width:18,height:18,display:'inline-flex',opacity:state==='attached'?.7:1,
-        }}
-      >○</button>
-    </div>
-    <label style={{display:'grid',alignItems:'end',gap:2,minWidth:58}}>
-      <span style={{textTransform:'uppercase',textAlign:'center',opacity:.72,fontSize:8,fontWeight:900,lineHeight:1}}>{def.label}</span>
-      <input
-        aria-label={`${def.label} value`}
-        type="number"
-        min={def.min}
-        max={def.max}
-        step={def.step}
-        value={Number(display.toFixed(def.step<1?2:0))}
-        onChange={event=>{const next=Number(event.target.value);if(Number.isFinite(next))commit(next)}}
-        style={valueInput}
-      />
-    </label>
-  </div>;
+  return <HoldStepper
+    label={def.label}
+    value={display}
+    min={def.min}
+    max={def.max}
+    step={def.step}
+    precision={def.step<1?2:0}
+    suffix={def.prop==='opacity'?'%':''}
+    onChange={commit}
+    keyframeState={state}
+    onKeyframe={()=>store.dispatch({type:'addClipKeyframeValue',clipId:clip.id,prop:def.prop,value:raw})}
+  />;
 };
 
 const ColorControl:React.FC<{
@@ -333,11 +378,36 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
     </div>
 
     <div style={sectionLabel}>TIMING</div>
-    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:4,marginBottom:8}}>
-      <label style={{fontSize:7,fontWeight:900,textAlign:'center'}}>START<input type="number" step=".01" value={Number(clip.start.toFixed(2))} onChange={e=>store.dispatch({type:'trimClip',id:clip.id,side:'left',sec:Number(e.target.value)})} style={valueInput}/></label>
-      <label style={{fontSize:7,fontWeight:900,textAlign:'center'}}>END<input type="number" step=".01" value={Number(clip.end.toFixed(2))} onChange={e=>store.dispatch({type:'trimClip',id:clip.id,side:'right',sec:Number(e.target.value)})} style={valueInput}/></label>
-      <label style={{fontSize:7,fontWeight:900,textAlign:'center'}}>DUR<input readOnly value={(clip.end-clip.start).toFixed(2)} style={{...valueInput,opacity:.65}}/></label>
-    </div>
+    <HoldStepper
+      label="START"
+      value={clip.start}
+      min={0}
+      max={Math.max(0,clip.end-.1)}
+      step={.05}
+      precision={2}
+      suffix="s"
+      onChange={sec=>store.dispatch({type:'trimClip',id:clip.id,side:'left',sec})}
+    />
+    <HoldStepper
+      label="END"
+      value={clip.end}
+      min={Math.min(store.state.project.durationSec,clip.start+.1)}
+      max={store.state.project.durationSec}
+      step={.05}
+      precision={2}
+      suffix="s"
+      onChange={sec=>store.dispatch({type:'trimClip',id:clip.id,side:'right',sec})}
+    />
+    <HoldStepper
+      label="DURATION"
+      value={Math.max(.1,clip.end-clip.start)}
+      min={.1}
+      max={Math.max(.1,store.state.project.durationSec-clip.start)}
+      step={.05}
+      precision={2}
+      suffix="s"
+      onChange={duration=>store.dispatch({type:'trimClip',id:clip.id,side:'right',sec:clip.start+duration})}
+    />
 
     <div style={sectionLabel}>TRANSFORM + TIMING</div>
     {SETTINGS.map(def=><SettingRow key={def.prop} def={def} payload={payload} clip={clip} store={store} onPatch={patch}/>)}
@@ -376,8 +446,8 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
 
     {isAudio?<div style={{marginTop:10}}>
       <div style={sectionLabel}>AUDIO</div>
-      <label style={{fontSize:8,fontWeight:900}}>VOLUME<input type="number" min="0" max="1" step=".01" value={audioVolume} onChange={e=>patch({volume:clamp(Number(e.target.value),0,1)})} style={valueInput}/></label>
-      <label style={{fontSize:8,fontWeight:900}}>PLAYBACK RATE<input type="number" min=".1" max="4" step=".1" value={audioRate} onChange={e=>patch({playbackRate:clamp(Number(e.target.value),.1,4)})} style={valueInput}/></label>
+      <HoldStepper label="VOLUME" value={audioVolume} min={0} max={1} step={.01} precision={2} onChange={volume=>patch({volume})}/>
+      <HoldStepper label="PLAYBACK RATE" value={audioRate} min={.1} max={4} step={.1} precision={1} suffix="×" onChange={playbackRate=>patch({playbackRate})}/>
       <button style={{...miniButton,width:'100%',marginTop:4,background:Boolean(payload.muted)?'#fff':BLUE}} onClick={()=>patch({muted:!Boolean(payload.muted)})}>{Boolean(payload.muted)?'UNMUTE':'MUTE'}</button>
     </div>:null}
 
