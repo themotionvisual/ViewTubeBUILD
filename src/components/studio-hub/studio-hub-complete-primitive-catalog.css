@@ -824,7 +824,7 @@
    frozen comparison toolbox does not depend on production primitive CSS. */
 .vt-complete-catalog .vt-hardcoded-tooltip{
   position:relative;display:inline-grid;place-items:center;
-  padding-top:calc(var(--h)*1.48);isolation:isolate;
+  padding-top:0;isolation:isolate;
 }
 .vt-complete-catalog .vt-hardcoded-tooltip>button{
   width:var(--h);height:var(--h);padding:0;border:0;border-radius:calc(var(--radius)*.75);
