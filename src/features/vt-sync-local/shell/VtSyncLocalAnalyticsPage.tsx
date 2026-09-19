@@ -32,7 +32,7 @@ import {
  removeVtSyncTableFromImportState,
  saveVtSyncSnapshot,
 } from ".."
-import { VtSyncUnifiedSyncToolbox } from "./VtSyncControllerPanel"
+import { VtSyncUnifiedSyncToolbox } from "./VtSyncUnifiedSyncToolbox"
 import { buildVtSyncCreatorHeroModel, VtSyncCreatorHero } from "./VtSyncCreatorHero"
 import { VtSyncToolboxDataTable } from "./toolbox-table/VtSyncToolboxDataTable"
 import { VtSyncDataVisualsGate } from "./VtSyncDataVisualsGate"
