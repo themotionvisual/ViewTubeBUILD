@@ -2,6 +2,7 @@ import React from 'react';
 import type {EditorStore} from '../state/editorState';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
 import {resolveClipPreviewGeometry} from './mobilePreviewGeometry';
+import {expandCompoundClips} from '../../../../shared/vtE1CompoundClips.js';
 
 const clamp=(v:number,min:number,max:number)=>Math.min(max,Math.max(min,v));
 const isVideo=(src:string)=>/\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(src);
@@ -26,7 +27,7 @@ function VideoPreview({src,clip,playheadSec,playing,playbackRate,payload}:{src:s
 export const MobileProjectPreview:React.FC<{store:EditorStore}>=({store})=>{
   const {state}=store;
   const trackOrder=new Map(state.project.tracks.map((t,i)=>[t.id,i]));
-  const active=state.project.clips
+  const active=expandCompoundClips(state.project.clips)
     .filter(c=>state.playheadSec>=c.start&&state.playheadSec<c.end)
     .filter(c=>!store.trackById(c.trackId)?.hidden)
     .sort((a,b)=>(trackOrder.get(a.trackId)??0)-(trackOrder.get(b.trackId)??0));
