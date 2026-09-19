@@ -1,7 +1,6 @@
 import type { VideoDirectorCategoryId } from "./categorySchemas"
 import {
   VideoDirectorProjectSchema,
-  type VideoDirectorConflictSchema,
   type VideoDirectorProject,
 } from "./projectSchema"
 
