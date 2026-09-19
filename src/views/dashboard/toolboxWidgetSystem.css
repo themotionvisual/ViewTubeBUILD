@@ -1560,6 +1560,19 @@
 }
 
 @container (max-width: 460px) {
+  /* Final portrait ownership: widget header toggles stay mounted even when
+     widget-specific header rules appear later in the cascade. */
+  :where(.dashboard-barrier) [data-widget-id] .header-extra:has(.widget-header-toggle) {
+    display: flex !important;
+    flex: 1 1 120px !important;
+    min-width: 86px;
+    max-width: 44%;
+    overflow: hidden;
+    justify-content: center !important;
+  }
+}
+
+@container (max-width: 460px) {
   :where(.dashboard-barrier) [data-widget-id="comment-replier"] .vt-widget-header .title {
     max-width: 94px;
     font-size: 13px;
