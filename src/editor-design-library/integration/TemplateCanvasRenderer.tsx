@@ -2,9 +2,10 @@ import React from 'react';
 import type {VtE1Clip} from '../../shared/vtE1TimelineContract';
 import type {TemplateDefinition,TemplateElement,TemplateStyleConfig,StyleTokenPath} from '../core/schema';
 
+type TemplateStyleOverrides=Partial<Omit<TemplateStyleConfig,'colors'>>&{colors?:Partial<TemplateStyleConfig['colors']>};
 type TemplateOverrides={
   content?:Record<string,unknown>;
-  style?:Partial<TemplateStyleConfig>;
+  style?:TemplateStyleOverrides;
 };
 type DesignClip=VtE1Clip&{
   templateDefinition?:TemplateDefinition;
