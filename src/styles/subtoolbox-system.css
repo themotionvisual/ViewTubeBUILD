@@ -1138,3 +1138,146 @@
   .vt-subtoolbox-toolbar-leading,.vt-subtoolbox-toolbar-main,.vt-subtoolbox-toolbar-trailing{width:100%}
   .vt-subtoolbox-toolbar-trailing{justify-content:flex-start}
 }
+
+
+/* ==========================================================================
+   USER CORRECTION WAVE — 14 Split Search / 16 Input Action /
+   29 Tag Editor / 33 Progress Value / 52 Knob Dial.
+   ========================================================================== */
+
+/* 14 + 16: search and action fields are related compounds, not duplicates. */
+.vt-subtoolbox-split-field{
+  grid-template-columns:var(--vt-component-height) minmax(0,1fr);
+}
+.vt-subtoolbox-split-field.has-action{grid-template-columns:var(--vt-component-height) minmax(0,1fr) var(--vt-component-height)}
+.vt-subtoolbox-split-field.is-action{grid-template-columns:minmax(0,1fr) var(--vt-component-height)}
+.vt-subtoolbox-split-field.is-action.has-action{grid-template-columns:minmax(0,1fr) var(--vt-component-height)}
+.vt-subtoolbox-split-field input{
+  background:transparent;
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) var(--pair-b,#ff7f6b);
+}
+.vt-subtoolbox-split-field input:focus{
+  background:#fff;
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) var(--pair-a,#36e0f6);
+}
+.vt-subtoolbox-split-field-action{
+  width:var(--vt-component-height);height:100%;padding:0;border:0;border-left:var(--vt-component-stroke) solid #000;
+  border-radius:0;background:var(--pair-a,#36e0f6);box-shadow:none;color:#000;display:grid;place-items:center
+}
+.vt-subtoolbox-split-field.is-action .vt-subtoolbox-split-field-action{background:var(--pair-b,#ff7f6b)}
+.vt-subtoolbox-split-field-action svg{width:48%;height:48%;stroke-width:3.5}
+.vt-subtoolbox-split-field-action:focus-visible{outline:calc(var(--vt-component-stroke)*.75) solid #fff;outline-offset:calc(var(--vt-component-stroke)*-1.5)}
+
+/* 29: the editor is a labeled tag tray. Tags keep their A-Z spectrum identity,
+   + lives at the end of the tag row, and the editor opens as a dedicated row. */
+.vt-subtoolbox-tag-editor{
+  display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:calc(var(--vt-component-height)*.12);
+  padding:calc(var(--vt-component-height)*.10);background:#fff;
+}
+.vt-subtoolbox-tag-editor.is-editing{grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto}
+.vt-subtoolbox-tag-editor-label{
+  align-self:stretch;display:flex;align-items:center;padding:0 calc(var(--vt-component-height)*.14);
+  border-right:var(--vt-component-stroke) solid #000;color:#000;
+  font:1000 calc(var(--vt-component-font-size)*.62)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:.05em;text-transform:uppercase
+}
+.vt-subtoolbox-tag-editor-tags{min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.vt-subtoolbox-removable-tag{
+  border:var(--vt-component-stroke) solid var(--vt-tag-color,var(--pair-a,#36e0f6));
+  background:color-mix(in srgb,var(--vt-tag-color,var(--pair-a,#36e0f6)) 35%,white);
+  color:var(--vt-tag-color,var(--pair-a,#36e0f6));padding-left:calc(var(--tag-h)*.30)
+}
+.vt-subtoolbox-removable-tag button{background:var(--vt-tag-color,var(--pair-a,#36e0f6));color:#000}
+.vt-subtoolbox-tag-editor .add,
+.vt-subtoolbox-tag-editor .submit{
+  width:calc(var(--vt-component-height)*.62);height:calc(var(--vt-component-height)*.62);
+  padding:0;border:var(--vt-component-stroke) solid #000;border-radius:calc(var(--vt-component-radius)*.64);
+  display:grid;place-items:center;background:#3FEE56;color:#000
+}
+.vt-subtoolbox-tag-editor .submit{background:var(--pair-b,#ff7f6b)}
+.vt-subtoolbox-tag-editor .add svg,.vt-subtoolbox-tag-editor .submit svg{width:55%;height:55%;stroke-width:4}
+.vt-subtoolbox-tag-editor-entry{
+  grid-column:2;display:grid;grid-template-columns:minmax(0,1fr) calc(var(--vt-component-height)*.62);
+  gap:6px;align-items:center;margin-top:calc(var(--vt-component-height)*.08)
+}
+.vt-subtoolbox-tag-editor-entry>input{
+  min-width:0;height:calc(var(--vt-component-height)*.62);padding:0 9px;
+  border:var(--vt-component-stroke) solid #000;border-radius:calc(var(--vt-component-radius)*.64);
+  outline:0;background:transparent;color:#000;caret-color:var(--pair-a,#36e0f6);
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) var(--pair-a,#36e0f6);
+  font:1000 calc(var(--vt-component-font-size)*.68)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));text-transform:uppercase
+}
+.vt-subtoolbox-tag-editor-entry>input:focus{
+  background:#fff;
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) var(--pair-a,#36e0f6),0 0 calc(var(--vt-component-height)*.22) color-mix(in srgb,var(--pair-b,#ff7f6b) 60%,transparent)
+}
+
+/* 33: value and fill now read as one progress instrument. */
+.vt-subtoolbox-progress-value{
+  grid-template-columns:minmax(0,1fr) max(var(--vt-component-height),4.7ch);
+  background:color-mix(in srgb,var(--pair-b,#ff7f6b) 22%,white)
+}
+.vt-subtoolbox-progress-value .bar{
+  position:relative;padding:0;overflow:hidden;background:color-mix(in srgb,var(--pair-b,#ff7f6b) 22%,white)
+}
+.vt-subtoolbox-progress-value .bar .fill{
+  position:absolute;inset:0 auto 0 0;height:100%;border:0;border-radius:0;background:var(--pair-a,#36e0f6)
+}
+.vt-subtoolbox-progress-value .bar strong{
+  position:relative;z-index:1;display:flex;align-items:center;height:100%;padding:0 calc(var(--vt-component-height)*.18);
+  color:#000;font:1000 calc(var(--vt-component-font-size)*.64)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:.02em;text-transform:uppercase
+}
+.vt-subtoolbox-progress-value output{
+  background:var(--pair-b,#ff7f6b);font-size:calc(var(--vt-component-font-size)*.92)
+}
+
+/* 52: large tactile radial controller with an active 270-degree arc. */
+.vt-subtoolbox-knob{
+  --vt-knob-size:calc(var(--vt-component-height)*2.45);
+  --vt-knob-ring:var(--pair-a,#36e0f6);
+  --vt-knob-face:var(--pair-b,#ff7f6b);
+  gap:calc(var(--vt-component-height)*.16);
+  min-width:calc(var(--vt-knob-size) + var(--vt-component-shadow-offset)*1.4)
+}
+.vt-subtoolbox-knob-dial{
+  touch-action:none;cursor:grab;outline:none;
+  background:conic-gradient(from 225deg,
+    var(--vt-knob-ring) 0 var(--vt-knob-sweep),
+    color-mix(in srgb,var(--vt-knob-ring) 18%,white) var(--vt-knob-sweep) 75%,
+    transparent 75% 100%);
+  box-shadow:var(--vt-component-shadow-offset) var(--vt-component-shadow-offset) 0 color-mix(in srgb,var(--vt-knob-ring) 42%,transparent)
+}
+.vt-subtoolbox-knob-dial:active{cursor:grabbing}
+.vt-subtoolbox-knob-dial:before{
+  inset:calc(var(--vt-component-stroke)*2.1);background:#fff;
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) #000
+}
+.vt-subtoolbox-knob-arc{
+  position:absolute;inset:calc(var(--vt-component-stroke)*3.4);border-radius:50%;
+  background:var(--vt-knob-face);z-index:1;box-shadow:inset 0 0 0 var(--vt-component-stroke) #000
+}
+.vt-subtoolbox-knob-face{
+  z-index:2;width:62%;height:62%;background:color-mix(in srgb,var(--vt-knob-face) 72%,white);
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) #000
+}
+.vt-subtoolbox-knob-face strong{font-size:calc(var(--vt-component-font-size)*1.60)}
+.vt-subtoolbox-knob-pointer{
+  top:5%;height:31%;transform-origin:50% calc((var(--vt-knob-size)*.62)/2 - (var(--vt-knob-size)*.62)*.05)
+}
+.vt-subtoolbox-knob-dial:focus-visible{
+  outline:calc(var(--vt-component-stroke)*.9) solid var(--vt-knob-face);outline-offset:5px
+}
+.vt-subtoolbox-knob-controls{
+  width:var(--vt-knob-size);display:grid;grid-template-columns:calc(var(--vt-component-height)*.62) minmax(0,1fr) calc(var(--vt-component-height)*.62);
+  gap:6px;align-items:center
+}
+.vt-subtoolbox-knob-controls>button{
+  width:100%;height:calc(var(--vt-component-height)*.62);padding:0;border:var(--vt-component-stroke) solid #000;
+  border-radius:calc(var(--vt-component-radius)*.64);background:var(--vt-knob-ring);color:#000;
+  display:grid;place-items:center;font-size:calc(var(--vt-component-font-size)*.98);font-weight:1000
+}
+.vt-subtoolbox-knob-controls>button:last-child{background:var(--vt-knob-face)}
+.vt-subtoolbox-knob-label{
+  text-align:center;font-size:calc(var(--vt-component-font-size)*.70);letter-spacing:.06em
+}
