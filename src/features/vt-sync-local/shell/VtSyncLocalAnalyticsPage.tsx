@@ -102,6 +102,20 @@ const formatRelativeTime = (iso?: string): string => {
 const EMPTY_MANUAL_IMPORTS: VtSyncManualImportState = { rowsByTableId: {}, capturedAtByTableId: {} }
 const EMPTY_PERSISTED_API_ROWS: VtSyncPersistedApiState = { rowsByTableId: {}, capturedAtByTableId: {} }
 
+type VtSyncQueuedRequest = {
+ categoryIds: string[]
+ retentionVideoIds?: string[]
+ forceFullVideoMetadata?: boolean
+ windows?: VtSyncAnalyticsWindow[]
+}
+
+const vtSyncQueueRequestKey = (request: VtSyncQueuedRequest): string => JSON.stringify({
+ categoryIds: [...new Set(request.categoryIds)].sort(),
+ retentionVideoIds: [...new Set(request.retentionVideoIds || [])].sort(),
+ forceFullVideoMetadata: Boolean(request.forceFullVideoMetadata),
+ windows: [...new Set(request.windows || ["lifetime"])].sort(),
+})
+
 const writeClipboardText = async (text: string) => {
  if (navigator.clipboard?.writeText) {
   await navigator.clipboard.writeText(text)
@@ -680,7 +694,8 @@ const refreshManualImports = useCallback(async (payload?: {
  const controllerPanelRef = useRef<HTMLDivElement | null>(null)
  const progressPanelRef = useRef<HTMLDivElement | null>(null)
  const syncRequestActiveRef = useRef(false)
- const syncQueueRef = useRef<Array<{ categoryIds: string[]; retentionVideoIds?: string[]; forceFullVideoMetadata?: boolean; windows?: VtSyncAnalyticsWindow[] }>>([])
+ const activeSyncRequestKeyRef = useRef<string | null>(null)
+ const syncQueueRef = useRef<VtSyncQueuedRequest[]>([])
  const [queuedCategoryIds, setQueuedCategoryIds] = useState<string[]>([])
  const controllerActiveCategoryIds = useMemo(
   () => getVtSyncActiveCategoryIds(syncProgress),
@@ -776,12 +791,12 @@ const refreshManualImports = useCallback(async (payload?: {
 
  const runQueuedSyncs = async () => {
   if (!claimVtSyncSyncRequest(syncRequestActiveRef)) return
-  const request = syncQueueRef.current.shift()
-  updateQueuedCategories()
+  const request = syncQueueRef.current[0]
   if (!request) {
    syncRequestActiveRef.current = false
    return
   }
+  let shouldContinueQueue = true
   setBusy(true)
   setSyncError("")
   try {
@@ -790,6 +805,7 @@ const refreshManualImports = useCallback(async (payload?: {
     : legacyAccountBridge.getAccessToken()
    if (!token) {
     if (account.serverEnabled) {
+      shouldContinueQueue = false
       await account.start(account.intent, "/local-analytics")
       return
     }
@@ -798,6 +814,12 @@ const refreshManualImports = useCallback(async (payload?: {
     setAuthTick((tick) => tick + 1)
    }
    if (!token) throw new Error("No valid Google access token is available after authorization.")
+
+   // Remove a job only after authorization is ready. This prevents a login or
+   // reconnect detour from silently consuming a queued sync request.
+   syncQueueRef.current.shift()
+   updateQueuedCategories()
+   activeSyncRequestKeyRef.current = vtSyncQueueRequestKey(request)
    const requestedCategoryIds = expandVtSyncCategoryDependencies(request.categoryIds)
    const next = await runVtSyncLocalSync({
     token,
@@ -829,9 +851,10 @@ const refreshManualImports = useCallback(async (payload?: {
     setSyncError(error instanceof Error ? error.message : String(error))
    }
   } finally {
+   activeSyncRequestKeyRef.current = null
    syncRequestActiveRef.current = false
    setBusy(false)
-   if (syncQueueRef.current.length > 0) void runQueuedSyncs()
+   if (shouldContinueQueue && syncQueueRef.current.length > 0) void runQueuedSyncs()
   }
  }
 
@@ -842,10 +865,20 @@ const refreshManualImports = useCallback(async (payload?: {
   windows?: VtSyncAnalyticsWindow[],
  ) => {
   const requestedCategoryIds = expandVtSyncCategoryDependencies(categoryIds)
-  syncQueueRef.current.push({ categoryIds: requestedCategoryIds, retentionVideoIds, forceFullVideoMetadata, windows })
+  const request: VtSyncQueuedRequest = { categoryIds: requestedCategoryIds, retentionVideoIds, forceFullVideoMetadata, windows }
+  const requestKey = vtSyncQueueRequestKey(request)
+  const alreadyActive = activeSyncRequestKeyRef.current === requestKey
+  const alreadyQueued = syncQueueRef.current.some((queued) => vtSyncQueueRequestKey(queued) === requestKey)
+  if (alreadyActive || alreadyQueued) return
+  syncQueueRef.current.push(request)
   updateQueuedCategories()
   void runQueuedSyncs()
  }
+
+ useEffect(() => {
+  if (!authReady || queuedCategoryIds.length === 0 || syncRequestActiveRef.current) return
+  void runQueuedSyncs()
+ }, [authReady, queuedCategoryIds.length])
 
  return (
   <div className="vt-sync-local-page min-h-screen bg-[#f3f4f6] px-4 py-6 text-black sm:px-6 lg:px-8">
