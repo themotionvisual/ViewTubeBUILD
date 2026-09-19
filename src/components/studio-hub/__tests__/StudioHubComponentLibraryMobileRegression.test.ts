@@ -31,6 +31,12 @@ describe("Studio Hub Component Library mobile regression", () => {
     expect(primitives).toContain("data-vt-control-level")
     expect(migration).toContain("STUDIO_HUB_MIGRATED_FAMILIES")
     expect(migration).toContain("SubToolboxSegmentedToggle")
+    expect(migration).toContain("STUDIO_HUB_MIGRATED_FAMILIES.map")
+    expect(migration).not.toContain("HardcodedGenericControl")
+    expect(migration).not.toContain("hardcoded-fallback")
+    expect(migration).toContain("SubToolboxSplitDropdown")
+    expect(migration).toContain("SubToolboxRangeSlider")
+    expect(migration).toContain("SubToolboxTagEditor")
   })
 
   it("keeps the requested missing families in the canonical registry", () => {
