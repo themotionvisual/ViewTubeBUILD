@@ -44,7 +44,8 @@ export const AcceleratingStepper:React.FC<{
   label:string;value:number;min:number;max:number;step:number;precision?:number;suffix?:string;
   defaultValue?:number;onChange:(value:number)=>void;onReset?:()=>void;
   leftColor?:string;rightColor?:string;rightSlot?:React.ReactNode;
-}>=({label,value,min,max,step,precision,suffix='',defaultValue,onChange,onReset,leftColor=T.cyan,rightColor=T.yellow,rightSlot})=>{
+  keyframeState?:'none'|'attached'|'active';onKeyframe?:()=>void;
+}>=({label,value,min,max,step,precision,suffix='',defaultValue,onChange,onReset,leftColor=T.cyan,rightColor=T.yellow,rightSlot,keyframeState='none',onKeyframe})=>{
   const valueRef=useRef(value);
   const timerRef=useRef<number|null>(null);
   const holdRef=useRef<{start:number;y:number;factor:number}|null>(null);
@@ -84,7 +85,15 @@ export const AcceleratingStepper:React.FC<{
   return <div style={{width:'min(104px,100%)',maxWidth:'100%',marginBottom:6}}>
     <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',alignItems:'center',gap:4,marginBottom:2}}>
       <span style={{fontSize:8,fontWeight:1000,textTransform:'uppercase',opacity:.72,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</span>
-      {rightSlot}
+      <span style={{display:'inline-flex',alignItems:'center',gap:3}}>
+        {rightSlot}
+        {onKeyframe?<button
+          title={keyframeState==='active'?'Keyframe at playhead':keyframeState==='attached'?'Animated property':'Add keyframe'}
+          aria-label={keyframeState==='active'?'Keyframe at playhead':keyframeState==='attached'?'Animated property':'Add keyframe'}
+          onClick={onKeyframe}
+          style={{width:18,height:18,border:`2px solid ${T.ink}`,borderRadius:99,padding:0,background:keyframeState==='active'?T.blue:keyframeState==='attached'?'#a8caff':'#fff',display:'grid',placeItems:'center'}}
+        ><span style={{width:7,height:7,borderRadius:99,border:`1.5px solid ${T.ink}`,background:keyframeState==='active'?T.cyan:'#fff'}}/></button>:null}
+      </span>
     </div>
     <div style={{display:'grid',gridTemplateColumns:'24px minmax(50px,56px) 24px',width:104,maxWidth:'100%'}}>
       <button aria-label={`Decrease ${label}`} style={{...mobileButton(true),width:24,minHeight:26,padding:0,background:leftColor,borderTopRightRadius:0,borderBottomRightRadius:0}}
