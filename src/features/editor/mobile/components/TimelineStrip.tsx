@@ -1,8 +1,11 @@
-/** Phone timeline with playhead navigation, keyframes, scroll, clip move/trim and context tools. */
-import React,{useCallback,useEffect,useMemo,useRef} from 'react';
-import {EyeOff,LocateFixed,LockKeyhole,Minus,Plus,SkipBack,SkipForward,VolumeX} from 'lucide-react';
+/** Phone timeline with touch-arbitrated select/move/trim, keyframes and collision-safe tracks. */
+import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {
+  AlertTriangle,EyeOff,ListPlus,LocateFixed,LockKeyhole,Minus,Plus,
+  SkipBack,SkipForward,Trash2,VolumeX,
+} from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
-import {useDragScrub,useLongPress,usePinchZoom} from '../hooks/gestures';
+import {useLongPress,usePinchZoom} from '../hooks/gestures';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
 
 export interface TimelineViewport{startSec:number;endSec:number}
@@ -16,13 +19,22 @@ export interface TimelineStripProps{
 }
 
 type TimelineKeyframe={id?:string;offsetSec?:number;mode?:string;values?:Record<string,unknown>};
+type ClipGestureMode='pending'|'move'|'trim-left'|'trim-right'|'longpress';
 
-const TRACK_HEIGHT=44;
-const HEADER_HEIGHT=28;
+export const TIMELINE_TRACK_HEIGHT=44;
+export const TIMELINE_HEADER_HEIGHT=28;
+export const timelinePreferredHeight=(visibleTracks:number)=>TIMELINE_HEADER_HEIGHT+Math.max(1,visibleTracks)*TIMELINE_TRACK_HEIGHT+14;
+
 const LABEL_WIDTH=82;
 const CYAN='#36E0F6';
 const INK='#248b99';
 const YELLOW='#FFFF61';
+const PINK='#FA618A';
+const EDGE_TOUCH_PX=32;
+const MOVE_THRESHOLD_PX=9;
+const LONG_PRESS_MS=460;
+
+const overlaps=(a:VtE1Clip,b:VtE1Clip)=>a.trackId===b.trackId&&a.start<b.end&&a.end>b.start;
 
 export const TimelineStrip:React.FC<TimelineStripProps>=({
   store,height,onClipContextMenu,onEmptyContextMenu,onViewportChange,scrollToSec,
@@ -74,9 +86,7 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
     centerPlayhead(target);
   };
 
-  const pinch=usePinchZoom({
-    onPinch:({delta})=>dispatch({type:'setZoom',pxPerSec:zoom*delta}),
-  });
+  const pinch=usePinchZoom({onPinch:({delta})=>dispatch({type:'setZoom',pxPerSec:zoom*delta})});
 
   useEffect(()=>{
     if(!state.playing||!scrollRef.current)return;
@@ -105,7 +115,8 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
   },[reportViewport,totalPx]);
 
   const tracks=state.project.tracks.filter(track=>!track.hidden);
-  const bodyHeight=tracks.length*TRACK_HEIGHT+HEADER_HEIGHT+8;
+  const bodyHeight=tracks.length*TIMELINE_TRACK_HEIGHT+TIMELINE_HEADER_HEIGHT+8;
+  const hasOverlaps=state.project.clips.some((clip,index,all)=>all.some((other,otherIndex)=>otherIndex>index&&overlaps(clip,other)));
 
   return <div style={{
     width:'100%',maxWidth:'100%',height:height??'100%',maxHeight:'100%',
@@ -118,6 +129,20 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
       onCenter={()=>centerPlayhead()}
       onNext={()=>jumpEdge(1)}
     />
+    <div style={{position:'absolute',top:3,left:LABEL_WIDTH+4,zIndex:4,display:'flex',gap:2}}>
+      <button
+        title="Add overlay track"
+        aria-label="Add overlay track"
+        onClick={()=>dispatch({type:'addTrack',kind:'overlay'})}
+        style={headerBtn(CYAN)}
+      ><ListPlus size={12}/></button>
+      {hasOverlaps?<button
+        title="Resolve overlapping clips"
+        aria-label="Resolve overlapping clips"
+        onClick={()=>dispatch({type:'resolveTrackOverlaps'})}
+        style={headerBtn(YELLOW)}
+      ><AlertTriangle size={12}/></button>:null}
+    </div>
     <ZoomControls pxPerSec={zoom} onZoom={value=>dispatch({type:'setZoom',pxPerSec:value})}/>
 
     <div
@@ -143,7 +168,7 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
             dispatch({type:'setPlayhead',sec});
           }}
         />
-        <div style={{position:'relative',paddingTop:HEADER_HEIGHT}}>
+        <div style={{position:'relative',paddingTop:TIMELINE_HEADER_HEIGHT}}>
           {tracks.map((track,index)=><TrackRow
             key={track.id}
             track={track}
@@ -151,12 +176,12 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
             clips={clipsOnTrack(track.id)}
             pxPerSec={zoom}
             totalPx={totalPx}
-            y={index*TRACK_HEIGHT}
+            y={index*TIMELINE_TRACK_HEIGHT}
             onClipContextMenu={onClipContextMenu}
             onEmptyContextMenu={onEmptyContextMenu}
           />)}
         </div>
-        <Playhead playheadSec={state.playheadSec} pxPerSec={zoom} height={bodyHeight-HEADER_HEIGHT}/>
+        <Playhead playheadSec={state.playheadSec} pxPerSec={zoom} height={bodyHeight-TIMELINE_HEADER_HEIGHT}/>
       </div>
     </div>
   </div>;
@@ -175,7 +200,7 @@ const Ruler:React.FC<{pxPerSec:number;durationSec:number;onSeek:(sec:number)=>vo
       onSeek(sec);
     }}
     style={{
-      position:'sticky',top:0,height:HEADER_HEIGHT,background:'#fff',zIndex:2,
+      position:'sticky',top:0,height:TIMELINE_HEADER_HEIGHT,background:'#fff',zIndex:2,
       marginLeft:LABEL_WIDTH,borderBottom:`2px solid ${INK}`,cursor:'crosshair',
       touchAction:'pan-x',
     }}
@@ -204,8 +229,9 @@ const TrackRow:React.FC<{
     onLongPress:({x,y:localY})=>onEmptyContextMenu?.({x,y:localY}),
     ms:450,
   });
+  const removable=clips.length===0&&state.project.tracks.length>1;
 
-  return <div style={{position:'absolute',top:y,left:0,right:0,height:TRACK_HEIGHT,display:'flex'}}>
+  return <div style={{position:'absolute',top:y,left:0,right:0,height:TIMELINE_TRACK_HEIGHT,display:'flex'}}>
     <div
       onClick={()=>dispatch({type:'selectTrack',id:track.id})}
       style={{
@@ -216,25 +242,17 @@ const TrackRow:React.FC<{
       }}
     >
       <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{track.name}</span>
-      <div style={{display:'flex',gap:2}}>
-        <button
-          title={track.muted?'Unmute track':'Mute track'}
-          aria-label={track.muted?'Unmute track':'Mute track'}
-          onClick={event=>{event.stopPropagation();dispatch({type:'muteTrack',id:track.id})}}
-          style={miniBtn(track.muted?'#FA618A':'#fff')}
-        ><VolumeX size={10}/></button>
-        <button
-          title={track.locked?'Unlock track':'Lock track'}
-          aria-label={track.locked?'Unlock track':'Lock track'}
-          onClick={event=>{event.stopPropagation();dispatch({type:'lockTrack',id:track.id})}}
-          style={miniBtn(track.locked?YELLOW:'#fff')}
-        ><LockKeyhole size={10}/></button>
-        <button
-          title="Hide track"
-          aria-label="Hide track"
-          onClick={event=>{event.stopPropagation();dispatch({type:'hideTrack',id:track.id})}}
-          style={miniBtn('#fff')}
-        ><EyeOff size={10}/></button>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,17px)',gap:2}}>
+        <button title={track.muted?'Unmute track':'Mute track'} aria-label={track.muted?'Unmute track':'Mute track'}
+          onClick={event=>{event.stopPropagation();dispatch({type:'muteTrack',id:track.id})}} style={miniBtn(track.muted?PINK:'#fff')}><VolumeX size={10}/></button>
+        <button title={track.locked?'Unlock track':'Lock track'} aria-label={track.locked?'Unlock track':'Lock track'}
+          onClick={event=>{event.stopPropagation();dispatch({type:'lockTrack',id:track.id})}} style={miniBtn(track.locked?YELLOW:'#fff')}><LockKeyhole size={10}/></button>
+        <button title="Hide track" aria-label="Hide track"
+          onClick={event=>{event.stopPropagation();dispatch({type:'hideTrack',id:track.id})}} style={miniBtn('#fff')}><EyeOff size={10}/></button>
+        <button title={removable?'Remove empty track':'Track must be empty before removal'} aria-label="Remove track"
+          disabled={!removable}
+          onClick={event=>{event.stopPropagation();if(removable)dispatch({type:'removeTrack',id:track.id})}}
+          style={{...miniBtn(removable?'#fff':'#f2f2f2'),opacity:removable?1:.35}}><Trash2 size={10}/></button>
       </div>
     </div>
 
@@ -253,6 +271,7 @@ const TrackRow:React.FC<{
         color={rowColor}
         pxPerSec={pxPerSec}
         store={store}
+        siblings={clips}
         onContextMenu={onClipContextMenu}
       />)}
     </div>
@@ -261,147 +280,182 @@ const TrackRow:React.FC<{
 
 const miniBtn=(background:string):React.CSSProperties=>({
   width:17,height:17,borderRadius:3,border:`1.5px solid ${INK}`,
-  background,fontSize:7,fontWeight:900,padding:0,
-  display:'grid',placeItems:'center',
+  background,fontSize:7,fontWeight:900,padding:0,display:'grid',placeItems:'center',
 });
 
 const ClipBlock:React.FC<{
   clip:VtE1Clip;selected:boolean;color:string;pxPerSec:number;store:EditorStore;
+  siblings:VtE1Clip[];
   onContextMenu?:TimelineStripProps['onClipContextMenu'];
-}>=({clip,selected,color,pxPerSec,store,onContextMenu})=>{
+}>=({clip,selected,color,pxPerSec,store,siblings,onContextMenu})=>{
   const{dispatch}=store;
   const left=clip.start*pxPerSec;
   const width=Math.max(20,(clip.end-clip.start)*pxPerSec);
   const clipColor=String((clip as VtE1Clip&{uiColor?:string}).uiColor??color);
   const keyframes=((clip.keyframes??[]) as TimelineKeyframe[]).filter(keyframe=>Number.isFinite(Number(keyframe.offsetSec??0)));
   const duration=Math.max(.001,clip.end-clip.start);
-  const scrubbing=useRef(false);
+  const hasOverlap=siblings.some(other=>other.id!==clip.id&&overlaps(clip,other));
+  const[gestureMode,setGestureMode]=useState<ClipGestureMode|null>(null);
+  const gesture=useRef<{
+    pointerId:number;mode:ClipGestureMode;startX:number;startY:number;
+    startSec:number;endSec:number;timer:number|null;longPressFired:boolean;
+  }|null>(null);
 
-  const drag=useDragScrub({
-    pixelsPerUnit:pxPerSec,cancelIfVertical:16,guard:()=>scrubbing.current,
-    onScrubStart:()=>{scrubbing.current=true},
-    onScrub:deltaSec=>dispatch({type:'moveClip',id:clip.id,deltaSec}),
-    onScrubEnd:()=>{scrubbing.current=false},
-  });
+  const clearGesture=()=>{
+    const current=gesture.current;
+    if(current?.timer!=null)window.clearTimeout(current.timer);
+    gesture.current=null;
+    setGestureMode(null);
+  };
 
-  const longPress=useLongPress({
-    onLongPress:({x,y})=>{
-      dispatch({type:'selectClip',id:clip.id});
-      onContextMenu?.(clip,{x,y});
-    },
-  });
+  useEffect(()=>clearGesture,[]);
+
+  const begin=(event:React.PointerEvent<HTMLDivElement>)=>{
+    if(event.pointerType==='mouse'&&event.button!==0)return;
+    event.stopPropagation();
+    dispatch({type:'selectClip',id:clip.id});
+    const rect=event.currentTarget.getBoundingClientRect();
+    const localX=event.clientX-rect.left;
+    const edge=Math.min(EDGE_TOUCH_PX,Math.max(12,rect.width*.3));
+    const mode:ClipGestureMode=localX<=edge?'trim-left':localX>=rect.width-edge?'trim-right':'pending';
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    const next={
+      pointerId:event.pointerId,mode,startX:event.clientX,startY:event.clientY,
+      startSec:clip.start,endSec:clip.end,timer:null as number|null,longPressFired:false,
+    };
+    if(mode==='pending'){
+      next.timer=window.setTimeout(()=>{
+        const active=gesture.current;
+        if(!active||active.pointerId!==event.pointerId||active.mode!=='pending')return;
+        active.mode='longpress';
+        active.longPressFired=true;
+        setGestureMode('longpress');
+        if(typeof navigator!=='undefined'&&'vibrate' in navigator){
+          (navigator as Navigator&{vibrate:(pattern:number|number[])=>boolean}).vibrate(15);
+        }
+        onContextMenu?.(clip,{x:event.clientX,y:event.clientY});
+      },LONG_PRESS_MS);
+    }
+    gesture.current=next;
+    setGestureMode(mode);
+  };
+
+  const move=(event:React.PointerEvent<HTMLDivElement>)=>{
+    const active=gesture.current;
+    if(!active||active.pointerId!==event.pointerId)return;
+    const dx=event.clientX-active.startX;
+    const dy=event.clientY-active.startY;
+
+    if(active.mode==='pending'){
+      const distance=Math.hypot(dx,dy);
+      if(distance<MOVE_THRESHOLD_PX)return;
+      if(active.timer!=null){window.clearTimeout(active.timer);active.timer=null}
+      if(Math.abs(dx)<=Math.abs(dy)){
+        clearGesture();
+        return;
+      }
+      active.mode='move';
+      setGestureMode('move');
+    }
+
+    if(active.mode==='move'){
+      dispatch({type:'moveClipTo',id:clip.id,startSec:active.startSec+(dx/Math.max(4,pxPerSec))});
+      return;
+    }
+    if(active.mode==='trim-left'){
+      dispatch({type:'trimClip',id:clip.id,side:'left',sec:active.startSec+(dx/Math.max(4,pxPerSec))});
+      return;
+    }
+    if(active.mode==='trim-right'){
+      dispatch({type:'trimClip',id:clip.id,side:'right',sec:active.endSec+(dx/Math.max(4,pxPerSec))});
+    }
+  };
+
+  const end=(event:React.PointerEvent<HTMLDivElement>)=>{
+    const active=gesture.current;
+    if(!active||active.pointerId!==event.pointerId)return;
+    event.stopPropagation();
+    clearGesture();
+  };
 
   return <div
-    onClick={event=>{event.stopPropagation();dispatch({type:'selectClip',id:clip.id})}}
-    onPointerDown={event=>{longPress.onPointerDown(event);drag.onPointerDown(event)}}
-    onPointerMove={event=>{longPress.onPointerMove(event);drag.onPointerMove(event)}}
-    onPointerUp={event=>{longPress.onPointerUp(event);drag.onPointerUp(event)}}
-    onPointerCancel={event=>{longPress.onPointerCancel(event);drag.onPointerCancel(event)}}
-    onPointerLeave={longPress.onPointerLeave}
+    onPointerDown={begin}
+    onPointerMove={move}
+    onPointerUp={end}
+    onPointerCancel={end}
     style={{
       position:'absolute',top:4,bottom:4,left,width,borderRadius:5,background:clipColor,
-      border:selected?'3px solid #000':`2px solid ${INK}`,
+      border:hasOverlap?`3px solid ${PINK}`:selected?'3px solid #000':`2px solid ${INK}`,
       boxShadow:selected?`0 0 0 2px #fff,3px 3px 0 ${CYAN}`:'2px 2px 0 rgba(0,0,0,.12)',
       padding:'4px 8px',fontSize:9,fontWeight:900,overflow:'hidden',
       whiteSpace:'nowrap',touchAction:'none',userSelect:'none',
     }}
   >
-    <span style={{position:'relative',zIndex:1}}>{String(clip.id).slice(0,18)}</span>
+    <span style={{position:'relative',zIndex:1,pointerEvents:'none'}}>{String(clip.id).slice(0,18)}</span>
+    {gestureMode==='trim-left'||gestureMode==='trim-right'?<div style={{
+      position:'absolute',top:2,right:3,zIndex:4,padding:'1px 4px',
+      background:'#fff',border:`1.5px solid ${INK}`,borderRadius:3,
+      fontSize:7,fontWeight:900,pointerEvents:'none',
+    }}>{clip.start.toFixed(2)}–{clip.end.toFixed(2)}s</div>:null}
 
     <div aria-label="Clip keyframes" style={{
       position:'absolute',left:7,right:7,bottom:3,height:10,pointerEvents:'none',zIndex:2,
     }}>
       {keyframes.map((keyframe,index)=>{
         const offset=Math.max(0,Math.min(duration,Number(keyframe.offsetSec??0)));
-        const percent=(offset/duration)*100;
-        return <KeyframeMarker
-          key={String(keyframe.id??`${offset}-${index}`)}
-          mode={String(keyframe.mode??'circle')}
-          leftPercent={percent}
-        />;
+        return <KeyframeMarker key={String(keyframe.id??`${offset}-${index}`)}
+          mode={String(keyframe.mode??'circle')} leftPercent={(offset/duration)*100}/>;
       })}
     </div>
 
-    <TrimHandle side="left" clip={clip} store={store} pxPerSec={pxPerSec}/>
-    <TrimHandle side="right" clip={clip} store={store} pxPerSec={pxPerSec}/>
+    <TouchEdge side="left" active={gestureMode==='trim-left'}/>
+    <TouchEdge side="right" active={gestureMode==='trim-right'}/>
   </div>;
 };
+
+const TouchEdge:React.FC<{side:'left'|'right';active:boolean}>=({side,active})=><div style={{
+  position:'absolute',top:0,bottom:0,[side]:0,width:EDGE_TOUCH_PX,pointerEvents:'none',
+  background:active?'rgba(54,224,246,.22)':'transparent',
+}}>
+  <div style={{
+    position:'absolute',top:'50%',[side]:5,transform:'translateY(-50%)',
+    width:5,height:20,borderRadius:2,background:active?CYAN:'#000',
+    boxShadow:active?'0 0 0 2px #fff':undefined,
+  }}/>
+</div>;
 
 const KeyframeMarker:React.FC<{mode:string;leftPercent:number}>=({mode,leftPercent})=>{
   if(mode==='diamond')return <span style={{
     position:'absolute',left:`${leftPercent}%`,top:'50%',
     width:12,height:10,transform:'translate(-50%,-50%)',
   }}>
-    <span style={{
-      position:'absolute',left:1,top:2,width:6,height:6,
-      background:'#fff',border:'1.5px solid #111',transform:'rotate(45deg)',
-      boxSizing:'border-box',
-    }}/>
-    <span style={{
-      position:'absolute',right:1,top:2,width:6,height:6,
-      background:CYAN,border:'1.5px solid #111',transform:'rotate(45deg)',
-      boxSizing:'border-box',
-    }}/>
+    <span style={{position:'absolute',left:1,top:2,width:6,height:6,background:'#fff',border:'1.5px solid #111',transform:'rotate(45deg)',boxSizing:'border-box'}}/>
+    <span style={{position:'absolute',right:1,top:2,width:6,height:6,background:CYAN,border:'1.5px solid #111',transform:'rotate(45deg)',boxSizing:'border-box'}}/>
   </span>;
-
   return <span style={{
-    position:'absolute',left:`${leftPercent}%`,top:'50%',
-    width:8,height:8,borderRadius:'50%',background:'#fff',
-    border:'1.5px solid #111',transform:'translate(-50%,-50%)',
-    boxSizing:'border-box',
+    position:'absolute',left:`${leftPercent}%`,top:'50%',width:8,height:8,
+    borderRadius:'50%',background:'#fff',border:'1.5px solid #111',
+    transform:'translate(-50%,-50%)',boxSizing:'border-box',
   }}/>;
 };
 
-const TrimHandle:React.FC<{
-  side:'left'|'right';clip:VtE1Clip;store:EditorStore;pxPerSec:number;
-}>=({side,clip,store,pxPerSec})=>{
-  const drag=useDragScrub({
-    pixelsPerUnit:pxPerSec,cancelIfVertical:20,
-    onScrub:delta=>store.dispatch({
-      type:'trimClip',id:clip.id,side,
-      sec:(side==='left'?clip.start:clip.end)+delta*.02,
-    }),
-  });
-
-  return <div {...drag} onClick={event=>event.stopPropagation()} style={{
-    position:'absolute',top:0,bottom:0,[side]:0,width:16,touchAction:'none',
-  }}>
-    <div style={{
-      position:'absolute',top:'50%',[side]:3,transform:'translateY(-50%)',
-      width:4,height:16,borderRadius:1,background:'#000',
-    }}/>
-  </div>;
-};
-
-const Playhead:React.FC<{playheadSec:number;pxPerSec:number;height:number}>=({
-  playheadSec,pxPerSec,height,
-})=><div style={{
+const Playhead:React.FC<{playheadSec:number;pxPerSec:number;height:number}>=({playheadSec,pxPerSec,height})=><div style={{
   position:'absolute',left:playheadSec*pxPerSec+LABEL_WIDTH,
-  top:HEADER_HEIGHT-6,height:height+12,width:2,background:'#000',pointerEvents:'none',
+  top:TIMELINE_HEADER_HEIGHT-6,height:height+12,width:2,background:'#000',pointerEvents:'none',
 }}>
-  <div style={{
-    position:'absolute',top:-6,left:-5,width:12,height:12,
-    background:CYAN,border:'2px solid #000',transform:'rotate(45deg)',
-  }}/>
+  <div style={{position:'absolute',top:-6,left:-5,width:12,height:12,background:CYAN,border:'2px solid #000',transform:'rotate(45deg)'}}/>
 </div>;
 
-const PlayheadControls:React.FC<{
-  onPrevious:()=>void;onCenter:()=>void;onNext:()=>void;
-}>=({onPrevious,onCenter,onNext})=><div
+const PlayheadControls:React.FC<{onPrevious:()=>void;onCenter:()=>void;onNext:()=>void}>=({onPrevious,onCenter,onNext})=><div
   aria-label="Timeline playhead navigation"
-  style={{
-    position:'absolute',top:3,left:4,zIndex:4,width:LABEL_WIDTH-8,
-    display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:2,background:'#fff',
-  }}
+  style={{position:'absolute',top:3,left:4,zIndex:4,width:LABEL_WIDTH-8,display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:2,background:'#fff'}}
 >
   <button title="Previous edit point or keyframe" aria-label="Previous edit point or keyframe" onClick={onPrevious} style={headerBtn('#fff')}><SkipBack size={12}/></button>
   <button title="Center timeline on playhead" aria-label="Center timeline on playhead" onClick={onCenter} style={headerBtn(YELLOW)}><LocateFixed size={12}/></button>
   <button title="Next edit point or keyframe" aria-label="Next edit point or keyframe" onClick={onNext} style={headerBtn('#fff')}><SkipForward size={12}/></button>
 </div>;
 
-const ZoomControls:React.FC<{pxPerSec:number;onZoom:(value:number)=>void}>=({
-  pxPerSec,onZoom,
-})=><div style={{
+const ZoomControls:React.FC<{pxPerSec:number;onZoom:(value:number)=>void}>=({pxPerSec,onZoom})=><div style={{
   position:'absolute',top:3,right:4,zIndex:4,display:'flex',gap:2,
   background:'#fff',border:`2px solid ${INK}`,borderRadius:5,padding:1,
 }}>
