@@ -5,6 +5,7 @@ import {TemplateLibraryPanel} from './TemplateLibraryPanel';
 import {renderPanelBody} from './PanelBodies';
 import {EditorFeatureManifest} from './EditorFeatureManifest';
 import {EditorViewSwitcher} from './EditorViewSwitcher';
+import {ClipSettingsPanel} from './ClipSettingsPanel';
 import {capabilitiesForCategory,type EditorCapabilityStatus} from '../../editorCapabilities';
 
 export type EditorNavPage='select'|'media'|'text'|'audio'|'graphics'|'effects'|'transitions'|'templates'|'export'|'settings';
@@ -50,34 +51,7 @@ function Inspector({store}:{store:EditorStore}){
 }
 
 function Clips({store,onNavigate}:{store:EditorStore;onNavigate?:(page:EditorNavPage)=>void}){
-  const addText=()=>{
-    const id=`text_${Date.now().toString(36)}`;
-    store.dispatch({type:'addClip',clip:{id,trackId:'t_overlay',start:store.state.playheadSec,end:Math.min(store.state.project.durationSec,store.state.playheadSec+2),text:'New text'}});
-    store.dispatch({type:'selectClip',id});
-    onNavigate?.('text');
-  };
-  return <>
-    <Section name="Add To Project">
-      <Grid cols={4}>
-        <button style={button} disabled title="Connect the canonical media importer/Vault handoff first">Video</button>
-        <button style={button} disabled title="Connect the canonical media importer/Vault handoff first">Image</button>
-        <button style={button} disabled title="Connect the canonical media importer/Vault handoff first">Audio</button>
-        <button style={{...button,background:CYAN}} onClick={addText}>Text</button>
-        <button style={button} disabled title="Shape layer adapter still needs canonical layer serialization">Shape</button>
-        <button style={button} onClick={()=>onNavigate?.('graphics')}>SVG</button>
-        <button style={{...button,background:YELLOW}} onClick={()=>onNavigate?.('templates')}>Background</button>
-        <button style={button} disabled title="Vault-to-editor asset handoff is the canonical source path">Vault</button>
-      </Grid>
-      <div style={{fontSize:8,fontWeight:800,marginTop:6,opacity:.65}}>Disabled source buttons are intentionally not fake imports. They activate when the canonical media/Vault handoff is connected.</div>
-    </Section>
-    <Section name="Project Clips">
-      <div style={{display:'grid',gap:5}}>
-        {store.state.project.clips.map(c=><button key={c.id} style={{...button,textAlign:'left',background:store.state.selection.clipIds.includes(c.id)?CYAN:'#fff'}} onClick={()=>store.dispatch({type:'selectClip',id:c.id})}><b>{String(c.id)}</b><small style={{display:'block',fontSize:7}}>{store.trackById(c.trackId)?.kind??'clip'} · {c.start.toFixed(1)}–{c.end.toFixed(1)}s</small></button>)}
-        {!store.state.project.clips.length&&<div style={{fontSize:10,fontWeight:800,opacity:.55}}>No timeline clips yet.</div>}
-      </div>
-    </Section>
-    <Section name="Media Capabilities"><CapabilityGrid category="media"/></Section>
-  </>;
+  return <ClipSettingsPanel store={store} onNavigate={onNavigate}/>;
 }
 
 function Settings({model}:{model?:EditorSettingsModel}){
