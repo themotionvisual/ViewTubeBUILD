@@ -20,7 +20,7 @@ export interface TimelineStripProps{
   onToggleActionLabels?:()=>void;
 }
 
-type TimelineKeyframe={id?:string;offsetSec?:number;mode?:string;values?:Record<string,unknown>};
+type TimelineKeyframe={id?:string;offsetSec?:number;mode?:string;values?:Record<string,unknown>;interp?:string};
 type ClipGestureMode='pending'|'move'|'trim-left'|'trim-right'|'longpress'|'multi';
 type SnapStrength='off'|'soft'|'strong';
 type NavMode='all'|'clip'|'keyframe'|'transition'|'frame';
@@ -437,6 +437,76 @@ const TrackRow:React.FC<{
       </div>
       {showKeyframeLane&&selectedClip&&!readOnly?<KeyframeLane clip={selectedClip} store={store} pxPerSec={pxPerSec} top={TIMELINE_TRACK_HEIGHT}/>:null}
     </div>
+  </div>;
+};
+
+const KeyframeLane:React.FC<{clip:VtE1Clip;store:EditorStore;pxPerSec:number;top:number}>=({clip,store,pxPerSec,top})=>{
+  const frames=((clip.keyframes??[]) as TimelineKeyframe[]).filter(frame=>frame.id&&Number.isFinite(Number(frame.offsetSec??0)));
+  const[selected,setSelected]=useState<string[]>([]);
+  const[preview,setPreview]=useState<Record<string,number>>({});
+  const drag=useRef<{id:string;pointerId:number;x:number;offset:number;moved:boolean;timer:number|null}|null>(null);
+  const duration=Math.max(.001,clip.end-clip.start);
+  useEffect(()=>setSelected(current=>current.filter(id=>frames.some(frame=>String(frame.id)===id))),[clip.keyframes]);
+  const properties=useMemo(()=>Array.from(new Set(frames.flatMap(frame=>Object.keys(frame.values??{})))).slice(0,5),[clip.keyframes]);
+  const cycleInterp=()=>{
+    const ids=selected.length?selected:frames[0]?.id?[String(frames[0].id)]:[];
+    if(!ids.length)return;
+    const source=frames.find(frame=>ids.includes(String(frame.id)));
+    const order=['linear','easeIn','easeOut','easeInOut','springy','bell'];
+    const next=order[(order.indexOf(String(source?.interp??'linear'))+1)%order.length];
+    store.dispatch({type:'setClipKeyframeInterpolation',clipId:clip.id,keyframeIds:ids,interp:next});
+  };
+  return <div
+    aria-label="Expanded keyframe lane"
+    onClick={event=>event.stopPropagation()}
+    style={{position:'absolute',left:0,right:0,top,height:28,borderTop:`1.5px solid ${INK}`,background:'rgba(54,224,246,.08)',overflow:'hidden'}}
+  >
+    <div style={{position:'sticky',left:0,zIndex:5,width:LABEL_WIDTH,height:'100%',borderRight:`2px solid ${INK}`,background:'#fff',display:'grid',gridTemplateColumns:'1fr repeat(3,18px)',alignItems:'center',gap:2,padding:'0 3px',boxSizing:'border-box'}}>
+      <span style={{fontSize:6,fontWeight:1000,textTransform:'uppercase',overflow:'hidden',textOverflow:'ellipsis'}}>{properties.join(' · ')||'Keyframes'}</span>
+      <button title="Duplicate selected keyframes" aria-label="Duplicate selected keyframes" disabled={!selected.length} onClick={()=>store.dispatch({type:'duplicateClipKeyframes',clipId:clip.id,keyframeIds:selected})} style={{...miniBtn(CYAN),opacity:selected.length?1:.35}}><Copy size={9}/></button>
+      <button title="Cycle interpolation" aria-label="Cycle selected keyframe interpolation" disabled={!selected.length} onClick={cycleInterp} style={{...miniBtn(YELLOW),opacity:selected.length?1:.35}}><SlidersHorizontal size={9}/></button>
+      <button title="Delete selected keyframes" aria-label="Delete selected keyframes" disabled={!selected.length} onClick={()=>{store.dispatch({type:'deleteClipKeyframes',clipId:clip.id,keyframeIds:selected});setSelected([])}} style={{...miniBtn(PINK),opacity:selected.length?1:.35}}><Trash2 size={9}/></button>
+    </div>
+    {frames.map((frame,index)=>{
+      const id=String(frame.id);
+      const offset=preview[id]??Number(frame.offsetSec??0);
+      const x=(clip.start+offset)*pxPerSec;
+      const active=selected.includes(id);
+      const mode=String(frame.mode??'circle');
+      return <button
+        key={id}
+        title={`${Object.keys(frame.values??{}).join(', ')||'keyframe'} · ${String(frame.interp??'linear')}`}
+        aria-label={`Keyframe ${index+1}`}
+        onPointerDown={event=>{
+          event.stopPropagation();event.currentTarget.setPointerCapture?.(event.pointerId);
+          const timer=window.setTimeout(()=>setSelected(current=>current.includes(id)?current.filter(item=>item!==id):[...current,id]),420);
+          drag.current={id,pointerId:event.pointerId,x:event.clientX,offset,moved:false,timer};
+          if(!active&&!event.shiftKey)setSelected([id]);
+        }}
+        onPointerMove={event=>{
+          const current=drag.current;if(!current||current.id!==id||current.pointerId!==event.pointerId)return;
+          const dx=event.clientX-current.x;if(Math.abs(dx)>5){current.moved=true;if(current.timer!=null){window.clearTimeout(current.timer);current.timer=null}}
+          if(current.moved)setPreview(values=>({...values,[id]:clamp(current.offset+dx/Math.max(4,pxPerSec),0,duration)}));
+        }}
+        onPointerUp={event=>{
+          const current=drag.current;if(!current||current.pointerId!==event.pointerId)return;
+          if(current.timer!=null)window.clearTimeout(current.timer);
+          const next=preview[id]??current.offset;
+          if(current.moved)store.dispatch({type:'moveClipKeyframe',clipId:clip.id,keyframeId:id,offsetSec:next});
+          else if(active&&event.shiftKey)setSelected(items=>items.filter(item=>item!==id));
+          setPreview(values=>{const copy={...values};delete copy[id];return copy});
+          drag.current=null;
+        }}
+        onPointerCancel={()=>{const current=drag.current;if(current?.timer!=null)window.clearTimeout(current.timer);drag.current=null;setPreview(values=>{const copy={...values};delete copy[id];return copy})}}
+        style={{
+          position:'absolute',left:x,top:'50%',transform:'translate(-50%,-50%)',
+          width:mode==='diamond'?11:10,height:mode==='diamond'?11:10,border:`2px solid ${INK}`,
+          borderRadius:mode==='diamond'?2:99,background:active?CYAN:'#fff',
+          padding:0,touchAction:'none',zIndex:4,
+          ...(mode==='diamond'?{transform:'translate(-50%,-50%) rotate(45deg)'}:{}),
+        }}
+      />;
+    })}
   </div>;
 };
 
