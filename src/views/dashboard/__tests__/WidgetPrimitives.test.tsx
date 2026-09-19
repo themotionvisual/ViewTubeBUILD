@@ -33,7 +33,9 @@ import {
   WidgetSizedButton,
 } from "../WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
-import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"\n\nconst variantsCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
+import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"
+
+const variantsCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
 
 describe("widget viewport indicator geometry", () => {
   it.each([
