@@ -48,7 +48,7 @@ import { VtSyncToolboxDataTable } from "./toolbox-table/VtSyncToolboxDataTable"
 import { VtSyncDataVisualsGate } from "./VtSyncDataVisualsGate"
 import { VtSyncIntelligenceHubGate } from "./VtSyncIntelligenceHubGate"
 import "./VtSyncLocalAnalyticsPage.css"
-import { RetroLcd, RetroLedRow, RetroRivets, type RetroLedSpec } from "./VtSyncRetroChrome"
+import { RetroLcd, RetroLedRow, RetroRivets, RetroSyncExecutionSwitch, type RetroLedSpec, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
 import {
  buildVtSyncUnifiedProgressRows,
  claimVtSyncSyncRequest,
@@ -83,6 +83,15 @@ const syncStatusTone = (status?: string) => {
  if (status === "skipped" || status === "stale" || status === "placeholder") return "#FFA85C"
  if (status === "never") return "#e9eaec"
  return "#ffffff"
+}
+
+const toRetroExecutionStatus = (status?: string): RetroSyncExecutionStatus => {
+ if (status === "running") return "running"
+ if (status === "pending") return "queued"
+ if (status === "complete" || status === "synced") return "complete"
+ if (status === "partial") return "partial"
+ if (status === "failed") return "failed"
+ return "idle"
 }
 
 const formatRelativeTime = (iso?: string): string => {
@@ -132,7 +141,7 @@ const writeClipboardText = async (text: string) => {
  document.body.removeChild(textarea)
 }
 
-export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; datasetFreshness?: VtSyncDatasetFreshness; syncError?: string; queuedCategoryIds?: string[]; videoCatalogCoverage?: VtSyncVideoCatalogCoverage }> = ({ progress, datasetFreshness, syncError, queuedCategoryIds = [], videoCatalogCoverage }) => {
+export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; datasetFreshness?: VtSyncDatasetFreshness; syncError?: string; queuedCategoryIds?: string[]; videoCatalogCoverage?: VtSyncVideoCatalogCoverage; onStartUnitSync?: (categoryIds: string[]) => void }> = ({ progress, datasetFreshness, syncError, queuedCategoryIds = [], videoCatalogCoverage, onStartUnitSync }) => {
  const [copyStatus, setCopyStatus] = useState("")
  const [expandedUnitIds, setExpandedUnitIds] = useState<Set<string>>(() => new Set())
  const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(() => new Set([VT_SYNC_GROUP_ORDER[0]]))
@@ -409,26 +418,33 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
          const expanded = unit.isOpenByState || expandedUnitIds.has(unit.id)
          const unitContentId = `vt-sync-progress-unit-${unit.id}`
          return <article key={unit.id} className="border-t-[2px] border-black first:border-t-0">
-          <button
-           type="button"
-           aria-expanded={expanded}
-           aria-controls={unitContentId}
-           onClick={() => setExpandedUnitIds((current) => {
-            const next = new Set(current)
-            if (next.has(unit.id)) next.delete(unit.id)
-            else next.add(unit.id)
-            return next
-           })}
-           className="grid min-h-[48px] w-full grid-cols-[minmax(0,1fr)_auto_auto_auto] items-center gap-2 px-3 py-1.5 text-left hover:bg-[#f6f6f6] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-black max-sm:grid-cols-[minmax(0,1fr)_auto_auto]"
-          >
-           <span className="min-w-0">
-            <span className="flex items-center gap-1.5 text-[11px] font-black uppercase leading-none"><span className="grid h-4 w-4 place-items-center rounded border border-black bg-white" aria-hidden="true">{expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}</span><span className="truncate">{unit.label}</span></span>
-            <span className="ml-[22px] mt-1 block truncate text-[8px] font-bold uppercase leading-none tracking-[0.05em] text-black/50">{unit.id === "video_catalog" && videoCatalogCoverage ? `${videoCatalogCoverage.catalogTotal.toLocaleString()} videos · metadata ${videoCatalogCoverage.metadataAvailable.toLocaleString()} · analytics ${videoCatalogCoverage.analyticsAvailable.toLocaleString()}` : `${unit.rows.length} dataset${unit.rows.length === 1 ? "" : "s"} · ${unit.displayRows.toLocaleString()} rows`} · {unit.completedAt ? formatRelativeTime(unit.completedAt) : unit.startedAt ? "in progress" : "not run"}</span>
-           </span>
-           <span className="rounded-full border-[2px] border-black px-2 py-1 text-[8px] font-black uppercase leading-none" style={{ backgroundColor: syncStatusTone(unit.status) }}>{syncStatusLabel(unit.status)}</span>
-           <span className="hidden text-right text-[9px] font-black tabular-nums text-black/60 sm:block">{unit.displayRows.toLocaleString()}</span>
-           <span className="text-[8px] font-black uppercase text-black/45">{unit.issues.length ? `${unit.issues.length} issue${unit.issues.length === 1 ? "" : "s"}` : "clear"}</span>
-          </button>
+          <div className="grid min-h-[54px] grid-cols-[minmax(0,1fr)_104px] items-stretch">
+           <button
+            type="button"
+            aria-expanded={expanded}
+            aria-controls={unitContentId}
+            onClick={() => setExpandedUnitIds((current) => {
+             const next = new Set(current)
+             if (next.has(unit.id)) next.delete(unit.id)
+             else next.add(unit.id)
+             return next
+            })}
+            className="min-w-0 px-3 py-1.5 text-left hover:bg-[#f6f6f6] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-black"
+           >
+            <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-black uppercase leading-none">
+             <span className="grid h-4 w-4 shrink-0 place-items-center rounded border border-black bg-white" aria-hidden="true">{expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}</span>
+             <span className="truncate">{unit.label}</span>
+            </span>
+            <span className="ml-[22px] mt-1 block truncate text-[8px] font-bold uppercase leading-none tracking-[0.05em] text-black/50">{unit.id === "video_catalog" && videoCatalogCoverage ? `${videoCatalogCoverage.catalogTotal.toLocaleString()} videos · metadata ${videoCatalogCoverage.metadataAvailable.toLocaleString()} · analytics ${videoCatalogCoverage.analyticsAvailable.toLocaleString()}` : `${unit.rows.length} dataset${unit.rows.length === 1 ? "" : "s"} · ${unit.displayRows.toLocaleString()} rows`} · {syncStatusLabel(unit.status)} · {unit.issues.length ? `${unit.issues.length} issue${unit.issues.length === 1 ? "" : "s"}` : "clear"} · {unit.completedAt ? formatRelativeTime(unit.completedAt) : unit.startedAt ? "in progress" : "not run"}</span>
+           </button>
+           <div className="grid place-items-center border-l-[2px] border-black px-2 py-1">
+            <RetroSyncExecutionSwitch
+             idleLabel={unit.status === "never" ? "FULL SYNC" : "UPDATE"}
+             status={toRetroExecutionStatus(unit.status)}
+             onClick={onStartUnitSync ? () => onStartUnitSync(unit.categoryIds) : undefined}
+            />
+           </div>
+          </div>
           <div id={unitContentId} className={`${expanded ? "grid" : "hidden"} gap-2 border-t-[2px] border-black bg-[#f4f4f4] px-3 py-2 text-[9px] font-black uppercase tracking-[0.035em] sm:grid-cols-2`}>
            <section className="rounded border-[2px] border-black bg-white px-2 py-1.5"><strong className="block text-[8px] text-black/50">Sync time</strong><span>{formatSyncTime(unit.startedAt, unit.completedAt, unit.storedUpdatedAt)}</span></section>
            <section className="rounded border-[2px] border-black bg-white px-2 py-1.5"><strong className="block text-[8px] text-black/50">Issues</strong>{unit.issues.length ? <ul className="mt-1 space-y-1 normal-case tracking-normal text-black/75">{unit.issues.map((row) => <li key={row.category.id}><b>{row.category.label}:</b> {row.message}</li>)}</ul> : <span>No issues.</span>}</section>
@@ -927,6 +943,7 @@ const refreshManualImports = useCallback(async (payload?: {
        syncError={syncError}
        queuedCategoryIds={queuedCategoryIds}
        videoCatalogCoverage={videoCatalogProjection.coverage}
+       onStartUnitSync={(categoryIds) => { void startSync(categoryIds) }}
       />
      </div>
     </section>
