@@ -47,13 +47,22 @@ import {
 } from "../../../../features/video-director"
 import {
   DirectorWidgetAudioStage,
+  DirectorWidgetCameraPath,
+  DirectorWidgetCaptionPreview,
   DirectorWidgetCompositionVisual,
+  DirectorWidgetContinuityLedger,
+  DirectorWidgetFocusDepth,
   DirectorWidgetLensVisual,
   DirectorWidgetLightingVisual,
   DirectorWidgetMoodVisual,
+  DirectorWidgetMusicBeat,
+  DirectorWidgetNegativeBank,
   DirectorWidgetPacingVisual,
   DirectorWidgetProviderRoute,
+  DirectorWidgetReferenceBoard,
   DirectorWidgetShotStrip,
+  DirectorWidgetTextureStack,
+  DirectorWidgetTransitionBridge,
 } from "./VideoDirectorWidgetComponents"
 import "./videoDirectorWidget.css"
 
@@ -247,6 +256,33 @@ export const VideoDirectorWidget: React.FC<
     }
     if (activeCategoryId === "generation-output") {
       return <DirectorWidgetProviderRoute mode={activePayload.providerMode} provider={activePayload.providerId} model={activePayload.modelId} />
+    }
+    if (activeCategoryId === "camera-movement") {
+      return <DirectorWidgetCameraPath type={activePayload.type} speed={activePayload.speed} panDegrees={activePayload.panDegrees} tiltDegrees={activePayload.tiltDegrees} orbitDegrees={activePayload.orbitDegrees} />
+    }
+    if (activeCategoryId === "focus-depth") {
+      return <DirectorWidgetFocusDepth mode={activePayload.mode} focusDistanceMeters={activePayload.focusDistanceMeters} depthStrength={activePayload.depthStrength} bokeh={activePayload.bokeh} />
+    }
+    if (activeCategoryId === "texture-film") {
+      return <DirectorWidgetTextureStack grain={activePayload.grain} halation={activePayload.halation} bloom={activePayload.bloom} vignette={activePayload.vignette} filmStock={activePayload.filmStock} />
+    }
+    if (activeCategoryId === "transitions") {
+      return <DirectorWidgetTransitionBridge type={activePayload.defaultType} durationFrames={activePayload.durationFrames} matchMotion={activePayload.matchMotion} />
+    }
+    if (activeCategoryId === "music") {
+      return <DirectorWidgetMusicBeat bpm={activePayload.bpm} intensity={activePayload.intensity} beatSync={activePayload.beatSync} />
+    }
+    if (activeCategoryId === "captions") {
+      return <DirectorWidgetCaptionPreview position={activePayload.position} animation={activePayload.animation} maxWordsPerLine={activePayload.maxWordsPerLine} burnIn={activePayload.burnIn} />
+    }
+    if (activeCategoryId === "references-seeds") {
+      return <DirectorWidgetReferenceBoard referenceCount={activePayload.references.length} seed={activePayload.seed} lockSeed={activePayload.lockSeed} variationNoise={activePayload.variationNoise} />
+    }
+    if (activeCategoryId === "consistency-continuity") {
+      return <DirectorWidgetContinuityLedger entityCount={activePayload.entities.length} identityStrength={activePayload.identityStrength} wardrobeStrength={activePayload.wardrobeStrength} environmentStrength={activePayload.environmentStrength} />
+    }
+    if (activeCategoryId === "negative-constraints") {
+      return <DirectorWidgetNegativeBank tagCount={activePayload.tags.length} enforcement={activePayload.enforcement} freeText={activePayload.freeText} />
     }
     return (
       <div className="vtdw-signature vtdw-pacing">
