@@ -223,7 +223,7 @@ export const VtSyncControllerPanel: React.FC<{
 
   return (
    <div
-    className={`vt-retro-pcb-group is-category-action ${status !== "idle" ? "is-active" : ""} ${statusClass}`}
+    className={`vt-retro-pcb-group is-category-action ${status === "running" ? "is-active" : ""} ${statusClass}`}
     data-sync-status={status}
     style={
      {
