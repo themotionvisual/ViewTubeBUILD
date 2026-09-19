@@ -68,6 +68,7 @@ export type EditorAction=
   |{type:'setLayerVisible';id:string;visible:boolean}
   |{type:'addClipKeyframeValue';clipId:string;prop:string;value:unknown}
   |{type:'moveClipKeyframe';clipId:string;keyframeId:string;offsetSec:number}
+  |{type:'updateClipKeyframeValues';clipId:string;keyframeId:string;patch:Record<string,unknown>}
   |{type:'duplicateClipKeyframes';clipId:string;keyframeIds:string[];offsetDeltaSec?:number}
   |{type:'deleteClipKeyframes';clipId:string;keyframeIds:string[]}
   |{type:'setClipKeyframeInterpolation';clipId:string;keyframeIds:string[];interp:string}
@@ -342,6 +343,15 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
           :keyframe
         ).sort((a,b)=>Number(a.offsetSec??0)-Number(b.offsetSec??0));
         return{...clip,keyframes};
+      });
+      return withHistory(state,{...state,project:{...state.project,clips}});
+    }
+    case'updateClipKeyframeValues':{
+      const clips=state.project.clips.map(clip=>clip.id!==action.clipId?clip:{
+        ...clip,
+        keyframes:(clip.keyframes??[]).map(keyframe=>String(keyframe.id??'')===action.keyframeId
+          ?{...keyframe,values:{...((keyframe.values??{}) as Record<string,unknown>),...action.patch}}
+          :keyframe),
       });
       return withHistory(state,{...state,project:{...state.project,clips}});
     }
