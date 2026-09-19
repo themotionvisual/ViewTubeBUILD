@@ -6,6 +6,7 @@ import {
   WidgetLeftSplitBadge,
   WidgetToast,
   WidgetAlphabeticalTag,
+  WidgetActionButton,
   WidgetBadge,
   WidgetChoice,
   WidgetDisclosure,
@@ -139,6 +140,15 @@ describe("adaptive sized-control typography", () => {
       <WidgetSizedButton height={24}>Educational</WidgetSizedButton>,
     )
     expect(markup).not.toContain("vt-text-fit-adaptive")
+  })
+
+  it("allows canonical action buttons to opt into the same adaptive 24px text fit", () => {
+    const markup = renderToStaticMarkup(
+      <WidgetActionButton height={24} textFit="adaptive">Auto-fill Director</WidgetActionButton>,
+    )
+    expect(markup).toContain("widget-action")
+    expect(markup).toContain("is-height-24")
+    expect(markup).toContain("vt-text-fit-adaptive")
   })
 
   it("owns the final 24px adaptive cascade after fixed-size compatibility rules", () => {
