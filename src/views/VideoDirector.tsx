@@ -79,12 +79,14 @@ import {
   VideoDirectorProjectSchema,
   applyVideoDirectorConflicts,
   applyVideoDirectorRecipe,
+  applyVideoDirectorSuggestion,
   createDefaultVideoDirectorCategories,
   createEmptyVideoDirectorProject,
   createVideoDirectorAutosaveController,
   createVideoDirectorCategoryRecipe,
   createVideoDirectorProjectRecipe,
   deriveVideoDirectorCategoryStatus,
+  evaluateVideoDirectorSuggestions,
   readVideoDirectorRecipeLibrary,
   readVideoDirectorState,
   saveVideoDirectorDraft,
@@ -417,6 +419,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
   const conflictCount = VIDEO_DIRECTOR_CATEGORY_REGISTRY.filter(
     (definition) => statusForProject(project, definition.id) === "conflict",
   ).length
+  const suggestions = useMemo(() => evaluateVideoDirectorSuggestions(project), [project])
   const lockedCount = VIDEO_DIRECTOR_CATEGORY_REGISTRY.filter(
     (definition) => project.categories[definition.id].locked,
   ).length
@@ -894,6 +897,45 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
               <SubToolboxStack>
                 <MutedNote>Optional categories do not reduce readiness. Only unresolved blockers and invalid generation requirements should prevent execution.</MutedNote>
                 {notice ? <SubToolboxSurface tone="subtle" role="status">{notice}</SubToolboxSurface> : null}
+              </SubToolboxStack>
+            </SubToolbox>
+
+            <SubToolbox title={`Director Suggestions · ${suggestions.length}`} icon={<Lightbulb />} collapsible isOpenInitial={suggestions.length > 0}>
+              <SubToolboxStack>
+                {suggestions.map((item) => (
+                  <SubToolboxSurface key={item.id} tone={item.priority === "high" ? "accent" : "subtle"}>
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-start">
+                      <div className="min-w-0">
+                        <strong className="block text-[13px] font-black uppercase tracking-tight">{item.title}</strong>
+                        <p className="mt-1 text-[10px] font-bold leading-snug opacity-65">{item.reason}</p>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {item.targetCategoryIds.map((categoryId) => (
+                            <SubToolboxBadge key={categoryId}>{VIDEO_DIRECTOR_CATEGORY_BY_ID[categoryId].shortLabel}</SubToolboxBadge>
+                          ))}
+                        </div>
+                      </div>
+                      <StudioButton
+                        sizeVariant="compact"
+                        tone="neutral"
+                        onClick={() => {
+                          setProject((current) => applyVideoDirectorConflicts(applyVideoDirectorSuggestion(current, item)))
+                          setNotice(`${item.title} applied to Auto/inherited fields only.`)
+                        }}
+                      >
+                        Apply
+                      </StudioButton>
+                    </div>
+                  </SubToolboxSurface>
+                ))}
+                {!suggestions.length ? (
+                  <SubToolboxSurface tone="subtle">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase opacity-55">
+                      <CheckCircle2 size={17} aria-hidden="true" />
+                      <span>No contextual Director suggestions right now.</span>
+                    </div>
+                  </SubToolboxSurface>
+                ) : null}
+                <MutedNote>Suggestions can modify Auto, provider-default, recipe, or earlier AI-directed fields. User, shot, and variant overrides remain protected.</MutedNote>
               </SubToolboxStack>
             </SubToolbox>
 
