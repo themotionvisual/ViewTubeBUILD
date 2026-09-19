@@ -386,6 +386,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     return items
   }, [accountOpen, brain.activeProjectId, brain.projects])
   const shellLayout = mobile ? "mobile" : layout
+  const hideMobileEditorChrome = mobile && isEditorSurface
   const isBrainWorkspace = location.pathname === "/ai-brain"
 
   const closeAccountMenu = (restoreFocus = false) => {
@@ -660,8 +661,8 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   )
 
   return (
-    <div className="vt-adaptive-shell" data-layout={shellLayout} ref={shellRef}>
-      {mobile ? (
+    <div className="vt-adaptive-shell" data-layout={shellLayout} data-editor-chromeless={hideMobileEditorChrome ? "true" : "false"} ref={shellRef}>
+      {mobile && !hideMobileEditorChrome ? (
         <>
           <header className="vt-adaptive-nav vt-adaptive-nav--mobile">
             <button
@@ -709,7 +710,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
             </div>
           ) : null}
         </>
-      ) : (
+      ) : !mobile ? (
         <header className="vt-adaptive-nav">
           <div className="vt-adaptive-nav__brand">{logo}</div>
           {renderPrimaryNavigation()}
@@ -723,7 +724,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
             {accountMenu}
           </div>
         </header>
-      )}
+      ) : null}
 
       <main
         ref={mainViewportRef}
