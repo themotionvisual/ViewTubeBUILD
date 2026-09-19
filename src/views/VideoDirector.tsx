@@ -78,17 +78,23 @@ import {
   VIDEO_DIRECTOR_CATEGORY_REGISTRY,
   VideoDirectorProjectSchema,
   applyVideoDirectorConflicts,
+  applyVideoDirectorRecipe,
   createDefaultVideoDirectorCategories,
   createEmptyVideoDirectorProject,
   createVideoDirectorAutosaveController,
+  createVideoDirectorCategoryRecipe,
+  createVideoDirectorProjectRecipe,
   deriveVideoDirectorCategoryStatus,
+  readVideoDirectorRecipeLibrary,
   readVideoDirectorState,
   saveVideoDirectorDraft,
+  saveVideoDirectorRecipe,
   type VideoDirectorCategoryGroup,
   type VideoDirectorCategoryId,
   type VideoDirectorCategoryStatus,
   type VideoDirectorMode,
   type VideoDirectorProject,
+  type VideoDirectorRecipe,
 } from "../features/video-director"
 
 export interface VideoDirectorProps {
@@ -340,6 +346,8 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
     readVideoDirectorState() ?? createEmptyVideoDirectorProject(),
   )
   const [notice, setNotice] = useState("")
+  const [recipeName, setRecipeName] = useState("")
+  const [recipes, setRecipes] = useState<VideoDirectorRecipe[]>(() => readVideoDirectorRecipeLibrary())
   const autosave = useMemo(() => createVideoDirectorAutosaveController(350), [])
 
   useEffect(() => {
@@ -855,7 +863,19 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                   <StudioButton sizeVariant="standard" tone="neutral" onClick={() => resetCategory(activeCategoryId)}>
                     <RotateCcw size={15} />Reset
                   </StudioButton>
-                  <StudioButton sizeVariant="standard" tone="neutral" disabled title="Recipe persistence is the next foundation slice.">
+                  <StudioButton
+                    sizeVariant="standard"
+                    tone="neutral"
+                    onClick={() => {
+                      const recipe = createVideoDirectorCategoryRecipe({
+                        project,
+                        categoryId: activeCategoryId,
+                        name: recipeName.trim() || `${activeDefinition.label} Recipe`,
+                      })
+                      setRecipes(saveVideoDirectorRecipe(recipe))
+                      setNotice(`${activeDefinition.label} recipe saved.`)
+                    }}
+                  >
                     <BookmarkPlus size={15} />Recipe
                   </StudioButton>
                 </SubToolboxActions>
@@ -911,6 +931,72 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                     </SubToolboxSection>
                   )
                 })}
+              </SubToolboxStack>
+            </SubToolbox>
+
+            <SubToolbox title="Recipe Library" icon={<BookmarkPlus />} collapsible isOpenInitial={false}>
+              <SubToolboxStack>
+                <TextField
+                  label="Recipe Name"
+                  value={recipeName}
+                  placeholder="Battlefield camera, cold documentary…"
+                  onChange={setRecipeName}
+                />
+                <SubToolboxActions columns={2}>
+                  <StudioButton
+                    sizeVariant="standard"
+                    tone="neutral"
+                    onClick={() => {
+                      const recipe = createVideoDirectorCategoryRecipe({
+                        project,
+                        categoryId: activeCategoryId,
+                        name: recipeName.trim() || `${activeDefinition.label} Recipe`,
+                      })
+                      setRecipes(saveVideoDirectorRecipe(recipe))
+                      setNotice(`${activeDefinition.label} recipe saved.`)
+                    }}
+                  >
+                    <BookmarkPlus size={15} />Save Category
+                  </StudioButton>
+                  <StudioButton
+                    sizeVariant="standard"
+                    tone="neutral"
+                    onClick={() => {
+                      const recipe = createVideoDirectorProjectRecipe({
+                        project,
+                        name: recipeName.trim() || `${project.name || "Video Director"} Recipe`,
+                      })
+                      setRecipes(saveVideoDirectorRecipe(recipe))
+                      setNotice("Project recipe saved.")
+                    }}
+                  >
+                    <Save size={15} />Save Project
+                  </StudioButton>
+                </SubToolboxActions>
+                <SubToolboxSurface tone="subtle" scroll className="max-h-64">
+                  <div className="flex flex-col gap-2">
+                    {recipes.map((recipe) => (
+                      <div key={recipe.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center border-[2px] border-current rounded-[8px] p-2 bg-white">
+                        <button
+                          type="button"
+                          className="min-w-0 text-left"
+                          onClick={() => {
+                            setProject((current) => applyVideoDirectorConflicts(applyVideoDirectorRecipe(current, recipe)))
+                            setNotice(`${recipe.name} applied without replacing later user overrides.`)
+                          }}
+                        >
+                          <strong className="block truncate text-[12px] font-black uppercase">{recipe.name}</strong>
+                          <span className="block text-[9px] font-black uppercase opacity-50">
+                            {recipe.scope} · v{recipe.version} · {recipe.categories.length} categor{recipe.categories.length === 1 ? "y" : "ies"}
+                          </span>
+                        </button>
+                        <SubToolboxBadge>◆</SubToolboxBadge>
+                      </div>
+                    ))}
+                    {!recipes.length ? <MutedNote>No saved Director recipes yet.</MutedNote> : null}
+                  </div>
+                </SubToolboxSurface>
+                <MutedNote>Recipe application is inherited. Existing user, shot, and variant overrides remain authoritative unless a future explicit “force apply” action is used.</MutedNote>
               </SubToolboxStack>
             </SubToolbox>
 
