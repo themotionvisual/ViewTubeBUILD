@@ -1,3 +1,94 @@
+
+/* Video Director owns a deliberately denser execution profile than the global
+   primitive ladder. Geometry stays canonical at 24px; only local typography
+   and spacing are condensed so the widget can preserve four-up mode/page rows. */
+.vt-video-director-widget .vt-sized-control.is-height-24,
+.vt-video-director-widget .widget-action.is-height-24,
+.vt-video-director-widget .widget-stepper.is-height-24,
+.vt-video-director-widget .widget-toggle-switch.is-height-24 {
+  --vt-primitive-font:10px;
+  font-size:10px !important;
+  letter-spacing:0 !important;
+  line-height:1 !important;
+}
+.vt-video-director-widget .vt-sized-control.is-height-24 :is(span,strong,small,button,input),
+.vt-video-director-widget .widget-action.is-height-24 :is(span,strong,small) {
+  font-size:10px !important;
+  line-height:1 !important;
+}
+.vt-video-director-widget .vt-sized-control:is(.vt-button,.widget-action,.widget-select-trigger,.widget-text-input) {
+  min-width:0;
+  padding-inline:5px !important;
+  overflow:hidden;
+}
+.vt-video-director-widget .vt-button,
+.vt-video-director-widget .widget-action,
+.vt-video-director-widget .widget-select-trigger {
+  white-space:nowrap;
+  text-overflow:clip;
+}
+.vt-video-director-widget .vtdw-mode-row,
+.vt-video-director-widget .vtdw-page-row,
+.vt-video-director-widget .vtdw-quick-row {
+  gap:4px;
+}
+.vt-video-director-widget .vtdw-mode-row > *,
+.vt-video-director-widget .vtdw-page-row > * {
+  flex:1 1 0;
+  min-width:0;
+}
+.vt-video-director-widget .vtdw-quick-row > * {
+  flex:1 1 0;
+  min-width:0;
+}
+.vt-video-director-widget .vtdw-field-grid {
+  gap:6px;
+}
+.vt-video-director-widget .vtdw-field {
+  gap:2px;
+}
+.vt-video-director-widget .vtdw-field > span {
+  font-size:7px;
+  line-height:1;
+}
+.vt-video-director-widget .vtdw-category-copy strong {
+  font-size:11px;
+  line-height:1;
+}
+.vt-video-director-widget .vtdw-category-copy small {
+  font-size:8px;
+  line-height:1.12;
+}
+.vtdw-header-studio {
+  width:auto !important;
+  min-width:66px !important;
+  max-width:84px;
+  padding-inline:6px !important;
+  font-size:10px !important;
+  white-space:nowrap !important;
+}
+@container vt-widget (max-width:430px) {
+  .vt-video-director-widget .vtdw-mode-row,
+  .vt-video-director-widget .vtdw-page-row {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    overflow:visible;
+  }
+  .vt-video-director-widget .vtdw-mode-row > *,
+  .vt-video-director-widget .vtdw-page-row > * {
+    width:100%;
+  }
+  .vt-video-director-widget .vtdw-field-grid {
+    grid-template-columns:minmax(0,1fr);
+  }
+  .vtdw-header-studio {
+    min-width:58px !important;
+    max-width:68px !important;
+    font-size:9px !important;
+    padding-inline:4px !important;
+  }
+}
+
 .vt-video-director-widget{height:100%;min-width:0;min-height:0;display:flex;flex-direction:column;color:var(--widget-border,currentColor)}
 .vtdw-topline{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .vtdw-mode-row,.vtdw-page-row,.vtdw-quick-row,.vtdw-category-strip,.vtdw-field-grid{display:flex;gap:8px;align-items:center;min-width:0}
@@ -19,7 +110,7 @@
 .vtdw-footer-grid{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}.vtdw-footer-copy{min-width:0}.vtdw-footer-copy strong,.vtdw-footer-copy span{display:block}.vtdw-footer-copy strong{font-size:11px;font-weight:1000;text-transform:uppercase}.vtdw-footer-copy span{font-size:8px;font-weight:900;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @container (max-width:620px){.vtdw-field-grid{grid-template-columns:1fr}.vtdw-shot-strip{grid-template-columns:repeat(3,minmax(84px,1fr))}.vtdw-footer-grid{grid-template-columns:1fr auto}.vtdw-footer-grid>.vtdw-generate{grid-column:1/-1}.vtdw-variation-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @container (max-width:430px){.vtdw-topline{grid-template-columns:1fr}.vtdw-signature{min-height:126px}.vtdw-shot-strip{grid-template-columns:repeat(2,minmax(82px,1fr))}.vtdw-variation-grid{grid-template-columns:1fr}.vtdw-footer-grid{grid-template-columns:1fr}.vtdw-footer-grid>*{width:100%}}
-@media (pointer:coarse){.vt-video-director-widget .vt-sized-control,.vt-video-director-widget .widget-action{min-height:44px}.vtdw-category-strip .vt-sized-control{min-height:44px}}
+@media (pointer:coarse){.vt-video-director-widget .vt-sized-control,.vt-video-director-widget .widget-action{touch-action:manipulation}.vtdw-category-strip .vt-sized-control{touch-action:manipulation}}
 @media (prefers-reduced-motion:reduce){.vt-video-director-widget *{scroll-behavior:auto!important;transition-duration:0s!important}}
 .vtdw-path-grid{position:absolute;inset:0;background-image:linear-gradient(to right,color-mix(in srgb,currentColor 12%,transparent) 1px,transparent 1px),linear-gradient(to bottom,color-mix(in srgb,currentColor 12%,transparent) 1px,transparent 1px);background-size:25% 25%}.vtdw-camera-origin,.vtdw-camera-target{position:absolute;top:42%;display:grid;place-items:center;width:38px;height:38px;border:3px solid currentColor;border-radius:10px;background:#fff;font-size:8px;font-weight:1000}.vtdw-camera-origin{left:16%}.vtdw-camera-target{right:18%;border-radius:50%}.vtdw-camera-arc{position:absolute;left:28%;top:30%;width:45%;height:45%;border-top:4px solid var(--widget-color,#aaa);border-radius:50%}
 .vtdw-focus-depth{perspective:320px;display:grid;place-items:center}.vtdw-focus-plane{position:absolute;width:56%;height:56%;border:3px solid currentColor;border-radius:9px;background:color-mix(in srgb,var(--widget-color,#fff) 9%,#fff)}.vtdw-focus-plane.is-near{transform:translateX(-32%) scale(.72);opacity:.4}.vtdw-focus-plane.is-mid{transform:translateX(0)}.vtdw-focus-plane.is-far{transform:translateX(32%) scale(.82);opacity:.55}.vtdw-focus-marker{position:relative;z-index:4;border:2px solid currentColor;border-radius:7px;background:#fff;padding:5px 8px;font-size:8px;font-weight:1000}
