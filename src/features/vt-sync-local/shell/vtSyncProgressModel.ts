@@ -201,12 +201,15 @@ export const buildVtSyncUnifiedUnitViewModels = (
  return VT_SYNC_SYNC_UNITS.map((unit) => {
   const rows = unifiedRows.filter((row) => row.syncUnitId === unit.id)
   const statuses = rows.map((row) => row.displayStatus)
+  const successCount = statuses.filter((entry) => entry === "synced" || entry === "complete").length
+  const failedCount = statuses.filter((entry) => entry === "failed").length
   const status = statuses.includes("running") ? "running"
    : statuses.includes("pending") ? "pending"
-   : statuses.includes("failed") ? "failed"
-   : statuses.includes("partial") ? "partial"
-   : statuses.length > 0 && statuses.every((entry) => entry === "synced" || entry === "complete") ? "synced"
-   : statuses.includes("skipped") ? "skipped"
+   : failedCount > 0 && successCount === 0 && failedCount === statuses.length ? "failed"
+   : failedCount > 0 ? "partial"
+   : statuses.includes("partial") || statuses.includes("placeholder") || statuses.includes("skipped") ? "partial"
+   : statuses.length > 0 && successCount === statuses.length ? "synced"
+   : successCount > 0 ? "partial"
    : statuses.includes("stale") ? "stale"
    : "never"
 
