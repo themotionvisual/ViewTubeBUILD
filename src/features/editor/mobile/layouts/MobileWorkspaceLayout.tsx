@@ -96,7 +96,6 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
 
   const containerHeight=height??(typeof window!=='undefined'?window.innerHeight:(orientation==='portrait'?800:480));
   const isPortraitVideo=compositionAspect<1;
-  const portraitPhonePortraitVideo=orientation==='portrait'&&isPortraitVideo;
   const[prefs,patchPrefs]=useMobileWorkspacePreferences(orientation,isPortraitVideo);
   const showTimeline=prefs.showTimeline;
   const showMap=prefs.showMap;
@@ -259,12 +258,12 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   </section>
 
   const moduleFocusButton=(kind:WorkspaceFocus)=>kind?<button
-    title={focus===kind?'Restore workspace':\`Focus \${kind}\`}
-    aria-label={focus===kind?'Restore workspace':\`Focus \${kind}\`}
+    title={focus===kind?'Restore workspace':`Focus ${kind}`}
+    aria-label={focus===kind?'Restore workspace':`Focus ${kind}`}
     onClick={event=>{event.stopPropagation();setFocus(kind)}}
     style={{
       position:'absolute',top:3,right:3,zIndex:20,width:24,height:24,
-      border:\`2px solid \${INK}\`,borderRadius:5,background:focus===kind?YELLOW:'#fff',
+      border:`2px solid ${INK}`,borderRadius:5,background:focus===kind?YELLOW:'#fff',
       display:'grid',placeItems:'center',padding:0,
     }}
   ><Maximize2 size={12}/></button>:null;
@@ -273,7 +272,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     onDoubleClick={()=>setFocus('inspector')}
     style={{
       position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,display:'flex',flexDirection:'column',
-      background:'#fff',border:\`3px solid \${INK}\`,borderRadius:7,padding:4,
+      background:'#fff',border:`3px solid ${INK}`,borderRadius:7,padding:4,
       boxSizing:'border-box',overflow:'hidden',
     }}
   >
@@ -290,7 +289,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     onDoubleClick={()=>setFocus('preview')}
     style={{
       position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden',
-      background:'#fff',border:\`3px solid \${INK}\`,borderRadius:7,padding:3,boxSizing:'border-box',
+      background:'#fff',border:`3px solid ${INK}`,borderRadius:7,padding:3,boxSizing:'border-box',
     }}
   >
     {moduleFocusButton('preview')}
@@ -300,7 +299,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const splitHorizontal=<div style={{
     position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,
     display:'grid',gap:4,
-    gridTemplateColumns:\`minmax(0,\${prefs.mainSplit}fr) minmax(0,\${1-prefs.mainSplit}fr)\`,
+    gridTemplateColumns:`minmax(0,${prefs.mainSplit}fr) minmax(0,${1-prefs.mainSplit}fr)`,
     overflow:'hidden',
   }}>
     {previewSurface}{pageSurface}
@@ -310,7 +309,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const splitVertical=<div style={{
     position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,
     display:'grid',gap:4,
-    gridTemplateRows:\`minmax(0,\${prefs.mainSplit}fr) minmax(0,\${1-prefs.mainSplit}fr)\`,
+    gridTemplateRows:`minmax(0,${prefs.mainSplit}fr) minmax(0,${1-prefs.mainSplit}fr)`,
     overflow:'hidden',
   }}>
     {pageSurface}{previewSurface}
@@ -329,7 +328,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
       ?pageSurface
       :normalMainSurface;
 
-  const timeline=showTimeline?<div
+  const timeline=(showTimeline||focus==='timeline')?<div
     onDoubleClick={()=>setFocus('timeline')}
     style={{position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}
   >
@@ -370,17 +369,15 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     <MiniTimelineMap store={store} height="100%" viewport={timelineViewport} onViewportNavigate={setScrollToSec}/>
   </div>:null;
 
-  const rows=focus==='timeline'
-    ?['0px','0px','0px','minmax(0,1fr)'].join(' ')
-    :focus==='preview'||focus==='inspector'
-      ?['minmax(0,1fr)','0px','0px'].join(' ')
-      :[
-        'minmax(0,1fr)',
-        `${NAV_ROW_HEIGHT}px`,
-        `${showActionLabels?40:34}px`,
-        ...(showTimeline?[`${timelineHeight}px`]:[]),
-        ...(showMap?[`${MAP_HEIGHT}px`]:[]),
-      ].join(' ');
+  const rows=focus
+    ?'minmax(0,1fr)'
+    :[
+      'minmax(0,1fr)',
+      `${NAV_ROW_HEIGHT}px`,
+      `${showActionLabels?40:34}px`,
+      ...(showTimeline?[`${timelineHeight}px`]:[]),
+      ...(showMap?[`${MAP_HEIGHT}px`]:[]),
+    ].join(' ');
 
   const presetBar=focus?null:<div style={{
     position:'absolute',top:7,left:7,zIndex:60,display:'grid',
