@@ -32,7 +32,7 @@ import {
  removeVtSyncTableFromImportState,
  saveVtSyncSnapshot,
 } from ".."
-import { VtSyncControllerPanel } from "./VtSyncControllerPanel"
+import { VtSyncUnifiedSyncToolbox } from "./VtSyncControllerPanel"
 import { buildVtSyncCreatorHeroModel, VtSyncCreatorHero } from "./VtSyncCreatorHero"
 import { VtSyncToolboxDataTable } from "./toolbox-table/VtSyncToolboxDataTable"
 import { VtSyncDataVisualsGate } from "./VtSyncDataVisualsGate"
@@ -520,7 +520,7 @@ const refreshManualImports = useCallback(async (payload?: {
     />
 
     <section ref={controllerPanelRef} className="min-w-0">
-     <VtSyncControllerPanel
+     <VtSyncUnifiedSyncToolbox
       isAuthenticated={authReady}
       isSyncing={busy}
       progress={syncProgress}
