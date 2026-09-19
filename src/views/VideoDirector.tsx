@@ -80,6 +80,7 @@ import {
   applyVideoDirectorConflicts,
   applyVideoDirectorRecipe,
   applyVideoDirectorSuggestion,
+  autoFillVideoDirectorProject,
   buildVideoDirectorStoryboard,
   cancelVideoDirectorJob,
   createDefaultVideoDirectorCategories,
@@ -367,6 +368,8 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
     readVideoDirectorState() ?? createEmptyVideoDirectorProject(),
   )
   const [notice, setNotice] = useState("")
+  const [autoFillLoading, setAutoFillLoading] = useState(false)
+  const [autoFillSummary, setAutoFillSummary] = useState("")
   const [recipeName, setRecipeName] = useState("")
   const [inspectorView, setInspectorView] = useState<"prompt" | "json">("prompt")
   const [scopeKey, setScopeKey] = useState("project")
@@ -912,6 +915,63 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                     </StudioSplitLeftButton>
                   ))}
                 </SubToolboxGrid>
+                <SubToolboxActions columns={2}>
+                  <StudioButton
+                    sizeVariant="action"
+                    tone="accent"
+                    loading={autoFillLoading}
+                    disabled={!project.categories["concept-direction"].payload.brief.trim()}
+                    onClick={async () => {
+                      setAutoFillLoading(true)
+                      setAutoFillSummary("")
+                      try {
+                        const result = await autoFillVideoDirectorProject({ project })
+                        const nextProject = applyVideoDirectorConflicts(result.project)
+                        setProject(nextProject)
+                        setScopeKey("project")
+                        const accepted = result.acceptedFields.length
+                        const skipped = result.skippedFields.length
+                        const storyboard = result.storyboardCreated
+                          ? ` · ${nextProject.shots.length} storyboard shots created`
+                          : ""
+                        const summary = result.plan.summary?.trim()
+                          ? `${result.plan.summary} · ${accepted} field${accepted === 1 ? "" : "s"} applied · ${skipped} protected/skipped${storyboard}`
+                          : `${accepted} Director field${accepted === 1 ? "" : "s"} applied · ${skipped} protected/skipped${storyboard}`
+                        setAutoFillSummary(summary)
+                        setNotice("Brain Auto-Fill completed without replacing explicit creator-owned settings.")
+                      } catch (error) {
+                        const message = error instanceof Error ? error.message : "Video Director Auto-Fill failed."
+                        setAutoFillSummary(message)
+                        setNotice(message)
+                      } finally {
+                        setAutoFillLoading(false)
+                      }
+                    }}
+                  >
+                    <WandSparkles size={18} />
+                    Auto-Fill Director
+                  </StudioButton>
+                  <StudioButton
+                    sizeVariant="action"
+                    tone="neutral"
+                    onClick={() => {
+                      setScopeKey("project")
+                      mutateProject((draft) => { draft.activeCategoryId = "concept-direction" })
+                      setNotice("Concept & Direction opened for manual refinement.")
+                    }}
+                  >
+                    <SlidersHorizontal size={18} />
+                    Direct Manually
+                  </StudioButton>
+                </SubToolboxActions>
+                {autoFillSummary ? (
+                  <SubToolboxSurface tone="subtle" role="status">
+                    <div className="flex items-start gap-2">
+                      <Sparkles size={18} className="shrink-0" aria-hidden="true" />
+                      <p className="text-[10px] font-black uppercase leading-snug">{autoFillSummary}</p>
+                    </div>
+                  </SubToolboxSurface>
+                ) : null}
                 <SubToolboxGrid>
                   <NumberField
                     label="Duration"
