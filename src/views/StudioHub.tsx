@@ -45,6 +45,9 @@ const StudioHub: React.FC = () => {
 
     {/* Natively Supported Tools */}
     <VideoManager collapsible isOpenInitial={true} paletteIndex={0} />
+    <React.Suspense fallback={null}>
+     <VideoDirector collapsible isOpenInitial={false} paletteIndex={11} />
+    </React.Suspense>
     <VideoPublisher collapsible isOpenInitial={false} paletteIndex={1} />
     <MediaAnalyzer collapsible isOpenInitial={false} paletteIndex={2} />
     <ThumbnailStudio collapsible isOpenInitial={false} paletteIndex={3} />
