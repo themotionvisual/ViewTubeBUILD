@@ -536,7 +536,7 @@ export const SubToolboxColorPicker: React.FC<SubToolboxColorPickerProps> = ({ le
   </div>
 )
 
-export interface SubToolboxMediaCardProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface SubToolboxMediaCardProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "title"> {
   level?: ToolboxControlLevel
   title: React.ReactNode
   meta?: React.ReactNode
@@ -552,7 +552,7 @@ export const SubToolboxMediaCard: React.FC<SubToolboxMediaCardProps> = ({ level 
   </button>
 )
 
-export interface SubToolboxSelectableListRowProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface SubToolboxSelectableListRowProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "title"> {
   level?: ToolboxControlLevel
   title: React.ReactNode
   detail?: React.ReactNode
@@ -568,7 +568,7 @@ export const SubToolboxSelectableListRow: React.FC<SubToolboxSelectableListRowPr
   </button>
 )
 
-export interface SubToolboxReorderRowProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SubToolboxReorderRowProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   level?: ToolboxControlLevel
   title: React.ReactNode
   detail?: React.ReactNode
@@ -608,7 +608,7 @@ export const SubToolboxTabs: React.FC<SubToolboxTabsProps> = ({ level = "l0", it
   </div>
 )
 
-export interface SubToolboxAlertProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SubToolboxAlertProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   level?: ToolboxControlLevel
   tone?: "info" | "success" | "warning" | "danger"
   title: React.ReactNode
@@ -634,7 +634,7 @@ export const SubToolboxStepIndicator: React.FC<SubToolboxStepIndicatorProps> = (
   </ol>
 )
 
-export interface SubToolboxDialogProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SubToolboxDialogProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   level?: ToolboxControlLevel
   open: boolean
   onOpenChange?: (open: boolean) => void
@@ -654,7 +654,7 @@ export const SubToolboxDialog: React.FC<SubToolboxDialogProps> = ({ level = "l0"
   </div>
 )
 
-export interface SubToolboxDrawerProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SubToolboxDrawerProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   level?: ToolboxControlLevel
   open: boolean
   onOpenChange?: (open: boolean) => void
@@ -716,7 +716,7 @@ export const SubToolboxSkeleton: React.FC<SubToolboxSkeletonProps> = ({ level = 
   </div>
 )
 
-export interface SubToolboxToastProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SubToolboxToastProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   level?: ToolboxControlLevel
   tone?: "info" | "success" | "warning" | "danger"
   title: React.ReactNode
