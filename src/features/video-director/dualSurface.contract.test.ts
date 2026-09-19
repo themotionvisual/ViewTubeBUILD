@@ -69,7 +69,9 @@ describe("Video Director dual-surface architecture", () => {
   })
 
   it("keeps signature directing concepts paired across Widget and Studio implementations", () => {
-    const widget = read("src/views/dashboard/widgets/video-director/VideoDirectorWidgetComponents.tsx")
+    const widget =
+      read("src/views/dashboard/widgets/video-director/VideoDirectorWidgetComponents.tsx") +
+      read("src/views/dashboard/widgets/video-director/VideoDirectorWidgetMoreComponents.tsx")
     const studioCore = read("src/views/video-director/StudioDirectorSignatureControls.tsx")
     const studioAdvanced = read("src/views/video-director/StudioDirectorAdvancedSignatureControls.tsx")
     const studioMore = read("src/views/video-director/StudioDirectorMoreSignatureControls.tsx")
