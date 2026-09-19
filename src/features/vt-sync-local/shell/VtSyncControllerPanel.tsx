@@ -2,13 +2,18 @@ import React, { useMemo, useRef, useState } from "react"
 import { CheckSquare, ChevronDown, ChevronRight, RefreshCw, ShieldCheck, Square } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
-import { RetroRivets, RetroSyncExecutionSwitch } from "./VtSyncRetroChrome"
+import { RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
 import type {
  VtSyncAnalyticsWindow,
  VtSyncCategoryGroup,
  VtSyncDatasetFreshness,
 } from "../adapters/contracts"
-import type { VtSyncLocalSyncCategoryProgress } from "../adapters/localSyncEngine"
+import type { VtSyncLocalSyncProgress } from "../adapters/localSyncEngine"
+import type { VtSyncVideoCatalogCoverage } from "../adapters/videoCatalogProjection"
+import {
+ buildVtSyncUnifiedUnitViewModels,
+ getVtSyncProgressQueueSummary,
+} from "./vtSyncProgressModel"
 import { vtSyncCategoryCostsPerWindow } from "../adapters/windowDerivation"
 import {
  ANALYTICS_WINDOWS,
@@ -53,23 +58,21 @@ const buildUnitGroups = (hasContentOwner: boolean) => VT_SYNC_GROUP_ORDER
  }))
  .filter((entry) => entry.units.length > 0)
 
-const categoryFreshness = (freshness: VtSyncDatasetFreshness | undefined, categoryId: string) =>
- freshness?.[categoryId] || Object.values(freshness || {}).find((entry) => entry.phase === categoryId)
-
 export const VtSyncControllerPanel: React.FC<{
  isAuthenticated: boolean
  isSyncing: boolean
  videos: VtSyncRetentionVideoOption[]
- activeCategoryIds?: string[]
+ progress?: VtSyncLocalSyncProgress | null
  queuedCategoryIds?: string[]
- categoryExecutionStates?: Record<string, VtSyncLocalSyncCategoryProgress>
  datasetFreshness?: VtSyncDatasetFreshness
+ syncError?: string
+ videoCatalogCoverage?: VtSyncVideoCatalogCoverage
  contentOwners?: Array<{ id: string; displayName: string }>
  activeContentOwnerId?: string | null
  onSelectContentOwner?: (ownerId: string) => Promise<void>
  onLogin: () => Promise<void>
  onStartSync: (categoryIds: string[], retentionVideoIds?: string[], forceFullVideoMetadata?: boolean, windows?: VtSyncAnalyticsWindow[]) => Promise<void>
-}> = ({ isAuthenticated, isSyncing, videos, activeCategoryIds = [], queuedCategoryIds = [], categoryExecutionStates, datasetFreshness, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
+}> = ({ isAuthenticated, isSyncing, videos, progress = null, queuedCategoryIds = [], datasetFreshness, syncError, videoCatalogCoverage, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
  const [selected, setSelected] = useState<string[]>(() => getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))
  const [retentionVideoIds, setRetentionVideoIds] = useState<string[]>([])
  // Lifetime only by default: every extra window costs one request per aggregate
@@ -80,16 +83,33 @@ export const VtSyncControllerPanel: React.FC<{
  const [openGroups, setOpenGroups] = useState<Set<VtSyncCategoryGroup>>(
   () => new Set(["channel"]),
  )
+ const [expandedUnitIds, setExpandedUnitIds] = useState<Set<string>>(() => new Set())
  const unitGroups = useMemo(() => buildUnitGroups(Boolean(activeContentOwnerId)), [activeContentOwnerId])
  const availableUnits = useMemo(() => unitGroups.flatMap((entry) => entry.units), [unitGroups])
+ const unifiedUnitModels = useMemo(
+  () => buildVtSyncUnifiedUnitViewModels(progress, datasetFreshness, queuedCategoryIds, syncError)
+   .filter((unit) => unit.id !== "traffic_detail_traffic_campaign_card" || Boolean(activeContentOwnerId))
+   .map((unit) => unit.id === "video_catalog" && videoCatalogCoverage
+    ? { ...unit, displayRows: videoCatalogCoverage.catalogTotal }
+    : unit),
+  [activeContentOwnerId, datasetFreshness, progress, queuedCategoryIds, syncError, videoCatalogCoverage],
+ )
+ const unitModelById = useMemo(() => new Map(unifiedUnitModels.map((unit) => [unit.id, unit])), [unifiedUnitModels])
+ const queueSummary = useMemo(() => getVtSyncProgressQueueSummary(progress, queuedCategoryIds), [progress, queuedCategoryIds])
+ const unitTally = useMemo(() => unifiedUnitModels.reduce<Record<string, number>>((acc, unit) => {
+  acc[unit.status] = (acc[unit.status] || 0) + 1
+  return acc
+ }, {}), [unifiedUnitModels])
+ const latestDatasetAt = useMemo(() => unifiedUnitModels
+  .map((unit) => unit.lastSyncedAt)
+  .filter((value): value is string => Boolean(value))
+  .sort((left, right) => new Date(right).getTime() - new Date(left).getTime())[0], [unifiedUnitModels])
  const groupHeaderRefs = useRef(new Map<VtSyncCategoryGroup, HTMLButtonElement>())
  const selectedSet = useMemo(() => new Set(selected), [selected])
  const selectedUnitCount = useMemo(() => countVtSyncSelectedUnits(selected, availableUnits), [availableUnits, selected])
  const selectedQueryCount = useMemo(() => countVtSyncUnderlyingQueries(selected), [selected])
  const retentionSelectedSet = useMemo(() => new Set(retentionVideoIds), [retentionVideoIds])
  const retentionEnabled = selectedSet.has("retention")
- const activeCategorySet = useMemo(() => new Set(activeCategoryIds), [activeCategoryIds])
- const queuedCategorySet = useMemo(() => new Set(queuedCategoryIds), [queuedCategoryIds])
  const sortedVideos = useMemo(() => [...videos].sort((a, b) => (b.views || 0) - (a.views || 0)), [videos])
  const baselineRetentionSelection = useMemo(() => selectVtSyncBaseRetentionVideos(videos.map((video) => ({
   id: video.id,
@@ -183,28 +203,62 @@ export const VtSyncControllerPanel: React.FC<{
   await onStartSync(expanded, includeRetentionVideoIds ? retentionVideoIds : undefined, forceFullVideoMetadata, selectedWindows)
  }
 
- const resolveExecutionStatus = (categoryIds: string[]): "idle" | "queued" | "running" | "complete" | "partial" | "failed" => {
-  if (categoryIds.some((id) => activeCategorySet.has(id))) return "running"
-  if (categoryIds.some((id) => queuedCategorySet.has(id))) return "queued"
-
-  const liveStates = categoryIds
-   .map((id) => categoryExecutionStates?.[id])
-   .filter(Boolean) as VtSyncLocalSyncCategoryProgress[]
-  if (liveStates.length > 0) {
-   if (liveStates.some((entry) => entry.status === "failed")) return "failed"
-   if (liveStates.some((entry) => entry.status === "partial" || entry.status === "skipped")) return "partial"
-   if (liveStates.length === categoryIds.length && liveStates.every((entry) => entry.status === "complete")) return "complete"
-  }
-
-  const storedEntries = categoryIds
-   .map((id) => categoryFreshness(datasetFreshness, id))
-   .filter(Boolean)
-
-  if (storedEntries.some((entry) => entry?.status === "failed")) return "failed"
-  if (storedEntries.some((entry) => entry?.status === "partial")) return "partial"
-  if (storedEntries.length === categoryIds.length && storedEntries.every((entry) => entry?.status === "synced")) return "complete"
+ const toExecutionStatus = (status?: string): RetroSyncExecutionStatus => {
+  if (status === "running") return "running"
+  if (status === "pending") return "queued"
+  if (status === "synced" || status === "complete") return "complete"
+  if (status === "partial" || status === "skipped") return "partial"
+  if (status === "failed") return "failed"
   return "idle"
  }
+
+ const shortStatus = (status?: string) => {
+  if (status === "running") return "RUN"
+  if (status === "pending") return "QUEUE"
+  if (status === "synced" || status === "complete") return "DONE"
+  if (status === "partial") return "PART"
+  if (status === "failed") return "FAIL"
+  if (status === "stale") return "STALE"
+  if (status === "skipped") return "SKIP"
+  return "NEVER"
+ }
+
+ const statusTone = (status?: string) => {
+  if (status === "running") return "#3FEE56"
+  if (status === "pending") return "#FFDA47"
+  if (status === "synced" || status === "complete") return "#3FEE56"
+  if (status === "partial" || status === "stale" || status === "skipped") return "#FFDA47"
+  if (status === "failed") return "#FA618A"
+  return "#B9BEC8"
+ }
+
+ const formatDuration = (durationMs?: number) => {
+  if (durationMs === undefined || !Number.isFinite(durationMs)) return "—"
+  const totalSeconds = Math.max(0, Math.round(durationMs / 1000))
+  if (totalSeconds < 60) return `${totalSeconds}s`
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}m${seconds ? ` ${seconds}s` : ""}`
+ }
+
+ const formatLastSync = (iso?: string) => {
+  if (!iso) return "—"
+  const value = new Date(iso)
+  if (!Number.isFinite(value.getTime())) return "—"
+  const today = new Date()
+  const sameDay = value.getFullYear() === today.getFullYear()
+   && value.getMonth() === today.getMonth()
+   && value.getDate() === today.getDate()
+  return sameDay
+   ? value.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+   : value.toLocaleDateString([], { month: "numeric", day: "numeric" })
+ }
+
+ const compactRows = (value: number) => value >= 1_000_000
+  ? `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1)}M`
+  : value >= 1_000
+   ? `${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1)}K`
+   : value.toLocaleString()
 
 
 
