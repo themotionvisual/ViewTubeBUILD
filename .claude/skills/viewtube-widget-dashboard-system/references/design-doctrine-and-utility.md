@@ -333,3 +333,46 @@ A widget is not finished if:
 - it displays insight without any reasonable follow-up when one exists;
 - its primary action is visually indistinguishable from tertiary actions;
 - it duplicates another widget's creator job without a clear reason.
+
+
+## Local fix containment
+
+A widget-specific problem should remain widget-specific unless the proposed shared change is independently correct for the whole dashboard system.
+
+Before changing shared shell/primitive CSS during one-widget work, perform a blast-radius review:
+
+- other widget consumers;
+- title/header behavior;
+- primitive size/type behavior;
+- mobile/portrait rules;
+- focus/state behavior;
+- touch/coarse-pointer behavior;
+- test coverage.
+
+Do not weaken a system invariant merely to make one complex widget fit.
+
+## Density versus fitting
+
+Do not confuse these:
+
+- **Density** changes the scale/detail of an entire region.
+- **Adaptive text fit** preserves one control's geometry while fitting a complete label.
+
+A complex widget may simultaneously use compact navigation, standard inputs, and an expanded signature component.
+
+Do not apply widget-wide compact density because a few long buttons are crowded.
+
+## Duplicate navigation and action audit
+
+Constrained layouts should not carry every desktop accelerator.
+
+Before shrinking essential controls, identify duplicates:
+
+- repeated generic actions in header/body/footer;
+- full selector plus full quick-switch strip;
+- multiple links to the same destination;
+- redundant summary/control surfaces.
+
+Keep one persistent primary control and retain contextual duplicates only when they perform a distinct job.
+
+Remove redundant accelerators before shrinking or reflowing the main workflow.
