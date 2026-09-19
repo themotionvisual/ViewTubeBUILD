@@ -85,8 +85,10 @@ import {
   listVideoDirectorJobs,
   listVideoDirectorScopeOptions,
   parseVideoDirectorScopeKey,
+  clearVideoDirectorSurfaceHandoff,
   readVideoDirectorRecipeLibrary,
   readVideoDirectorState,
+  readVideoDirectorSurfaceHandoff,
   removeVideoDirectorShot,
   reorderVideoDirectorShot,
   resetVideoDirectorScopedCategory,
@@ -295,7 +297,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
   const [autoFillSummary, setAutoFillSummary] = useState("")
   const [recipeName, setRecipeName] = useState("")
   const [inspectorView, setInspectorView] = useState<"prompt" | "json">("prompt")
-  const [scopeKey, setScopeKey] = useState("project")
+  const [scopeKey, setScopeKey] = useState(() => readVideoDirectorSurfaceHandoff("studio")?.scopeKey || "project")
   const [recipes, setRecipes] = useState<VideoDirectorRecipe[]>(() => readVideoDirectorRecipeLibrary())
   const [jobs, setJobs] = useState<VideoDirectorRemoteJob[]>([])
   const [jobsLoading, setJobsLoading] = useState(false)
@@ -307,6 +309,10 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
   }, [autosave, project])
 
   useEffect(() => () => autosave.flush(), [autosave])
+
+  useEffect(() => {
+    clearVideoDirectorSurfaceHandoff()
+  }, [])
 
   useEffect(() => subscribeVideoDirectorState((external) => {
     if (!external) return
