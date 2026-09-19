@@ -137,6 +137,7 @@ export const ImageGeneratorWidget = ({
             <WidgetSizedButton
               key={style}
               height={24}
+              textFit="adaptive"
               tone={selectedStyles.includes(style) ? "primary" : "default"}
               onClick={() => toggleStyle(style)}
               aria-pressed={selectedStyles.includes(style)}
@@ -147,7 +148,7 @@ export const ImageGeneratorWidget = ({
         </div>
 
         {!hasGeminiKey() ? (
-          <WidgetSizedButton height={24} tone="secondary" className="image-generator-key-action" onClick={() => (window.location.href = "/settings")}>
+          <WidgetSizedButton height={24} textFit="adaptive" tone="secondary" className="image-generator-key-action" onClick={() => (window.location.href = "/settings")}>
             Missing API Key: Open Settings
           </WidgetSizedButton>
         ) : (
@@ -167,16 +168,16 @@ export const ImageGeneratorWidget = ({
       </WidgetWorkflowMain>
         <WidgetFooter divider={false} className="image-generator-footer">
         <div className="image-generator-send-grid">
-          <WidgetSizedButton height={24} tone="default" aria-label="Send image to Community Post" onClick={() => sendToWidget("community-post")} disabled={!generatedImage}>
+          <WidgetSizedButton height={24} textFit="adaptive" tone="default" aria-label="Send image to Community Post" onClick={() => sendToWidget("community-post")} disabled={!generatedImage}>
             <Send /> Community
           </WidgetSizedButton>
-          <WidgetSizedButton height={24} tone="default" aria-label="Send image to Comment Responder" onClick={() => sendToWidget("comment-replier")} disabled={!generatedImage}>
+          <WidgetSizedButton height={24} textFit="adaptive" tone="default" aria-label="Send image to Comment Responder" onClick={() => sendToWidget("comment-replier")} disabled={!generatedImage}>
             <Send /> Comments
           </WidgetSizedButton>
-          <WidgetSizedButton height={24} tone="default" aria-label="Send image to Thumbnail AI" onClick={() => sendToWidget("thumb-ai")} disabled={!generatedImage}>
+          <WidgetSizedButton height={24} textFit="adaptive" tone="default" aria-label="Send image to Thumbnail AI" onClick={() => sendToWidget("thumb-ai")} disabled={!generatedImage}>
             <Send /> Thumb AI
           </WidgetSizedButton>
-          <WidgetSizedButton height={24} tone="default" aria-label="Send image to Video Uploader" onClick={() => sendToWidget("video-uploader")} disabled={!generatedImage}>
+          <WidgetSizedButton height={24} textFit="adaptive" tone="default" aria-label="Send image to Video Uploader" onClick={() => sendToWidget("video-uploader")} disabled={!generatedImage}>
             <Send /> Uploader
           </WidgetSizedButton>
         </div>
