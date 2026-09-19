@@ -161,7 +161,7 @@ export const HardcodedGenericControl: React.FC<{ name: string; level: Level; ind
         onWheel={e => { e.preventDefault(); setKnobValue(v => Math.min(100, Math.max(0, v + (e.deltaY < 0 ? 1 : -1)))) }}
         onKeyDown={e => { if (e.key === "ArrowUp" || e.key === "ArrowRight") { e.preventDefault(); setKnobValue(v => Math.min(100,v+1)) } if (e.key === "ArrowDown" || e.key === "ArrowLeft") { e.preventDefault(); setKnobValue(v => Math.max(0,v-1)) } if (e.key === "Home") setKnobValue(0); if (e.key === "End") setKnobValue(100) }}
       ><span className="knob-arc"/><i/><em>{knobValue}</em></span>
-      <div className="knob-controls"><button type="button" aria-label="Decrease value" onClick={() => setKnobValue(v => Math.max(0,v-1))}>−</button><b className="knob-value">VALUE</b><button type="button" aria-label="Increase value" onClick={() => setKnobValue(v => Math.min(100,v+1))}>+</button></div>
+      <div className="knob-readout"><b className="knob-value">VALUE</b><output>{knobValue}</output></div>
     </div>
   }
   if (name === "Controller Switch") return <button className={`vt-catalog-controller-switch is-${level}`} style={style}><span/><b>ON</b></button>
