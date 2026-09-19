@@ -1,6 +1,6 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {
-  Columns2,Copy,LayoutTemplate,Map as MapIcon,PanelRight,Palette,
+  Columns2,Copy,LayoutTemplate,Map as MapIcon,PanelRight,
   Redo2,Rows3,ScanSearch,Scissors,Trash2,Type,Undo2,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
