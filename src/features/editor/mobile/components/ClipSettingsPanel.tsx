@@ -451,11 +451,6 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
       <button style={{...miniButton,width:'100%',marginTop:4,background:Boolean(payload.muted)?'#fff':BLUE}} onClick={()=>patch({muted:!Boolean(payload.muted)})}>{Boolean(payload.muted)?'UNMUTE':'MUTE'}</button>
     </div>:null}
 
-    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:4,marginTop:10}}>
-      <button style={miniButton} onClick={()=>store.dispatch({type:'splitClipAtPlayhead',id:clip.id})}>Split</button>
-      <button style={miniButton} onClick={()=>store.dispatch({type:'duplicateClip',id:clip.id})}>Duplicate</button>
-      <button style={{...miniButton,background:'#fa618a'}} onClick={()=>store.dispatch({type:'deleteClips',ids:[clip.id]})}>Delete</button>
-    </div>
   </div>;
 }
 
