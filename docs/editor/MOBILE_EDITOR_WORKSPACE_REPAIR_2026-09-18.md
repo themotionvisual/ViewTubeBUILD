@@ -31,3 +31,11 @@ Repair the phone editor without creating a second editor engine. The mobile surf
 - Navigation has no duplicate Media/Text/Settings quick actions.
 - Existing bridged media/text/shape layers appear in mobile preview.
 - Templates/SVG/backgrounds remain reachable from the navigation.
+
+
+## Containment and elastic module sizing
+- Navigation, preview/tool workspace, timeline, and mini-map are bounded by the editor viewport and may not extend outside it.
+- Each module owns an internal overflow surface; oversized contents scroll inside the module instead of enlarging the page.
+- Preview canvas dimensions are calculated with an aspect-fit observer so 9:16 and 16:9 compositions remain completely inside the allocated preview module.
+- Timeline and map use fractional grid rows instead of fixed pixel rows. Removing either module redistributes its space across the remaining preview/tool and timeline/map modules.
+- Split workspace uses only minmax(0, fr) tracks; it has no fixed-width or fixed-height minimum that can force a phone viewport overflow.
