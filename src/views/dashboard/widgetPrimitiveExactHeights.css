@@ -82,3 +82,17 @@
  .vt-spectrum-badge.is-height-38 { min-height:38px; height:38px; font-size:26px; font-weight:1000; line-height:1; }
  .vt-spectrum-badge[class*="is-height-"] > span { font-size:inherit; font-weight:inherit; line-height:1; }
 }
+
+
+@layer primitives {
+ .vt-widget[data-control-density="compact"] .is-height-18 { --vt-primitive-font:8px; }
+ .vt-widget[data-control-density="compact"] .is-height-24 { --vt-primitive-font:10px; }
+ .vt-widget[data-control-density="compact"] .is-height-32 { --vt-primitive-font:12px; }
+ .vt-widget[data-control-density="compact"] .is-height-38 { --vt-primitive-font:16px; }
+ .vt-widget[data-control-density="compact"] .vt-sized-control {
+  letter-spacing:0;
+ }
+ .vt-widget[data-control-density="compact"] .vt-sized-control:is(.vt-button,.widget-action,.widget-select-trigger,.widget-text-input) {
+  min-width:0;
+ }
+}
