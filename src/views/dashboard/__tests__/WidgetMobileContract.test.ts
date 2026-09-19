@@ -66,6 +66,13 @@ describe("mobile widget geometry contract", () => {
     expect(widgetSystemCss).toContain(".vt-widget-header:has(.header-extra .widget-header-toggle)")
   })
 
+  it("keeps portrait module titles full-size, two-line capable, and never ellipsized", () => {
+    expect(widgetSystemCss).toContain("font-size: var(--widget-type-title) !important;")
+    expect(widgetSystemCss).toContain("white-space: normal !important;")
+    expect(widgetSystemCss).toContain("text-overflow: clip !important;")
+    expect(widgetSystemCss).not.toContain("font-size: clamp(11px, 3.4cqw, var(--widget-type-title));")
+  })
+
   it("forces every phone widget to one complete dashboard row without mutating persisted width state", () => {
     expect(mobileCss).toContain("@media (max-width: 767px)")
     expect(mobileCss).toContain("grid-column: 1 / -1;")
