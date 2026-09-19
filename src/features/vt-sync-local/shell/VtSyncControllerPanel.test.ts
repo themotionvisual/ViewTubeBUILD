@@ -4,12 +4,12 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
 import { VT_SYNC_SYNC_UNITS } from "../upstream/syncUnitRegistry"
-import { VtSyncControllerPanel } from "./VtSyncControllerPanel"
+import { VtSyncUnifiedSyncToolbox } from "./VtSyncUnifiedSyncToolbox"
 import { ANALYTICS_WINDOWS, WINDOW_SHORT_LABELS } from "../../../services/analytics/windows"
 
 describe("VT-SYNC controller accordion", () => {
  it("renders stacked category controls with only the first group expanded", () => {
-  const markup = renderToStaticMarkup(React.createElement(VtSyncControllerPanel, {
+  const markup = renderToStaticMarkup(React.createElement(VtSyncUnifiedSyncToolbox, {
    isAuthenticated: true,
    isSyncing: false,
    videos: [],
@@ -31,7 +31,7 @@ describe("VT-SYNC controller accordion", () => {
 
 describe("VT-SYNC execution status controls", () => {
  it("keeps a stored successful unit visibly done between runs", () => {
-  const markup = renderToStaticMarkup(React.createElement(VtSyncControllerPanel, {
+  const markup = renderToStaticMarkup(React.createElement(VtSyncUnifiedSyncToolbox, {
    isAuthenticated: true,
    isSyncing: false,
    videos: [],
@@ -53,7 +53,7 @@ describe("VT-SYNC execution status controls", () => {
  })
 
  it("uses one compact telemetry row with the controller pinned to the far right", () => {
-  const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
+  const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
   expect(source).toContain("grid-cols-[minmax(210px,1fr)_58px_54px_88px_34px_58px_96px]")
   expect(source).toContain("min-w-[600px]")
   expect(source).toContain("sticky right-0")
@@ -64,7 +64,7 @@ describe("VT-SYNC execution status controls", () => {
  })
 
  it("keeps sync time, issues, child queries, and description inside the expandable dataset detail surface", () => {
-  const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
+  const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
   expect(source).toContain("vt-sync-unified-unit-")
   expect(source).toContain("Issues ·")
   expect(source).toContain("Underlying query")
@@ -75,7 +75,7 @@ describe("VT-SYNC execution status controls", () => {
 })
 
 describe("time window controller options", () => {
- const render = () => renderToStaticMarkup(React.createElement(VtSyncControllerPanel, {
+ const render = () => renderToStaticMarkup(React.createElement(VtSyncUnifiedSyncToolbox, {
   isAuthenticated: true,
   isSyncing: false,
   videos: [],
@@ -106,7 +106,7 @@ describe("time window controller options", () => {
  })
 
  it("labels visible dataset units separately from underlying child queries", () => {
-  const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
+  const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
   expect(source).toContain("selectedUnitCount")
   expect(source).toContain("selectedQueryCount")
   expect(source).toContain("underlying quer")
@@ -119,14 +119,14 @@ describe("time window controller options", () => {
  })
 
  it("passes the selected windows to both sync entry points", () => {
-  const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
+  const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
   const startCalls = source.split("\n").filter((line) => line.includes("await onStartSync("))
   expect(startCalls).toHaveLength(2)
   startCalls.forEach((call) => expect(call).toContain("selectedWindows"))
  })
 
  it("excludes derived datasets from the request-cost estimate", () => {
-  const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
+  const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
   expect(source).toContain("selected.filter(vtSyncCategoryCostsPerWindow)")
  })
 })
