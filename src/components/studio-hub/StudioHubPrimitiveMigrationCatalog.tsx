@@ -4,6 +4,7 @@ import { type StudioHubComponentLevel } from "./StudioHubCompletePrimitiveCatalo
 import {
   SubToolboxAlert,
   SubToolboxAlphabeticalSpectrumTags,
+  SubToolboxAspectRatioFrame,
   SubToolboxAvatar,
   SubToolboxBreadcrumb,
   SubToolboxCarousel,
@@ -62,6 +63,7 @@ import {
   SubToolboxSurface,
   SubToolboxTabs,
   SubToolboxTag,
+  SubToolboxToolbar,
   SubToolboxTagEditor,
   SubToolboxTextArea,
   SubToolboxToast,
@@ -159,6 +161,16 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Vault Audio Asset",
   "Vault Document Asset",
   "Tree View",
+  "Disabled Button",
+  "Disabled Split Button",
+  "Two Color Data Stats",
+  "Monochrome Data Stats",
+  "Tiny Data Stats",
+  "Tooltip Dark",
+  "Tooltip Color",
+  "Dashboard Pill Tags",
+  "Aspect Ratio Frame",
+  "Toolbar",
 ] as const
 
 const pair = (index: number) => ({
@@ -433,6 +445,36 @@ const PrimitiveMigrationControl: React.FC<{
   }
   if (name === "Tree View") {
     return <SubToolboxTree level={level} style={style} defaultOpenIds={["root"]} nodes={[{ id: "root", label: "PROJECT", children: [{ id: "script", label: "SCRIPT" }, { id: "assets", label: "ASSETS", children: [{ id: "thumb", label: "THUMBNAIL" }, { id: "audio", label: "AUDIO" }] }] }]} />
+  }
+  if (name === "Disabled Button") {
+    return <SubToolboxButton level={level} style={style} disabled>DISABLED</SubToolboxButton>
+  }
+  if (name === "Disabled Split Button") {
+    return <SubToolboxSplitButton level={level} style={style} icon={<Settings2 />} railColor={colors.a} labelColor={colors.b} disabled>DISABLED</SubToolboxSplitButton>
+  }
+  if (name === "Two Color Data Stats") {
+    return <SubToolboxDataStats level={level} style={style} label="VIEWS" value="128K" delta="+12%" variant="two-color" />
+  }
+  if (name === "Monochrome Data Stats") {
+    return <SubToolboxDataStats level={level} style={style} label="WATCH TIME" value="4.8K" delta="+8%" variant="monochrome" />
+  }
+  if (name === "Tiny Data Stats") {
+    return <SubToolboxDataStats level={level} style={style} label="CTR" value="5.8%" variant="tiny" />
+  }
+  if (name === "Tooltip Dark") {
+    return <SubToolboxTooltip level={level} style={style} variant="dark" content="TOOLTIP" />
+  }
+  if (name === "Tooltip Color") {
+    return <SubToolboxTooltip level={level} style={style} variant="color" content="TOOLTIP" />
+  }
+  if (name === "Dashboard Pill Tags") {
+    return <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}><SubToolboxTag level={level} style={style} variant="dashboard-pill">READY</SubToolboxTag><SubToolboxTag level={level} style={style} variant="dashboard-pill">VIDEO</SubToolboxTag></div>
+  }
+  if (name === "Aspect Ratio Frame") {
+    return <SubToolboxAspectRatioFrame level={level} style={style} ratio="16:9" label="16:9"><Image /></SubToolboxAspectRatioFrame>
+  }
+  if (name === "Toolbar") {
+    return <SubToolboxToolbar level={level} style={style} leading={<strong>TOOLS</strong>} trailing={<SubToolboxIconButton level={level} style={style} icon={<Settings2 />} ariaLabel="Toolbar settings" />}><SubToolboxButton level={level} style={style}>EDIT</SubToolboxButton><SubToolboxButton level={level} style={style}>SAVE</SubToolboxButton></SubToolboxToolbar>
   }
 
   return null
