@@ -49,7 +49,9 @@ describe("Toolbox UI Reference Library", () => {
       "Field Label", "Surface", "State Panel", "Output Card", "Metric", "Link Button",
       "Data Table", "Color Picker", "Media Card", "Selectable List Row", "Reorderable Row",
       "Tabs", "Alert", "Step Indicator", "Dialog", "Drawer", "Calendar",
-      "Loader", "Skeleton", "Toast",
+      "Loader", "Skeleton", "Toast", "Popover", "Disclosure", "Divider",
+      "Pagination", "Controller Switch", "LED Light", "Icon Rail Control", "Hover Card",
+      "Meter", "Avatar", "Name Value List", "Breadcrumb", "Carousel", "Command Palette",
     ]) expect(source).toContain(`"${family}"`)
     expect(source).not.toContain("HardcodedGenericControl")
     expect(source).not.toContain("hardcoded-fallback")
@@ -75,6 +77,18 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).toContain("<SubToolboxLoader")
     expect(source).toContain("<SubToolboxSkeleton")
     expect(source).toContain("<SubToolboxToast")
+    expect(source).toContain("<SubToolboxPopover")
+    expect(source).toContain("<SubToolboxDisclosure")
+    expect(source).toContain("<SubToolboxPagination")
+    expect(source).toContain("<SubToolboxControllerSwitch")
+    expect(source).toContain("<SubToolboxLed")
+    expect(source).toContain("<SubToolboxHoverCard")
+    expect(source).toContain("<SubToolboxMeter")
+    expect(source).toContain("<SubToolboxAvatar")
+    expect(source).toContain("<SubToolboxNameValueList")
+    expect(source).toContain("<SubToolboxBreadcrumb")
+    expect(source).toContain("<SubToolboxCarousel")
+    expect(source).toContain("<SubToolboxCommandPalette")
     expect(source).not.toContain("forceOpen content=\"TOOLTIP\"")
   })
 
