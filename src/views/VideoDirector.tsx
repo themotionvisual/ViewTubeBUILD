@@ -119,6 +119,16 @@ import {
   type VideoDirectorRemoteJob,
   type VideoDirectorScope,
 } from "../features/video-director"
+import {
+  StudioDirectorAudioStage,
+  StudioDirectorCompositionVisual,
+  StudioDirectorLensVisual,
+  StudioDirectorLightingVisual,
+  StudioDirectorMoodVisual,
+  StudioDirectorOutputFrame,
+  StudioDirectorPacingVisual,
+  StudioDirectorPaletteVisual,
+} from "./video-director/StudioDirectorSignatureControls"
 
 export interface VideoDirectorProps {
   embedded?: boolean
@@ -255,108 +265,6 @@ const SelectField: React.FC<{
     </StudioSelect>
   </Field>
 )
-
-const CameraPreview: React.FC<{ focalLength: number; aperture: number; movement?: string }> = ({ focalLength, aperture, movement }) => {
-  const fieldWidth = Math.max(18, Math.min(86, 90 - Math.log2(Math.max(1, focalLength) / 14) * 16))
-  return (
-    <SubToolboxSurface tone="subtle" className="relative overflow-hidden min-h-[160px] grid place-items-center">
-      <div className="absolute inset-3 border-[3px] border-current rounded-[10px] opacity-25" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[76%] border-[3px] border-current rounded-[10px] opacity-70" style={{ width: `${fieldWidth}%` }} />
-      <Crosshair size={46} strokeWidth={2.5} aria-hidden="true" />
-      <div className="absolute left-3 right-3 bottom-3 grid grid-cols-3 gap-2 text-[9px] font-black uppercase">
-        <span>{focalLength}mm</span><span className="text-center">f/{aperture}</span><span className="text-right">{movement || "Auto"}</span>
-      </div>
-    </SubToolboxSurface>
-  )
-}
-
-const MoodPreview: React.FC<{ x: number; y: number }> = ({ x, y }) => (
-  <SubToolboxSurface tone="subtle" className="relative min-h-[170px] overflow-hidden">
-    <div className="absolute left-1/2 top-3 bottom-3 border-l-[2px] border-current opacity-25" />
-    <div className="absolute top-1/2 left-3 right-3 border-t-[2px] border-current opacity-25" />
-    <span className="absolute left-3 top-3 text-[9px] font-black uppercase opacity-55">Somber</span>
-    <span className="absolute right-3 top-3 text-[9px] font-black uppercase opacity-55">Triumphant</span>
-    <span className="absolute left-3 bottom-3 text-[9px] font-black uppercase opacity-55">Calm</span>
-    <span className="absolute right-3 bottom-3 text-[9px] font-black uppercase opacity-55">Energetic</span>
-    <span
-      className="absolute w-8 h-8 rounded-full border-[3px] border-current bg-white shadow-[3px_3px_0_current]"
-      style={{ left: `calc(${((x + 1) / 2) * 100}% - 16px)`, top: `calc(${((1 - y) / 2) * 100}% - 16px)` }}
-    />
-  </SubToolboxSurface>
-)
-
-const PalettePreview: React.FC<{ colors: string[]; exactLock: boolean }> = ({ colors, exactLock }) => (
-  <div className="grid grid-cols-3 sm:grid-cols-6 border-[3px] border-current rounded-[10px] overflow-hidden min-h-[88px]">
-    {colors.map((color, index) => (
-      <div key={`${color}-${index}`} className="relative min-h-[76px]" style={{ backgroundColor: color }}>
-        <span className="absolute bottom-1 left-1 text-[8px] font-black px-1 bg-white/80 rounded">{color.toUpperCase()}</span>
-      </div>
-    ))}
-    {exactLock ? <span className="absolute sr-only">Palette is exactly locked.</span> : null}
-  </div>
-)
-
-const LightingPreview: React.FC<{ azimuth: number; elevation: number; warmth: number }> = ({ azimuth, elevation, warmth }) => {
-  const x = 50 + Math.sin((azimuth * Math.PI) / 180) * 35
-  const y = 50 - Math.sin((elevation * Math.PI) / 180) * 35
-  return (
-    <SubToolboxSurface tone="subtle" className="relative min-h-[170px] grid place-items-center overflow-hidden">
-      <div className="w-28 h-28 rounded-full border-[3px] border-current bg-white/60 shadow-inner" />
-      <div className="absolute w-8 h-8 rounded-full border-[3px] border-current" style={{ left: `calc(${x}% - 16px)`, top: `calc(${y}% - 16px)`, backgroundColor: warmth < 4500 ? "#FFB15C" : warmth > 7000 ? "#A9D8FF" : "#FFF0B4" }} />
-      <Lightbulb size={30} strokeWidth={2.5} aria-hidden="true" />
-    </SubToolboxSurface>
-  )
-}
-
-const CompositionPreview: React.FC<{ x: number; y: number; horizon: number; safeZones: boolean }> = ({ x, y, horizon, safeZones }) => (
-  <SubToolboxSurface tone="subtle" className="relative aspect-video overflow-hidden">
-    <div className="absolute inset-y-0 left-1/3 border-l-[2px] border-current opacity-25" />
-    <div className="absolute inset-y-0 left-2/3 border-l-[2px] border-current opacity-25" />
-    <div className="absolute inset-x-0 top-1/3 border-t-[2px] border-current opacity-25" />
-    <div className="absolute inset-x-0 top-2/3 border-t-[2px] border-current opacity-25" />
-    <div className="absolute left-0 right-0 border-t-[3px] border-current opacity-55" style={{ top: `${horizon * 100}%` }} />
-    {safeZones ? <div className="absolute inset-[8%] border-[2px] border-dashed border-current opacity-40 rounded-[8px]" /> : null}
-    <div className="absolute w-11 h-11 rounded-full border-[3px] border-current bg-white/80" style={{ left: `calc(${x * 100}% - 22px)`, top: `calc(${y * 100}% - 22px)` }} />
-  </SubToolboxSurface>
-)
-
-const PacingPreview: React.FC<{ duration: number; hook: number; hold: number }> = ({ duration, hook, hold }) => {
-  const safeDuration = Math.max(1, duration)
-  const hookPct = Math.min(100, (hook / safeDuration) * 100)
-  const holdPct = Math.min(100, (hold / safeDuration) * 100)
-  return (
-    <SubToolboxSurface tone="subtle" className="p-3">
-      <div className="h-12 border-[3px] border-current rounded-[8px] overflow-hidden flex">
-        <div className="h-full opacity-80" style={{ width: `${hookPct}%`, background: "var(--vt-subtoolbox-fill, #FA618A)" }} />
-        <div className="h-full flex-1 bg-white" />
-        <div className="h-full opacity-60" style={{ width: `${holdPct}%`, background: "var(--vt-subtoolbox-fill, #FA618A)" }} />
-      </div>
-      <div className="mt-2 flex justify-between text-[9px] font-black uppercase opacity-60"><span>Hook {hook}s</span><span>{duration}s total</span><span>Hold {hold}s</span></div>
-    </SubToolboxSurface>
-  )
-}
-
-const AudioMatrixPreview: React.FC = () => (
-  <SubToolboxSurface tone="subtle" className="relative aspect-[2/1] overflow-hidden">
-    <div className="absolute inset-0 grid grid-cols-5 grid-rows-3 opacity-20">
-      {Array.from({ length: 15 }).map((_, index) => <span key={index} className="border-r border-b border-current" />)}
-    </div>
-    <div className="absolute left-[18%] top-[42%] w-7 h-7 rounded-full border-[3px] border-current bg-white grid place-items-center text-[8px] font-black">SFX</div>
-    <div className="absolute left-[49%] top-[48%] w-9 h-9 rounded-full border-[3px] border-current bg-white grid place-items-center text-[8px] font-black">VO</div>
-    <div className="absolute right-[14%] top-[30%] w-8 h-8 rounded-full border-[3px] border-current bg-white grid place-items-center text-[8px] font-black">AMB</div>
-  </SubToolboxSurface>
-)
-
-const OutputPreview: React.FC<{ ratio: string; quality: string; outputs: number }> = ({ ratio, quality, outputs }) => {
-  const aspect = ratio === "9:16" ? "9 / 16" : ratio === "1:1" ? "1 / 1" : ratio === "21:9" ? "21 / 9" : "16 / 9"
-  return (
-    <SubToolboxSurface tone="subtle" className="min-h-[190px] grid place-items-center p-4">
-      <div className="max-h-[150px] max-w-full border-[4px] border-current rounded-[10px] bg-white grid place-items-center" style={{ aspectRatio: aspect, width: ratio === "9:16" ? "84px" : "78%" }}>
-        <div className="text-center"><MonitorPlay size={28} className="mx-auto" /><strong className="block text-[12px] font-black uppercase mt-1">{ratio}</strong><small className="text-[9px] font-black uppercase opacity-55">{quality} · {outputs} output{outputs === 1 ? "" : "s"}</small></div>
-      </div>
-    </SubToolboxSurface>
-  )
-}
 
 const VideoDirector: React.FC<VideoDirectorProps> = ({
   embedded = false,
@@ -572,7 +480,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "emotion-tone":
         return <SubToolboxStack>
-          <MoodPreview x={activePayload.triumphantVsSomber} y={activePayload.energeticVsCalm} />
+          <StudioDirectorMoodVisual horizontal={activePayload.triumphantVsSomber} vertical={activePayload.energeticVsCalm} />
           <SubToolboxGrid>
             <NumberField label="Somber ↔ Triumphant" value={activePayload.triumphantVsSomber} min={-1} max={1} step={0.1} onChange={(value) => setCategoryField(activeCategoryId, "triumphantVsSomber", value)} />
             <NumberField label="Calm ↔ Energetic" value={activePayload.energeticVsCalm} min={-1} max={1} step={0.1} onChange={(value) => setCategoryField(activeCategoryId, "energeticVsCalm", value)} />
@@ -583,7 +491,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "composition":
         return <SubToolboxStack>
-          <CompositionPreview x={activePayload.subjectX} y={activePayload.subjectY} horizon={activePayload.horizonY} safeZones={activePayload.safeZones} />
+          <StudioDirectorCompositionVisual subjectX={activePayload.subjectX} subjectY={activePayload.subjectY} horizonY={activePayload.horizonY} safeZones={activePayload.safeZones} />
           <SubToolboxGrid>
             <SelectField label="Shot Scale" value={activePayload.shotScale} options={["auto", "extreme-wide", "wide", "full", "medium", "medium-close", "close", "extreme-close"]} onChange={(value) => setCategoryField(activeCategoryId, "shotScale", value)} />
             <SelectField label="Framing" value={activePayload.framing} options={["auto", "thirds", "centered", "symmetrical", "negative-space", "leading-lines", "custom"]} onChange={(value) => setCategoryField(activeCategoryId, "framing", value)} />
@@ -596,7 +504,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "camera-lens":
         return <SubToolboxStack>
-          <CameraPreview focalLength={activePayload.focalLengthMm} aperture={activePayload.aperture} />
+          <StudioDirectorLensVisual focalLength={activePayload.focalLengthMm} aperture={activePayload.aperture} />
           <SubToolboxGrid>
             <SelectField label="Capture Family" value={activePayload.captureFamily} options={["auto", "cinema", "full-frame", "super35", "medium-format", "phone", "action-camera", "vintage-video"]} onChange={(value) => setCategoryField(activeCategoryId, "captureFamily", value)} />
             <NumberField label="Focal Length" value={activePayload.focalLengthMm} min={1} max={1200} unit="mm" onChange={(value) => setCategoryField(activeCategoryId, "focalLengthMm", value)} />
@@ -609,7 +517,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "camera-movement":
         return <SubToolboxStack>
-          <CameraPreview focalLength={project.categories["camera-lens"].payload.focalLengthMm} aperture={project.categories["camera-lens"].payload.aperture} movement={activePayload.type} />
+          <StudioDirectorLensVisual focalLength={project.categories["camera-lens"].payload.focalLengthMm} aperture={project.categories["camera-lens"].payload.aperture} movement={activePayload.type} />
           <SelectField label="Movement" value={activePayload.type} options={["auto", "static", "pan", "tilt", "dolly", "truck", "pedestal", "orbit", "crane", "drone", "handheld", "steadicam", "pov"]} onChange={(value) => setCategoryField(activeCategoryId, "type", value)} />
           <SubToolboxGrid>
             <NumberField label="Speed" value={Math.round(activePayload.speed * 100)} min={0} max={100} unit="%" onChange={(value) => setCategoryField(activeCategoryId, "speed", value / 100)} />
@@ -647,7 +555,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "color-palette":
         return <SubToolboxStack>
-          <PalettePreview colors={activePayload.colors} exactLock={activePayload.exactLock} />
+          <StudioDirectorPaletteVisual colors={activePayload.colors} exactLock={activePayload.exactLock} />
           <SubToolboxGrid minItemWidth="compact">
             {activePayload.colors.map((color: string, index: number) => <StudioInput key={index} type="color" value={color} aria-label={`Palette color ${index + 1}`} onChange={(event) => {
               const next = [...activePayload.colors]
@@ -682,7 +590,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "lighting":
         return <SubToolboxStack>
-          <LightingPreview azimuth={activePayload.keyAzimuthDegrees} elevation={activePayload.keyElevationDegrees} warmth={activePayload.temperatureK} />
+          <StudioDirectorLightingVisual azimuth={activePayload.keyAzimuthDegrees} elevation={activePayload.keyElevationDegrees} temperatureK={activePayload.temperatureK} />
           <SubToolboxGrid>
             <NumberField label="Azimuth" value={activePayload.keyAzimuthDegrees} min={-180} max={180} unit="°" onChange={(value) => setCategoryField(activeCategoryId, "keyAzimuthDegrees", value)} />
             <NumberField label="Elevation" value={activePayload.keyElevationDegrees} min={-90} max={90} unit="°" onChange={(value) => setCategoryField(activeCategoryId, "keyElevationDegrees", value)} />
@@ -695,7 +603,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "timing-pacing":
         return <SubToolboxStack>
-          <PacingPreview duration={activePayload.durationSeconds} hook={activePayload.openingHookSeconds} hold={activePayload.finalHoldSeconds} />
+          <StudioDirectorPacingVisual duration={activePayload.durationSeconds} hook={activePayload.openingHookSeconds} hold={activePayload.finalHoldSeconds} />
           <SubToolboxGrid>
             <NumberField label="Duration" value={activePayload.durationSeconds} min={1} max={3600} step={0.5} unit="sec" onChange={(value) => setCategoryField(activeCategoryId, "durationSeconds", value)} />
             <SelectField label="Frame Rate" value={String(activePayload.frameRate)} options={["15", "23.976", "24", "25", "30", "48", "50", "60"]} onChange={(value) => setCategoryField(activeCategoryId, "frameRate", Number(value))} />
@@ -765,7 +673,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "ambience-mix":
         return <SubToolboxStack>
-          <AudioMatrixPreview />
+          <StudioDirectorAudioStage width={activePayload.spatialWidth} targetLufs={activePayload.targetLufs} />
           <SubToolboxToggle pressed={activePayload.ambienceEnabled} label="Enable ambience" onClick={() => setCategoryField(activeCategoryId, "ambienceEnabled", !activePayload.ambienceEnabled)} />
           <TextField label="Ambience Brief" value={activePayload.ambiencePrompt} placeholder="Winter wind, distant artillery…" onChange={(value) => setCategoryField(activeCategoryId, "ambiencePrompt", value)} />
           <SubToolboxGrid>
@@ -789,7 +697,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "text-titles":
         return <SubToolboxStack>
-          <CompositionPreview x={0.5} y={0.72} horizon={0.5} safeZones={activePayload.safeMargins} />
+          <StudioDirectorCompositionVisual subjectX={0.5} subjectY={0.72} horizonY={0.5} safeZones={activePayload.safeMargins} />
           <SubToolboxToggle pressed={activePayload.safeMargins} label="Title-safe margins" onClick={() => setCategoryField(activeCategoryId, "safeMargins", !activePayload.safeMargins)} />
           <SubToolboxSurface tone="subtle"><MutedNote>{activePayload.overlays.length} text overlay{activePayload.overlays.length === 1 ? "" : "s"} configured. Direct manipulation connects to the ViewTube Editor overlay canvas.</MutedNote></SubToolboxSurface>
         </SubToolboxStack>
@@ -854,7 +762,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
       case "generation-output":
         return <SubToolboxStack>
-          <OutputPreview ratio={activePayload.aspectRatio} quality={activePayload.quality} outputs={activePayload.outputs} />
+          <StudioDirectorOutputFrame ratio={activePayload.aspectRatio} quality={activePayload.quality} outputs={activePayload.outputs} />
           <SubToolboxGrid>
             <SelectField label="Provider Routing" value={activePayload.providerMode} options={["auto", "manual"]} onChange={(value) => setCategoryField(activeCategoryId, "providerMode", value)} />
             <SelectField label="Quality" value={activePayload.quality} options={["draft", "preview", "final"]} onChange={(value) => setCategoryField(activeCategoryId, "quality", value)} />
@@ -1569,7 +1477,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
 
             <SubToolbox title="Generation Plan" icon={<Play />} collapsible isOpenInitial>
               <SubToolboxStack>
-                <OutputPreview
+                <StudioDirectorOutputFrame
                   ratio={project.categories["generation-output"].payload.aspectRatio}
                   quality={project.categories["generation-output"].payload.quality}
                   outputs={project.categories["generation-output"].payload.outputs}
