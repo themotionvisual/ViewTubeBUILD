@@ -37,6 +37,11 @@ describe("Studio Hub Component Library mobile regression", () => {
     expect(migration).toContain("SubToolboxSplitDropdown")
     expect(migration).toContain("SubToolboxRangeSlider")
     expect(migration).toContain("SubToolboxTagEditor")
+    expect(migration).toContain("SubToolboxKnob")
+    expect(migration).toContain("SubToolboxAlphabeticalSpectrumTags")
+    expect(migration).toContain("SubToolboxDataTable")
+    expect(migration).toContain("SubToolboxDialog")
+    expect(migration).not.toContain("forceOpen content=\"TOOLTIP\"")
   })
 
   it("keeps the requested missing families in the canonical registry", () => {
