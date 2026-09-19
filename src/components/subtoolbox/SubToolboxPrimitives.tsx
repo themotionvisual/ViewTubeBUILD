@@ -502,7 +502,7 @@ export interface SubToolboxDataTableProps<T extends Record<string, React.ReactNo
   rows: T[]
   getRowKey?: (row: T, index: number) => React.Key
 }
-export const SubToolboxDataTable = <T extends Record<string, React.ReactNode>>({
+export const SubToolboxDataTable = <T extends Record<string, React.ReactNode>,>({
   level = "l0",
   columns,
   rows,
