@@ -81,6 +81,16 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
   const zoom=state.zoomPxPerSec;
   const totalPx=Math.max(state.project.durationSec*zoom,400);
   const scrollRef=useRef<HTMLDivElement>(null);
+  const[snap,setSnap]=useState(readSnap);
+  const[showSnap,setShowSnap]=useState(false);
+  const[navMode,setNavMode]=useState<NavMode>('all');
+  const[showNavigator,setShowNavigator]=useState(false);
+  const[compoundFocusId,setCompoundFocusId]=useState<string|null>(null);
+  const fps=Math.max(1,Number((state.project.meta as Record<string,unknown>|undefined)?.fps??30));
+
+  useEffect(()=>{
+    if(typeof window!=='undefined')localStorage.setItem(SNAP_STORAGE,JSON.stringify(snap));
+  },[snap]);
 
   const reportViewport=useCallback(()=>{
     const el=scrollRef.current;
@@ -100,24 +110,38 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
     requestAnimationFrame(reportViewport);
   },[reportViewport,state.playheadSec,zoom]);
 
-  const editPoints=useMemo(()=>{
-    const points=new Set<number>([0,state.project.durationSec]);
+  const navPoints=useMemo(()=>{
+    const clipPoints=new Set<number>([0,state.project.durationSec]);
+    const keyframePoints=new Set<number>();
+    const transitionPoints=new Set<number>();
     state.project.clips.forEach(clip=>{
-      points.add(clip.start);
-      points.add(clip.end);
-      (clip.keyframes as TimelineKeyframe[]|undefined)?.forEach(keyframe=>{
-        points.add(clip.start+Math.max(0,Number(keyframe.offsetSec??0)));
-      });
+      clipPoints.add(clip.start);clipPoints.add(clip.end);
+      (clip.keyframes as TimelineKeyframe[]|undefined)?.forEach(keyframe=>keyframePoints.add(clip.start+Math.max(0,Number(keyframe.offsetSec??0))));
     });
-    return[...points].filter(Number.isFinite).sort((a,b)=>a-b);
-  },[state.project.clips,state.project.durationSec]);
+    (state.project.transitions??[]).forEach(transition=>{
+      const left=state.project.clips.find(clip=>clip.id===transition.leftClipId);
+      const right=state.project.clips.find(clip=>clip.id===transition.rightClipId);
+      if(left)transitionPoints.add(left.end);
+      if(right)transitionPoints.add(right.start);
+    });
+    const sort=(values:Set<number>)=>[...values].filter(Number.isFinite).sort((a,b)=>a-b);
+    return{clip:sort(clipPoints),keyframe:sort(keyframePoints),transition:sort(transitionPoints),all:sort(new Set([...clipPoints,...keyframePoints,...transitionPoints]))};
+  },[state.project.clips,state.project.transitions,state.project.durationSec]);
+
+  const stepFrame=(direction:-1|1)=>{
+    dispatch({type:'setPlaying',playing:false});
+    const sec=clamp(state.playheadSec+direction/fps,0,state.project.durationSec);
+    dispatch({type:'setPlayhead',sec});
+    centerPlayhead(sec);
+  };
 
   const jumpEdge=(direction:-1|1)=>{
-    const now=state.playheadSec;
+    if(navMode==='frame'){stepFrame(direction);return}
+    const points=navPoints[navMode==='all'?'all':navMode];
     const epsilon=.001;
     const target=direction<0
-      ?[...editPoints].reverse().find(value=>value<now-epsilon)
-      :editPoints.find(value=>value>now+epsilon);
+      ?[...points].reverse().find(value=>value<state.playheadSec-epsilon)
+      :points.find(value=>value>state.playheadSec+epsilon);
     if(target==null)return;
     dispatch({type:'setPlaying',playing:false});
     dispatch({type:'setPlayhead',sec:target});
@@ -152,9 +176,11 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
     return()=>observer.disconnect();
   },[reportViewport,totalPx]);
 
-  const tracks=state.project.tracks.filter(track=>!track.hidden);
+  const focusedCompound=compoundFocusId?state.project.clips.find(clip=>clip.id===compoundFocusId):undefined;
+  const focusedChildren=focusedCompound?compoundChildren(focusedCompound):[];
+  const tracks=state.project.tracks.filter(track=>!track.hidden).filter(track=>!focusedCompound||track.id===focusedCompound.trackId);
   const bodyHeight=tracks.length*TIMELINE_TRACK_HEIGHT+TIMELINE_HEADER_HEIGHT+8;
-  const hasOverlaps=state.project.clips.some((clip,index,all)=>all.some((other,otherIndex)=>otherIndex>index&&overlaps(clip,other)));
+  const hasOverlaps=!focusedCompound&&state.project.clips.some((clip,index,all)=>all.some((other,otherIndex)=>otherIndex>index&&overlaps(clip,other)));
 
   return <div style={{
     width:'100%',maxWidth:'100%',height:height??'100%',maxHeight:'100%',
@@ -163,9 +189,13 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
     position:'relative',boxShadow:'3px 3px 0 rgba(54,224,246,.22)',
   }}>
     <PlayheadControls
+      navMode={navMode}
       onPrevious={()=>jumpEdge(-1)}
       onCenter={()=>centerPlayhead()}
       onNext={()=>jumpEdge(1)}
+      onFrameBack={()=>stepFrame(-1)}
+      onFrameForward={()=>stepFrame(1)}
+      onOpenNavigator={()=>setShowNavigator(value=>!value)}
     />
     <div style={{position:'absolute',top:3,left:LABEL_WIDTH+4,zIndex:4,display:'flex',gap:2}}>
       <button
@@ -180,6 +210,7 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
         onClick={onToggleActionLabels}
         style={headerBtn(actionLabelsVisible?CYAN:'#fff')}
       ><Type size={12}/></button>:null}
+      {focusedCompound?<button title="Exit compound timeline" aria-label="Exit compound timeline" onClick={()=>setCompoundFocusId(null)} style={headerBtn(YELLOW)}><Layers3 size={12}/></button>:null}
       {hasOverlaps?<button
         title="Resolve overlapping clips"
         aria-label="Resolve overlapping clips"
@@ -187,7 +218,16 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
         style={headerBtn(YELLOW)}
       ><AlertTriangle size={12}/></button>:null}
     </div>
+    <button
+      title={'Snap: '+snap.strength}
+      aria-label={'Snap strength: '+snap.strength}
+      onClick={()=>setSnap(current=>({...current,strength:current.strength==='off'?'soft':current.strength==='soft'?'strong':'off'}))}
+      onContextMenu={event=>{event.preventDefault();setShowSnap(value=>!value)}}
+      style={{...headerBtn(snap.strength==='off'?'#fff':snap.strength==='soft'?CYAN:YELLOW),position:'absolute',top:3,right:74,zIndex:6,width:20}}
+    ><Magnet size={11}/></button>
     <ZoomControls pxPerSec={zoom} onZoom={value=>dispatch({type:'setZoom',pxPerSec:value})}/>
+    {showNavigator?<NavigatorPicker mode={navMode} onChange={mode=>{setNavMode(mode);setShowNavigator(false)}}/>:null}
+    {showSnap?<SnapPicker snap={snap} onChange={setSnap} onClose={()=>setShowSnap(false)}/>:null}
 
     <div
       ref={scrollRef}
