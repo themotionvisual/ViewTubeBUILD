@@ -118,3 +118,89 @@ export interface DirectorNegativeBankProps {
   enforcement: string
   freeText: string
 }
+export interface DirectorConceptDeckProps {
+  objective: string
+  audience: string
+  treatment: string
+  conceptCount: number
+  variationStrength: string
+}
+
+export interface DirectorStyleDeckProps {
+  medium: string
+  period: string
+  realism: number
+  stylization: number
+  descriptorCount: number
+  recipeCount: number
+}
+
+export interface DirectorPerspectiveRigProps {
+  rig: string
+  cameraHeightMeters: number
+  pitchDegrees: number
+  yawDegrees: number
+  fieldOfViewDegrees: number
+  firstPerson: boolean
+}
+
+export interface DirectorGradeBoardProps {
+  exposureEv: number
+  contrast: number
+  highlights: number
+  shadows: number
+  temperatureK: number
+  saturation: number
+}
+
+export interface DirectorShotStructureProps {
+  mode: string
+  shotCount: number
+  averageShotSeconds: number
+  continuityStrength: number
+}
+
+export interface DirectorSpeedCurveProps {
+  playbackRate: number
+  interpolation: string
+  motionBlur: number
+  pointCount: number
+}
+
+export interface DirectorDialogueLaneProps {
+  enabled: boolean
+  source: string
+  language: string
+  speakingRate: number
+  expressiveness: number
+  scriptLength: number
+}
+
+export interface DirectorSfxLaneProps {
+  enabled: boolean
+  cueCount: number
+  autoDetectEvents: boolean
+}
+
+export interface DirectorTitleCanvasProps {
+  overlayCount: number
+  safeMargins: boolean
+}
+
+export interface DirectorOverlayStackProps {
+  itemCount: number
+}
+
+export interface DirectorEffectsStackProps {
+  effects: Array<{ type: string; intensity: number }>
+}
+
+export interface DirectorOutputCardProps {
+  ratio: string
+  resolution: string
+  quality: string
+  outputs: number
+  nativeAudio: boolean
+  upscale: boolean
+  hdr: boolean
+}
