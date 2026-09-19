@@ -559,6 +559,102 @@ export const requestCancelVideoDirectorJob = async (jobId) => {
   return result.rows[0] ? rowToJob(result.rows[0]) : null;
 };
 
+export const bindVideoDirectorJobProvider = async (jobId, workerId, {
+  providerId,
+  modelId,
+  providerJobId = null,
+} = {}) => {
+  await ensureInit();
+  const resolvedProviderId = asString(providerId);
+  const resolvedModelId = asString(modelId);
+  if (!resolvedProviderId || !resolvedModelId) {
+    throw new Error("providerId and modelId are required");
+  }
+
+  if (!pool) {
+    return updateFileDb(async (db) => {
+      const current = db.jobs[jobId];
+      if (!current) return null;
+      const job = normalizeJob(current);
+      if (job.lockedBy !== workerId || !["running", "post-processing"].includes(job.status)) {
+        return null;
+      }
+      job.providerId = resolvedProviderId;
+      job.modelId = resolvedModelId;
+      job.providerJobId = asString(providerJobId) || job.providerJobId;
+      job.updatedAt = nowIso();
+      db.jobs[job.id] = job;
+      return job;
+    });
+  }
+
+  const result = await pool.query(
+    `UPDATE viewtube_video_director_jobs
+     SET provider_id = $3,
+         model_id = $4,
+         provider_job_id = COALESCE($5, provider_job_id),
+         updated_at = NOW()
+     WHERE id = $1
+       AND locked_by = $2
+       AND status IN ('running','post-processing')
+     RETURNING *`,
+    [String(jobId), String(workerId), resolvedProviderId, resolvedModelId, providerJobId],
+  );
+  return result.rows[0] ? rowToJob(result.rows[0]) : null;
+};
+
+export const finalizeCancelledVideoDirectorJob = async (jobId, workerId, {
+  providerMayStillBill = false,
+  providerJobId = null,
+} = {}) => {
+  await ensureInit();
+  const failureMetadata = { providerMayStillBill: Boolean(providerMayStillBill) };
+
+  if (!pool) {
+    return updateFileDb(async (db) => {
+      const current = db.jobs[jobId];
+      if (!current) return null;
+      const job = normalizeJob(current);
+      if (job.lockedBy !== workerId || !["running", "post-processing"].includes(job.status)) {
+        return null;
+      }
+      job.status = "cancelled";
+      job.cancelRequested = true;
+      job.providerJobId = asString(providerJobId) || job.providerJobId;
+      job.failureMetadata = { ...job.failureMetadata, ...failureMetadata };
+      job.lockedBy = null;
+      job.lockedAt = null;
+      job.heartbeatAt = null;
+      job.updatedAt = nowIso();
+      db.jobs[job.id] = job;
+      return job;
+    });
+  }
+
+  const result = await pool.query(
+    `UPDATE viewtube_video_director_jobs
+     SET status = 'cancelled',
+         cancel_requested = TRUE,
+         provider_job_id = COALESCE($3, provider_job_id),
+         failure_metadata = failure_metadata || $4::jsonb,
+         locked_by = NULL,
+         locked_at = NULL,
+         heartbeat_at = NULL,
+         updated_at = NOW()
+     WHERE id = $1
+       AND locked_by = $2
+       AND status IN ('running','post-processing')
+     RETURNING *`,
+    [
+      String(jobId),
+      String(workerId),
+      providerJobId,
+      JSON.stringify(failureMetadata),
+    ],
+  );
+  return result.rows[0] ? rowToJob(result.rows[0]) : null;
+};
+
 export const recoverStaleVideoDirectorJobs = async ({
   staleAfterMs = 120_000,
   limit = 100,
