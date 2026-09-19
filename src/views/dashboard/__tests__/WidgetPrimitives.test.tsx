@@ -32,7 +32,7 @@ import {
   WidgetSizedButton,
 } from "../WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
-import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"
+import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"\n\nconst variantsCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
 
 describe("widget viewport indicator geometry", () => {
   it.each([
@@ -139,6 +139,12 @@ describe("adaptive sized-control typography", () => {
       <WidgetSizedButton height={24}>Educational</WidgetSizedButton>,
     )
     expect(markup).not.toContain("vt-text-fit-adaptive")
+  })
+
+  it("owns the final 24px adaptive cascade after fixed-size compatibility rules", () => {
+    expect(variantsCss).toContain("Final adaptive text-fit ownership")
+    expect(variantsCss).toContain("--vt-primitive-font: clamp(10px, 2.8cqi, 16px)")
+    expect(variantsCss).toContain("white-space: nowrap !important;")
   })
 })
 
