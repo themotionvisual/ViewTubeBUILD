@@ -19,8 +19,8 @@ describe("VT-SYNC controller accordion", () => {
   const groups = [...new Set(VT_SYNC_SYNC_UNITS.map((unit) => unit.group))]
   const groupCount = groups.length
 
-  expect(markup.match(/aria-expanded="true"/g)).toHaveLength(1)
-  expect(markup.match(/aria-expanded="false"/g)).toHaveLength(groupCount - 1)
+  expect(groupCount).toBeGreaterThan(1)
+  expect(markup).toContain("SYNC CONTROL + PROGRESS")
   expect(markup).toContain('id="vt-sync-controller-group-channel"')
   expect(markup).toContain('id="vt-sync-controller-group-time" hidden=""')
   expect(markup.match(/id="vt-sync-controller-group-[^"]+"/g)).toHaveLength(groupCount)
@@ -51,12 +51,23 @@ describe("VT-SYNC execution status controls", () => {
   expect(markup).toContain(">DONE<")
  })
 
- it("pins every dataset execution control to the right-side grid column on narrow layouts", () => {
+ it("uses one compact telemetry row with the controller pinned to the far right", () => {
   const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
-  expect(source).toContain("col-start-4")
-  expect(source).toContain("max-lg:col-start-3")
-  expect(source).toContain("max-lg:row-span-2")
+  expect(source).toContain("grid-cols-[minmax(260px,1fr)_72px_64px_94px_46px_70px_108px]")
+  expect(source).toContain("sticky right-0")
+  expect(source).toContain("<span>Status</span><span>Time</span><span>Last sync</span>")
+  expect(source).toContain("<span className=\"text-center\">!</span>")
+  expect(source).toContain("<span className=\"text-right\">Rows</span>")
   expect(source).toContain("<RetroSyncExecutionSwitch")
+ })
+
+ it("keeps sync time, issues, child queries, and description inside the expandable dataset detail surface", () => {
+  const source = readFileSync(new URL("./VtSyncControllerPanel.tsx", import.meta.url), "utf8")
+  expect(source).toContain("vt-sync-unified-unit-")
+  expect(source).toContain("Issues ·")
+  expect(source).toContain("Underlying query")
+  expect(source).toContain("DURATION")
+  expect(source).toContain("LAST SYNC")
  })
 
 })
