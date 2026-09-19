@@ -261,211 +261,351 @@ export const VtSyncControllerPanel: React.FC<{
    : value.toLocaleString()
 
 
-
  return (
   <ToolboxScaffold
-   title="YOUTUBE DATA SYNC"
-   subtitle="Select datasets and run the YouTube sync."
+   title="SYNC CONTROL + PROGRESS"
+   subtitle="Select, run, monitor, inspect, and retry every YouTube dataset from one toolbox."
    iconName="analytics"
    headerColor="bg-[#36E0F6]"
    iconBoxColor="bg-[#C0F240]"
    paletteIndex={2}
    embedded
-   contentClassName="vt-retro-dark-content p-4"
+   contentClassName="vt-retro-dark-content p-3"
    outerClassName="vt-retro-shell"
    hardShadow
   >
    <RetroRivets />
    <div className="w-full">
+    <section className="mb-3 overflow-hidden rounded-[12px] border-[3px] border-black bg-white">
+     <div className="grid grid-cols-2 border-b-[3px] border-black sm:grid-cols-4">
+      <div className="min-w-0 border-r-[2px] border-black bg-[#36E0F6] px-2.5 py-1.5 sm:col-span-2">
+       <span className="block text-[8px] font-black uppercase tracking-[0.1em] text-black/55">Now</span>
+       <strong className="block truncate text-[12px] font-[1000] uppercase leading-tight">{queueSummary.currentLabel}</strong>
+      </div>
+      <div className="min-w-0 bg-[#FFDA47] px-2.5 py-1.5 sm:border-r-[2px] sm:border-black">
+       <span className="block text-[8px] font-black uppercase tracking-[0.1em] text-black/55">Next</span>
+       <strong className="block truncate text-[11px] font-[1000] uppercase leading-tight">{queueSummary.nextLabel}</strong>
+      </div>
+      <div className="min-w-0 border-l-[2px] border-black bg-[#f4f4f4] px-2.5 py-1.5 sm:border-l-0">
+       <span className="block text-[8px] font-black uppercase tracking-[0.1em] text-black/55">Last update</span>
+       <strong className="block truncate text-[11px] font-[1000] uppercase leading-tight">{formatLastSync(latestDatasetAt)}</strong>
+      </div>
+     </div>
+     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 bg-[#161616] px-2.5 py-1.5 text-[8px] font-black uppercase tracking-[0.08em] text-white">
+      {[
+       ["Live", progress?.status === "running" ? 1 : 0, "#36E0F6"],
+       ["Queued", unitTally.pending || 0, "#FFDA47"],
+       ["Done", unitTally.synced || 0, "#3FEE56"],
+       ["Partial", unitTally.partial || 0, "#FFDA47"],
+       ["Failed", unitTally.failed || 0, "#FA618A"],
+       ["Never", unitTally.never || 0, "#B9BEC8"],
+      ].map(([label, value, tone]) => (
+       <span key={String(label)} className="inline-flex items-center gap-1">
+        <i className="h-2 w-2 rounded-full" style={{ backgroundColor: String(tone), boxShadow: `0 0 5px ${String(tone)}` }} />
+        {label} <b className="font-mono text-[10px]" style={{ color: String(tone) }}>{Number(value).toLocaleString()}</b>
+       </span>
+      ))}
+     </div>
+    </section>
 
-   <div className="mb-4 flex flex-wrap items-center gap-2">
-    <button type="button" onClick={() => setSelected(availableUnits.flatMap((unit) => unit.categoryIds))} className="vt-retro-switch"><span className="vt-retro-switch-led" />Select All</button>
-    <button type="button" onClick={() => setSelected(availableUnits.filter((unit) => unit.defaultEnabled).flatMap((unit) => unit.categoryIds))} className="vt-retro-switch" style={{ "--tone": "#FFDA47", "--tone-light": "#fff3b0" } as React.CSSProperties}><span className="vt-retro-switch-led" />Core Units</button>
-    <button type="button" onClick={() => setSelected(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))} className="vt-retro-switch" style={{ "--tone": "#36E0F6", "--tone-light": "#b9f2ff" } as React.CSSProperties}><span className="vt-retro-switch-led" />Recommended</button>
-    <button type="button" onClick={() => setSelected([])} className="vt-retro-switch"><span className="vt-retro-switch-led" />Clear</button>
-    {contentOwners.length > 0 ? <label className="vt-retro-switch">
-     <span className="vt-retro-switch-led" />Content Owner
-     <select
-      aria-label="Active YouTube Content Owner"
-      value={activeContentOwnerId || ""}
-      onChange={(event) => { if (event.target.value) void onSelectContentOwner?.(event.target.value) }}
-     >
-      <option value="">Select owner</option>
-      {contentOwners.map((owner) => <option key={owner.id} value={owner.id}>{owner.displayName}</option>)}
-     </select>
-    </label> : null}
-   </div>
+    {syncError ? (
+     <div className="mb-3 rounded-[10px] border-[2px] border-black bg-[#FA618A] px-3 py-2 text-[10px] font-black uppercase">
+      Sync issue · {syncError}
+     </div>
+    ) : null}
 
-   <div className="mb-4 rounded-[14px] border-[3px] border-black bg-[#0d0d0d] p-3">
-    <div className="mb-2 flex flex-wrap items-center gap-2">
-     <span className="text-[11px] font-[1000] uppercase tracking-tight text-white">Time Windows</span>
-     {ANALYTICS_WINDOWS.map((window) => {
-      const active = selectedWindows.includes(window)
-      const locked = window === "lifetime"
-      return (
-       <button
-        key={window}
-        type="button"
-        onClick={() => toggleWindow(window)}
-        data-window={window}
-        aria-pressed={active}
-        disabled={locked}
-        title={locked ? "Lifetime is always synced" : undefined}
-        className="vt-retro-switch"
-        style={{
-         "--tone": active ? "#C0F240" : "#6b7280",
-         "--tone-light": active ? "#e4ffa8" : "#9ca3af",
-         opacity: locked ? 0.75 : 1,
-         cursor: locked ? "default" : "pointer",
-        } as React.CSSProperties}
+    <section className="mb-3 grid gap-2 rounded-[12px] border-[3px] border-black bg-[#0d0d0d] p-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+      <button type="button" onClick={() => setSelected(availableUnits.flatMap((unit) => unit.categoryIds))} className="vt-retro-switch"><span className="vt-retro-switch-led" />All</button>
+      <button type="button" onClick={() => setSelected(availableUnits.filter((unit) => unit.defaultEnabled).flatMap((unit) => unit.categoryIds))} className="vt-retro-switch" style={{ "--tone": "#FFDA47", "--tone-light": "#fff3b0" } as React.CSSProperties}><span className="vt-retro-switch-led" />Core</button>
+      <button type="button" onClick={() => setSelected(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))} className="vt-retro-switch" style={{ "--tone": "#36E0F6", "--tone-light": "#b9f2ff" } as React.CSSProperties}><span className="vt-retro-switch-led" />Recommended</button>
+      <button type="button" onClick={() => setSelected([])} className="vt-retro-switch"><span className="vt-retro-switch-led" />Clear</button>
+      {contentOwners.length > 0 ? <label className="vt-retro-switch">
+       <span className="vt-retro-switch-led" />Owner
+       <select
+        aria-label="Active YouTube Content Owner"
+        value={activeContentOwnerId || ""}
+        onChange={(event) => { if (event.target.value) void onSelectContentOwner?.(event.target.value) }}
        >
-        <span className="vt-retro-switch-led" />
-        {WINDOW_SHORT_LABELS[window]}
-       </button>
+        <option value="">Select</option>
+        {contentOwners.map((owner) => <option key={owner.id} value={owner.id}>{owner.displayName}</option>)}
+       </select>
+      </label> : null}
+     </div>
+     <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
+      <span className="text-[9px] font-[1000] uppercase text-white/65">{selectedUnitCount} datasets · {selectedQueryCount} queries</span>
+      {ANALYTICS_WINDOWS.map((window) => {
+       const active = selectedWindows.includes(window)
+       const locked = window === "lifetime"
+       return (
+        <button
+         key={window}
+         type="button"
+         onClick={() => toggleWindow(window)}
+         data-window={window}
+         aria-pressed={active}
+         disabled={locked}
+         title={locked ? "Lifetime is always synced" : undefined}
+         className="vt-retro-switch"
+         style={{
+          "--tone": active ? "#C0F240" : "#6b7280",
+          "--tone-light": active ? "#e4ffa8" : "#9ca3af",
+          opacity: locked ? 0.75 : 1,
+          cursor: locked ? "default" : "pointer",
+         } as React.CSSProperties}
+        >
+         <span className="vt-retro-switch-led" />
+         {WINDOW_SHORT_LABELS[window]}
+        </button>
+       )
+      })}
+     </div>
+     <p className="m-0 text-[9px] font-semibold leading-snug text-[#9ca3af] sm:col-span-2">
+      {windowCost.extraWindows === 0
+       ? `Lifetime only — ${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selectedQueryCount} underlying quer${selectedQueryCount === 1 ? "y" : "ies"}.`
+       : `${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selectedQueryCount} underlying quer${selectedQueryCount === 1 ? "y" : "ies"}. ${windowCost.perWindowCategories} windowed quer${windowCost.perWindowCategories === 1 ? "y" : "ies"} × ${windowCost.extraWindows} extra window${windowCost.extraWindows === 1 ? "" : "s"} = ~${windowCost.extraRequests} additional request${windowCost.extraRequests === 1 ? "" : "s"}.`}
+      {windowCost.derivedCount > 0
+       ? ` ${windowCost.derivedCount} day-grained quer${windowCost.derivedCount === 1 ? "y" : "ies"} derive their windows without extra window requests.`
+       : ""}
+     </p>
+    </section>
+
+    <div className="overflow-hidden rounded-[12px] border-[3px] border-black bg-[#0d0d0d]">
+     {unitGroups.map(({ group, label, units }) => {
+      const expanded = openGroups.has(group)
+      const contentId = `vt-sync-controller-group-${group}`
+      const groupCategoryIds = [...new Set(units.flatMap((unit) => unit.categoryIds))]
+      const models = units.map((unit) => unitModelById.get(unit.id)).filter(Boolean)
+      const groupCounts = models.reduce<Record<string, number>>((acc, unit) => {
+       acc[unit!.status] = (acc[unit!.status] || 0) + 1
+       return acc
+      }, {})
+      const groupIssues = models.reduce((sum, unit) => sum + (unit?.issueCount || 0), 0)
+      const groupRows = models.reduce((sum, unit) => sum + (unit?.displayRows || 0), 0)
+      const groupStatus = groupCounts.running ? "running"
+       : groupCounts.pending ? "pending"
+       : groupCounts.failed ? "failed"
+       : groupCounts.partial ? "partial"
+       : models.length > 0 && models.every((unit) => unit?.status === "synced") ? "synced"
+       : "never"
+      const groupSummary = [
+       `${units.length} dataset${units.length === 1 ? "" : "s"}`,
+       groupCounts.running ? `${groupCounts.running} running` : "",
+       groupCounts.pending ? `${groupCounts.pending} queued` : "",
+       groupCounts.synced ? `${groupCounts.synced} done` : "",
+       groupCounts.partial ? `${groupCounts.partial} partial` : "",
+       groupCounts.failed ? `${groupCounts.failed} failed` : "",
+       groupIssues ? `${groupIssues} issue${groupIssues === 1 ? "" : "s"}` : "0 issues",
+       `${compactRows(groupRows)} rows`,
+      ].filter(Boolean).join(" · ")
+
+      return (
+       <section key={group} className="border-b-[3px] border-black bg-white last:border-b-0">
+        <div className="flex items-stretch" style={{ backgroundColor: GROUP_COLORS[group] }}>
+         <h3 className="min-w-0 flex-1">
+          <button
+           ref={(node) => {
+            if (node) groupHeaderRefs.current.set(group, node)
+            else groupHeaderRefs.current.delete(group)
+           }}
+           type="button"
+           aria-expanded={expanded}
+           aria-controls={contentId}
+           onClick={() => toggleGroup(group)}
+           className={`vt-retro-acc-header grid h-full min-h-[44px] w-full grid-cols-[minmax(0,1fr)] items-center px-2.5 py-1 text-left focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-black ${expanded ? "border-b-[2px] border-black" : ""}`}
+          >
+           <span className="flex min-w-0 items-center gap-2">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-[5px] border-[2px] border-black bg-white" aria-hidden="true">
+             {expanded ? <ChevronDown className="h-4 w-4" strokeWidth={3.5} /> : <ChevronRight className="h-4 w-4" strokeWidth={3.5} />}
+            </span>
+            <span className="min-w-0">
+             <span className="vt-retro-acc-label block truncate text-[15px] font-[1000] tracking-tighter">{label}</span>
+             <span className="block truncate text-[8px] font-black uppercase tracking-[0.04em] text-black/55">{groupSummary}</span>
+            </span>
+           </span>
+          </button>
+         </h3>
+         <div className={`grid shrink-0 place-items-center border-l-[3px] border-black px-2 py-1 ${expanded ? "border-b-[2px]" : ""}`}>
+          <RetroSyncExecutionSwitch
+           idleLabel="SYNC ALL"
+           status={toExecutionStatus(groupStatus)}
+           onClick={() => void startCategories(groupCategoryIds, units.some((unit) => unit.id === "retention"))}
+          />
+         </div>
+        </div>
+
+        <div id={contentId} hidden={!expanded}>
+         <div className="overflow-x-auto custom-scrollbar">
+          <div className="min-w-[760px]">
+           <div className="grid h-[26px] grid-cols-[minmax(260px,1fr)_72px_64px_94px_46px_70px_108px] items-center border-b-[2px] border-black bg-[#161616] px-2 text-[8px] font-black uppercase tracking-[0.08em] text-white/75">
+            <span>Dataset</span><span>Status</span><span>Time</span><span>Last sync</span><span className="text-center">!</span><span className="text-right">Rows</span><span className="text-center">Sync</span>
+           </div>
+
+           {units.map((unit) => {
+            const checked = unit.categoryIds.every((id) => selectedSet.has(id))
+            const model = unitModelById.get(unit.id)
+            const unitStatus = model?.status || "never"
+            const expandedUnit = expandedUnitIds.has(unit.id)
+            const hasPriorData = unitStatus !== "never"
+            const unitContentId = `vt-sync-unified-unit-${unit.id}`
+            return (
+             <article key={unit.id} className="border-b-[2px] border-black last:border-b-0">
+              <div className={`grid min-h-[48px] grid-cols-[minmax(260px,1fr)_72px_64px_94px_46px_70px_108px] items-stretch px-2 ${checked ? "bg-white" : "bg-[#f1f1f1] text-black/50"}`}>
+               <div className="sticky left-0 z-[2] flex min-w-0 items-center gap-1.5 bg-inherit pr-1">
+                <button
+                 type="button"
+                 aria-pressed={checked}
+                 onClick={() => toggleMany(unit.categoryIds)}
+                 title={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`}
+                 aria-label={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`}
+                 className="grid h-7 w-7 shrink-0 place-items-center rounded-[5px] focus-visible:outline focus-visible:outline-3 focus-visible:outline-black"
+                >
+                 {checked ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-black/35" />}
+                </button>
+                <button
+                 type="button"
+                 aria-expanded={expandedUnit}
+                 aria-controls={unitContentId}
+                 onClick={() => setExpandedUnitIds((current) => {
+                  const next = new Set(current)
+                  if (next.has(unit.id)) next.delete(unit.id)
+                  else next.add(unit.id)
+                  return next
+                 })}
+                 className="grid h-6 w-6 shrink-0 place-items-center rounded-[4px] border border-black bg-white"
+                 title={expandedUnit ? "Collapse dataset details" : "Expand dataset details"}
+                >
+                 {expandedUnit ? <ChevronDown className="h-3.5 w-3.5" strokeWidth={3} /> : <ChevronRight className="h-3.5 w-3.5" strokeWidth={3} />}
+                </button>
+                <span className="min-w-0">
+                 <strong className="block truncate text-[11px] font-[1000] uppercase leading-none">{unit.label}</strong>
+                 <span className="mt-1 block truncate text-[7.5px] font-black uppercase tracking-[0.035em] text-black/45">
+                  {unit.categoryIds.length} quer{unit.categoryIds.length === 1 ? "y" : "ies"} · {formatPlainLabel(unit.refreshPolicy)}
+                 </span>
+                </span>
+               </div>
+
+               <div className="flex items-center border-l border-black/20 px-1.5">
+                <span className="inline-flex min-w-0 items-center gap-1 text-[8px] font-[1000] uppercase">
+                 <i className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: statusTone(unitStatus), boxShadow: `0 0 4px ${statusTone(unitStatus)}` }} />
+                 <span className="truncate">{shortStatus(unitStatus)}</span>
+                </span>
+               </div>
+               <div className="flex items-center border-l border-black/20 px-1.5 font-mono text-[9px] font-black tabular-nums">{formatDuration(model?.durationMs)}</div>
+               <div className="flex items-center border-l border-black/20 px-1.5 font-mono text-[9px] font-black tabular-nums">{formatLastSync(model?.lastSyncedAt)}</div>
+               <div className="grid place-items-center border-l border-black/20 text-[10px] font-[1000]">{model?.issueCount || 0}</div>
+               <div className="flex items-center justify-end border-l border-black/20 px-1.5 font-mono text-[9px] font-black tabular-nums">{compactRows(model?.displayRows || 0)}</div>
+               <div className="sticky right-0 z-[2] grid place-items-center border-l-[2px] border-black bg-inherit px-1">
+                <RetroSyncExecutionSwitch
+                 idleLabel={hasPriorData ? "UPDATE" : "FULL SYNC"}
+                 status={toExecutionStatus(unitStatus)}
+                 onClick={() => void startCategories(unit.categoryIds)}
+                />
+               </div>
+              </div>
+
+              <div id={unitContentId} hidden={!expandedUnit} className="border-t-[2px] border-black bg-[#f3f4f6]">
+               <div className="grid gap-2 p-2 text-[9px] font-black uppercase tracking-[0.025em] sm:grid-cols-[minmax(0,1.35fr)_minmax(0,.65fr)]">
+                <section className="rounded-[7px] border-[2px] border-black bg-white p-2">
+                 <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                  <strong className="text-[10px]">{unit.description}</strong>
+                  {unit.defaultEnabled ? <span className="rounded-full border border-black bg-[#3FEE56] px-1.5 py-[1px] text-[7px]">Core</span> : null}
+                 </div>
+                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[8px] text-black/65 sm:grid-cols-4">
+                  <span>STATUS <b className="block text-black">{shortStatus(unitStatus)}</b></span>
+                  <span>DURATION <b className="block text-black">{formatDuration(model?.durationMs)}</b></span>
+                  <span>LAST SYNC <b className="block text-black">{model?.lastSyncedAt ? new Date(model.lastSyncedAt).toLocaleString() : "Never"}</b></span>
+                  <span>SOURCE <b className="block truncate text-black">{model?.sourceLabels.join(" + ") || "—"}</b></span>
+                 </div>
+                 {unit.id === "video_catalog" ? (
+                  <button type="button" onClick={() => void startCategories(unit.categoryIds, false, true)} className="mt-2 rounded border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[8px] font-black uppercase shadow-[2px_2px_0_0_#000]">
+                   Full metadata refresh
+                  </button>
+                 ) : null}
+                </section>
+
+                <section className="rounded-[7px] border-[2px] border-black bg-white p-2">
+                 <strong className="text-[8px] text-black/50">Issues · {model?.issueCount || 0}</strong>
+                 {model?.issues.length ? (
+                  <ul className="mt-1 space-y-1 normal-case tracking-normal text-black/75">
+                   {model.issues.map((row, index) => <li key={`${row.category.id}-${index}`}><b>{row.category.label}:</b> {row.message}</li>)}
+                  </ul>
+                 ) : <span className="mt-1 block">No issues.</span>}
+                </section>
+               </div>
+
+               <div className="border-t-[2px] border-black bg-white px-2 py-1.5">
+                <div className="mb-1 grid grid-cols-[minmax(0,1fr)_68px_72px] gap-2 text-[7px] font-black uppercase tracking-[0.07em] text-black/45">
+                 <span>Underlying query</span><span className="text-right">Rows</span><span>Status</span>
+                </div>
+                {(model?.rows || []).map((row) => (
+                 <div key={row.category.id} className="grid min-h-[24px] grid-cols-[minmax(0,1fr)_68px_72px] items-center gap-2 border-t border-black/15 text-[8px] font-black uppercase">
+                  <span className="min-w-0 truncate" title={row.message}>{row.category.label} · {row.phaseLabel}</span>
+                  <span className="text-right font-mono tabular-nums">{compactRows(row.displayRows)}</span>
+                  <span>{shortStatus(row.displayStatus)}</span>
+                 </div>
+                ))}
+               </div>
+
+               {unit.id === "retention" && retentionEnabled ? (
+                <section className="border-t-[2px] border-black bg-[#f3f4f6]">
+                 <div className="flex flex-wrap items-center justify-between gap-2 border-b-[2px] border-black bg-white px-3 py-2">
+                  <div>
+                   <span className="text-[10px] font-black uppercase">Retention videos</span>
+                   <span className="ml-2 text-[8px] font-bold uppercase text-black/45">
+                    {retentionVideoIds.length > 0
+                     ? `${retentionVideoIds.length} manually selected`
+                     : `Default · ${baselineRetentionSelection.selectedCounts.long} long + ${baselineRetentionSelection.selectedCounts.short} Shorts`}
+                   </span>
+                  </div>
+                  <button type="button" onClick={() => setRetentionVideoIds([])} className="rounded-full border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[8px] font-black uppercase">Balanced default</button>
+                 </div>
+                 <div className="border-b-[2px] border-black bg-white p-2">
+                  <input
+                   type="text"
+                   value={videoSearch}
+                   onChange={(event) => setVideoSearch(event.target.value)}
+                   placeholder="Search videos by title…"
+                   className="w-full rounded-full border-[2px] border-black px-3 py-1.5 text-[9px] font-bold uppercase outline-none focus:border-[#528FFA]"
+                  />
+                 </div>
+                 <div className="max-h-[220px] overflow-auto custom-scrollbar">
+                  {filteredVideos.length === 0 ? (
+                   <div className="px-3 py-3 text-center text-[9px] font-black uppercase text-black/45">No videos match.</div>
+                  ) : filteredVideos.map((video) => {
+                   const retentionChecked = retentionSelectedSet.has(video.id)
+                   return (
+                    <button key={video.id} type="button" aria-pressed={retentionChecked} onClick={() => toggleRetentionVideo(video.id)} className={`grid w-full grid-cols-[20px_1fr_auto] items-center gap-2 border-b border-black/10 px-3 py-2 text-left hover:bg-white ${retentionChecked ? "bg-white" : "bg-white/40 text-black/50"}`}>
+                     <span>{retentionChecked ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-black/35" />}</span>
+                     <span className="truncate text-[9px] font-black uppercase">{video.title || video.id}</span>
+                     <span className="whitespace-nowrap text-[8px] font-bold text-black/45">{compactRows(video.views || 0)} views</span>
+                    </button>
+                   )
+                  })}
+                 </div>
+                </section>
+               ) : null}
+              </div>
+             </article>
+            )
+           })}
+          </div>
+         </div>
+        </div>
+       </section>
       )
      })}
     </div>
-    <p className="m-0 text-[11px] font-semibold leading-snug text-[#9ca3af]">
-     {windowCost.extraWindows === 0
-      ? `Lifetime only — ${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selectedQueryCount} underlying quer${selectedQueryCount === 1 ? "y" : "ies"}.`
-      : `${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selectedQueryCount} underlying quer${selectedQueryCount === 1 ? "y" : "ies"}. ${windowCost.perWindowCategories} windowed quer${windowCost.perWindowCategories === 1 ? "y" : "ies"} × ${windowCost.extraWindows} extra window${windowCost.extraWindows === 1 ? "" : "s"} = ~${windowCost.extraRequests} additional request${windowCost.extraRequests === 1 ? "" : "s"}.`}
-     {windowCost.derivedCount > 0
-      ? ` ${windowCost.derivedCount} day-grained quer${windowCost.derivedCount === 1 ? "y" : "ies"} derive their windows without extra window requests.`
-      : ""}
-    </p>
-   </div>
 
-   <div className="overflow-hidden rounded-[14px] border-[3px] border-black bg-[#0d0d0d]">
-    {unitGroups.map(({ group, label, units }) => {
-     const expanded = openGroups.has(group)
-     const contentId = `vt-sync-controller-group-${group}`
-     const groupCategoryIds = [...new Set(units.flatMap((unit) => unit.categoryIds))]
-     const groupStatus = resolveExecutionStatus(groupCategoryIds)
-     return (
-      <section key={group} className="border-b-[3px] border-black bg-[#0d0d0d] last:border-b-0">
-       <div className="flex items-stretch" style={{ backgroundColor: GROUP_COLORS[group] }}>
-        <h3 className="min-w-0 flex-1">
-        <button
-         ref={(node) => {
-          if (node) groupHeaderRefs.current.set(group, node)
-          else groupHeaderRefs.current.delete(group)
-         }}
-         type="button"
-         aria-expanded={expanded}
-         aria-controls={contentId}
-         onClick={() => toggleGroup(group)}
-         className={`vt-retro-acc-header flex h-full w-full items-center justify-between gap-3 py-1.5 px-3 text-left focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-[-4px] focus-visible:outline-black ${expanded ? "border-b-[2px] border-black" : ""}`}
-        >
-         <span className="flex min-w-0 items-center gap-2">
-          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-[5px] border-[2px] border-black bg-white" aria-hidden="true">
-           {expanded ? <ChevronDown className="h-4 w-4" strokeWidth={3.5} /> : <ChevronRight className="h-4 w-4" strokeWidth={3.5} />}
-          </span>
-          <span className="vt-retro-acc-label truncate text-[15px] font-[1000] tracking-tighter">{label}</span>
-         </span>
-        </button>
-        </h3>
-        <div className={`grid shrink-0 place-items-center border-l-[3px] border-black px-2 py-1 ${expanded ? "border-b-[2px]" : ""}`}>
-         <RetroSyncExecutionSwitch
-          idleLabel="SYNC ALL"
-          status={groupStatus}
-          onClick={() => void startCategories(groupCategoryIds, units.some((unit) => unit.id === "retention"))}
-         />
-        </div>
-       </div>
-       <div id={contentId} hidden={!expanded}>
-         <div className="divide-y-[2px] divide-black">
-          {units.map((unit) => {
-           const checked = unit.categoryIds.every((id) => selectedSet.has(id))
-           const unitStatus = resolveExecutionStatus(unit.categoryIds)
-           const hasPriorData = unit.categoryIds.some((id) => {
-            const entry = categoryFreshness(datasetFreshness, id)
-            return Boolean(entry?.status && entry.status !== "failed")
-           })
-           return (
-            <div key={unit.id} className={`grid min-h-[54px] w-full grid-cols-[28px_minmax(150px,1.05fr)_minmax(180px,1.45fr)_104px] items-center gap-2 px-3 py-1.5 text-left hover:bg-[#f8f7f1] max-lg:grid-cols-[28px_minmax(0,1fr)_104px] ${checked ? "bg-white" : "bg-white/55 text-black/50"}`}>
-             <button type="button" aria-pressed={checked} onClick={() => toggleMany(unit.categoryIds)} title={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`} aria-label={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`} className="grid min-h-8 min-w-8 place-items-center rounded-[6px] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-black">
-              {checked ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5 text-black/35" />}
-             </button>
-             <span className="min-w-0 leading-none">
-              <span className="flex flex-wrap items-center gap-1.5">
-               <span className="truncate text-[12px] font-black uppercase tracking-[-0.01em]">{unit.label}</span>
-               {unit.defaultEnabled ? <span className="rounded-full border border-black bg-[#3FEE56] px-1.5 py-[1px] text-[8px] font-black uppercase leading-tight">Core</span> : null}
-              </span>
-              <span className="mt-1 flex min-w-0 items-center gap-1 text-[8px] font-bold uppercase leading-none tracking-[0.03em] text-black/50">
-               <span className="truncate">{unit.categoryIds.length} child quer{unit.categoryIds.length === 1 ? "y" : "ies"} · {formatPlainLabel(unit.refreshPolicy)}</span>
-               {unit.id === "video_catalog" ? <button type="button" onClick={() => void startCategories(unit.categoryIds, false, true)} className="ml-1.5 rounded border border-black bg-[#FFDA47] px-1 py-px text-[7px] font-black uppercase leading-none shadow-[1px_1px_0_0_#000]">Full refresh</button> : null}
-              </span>
-             </span>
-             <span className="min-w-0 truncate text-[9px] font-black uppercase leading-tight tracking-[0.02em] text-black/70 max-lg:col-start-2 max-lg:col-span-1 max-lg:row-start-2" title={unit.description}>
-              {unit.description}
-             </span>
-             <div className="col-start-4 self-center justify-self-end max-lg:col-start-3 max-lg:row-span-2 max-lg:row-start-1">
-              <RetroSyncExecutionSwitch
-               idleLabel={hasPriorData ? "UPDATE" : "FULL SYNC"}
-               status={unitStatus}
-               onClick={() => void startCategories(unit.categoryIds)}
-              />
-             </div>
-            </div>
-           )
-          })}
-         </div>
-         {units.some((unit) => unit.id === "retention") && retentionEnabled ? (
-          <div className="border-t-[3px] border-black bg-[#f3f4f6]">
-           <div className="flex flex-wrap items-center justify-between gap-2 border-b-[3px] border-black bg-white px-3.5 py-2.5">
-            <div>
-             <span className="text-[12px] font-black uppercase tracking-[0.02em]">Retention Videos</span>
-             <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.02em] text-black/45">
-              {retentionVideoIds.length > 0
-               ? `${retentionVideoIds.length} manually selected`
-               : `Base sync — ${baselineRetentionSelection.selectedCounts.long} long-form + ${baselineRetentionSelection.selectedCounts.short} Shorts by views`}
-             </span>
-            </div>
-            <div className="flex items-center gap-2">
-             <button type="button" onClick={() => setRetentionVideoIds([])} className="rounded-full border-[2px] border-black bg-[#FFDA47] px-2.5 py-1 text-[9.5px] font-black uppercase shadow-[2px_2px_0_0_#000]">Use Balanced Default</button>
-            </div>
-           </div>
-           <div className="border-b-[3px] border-black bg-white px-3.5 py-2.5">
-            <input
-             type="text"
-             value={videoSearch}
-             onChange={(event) => setVideoSearch(event.target.value)}
-             placeholder="Search videos by title…"
-             className="w-full rounded-full border-[2px] border-black px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.02em] outline-none focus:border-[#528FFA]"
-            />
-           </div>
-           <div className="max-h-[240px] overflow-auto custom-scrollbar">
-            {filteredVideos.length === 0 ? (
-             <div className="px-3.5 py-4 text-center text-[11px] font-black uppercase tracking-[0.03em] text-black/45">No videos match.</div>
-            ) : filteredVideos.map((video) => {
-             const checked = retentionSelectedSet.has(video.id)
-             return (
-              <button key={video.id} type="button" aria-pressed={checked} onClick={() => toggleRetentionVideo(video.id)} className={`grid w-full grid-cols-[22px_1fr_auto] items-center gap-2.5 border-b border-black/10 px-3.5 py-2.5 text-left transition-colors hover:bg-white ${checked ? "bg-white" : "bg-white/40 text-black/50"}`}>
-               <span>{checked ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-black/35" />}</span>
-               <span className="truncate text-[11px] font-black uppercase tracking-[0.01em]">{video.title || video.id}</span>
-               <span className="whitespace-nowrap text-[10px] font-bold text-black/45">{(video.views || 0).toLocaleString()} views</span>
-              </button>
-             )
-            })}
-           </div>
-          </div>
-         ) : null}
-       </div>
-      </section>
-     )
-    })}
-   </div>
-
-   <button
-    type="button"
-    onClick={isAuthenticated ? start : onLogin}
-    disabled={isAuthenticated && selected.length === 0}
-    className="mt-4 flex w-full items-center justify-center gap-2 rounded-[14px] border-[3px] border-black bg-[#3FEE56] py-3.5 text-[14px] font-black uppercase tracking-[0.03em] shadow-[4px_4px_0_0_#000] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_0_#000] disabled:cursor-not-allowed disabled:opacity-50"
-   >
-    {isAuthenticated ? <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} /> : <ShieldCheck className="h-4 w-4" />}
-    {isSyncing ? `Queue Selected YouTube Data (${selectedUnitCount})` : isAuthenticated ? `Sync Selected YouTube Data (${selectedUnitCount})` : "Connect YouTube Channel"}
-   </button>
-
+    <button
+     type="button"
+     onClick={isAuthenticated ? start : onLogin}
+     disabled={isAuthenticated && selected.length === 0}
+     className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border-[3px] border-black bg-[#3FEE56] py-2.5 text-[12px] font-black uppercase tracking-[0.03em] shadow-[4px_4px_0_0_#000] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_0_#000] disabled:cursor-not-allowed disabled:opacity-50"
+    >
+     {isAuthenticated ? <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} /> : <ShieldCheck className="h-4 w-4" />}
+     {isSyncing ? `Queue Selected Data (${selectedUnitCount})` : isAuthenticated ? `Sync Selected Data (${selectedUnitCount})` : "Connect YouTube Channel"}
+    </button>
    </div>
   </ToolboxScaffold>
  )
