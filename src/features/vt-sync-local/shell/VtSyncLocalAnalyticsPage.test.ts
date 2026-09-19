@@ -39,7 +39,16 @@ describe("VT-SYNC unified progress rows", () => {
   expect(pageCss).toContain("height: var(--vt-sync-controller-height, auto)")
  })
 
- it("synchronously rejects a second active sync request", () => {
+ it("does not consume a queued request before authorization is ready and dedupes equivalent jobs", () => {
+  const tokenGuard = pageSource.indexOf('if (!token) throw new Error("No valid Google access token is available after authorization.")')
+  const queueShift = pageSource.indexOf("syncQueueRef.current.shift()")
+  expect(tokenGuard).toBeGreaterThan(-1)
+  expect(queueShift).toBeGreaterThan(tokenGuard)
+  expect(pageSource).toContain("vtSyncQueueRequestKey")
+  expect(pageSource).toContain("alreadyActive || alreadyQueued")
+ })
+
+  it("synchronously rejects a second active sync request", () => {
   const lock = { current: false }
   expect(claimVtSyncSyncRequest(lock)).toBe(true)
   expect(claimVtSyncSyncRequest(lock)).toBe(false)
