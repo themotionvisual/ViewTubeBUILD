@@ -27,6 +27,7 @@ Before changing widget code, read the relevant references in this skill:
 - `references/futures-prototypes-and-reference-atlas.md`
 - `references/data-actions-and-integrations.md`
 - `references/testing-certification-and-management.md`
+- `references/video-director-responsive-lessons.md` — complex-widget case study for local-fix containment, two-axis/landscape behavior, density vs fitting, and rendered certification.
 - `references/authority-and-reconciliation.md`
 - `references/css-management-and-deployment.md`
 
@@ -145,6 +146,8 @@ Preferred expansion order:
 Never merely stretch empty whitespace.
 
 ## 6. Canonical primitive sizing
+
+**Density and fitting are separate systems.** Density changes the overall scale/detail of a region. Adaptive text fitting preserves a specific control geometry while fitting its complete label. Do not set an entire complex widget to compact merely because several dense buttons are long, and never use clipping as a substitute for fitting.
 
 Current control ladder:
 
@@ -347,7 +350,13 @@ Keep Widget and Toolbox/Subtoolbox systems isolated unless a deliberately shared
 
 ## 18. Mobile and container responsiveness
 
-Widget internals respond to allocated widget width with container queries whenever possible.
+Responsive state is not width alone. For complex widgets reason about:
+
+`allocated width × selected widget height × interaction/viewport mode`
+
+Widget internals respond to allocated widget width with container queries whenever possible. Use the shell's declared height state as a second design input when vertical detail changes meaningfully. Treat coarse-pointer landscape as a distinct vertical-budget state when appropriate.
+
+A widget-specific mobile fix may not weaken a shared primitive/shell guarantee. Before changing shared widget-system CSS during one-widget work, perform a blast-radius review and prove the change is correct for unrelated consumers.
 
 On phones:
 
