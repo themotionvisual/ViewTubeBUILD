@@ -2,6 +2,7 @@ import {
   VideoDirectorProjectSchema,
   type VideoDirectorProject,
 } from "./projectSchema"
+import type { VideoDirectorCategoryId } from "./categorySchemas"
 
 const makeId = (prefix: string) =>
   `${prefix}-${globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(16).slice(2, 8)}`}`
@@ -138,6 +139,51 @@ export const ensureVideoDirectorVariants = (
     }
   })
 
+  project.updatedAt = new Date().toISOString()
+  return VideoDirectorProjectSchema.parse(project)
+}
+
+
+export const setVideoDirectorVariantStrength = (
+  projectInput: VideoDirectorProject,
+  variantId: string,
+  variationStrength: "subtle" | "balanced" | "radical",
+): VideoDirectorProject => {
+  const project = structuredClone(VideoDirectorProjectSchema.parse(projectInput))
+  const variant = project.variants.find((candidate) => candidate.id === variantId)
+  if (!variant) return project
+  variant.variationStrength = variationStrength
+  project.updatedAt = new Date().toISOString()
+  return VideoDirectorProjectSchema.parse(project)
+}
+
+export const setVideoDirectorVariantCategoryAllowed = (
+  projectInput: VideoDirectorProject,
+  variantId: string,
+  categoryId: VideoDirectorCategoryId,
+  allowed: boolean,
+): VideoDirectorProject => {
+  const project = structuredClone(VideoDirectorProjectSchema.parse(projectInput))
+  const variant = project.variants.find((candidate) => candidate.id === variantId)
+  if (!variant) return project
+
+  const current = new Set(variant.allowedCategories)
+  if (allowed) current.add(categoryId)
+  else current.delete(categoryId)
+  variant.allowedCategories = [...current]
+  project.updatedAt = new Date().toISOString()
+  return VideoDirectorProjectSchema.parse(project)
+}
+
+export const setVideoDirectorVariantAllowedCategories = (
+  projectInput: VideoDirectorProject,
+  variantId: string,
+  categoryIds: readonly VideoDirectorCategoryId[],
+): VideoDirectorProject => {
+  const project = structuredClone(VideoDirectorProjectSchema.parse(projectInput))
+  const variant = project.variants.find((candidate) => candidate.id === variantId)
+  if (!variant) return project
+  variant.allowedCategories = [...new Set(categoryIds)]
   project.updatedAt = new Date().toISOString()
   return VideoDirectorProjectSchema.parse(project)
 }
