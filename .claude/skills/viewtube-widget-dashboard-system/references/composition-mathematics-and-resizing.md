@@ -197,7 +197,7 @@ Every supported width × height combination is a public state.
 
 ## 13. Bidirectional state space
 
-Treat a widget as a matrix, not a single responsive line.
+Treat a widget as a matrix, not a single responsive line. For complex mobile tools, the complete responsive state is:\n\n`allocated width × selected widget height × interaction/viewport mode`\n\nWidth-only breakpoints are insufficient when landscape increases width while sharply reducing visible vertical space.
 
 For each supported width state and each supported height state, define:
 
@@ -385,3 +385,38 @@ Examples:
 - `threeRows = 3*rowH + 2*gap`
 
 A layout that fails its own equation fails certification.
+
+
+## 26. Aspect-ratio signature budget
+
+Media-like signature components must respect vertical budget.
+
+Do not let a full-width 16:9 canvas become taller simply because a phone rotates to landscape.
+
+Use the relationship:
+
+`signatureHeight = min(desiredAspectHeight, availableVerticalBudget)`
+
+Then, when necessary:
+
+`signatureWidth = min(availableWidth, signatureHeight × aspectRatio)`
+
+The signature visual remains conceptually identical; only its allocation changes.
+
+## 27. Breakpoints come from measured failure
+
+A breakpoint must correspond to an actual composition failure:
+
+- label no longer fits under approved adaptive range;
+- signature interaction becomes unusable;
+- required control cannot retain its allocation;
+- linked geometry cannot remain aligned;
+- touch interaction becomes ambiguous.
+
+Do not add generic 430/620/etc. breakpoints without recording what invariant fails there.
+
+## 28. Sequential systems may scroll without changing their mental model
+
+Storyboards, timelines, shot strips, queues, and similar sequence-native components may preserve horizontal ordering with bounded horizontal scrolling instead of changing row counts.
+
+Use scroll only where the sequence itself makes scrolling understandable. Essential navigation still requires a discoverable primary control.
