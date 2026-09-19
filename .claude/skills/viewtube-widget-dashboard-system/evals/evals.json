@@ -101,6 +101,39 @@
         "verify Claude/Codex routing",
         "require creator-approved destructive deletion gate"
       ]
+    },
+    {
+      "name": "complex-widget-landscape",
+      "prompt": "A complex full-width widget looks good in portrait but its 16:9 signature canvas becomes huge in phone landscape.",
+      "must": [
+        "treat responsive state as width x selected height x interaction/viewport mode",
+        "apply a vertical budget to the signature canvas",
+        "preserve the same signature concept",
+        "avoid width-only breakpoint reasoning",
+        "verify rendered landscape evidence"
+      ]
+    },
+    {
+      "name": "local-fix-containment",
+      "prompt": "One widget needs denser mobile controls and an agent proposes changing shared primitive CSS.",
+      "must": [
+        "perform shared blast-radius review",
+        "prefer local or opt-in primitive behavior",
+        "do not weaken unrelated header/mobile guarantees",
+        "distinguish density from adaptive text fitting",
+        "verify an unrelated widget if shared code changes"
+      ]
+    },
+    {
+      "name": "duplicate-mobile-actions",
+      "prompt": "A widget repeats the same destination action in header body and footer and also exposes two complete navigation systems on portrait.",
+      "must": [
+        "audit duplicate actions and navigation",
+        "keep one persistent primary control",
+        "retain contextual actions only when meaning differs",
+        "remove redundant accelerators before shrinking essential controls",
+        "preserve accessible discovery"
+      ]
     }
   ]
 }
