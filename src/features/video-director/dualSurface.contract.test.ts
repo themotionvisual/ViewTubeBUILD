@@ -72,6 +72,7 @@ describe("Video Director dual-surface architecture", () => {
     const widget = read("src/views/dashboard/widgets/video-director/VideoDirectorWidgetComponents.tsx")
     const studioCore = read("src/views/video-director/StudioDirectorSignatureControls.tsx")
     const studioAdvanced = read("src/views/video-director/StudioDirectorAdvancedSignatureControls.tsx")
+    const studioMore = read("src/views/video-director/StudioDirectorMoreSignatureControls.tsx")
     const contracts = read("src/features/video-director/signatureContracts.ts")
 
     const concepts = [
@@ -90,11 +91,24 @@ describe("Video Director dual-surface architecture", () => {
       "Reference",
       "Continuity",
       "Negative",
+      "Concept",
+      "Style",
+      "Perspective",
+      "Palette",
+      "Grade",
+      "ShotStructure",
+      "Speed",
+      "Dialogue",
+      "Sfx",
+      "Title",
+      "Overlay",
+      "Effects",
+      "Output",
     ]
 
     for (const concept of concepts) {
       expect(widget).toContain(concept)
-      expect(studioCore + studioAdvanced).toContain(concept)
+      expect(studioCore + studioAdvanced + studioMore).toContain(concept)
     }
 
     expect(contracts).toContain("DirectorLensControlProps")
