@@ -35,7 +35,7 @@ describe("Toolbox UI Reference Library", () => {
     expect(html).toContain('data-vt-toolbox-level="main"')
   })
 
-  it("renders only real primitive families in the migration toolbox and includes 20 additional migrations", () => {
+  it("renders only real primitive families and includes the correction + discovery wave", () => {
     const source = readFileSync(resolve(process.cwd(), "src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx"), "utf8")
     for (const family of [
       "Primary Button", "Secondary Button", "Neutral Button", "Destructive Button",
@@ -45,7 +45,10 @@ describe("Toolbox UI Reference Library", () => {
       "Range Slider", "Toggle", "Settings Switch", "Checkbox", "Radio",
       "Segmented Choice", "Button Group", "Tag", "Removable Tag", "Selectable Tag",
       "Tag Editor", "Badge", "Status Badge", "Progress Bar", "Progress Value",
-      "KPI", "Stat Card", "Tooltip",
+      "KPI", "Stat Card", "Tooltip", "Knob Dial", "Alphabetical Spectrum Tags",
+      "Field Label", "Surface", "State Panel", "Output Card", "Metric", "Link Button",
+      "Data Table", "Color Picker", "Media Card", "Selectable List Row", "Reorderable Row",
+      "Tabs", "Alert", "Step Indicator",
     ]) expect(source).toContain(`"${family}"`)
     expect(source).not.toContain("HardcodedGenericControl")
     expect(source).not.toContain("hardcoded-fallback")
@@ -59,6 +62,13 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).toContain("<SubToolboxTagEditor")
     expect(source).toContain("<SubToolboxProgressBar")
     expect(source).toContain("<SubToolboxKpiCard")
+    expect(source).toContain("<SubToolboxKnob")
+    expect(source).toContain("<SubToolboxAlphabeticalSpectrumTags")
+    expect(source).toContain("<SubToolboxDataTable")
+    expect(source).toContain("<SubToolboxColorPicker")
+    expect(source).toContain("<SubToolboxMediaCard")
+    expect(source).toContain("<SubToolboxStepIndicator")
+    expect(source).not.toContain("forceOpen content=\"TOOLTIP\"")
   })
 
   it("restores the 80px main toolbox header authority instead of inheriting subtoolbox height", () => {
