@@ -79,6 +79,17 @@ export type VtSyncLocalSyncPhase = {
  nextQueryLabel?: string
 }
 
+export type VtSyncLocalSyncCategoryProgress = {
+ categoryId: string
+ status: VtSyncLocalSyncPhaseStatus
+ rows: number
+ startedAt?: string
+ completedAt?: string
+ message?: string
+ error?: string
+ currentWindow?: VtSyncAnalyticsWindow
+}
+
 export type VtSyncLocalSyncProgress = {
  runId: string
  startedAt: string
@@ -90,6 +101,7 @@ export type VtSyncLocalSyncProgress = {
  requestId?: string
  requestedCategoryIds: string[]
  phases: VtSyncLocalSyncPhase[]
+ categoryStates: Record<string, VtSyncLocalSyncCategoryProgress>
 }
 
 export type VtSyncLocalSyncOptions = {
@@ -1090,6 +1102,35 @@ const runTrafficDetailAnalyticsBundle = async (
  return paginated
 }
 
+const publishProgress = (
+ progress: VtSyncLocalSyncProgress,
+ onProgress?: (progress: VtSyncLocalSyncProgress) => void,
+) => {
+ onProgress?.({
+  ...progress,
+  phases: [...progress.phases],
+  categoryStates: { ...progress.categoryStates },
+ })
+}
+
+const updateCategoryState = (
+ progress: VtSyncLocalSyncProgress,
+ categoryId: string,
+ patch: Partial<VtSyncLocalSyncCategoryProgress>,
+ onProgress?: (progress: VtSyncLocalSyncProgress) => void,
+) => {
+ const current = progress.categoryStates[categoryId] || {
+  categoryId,
+  status: "pending" as VtSyncLocalSyncPhaseStatus,
+  rows: 0,
+ }
+ progress.categoryStates = {
+  ...progress.categoryStates,
+  [categoryId]: { ...current, ...patch, categoryId },
+ }
+ publishProgress(progress, onProgress)
+}
+
 const updatePhase = (
  progress: VtSyncLocalSyncProgress,
  phaseId: string,
@@ -1097,7 +1138,32 @@ const updatePhase = (
  onProgress?: (progress: VtSyncLocalSyncProgress) => void,
 ) => {
  progress.phases = progress.phases.map((phase) => phase.id === phaseId ? { ...phase, ...patch } : phase)
- onProgress?.({ ...progress, phases: [...progress.phases] })
+
+ // Dedicated runtime phases map one-to-one to a user-visible category. Keep
+ // those category states in lockstep automatically. Shared traffic/segments
+ // phases publish their exact child category explicitly inside their loops.
+ const matchingCategoryIds = progress.requestedCategoryIds.filter((categoryId) =>
+  VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.runtimePhaseId === phaseId,
+ )
+ if (matchingCategoryIds.length === 1) {
+  const categoryId = matchingCategoryIds[0]
+  const current = progress.categoryStates[categoryId] || { categoryId, status: "pending" as VtSyncLocalSyncPhaseStatus, rows: 0 }
+  progress.categoryStates = {
+   ...progress.categoryStates,
+   [categoryId]: {
+    ...current,
+    categoryId,
+    status: patch.status ?? current.status,
+    rows: patch.rows ?? current.rows,
+    startedAt: patch.startedAt ?? current.startedAt,
+    completedAt: patch.completedAt ?? current.completedAt,
+    message: patch.message ?? current.message,
+    error: patch.error ?? current.error,
+    currentWindow: patch.currentWindow ?? current.currentWindow,
+   },
+  }
+ }
+ publishProgress(progress, onProgress)
 }
 
 const addManifestResult = (
@@ -2050,8 +2116,13 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   status: "running",
   requestedCategoryIds: visibleSelectedCategories,
   phases: phaseIds.map(([id, label]) => ({ id, label, status: "pending", rows: 0 })),
+  categoryStates: Object.fromEntries(visibleSelectedCategories.map((categoryId) => [categoryId, {
+   categoryId,
+   status: "pending" as VtSyncLocalSyncPhaseStatus,
+   rows: 0,
+  }])),
  }
- onProgress?.(progress)
+ publishProgress(progress, onProgress)
 
  const manifest: VtSyncSyncManifest = {
   run_id: runId,
@@ -3354,7 +3425,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   commitSnapshot()
   progress.status = manifest.bundles_failed?.length ? "partial" : "complete"
   progress.completedAt = completedAt
-  onProgress?.({ ...progress, phases: [...progress.phases] })
+  publishProgress(progress, onProgress)
   return snapshot
  } catch (error) {
   const completedAt = new Date().toISOString()
@@ -3401,7 +3472,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
       : "This phase was skipped after the sync stopped.",
     }
    : phase)
-  onProgress?.({ ...progress, phases: [...progress.phases] })
+  publishProgress(progress, onProgress)
   throw error
  }
 }
