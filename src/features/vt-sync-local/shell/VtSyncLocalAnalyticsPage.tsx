@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { ChevronDown, ChevronRight, Copy } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
@@ -52,8 +52,6 @@ import { RetroLcd, RetroLedRow, RetroRivets, RetroSyncExecutionSwitch, type Retr
 import {
  buildVtSyncUnifiedProgressRows,
  claimVtSyncSyncRequest,
- getVtSyncActiveCategoryIds,
- getVtSyncPendingCategoryIds,
  getVtSyncProgressQueueSummary,
  type VtSyncUnifiedProgressRow,
 } from "./vtSyncProgressModel"
@@ -749,24 +747,13 @@ const refreshManualImports = useCallback(async (payload?: {
  const [syncError, setSyncError] = useState<string>("")
  const [busy, setBusy] = useState(false)
  const [authTick, setAuthTick] = useState(0)
- const [controllerPanelHeight, setControllerPanelHeight] = useState<number>()
  const controllerPanelRef = useRef<HTMLDivElement | null>(null)
- const progressPanelRef = useRef<HTMLDivElement | null>(null)
  const syncRequestActiveRef = useRef(false)
  const activeSyncRequestKeyRef = useRef<string | null>(null)
  const syncQueueRef = useRef<VtSyncQueuedRequest[]>(readPersistedVtSyncQueue())
  const [queuedCategoryIds, setQueuedCategoryIds] = useState<string[]>(() =>
   [...new Set(syncQueueRef.current.flatMap((request) => request.categoryIds))],
  )
- const controllerActiveCategoryIds = useMemo(
-  () => getVtSyncActiveCategoryIds(syncProgress),
-  [syncProgress],
- )
- const controllerQueuedCategoryIds = useMemo(
-  () => getVtSyncPendingCategoryIds(syncProgress, mergedSnapshot.datasetFreshness, queuedCategoryIds),
-  [mergedSnapshot.datasetFreshness, queuedCategoryIds, syncProgress],
- )
-
  const publishSyncProgress = useCallback((next: VtSyncLocalSyncProgress) => {
   pendingSyncProgressRef.current = next
   if (next.status !== "running") {
@@ -787,20 +774,6 @@ const refreshManualImports = useCallback(async (payload?: {
 
  useEffect(() => () => {
   if (syncProgressTimerRef.current !== null) window.clearTimeout(syncProgressTimerRef.current)
- }, [])
-
- useLayoutEffect(() => {
-  const node = controllerPanelRef.current
-  if (!node) return
-  const updateHeight = () => {
-   const nextHeight = Math.ceil(node.getBoundingClientRect().height)
-   setControllerPanelHeight((current) => current === nextHeight ? current : nextHeight)
-  }
-  updateHeight()
-  if (typeof ResizeObserver === "undefined") return
-  const observer = new ResizeObserver(updateHeight)
-  observer.observe(node)
-  return () => observer.disconnect()
  }, [])
 
  const authReady = useMemo(
@@ -950,48 +923,33 @@ const refreshManualImports = useCallback(async (payload?: {
      onConnect={() => { void login() }}
      onRecommendedSync={() => { void startSync(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds)) }}
      onChooseDatasets={() => scrollToPanel(controllerPanelRef.current)}
-     onViewProgress={() => scrollToPanel(progressPanelRef.current)}
+     onViewProgress={() => scrollToPanel(controllerPanelRef.current)}
     />
 
-    <section className="grid items-start gap-6 md:grid-cols-2">
-     <div ref={controllerPanelRef} className="min-w-0">
-      <VtSyncControllerPanel
-       isAuthenticated={authReady}
-       isSyncing={busy}
-       activeCategoryIds={controllerActiveCategoryIds}
-       queuedCategoryIds={controllerQueuedCategoryIds}
-       categoryExecutionStates={syncProgress?.categoryStates}
-       datasetFreshness={mergedSnapshot.datasetFreshness}
-       contentOwners={account.snapshot.google.contentOwners}
-       activeContentOwnerId={account.snapshot.google.activeContentOwnerId}
-       onSelectContentOwner={account.selectContentOwner}
-       videos={consumerSnapshot.videos.map((video) => ({
-        id: video.id,
-        title: video.title,
-        thumbnail: video.thumbnail,
-        views: video.metrics?.views || 0,
-        format: video.format,
-        publishedAt: video.publishedAt,
-        privacyStatus: video.privacyStatus,
-       }))}
-       onLogin={login}
-       onStartSync={startSync}
-      />
-     </div>
-     <div
-      ref={progressPanelRef}
-      className="vt-sync-progress-height-match min-h-0 min-w-0"
-      style={controllerPanelHeight ? ({ "--vt-sync-controller-height": `${controllerPanelHeight}px` } as React.CSSProperties) : undefined}
-     >
-      <ProgressRail
-       progress={syncProgress}
-       datasetFreshness={mergedSnapshot.datasetFreshness}
-       syncError={syncError}
-       queuedCategoryIds={queuedCategoryIds}
-       videoCatalogCoverage={videoCatalogProjection.coverage}
-       onStartUnitSync={(categoryIds) => { void startSync(categoryIds) }}
-      />
-     </div>
+    <section ref={controllerPanelRef} className="min-w-0">
+     <VtSyncControllerPanel
+      isAuthenticated={authReady}
+      isSyncing={busy}
+      progress={syncProgress}
+      queuedCategoryIds={queuedCategoryIds}
+      datasetFreshness={mergedSnapshot.datasetFreshness}
+      syncError={syncError}
+      videoCatalogCoverage={videoCatalogProjection.coverage}
+      contentOwners={account.snapshot.google.contentOwners}
+      activeContentOwnerId={account.snapshot.google.activeContentOwnerId}
+      onSelectContentOwner={account.selectContentOwner}
+      videos={consumerSnapshot.videos.map((video) => ({
+       id: video.id,
+       title: video.title,
+       thumbnail: video.thumbnail,
+       views: video.metrics?.views || 0,
+       format: video.format,
+       publishedAt: video.publishedAt,
+       privacyStatus: video.privacyStatus,
+      }))}
+      onLogin={login}
+      onStartSync={startSync}
+     />
     </section>
     {/* Intelligence Hub moved ABOVE the data table so it is actually
       visible without scrolling past 5,000 lines of tabular rows. Users
