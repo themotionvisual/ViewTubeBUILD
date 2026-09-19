@@ -153,7 +153,7 @@ function placeClipAfterCollisions(clips:VtE1Clip[],clip:VtE1Clip){
 }
 
 export function initialState(project?:Partial<EditorProject>):EditorState{
-  const p:EditorProject={
+  const defaults:EditorProject={
     clips:[],
     transitions:[],
     tracks:[
@@ -163,9 +163,11 @@ export function initialState(project?:Partial<EditorProject>):EditorState{
     ],
     layers:[],
     durationSec:30,
-    ...(project??{}),
-    layers:Array.isArray(project?.layers)?project.layers:[],
   };
+  const p:EditorProject={...defaults,...(project??{})};
+  p.layers=Array.isArray(project?.layers)?project.layers:defaults.layers;
+  p.tracks=Array.isArray(project?.tracks)&&project.tracks.length?project.tracks:defaults.tracks;
+  p.clips=Array.isArray(project?.clips)?project.clips:defaults.clips;
   return{
     project:p,
     playheadSec:0,
@@ -347,19 +349,41 @@ export function editorReducer(state:EditorState,action:EditorAction):EditorState
     case'resetClipTransform':
       return editorReducer(state,{type:'updateClipTransform',id:action.id,patch:DEFAULT_CLIP_VISUAL_TRANSFORM});
     case'moveClip':{
-      const clip=state.project.clips.find(c=>c.id===action.id);
-      if(!clip)return state;
-      const duration=clip.end-clip.start;
-      const start=clampClipMoveStart(state.project.clips,clip,clip.start+action.deltaSec,state.project.durationSec);
-      const clips=state.project.clips.map(c=>c.id===clip.id?{...c,start,end:start+duration}:c);
+      const clips=state.project.clips.map(c=>{
+        if(c.id!==action.id)return c;
+        const duration=c.end-c.start;
+        const start=Math.max(0,c.start+action.deltaSec);
+        return{...c,start,end:start+duration};
+      });
       return withHistory(state,{...state,project:{...state.project,clips}});
     }
     case'moveClipTo':{
       const clip=state.project.clips.find(c=>c.id===action.id);
       if(!clip)return state;
-      const duration=clip.end-clip.start;
-      const start=clampClipMoveStart(state.project.clips,clip,action.startSec,state.project.durationSec);
-      const clips=state.project.clips.map(c=>c.id===clip.id?{...c,start,end:start+duration}:c);
+      const groupId=String((clip as VtE1Clip&{groupId?:unknown}).groupId??'');
+      if(!groupId){
+        const duration=clip.end-clip.start;
+        const start=clampClipMoveStart(state.project.clips,clip,action.startSec,state.project.durationSec);
+        const clips=state.project.clips.map(c=>c.id===clip.id?{...c,start,end:start+duration}:c);
+        return withHistory(state,{...state,project:{...state.project,clips}});
+      }
+
+      const members=state.project.clips.filter(c=>String((c as VtE1Clip&{groupId?:unknown}).groupId??'')===groupId);
+      const memberIds=new Set(members.map(member=>member.id));
+      const desiredDelta=action.startSec-clip.start;
+      let minDelta=-Infinity;
+      let maxDelta=Infinity;
+      for(const member of members){
+        const siblings=state.project.clips
+          .filter(other=>!memberIds.has(other.id)&&other.trackId===member.trackId)
+          .sort((a,b)=>a.start-b.start);
+        const before=siblings.filter(other=>other.end<=member.start).at(-1);
+        const after=siblings.find(other=>other.start>=member.end);
+        minDelta=Math.max(minDelta,-member.start,(before?.end??0)-member.start);
+        maxDelta=Math.min(maxDelta,(after?.start??state.project.durationSec)-member.end);
+      }
+      const delta=Math.max(minDelta,Math.min(desiredDelta,maxDelta));
+      const clips=state.project.clips.map(c=>memberIds.has(c.id)?{...c,start:c.start+delta,end:c.end+delta}:c);
       return withHistory(state,{...state,project:{...state.project,clips}});
     }
     case'trimClip':{
