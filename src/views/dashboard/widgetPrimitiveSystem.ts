@@ -30,6 +30,4 @@ export function widgetPrimitiveClasses({ size=32, tone="default", state="default
   return ["vt-primitive", `vt-size-${size}`, `vt-tone-${tone}`, `vt-shape-${shape}`, width === "full" && "vt-width-full", state !== "default" && `vt-state-${state}`, interactive && "vt-interactive"].filter(Boolean).join(" ")
 }
 
-export function widgetSizedControlClasses(size: WidgetPrimitiveSize = 32, tone: WidgetPrimitiveTone = "default") {
-  return `${widgetPrimitiveClasses({ size, tone })} vt-sized-control is-height-${size} is-tone-${tone}`
-}
+export function widgetSizedControlClasses(\n  size: WidgetPrimitiveSize = 32,\n  tone: WidgetPrimitiveTone = "default",\n  textFit: WidgetPrimitiveTextFit = "fixed",\n) {\n  return `${widgetPrimitiveClasses({ size, tone })} vt-sized-control is-height-${size} is-tone-${tone}${textFit === "adaptive" ? " vt-text-fit-adaptive" : ""}`\n}
