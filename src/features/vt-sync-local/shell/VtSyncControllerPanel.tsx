@@ -187,7 +187,6 @@ export const VtSyncControllerPanel: React.FC<{
  const resolveExecutionStatus = (categoryIds: string[]): "idle" | "queued" | "running" | "complete" | "partial" | "failed" => {
   if (categoryIds.some((id) => activeCategorySet.has(id))) return "running"
   if (categoryIds.some((id) => queuedCategorySet.has(id))) return "queued"
-  if (!activeRunId) return "idle"
 
   const liveStates = categoryIds
    .map((id) => categoryExecutionStates?.[id])
@@ -198,13 +197,13 @@ export const VtSyncControllerPanel: React.FC<{
    if (liveStates.length === categoryIds.length && liveStates.every((entry) => entry.status === "complete")) return "complete"
   }
 
-  const currentRunEntries = categoryIds
+  const storedEntries = categoryIds
    .map((id) => categoryFreshness(datasetFreshness, id))
-   .filter((entry) => entry?.runId === activeRunId)
+   .filter(Boolean)
 
-  if (currentRunEntries.some((entry) => entry?.status === "failed")) return "failed"
-  if (currentRunEntries.some((entry) => entry?.status === "partial")) return "partial"
-  if (currentRunEntries.length === categoryIds.length && currentRunEntries.every((entry) => entry?.status === "synced")) return "complete"
+  if (storedEntries.some((entry) => entry?.status === "failed")) return "failed"
+  if (storedEntries.some((entry) => entry?.status === "partial")) return "partial"
+  if (storedEntries.length === categoryIds.length && storedEntries.every((entry) => entry?.status === "synced")) return "complete"
   return "idle"
  }
 
