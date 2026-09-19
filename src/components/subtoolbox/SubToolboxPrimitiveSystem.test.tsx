@@ -4,7 +4,7 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "./SubToolboxLayouts"
-import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataStats, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxMeter, SubToolboxMetric, SubToolboxMetricStrip, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxScrollbar, SubToolboxStatePanel, SubToolboxTextArea, SubToolboxTooltip, SubToolboxTree, SubToolboxVaultAsset } from "./SubToolboxPrimitives"
+import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAspectRatioFrame, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataStats, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxMeter, SubToolboxMetric, SubToolboxMetricStrip, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxScrollbar, SubToolboxStatePanel, SubToolboxTag, SubToolboxTextArea, SubToolboxToolbar, SubToolboxTooltip, SubToolboxTree, SubToolboxVaultAsset } from "./SubToolboxPrimitives"
 import { CONTROL_SHELL, SUBTOOLBOX_CONTROL_SIZES, SUBTOOLBOX_STATES, SUBTOOLBOX_TOKENS, TOOLBOX_LEVEL_DNA, resolveSubtoolboxMinHeight } from "./tokens"
 
 describe("Subtoolbox Primitive System", () => {
@@ -118,6 +118,11 @@ describe("Subtoolbox Primitive System", () => {
         <SubToolboxFileTarget level="l2" label="Upload" />
         <SubToolboxVaultAsset level="l2" kind="landscape" title="Landscape" />
         <SubToolboxTree level="l2" defaultOpenIds={["root"]} nodes={[{ id: "root", label: "Root", children: [{ id: "child", label: "Child" }] }]} />
+        <SubToolboxTooltip level="l2" variant="dark" content="Dark" />
+        <SubToolboxTooltip level="l2" variant="color" content="Color" />
+        <SubToolboxTag level="l2" variant="dashboard-pill">Pill</SubToolboxTag>
+        <SubToolboxAspectRatioFrame level="l2" ratio="16:9" label="16:9">Frame</SubToolboxAspectRatioFrame>
+        <SubToolboxToolbar level="l2"><SubToolboxButton level="l2">Save</SubToolboxButton></SubToolboxToolbar>
       </SubToolboxStack>,
     )
 
@@ -155,5 +160,10 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("vt-subtoolbox-file-target")
     expect(html).toContain("vt-subtoolbox-vault-asset")
     expect(html).toContain("vt-subtoolbox-tree")
+    expect(html).toContain("is-dark")
+    expect(html).toContain("is-color")
+    expect(html).toContain("is-dashboard-pill")
+    expect(html).toContain("vt-subtoolbox-aspect-frame")
+    expect(html).toContain("vt-subtoolbox-toolbar")
   })
 })
