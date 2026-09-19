@@ -6,6 +6,7 @@ import {
   getShortsCropStyle as getSharedShortsCropStyle,
   interpolateShortsConfig as interpolateSharedShortsConfig,
 } from '../../shared/vtE1Shorts';
+import { expandCompoundClips } from '../../shared/vtE1CompoundClips.js';
 import {
   sourceTimeAtTimelineSec as sharedSourceTimeAtTimelineSec,
   transitionWindowFor as sharedTransitionWindowFor,
@@ -510,7 +511,7 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
     return new Set(activeTracks.filter((track) => track.visible !== false).map((track) => track.id));
   }, [tracks]);
   const layers = Array.isArray(project.layers) ? project.layers : [];
-  const clips = Array.isArray(project.clips) ? project.clips : [];
+  const clips = expandCompoundClips(Array.isArray(project.clips) ? project.clips : []);
   const currentSec = frame / Math.max(1, fps);
 
   return (
