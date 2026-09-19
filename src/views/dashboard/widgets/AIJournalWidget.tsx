@@ -85,6 +85,7 @@ export const AIJournalWidget: React.FC<any> = ({widget, instance, editMode, onTo
               <WidgetSizedButton
                 key={id}
                 height={24}
+                textFit="adaptive"
                 tone={category === id ? "primary" : "default"}
                 aria-pressed={category === id}
                 onClick={() => setCategory(id)}
