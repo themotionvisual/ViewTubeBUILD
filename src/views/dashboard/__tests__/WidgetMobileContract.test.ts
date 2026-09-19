@@ -42,23 +42,28 @@ describe("mobile widget geometry contract", () => {
     expect(variantCss).toContain("grid-template-columns: minmax(0, 1fr);")
   })
 
-  it("reflows Image Generator controls instead of shrinking primitive typography", () => {
+  it("keeps Image Generator button geometry stable while adaptive 24px type fits the row", () => {
     expect(widgetSystemCss).toContain("@container vt-widget (max-width: 900px)")
     expect(widgetSystemCss).toContain("@container vt-widget (max-width: 560px)")
     expect(widgetSystemCss).toContain(".image-generator-style-grid")
     expect(widgetSystemCss).toContain("grid-template-columns: repeat(4, minmax(0, 1fr));")
-    expect(widgetSystemCss).toContain("grid-template-columns: repeat(2, minmax(0, 1fr));")
+    expect(widgetSystemCss).not.toContain(".image-generator-style-grid,\n  :where(.dashboard-barrier) .image-generator-send-grid {\n    grid-template-columns: repeat(2")
     expect(widgetSystemCss).toContain("--image-generator-copy-height:")
     expect(widgetSystemCss).toContain("resize: vertical;")
     expect(widgetSystemCss).toContain("height: var(--image-generator-copy-height) !important;")
     expect(widgetSystemCss).toContain("height: var(--image-generator-copy-height);")
-    expect(widgetSystemCss).not.toContain("Image styles preserve the shared control typography while retaining one row")
   })
 
-  it("reflows AI Journal category controls to two columns on narrow widgets", () => {
-    expect(widgetSystemCss).toContain("AI Journal keeps canonical control type/height")
+  it("keeps AI Journal categories at four columns on narrow widgets", () => {
+    expect(widgetSystemCss).toContain("AI Journal keeps the four-column category matrix")
     expect(widgetSystemCss).toContain(".ai-journal-category-grid")
-    expect(widgetSystemCss).toContain("grid-template-columns: repeat(2, minmax(0, 1fr));")
+    expect(widgetSystemCss).toContain("grid-template-columns: repeat(4, minmax(0, 1fr));")
+  })
+
+  it("keeps header toggles visible in portrait widget headers", () => {
+    expect(widgetSystemCss).toContain(".header-extra:has(.widget-header-toggle)")
+    expect(widgetSystemCss).toContain("display: flex !important;")
+    expect(widgetSystemCss).toContain(".vt-widget-header:has(.header-extra .widget-header-toggle)")
   })
 
   it("forces every phone widget to one complete dashboard row without mutating persisted width state", () => {
