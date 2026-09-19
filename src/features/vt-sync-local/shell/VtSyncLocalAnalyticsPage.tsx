@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useNavigate } from "react-router-dom"
 import { useBrain } from "../../../context/useBrain"
 import { legacyAccountBridge } from "../../../services/account/legacyAccountBridge"
 import { isGoogleReconnectRequiredError } from "../../../services/youtube/googleProxyErrors"
@@ -101,7 +100,6 @@ const persistVtSyncQueue = (queue: VtSyncQueuedRequest[]) => {
 
 
 const VtSyncLocalAnalyticsPage: React.FC = () => {
- const navigate = useNavigate()
  const { emitSignal } = useBrain()
  const account = useUnifiedAccount()
  const [snapshot, setSnapshot] = useState<VtSyncSnapshot>(() => getVtSyncSnapshot())
@@ -549,7 +547,7 @@ const refreshManualImports = useCallback(async (payload?: {
     {/* Intelligence Hub moved ABOVE the data table so it is actually
       visible without scrolling past 5,000 lines of tabular rows. Users
       reported "I don't see the module on the Analytics page" — the
-      gate WAS mounted, just buried. Sync controller → Intelligence
+      gate WAS mounted, just buried. Unified sync control + progress → Intelligence
       Hub → data table → visuals is the natural reading order because
       the Hub answers "what does this data mean?" and the table +
       visuals are "here is the raw data." */}
