@@ -85,6 +85,7 @@ import {
   createVideoDirectorAutosaveController,
   createVideoDirectorCategoryRecipe,
   createVideoDirectorProjectRecipe,
+  compileSemanticDirectorPacket,
   deriveVideoDirectorCategoryStatus,
   evaluateVideoDirectorSuggestions,
   readVideoDirectorRecipeLibrary,
@@ -349,6 +350,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
   )
   const [notice, setNotice] = useState("")
   const [recipeName, setRecipeName] = useState("")
+  const [inspectorView, setInspectorView] = useState<"prompt" | "json">("prompt")
   const [recipes, setRecipes] = useState<VideoDirectorRecipe[]>(() => readVideoDirectorRecipeLibrary())
   const autosave = useMemo(() => createVideoDirectorAutosaveController(350), [])
 
@@ -392,6 +394,8 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
       draft.categories[categoryId].locked = !draft.categories[categoryId].locked
     })
   }, [mutateProject])
+
+  const compiledPacket = useMemo(() => compileSemanticDirectorPacket(project), [project])
 
   const activeCategoryId = project.activeCategoryId
   const activeDefinition = VIDEO_DIRECTOR_CATEGORY_BY_ID[activeCategoryId]
@@ -1039,6 +1043,63 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                   </div>
                 </SubToolboxSurface>
                 <MutedNote>Recipe application is inherited. Existing user, shot, and variant overrides remain authoritative unless a future explicit “force apply” action is used.</MutedNote>
+              </SubToolboxStack>
+            </SubToolbox>
+
+            <SubToolbox title="Prompt Inspector" icon={<Eye />} collapsible isOpenInitial={false}>
+              <SubToolboxStack>
+                <SubToolboxActions columns={2}>
+                  <StudioButton
+                    sizeVariant="standard"
+                    tone="neutral"
+                    selected={inspectorView === "prompt"}
+                    onClick={() => setInspectorView("prompt")}
+                  >
+                    Semantic Prompt
+                  </StudioButton>
+                  <StudioButton
+                    sizeVariant="standard"
+                    tone="neutral"
+                    selected={inspectorView === "json"}
+                    onClick={() => setInspectorView("json")}
+                  >
+                    Video DNA JSON
+                  </StudioButton>
+                </SubToolboxActions>
+                <StudioTextArea
+                  readOnly
+                  value={inspectorView === "prompt" ? compiledPacket.prompt : compiledPacket.json}
+                  aria-label={inspectorView === "prompt" ? "Compiled Director prompt" : "Compiled Director JSON"}
+                  style={{ minHeight: 260, textTransform: "none", fontWeight: 650, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 11 }}
+                />
+                <SubToolboxActions columns={2}>
+                  <StudioButton
+                    sizeVariant="standard"
+                    tone="neutral"
+                    onClick={async () => {
+                      const text = inspectorView === "prompt" ? compiledPacket.prompt : compiledPacket.json
+                      try {
+                        await navigator.clipboard.writeText(text)
+                        setNotice(`${inspectorView === "prompt" ? "Prompt" : "Video DNA JSON"} copied.`)
+                      } catch {
+                        setNotice("Copy failed in this browser.")
+                      }
+                    }}
+                  >
+                    Copy {inspectorView === "prompt" ? "Prompt" : "JSON"}
+                  </StudioButton>
+                  <StudioButton
+                    sizeVariant="standard"
+                    tone="neutral"
+                    onClick={() => {
+                      mutateProject((draft) => { draft.activeCategoryId = "generation-output" })
+                      setNotice("Generation & Output opened for final preflight settings.")
+                    }}
+                  >
+                    Review Output
+                  </StudioButton>
+                </SubToolboxActions>
+                <MutedNote>The semantic plan is deterministic and provider-agnostic. Provider adapters will translate this packet into model-specific fields without changing the underlying Video DNA.</MutedNote>
               </SubToolboxStack>
             </SubToolbox>
 
