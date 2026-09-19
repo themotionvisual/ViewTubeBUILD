@@ -130,4 +130,26 @@ describe("Video Director dual-surface architecture", () => {
     expect(handoff).toContain("scopeKey")
   })
 
+
+  it("keeps the Dashboard Video Director in its compact 24px execution profile", () => {
+    const widget = read("src/views/dashboard/widgets/video-director/VideoDirectorWidget.tsx")
+    const css = read("src/views/dashboard/widgets/video-director/videoDirectorWidget.css")
+    const primitiveCss = read("src/views/dashboard/widgetPrimitiveExactHeights.css")
+    const shell = read("src/views/dashboard/WidgetShell.tsx")
+
+    expect(widget).toContain('className="widget-header-toggle vtdw-header-studio"')
+    expect(widget).toContain("STUDIO ↗")
+    expect(widget).toContain('controlDensity="compact"')
+    expect(widget).not.toContain("height={38}")
+    expect(widget).not.toContain("height={32}")
+    expect(shell).toContain('controlDensity?: "default" | "compact"')
+    expect(shell).toContain("data-control-density={controlDensity}")
+    expect(primitiveCss).toContain('.vt-widget[data-control-density="compact"] .is-height-24')
+    expect(primitiveCss).toContain("--vt-primitive-font:10px")
+    expect(primitiveCss).toContain("--vt-primitive-font:12px")
+    expect(primitiveCss).toContain("--vt-primitive-font:16px")
+    expect(css).not.toContain("min-height:44px")
+    expect(css).toContain("grid-template-columns:repeat(4,minmax(0,1fr))")
+  })
+
 })
