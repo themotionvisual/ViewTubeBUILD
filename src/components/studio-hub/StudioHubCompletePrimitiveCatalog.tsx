@@ -10,7 +10,7 @@ import {
 import {
   SubToolboxSplitButton,
 } from "../subtoolbox/SubToolboxSplitPrimitives"
-import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
+import { getAlphabeticalSpectrumColor, VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import "./studio-hub-complete-primitive-catalog.css"
 
 export type StudioHubComponentLevel = "l0" | "l1" | "l2"
@@ -31,7 +31,7 @@ export const STUDIO_HUB_COMPONENT_FAMILIES = [
   "Vault Portrait Asset", "Vault Audio Asset", "Vault Document Asset", "Knob Dial",
   "Controller Switch", "LED Light", "Alphabetical Spectrum Tags", "Icon Rail Control",
   "Two Color Data Stats", "Monochrome Data Stats", "Tiny Data Stats", "Tooltip Dark",
-  "Tooltip Color", "Dashboard Pill Tags", "Two Color Upload Frame",
+  "Tooltip Color", "Dashboard Pill Tags",
 ] as const
 
 const pair = (index: number) => ({
@@ -65,6 +65,7 @@ export const HardcodedGenericControl: React.FC<{ name: string; level: Level; ind
   const [tagEditorOpen, setTagEditorOpen] = useState(false)
   const [tagDraft, setTagDraft] = useState("")
   const [editorTags, setEditorTags] = useState(["HISTORY"])
+  const [knobValue, setKnobValue] = useState(72)
   const style = { "--pair-a": colors.a, "--pair-b": colors.b } as React.CSSProperties
   const icon = <Settings2 aria-hidden="true" />
 
@@ -127,17 +128,22 @@ export const HardcodedGenericControl: React.FC<{ name: string; level: Level; ind
     const Icon = name.includes("Landscape") || name.includes("Portrait") ? Image : name.includes("Audio") ? Music : FileText
     return <div className={`vt-catalog-asset is-${level} ${name.includes("Portrait") ? "is-portrait" : ""}`} style={style}><header><Icon/><b>{name.replace("Vault ","")}</b></header><div className="preview"><Icon/></div><footer><span>ASSET</span><button><X/></button></footer></div>
   }
-  if (name === "Knob Dial") return <div className={`vt-catalog-knob is-${level}`} style={style}><span className="knob-face"><i/><em>72</em></span><b className="knob-value">72</b></div>
+  if (name === "Knob Dial") {
+    const knobAngle = -135 + (knobValue / 100) * 270
+    return <div className={`vt-catalog-knob is-${level}`} style={{...style,"--vt-knob-angle":`${knobAngle}deg`} as React.CSSProperties}>
+      <span className="knob-face"><i/><em>{knobValue}</em><input type="range" min="0" max="100" value={knobValue} aria-label="Knob value" onChange={e => setKnobValue(Number(e.target.value))}/></span>
+      <b className="knob-value">VALUE</b>
+    </div>
+  }
   if (name === "Controller Switch") return <button className={`vt-catalog-controller-switch is-${level}`} style={style}><span/><b>ON</b></button>
   if (name === "LED Light") return <div className={`vt-catalog-led is-${level} is-active`} style={style}><i/><b>ACTIVE</b></div>
-  if (name === "Alphabetical Spectrum Tags") return <div className="vt-catalog-spectrum-row">{Array.from({length:26},(_,i)=>String.fromCharCode(65+i)).map((letter, i) => <span key={letter} className={`vt-alpha-tag is-${level}`} style={{"--alpha-h":`${(i * 360) / 26}`} as React.CSSProperties}>{letter} · TAG</span>)}</div>
+  if (name === "Alphabetical Spectrum Tags") return <div className="vt-catalog-spectrum-row">{Array.from({length:26},(_,i)=>String.fromCharCode(65+i)).map((letter) => <span key={letter} className={`vt-alpha-tag is-${level}`} style={{"--alpha":getAlphabeticalSpectrumColor(letter)} as React.CSSProperties}>{letter} · TAG</span>)}</div>
   if (name === "Icon Rail Control") return <div className={`vt-catalog-icon-rail is-${level}`} style={style}><span><SlidersHorizontal/></span><b>Control</b></div>
   if (name === "Two Color Data Stats") return <div className={`vt-variant-stat vt-stat-two is-${level}`} style={style}><span>VIEWS</span><strong>128K</strong><small>+12.4%</small></div>
   if (name === "Monochrome Data Stats") return <div className={`vt-variant-stat vt-stat-mono is-${level}`} style={style}><span>WATCH TIME</span><strong>4.8K</strong><small>+8.2%</small></div>
   if (name === "Tiny Data Stats") return <div className={`vt-tiny-stats is-${level}`} style={style}><div><span>ROWS</span><strong>248</strong></div><div><span>SYNCED</span><strong>100%</strong></div></div>
   if (name === "Tooltip Dark" || name === "Tooltip Color") return <div className={`vt-catalog-tooltip-demo is-${level} ${name === "Tooltip Dark" ? "is-dark" : "is-v31"}`} style={style}><button type="button">?</button><div role="tooltip" className="vt-catalog-tooltip">{name === "Tooltip Dark" ? "HELP" : "TOOLTIP"}</div></div>
   if (name === "Dashboard Pill Tags") return <div className="vt-dashboard-pill-row" style={style}><span>ANALYTICS</span><span>HISTORY</span><span>READY</span></div>
-  if (name === "Two Color Upload Frame") return <div className={`vt-upload-two-color is-${level}`} style={style}><div className="upload-bands"><i/><i/><i/><i/><i/><i/></div><div className="upload-core"><Upload/><b>DROP OR CHOOSE</b></div></div>
   return <Circle />
 }
 
