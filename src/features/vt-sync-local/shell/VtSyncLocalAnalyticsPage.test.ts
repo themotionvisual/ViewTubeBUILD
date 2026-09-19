@@ -12,6 +12,8 @@ import {
 import {
  buildVtSyncUnifiedProgressRows,
  claimVtSyncSyncRequest,
+ getVtSyncActiveCategoryIds,
+ getVtSyncPendingCategoryIds,
  getVtSyncProgressQueueSummary,
 } from "./vtSyncProgressModel"
 
@@ -84,7 +86,67 @@ describe("VT-SYNC unified progress rows", () => {
   })
  })
 
- it("groups progress datasets into the same collapsible categories as the controller", () => {
+ it("lights only the exact query running inside a shared traffic phase", () => {
+  const progress: VtSyncLocalSyncProgress = {
+   runId: "traffic-run",
+   startedAt: "2026-09-19T12:00:00.000Z",
+   status: "running",
+   requestedCategoryIds: ["search_terms", "ext_websites", "suggested_videos"],
+   phases: [{
+    id: "traffic",
+    label: "Traffic Details",
+    status: "running",
+    rows: 12,
+    currentCategoryId: "search_terms",
+    nextCategoryId: "ext_websites",
+    currentQueryLabel: "Search Terms",
+    nextQueryLabel: "External Websites",
+   }],
+  }
+
+  expect(getVtSyncActiveCategoryIds(progress)).toEqual(["search_terms"])
+  expect(getVtSyncPendingCategoryIds(progress)).toEqual(expect.arrayContaining(["ext_websites", "suggested_videos"]))
+  expect(getVtSyncPendingCategoryIds(progress)).not.toContain("search_terms")
+
+  const rows = buildVtSyncUnifiedProgressRows(progress)
+  expect(rows.find((row) => row.category.id === "search_terms")?.displayStatus).toBe("running")
+  expect(rows.find((row) => row.category.id === "ext_websites")?.displayStatus).toBe("pending")
+  expect(rows.find((row) => row.category.id === "suggested_videos")?.displayStatus).toBe("pending")
+ })
+
+ it("does not relabel a completed sibling as queued while its shared phase keeps running", () => {
+  const progress: VtSyncLocalSyncProgress = {
+   runId: "traffic-run",
+   startedAt: "2026-09-19T12:00:00.000Z",
+   status: "running",
+   requestedCategoryIds: ["search_terms", "ext_websites"],
+   phases: [{
+    id: "traffic",
+    label: "Traffic Details",
+    status: "running",
+    rows: 20,
+    currentCategoryId: "ext_websites",
+    currentQueryLabel: "External Websites",
+   }],
+  }
+  const freshness: VtSyncDatasetFreshness = {
+   search_terms: {
+    runId: "traffic-run",
+    phase: "search_terms",
+    status: "synced",
+    source: "current_run",
+    rows: 12,
+    updatedAt: "2026-09-19T12:00:04.000Z",
+   },
+  }
+
+  expect(getVtSyncActiveCategoryIds(progress)).toEqual(["ext_websites"])
+  expect(getVtSyncPendingCategoryIds(progress, freshness)).not.toContain("search_terms")
+  expect(buildVtSyncUnifiedProgressRows(progress, freshness)
+   .find((row) => row.category.id === "search_terms")?.displayStatus).toBe("synced")
+ })
+
+  it("groups progress datasets into the same collapsible categories as the controller", () => {
   const markup = renderToStaticMarkup(React.createElement(ProgressRail, { progress: null }))
   VT_SYNC_GROUP_ORDER.forEach((group) => {
    expect(markup).toContain(`id="vt-sync-progress-group-${group}"`)
