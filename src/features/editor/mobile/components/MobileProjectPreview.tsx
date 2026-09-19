@@ -41,10 +41,24 @@ export const MobileProjectPreview:React.FC<{store:EditorStore}>=({store})=>{
       const geometry=resolveClipPreviewGeometry(store,clip);
       const {layer,payload,type,projectWidth,projectHeight,x,y,width,height,scaleX,scaleY,rotation,opacity}=geometry;
       if(layer?.visible===false)return null;
-      const blur=Math.max(0,Number(payload.blur??0));
-      const sat=Math.max(0,Number(payload.saturation??1));
-      const bright=Math.max(0,Number(payload.brightness??1));
-      const hue=Number(payload.hue??0);
+      const fxBypass=Boolean(payload.fxBypass);
+      const fxDisabled=payload.fxDisabled&&typeof payload.fxDisabled==='object'?payload.fxDisabled as Record<string,boolean>:{};
+      const blur=fxBypass||fxDisabled.blur?0:Math.max(0,Number(payload.blur??0));
+      const sat=fxBypass||fxDisabled.saturation?1:Math.max(0,Number(payload.saturation??1));
+      const bright=fxBypass||fxDisabled.brightness?1:Math.max(0,Number(payload.brightness??1));
+      const hue=fxBypass||fxDisabled.hue?0:Number(payload.hue??0);
+      const fxOrder=Array.isArray(payload.fxOrder)?payload.fxOrder.map(String):['blur','saturation','brightness','hue'];
+      const filterByKey:Record<string,string>={
+        blur:blur?`blur(${blur}px)`:'',
+        saturation:`saturate(${sat})`,
+        brightness:`brightness(${bright})`,
+        hue:hue?`hue-rotate(${hue}deg)`:'',
+      };
+      const filter=[...fxOrder.filter(key=>filterByKey[key]!=null),...['blur','saturation','brightness','hue'].filter(key=>!fxOrder.includes(key))]
+        .filter(key=>!fxDisabled[key])
+        .map(key=>filterByKey[key])
+        .filter(Boolean)
+        .join(' ');
       const style:React.CSSProperties={
         position:'absolute',
         left:`${50+(x/projectWidth)*100}%`,
@@ -53,10 +67,10 @@ export const MobileProjectPreview:React.FC<{store:EditorStore}>=({store})=>{
         height:`${(height/projectHeight)*100}%`,
         transform:`translate(-50%,-50%) scale(${scaleX},${scaleY}) rotate(${rotation}deg)`,
         transformOrigin:'center',
-        opacity,
+        opacity:fxBypass||fxDisabled.opacity?1:opacity,
         zIndex:index+1,
         overflow:'hidden',
-        filter:`${blur?`blur(${blur}px) `:''}saturate(${sat}) brightness(${bright}) ${hue?`hue-rotate(${hue}deg)`:''}`,
+        filter,
         display:'grid',
         placeItems:'center',
       };
