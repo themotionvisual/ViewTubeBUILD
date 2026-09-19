@@ -914,7 +914,6 @@ const refreshManualImports = useCallback(async (payload?: {
       <VtSyncControllerPanel
        isAuthenticated={authReady}
        isSyncing={busy}
-       activeRunId={syncProgress?.runId}
        activeCategoryIds={controllerActiveCategoryIds}
        queuedCategoryIds={controllerQueuedCategoryIds}
        categoryExecutionStates={syncProgress?.categoryStates}
