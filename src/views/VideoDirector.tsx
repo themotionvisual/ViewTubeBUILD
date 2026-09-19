@@ -104,6 +104,7 @@ import {
   resolveVideoDirectorScopedCategoryState,
   saveVideoDirectorDraft,
   saveVideoDirectorRecipe,
+  subscribeVideoDirectorState,
   setVideoDirectorScopedCategoryField,
   setVideoDirectorVariantAllowedCategories,
   setVideoDirectorVariantCategoryAllowed,
@@ -384,6 +385,11 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
   }, [autosave, project])
 
   useEffect(() => () => autosave.flush(), [autosave])
+
+  useEffect(() => subscribeVideoDirectorState((external) => {
+    if (!external) return
+    setProject((current) => external.updatedAt === current.updatedAt ? current : external)
+  }), [])
 
   const refreshJobs = useCallback(async () => {
     setJobsLoading(true)
