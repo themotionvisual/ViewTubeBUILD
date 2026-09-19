@@ -333,9 +333,14 @@ const TrackRow:React.FC<{
   pxPerSec:number;
   totalPx:number;
   y:number;
+  snap:{strength:SnapStrength;kinds:SnapKinds};
+  fps:number;
+  readOnly?:boolean;
+  focusParentId?:string;
+  onOpenCompound?:(id:string)=>void;
   onClipContextMenu?:TimelineStripProps['onClipContextMenu'];
   onEmptyContextMenu?:TimelineStripProps['onEmptyContextMenu'];
-}>=({track,clips,pxPerSec,totalPx,y,store,onClipContextMenu,onEmptyContextMenu})=>{
+}>=({track,clips,pxPerSec,totalPx,y,store,snap,fps,readOnly=false,focusParentId,onOpenCompound,onClipContextMenu,onEmptyContextMenu})=>{
   const{state,dispatch}=store;
   const rowColor=track.kind==='audio'?'#4EE4BE':track.kind==='overlay'?'#528FFA':track.kind==='caption'?'#FFDA47':'#FA618A';
   const selected=state.selection.trackId===track.id;
@@ -343,11 +348,11 @@ const TrackRow:React.FC<{
     onLongPress:({x,y:localY})=>onEmptyContextMenu?.({x,y:localY}),
     ms:450,
   });
-  const removable=clips.length===0&&state.project.tracks.length>1;
+  const removable=!readOnly&&clips.length===0&&state.project.tracks.length>1;
 
   return <div style={{position:'absolute',top:y,left:0,right:0,height:TIMELINE_TRACK_HEIGHT,display:'flex'}}>
     <div
-      onClick={()=>dispatch({type:'selectTrack',id:track.id})}
+      onClick={()=>!readOnly&&dispatch({type:'selectTrack',id:track.id})}
       style={{
         position:'sticky',left:0,width:LABEL_WIDTH,background:selected?CYAN:'#fff',
         zIndex:2,borderRight:`2px solid ${INK}`,borderBottom:`1px solid ${INK}`,
@@ -355,8 +360,8 @@ const TrackRow:React.FC<{
         padding:'0 4px',fontSize:8,fontWeight:900,textTransform:'uppercase',
       }}
     >
-      <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{track.name}</span>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,17px)',gap:2}}>
+      <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{readOnly?'Compound':track.name}</span>
+      {!readOnly?<div style={{display:'grid',gridTemplateColumns:'repeat(4,17px)',gap:2}}>
         <button title={track.muted?'Unmute track':'Mute track'} aria-label={track.muted?'Unmute track':'Mute track'}
           onClick={event=>{event.stopPropagation();dispatch({type:'muteTrack',id:track.id})}} style={miniBtn(track.muted?PINK:'#fff')}><VolumeX size={10}/></button>
         <button title={track.locked?'Unlock track':'Lock track'} aria-label={track.locked?'Unlock track':'Lock track'}
@@ -367,12 +372,12 @@ const TrackRow:React.FC<{
           disabled={!removable}
           onClick={event=>{event.stopPropagation();if(removable)dispatch({type:'removeTrack',id:track.id})}}
           style={{...miniBtn(removable?'#fff':'#f2f2f2'),opacity:removable?1:.35}}><Trash2 size={10}/></button>
-      </div>
+      </div>:<Layers3 size={14}/>}
     </div>
 
     <div
-      {...rowLongPress}
-      onClick={()=>dispatch({type:'clearSelection'})}
+      {...(!readOnly?rowLongPress:{})}
+      onClick={()=>!readOnly&&dispatch({type:'clearSelection'})}
       style={{
         position:'relative',width:totalPx,background:'#f7f7f7',
         borderBottom:`1px solid ${INK}`,touchAction:'pan-x pan-y',
@@ -386,6 +391,11 @@ const TrackRow:React.FC<{
         pxPerSec={pxPerSec}
         store={store}
         siblings={clips}
+        snap={snap}
+        fps={fps}
+        readOnly={readOnly}
+        focusParentId={focusParentId}
+        onOpenCompound={onOpenCompound}
         onContextMenu={onClipContextMenu}
       />)}
     </div>
@@ -400,19 +410,29 @@ const miniBtn=(background:string):React.CSSProperties=>({
 const ClipBlock:React.FC<{
   clip:VtE1Clip;selected:boolean;color:string;pxPerSec:number;store:EditorStore;
   siblings:VtE1Clip[];
+  snap:{strength:SnapStrength;kinds:SnapKinds};
+  fps:number;
+  readOnly?:boolean;
+  focusParentId?:string;
+  onOpenCompound?:(id:string)=>void;
   onContextMenu?:TimelineStripProps['onClipContextMenu'];
-}>=({clip,selected,color,pxPerSec,store,siblings,onContextMenu})=>{
+}>=({clip,selected,color,pxPerSec,store,siblings,snap,fps,readOnly=false,focusParentId,onOpenCompound,onContextMenu})=>{
   const{dispatch}=store;
   const left=clip.start*pxPerSec;
   const width=Math.max(20,(clip.end-clip.start)*pxPerSec);
   const clipColor=String((clip as VtE1Clip&{uiColor?:string}).uiColor??color);
   const keyframes=((clip.keyframes??[]) as TimelineKeyframe[]).filter(keyframe=>Number.isFinite(Number(keyframe.offsetSec??0)));
   const duration=Math.max(.001,clip.end-clip.start);
-  const hasOverlap=siblings.some(other=>other.id!==clip.id&&overlaps(clip,other));
+  const hasOverlap=!readOnly&&siblings.some(other=>other.id!==clip.id&&overlaps(clip,other));
+  const groupId=String((clip as VtE1Clip&{groupId?:unknown}).groupId??'');
+  const isCompound=String((clip as VtE1Clip&{clipType?:unknown}).clipType??'')==='compound';
+  const compoundCount=isCompound?compoundChildren(clip).length:0;
+  const lastTap=useRef(0);
   const[gestureMode,setGestureMode]=useState<ClipGestureMode|null>(null);
   const gesture=useRef<{
     pointerId:number;mode:ClipGestureMode;startX:number;startY:number;
     startSec:number;endSec:number;timer:number|null;longPressFired:boolean;
+    multiChanged:boolean;lastSelectedId?:string;
   }|null>(null);
 
   const clearGesture=()=>{
@@ -427,9 +447,20 @@ const ClipBlock:React.FC<{
   const begin=(event:React.PointerEvent<HTMLDivElement>)=>{
     if(event.pointerType==='mouse'&&event.button!==0)return;
     event.stopPropagation();
+    if(readOnly){
+      if(focusParentId)dispatch({type:'selectClip',id:focusParentId});
+      return;
+    }
+    const now=event.timeStamp;
+    if(isCompound&&now-lastTap.current<330){
+      onOpenCompound?.(clip.id);
+      lastTap.current=0;
+      return;
+    }
+    lastTap.current=now;
     const rect=event.currentTarget.getBoundingClientRect();
     const localX=event.clientX-rect.left;
-    const edge=Math.min(EDGE_TOUCH_PX,Math.max(12,rect.width*.3));
+    const edge=Math.min(EDGE_TOUCH_PX,Math.max(13,rect.width*.3));
     const mode:ClipGestureMode=localX<=edge?'trim-left':localX>=rect.width-edge?'trim-right':'pending';
     const hadSelection=store.state.selection.clipIds.length>0;
     const alreadySelected=store.state.selection.clipIds.includes(clip.id);
@@ -438,20 +469,21 @@ const ClipBlock:React.FC<{
     const next={
       pointerId:event.pointerId,mode,startX:event.clientX,startY:event.clientY,
       startSec:clip.start,endSec:clip.end,timer:null as number|null,longPressFired:false,
+      multiChanged:false,lastSelectedId:undefined as string|undefined,
     };
     if(mode==='pending'){
       next.timer=window.setTimeout(()=>{
         const active=gesture.current;
         if(!active||active.pointerId!==event.pointerId||active.mode!=='pending')return;
-        active.mode='longpress';
+        active.mode='multi';
         active.longPressFired=true;
-        setGestureMode('longpress');
+        setGestureMode('multi');
         const currentSelection=store.state.selection.clipIds;
         dispatch({type:'selectClip',id:clip.id,additive:currentSelection.length>0&&!currentSelection.includes(clip.id)});
+        active.lastSelectedId=clip.id;
         if(typeof navigator!=='undefined'&&'vibrate' in navigator){
           (navigator as Navigator&{vibrate:(pattern:number|number[])=>boolean}).vibrate(15);
         }
-        onContextMenu?.(clip,{x:event.clientX,y:event.clientY});
       },LONG_PRESS_MS);
     }
     gesture.current=next;
@@ -477,16 +509,41 @@ const ClipBlock:React.FC<{
       setGestureMode('move');
     }
 
+    if(active.mode==='multi'){
+      const element=document.elementFromPoint(event.clientX,event.clientY) as HTMLElement|null;
+      const node=element?.closest?.('[data-vt-clip-id]') as HTMLElement|null;
+      const id=node?.dataset.vtClipId;
+      if(id&&id!==active.lastSelectedId&&store.state.project.clips.some(item=>item.id===id)){
+        dispatch({type:'selectClip',id,additive:true});
+        active.lastSelectedId=id;
+        active.multiChanged=true;
+      }
+      return;
+    }
+    const targets:number[]=[];
+    if(snap.kinds.edges)store.state.project.clips.forEach(item=>{if(item.id!==clip.id)targets.push(item.start,item.end)});
+    if(snap.kinds.keyframes)store.state.project.clips.forEach(item=>(item.keyframes as TimelineKeyframe[]|undefined)?.forEach(k=>targets.push(item.start+Number(k.offsetSec??0))));
+    if(snap.kinds.playhead)targets.push(store.state.playheadSec);
+    if(snap.kinds.seconds)for(let sec=0;sec<=Math.ceil(store.state.project.durationSec);sec++)targets.push(sec);
+    if(snap.kinds.transitions)(store.state.project.transitions??[]).forEach(transition=>{
+      const left=store.state.project.clips.find(item=>item.id===transition.leftClipId);
+      const right=store.state.project.clips.find(item=>item.id===transition.rightClipId);
+      if(left)targets.push(left.end);
+      if(right)targets.push(right.start);
+    });
     if(active.mode==='move'){
-      dispatch({type:'moveClipTo',id:clip.id,startSec:active.startSec+(dx/Math.max(4,pxPerSec))});
+      const desired=active.startSec+(dx/Math.max(4,pxPerSec));
+      dispatch({type:'moveClipTo',id:clip.id,startSec:snapMoveStart(desired,duration,targets,snap.strength,pxPerSec)});
       return;
     }
     if(active.mode==='trim-left'){
-      dispatch({type:'trimClip',id:clip.id,side:'left',sec:active.startSec+(dx/Math.max(4,pxPerSec))});
+      const desired=active.startSec+(dx/Math.max(4,pxPerSec));
+      dispatch({type:'trimClip',id:clip.id,side:'left',sec:snapTime(desired,targets,snap.strength,pxPerSec)});
       return;
     }
     if(active.mode==='trim-right'){
-      dispatch({type:'trimClip',id:clip.id,side:'right',sec:active.endSec+(dx/Math.max(4,pxPerSec))});
+      const desired=active.endSec+(dx/Math.max(4,pxPerSec));
+      dispatch({type:'trimClip',id:clip.id,side:'right',sec:snapTime(desired,targets,snap.strength,pxPerSec)});
     }
   };
 
@@ -495,23 +552,29 @@ const ClipBlock:React.FC<{
     if(!active||active.pointerId!==event.pointerId)return;
     event.stopPropagation();
     if(active.mode==='pending'&&!active.longPressFired)dispatch({type:'selectClip',id:clip.id});
+    if(active.mode==='multi'&&!active.multiChanged)onContextMenu?.(clip,{x:event.clientX,y:event.clientY});
     clearGesture();
   };
 
+  const selectionShadow=selected?(store.state.selection.clipIds.length>1?`0 0 0 3px ${CYAN},0 0 0 5px #fff,3px 3px 0 rgba(36,139,153,.35)`:`0 0 0 2px #fff,3px 3px 0 ${CYAN}`):'2px 2px 0 rgba(0,0,0,.12)';
+
   return <div
+    data-vt-clip-id={readOnly?undefined:clip.id}
     onPointerDown={begin}
     onPointerMove={move}
     onPointerUp={end}
     onPointerCancel={end}
     style={{
-      position:'absolute',top:4,bottom:4,left,width,borderRadius:5,background:clipColor,
-      border:hasOverlap?`3px solid ${PINK}`:selected?'3px solid #000':`2px solid ${INK}`,
-      boxShadow:selected?`0 0 0 2px #fff,3px 3px 0 ${CYAN}`:'2px 2px 0 rgba(0,0,0,.12)',
+      position:'absolute',top:4,bottom:4,left,width,borderRadius:5,
+      background:isCompound?`repeating-linear-gradient(135deg,${clipColor},${clipColor} 7px,#ffffff55 7px,#ffffff55 10px)`:clipColor,
+      border:hasOverlap?`3px solid ${PINK}`:selected?'3px solid #111':`2px solid ${INK}`,
+      boxShadow:selectionShadow,
       padding:'4px 8px',fontSize:9,fontWeight:900,overflow:'hidden',
       whiteSpace:'nowrap',touchAction:'none',userSelect:'none',
     }}
   >
-    <span style={{position:'relative',zIndex:1,pointerEvents:'none'}}>{String(clip.id).slice(0,18)}</span>
+    {groupId?<div style={{position:'absolute',left:0,right:0,top:0,height:4,background:groupColor(groupId),borderBottom:'1px solid #fff',zIndex:3}}/>:null}
+    <span style={{position:'relative',zIndex:1,pointerEvents:'none',display:'inline-flex',alignItems:'center',gap:3}}>{isCompound?<Layers3 size={10}/>:null}{String(clip.id).split('::').at(-1)?.slice(0,14)}{isCompound?<span style={{fontSize:7}}>×{compoundCount}</span>:null}</span>
     {gestureMode==='trim-left'||gestureMode==='trim-right'?<div style={{
       position:'absolute',top:2,right:3,zIndex:4,padding:'1px 4px',
       background:'#fff',border:`1.5px solid ${INK}`,borderRadius:3,
@@ -528,8 +591,7 @@ const ClipBlock:React.FC<{
       })}
     </div>
 
-    <TouchEdge side="left" active={gestureMode==='trim-left'}/>
-    <TouchEdge side="right" active={gestureMode==='trim-right'}/>
+    {!readOnly?<><TouchEdge side="left" active={gestureMode==='trim-left'}/><TouchEdge side="right" active={gestureMode==='trim-right'}/></>:null}
   </div>;
 };
 
