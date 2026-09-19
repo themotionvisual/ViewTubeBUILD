@@ -33,7 +33,15 @@ const candidate = ({
   latency = 1000,
   credits = 10,
   nativeAudio = false,
-  availability = "healthy" as const,
+  availability = "healthy",
+}: {
+  providerId: string
+  modelId: string
+  success?: number
+  latency?: number
+  credits?: number
+  nativeAudio?: boolean
+  availability?: "healthy" | "degraded" | "unavailable"
 }) => ({
   capabilities: VideoProviderCapabilitiesSchema.parse({
     providerId,
