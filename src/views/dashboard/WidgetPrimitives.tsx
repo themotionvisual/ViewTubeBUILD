@@ -271,13 +271,14 @@ export const WidgetActionButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonE
   tone?: "primary" | "neutral" | "danger"
   height?: WidgetPrimitiveSize
   primitiveTone?: WidgetPrimitiveTone
-}> = ({ className = "", tone = "neutral", height = 32, primitiveTone, type = "button", ...props }) => {
+  textFit?: WidgetPrimitiveTextFit
+}> = ({ className = "", tone = "neutral", height = 32, primitiveTone, textFit = "fixed", type = "button", ...props }) => {
   const resolvedTone: WidgetPrimitiveTone = primitiveTone ?? (tone === "primary" ? "primary" : tone === "danger" ? "secondary" : "default")
   return (
     <button
       type={type}
       data-action-tone={tone}
-      className={`widget-action is-${tone} ${widgetSizedControlClasses(height, resolvedTone)} vt-interactive ${className}`.trim()}
+      className={`widget-action is-${tone} ${widgetSizedControlClasses(height, resolvedTone, textFit)} vt-interactive ${className}`.trim()}
       {...props}
     />
   )
