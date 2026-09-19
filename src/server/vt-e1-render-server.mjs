@@ -398,7 +398,8 @@ const validateRenderPayload = (payload) => {
   clips.forEach((clip) => {
     const start = Number(clip?.start);
     const end = Number(clip?.end);
-    if (!layerIds.has(clip?.layerId)) errors.push(`Clip ${clip?.id || 'unknown'} references missing layer '${clip?.layerId || 'unknown'}'.`);
+    const designTemplateClip = clip?.clipType === 'design-template' && clip?.templateDefinition;
+    if (!designTemplateClip && !layerIds.has(clip?.layerId)) errors.push(`Clip ${clip?.id || 'unknown'} references missing layer '${clip?.layerId || 'unknown'}'.`);
     if (!trackIds.has(clip?.trackId)) errors.push(`Clip ${clip?.id || 'unknown'} references missing track '${clip?.trackId || 'unknown'}'.`);
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
       errors.push(`Clip ${clip?.id || 'unknown'} has invalid timing.`);
