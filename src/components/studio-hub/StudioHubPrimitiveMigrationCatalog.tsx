@@ -4,6 +4,10 @@ import { type StudioHubComponentLevel } from "./StudioHubCompletePrimitiveCatalo
 import {
   SubToolboxAlert,
   SubToolboxAlphabeticalSpectrumTags,
+  SubToolboxAvatar,
+  SubToolboxBreadcrumb,
+  SubToolboxCarousel,
+  SubToolboxCommandPalette,
   SubToolboxBadge,
   SubToolboxButton,
   SubToolboxButtonGroup,
@@ -11,6 +15,8 @@ import {
   SubToolboxColorPicker,
   SubToolboxDataTable,
   SubToolboxDialog,
+  SubToolboxDisclosure,
+  SubToolboxDivider,
   SubToolboxDrawer,
   SubToolboxFieldLabel,
   SubToolboxIconButton,
@@ -20,9 +26,13 @@ import {
   SubToolboxLoader,
   SubToolboxMediaCard,
   SubToolboxMenu,
+  SubToolboxMeter,
   SubToolboxMetric,
   SubToolboxCalendar,
+  SubToolboxHoverCard,
   SubToolboxOutputCard,
+  SubToolboxPagination,
+  SubToolboxPopover,
   SubToolboxProgressBar,
   SubToolboxProgressValue,
   SubToolboxRadioControl,
@@ -35,11 +45,15 @@ import {
   SubToolboxSkeleton,
   SubToolboxSettingsSwitch,
   SubToolboxSlider,
+  SubToolboxControllerSwitch,
   SubToolboxSplitField,
   SubToolboxStatePanel,
   SubToolboxStatCard,
   SubToolboxStatusBadge,
   SubToolboxStepIndicator,
+  SubToolboxIconRailControl,
+  SubToolboxLed,
+  SubToolboxNameValueList,
   SubToolboxStepper,
   SubToolboxSurface,
   SubToolboxTabs,
@@ -115,6 +129,20 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Loader",
   "Skeleton",
   "Toast",
+  "Popover",
+  "Disclosure",
+  "Divider",
+  "Pagination",
+  "Controller Switch",
+  "LED Light",
+  "Icon Rail Control",
+  "Hover Card",
+  "Meter",
+  "Avatar",
+  "Name Value List",
+  "Breadcrumb",
+  "Carousel",
+  "Command Palette",
 ] as const
 
 const pair = (index: number) => ({
@@ -157,6 +185,9 @@ const PrimitiveMigrationControl: React.FC<{
   const [drawerOpen, setDrawerOpen] = React.useState(false)
   const [selectedDay, setSelectedDay] = React.useState(19)
   const [toastVisible, setToastVisible] = React.useState(true)
+  const [page, setPage] = React.useState(2)
+  const [controllerOn, setControllerOn] = React.useState(true)
+  const [carouselIndex, setCarouselIndex] = React.useState(0)
 
   // Primitive track rule: only production primitives + shared CSS render here.
   // Unmigrated hardcoded families remain exclusively in the frozen baseline.
@@ -319,6 +350,48 @@ const PrimitiveMigrationControl: React.FC<{
     return toastVisible
       ? <SubToolboxToast level={level} style={style} tone="success" title="SAVED" detail="Changes are ready." onDismiss={() => setToastVisible(false)} />
       : <SubToolboxButton level={level} style={style} onClick={() => setToastVisible(true)}>SHOW TOAST</SubToolboxButton>
+  }
+  if (name === "Popover") {
+    return <SubToolboxPopover level={level} style={style} trigger="OPTIONS" title="OPTIONS"><strong>Popover content</strong></SubToolboxPopover>
+  }
+  if (name === "Disclosure") {
+    return <SubToolboxDisclosure level={level} style={style} title="ADVANCED" icon={<Plus />}>Disclosure content.</SubToolboxDisclosure>
+  }
+  if (name === "Divider") {
+    return <SubToolboxDivider level={level} style={style} />
+  }
+  if (name === "Pagination") {
+    return <SubToolboxPagination level={level} style={style} page={page} pages={3} onPageChange={setPage} />
+  }
+  if (name === "Controller Switch") {
+    return <SubToolboxControllerSwitch level={level} style={style} pressed={controllerOn} onClick={() => setControllerOn((value) => !value)} />
+  }
+  if (name === "LED Light") {
+    return <SubToolboxLed level={level} style={style} active label="ACTIVE" />
+  }
+  if (name === "Icon Rail Control") {
+    return <SubToolboxIconRailControl level={level} style={style} icon={<SlidersHorizontal />} label="CONTROL" />
+  }
+  if (name === "Hover Card") {
+    return <SubToolboxHoverCard level={level} style={style} trigger="HOVER" content={<><strong>DETAILS</strong><div>Reusable hover information.</div></>} />
+  }
+  if (name === "Meter") {
+    return <SubToolboxMeter level={level} style={style} value={73} label="QUALITY" />
+  }
+  if (name === "Avatar") {
+    return <SubToolboxAvatar level={level} style={style} name="VIEW TUBE" meta="CREATOR" />
+  }
+  if (name === "Name Value List") {
+    return <SubToolboxNameValueList level={level} style={style} items={[{ name: "Views", value: "12.4K" }, { name: "CTR", value: "5.8%" }]} />
+  }
+  if (name === "Breadcrumb") {
+    return <SubToolboxBreadcrumb level={level} style={style} items={[{ label: "Studio" }, { label: "Video" }, { label: "Package" }]} />
+  }
+  if (name === "Carousel") {
+    return <SubToolboxCarousel level={level} style={style} index={carouselIndex} onIndexChange={setCarouselIndex} items={["FRAME 01","FRAME 02","FRAME 03"].map((item) => <span key={item}>{item}</span>)} />
+  }
+  if (name === "Command Palette") {
+    return <SubToolboxCommandPalette level={level} style={style} items={[{ id: "script", label: "SCRIPT ARCHITECT", keywords: "write outline" }, { id: "thumb", label: "THUMBNAIL STUDIO", keywords: "image packaging" }, { id: "publish", label: "VIDEO PUBLISHER", keywords: "upload metadata" }]} />
   }
 
   return null
