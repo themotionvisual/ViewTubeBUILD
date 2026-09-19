@@ -404,59 +404,6 @@
  .vt-retro-pcb-group.is-syncing .led-bulb { animation: none; background: #4FFF5B; }
 }
 
-/* Compact layout for row action slide switches */
-.vt-retro-pcb-group.is-category-action {
-    align-self: stretch;
-    background: #d7d9da !important;
-    border: 3px solid #000 !important;
-    box-shadow: inset 0 1px 0 #fff, 3px 3px 0 #000 !important;
-    padding: 9px 8px 10px !important;
-    min-width: 128px !important;
-    gap: 8px !important;
-    display: inline-flex !important;
-}
-.vt-retro-pcb-group.is-category-action .vt-retro-pcb-controls {
-    width: 100%;
-    justify-content: center;
-    gap: 12px !important;
-}
-.vt-retro-pcb-group.is-category-action .sw-slide-housing {
-    width: 88px !important;
-    height: 44px !important;
-    padding: 0 6px !important;
-}
-.vt-retro-pcb-group.is-category-action .sw-slide-track {
-    height: 20px !important;
-}
-.vt-retro-pcb-group.is-category-action .sw-slide-nub {
-    width: 24px !important;
-    height: 28px !important;
-    top: -4px !important;
-}
-.vt-retro-pcb-group.is-category-action.is-active .sw-slide-nub {
-    left: calc(100% - 28px) !important;
-}
-.vt-retro-pcb-group.is-category-action .led-rim {
-    width: 36px !important;
-    height: 36px !important;
-}
-.vt-retro-pcb-group.is-category-action .led-bulb {
-    width: 20px !important;
-    height: 20px !important;
-}
-.vt-retro-pcb-group.is-category-action .comp-label {
-    width: calc(100% + 16px);
-    margin-bottom: -10px;
-    padding: 6px 4px;
-    background: #090909;
-    border-top: 2px solid #000;
-    color: #fff !important;
-    font-size: 12px !important;
-    letter-spacing: 0.1em !important;
-    line-height: 1;
-    text-shadow: 1px 1px 0 #4a4a4a;
-}
-
 /* Controller action switch: the silver housing is the control itself. The
    status strip is deliberately separate rather than a second silver module. */
 .vt-retro-pcb-group.is-category-action {
