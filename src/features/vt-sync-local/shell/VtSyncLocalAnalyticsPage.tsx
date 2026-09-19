@@ -179,11 +179,12 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
    return category?.runtimePhaseId === phase.id
   }))
   const statuses = rows.map((row) => row.displayStatus)
-  const status = statuses.includes("failed") ? "failed"
-   : statuses.includes("partial") ? "partial"
-   : statuses.includes("running") ? "running"
+  const status = statuses.includes("running") ? "running"
    : statuses.includes("pending") ? "pending"
+   : statuses.includes("failed") ? "failed"
+   : statuses.includes("partial") ? "partial"
    : statuses.includes("synced") || statuses.includes("complete") ? "synced"
+   : statuses.includes("skipped") ? "skipped"
    : statuses.includes("stale") ? "stale"
    : "never"
   const issues = rows.filter((row) => row.displayStatus === "failed" || row.displayStatus === "partial" || /reconnect|required|missing/i.test(row.message))
@@ -224,11 +225,12 @@ export const ProgressRail: React.FC<{ progress: VtSyncLocalSyncProgress | null; 
  const progressGroups = useMemo(() => VT_SYNC_GROUP_ORDER.map((group, index) => {
   const units = progressUnits.filter((unit) => unit.group === group)
   const statuses = units.map((unit) => unit.status)
-  const status = statuses.includes("failed") ? "failed"
-   : statuses.includes("partial") ? "partial"
-   : statuses.includes("running") ? "running"
+  const status = statuses.includes("running") ? "running"
    : statuses.includes("pending") ? "pending"
+   : statuses.includes("failed") ? "failed"
+   : statuses.includes("partial") ? "partial"
    : statuses.includes("synced") ? "synced"
+   : statuses.includes("skipped") ? "skipped"
    : statuses.includes("stale") ? "stale"
    : "never"
   return {
