@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import { AssetRenderer } from './assets';
+import type { AssetDefinition, AssetVisualProps } from './assets/types';
 import { AbsoluteFill, Audio, Img, OffthreadVideo, Sequence, interpolate, spring, useCurrentFrame } from 'remotion';
 import {
   getShortsCropStyle as getSharedShortsCropStyle,
@@ -10,7 +12,7 @@ import {
   validateTransitionSeam as sharedValidateTransitionSeam,
 } from '../../shared/vtE1TimelineContract.js';
 
-type LayerType = 'text' | 'shape' | 'media' | 'audio' | 'svg-overlay' | 'generative-shape';
+type LayerType = 'text' | 'shape' | 'media' | 'audio' | 'svg-overlay' | 'generative-shape' | 'remotion-asset';
 
 type VTLayer = {
   id: string;
@@ -611,6 +613,23 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
           return (
             <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
               {renderGenerativeShape(payload, commonStyle, localFrame, fps)}
+            </Sequence>
+          );
+        }
+
+        if (layer.type === 'remotion-asset') {
+          const assetId = String(payload.assetId || 'static-001') as AssetDefinition['id'];
+          const assetProps = payload as Partial<AssetVisualProps>;
+          return (
+            <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
+              <div style={commonStyle}>
+                <AssetRenderer
+                  {...assetProps}
+                  assetId={assetId}
+                  layoutWidth={layerWidth}
+                  layoutHeight={layerHeight}
+                />
+              </div>
             </Sequence>
           );
         }
