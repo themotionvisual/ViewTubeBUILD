@@ -1,8 +1,9 @@
-import React,{useEffect,useRef} from 'react';
-import {AudioLines,Circle,ImageIcon,LayoutTemplate,Minus,Plus,RectangleHorizontal,Type,Video} from 'lucide-react';
+import React,{useMemo,useRef,useState} from 'react';
+import {AudioLines,Circle,ImageIcon,LayoutTemplate,RectangleHorizontal,Save,Type,Video} from 'lucide-react';
 import type {EditorLayer,EditorStore} from '../state/editorState';
 import type {EditorNavPage} from './EditorNavigationPages';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
+import {AcceleratingStepper as HoldStepper,LinkToggle,RotationDial,XYJoystick} from './MobileEditorPrimitives';
 
 const BLACK='#111111';
 const MAGENTA='#ff00ff';
@@ -193,100 +194,6 @@ function keyframeState(clip:VtE1Clip,prop:string,playheadSec:number){
   const active=keyframes.some(k=>Math.abs(Number(k.offsetSec??0)-local)<=.03&&Object.prototype.hasOwnProperty.call((k.values??{}) as object,prop));
   return active?'active' as const:'attached' as const;
 }
-
-interface HoldStepperProps{
-  label:string;
-  value:number;
-  min:number;
-  max:number;
-  step:number;
-  onChange:(value:number)=>void;
-  keyframeState?:'none'|'attached'|'active';
-  onKeyframe?:()=>void;
-  suffix?:string;
-  precision?:number;
-}
-
-const HoldStepper:React.FC<HoldStepperProps>=({
-  label,value,min,max,step,onChange,keyframeState='none',onKeyframe,suffix='',precision,
-})=>{
-  const valueRef=useRef(value);
-  const timerRef=useRef<number|null>(null);
-  const holdStartRef=useRef(0);
-  valueRef.current=value;
-
-  const stop=()=>{
-    if(timerRef.current!=null){
-      window.clearTimeout(timerRef.current);
-      timerRef.current=null;
-    }
-  };
-
-  useEffect(()=>stop,[]);
-
-  const nudge=(direction:-1|1,elapsed=0)=>{
-    const multiplier=elapsed>=2800?10:elapsed>=1700?5:elapsed>=900?2:1;
-    const next=clamp(valueRef.current+(direction*step*multiplier),min,max);
-    const decimals=precision??(step<.01?3:step<1?2:0);
-    const snapped=Number(next.toFixed(decimals));
-    valueRef.current=snapped;
-    onChange(snapped);
-  };
-
-  const schedule=(direction:-1|1)=>{
-    const elapsed=performance.now()-holdStartRef.current;
-    nudge(direction,elapsed);
-    const interval=Math.max(42,210-(elapsed/18));
-    timerRef.current=window.setTimeout(()=>schedule(direction),interval);
-  };
-
-  const start=(direction:-1|1,event:React.PointerEvent<HTMLButtonElement>)=>{
-    event.preventDefault();
-    event.currentTarget.setPointerCapture?.(event.pointerId);
-    stop();
-    holdStartRef.current=performance.now();
-    nudge(direction,0);
-    timerRef.current=window.setTimeout(()=>schedule(direction),340);
-  };
-
-  const decimals=precision??(step<.01?3:step<1?2:0);
-  const display=`${Number(value.toFixed(decimals))}${suffix}`;
-
-  return <div style={{width:'min(108px,100%)',maxWidth:'100%',marginBottom:7}}>
-    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:6,marginBottom:3}}>
-      <span style={{fontSize:8,fontWeight:1000,textTransform:'uppercase',opacity:.72,lineHeight:1}}>{label}</span>
-      {onKeyframe?<button
-        title={`Add circle keyframe for ${label}`}
-        onClick={onKeyframe}
-        style={{
-          width:18,height:18,border:`2px solid ${INK}`,borderRadius:99,padding:0,
-          background:keyframeState==='active'?BLUE:keyframeState==='attached'?'#a8caff':'#fff',
-          color:'#111',fontSize:13,fontWeight:1000,lineHeight:1,display:'grid',placeItems:'center',
-          opacity:keyframeState==='attached'?.72:1,
-        }}
-      ><Circle size={10}/></button>:null}
-    </div>
-    <div style={{display:'grid',gridTemplateColumns:'24px minmax(52px,60px) 24px',alignItems:'stretch',width:'108px',maxWidth:'100%'}}>
-      <button
-        aria-label={`Decrease ${label}`}
-        style={{...stepperButton,background:CYAN,borderTopRightRadius:0,borderBottomRightRadius:0}}
-        onPointerDown={e=>start(-1,e)}
-        onPointerUp={stop}
-        onPointerCancel={stop}
-        onLostPointerCapture={stop}
-      ><Minus size={13}/></button>
-      <div aria-live="polite" style={stepperValue}>{display}</div>
-      <button
-        aria-label={`Increase ${label}`}
-        style={{...stepperButton,background:CYAN,borderTopLeftRadius:0,borderBottomLeftRadius:0}}
-        onPointerDown={e=>start(1,e)}
-        onPointerUp={stop}
-        onPointerCancel={stop}
-        onLostPointerCapture={stop}
-      ><Plus size={13}/></button>
-    </div>
-  </div>;
-};
 
 const SettingRow:React.FC<{
   def:SettingDef;
