@@ -149,7 +149,7 @@ describe("Video Director dual-surface architecture", () => {
     expect(css).toContain("grid-template-columns:repeat(4,minmax(0,1fr))")
     expect(css).toContain("grid-template-columns:repeat(2,minmax(0,1fr))")
     expect(css).toContain("@media (pointer:coarse) and (orientation:landscape) and (max-height:500px)")
-    expect(css).toContain(".vtdw-category-shortcuts{display:none!important}")
+    expect(css).toContain(".vtdw-project-badge,.vtdw-category-shortcuts{display:none!important}")
     expect(css).toContain("width:min(100%,calc(var(--vtdw-signature-h) * 1.7778))")
     expect(css).not.toContain(".vtdw-field-grid{grid-template-columns:1fr}")
     expect(css).not.toContain(".vtdw-variation-grid{grid-template-columns:1fr}")
