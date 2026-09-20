@@ -787,7 +787,9 @@
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
+  height: 56px;
   min-height: 56px;
+  max-height: 56px;
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr) auto;
   align-items: stretch;
@@ -830,6 +832,10 @@
 }
 .widget-icon-title-module-copy > small {
   min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   color: var(--widget-border, #243247);
   font-size: 9px;
   font-weight: 800;
