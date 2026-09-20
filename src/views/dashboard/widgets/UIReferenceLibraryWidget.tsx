@@ -397,7 +397,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                       <div className={`widget-reference-size-flow ${sizeGridMode ? "is-grid" : ""}`.trim()}>
                         <div className="widget-reference-size-cell"><WidgetSizedButton height={height} tone={tone}>Apply</WidgetSizedButton></div>
                         <div className="widget-reference-size-cell"><WidgetLeftSplitButton height={height} tone={tone} icon={<Sparkles />}>Create Asset</WidgetLeftSplitButton></div>
-                        <div className="widget-reference-size-cell"><WidgetTextInput height={height} tone={tone} value="" readOnly placeholder="Video title" aria-label={`${height}px ${tone} input`} /></div>
+                        <div className="widget-reference-size-cell"><WidgetTextInput height={height} tone={tone} placeholder="Video title" aria-label={`${height}px ${tone} input`} /></div>
                         <div className="widget-reference-size-cell"><WidgetSizedSelect height={height} tone={tone} value={selectValue} onChange={setSelectValue} label={`${height}px ${tone} visibility`} options={[{value:"public",label:"PUBLIC"},{value:"unlisted",label:"UNLISTED"},{value:"private",label:"PRIVATE"}]} /></div>
                         <div className="widget-reference-size-cell"><WidgetStepper height={height} tone={tone} label={`${height}px ${tone} stepper`} value={matrixStepper} onChange={setMatrixStepper} min={0} max={99} /></div>
                         <div className="widget-reference-size-cell"><WidgetSplitCounter height={height} tone={tone} label={`${height}px ${tone} counter`} value={matrixStepper} onChange={setMatrixStepper} min={0} max={99} /></div>
@@ -417,11 +417,11 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("2. Video Select", "Video Manager-derived dropdown")}
             <p className="text-[10px] font-bold uppercase opacity-60">
-              Both split-icon treatments are available: white icon on the colored bay, or widget-colored icon on a light bay.
+              The closed selector uses a split-left VIDEO / chevron bay. The selected title wraps naturally into two or three lines without ellipsis.
             </p>
             {(["white-on-color", "color-on-light"] as WidgetSplitIconStyle[]).map((iconStyle) => (
               <div className="widget-reference-family" key={iconStyle}>
-                {familyHeading("Video Selector", iconStyle === "white-on-color" ? "White icon / colored bay" : "Colored icon / light bay")}
+                {familyHeading("Video Selector", iconStyle === "white-on-color" ? "White VIDEO/chevron on colored bay" : "Colored VIDEO/chevron on light bay")}
                 <ToneRows
                   render={(tone, height) => (
                     <WidgetVideoSelect
