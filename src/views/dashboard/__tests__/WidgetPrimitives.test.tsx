@@ -413,15 +413,20 @@ describe("expanded widget compound primitives", () => {
     expect(variantsCss).toContain("stroke-width: var(--vt-primitive-icon-stroke, 2.5) !important")
   })
 
-  it("uses full-width video rows with centered thumbnails, multiline titles and metadata badges", () => {
+  it("uses alternating full-width video rows with centered media and badge metadata", () => {
     expect(extensionSource).toContain("widget-video-select-option-media")
     expect(extensionSource).toContain("widget-video-select-duration")
     expect(extensionSource).toContain("widget-video-select-views")
+    expect(variantsCss).toContain("border: 0")
     expect(variantsCss).toContain("border-radius: 0")
     expect(variantsCss).toContain("justify-self: center")
     expect(variantsCss).toContain("-webkit-line-clamp: 3")
+    expect(variantsCss).toContain(".widget-video-select-option:nth-child(even)")
+    expect(variantsCss).toContain(".widget-video-select-option:nth-child(odd)")
+    expect(variantsCss).toContain("72%, #fff")
+    expect(variantsCss).toContain("background: transparent")
+    expect(variantsCss).toContain("color-mix(in srgb, #fff 86%")
     expect(variantsCss).toContain("height: 14px")
-    expect(variantsCss).toContain("25%, white")
   })
 
   it("keeps sized select and video select on the public primitive surface", () => {
@@ -490,12 +495,16 @@ describe("spectrum tone classes", () => {
     })
   })
 
-  it("renders a spectrum split badge and a semantic toast", () => {
+  it("renders spectrum badges and toasts with tag-matched monochrome ink", () => {
     const badge = renderToStaticMarkup(
       <WidgetLeftSplitBadge spectrum="teal" icon={<span />}>On target</WidgetLeftSplitBadge>,
     )
     expect(badge).toContain("is-spectrum-teal")
     expect(badge).toContain("widget-split-badge-icon")
+    expect(matrixCss).toContain("--widget-spectrum-ink: #4EE4BE")
+    expect(matrixCss).toContain("border: 2px solid var(--widget-spectrum-ink) !important")
+    expect(matrixCss).toContain("color: var(--widget-spectrum-ink) !important")
+    expect(matrixCss).toContain("--widget-toast-ink: var(--widget-spectrum-ink)")
 
     // Status must not be carried by hue alone: it sets a data attribute
     // and an assertive live region for the two urgent states.
