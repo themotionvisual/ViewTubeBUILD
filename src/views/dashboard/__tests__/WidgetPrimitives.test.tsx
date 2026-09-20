@@ -446,9 +446,9 @@ describe("expanded widget compound primitives", () => {
   })
 
   it("keeps the three larger VIDEO split bays wide enough for the label and chevron", () => {
-    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-24 { --widget-video-split-bay: 38px; }")
-    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-32 { --widget-video-split-bay: 50px; }")
-    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-38 { --widget-video-split-bay: 60px; }")
+    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-24 { --widget-video-split-bay: 40px; }")
+    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-32 { --widget-video-split-bay: 48px; }")
+    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-38 { --widget-video-split-bay: 54px; }")
     expect(variantsCss).toContain("span:first-child { font-size: 6px")
     expect(variantsCss).toContain("span:first-child { font-size: 8px")
     expect(variantsCss).toContain("span:first-child { font-size: 9px")
@@ -456,17 +456,22 @@ describe("expanded widget compound primitives", () => {
 
   it("makes the video menu search and option rows truly edge-to-edge", () => {
     expect(extensionSource).toContain('className="widget-video-select-menu-search-row"')
+    expect(extensionSource).toContain('height={height} tone="primary"')
     expect(variantsCss).toContain(".widget-video-select.is-open > .widget-video-select-menu")
     expect(variantsCss).toContain("padding: 0")
     expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-menu-search-row")
     expect(variantsCss).toContain("border-radius: 0")
     expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-option")
+    expect(variantsCss).toContain("grid-template-columns: calc(var(--vt-primitive-height, 38px) * 1.7778)")
+    expect(variantsCss).toContain(".widget-video-select-option-media")
+    expect(variantsCss).toContain("align-self: stretch")
+    expect(variantsCss).toContain("height: 100%")
     expect(variantsCss).toContain("min-width: 100%")
     expect(videoSelectCss).not.toContain("border-bottom:")
   })
 
   it("frames video thumbnails in VT ink and moves duration one pixel up and left", () => {
-    expect(variantsCss).toContain("border: 1.5px solid var(--vt-tone-ink")
+    expect(variantsCss).toContain("border-inline-end: 1.5px solid var(--vt-tone-ink")
     expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-duration")
     expect(variantsCss).toContain("right: 2px")
     expect(variantsCss).toContain("bottom: 0")
