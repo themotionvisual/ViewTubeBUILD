@@ -435,7 +435,6 @@ export const WidgetSelect: React.FC<{
             "--widget-select-surface": menuSurface,
           } as React.CSSProperties}
         >
-          <Select.ScrollUpButton className="widget-select-scroll"><ChevronUp /></Select.ScrollUpButton>
           <Select.Viewport className="widget-select-viewport">
             <Select.Item className="widget-select-item" value={EMPTY_WIDGET_SELECT_VALUE}>
               <Select.ItemText>{placeholder}</Select.ItemText>
@@ -448,7 +447,6 @@ export const WidgetSelect: React.FC<{
               </Select.Item>
             ))}
           </Select.Viewport>
-          <Select.ScrollDownButton className="widget-select-scroll"><ChevronDown /></Select.ScrollDownButton>
         </Select.Content>
       </Select.Portal>
     </Select.Root>
@@ -793,8 +791,17 @@ export {
   WidgetIconButton,
   WidgetIconBadge,
   WidgetStepper,
+  WidgetSplitCounter,
   WidgetPagination,
   WidgetLeftSplitBadge,
+  WidgetTinySpectrumIcon,
+  WIDGET_TINY_ICON_SET,
+  WidgetAccentRailModule,
+  WidgetIconTitleModule,
+  WidgetRainbowDivider,
+  WidgetRainbowPanel,
+  WidgetModuleHeader,
+  WidgetModuleFrame,
   WidgetSearchInput,
   WidgetLiveBadge,
   WidgetSpectrumFillBadge,
@@ -807,4 +814,5 @@ export {
   type WidgetPrimitiveTone,
   type WidgetTextFit,
   type WidgetSplitIconStyle,
+  type WidgetTinyIconName,
 } from "./WidgetPrimitiveExtensions"
