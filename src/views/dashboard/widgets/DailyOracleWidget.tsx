@@ -191,12 +191,14 @@ export const DailyOracleWidget = ({
   )
 
   const evidence = useMemo(() => {
-    const rows = Array.isArray(data?.canonicalRows) ? data.canonicalRows : []
-    const dates = rows.map(uploadDate).filter((value): value is Date => Boolean(value))
-    dates.sort((a, b) => b.getTime() - a.getTime())
+    const rows: any[] = Array.isArray(data?.canonicalRows) ? data.canonicalRows : []
+    const dates: Date[] = rows
+      .map((row: any) => uploadDate(row))
+      .filter((value: Date | null): value is Date => Boolean(value))
+    dates.sort((a: Date, b: Date) => b.getTime() - a.getTime())
     const latest = dates[0] || null
     const now = Date.now()
-    const recentUploadCount14d = dates.filter((date) => now - date.getTime() <= 14 * 86400000).length
+    const recentUploadCount14d = dates.filter((date: Date) => now - date.getTime() <= 14 * 86400000).length
     const daysSinceLatestUpload = latest ? Math.max(0, Math.floor((now - latest.getTime()) / 86400000)) : null
     const sourceStatuses = Array.isArray(snapshot.sourceStatuses) ? snapshot.sourceStatuses : []
     const readySources = sourceStatuses.filter((source) => source.status === "ready").length
