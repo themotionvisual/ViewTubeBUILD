@@ -37,6 +37,7 @@ import {
   WidgetSplitCounter,
   WidgetTinySpectrumIcon,
   WIDGET_TINY_ICON_SET,
+  WIDGET_METRIC_ICON_SET,
   WidgetAccentRailModule,
   WidgetIconTitleModule,
   WidgetRainbowDivider,
@@ -51,6 +52,7 @@ const variantsCss = readFileSync(new URL("../widgetPrimitiveVariants.css", impor
 const matrixCss = readFileSync(new URL("../widgetMatrixPrimitives.css", import.meta.url), "utf8")
 const videoSelectCss = readFileSync(new URL("../widgetVideoSelectButtonScroll.css", import.meta.url), "utf8")
 const extensionSource = readFileSync(new URL("../WidgetPrimitiveExtensions.tsx", import.meta.url), "utf8")
+const referenceSource = readFileSync(new URL("../widgets/UIReferenceLibraryWidget.tsx", import.meta.url), "utf8")
 
 describe("widget viewport indicator geometry", () => {
   it.each([
@@ -360,13 +362,16 @@ describe("expanded widget compound primitives", () => {
     expect(matrixCss).toContain("grid-template-rows: repeat(2, minmax(0, 1fr))")
   })
 
-  it("publishes exactly 50 tiny spectrum icons through the canonical primitive surface", () => {
-    expect(Object.keys(WIDGET_TINY_ICON_SET)).toHaveLength(50)
+  it("publishes 50 general icons plus 12 canonical metric icons", () => {
+    expect(Object.keys(WIDGET_TINY_ICON_SET)).toHaveLength(62)
+    expect(WIDGET_METRIC_ICON_SET).toHaveLength(12)
+    expect(WIDGET_METRIC_ICON_SET.map((item) => item.spectrum)).toEqual(WIDGET_BADGE_SPECTRUM)
+    expect(WIDGET_METRIC_ICON_SET.map((item) => item.color)).toEqual(VT_SPECTRUM_PALETTE_06)
     const markup = renderToStaticMarkup(
-      <WidgetTinySpectrumIcon name="zap" spectrum="lime" label="Quick win" />,
+      <WidgetTinySpectrumIcon name="metricViews" spectrum="rose" label="Views" />,
     )
     expect(markup).toContain("widget-tiny-spectrum-icon")
-    expect(markup).toContain('aria-label="Quick win"')
+    expect(markup).toContain('aria-label="Views"')
   })
 
   it("renders edge-to-edge rail, icon-title, rainbow, and generic module compounds", () => {
@@ -427,6 +432,39 @@ describe("expanded widget compound primitives", () => {
     expect(variantsCss).toContain("background: transparent")
     expect(variantsCss).toContain("color-mix(in srgb, #fff 86%")
     expect(variantsCss).toContain("height: 14px")
+  })
+
+  it("uses a stacked VIDEO + chevron split-left bay and never a right-side video chevron", () => {
+    expect(extensionSource).toContain("widget-video-select-trigger-selector")
+    expect(extensionSource).toContain("<span>VIDEO</span>")
+    expect(extensionSource).not.toContain("widget-video-select-trigger-chevron")
+    expect(extensionSource).not.toContain("widget-video-select-trigger-icon")
+    expect(variantsCss).toContain("grid-template-rows: repeat(2, minmax(0, 1fr))")
+    expect(variantsCss).toContain("white-space: normal")
+    expect(variantsCss).toContain("text-overflow: clip")
+  })
+
+  it("uses placeholder filler copy so focus starts the caret at the left edge", () => {
+    expect(extensionSource).toContain('placeholder="Type…"')
+    expect(referenceSource).toContain('placeholder="Sample title input"')
+    expect(referenceSource).toContain('const [textValue, setTextValue] = useState("")')
+    expect(variantsCss + matrixCss).toContain("::placeholder")
+  })
+
+  it("groups the UI Reference by size then tone with optional equal-width grid mode", () => {
+    expect(referenceSource).toContain('"size", label: "SIZE"')
+    expect(referenceSource).toContain("sizeGridMode")
+    expect(referenceSource).toContain("CONTROL_HEIGHTS.map((height)")
+    expect(referenceSource).toContain("CONTROL_TONES.map((tone)")
+    expect(variantsCss).toContain(".widget-reference-size-flow.is-grid")
+    expect(variantsCss).toContain("grid-template-columns: repeat(3, minmax(0, 1fr))")
+    expect(referenceSource).not.toContain('familyHeading("Compact Steppers"')
+  })
+
+  it("scales split-counter chevrons with the canonical icon token", () => {
+    expect(matrixCss).toContain(".widget-split-counter-controls svg")
+    expect(matrixCss).toContain("width: var(--vt-primitive-icon)")
+    expect(matrixCss).toContain("height: var(--vt-primitive-icon)")
   })
 
   it("keeps sized select and video select on the public primitive surface", () => {
