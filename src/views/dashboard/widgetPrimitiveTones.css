@@ -83,7 +83,7 @@
 
 /* ── Split-left icon bay variants ───────────────────────────── */
 .widget-split-button.is-left-split .widget-split-button-icon,
-.widget-video-select-trigger .widget-video-select-trigger-icon {
+.widget-video-select-trigger .widget-video-select-trigger-selector {
   color: inherit;
 }
 
