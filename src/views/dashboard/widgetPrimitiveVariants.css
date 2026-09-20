@@ -282,15 +282,17 @@
   padding: 2px 6px;
   overflow: hidden;
   border: 0;
-  border-bottom: max(1px, var(--vt-primitive-stroke, 2px)) solid color-mix(in srgb, var(--widget-border, var(--widget-ink, #243247)) 34%, transparent);
   border-radius: 0;
-  background: color-mix(in srgb, var(--widget-color, #34cdea) 8%, white);
+  background: #fff;
   color: var(--vt-tone-ink, var(--widget-ink, var(--widget-border, #243247)));
   text-align: left;
   cursor: pointer;
 }
-.widget-video-select-option:last-child {
-  border-bottom: 0;
+.widget-video-select-option:nth-child(even) {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 10%, #fff);
+}
+.widget-video-select-option:nth-child(odd) {
+  background: #fff;
 }
 
 /* Portalled selects carry explicit metrics from WidgetSizedSelect because the
@@ -351,12 +353,11 @@
   box-shadow: none;
 }
 
-.widget-video-select-option:hover,
-.widget-video-select-option.is-selected {
-  background: color-mix(in srgb, var(--widget-color, #34cdea) 25%, white);
+.widget-video-select-option:hover {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 22%, #fff);
 }
 .widget-video-select-option.is-selected {
-  box-shadow: inset 5px 0 0 var(--widget-color, #34cdea);
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 72%, #fff);
 }
 
 .widget-video-select-option-media {
@@ -387,16 +388,18 @@
 .widget-video-select-duration {
   position: absolute;
   right: 1px;
-  bottom: 1px;
+  bottom: -1px;
   box-sizing: border-box;
   height: 14px;
   min-height: 14px;
   display: inline-flex;
-  align-items: center;
-  padding: 0 3px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--widget-color, #34cdea) 25%, white);
-  color: var(--widget-ink, var(--widget-border, #243247));
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: color-mix(in srgb, #fff 86%, var(--widget-color, #34cdea));
   font-size: 7px;
   font-weight: 1000;
   line-height: 1;
@@ -449,6 +452,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   text-transform: uppercase;
+}
+.widget-video-select-option.is-selected .widget-video-select-views {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 88%, #fff);
 }
 
 .widget-video-select-menu.is-height-18 .widget-video-select-option {
