@@ -1,12 +1,17 @@
-/* Video selector menu: native/custom scrollbar, no top/bottom scroll buttons.
-   The trigger owns one canonical control height; the open menu owns an auto-height
-   list whose individual option rows use that exact same height. */
+/* Video selector menu ownership.
+   Closed trigger and each open row use the same canonical primitive height.
+   Search is one split-left row; options are full-width rows with a scrollbar. */
 .widget-video-select-menu {
   height: auto;
   min-height: 0;
   max-height: none;
-  overflow: visible;
+  overflow: hidden;
+  display: grid;
   grid-template-rows: auto minmax(0, auto);
+  gap: 0;
+  padding: 0;
+  top: calc(100% + 4px);
+  border-radius: var(--vt-primitive-radius, 7px);
 }
 
 .widget-video-select-search {
@@ -15,7 +20,8 @@
   z-index: 2;
   width: 100%;
   min-width: 0;
-  padding: 0;
+  padding: 6px;
+  border-bottom: var(--vt-primitive-stroke, 2px) solid color-mix(in srgb, var(--widget-border, #243247) 35%, transparent);
   background: var(--vt-tone-bg, #fff);
 }
 
@@ -32,8 +38,8 @@
 
 .widget-video-select-options {
   display: grid;
-  gap: 4px;
-  max-height: calc((var(--vt-primitive-height, 38px) + 4px) * 4 - 4px);
+  gap: 0;
+  max-height: calc(var(--vt-primitive-height, 38px) * 5);
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
@@ -48,7 +54,6 @@
 }
 
 .widget-video-select-options::-webkit-scrollbar-track {
-  border-radius: 3px;
   background: color-mix(in srgb, var(--widget-color, #34cdea) 10%, white);
 }
 
@@ -61,12 +66,6 @@
 
 .widget-video-select-options::-webkit-scrollbar-thumb:hover {
   background: var(--widget-color, #34cdea);
-}
-
-/* Keep menu corners intact and visually separate it from the closed trigger. */
-.widget-video-select-menu {
-  top: calc(100% + 4px);
-  border-radius: var(--vt-primitive-radius, 7px);
 }
 
 @media (pointer: coarse) {
