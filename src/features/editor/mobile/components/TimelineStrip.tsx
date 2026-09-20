@@ -471,7 +471,7 @@ const KeyframeLane:React.FC<{clip:VtE1Clip;store:EditorStore;pxPerSec:number;top
     onClick={event=>event.stopPropagation()}
     style={{position:'absolute',left:0,right:0,top,height:KEYFRAME_LANE_HEIGHT,background:'rgba(54,224,246,.08)',overflow:'hidden',...IOS_TOUCH_SAFE}}
   >
-2874((frame,index)=>{
+    {frames.map((frame,index)=>{
       const id=String(frame.id);
       const offset=preview[id]??Number(frame.offsetSec??0);
       const x=(clip.start+offset)*pxPerSec;
@@ -528,12 +528,11 @@ const ClipBlock:React.FC<{
   clip:VtE1Clip;selected:boolean;color:string;pxPerSec:number;store:EditorStore;
   siblings:VtE1Clip[];
   snap:{strength:SnapStrength;kinds:SnapKinds};
-  fps:number;
   readOnly?:boolean;
   focusParentId?:string;
   onOpenCompound?:(id:string)=>void;
   onContextMenu?:TimelineStripProps['onClipContextMenu'];
-}>=({clip,selected,color,pxPerSec,store,siblings,snap,fps,readOnly=false,focusParentId,onOpenCompound,onContextMenu})=>{
+}>=({clip,selected,color,pxPerSec,store,siblings,snap,readOnly=false,focusParentId,onOpenCompound,onContextMenu})=>{
   const{dispatch}=store;
   const left=clip.start*pxPerSec;
   const width=Math.max(20,(clip.end-clip.start)*pxPerSec);
