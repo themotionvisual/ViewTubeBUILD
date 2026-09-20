@@ -39,56 +39,120 @@ export const RetroLcd: React.FC<{ tone: string; children: React.ReactNode; class
 
 export type RetroSyncExecutionStatus = "idle" | "queued" | "running" | "complete" | "partial" | "failed"
 
+const executionStatusClass = (status: RetroSyncExecutionStatus) =>
+ status === "running" ? "is-syncing"
+ : status === "queued" ? "is-waiting"
+ : status === "complete" ? "is-completed"
+ : status === "partial" ? "is-partial"
+ : status === "failed" ? "is-failed"
+ : ""
+
+const executionStatusLabel = (status: RetroSyncExecutionStatus, idleLabel: string) =>
+ status === "running" ? "RUNNING"
+ : status === "queued" ? "QUEUED"
+ : status === "complete" ? "DONE"
+ : status === "partial" ? "PARTIAL"
+ : status === "failed" ? "FAILED"
+ : idleLabel
+
+export const RetroAnalogToggle: React.FC<{
+ label: string
+ active: boolean
+ onChange: (next: boolean) => void
+ tone?: "green" | "cyan" | "yellow" | "red"
+ disabled?: boolean
+ className?: string
+}> = ({ label, active, onChange, tone = "green", disabled = false, className = "" }) => (
+ <button
+  type="button"
+  className={`vt-retro-analog-toggle is-${tone} ${active ? "is-on" : ""} ${className}`}
+  data-active={active ? "true" : "false"}
+  aria-pressed={active}
+  disabled={disabled}
+  onClick={() => onChange(!active)}
+  title={`${label}: ${active ? "on" : "off"}`}
+ >
+  <span className="vt-retro-analog-toggle__plate" aria-hidden="true">
+   <span className="vt-retro-analog-toggle__led"><i /></span>
+   <span className="vt-retro-analog-toggle__track"><i /></span>
+  </span>
+  <span className="vt-retro-analog-toggle__label">{label}</span>
+ </button>
+)
+
 export const RetroSyncExecutionSwitch: React.FC<{
  status: RetroSyncExecutionStatus
  idleLabel: string
  onClick?: () => void
  disabled?: boolean
-}> = ({ status, idleLabel, onClick, disabled = false }) => {
- const statusClass =
-  status === "running" ? "is-syncing"
-  : status === "queued" ? "is-waiting"
-  : status === "complete" ? "is-completed"
-  : status === "partial" ? "is-partial"
-  : status === "failed" ? "is-failed"
-  : ""
- const statusLabel =
-  status === "running" ? "RUNNING"
-  : status === "queued" ? "QUEUED"
-  : status === "complete" ? "DONE"
-  : status === "partial" ? "PARTIAL"
-  : status === "failed" ? "FAILED"
-  : idleLabel
+ selected?: boolean
+ onSelectedChange?: (next: boolean) => void
+ selectionDisabled?: boolean
+ selectionLabel?: string
+}> = ({
+ status,
+ idleLabel,
+ onClick,
+ disabled = false,
+ selected,
+ onSelectedChange,
+ selectionDisabled = false,
+ selectionLabel = "Batch selection",
+}) => {
+ const statusClass = executionStatusClass(status)
+ const statusLabel = executionStatusLabel(status, idleLabel)
  const isBusyState = status === "running" || status === "queued"
+ const hasSelectionControl = typeof selected === "boolean" && Boolean(onSelectedChange)
 
  return (
   <div
-   className={`vt-retro-pcb-group is-category-action ${status === "running" ? "is-active" : ""} ${statusClass}`}
+   className={`vt-retro-pcb-group is-category-action ${status === "running" ? "is-active" : ""} ${statusClass} ${hasSelectionControl ? "has-batch-selection" : ""} ${selected ? "is-batch-selected" : ""}`}
    data-sync-status={status}
+   data-batch-selected={selected ? "true" : "false"}
    style={{
     "--active-col": "var(--led-green)",
     "--active-col-rgb": "var(--led-green-rgb)",
    } as React.CSSProperties}
   >
    <div className="vt-retro-pcb-controls">
-    <button
-     type="button"
-     disabled={disabled || isBusyState || !onClick}
-     onClick={onClick}
-     className="switch-hitbox"
-     aria-pressed={status === "running"}
-     title={`${statusLabel} Sync`}
-     aria-label={`${statusLabel} Sync`}
-    >
-     <div className="sw-slide-housing">
+    <div className="vt-retro-dual-plate">
+     <div className="led-rim vt-retro-status-led" aria-hidden="true">
+      <div className="led-bulb" />
+     </div>
+     <button
+      type="button"
+      disabled={disabled || isBusyState || !onClick}
+      onClick={onClick}
+      className="switch-hitbox vt-retro-sync-hitbox"
+      aria-pressed={status === "running"}
+      title={`${statusLabel} Sync`}
+      aria-label={`${statusLabel} Sync`}
+     >
       <div className="sw-slide-track">
        <div className="sw-slide-nub" />
       </div>
-      <div className="led-rim" aria-hidden="true">
+     </button>
+     {hasSelectionControl ? (
+      <button
+       type="button"
+       disabled={selectionDisabled}
+       onClick={() => onSelectedChange?.(!selected)}
+       className="vt-retro-batch-hitbox"
+       aria-pressed={selected}
+       aria-label={`${selectionLabel}: ${selected ? "selected" : "not selected"}`}
+       title={`${selectionLabel}: ${selected ? "selected" : "not selected"}`}
+      >
+       <span className="vt-retro-batch-track" aria-hidden="true">
+        <i className="vt-retro-batch-nub" />
+       </span>
+      </button>
+     ) : null}
+     {hasSelectionControl ? (
+      <div className="led-rim vt-retro-selection-led" aria-hidden="true">
        <div className="led-bulb" />
       </div>
-     </div>
-    </button>
+     ) : null}
+    </div>
    </div>
    <div className="comp-label">{statusLabel}</div>
   </div>
