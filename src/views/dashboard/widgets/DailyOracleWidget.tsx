@@ -1,223 +1,598 @@
-import React, { useState, useEffect } from "react"
-import { WidgetShell } from "../WidgetShell"
-import { Sparkles, Zap, ArrowRight, Check, RefreshCw, Eye, Users, DollarSign, Heart, Clock3 } from "lucide-react"
+import React, { useEffect, useMemo, useState } from "react"
+import {
+  Brain,
+  CalendarDays,
+  CalendarPlus,
+  Check,
+  Clock3,
+  DollarSign,
+  Eye,
+  Flame,
+  Heart,
+  RefreshCw,
+  Sparkles,
+  Target,
+  Users,
+  Zap,
+} from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
+import { buildAIBrainContextSnapshot } from "../../../services/aiBrainCommandInterface"
+import { buildCreatorGrowthContext } from "../../../services/aiBrainConversationStore"
+import {
+  buildDailyOraclePlan,
+  calculateDailyOracleStreak,
+  oracleEffortLabel,
+  oracleLevelLabel,
+  type DailyOracleCandidate,
+  type DailyOracleGoalMetric,
+} from "../../../services/brain/DailyOracleDecisionEngine"
 import type { DayTask } from "../../../types"
+import { WidgetShell } from "../WidgetShell"
+import {
+  WidgetBadge,
+  WidgetFooter,
+  WidgetHeaderToggle,
+  WidgetIconButton,
+  WidgetScrollArea,
+  WidgetSection,
+  WidgetSizedButton,
+  WidgetWorkflowMain,
+} from "../WidgetPrimitives"
+import "./DailyOracleWidget.css"
 
-const ORACLE_STORAGE_KEY = "vt_daily_oracle"
+const ORACLE_UI_KEY = "vt_daily_oracle_v2"
+const ORACLE_STREAK_KEY = "vt_daily_oracle_streak_v1"
 
-interface OracleAdvice {
- text: string
- timeframe: string
- color: string
- shadowColor: string
- action: string
- completed: boolean
+type OraclePage = "today" | "focus"
+type OracleTodayPanel = "move" | "calendar"
+
+const ORACLE_PAGES = [
+  { id: "today", label: "TODAY" },
+  { id: "focus", label: "FOCUS" },
+] as const
+
+const METRICS: Array<{
+  id: DailyOracleGoalMetric
+  label: string
+  Icon: typeof Eye
+  compactLabel: string
+}> = [
+  { id: "views", label: "Views", compactLabel: "Views", Icon: Eye },
+  { id: "subscribers", label: "Subscribers", compactLabel: "Subs", Icon: Users },
+  { id: "revenue", label: "Revenue", compactLabel: "Revenue", Icon: DollarSign },
+  { id: "engagement", label: "Engagement", compactLabel: "Engage", Icon: Heart },
+  { id: "watch-time", label: "Watch Time", compactLabel: "Watch", Icon: Clock3 },
+]
+
+const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"] as const
+
+type OracleUiState = {
+  dateKey: string
+  focusMetric: DailyOracleGoalMetric
+  completedIds: string[]
+  rotation: number
+  refreshedAt: number
 }
 
-interface OracleState {
- dateKey: string
- priorities: OracleAdvice[]
- quickWins: OracleAdvice[]
+type OracleStreakState = {
+  completionDates: string[]
 }
 
-type DailyOracleGoalMetric = "views" | "subscribers" | "revenue" | "engagement" | "watch-time"
-
-const METRIC_TASKS: Record<DailyOracleGoalMetric, readonly string[]> = {
- views: ["Refresh the title and thumbnail promise on a recent video with low click-through rate.", "Create one searchable follow-up around a proven channel topic.", "Add an end screen from a top video to the strongest related upload.", "Publish one Community post that sends viewers to a relevant catalog video.", "Compare your top 3 videos and repeat the topic-hook combination with the highest reach."],
- subscribers: ["Add a clear subscriber payoff to the first 30 seconds of your next video.", "Pin a comment that asks viewers to subscribe for the next related upload.", "Turn a proven topic into a repeatable series with a named viewer promise.", "Improve the channel trailer or featured-video call to action.", "Reply to five high-intent comments with a useful next video recommendation."],
- revenue: ["Add end screens to the five videos with the strongest current watch time.", "Audit monetization eligibility and mid-roll opportunities on your longest videos.", "Create a follow-up that extends a proven revenue-driving topic.", "Improve the first minute of a high-value video to retain monetizable viewing.", "Link a relevant long-form video from a recent short or Community post."],
- engagement: ["Pin a question on the latest video that invites a specific viewer response.", "Publish a two-option Community poll based on current channel topics.", "Reply to five thoughtful comments with a follow-up question.", "Add one direct question near the end of a new upload.", "Turn a recurring audience question into a video or post."],
- "watch-time": ["Add an end screen that continues viewers to the most relevant next video.", "Review the first 30 seconds of a recent upload and sharpen its promise.", "Add timestamps to a long video so viewers can find value without leaving.", "Create a sequel around the topic with the strongest average view duration.", "Link a related playlist in the description and pinned comment."],
+const localDateKey = (date = new Date()) => {
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, "0")
+  const dd = String(date.getDate()).padStart(2, "0")
+  return `${yyyy}-${mm}-${dd}`
 }
 
-function generateAdvice(data: any): OracleState {
- const rows = data.canonicalRows || []
- const stats = data.statBlocks28d || []
- const revenueBlock = stats.find((s: any) => s.label.toLowerCase().includes("revenue"))
+const readUiState = (): OracleUiState => {
+  const fallback: OracleUiState = {
+    dateKey: localDateKey(),
+    focusMetric: "views",
+    completedIds: [],
+    rotation: 0,
+    refreshedAt: Date.now(),
+  }
+  if (typeof window === "undefined") return fallback
 
- // Analyze channel state to generate relevant advice
- const recentUploads = rows.filter((r: any) => {
-  const d = new Date(r.uploadDate)
-  return !isNaN(d.getTime()) && (Date.now() - d.getTime()) < 14 * 86400000
- })
- const hasRecentUpload = recentUploads.length > 0
- const avgTitleLen = rows.slice(0, 10).reduce((sum: number, r: any) => sum + (r.title?.length || 0), 0) / Math.max(1, Math.min(10, rows.length))
-
- const priorities: OracleAdvice[] = []
- const quickWins: OracleAdvice[] = []
-
- // Priority 1: Upload consistency
- if (!hasRecentUpload) {
-  priorities.push({text: `You haven't uploaded in over 2 weeks. Impressions decay rapidly after 7 days of inactivity. Record something today, even if it's a Short.`, timeframe: "Today", color: "#FF8AAF", shadowColor: "rgba(255, 138, 175, 0.5)", action: "Upload", completed: false})
- } else {
-  priorities.push({
-   text: `You have ${recentUploads.length} recent uploads — good cadence. Focus on doubling down on your top format: analyze which video type gets the best engagement rate and do more of that.`,
-   timeframe: "This week", color: "#579AFF", shadowColor: "rgba(87,154,255,0.5)", action: "Analyze", completed: false
-  })
- }
-
- // Priority 2: Title optimization
- if (avgTitleLen > 60) {
-  priorities.push({
-   text: `Your average title length is ${Math.round(avgTitleLen)} characters — YouTube truncates at ~60 on mobile. Rewrite your last 5 titles to be punchier with emotional power words and specific outcomes.`,
-   timeframe: "2-3 days", color: "#FF8AAF", shadowColor: "rgba(255,138,175,0.5)", action: "Fix", completed: false
-  })
- } else {
-  priorities.push({
-   text: `Revenue is at ${revenueBlock?.value || "$0"} this period. Increase monetized watch time by adding timestamps and end screens to your top 10 videos — this chains viewing sessions and boosts ad impressions.`,
-   timeframe: "1-2 weeks", color: "#579AFF", shadowColor: "rgba(87,154,255,0.5)", action: "Plan", completed: false
-  })
- }
-
- // Quick Wins
- quickWins.push({text: "Add end screens to your top 5 videos — they currently drive 0 extra views without them.", timeframe: "20 min", color: "#FFFF61", shadowColor: "rgba(255, 255, 97, 0.5)", action: "Go", completed: false})
- quickWins.push({text: "Pin a comment on your latest video asking viewers a direct question to boost engagement signals.", timeframe: "5 min", color: "#40C6E9", shadowColor: "rgba(64, 198, 233, 0.5)", action: "Post", completed: false})
- quickWins.push({text: "Create a Community Tab poll with your top 3 backlog ideas as options — algorithms love poll engagement.", timeframe: "10 min", color: "#FF83EA", shadowColor: "rgba(255, 131, 234, 0.5)", action: "Poll", completed: false})
-
- return {
-  dateKey: new Date().toISOString().split("T")[0],
-  priorities,
-  quickWins,
- }
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(ORACLE_UI_KEY) || "{}") as Partial<OracleUiState>
+    if (parsed.dateKey !== fallback.dateKey) return fallback
+    return {
+      ...fallback,
+      ...parsed,
+      focusMetric: METRICS.some((metric) => metric.id === parsed.focusMetric) ? parsed.focusMetric! : fallback.focusMetric,
+      completedIds: Array.isArray(parsed.completedIds) ? parsed.completedIds.filter(Boolean) : [],
+      rotation: Number.isFinite(parsed.rotation) ? Math.max(0, Number(parsed.rotation)) : 0,
+      refreshedAt: Number.isFinite(parsed.refreshedAt) ? Number(parsed.refreshedAt) : fallback.refreshedAt,
+    }
+  } catch {
+    return fallback
+  }
 }
 
-export const DailyOracleWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
- const { setCalendarState } = useBrain()
- const common = {
+const readStreakState = (): OracleStreakState => {
+  if (typeof window === "undefined") return { completionDates: [] }
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(ORACLE_STREAK_KEY) || "{}") as Partial<OracleStreakState>
+    return {
+      completionDates: Array.isArray(parsed.completionDates)
+        ? Array.from(new Set(parsed.completionDates.filter((value): value is string => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))))
+        : [],
+    }
+  } catch {
+    return { completionDates: [] }
+  }
+}
+
+const uploadDate = (row: any): Date | null => {
+  const raw = row?.uploadDate || row?.publishedAt || row?.publishedDate || row?.published_at
+  if (!raw) return null
+  const value = new Date(raw)
+  return Number.isNaN(value.getTime()) ? null : value
+}
+
+const scorePercent = (value: number) => Math.max(0, Math.min(100, Math.round((value / 3) * 100)))
+
+export const DailyOracleWidget = ({
   widget,
   instance,
   editMode,
-  canEdit: true,
   onToggleCollapse,
   onCycleSize,
-  onRemove,
   onDecSize,
   onCycleHeight,
   onDecHeight,
- }
- const todayKey = new Date().toISOString().split("T")[0]
+  onRemove,
+  data,
+  onNavigate,
+}: any) => {
+  const { brain, authState, channelConnection, getBrainMemory, setCalendarState } = useBrain()
+  const [page, setPage] = useState<OraclePage>("today")
+  const [ui, setUi] = useState<OracleUiState>(readUiState)
+  const [streak, setStreak] = useState<OracleStreakState>(readStreakState)
+  const [notice, setNotice] = useState("")
+  const [todayPanel, setTodayPanel] = useState<OracleTodayPanel>("move")
 
- const [oracle, setOracle] = useState<OracleState>(() => {
-  try {
-   const saved = JSON.parse(localStorage.getItem(ORACLE_STORAGE_KEY) || "{}")
-   if (saved.dateKey === todayKey) return saved
-  } catch {
-   // Ignore malformed legacy state and regenerate today's local advice.
+  const common = {
+    widget,
+    instance,
+    editMode,
+    canEdit: true,
+    onToggleCollapse,
+    onCycleSize,
+    onRemove,
+    onDecSize,
+    onCycleHeight,
+    onDecHeight,
   }
-  return generateAdvice(data)
- })
 
- useEffect(() => {
-  localStorage.setItem(ORACLE_STORAGE_KEY, JSON.stringify(oracle))
- }, [oracle])
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    window.localStorage.setItem(ORACLE_UI_KEY, JSON.stringify(ui))
+  }, [ui])
 
- const toggleComplete = (type: "priorities" | "quickWins", idx: number) => {
-  setOracle(prev => {
-   const next = { ...prev, [type]: [...prev[type]] }
-   next[type][idx] = { ...next[type][idx], completed: !next[type][idx].completed }
-   return next
-  })
- }
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    window.localStorage.setItem(ORACLE_STREAK_KEY, JSON.stringify(streak))
+  }, [streak])
 
- const refresh = () => setOracle(generateAdvice(data))
-
- const focusMetric = (metric: DailyOracleGoalMetric) => {
-  const dateKey = new Date().toISOString().slice(0, 10)
-  const tasks: DayTask[] = METRIC_TASKS[metric].map((text, index) => ({
-   id: `daily_oracle_${metric}_${Date.now()}_${index}`,
-   text,
-   completed: false,
-   dueDate: dateKey,
-  }))
-  const existing = data.brain?.calendarState?.dayTasks?.[dateKey] || []
-  setCalendarState({ dayTasks: { ...(data.brain?.calendarState?.dayTasks || {}), [dateKey]: [...existing, ...tasks] } })
-  setOracle((current) => ({
-   ...current,
-   priorities: [{
-    text: `${metric.replace("-", " ")} task pack added: ${tasks[0].text}`,
-    timeframe: "Today",
-    color: "#579AFF",
-    shadowColor: "rgba(87,154,255,0.5)",
-    action: "Review",
-    completed: false,
-   }, ...current.priorities].slice(0, 2),
-  }))
- }
-
- const renderAdviceCard = (advice: OracleAdvice, idx: number, type: "priorities" | "quickWins") => {
-  const isPriority = type === "priorities"
-  return (
-   <div
-    key={idx}
-    className="oracle-advice-card"
-    style={{
-     flexShrink: 0,
-     display: "flex", background: advice.completed ? "color-mix(in srgb, var(--widget-color) 10%, white)" : "#fff",
-     border: `2px solid #000`, borderRadius: "4px",
-     overflow: "hidden", boxShadow: `2px 2px 0 0 ${advice.shadowColor}`,
-     opacity: advice.completed ? 0.78 : 1,
-    }}>
-    {isPriority && <div style={{ width: "6px", background: advice.color, flexShrink: 0 }} />}
-    {!isPriority && <div style={{ width: "8px", borderRadius: "999px", background: advice.color, flexShrink: 0, margin: "8px 0 8px 10px" }} />}
-    <div style={{ flex: 1, padding: isPriority ? "7px 8px" : "6px 8px", display: "flex", alignItems: "center", gap: "6px" }}>
-     <div style={{ flex: 1 }}>
-      <div style={{
-       fontWeight: 700, fontSize: isPriority ? "11px" : "10px", lineHeight: 1.4,
-       textDecoration: "none",
-      }}>
-       {advice.text}
-       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4, marginLeft: "6px", display: "inline-block" }}>
-        ⏱ {advice.timeframe}
-       </span>
-       {advice.completed ? <span className="oracle-outcome-copy">Verify the outcome in channel metrics, then repeat the approach that improved the result.</span> : null}
-      </div>
-     </div>
-     <button
-      onClick={() => toggleComplete(type, idx)}
-      className="vt-button"
-      style={{
-       background: advice.completed ? "#4FFF5B" : advice.color,
-       flexShrink: 0,
-       width: "32px",
-       height: "32px",
-       padding: "0",
-       flexDirection: "column",
-       gap: "2px",
-      }}>
-      {advice.completed ? <Check size={16} strokeWidth={3} /> : <ArrowRight size={16} strokeWidth={3} />}
-      {!advice.completed && <span style={{ fontSize: "7px", fontWeight: 900 }}>{advice.action}</span>}
-     </button>
-    </div>
-   </div>
+  const snapshot = useMemo(
+    () => buildAIBrainContextSnapshot({
+      brain,
+      authState,
+      channelConnection,
+      brainMemory: getBrainMemory(),
+      requestText: `Daily Oracle · ${ui.focusMetric}`,
+    }),
+    [authState, brain, channelConnection, getBrainMemory, ui.focusMetric, ui.refreshedAt],
   )
- }
 
- return (
-  <WidgetShell
-   {...common}
-   icon={<Sparkles size={22} />}>
-   <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%", minHeight: 0 }}>
-    <div className="daily-oracle-actions" aria-label="Generate goal-focused tasks">
-     <button type="button" className="vt-button is-icon-only" onClick={refresh} aria-label="Refresh daily guidance"><RefreshCw size={15} /></button>
-     {([
-      ["views", "Views", Eye], ["subscribers", "Subscribers", Users], ["revenue", "Revenue", DollarSign], ["engagement", "Engagement", Heart], ["watch-time", "Watch time", Clock3],
-     ] as const).map(([id, label, Icon]) => <button key={id} type="button" className="vt-button" onClick={() => focusMetric(id)}><Icon size={13} />{label}</button>)}
-    </div>
-    <div className="daily-oracle-list">
-     {/* Priorities */}
-     {oracle.priorities.map((p, i) => renderAdviceCard(p, i, "priorities"))}
+  const growth = useMemo(
+    () => buildCreatorGrowthContext(snapshot, [], []),
+    [snapshot],
+  )
 
-     {/* Quick Wins Header */}
-     <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px", flexShrink: 0 }}>
-      <Zap size={14} color="#4FFF5B" />
-      <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", opacity: 0.5 }}>Quick Wins (20-30 min)</span>
-     </div>
+  const evidence = useMemo(() => {
+    const rows: any[] = Array.isArray(data?.canonicalRows) ? data.canonicalRows : []
+    const dates: Date[] = rows
+      .map((row: any) => uploadDate(row))
+      .filter((value: Date | null): value is Date => Boolean(value))
+    dates.sort((a: Date, b: Date) => b.getTime() - a.getTime())
+    const latest = dates[0] || null
+    const now = Date.now()
+    const recentUploadCount14d = dates.filter((date: Date) => now - date.getTime() <= 14 * 86400000).length
+    const daysSinceLatestUpload = latest ? Math.max(0, Math.floor((now - latest.getTime()) / 86400000)) : null
+    const sourceStatuses = Array.isArray(snapshot.sourceStatuses) ? snapshot.sourceStatuses : []
+    const readySources = sourceStatuses.filter((source) => source.status === "ready").length
 
-     {/* Quick Wins */}
-     {oracle.quickWins.map((w, i) => renderAdviceCard(w, i, "quickWins"))}
-    </div>
-   </div>
-  </WidgetShell>
- )
+    return {
+      recentUploadCount14d,
+      daysSinceLatestUpload,
+      readySources,
+      totalSources: sourceStatuses.length,
+      channelConnected: Boolean(snapshot.channel.connected),
+    }
+  }, [data?.canonicalRows, snapshot])
+
+  const plan = useMemo(
+    () => buildDailyOraclePlan({
+      growth,
+      focusMetric: ui.focusMetric,
+      evidence,
+      rotation: ui.rotation,
+    }),
+    [evidence, growth, ui.focusMetric, ui.rotation],
+  )
+
+  const todayKey = localDateKey()
+  const streakSummary = useMemo(
+    () => calculateDailyOracleStreak(streak.completionDates, todayKey),
+    [streak.completionDates, todayKey],
+  )
+
+  const calendar = useMemo(() => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    const firstDay = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const cells: Array<{ day: number; key: string; completed: boolean; today: boolean } | null> = []
+
+    for (let index = 0; index < firstDay; index += 1) cells.push(null)
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const key = localDateKey(new Date(year, month, day))
+      cells.push({
+        day,
+        key,
+        completed: streak.completionDates.includes(key),
+        today: key === todayKey,
+      })
+    }
+
+    return {
+      label: now.toLocaleDateString(undefined, { month: "long", year: "numeric" }),
+      cells,
+    }
+  }, [streak.completionDates, todayKey])
+
+  const todaysTasks: DayTask[] = Array.isArray(brain.calendarState?.dayTasks?.[todayKey])
+    ? brain.calendarState.dayTasks[todayKey]
+    : []
+
+  const isTaskAdded = (candidate: DailyOracleCandidate) =>
+    todaysTasks.some((task) => task.text.trim().toLowerCase() === candidate.taskText.trim().toLowerCase())
+
+  const addToToday = (candidate: DailyOracleCandidate) => {
+    if (isTaskAdded(candidate)) {
+      setNotice("ALREADY IN TODAY.")
+      return
+    }
+
+    const task: DayTask = {
+      id: `daily_oracle_${candidate.id}_${Date.now()}`,
+      text: candidate.taskText,
+      completed: false,
+      dueDate: todayKey,
+    }
+
+    setCalendarState({
+      dayTasks: {
+        ...(brain.calendarState?.dayTasks || {}),
+        [todayKey]: [...todaysTasks, task],
+      },
+    })
+    setNotice("ADDED TO TODAY.")
+  }
+
+  const togglePrimaryComplete = () => {
+    const completing = !streakSummary.completedToday
+    const nextDates = completing
+      ? Array.from(new Set([...streak.completionDates, todayKey]))
+      : streak.completionDates.filter((date) => date !== todayKey)
+    const nextSummary = calculateDailyOracleStreak(nextDates, todayKey)
+    const normalizedTaskText = plan.primary.taskText.trim().toLowerCase()
+    const existingTaskIndex = todaysTasks.findIndex((task) => task.text.trim().toLowerCase() === normalizedTaskText)
+    const nextTasks = [...todaysTasks]
+
+    if (existingTaskIndex >= 0) {
+      nextTasks[existingTaskIndex] = { ...nextTasks[existingTaskIndex], completed: completing }
+    } else if (completing) {
+      nextTasks.push({
+        id: `daily_oracle_${plan.primary.id}_${Date.now()}`,
+        text: plan.primary.taskText,
+        completed: true,
+        dueDate: todayKey,
+      })
+    }
+
+    setCalendarState({
+      dayTasks: {
+        ...(brain.calendarState?.dayTasks || {}),
+        [todayKey]: nextTasks,
+      },
+    })
+    setStreak({ completionDates: nextDates })
+    setUi((current) => ({
+      ...current,
+      completedIds: nextSummary.completedToday
+        ? Array.from(new Set([...current.completedIds, plan.primary.id]))
+        : current.completedIds.filter((id) => id !== plan.primary.id),
+    }))
+    setNotice(nextSummary.completedToday
+      ? `TASK COMPLETE · ${nextSummary.currentStreak}-DAY STREAK.`
+      : "TODAY REOPENED.")
+    setTodayPanel(nextSummary.completedToday ? "calendar" : "move")
+  }
+
+  const refresh = () => {
+    setUi((current) => ({
+      ...current,
+      rotation: current.rotation + 1,
+      refreshedAt: Date.now(),
+    }))
+    setNotice("RANKING REFRESHED.")
+  }
+
+  const setFocusMetric = (metric: DailyOracleGoalMetric) => {
+    setUi((current) => ({ ...current, focusMetric: metric }))
+    setNotice("")
+  }
+
+  const renderCompactAction = (candidate: DailyOracleCandidate, index: number) => (
+    <article key={candidate.id} className={`daily-oracle-v2__quick-card is-tone-${(index % 3) + 1}`}>
+      <div className="daily-oracle-v2__quick-copy">
+        <strong>{candidate.title}</strong>
+        <small>{candidate.evidence}</small>
+      </div>
+      <WidgetIconButton
+        height={24}
+        tone={isTaskAdded(candidate) ? "primary" : "default"}
+        label={isTaskAdded(candidate) ? `${candidate.title} is already in Today` : `Add ${candidate.title} to Today`}
+        icon={isTaskAdded(candidate) ? <Check /> : <CalendarPlus />}
+        onClick={() => addToToday(candidate)}
+      />
+    </article>
+  )
+
+  const headerContent = (
+    <WidgetHeaderToggle
+      label="Daily Oracle page"
+      value={page}
+      items={ORACLE_PAGES}
+      onChange={setPage}
+    />
+  )
+
+  return (
+    <WidgetShell
+      {...common}
+      icon={<Sparkles size={22} aria-hidden="true" />}
+      headerContent={headerContent}
+    >
+      <WidgetWorkflowMain className="daily-oracle-v2">
+        <WidgetScrollArea
+          ariaLabel={page === "today" ? "Daily Oracle ranked actions" : "Daily Oracle focus controls"}
+          edge="inset"
+          className="daily-oracle-v2__scroll"
+          contentClassName="daily-oracle-v2__content"
+        >
+          {page === "today" ? (
+            <>
+              <WidgetSection className="daily-oracle-v2__source-strip">
+                <WidgetBadge height={18} icon={<Brain size={11} />}>
+                  {Math.round(growth.profileConfidenceScore)}% CHANNEL READ
+                </WidgetBadge>
+                <span>{plan.sourceLabel}</span>
+                <span>{plan.evidenceCoverage}% EVIDENCE READY</span>
+              </WidgetSection>
+
+              <WidgetSection className="daily-oracle-v2__compass-section">
+                {todayPanel === "calendar" && streakSummary.completedToday ? (
+                  <div className="daily-oracle-v2__calendar-stage" aria-label="Daily Oracle streak calendar">
+                    <div className="daily-oracle-v2__calendar-stage-header">
+                      <div className="daily-oracle-v2__streak-flame" aria-hidden="true">
+                        <Flame />
+                      </div>
+                      <div className="daily-oracle-v2__streak-copy">
+                        <span>TODAY COMPLETE</span>
+                        <strong>{streakSummary.currentStreak} DAY STREAK</strong>
+                        <small>BEST {streakSummary.longestStreak} · TOTAL {streakSummary.totalCompleted}</small>
+                      </div>
+                      <WidgetIconButton
+                        height={24}
+                        tone="default"
+                        label="Return to Best Next Move"
+                        icon={<Target />}
+                        onClick={() => setTodayPanel("move")}
+                      />
+                    </div>
+                    <div className="daily-oracle-v2__calendar">
+                      <div className="daily-oracle-v2__calendar-title">
+                        <CalendarDays aria-hidden="true" />
+                        <strong>{calendar.label}</strong>
+                      </div>
+                      <div className="daily-oracle-v2__calendar-grid" aria-label={`Daily Oracle completion calendar for ${calendar.label}`}>
+                        {WEEKDAYS.map((day, index) => <span key={`${day}-${index}`} className="is-weekday">{day}</span>)}
+                        {calendar.cells.map((cell, index) => cell ? (
+                          <span
+                            key={cell.key}
+                            className={`${cell.completed ? "is-complete" : ""} ${cell.today ? "is-today" : ""}`.trim()}
+                            aria-label={`${cell.key}${cell.completed ? ", completed" : ""}${cell.today ? ", today" : ""}`}
+                          >
+                            {cell.completed ? <Check aria-hidden="true" /> : cell.day}
+                          </span>
+                        ) : <span key={`blank-${index}`} className="is-blank" aria-hidden="true" />)}
+                      </div>
+                    </div>
+                    <WidgetSizedButton
+                      height={24}
+                      textFit="adaptive"
+                      tone="default"
+                      className="daily-oracle-v2__reopen-button"
+                      onClick={togglePrimaryComplete}
+                    >
+                      REOPEN TODAY
+                    </WidgetSizedButton>
+                  </div>
+                ) : (
+                  <div className="daily-oracle-v2__compass">
+                    <article className={`daily-oracle-v2__primary ${streakSummary.completedToday ? "is-done" : ""}`}>
+                      <div className="daily-oracle-v2__primary-kicker">
+                        <Target size={16} aria-hidden="true" />
+                        <span>BEST NEXT MOVE</span>
+                      </div>
+                      <strong>{plan.primary.title}</strong>
+                      <p>{plan.primary.detail}</p>
+                      <small>{plan.primary.evidence}</small>
+                      <div className="daily-oracle-v2__primary-actions">
+                        <WidgetSizedButton
+                          height={24}
+                          textFit="adaptive"
+                          tone="primary"
+                          onClick={() => addToToday(plan.primary)}
+                        >
+                          <CalendarPlus aria-hidden="true" />
+                          {isTaskAdded(plan.primary) ? "IN TODAY" : "ADD TO TODAY"}
+                        </WidgetSizedButton>
+                        <WidgetIconButton
+                          height={38}
+                          tone={streakSummary.completedToday ? "primary" : "default"}
+                          className="daily-oracle-v2__day-check"
+                          label={streakSummary.completedToday ? "Open today's streak calendar" : "Complete today's Daily Oracle task"}
+                          icon={streakSummary.completedToday ? <CalendarDays /> : <Check />}
+                          onClick={() => streakSummary.completedToday ? setTodayPanel("calendar") : togglePrimaryComplete()}
+                        />
+                      </div>
+                    </article>
+
+                    <div className="daily-oracle-v2__score-stack" aria-label="Daily Oracle decision score">
+                      <div className="daily-oracle-v2__score is-impact">
+                        <span>IMPACT</span>
+                        <strong>{oracleLevelLabel(plan.primary.impact)}</strong>
+                        <i style={{ "--oracle-score": `${scorePercent(plan.primary.impact)}%` } as React.CSSProperties} />
+                      </div>
+                      <div className="daily-oracle-v2__score is-effort">
+                        <span>EFFORT</span>
+                        <strong>{oracleEffortLabel(plan.primary.effort)}</strong>
+                        <i style={{ "--oracle-score": `${scorePercent(4 - plan.primary.effort)}%` } as React.CSSProperties} />
+                      </div>
+                      <div className="daily-oracle-v2__score is-evidence">
+                        <span>EVIDENCE</span>
+                        <strong>{plan.evidenceCoverage}%</strong>
+                        <i style={{ "--oracle-score": `${plan.evidenceCoverage}%` } as React.CSSProperties} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </WidgetSection>
+
+              <WidgetSection className="daily-oracle-v2__quick-section">
+                <div className="daily-oracle-v2__section-heading">
+                  <Zap size={15} aria-hidden="true" />
+                  <strong>QUICK WIN RAIL</strong>
+                  <span>LOWER EFFORT · TODAY</span>
+                </div>
+                <div className="daily-oracle-v2__quick-grid">
+                  {plan.quickWins.map(renderCompactAction)}
+                </div>
+              </WidgetSection>
+
+              <WidgetSection className="daily-oracle-v2__goal-strip">
+                <span>CURRENT GOAL</span>
+                <strong>{growth.currentGoal}</strong>
+              </WidgetSection>
+            </>
+          ) : (
+            <>
+              <WidgetSection className="daily-oracle-v2__focus-intro">
+                <div>
+                  <WidgetBadge height={18}>GOAL LENS</WidgetBadge>
+                  <strong>WHAT SHOULD TODAY OPTIMIZE?</strong>
+                </div>
+                <p>Change the lens; the Oracle reranks actions without losing the same decision model.</p>
+              </WidgetSection>
+
+              <WidgetSection className="daily-oracle-v2__metric-grid-section">
+                <div className="daily-oracle-v2__metric-grid" role="group" aria-label="Daily Oracle focus metric">
+                  {METRICS.map(({ id, compactLabel, Icon }) => (
+                    <WidgetSizedButton
+                      key={id}
+                      height={24}
+                      textFit="adaptive"
+                      tone={ui.focusMetric === id ? "primary" : "default"}
+                      className={`is-${id}`}
+                      aria-pressed={ui.focusMetric === id}
+                      onClick={() => setFocusMetric(id)}
+                    >
+                      <Icon aria-hidden="true" />
+                      {compactLabel}
+                    </WidgetSizedButton>
+                  ))}
+                </div>
+              </WidgetSection>
+
+              <WidgetSection className="daily-oracle-v2__focus-plan">
+                <div className="daily-oracle-v2__section-heading">
+                  <Target size={15} aria-hidden="true" />
+                  <strong>{ui.focusMetric.replace("-", " ").toUpperCase()} PLAN</strong>
+                  <span>3 ACTIONS</span>
+                </div>
+                <div className="daily-oracle-v2__focus-list">
+                  {plan.focusTasks.map((candidate, index) => (
+                    <article key={candidate.id} className={`daily-oracle-v2__focus-row is-tone-${(index % 3) + 1}`}>
+                      <span className="daily-oracle-v2__focus-index">{String(index + 1).padStart(2, "0")}</span>
+                      <div>
+                        <strong>{candidate.title}</strong>
+                        <p>{candidate.detail}</p>
+                      </div>
+                      <WidgetIconButton
+                        height={24}
+                        tone={isTaskAdded(candidate) ? "primary" : "default"}
+                        label={isTaskAdded(candidate) ? `${candidate.title} is already in Today` : `Add ${candidate.title} to Today`}
+                        icon={isTaskAdded(candidate) ? <Check /> : <CalendarPlus />}
+                        onClick={() => addToToday(candidate)}
+                      />
+                    </article>
+                  ))}
+                </div>
+              </WidgetSection>
+
+              <WidgetSection className="daily-oracle-v2__context-grid">
+                <div className="is-purple">
+                  <span>CHANNEL READ</span>
+                  <strong>{Math.round(growth.profileConfidenceScore)}%</strong>
+                </div>
+                <div className="is-cyan">
+                  <span>EVIDENCE READY</span>
+                  <strong>{plan.evidenceCoverage}%</strong>
+                </div>
+                <div className="is-orange">
+                  <span>UPLOAD CADENCE</span>
+                  <strong>{evidence.daysSinceLatestUpload === null ? "UNKNOWN" : `${evidence.daysSinceLatestUpload}D AGO`}</strong>
+                </div>
+              </WidgetSection>
+            </>
+          )}
+        </WidgetScrollArea>
+      </WidgetWorkflowMain>
+
+      <WidgetFooter className="daily-oracle-v2__footer">
+        <WidgetSizedButton height={24} textFit="adaptive" tone="default" onClick={refresh}>
+          <RefreshCw aria-hidden="true" />
+          REFRESH RANKING
+        </WidgetSizedButton>
+        <WidgetSizedButton
+          height={24}
+          textFit="adaptive"
+          tone="primary"
+          onClick={() => onNavigate?.("/ai-brain")}
+        >
+          <Brain aria-hidden="true" />
+          OPEN BRAIN
+        </WidgetSizedButton>
+        <span className="daily-oracle-v2__notice" role="status" aria-live="polite">{notice}</span>
+      </WidgetFooter>
+    </WidgetShell>
+  )
 }
