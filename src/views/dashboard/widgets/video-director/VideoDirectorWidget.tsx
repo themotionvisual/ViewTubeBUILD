@@ -820,7 +820,6 @@ export const VideoDirectorWidget: React.FC<
           STUDIO ↗
         </DirectorButton>
       }
-      contentLayout="flush"
     >
       <div className="vt-video-director-widget">
         <WidgetWorkflowMain>
@@ -836,7 +835,7 @@ export const VideoDirectorWidget: React.FC<
               <WidgetBadge className="vtdw-project-badge">{project.name || "UNTITLED"}</WidgetBadge>
             </div>
           </WidgetSection>
-          <WidgetScrollArea ariaLabel="Video Director workflow" edge="full">
+          <WidgetScrollArea ariaLabel="Video Director workflow" edge="inset" className="vtdw-scroll-area" contentClassName="vtdw-scroll-content">
             {notice ? <WidgetSection><WidgetToast title={notice} status="neutral" onDismiss={() => setNotice("")} /></WidgetSection> : null}
             {body}
           </WidgetScrollArea>
