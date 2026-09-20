@@ -259,3 +259,61 @@ export const oracleLevelLabel = (level: DailyOracleLevel) =>
 
 export const oracleEffortLabel = (level: DailyOracleLevel) =>
  level === 3 ? "Deep" : level === 2 ? "30–60m" : "≤20m"
+
+
+export interface DailyOracleStreakSummary {
+ currentStreak: number
+ longestStreak: number
+ completedToday: boolean
+ totalCompleted: number
+}
+
+const oracleDateOrdinal = (dateKey: string): number | null => {
+ const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateKey || ""))
+ if (!match) return null
+ const year = Number(match[1])
+ const month = Number(match[2])
+ const day = Number(match[3])
+ const stamp = Date.UTC(year, month - 1, day)
+ return Number.isFinite(stamp) ? Math.floor(stamp / 86400000) : null
+}
+
+export const calculateDailyOracleStreak = (
+ completionDates: readonly string[],
+ todayKey: string,
+): DailyOracleStreakSummary => {
+ const unique = Array.from(new Set(completionDates))
+  .map((key) => ({ key, ordinal: oracleDateOrdinal(key) }))
+  .filter((entry): entry is { key: string; ordinal: number } => entry.ordinal !== null)
+  .sort((a, b) => a.ordinal - b.ordinal)
+
+ const completedSet = new Set(unique.map((entry) => entry.ordinal))
+ const todayOrdinal = oracleDateOrdinal(todayKey)
+ const completedToday = todayOrdinal !== null && completedSet.has(todayOrdinal)
+
+ let currentStreak = 0
+ if (completedToday && todayOrdinal !== null) {
+  let cursor = todayOrdinal
+  while (completedSet.has(cursor)) {
+   currentStreak += 1
+   cursor -= 1
+  }
+ }
+
+ let longestStreak = 0
+ let running = 0
+ let previous: number | null = null
+ for (const entry of unique) {
+  if (previous !== null && entry.ordinal === previous + 1) running += 1
+  else running = 1
+  longestStreak = Math.max(longestStreak, running)
+  previous = entry.ordinal
+ }
+
+ return {
+  currentStreak,
+  longestStreak,
+  completedToday,
+  totalCompleted: unique.length,
+ }
+}
