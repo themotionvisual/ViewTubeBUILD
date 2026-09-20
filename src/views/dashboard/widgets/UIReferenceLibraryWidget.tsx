@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from "react"
 import {
   Award,
+  BarChart3,
   Bell,
   BadgeCheck,
+  Brain,
   Bookmark,
   Check,
   Circle,
@@ -15,11 +17,13 @@ import {
   Plus,
   RotateCcw,
   Save,
+  Settings,
   Sparkles,
   Star,
   Target,
   TrendingUp,
   UploadCloud,
+  Zap,
 } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
 import {
@@ -58,8 +62,17 @@ import {
   WidgetSizedSelect,
   WidgetSpectrumFillBadge,
   WidgetStepper,
+  WidgetSplitCounter,
   WidgetTextInput,
   WidgetToggleSwitch,
+  WidgetTinySpectrumIcon,
+  WIDGET_TINY_ICON_SET,
+  WidgetAccentRailModule,
+  WidgetIconTitleModule,
+  WidgetRainbowPanel,
+  WidgetRainbowDivider,
+  WidgetModuleHeader,
+  WidgetModuleFrame,
   WidgetVideoSelect,
   type WidgetControlHeight,
   type WidgetPrimitiveTone,
@@ -549,6 +562,165 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   />
                 )}
               />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Compact Steppers", "Middle cell fits the widest two-digit value only")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetStepper
+                    height={height}
+                    tone={tone}
+                    label="Compact quantity"
+                    value={matrixStepper}
+                    onChange={setMatrixStepper}
+                    min={0}
+                    max={99}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Split-Left Counters", "Square bay = two 2:1 chevron buttons")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetSplitCounter
+                    height={height}
+                    tone={tone}
+                    label="Split counter quantity"
+                    value={matrixStepper}
+                    onChange={setMatrixStepper}
+                    min={0}
+                    max={99}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Daily Oracle Accent Rail", "Reusable edge-to-edge colored status/action module")}
+              <div className="grid gap-2">
+                <WidgetAccentRailModule
+                  spectrum="rose"
+                  title="Publish cadence needs attention"
+                  detail="The color rail touches the outer module stroke."
+                  action={<WidgetIconButton height={32} tone="secondary" label="Open upload" icon={<UploadCloud />} />}
+                />
+                <WidgetAccentRailModule
+                  spectrum="cyan"
+                  title="Audience signal found"
+                  detail="Use the rail color for a meaningful category or status."
+                  action={<WidgetIconButton height={32} tone="default" label="Open insight" icon={<ArrowRight />} />}
+                />
+              </div>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Icon + Title Modules", "About VIEWTUBE-style square icon bay + copy")}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <WidgetIconTitleModule spectrum="cyan" icon={<Brain />} title="Channel Brain" subtitle="Context, memory, and recommendations" />
+                <WidgetIconTitleModule spectrum="royal" icon={<BarChart3 />} title="Analytics" subtitle="Canonical channel performance data" />
+                <WidgetIconTitleModule spectrum="lime" icon={<Zap />} title="Quick Action" subtitle="One-tap creator workflow handoff" />
+                <WidgetIconTitleModule spectrum="purple" icon={<Settings />} title="Control" subtitle="Preferences and system configuration" />
+              </div>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Rainbow Surfaces", "Full-bleed gradient panel + divider line")}
+              <WidgetRainbowPanel>
+                <div className="grid gap-1">
+                  <strong className="text-[12px] font-black uppercase">ViewTube Spectrum Surface</strong>
+                  <span className="text-[9px] font-bold uppercase opacity-60">Gradient reaches every module edge; the divider spans left to right.</span>
+                </div>
+              </WidgetRainbowPanel>
+              <WidgetRainbowDivider />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Tiny Colored Icons", "50 reusable 18px spectrum icons")}
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(WIDGET_TINY_ICON_SET) as Array<keyof typeof WIDGET_TINY_ICON_SET>).map((name, index) => (
+                  <div key={name} className="grid justify-items-center gap-1">
+                    <WidgetTinySpectrumIcon
+                      name={name}
+                      spectrum={WIDGET_BADGE_SPECTRUM[index % WIDGET_BADGE_SPECTRUM.length]}
+                      label={name}
+                    />
+                    <small className="text-[7px] font-black uppercase opacity-55">{name}</small>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Widget Modules", "Composable module frame + interchangeable header controls")}
+              <div className="grid gap-3">
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Zap />}
+                      title="Toggle Header"
+                      subtitle="Boolean control"
+                      controls={<WidgetToggleSwitch height={24} tone="primary" label="Enable module" checked={matrixToggle} onChange={setMatrixToggle} />}
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">Module body content stays independent from the header control.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Layers />}
+                      title="Counter Header"
+                      subtitle="Compact split-left number control"
+                      controls={<WidgetSplitCounter height={24} tone="primary" label="Header quantity" value={matrixStepper} onChange={setMatrixStepper} min={0} max={99} />}
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">The header can carry a number counter without changing module geometry.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Star />}
+                      title="Button Header"
+                      subtitle="Compact action"
+                      controls={<WidgetSizedButton height={24} tone="primary" textFit="adaptive">Apply</WidgetSizedButton>}
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">Header buttons use the canonical control ladder.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Settings />}
+                      title="Dropdown Header"
+                      subtitle="Portalled menu"
+                      controls={
+                        <WidgetSizedSelect
+                          height={24}
+                          tone="primary"
+                          value={selectValue}
+                          onChange={setSelectValue}
+                          label="Module header visibility"
+                          options={[
+                            { value: "public", label: "PUBLIC" },
+                            { value: "unlisted", label: "UNLISTED" },
+                            { value: "private", label: "PRIVATE" },
+                          ]}
+                        />
+                      }
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">Dropdown rows match the 24px closed trigger and use a scrollbar when needed.</p>
+                </WidgetModuleFrame>
+              </div>
             </div>
           </WidgetSection>
         )}
