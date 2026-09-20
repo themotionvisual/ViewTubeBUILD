@@ -62,6 +62,17 @@ describe("dashboard widget control rhythm", () => {
     expect(widgetPrimitiveExtensionsSource).toContain("contentClassName={selectMenuClass(height,tone)}")
     expect(widgetPrimitiveExtensionsSource).not.toContain("contentClassName={primitiveClass(height,tone,textFit)}")
   })
+
+  it("does not clamp portalled dropdown menus to one control row on mobile", () => {
+    const exactHeightsCss = readFileSync(
+      new URL("../widgetPrimitiveExactHeights.css", import.meta.url),
+      "utf8",
+    )
+    expect(exactHeightsCss).toContain(".vt-sized-control:not(.widget-select-content)")
+    expect(exactHeightsCss).toContain(".widget-select-content.vt-sized-control {")
+    expect(exactHeightsCss).toContain("height:auto;")
+    expect(exactHeightsCss).toContain("max-height:min(340px,calc(var(--vt-primitive-height) * 9));")
+  })
 })
 
 describe("dashboard widget scrollbar contract", () => {
