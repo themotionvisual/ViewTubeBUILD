@@ -73,8 +73,10 @@ describe("Subtoolbox Primitive System", () => {
 
     expect(splitCss).toContain("split-left square parity")
     expect(splitCss).toContain("aspect-ratio:1/1")
+    expect(splitCss).toContain("Split Menu hybrid authority")
+    expect(splitCss).toContain("vt-subtoolbox-split-dropdown-option-rail")
     expect(css).toContain("field parity, borderless action tags")
-    expect(css).toContain("--field-accent:var(--pair-a")
+    expect(css).toContain("--field-accent:var(--pair-b")
     expect(css).toContain(".vt-subtoolbox-removable-tag,")
     expect(css).toContain(".vt-subtoolbox-selectable-tag{")
     expect(css).toContain("border:0!important")
