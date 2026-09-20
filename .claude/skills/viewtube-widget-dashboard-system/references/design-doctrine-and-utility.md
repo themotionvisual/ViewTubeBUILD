@@ -376,3 +376,19 @@ Before shrinking essential controls, identify duplicates:
 Keep one persistent primary control and retain contextual duplicates only when they perform a distinct job.
 
 Remove redundant accelerators before shrinking or reflowing the main workflow.
+
+
+## Control-panel selector reachability
+
+A multi-panel widget must always leave a clear, operable path for changing its active control panel.
+
+On constrained layouts:
+
+- the primary panel selector must remain fully visible and tappable;
+- if a secondary quick-switch strip is removed, the primary selector must become more prominent, not more compressed;
+- a selector may become full-width on portrait even when its desktop form shares a row with the panel title;
+- for long scrollable tools, keep the panel selector sticky or otherwise persistently reachable when doing so does not obscure the work surface;
+- never hide the only discoverable control for changing panels;
+- verify the selector popup/portal is not clipped by widget overflow.
+
+Functional navigation outranks preserving a decorative desktop row composition.
