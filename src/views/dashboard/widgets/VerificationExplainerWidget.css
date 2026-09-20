@@ -32,16 +32,30 @@
   height: 100%;
 }
 
+/* The custom mobile scroll lane is hidden on touch devices, so do not reserve
+   an invisible right gutter. This lets gradients, rules and full-width panels
+   visibly reach the content edge. */
+.about-vt__scroll .widget-scroll-viewport {
+  padding-inline-end: 0;
+}
+
 .about-vt__scroll-content {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--widget-component-gap, 8px);
 }
 
 .about-vt__page {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--widget-component-gap, 8px);
+}
+
+.about-vt__page > * {
+  width: 100%;
+  align-self: stretch;
 }
 
 .about-vt__intro {
