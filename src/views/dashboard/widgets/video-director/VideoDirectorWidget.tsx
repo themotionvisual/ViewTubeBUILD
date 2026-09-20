@@ -604,7 +604,7 @@ export const VideoDirectorWidget: React.FC<
         </div>
       </WidgetSection>
 
-      <WidgetSection>
+      <WidgetSection className="vtdw-category-switcher">
         <div className="vtdw-category-head">
           <div className="vtdw-category-copy">
             <strong>{STATUS_SYMBOL[activeStatus]} {activeDefinition.label}</strong>
