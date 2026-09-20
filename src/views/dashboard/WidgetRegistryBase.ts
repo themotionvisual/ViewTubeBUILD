@@ -15,12 +15,12 @@ type DefaultDashboardSlot = Readonly<{
 }>
 
 export const DEFAULT_DASHBOARD_ROWS = [
- // Top row — Channel Overview (left half) + About VIEWTUBE hero (right half).
- // The About panel explains the product and data use. Its visibility is owned
- // exclusively by dashboard layout state, like every other widget.
+ // Top row — About VIEWTUBE is deliberately first so a new visitor meets the
+ // product through its visual language and creator loop before seeing channel
+ // metrics. Channel Overview follows beside it for returning creators.
  [
-  { id: "kpi-cluster", size: "half", height: "medium" },
   { id: "app-verification-explainer", size: "half", height: "medium" },
+  { id: "kpi-cluster", size: "half", height: "medium" },
  ],
  [
   { id: "community-post", size: "half", height: "tall" },
