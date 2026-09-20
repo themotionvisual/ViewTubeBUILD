@@ -181,6 +181,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
  }
 
  const start = async () => {
+  if (selectedWindows.length === 0 || selected.length === 0) return
   if (!isAuthenticated) {
    try { await onLogin() } catch (error) {
     if (isLoginAbortError(error)) return
@@ -193,6 +194,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
  }
 
  const startCategories = async (categoryIds: string[], includeRetentionVideoIds = false, forceFullVideoMetadata = false) => {
+  if (selectedWindows.length === 0) return
   if (!isAuthenticated) {
    try { await onLogin() } catch (error) {
     if (isLoginAbortError(error)) return
@@ -653,11 +655,15 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
     <button
      type="button"
      onClick={isAuthenticated ? start : onLogin}
-     disabled={isAuthenticated && selected.length === 0}
+     disabled={isAuthenticated && (selected.length === 0 || selectedWindows.length === 0)}
      className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border-[3px] border-black bg-[#3FEE56] py-2.5 text-[12px] font-black uppercase tracking-[0.03em] shadow-[4px_4px_0_0_#000] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_0_#000] disabled:cursor-not-allowed disabled:opacity-50"
     >
      {isAuthenticated ? <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} /> : <ShieldCheck className="h-4 w-4" />}
-     {isSyncing ? `Queue Selected Data (${selectedUnitCount})` : isAuthenticated ? `Sync Selected Data (${selectedUnitCount})` : "Connect YouTube Channel"}
+     {selectedWindows.length === 0
+      ? "Select a Time Window"
+      : isSyncing
+       ? `Queue Selected Data (${selectedUnitCount})`
+       : isAuthenticated ? `Sync Selected Data (${selectedUnitCount})` : "Connect YouTube Channel"}
     </button>
    </div>
   </ToolboxScaffold>
