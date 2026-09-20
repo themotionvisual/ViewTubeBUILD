@@ -496,3 +496,32 @@ Canonical examples:
 - **Toggle:** no stroke in Secondary. OFF = pale/white track + widget-colored thumb. ON = widget-colored track + white thumb. Background and thumb color animate together as the state changes.
 
 Do not implement a new tone by merely changing opacity on the Default construction. If Default, Primary, and Secondary are difficult to distinguish in the UI Reference Library without reading their labels, the family needs another construction pass.
+
+
+## Widget module header manifestations
+
+The UI Reference Widget Modules section must demonstrate the canonical Navigation primitives *inside actual module headers*, not as unrelated body controls. Include representative header manifestations for:
+
+- Header Stepper / time-window navigation (Channel Overview pattern)
+- Header Toggle + Header Stepper / current-item counter (Comment Responder pattern)
+- Step Tabs
+- Switch
+- Checkbox / choice
+- Radio-mode choice
+
+Header-control examples must use the same production Navigation primitives shown in the Navigation section.
+
+## Video-select edge-to-edge open menu
+
+The open video selector is one continuous menu surface:
+
+- menu padding is 0;
+- the search control is a full-width flat first row, not an inset rounded module;
+- there is no horizontal divider below the search row;
+- option rows touch the left and right menu edges;
+- option rows have no individual border/radius;
+- thumbnail frames use VT ink;
+- unboxed duration text sits over the thumbnail at right: 2px; bottom: 0;
+- the 24 / 32 / 38px closed selector split bays are widened independently so VIDEO and the chevron remain legible.
+
+Do not rely on lazy stylesheet import order to preserve this geometry. The canonical variants layer owns the final menu construction.
