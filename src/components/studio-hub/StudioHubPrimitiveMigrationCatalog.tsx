@@ -175,6 +175,8 @@ const PrimitiveMigrationControl: React.FC<{
   const [rangeHigh, setRangeHigh] = React.useState(76)
   const [selectableTagOn, setSelectableTagOn] = React.useState(false)
   const [editorTags, setEditorTags] = React.useState(["NAPOLEON", "CAVALRY"])
+  const [searchQuery, setSearchQuery] = React.useState("NAPOLEON")
+  const [actionDraft, setActionDraft] = React.useState("NEW ITEM")
   const [knobValue, setKnobValue] = React.useState(72)
   const [colorValue, setColorValue] = React.useState("#36E0F6")
   const [mediaSelected, setMediaSelected] = React.useState(true)
@@ -231,19 +233,33 @@ const PrimitiveMigrationControl: React.FC<{
     return <SubToolboxSplitButton level={level} style={style} icon={name === "Head Tail Action" ? <ChevronRight /> : <Settings2 />} railColor={colors.a} labelColor={colors.b}>{name === "Head Tail Action" ? "Action" : "Settings"}</SubToolboxSplitButton>
   }
   if (name === "Split Menu") {
-    return <SubToolboxSplitDropdown level={level} value={menuChoice} options={["OPTION 1","OPTION 2","OPTION 3"].map((option) => ({ value: option, label: option, icon: <Menu /> }))} onChange={setMenuChoice} icon={<Menu />} railLabel="SET" ariaLabel="Split menu" railColor={colors.a} labelColor={colors.b} />
+    return <SubToolboxSplitDropdown
+      level={level}
+      value={menuChoice}
+      options={[
+        { value: "OPTION 1", label: "OPTION 1", icon: <Menu /> },
+        { value: "OPTION 2", label: "OPTION 2", icon: <Settings2 /> },
+        { value: "OPTION 3", label: "OPTION 3", icon: <SlidersHorizontal /> },
+      ]}
+      onChange={setMenuChoice}
+      icon={<Menu />}
+      chevron={<ChevronDown />}
+      ariaLabel="Split menu"
+      railColor={colors.a}
+      labelColor={colors.b}
+    />
   }
   if (name === "Dropdown" || name === "Select Menu" || name === "Context Menu") {
     return <SubToolboxMenu level={level} style={style} variant={name === "Context Menu" ? "context" : name === "Select Menu" ? "select" : "dropdown"} value={menuChoice} options={["OPTION 1","OPTION 2","OPTION 3"].map((option) => ({ value: option, label: option }))} onValueChange={setMenuChoice} triggerLabel={name === "Dropdown" ? "MENU" : menuChoice} triggerIcon={<MoreHorizontal />} chevronIcon={<ChevronDown />} ariaLabel={name} />
   }
   if (name === "Split Search") {
-    return <SubToolboxSplitField level={level} style={style} icon={<Search />} inputProps={{ "aria-label": "Search", placeholder: "SEARCH" }} />
+    return <SubToolboxSplitField level={level} style={style} variant="search" icon={<Search />} actionIcon={<X />} actionLabel="Clear search" onAction={() => setSearchQuery("")} inputProps={{ "aria-label": "Search", placeholder: "SEARCH", value: searchQuery, onChange: (event) => setSearchQuery(event.target.value) }} />
   }
   if (name === "Number Field") {
     return <SubToolboxInput level={level} style={style} type="number" defaultValue="25" />
   }
   if (name === "Input Action") {
-    return <SubToolboxSplitField level={level} style={style} icon={<Plus />} inputProps={{ "aria-label": "Add item", placeholder: "ADD ITEM" }} />
+    return <SubToolboxSplitField level={level} style={style} variant="action" actionIcon={<Plus />} actionLabel="Add item" onAction={() => setActionDraft("")} inputProps={{ "aria-label": "Add item", placeholder: "ADD ITEM", value: actionDraft, onChange: (event) => setActionDraft(event.target.value) }} />
   }
   if (name === "Slider") {
     return <SubToolboxSlider level={level} style={style} value={sliderValue} onValueChange={setSliderValue} railIcon={<span>S</span>} onReset={() => setSliderValue(62)} />
@@ -270,7 +286,7 @@ const PrimitiveMigrationControl: React.FC<{
     return <SubToolboxProgressBar level={level} style={style} value={68} />
   }
   if (name === "Progress Value") {
-    return <SubToolboxProgressValue level={level} style={style} value={68} />
+    return <SubToolboxProgressValue level={level} style={style} value={68} label="SYNC" />
   }
   if (name === "KPI") {
     return <SubToolboxKpiCard level={level} style={style} label="VIEWS" value="12.4K" accentColor={colors.a} railColor={colors.b} />

@@ -20,14 +20,13 @@ describe("SubToolbox split-left primitives", () => {
     expect(html).toContain("is-selected")
   })
 
-  it("renders the canonical split-left dropdown trigger with a split rail and uninterrupted value region", () => {
+  it("renders the split menu with a square icon rail and full text/chevron side", () => {
     const html = renderToStaticMarkup(
       <SubToolboxSplitDropdown
         ariaLabel="Dataset"
-        railLabel="SET"
         icon={<Settings />}
         value="videos"
-        options={[{ value: "videos", label: "Videos" }, { value: "playlists", label: "Playlists" }]}
+        options={[{ value: "videos", label: "Videos", icon: <Settings /> }, { value: "playlists", label: "Playlists", icon: <Settings /> }]}
         onChange={() => {}}
       />,
     )
@@ -35,13 +34,30 @@ describe("SubToolbox split-left primitives", () => {
     expect(html).toContain("aria-expanded=\"false\"")
     expect(html).toContain("vt-subtoolbox-split-dropdown-trigger")
     expect(html).toContain("vt-subtoolbox-split-dropdown-rail")
-    expect(html).toContain("vt-subtoolbox-split-dropdown-rail-label")
-    expect(html).toContain(">SET<")
-    expect(html).toContain("vt-subtoolbox-split-dropdown-rail-arrow")
     expect(html).toContain("vt-subtoolbox-split-dropdown-label")
+    expect(html).toContain("vt-subtoolbox-split-dropdown-chevron")
     expect(html).toContain(">Videos<")
-    expect(html).not.toContain("vt-subtoolbox-split-dropdown-chevron")
-    expect(html).not.toContain("role=\"listbox\"")
+    expect(html).not.toContain(">SET<")
+    expect(html).not.toContain("vt-subtoolbox-split-dropdown-rail-label")
+    expect(html).not.toContain("vt-subtoolbox-split-dropdown-rail-arrow")
+  })
+
+  it("renders a square split-left icon section on every open menu row", () => {
+    const html = renderToStaticMarkup(
+      <SubToolboxSplitDropdown
+        ariaLabel="Dataset"
+        icon={<Settings />}
+        value="videos"
+        defaultOpen
+        options={[{ value: "videos", label: "Videos", icon: <Settings /> }, { value: "playlists", label: "Playlists", icon: <Settings /> }]}
+        onChange={() => {}}
+      />,
+    )
+    expect(html).toContain("aria-expanded=\"true\"")
+    expect(html).toContain("role=\"listbox\"")
+    expect(html.match(/vt-subtoolbox-split-dropdown-option-rail/g)).toHaveLength(2)
+    expect(html.match(/vt-subtoolbox-split-dropdown-option-label/g)).toHaveLength(2)
+    expect(html).toContain("vt-subtoolbox-split-dropdown-option-check")
   })
 
   it("renders the KPI card using the split header pattern", () => {

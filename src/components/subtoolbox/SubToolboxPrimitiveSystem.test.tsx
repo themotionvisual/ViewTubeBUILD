@@ -4,7 +4,7 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "./SubToolboxLayouts"
-import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxMeter, SubToolboxMetric, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxStatePanel, SubToolboxTextArea, SubToolboxTooltip } from "./SubToolboxPrimitives"
+import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxMeter, SubToolboxMetric, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxSplitField, SubToolboxStatePanel, SubToolboxTagEditor, SubToolboxTextArea, SubToolboxTooltip, SubToolboxProgressValue } from "./SubToolboxPrimitives"
 import { CONTROL_SHELL, SUBTOOLBOX_CONTROL_SIZES, SUBTOOLBOX_STATES, SUBTOOLBOX_TOKENS, TOOLBOX_LEVEL_DNA, resolveSubtoolboxMinHeight } from "./tokens"
 
 describe("Subtoolbox Primitive System", () => {
@@ -67,6 +67,31 @@ describe("Subtoolbox Primitive System", () => {
     }
   })
 
+  it("keeps the corrected split/tag/field/knob visual contracts in canonical CSS", () => {
+    const css = readFileSync(resolve(process.cwd(), "src/styles/subtoolbox-system.css"), "utf8")
+    const splitCss = readFileSync(resolve(process.cwd(), "src/styles/subtoolbox-split-primitives.css"), "utf8")
+
+    expect(splitCss).toContain("split-left square parity")
+    expect(splitCss).toContain("aspect-ratio:1/1")
+    expect(splitCss).toContain("Split Menu hybrid authority")
+    expect(splitCss).toContain("vt-subtoolbox-split-dropdown-option-rail")
+    expect(css).toContain("field parity, borderless action tags")
+    expect(css).toContain("--field-accent:var(--pair-b")
+    expect(css).toContain(".vt-subtoolbox-removable-tag,")
+    expect(css).toContain(".vt-subtoolbox-selectable-tag{")
+    expect(css).toContain("border:0!important")
+    expect(css).toContain("--vt-knob-size:calc(var(--vt-component-height)*2.15)")
+    expect(css).toContain(".vt-subtoolbox-knob-arc{display:none}")
+    expect(css).toContain("COMPONENT LIBRARY CORRECTION V4 — groups 18 / 19 / 21 / 22 / 23.")
+    expect(css).toContain("border:var(--vt-component-stroke) solid #000!important")
+    expect(css).toContain("--switch-inset:calc(var(--vt-component-height)*.10)")
+    expect(css).toContain("var(--switch-handle-w)")
+    expect(css).toContain("width:var(--vt-component-height)!important")
+    expect(css).toContain("border-radius:var(--vt-component-radius)!important")
+    expect(css).toContain("COMPONENT LIBRARY CORRECTION V5 — tag editor parity")
+    expect(css).toContain("--field-body:var(--pair-b")
+  })
+
   it("gives every declared subtoolbox state default copy", () => {
     // The Record is typed, but a missing key renders an empty panel rather than
     // failing the build, so assert the rendered output instead of the type.
@@ -93,6 +118,10 @@ describe("Subtoolbox Primitive System", () => {
         <SubToolboxFileTarget label="Upload video" />
         <SubToolboxTooltip level="l1" forceOpen content="Tooltip" />
         <SubToolboxKnob level="l1" value={72} onValueChange={() => undefined} />
+        <SubToolboxSplitField level="l1" variant="search" icon="S" actionIcon="X" inputProps={{ "aria-label": "Search", defaultValue: "Napoleon" }} />
+        <SubToolboxSplitField level="l1" variant="action" actionIcon="+" inputProps={{ "aria-label": "Add item", defaultValue: "Item" }} />
+        <SubToolboxTagEditor level="l1" tags={["HISTORY"]} onTagsChange={() => undefined} />
+        <SubToolboxProgressValue level="l1" value={68} label="Sync" />
         <SubToolboxAlphabeticalSpectrumTags level="l2" />
         <SubToolboxDataTable
           level="l2"
@@ -126,9 +155,16 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("vt-subtoolbox-tooltip is-l1 is-open")
     expect(html).toContain('role="tooltip"')
     expect(html).toContain("vt-subtoolbox-knob")
-    expect(html).toContain('type="range"')
+    expect(html).toContain('role="slider"')
+    expect(html).toContain("vt-subtoolbox-knob-readout")
     expect(html).toContain("A · TAG")
     expect(html).toContain("Z · TAG")
+    expect(html).toContain("vt-subtoolbox-split-field is-search has-action")
+    expect(html).toContain("vt-subtoolbox-split-field is-action has-action")
+    expect(html).toContain("vt-subtoolbox-tag-editor-tags")
+    expect(html).not.toContain("vt-subtoolbox-tag-editor-label")
+    expect(html).toContain('role="progressbar"')
+    expect(html).toContain(">SYNC<")
     expect(html).toContain("vt-subtoolbox-data-table")
     expect(html).toContain("vt-subtoolbox-popover")
     expect(html).toContain("vt-subtoolbox-disclosure")

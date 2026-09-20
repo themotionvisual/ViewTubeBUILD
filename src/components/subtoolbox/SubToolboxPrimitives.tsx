@@ -260,13 +260,29 @@ export const SubToolboxMenu: React.FC<SubToolboxMenuProps> = ({
 
 export interface SubToolboxSplitFieldProps extends React.HTMLAttributes<HTMLDivElement> {
   level?: ToolboxControlLevel
-  icon: React.ReactNode
+  variant?: "search" | "action"
+  icon?: React.ReactNode
+  actionIcon?: React.ReactNode
+  actionLabel?: string
+  onAction?: () => void
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>
 }
-export const SubToolboxSplitField: React.FC<SubToolboxSplitFieldProps> = ({ level = "l0", icon, inputProps, className, style, ...props }) => (
-  <div className={classes("vt-subtoolbox-split-field", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
-    <span className="vt-subtoolbox-split-field-rail" aria-hidden="true">{icon}</span>
+export const SubToolboxSplitField: React.FC<SubToolboxSplitFieldProps> = ({
+  level = "l0",
+  variant = "search",
+  icon,
+  actionIcon,
+  actionLabel = variant === "search" ? "Clear search" : "Submit",
+  onAction,
+  inputProps,
+  className,
+  style,
+  ...props
+}) => (
+  <div className={classes("vt-subtoolbox-split-field", `is-${variant}`, actionIcon && "has-action", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
+    {variant === "search" && icon ? <span className="vt-subtoolbox-split-field-rail" aria-hidden="true">{icon}</span> : null}
     <input {...inputProps} />
+    {actionIcon ? <button type="button" className="vt-subtoolbox-split-field-action" aria-label={actionLabel} onClick={onAction}>{actionIcon}</button> : null}
   </div>
 )
 
@@ -330,9 +346,10 @@ export interface SubToolboxRemovableTagProps extends React.HTMLAttributes<HTMLSp
   level?: ToolboxControlLevel
   onRemove?: () => void
   removeIcon?: React.ReactNode
+  color?: string
 }
-export const SubToolboxRemovableTag: React.FC<SubToolboxRemovableTagProps> = ({ level = "l0", onRemove, removeIcon = "×", children, className, style, ...props }) => (
-  <span className={classes("vt-subtoolbox-removable-tag", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>{children}<button type="button" aria-label="Remove" onClick={onRemove}>{removeIcon}</button></span>
+export const SubToolboxRemovableTag: React.FC<SubToolboxRemovableTagProps> = ({ level = "l0", onRemove, removeIcon = "×", color, children, className, style, ...props }) => (
+  <span className={classes("vt-subtoolbox-removable-tag", className)} data-vt-control-level={level} style={{ ...(withComponentLevelStyle(level, style) ?? {}), ...(color ? { ["--vt-tag-color" as string]: color } : {}) } as React.CSSProperties} {...props}>{children}<button type="button" aria-label="Remove" onClick={onRemove}>{removeIcon}</button></span>
 )
 
 export interface SubToolboxSelectableTagProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -352,20 +369,61 @@ export interface SubToolboxTagEditorProps extends React.HTMLAttributes<HTMLDivEl
   addIcon?: React.ReactNode
   saveIcon?: React.ReactNode
   removeIcon?: React.ReactNode
+  label?: React.ReactNode
 }
-export const SubToolboxTagEditor: React.FC<SubToolboxTagEditorProps> = ({ level = "l0", tags, onTagsChange, addIcon = "+", saveIcon = "✓", removeIcon = "×", className, style, ...props }) => {
+export const SubToolboxTagEditor: React.FC<SubToolboxTagEditorProps> = ({
+  level = "l0",
+  tags,
+  onTagsChange,
+  addIcon = "+",
+  saveIcon = "✓",
+  removeIcon = "×",
+  label,
+  className,
+  style,
+  ...props
+}) => {
   const [editing, setEditing] = React.useState(false)
   const [draft, setDraft] = React.useState("")
   const save = () => {
     const next = draft.trim().toUpperCase()
-    if (next) onTagsChange?.([...tags, next])
+    if (next && !tags.includes(next)) onTagsChange?.([...tags, next])
     setDraft("")
     setEditing(false)
   }
+
   return (
     <div className={classes("vt-subtoolbox-tag-editor", editing && "is-editing", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
-      <div className="vt-subtoolbox-tag-editor-tags">{tags.map((tag) => <SubToolboxRemovableTag key={tag} level={level} onRemove={() => onTagsChange?.(tags.filter((item) => item !== tag))} removeIcon={removeIcon}>{tag}</SubToolboxRemovableTag>)}</div>
-      {editing ? <><input aria-label="New tag" value={draft} placeholder="ADD TAG" onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") save() }} /><button type="button" className="submit" aria-label="Save tag" onClick={save}>{saveIcon}</button></> : <button type="button" className="add" aria-label="Add tag" onClick={() => setEditing(true)}>{addIcon}</button>}
+      {label ? <strong className="vt-subtoolbox-tag-editor-label">{label}</strong> : null}
+      <div className="vt-subtoolbox-tag-editor-tags">
+        {tags.map((tag) => (
+          <SubToolboxRemovableTag
+            key={tag}
+            level={level}
+            onRemove={() => onTagsChange?.(tags.filter((item) => item !== tag))}
+            removeIcon={removeIcon}
+          >
+            {tag}
+          </SubToolboxRemovableTag>
+        ))}
+        {!editing ? <button type="button" className="add" aria-label="Add tag" onClick={() => setEditing(true)}>{addIcon}</button> : null}
+      </div>
+      {editing ? (
+        <>
+          <input
+            autoFocus
+            aria-label="New tag"
+            value={draft}
+            placeholder="ADD TAG"
+            onChange={(event) => setDraft(event.target.value.toUpperCase())}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") save()
+              if (event.key === "Escape") { setDraft(""); setEditing(false) }
+            }}
+          />
+          <button type="button" className="submit" aria-label="Save tag" onClick={save}>{saveIcon}</button>
+        </>
+      ) : null}
     </div>
   )
 }
@@ -381,10 +439,17 @@ export const SubToolboxProgressBar: React.FC<SubToolboxProgressBarProps> = ({ le
 export interface SubToolboxProgressValueProps extends React.HTMLAttributes<HTMLDivElement> {
   level?: ToolboxControlLevel
   value: number
+  label?: React.ReactNode
 }
-export const SubToolboxProgressValue: React.FC<SubToolboxProgressValueProps> = ({ level = "l0", value, className, style, ...props }) => (
-  <div className={classes("vt-subtoolbox-progress-value", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}><div className="bar"><span style={{ width: `${value}%` }} /></div><output>{value}%</output></div>
-)
+export const SubToolboxProgressValue: React.FC<SubToolboxProgressValueProps> = ({ level = "l0", value, label = "PROGRESS", className, style, ...props }) => {
+  const clamped = Math.min(100, Math.max(0, value))
+  return (
+    <div className={classes("vt-subtoolbox-progress-value", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={clamped} {...props}>
+      <div className="bar"><span className="fill" style={{ width: `${clamped}%` }} /><strong>{label}</strong></div>
+      <output>{clamped}%</output>
+    </div>
+  )
+}
 
 export interface SubToolboxStatCardProps extends React.HTMLAttributes<HTMLDivElement> {
   level?: ToolboxControlLevel
@@ -419,35 +484,64 @@ export const SubToolboxKnob: React.FC<SubToolboxKnobProps> = ({
   style,
   ...props
 }) => {
+  const dialRef = React.useRef<HTMLDivElement>(null)
   const safeMax = max <= min ? min + 1 : max
-  const clamped = Math.min(safeMax, Math.max(min, value))
+  const clamp = (next: number) => Math.min(safeMax, Math.max(min, min + Math.round((next - min) / step) * step))
+  const clamped = clamp(value)
   const pct = (clamped - min) / (safeMax - min)
   const angle = -135 + pct * 270
   const mergedStyle = {
     ...(withComponentLevelStyle(level, style) ?? {}),
     ["--vt-knob-angle" as string]: `${angle}deg`,
     ["--vt-knob-pct" as string]: `${pct * 100}%`,
+    ["--vt-knob-sweep" as string]: `${pct * 75}%`,
   } as React.CSSProperties
+
+  const emit = (next: number) => onValueChange?.(clamp(next))
+  const updateFromPointer = (clientX: number, clientY: number) => {
+    const rect = dialRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const dx = clientX - (rect.left + rect.width / 2)
+    const dy = clientY - (rect.top + rect.height / 2)
+    let degrees = Math.atan2(dx, -dy) * 180 / Math.PI
+    if (degrees < 0) degrees += 360
+    const swept = degrees >= 225 ? degrees - 360 : degrees <= 135 ? degrees : degrees < 180 ? 135 : -135
+    const ratio = (swept + 135) / 270
+    emit(min + ratio * (safeMax - min))
+  }
 
   return (
     <div className={classes("vt-subtoolbox-knob", className)} data-vt-control-level={level} style={mergedStyle} {...props}>
-      <div className="vt-subtoolbox-knob-dial">
-        <span className="vt-subtoolbox-knob-ticks" aria-hidden="true" />
+      <div
+        ref={dialRef}
+        className="vt-subtoolbox-knob-dial"
+        role="slider"
+        tabIndex={0}
+        aria-label={ariaLabel}
+        aria-valuemin={min}
+        aria-valuemax={safeMax}
+        aria-valuenow={clamped}
+        onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); updateFromPointer(event.clientX, event.clientY) }}
+        onPointerMove={(event) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) updateFromPointer(event.clientX, event.clientY) }}
+        onPointerUp={(event) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId) }}
+        onWheel={(event) => { event.preventDefault(); emit(clamped + (event.deltaY < 0 ? step : -step)) }}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowUp" || event.key === "ArrowRight") { event.preventDefault(); emit(clamped + step) }
+          if (event.key === "ArrowDown" || event.key === "ArrowLeft") { event.preventDefault(); emit(clamped - step) }
+          if (event.key === "Home") { event.preventDefault(); emit(min) }
+          if (event.key === "End") { event.preventDefault(); emit(safeMax) }
+        }}
+      >
+        <span className="vt-subtoolbox-knob-arc" aria-hidden="true" />
         <span className="vt-subtoolbox-knob-face" aria-hidden="true">
           <i className="vt-subtoolbox-knob-pointer" />
           <strong>{clamped}</strong>
         </span>
-        <input
-          type="range"
-          min={min}
-          max={safeMax}
-          step={step}
-          value={clamped}
-          aria-label={ariaLabel}
-          onChange={(event) => onValueChange?.(Number(event.target.value))}
-        />
       </div>
-      <b className="vt-subtoolbox-knob-label">{label}</b>
+      <div className="vt-subtoolbox-knob-readout">
+        <b className="vt-subtoolbox-knob-label">{label}</b>
+        <output>{clamped}</output>
+      </div>
     </div>
   )
 }
