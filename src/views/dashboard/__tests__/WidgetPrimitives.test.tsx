@@ -50,6 +50,7 @@ import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"
 
 const variantsCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
 const matrixCss = readFileSync(new URL("../widgetMatrixPrimitives.css", import.meta.url), "utf8")
+const tonesCss = readFileSync(new URL("../widgetPrimitiveTones.css", import.meta.url), "utf8")
 const videoSelectCss = readFileSync(new URL("../widgetVideoSelectButtonScroll.css", import.meta.url), "utf8")
 const extensionSource = readFileSync(new URL("../WidgetPrimitiveExtensions.tsx", import.meta.url), "utf8")
 const referenceSource = readFileSync(new URL("../widgets/UIReferenceLibraryWidget.tsx", import.meta.url), "utf8")
@@ -448,7 +449,8 @@ describe("expanded widget compound primitives", () => {
     expect(extensionSource).toContain('placeholder="Type…"')
     expect(referenceSource).toContain('placeholder="Sample title input"')
     expect(referenceSource).toContain('const [textValue, setTextValue] = useState("")')
-    expect(variantsCss + matrixCss).toContain("::placeholder")
+    expect(tonesCss).toContain("::placeholder")
+    expect(tonesCss).toContain("opacity: .12")
   })
 
   it("groups the UI Reference by size then tone with optional equal-width grid mode", () => {
