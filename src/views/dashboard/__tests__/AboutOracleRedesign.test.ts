@@ -6,6 +6,7 @@ const aboutCss = readFileSync(new URL("../widgets/VerificationExplainerWidget.cs
 const oracleSource = readFileSync(new URL("../widgets/DailyOracleWidget.tsx", import.meta.url), "utf8")
 const oracleCss = readFileSync(new URL("../widgets/DailyOracleWidget.css", import.meta.url), "utf8")
 const sharedCss = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
+const primitiveCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
 const registrySource = readFileSync(new URL("../WidgetRegistryBase.ts", import.meta.url), "utf8")
 
 describe("About VIEWTUBE redesign contract", () => {
@@ -49,6 +50,8 @@ describe("About VIEWTUBE redesign contract", () => {
     expect(aboutCss).toContain("--vt-cyan: #36e0f6")
     expect(aboutCss).toContain("--vt-magenta: #f55efc")
     expect(aboutCss).toContain("repeat(12, minmax(0, 1fr))")
+    expect(aboutCss).toContain(".about-vt__scroll .widget-scroll-viewport")
+    expect(aboutCss).toContain("padding-inline-end: 0")
   })
 })
 
@@ -79,26 +82,37 @@ describe("Daily Oracle redesign contract", () => {
     expect(oracleSource).toContain('textFit="adaptive"')
   })
 
-  it("reveals a persistent calendar and streak only after the large daily task control is completed", () => {
+  it("swaps the persistent calendar into the Best Next Move footprint instead of growing the widget", () => {
     expect(oracleSource).toContain("ORACLE_STREAK_KEY")
     expect(oracleSource).toContain("calculateDailyOracleStreak")
     expect(oracleSource).toContain('height={38}')
-    expect(oracleSource).toContain("daily-oracle-v2__day-check")
-    expect(oracleSource).toContain("streakSummary.completedToday ? (")
-    expect(oracleSource).toContain("daily-oracle-v2__streak-reveal")
+    expect(oracleSource).toContain("todayPanel === \"calendar\"")
+    expect(oracleSource).toContain("daily-oracle-v2__calendar-stage")
     expect(oracleSource).toContain("daily-oracle-v2__calendar-grid")
     expect(oracleSource).toContain("DAY STREAK")
-    expect(oracleCss).toContain(".daily-oracle-v2__streak-reveal")
-    expect(oracleCss).toContain(".daily-oracle-v2__calendar-grid")
-    expect(oracleCss).toContain("grid-template-columns: repeat(7, minmax(14px, 1fr))")
+    expect(oracleSource).not.toContain("daily-oracle-v2__streak-reveal")
+    expect(oracleCss).toContain(".daily-oracle-v2__calendar-stage")
+    expect(oracleCss).toContain("height: var(--oracle-compass-h)")
+    expect(oracleCss).toContain("grid-template-columns: repeat(7, minmax(0, 1fr))")
   })
 
-  it("adds controlled color pops without replacing the Oracle's primary palette", () => {
-    expect(oracleCss).toContain("--oracle-rose: #fa618a")
-    expect(oracleCss).toContain("--oracle-yellow: #ffda47")
-    expect(oracleCss).toContain("--oracle-cyan: #36e0f6")
+  it("keeps the Oracle monochromatic and reserves a different hue for completion", () => {
+    expect(oracleCss).toContain("--oracle-success: #c0f240")
+    expect(oracleCss).not.toContain("--oracle-rose:")
+    expect(oracleCss).not.toContain("--oracle-cyan:")
+    expect(oracleCss).toContain(".daily-oracle-v2__day-check")
+    expect(oracleCss).toContain("var(--oracle-success)")
     expect(oracleCss).toContain(".daily-oracle-v2__score.is-impact")
-    expect(oracleCss).toContain(".daily-oracle-v2__score.is-effort")
-    expect(oracleCss).toContain(".daily-oracle-v2__score.is-evidence")
+    expect(oracleCss).toContain("--oracle-score-color: var(--widget-color)")
+  })
+
+  it("uses compact lens copy and narrows adaptive 24px controls before clipping text", () => {
+    expect(oracleSource).toContain('compactLabel: "Subs"')
+    expect(oracleSource).toContain('compactLabel: "Engage"')
+    expect(oracleSource).toContain('compactLabel: "Watch"')
+    expect(primitiveCss).toContain("@container vt-widget (max-width: 430px)")
+    expect(primitiveCss).toContain("--vt-primitive-font: 10px")
+    expect(primitiveCss).toContain("@container vt-widget (max-width: 360px)")
+    expect(primitiveCss).toContain("--vt-primitive-font: 9px")
   })
 })
