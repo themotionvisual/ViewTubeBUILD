@@ -276,98 +276,207 @@
   min-height: var(--vt-primitive-height, 38px);
   max-height: var(--vt-primitive-height, 38px);
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: calc((var(--vt-primitive-height, 38px) - 4px) * 1.7778) minmax(0, 1fr);
+  align-items: stretch;
   gap: 6px;
-  align-items: center;
-  padding: 2px 4px;
+  padding: 2px 6px;
   overflow: hidden;
-  border: 2px solid color-mix(in srgb, var(--widget-border, var(--widget-ink, #243247)) 72%, transparent);
-  border-radius: var(--vt-primitive-radius, 7px);
-  background: color-mix(in srgb, var(--vt-tone-bg, #fff) 86%, white);
-  color: var(--vt-tone-ink, var(--widget-ink, var(--widget-border, var(--widget-ink, #243247))));
+  border: 0;
+  border-bottom: max(1px, var(--vt-primitive-stroke, 2px)) solid color-mix(in srgb, var(--widget-border, var(--widget-ink, #243247)) 34%, transparent);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 8%, white);
+  color: var(--vt-tone-ink, var(--widget-ink, var(--widget-border, #243247)));
   text-align: left;
   cursor: pointer;
 }
+.widget-video-select-option:last-child {
+  border-bottom: 0;
+}
 
-
-/* Portalled selects carry size/tone variables without inheriting trigger
-   fixed-height geometry. Every option row still matches the closed trigger. */
+/* Portalled selects carry explicit metrics from WidgetSizedSelect because the
+   portal does not inherit the dashboard/widget element's size or palette. */
 .widget-select-content {
+  box-sizing: border-box;
   height: auto;
   min-height: 0;
-  max-height: min(70vh, 420px);
+  max-height: min(70vh, calc(var(--vt-primitive-height, 32px) * 9));
   overflow: hidden;
   border-width: var(--vt-primitive-stroke, 2px);
   border-style: solid;
-  border-color: var(--widget-select-stroke, var(--widget-select-ink, var(--widget-ink, #243247)));
+  border-color: var(--widget-select-stroke, var(--widget-select-ink, #243247));
   border-radius: var(--vt-primitive-radius, 7px);
   background: var(--widget-select-surface, #fff);
+  color: var(--widget-select-ink, #243247);
+  font-family: inherit;
 }
 
 .widget-select-content .widget-select-viewport {
-  max-height: min(70vh, 420px);
+  max-height: min(70vh, calc(var(--vt-primitive-height, 32px) * 9));
   overflow-y: auto;
+  padding: 0;
 }
 
 .widget-select-content .widget-select-item {
   box-sizing: border-box;
-  min-height: var(--vt-primitive-height, 32px);
-  height: var(--vt-primitive-height, 32px);
-  max-height: var(--vt-primitive-height, 32px);
-  font-size: var(--vt-primitive-font, 11px);
+  height: var(--vt-primitive-height, 32px) !important;
+  min-height: var(--vt-primitive-height, 32px) !important;
+  max-height: var(--vt-primitive-height, 32px) !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: max(3px, calc(var(--vt-primitive-height, 32px) * .16));
+  padding: 0 max(4px, calc(var(--vt-primitive-height, 32px) * .26));
+  font-family: inherit;
+  font-size: var(--vt-primitive-font, 11px) !important;
+  font-weight: 1000 !important;
+  line-height: 1 !important;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.widget-select-trigger svg,
+.widget-select-content .widget-select-item svg {
+  width: var(--vt-primitive-icon, 18px) !important;
+  height: var(--vt-primitive-icon, 18px) !important;
+  min-width: var(--vt-primitive-icon, 18px);
+  stroke-width: var(--vt-primitive-icon-stroke, 2.5) !important;
+  color: currentColor;
+  stroke: currentColor;
+}
+
+.widget-select-content.is-height-18 .widget-select-item {
+  border-bottom-width: 0;
+}
+.widget-select-content.is-height-18 {
+  box-shadow: none;
 }
 
 .widget-video-select-option:hover,
 .widget-video-select-option.is-selected {
-  background: color-mix(in srgb, var(--widget-color, #34cdea) 16%, white);
-  border-color: var(--widget-color, #34cdea);
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 25%, white);
+}
+.widget-video-select-option.is-selected {
+  box-shadow: inset 5px 0 0 var(--widget-color, #34cdea);
+}
+
+.widget-video-select-option-media {
+  position: relative;
+  align-self: center;
+  justify-self: center;
+  width: 100%;
+  height: calc(var(--vt-primitive-height, 38px) - 4px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: max(1px, calc(var(--vt-primitive-radius, 6px) - 2px));
 }
 
 .widget-video-select-option img,
 .widget-video-select-option-placeholder {
-  height: max(10px, calc(var(--vt-primitive-height, 38px) - 6px));
-  width: auto;
+  display: block;
+  width: 100%;
+  height: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  border-radius: 3px;
-  flex: none;
+  border-radius: inherit;
 }
 .widget-video-select-option-placeholder {
-  display: block;
   background: color-mix(in srgb, var(--widget-color, #34cdea) 14%, white);
 }
 
+.widget-video-select-duration {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  box-sizing: border-box;
+  height: 14px;
+  min-height: 14px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 3px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 25%, white);
+  color: var(--widget-ink, var(--widget-border, #243247));
+  font-size: 7px;
+  font-weight: 1000;
+  line-height: 1;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
 .widget-video-select-option-copy {
+  position: relative;
   min-width: 0;
-  display: grid;
-  gap: 2px;
+  height: 100%;
+  overflow: hidden;
+  display: block;
+  padding: 2px 0;
 }
 
 .widget-video-select-option-copy strong {
+  display: -webkit-box;
+  min-width: 0;
   overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  white-space: normal;
+  text-overflow: clip;
+  font-size: 10px;
+  font-weight: 1000;
+  line-height: 1.02;
+  text-transform: uppercase;
+}
+
+.widget-video-select-views {
+  position: absolute;
+  right: 0;
+  bottom: 1px;
+  box-sizing: border-box;
+  height: 14px;
+  min-height: 14px;
+  max-width: 72%;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 58%, white);
+  color: var(--widget-ink, var(--widget-border, #243247));
+  font-size: 7px;
+  font-weight: 1000;
+  line-height: 1;
+  letter-spacing: .02em;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 10px;
-  font-weight: 900;
   text-transform: uppercase;
 }
 
-.widget-video-select-option-copy small {
-  font-size: 8px;
-  font-weight: 800;
-  opacity: 0.55;
-  text-transform: uppercase;
-}
-
-.widget-video-select-menu.is-height-18 .widget-video-select-option-copy small,
-.widget-video-select-menu.is-height-24 .widget-video-select-option-copy small {
-  display: none;
+.widget-video-select-menu.is-height-18 .widget-video-select-option {
+  gap: 3px;
+  padding-inline: 2px;
 }
 .widget-video-select-menu.is-height-18 .widget-video-select-option-copy strong {
   font-size: 7px;
+  -webkit-line-clamp: 1;
+}
+.widget-video-select-menu.is-height-18 .widget-video-select-duration,
+.widget-video-select-menu.is-height-18 .widget-video-select-views {
+  display: none;
 }
 .widget-video-select-menu.is-height-24 .widget-video-select-option-copy strong {
   font-size: 8px;
+  -webkit-line-clamp: 2;
+}
+.widget-video-select-menu.is-height-24 .widget-video-select-views {
+  display: none;
+}
+.widget-video-select-menu.is-height-32 .widget-video-select-option-copy strong {
+  font-size: 9px;
+  -webkit-line-clamp: 2;
+}
+.widget-video-select-menu.is-height-38 .widget-video-select-option-copy strong {
+  font-size: 10px;
+  -webkit-line-clamp: 3;
 }
 
 /* Keyword Engine-derived progress bars with copy over the fill. */
