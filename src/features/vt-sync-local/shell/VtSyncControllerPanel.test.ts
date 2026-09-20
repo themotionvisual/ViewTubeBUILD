@@ -49,21 +49,32 @@ describe("VT-SYNC execution status controls", () => {
    onStartSync: vi.fn(async () => undefined),
   }))
   expect(markup).toContain('data-sync-status="complete"')
-  expect(markup).toContain(">DONE<")
+  expect(markup).toContain(">COMPLETE<")
  })
 
- it("uses one compact telemetry row with the controller pinned to the far right", () => {
+ it("uses a three-zone hardware row instead of the old status/time/last-sync/rows table columns", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
-  expect(source).toContain("grid-cols-[minmax(210px,1fr)_58px_54px_88px_38px_58px_142px]")
-  expect(source).toContain("min-w-[650px]")
-  expect(source).toContain("sticky right-0")
-  expect(source).toContain("<span>Status</span><span>Time</span><span>Last sync</span>")
-  expect(source).toContain("<span className=\"text-center\">!</span>")
-  expect(source).toContain("<span className=\"text-right\">Rows</span>")
-  expect(source).toContain("<RetroSyncExecutionSwitch")
+  expect(source).toContain("grid-cols-[50px_minmax(0,1fr)_108px]")
+  expect(source).toContain("<RetroBatchSelectionSwitch")
+  expect(source).toContain('className="is-row-sync-control"')
+  expect(source).toContain("<SyncMetaBadge")
+  expect(source).not.toContain("<span>Status</span><span>Time</span><span>Last sync</span>")
+  expect(source).not.toContain("grid-cols-[minmax(210px,1fr)_58px_54px_88px_38px_58px_142px]")
  })
 
- it("removes default row checkboxes and only exposes details for rows with extra information", () => {
+ it("puts the dataset title and subtitle on one row with status/result badges beneath them", () => {
+  const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
+  expect(source).toContain("{unit.label}</strong>")
+  expect(source).toContain("{unit.description}")
+  expect(source).toContain("statusBadgeForUnit")
+  expect(source).toContain("formatDurationLong")
+  expect(source).toContain("resultNounForUnit")
+  expect(source).toContain("NO ISSUES")
+  expect(source).toContain("QUEUED · UP NEXT")
+  expect(source).toContain("SYNCED ·")
+ })
+
+  it("removes default row checkboxes and only exposes details for rows with extra information", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
   expect(source).toContain("hasExtraDetail")
   expect(source).toContain("vt-sync-unified-unit-")
@@ -73,15 +84,15 @@ describe("VT-SYNC execution status controls", () => {
   expect(source).not.toContain('aria-label={`${checked ? "Remove" : "Add"}')
  })
 
- it("integrates the red batch selector and its LED into the same silver controller plate", () => {
+ it("frames each dataset with a full-height red batch switch on the left and immediate sync switch on the right", () => {
+  const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
   const chromeSource = readFileSync(new URL("./VtSyncRetroChrome.tsx", import.meta.url), "utf8")
   const cssSource = readFileSync(new URL("./VtSyncRetroChrome.css", import.meta.url), "utf8")
-  expect(chromeSource).toContain("vt-retro-dual-plate")
-  expect(chromeSource).toContain("vt-retro-status-led")
-  expect(chromeSource).toContain("vt-retro-batch-track")
-  expect(chromeSource).toContain("vt-retro-selection-led")
-  expect(cssSource).toContain("Physical composition: [ status LED | horizontal sync switch | red vertical batch switch | batch LED ]")
-  expect(cssSource).toContain(".vt-retro-pcb-group.is-batch-selected .vt-retro-batch-nub")
+  expect(source.indexOf("<RetroBatchSelectionSwitch")).toBeLessThan(source.indexOf('className="is-row-sync-control"'))
+  expect(chromeSource).toContain("vt-retro-batch-selector__track")
+  expect(chromeSource).toContain("vt-retro-batch-selector__led")
+  expect(cssSource).toContain(".vt-retro-batch-selector")
+  expect(cssSource).toContain(".vt-retro-pcb-group.is-row-sync-control")
  })
 
 })
