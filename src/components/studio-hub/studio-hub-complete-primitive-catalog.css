@@ -1319,3 +1319,63 @@
   background:var(--pair-a)!important;
   font:1000 calc(var(--fs)*.82)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
 }
+
+
+/* ==========================================================================
+   USER CORRECTION V4 — groups 18 / 19 / 21 / 22 / 23 baseline parity.
+   ========================================================================== */
+
+/* 18 / 19 — visible structural stroke around every slider handle. */
+.vt-complete-catalog .vt-catalog-slider input[type=range]::-webkit-slider-thumb,
+.vt-complete-catalog .vt-catalog-range input[type=range]::-webkit-slider-thumb{
+  box-sizing:border-box!important;
+  border:var(--stroke) solid #000!important;
+}
+.vt-complete-catalog .vt-catalog-slider input[type=range]::-moz-range-thumb,
+.vt-complete-catalog .vt-catalog-range input[type=range]::-moz-range-thumb{
+  box-sizing:border-box!important;
+  border:var(--stroke) solid #000!important;
+}
+
+/* 21 — exact symmetric end positions. */
+.vt-complete-catalog .vt-catalog-switch{
+  --switch-inset:calc(var(--h)*.10)!important;
+  --switch-handle-h:calc(var(--h) - (var(--switch-inset)*2))!important;
+  --switch-handle-w:calc(var(--switch-handle-h)*.82)!important;
+}
+.vt-complete-catalog .vt-catalog-switch span{
+  top:var(--switch-inset)!important;
+  left:var(--switch-inset)!important;
+  width:var(--switch-handle-w)!important;
+  height:var(--switch-handle-h)!important;
+  aspect-ratio:auto!important;
+  transform:translateX(0)!important;
+}
+.vt-complete-catalog .vt-catalog-switch.is-on span{
+  transform:translateX(calc((var(--h)*1.72) - (var(--switch-inset)*2) - var(--switch-handle-w)))!important;
+}
+
+/* 22 / 23 — exact level-owned geometry. */
+.vt-complete-catalog .vt-catalog-checkbox,
+.vt-complete-catalog .vt-catalog-radio{
+  width:var(--h)!important;
+  min-width:var(--h)!important;
+  max-width:var(--h)!important;
+  height:var(--h)!important;
+  min-height:var(--h)!important;
+  max-height:var(--h)!important;
+}
+.vt-complete-catalog .vt-catalog-checkbox{
+  border-radius:var(--radius)!important;
+}
+.vt-complete-catalog .vt-catalog-radio{
+  border-radius:50%!important;
+}
+.vt-complete-catalog .vt-catalog-checkbox span{
+  width:72%!important;
+  height:72%!important;
+}
+.vt-complete-catalog .vt-catalog-radio span{
+  width:48%!important;
+  height:48%!important;
+}
