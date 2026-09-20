@@ -52,6 +52,8 @@ describe("About VIEWTUBE redesign contract", () => {
     expect(aboutCss).toContain("repeat(12, minmax(0, 1fr))")
     expect(aboutCss).toContain(".about-vt__scroll .widget-scroll-viewport")
     expect(aboutCss).toContain("padding-inline-end: 0")
+    expect(aboutSource).toContain('<WidgetSection edge="full" className="about-vt__intro">')
+    expect(aboutSource).toContain('<WidgetSection edge="full" className="about-vt__handoff">')
   })
 })
 
