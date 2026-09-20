@@ -318,3 +318,29 @@ A 24px ViewTube control does not automatically become a 44px visible control on 
 Visual geometry and acquisition target are separate concerns.
 
 When larger touch acquisition is required, use an intentional hit-area mechanism that does not alter visible primitive height or overlap neighboring actions ambiguously.
+
+
+## Portalled select/dropdown geometry
+
+A dropdown trigger and its portalled menu share visual tokens, but they are **not the same geometric primitive root**.
+
+Do not apply the full trigger/root primitive class to the portalled menu when that class imposes:
+
+- fixed control height;
+- inline-flex row layout;
+- trigger padding;
+- adaptive text-fit overflow clipping;
+- trigger interaction transforms.
+
+A portalled menu should inherit/carry only the size/tone variables and menu-specific classes needed for:
+
+- row height;
+- menu typography;
+- border/radius/color;
+- max-height and scrolling.
+
+The menu itself must remain an auto-height vertical list.
+
+If a dropdown opens as an empty white strip with only a scroll chevron visible, inspect whether trigger geometry classes were copied onto the portal content and collapsed the viewport.
+
+Always verify dropdowns on mobile Safari/Chrome after primitive changes because portals escape the widget container and do not inherit the widget element directly.
