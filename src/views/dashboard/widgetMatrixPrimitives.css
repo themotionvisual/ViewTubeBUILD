@@ -428,7 +428,7 @@
    They never fall back to widget ink or black. */
 .widget-spectrum-fill-badge[class*="is-spectrum-"],
 .widget-split-badge[class*="is-spectrum-"] {
-  border-color: var(--widget-spectrum-ink) !important;
+  border: 2px solid var(--widget-spectrum-ink) !important;
   background: color-mix(in srgb, var(--widget-spectrum-fill) 18%, #fff) !important;
   color: var(--widget-spectrum-ink) !important;
   --vt-tone-stroke: var(--widget-spectrum-ink);
