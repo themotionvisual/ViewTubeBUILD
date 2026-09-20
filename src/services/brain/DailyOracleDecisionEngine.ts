@@ -234,10 +234,18 @@ export const buildDailyOraclePlan = ({
 
  const sorted = [...candidates].sort((a, b) => b.score - a.score || a.effort - b.effort || a.id.localeCompare(b.id))
  const primary = sorted[0] || focused[0]
- const quickWins = sorted
+ const quickPool = sorted
   .filter((candidate) => candidate.id !== primary.id)
   .sort((a, b) => a.effort - b.effort || b.score - a.score)
-  .slice(0, 3)
+ const evidenceDriven = quickPool.find((candidate) =>
+  candidate.id === "repeat-pattern" ||
+  candidate.id === "advance-goal" ||
+  candidate.id === "brain-daily",
+ )
+ const quickWins = [
+  ...(evidenceDriven ? [evidenceDriven] : []),
+  ...quickPool.filter((candidate) => candidate.id !== evidenceDriven?.id),
+ ].slice(0, 3)
 
  const totalSources = Math.max(0, evidence.totalSources)
  const readySources = Math.max(0, Math.min(totalSources, evidence.readySources))
