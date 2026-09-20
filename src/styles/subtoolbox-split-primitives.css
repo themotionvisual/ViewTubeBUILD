@@ -276,3 +276,148 @@
 .vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-rail{
   box-sizing:border-box;
 }
+
+
+/* ==========================================================================
+   COMPONENT LIBRARY CORRECTION V3 — Split Menu hybrid authority.
+   Right text/chevron uses the full-width menu anatomy. Left rail uses the
+   square icon bay from the split-left control. Open rows repeat that square
+   icon bay on every option.
+   ========================================================================== */
+.vt-subtoolbox-split-dropdown.has-component-level{
+  width:100%;
+  min-width:0;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-trigger{
+  width:100%;
+  height:var(--vt-component-height);
+  grid-template-columns:var(--vt-component-height) minmax(0,1fr);
+  align-items:stretch;
+  overflow:hidden;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-rail{
+  width:var(--vt-component-height);
+  min-width:var(--vt-component-height);
+  max-width:var(--vt-component-height);
+  height:var(--vt-component-height);
+  min-height:var(--vt-component-height);
+  aspect-ratio:1/1;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border-right:var(--vt-component-stroke) solid #000;
+  background:var(--vt-split-rail);
+  box-sizing:border-box;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-rail svg{
+  width:52%;
+  height:52%;
+  stroke-width:3.4;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-label{
+  min-width:0;
+  height:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) var(--vt-component-height);
+  align-items:center;
+  padding:0;
+  background:var(--vt-split-label);
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-label>b{
+  min-width:0;
+  padding-left:calc(var(--vt-component-height)*.22);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:left;
+  font:1000 var(--vt-component-font-size)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.055em;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-chevron{
+  width:var(--vt-component-height);
+  height:100%;
+  display:grid;
+  place-items:center;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-chevron svg{
+  width:46%;
+  height:46%;
+  stroke-width:4;
+  transition:transform 180ms ease-out;
+}
+.vt-subtoolbox-split-dropdown.has-component-level.is-open .vt-subtoolbox-split-dropdown-chevron svg{
+  transform:rotate(180deg);
+}
+
+/* Detached menu keeps the same two-part split anatomy on every row. */
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-menu{
+  width:100%;
+  min-width:100%;
+  overflow:hidden;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option{
+  width:100%;
+  min-height:var(--vt-component-height);
+  display:grid;
+  grid-template-columns:var(--vt-component-height) minmax(0,1fr);
+  align-items:stretch;
+  padding:0;
+  border:0;
+  border-bottom:var(--vt-component-stroke) solid #000;
+  border-radius:0;
+  background:#fff;
+  color:#000;
+  box-shadow:none;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option:last-child{
+  border-bottom:0;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option-rail{
+  width:var(--vt-component-height);
+  min-width:var(--vt-component-height);
+  max-width:var(--vt-component-height);
+  min-height:var(--vt-component-height);
+  aspect-ratio:1/1;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border-right:var(--vt-component-stroke) solid #000;
+  background:var(--vt-split-rail);
+  box-sizing:border-box;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option-rail svg{
+  width:48%;
+  height:48%;
+  stroke-width:3.4;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option-label{
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  padding:0 calc(var(--vt-component-height)*.20);
+  background:#fff;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option-label>b{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:left;
+  font:1000 var(--vt-component-font-size)/.9 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.055em;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option-check{
+  display:grid;
+  place-items:center;
+  width:calc(var(--vt-component-height)*.42);
+  height:calc(var(--vt-component-height)*.42);
+  border-radius:50%;
+  background:var(--vt-split-label);
+  font-size:calc(var(--vt-component-font-size)*.66);
+  font-weight:1000;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option:is(:hover,:focus-visible,.is-active) .vt-subtoolbox-split-dropdown-option-label{
+  background:color-mix(in srgb,var(--vt-split-label) 38%,white);
+}
