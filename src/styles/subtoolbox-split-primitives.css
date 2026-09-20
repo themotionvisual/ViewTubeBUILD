@@ -421,3 +421,91 @@
 .vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option:is(:hover,:focus-visible,.is-active) .vt-subtoolbox-split-dropdown-option-label{
   background:color-mix(in srgb,var(--vt-split-label) 38%,white);
 }
+
+
+/* ==========================================================================
+   COMPONENT LIBRARY CORRECTION V5 — force the primitive Split Menu to render
+   the full text/chevron side beside the square icon rail at every level.
+   ========================================================================== */
+.vt-subtoolbox-split-dropdown.has-component-level{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-trigger{
+  display:grid!important;
+  grid-template-columns:var(--vt-component-height) minmax(0,1fr)!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:var(--vt-component-height)!important;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-rail{
+  display:grid!important;
+  width:var(--vt-component-height)!important;
+  min-width:var(--vt-component-height)!important;
+  max-width:var(--vt-component-height)!important;
+  height:var(--vt-component-height)!important;
+  min-height:var(--vt-component-height)!important;
+  aspect-ratio:1/1!important;
+  place-items:center!important;
+  overflow:hidden!important;
+  padding:0!important;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-label{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) var(--vt-component-height)!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:100%!important;
+  opacity:1!important;
+  visibility:visible!important;
+  overflow:hidden!important;
+  padding:0!important;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-label>b{
+  display:block!important;
+  opacity:1!important;
+  visibility:visible!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-chevron{
+  display:grid!important;
+  place-items:center!important;
+  width:var(--vt-component-height)!important;
+  height:100%!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-menu{
+  width:100%!important;
+  min-width:100%!important;
+  max-width:none!important;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option{
+  display:grid!important;
+  grid-template-columns:var(--vt-component-height) minmax(0,1fr)!important;
+  width:100%!important;
+  min-width:0!important;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option-rail{
+  display:grid!important;
+  width:var(--vt-component-height)!important;
+  min-width:var(--vt-component-height)!important;
+  max-width:var(--vt-component-height)!important;
+  min-height:var(--vt-component-height)!important;
+  aspect-ratio:1/1!important;
+  place-items:center!important;
+}
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-option-label{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  width:auto!important;
+  min-width:0!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
