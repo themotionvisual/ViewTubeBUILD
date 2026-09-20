@@ -673,16 +673,19 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             <div className="widget-reference-family">
               {familyHeading("Tiny Colored Icons", "62 reusable 18px icons")}
               <div className="flex flex-wrap gap-2">
-                {(Object.keys(WIDGET_TINY_ICON_SET) as Array<keyof typeof WIDGET_TINY_ICON_SET>).map((name, index) => (
-                  <div key={name} className="grid justify-items-center gap-1">
-                    <WidgetTinySpectrumIcon
-                      name={name}
-                      spectrum={WIDGET_BADGE_SPECTRUM[index % WIDGET_BADGE_SPECTRUM.length]}
-                      label={name}
-                    />
-                    <small className="text-[7px] font-black uppercase opacity-55">{name}</small>
-                  </div>
-                ))}
+                {(Object.keys(WIDGET_TINY_ICON_SET) as Array<keyof typeof WIDGET_TINY_ICON_SET>).map((name, index) => {
+                  const metricIcon = WIDGET_METRIC_ICON_SET.find((item) => item.name === name)
+                  return (
+                    <div key={name} className="grid justify-items-center gap-1">
+                      <WidgetTinySpectrumIcon
+                        name={name}
+                        spectrum={metricIcon?.spectrum ?? WIDGET_BADGE_SPECTRUM[index % WIDGET_BADGE_SPECTRUM.length]}
+                        label={metricIcon?.label ?? name}
+                      />
+                      <small className="text-[7px] font-black uppercase opacity-55">{metricIcon?.label ?? name}</small>
+                    </div>
+                  )
+                })}
               </div>
             </div>
 
