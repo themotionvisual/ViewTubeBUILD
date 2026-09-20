@@ -401,3 +401,56 @@ Required geometry:
 - viewport = vertically scrollable with visible scrollbar when options exceed the bound.
 
 Do not copy `.vt-sized-control` fixed-height root geometry onto the portalled/open menu container. Carry only the size/tone variables needed for rows and color.
+
+
+## UI Reference size-first certification page
+
+The UI Reference Library includes a dedicated **SIZE** page whose ordering is size-first, then color:
+
+1. 18px — default, primary, secondary
+2. 24px — default, primary, secondary
+3. 32px — default, primary, secondary
+4. 38px — default, primary, secondary
+
+Normal flow mode must keep every primitive at natural/content width so mixed control widths can be inspected together. Grid mode is an explicit comparison mode: it equalizes the primitive widths and uses a fixed three-column row so alignment defects become obvious.
+
+Do not duplicate primitive families merely to demonstrate sizing. The same production primitive should be rendered into the size-first matrix.
+
+## Video select closed-trigger anatomy
+
+The canonical closed video selector uses two regions:
+
+- a square split-left bay divided horizontally into equal halves;
+- selected video content.
+
+The top half reads **VIDEO**. The bottom half contains the open/close chevron. There is no right-side chevron and no file icon.
+
+The selected video title wraps naturally into the available space. Never apply ellipsis to the closed selected title; use two or three compact lines as the size permits.
+
+## Input filler-copy behavior
+
+Filler copy belongs in the native `placeholder`, not in the input value.
+
+- Unfocused: placeholder is visible at reduced opacity.
+- Focused while empty: placeholder becomes mostly transparent and the caret starts at the far-left editing origin.
+- First typed character: the browser removes the placeholder naturally.
+- Never prefill demonstration/filler copy as the actual value merely to make an empty input look occupied.
+
+## Canonical 12-metric tiny icon map
+
+The tiny-icon library reserves one icon/color pair for each canonical Data Visual metric, in `VT_VISUAL_METRIC_ORDER` and therefore in the same 12-stop spectrum order:
+
+- rose — Views
+- coral — Engaged Views
+- orange — Watch Time
+- yellow — Subscribers
+- lime — Revenue
+- green — Comments
+- teal — Average % Viewed
+- cyan — Average View Duration
+- royal — Likes
+- purple — RPM
+- magenta — Shares
+- pink — Playlist Saves
+
+These metric icons must not be recolored arbitrarily when rendered in the reference library or a Data Visual.
