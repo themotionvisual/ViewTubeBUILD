@@ -274,6 +274,82 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
    ? `${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1)}K`
    : value.toLocaleString()
 
+ const formatDurationLong = (durationMs?: number) => {
+  if (durationMs === undefined || !Number.isFinite(durationMs)) return "No sync time"
+  const totalSeconds = Math.max(0, Math.round(durationMs / 1000))
+  if (totalSeconds < 60) return `${totalSeconds} second${totalSeconds === 1 ? "" : "s"}`
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes} minute${minutes === 1 ? "" : "s"}${seconds ? ` ${seconds} second${seconds === 1 ? "" : "s"}` : ""}`
+ }
+
+ const formatFullLastSync = (iso?: string) => {
+  if (!iso) return ""
+  const value = new Date(iso)
+  if (!Number.isFinite(value.getTime())) return ""
+  return value.toLocaleString([], {
+   year: "numeric",
+   month: "short",
+   day: "numeric",
+   hour: "numeric",
+   minute: "2-digit",
+  })
+ }
+
+ const resultNounForUnit = (unitId: string, rows: number, fallbackLabel: string) => {
+  const singular = rows === 1
+  const labels: Record<string, [string, string]> = {
+   channel_overview_windows: ["channel record", "channel records"],
+   video_catalog: ["published video", "published videos"],
+   daily_stats: ["daily analytics row", "daily analytics rows"],
+   monthly_stats: ["monthly analytics row", "monthly analytics rows"],
+   traffic_by_day: ["traffic-by-day row", "traffic-by-day rows"],
+   traffic_overview: ["traffic source", "traffic sources"],
+   audience_demographics: ["audience segment", "audience segments"],
+   content_type: ["content format", "content formats"],
+   formats_subscriber_status: ["format × subscriber row", "format × subscriber rows"],
+   sharing_services: ["sharing service", "sharing services"],
+   playback_locations: ["playback location", "playback locations"],
+   subscription_status: ["subscriber segment", "subscriber segments"],
+   geography_country: ["country", "countries"],
+   geography_city: ["city", "cities"],
+   geography_province: ["US state", "US states"],
+   geography_dma: ["DMA region", "DMA regions"],
+   device_type: ["device type", "device types"],
+   operating_system: ["operating system", "operating systems"],
+   device_os: ["device × OS row", "device × OS rows"],
+   playlists: ["playlist", "playlists"],
+   revenue_source: ["revenue source", "revenue sources"],
+   ad_type: ["ad type", "ad types"],
+   retention: ["retention curve", "retention curves"],
+  }
+  if (unitId.includes("search_terms")) return singular ? "YouTube search term" : "YouTube search terms"
+  if (unitId.startsWith("traffic_detail_")) return singular ? `${fallbackLabel.toLowerCase()} row` : `${fallbackLabel.toLowerCase()} rows`
+  const pair = labels[unitId]
+  return pair ? (singular ? pair[0] : pair[1]) : singular ? "result" : "results"
+ }
+
+ const statusBadgeForUnit = (status: string, lastSyncedAt?: string, isNext = false): { tone: SyncBadgeTone; text: string } => {
+  const stamp = formatFullLastSync(lastSyncedAt)
+  if (status === "running") return { tone: "live", text: "SYNCING · NOW" }
+  if (status === "pending") return { tone: "warn", text: isNext ? "QUEUED · UP NEXT" : "QUEUED · WAITING" }
+  if (status === "synced" || status === "complete") return { tone: "good", text: `SYNCED · ${stamp || "COMPLETE"}` }
+  if (status === "partial") return { tone: "warn", text: `PARTIAL · ${stamp || "INCOMPLETE DATA"}` }
+  if (status === "failed") return { tone: "bad", text: `FAILED · ${stamp || "RETRY NEEDED"}` }
+  if (status === "stale") return { tone: "warn", text: `STALE · ${stamp || "UPDATE NEEDED"}` }
+  if (status === "skipped") return { tone: "warn", text: "SKIPPED · NOT RUN" }
+  return { tone: "neutral", text: "NEVER · DATASET NOT AVAILABLE" }
+ }
+
+ const immediateLabelForUnit = (status: string, isNext = false, hasPriorData = false) => {
+  if (status === "running") return "SYNCING"
+  if (status === "pending") return isNext ? "UP NEXT" : "QUEUED"
+  if (status === "synced" || status === "complete") return "COMPLETE"
+  if (status === "partial") return "PARTIAL"
+  if (status === "failed") return "RETRY"
+  return hasPriorData ? "UPDATE" : "FULL SYNC"
+ }
+
  const copySyncSummary = async () => {
   const text = [
    "ViewTube Sync Control + Progress",
