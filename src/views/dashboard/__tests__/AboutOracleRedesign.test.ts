@@ -31,6 +31,21 @@ describe("About VIEWTUBE redesign contract", () => {
     expect(aboutCss).toContain(".about-vt__system-node.is-south")
     expect(aboutCss).toContain(".about-vt__hub")
   })
+
+  it("acts as a colorful first-visit hook using the full ViewTube spectrum and creator loop", () => {
+    expect(aboutSource).toContain("about-vt__spectrum")
+    expect(aboutSource).toContain("about-vt__capability-ribbon")
+    expect(aboutSource).toContain("WELCOME TO VIEWTUBE")
+    expect(aboutSource).toContain("ANALYZE")
+    expect(aboutSource).toContain("THINK")
+    expect(aboutSource).toContain("MAKE")
+    expect(aboutSource).toContain("PUBLISH")
+    expect(aboutSource).toContain("LEARN")
+    expect(aboutCss).toContain("--vt-rose: #fa618a")
+    expect(aboutCss).toContain("--vt-cyan: #36e0f6")
+    expect(aboutCss).toContain("--vt-magenta: #f55efc")
+    expect(aboutCss).toContain("repeat(12, minmax(0, 1fr))")
+  })
 })
 
 describe("Daily Oracle redesign contract", () => {
@@ -58,5 +73,28 @@ describe("Daily Oracle redesign contract", () => {
   it("keeps the five growth lenses in one adaptive control row", () => {
     expect(oracleCss).toContain("grid-template-columns: repeat(5, minmax(0, 1fr))")
     expect(oracleSource).toContain('textFit="adaptive"')
+  })
+
+  it("reveals a persistent calendar and streak only after the large daily task control is completed", () => {
+    expect(oracleSource).toContain("ORACLE_STREAK_KEY")
+    expect(oracleSource).toContain("calculateDailyOracleStreak")
+    expect(oracleSource).toContain('height={38}')
+    expect(oracleSource).toContain("daily-oracle-v2__day-check")
+    expect(oracleSource).toContain("streakSummary.completedToday ? (")
+    expect(oracleSource).toContain("daily-oracle-v2__streak-reveal")
+    expect(oracleSource).toContain("daily-oracle-v2__calendar-grid")
+    expect(oracleSource).toContain("DAY STREAK")
+    expect(oracleCss).toContain(".daily-oracle-v2__streak-reveal")
+    expect(oracleCss).toContain(".daily-oracle-v2__calendar-grid")
+    expect(oracleCss).toContain("grid-template-columns: repeat(7, minmax(14px, 1fr))")
+  })
+
+  it("adds controlled color pops without replacing the Oracle's primary palette", () => {
+    expect(oracleCss).toContain("--oracle-rose: #fa618a")
+    expect(oracleCss).toContain("--oracle-yellow: #ffda47")
+    expect(oracleCss).toContain("--oracle-cyan: #36e0f6")
+    expect(oracleCss).toContain(".daily-oracle-v2__score.is-impact")
+    expect(oracleCss).toContain(".daily-oracle-v2__score.is-effort")
+    expect(oracleCss).toContain(".daily-oracle-v2__score.is-evidence")
   })
 })
