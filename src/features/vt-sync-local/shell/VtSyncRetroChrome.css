@@ -412,7 +412,7 @@
  padding: 0;
  border: 0;
  background: transparent;
- color: inherit;
+ color: var(--vt-analog-label, #f7f7f7);
  font: inherit;
  cursor: pointer;
  -webkit-tap-highlight-color: transparent;
