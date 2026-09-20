@@ -233,7 +233,21 @@ const PrimitiveMigrationControl: React.FC<{
     return <SubToolboxSplitButton level={level} style={style} icon={name === "Head Tail Action" ? <ChevronRight /> : <Settings2 />} railColor={colors.a} labelColor={colors.b}>{name === "Head Tail Action" ? "Action" : "Settings"}</SubToolboxSplitButton>
   }
   if (name === "Split Menu") {
-    return <SubToolboxSplitDropdown level={level} value={menuChoice} options={["OPTION 1","OPTION 2","OPTION 3"].map((option) => ({ value: option, label: option, icon: <Menu /> }))} onChange={setMenuChoice} icon={<Menu />} railLabel="SET" ariaLabel="Split menu" railColor={colors.a} labelColor={colors.b} />
+    return <SubToolboxSplitDropdown
+      level={level}
+      value={menuChoice}
+      options={[
+        { value: "OPTION 1", label: "OPTION 1", icon: <Menu /> },
+        { value: "OPTION 2", label: "OPTION 2", icon: <Settings2 /> },
+        { value: "OPTION 3", label: "OPTION 3", icon: <SlidersHorizontal /> },
+      ]}
+      onChange={setMenuChoice}
+      icon={<Menu />}
+      chevron={<ChevronDown />}
+      ariaLabel="Split menu"
+      railColor={colors.a}
+      labelColor={colors.b}
+    />
   }
   if (name === "Dropdown" || name === "Select Menu" || name === "Context Menu") {
     return <SubToolboxMenu level={level} style={style} variant={name === "Context Menu" ? "context" : name === "Select Menu" ? "select" : "dropdown"} value={menuChoice} options={["OPTION 1","OPTION 2","OPTION 3"].map((option) => ({ value: option, label: option }))} onValueChange={setMenuChoice} triggerLabel={name === "Dropdown" ? "MENU" : menuChoice} triggerIcon={<MoreHorizontal />} chevronIcon={<ChevronDown />} ariaLabel={name} />
