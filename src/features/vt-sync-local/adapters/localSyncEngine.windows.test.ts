@@ -94,7 +94,7 @@ describe("engine window-loop invariants", () => {
  })
 
  it("tags every windowed segment persistence with its window", () => {
-  expect(engineSource).toContain('datasetId: categoryId, window: segmentWindow')
+  expect(engineSource).toContain('datasetId: categoryId, window: storageWindow')
   expect(engineSource).toContain('datasetId: "ads", window: adWindow')
   expect(engineSource).toContain('datasetId: "shares", window: shareWindow')
  })
