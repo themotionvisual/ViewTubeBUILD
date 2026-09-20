@@ -469,6 +469,31 @@ describe("expanded widget compound primitives", () => {
     expect(matrixCss).toContain("height: min(var(--vt-primitive-icon), var(--vt-primitive-font)")
   })
 
+  it("gives secondary controls a structurally different inverse color construction", () => {
+    expect(matrixCss).toContain(".widget-stepper.is-tone-secondary")
+    expect(matrixCss).toContain(".widget-pagination.is-tone-secondary")
+    expect(matrixCss).toContain(".widget-search-input.is-tone-secondary")
+    expect(matrixCss).toContain(".widget-toggle-switch.is-tone-secondary")
+    expect(matrixCss).toContain("background: var(--widget-color, #34cdea)")
+    expect(matrixCss).toContain("background: #fff")
+    expect(matrixCss).toContain("color: #fff")
+
+    expect(tonesCss).toContain(".widget-text-input.vt-sized-control.is-tone-secondary")
+    expect(tonesCss).toContain(".widget-select-trigger.vt-sized-control.is-tone-secondary")
+    expect(tonesCss).toContain(".widget-video-select-trigger.vt-sized-control.is-tone-secondary")
+    expect(tonesCss).toContain(".widget-select-content.is-tone-secondary")
+  })
+
+  it("uses the requested inverse secondary toggle animation", () => {
+    expect(matrixCss).toContain(".widget-toggle-switch.is-tone-secondary")
+    expect(matrixCss).toContain("border: 0 !important")
+    expect(matrixCss).toContain(".widget-toggle-switch.is-tone-secondary.is-checked")
+    expect(matrixCss).toContain("background: var(--widget-color, #34cdea)")
+    expect(matrixCss).toContain(".widget-toggle-switch.is-tone-secondary.is-checked .widget-toggle-switch-thumb")
+    expect(matrixCss).toContain("background: #fff")
+    expect(matrixCss).toContain("background 260ms ease")
+  })
+
   it("keeps sized select and video select on the public primitive surface", () => {
     expect(renderToStaticMarkup(
       <WidgetSizedSelect
