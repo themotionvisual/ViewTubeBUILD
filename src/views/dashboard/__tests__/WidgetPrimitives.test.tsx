@@ -465,8 +465,8 @@ describe("expanded widget compound primitives", () => {
 
   it("scales split-counter chevrons with the canonical icon token", () => {
     expect(matrixCss).toContain(".widget-split-counter-controls svg")
-    expect(matrixCss).toContain("width: var(--vt-primitive-icon)")
-    expect(matrixCss).toContain("height: var(--vt-primitive-icon)")
+    expect(matrixCss).toContain("width: min(var(--vt-primitive-icon), var(--vt-primitive-font)")
+    expect(matrixCss).toContain("height: min(var(--vt-primitive-icon), var(--vt-primitive-font)")
   })
 
   it("keeps sized select and video select on the public primitive surface", () => {
