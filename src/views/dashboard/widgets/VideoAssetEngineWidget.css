@@ -128,7 +128,6 @@
 .vt-asset-engine-footer{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(110px,.55fr);gap:var(--vt-gap-2,8px)}
 .vt-asset-engine-footer .widget-action,.vt-asset-engine-destinations .widget-action{width:100%;min-width:0}
 
-.vt-widget[data-widget-height="medium"] .vt-asset-engine-widget .vt-asset-engine-inspector{display:none}
 
 @container vt-widget (max-width:520px){
   .vt-asset-engine-composer{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(76px,1fr)}
