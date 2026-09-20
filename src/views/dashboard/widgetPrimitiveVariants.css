@@ -683,8 +683,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .widget-progress-bar-fill,
-  .widget-video-select-trigger-chevron {
+  .widget-progress-bar-fill {
     transition: none;
   }
 }
@@ -767,4 +766,106 @@
   white-space: nowrap !important;
   overflow: visible;
   text-overflow: clip;
+}
+
+
+/* ── UI Reference: size × color page ──────────────────────────
+   Flow mode is deliberately content-width. Grid mode is an explicit visual
+   comparison mode and equalizes the control width into three columns. */
+.widget-reference-size-matrix {
+  display: grid;
+  gap: 14px;
+}
+.widget-reference-size-band {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+}
+.widget-reference-size-band-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-block-end: 5px;
+  border-block-end: 2px solid color-mix(in srgb, var(--widget-color, #34cdea) 24%, transparent);
+}
+.widget-reference-size-band-title > strong {
+  font-size: 14px;
+  font-weight: 1000;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.widget-reference-size-band-title > span,
+.widget-reference-size-tone > small {
+  font-size: 8px;
+  font-weight: 1000;
+  line-height: 1;
+  text-transform: uppercase;
+  opacity: .58;
+}
+.widget-reference-size-tone {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.widget-reference-size-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.widget-reference-size-cell {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+}
+.widget-reference-size-flow:not(.is-grid) .widget-reference-size-cell > * {
+  width: fit-content;
+  max-width: max-content;
+}
+.widget-reference-size-flow:not(.is-grid) .widget-split-button.is-left-split {
+  width: fit-content !important;
+}
+.widget-reference-size-flow.is-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+.widget-reference-size-flow.is-grid .widget-reference-size-cell {
+  width: 100%;
+  min-width: 0;
+}
+.widget-reference-size-flow.is-grid .widget-reference-size-cell > :is(
+  .vt-button,
+  .widget-split-button,
+  .widget-text-input,
+  .widget-select-trigger,
+  .widget-stepper,
+  .widget-split-counter,
+  .widget-split-badge,
+  .widget-search-input,
+  .widget-live-badge
+) {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+.widget-reference-size-flow.is-grid .widget-stepper-value {
+  width: auto;
+  max-width: none;
+  flex: 1 1 auto;
+}
+.widget-reference-size-flow.is-grid .widget-split-counter {
+  grid-template-columns: var(--widget-split-counter-bay) minmax(0, 1fr);
+}
+.widget-reference-size-flow.is-grid .widget-split-counter-value {
+  width: auto;
+  max-width: none;
+}
+.widget-reference-size-flow.is-grid .widget-search-input > input {
+  flex: 1 1 auto;
+  width: auto;
 }
