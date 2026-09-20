@@ -68,6 +68,7 @@ import {
   WidgetToggleSwitch,
   WidgetTinySpectrumIcon,
   WIDGET_TINY_ICON_SET,
+  WIDGET_METRIC_ICON_SET,
   WidgetAccentRailModule,
   WidgetIconTitleModule,
   WidgetRainbowPanel,
@@ -86,6 +87,7 @@ import { getDashboardWidgetPaletteColors } from "../../../styles/toolboxPalette"
 type ReferenceCategory =
   | "all"
   | "controls"
+  | "size"
   | "video"
   | "progress"
   | "tags"
@@ -197,7 +199,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   const [switchValue, setSwitchValue] = useState(true)
   const [checkboxValue, setCheckboxValue] = useState(true)
   const [radioValue, setRadioValue] = useState("b")
-  const [textValue, setTextValue] = useState("Sample Title Input")
+  const [textValue, setTextValue] = useState("")
   const [tags, setTags] = useState(["viewtube", "analytics", "creator"])
   const [hasThumbnail, setHasThumbnail] = useState(false)
   const [statePanelStatus, setStatePanelStatus] = useState<"loading" | "ready" | "empty" | "blocked" | "stale" | "error">("ready")
@@ -207,6 +209,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   const [matrixRadio, setMatrixRadio] = useState<WidgetPrimitiveTone>("primary")
   const [matrixCheck, setMatrixCheck] = useState(true)
   const [matrixSearch, setMatrixSearch] = useState("")
+  const [sizeGridMode, setSizeGridMode] = useState(false)
   const previewWidget = useMemo(
     () => ({ ...widget, ...getDashboardWidgetPaletteColors(paletteIndex) }),
     [paletteIndex, widget],
@@ -220,6 +223,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
       items={[
         { id: "all", label: "ALL" },
         { id: "controls", label: "CONTROLS" },
+        { id: "size", label: "SIZE" },
         { id: "matrix", label: "MATRIX" },
         { id: "video", label: "VIDEO" },
         { id: "progress", label: "BARS" },
@@ -322,6 +326,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                     height={height}
                     tone={tone}
                     value={textValue}
+                    placeholder="Sample title input"
                     onChange={(event) => setTextValue(event.currentTarget.value)}
                     aria-label={`${tone} ${height}px text input`}
                   />
@@ -360,6 +365,50 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   <button type="button" className="vt-button is-icon-only" aria-label="Reset"><RotateCcw size={14} /></button>
                 </WidgetTooltip>
               </div>
+            </div>
+          </WidgetSection>
+        )}
+
+        {activeCategory === "size" && (
+          <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
+            {sectionHeading("Size × Color Matrix", "18 → 24 → 32 → 38 · default / primary / secondary")}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="m-0 max-w-[56ch] text-[10px] font-bold uppercase opacity-60">
+                Flow mode keeps every component only as wide as its own content. Grid mode equalizes component widths and fixes every row to three columns.
+              </p>
+              <WidgetToggleSwitch
+                height={24}
+                tone={sizeGridMode ? "primary" : "default"}
+                checked={sizeGridMode}
+                onChange={setSizeGridMode}
+                label="Equal-width grid mode"
+              />
+            </div>
+            <div className="widget-reference-size-matrix">
+              {CONTROL_HEIGHTS.map((height) => (
+                <div className="widget-reference-size-band" key={height}>
+                  <div className="widget-reference-size-band-title">
+                    <strong>{height}px</strong>
+                    <span>All three color treatments before the next size</span>
+                  </div>
+                  {CONTROL_TONES.map((tone) => (
+                    <div className="widget-reference-size-tone" key={tone}>
+                      <small>{tone}</small>
+                      <div className={`widget-reference-size-flow ${sizeGridMode ? "is-grid" : ""}`.trim()}>
+                        <div className="widget-reference-size-cell"><WidgetSizedButton height={height} tone={tone}>Apply</WidgetSizedButton></div>
+                        <div className="widget-reference-size-cell"><WidgetLeftSplitButton height={height} tone={tone} icon={<Sparkles />}>Create Asset</WidgetLeftSplitButton></div>
+                        <div className="widget-reference-size-cell"><WidgetTextInput height={height} tone={tone} value="" readOnly placeholder="Video title" aria-label={`${height}px ${tone} input`} /></div>
+                        <div className="widget-reference-size-cell"><WidgetSizedSelect height={height} tone={tone} value={selectValue} onChange={setSelectValue} label={`${height}px ${tone} visibility`} options={[{value:"public",label:"PUBLIC"},{value:"unlisted",label:"UNLISTED"},{value:"private",label:"PRIVATE"}]} /></div>
+                        <div className="widget-reference-size-cell"><WidgetStepper height={height} tone={tone} label={`${height}px ${tone} stepper`} value={matrixStepper} onChange={setMatrixStepper} min={0} max={99} /></div>
+                        <div className="widget-reference-size-cell"><WidgetSplitCounter height={height} tone={tone} label={`${height}px ${tone} counter`} value={matrixStepper} onChange={setMatrixStepper} min={0} max={99} /></div>
+                        <div className="widget-reference-size-cell"><WidgetLeftSplitBadge height={height} tone={tone} icon={<Check />}>Ready</WidgetLeftSplitBadge></div>
+                        <div className="widget-reference-size-cell"><WidgetSearchInput height={height} tone={tone} label={`${height}px ${tone} search`} placeholder="Search" /></div>
+                        <div className="widget-reference-size-cell"><WidgetLiveBadge height={height} tone={tone}>Live</WidgetLiveBadge></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
             </div>
           </WidgetSection>
         )}
@@ -566,23 +615,6 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             </div>
 
             <div className="widget-reference-family">
-              {familyHeading("Compact Steppers", "Middle cell fits the widest two-digit value only")}
-              <ToneRows
-                render={(tone, height) => (
-                  <WidgetStepper
-                    height={height}
-                    tone={tone}
-                    label="Compact quantity"
-                    value={matrixStepper}
-                    onChange={setMatrixStepper}
-                    min={0}
-                    max={99}
-                  />
-                )}
-              />
-            </div>
-
-            <div className="widget-reference-family">
               {familyHeading("Split-Left Counters", "Square bay = two 2:1 chevron buttons")}
               <ToneRows
                 render={(tone, height) => (
@@ -639,7 +671,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             </div>
 
             <div className="widget-reference-family">
-              {familyHeading("Tiny Colored Icons", "50 reusable 18px spectrum icons")}
+              {familyHeading("Tiny Colored Icons", "62 reusable 18px icons")}
               <div className="flex flex-wrap gap-2">
                 {(Object.keys(WIDGET_TINY_ICON_SET) as Array<keyof typeof WIDGET_TINY_ICON_SET>).map((name, index) => (
                   <div key={name} className="grid justify-items-center gap-1">
@@ -649,6 +681,18 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                       label={name}
                     />
                     <small className="text-[7px] font-black uppercase opacity-55">{name}</small>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Canonical Metric Icons", "12 Data Visual metrics mapped to the 12 spectrum colors")}
+              <div className="flex flex-wrap gap-3">
+                {WIDGET_METRIC_ICON_SET.map((item) => (
+                  <div key={item.metric} className="grid max-w-[74px] justify-items-center gap-1 text-center">
+                    <WidgetTinySpectrumIcon name={item.name} spectrum={item.spectrum} label={item.label} height={24} />
+                    <small className="text-[7px] font-black uppercase leading-[1.05] opacity-65">{item.label}</small>
                   </div>
                 ))}
               </div>
@@ -938,7 +982,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
       </WidgetScrollArea>
 
       <WidgetFooter className="widget-toolbar widget-workflow-toolbar">
-        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.4 · compound modules + 50 icon set</span>
+        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.5 · size/color matrix + 62 icon set</span>
         <WidgetLeftSplitButton height={32} tone="primary" iconStyle="white-on-color" icon={<Check />}>
           Standard Compliant
         </WidgetLeftSplitButton>
