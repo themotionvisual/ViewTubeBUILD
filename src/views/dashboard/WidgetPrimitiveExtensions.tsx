@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react"
-import { AlertTriangle, Activity, ArrowRight, Award, BarChart3, Bell, Bookmark, Brain, CalendarDays, Camera, Check, ChevronDown, ChevronUp, CircleDollarSign, Clock3, Download, Eye, FileText, FileVideo2, Film, Filter, Flag, Flame, Folder, Gauge, Gem, Heart, Image, Info, Layers, Lightbulb, Link, ListChecks, Lock, Mail, MessageCircle, Mic, MonitorPlay, Music, OctagonAlert, Pencil, Play, Plus, Rocket, Search, Send, Settings, Sparkles, Star, Target, TrendingUp, Upload, Users, WandSparkles, X, Zap, type LucideIcon } from "lucide-react"
+import { AlertTriangle, Activity, ArrowRight, Award, BadgeDollarSign, BarChart3, Bell, Bookmark, Brain, CalendarDays, Camera, Check, ChevronDown, ChevronUp, CircleDollarSign, CirclePlay, Clock3, Coins, Download, Eye, FileText, FileVideo2, Film, Filter, Flag, Flame, Folder, Gauge, Gem, Heart, Hourglass, Image, Info, Layers, Lightbulb, Link, ListChecks, ListPlus, Lock, Mail, MessageCircle, MessagesSquare, Mic, MonitorPlay, MousePointerClick, Music, OctagonAlert, Pencil, Percent, Play, Plus, Rocket, Search, Send, Settings, Share2, Sparkles, Star, Target, ThumbsUp, Timer, TrendingUp, Upload, UserPlus, Users, WandSparkles, X, Zap, type LucideIcon } from "lucide-react"
 import { WIDGET_BADGE_SPECTRUM, WidgetSelect, WidgetSplitButton, resolveBadgeHue, type WidgetBadgeSpectrumName, type WidgetBadgeStatus, type WidgetBadgeTone, type WidgetSelectOption } from "./WidgetPrimitives"
-import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
+import { VT_SPECTRUM_PALETTE_06, VT_VISUAL_METRIC_ORDER } from "../../styles/toolboxPalette"
 import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone as PrimitiveTone, type WidgetPrimitiveTextFit } from "./widgetPrimitiveSystem"
 import "./widgetVideoSelectButtonScroll.css"
 
@@ -15,7 +15,7 @@ const primitiveClass = (height:WidgetControlHeight,tone:WidgetPrimitiveTone,text
 
 export const WidgetSizedButton:React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>&{height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;textFit?:WidgetTextFit}> = ({height=32,tone="default",textFit="fixed",className="",type="button",...props}) => <button type={type} className={`vt-button vt-interactive ${primitiveClass(height,tone,textFit)} ${className}`.trim()} {...props}/>
 export const WidgetLeftSplitButton:React.FC<Omit<React.ButtonHTMLAttributes<HTMLButtonElement>,"children">&{icon:React.ReactNode;children:React.ReactNode;tone?:WidgetPrimitiveTone;iconStyle?:WidgetSplitIconStyle;width?:"auto"|"compact"|"wide"|"full";height?:WidgetControlHeight;textFit?:WidgetTextFit}> = ({icon,children,tone="default",iconStyle="white-on-color",width="auto",height=32,textFit="fixed",className="",...props}) => <WidgetSplitButton icon={icon} tone="neutral" width={width} className={`is-left-split ${primitiveClass(height,tone,textFit)} is-icon-${iconStyle} ${className}`.trim()} {...props}>{children}</WidgetSplitButton>
-export const WidgetTextInput:React.FC<React.InputHTMLAttributes<HTMLInputElement>&{height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;textFit?:WidgetTextFit}> = ({height=32,tone="default",textFit="fixed",className="",...props}) => <input className={`vt-input widget-text-input ${primitiveClass(height,tone,textFit)} ${className}`.trim()} {...props}/>
+export const WidgetTextInput:React.FC<React.InputHTMLAttributes<HTMLInputElement>&{height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;textFit?:WidgetTextFit}> = ({height=32,tone="default",textFit="fixed",className="",placeholder="Type…",...props}) => <input className={`vt-input widget-text-input ${primitiveClass(height,tone,textFit)} ${className}`.trim()} placeholder={placeholder} {...props}/>
 const selectMenuClass = (height:WidgetControlHeight,tone:WidgetPrimitiveTone) => `vt-size-${height} is-height-${height} vt-tone-${tone} is-tone-${tone}`
 const SELECT_MENU_METRICS:Record<WidgetControlHeight,{font:number;icon:number;iconStroke:number;radius:number;stroke:number}> = {
   18:{font:8,icon:12,iconStroke:2,radius:2,stroke:0},
@@ -54,9 +54,8 @@ export const WidgetVideoSelect:React.FC<{value:string;onChange:(value:string)=>v
  const visibleOptions=useMemo(()=>{const n=query.trim().toLowerCase();return n?options.filter(o=>`${o.label} ${o.meta||""} ${o.duration||""} ${o.views||""}`.toLowerCase().includes(n)):options},[options,query])
  return <div className={`widget-video-select ${open?"is-open":""} ${className}`.trim()}>
   <button type="button" className={`widget-video-select-trigger vt-interactive ${primitiveClass(height,tone)} is-icon-${iconStyle}`} aria-label={label} aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={()=>setOpen(c=>!c)}>
-   <span className="widget-video-select-trigger-icon" aria-hidden="true"><FileVideo2 strokeWidth={2.5}/></span>
+   <span className="widget-video-select-trigger-selector" aria-hidden="true"><span>VIDEO</span><span>{open?<ChevronUp/>:<ChevronDown/>}</span></span>
    <span className="widget-video-select-trigger-copy">{selected?.thumbnail?<img src={selected.thumbnail} alt=""/>:null}<span>{selected?.label||placeholder}</span></span>
-   <span className="widget-video-select-trigger-chevron" aria-hidden="true"><ChevronDown/></span>
   </button>
   {open?<div className={`widget-video-select-menu ${selectMenuClass(height,tone)}`} style={selectMenuStyle(height)} role="listbox" aria-label={label}>
    {searchable?<div className="widget-video-select-search"><WidgetSearchInput height={height} tone="secondary" iconStyle={iconStyle} label={`Search ${label}`} value={query} onChange={e=>setQuery(e.currentTarget.value)} placeholder="Search videos…"/></div>:null}
@@ -125,8 +124,30 @@ export const WIDGET_TINY_ICON_SET = {
  edit:Pencil, play:Play, plus:Plus, rocket:Rocket, search:Search,
  send:Send, settings:Settings, sparkles:Sparkles, star:Star, target:Target,
  trend:TrendingUp, upload:Upload, users:Users, magic:WandSparkles, zap:Zap,
+ metricViews:CirclePlay, metricEngagedViews:MousePointerClick, metricWatchTime:Hourglass,
+ metricSubscribers:UserPlus, metricRevenue:BadgeDollarSign, metricComments:MessagesSquare,
+ metricAvp:Percent, metricAvd:Timer, metricLikes:ThumbsUp, metricRpm:Coins,
+ metricShares:Share2, metricPlaylistSaves:ListPlus,
 } satisfies Record<string,LucideIcon>
 export type WidgetTinyIconName = keyof typeof WIDGET_TINY_ICON_SET
+
+const WIDGET_METRIC_ICON_NAMES = [
+ "metricViews","metricEngagedViews","metricWatchTime","metricSubscribers",
+ "metricRevenue","metricComments","metricAvp","metricAvd","metricLikes",
+ "metricRpm","metricShares","metricPlaylistSaves",
+] as const satisfies readonly WidgetTinyIconName[]
+const WIDGET_METRIC_LABELS = [
+ "Views","Engaged Views","Watch Time","Subscribers","Revenue","Comments",
+ "Average % Viewed","Average View Duration","Likes","RPM","Shares","Playlist Saves",
+] as const
+
+export const WIDGET_METRIC_ICON_SET = VT_VISUAL_METRIC_ORDER.map((metric,index)=>({
+ metric,
+ label:WIDGET_METRIC_LABELS[index],
+ name:WIDGET_METRIC_ICON_NAMES[index],
+ spectrum:WIDGET_BADGE_SPECTRUM[index],
+ color:VT_SPECTRUM_PALETTE_06[index],
+}))
 
 export const WidgetTinySpectrumIcon:React.FC<{name:WidgetTinyIconName;spectrum:WidgetBadgeSpectrumName;label?:string;height?:18|24;className?:string}> = ({name,spectrum,label,height=18,className=""}) => {const Icon=WIDGET_TINY_ICON_SET[name];return <span className={`widget-tiny-spectrum-icon is-height-${height} ${className}`.trim()} role={label?"img":undefined} aria-label={label} aria-hidden={label?undefined:true} style={{["--widget-tiny-icon-color" as string]:resolveSpectrumHue(spectrum)}}><Icon aria-hidden="true"/></span>}
 
