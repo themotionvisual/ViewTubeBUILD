@@ -523,10 +523,10 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
              <article key={unit.id} className="border-b-[2px] border-black last:border-b-0">
               <div className={`grid min-h-[48px] grid-cols-[minmax(210px,1fr)_58px_54px_88px_38px_58px_142px] items-stretch px-2 ${selectedForBatch ? "bg-white" : "bg-[#f1f1f1] text-black/50"}`}>
                <div className="sticky left-0 z-[2] flex min-w-0 items-center bg-inherit pr-2">
-                <span className="min-w-0">
+                <span className="min-w-0" title={`${unit.description} · ${unit.categoryIds.length} quer${unit.categoryIds.length === 1 ? "y" : "ies"} · ${formatPlainLabel(unit.refreshPolicy)}`}>
                  <strong className="block truncate text-[11px] font-[1000] uppercase leading-none">{unit.label}</strong>
                  <span className="mt-1 block truncate text-[7.5px] font-black uppercase tracking-[0.035em] text-black/45">
-                  {unit.categoryIds.length} quer{unit.categoryIds.length === 1 ? "y" : "ies"} · {formatPlainLabel(unit.refreshPolicy)}
+                  {unit.description}
                  </span>
                 </span>
                </div>
