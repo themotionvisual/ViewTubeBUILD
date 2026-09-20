@@ -1385,3 +1385,67 @@
 .vt-subtoolbox-split-field.is-action .vt-subtoolbox-split-field-action{
   background:var(--field-accent);
 }
+
+
+/* ==========================================================================
+   COMPONENT LIBRARY CORRECTION V4 — groups 18 / 19 / 21 / 22 / 23.
+   18/19 slider handles carry the structural stroke.
+   21 settings switch uses mathematically symmetric end insets.
+   22/23 checkbox/radio own the full level height.
+   Knob Dial intentionally remains on the PR-282 design.
+   ========================================================================== */
+
+/* 18 / 19 — handles are structural controls, so their edge must read. */
+.vt-subtoolbox-slider input[type=range]::-webkit-slider-thumb,
+.vt-subtoolbox-range input[type=range]::-webkit-slider-thumb{
+  box-sizing:border-box!important;
+  border:var(--vt-component-stroke) solid #000!important;
+}
+.vt-subtoolbox-slider input[type=range]::-moz-range-thumb,
+.vt-subtoolbox-range input[type=range]::-moz-range-thumb{
+  box-sizing:border-box!important;
+  border:var(--vt-component-stroke) solid #000!important;
+}
+
+/* 21 — exact symmetric travel. Left OFF inset == right ON inset. */
+.vt-subtoolbox-settings-switch{
+  --switch-inset:calc(var(--vt-component-height)*.10);
+  --switch-handle-h:calc(var(--vt-component-height) - (var(--switch-inset)*2));
+  --switch-handle-w:calc(var(--switch-handle-h)*.82);
+}
+.vt-subtoolbox-settings-switch span{
+  top:var(--switch-inset)!important;
+  left:var(--switch-inset)!important;
+  width:var(--switch-handle-w)!important;
+  height:var(--switch-handle-h)!important;
+  aspect-ratio:auto!important;
+  transform:translateX(0)!important;
+}
+.vt-subtoolbox-settings-switch.is-on span{
+  transform:translateX(calc((var(--vt-component-height)*1.72) - (var(--switch-inset)*2) - var(--switch-handle-w)))!important;
+}
+
+/* 22 / 23 — the control itself owns the level height. */
+.vt-subtoolbox-check-control,
+.vt-subtoolbox-radio-control{
+  width:var(--vt-component-height)!important;
+  min-width:var(--vt-component-height)!important;
+  max-width:var(--vt-component-height)!important;
+  height:var(--vt-component-height)!important;
+  min-height:var(--vt-component-height)!important;
+  max-height:var(--vt-component-height)!important;
+}
+.vt-subtoolbox-check-control{
+  border-radius:var(--vt-component-radius)!important;
+}
+.vt-subtoolbox-radio-control{
+  border-radius:50%!important;
+}
+.vt-subtoolbox-check-control>span{
+  width:72%!important;
+  height:72%!important;
+}
+.vt-subtoolbox-radio-control>span{
+  width:48%!important;
+  height:48%!important;
+}
