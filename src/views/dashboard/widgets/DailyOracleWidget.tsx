@@ -44,6 +44,7 @@ const ORACLE_UI_KEY = "vt_daily_oracle_v2"
 const ORACLE_STREAK_KEY = "vt_daily_oracle_streak_v1"
 
 type OraclePage = "today" | "focus"
+type OracleTodayPanel = "move" | "calendar"
 
 const ORACLE_PAGES = [
   { id: "today", label: "TODAY" },
@@ -54,12 +55,13 @@ const METRICS: Array<{
   id: DailyOracleGoalMetric
   label: string
   Icon: typeof Eye
+  compactLabel: string
 }> = [
-  { id: "views", label: "Views", Icon: Eye },
-  { id: "subscribers", label: "Subscribers", Icon: Users },
-  { id: "revenue", label: "Revenue", Icon: DollarSign },
-  { id: "engagement", label: "Engagement", Icon: Heart },
-  { id: "watch-time", label: "Watch Time", Icon: Clock3 },
+  { id: "views", label: "Views", compactLabel: "Views", Icon: Eye },
+  { id: "subscribers", label: "Subscribers", compactLabel: "Subs", Icon: Users },
+  { id: "revenue", label: "Revenue", compactLabel: "Revenue", Icon: DollarSign },
+  { id: "engagement", label: "Engagement", compactLabel: "Engage", Icon: Heart },
+  { id: "watch-time", label: "Watch Time", compactLabel: "Watch", Icon: Clock3 },
 ]
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"] as const
@@ -150,6 +152,7 @@ export const DailyOracleWidget = ({
   const [ui, setUi] = useState<OracleUiState>(readUiState)
   const [streak, setStreak] = useState<OracleStreakState>(readStreakState)
   const [notice, setNotice] = useState("")
+  const [todayPanel, setTodayPanel] = useState<OracleTodayPanel>("move")
 
   const common = {
     widget,
@@ -319,6 +322,7 @@ export const DailyOracleWidget = ({
     setNotice(nextSummary.completedToday
       ? `TASK COMPLETE · ${nextSummary.currentStreak}-DAY STREAK.`
       : "TODAY REOPENED.")
+    setTodayPanel(nextSummary.completedToday ? "calendar" : "move")
   }
 
   const refresh = () => {
@@ -384,91 +388,104 @@ export const DailyOracleWidget = ({
               </WidgetSection>
 
               <WidgetSection className="daily-oracle-v2__compass-section">
-                <div className="daily-oracle-v2__compass">
-                  <article className={`daily-oracle-v2__primary ${streakSummary.completedToday ? "is-done" : ""}`}>
-                    <div className="daily-oracle-v2__primary-kicker">
-                      <Target size={16} aria-hidden="true" />
-                      <span>BEST NEXT MOVE</span>
-                    </div>
-                    <strong>{plan.primary.title}</strong>
-                    <p>{plan.primary.detail}</p>
-                    <small>{plan.primary.evidence}</small>
-                    <div className="daily-oracle-v2__primary-actions">
-                      <WidgetSizedButton
-                        height={24}
-                        textFit="adaptive"
-                        tone="primary"
-                        onClick={() => addToToday(plan.primary)}
-                      >
-                        <CalendarPlus aria-hidden="true" />
-                        {isTaskAdded(plan.primary) ? "IN TODAY" : "ADD TO TODAY"}
-                      </WidgetSizedButton>
+                {todayPanel === "calendar" && streakSummary.completedToday ? (
+                  <div className="daily-oracle-v2__calendar-stage" aria-label="Daily Oracle streak calendar">
+                    <div className="daily-oracle-v2__calendar-stage-header">
+                      <div className="daily-oracle-v2__streak-flame" aria-hidden="true">
+                        <Flame />
+                      </div>
+                      <div className="daily-oracle-v2__streak-copy">
+                        <span>TODAY COMPLETE</span>
+                        <strong>{streakSummary.currentStreak} DAY STREAK</strong>
+                        <small>BEST {streakSummary.longestStreak} · TOTAL {streakSummary.totalCompleted}</small>
+                      </div>
                       <WidgetIconButton
-                        height={38}
-                        tone={streakSummary.completedToday ? "primary" : "default"}
-                        className="daily-oracle-v2__day-check"
-                        label={streakSummary.completedToday ? "Reopen today's Daily Oracle task" : "Complete today's Daily Oracle task"}
-                        icon={streakSummary.completedToday ? <Flame /> : <Check />}
-                        onClick={togglePrimaryComplete}
+                        height={24}
+                        tone="default"
+                        label="Return to Best Next Move"
+                        icon={<Target />}
+                        onClick={() => setTodayPanel("move")}
                       />
                     </div>
-                  </article>
-
-                  <div className="daily-oracle-v2__score-stack" aria-label="Daily Oracle decision score">
-                    <div className="daily-oracle-v2__score is-impact">
-                      <span>IMPACT</span>
-                      <strong>{oracleLevelLabel(plan.primary.impact)}</strong>
-                      <i style={{ "--oracle-score": `${scorePercent(plan.primary.impact)}%` } as React.CSSProperties} />
+                    <div className="daily-oracle-v2__calendar">
+                      <div className="daily-oracle-v2__calendar-title">
+                        <CalendarDays aria-hidden="true" />
+                        <strong>{calendar.label}</strong>
+                      </div>
+                      <div className="daily-oracle-v2__calendar-grid" aria-label={`Daily Oracle completion calendar for ${calendar.label}`}>
+                        {WEEKDAYS.map((day, index) => <span key={`${day}-${index}`} className="is-weekday">{day}</span>)}
+                        {calendar.cells.map((cell, index) => cell ? (
+                          <span
+                            key={cell.key}
+                            className={`${cell.completed ? "is-complete" : ""} ${cell.today ? "is-today" : ""}`.trim()}
+                            aria-label={`${cell.key}${cell.completed ? ", completed" : ""}${cell.today ? ", today" : ""}`}
+                          >
+                            {cell.completed ? <Check aria-hidden="true" /> : cell.day}
+                          </span>
+                        ) : <span key={`blank-${index}`} className="is-blank" aria-hidden="true" />)}
+                      </div>
                     </div>
-                    <div className="daily-oracle-v2__score is-effort">
-                      <span>EFFORT</span>
-                      <strong>{oracleEffortLabel(plan.primary.effort)}</strong>
-                      <i style={{ "--oracle-score": `${scorePercent(4 - plan.primary.effort)}%` } as React.CSSProperties} />
-                    </div>
-                    <div className="daily-oracle-v2__score is-evidence">
-                      <span>EVIDENCE</span>
-                      <strong>{plan.evidenceCoverage}%</strong>
-                      <i style={{ "--oracle-score": `${plan.evidenceCoverage}%` } as React.CSSProperties} />
-                    </div>
+                    <WidgetSizedButton
+                      height={24}
+                      textFit="adaptive"
+                      tone="default"
+                      className="daily-oracle-v2__reopen-button"
+                      onClick={togglePrimaryComplete}
+                    >
+                      REOPEN TODAY
+                    </WidgetSizedButton>
                   </div>
-                </div>
-              </WidgetSection>
-
-              {streakSummary.completedToday ? (
-                <WidgetSection className="daily-oracle-v2__streak-reveal">
-                  <div className="daily-oracle-v2__streak-header">
-                    <div className="daily-oracle-v2__streak-flame">
-                      <Flame aria-hidden="true" />
-                    </div>
-                    <div>
-                      <span>TODAY COMPLETE</span>
-                      <strong>{streakSummary.currentStreak} DAY STREAK</strong>
-                    </div>
-                    <div className="daily-oracle-v2__streak-stats">
-                      <span>BEST <b>{streakSummary.longestStreak}</b></span>
-                      <span>TOTAL <b>{streakSummary.totalCompleted}</b></span>
-                    </div>
-                  </div>
-                  <div className="daily-oracle-v2__calendar">
-                    <div className="daily-oracle-v2__calendar-title">
-                      <CalendarDays aria-hidden="true" />
-                      <strong>{calendar.label}</strong>
-                    </div>
-                    <div className="daily-oracle-v2__calendar-grid" aria-label={`Daily Oracle completion calendar for ${calendar.label}`}>
-                      {WEEKDAYS.map((day, index) => <span key={`${day}-${index}`} className="is-weekday">{day}</span>)}
-                      {calendar.cells.map((cell, index) => cell ? (
-                        <span
-                          key={cell.key}
-                          className={`${cell.completed ? "is-complete" : ""} ${cell.today ? "is-today" : ""}`.trim()}
-                          aria-label={`${cell.key}${cell.completed ? ", completed" : ""}${cell.today ? ", today" : ""}`}
+                ) : (
+                  <div className="daily-oracle-v2__compass">
+                    <article className={`daily-oracle-v2__primary ${streakSummary.completedToday ? "is-done" : ""}`}>
+                      <div className="daily-oracle-v2__primary-kicker">
+                        <Target size={16} aria-hidden="true" />
+                        <span>BEST NEXT MOVE</span>
+                      </div>
+                      <strong>{plan.primary.title}</strong>
+                      <p>{plan.primary.detail}</p>
+                      <small>{plan.primary.evidence}</small>
+                      <div className="daily-oracle-v2__primary-actions">
+                        <WidgetSizedButton
+                          height={24}
+                          textFit="adaptive"
+                          tone="primary"
+                          onClick={() => addToToday(plan.primary)}
                         >
-                          {cell.completed ? <Check aria-hidden="true" /> : cell.day}
-                        </span>
-                      ) : <span key={`blank-${index}`} className="is-blank" aria-hidden="true" />)}
+                          <CalendarPlus aria-hidden="true" />
+                          {isTaskAdded(plan.primary) ? "IN TODAY" : "ADD TO TODAY"}
+                        </WidgetSizedButton>
+                        <WidgetIconButton
+                          height={38}
+                          tone={streakSummary.completedToday ? "primary" : "default"}
+                          className="daily-oracle-v2__day-check"
+                          label={streakSummary.completedToday ? "Open today's streak calendar" : "Complete today's Daily Oracle task"}
+                          icon={streakSummary.completedToday ? <CalendarDays /> : <Check />}
+                          onClick={() => streakSummary.completedToday ? setTodayPanel("calendar") : togglePrimaryComplete()}
+                        />
+                      </div>
+                    </article>
+
+                    <div className="daily-oracle-v2__score-stack" aria-label="Daily Oracle decision score">
+                      <div className="daily-oracle-v2__score is-impact">
+                        <span>IMPACT</span>
+                        <strong>{oracleLevelLabel(plan.primary.impact)}</strong>
+                        <i style={{ "--oracle-score": `${scorePercent(plan.primary.impact)}%` } as React.CSSProperties} />
+                      </div>
+                      <div className="daily-oracle-v2__score is-effort">
+                        <span>EFFORT</span>
+                        <strong>{oracleEffortLabel(plan.primary.effort)}</strong>
+                        <i style={{ "--oracle-score": `${scorePercent(4 - plan.primary.effort)}%` } as React.CSSProperties} />
+                      </div>
+                      <div className="daily-oracle-v2__score is-evidence">
+                        <span>EVIDENCE</span>
+                        <strong>{plan.evidenceCoverage}%</strong>
+                        <i style={{ "--oracle-score": `${plan.evidenceCoverage}%` } as React.CSSProperties} />
+                      </div>
                     </div>
                   </div>
-                </WidgetSection>
-              ) : null}
+                )}
+              </WidgetSection>
 
               <WidgetSection className="daily-oracle-v2__quick-section">
                 <div className="daily-oracle-v2__section-heading">
@@ -498,7 +515,7 @@ export const DailyOracleWidget = ({
 
               <WidgetSection className="daily-oracle-v2__metric-grid-section">
                 <div className="daily-oracle-v2__metric-grid" role="group" aria-label="Daily Oracle focus metric">
-                  {METRICS.map(({ id, label, Icon }) => (
+                  {METRICS.map(({ id, compactLabel, Icon }) => (
                     <WidgetSizedButton
                       key={id}
                       height={24}
@@ -509,7 +526,7 @@ export const DailyOracleWidget = ({
                       onClick={() => setFocusMetric(id)}
                     >
                       <Icon aria-hidden="true" />
-                      {label}
+                      {compactLabel}
                     </WidgetSizedButton>
                   ))}
                 </div>
