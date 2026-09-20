@@ -1328,3 +1328,60 @@
   background:var(--pair-a,#36e0f6);
   font:1000 calc(var(--vt-component-font-size)*.82)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
 }
+
+
+/* ==========================================================================
+   COMPONENT LIBRARY CORRECTION V3 — primitive split-field state parity.
+   Match the top hardcoded library exactly:
+   pair-A owns the split rail, pair-B owns the editable body.
+   Rest = 50% pair-B tint + opaque pair-B inset.
+   Focus = white body + retained pair-B inset + pair-A outer glow.
+   ========================================================================== */
+.vt-subtoolbox-split-field{
+  --field-accent:var(--pair-b,#ff7f6b);
+  --field-glow:var(--pair-a,#36e0f6);
+  background:var(--field-accent);
+  box-shadow:none!important;
+}
+.vt-subtoolbox-split-field .vt-subtoolbox-split-field-rail{
+  background:var(--field-glow);
+}
+.vt-subtoolbox-split-field input{
+  box-sizing:border-box!important;
+  width:100%!important;
+  height:100%!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  background:color-mix(in srgb,var(--field-accent) 50%,white)!important;
+  color:#000!important;
+  caret-color:var(--field-accent)!important;
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) var(--field-accent)!important;
+  font:1000 var(--vt-component-font-size)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+  letter-spacing:-.055em!important;
+  text-transform:uppercase!important;
+  transition:background 180ms ease-out,box-shadow 180ms ease-out!important;
+}
+.vt-subtoolbox-split-field input::placeholder{
+  color:#8b8b8b!important;
+  opacity:1!important;
+  font:inherit!important;
+  text-transform:uppercase!important;
+}
+.vt-subtoolbox-split-field:focus-within{
+  box-shadow:
+    0 0 3px calc(var(--vt-component-stroke)*.75) color-mix(in srgb,var(--field-glow) 78%,transparent),
+    0 0 calc(var(--vt-component-height)*.20) calc(var(--vt-component-stroke)*1.1) color-mix(in srgb,var(--field-glow) 48%,transparent),
+    0 0 calc(var(--vt-component-height)*.42) calc(var(--vt-component-stroke)*.25) color-mix(in srgb,var(--field-glow) 24%,transparent)!important;
+}
+.vt-subtoolbox-split-field input:focus{
+  background:#fff!important;
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) var(--field-accent)!important;
+}
+/* Keep trailing action visually attached while the editable field owns state. */
+.vt-subtoolbox-split-field .vt-subtoolbox-split-field-action{
+  background:var(--field-glow);
+}
+.vt-subtoolbox-split-field.is-action .vt-subtoolbox-split-field-action{
+  background:var(--field-accent);
+}
