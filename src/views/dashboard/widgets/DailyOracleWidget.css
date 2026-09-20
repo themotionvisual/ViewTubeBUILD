@@ -16,16 +16,8 @@
 .daily-oracle-v2 {
   --oracle-gap: 4px;
   --oracle-compass-h: clamp(156px, 27cqi, 196px);
-  --oracle-rose: #fa618a;
-  --oracle-orange: #ffa85c;
-  --oracle-yellow: #ffda47;
-  --oracle-lime: #c0f240;
-  --oracle-teal: #4ee4be;
-  --oracle-cyan: #36e0f6;
-  --oracle-royal: #528ffa;
-  --oracle-purple: #a467f4;
-  --oracle-magenta: #f55efc;
-  --oracle-pink: #ff7ac8;
+  /* Oracle stays monochromatic; lime is reserved for the completion/streak state. */
+  --oracle-success: #c0f240;
   height: 100%;
   min-height: 0;
 }
@@ -50,6 +42,10 @@
   height: 100%;
 }
 
+.daily-oracle-v2__scroll .widget-scroll-viewport {
+  padding-inline-end: 0;
+}
+
 .daily-oracle-v2__content {
   display: flex;
   flex-direction: column;
@@ -64,10 +60,10 @@
   color: var(--widget-border);
   background:
     linear-gradient(90deg,
-      color-mix(in srgb, var(--oracle-purple) 11%, white),
-      color-mix(in srgb, var(--oracle-cyan) 10%, white),
-      color-mix(in srgb, var(--oracle-lime) 9%, white));
-  border-color: color-mix(in srgb, var(--oracle-cyan) 58%, var(--widget-border));
+      color-mix(in srgb, var(--widget-color) 11%, white),
+      color-mix(in srgb, var(--widget-color) 10%, white),
+      color-mix(in srgb, var(--oracle-success) 9%, white));
+  border-color: color-mix(in srgb, var(--widget-color) 58%, var(--widget-border));
 }
 
 .daily-oracle-v2__source-strip > span:not(.vt-spectrum-badge) {
@@ -105,14 +101,14 @@
   border: var(--widget-module-stroke, 2px) solid var(--widget-border);
   border-radius: 7px;
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--oracle-pink) 18%, transparent), transparent 35%),
-    radial-gradient(circle at 0% 100%, color-mix(in srgb, var(--oracle-yellow) 18%, transparent), transparent 38%),
-    linear-gradient(145deg, color-mix(in srgb, var(--oracle-purple) 18%, white), white 60%);
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--widget-color) 18%, transparent), transparent 35%),
+    radial-gradient(circle at 0% 100%, color-mix(in srgb, var(--widget-color) 18%, transparent), transparent 38%),
+    linear-gradient(145deg, color-mix(in srgb, var(--widget-color) 18%, white), white 60%);
   color: var(--widget-border);
-  border-color: color-mix(in srgb, var(--oracle-purple) 62%, var(--widget-border));
+  border-color: color-mix(in srgb, var(--widget-color) 62%, var(--widget-border));
   box-shadow:
-    3px 3px 0 color-mix(in srgb, var(--oracle-purple) 35%, transparent),
-    -2px -2px 0 color-mix(in srgb, var(--oracle-cyan) 20%, transparent);
+    3px 3px 0 color-mix(in srgb, var(--widget-color) 35%, transparent),
+    -2px -2px 0 color-mix(in srgb, var(--widget-color) 20%, transparent);
   overflow: hidden;
 }
 
@@ -184,19 +180,19 @@
 .daily-oracle-v2__day-check {
   width: 38px !important;
   min-width: 38px !important;
-  border-color: var(--oracle-lime) !important;
+  border-color: var(--oracle-success) !important;
   background:
-    linear-gradient(145deg, color-mix(in srgb, var(--oracle-lime) 62%, white), color-mix(in srgb, var(--oracle-yellow) 40%, white)) !important;
-  color: color-mix(in srgb, var(--oracle-lime) 72%, var(--widget-border)) !important;
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--oracle-lime) 42%, transparent) !important;
+    linear-gradient(145deg, color-mix(in srgb, var(--oracle-success) 62%, white), color-mix(in srgb, var(--widget-color) 40%, white)) !important;
+  color: color-mix(in srgb, var(--oracle-success) 72%, var(--widget-border)) !important;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--oracle-success) 42%, transparent) !important;
 }
 
 .daily-oracle-v2__primary.is-done .daily-oracle-v2__day-check {
-  border-color: var(--oracle-orange) !important;
+  border-color: var(--widget-color) !important;
   background:
-    linear-gradient(145deg, color-mix(in srgb, var(--oracle-orange) 54%, white), color-mix(in srgb, var(--oracle-pink) 38%, white)) !important;
-  color: color-mix(in srgb, var(--oracle-orange) 78%, var(--widget-border)) !important;
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--oracle-pink) 42%, transparent) !important;
+    linear-gradient(145deg, color-mix(in srgb, var(--widget-color) 54%, white), color-mix(in srgb, var(--widget-color) 38%, white)) !important;
+  color: color-mix(in srgb, var(--widget-color) 78%, var(--widget-border)) !important;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color) 42%, transparent) !important;
 }
 
 .daily-oracle-v2__score-stack {
@@ -257,21 +253,21 @@
 }
 
 .daily-oracle-v2__score.is-impact {
-  --oracle-score-color: var(--oracle-rose);
-  border-color: color-mix(in srgb, var(--oracle-rose) 66%, var(--widget-border));
-  background: color-mix(in srgb, var(--oracle-rose) 11%, white);
+  --oracle-score-color: var(--widget-color);
+  border-color: color-mix(in srgb, var(--widget-color) 66%, var(--widget-border));
+  background: color-mix(in srgb, var(--widget-color) 11%, white);
 }
 
 .daily-oracle-v2__score.is-effort {
-  --oracle-score-color: var(--oracle-yellow);
-  border-color: color-mix(in srgb, var(--oracle-yellow) 70%, var(--widget-border));
-  background: color-mix(in srgb, var(--oracle-yellow) 12%, white);
+  --oracle-score-color: var(--widget-color);
+  border-color: color-mix(in srgb, var(--widget-color) 70%, var(--widget-border));
+  background: color-mix(in srgb, var(--widget-color) 12%, white);
 }
 
 .daily-oracle-v2__score.is-evidence {
-  --oracle-score-color: var(--oracle-cyan);
-  border-color: color-mix(in srgb, var(--oracle-cyan) 68%, var(--widget-border));
-  background: color-mix(in srgb, var(--oracle-cyan) 11%, white);
+  --oracle-score-color: var(--widget-color);
+  border-color: color-mix(in srgb, var(--widget-color) 68%, var(--widget-border));
+  background: color-mix(in srgb, var(--widget-color) 11%, white);
 }
 
 .daily-oracle-v2__section-heading {
@@ -330,21 +326,21 @@
 }
 
 .daily-oracle-v2__quick-card.is-tone-1 {
-  border-color: color-mix(in srgb, var(--oracle-cyan) 65%, var(--widget-border));
-  background: color-mix(in srgb, var(--oracle-cyan) 8%, white);
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--oracle-cyan) 28%, transparent);
+  border-color: color-mix(in srgb, var(--widget-color) 65%, var(--widget-border));
+  background: color-mix(in srgb, var(--widget-color) 8%, white);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color) 28%, transparent);
 }
 
 .daily-oracle-v2__quick-card.is-tone-2 {
-  border-color: color-mix(in srgb, var(--oracle-orange) 65%, var(--widget-border));
-  background: color-mix(in srgb, var(--oracle-orange) 8%, white);
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--oracle-orange) 28%, transparent);
+  border-color: color-mix(in srgb, var(--widget-color) 65%, var(--widget-border));
+  background: color-mix(in srgb, var(--widget-color) 8%, white);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color) 28%, transparent);
 }
 
 .daily-oracle-v2__quick-card.is-tone-3 {
-  border-color: color-mix(in srgb, var(--oracle-pink) 65%, var(--widget-border));
-  background: color-mix(in srgb, var(--oracle-pink) 8%, white);
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--oracle-pink) 28%, transparent);
+  border-color: color-mix(in srgb, var(--widget-color) 65%, var(--widget-border));
+  background: color-mix(in srgb, var(--widget-color) 8%, white);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color) 28%, transparent);
 }
 
 .daily-oracle-v2__quick-copy {
@@ -438,28 +434,28 @@
 }
 
 .daily-oracle-v2__metric-grid > .is-views {
-  border-color: var(--oracle-cyan) !important;
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--oracle-cyan) 30%, transparent) !important;
+  border-color: var(--widget-color) !important;
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color) 30%, transparent) !important;
 }
 
 .daily-oracle-v2__metric-grid > .is-subscribers {
-  border-color: var(--oracle-purple) !important;
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--oracle-purple) 30%, transparent) !important;
+  border-color: var(--widget-color) !important;
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color) 30%, transparent) !important;
 }
 
 .daily-oracle-v2__metric-grid > .is-revenue {
-  border-color: var(--oracle-yellow) !important;
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--oracle-yellow) 30%, transparent) !important;
+  border-color: var(--widget-color) !important;
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color) 30%, transparent) !important;
 }
 
 .daily-oracle-v2__metric-grid > .is-engagement {
-  border-color: var(--oracle-pink) !important;
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--oracle-pink) 30%, transparent) !important;
+  border-color: var(--widget-color) !important;
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color) 30%, transparent) !important;
 }
 
 .daily-oracle-v2__metric-grid > .is-watch-time {
-  border-color: var(--oracle-lime) !important;
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--oracle-lime) 30%, transparent) !important;
+  border-color: var(--oracle-success) !important;
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--oracle-success) 30%, transparent) !important;
 }
 
 .daily-oracle-v2__focus-list {
@@ -481,23 +477,23 @@
 }
 
 .daily-oracle-v2__focus-row.is-tone-1 {
-  border-color: color-mix(in srgb, var(--oracle-purple) 62%, var(--widget-border));
-  background: color-mix(in srgb, var(--oracle-purple) 7%, white);
+  border-color: color-mix(in srgb, var(--widget-color) 62%, var(--widget-border));
+  background: color-mix(in srgb, var(--widget-color) 7%, white);
 }
 
 .daily-oracle-v2__focus-row.is-tone-2 {
-  border-color: color-mix(in srgb, var(--oracle-teal) 62%, var(--widget-border));
-  background: color-mix(in srgb, var(--oracle-teal) 7%, white);
+  border-color: color-mix(in srgb, var(--widget-color) 62%, var(--widget-border));
+  background: color-mix(in srgb, var(--widget-color) 7%, white);
 }
 
 .daily-oracle-v2__focus-row.is-tone-3 {
-  border-color: color-mix(in srgb, var(--oracle-orange) 62%, var(--widget-border));
-  background: color-mix(in srgb, var(--oracle-orange) 7%, white);
+  border-color: color-mix(in srgb, var(--widget-color) 62%, var(--widget-border));
+  background: color-mix(in srgb, var(--widget-color) 7%, white);
 }
 
-.daily-oracle-v2__focus-row.is-tone-1 .daily-oracle-v2__focus-index { background: color-mix(in srgb, var(--oracle-purple) 45%, white); }
-.daily-oracle-v2__focus-row.is-tone-2 .daily-oracle-v2__focus-index { background: color-mix(in srgb, var(--oracle-teal) 45%, white); }
-.daily-oracle-v2__focus-row.is-tone-3 .daily-oracle-v2__focus-index { background: color-mix(in srgb, var(--oracle-orange) 45%, white); }
+.daily-oracle-v2__focus-row.is-tone-1 .daily-oracle-v2__focus-index { background: color-mix(in srgb, var(--widget-color) 45%, white); }
+.daily-oracle-v2__focus-row.is-tone-2 .daily-oracle-v2__focus-index { background: color-mix(in srgb, var(--widget-color) 45%, white); }
+.daily-oracle-v2__focus-row.is-tone-3 .daily-oracle-v2__focus-index { background: color-mix(in srgb, var(--widget-color) 45%, white); }
 
 .daily-oracle-v2__focus-index {
   display: grid;
@@ -549,9 +545,9 @@
   color: color-mix(in srgb, var(--oracle-context-color) 70%, var(--widget-border));
 }
 
-.daily-oracle-v2__context-grid > .is-purple { --oracle-context-color: var(--oracle-purple); }
-.daily-oracle-v2__context-grid > .is-cyan { --oracle-context-color: var(--oracle-cyan); }
-.daily-oracle-v2__context-grid > .is-orange { --oracle-context-color: var(--oracle-orange); }
+.daily-oracle-v2__context-grid > .is-purple { --oracle-context-color: var(--widget-color); }
+.daily-oracle-v2__context-grid > .is-cyan { --oracle-context-color: var(--widget-color); }
+.daily-oracle-v2__context-grid > .is-orange { --oracle-context-color: var(--widget-color); }
 
 .daily-oracle-v2__context-grid span {
   font-size: 7px;
@@ -632,14 +628,15 @@
   }
 
   .daily-oracle-v2__metric-grid .vt-sized-control {
-    --vt-primitive-font: clamp(10px, 2.7cqi, 14px);
+    --vt-primitive-font: clamp(8px, 2.15cqi, 10px);
     --vt-primitive-gap: 1px;
-    padding-inline: 2px !important;
+    letter-spacing: -0.02em;
+    padding-inline: 1px !important;
   }
 
   .daily-oracle-v2__metric-grid .vt-sized-control svg {
-    width: 12px !important;
-    height: 12px !important;
+    width: 10px !important;
+    height: 10px !important;
   }
 
   .daily-oracle-v2__goal-strip {
@@ -682,124 +679,101 @@
 }
 
 
-.daily-oracle-v2__streak-reveal {
+/* Calendar/streak is a view of the primary stage, never extra widget height. */
+.daily-oracle-v2__calendar-stage {
+  height: var(--oracle-compass-h);
+  min-height: 0;
   display: grid;
-  grid-template-columns: minmax(132px, .72fr) minmax(170px, 1.28fr);
-  gap: 7px;
-  border-color: color-mix(in srgb, var(--oracle-orange) 72%, var(--widget-border));
-  background:
-    radial-gradient(circle at 2% 50%, color-mix(in srgb, var(--oracle-orange) 22%, transparent), transparent 32%),
-    radial-gradient(circle at 98% 50%, color-mix(in srgb, var(--oracle-pink) 18%, transparent), transparent 34%),
-    white;
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--oracle-orange) 28%, transparent);
+  grid-template-rows: auto minmax(0, 1fr) 24px;
+  gap: 5px;
+  padding: 7px;
+  overflow: hidden;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--widget-color) 8%, white);
+  color: var(--widget-border);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color) 30%, transparent);
 }
 
-.daily-oracle-v2__streak-header {
+.daily-oracle-v2__calendar-stage-header {
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  align-content: center;
-  gap: 2px 7px;
+  grid-template-columns: 34px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
 }
 
 .daily-oracle-v2__streak-flame {
-  grid-row: 1 / span 2;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
-  border: 2px solid var(--oracle-orange);
-  border-radius: 7px;
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--oracle-yellow) 56%, white), color-mix(in srgb, var(--oracle-rose) 42%, white));
-  color: color-mix(in srgb, var(--oracle-orange) 82%, var(--widget-border));
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--oracle-orange) 32%, transparent);
+  border: 2px solid color-mix(in srgb, var(--oracle-success) 76%, var(--widget-border));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--oracle-success) 42%, white);
+  color: color-mix(in srgb, var(--oracle-success) 64%, var(--widget-border));
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--oracle-success) 34%, transparent);
 }
 
 .daily-oracle-v2__streak-flame svg {
-  width: 23px;
-  height: 23px;
+  width: 20px;
+  height: 20px;
 }
 
-.daily-oracle-v2__streak-header > div:nth-child(2) {
+.daily-oracle-v2__streak-copy {
   display: grid;
-  align-content: center;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
 }
 
-.daily-oracle-v2__streak-header > div:nth-child(2) > span {
-  font-size: 7px;
-  font-weight: 1000;
-  line-height: 1;
-  color: var(--oracle-orange);
-  text-transform: uppercase;
-}
-
-.daily-oracle-v2__streak-header > div:nth-child(2) > strong {
-  font-size: clamp(15px, 2.6cqi, 21px);
-  font-weight: 1000;
-  line-height: .9;
-  color: color-mix(in srgb, var(--oracle-rose) 68%, var(--widget-border));
-  text-transform: uppercase;
-}
-
-.daily-oracle-v2__streak-stats {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 3px;
-  margin-top: 4px;
-}
-
-.daily-oracle-v2__streak-stats span {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
+.daily-oracle-v2__streak-copy span,
+.daily-oracle-v2__streak-copy small {
   min-width: 0;
-  padding: 4px 5px;
-  border: 1.5px solid currentColor;
-  border-radius: 4px;
-  background: color-mix(in srgb, currentColor 8%, white);
-  color: var(--oracle-purple);
   font-size: 7px;
   font-weight: 900;
+  line-height: 1;
   text-transform: uppercase;
 }
 
-.daily-oracle-v2__streak-stats span:last-child {
-  color: var(--oracle-cyan);
+.daily-oracle-v2__streak-copy span {
+  color: color-mix(in srgb, var(--oracle-success) 62%, var(--widget-border));
 }
 
-.daily-oracle-v2__streak-stats b {
-  font-size: 12px;
+.daily-oracle-v2__streak-copy strong {
+  min-width: 0;
+  font-size: clamp(14px, 2.5cqi, 19px);
   font-weight: 1000;
+  line-height: .92;
+  text-transform: uppercase;
+}
+
+.daily-oracle-v2__streak-copy small {
+  opacity: .62;
 }
 
 .daily-oracle-v2__calendar {
+  min-height: 0;
   display: grid;
-  gap: 4px;
-  min-width: 0;
-  padding: 5px;
-  border: 2px solid color-mix(in srgb, var(--oracle-purple) 54%, var(--widget-border));
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 3px;
+  padding: 4px;
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--widget-color) 62%, var(--widget-border));
   border-radius: 5px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--oracle-cyan) 7%, white), color-mix(in srgb, var(--oracle-purple) 7%, white));
+  background: white;
 }
 
 .daily-oracle-v2__calendar-title {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   min-width: 0;
-  color: color-mix(in srgb, var(--oracle-purple) 72%, var(--widget-border));
+  color: var(--widget-border);
 }
 
 .daily-oracle-v2__calendar-title svg {
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
 }
 
 .daily-oracle-v2__calendar-title strong {
@@ -811,32 +785,33 @@
 }
 
 .daily-oracle-v2__calendar-grid {
+  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(7, minmax(14px, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: 11px repeat(6, minmax(13px, 1fr));
   gap: 2px;
 }
 
 .daily-oracle-v2__calendar-grid > span {
-  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 0;
   display: grid;
   place-items: center;
-  min-width: 0;
-  border: 1px solid color-mix(in srgb, var(--widget-border) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--widget-border) 24%, transparent);
   border-radius: 3px;
-  background: white;
+  background: color-mix(in srgb, var(--widget-color) 4%, white);
   color: var(--widget-border);
-  font-size: clamp(7px, 1.05cqi, 9px);
+  font-size: clamp(7px, 1cqi, 9px);
   font-weight: 900;
   line-height: 1;
 }
 
 .daily-oracle-v2__calendar-grid > .is-weekday {
-  aspect-ratio: auto;
-  min-height: 12px;
   border: 0;
   background: transparent;
-  color: var(--oracle-purple);
+  color: var(--widget-border);
   font-size: 7px;
+  opacity: .62;
 }
 
 .daily-oracle-v2__calendar-grid > .is-blank {
@@ -846,57 +821,59 @@
 
 .daily-oracle-v2__calendar-grid > .is-today {
   border-width: 2px;
-  border-color: var(--oracle-orange);
-  background: color-mix(in srgb, var(--oracle-yellow) 14%, white);
+  border-color: var(--widget-color);
+  background: color-mix(in srgb, var(--widget-color) 12%, white);
 }
 
 .daily-oracle-v2__calendar-grid > .is-complete {
-  border-color: var(--oracle-lime);
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--oracle-lime) 52%, white), color-mix(in srgb, var(--oracle-cyan) 28%, white));
-  color: color-mix(in srgb, var(--oracle-green, #3fee56) 72%, var(--widget-border));
-  box-shadow: 1px 1px 0 color-mix(in srgb, var(--oracle-lime) 35%, transparent);
-}
-
-.daily-oracle-v2__calendar-grid > .is-complete:nth-child(5n + 1) {
-  border-color: var(--oracle-cyan);
-  background: color-mix(in srgb, var(--oracle-cyan) 28%, white);
-}
-
-.daily-oracle-v2__calendar-grid > .is-complete:nth-child(5n + 2) {
-  border-color: var(--oracle-purple);
-  background: color-mix(in srgb, var(--oracle-purple) 24%, white);
-}
-
-.daily-oracle-v2__calendar-grid > .is-complete:nth-child(5n + 3) {
-  border-color: var(--oracle-pink);
-  background: color-mix(in srgb, var(--oracle-pink) 24%, white);
+  border-color: color-mix(in srgb, var(--oracle-success) 78%, var(--widget-border));
+  background: color-mix(in srgb, var(--oracle-success) 42%, white);
+  color: color-mix(in srgb, var(--oracle-success) 58%, var(--widget-border));
+  box-shadow: 1px 1px 0 color-mix(in srgb, var(--oracle-success) 30%, transparent);
 }
 
 .daily-oracle-v2__calendar-grid > .is-complete svg {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   stroke-width: 3;
 }
 
+.daily-oracle-v2__reopen-button {
+  width: 100%;
+  min-width: 0;
+}
+
+/* The completion control is the one deliberate non-blue accent in the main stage. */
+.daily-oracle-v2__day-check,
+.daily-oracle-v2__primary.is-done .daily-oracle-v2__day-check {
+  border-color: color-mix(in srgb, var(--oracle-success) 76%, var(--widget-border)) !important;
+  background: color-mix(in srgb, var(--oracle-success) 38%, white) !important;
+  color: color-mix(in srgb, var(--oracle-success) 60%, var(--widget-border)) !important;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--oracle-success) 34%, transparent) !important;
+}
+
 @container vt-widget (max-width: 470px) {
-  .daily-oracle-v2__streak-reveal {
-    grid-template-columns: minmax(0, 1fr);
+  .daily-oracle-v2__calendar-stage {
+    padding: 6px;
   }
 
-  .daily-oracle-v2__streak-header {
-    grid-template-columns: 38px minmax(0, 1fr) minmax(72px, .7fr);
-    grid-template-rows: 1fr;
-    align-items: center;
+  .daily-oracle-v2__calendar-stage-header {
+    grid-template-columns: 32px minmax(0, 1fr) 24px;
   }
 
   .daily-oracle-v2__streak-flame {
-    grid-row: 1;
+    width: 32px;
+    height: 32px;
   }
 
-  .daily-oracle-v2__streak-stats {
-    grid-column: 3;
-    grid-template-columns: 1fr;
-    margin-top: 0;
+  .daily-oracle-v2__calendar-grid {
+    grid-template-rows: 10px repeat(6, minmax(11px, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .daily-oracle-v2 * {
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
   }
 }
