@@ -6,6 +6,39 @@
   --vtdw-signature-h:145px;
   --vtdw-control-gap:4px;
 }
+.vt-video-director-widget,
+.vt-video-director-widget .widget-workflow-main,
+.vt-video-director-widget .vtdw-scroll-area,
+.vt-video-director-widget .vtdw-scroll-content,
+.vt-video-director-widget .widget-section,
+.vt-video-director-widget .vtdw-topline,
+.vt-video-director-widget .vtdw-mode-row,
+.vt-video-director-widget .vtdw-page-row,
+.vt-video-director-widget .vtdw-field-grid,
+.vt-video-director-widget .vtdw-category-head,
+.vt-video-director-widget .vtdw-footer-grid {
+  box-sizing:border-box;
+  min-width:0;
+  max-width:100%;
+}
+.vt-video-director-widget .vtdw-scroll-area {
+  margin-inline-start:0;
+}
+.vt-video-director-widget .vtdw-scroll-content {
+  width:100%;
+  overflow-x:clip;
+}
+.vt-video-director-widget .vtdw-field-grid > *,
+.vt-video-director-widget .vtdw-category-head > * {
+  min-width:0;
+  max-width:100%;
+}
+.vt-video-director-widget .vtdw-field :is(.widget-text-input,.widget-select-trigger,.widget-stepper,.widget-toggle-switch),
+.vt-video-director-widget .vtdw-category-select {
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
 .vt-widget[data-widget-height="tall"] .vt-video-director-widget { --vtdw-signature-h:126px; }
 .vt-widget[data-widget-height="xtall"] .vt-video-director-widget { --vtdw-signature-h:136px; }
 .vt-widget[data-widget-height="massive"] .vt-video-director-widget { --vtdw-signature-h:145px; }
@@ -60,6 +93,9 @@
 .vtdw-footer-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}.vtdw-footer-copy{min-width:0}.vtdw-footer-copy strong,.vtdw-footer-copy span{display:block}.vtdw-footer-copy strong{font-size:11px;font-weight:1000;text-transform:uppercase}.vtdw-footer-copy span{font-size:8px;font-weight:900;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @container vt-widget (max-width:430px){
   .vt-video-director-widget{--vtdw-signature-h:112px}
+  .vtdw-category-head{grid-template-columns:minmax(0,1fr);gap:4px}
+  .vtdw-category-select{width:100%!important;max-width:100%!important}
+  .vtdw-category-copy{width:100%;min-width:0}
   .vtdw-project-badge,.vtdw-category-shortcuts{display:none!important}
   .vtdw-category-copy small{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
   .vtdw-shot{min-height:68px;padding:5px}
