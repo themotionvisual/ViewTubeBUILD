@@ -58,7 +58,7 @@ export const WidgetVideoSelect:React.FC<{value:string;onChange:(value:string)=>v
    <span className="widget-video-select-trigger-copy">{selected?.thumbnail?<img src={selected.thumbnail} alt=""/>:null}<span>{selected?.label||placeholder}</span></span>
   </button>
   {open?<div className={`widget-video-select-menu ${selectMenuClass(height,tone)}`} style={selectMenuStyle(height)} role="listbox" aria-label={label}>
-   {searchable?<div className="widget-video-select-search"><WidgetSearchInput className="widget-video-select-menu-search-row" height={height} tone="secondary" iconStyle={iconStyle} label={`Search ${label}`} value={query} onChange={e=>setQuery(e.currentTarget.value)} placeholder="Search videos…"/></div>:null}
+   {searchable?<div className="widget-video-select-search"><WidgetSearchInput className="widget-video-select-menu-search-row" height={height} tone="primary" iconStyle={iconStyle} label={`Search ${label}`} value={query} onChange={e=>setQuery(e.currentTarget.value)} placeholder="Search videos…"/></div>:null}
    <div className="widget-video-select-options">
     {visibleOptions.map(option=>{const meta=resolveVideoOptionMeta(option);return <button key={option.value} type="button" role="option" aria-selected={option.value===value} className={`widget-video-select-option ${option.value===value?"is-selected":""}`.trim()} onClick={()=>{onChange(option.value);setOpen(false)}}>
      <span className="widget-video-select-option-media">
