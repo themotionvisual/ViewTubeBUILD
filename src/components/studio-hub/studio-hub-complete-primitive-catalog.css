@@ -1379,3 +1379,97 @@
   width:48%!important;
   height:48%!important;
 }
+
+
+/* ==========================================================================
+   USER CORRECTION V5 — restore desired Tag Editor + explicit two-color split
+   fields in the hardcoded comparison library.
+   ========================================================================== */
+
+.vt-complete-catalog .vt-catalog-tag-editor{
+  min-height:var(--h)!important;
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:6px!important;
+  padding:4px!important;
+  border:var(--stroke) solid #000!important;
+  border-radius:var(--radius)!important;
+  background:color-mix(in srgb,var(--pair-b) 20%,white)!important;
+}
+.vt-complete-catalog .tag-editor-label{display:none!important}
+.vt-complete-catalog .tag-editor-tags{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:6px!important;
+}
+.vt-complete-catalog .vt-catalog-tag-editor .vt-spectrum-tag{
+  --tag-h:calc(var(--h)*.68)!important;
+  min-height:var(--tag-h)!important;
+  height:var(--tag-h)!important;
+  padding:0 calc(var(--tag-h)*.10) 0 calc(var(--tag-h)*.30)!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:var(--pair-a)!important;
+  color:#000!important;
+  box-shadow:none!important;
+  font:1000 calc(var(--fs)*.78)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+}
+.vt-complete-catalog .vt-catalog-tag-editor .vt-spectrum-tag>button{
+  width:calc(var(--tag-h)*.72)!important;
+  height:calc(var(--tag-h)*.72)!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:var(--pair-b)!important;
+  color:#000!important;
+  box-shadow:none!important;
+}
+.vt-complete-catalog .vt-catalog-tag-editor>.add,
+.vt-complete-catalog .vt-catalog-tag-editor>.submit{
+  width:calc(var(--h)*.68)!important;
+  height:calc(var(--h)*.68)!important;
+  padding:0!important;
+  border:var(--stroke) solid #000!important;
+  border-radius:calc(var(--radius)*.65)!important;
+  display:grid!important;
+  place-items:center!important;
+  background:var(--pair-a)!important;
+  color:#000!important;
+}
+.vt-complete-catalog .vt-catalog-tag-editor>.submit{background:var(--pair-b)!important}
+.vt-complete-catalog .vt-catalog-tag-editor>input{
+  min-width:6ch!important;
+  flex:1 1 90px!important;
+  height:calc(var(--h)*.68)!important;
+  border:var(--stroke) solid #000!important;
+  border-radius:calc(var(--radius)*.65)!important;
+  background:color-mix(in srgb,var(--pair-a) 50%,white)!important;
+  box-shadow:inset 0 0 0 var(--stroke) var(--pair-a)!important;
+  padding:0 8px!important;
+  outline:0!important;
+  caret-color:var(--pair-a)!important;
+  font:1000 calc(var(--fs)*.78)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+  text-transform:uppercase!important;
+}
+.vt-complete-catalog .vt-catalog-tag-editor>input:focus{
+  background:#fff!important;
+  box-shadow:inset 0 0 0 var(--stroke) var(--pair-a),0 0 calc(var(--h)*.22) color-mix(in srgb,var(--pair-b) 62%,transparent)!important;
+}
+
+.vt-complete-catalog .vt-catalog-split-field{
+  background:var(--pair-b)!important;
+}
+.vt-complete-catalog .vt-catalog-split-field>span,
+.vt-complete-catalog .vt-catalog-split-field .field-action{
+  background:var(--pair-a)!important;
+}
+.vt-complete-catalog .vt-catalog-split-field input{
+  background:color-mix(in srgb,var(--pair-b) 50%,white)!important;
+  caret-color:var(--pair-b)!important;
+  box-shadow:inset 0 0 0 var(--stroke) var(--pair-b)!important;
+}
+.vt-complete-catalog .vt-catalog-split-field input:focus{
+  background:#fff!important;
+  box-shadow:inset 0 0 0 var(--stroke) var(--pair-b)!important;
+}
