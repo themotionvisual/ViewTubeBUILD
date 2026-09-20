@@ -53,8 +53,8 @@
 .widget-icon-button,
 .widget-icon-badge {
   aspect-ratio: 1 / 1;
-  width: var(--widget-split-counter-bay);
-  min-width: var(--widget-split-counter-bay);
+  width: var(--vt-primitive-height);
+  min-width: var(--vt-primitive-height);
   display: inline-grid;
   place-items: center;
   padding: 0;
@@ -654,8 +654,8 @@
 }
 .widget-split-counter-controls {
   box-sizing: border-box;
-  width: var(--vt-primitive-height);
-  min-width: var(--vt-primitive-height);
+  width: var(--widget-split-counter-bay);
+  min-width: var(--widget-split-counter-bay);
   height: 100%;
   display: grid;
   grid-template-rows: repeat(2, minmax(0, 1fr));
