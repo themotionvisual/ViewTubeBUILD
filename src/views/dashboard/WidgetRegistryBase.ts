@@ -80,14 +80,14 @@ const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
  {
   id: "app-verification-explainer",
   title: "About VIEWTUBE",
-  subtitle: "VIEWTUBE app purpose, Google sign-in, and YouTube data use",
+  subtitle: "Connected creator system + trust map",
   category: "system",
   defaultSize: "full",
   minSize: "half",
   maxSize: "full",
   defaultHeight: "medium",
   minHeight: "short",
-  maxHeight: "medium",
+  maxHeight: "tall",
   ...getDashboardWidgetPaletteColors(7),
   dependency: ["none"],
   status: "ready",
@@ -605,7 +605,7 @@ const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
  {
   id: "daily-oracle",
   title: "Daily Oracle",
-  subtitle: "Strategic Advice",
+  subtitle: "Evidence-ranked next action",
   category: "ai",
   defaultSize: "third",
   minSize: "quarter",
@@ -1028,8 +1028,8 @@ export const DASHBOARD_WIDGET_BY_ID = Object.fromEntries(
 
 export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: string }> = {
   "app-verification-explainer": {
-   short: "VIEWTUBE EXPLAINS ITS PURPOSE AND DATA USE BEFORE CHANNEL TOOLS.",
-   detailed: "This module is intentionally visible at the top of the dashboard so reviewers and creators can understand why the app requests Google and YouTube access."
+   short: "SEE HOW VIEWTUBE CONNECTS DATA, DECISIONS, CREATION, AND PLANNING.",
+   detailed: "Use the system map to open the major creator loop, or switch to Trust to inspect the connection path, account controls, privacy resources, and data transparency."
   },
   "kpi-cluster": {
    short: "REAL-TIME CHANNEL VITALS AND CORE GROWTH METRICS.",
@@ -1124,8 +1124,8 @@ export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: stri
    detailed: "Ask anything about your data and get an immediate answer. Best used for 'Why?' questions that charts can't explain."
   },
   "daily-oracle": {
-   short: "STRATEGIC AI ADVICE TAILORED TO YOUR CURRENT GROWTH.",
-   detailed: "Receive a daily 'prediction' or strategic tip for your channel. Use this for a fresh perspective on your content direction."
+   short: "RANK TODAY'S HIGHEST-LEVERAGE CREATOR MOVE FROM CURRENT EVIDENCE.",
+   detailed: "The Oracle combines Brain context, creator goals, channel evidence, cadence, effort, and a selected growth lens into one primary move plus lower-effort quick wins you can add directly to Today."
   },
   "ai-journal": {
    short: "CREATIVE LOG FOR TRACKING EXPERIMENTS AND STRATEGIES.",
