@@ -445,6 +445,49 @@ describe("expanded widget compound primitives", () => {
     expect(variantsCss).toContain("text-overflow: clip")
   })
 
+  it("keeps the three larger VIDEO split bays wide enough for the label and chevron", () => {
+    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-24 { --widget-video-split-bay: 38px; }")
+    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-32 { --widget-video-split-bay: 50px; }")
+    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-38 { --widget-video-split-bay: 60px; }")
+    expect(variantsCss).toContain("span:first-child { font-size: 6px")
+    expect(variantsCss).toContain("span:first-child { font-size: 8px")
+    expect(variantsCss).toContain("span:first-child { font-size: 9px")
+  })
+
+  it("makes the video menu search and option rows truly edge-to-edge", () => {
+    expect(extensionSource).toContain('className="widget-video-select-menu-search-row"')
+    expect(variantsCss).toContain(".widget-video-select.is-open > .widget-video-select-menu")
+    expect(variantsCss).toContain("padding: 0")
+    expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-menu-search-row")
+    expect(variantsCss).toContain("border-radius: 0")
+    expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-option")
+    expect(variantsCss).toContain("min-width: 100%")
+    expect(videoSelectCss).not.toContain("border-bottom:")
+  })
+
+  it("frames video thumbnails in VT ink and moves duration one pixel up and left", () => {
+    expect(variantsCss).toContain("border: 1.5px solid var(--vt-tone-ink")
+    expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-duration")
+    expect(variantsCss).toContain("right: 2px")
+    expect(variantsCss).toContain("bottom: 0")
+  })
+
+  it("manifests every Navigation primitive inside Widget Module headers", () => {
+    expect(referenceSource).toContain('title="Channel Overview"')
+    expect(referenceSource).toContain('label="Channel overview time window"')
+    expect(referenceSource).toContain('title="Comment Responder"')
+    expect(referenceSource).toContain('label="Comment responder view example"')
+    expect(referenceSource).toContain('label="Comment pagination example"')
+    expect(referenceSource).toContain('title="Publishing Workflow"')
+    expect(referenceSource).toContain('label="Header publishing stages"')
+    expect(referenceSource).toContain('title="Auto Chapters"')
+    expect(referenceSource).toContain('label="Automatic Chapters"')
+    expect(referenceSource).toContain('title="Embed Permission"')
+    expect(referenceSource).toContain('label="Allow Embedding"')
+    expect(referenceSource).toContain('title="Reply Mode"')
+    expect(referenceSource).toContain('name="module-reply-mode"')
+  })
+
   it("uses placeholder filler copy so focus starts the caret at the left edge", () => {
     expect(extensionSource).toContain('placeholder="Type…"')
     expect(referenceSource).toContain('placeholder="Sample title input"')
