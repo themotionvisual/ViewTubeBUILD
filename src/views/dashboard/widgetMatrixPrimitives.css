@@ -703,9 +703,9 @@
   cursor: not-allowed;
 }
 .widget-split-counter-controls svg {
-  width: max(7px, calc(var(--vt-primitive-height) * .32));
-  height: max(7px, calc(var(--vt-primitive-height) * .32));
-  stroke-width: 3;
+  width: var(--vt-primitive-icon);
+  height: var(--vt-primitive-icon);
+  stroke-width: var(--vt-primitive-icon-stroke, 2.5);
 }
 .widget-split-counter-value {
   box-sizing: border-box;
