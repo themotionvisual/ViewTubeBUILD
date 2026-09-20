@@ -129,8 +129,8 @@
   stroke-width: var(--vt-primitive-icon-stroke) !important;
 }
 .widget-video-select-trigger .widget-video-select-trigger-chevron svg {
-  width: calc(var(--vt-primitive-icon) * .78) !important;
-  height: calc(var(--vt-primitive-icon) * .78) !important;
+  width: var(--vt-primitive-icon) !important;
+  height: var(--vt-primitive-icon) !important;
   stroke-width: var(--vt-primitive-icon-stroke) !important;
 }
 
