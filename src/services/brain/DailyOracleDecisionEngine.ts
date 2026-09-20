@@ -237,11 +237,15 @@ export const buildDailyOraclePlan = ({
  const quickPool = sorted
   .filter((candidate) => candidate.id !== primary.id)
   .sort((a, b) => a.effort - b.effort || b.score - a.score)
- const evidenceDriven = quickPool.find((candidate) =>
-  candidate.id === "repeat-pattern" ||
-  candidate.id === "advance-goal" ||
-  candidate.id === "brain-daily",
- )
+ const evidencePriorityIds = [
+  growth.profileConfidenceScore < 60 ? "brain-context" : null,
+  topPattern ? "repeat-pattern" : null,
+  currentGoal && !/pick one measurable channel goal/i.test(currentGoal) ? "advance-goal" : null,
+  "brain-daily",
+ ].filter((value): value is string => Boolean(value))
+ const evidenceDriven = evidencePriorityIds
+  .map((id) => quickPool.find((candidate) => candidate.id === id))
+  .find((candidate): candidate is DailyOracleCandidate => Boolean(candidate))
  const quickWins = [
   ...(evidenceDriven ? [evidenceDriven] : []),
   ...quickPool.filter((candidate) => candidate.id !== evidenceDriven?.id),
