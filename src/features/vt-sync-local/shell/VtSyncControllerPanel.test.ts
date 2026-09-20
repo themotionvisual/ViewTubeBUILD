@@ -54,8 +54,8 @@ describe("VT-SYNC execution status controls", () => {
 
  it("uses one compact telemetry row with the controller pinned to the far right", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
-  expect(source).toContain("grid-cols-[minmax(210px,1fr)_58px_54px_88px_34px_58px_96px]")
-  expect(source).toContain("min-w-[600px]")
+  expect(source).toContain("grid-cols-[minmax(210px,1fr)_58px_54px_88px_38px_58px_142px]")
+  expect(source).toContain("min-w-[650px]")
   expect(source).toContain("sticky right-0")
   expect(source).toContain("<span>Status</span><span>Time</span><span>Last sync</span>")
   expect(source).toContain("<span className=\"text-center\">!</span>")
@@ -63,13 +63,25 @@ describe("VT-SYNC execution status controls", () => {
   expect(source).toContain("<RetroSyncExecutionSwitch")
  })
 
- it("keeps sync time, issues, child queries, and description inside the expandable dataset detail surface", () => {
+ it("removes default row checkboxes and only exposes details for rows with extra information", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
+  expect(source).toContain("hasExtraDetail")
   expect(source).toContain("vt-sync-unified-unit-")
   expect(source).toContain("Issues ·")
   expect(source).toContain("Underlying query")
-  expect(source).toContain("DURATION")
-  expect(source).toContain("LAST SYNC")
+  expect(source).not.toContain('title={expandedUnit ? "Collapse dataset details" : "Expand dataset details"}')
+  expect(source).not.toContain('aria-label={`${checked ? "Remove" : "Add"}')
+ })
+
+ it("integrates the red batch selector and its LED into the same silver controller plate", () => {
+  const chromeSource = readFileSync(new URL("./VtSyncRetroChrome.tsx", import.meta.url), "utf8")
+  const cssSource = readFileSync(new URL("./VtSyncRetroChrome.css", import.meta.url), "utf8")
+  expect(chromeSource).toContain("vt-retro-dual-plate")
+  expect(chromeSource).toContain("vt-retro-status-led")
+  expect(chromeSource).toContain("vt-retro-batch-track")
+  expect(chromeSource).toContain("vt-retro-selection-led")
+  expect(cssSource).toContain("Physical composition: [ status LED | horizontal sync switch | red vertical batch switch | batch LED ]")
+  expect(cssSource).toContain(".vt-retro-pcb-group.is-batch-selected .vt-retro-batch-nub")
  })
 
 })
@@ -83,26 +95,29 @@ describe("time window controller options", () => {
   onStartSync: vi.fn(async () => undefined),
  }))
 
- it("offers every canonical window as a chip", () => {
+ it("offers every canonical window as an analog toggle", () => {
   const markup = render()
   ANALYTICS_WINDOWS.forEach((window) => {
+   expect(markup).toContain(`data-window="${window}"`)
    expect(markup).toContain(WINDOW_SHORT_LABELS[window])
   })
+  expect(markup).toContain("vt-retro-analog-toggle")
  })
 
- it("selects lifetime only by default, so opening the panel cannot raise quota", () => {
+ it("starts with lifetime on but leaves it independently toggleable", () => {
   const markup = render()
-  const chips = markup.match(/<button[^>]*data-window="[^"]+"[^>]*>/g) || []
-  expect(chips).toHaveLength(ANALYTICS_WINDOWS.length)
-  const selectedChips = chips.filter((chip) => chip.includes('aria-pressed="true"'))
-  expect(selectedChips).toHaveLength(1)
-  expect(selectedChips[0]).toContain('data-window="lifetime"')
-  // Lifetime is also locked on, since stored rows still key off it.
-  expect(selectedChips[0]).toContain("disabled")
+  const lifetimeMarker = markup.indexOf('data-window="lifetime"')
+  expect(lifetimeMarker).toBeGreaterThan(-1)
+  const lifetimeSlice = markup.slice(lifetimeMarker, lifetimeMarker + 900)
+  expect(lifetimeSlice).toContain('aria-pressed="true"')
+  expect(lifetimeSlice).not.toContain("disabled")
  })
 
- it("says the run is lifetime-only rather than quoting an extra cost", () => {
-  expect(render()).toContain("Lifetime only")
+ it("describes the selected-window request estimate rather than forcing lifetime language", () => {
+  const markup = render()
+  expect(markup).toContain("window")
+  expect(markup).toContain("selected")
+  expect(markup).not.toContain("Lifetime is always synced")
  })
 
  it("labels visible dataset units separately from underlying child queries", () => {
@@ -118,7 +133,15 @@ describe("time window controller options", () => {
   expect(render()).toContain("derive their windows without extra window requests")
  })
 
- it("passes the selected windows to both sync entry points", () => {
+ it("uses analog switch components for quick-select presets rather than ordinary preset buttons", () => {
+  const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
+  expect(source).toContain('<RetroAnalogToggle\n       label="All"')
+  expect(source).toContain('label="Core"')
+  expect(source).toContain('label="Recommended"')
+  expect(source).toContain('label="Clear"')
+ })
+
+  it("passes the selected windows to both sync entry points", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
   const startCalls = source.split("\n").filter((line) => line.includes("await onStartSync("))
   expect(startCalls).toHaveLength(2)
