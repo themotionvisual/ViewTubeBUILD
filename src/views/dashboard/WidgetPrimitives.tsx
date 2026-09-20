@@ -801,6 +801,7 @@ export {
   WidgetLeftSplitBadge,
   WidgetTinySpectrumIcon,
   WIDGET_TINY_ICON_SET,
+  WIDGET_METRIC_ICON_SET,
   WidgetAccentRailModule,
   WidgetIconTitleModule,
   WidgetRainbowDivider,
