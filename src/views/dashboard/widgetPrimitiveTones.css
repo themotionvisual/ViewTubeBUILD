@@ -89,33 +89,33 @@
 
 /* White icon stroke on a full colored bay. */
 .widget-split-button.is-left-split.is-icon-white-on-color .widget-split-button-icon,
-.widget-video-select-trigger.is-icon-white-on-color .widget-video-select-trigger-icon {
+.widget-video-select-trigger.is-icon-white-on-color .widget-video-select-trigger-selector {
   background: var(--widget-color, #34cdea) !important;
   color: #fff !important;
 }
 
 .widget-split-button.is-left-split.is-icon-white-on-color .widget-split-button-icon svg,
-.widget-video-select-trigger.is-icon-white-on-color .widget-video-select-trigger-icon svg {
+.widget-video-select-trigger.is-icon-white-on-color .widget-video-select-trigger-selector svg {
   stroke: #fff !important;
   color: #fff !important;
 }
 
 /* Colored icon stroke on a light/white bay. */
 .widget-split-button.is-left-split.is-icon-color-on-light .widget-split-button-icon,
-.widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-icon {
+.widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-selector {
   background: color-mix(in srgb, var(--widget-color, #34cdea) 14%, white) !important;
   color: var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247))) !important;
 }
 
 .widget-split-button.is-left-split.is-icon-color-on-light .widget-split-button-icon svg,
-.widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-icon svg {
+.widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-selector svg {
   stroke: var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247))) !important;
   color: var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247))) !important;
 }
 
 /* 18px split controls keep no separator stroke, regardless of icon mode. */
 .widget-split-button.is-left-split.is-height-18 .widget-split-button-icon,
-.widget-video-select-trigger.is-height-18 .widget-video-select-trigger-icon {
+.widget-video-select-trigger.is-height-18 .widget-video-select-trigger-selector {
   border-right: 0 !important;
 }
 
@@ -123,12 +123,7 @@
    All split/video glyphs consume the same canonical icon tokens as square
    primitives. The chevron is intentionally slightly calmer. */
 .widget-split-button.is-left-split .widget-split-button-icon svg,
-.widget-video-select-trigger .widget-video-select-trigger-icon svg {
-  width: var(--vt-primitive-icon) !important;
-  height: var(--vt-primitive-icon) !important;
-  stroke-width: var(--vt-primitive-icon-stroke) !important;
-}
-.widget-video-select-trigger .widget-video-select-trigger-chevron svg {
+.widget-video-select-trigger .widget-video-select-trigger-selector svg {
   width: var(--vt-primitive-icon) !important;
   height: var(--vt-primitive-icon) !important;
   stroke-width: var(--vt-primitive-icon-stroke) !important;
@@ -176,6 +171,16 @@
 :where(.dashboard-barrier) .widget-text-input.vt-sized-control.is-tone-secondary:focus,
 :where(.dashboard-barrier) .widget-text-input.vt-sized-control.is-tone-secondary:focus-visible {
   background: #fff !important;
+}
+
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control::placeholder {
+  color: currentColor;
+  opacity: .52;
+  transition: opacity 120ms ease;
+}
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control:focus::placeholder,
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control:focus-visible::placeholder {
+  opacity: .12;
 }
 
 
