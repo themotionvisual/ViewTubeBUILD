@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react"
 import {
   Brain,
+  CalendarDays,
   CalendarPlus,
   Check,
   Clock3,
   DollarSign,
   Eye,
+  Flame,
   Heart,
   RefreshCw,
   Sparkles,
@@ -18,6 +20,7 @@ import { buildAIBrainContextSnapshot } from "../../../services/aiBrainCommandInt
 import { buildCreatorGrowthContext } from "../../../services/aiBrainConversationStore"
 import {
   buildDailyOraclePlan,
+  calculateDailyOracleStreak,
   oracleEffortLabel,
   oracleLevelLabel,
   type DailyOracleCandidate,
@@ -38,6 +41,7 @@ import {
 import "./DailyOracleWidget.css"
 
 const ORACLE_UI_KEY = "vt_daily_oracle_v2"
+const ORACLE_STREAK_KEY = "vt_daily_oracle_streak_v1"
 
 type OraclePage = "today" | "focus"
 
@@ -58,12 +62,18 @@ const METRICS: Array<{
   { id: "watch-time", label: "Watch Time", Icon: Clock3 },
 ]
 
+const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"] as const
+
 type OracleUiState = {
   dateKey: string
   focusMetric: DailyOracleGoalMetric
   completedIds: string[]
   rotation: number
   refreshedAt: number
+}
+
+type OracleStreakState = {
+  completionDates: string[]
 }
 
 const localDateKey = (date = new Date()) => {
@@ -99,6 +109,20 @@ const readUiState = (): OracleUiState => {
   }
 }
 
+const readStreakState = (): OracleStreakState => {
+  if (typeof window === "undefined") return { completionDates: [] }
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(ORACLE_STREAK_KEY) || "{}") as Partial<OracleStreakState>
+    return {
+      completionDates: Array.isArray(parsed.completionDates)
+        ? Array.from(new Set(parsed.completionDates.filter((value): value is string => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))))
+        : [],
+    }
+  } catch {
+    return { completionDates: [] }
+  }
+}
+
 const uploadDate = (row: any): Date | null => {
   const raw = row?.uploadDate || row?.publishedAt || row?.publishedDate || row?.published_at
   if (!raw) return null
@@ -124,6 +148,7 @@ export const DailyOracleWidget = ({
   const { brain, authState, channelConnection, getBrainMemory, setCalendarState } = useBrain()
   const [page, setPage] = useState<OraclePage>("today")
   const [ui, setUi] = useState<OracleUiState>(readUiState)
+  const [streak, setStreak] = useState<OracleStreakState>(readStreakState)
   const [notice, setNotice] = useState("")
 
   const common = {
@@ -143,6 +168,11 @@ export const DailyOracleWidget = ({
     if (typeof window === "undefined") return
     window.localStorage.setItem(ORACLE_UI_KEY, JSON.stringify(ui))
   }, [ui])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    window.localStorage.setItem(ORACLE_STREAK_KEY, JSON.stringify(streak))
+  }, [streak])
 
   const snapshot = useMemo(
     () => buildAIBrainContextSnapshot({
@@ -191,6 +221,36 @@ export const DailyOracleWidget = ({
   )
 
   const todayKey = localDateKey()
+  const streakSummary = useMemo(
+    () => calculateDailyOracleStreak(streak.completionDates, todayKey),
+    [streak.completionDates, todayKey],
+  )
+
+  const calendar = useMemo(() => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    const firstDay = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const cells: Array<{ day: number; key: string; completed: boolean; today: boolean } | null> = []
+
+    for (let index = 0; index < firstDay; index += 1) cells.push(null)
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const key = localDateKey(new Date(year, month, day))
+      cells.push({
+        day,
+        key,
+        completed: streak.completionDates.includes(key),
+        today: key === todayKey,
+      })
+    }
+
+    return {
+      label: now.toLocaleDateString(undefined, { month: "long", year: "numeric" }),
+      cells,
+    }
+  }, [streak.completionDates, todayKey])
+
   const todaysTasks: DayTask[] = Array.isArray(brain.calendarState?.dayTasks?.[todayKey])
     ? brain.calendarState.dayTasks[todayKey]
     : []
@@ -220,13 +280,20 @@ export const DailyOracleWidget = ({
     setNotice("ADDED TO TODAY.")
   }
 
-  const toggleComplete = (candidateId: string) => {
+  const togglePrimaryComplete = () => {
+    const nextDates = streakSummary.completedToday
+      ? streak.completionDates.filter((date) => date !== todayKey)
+      : Array.from(new Set([...streak.completionDates, todayKey]))
+    const nextSummary = calculateDailyOracleStreak(nextDates, todayKey)
+
+    setStreak({ completionDates: nextDates })
     setUi((current) => ({
       ...current,
-      completedIds: current.completedIds.includes(candidateId)
-        ? current.completedIds.filter((id) => id !== candidateId)
-        : [...current.completedIds, candidateId],
+      completedIds: nextSummary.completedToday
+        ? Array.from(new Set([...current.completedIds, plan.primary.id]))
+        : current.completedIds.filter((id) => id !== plan.primary.id),
     }))
+    setNotice(nextSummary.completedToday ? `${nextSummary.currentStreak}-DAY STREAK LOCKED IN.` : "TODAY REOPENED.")
   }
 
   const refresh = () => {
@@ -243,24 +310,21 @@ export const DailyOracleWidget = ({
     setNotice("")
   }
 
-  const renderCompactAction = (candidate: DailyOracleCandidate) => {
-    const done = ui.completedIds.includes(candidate.id)
-    return (
-      <article key={candidate.id} className={`daily-oracle-v2__quick-card ${done ? "is-done" : ""}`}>
-        <div className="daily-oracle-v2__quick-copy">
-          <strong>{candidate.title}</strong>
-          <small>{candidate.evidence}</small>
-        </div>
-        <WidgetIconButton
-          height={24}
-          tone={isTaskAdded(candidate) ? "primary" : "default"}
-          label={isTaskAdded(candidate) ? `${candidate.title} is already in Today` : `Add ${candidate.title} to Today`}
-          icon={isTaskAdded(candidate) ? <Check /> : <CalendarPlus />}
-          onClick={() => addToToday(candidate)}
-        />
-      </article>
-    )
-  }
+  const renderCompactAction = (candidate: DailyOracleCandidate, index: number) => (
+    <article key={candidate.id} className={`daily-oracle-v2__quick-card is-tone-${(index % 3) + 1}`}>
+      <div className="daily-oracle-v2__quick-copy">
+        <strong>{candidate.title}</strong>
+        <small>{candidate.evidence}</small>
+      </div>
+      <WidgetIconButton
+        height={24}
+        tone={isTaskAdded(candidate) ? "primary" : "default"}
+        label={isTaskAdded(candidate) ? `${candidate.title} is already in Today` : `Add ${candidate.title} to Today`}
+        icon={isTaskAdded(candidate) ? <Check /> : <CalendarPlus />}
+        onClick={() => addToToday(candidate)}
+      />
+    </article>
+  )
 
   const headerContent = (
     <WidgetHeaderToggle
@@ -296,7 +360,7 @@ export const DailyOracleWidget = ({
 
               <WidgetSection className="daily-oracle-v2__compass-section">
                 <div className="daily-oracle-v2__compass">
-                  <article className={`daily-oracle-v2__primary ${ui.completedIds.includes(plan.primary.id) ? "is-done" : ""}`}>
+                  <article className={`daily-oracle-v2__primary ${streakSummary.completedToday ? "is-done" : ""}`}>
                     <div className="daily-oracle-v2__primary-kicker">
                       <Target size={16} aria-hidden="true" />
                       <span>BEST NEXT MOVE</span>
@@ -315,27 +379,28 @@ export const DailyOracleWidget = ({
                         {isTaskAdded(plan.primary) ? "IN TODAY" : "ADD TO TODAY"}
                       </WidgetSizedButton>
                       <WidgetIconButton
-                        height={24}
-                        tone={ui.completedIds.includes(plan.primary.id) ? "primary" : "default"}
-                        label={ui.completedIds.includes(plan.primary.id) ? "Mark primary move active" : "Mark primary move complete"}
-                        icon={<Check />}
-                        onClick={() => toggleComplete(plan.primary.id)}
+                        height={38}
+                        tone={streakSummary.completedToday ? "primary" : "default"}
+                        className="daily-oracle-v2__day-check"
+                        label={streakSummary.completedToday ? "Reopen today's Daily Oracle task" : "Complete today's Daily Oracle task"}
+                        icon={streakSummary.completedToday ? <Flame /> : <Check />}
+                        onClick={togglePrimaryComplete}
                       />
                     </div>
                   </article>
 
                   <div className="daily-oracle-v2__score-stack" aria-label="Daily Oracle decision score">
-                    <div className="daily-oracle-v2__score">
+                    <div className="daily-oracle-v2__score is-impact">
                       <span>IMPACT</span>
                       <strong>{oracleLevelLabel(plan.primary.impact)}</strong>
                       <i style={{ "--oracle-score": `${scorePercent(plan.primary.impact)}%` } as React.CSSProperties} />
                     </div>
-                    <div className="daily-oracle-v2__score">
+                    <div className="daily-oracle-v2__score is-effort">
                       <span>EFFORT</span>
                       <strong>{oracleEffortLabel(plan.primary.effort)}</strong>
                       <i style={{ "--oracle-score": `${scorePercent(4 - plan.primary.effort)}%` } as React.CSSProperties} />
                     </div>
-                    <div className="daily-oracle-v2__score">
+                    <div className="daily-oracle-v2__score is-evidence">
                       <span>EVIDENCE</span>
                       <strong>{plan.evidenceCoverage}%</strong>
                       <i style={{ "--oracle-score": `${plan.evidenceCoverage}%` } as React.CSSProperties} />
@@ -343,6 +408,42 @@ export const DailyOracleWidget = ({
                   </div>
                 </div>
               </WidgetSection>
+
+              {streakSummary.completedToday ? (
+                <WidgetSection className="daily-oracle-v2__streak-reveal">
+                  <div className="daily-oracle-v2__streak-header">
+                    <div className="daily-oracle-v2__streak-flame">
+                      <Flame aria-hidden="true" />
+                    </div>
+                    <div>
+                      <span>TODAY COMPLETE</span>
+                      <strong>{streakSummary.currentStreak} DAY STREAK</strong>
+                    </div>
+                    <div className="daily-oracle-v2__streak-stats">
+                      <span>BEST <b>{streakSummary.longestStreak}</b></span>
+                      <span>TOTAL <b>{streakSummary.totalCompleted}</b></span>
+                    </div>
+                  </div>
+                  <div className="daily-oracle-v2__calendar">
+                    <div className="daily-oracle-v2__calendar-title">
+                      <CalendarDays aria-hidden="true" />
+                      <strong>{calendar.label}</strong>
+                    </div>
+                    <div className="daily-oracle-v2__calendar-grid" aria-label={`Daily Oracle completion calendar for ${calendar.label}`}>
+                      {WEEKDAYS.map((day, index) => <span key={`${day}-${index}`} className="is-weekday">{day}</span>)}
+                      {calendar.cells.map((cell, index) => cell ? (
+                        <span
+                          key={cell.key}
+                          className={`${cell.completed ? "is-complete" : ""} ${cell.today ? "is-today" : ""}`.trim()}
+                          aria-label={`${cell.key}${cell.completed ? ", completed" : ""}${cell.today ? ", today" : ""}`}
+                        >
+                          {cell.completed ? <Check aria-hidden="true" /> : cell.day}
+                        </span>
+                      ) : <span key={`blank-${index}`} className="is-blank" aria-hidden="true" />)}
+                    </div>
+                  </div>
+                </WidgetSection>
+              ) : null}
 
               <WidgetSection className="daily-oracle-v2__quick-section">
                 <div className="daily-oracle-v2__section-heading">
@@ -378,6 +479,7 @@ export const DailyOracleWidget = ({
                       height={24}
                       textFit="adaptive"
                       tone={ui.focusMetric === id ? "primary" : "default"}
+                      className={`is-${id}`}
                       aria-pressed={ui.focusMetric === id}
                       onClick={() => setFocusMetric(id)}
                     >
@@ -396,7 +498,7 @@ export const DailyOracleWidget = ({
                 </div>
                 <div className="daily-oracle-v2__focus-list">
                   {plan.focusTasks.map((candidate, index) => (
-                    <article key={candidate.id} className="daily-oracle-v2__focus-row">
+                    <article key={candidate.id} className={`daily-oracle-v2__focus-row is-tone-${(index % 3) + 1}`}>
                       <span className="daily-oracle-v2__focus-index">{String(index + 1).padStart(2, "0")}</span>
                       <div>
                         <strong>{candidate.title}</strong>
@@ -415,15 +517,15 @@ export const DailyOracleWidget = ({
               </WidgetSection>
 
               <WidgetSection className="daily-oracle-v2__context-grid">
-                <div>
+                <div className="is-purple">
                   <span>CHANNEL READ</span>
                   <strong>{Math.round(growth.profileConfidenceScore)}%</strong>
                 </div>
-                <div>
+                <div className="is-cyan">
                   <span>EVIDENCE READY</span>
                   <strong>{plan.evidenceCoverage}%</strong>
                 </div>
-                <div>
+                <div className="is-orange">
                   <span>UPLOAD CADENCE</span>
                   <strong>{evidence.daysSinceLatestUpload === null ? "UNKNOWN" : `${evidence.daysSinceLatestUpload}D AGO`}</strong>
                 </div>
