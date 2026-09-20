@@ -228,7 +228,7 @@ export const VideoAssetEngineWidget: React.FC<
         <div className="vt-asset-engine-lineage-track">
           {lineage.length ? lineage.map((asset, index) => (
             <React.Fragment key={asset.id}>
-              <button type="button" onClick={() => setSelectedAssetId(asset.id)}>{asset.name}</button>
+              <WidgetSizedButton height={24} tone="secondary" onClick={() => setSelectedAssetId(asset.id)}>{asset.name}</WidgetSizedButton>
               {index < lineage.length - 1 ? <i aria-hidden="true">→</i> : null}
             </React.Fragment>
           )) : <small>NO LINEAGE AVAILABLE</small>}
@@ -267,7 +267,7 @@ export const VideoAssetEngineWidget: React.FC<
         </main>
         <footer className="vt-asset-engine-footer">
           <WidgetActionButton tone="primary" height={32} onClick={() => onNavigate?.("/studio")}>
-            OPEN FULL ASSET ENGINE
+            {readyCount < PACKAGE_SLOTS.length ? "FIX " + (PACKAGE_SLOTS.length - readyCount) + " MISSING ASSETS" : "OPEN FULL ASSET ENGINE"}
           </WidgetActionButton>
           <WidgetActionButton height={32} onClick={() => onNavigate?.("/vault")}>
             VAULT
