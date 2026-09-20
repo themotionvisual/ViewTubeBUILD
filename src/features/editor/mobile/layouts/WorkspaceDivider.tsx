@@ -2,6 +2,7 @@ import React from 'react';
 import {GripHorizontal,GripVertical} from 'lucide-react';
 
 const INK='#248b99',CYAN='#36E0F6';
+const IOS_TOUCH_SAFE:React.CSSProperties={userSelect:'none',WebkitUserSelect:'none',WebkitTouchCallout:'none',WebkitTapHighlightColor:'transparent'};
 
 export const WorkspaceDivider:React.FC<{
   axis:'x'|'y';
@@ -40,7 +41,7 @@ export const WorkspaceDivider:React.FC<{
       ...(axis==='x'
         ?{left:`calc(${value*100}% - 7px)`,top:0,bottom:0,width:14,cursor:'col-resize'}
         :{top:`calc(${value*100}% - 7px)`,left:0,right:0,height:14,cursor:'row-resize'}),
-      display:'grid',placeItems:'center',touchAction:'none',
+      display:'grid',placeItems:'center',touchAction:'none',...IOS_TOUCH_SAFE,
     }}
   >
     <span style={{

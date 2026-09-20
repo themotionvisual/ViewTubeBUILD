@@ -1,8 +1,8 @@
 /** Phone timeline with touch-arbitrated select/move/trim, keyframes and collision-safe tracks. */
 import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {
-  AlertTriangle,Copy,EyeOff,GripVertical,Layers3,ListPlus,LocateFixed,LockKeyhole,Magnet,Minus,Plus,
-  SkipBack,SkipForward,SlidersHorizontal,StepBack,StepForward,Trash2,Type,VolumeX,X,
+  AlertTriangle,EyeOff,GripVertical,Layers3,ListPlus,LocateFixed,LockKeyhole,Magnet,Minus,Plus,
+  SkipBack,SkipForward,StepBack,StepForward,Trash2,Type,VolumeX,X,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {useLongPress,usePinchZoom} from '../hooks/gestures';
@@ -29,10 +29,12 @@ type NavMode='all'|'clip'|'keyframe'|'transition'|'frame';
 type SnapKinds={edges:boolean;keyframes:boolean;playhead:boolean;seconds:boolean;transitions:boolean};
 
 export const TIMELINE_TRACK_HEIGHT=44;
+const CLIP_BODY_HEIGHT=26;
+const KEYFRAME_LANE_HEIGHT=18;
 export const TIMELINE_HEADER_HEIGHT=48;
 export const timelinePreferredHeight=(visibleTracks:number)=>TIMELINE_HEADER_HEIGHT+Math.max(1,visibleTracks)*TIMELINE_TRACK_HEIGHT+14;
 
-const LABEL_WIDTH=82;
+const LABEL_WIDTH=94;
 const CYAN='#36E0F6';
 const INK='#248b99';
 const YELLOW='#FFFF61';
@@ -40,6 +42,7 @@ const PINK='#FA618A';
 const EDGE_TOUCH_PX=32;
 const MOVE_THRESHOLD_PX=9;
 const LONG_PRESS_MS=460;
+const IOS_TOUCH_SAFE:React.CSSProperties={userSelect:'none',WebkitUserSelect:'none',WebkitTouchCallout:'none',WebkitTapHighlightColor:'transparent'};
 const SNAP_STORAGE='viewtube.mobile.timeline.snap.v2';
 
 const overlaps=(a:VtE1Clip,b:VtE1Clip)=>a.trackId===b.trackId&&a.start<b.end&&a.end>b.start;
@@ -181,27 +184,26 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
   const focusedCompound=compoundFocusId?state.project.clips.find(clip=>clip.id===compoundFocusId):undefined;
   const focusedChildren=focusedCompound?compoundChildren(focusedCompound):[];
   const tracks=state.project.tracks.filter(track=>!track.hidden).filter(track=>!focusedCompound||track.id===focusedCompound.trackId);
-  const trackRows=useMemo(()=>{
-    let y=0;
-    return tracks.map(track=>{
-      const clips=focusedCompound?focusedChildren.filter(clip=>clip.trackId===track.id||focusedCompound.trackId===track.id):clipsOnTrack(track.id);
-      const hasSelected=clips.some(clip=>state.selection.clipIds.includes(clip.id));
-      const selectedClip=clips.find(clip=>state.selection.clipIds.includes(clip.id));
-      const hasKeyframes=Boolean(selectedClip&&(selectedClip.keyframes??[]).length);
-      const height=focusedCompound?TIMELINE_TRACK_HEIGHT:clips.length===0?24:hasSelected?(hasKeyframes?72:54):TIMELINE_TRACK_HEIGHT;
-      const row={track,clips,y,height,selectedClip,hasKeyframes};
-      y+=height;
-      return row;
-    });
-  },[tracks,focusedCompound,focusedChildren,state.selection.clipIds,clipsOnTrack,state.project.clips]);
-  const bodyHeight=trackRows.reduce((sum,row)=>sum+row.height,0)+TIMELINE_HEADER_HEIGHT+8;
+  const trackRows=useMemo(()=>tracks.map((track,index)=>{
+    const clips=focusedCompound?focusedChildren.filter(clip=>clip.trackId===track.id||focusedCompound.trackId===track.id):clipsOnTrack(track.id);
+    const selectedClip=clips.find(clip=>state.selection.clipIds.includes(clip.id));
+    return{
+      track,
+      clips,
+      y:index*TIMELINE_TRACK_HEIGHT,
+      height:TIMELINE_TRACK_HEIGHT,
+      selectedClip,
+      hasKeyframes:Boolean(selectedClip&&(selectedClip.keyframes??[]).length),
+    };
+  }),[tracks,focusedCompound,focusedChildren,state.selection.clipIds,clipsOnTrack,state.project.clips]);
+  const bodyHeight=trackRows.length*TIMELINE_TRACK_HEIGHT+TIMELINE_HEADER_HEIGHT+8;
   const hasOverlaps=!focusedCompound&&state.project.clips.some((clip,index,all)=>all.some((other,otherIndex)=>otherIndex>index&&overlaps(clip,other)));
 
   return <div style={{
     width:'100%',maxWidth:'100%',height:height??'100%',maxHeight:'100%',
     minWidth:0,minHeight:0,boxSizing:'border-box',background:'#fff',
     borderRadius:7,border:`3px solid ${INK}`,overflow:'hidden',
-    position:'relative',boxShadow:'3px 3px 0 rgba(54,224,246,.22)',
+    position:'relative',boxShadow:'3px 3px 0 rgba(54,224,246,.22)',...IOS_TOUCH_SAFE,
   }}>
     <PlayheadControls
       navMode={navMode}
@@ -388,28 +390,31 @@ const TrackRow:React.FC<{
       style={{
         position:'sticky',left:0,width:LABEL_WIDTH,background:selected?CYAN:'#fff',
         zIndex:2,borderRight:`2px solid ${INK}`,borderBottom:`1px solid ${INK}`,
-        display:'grid',gridTemplateColumns:'16px minmax(0,1fr) auto',alignItems:'center',gap:2,
-        padding:'0 4px',fontSize:8,fontWeight:900,textTransform:'uppercase',
+        display:'grid',gridTemplateRows:'17px 17px',gridTemplateColumns:'minmax(0,1fr)',alignContent:'center',gap:2,
+        padding:'3px 4px',boxSizing:'border-box',fontSize:8,fontWeight:900,textTransform:'uppercase',
+        ...IOS_TOUCH_SAFE,
       }}
     >
-      {!readOnly?<button
-        title="Drag to reorder track"
-        aria-label="Drag to reorder track"
-        onPointerDown={event=>{event.stopPropagation();reorder.current={pointerId:event.pointerId};event.currentTarget.setPointerCapture?.(event.pointerId)}}
-        onPointerMove={event=>{
-          if(reorder.current?.pointerId!==event.pointerId)return;
-          const node=(document.elementFromPoint(event.clientX,event.clientY) as HTMLElement|null)?.closest?.('[data-vt-track-id]') as HTMLElement|null;
-          const targetId=node?.dataset.vtTrackId;
-          if(!targetId||targetId===track.id)return;
-          const toIndex=state.project.tracks.findIndex(item=>item.id===targetId);
-          if(toIndex>=0&&toIndex!==trackIndex)dispatch({type:'reorderTrack',id:track.id,toIndex});
-        }}
-        onPointerUp={finishReorder}
-        onPointerCancel={finishReorder}
-        style={{...miniBtn('#fff'),width:15,height:21,touchAction:'none'}}
-      ><GripVertical size={9}/></button>:<span/>}
-      <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{readOnly?'Compound':track.name}</span>
-      {!readOnly?<div style={{display:'grid',gridTemplateColumns:'repeat(4,17px)',gap:2}}>
+      <div style={{display:'grid',gridTemplateColumns:'16px minmax(0,1fr)',alignItems:'center',gap:3,minWidth:0}}>
+        {!readOnly?<button
+          title="Drag to reorder track"
+          aria-label="Drag to reorder track"
+          onPointerDown={event=>{event.stopPropagation();reorder.current={pointerId:event.pointerId};event.currentTarget.setPointerCapture?.(event.pointerId)}}
+          onPointerMove={event=>{
+            if(reorder.current?.pointerId!==event.pointerId)return;
+            const node=(document.elementFromPoint(event.clientX,event.clientY) as HTMLElement|null)?.closest?.('[data-vt-track-id]') as HTMLElement|null;
+            const targetId=node?.dataset.vtTrackId;
+            if(!targetId||targetId===track.id)return;
+            const toIndex=state.project.tracks.findIndex(item=>item.id===targetId);
+            if(toIndex>=0&&toIndex!==trackIndex)dispatch({type:'reorderTrack',id:track.id,toIndex});
+          }}
+          onPointerUp={finishReorder}
+          onPointerCancel={finishReorder}
+          style={{...miniBtn('#fff'),width:15,height:17,touchAction:'none'}}
+        ><GripVertical size={9}/></button>:<Layers3 size={12}/>}
+        <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{readOnly?'Compound':track.name}</span>
+      </div>
+      {!readOnly?<div style={{display:'grid',gridTemplateColumns:'repeat(4,17px)',gap:2,justifyContent:'start'}}>
         <button title={track.muted?'Unmute track':'Mute track'} aria-label={track.muted?'Unmute track':'Mute track'}
           onClick={event=>{event.stopPropagation();dispatch({type:'muteTrack',id:track.id})}} style={miniBtn(track.muted?PINK:'#fff')}><VolumeX size={10}/></button>
         <button title={track.locked?'Unlock track':'Lock track'} aria-label={track.locked?'Unlock track':'Lock track'}
@@ -420,7 +425,7 @@ const TrackRow:React.FC<{
           disabled={!removable}
           onClick={event=>{event.stopPropagation();if(removable)dispatch({type:'removeTrack',id:track.id})}}
           style={{...miniBtn(removable?'#fff':'#f2f2f2'),opacity:removable?1:.35}}><Trash2 size={10}/></button>
-      </div>:<Layers3 size={14}/>}
+      </div>:<span/>}
     </div>
 
     <div
@@ -431,7 +436,7 @@ const TrackRow:React.FC<{
         borderBottom:`1px solid ${INK}`,touchAction:'pan-x pan-y',
       }}
     >
-      <div style={{position:'absolute',left:0,right:0,top:0,height:Math.min(TIMELINE_TRACK_HEIGHT,rowHeight)}}>
+      <div style={{position:'absolute',left:0,right:0,top:0,height:CLIP_BODY_HEIGHT}}>
         {clips.map(clip=><ClipBlock
           key={clip.id}
           clip={clip}
@@ -447,7 +452,9 @@ const TrackRow:React.FC<{
           onContextMenu={onClipContextMenu}
         />)}
       </div>
-      {showKeyframeLane&&selectedClip&&!readOnly?<KeyframeLane clip={selectedClip} store={store} pxPerSec={pxPerSec} top={TIMELINE_TRACK_HEIGHT} onContextMenu={onKeyframeContextMenu}/>:null}
+      <div style={{position:'absolute',left:0,right:0,top:CLIP_BODY_HEIGHT,height:KEYFRAME_LANE_HEIGHT,borderTop:`1px solid ${INK}`,background:'rgba(54,224,246,.035)'}}>
+        {showKeyframeLane&&selectedClip&&!readOnly?<KeyframeLane clip={selectedClip} store={store} pxPerSec={pxPerSec} top={0} onContextMenu={onKeyframeContextMenu}/>:null}
+      </div>
     </div>
   </div>;
 };
@@ -459,26 +466,11 @@ const KeyframeLane:React.FC<{clip:VtE1Clip;store:EditorStore;pxPerSec:number;top
   const drag=useRef<{id:string;pointerId:number;x:number;offset:number;moved:boolean;timer:number|null}|null>(null);
   const duration=Math.max(.001,clip.end-clip.start);
   useEffect(()=>setSelected(current=>current.filter(id=>frames.some(frame=>String(frame.id)===id))),[clip.keyframes]);
-  const properties=useMemo(()=>Array.from(new Set(frames.flatMap(frame=>Object.keys(frame.values??{})))).slice(0,5),[clip.keyframes]);
-  const cycleInterp=()=>{
-    const ids=selected.length?selected:frames[0]?.id?[String(frames[0].id)]:[];
-    if(!ids.length)return;
-    const source=frames.find(frame=>ids.includes(String(frame.id)));
-    const order=['linear','easeIn','easeOut','easeInOut','springy','bell'];
-    const next=order[(order.indexOf(String(source?.interp??'linear'))+1)%order.length];
-    store.dispatch({type:'setClipKeyframeInterpolation',clipId:clip.id,keyframeIds:ids,interp:next});
-  };
   return <div
     aria-label="Expanded keyframe lane"
     onClick={event=>event.stopPropagation()}
-    style={{position:'absolute',left:0,right:0,top,height:28,borderTop:`1.5px solid ${INK}`,background:'rgba(54,224,246,.08)',overflow:'hidden'}}
+    style={{position:'absolute',left:0,right:0,top,height:KEYFRAME_LANE_HEIGHT,background:'rgba(54,224,246,.08)',overflow:'hidden',...IOS_TOUCH_SAFE}}
   >
-    <div style={{position:'sticky',left:0,zIndex:5,width:LABEL_WIDTH,height:'100%',borderRight:`2px solid ${INK}`,background:'#fff',display:'grid',gridTemplateColumns:'1fr repeat(3,18px)',alignItems:'center',gap:2,padding:'0 3px',boxSizing:'border-box'}}>
-      <span style={{fontSize:6,fontWeight:1000,textTransform:'uppercase',overflow:'hidden',textOverflow:'ellipsis'}}>{properties.join(' · ')||'Keyframes'}</span>
-      <button title="Duplicate selected keyframes" aria-label="Duplicate selected keyframes" disabled={!selected.length} onClick={()=>store.dispatch({type:'duplicateClipKeyframes',clipId:clip.id,keyframeIds:selected})} style={{...miniBtn(CYAN),opacity:selected.length?1:.35}}><Copy size={9}/></button>
-      <button title="Cycle interpolation" aria-label="Cycle selected keyframe interpolation" disabled={!selected.length} onClick={cycleInterp} style={{...miniBtn(YELLOW),opacity:selected.length?1:.35}}><SlidersHorizontal size={9}/></button>
-      <button title="Delete selected keyframes" aria-label="Delete selected keyframes" disabled={!selected.length} onClick={()=>{store.dispatch({type:'deleteClipKeyframes',clipId:clip.id,keyframeIds:selected});setSelected([])}} style={{...miniBtn(PINK),opacity:selected.length?1:.35}}><Trash2 size={9}/></button>
-    </div>
     {frames.map((frame,index)=>{
       const id=String(frame.id);
       const offset=preview[id]??Number(frame.offsetSec??0);
@@ -529,19 +521,18 @@ const KeyframeLane:React.FC<{clip:VtE1Clip;store:EditorStore;pxPerSec:number;top
 
 const miniBtn=(background:string):React.CSSProperties=>({
   width:17,height:17,borderRadius:3,border:`1.5px solid ${INK}`,
-  background,fontSize:7,fontWeight:900,padding:0,display:'grid',placeItems:'center',
+  background,fontSize:7,fontWeight:900,padding:0,display:'grid',placeItems:'center',...IOS_TOUCH_SAFE,
 });
 
 const ClipBlock:React.FC<{
   clip:VtE1Clip;selected:boolean;color:string;pxPerSec:number;store:EditorStore;
   siblings:VtE1Clip[];
   snap:{strength:SnapStrength;kinds:SnapKinds};
-  fps:number;
   readOnly?:boolean;
   focusParentId?:string;
   onOpenCompound?:(id:string)=>void;
   onContextMenu?:TimelineStripProps['onClipContextMenu'];
-}>=({clip,selected,color,pxPerSec,store,siblings,snap,fps,readOnly=false,focusParentId,onOpenCompound,onContextMenu})=>{
+}>=({clip,selected,color,pxPerSec,store,siblings,snap,readOnly=false,focusParentId,onOpenCompound,onContextMenu})=>{
   const{dispatch}=store;
   const left=clip.start*pxPerSec;
   const width=Math.max(20,(clip.end-clip.start)*pxPerSec);
@@ -695,7 +686,7 @@ const ClipBlock:React.FC<{
       border:hasOverlap?`3px solid ${PINK}`:selected?'3px solid #111':`2px solid ${INK}`,
       boxShadow:selectionShadow,
       padding:'4px 8px',fontSize:9,fontWeight:900,overflow:'hidden',
-      whiteSpace:'nowrap',touchAction:'none',userSelect:'none',
+      whiteSpace:'nowrap',touchAction:'none',userSelect:'none',WebkitUserSelect:'none',WebkitTouchCallout:'none',WebkitTapHighlightColor:'transparent',
     }}
   >
     {groupId?<div style={{position:'absolute',left:0,right:0,top:0,height:4,background:groupColor(groupId),borderBottom:'1px solid #fff',zIndex:3}}/>:null}

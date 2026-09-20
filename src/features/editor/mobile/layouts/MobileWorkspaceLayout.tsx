@@ -48,6 +48,7 @@ const toolbarButton=(active=false,showLabel=true):React.CSSProperties=>({
   textTransform:'uppercase',display:'grid',
   gridTemplateRows:showLabel?'14px auto':'1fr',
   placeItems:'center',padding:showLabel?'2px 1px':0,lineHeight:1,boxSizing:'border-box',
+  userSelect:'none',WebkitUserSelect:'none',WebkitTouchCallout:'none',WebkitTapHighlightColor:'transparent',
 });
 
 const FitPreview:React.FC<{
@@ -66,20 +67,28 @@ const FitPreview:React.FC<{
     return()=>observer.disconnect();
   },[]);
   const fit=useMemo(()=>{
+    const FRAME=12;
     const width=Math.max(0,bounds.width),height=Math.max(0,bounds.height);
     if(!width||!height)return{width:'100%',height:'100%'} as React.CSSProperties;
-    const canvasHeight=Math.max(1,height-PREVIEW_TRANSPORT_HEIGHT);
-    if(width/canvasHeight>aspect){
+    const contentWidth=Math.max(1,width-FRAME);
+    const canvasHeight=Math.max(1,height-FRAME-PREVIEW_TRANSPORT_HEIGHT);
+    if(contentWidth/canvasHeight>aspect){
       const canvasWidth=Math.max(1,canvasHeight*aspect);
-      return{width:canvasWidth,height:canvasHeight+PREVIEW_TRANSPORT_HEIGHT};
+      return{width:canvasWidth+FRAME,height:canvasHeight+PREVIEW_TRANSPORT_HEIGHT+FRAME};
     }
-    return{width,height:Math.max(1,width/aspect)+PREVIEW_TRANSPORT_HEIGHT};
+    const nextCanvasHeight=Math.max(1,contentWidth/aspect);
+    return{width:contentWidth+FRAME,height:nextCanvasHeight+PREVIEW_TRANSPORT_HEIGHT+FRAME};
   },[bounds,aspect]);
   return <div ref={hostRef} style={{
     width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden',
-    display:'grid',placeItems:'start',boxSizing:'border-box',
+    display:'grid',placeItems:'center',boxSizing:'border-box',
+    userSelect:'none',WebkitUserSelect:'none',WebkitTouchCallout:'none',WebkitTapHighlightColor:'transparent',
   }}>
-    <div style={{...fit,minWidth:0,minHeight:0,flex:'0 0 auto'}}>
+    <div style={{
+      ...fit,minWidth:0,minHeight:0,boxSizing:'border-box',
+      border:`3px solid ${INK}`,borderRadius:7,padding:3,background:'#fff',
+      boxShadow:'3px 3px 0 rgba(54,224,246,.22)',overflow:'hidden',
+    }}>
       <PreviewPane store={store} renderPreview={renderPreview} aspect={aspect}/>
     </div>
   </div>;
@@ -106,8 +115,22 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const showMap=prefs.showMap;
   const showActionLabels=prefs.showActionLabels;
   const focus=prefs.focus;
+  const moduleDraggingEnabled=prefs.layoutDraggingEnabled;
+  const effectiveMainSplit=moduleDraggingEnabled
+    ?prefs.mainSplit
+    :orientation==='portrait'&&isPortraitVideo
+      ?.64
+      :orientation==='landscape'&&isPortraitVideo
+        ?.38
+        :prefs.mainSplit;
+  const resolvedEditorSettings=useMemo<EditorSettingsModel|undefined>(()=>editorSettings?{
+    ...editorSettings,
+    layoutDraggingEnabled:moduleDraggingEnabled,
+    onLayoutDraggingEnabled:(enabled:boolean)=>patchPrefs({layoutDraggingEnabled:enabled}),
+  }:undefined,[editorSettings,moduleDraggingEnabled,patchPrefs]);
   const visibleTrackCount=store.state.project.tracks.filter(track=>!track.hidden).length;
-  const timelineHeight=Math.min(timelinePreferredHeight(visibleTrackCount)*prefs.timelineScale,Math.max(96,containerHeight*.52));
+  const effectiveTimelineScale=moduleDraggingEnabled?prefs.timelineScale:1;
+  const timelineHeight=Math.min(timelinePreferredHeight(visibleTrackCount)*effectiveTimelineScale,Math.max(96,containerHeight*.52));
 
   const selectionKey=`${store.state.selection.clipIds.join(',')}|${store.state.selection.trackId??''}|${store.state.selection.transitionId??''}`;
   useEffect(()=>{
@@ -320,7 +343,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
       minWidth:0,minHeight:0,overflowY:'auto',overflowX:'hidden',
       WebkitOverflowScrolling:'touch',overscrollBehavior:'contain',flex:1,paddingRight:1,
     }}>
-      <EditorNavigationPage page={page} store={store} settings={editorSettings} onNavigate={openPage}/>
+      <EditorNavigationPage page={page} store={store} settings={resolvedEditorSettings} onNavigate={openPage}/>
     </div>
   </section>;
 
@@ -354,7 +377,8 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     onDoubleClick={()=>setFocus('preview')}
     style={{
       position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden',
-      background:'#fff',border:`3px solid ${INK}`,borderRadius:7,padding:3,boxSizing:'border-box',
+      background:'transparent',boxSizing:'border-box',
+      userSelect:'none',WebkitUserSelect:'none',WebkitTouchCallout:'none',WebkitTapHighlightColor:'transparent',
     }}
   >
     {moduleFocusButton('preview')}
@@ -364,21 +388,21 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const splitHorizontal=<div style={{
     position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,
     display:'grid',gap:4,
-    gridTemplateColumns:`minmax(0,${prefs.mainSplit}fr) minmax(0,${1-prefs.mainSplit}fr)`,
+    gridTemplateColumns:`minmax(0,${effectiveMainSplit}fr) minmax(0,${1-effectiveMainSplit}fr)`,
     overflow:'hidden',
   }}>
     {previewSurface}{pageSurface}
-    <WorkspaceDivider axis="x" value={prefs.mainSplit} onChange={mainSplit=>patchPrefs({mainSplit})}/>
+    {moduleDraggingEnabled?<WorkspaceDivider axis="x" value={prefs.mainSplit} onChange={mainSplit=>patchPrefs({mainSplit})}/>:null}
   </div>;
 
   const splitVertical=<div style={{
     position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,
     display:'grid',gap:4,
-    gridTemplateRows:`minmax(0,${prefs.mainSplit}fr) minmax(0,${1-prefs.mainSplit}fr)`,
+    gridTemplateRows:`minmax(0,${effectiveMainSplit}fr) minmax(0,${1-effectiveMainSplit}fr)`,
     overflow:'hidden',
   }}>
     {pageSurface}{previewSurface}
-    <WorkspaceDivider axis="y" value={prefs.mainSplit} onChange={mainSplit=>patchPrefs({mainSplit})}/>
+    {moduleDraggingEnabled?<WorkspaceDivider axis="y" value={prefs.mainSplit} onChange={mainSplit=>patchPrefs({mainSplit})}/>:null}
   </div>;
 
   const normalMainSurface=workspaceMode==='edit'
@@ -399,7 +423,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     style={{position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}
   >
     {moduleFocusButton('timeline')}
-    <div
+    {moduleDraggingEnabled?<div
       role="separator"
       aria-label="Resize timeline"
       onPointerDown={event=>{
@@ -418,7 +442,8 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
         position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',zIndex:25,
         width:34,height:12,display:'grid',placeItems:'start center',touchAction:'none',
       }}
-    ><span style={{width:24,height:5,border:`1.5px solid ${INK}`,borderRadius:4,background:CYAN}}/></div>
+    ><span style={{width:24,height:5,border:`1.5px solid ${INK}`,borderRadius:4,background:CYAN}}/></div> :null}
+
     <TimelineStrip
       store={store}
       height="100%"
@@ -513,6 +538,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
       position:'relative',width:'100%',height:containerHeight,maxWidth:'100%',maxHeight:'100%',
       minWidth:0,minHeight:0,background:'#f3f3f3',color:'#000',display:'grid',gap:4,
       padding:4,paddingBottom:6,boxSizing:'border-box',overflow:'hidden',touchAction:'manipulation',
+      WebkitTapHighlightColor:'transparent',
       gridTemplateColumns:'minmax(0,1fr)',gridTemplateRows:rows,
     }}
   >

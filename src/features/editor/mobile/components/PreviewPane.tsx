@@ -18,12 +18,13 @@ export interface PreviewPaneProps{
 
 export const PREVIEW_TRANSPORT_HEIGHT=36;
 const CYAN='#36E0F6',INK='#248b99',YELLOW='#FFFF61';
+const IOS_TOUCH_SAFE:React.CSSProperties={userSelect:'none',WebkitUserSelect:'none',WebkitTouchCallout:'none',WebkitTapHighlightColor:'transparent'};
 
 const transportButton=(active=false):React.CSSProperties=>({
   height:28,minWidth:38,border:`2px solid ${INK}`,borderRadius:5,
   background:active?CYAN:'#fff',color:'#111',fontSize:11,fontWeight:1000,
   padding:'0 8px',display:'grid',placeItems:'center',touchAction:'manipulation',
-  boxShadow:'2px 2px 0 rgba(36,139,153,.18)',
+  boxShadow:'2px 2px 0 rgba(36,139,153,.18)',...IOS_TOUCH_SAFE,
 });
 
 export const PreviewPane:React.FC<PreviewPaneProps>=({
@@ -114,10 +115,10 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
     transform:`translate(-50%,-50%) scale(${geometry.scaleX},${geometry.scaleY}) rotate(${geometry.rotation}deg)`,
     transformOrigin:'center',
     border:`2px solid ${CYAN}`,
-    boxShadow:'0 0 0 1px #000',
+    boxShadow:`0 0 0 1px ${INK}`,
     touchAction:'none',
     pointerEvents:'auto',
-    boxSizing:'border-box',
+    boxSizing:'border-box',...IOS_TOUCH_SAFE,
   }:undefined;
 
   const togglePlay=()=>{
@@ -139,7 +140,7 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
     style={{
       position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,
       background:'#fff',overflow:'hidden',borderRadius:6,
-      display:'grid',gridTemplateRows:`minmax(0,1fr) ${PREVIEW_TRANSPORT_HEIGHT}px`,
+      display:'grid',gridTemplateRows:`minmax(0,1fr) ${PREVIEW_TRANSPORT_HEIGHT}px`,...IOS_TOUCH_SAFE,
     }}
   >
     <div
@@ -150,8 +151,7 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
       onPointerCancel={e=>{handlers.onPointerCancel(e);scrub.onPointerCancel(e)}}
       style={{
         position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,
-        background:'#111',touchAction:'none',userSelect:'none',
-        display:'grid',placeItems:'center',overflow:'hidden',
+        background:'#111',touchAction:'none',display:'grid',placeItems:'center',overflow:'hidden',...IOS_TOUCH_SAFE,
       }}
     >
       {renderPreview?renderPreview(size):<MobileProjectPreview store={store}/>}
@@ -203,7 +203,7 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
             position:'absolute',left:`${left}%`,top:`${top}%`,zIndex:18,
             width:14,height:14,transform:'translate(-50%,-50%) rotate(45deg)',
             border:`2px solid ${INK}`,borderRadius:2,background:index===0?YELLOW:CYAN,
-            padding:0,touchAction:'none',boxShadow:'0 0 0 2px rgba(255,255,255,.8)',
+            padding:0,touchAction:'none',boxShadow:'0 0 0 2px rgba(255,255,255,.8)',...IOS_TOUCH_SAFE,
           }}
         />;
       }):null}
@@ -266,8 +266,8 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
           onPointerCancel={e=>{e.stopPropagation();rotateRef.current=null}}
           style={{
             position:'absolute',left:'50%',top:-25,transform:'translateX(-50%)',
-            width:16,height:16,borderRadius:8,border:'2px solid #000',
-            background:YELLOW,touchAction:'none',
+            width:16,height:16,borderRadius:8,border:`2px solid ${INK}`,
+            background:YELLOW,touchAction:'none',...IOS_TOUCH_SAFE,
           }}
         />
       </div>:null}

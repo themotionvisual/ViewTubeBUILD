@@ -9,6 +9,7 @@ export interface MobileWorkspacePreferences{
   showTimeline:boolean;
   showMap:boolean;
   showActionLabels:boolean;
+  layoutDraggingEnabled:boolean;
   preset:WorkspacePreset;
   focus:WorkspaceFocus;
   lastPage:string;
@@ -20,6 +21,7 @@ const DEFAULTS:MobileWorkspacePreferences={
   showTimeline:true,
   showMap:false,
   showActionLabels:false,
+  layoutDraggingEnabled:false,
   preset:'edit',
   focus:null,
   lastPage:'media',
@@ -41,6 +43,7 @@ function read(orientation:'portrait'|'landscape',isPortraitVideo:boolean):Mobile
       showTimeline:raw.showTimeline!==false,
       showMap:Boolean(raw.showMap),
       showActionLabels:Boolean(raw.showActionLabels),
+      layoutDraggingEnabled:Boolean(raw.layoutDraggingEnabled),
       focus:['preview','timeline','inspector'].includes(raw.focus)?raw.focus:null,
     };
   }catch{return DEFAULTS}
