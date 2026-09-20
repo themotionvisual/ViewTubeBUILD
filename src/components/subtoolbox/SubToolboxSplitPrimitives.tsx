@@ -59,6 +59,7 @@ export interface SubToolboxSplitDropdownProps {
   icon?: React.ReactNode
   railLabel?: React.ReactNode
   chevron?: React.ReactNode
+  defaultOpen?: boolean
   ariaLabel: string
   railColor?: string
   labelColor?: string
@@ -73,13 +74,14 @@ export const SubToolboxSplitDropdown: React.FC<SubToolboxSplitDropdownProps> = (
   icon,
   railLabel: _legacyRailLabel,
   chevron,
+  defaultOpen = false,
   ariaLabel,
   railColor,
   labelColor,
   className,
   level,
 }) => {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
   const rootRef = useRef<HTMLDivElement>(null)
   const selected = options.find((option) => option.value === value)
 
