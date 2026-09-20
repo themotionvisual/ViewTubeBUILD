@@ -2885,10 +2885,13 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    const segmentStartDate = vtSyncWindowStartDate(segmentWindow, channelStartDate)
    for (const [categoryId, field, dimensions, metrics, sort, filters = "", maxResults = 200] of segmentRuns) {
     if (!shouldSync(selected, categoryId)) continue
-    // Day/month-grained categories are fetched once over lifetime and their
-    // windows are derived from that history, so looping them per window would
-    // buy nothing and cost a full paginated sweep each time.
-    if (segmentWindow !== "lifetime" && VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)) continue
+    // Day/month-grained categories are fetched once as their lifetime source
+    // history even when the user has turned the lifetime output window off.
+    // Run that source acquisition once, keyed to the first requested window,
+    // then derive the requested windows locally without extra API requests.
+    const isDerivedSource = VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)
+    if (isDerivedSource && segmentWindow !== aggregateWindows[0]) continue
+    const storageWindow: VtSyncAnalyticsWindow = isDerivedSource ? "lifetime" : segmentWindow
     const currentSegmentIndex = selectedSegmentCategoryIds.indexOf(categoryId)
     const nextCategoryId = selectedSegmentCategoryIds[currentSegmentIndex + 1]
     const currentQueryLabel = VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.label || categoryId.replace(/_/g, " ")
@@ -2984,14 +2987,14 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      : mapSegmentRows(result.rows, dimensions.split(",").pop() || dimensions)
     // Merge within a window only. Blending rows across windows would silently
     // mix date ranges under one row key — the merge key has no window in it.
-    const isLifetime = segmentWindow === "lifetime"
-    const previousRows = readWindowedDataset(snapshot, segmentWindow, field as string, categoryId)
+    const isLifetime = storageWindow === "lifetime"
+    const previousRows = readWindowedDataset(snapshot, storageWindow, field as string, categoryId)
     const completedRows = mergeVtSyncRowsPreservingDefined(
      previousRows,
      mappedRows,
      vtSyncSegmentRowKey,
     )
-    snapshot = writeWindowedDataset(snapshot, segmentWindow, field as string, categoryId, completedRows)
+    snapshot = writeWindowedDataset(snapshot, storageWindow, field as string, categoryId, completedRows)
     rowsWritten += result.rows?.length || 0
     addManifestResult(
      manifest,
@@ -3002,7 +3005,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      result.error,
      result.columns,
     )
-    if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: categoryId, window: segmentWindow, phase: "segments", rawRows, tableRows: completedRows, columns: result.columns })
+    if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: categoryId, window: storageWindow, phase: "segments", rawRows, tableRows: completedRows, columns: result.columns })
     // Freshness is keyed by category with no window dimension, so it keeps
     // tracking the lifetime pass. Per-window outcomes are in the manifest.
     if (isLifetime) {
