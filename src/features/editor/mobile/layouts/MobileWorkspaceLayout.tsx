@@ -129,7 +129,8 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     onLayoutDraggingEnabled:(enabled:boolean)=>patchPrefs({layoutDraggingEnabled:enabled}),
   }:undefined,[editorSettings,moduleDraggingEnabled,patchPrefs]);
   const visibleTrackCount=store.state.project.tracks.filter(track=>!track.hidden).length;
-  const timelineHeight=Math.min(timelinePreferredHeight(visibleTrackCount)*prefs.timelineScale,Math.max(96,containerHeight*.52));
+  const effectiveTimelineScale=moduleDraggingEnabled?prefs.timelineScale:1;
+  const timelineHeight=Math.min(timelinePreferredHeight(visibleTrackCount)*effectiveTimelineScale,Math.max(96,containerHeight*.52));
 
   const selectionKey=`${store.state.selection.clipIds.join(',')}|${store.state.selection.trackId??''}|${store.state.selection.transitionId??''}`;
   useEffect(()=>{
