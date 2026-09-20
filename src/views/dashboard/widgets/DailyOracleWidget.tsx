@@ -283,11 +283,32 @@ export const DailyOracleWidget = ({
   }
 
   const togglePrimaryComplete = () => {
-    const nextDates = streakSummary.completedToday
-      ? streak.completionDates.filter((date) => date !== todayKey)
-      : Array.from(new Set([...streak.completionDates, todayKey]))
+    const completing = !streakSummary.completedToday
+    const nextDates = completing
+      ? Array.from(new Set([...streak.completionDates, todayKey]))
+      : streak.completionDates.filter((date) => date !== todayKey)
     const nextSummary = calculateDailyOracleStreak(nextDates, todayKey)
+    const normalizedTaskText = plan.primary.taskText.trim().toLowerCase()
+    const existingTaskIndex = todaysTasks.findIndex((task) => task.text.trim().toLowerCase() === normalizedTaskText)
+    const nextTasks = [...todaysTasks]
 
+    if (existingTaskIndex >= 0) {
+      nextTasks[existingTaskIndex] = { ...nextTasks[existingTaskIndex], completed: completing }
+    } else if (completing) {
+      nextTasks.push({
+        id: `daily_oracle_${plan.primary.id}_${Date.now()}`,
+        text: plan.primary.taskText,
+        completed: true,
+        dueDate: todayKey,
+      })
+    }
+
+    setCalendarState({
+      dayTasks: {
+        ...(brain.calendarState?.dayTasks || {}),
+        [todayKey]: nextTasks,
+      },
+    })
     setStreak({ completionDates: nextDates })
     setUi((current) => ({
       ...current,
@@ -295,7 +316,9 @@ export const DailyOracleWidget = ({
         ? Array.from(new Set([...current.completedIds, plan.primary.id]))
         : current.completedIds.filter((id) => id !== plan.primary.id),
     }))
-    setNotice(nextSummary.completedToday ? `${nextSummary.currentStreak}-DAY STREAK LOCKED IN.` : "TODAY REOPENED.")
+    setNotice(nextSummary.completedToday
+      ? `TASK COMPLETE · ${nextSummary.currentStreak}-DAY STREAK.`
+      : "TODAY REOPENED.")
   }
 
   const refresh = () => {
