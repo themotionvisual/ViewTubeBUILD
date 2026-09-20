@@ -993,9 +993,13 @@
   border-radius: 0;
 }
 
-/* Open-menu thumbnails use the VT ink as their frame. */
+/* Open-menu thumbnails are full-height media bays; only the right
+   structural divider uses VT ink so the image does not read like an inset card. */
+.widget-video-select.is-open .widget-video-select-option-media {
+  border-inline-end: 1.5px solid var(--vt-tone-ink, var(--widget-ink, var(--widget-border, #243247)));
+}
 .widget-video-select.is-open .widget-video-select-option img {
-  border: 1.5px solid var(--vt-tone-ink, var(--widget-ink, var(--widget-border, #243247)));
+  border: 0;
 }
 
 /* Time remains unboxed white-ish copy over the image, inset exactly 2px from
