@@ -1013,3 +1013,175 @@
   .widget-module-header-icon { width: 38px; min-width: 38px; }
   .widget-module-header-controls { gap: 2px; padding-inline-end: 3px; }
 }
+
+
+/* ── Alternate tone constructions ─────────────────────────────
+   Tone names are not simple tint levels:
+   DEFAULT   = neutral white/reference construction.
+   PRIMARY   = emphasized tinted construction.
+   SECONDARY = inverse/compound construction with filled structural zones.
+   These overrides intentionally change component anatomy, not just hue. */
+
+/* Secondary stepper: saturated shell and side cells, white glyphs/value.
+   The outer stroke uses the same hue as the fill so the shell reads as one
+   continuous colored chassis rather than another outlined default stepper. */
+.widget-stepper.is-tone-secondary {
+  border-color: var(--widget-color, #34cdea);
+  background: var(--widget-color, #34cdea);
+  color: #fff;
+}
+.widget-stepper.is-tone-secondary .widget-stepper-step {
+  background: var(--widget-color, #34cdea);
+  color: #fff;
+}
+.widget-stepper.is-tone-secondary .widget-stepper-value {
+  border-inline-color: var(--widget-color, #34cdea);
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 84%, white);
+  color: #fff;
+}
+.widget-stepper.is-tone-secondary .widget-stepper-step:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 86%, white);
+}
+
+/* Secondary pagination: one saturated strip with white pages; selection is the
+   inverse white tile. This is intentionally opposite the default white strip. */
+.widget-pagination.is-tone-secondary {
+  border-color: var(--widget-color, #34cdea);
+  background: var(--widget-color, #34cdea);
+  color: #fff;
+}
+.widget-pagination.is-tone-secondary .widget-pagination-page {
+  border-inline-end-color: color-mix(in srgb, #fff 30%, transparent);
+  background: var(--widget-color, #34cdea);
+  color: #fff;
+}
+.widget-pagination.is-tone-secondary .widget-pagination-page:hover:not(.is-active) {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 82%, white);
+}
+.widget-pagination.is-tone-secondary .widget-pagination-page.is-active {
+  background: #fff;
+  color: var(--widget-color, #34cdea);
+}
+
+/* Secondary split-left search: filled field and filled bay with white glyph /
+   copy. The separator is a soft white structural line instead of dark ink. */
+.widget-search-input.is-tone-secondary {
+  border-color: var(--widget-color, #34cdea);
+  background: var(--widget-color, #34cdea);
+  color: #fff;
+}
+.widget-search-input.is-tone-secondary .widget-search-input-icon {
+  border-inline-end-color: color-mix(in srgb, #fff 34%, transparent);
+  background: var(--widget-color, #34cdea);
+  color: #fff;
+}
+.widget-search-input.is-tone-secondary .widget-search-input-icon svg {
+  color: #fff;
+  stroke: #fff;
+}
+.widget-search-input.is-tone-secondary > input {
+  background: var(--widget-color, #34cdea);
+  color: #fff;
+  caret-color: #fff;
+}
+.widget-search-input.is-tone-secondary > input::placeholder {
+  color: #fff;
+  opacity: .58;
+}
+.widget-search-input.is-tone-secondary:focus-within {
+  border-color: var(--widget-color, #34cdea);
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 86%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--widget-color, #34cdea) 30%, transparent);
+}
+
+/* Secondary toggle: no stroke. OFF is the inverse state — pale/white track
+   with a colored handle. ON fades to a colored track with a white handle. */
+.widget-toggle-switch.is-tone-secondary {
+  border: 0 !important;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 14%, #fff);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--widget-color, #34cdea) 18%, transparent);
+  transition:
+    background 260ms ease,
+    box-shadow 260ms ease,
+    transform 90ms linear;
+}
+.widget-toggle-switch.is-tone-secondary .widget-toggle-switch-thumb {
+  inset-block: 2px;
+  inset-inline-start: 2px;
+  height: calc(100% - 4px);
+  background: var(--widget-color, #34cdea);
+  transition:
+    transform 240ms cubic-bezier(0.4, 0, 0.2, 1),
+    background 260ms ease,
+    box-shadow 260ms ease;
+}
+.widget-toggle-switch.is-tone-secondary.is-checked {
+  background: var(--widget-color, #34cdea);
+  box-shadow: none;
+}
+.widget-toggle-switch.is-tone-secondary.is-checked .widget-toggle-switch-thumb {
+  background: #fff;
+  box-shadow: 0 0 0 1px color-mix(in srgb, #fff 42%, transparent);
+}
+
+/* Secondary choice controls invert in the same family: pale unselected shell,
+   saturated selected shell, white selected mark. */
+.widget-radio.is-tone-secondary,
+.widget-checkbox.is-tone-secondary {
+  border-color: var(--widget-color, #34cdea);
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 12%, #fff);
+  color: var(--widget-color, #34cdea);
+}
+.widget-radio.is-tone-secondary.is-checked,
+.widget-radio.is-tone-secondary[aria-checked="true"],
+.widget-checkbox.is-tone-secondary.is-checked,
+.widget-checkbox.is-tone-secondary[aria-checked="true"] {
+  background: var(--widget-color, #34cdea);
+  color: #fff;
+}
+.widget-radio.is-tone-secondary .widget-radio-dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 0 #fff;
+}
+.widget-radio.is-tone-secondary.is-checked .widget-radio-dot,
+.widget-radio.is-tone-secondary[aria-checked="true"] .widget-radio-dot {
+  background: #fff !important;
+  box-shadow: inset 0 0 0 999px #fff;
+}
+
+/* Secondary split-left counter follows the same inverted chassis language as
+   the redesigned stepper. */
+.widget-split-counter.is-tone-secondary {
+  border-color: var(--widget-color, #34cdea);
+  background: var(--widget-color, #34cdea);
+  color: #fff;
+}
+.widget-split-counter.is-tone-secondary .widget-split-counter-controls {
+  border-inline-end-color: var(--widget-color, #34cdea);
+  background: var(--widget-color, #34cdea);
+  color: #fff;
+}
+.widget-split-counter.is-tone-secondary .widget-split-counter-controls > button + button {
+  border-block-start-color: color-mix(in srgb, #fff 30%, transparent);
+}
+.widget-split-counter.is-tone-secondary .widget-split-counter-controls svg {
+  color: #fff;
+  stroke: #fff;
+}
+.widget-split-counter.is-tone-secondary .widget-split-counter-value {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 84%, white);
+  color: #fff;
+}
+
+/* Keep 18px micro variants borderless while preserving the alternate filled
+   secondary construction. */
+.is-height-18.widget-stepper.is-tone-secondary,
+.is-height-18.widget-pagination.is-tone-secondary,
+.is-height-18.widget-search-input.is-tone-secondary,
+.is-height-18.widget-toggle-switch.is-tone-secondary,
+.is-height-18.widget-radio.is-tone-secondary,
+.is-height-18.widget-checkbox.is-tone-secondary,
+.is-height-18.widget-split-counter.is-tone-secondary {
+  border: 0 !important;
+  box-shadow: none !important;
+}
