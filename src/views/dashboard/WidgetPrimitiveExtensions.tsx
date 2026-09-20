@@ -131,23 +131,20 @@ export const WIDGET_TINY_ICON_SET = {
 } satisfies Record<string,LucideIcon>
 export type WidgetTinyIconName = keyof typeof WIDGET_TINY_ICON_SET
 
-const WIDGET_METRIC_ICON_NAMES = [
- "metricViews","metricEngagedViews","metricWatchTime","metricSubscribers",
- "metricRevenue","metricComments","metricAvp","metricAvd","metricLikes",
- "metricRpm","metricShares","metricPlaylistSaves",
-] as const satisfies readonly WidgetTinyIconName[]
-const WIDGET_METRIC_LABELS = [
- "Views","Engaged Views","Watch Time","Subscribers","Revenue","Comments",
- "Average % Viewed","Average View Duration","Likes","RPM","Shares","Playlist Saves",
-] as const
-
-export const WIDGET_METRIC_ICON_SET = VT_VISUAL_METRIC_ORDER.map((metric,index)=>({
- metric,
- label:WIDGET_METRIC_LABELS[index],
- name:WIDGET_METRIC_ICON_NAMES[index],
- spectrum:WIDGET_BADGE_SPECTRUM[index],
- color:VT_SPECTRUM_PALETTE_06[index],
-}))
+export const WIDGET_METRIC_ICON_SET = [
+ { metric:VT_VISUAL_METRIC_ORDER[0], label:"Views", name:"metricViews", spectrum:"rose", color:VT_SPECTRUM_PALETTE_06[0] },
+ { metric:VT_VISUAL_METRIC_ORDER[1], label:"Engaged Views", name:"metricEngagedViews", spectrum:"coral", color:VT_SPECTRUM_PALETTE_06[1] },
+ { metric:VT_VISUAL_METRIC_ORDER[2], label:"Watch Time", name:"metricWatchTime", spectrum:"orange", color:VT_SPECTRUM_PALETTE_06[2] },
+ { metric:VT_VISUAL_METRIC_ORDER[3], label:"Subscribers", name:"metricSubscribers", spectrum:"yellow", color:VT_SPECTRUM_PALETTE_06[3] },
+ { metric:VT_VISUAL_METRIC_ORDER[4], label:"Revenue", name:"metricRevenue", spectrum:"lime", color:VT_SPECTRUM_PALETTE_06[4] },
+ { metric:VT_VISUAL_METRIC_ORDER[5], label:"Comments", name:"metricComments", spectrum:"green", color:VT_SPECTRUM_PALETTE_06[5] },
+ { metric:VT_VISUAL_METRIC_ORDER[6], label:"Average % Viewed", name:"metricAvp", spectrum:"teal", color:VT_SPECTRUM_PALETTE_06[6] },
+ { metric:VT_VISUAL_METRIC_ORDER[7], label:"Average View Duration", name:"metricAvd", spectrum:"cyan", color:VT_SPECTRUM_PALETTE_06[7] },
+ { metric:VT_VISUAL_METRIC_ORDER[8], label:"Likes", name:"metricLikes", spectrum:"royal", color:VT_SPECTRUM_PALETTE_06[8] },
+ { metric:VT_VISUAL_METRIC_ORDER[9], label:"RPM", name:"metricRpm", spectrum:"purple", color:VT_SPECTRUM_PALETTE_06[9] },
+ { metric:VT_VISUAL_METRIC_ORDER[10], label:"Shares", name:"metricShares", spectrum:"magenta", color:VT_SPECTRUM_PALETTE_06[10] },
+ { metric:VT_VISUAL_METRIC_ORDER[11], label:"Playlist Saves", name:"metricPlaylistSaves", spectrum:"pink", color:VT_SPECTRUM_PALETTE_06[11] },
+] as const satisfies readonly {metric:(typeof VT_VISUAL_METRIC_ORDER)[number];label:string;name:WidgetTinyIconName;spectrum:WidgetBadgeSpectrumName;color:string}[]
 
 export const WidgetTinySpectrumIcon:React.FC<{name:WidgetTinyIconName;spectrum:WidgetBadgeSpectrumName;label?:string;height?:18|24;className?:string}> = ({name,spectrum,label,height=18,className=""}) => {const Icon=WIDGET_TINY_ICON_SET[name];return <span className={`widget-tiny-spectrum-icon is-height-${height} ${className}`.trim()} role={label?"img":undefined} aria-label={label} aria-hidden={label?undefined:true} style={{["--widget-tiny-icon-color" as string]:resolveSpectrumHue(spectrum)}}><Icon aria-hidden="true"/></span>}
 
