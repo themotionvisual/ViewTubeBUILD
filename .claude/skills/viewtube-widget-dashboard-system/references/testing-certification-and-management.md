@@ -448,3 +448,18 @@ After iterative mobile fixes, search for repeated/contradictory breakpoints and 
 Consolidate duplicate ownership where practical.
 
 Do not certify a widget while obsolete narrow-state rules remain in the same stylesheet merely because later selectors happen to override them.
+
+
+## 30. Portalled dropdown verification
+
+For any widget that depends on selects/dropdowns, certification must open the menu and verify:
+
+- options are actually visible;
+- option text uses the captured widget palette;
+- the menu is auto-height up to its max-height;
+- the viewport scrolls when many options exist;
+- the menu is not clipped by the widget shell or scroll viewport;
+- the trigger remains inside the widget bounds;
+- selecting an option updates the intended panel/state.
+
+Source-only checks that a `Select.Content` exists are insufficient.
