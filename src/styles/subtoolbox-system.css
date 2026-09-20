@@ -1449,3 +1449,113 @@
   width:48%!important;
   height:48%!important;
 }
+
+
+/* ==========================================================================
+   COMPONENT LIBRARY CORRECTION V5 — tag editor parity + explicit two-color
+   split fields. This restores the compact production tag editor composition.
+   ========================================================================== */
+
+.vt-subtoolbox-tag-editor{
+  min-height:var(--vt-component-height)!important;
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:6px!important;
+  padding:4px!important;
+  border:var(--vt-component-stroke) solid #000!important;
+  border-radius:var(--vt-component-radius)!important;
+  background:color-mix(in srgb,var(--pair-b,#ff7f6b) 20%,white)!important;
+}
+.vt-subtoolbox-tag-editor-label{display:none!important}
+.vt-subtoolbox-tag-editor-tags{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:6px!important;
+  min-width:0!important;
+}
+.vt-subtoolbox-tag-editor .vt-subtoolbox-removable-tag{
+  --tag-h:calc(var(--vt-component-height)*.68)!important;
+  min-height:var(--tag-h)!important;
+  height:var(--tag-h)!important;
+  padding:0 calc(var(--tag-h)*.10) 0 calc(var(--tag-h)*.30)!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:var(--pair-a,#36e0f6)!important;
+  color:#000!important;
+  box-shadow:none!important;
+  font:1000 calc(var(--vt-component-font-size)*.78)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+}
+.vt-subtoolbox-tag-editor .vt-subtoolbox-removable-tag button{
+  width:calc(var(--tag-h)*.72)!important;
+  height:calc(var(--tag-h)*.72)!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:var(--pair-b,#ff7f6b)!important;
+  color:#000!important;
+  box-shadow:none!important;
+}
+.vt-subtoolbox-tag-editor>.add,
+.vt-subtoolbox-tag-editor>.submit,
+.vt-subtoolbox-tag-editor .add,
+.vt-subtoolbox-tag-editor .submit{
+  width:calc(var(--vt-component-height)*.68)!important;
+  height:calc(var(--vt-component-height)*.68)!important;
+  padding:0!important;
+  border:var(--vt-component-stroke) solid #000!important;
+  border-radius:calc(var(--vt-component-radius)*.65)!important;
+  display:grid!important;
+  place-items:center!important;
+  background:var(--pair-a,#36e0f6)!important;
+  color:#000!important;
+}
+.vt-subtoolbox-tag-editor>.submit,
+.vt-subtoolbox-tag-editor .submit{background:var(--pair-b,#ff7f6b)!important}
+.vt-subtoolbox-tag-editor>input{
+  min-width:6ch!important;
+  flex:1 1 90px!important;
+  height:calc(var(--vt-component-height)*.68)!important;
+  border:var(--vt-component-stroke) solid #000!important;
+  border-radius:calc(var(--vt-component-radius)*.65)!important;
+  background:color-mix(in srgb,var(--pair-a,#36e0f6) 50%,white)!important;
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) var(--pair-a,#36e0f6)!important;
+  padding:0 8px!important;
+  outline:0!important;
+  caret-color:var(--pair-a,#36e0f6)!important;
+  font:1000 calc(var(--vt-component-font-size)*.78)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui))!important;
+  text-transform:uppercase!important;
+}
+.vt-subtoolbox-tag-editor>input:focus{
+  background:#fff!important;
+  box-shadow:
+    inset 0 0 0 var(--vt-component-stroke) var(--pair-a,#36e0f6),
+    0 0 calc(var(--vt-component-height)*.22) color-mix(in srgb,var(--pair-b,#ff7f6b) 62%,transparent)!important;
+}
+
+/* Split Search / Input Action: pair-A owns the icon/action bays; pair-B owns
+   the editable text region in both rest and focus states. */
+.vt-subtoolbox-split-field{
+  --field-rail:var(--pair-a,#36e0f6)!important;
+  --field-body:var(--pair-b,#ff7f6b)!important;
+  background:var(--field-body)!important;
+}
+.vt-subtoolbox-split-field .vt-subtoolbox-split-field-rail,
+.vt-subtoolbox-split-field .vt-subtoolbox-split-field-action{
+  background:var(--field-rail)!important;
+}
+.vt-subtoolbox-split-field input{
+  background:color-mix(in srgb,var(--field-body) 50%,white)!important;
+  caret-color:var(--field-body)!important;
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) var(--field-body)!important;
+}
+.vt-subtoolbox-split-field input:focus{
+  background:#fff!important;
+  box-shadow:inset 0 0 0 var(--vt-component-stroke) var(--field-body)!important;
+}
+.vt-subtoolbox-split-field:focus-within{
+  box-shadow:
+    0 0 3px calc(var(--vt-component-stroke)*.75) color-mix(in srgb,var(--field-rail) 78%,transparent),
+    0 0 calc(var(--vt-component-height)*.20) calc(var(--vt-component-stroke)*1.1) color-mix(in srgb,var(--field-rail) 48%,transparent),
+    0 0 calc(var(--vt-component-height)*.42) calc(var(--vt-component-stroke)*.25) color-mix(in srgb,var(--field-rail) 24%,transparent)!important;
+}
