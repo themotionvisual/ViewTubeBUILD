@@ -8,7 +8,7 @@ Status: active migration plan. No destructive deletion in this phase.
 | .codex/skills/viewtube-widget-dashboard | MERGE/SUPERSEDE | Codex routing/agent metadata | migrate consumer routing after parity review |
 | .claude/skills/viewtube-mobile-widget-system | MERGE/SUPERSEDE | phone full-width, deterministic heights, FIT/ADAPT/SCROLL, acceptance widths | absorbed; keep temporarily until all callers migrate |
 | .codex/skills/viewtube-mobile-widget-system | MERGE/SUPERSEDE | Codex mobile routing | migrate after parity review |
-| docs/architecture/WIDGET_SYSTEM_CERTIFICATION_MASTER_2026-09-14.md | KEEP AUTHORITY | certification chain, tokens, archetypes, data/CSS/mobile contracts | canonical reference input; do not delete |
+| docs/architecture/WIDGET_SYSTEM_CERTIFICATION_MASTER_2026-09-14.md | KEEP/RECONCILE | certification chain, tokens, data/CSS/mobile contracts; historical archetype taxonomy | retain as reference, but archetype-first design is superseded by unique-widget doctrine |
 | docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_OPTIMIZATION_PLAN.md | KEEP/UPDATE BY MEASUREMENT | measured CSS/perf baseline, target architecture, phased consolidation | remeasure before numeric acceptance |
 | governance/widget-library/* | KEEP AS EVIDENCE | historical/reference visual library | production primitives remain authority |
 | public/widget-primitives.html | REVIEW | standalone primitive representation | ensure generated/rendered from production authority where feasible |
@@ -30,3 +30,10 @@ Before deleting any predecessor skill:
 8. obtain creator approval for the final destructive deletion set.
 
 Until all eight pass, predecessor skills are superseded candidates, not deletion targets.
+
+## Additional reconciliation decisions
+
+- Any **archetype-first design requirement** is superseded. Archetypes may remain descriptive/historical pattern vocabulary only.
+- Generic template uniformity is superseded by **uniform shell + uniform primitives + unique functional interior**.
+- Portrait header toggles must remain visible; widget titles keep canonical size and may wrap to two lines without ellipsis.
+- Bidirectional width × height resizing and composition mathematics supersede mobile-only stack-first guidance.

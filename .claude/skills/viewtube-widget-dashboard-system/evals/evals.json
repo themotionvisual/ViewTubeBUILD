@@ -1,10 +1,161 @@
 {
   "skill": "viewtube-widget-dashboard-system",
   "evals": [
-    {"name":"new-widget","prompt":"Create a new dashboard widget with a custom creator workflow.","must":["define creator job before styling","reuse WidgetShell and production primitives","declare W/H and states","use palette tokens","verify mobile and certification"]},
-    {"name":"migrate-widget","prompt":"Standardize an existing custom widget that has private controls and CSS.","must":["preserve specialized functional component","map private controls to primitives","fix highest shared CSS owner","preserve ID/data behavior","capture before/after visual evidence"]},
-    {"name":"library-promotion","prompt":"A useful control exists only in the UI Reference Library.","must":["promote implementation to production primitive layer","make library consume production primitive","avoid duplicate implementations"]},
-    {"name":"mobile-overflow","prompt":"A half-width desktop widget overflows on a phone.","must":["phone full width","preserve persisted desktop width","deterministic height","FIT ADAPT or SCROLL","fix shared owner before widget patch"]},
-    {"name":"legacy-cleanup","prompt":"Delete the old widget skills now that the new skill exists.","must":["reconcile unique rules","search consumers","migrate references","verify Claude/Codex routing","require creator-approved destructive deletion gate"]}
+    {
+      "name": "new-widget-identity",
+      "prompt": "Create a new dashboard widget for a creator workflow.",
+      "must": [
+        "define creator job before styling",
+        "do not force an archetype",
+        "design a unique signature functional component",
+        "reuse WidgetShell and production primitives",
+        "declare min/default/max width and height",
+        "define width x height behavior",
+        "verify mobile and certification"
+      ]
+    },
+    {
+      "name": "composition-math",
+      "prompt": "Design a two-column widget where one side has one component and the other has three stacked components.",
+      "must": [
+        "write a geometry equation",
+        "include two gaps in the stacked total",
+        "align visible border edges",
+        "use shared CSS variables or grid math",
+        "avoid approximate magic-number alignment"
+      ]
+    },
+    {
+      "name": "bidirectional-resize",
+      "prompt": "Make a widget support more and less width and height without losing its identity.",
+      "must": [
+        "treat width and height independently",
+        "preserve composition before reflow",
+        "scale canonical primitives and density",
+        "use adaptive 24px type when appropriate",
+        "reveal useful detail when expanding",
+        "preserve signature component"
+      ]
+    },
+    {
+      "name": "migrate-widget",
+      "prompt": "Standardize an existing custom widget with private controls and CSS.",
+      "must": [
+        "preserve specialized functional component",
+        "map private controls to primitives",
+        "fix highest shared CSS owner",
+        "preserve stable ID/data/actions",
+        "capture before/after visual evidence"
+      ]
+    },
+    {
+      "name": "library-promotion",
+      "prompt": "A useful control exists only in the UI Reference Library.",
+      "must": [
+        "promote implementation to production primitive layer",
+        "make library consume production primitive",
+        "add states/sizes/tests",
+        "avoid duplicate implementations"
+      ]
+    },
+    {
+      "name": "mobile-header",
+      "prompt": "A portrait widget title and header toggle do not fit.",
+      "must": [
+        "keep canonical title font size",
+        "allow two-line title",
+        "never ellipsize title",
+        "keep primary header toggle visible",
+        "compact toggle before changing composition"
+      ]
+    },
+    {
+      "name": "dense-24px-row",
+      "prompt": "A row of 24px buttons clips labels on a narrow widget.",
+      "must": [
+        "consider textFit adaptive",
+        "keep complete words visible",
+        "scale 16px toward 10px",
+        "preserve row geometry when appropriate",
+        "do not crop start/end of labels"
+      ]
+    },
+    {
+      "name": "data-tool",
+      "prompt": "An analytics widget shows a useful signal but has no follow-up action.",
+      "must": [
+        "identify creator decision",
+        "add appropriate actionable handoff",
+        "preserve provenance/freshness",
+        "distinguish data states",
+        "avoid generic chat as the only AI interaction"
+      ]
+    },
+    {
+      "name": "legacy-cleanup",
+      "prompt": "Delete the old widget skills now that the new skill exists.",
+      "must": [
+        "reconcile unique rules",
+        "search consumers",
+        "migrate references",
+        "verify Claude/Codex routing",
+        "require creator-approved destructive deletion gate"
+      ]
+    },
+    {
+      "name": "complex-widget-landscape",
+      "prompt": "A complex full-width widget looks good in portrait but its 16:9 signature canvas becomes huge in phone landscape.",
+      "must": [
+        "treat responsive state as width x selected height x interaction/viewport mode",
+        "apply a vertical budget to the signature canvas",
+        "preserve the same signature concept",
+        "avoid width-only breakpoint reasoning",
+        "verify rendered landscape evidence"
+      ]
+    },
+    {
+      "name": "local-fix-containment",
+      "prompt": "One widget needs denser mobile controls and an agent proposes changing shared primitive CSS.",
+      "must": [
+        "perform shared blast-radius review",
+        "prefer local or opt-in primitive behavior",
+        "do not weaken unrelated header/mobile guarantees",
+        "distinguish density from adaptive text fitting",
+        "verify an unrelated widget if shared code changes"
+      ]
+    },
+    {
+      "name": "duplicate-mobile-actions",
+      "prompt": "A widget repeats the same destination action in header body and footer and also exposes two complete navigation systems on portrait.",
+      "must": [
+        "audit duplicate actions and navigation",
+        "keep one persistent primary control",
+        "retain contextual actions only when meaning differs",
+        "remove redundant accelerators before shrinking essential controls",
+        "preserve accessible discovery"
+      ]
+    },
+    {
+      "name": "scroll-safe-area-clipping",
+      "prompt": "A mobile widget's scrollable controls are clipped on both left and right edges after combining a flush body with a full-bleed scroll area.",
+      "must": [
+        "identify the inset/full-bleed ownership conflict",
+        "restore a shell content inset or use an inset scroll area",
+        "do not solve the geometry defect by shrinking text",
+        "verify all interactive borders remain inside the shell",
+        "keep only intentional full-bleed sections full-bleed"
+      ]
+    },
+    {
+      "name": "panel-selector-reachability",
+      "prompt": "A multi-panel widget hides its quick-switch strip on portrait and the remaining category selector is compressed and hard to use.",
+      "must": [
+        "keep the primary panel selector fully visible and tappable",
+        "allow full-width portrait selector composition",
+        "consider persistent or sticky access in long scrollable tools",
+        "preserve the selector popup from clipping",
+        "prioritize functional navigation over desktop-row preservation"
+      ]
+    }
   ]
 }
