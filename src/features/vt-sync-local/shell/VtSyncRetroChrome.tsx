@@ -48,9 +48,9 @@ const executionStatusClass = (status: RetroSyncExecutionStatus) =>
  : ""
 
 const executionStatusLabel = (status: RetroSyncExecutionStatus, idleLabel: string) =>
- status === "running" ? "RUNNING"
+ status === "running" ? "SYNCING"
  : status === "queued" ? "QUEUED"
- : status === "complete" ? "DONE"
+ : status === "complete" ? "COMPLETE"
  : status === "partial" ? "PARTIAL"
  : status === "failed" ? "FAILED"
  : idleLabel
@@ -89,6 +89,8 @@ export const RetroSyncExecutionSwitch: React.FC<{
  onSelectedChange?: (next: boolean) => void
  selectionDisabled?: boolean
  selectionLabel?: string
+ labelOverride?: string
+ className?: string
 }> = ({
  status,
  idleLabel,
@@ -98,15 +100,17 @@ export const RetroSyncExecutionSwitch: React.FC<{
  onSelectedChange,
  selectionDisabled = false,
  selectionLabel = "Batch selection",
+ labelOverride,
+ className = "",
 }) => {
  const statusClass = executionStatusClass(status)
- const statusLabel = executionStatusLabel(status, idleLabel)
+ const statusLabel = labelOverride || executionStatusLabel(status, idleLabel)
  const isBusyState = status === "running" || status === "queued"
  const hasSelectionControl = typeof selected === "boolean" && Boolean(onSelectedChange)
 
  return (
   <div
-   className={`vt-retro-pcb-group is-category-action ${status === "running" ? "is-active" : ""} ${statusClass} ${hasSelectionControl ? "has-batch-selection" : ""} ${selected ? "is-batch-selected" : ""}`}
+   className={`vt-retro-pcb-group is-category-action ${status === "running" ? "is-active" : ""} ${statusClass} ${hasSelectionControl ? "has-batch-selection" : ""} ${selected ? "is-batch-selected" : ""} ${className}`}
    data-sync-status={status}
    data-batch-selected={selected ? "true" : "false"}
    style={{
@@ -158,6 +162,33 @@ export const RetroSyncExecutionSwitch: React.FC<{
   </div>
  )
 }
+
+export const RetroBatchSelectionSwitch: React.FC<{
+ selected: boolean
+ onChange: (next: boolean) => void
+ label?: string
+ disabled?: boolean
+ className?: string
+}> = ({ selected, onChange, label = "Include in batch", disabled = false, className = "" }) => (
+ <button
+  type="button"
+  className={`vt-retro-batch-selector ${selected ? "is-selected" : ""} ${className}`}
+  data-batch-selected={selected ? "true" : "false"}
+  aria-pressed={selected}
+  aria-label={`${label}: ${selected ? "selected" : "not selected"}`}
+  title={`${label}: ${selected ? "selected" : "not selected"}`}
+  disabled={disabled}
+  onClick={() => onChange(!selected)}
+ >
+  <span className="vt-retro-batch-selector__plate" aria-hidden="true">
+   <span className="vt-retro-batch-selector__led"><i /></span>
+   <span className="vt-retro-batch-selector__track">
+    <i className="vt-retro-batch-selector__nub" />
+   </span>
+  </span>
+  <span className="vt-retro-batch-selector__label">BATCH</span>
+ </button>
+)
 
 export const RetroVuMeter: React.FC<{ tone: string; percent: number }> = ({ tone, percent }) => (
  <span
