@@ -31,6 +31,8 @@ import {
   resolveAlphabeticalSpectrumHue,
   WidgetIconButton,
   WidgetSizedButton,
+  WidgetSizedSelect,
+  WidgetVideoSelect,
   WidgetStepper,
   WidgetSplitCounter,
   WidgetTinySpectrumIcon,
@@ -396,6 +398,53 @@ describe("expanded widget compound primitives", () => {
     expect(videoSelectCss).toContain("::-webkit-scrollbar")
     expect(variantsCss).toContain("height: var(--vt-primitive-height, 38px)")
     expect(variantsCss).toContain(".widget-select-content .widget-select-item")
+  })
+
+  it("binds each portalled standard dropdown to its own height, type and icon metrics", () => {
+    expect(extensionSource).toContain("SELECT_MENU_METRICS")
+    expect(extensionSource).toContain("18:{font:8,icon:12")
+    expect(extensionSource).toContain("24:{font:16,icon:18")
+    expect(extensionSource).toContain("32:{font:21,icon:24")
+    expect(extensionSource).toContain("38:{font:26,icon:29")
+    expect(extensionSource).toContain("contentStyle={selectMenuStyle(height)}")
+    expect(variantsCss).toContain("height: var(--vt-primitive-height, 32px) !important")
+    expect(variantsCss).toContain("font-size: var(--vt-primitive-font, 11px) !important")
+    expect(variantsCss).toContain("width: var(--vt-primitive-icon, 18px) !important")
+    expect(variantsCss).toContain("stroke-width: var(--vt-primitive-icon-stroke, 2.5) !important")
+  })
+
+  it("uses full-width video rows with centered thumbnails, multiline titles and metadata badges", () => {
+    expect(extensionSource).toContain("widget-video-select-option-media")
+    expect(extensionSource).toContain("widget-video-select-duration")
+    expect(extensionSource).toContain("widget-video-select-views")
+    expect(variantsCss).toContain("border-radius: 0")
+    expect(variantsCss).toContain("justify-self: center")
+    expect(variantsCss).toContain("-webkit-line-clamp: 3")
+    expect(variantsCss).toContain("height: 14px")
+    expect(variantsCss).toContain("25%, white")
+  })
+
+  it("keeps sized select and video select on the public primitive surface", () => {
+    expect(renderToStaticMarkup(
+      <WidgetSizedSelect
+        height={24}
+        tone="primary"
+        label="Visibility"
+        value="public"
+        onChange={() => {}}
+        options={[{ value: "public", label: "Public" }]}
+      />,
+    )).toContain("is-height-24")
+
+    expect(renderToStaticMarkup(
+      <WidgetVideoSelect
+        height={38}
+        label="Video"
+        value="v1"
+        onChange={() => {}}
+        options={[{ value: "v1", label: "Long title", meta: "12:42 · 48,230 views" }]}
+      />,
+    )).toContain("is-height-38")
   })
 })
 
