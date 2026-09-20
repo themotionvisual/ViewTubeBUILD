@@ -454,3 +454,45 @@ The tiny-icon library reserves one icon/color pair for each canonical Data Visua
 - pink — Playlist Saves
 
 These metric icons must not be recolored arbitrarily when rendered in the reference library or a Data Visual.
+
+
+## Tone construction, not tint duplication
+
+The three widget primitive tones must be visibly distinct constructions rather than three near-identical tint levels.
+
+### Default
+
+Use as the neutral reference construction:
+
+- white or near-white primary surface;
+- palette-aware stroke and ink;
+- colored accents limited to active cells, bays, or handles.
+
+### Primary
+
+Use as the emphasized construction:
+
+- stronger widget-color presence than Default;
+- saturated active regions;
+- still preserves ink-led readability where practical.
+
+### Secondary
+
+Use as the inverse/compound construction:
+
+- saturated structural zones instead of another pale tint;
+- white text/icons on saturated areas;
+- white or inverted center/selected cells where they improve hierarchy;
+- component anatomy may change to communicate the alternate construction.
+
+Canonical examples:
+
+- **Stepper:** saturated chassis + saturated plus/minus cells + white glyphs/value.
+- **Pagination:** saturated strip with white page copy; active page becomes the inverse white tile.
+- **Split-left Search:** saturated bay + saturated input field + white icon/copy.
+- **Text Input:** saturated resting surface with white copy; focus inverts to a white editing surface.
+- **Select:** saturated trigger with white label/chevron; secondary open-menu treatment remains inverse.
+- **Video Select:** saturated title surface + saturated VIDEO/chevron bay with white foreground.
+- **Toggle:** no stroke in Secondary. OFF = pale/white track + widget-colored thumb. ON = widget-colored track + white thumb. Background and thumb color animate together as the state changes.
+
+Do not implement a new tone by merely changing opacity on the Default construction. If Default, Primary, and Secondary are difficult to distinguish in the UI Reference Library without reading their labels, the family needs another construction pass.
