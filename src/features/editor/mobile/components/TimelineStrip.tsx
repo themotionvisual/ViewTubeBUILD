@@ -28,9 +28,9 @@ type SnapStrength='off'|'soft'|'strong';
 type NavMode='all'|'clip'|'keyframe'|'transition'|'frame';
 type SnapKinds={edges:boolean;keyframes:boolean;playhead:boolean;seconds:boolean;transitions:boolean};
 
-export const TIMELINE_TRACK_HEIGHT=52;
-const CLIP_BODY_HEIGHT=31;
-const KEYFRAME_LANE_HEIGHT=21;
+export const TIMELINE_TRACK_HEIGHT=44;
+const CLIP_BODY_HEIGHT=26;
+const KEYFRAME_LANE_HEIGHT=18;
 export const TIMELINE_HEADER_HEIGHT=48;
 export const timelinePreferredHeight=(visibleTracks:number)=>TIMELINE_HEADER_HEIGHT+Math.max(1,visibleTracks)*TIMELINE_TRACK_HEIGHT+14;
 
@@ -390,7 +390,7 @@ const TrackRow:React.FC<{
       style={{
         position:'sticky',left:0,width:LABEL_WIDTH,background:selected?CYAN:'#fff',
         zIndex:2,borderRight:`2px solid ${INK}`,borderBottom:`1px solid ${INK}`,
-        display:'grid',gridTemplateRows:'20px 22px',gridTemplateColumns:'minmax(0,1fr)',alignContent:'center',gap:2,
+        display:'grid',gridTemplateRows:'17px 17px',gridTemplateColumns:'minmax(0,1fr)',alignContent:'center',gap:2,
         padding:'3px 4px',boxSizing:'border-box',fontSize:8,fontWeight:900,textTransform:'uppercase',
         ...IOS_TOUCH_SAFE,
       }}
@@ -410,7 +410,7 @@ const TrackRow:React.FC<{
           }}
           onPointerUp={finishReorder}
           onPointerCancel={finishReorder}
-          style={{...miniBtn('#fff'),width:15,height:18,touchAction:'none'}}
+          style={{...miniBtn('#fff'),width:15,height:17,touchAction:'none'}}
         ><GripVertical size={9}/></button>:<Layers3 size={12}/>}
         <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{readOnly?'Compound':track.name}</span>
       </div>
