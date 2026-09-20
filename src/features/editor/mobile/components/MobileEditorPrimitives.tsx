@@ -17,6 +17,7 @@ export const MOBILE_EDITOR_TOKENS={
 } as const;
 
 const T=MOBILE_EDITOR_TOKENS;
+const IOS_TOUCH_SAFE:React.CSSProperties={userSelect:'none',WebkitUserSelect:'none',WebkitTouchCallout:'none',WebkitTapHighlightColor:'transparent'};
 export const mobilePanel:React.CSSProperties={
   boxSizing:'border-box',border:`${T.stroke}px solid ${T.ink}`,borderRadius:T.radius,
   background:'#fff',padding:7,boxShadow:'2px 2px 0 rgba(36,139,153,.18)',
@@ -25,7 +26,7 @@ export const mobileButton=(active=false):React.CSSProperties=>({
   minHeight:T.touch,border:`${T.stroke}px solid ${T.ink}`,borderRadius:5,
   background:active?T.cyan:'#fff',color:'#111',fontSize:8,fontWeight:1000,
   textTransform:'uppercase',padding:'3px 6px',display:'inline-flex',
-  alignItems:'center',justifyContent:'center',gap:4,touchAction:'manipulation',
+  alignItems:'center',justifyContent:'center',gap:4,touchAction:'manipulation',...IOS_TOUCH_SAFE,
 });
 export const MobileIconButton:React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>&{active?:boolean;size?:number}>=({
   active=false,size=28,style,children,...props
@@ -82,7 +83,7 @@ export const AcceleratingStepper:React.FC<{
     if(onReset){onReset();return}
     if(defaultValue!=null)onChange(defaultValue);
   };
-  return <div style={{width:'min(104px,100%)',maxWidth:'100%',marginBottom:6}}>
+  return <div style={{width:'min(104px,100%)',maxWidth:'100%',marginBottom:6,...IOS_TOUCH_SAFE}}>
     <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',alignItems:'center',gap:4,marginBottom:2}}>
       <span style={{fontSize:8,fontWeight:1000,textTransform:'uppercase',opacity:.72,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</span>
       <span style={{display:'inline-flex',alignItems:'center',gap:3}}>
@@ -100,7 +101,7 @@ export const AcceleratingStepper:React.FC<{
         onPointerDown={e=>begin(-1,e)} onPointerMove={move} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}><Minus size={12}/></button>
       <button aria-label={`Reset ${label}`} title="Double tap to reset" onDoubleClick={reset} style={{
         height:26,borderTop:`2px solid ${T.ink}`,borderBottom:`2px solid ${T.ink}`,borderLeft:0,borderRight:0,
-        background:'#fff',display:'grid',placeItems:'center',fontSize:9,fontWeight:1000,padding:0,
+        background:'#fff',display:'grid',placeItems:'center',fontSize:9,fontWeight:1000,padding:0,...IOS_TOUCH_SAFE,
       }}>{Number(value.toFixed(decimals))}{suffix}{factor!==1?<small style={{fontSize:6,opacity:.55}}> ×{factor}</small>:null}</button>
       <button aria-label={`Increase ${label}`} style={{...mobileButton(true),width:24,minHeight:26,padding:0,background:rightColor,borderTopLeftRadius:0,borderBottomLeftRadius:0}}
         onPointerDown={e=>begin(1,e)} onPointerMove={move} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}><Plus size={12}/></button>
@@ -125,7 +126,7 @@ export const XYJoystick:React.FC<{x:number;y:number;range?:number;onChange:(valu
   };
   return <div ref={ref} onDoubleClick={()=>onReset?.()} onPointerDown={event=>{active.current=event.pointerId;event.currentTarget.setPointerCapture?.(event.pointerId);update(event)}} onPointerMove={update}
     onPointerUp={()=>{active.current=null}} onPointerCancel={()=>{active.current=null}}
-    style={{position:'relative',width:92,height:92,border:`2px solid ${T.ink}`,borderRadius:7,background:'#fff',touchAction:'none',overflow:'hidden'}}>
+    style={{position:'relative',width:92,height:92,border:`2px solid ${T.ink}`,borderRadius:7,background:'#fff',touchAction:'none',overflow:'hidden',...IOS_TOUCH_SAFE}}>
     <i style={{position:'absolute',left:'50%',top:0,bottom:0,width:1,background:T.ink,opacity:.24}}/>
     <i style={{position:'absolute',top:'50%',left:0,right:0,height:1,background:T.ink,opacity:.24}}/>
     <i style={{position:'absolute',left:`calc(${50+(x/range)*50}% - 8px)`,top:`calc(${50+(y/range)*50}% - 8px)`,width:16,height:16,borderRadius:99,border:`2px solid ${T.ink}`,background:T.cyan,boxSizing:'border-box'}}/>
@@ -143,7 +144,7 @@ export const RotationDial:React.FC<{value:number;onChange:(value:number)=>void;o
   };
   return <div ref={ref} onDoubleClick={()=>onReset?.()} onPointerDown={event=>{active.current=event.pointerId;event.currentTarget.setPointerCapture?.(event.pointerId);update(event)}} onPointerMove={update}
     onPointerUp={()=>{active.current=null}} onPointerCancel={()=>{active.current=null}}
-    style={{position:'relative',width:72,height:72,borderRadius:99,border:`2px solid ${T.ink}`,background:'#fff',touchAction:'none',display:'grid',placeItems:'center'}}>
+    style={{position:'relative',width:72,height:72,borderRadius:99,border:`2px solid ${T.ink}`,background:'#fff',touchAction:'none',display:'grid',placeItems:'center',...IOS_TOUCH_SAFE}}>
     <RotateCw size={14}/>
     <i style={{position:'absolute',left:'50%',top:5,width:3,height:24,borderRadius:2,background:T.cyan,transformOrigin:'50% 31px',transform:`translateX(-50%) rotate(${value}deg)`,border:`1px solid ${T.ink}`}}/>
     <span style={{position:'absolute',bottom:4,fontSize:7,fontWeight:1000}}>{Math.round(value)}°</span>
