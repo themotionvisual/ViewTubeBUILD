@@ -58,6 +58,7 @@ export interface SubToolboxSplitDropdownProps {
   onChange: (value: string) => void
   icon?: React.ReactNode
   railLabel?: React.ReactNode
+  chevron?: React.ReactNode
   ariaLabel: string
   railColor?: string
   labelColor?: string
@@ -70,7 +71,8 @@ export const SubToolboxSplitDropdown: React.FC<SubToolboxSplitDropdownProps> = (
   options,
   onChange,
   icon,
-  railLabel = "SET",
+  railLabel: _legacyRailLabel,
+  chevron,
   ariaLabel,
   railColor,
   labelColor,
@@ -113,11 +115,11 @@ export const SubToolboxSplitDropdown: React.FC<SubToolboxSplitDropdownProps> = (
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
       >
-        <span className="vt-subtoolbox-split-dropdown-rail" aria-hidden="true">
-          <span className="vt-subtoolbox-split-dropdown-rail-label">{railLabel}</span>
-          <span className="vt-subtoolbox-split-dropdown-rail-arrow"><ChevronDown size={18} strokeWidth={3.4} /></span>
+        <span className="vt-subtoolbox-split-dropdown-rail" aria-hidden="true">{icon}</span>
+        <span className="vt-subtoolbox-split-dropdown-label">
+          <b>{selected?.label ?? value}</b>
+          <span className="vt-subtoolbox-split-dropdown-chevron" aria-hidden="true">{chevron ?? <ChevronDown size={18} strokeWidth={3.4} />}</span>
         </span>
-        <span className="vt-subtoolbox-split-dropdown-label">{selected?.label ?? value}</span>
       </button>
       {open ? (
         <div className="vt-subtoolbox-split-dropdown-menu" role="listbox" aria-label={ariaLabel}>
@@ -138,7 +140,10 @@ export const SubToolboxSplitDropdown: React.FC<SubToolboxSplitDropdownProps> = (
                 }}
               >
                 <span className="vt-subtoolbox-split-dropdown-option-rail" aria-hidden="true">{option.icon ?? icon}</span>
-                <span className="vt-subtoolbox-split-dropdown-option-label">{option.label}</span>
+                <span className="vt-subtoolbox-split-dropdown-option-label">
+                  <b>{option.label}</b>
+                  {active ? <span className="vt-subtoolbox-split-dropdown-option-check" aria-hidden="true">✓</span> : null}
+                </span>
               </button>
             )
           })}
