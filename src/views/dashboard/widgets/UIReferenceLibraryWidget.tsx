@@ -194,7 +194,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   const [selectValue, setSelectValue] = useState("public")
   const [selectedVideo, setSelectedVideo] = useState("v1")
   const [headerToggleValue, setHeaderToggleValue] = useState("draft-1")
-  const [stepperValue, setStepperValue] = useState("Step 1 of 4")
+  const [stepperValue, setStepperValue] = useState("28 DAYS")
   const [stepTabValue, setStepTabValue] = useState("meta")
   const [switchValue, setSwitchValue] = useState(true)
   const [checkboxValue, setCheckboxValue] = useState(true)
@@ -711,71 +711,124 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             </div>
 
             <div className="widget-reference-family">
-              {familyHeading("Widget Modules", "Composable module frame + interchangeable header controls")}
+              {familyHeading("Widget Modules", "Navigation primitives manifested as real header controls")}
               <div className="grid gap-3">
                 <WidgetModuleFrame
                   header={
                     <WidgetModuleHeader
-                      icon={<Zap />}
-                      title="Toggle Header"
-                      subtitle="Boolean control"
-                      controls={<WidgetToggleSwitch height={24} tone="primary" label="Enable module" checked={matrixToggle} onChange={setMatrixToggle} />}
+                      icon={<BarChart3 />}
+                      title="Channel Overview"
+                      subtitle="Time window"
+                      controls={
+                        <WidgetHeaderStepper
+                          label="Channel overview time window"
+                          value={stepperValue}
+                          onPrevious={() => setStepperValue("7 DAYS")}
+                          onNext={() => setStepperValue("28 DAYS")}
+                        />
+                      }
                     />
                   }
                 >
-                  <p className="text-[9px] font-bold uppercase opacity-65">Module body content stays independent from the header control.</p>
+                  <p className="text-[9px] font-bold uppercase opacity-65">The canonical header stepper becomes the time-window controller used by an analytics widget.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Bell />}
+                      title="Comment Responder"
+                      subtitle="View + comment counter"
+                      controls={
+                        <span className="widget-module-header-nav-cluster">
+                          <WidgetHeaderToggle
+                            label="Comment responder view example"
+                            value={headerToggleValue === "draft-2" ? "history" : "unreplied"}
+                            items={[{ id: "unreplied", label: "NEW" }, { id: "history", label: "OLD" }]}
+                            onChange={(value) => setHeaderToggleValue(value === "history" ? "draft-2" : "draft-1")}
+                          />
+                          <WidgetHeaderStepper
+                            label="Comment pagination example"
+                            value={`${matrixPage} / 12`}
+                            canPrevious={matrixPage > 1}
+                            canNext={matrixPage < 12}
+                            onPrevious={() => setMatrixPage((current) => Math.max(1, current - 1))}
+                            onNext={() => setMatrixPage((current) => Math.min(12, current + 1))}
+                          />
+                        </span>
+                      }
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">This mirrors the Comment Responder header: NEW/OLD mode plus the current comment counter.</p>
                 </WidgetModuleFrame>
 
                 <WidgetModuleFrame
                   header={
                     <WidgetModuleHeader
                       icon={<Layers />}
-                      title="Counter Header"
-                      subtitle="Compact split-left number control"
-                      controls={<WidgetSplitCounter height={24} tone="primary" label="Header quantity" value={matrixStepper} onChange={setMatrixStepper} min={0} max={99} />}
+                      title="Publishing Workflow"
+                      subtitle="Step navigation"
+                      controls={
+                        <WidgetStepTabs
+                          label="Header publishing stages"
+                          value={stepTabValue}
+                          items={[
+                            { id: "meta", label: "DETAILS" },
+                            { id: "options", label: "OPTIONS" },
+                            { id: "review", label: "VERIFY" },
+                          ]}
+                          onChange={setStepTabValue}
+                        />
+                      }
                     />
                   }
                 >
-                  <p className="text-[9px] font-bold uppercase opacity-65">The header can carry a number counter without changing module geometry.</p>
-                </WidgetModuleFrame>
-
-                <WidgetModuleFrame
-                  header={
-                    <WidgetModuleHeader
-                      icon={<Star />}
-                      title="Button Header"
-                      subtitle="Compact action"
-                      controls={<WidgetSizedButton height={24} tone="primary" textFit="adaptive">Apply</WidgetSizedButton>}
-                    />
-                  }
-                >
-                  <p className="text-[9px] font-bold uppercase opacity-65">Header buttons use the canonical control ladder.</p>
+                  <p className="text-[9px] font-bold uppercase opacity-65">Step tabs can live directly in a widget header when the module itself has sequential pages.</p>
                 </WidgetModuleFrame>
 
                 <WidgetModuleFrame
                   header={
                     <WidgetModuleHeader
                       icon={<Settings />}
-                      title="Dropdown Header"
-                      subtitle="Portalled menu"
+                      title="Auto Chapters"
+                      subtitle="Header switch"
+                      controls={<WidgetSwitch label="Automatic Chapters" checked={switchValue} onChange={setSwitchValue} />}
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">The navigation switch becomes a compact persistent header setting.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Check />}
+                      title="Embed Permission"
+                      subtitle="Header checkbox"
+                      controls={<WidgetChoice label="Allow Embedding" checked={checkboxValue} onChange={() => setCheckboxValue(!checkboxValue)} />}
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">A canonical choice control can expose a persistent binary publishing option from the header.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Sparkles />}
+                      title="Reply Mode"
+                      subtitle="Header radio group"
                       controls={
-                        <WidgetSizedSelect
-                          height={24}
-                          tone="primary"
-                          value={selectValue}
-                          onChange={setSelectValue}
-                          label="Module header visibility"
-                          options={[
-                            { value: "public", label: "PUBLIC" },
-                            { value: "unlisted", label: "UNLISTED" },
-                            { value: "private", label: "PRIVATE" },
-                          ]}
-                        />
+                        <span className="widget-module-header-nav-cluster is-choice-cluster">
+                          <WidgetChoice type="radio" name="module-reply-mode" value="a" label="AI" checked={radioValue === "a"} onChange={() => setRadioValue("a")} />
+                          <WidgetChoice type="radio" name="module-reply-mode" value="b" label="MANUAL" checked={radioValue === "b"} onChange={() => setRadioValue("b")} />
+                        </span>
                       }
                     />
                   }
                 >
-                  <p className="text-[9px] font-bold uppercase opacity-65">Dropdown rows match the 24px closed trigger and use a scrollbar when needed.</p>
+                  <p className="text-[9px] font-bold uppercase opacity-65">Radio choices can become a compact header mode selector without adding another interior toolbar.</p>
                 </WidgetModuleFrame>
               </div>
             </div>
