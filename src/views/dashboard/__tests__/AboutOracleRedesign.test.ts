@@ -6,6 +6,7 @@ const aboutCss = readFileSync(new URL("../widgets/VerificationExplainerWidget.cs
 const oracleSource = readFileSync(new URL("../widgets/DailyOracleWidget.tsx", import.meta.url), "utf8")
 const oracleCss = readFileSync(new URL("../widgets/DailyOracleWidget.css", import.meta.url), "utf8")
 const sharedCss = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
+const registrySource = readFileSync(new URL("../WidgetRegistryBase.ts", import.meta.url), "utf8")
 
 describe("About VIEWTUBE redesign contract", () => {
   it("uses a functional system map and a separate trust map instead of the retired marketing matrix", () => {
@@ -33,6 +34,9 @@ describe("About VIEWTUBE redesign contract", () => {
   })
 
   it("acts as a colorful first-visit hook using the full ViewTube spectrum and creator loop", () => {
+    expect(registrySource.indexOf('{ id: "app-verification-explainer", size: "half", height: "medium" }')).toBeLessThan(
+      registrySource.indexOf('{ id: "kpi-cluster", size: "half", height: "medium" }'),
+    )
     expect(aboutSource).toContain("about-vt__spectrum")
     expect(aboutSource).toContain("about-vt__capability-ribbon")
     expect(aboutSource).toContain("WELCOME TO VIEWTUBE")
