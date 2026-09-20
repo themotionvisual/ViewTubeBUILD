@@ -981,6 +981,20 @@
   gap: 4px;
   padding: 4px 5px 4px 0;
 }
+.widget-module-header-nav-cluster {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+.widget-module-header-nav-cluster.is-choice-cluster {
+  gap: 6px;
+}
+.widget-module-header-controls :is(.widget-header-toggle,.widget-header-stepper,.widget-step-tabs,.widget-control-choice,.widget-control-switch) {
+  max-width: 100%;
+}
+
 .widget-module-frame-body {
   min-width: 0;
   padding: 9px;
