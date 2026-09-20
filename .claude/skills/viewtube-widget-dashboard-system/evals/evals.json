@@ -134,6 +134,28 @@
         "remove redundant accelerators before shrinking essential controls",
         "preserve accessible discovery"
       ]
+    },
+    {
+      "name": "scroll-safe-area-clipping",
+      "prompt": "A mobile widget's scrollable controls are clipped on both left and right edges after combining a flush body with a full-bleed scroll area.",
+      "must": [
+        "identify the inset/full-bleed ownership conflict",
+        "restore a shell content inset or use an inset scroll area",
+        "do not solve the geometry defect by shrinking text",
+        "verify all interactive borders remain inside the shell",
+        "keep only intentional full-bleed sections full-bleed"
+      ]
+    },
+    {
+      "name": "panel-selector-reachability",
+      "prompt": "A multi-panel widget hides its quick-switch strip on portrait and the remaining category selector is compressed and hard to use.",
+      "must": [
+        "keep the primary panel selector fully visible and tappable",
+        "allow full-width portrait selector composition",
+        "consider persistent or sticky access in long scrollable tools",
+        "preserve the selector popup from clipping",
+        "prioritize functional navigation over desktop-row preservation"
+      ]
     }
   ]
 }
