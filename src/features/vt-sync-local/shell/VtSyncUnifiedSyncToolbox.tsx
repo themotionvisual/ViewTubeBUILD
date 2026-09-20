@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from "react"
 import { CheckSquare, ChevronDown, ChevronRight, Copy, RefreshCw, ShieldCheck, Square } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
-import { RetroAnalogToggle, RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
+import { RetroAnalogToggle, RetroBatchSelectionSwitch, RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
 import type {
  VtSyncAnalyticsWindow,
  VtSyncCategoryGroup,
@@ -49,6 +49,21 @@ export type VtSyncRetentionVideoOption = {
 
 const GROUP_COLORS: Record<string, string> = Object.fromEntries(VT_SYNC_GROUP_ORDER.map((group, index) => [group, getPaletteColor(index * 2)]))
 const formatPlainLabel = (value: string) => value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
+
+type SyncBadgeTone = "neutral" | "live" | "good" | "warn" | "bad" | "info" | "accent"
+
+const SyncMetaBadge: React.FC<{
+ tone?: SyncBadgeTone
+ children: React.ReactNode
+ onClick?: () => void
+ title?: string
+}> = ({ tone = "neutral", children, onClick, title }) => {
+ const className = `vt-sync-meta-badge is-${tone} ${onClick ? "is-clickable" : ""}`
+ if (onClick) {
+  return <button type="button" className={className} onClick={onClick} title={title}>{children}</button>
+ }
+ return <span className={className} title={title}>{children}</span>
+}
 
 const buildUnitGroups = (hasContentOwner: boolean) => VT_SYNC_GROUP_ORDER
  .map((group) => ({
