@@ -581,162 +581,175 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
          </div>
         </div>
 
-        <div id={contentId} hidden={!expanded}>
-         <div className="overflow-x-auto custom-scrollbar">
-          <div className="min-w-[650px]">
-           <div className="grid h-[26px] grid-cols-[minmax(210px,1fr)_58px_54px_88px_38px_58px_142px] items-center border-b-[2px] border-black bg-[#161616] px-2 text-[8px] font-black uppercase tracking-[0.08em] text-white/75">
-            <span>Dataset</span><span>Status</span><span>Time</span><span>Last sync</span><span className="text-center">!</span><span className="text-right">Rows</span><span className="text-center">Sync</span>
-           </div>
+        <div id={contentId} hidden={!expanded} className="bg-white">
+         {units.map((unit) => {
+          const selectedForBatch = unit.categoryIds.every((id) => selectedSet.has(id))
+          const model = unitModelById.get(unit.id)
+          const unitStatus = model?.status || "never"
+          const expandedUnit = expandedUnitIds.has(unit.id)
+          const hasPriorData = unitStatus !== "never"
+          const hasExtraDetail = Boolean(
+           (model?.issueCount || 0) > 0
+           || unit.id === "retention"
+           || unit.id === "video_catalog"
+           || unit.categoryIds.length > 1
+          )
+          const unitContentId = `vt-sync-unified-unit-${unit.id}`
+          const isNextUnit = queueSummary.nextLabel === unit.label
+           || Boolean(model?.rows.some((row) => queueSummary.nextLabel.includes(row.category.label)))
+          const statusBadge = statusBadgeForUnit(unitStatus, model?.lastSyncedAt, isNextUnit)
+          const resultBadge = `${formatDurationLong(model?.durationMs)} · ${(model?.displayRows || 0).toLocaleString()} ${resultNounForUnit(unit.id, model?.displayRows || 0, unit.label)}`
+          const immediateLabel = immediateLabelForUnit(unitStatus, isNextUnit, hasPriorData)
+          const toggleUnitDetails = () => {
+           if (!hasExtraDetail) return
+           setExpandedUnitIds((current) => {
+            const next = new Set(current)
+            if (next.has(unit.id)) next.delete(unit.id)
+            else next.add(unit.id)
+            return next
+           })
+          }
 
-           {units.map((unit) => {
-            const selectedForBatch = unit.categoryIds.every((id) => selectedSet.has(id))
-            const model = unitModelById.get(unit.id)
-            const unitStatus = model?.status || "never"
-            const expandedUnit = expandedUnitIds.has(unit.id)
-            const hasPriorData = unitStatus !== "never"
-            const hasExtraDetail = Boolean(
-             (model?.issueCount || 0) > 0
-             || unit.id === "retention"
-             || unit.id === "video_catalog"
-             || unit.categoryIds.length > 1
-            )
-            const unitContentId = `vt-sync-unified-unit-${unit.id}`
-            const toggleUnitDetails = () => {
-             if (!hasExtraDetail) return
-             setExpandedUnitIds((current) => {
-              const next = new Set(current)
-              if (next.has(unit.id)) next.delete(unit.id)
-              else next.add(unit.id)
-              return next
-             })
-            }
-            return (
-             <article key={unit.id} className="border-b-[2px] border-black last:border-b-0">
-              <div className={`grid min-h-[48px] grid-cols-[minmax(210px,1fr)_58px_54px_88px_38px_58px_142px] items-stretch px-2 ${selectedForBatch ? "bg-white" : "bg-[#f1f1f1] text-black/50"}`}>
-               <div className="sticky left-0 z-[2] flex min-w-0 items-center bg-inherit pr-2">
-                <span className="min-w-0" title={`${unit.description} · ${unit.categoryIds.length} quer${unit.categoryIds.length === 1 ? "y" : "ies"} · ${formatPlainLabel(unit.refreshPolicy)}`}>
-                 <strong className="block truncate text-[11px] font-[1000] uppercase leading-none">{unit.label}</strong>
-                 <span className="mt-1 block truncate text-[7.5px] font-black uppercase tracking-[0.035em] text-black/45">
-                  {unit.description}
-                 </span>
-                </span>
-               </div>
+          return (
+           <article key={unit.id} className="border-b-[2px] border-black last:border-b-0">
+            <div className="grid min-h-[78px] grid-cols-[50px_minmax(0,1fr)_108px] items-stretch bg-white">
+             <div className="grid place-items-center border-r-[2px] border-black bg-[#f4f4f4] p-0.5">
+              <RetroBatchSelectionSwitch
+               selected={selectedForBatch}
+               onChange={() => toggleMany(unit.categoryIds)}
+               label={`${unit.label} batch selection`}
+              />
+             </div>
 
-               <div className="flex items-center border-l border-black/20 px-1.5">
-                <span className="inline-flex min-w-0 items-center gap-1 text-[8px] font-[1000] uppercase">
-                 <i className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: statusTone(unitStatus), boxShadow: `0 0 4px ${statusTone(unitStatus)}` }} />
-                 <span className="truncate">{shortStatus(unitStatus)}</span>
-                </span>
-               </div>
-               <div className="flex items-center border-l border-black/20 px-1.5 font-mono text-[9px] font-black tabular-nums">{formatDuration(model?.durationMs)}</div>
-               <div className="flex items-center border-l border-black/20 px-1.5 font-mono text-[9px] font-black tabular-nums">{formatLastSync(model?.lastSyncedAt)}</div>
-               <div className="grid place-items-center border-l border-black/20 text-[9px] font-[1000]">
-                {hasExtraDetail ? (
-                 <button
-                  type="button"
-                  aria-expanded={expandedUnit}
-                  aria-controls={unitContentId}
-                  onClick={toggleUnitDetails}
-                  className={`min-w-[24px] rounded-full border px-1 py-[2px] text-[8px] font-[1000] leading-none ${(model?.issueCount || 0) > 0 ? "border-[#FA618A] bg-[#FA618A]/15 text-[#9d173b]" : "border-black/30 bg-white/70 text-black/60"}`}
-                  title={expandedUnit ? "Hide dataset details" : "Show dataset details"}
-                 >
-                  {(model?.issueCount || 0) > 0 ? model?.issueCount : "···"}
-                 </button>
-                ) : <span>{model?.issueCount || 0}</span>}
-               </div>
-               <div className="flex items-center justify-end border-l border-black/20 px-1.5 font-mono text-[9px] font-black tabular-nums">{compactRows(model?.displayRows || 0)}</div>
-               <div className="sticky right-0 z-[2] grid place-items-center border-l-[2px] border-black bg-inherit px-1">
-                <RetroSyncExecutionSwitch
-                 idleLabel={hasPriorData ? "UPDATE" : "FULL SYNC"}
-                 status={toExecutionStatus(unitStatus)}
-                 onClick={() => void startCategories(unit.categoryIds)}
-                 selected={selectedForBatch}
-                 onSelectedChange={() => toggleMany(unit.categoryIds)}
-                 selectionLabel={`${unit.label} batch selection`}
-                />
-               </div>
+             <div className="grid min-w-0 grid-rows-2">
+              <div className="flex min-w-0 items-center gap-2 border-b border-black/15 px-2.5 py-1.5">
+               <strong className="shrink-0 truncate text-[11px] font-[1000] uppercase leading-none">{unit.label}</strong>
+               <span
+                className="min-w-0 flex-1 truncate text-[7.5px] font-black uppercase tracking-[0.035em] text-black/45"
+                title={unit.description}
+               >
+                {unit.description}
+               </span>
               </div>
 
-              {hasExtraDetail ? (
-               <div id={unitContentId} hidden={!expandedUnit} className="border-t-[2px] border-black bg-[#f3f4f6]">
-                {(model?.issueCount || 0) > 0 ? (
-                 <section className="border-b-[2px] border-black bg-white p-2 text-[9px]">
-                  <strong className="text-[8px] uppercase tracking-[0.06em] text-black/50">Issues · {model?.issueCount || 0}</strong>
-                  <ul className="mt-1 space-y-1 normal-case tracking-normal text-black/75">
-                   {model?.issues.map((row, index) => <li key={`${row.category.id}-${index}`}><b>{row.category.label}:</b> {row.message}</li>)}
-                  </ul>
-                 </section>
-                ) : null}
+              <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto px-2.5 py-1.5 custom-scrollbar">
+               <SyncMetaBadge tone={statusBadge.tone} title={statusBadge.text}>{statusBadge.text}</SyncMetaBadge>
+               <SyncMetaBadge tone={model?.displayRows ? "info" : "neutral"} title={resultBadge}>{resultBadge}</SyncMetaBadge>
+               <SyncMetaBadge tone={unit.defaultEnabled ? "good" : "accent"}>{formatPlainLabel(unit.refreshPolicy)}</SyncMetaBadge>
+               <SyncMetaBadge
+                tone={(model?.issueCount || 0) > 0 ? "bad" : "good"}
+                onClick={hasExtraDetail ? toggleUnitDetails : undefined}
+                title={hasExtraDetail ? (expandedUnit ? "Hide dataset details" : "Show dataset details") : undefined}
+               >
+                {(model?.issueCount || 0) > 0
+                 ? `${model?.issueCount} ISSUE${model?.issueCount === 1 ? "" : "S"}`
+                 : "NO ISSUES"}
+               </SyncMetaBadge>
+               {unit.categoryIds.length > 1 ? (
+                <SyncMetaBadge tone="accent" onClick={toggleUnitDetails} title={expandedUnit ? "Hide child queries" : "Show child queries"}>
+                 {unit.categoryIds.length} QUERIES
+                </SyncMetaBadge>
+               ) : null}
+               {unit.id === "video_catalog" ? (
+                <SyncMetaBadge tone="warn" onClick={toggleUnitDetails}>METADATA OPTIONS</SyncMetaBadge>
+               ) : null}
+               {unit.id === "retention" ? (
+                <SyncMetaBadge tone="accent" onClick={toggleUnitDetails}>VIDEO OPTIONS</SyncMetaBadge>
+               ) : null}
+               {model?.sourceLabels[0] ? <SyncMetaBadge tone="neutral">{model.sourceLabels[0]}</SyncMetaBadge> : null}
+              </div>
+             </div>
 
-                {unit.categoryIds.length > 1 ? (
-                 <section className="border-b-[2px] border-black bg-white px-2 py-1.5">
-                  <div className="mb-1 grid grid-cols-[minmax(0,1fr)_68px_72px] gap-2 text-[7px] font-black uppercase tracking-[0.07em] text-black/45">
-                   <span>Underlying query</span><span className="text-right">Rows</span><span>Status</span>
-                  </div>
-                  {(model?.rows || []).map((row) => (
-                   <div key={row.category.id} className="grid min-h-[24px] grid-cols-[minmax(0,1fr)_68px_72px] items-center gap-2 border-t border-black/15 text-[8px] font-black uppercase">
-                    <span className="min-w-0 truncate" title={row.message}>{row.category.label} · {row.phaseLabel}</span>
-                    <span className="text-right font-mono tabular-nums">{compactRows(row.displayRows)}</span>
-                    <span>{shortStatus(row.displayStatus)}</span>
-                   </div>
-                  ))}
-                 </section>
-                ) : null}
+             <div className="grid place-items-center border-l-[2px] border-black bg-[#f4f4f4] p-0.5">
+              <RetroSyncExecutionSwitch
+               idleLabel={hasPriorData ? "UPDATE" : "FULL SYNC"}
+               labelOverride={immediateLabel}
+               status={toExecutionStatus(unitStatus)}
+               onClick={() => void startCategories(unit.categoryIds)}
+               disabled={selectedWindows.length === 0}
+               className="is-row-sync-control"
+              />
+             </div>
+            </div>
 
-                {unit.id === "video_catalog" ? (
-                 <section className="border-b-[2px] border-black bg-white p-2">
-                  <p className="m-0 text-[8px] font-black uppercase text-black/55">Video catalog supports a full metadata refresh when cached metadata is incomplete.</p>
-                  <button type="button" onClick={() => void startCategories(unit.categoryIds, false, true)} className="mt-2 rounded border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[8px] font-black uppercase shadow-[2px_2px_0_0_#000]">
-                   Full metadata refresh
-                  </button>
-                 </section>
-                ) : null}
-
-                {unit.id === "retention" && retentionEnabled ? (
-                 <section className="bg-[#f3f4f6]">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b-[2px] border-black bg-white px-3 py-2">
-                   <div>
-                    <span className="text-[10px] font-black uppercase">Retention videos</span>
-                    <span className="ml-2 text-[8px] font-bold uppercase text-black/45">
-                     {retentionVideoIds.length > 0
-                      ? `${retentionVideoIds.length} manually selected`
-                      : `Default · ${baselineRetentionSelection.selectedCounts.long} long + ${baselineRetentionSelection.selectedCounts.short} Shorts`}
-                    </span>
-                   </div>
-                   <button type="button" onClick={() => setRetentionVideoIds([])} className="rounded-full border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[8px] font-black uppercase">Balanced default</button>
-                  </div>
-                  <div className="border-b-[2px] border-black bg-white p-2">
-                   <input
-                    type="text"
-                    value={videoSearch}
-                    onChange={(event) => setVideoSearch(event.target.value)}
-                    placeholder="Search videos by title…"
-                    className="w-full rounded-full border-[2px] border-black px-3 py-1.5 text-[9px] font-bold uppercase outline-none focus:border-[#528FFA]"
-                   />
-                  </div>
-                  <div className="max-h-[220px] overflow-auto custom-scrollbar">
-                   {filteredVideos.length === 0 ? (
-                    <div className="px-3 py-3 text-center text-[9px] font-black uppercase text-black/45">No videos match.</div>
-                   ) : filteredVideos.map((video) => {
-                    const retentionChecked = retentionSelectedSet.has(video.id)
-                    return (
-                     <button key={video.id} type="button" aria-pressed={retentionChecked} onClick={() => toggleRetentionVideo(video.id)} className={`grid w-full grid-cols-[20px_1fr_auto] items-center gap-2 border-b border-black/10 px-3 py-2 text-left hover:bg-white ${retentionChecked ? "bg-white" : "bg-white/40 text-black/50"}`}>
-                      <span>{retentionChecked ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-black/35" />}</span>
-                      <span className="truncate text-[9px] font-black uppercase">{video.title || video.id}</span>
-                      <span className="whitespace-nowrap text-[8px] font-bold text-black/45">{compactRows(video.views || 0)} views</span>
-                     </button>
-                    )
-                   })}
-                  </div>
-                 </section>
-                ) : null}
-               </div>
+            {hasExtraDetail ? (
+             <div id={unitContentId} hidden={!expandedUnit} className="border-t-[2px] border-black bg-[#f3f4f6]">
+              {(model?.issueCount || 0) > 0 ? (
+               <section className="border-b-[2px] border-black bg-white p-2 text-[9px]">
+                <strong className="text-[8px] uppercase tracking-[0.06em] text-black/50">Issues · {model?.issueCount || 0}</strong>
+                <ul className="mt-1 space-y-1 normal-case tracking-normal text-black/75">
+                 {model?.issues.map((row, index) => <li key={`${row.category.id}-${index}`}><b>{row.category.label}:</b> {row.message}</li>)}
+                </ul>
+               </section>
               ) : null}
-             </article>
-            )
-           })}
-          </div>
-         </div>
+
+              {unit.categoryIds.length > 1 ? (
+               <section className="border-b-[2px] border-black bg-white px-2 py-1.5">
+                <div className="mb-1 grid grid-cols-[minmax(0,1fr)_68px_72px] gap-2 text-[7px] font-black uppercase tracking-[0.07em] text-black/45">
+                 <span>Underlying query</span><span className="text-right">Rows</span><span>Status</span>
+                </div>
+                {(model?.rows || []).map((row) => (
+                 <div key={row.category.id} className="grid min-h-[24px] grid-cols-[minmax(0,1fr)_68px_72px] items-center gap-2 border-t border-black/15 text-[8px] font-black uppercase">
+                  <span className="min-w-0 truncate" title={row.message}>{row.category.label} · {row.phaseLabel}</span>
+                  <span className="text-right font-mono tabular-nums">{compactRows(row.displayRows)}</span>
+                  <span>{shortStatus(row.displayStatus)}</span>
+                 </div>
+                ))}
+               </section>
+              ) : null}
+
+              {unit.id === "video_catalog" ? (
+               <section className="border-b-[2px] border-black bg-white p-2">
+                <p className="m-0 text-[8px] font-black uppercase text-black/55">Video catalog supports a full metadata refresh when cached metadata is incomplete.</p>
+                <button type="button" onClick={() => void startCategories(unit.categoryIds, false, true)} className="mt-2 rounded border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[8px] font-black uppercase shadow-[2px_2px_0_0_#000]">
+                 Full metadata refresh
+                </button>
+               </section>
+              ) : null}
+
+              {unit.id === "retention" && retentionEnabled ? (
+               <section className="bg-[#f3f4f6]">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b-[2px] border-black bg-white px-3 py-2">
+                 <div>
+                  <span className="text-[10px] font-black uppercase">Retention videos</span>
+                  <span className="ml-2 text-[8px] font-bold uppercase text-black/45">
+                   {retentionVideoIds.length > 0
+                    ? `${retentionVideoIds.length} manually selected`
+                    : `Default · ${baselineRetentionSelection.selectedCounts.long} long + ${baselineRetentionSelection.selectedCounts.short} Shorts`}
+                  </span>
+                 </div>
+                 <button type="button" onClick={() => setRetentionVideoIds([])} className="rounded-full border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[8px] font-black uppercase">Balanced default</button>
+                </div>
+                <div className="border-b-[2px] border-black bg-white p-2">
+                 <input
+                  type="text"
+                  value={videoSearch}
+                  onChange={(event) => setVideoSearch(event.target.value)}
+                  placeholder="Search videos by title…"
+                  className="w-full rounded-full border-[2px] border-black px-3 py-1.5 text-[9px] font-bold uppercase outline-none focus:border-[#528FFA]"
+                 />
+                </div>
+                <div className="max-h-[220px] overflow-auto custom-scrollbar">
+                 {filteredVideos.length === 0 ? (
+                  <div className="px-3 py-3 text-center text-[9px] font-black uppercase text-black/45">No videos match.</div>
+                 ) : filteredVideos.map((video) => {
+                  const retentionChecked = retentionSelectedSet.has(video.id)
+                  return (
+                   <button key={video.id} type="button" aria-pressed={retentionChecked} onClick={() => toggleRetentionVideo(video.id)} className={`grid w-full grid-cols-[20px_1fr_auto] items-center gap-2 border-b border-black/10 px-3 py-2 text-left hover:bg-white ${retentionChecked ? "bg-white" : "bg-white/40 text-black/50"}`}>
+                    <span>{retentionChecked ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-black/35" />}</span>
+                    <span className="truncate text-[9px] font-black uppercase">{video.title || video.id}</span>
+                    <span className="whitespace-nowrap text-[8px] font-bold text-black/45">{compactRows(video.views || 0)} views</span>
+                   </button>
+                  )
+                 })}
+                </div>
+               </section>
+              ) : null}
+             </div>
+            ) : null}
+           </article>
+          )
+         })}
         </div>
        </section>
       )
