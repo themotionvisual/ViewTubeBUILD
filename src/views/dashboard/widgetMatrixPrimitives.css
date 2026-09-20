@@ -215,6 +215,14 @@
   font-weight: 700;
   outline: none;
 }
+.widget-search-input > input::placeholder {
+  color: currentColor;
+  opacity: .52;
+  transition: opacity 120ms ease;
+}
+.widget-search-input:focus-within > input::placeholder {
+  opacity: .12;
+}
 .widget-search-input > input::-webkit-search-cancel-button { cursor: pointer; }
 .widget-search-input:focus-within {
   border-color: var(--widget-color, #34cdea);
