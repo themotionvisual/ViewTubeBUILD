@@ -938,7 +938,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
       </WidgetScrollArea>
 
       <WidgetFooter className="widget-toolbar widget-workflow-toolbar">
-        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.3 · 12 palettes + spectrum tags</span>
+        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.4 · compound modules + 50 icon set</span>
         <WidgetLeftSplitButton height={32} tone="primary" iconStyle="white-on-color" icon={<Check />}>
           Standard Compliant
         </WidgetLeftSplitButton>
