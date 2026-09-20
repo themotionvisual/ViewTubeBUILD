@@ -121,9 +121,14 @@
 .widget-stepper-value {
   display: grid;
   place-items: center;
-  padding: 0 0.75em;
+  box-sizing: border-box;
+  width: 2.7ch;
+  min-width: 2.7ch;
+  max-width: 2.7ch;
+  padding: 0 0.12em;
   border-inline: 2px solid var(--vt-tone-stroke, currentColor);
   font-variant-numeric: tabular-nums;
+  text-align: center;
   background: #fff;
 }
 
@@ -622,3 +627,346 @@
 .widget-checkbox[aria-checked="true"]::before { transform: rotate(45deg); }
 .widget-checkbox.is-checked::after,
 .widget-checkbox[aria-checked="true"]::after { transform: rotate(-45deg); }
+
+
+/* ── Split-left counter ───────────────────────────────────────
+   One square left bay, divided horizontally into two 2:1 chevron buttons,
+   plus a compact two-digit value cell on the right. */
+.widget-split-counter {
+  --widget-split-counter-bay: calc(var(--vt-primitive-height) - var(--vt-primitive-stroke, 2px) - var(--vt-primitive-stroke, 2px));
+  box-sizing: border-box;
+  display: inline-grid;
+  grid-template-columns: var(--widget-split-counter-bay) 2.7ch;
+  align-items: stretch;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, currentColor);
+  border-radius: var(--vt-primitive-radius, 6px);
+  background: var(--vt-tone-bg, #fff);
+  color: var(--vt-tone-ink, var(--widget-ink, #243247));
+  font-family: inherit;
+  font-size: var(--vt-primitive-font);
+  font-weight: 1000;
+  line-height: 1;
+}
+.widget-split-counter-controls {
+  box-sizing: border-box;
+  width: var(--widget-split-counter-bay);
+  min-width: var(--widget-split-counter-bay);
+  height: 100%;
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  border-inline-end: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, currentColor);
+  background: var(--vt-tone-fill, var(--widget-color, #34cdea));
+}
+.widget-split-counter-controls > button {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.widget-split-counter-controls > button + button {
+  border-block-start: max(1px, var(--vt-primitive-stroke, 2px)) solid var(--vt-tone-stroke, currentColor);
+}
+.widget-split-counter-controls > button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+.widget-split-counter-controls svg {
+  width: max(7px, calc(var(--vt-primitive-height) * .32));
+  height: max(7px, calc(var(--vt-primitive-height) * .32));
+  stroke-width: 3;
+}
+.widget-split-counter-value {
+  box-sizing: border-box;
+  min-width: 2.7ch;
+  width: 2.7ch;
+  display: grid;
+  place-items: center;
+  padding-inline: .12em;
+  background: #fff;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.is-height-18.widget-split-counter {
+  border-width: 0;
+  box-shadow: none;
+}
+.is-height-18.widget-split-counter .widget-split-counter-controls {
+  border-inline-end-width: 0;
+}
+.is-height-18.widget-split-counter .widget-split-counter-controls > button + button {
+  border-block-start-width: 1px;
+}
+
+/* ── Tiny spectrum icon set ─────────────────────────────────── */
+.widget-tiny-spectrum-icon {
+  --widget-tiny-icon-color: var(--widget-color, #34cdea);
+  box-sizing: border-box;
+  width: var(--vt-primitive-height, 18px);
+  min-width: var(--vt-primitive-height, 18px);
+  height: var(--vt-primitive-height, 18px);
+  display: inline-grid;
+  place-items: center;
+  color: var(--widget-tiny-icon-color);
+}
+.widget-tiny-spectrum-icon > svg {
+  width: 74%;
+  height: 74%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Accent rail module ───────────────────────────────────────
+   The accent physically touches the module border: no wrapper padding,
+   no inset rail, and no empty edge between the rail and stroke. */
+.widget-accent-rail-module {
+  --widget-module-accent: var(--widget-color, #34cdea);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr) auto;
+  align-items: stretch;
+  overflow: hidden;
+  padding: 0;
+  gap: 0;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #243247);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--widget-border, #243247);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-module-accent) 36%, transparent);
+}
+.widget-accent-rail {
+  align-self: stretch;
+  width: 100%;
+  min-height: 100%;
+  background: var(--widget-module-accent);
+}
+.widget-accent-rail-copy {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  padding: 7px 9px;
+}
+.widget-accent-rail-copy > strong {
+  font-size: 11px;
+  font-weight: 1000;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+.widget-accent-rail-copy > small {
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.15;
+  opacity: .66;
+}
+.widget-accent-rail-action {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  padding: 5px 7px 5px 0;
+}
+
+/* ── Icon + title/subtitle module ─────────────────────────────
+   The colored icon bay is the left edge of the module itself, not an inset card. */
+.widget-icon-title-module {
+  --widget-module-accent: var(--widget-color, #34cdea);
+  --widget-icon-title-bay: calc(56px - var(--widget-module-stroke, 2px) - var(--widget-module-stroke, 2px));
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 56px;
+  min-height: 56px;
+  max-height: 56px;
+  display: grid;
+  grid-template-columns: var(--widget-icon-title-bay) minmax(0, 1fr) auto;
+  align-items: stretch;
+  overflow: hidden;
+  padding: 0;
+  gap: 0;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-module-accent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--widget-module-accent) 10%, #fff);
+  color: color-mix(in srgb, var(--widget-module-accent) 68%, var(--widget-border, #243247));
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-module-accent) 32%, transparent);
+}
+.widget-icon-title-module-icon {
+  width: var(--widget-icon-title-bay);
+  min-width: var(--widget-icon-title-bay);
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  border-inline-end: var(--widget-module-stroke, 2px) solid var(--widget-module-accent);
+  background: color-mix(in srgb, var(--widget-module-accent) 32%, #fff);
+}
+.widget-icon-title-module-icon > svg {
+  width: 28px;
+  height: 28px;
+  stroke-width: 2.5;
+}
+.widget-icon-title-module-copy {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  padding: 7px 9px;
+}
+.widget-icon-title-module-copy > strong {
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 1000;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.widget-icon-title-module-copy > small {
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  color: var(--widget-border, #243247);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.widget-icon-title-module-action {
+  display: grid;
+  place-items: center;
+  padding: 7px 8px 7px 0;
+}
+
+/* ── Rainbow surfaces ───────────────────────────────────────── */
+.widget-rainbow-panel {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding: 10px 10px 16px;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #243247);
+  border-radius: 7px;
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, #36E0F6 26%, transparent), transparent 34%),
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, #FF7AC8 24%, transparent), transparent 34%),
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, #A467F4 22%, transparent), transparent 36%),
+    radial-gradient(circle at 0% 100%, color-mix(in srgb, #C0F240 22%, transparent), transparent 36%),
+    #fff;
+}
+.widget-rainbow-divider {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 7px;
+  background: linear-gradient(90deg,
+    #FA618A 0 8.333%, #FF7F6B 8.333% 16.666%, #FFA85C 16.666% 25%,
+    #FFDA47 25% 33.333%, #C0F240 33.333% 41.666%, #3FEE56 41.666% 50%,
+    #4EE4BE 50% 58.333%, #36E0F6 58.333% 66.666%, #528FFA 66.666% 75%,
+    #A467F4 75% 83.333%, #F55EFC 83.333% 91.666%, #FF7AC8 91.666% 100%);
+}
+.widget-rainbow-panel > .widget-rainbow-divider {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+}
+
+/* ── Generic widget module frame + composable headers ───────── */
+.widget-module-frame {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border, #243247);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--widget-border, #243247);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color, #34cdea) 35%, transparent);
+}
+.widget-module-header {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  padding: 0;
+  border-block-end: var(--widget-module-stroke, 2px) solid var(--widget-border, #243247);
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 48%, #fff);
+}
+.widget-module-header.has-icon {
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+}
+.widget-module-header-icon {
+  width: 42px;
+  min-width: 42px;
+  display: grid;
+  place-items: center;
+  border-inline-end: var(--widget-module-stroke, 2px) solid var(--widget-border, #243247);
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 72%, #fff);
+}
+.widget-module-header-icon > svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2.5;
+}
+.widget-module-header-copy {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 1px;
+  padding: 5px 8px;
+}
+.widget-module-header-copy > strong {
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 1000;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.widget-module-header-copy > small {
+  min-width: 0;
+  font-size: 8px;
+  font-weight: 850;
+  line-height: 1;
+  opacity: .62;
+  text-transform: uppercase;
+}
+.widget-module-header-controls {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 4px 5px 4px 0;
+}
+.widget-module-frame-body {
+  min-width: 0;
+  padding: 9px;
+}
+.widget-module-frame-footer {
+  min-width: 0;
+  padding: 7px 9px;
+  border-block-start: var(--widget-module-stroke, 2px) solid var(--widget-border, #243247);
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 8%, #fff);
+}
+
+@container vt-widget (max-width: 430px) {
+  .widget-module-header-copy > small { display: none; }
+  .widget-module-header { min-height: 38px; }
+  .widget-module-header.has-icon { grid-template-columns: 38px minmax(0, 1fr) auto; }
+  .widget-module-header-icon { width: 38px; min-width: 38px; }
+  .widget-module-header-controls { gap: 2px; padding-inline-end: 3px; }
+}

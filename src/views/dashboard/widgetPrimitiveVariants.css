@@ -270,13 +270,17 @@
 }
 
 .widget-video-select-option {
+  box-sizing: border-box;
   width: 100%;
-  min-height: max(var(--vt-primitive-height, 38px), 38px);
+  height: var(--vt-primitive-height, 38px);
+  min-height: var(--vt-primitive-height, 38px);
+  max-height: var(--vt-primitive-height, 38px);
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px;
   align-items: center;
-  padding: 5px;
+  padding: 2px 4px;
+  overflow: hidden;
   border: 2px solid color-mix(in srgb, var(--widget-border, var(--widget-ink, #243247)) 72%, transparent);
   border-radius: var(--vt-primitive-radius, 7px);
   background: color-mix(in srgb, var(--vt-tone-bg, #fff) 86%, white);
@@ -286,18 +290,30 @@
 }
 
 
-/* Portalled selects mirror the closed trigger's exact surface and outline. */
-.widget-select-content.vt-sized-control {
+/* Portalled selects carry size/tone variables without inheriting trigger
+   fixed-height geometry. Every option row still matches the closed trigger. */
+.widget-select-content {
+  height: auto;
+  min-height: 0;
+  max-height: min(70vh, 420px);
+  overflow: hidden;
   border-width: var(--vt-primitive-stroke, 2px);
+  border-style: solid;
   border-color: var(--widget-select-stroke, var(--widget-select-ink, var(--widget-ink, #243247)));
   border-radius: var(--vt-primitive-radius, 7px);
   background: var(--widget-select-surface, #fff);
 }
 
-.widget-select-content.vt-sized-control .widget-select-item,
-.widget-select-content.vt-sized-control .widget-select-scroll {
+.widget-select-content .widget-select-viewport {
+  max-height: min(70vh, 420px);
+  overflow-y: auto;
+}
+
+.widget-select-content .widget-select-item {
+  box-sizing: border-box;
   min-height: var(--vt-primitive-height, 32px);
   height: var(--vt-primitive-height, 32px);
+  max-height: var(--vt-primitive-height, 32px);
   font-size: var(--vt-primitive-font, 11px);
 }
 
@@ -307,11 +323,18 @@
   border-color: var(--widget-color, #34cdea);
 }
 
-.widget-video-select-option img {
-  width: 64px;
+.widget-video-select-option img,
+.widget-video-select-option-placeholder {
+  height: max(10px, calc(var(--vt-primitive-height, 38px) - 6px));
+  width: auto;
   aspect-ratio: 16 / 9;
   object-fit: cover;
   border-radius: 3px;
+  flex: none;
+}
+.widget-video-select-option-placeholder {
+  display: block;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 14%, white);
 }
 
 .widget-video-select-option-copy {
@@ -334,6 +357,17 @@
   font-weight: 800;
   opacity: 0.55;
   text-transform: uppercase;
+}
+
+.widget-video-select-menu.is-height-18 .widget-video-select-option-copy small,
+.widget-video-select-menu.is-height-24 .widget-video-select-option-copy small {
+  display: none;
+}
+.widget-video-select-menu.is-height-18 .widget-video-select-option-copy strong {
+  font-size: 7px;
+}
+.widget-video-select-menu.is-height-24 .widget-video-select-option-copy strong {
+  font-size: 8px;
 }
 
 /* Keyword Engine-derived progress bars with copy over the fill. */

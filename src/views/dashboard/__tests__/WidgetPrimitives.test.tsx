@@ -31,11 +31,24 @@ import {
   resolveAlphabeticalSpectrumHue,
   WidgetIconButton,
   WidgetSizedButton,
+  WidgetStepper,
+  WidgetSplitCounter,
+  WidgetTinySpectrumIcon,
+  WIDGET_TINY_ICON_SET,
+  WidgetAccentRailModule,
+  WidgetIconTitleModule,
+  WidgetRainbowDivider,
+  WidgetRainbowPanel,
+  WidgetModuleHeader,
+  WidgetModuleFrame,
 } from "../WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
 import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"
 
 const variantsCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
+const matrixCss = readFileSync(new URL("../widgetMatrixPrimitives.css", import.meta.url), "utf8")
+const videoSelectCss = readFileSync(new URL("../widgetVideoSelectButtonScroll.css", import.meta.url), "utf8")
+const extensionSource = readFileSync(new URL("../WidgetPrimitiveExtensions.tsx", import.meta.url), "utf8")
 
 describe("widget viewport indicator geometry", () => {
   it.each([
@@ -324,6 +337,68 @@ describe("shared widget form primitives", () => {
   })
 })
 
+describe("expanded widget compound primitives", () => {
+  it("keeps the default stepper middle cell compact for two digits", () => {
+    const markup = renderToStaticMarkup(
+      <WidgetStepper label="Quantity" value={99} onChange={() => {}} min={0} max={99} />,
+    )
+    expect(markup).toContain("widget-stepper-value")
+    expect(matrixCss).toContain("width: 2.7ch")
+    expect(matrixCss).toContain("max-width: 2.7ch")
+  })
+
+  it("renders the split-left counter as two chevron controls plus a compact value cell", () => {
+    const markup = renderToStaticMarkup(
+      <WidgetSplitCounter label="Outputs" value={12} onChange={() => {}} min={0} max={99} />,
+    )
+    expect(markup).toContain("widget-split-counter-controls")
+    expect(markup).toContain('aria-label="Increase Outputs"')
+    expect(markup).toContain('aria-label="Decrease Outputs"')
+    expect(markup).toContain("widget-split-counter-value")
+    expect(matrixCss).toContain("grid-template-rows: repeat(2, minmax(0, 1fr))")
+  })
+
+  it("publishes exactly 50 tiny spectrum icons through the canonical primitive surface", () => {
+    expect(Object.keys(WIDGET_TINY_ICON_SET)).toHaveLength(50)
+    const markup = renderToStaticMarkup(
+      <WidgetTinySpectrumIcon name="zap" spectrum="lime" label="Quick win" />,
+    )
+    expect(markup).toContain("widget-tiny-spectrum-icon")
+    expect(markup).toContain('aria-label="Quick win"')
+  })
+
+  it("renders edge-to-edge rail, icon-title, rainbow, and generic module compounds", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <WidgetAccentRailModule spectrum="rose" title="Priority" detail="Today" />
+        <WidgetIconTitleModule spectrum="cyan" icon={<span>Icon</span>} title="Account" subtitle="Connected source" />
+        <WidgetRainbowPanel>System map</WidgetRainbowPanel>
+        <WidgetRainbowDivider />
+        <WidgetModuleFrame
+          header={<WidgetModuleHeader title="Module" controls={<WidgetSizedButton height={24}>Apply</WidgetSizedButton>} />}
+        >
+          Body
+        </WidgetModuleFrame>
+      </div>,
+    )
+    expect(markup).toContain("widget-accent-rail-module")
+    expect(markup).toContain("widget-icon-title-module")
+    expect(markup).toContain("widget-rainbow-panel")
+    expect(markup).toContain("widget-rainbow-divider")
+    expect(markup).toContain("widget-module-header-controls")
+    expect(matrixCss).toContain("inset-inline: 0")
+  })
+
+  it("uses one-row split-left video search and scrollbar-based dropdowns", () => {
+    expect(extensionSource).toContain("<WidgetSearchInput height={height}")
+    expect(extensionSource).not.toContain("widget-video-select-scroll-button")
+    expect(videoSelectCss).toContain("scrollbar-color")
+    expect(videoSelectCss).toContain("::-webkit-scrollbar")
+    expect(variantsCss).toContain("height: var(--vt-primitive-height, 38px)")
+    expect(variantsCss).toContain(".widget-select-content .widget-select-item")
+  })
+})
+
 // ═══════════════════════════════════════════════════════════════
 // A primitive that emits `is-<something>` as a class name renders
 // unstyled when the stylesheet has no matching rule, and nothing
@@ -333,11 +408,6 @@ describe("shared widget form primitives", () => {
 // of them, so all twelve painted the same royal fallback.
 // ═══════════════════════════════════════════════════════════════
 describe("spectrum tone classes", () => {
-  const matrixCss = readFileSync(
-    new URL("../widgetMatrixPrimitives.css", import.meta.url),
-    "utf8",
-  )
-
   it("defines every spectrum slot the primitives can emit", () => {
     for (const name of WIDGET_BADGE_SPECTRUM) {
       expect(

@@ -1,51 +1,76 @@
-/* Video selector menu: four-row viewport with explicit top/bottom scroll buttons.
-   Native scrollbar chrome is intentionally hidden; touch/wheel scrolling remains available. */
-.widget-video-select-menu.vt-sized-control {
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  overflow: visible !important;
-  grid-template-rows: auto auto minmax(0, auto) auto;
+/* Video selector menu: native/custom scrollbar, no top/bottom scroll buttons.
+   The trigger owns one canonical control height; the open menu owns an auto-height
+   list whose individual option rows use that exact same height. */
+.widget-video-select-menu {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+  grid-template-rows: auto minmax(0, auto);
+}
+
+.widget-video-select-search {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  background: var(--vt-tone-bg, #fff);
+}
+
+.widget-video-select-search > .widget-search-input {
+  width: 100%;
+  max-width: none;
+}
+
+.widget-video-select-search .widget-search-input > input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
 }
 
 .widget-video-select-options {
   display: grid;
   gap: 4px;
-  max-height: calc((max(var(--vt-primitive-height, 38px), 38px) + 4px) * 4 - 4px);
+  max-height: calc((var(--vt-primitive-height, 38px) + 4px) * 4 - 4px);
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  scroll-behavior: smooth;
+  scrollbar-width: auto;
+  scrollbar-color:
+    color-mix(in srgb, var(--widget-color, #34cdea) 76%, white)
+    color-mix(in srgb, var(--widget-color, #34cdea) 10%, white);
 }
-.widget-video-select-options::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
-.widget-video-select-scroll-button {
-  box-sizing: border-box;
-  width: 100%;
-  height: 22px;
-  min-height: 22px;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  border: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, #222));
-  border-radius: max(2px, calc(var(--vt-primitive-radius, 7px) - 2px));
-  background: color-mix(in srgb, var(--widget-color, #34cdea) 68%, white);
-  color: var(--widget-ink, var(--widget-border, #222));
-  cursor: pointer;
-  touch-action: manipulation;
+.widget-video-select-options::-webkit-scrollbar {
+  width: 11px;
 }
-.widget-video-select-scroll-button svg { width: 15px; height: 15px; stroke-width: 3; }
-.widget-video-select-scroll-button:active:not(:disabled) { transform: translateY(1px); }
-.widget-video-select-scroll-button:disabled { opacity: .28; cursor: default; }
+
+.widget-video-select-options::-webkit-scrollbar-track {
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 10%, white);
+}
+
+.widget-video-select-options::-webkit-scrollbar-thumb {
+  min-height: 34px;
+  border: 2px solid var(--vt-tone-stroke, var(--widget-border, #243247));
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 70%, white);
+}
+
+.widget-video-select-options::-webkit-scrollbar-thumb:hover {
+  background: var(--widget-color, #34cdea);
+}
 
 /* Keep menu corners intact and visually separate it from the closed trigger. */
-.widget-video-select-menu { top: calc(100% + 4px); border-radius: var(--vt-primitive-radius, 7px); }
-
-@media (pointer: coarse) {
-  .widget-video-select-scroll-button { height: 28px; min-height: 28px; }
+.widget-video-select-menu {
+  top: calc(100% + 4px);
+  border-radius: var(--vt-primitive-radius, 7px);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .widget-video-select-options { scroll-behavior: auto; }
+@media (pointer: coarse) {
+  .widget-video-select-options::-webkit-scrollbar {
+    width: 13px;
+  }
 }

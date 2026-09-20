@@ -361,3 +361,43 @@ Required invariant:
 - viewport: scrolls when option count exceeds available space.
 
 Mobile accessibility/density layers must not accidentally re-clamp the menu after the primitive layer has made it auto-height.
+
+
+## Compact counters and module compounds
+
+Canonical numeric controls now include two related compounds:
+
+- **WidgetStepper** — minus / value / plus. The value cell is intentionally only wide enough for a comfortable two-digit value; do not let it grow into a large empty center panel.
+- **WidgetSplitCounter** — a split-left counter. Its left bay is mathematically square after the outer stroke is removed, and that bay is divided horizontally into two equal 2:1 rectangles. The upper chevron increments and the lower chevron decrements. The numeric value sits in the compact right cell.
+
+Geometry:
+
+`splitBay = controlHeight - outerStroke - outerStroke`
+
+`chevronCellHeight = splitBay / 2`
+
+Therefore each chevron cell is `2:1` (width : height).
+
+Reusable compound/module primitives also include:
+
+- **WidgetAccentRailModule** — Daily Oracle-derived module with a semantic colored rail touching the module edge;
+- **WidgetIconTitleModule** — About VIEWTUBE-derived square colored icon bay plus title/subtitle copy;
+- **WidgetTinySpectrumIcon** + **WIDGET_TINY_ICON_SET** — 50 small reusable icon choices rendered through the ViewTube spectrum;
+- **WidgetRainbowPanel** and **WidgetRainbowDivider** — full-width spectrum surface and edge-to-edge divider;
+- **WidgetModuleFrame** and **WidgetModuleHeader** — generic module shell/header with a control slot for toggles, counters, buttons, dropdowns, and similar primitives.
+
+The UI Reference Library must render these actual production primitives, not visual copies.
+
+## Dropdown row and scrolling invariant
+
+Dropdowns use a scrollbar rather than dedicated top/bottom scroll buttons.
+
+Required geometry:
+
+- closed trigger = one canonical primitive height;
+- open option row = exactly the same canonical primitive height;
+- video-search row = the split-left search primitive, with magnifying-glass bay and input on one row;
+- menu container = auto height up to its bounded viewport;
+- viewport = vertically scrollable with visible scrollbar when options exceed the bound.
+
+Do not copy `.vt-sized-control` fixed-height root geometry onto the portalled/open menu container. Carry only the size/tone variables needed for rows and color.
