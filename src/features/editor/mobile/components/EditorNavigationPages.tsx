@@ -26,6 +26,8 @@ export interface EditorSettingsModel{
   onLayout?:(v:'auto'|'portrait'|'landscape')=>void;
   onAspect:(v:'portrait'|'landscape')=>void;
   onStyle:(v:string)=>void;
+  layoutDraggingEnabled?:boolean;
+  onLayoutDraggingEnabled?:(enabled:boolean)=>void;
   onBackToSite?:()=>void;
 }
 
@@ -66,6 +68,13 @@ function Settings({model}:{model?:EditorSettingsModel}){
   return <>
     <Section name="Site"><button style={{...button,width:'100%',background:CYAN,display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}} onClick={()=>model.onBackToSite?.()}><Upload size={14} style={{transform:'rotate(-90deg)'}}/>Back to Site</button></Section>
     <Section name="Interface & Phone Layout"><EditorViewSwitcher frontend={model.frontend} layout={model.layout??'auto'} onFrontend={model.onFrontend} onLayout={model.onLayout??(()=>{})}/></Section>
+    <Section name="Module Layout">
+      <div style={{fontSize:8,fontWeight:850,lineHeight:1.35,marginBottom:6,opacity:.68}}>Module drag handles stay hidden by default so they cannot cover the Preview or timeline. Turn dragging on only when you want to resize the workspace.</div>
+      <Grid>
+        <button style={{...button,background:!model.layoutDraggingEnabled?CYAN:'#fff'}} onClick={()=>model.onLayoutDraggingEnabled?.(false)}>Locked</button>
+        <button style={{...button,background:model.layoutDraggingEnabled?YELLOW:'#fff'}} onClick={()=>model.onLayoutDraggingEnabled?.(true)}>Dragging On</button>
+      </Grid>
+    </Section>
     <Section name="Video"><Grid>{(['portrait','landscape']as const).map(v=><button key={v} style={{...button,background:model.aspect===v?CYAN:'#fff'}} onClick={()=>model.onAspect(v)}>{v==='portrait'?'9:16':'16:9'}</button>)}</Grid></Section>
     <Section name="Editor Style"><Grid>{model.styleOptions.map(o=><button key={o.id} style={{...button,background:model.style===o.id?YELLOW:'#fff'}} onClick={()=>model.onStyle(o.id)}>{o.shortLabel||o.label}</button>)}</Grid></Section>
     <Section name="Feature System"><EditorFeatureManifest compact category="settings"/></Section>
