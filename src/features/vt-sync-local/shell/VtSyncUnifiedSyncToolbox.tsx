@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from "react"
 import { CheckSquare, ChevronDown, ChevronRight, Copy, RefreshCw, ShieldCheck, Square } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
-import { RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
+import { RetroAnalogToggle, RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
 import type {
  VtSyncAnalyticsWindow,
  VtSyncCategoryGroup,
@@ -75,9 +75,8 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
 }> = ({ isAuthenticated, isSyncing, videos, progress = null, queuedCategoryIds = [], datasetFreshness, syncError, videoCatalogCoverage, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
  const [selected, setSelected] = useState<string[]>(() => getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))
  const [retentionVideoIds, setRetentionVideoIds] = useState<string[]>([])
- // Lifetime only by default: every extra window costs one request per aggregate
- // dataset, so the cost is opted into rather than defaulted into. Lifetime is
- // always on because the stored dataset rows still key off it.
+ // Lifetime starts on, but every time window is independently toggleable.
+ // The engine receives the exact selected set rather than silently forcing lifetime.
  const [selectedWindows, setSelectedWindows] = useState<VtSyncAnalyticsWindow[]>(["lifetime"])
  const [videoSearch, setVideoSearch] = useState("")
  const [openGroups, setOpenGroups] = useState<Set<VtSyncCategoryGroup>>(
@@ -109,6 +108,10 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
  const selectedSet = useMemo(() => new Set(selected), [selected])
  const selectedUnitCount = useMemo(() => countVtSyncSelectedUnits(selected, availableUnits), [availableUnits, selected])
  const selectedQueryCount = useMemo(() => countVtSyncUnderlyingQueries(selected), [selected])
+ const allCategoryIds = useMemo(() => [...new Set(availableUnits.flatMap((unit) => unit.categoryIds))], [availableUnits])
+ const coreCategoryIds = useMemo(() => [...new Set(availableUnits.filter((unit) => unit.defaultEnabled).flatMap((unit) => unit.categoryIds))], [availableUnits])
+ const recommendedCategoryIds = useMemo(() => [...new Set(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))], [])
+ const selectionMatches = (target: string[]) => target.length === selected.length && target.every((id) => selectedSet.has(id))
  const retentionSelectedSet = useMemo(() => new Set(retentionVideoIds), [retentionVideoIds])
  const retentionEnabled = selectedSet.has("retention")
  const sortedVideos = useMemo(() => [...videos].sort((a, b) => (b.views || 0) - (a.views || 0)), [videos])
@@ -130,18 +133,15 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
  const windowCost = useMemo(() => {
   const perWindowCategories = selected.filter(vtSyncCategoryCostsPerWindow)
   const derivedCount = selected.length - perWindowCategories.length
-  const extraWindows = selectedWindows.filter((window) => window !== "lifetime").length
   return {
    perWindowCategories: perWindowCategories.length,
    derivedCount,
-   extraRequests: perWindowCategories.length * extraWindows,
-   extraWindows,
+   selectedWindowCount: selectedWindows.length,
+   estimatedWindowRequests: perWindowCategories.length * selectedWindows.length,
   }
  }, [selected, selectedWindows])
 
  const toggleWindow = (window: VtSyncAnalyticsWindow) => {
-  // Lifetime is not deselectable while the flat snapshot fields alias it.
-  if (window === "lifetime") return
   setSelectedWindows((current) => current.includes(window)
    ? current.filter((entry) => entry !== window)
    : [...current, window])
