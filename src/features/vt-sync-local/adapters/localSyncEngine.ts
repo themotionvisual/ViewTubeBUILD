@@ -2084,12 +2084,12 @@ const fillMissingChannelTotalsFromDaily = (
 }
 
 export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSnapshot, retentionVideoIds, forceFullVideoMetadata = false, contentOwnerId, selectedWindows, onProgress, onSnapshotCommit }: VtSyncLocalSyncOptions): Promise<VtSyncSnapshot> => {
- // Aggregate datasets cost one request per window, so an unspecified run stays
- // at lifetime — same requests, same quota as before windows existed. Lifetime
- // is always included: the flat snapshot fields still alias it.
- const aggregateWindows: VtSyncAnalyticsWindow[] = selectedWindows?.length
-  ? [...new Set<VtSyncAnalyticsWindow>(["lifetime", ...selectedWindows])]
-  : ["lifetime"]
+ // An unspecified caller keeps the legacy lifetime-only default. When the
+ // controller supplies a window array, honor that exact selection: lifetime is
+ // no longer silently inserted after the user turns it off.
+ const aggregateWindows: VtSyncAnalyticsWindow[] = selectedWindows === undefined
+  ? ["lifetime"]
+  : [...new Set<VtSyncAnalyticsWindow>(selectedWindows)]
  const visibleSelectedCategories = filterVtSyncVisibleCategoryIds(selectedCategories)
  const hiddenRequestedCategories = selectedCategories.filter((categoryId) => !visibleSelectedCategories.includes(categoryId))
  const selected = new Set(visibleSelectedCategories)
@@ -2463,7 +2463,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   if (shouldSync(selected, "channel_totals")) {
    updatePhase(progress, "channel_totals", { status: "running", startedAt: new Date().toISOString() }, onProgress)
    const previousChannelTotals = snapshot.channelTotals as Record<string, any> | null
-   const windows: VtSyncAnalyticsWindow[] = ANALYTICS_WINDOWS
+   const windows: VtSyncAnalyticsWindow[] = aggregateWindows
    const totalsEntries: Array<readonly [VtSyncAnalyticsWindow, Awaited<ReturnType<typeof channelTotalsForWindow>>]> = []
    for (const window of windows) {
     totalsEntries.push([window, await channelTotalsForWindow(token, window, channelStartDate)] as const)
