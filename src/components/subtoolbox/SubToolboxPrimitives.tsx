@@ -371,7 +371,18 @@ export interface SubToolboxTagEditorProps extends React.HTMLAttributes<HTMLDivEl
   removeIcon?: React.ReactNode
   label?: React.ReactNode
 }
-export const SubToolboxTagEditor: React.FC<SubToolboxTagEditorProps> = ({ level = "l0", tags, onTagsChange, addIcon = "+", saveIcon = "✓", removeIcon = "×", label = "TAGS", className, style, ...props }) => {
+export const SubToolboxTagEditor: React.FC<SubToolboxTagEditorProps> = ({
+  level = "l0",
+  tags,
+  onTagsChange,
+  addIcon = "+",
+  saveIcon = "✓",
+  removeIcon = "×",
+  label,
+  className,
+  style,
+  ...props
+}) => {
   const [editing, setEditing] = React.useState(false)
   const [draft, setDraft] = React.useState("")
   const save = () => {
@@ -380,14 +391,39 @@ export const SubToolboxTagEditor: React.FC<SubToolboxTagEditorProps> = ({ level 
     setDraft("")
     setEditing(false)
   }
+
   return (
     <div className={classes("vt-subtoolbox-tag-editor", editing && "is-editing", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
-      <strong className="vt-subtoolbox-tag-editor-label">{label}</strong>
+      {label ? <strong className="vt-subtoolbox-tag-editor-label">{label}</strong> : null}
       <div className="vt-subtoolbox-tag-editor-tags">
-        {tags.map((tag) => <SubToolboxRemovableTag key={tag} level={level} color={getAlphabeticalSpectrumColor(tag)} onRemove={() => onTagsChange?.(tags.filter((item) => item !== tag))} removeIcon={removeIcon}>{tag}</SubToolboxRemovableTag>)}
+        {tags.map((tag) => (
+          <SubToolboxRemovableTag
+            key={tag}
+            level={level}
+            onRemove={() => onTagsChange?.(tags.filter((item) => item !== tag))}
+            removeIcon={removeIcon}
+          >
+            {tag}
+          </SubToolboxRemovableTag>
+        ))}
         {!editing ? <button type="button" className="add" aria-label="Add tag" onClick={() => setEditing(true)}>{addIcon}</button> : null}
       </div>
-      {editing ? <div className="vt-subtoolbox-tag-editor-entry"><input autoFocus aria-label="New tag" value={draft} placeholder="ADD TAG" onChange={(event) => setDraft(event.target.value.toUpperCase())} onKeyDown={(event) => { if (event.key === "Enter") save(); if (event.key === "Escape") { setDraft(""); setEditing(false) } }} /><button type="button" className="submit" aria-label="Save tag" onClick={save}>{saveIcon}</button></div> : null}
+      {editing ? (
+        <>
+          <input
+            autoFocus
+            aria-label="New tag"
+            value={draft}
+            placeholder="ADD TAG"
+            onChange={(event) => setDraft(event.target.value.toUpperCase())}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") save()
+              if (event.key === "Escape") { setDraft(""); setEditing(false) }
+            }}
+          />
+          <button type="button" className="submit" aria-label="Save tag" onClick={save}>{saveIcon}</button>
+        </>
+      ) : null}
     </div>
   )
 }
