@@ -38,10 +38,12 @@ export const WidgetSizedSelect:React.FC<{value:string;onChange:(value:string)=>v
 
 export interface WidgetVideoSelectOption {value:string;label:string;thumbnail?:string;meta?:string;duration?:string;views?:string}
 const resolveVideoOptionMeta = (option:WidgetVideoSelectOption) => {
- const [durationFromMeta="",...rest]=String(option.meta||"").split("·").map(part=>part.trim()).filter(Boolean)
+ const parts=String(option.meta||"").split("·").map(part=>part.trim()).filter(Boolean)
+ const first=parts[0]||""
+ const firstIsDuration=/^\d{1,2}:\d{2}(?::\d{2})?$/.test(first)
  return {
-  duration: option.duration || durationFromMeta,
-  views: option.views || rest.join(" · "),
+  duration: option.duration || (firstIsDuration?first:""),
+  views: option.views || (firstIsDuration?parts.slice(1):parts).join(" · "),
  }
 }
 
