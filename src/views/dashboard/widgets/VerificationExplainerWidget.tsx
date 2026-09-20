@@ -89,7 +89,7 @@ export const VerificationExplainerWidget: React.FC<
         >
           {page === "system" ? (
             <div className="about-vt__page is-system">
-              <WidgetSection className="about-vt__intro">
+              <WidgetSection edge="full" className="about-vt__intro">
                 <div className="about-vt__intro-copy">
                   <div className="about-vt__intro-row">
                     <WidgetBadge height={18}>CREATOR OS</WidgetBadge>
@@ -141,14 +141,14 @@ export const VerificationExplainerWidget: React.FC<
                 </div>
               </WidgetSection>
 
-              <WidgetSection className="about-vt__handoff">
+              <WidgetSection edge="full" className="about-vt__handoff">
                 <Sparkles size={18} aria-hidden="true" />
                 <p><strong>THE LOOP:</strong> analytics becomes intelligence, intelligence becomes action, action becomes content, and every result becomes better context for the next decision.</p>
               </WidgetSection>
             </div>
           ) : (
             <div className="about-vt__page is-trust">
-              <WidgetSection className="about-vt__intro is-trust-intro">
+              <WidgetSection edge="full" className="about-vt__intro is-trust-intro">
                 <div className="about-vt__intro-copy">
                   <div className="about-vt__intro-row">
                     <WidgetBadge height={18} icon={<LockKeyhole size={11} />}>CONNECTION MAP</WidgetBadge>
