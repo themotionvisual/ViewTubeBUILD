@@ -14,7 +14,7 @@ describe("Video Asset Engine dashboard registration", () => {
     expect(widget.minSize).toBe("third")
     expect(widget.maxSize).toBe("full")
     expect(widget.defaultHeight).toBe("tall")
-    expect(widget.minHeight).toBe("medium")
+    expect(widget.minHeight).toBe("tall")
     expect(widget.maxHeight).toBe("xtall")
     expect(widget.responsiveMode).toBe("container")
   })
