@@ -83,39 +83,39 @@
 
 /* ── Split-left icon bay variants ───────────────────────────── */
 .widget-split-button.is-left-split .widget-split-button-icon,
-.widget-video-select-trigger .widget-video-select-trigger-icon {
+.widget-video-select-trigger .widget-video-select-trigger-selector {
   color: inherit;
 }
 
 /* White icon stroke on a full colored bay. */
 .widget-split-button.is-left-split.is-icon-white-on-color .widget-split-button-icon,
-.widget-video-select-trigger.is-icon-white-on-color .widget-video-select-trigger-icon {
+.widget-video-select-trigger.is-icon-white-on-color .widget-video-select-trigger-selector {
   background: var(--widget-color, #34cdea) !important;
   color: #fff !important;
 }
 
 .widget-split-button.is-left-split.is-icon-white-on-color .widget-split-button-icon svg,
-.widget-video-select-trigger.is-icon-white-on-color .widget-video-select-trigger-icon svg {
+.widget-video-select-trigger.is-icon-white-on-color .widget-video-select-trigger-selector svg {
   stroke: #fff !important;
   color: #fff !important;
 }
 
 /* Colored icon stroke on a light/white bay. */
 .widget-split-button.is-left-split.is-icon-color-on-light .widget-split-button-icon,
-.widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-icon {
+.widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-selector {
   background: color-mix(in srgb, var(--widget-color, #34cdea) 14%, white) !important;
   color: var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247))) !important;
 }
 
 .widget-split-button.is-left-split.is-icon-color-on-light .widget-split-button-icon svg,
-.widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-icon svg {
+.widget-video-select-trigger.is-icon-color-on-light .widget-video-select-trigger-selector svg {
   stroke: var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247))) !important;
   color: var(--vt-tone-stroke, var(--widget-border, var(--widget-ink, #243247))) !important;
 }
 
 /* 18px split controls keep no separator stroke, regardless of icon mode. */
 .widget-split-button.is-left-split.is-height-18 .widget-split-button-icon,
-.widget-video-select-trigger.is-height-18 .widget-video-select-trigger-icon {
+.widget-video-select-trigger.is-height-18 .widget-video-select-trigger-selector {
   border-right: 0 !important;
 }
 
@@ -123,14 +123,9 @@
    All split/video glyphs consume the same canonical icon tokens as square
    primitives. The chevron is intentionally slightly calmer. */
 .widget-split-button.is-left-split .widget-split-button-icon svg,
-.widget-video-select-trigger .widget-video-select-trigger-icon svg {
+.widget-video-select-trigger .widget-video-select-trigger-selector svg {
   width: var(--vt-primitive-icon) !important;
   height: var(--vt-primitive-icon) !important;
-  stroke-width: var(--vt-primitive-icon-stroke) !important;
-}
-.widget-video-select-trigger .widget-video-select-trigger-chevron svg {
-  width: calc(var(--vt-primitive-icon) * .78) !important;
-  height: calc(var(--vt-primitive-icon) * .78) !important;
   stroke-width: var(--vt-primitive-icon-stroke) !important;
 }
 
@@ -178,6 +173,16 @@
   background: #fff !important;
 }
 
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control::placeholder {
+  color: currentColor;
+  opacity: .52;
+  transition: opacity 120ms ease;
+}
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control:focus::placeholder,
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control:focus-visible::placeholder {
+  opacity: .12;
+}
+
 
 /* Canonical type ownership. Keep text-bearing sized controls on the primitive
    font token even when legacy .vt-button / split / Radix rules load later. */
@@ -202,4 +207,130 @@
 }
 :where(.dashboard-barrier) .widget-select-content.vt-sized-control :is(.widget-select-item,.widget-select-scroll) {
   font-size: var(--vt-primitive-font) !important;
+}
+
+
+/* ── Structural tone differentiation ──────────────────────────
+   Secondary is an inverse construction, not another pale tint. Keep Default
+   neutral and Primary emphasized/tinted; Secondary uses saturated structural
+   surfaces with white foreground where contrast is intended. */
+
+/* Ordinary action/button family. */
+.vt-button.vt-sized-control.is-tone-secondary,
+.widget-action.vt-sized-control.is-tone-secondary {
+  background: var(--widget-color, #34cdea) !important;
+  border-color: var(--widget-color, #34cdea) !important;
+  color: #fff !important;
+}
+.vt-button.vt-sized-control.is-tone-secondary svg,
+.widget-action.vt-sized-control.is-tone-secondary svg {
+  color: #fff !important;
+  stroke: #fff !important;
+}
+
+/* Split button: filled chassis with a subtly separated icon bay. */
+.widget-split-button.vt-sized-control.is-tone-secondary {
+  background: var(--widget-color, #34cdea) !important;
+  border-color: var(--widget-color, #34cdea) !important;
+  color: #fff !important;
+}
+.widget-split-button.vt-sized-control.is-tone-secondary .widget-split-button-icon {
+  border-inline-end-color: color-mix(in srgb, #fff 30%, transparent) !important;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 86%, white) !important;
+  color: #fff !important;
+}
+.widget-split-button.vt-sized-control.is-tone-secondary .widget-split-button-icon svg {
+  color: #fff !important;
+  stroke: #fff !important;
+}
+
+/* Text input: saturated resting state with white copy; focus deliberately
+   flips back to a white editing surface so the state change is obvious. */
+.widget-text-input.vt-sized-control.is-tone-secondary {
+  background: var(--widget-color, #34cdea) !important;
+  border-color: var(--widget-color, #34cdea) !important;
+  color: #fff !important;
+  caret-color: #fff !important;
+}
+.widget-text-input.vt-sized-control.is-tone-secondary::placeholder {
+  color: #fff !important;
+  opacity: .56;
+}
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control.is-tone-secondary:focus,
+:where(.dashboard-barrier) .widget-text-input.vt-sized-control.is-tone-secondary:focus-visible {
+  background: #fff !important;
+  border-color: var(--widget-color, #34cdea) !important;
+  color: var(--widget-color, #34cdea) !important;
+  caret-color: var(--widget-color, #34cdea) !important;
+}
+
+/* Standard select: saturated closed trigger with white label/chevron. */
+.widget-select-trigger.vt-sized-control.is-tone-secondary {
+  background: var(--widget-color, #34cdea) !important;
+  border-color: var(--widget-color, #34cdea) !important;
+  color: #fff !important;
+}
+.widget-select-trigger.vt-sized-control.is-tone-secondary svg {
+  color: #fff !important;
+  stroke: #fff !important;
+}
+
+/* Portalled secondary menu carries the same inverse tone so opening the
+   control does not fall back to the default white/ink construction. */
+.widget-select-content.is-tone-secondary {
+  --widget-select-surface: var(--widget-color, #34cdea);
+  --widget-select-ink: #fff;
+  --widget-select-stroke: var(--widget-color, #34cdea);
+  background: var(--widget-color, #34cdea) !important;
+  border-color: var(--widget-color, #34cdea) !important;
+  color: #fff !important;
+}
+.widget-select-content.is-tone-secondary .widget-select-item {
+  background: var(--widget-color, #34cdea);
+  color: #fff;
+}
+.widget-select-content.is-tone-secondary .widget-select-item[data-highlighted] {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 82%, white);
+  outline: none;
+}
+.widget-select-content.is-tone-secondary .widget-select-item[data-state="checked"] {
+  background: #fff;
+  color: var(--widget-color, #34cdea);
+}
+.widget-select-content.is-tone-secondary .widget-select-item[data-state="checked"] svg {
+  color: var(--widget-color, #34cdea) !important;
+  stroke: var(--widget-color, #34cdea) !important;
+}
+
+/* Video select: saturated body + white title, while the split VIDEO/chevron
+   bay stays a distinct saturated structural block. */
+.widget-video-select-trigger.vt-sized-control.is-tone-secondary {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 78%, white) !important;
+  border-color: var(--widget-color, #34cdea) !important;
+  color: #fff !important;
+}
+.widget-video-select-trigger.vt-sized-control.is-tone-secondary .widget-video-select-trigger-selector {
+  border-inline-end-color: color-mix(in srgb, #fff 30%, transparent) !important;
+  background: var(--widget-color, #34cdea) !important;
+  color: #fff !important;
+}
+.widget-video-select-trigger.vt-sized-control.is-tone-secondary .widget-video-select-trigger-selector svg {
+  color: #fff !important;
+  stroke: #fff !important;
+}
+.widget-video-select-trigger.vt-sized-control.is-tone-secondary .widget-video-select-trigger-copy > span {
+  color: #fff !important;
+}
+
+/* Micro controls stay borderless even when the alternate tone is saturated. */
+:is(
+  .vt-button,
+  .widget-action,
+  .widget-split-button,
+  .widget-text-input,
+  .widget-select-trigger,
+  .widget-video-select-trigger
+).vt-sized-control.is-height-18.is-tone-secondary {
+  border: 0 !important;
+  box-shadow: none !important;
 }

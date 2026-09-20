@@ -1,8 +1,11 @@
 import React, { useMemo, useState } from "react"
 import {
+  ArrowRight,
   Award,
+  BarChart3,
   Bell,
   BadgeCheck,
+  Brain,
   Bookmark,
   Check,
   Circle,
@@ -15,11 +18,13 @@ import {
   Plus,
   RotateCcw,
   Save,
+  Settings,
   Sparkles,
   Star,
   Target,
   TrendingUp,
   UploadCloud,
+  Zap,
 } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
 import {
@@ -58,8 +63,18 @@ import {
   WidgetSizedSelect,
   WidgetSpectrumFillBadge,
   WidgetStepper,
+  WidgetSplitCounter,
   WidgetTextInput,
   WidgetToggleSwitch,
+  WidgetTinySpectrumIcon,
+  WIDGET_TINY_ICON_SET,
+  WIDGET_METRIC_ICON_SET,
+  WidgetAccentRailModule,
+  WidgetIconTitleModule,
+  WidgetRainbowPanel,
+  WidgetRainbowDivider,
+  WidgetModuleHeader,
+  WidgetModuleFrame,
   WidgetVideoSelect,
   type WidgetControlHeight,
   type WidgetPrimitiveTone,
@@ -72,6 +87,7 @@ import { getDashboardWidgetPaletteColors } from "../../../styles/toolboxPalette"
 type ReferenceCategory =
   | "all"
   | "controls"
+  | "size"
   | "video"
   | "progress"
   | "tags"
@@ -180,10 +196,13 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   const [headerToggleValue, setHeaderToggleValue] = useState("draft-1")
   const [stepperValue, setStepperValue] = useState("Step 1 of 4")
   const [stepTabValue, setStepTabValue] = useState("meta")
+  const [moduleWindow, setModuleWindow] = useState("28 DAYS")
+  const [commentHeaderTab, setCommentHeaderTab] = useState<"unreplied" | "history">("unreplied")
+  const [commentHeaderPage, setCommentHeaderPage] = useState(1)
   const [switchValue, setSwitchValue] = useState(true)
   const [checkboxValue, setCheckboxValue] = useState(true)
   const [radioValue, setRadioValue] = useState("b")
-  const [textValue, setTextValue] = useState("Sample Title Input")
+  const [textValue, setTextValue] = useState("")
   const [tags, setTags] = useState(["viewtube", "analytics", "creator"])
   const [hasThumbnail, setHasThumbnail] = useState(false)
   const [statePanelStatus, setStatePanelStatus] = useState<"loading" | "ready" | "empty" | "blocked" | "stale" | "error">("ready")
@@ -193,6 +212,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   const [matrixRadio, setMatrixRadio] = useState<WidgetPrimitiveTone>("primary")
   const [matrixCheck, setMatrixCheck] = useState(true)
   const [matrixSearch, setMatrixSearch] = useState("")
+  const [sizeGridMode, setSizeGridMode] = useState(false)
   const previewWidget = useMemo(
     () => ({ ...widget, ...getDashboardWidgetPaletteColors(paletteIndex) }),
     [paletteIndex, widget],
@@ -206,6 +226,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
       items={[
         { id: "all", label: "ALL" },
         { id: "controls", label: "CONTROLS" },
+        { id: "size", label: "SIZE" },
         { id: "matrix", label: "MATRIX" },
         { id: "video", label: "VIDEO" },
         { id: "progress", label: "BARS" },
@@ -308,6 +329,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                     height={height}
                     tone={tone}
                     value={textValue}
+                    placeholder="Sample title input"
                     onChange={(event) => setTextValue(event.currentTarget.value)}
                     aria-label={`${tone} ${height}px text input`}
                   />
@@ -350,15 +372,68 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           </WidgetSection>
         )}
 
+        {activeCategory === "size" && (
+          <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
+            {sectionHeading("Size × Color Matrix", "18 → 24 → 32 → 38 · default / primary / secondary")}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="m-0 max-w-[56ch] text-[10px] font-bold uppercase opacity-60">
+                Flow mode keeps every component only as wide as its own content. Grid mode equalizes component widths and fixes every row to three columns.
+              </p>
+              <WidgetToggleSwitch
+                height={24}
+                tone={sizeGridMode ? "primary" : "default"}
+                checked={sizeGridMode}
+                onChange={setSizeGridMode}
+                label="Equal-width grid mode"
+              />
+            </div>
+            <div className="widget-reference-size-matrix">
+              {CONTROL_HEIGHTS.map((height) => (
+                <div className="widget-reference-size-band" key={height}>
+                  <div className="widget-reference-size-band-title">
+                    <strong>{height}px</strong>
+                    <span>All three color treatments before the next size</span>
+                  </div>
+                  {CONTROL_TONES.map((tone) => (
+                    <div className="widget-reference-size-tone" key={tone}>
+                      <small>{tone}</small>
+                      <div className={`widget-reference-size-flow ${sizeGridMode ? "is-grid" : ""}`.trim()}>
+                        <div className="widget-reference-size-cell"><WidgetSizedButton height={height} tone={tone}>Apply</WidgetSizedButton></div>
+                        <div className="widget-reference-size-cell"><WidgetLeftSplitButton height={height} tone={tone} iconStyle="white-on-color" icon={<Sparkles />}>Create Asset</WidgetLeftSplitButton></div>
+                        <div className="widget-reference-size-cell"><WidgetLeftSplitButton height={height} tone={tone} iconStyle="color-on-light" icon={<Save />}>Save Draft</WidgetLeftSplitButton></div>
+                        <div className="widget-reference-size-cell"><WidgetTextInput height={height} tone={tone} placeholder="Video title" aria-label={`${height}px ${tone} input`} /></div>
+                        <div className="widget-reference-size-cell"><WidgetSizedSelect height={height} tone={tone} value={selectValue} onChange={setSelectValue} label={`${height}px ${tone} visibility`} options={[{value:"public",label:"PUBLIC"},{value:"unlisted",label:"UNLISTED"},{value:"private",label:"PRIVATE"}]} /></div>
+                        <div className="widget-reference-size-cell"><WidgetVideoSelect className="widget-reference-size-video" height={height} tone={tone} value={selectedVideo} onChange={setSelectedVideo} label={`${height}px ${tone} video`} options={VIDEO_OPTIONS} /></div>
+                        <div className="widget-reference-size-cell"><WidgetProgressBar className="widget-reference-natural-progress" height={height} tone={tone} value={64} label="Progress" displayValue="64%" /></div>
+                        <div className="widget-reference-size-cell"><WidgetIconButton height={height} tone={tone} label="Add item" icon={<Plus />} /></div>
+                        <div className="widget-reference-size-cell"><WidgetIconBadge height={height} tone={tone} label="Saved" icon={<Star />} /></div>
+                        <div className="widget-reference-size-cell"><WidgetStepper height={height} tone={tone} label={`${height}px ${tone} stepper`} value={matrixStepper} onChange={setMatrixStepper} min={0} max={99} /></div>
+                        <div className="widget-reference-size-cell"><WidgetSplitCounter height={height} tone={tone} label={`${height}px ${tone} counter`} value={matrixStepper} onChange={setMatrixStepper} min={0} max={99} /></div>
+                        <div className="widget-reference-size-cell"><WidgetPagination height={height} tone={tone} page={matrixPage} pageCount={3} onChange={setMatrixPage} /></div>
+                        <div className="widget-reference-size-cell"><WidgetLeftSplitBadge height={height} tone={tone} icon={<Check />}>Ready</WidgetLeftSplitBadge></div>
+                        <div className="widget-reference-size-cell"><WidgetSearchInput height={height} tone={tone} label={`${height}px ${tone} search`} placeholder="Search" /></div>
+                        <div className="widget-reference-size-cell"><WidgetLiveBadge height={height} tone={tone}>Live</WidgetLiveBadge></div>
+                        <div className="widget-reference-size-cell"><WidgetToggleSwitch height={height} tone={tone} label={`${height}px ${tone} toggle`} checked={matrixToggle} onChange={setMatrixToggle} /></div>
+                        <div className="widget-reference-size-cell"><WidgetRadio height={height} tone={tone} label={`${height}px ${tone} radio`} checked={matrixRadio === tone} onChange={() => setMatrixRadio(tone)} /></div>
+                        <div className="widget-reference-size-cell"><WidgetCheckbox height={height} tone={tone} label={`${height}px ${tone} checkbox`} checked={matrixCheck} onChange={setMatrixCheck} /></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </WidgetSection>
+        )}
+
         {(activeCategory === "all" || activeCategory === "video") && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("2. Video Select", "Video Manager-derived dropdown")}
             <p className="text-[10px] font-bold uppercase opacity-60">
-              Both split-icon treatments are available: white icon on the colored bay, or widget-colored icon on a light bay.
+              The closed selector uses a split-left VIDEO / chevron bay. The selected title wraps naturally into two or three lines without ellipsis.
             </p>
             {(["white-on-color", "color-on-light"] as WidgetSplitIconStyle[]).map((iconStyle) => (
               <div className="widget-reference-family" key={iconStyle}>
-                {familyHeading("Video Selector", iconStyle === "white-on-color" ? "White icon / colored bay" : "Colored icon / light bay")}
+                {familyHeading("Video Selector", iconStyle === "white-on-color" ? "White VIDEO/chevron on colored bay" : "Colored VIDEO/chevron on light bay")}
                 <ToneRows
                   render={(tone, height) => (
                     <WidgetVideoSelect
@@ -549,6 +624,216 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   />
                 )}
               />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Split-Left Counters", "Square bay = two 2:1 chevron buttons")}
+              <ToneRows
+                render={(tone, height) => (
+                  <WidgetSplitCounter
+                    height={height}
+                    tone={tone}
+                    label="Split counter quantity"
+                    value={matrixStepper}
+                    onChange={setMatrixStepper}
+                    min={0}
+                    max={99}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Daily Oracle Accent Rail", "Reusable edge-to-edge colored status/action module")}
+              <div className="grid gap-2">
+                <WidgetAccentRailModule
+                  spectrum="rose"
+                  title="Publish cadence needs attention"
+                  detail="The color rail touches the outer module stroke."
+                  action={<WidgetIconButton height={32} tone="secondary" label="Open upload" icon={<UploadCloud />} />}
+                />
+                <WidgetAccentRailModule
+                  spectrum="cyan"
+                  title="Audience signal found"
+                  detail="Use the rail color for a meaningful category or status."
+                  action={<WidgetIconButton height={32} tone="default" label="Open insight" icon={<ArrowRight />} />}
+                />
+              </div>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Icon + Title Modules", "About VIEWTUBE-style square icon bay + copy")}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <WidgetIconTitleModule spectrum="cyan" icon={<Brain />} title="Channel Brain" subtitle="Context, memory, and recommendations" />
+                <WidgetIconTitleModule spectrum="royal" icon={<BarChart3 />} title="Analytics" subtitle="Canonical channel performance data" />
+                <WidgetIconTitleModule spectrum="lime" icon={<Zap />} title="Quick Action" subtitle="One-tap creator workflow handoff" />
+                <WidgetIconTitleModule spectrum="purple" icon={<Settings />} title="Control" subtitle="Preferences and system configuration" />
+              </div>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Rainbow Surfaces", "Full-bleed gradient panel + divider line")}
+              <WidgetRainbowPanel>
+                <div className="grid gap-1">
+                  <strong className="text-[12px] font-black uppercase">ViewTube Spectrum Surface</strong>
+                  <span className="text-[9px] font-bold uppercase opacity-60">Gradient reaches every module edge; the divider spans left to right.</span>
+                </div>
+              </WidgetRainbowPanel>
+              <WidgetRainbowDivider />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Tiny Colored Icons", "62 reusable 18px icons")}
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(WIDGET_TINY_ICON_SET) as Array<keyof typeof WIDGET_TINY_ICON_SET>).map((name, index) => {
+                  const metricIcon = WIDGET_METRIC_ICON_SET.find((item) => item.name === name)
+                  return (
+                    <div key={name} className="grid justify-items-center gap-1">
+                      <WidgetTinySpectrumIcon
+                        name={name}
+                        spectrum={metricIcon?.spectrum ?? WIDGET_BADGE_SPECTRUM[index % WIDGET_BADGE_SPECTRUM.length]}
+                        label={metricIcon?.label ?? name}
+                      />
+                      <small className="text-[7px] font-black uppercase opacity-55">{metricIcon?.label ?? name}</small>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Canonical Metric Icons", "12 Data Visual metrics mapped to the 12 spectrum colors")}
+              <div className="flex flex-wrap gap-3">
+                {WIDGET_METRIC_ICON_SET.map((item) => (
+                  <div key={item.metric} className="grid max-w-[74px] justify-items-center gap-1 text-center">
+                    <WidgetTinySpectrumIcon name={item.name} spectrum={item.spectrum} label={item.label} height={24} />
+                    <small className="text-[7px] font-black uppercase leading-[1.05] opacity-65">{item.label}</small>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Widget Modules", "Navigation primitives manifested as real header controls")}
+              <div className="grid gap-3">
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<BarChart3 />}
+                      title="Channel Overview"
+                      subtitle="Time window"
+                      controls={
+                        <WidgetHeaderStepper
+                          label="Channel overview time window"
+                          value={moduleWindow}
+                          onPrevious={() => setModuleWindow("7 DAYS")}
+                          onNext={() => setModuleWindow("28 DAYS")}
+                        />
+                      }
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">The canonical header stepper becomes the time-window controller used by an analytics widget.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Bell />}
+                      title="Comment Responder"
+                      subtitle="View + comment counter"
+                      controls={
+                        <span className="widget-module-header-nav-cluster">
+                          <WidgetHeaderToggle
+                            label="Comment responder view example"
+                            value={commentHeaderTab}
+                            items={[{ id: "unreplied", label: "NEW" }, { id: "history", label: "OLD" }]}
+                            onChange={setCommentHeaderTab}
+                          />
+                          <WidgetHeaderStepper
+                            label="Comment pagination example"
+                            value={`${commentHeaderPage} / 12`}
+                            canPrevious={commentHeaderPage > 1}
+                            canNext={commentHeaderPage < 12}
+                            onPrevious={() => setCommentHeaderPage((current) => Math.max(1, current - 1))}
+                            onNext={() => setCommentHeaderPage((current) => Math.min(12, current + 1))}
+                          />
+                        </span>
+                      }
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">This mirrors the Comment Responder header: NEW/OLD mode plus the current comment counter.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Layers />}
+                      title="Publishing Workflow"
+                      subtitle="Step navigation"
+                      controls={
+                        <WidgetStepTabs
+                          label="Header publishing stages"
+                          value={stepTabValue}
+                          items={[
+                            { id: "meta", label: "DETAILS" },
+                            { id: "options", label: "OPTIONS" },
+                            { id: "review", label: "VERIFY" },
+                          ]}
+                          onChange={setStepTabValue}
+                        />
+                      }
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">Step tabs can live directly in a widget header when the module itself has sequential pages.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Settings />}
+                      title="Auto Chapters"
+                      subtitle="Header switch"
+                      controls={<WidgetSwitch label="Automatic Chapters" checked={switchValue} onChange={setSwitchValue} />}
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">The navigation switch becomes a compact persistent header setting.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Check />}
+                      title="Embed Permission"
+                      subtitle="Header checkbox"
+                      controls={<WidgetChoice label="Allow Embedding" checked={checkboxValue} onChange={() => setCheckboxValue(!checkboxValue)} />}
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">A canonical choice control can expose a persistent binary publishing option from the header.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Sparkles />}
+                      title="Reply Mode"
+                      subtitle="Header radio group"
+                      controls={
+                        <span className="widget-module-header-nav-cluster is-choice-cluster">
+                          <WidgetChoice type="radio" name="module-reply-mode" value="a" label="AI" checked={radioValue === "a"} onChange={() => setRadioValue("a")} />
+                          <WidgetChoice type="radio" name="module-reply-mode" value="b" label="MANUAL" checked={radioValue === "b"} onChange={() => setRadioValue("b")} />
+                        </span>
+                      }
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">Radio choices can become a compact header mode selector without adding another interior toolbar.</p>
+                </WidgetModuleFrame>
+              </div>
             </div>
           </WidgetSection>
         )}
@@ -765,7 +1050,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
       </WidgetScrollArea>
 
       <WidgetFooter className="widget-toolbar widget-workflow-toolbar">
-        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.3 · 12 palettes + spectrum tags</span>
+        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.5 · size/color matrix + 62 icon set</span>
         <WidgetLeftSplitButton height={32} tone="primary" iconStyle="white-on-color" icon={<Check />}>
           Standard Compliant
         </WidgetLeftSplitButton>

@@ -361,3 +361,167 @@ Required invariant:
 - viewport: scrolls when option count exceeds available space.
 
 Mobile accessibility/density layers must not accidentally re-clamp the menu after the primitive layer has made it auto-height.
+
+
+## Compact counters and module compounds
+
+Canonical numeric controls now include two related compounds:
+
+- **WidgetStepper** — minus / value / plus. The value cell is intentionally only wide enough for a comfortable two-digit value; do not let it grow into a large empty center panel.
+- **WidgetSplitCounter** — a split-left counter. Its left bay is mathematically square after the outer stroke is removed, and that bay is divided horizontally into two equal 2:1 rectangles. The upper chevron increments and the lower chevron decrements. The numeric value sits in the compact right cell.
+
+Geometry:
+
+`splitBay = controlHeight - outerStroke - outerStroke`
+
+`chevronCellHeight = splitBay / 2`
+
+Therefore each chevron cell is `2:1` (width : height).
+
+Reusable compound/module primitives also include:
+
+- **WidgetAccentRailModule** — Daily Oracle-derived module with a semantic colored rail touching the module edge;
+- **WidgetIconTitleModule** — About VIEWTUBE-derived square colored icon bay plus title/subtitle copy;
+- **WidgetTinySpectrumIcon** + **WIDGET_TINY_ICON_SET** — 50 small reusable icon choices rendered through the ViewTube spectrum;
+- **WidgetRainbowPanel** and **WidgetRainbowDivider** — full-width spectrum surface and edge-to-edge divider;
+- **WidgetModuleFrame** and **WidgetModuleHeader** — generic module shell/header with a control slot for toggles, counters, buttons, dropdowns, and similar primitives.
+
+The UI Reference Library must render these actual production primitives, not visual copies.
+
+## Dropdown row and scrolling invariant
+
+Dropdowns use a scrollbar rather than dedicated top/bottom scroll buttons.
+
+Required geometry:
+
+- closed trigger = one canonical primitive height;
+- open option row = exactly the same canonical primitive height;
+- video-search row = the split-left search primitive, with magnifying-glass bay and input on one row;
+- menu container = auto height up to its bounded viewport;
+- viewport = vertically scrollable with visible scrollbar when options exceed the bound.
+
+Do not copy `.vt-sized-control` fixed-height root geometry onto the portalled/open menu container. Carry only the size/tone variables needed for rows and color.
+
+
+## UI Reference size-first certification page
+
+The UI Reference Library includes a dedicated **SIZE** page whose ordering is size-first, then color:
+
+1. 18px — default, primary, secondary
+2. 24px — default, primary, secondary
+3. 32px — default, primary, secondary
+4. 38px — default, primary, secondary
+
+Normal flow mode must keep every primitive at natural/content width so mixed control widths can be inspected together. Grid mode is an explicit comparison mode: it equalizes the primitive widths and uses a fixed three-column row so alignment defects become obvious.
+
+Do not duplicate primitive families merely to demonstrate sizing. The same production primitive should be rendered into the size-first matrix.
+
+## Video select closed-trigger anatomy
+
+The canonical closed video selector uses two regions:
+
+- a square split-left bay divided horizontally into equal halves;
+- selected video content.
+
+The top half reads **VIDEO**. The bottom half contains the open/close chevron. There is no right-side chevron and no file icon.
+
+The selected video title wraps naturally into the available space. Never apply ellipsis to the closed selected title; use two or three compact lines as the size permits.
+
+## Input filler-copy behavior
+
+Filler copy belongs in the native `placeholder`, not in the input value.
+
+- Unfocused: placeholder is visible at reduced opacity.
+- Focused while empty: placeholder becomes mostly transparent and the caret starts at the far-left editing origin.
+- First typed character: the browser removes the placeholder naturally.
+- Never prefill demonstration/filler copy as the actual value merely to make an empty input look occupied.
+
+## Canonical 12-metric tiny icon map
+
+The tiny-icon library reserves one icon/color pair for each canonical Data Visual metric, in `VT_VISUAL_METRIC_ORDER` and therefore in the same 12-stop spectrum order:
+
+- rose — Views
+- coral — Engaged Views
+- orange — Watch Time
+- yellow — Subscribers
+- lime — Revenue
+- green — Comments
+- teal — Average % Viewed
+- cyan — Average View Duration
+- royal — Likes
+- purple — RPM
+- magenta — Shares
+- pink — Playlist Saves
+
+These metric icons must not be recolored arbitrarily when rendered in the reference library or a Data Visual.
+
+
+## Tone construction, not tint duplication
+
+The three widget primitive tones must be visibly distinct constructions rather than three near-identical tint levels.
+
+### Default
+
+Use as the neutral reference construction:
+
+- white or near-white primary surface;
+- palette-aware stroke and ink;
+- colored accents limited to active cells, bays, or handles.
+
+### Primary
+
+Use as the emphasized construction:
+
+- stronger widget-color presence than Default;
+- saturated active regions;
+- still preserves ink-led readability where practical.
+
+### Secondary
+
+Use as the inverse/compound construction:
+
+- saturated structural zones instead of another pale tint;
+- white text/icons on saturated areas;
+- white or inverted center/selected cells where they improve hierarchy;
+- component anatomy may change to communicate the alternate construction.
+
+Canonical examples:
+
+- **Stepper:** saturated chassis + saturated plus/minus cells + white glyphs/value.
+- **Pagination:** saturated strip with white page copy; active page becomes the inverse white tile.
+- **Split-left Search:** saturated bay + saturated input field + white icon/copy.
+- **Text Input:** saturated resting surface with white copy; focus inverts to a white editing surface.
+- **Select:** saturated trigger with white label/chevron; secondary open-menu treatment remains inverse.
+- **Video Select:** saturated title surface + saturated VIDEO/chevron bay with white foreground.
+- **Toggle:** no stroke in Secondary. OFF = pale/white track + widget-colored thumb. ON = widget-colored track + white thumb. Background and thumb color animate together as the state changes.
+
+Do not implement a new tone by merely changing opacity on the Default construction. If Default, Primary, and Secondary are difficult to distinguish in the UI Reference Library without reading their labels, the family needs another construction pass.
+
+
+## Widget module header manifestations
+
+The UI Reference Widget Modules section must demonstrate the canonical Navigation primitives *inside actual module headers*, not as unrelated body controls. Include representative header manifestations for:
+
+- Header Stepper / time-window navigation (Channel Overview pattern)
+- Header Toggle + Header Stepper / current-item counter (Comment Responder pattern)
+- Step Tabs
+- Switch
+- Checkbox / choice
+- Radio-mode choice
+
+Header-control examples must use the same production Navigation primitives shown in the Navigation section.
+
+## Video-select edge-to-edge open menu
+
+The open video selector is one continuous menu surface:
+
+- menu padding is 0;
+- the search control is a full-width flat first row, not an inset rounded module;
+- there is no horizontal divider below the search row;
+- option rows touch the left and right menu edges;
+- option rows have no individual border/radius;
+- thumbnail frames use VT ink;
+- unboxed duration text sits over the thumbnail at right: 2px; bottom: 0;
+- the 24 / 32 / 38px closed selector split bays are widened independently so VIDEO and the chevron remain legible.
+
+Do not rely on lazy stylesheet import order to preserve this geometry. The canonical variants layer owns the final menu construction.

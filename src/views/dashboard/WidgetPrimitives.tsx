@@ -1,6 +1,6 @@
 import * as Select from "@radix-ui/react-select"
 import React, { useCallback, useEffect, useId, useRef, useState } from "react"
-import { AlertTriangle, Ban, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock3, Inbox, LoaderCircle, RotateCw, X } from "lucide-react"
+import { AlertTriangle, Ban, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, Inbox, LoaderCircle, RotateCw, X } from "lucide-react"
 import type { WidgetDataState } from "./types"
 import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone, type WidgetPrimitiveTextFit } from "./widgetPrimitiveSystem"
 import { resolveWidgetViewportSegment } from "./widgetScrollGeometry"
@@ -390,7 +390,8 @@ export const WidgetSelect: React.FC<{
   className?: string
   contentClassName?: string
   style?: React.CSSProperties
-}> = ({ value, onChange, options, label, placeholder = "Select…", disabled = false, className = "", contentClassName = "", style }) => {
+  contentStyle?: React.CSSProperties
+}> = ({ value, onChange, options, label, placeholder = "Select…", disabled = false, className = "", contentClassName = "", style, contentStyle }) => {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const [menuColor, setMenuColor] = useState("#FA618A")
   const [menuInk, setMenuInk] = useState("#9f3653")
@@ -429,13 +430,16 @@ export const WidgetSelect: React.FC<{
           sideOffset={4}
           collisionPadding={12}
           style={{
+            ...contentStyle,
+            "--widget-color": menuColor,
+            "--widget-border": menuInk,
+            "--widget-ink": menuInk,
             "--widget-select-color": menuColor,
             "--widget-select-ink": menuInk,
             "--widget-select-stroke": menuStroke,
             "--widget-select-surface": menuSurface,
           } as React.CSSProperties}
         >
-          <Select.ScrollUpButton className="widget-select-scroll"><ChevronUp /></Select.ScrollUpButton>
           <Select.Viewport className="widget-select-viewport">
             <Select.Item className="widget-select-item" value={EMPTY_WIDGET_SELECT_VALUE}>
               <Select.ItemText>{placeholder}</Select.ItemText>
@@ -448,7 +452,6 @@ export const WidgetSelect: React.FC<{
               </Select.Item>
             ))}
           </Select.Viewport>
-          <Select.ScrollDownButton className="widget-select-scroll"><ChevronDown /></Select.ScrollDownButton>
         </Select.Content>
       </Select.Portal>
     </Select.Root>
@@ -793,8 +796,18 @@ export {
   WidgetIconButton,
   WidgetIconBadge,
   WidgetStepper,
+  WidgetSplitCounter,
   WidgetPagination,
   WidgetLeftSplitBadge,
+  WidgetTinySpectrumIcon,
+  WIDGET_TINY_ICON_SET,
+  WIDGET_METRIC_ICON_SET,
+  WidgetAccentRailModule,
+  WidgetIconTitleModule,
+  WidgetRainbowDivider,
+  WidgetRainbowPanel,
+  WidgetModuleHeader,
+  WidgetModuleFrame,
   WidgetSearchInput,
   WidgetLiveBadge,
   WidgetSpectrumFillBadge,
@@ -807,4 +820,5 @@ export {
   type WidgetPrimitiveTone,
   type WidgetTextFit,
   type WidgetSplitIconStyle,
+  type WidgetTinyIconName,
 } from "./WidgetPrimitiveExtensions"

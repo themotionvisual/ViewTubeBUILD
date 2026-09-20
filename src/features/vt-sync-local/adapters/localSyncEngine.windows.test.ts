@@ -76,25 +76,25 @@ describe("windowed dataset storage on the snapshot", () => {
 })
 
 describe("engine window-loop invariants", () => {
- it("defaults an unspecified run to lifetime only, so quota is unchanged", () => {
-  expect(engineSource).toContain('? [...new Set<VtSyncAnalyticsWindow>(["lifetime", ...selectedWindows])]')
-  expect(engineSource).toContain(': ["lifetime"]')
+ it("defaults an unspecified run to lifetime only, but honors an explicit controller selection exactly", () => {
+  expect(engineSource).toContain('selectedWindows === undefined')
+  expect(engineSource).toContain('? ["lifetime"]')
+  expect(engineSource).toContain(': [...new Set<VtSyncAnalyticsWindow>(selectedWindows)]')
  })
 
- it("always includes lifetime, because the flat snapshot fields alias it", () => {
-  const match = engineSource.match(/const aggregateWindows[^\n]*\n[^\n]*\n[^\n]*/)
-  expect(match?.[0]).toContain('"lifetime"')
+ it("does not silently reinsert lifetime after the user turns that window off", () => {
+  expect(engineSource).not.toContain('["lifetime", ...selectedWindows]')
+  expect(engineSource).toContain('const windows: VtSyncAnalyticsWindow[] = aggregateWindows')
  })
 
- it("skips day/month-grained categories on non-lifetime windows", () => {
-  // Class A: fetched once over lifetime, windows derived from its months.
-  expect(engineSource).toContain(
-   'if (segmentWindow !== "lifetime" && VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)) continue',
-  )
+ it("fetches derived source history once even when lifetime output is turned off", () => {
+  expect(engineSource).toContain('const isDerivedSource = VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)')
+  expect(engineSource).toContain('if (isDerivedSource && segmentWindow !== aggregateWindows[0]) continue')
+  expect(engineSource).toContain('const storageWindow: VtSyncAnalyticsWindow = isDerivedSource ? "lifetime" : segmentWindow')
  })
 
  it("tags every windowed segment persistence with its window", () => {
-  expect(engineSource).toContain('datasetId: categoryId, window: segmentWindow')
+  expect(engineSource).toContain('datasetId: categoryId, window: storageWindow')
   expect(engineSource).toContain('datasetId: "ads", window: adWindow')
   expect(engineSource).toContain('datasetId: "shares", window: shareWindow')
  })

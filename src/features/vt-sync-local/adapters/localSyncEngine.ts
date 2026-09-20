@@ -2084,12 +2084,12 @@ const fillMissingChannelTotalsFromDaily = (
 }
 
 export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSnapshot, retentionVideoIds, forceFullVideoMetadata = false, contentOwnerId, selectedWindows, onProgress, onSnapshotCommit }: VtSyncLocalSyncOptions): Promise<VtSyncSnapshot> => {
- // Aggregate datasets cost one request per window, so an unspecified run stays
- // at lifetime — same requests, same quota as before windows existed. Lifetime
- // is always included: the flat snapshot fields still alias it.
- const aggregateWindows: VtSyncAnalyticsWindow[] = selectedWindows?.length
-  ? [...new Set<VtSyncAnalyticsWindow>(["lifetime", ...selectedWindows])]
-  : ["lifetime"]
+ // An unspecified caller keeps the legacy lifetime-only default. When the
+ // controller supplies a window array, honor that exact selection: lifetime is
+ // no longer silently inserted after the user turns it off.
+ const aggregateWindows: VtSyncAnalyticsWindow[] = selectedWindows === undefined
+  ? ["lifetime"]
+  : [...new Set<VtSyncAnalyticsWindow>(selectedWindows)]
  const visibleSelectedCategories = filterVtSyncVisibleCategoryIds(selectedCategories)
  const hiddenRequestedCategories = selectedCategories.filter((categoryId) => !visibleSelectedCategories.includes(categoryId))
  const selected = new Set(visibleSelectedCategories)
@@ -2463,7 +2463,7 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
   if (shouldSync(selected, "channel_totals")) {
    updatePhase(progress, "channel_totals", { status: "running", startedAt: new Date().toISOString() }, onProgress)
    const previousChannelTotals = snapshot.channelTotals as Record<string, any> | null
-   const windows: VtSyncAnalyticsWindow[] = ANALYTICS_WINDOWS
+   const windows: VtSyncAnalyticsWindow[] = aggregateWindows
    const totalsEntries: Array<readonly [VtSyncAnalyticsWindow, Awaited<ReturnType<typeof channelTotalsForWindow>>]> = []
    for (const window of windows) {
     totalsEntries.push([window, await channelTotalsForWindow(token, window, channelStartDate)] as const)
@@ -2885,10 +2885,13 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
    const segmentStartDate = vtSyncWindowStartDate(segmentWindow, channelStartDate)
    for (const [categoryId, field, dimensions, metrics, sort, filters = "", maxResults = 200] of segmentRuns) {
     if (!shouldSync(selected, categoryId)) continue
-    // Day/month-grained categories are fetched once over lifetime and their
-    // windows are derived from that history, so looping them per window would
-    // buy nothing and cost a full paginated sweep each time.
-    if (segmentWindow !== "lifetime" && VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)) continue
+    // Day/month-grained categories are fetched once as their lifetime source
+    // history even when the user has turned the lifetime output window off.
+    // Run that source acquisition once, keyed to the first requested window,
+    // then derive the requested windows locally without extra API requests.
+    const isDerivedSource = VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)
+    if (isDerivedSource && segmentWindow !== aggregateWindows[0]) continue
+    const storageWindow: VtSyncAnalyticsWindow = isDerivedSource ? "lifetime" : segmentWindow
     const currentSegmentIndex = selectedSegmentCategoryIds.indexOf(categoryId)
     const nextCategoryId = selectedSegmentCategoryIds[currentSegmentIndex + 1]
     const currentQueryLabel = VT_SYNC_CATEGORY_OPTIONS.find((category) => category.id === categoryId)?.label || categoryId.replace(/_/g, " ")
@@ -2984,14 +2987,14 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      : mapSegmentRows(result.rows, dimensions.split(",").pop() || dimensions)
     // Merge within a window only. Blending rows across windows would silently
     // mix date ranges under one row key — the merge key has no window in it.
-    const isLifetime = segmentWindow === "lifetime"
-    const previousRows = readWindowedDataset(snapshot, segmentWindow, field as string, categoryId)
+    const isLifetime = storageWindow === "lifetime"
+    const previousRows = readWindowedDataset(snapshot, storageWindow, field as string, categoryId)
     const completedRows = mergeVtSyncRowsPreservingDefined(
      previousRows,
      mappedRows,
      vtSyncSegmentRowKey,
     )
-    snapshot = writeWindowedDataset(snapshot, segmentWindow, field as string, categoryId, completedRows)
+    snapshot = writeWindowedDataset(snapshot, storageWindow, field as string, categoryId, completedRows)
     rowsWritten += result.rows?.length || 0
     addManifestResult(
      manifest,
@@ -3002,17 +3005,24 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      result.error,
      result.columns,
     )
-    if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: categoryId, window: segmentWindow, phase: "segments", rawRows, tableRows: completedRows, columns: result.columns })
-    // Freshness is keyed by category with no window dimension, so it keeps
-    // tracking the lifetime pass. Per-window outcomes are in the manifest.
-    if (isLifetime) {
-     markFreshness([categoryId], categoryId, completedRows.length, result.rows ? (result.error || missingMetrics.length ? "partial" : "synced") : "failed", missingMetrics)
-    }
+    if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: categoryId, window: storageWindow, phase: "segments", rawRows, tableRows: completedRows, columns: result.columns })
     const categoryRows = (segmentCategoryRows.get(categoryId) || 0) + (result.rows?.length || 0)
     segmentCategoryRows.set(categoryId, categoryRows)
     if (!result.rows || result.error || missingMetrics.length) segmentCategoryIssues.add(categoryId)
     const finalWindowForCategory = VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)
      || segmentWindow === aggregateWindows[aggregateWindows.length - 1]
+    // Freshness is category-level rather than window-level. Record the final
+    // requested-window outcome so a run without lifetime still persists DONE /
+    // PARTIAL / FAILED instead of reverting to NEVER after reload.
+    if (finalWindowForCategory) {
+     markFreshness(
+      [categoryId],
+      categoryId,
+      categoryRows,
+      categoryRows === 0 ? "failed" : segmentCategoryIssues.has(categoryId) ? "partial" : "synced",
+      missingMetrics,
+     )
+    }
     updateCategoryState(progress, categoryId, {
      status: finalWindowForCategory
       ? categoryRows === 0 ? "failed" : segmentCategoryIssues.has(categoryId) ? "partial" : "complete"
@@ -3079,13 +3089,19 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      rowsWritten += result.rows?.length || 0
      addManifestResult(manifest, adWindow === "lifetime" ? "ad_type" : `ad_type_${adWindow}`, !!result.rows, result.rows?.length || 0, result.columns, result.error)
      if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "ads", window: adWindow, phase: "ad_type", rawRows: result.rows, tableRows: result.rows, columns: result.columns })
-     if (adWindow === "lifetime") {
-      markFreshness(["ad_type"], "ad_type", result.rows?.length || 0, result.rows ? (result.error ? "partial" : "synced") : "failed", result.error ? [result.error] : [])
-     }
      const adRows = (revenueCategoryRows.get("ad_type") || 0) + (result.rows?.length || 0)
      revenueCategoryRows.set("ad_type", adRows)
      if (!result.rows || result.error) revenueCategoryIssues.add("ad_type")
      const finalAdWindow = adWindow === aggregateWindows[aggregateWindows.length - 1]
+     if (finalAdWindow) {
+      markFreshness(
+       ["ad_type"],
+       "ad_type",
+       adRows,
+       adRows === 0 ? "failed" : revenueCategoryIssues.has("ad_type") ? "partial" : "synced",
+       result.error ? [result.error] : [],
+      )
+     }
      updateCategoryState(progress, "ad_type", {
       status: finalAdWindow
        ? adRows === 0 ? "failed" : revenueCategoryIssues.has("ad_type") ? "partial" : "complete"
@@ -3203,13 +3219,19 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      }
      addManifestResult(manifest, shareWindow === "lifetime" ? "sharing_service" : `sharing_service_${shareWindow}`, !!result.rows, result.rows?.length || 0, result.columns, result.error)
      if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "shares", window: shareWindow, phase: "sharing_service", rawRows: result.rows, tableRows: mergedSharingRows, columns: result.columns })
-     if (shareWindow === "lifetime") {
-      markFreshness(["shares"], "sharing_service", result.rows?.length || 0, result.rows ? (result.error ? "partial" : "synced") : "failed", result.error ? [result.error] : [])
-     }
      const shareRows = (revenueCategoryRows.get("sharing_service") || 0) + (result.rows?.length || 0)
      revenueCategoryRows.set("sharing_service", shareRows)
      if (!result.rows || result.error) revenueCategoryIssues.add("sharing_service")
      const finalShareWindow = shareWindow === aggregateWindows[aggregateWindows.length - 1]
+     if (finalShareWindow) {
+      markFreshness(
+       ["shares"],
+       "sharing_service",
+       shareRows,
+       shareRows === 0 ? "failed" : revenueCategoryIssues.has("sharing_service") ? "partial" : "synced",
+       result.error ? [result.error] : [],
+      )
+     }
      updateCategoryState(progress, "sharing_service", {
       status: finalShareWindow
        ? shareRows === 0 ? "failed" : revenueCategoryIssues.has("sharing_service") ? "partial" : "complete"

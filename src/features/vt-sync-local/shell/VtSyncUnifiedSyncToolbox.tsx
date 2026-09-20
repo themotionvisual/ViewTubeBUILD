@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from "react"
 import { CheckSquare, ChevronDown, ChevronRight, Copy, RefreshCw, ShieldCheck, Square } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
-import { RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
+import { RetroAnalogToggle, RetroBatchSelectionSwitch, RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
 import type {
  VtSyncAnalyticsWindow,
  VtSyncCategoryGroup,
@@ -50,6 +50,21 @@ export type VtSyncRetentionVideoOption = {
 const GROUP_COLORS: Record<string, string> = Object.fromEntries(VT_SYNC_GROUP_ORDER.map((group, index) => [group, getPaletteColor(index * 2)]))
 const formatPlainLabel = (value: string) => value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
 
+type SyncBadgeTone = "neutral" | "live" | "good" | "warn" | "bad" | "info" | "accent"
+
+const SyncMetaBadge: React.FC<{
+ tone?: SyncBadgeTone
+ children: React.ReactNode
+ onClick?: () => void
+ title?: string
+}> = ({ tone = "neutral", children, onClick, title }) => {
+ const className = `vt-sync-meta-badge is-${tone} ${onClick ? "is-clickable" : ""}`
+ if (onClick) {
+  return <button type="button" className={className} onClick={onClick} title={title}>{children}</button>
+ }
+ return <span className={className} title={title}>{children}</span>
+}
+
 const buildUnitGroups = (hasContentOwner: boolean) => VT_SYNC_GROUP_ORDER
  .map((group) => ({
   group,
@@ -75,9 +90,8 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
 }> = ({ isAuthenticated, isSyncing, videos, progress = null, queuedCategoryIds = [], datasetFreshness, syncError, videoCatalogCoverage, contentOwners = [], activeContentOwnerId, onSelectContentOwner, onLogin, onStartSync }) => {
  const [selected, setSelected] = useState<string[]>(() => getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))
  const [retentionVideoIds, setRetentionVideoIds] = useState<string[]>([])
- // Lifetime only by default: every extra window costs one request per aggregate
- // dataset, so the cost is opted into rather than defaulted into. Lifetime is
- // always on because the stored dataset rows still key off it.
+ // Lifetime starts on, but every time window is independently toggleable.
+ // The engine receives the exact selected set rather than silently forcing lifetime.
  const [selectedWindows, setSelectedWindows] = useState<VtSyncAnalyticsWindow[]>(["lifetime"])
  const [videoSearch, setVideoSearch] = useState("")
  const [openGroups, setOpenGroups] = useState<Set<VtSyncCategoryGroup>>(
@@ -109,6 +123,10 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
  const selectedSet = useMemo(() => new Set(selected), [selected])
  const selectedUnitCount = useMemo(() => countVtSyncSelectedUnits(selected, availableUnits), [availableUnits, selected])
  const selectedQueryCount = useMemo(() => countVtSyncUnderlyingQueries(selected), [selected])
+ const allCategoryIds = useMemo(() => [...new Set(availableUnits.flatMap((unit) => unit.categoryIds))], [availableUnits])
+ const coreCategoryIds = useMemo(() => [...new Set(availableUnits.filter((unit) => unit.defaultEnabled).flatMap((unit) => unit.categoryIds))], [availableUnits])
+ const recommendedCategoryIds = useMemo(() => [...new Set(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))], [])
+ const selectionMatches = (target: string[]) => target.length === selected.length && target.every((id) => selectedSet.has(id))
  const retentionSelectedSet = useMemo(() => new Set(retentionVideoIds), [retentionVideoIds])
  const retentionEnabled = selectedSet.has("retention")
  const sortedVideos = useMemo(() => [...videos].sort((a, b) => (b.views || 0) - (a.views || 0)), [videos])
@@ -130,18 +148,15 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
  const windowCost = useMemo(() => {
   const perWindowCategories = selected.filter(vtSyncCategoryCostsPerWindow)
   const derivedCount = selected.length - perWindowCategories.length
-  const extraWindows = selectedWindows.filter((window) => window !== "lifetime").length
   return {
    perWindowCategories: perWindowCategories.length,
    derivedCount,
-   extraRequests: perWindowCategories.length * extraWindows,
-   extraWindows,
+   selectedWindowCount: selectedWindows.length,
+   estimatedWindowRequests: perWindowCategories.length * selectedWindows.length,
   }
  }, [selected, selectedWindows])
 
  const toggleWindow = (window: VtSyncAnalyticsWindow) => {
-  // Lifetime is not deselectable while the flat snapshot fields alias it.
-  if (window === "lifetime") return
   setSelectedWindows((current) => current.includes(window)
    ? current.filter((entry) => entry !== window)
    : [...current, window])
@@ -181,6 +196,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
  }
 
  const start = async () => {
+  if (selectedWindows.length === 0 || selected.length === 0) return
   if (!isAuthenticated) {
    try { await onLogin() } catch (error) {
     if (isLoginAbortError(error)) return
@@ -193,6 +209,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
  }
 
  const startCategories = async (categoryIds: string[], includeRetentionVideoIds = false, forceFullVideoMetadata = false) => {
+  if (selectedWindows.length === 0) return
   if (!isAuthenticated) {
    try { await onLogin() } catch (error) {
     if (isLoginAbortError(error)) return
@@ -256,6 +273,82 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
   : value >= 1_000
    ? `${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1)}K`
    : value.toLocaleString()
+
+ const formatDurationLong = (durationMs?: number) => {
+  if (durationMs === undefined || !Number.isFinite(durationMs)) return "No sync time"
+  const totalSeconds = Math.max(0, Math.round(durationMs / 1000))
+  if (totalSeconds < 60) return `${totalSeconds} second${totalSeconds === 1 ? "" : "s"}`
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes} minute${minutes === 1 ? "" : "s"}${seconds ? ` ${seconds} second${seconds === 1 ? "" : "s"}` : ""}`
+ }
+
+ const formatFullLastSync = (iso?: string) => {
+  if (!iso) return ""
+  const value = new Date(iso)
+  if (!Number.isFinite(value.getTime())) return ""
+  return value.toLocaleString([], {
+   year: "numeric",
+   month: "short",
+   day: "numeric",
+   hour: "numeric",
+   minute: "2-digit",
+  })
+ }
+
+ const resultNounForUnit = (unitId: string, rows: number, fallbackLabel: string) => {
+  const singular = rows === 1
+  const labels: Record<string, [string, string]> = {
+   channel_overview_windows: ["channel record", "channel records"],
+   video_catalog: ["published video", "published videos"],
+   daily_stats: ["daily analytics row", "daily analytics rows"],
+   monthly_stats: ["monthly analytics row", "monthly analytics rows"],
+   traffic_by_day: ["traffic-by-day row", "traffic-by-day rows"],
+   traffic_overview: ["traffic source", "traffic sources"],
+   audience_demographics: ["audience segment", "audience segments"],
+   content_type: ["content format", "content formats"],
+   formats_subscriber_status: ["format × subscriber row", "format × subscriber rows"],
+   sharing_services: ["sharing service", "sharing services"],
+   playback_locations: ["playback location", "playback locations"],
+   subscription_status: ["subscriber segment", "subscriber segments"],
+   geography_country: ["country", "countries"],
+   geography_city: ["city", "cities"],
+   geography_province: ["US state", "US states"],
+   geography_dma: ["DMA region", "DMA regions"],
+   device_type: ["device type", "device types"],
+   operating_system: ["operating system", "operating systems"],
+   device_os: ["device × OS row", "device × OS rows"],
+   playlists: ["playlist", "playlists"],
+   revenue_source: ["revenue source", "revenue sources"],
+   ad_type: ["ad type", "ad types"],
+   retention: ["retention curve", "retention curves"],
+  }
+  if (unitId.includes("search_terms")) return singular ? "YouTube search term" : "YouTube search terms"
+  if (unitId.startsWith("traffic_detail_")) return singular ? `${fallbackLabel.toLowerCase()} row` : `${fallbackLabel.toLowerCase()} rows`
+  const pair = labels[unitId]
+  return pair ? (singular ? pair[0] : pair[1]) : singular ? "result" : "results"
+ }
+
+ const statusBadgeForUnit = (status: string, lastSyncedAt?: string, isNext = false): { tone: SyncBadgeTone; text: string } => {
+  const stamp = formatFullLastSync(lastSyncedAt)
+  if (status === "running") return { tone: "live", text: "SYNCING · NOW" }
+  if (status === "pending") return { tone: "warn", text: isNext ? "QUEUED · UP NEXT" : "QUEUED · WAITING" }
+  if (status === "synced" || status === "complete") return { tone: "good", text: `SYNCED · ${stamp || "COMPLETE"}` }
+  if (status === "partial") return { tone: "warn", text: `PARTIAL · ${stamp || "INCOMPLETE DATA"}` }
+  if (status === "failed") return { tone: "bad", text: `FAILED · ${stamp || "RETRY NEEDED"}` }
+  if (status === "stale") return { tone: "warn", text: `STALE · ${stamp || "UPDATE NEEDED"}` }
+  if (status === "skipped") return { tone: "warn", text: "SKIPPED · NOT RUN" }
+  return { tone: "neutral", text: "NEVER · DATASET NOT AVAILABLE" }
+ }
+
+ const immediateLabelForUnit = (status: string, isNext = false, hasPriorData = false) => {
+  if (status === "running") return "SYNCING"
+  if (status === "pending") return isNext ? "UP NEXT" : "QUEUED"
+  if (status === "synced" || status === "complete") return "COMPLETE"
+  if (status === "partial") return "PARTIAL"
+  if (status === "failed") return "RETRY"
+  return hasPriorData ? "UPDATE" : "FULL SYNC"
+ }
 
  const copySyncSummary = async () => {
   const text = [
@@ -349,13 +442,34 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
      </div>
     ) : null}
 
-    <section className="mb-3 grid gap-2 rounded-[12px] border-[3px] border-black bg-[#0d0d0d] p-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-      <button type="button" onClick={() => setSelected(availableUnits.flatMap((unit) => unit.categoryIds))} className="vt-retro-switch"><span className="vt-retro-switch-led" />All</button>
-      <button type="button" onClick={() => setSelected(availableUnits.filter((unit) => unit.defaultEnabled).flatMap((unit) => unit.categoryIds))} className="vt-retro-switch" style={{ "--tone": "#FFDA47", "--tone-light": "#fff3b0" } as React.CSSProperties}><span className="vt-retro-switch-led" />Core</button>
-      <button type="button" onClick={() => setSelected(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))} className="vt-retro-switch" style={{ "--tone": "#36E0F6", "--tone-light": "#b9f2ff" } as React.CSSProperties}><span className="vt-retro-switch-led" />Recommended</button>
-      <button type="button" onClick={() => setSelected([])} className="vt-retro-switch"><span className="vt-retro-switch-led" />Clear</button>
-      <button type="button" onClick={() => { void copySyncSummary() }} className="vt-retro-switch" style={{ "--tone": "#F55EFC", "--tone-light": "#ffd6f7" } as React.CSSProperties}>
+    <section className="mb-3 grid gap-2 rounded-[12px] border-[3px] border-black bg-[#0d0d0d] p-2">
+     <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+      <span className="text-[8px] font-[1000] uppercase tracking-[0.08em] text-white/55">Quick select</span>
+      <RetroAnalogToggle
+       label="All"
+       active={selectionMatches(allCategoryIds)}
+       onChange={(next) => setSelected(next ? allCategoryIds : [])}
+       tone="cyan"
+      />
+      <RetroAnalogToggle
+       label="Core"
+       active={selectionMatches(coreCategoryIds)}
+       onChange={(next) => setSelected(next ? coreCategoryIds : [])}
+       tone="green"
+      />
+      <RetroAnalogToggle
+       label="Recommended"
+       active={selectionMatches(recommendedCategoryIds)}
+       onChange={(next) => setSelected(next ? recommendedCategoryIds : [])}
+       tone="yellow"
+      />
+      <RetroAnalogToggle
+       label="Clear"
+       active={selected.length === 0}
+       onChange={() => setSelected([])}
+       tone="red"
+      />
+      <button type="button" onClick={() => { void copySyncSummary() }} className="vt-retro-switch ml-auto" style={{ "--tone": "#F55EFC", "--tone-light": "#ffd6f7" } as React.CSSProperties}>
        <Copy className="h-3.5 w-3.5" aria-hidden="true" />{copyStatus || "Copy Summary"}
       </button>
       <span className="sr-only" aria-live="polite">{copyStatus}</span>
@@ -371,40 +485,28 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
        </select>
       </label> : null}
      </div>
-     <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
-      <span className="text-[9px] font-[1000] uppercase text-white/65">{selectedUnitCount} datasets · {selectedQueryCount} queries</span>
-      {ANALYTICS_WINDOWS.map((window) => {
-       const active = selectedWindows.includes(window)
-       const locked = window === "lifetime"
-       return (
-        <button
-         key={window}
-         type="button"
-         onClick={() => toggleWindow(window)}
-         data-window={window}
-         aria-pressed={active}
-         disabled={locked}
-         title={locked ? "Lifetime is always synced" : undefined}
-         className="vt-retro-switch"
-         style={{
-          "--tone": active ? "#C0F240" : "#6b7280",
-          "--tone-light": active ? "#e4ffa8" : "#9ca3af",
-          opacity: locked ? 0.75 : 1,
-          cursor: locked ? "default" : "pointer",
-         } as React.CSSProperties}
-        >
-         <span className="vt-retro-switch-led" />
-         {WINDOW_SHORT_LABELS[window]}
-        </button>
-       )
-      })}
+
+     <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 border-t border-white/15 pt-2">
+      <span className="text-[8px] font-[1000] uppercase tracking-[0.08em] text-white/55">Time window</span>
+      {ANALYTICS_WINDOWS.map((window) => (
+       <span key={window} data-window={window}>
+        <RetroAnalogToggle
+         label={WINDOW_SHORT_LABELS[window]}
+         active={selectedWindows.includes(window)}
+         onChange={() => toggleWindow(window)}
+         tone={window === "lifetime" ? "green" : "cyan"}
+        />
+       </span>
+      ))}
+      <span className="ml-auto text-[9px] font-[1000] uppercase text-white/65">{selectedUnitCount} datasets · {selectedQueryCount} queries</span>
      </div>
-     <p className="m-0 text-[9px] font-semibold leading-snug text-[#9ca3af] sm:col-span-2">
-      {windowCost.extraWindows === 0
-       ? `Lifetime only — ${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selectedQueryCount} underlying quer${selectedQueryCount === 1 ? "y" : "ies"}.`
-       : `${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selectedQueryCount} underlying quer${selectedQueryCount === 1 ? "y" : "ies"}. ${windowCost.perWindowCategories} windowed quer${windowCost.perWindowCategories === 1 ? "y" : "ies"} × ${windowCost.extraWindows} extra window${windowCost.extraWindows === 1 ? "" : "s"} = ~${windowCost.extraRequests} additional request${windowCost.extraRequests === 1 ? "" : "s"}.`}
+
+     <p className="m-0 text-[9px] font-semibold leading-snug text-[#9ca3af]">
+      {selectedWindows.length === 0
+       ? "No time window selected. Choose at least one window before starting the selected batch."
+       : `${selectedWindows.length} window${selectedWindows.length === 1 ? "" : "s"} selected · ~${windowCost.estimatedWindowRequests} windowed request${windowCost.estimatedWindowRequests === 1 ? "" : "s"} for the current dataset selection.`}
       {windowCost.derivedCount > 0
-       ? ` ${windowCost.derivedCount} day-grained quer${windowCost.derivedCount === 1 ? "y" : "ies"} derive their windows without extra window requests.`
+       ? ` ${windowCost.derivedCount} day-grained quer${windowCost.derivedCount === 1 ? "y" : "ies"} derive requested windows from their source data without extra per-window requests.`
        : ""}
      </p>
     </section>
@@ -414,6 +516,8 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
       const expanded = openGroups.has(group)
       const contentId = `vt-sync-controller-group-${group}`
       const groupCategoryIds = [...new Set(units.flatMap((unit) => unit.categoryIds))]
+      const groupSelected = groupCategoryIds.length > 0 && groupCategoryIds.every((id) => selectedSet.has(id))
+      const selectedUnitsInGroup = units.filter((unit) => unit.categoryIds.every((id) => selectedSet.has(id))).length
       const models = units.map((unit) => unitModelById.get(unit.id)).filter(Boolean)
       const groupCounts = models.reduce<Record<string, number>>((acc, unit) => {
        acc[unit!.status] = (acc[unit!.status] || 0) + 1
@@ -429,6 +533,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
        : "never"
       const groupSummary = [
        `${units.length} dataset${units.length === 1 ? "" : "s"}`,
+       `${selectedUnitsInGroup} selected`,
        groupCounts.running ? `${groupCounts.running} running` : "",
        groupCounts.pending ? `${groupCounts.pending} queued` : "",
        groupCounts.synced ? `${groupCounts.synced} done` : "",
@@ -469,111 +574,117 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
            idleLabel="SYNC ALL"
            status={toExecutionStatus(groupStatus)}
            onClick={() => void startCategories(groupCategoryIds, units.some((unit) => unit.id === "retention"))}
+           selected={groupSelected}
+           onSelectedChange={() => toggleMany(groupCategoryIds)}
+           selectionLabel={`${label} batch selection`}
           />
          </div>
         </div>
 
-        <div id={contentId} hidden={!expanded}>
-         <div className="overflow-x-auto custom-scrollbar">
-          <div className="min-w-[600px]">
-           <div className="grid h-[26px] grid-cols-[minmax(210px,1fr)_58px_54px_88px_34px_58px_96px] items-center border-b-[2px] border-black bg-[#161616] px-2 text-[8px] font-black uppercase tracking-[0.08em] text-white/75">
-            <span>Dataset</span><span>Status</span><span>Time</span><span>Last sync</span><span className="text-center">!</span><span className="text-right">Rows</span><span className="text-center">Sync</span>
-           </div>
+        <div id={contentId} hidden={!expanded} className="bg-white">
+         {units.map((unit) => {
+          const selectedForBatch = unit.categoryIds.every((id) => selectedSet.has(id))
+          const model = unitModelById.get(unit.id)
+          const unitStatus = model?.status || "never"
+          const expandedUnit = expandedUnitIds.has(unit.id)
+          const hasPriorData = unitStatus !== "never"
+          const hasExtraDetail = Boolean(
+           (model?.issueCount || 0) > 0
+           || unit.id === "retention"
+           || unit.id === "video_catalog"
+           || unit.categoryIds.length > 1
+          )
+          const unitContentId = `vt-sync-unified-unit-${unit.id}`
+          const isNextUnit = queueSummary.nextLabel === unit.label
+           || Boolean(model?.rows.some((row) => queueSummary.nextLabel.includes(row.category.label)))
+          const statusBadge = statusBadgeForUnit(unitStatus, model?.lastSyncedAt, isNextUnit)
+          const resultBadge = `${formatDurationLong(model?.durationMs)} · ${(model?.displayRows || 0).toLocaleString()} ${resultNounForUnit(unit.id, model?.displayRows || 0, unit.label)}`
+          const immediateLabel = immediateLabelForUnit(unitStatus, isNextUnit, hasPriorData)
+          const toggleUnitDetails = () => {
+           if (!hasExtraDetail) return
+           setExpandedUnitIds((current) => {
+            const next = new Set(current)
+            if (next.has(unit.id)) next.delete(unit.id)
+            else next.add(unit.id)
+            return next
+           })
+          }
 
-           {units.map((unit) => {
-            const checked = unit.categoryIds.every((id) => selectedSet.has(id))
-            const model = unitModelById.get(unit.id)
-            const unitStatus = model?.status || "never"
-            const expandedUnit = expandedUnitIds.has(unit.id)
-            const hasPriorData = unitStatus !== "never"
-            const unitContentId = `vt-sync-unified-unit-${unit.id}`
-            return (
-             <article key={unit.id} className="border-b-[2px] border-black last:border-b-0">
-              <div className={`grid min-h-[48px] grid-cols-[minmax(210px,1fr)_58px_54px_88px_34px_58px_96px] items-stretch px-2 ${checked ? "bg-white" : "bg-[#f1f1f1] text-black/50"}`}>
-               <div className="sticky left-0 z-[2] flex min-w-0 items-center gap-1.5 bg-inherit pr-1">
-                <button
-                 type="button"
-                 aria-pressed={checked}
-                 onClick={() => toggleMany(unit.categoryIds)}
-                 title={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`}
-                 aria-label={`${checked ? "Remove" : "Add"} ${unit.label} ${checked ? "from" : "to"} batch sync`}
-                 className="grid h-7 w-7 shrink-0 place-items-center rounded-[5px] focus-visible:outline focus-visible:outline-3 focus-visible:outline-black"
-                >
-                 {checked ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-black/35" />}
-                </button>
-                <button
-                 type="button"
-                 aria-expanded={expandedUnit}
-                 aria-controls={unitContentId}
-                 onClick={() => setExpandedUnitIds((current) => {
-                  const next = new Set(current)
-                  if (next.has(unit.id)) next.delete(unit.id)
-                  else next.add(unit.id)
-                  return next
-                 })}
-                 className="grid h-6 w-6 shrink-0 place-items-center rounded-[4px] border border-black bg-white"
-                 title={expandedUnit ? "Collapse dataset details" : "Expand dataset details"}
-                >
-                 {expandedUnit ? <ChevronDown className="h-3.5 w-3.5" strokeWidth={3} /> : <ChevronRight className="h-3.5 w-3.5" strokeWidth={3} />}
-                </button>
-                <span className="min-w-0">
-                 <strong className="block truncate text-[11px] font-[1000] uppercase leading-none">{unit.label}</strong>
-                 <span className="mt-1 block truncate text-[7.5px] font-black uppercase tracking-[0.035em] text-black/45">
-                  {unit.categoryIds.length} quer{unit.categoryIds.length === 1 ? "y" : "ies"} · {formatPlainLabel(unit.refreshPolicy)}
-                 </span>
-                </span>
-               </div>
+          return (
+           <article key={unit.id} className="border-b-[2px] border-black last:border-b-0">
+            <div className="grid min-h-[78px] grid-cols-[50px_minmax(0,1fr)_108px] items-stretch bg-white">
+             <div className="grid place-items-center border-r-[2px] border-black bg-[#f4f4f4] p-0.5">
+              <RetroBatchSelectionSwitch
+               selected={selectedForBatch}
+               onChange={() => toggleMany(unit.categoryIds)}
+               label={`${unit.label} batch selection`}
+              />
+             </div>
 
-               <div className="flex items-center border-l border-black/20 px-1.5">
-                <span className="inline-flex min-w-0 items-center gap-1 text-[8px] font-[1000] uppercase">
-                 <i className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: statusTone(unitStatus), boxShadow: `0 0 4px ${statusTone(unitStatus)}` }} />
-                 <span className="truncate">{shortStatus(unitStatus)}</span>
-                </span>
-               </div>
-               <div className="flex items-center border-l border-black/20 px-1.5 font-mono text-[9px] font-black tabular-nums">{formatDuration(model?.durationMs)}</div>
-               <div className="flex items-center border-l border-black/20 px-1.5 font-mono text-[9px] font-black tabular-nums">{formatLastSync(model?.lastSyncedAt)}</div>
-               <div className="grid place-items-center border-l border-black/20 text-[10px] font-[1000]">{model?.issueCount || 0}</div>
-               <div className="flex items-center justify-end border-l border-black/20 px-1.5 font-mono text-[9px] font-black tabular-nums">{compactRows(model?.displayRows || 0)}</div>
-               <div className="sticky right-0 z-[2] grid place-items-center border-l-[2px] border-black bg-inherit px-1">
-                <RetroSyncExecutionSwitch
-                 idleLabel={hasPriorData ? "UPDATE" : "FULL SYNC"}
-                 status={toExecutionStatus(unitStatus)}
-                 onClick={() => void startCategories(unit.categoryIds)}
-                />
-               </div>
+             <div className="grid min-w-0 grid-rows-2">
+              <div className="flex min-w-0 items-center gap-2 border-b border-black/15 px-2.5 py-1.5">
+               <strong className="shrink-0 truncate text-[11px] font-[1000] uppercase leading-none">{unit.label}</strong>
+               <span
+                className="min-w-0 flex-1 truncate text-[7.5px] font-black uppercase tracking-[0.035em] text-black/45"
+                title={unit.description}
+               >
+                {unit.description}
+               </span>
               </div>
 
-              <div id={unitContentId} hidden={!expandedUnit} className="border-t-[2px] border-black bg-[#f3f4f6]">
-               <div className="grid gap-2 p-2 text-[9px] font-black uppercase tracking-[0.025em] sm:grid-cols-[minmax(0,1.35fr)_minmax(0,.65fr)]">
-                <section className="rounded-[7px] border-[2px] border-black bg-white p-2">
-                 <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-                  <strong className="text-[10px]">{unit.description}</strong>
-                  {unit.defaultEnabled ? <span className="rounded-full border border-black bg-[#3FEE56] px-1.5 py-[1px] text-[7px]">Core</span> : null}
-                 </div>
-                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[8px] text-black/65 sm:grid-cols-4">
-                  <span>STATUS <b className="block text-black">{shortStatus(unitStatus)}</b></span>
-                  <span>DURATION <b className="block text-black">{formatDuration(model?.durationMs)}</b></span>
-                  <span>LAST SYNC <b className="block text-black">{model?.lastSyncedAt ? new Date(model.lastSyncedAt).toLocaleString() : "Never"}</b></span>
-                  <span>SOURCE <b className="block truncate text-black">{model?.sourceLabels.join(" + ") || "—"}</b></span>
-                 </div>
-                 {unit.id === "video_catalog" ? (
-                  <button type="button" onClick={() => void startCategories(unit.categoryIds, false, true)} className="mt-2 rounded border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[8px] font-black uppercase shadow-[2px_2px_0_0_#000]">
-                   Full metadata refresh
-                  </button>
-                 ) : null}
-                </section>
+              <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto px-2.5 py-1.5 custom-scrollbar">
+               <SyncMetaBadge tone={statusBadge.tone} title={statusBadge.text}>{statusBadge.text}</SyncMetaBadge>
+               <SyncMetaBadge tone={model?.displayRows ? "info" : "neutral"} title={resultBadge}>{resultBadge}</SyncMetaBadge>
+               <SyncMetaBadge tone={unit.defaultEnabled ? "good" : "accent"}>{formatPlainLabel(unit.refreshPolicy)}</SyncMetaBadge>
+               <SyncMetaBadge
+                tone={(model?.issueCount || 0) > 0 ? "bad" : "good"}
+                onClick={hasExtraDetail ? toggleUnitDetails : undefined}
+                title={hasExtraDetail ? (expandedUnit ? "Hide dataset details" : "Show dataset details") : undefined}
+               >
+                {(model?.issueCount || 0) > 0
+                 ? `${model?.issueCount} ISSUE${model?.issueCount === 1 ? "" : "S"}`
+                 : "NO ISSUES"}
+               </SyncMetaBadge>
+               {unit.categoryIds.length > 1 ? (
+                <SyncMetaBadge tone="accent" onClick={toggleUnitDetails} title={expandedUnit ? "Hide child queries" : "Show child queries"}>
+                 {unit.categoryIds.length} QUERIES
+                </SyncMetaBadge>
+               ) : null}
+               {unit.id === "video_catalog" ? (
+                <SyncMetaBadge tone="warn" onClick={toggleUnitDetails}>METADATA OPTIONS</SyncMetaBadge>
+               ) : null}
+               {unit.id === "retention" ? (
+                <SyncMetaBadge tone="accent" onClick={toggleUnitDetails}>VIDEO OPTIONS</SyncMetaBadge>
+               ) : null}
+               {model?.sourceLabels[0] ? <SyncMetaBadge tone="neutral">{model.sourceLabels[0]}</SyncMetaBadge> : null}
+              </div>
+             </div>
 
-                <section className="rounded-[7px] border-[2px] border-black bg-white p-2">
-                 <strong className="text-[8px] text-black/50">Issues · {model?.issueCount || 0}</strong>
-                 {model?.issues.length ? (
-                  <ul className="mt-1 space-y-1 normal-case tracking-normal text-black/75">
-                   {model.issues.map((row, index) => <li key={`${row.category.id}-${index}`}><b>{row.category.label}:</b> {row.message}</li>)}
-                  </ul>
-                 ) : <span className="mt-1 block">No issues.</span>}
-                </section>
-               </div>
+             <div className="grid place-items-center border-l-[2px] border-black bg-[#f4f4f4] p-0.5">
+              <RetroSyncExecutionSwitch
+               idleLabel={hasPriorData ? "UPDATE" : "FULL SYNC"}
+               labelOverride={immediateLabel}
+               status={toExecutionStatus(unitStatus)}
+               onClick={() => void startCategories(unit.categoryIds)}
+               disabled={selectedWindows.length === 0}
+               className="is-row-sync-control"
+              />
+             </div>
+            </div>
 
-               <div className="border-t-[2px] border-black bg-white px-2 py-1.5">
+            {hasExtraDetail ? (
+             <div id={unitContentId} hidden={!expandedUnit} className="border-t-[2px] border-black bg-[#f3f4f6]">
+              {(model?.issueCount || 0) > 0 ? (
+               <section className="border-b-[2px] border-black bg-white p-2 text-[9px]">
+                <strong className="text-[8px] uppercase tracking-[0.06em] text-black/50">Issues · {model?.issueCount || 0}</strong>
+                <ul className="mt-1 space-y-1 normal-case tracking-normal text-black/75">
+                 {model?.issues.map((row, index) => <li key={`${row.category.id}-${index}`}><b>{row.category.label}:</b> {row.message}</li>)}
+                </ul>
+               </section>
+              ) : null}
+
+              {unit.categoryIds.length > 1 ? (
+               <section className="border-b-[2px] border-black bg-white px-2 py-1.5">
                 <div className="mb-1 grid grid-cols-[minmax(0,1fr)_68px_72px] gap-2 text-[7px] font-black uppercase tracking-[0.07em] text-black/45">
                  <span>Underlying query</span><span className="text-right">Rows</span><span>Status</span>
                 </div>
@@ -584,52 +695,61 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
                   <span>{shortStatus(row.displayStatus)}</span>
                  </div>
                 ))}
-               </div>
+               </section>
+              ) : null}
 
-               {unit.id === "retention" && retentionEnabled ? (
-                <section className="border-t-[2px] border-black bg-[#f3f4f6]">
-                 <div className="flex flex-wrap items-center justify-between gap-2 border-b-[2px] border-black bg-white px-3 py-2">
-                  <div>
-                   <span className="text-[10px] font-black uppercase">Retention videos</span>
-                   <span className="ml-2 text-[8px] font-bold uppercase text-black/45">
-                    {retentionVideoIds.length > 0
-                     ? `${retentionVideoIds.length} manually selected`
-                     : `Default · ${baselineRetentionSelection.selectedCounts.long} long + ${baselineRetentionSelection.selectedCounts.short} Shorts`}
-                   </span>
-                  </div>
-                  <button type="button" onClick={() => setRetentionVideoIds([])} className="rounded-full border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[8px] font-black uppercase">Balanced default</button>
+              {unit.id === "video_catalog" ? (
+               <section className="border-b-[2px] border-black bg-white p-2">
+                <p className="m-0 text-[8px] font-black uppercase text-black/55">Video catalog supports a full metadata refresh when cached metadata is incomplete.</p>
+                <button type="button" onClick={() => void startCategories(unit.categoryIds, false, true)} className="mt-2 rounded border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[8px] font-black uppercase shadow-[2px_2px_0_0_#000]">
+                 Full metadata refresh
+                </button>
+               </section>
+              ) : null}
+
+              {unit.id === "retention" && retentionEnabled ? (
+               <section className="bg-[#f3f4f6]">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b-[2px] border-black bg-white px-3 py-2">
+                 <div>
+                  <span className="text-[10px] font-black uppercase">Retention videos</span>
+                  <span className="ml-2 text-[8px] font-bold uppercase text-black/45">
+                   {retentionVideoIds.length > 0
+                    ? `${retentionVideoIds.length} manually selected`
+                    : `Default · ${baselineRetentionSelection.selectedCounts.long} long + ${baselineRetentionSelection.selectedCounts.short} Shorts`}
+                  </span>
                  </div>
-                 <div className="border-b-[2px] border-black bg-white p-2">
-                  <input
-                   type="text"
-                   value={videoSearch}
-                   onChange={(event) => setVideoSearch(event.target.value)}
-                   placeholder="Search videos by title…"
-                   className="w-full rounded-full border-[2px] border-black px-3 py-1.5 text-[9px] font-bold uppercase outline-none focus:border-[#528FFA]"
-                  />
-                 </div>
-                 <div className="max-h-[220px] overflow-auto custom-scrollbar">
-                  {filteredVideos.length === 0 ? (
-                   <div className="px-3 py-3 text-center text-[9px] font-black uppercase text-black/45">No videos match.</div>
-                  ) : filteredVideos.map((video) => {
-                   const retentionChecked = retentionSelectedSet.has(video.id)
-                   return (
-                    <button key={video.id} type="button" aria-pressed={retentionChecked} onClick={() => toggleRetentionVideo(video.id)} className={`grid w-full grid-cols-[20px_1fr_auto] items-center gap-2 border-b border-black/10 px-3 py-2 text-left hover:bg-white ${retentionChecked ? "bg-white" : "bg-white/40 text-black/50"}`}>
-                     <span>{retentionChecked ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-black/35" />}</span>
-                     <span className="truncate text-[9px] font-black uppercase">{video.title || video.id}</span>
-                     <span className="whitespace-nowrap text-[8px] font-bold text-black/45">{compactRows(video.views || 0)} views</span>
-                    </button>
-                   )
-                  })}
-                 </div>
-                </section>
-               ) : null}
-              </div>
-             </article>
-            )
-           })}
-          </div>
-         </div>
+                 <button type="button" onClick={() => setRetentionVideoIds([])} className="rounded-full border-[2px] border-black bg-[#FFDA47] px-2 py-1 text-[8px] font-black uppercase">Balanced default</button>
+                </div>
+                <div className="border-b-[2px] border-black bg-white p-2">
+                 <input
+                  type="text"
+                  value={videoSearch}
+                  onChange={(event) => setVideoSearch(event.target.value)}
+                  placeholder="Search videos by title…"
+                  className="w-full rounded-full border-[2px] border-black px-3 py-1.5 text-[9px] font-bold uppercase outline-none focus:border-[#528FFA]"
+                 />
+                </div>
+                <div className="max-h-[220px] overflow-auto custom-scrollbar">
+                 {filteredVideos.length === 0 ? (
+                  <div className="px-3 py-3 text-center text-[9px] font-black uppercase text-black/45">No videos match.</div>
+                 ) : filteredVideos.map((video) => {
+                  const retentionChecked = retentionSelectedSet.has(video.id)
+                  return (
+                   <button key={video.id} type="button" aria-pressed={retentionChecked} onClick={() => toggleRetentionVideo(video.id)} className={`grid w-full grid-cols-[20px_1fr_auto] items-center gap-2 border-b border-black/10 px-3 py-2 text-left hover:bg-white ${retentionChecked ? "bg-white" : "bg-white/40 text-black/50"}`}>
+                    <span>{retentionChecked ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-black/35" />}</span>
+                    <span className="truncate text-[9px] font-black uppercase">{video.title || video.id}</span>
+                    <span className="whitespace-nowrap text-[8px] font-bold text-black/45">{compactRows(video.views || 0)} views</span>
+                   </button>
+                  )
+                 })}
+                </div>
+               </section>
+              ) : null}
+             </div>
+            ) : null}
+           </article>
+          )
+         })}
         </div>
        </section>
       )
@@ -639,11 +759,15 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
     <button
      type="button"
      onClick={isAuthenticated ? start : onLogin}
-     disabled={isAuthenticated && selected.length === 0}
+     disabled={isAuthenticated && (selected.length === 0 || selectedWindows.length === 0)}
      className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] border-[3px] border-black bg-[#3FEE56] py-2.5 text-[12px] font-black uppercase tracking-[0.03em] shadow-[4px_4px_0_0_#000] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_0_#000] disabled:cursor-not-allowed disabled:opacity-50"
     >
      {isAuthenticated ? <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} /> : <ShieldCheck className="h-4 w-4" />}
-     {isSyncing ? `Queue Selected Data (${selectedUnitCount})` : isAuthenticated ? `Sync Selected Data (${selectedUnitCount})` : "Connect YouTube Channel"}
+     {selectedWindows.length === 0
+      ? "Select a Time Window"
+      : isSyncing
+       ? `Queue Selected Data (${selectedUnitCount})`
+       : isAuthenticated ? `Sync Selected Data (${selectedUnitCount})` : "Connect YouTube Channel"}
     </button>
    </div>
   </ToolboxScaffold>

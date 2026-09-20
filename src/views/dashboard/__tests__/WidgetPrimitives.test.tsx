@@ -31,11 +31,29 @@ import {
   resolveAlphabeticalSpectrumHue,
   WidgetIconButton,
   WidgetSizedButton,
+  WidgetSizedSelect,
+  WidgetVideoSelect,
+  WidgetStepper,
+  WidgetSplitCounter,
+  WidgetTinySpectrumIcon,
+  WIDGET_TINY_ICON_SET,
+  WIDGET_METRIC_ICON_SET,
+  WidgetAccentRailModule,
+  WidgetIconTitleModule,
+  WidgetRainbowDivider,
+  WidgetRainbowPanel,
+  WidgetModuleHeader,
+  WidgetModuleFrame,
 } from "../WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
 import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"
 
 const variantsCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
+const matrixCss = readFileSync(new URL("../widgetMatrixPrimitives.css", import.meta.url), "utf8")
+const tonesCss = readFileSync(new URL("../widgetPrimitiveTones.css", import.meta.url), "utf8")
+const videoSelectCss = readFileSync(new URL("../widgetVideoSelectButtonScroll.css", import.meta.url), "utf8")
+const extensionSource = readFileSync(new URL("../WidgetPrimitiveExtensions.tsx", import.meta.url), "utf8")
+const referenceSource = readFileSync(new URL("../widgets/UIReferenceLibraryWidget.tsx", import.meta.url), "utf8")
 
 describe("widget viewport indicator geometry", () => {
   it.each([
@@ -324,6 +342,230 @@ describe("shared widget form primitives", () => {
   })
 })
 
+describe("expanded widget compound primitives", () => {
+  it("keeps the default stepper middle cell compact for two digits", () => {
+    const markup = renderToStaticMarkup(
+      <WidgetStepper label="Quantity" value={99} onChange={() => {}} min={0} max={99} />,
+    )
+    expect(markup).toContain("widget-stepper-value")
+    expect(matrixCss).toContain("width: 2.7ch")
+    expect(matrixCss).toContain("max-width: 2.7ch")
+  })
+
+  it("renders the split-left counter as two chevron controls plus a compact value cell", () => {
+    const markup = renderToStaticMarkup(
+      <WidgetSplitCounter label="Outputs" value={12} onChange={() => {}} min={0} max={99} />,
+    )
+    expect(markup).toContain("widget-split-counter-controls")
+    expect(markup).toContain('aria-label="Increase Outputs"')
+    expect(markup).toContain('aria-label="Decrease Outputs"')
+    expect(markup).toContain("widget-split-counter-value")
+    expect(matrixCss).toContain("grid-template-rows: repeat(2, minmax(0, 1fr))")
+  })
+
+  it("publishes 50 general icons plus 12 canonical metric icons", () => {
+    expect(Object.keys(WIDGET_TINY_ICON_SET)).toHaveLength(62)
+    expect(WIDGET_METRIC_ICON_SET).toHaveLength(12)
+    expect(WIDGET_METRIC_ICON_SET.map((item) => item.spectrum)).toEqual(WIDGET_BADGE_SPECTRUM)
+    expect(WIDGET_METRIC_ICON_SET.map((item) => item.color)).toEqual(VT_SPECTRUM_PALETTE_06)
+    const markup = renderToStaticMarkup(
+      <WidgetTinySpectrumIcon name="metricViews" spectrum="rose" label="Views" />,
+    )
+    expect(markup).toContain("widget-tiny-spectrum-icon")
+    expect(markup).toContain('aria-label="Views"')
+  })
+
+  it("renders edge-to-edge rail, icon-title, rainbow, and generic module compounds", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <WidgetAccentRailModule spectrum="rose" title="Priority" detail="Today" />
+        <WidgetIconTitleModule spectrum="cyan" icon={<span>Icon</span>} title="Account" subtitle="Connected source" />
+        <WidgetRainbowPanel>System map</WidgetRainbowPanel>
+        <WidgetRainbowDivider />
+        <WidgetModuleFrame
+          header={<WidgetModuleHeader title="Module" controls={<WidgetSizedButton height={24}>Apply</WidgetSizedButton>} />}
+        >
+          Body
+        </WidgetModuleFrame>
+      </div>,
+    )
+    expect(markup).toContain("widget-accent-rail-module")
+    expect(markup).toContain("widget-icon-title-module")
+    expect(markup).toContain("widget-rainbow-panel")
+    expect(markup).toContain("widget-rainbow-divider")
+    expect(markup).toContain("widget-module-header-controls")
+    expect(matrixCss).toContain("inset-inline: 0")
+  })
+
+  it("uses one-row split-left video search and scrollbar-based dropdowns", () => {
+    expect(extensionSource).toContain('<WidgetSearchInput className="widget-video-select-menu-search-row" height={height}')
+    expect(extensionSource).not.toContain("widget-video-select-scroll-button")
+    expect(videoSelectCss).toContain("scrollbar-color")
+    expect(videoSelectCss).toContain("::-webkit-scrollbar")
+    expect(variantsCss).toContain("height: var(--vt-primitive-height, 38px)")
+    expect(variantsCss).toContain(".widget-select-content .widget-select-item")
+  })
+
+  it("binds each portalled standard dropdown to its own height, type and icon metrics", () => {
+    expect(extensionSource).toContain("SELECT_MENU_METRICS")
+    expect(extensionSource).toContain("18:{font:8,icon:12")
+    expect(extensionSource).toContain("24:{font:16,icon:18")
+    expect(extensionSource).toContain("32:{font:21,icon:24")
+    expect(extensionSource).toContain("38:{font:26,icon:29")
+    expect(extensionSource).toContain("contentStyle={selectMenuStyle(height)}")
+    expect(variantsCss).toContain("height: var(--vt-primitive-height, 32px) !important")
+    expect(variantsCss).toContain("font-size: var(--vt-primitive-font, 11px) !important")
+    expect(variantsCss).toContain("width: var(--vt-primitive-icon, 18px) !important")
+    expect(variantsCss).toContain("stroke-width: var(--vt-primitive-icon-stroke, 2.5) !important")
+  })
+
+  it("uses alternating full-width video rows with centered media and badge metadata", () => {
+    expect(extensionSource).toContain("widget-video-select-option-media")
+    expect(extensionSource).toContain("widget-video-select-duration")
+    expect(extensionSource).toContain("widget-video-select-views")
+    expect(variantsCss).toContain("border: 0")
+    expect(variantsCss).toContain("border-radius: 0")
+    expect(variantsCss).toContain("justify-self: center")
+    expect(variantsCss).toContain("-webkit-line-clamp: 3")
+    expect(variantsCss).toContain(".widget-video-select-option:nth-child(even)")
+    expect(variantsCss).toContain(".widget-video-select-option:nth-child(odd)")
+    expect(variantsCss).toContain("72%, #fff")
+    expect(variantsCss).toContain("background: transparent")
+    expect(variantsCss).toContain("color-mix(in srgb, #fff 86%")
+    expect(variantsCss).toContain("height: 14px")
+  })
+
+  it("uses a stacked VIDEO + chevron split-left bay and never a right-side video chevron", () => {
+    expect(extensionSource).toContain("widget-video-select-trigger-selector")
+    expect(extensionSource).toContain("<span>VIDEO</span>")
+    expect(extensionSource).not.toContain("widget-video-select-trigger-chevron")
+    expect(extensionSource).not.toContain("widget-video-select-trigger-icon")
+    expect(variantsCss).toContain("grid-template-rows: repeat(2, minmax(0, 1fr))")
+    expect(variantsCss).toContain("white-space: normal")
+    expect(variantsCss).toContain("text-overflow: clip")
+  })
+
+  it("keeps the three larger VIDEO split bays wide enough for the label and chevron", () => {
+    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-24 { --widget-video-split-bay: 40px; }")
+    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-32 { --widget-video-split-bay: 48px; }")
+    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-38 { --widget-video-split-bay: 54px; }")
+    expect(variantsCss).toContain("span:first-child { font-size: 6px")
+    expect(variantsCss).toContain("span:first-child { font-size: 8px")
+    expect(variantsCss).toContain("span:first-child { font-size: 9px")
+  })
+
+  it("makes the video menu search and option rows truly edge-to-edge", () => {
+    expect(extensionSource).toContain('className="widget-video-select-menu-search-row"')
+    expect(extensionSource).toContain('height={height} tone="primary"')
+    expect(variantsCss).toContain(".widget-video-select.is-open > .widget-video-select-menu")
+    expect(variantsCss).toContain("padding: 0")
+    expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-menu-search-row")
+    expect(variantsCss).toContain("border-radius: 0")
+    expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-option")
+    expect(variantsCss).toContain("grid-template-columns: calc(var(--vt-primitive-height, 38px) * 1.7778)")
+    expect(variantsCss).toContain(".widget-video-select-option-media")
+    expect(variantsCss).toContain("align-self: stretch")
+    expect(variantsCss).toContain("height: 100%")
+    expect(variantsCss).toContain("min-width: 100%")
+    expect(videoSelectCss).not.toContain("border-bottom:")
+  })
+
+  it("frames video thumbnails in VT ink and moves duration one pixel up and left", () => {
+    expect(variantsCss).toContain("border-inline-end: 1.5px solid var(--vt-tone-ink")
+    expect(variantsCss).toContain(".widget-video-select.is-open .widget-video-select-duration")
+    expect(variantsCss).toContain("right: 2px")
+    expect(variantsCss).toContain("bottom: 0")
+  })
+
+  it("manifests every Navigation primitive inside Widget Module headers", () => {
+    expect(referenceSource).toContain('title="Channel Overview"')
+    expect(referenceSource).toContain('label="Channel overview time window"')
+    expect(referenceSource).toContain('title="Comment Responder"')
+    expect(referenceSource).toContain('label="Comment responder view example"')
+    expect(referenceSource).toContain('label="Comment pagination example"')
+    expect(referenceSource).toContain('title="Publishing Workflow"')
+    expect(referenceSource).toContain('label="Header publishing stages"')
+    expect(referenceSource).toContain('title="Auto Chapters"')
+    expect(referenceSource).toContain('label="Automatic Chapters"')
+    expect(referenceSource).toContain('title="Embed Permission"')
+    expect(referenceSource).toContain('label="Allow Embedding"')
+    expect(referenceSource).toContain('title="Reply Mode"')
+    expect(referenceSource).toContain('name="module-reply-mode"')
+  })
+
+  it("uses placeholder filler copy so focus starts the caret at the left edge", () => {
+    expect(extensionSource).toContain('placeholder="Type…"')
+    expect(referenceSource).toContain('placeholder="Sample title input"')
+    expect(referenceSource).toContain('const [textValue, setTextValue] = useState("")')
+    expect(tonesCss).toContain("::placeholder")
+    expect(tonesCss).toContain("opacity: .12")
+  })
+
+  it("groups the UI Reference by size then tone with optional equal-width grid mode", () => {
+    expect(referenceSource).toContain('"size", label: "SIZE"')
+    expect(referenceSource).toContain("sizeGridMode")
+    expect(referenceSource).toContain("CONTROL_HEIGHTS.map((height)")
+    expect(referenceSource).toContain("CONTROL_TONES.map((tone)")
+    expect(variantsCss).toContain(".widget-reference-size-flow.is-grid")
+    expect(variantsCss).toContain("grid-template-columns: repeat(3, minmax(0, 1fr))")
+    expect(referenceSource).not.toContain('familyHeading("Compact Steppers"')
+  })
+
+  it("scales split-counter chevrons with the canonical icon token", () => {
+    expect(matrixCss).toContain(".widget-split-counter-controls svg")
+    expect(matrixCss).toContain("width: min(var(--vt-primitive-icon), var(--vt-primitive-font)")
+    expect(matrixCss).toContain("height: min(var(--vt-primitive-icon), var(--vt-primitive-font)")
+  })
+
+  it("gives secondary controls a structurally different inverse color construction", () => {
+    expect(matrixCss).toContain(".widget-stepper.is-tone-secondary")
+    expect(matrixCss).toContain(".widget-pagination.is-tone-secondary")
+    expect(matrixCss).toContain(".widget-search-input.is-tone-secondary")
+    expect(matrixCss).toContain(".widget-toggle-switch.is-tone-secondary")
+    expect(matrixCss).toContain("background: var(--widget-color, #34cdea)")
+    expect(matrixCss).toContain("background: #fff")
+    expect(matrixCss).toContain("color: #fff")
+
+    expect(tonesCss).toContain(".widget-text-input.vt-sized-control.is-tone-secondary")
+    expect(tonesCss).toContain(".widget-select-trigger.vt-sized-control.is-tone-secondary")
+    expect(tonesCss).toContain(".widget-video-select-trigger.vt-sized-control.is-tone-secondary")
+    expect(tonesCss).toContain(".widget-select-content.is-tone-secondary")
+  })
+
+  it("uses the requested inverse secondary toggle animation", () => {
+    expect(matrixCss).toContain(".widget-toggle-switch.is-tone-secondary")
+    expect(matrixCss).toContain("border: 0 !important")
+    expect(matrixCss).toContain(".widget-toggle-switch.is-tone-secondary.is-checked")
+    expect(matrixCss).toContain("background: var(--widget-color, #34cdea)")
+    expect(matrixCss).toContain(".widget-toggle-switch.is-tone-secondary.is-checked .widget-toggle-switch-thumb")
+    expect(matrixCss).toContain("background: #fff")
+    expect(matrixCss).toContain("background 260ms ease")
+  })
+
+  it("keeps sized select and video select on the public primitive surface", () => {
+    expect(renderToStaticMarkup(
+      <WidgetSizedSelect
+        height={24}
+        tone="primary"
+        label="Visibility"
+        value="public"
+        onChange={() => {}}
+        options={[{ value: "public", label: "Public" }]}
+      />,
+    )).toContain("is-height-24")
+
+    expect(renderToStaticMarkup(
+      <WidgetVideoSelect
+        height={38}
+        label="Video"
+        value="v1"
+        onChange={() => {}}
+        options={[{ value: "v1", label: "Long title", meta: "12:42 · 48,230 views" }]}
+      />,
+    )).toContain("is-height-38")
+  })
+})
+
 // ═══════════════════════════════════════════════════════════════
 // A primitive that emits `is-<something>` as a class name renders
 // unstyled when the stylesheet has no matching rule, and nothing
@@ -333,11 +575,6 @@ describe("shared widget form primitives", () => {
 // of them, so all twelve painted the same royal fallback.
 // ═══════════════════════════════════════════════════════════════
 describe("spectrum tone classes", () => {
-  const matrixCss = readFileSync(
-    new URL("../widgetMatrixPrimitives.css", import.meta.url),
-    "utf8",
-  )
-
   it("defines every spectrum slot the primitives can emit", () => {
     for (const name of WIDGET_BADGE_SPECTRUM) {
       expect(
@@ -371,12 +608,16 @@ describe("spectrum tone classes", () => {
     })
   })
 
-  it("renders a spectrum split badge and a semantic toast", () => {
+  it("renders spectrum badges and toasts with tag-matched monochrome ink", () => {
     const badge = renderToStaticMarkup(
       <WidgetLeftSplitBadge spectrum="teal" icon={<span />}>On target</WidgetLeftSplitBadge>,
     )
     expect(badge).toContain("is-spectrum-teal")
     expect(badge).toContain("widget-split-badge-icon")
+    expect(matrixCss).toContain("--widget-spectrum-ink: #4EE4BE")
+    expect(matrixCss).toContain("border: 2px solid var(--widget-spectrum-ink) !important")
+    expect(matrixCss).toContain("color: var(--widget-spectrum-ink) !important")
+    expect(matrixCss).toContain("--widget-toast-ink: var(--widget-spectrum-ink)")
 
     // Status must not be carried by hue alone: it sets a data attribute
     // and an assertive live region for the two urgent states.
