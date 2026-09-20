@@ -82,6 +82,12 @@ describe("Subtoolbox Primitive System", () => {
     expect(css).toContain("border:0!important")
     expect(css).toContain("--vt-knob-size:calc(var(--vt-component-height)*2.15)")
     expect(css).toContain(".vt-subtoolbox-knob-arc{display:none}")
+    expect(css).toContain("COMPONENT LIBRARY CORRECTION V4 — groups 18 / 19 / 21 / 22 / 23.")
+    expect(css).toContain("border:var(--vt-component-stroke) solid #000!important")
+    expect(css).toContain("--switch-inset:calc(var(--vt-component-height)*.10)")
+    expect(css).toContain("var(--switch-handle-w)")
+    expect(css).toContain("width:var(--vt-component-height)!important")
+    expect(css).toContain("border-radius:var(--vt-component-radius)!important")
   })
 
   it("gives every declared subtoolbox state default copy", () => {
