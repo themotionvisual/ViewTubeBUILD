@@ -24,6 +24,12 @@
   max-width: none;
 }
 
+.widget-video-select-search .widget-search-input > input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
 .widget-video-select-options {
   display: grid;
   gap: 4px;
