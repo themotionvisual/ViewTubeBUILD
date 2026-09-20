@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { CreatorGrowthContext } from "../../../types"
-import { buildDailyOraclePlan } from "../DailyOracleDecisionEngine"
+import { buildDailyOraclePlan, calculateDailyOracleStreak } from "../DailyOracleDecisionEngine"
 
 const growth = (overrides: Partial<CreatorGrowthContext> = {}): CreatorGrowthContext => ({
  profileConfidenceScore: 82,
@@ -75,5 +75,32 @@ describe("DailyOracleDecisionEngine", () => {
   expect(plan.focusTasks.every((item) => item.metric === "watch-time")).toBe(true)
   expect(plan.sourceLabel).toContain("channel not connected")
   expect(plan.quickWins.some((item) => item.id === "brain-context")).toBe(true)
+ })
+})
+
+
+describe("Daily Oracle streaks", () => {
+ it("counts a current streak only after today is completed", () => {
+  const before = calculateDailyOracleStreak(["2026-09-18", "2026-09-19"], "2026-09-20")
+  expect(before.currentStreak).toBe(0)
+  expect(before.completedToday).toBe(false)
+
+  const after = calculateDailyOracleStreak(["2026-09-18", "2026-09-19", "2026-09-20"], "2026-09-20")
+  expect(after.currentStreak).toBe(3)
+  expect(after.completedToday).toBe(true)
+  expect(after.longestStreak).toBe(3)
+ })
+
+ it("tracks longest streak across gaps", () => {
+  const streak = calculateDailyOracleStreak([
+   "2026-09-10",
+   "2026-09-11",
+   "2026-09-12",
+   "2026-09-15",
+   "2026-09-20",
+  ], "2026-09-20")
+  expect(streak.currentStreak).toBe(1)
+  expect(streak.longestStreak).toBe(3)
+  expect(streak.totalCompleted).toBe(5)
  })
 })
