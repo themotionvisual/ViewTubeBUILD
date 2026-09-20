@@ -54,4 +54,5 @@ export const WIDGET_DESCRIPTIONS: Record<string, { short: string; detailed: stri
  "content-pipeline": { short: "FOLLOW CONTENT FROM IDEA THROUGH PUBLISH.", detailed: "See the current production pulse across ideation, build, ready, and published stages and jump directly into Projects." },
  "audience-requests": { short: "TURN VIEWER REQUESTS INTO CONTENT OPPORTUNITIES.", detailed: "Surface recurring audience questions and requests, preserve their evidence, and route promising ideas into the production workflow." },
  "video-director": { short: "DIRECT GENERATED VIDEO FROM ONE SHARED VIDEO DNA SYSTEM.", detailed: "Use the compact Dashboard execution surface for briefs, scoped Director settings, storyboard shots, variation permissions, generation planning, queue progress, and direct handoff to the expanded Studio Hub Video Director." },
+ "video-asset-engine": { short: "ASSEMBLE DURABLE CREATOR ASSETS INTO ONE TRACEABLE VIDEO PACKAGE.", detailed: "Use canonical Asset Engine and Vault records to inspect package readiness, select recent assets, follow lineage, and hand work into Studio, Editor, or Vault without creating a second asset store." },
 }
