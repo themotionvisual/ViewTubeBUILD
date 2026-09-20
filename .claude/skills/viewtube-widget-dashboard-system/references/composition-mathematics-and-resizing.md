@@ -420,3 +420,19 @@ Do not add generic 430/620/etc. breakpoints without recording what invariant fai
 Storyboards, timelines, shot strips, queues, and similar sequence-native components may preserve horizontal ordering with bounded horizontal scrolling instead of changing row counts.
 
 Use scroll only where the sequence itself makes scrolling understandable. Essential navigation still requires a discoverable primary control.
+
+
+## 29. Scroll safe-area ownership
+
+Do not combine a flush widget body with a full-bleed `WidgetScrollArea` unless the widget intentionally owns and compensates the resulting edge geometry.
+
+The canonical scroll area assumes the shell content inset when calculating its negative margins and scrollbar lane. If the body inset is zeroed and the scroll area is still full-bleed, the scroll frame can extend beyond the widget shell and be clipped on both sides.
+
+For ordinary tool widgets:
+
+- keep the shell body inset;
+- use `edge="inset"` for the primary workflow scroll area;
+- let full-bleed sections opt out deliberately rather than making the whole scroll surface full-bleed;
+- verify that every input, selector, signature component and border remains inside the shell at portrait width.
+
+Treat visible clipping at both left and right edges as an ownership/geometry defect, not a reason to shrink text or controls.
