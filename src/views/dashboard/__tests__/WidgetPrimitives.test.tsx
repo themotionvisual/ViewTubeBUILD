@@ -398,7 +398,7 @@ describe("expanded widget compound primitives", () => {
   })
 
   it("uses one-row split-left video search and scrollbar-based dropdowns", () => {
-    expect(extensionSource).toContain("<WidgetSearchInput height={height}")
+    expect(extensionSource).toContain('<WidgetSearchInput className="widget-video-select-menu-search-row" height={height}')
     expect(extensionSource).not.toContain("widget-video-select-scroll-button")
     expect(videoSelectCss).toContain("scrollbar-color")
     expect(videoSelectCss).toContain("::-webkit-scrollbar")
