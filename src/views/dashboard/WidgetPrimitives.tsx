@@ -390,7 +390,8 @@ export const WidgetSelect: React.FC<{
   className?: string
   contentClassName?: string
   style?: React.CSSProperties
-}> = ({ value, onChange, options, label, placeholder = "Select…", disabled = false, className = "", contentClassName = "", style }) => {
+  contentStyle?: React.CSSProperties
+}> = ({ value, onChange, options, label, placeholder = "Select…", disabled = false, className = "", contentClassName = "", style, contentStyle }) => {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const [menuColor, setMenuColor] = useState("#FA618A")
   const [menuInk, setMenuInk] = useState("#9f3653")
@@ -429,6 +430,10 @@ export const WidgetSelect: React.FC<{
           sideOffset={4}
           collisionPadding={12}
           style={{
+            ...contentStyle,
+            "--widget-color": menuColor,
+            "--widget-border": menuInk,
+            "--widget-ink": menuInk,
             "--widget-select-color": menuColor,
             "--widget-select-ink": menuInk,
             "--widget-select-stroke": menuStroke,
