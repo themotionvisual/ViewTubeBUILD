@@ -88,6 +88,8 @@ describe("Subtoolbox Primitive System", () => {
     expect(css).toContain("var(--switch-handle-w)")
     expect(css).toContain("width:var(--vt-component-height)!important")
     expect(css).toContain("border-radius:var(--vt-component-radius)!important")
+    expect(css).toContain("COMPONENT LIBRARY CORRECTION V5 — tag editor parity")
+    expect(css).toContain("--field-body:var(--pair-b")
   })
 
   it("gives every declared subtoolbox state default copy", () => {
@@ -159,7 +161,8 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("Z · TAG")
     expect(html).toContain("vt-subtoolbox-split-field is-search has-action")
     expect(html).toContain("vt-subtoolbox-split-field is-action has-action")
-    expect(html).toContain("vt-subtoolbox-tag-editor-label")
+    expect(html).toContain("vt-subtoolbox-tag-editor-tags")
+    expect(html).not.toContain("vt-subtoolbox-tag-editor-label")
     expect(html).toContain('role="progressbar"')
     expect(html).toContain(">SYNC<")
     expect(html).toContain("vt-subtoolbox-data-table")
