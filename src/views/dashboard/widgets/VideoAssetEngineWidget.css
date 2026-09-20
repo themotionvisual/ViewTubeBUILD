@@ -115,14 +115,12 @@
 .vt-asset-engine-lineage{flex:1;min-height:0;overflow:auto}
 .vt-asset-engine-lineage>span{display:block;margin-bottom:6px;font-size:8px;font-weight:1000;letter-spacing:.05em}
 .vt-asset-engine-lineage-track{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.vt-asset-engine-lineage-track button{
+.vt-asset-engine-lineage-track .vt-button{
   max-width:170px;
-  padding:5px 7px;
-  border:var(--widget-module-stroke,2px) solid var(--widget-border,var(--widget-ink,#243247));
-  border-radius:var(--widget-control-radius,4px);
-  background:#fff;color:inherit;
-  font-size:8px;font-weight:1000;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 .vt-asset-engine-lineage-track i{font-style:normal;font-weight:1000}
 .vt-asset-engine-lineage-track small{font-size:9px;font-weight:900;opacity:.56}
@@ -163,7 +161,7 @@
   .vt-asset-engine-footer .widget-action:last-child{display:none}
 }
 @media (pointer:coarse){
-  .vt-asset-engine-slot,.vt-asset-engine-asset-row,.vt-asset-engine-lineage-track button{min-height:44px}
+  .vt-asset-engine-slot,.vt-asset-engine-asset-row{min-height:44px}
 }
 @media (prefers-reduced-motion:reduce){
   .vt-asset-engine-slot,.vt-asset-engine-asset-row{transition:none}
