@@ -829,6 +829,15 @@
 .widget-reference-size-flow:not(.is-grid) .widget-split-button.is-left-split {
   width: fit-content !important;
 }
+.widget-reference-size-flow:not(.is-grid) .widget-reference-size-video {
+  width: clamp(150px, 24ch, 230px) !important;
+  max-width: min(230px, 72vw) !important;
+}
+.widget-reference-size-flow:not(.is-grid) .widget-reference-natural-progress {
+  width: clamp(96px, 16ch, 140px) !important;
+  max-width: 140px !important;
+}
+
 .widget-reference-size-flow.is-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -847,7 +856,10 @@
   .widget-split-counter,
   .widget-split-badge,
   .widget-search-input,
-  .widget-live-badge
+  .widget-live-badge,
+  .widget-video-select,
+  .widget-progress-bar,
+  .widget-toggle-switch
 ) {
   width: 100% !important;
   max-width: none !important;
