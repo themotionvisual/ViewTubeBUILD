@@ -101,7 +101,22 @@
 @layer archetypes { .widget-upload-frame { width:100%; aspect-ratio:16/9; min-height:0; height:auto; padding:var(--vt-gap-2); border:2px solid; border-top-color:var(--widget-color,#34cdea); border-right-color:var(--widget-border,var(--vt-ink)); border-bottom-color:var(--widget-color,#34cdea); border-left-color:var(--widget-border,var(--vt-ink)); border-radius:var(--widget-control-radius,8px); background:color-mix(in srgb,var(--widget-color,#34cdea) 10%,white); box-sizing:border-box; align-content:center; justify-items:center; } .widget-upload-frame::before { content:none; } }
 @layer widgets { .widget-edit-menu-popover { gap:var(--vt-gap-2); } .widget-edit-dimensions { display:grid; grid-template-columns:1fr 1fr; gap:var(--vt-gap-1); padding:var(--vt-gap-2); border-bottom:2px solid var(--vt-ink); font-size:10px; font-weight:1000; } .widget-edit-resize-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--vt-gap-1); } .widget-edit-resize-grid .widget-edit-action { min-width:32px; justify-content:center; padding:0 4px; font-size:10px; font-weight:1000; } .widget-reference-header-controls > .widget-header-toggle:first-child { display:none; } }
 @layer utilities { .vt-grid-4 { display:grid; gap:var(--vt-gap-1); } .vt-grid-8 { display:grid; gap:var(--vt-gap-2); } .vt-stack-4 { display:flex; flex-direction:column; gap:var(--vt-gap-1); } .vt-stack-8 { display:flex; flex-direction:column; gap:var(--vt-gap-2); } }
-@layer accessibility { @media (max-width:767px) { .vt-sized-control { height:var(--vt-primitive-height); min-height:var(--vt-primitive-height); max-height:var(--vt-primitive-height); } } }
+@layer accessibility {
+ @media (max-width:767px) {
+  /* Mobile keeps visible controls at their canonical height, but portalled
+     dropdown menus are collections of rows and must remain auto-height. */
+  .vt-sized-control:not(.widget-select-content) {
+   height:var(--vt-primitive-height);
+   min-height:var(--vt-primitive-height);
+   max-height:var(--vt-primitive-height);
+  }
+  .widget-select-content.vt-sized-control {
+   height:auto;
+   min-height:0;
+   max-height:min(340px,calc(var(--vt-primitive-height) * 9));
+  }
+ }
+}
 
 
 @layer primitives {
