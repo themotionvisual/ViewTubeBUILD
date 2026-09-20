@@ -388,47 +388,68 @@
    ─────────────────────────────────────────────────────────────── */
 .widget-spectrum-fill-badge.is-spectrum-rose,
 .widget-toast.is-spectrum-rose,
-.widget-split-badge.is-spectrum-rose { --widget-spectrum-fill: #FA618A; --vt-tone-fill: #FA618A; }
+.widget-split-badge.is-spectrum-rose { --widget-spectrum-fill: #FA618A; --widget-spectrum-ink: #FA618A; --vt-tone-fill: #FA618A; }
 .widget-spectrum-fill-badge.is-spectrum-coral,
 .widget-toast.is-spectrum-coral,
-.widget-split-badge.is-spectrum-coral { --widget-spectrum-fill: #FF7F6B; --vt-tone-fill: #FF7F6B; }
+.widget-split-badge.is-spectrum-coral { --widget-spectrum-fill: #FF7F6B; --widget-spectrum-ink: #FF7F6B; --vt-tone-fill: #FF7F6B; }
 .widget-spectrum-fill-badge.is-spectrum-orange,
 .widget-toast.is-spectrum-orange,
-.widget-split-badge.is-spectrum-orange { --widget-spectrum-fill: #FFA85C; --vt-tone-fill: #FFA85C; }
+.widget-split-badge.is-spectrum-orange { --widget-spectrum-fill: #FFA85C; --widget-spectrum-ink: #FFA85C; --vt-tone-fill: #FFA85C; }
 .widget-spectrum-fill-badge.is-spectrum-yellow,
 .widget-toast.is-spectrum-yellow,
-.widget-split-badge.is-spectrum-yellow { --widget-spectrum-fill: #FFDA47; --vt-tone-fill: #FFDA47; }
+.widget-split-badge.is-spectrum-yellow { --widget-spectrum-fill: #FFDA47; --widget-spectrum-ink: #FFDA47; --vt-tone-fill: #FFDA47; }
 .widget-spectrum-fill-badge.is-spectrum-lime,
 .widget-toast.is-spectrum-lime,
-.widget-split-badge.is-spectrum-lime { --widget-spectrum-fill: #C0F240; --vt-tone-fill: #C0F240; }
+.widget-split-badge.is-spectrum-lime { --widget-spectrum-fill: #C0F240; --widget-spectrum-ink: #C0F240; --vt-tone-fill: #C0F240; }
 .widget-spectrum-fill-badge.is-spectrum-green,
 .widget-toast.is-spectrum-green,
-.widget-split-badge.is-spectrum-green { --widget-spectrum-fill: #3FEE56; --vt-tone-fill: #3FEE56; }
+.widget-split-badge.is-spectrum-green { --widget-spectrum-fill: #3FEE56; --widget-spectrum-ink: #3FEE56; --vt-tone-fill: #3FEE56; }
 .widget-spectrum-fill-badge.is-spectrum-teal,
 .widget-toast.is-spectrum-teal,
-.widget-split-badge.is-spectrum-teal { --widget-spectrum-fill: #4EE4BE; --vt-tone-fill: #4EE4BE; }
+.widget-split-badge.is-spectrum-teal { --widget-spectrum-fill: #4EE4BE; --widget-spectrum-ink: #4EE4BE; --vt-tone-fill: #4EE4BE; }
 .widget-spectrum-fill-badge.is-spectrum-cyan,
 .widget-toast.is-spectrum-cyan,
-.widget-split-badge.is-spectrum-cyan { --widget-spectrum-fill: #36E0F6; --vt-tone-fill: #36E0F6; }
+.widget-split-badge.is-spectrum-cyan { --widget-spectrum-fill: #36E0F6; --widget-spectrum-ink: #36E0F6; --vt-tone-fill: #36E0F6; }
 .widget-spectrum-fill-badge.is-spectrum-royal,
 .widget-toast.is-spectrum-royal,
-.widget-split-badge.is-spectrum-royal { --widget-spectrum-fill: #528FFA; --vt-tone-fill: #528FFA; }
+.widget-split-badge.is-spectrum-royal { --widget-spectrum-fill: #528FFA; --widget-spectrum-ink: #528FFA; --vt-tone-fill: #528FFA; }
 .widget-spectrum-fill-badge.is-spectrum-purple,
 .widget-toast.is-spectrum-purple,
-.widget-split-badge.is-spectrum-purple { --widget-spectrum-fill: #A467F4; --vt-tone-fill: #A467F4; }
+.widget-split-badge.is-spectrum-purple { --widget-spectrum-fill: #A467F4; --widget-spectrum-ink: #A467F4; --vt-tone-fill: #A467F4; }
 .widget-spectrum-fill-badge.is-spectrum-magenta,
 .widget-toast.is-spectrum-magenta,
-.widget-split-badge.is-spectrum-magenta { --widget-spectrum-fill: #F55EFC; --vt-tone-fill: #F55EFC; }
+.widget-split-badge.is-spectrum-magenta { --widget-spectrum-fill: #F55EFC; --widget-spectrum-ink: #F55EFC; --vt-tone-fill: #F55EFC; }
 .widget-spectrum-fill-badge.is-spectrum-pink,
 .widget-toast.is-spectrum-pink,
-.widget-split-badge.is-spectrum-pink { --widget-spectrum-fill: #FF7AC8; --vt-tone-fill: #FF7AC8; }
+.widget-split-badge.is-spectrum-pink { --widget-spectrum-fill: #FF7AC8; --widget-spectrum-ink: #FF7AC8; --vt-tone-fill: #FF7AC8; }
 
-/* A spectrum split badge tints its body with its own hue rather than
-   the widget colour, so the twelve read as a set. */
-.widget-toast[class*="is-spectrum-"] { --widget-toast-hue: var(--vt-tone-fill); }
-
+/* Spectrum badges/toasts share the exact same monochrome ownership as
+   spectrum tags: hue-colored stroke, text and icons over a pale hue tint.
+   They never fall back to widget ink or black. */
+.widget-spectrum-fill-badge[class*="is-spectrum-"],
 .widget-split-badge[class*="is-spectrum-"] {
-  background: color-mix(in srgb, var(--vt-tone-fill) 22%, #fff);
+  border-color: var(--widget-spectrum-ink) !important;
+  background: color-mix(in srgb, var(--widget-spectrum-fill) 18%, #fff) !important;
+  color: var(--widget-spectrum-ink) !important;
+  --vt-tone-stroke: var(--widget-spectrum-ink);
+  --vt-tone-ink: var(--widget-spectrum-ink);
+}
+
+.widget-spectrum-fill-badge[class*="is-spectrum-"] svg,
+.widget-split-badge[class*="is-spectrum-"] svg {
+  color: var(--widget-spectrum-ink) !important;
+  stroke: var(--widget-spectrum-ink) !important;
+}
+
+.widget-split-badge[class*="is-spectrum-"] .widget-split-badge-icon {
+  border-color: var(--widget-spectrum-ink) !important;
+  background: color-mix(in srgb, var(--widget-spectrum-fill) 28%, #fff) !important;
+  color: var(--widget-spectrum-ink) !important;
+}
+
+.widget-toast[class*="is-spectrum-"] {
+  --widget-toast-hue: var(--widget-spectrum-fill);
+  --widget-toast-ink: var(--widget-spectrum-ink);
 }
 
 /* ── Toast / alert ──────────────────────────────────────────────
@@ -448,10 +469,10 @@
   width: 100%;
   min-width: 0;
   padding: 10px 12px;
-  border: 2px solid var(--vt-tone-stroke, var(--widget-ink, #243247));
+  border: 2px solid var(--widget-toast-ink, var(--vt-tone-stroke, var(--widget-ink, #243247)));
   border-radius: 8px;
   background: color-mix(in srgb, var(--widget-toast-hue) 16%, #fff);
-  color: var(--widget-ink, #243247);
+  color: var(--widget-toast-ink, var(--widget-ink, #243247));
   box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--widget-toast-hue) 55%, transparent);
   font-family: inherit;
 }
@@ -461,10 +482,10 @@
   width: 36px;
   min-width: 36px;
   height: 36px;
-  border: 2px solid var(--vt-tone-stroke, var(--widget-ink, #243247));
+  border: 2px solid var(--widget-toast-ink, var(--vt-tone-stroke, var(--widget-ink, #243247)));
   border-radius: 6px;
-  background: var(--widget-toast-hue);
-  color: var(--widget-ink, #243247);
+  background: color-mix(in srgb, var(--widget-toast-hue) 22%, #fff);
+  color: var(--widget-toast-ink, var(--widget-toast-hue));
 }
 .widget-toast-icon > svg {
   width: 20px;
@@ -499,10 +520,10 @@
   min-width: 24px;
   height: 24px;
   padding: 0;
-  border: 2px solid var(--vt-tone-stroke, var(--widget-ink, #243247));
+  border: 2px solid var(--widget-toast-ink, var(--vt-tone-stroke, var(--widget-ink, #243247)));
   border-radius: 5px;
-  background: #fff;
-  color: inherit;
+  background: color-mix(in srgb, var(--widget-toast-hue) 10%, #fff);
+  color: var(--widget-toast-ink, inherit);
   cursor: pointer;
 }
 .widget-toast-dismiss > svg {
