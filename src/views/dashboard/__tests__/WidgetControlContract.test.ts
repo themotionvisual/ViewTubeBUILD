@@ -9,6 +9,10 @@ const widgetScrollbarCss = readFileSync(
   new URL("../widgetScrollbar.css", import.meta.url),
   "utf8",
 )
+const widgetPrimitiveExtensionsSource = readFileSync(
+  new URL("../WidgetPrimitiveExtensions.tsx", import.meta.url),
+  "utf8",
+)
 const dailyOracleSource = readFileSync(new URL("../widgets/DailyOracleWidget.tsx", import.meta.url), "utf8")
 const aiJournalSource = readFileSync(new URL("../widgets/AIJournalWidget.tsx", import.meta.url), "utf8")
 const imageGeneratorSource = readFileSync(new URL("../widgets/ImageGeneratorWidget.tsx", import.meta.url), "utf8")
@@ -51,6 +55,12 @@ describe("dashboard widget control rhythm", () => {
   it("gives portalled dropdown options the same fallback geometry and type", () => {
     expect(widgetSystemCss).toContain("min-height: var(--widget-control-height);")
     expect(widgetSystemCss).toContain("font-size: var(--widget-control-font-size, 12px) !important;")
+  })
+
+  it("keeps portalled sized-select menus out of primitive flex and adaptive-fit geometry", () => {
+    expect(widgetPrimitiveExtensionsSource).toContain("const selectMenuClass")
+    expect(widgetPrimitiveExtensionsSource).toContain("contentClassName={selectMenuClass(height,tone)}")
+    expect(widgetPrimitiveExtensionsSource).not.toContain("contentClassName={primitiveClass(height,tone,textFit)}")
   })
 })
 
