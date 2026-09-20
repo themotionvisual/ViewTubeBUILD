@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { Activity, ArrowRight, Award, BarChart3, Bell, Bookmark, Brain, CalendarDays, Camera, Check, ChevronDown, ChevronUp, CircleDollarSign, Clock3, Download, Eye, FileText, FileVideo2, Film, Filter, Flag, Flame, Folder, Gauge, Gem, Heart, Image, Info, Layers, Lightbulb, Link, ListChecks, Lock, Mail, MessageCircle, Mic, MonitorPlay, Music, OctagonAlert, Pencil, Play, Plus, Rocket, Search, Send, Settings, Sparkles, Star, Target, TrendingUp, Upload, Users, WandSparkles, X, Zap, type LucideIcon } from "lucide-react"
 import { WIDGET_BADGE_SPECTRUM, WidgetSelect, WidgetSplitButton, resolveBadgeHue, type WidgetBadgeSpectrumName, type WidgetBadgeStatus, type WidgetBadgeTone, type WidgetSelectOption } from "./WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
