@@ -344,3 +344,20 @@ The menu itself must remain an auto-height vertical list.
 If a dropdown opens as an empty white strip with only a scroll chevron visible, inspect whether trigger geometry classes were copied onto the portal content and collapsed the viewport.
 
 Always verify dropdowns on mobile Safari/Chrome after primitive changes because portals escape the widget container and do not inherit the widget element directly.
+
+## Mobile dropdown height exception
+
+A portalled select menu is not a single fixed-height control.
+
+Any mobile rule that enforces canonical control height on `.vt-sized-control` must explicitly exclude `.widget-select-content` or override it back to auto-height.
+
+Otherwise a valid dropdown with many options can collapse to one control-row height, leaving only a scroll chevron visible while the option viewport appears empty.
+
+Required invariant:
+
+- trigger: fixed canonical height;
+- menu container: auto height up to max-height;
+- option rows: canonical primitive height;
+- viewport: scrolls when option count exceeds available space.
+
+Mobile accessibility/density layers must not accidentally re-clamp the menu after the primitive layer has made it auto-height.
