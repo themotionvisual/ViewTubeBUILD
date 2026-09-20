@@ -1012,3 +1012,30 @@
   border: 0;
   background: transparent;
 }
+
+
+/* Small allocated widget widths need a second fitting step. Keep the 24px
+   control geometry, but compress text/icon/gap before allowing a label to be
+   cropped. This specifically protects dense action rows such as Image
+   Generator handoffs and five-way mode/lens controls. */
+@container vt-widget (max-width: 430px) {
+  .vt-sized-control.is-height-24.vt-text-fit-adaptive {
+    --vt-primitive-font: 10px;
+    --vt-font: 10px;
+    --vt-primitive-icon: 11px;
+    --vt-primitive-gap: 1px;
+    padding-inline: 2px !important;
+    letter-spacing: -0.02em;
+  }
+}
+
+@container vt-widget (max-width: 360px) {
+  .vt-sized-control.is-height-24.vt-text-fit-adaptive {
+    --vt-primitive-font: 9px;
+    --vt-font: 9px;
+    --vt-primitive-icon: 9px;
+    --vt-primitive-gap: 1px;
+    padding-inline: 1px !important;
+    letter-spacing: -0.03em;
+  }
+}
