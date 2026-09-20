@@ -130,7 +130,7 @@ describe("time window controller options", () => {
 
  it("tells the user which datasets derive their windows for free", () => {
   // The recommended default selection includes daily stats, which is derived.
-  expect(render()).toContain("derive their windows without extra window requests")
+  expect(render()).toContain("derive requested windows from their source data without extra per-window requests")
  })
 
  it("uses analog switch components for quick-select presets rather than ordinary preset buttons", () => {
@@ -141,7 +141,7 @@ describe("time window controller options", () => {
   expect(source).toContain('label="Clear"')
  })
 
-  it("passes the selected windows to both sync entry points", () => {
+ it("passes the selected windows to both sync entry points", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
   const startCalls = source.split("\n").filter((line) => line.includes("await onStartSync("))
   expect(startCalls).toHaveLength(2)
