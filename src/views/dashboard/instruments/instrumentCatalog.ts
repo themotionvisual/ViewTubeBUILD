@@ -78,6 +78,7 @@ export const WIDGET_INSTRUMENT_CATALOG: readonly WidgetInstrumentDefinition[] = 
   define("content-pipeline", "flow", "Production assembly line", "Content package", "Advance stage", "Track content from idea to publication.", "Move packages through ideation, build, ready and published stages.", "Production bottlenecks are visible."),
   define("audience-requests", "flow", "Request opportunity funnel", "Viewer request", "Promote opportunity", "Turn audience needs into content opportunities.", "Collect, cluster and rank repeated requests.", "A supported request enters production."),
   define("video-director", "console", "Director control room", "Video DNA direction", "Direct or generate", "Direct generated video from one shared Video DNA system.", "Coordinate concept, shot, camera, audio, graphics, variation and output controls through purpose-built directing instruments.", "A coherent directed video plan is ready to storyboard, vary, generate or continue in Studio."),
+  define("video-asset-engine", "forge", "Package composer", "Durable creator asset", "Inspect or hand off", "Assemble reusable video assets into one traceable package.", "Resolve canonical Vault assets into package slots, readiness, lineage and contextual destinations.", "A durable package is ready for the next creator workflow."),
 ] as const
 
 export const WIDGET_INSTRUMENT_BY_ID = Object.fromEntries(
