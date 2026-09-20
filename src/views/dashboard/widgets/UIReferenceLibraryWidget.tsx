@@ -396,14 +396,23 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                       <small>{tone}</small>
                       <div className={`widget-reference-size-flow ${sizeGridMode ? "is-grid" : ""}`.trim()}>
                         <div className="widget-reference-size-cell"><WidgetSizedButton height={height} tone={tone}>Apply</WidgetSizedButton></div>
-                        <div className="widget-reference-size-cell"><WidgetLeftSplitButton height={height} tone={tone} icon={<Sparkles />}>Create Asset</WidgetLeftSplitButton></div>
+                        <div className="widget-reference-size-cell"><WidgetLeftSplitButton height={height} tone={tone} iconStyle="white-on-color" icon={<Sparkles />}>Create Asset</WidgetLeftSplitButton></div>
+                        <div className="widget-reference-size-cell"><WidgetLeftSplitButton height={height} tone={tone} iconStyle="color-on-light" icon={<Save />}>Save Draft</WidgetLeftSplitButton></div>
                         <div className="widget-reference-size-cell"><WidgetTextInput height={height} tone={tone} placeholder="Video title" aria-label={`${height}px ${tone} input`} /></div>
                         <div className="widget-reference-size-cell"><WidgetSizedSelect height={height} tone={tone} value={selectValue} onChange={setSelectValue} label={`${height}px ${tone} visibility`} options={[{value:"public",label:"PUBLIC"},{value:"unlisted",label:"UNLISTED"},{value:"private",label:"PRIVATE"}]} /></div>
+                        <div className="widget-reference-size-cell"><WidgetVideoSelect className="widget-reference-size-video" height={height} tone={tone} value={selectedVideo} onChange={setSelectedVideo} label={`${height}px ${tone} video`} options={VIDEO_OPTIONS} /></div>
+                        <div className="widget-reference-size-cell"><WidgetProgressBar className="widget-reference-natural-progress" height={height} tone={tone} value={64} label="Progress" displayValue="64%" /></div>
+                        <div className="widget-reference-size-cell"><WidgetIconButton height={height} tone={tone} label="Add item" icon={<Plus />} /></div>
+                        <div className="widget-reference-size-cell"><WidgetIconBadge height={height} tone={tone} label="Saved" icon={<Star />} /></div>
                         <div className="widget-reference-size-cell"><WidgetStepper height={height} tone={tone} label={`${height}px ${tone} stepper`} value={matrixStepper} onChange={setMatrixStepper} min={0} max={99} /></div>
                         <div className="widget-reference-size-cell"><WidgetSplitCounter height={height} tone={tone} label={`${height}px ${tone} counter`} value={matrixStepper} onChange={setMatrixStepper} min={0} max={99} /></div>
+                        <div className="widget-reference-size-cell"><WidgetPagination height={height} tone={tone} page={matrixPage} pageCount={3} onChange={setMatrixPage} /></div>
                         <div className="widget-reference-size-cell"><WidgetLeftSplitBadge height={height} tone={tone} icon={<Check />}>Ready</WidgetLeftSplitBadge></div>
                         <div className="widget-reference-size-cell"><WidgetSearchInput height={height} tone={tone} label={`${height}px ${tone} search`} placeholder="Search" /></div>
                         <div className="widget-reference-size-cell"><WidgetLiveBadge height={height} tone={tone}>Live</WidgetLiveBadge></div>
+                        <div className="widget-reference-size-cell"><WidgetToggleSwitch height={height} tone={tone} label={`${height}px ${tone} toggle`} checked={matrixToggle} onChange={setMatrixToggle} /></div>
+                        <div className="widget-reference-size-cell"><WidgetRadio height={height} tone={tone} label={`${height}px ${tone} radio`} checked={matrixRadio === tone} onChange={() => setMatrixRadio(tone)} /></div>
+                        <div className="widget-reference-size-cell"><WidgetCheckbox height={height} tone={tone} label={`${height}px ${tone} checkbox`} checked={matrixCheck} onChange={setMatrixCheck} /></div>
                       </div>
                     </div>
                   ))}
