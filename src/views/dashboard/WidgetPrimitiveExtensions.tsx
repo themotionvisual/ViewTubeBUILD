@@ -17,11 +17,62 @@ export const WidgetSizedButton:React.FC<React.ButtonHTMLAttributes<HTMLButtonEle
 export const WidgetLeftSplitButton:React.FC<Omit<React.ButtonHTMLAttributes<HTMLButtonElement>,"children">&{icon:React.ReactNode;children:React.ReactNode;tone?:WidgetPrimitiveTone;iconStyle?:WidgetSplitIconStyle;width?:"auto"|"compact"|"wide"|"full";height?:WidgetControlHeight;textFit?:WidgetTextFit}> = ({icon,children,tone="default",iconStyle="white-on-color",width="auto",height=32,textFit="fixed",className="",...props}) => <WidgetSplitButton icon={icon} tone="neutral" width={width} className={`is-left-split ${primitiveClass(height,tone,textFit)} is-icon-${iconStyle} ${className}`.trim()} {...props}>{children}</WidgetSplitButton>
 export const WidgetTextInput:React.FC<React.InputHTMLAttributes<HTMLInputElement>&{height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;textFit?:WidgetTextFit}> = ({height=32,tone="default",textFit="fixed",className="",...props}) => <input className={`vt-input widget-text-input ${primitiveClass(height,tone,textFit)} ${className}`.trim()} {...props}/>
 const selectMenuClass = (height:WidgetControlHeight,tone:WidgetPrimitiveTone) => `vt-size-${height} is-height-${height} vt-tone-${tone} is-tone-${tone}`
-export const WidgetSizedSelect:React.FC<{value:string;onChange:(value:string)=>void;options:WidgetSelectOption[];label:string;placeholder?:string;disabled?:boolean;className?:string;style?:React.CSSProperties;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;textFit?:WidgetTextFit}> = ({height=32,tone="default",textFit="fixed",className="",...props}) => <WidgetSelect className={`${primitiveClass(height,tone,textFit)} ${className}`.trim()} contentClassName={selectMenuClass(height,tone)} {...props}/>
+const SELECT_MENU_METRICS:Record<WidgetControlHeight,{font:number;icon:number;iconStroke:number;radius:number;stroke:number}> = {
+  18:{font:8,icon:12,iconStroke:2,radius:2,stroke:0},
+  24:{font:16,icon:18,iconStroke:2.25,radius:3,stroke:2},
+  32:{font:21,icon:24,iconStroke:2.5,radius:4,stroke:2},
+  38:{font:26,icon:29,iconStroke:2.75,radius:6,stroke:2},
+}
+const selectMenuStyle = (height:WidgetControlHeight) => {
+ const metric=SELECT_MENU_METRICS[height]
+ return {
+  ["--vt-primitive-height" as string]:`${height}px`,
+  ["--vt-primitive-font" as string]:`${metric.font}px`,
+  ["--vt-primitive-icon" as string]:`${metric.icon}px`,
+  ["--vt-primitive-icon-stroke" as string]:metric.iconStroke,
+  ["--vt-primitive-radius" as string]:`${metric.radius}px`,
+  ["--vt-primitive-stroke" as string]:`${metric.stroke}px`,
+ } as React.CSSProperties
+}
+export const WidgetSizedSelect:React.FC<{value:string;onChange:(value:string)=>void;options:WidgetSelectOption[];label:string;placeholder?:string;disabled?:boolean;className?:string;style?:React.CSSProperties;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;textFit?:WidgetTextFit}> = ({height=32,tone="default",textFit="fixed",className="",...props}) => <WidgetSelect className={`${primitiveClass(height,tone,textFit)} ${className}`.trim()} contentClassName={selectMenuClass(height,tone)} contentStyle={selectMenuStyle(height)} {...props}/>
 
-export interface WidgetVideoSelectOption {value:string;label:string;thumbnail?:string;meta?:string}
+export interface WidgetVideoSelectOption {value:string;label:string;thumbnail?:string;meta?:string;duration?:string;views?:string}
+const resolveVideoOptionMeta = (option:WidgetVideoSelectOption) => {
+ const [durationFromMeta="",...rest]=String(option.meta||"").split("·").map(part=>part.trim()).filter(Boolean)
+ return {
+  duration: option.duration || durationFromMeta,
+  views: option.views || rest.join(" · "),
+ }
+}
+
 export const WidgetVideoSelect:React.FC<{value:string;onChange:(value:string)=>void;options:WidgetVideoSelectOption[];label:string;placeholder?:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;iconStyle?:WidgetSplitIconStyle;searchable?:boolean;disabled?:boolean;className?:string}> = ({value,onChange,options,label,placeholder="Select a video…",height=38,tone="default",iconStyle="white-on-color",searchable=true,disabled=false,className=""}) => {
- const[open,setOpen]=useState(false);const[query,setQuery]=useState("");const selected=options.find(o=>o.value===value);const visibleOptions=useMemo(()=>{const n=query.trim().toLowerCase();return n?options.filter(o=>`${o.label} ${o.meta||""}`.toLowerCase().includes(n)):options},[options,query]);return <div className={`widget-video-select ${open?"is-open":""} ${className}`.trim()}><button type="button" className={`widget-video-select-trigger vt-interactive ${primitiveClass(height,tone)} is-icon-${iconStyle}`} aria-label={label} aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={()=>setOpen(c=>!c)}><span className="widget-video-select-trigger-icon" aria-hidden="true"><FileVideo2 strokeWidth={2.5}/></span><span className="widget-video-select-trigger-copy">{selected?.thumbnail?<img src={selected.thumbnail} alt=""/>:null}<span>{selected?.label||placeholder}</span></span><span className="widget-video-select-trigger-chevron" aria-hidden="true"><ChevronDown strokeWidth={2.5}/></span></button>{open?<div className={`widget-video-select-menu ${selectMenuClass(height,tone)}`} role="listbox" aria-label={label}>{searchable?<div className="widget-video-select-search"><WidgetSearchInput height={height} tone="secondary" iconStyle={iconStyle} label={`Search ${label}`} value={query} onChange={e=>setQuery(e.currentTarget.value)} placeholder="Search videos…"/></div>:null}<div className="widget-video-select-options">{visibleOptions.map(option=><button key={option.value} type="button" role="option" aria-selected={option.value===value} className={`widget-video-select-option ${option.value===value?"is-selected":""}`.trim()} onClick={()=>{onChange(option.value);setOpen(false)}}>{option.thumbnail?<img src={option.thumbnail} alt=""/>:<span className="widget-video-select-option-placeholder" aria-hidden="true"/>}<span className="widget-video-select-option-copy"><strong>{option.label}</strong>{option.meta?<small>{option.meta}</small>:null}</span></button>)}</div></div>:null}</div>}
+ const[open,setOpen]=useState(false)
+ const[query,setQuery]=useState("")
+ const selected=options.find(o=>o.value===value)
+ const visibleOptions=useMemo(()=>{const n=query.trim().toLowerCase();return n?options.filter(o=>`${o.label} ${o.meta||""} ${o.duration||""} ${o.views||""}`.toLowerCase().includes(n)):options},[options,query])
+ return <div className={`widget-video-select ${open?"is-open":""} ${className}`.trim()}>
+  <button type="button" className={`widget-video-select-trigger vt-interactive ${primitiveClass(height,tone)} is-icon-${iconStyle}`} aria-label={label} aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={()=>setOpen(c=>!c)}>
+   <span className="widget-video-select-trigger-icon" aria-hidden="true"><FileVideo2 strokeWidth={2.5}/></span>
+   <span className="widget-video-select-trigger-copy">{selected?.thumbnail?<img src={selected.thumbnail} alt=""/>:null}<span>{selected?.label||placeholder}</span></span>
+   <span className="widget-video-select-trigger-chevron" aria-hidden="true"><ChevronDown/></span>
+  </button>
+  {open?<div className={`widget-video-select-menu ${selectMenuClass(height,tone)}`} style={selectMenuStyle(height)} role="listbox" aria-label={label}>
+   {searchable?<div className="widget-video-select-search"><WidgetSearchInput height={height} tone="secondary" iconStyle={iconStyle} label={`Search ${label}`} value={query} onChange={e=>setQuery(e.currentTarget.value)} placeholder="Search videos…"/></div>:null}
+   <div className="widget-video-select-options">
+    {visibleOptions.map(option=>{const meta=resolveVideoOptionMeta(option);return <button key={option.value} type="button" role="option" aria-selected={option.value===value} className={`widget-video-select-option ${option.value===value?"is-selected":""}`.trim()} onClick={()=>{onChange(option.value);setOpen(false)}}>
+     <span className="widget-video-select-option-media">
+      {option.thumbnail?<img src={option.thumbnail} alt=""/>:<span className="widget-video-select-option-placeholder" aria-hidden="true"/>}
+      {meta.duration?<span className="widget-video-select-duration">{meta.duration}</span>:null}
+     </span>
+     <span className="widget-video-select-option-copy">
+      <strong>{option.label}</strong>
+      {meta.views?<small className="widget-video-select-views">{meta.views}</small>:null}
+     </span>
+    </button>})}
+   </div>
+  </div>:null}
+ </div>
+}
 
 export const WidgetProgressBar:React.FC<{value:number;max?:number;label?:React.ReactNode;displayValue?:React.ReactNode;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;className?:string;style?:React.CSSProperties}> = ({value,max=100,label,displayValue,height=24,tone="default",className="",style}) => {const percentage=Math.max(0,Math.min(100,max>0?(value/max)*100:0));return <div className={`widget-progress-bar ${primitiveClass(height,tone)} ${className}`.trim()} style={{...style,["--widget-progress" as string]:`${percentage}%`}} role="progressbar" aria-valuemin={0} aria-valuemax={max} aria-valuenow={Math.max(0,Math.min(max,value))}><span className="widget-progress-bar-fill" aria-hidden="true"/><span className="widget-progress-bar-copy"><span>{label}</span><strong>{displayValue??`${Math.round(percentage)}%`}</strong></span></div>}
 
