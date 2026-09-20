@@ -64,7 +64,7 @@ export const HardcodedGenericControl: React.FC<{ name: string; level: Level; ind
   const [selectableTagOn, setSelectableTagOn] = useState(true)
   const [tagEditorOpen, setTagEditorOpen] = useState(false)
   const [tagDraft, setTagDraft] = useState("")
-  const [editorTags, setEditorTags] = useState(["HISTORY"])
+  const [editorTags, setEditorTags] = useState(["NAPOLEON", "CAVALRY"])
   const [searchQuery, setSearchQuery] = useState("NAPOLEON")
   const [actionDraft, setActionDraft] = useState("NEW ITEM")
   const [knobValue, setKnobValue] = useState(72)
@@ -116,12 +116,13 @@ export const HardcodedGenericControl: React.FC<{ name: string; level: Level; ind
   if (name === "Removable Tag") return <span className={`vt-spectrum-tag is-${level}`} style={style}>Napoleon <button aria-label="Remove"><X /></button></span>
   if (name === "Selectable Tag") return <button type="button" className={`vt-catalog-selectable-tag is-${level} ${selectableTagOn ? "is-selected" : ""}`} style={style} aria-pressed={selectableTagOn} onClick={() => setSelectableTagOn(v => !v)}>{selectableTagOn ? <Check /> : <Plus />}<span>{selectableTagOn ? "SELECTED" : "SELECT"}</span></button>
   if (name === "Tag Editor") return <div className={`vt-catalog-tag-editor is-${level} ${tagEditorOpen ? "is-editing" : ""}`} style={style}>
-    <strong className="tag-editor-label">TAGS</strong>
     <div className="tag-editor-tags">
-      {editorTags.map(tag => <span key={tag} className={`vt-spectrum-tag is-${level}`} style={{"--tag-color":getAlphabeticalSpectrumColor(tag)} as React.CSSProperties}>{tag}<button type="button" aria-label={`Remove ${tag}`} onClick={() => setEditorTags(tags => tags.filter(item => item !== tag))}><X /></button></span>)}
-      {!tagEditorOpen ? <button type="button" className="add" aria-label="Add tag" onClick={() => setTagEditorOpen(true)}><Plus /></button> : null}
+      {editorTags.map(tag => <span key={tag} className={`vt-spectrum-tag is-${level}`}>{tag}<button type="button" aria-label={`Remove ${tag}`} onClick={() => setEditorTags(tags => tags.filter(item => item !== tag))}><X /></button></span>)}
     </div>
-    {tagEditorOpen ? <div className="tag-editor-entry"><input autoFocus aria-label="New tag" value={tagDraft} placeholder="ADD TAG" onChange={e => setTagDraft(e.target.value.toUpperCase())} onKeyDown={e => { if (e.key === "Enter" && tagDraft.trim()) { if (!editorTags.includes(tagDraft.trim())) setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) } if (e.key === "Escape") { setTagDraft(""); setTagEditorOpen(false) } }} /><button type="button" className="submit" aria-label="Save tag" onClick={() => { if (tagDraft.trim() && !editorTags.includes(tagDraft.trim())) setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) }}><Check /></button></div> : null}
+    {tagEditorOpen ? <>
+      <input autoFocus aria-label="New tag" value={tagDraft} placeholder="ADD TAG" onChange={e => setTagDraft(e.target.value.toUpperCase())} onKeyDown={e => { if (e.key === "Enter" && tagDraft.trim()) { if (!editorTags.includes(tagDraft.trim())) setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) } if (e.key === "Escape") { setTagDraft(""); setTagEditorOpen(false) } }} />
+      <button type="button" className="submit" aria-label="Save tag" onClick={() => { if (tagDraft.trim() && !editorTags.includes(tagDraft.trim())) setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) }}><Check /></button>
+    </> : <button type="button" className="add" aria-label="Add tag" onClick={() => setTagEditorOpen(true)}><Plus /></button>}
   </div>
   if (name === "Badge") return <span className={`vt-catalog-fill-badge is-${level}`} style={style}>BADGE</span>
   if (name === "Status Badge") return <span className={`vt-status-badge is-${level}`} style={style}><i/>Ready</span>
