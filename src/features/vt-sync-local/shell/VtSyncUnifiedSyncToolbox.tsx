@@ -349,13 +349,34 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
      </div>
     ) : null}
 
-    <section className="mb-3 grid gap-2 rounded-[12px] border-[3px] border-black bg-[#0d0d0d] p-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-      <button type="button" onClick={() => setSelected(availableUnits.flatMap((unit) => unit.categoryIds))} className="vt-retro-switch"><span className="vt-retro-switch-led" />All</button>
-      <button type="button" onClick={() => setSelected(availableUnits.filter((unit) => unit.defaultEnabled).flatMap((unit) => unit.categoryIds))} className="vt-retro-switch" style={{ "--tone": "#FFDA47", "--tone-light": "#fff3b0" } as React.CSSProperties}><span className="vt-retro-switch-led" />Core</button>
-      <button type="button" onClick={() => setSelected(getVtSyncDefaultUnitIds().flatMap(getVtSyncUnitCategoryIds))} className="vt-retro-switch" style={{ "--tone": "#36E0F6", "--tone-light": "#b9f2ff" } as React.CSSProperties}><span className="vt-retro-switch-led" />Recommended</button>
-      <button type="button" onClick={() => setSelected([])} className="vt-retro-switch"><span className="vt-retro-switch-led" />Clear</button>
-      <button type="button" onClick={() => { void copySyncSummary() }} className="vt-retro-switch" style={{ "--tone": "#F55EFC", "--tone-light": "#ffd6f7" } as React.CSSProperties}>
+    <section className="mb-3 grid gap-2 rounded-[12px] border-[3px] border-black bg-[#0d0d0d] p-2">
+     <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+      <span className="text-[8px] font-[1000] uppercase tracking-[0.08em] text-white/55">Quick select</span>
+      <RetroAnalogToggle
+       label="All"
+       active={selectionMatches(allCategoryIds)}
+       onChange={(next) => setSelected(next ? allCategoryIds : [])}
+       tone="cyan"
+      />
+      <RetroAnalogToggle
+       label="Core"
+       active={selectionMatches(coreCategoryIds)}
+       onChange={(next) => setSelected(next ? coreCategoryIds : [])}
+       tone="green"
+      />
+      <RetroAnalogToggle
+       label="Recommended"
+       active={selectionMatches(recommendedCategoryIds)}
+       onChange={(next) => setSelected(next ? recommendedCategoryIds : [])}
+       tone="yellow"
+      />
+      <RetroAnalogToggle
+       label="Clear"
+       active={selected.length === 0}
+       onChange={() => setSelected([])}
+       tone="red"
+      />
+      <button type="button" onClick={() => { void copySyncSummary() }} className="vt-retro-switch ml-auto" style={{ "--tone": "#F55EFC", "--tone-light": "#ffd6f7" } as React.CSSProperties}>
        <Copy className="h-3.5 w-3.5" aria-hidden="true" />{copyStatus || "Copy Summary"}
       </button>
       <span className="sr-only" aria-live="polite">{copyStatus}</span>
@@ -371,40 +392,28 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
        </select>
       </label> : null}
      </div>
-     <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
-      <span className="text-[9px] font-[1000] uppercase text-white/65">{selectedUnitCount} datasets · {selectedQueryCount} queries</span>
-      {ANALYTICS_WINDOWS.map((window) => {
-       const active = selectedWindows.includes(window)
-       const locked = window === "lifetime"
-       return (
-        <button
-         key={window}
-         type="button"
-         onClick={() => toggleWindow(window)}
-         data-window={window}
-         aria-pressed={active}
-         disabled={locked}
-         title={locked ? "Lifetime is always synced" : undefined}
-         className="vt-retro-switch"
-         style={{
-          "--tone": active ? "#C0F240" : "#6b7280",
-          "--tone-light": active ? "#e4ffa8" : "#9ca3af",
-          opacity: locked ? 0.75 : 1,
-          cursor: locked ? "default" : "pointer",
-         } as React.CSSProperties}
-        >
-         <span className="vt-retro-switch-led" />
-         {WINDOW_SHORT_LABELS[window]}
-        </button>
-       )
-      })}
+
+     <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 border-t border-white/15 pt-2">
+      <span className="text-[8px] font-[1000] uppercase tracking-[0.08em] text-white/55">Time window</span>
+      {ANALYTICS_WINDOWS.map((window) => (
+       <span key={window} data-window={window}>
+        <RetroAnalogToggle
+         label={WINDOW_SHORT_LABELS[window]}
+         active={selectedWindows.includes(window)}
+         onChange={() => toggleWindow(window)}
+         tone={window === "lifetime" ? "green" : "cyan"}
+        />
+       </span>
+      ))}
+      <span className="ml-auto text-[9px] font-[1000] uppercase text-white/65">{selectedUnitCount} datasets · {selectedQueryCount} queries</span>
      </div>
-     <p className="m-0 text-[9px] font-semibold leading-snug text-[#9ca3af] sm:col-span-2">
-      {windowCost.extraWindows === 0
-       ? `Lifetime only — ${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selectedQueryCount} underlying quer${selectedQueryCount === 1 ? "y" : "ies"}.`
-       : `${selectedUnitCount} dataset${selectedUnitCount === 1 ? "" : "s"} selected · ${selectedQueryCount} underlying quer${selectedQueryCount === 1 ? "y" : "ies"}. ${windowCost.perWindowCategories} windowed quer${windowCost.perWindowCategories === 1 ? "y" : "ies"} × ${windowCost.extraWindows} extra window${windowCost.extraWindows === 1 ? "" : "s"} = ~${windowCost.extraRequests} additional request${windowCost.extraRequests === 1 ? "" : "s"}.`}
+
+     <p className="m-0 text-[9px] font-semibold leading-snug text-[#9ca3af]">
+      {selectedWindows.length === 0
+       ? "No time window selected. Choose at least one window before starting the selected batch."
+       : `${selectedWindows.length} window${selectedWindows.length === 1 ? "" : "s"} selected · ~${windowCost.estimatedWindowRequests} windowed request${windowCost.estimatedWindowRequests === 1 ? "" : "s"} for the current dataset selection.`}
       {windowCost.derivedCount > 0
-       ? ` ${windowCost.derivedCount} day-grained quer${windowCost.derivedCount === 1 ? "y" : "ies"} derive their windows without extra window requests.`
+       ? ` ${windowCost.derivedCount} day-grained quer${windowCost.derivedCount === 1 ? "y" : "ies"} derive requested windows from their source data without extra per-window requests.`
        : ""}
      </p>
     </section>
