@@ -194,8 +194,11 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   const [selectValue, setSelectValue] = useState("public")
   const [selectedVideo, setSelectedVideo] = useState("v1")
   const [headerToggleValue, setHeaderToggleValue] = useState("draft-1")
-  const [stepperValue, setStepperValue] = useState("28 DAYS")
+  const [stepperValue, setStepperValue] = useState("Step 1 of 4")
   const [stepTabValue, setStepTabValue] = useState("meta")
+  const [moduleWindow, setModuleWindow] = useState("28 DAYS")
+  const [commentHeaderTab, setCommentHeaderTab] = useState<"unreplied" | "history">("unreplied")
+  const [commentHeaderPage, setCommentHeaderPage] = useState(1)
   const [switchValue, setSwitchValue] = useState(true)
   const [checkboxValue, setCheckboxValue] = useState(true)
   const [radioValue, setRadioValue] = useState("b")
@@ -722,9 +725,9 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                       controls={
                         <WidgetHeaderStepper
                           label="Channel overview time window"
-                          value={stepperValue}
-                          onPrevious={() => setStepperValue("7 DAYS")}
-                          onNext={() => setStepperValue("28 DAYS")}
+                          value={moduleWindow}
+                          onPrevious={() => setModuleWindow("7 DAYS")}
+                          onNext={() => setModuleWindow("28 DAYS")}
                         />
                       }
                     />
@@ -743,17 +746,17 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                         <span className="widget-module-header-nav-cluster">
                           <WidgetHeaderToggle
                             label="Comment responder view example"
-                            value={headerToggleValue === "draft-2" ? "history" : "unreplied"}
+                            value={commentHeaderTab}
                             items={[{ id: "unreplied", label: "NEW" }, { id: "history", label: "OLD" }]}
-                            onChange={(value) => setHeaderToggleValue(value === "history" ? "draft-2" : "draft-1")}
+                            onChange={setCommentHeaderTab}
                           />
                           <WidgetHeaderStepper
                             label="Comment pagination example"
-                            value={`${matrixPage} / 12`}
-                            canPrevious={matrixPage > 1}
-                            canNext={matrixPage < 12}
-                            onPrevious={() => setMatrixPage((current) => Math.max(1, current - 1))}
-                            onNext={() => setMatrixPage((current) => Math.min(12, current + 1))}
+                            value={`${commentHeaderPage} / 12`}
+                            canPrevious={commentHeaderPage > 1}
+                            canNext={commentHeaderPage < 12}
+                            onPrevious={() => setCommentHeaderPage((current) => Math.max(1, current - 1))}
+                            onNext={() => setCommentHeaderPage((current) => Math.min(12, current + 1))}
                           />
                         </span>
                       }
