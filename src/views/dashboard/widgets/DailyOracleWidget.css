@@ -671,12 +671,6 @@
   -webkit-box-orient: vertical;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .daily-oracle-v2 * {
-    scroll-behavior: auto !important;
-    transition-duration: 0s !important;
-  }
-}
 
 
 /* Calendar/streak is a view of the primary stage, never extra widget height. */
