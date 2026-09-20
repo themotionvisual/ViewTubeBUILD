@@ -2,7 +2,7 @@ import * as Select from "@radix-ui/react-select"
 import React, { useCallback, useEffect, useId, useRef, useState } from "react"
 import { AlertTriangle, Ban, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock3, Inbox, LoaderCircle, RotateCw, X } from "lucide-react"
 import type { WidgetDataState } from "./types"
-import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone } from "./widgetPrimitiveSystem"
+import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone, type WidgetPrimitiveTextFit } from "./widgetPrimitiveSystem"
 import { resolveWidgetViewportSegment } from "./widgetScrollGeometry"
 
 export interface WidgetScrollAreaProps {
@@ -271,13 +271,14 @@ export const WidgetActionButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonE
   tone?: "primary" | "neutral" | "danger"
   height?: WidgetPrimitiveSize
   primitiveTone?: WidgetPrimitiveTone
-}> = ({ className = "", tone = "neutral", height = 32, primitiveTone, type = "button", ...props }) => {
+  textFit?: WidgetPrimitiveTextFit
+}> = ({ className = "", tone = "neutral", height = 32, primitiveTone, textFit = "fixed", type = "button", ...props }) => {
   const resolvedTone: WidgetPrimitiveTone = primitiveTone ?? (tone === "primary" ? "primary" : tone === "danger" ? "secondary" : "default")
   return (
     <button
       type={type}
       data-action-tone={tone}
-      className={`widget-action is-${tone} ${widgetSizedControlClasses(height, resolvedTone)} vt-interactive ${className}`.trim()}
+      className={`widget-action is-${tone} ${widgetSizedControlClasses(height, resolvedTone, textFit)} vt-interactive ${className}`.trim()}
       {...props}
     />
   )
