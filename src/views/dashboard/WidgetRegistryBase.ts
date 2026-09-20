@@ -1028,8 +1028,8 @@ export const DASHBOARD_WIDGET_BY_ID = Object.fromEntries(
 
 export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: string }> = {
   "app-verification-explainer": {
-   short: "SEE HOW VIEWTUBE CONNECTS DATA, DECISIONS, CREATION, AND PLANNING.",
-   detailed: "Use the system map to open the major creator loop, or switch to Trust to inspect the connection path, account controls, privacy resources, and data transparency."
+   short: "MEET VIEWTUBE THROUGH ITS COLOR, CREATOR LOOP, TOOLS, AND TRUST MODEL.",
+   detailed: "The first-visit system map showcases the ViewTube spectrum and creator loop while opening Sync, Brain, Studio, and Projects directly; Trust exposes connection, account, privacy, and data controls."
   },
   "kpi-cluster": {
    short: "REAL-TIME CHANNEL VITALS AND CORE GROWTH METRICS.",
@@ -1124,8 +1124,8 @@ export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: stri
    detailed: "Ask anything about your data and get an immediate answer. Best used for 'Why?' questions that charts can't explain."
   },
   "daily-oracle": {
-   short: "RANK TODAY'S HIGHEST-LEVERAGE CREATOR MOVE FROM CURRENT EVIDENCE.",
-   detailed: "The Oracle combines Brain context, creator goals, channel evidence, cadence, effort, and a selected growth lens into one primary move plus lower-effort quick wins you can add directly to Today."
+   short: "RANK TODAY'S HIGHEST-LEVERAGE MOVE, COMPLETE IT, AND BUILD A DAILY STREAK.",
+   detailed: "The Oracle combines Brain context, goals, evidence, cadence, effort, and a selected growth lens into one primary move plus quick wins. Complete the large daily task control to reveal the monthly completion calendar, current streak, best streak, and total completed days."
   },
   "ai-journal": {
    short: "CREATIVE LOG FOR TRACKING EXPERIMENTS AND STRATEGIES.",
