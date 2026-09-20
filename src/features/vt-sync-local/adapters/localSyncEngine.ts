@@ -3006,16 +3006,23 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      result.columns,
     )
     if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: categoryId, window: storageWindow, phase: "segments", rawRows, tableRows: completedRows, columns: result.columns })
-    // Freshness is keyed by category with no window dimension, so it keeps
-    // tracking the lifetime pass. Per-window outcomes are in the manifest.
-    if (isLifetime) {
-     markFreshness([categoryId], categoryId, completedRows.length, result.rows ? (result.error || missingMetrics.length ? "partial" : "synced") : "failed", missingMetrics)
-    }
     const categoryRows = (segmentCategoryRows.get(categoryId) || 0) + (result.rows?.length || 0)
     segmentCategoryRows.set(categoryId, categoryRows)
     if (!result.rows || result.error || missingMetrics.length) segmentCategoryIssues.add(categoryId)
     const finalWindowForCategory = VT_SYNC_DERIVED_WINDOW_CATEGORY_IDS.has(categoryId)
      || segmentWindow === aggregateWindows[aggregateWindows.length - 1]
+    // Freshness is category-level rather than window-level. Record the final
+    // requested-window outcome so a run without lifetime still persists DONE /
+    // PARTIAL / FAILED instead of reverting to NEVER after reload.
+    if (finalWindowForCategory) {
+     markFreshness(
+      [categoryId],
+      categoryId,
+      categoryRows,
+      categoryRows === 0 ? "failed" : segmentCategoryIssues.has(categoryId) ? "partial" : "synced",
+      missingMetrics,
+     )
+    }
     updateCategoryState(progress, categoryId, {
      status: finalWindowForCategory
       ? categoryRows === 0 ? "failed" : segmentCategoryIssues.has(categoryId) ? "partial" : "complete"
@@ -3082,13 +3089,19 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      rowsWritten += result.rows?.length || 0
      addManifestResult(manifest, adWindow === "lifetime" ? "ad_type" : `ad_type_${adWindow}`, !!result.rows, result.rows?.length || 0, result.columns, result.error)
      if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "ads", window: adWindow, phase: "ad_type", rawRows: result.rows, tableRows: result.rows, columns: result.columns })
-     if (adWindow === "lifetime") {
-      markFreshness(["ad_type"], "ad_type", result.rows?.length || 0, result.rows ? (result.error ? "partial" : "synced") : "failed", result.error ? [result.error] : [])
-     }
      const adRows = (revenueCategoryRows.get("ad_type") || 0) + (result.rows?.length || 0)
      revenueCategoryRows.set("ad_type", adRows)
      if (!result.rows || result.error) revenueCategoryIssues.add("ad_type")
      const finalAdWindow = adWindow === aggregateWindows[aggregateWindows.length - 1]
+     if (finalAdWindow) {
+      markFreshness(
+       ["ad_type"],
+       "ad_type",
+       adRows,
+       adRows === 0 ? "failed" : revenueCategoryIssues.has("ad_type") ? "partial" : "synced",
+       result.error ? [result.error] : [],
+      )
+     }
      updateCategoryState(progress, "ad_type", {
       status: finalAdWindow
        ? adRows === 0 ? "failed" : revenueCategoryIssues.has("ad_type") ? "partial" : "complete"
@@ -3206,13 +3219,19 @@ export const runVtSyncLocalSync = async ({ token, selectedCategories, previousSn
      }
      addManifestResult(manifest, shareWindow === "lifetime" ? "sharing_service" : `sharing_service_${shareWindow}`, !!result.rows, result.rows?.length || 0, result.columns, result.error)
      if (result.rows) await persistDatasetRows({ runId, channelId: snapshot.channelId || undefined, datasetId: "shares", window: shareWindow, phase: "sharing_service", rawRows: result.rows, tableRows: mergedSharingRows, columns: result.columns })
-     if (shareWindow === "lifetime") {
-      markFreshness(["shares"], "sharing_service", result.rows?.length || 0, result.rows ? (result.error ? "partial" : "synced") : "failed", result.error ? [result.error] : [])
-     }
      const shareRows = (revenueCategoryRows.get("sharing_service") || 0) + (result.rows?.length || 0)
      revenueCategoryRows.set("sharing_service", shareRows)
      if (!result.rows || result.error) revenueCategoryIssues.add("sharing_service")
      const finalShareWindow = shareWindow === aggregateWindows[aggregateWindows.length - 1]
+     if (finalShareWindow) {
+      markFreshness(
+       ["shares"],
+       "sharing_service",
+       shareRows,
+       shareRows === 0 ? "failed" : revenueCategoryIssues.has("sharing_service") ? "partial" : "synced",
+       result.error ? [result.error] : [],
+      )
+     }
      updateCategoryState(progress, "sharing_service", {
       status: finalShareWindow
        ? shareRows === 0 ? "failed" : revenueCategoryIssues.has("sharing_service") ? "partial" : "complete"
