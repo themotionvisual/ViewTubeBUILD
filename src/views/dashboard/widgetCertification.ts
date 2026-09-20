@@ -25,7 +25,7 @@ const STANDARD_STATES = ["loading", "ready", "empty", "blocked", "stale", "error
 const STANDARD_VARIANTS = ["compact", "standard", "wide"] as const
 
 const CERTIFICATION_INTENT: Record<string, readonly [string, string, WidgetPerformanceCost]> = {
-  "app-verification-explainer": ["Explain product trust and data access", "Open account or help guidance", "light"],
+  "app-verification-explainer": ["Explain the connected ViewTube creator system and trust path", "Open a system destination or account/data guidance", "light"],
   "kpi-cluster": ["Summarize channel health", "Change analytics time window", "moderate"],
   "community-post": ["Draft an audience update", "Create community post", "moderate"],
   "comment-replier": ["Resolve recent audience replies", "Draft a reply", "moderate"],
@@ -33,7 +33,7 @@ const CERTIFICATION_INTENT: Record<string, readonly [string, string, WidgetPerfo
   "realtime-performance": ["Expose current performance pulse", "Refresh live metrics", "moderate"],
   "goals-tracker": ["Track creator targets", "Update a goal", "light"],
   "keyword-engine": ["Discover search opportunities", "Analyze a keyword", "heavy"],
-  "daily-oracle": ["Prioritize the next creator action", "Generate daily guidance", "heavy"],
+  "daily-oracle": ["Rank the highest-leverage creator action from current evidence", "Add the chosen move to Today", "moderate"],
   "ask-me": ["Answer a focused channel question", "Ask the Brain", "heavy"],
   "ai-journal": ["Capture creator context", "Add journal entry", "moderate"],
   "image-generator": ["Create campaign imagery", "Generate an image", "heavy"],
