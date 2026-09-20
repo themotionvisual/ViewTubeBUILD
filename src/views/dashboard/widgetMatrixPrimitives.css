@@ -711,8 +711,8 @@
   cursor: not-allowed;
 }
 .widget-split-counter-controls svg {
-  width: var(--vt-primitive-icon);
-  height: var(--vt-primitive-icon);
+  width: min(var(--vt-primitive-icon), var(--vt-primitive-font), calc(var(--widget-split-counter-bay) * .42));
+  height: min(var(--vt-primitive-icon), var(--vt-primitive-font), calc(var(--widget-split-counter-bay) * .42));
   stroke-width: var(--vt-primitive-icon-stroke, 2.5);
 }
 .widget-split-counter-value {
