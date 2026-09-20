@@ -279,7 +279,10 @@
   border-radius: 3px;
   background: color-mix(in srgb, var(--widget-color) 10%, white);
   color: var(--widget-border);
-  font: 1000 clamp(8px, 1.2cqi, 10px)/1 inherit;
+  font-family: inherit;
+  font-size: clamp(8px, 1.2cqi, 10px);
+  font-weight: 1000;
+  line-height: 1;
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
