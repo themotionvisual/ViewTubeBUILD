@@ -115,7 +115,7 @@ export const SubToolboxToggle: React.FC<React.ButtonHTMLAttributes<HTMLButtonEle
 
 export const SubToolboxBadge: React.FC<React.HTMLAttributes<HTMLSpanElement> & { active?: boolean; level?: ToolboxControlLevel }> = ({ active = true, level, className, children, style, ...props }) => <span data-vt-control-level={level} style={withComponentLevelStyle(level, style)} className={classes("vt-subtoolbox-chip", "is-badge", level && "has-component-level", active && "is-active", className)} {...props}>{children}</span>
 
-export const SubToolboxTag: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { selected?: boolean; level?: ToolboxControlLevel }> = ({ selected = false, level, className, children, type = "button", style, ...props }) => <button type={type} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} className={classes("vt-subtoolbox-chip", "is-tag", level && "has-component-level", selected && "is-active", className)} aria-pressed={selected} {...props}>{children}</button>
+export const SubToolboxTag: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { selected?: boolean; level?: ToolboxControlLevel; variant?: "standard" | "dashboard-pill" }> = ({ selected = false, level, variant = "standard", className, children, type = "button", style, ...props }) => <button type={type} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} className={classes("vt-subtoolbox-chip", "is-tag", `is-${variant}`, level && "has-component-level", selected && "is-active", className)} aria-pressed={selected} {...props}>{children}</button>
 
 export type SubToolboxTooltipLevel = ToolboxControlLevel
 
@@ -123,6 +123,7 @@ export interface SubToolboxTooltipProps extends Omit<React.HTMLAttributes<HTMLSp
   content?: React.ReactNode
   level?: SubToolboxTooltipLevel
   forceOpen?: boolean
+  variant?: "default" | "dark" | "color"
   triggerLabel?: React.ReactNode
   triggerAriaLabel?: string
 }
@@ -131,6 +132,7 @@ export const SubToolboxTooltip: React.FC<SubToolboxTooltipProps> = ({
   content = "TOOLTIP",
   level = "l0",
   forceOpen = false,
+  variant = "default",
   triggerLabel = "?",
   triggerAriaLabel = "Show tooltip",
   className,
@@ -139,7 +141,7 @@ export const SubToolboxTooltip: React.FC<SubToolboxTooltipProps> = ({
 }) => {
   const tooltipId = React.useId()
   return (
-    <span className={classes("vt-subtoolbox-tooltip", `is-${level}`, forceOpen && "is-open", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
+    <span className={classes("vt-subtoolbox-tooltip", `is-${level}`, `is-${variant}`, forceOpen && "is-open", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
       <button type="button" className="vt-subtoolbox-tooltip-trigger" aria-label={triggerAriaLabel} aria-describedby={tooltipId}>{triggerLabel}</button>
       <span id={tooltipId} role="tooltip" className="vt-subtoolbox-tooltip-bubble">{content}</span>
     </span>
@@ -1047,11 +1049,11 @@ export const SubToolboxOutputCard: React.FC<Omit<React.HTMLAttributes<HTMLElemen
 
 /* Canonical Toolbox upload primitive: Tight Reveal (#05).
  * Seven flush nested bands replace the legacy dashed drop-zone treatment. */
-export const SubToolboxFileTarget: React.FC<{ label: React.ReactNode; icon?: React.ReactNode; accept?: string; multiple?: boolean; minHeight?: number; onFiles?: (files: FileList | null) => void; className?: string }> = ({ label, icon, accept, multiple = false, minHeight = 220, onFiles, className }) => {
+export const SubToolboxFileTarget: React.FC<{ label: React.ReactNode; icon?: React.ReactNode; accept?: string; multiple?: boolean; minHeight?: number; onFiles?: (files: FileList | null) => void; className?: string; level?: ToolboxControlLevel; style?: React.CSSProperties }> = ({ label, icon, accept, multiple = false, minHeight = 220, onFiles, className, level, style }) => {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = React.useState(false)
   const choose = () => inputRef.current?.click()
-  return <SubToolboxSurface className={classes("vt-subtoolbox-file-target", "vt-upload-tight-reveal", dragging && "is-dragging", className)} style={{ minHeight, border: 0 }}>
+  return <SubToolboxSurface level={level} className={classes("vt-subtoolbox-file-target", "vt-upload-tight-reveal", dragging && "is-dragging", className)} style={{ ...style, minHeight, border: 0 }}>
     <input ref={inputRef} type="file" accept={accept} multiple={multiple} className="hidden" onChange={(event) => onFiles?.(event.target.files)} />
     <button type="button" className="vt-subtoolbox-file-target-button" onClick={choose} onDragEnter={(e) => { e.preventDefault(); setDragging(true) }} onDragOver={(e) => { e.preventDefault(); setDragging(true) }} onDragLeave={(e) => { e.preventDefault(); setDragging(false) }} onDrop={(e) => { e.preventDefault(); setDragging(false); onFiles?.(e.dataTransfer.files) }}>
       <span className="vt-upload-tight-reveal-layers" aria-hidden="true">{[7,6,5,4,3,2,1].map((layer) => <span key={layer} className={`vt-upload-tight-reveal-layer is-l${layer}`} />)}</span>
@@ -1062,3 +1064,130 @@ export const SubToolboxFileTarget: React.FC<{ label: React.ReactNode; icon?: Rea
 
 const DEFAULT_STATE_COPY: Record<SubToolboxState, string> = { loading: "Loading…", ready: "Ready.", empty: "Nothing to show yet.", "filtered-empty": "No results match the current filters.", disconnected: "Connect your channel to load this.", blocked: "A required connection is unavailable.", stale: "This information may be out of date.", permission: "You do not have access to this.", error: "This section could not be loaded." }
 export const SubToolboxStatePanel: React.FC<{ state: SubToolboxState; message?: React.ReactNode; action?: React.ReactNode; className?: string; level?: ToolboxControlLevel; style?: React.CSSProperties }> = ({ state, message, action, className, level, style }) => { const urgent = state === "error" || state === "blocked"; return <section className={classes("vt-subtoolbox-state", `is-${state}`, level && "has-component-level", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} data-subtoolbox-state={state} role={urgent ? "alert" : "status"} aria-live={urgent ? "assertive" : "polite"}><p>{message ?? DEFAULT_STATE_COPY[state]}</p>{action}</section> }
+
+
+export interface SubToolboxScrollbarProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
+  level?: ToolboxControlLevel
+  orientation?: "horizontal" | "vertical"
+  value: number
+  onValueChange?: (value: number) => void
+  decrementIcon?: React.ReactNode
+  incrementIcon?: React.ReactNode
+}
+export const SubToolboxScrollbar: React.FC<SubToolboxScrollbarProps> = ({ level = "l0", orientation = "horizontal", value, onValueChange, decrementIcon = "‹", incrementIcon = "›", className, style, ...props }) => {
+  const clamped = Math.min(100, Math.max(0, value))
+  return (
+    <div className={classes("vt-subtoolbox-scrollbar", `is-${orientation}`, className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
+      <button type="button" aria-label={orientation === "horizontal" ? "Scroll left" : "Scroll up"} onClick={() => onValueChange?.(Math.max(0, clamped - 10))}>{decrementIcon}</button>
+      <div className="vt-subtoolbox-scrollbar-track"><span style={orientation === "horizontal" ? { left: `${clamped * .58}%` } : { top: `${clamped * .58}%` }} /></div>
+      <button type="button" aria-label={orientation === "horizontal" ? "Scroll right" : "Scroll down"} onClick={() => onValueChange?.(Math.min(100, clamped + 10))}>{incrementIcon}</button>
+    </div>
+  )
+}
+
+export interface SubToolboxMetricStripProps extends React.HTMLAttributes<HTMLDivElement> {
+  level?: ToolboxControlLevel
+  items: Array<{ label: React.ReactNode; value: React.ReactNode }>
+}
+export const SubToolboxMetricStrip: React.FC<SubToolboxMetricStripProps> = ({ level = "l0", items, className, style, ...props }) => (
+  <div className={classes("vt-subtoolbox-metric-strip", className)} data-vt-control-level={level} style={{ ...(withComponentLevelStyle(level, style) ?? {}), ["--vt-metric-count" as string]: Math.max(1, items.length) } as React.CSSProperties} {...props}>
+    {items.map((item, index) => <span key={index}><b>{item.label}</b><strong>{item.value}</strong></span>)}
+  </div>
+)
+
+export interface SubToolboxDataStatsProps extends React.HTMLAttributes<HTMLDivElement> {
+  level?: ToolboxControlLevel
+  label: React.ReactNode
+  value: React.ReactNode
+  delta?: React.ReactNode
+  variant?: "standard" | "two-color" | "monochrome" | "tiny"
+}
+export const SubToolboxDataStats: React.FC<SubToolboxDataStatsProps> = ({ level = "l0", label, value, delta, variant = "standard", className, style, ...props }) => (
+  <div className={classes("vt-subtoolbox-data-stats", `is-${variant}`, className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
+    <small>{label}</small><strong>{value}</strong>{delta != null ? <span>{delta}</span> : null}
+  </div>
+)
+
+export type SubToolboxVaultAssetKind = "landscape" | "portrait" | "audio" | "document"
+export interface SubToolboxVaultAssetProps extends Omit<React.HTMLAttributes<HTMLElement>, "title"> {
+  level?: ToolboxControlLevel
+  kind: SubToolboxVaultAssetKind
+  title: React.ReactNode
+  preview?: React.ReactNode
+  tags?: React.ReactNode
+  notes?: React.ReactNode
+  icon?: React.ReactNode
+  selected?: boolean
+  onSelectedChange?: (selected: boolean) => void
+  onRemove?: () => void
+  removeIcon?: React.ReactNode
+}
+export const SubToolboxVaultAsset: React.FC<SubToolboxVaultAssetProps> = ({
+  level = "l0", kind, title, preview, tags, notes, icon, selected = false, onSelectedChange, onRemove, removeIcon = "×",
+  className, style, ...props
+}) => (
+  <article className={classes("vt-subtoolbox-vault-asset", `is-${kind}`, selected && "is-selected", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
+    <header><button type="button" className="select" aria-pressed={selected} aria-label="Select asset" onClick={() => onSelectedChange?.(!selected)}><span /></button><strong>{title}</strong></header>
+    <div className="vt-subtoolbox-vault-body">
+      <div className="vt-subtoolbox-vault-preview">{preview ?? icon}</div>
+      <div className="vt-subtoolbox-vault-meta">
+        <div className="tags">{tags ?? "ASSET"}</div>
+        <div className="notes">{notes ?? "NOTES"}</div>
+      </div>
+    </div>
+    <button type="button" className="remove" aria-label="Remove asset" onClick={onRemove}>{removeIcon}</button>
+  </article>
+)
+
+export interface SubToolboxTreeNode {
+  id: string
+  label: React.ReactNode
+  children?: SubToolboxTreeNode[]
+}
+export interface SubToolboxTreeProps extends React.HTMLAttributes<HTMLDivElement> {
+  level?: ToolboxControlLevel
+  nodes: SubToolboxTreeNode[]
+  defaultOpenIds?: string[]
+}
+export const SubToolboxTree: React.FC<SubToolboxTreeProps> = ({ level = "l0", nodes, defaultOpenIds = [], className, style, ...props }) => {
+  const [openIds, setOpenIds] = React.useState<string[]>(defaultOpenIds)
+  const toggle = (id: string) => setOpenIds((ids) => ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id])
+  const renderNodes = (items: SubToolboxTreeNode[], depth = 0): React.ReactNode => items.map((node) => {
+    const hasChildren = Boolean(node.children?.length)
+    const open = openIds.includes(node.id)
+    return <React.Fragment key={node.id}>
+      <button type="button" className="vt-subtoolbox-tree-row" style={{ ["--vt-tree-depth" as string]: depth }} aria-expanded={hasChildren ? open : undefined} onClick={() => hasChildren && toggle(node.id)}>
+        <span aria-hidden="true">{hasChildren ? (open ? "−" : "+") : "·"}</span><strong>{node.label}</strong>
+      </button>
+      {hasChildren && open ? <div className="vt-subtoolbox-tree-children">{renderNodes(node.children ?? [], depth + 1)}</div> : null}
+    </React.Fragment>
+  })
+  return <div className={classes("vt-subtoolbox-tree", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} role="tree" {...props}>{renderNodes(nodes)}</div>
+}
+
+export interface SubToolboxAspectRatioFrameProps extends React.HTMLAttributes<HTMLDivElement> {
+  level?: ToolboxControlLevel
+  ratio?: "16:9" | "9:16" | "1:1"
+  label?: React.ReactNode
+  children?: React.ReactNode
+}
+export const SubToolboxAspectRatioFrame: React.FC<SubToolboxAspectRatioFrameProps> = ({ level = "l0", ratio = "16:9", label, children, className, style, ...props }) => (
+  <div className={classes("vt-subtoolbox-aspect-frame", className)} data-vt-control-level={level} data-ratio={ratio} style={withComponentLevelStyle(level, style)} {...props}>
+    <div className="vt-subtoolbox-aspect-frame-canvas">{children}</div>
+    {label ? <strong className="vt-subtoolbox-aspect-frame-label">{label}</strong> : null}
+  </div>
+)
+
+export interface SubToolboxToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
+  level?: ToolboxControlLevel
+  leading?: React.ReactNode
+  trailing?: React.ReactNode
+  children?: React.ReactNode
+}
+export const SubToolboxToolbar: React.FC<SubToolboxToolbarProps> = ({ level = "l0", leading, trailing, children, className, style, ...props }) => (
+  <div className={classes("vt-subtoolbox-toolbar", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} role="toolbar" {...props}>
+    {leading ? <div className="vt-subtoolbox-toolbar-leading">{leading}</div> : null}
+    <div className="vt-subtoolbox-toolbar-main">{children}</div>
+    {trailing ? <div className="vt-subtoolbox-toolbar-trailing">{trailing}</div> : null}
+  </div>
+)
