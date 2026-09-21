@@ -6,6 +6,7 @@ import type {TemplateDefinition,TemplateElement,TemplateStyleConfig} from '../..
 import {templateToTimelineClip} from '../../../../editor-design-library/integration/timelineAdapter';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
 import {ContextMenu,type ContextMenuItem} from './ContextMenu';
+import {TemplateVisualPreview} from './TemplateVisualPreview';
 
 const INK='#248b99',CYAN='#36E0F6';
 const card:React.CSSProperties={border:`2px solid ${INK}`,borderRadius:7,background:'#fff',padding:7,marginBottom:7,boxShadow:'2px 2px 0 rgba(54,224,246,.22)'};
@@ -116,10 +117,20 @@ export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
         <Search size={12} style={{position:'absolute',left:7,top:9,pointerEvents:'none'}}/>
         <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search customizable templates" style={{...field,paddingLeft:24}}/>
       </label>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:5,maxHeight:190,overflowY:'auto',overflowX:'hidden',marginTop:6}}>
-        {items.map(item=><button key={item.id} style={{...btn(false),display:'grid',gridTemplateColumns:'24px minmax(0,1fr)',textAlign:'left',justifyContent:'stretch'}} onClick={()=>add(item)}>
-          <span style={{width:22,height:22,border:`1.5px solid ${INK}`,borderRadius:4,background:item.palette?.[0]??CYAN,display:'grid',placeItems:'center'}}><LayoutTemplate size={12}/></span>
-          <span style={{minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.name}</span>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:6,maxHeight:250,overflowY:'auto',overflowX:'hidden',marginTop:6,padding:1}}>
+        {items.map(item=><button
+          key={item.id}
+          title={item.name}
+          aria-label={`Add template: ${item.name}`}
+          onClick={()=>add(item)}
+          style={{
+            position:'relative',minWidth:0,aspectRatio:'16 / 9',padding:0,
+            border:`2px solid ${INK}`,borderRadius:7,overflow:'hidden',
+            background:'#fff',boxShadow:'2px 2px 0 rgba(54,224,246,.28)',
+            userSelect:'none',WebkitUserSelect:'none',WebkitTouchCallout:'none',WebkitTapHighlightColor:'transparent',
+          }}
+        >
+          <TemplateVisualPreview template={item}/>
         </button>)}
       </div>
     </section>
@@ -130,37 +141,19 @@ export const CustomTemplatePanel:React.FC<{store:EditorStore}>=({store})=>{
         <div style={{fontSize:9,fontWeight:1000,marginBottom:7}}>{template.name}</div>
         <div style={{
           position:'relative',width:'100%',aspectRatio:`${Math.max(1,template.width)} / ${Math.max(1,template.height)}`,
-          border:`2px solid ${INK}`,borderRadius:6,background:String(colors.background??template.background??'#fff'),
-          overflow:'hidden',marginBottom:6,
+          border:`2px solid ${INK}`,borderRadius:6,overflow:'hidden',marginBottom:6,background:'#fff',
         }}>
-          {editables.map(element=>{
-            const left=(element.x/Math.max(1,template.width))*100;
-            const top=(element.y/Math.max(1,template.height))*100;
-            const width=(element.width/Math.max(1,template.width))*100;
-            const height=(element.height/Math.max(1,template.height))*100;
-            const active=selectedElementId===element.id;
-            return <button
-              key={element.id}
-              title={`Edit ${element.name}`}
-              aria-label={`Select template element ${element.name}`}
-              onContextMenu={event=>{
-                event.preventDefault();event.stopPropagation();
-                setElementMenu({element,at:{x:event.clientX,y:event.clientY}});
-              }}
-              onClick={()=>{
-                setSelectedElementId(element.id);
-                requestAnimationFrame(()=>editorRef.current?.scrollIntoView({behavior:'smooth',block:'nearest'}));
-              }}
-              style={{
-                position:'absolute',left:`${left}%`,top:`${top}%`,width:`${Math.max(5,width)}%`,height:`${Math.max(5,height)}%`,
-                transform:`rotate(${Number(element.rotation??0)}deg)`,transformOrigin:'top left',
-                border:`2px solid ${active?CYAN:INK}`,borderRadius:3,
-                background:active?'rgba(54,224,246,.22)':'rgba(255,255,255,.08)',
-                padding:0,color:String(colors.foreground??'#111'),fontSize:6,fontWeight:1000,
-                overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',
-              }}
-            >{element.type==='text'?String((clip.templateOverrides?.content?.[element.id] as Record<string,unknown>|undefined)?.text??element.text??element.name):element.name}</button>;
-          })}
+          <TemplateVisualPreview
+            template={template}
+            styleOverrides={clip.templateOverrides?.style}
+            contentOverrides={clip.templateOverrides?.content}
+            selectedElementId={selectedElementId}
+            interactive
+            onSelectElement={element=>{
+              setSelectedElementId(element.id);
+              requestAnimationFrame(()=>editorRef.current?.scrollIntoView({behavior:'smooth',block:'nearest'}));
+            }}
+          />
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',gap:3,marginBottom:6}}>
           {editables.map(element=><button key={element.id} style={{...btn(selectedElementId===element.id),minWidth:0,overflow:'hidden',textOverflow:'ellipsis'}} onClick={()=>setSelectedElementId(element.id)}>{element.name}</button>)}
