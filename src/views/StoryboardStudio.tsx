@@ -28,6 +28,12 @@ import { nexusSyncService } from "../services/nexusSyncService";
 import { generateStoryboard } from "../services/gemini";
 import { PostActionReflection } from "../components/PostActionReflection";
 import type { Scene } from "../types";
+import { createVersionedAsset } from "../services/assetEngine";
+import {
+  recordContentBuildToolInput,
+  recordContentBuildToolOutput,
+  resolveWorkspaceContentBuildToolContext,
+} from "../services/asset-engine/ToolContext";
 
 const calculateDuration = (text: string) => {
   const words = text
@@ -220,17 +226,67 @@ const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
         brain,
       );
       if (generatedScenes.length > 0) {
+        const normalizedScenes = generatedScenes.map((gs, i) => ({
+          ...gs,
+          id: gs.id || Date.now() + i + "",
+          imageUrl: null,
+          voiceoverUrl: null,
+          durationEstimate: calculateDuration(gs.text),
+          emotionScore: calculateEmotion(gs.text),
+        }));
         setHasGenerated(true);
-        setScenes(
-          generatedScenes.map((gs, i) => ({
-            ...gs,
-            id: gs.id || Date.now() + i + "",
-            imageUrl: null,
-            voiceoverUrl: null,
-            durationEstimate: calculateDuration(gs.text),
-            emotionScore: calculateEmotion(gs.text),
-          })),
+        setScenes(normalizedScenes);
+
+        const contentContext = resolveWorkspaceContentBuildToolContext(
+          brain,
+          "storyboard-studio",
+          ["script", "storyboard"],
         );
+        if (contentContext) {
+          recordContentBuildToolInput({
+            contentBuildId: contentContext.contentBuildId,
+            toolId: "storyboard-studio",
+            assetIds: [
+              contentContext.selectedAssets.script?.id,
+              contentContext.selectedAssets.storyboard?.id,
+            ].filter((id): id is string => Boolean(id)),
+            summary: "Generate a storyboard from the active ContentBuild script and production context.",
+            metadata: { requestedScenes: normalizedScenes.length },
+          });
+
+          const created = createVersionedAsset({
+            sourceToolId: "storyboard-studio",
+            sourceKind: "project",
+            payloadKind: "storyboard",
+            name: `Storyboard · ${brain.coreConcept || contentContext.build.profile.workingConcept || "ContentBuild"}`,
+            summary: `${normalizedScenes.length} generated storyboard scenes`,
+            kind: "document",
+            payload: { scenes: normalizedScenes, estimatedDuration: normalizedScenes.reduce((sum, scene) => sum + scene.durationEstimate, 0) },
+            tags: ["storyboard", "content-build"],
+            slot: "storyboard",
+            label: `Storyboard V${(contentContext.build.versions || []).filter(version => version.slot === "storyboard").length + 1}`,
+            parentAssetId: contentContext.selectedAssets.storyboard?.id || contentContext.selectedAssets.script?.id || null,
+            context: {
+              contentBuildId: contentContext.contentBuildId,
+              projectId: contentContext.build.legacyProjectId || null,
+              projectName: contentContext.build.legacyProjectName || null,
+              videoId: contentContext.build.youtube?.videoId || null,
+              stage: "visual-plan",
+              parentAssetIds: [
+                contentContext.selectedAssets.script?.id,
+                contentContext.selectedAssets.storyboard?.id,
+              ].filter((id): id is string => Boolean(id)),
+            },
+          });
+          recordContentBuildToolOutput({
+            contentBuildId: contentContext.contentBuildId,
+            toolId: "storyboard-studio",
+            assetIds: [created.asset.id],
+            generationRecordId: created.generationRecordId,
+            summary: `Created storyboard version ${created.version?.version || 1} with ${normalizedScenes.length} scenes.`,
+            metadata: { sceneCount: normalizedScenes.length, versionId: created.version?.id || null },
+          });
+        }
       }
     } catch (e) {
       console.error("Storyboard generation failed:", e);
