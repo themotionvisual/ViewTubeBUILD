@@ -1550,7 +1550,41 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                     tone="yellow"
                     onClick={() => {
                       saveVideoDirectorDraft(project.name, project)
-                      setNotice("Video Director draft saved.")
+                      if (project.contentBuildId) {
+                        const contentContext = resolveWorkspaceContentBuildToolContext(brain, "video-director", ["storyboard", "script"])
+                        const created = createVersionedAsset({
+                          sourceToolId: "video-director",
+                          sourceKind: "studio-tool",
+                          payloadKind: "video",
+                          name: `Video Director plan · ${project.name}`,
+                          summary: `${project.shots.length} shots · ${project.variants.length} variants · ${configuredCount} configured categories`,
+                          kind: "document",
+                          payload: { project, compiledPacket },
+                          tags: ["video-director", "video-dna", "production-plan", "content-build"],
+                          slot: "video-director-plan",
+                          label: "Video Director draft",
+                          context: {
+                            contentBuildId: project.contentBuildId,
+                            projectId: project.legacyProjectId || contentContext?.build.legacyProjectId || null,
+                            projectName: contentContext?.build.legacyProjectName || project.name,
+                            videoId: contentContext?.build.youtube?.videoId || null,
+                            stage: "production",
+                            parentAssetIds: [
+                              contentContext?.selectedAssets.storyboard?.id,
+                              contentContext?.selectedAssets.script?.id,
+                            ].filter((id): id is string => Boolean(id)),
+                          },
+                        })
+                        recordContentBuildToolOutput({
+                          contentBuildId: project.contentBuildId,
+                          toolId: "video-director",
+                          assetIds: [created.asset.id],
+                          generationRecordId: created.generationRecordId,
+                          summary: "Saved the Video Director plan as a versioned ContentBuild production asset.",
+                          metadata: { videoDirectorProjectId: project.id, versionId: created.version?.id || null },
+                        })
+                      }
+                      setNotice("Video Director draft saved to its ContentBuild.")
                     }}
                   />
                   <SubToolboxGridActionButton
