@@ -173,7 +173,7 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("vt-subtoolbox-split-field is-search has-action")
     expect(html).toContain("vt-subtoolbox-split-field is-action has-action")
     expect(html).toContain("vt-subtoolbox-tag-editor-tags")
-    expect(html).toContain("vt-subtoolbox-tag-editor-label")
+    expect(html).not.toContain("vt-subtoolbox-tag-editor-label")
     expect(html).toContain('role="progressbar"')
     expect(html).toContain(">SYNC<")
     expect(html).toContain("vt-subtoolbox-data-table")
