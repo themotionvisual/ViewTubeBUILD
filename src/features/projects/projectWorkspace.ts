@@ -145,11 +145,11 @@ export const patchProjectMeta = (
 export const statusForLane = (lane: ProjectLaneId): string => {
  switch (lane) {
   case "ideas": return "ideation"
-  case "planned": return "scripting"
-  case "in-progress": return "editing"
-  case "review": return "editing"
-  case "ready": return "publishing"
-  case "blocked": return "editing"
+  case "planned": return "planned"
+  case "in-progress": return "production"
+  case "review": return "review"
+  case "ready": return "ready"
+  case "blocked": return "blocked"
   case "published": return "published"
  }
 }
