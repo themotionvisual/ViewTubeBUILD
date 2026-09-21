@@ -49,6 +49,7 @@ export const validateVideoPackage = (videoPackage: ViewTubeVideoPackage): VideoP
  const issues: VideoPackageValidationIssue[] = []
  if (videoPackage.schemaVersion !== VIDEO_PACKAGE_SCHEMA_VERSION) issues.push({ path: "schemaVersion", code: "invalid", message: "Unsupported video package schema version." })
  if (!nonEmpty(videoPackage.id)) issues.push({ path: "id", code: "required", message: "Package ID is required." })
+ if (!nonEmpty(videoPackage.contentBuildId)) issues.push({ path: "contentBuildId", code: "scope", message: "ContentBuild identity is required." })
  if (!nonEmpty(videoPackage.channelId)) issues.push({ path: "channelId", code: "scope", message: "Channel ownership is required." })
  if (!nonEmpty(videoPackage.projectId)) issues.push({ path: "projectId", code: "scope", message: "Project ownership is required." })
  if (!Number.isInteger(videoPackage.version) || videoPackage.version < 1) issues.push({ path: "version", code: "invalid", message: "Package version must be a positive integer." })
@@ -78,6 +79,7 @@ export const createVideoPackage = (input: CreateVideoPackageInput): ViewTubeVide
  return {
   schemaVersion: VIDEO_PACKAGE_SCHEMA_VERSION,
   id,
+  contentBuildId: input.contentBuildId?.trim() || id,
   version: 1,
   channelId: input.channelId.trim(),
   projectId: input.projectId.trim(),
@@ -88,7 +90,7 @@ export const createVideoPackage = (input: CreateVideoPackageInput): ViewTubeVide
   production: { vaultAssetIds: [], renderIds: [] },
   publishing: { checks: [], approval: { status: "draft" } },
   workflow: { blockers: [], handoffs: [] },
-  provenance: [{ id: `${id}:created`, action: "package_created", sourceToolId: input.sourceToolId || "creator-canvas-os", artifactIds: [], evidenceIds: [], createdAt: now }],
+  provenance: [{ id: id + ":created", action: "package_created", sourceToolId: input.sourceToolId || "creator-canvas-os", artifactIds: [], evidenceIds: [], createdAt: now }],
  }
 }
 
@@ -98,7 +100,7 @@ export const transitionVideoPackage = (
  now = new Date().toISOString(),
 ): ViewTubeVideoPackage => {
  if (!canTransitionVideoPackage(videoPackage.identity.status, status)) {
-  throw new Error(`Invalid video package transition: ${videoPackage.identity.status} -> ${status}`)
+  throw new Error("Invalid video package transition: " + videoPackage.identity.status + " -> " + status)
  }
  const next = {
   ...videoPackage,
@@ -106,6 +108,6 @@ export const transitionVideoPackage = (
   identity: { ...videoPackage.identity, status, updatedAt: now },
  }
  const validation = validateVideoPackage(next)
- if (!validation.valid) throw new Error(validation.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; "))
+ if (!validation.valid) throw new Error(validation.issues.map((issue) => issue.path + ": " + issue.message).join("; "))
  return next
 }
