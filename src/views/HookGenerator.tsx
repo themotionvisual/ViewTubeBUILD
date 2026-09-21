@@ -151,6 +151,37 @@ const HookGenerator: React.FC<HookGeneratorProps> = ({
   try {
    const imageUrl = await generateVisualImage(fullPrompt)
    setGeneratedImages((prev) => ({ ...prev, [key]: imageUrl }))
+
+   const contentContext = resolveWorkspaceContentBuildToolContext(brain, "hook-generator", ["script"])
+   const created = createAsset({
+    sourceToolId: "hook-generator",
+    sourceKind: "studio-tool",
+    payloadKind: "image",
+    name: `Hook visual image · ${hookIndex + 1}.${timelineIndex + 1}`,
+    summary: fullPrompt,
+    kind: "image",
+    url: imageUrl,
+    tags: ["hook-visual", "image", "content-build"],
+    context: {
+     contentBuildId: contentContext?.contentBuildId || null,
+     projectId: contentContext?.build.legacyProjectId || null,
+     projectName: contentContext?.build.legacyProjectName || null,
+     videoId: contentContext?.build.youtube?.videoId || null,
+     stage: "production",
+     parentAssetIds: contentContext?.selectedAssets.script ? [contentContext.selectedAssets.script.id] : [],
+    },
+    metadata: { hookIndex, timelineIndex, prompt: fullPrompt },
+   })
+   if (contentContext) {
+    recordContentBuildToolOutput({
+     contentBuildId: contentContext.contentBuildId,
+     toolId: "hook-generator",
+     assetIds: [created.asset.id],
+     generationRecordId: created.generationRecordId,
+     summary: "Generated a hook visual image and attached it to the active ContentBuild.",
+     metadata: { hookIndex, timelineIndex },
+    })
+   }
   } catch (e) {
    alert("Failed to generate image.")
   } finally {
@@ -176,6 +207,42 @@ const HookGenerator: React.FC<HookGeneratorProps> = ({
   try {
    const videoUrl = await generateVisualVideo(fullPrompt, imageBytes)
    setGeneratedVideos((prev) => ({ ...prev, [key]: videoUrl }))
+
+   const contentContext = resolveWorkspaceContentBuildToolContext(brain, "hook-generator", ["script"])
+   const created = createAsset({
+    sourceToolId: "hook-generator",
+    sourceKind: "studio-tool",
+    payloadKind: "video",
+    name: `Hook visual video · ${hookIndex + 1}.${timelineIndex + 1}`,
+    summary: fullPrompt,
+    kind: "video",
+    url: videoUrl,
+    tags: ["hook-visual", "video", "content-build"],
+    context: {
+     contentBuildId: contentContext?.contentBuildId || null,
+     projectId: contentContext?.build.legacyProjectId || null,
+     projectName: contentContext?.build.legacyProjectName || null,
+     videoId: contentContext?.build.youtube?.videoId || null,
+     stage: "production",
+     parentAssetIds: contentContext?.selectedAssets.script ? [contentContext.selectedAssets.script.id] : [],
+    },
+    metadata: {
+     hookIndex,
+     timelineIndex,
+     prompt: fullPrompt,
+     sourceImageAttached: Boolean(imageBytes),
+    },
+   })
+   if (contentContext) {
+    recordContentBuildToolOutput({
+     contentBuildId: contentContext.contentBuildId,
+     toolId: "hook-generator",
+     assetIds: [created.asset.id],
+     generationRecordId: created.generationRecordId,
+     summary: "Generated a hook visual video and attached it to the active ContentBuild.",
+     metadata: { hookIndex, timelineIndex },
+    })
+   }
   } catch (e) {
    alert("Failed to generate video.")
   } finally {
