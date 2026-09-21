@@ -541,7 +541,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
 
       return (
        <section key={group} className="border-b-[3px] border-black bg-white last:border-b-0">
-        <div className="flex items-stretch" style={{ backgroundColor: GROUP_COLORS[group] }}>
+        <div className="vt-sync-group-header flex items-stretch" style={{ backgroundColor: GROUP_COLORS[group] }}>
          <h3 className="min-w-0 flex-1">
           <button
            ref={(node) => {
