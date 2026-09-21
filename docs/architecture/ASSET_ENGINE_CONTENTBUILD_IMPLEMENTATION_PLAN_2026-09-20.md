@@ -210,6 +210,20 @@ Final render becomes a canonical Asset Engine asset with lineage to timeline sta
 
 ## Wave 8 — Publisher transaction
 
+Status: TRANSACTION FOUNDATION + EXPLICIT APPROVAL IMPLEMENTED; REMOTE UPLOAD ADAPTER STILL MISSING.
+
+Implemented on this branch:
+
+- ContentBuild-scoped publish transaction records,
+- idempotency key derived from ContentBuild + final render,
+- append-only transaction started/step/failed/completed events,
+- explicit creator approval receipt before external upload,
+- Publisher validation of final render/title/thumbnail/description,
+- YouTube binding helper that records the returned video ID and exact selected package assets,
+- stage transition to scheduled/published only after verified binding state.
+
+The repository capability registry declares upload capability, but the stabilization tracker still explicitly lists the resumable Video Publisher upload endpoint/session as unfinished. Therefore this pass does not fake a successful upload. The approved transaction is ready for that adapter.
+
 Complete the real publishing sequence:
 
 1. validate canonical package,
