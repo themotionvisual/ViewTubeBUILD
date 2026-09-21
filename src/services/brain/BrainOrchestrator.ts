@@ -305,7 +305,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   userText: input.userText,
   metadata: { source: "brain_orchestrator", promptVersion: BRAIN_PROMPT_VERSION, taskProfileId: taskProfile.id },
  })
- const capabilities = selectBrainCapabilities({ userText: input.userText, snapshot: input.snapshot })
+ const capabilities = selectBrainCapabilities({ channelId: input.channelId, userText: input.userText, snapshot: input.snapshot })
  const capabilityIds = capabilities.map((capability) => capability.id)
  const statisticsIntelligence = capabilityIds.includes("statistics-intelligence")
   ? buildBrainStatisticsIntelligence()
