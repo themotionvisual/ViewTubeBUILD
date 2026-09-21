@@ -1,4 +1,4 @@
-import type { VaultAsset } from "@/types"
+import type { VaultAsset, WorkspaceBrain } from "@/types"
 import { listVaultAssets } from "../vaultAdapter"
 import {
  appendContentBuildEvent,
@@ -7,6 +7,7 @@ import {
  listContentBuildEvents,
 } from "./ContentBuildRepository"
 import type { ContentBuildEvent, ContentBuildSnapshot } from "./contracts"
+import { syncProjectToContentBuild } from "./ProjectContentBuildBridge"
 
 export interface ResolveContentBuildToolContextInput {
  contentBuildId?: string | null
@@ -129,6 +130,31 @@ export const refreshContentBuildToolContext = (
   channelId: build.channelId || null,
   projectId: build.legacyProjectId || null,
   projectName: build.legacyProjectName || null,
+  videoId: build.youtube?.videoId || null,
+  toolId,
+  requestedSlots,
+ })
+}
+
+
+export const resolveWorkspaceContentBuildToolContext = (
+ brain: WorkspaceBrain,
+ toolId: string,
+ requestedSlots?: string[],
+): ContentBuildToolContext | null => {
+ const project =
+  brain.projects.find(candidate => candidate.id === brain.activeProjectId) ||
+  brain.projects.find(candidate => candidate.status === "active") ||
+  brain.projects[0]
+
+ if (!project) return null
+
+ const build = syncProjectToContentBuild(project, { sourceToolId: toolId })
+
+ return resolveContentBuildToolContext({
+  contentBuildId: build.id,
+  projectId: project.id,
+  projectName: project.name,
   videoId: build.youtube?.videoId || null,
   toolId,
   requestedSlots,
