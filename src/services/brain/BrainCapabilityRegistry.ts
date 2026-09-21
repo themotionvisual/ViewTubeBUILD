@@ -35,7 +35,7 @@ const capabilityAllowedByCreator = (
 ): boolean => {
  if (!controls.enabled) return false
  if (!controls.personalization && ["channel-profile", "channel-intelligence", "journal-memory", "goal-coach"].includes(capability.id)) return false
- if (!controls.allowAnalytics && ["statistics-intelligence", "analytics-diagnosis", "top-performer-mining", "signal-anomaly-intelligence", "channel-intelligence"].includes(capability.id)) return false
+ if (!controls.allowAnalytics && ["statistics-intelligence", "analytics-diagnosis", "top-performer-mining", "signal-anomaly-intelligence", "channel-intelligence", "opportunity-intelligence", "algorithm-priming"].includes(capability.id)) return false
  return true
 }
 
