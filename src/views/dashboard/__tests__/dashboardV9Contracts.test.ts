@@ -101,8 +101,8 @@ describe("dashboard v9 registry and layout migration", () => {
       .sort((left, right) => left.defaultOrder - right.defaultOrder)
 
     expect(supported).toHaveLength(30)
-    expect(supported[0]?.id).toBe("kpi-cluster")
-    expect(supported[1]?.id).toBe("app-verification-explainer")
+    expect(supported[0]?.id).toBe("app-verification-explainer")
+    expect(supported[1]?.id).toBe("kpi-cluster")
     expect(supported.map((widget) => widget.id)).toContain("video-uploader")
     expect(supported.map((widget) => widget.id)).toContain("data-edit")
     expect(supported[29]?.id).toBe("hashtag-analyzer")
