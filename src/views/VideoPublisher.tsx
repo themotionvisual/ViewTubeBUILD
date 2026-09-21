@@ -3,6 +3,16 @@ import { BarChart3, Check, Copy, FileText, Sparkles, Type, Upload, Zap } from "l
 import JSZip from "jszip"
 import { useBrain } from "../context/useBrain"
 import { generateSeoData, hasGeminiKey } from "../services/gemini"
+import {
+ addAssetVariant,
+ createAssetVariantGroup,
+ createVersionedAsset,
+} from "../services/assetEngine"
+import {
+ recordContentBuildToolInput,
+ recordContentBuildToolOutput,
+ resolveWorkspaceContentBuildToolContext,
+} from "../services/asset-engine/ToolContext"
 import { nexusSyncService } from "../services/nexusSyncService"
 import { sheetsService } from "../services/sheetsService"
 import type { SeoResult } from "../types"
@@ -149,9 +159,112 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
     setLoading(true)
     try {
       updateBrain({ coreConcept: concept, targetNiche: niche })
+      const contentContext = resolveWorkspaceContentBuildToolContext(
+        brain,
+        "video-publisher",
+        ["script", "title", "thumbnail", "description", "tags"],
+      )
+      if (contentContext) {
+        recordContentBuildToolInput({
+          contentBuildId: contentContext.contentBuildId,
+          toolId: "video-publisher",
+          assetIds: Object.values(contentContext.selectedAssets).filter(Boolean).map(asset => asset!.id),
+          summary: "Generate publishing metadata from the active ContentBuild package.",
+          metadata: { concept, niche, formatMode, videoLength },
+        })
+      }
+
       const data = await generateSeoData(concept, niche, script, "", videoLength, channelHandle, resourceLinks, formatMode === "longform" ? "Longform" : "Shorts", undefined, brain)
       setResult(data)
       setSeoState({ winningTitle: data.titleSets[0].title, winningKeywords: data.tags.split(",").map((keyword) => keyword.trim()).slice(0, 5), descriptionDraft: data.description })
+
+      if (contentContext) {
+        const titleGroup = createAssetVariantGroup({
+          contentBuildId: contentContext.contentBuildId,
+          slot: "title",
+          label: "Publisher title candidates",
+          sourceToolId: "video-publisher",
+        })
+        const titleAssets = data.titleSets.map((titleSet, index) => {
+          const created = createVersionedAsset({
+            sourceToolId: "video-publisher",
+            sourceKind: "studio-tool",
+            payloadKind: "metadata",
+            name: `Title candidate ${index + 1}`,
+            summary: titleSet.title,
+            kind: "document",
+            payload: titleSet,
+            tags: ["title", "candidate", "publishing", "content-build"],
+            slot: "title",
+            label: `Title ${index + 1}`,
+            parentAssetId: contentContext.selectedAssets.title?.id || null,
+            context: {
+              contentBuildId: contentContext.contentBuildId,
+              projectId: contentContext.build.legacyProjectId || null,
+              projectName: contentContext.build.legacyProjectName || null,
+              videoId: contentContext.build.youtube?.videoId || null,
+              stage: "metadata",
+              parentAssetIds: contentContext.selectedAssets.title ? [contentContext.selectedAssets.title.id] : [],
+            },
+          })
+          addAssetVariant({
+            contentBuildId: contentContext.contentBuildId,
+            groupId: titleGroup.id,
+            assetId: created.asset.id,
+            versionId: created.version?.id || null,
+            label: `Candidate ${index + 1}`,
+            sourceToolId: "video-publisher",
+          })
+          return created
+        })
+        const descriptionAsset = createVersionedAsset({
+          sourceToolId: "video-publisher",
+          sourceKind: "studio-tool",
+          payloadKind: "metadata",
+          name: "Publishing description",
+          summary: data.description,
+          kind: "document",
+          payload: { description: data.description },
+          tags: ["description", "publishing", "content-build"],
+          slot: "description",
+          label: "Generated description",
+          parentAssetId: contentContext.selectedAssets.description?.id || null,
+          context: {
+            contentBuildId: contentContext.contentBuildId,
+            projectId: contentContext.build.legacyProjectId || null,
+            projectName: contentContext.build.legacyProjectName || null,
+            videoId: contentContext.build.youtube?.videoId || null,
+            stage: "metadata",
+          },
+        })
+        const tagsAsset = createVersionedAsset({
+          sourceToolId: "video-publisher",
+          sourceKind: "studio-tool",
+          payloadKind: "metadata",
+          name: "Publishing tags",
+          summary: data.tags,
+          kind: "document",
+          payload: { tags: data.tags },
+          tags: ["tags", "publishing", "content-build"],
+          slot: "tags",
+          label: "Generated tags",
+          parentAssetId: contentContext.selectedAssets.tags?.id || null,
+          context: {
+            contentBuildId: contentContext.contentBuildId,
+            projectId: contentContext.build.legacyProjectId || null,
+            projectName: contentContext.build.legacyProjectName || null,
+            videoId: contentContext.build.youtube?.videoId || null,
+            stage: "metadata",
+          },
+        })
+        recordContentBuildToolOutput({
+          contentBuildId: contentContext.contentBuildId,
+          toolId: "video-publisher",
+          assetIds: [...titleAssets.map(item => item.asset.id), descriptionAsset.asset.id, tagsAsset.asset.id],
+          summary: `Created ${titleAssets.length} title variants plus description and tags for the active ContentBuild.`,
+          metadata: { titleVariantGroupId: titleGroup.id },
+        })
+      }
     } catch (error: any) {
       console.error(error)
       alert(`SEO Protocols failed: ${error.message}`)

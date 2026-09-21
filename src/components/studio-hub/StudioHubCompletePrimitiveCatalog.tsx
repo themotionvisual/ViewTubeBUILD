@@ -116,13 +116,12 @@ export const HardcodedGenericControl: React.FC<{ name: string; level: Level; ind
   if (name === "Removable Tag") return <span className={`vt-spectrum-tag is-${level}`} style={style}>Napoleon <button aria-label="Remove"><X /></button></span>
   if (name === "Selectable Tag") return <button type="button" className={`vt-catalog-selectable-tag is-${level} ${selectableTagOn ? "is-selected" : ""}`} style={style} aria-pressed={selectableTagOn} onClick={() => setSelectableTagOn(v => !v)}>{selectableTagOn ? <Check /> : <Plus />}<span>{selectableTagOn ? "SELECTED" : "SELECT"}</span></button>
   if (name === "Tag Editor") return <div className={`vt-catalog-tag-editor is-${level} ${tagEditorOpen ? "is-editing" : ""}`} style={style}>
+    <strong className="tag-editor-label">TAGS</strong>
     <div className="tag-editor-tags">
-      {editorTags.map(tag => <span key={tag} className={`vt-spectrum-tag is-${level}`}>{tag}<button type="button" aria-label={`Remove ${tag}`} onClick={() => setEditorTags(tags => tags.filter(item => item !== tag))}><X /></button></span>)}
+      {editorTags.map(tag => <span key={tag} className={`vt-spectrum-tag is-${level}`} style={{"--tag-color":getAlphabeticalSpectrumColor(tag)} as React.CSSProperties}>{tag}<button type="button" aria-label={`Remove ${tag}`} onClick={() => setEditorTags(tags => tags.filter(item => item !== tag))}><X /></button></span>)}
+      {!tagEditorOpen ? <button type="button" className="add" aria-label="Add tag" onClick={() => setTagEditorOpen(true)}><Plus /></button> : null}
     </div>
-    {tagEditorOpen ? <>
-      <input autoFocus aria-label="New tag" value={tagDraft} placeholder="ADD TAG" onChange={e => setTagDraft(e.target.value.toUpperCase())} onKeyDown={e => { if (e.key === "Enter" && tagDraft.trim()) { if (!editorTags.includes(tagDraft.trim())) setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) } if (e.key === "Escape") { setTagDraft(""); setTagEditorOpen(false) } }} />
-      <button type="button" className="submit" aria-label="Save tag" onClick={() => { if (tagDraft.trim() && !editorTags.includes(tagDraft.trim())) setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) }}><Check /></button>
-    </> : <button type="button" className="add" aria-label="Add tag" onClick={() => setTagEditorOpen(true)}><Plus /></button>}
+    {tagEditorOpen ? <div className="tag-editor-entry"><input autoFocus aria-label="New tag" value={tagDraft} placeholder="ADD TAG" onChange={e => setTagDraft(e.target.value.toUpperCase())} onKeyDown={e => { if (e.key === "Enter" && tagDraft.trim()) { if (!editorTags.includes(tagDraft.trim())) setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) } if (e.key === "Escape") { setTagDraft(""); setTagEditorOpen(false) } }} /><button type="button" className="submit" aria-label="Save tag" onClick={() => { if (tagDraft.trim() && !editorTags.includes(tagDraft.trim())) setEditorTags(tags => [...tags, tagDraft.trim()]); setTagDraft(""); setTagEditorOpen(false) }}><Check /></button></div> : null}
   </div>
   if (name === "Badge") return <span className={`vt-catalog-fill-badge is-${level}`} style={style}>BADGE</span>
   if (name === "Status Badge") return <span className={`vt-status-badge is-${level}`} style={style}><i/>Ready</span>
@@ -162,7 +161,7 @@ export const HardcodedGenericControl: React.FC<{ name: string; level: Level; ind
         onWheel={e => { e.preventDefault(); setKnobValue(v => Math.min(100, Math.max(0, v + (e.deltaY < 0 ? 1 : -1)))) }}
         onKeyDown={e => { if (e.key === "ArrowUp" || e.key === "ArrowRight") { e.preventDefault(); setKnobValue(v => Math.min(100,v+1)) } if (e.key === "ArrowDown" || e.key === "ArrowLeft") { e.preventDefault(); setKnobValue(v => Math.max(0,v-1)) } if (e.key === "Home") setKnobValue(0); if (e.key === "End") setKnobValue(100) }}
       ><span className="knob-arc"/><i/><em>{knobValue}</em></span>
-      <div className="knob-readout"><b className="knob-value">VALUE</b><output>{knobValue}</output></div>
+      <div className="knob-controls"><button type="button" aria-label="Decrease value" onClick={() => setKnobValue(v => Math.max(0,v-1))}>−</button><b className="knob-value">VALUE</b><button type="button" aria-label="Increase value" onClick={() => setKnobValue(v => Math.min(100,v+1))}>+</button></div>
     </div>
   }
   if (name === "Controller Switch") return <button className={`vt-catalog-controller-switch is-${level}`} style={style}><span/><b>ON</b></button>

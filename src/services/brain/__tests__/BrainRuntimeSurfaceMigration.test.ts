@@ -14,6 +14,10 @@ const SURFACES = [
   path: "src/components/SidebarChatbot.tsx",
   surface: 'surface: "sidebar-chatbot"',
  },
+ {
+  path: "src/views/AIBrainCommandInterface.tsx",
+  surface: 'surface: "ai-brain"',
+ },
 ] as const
 
 describe("BrainRuntime creator-surface migration guard", () => {
@@ -29,6 +33,25 @@ describe("BrainRuntime creator-surface migration guard", () => {
   expect(source).toContain("visibleContext")
   expect(source).toContain("selectedItem")
   expect(source).toContain("projectId: selection?.projectId ?? surface.projectId ?? null")
+ })
+
+ it("preserves runtime context through the orchestrator for specialist intelligence", () => {
+  const runtime = read("src/services/brain/runtime/BrainRuntime.ts")
+  const orchestrator = read("src/services/brain/BrainOrchestrator.ts")
+  const broker = read("src/services/brain/BrainContextBroker.ts")
+  expect(runtime).toContain("visibleContext: input.visibleContext")
+  expect(runtime).toContain("projectId: input.projectId")
+  expect(orchestrator).toContain("readAlgorithmIntelligenceForBrain")
+  expect(orchestrator).toContain("algorithmIntelligence")
+  expect(broker).toContain("ALGORITHM / CHANNEL / OPPORTUNITY INTELLIGENCE")
+ })
+
+ it("keeps evidence permissions and engine controls canonical", () => {
+  const broker = read("src/services/brain/BrainContextBroker.ts")
+  const controls = read("src/services/brain/BrainUserControls.ts")
+  expect(broker).toContain("readBrainUserControls(input.channelId)")
+  expect(controls).toContain("showEvidence: boolean")
+  expect(controls).toContain("externalActionsRequireApproval: boolean")
  })
 
  it("keeps Brain Hub controls on the canonical user and engine stores", () => {

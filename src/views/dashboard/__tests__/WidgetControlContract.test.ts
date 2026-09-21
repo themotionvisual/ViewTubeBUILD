@@ -122,7 +122,16 @@ describe("dashboard widget scrollbar contract", () => {
 })
 
 describe("widget uniformity migrations", () => {
-  it("removes the Daily Oracle promotional heading and upgrade row", () => {
+  it("routes Daily Oracle through the evidence-ranked decision engine and canonical widget primitives", () => {
+    expect(dailyOracleSource).toContain("buildAIBrainContextSnapshot")
+    expect(dailyOracleSource).toContain("buildCreatorGrowthContext")
+    expect(dailyOracleSource).toContain("buildDailyOraclePlan")
+    expect(dailyOracleSource).toContain("<WidgetHeaderToggle")
+    expect(dailyOracleSource).toContain("<WidgetScrollArea")
+    expect(dailyOracleSource).toContain("<WidgetSizedButton")
+    expect(dailyOracleSource).toContain("<WidgetIconButton")
+    expect(dailyOracleSource).toContain("daily-oracle-v2__compass")
+    expect(dailyOracleSource).not.toContain('className="vt-button')
     expect(dailyOracleSource).not.toContain("Strategic Priorities")
     expect(dailyOracleSource).not.toContain("Upgrade for Oracle AI")
   })
@@ -154,8 +163,8 @@ describe("widget uniformity migrations", () => {
     expect(widgetRendererSource).toContain("channel-overview-main")
     expect(commentResponderSource).toContain('enabled={tab === "history"}')
     expect(commentResponderSource).toContain("comment-responder-footer-actions")
-    expect(dailyOracleSource).toContain("daily-oracle-list")
-    expect(dailyOracleSource).not.toContain("<WidgetScrollArea")
+    expect(dailyOracleSource).toContain("daily-oracle-v2__quick-grid")
+    expect(dailyOracleSource).toContain("<WidgetScrollArea")
   })
 
   it("lets dashboard visibility control the About VIEWTUBE widget", () => {
@@ -169,5 +178,10 @@ describe("widget uniformity migrations", () => {
     expect(verificationExplainerSource).not.toContain("if (isConnected) return null")
     expect(verificationExplainerSource).not.toContain("useUnifiedAccount")
     expect(verificationExplainerSource).toContain("<WidgetShell")
+    expect(verificationExplainerSource).toContain("<WidgetHeaderToggle")
+    expect(verificationExplainerSource).toContain("about-vt__system-map")
+    expect(verificationExplainerSource).toContain("about-vt__trust-map")
+    expect(verificationExplainerSource).toContain("<WidgetScrollArea")
+    expect(verificationExplainerSource).toContain("<WidgetSizedButton")
   })
 })

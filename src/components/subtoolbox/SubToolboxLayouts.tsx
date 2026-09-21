@@ -1,4 +1,5 @@
 import React from "react"
+import "../../styles/toolbox-entry.css"
 import type { SubToolboxLayoutDensity } from "./tokens"
 
 const classes = (...values: Array<string | false | null | undefined>) => values.filter(Boolean).join(" ")

@@ -103,6 +103,7 @@ export interface PackageApprovalState {
 export interface ViewTubeVideoPackage {
  schemaVersion: typeof VIDEO_PACKAGE_SCHEMA_VERSION
  id: string
+ contentBuildId?: string
  version: number
  channelId: string
  projectId: string
@@ -165,6 +166,7 @@ export type CreateVideoPackageInput = {
  projectId: string
  workingTitle: string
  format: VideoPackageFormat
+ contentBuildId?: string
  sourceToolId?: SuperToolId | string
  now?: string
  id?: string

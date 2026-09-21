@@ -1,0 +1,16 @@
+/* Canonical Dashboard/Widget stylesheet entry point.
+ * Keep this order deterministic. Widget implementations must not lazily import
+ * shared CSS because late injection can change layer order and mobile sizing.
+ */
+@import "./widgetLayerOrder.css";
+@import "./toolboxWidgetSystem.css"; /* LEGACY migration monolith */
+@import "./widgetPrimitiveSystem.css";
+@import "./widgetPrimitiveVariants.css";
+@import "./widgetPrimitiveExactHeights.css";
+@import "./widgetPrimitiveTones.css";
+@import "./widgetMatrixPrimitives.css";
+@import "./widgetControlOwnership.css";
+@import "./widgetArchetypeResponsive.css";
+@import "./widgetShellOwnership.css";
+@import "./widgetScrollbar.css";
+@import "./widgetMobileContract.css";

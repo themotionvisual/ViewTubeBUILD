@@ -15,12 +15,12 @@ type DefaultDashboardSlot = Readonly<{
 }>
 
 export const DEFAULT_DASHBOARD_ROWS = [
- // Top row — Channel Overview (left half) + About VIEWTUBE hero (right half).
- // The About panel explains the product and data use. Its visibility is owned
- // exclusively by dashboard layout state, like every other widget.
+ // Top row — About VIEWTUBE is deliberately first so a new visitor meets the
+ // product through its visual language and creator loop before seeing channel
+ // metrics. Channel Overview follows beside it for returning creators.
  [
-  { id: "kpi-cluster", size: "half", height: "medium" },
   { id: "app-verification-explainer", size: "half", height: "medium" },
+  { id: "kpi-cluster", size: "half", height: "medium" },
  ],
  [
   { id: "community-post", size: "half", height: "tall" },
@@ -80,14 +80,14 @@ const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
  {
   id: "app-verification-explainer",
   title: "About VIEWTUBE",
-  subtitle: "VIEWTUBE app purpose, Google sign-in, and YouTube data use",
+  subtitle: "Connected creator system + trust map",
   category: "system",
   defaultSize: "full",
   minSize: "half",
   maxSize: "full",
   defaultHeight: "medium",
   minHeight: "short",
-  maxHeight: "medium",
+  maxHeight: "tall",
   ...getDashboardWidgetPaletteColors(7),
   dependency: ["none"],
   status: "ready",
@@ -605,7 +605,7 @@ const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
  {
   id: "daily-oracle",
   title: "Daily Oracle",
-  subtitle: "Strategic Advice",
+  subtitle: "Evidence-ranked next action",
   category: "ai",
   defaultSize: "third",
   minSize: "quarter",
@@ -1028,8 +1028,8 @@ export const DASHBOARD_WIDGET_BY_ID = Object.fromEntries(
 
 export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: string }> = {
   "app-verification-explainer": {
-   short: "VIEWTUBE EXPLAINS ITS PURPOSE AND DATA USE BEFORE CHANNEL TOOLS.",
-   detailed: "This module is intentionally visible at the top of the dashboard so reviewers and creators can understand why the app requests Google and YouTube access."
+   short: "MEET VIEWTUBE THROUGH ITS COLOR, CREATOR LOOP, TOOLS, AND TRUST MODEL.",
+   detailed: "The first-visit system map showcases the ViewTube spectrum and creator loop while opening Sync, Brain, Studio, and Projects directly; Trust exposes connection, account, privacy, and data controls."
   },
   "kpi-cluster": {
    short: "REAL-TIME CHANNEL VITALS AND CORE GROWTH METRICS.",
@@ -1124,8 +1124,8 @@ export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: stri
    detailed: "Ask anything about your data and get an immediate answer. Best used for 'Why?' questions that charts can't explain."
   },
   "daily-oracle": {
-   short: "STRATEGIC AI ADVICE TAILORED TO YOUR CURRENT GROWTH.",
-   detailed: "Receive a daily 'prediction' or strategic tip for your channel. Use this for a fresh perspective on your content direction."
+   short: "RANK TODAY'S HIGHEST-LEVERAGE MOVE, COMPLETE IT, AND BUILD A DAILY STREAK.",
+   detailed: "The Oracle combines Brain context, goals, evidence, cadence, effort, and a selected growth lens into one primary move plus quick wins. Complete the large daily task control to reveal the monthly completion calendar, current streak, best streak, and total completed days."
   },
   "ai-journal": {
    short: "CREATIVE LOG FOR TRACKING EXPERIMENTS AND STRATEGIES.",

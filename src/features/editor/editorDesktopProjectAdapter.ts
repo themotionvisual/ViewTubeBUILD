@@ -2,9 +2,13 @@ import type { VtE1Project } from '../../shared/vtE1TimelineContract';
 
 export type DesktopProjectRecord = VtE1Project & {
   schemaVersion?: string;
+  contentBuildId?: string;
+  legacyProjectId?: string;
   meta?: Record<string, unknown> & {
     durationSec?: number;
     aspectRatio?: string;
+    contentBuildId?: string;
+    legacyProjectId?: string;
   };
   tracks?: Array<Record<string, unknown> & {
     id: string;

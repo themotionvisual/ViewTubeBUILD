@@ -9,6 +9,12 @@ import { Magnet } from "lucide-react"
 import { ToolboxScaffold, Toolbox, SubToolbox, StandardTextArea } from "../components/Toolbox"
 import { useBrain } from "../context/useBrain"
 import { PostActionReflection } from "../components/PostActionReflection"
+import { createAsset } from "../services/assetEngine"
+import {
+ recordContentBuildToolInput,
+ recordContentBuildToolOutput,
+ resolveWorkspaceContentBuildToolContext,
+} from "../services/asset-engine/ToolContext"
 
 interface HookGeneratorProps {
  globalScript?: string
@@ -59,8 +65,53 @@ const HookGenerator: React.FC<HookGeneratorProps> = ({
   }
   setLoading(true)
   try {
+   const contentContext = resolveWorkspaceContentBuildToolContext(brain, "hook-generator", ["script"])
+   if (contentContext) {
+    recordContentBuildToolInput({
+     contentBuildId: contentContext.contentBuildId,
+     toolId: "hook-generator",
+     assetIds: contentContext.selectedAssets.script ? [contentContext.selectedAssets.script.id] : [],
+     summary: "Generate opening-hook variants from the active ContentBuild script/context.",
+     metadata: { sourceCharacters: localScript.length },
+    })
+   }
+
    const hookResults = await generateHook(localScript, "script", brain)
    setResults(hookResults)
+
+   const created = hookResults.map((hook, index) => createAsset({
+    sourceToolId: "hook-generator",
+    sourceKind: "studio-tool",
+    payloadKind: "hook",
+    name: `Hook ${index + 1} · ${hook.styleName || "Variant"}`,
+    summary: hook.explanation || hook.script,
+    kind: "document",
+    payload: hook,
+    tags: ["hook", "candidate", "content-build"],
+    context: {
+     contentBuildId: contentContext?.contentBuildId || null,
+     projectId: contentContext?.build.legacyProjectId || null,
+     projectName: contentContext?.build.legacyProjectName || null,
+     videoId: contentContext?.build.youtube?.videoId || null,
+     stage: "script",
+     parentAssetIds: contentContext?.selectedAssets.script ? [contentContext.selectedAssets.script.id] : [],
+    },
+    metadata: {
+     variantIndex: index,
+     styleName: hook.styleName,
+     candidate: true,
+    },
+   }))
+
+   if (contentContext) {
+    recordContentBuildToolOutput({
+     contentBuildId: contentContext.contentBuildId,
+     toolId: "hook-generator",
+     assetIds: created.map(item => item.asset.id),
+     summary: `Created ${created.length} hook candidates for the active ContentBuild.`,
+     metadata: { variantCount: created.length },
+    })
+   }
    setSelectedVisuals({})
    setVisualDetails({})
    setGeneratedImages({})
@@ -100,6 +151,37 @@ const HookGenerator: React.FC<HookGeneratorProps> = ({
   try {
    const imageUrl = await generateVisualImage(fullPrompt)
    setGeneratedImages((prev) => ({ ...prev, [key]: imageUrl }))
+
+   const contentContext = resolveWorkspaceContentBuildToolContext(brain, "hook-generator", ["script"])
+   const created = createAsset({
+    sourceToolId: "hook-generator",
+    sourceKind: "studio-tool",
+    payloadKind: "image",
+    name: `Hook visual image · ${hookIndex + 1}.${timelineIndex + 1}`,
+    summary: fullPrompt,
+    kind: "image",
+    url: imageUrl,
+    tags: ["hook-visual", "image", "content-build"],
+    context: {
+     contentBuildId: contentContext?.contentBuildId || null,
+     projectId: contentContext?.build.legacyProjectId || null,
+     projectName: contentContext?.build.legacyProjectName || null,
+     videoId: contentContext?.build.youtube?.videoId || null,
+     stage: "production",
+     parentAssetIds: contentContext?.selectedAssets.script ? [contentContext.selectedAssets.script.id] : [],
+    },
+    metadata: { hookIndex, timelineIndex, prompt: fullPrompt },
+   })
+   if (contentContext) {
+    recordContentBuildToolOutput({
+     contentBuildId: contentContext.contentBuildId,
+     toolId: "hook-generator",
+     assetIds: [created.asset.id],
+     generationRecordId: created.generationRecordId,
+     summary: "Generated a hook visual image and attached it to the active ContentBuild.",
+     metadata: { hookIndex, timelineIndex },
+    })
+   }
   } catch (e) {
    alert("Failed to generate image.")
   } finally {
@@ -125,6 +207,42 @@ const HookGenerator: React.FC<HookGeneratorProps> = ({
   try {
    const videoUrl = await generateVisualVideo(fullPrompt, imageBytes)
    setGeneratedVideos((prev) => ({ ...prev, [key]: videoUrl }))
+
+   const contentContext = resolveWorkspaceContentBuildToolContext(brain, "hook-generator", ["script"])
+   const created = createAsset({
+    sourceToolId: "hook-generator",
+    sourceKind: "studio-tool",
+    payloadKind: "video",
+    name: `Hook visual video · ${hookIndex + 1}.${timelineIndex + 1}`,
+    summary: fullPrompt,
+    kind: "video",
+    url: videoUrl,
+    tags: ["hook-visual", "video", "content-build"],
+    context: {
+     contentBuildId: contentContext?.contentBuildId || null,
+     projectId: contentContext?.build.legacyProjectId || null,
+     projectName: contentContext?.build.legacyProjectName || null,
+     videoId: contentContext?.build.youtube?.videoId || null,
+     stage: "production",
+     parentAssetIds: contentContext?.selectedAssets.script ? [contentContext.selectedAssets.script.id] : [],
+    },
+    metadata: {
+     hookIndex,
+     timelineIndex,
+     prompt: fullPrompt,
+     sourceImageAttached: Boolean(imageBytes),
+    },
+   })
+   if (contentContext) {
+    recordContentBuildToolOutput({
+     contentBuildId: contentContext.contentBuildId,
+     toolId: "hook-generator",
+     assetIds: [created.asset.id],
+     generationRecordId: created.generationRecordId,
+     summary: "Generated a hook visual video and attached it to the active ContentBuild.",
+     metadata: { hookIndex, timelineIndex },
+    })
+   }
   } catch (e) {
    alert("Failed to generate video.")
   } finally {

@@ -7,19 +7,26 @@ import type { AIBrainContextSnapshot } from "../aiBrainCommandInterface"
 import { buildBrainTaskInstruction, resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
 import { buildRelevantNicheKnowledgeContext } from "./NicheKnowledge"
 import { readBrainUserControls } from "./BrainUserControls"
+import type { StatisticsIntelligenceSnapshot } from "./StatisticsIntelligence"
+import type { AudienceIntelligenceSnapshot } from "./AudienceIntelligence"
+import { buildAlgorithmIntelligenceContext, type AlgorithmIntelligencePortfolio } from "./AlgorithmIntelligenceOrchestrator"
 
 const clip = (value: string, maximum: number): string => value.slice(0, Math.max(0, maximum))
 
 export const buildBrainContextPack = (input: {
+ channelId?: string | null
  systemPrompt: string
  snapshot: AIBrainContextSnapshot
  recentTurns: AIBrainConversationTurn[]
  nicheKnowledge?: NicheKnowledgeProfile | null
  userText: string
  currentResearch?: string
+ statisticsIntelligence?: StatisticsIntelligenceSnapshot | null
+ audienceIntelligence?: AudienceIntelligenceSnapshot | null
+ algorithmIntelligence?: AlgorithmIntelligencePortfolio | null
  maximumCharacters?: number
 }): { systemInstruction: string; budget: BrainContextBudget } => {
- const controls = readBrainUserControls()
+ const controls = readBrainUserControls(input.channelId)
  const maximumCharacters = input.maximumCharacters || 24_000
  const omittedSections: string[] = []
  const system = clip(input.systemPrompt, 11_000)
@@ -59,6 +66,29 @@ export const buildBrainContextPack = (input: {
   : "Analytics evidence access is disabled by the creator in Brain User Controls. Do not infer private channel metrics or quote stored analytics values."
  if (!controls.allowAnalytics) omittedSections.push("analytics_access_disabled")
 
+ const statistics = controls.allowAnalytics && input.statisticsIntelligence
+  ? clip([
+    `confidence=${input.statisticsIntelligence.confidence}; coverage=${Math.round(input.statisticsIntelligence.coverageRatio * 100)}%; window=${input.statisticsIntelligence.selectedWindow}`,
+    ...input.statisticsIntelligence.metrics.slice(0, 18).map((metric) =>
+     `${metric.datasetId}.${metric.metric}: n=${metric.count}; sum=${metric.sum}; avg=${metric.average}; min=${metric.minimum}; max=${metric.maximum}; evidence=${metric.evidenceRef || "none"}`),
+    ...input.statisticsIntelligence.limitations.map((value) => `Limitation: ${value}`),
+   ].join("\n"), 4200)
+  : ""
+
+ const audience = controls.allowAnalytics && input.audienceIntelligence
+  ? clip([
+    `confidence=${input.audienceIntelligence.confidence}; window=${input.audienceIntelligence.selectedWindow}`,
+    ...input.audienceIntelligence.signals.slice(0, 16).map((signal) =>
+     `${signal.kind} | ${signal.label} | ${JSON.stringify(signal.metrics)} | evidence=${signal.evidenceRef || "none"}`),
+    ...input.audienceIntelligence.missingEvidence.map((id) => `Missing audience dataset: ${id}`),
+    ...input.audienceIntelligence.evidenceBoundary.map((rule) => `Boundary: ${rule}`),
+   ].join("\n"), 4200)
+  : ""
+
+ const algorithm = controls.allowAnalytics && input.algorithmIntelligence
+  ? clip(buildAlgorithmIntelligenceContext(input.algorithmIntelligence), 4800)
+  : ""
+
  const knowledge = clip(buildRelevantNicheKnowledgeContext(input.nicheKnowledge || null, input.userText, 2200), 2200)
  const research = clip(input.currentResearch || "", 1800)
  const taskInstruction = buildBrainTaskInstruction(resolveBrainTaskProfile(input.userText))
@@ -75,6 +105,9 @@ export const buildBrainContextPack = (input: {
   system,
   controlInstruction,
   "\nCHANNEL EVIDENCE\n" + evidence,
+  statistics ? "\nDETERMINISTIC STATISTICS INTELLIGENCE\n" + statistics : "",
+  audience ? "\nAUDIENCE INTELLIGENCE\n" + audience : "",
+  algorithm ? "\nALGORITHM / CHANNEL / OPPORTUNITY INTELLIGENCE\n" + algorithm : "",
   memory ? "\nCONFIRMED CREATOR CONTEXT\n" + memory : "",
   clippedConversation ? "\nRECENT CONVERSATION\n" + clippedConversation : "",
   knowledge ? "\nPUBLIC NICHE KNOWLEDGE\n" + knowledge : "",
@@ -92,7 +125,7 @@ export const buildBrainContextPack = (input: {
   budget: {
    maximumCharacters,
    systemCharacters: system.length,
-   evidenceCharacters: evidence.length,
+   evidenceCharacters: evidence.length + statistics.length + audience.length + algorithm.length,
    memoryCharacters: memory.length,
    knowledgeCharacters: knowledge.length + research.length,
    conversationCharacters: clippedConversation.length,

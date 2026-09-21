@@ -5,6 +5,8 @@ import { MOUNTED_INTERNAL_TOOL_IDS } from "./superToolRuntimePlanRegistry"
 import { ingestGenerationArtifacts } from "./vaultAdapter"
 import { createWorkflowChain, createWorkflowStep } from "./workflowEngine"
 import { createViewTubeActionPacket, persistViewTubeActionPacket, type ViewTubePayloadKind, type ViewTubeToolKind } from "./viewTubeToolChains"
+import { attachAssetToContentBuild, ensureContentBuild } from "./asset-engine/ContentBuildRepository"
+import { recordContentBuildToolInput, recordContentBuildToolOutput } from "./asset-engine/ToolContext"
 
 const BRAIN_COMMAND_ACTIONS_STORAGE_KEY="vt_brain_command_actions_v1"
 const canUseStorage=()=>typeof window!=="undefined"&&typeof localStorage!=="undefined"
@@ -26,17 +28,229 @@ const destinationAliases:Record<string,string>={
 const inferPayloadKind=(moduleId:string,outputs:Record<string,unknown>):ViewTubePayloadKind=>{const text=`${moduleId} ${Object.keys(outputs).join(" ")}`.toLowerCase();if(text.includes("storyboard")||text.includes("scene"))return "storyboard";if(text.includes("script")||text.includes("hook"))return "script";if(text.includes("calendar")||text.includes("schedule"))return "calendar-item";if(text.includes("project")||text.includes("milestone"))return "project";if(text.includes("thumbnail"))return "thumbnail";if(text.includes("image"))return "image";if(text.includes("metadata")||text.includes("title"))return "metadata";if(text.includes("analysis"))return "analysis";return "json"}
 const inferSourceKind=(toolId:string):ViewTubeToolKind=>toolId.includes("project")?"project":toolId.includes("vault")?"vault":toolId.includes("brain")?"brain":toolId.includes("scene")||toolId.includes("editor")?"editor":"super-tool"
 
-export const createSuperToolActionPacket=(input:{toolId:SuperToolId;moduleId:string;title:string;summary:string;inputs:Record<string,unknown>;outputs:Record<string,unknown>;confidence:SuperToolActionPacket["confidence"];evidence:string[];missingInputs:string[];handoffTargets:string[];workflowTitle:string;workflowGoal:string;workflowSteps:Array<{title:string;surface:SuperToolSurface;toolId:SuperToolId;details:string}>;tags?:string[]}):{packet:SuperToolActionPacket;recordId:string;artifactId:string;chain:WorkflowChain}=>{
- const packet:SuperToolActionPacket={id:crypto.randomUUID(),toolId:input.toolId,moduleId:input.moduleId,title:input.title,summary:input.summary,inputs:input.inputs,outputs:input.outputs,confidence:input.confidence,evidence:input.evidence,missingInputs:input.missingInputs,handoffTargets:input.handoffTargets,createdAt:Date.now()}
- const selfImprovement={inputsUsed:Object.keys(input.inputs).filter(key=>{const value=input.inputs[key];return value!==null&&value!==undefined&&value!==""}),inferred:input.summary,missing:input.missingInputs,handedOffTo:input.handoffTargets,improveNext:[`Review ${input.moduleId} confidence after handoff`,"Compare output against later workflow outcomes"]}
- const outputJson={...packet,metadata:{selfImprovement}}
- const record=createGenerationRecord({toolId:input.toolId,provider:"mock",model:"viewtube-supertool-action-v1",prompt:JSON.stringify({moduleId:input.moduleId,title:input.title,inputs:input.inputs}),status:"running",artifacts:[],metadata:{actionPacketId:packet.id,moduleId:input.moduleId,selfImprovement}})
- const artifact:GenerationArtifact={id:crypto.randomUUID(),kind:"json",label:`${input.title} action packet`,sourceRecordId:record.id,metadata:outputJson}
- updateGenerationRecord(record.id,{status:"complete",outputText:input.summary,outputJson,artifacts:[artifact],usage:{promptTokens:0,completionTokens:0,totalTokens:0},estimatedCostCents:0})
- ingestGenerationArtifacts([artifact],{toolId:input.toolId,generationId:record.id,tags:[input.toolId,input.moduleId,"super-tool-action",...(input.tags||[])]})
- const chain=createWorkflowChain({title:input.workflowTitle,goal:input.workflowGoal,primaryToolId:input.toolId,steps:input.workflowSteps.map(step=>createWorkflowStep(step.title,step.surface,step.toolId,step.details)),provenance:[`${input.toolId}.${input.moduleId}.${packet.id}`,...input.evidence,...input.handoffTargets]})
- const liveTargets=[...new Set(input.handoffTargets.map(target=>destinationAliases[target]||target.split(":").pop()||"").filter(Boolean))]
- const payloadKind=inferPayloadKind(input.moduleId,input.outputs)
- if(liveTargets.length){const livePacket=createViewTubeActionPacket({sourceToolId:input.toolId,sourceKind:inferSourceKind(input.toolId),payloadKind,title:input.title,summary:input.summary,payload:{...input.inputs,...input.outputs,confidence:input.confidence,missingInputs:input.missingInputs,workflowId:chain.id,sourceActionPacketId:packet.id},evidence:input.evidence,provenance:[`${input.toolId}.${input.moduleId}.${packet.id}`,`workflow:${chain.id}`],suggestedTargets:liveTargets});persistViewTubeActionPacket(livePacket)}
- return{packet,recordId:record.id,artifactId:artifact.id,chain}
+export interface CreateSuperToolActionPacketInput {
+ toolId: SuperToolId
+ moduleId: string
+ title: string
+ summary: string
+ contentBuildId?: string | null
+ projectId?: string | null
+ projectName?: string | null
+ channelId?: string | null
+ videoId?: string | null
+ inputs: Record<string, unknown>
+ outputs: Record<string, unknown>
+ confidence: SuperToolActionPacket["confidence"]
+ evidence: string[]
+ missingInputs: string[]
+ handoffTargets: string[]
+ workflowTitle: string
+ workflowGoal: string
+ workflowSteps: Array<{ title: string; surface: SuperToolSurface; toolId: SuperToolId; details: string }>
+ tags?: string[]
 }
+
+const stringScope = (value: unknown) => typeof value === "string" && value.trim() ? value.trim() : null
+
+const resolveSuperToolContentBuild = (input: CreateSuperToolActionPacketInput) => {
+ const contentBuildId = input.contentBuildId || stringScope(input.inputs.contentBuildId)
+ const projectId = input.projectId || stringScope(input.inputs.projectId)
+ const projectName = input.projectName || stringScope(input.inputs.projectName) || stringScope(input.inputs.project)
+ const channelId = input.channelId || stringScope(input.inputs.channelId)
+ const videoId = input.videoId || stringScope(input.inputs.videoId)
+
+ const build = ensureContentBuild({
+  id: contentBuildId || undefined,
+  channelId,
+  legacyProjectId: projectId,
+  legacyProjectName: projectName,
+  videoId,
+  profile: projectName ? { workingConcept: projectName } : undefined,
+  toolId: input.toolId,
+ })
+
+ return { build, contentBuildId: build?.id || null, projectId, projectName, channelId, videoId }
+}
+
+export const createSuperToolActionPacket = (
+ input: CreateSuperToolActionPacketInput,
+): { packet: SuperToolActionPacket; recordId: string; artifactId: string; chain: WorkflowChain } => {
+ const scope = resolveSuperToolContentBuild(input)
+
+ if (scope.contentBuildId) {
+  recordContentBuildToolInput({
+   contentBuildId: scope.contentBuildId,
+   toolId: input.toolId,
+   evidenceIds: input.evidence,
+   summary: input.summary,
+   metadata: {
+    moduleId: input.moduleId,
+    projectId: scope.projectId,
+    channelId: scope.channelId,
+    videoId: scope.videoId,
+    missingInputs: input.missingInputs,
+   },
+  })
+ }
+
+ const packet: SuperToolActionPacket = {
+  id: crypto.randomUUID(),
+  toolId: input.toolId,
+  moduleId: input.moduleId,
+  title: input.title,
+  summary: input.summary,
+  contentBuildId: scope.contentBuildId,
+  projectId: scope.projectId,
+  channelId: scope.channelId,
+  videoId: scope.videoId,
+  inputs: input.inputs,
+  outputs: input.outputs,
+  confidence: input.confidence,
+  evidence: input.evidence,
+  missingInputs: input.missingInputs,
+  handoffTargets: input.handoffTargets,
+  createdAt: Date.now(),
+ }
+
+ const selfImprovement = {
+  inputsUsed: Object.keys(input.inputs).filter(key => {
+   const value = input.inputs[key]
+   return value !== null && value !== undefined && value !== ""
+  }),
+  inferred: input.summary,
+  missing: input.missingInputs,
+  handedOffTo: input.handoffTargets,
+  improveNext: [
+   `Review ${input.moduleId} confidence after handoff`,
+   "Compare output against later workflow outcomes",
+  ],
+ }
+
+ const outputJson = { ...packet, metadata: { selfImprovement } }
+ const record = createGenerationRecord({
+  toolId: input.toolId,
+  provider: "mock",
+  model: "viewtube-supertool-action-v1",
+  prompt: JSON.stringify({ moduleId: input.moduleId, title: input.title, inputs: input.inputs }),
+  status: "running",
+  artifacts: [],
+  metadata: {
+   actionPacketId: packet.id,
+   moduleId: input.moduleId,
+   contentBuildId: scope.contentBuildId,
+   projectId: scope.projectId,
+   channelId: scope.channelId,
+   videoId: scope.videoId,
+   selfImprovement,
+  },
+ })
+ const artifact: GenerationArtifact = {
+  id: crypto.randomUUID(),
+  kind: "json",
+  label: `${input.title} action packet`,
+  sourceRecordId: record.id,
+  metadata: outputJson,
+ }
+
+ updateGenerationRecord(record.id, {
+  status: "complete",
+  outputText: input.summary,
+  outputJson,
+  artifacts: [artifact],
+  usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+  estimatedCostCents: 0,
+ })
+
+ const [vaultAsset] = ingestGenerationArtifacts([artifact], {
+  toolId: input.toolId,
+  projectId: scope.projectId,
+  projectName: scope.projectName,
+  generationId: record.id,
+  tags: [
+   input.toolId,
+   input.moduleId,
+   "super-tool-action",
+   ...(scope.contentBuildId ? ["content-build"] : []),
+   ...(input.tags || []),
+  ],
+ })
+
+ if (scope.contentBuildId && vaultAsset) {
+  attachAssetToContentBuild(scope.contentBuildId, vaultAsset.id, {
+   toolId: input.toolId,
+   evidenceIds: input.evidence,
+   generationRecordId: record.id,
+   metadata: { moduleId: input.moduleId, actionPacketId: packet.id },
+  })
+  recordContentBuildToolOutput({
+   contentBuildId: scope.contentBuildId,
+   toolId: input.toolId,
+   assetIds: [vaultAsset.id],
+   evidenceIds: input.evidence,
+   generationRecordId: record.id,
+   summary: input.summary,
+   metadata: {
+    moduleId: input.moduleId,
+    actionPacketId: packet.id,
+    workflowTitle: input.workflowTitle,
+   },
+  })
+ }
+
+ const chain = createWorkflowChain({
+  title: input.workflowTitle,
+  goal: input.workflowGoal,
+  projectId: scope.projectId,
+  primaryToolId: input.toolId,
+  steps: input.workflowSteps.map(step => createWorkflowStep(step.title, step.surface, step.toolId, step.details)),
+  provenance: [
+   `${input.toolId}.${input.moduleId}.${packet.id}`,
+   ...(scope.contentBuildId ? [`content-build:${scope.contentBuildId}`] : []),
+   ...input.evidence,
+   ...input.handoffTargets,
+  ],
+ })
+
+ const liveTargets = [
+  ...new Set(
+   input.handoffTargets
+    .map(target => destinationAliases[target] || target.split(":").pop() || "")
+    .filter(Boolean),
+  ),
+ ]
+ const payloadKind = inferPayloadKind(input.moduleId, input.outputs)
+
+ if (liveTargets.length) {
+  const livePacket = createViewTubeActionPacket({
+   sourceToolId: input.toolId,
+   sourceKind: inferSourceKind(input.toolId),
+   payloadKind,
+   title: input.title,
+   summary: input.summary,
+   contentBuildId: scope.contentBuildId,
+   projectId: scope.projectId,
+   channelId: scope.channelId,
+   videoId: scope.videoId,
+   payload: {
+    ...input.inputs,
+    ...input.outputs,
+    contentBuildId: scope.contentBuildId,
+    confidence: input.confidence,
+    missingInputs: input.missingInputs,
+    workflowId: chain.id,
+    sourceActionPacketId: packet.id,
+   },
+   evidence: input.evidence,
+   provenance: [
+    `${input.toolId}.${input.moduleId}.${packet.id}`,
+    `workflow:${chain.id}`,
+    ...(scope.contentBuildId ? [`content-build:${scope.contentBuildId}`] : []),
+   ],
+   suggestedTargets: liveTargets,
+  })
+  persistViewTubeActionPacket(livePacket)
+ }
+
+ return { packet, recordId: record.id, artifactId: artifact.id, chain }
+}
+

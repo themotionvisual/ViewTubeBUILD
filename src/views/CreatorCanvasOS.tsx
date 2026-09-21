@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import { Clapperboard, Compass, GitBranch, Lightbulb, NotebookPen, ShieldCheck } from "lucide-react"
 import { useBrain } from "../context/useBrain"
 import { createSuperToolActionPacket } from "../services/superToolActionPackets"
+import { resolveWorkspaceContentBuildToolContext } from "../services/asset-engine/ToolContext"
 import InternalSuperToolWorkbench, {
  type InternalToolProps,
  type InternalWorkbenchConfig,
@@ -263,7 +264,7 @@ const config: InternalWorkbenchConfig = {
 }
 
 const CreatorCanvasDeepActions: React.FC = () => {
- const { emitSignal } = useBrain()
+ const { brain, emitSignal } = useBrain()
  const [sourceIdea, setSourceIdea] = useState("")
  const [targetViewer, setTargetViewer] = useState("")
  const [proofPoints, setProofPoints] = useState("")
@@ -273,14 +274,20 @@ const CreatorCanvasDeepActions: React.FC = () => {
  const [confidence, setConfidence] = useState<"high" | "medium" | "low">("medium")
  const [status, setStatus] = useState<string | null>(null)
 
- const buildCommonInputs = () => ({
-  sourceIdea: sourceIdea.trim() || "Untitled idea",
-  targetViewer: targetViewer.trim(),
-  proofPoints: proofPoints.trim(),
-  format,
-  sceneCount,
-  assetNeeds: assetNeeds.trim(),
- })
+ const buildCommonInputs = () => {
+  const contentContext = resolveWorkspaceContentBuildToolContext(brain, "creator-canvas-os")
+  return {
+   contentBuildId: contentContext?.contentBuildId || null,
+   projectId: contentContext?.build.legacyProjectId || null,
+   projectName: contentContext?.build.legacyProjectName || null,
+   sourceIdea: sourceIdea.trim() || "Untitled idea",
+   targetViewer: targetViewer.trim(),
+   proofPoints: proofPoints.trim(),
+   format,
+   sceneCount,
+   assetNeeds: assetNeeds.trim(),
+  }
+ }
 
  const saveIdeaPacket = async () => {
   const inputs = buildCommonInputs()

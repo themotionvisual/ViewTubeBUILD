@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react"
 import { getComponentLevelCssVars } from "./tokens"
 import type { ToolboxControlLevel } from "./tokens"
 import { ChevronDown } from "lucide-react"
+import "../../styles/toolbox-entry.css"
 import "../../styles/subtoolbox-split-primitives.css"
 
 const classes = (...values: Array<string | false | null | undefined>) => values.filter(Boolean).join(" ")
