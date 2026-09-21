@@ -83,7 +83,8 @@ describe("ContentBuild repository", () => {
    canonicalUrl: "https://www.youtube.com/watch?v=yt-123",
    status: "published",
   })
-  expect(listContentBuildEvents("cb-003").at(-1)?.eventType).toBe("youtube.bound")
+  const events = listContentBuildEvents("cb-003")
+  expect(events[events.length - 1]?.eventType).toBe("youtube.bound")
  })
 
  it("derives stable compatibility ids from legacy project/video scope", () => {
