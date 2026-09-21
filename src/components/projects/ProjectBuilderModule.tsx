@@ -9,7 +9,8 @@ const ProjectBuilderModule: React.FC = () => {
   const projects = Array.isArray(brain.projects) ? brain.projects : []
   const activeProject = projects.find((project) => project.id === brain.activeProjectId) || projects[0] || null
   const storedIndex = Number(activeProject?.plan?.projectPaletteIndex)
-  const paletteIndex = Number.isFinite(storedIndex) ? storedIndex : 0
+  const legacyColorIndex = activeProject?.color ? VT_SPECTRUM_PALETTE_06.findIndex((color) => color.toLowerCase() === activeProject.color?.toLowerCase()) : -1
+  const paletteIndex = Number.isFinite(storedIndex) ? storedIndex : legacyColorIndex >= 0 ? legacyColorIndex : 0
 
   return (
     <ProjectsToolboxModule
