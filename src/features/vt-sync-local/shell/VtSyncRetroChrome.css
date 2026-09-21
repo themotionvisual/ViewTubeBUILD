@@ -833,6 +833,17 @@
  padding: 0 !important;
  gap: 0 !important;
 }
+.vt-sync-batch-checkbox:has(input:checked) {
+ background: transparent !important;
+}
+.vt-sync-batch-checkbox .vt-subtoolbox-binary-mark {
+ border-color: var(--vt-subtoolbox-fill, #73deff);
+ background: color-mix(in srgb, var(--vt-subtoolbox-fill, #73deff) 10%, white);
+}
+.vt-sync-batch-checkbox:has(input:checked) .vt-subtoolbox-binary-mark {
+ background: var(--vt-subtoolbox-fill, #73deff);
+}
+
 .vt-sync-batch-checkbox .vt-subtoolbox-binary-label {
  position: absolute !important;
  width: 1px !important;
