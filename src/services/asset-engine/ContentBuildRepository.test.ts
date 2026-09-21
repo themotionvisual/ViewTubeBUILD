@@ -2,13 +2,17 @@ import { beforeEach, describe, expect, it } from "vitest"
 import {
  addContentBuildAssetRelation,
  attachAssetToContentBuild,
+ addContentBuildVariant,
  bindYouTubeVideo,
  createContentBuild,
+ createContentBuildAssetVersion,
+ createContentBuildVariantGroup,
  deriveLegacyContentBuildId,
  getContentBuild,
  listContentBuildEvents,
  resetContentBuildRepositoryForTests,
  setContentBuildSelection,
+ selectContentBuildVariant,
 } from "./ContentBuildRepository"
 
 describe("ContentBuild repository", () => {
@@ -92,4 +96,61 @@ describe("ContentBuild repository", () => {
   expect(deriveLegacyContentBuildId({ videoId: "abc123" })).toBe("cb:video:abc123")
   expect(deriveLegacyContentBuildId({})).toBeNull()
  })
+
+ it("tracks versions and variant-group selection without replacing asset identity", () => {
+  const build = createContentBuild({ id: "cb-variants" })
+  const v1 = createContentBuildAssetVersion({
+   contentBuildId: build.id,
+   assetId: "thumb-a",
+   slot: "thumbnail",
+   label: "A",
+   sourceToolId: "thumbnail-studio",
+  })
+  const v2 = createContentBuildAssetVersion({
+   contentBuildId: build.id,
+   assetId: "thumb-b",
+   slot: "thumbnail",
+   label: "B",
+   parentVersionId: v1.id,
+   parentAssetId: "thumb-a",
+   sourceToolId: "thumbnail-studio",
+  })
+  const group = createContentBuildVariantGroup({
+   contentBuildId: build.id,
+   slot: "thumbnail",
+   label: "Thumbnail candidates",
+   sourceToolId: "thumbnail-studio",
+  })
+  addContentBuildVariant({
+   contentBuildId: build.id,
+   groupId: group.id,
+   assetId: "thumb-a",
+   versionId: v1.id,
+   sourceToolId: "thumbnail-studio",
+  })
+  addContentBuildVariant({
+   contentBuildId: build.id,
+   groupId: group.id,
+   assetId: "thumb-b",
+   versionId: v2.id,
+   sourceToolId: "thumbnail-studio",
+  })
+  selectContentBuildVariant({
+   contentBuildId: build.id,
+   groupId: group.id,
+   assetId: "thumb-b",
+   final: true,
+   sourceToolId: "thumbnail-studio",
+  })
+
+  const snapshot = getContentBuild(build.id)!
+  expect(snapshot.versions.map(version => version.version)).toEqual([1, 2])
+  expect(snapshot.variantGroups[0].members).toHaveLength(2)
+  expect(snapshot.variantGroups[0].finalAssetId).toBe("thumb-b")
+  expect(snapshot.selections.thumbnail).toBe("thumb-b")
+  expect(listContentBuildEvents(build.id).map(event => event.eventType)).toEqual(
+   expect.arrayContaining(["asset.versioned", "asset.variant.created", "asset.finalized"]),
+  )
+ })
+
 })
