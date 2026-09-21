@@ -8,7 +8,8 @@ import { buildBrainTaskInstruction, resolveBrainTaskProfile } from "./BrainTaskP
 import { buildRelevantNicheKnowledgeContext } from "./NicheKnowledge"
 import { readBrainUserControls } from "./BrainUserControls"
 import type { StatisticsIntelligenceSnapshot } from "./StatisticsIntelligence"
-import type { AudienceIntelligenceSnapshot } from "./AudienceIntelligence"\nimport { buildAlgorithmIntelligenceContext, type AlgorithmIntelligencePortfolio } from "./AlgorithmIntelligenceOrchestrator"
+import type { AudienceIntelligenceSnapshot } from "./AudienceIntelligence"
+import { buildAlgorithmIntelligenceContext, type AlgorithmIntelligencePortfolio } from "./AlgorithmIntelligenceOrchestrator"
 
 const clip = (value: string, maximum: number): string => value.slice(0, Math.max(0, maximum))
 
