@@ -13,6 +13,11 @@ import {
  recordContentBuildToolOutput,
  resolveWorkspaceContentBuildToolContext,
 } from "../services/asset-engine/ToolContext"
+import {
+  approvePublishTransaction,
+  beginPublishTransaction,
+  type ContentBuildPublishTransaction,
+} from "../services/asset-engine/PublishTransaction"
 import { nexusSyncService } from "../services/nexusSyncService"
 import { sheetsService } from "../services/sheetsService"
 import type { SeoResult } from "../types"
@@ -119,6 +124,7 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
   const [isOpen, setIsOpen] = useState(isOpenInitial)
   const [missingFields, setMissingFields] = useState({ concept: false, niche: false })
   const [insightsImported, setInsightsImported] = useState(false)
+  const [publishTransaction, setPublishTransaction] = useState<ContentBuildPublishTransaction | null>(null)
 
   useEffect(() => {
     registerProvider("VIDEO_PUBLISHER")
@@ -273,6 +279,34 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
     }
   }
 
+  const preparePublishTransaction = () => {
+    const contentContext = resolveWorkspaceContentBuildToolContext(
+      brain,
+      "video-publisher",
+      ["final-render", "title", "thumbnail", "description", "tags"],
+    )
+    if (!contentContext) {
+      alert("Open this Publisher from a Project or ContentBuild before preparing publication.")
+      return
+    }
+    const required = ["final-render", "title", "thumbnail", "description"]
+    const missing = required.filter(slot => !contentContext.selectedAssets[slot])
+    if (missing.length) {
+      alert(`Publishing package is missing: ${missing.join(", ")}.`)
+      return
+    }
+    const transaction = beginPublishTransaction({
+      contentBuildId: contentContext.contentBuildId,
+      toolId: "video-publisher",
+    })
+    setPublishTransaction(transaction)
+  }
+
+  const approvePreparedPublish = () => {
+    if (!publishTransaction) return
+    setPublishTransaction(approvePublishTransaction(publishTransaction.id, "video-publisher"))
+  }
+
   const handleExport = async () => {
     if (!result) return
     setIsExporting(true)
@@ -383,6 +417,32 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
             <SubToolboxButton tone="success" disabled={isSyncing} onClick={handleSyncToDrive}>{isSyncing ? "Syncing…" : "Vault"}</SubToolboxButton>
             <SubToolboxButton tone="warning" onClick={handleDownloadZip}>ZIP</SubToolboxButton>
           </SubToolboxActions>
+          <SubToolbox title="Publish Transaction" icon={<Upload size={20} strokeWidth={3} />} collapsible isOpenInitial>
+            <SubToolboxStack>
+              <SubToolboxStatePanel
+                state={publishTransaction?.status === "approved" ? "ready" : publishTransaction ? "warning" : "empty"}
+                message={publishTransaction
+                  ? `ContentBuild publication is ${publishTransaction.status}. Upload remains blocked until the creator explicitly approves it.`
+                  : "Validate the canonical ContentBuild package and prepare an idempotent publish transaction."}
+              />
+              <SubToolboxActions columns={2}>
+                <SubToolboxButton tone="neutral" onClick={preparePublishTransaction}>Validate + Prepare</SubToolboxButton>
+                <SubToolboxButton
+                  tone="success"
+                  disabled={!publishTransaction || publishTransaction.status !== "awaiting-approval"}
+                  onClick={approvePreparedPublish}
+                >
+                  Approve Publish
+                </SubToolboxButton>
+              </SubToolboxActions>
+              {publishTransaction?.status === "approved" ? (
+                <SubToolboxStatePanel
+                  state="ready"
+                  message="Creator approval recorded. Resumable YouTube upload is the next transaction step; this build does not fake or duplicate an upload endpoint."
+                />
+              ) : null}
+            </SubToolboxStack>
+          </SubToolbox>
           <ConsolidatedCopyBox label="Title Options" items={result.titleSets.map((title) => title.title)} accentColor="#ff4d6f" icon={<Type size={20} />} />
           <CopyBox label="Description" content={result.description} multiline accentColor="#00d2ff" icon={<FileText size={20} />} />
           <CopyBox label="Tags" content={result.tags} multiline accentColor="#ccff00" icon={<BarChart3 size={20} />} />
