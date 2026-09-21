@@ -432,9 +432,7 @@
  padding: 0 5px;
  border: 2px solid #000;
  border-radius: 5px;
- background:
-  repeating-linear-gradient(105deg, rgba(255,255,255,.34) 0 1px, transparent 1px 3px),
-  linear-gradient(180deg, #f3f4f6 0%, #b9bec6 48%, #858b94 100%);
+ background: linear-gradient(180deg, #f3f4f6 0%, #c7cbd0 46%, #9298a0 100%);
  box-shadow: inset 0 1px 1px #fff, inset 0 -1px 2px rgba(0,0,0,.25), 1px 1px 0 #000;
 }
 .vt-retro-analog-toggle__led {
@@ -538,9 +536,7 @@
  padding: 0 5px;
  border: 2px solid #000;
  border-radius: 5px;
- background:
-  repeating-linear-gradient(105deg, rgba(255,255,255,.34) 0 1px, transparent 1px 3px),
-  linear-gradient(180deg, #f4f5f6 0%, #c2c6cc 42%, #8d939c 100%);
+ background: linear-gradient(180deg, #f4f5f6 0%, #c9cdd2 44%, #969ca4 100%);
  box-shadow: inset 0 1px 1px #fff, inset 0 -2px 2px rgba(0,0,0,.25), 1px 1px 0 #000;
 }
 .vt-retro-pcb-group.has-batch-selection .vt-retro-dual-plate {
@@ -825,3 +821,101 @@
  .vt-retro-batch-selector__nub { transition: none; }
 }
 
+
+
+/* VT-SYNC compact mobile row primitives.
+   Batch inclusion uses the canonical toolbox checkbox; metadata uses
+   canonical alphabetical spectrum tags in two-tag columns. */
+.vt-sync-batch-checkbox {
+ box-sizing: border-box;
+ display: grid !important;
+ width: 30px;
+ min-width: 30px;
+ height: 30px;
+ min-height: 30px;
+ place-items: center;
+ padding: 0 !important;
+ gap: 0 !important;
+ --vt-subtoolbox-fill: #FA618A;
+}
+.vt-sync-batch-checkbox .vt-subtoolbox-binary-label {
+ position: absolute !important;
+ width: 1px !important;
+ height: 1px !important;
+ padding: 0 !important;
+ margin: -1px !important;
+ overflow: hidden !important;
+ clip: rect(0,0,0,0) !important;
+ white-space: nowrap !important;
+ border: 0 !important;
+}
+.vt-sync-tag-pair,
+.vt-sync-tag-pair-action {
+ box-sizing: border-box;
+ min-width: 0;
+ width: 100%;
+}
+.vt-sync-tag-pair {
+ display: grid;
+ grid-template-rows: auto auto;
+ gap: 2px;
+}
+.vt-sync-tag-pair-action {
+ display: block;
+ margin: 0;
+ padding: 0;
+ border: 0;
+ background: transparent;
+ color: inherit;
+ cursor: pointer;
+}
+.vt-sync-tag-pair-action:focus-visible {
+ outline: 2px solid #528FFA;
+ outline-offset: 2px;
+ border-radius: 4px;
+}
+.vt-sync-tag-pair .vt-subtoolbox-alpha-tag {
+ box-sizing: border-box;
+ width: 100%;
+ max-width: 100%;
+ min-width: 0;
+ height: 18px;
+ min-height: 18px;
+ justify-content: flex-start;
+ overflow: hidden;
+ padding: 0 5px;
+ border-radius: 4px;
+ font-size: 8px;
+ letter-spacing: 0;
+ text-overflow: ellipsis;
+ white-space: nowrap;
+}
+.vt-sync-tag-pair .vt-sync-tag-title {
+ opacity: .82;
+ font-size: 7px;
+}
+.vt-sync-tag-pair .vt-sync-tag-value {
+ font-size: 8px;
+ opacity: 1;
+}
+
+@media (max-width: 430px) {
+ .vt-retro-pcb-group.is-category-action {
+  min-width: 84px !important;
+ }
+ .vt-retro-dual-plate {
+  width: 80px;
+  padding-inline: 4px;
+  gap: 5px;
+ }
+ .vt-retro-sync-hitbox {
+  width: 44px !important;
+  flex-basis: 44px;
+ }
+ .vt-retro-pcb-group.is-category-action .vt-retro-sync-hitbox .sw-slide-track {
+  width: 44px;
+ }
+ .vt-retro-pcb-group.is-category-action .comp-label {
+  width: 80px;
+ }
+}
