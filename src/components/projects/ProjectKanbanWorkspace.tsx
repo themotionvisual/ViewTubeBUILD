@@ -34,6 +34,7 @@ import {
 } from "lucide-react"
 import { useBrain } from "../../context/useBrain"
 import type { Project } from "../../types"
+import ProjectCreationDialog from "./ProjectCreationDialog"
 import {
  PROJECT_LANES,
  hydrateProjectWorkspace,
@@ -210,14 +211,11 @@ const BoardLane: React.FC<{
 }
 
 const ProjectKanbanWorkspace: React.FC = () => {
- const { brain, addProject, updateProject } = useBrain()
+ const { brain, updateProject } = useBrain()
  const projects = useMemo(() => Array.isArray(brain.projects) ? brain.projects : [], [brain.projects])
  const [workspace, setWorkspace] = useState<ProjectWorkspaceState>(() => hydrateProjectWorkspace(readProjectWorkspace(), projects))
  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
  const [showCreate, setShowCreate] = useState(false)
- const [newName, setNewName] = useState("")
- const [newDate, setNewDate] = useState("")
- const [newPriority, setNewPriority] = useState<ProjectPriority>("medium")
  const sensors = useSensors(
   useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -285,36 +283,7 @@ const ProjectKanbanWorkspace: React.FC = () => {
  const selectedProject = projects.find((project) => project.id === selectedProjectId) || null
  const selectedMeta = selectedProject ? workspace.projects[selectedProject.id] : null
 
- const createProject = () => {
-  const name = newName.trim()
-  if (!name) return
-  const id = `p-${Date.now()}`
-  const project = {
-   id,
-   name,
-   videoTitle: name,
-   status: "ideation",
-   color: "#00CCFF",
-   publishDate: newDate,
-   tasks: [],
-   script: "",
-   description: "",
-   tags: "",
-   storyboard: [],
-  } as Project
-  addProject(project)
-  setWorkspace((current) => {
-   const hydrated = hydrateProjectWorkspace(current, [...projects, project])
-   return patchProjectMeta(hydrated, id, { priority: newPriority, lane: "ideas" })
-  })
-  setNewName("")
-  setNewDate("")
-  setNewPriority("medium")
-  setShowCreate(false)
-  setSelectedProjectId(id)
- }
-
- return (
+  return (
   <div className="w-full overflow-hidden rounded-[14px] border-[4px] border-black bg-white shadow-[8px_8px_0_rgba(0,0,0,0.16)]">
    <header className="border-b-[4px] border-black bg-[#00CCFF] px-3 py-3 sm:px-4">
     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -376,22 +345,17 @@ const ProjectKanbanWorkspace: React.FC = () => {
     </div>
    ) : null}
 
-   {showCreate ? (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-label="Create project">
-     <div className="w-full max-w-md rounded-[12px] border-[4px] border-black bg-white shadow-[10px_10px_0_black]">
-      <div className="flex items-center justify-between border-b-[3px] border-black bg-[#CCFF00] px-4 py-3">
-       <h3 className="text-[15px] font-[1000] uppercase">New Project</h3>
-       <button type="button" onClick={() => setShowCreate(false)}><X size={18} /></button>
-      </div>
-      <div className="grid gap-3 p-4">
-       <label className="grid gap-1 text-[9px] font-black uppercase">Project name<input autoFocus value={newName} onChange={(event) => setNewName(event.target.value)} className="h-10 rounded-[7px] border-[2px] border-black px-3 text-[11px] normal-case outline-none focus:shadow-[2px_2px_0_black]" /></label>
-       <label className="grid gap-1 text-[9px] font-black uppercase">Target publish date<input type="date" value={newDate} onChange={(event) => setNewDate(event.target.value)} className="h-10 rounded-[7px] border-[2px] border-black px-3 text-[11px] outline-none" /></label>
-       <label className="grid gap-1 text-[9px] font-black uppercase">Priority<select value={newPriority} onChange={(event) => setNewPriority(event.target.value as ProjectPriority)} className="h-10 rounded-[7px] border-[2px] border-black px-3 text-[10px] font-black uppercase outline-none"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></label>
-       <button type="button" onClick={createProject} disabled={!newName.trim()} className="mt-1 h-10 rounded-[7px] border-[2px] border-black bg-black text-[10px] font-black uppercase text-white disabled:opacity-30">Create project</button>
-      </div>
-     </div>
-    </div>
-   ) : null}
+   <ProjectCreationDialog
+    open={showCreate}
+    onClose={() => setShowCreate(false)}
+    onCreated={(project, priority) => {
+     setWorkspace((current) => {
+      const hydrated = hydrateProjectWorkspace(current, [...projects, project])
+      return patchProjectMeta(hydrated, project.id, { priority, lane: "ideas" })
+     })
+     setSelectedProjectId(project.id)
+    }}
+   />
 
    {selectedProject && selectedMeta ? (
     <div className="fixed inset-0 z-[110] flex justify-end bg-black/35" role="dialog" aria-modal="true" aria-label={`${selectedProject.name} project details`}>
