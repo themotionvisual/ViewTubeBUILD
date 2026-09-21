@@ -14,6 +14,12 @@ import { createGenerationRecord, listGenerationRecords, updateGenerationRecord }
 import { listSuperToolsByIds } from "../../services/superToolRegistry"
 import { ingestGenerationArtifacts } from "../../services/vaultAdapter"
 import { createWorkflowChain, createWorkflowStep, listWorkflowChains } from "../../services/workflowEngine"
+import { attachAssetToContentBuild } from "../../services/asset-engine/ContentBuildRepository"
+import {
+ recordContentBuildToolInput,
+ recordContentBuildToolOutput,
+ resolveWorkspaceContentBuildToolContext,
+} from "../../services/asset-engine/ToolContext"
 import type { GenerationArtifact, SuperToolId, SuperToolSurface } from "../../types"
 import SuperToolPrototypeWorkspace, { type PrototypeWorkspaceConfig } from "./SuperToolPrototypeWorkspace"
 
@@ -60,13 +66,148 @@ const PROSE_FIELD:React.CSSProperties={minHeight:"120px",textTransform:"none",fo
 const TOGGLE_BASE="min-h-11 px-3 border-[3px] border-black rounded-xl font-black uppercase text-[10px] shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-[transform,box-shadow,background-color]"
 
 const InternalSuperToolWorkbench:React.FC<InternalSuperToolWorkbenchProps>=({config,embedded=false,collapsible=false,isOpenInitial=true,paletteIndex,children})=>{
- const {consultBrain,emitSignal}=useBrain();const [selectedModeId,setSelectedModeId]=useState(config.modes[0]?.id||"");const [source,setSource]=useState("");const [objective,setObjective]=useState("");const [notes,setNotes]=useState("");const [status,setStatus]=useState<string|null>(null);const [refreshTick,setRefreshTick]=useState(0);const [latestChainId,setLatestChainId]=useState<string|null>(null);const [isOpen,setIsOpen]=useState(isOpenInitial)
+ const {brain,consultBrain,emitSignal}=useBrain();const [selectedModeId,setSelectedModeId]=useState(config.modes[0]?.id||"");const [source,setSource]=useState("");const [objective,setObjective]=useState("");const [notes,setNotes]=useState("");const [status,setStatus]=useState<string|null>(null);const [refreshTick,setRefreshTick]=useState(0);const [latestChainId,setLatestChainId]=useState<string|null>(null);const [isOpen,setIsOpen]=useState(isOpenInitial)
  const tools=useMemo(()=>listSuperToolsByIds(config.sisterToolIds),[config.sisterToolIds]);const generations=useMemo(()=>listGenerationRecords().filter(record=>record.toolId===config.toolId),[refreshTick,config.toolId]);const workflows=useMemo(()=>listWorkflowChains().filter(chain=>chain.primaryToolId===config.toolId),[refreshTick,config.toolId]);const selectedMode=config.modes.find(mode=>mode.id===selectedModeId)||config.modes[0];const latestWorkflow=workflows.find(chain=>chain.id===latestChainId)||workflows[0]||null;const latestGeneration=generations[0]||null
  const tone=ACCENT_TONE[config.accentClassName]||"yellow"
  const fieldId=(name:string)=>`${config.toolId}-${name}`
  const heroIcon=useMemo(()=>{const Icon=config.modules[0]?.icon;return Icon?React.createElement(Icon,{size:40,strokeWidth:2.5}):<Boxes size={40} strokeWidth={2.5}/>},[config.modules])
  const applyIncoming=(payload:Record<string,unknown>)=>{const p=payload as any;setSource(String(p.source??p.concept??p.title??p.project??p.script??source));setObjective(String(p.objective??p.goal??p.summary??p.intent??objective));const context=[p.notes,p.analysis,p.strategicAnalysis,p.description,p.evidence,p.provenance].flat().filter(Boolean).join("\n");if(context)setNotes(prev=>[prev,context].filter(Boolean).join("\n\n"));if(p.mode&&config.modes.some(m=>m.id===p.mode))setSelectedModeId(p.mode);setStatus("Incoming Brain/tool handoff loaded. Review the fields, then create the packet when ready.")}
- const handleCreatePacket=async()=>{setStatus("Consulting Brain and building persisted super-tool packet...");const brainContext=await consultBrain(config.toolId,{source,objective,notes,mode:selectedMode.id}).catch(()=>null);const built=config.buildPacket({source:source.trim(),objective:objective.trim(),notes:notes.trim(),mode:selectedMode,brainContext,workflowCount:workflows.length});const selfImprovement=buildSelfImprovementTrail(config.modules,{source:source.trim(),objective:objective.trim(),notes:notes.trim(),sourceLabel:config.sourceLabel,objectiveLabel:config.objectiveLabel,notesLabel:config.notesLabel},built);const outputPacket={...built.packet,selfImprovement};const record=createGenerationRecord({toolId:config.toolId,provider:"mock",model:"viewtube-supertool-shell-v1",prompt:JSON.stringify({source:source.trim(),objective:objective.trim(),notes:notes.trim(),mode:selectedMode.id}),status:"running",artifacts:[],metadata:{source:source.trim(),objective:objective.trim(),mode:selectedMode.id,selfImprovement}});const artifact=buildArtifact(record.id,config.title,outputPacket);updateGenerationRecord(record.id,{status:"complete",outputText:built.summary,outputJson:outputPacket,artifacts:[artifact],usage:{promptTokens:0,completionTokens:0,totalTokens:0},estimatedCostCents:0});ingestGenerationArtifacts([artifact],{toolId:config.toolId,generationId:record.id,tags:[config.toolId,selectedMode.id,"internal-super-tool"]});const chain=createWorkflowChain({title:built.workflowTitle,goal:built.workflowGoal,primaryToolId:config.toolId,steps:built.workflowSteps.map(step=>createWorkflowStep(step.title,step.surface,step.toolId,step.details)),provenance:[`${config.toolId}.internal-workbench.${selectedMode.id}`,...selfImprovement.handedOffTo]});await emitSignal(config.toolId,"INTERNAL_PACKET_CREATED",{generationId:record.id,workflowId:chain.id,mode:selectedMode.id,source:source.trim(),objective:objective.trim(),selfImprovement});setLatestChainId(chain.id);setRefreshTick(v=>v+1);setStatus(`${config.title} packet saved, vault artifact created, and workflow chain queued.`)}
+ const handleCreatePacket=async()=>{
+  setStatus("Consulting Brain and building persisted super-tool packet...")
+  const contentContext=resolveWorkspaceContentBuildToolContext(brain,config.toolId)
+  const brainContext=await consultBrain(config.toolId,{
+   source,
+   objective,
+   notes,
+   mode:selectedMode.id,
+   contentBuildId:contentContext?.contentBuildId||null,
+  }).catch(()=>null)
+  const built=config.buildPacket({
+   source:source.trim(),
+   objective:objective.trim(),
+   notes:notes.trim(),
+   mode:selectedMode,
+   brainContext,
+   workflowCount:workflows.length,
+  })
+  const selfImprovement=buildSelfImprovementTrail(
+   config.modules,
+   {
+    source:source.trim(),
+    objective:objective.trim(),
+    notes:notes.trim(),
+    sourceLabel:config.sourceLabel,
+    objectiveLabel:config.objectiveLabel,
+    notesLabel:config.notesLabel,
+   },
+   built,
+  )
+  const contentBuildId=contentContext?.contentBuildId||null
+  const projectId=contentContext?.build.legacyProjectId||null
+  const outputPacket={
+   ...built.packet,
+   contentBuildId,
+   projectId,
+   selfImprovement,
+  }
+
+  if(contentBuildId){
+   recordContentBuildToolInput({
+    contentBuildId,
+    toolId:config.toolId,
+    assetIds:Object.values(contentContext?.selectedAssets||{}).filter(Boolean).map(asset=>asset!.id),
+    evidenceIds:contentContext?.evidenceIds||[],
+    summary:`${config.title}: ${source.trim()||"untitled work"}`,
+    metadata:{mode:selectedMode.id,objective:objective.trim(),notes:notes.trim()},
+   })
+  }
+
+  const record=createGenerationRecord({
+   toolId:config.toolId,
+   provider:"mock",
+   model:"viewtube-supertool-shell-v1",
+   prompt:JSON.stringify({
+    source:source.trim(),
+    objective:objective.trim(),
+    notes:notes.trim(),
+    mode:selectedMode.id,
+    contentBuildId,
+   }),
+   status:"running",
+   artifacts:[],
+   metadata:{
+    contentBuildId,
+    projectId,
+    source:source.trim(),
+    objective:objective.trim(),
+    mode:selectedMode.id,
+    selfImprovement,
+   },
+  })
+  const artifact=buildArtifact(record.id,config.title,outputPacket)
+  updateGenerationRecord(record.id,{
+   status:"complete",
+   outputText:built.summary,
+   outputJson:outputPacket,
+   artifacts:[artifact],
+   usage:{promptTokens:0,completionTokens:0,totalTokens:0},
+   estimatedCostCents:0,
+  })
+  const [vaultAsset]=ingestGenerationArtifacts([artifact],{
+   toolId:config.toolId,
+   projectId,
+   projectName:contentContext?.build.legacyProjectName||null,
+   generationId:record.id,
+   tags:[
+    config.toolId,
+    selectedMode.id,
+    "internal-super-tool",
+    ...(contentBuildId?["content-build"]:[]),
+   ],
+  })
+
+  if(contentBuildId&&vaultAsset){
+   attachAssetToContentBuild(contentBuildId,vaultAsset.id,{
+    toolId:config.toolId,
+    generationRecordId:record.id,
+    metadata:{mode:selectedMode.id,packetType:"internal-super-tool"},
+   })
+   recordContentBuildToolOutput({
+    contentBuildId,
+    toolId:config.toolId,
+    assetIds:[vaultAsset.id],
+    generationRecordId:record.id,
+    summary:built.summary,
+    metadata:{mode:selectedMode.id,workflowTitle:built.workflowTitle},
+   })
+  }
+
+  const chain=createWorkflowChain({
+   title:built.workflowTitle,
+   goal:built.workflowGoal,
+   projectId,
+   primaryToolId:config.toolId,
+   steps:built.workflowSteps.map(step=>createWorkflowStep(step.title,step.surface,step.toolId,step.details)),
+   provenance:[
+    `${config.toolId}.internal-workbench.${selectedMode.id}`,
+    ...(contentBuildId?[`content-build:${contentBuildId}`]:[]),
+    ...selfImprovement.handedOffTo,
+   ],
+  })
+  await emitSignal(config.toolId,"INTERNAL_PACKET_CREATED",{
+   contentBuildId,
+   projectId,
+   generationId:record.id,
+   workflowId:chain.id,
+   mode:selectedMode.id,
+   source:source.trim(),
+   objective:objective.trim(),
+   selfImprovement,
+  })
+  setLatestChainId(chain.id)
+  setRefreshTick(v=>v+1)
+  setStatus(`${config.title} packet saved to ${contentBuildId||"standalone workspace"}, Vault artifact created, and workflow chain queued.`)
+ }
 
  return (
   <ToolboxScaffold
