@@ -233,6 +233,8 @@ export const VideoDirectorProjectSchema = z.object({
   schemaVersion: z.literal(VIDEO_DIRECTOR_PROJECT_SCHEMA_VERSION),
   id: z.string().trim().min(1),
   name: z.string().max(500).default("Untitled Video Director project"),
+  contentBuildId: z.string().trim().min(1).optional(),
+  legacyProjectId: z.string().trim().min(1).optional(),
   mode: VideoDirectorModeSchema.default("single"),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
