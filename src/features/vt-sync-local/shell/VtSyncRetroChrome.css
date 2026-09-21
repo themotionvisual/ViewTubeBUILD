@@ -926,6 +926,10 @@
 .vt-sync-category-summary {
  font-size: 9.5px !important;
 }
+.vt-sync-group-header {
+ box-sizing: border-box;
+ padding-inline: 8px;
+}
 
 /* Status palette: execution badge and LED share the exact state color. */
 .vt-retro-pcb-group.is-category-action {
@@ -1036,7 +1040,7 @@
    to the left of the larger sync compound component. */
 @media (min-width: 600px) {
  .vt-sync-row-shell {
-  grid-template-columns: 40px minmax(220px, 1fr) minmax(190px, 38vw) 112px;
+  grid-template-columns: 40px minmax(180px, 1fr) minmax(160px, 30vw) 112px;
   grid-template-areas: "check copy meta sync";
   align-items: center;
   column-gap: 10px;
@@ -1080,7 +1084,7 @@
   flex-basis: 28px;
  }
  .vt-sync-dataset-title {
-  font-size: clamp(17px, 1.75vw, 21px) !important;
+  font-size: clamp(16px, 1.55vw, 20px) !important;
   letter-spacing: -.042em !important;
  }
  .vt-sync-dataset-subtitle {
@@ -1092,6 +1096,9 @@
  }
  .vt-sync-category-summary {
   font-size: 10.5px !important;
+ }
+ .vt-sync-group-header {
+  padding-inline: 12px;
  }
 
  .vt-retro-pcb-group.is-category-action {
@@ -1163,6 +1170,9 @@
  }
  .vt-sync-category-summary {
   font-size: 11px !important;
+ }
+ .vt-sync-group-header {
+  padding-inline: 16px;
  }
  .vt-sync-meta-tag.vt-subtoolbox-alpha-tag {
   height: 24px;
