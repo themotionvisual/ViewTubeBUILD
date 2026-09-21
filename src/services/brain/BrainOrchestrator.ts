@@ -38,6 +38,8 @@ import {
 import { resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
 import { buildBrainStatisticsIntelligence } from "./BrainStatisticsBridge"
 import { buildBrainAudienceIntelligence } from "./BrainAudienceBridge"
+import { readAlgorithmIntelligenceForBrain } from "./AlgorithmIntelligenceAccess"
+import { readBrainEngineControls } from "./BrainEngineControls"
 import {
  cacheCurrentNicheResearch,
  readCachedCurrentNicheResearch,
@@ -291,6 +293,9 @@ export interface RunBrainTurnInput {
  modelGenerator?: typeof generateStructuredBrainResponse
  nicheResolver?: typeof resolveNicheKnowledge
  currentResearcher?: typeof groundCurrentNicheResearch
+ projectId?: string | null
+ visibleContext?: Record<string, unknown> | null
+ artifactRefs?: string[]
 }
 
 export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrchestratorResult> => {
@@ -308,16 +313,35 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
  const audienceIntelligence = statisticsIntelligence && inferBrainIntent(input.userText) === "audience"
   ? buildBrainAudienceIntelligence()
   : null
+ const engineControls = readBrainEngineControls(input.channelId)
+ const wantsAlgorithmIntelligence = capabilityIds.includes("algorithm-intelligence") && engineControls.channelIntelligence
+ const projectContext = input.projectId && input.channelId
+  ? {
+    channelId: input.channelId,
+    projectId: input.projectId,
+    title: typeof input.visibleContext?.title === "string" ? input.visibleContext.title : null,
+    topic: typeof input.visibleContext?.topic === "string" ? input.visibleContext.topic : null,
+    format: typeof input.visibleContext?.format === "string" ? input.visibleContext.format : null,
+    plannedPublishAt: typeof input.visibleContext?.plannedPublishAt === "string" ? input.visibleContext.plannedPublishAt : null,
+    evidenceIds: input.artifactRefs || [],
+   }
+  : null
+ const algorithmAccess = wantsAlgorithmIntelligence && input.channelId
+  ? await readAlgorithmIntelligenceForBrain({ channelId: input.channelId, project: engineControls.algorithmPriming ? projectContext : null }).catch(() => null)
+  : null
+ const algorithmIntelligence = algorithmAccess?.status === "ok" ? algorithmAccess.value : null
  let nicheKnowledge: NicheKnowledgeProfile | null = null
  let currentResearch = ""
  let citations: BrainResponseCitation[] = []
  let context = buildBrainContextPack({
+  channelId: input.channelId,
   systemPrompt: input.systemPrompt,
   snapshot: input.snapshot,
   recentTurns: input.recentTurns || [],
   userText: input.userText,
   statisticsIntelligence,
   audienceIntelligence,
+  algorithmIntelligence,
  })
  try {
   if (capabilities.some((capability) => capability.id === "niche-knowledge")) {
@@ -356,6 +380,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    userText: input.userText,
    statisticsIntelligence,
    audienceIntelligence,
+   algorithmIntelligence,
   })
 
   let response = buildFallback(input.userText, input.snapshot, input.growthContext)

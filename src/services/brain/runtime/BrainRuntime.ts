@@ -20,6 +20,9 @@ const toLegacyInput = (input: BrainRuntimeRequest): RunBrainTurnInput => ({
  modelGenerator: input.modelGenerator || defaultBrainModelGateway.generateStructuredResponse,
  nicheResolver: input.nicheResolver,
  currentResearcher: input.currentResearcher,
+ projectId: input.projectId,
+ visibleContext: input.visibleContext,
+ artifactRefs: input.artifactRefs,
 })
 
 export const buildBrainRuntimeMetadata = (
