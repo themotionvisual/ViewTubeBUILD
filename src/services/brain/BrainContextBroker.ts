@@ -21,6 +21,7 @@ export const buildBrainContextPack = (input: {
  currentResearch?: string
  statisticsIntelligence?: StatisticsIntelligenceSnapshot | null
  audienceIntelligence?: AudienceIntelligenceSnapshot | null
+ algorithmIntelligence?: string
  maximumCharacters?: number
 }): { systemInstruction: string; budget: BrainContextBudget } => {
  const controls = readBrainUserControls()
@@ -82,6 +83,12 @@ export const buildBrainContextPack = (input: {
    ].join("\n"), 4200)
   : ""
 
+ const algorithmIntelligence = controls.allowAnalytics
+  ? clip(input.algorithmIntelligence || "", 3200)
+  : ""
+ if (input.algorithmIntelligence && !controls.allowAnalytics) omittedSections.push("algorithm_intelligence_analytics_disabled")
+ if (input.algorithmIntelligence && algorithmIntelligence.length < input.algorithmIntelligence.length) omittedSections.push("algorithm_intelligence_clipped")
+
  const knowledge = clip(buildRelevantNicheKnowledgeContext(input.nicheKnowledge || null, input.userText, 2200), 2200)
  const research = clip(input.currentResearch || "", 1800)
  const taskInstruction = buildBrainTaskInstruction(resolveBrainTaskProfile(input.userText))
@@ -92,6 +99,8 @@ export const buildBrainContextPack = (input: {
   `Analytics evidence: ${controls.allowAnalytics ? "allowed" : "disabled"}`,
   `Learning from interactions: ${controls.learnFromInteractions ? "allowed" : "disabled"}`,
   "Never work around a disabled creator permission by reconstructing private data from memory.",
+  "Treat anomaly observations, opportunity signals, priming plans, and algorithm recommendations as distinct evidence classes.",
+  "Never describe a recommendation or priming step as already executed unless the workflow outcome says it was completed.",
  ].join("\n")
 
  const sections = [
@@ -100,6 +109,7 @@ export const buildBrainContextPack = (input: {
   "\nCHANNEL EVIDENCE\n" + evidence,
   statistics ? "\nDETERMINISTIC STATISTICS INTELLIGENCE\n" + statistics : "",
   audience ? "\nAUDIENCE INTELLIGENCE\n" + audience : "",
+  algorithmIntelligence ? "\nALGORITHM INTELLIGENCE & MOMENTUM\n" + algorithmIntelligence : "",
   memory ? "\nCONFIRMED CREATOR CONTEXT\n" + memory : "",
   clippedConversation ? "\nRECENT CONVERSATION\n" + clippedConversation : "",
   knowledge ? "\nPUBLIC NICHE KNOWLEDGE\n" + knowledge : "",
@@ -117,7 +127,7 @@ export const buildBrainContextPack = (input: {
   budget: {
    maximumCharacters,
    systemCharacters: system.length,
-   evidenceCharacters: evidence.length + statistics.length + audience.length,
+   evidenceCharacters: evidence.length + statistics.length + audience.length + algorithmIntelligence.length,
    memoryCharacters: memory.length,
    knowledgeCharacters: knowledge.length + research.length,
    conversationCharacters: clippedConversation.length,
