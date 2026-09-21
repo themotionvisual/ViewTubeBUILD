@@ -305,7 +305,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   userText: input.userText,
   metadata: { source: "brain_orchestrator", promptVersion: BRAIN_PROMPT_VERSION, taskProfileId: taskProfile.id },
  })
- const capabilities = selectBrainCapabilities({ userText: input.userText, snapshot: input.snapshot })
+ const capabilities = selectBrainCapabilities({ userText: input.userText, snapshot: input.snapshot, channelId: input.channelId })
  const capabilityIds = capabilities.map((capability) => capability.id)
  const statisticsIntelligence = capabilityIds.includes("statistics-intelligence")
   ? buildBrainStatisticsIntelligence()
@@ -372,6 +372,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    }
   }
   context = buildBrainContextPack({
+   channelId: input.channelId,
    systemPrompt: input.systemPrompt,
    snapshot: input.snapshot,
    recentTurns: input.recentTurns || [],
