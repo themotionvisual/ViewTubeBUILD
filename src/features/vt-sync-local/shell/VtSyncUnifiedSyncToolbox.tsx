@@ -1,9 +1,9 @@
 import React, { useMemo, useRef, useState } from "react"
 import { CheckSquare, ChevronDown, ChevronRight, Copy, RefreshCw, ShieldCheck, Square } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
-import { SubToolboxBadge } from "../../../components/subtoolbox/SubToolboxPrimitives"
-import { getPaletteColor, VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
-import { RetroAnalogToggle, RetroBatchSelectionSwitch, RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
+import { SubToolboxAlphabeticalTag, SubToolboxCheckbox } from "../../../components/subtoolbox/SubToolboxPrimitives"
+import { getPaletteColor } from "../../../styles/toolboxPalette"
+import { RetroAnalogToggle, RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
 import type {
  VtSyncAnalyticsWindow,
  VtSyncCategoryGroup,
@@ -51,43 +51,29 @@ export type VtSyncRetentionVideoOption = {
 const GROUP_COLORS: Record<string, string> = Object.fromEntries(VT_SYNC_GROUP_ORDER.map((group, index) => [group, getPaletteColor(index * 2)]))
 const formatPlainLabel = (value: string) => value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
 
-type SyncBadgeTone = "neutral" | "live" | "good" | "warn" | "bad" | "info" | "accent"
-
-const SYNC_BADGE_COLORS: Record<SyncBadgeTone, string> = {
- neutral: VT_SPECTRUM_PALETTE_06[8],
- live: VT_SPECTRUM_PALETTE_06[7],
- good: VT_SPECTRUM_PALETTE_06[5],
- warn: VT_SPECTRUM_PALETTE_06[3],
- bad: VT_SPECTRUM_PALETTE_06[0],
- info: VT_SPECTRUM_PALETTE_06[6],
- accent: VT_SPECTRUM_PALETTE_06[9],
-}
-
-const SyncMetaBadge: React.FC<{
- tone?: SyncBadgeTone
- children: React.ReactNode
+type SyncTagPairProps = {
+ label: string
+ value: string
  onClick?: () => void
  title?: string
-}> = ({ tone = "neutral", children, onClick, title }) => {
- const badge = (
-  <SubToolboxBadge
-   level="l2"
-   className="vt-sync-standard-badge"
-   style={{ ["--pair-a" as string]: SYNC_BADGE_COLORS[tone] } as React.CSSProperties}
-   title={title}
-  >
-   {children}
-  </SubToolboxBadge>
+}
+
+const SyncSpectrumTagPair: React.FC<SyncTagPairProps> = ({ label, value, onClick, title }) => {
+ const content = (
+  <span className="vt-sync-tag-pair">
+   <SubToolboxAlphabeticalTag level="l2" className="vt-sync-tag-title" label={label} />
+   <SubToolboxAlphabeticalTag level="l2" className="vt-sync-tag-value" label={value} title={title} />
+  </span>
  )
- if (!onClick) return badge
+ if (!onClick) return content
  return (
   <button
    type="button"
-   className="vt-sync-standard-badge-action"
+   className="vt-sync-tag-pair-action"
    onClick={onClick}
    title={title}
   >
-   {badge}
+   {content}
   </button>
  )
 }
