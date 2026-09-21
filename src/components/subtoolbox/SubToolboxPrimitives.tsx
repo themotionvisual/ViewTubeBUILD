@@ -552,15 +552,17 @@ export const SubToolboxKnob: React.FC<SubToolboxKnobProps> = ({
 export interface SubToolboxAlphabeticalTagProps extends React.HTMLAttributes<HTMLSpanElement> {
   level?: ToolboxControlLevel
   label: string
+  spectrumKey?: string
 }
 export const SubToolboxAlphabeticalTag: React.FC<SubToolboxAlphabeticalTagProps> = ({
   level = "l0",
   label,
+  spectrumKey,
   className,
   style,
   ...props
 }) => {
-  const color = getAlphabeticalSpectrumColor(label)
+  const color = getAlphabeticalSpectrumColor(spectrumKey || label)
   return (
     <span
       className={classes("vt-subtoolbox-alpha-tag", className)}
