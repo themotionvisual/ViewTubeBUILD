@@ -559,8 +559,8 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
              {expanded ? <ChevronDown className="h-4 w-4" strokeWidth={3.5} /> : <ChevronRight className="h-4 w-4" strokeWidth={3.5} />}
             </span>
             <span className="min-w-0">
-             <span className="vt-retro-acc-label block truncate text-[15px] font-[1000] tracking-tighter">{label}</span>
-             <span className="block truncate text-[8px] font-black uppercase tracking-[0.04em] text-black/55">{groupSummary}</span>
+             <span className="vt-retro-acc-label vt-sync-category-title block truncate text-[18px] font-[1000] tracking-tighter">{label}</span>
+             <span className="vt-sync-category-summary block truncate text-[9px] font-black uppercase tracking-[0.04em] text-black/55">{groupSummary}</span>
             </span>
            </span>
           </button>
@@ -614,7 +614,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
           const immediateLabel = immediateLabelForUnit(unitStatus, isNextUnit, hasPriorData)
           const groupColor = GROUP_COLORS[group]
           const rowFill = `color-mix(in srgb, ${groupColor} ${selectedForBatch ? 30 : 10}%, white)`
-          const titleFontSize = unit.label.length > 29 ? "13px" : unit.label.length > 24 ? "14px" : "16px"
+          const titleFontSize = unit.label.length > 29 ? "14px" : unit.label.length > 24 ? "15px" : "17px"
           const toggleUnitDetails = () => {
            if (!hasExtraDetail) return
            setExpandedUnitIds((current) => {
@@ -634,8 +634,8 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
              ["--vt-subtoolbox-fill" as string]: groupColor,
             } as React.CSSProperties}
            >
-            <div className="grid min-h-[66px] grid-cols-[36px_minmax(0,1fr)_88px] items-stretch" style={{ backgroundColor: rowFill }}>
-             <div className="grid place-items-center px-0.5 py-1">
+            <div className="vt-sync-row-shell" style={{ backgroundColor: rowFill }}>
+             <div className="vt-sync-row-check grid place-items-center">
               <SubToolboxCheckControl
                level="l2"
                checked={selectedForBatch}
@@ -649,7 +649,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
               />
              </div>
 
-             <div className="flex min-w-0 flex-col justify-center gap-1 px-2 py-2">
+             <div className="vt-sync-row-copy flex min-w-0 flex-col justify-center gap-1">
               <strong
                className="vt-sync-dataset-title block min-w-0 whitespace-nowrap font-[1000] uppercase leading-none tracking-[-0.045em]"
                style={{ fontSize: titleFontSize }}
@@ -662,7 +662,36 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
               </span>
              </div>
 
-             <div className="grid place-items-center px-0.5 py-1">
+             <div className="vt-sync-meta-rail custom-scrollbar">
+              <SyncSpectrumTag text={statusAndSyncValue} spectrumKey={`STATUS-${statusValue}`} />
+              <SyncSpectrumTag text={resultValue} spectrumKey="RESULT" />
+              {(model?.issueCount || 0) > 0 ? (
+               <SyncSpectrumTag
+                text={issueValue}
+                spectrumKey="ISSUES"
+                onClick={toggleUnitDetails}
+                title={expandedUnit ? "Hide issue details" : "Show issue details"}
+               />
+              ) : null}
+              {unit.id === "video_catalog" ? (
+               <SyncSpectrumTag
+                text="OPTIONS: METADATA"
+                spectrumKey="OPTIONS"
+                onClick={toggleUnitDetails}
+                title={expandedUnit ? "Hide metadata options" : "Show metadata options"}
+               />
+              ) : null}
+              {unit.id === "retention" ? (
+               <SyncSpectrumTag
+                text="OPTIONS: VIDEOS"
+                spectrumKey="OPTIONS"
+                onClick={toggleUnitDetails}
+                title={expandedUnit ? "Hide retention options" : "Show retention options"}
+               />
+              ) : null}
+             </div>
+
+             <div className="vt-sync-row-sync grid place-items-center">
               <RetroSyncExecutionSwitch
                idleLabel={hasPriorData ? "UPDATE" : "FULL SYNC"}
                labelOverride={immediateLabel}
@@ -671,38 +700,6 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
                disabled={selectedWindows.length === 0}
               />
              </div>
-            </div>
-
-            <div
-             className="vt-sync-meta-rail flex min-w-0 items-center gap-1.5 overflow-x-auto border-t border-black/15 px-2 py-1.5 custom-scrollbar"
-             style={{ backgroundColor: rowFill }}
-            >
-             <SyncSpectrumTag text={statusAndSyncValue} spectrumKey={`STATUS-${statusValue}`} />
-             <SyncSpectrumTag text={resultValue} spectrumKey="RESULT" />
-             {(model?.issueCount || 0) > 0 ? (
-              <SyncSpectrumTag
-               text={issueValue}
-               spectrumKey="ISSUES"
-               onClick={toggleUnitDetails}
-               title={expandedUnit ? "Hide issue details" : "Show issue details"}
-              />
-             ) : null}
-             {unit.id === "video_catalog" ? (
-              <SyncSpectrumTag
-               text="OPTIONS: METADATA"
-               spectrumKey="OPTIONS"
-               onClick={toggleUnitDetails}
-               title={expandedUnit ? "Hide metadata options" : "Show metadata options"}
-              />
-             ) : null}
-             {unit.id === "retention" ? (
-              <SyncSpectrumTag
-               text="OPTIONS: VIDEOS"
-               spectrumKey="OPTIONS"
-               onClick={toggleUnitDetails}
-               title={expandedUnit ? "Hide retention options" : "Show retention options"}
-              />
-             ) : null}
             </div>
 
             {hasExtraDetail ? (
