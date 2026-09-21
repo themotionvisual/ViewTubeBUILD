@@ -67,6 +67,11 @@ docs/*
 # Repo-authored migration guides — see docs/migration/README.md.
 !docs/migration/
 !docs/migration/**
+# Herald conversation artifacts — screenshots, documents and versioned families
+# saved per conversation. Without this the deny-by-default `docs/*` above drops
+# them silently: the commit succeeds and captures nothing.
+!docs/herald/
+!docs/herald/**
 _quarantine/
 _migration_hub/
 sources/

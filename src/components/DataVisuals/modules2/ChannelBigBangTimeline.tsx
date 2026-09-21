@@ -131,7 +131,7 @@ export const ChannelBigBangTimelineModule: React.FC<TubeExplorerVisualProps> = (
         iconBg={palette.iconBg}
         titleBg={palette.titleBg}
         title="CHANNEL GROWTH BIG BANG TIMELINE"
-        subtitle="ROLLED FROM CANONICAL VIDEO ROWS · SCRUB TO EXPLORE PEAKS"
+        subtitle="The channel\'s whole history on one timeline; scrub it to land on the peaks."
         chartInsight="No weekly data available yet — sync or import Annalytics tables to populate this timeline."
         bodyBg="#04050a"
         minHeight={360}
@@ -178,7 +178,7 @@ export const ChannelBigBangTimelineModule: React.FC<TubeExplorerVisualProps> = (
       iconBg={m.color}
       titleBg={m.color}
       title={isBigBang ? "CHANNEL BIG BANG — PEAK DETECTED!" : "CHANNEL GROWTH BIG BANG TIMELINE"}
-      subtitle="WEEKLY ROLLUP FROM CANONICAL VIDEO ROWS · SCRUB TO EXPLORE PEAKS"
+      subtitle="The channel\'s history rolled up week by week; scrub it to land on the peaks."
       controlBlock={
         <RaisedControl
           cfg={{

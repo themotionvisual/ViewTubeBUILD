@@ -4906,6 +4906,7 @@ export const TubeExplorerSubscriberWaterfall: React.FC<TubeExplorerVisualProps> 
      type: "text",
      labelPrefix: "RANKED BY",
      value: activeDef.label,
+     widthValues: WATERFALL_METRICS.map((metric) => metric.label),
      onPrev: () => { setMetricIndex((i) => (i + WATERFALL_METRICS.length - 1) % WATERFALL_METRICS.length); setHovered(null) },
      onNext: () => { setMetricIndex((i) => (i + 1) % WATERFALL_METRICS.length); setHovered(null) },
      bgTone: activeDef.tone,
@@ -4964,6 +4965,7 @@ export const TubeExplorerShortsVsLongs: React.FC<TubeExplorerVisualProps> = (pro
      type: "text",
      labelPrefix: "SHOW AS",
      value: average ? "AVERAGE" : "TOTAL",
+     widthValues: ["AVERAGE", "TOTAL"],
      onPrev: () => setAverage((current) => !current),
      onNext: () => setAverage((current) => !current),
      bgTone: "#FF7497",
@@ -4987,6 +4989,9 @@ const TREEMAP_METRICS: Array<{ key: TreemapMetricKey; label: string; format: (va
  { key: "watchHours", label: "WATCH TIME", format: (value) => `${compact(value)}h` },
  { key: "revenue", label: "REVENUE", format: (value) => `$${value.toFixed(2)}` },
 ]
+
+/** Every metric name the treemap's stat cards can carry, so they never resize. */
+const TREEMAP_METRIC_LABELS = TREEMAP_METRICS.map((entry) => entry.label)
 
 type TreemapPillar = {
  word: string
@@ -5160,14 +5165,14 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
 
  const stats = hovered
   ? [
-   { label: metric.label, value: metric.format(hovered.value), tone: "lime" as const, lockTone: true, compact: true },
-   { label: drilled ? "VIDEO STATS" : "VIDEOS", value: hovered.sub, tone: "cyan" as const, lockTone: true, compact: true },
+   { label: metric.label, value: metric.format(hovered.value), tone: "lime" as const, lockTone: true, compact: true, labelWidthValues: TREEMAP_METRIC_LABELS },
+   { label: drilled ? "VIDEO STATS" : "VIDEOS", value: hovered.sub, tone: "cyan" as const, lockTone: true, compact: true, labelWidthValues: ["VIDEO STATS", "VIDEOS"] },
    { label: "SHARE", value: `${((hovered.value / scopeTotal) * 100).toFixed(1)}%`, tone: "pink" as const, lockTone: true, compact: true },
   ]
   : [
    { label: "PILLARS", value: String(pillars.length), tone: "lime" as const, lockTone: true, compact: true },
    { label: "VIDEOS", value: compact(drilled ? drilled.videos.length : scoped.length), tone: "cyan" as const, lockTone: true, compact: true },
-   { label: metric.label, value: metric.format(scopeTotal), tone: "yellow" as const, lockTone: true, compact: true },
+   { label: metric.label, value: metric.format(scopeTotal), tone: "yellow" as const, lockTone: true, compact: true, labelWidthValues: TREEMAP_METRIC_LABELS },
   ]
 
  return (
@@ -5209,6 +5214,7 @@ export const TubeExplorerContentTreemap: React.FC<TubeExplorerVisualProps> = (pr
      type: "text",
      labelPrefix: "RANKED BY",
      value: metric.label,
+     widthValues: TREEMAP_METRICS.map((entry) => entry.label),
      onPrev: () => setMetricIndex((i) => (i + TREEMAP_METRICS.length - 1) % TREEMAP_METRICS.length),
      onNext: () => setMetricIndex((i) => (i + 1) % TREEMAP_METRICS.length),
      bgTone: "#FF7497",
@@ -5446,13 +5452,11 @@ export const TubeExplorerRevenueEfficiencyMap: React.FC<TubeExplorerVisualProps>
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "PLOT", value: xMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setXMetric(value as VideoPlotMetricKey), bgTone: "#00E5FF" },
-    { type: "dropdown", labelPrefix: "VERSUS", value: yMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setYMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
-    { type: "dropdown", labelPrefix: "SIZE", value: sizeMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setSizeMetric(value as VideoPlotMetricKey), bgTone: "#FFFF61" },
     {
      type: "text",
      labelPrefix: "FROM",
      value: formatMode.label,
+     widthValues: VITAL_FORMAT_MODES.map((mode) => mode.label),
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
      bgTone: "#FFB570",
@@ -5465,7 +5469,9 @@ export const TubeExplorerRevenueEfficiencyMap: React.FC<TubeExplorerVisualProps>
      bgTone: "#42FF68",
      isBig: false,
     },
-   ]}
+    { type: "dropdown", labelPrefix: "PLOT", value: xMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setXMetric(value as VideoPlotMetricKey), bgTone: "#00E5FF" },
+    { type: "dropdown", labelPrefix: "VERSUS", value: yMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setYMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
+    { type: "dropdown", labelPrefix: "SIZE", value: sizeMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setSizeMetric(value as VideoPlotMetricKey), bgTone: "#FFFF61" },]}
   >
    <RevenueEfficiencyMapRenderer dataset={dataset} xMetric={xMetric} yMetric={yMetric} sizeMetric={sizeMetric} formatMode={formatMode.value} limit={limit} />
   </ModuleFrame>
@@ -5504,11 +5510,11 @@ export const TubeExplorerLikeRateWaveform: React.FC<TubeExplorerVisualProps> = (
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "TRACKING", value: metric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
     {
      type: "text",
      labelPrefix: "FROM",
      value: formatMode.label,
+     widthValues: VITAL_FORMAT_MODES.map((mode) => mode.label),
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
      bgTone: "#00E5FF",
@@ -5517,6 +5523,7 @@ export const TubeExplorerLikeRateWaveform: React.FC<TubeExplorerVisualProps> = (
      type: "text",
      labelPrefix: "ORDERED",
      value: order === "recent" ? "NEWEST" : "TOP",
+     widthValues: ["NEWEST", "TOP"],
      onPrev: () => setOrder((current) => current === "recent" ? "top" : "recent"),
      onNext: () => setOrder((current) => current === "recent" ? "top" : "recent"),
      bgTone: "#FFFF61",
@@ -5529,7 +5536,7 @@ export const TubeExplorerLikeRateWaveform: React.FC<TubeExplorerVisualProps> = (
      bgTone: "#42FF68",
      isBig: false,
     },
-   ]}
+    { type: "dropdown", labelPrefix: "TRACKING", value: metric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },]}
   >
    <LikeRateWaveformRenderer dataset={dataset} metric={metric} formatMode={formatMode.value} order={order} limit={limit} />
   </ModuleFrame>
@@ -5564,17 +5571,17 @@ export const TubeExplorerSeasonalityRadar: React.FC<TubeExplorerVisualProps> = (
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "BY", value: metric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setMetric(value as VideoPlotMetricKey), bgTone: "#FFFF61" },
     {
      type: "text",
      labelPrefix: "FROM",
      value: formatMode.label,
+     widthValues: VITAL_FORMAT_MODES.map((mode) => mode.label),
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
      bgTone: "#00E5FF",
     },
     { type: "label", value: "ACROSS 7 WEEKDAYS", bgTone: "#000000", fgTone: "#FFFF61" },
-   ]}
+    { type: "dropdown", labelPrefix: "BY", value: metric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setMetric(value as VideoPlotMetricKey), bgTone: "#FFFF61" },]}
   >
    <div className="h-full bg-[#0a0a1a]">
     <SeasonalityRadarRenderer dataset={dataset} metric={metric} formatMode={formatMode.value} />
@@ -5615,13 +5622,11 @@ export const TubeExplorerSearchBubbleUniverse: React.FC<TubeExplorerVisualProps>
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "PLOT", value: xMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setXMetric(value as VideoPlotMetricKey), bgTone: "#00E5FF" },
-    { type: "dropdown", labelPrefix: "VERSUS", value: yMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setYMetric(value as VideoPlotMetricKey), bgTone: "#579AFF" },
-    { type: "dropdown", labelPrefix: "SIZE", value: sizeMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setSizeMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },
     {
      type: "text",
      labelPrefix: "FROM",
      value: formatMode.label,
+     widthValues: VITAL_FORMAT_MODES.map((mode) => mode.label),
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
      bgTone: "#42FF68",
@@ -5634,7 +5639,9 @@ export const TubeExplorerSearchBubbleUniverse: React.FC<TubeExplorerVisualProps>
      bgTone: "#FFFF61",
      isBig: false,
     },
-   ]}
+    { type: "dropdown", labelPrefix: "PLOT", value: xMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setXMetric(value as VideoPlotMetricKey), bgTone: "#00E5FF" },
+    { type: "dropdown", labelPrefix: "VERSUS", value: yMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setYMetric(value as VideoPlotMetricKey), bgTone: "#579AFF" },
+    { type: "dropdown", labelPrefix: "SIZE", value: sizeMetric, options: PLOT_METRIC_SELECT_OPTIONS, onSelect: (value) => setSizeMetric(value as VideoPlotMetricKey), bgTone: "#FF83EA" },]}
   >
    <BubbleUniverseRenderer dataset={dataset} xMetric={xMetric} yMetric={yMetric} sizeMetric={sizeMetric} formatMode={formatMode.value} limit={limit} />
   </ModuleFrame>
@@ -5677,11 +5684,11 @@ export const TubeExplorerRetentionCurveAtlas: React.FC<TubeExplorerVisualProps> 
     ],
    }}
    controllerRows={[
-    { type: "dropdown", labelPrefix: "RANKED BY", value: sortMetric, options: RETENTION_SORT_OPTIONS, onSelect: (value) => setSortMetric(value as VideoPlotMetricKey), bgTone: "#579AFF" },
     {
      type: "text",
      labelPrefix: "FROM",
      value: formatMode.label,
+     widthValues: VITAL_FORMAT_MODES.map((mode) => mode.label),
      onPrev: () => setFormatIndex((i) => (i + VITAL_FORMAT_MODES.length - 1) % VITAL_FORMAT_MODES.length),
      onNext: () => setFormatIndex((i) => (i + 1) % VITAL_FORMAT_MODES.length),
      bgTone: "#FF83EA",
@@ -5694,7 +5701,7 @@ export const TubeExplorerRetentionCurveAtlas: React.FC<TubeExplorerVisualProps> 
      bgTone: "#FFFF61",
      isBig: false,
     },
-   ]}
+    { type: "dropdown", labelPrefix: "RANKED BY", value: sortMetric, options: RETENTION_SORT_OPTIONS, onSelect: (value) => setSortMetric(value as VideoPlotMetricKey), bgTone: "#579AFF" },]}
   >
    <RetentionCurveAtlasRenderer dataset={dataset} sortMetric={sortMetric} formatMode={formatMode.value} limit={limit} />
   </ModuleFrame>
@@ -5826,6 +5833,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
     ],
    }}
    controllerRows={[
+    { type: "label", value: `${scopedCount} VIDEOS`, bgTone: "#000000", fgTone: "#FFEA00" },
     {
      type: "dropdown",
      labelPrefix: "BY",
@@ -5845,9 +5853,7 @@ export const TubeExplorerPublishOptimalClock: React.FC<TubeExplorerVisualProps> 
      ],
      onSelect: (value) => setFormatFilter(value as "all" | "shorts" | "long"),
      bgTone: "#FF7497",
-    },
-    { type: "label", value: `${scopedCount} VIDEOS`, bgTone: "#000000", fgTone: "#FFEA00" },
-   ]}
+    },]}
   >
    <PublishOptimalClockRenderer
     cells={cells}
@@ -5917,6 +5923,7 @@ export const TubeExplorerTrafficDayRiverDelta: React.FC<TubeExplorerVisualProps>
      type: "text",
      labelPrefix: "ACROSS",
      value: grainSpec.label,
+     widthValues: RIVER_GRAINS.map((grain) => grain.label),
      onPrev: () => { setGrainIndex((i) => (i + RIVER_GRAINS.length - 1) % RIVER_GRAINS.length); setHighlight(null); setHovered(null) },
      onNext: () => { setGrainIndex((i) => (i + 1) % RIVER_GRAINS.length); setHighlight(null); setHovered(null) },
      bgTone: "#000000",
@@ -6149,11 +6156,7 @@ export const TubeExplorerTitleWordNetwork: React.FC<TubeExplorerVisualProps> = (
    heroVisualId="title-keyword-network"
    shellMode="standard"
    title="TITLE WORD NETWORK"
-   subtitle={selectedRoots.length >= 2
-    ? `${selectedRoots.length} WORDS SELECTED · ${selSharedVideos} SHARED VIDEOS · ${selectionEdges.length} CONNECTIONS BETWEEN THEM`
-    : hoveredNode
-    ? `"${hoveredNode.id.toUpperCase()}" · ${hoveredConnections} CO-WORDS · ${hoveredNode.videoCount} VIDEOS · AVG RET ${hoveredNode.avgAvp.toFixed(0)}% · AVG DUR ${(hoveredNode.avgDurSec / 60).toFixed(1)}m`
-    : `WORDS SIZE ${metric.toUpperCase()} · LINE THICKNESS = SHARED VIDEOS · SIMILAR COLOR = RELATED CLUSTER`}
+   subtitle="Title words linked by the videos they share; word size is the selected metric."
    iconKey={networkStyle.iconKey}
    headerColorPair={networkHeaderPair}
    activeContext={{

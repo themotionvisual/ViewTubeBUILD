@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { useAnalyticsVisualStyle } from "./AnalyticsVisualStyleContext"
+import { estimateControllerRowWidth } from "./controllerRowWidth"
 
 export type Tone = "pink" | "cyan" | "lime" | "yellow" | "purple" | "orange" | "white" | "black"
 
@@ -19,6 +20,8 @@ export interface ControllerNumberRow extends ControllerRowBase {
   onNext?: () => void
   isBig?: boolean
   unitLabel?: string
+  /** Every value this row can cycle to, so its width never moves. */
+  widthValues?: readonly string[]
 }
 
 export interface ControllerTextRow extends ControllerRowBase {
@@ -33,6 +36,8 @@ export interface ControllerTextRow extends ControllerRowBase {
 export interface ControllerLabelRow extends ControllerRowBase {
   type: "label"
   value: string
+  /** Every value this row can show, so its width never moves. */
+  widthValues?: readonly string[]
 }
 
 export interface ControllerDropdownRow extends ControllerRowBase {
@@ -113,7 +118,6 @@ const controllerArrowSizeClass = "text-[15px]"
 const controllerRowHeightClass = "h-[26px] min-h-[26px]"
 const controllerArrowButtonClass = "inline-flex h-[20px] w-[24px] shrink-0 items-center justify-center overflow-hidden border-none bg-transparent px-0 leading-none origin-center transform-gpu transition-transform duration-100 will-change-transform"
 const controllerBaseWidth = 195
-const controllerMinWidth = 195
 const controllerDropdownMenuMaxHeight = 240
 const controllerDropdownMenuItemHeight = 28
 
@@ -134,64 +138,6 @@ const getComplementaryHex = (hex: string): string => {
   return "#" + [h + 1 / 3, h, h - 1 / 3].map(t => Math.round(f(t) * 255).toString(16).padStart(2, "0")).join("")
 }
 
-const measureTextWidth = (value: string, fontSize = 16): number => {
-  const length = Math.max(0, value.trim().length)
-  return Math.ceil(length * fontSize * 0.72)
-}
-
-const estimateRowMinWidth = (row: ControllerRow): number => {
-  if (row.type === "number") {
-    const valueWidth = measureTextWidth(String(row.value), row.isBig === false ? 18 : 38)
-    return Math.max(controllerMinWidth, valueWidth + 64)
-  }
-
-  if (row.type === "text") {
-    return Math.max(controllerMinWidth, measureTextWidth(row.value) + 56)
-  }
-
-  if (row.type === "label") {
-    return Math.max(controllerMinWidth, measureTextWidth(row.value) + 28)
-  }
-
-  if (row.type === "dropdown") {
-    const labelPrefixWidth = row.labelPrefix ? measureTextWidth(row.labelPrefix, 13) + 10 : 0
-    const valueWidth = measureTextWidth(row.options.find((opt) => opt.value === row.value)?.label || row.value)
-    const widestOptionWidth = Math.max(valueWidth, ...row.options.map((opt) => measureTextWidth(opt.label)))
-    return Math.max(controllerMinWidth, labelPrefixWidth + widestOptionWidth + 40)
-  }
-
-  if (row.type === "split") {
-    const leftWidth = measureTextWidth(row.leftValue) + 32
-    const rightWidth = measureTextWidth(row.rightValue) + 32
-    return Math.max(controllerMinWidth, leftWidth + rightWidth + 32)
-  }
-
-  if (row.type === "rankedBy") {
-    const labelWidth = measureTextWidth(row.label, 15) + 28
-    const currentWidth = measureTextWidth(row.options.find((o) => o.active)?.label || row.value) + 36
-    const widestOptionWidth = Math.max(currentWidth, ...row.options.map((option) => measureTextWidth(option.label) + 24))
-    return Math.max(controllerMinWidth, labelWidth + widestOptionWidth)
-  }
-
-  if (row.type === "metricMultiSelect") {
-    const selected = row.options.filter((option) => row.selectedValues.includes(option.value))
-    const labelWidth = selected.length <= (row.maxLabels ?? 3)
-      ? selected.reduce((sum, option) => sum + measureTextWidth(option.label, 10) + 16, 26)
-      : selected.length * 17 + 34
-    return Math.max(controllerMinWidth, labelWidth)
-  }
-
-  if (row.type === "toggle") {
-    const widest = Math.max(measureTextWidth(row.value), ...row.options.map((option) => measureTextWidth(option)))
-    return Math.max(controllerMinWidth, widest + 56)
-  }
-
-  if (row.type === "statement") {
-    return Math.max(controllerMinWidth, Math.min(260, measureTextWidth(row.value, 11) + 24))
-  }
-
-  return controllerMinWidth
-}
 
 const applyControllerPalette = (
   row: ControllerRow,
@@ -604,10 +550,23 @@ export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ 
   const textSizeClass = controllerTextSizeClass
   const labelSizeClass = controllerTextSizeClass
   const numberValueFontSize = "38px"
-  const computedWidth = Math.max(width, ...displayRows.map(estimateRowMinWidth))
+  // Whole pixels: a fractional column width leaves a sub-pixel seam against the
+  // canvas border and makes the published width harder to read in a test.
+  const computedWidth = Math.ceil(Math.max(width, ...displayRows.map(estimateControllerRowWidth)))
   return (
     <div 
       data-controller-root
+      /*
+       * The controller's resolved shape, published for tests rather than for
+       * CSS. Row order, row count, width and density are the four things the
+       * unification plan changes, and they are all decided above this point —
+       * partly by the module, partly by whichever shell it was rendered
+       * through. Emitting them here is the only place they can be observed
+       * together, after every hand has been on them.
+       */
+      data-vt-controller-rows={displayRows.map((row) => row.type).join(",")}
+      data-vt-controller-width={computedWidth}
+      data-vt-controller-density={density}
       className="flex flex-col h-full overflow-hidden shrink-0 border-l-[4px] border-l-black relative"
       style={{ width: computedWidth }}
     >

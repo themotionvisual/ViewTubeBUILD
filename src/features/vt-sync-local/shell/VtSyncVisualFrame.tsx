@@ -1,14 +1,7 @@
 import React from "react"
 import { AnalyticsVisualStyleProvider } from "../../../components/AnalyticsVisualStyleContext"
-import type { ControllerRow } from "../../../components/VisualModuleController"
 import type { TubeExplorerVisualProps } from "../../../components/TubeExplorerVisualModules"
 import { VtSyncVisualDataSourceProvider } from "./VtSyncVisualDataSourceContext"
-
-export type VtSyncVisualControlSpec = {
- id: string
- label: string
- kind: "count" | "select" | "toggle" | "metricMultiSelect"
-}
 
 export type VtSyncVisualCanvasFitMode = "balanced" | "fillWidth" | "preserveRatio"
 export type VtSyncVisualShellMode = "standard" | "vt2-preserved" | "compact-row"
@@ -57,20 +50,12 @@ export type VtSyncVisualModuleSpec = {
  controllerColors?: VtSyncVisualControllerColors
  activeMetricKeys?: readonly string[]
  dimensionKeys?: readonly string[]
- controllerExplanation?: string
- controllerSpec: {
-  rows: readonly ControllerRow[]
-  width?: number
-  density?: "normal" | "compact"
-  denseLegacy?: boolean
- }
  canvasFitMode?: VtSyncVisualCanvasFitMode
  heightPolicy?: VtSyncVisualHeightPolicy
  bodyMinHeight?: string
  bodyPreferredHeight?: string
  responsive?: VtSyncVisualResponsiveSpec
  shellMode: VtSyncVisualShellMode
- controls: readonly VtSyncVisualControlSpec[]
  footer: {
   insight: string
   legend: readonly VtSyncLegendSpec[]

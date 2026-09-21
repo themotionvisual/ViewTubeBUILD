@@ -4,6 +4,7 @@ import {
  type RegisteredDataVisualModuleId,
 } from "../../components/dataVisualModuleContract"
 import {
+ ComboChannelProgress,
  EngagementLinesModule,
  ShortsRetentionWidgetModule,
  TrafficSourceEvolutionModule,
@@ -15,6 +16,8 @@ import {
  TubeExplorerThermalImaging,
  type TubeExplorerVisualProps,
 } from "../../components/TubeExplorerVisualModules"
+import { dataVisualSourceTables } from "../../features/vt-sync-local/shell/dataVisualSourceTables"
+import { VtSyncVisualDataSourceProvider } from "../../features/vt-sync-local/shell/VtSyncVisualDataSourceContext"
 import { buildDataVisualAuditProps } from "./dataVisualAuditFixture"
 
 /**
@@ -31,18 +34,26 @@ import { buildDataVisualAuditProps } from "./dataVisualAuditFixture"
 
 type AuditEntry = {
  id: RegisteredDataVisualModuleId
+ /**
+  * The module's id in the VT-SYNC registry, which is what names its source
+  * tables. It differs from the canvas-contract id above (the canvas contract
+  * is keyed by visual, the registry by registered module), and the bench needs
+  * it so the captured header carries the same `DATA: …` line production does.
+  */
+ registryId: string
  title: string
  render: (props: TubeExplorerVisualProps) => React.ReactNode
 }
 
 const AUDIT_MODULES: AuditEntry[] = [
- { id: "shorts-retention", title: "Shorts Retention", render: (props) => <ShortsRetentionWidgetModule {...props} /> },
- { id: "publish-optimal-clock", title: "Publish Optimal Clock", render: (props) => <TubeExplorerPublishOptimalClock {...props} /> },
- { id: "clock-radial-burst", title: "Clock Radial Burst", render: (props) => <TubeExplorerClockRadialBurst {...props} /> },
- { id: "heat-matrix", title: "Heat Matrix", render: (props) => <TubeExplorerThermalImaging {...props} /> },
- { id: "content-treemap", title: "Content Treemap", render: (props) => <TubeExplorerContentTreemap {...props} /> },
- { id: "traffic-source-evolution", title: "Traffic Source Evolution", render: (props) => <TrafficSourceEvolutionModule {...props} /> },
- { id: "engagement-pulse", title: "Engagement Pulse", render: (props) => <EngagementLinesModule {...props} /> },
+ { id: "shorts-retention", registryId: "shorts-retention-widget", title: "Shorts Retention", render: (props) => <ShortsRetentionWidgetModule {...props} /> },
+ { id: "publish-optimal-clock", registryId: "tube-explorer-publish-optimal-clock", title: "Publish Optimal Clock", render: (props) => <TubeExplorerPublishOptimalClock {...props} /> },
+ { id: "clock-radial-burst", registryId: "tube-explorer-clock-radial-burst", title: "Clock Radial Burst", render: (props) => <TubeExplorerClockRadialBurst {...props} /> },
+ { id: "heat-matrix", registryId: "tube-explorer-thermal-imaging", title: "Heat Matrix", render: (props) => <TubeExplorerThermalImaging {...props} /> },
+ { id: "content-treemap", registryId: "tube-explorer-content-treemap", title: "Content Treemap", render: (props) => <TubeExplorerContentTreemap {...props} /> },
+ { id: "traffic-source-evolution", registryId: "traffic-source-evolution", title: "Traffic Source Evolution", render: (props) => <TrafficSourceEvolutionModule {...props} /> },
+ { id: "engagement-pulse", registryId: "engagement-lines", title: "Engagement Pulse", render: (props) => <EngagementLinesModule {...props} /> },
+ { id: "channel-progress", registryId: "combo-channel-progress", title: "Channel Progress", render: (props) => <ComboChannelProgress {...props} /> },
 ]
 
 const DataVisualMobileAudit: React.FC = () => {
@@ -80,7 +91,9 @@ const DataVisualMobileAudit: React.FC = () => {
        <h2 className="mb-1 text-[11px] font-black uppercase tracking-[0.14em] text-black/55">
         {entry.title} · {contract.family} · {contract.canvasAspect}
        </h2>
-       {entry.render(visualProps)}
+       <VtSyncVisualDataSourceProvider sourceTableIds={dataVisualSourceTables(entry.registryId)}>
+        {entry.render(visualProps)}
+       </VtSyncVisualDataSourceProvider>
       </section>
      )
     })}

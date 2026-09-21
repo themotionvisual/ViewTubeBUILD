@@ -2,6 +2,8 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
+
+import { dataVisualSourceTables } from "./dataVisualSourceTables"
 import { buildEngagementRadarSeriesPalette } from "../../../components/TubeExplorerVisualModules"
 import {
  buildVtSyncVisualGridBlocks,
@@ -122,27 +124,29 @@ describe("VT-SYNC data visual module registry", () => {
  })
 
  it("uses Daily and Monthly Stats for Channel Progress and Creator Content Type first for Format Dominance", () => {
-  expect(source).toContain('id === "combo-channel-progress") return ["daily", "monthly", "videos"]')
-  expect(source).toContain('id === "format-comparison-donuts") return ["creator", "videos"]')
+  expect(dataVisualSourceTables("combo-channel-progress")).toEqual(["videos", "daily", "monthly"])
+  expect(dataVisualSourceTables("format-comparison-donuts")).toEqual(["videos", "creator"])
   expect(source).toContain('<ComboChannelProgress data={data} dailyMetrics={dailyMetrics} monthlyMetrics={monthlyMetrics} visualStyle={visualStyle} />')
   expect(source).toContain('<FormatComparisonDonuts data={data} contentTypeRows={contentTypeRows} />')
   expect(graphSource).toContain('buildFormatDominanceContentTypeTotals(contentTypeRows)')
   expect(graphSource).toContain('resolveChannelProgressDailyMetricValue(row, metricKey as ChannelProgressMetricKey)')
   expect(graphSource).toContain('{ value: "lifetime", label: "LIFETIME", months: null, grain: "month" }')
   expect(graphSource).toContain('{ value: "3y", label: "THREE YEARS", months: 36, grain: "month" }')
-  expect(graphSource).toContain('subtitle: `DATA: ${usesMonthlyGrain ? "MONTHLY STATS" : "DAILY STATS"}')
+  // The shell prints the provenance line from the registry now, so the
+  // subtitle carries the explanation alone.
+  expect(graphSource).not.toContain('subtitle: `DATA:')
   expect(graphSource).toContain('monthlyMetrics ?? []')
   expect(graphSource).toContain('const sourceRows = metricKey === "videoCount"')
   expect(graphSource).not.toContain('dailySourceRows.length > 0\n      ? dailySourceRows\n      : scopedVideoRows')
-  expect(source).toContain('id.startsWith("vt2-weekly-sparklines")')
-  expect(source).toContain('id.startsWith("vt2-channel-big-bang")')
-  expect(source).toContain('id.startsWith("vt2-trajectory-forecaster")')
-  expect(source).toContain('id.startsWith("vt2-multi-metric-timeline")')
-  expect(source.match(/id\.startsWith\("vt2-[^"]+"\)\) return \["daily"\]/g)).toHaveLength(4)
+  for (const id of ["vt2-weekly-sparklines", "vt2-channel-big-bang", "vt2-trajectory-forecaster", "vt2-multi-metric-timeline"]) {
+   expect(dataVisualSourceTables(id), id).toEqual(["videos", "daily"])
+  }
  })
 
  it("feeds Clock Burst from traffic overview and detail datasets, never Traffic Source x Day", () => {
-  expect(source).toContain('id === "tube-explorer-clock-radial-burst") return ["traffic_overview", "traffic_details"]')
+  expect(dataVisualSourceTables("tube-explorer-clock-radial-burst")).toContain("traffic_overview")
+  expect(dataVisualSourceTables("tube-explorer-clock-radial-burst")).toContain("traffic_details")
+  expect(dataVisualSourceTables("tube-explorer-clock-radial-burst")).not.toContain("traffic_day")
   expect(explorerSource).toContain('row.datasetKind === "traffic_summary"')
   expect(explorerSource).toContain('row.datasetKind === "traffic_detail"')
   expect(explorerSource).toContain('row.datasetKind !== "traffic_day"')
@@ -152,12 +156,12 @@ describe("VT-SYNC data visual module registry", () => {
   expect(source).toContain('id: "age-gender-audience"')
   expect(source).toContain("<AgeGenderAudienceModule")
   expect(source).toContain("demographicRows={demographicRows}")
-  expect(source).toContain('return ["demographics"]')
+  expect(dataVisualSourceTables("age-gender-audience")).toEqual(["demographics"])
   expect(source).toContain('"age-gender-audience"')
   expect(graphSource).toContain("export const AgeGenderAudienceModule")
   expect(graphSource).toContain("buildAgeGenderAudienceData")
   expect(graphSource).toContain('title: "AGE × GENDER"')
-  expect(graphSource).toContain("INNER=GENDER · OUTER=AGE")
+  expect(graphSource).toContain("inner ring is gender, outer ring is age band")
   expect(graphSource).toContain("GENDER_SUNBURST_COLORS")
  })
 
@@ -274,9 +278,18 @@ describe("VT-SYNC data visual module registry", () => {
 
  it("registers source tables, controls, footer contracts, and one shared visual frame", () => {
   expect(source).toContain("export const VT_SYNC_VISUAL_MODULE_REGISTRY")
-  expect(source).toContain("sourceTableIds: sourceTablesForVisual(module.id)")
- expect(source).toContain("controls: controlsForVisual(module.id)")
-  expect(source).toContain("controllerSpec: controllerSpecForVisual(module.id)")
+  expect(source).toContain("sourceTableIds: dataVisualSourceTables(module.id)")
+  /*
+   * The registry no longer describes controllers. `controllerSpec` and
+   * `controls` were populated with `noop` handlers and never rendered —
+   * `VtSyncVisualFrame` reads `sourceTableIds`, the icon and the colour pairs,
+   * and nothing else — so they were a second, fictional description of every
+   * controller with nothing keeping it in step with the real one.
+   */
+  expect(source).not.toContain("controllerSpecForVisual")
+  expect(source).not.toContain("controlsForVisual")
+  expect(frameSource).not.toContain("controllerSpec")
+  expect(frameSource).not.toContain("VtSyncVisualControlSpec")
   expect(source).toContain("shellMode: shellModeForVisual(module.group)")
   expect(visualStyleSource).toContain("export const VT_SYNC_VISUAL_STYLE_REGISTRY")
   expect(source).toContain("export const VT_SYNC_VISUAL_ICON_REGISTRY")
@@ -287,7 +300,6 @@ describe("VT-SYNC data visual module registry", () => {
   expect(visualStyleSource).not.toContain("paletteIndex")
   expect(source).toContain('insight: "Calculated from the active VT-SYNC table registry."')
   expect(frameSource).toContain("export type VtSyncVisualModuleSpec")
-  expect(frameSource).toContain("controllerSpec")
   expect(frameSource).toContain("shellMode")
   expect(frameSource).toContain("export const VtSyncVisualFrame")
   expect(frameSource).toContain("React.createElement(spec.renderer, {")
@@ -306,9 +318,10 @@ describe("VT-SYNC data visual module registry", () => {
  })
 
  it("keeps unified visual controller and icon metadata in the registry", () => {
-  expect(source).toContain('type: "metricMultiSelect"')
-  expect(source).toContain('type: "statement"')
-  expect(source).toContain('type: "toggle"')
+  // The controller row types that used to be asserted here belonged to the
+  // registry's mock `controllerSpec`, not to any controller a creator saw. The
+  // real ones are authored by the modules and recorded in
+  // `dataVisualControllerShape.test.tsx`.
   expect(source).toContain('"tube-explorer-barcode-fingerprint"')
   expect(source).toContain('"vt2-multi-metric-timeline"')
   expect(visualStyleSource).toContain('"tube-explorer-barcode-fingerprint": { iconKey: "database" }')
@@ -433,7 +446,9 @@ describe("VT-SYNC data visual module registry", () => {
   expect(graphSource).toContain('labelPrefix: "PLOT"')
   expect(graphSource).toContain('const viewRadii = buildLinearAreaBubbleRadii')
   expect(graphSource).toContain('labelPrefix: "SIZE"')
-  expect(graphSource).toContain('subtitle: `DATA: FORMATS')
+  // Format Dominance used to hand-roll its own "DATA: FORMATS • …" prefix on
+  // top of the shell's; the provenance line comes from the registry now.
+  expect(graphSource).toContain('subtitle: "How each format splits the channel\'s core metrics."')
   expect(graphSource).toContain('{ label: "VIDEOS", value: formatCounts.long.toLocaleString()')
   expect(graphSource).not.toContain('["impressions", "IMPR"]')
   expect(explorerSource).toContain("TITLE_NETWORK_MAX_WORDS = 50")

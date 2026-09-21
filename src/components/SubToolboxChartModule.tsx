@@ -54,6 +54,10 @@ export interface SubToolboxStat {
   compact?: boolean
   /** Minimum card width. Longer labels may expand beyond this value. */
   minWidth?: number
+  /** Every label this card can show, so changing a setting never resizes it. */
+  labelWidthValues?: readonly string[]
+  /** Every value this card can show, when the value is what moves. */
+  valueWidthValues?: readonly string[]
 }
 
 export interface SubToolboxMetricBadge {
@@ -284,7 +288,7 @@ export const SubToolboxChartModule: React.FC<
               <div className={`max-w-full font-[1000] uppercase tracking-[0em] leading-none ${header.titleClassName ?? ""}`} style={{ fontSize: "var(--vt-subtoolbox-title-size, 20px)" }}>
                 {header.title}
               </div>
-              <div className="max-w-full truncate text-[clamp(10px,2.2vw,14px)] font-black uppercase tracking-[0.069em] text-black/80">
+              <div className="line-clamp-2 max-w-full text-[clamp(10px,2.2vw,14px)] font-black uppercase leading-[1.15] tracking-[0.069em] text-black/80">
                 {resolvedSubtitle}
               </div>
             </div>

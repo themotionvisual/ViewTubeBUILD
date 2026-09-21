@@ -14,7 +14,6 @@ import type { TubeExplorerVisualProps } from "../../TubeExplorerVisualModules"
 import { ChartModule, SlabControl, type Stat } from "../ChartModule"
 import { useVt2Theme } from "./theme"
 import {
-  describeWeeklySource,
   rollupWeeklyChannelWithSource,
   type Vt2WeeklyRow,
 } from "./dataBridge"
@@ -206,8 +205,6 @@ export const WeeklySparklinesModule: React.FC<TubeExplorerVisualProps> = ({
     () => projectWeeklyDisplay(weeklyBase, displayType),
     [weeklyBase, displayType],
   )
-  const sourceLabel = describeWeeklySource(rollup.source)
-
   const highlightedDef = sparkDefs.find((d) => d.label === metric)
   const hovWeekData = hovWeek !== null ? weekly[hovWeek] : null
 
@@ -271,11 +268,7 @@ export const WeeklySparklinesModule: React.FC<TubeExplorerVisualProps> = ({
       titleBg={palette.titleBg}
       bodyBg={palette.bodyBg}
       title="Weekly Channel Sparklines"
-      subtitle={
-        weekly.length > 0
-          ? `MOST RECENT ${weekly.length} WEEKS · ${rangeLabel} · SOURCE: ${sourceLabel} · ${displayType} MODE`
-          : `NO WEEKLY DATA · ${displayType} MODE`
-      }
+      subtitle="One sparkline per channel metric, rolled up week by week."
       controlBlock={
         <SlabControl
           cfg={{

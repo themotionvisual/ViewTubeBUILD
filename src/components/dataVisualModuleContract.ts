@@ -214,6 +214,32 @@ export const DATA_VISUAL_MODULE_CONTRACTS = {
    */
   defaultSelection: { desktop: 8, landscape: 5, portrait: 4 },
  },
+ "channel-progress": {
+  id: "channel-progress",
+  family: "temporal",
+  canvasAspect: "16:9",
+  density: "normal",
+  overflow: "clip",
+  /*
+   * Hover reads the plot position, not a tapped bar, so the touch floor does
+   * not apply — the bars and dots are a field, and at five metrics a 24px
+   * minimum would be wider than the desktop bar it is meant to protect.
+   */
+  markInteraction: "field",
+  /*
+   * Panels in the per-metric grid layout. A landscape phone can carry two
+   * stacked plots and still leave each one a readable band; a portrait phone
+   * gets one at a time and switches with the metric control rather than
+   * shrinking four plots into a strip each.
+   */
+  panelBudget: { desktop: 4, landscape: 2, portrait: 1 },
+  /*
+   * Metrics overlaid at once. Every extra metric divides the bar width, so
+   * this caps the overlay before the bars stop being readable rather than
+   * letting the control stack five series into a phone canvas.
+   */
+  seriesBudget: { desktop: 5, landscape: 3, portrait: 2 },
+ },
  "traffic-source-evolution": {
   id: "traffic-source-evolution",
   family: "temporal",

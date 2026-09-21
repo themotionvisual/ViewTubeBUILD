@@ -25,6 +25,17 @@ export interface AnalyticsVisualStat {
   lockTone?: boolean
   compact?: boolean
   minWidth?: number
+  /**
+   * Every label this card can show as the reader changes a setting.
+   *
+   * A stat card is `w-auto`, so it grows to fit its contents: switch the
+   * treemap's metric from VIEWS to WATCH TIME and the card widens, the stat row
+   * widens, and the title beside it is squeezed. Declaring the candidates sizes
+   * the card for the longest one up front and holds it for every setting.
+   */
+  labelWidthValues?: readonly string[]
+  /** Every value this card can show, when the value is what moves. */
+  valueWidthValues?: readonly string[]
 }
 
 export interface AnalyticsVisualContextBarConfig {
@@ -132,12 +143,27 @@ const statButtonClass = (clickable: boolean, dark: boolean): string =>
       : "cursor-default"
   }`
 
+/** Rough advance width of a string at the stat row's 13px face. */
+const statTextWidth = (value: string): number => Math.ceil(value.trim().length * 13 * 0.72) + 8
+
+/**
+ * Width a card reserves: its declared minimum, or the widest label/value it
+ * has been told it can ever show — whichever is larger. With no declaration
+ * this is exactly the previous behaviour, and the card still grows to fit.
+ */
+const statReservedWidth = (item: AnalyticsVisualStat): number => {
+  const floor = item.minWidth ?? (item.compact ? 68 : 76)
+  const candidates = [...(item.labelWidthValues ?? []), ...(item.valueWidthValues ?? [])]
+  if (candidates.length === 0) return floor
+  return Math.max(floor, ...candidates.map(statTextWidth))
+}
+
 const statButtonStyle = (
   item: AnalyticsVisualStat,
   dark: boolean,
 ): React.CSSProperties => ({
   background: item.backgroundTone ?? (dark ? ANALYTICS_DARK_STATS_BACKGROUND : "#EDEDED"),
-  minWidth: item.minWidth ?? (item.compact ? 68 : 76),
+  minWidth: statReservedWidth(item),
 })
 
 export const resolveAnalyticsStatValueColor = (

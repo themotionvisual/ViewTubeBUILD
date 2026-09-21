@@ -45,10 +45,10 @@ import { Vt2ThemeContext, type Vt2ThemeMode } from "../../../components/DataVisu
 import {
  getVtVisualControllerColors,
  getVtVisualHeaderColorPair,
- VT_VISUAL_METRIC_COLORS,
 } from "../../../styles/toolboxPalette"
 import { getVtSyncVisualStyle } from "../../../styles/vtSyncVisualStyles"
 import { buildVtSyncVisualGridBlocks, shouldVtSyncVisualStartOpen } from "./vtSyncVisualGridModel"
+import { dataVisualSourceTables } from "./dataVisualSourceTables"
 
 type VtSyncVisualModuleDefinition = VtSyncVisualModuleSpec & {
  group: "core" | "tube-explorer" | "vt2"
@@ -124,46 +124,7 @@ const VT2_MODULES: LegacyVisualModuleDefinition[] = [
  { id: "vt2-multi-metric-timeline", group: "vt2", delayMs: 280, render: ({ data, dailyMetrics }) => <MultiMetricTimelineModule data={data} dailyMetrics={dailyMetrics} /> },
 ]
 
-const sourceTablesForVisual = (id: string): readonly string[] => {
- if (id === "combo-channel-progress") return ["daily", "monthly", "videos"]
- if (id === "format-comparison-donuts") return ["creator", "videos"]
- if (id === "tube-explorer-clock-radial-burst") return ["traffic_overview", "traffic_details"]
- if (id.startsWith("vt2-weekly-sparklines")) return ["daily"]
- if (id.startsWith("vt2-revenue-mosaic")) return ["videos"]
- if (id.startsWith("vt2-search-term-gravity")) return ["traffic", "search"]
- if (id.startsWith("vt2-video-fingerprint")) return ["videos"]
- if (id.startsWith("vt2-channel-big-bang")) return ["daily"]
- if (id.startsWith("vt2-trajectory-forecaster")) return ["daily"]
- if (id.startsWith("vt2-multi-metric-timeline")) return ["daily"]
- if (id.includes("traffic")) return ["traffic", "traffic_day"]
- if (id.includes("format") || id.includes("shorts-vs-longs")) return ["creator", "videos"]
- if (id.includes("keyword") || id.includes("word-network")) return ["videos", "search"]
- if (id.includes("publish") || id.includes("upload-time")) return ["videos", "daily"]
- if (id.includes("age-gender") || id.includes("audience")) return ["demographics"]
- if (id.includes("revenue")) return ["videos", "ads"]
- if (id.includes("subscriber")) return ["videos", "subs"]
- return ["videos"]
-}
 
-const controlsForVisual = (id: string): VtSyncVisualModuleSpec["controls"] => {
- if (id.includes("word-network"))
-  return [
-   { id: "metric", label: "Metric", kind: "select" },
-   { id: "word-limit", label: "Words", kind: "count" },
-  ]
- if (id.includes("format"))
-  return [
-   { id: "window", label: "Window", kind: "select" },
-   { id: "aggregation", label: "Average / Total", kind: "toggle" },
-  ]
- if (id.includes("engagement"))
-  return [
-   { id: "count", label: "Videos", kind: "count" },
-   { id: "format", label: "Format", kind: "select" },
-   { id: "ranking", label: "Ranked By", kind: "select" },
-  ]
- return []
-}
 
 const iconKeyForVisual = (id: string): string => getVtSyncVisualStyle(id).iconKey
 
@@ -185,13 +146,6 @@ const dimensionKeysForVisual = (id: string): readonly string[] => {
  return ["video"]
 }
 
-const controllerExplanationForVisual = (id: string): string => {
- if (id.includes("barcode")) return "Ranked video bars by the selected metric and format."
- if (id.includes("multi-metric")) return "Selected metrics over the chosen channel or video time window."
- if (id.includes("combo-channel-progress")) return "Daily Stats drive channel metrics; the Videos catalog supplies only upload counts."
- if (id.includes("engagement")) return "Newest or top videos grouped by engagement metric."
- return "Visualization generated from the active VT-SYNC table snapshot."
-}
 
 const canvasFitModeForVisual = (id: string): VtSyncVisualModuleSpec["canvasFitMode"] => {
  if (id.includes("barcode") || id.includes("multi-metric")) return "fillWidth"
@@ -204,79 +158,6 @@ const shellModeForVisual = (group: VtSyncVisualModuleDefinition["group"]): VtSyn
  return "standard"
 }
 
-const noop = () => undefined
-
-const controllerSpecForVisual = (id: string): VtSyncVisualModuleSpec["controllerSpec"] => {
- if (id.includes("barcode")) {
-  return {
-   rows: [
-    { type: "number", value: 80, bgTone: VT_VISUAL_METRIC_COLORS.revenue, fgTone: "#000000", onPrev: noop, onNext: noop },
-    {
-     type: "dropdown",
-     value: "top:all",
-     options: [
-      { label: "GREATEST | ALL", value: "top:all" },
-      { label: "LATEST | SHORTS", value: "recent:shorts" },
-     ],
-     onSelect: noop,
-     bgTone: VT_VISUAL_METRIC_COLORS.views,
-     fgTone: "#000000",
-    },
-    {
-     type: "dropdown",
-     value: "views",
-     options: [
-      { label: "RANKED BY: VIEWS", value: "views" },
-      { label: "RANKED BY: LIKES", value: "likes" },
-     ],
-     onSelect: noop,
-     bgTone: VT_VISUAL_METRIC_COLORS.likes,
-     fgTone: "#000000",
-    },
-   ],
-  }
- }
-
- if (id.includes("multi-metric")) {
-  return {
-   denseLegacy: true,
-   rows: [
-    { type: "number", value: 12, bgTone: VT_VISUAL_METRIC_COLORS.engagedViews, fgTone: "#000000", onPrev: noop, onNext: noop },
-    { type: "toggle", value: "WEEKS", options: ["WEEKS", "MONTHS"], onSelect: noop, bgTone: VT_VISUAL_METRIC_COLORS.views, fgTone: "#000000" },
-    { type: "statement", value: "CHANNEL OVERLAY", bgTone: "#000000", fgTone: VT_VISUAL_METRIC_COLORS.engagedViews },
-    {
-     type: "metricMultiSelect",
-     selectedValues: ["views", "subscribers"],
-     options: [
-      { label: "VIEWS", value: "views", color: VT_VISUAL_METRIC_COLORS.views },
-      { label: "SUBS", value: "subscribers", color: VT_VISUAL_METRIC_COLORS.subscribers },
-      { label: "LIKES", value: "likes", color: VT_VISUAL_METRIC_COLORS.likes },
-      { label: "RPM", value: "rpm", color: VT_VISUAL_METRIC_COLORS.rpm },
-     ],
-     onToggleValue: noop,
-     bgTone: "#FFFFFF",
-     fgTone: "#000000",
-    },
-   ],
-  }
- }
-
- if (id.includes("combo-channel-progress")) {
-  return {
-   rows: [
-    { type: "statement", value: "CHANNEL TOTALS", bgTone: "#000000", fgTone: VT_VISUAL_METRIC_COLORS.views },
-    { type: "dropdown", value: "views", options: [{ label: "VIEWS", value: "views" }, { label: "LIKES", value: "likes" }], onSelect: noop, bgTone: VT_VISUAL_METRIC_COLORS.views, fgTone: "#000000" },
-    { type: "toggle", value: "1 YEAR", options: ["90 DAYS", "6 MONTHS", "1 YEAR"], onSelect: noop, bgTone: VT_VISUAL_METRIC_COLORS.watchTime, fgTone: "#000000" },
-   ],
-  }
- }
-
- return {
-  rows: [
-   { type: "statement", value: controllerExplanationForVisual(id), bgTone: "#000000", fgTone: VT_VISUAL_METRIC_COLORS.likes },
-  ],
- }
-}
 
 const visualRenderer = (
  render: LegacyVisualModuleDefinition["render"],
@@ -298,16 +179,13 @@ const VISUAL_MODULES: VtSyncVisualModuleDefinition[] = ALL_LEGACY_VISUAL_MODULES
  id: module.id,
  group: module.group,
  delayMs: module.delayMs,
- sourceTableIds: sourceTablesForVisual(module.id),
+ sourceTableIds: dataVisualSourceTables(module.id),
  iconKey: VT_SYNC_VISUAL_ICON_REGISTRY[module.id] || "analytics",
  headerColorPair: getVtVisualHeaderColorPair(index),
  activeMetricKeys: activeMetricKeysForVisual(module.id),
  dimensionKeys: dimensionKeysForVisual(module.id),
- controllerExplanation: controllerExplanationForVisual(module.id),
- controllerSpec: controllerSpecForVisual(module.id),
  canvasFitMode: canvasFitModeForVisual(module.id),
  shellMode: shellModeForVisual(module.group),
- controls: controlsForVisual(module.id),
  footer: {
   insight: "Calculated from the active VT-SYNC table registry.",
   legend: [],
@@ -419,10 +297,25 @@ const VtSyncDataVisualsContent: React.FC<{
 }> = ({ snapshot, modules }) => {
  const visualData = useMemo(() => buildVtSyncVisualPropsData(snapshot), [snapshot])
 
+/*
+  * Whether ANY table has arrived — used for a banner, never as a gate.
+  *
+  * This used to hide every module behind one all-or-nothing check on three
+  * datasets (videos, traffic, geography). A creator who imported only Daily
+  * Stats got a blank page even though Channel Progress, Engagement Pulse and
+  * the rest of the daily-driven modules had everything they needed, and a
+  * creator with no channel connected could not see what the visuals even are.
+  * Every module already renders its own empty state for the table IT needs, so
+  * the grid renders unconditionally and each module speaks for itself.
+  */
  const hasRenderableData =
   visualData.rows.length > 0 ||
   visualData.canonicalContext.trafficRows.length > 0 ||
-  visualData.canonicalContext.geographyRows.length > 0
+  visualData.canonicalContext.geographyRows.length > 0 ||
+  visualData.trafficByDay.length > 0 ||
+  visualData.dailyMetrics.length > 0 ||
+  visualData.monthlyMetrics.length > 0 ||
+  visualData.canonicalContext.demographicRows.length > 0
 
  const renderedVisualBlocks = useMemo(() => {
   return buildVtSyncVisualGridBlocks(modules)
@@ -459,11 +352,15 @@ const VtSyncDataVisualsContent: React.FC<{
    </div>
 
    {!hasRenderableData ? (
-    <div className="flex items-center justify-center rounded-[20px] border-[4px] border-dashed border-black bg-white p-16 text-center text-xl font-black uppercase tracking-[0.14em] text-black/35">
+    <div className="mb-6 rounded-[20px] border-[4px] border-dashed border-black bg-white p-6 text-center text-sm font-black uppercase tracking-[0.14em] text-black/40">
      Sync or import Annalytics tables to populate data visuals.
+     <span className="mt-2 block text-[11px] tracking-[0.1em] text-black/30">
+      Every module below is live — each one fills in as its table arrives.
+     </span>
     </div>
-   ) : (
-    <div className="flex flex-col gap-8">
+   ) : null}
+
+   <div className="flex flex-col gap-8">
      {renderedVisualBlocks.map((block) => (
       <React.Fragment
        key={block.type === "module" ? block.module.id : block.modules.map(({ module }) => module.id).join("-")}>
@@ -511,8 +408,7 @@ const VtSyncDataVisualsContent: React.FC<{
        )}
       </React.Fragment>
      ))}
-    </div>
-   )}
+   </div>
   </>
  )
 }

@@ -17,8 +17,10 @@ import { DataVisualCanvas } from "./DataVisualCanvas"
 import {
  useDataVisualDensityBudget,
  useDataVisualMarks,
+ useDataVisualPanelBudget,
  useDataVisualSelection,
  useDataVisualSeriesBudget,
+ useDataVisualViewportBucket,
  useVisualCanvasBox,
 } from "./dataVisualCanvasGeometry"
 import {
@@ -565,7 +567,7 @@ export const VideoValueMatrix: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
     title: "VIDEO VALUE MATRIX",
-    subtitle: `TOP ${selectedCount} ${mode === "most-recent" ? "RECENT" : "PERFORMING"} ${selectedFormat === "All" ? "VIDEOS" : selectedFormat.toUpperCase() + " FORM"}`,
+    subtitle: "Each video placed by click-through rate against retention; bubble size is reach.",
     icon: <CustomIcon name="target" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -825,7 +827,7 @@ export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
    title: "REVENUE DISTRIBUTION",
-    subtitle: `TOP ${cd.length} • ${getDistributionFormatLabel(selectedFormat)} • ${getDistributionWindowLabel(selectedWindow)}`,
+    subtitle: "Share of estimated revenue carried by each of the ranked videos.",
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
     titleClassName: "text-[clamp(18px,2vw,30px)] leading-[.9]",
@@ -951,7 +953,7 @@ export const AgeGenderAudienceModule: React.FC<GChartProps> = ({ demographicRows
  <SubToolboxChartModule
  header={{
  title: "AGE × GENDER",
- subtitle: "VIEWER % SUNBURST · INNER=GENDER · OUTER=AGE",
+ subtitle: "Viewer share as a sunburst — inner ring is gender, outer ring is age band.",
  icon: <CustomIcon name="analytics" size={18} />,
  headerStyle: "subtoolbox",
  titleClassName: "text-[clamp(18px,2vw,30px)] leading-[.9]",
@@ -1124,7 +1126,7 @@ export const WatchTimeDistribution: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
    title: "WATCH TIME DISTRIBUTION",
-    subtitle: `TOP ${cd.length} • ${getDistributionFormatLabel(selectedFormat)} • ${getDistributionWindowLabel(selectedWindow)}`,
+    subtitle: "Share of watch time carried by each of the ranked videos.",
     icon: <CustomIcon name="calendar" size={18} />,
     headerStyle: "subtoolbox",
     titleClassName: "text-[clamp(18px,2vw,30px)] leading-[.9]",
@@ -1202,7 +1204,7 @@ export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
    title: "SUBSCRIBERS GAINED",
-    subtitle: `TOP ${cd.length} • ${getDistributionFormatLabel(selectedFormat)} • ${getDistributionWindowLabel(selectedWindow)}`,
+    subtitle: "Subscribers gained by each of the ranked videos.",
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
     titleClassName: "text-[clamp(18px,2vw,30px)] leading-[.9]",
@@ -1278,7 +1280,7 @@ export const TopPerformersTrio: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
-   header={{ title: "TOP PERFORMERS TRIO", subtitle: "REVENUE \u2022 WATCH HOURS \u2022 SUBSCRIBERS", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "TOP PERFORMERS TRIO", subtitle: "Strongest videos by revenue, watch hours and subscribers, side by side.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#FF7497", iconBlockBg: "#FF83EA", shadowColor: "rgba(255,116,151,0.45)" }}
    activeContext={{ title: "TOP 10 PER METRIC", stats: [{ label: "VIDEOS", value: "10", tone: "pink" }] }}
   >
@@ -1408,7 +1410,7 @@ export const ShortsRetention: React.FC<GChartProps> = ({ data }) => {
  return (
   <SubToolboxChartModule
    heroVisualId="shorts-retention"
-   header={{ title: "SHORTS RETENTION", subtitle: "AVD (s) \u00d7 DURATION \u00b7 BUBBLE = VIEWS", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "SHORTS RETENTION", subtitle: "Each Short placed by length against average view duration; bubble size is views.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#33FF99", shadowColor: "rgba(204,255,0,0.45)" }}
    activeContext={{
     title: `${cd.points.length} SHOWN \u00b7 TOP AVD ${cd.avdScale.domain[1]}s`,
@@ -1922,7 +1924,7 @@ export const AlgorithmTriggerModule: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
     title: "ALGORITHM TRIGGER",
-    subtitle: `TOP ${selectedCount} ${mode === "most-recent" ? "RECENT" : "PERFORMING"} BY ${sortMetric.toUpperCase()}`,
+    subtitle: "Each video placed by click-through rate against impressions.",
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -2206,7 +2208,7 @@ export const EngagementLinesModule: React.FC<GChartProps> = ({ data, visualStyle
    heroVisualId="engagement-pulse"
    header={{
    title: "ENGAGEMENT PULSE",
-   subtitle: `TOP ${cd.length} ${mode === "most-recent" ? "RECENT" : "PERFORMING"} BY ${sortLabel}`,
+   subtitle: "Likes, comments and shares traced across the ranked videos.",
     icon: visualShellIcon(visualStyle, "sparkles"),
     headerStyle: "subtoolbox",
    }}
@@ -2507,7 +2509,7 @@ export const EngagementMap: React.FC<GChartProps> = ({ data }) => {
  const top = cd[0]
  return (
   <SubToolboxChartModule
-   header={{ title: "ENGAGEMENT MAP", subtitle: "LIKES \u00b7 COMMENTS \u00b7 SHARES", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "ENGAGEMENT MAP", subtitle: "Likes, comments and shares plotted together for each video.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#FF9900", iconBlockBg: "#FFB158", shadowColor: "rgba(255,153,0,0.45)" }}
    activeContext={{
     title: top?.name?.toUpperCase() || "NO DATA",
@@ -2695,7 +2697,7 @@ export const GoldenRatioRadar: React.FC<GChartProps> = ({ data }) => {
  }, [data])
  return (
   <SubToolboxChartModule
-   header={{ title: "GOLDEN RATIO RADAR", subtitle: "CTR \u00b7 AVP \u00b7 LIKES \u00b7 CMTS \u00b7 SHARES \u00b7 SUBS", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "GOLDEN RATIO RADAR", subtitle: "Six performance axes drawn as one shape, so a video's balance reads at a glance.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#00E5FF", iconBlockBg: "#0088FF", shadowColor: "rgba(0,229,255,0.45)" }}
    activeContext={{ title: "CHANNEL AVERAGES", stats: [
     { label: "CTR", value: `${rd[0]?.A ?? 0}%`, tone: "cyan" },
@@ -2727,7 +2729,7 @@ export const HookEffectiveness: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
     title: "HOOK EFFECTIVENESS",
-    subtitle: "30-SECOND RETENTION",
+    subtitle: "How much of the first 30 seconds each video holds.",
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -2893,7 +2895,7 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
     title: "GROWTH PULSE",
-    subtitle: "PERIOD AMOUNT • RUNNING TOTAL",
+    subtitle: "Per-period totals with the running cumulative line above them.",
     icon: <CustomIcon name="analytics" size={18} />,
    }}
    theme={{
@@ -2920,6 +2922,7 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
       type: "text",
       labelPrefix: "PAST",
       value: TIME_RANGE_OPTIONS.find((o) => o.value === timeRange)?.label || timeRange,
+      widthValues: TIME_RANGE_OPTIONS.map((option) => option.label),
       onPrev: () => {
        const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
        setTimeRange(TIME_RANGE_OPTIONS[(idx - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value)
@@ -3062,7 +3065,7 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
    heroVisualId="format-dominance"
    header={{
     title: "FORMAT DOMINANCE",
-    subtitle: `DATA: FORMATS • ${contentTypeTotals ? "CREATOR CONTENT TYPE" : "VIDEO CATALOG FALLBACK"} • HOW EACH FORMAT DRIVES CORE METRICS`,
+    subtitle: "How each format splits the channel's core metrics.",
     headerStyle: "subtoolbox",
     icon: <CustomIcon name="layers" size={18} />,
    }}
@@ -3270,7 +3273,7 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
     <SubToolboxChartModule
       header={{
         title: "REVENUE EFFICIENCY",
-        subtitle: "WATCH HOURS × EST. REVENUE",
+        subtitle: "Each video placed by watch hours against estimated revenue.",
         headerStyle: "subtoolbox",
         icon: <CustomIcon name="analytics" size={18} />,
       }}
@@ -3533,6 +3536,26 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
   const [layoutMode, setLayoutMode] = useState<"overlay" | "individual">("overlay")
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
+  // Composition, from the registered contract: how thick a mark may be drawn,
+  // how many per-metric panels may be stacked, and how many metrics may share
+  // one plot. The canvas owns the height, so a phone already gets a shorter
+  // plot; these keep the marks INSIDE it from being desktop-sized.
+  const progressBucket = useDataVisualViewportBucket()
+  const { scale: scaleProgressMark } = useDataVisualMarks("channel-progress")
+  const progressPanelBudget = useDataVisualPanelBudget("channel-progress", 4)
+  const progressSeriesBudget = useDataVisualSeriesBudget("channel-progress", 5)
+  const plotHostRef = useRef<HTMLDivElement | null>(null)
+  const progressPlotBox = useVisualCanvasBox(plotHostRef)
+  /**
+   * Height of one plot, measured rather than assumed. In the per-metric grid
+   * the panels split the canvas, so each one gets its share.
+   */
+  const progressPlotHeight = (isIndividualGrid: boolean) => {
+    const measured = progressPlotBox.height
+    if (!(measured > 1)) return isIndividualGrid ? 285 : 340
+    return isIndividualGrid ? measured / Math.max(1, visiblePanelRows) : measured
+  }
+
   const METRIC_OPTIONS = [
     { value: "subscribersGained", label: "SUBSCRIBERS", tone: VT_VISUAL_METRIC_COLORS.subscribers, isRevenue: false },
     { value: "revenue", label: "REVENUE", tone: VT_VISUAL_METRIC_COLORS.revenue, isRevenue: true },
@@ -3705,10 +3728,13 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
 
   const periodRangeLabel = useMemo(() => {
     if (chartData.length === 0) return "NO PERIOD RANGE"
-    const start = chartData[0]?.start
-    const end = chartData[chartData.length - 1]?.end
-    if (!(start instanceof Date) || !(end instanceof Date)) return "NO PERIOD RANGE"
-    return formatRange(start, end)
+    // Buckets carry epoch milliseconds, not Date objects — the old
+    // `instanceof Date` guard was never true, so the module printed
+    // "NO PERIOD RANGE" over a plot that had a perfectly good range.
+    const start = Number(chartData[0]?.start)
+    const end = Number(chartData[chartData.length - 1]?.end)
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return "NO PERIOD RANGE"
+    return formatRange(new Date(start), new Date(end))
   }, [chartData])
 
   const hoveredPeriod = hoveredIdx !== null ? chartData[hoveredIdx] ?? null : null
@@ -3728,8 +3754,8 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     : null
   const activePeriodLabel = hoveredPeriod
    ? usesMonthlyGrain
-    ? hoveredPeriod.start.toLocaleDateString(undefined, { month: "long", year: "numeric" }).toUpperCase()
-    : formatRange(hoveredPeriod.start, hoveredPeriod.end)
+    ? new Date(Number(hoveredPeriod.start)).toLocaleDateString(undefined, { month: "long", year: "numeric" }).toUpperCase()
+    : formatRange(new Date(Number(hoveredPeriod.start)), new Date(Number(hoveredPeriod.end)))
    : periodRangeLabel
 
   const channelProgressTooltip = ({ active, payload }: any) => {
@@ -3768,7 +3794,24 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     )
   }
 
-  const activeMetrics = METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value))
+  /*
+   * Metrics actually drawn. The control still owns WHICH metrics are selected;
+   * the series budget owns how many of them may share one canvas, so a phone
+   * plots the reader's top choices rather than slicing the bar width five ways.
+   */
+  const activeMetrics = METRIC_OPTIONS
+    .filter((option) => selectedMetrics.includes(option.value))
+    .slice(0, Math.max(1, progressSeriesBudget))
+  /*
+   * Panels the grid layout may stack at once, and the rows they occupy. Beyond
+   * one panel the grid is 2x2 on desktop; a landscape phone stacks two bands
+   * and a portrait phone shows one plot at a time.
+   */
+  const visiblePanels = activeMetrics.slice(0, Math.max(1, progressPanelBudget))
+  const useIndividualGrid = layoutMode === "individual" && visiblePanels.length > 1
+  const visiblePanelRows = !useIndividualGrid
+    ? 1
+    : visiblePanels.length <= 2 ? visiblePanels.length : 2
 
   const CustomCandle = (props: any) => {
     const { x, y, width, height, payload, optionKey } = props
@@ -3812,6 +3855,15 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     // Every selected metric still gets its own hidden pair of axes so metrics with
     // wildly different units can overlay without flattening each other. Only the
     // first selected metric exposes tick labels on the left/right edges.
+    /*
+     * Rotated axis titles are a guide, and a guide only earns its place when
+     * the plot has room for it. In the per-metric grid each panel already
+     * carries a coloured metric label, and the titles are longer than a
+     * landscape panel is tall — they collided across stacked panels. On a
+     * portrait phone they cost a sixth of the plot width on each side, and the
+     * legend under the canvas already names the metric.
+     */
+    const showAxisTitles = !isIndividualGrid && progressBucket !== "portrait"
     const getPeriodAxisId = (metricKey: string) => `period-axis-${metricKey}`
     const getTotalAxisId = (metricKey: string) => `total-axis-${metricKey}`
 
@@ -3939,7 +3991,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
                     tick={(props: any) => (
                       <ViewTubeYAxisTick {...props} orientation="left" formatter={metricFormatter} />
                     )}
-                    label={isPrimary ? {
+                    label={isPrimary && showAxisTitles ? {
                       content: (props: any) => (
                         <ViewTubeYAxisTitle {...props} title={`${option.label} PERIOD`} orientation="left" />
                       ),
@@ -3955,7 +4007,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
                     tick={(props: any) => (
                       <ViewTubeYAxisTick {...props} orientation="right" formatter={metricFormatter} />
                     )}
-                    label={isPrimary ? {
+                    label={isPrimary && showAxisTitles ? {
                       content: (props: any) => (
                         <ViewTubeYAxisTitle {...props} title={`${option.label} TOTAL`} orientation="right" />
                       ),
@@ -3984,7 +4036,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
                     }
                   />
                 )}
-                label={idx < 2 ? {
+                label={idx < 2 && showAxisTitles ? {
                   content: (props: any) => (
                     <ViewTubeYAxisTitle {...props} title={`${option.label} DELTA`} orientation={orientation} />
                   ),
@@ -4001,30 +4053,39 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
           const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
           const metricCount = Math.max(1, metricsToRender.length)
           const isTwoMetricOverlay = metricCount === 2 && !isIndividualGrid
-          const darkLineWidth =
-            metricCount === 1 ? 8 :
-            metricCount === 2 ? 6 :
-            metricCount === 3 ? 4.5 :
-            metricCount === 4 ? 3.5 : 3
-          const lightLineWidth =
+          const lightLineWidth = scaleProgressMark(
             metricCount === 1 ? 5 :
             metricCount === 2 ? 4 :
             metricCount === 3 ? 3 :
-            metricCount === 4 ? 2.5 : 2
-          const dotRadius =
+            metricCount === 4 ? 2.5 : 2,
+            "strokeWidth",
+          )
+          const dotRadius = scaleProgressMark(
             metricCount === 1 ? 6 :
             metricCount === 2 ? 5 :
             metricCount === 3 ? 4.5 :
-            metricCount === 4 ? 4 : 3.5
-          const dotStrokeWidth = metricCount <= 2 ? 3 : metricCount === 3 ? 2.5 : 2
+            metricCount === 4 ? 4 : 3.5,
+            "bubbleRadius",
+          )
+          const dotStrokeWidth = scaleProgressMark(
+            metricCount <= 2 ? 3 : metricCount === 3 ? 2.5 : 2,
+            "strokeWidth",
+          )
           const activeDotRadius = dotRadius + 1
-          const barSize = isIndividualGrid
-            ? 28
-            : metricsToRender.length === 1
-              ? 46
-              : metricsToRender.length === 2
-                ? 23
-                : Math.max(3, Math.floor((48 - (metricsToRender.length - 1) * 2) / metricsToRender.length))
+          // Bar thickness is a mark, so it scales with the composition. The
+          // floor is 3px rather than the touch floor: this is a hover field,
+          // and a 24px minimum at five metrics would draw a PHONE bar wider
+          // than the desktop bar it is supposed to be a reduction of.
+          const barSize = scaleProgressMark(
+            isIndividualGrid
+              ? 28
+              : metricsToRender.length === 1
+                ? 46
+                : metricsToRender.length === 2
+                  ? 23
+                  : Math.max(3, Math.floor((48 - (metricsToRender.length - 1) * 2) / metricsToRender.length)),
+            3,
+          )
 
           if (viewMode === "delta") {
             return (
@@ -4061,7 +4122,11 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
                 // A 10–12px minimum keeps very small non-zero periods visible.
                 // At the normal Channel Progress plot heights this is roughly
                 // 3.5%+ of the usable chart area.
-                minPointSize={getRelativeBarMinPointSize(isIndividualGrid ? 285 : 340)}
+                // Keyed to the plot the canvas actually handed us. The old
+                // constants (285 / 340) were desktop guesses, so on a phone
+                // canvas a third of a 203px plot was reserved for bars that
+                // carry almost no value.
+                minPointSize={getRelativeBarMinPointSize(progressPlotHeight(isIndividualGrid))}
               />
 
               {/* Cumulative line uses the light metric tone only. */}
@@ -4072,25 +4137,25 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
                 name={`${option.label} TOTAL`}
                 className={`channel-progress-line-${option.value}`}
                 stroke={lightTone}
-                strokeWidth={isTwoMetricOverlay ? 4 : lightLineWidth}
+                strokeWidth={isTwoMetricOverlay ? scaleProgressMark(4, "strokeWidth") : lightLineWidth}
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 isAnimationActive={false}
                 dot={{
-                  r: isTwoMetricOverlay ? 5 : dotRadius,
+                  r: isTwoMetricOverlay ? scaleProgressMark(5, "bubbleRadius") : dotRadius,
                   fill: lightTone,
                   stroke: darkTone,
-                  strokeWidth: isTwoMetricOverlay ? 2 : dotStrokeWidth,
+                  strokeWidth: isTwoMetricOverlay ? scaleProgressMark(2, "strokeWidth") : dotStrokeWidth,
                   style: {
                     transition:
                       "r 350ms cubic-bezier(0.22, 1, 0.36, 1), stroke-width 350ms ease, fill 350ms ease",
                   },
                 }}
                 activeDot={{
-                  r: isTwoMetricOverlay ? 6 : activeDotRadius,
+                  r: isTwoMetricOverlay ? scaleProgressMark(6, "bubbleRadius") : activeDotRadius,
                   fill: lightTone,
                   stroke: darkTone,
-                  strokeWidth: isTwoMetricOverlay ? 2.5 : dotStrokeWidth,
+                  strokeWidth: isTwoMetricOverlay ? scaleProgressMark(2.5, "strokeWidth") : dotStrokeWidth,
                   style: {
                     transition:
                       "r 750ms cubic-bezier(0.22, 1, 0.36, 1), stroke-width 750ms ease, fill 750ms ease",
@@ -4109,10 +4174,12 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
       heroVisualId="channel-progress"
       header={{
         title: "CHANNEL PROGRESS",
-        subtitle: `DATA: ${usesMonthlyGrain ? "MONTHLY STATS" : "DAILY STATS"} • ${viewMode === "progress" ? "OVERALL" : "WINDOW CHANGE"} • RAW METRICS`,
+        subtitle: "Per-period totals with the cumulative growth line above them.",
         icon: visualShellIcon(visualStyle, "calendar"),
       }}
       theme={visualShellTheme(visualStyle, "#FF82B0", "#26C7EC")}
+      // The canvas owns height now, so the shell contributes none of its own.
+      layout={{ moduleMinHeight: "0px", moduleWidth: "100%" }}
       controllerWidth={300}
       controllerRows={[
         {
@@ -4169,6 +4236,7 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         {
           type: "text",
           value: TIME_RANGE_OPTIONS.find((o) => o.value === timeRange)?.label || timeRange,
+          widthValues: TIME_RANGE_OPTIONS.map((option) => option.label),
           onPrev: () => {
             const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
             setTimeRange(TIME_RANGE_OPTIONS[(idx - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value)
@@ -4252,59 +4320,70 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         stats: hoveredStats || selectedWindowStats,
       }}
       footer={
-        <InsightMarquee
-          chartInsight="Cumulative growth tracking identifies the long-term compound value of your content periods."
-          personalInsight="Toggle CANDLE DELTA to analyze period-over-period performance gains or losses."
-        />
+        <>
+          {/* Keys live in the bottom section, never inside the evidence canvas. */}
+          <div data-vt-data-visual-guides>
+            <div className="flex flex-row flex-nowrap items-center gap-3 overflow-x-auto bg-white px-2 py-1.5">
+              {activeMetrics.map((option) => {
+                const lightTone = mixChannelProgressTone(option.tone, "#FFFFFF", 0.38)
+                const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
+                return (
+                  <div key={option.value} className="flex shrink-0 items-center gap-1.5">
+                    <span className="h-[10px] w-[18px] shrink-0 border border-black" style={{ background: lightTone, borderColor: darkTone }} />
+                    <span className="h-[3px] w-[18px] shrink-0" style={{ background: darkTone }} />
+                    <span className="whitespace-nowrap text-[9px] font-[1000] uppercase tracking-[0.04em] text-black">{option.label}</span>
+                  </div>
+                )
+              })}
+              {activeMetrics.length < selectedMetrics.length ? (
+                <span className="shrink-0 whitespace-nowrap text-[9px] font-[1000] uppercase tracking-[0.04em] text-black/40">
+                  +{selectedMetrics.length - activeMetrics.length} hidden
+                </span>
+              ) : null}
+            </div>
+          </div>
+          <InsightMarquee
+            chartInsight="Cumulative growth tracking identifies the long-term compound value of your content periods."
+            personalInsight="Toggle CANDLE DELTA to analyze period-over-period performance gains or losses."
+          />
+        </>
       }
     >
       <HeroIntroBoundary
         visualId="channel-progress"
         replayKey={`${viewMode}-${layoutMode}-${timeRange}-${selectedMetrics.join("|")}-${chartData.length}`}
-        className="px-1 pt-2 pb-4 min-h-[400px] relative overflow-visible"
+        className="relative"
       >
-        {layoutMode === "individual" && activeMetrics.length > 1 ? (
-          <div className={`grid gap-1 h-[420px] ${activeMetrics.length === 2 ? 'grid-cols-1 grid-rows-2' : 'grid-cols-2 grid-rows-2'}`}>
-            {activeMetrics.map((metricOpt, metricIndex) => {
-              const isBottomChart =
-                activeMetrics.length === 2
-                  ? metricIndex === activeMetrics.length - 1
-                  : metricIndex >= Math.max(0, activeMetrics.length - 2)
-              return (
-                <div key={metricOpt.value} className="relative h-full min-h-0 bg-white">
-                  <div className="absolute top-0 left-2 z-10 text-[9px] font-black uppercase tracking-wider" style={{ color: metricOpt.tone }}>
-                    {metricOpt.label}
-                  </div>
-                  <StableChartFrame minHeightClassName="h-full">
-                    {renderChartForMetrics([metricOpt], true, isBottomChart)}
-                  </StableChartFrame>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div className="h-[400px]">
-            <StableChartFrame minHeightClassName="min-h-[360px]">
-              {renderChartForMetrics(activeMetrics, false)}
-            </StableChartFrame>
-          </div>
-        )}
-
-        {layoutMode !== "individual" ? (
-        <div className="pointer-events-none absolute bottom-0 left-[14px] right-[14px] flex h-8 items-center justify-center gap-3 overflow-hidden bg-white/90 px-2">
-          {activeMetrics.map((option) => {
-            const lightTone = mixChannelProgressTone(option.tone, "#FFFFFF", 0.38)
-            const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
-            return (
-              <div key={option.value} className="flex min-w-0 items-center gap-1.5">
-                <span className="h-[10px] w-[18px] shrink-0 border border-black" style={{ background: lightTone, borderColor: darkTone }} />
-                <span className="h-[3px] w-[18px] shrink-0" style={{ background: darkTone }} />
-                <span className="truncate text-[9px] font-[1000] uppercase tracking-[0.04em] text-black">{option.label}</span>
+        <DataVisualCanvas id="channel-progress">
+          <div ref={plotHostRef} className="h-full min-h-0 w-full min-w-0 bg-white">
+            {useIndividualGrid ? (
+              <div
+                className={`grid h-full min-h-0 gap-1 ${visiblePanelRows === 1 ? "grid-cols-1 grid-rows-1" : visiblePanels.length <= 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-2 grid-rows-2"}`}
+              >
+                {visiblePanels.map((metricOpt, metricIndex) => {
+                  const isBottomChart =
+                    visiblePanels.length <= 2
+                      ? metricIndex === visiblePanels.length - 1
+                      : metricIndex >= Math.max(0, visiblePanels.length - 2)
+                  return (
+                    <div key={metricOpt.value} className="relative h-full min-h-0 bg-white">
+                      <div className="absolute top-0 left-2 z-10 text-[9px] font-black uppercase tracking-wider" style={{ color: metricOpt.tone }}>
+                        {metricOpt.label}
+                      </div>
+                      <StableChartFrame minHeightClassName="min-h-0">
+                        {renderChartForMetrics([metricOpt], true, isBottomChart)}
+                      </StableChartFrame>
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
-        </div>
-        ) : null}
+            ) : (
+              <StableChartFrame minHeightClassName="min-h-0">
+                {renderChartForMetrics(activeMetrics, false)}
+              </StableChartFrame>
+            )}
+          </div>
+        </DataVisualCanvas>
       </HeroIntroBoundary>
     </SubToolboxChartModule>
   )
@@ -5305,7 +5384,7 @@ export const TrafficSourceEvolutionModule: React.FC<GChartProps> = ({
  return (
   <SubToolboxChartModule
    heroVisualId="traffic-source-evolution"
-   header={{ title: "TRAFFIC SOURCE EVOLUTION", subtitle: "SOURCE MIX OVER TIME", icon: <CustomIcon name="analytics" size={18} />, headerStyle: "subtoolbox" }}
+   header={{ title: "TRAFFIC SOURCE EVOLUTION", subtitle: "How the share of each traffic source moves across the selected window.", icon: <CustomIcon name="analytics" size={18} />, headerStyle: "subtoolbox" }}
    theme={{ headerBandBg: "#B8FF2C", iconBlockBg: "#24D3FF", shadowColor: "rgba(184,255,44,0.45)" }}
    layout={{ moduleMinHeight: "0px", moduleWidth: "100%" }}
    footer={
@@ -5463,7 +5542,7 @@ export const KeywordTreemapModule: React.FC<GChartProps & { renderBare?: boolean
  )
  if (renderBare) return body
  return (
-  <SubToolboxChartModule header={{ title: "KEYWORD TREEMAP", subtitle: "TITLE TOKEN REACH WEIGHTING", icon: <CustomIcon name="target" size={18} /> }} theme={{ headerBandBg: "#00E5FF", iconBlockBg: "#FF7497", shadowColor: "rgba(0,229,255,0.45)" }}>
+  <SubToolboxChartModule header={{ title: "KEYWORD TREEMAP", subtitle: "Title words sized by the reach of the videos that use them.", icon: <CustomIcon name="target" size={18} /> }} theme={{ headerBandBg: "#00E5FF", iconBlockBg: "#FF7497", shadowColor: "rgba(0,229,255,0.45)" }}>
    {body}
   </SubToolboxChartModule>
  )
@@ -5864,7 +5943,7 @@ export const KeywordVennModule: React.FC<GChartProps> = ({ data }) => {
    heroVisualId="keyword-venn"
    header={{
     title: "KEYWORD VENN",
-    subtitle: "MASTER TABLE TITLE OVERLAP × LIVE PERFORMANCE STATS",
+    subtitle: "Title terms that overlap, blocked out by the reach they share.",
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -6317,7 +6396,7 @@ export const UploadTimeHeatmapModule: React.FC<GChartProps & { renderBare?: bool
  if (renderBare) return body
  return (
   <SubToolboxChartModule
-   header={{ title: "UPLOAD TIME HEATMAP", subtitle: "WEEKDAY × HOUR DENSITY", icon: <CustomIcon name="calendar" size={18} /> }}
+   header={{ title: "UPLOAD TIME HEATMAP", subtitle: "Which weekday and hour combinations carry the most uploads and views.", icon: <CustomIcon name="calendar" size={18} /> }}
    theme={{ headerBandBg: "#FFEA00", iconBlockBg: "#24D3FF", shadowColor: "rgba(255,234,0,0.45)" }}>
    {body}
   </SubToolboxChartModule>
@@ -6329,7 +6408,7 @@ export const ConversionFunnelModule: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
-   header={{ title: "CONVERSION FUNNEL", subtitle: "IMPRESSIONS TO SUBSCRIBERS", icon: <CustomIcon name="target" size={18} /> }}
+   header={{ title: "CONVERSION FUNNEL", subtitle: "Impressions narrowing through views, engagement and watch hours to subscribers.", icon: <CustomIcon name="target" size={18} /> }}
    theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#FF82B0", shadowColor: "rgba(204,255,0,0.45)" }}>
    <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
     {ds.funnelStages.every((stage) => stage.value <= 0) ? (
@@ -6381,7 +6460,7 @@ export const PerformanceGaugesModule: React.FC<GChartProps & { renderBare?: bool
  if (renderBare) return body
  return (
   <SubToolboxChartModule
-   header={{ title: "PERFORMANCE GAUGES", subtitle: "CORE HEALTH SNAPSHOT", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "PERFORMANCE GAUGES", subtitle: "Core channel rates read against their targets as dials.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#F5E44D", iconBlockBg: "#F06D98", shadowColor: "rgba(245,228,77,0.45)" }}>
    {body}
   </SubToolboxChartModule>
@@ -6393,7 +6472,7 @@ export const LissajousWebModule: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
-   header={{ title: "LISSAJOUS WEB", subtitle: "CTR × AVP PERFORMANCE SIGNATURE", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "LISSAJOUS WEB", subtitle: "Click-through rate against average percentage viewed, traced as one signature.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#B14AED", iconBlockBg: "#24D3FF", shadowColor: "rgba(180,74,237,0.45)" }}>
    <div className="min-h-[400px] w-full bg-white p-4 overflow-hidden flex flex-col">
     {ds.lissajous.length === 0 ? (
@@ -6452,7 +6531,7 @@ export const OrbitalModule: React.FC<GChartProps & { renderBare?: boolean }> = (
  if (renderBare) return body
  return (
   <SubToolboxChartModule
-   header={{ title: "ORBITAL", subtitle: "CONTENT CATEGORIES AS PLANETARY ORBITS", icon: <CustomIcon name="target" size={18} /> }}
+   header={{ title: "ORBITAL", subtitle: "Content categories as orbits — distance is value score, size is reach.", icon: <CustomIcon name="target" size={18} /> }}
    theme={{ headerBandBg: "#FF9900", iconBlockBg: "#B14AED", shadowColor: "rgba(180,74,237,0.45)" }}>
    {body}
   </SubToolboxChartModule>
@@ -6565,7 +6644,7 @@ export const CustomScatterModule: React.FC<GChartProps> = ({ data }) => {
 
  return (
   <SubToolboxChartModule
-   header={{ title: "CUSTOM SCATTER", subtitle: "FULLY CONFIGURABLE BUBBLE PLOT · 4 AXES", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "CUSTOM SCATTER", subtitle: "A bubble plot you choose all four axes for: X, Y, size and colour.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#CCFF00", iconBlockBg: "#FF9900", shadowColor: "rgba(204,255,0,0.45)" }}
    layout={{ moduleMinHeight: "480px", moduleWidth: "100%" }}
    controlBox={{
@@ -6747,7 +6826,7 @@ export const SignalMatrixModule: React.FC<GChartProps> = ({ data }) => {
 
   return (
    <SubToolboxChartModule
-    header={{ title: "SIGNAL MATRIX", subtitle: "KEYWORD × METRIC HEATMAP · CLICK COLUMN TO SORT", icon: <CustomIcon name="analytics" size={18} /> }}
+    header={{ title: "SIGNAL MATRIX", subtitle: "Keywords against metrics as a heat grid; click a column to re-sort.", icon: <CustomIcon name="analytics" size={18} /> }}
     theme={{ headerBandBg: "#C0F240", iconBlockBg: "#3FEE56", shadowColor: "rgba(192,242,64,0.5)" }}
     layout={{ moduleWidth: "100%" }}
     controllerRows={[
