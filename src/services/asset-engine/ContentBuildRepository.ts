@@ -391,7 +391,17 @@ export const ensureContentBuild = (input: CreateContentBuildInput & { videoId?: 
  const id = input.id || deriveLegacyContentBuildId({ projectId: input.legacyProjectId, videoId: input.videoId })
  if (!id) return null
  const existing = getContentBuild(id)
- if (existing) return existing
+ if (existing) {
+  if (input.videoId && existing.youtube?.videoId !== input.videoId) {
+   return bindYouTubeVideo({
+    contentBuildId: existing.id,
+    videoId: input.videoId,
+    channelId: input.channelId || existing.channelId || null,
+    toolId: input.toolId || null,
+   })
+  }
+  return existing
+ }
  const build = createContentBuild({ ...input, id })
  if (input.videoId) {
   return bindYouTubeVideo({
