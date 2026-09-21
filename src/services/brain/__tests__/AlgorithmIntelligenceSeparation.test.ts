@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { buildAlgorithmPrimingPlan } from "../AlgorithmPrimingEngine"
+import { getReadyPrimingSteps } from "../AlgorithmPrimingWorkflow"
 import { anomalyToAlgorithmSignal, escalateAnomaliesToAlgorithmSignals } from "../AnomalySignalBridge"
 import { opportunityToAlgorithmSignal } from "../OpportunityIntelligence"
 
@@ -38,6 +39,18 @@ describe("Algorithm Intelligence separation", () => {
   expect(plan.steps.some((step) => step.phase === "EARLY_POST_LAUNCH")).toBe(true)
   expect(plan.guardrails.join(" ")).toContain("not anomaly detection")
   expect(plan.evidenceIds).toContain("project-evidence")
+ })
+
+ it("keeps dependent priming steps blocked until prerequisites complete", () => {
+  const plan = buildAlgorithmPrimingPlan({
+   video: { channelId: "channel-1", projectId: "project-1", videoId: "video-2", title: "The Last Stand" },
+  })
+  const initial = getReadyPrimingSteps(plan, [])
+  expect(initial.map((step) => step.id)).toContain("priming:qualify")
+  expect(initial.some((step) => step.dependsOn.length > 0)).toBe(false)
+
+  const afterQualify = getReadyPrimingSteps(plan, ["priming:qualify"])
+  expect(afterQualify.some((step) => step.dependsOn.includes("priming:qualify"))).toBe(true)
  })
 
  it("converts an already-detected anomaly into an algorithm signal without detecting it", () => {
