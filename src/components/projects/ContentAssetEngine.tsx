@@ -6,6 +6,7 @@ import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../subtoolbo
 import { SubToolboxBadge, SubToolboxButton, SubToolboxInput, SubToolboxSelect, SubToolboxStatePanel, SubToolboxSurface, SubToolboxTextArea, SubToolboxToggle } from "../subtoolbox/SubToolboxPrimitives"
 import { useBrain } from "../../context/useBrain"
 import type { Project } from "../../types"
+import { syncProjectToContentBuild } from "../../services/asset-engine/ProjectContentBuildBridge"
 
 type SectionState={count:number;status:string;route:string;detail:string}
 type SectionDescriptor={id:string;title:string;subtitle:string;icon:React.ElementType;derive:(project:Project,brain:any)=>SectionState}
@@ -41,6 +42,13 @@ const ContentAssetEngine:React.FC=()=>{
  const [buildId,setBuildId]=useState<string>(brain.activeProjectId||projects[0]?.id||"")
  useEffect(()=>{if(buildId&&projects.some(p=>p.id===buildId))return;setBuildId(brain.activeProjectId||projects[0]?.id||"")},[brain.activeProjectId,buildId,projects])
  const build=useMemo(()=>projects.find(p=>p.id===buildId)||null,[buildId,projects])
+ useEffect(()=>{
+  if(!build)return
+  const canonical=syncProjectToContentBuild(build,{sourceToolId:"project-command-kanban"})
+  if(build.contentBuildId!==canonical.id){
+   updateProject(build.id,{contentBuildId:canonical.id})
+  }
+ },[build,updateProject])
  const sections=useMemo(()=>build?SECTIONS.map(s=>({...s,state:s.derive(build,brain)})):[],[brain,build])
  const ready=sections.filter(s=>["READY","CONNECTED","READY FOR HANDOFF"].includes(s.state.status)).length
  const progress=sections.length?Math.round((ready/sections.length)*100):0
