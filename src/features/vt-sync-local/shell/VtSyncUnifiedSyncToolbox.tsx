@@ -254,15 +254,6 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
   return "NEVER"
  }
 
- const statusTone = (status?: string) => {
-  if (status === "running") return "#3FEE56"
-  if (status === "pending") return "#FFDA47"
-  if (status === "synced" || status === "complete") return "#3FEE56"
-  if (status === "partial" || status === "stale" || status === "skipped") return "#FFDA47"
-  if (status === "failed") return "#FA618A"
-  return "#B9BEC8"
- }
-
  const formatDuration = (durationMs?: number) => {
   if (durationMs === undefined || !Number.isFinite(durationMs)) return "—"
   const totalSeconds = Math.max(0, Math.round(durationMs / 1000))
@@ -286,15 +277,6 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
   : value >= 1_000
    ? `${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1)}K`
    : value.toLocaleString()
-
- const formatDurationLong = (durationMs?: number) => {
-  if (durationMs === undefined || !Number.isFinite(durationMs)) return "No sync time"
-  const totalSeconds = Math.max(0, Math.round(durationMs / 1000))
-  if (totalSeconds < 60) return `${totalSeconds} second${totalSeconds === 1 ? "" : "s"}`
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${minutes} minute${minutes === 1 ? "" : "s"}${seconds ? ` ${seconds} second${seconds === 1 ? "" : "s"}` : ""}`
- }
 
  const formatCompactLastSync = (iso?: string) => {
   if (!iso) return "NEVER"
