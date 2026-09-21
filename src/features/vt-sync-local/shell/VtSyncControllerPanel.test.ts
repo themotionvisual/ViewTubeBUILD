@@ -52,20 +52,24 @@ describe("VT-SYNC execution status controls", () => {
   expect(markup).toContain(">COMPLETE<")
  })
 
- it("uses a three-zone hardware row instead of the old status/time/last-sync/rows table columns", () => {
+ it("uses a two-row dataset composition with compact hardware on top and badges beneath", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
-  expect(source).toContain("grid-cols-[50px_minmax(0,1fr)_108px]")
+  expect(source).toContain("grid-cols-[66px_minmax(0,1fr)_96px]")
   expect(source).toContain("<RetroBatchSelectionSwitch")
-  expect(source).toContain('className="is-row-sync-control"')
+  expect(source).toContain("<RetroSyncExecutionSwitch")
+  expect(source).toContain("overflow-x-auto border-t border-black/15")
   expect(source).toContain("<SyncMetaBadge")
+  expect(source).not.toContain('className="is-row-sync-control"')
   expect(source).not.toContain("<span>Status</span><span>Time</span><span>Last sync</span>")
-  expect(source).not.toContain("grid-cols-[minmax(210px,1fr)_58px_54px_88px_38px_58px_142px]")
  })
 
- it("puts the dataset title and subtitle on one row with status/result badges beneath them", () => {
+ it("puts the dataset title above the subtitle and uses canonical subtoolbox badges beneath the top row", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
   expect(source).toContain("{unit.label}</strong>")
   expect(source).toContain("{unit.description}")
+  expect(source).toContain("<SubToolboxBadge")
+  expect(source).toContain('level="l2"')
+  expect(source).toContain("VT_SPECTRUM_PALETTE_06")
   expect(source).toContain("statusBadgeForUnit")
   expect(source).toContain("formatDurationLong")
   expect(source).toContain("resultNounForUnit")
@@ -84,15 +88,16 @@ describe("VT-SYNC execution status controls", () => {
   expect(source).not.toContain('aria-label={`${checked ? "Remove" : "Add"}')
  })
 
- it("frames each dataset with a full-height red batch switch on the left and immediate sync switch on the right", () => {
+ it("keeps the red vertical batch switch and its LED side-by-side on a compact silver plate", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
   const chromeSource = readFileSync(new URL("./VtSyncRetroChrome.tsx", import.meta.url), "utf8")
   const cssSource = readFileSync(new URL("./VtSyncRetroChrome.css", import.meta.url), "utf8")
-  expect(source.indexOf("<RetroBatchSelectionSwitch")).toBeLessThan(source.indexOf('className="is-row-sync-control"'))
-  expect(chromeSource).toContain("vt-retro-batch-selector__track")
+  expect(source.indexOf("<RetroBatchSelectionSwitch")).toBeLessThan(source.indexOf("<RetroSyncExecutionSwitch"))
   expect(chromeSource).toContain("vt-retro-batch-selector__led")
-  expect(cssSource).toContain(".vt-retro-batch-selector")
-  expect(cssSource).toContain(".vt-retro-pcb-group.is-row-sync-control")
+  expect(chromeSource).toContain("vt-retro-batch-selector__track")
+  expect(cssSource).toContain("display: flex")
+  expect(cssSource).toContain("gap: 7px")
+  expect(cssSource).not.toContain(".vt-retro-pcb-group.is-row-sync-control")
  })
 
 })
