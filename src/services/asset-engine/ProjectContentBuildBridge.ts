@@ -90,6 +90,7 @@ export const ensureContentBuildForProject = (
  input: { channelId?: string | null; sourceToolId?: string | null } = {},
 ) => {
  const build = ensureContentBuild({
+  id: project.contentBuildId || undefined,
   channelId: input.channelId || null,
   legacyProjectId: project.id,
   legacyProjectName: project.name,
