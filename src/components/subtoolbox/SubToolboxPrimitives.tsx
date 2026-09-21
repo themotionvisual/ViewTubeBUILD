@@ -1,4 +1,5 @@
 import React from "react"
+import "../../styles/toolbox-entry.css"
 import { getComponentLevelCssVars } from "./tokens"
 import type { SubToolboxControlSize, SubToolboxState, ToolboxControlLevel } from "./tokens"
 import { getAlphabeticalSpectrumColor } from "../../styles/toolboxPalette"
