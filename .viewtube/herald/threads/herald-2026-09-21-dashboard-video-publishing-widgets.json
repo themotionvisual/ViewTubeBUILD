@@ -27,11 +27,12 @@
   },
   "reconRef": "main@b282a86f274855776821c5208175b0cb38c041ff",
   "openQuestions": [
-    "Built-app visual certification is blocked because every Vercel preview for this branch fails immediately with BUILD_FAILED: Resource provisioning failed.",
-    "Repository-wide typecheck/full-suite failures remain in unrelated pre-existing Editor, Brain, VT-SYNC, toolbox, and planning files; the focused publishing tests, production build, local smoke, focused contracts, CSS/source governance all pass."
+    "Vercel preview provisioning is blocked by the documented Neon free-plan 10-branch cap: main + stale preview/* branches. Vercel fails before build with Resource provisioning failed.",
+    "Neon connector is not yet installed/authorized in this ChatGPT session, so stale preview database branches cannot be safely enumerated and deleted here.",
+    "GitHub Pages bypass built successfully but deployment is repository-protected: Pages deployments are only allowed from launch/main-clean-2026-05-06; temporary preview-pages environment was rejected by the Pages API."
   ],
-  "nextAction": "When preview resource provisioning is available, capture and inspect Video Uploader and Video Manager at desktop, 390x844 portrait, and approximately 844x390 landscape; then mark VISUALLY_CERTIFIED.",
-  "entries": 1,
+  "nextAction": "After the Neon connector is authorized, enumerate cold-dust-12140983 branches, preserve main/currently active preview branches, delete only stale preview/* branches, then trigger and verify a fresh Vercel preview for PR #301.",
+  "entries": 2,
   "lastApp": "chatgpt",
-  "lastTs": "2026-09-21T20:32:00Z"
+  "lastTs": "2026-09-21T23:58:30Z"
 }
