@@ -1,7 +1,8 @@
 import React, { useMemo, useRef, useState } from "react"
 import { CheckSquare, ChevronDown, ChevronRight, Copy, RefreshCw, ShieldCheck, Square } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
-import { getPaletteColor } from "../../../styles/toolboxPalette"
+import { SubToolboxBadge } from "../../../components/subtoolbox/SubToolboxPrimitives"
+import { getPaletteColor, VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
 import { RetroAnalogToggle, RetroBatchSelectionSwitch, RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
 import type {
  VtSyncAnalyticsWindow,
@@ -52,17 +53,43 @@ const formatPlainLabel = (value: string) => value.replace(/_/g, " ").replace(/\b
 
 type SyncBadgeTone = "neutral" | "live" | "good" | "warn" | "bad" | "info" | "accent"
 
+const SYNC_BADGE_COLORS: Record<SyncBadgeTone, string> = {
+ neutral: VT_SPECTRUM_PALETTE_06[8],
+ live: VT_SPECTRUM_PALETTE_06[7],
+ good: VT_SPECTRUM_PALETTE_06[5],
+ warn: VT_SPECTRUM_PALETTE_06[3],
+ bad: VT_SPECTRUM_PALETTE_06[0],
+ info: VT_SPECTRUM_PALETTE_06[6],
+ accent: VT_SPECTRUM_PALETTE_06[9],
+}
+
 const SyncMetaBadge: React.FC<{
  tone?: SyncBadgeTone
  children: React.ReactNode
  onClick?: () => void
  title?: string
 }> = ({ tone = "neutral", children, onClick, title }) => {
- const className = `vt-sync-meta-badge is-${tone} ${onClick ? "is-clickable" : ""}`
- if (onClick) {
-  return <button type="button" className={className} onClick={onClick} title={title}>{children}</button>
- }
- return <span className={className} title={title}>{children}</span>
+ const badge = (
+  <SubToolboxBadge
+   level="l2"
+   className="vt-sync-standard-badge"
+   style={{ ["--pair-a" as string]: SYNC_BADGE_COLORS[tone] } as React.CSSProperties}
+   title={title}
+  >
+   {children}
+  </SubToolboxBadge>
+ )
+ if (!onClick) return badge
+ return (
+  <button
+   type="button"
+   className="vt-sync-standard-badge-action"
+   onClick={onClick}
+   title={title}
+  >
+   {badge}
+  </button>
+ )
 }
 
 const buildUnitGroups = (hasContentOwner: boolean) => VT_SYNC_GROUP_ORDER
