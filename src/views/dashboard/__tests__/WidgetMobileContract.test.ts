@@ -3,15 +3,17 @@ import { describe, expect, it } from "vitest"
 
 const mobileCss = readFileSync(new URL("../widgetMobileContract.css", import.meta.url), "utf8")
 const barrierSource = readFileSync(new URL("../DashboardBarrier.tsx", import.meta.url), "utf8")
+const widgetEntrySource = readFileSync(new URL("../widget-entry.css", import.meta.url), "utf8")
 const primitiveSource = readFileSync(new URL("../WidgetPrimitives.tsx", import.meta.url), "utf8")
 const variantCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
 const widgetSystemCss = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
 
 describe("mobile widget geometry contract", () => {
   it("loads the phone contract after the canonical shell layers", () => {
-    expect(barrierSource).toContain('import "./widgetScrollbar.css"')
-    expect(barrierSource).toContain('import "./widgetMobileContract.css"')
-    expect(barrierSource.indexOf("widgetMobileContract.css")).toBeGreaterThan(barrierSource.indexOf("widgetScrollbar.css"))
+    expect(barrierSource).toContain('import "./widget-entry.css"')
+    expect(widgetEntrySource).toContain('@import "./widgetScrollbar.css"')
+    expect(widgetEntrySource).toContain('@import "./widgetMobileContract.css"')
+    expect(widgetEntrySource.indexOf("widgetMobileContract.css")).toBeGreaterThan(widgetEntrySource.indexOf("widgetScrollbar.css"))
   })
 
   it("loads every shared stylesheet before the final phone contract and never from a lazy widget module", () => {
@@ -29,9 +31,10 @@ describe("mobile widget geometry contract", () => {
       "widgetScrollbar.css",
       "widgetMobileContract.css",
     ]
-    for (const name of imports) expect(barrierSource).toContain(`import "./${name}"`)
+    expect(barrierSource).toContain('import "./widget-entry.css"')
+    for (const name of imports) expect(widgetEntrySource).toContain(`@import "./${name}"`)
     for (let index = 1; index < imports.length; index += 1) {
-      expect(barrierSource.indexOf(imports[index])).toBeGreaterThan(barrierSource.indexOf(imports[index - 1]))
+      expect(widgetEntrySource.indexOf(imports[index])).toBeGreaterThan(widgetEntrySource.indexOf(imports[index - 1]))
     }
     expect(primitiveSource).not.toContain('import "./widgetPrimitive')
     expect(primitiveSource).not.toContain('import "./widgetMatrixPrimitives.css"')

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import '../styles/toolbox-entry.css';
 import { CustomIcon } from './CustomIcon';
 import { getToolboxPaletteColors } from '../styles/toolboxPalette';
 import { hexToRgba, AnimatedToggleIcon } from './ToolboxUISystem';
