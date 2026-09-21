@@ -186,7 +186,6 @@ export const RetroBatchSelectionSwitch: React.FC<{
     <i className="vt-retro-batch-selector__nub" />
    </span>
   </span>
-  <span className="vt-retro-batch-selector__label">BATCH</span>
  </button>
 )
 
