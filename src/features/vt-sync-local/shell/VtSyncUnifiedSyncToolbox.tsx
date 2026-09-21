@@ -612,7 +612,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
           const immediateLabel = immediateLabelForUnit(unitStatus, isNextUnit, hasPriorData)
           const groupColor = GROUP_COLORS[group]
           const rowFill = `color-mix(in srgb, ${groupColor} ${selectedForBatch ? 30 : 10}%, white)`
-          const titleFontSize = unit.label.length > 29 ? "12px" : unit.label.length > 24 ? "13px" : "15px"
+          const titleFontSize = unit.label.length > 29 ? "13px" : unit.label.length > 24 ? "14px" : "16px"
           const toggleUnitDetails = () => {
            if (!hasExtraDetail) return
            setExpandedUnitIds((current) => {
