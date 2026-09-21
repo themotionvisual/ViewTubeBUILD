@@ -38,6 +38,8 @@ import {
 import { resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
 import { buildBrainStatisticsIntelligence } from "./BrainStatisticsBridge"
 import { buildBrainAudienceIntelligence } from "./BrainAudienceBridge"
+import { readAlgorithmIntelligenceForBrain } from "./AlgorithmIntelligenceAccess"
+import { buildAlgorithmIntelligenceContext } from "./AlgorithmIntelligenceOrchestrator"
 import {
  cacheCurrentNicheResearch,
  readCachedCurrentNicheResearch,
@@ -291,6 +293,7 @@ export interface RunBrainTurnInput {
  modelGenerator?: typeof generateStructuredBrainResponse
  nicheResolver?: typeof resolveNicheKnowledge
  currentResearcher?: typeof groundCurrentNicheResearch
+ algorithmIntelligence?: string
 }
 
 export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrchestratorResult> => {
@@ -308,6 +311,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
  const audienceIntelligence = statisticsIntelligence && inferBrainIntent(input.userText) === "audience"
   ? buildBrainAudienceIntelligence()
   : null
+ let algorithmIntelligence = input.algorithmIntelligence || ""
  let nicheKnowledge: NicheKnowledgeProfile | null = null
  let currentResearch = ""
  let citations: BrainResponseCitation[] = []
@@ -318,8 +322,24 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   userText: input.userText,
   statisticsIntelligence,
   audienceIntelligence,
+  algorithmIntelligence,
  })
  try {
+  if (
+   !algorithmIntelligence
+   && input.channelId
+   && capabilityIds.some((id) => ["channel-intelligence", "signal-anomaly-intelligence", "opportunity-intelligence", "algorithm-priming"].includes(id))
+  ) {
+   try {
+    const algorithmAccess = await readAlgorithmIntelligenceForBrain({ channelId: input.channelId })
+    if (algorithmAccess.status === "ok") {
+     algorithmIntelligence = buildAlgorithmIntelligenceContext(algorithmAccess.value)
+    }
+   } catch {
+    // Algorithm intelligence is additive evidence. A specialist failure must not
+    // downgrade the creator's entire Brain turn to local fallback.
+   }
+  }
   if (capabilities.some((capability) => capability.id === "niche-knowledge")) {
    nicheKnowledge = await (input.nicheResolver || resolveNicheKnowledge)({
     channelId: input.channelId,
@@ -356,6 +376,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    userText: input.userText,
    statisticsIntelligence,
    audienceIntelligence,
+   algorithmIntelligence,
   })
 
   let response = buildFallback(input.userText, input.snapshot, input.growthContext)
