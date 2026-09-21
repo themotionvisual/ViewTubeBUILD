@@ -28,4 +28,12 @@ describe("Algorithm Intelligence Brain integration", () => {
   expect(source).toContain("Algorithm intelligence is additive evidence")
   expect(source).toContain("algorithmIntelligence,")
  })
+
+ it("uses one canonical algorithm portfolio for workflow planning", () => {
+  const source = read("src/services/brain/ChannelIntelligenceWorkflowPlanner.ts")
+  expect(source).toContain("buildAlgorithmIntelligencePortfolio")
+  expect(source).toContain("const intelligence = portfolio.channelIntelligence")
+  expect(source).toContain("const algorithmRecommendations = portfolio.recommendations")
+  expect(source).toContain("portfolio,")
+ })
 })
