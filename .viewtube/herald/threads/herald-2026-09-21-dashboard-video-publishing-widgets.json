@@ -2,7 +2,7 @@
   "threadId": "herald-2026-09-21-dashboard-video-publishing-widgets",
   "verb": "BUILD",
   "tier": "T2",
-  "stage": "EXECUTE",
+  "stage": "VERIFY",
   "taskIds": [],
   "missionId": null,
   "owner": "ViewTube Design / Widget System + Packaging / Video Publisher",
@@ -19,18 +19,19 @@
       ".claude/skills/viewtube-widget-dashboard-system/references/current-widget-inventory.md",
       ".claude/skills/viewtube-widget-dashboard-system/references/source-code-map.md",
       ".viewtube/herald/threads/herald-2026-09-21-dashboard-video-publishing-widgets.json",
-      ".viewtube/herald/ledger/2026-09-21.jsonl"
+      ".viewtube/herald/ledger/2026-09-21.jsonl",
+      ".claude/skills/viewtube-widget-dashboard-system/SKILL.md"
     ],
     "acquired": "2026-09-21T20:15:00Z",
     "holder": "chatgpt"
   },
   "reconRef": "main@b282a86f274855776821c5208175b0cb38c041ff",
   "openQuestions": [
-    "Built-app visual certification remains required after code/test verification.",
-    "Existing Video Manager branches are historical/merged prior art; current main remains runtime authority."
+    "Built-app visual certification is blocked because every Vercel preview for this branch fails immediately with BUILD_FAILED: Resource provisioning failed.",
+    "Repository-wide typecheck/full-suite failures remain in unrelated pre-existing Editor, Brain, VT-SYNC, toolbox, and planning files; the focused publishing tests, production build, local smoke, focused contracts, CSS/source governance all pass."
   ],
-  "nextAction": "Create independent Video Uploader and Video Manager widget owners, wire the renderer, update focused contracts, then verify and capture built UI.",
-  "entries": 0,
+  "nextAction": "When preview resource provisioning is available, capture and inspect Video Uploader and Video Manager at desktop, 390x844 portrait, and approximately 844x390 landscape; then mark VISUALLY_CERTIFIED.",
+  "entries": 1,
   "lastApp": "chatgpt",
-  "lastTs": "2026-09-21T20:15:00Z"
+  "lastTs": "2026-09-21T20:32:00Z"
 }
