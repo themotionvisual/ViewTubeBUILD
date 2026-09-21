@@ -2,6 +2,8 @@ import React from 'react';
 import {Check,Download,FileVideo2,LoaderCircle} from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {createRenderJobClient,type RenderJob,type RenderOutputFormat} from '../../render/renderJobContract';
+import {createVersionedAsset,selectContentBuildAsset} from '../../../../services/assetEngine';
+import {getContentBuild} from '../../../../services/asset-engine/ContentBuildRepository';
 
 const INK='#248b99',CYAN='#36E0F6',GREEN='#4EE4BE',YELLOW='#FFFF61',PINK='#FA618A';
 const card:React.CSSProperties={border:`2px solid ${INK}`,borderRadius:7,background:'#fff',padding:8,marginBottom:7,boxShadow:'2px 2px 0 rgba(54,224,246,.22)'};
@@ -59,6 +61,7 @@ export const ExportRenderPanel:React.FC<{store:EditorStore}>=({store})=>{
     const fps=30;
     const duration=Math.max(.1,store.state.project.durationSec);
     const meta=(store.state.project.meta??{}) as Record<string,unknown>;
+    const contentBuildId=typeof meta.contentBuildId==='string'?meta.contentBuildId:null;
     const landscape=String(meta.aspectRatio??meta.aspect??'9:16')==='16:9'||meta.aspect==='landscape';
     const width=landscape?1920:1080,height=landscape?1080:1920;
     try{
@@ -68,6 +71,8 @@ export const ExportRenderPanel:React.FC<{store:EditorStore}>=({store})=>{
           renderMode:'remotion-mp4',outputFormat:format,compositionId:'VTE1Renderer',
           compositionMeta:{fps,width,height,durationInFrames:Math.max(1,Math.ceil(duration*fps)),durationInSeconds:duration,aspectRatio:landscape?'16:9':'9:16'},
           project:store.state.project,
+          projectId:store.state.project.id,
+          contentBuildId:contentBuildId||undefined,
         });
         setJobs(current=>({...current,[format]:created.job}));
         const final=await client.wait(created.job.jobId,{
@@ -76,6 +81,34 @@ export const ExportRenderPanel:React.FC<{store:EditorStore}>=({store})=>{
         });
         setJobs(current=>({...current,[format]:final}));
         if(final.status==='failed')throw new Error(final.failureReason||`${format.toUpperCase()} render failed`);
+        if(final.status==='succeeded'&&contentBuildId&&getContentBuild(contentBuildId)){
+          const outputUrl=client.downloadUrl(final);
+          const createdAsset=createVersionedAsset({
+            sourceToolId:'vt-e1-editor',
+            sourceKind:'studio-tool',
+            payloadKind:'video',
+            name:`Final render · ${format.toUpperCase()}`,
+            summary:`${duration.toFixed(1)}s ${landscape?'16:9':'9:16'} ${format.toUpperCase()} render`,
+            kind:'video',
+            url:outputUrl,
+            tags:['editor','render','final-video','content-build',format],
+            slot:'final-render',
+            label:`${format.toUpperCase()} render`,
+            context:{
+              contentBuildId,
+              stage:'production',
+              parentAssetIds:Object.values(getContentBuild(contentBuildId)?.selections||{}).filter((id):id is string=>typeof id==='string'),
+            },
+            metadata:{renderJobId:final.jobId,format,width,height,fps,duration,compositionId:'VTE1Renderer'},
+          });
+          selectContentBuildAsset({
+            contentBuildId,
+            slot:'final-render',
+            assetId:createdAsset.asset.id,
+            sourceToolId:'vt-e1-editor',
+            final:format==='mp4',
+          });
+        }
       }
     }catch(reason){
       if((reason as Error)?.name!=='AbortError')setError(reason instanceof Error?reason.message:String(reason));
