@@ -59,7 +59,8 @@ import {
  listAIBrainLearningEntries,
  scoreAIBrainAnswerUsefulness,
 } from "../services/aiBrainSelfImprovement"
-import { runBrainTurn } from "../services/brain/BrainOrchestrator"
+import { runBrainTask } from "../services/brain/runtime/BrainRuntime"
+import { buildBrainConversationHistory } from "../services/brain/BrainConversationController"
 import { BrainAnswerModuleGrid } from "../components/brain/BrainAnswerModules"
 import { BrainConfidenceChip, confidenceForEvidence } from "../components/brain/BrainConfidenceChip"
 import { BrainContextRail } from "../components/brain/BrainContextRail"
@@ -774,15 +775,9 @@ const AIBrainCommandInterface: React.FC = () => {
     recentConversationTurns: recentTurns,
     creatorGrowthContext,
    })
-   const historyPayload = recentTurns
-    .filter((turn) => turn.response)
-    .slice(0, 4)
-    .reverse()
-    .flatMap((turn) => [
-     { role: "user", parts: [{ text: turn.userText }] },
-     { role: "model", parts: [{ text: turn.assistantText }] },
-    ])
-   const result = await runBrainTurn({
+   const historyPayload = buildBrainConversationHistory(recentTurns)
+   const result = await runBrainTask({
+    surface: "ai-brain",
     channelId,
     userText,
     snapshot,
