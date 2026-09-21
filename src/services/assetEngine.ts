@@ -268,6 +268,7 @@ export const handoffAsset = <T,>(input: HandoffAssetInput<T>) => {
    asset: input.asset,
    contentBuildId,
   } as Record<string, unknown>),
+  contentBuildId,
   projectId: context.projectId || input.asset.projectId || null,
   channelId: context.channelId || null,
   videoId: context.videoId || null,
