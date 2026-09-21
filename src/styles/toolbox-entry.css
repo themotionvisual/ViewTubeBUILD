@@ -1,0 +1,11 @@
+/* Canonical Toolbox/Subtoolbox stylesheet entry point.
+ *
+ * Consumers import this entry rather than reaching into individual system
+ * files. The layer declaration mirrors the Widget entry's global ownership
+ * order without wrapping legacy CSS yet; wrapping happens only after visual
+ * parity tests prove that doing so cannot change specificity/cascade output.
+ */
+@layer reset, foundation, app, toolbox, pages, tokens, shell-grid, primitives, archetypes, widgets, editor, utilities, accessibility;
+
+@import "./toolbox-system.css";
+@import "./subtoolbox-system.css";
