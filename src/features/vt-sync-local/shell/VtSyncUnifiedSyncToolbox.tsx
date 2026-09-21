@@ -296,17 +296,18 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
   return `${minutes} minute${minutes === 1 ? "" : "s"}${seconds ? ` ${seconds} second${seconds === 1 ? "" : "s"}` : ""}`
  }
 
- const formatFullLastSync = (iso?: string) => {
-  if (!iso) return ""
+ const formatCompactLastSync = (iso?: string) => {
+  if (!iso) return "NEVER"
   const value = new Date(iso)
-  if (!Number.isFinite(value.getTime())) return ""
-  return value.toLocaleString([], {
-   year: "numeric",
-   month: "short",
-   day: "numeric",
-   hour: "numeric",
-   minute: "2-digit",
-  })
+  if (!Number.isFinite(value.getTime())) return "NEVER"
+  const month = String(value.getMonth() + 1).padStart(2, "0")
+  const day = String(value.getDate()).padStart(2, "0")
+  const year = String(value.getFullYear()).slice(-2)
+  const hours = value.getHours()
+  const hour = hours % 12 || 12
+  const minute = String(value.getMinutes()).padStart(2, "0")
+  const suffix = hours >= 12 ? "P" : "A"
+  return `${month}/${day}/${year} · ${hour}:${minute}${suffix}`
  }
 
  const resultNounForUnit = (unitId: string, rows: number, fallbackLabel: string) => {
@@ -342,16 +343,15 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
   return pair ? (singular ? pair[0] : pair[1]) : singular ? "result" : "results"
  }
 
- const statusBadgeForUnit = (status: string, lastSyncedAt?: string, isNext = false): { tone: SyncBadgeTone; text: string } => {
-  const stamp = formatFullLastSync(lastSyncedAt)
-  if (status === "running") return { tone: "live", text: "SYNCING · NOW" }
-  if (status === "pending") return { tone: "warn", text: isNext ? "QUEUED · UP NEXT" : "QUEUED · WAITING" }
-  if (status === "synced" || status === "complete") return { tone: "good", text: `SYNCED · ${stamp || "COMPLETE"}` }
-  if (status === "partial") return { tone: "warn", text: `PARTIAL · ${stamp || "INCOMPLETE DATA"}` }
-  if (status === "failed") return { tone: "bad", text: `FAILED · ${stamp || "RETRY NEEDED"}` }
-  if (status === "stale") return { tone: "warn", text: `STALE · ${stamp || "UPDATE NEEDED"}` }
-  if (status === "skipped") return { tone: "warn", text: "SKIPPED · NOT RUN" }
-  return { tone: "neutral", text: "NEVER · DATASET NOT AVAILABLE" }
+ const statusLabelForUnit = (status: string, isNext = false) => {
+  if (status === "running") return "SYNCING"
+  if (status === "pending") return isNext ? "UP NEXT" : "QUEUED"
+  if (status === "synced" || status === "complete") return "COMPLETE"
+  if (status === "partial") return "PARTIAL"
+  if (status === "failed") return "FAILED"
+  if (status === "stale") return "STALE"
+  if (status === "skipped") return "SKIPPED"
+  return "NEVER"
  }
 
  const immediateLabelForUnit = (status: string, isNext = false, hasPriorData = false) => {
