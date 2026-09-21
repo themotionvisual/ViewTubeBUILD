@@ -38,11 +38,12 @@ const capabilityAllowedByCreator = (
 }
 
 export const selectBrainCapabilities = (input: {
+ channelId?: string | null
  userText: string
  snapshot: AIBrainContextSnapshot
  maximum?: number
 }): BrainCapabilityDefinition[] => {
- const controls = readBrainUserControls()
+ const controls = readBrainUserControls(input.channelId)
  if (!controls.enabled) return []
 
  const intent = inferBrainIntent(input.userText)
