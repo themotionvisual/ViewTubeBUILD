@@ -141,6 +141,8 @@ export type ContentBuildEventType =
  | "asset.selected"
  | "asset.finalized"
  | "asset.relation.created"
+ | "tool.input.received"
+ | "tool.output.recorded"
  | "handoff.created"
  | "handoff.accepted"
  | "handoff.rejected"
