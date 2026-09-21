@@ -1980,6 +1980,10 @@ export interface SuperToolActionPacket {
  moduleId: string
  title: string
  summary: string
+ contentBuildId?: string | null
+ projectId?: string | null
+ channelId?: string | null
+ videoId?: string | null
  inputs: Record<string, unknown>
  outputs: Record<string, unknown>
  confidence: "low" | "medium" | "high"
