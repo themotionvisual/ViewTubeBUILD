@@ -49,7 +49,6 @@ export const validateVideoPackage = (videoPackage: ViewTubeVideoPackage): VideoP
  const issues: VideoPackageValidationIssue[] = []
  if (videoPackage.schemaVersion !== VIDEO_PACKAGE_SCHEMA_VERSION) issues.push({ path: "schemaVersion", code: "invalid", message: "Unsupported video package schema version." })
  if (!nonEmpty(videoPackage.id)) issues.push({ path: "id", code: "required", message: "Package ID is required." })
- if (!nonEmpty(videoPackage.contentBuildId)) issues.push({ path: "contentBuildId", code: "scope", message: "ContentBuild identity is required." })
  if (!nonEmpty(videoPackage.channelId)) issues.push({ path: "channelId", code: "scope", message: "Channel ownership is required." })
  if (!nonEmpty(videoPackage.projectId)) issues.push({ path: "projectId", code: "scope", message: "Project ownership is required." })
  if (!Number.isInteger(videoPackage.version) || videoPackage.version < 1) issues.push({ path: "version", code: "invalid", message: "Package version must be a positive integer." })
