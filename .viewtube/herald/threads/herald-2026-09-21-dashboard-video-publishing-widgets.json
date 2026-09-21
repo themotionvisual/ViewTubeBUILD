@@ -1,0 +1,36 @@
+{
+  "threadId": "herald-2026-09-21-dashboard-video-publishing-widgets",
+  "verb": "BUILD",
+  "tier": "T2",
+  "stage": "EXECUTE",
+  "taskIds": [],
+  "missionId": null,
+  "owner": "ViewTube Design / Widget System + Packaging / Video Publisher",
+  "writerLock": {
+    "paths": [
+      "src/views/dashboard/widgets/VideoUploaderWidget.tsx",
+      "src/views/dashboard/widgets/VideoManagerWidget.tsx",
+      "src/views/dashboard/widgets/videoUploaderWidget.css",
+      "src/views/dashboard/widgets/videoManagerWidget.css",
+      "src/views/dashboard/widgets/DataEditWidget.tsx",
+      "src/views/dashboard/WidgetRendererBase.tsx",
+      "src/views/dashboard/__tests__/VideoPublishingWidgets.test.tsx",
+      "src/views/dashboard/__tests__/WidgetControlContract.test.ts",
+      ".claude/skills/viewtube-widget-dashboard-system/references/current-widget-inventory.md",
+      ".claude/skills/viewtube-widget-dashboard-system/references/source-code-map.md",
+      ".viewtube/herald/threads/herald-2026-09-21-dashboard-video-publishing-widgets.json",
+      ".viewtube/herald/ledger/2026-09-21.jsonl"
+    ],
+    "acquired": "2026-09-21T20:15:00Z",
+    "holder": "chatgpt"
+  },
+  "reconRef": "main@b282a86f274855776821c5208175b0cb38c041ff",
+  "openQuestions": [
+    "Built-app visual certification remains required after code/test verification.",
+    "Existing Video Manager branches are historical/merged prior art; current main remains runtime authority."
+  ],
+  "nextAction": "Create independent Video Uploader and Video Manager widget owners, wire the renderer, update focused contracts, then verify and capture built UI.",
+  "entries": 0,
+  "lastApp": "chatgpt",
+  "lastTs": "2026-09-21T20:15:00Z"
+}
