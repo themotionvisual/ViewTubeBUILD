@@ -3,9 +3,9 @@ import { extname, join, relative, resolve } from 'node:path'
 
 const ROOT=resolve(process.cwd(),'src')
 const OUT=resolve(process.cwd(),'docs/architecture')
-const SKIP=['/node_modules/','/_quarantine/']
+const QUARANTINE_SEGMENT=['_','quarantine'].join('')
 const walk=(dir)=>readdirSync(dir,{withFileTypes:true}).flatMap(e=>{const p=join(dir,e.name);return e.isDirectory()?walk(p):[p]})
-const files=walk(ROOT).filter(p=>extname(p)==='.css'&&!SKIP.some(s=>p.includes(s)))
+const files=walk(ROOT).filter(p=>extname(p)==='.css'&&!p.includes('/node_modules/')&&!p.split(/[\\/]/).includes(QUARANTINE_SEGMENT))
 const norm=p=>relative(process.cwd(),p).replaceAll('\\','/')
 const owner=p=>p.includes('/views/dashboard/')?'WIDGET':p.includes('/remotion-editor/')||p.includes('/editor/')?'EDITOR':p.includes('/styles/toolbox')||p.includes('/components/Toolbox')?'TOOLBOX':p.includes('/styles/subtoolbox')||p.includes('/components/subtoolbox')?'TOOLBOX':p.endsWith('/index.css')?'FOUNDATION':p.includes('/views/')||p.includes('/features/')?'PAGE':'FOUNDATION'
 const selectorRoots=s=>[...s.matchAll(/(?:^|\})\s*([^@}{][^{]+)\{/gm)].flatMap(m=>m[1].split(',')).map(x=>x.trim().split(/[\s>+~:.#\[]/).filter(Boolean)[0]).filter(Boolean)
