@@ -24,7 +24,7 @@ export type ProjectCreationDialogProps = {
 const today = () => new Date().toISOString().slice(0, 10)
 
 const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({ open, onClose, onCreated }) => {
-  const { brain, addProject, setActiveProject } = useBrain()
+  const { brain, addProject, setActiveProject, channelIdentity } = useBrain()
   const [name, setName] = useState("")
   const [videoTitle, setVideoTitle] = useState("")
   const [concept, setConcept] = useState("")
@@ -89,7 +89,7 @@ const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({ open, onC
 
     try {
       const build = syncProjectToContentBuild(project, {
-        channelId: null,
+        channelId: channelIdentity.channelId || null,
         sourceToolId: "project-builder",
       })
       const canonicalProject: Project = { ...project, contentBuildId: build.id }
