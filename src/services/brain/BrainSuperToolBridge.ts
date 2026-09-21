@@ -5,6 +5,7 @@ import { emitSignal } from "./Core"
 import { readBrainUserControls } from "./BrainUserControls"
 
 export interface BrainSuperToolHandoffInput {
+ contentBuildId?: string | null
  channelId?: string | null
  projectId?: string | null
  sourceToolId: SuperToolId
@@ -38,10 +39,14 @@ export const createBrainSuperToolHandoff = async (
 
  const result = createSuperToolActionPacket({
   toolId: input.sourceToolId,
+  contentBuildId: input.contentBuildId || null,
+  projectId: input.projectId || null,
+  channelId: input.channelId || null,
   moduleId: "brain-handoff",
   title: `${sourceTool.title} → ${destinationTool.title}`,
   summary: input.objective,
   inputs: {
+   contentBuildId: input.contentBuildId ?? null,
    channelId: input.channelId ?? null,
    projectId: input.projectId ?? null,
    creatorDecisions: input.creatorDecisions ?? [],
@@ -74,6 +79,7 @@ export const createBrainSuperToolHandoff = async (
  })
 
  await emitSignal(input.sourceToolId, "BRAIN_HANDOFF_CREATED", {
+  contentBuildId: input.contentBuildId ?? null,
   channelId: input.channelId ?? null,
   projectId: input.projectId ?? null,
   destinationToolId: input.destinationToolId,
