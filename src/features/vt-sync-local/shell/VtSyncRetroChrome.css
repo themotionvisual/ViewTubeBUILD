@@ -821,9 +821,7 @@
 
 
 
-/* VT-SYNC compact mobile row primitives.
-   Batch inclusion uses the canonical toolbox checkbox; metadata uses
-   canonical alphabetical spectrum tags in two-tag columns. */
+/* VT-SYNC compact responsive row primitives. */
 .vt-sync-batch-checkbox {
  box-sizing: border-box;
  display: grid !important;
@@ -834,7 +832,6 @@
  place-items: center;
  padding: 0 !important;
  gap: 0 !important;
- --vt-subtoolbox-fill: #FA618A;
 }
 .vt-sync-batch-checkbox .vt-subtoolbox-binary-label {
  position: absolute !important;
@@ -847,19 +844,15 @@
  white-space: nowrap !important;
  border: 0 !important;
 }
-.vt-sync-tag-pair,
-.vt-sync-tag-pair-action {
+
+.vt-sync-meta-tag,
+.vt-sync-meta-tag-action {
  box-sizing: border-box;
+ flex: 0 0 auto;
  min-width: 0;
- width: 100%;
 }
-.vt-sync-tag-pair {
- display: grid;
- grid-template-rows: auto auto;
- gap: 2px;
-}
-.vt-sync-tag-pair-action {
- display: block;
+.vt-sync-meta-tag-action {
+ display: inline-flex;
  margin: 0;
  padding: 0;
  border: 0;
@@ -867,53 +860,187 @@
  color: inherit;
  cursor: pointer;
 }
-.vt-sync-tag-pair-action:focus-visible {
+.vt-sync-meta-tag-action:focus-visible {
  outline: 2px solid #528FFA;
  outline-offset: 2px;
  border-radius: 4px;
 }
-.vt-sync-tag-pair .vt-subtoolbox-alpha-tag {
- box-sizing: border-box;
- width: 100%;
+.vt-sync-meta-tag.vt-subtoolbox-alpha-tag {
+ height: 19px;
+ min-height: 19px;
  max-width: 100%;
- min-width: 0;
- height: 18px;
- min-height: 18px;
  justify-content: flex-start;
  overflow: hidden;
- padding: 0 5px;
+ padding: 0 6px;
  border-radius: 4px;
  font-size: 8px;
+ font-weight: 1000;
  letter-spacing: 0;
  text-overflow: ellipsis;
  white-space: nowrap;
 }
-.vt-sync-tag-pair .vt-sync-tag-title {
- opacity: .82;
- font-size: 7px;
+.vt-sync-meta-rail {
+ scrollbar-width: thin;
+ overscroll-behavior-inline: contain;
 }
-.vt-sync-tag-pair .vt-sync-tag-value {
- font-size: 8px;
- opacity: 1;
+.vt-sync-dataset-title {
+ max-width: 100%;
+ overflow: hidden;
+ text-overflow: clip;
+}
+.vt-sync-dataset-subtitle {
+ font-size: 10px;
+}
+
+/* Status palette: the label badge and LED use the same state color. */
+.vt-retro-pcb-group.is-category-action {
+ --vt-sync-led-color: #8f96a0;
+ --vt-sync-led-rgb: 143,150,160;
+}
+.vt-retro-pcb-group.is-waiting {
+ --vt-sync-led-color: #FFFF61;
+ --vt-sync-led-rgb: 255,255,97;
+}
+.vt-retro-pcb-group[data-sync-label="UP NEXT"] {
+ --vt-sync-led-color: #36E0F6;
+ --vt-sync-led-rgb: 54,224,246;
+}
+.vt-retro-pcb-group.is-syncing {
+ --vt-sync-led-color: #4FFF5B;
+ --vt-sync-led-rgb: 79,255,91;
+}
+.vt-retro-pcb-group.is-completed {
+ --vt-sync-led-color: #3B6BFF;
+ --vt-sync-led-rgb: 59,107,255;
+}
+.vt-retro-pcb-group.is-partial {
+ --vt-sync-led-color: #FFDA47;
+ --vt-sync-led-rgb: 255,218,71;
+}
+.vt-retro-pcb-group.is-failed {
+ --vt-sync-led-color: #FA618A;
+ --vt-sync-led-rgb: 250,97,138;
+}
+
+.vt-retro-pcb-group.is-category-action .comp-label {
+ width: 84px;
+ min-height: 17px;
+ margin: 3px 0 0;
+ padding: 3px 4px;
+ border: 1.5px solid var(--vt-sync-led-color);
+ border-radius: 4px;
+ background: color-mix(in srgb, var(--vt-sync-led-color) 14%, white);
+ box-shadow: none;
+ color: var(--vt-sync-led-color) !important;
+ font-size: 8px !important;
+ font-weight: 1000;
+ line-height: 1 !important;
+ letter-spacing: .06em;
+ text-shadow: none !important;
+}
+
+@keyframes vt-sync-led-breathe {
+ 0%,100% {
+  filter: brightness(1);
+  box-shadow:
+   inset -2px -2px 4px rgba(0,0,0,.2),
+   inset 2px 2px 4px rgba(255,255,255,.6),
+   0 0 8px var(--vt-sync-led-color),
+   0 0 14px rgba(var(--vt-sync-led-rgb),.36);
+ }
+ 50% {
+  filter: brightness(.68);
+  box-shadow:
+   inset -2px -2px 4px rgba(0,0,0,.35),
+   inset 2px 2px 4px rgba(255,255,255,.28),
+   0 0 3px rgba(var(--vt-sync-led-rgb),.35);
+ }
+}
+@keyframes vt-sync-led-ripple {
+ 0% { transform: scale(.65); opacity: .6; }
+ 70% { opacity: .18; }
+ 100% { transform: scale(2.45); opacity: 0; }
+}
+
+.vt-retro-pcb-group:is(.is-waiting,.is-syncing,.is-completed,.is-partial,.is-failed) .vt-retro-status-led {
+ overflow: visible;
+}
+.vt-retro-pcb-group:is(.is-waiting,.is-syncing,.is-completed,.is-partial,.is-failed) .vt-retro-status-led .led-bulb {
+ background: var(--vt-sync-led-color) !important;
+ animation: vt-sync-led-breathe 1.45s infinite ease-in-out !important;
+}
+.vt-retro-pcb-group:is(.is-waiting,.is-syncing,.is-completed,.is-partial,.is-failed) .vt-retro-status-led::after {
+ content: "";
+ position: absolute;
+ inset: 2px;
+ z-index: 0;
+ border: 1.5px solid var(--vt-sync-led-color);
+ border-radius: 50%;
+ pointer-events: none;
+ animation: vt-sync-led-ripple 1.65s infinite ease-out;
+}
+.vt-retro-pcb-group[data-sync-label="UP NEXT"] .vt-retro-status-led .led-bulb,
+.vt-retro-pcb-group[data-sync-label="UP NEXT"] .vt-retro-status-led::after {
+ animation-duration: 1.05s !important;
+}
+.vt-retro-pcb-group.is-syncing .vt-retro-status-led .led-bulb,
+.vt-retro-pcb-group.is-syncing .vt-retro-status-led::after {
+ animation-duration: .9s !important;
+}
+.vt-retro-pcb-group.is-completed .vt-retro-status-led .led-bulb,
+.vt-retro-pcb-group.is-completed .vt-retro-status-led::after {
+ animation-duration: 2.25s !important;
+}
+.vt-retro-pcb-group.is-failed .vt-retro-status-led .led-bulb,
+.vt-retro-pcb-group.is-failed .vt-retro-status-led::after {
+ animation-duration: 1.15s !important;
+}
+
+@media (orientation: landscape) and (max-width: 980px) {
+ .vt-sync-dataset-title {
+  font-size: clamp(17px, 2.15vw, 20px) !important;
+  letter-spacing: -.04em !important;
+ }
+ .vt-sync-dataset-subtitle {
+  font-size: 12px;
+  line-height: 1.14;
+ }
 }
 
 @media (max-width: 430px) {
  .vt-retro-pcb-group.is-category-action {
-  min-width: 84px !important;
+  min-width: 82px !important;
  }
  .vt-retro-dual-plate {
-  width: 80px;
+  width: 78px;
   padding-inline: 4px;
   gap: 5px;
  }
  .vt-retro-sync-hitbox {
-  width: 44px !important;
-  flex-basis: 44px;
+  width: 42px !important;
+  flex-basis: 42px;
  }
  .vt-retro-pcb-group.is-category-action .vt-retro-sync-hitbox .sw-slide-track {
-  width: 44px;
+  width: 42px;
  }
  .vt-retro-pcb-group.is-category-action .comp-label {
-  width: 80px;
+  width: 78px;
+  font-size: 7.5px !important;
+ }
+ .vt-sync-meta-tag.vt-subtoolbox-alpha-tag {
+  height: 18px;
+  min-height: 18px;
+  padding-inline: 5px;
+  font-size: 7.5px;
  }
 }
+
+@media (prefers-reduced-motion: reduce) {
+ .vt-retro-pcb-group:is(.is-waiting,.is-syncing,.is-completed,.is-partial,.is-failed) .vt-retro-status-led .led-bulb {
+  animation: none !important;
+ }
+ .vt-retro-pcb-group:is(.is-waiting,.is-syncing,.is-completed,.is-partial,.is-failed) .vt-retro-status-led::after {
+  display: none;
+ }
+}
+
