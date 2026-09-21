@@ -567,7 +567,10 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
            </span>
           </button>
          </h3>
-         <div className={`flex shrink-0 items-center gap-1.5 border-l-[3px] border-black px-1.5 py-1 ${expanded ? "border-b-[2px]" : ""}`}>
+         <div
+          className={`flex shrink-0 items-center gap-1.5 border-l-[3px] border-black px-1.5 py-1 ${expanded ? "border-b-[2px]" : ""}`}
+          style={{ ["--vt-subtoolbox-fill" as string]: GROUP_COLORS[group] } as React.CSSProperties}
+         >
           <SubToolboxCheckbox
            checked={groupSelected}
            onChange={() => toggleMany(groupCategoryIds)}
