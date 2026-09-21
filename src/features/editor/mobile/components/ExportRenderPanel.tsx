@@ -61,7 +61,10 @@ export const ExportRenderPanel:React.FC<{store:EditorStore}>=({store})=>{
     const fps=30;
     const duration=Math.max(.1,store.state.project.durationSec);
     const meta=(store.state.project.meta??{}) as Record<string,unknown>;
-    const contentBuildId=typeof meta.contentBuildId==='string'?meta.contentBuildId:null;
+    const projectScope=store.state.project as typeof store.state.project&{contentBuildId?:string};
+    const contentBuildId=typeof projectScope.contentBuildId==='string'
+      ?projectScope.contentBuildId
+      :typeof meta.contentBuildId==='string'?meta.contentBuildId:null;
     const landscape=String(meta.aspectRatio??meta.aspect??'9:16')==='16:9'||meta.aspect==='landscape';
     const width=landscape?1920:1080,height=landscape?1080:1920;
     try{
