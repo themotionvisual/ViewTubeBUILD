@@ -925,6 +925,7 @@ export interface ProjectPlan {
 
 export interface Project {
  id: string
+ contentBuildId?: string
  name: string
  color?: string
  publishDate?: string
