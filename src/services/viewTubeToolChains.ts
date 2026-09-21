@@ -4,6 +4,7 @@ import { enqueueBrainHandoffs } from "./brainHandoffInbox"
 import {
  appendContentBuildEvent,
  attachAssetToContentBuild,
+ ensureContentBuild,
  listContentBuildEvents,
 } from "./asset-engine/ContentBuildRepository"
 
@@ -103,6 +104,13 @@ export const persistViewTubeActionPacket = <T,>(packet: ViewTubeActionPacket<T>)
  })
 
  if (packet.contentBuildId && vaultAsset) {
+  ensureContentBuild({
+   id: packet.contentBuildId,
+   channelId: packet.channelId || null,
+   legacyProjectId: packet.projectId || null,
+   videoId: packet.videoId || null,
+   toolId: packet.sourceToolId,
+  })
   attachAssetToContentBuild(packet.contentBuildId, vaultAsset.id, {
    toolId: packet.sourceToolId,
    evidenceIds: packet.evidence,
