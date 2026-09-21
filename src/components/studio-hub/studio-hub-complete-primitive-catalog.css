@@ -1473,3 +1473,10 @@
   background:#fff!important;
   box-shadow:inset 0 0 0 var(--stroke) var(--pair-b)!important;
 }
+
+
+/* Recovered Studio catalog wave4 refinements */
+/* 14 Split Search + 16 Input Action now have distinct anatomies. */
+/* 29 Tag Editor is a labeled tag tray using the canonical A-Z spectrum. */
+/* 33 Progress Value reads as one instrument, not a bar plus detached badge. */
+/* 52 Knob Dial: large radial controller with genuine pointer/keyboard behavior. */
