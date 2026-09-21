@@ -18,6 +18,7 @@ import { attachAssetToContentBuild } from "../../services/asset-engine/ContentBu
 import {
  recordContentBuildToolInput,
  recordContentBuildToolOutput,
+ resolveContentBuildToolContext,
  resolveWorkspaceContentBuildToolContext,
 } from "../../services/asset-engine/ToolContext"
 import type { GenerationArtifact, SuperToolId, SuperToolSurface } from "../../types"
@@ -66,15 +67,37 @@ const PROSE_FIELD:React.CSSProperties={minHeight:"120px",textTransform:"none",fo
 const TOGGLE_BASE="min-h-11 px-3 border-[3px] border-black rounded-xl font-black uppercase text-[10px] shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-[transform,box-shadow,background-color]"
 
 const InternalSuperToolWorkbench:React.FC<InternalSuperToolWorkbenchProps>=({config,embedded=false,collapsible=false,isOpenInitial=true,paletteIndex,children})=>{
- const {brain,consultBrain,emitSignal}=useBrain();const [selectedModeId,setSelectedModeId]=useState(config.modes[0]?.id||"");const [source,setSource]=useState("");const [objective,setObjective]=useState("");const [notes,setNotes]=useState("");const [status,setStatus]=useState<string|null>(null);const [refreshTick,setRefreshTick]=useState(0);const [latestChainId,setLatestChainId]=useState<string|null>(null);const [isOpen,setIsOpen]=useState(isOpenInitial)
+ const {brain,consultBrain,emitSignal}=useBrain();const [selectedModeId,setSelectedModeId]=useState(config.modes[0]?.id||"");const [source,setSource]=useState("");const [objective,setObjective]=useState("");const [notes,setNotes]=useState("");const [status,setStatus]=useState<string|null>(null);const [refreshTick,setRefreshTick]=useState(0);const [latestChainId,setLatestChainId]=useState<string|null>(null);const [isOpen,setIsOpen]=useState(isOpenInitial);const [incomingScope,setIncomingScope]=useState<{contentBuildId?:string|null;projectId?:string|null;projectName?:string|null;videoId?:string|null}>({})
  const tools=useMemo(()=>listSuperToolsByIds(config.sisterToolIds),[config.sisterToolIds]);const generations=useMemo(()=>listGenerationRecords().filter(record=>record.toolId===config.toolId),[refreshTick,config.toolId]);const workflows=useMemo(()=>listWorkflowChains().filter(chain=>chain.primaryToolId===config.toolId),[refreshTick,config.toolId]);const selectedMode=config.modes.find(mode=>mode.id===selectedModeId)||config.modes[0];const latestWorkflow=workflows.find(chain=>chain.id===latestChainId)||workflows[0]||null;const latestGeneration=generations[0]||null
  const tone=ACCENT_TONE[config.accentClassName]||"yellow"
  const fieldId=(name:string)=>`${config.toolId}-${name}`
  const heroIcon=useMemo(()=>{const Icon=config.modules[0]?.icon;return Icon?React.createElement(Icon,{size:40,strokeWidth:2.5}):<Boxes size={40} strokeWidth={2.5}/>},[config.modules])
- const applyIncoming=(payload:Record<string,unknown>)=>{const p=payload as any;setSource(String(p.source??p.concept??p.title??p.project??p.script??source));setObjective(String(p.objective??p.goal??p.summary??p.intent??objective));const context=[p.notes,p.analysis,p.strategicAnalysis,p.description,p.evidence,p.provenance].flat().filter(Boolean).join("\n");if(context)setNotes(prev=>[prev,context].filter(Boolean).join("\n\n"));if(p.mode&&config.modes.some(m=>m.id===p.mode))setSelectedModeId(p.mode);setStatus("Incoming Brain/tool handoff loaded. Review the fields, then create the packet when ready.")}
+ const applyIncoming=(payload:Record<string,unknown>)=>{
+  const p=payload as any
+  setSource(String(p.source??p.concept??p.title??p.project??p.script??source))
+  setObjective(String(p.objective??p.goal??p.summary??p.intent??objective))
+  const context=[p.notes,p.analysis,p.strategicAnalysis,p.description,p.evidence,p.provenance].flat().filter(Boolean).join("\n")
+  if(context)setNotes(prev=>[prev,context].filter(Boolean).join("\n\n"))
+  if(p.mode&&config.modes.some(m=>m.id===p.mode))setSelectedModeId(p.mode)
+  setIncomingScope({
+   contentBuildId:typeof p.contentBuildId==="string"?p.contentBuildId:null,
+   projectId:typeof p.projectId==="string"?p.projectId:null,
+   projectName:typeof p.projectName==="string"?p.projectName:null,
+   videoId:typeof p.videoId==="string"?p.videoId:null,
+  })
+  setStatus("Incoming Brain/tool handoff loaded with its ContentBuild scope. Review the fields, then create the packet when ready.")
+ }
  const handleCreatePacket=async()=>{
   setStatus("Consulting Brain and building persisted super-tool packet...")
-  const contentContext=resolveWorkspaceContentBuildToolContext(brain,config.toolId)
+  const contentContext=incomingScope.contentBuildId
+   ? resolveContentBuildToolContext({
+      contentBuildId:incomingScope.contentBuildId,
+      projectId:incomingScope.projectId||null,
+      projectName:incomingScope.projectName||null,
+      videoId:incomingScope.videoId||null,
+      toolId:config.toolId,
+     })
+   : resolveWorkspaceContentBuildToolContext(brain,config.toolId)
   const brainContext=await consultBrain(config.toolId,{
    source,
    objective,
