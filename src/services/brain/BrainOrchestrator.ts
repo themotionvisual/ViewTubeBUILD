@@ -327,13 +327,14 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    }
   : null
  const algorithmAccess = wantsAlgorithmIntelligence && input.channelId
-  ? await readAlgorithmIntelligenceForBrain({ channelId: input.channelId, project: engineControls.algorithmPriming ? projectContext : null })
+  ? await readAlgorithmIntelligenceForBrain({ channelId: input.channelId, project: engineControls.algorithmPriming ? projectContext : null }).catch(() => null)
   : null
  const algorithmIntelligence = algorithmAccess?.status === "ok" ? algorithmAccess.value : null
  let nicheKnowledge: NicheKnowledgeProfile | null = null
  let currentResearch = ""
  let citations: BrainResponseCitation[] = []
  let context = buildBrainContextPack({
+  channelId: input.channelId,
   systemPrompt: input.systemPrompt,
   snapshot: input.snapshot,
   recentTurns: input.recentTurns || [],
