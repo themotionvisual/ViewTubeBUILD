@@ -621,9 +621,16 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
           }
 
           return (
-           <article key={unit.id} className="border-b-[2px] border-black last:border-b-0">
-            <div className="grid min-h-[64px] grid-cols-[40px_minmax(0,1fr)_92px] items-stretch bg-white">
-             <div className="grid place-items-center border-r-[2px] border-black bg-[#f4f4f4] px-0.5 py-1">
+           <article
+            key={unit.id}
+            className="border-b-[2px] border-black last:border-b-0"
+            style={{
+             ["--vt-sync-group-color" as string]: groupColor,
+             ["--vt-subtoolbox-fill" as string]: groupColor,
+            } as React.CSSProperties}
+           >
+            <div className="grid min-h-[66px] grid-cols-[36px_minmax(0,1fr)_88px] items-stretch" style={{ backgroundColor: rowFill }}>
+             <div className="grid place-items-center px-0.5 py-1">
               <SubToolboxCheckbox
                checked={selectedForBatch}
                onChange={() => toggleMany(unit.categoryIds)}
@@ -633,16 +640,20 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
               />
              </div>
 
-             <div className="flex min-w-0 flex-col justify-center gap-1 px-2.5 py-2">
-              <strong className="block min-w-0 whitespace-normal break-words text-[15px] font-[1000] uppercase leading-[1.02] tracking-[-0.035em] sm:text-[16px]">{unit.label}</strong>
-              <span
-               className="block min-w-0 whitespace-normal break-words text-[9px] font-black uppercase leading-[1.18] tracking-[0.025em] text-black/45"
+             <div className="flex min-w-0 flex-col justify-center gap-1 px-2 py-2">
+              <strong
+               className="vt-sync-dataset-title block min-w-0 whitespace-nowrap font-[1000] uppercase leading-none tracking-[-0.045em]"
+               style={{ fontSize: titleFontSize }}
+               title={unit.label}
               >
+               {unit.label}
+              </strong>
+              <span className="vt-sync-dataset-subtitle block min-w-0 whitespace-normal break-words font-black uppercase leading-[1.16] tracking-[0.02em] text-black/50">
                {unit.description}
               </span>
              </div>
 
-             <div className="grid place-items-center border-l-[2px] border-black bg-[#f4f4f4] px-1 py-1">
+             <div className="grid place-items-center px-0.5 py-1">
               <RetroSyncExecutionSwitch
                idleLabel={hasPriorData ? "UPDATE" : "FULL SYNC"}
                labelOverride={immediateLabel}
@@ -653,28 +664,36 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
              </div>
             </div>
 
-            <div className="grid min-w-0 grid-cols-2 gap-1.5 border-t border-black/15 bg-[#f7f7f7] px-2 py-2 sm:grid-cols-3 lg:grid-cols-6">
-             <SyncSpectrumTagPair label="STATUS" value={statusValue} />
-             <SyncSpectrumTagPair label="LAST SYNC" value={lastSyncValue} />
-             <SyncSpectrumTagPair label="RESULT" value={resultValue} />
-             <SyncSpectrumTagPair
-              label="MODE"
-              value={modeValue}
-              onClick={unit.id === "retention" ? toggleUnitDetails : undefined}
-              title={unit.id === "retention" ? (expandedUnit ? "Hide retention options" : "Show retention options") : undefined}
-             />
-             <SyncSpectrumTagPair
-              label="ISSUES"
-              value={issueValue}
-              onClick={(model?.issueCount || 0) > 0 ? toggleUnitDetails : undefined}
-              title={(model?.issueCount || 0) > 0 ? (expandedUnit ? "Hide issue details" : "Show issue details") : undefined}
-             />
-             <SyncSpectrumTagPair
-              label="QUERIES"
-              value={queryValue}
-              onClick={unit.categoryIds.length > 1 ? toggleUnitDetails : undefined}
-              title={unit.categoryIds.length > 1 ? (expandedUnit ? "Hide child queries" : "Show child queries") : undefined}
-             />
+            <div
+             className="vt-sync-meta-rail flex min-w-0 items-center gap-1.5 overflow-x-auto border-t border-black/15 px-2 py-1.5 custom-scrollbar"
+             style={{ backgroundColor: rowFill }}
+            >
+             <SyncSpectrumTag text={statusAndSyncValue} spectrumKey={`STATUS-${statusValue}`} />
+             <SyncSpectrumTag text={resultValue} spectrumKey="RESULT" />
+             {(model?.issueCount || 0) > 0 ? (
+              <SyncSpectrumTag
+               text={issueValue}
+               spectrumKey="ISSUES"
+               onClick={toggleUnitDetails}
+               title={expandedUnit ? "Hide issue details" : "Show issue details"}
+              />
+             ) : null}
+             {unit.id === "video_catalog" ? (
+              <SyncSpectrumTag
+               text="OPTIONS: METADATA"
+               spectrumKey="OPTIONS"
+               onClick={toggleUnitDetails}
+               title={expandedUnit ? "Hide metadata options" : "Show metadata options"}
+              />
+             ) : null}
+             {unit.id === "retention" ? (
+              <SyncSpectrumTag
+               text="OPTIONS: VIDEOS"
+               spectrumKey="OPTIONS"
+               onClick={toggleUnitDetails}
+               title={expandedUnit ? "Hide retention options" : "Show retention options"}
+              />
+             ) : null}
             </div>
 
             {hasExtraDetail ? (
