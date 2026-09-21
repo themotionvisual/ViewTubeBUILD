@@ -52,28 +52,35 @@ describe("VT-SYNC execution status controls", () => {
   expect(markup).toContain(">COMPLETE<")
  })
 
- it("uses a compact checkbox/title/sync top row with paired spectrum tags beneath", () => {
+ it("uses one top control row and one compact spectrum-tag rail beneath it", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
-  expect(source).toContain("grid-cols-[40px_minmax(0,1fr)_92px]")
+  expect(source).toContain("grid-cols-[36px_minmax(0,1fr)_88px]")
   expect(source).toContain("<SubToolboxCheckbox")
   expect(source).toContain("<RetroSyncExecutionSwitch")
-  expect(source).toContain("grid-cols-2")
-  expect(source).toContain("<SyncSpectrumTagPair")
-  expect(source).not.toContain("<RetroBatchSelectionSwitch")
-  expect(source).not.toContain("<SyncMetaBadge")
+  expect(source).toContain("vt-sync-meta-rail")
+  expect(source).toContain("<SyncSpectrumTag")
+  expect(source).not.toContain("<SyncSpectrumTagPair")
+  expect(source).not.toContain('label="MODE"')
+  expect(source).not.toContain('label="QUERIES"')
  })
 
- it("keeps full mobile titles and subtitles visible and formats metadata as two-tag spectrum columns", () => {
+ it("keeps a one-line title, larger subtitle, and combines status with last-sync time", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
-  expect(source).toContain("whitespace-normal break-words text-[15px]")
-  expect(source).toContain("whitespace-normal break-words text-[9px]")
-  expect(source).toContain("<SubToolboxAlphabeticalTag")
-  expect(source).toContain('className="vt-sync-tag-title"')
-  expect(source).toContain('className="vt-sync-tag-value"')
-  expect(source).toContain('label="LAST SYNC"')
+  expect(source).toContain("vt-sync-dataset-title")
+  expect(source).toContain("whitespace-nowrap")
+  expect(source).toContain("vt-sync-dataset-subtitle")
   expect(source).toContain("formatCompactLastSync")
-  expect(source).toContain('label="RESULT"')
+  expect(source).toContain("statusAndSyncValue")
+  expect(source).toContain("resultValue")
   expect(source).toContain("resultNounForUnit")
+ })
+
+ it("tints each dataset row from its category color at 10% unselected and 30% selected", () => {
+  const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
+  expect(source).toContain("selectedForBatch ? 30 : 10")
+  expect(source).toContain('["--vt-subtoolbox-fill" as string]: groupColor')
+  expect(source).not.toContain('border-r-[2px] border-black bg-[#f4f4f4]')
+  expect(source).not.toContain('border-l-[2px] border-black bg-[#f4f4f4]')
  })
 
  it("uses the default toolbox checkbox primitive for dataset and group batch inclusion", () => {
@@ -84,30 +91,31 @@ describe("VT-SYNC execution status controls", () => {
   expect(source).not.toContain("onSelectedChange=")
  })
 
- it("keeps conditional detail surfaces but only opens them from relevant spectrum tag pairs", () => {
+ it("shows an issues tag only when issues exist and keeps only purposeful special-option tags", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
-  expect(source).toContain("hasExtraDetail")
-  expect(source).toContain("vt-sync-unified-unit-")
-  expect(source).toContain("Issues ·")
-  expect(source).toContain("Underlying query")
-  expect(source).toContain('label="ISSUES"')
-  expect(source).toContain('label="QUERIES"')
-  expect(source).not.toContain('title={expandedUnit ? "Collapse dataset details" : "Expand dataset details"}')
+  expect(source).toContain("(model?.issueCount || 0) > 0 ? (")
+  expect(source).toContain("issueValue")
+  expect(source).toContain('text="OPTIONS: METADATA"')
+  expect(source).toContain('text="OPTIONS: VIDEOS"')
+  expect(source).not.toContain('label="QUERIES"')
+  expect(source).not.toContain('label="MODE"')
  })
 
- it("places the LED to the right of every horizontal analog switch and removes diagonal plate grain", () => {
+ it("puts LEDs to the right, matches state-label colors, and animates colored LED ripples", () => {
   const chromeSource = readFileSync(new URL("./VtSyncRetroChrome.tsx", import.meta.url), "utf8")
   const cssSource = readFileSync(new URL("./VtSyncRetroChrome.css", import.meta.url), "utf8")
   const executionStart = chromeSource.indexOf("export const RetroSyncExecutionSwitch")
   const executionEnd = chromeSource.indexOf("export const RetroBatchSelectionSwitch", executionStart)
   const executionBlock = chromeSource.slice(executionStart, executionEnd)
   expect(executionBlock.indexOf("vt-retro-sync-hitbox")).toBeLessThan(executionBlock.indexOf("vt-retro-status-led"))
-  const analogStart = chromeSource.indexOf("export const RetroAnalogToggle")
-  const analogEnd = chromeSource.indexOf("export const RetroSyncExecutionSwitch", analogStart)
-  const analogBlock = chromeSource.slice(analogStart, analogEnd)
-  expect(analogBlock.indexOf("vt-retro-analog-toggle__track")).toBeLessThan(analogBlock.indexOf("vt-retro-analog-toggle__led"))
+  expect(executionBlock).toContain("data-sync-label={statusLabel}")
+  expect(cssSource).toContain("@keyframes vt-sync-led-ripple")
+  expect(cssSource).toContain("@keyframes vt-sync-led-breathe")
+  expect(cssSource).toContain('[data-sync-label="UP NEXT"]')
+  expect(cssSource).toContain("var(--vt-sync-led-color)")
   expect(cssSource).not.toContain("repeating-linear-gradient(105deg")
  })
+
 
 })
 
