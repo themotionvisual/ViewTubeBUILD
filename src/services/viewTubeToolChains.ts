@@ -1,6 +1,11 @@
 import { createGenerationRecord, updateGenerationRecord } from "./generationStore"
 import { ingestGenerationArtifacts } from "./vaultAdapter"
 import { enqueueBrainHandoffs } from "./brainHandoffInbox"
+import {
+ appendContentBuildEvent,
+ attachAssetToContentBuild,
+ listContentBuildEvents,
+} from "./asset-engine/ContentBuildRepository"
 
 export type ViewTubeToolKind = "studio-tool" | "widget" | "analytics" | "project" | "vault" | "editor" | "brain" | "super-tool" | "system"
 export type ViewTubePayloadKind = "video" | "thumbnail" | "image" | "script" | "storyboard" | "metadata" | "comment" | "community-post" | "poll" | "analysis" | "tactic" | "hook" | "project" | "calendar-item" | "timeline" | "asset" | "evidence" | "json"
@@ -46,4 +51,99 @@ export const getViewTubeToolCapability=(id:string)=>VIEWTUBE_TOOL_CAPABILITIES.f
 export const getCompatibleHandoffTargets=(packet:Pick<ViewTubeActionPacket,"sourceToolId"|"payloadKind">)=>VIEWTUBE_TOOL_CAPABILITIES.filter(tool=>tool.id!==packet.sourceToolId&&tool.accepts.includes(packet.payloadKind))
 export const getSuggestedChainsForTool=(toolId:string)=>VIEWTUBE_SUGGESTED_TOOL_CHAINS.filter(chain=>chain.startsWith.includes(toolId)||chain.steps.some(step=>step.toolId===toolId))
 export const createViewTubeActionPacket=<T,>(input:Omit<ViewTubeActionPacket<T>,"id"|"version"|"createdAt"|"suggestedTargets">&{suggestedTargets?:string[]}):ViewTubeActionPacket<T>=>{const compatible=VIEWTUBE_TOOL_CAPABILITIES.filter(tool=>tool.id!==input.sourceToolId&&tool.accepts.includes(input.payloadKind)).map(tool=>tool.id);return{...input,id:crypto.randomUUID(),version:1,suggestedTargets:input.suggestedTargets||compatible,createdAt:Date.now()}}
-export const persistViewTubeActionPacket=<T,>(packet:ViewTubeActionPacket<T>)=>{cachePacket(packet as ViewTubeActionPacket);const inboxItems=enqueueBrainHandoffs(packet as ViewTubeActionPacket);const record=createGenerationRecord({toolId:packet.sourceToolId as never,provider:"mock",model:"viewtube-action-packet-v1",prompt:JSON.stringify({sourceToolId:packet.sourceToolId,payloadKind:packet.payloadKind}),status:"running",artifacts:[],metadata:{actionPacketId:packet.id,universalToolHandoff:true,handoffInboxIds:inboxItems.map(item=>item.id)}});const artifact={id:crypto.randomUUID(),kind:"json" as const,label:`${packet.title} handoff`,sourceRecordId:record.id,metadata:packet as unknown as Record<string,unknown>};updateGenerationRecord(record.id,{status:"complete",outputText:packet.summary,outputJson:packet as unknown as Record<string,unknown>,artifacts:[artifact],usage:{promptTokens:0,completionTokens:0,totalTokens:0},estimatedCostCents:0});ingestGenerationArtifacts([artifact],{toolId:packet.sourceToolId as never,generationId:record.id,tags:[packet.sourceToolId,packet.payloadKind,"viewtube-action-packet"]});return{packet,inboxItems,recordId:record.id,artifactId:artifact.id}}
+export const persistViewTubeActionPacket = <T,>(packet: ViewTubeActionPacket<T>) => {
+ cachePacket(packet as ViewTubeActionPacket)
+ const inboxItems = enqueueBrainHandoffs(packet as ViewTubeActionPacket)
+ const record = createGenerationRecord({
+  toolId: packet.sourceToolId as never,
+  provider: "mock",
+  model: "viewtube-action-packet-v1",
+  prompt: JSON.stringify({
+   sourceToolId: packet.sourceToolId,
+   payloadKind: packet.payloadKind,
+   contentBuildId: packet.contentBuildId || null,
+  }),
+  status: "running",
+  artifacts: [],
+  metadata: {
+   actionPacketId: packet.id,
+   contentBuildId: packet.contentBuildId || null,
+   projectId: packet.projectId || null,
+   channelId: packet.channelId || null,
+   videoId: packet.videoId || null,
+   universalToolHandoff: true,
+   handoffInboxIds: inboxItems.map(item => item.id),
+  },
+ })
+ const artifact = {
+  id: crypto.randomUUID(),
+  kind: "json" as const,
+  label: `${packet.title} handoff`,
+  sourceRecordId: record.id,
+  metadata: packet as unknown as Record<string, unknown>,
+ }
+ updateGenerationRecord(record.id, {
+  status: "complete",
+  outputText: packet.summary,
+  outputJson: packet as unknown as Record<string, unknown>,
+  artifacts: [artifact],
+  usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+  estimatedCostCents: 0,
+ })
+ const [vaultAsset] = ingestGenerationArtifacts([artifact], {
+  toolId: packet.sourceToolId as never,
+  projectId: packet.projectId || null,
+  generationId: record.id,
+  tags: [
+   packet.sourceToolId,
+   packet.payloadKind,
+   "viewtube-action-packet",
+   ...(packet.contentBuildId ? ["content-build"] : []),
+  ],
+ })
+
+ if (packet.contentBuildId && vaultAsset) {
+  attachAssetToContentBuild(packet.contentBuildId, vaultAsset.id, {
+   toolId: packet.sourceToolId,
+   evidenceIds: packet.evidence,
+   generationRecordId: record.id,
+   metadata: {
+    actionPacketId: packet.id,
+    payloadKind: packet.payloadKind,
+    suggestedTargets: packet.suggestedTargets,
+   },
+  })
+
+  const alreadyRecorded = listContentBuildEvents(packet.contentBuildId).some(
+   event => event.eventType === "handoff.created" && event.actionPacketId === packet.id,
+  )
+  if (!alreadyRecorded) {
+   appendContentBuildEvent({
+    contentBuildId: packet.contentBuildId,
+    eventType: "handoff.created",
+    entityType: "action-packet",
+    entityId: packet.id,
+    actorType: "tool",
+    toolId: packet.sourceToolId,
+    inputAssetIds: [],
+    outputAssetIds: [vaultAsset.id],
+    evidenceIds: packet.evidence,
+    generationRecordId: record.id,
+    actionPacketId: packet.id,
+    metadata: {
+     payloadKind: packet.payloadKind,
+     suggestedTargets: packet.suggestedTargets,
+    },
+   })
+  }
+ }
+
+ return {
+  packet,
+  inboxItems,
+  recordId: record.id,
+  artifactId: artifact.id,
+  vaultAssetId: vaultAsset?.id || null,
+ }
+}
+
