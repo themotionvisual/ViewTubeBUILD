@@ -35,7 +35,6 @@ import {
   WidgetVideoSelect,
   WidgetWorkflowMain,
   type WidgetSelectOption as SelectOption,
-  type WidgetVideoSelectOption,
 } from "../WidgetPrimitives"
 import { WidgetShell } from "../WidgetShell"
 import "./videoManagerWidget.css"
