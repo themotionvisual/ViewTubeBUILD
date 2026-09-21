@@ -8,6 +8,22 @@ import {
  type ViewTubePayloadKind,
  type ViewTubeToolKind,
 } from "./viewTubeToolChains"
+import {
+ addContentBuildAssetRelation,
+ appendContentBuildEvent,
+ attachAssetToContentBuild,
+ ensureContentBuild,
+ getContentBuild,
+ listContentBuildEvents,
+ listContentBuilds,
+ setContentBuildSelection,
+ setContentBuildStage,
+} from "./asset-engine/ContentBuildRepository"
+import type {
+ ContentBuildRelationType,
+ ContentBuildSnapshot,
+ ContentBuildStage,
+} from "./asset-engine/contracts"
 
 /**
  * Canonical Asset Engine
@@ -20,6 +36,9 @@ import {
  * BrainRuntime remains the reasoning/orchestration owner; Vault remains the
  * canonical artifact owner; ActionPacket/Handoff remains transport. This
  * service is the connective workflow facade over those canonical owners.
+ *
+ * ContentBuild is the durable lifecycle identity carried through those owners.
+ * Legacy callers can continue to pass project/video scope while they migrate.
  */
 export type AssetEngineStage =
  | "idea" | "evidence" | "research" | "concept" | "outline" | "script"
@@ -35,6 +54,7 @@ export interface AssetEvidenceRef {
 }
 
 export interface AssetEngineContext {
+ contentBuildId?: string | null
  channelId?: string | null
  projectId?: string | null
  projectName?: string | null
@@ -66,12 +86,59 @@ export interface AssetEngineResult {
  asset: VaultAsset
  generationRecordId: string
  artifactId: string
+ contentBuildId: string | null
 }
 
 const evidenceIds = (context?: AssetEngineContext) => (context?.evidence || []).map(item => item.id)
 
+const toContentBuildStage = (stage?: AssetEngineStage): ContentBuildStage | undefined => {
+ if (!stage) return undefined
+ switch (stage) {
+  case "evidence":
+  case "research":
+   return "research"
+  case "visual-plan":
+  case "production":
+   return "media"
+  case "metadata":
+   return "package"
+  case "priming":
+   return "launch"
+  case "publish":
+   return "scheduled"
+  default:
+   return stage
+ }
+}
+
+export const resolveContentBuildForContext = (
+ context: AssetEngineContext = {},
+ sourceToolId?: string,
+): ContentBuildSnapshot | null => {
+ const build = ensureContentBuild({
+  id: context.contentBuildId || undefined,
+  channelId: context.channelId || null,
+  legacyProjectId: context.projectId || null,
+  legacyProjectName: context.projectName || null,
+  videoId: context.videoId || null,
+  stage: toContentBuildStage(context.stage),
+  profile: context.projectName ? { workingConcept: context.projectName } : undefined,
+  toolId: sourceToolId || null,
+ })
+ if (build && context.stage) {
+  const desired = toContentBuildStage(context.stage)
+  if (desired && build.stage !== desired) {
+   return setContentBuildStage(build.id, desired, { actorType: "tool", toolId: sourceToolId || null })
+  }
+ }
+ return build
+}
+
 export const createAsset = (input: CreateAssetInput): AssetEngineResult => {
  const context = input.context || {}
+ const contentBuild = resolveContentBuildForContext(context, input.sourceToolId)
+ const contentBuildId = contentBuild?.id || null
+
  const record = createGenerationRecord({
   toolId: input.sourceToolId as SuperToolId,
   provider: "mock",
@@ -80,6 +147,7 @@ export const createAsset = (input: CreateAssetInput): AssetEngineResult => {
    operation: "create-asset",
    sourceToolId: input.sourceToolId,
    payloadKind: input.payloadKind,
+   contentBuildId,
    projectId: context.projectId || null,
    videoId: context.videoId || null,
    evidenceIds: evidenceIds(context),
@@ -88,6 +156,7 @@ export const createAsset = (input: CreateAssetInput): AssetEngineResult => {
   artifacts: [],
   metadata: {
    assetEngine: true,
+   contentBuildId,
    traceId: context.traceId || null,
    stage: context.stage || null,
    evidence: context.evidence || [],
@@ -107,6 +176,7 @@ export const createAsset = (input: CreateAssetInput): AssetEngineResult => {
    ...(input.metadata || {}),
    payload: input.payload,
    payloadKind: input.payloadKind,
+   contentBuildId,
    channelId: context.channelId || null,
    projectId: context.projectId || null,
    videoId: context.videoId || null,
@@ -121,7 +191,7 @@ export const createAsset = (input: CreateAssetInput): AssetEngineResult => {
  updateGenerationRecord(record.id, {
   status: "complete",
   outputText: input.summary || input.name,
-  outputJson: { payload: input.payload } as Record<string, unknown>,
+  outputJson: { payload: input.payload, contentBuildId } as Record<string, unknown>,
   artifacts: [artifact],
   usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
   estimatedCostCents: 0,
@@ -135,7 +205,44 @@ export const createAsset = (input: CreateAssetInput): AssetEngineResult => {
   tags: [...(input.tags || []), "asset-engine", input.payloadKind, context.stage || "unscoped"],
  })
 
- return { asset, generationRecordId: record.id, artifactId: artifact.id }
+ if (contentBuildId) {
+  attachAssetToContentBuild(contentBuildId, asset.id, {
+   toolId: input.sourceToolId,
+   evidenceIds: evidenceIds(context),
+   generationRecordId: record.id,
+   traceId: context.traceId || null,
+   metadata: { payloadKind: input.payloadKind, artifactId: artifact.id },
+  })
+  appendContentBuildEvent({
+   contentBuildId,
+   eventType: "asset.created",
+   entityType: "asset",
+   entityId: asset.id,
+   actorType: "tool",
+   toolId: input.sourceToolId,
+   outputAssetIds: [asset.id],
+   evidenceIds: evidenceIds(context),
+   generationRecordId: record.id,
+   traceId: context.traceId || null,
+   metadata: {
+    payloadKind: input.payloadKind,
+    artifactId: artifact.id,
+    kind: input.kind,
+   },
+  })
+  ;(context.parentAssetIds || []).forEach(parentAssetId => {
+   addContentBuildAssetRelation({
+    contentBuildId,
+    fromAssetId: parentAssetId,
+    toAssetId: asset.id,
+    relation: "derived-from",
+    sourceToolId: input.sourceToolId,
+    metadata: { generationRecordId: record.id },
+   })
+  })
+ }
+
+ return { asset, generationRecordId: record.id, artifactId: artifact.id, contentBuildId }
 }
 
 export interface HandoffAssetInput<T = unknown> {
@@ -152,21 +259,53 @@ export interface HandoffAssetInput<T = unknown> {
 
 export const handoffAsset = <T,>(input: HandoffAssetInput<T>) => {
  const context = input.context || {}
+ const contentBuild = resolveContentBuildForContext(context, input.sourceToolId)
+ const contentBuildId = contentBuild?.id || null
+ if (contentBuildId) {
+  attachAssetToContentBuild(contentBuildId, input.asset.id, { toolId: input.sourceToolId })
+ }
+
  const packet: ViewTubeActionPacket<T | Record<string, unknown>> = createViewTubeActionPacket({
   sourceToolId: input.sourceToolId,
   sourceKind: input.sourceKind,
   payloadKind: input.payloadKind,
   title: input.title || input.asset.name,
-  summary: input.summary || `Asset Engine handoff: ${input.asset.name}`,
-  payload: input.payload ?? ({ assetId: input.asset.id, asset: input.asset } as Record<string, unknown>),
+  summary: input.summary || "Asset Engine handoff: " + input.asset.name,
+  payload: input.payload ?? ({
+   assetId: input.asset.id,
+   asset: input.asset,
+   contentBuildId,
+  } as Record<string, unknown>),
   projectId: context.projectId || input.asset.projectId || null,
   channelId: context.channelId || null,
   videoId: context.videoId || null,
   evidence: evidenceIds(context),
-  provenance: [input.asset.id, ...(context.provenance || [])],
+  provenance: [
+   input.asset.id,
+   ...(contentBuildId ? ["content-build:" + contentBuildId] : []),
+   ...(context.provenance || []),
+  ],
   suggestedTargets: input.suggestedTargets,
  })
- return persistViewTubeActionPacket(packet)
+ const persisted = persistViewTubeActionPacket(packet)
+
+ if (contentBuildId) {
+  appendContentBuildEvent({
+   contentBuildId,
+   eventType: "handoff.created",
+   entityType: "action-packet",
+   entityId: (persisted as { id?: string })?.id || packet.id || null,
+   actorType: "tool",
+   toolId: input.sourceToolId,
+   inputAssetIds: [input.asset.id],
+   evidenceIds: evidenceIds(context),
+   actionPacketId: (persisted as { id?: string })?.id || packet.id || null,
+   traceId: context.traceId || null,
+   metadata: { payloadKind: input.payloadKind, suggestedTargets: input.suggestedTargets || [] },
+  })
+ }
+
+ return persisted
 }
 
 export const createAndHandoffAsset = <T,>(
@@ -181,11 +320,39 @@ export const createAndHandoffAsset = <T,>(
   title: input.name,
   summary: input.summary,
   payload: input.handoffPayload,
-  context: input.context,
+  context: {
+   ...(input.context || {}),
+   contentBuildId: created.contentBuildId || input.context?.contentBuildId || null,
+  },
   suggestedTargets: input.suggestedTargets,
  })
  return { ...created, handoff }
 }
+
+export const selectContentBuildAsset = (input: {
+ contentBuildId: string
+ slot: string
+ assetId: string | null
+ sourceToolId?: string | null
+ final?: boolean
+}) => setContentBuildSelection(input.contentBuildId, input.slot, input.assetId, {
+ toolId: input.sourceToolId || null,
+ actorType: "creator",
+ final: input.final,
+})
+
+export const relateContentBuildAssets = (input: {
+ contentBuildId: string
+ fromAssetId: string
+ toAssetId: string
+ relation: ContentBuildRelationType
+ sourceToolId?: string | null
+ metadata?: Record<string, unknown>
+}) => addContentBuildAssetRelation(input)
+
+export const getContentBuildHistory = (contentBuildId: string) => listContentBuildEvents(contentBuildId)
+export const getContentBuildSnapshot = (contentBuildId: string) => getContentBuild(contentBuildId)
+export const listContentBuildSnapshots = () => listContentBuilds()
 
 export const resolveAssets = (input: Parameters<typeof searchVaultAssets>[0] = {}) => searchVaultAssets(input)
 export const listAssets = () => listVaultAssets()
