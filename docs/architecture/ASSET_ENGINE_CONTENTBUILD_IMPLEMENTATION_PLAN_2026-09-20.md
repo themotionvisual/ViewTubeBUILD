@@ -132,6 +132,24 @@ Next:
 
 ## Wave 4 — shared tool context SDK
 
+Status: INITIAL INTEGRATION IMPLEMENTED ON THIS BRANCH.
+
+Implemented:
+
+- shared ContentBuildToolContext resolution,
+- active Workspace Project → ContentBuild resolution,
+- incoming handoff ContentBuild preservation for internal SuperTools,
+- tool input/output lifecycle receipts,
+- ContentBuild scope on SuperTool packets and universal ActionPackets,
+- Project ContentBuild materialization,
+- Creator Canvas packet scope,
+- Script Architect packet scope,
+- Hook Generator hook/media asset persistence,
+- Thumbnail Studio candidate persistence,
+- Packaging Lab / Project Command / config-driven internal SuperTools through the shared workbench.
+
+Next: add the explicit active ContentBuild selector and migrate remaining standard Studio tools.
+
 Build ContentBuildToolContext and standard hooks/services.
 
 Every compatible tool should receive:
@@ -151,13 +169,14 @@ Every tool should return a durable output receipt that attaches its work to the 
 
 First migration set:
 
-- Creator Canvas
-- Script Architect
-- Hook Generator
-- Thumbnail Studio
-- Packaging Lab
+- Creator Canvas — initial ContentBuild binding implemented.
+- Script Architect — initial ContentBuild binding implemented.
+- Hook Generator — hook, image and video outputs attach to ContentBuild.
+- Thumbnail Studio — generated thumbnail candidates attach to ContentBuild.
+- Packaging Lab — config-driven packet creation preserves active/incoming ContentBuild.
+- Project Command — active Project materializes and carries ContentBuild identity.
 
-This set is the first proof that several formerly separate tools can operate on one durable piece of content.
+This set is now the first working proof that several formerly separate tools can operate on one durable piece of content.
 
 ## Wave 5 — workflows and templates
 
