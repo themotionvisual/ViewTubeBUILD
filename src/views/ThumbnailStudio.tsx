@@ -26,7 +26,11 @@ import {
 } from "../components/Toolbox"
 import { StandardButton } from "../components/StandardButton"
 import { PostActionReflection } from "../components/PostActionReflection"
-import { createAsset } from "../services/assetEngine"
+import {
+ addAssetVariant,
+ createAssetVariantGroup,
+ createVersionedAsset,
+} from "../services/assetEngine"
 import {
  recordContentBuildToolInput,
  recordContentBuildToolOutput,
@@ -259,8 +263,11 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
     contentContext?.selectedAssets.thumbnail?.id,
    ].filter((id): id is string => Boolean(id))
 
-   const created = createAsset({
+   const created = createVersionedAsset({
     sourceToolId: "thumbnail-studio",
+    slot: "thumbnail",
+    label: `Thumbnail candidate ${history.length + 1}`,
+    parentAssetId: contentContext?.selectedAssets.thumbnail?.id || null,
     sourceKind: "studio-tool",
     payloadKind: "thumbnail",
     name: `Thumbnail candidate · ${new Date(newItem.timestamp).toISOString()}`,
@@ -294,6 +301,22 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
    })
 
    if (contentContext) {
+    const variantGroup = createAssetVariantGroup({
+     contentBuildId: contentContext.contentBuildId,
+     slot: "thumbnail",
+     label: "Thumbnail candidates",
+     sourceToolId: "thumbnail-studio",
+     metadata: { surfaceMode, aspectRatio },
+    })
+    addAssetVariant({
+     contentBuildId: contentContext.contentBuildId,
+     groupId: variantGroup.id,
+     assetId: created.asset.id,
+     versionId: created.version?.id || null,
+     label: `Candidate ${variantGroup.members.length + 1}`,
+     sourceToolId: "thumbnail-studio",
+     metadata: { historyId: newItem.id, prompt },
+    })
     recordContentBuildToolOutput({
      contentBuildId: contentContext.contentBuildId,
      toolId: "thumbnail-studio",
