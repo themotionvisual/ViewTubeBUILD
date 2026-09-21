@@ -52,19 +52,33 @@ describe("VT-SYNC execution status controls", () => {
   expect(markup).toContain(">COMPLETE<")
  })
 
- it("uses one top control row and one compact spectrum-tag rail beneath it", () => {
+ it("keeps portrait metadata below the row but moves two-high badge columns left of sync on landscape and desktop", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
-  expect(source).toContain("grid-cols-[36px_minmax(0,1fr)_88px]")
-  expect(source).toContain("<SubToolboxCheckbox")
-  expect(source).toContain("<RetroSyncExecutionSwitch")
+  const cssSource = readFileSync(new URL("./VtSyncRetroChrome.css", import.meta.url), "utf8")
+  expect(source).toContain("vt-sync-row-shell")
+  expect(source).toContain("vt-sync-row-check")
+  expect(source).toContain("vt-sync-row-copy")
   expect(source).toContain("vt-sync-meta-rail")
-  expect(source).toContain("<SyncSpectrumTag")
-  expect(source).not.toContain("<SyncSpectrumTagPair")
-  expect(source).not.toContain('label="MODE"')
-  expect(source).not.toContain('label="QUERIES"')
+  expect(source).toContain("vt-sync-row-sync")
+  expect(cssSource).toContain('grid-template-areas: "check copy meta sync"')
+  expect(cssSource).toContain("grid-template-rows: repeat(2")
+  expect(cssSource).toContain("grid-auto-flow: column")
  })
 
- it("keeps a one-line title, larger subtitle, and combines status with last-sync time", () => {
+ it("enlarges dataset/category text and the complete sync compound on landscape and desktop without edge collisions", () => {
+  const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
+  const cssSource = readFileSync(new URL("./VtSyncRetroChrome.css", import.meta.url), "utf8")
+  expect(source).toContain("vt-sync-category-title")
+  expect(source).toContain("vt-sync-category-summary")
+  expect(cssSource).toContain("@media (min-width: 600px)")
+  expect(cssSource).toContain("margin: 7px 12px")
+  expect(cssSource).toContain("width: 102px")
+  expect(cssSource).toContain("@media (min-width: 1100px)")
+  expect(cssSource).toContain("margin: 9px 16px")
+  expect(cssSource).toContain("width: 114px")
+ })
+
+  it("keeps a one-line title, larger subtitle, and combines status with last-sync time", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
   expect(source).toContain("vt-sync-dataset-title")
   expect(source).toContain("whitespace-nowrap")
@@ -83,12 +97,14 @@ describe("VT-SYNC execution status controls", () => {
   expect(source).not.toContain('border-l-[2px] border-black bg-[#f4f4f4]')
  })
 
- it("uses the default toolbox checkbox primitive for dataset and group batch inclusion", () => {
+ it("uses the canonical toolbox X check-control primitive for dataset and group batch inclusion", () => {
   const source = readFileSync(new URL("./VtSyncUnifiedSyncToolbox.tsx", import.meta.url), "utf8")
-  expect(source.match(/<SubToolboxCheckbox/g)?.length).toBeGreaterThanOrEqual(2)
+  const cssSource = readFileSync(new URL("../../../styles/subtoolbox-system.css", import.meta.url), "utf8")
+  expect(source.match(/<SubToolboxCheckControl/g)?.length).toBeGreaterThanOrEqual(2)
   expect(source).toContain('className="vt-sync-batch-checkbox"')
-  expect(source).not.toContain("selectionLabel=")
-  expect(source).not.toContain("onSelectedChange=")
+  expect(cssSource).toContain(".vt-subtoolbox-check-control>span:before")
+  expect(cssSource).toContain("rotate(45deg)")
+  expect(cssSource).toContain("rotate(-45deg)")
  })
 
  it("shows an issues tag only when issues exist and keeps only purposeful special-option tags", () => {
