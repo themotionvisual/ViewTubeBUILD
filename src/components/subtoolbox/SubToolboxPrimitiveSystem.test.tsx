@@ -175,7 +175,7 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("vt-subtoolbox-tag-editor-tags")
     expect(html).not.toContain("vt-subtoolbox-tag-editor-label")
     expect(html).toContain('role="progressbar"')
-    expect(html).toContain(">SYNC<")
+    expect(html).toContain(">Sync<")
     expect(html).toContain("vt-subtoolbox-data-table")
     expect(html).toContain("vt-subtoolbox-popover")
     expect(html).toContain("vt-subtoolbox-disclosure")
