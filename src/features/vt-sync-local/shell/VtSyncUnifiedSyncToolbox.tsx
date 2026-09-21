@@ -587,7 +587,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
            checked={groupSelected}
            onChange={() => toggleMany(groupCategoryIds)}
            aria-label={`${label} batch selection`}
-           label={<span className="sr-only">${label} batch selection</span>}
+           label={`${label} batch selection`}
            className="vt-sync-batch-checkbox"
           />
           <RetroSyncExecutionSwitch
@@ -639,7 +639,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
                checked={selectedForBatch}
                onChange={() => toggleMany(unit.categoryIds)}
                aria-label={`${unit.label} batch selection`}
-               label={<span className="sr-only">${unit.label} batch selection</span>}
+               label={`${unit.label} batch selection`}
                className="vt-sync-batch-checkbox"
               />
              </div>
