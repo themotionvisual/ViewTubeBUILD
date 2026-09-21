@@ -71,13 +71,6 @@ interface BrainHubWidgetProps extends CommonWidgetProps {
 type MainPage = "chat" | "controls"
 type ChatPage = "conversation" | "intelligence" | "evidence" | "packages"
 
-type EvidenceItem = {
- id: string
- label?: string
- source?: string
- detail?: string
-}
-
 const MAIN_PAGES = [
  { id: "chat", label: "Chat" },
  { id: "controls", label: "Controls" },
@@ -173,7 +166,33 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
  )
 
  const evidence = useMemo(() => {
-  const items = ((snapshot.evidencePack as { items?: EvidenceItem[] } | undefined)?.items || [])
+  const pack = snapshot.evidencePack
+  const items = [
+   ...pack.topVideos.map((video) => ({
+    id: video.evidenceId,
+    label: video.title,
+    source: "video",
+    detail: typeof video.metrics.views === "number" ? `${video.metrics.views.toLocaleString()} views` : "Video evidence",
+   })),
+   ...pack.searchTerms.map((signal) => ({
+    id: signal.evidenceId,
+    label: signal.value,
+    source: "search",
+    detail: "Search evidence",
+   })),
+   ...pack.trafficSources.map((signal) => ({
+    id: signal.evidenceId,
+    label: signal.value,
+    source: "traffic",
+    detail: "Traffic-source evidence",
+   })),
+   ...pack.missingInputs.map((value, index) => ({
+    id: `missing-${index}-${value}`,
+    label: value,
+    source: "missing",
+    detail: "Missing evidence",
+   })),
+  ]
   return items.slice(0, engines.maxEvidenceItems)
  }, [snapshot.evidencePack, engines.maxEvidenceItems])
 
