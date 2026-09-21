@@ -61,8 +61,8 @@ type SyncTagPairProps = {
 const SyncSpectrumTagPair: React.FC<SyncTagPairProps> = ({ label, value, onClick, title }) => {
  const content = (
   <span className="vt-sync-tag-pair">
-   <SubToolboxAlphabeticalTag level="l2" className="vt-sync-tag-title" label={label} />
-   <SubToolboxAlphabeticalTag level="l2" className="vt-sync-tag-value" label={value} title={title} />
+   <SubToolboxAlphabeticalTag level="l2" className="vt-sync-tag-title" label={label} spectrumKey={label} />
+   <SubToolboxAlphabeticalTag level="l2" className="vt-sync-tag-value" label={value} spectrumKey={label} title={title} />
   </span>
  )
  if (!onClick) return content
