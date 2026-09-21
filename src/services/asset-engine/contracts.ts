@@ -87,6 +87,47 @@ export interface ContentBuildAssetRelation {
  metadata?: Record<string, unknown>
 }
 
+export type ContentBuildVariantStatus = "candidate" | "selected" | "final" | "rejected" | "archived"
+
+export interface ContentBuildAssetVersion {
+ id: string
+ contentBuildId: string
+ assetId: string
+ slot: string
+ version: number
+ label?: string | null
+ parentVersionId?: string | null
+ parentAssetId?: string | null
+ sourceToolId?: string | null
+ generationRecordId?: string | null
+ createdAt: string
+ metadata?: Record<string, unknown>
+}
+
+export interface ContentBuildVariantMember {
+ assetId: string
+ versionId?: string | null
+ label?: string | null
+ status: ContentBuildVariantStatus
+ score?: number | null
+ createdAt: string
+ metadata?: Record<string, unknown>
+}
+
+export interface ContentBuildVariantGroup {
+ id: string
+ contentBuildId: string
+ slot: string
+ label: string
+ sourceToolId?: string | null
+ members: ContentBuildVariantMember[]
+ selectedAssetId?: string | null
+ finalAssetId?: string | null
+ createdAt: string
+ updatedAt: string
+ metadata?: Record<string, unknown>
+}
+
 export interface ContentBuildYouTubeBinding {
  channelId?: string | null
  videoId: string
@@ -123,6 +164,8 @@ export interface ContentBuildSnapshot {
  assetIds: string[]
  selections: Record<string, string | null>
  relations: ContentBuildAssetRelation[]
+ versions: ContentBuildAssetVersion[]
+ variantGroups: ContentBuildVariantGroup[]
  workflow: ContentBuildWorkflowState
  youtube?: ContentBuildYouTubeBinding | null
  createdAt: string
