@@ -2,11 +2,14 @@ import {
  CONTENT_BUILD_SCHEMA_VERSION,
  type BindYouTubeVideoInput,
  type ContentBuildAssetRelation,
+ type ContentBuildAssetVersion,
  type ContentBuildEvent,
  type ContentBuildEventType,
  type ContentBuildProfile,
  type ContentBuildRelationType,
  type ContentBuildSnapshot,
+ type ContentBuildVariantGroup,
+ type ContentBuildVariantStatus,
  type ContentBuildStage,
  type CreateContentBuildInput,
 } from "./contracts"
@@ -140,6 +143,8 @@ export const createContentBuild = (input: CreateContentBuildInput = {}): Content
   assetIds: [],
   selections: {},
   relations: [],
+  versions: [],
+  variantGroups: [],
   workflow: { completedStepIds: [], blockerIds: [] },
   youtube: null,
   createdAt,
@@ -169,7 +174,11 @@ export const updateContentBuild = (
  if (index < 0) throw new Error("Unknown ContentBuild: " + contentBuildId)
  const current = builds[index]
  const next = {
-  ...updater(current),
+  ...updater({
+   ...current,
+   versions: current.versions || [],
+   variantGroups: current.variantGroups || [],
+  }),
   id: current.id,
   schemaVersion: CONTENT_BUILD_SCHEMA_VERSION,
   revision: current.revision + 1,
@@ -340,6 +349,197 @@ export const addContentBuildAssetRelation = (input: {
   metadata: { relation: input.relation, ...(input.metadata || {}) },
  })
  return relation
+}
+
+export const createContentBuildAssetVersion = (input: {
+ contentBuildId: string
+ assetId: string
+ slot: string
+ label?: string | null
+ parentVersionId?: string | null
+ parentAssetId?: string | null
+ sourceToolId?: string | null
+ generationRecordId?: string | null
+ metadata?: Record<string, unknown>
+}): ContentBuildAssetVersion => {
+ const build = getContentBuild(input.contentBuildId)
+ if (!build) throw new Error("Unknown ContentBuild: " + input.contentBuildId)
+ attachAssetToContentBuild(input.contentBuildId, input.assetId, {
+  toolId: input.sourceToolId,
+  generationRecordId: input.generationRecordId,
+ })
+ const refreshed = getContentBuild(input.contentBuildId)!
+ const slotVersions = (refreshed.versions || []).filter(version => version.slot === input.slot)
+ const version: ContentBuildAssetVersion = {
+  id: uuid(),
+  contentBuildId: input.contentBuildId,
+  assetId: input.assetId,
+  slot: input.slot,
+  version: slotVersions.length ? Math.max(...slotVersions.map(item => item.version)) + 1 : 1,
+  label: input.label || null,
+  parentVersionId: input.parentVersionId || null,
+  parentAssetId: input.parentAssetId || null,
+  sourceToolId: input.sourceToolId || null,
+  generationRecordId: input.generationRecordId || null,
+  createdAt: nowIso(),
+  metadata: input.metadata,
+ }
+ updateContentBuild(input.contentBuildId, current => ({
+  ...current,
+  versions: [...(current.versions || []), version],
+ }))
+ if (input.parentAssetId) {
+  addContentBuildAssetRelation({
+   contentBuildId: input.contentBuildId,
+   fromAssetId: input.parentAssetId,
+   toAssetId: input.assetId,
+   relation: "edited-from",
+   sourceToolId: input.sourceToolId,
+   metadata: { versionId: version.id, slot: input.slot },
+  })
+ }
+ appendContentBuildEvent({
+  contentBuildId: input.contentBuildId,
+  eventType: "asset.versioned",
+  entityType: "asset-version",
+  entityId: version.id,
+  actorType: "tool",
+  toolId: input.sourceToolId || null,
+  inputAssetIds: input.parentAssetId ? [input.parentAssetId] : [],
+  outputAssetIds: [input.assetId],
+  generationRecordId: input.generationRecordId || null,
+  resultingState: version,
+  metadata: { slot: input.slot, version: version.version },
+ })
+ return version
+}
+
+export const createContentBuildVariantGroup = (input: {
+ contentBuildId: string
+ slot: string
+ label: string
+ sourceToolId?: string | null
+ metadata?: Record<string, unknown>
+}): ContentBuildVariantGroup => {
+ const build = getContentBuild(input.contentBuildId)
+ if (!build) throw new Error("Unknown ContentBuild: " + input.contentBuildId)
+ const existing = (build.variantGroups || []).find(group =>
+  group.slot === input.slot && group.label === input.label
+ )
+ if (existing) return existing
+ const timestamp = nowIso()
+ const group: ContentBuildVariantGroup = {
+  id: uuid(),
+  contentBuildId: input.contentBuildId,
+  slot: input.slot,
+  label: input.label,
+  sourceToolId: input.sourceToolId || null,
+  members: [],
+  selectedAssetId: null,
+  finalAssetId: null,
+  createdAt: timestamp,
+  updatedAt: timestamp,
+  metadata: input.metadata,
+ }
+ updateContentBuild(input.contentBuildId, current => ({
+  ...current,
+  variantGroups: [...(current.variantGroups || []), group],
+ }))
+ return group
+}
+
+export const addContentBuildVariant = (input: {
+ contentBuildId: string
+ groupId: string
+ assetId: string
+ versionId?: string | null
+ label?: string | null
+ status?: ContentBuildVariantStatus
+ score?: number | null
+ sourceToolId?: string | null
+ metadata?: Record<string, unknown>
+}): ContentBuildVariantGroup => {
+ const build = getContentBuild(input.contentBuildId)
+ if (!build) throw new Error("Unknown ContentBuild: " + input.contentBuildId)
+ const group = (build.variantGroups || []).find(candidate => candidate.id === input.groupId)
+ if (!group) throw new Error("Unknown ContentBuild variant group: " + input.groupId)
+ attachAssetToContentBuild(input.contentBuildId, input.assetId, { toolId: input.sourceToolId })
+ const existing = group.members.find(member => member.assetId === input.assetId)
+ if (existing) return group
+ const member = {
+  assetId: input.assetId,
+  versionId: input.versionId || null,
+  label: input.label || null,
+  status: input.status || "candidate" as ContentBuildVariantStatus,
+  score: input.score ?? null,
+  createdAt: nowIso(),
+  metadata: input.metadata,
+ }
+ let nextGroup: ContentBuildVariantGroup | null = null
+ updateContentBuild(input.contentBuildId, current => ({
+  ...current,
+  variantGroups: (current.variantGroups || []).map(candidate => {
+   if (candidate.id !== input.groupId) return candidate
+   nextGroup = { ...candidate, members: [...candidate.members, member], updatedAt: nowIso() }
+   return nextGroup
+  }),
+ }))
+ appendContentBuildEvent({
+  contentBuildId: input.contentBuildId,
+  eventType: "asset.variant.created",
+  entityType: "variant-group",
+  entityId: input.groupId,
+  actorType: "tool",
+  toolId: input.sourceToolId || null,
+  outputAssetIds: [input.assetId],
+  metadata: { slot: group.slot, label: input.label || null, versionId: input.versionId || null },
+ })
+ return nextGroup!
+}
+
+export const selectContentBuildVariant = (input: {
+ contentBuildId: string
+ groupId: string
+ assetId: string
+ final?: boolean
+ sourceToolId?: string | null
+ actorType?: ContentBuildEvent["actorType"]
+}): ContentBuildVariantGroup => {
+ const build = getContentBuild(input.contentBuildId)
+ if (!build) throw new Error("Unknown ContentBuild: " + input.contentBuildId)
+ const group = (build.variantGroups || []).find(candidate => candidate.id === input.groupId)
+ if (!group) throw new Error("Unknown ContentBuild variant group: " + input.groupId)
+ if (!group.members.some(member => member.assetId === input.assetId)) {
+  throw new Error("Asset is not a member of variant group: " + input.assetId)
+ }
+ let nextGroup: ContentBuildVariantGroup | null = null
+ updateContentBuild(input.contentBuildId, current => ({
+  ...current,
+  variantGroups: (current.variantGroups || []).map(candidate => {
+   if (candidate.id !== input.groupId) return candidate
+   nextGroup = {
+    ...candidate,
+    selectedAssetId: input.assetId,
+    finalAssetId: input.final ? input.assetId : candidate.finalAssetId || null,
+    members: candidate.members.map(member => ({
+     ...member,
+     status: member.assetId === input.assetId
+      ? (input.final ? "final" : "selected")
+      : member.status === "final" && !input.final
+        ? member.status
+        : "candidate",
+    })),
+    updatedAt: nowIso(),
+   }
+   return nextGroup
+  }),
+ }))
+ setContentBuildSelection(input.contentBuildId, group.slot, input.assetId, {
+  toolId: input.sourceToolId,
+  actorType: input.actorType || "creator",
+  final: input.final,
+ })
+ return nextGroup!
 }
 
 export const bindYouTubeVideo = (input: BindYouTubeVideoInput): ContentBuildSnapshot => {
