@@ -26,6 +26,12 @@ import {
 } from "../components/Toolbox"
 import { StandardButton } from "../components/StandardButton"
 import { PostActionReflection } from "../components/PostActionReflection"
+import { createAsset } from "../services/assetEngine"
+import {
+ recordContentBuildToolInput,
+ recordContentBuildToolOutput,
+ resolveWorkspaceContentBuildToolContext,
+} from "../services/asset-engine/ToolContext"
 
 interface ReferenceImage {
  id: string
@@ -194,6 +200,32 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
   if (!prompt) return
   setGenLoading(true)
   try {
+   const contentContext = resolveWorkspaceContentBuildToolContext(
+    brain,
+    "thumbnail-studio",
+    ["title", "script", "thumbnail"],
+   )
+   if (contentContext) {
+    recordContentBuildToolInput({
+     contentBuildId: contentContext.contentBuildId,
+     toolId: "thumbnail-studio",
+     assetIds: [
+      contentContext.selectedAssets.title?.id,
+      contentContext.selectedAssets.script?.id,
+      contentContext.selectedAssets.thumbnail?.id,
+     ].filter((id): id is string => Boolean(id)),
+     summary: "Generate a thumbnail candidate from the active ContentBuild package context.",
+     metadata: {
+      prompt,
+      hookText,
+      surfaceMode,
+      expression,
+      aspectRatio,
+      imageSize,
+     },
+    })
+   }
+
    const activeColors = palette.filter((c) => c.trim() !== "")
    const paletteWeights = ["60%", "30%", "10%"]
    const paletteContext =
@@ -220,6 +252,61 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
     timestamp: Date.now(),
    }
    setHistory([newItem, ...history])
+
+   const parentAssetIds = [
+    contentContext?.selectedAssets.title?.id,
+    contentContext?.selectedAssets.script?.id,
+    contentContext?.selectedAssets.thumbnail?.id,
+   ].filter((id): id is string => Boolean(id))
+
+   const created = createAsset({
+    sourceToolId: "thumbnail-studio",
+    sourceKind: "studio-tool",
+    payloadKind: "thumbnail",
+    name: `Thumbnail candidate · ${new Date(newItem.timestamp).toISOString()}`,
+    summary: hookText || aiHookText || prompt,
+    kind: "image",
+    url: img,
+    tags: ["thumbnail", "candidate", "content-build"],
+    context: {
+     contentBuildId: contentContext?.contentBuildId || null,
+     projectId: contentContext?.build.legacyProjectId || null,
+     projectName: contentContext?.build.legacyProjectName || null,
+     videoId: contentContext?.build.youtube?.videoId || null,
+     stage: "metadata",
+     parentAssetIds,
+    },
+    metadata: {
+     historyId: newItem.id,
+     prompt,
+     hookText: hookText || null,
+     aiHookText: aiHookText || null,
+     aiExpression: aiExpression || null,
+     aiColorStrategy: aiColorStrategy || null,
+     expression,
+     surfaceMode,
+     aspectRatio,
+     imageSize,
+     selectedStyles,
+     palette: activeColors,
+     candidate: true,
+    },
+   })
+
+   if (contentContext) {
+    recordContentBuildToolOutput({
+     contentBuildId: contentContext.contentBuildId,
+     toolId: "thumbnail-studio",
+     assetIds: [created.asset.id],
+     generationRecordId: created.generationRecordId,
+     summary: "Created one thumbnail candidate and attached it to the active ContentBuild.",
+     metadata: {
+      historyId: newItem.id,
+      aspectRatio,
+      surfaceMode,
+     },
+    })
+   }
   } catch (e: any) {
    console.error(e)
    alert("Generation Failed.")
