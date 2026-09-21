@@ -582,14 +582,18 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
            </span>
           </button>
          </h3>
-         <div className={`grid shrink-0 place-items-center border-l-[3px] border-black px-2 py-1 ${expanded ? "border-b-[2px]" : ""}`}>
+         <div className={`flex shrink-0 items-center gap-1.5 border-l-[3px] border-black px-1.5 py-1 ${expanded ? "border-b-[2px]" : ""}`}>
+          <SubToolboxCheckbox
+           checked={groupSelected}
+           onChange={() => toggleMany(groupCategoryIds)}
+           aria-label={`${label} batch selection`}
+           label={<span className="sr-only">${label} batch selection</span>}
+           className="vt-sync-batch-checkbox"
+          />
           <RetroSyncExecutionSwitch
            idleLabel="SYNC ALL"
            status={toExecutionStatus(groupStatus)}
            onClick={() => void startCategories(groupCategoryIds, units.some((unit) => unit.id === "retention"))}
-           selected={groupSelected}
-           onSelectedChange={() => toggleMany(groupCategoryIds)}
-           selectionLabel={`${label} batch selection`}
           />
          </div>
         </div>
@@ -610,8 +614,12 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
           const unitContentId = `vt-sync-unified-unit-${unit.id}`
           const isNextUnit = queueSummary.nextLabel === unit.label
            || Boolean(model?.rows.some((row) => queueSummary.nextLabel.includes(row.category.label)))
-          const statusBadge = statusBadgeForUnit(unitStatus, model?.lastSyncedAt, isNextUnit)
-          const resultBadge = `${formatDurationLong(model?.durationMs)} · ${(model?.displayRows || 0).toLocaleString()} ${resultNounForUnit(unit.id, model?.displayRows || 0, unit.label)}`
+          const statusValue = statusLabelForUnit(unitStatus, isNextUnit)
+          const lastSyncValue = formatCompactLastSync(model?.lastSyncedAt)
+          const resultValue = `${formatDuration(model?.durationMs)} · ${compactRows(model?.displayRows || 0)} ${resultNounForUnit(unit.id, model?.displayRows || 0, unit.label)}`
+          const modeValue = formatPlainLabel(unit.refreshPolicy)
+          const issueValue = (model?.issueCount || 0) > 0 ? `${model?.issueCount} ISSUE${model?.issueCount === 1 ? "" : "S"}` : "NONE"
+          const queryValue = String(unit.categoryIds.length)
           const immediateLabel = immediateLabelForUnit(unitStatus, isNextUnit, hasPriorData)
           const toggleUnitDetails = () => {
            if (!hasExtraDetail) return
@@ -625,20 +633,21 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
 
           return (
            <article key={unit.id} className="border-b-[2px] border-black last:border-b-0">
-            <div className="grid min-h-[50px] grid-cols-[66px_minmax(0,1fr)_96px] items-stretch bg-white">
+            <div className="grid min-h-[64px] grid-cols-[40px_minmax(0,1fr)_92px] items-stretch bg-white">
              <div className="grid place-items-center border-r-[2px] border-black bg-[#f4f4f4] px-0.5 py-1">
-              <RetroBatchSelectionSwitch
-               selected={selectedForBatch}
+              <SubToolboxCheckbox
+               checked={selectedForBatch}
                onChange={() => toggleMany(unit.categoryIds)}
-               label={`${unit.label} batch selection`}
+               aria-label={`${unit.label} batch selection`}
+               label={<span className="sr-only">${unit.label} batch selection</span>}
+               className="vt-sync-batch-checkbox"
               />
              </div>
 
-             <div className="grid min-w-0 content-center gap-1 px-2.5 py-1.5">
-              <strong className="block min-w-0 truncate text-[11px] font-[1000] uppercase leading-none">{unit.label}</strong>
+             <div className="flex min-w-0 flex-col justify-center gap-1 px-2.5 py-2">
+              <strong className="block min-w-0 whitespace-normal break-words text-[15px] font-[1000] uppercase leading-[1.02] tracking-[-0.035em] sm:text-[16px]">{unit.label}</strong>
               <span
-               className="block min-w-0 truncate text-[7.5px] font-black uppercase tracking-[0.035em] text-black/45"
-               title={unit.description}
+               className="block min-w-0 whitespace-normal break-words text-[9px] font-black uppercase leading-[1.18] tracking-[0.025em] text-black/45"
               >
                {unit.description}
               </span>
@@ -655,31 +664,28 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
              </div>
             </div>
 
-            <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto border-t border-black/15 bg-[#f7f7f7] px-2 py-1.5 custom-scrollbar">
-             <SyncMetaBadge tone={statusBadge.tone} title={statusBadge.text}>{statusBadge.text}</SyncMetaBadge>
-             <SyncMetaBadge tone={model?.displayRows ? "info" : "neutral"} title={resultBadge}>{resultBadge}</SyncMetaBadge>
-             <SyncMetaBadge tone={unit.defaultEnabled ? "good" : "accent"}>{formatPlainLabel(unit.refreshPolicy)}</SyncMetaBadge>
-             <SyncMetaBadge
-              tone={(model?.issueCount || 0) > 0 ? "bad" : "good"}
-              onClick={hasExtraDetail ? toggleUnitDetails : undefined}
-              title={hasExtraDetail ? (expandedUnit ? "Hide dataset details" : "Show dataset details") : undefined}
-             >
-              {(model?.issueCount || 0) > 0
-               ? `${model?.issueCount} ISSUE${model?.issueCount === 1 ? "" : "S"}`
-               : "NO ISSUES"}
-             </SyncMetaBadge>
-             {unit.categoryIds.length > 1 ? (
-              <SyncMetaBadge tone="accent" onClick={toggleUnitDetails} title={expandedUnit ? "Hide child queries" : "Show child queries"}>
-               {unit.categoryIds.length} QUERIES
-              </SyncMetaBadge>
-             ) : null}
-             {unit.id === "video_catalog" ? (
-              <SyncMetaBadge tone="warn" onClick={toggleUnitDetails}>METADATA OPTIONS</SyncMetaBadge>
-             ) : null}
-             {unit.id === "retention" ? (
-              <SyncMetaBadge tone="accent" onClick={toggleUnitDetails}>VIDEO OPTIONS</SyncMetaBadge>
-             ) : null}
-             {model?.sourceLabels[0] ? <SyncMetaBadge tone="neutral">{model.sourceLabels[0]}</SyncMetaBadge> : null}
+            <div className="grid min-w-0 grid-cols-2 gap-1.5 border-t border-black/15 bg-[#f7f7f7] px-2 py-2 sm:grid-cols-3 lg:grid-cols-6">
+             <SyncSpectrumTagPair label="STATUS" value={statusValue} />
+             <SyncSpectrumTagPair label="LAST SYNC" value={lastSyncValue} />
+             <SyncSpectrumTagPair label="RESULT" value={resultValue} />
+             <SyncSpectrumTagPair
+              label="MODE"
+              value={modeValue}
+              onClick={unit.id === "retention" ? toggleUnitDetails : undefined}
+              title={unit.id === "retention" ? (expandedUnit ? "Hide retention options" : "Show retention options") : undefined}
+             />
+             <SyncSpectrumTagPair
+              label="ISSUES"
+              value={issueValue}
+              onClick={(model?.issueCount || 0) > 0 ? toggleUnitDetails : undefined}
+              title={(model?.issueCount || 0) > 0 ? (expandedUnit ? "Hide issue details" : "Show issue details") : undefined}
+             />
+             <SyncSpectrumTagPair
+              label="QUERIES"
+              value={queryValue}
+              onClick={unit.categoryIds.length > 1 ? toggleUnitDetails : undefined}
+              title={unit.categoryIds.length > 1 ? (expandedUnit ? "Hide child queries" : "Show child queries") : undefined}
+             />
             </div>
 
             {hasExtraDetail ? (
