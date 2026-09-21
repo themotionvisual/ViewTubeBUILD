@@ -22,15 +22,12 @@ import {
  CheckCircle2,
  ChevronLeft,
  ChevronRight,
- CircleAlert,
  GripVertical,
  MoreHorizontal,
  Plus,
  Search,
  SlidersHorizontal,
- Tag,
  UserRound,
- X,
 } from "lucide-react"
 import { useBrain } from "../../context/useBrain"
 import type { Project } from "../../types"
@@ -211,10 +208,9 @@ const BoardLane: React.FC<{
 }
 
 const ProjectKanbanWorkspace: React.FC = () => {
- const { brain, updateProject } = useBrain()
+ const { brain, updateProject, setActiveProject } = useBrain()
  const projects = useMemo(() => Array.isArray(brain.projects) ? brain.projects : [], [brain.projects])
  const [workspace, setWorkspace] = useState<ProjectWorkspaceState>(() => hydrateProjectWorkspace(readProjectWorkspace(), projects))
- const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
  const [showCreate, setShowCreate] = useState(false)
  const sensors = useSensors(
   useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -280,10 +276,16 @@ const ProjectKanbanWorkspace: React.FC = () => {
  }, [projects, workspace])
 
  const owners = useMemo(() => Array.from(new Set(Object.values(workspace.projects).map((meta) => meta.owner).filter(Boolean))).sort(), [workspace.projects])
- const selectedProject = projects.find((project) => project.id === selectedProjectId) || null
- const selectedMeta = selectedProject ? workspace.projects[selectedProject.id] : null
+  const openProject = (projectId: string) => {
+  setActiveProject(projectId)
+  if (typeof document !== "undefined") {
+   window.requestAnimationFrame(() => {
+    document.getElementById("project-builder")?.scrollIntoView({ behavior: "smooth", block: "start" })
+   })
+  }
+ }
 
-  return (
+ return (
   <div className="w-full overflow-hidden rounded-[14px] border-[4px] border-black bg-white shadow-[8px_8px_0_rgba(0,0,0,0.16)]">
    <header className="border-b-[4px] border-black bg-[#00CCFF] px-3 py-3 sm:px-4">
     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -331,7 +333,7 @@ const ProjectKanbanWorkspace: React.FC = () => {
        const laneProjects = filteredProjects
         .filter((project) => workspace.projects[project.id]?.lane === lane.id)
         .sort((a, b) => (workspace.projects[a.id]?.order ?? 0) - (workspace.projects[b.id]?.order ?? 0))
-       return <BoardLane key={lane.id} lane={lane} projects={laneProjects} state={workspace} onOpen={setSelectedProjectId} onMove={moveByDirection} />
+       return <BoardLane key={lane.id} lane={lane} projects={laneProjects} state={workspace} onOpen={openProject} onMove={moveByDirection} />
       })}
      </div>
     </div>
@@ -353,36 +355,10 @@ const ProjectKanbanWorkspace: React.FC = () => {
       const hydrated = hydrateProjectWorkspace(current, [...projects, project])
       return patchProjectMeta(hydrated, project.id, { priority, lane: "ideas" })
      })
-     setSelectedProjectId(project.id)
+     openProject(project.id)
     }}
    />
 
-   {selectedProject && selectedMeta ? (
-    <div className="fixed inset-0 z-[110] flex justify-end bg-black/35" role="dialog" aria-modal="true" aria-label={`${selectedProject.name} project details`}>
-     <aside className="h-full w-full max-w-[430px] overflow-y-auto border-l-[4px] border-black bg-white shadow-[-8px_0_0_rgba(0,0,0,.15)]">
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b-[3px] border-black px-4 py-3" style={{ backgroundColor: laneTone[selectedMeta.lane] }}>
-       <div>
-        <div className="text-[9px] font-black uppercase text-black/55">Project details</div>
-        <h3 className="text-[16px] font-[1000] uppercase leading-tight">{selectedProject.name}</h3>
-       </div>
-       <button type="button" onClick={() => setSelectedProjectId(null)} className="flex h-8 w-8 items-center justify-center rounded-[6px] border-[2px] border-black bg-white"><X size={16} /></button>
-      </div>
-      <div className="grid gap-4 p-4">
-       <label className="grid gap-1 text-[9px] font-black uppercase">Title<input value={selectedProject.name} onChange={(event) => updateProject(selectedProject.id, { name: event.target.value } as Partial<Project>)} className="h-10 rounded-[7px] border-[2px] border-black px-3 text-[11px] normal-case outline-none" /></label>
-       <div className="grid grid-cols-2 gap-2">
-        <label className="grid gap-1 text-[9px] font-black uppercase">Status<select value={selectedMeta.lane} onChange={(event) => moveProject(selectedProject.id, event.target.value as ProjectLaneId)} className="h-10 rounded-[7px] border-[2px] border-black px-2 text-[9px] font-black uppercase outline-none">{PROJECT_LANES.map((lane) => <option key={lane.id} value={lane.id}>{lane.label}</option>)}</select></label>
-        <label className="grid gap-1 text-[9px] font-black uppercase">Priority<select value={selectedMeta.priority} onChange={(event) => patchWorkspace((state) => patchProjectMeta(state, selectedProject.id, { priority: event.target.value as ProjectPriority }))} className="h-10 rounded-[7px] border-[2px] border-black px-2 text-[9px] font-black uppercase outline-none"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></label>
-       </div>
-       <label className="grid gap-1 text-[9px] font-black uppercase">Owner<div className="relative"><UserRound size={14} className="absolute left-3 top-3" /><input value={selectedMeta.owner} onChange={(event) => patchWorkspace((state) => patchProjectMeta(state, selectedProject.id, { owner: event.target.value }))} placeholder="Unassigned" className="h-10 w-full rounded-[7px] border-[2px] border-black pl-9 pr-3 text-[10px] normal-case outline-none" /></div></label>
-       <label className="grid gap-1 text-[9px] font-black uppercase">Publish date<input type="date" value={selectedProject.publishDate || ""} onChange={(event) => updateProject(selectedProject.id, { publishDate: event.target.value } as Partial<Project>)} className="h-10 rounded-[7px] border-[2px] border-black px-3 text-[10px] outline-none" /></label>
-       <label className="grid gap-1 text-[9px] font-black uppercase">Description<textarea value={selectedProject.description || ""} onChange={(event) => updateProject(selectedProject.id, { description: event.target.value } as Partial<Project>)} rows={5} className="rounded-[7px] border-[2px] border-black p-3 text-[10px] font-medium normal-case outline-none" /></label>
-       <label className="grid gap-1 text-[9px] font-black uppercase"><span className="flex items-center gap-1"><Tag size={12} /> Tags</span><input value={selectedMeta.tags.join(", ")} onChange={(event) => patchWorkspace((state) => patchProjectMeta(state, selectedProject.id, { tags: event.target.value.split(",").map((tag) => tag.trim()).filter(Boolean) }))} placeholder="history, longform, sponsor" className="h-10 rounded-[7px] border-[2px] border-black px-3 text-[10px] normal-case outline-none" /></label>
-       {selectedMeta.lane === "blocked" ? <div className="flex gap-2 rounded-[8px] border-[2px] border-black bg-[#FF4FD8] p-3 text-[9px] font-black uppercase text-white"><CircleAlert size={16} className="shrink-0" /> This project is blocked. Update its description or tasks with the recovery action, then move it back into production.</div> : null}
-       <button type="button" onClick={() => { patchWorkspace((state) => patchProjectMeta(state, selectedProject.id, { archived: true })); setSelectedProjectId(null) }} className="flex h-10 items-center justify-center gap-2 rounded-[7px] border-[2px] border-black bg-white text-[9px] font-black uppercase hover:bg-black hover:text-white"><Archive size={14} /> Archive project</button>
-      </div>
-     </aside>
-    </div>
-   ) : null}
   </div>
  )
 }
