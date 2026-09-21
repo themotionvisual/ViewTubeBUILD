@@ -1,7 +1,8 @@
 import React, { useMemo, useRef, useState } from "react"
 import { CheckSquare, ChevronDown, ChevronRight, Copy, RefreshCw, ShieldCheck, Square } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
-import { getPaletteColor } from "../../../styles/toolboxPalette"
+import { SubToolboxBadge } from "../../../components/subtoolbox/SubToolboxPrimitives"
+import { getPaletteColor, VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
 import { RetroAnalogToggle, RetroBatchSelectionSwitch, RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
 import type {
  VtSyncAnalyticsWindow,
@@ -52,17 +53,43 @@ const formatPlainLabel = (value: string) => value.replace(/_/g, " ").replace(/\b
 
 type SyncBadgeTone = "neutral" | "live" | "good" | "warn" | "bad" | "info" | "accent"
 
+const SYNC_BADGE_COLORS: Record<SyncBadgeTone, string> = {
+ neutral: VT_SPECTRUM_PALETTE_06[8],
+ live: VT_SPECTRUM_PALETTE_06[7],
+ good: VT_SPECTRUM_PALETTE_06[5],
+ warn: VT_SPECTRUM_PALETTE_06[3],
+ bad: VT_SPECTRUM_PALETTE_06[0],
+ info: VT_SPECTRUM_PALETTE_06[6],
+ accent: VT_SPECTRUM_PALETTE_06[9],
+}
+
 const SyncMetaBadge: React.FC<{
  tone?: SyncBadgeTone
  children: React.ReactNode
  onClick?: () => void
  title?: string
 }> = ({ tone = "neutral", children, onClick, title }) => {
- const className = `vt-sync-meta-badge is-${tone} ${onClick ? "is-clickable" : ""}`
- if (onClick) {
-  return <button type="button" className={className} onClick={onClick} title={title}>{children}</button>
- }
- return <span className={className} title={title}>{children}</span>
+ const badge = (
+  <SubToolboxBadge
+   level="l2"
+   className="vt-sync-standard-badge"
+   style={{ ["--pair-a" as string]: SYNC_BADGE_COLORS[tone] } as React.CSSProperties}
+   title={title}
+  >
+   {children}
+  </SubToolboxBadge>
+ )
+ if (!onClick) return badge
+ return (
+  <button
+   type="button"
+   className="vt-sync-standard-badge-action"
+   onClick={onClick}
+   title={title}
+  >
+   {badge}
+  </button>
+ )
 }
 
 const buildUnitGroups = (hasContentOwner: boolean) => VT_SYNC_GROUP_ORDER
@@ -612,8 +639,8 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
 
           return (
            <article key={unit.id} className="border-b-[2px] border-black last:border-b-0">
-            <div className="grid min-h-[78px] grid-cols-[50px_minmax(0,1fr)_108px] items-stretch bg-white">
-             <div className="grid place-items-center border-r-[2px] border-black bg-[#f4f4f4] p-0.5">
+            <div className="grid min-h-[50px] grid-cols-[66px_minmax(0,1fr)_96px] items-stretch bg-white">
+             <div className="grid place-items-center border-r-[2px] border-black bg-[#f4f4f4] px-0.5 py-1">
               <RetroBatchSelectionSwitch
                selected={selectedForBatch}
                onChange={() => toggleMany(unit.categoryIds)}
@@ -621,55 +648,52 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
               />
              </div>
 
-             <div className="grid min-w-0 grid-rows-2">
-              <div className="flex min-w-0 items-center gap-2 border-b border-black/15 px-2.5 py-1.5">
-               <strong className="shrink-0 truncate text-[11px] font-[1000] uppercase leading-none">{unit.label}</strong>
-               <span
-                className="min-w-0 flex-1 truncate text-[7.5px] font-black uppercase tracking-[0.035em] text-black/45"
-                title={unit.description}
-               >
-                {unit.description}
-               </span>
-              </div>
-
-              <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto px-2.5 py-1.5 custom-scrollbar">
-               <SyncMetaBadge tone={statusBadge.tone} title={statusBadge.text}>{statusBadge.text}</SyncMetaBadge>
-               <SyncMetaBadge tone={model?.displayRows ? "info" : "neutral"} title={resultBadge}>{resultBadge}</SyncMetaBadge>
-               <SyncMetaBadge tone={unit.defaultEnabled ? "good" : "accent"}>{formatPlainLabel(unit.refreshPolicy)}</SyncMetaBadge>
-               <SyncMetaBadge
-                tone={(model?.issueCount || 0) > 0 ? "bad" : "good"}
-                onClick={hasExtraDetail ? toggleUnitDetails : undefined}
-                title={hasExtraDetail ? (expandedUnit ? "Hide dataset details" : "Show dataset details") : undefined}
-               >
-                {(model?.issueCount || 0) > 0
-                 ? `${model?.issueCount} ISSUE${model?.issueCount === 1 ? "" : "S"}`
-                 : "NO ISSUES"}
-               </SyncMetaBadge>
-               {unit.categoryIds.length > 1 ? (
-                <SyncMetaBadge tone="accent" onClick={toggleUnitDetails} title={expandedUnit ? "Hide child queries" : "Show child queries"}>
-                 {unit.categoryIds.length} QUERIES
-                </SyncMetaBadge>
-               ) : null}
-               {unit.id === "video_catalog" ? (
-                <SyncMetaBadge tone="warn" onClick={toggleUnitDetails}>METADATA OPTIONS</SyncMetaBadge>
-               ) : null}
-               {unit.id === "retention" ? (
-                <SyncMetaBadge tone="accent" onClick={toggleUnitDetails}>VIDEO OPTIONS</SyncMetaBadge>
-               ) : null}
-               {model?.sourceLabels[0] ? <SyncMetaBadge tone="neutral">{model.sourceLabels[0]}</SyncMetaBadge> : null}
-              </div>
+             <div className="grid min-w-0 content-center gap-1 px-2.5 py-1.5">
+              <strong className="block min-w-0 truncate text-[11px] font-[1000] uppercase leading-none">{unit.label}</strong>
+              <span
+               className="block min-w-0 truncate text-[7.5px] font-black uppercase tracking-[0.035em] text-black/45"
+               title={unit.description}
+              >
+               {unit.description}
+              </span>
              </div>
 
-             <div className="grid place-items-center border-l-[2px] border-black bg-[#f4f4f4] p-0.5">
+             <div className="grid place-items-center border-l-[2px] border-black bg-[#f4f4f4] px-1 py-1">
               <RetroSyncExecutionSwitch
                idleLabel={hasPriorData ? "UPDATE" : "FULL SYNC"}
                labelOverride={immediateLabel}
                status={toExecutionStatus(unitStatus)}
                onClick={() => void startCategories(unit.categoryIds)}
                disabled={selectedWindows.length === 0}
-               className="is-row-sync-control"
               />
              </div>
+            </div>
+
+            <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto border-t border-black/15 bg-[#f7f7f7] px-2 py-1.5 custom-scrollbar">
+             <SyncMetaBadge tone={statusBadge.tone} title={statusBadge.text}>{statusBadge.text}</SyncMetaBadge>
+             <SyncMetaBadge tone={model?.displayRows ? "info" : "neutral"} title={resultBadge}>{resultBadge}</SyncMetaBadge>
+             <SyncMetaBadge tone={unit.defaultEnabled ? "good" : "accent"}>{formatPlainLabel(unit.refreshPolicy)}</SyncMetaBadge>
+             <SyncMetaBadge
+              tone={(model?.issueCount || 0) > 0 ? "bad" : "good"}
+              onClick={hasExtraDetail ? toggleUnitDetails : undefined}
+              title={hasExtraDetail ? (expandedUnit ? "Hide dataset details" : "Show dataset details") : undefined}
+             >
+              {(model?.issueCount || 0) > 0
+               ? `${model?.issueCount} ISSUE${model?.issueCount === 1 ? "" : "S"}`
+               : "NO ISSUES"}
+             </SyncMetaBadge>
+             {unit.categoryIds.length > 1 ? (
+              <SyncMetaBadge tone="accent" onClick={toggleUnitDetails} title={expandedUnit ? "Hide child queries" : "Show child queries"}>
+               {unit.categoryIds.length} QUERIES
+              </SyncMetaBadge>
+             ) : null}
+             {unit.id === "video_catalog" ? (
+              <SyncMetaBadge tone="warn" onClick={toggleUnitDetails}>METADATA OPTIONS</SyncMetaBadge>
+             ) : null}
+             {unit.id === "retention" ? (
+              <SyncMetaBadge tone="accent" onClick={toggleUnitDetails}>VIDEO OPTIONS</SyncMetaBadge>
+             ) : null}
+             {model?.sourceLabels[0] ? <SyncMetaBadge tone="neutral">{model.sourceLabels[0]}</SyncMetaBadge> : null}
             </div>
 
             {hasExtraDetail ? (
