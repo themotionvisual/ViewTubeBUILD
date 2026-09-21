@@ -14,6 +14,7 @@ const clip = (value: string, maximum: number): string => value.slice(0, Math.max
 
 export const buildBrainContextPack = (input: {
  systemPrompt: string
+ channelId?: string | null
  snapshot: AIBrainContextSnapshot
  recentTurns: AIBrainConversationTurn[]
  nicheKnowledge?: NicheKnowledgeProfile | null
@@ -24,7 +25,7 @@ export const buildBrainContextPack = (input: {
  algorithmIntelligence?: string
  maximumCharacters?: number
 }): { systemInstruction: string; budget: BrainContextBudget } => {
- const controls = readBrainUserControls()
+ const controls = readBrainUserControls(input.channelId)
  const maximumCharacters = input.maximumCharacters || 24_000
  const omittedSections: string[] = []
  const system = clip(input.systemPrompt, 11_000)
