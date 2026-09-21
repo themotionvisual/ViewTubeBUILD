@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { Boxes, CalendarDays, FolderKanban, Gauge, Plus, Workflow } from "lucide-react"
 import { useBrain } from "../../context/useBrain"
+import type { Project } from "../../types"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import { SubToolbox } from "../Toolbox"
 import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../subtoolbox/SubToolboxLayouts"
@@ -239,7 +240,7 @@ const ProjectBuilder: React.FC = () => {
                 status={activeProject.status || "ideation"}
                 script={activeProject.script || ""}
                 notes={activeProject.notes || ""}
-                onChange={(field, value) => updateProject(activeProject.id, { [field]: value } as Partial<typeof activeProject>)}
+                onChange={(field, value) => updateProject(activeProject.id, { [field]: value } as Partial<Project>)}
               />
             </SubToolbox>
 
