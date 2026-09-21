@@ -103,6 +103,7 @@ export const RetroSyncExecutionSwitch: React.FC<{
   <div
    className={`vt-retro-pcb-group is-category-action ${status === "running" ? "is-active" : ""} ${statusClass} ${className}`}
    data-sync-status={status}
+   data-sync-label={statusLabel}
    style={{
     "--active-col": "var(--led-green)",
     "--active-col-rgb": "var(--led-green-rgb)",
