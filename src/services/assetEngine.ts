@@ -17,7 +17,6 @@ import {
  listContentBuildEvents,
  listContentBuilds,
  setContentBuildSelection,
- setContentBuildStage,
 } from "./asset-engine/ContentBuildRepository"
 import type {
  ContentBuildRelationType,
@@ -115,7 +114,7 @@ export const resolveContentBuildForContext = (
  context: AssetEngineContext = {},
  sourceToolId?: string,
 ): ContentBuildSnapshot | null => {
- const build = ensureContentBuild({
+ return ensureContentBuild({
   id: context.contentBuildId || undefined,
   channelId: context.channelId || null,
   legacyProjectId: context.projectId || null,
@@ -125,13 +124,6 @@ export const resolveContentBuildForContext = (
   profile: context.projectName ? { workingConcept: context.projectName } : undefined,
   toolId: sourceToolId || null,
  })
- if (build && context.stage) {
-  const desired = toContentBuildStage(context.stage)
-  if (desired && build.stage !== desired) {
-   return setContentBuildStage(build.id, desired, { actorType: "tool", toolId: sourceToolId || null })
-  }
- }
- return build
 }
 
 export const createAsset = (input: CreateAssetInput): AssetEngineResult => {
@@ -206,13 +198,6 @@ export const createAsset = (input: CreateAssetInput): AssetEngineResult => {
  })
 
  if (contentBuildId) {
-  attachAssetToContentBuild(contentBuildId, asset.id, {
-   toolId: input.sourceToolId,
-   evidenceIds: evidenceIds(context),
-   generationRecordId: record.id,
-   traceId: context.traceId || null,
-   metadata: { payloadKind: input.payloadKind, artifactId: artifact.id },
-  })
   appendContentBuildEvent({
    contentBuildId,
    eventType: "asset.created",
@@ -229,6 +214,13 @@ export const createAsset = (input: CreateAssetInput): AssetEngineResult => {
     artifactId: artifact.id,
     kind: input.kind,
    },
+  })
+  attachAssetToContentBuild(contentBuildId, asset.id, {
+   toolId: input.sourceToolId,
+   evidenceIds: evidenceIds(context),
+   generationRecordId: record.id,
+   traceId: context.traceId || null,
+   metadata: { payloadKind: input.payloadKind, artifactId: artifact.id },
   })
   ;(context.parentAssetIds || []).forEach(parentAssetId => {
    addContentBuildAssetRelation({
