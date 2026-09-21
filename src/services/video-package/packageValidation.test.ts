@@ -14,7 +14,7 @@ describe("canonical video package contract", () => {
  it("creates a channel- and project-scoped package with provenance", () => {
   const result = create()
   expect(validateVideoPackage(result)).toEqual({ valid: true, issues: [] })
-  expect(result).toMatchObject({ schemaVersion: 1, version: 1, channelId: "channel-a", projectId: "project-a", identity: { status: "idea" } })
+  expect(result).toMatchObject({ schemaVersion: 1, contentBuildId: "package-a", version: 1, channelId: "channel-a", projectId: "project-a", identity: { status: "idea" } })
   expect(result.provenance[0]).toMatchObject({ action: "package_created", sourceToolId: "creator-canvas-os" })
  })
 

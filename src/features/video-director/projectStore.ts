@@ -141,6 +141,14 @@ export const normalizeVideoDirectorProject = (value: unknown): VideoDirectorProj
       typeof raw.name === "string" && raw.name.trim()
         ? raw.name
         : fallback.name,
+    contentBuildId:
+      typeof raw.contentBuildId === "string" && raw.contentBuildId.trim()
+        ? raw.contentBuildId
+        : undefined,
+    legacyProjectId:
+      typeof raw.legacyProjectId === "string" && raw.legacyProjectId.trim()
+        ? raw.legacyProjectId
+        : undefined,
     mode: modeResult.success ? modeResult.data : fallback.mode,
     activeCategoryId: activeCategoryResult.success
       ? activeCategoryResult.data

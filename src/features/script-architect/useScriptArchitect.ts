@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { generateScript } from "../../services/gemini"
 import { createSuperToolActionPacket } from "../../services/superToolActionPackets"
+import { resolveWorkspaceContentBuildToolContext } from "../../services/asset-engine/ToolContext"
 import {
  HOOK_SECTION_ID,
  OUTRO_SECTION_ID,
@@ -346,6 +347,7 @@ export const useScriptArchitect = (): ScriptArchitectController => {
  const savePacket = useCallback(async () => {
   if (!result) return
   const title = project.topic.trim() || "Untitled script"
+  const contentContext = resolveWorkspaceContentBuildToolContext(brain, "creator-canvas-os", ["script"])
   const locked = lockSummary
   const confidence =
    locked.altered === 0 && result.groundingNotes.length === 0 && result.assumptions.length <= 1
@@ -357,9 +359,15 @@ export const useScriptArchitect = (): ScriptArchitectController => {
   const packet = createSuperToolActionPacket({
    toolId: "creator-canvas-os",
    moduleId: "script-architect",
+   contentBuildId: contentContext?.contentBuildId || null,
+   projectId: contentContext?.build.legacyProjectId || null,
+   projectName: contentContext?.build.legacyProjectName || null,
    title: `${title} script packet`,
    summary: `Assembled a ${formatClock(reconciliation?.actualMinutes ?? budget.allocatedMinutes)} script for ${title} across ${result.sections.length} sections (${budget.wordBudget} word budget, ${project.pacing} pacing), with ${locked.verbatim}/${locked.total} locked pieces verified verbatim and ${result.shortsIdeas.length} priming short(s) proposed.`,
    inputs: {
+    contentBuildId: contentContext?.contentBuildId || null,
+    projectId: contentContext?.build.legacyProjectId || null,
+    projectName: contentContext?.build.legacyProjectName || null,
     topic: project.topic,
     angle: project.angle,
     audience: project.audience,
@@ -432,7 +440,7 @@ export const useScriptArchitect = (): ScriptArchitectController => {
 
   await emitSignal("SCRIPT_ARCHITECT", "SCRIPT_PACKET_CREATED", packet)
   setStatus("Script packet saved with Vault artifact, workflow chain, and Brain signal.")
- }, [result, project, budget, reconciliation, lockSummary, emitSignal])
+ }, [result, project, budget, reconciliation, lockSummary, emitSignal, brain])
 
  return {
   project,
