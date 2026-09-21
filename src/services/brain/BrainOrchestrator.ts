@@ -36,6 +36,8 @@ import {
  shouldUseCurrentGrounding,
 } from "./BrainCapabilityRegistry"
 import { resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
+import { buildBrainStatisticsIntelligence } from "./BrainStatisticsBridge"
+import { buildBrainAudienceIntelligence } from "./BrainAudienceBridge"
 import {
  cacheCurrentNicheResearch,
  readCachedCurrentNicheResearch,
@@ -300,6 +302,12 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
  })
  const capabilities = selectBrainCapabilities({ userText: input.userText, snapshot: input.snapshot })
  const capabilityIds = capabilities.map((capability) => capability.id)
+ const statisticsIntelligence = capabilityIds.includes("statistics-intelligence")
+  ? buildBrainStatisticsIntelligence()
+  : null
+ const audienceIntelligence = statisticsIntelligence && inferBrainIntent(input.userText) === "audience"
+  ? buildBrainAudienceIntelligence()
+  : null
  let nicheKnowledge: NicheKnowledgeProfile | null = null
  let currentResearch = ""
  let citations: BrainResponseCitation[] = []
@@ -308,6 +316,8 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   snapshot: input.snapshot,
   recentTurns: input.recentTurns || [],
   userText: input.userText,
+  statisticsIntelligence,
+  audienceIntelligence,
  })
  try {
   if (capabilities.some((capability) => capability.id === "niche-knowledge")) {
@@ -344,6 +354,8 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    nicheKnowledge,
    currentResearch,
    userText: input.userText,
+   statisticsIntelligence,
+   audienceIntelligence,
   })
 
   let response = buildFallback(input.userText, input.snapshot, input.growthContext)
