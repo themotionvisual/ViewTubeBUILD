@@ -594,18 +594,22 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
            (model?.issueCount || 0) > 0
            || unit.id === "retention"
            || unit.id === "video_catalog"
-           || unit.categoryIds.length > 1
           )
           const unitContentId = `vt-sync-unified-unit-${unit.id}`
           const isNextUnit = queueSummary.nextLabel === unit.label
            || Boolean(model?.rows.some((row) => queueSummary.nextLabel.includes(row.category.label)))
           const statusValue = statusLabelForUnit(unitStatus, isNextUnit)
           const lastSyncValue = formatCompactLastSync(model?.lastSyncedAt)
-          const resultValue = `${formatDuration(model?.durationMs)} · ${compactRows(model?.displayRows || 0)} ${resultNounForUnit(unit.id, model?.displayRows || 0, unit.label)}`
-          const modeValue = formatPlainLabel(unit.refreshPolicy)
-          const issueValue = (model?.issueCount || 0) > 0 ? `${model?.issueCount} ISSUE${model?.issueCount === 1 ? "" : "S"}` : "NONE"
-          const queryValue = String(unit.categoryIds.length)
+          const statusAndSyncValue = lastSyncValue === "NEVER"
+           ? `STATUS: ${statusValue}`
+           : `STATUS: ${statusValue} - ${lastSyncValue}`
+          const durationValue = formatDuration(model?.durationMs)
+          const resultValue = `RESULT: ${durationValue === "—" ? "" : `${durationValue} - `}${compactRows(model?.displayRows || 0)} ${resultNounForUnit(unit.id, model?.displayRows || 0, unit.label)}`
+          const issueValue = `ISSUES: ${model?.issueCount || 0}`
           const immediateLabel = immediateLabelForUnit(unitStatus, isNextUnit, hasPriorData)
+          const groupColor = GROUP_COLORS[group]
+          const rowFill = `color-mix(in srgb, ${groupColor} ${selectedForBatch ? 30 : 10}%, white)`
+          const titleFontSize = unit.label.length > 29 ? "12px" : unit.label.length > 24 ? "13px" : "15px"
           const toggleUnitDetails = () => {
            if (!hasExtraDetail) return
            setExpandedUnitIds((current) => {
