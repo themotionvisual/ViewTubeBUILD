@@ -49,8 +49,6 @@ export type VtSyncRetentionVideoOption = {
 }
 
 const GROUP_COLORS: Record<string, string> = Object.fromEntries(VT_SYNC_GROUP_ORDER.map((group, index) => [group, getPaletteColor(index * 2)]))
-const formatPlainLabel = (value: string) => value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
-
 type SyncSpectrumTagProps = {
  text: string
  spectrumKey: string
