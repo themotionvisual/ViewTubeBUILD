@@ -143,7 +143,7 @@ export const VideoManagerWidget = ({ data, ...common }: WidgetProps) => {
     [selectedVideoId, videos],
   )
 
-  const videoOptions = useMemo<WidgetVideoSelectOption[]>(() =>
+  const videoOptions = useMemo(() =>
     videos.map((video) => ({
       value: video.videoId,
       label: video.title || video.videoId,
