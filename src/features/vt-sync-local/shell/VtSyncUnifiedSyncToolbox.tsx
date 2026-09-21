@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from "react"
 import { CheckSquare, ChevronDown, ChevronRight, Copy, RefreshCw, ShieldCheck, Square } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
-import { SubToolboxAlphabeticalTag, SubToolboxCheckbox } from "../../../components/subtoolbox/SubToolboxPrimitives"
+import { SubToolboxAlphabeticalTag, SubToolboxCheckControl } from "../../../components/subtoolbox/SubToolboxPrimitives"
 import { getPaletteColor } from "../../../styles/toolboxPalette"
 import { RetroAnalogToggle, RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
 import type {
@@ -569,12 +569,16 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
           className={`flex shrink-0 items-center gap-1.5 border-l-[3px] border-black px-1.5 py-1 ${expanded ? "border-b-[2px]" : ""}`}
           style={{ ["--vt-subtoolbox-fill" as string]: GROUP_COLORS[group] } as React.CSSProperties}
          >
-          <SubToolboxCheckbox
+          <SubToolboxCheckControl
+           level="l2"
            checked={groupSelected}
-           onChange={() => toggleMany(groupCategoryIds)}
+           onClick={() => toggleMany(groupCategoryIds)}
            aria-label={`${label} batch selection`}
-           label={`${label} batch selection`}
            className="vt-sync-batch-checkbox"
+           style={{
+            ["--pair-a" as string]: "#ffffff",
+            ["--pair-b" as string]: GROUP_COLORS[group],
+           } as React.CSSProperties}
           />
           <RetroSyncExecutionSwitch
            idleLabel="SYNC ALL"
@@ -632,12 +636,16 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
            >
             <div className="grid min-h-[66px] grid-cols-[36px_minmax(0,1fr)_88px] items-stretch" style={{ backgroundColor: rowFill }}>
              <div className="grid place-items-center px-0.5 py-1">
-              <SubToolboxCheckbox
+              <SubToolboxCheckControl
+               level="l2"
                checked={selectedForBatch}
-               onChange={() => toggleMany(unit.categoryIds)}
+               onClick={() => toggleMany(unit.categoryIds)}
                aria-label={`${unit.label} batch selection`}
-               label={`${unit.label} batch selection`}
                className="vt-sync-batch-checkbox"
+               style={{
+                ["--pair-a" as string]: "#ffffff",
+                ["--pair-b" as string]: groupColor,
+               } as React.CSSProperties}
               />
              </div>
 
