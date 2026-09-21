@@ -1,0 +1,299 @@
+:where(.dashboard-barrier) .video-manager-widget {
+  --video-manager-side: clamp(10rem, 28cqw, 15rem);
+  container: video-manager-widget / inline-size;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: var(--widget-component-gap);
+  color: var(--widget-border);
+}
+
+:where(.dashboard-barrier) .video-manager-selector {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-manager-main {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+
+:where(.dashboard-barrier) .video-manager-package-desk {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, .55fr);
+  gap: var(--widget-component-gap);
+  align-items: stretch;
+  min-width: 0;
+  padding: var(--widget-component-gap);
+  border: var(--widget-module-stroke) solid var(--widget-border);
+  border-radius: var(--widget-control-radius);
+  background: color-mix(in srgb, var(--widget-color) 12%, white);
+}
+
+:where(.dashboard-barrier) .video-manager-package-desk.is-empty {
+  flex: 1 1 auto;
+  min-height: 8rem;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  text-align: center;
+}
+
+:where(.dashboard-barrier) .video-manager-desk-placeholder {
+  display: grid;
+  place-items: center;
+  gap: var(--widget-component-gap);
+  max-width: 28rem;
+}
+
+:where(.dashboard-barrier) .video-manager-desk-placeholder svg {
+  width: calc(var(--widget-control-height) * 1.2);
+  height: calc(var(--widget-control-height) * 1.2);
+  opacity: .55;
+}
+
+:where(.dashboard-barrier) .video-manager-desk-placeholder strong {
+  font-size: var(--widget-type-body);
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+:where(.dashboard-barrier) .video-manager-desk-placeholder span {
+  font-size: var(--widget-type-body);
+  font-weight: 750;
+}
+
+:where(.dashboard-barrier) .video-manager-package-identity {
+  display: grid;
+  grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr);
+  gap: var(--widget-component-gap);
+  align-items: center;
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-manager-package-identity img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: var(--widget-module-stroke) solid var(--widget-border);
+  border-radius: var(--widget-control-radius);
+}
+
+:where(.dashboard-barrier) .video-manager-package-identity div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+:where(.dashboard-barrier) .video-manager-package-identity span,
+:where(.dashboard-barrier) .video-manager-package-identity small {
+  font-size: var(--widget-type-label);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+:where(.dashboard-barrier) .video-manager-package-identity strong {
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: var(--widget-type-body);
+  font-weight: 950;
+  line-height: 1.08;
+}
+
+:where(.dashboard-barrier) .video-manager-package-status {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: flex-end;
+  gap: var(--widget-component-gap);
+}
+
+:where(.dashboard-barrier) .video-manager-details {
+  display: grid;
+  grid-template-columns: var(--video-manager-side) minmax(0, 1fr);
+  gap: var(--widget-component-gap);
+  align-items: start;
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-manager-thumbnail-panel,
+:where(.dashboard-barrier) .video-manager-metadata-panel {
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-manager-thumbnail-frame {
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-manager-thumbnail-frame .widget-media-upload-frame {
+  aspect-ratio: 16 / 9;
+  border-style: solid;
+}
+
+:where(.dashboard-barrier) .video-manager-thumbnail-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+:where(.dashboard-barrier) .video-manager-metadata-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--widget-component-gap);
+}
+
+:where(.dashboard-barrier) .video-manager-metadata-panel .widget-control-field {
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-manager-metadata-panel .vt-input,
+:where(.dashboard-barrier) .video-manager-metadata-panel .vt-textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+:where(.dashboard-barrier) .video-manager-description {
+  min-height: calc((var(--widget-control-height) * 2) + var(--widget-component-gap));
+  resize: vertical;
+}
+
+:where(.dashboard-barrier) .video-manager-tags {
+  display: flex;
+  flex-direction: column;
+  gap: var(--widget-component-gap);
+  padding: var(--widget-component-gap);
+  border: var(--widget-module-stroke) solid var(--widget-border);
+  border-radius: var(--widget-control-radius);
+  background: color-mix(in srgb, var(--widget-color) 8%, white);
+}
+
+:where(.dashboard-barrier) .video-manager-tag-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--widget-component-gap);
+  align-items: stretch;
+}
+
+:where(.dashboard-barrier) .video-manager-tag-entry .vt-input {
+  min-width: 0;
+  height: 32px;
+}
+
+:where(.dashboard-barrier) .video-manager-selects {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--widget-component-gap);
+}
+
+:where(.dashboard-barrier) .video-manager-disclosures,
+:where(.dashboard-barrier) .video-manager-clearance,
+:where(.dashboard-barrier) .video-manager-timestamps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--widget-component-gap);
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-manager-control-grid,
+:where(.dashboard-barrier) .video-manager-ad-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--widget-component-gap);
+}
+
+:where(.dashboard-barrier) .video-manager-clearance > header,
+:where(.dashboard-barrier) .video-manager-timestamps > header {
+  display: flex;
+  align-items: center;
+  gap: var(--widget-component-gap);
+  padding: var(--widget-component-gap);
+  border: var(--widget-module-stroke) solid var(--widget-border);
+  border-radius: var(--widget-control-radius);
+  background: color-mix(in srgb, var(--widget-color) 16%, white);
+}
+
+:where(.dashboard-barrier) .video-manager-clearance > header svg,
+:where(.dashboard-barrier) .video-manager-timestamps > header svg {
+  flex: 0 0 auto;
+  width: var(--widget-control-height);
+  height: var(--widget-control-height);
+}
+
+:where(.dashboard-barrier) .video-manager-clearance > header div,
+:where(.dashboard-barrier) .video-manager-timestamps > header div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:where(.dashboard-barrier) .video-manager-clearance > header strong,
+:where(.dashboard-barrier) .video-manager-timestamps > header strong {
+  font-size: var(--widget-type-body);
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+:where(.dashboard-barrier) .video-manager-clearance > header span,
+:where(.dashboard-barrier) .video-manager-timestamps > header span {
+  font-size: var(--widget-type-label);
+  font-weight: 800;
+}
+
+:where(.dashboard-barrier) .video-manager-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(10rem, 1fr) auto;
+  gap: var(--widget-component-gap);
+  align-items: center;
+}
+
+:where(.dashboard-barrier) .video-manager-pages {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--widget-component-gap);
+  min-width: 0;
+}
+
+@container video-manager-widget (max-width: 680px) {
+  :where(.dashboard-barrier) .video-manager-package-desk {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :where(.dashboard-barrier) .video-manager-package-status {
+    justify-content: flex-start;
+  }
+
+  :where(.dashboard-barrier) .video-manager-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :where(.dashboard-barrier) .video-manager-thumbnail-panel {
+    max-width: 18rem;
+  }
+
+  :where(.dashboard-barrier) .video-manager-footer {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  :where(.dashboard-barrier) .video-manager-pages {
+    grid-column: 1 / -1;
+  }
+}
+
+@container video-manager-widget (max-width: 460px) {
+  :where(.dashboard-barrier) .video-manager-package-identity,
+  :where(.dashboard-barrier) .video-manager-control-grid,
+  :where(.dashboard-barrier) .video-manager-ad-grid,
+  :where(.dashboard-barrier) .video-manager-selects {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :where(.dashboard-barrier) .video-manager-package-identity img {
+    max-width: 12rem;
+  }
+}
