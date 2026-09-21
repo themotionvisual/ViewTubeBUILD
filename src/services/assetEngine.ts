@@ -10,13 +10,17 @@ import {
 } from "./viewTubeToolChains"
 import {
  addContentBuildAssetRelation,
+ addContentBuildVariant,
  appendContentBuildEvent,
+ createContentBuildAssetVersion,
+ createContentBuildVariantGroup,
  attachAssetToContentBuild,
  ensureContentBuild,
  getContentBuild,
  listContentBuildEvents,
  listContentBuilds,
  setContentBuildSelection,
+ selectContentBuildVariant,
 } from "./asset-engine/ContentBuildRepository"
 import type {
  ContentBuildRelationType,
@@ -321,6 +325,72 @@ export const createAndHandoffAsset = <T,>(
  })
  return { ...created, handoff }
 }
+
+export const createVersionedAsset = (
+ input: CreateAssetInput & {
+  slot: string
+  label?: string | null
+  parentVersionId?: string | null
+  parentAssetId?: string | null
+ },
+) => {
+ const created = createAsset({
+  ...input,
+  context: {
+   ...(input.context || {}),
+   parentAssetIds: [
+    ...(input.context?.parentAssetIds || []),
+    ...(input.parentAssetId ? [input.parentAssetId] : []),
+   ].filter((id, index, all) => all.indexOf(id) === index),
+  },
+ })
+ if (!created.contentBuildId) return { ...created, version: null }
+ const version = createContentBuildAssetVersion({
+  contentBuildId: created.contentBuildId,
+  assetId: created.asset.id,
+  slot: input.slot,
+  label: input.label || null,
+  parentVersionId: input.parentVersionId || null,
+  parentAssetId: input.parentAssetId || null,
+  sourceToolId: input.sourceToolId,
+  generationRecordId: created.generationRecordId,
+  metadata: { payloadKind: input.payloadKind },
+ })
+ return { ...created, version }
+}
+
+export const createAssetVariantGroup = (input: {
+ contentBuildId: string
+ slot: string
+ label: string
+ sourceToolId?: string | null
+ metadata?: Record<string, unknown>
+}) => createContentBuildVariantGroup(input)
+
+export const addAssetVariant = (input: {
+ contentBuildId: string
+ groupId: string
+ assetId: string
+ versionId?: string | null
+ label?: string | null
+ score?: number | null
+ sourceToolId?: string | null
+ metadata?: Record<string, unknown>
+}) => addContentBuildVariant({
+ ...input,
+ status: "candidate",
+})
+
+export const selectAssetVariant = (input: {
+ contentBuildId: string
+ groupId: string
+ assetId: string
+ final?: boolean
+ sourceToolId?: string | null
+}) => selectContentBuildVariant({
+ ...input,
+ actorType: "creator",
+})
 
 export const selectContentBuildAsset = (input: {
  contentBuildId: string
