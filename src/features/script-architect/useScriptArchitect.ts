@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { generateScript } from "../../services/gemini"
 import { createSuperToolActionPacket } from "../../services/superToolActionPackets"
+import { resolveWorkspaceContentBuildToolContext } from "../../services/asset-engine/ToolContext"
 import {
  HOOK_SECTION_ID,
  OUTRO_SECTION_ID,
