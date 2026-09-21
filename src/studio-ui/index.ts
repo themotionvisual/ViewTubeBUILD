@@ -1,3 +1,4 @@
+import "../styles/toolbox-entry.css"
 import "../styles/studio-control-system.css"
 
 export { STUDIO_TOKENS } from "./tokens"
