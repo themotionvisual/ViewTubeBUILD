@@ -100,7 +100,7 @@ export const syncVideoPackageToContentBuild = (videoPackage: ViewTubeVideoPackag
    scheduledAt: videoPackage.publishing.scheduledAt || null,
    initialTitleAssetId: selectedTitleAssetId,
    initialThumbnailAssetId: selectedThumbnailAssetId,
-   finalRenderAssetId: videoPackage.production.renderIds.at(-1) || null,
+   finalRenderAssetId: videoPackage.production.renderIds.length ? videoPackage.production.renderIds[videoPackage.production.renderIds.length - 1] : null,
    toolId: "video-package",
   })
  }
