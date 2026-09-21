@@ -110,6 +110,12 @@ import {
   type VideoDirectorRemoteJob,
   type VideoDirectorScope,
 } from "../features/video-director"
+import { useBrain } from "../context/useBrain"
+import { createVersionedAsset } from "../services/assetEngine"
+import {
+  recordContentBuildToolOutput,
+  resolveWorkspaceContentBuildToolContext,
+} from "../services/asset-engine/ToolContext"
 import {
   StudioDirectorAudioStage,
   StudioDirectorCompositionVisual,
@@ -288,6 +294,7 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
   isOpenInitial = false,
   paletteIndex = 11,
 }) => {
+  const { brain } = useBrain()
   const [open, setOpen] = useState(isOpenInitial)
   const [project, setProject] = useState<VideoDirectorProject>(() =>
     readVideoDirectorState() ?? createEmptyVideoDirectorProject(),
@@ -307,6 +314,20 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
   useEffect(() => {
     autosave.schedule(project)
   }, [autosave, project])
+
+  useEffect(() => {
+    const contentContext = resolveWorkspaceContentBuildToolContext(brain, "video-director", ["storyboard", "script"])
+    if (!contentContext || project.contentBuildId === contentContext.contentBuildId) return
+    setProject((current) => VideoDirectorProjectSchema.parse({
+      ...current,
+      contentBuildId: contentContext.contentBuildId,
+      legacyProjectId: contentContext.build.legacyProjectId || undefined,
+      name: current.name === "Untitled Video Director project"
+        ? (contentContext.build.legacyProjectName || contentContext.build.profile.workingConcept || current.name)
+        : current.name,
+      updatedAt: new Date().toISOString(),
+    }))
+  }, [brain, project.contentBuildId])
 
   useEffect(() => () => autosave.flush(), [autosave])
 
