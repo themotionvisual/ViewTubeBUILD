@@ -425,7 +425,7 @@ describe("expanded widget compound primitives", () => {
     expect(extensionSource).toContain("widget-video-select-views")
     expect(variantsCss).toContain("border: 0")
     expect(variantsCss).toContain("border-radius: 0")
-    expect(variantsCss).toContain("justify-self: center")
+    expect(variantsCss).toContain("justify-self: stretch")
     expect(variantsCss).toContain("-webkit-line-clamp: 3")
     expect(variantsCss).toContain(".widget-video-select-option:nth-child(even)")
     expect(variantsCss).toContain(".widget-video-select-option:nth-child(odd)")
@@ -440,7 +440,7 @@ describe("expanded widget compound primitives", () => {
     expect(extensionSource).toContain("<span>VIDEO</span>")
     expect(extensionSource).not.toContain("widget-video-select-trigger-chevron")
     expect(extensionSource).not.toContain("widget-video-select-trigger-icon")
-    expect(variantsCss).toContain("grid-template-rows: repeat(2, minmax(0, 1fr))")
+    expect(variantsCss).toContain("grid-template-rows: 52% 48%")
     expect(variantsCss).toContain("white-space: normal")
     expect(variantsCss).toContain("text-overflow: clip")
   })
@@ -450,8 +450,8 @@ describe("expanded widget compound primitives", () => {
     expect(variantsCss).toContain(".widget-video-select-trigger.is-height-32 { --widget-video-split-bay: 48px; }")
     expect(variantsCss).toContain(".widget-video-select-trigger.is-height-38 { --widget-video-split-bay: 54px; }")
     expect(variantsCss).toContain("span:first-child { font-size: 6px")
+    expect(variantsCss).toContain("span:first-child { font-size: 7px")
     expect(variantsCss).toContain("span:first-child { font-size: 8px")
-    expect(variantsCss).toContain("span:first-child { font-size: 9px")
   })
 
   it("makes the video menu search and option rows truly edge-to-edge", () => {
