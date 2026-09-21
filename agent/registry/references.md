@@ -16,6 +16,7 @@ Verified 2026-09-16 against this checkout. Append anything you needed that was n
 | `docs/architecture/viewtube-crown-protocols.schema.json` | schema for the five Crown records |
 | `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` | toolbox/subtoolbox UI contracts |
 | `docs/architecture/SUBTOOLBOX_PRIMITIVE_SYSTEM_V1.md` | primitive system |
+| `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md` | **master Asset Engine / ContentBuild product and architecture definition**: backend services, assets, lineage, generation, publishing, 15 frontend manifestations, integrations, mobile/UI contracts, migration and acceptance criteria |
 | `docs/architecture/dashboard-baseline.json` · `dashboard-style-snapshot.json` | dashboard regression baselines |
 | `docs/MOBILE_VISUAL_RESPONSIVE_CONTRACT.md` · `MOBILE_VISUAL_QA_MATRIX.md` | mobile geometry contract + QA matrix |
 | `docs/brain/` (6) | Brain runtime, shared conversation controller, tool handoffs, asset engine |
