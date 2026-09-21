@@ -51,25 +51,28 @@ export type VtSyncRetentionVideoOption = {
 const GROUP_COLORS: Record<string, string> = Object.fromEntries(VT_SYNC_GROUP_ORDER.map((group, index) => [group, getPaletteColor(index * 2)]))
 const formatPlainLabel = (value: string) => value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
 
-type SyncTagPairProps = {
- label: string
- value: string
+type SyncSpectrumTagProps = {
+ text: string
+ spectrumKey: string
  onClick?: () => void
  title?: string
 }
 
-const SyncSpectrumTagPair: React.FC<SyncTagPairProps> = ({ label, value, onClick, title }) => {
+const SyncSpectrumTag: React.FC<SyncSpectrumTagProps> = ({ text, spectrumKey, onClick, title }) => {
  const content = (
-  <span className="vt-sync-tag-pair">
-   <SubToolboxAlphabeticalTag level="l2" className="vt-sync-tag-title" label={label} spectrumKey={label} />
-   <SubToolboxAlphabeticalTag level="l2" className="vt-sync-tag-value" label={value} spectrumKey={label} title={title} />
-  </span>
+  <SubToolboxAlphabeticalTag
+   level="l2"
+   className="vt-sync-meta-tag"
+   label={text}
+   spectrumKey={spectrumKey}
+   title={title}
+  />
  )
  if (!onClick) return content
  return (
   <button
    type="button"
-   className="vt-sync-tag-pair-action"
+   className="vt-sync-meta-tag-action"
    onClick={onClick}
    title={title}
   >
