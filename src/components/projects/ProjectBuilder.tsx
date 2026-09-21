@@ -34,7 +34,7 @@ const lifecycle = [
 ] as const
 
 const ProjectBuilder: React.FC = () => {
-  const { brain, updateProject, setActiveProject } = useBrain()
+  const { brain, updateProject, setActiveProject, channelIdentity } = useBrain()
   const projects = Array.isArray(brain.projects) ? brain.projects : []
   const [scope, setScope] = useState<BuilderScope>(projects.length ? "project" : "channel")
   const [assetMode, setAssetMode] = useState<AssetMode>("simple")
@@ -48,6 +48,17 @@ const ProjectBuilder: React.FC = () => {
   useEffect(() => {
     if (!brain.activeProjectId && activeProject) setActiveProject(activeProject.id)
   }, [activeProject, brain.activeProjectId, setActiveProject])
+
+  useEffect(() => {
+    if (!activeProject) return
+    const build = syncProjectToContentBuild(activeProject, {
+      channelId: channelIdentity.channelId || null,
+      sourceToolId: "project-builder",
+    })
+    if (activeProject.contentBuildId !== build.id) {
+      updateProject(activeProject.id, { contentBuildId: build.id })
+    }
+  }, [activeProject, channelIdentity.channelId, updateProject])
 
   const completion = useMemo(() => {
     if (!activeProject) return { complete: 0, total: 8, percent: 0 }
@@ -228,7 +239,7 @@ const ProjectBuilder: React.FC = () => {
                 status={activeProject.status || "ideation"}
                 script={activeProject.script || ""}
                 notes={activeProject.notes || ""}
-                onChange={(field, value) => updateProject(activeProject.id, { [field]: value })}
+                onChange={(field, value) => updateProject(activeProject.id, { [field]: value } as Partial<typeof activeProject>)}
               />
             </SubToolbox>
 
