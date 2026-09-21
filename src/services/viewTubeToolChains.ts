@@ -5,7 +5,7 @@ import { enqueueBrainHandoffs } from "./brainHandoffInbox"
 export type ViewTubeToolKind = "studio-tool" | "widget" | "analytics" | "project" | "vault" | "editor" | "brain" | "super-tool" | "system"
 export type ViewTubePayloadKind = "video" | "thumbnail" | "image" | "script" | "storyboard" | "metadata" | "comment" | "community-post" | "poll" | "analysis" | "tactic" | "hook" | "project" | "calendar-item" | "timeline" | "asset" | "evidence" | "json"
 export interface ViewTubeToolCapability { id:string; label:string; kind:ViewTubeToolKind; route:string; accepts:ViewTubePayloadKind[]; produces:ViewTubePayloadKind[]; status:"ready"|"partial"|"planned"; description:string }
-export interface ViewTubeActionPacket<T=unknown> { id:string; version:1; sourceToolId:string; sourceKind:ViewTubeToolKind; payloadKind:ViewTubePayloadKind; title:string; summary:string; payload:T; projectId?:string|null; channelId?:string|null; videoId?:string|null; evidence:string[]; provenance:string[]; suggestedTargets:string[]; createdAt:number }
+export interface ViewTubeActionPacket<T=unknown> { id:string; version:1; sourceToolId:string; sourceKind:ViewTubeToolKind; payloadKind:ViewTubePayloadKind; title:string; summary:string; payload:T; contentBuildId?:string|null; projectId?:string|null; channelId?:string|null; videoId?:string|null; evidence:string[]; provenance:string[]; suggestedTargets:string[]; createdAt:number }
 export interface ViewTubeToolChainStep { toolId:string; purpose:string; optional?:boolean }
 export interface ViewTubeSuggestedToolChain { id:string; title:string; description:string; startsWith:string[]; steps:ViewTubeToolChainStep[]; outcome:string }
 
