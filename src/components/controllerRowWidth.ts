@@ -19,7 +19,15 @@ import type { ControllerRow } from "./VisualModuleController"
  * components, and so the rule can be unit-tested without rendering anything.
  */
 
-const controllerMinWidth = 195
+/** Existing width floors, centralized without changing any module's geometry. */
+export const CONTROLLER_LAYOUT_WIDTH = {
+  default: 195,
+  chart: 210,
+  explorer: 220,
+  channelProgress: 300,
+} as const
+
+const controllerMinWidth = CONTROLLER_LAYOUT_WIDTH.default
 /** Digits a counter reserves before its width can start tracking its value. */
 const CONTROLLER_NUMBER_DIGIT_RESERVE = 4
 /** Characters a metric chip reserves before it starts truncating. */

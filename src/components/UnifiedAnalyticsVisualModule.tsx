@@ -1,7 +1,8 @@
 import React from "react"
 import { AnalyticsVisualIcon } from "./AnalyticsVisualIcon"
 import { useAnalyticsVisualStyle } from "./AnalyticsVisualStyleContext"
-import { VisualModuleController, type ControllerRow } from "./VisualModuleController"
+import type { ControllerRow } from "./VisualModuleController"
+import { VisualControllerRail } from "./VisualControllerRail"
 import type {
   ModuleThemeTokens,
   SubToolboxChartModuleProps,
@@ -123,13 +124,12 @@ export const UnifiedAnalyticsVisualModule: React.FC<UnifiedAnalyticsVisualModule
           </div>
         </div>
         {controllerRows ? (
-          <div
-            className="flex w-full shrink-0 items-stretch overflow-x-auto border-t-[4px] border-black sm:w-auto sm:border-t-0"
-            style={{ background: resolvedHeaderPair.title }}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <VisualModuleController rows={controllerRows} width={controllerWidth ?? 195} density={controllerDensity ?? "normal"} />
-          </div>
+          <VisualControllerRail
+            rows={controllerRows}
+            width={controllerWidth}
+            density={controllerDensity}
+            background={resolvedHeaderPair.title}
+          />
         ) : null}
       </div>
 

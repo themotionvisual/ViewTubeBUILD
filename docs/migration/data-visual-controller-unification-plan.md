@@ -1,6 +1,13 @@
 # Data Visual controller unification — plan
 
-Status: **proposed**. No code in this plan has been written yet.
+Status: **in progress**. Phases 0, 1 and 4 landed in PR #289. Phase 2 is implemented on `codex/data-visual-controller-unification-phase2-2026-09-21`: both declarative shells use `VisualControllerRail`, width floors live in `controllerRowWidth.ts`, and the existing controller shape snapshot is unchanged. Phases 3 and 5–7 remain pending. The inventory below describes the original baseline, not the current tree.
+
+## 2026-09-21 verification
+
+- 90 controller width, rendered shape and empty-state tests pass; production build passes.
+- The user supplied a private version-1 analytics bundle with 34 datasets. It passed the production import validator. The production import/snapshot/visual adapters retained all 1,446 video rows, and all 77 registered visual renderers mounted without throwing (78 temporary checks passed). Neither the private data nor the local audit test is committed.
+- Live anonymous Analytics was inspected: opening the Data Visuals section rendered the older sync/import-only empty panel. This does not certify deployment of PR #289. Authenticated data, real browser geometry with the uploaded data, loading/error captures, and production commit identity remain unverified.
+- This phase preserves existing row DOM, row order, width, density, handlers, legacy controlBox actions and custom rows. It centralizes placement and width floors in preparation for the vocabulary and responsive-layout migrations.
 Scope: the controller column, its rows, and the shells that lay it out, for the
 Analytics **Data Visual modules** only. Out of scope, unchanged: the global
 Toolbox and SubToolbox systems, Studio Hub, Projects, Editor, dashboard widget

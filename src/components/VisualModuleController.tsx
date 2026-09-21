@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { useAnalyticsVisualStyle } from "./AnalyticsVisualStyleContext"
-import { estimateControllerRowWidth } from "./controllerRowWidth"
+import { CONTROLLER_LAYOUT_WIDTH, estimateControllerRowWidth } from "./controllerRowWidth"
 
 export type Tone = "pink" | "cyan" | "lime" | "yellow" | "purple" | "orange" | "white" | "black"
 
@@ -117,7 +117,6 @@ const controllerTextSizeClass = "text-[15px]"
 const controllerArrowSizeClass = "text-[15px]"
 const controllerRowHeightClass = "h-[26px] min-h-[26px]"
 const controllerArrowButtonClass = "inline-flex h-[20px] w-[24px] shrink-0 items-center justify-center overflow-hidden border-none bg-transparent px-0 leading-none origin-center transform-gpu transition-transform duration-100 will-change-transform"
-const controllerBaseWidth = 195
 const controllerDropdownMenuMaxHeight = 240
 const controllerDropdownMenuItemHeight = 28
 
@@ -542,7 +541,7 @@ const MetricMultiSelectRow: React.FC<{ row: ControllerMetricMultiSelectRow; isLa
   )
 }
 
-export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ rows, width = controllerBaseWidth, density = "normal" }) => {
+export const VisualModuleController: React.FC<VisualModuleControllerProps> = ({ rows, width = CONTROLLER_LAYOUT_WIDTH.default, density = "normal" }) => {
   const visualStyle = useAnalyticsVisualStyle()
   const displayRows = rows.map((row, index) => applyControllerPalette(row, index, rows, visualStyle?.controllerColors))
   const compact = density === "compact"

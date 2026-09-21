@@ -2,6 +2,7 @@ import React from "react"
 import { AnalyticsVisualIcon } from "./AnalyticsVisualIcon"
 import { useAnalyticsVisualStyle } from "./AnalyticsVisualStyleContext"
 import { VisualModuleController, type ControllerRow } from "./VisualModuleController"
+import { VisualControllerRail } from "./VisualControllerRail"
 import { useVtSyncVisualDataSourcePrefix } from "../features/vt-sync-local/shell/VtSyncVisualDataSourceContext"
 import {
   VT_VISUAL_METRIC_COLORS,
@@ -297,22 +298,20 @@ export const SubToolboxChartModule: React.FC<
         </div>
 
         {(controlBox?.rightInlineControls || controllerRows || controlBox) ? (
-        <div
-          className="flex shrink-0 items-stretch border-t-[4px] sm:border-t-0 border-black w-full sm:w-auto overflow-x-auto"
-          style={{ background: tokens.headerBandBg }}
-          onClick={(event) => event.stopPropagation()}
-        >
-          {controlBox?.rightInlineControls ? (
+        <VisualControllerRail
+          rows={controllerRows}
+          width={controllerWidth}
+          density={controllerDensity}
+          background={tokens.headerBandBg}
+          leading={controlBox?.rightInlineControls ? (
             <div className="flex items-center justify-end gap-2 pr-2 py-2">
               {controlBox.rightInlineControls}
             </div>
           ) : null}
-
-          {controllerRows ? (
-            <VisualModuleController rows={controllerRows} width={controllerWidth ?? 195} density={controllerDensity ?? "normal"} />
-          ) : controlBox ? (
+        >
+          {controlBox ? (
             <div className="flex shrink-0 relative h-full">
-              <VisualModuleController width={controllerWidth ?? 195} density={controllerDensity ?? "normal"} rows={[
+              <VisualModuleController width={controllerWidth} density={controllerDensity} rows={[
                 ...(controlBox.count !== undefined ? [
                   { type: "number" as const, value: controlBox.count, bgTone: tokens.iconBlockBg, fgTone: "#000000", onPrev: controlBox.onCountPrev, onNext: controlBox.onCountNext }
                 ] : []),
@@ -337,7 +336,7 @@ export const SubToolboxChartModule: React.FC<
               {controlBox.extraActions}
             </div>
           ) : null}
-        </div>
+        </VisualControllerRail>
         ) : null}
       </div>
 
