@@ -20,6 +20,7 @@ const ALLOWED_DIRECT_PROVIDER_CALLS = new Set([
  "src/context/GeminiKeyContext.tsx", // credential validation, not creator reasoning
  "src/services/CollabEngine.ts", // migrate after task contract is explicit
  "src/services/brain/Core.ts", // reflection/compression migration target
+ "src/services/brain/runtime/BrainModelGateway.ts", // canonical provider-neutral gateway; SDK access belongs behind this seam
  "src/services/gemini.ts", // current provider service owner
  "src/views/dashboard/widgets/VideoCommentOperatorWidget.tsx", // CreatorAssetEngine migration target
 ])
