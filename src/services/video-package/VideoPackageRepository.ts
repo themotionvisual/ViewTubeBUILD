@@ -1,6 +1,9 @@
 import type { ViewTubeVideoPackage } from "./contracts"
 import { validateVideoPackage } from "./packageValidation"
-import { syncVideoPackageToContentBuild } from "../asset-engine/VideoPackageContentBuildBridge"
+import {
+  projectContentBuildSelectionsToVideoPackage,
+  syncVideoPackageToContentBuild,
+} from "../asset-engine/VideoPackageContentBuildBridge"
 
 export const VIDEO_PACKAGE_STORAGE_KEY = "viewtube_video_packages_v1"
 export const VIDEO_PACKAGE_RECOVERY_KEY = "viewtube_video_packages_recovery_v1"
@@ -64,10 +67,15 @@ const writeStored = (packages: ViewTubeVideoPackage[]) => {
 }
 
 export const listVideoPackages = (): ViewTubeVideoPackage[] =>
-  readStored().slice().sort((a, b) => b.identity.updatedAt.localeCompare(a.identity.updatedAt))
+  readStored()
+    .map(projectContentBuildSelectionsToVideoPackage)
+    .slice()
+    .sort((a, b) => b.identity.updatedAt.localeCompare(a.identity.updatedAt))
 
-export const getVideoPackage = (packageId: string): ViewTubeVideoPackage | null =>
-  readStored().find((videoPackage) => videoPackage.id === packageId) || null
+export const getVideoPackage = (packageId: string): ViewTubeVideoPackage | null => {
+  const videoPackage = readStored().find((candidate) => candidate.id === packageId)
+  return videoPackage ? projectContentBuildSelectionsToVideoPackage(videoPackage) : null
+}
 
 export const getVideoPackageRecoverySnapshot = (): string | null => {
   if (!canUseStorage()) return null
@@ -82,10 +90,13 @@ export const findVideoPackageByProject = (
   projectId: string,
   contentBuildId?: string | null,
 ): ViewTubeVideoPackage | null =>
-  readStored().find((videoPackage) =>
-    videoPackage.projectId === projectId &&
-    (!contentBuildId || videoPackage.contentBuildId === contentBuildId)
-  ) || null
+  (() => {
+    const videoPackage = readStored().find((candidate) =>
+      candidate.projectId === projectId &&
+      (!contentBuildId || candidate.contentBuildId === contentBuildId)
+    )
+    return videoPackage ? projectContentBuildSelectionsToVideoPackage(videoPackage) : null
+  })()
 
 export const saveVideoPackage = (videoPackage: ViewTubeVideoPackage): ViewTubeVideoPackage => {
   const validation = validateVideoPackage(videoPackage)
