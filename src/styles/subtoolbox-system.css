@@ -1926,13 +1926,16 @@
    Two-row publishing-control anatomy: title rail above the large selected value.
    Geometry is owned by L0 / L1 / L2 component DNA.
    ========================================================================== */
+.vt-subtoolbox-top-title-dropdown,
+.vt-subtoolbox-top-title-dropdown-panel{
+  --vt-top-title-title:var(--pair-a,#36e0f6);
+  --vt-top-title-body:var(--pair-b,#ff7f6b);
+  --vt-top-title-shadow:color-mix(in srgb,var(--vt-top-title-title) 42%,transparent);
+}
 .vt-subtoolbox-top-title-dropdown{
   position:relative;
   width:100%;
   min-width:0;
-  --vt-top-title-title:var(--pair-a,#36e0f6);
-  --vt-top-title-body:var(--pair-b,#ff7f6b);
-  --vt-top-title-shadow:color-mix(in srgb,var(--vt-top-title-title) 42%,transparent);
   z-index:1;
 }
 .vt-subtoolbox-top-title-dropdown.is-open{z-index:180}
