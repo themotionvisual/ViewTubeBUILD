@@ -84,7 +84,7 @@ export const HardcodedGenericControl: React.FC<{ name: string; level: Level; ind
   if (name === "Primary Button" || name === "Secondary Button" || name === "Neutral Button" || name === "Destructive Button")
     return <button className={`vt-catalog-button is-${level}`} style={style}>{name.replace(" Button", "")}</button>
   if (name === "Square Icon Button") return <button aria-label="Settings" className={`vt-catalog-icon-button is-${level}`} style={style}>{icon}</button>
-  if (name === "Split Left Button" || name === "Head Tail Action") return <SubToolboxSplitButton className={`vt-catalog-split-primitive is-${level}`} style={{ ...style, ["--vt-split-rail" as string]: colors.a, ["--vt-split-label" as string]: colors.b }} icon={name === "Head Tail Action" ? <ChevronRight /> : icon}>{name === "Head Tail Action" ? "Action" : "Settings"}</SubToolboxSplitButton>
+  if (name === "Split Left Button" || name === "Head Tail Action") return <SubToolboxSplitButton className={`vt-catalog-split-primitive is-${level}`} style={{ ...style, ["--vt-split-rail" as string]: colors.a, ["--vt-split-label" as string]: colors.b } as React.CSSProperties} icon={name === "Head Tail Action" ? <ChevronRight /> : icon}>{name === "Head Tail Action" ? "Action" : "Settings"}</SubToolboxSplitButton>
   if (name === "Split Menu" || name === "Dropdown" || name === "Select Menu" || name === "Context Menu") {
     const key = `${name}-${level}-${index}`
     const split = name === "Split Menu"
