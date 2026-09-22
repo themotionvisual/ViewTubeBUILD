@@ -40,7 +40,7 @@ describe("Toolbox UI Reference Library", () => {
     for (const family of [
       "Primary Button", "Secondary Button", "Neutral Button", "Destructive Button",
       "Square Icon Button", "Split Left Button", "Head Tail Action", "Split Menu",
-      "Dropdown", "Select Menu", "Context Menu", "Text Input", "Textarea",
+      "Dropdown", "Top Title Dropdown", "Select Menu", "Context Menu", "Text Input", "Textarea",
       "Split Search", "Number Field", "Input Action", "Stepper", "Slider",
       "Range Slider", "Toggle", "Settings Switch", "Checkbox", "Radio",
       "Segmented Choice", "Button Group", "Tag", "Removable Tag", "Selectable Tag",
@@ -64,6 +64,7 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).toContain("<SubToolboxSplitButton")
     expect(source).toContain("<SubToolboxSplitDropdown")
     expect(source).toContain("<SubToolboxMenu")
+    expect(source).toContain("<SubToolboxTopTitleDropdown")
     expect(source).toContain("<SubToolboxSplitField")
     expect(source).toContain("<SubToolboxSlider")
     expect(source).toContain("<SubToolboxRangeSlider")
