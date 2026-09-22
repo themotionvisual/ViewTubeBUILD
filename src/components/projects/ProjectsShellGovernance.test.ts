@@ -51,11 +51,11 @@ describe("Projects level-0 shell ownership", () => {
   })
 
   it("keeps one level-0 module per Projects section", () => {
-    const directMounts = pageSource.match(/<ProjectsToolboxModule\\b/g) ?? []
-    const builderMounts = pageSource.match(/<ProjectBuilderModule\\b/g) ?? []
+    const directMounts = pageSource.match(/<ProjectsToolboxModule\b/g) ?? []
+    const builderMounts = pageSource.match(/<ProjectBuilderModule\b/g) ?? []
     const sections = pageSource.match(/<section id="/g) ?? []
 
-    expect(projectBuilderModuleSource.match(/<ProjectsToolboxModule\\b/g) ?? []).toHaveLength(1)
+    expect(projectBuilderModuleSource.match(/<ProjectsToolboxModule\b/g) ?? []).toHaveLength(1)
     expect(directMounts.length + builderMounts.length).toBe(sections.length)
     expect(sections.length).toBeGreaterThan(0)
   })
