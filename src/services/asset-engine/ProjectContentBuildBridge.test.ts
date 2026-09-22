@@ -64,4 +64,20 @@ describe("Project ContentBuild bridge", () => {
   expect(changed.profile.intention).toBe("A tighter eyewitness reconstruction")
   expect(listContentBuildEvents(first.id).map(event => event.eventType)).toContain("profile.updated")
  })
+
+ it.each([
+  ["ideation", "idea"],
+  ["planned", "concept"],
+  ["scripting", "script"],
+  ["production", "media"],
+  ["review", "review"],
+  ["ready", "scheduled"],
+  ["published", "published"],
+  ["completed", "evaluation"],
+  ["archived", "archived"],
+ ] as const)("maps project status %s to ContentBuild stage %s", (status, expectedStage) => {
+  const build = syncProjectToContentBuild(project({ id: `project-${status}`, status }))
+  expect(build.stage).toBe(expectedStage)
+ })
+
 })
