@@ -23,7 +23,6 @@ import {
  analyzeExistingTags,
  hasGeminiKey,
 } from "../services/gemini"
-import { StandardButton } from "../components/NativeUIKit"
 import type { TagSuggestion } from "../services/gemini"
 import {
  X,
@@ -52,16 +51,21 @@ import {
  SubToolboxGridActionButton,
  ToolboxScaffold,
  SubToolbox,
- SubToolboxDropdownTopTitleControl,
 } from "../components/Toolbox"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../components/subtoolbox/SubToolboxLayouts"
 import {
  SubToolboxButton,
  SubToolboxFieldLabel,
+ SubToolboxIconButton,
  SubToolboxInput,
+ SubToolboxLinkButton,
  SubToolboxMetric,
+ SubToolboxRemovableTag,
+ SubToolboxSelectableTag,
  SubToolboxSurface,
+ SubToolboxTag,
  SubToolboxTextArea,
+ SubToolboxTopTitleDropdown,
 } from "../components/subtoolbox/SubToolboxPrimitives"
 import { SubToolboxSplitButton, SubToolboxSplitDropdown } from "../studio-ui"
 import { getToolboxPaletteColors } from "../styles/toolboxPalette"
@@ -75,87 +79,57 @@ const TagBadge: React.FC<{
  isSuggested?: boolean
  isAdded?: boolean
 }> = ({ tag, analysis, onRemove, onAdd, isSuggested, isAdded }) => {
- const [showTooltip, setShowTooltip] = useState(false)
- const [tooltipPos, setTooltipPos] = useState<{ left: number; top: number } | null>(null)
- const [isHovered, setIsHovered] = useState(false)
- const badgeRef = useRef<HTMLButtonElement>(null)
-
  const getRankColor = (rank?: number) => {
-  if (typeof rank !== "number") return "#ffffff"
-  if (rank >= 1 && rank <= 10) return "#45C8E9"
-  if (rank >= 11 && rank <= 20) return "#57F15C"
-  if (rank >= 21 && rank <= 30) return "#F9F36B"
-  if (rank >= 31 && rank <= 40) return "#FFB158"
-  return "#FF7497"
+  if (typeof rank !== "number") return "#36E0F6"
+  if (rank >= 1 && rank <= 10) return "#36E0F6"
+  if (rank >= 11 && rank <= 20) return "#3FEE56"
+  if (rank >= 21 && rank <= 30) return "#FFDA47"
+  if (rank >= 31 && rank <= 40) return "#FFA85C"
+  return "#FA618A"
  }
 
- return (
-  <div className="relative group">
-   <button
-    ref={badgeRef}
-    type="button"
-    onClick={isAdded ? undefined : onAdd || onRemove}
-    onMouseEnter={() => {
-     setIsHovered(true)
-     if (badgeRef.current) {
-      const rect = badgeRef.current.getBoundingClientRect()
-      setTooltipPos({ left: rect.left + rect.width / 2, top: rect.top })
-     }
-     setShowTooltip(true)
-    }}
-    onMouseLeave={() => {
-     setShowTooltip(false)
-     setIsHovered(false)
-    }}
-    className="inline-flex items-center px-3 py-1 text-xs font-[900] uppercase border-[3px] border-black rounded-full shadow-[3px_3px_0px_0px_var(--vt-subtoolbox-shadow,rgba(0,0,0,0.35))]"
-    style={{
-     backgroundColor: isAdded
-      ? "#E5E7EB"
-      : isHovered
-        ? "#FFFFFF"
-        : analysis
-          ? getRankColor(analysis.rank)
-          : "#FFFFFF",
-     opacity: isAdded ? 0.65 : 1,
-     cursor: isAdded ? "not-allowed" : "pointer",
-    }}>
-    <span className="whitespace-nowrap text-black">{tag}</span>
-    {analysis && <span className="ml-1 font-[1000] text-black">#{analysis.rank}</span>}
-    {(onRemove || (isSuggested && !isAdded)) && (
-     <span
-      className="w-4 h-4 flex shrink-0 items-center justify-center rounded-full bg-black text-white ml-2 border border-transparent hover:bg-[#ff3b30] hover:text-black hover:border-transparent"
-      onClick={(e) => {
-       e.stopPropagation()
-       if (onRemove) onRemove()
-      }}>
-      {onRemove ? <X size={10} strokeWidth={3.2} /> : <Plus size={10} strokeWidth={3.2} />}
-     </span>
-    )}
-   </button>
-   {showTooltip && analysis && tooltipPos && (
-    <div
-     className="fixed z-[200] w-52 bg-white text-black p-3 rounded-2xl border-[4px] border-black shadow-[6px_6px_0px_0px_black] pointer-events-none"
-     style={{ left: tooltipPos.left, top: tooltipPos.top - 12, transform: "translate(-50%, -100%)" }}>
-     <div className="space-y-2 text-[10px] font-bold uppercase">
-      <div className="flex justify-between border-b border-black/20 pb-1 mb-1">
-       <span className="text-black/60">SEO Metrics</span>
-       <span className="text-black px-2 py-0.5 rounded-full font-black border border-black" style={{ backgroundColor: getRankColor(analysis.rank) }}>
-        {analysis.score}
-       </span>
-      </div>
-      <div className="flex justify-between"><span>Search Vol:</span><span>{(analysis.searchVolume / 1000).toFixed(1)}K</span></div>
-      <div className="flex justify-between"><span>Comp:</span><span>{analysis.competition}</span></div>
-      <div className="flex justify-between"><span>Rank:</span><span className="text-black">#{analysis.rank}</span></div>
-      <div className="flex justify-between mt-1 pt-1 border-t border-black/20">
-       <span>Triple Keyword:</span>
-       <span>{analysis.tripleKeyword ? <span className="text-black flex items-center gap-1"><CheckCircle size={10} /> YES</span> : <span className="text-black flex items-center gap-1"><X size={10} /> NO</span>}</span>
-      </div>
-     </div>
-     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rotate-45 border-r border-b border-black" />
-    </div>
-   )}
-  </div>
- )
+ const rankColor = getRankColor(analysis?.rank)
+ const title = analysis
+  ? `SEO score ${analysis.score} · search volume ${analysis.searchVolume.toLocaleString()} · competition ${analysis.competition.toLocaleString()} · rank #${analysis.rank}${analysis.tripleKeyword ? " · triple keyword" : ""}`
+  : undefined
+ const label = <>{tag}{analysis ? <span aria-hidden="true"> · #{analysis.rank}</span> : null}</>
+ const style = {
+  ["--pair-a" as string]: rankColor,
+  ["--pair-b" as string]: "#ffffff",
+ } as React.CSSProperties
+
+ if (onRemove) {
+  return (
+   <SubToolboxRemovableTag
+    level="l2"
+    onRemove={onRemove}
+    removeIcon={<X size={12} strokeWidth={3.2} />}
+    style={style}
+    title={title}
+   >
+    {label}
+   </SubToolboxRemovableTag>
+  )
+ }
+
+ if (isSuggested) {
+  return (
+   <SubToolboxSelectableTag
+    level="l2"
+    selected={Boolean(isAdded)}
+    selectedIcon={<CheckCircle size={12} strokeWidth={3} />}
+    unselectedIcon={<Plus size={12} strokeWidth={3} />}
+    disabled={isAdded}
+    onClick={() => { if (!isAdded) onAdd?.() }}
+    style={style}
+    title={title}
+   >
+    {label}
+   </SubToolboxSelectableTag>
+  )
+ }
+
+ return <SubToolboxTag level="l2" style={style} title={title}>{label}</SubToolboxTag>
 }
 
 interface VideoManagerProps {
