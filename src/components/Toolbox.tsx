@@ -967,7 +967,7 @@ export const SubToolboxDropdownControl: React.FC<SubToolboxDropdownControlProps>
           open ? "rounded-t-[8px] rounded-b-none" : "rounded-[8px]"
         }`}
         style={{
-          backgroundColor: resolvedBody,
+          backgroundColor: resolvedSurface,
           height: `${CONTROL_SHELL.height}px`,
           boxShadow: `${SUB_TOOLBOX_INNER_SHADOW}px ${SUB_TOOLBOX_INNER_SHADOW}px 0px 0px ${resolvedShadow}`,
         }}
@@ -1097,7 +1097,7 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
           open ? "rounded-t-[8px] rounded-b-none" : "rounded-[8px]"
         } ${borderClass}`}
         style={{
-          backgroundColor: resolvedSurface,
+          backgroundColor: resolvedBody,
           height: `${CONTROL_SHELL.height}px`,
           boxShadow: `${borderWidth === 4 ? SUB_TOOLBOX_SHADOW : SUB_TOOLBOX_INNER_SHADOW}px ${borderWidth === 4 ? SUB_TOOLBOX_SHADOW : SUB_TOOLBOX_INNER_SHADOW}px 0px 0px ${resolvedShadow}`,
         }}
