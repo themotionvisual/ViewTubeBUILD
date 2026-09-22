@@ -84,6 +84,7 @@ const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({ open, onC
         niche: brain.targetNiche || "",
         format,
         projectPaletteIndex: paletteIndex,
+        projectPriority: priority,
       },
     }
 
