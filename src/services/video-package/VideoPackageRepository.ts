@@ -3,6 +3,7 @@ import { validateVideoPackage } from "./packageValidation"
 import { syncVideoPackageToContentBuild } from "../asset-engine/VideoPackageContentBuildBridge"
 
 export const VIDEO_PACKAGE_STORAGE_KEY = "viewtube_video_packages_v1"
+export const VIDEO_PACKAGE_RECOVERY_KEY = "viewtube_video_packages_recovery_v1"
 
 let memoryPackages: ViewTubeVideoPackage[] = []
 
@@ -14,13 +15,38 @@ const canUseStorage = () => {
   }
 }
 
+const recoverValidPackages = (value: unknown): ViewTubeVideoPackage[] => {
+  if (!Array.isArray(value)) return []
+  return value.filter((candidate): candidate is ViewTubeVideoPackage => {
+    if (!candidate || typeof candidate !== "object") return false
+    try {
+      return validateVideoPackage(candidate as ViewTubeVideoPackage).valid
+    } catch {
+      return false
+    }
+  })
+}
+
 const readStored = (): ViewTubeVideoPackage[] => {
   if (!canUseStorage()) return memoryPackages
+  const raw = localStorage.getItem(VIDEO_PACKAGE_STORAGE_KEY)
+  if (!raw) return []
   try {
-    const raw = localStorage.getItem(VIDEO_PACKAGE_STORAGE_KEY)
-    const parsed = raw ? JSON.parse(raw) : []
-    return Array.isArray(parsed) ? parsed : []
+    const parsed = JSON.parse(raw)
+    const recovered = recoverValidPackages(parsed)
+    if (recovered.length !== (Array.isArray(parsed) ? parsed.length : 0)) {
+      localStorage.setItem(VIDEO_PACKAGE_RECOVERY_KEY, raw)
+      localStorage.setItem(VIDEO_PACKAGE_STORAGE_KEY, JSON.stringify(recovered))
+    }
+    return recovered
   } catch {
+    try {
+      localStorage.setItem(VIDEO_PACKAGE_RECOVERY_KEY, raw)
+      localStorage.removeItem(VIDEO_PACKAGE_STORAGE_KEY)
+    localStorage.removeItem(VIDEO_PACKAGE_RECOVERY_KEY)
+    } catch {
+      // Preserve the in-memory fallback if browser storage cannot be repaired.
+    }
     return []
   }
 }
@@ -42,6 +68,15 @@ export const listVideoPackages = (): ViewTubeVideoPackage[] =>
 
 export const getVideoPackage = (packageId: string): ViewTubeVideoPackage | null =>
   readStored().find((videoPackage) => videoPackage.id === packageId) || null
+
+export const getVideoPackageRecoverySnapshot = (): string | null => {
+  if (!canUseStorage()) return null
+  try {
+    return localStorage.getItem(VIDEO_PACKAGE_RECOVERY_KEY)
+  } catch {
+    return null
+  }
+}
 
 export const findVideoPackageByProject = (
   projectId: string,
