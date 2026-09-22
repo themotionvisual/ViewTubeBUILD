@@ -121,6 +121,34 @@ describe("subtoolbox design governance", () => {
   expect(migrationCss).not.toContain("[data-vt-studio-control]")
  })
 
+ it("keeps component colors owned by the nearest SubToolbox pair", () => {
+  const split = source("src/components/subtoolbox/SubToolboxSplitPrimitives.tsx")
+  const primitives = source("src/components/subtoolbox/SubToolboxPrimitives.tsx")
+  const studioControls = source("src/studio-ui/primitives/StudioControls.tsx")
+  const toolbox = source("src/components/Toolbox.tsx")
+  const manager = source("src/views/VideoManager.tsx")
+  const publisher = source("src/views/VideoPublisher.tsx")
+  const community = source("src/components/CommunityPostGenerator.tsx")
+
+  for (const forbidden of ["railColor?:", "labelColor?:", "accentColor?:"]) {
+   expect(split).not.toContain(forbidden)
+  }
+  expect(primitives).not.toContain("toneColor?:")
+  expect(primitives).not.toContain("accentColor?:")
+  expect(studioControls).not.toContain("railColor?:")
+  expect(toolbox).not.toContain("surfaceColor?: string;")
+  expect(toolbox).not.toContain("controlColor?: string;")
+  expect(manager).not.toContain("surfaceColor=")
+  expect(manager).not.toContain("controlColor=")
+  expect(publisher).not.toContain("accentColor=")
+  expect(publisher).not.toContain("surfaceColor=")
+  expect(community).not.toContain("railColor=")
+  expect(community).not.toContain("--vt-studio-control-accent")
+  expect(manager).toContain('title="Save Video Changes"')
+  expect(publisher).toContain('title="Generate Assets"')
+  expect(publisher).toContain('title="Generated Assets"')
+ })
+
  it("keeps legacy Studio field wrappers on the same inherited pair and field-state contract", () => {
   const studioCss = source("src/styles/studio-control-system.css")
 
