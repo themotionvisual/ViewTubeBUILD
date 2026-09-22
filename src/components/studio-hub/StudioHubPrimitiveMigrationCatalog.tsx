@@ -1,7 +1,7 @@
 import React from "react"
 import { Check, ChevronDown, ChevronRight, FileText, Image, Lightbulb, Menu, Minus, MoreHorizontal, Music, Plus, Search, Settings2, SlidersHorizontal, Upload, X } from "lucide-react"
-import { type StudioHubComponentLevel } from "./StudioHubCompletePrimitiveCatalog"
 import { SubToolbox } from "../Toolbox"
+import type { ToolboxControlLevel } from "../subtoolbox/tokens"
 import {
   SubToolboxAlert,
   SubToolboxAspectRatioFrame,
@@ -76,6 +76,8 @@ import {
 } from "../subtoolbox/SubToolboxPrimitives"
 import { SubToolboxKpiCard, SubToolboxSplitButton, SubToolboxSplitDropdown } from "../subtoolbox/SubToolboxSplitPrimitives"
 import "./studio-hub-primitive-migration-catalog.css"
+
+type StudioHubComponentLevel = ToolboxControlLevel
 
 const LEVELS: StudioHubComponentLevel[] = ["l0", "l1", "l2"]
 
