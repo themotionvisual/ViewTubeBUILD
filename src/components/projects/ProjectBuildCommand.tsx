@@ -2,6 +2,7 @@ import React, { useMemo } from "react"
 import { Activity, Boxes, CalendarDays, Layers3 } from "lucide-react"
 import type { Project } from "../../types"
 import { getContentBuild } from "../../services/asset-engine/ContentBuildRepository"
+import { findVideoPackageByProject } from "../../services/video-package/VideoPackageRepository"
 import type { ContentBuildStage } from "../../services/asset-engine/contracts"
 import { SubToolboxGrid } from "../subtoolbox/SubToolboxLayouts"
 import {
@@ -38,6 +39,7 @@ const completionFor=(project:Project)=>{
 
 const ProjectBuildCommand:React.FC<{project:Project}> = ({project}) => {
  const build=project.contentBuildId?getContentBuild(project.contentBuildId):null
+ const videoPackage=findVideoPackageByProject(project.id,project.contentBuildId||null)
  const completion=completionFor(project)
  const activeIndex=useMemo(()=>{
   const stage=build?.stage||"idea"
@@ -54,6 +56,7 @@ const ProjectBuildCommand:React.FC<{project:Project}> = ({project}) => {
       <SubToolboxBadge>{String(project.status||"ideation").replaceAll("-"," ")}</SubToolboxBadge>
       <SubToolboxBadge>{build?.stage||"idea"}</SubToolboxBadge>
       <SubToolboxBadge>{project.contentBuildId?"ContentBuild linked":"ContentBuild pending"}</SubToolboxBadge>
+      <SubToolboxBadge>{videoPackage?"Video Package linked":"Video Package pending"}</SubToolboxBadge>
      </div>
     </div>
     <div className="min-w-[180px] flex-1 sm:max-w-[320px]">
