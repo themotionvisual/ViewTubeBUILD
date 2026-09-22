@@ -107,3 +107,55 @@ export const syncVideoPackageToContentBuild = (videoPackage: ViewTubeVideoPackag
 
  return getContentBuild(build.id)!
 }
+
+
+/**
+ * Projects canonical ContentBuild selections back into the Video Package shape.
+ * This is intentionally a projection: ContentBuild remains authoritative for
+ * selected/final durable assets while the package retains its structured spec.
+ */
+export const projectContentBuildSelectionsToVideoPackage = (
+ videoPackage: ViewTubeVideoPackage,
+): ViewTubeVideoPackage => {
+ const contentBuildId = videoPackage.contentBuildId || videoPackage.id
+ const build = getContentBuild(contentBuildId)
+ if (!build) return videoPackage
+
+ const titleAssetId = build.selections.title || null
+ const thumbnailAssetId = build.selections.thumbnail || null
+ const scriptAssetId = build.selections.script || null
+ const finalRenderAssetId = build.selections["final-render"] || build.youtube?.finalRenderAssetId || null
+
+ const packageArtifactId = (artifacts: PackageArtifactRef[], canonicalAssetId: string | null) => {
+  if (!canonicalAssetId) return null
+  return artifacts.find(artifact => assetIdOf(artifact) === canonicalAssetId)?.id || null
+ }
+
+ const titleId = packageArtifactId(videoPackage.packaging.titleVariants, titleAssetId)
+ const thumbnailId = packageArtifactId(videoPackage.packaging.thumbnailVariants, thumbnailAssetId)
+ const scriptMatches = scriptAssetId && videoPackage.creative.script
+  ? assetIdOf(videoPackage.creative.script) === scriptAssetId
+  : false
+ const renderIds = finalRenderAssetId && !videoPackage.production.renderIds.includes(finalRenderAssetId)
+  ? [...videoPackage.production.renderIds, finalRenderAssetId]
+  : videoPackage.production.renderIds
+
+ return {
+  ...videoPackage,
+  creative: {
+   ...videoPackage.creative,
+   script: scriptMatches ? videoPackage.creative.script : videoPackage.creative.script,
+  },
+  packaging: {
+   ...videoPackage.packaging,
+   selectedTitleId: titleId || videoPackage.packaging.selectedTitleId || null,
+   selectedThumbnailId: thumbnailId || videoPackage.packaging.selectedThumbnailId || null,
+  },
+  production: { ...videoPackage.production, renderIds },
+  publishing: {
+   ...videoPackage.publishing,
+   publishedVideoId: build.youtube?.videoId || videoPackage.publishing.publishedVideoId || null,
+   scheduledAt: build.youtube?.scheduledAt || videoPackage.publishing.scheduledAt || null,
+  },
+ }
+}
