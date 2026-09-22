@@ -210,7 +210,7 @@ const BoardLane: React.FC<{
  )
 }
 
-const ProjectKanbanWorkspace: React.FC = () => {
+const ProjectKanbanWorkspace: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
  const { brain, updateProject, channelIdentity } = useBrain()
  const { openProject } = useProjectsWorkspace()
  const projects = useMemo(() => Array.isArray(brain.projects) ? brain.projects : [], [brain.projects])
@@ -291,24 +291,30 @@ const ProjectKanbanWorkspace: React.FC = () => {
 
  const owners = useMemo(() => Array.from(new Set(Object.values(workspace.projects).map((meta) => meta.owner).filter(Boolean))).sort(), [workspace.projects])
  
+ const boardActions = <div className="flex flex-wrap gap-2">
+  <button type="button" onClick={() => setWorkspace((state) => ({ ...state, showArchived: !state.showArchived }))} className="flex h-9 items-center gap-1.5 rounded-[7px] border-[2px] border-black bg-white px-3 text-[9px] font-black uppercase shadow-[2px_2px_0_black]">
+   <Archive size={14} /> {workspace.showArchived ? "Active" : "Archived"}
+  </button>
+  <button type="button" onClick={() => setShowCreate(true)} className="flex h-9 items-center gap-1.5 rounded-[7px] border-[2px] border-black bg-black px-3 text-[9px] font-black uppercase text-white shadow-[2px_2px_0_rgba(0,0,0,.25)]">
+   <Plus size={14} /> New Project
+  </button>
+ </div>
+
  return (
   <div className="w-full overflow-hidden rounded-[14px] border-[4px] border-black bg-white shadow-[8px_8px_0_rgba(0,0,0,0.16)]">
-   <header className="border-b-[4px] border-black bg-[#00CCFF] px-3 py-3 sm:px-4">
-    <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-     <div>
-      <div className="text-[19px] font-[1000] uppercase leading-none tracking-[-0.04em]">Project Board</div>
-      <div className="mt-1 text-[9px] font-black uppercase tracking-[0.08em] text-black/55">Move real projects from idea to published</div>
+   {embedded ? (
+    <div className="flex items-center justify-end border-b-[3px] border-black bg-white p-2">{boardActions}</div>
+   ) : (
+    <header className="border-b-[4px] border-black bg-[#00CCFF] px-3 py-3 sm:px-4">
+     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+      <div>
+       <div className="text-[19px] font-[1000] uppercase leading-none tracking-[-0.04em]">Project Board</div>
+       <div className="mt-1 text-[9px] font-black uppercase tracking-[0.08em] text-black/55">Move real projects from idea to published</div>
+      </div>
+      {boardActions}
      </div>
-     <div className="flex flex-wrap gap-2">
-      <button type="button" onClick={() => setWorkspace((state) => ({ ...state, showArchived: !state.showArchived }))} className="flex h-9 items-center gap-1.5 rounded-[7px] border-[2px] border-black bg-white px-3 text-[9px] font-black uppercase shadow-[2px_2px_0_black]">
-       <Archive size={14} /> {workspace.showArchived ? "Active" : "Archived"}
-      </button>
-      <button type="button" onClick={() => setShowCreate(true)} className="flex h-9 items-center gap-1.5 rounded-[7px] border-[2px] border-black bg-black px-3 text-[9px] font-black uppercase text-white shadow-[2px_2px_0_rgba(0,0,0,.25)]">
-       <Plus size={14} /> New Project
-      </button>
-     </div>
-    </div>
-   </header>
+    </header>
+   )}
 
    <div className="grid gap-2 border-b-[3px] border-black bg-white p-2 md:grid-cols-[minmax(180px,1fr)_140px_150px_auto]">
     <label className="flex h-9 items-center gap-2 rounded-[7px] border-[2px] border-black px-2">
