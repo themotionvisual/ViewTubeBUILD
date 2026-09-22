@@ -1,6 +1,7 @@
 import React from "react"
 import { Check, ChevronDown, ChevronRight, FileText, Image, Lightbulb, Menu, Minus, MoreHorizontal, Music, Plus, Search, Settings2, SlidersHorizontal, Upload, X } from "lucide-react"
 import { type StudioHubComponentLevel } from "./StudioHubCompletePrimitiveCatalog"
+import { SubToolbox } from "../Toolbox"
 import {
   SubToolboxAlert,
   SubToolboxAspectRatioFrame,
@@ -74,7 +75,6 @@ import {
   SubToolboxVaultAsset,
 } from "../subtoolbox/SubToolboxPrimitives"
 import { SubToolboxKpiCard, SubToolboxSplitButton, SubToolboxSplitDropdown } from "../subtoolbox/SubToolboxSplitPrimitives"
-import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import "./studio-hub-primitive-migration-catalog.css"
 
 const LEVELS: StudioHubComponentLevel[] = ["l0", "l1", "l2"]
@@ -175,11 +175,6 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Toolbar",
 ] as const
 
-const pair = (index: number) => ({
-  a: VT_SPECTRUM_PALETTE_06[index % 12],
-  b: VT_SPECTRUM_PALETTE_06[(index + 6) % 12],
-})
-
 const DemoShell: React.FC<{ level: StudioHubComponentLevel; children: React.ReactNode }> = ({ level, children }) => (
   <div className={`vt-catalog-demo is-${level}`} data-level={level}>{children}</div>
 )
@@ -187,11 +182,7 @@ const DemoShell: React.FC<{ level: StudioHubComponentLevel; children: React.Reac
 const PrimitiveMigrationControl: React.FC<{
   name: string
   level: StudioHubComponentLevel
-  paletteIndex: number
-}> = ({ name, level, paletteIndex }) => {
-  const levelOffset = level === "l0" ? 0 : level === "l1" ? 2 : 4
-  const colors = pair(paletteIndex + levelOffset)
-  const style = { "--pair-a": colors.a, "--pair-b": colors.b } as React.CSSProperties
+}> = ({ name, level }) => {
   const [stepperValue, setStepperValue] = React.useState(5)
   const [toggleOn, setToggleOn] = React.useState(true)
   const [settingsOn, setSettingsOn] = React.useState(true)
@@ -226,43 +217,43 @@ const PrimitiveMigrationControl: React.FC<{
   // Primitive track rule: only production primitives + shared CSS render here.
   // Unmigrated hardcoded families remain exclusively in the frozen baseline.
   if (name === "Primary Button" || name === "Secondary Button" || name === "Neutral Button" || name === "Destructive Button") {
-    return <SubToolboxButton level={level} style={style}>{name.replace(" Button", "")}</SubToolboxButton>
+    return <SubToolboxButton level={level}>{name.replace(" Button", "")}</SubToolboxButton>
   }
   if (name === "Square Icon Button") {
-    return <SubToolboxIconButton level={level} style={style} icon={<Settings2 />} ariaLabel="Settings" />
+    return <SubToolboxIconButton level={level} icon={<Settings2 />} ariaLabel="Settings" />
   }
   if (name === "Text Input") {
-    return <SubToolboxInput level={level} style={style} type="text" defaultValue="TEXT INPUT" />
+    return <SubToolboxInput level={level} type="text" defaultValue="TEXT INPUT" />
   }
   if (name === "Textarea") {
-    return <SubToolboxTextArea level={level} style={style} defaultValue="DESCRIPTION" />
+    return <SubToolboxTextArea level={level} defaultValue="DESCRIPTION" />
   }
   if (name === "Stepper") {
-    return <SubToolboxStepper level={level} style={style} value={stepperValue} decreaseIcon={<Minus />} increaseIcon={<Plus />} onDecrease={() => setStepperValue((value) => value - 1)} onIncrease={() => setStepperValue((value) => value + 1)} />
+    return <SubToolboxStepper level={level} value={stepperValue} decreaseIcon={<Minus />} increaseIcon={<Plus />} onDecrease={() => setStepperValue((value) => value - 1)} onIncrease={() => setStepperValue((value) => value + 1)} />
   }
   if (name === "Toggle") {
-    return <SubToolboxToggleSwitch level={level} style={style} pressed={toggleOn} aria-label="Toggle" onClick={() => setToggleOn((value) => !value)} />
+    return <SubToolboxToggleSwitch level={level} pressed={toggleOn} aria-label="Toggle" onClick={() => setToggleOn((value) => !value)} />
   }
   if (name === "Checkbox") {
-    return <SubToolboxCheckControl level={level} style={style} checked={checkboxOn} aria-label="Checkbox" onClick={() => setCheckboxOn((value) => !value)} />
+    return <SubToolboxCheckControl level={level} checked={checkboxOn} aria-label="Checkbox" onClick={() => setCheckboxOn((value) => !value)} />
   }
   if (name === "Radio") {
-    return <SubToolboxRadioControl level={level} style={style} checked={radioOn} aria-label="Radio" onClick={() => setRadioOn((value) => !value)} />
+    return <SubToolboxRadioControl level={level} checked={radioOn} aria-label="Radio" onClick={() => setRadioOn((value) => !value)} />
   }
   if (name === "Segmented Choice") {
-    return <SubToolboxSegmentedToggle level={level} style={{ ...style, ["--vt-segment-count" as string]: 3 }} options={[{ value: "A", label: "A" }, { value: "B", label: "B" }, { value: "C", label: "C" }]} value={segmentChoice} onValueChange={setSegmentChoice} />
+    return <SubToolboxSegmentedToggle level={level} style={{ ["--vt-segment-count" as string]: 3 } as React.CSSProperties} options={[{ value: "A", label: "A" }, { value: "B", label: "B" }, { value: "C", label: "C" }]} value={segmentChoice} onValueChange={setSegmentChoice} />
   }
   if (name === "Tag") {
-    return <SubToolboxTag level={level} style={style}>NAPOLEON</SubToolboxTag>
+    return <SubToolboxTag level={level}>NAPOLEON</SubToolboxTag>
   }
   if (name === "Badge") {
-    return <SubToolboxBadge level={level} style={style}>BADGE</SubToolboxBadge>
+    return <SubToolboxBadge level={level}>BADGE</SubToolboxBadge>
   }
   if (name === "Status Badge") {
-    return <SubToolboxStatusBadge level={level} style={style}>READY</SubToolboxStatusBadge>
+    return <SubToolboxStatusBadge level={level}>READY</SubToolboxStatusBadge>
   }
   if (name === "Split Left Button" || name === "Head Tail Action") {
-    return <SubToolboxSplitButton level={level} style={style} icon={name === "Head Tail Action" ? <ChevronRight /> : <Settings2 />} railColor={colors.a} labelColor={colors.b}>{name === "Head Tail Action" ? "Action" : "Settings"}</SubToolboxSplitButton>
+    return <SubToolboxSplitButton level={level} icon={name === "Head Tail Action" ? <ChevronRight /> : <Settings2 />}>{name === "Head Tail Action" ? "Action" : "Settings"}</SubToolboxSplitButton>
   }
   if (name === "Split Menu") {
     return <SubToolboxSplitDropdown
@@ -277,12 +268,10 @@ const PrimitiveMigrationControl: React.FC<{
       icon={<Menu />}
       chevron={<ChevronDown />}
       ariaLabel="Split menu"
-      railColor={colors.a}
-      labelColor={colors.b}
     />
   }
   if (name === "Dropdown" || name === "Select Menu" || name === "Context Menu") {
-    return <SubToolboxMenu level={level} style={style} variant={name === "Context Menu" ? "context" : name === "Select Menu" ? "select" : "dropdown"} value={menuChoice} options={["OPTION 1","OPTION 2","OPTION 3"].map((option) => ({ value: option, label: option }))} onValueChange={setMenuChoice} triggerLabel={name === "Dropdown" ? "MENU" : menuChoice} triggerIcon={<MoreHorizontal />} chevronIcon={<ChevronDown />} ariaLabel={name} />
+    return <SubToolboxMenu level={level} variant={name === "Context Menu" ? "context" : name === "Select Menu" ? "select" : "dropdown"} value={menuChoice} options={["OPTION 1","OPTION 2","OPTION 3"].map((option) => ({ value: option, label: option }))} onValueChange={setMenuChoice} triggerLabel={name === "Dropdown" ? "MENU" : menuChoice} triggerIcon={<MoreHorizontal />} chevronIcon={<ChevronDown />} ariaLabel={name} />
   }
   if (name === "Top Title Dropdown") {
     return <SubToolboxTopTitleDropdown
@@ -292,220 +281,220 @@ const PrimitiveMigrationControl: React.FC<{
       options={["PUBLIC","UNLISTED","PRIVATE"].map((option) => ({ value: option, label: option }))}
       onValueChange={setMenuChoice}
       ariaLabel="Publishing control dropdown"
-      style={style}
+     
     />
   }
   if (name === "Split Search") {
-    return <SubToolboxSplitField level={level} style={style} variant="search" icon={<Search />} actionIcon={<X />} actionLabel="Clear search" onAction={() => setSearchQuery("")} inputProps={{ "aria-label": "Search", placeholder: "SEARCH", value: searchQuery, onChange: (event) => setSearchQuery(event.target.value) }} />
+    return <SubToolboxSplitField level={level} variant="search" icon={<Search />} actionIcon={<X />} actionLabel="Clear search" onAction={() => setSearchQuery("")} inputProps={{ "aria-label": "Search", placeholder: "SEARCH", value: searchQuery, onChange: (event) => setSearchQuery(event.target.value) }} />
   }
   if (name === "Number Field") {
-    return <SubToolboxInput level={level} style={style} type="number" defaultValue="25" />
+    return <SubToolboxInput level={level} type="number" defaultValue="25" />
   }
   if (name === "Input Action") {
-    return <SubToolboxSplitField level={level} style={style} variant="action" actionIcon={<Plus />} actionLabel="Add item" onAction={() => setActionDraft("")} inputProps={{ "aria-label": "Add item", placeholder: "ADD ITEM", value: actionDraft, onChange: (event) => setActionDraft(event.target.value) }} />
+    return <SubToolboxSplitField level={level} variant="action" actionIcon={<Plus />} actionLabel="Add item" onAction={() => setActionDraft("")} inputProps={{ "aria-label": "Add item", placeholder: "ADD ITEM", value: actionDraft, onChange: (event) => setActionDraft(event.target.value) }} />
   }
   if (name === "Slider") {
-    return <SubToolboxSlider level={level} style={style} value={sliderValue} onValueChange={setSliderValue} railIcon={<span>S</span>} onReset={() => setSliderValue(62)} />
+    return <SubToolboxSlider level={level} value={sliderValue} onValueChange={setSliderValue} railIcon={<span>S</span>} onReset={() => setSliderValue(62)} />
   }
   if (name === "Range Slider") {
-    return <SubToolboxRangeSlider level={level} style={style} low={rangeLow} high={rangeHigh} onLowChange={setRangeLow} onHighChange={setRangeHigh} railIcon={<SlidersHorizontal />} onReset={() => { setRangeLow(22); setRangeHigh(76) }} />
+    return <SubToolboxRangeSlider level={level} low={rangeLow} high={rangeHigh} onLowChange={setRangeLow} onHighChange={setRangeHigh} railIcon={<SlidersHorizontal />} onReset={() => { setRangeLow(22); setRangeHigh(76) }} />
   }
   if (name === "Settings Switch") {
-    return <SubToolboxSettingsSwitch level={level} style={style} pressed={settingsOn} aria-label="Settings switch" onClick={() => setSettingsOn((value) => !value)} />
+    return <SubToolboxSettingsSwitch level={level} pressed={settingsOn} aria-label="Settings switch" onClick={() => setSettingsOn((value) => !value)} />
   }
   if (name === "Button Group") {
-    return <SubToolboxButtonGroup level={level} style={style} items={[{ value: "ONE", label: "ONE" }, { value: "TWO", label: "TWO" }]} value={groupChoice} onValueChange={setGroupChoice} />
+    return <SubToolboxButtonGroup level={level} items={[{ value: "ONE", label: "ONE" }, { value: "TWO", label: "TWO" }]} value={groupChoice} onValueChange={setGroupChoice} />
   }
   if (name === "Removable Tag") {
-    return <SubToolboxRemovableTag level={level} style={style} removeIcon={<X />}>NAPOLEON</SubToolboxRemovableTag>
+    return <SubToolboxRemovableTag level={level} removeIcon={<X />}>NAPOLEON</SubToolboxRemovableTag>
   }
   if (name === "Selectable Tag") {
-    return <SubToolboxSelectableTag level={level} style={style} selected={selectableTagOn} selectedIcon={<Check />} unselectedIcon={<Plus />} onClick={() => setSelectableTagOn((value) => !value)}>{selectableTagOn ? "SELECTED" : "SELECT"}</SubToolboxSelectableTag>
+    return <SubToolboxSelectableTag level={level} selected={selectableTagOn} selectedIcon={<Check />} unselectedIcon={<Plus />} onClick={() => setSelectableTagOn((value) => !value)}>{selectableTagOn ? "SELECTED" : "SELECT"}</SubToolboxSelectableTag>
   }
   if (name === "Tag Editor") {
-    return <SubToolboxTagEditor level={level} style={style} tags={editorTags} onTagsChange={setEditorTags} addIcon={<Plus />} saveIcon={<Check />} removeIcon={<X />} />
+    return <SubToolboxTagEditor level={level} tags={editorTags} onTagsChange={setEditorTags} addIcon={<Plus />} saveIcon={<Check />} removeIcon={<X />} />
   }
   if (name === "Progress Bar") {
-    return <SubToolboxProgressBar level={level} style={style} value={68} />
+    return <SubToolboxProgressBar level={level} value={68} />
   }
   if (name === "Progress Value") {
-    return <SubToolboxProgressValue level={level} style={style} value={68} label="SYNC" />
+    return <SubToolboxProgressValue level={level} value={68} label="SYNC" />
   }
   if (name === "KPI") {
-    return <SubToolboxKpiCard level={level} style={style} label="VIEWS" value="12.4K" accentColor={colors.a} railColor={colors.b} />
+    return <SubToolboxKpiCard level={level} label="VIEWS" value="12.4K" />
   }
   if (name === "Stat Card") {
-    return <SubToolboxStatCard level={level} style={style} label="WATCH TIME" value="4,820H" delta="+12.4%" />
+    return <SubToolboxStatCard level={level} label="WATCH TIME" value="4,820H" delta="+12.4%" />
   }
   if (name === "Tooltip") {
-    return <SubToolboxTooltip level={level} content="TOOLTIP" style={style} />
+    return <SubToolboxTooltip level={level} content="TOOLTIP" />
   }
   if (name === "Knob Dial") {
-    return <SubToolboxKnob level={level} style={style} value={knobValue} onValueChange={setKnobValue} label="VALUE" />
+    return <SubToolboxKnob level={level} value={knobValue} onValueChange={setKnobValue} label="VALUE" />
   }
   if (name === "Alphabetical Spectrum Tags") {
     return <SubToolboxAlphabeticalSpectrumTags level={level} />
   }
   if (name === "Field Label") {
-    return <SubToolboxFieldLabel level={level} style={style}>VIDEO TITLE</SubToolboxFieldLabel>
+    return <SubToolboxFieldLabel level={level}>VIDEO TITLE</SubToolboxFieldLabel>
   }
   if (name === "Surface") {
-    return <SubToolboxSurface level={level} style={style} tone="accent"><strong>SURFACE</strong></SubToolboxSurface>
+    return <SubToolboxSurface level={level} tone="accent"><strong>SURFACE</strong></SubToolboxSurface>
   }
   if (name === "State Panel") {
-    return <SubToolboxStatePanel level={level} style={style} state="ready" message="Ready to generate." />
+    return <SubToolboxStatePanel level={level} state="ready" message="Ready to generate." />
   }
   if (name === "Output Card") {
-    return <SubToolboxOutputCard level={level} style={style} title="DESCRIPTION" accentColor={colors.a} badge="READY">Reusable generated output.</SubToolboxOutputCard>
+    return <SubToolboxOutputCard level={level} title="DESCRIPTION" badge="READY">Reusable generated output.</SubToolboxOutputCard>
   }
   if (name === "Metric") {
-    return <SubToolboxMetric level={level} style={style} label="VIEWS" value="12.4K" accentColor={colors.a} />
+    return <SubToolboxMetric level={level} label="VIEWS" value="12.4K" />
   }
   if (name === "Link Button") {
-    return <SubToolboxLinkButton level={level} style={style} href="#toolbox-ui-library-primitive" icon={<ChevronRight />}>OPEN</SubToolboxLinkButton>
+    return <SubToolboxLinkButton level={level} href="#toolbox-ui-library-primitive" icon={<ChevronRight />}>OPEN</SubToolboxLinkButton>
   }
   if (name === "Data Table") {
     const rows = [{ metric: "Views", value: "12.4K" }, { metric: "CTR", value: "5.8%" }]
-    return <SubToolboxDataTable level={level} style={style} columns={[{ key: "metric", label: "METRIC" }, { key: "value", label: "VALUE", align: "right" }]} rows={rows} />
+    return <SubToolboxDataTable level={level} columns={[{ key: "metric", label: "METRIC" }, { key: "value", label: "VALUE", align: "right" }]} rows={rows} />
   }
   if (name === "Color Picker") {
-    return <SubToolboxColorPicker level={level} style={style} value={colorValue} onValueChange={setColorValue} label="ACCENT" />
+    return <SubToolboxColorPicker level={level} value={colorValue} onValueChange={setColorValue} label="ACCENT" />
   }
   if (name === "Media Card") {
-    return <SubToolboxMediaCard level={level} style={style} title="AUSTERLITZ" meta="16:9 · READY" preview={<div style={{ width: "100%", height: "100%", background: colors.a }} />} selected={mediaSelected} onClick={() => setMediaSelected((value) => !value)} />
+    return <SubToolboxMediaCard level={level} title="AUSTERLITZ" meta="16:9 · READY" preview={<div style={{ width: "100%", height: "100%", background: "var(--pair-a)" }} />} selected={mediaSelected} onClick={() => setMediaSelected((value) => !value)} />
   }
   if (name === "Selectable List Row") {
-    return <SubToolboxSelectableListRow level={level} style={style} title="DRAFT 01" detail="UPDATED NOW" leading={<span>01</span>} trailing={<ChevronRight />} selected={rowSelected} onClick={() => setRowSelected((value) => !value)} />
+    return <SubToolboxSelectableListRow level={level} title="DRAFT 01" detail="UPDATED NOW" leading={<span>01</span>} trailing={<ChevronRight />} selected={rowSelected} onClick={() => setRowSelected((value) => !value)} />
   }
   if (name === "Reorderable Row") {
     const first = reorderItems[0] ?? "HOOK"
-    return <SubToolboxReorderRow level={level} style={style} title={first} detail="SECTION 01" disableUp onMoveDown={() => setReorderItems((items) => items.length > 1 ? [items[1], items[0], ...items.slice(2)] : items)} onRemove={() => setReorderItems((items) => items.slice(1))} />
+    return <SubToolboxReorderRow level={level} title={first} detail="SECTION 01" disableUp onMoveDown={() => setReorderItems((items) => items.length > 1 ? [items[1], items[0], ...items.slice(2)] : items)} onRemove={() => setReorderItems((items) => items.slice(1))} />
   }
   if (name === "Tabs") {
-    return <SubToolboxTabs level={level} style={{ ...style, ["--vt-tab-count" as string]: 3 }} items={[{ value: "A", label: "EDIT" }, { value: "B", label: "PREVIEW" }, { value: "C", label: "DATA" }]} value={tabValue} onValueChange={setTabValue} />
+    return <SubToolboxTabs level={level} style={{ ["--vt-tab-count" as string]: 3 } as React.CSSProperties} items={[{ value: "A", label: "EDIT" }, { value: "B", label: "PREVIEW" }, { value: "C", label: "DATA" }]} value={tabValue} onValueChange={setTabValue} />
   }
   if (name === "Alert") {
-    return <SubToolboxAlert level={level} style={style} tone="success" icon={<Check />} title="READY" detail="Primitive connected" />
+    return <SubToolboxAlert level={level} tone="success" icon={<Check />} title="READY" detail="Primitive connected" />
   }
   if (name === "Step Indicator") {
-    return <SubToolboxStepIndicator level={level} style={{ ...style, ["--vt-step-count" as string]: 3 }} steps={[{ label: "SCRIPT", state: "complete" }, { label: "VISUALS", state: "active" }, { label: "EXPORT", state: "upcoming" }]} />
+    return <SubToolboxStepIndicator level={level} style={{ ["--vt-step-count" as string]: 3 } as React.CSSProperties} steps={[{ label: "SCRIPT", state: "complete" }, { label: "VISUALS", state: "active" }, { label: "EXPORT", state: "upcoming" }]} />
   }
   if (name === "Dialog") {
-    return <SubToolboxDialog level={level} style={style} open={dialogOpen} onOpenChange={setDialogOpen} title="CONFIRM">Dialog content uses the same level DNA.</SubToolboxDialog>
+    return <SubToolboxDialog level={level} open={dialogOpen} onOpenChange={setDialogOpen} title="CONFIRM">Dialog content uses the same level DNA.</SubToolboxDialog>
   }
   if (name === "Drawer") {
-    return <SubToolboxDrawer level={level} style={style} open={drawerOpen} onOpenChange={setDrawerOpen} title="DETAILS">Drawer content.</SubToolboxDrawer>
+    return <SubToolboxDrawer level={level} open={drawerOpen} onOpenChange={setDrawerOpen} title="DETAILS">Drawer content.</SubToolboxDrawer>
   }
   if (name === "Calendar") {
-    return <SubToolboxCalendar level={level} style={style} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+    return <SubToolboxCalendar level={level} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
   }
   if (name === "Loader") {
-    return <SubToolboxLoader level={level} style={style} variant="spinner" label="LOADING" />
+    return <SubToolboxLoader level={level} variant="spinner" label="LOADING" />
   }
   if (name === "Skeleton") {
-    return <SubToolboxSkeleton level={level} style={style} lines={3} />
+    return <SubToolboxSkeleton level={level} lines={3} />
   }
   if (name === "Toast") {
     return toastVisible
-      ? <SubToolboxToast level={level} style={style} tone="success" title="SAVED" detail="Changes are ready." onDismiss={() => setToastVisible(false)} />
-      : <SubToolboxButton level={level} style={style} onClick={() => setToastVisible(true)}>SHOW TOAST</SubToolboxButton>
+      ? <SubToolboxToast level={level} tone="success" title="SAVED" detail="Changes are ready." onDismiss={() => setToastVisible(false)} />
+      : <SubToolboxButton level={level} onClick={() => setToastVisible(true)}>SHOW TOAST</SubToolboxButton>
   }
   if (name === "Popover") {
-    return <SubToolboxPopover level={level} style={style} trigger="OPTIONS" title="OPTIONS"><strong>Popover content</strong></SubToolboxPopover>
+    return <SubToolboxPopover level={level} trigger="OPTIONS" title="OPTIONS"><strong>Popover content</strong></SubToolboxPopover>
   }
   if (name === "Disclosure") {
-    return <SubToolboxDisclosure level={level} style={style} title="ADVANCED" icon={<Plus />}>Disclosure content.</SubToolboxDisclosure>
+    return <SubToolboxDisclosure level={level} title="ADVANCED" icon={<Plus />}>Disclosure content.</SubToolboxDisclosure>
   }
   if (name === "Divider") {
-    return <SubToolboxDivider level={level} style={style} />
+    return <SubToolboxDivider level={level} />
   }
   if (name === "Pagination") {
-    return <SubToolboxPagination level={level} style={style} page={page} pages={3} onPageChange={setPage} />
+    return <SubToolboxPagination level={level} page={page} pages={3} onPageChange={setPage} />
   }
   if (name === "Controller Switch") {
-    return <SubToolboxControllerSwitch level={level} style={style} pressed={controllerOn} onClick={() => setControllerOn((value) => !value)} />
+    return <SubToolboxControllerSwitch level={level} pressed={controllerOn} onClick={() => setControllerOn((value) => !value)} />
   }
   if (name === "LED Light") {
-    return <SubToolboxLed level={level} style={style} active label="ACTIVE" />
+    return <SubToolboxLed level={level} active label="ACTIVE" />
   }
   if (name === "Icon Rail Control") {
-    return <SubToolboxIconRailControl level={level} style={style} icon={<SlidersHorizontal />} label="CONTROL" />
+    return <SubToolboxIconRailControl level={level} icon={<SlidersHorizontal />} label="CONTROL" />
   }
   if (name === "Hover Card") {
-    return <SubToolboxHoverCard level={level} style={style} trigger="HOVER" content={<><strong>DETAILS</strong><div>Reusable hover information.</div></>} />
+    return <SubToolboxHoverCard level={level} trigger="HOVER" content={<><strong>DETAILS</strong><div>Reusable hover information.</div></>} />
   }
   if (name === "Meter") {
-    return <SubToolboxMeter level={level} style={style} value={73} label="QUALITY" />
+    return <SubToolboxMeter level={level} value={73} label="QUALITY" />
   }
   if (name === "Avatar") {
-    return <SubToolboxAvatar level={level} style={style} name="VIEW TUBE" meta="CREATOR" />
+    return <SubToolboxAvatar level={level} name="VIEW TUBE" meta="CREATOR" />
   }
   if (name === "Name Value List") {
-    return <SubToolboxNameValueList level={level} style={style} items={[{ name: "Views", value: "12.4K" }, { name: "CTR", value: "5.8%" }]} />
+    return <SubToolboxNameValueList level={level} items={[{ name: "Views", value: "12.4K" }, { name: "CTR", value: "5.8%" }]} />
   }
   if (name === "Breadcrumb") {
-    return <SubToolboxBreadcrumb level={level} style={style} items={[{ label: "Studio" }, { label: "Video" }, { label: "Package" }]} />
+    return <SubToolboxBreadcrumb level={level} items={[{ label: "Studio" }, { label: "Video" }, { label: "Package" }]} />
   }
   if (name === "Carousel") {
-    return <SubToolboxCarousel level={level} style={style} index={carouselIndex} onIndexChange={setCarouselIndex} items={["FRAME 01","FRAME 02","FRAME 03"].map((item) => <span key={item}>{item}</span>)} />
+    return <SubToolboxCarousel level={level} index={carouselIndex} onIndexChange={setCarouselIndex} items={["FRAME 01","FRAME 02","FRAME 03"].map((item) => <span key={item}>{item}</span>)} />
   }
   if (name === "Command Palette") {
-    return <SubToolboxCommandPalette level={level} style={style} items={[{ id: "script", label: "SCRIPT ARCHITECT", keywords: "write outline" }, { id: "thumb", label: "THUMBNAIL STUDIO", keywords: "image packaging" }, { id: "publish", label: "VIDEO PUBLISHER", keywords: "upload metadata" }]} />
+    return <SubToolboxCommandPalette level={level} items={[{ id: "script", label: "SCRIPT ARCHITECT", keywords: "write outline" }, { id: "thumb", label: "THUMBNAIL STUDIO", keywords: "image packaging" }, { id: "publish", label: "VIDEO PUBLISHER", keywords: "upload metadata" }]} />
   }
 
 
   if (name === "Metric Strip") {
-    return <SubToolboxMetricStrip level={level} style={style} items={[{ label: "VIEWS", value: "12K" }, { label: "CTR", value: "5.8%" }, { label: "AVP", value: "72%" }]} />
+    return <SubToolboxMetricStrip level={level} items={[{ label: "VIEWS", value: "12K" }, { label: "CTR", value: "5.8%" }, { label: "AVP", value: "72%" }]} />
   }
   if (name === "Horizontal Scrollbar") {
-    return <SubToolboxScrollbar level={level} style={style} orientation="horizontal" value={scrollPos} onValueChange={setScrollPos} />
+    return <SubToolboxScrollbar level={level} orientation="horizontal" value={scrollPos} onValueChange={setScrollPos} />
   }
   if (name === "Vertical Scrollbar") {
-    return <SubToolboxScrollbar level={level} style={style} orientation="vertical" value={scrollPos} onValueChange={setScrollPos} decrementIcon="↑" incrementIcon="↓" />
+    return <SubToolboxScrollbar level={level} orientation="vertical" value={scrollPos} onValueChange={setScrollPos} decrementIcon="↑" incrementIcon="↓" />
   }
   if (name === "Data Stats Module") {
-    return <SubToolboxDataStats level={level} style={style} label="TOTAL VIEWS" value="128,442" delta="+12.4%" variant="standard" />
+    return <SubToolboxDataStats level={level} label="TOTAL VIEWS" value="128,442" delta="+12.4%" variant="standard" />
   }
   if (name === "Upload Frame") {
-    return <SubToolboxFileTarget level={level} style={style} label="DROP OR CHOOSE FILE" icon={<Upload />} minHeight={level === "l0" ? 176 : level === "l1" ? 144 : 112} />
+    return <SubToolboxFileTarget level={level} label="DROP OR CHOOSE FILE" icon={<Upload />} minHeight={level === "l0" ? 176 : level === "l1" ? 144 : 112} />
   }
   if (name.startsWith("Vault ")) {
     const kind = name.includes("Landscape") ? "landscape" : name.includes("Portrait") ? "portrait" : name.includes("Audio") ? "audio" : "document"
     const Icon = kind === "audio" ? Music : kind === "document" ? FileText : Image
-    return <SubToolboxVaultAsset level={level} style={style} kind={kind} title={name.replace("Vault ","")} icon={<Icon />} tags="ASSET" notes="NOTES" selected={vaultSelected} onSelectedChange={setVaultSelected} removeIcon={<X />} />
+    return <SubToolboxVaultAsset level={level} kind={kind} title={name.replace("Vault ","")} icon={<Icon />} tags="ASSET" notes="NOTES" selected={vaultSelected} onSelectedChange={setVaultSelected} removeIcon={<X />} />
   }
   if (name === "Tree View") {
-    return <SubToolboxTree level={level} style={style} defaultOpenIds={["root"]} nodes={[{ id: "root", label: "PROJECT", children: [{ id: "script", label: "SCRIPT" }, { id: "assets", label: "ASSETS", children: [{ id: "thumb", label: "THUMBNAIL" }, { id: "audio", label: "AUDIO" }] }] }]} />
+    return <SubToolboxTree level={level} defaultOpenIds={["root"]} nodes={[{ id: "root", label: "PROJECT", children: [{ id: "script", label: "SCRIPT" }, { id: "assets", label: "ASSETS", children: [{ id: "thumb", label: "THUMBNAIL" }, { id: "audio", label: "AUDIO" }] }] }]} />
   }
   if (name === "Disabled Button") {
-    return <SubToolboxButton level={level} style={style} disabled>DISABLED</SubToolboxButton>
+    return <SubToolboxButton level={level} disabled>DISABLED</SubToolboxButton>
   }
   if (name === "Disabled Split Button") {
-    return <SubToolboxSplitButton level={level} style={style} icon={<Settings2 />} railColor={colors.a} labelColor={colors.b} disabled>DISABLED</SubToolboxSplitButton>
+    return <SubToolboxSplitButton level={level} icon={<Settings2 />} disabled>DISABLED</SubToolboxSplitButton>
   }
   if (name === "Two Color Data Stats") {
-    return <SubToolboxDataStats level={level} style={style} label="VIEWS" value="128K" delta="+12%" variant="two-color" />
+    return <SubToolboxDataStats level={level} label="VIEWS" value="128K" delta="+12%" variant="two-color" />
   }
   if (name === "Monochrome Data Stats") {
-    return <SubToolboxDataStats level={level} style={style} label="WATCH TIME" value="4.8K" delta="+8%" variant="monochrome" />
+    return <SubToolboxDataStats level={level} label="WATCH TIME" value="4.8K" delta="+8%" variant="monochrome" />
   }
   if (name === "Tiny Data Stats") {
-    return <SubToolboxDataStats level={level} style={style} label="CTR" value="5.8%" variant="tiny" />
+    return <SubToolboxDataStats level={level} label="CTR" value="5.8%" variant="tiny" />
   }
   if (name === "Tooltip Dark") {
-    return <SubToolboxTooltip level={level} style={style} variant="dark" content="TOOLTIP" />
+    return <SubToolboxTooltip level={level} variant="dark" content="TOOLTIP" />
   }
   if (name === "Tooltip Color") {
-    return <SubToolboxTooltip level={level} style={style} variant="color" content="TOOLTIP" />
+    return <SubToolboxTooltip level={level} variant="color" content="TOOLTIP" />
   }
   if (name === "Dashboard Pill Tags") {
-    return <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}><SubToolboxTag level={level} style={style} variant="dashboard-pill">READY</SubToolboxTag><SubToolboxTag level={level} style={style} variant="dashboard-pill">VIDEO</SubToolboxTag></div>
+    return <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}><SubToolboxTag level={level} variant="dashboard-pill">READY</SubToolboxTag><SubToolboxTag level={level} variant="dashboard-pill">VIDEO</SubToolboxTag></div>
   }
   if (name === "Aspect Ratio Frame") {
-    return <SubToolboxAspectRatioFrame level={level} style={style} ratio="16:9" label="16:9"><Image /></SubToolboxAspectRatioFrame>
+    return <SubToolboxAspectRatioFrame level={level} ratio="16:9" label="16:9"><Image /></SubToolboxAspectRatioFrame>
   }
   if (name === "Toolbar") {
-    return <SubToolboxToolbar level={level} style={style} leading={<strong>TOOLS</strong>} trailing={<SubToolboxIconButton level={level} style={style} icon={<Settings2 />} ariaLabel="Toolbar settings" />}><SubToolboxButton level={level} style={style}>EDIT</SubToolboxButton><SubToolboxButton level={level} style={style}>SAVE</SubToolboxButton></SubToolboxToolbar>
+    return <SubToolboxToolbar level={level} leading={<strong>TOOLS</strong>} trailing={<SubToolboxIconButton level={level} icon={<Settings2 />} ariaLabel="Toolbar settings" />}><SubToolboxButton level={level}>EDIT</SubToolboxButton><SubToolboxButton level={level}>SAVE</SubToolboxButton></SubToolboxToolbar>
   }
 
   return null
@@ -537,25 +526,30 @@ export const StudioHubPrimitiveMigrationCatalog: React.FC<StudioHubPrimitiveMigr
 
     <div className="vt-complete-catalog-grid">
       {STUDIO_HUB_MIGRATED_FAMILIES.map((name, index) => (
-        <article
-          className="vt-catalog-family"
+        <div
+          className="vt-primitive-migration-family"
           key={name}
           data-vt-family={name}
           data-vt-migration-state="primitive"
         >
-          <h3><span>{String(index + 1).padStart(2, "0")}</span>{name}</h3>
-          <div className="vt-catalog-levels">
-            {LEVELS.map((level) => (
-              <DemoShell level={level} key={level}>
-                <PrimitiveMigrationControl
-                  name={name}
-                  level={level}
-                  paletteIndex={paletteIndex}
-                />
-              </DemoShell>
-            ))}
-          </div>
-        </article>
+          <SubToolbox
+            title={`${String(index + 1).padStart(2, "0")} ${name}`}
+            icon={<Settings2 />}
+            paletteIndex={paletteIndex + index}
+            collapsible
+            isOpenInitial
+            overflowVisible
+            contentClassName="p-3"
+          >
+            <div className="vt-catalog-levels">
+              {LEVELS.map((level) => (
+                <DemoShell level={level} key={level}>
+                  <PrimitiveMigrationControl name={name} level={level} />
+                </DemoShell>
+              ))}
+            </div>
+          </SubToolbox>
+        </div>
       ))}
     </div>
   </section>
