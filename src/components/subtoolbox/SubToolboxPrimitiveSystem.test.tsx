@@ -116,8 +116,8 @@ describe("Subtoolbox Primitive System", () => {
           <SubToolboxButton size="action" tone="success">Create</SubToolboxButton>
         </SubToolboxActions>
         <SubToolboxStatePanel state="error" message="Try again." />
-        <SubToolboxMetric label="Views" value="1,000" accentColor="#00ccff" />
-        <SubToolboxOutputCard title="Description" accentColor="#ccff00">Output</SubToolboxOutputCard>
+        <SubToolboxMetric label="Views" value="1,000" />
+        <SubToolboxOutputCard title="Description">Output</SubToolboxOutputCard>
         <SubToolboxFileTarget label="Upload video" />
         <SubToolboxTooltip level="l1" forceOpen content="Tooltip" />
         <SubToolboxKnob level="l1" value={72} onValueChange={() => undefined} />
