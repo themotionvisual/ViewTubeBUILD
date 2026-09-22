@@ -11,7 +11,7 @@ import {
 describe("SubToolbox split-left primitives", () => {
   it("renders the split-left button with separate rail and label surfaces", () => {
     const html = renderToStaticMarkup(
-      <SubToolboxSplitButton icon={<Settings />} selected railColor="#C0F240" labelColor="#FF5D8F">
+      <SubToolboxSplitButton icon={<Settings />} selected>
         Settings
       </SubToolboxSplitButton>,
     )

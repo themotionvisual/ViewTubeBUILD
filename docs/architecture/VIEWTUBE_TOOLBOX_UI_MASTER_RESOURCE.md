@@ -58,6 +58,10 @@ Production palette authority is `src/styles/toolboxPalette.ts` -> `VT_SPECTRUM_P
 
 Canonical color inheritance is **12-color palette -> SubToolbox title/icon pair -> nested component pair**. `getToolboxPaletteColors(index)` owns the pairing rule: the SubToolbox title/header uses `getPaletteColor(index)`; the icon section uses `getPaletteColor(index + 4)`, wrapping through the same 12-color palette. `SubToolbox` exposes those two resolved colors to every nested primitive as `--pair-a` (title/header) and `--pair-b` (icon section). Components must consume that inherited pair and must not select, rotate, or synthesize their own palette pair. Component-specific props may change anatomy/state, but not silently replace the owning SubToolbox pair.
 
+Production nested components must not expose arbitrary palette escape hatches such as `railColor`, `labelColor`, `accentColor`, `surfaceColor`, `controlColor`, `toneColor`, or equivalent props merely to recolor normal component anatomy. If a region genuinely needs a different normal palette pair, give it its own child `SubToolbox` and `paletteIndex`. Semantic colors remain valid when they encode meaning rather than decoration—for example error/warning/success state, rank/status, or a data-visual encoding.
+
+A component rendered through a React portal must explicitly bridge the resolved `--pair-a` / `--pair-b` values onto the detached portal root because CSS inheritance stops when that DOM subtree moves under `document.body`. Open menus, popovers, and future detached surfaces must therefore retain the exact title/icon pair of their owning SubToolbox.
+
 Older standalone/documented palette sequences are historical references only unless production tokens are deliberately changed.
 
 ## 5. Primitive families

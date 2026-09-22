@@ -88,16 +88,14 @@ StudioIconButton.displayName = "StudioIconButton"
 
 export interface StudioSplitLeftButtonProps extends StudioButtonProps {
   icon: React.ReactNode
-  railColor?: string
 }
 
 export const StudioSplitLeftButton = React.forwardRef<HTMLButtonElement, StudioSplitLeftButtonProps>(
-  ({ icon, railColor, children, sizeVariant = "action", ...props }, ref) => (
+  ({ icon, children, sizeVariant = "action", ...props }, ref) => (
     <StudioButton ref={ref} sizeVariant={sizeVariant} data-split-left="true" {...props}>
       <span
         aria-hidden="true"
         data-vt-studio-split-rail
-        style={railColor ? { backgroundColor: railColor } : undefined}
       >
         {icon}
       </span>

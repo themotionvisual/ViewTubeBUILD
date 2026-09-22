@@ -11,8 +11,6 @@ export interface SubToolboxSplitButtonProps extends React.ButtonHTMLAttributes<H
   icon: React.ReactNode
   children: React.ReactNode
   selected?: boolean
-  railColor?: string
-  labelColor?: string
   level?: ToolboxControlLevel
 }
 
@@ -20,8 +18,6 @@ export const SubToolboxSplitButton: React.FC<SubToolboxSplitButtonProps> = ({
   icon,
   children,
   selected = false,
-  railColor,
-  labelColor,
   level,
   className,
   style,
@@ -36,8 +32,6 @@ export const SubToolboxSplitButton: React.FC<SubToolboxSplitButtonProps> = ({
     style={{
       ...style,
       ...(level ? getComponentLevelCssVars(level) : {}),
-      ...(railColor ? { ["--vt-split-rail" as string]: railColor } : {}),
-      ...(labelColor ? { ["--vt-split-label" as string]: labelColor } : {}),
     }}
     {...props}
   >
@@ -62,8 +56,6 @@ export interface SubToolboxSplitDropdownProps {
   chevron?: React.ReactNode
   defaultOpen?: boolean
   ariaLabel: string
-  railColor?: string
-  labelColor?: string
   className?: string
   level?: ToolboxControlLevel
 }
@@ -77,8 +69,6 @@ export const SubToolboxSplitDropdown: React.FC<SubToolboxSplitDropdownProps> = (
   chevron,
   defaultOpen = false,
   ariaLabel,
-  railColor,
-  labelColor,
   className,
   level,
 }) => {
@@ -104,8 +94,6 @@ export const SubToolboxSplitDropdown: React.FC<SubToolboxSplitDropdownProps> = (
 
   const style = {
     ...(level ? getComponentLevelCssVars(level) : {}),
-    ...(railColor ? { ["--vt-split-rail" as string]: railColor } : {}),
-    ...(labelColor ? { ["--vt-split-label" as string]: labelColor } : {}),
   } as React.CSSProperties
 
   return (
@@ -161,8 +149,6 @@ export interface SubToolboxKpiCardProps extends React.HTMLAttributes<HTMLElement
   value: React.ReactNode
   sublabel?: React.ReactNode
   icon?: React.ReactNode
-  accentColor?: string
-  railColor?: string
   level?: ToolboxControlLevel
 }
 
@@ -171,8 +157,6 @@ export const SubToolboxKpiCard: React.FC<SubToolboxKpiCardProps> = ({
   value,
   sublabel,
   icon,
-  accentColor,
-  railColor,
   level,
   className,
   style,
@@ -184,8 +168,6 @@ export const SubToolboxKpiCard: React.FC<SubToolboxKpiCardProps> = ({
     style={{
       ...style,
       ...(level ? getComponentLevelCssVars(level) : {}),
-      ...(accentColor ? { ["--vt-kpi-accent" as string]: accentColor } : {}),
-      ...(railColor ? { ["--vt-kpi-rail" as string]: railColor } : {}),
     }}
     {...props}
   >

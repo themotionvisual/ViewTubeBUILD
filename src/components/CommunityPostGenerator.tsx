@@ -9,8 +9,6 @@ import {
  SubToolboxSurface,
 } from "./subtoolbox/SubToolboxPrimitives"
 import { StudioButton, StudioInput, StudioSearchInput, StudioSplitLeftButton, StudioTextArea } from "../studio-ui"
-import { getToolboxPaletteColors } from "../styles/toolboxPalette"
-import { hexToRgba } from "./ToolboxUISystem"
 import { useCommunityPostController, useCreatorEngagementContext, type CommunityPostType } from "../features/creator-engagement"
 
 const POST_WORKSPACE_PALETTE_INDEX = 4
@@ -25,7 +23,6 @@ export const CommunityPostGenerator: React.FC = () => {
  const post = useCommunityPostController(context)
  const imageInput = useRef<HTMLInputElement>(null)
  const pollInputs = useRef<Array<HTMLInputElement | null>>([])
- const postWorkspacePalette = getToolboxPaletteColors(POST_WORKSPACE_PALETTE_INDEX)
 
  return <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start w-full px-0 py-4 sm:py-6 lg:py-8 bg-white">
   <div className="flex flex-col gap-6 min-w-0">
@@ -34,20 +31,13 @@ export const CommunityPostGenerator: React.FC = () => {
     <SubToolboxGrid minItemWidth="compact" density="dense" aria-label="Post type">
      {POST_TYPES.map(({ id, label, icon: Icon }) => {
       const active = post.postType === id
-      const bodyColor = active ? postWorkspacePalette.icon : postWorkspacePalette.header
-      const railColor = active ? postWorkspacePalette.header : postWorkspacePalette.icon
       return <StudioSplitLeftButton
        key={id}
        sizeVariant="standard"
        selected={active}
        aria-pressed={active}
        icon={<Icon size={18} aria-hidden="true" />}
-       railColor={railColor}
        onClick={() => post.setPostType(id)}
-       style={{
-        ["--vt-studio-control-accent" as string]: bodyColor,
-        ["--vt-studio-control-shadow-color" as string]: hexToRgba(bodyColor, 0.45),
-       }}
       >{label}</StudioSplitLeftButton>
      })}
     </SubToolboxGrid>
