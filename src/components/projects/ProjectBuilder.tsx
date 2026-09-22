@@ -25,6 +25,7 @@ import ProjectBriefSubtoolbox from "./ProjectBriefSubtoolbox"
 import ProjectPackagingSubtoolbox from "./ProjectPackagingSubtoolbox"
 import ProjectAssetEngineSimple from "./ProjectAssetEngineSimple"
 import ProjectScheduleContextSubtoolbox from "./ProjectScheduleContextSubtoolbox"
+import ProjectPublishingPackageSummary from "./ProjectPublishingPackageSummary"
 import { useProjectsWorkspace } from "./ProjectsWorkspaceContext"
 
 type AssetMode = "simple" | "full"
@@ -199,6 +200,8 @@ const ProjectBuilder: React.FC<ProjectBuilderProps> = ({ onCreateProject }) => {
           </SubToolbox>
 
           <ProjectPlanningSubtoolboxes />
+
+          <ProjectPublishingPackageSummary project={activeProject} />
 
           <SubToolbox title="ASSET ENGINE" subtitle="Simple lifecycle controls or the complete ContentBuild asset system" icon={<Workflow />} collapsible isOpenInitial openUnits={6}>
             <SubToolboxStack density="comfortable">
