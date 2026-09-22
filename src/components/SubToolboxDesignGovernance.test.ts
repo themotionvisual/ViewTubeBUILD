@@ -149,6 +149,19 @@ describe("subtoolbox design governance", () => {
   expect(publisher).toContain('title="Generated Assets"')
  })
 
+ it("bridges the owning SubToolbox pair into detached dropdown portals", () => {
+  const primitives = source("src/components/subtoolbox/SubToolboxPrimitives.tsx")
+  const css = source("src/styles/subtoolbox-system.css")
+
+  expect(primitives).toContain('getPropertyValue("--pair-a")')
+  expect(primitives).toContain('getPropertyValue("--pair-b")')
+  expect(primitives).toContain('["--pair-a" as string]: inheritedPair.pairA')
+  expect(primitives).toContain('["--pair-b" as string]: inheritedPair.pairB')
+  expect(css).toContain(".vt-subtoolbox-top-title-dropdown-panel{")
+  expect(css).toContain("--vt-top-title-title:var(--pair-a")
+  expect(css).toContain("--vt-top-title-body:var(--pair-b")
+ })
+
  it("keeps legacy Studio field wrappers on the same inherited pair and field-state contract", () => {
   const studioCss = source("src/styles/studio-control-system.css")
 
