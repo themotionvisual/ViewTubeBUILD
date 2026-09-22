@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it } from "vitest"
-import { resetContentBuildRepositoryForTests } from "./ContentBuildRepository"
-import { syncVideoPackageToContentBuild } from "./VideoPackageContentBuildBridge"
+import {
+ createContentBuild,
+ resetContentBuildRepositoryForTests,
+ setContentBuildSelection,
+} from "./ContentBuildRepository"
+import {
+ projectContentBuildSelectionsToVideoPackage,
+ syncVideoPackageToContentBuild,
+} from "./VideoPackageContentBuildBridge"
 import { createVideoPackage } from "../video-package/packageValidation"
 
 describe("VideoPackage ContentBuild bridge", () => {
@@ -93,4 +100,37 @@ describe("VideoPackage ContentBuild bridge", () => {
    finalRenderAssetId: "render-final",
   })
  })
+ it("projects canonical ContentBuild title and thumbnail selections back into package references", () => {
+  const base = createVideoPackage({
+   id: "package-projection",
+   contentBuildId: "cb-projection",
+   channelId: "channel-a",
+   projectId: "project-a",
+   workingTitle: "Projection test",
+   format: "long",
+  })
+  const videoPackage = {
+   ...base,
+   packaging: {
+    ...base.packaging,
+    titleVariants: [{
+     id: "title-ref-a", kind: "title" as const, version: 1, label: "A",
+     sourceToolId: "packaging-lab-pro", vaultAssetId: "vault-title-a", createdAt: base.identity.createdAt,
+    }],
+    thumbnailVariants: [{
+     id: "thumb-ref-b", kind: "thumbnail" as const, version: 1, label: "B",
+     sourceToolId: "thumbnail-studio", vaultAssetId: "vault-thumb-b", createdAt: base.identity.createdAt,
+    }],
+   },
+  }
+
+  createContentBuild({ id: "cb-projection", channelId: "channel-a" })
+  setContentBuildSelection("cb-projection", "title", "vault-title-a")
+  setContentBuildSelection("cb-projection", "thumbnail", "vault-thumb-b")
+
+  const projected = projectContentBuildSelectionsToVideoPackage(videoPackage)
+  expect(projected.packaging.selectedTitleId).toBe("title-ref-a")
+  expect(projected.packaging.selectedThumbnailId).toBe("thumb-ref-b")
+ })
+
 })
