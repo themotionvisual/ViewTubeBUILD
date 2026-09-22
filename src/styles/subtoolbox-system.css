@@ -2080,3 +2080,11 @@
     0 0 calc(var(--field-height)*.20) calc(var(--field-stroke)*1.1) color-mix(in srgb,var(--field-glow) 48%,transparent),
     0 0 calc(var(--field-height)*.42) calc(var(--field-stroke)*.25) color-mix(in srgb,var(--field-glow) 24%,transparent)!important;
 }
+
+/* Detached legacy SubToolbox dropdown menus keep the owning two-color pair.
+   Pair variables are bridged inline when the portal moves under document.body. */
+[data-vt-subtoolbox-dropdown-portal="true"]>button:is(:hover,:focus-visible),
+[data-vt-subtoolbox-dropdown-portal="true"]>button[data-selected="true"]{
+  background:color-mix(in srgb,var(--pair-b,#ff7f6b) 30%,white)!important;
+  outline:none;
+}
