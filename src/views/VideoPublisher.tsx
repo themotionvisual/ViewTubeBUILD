@@ -17,14 +17,17 @@ import {
   approvePublishTransaction,
   beginPublishTransaction,
   completePublishStep,
+  completePublishTransaction,
   failPublishTransaction,
   type ContentBuildPublishTransaction,
 } from "../services/asset-engine/PublishTransaction"
 import { YouTubeUploadService } from "../services/youtube/youtubeUploadService"
 import {
+  addUnifiedPlaylistItem,
   getUnifiedVideo,
   updateUnifiedThumbnail,
   updateUnifiedVideo,
+  uploadUnifiedCaptions,
 } from "../services/youtube/youtubeWriteTransport"
 import { nexusSyncService } from "../services/nexusSyncService"
 import { sheetsService } from "../services/sheetsService"
@@ -138,6 +141,11 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
   const [uploadError, setUploadError] = useState("")
   const [publishThumbnailFile, setPublishThumbnailFile] = useState<File | null>(null)
   const [remoteVerified, setRemoteVerified] = useState(false)
+  const [captionFile, setCaptionFile] = useState<File | null>(null)
+  const [captionLanguage, setCaptionLanguage] = useState("en")
+  const [playlistId, setPlaylistId] = useState("")
+  const [publishMode, setPublishMode] = useState<"private" | "unlisted" | "public" | "scheduled">("private")
+  const [publishAt, setPublishAt] = useState("")
 
   useEffect(() => {
     registerProvider("VIDEO_PUBLISHER")
@@ -412,6 +420,79 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
     }
   }
 
+  const finishPublishingTransaction = async () => {
+    if (!publishTransaction?.youtubeVideoId || !result || !remoteVerified) return
+    setUploadError("")
+    const videoId = publishTransaction.youtubeVideoId
+    try {
+      let next = publishTransaction
+      if (captionFile) {
+        const captionReceipt = await uploadUnifiedCaptions(videoId, captionFile, { language: captionLanguage })
+        next = completePublishStep({
+          transactionId: next.id,
+          step: "apply-captions",
+          receipt: { language: captionLanguage, filename: captionFile.name, response: captionReceipt },
+          toolId: "video-publisher",
+        })
+      }
+      if (playlistId.trim()) {
+        const playlistReceipt = await addUnifiedPlaylistItem(playlistId.trim(), videoId)
+        next = completePublishStep({
+          transactionId: next.id,
+          step: "apply-routing",
+          receipt: { playlistId: playlistId.trim(), response: playlistReceipt },
+          toolId: "video-publisher",
+        })
+      }
+      const scheduledIso = publishMode === "scheduled" && publishAt ? new Date(publishAt).toISOString() : null
+      const privacyStatus = publishMode === "scheduled" ? "private" : publishMode
+      await updateUnifiedVideo(videoId, {
+        title: result.titleSets[0]?.title,
+        description: result.description,
+        tags: result.tags.split(",").map(tag => tag.trim()).filter(Boolean),
+        privacyStatus,
+        ...(scheduledIso ? { publishAt: scheduledIso } : {}),
+      })
+      next = completePublishStep({
+        transactionId: next.id,
+        step: "apply-schedule-privacy",
+        youtubeVideoId: videoId,
+        youtubeBinding: {
+          status: scheduledIso ? "scheduled" : privacyStatus === "public" ? "published" : privacyStatus,
+          scheduledAt: scheduledIso,
+          publishedAt: privacyStatus === "public" ? new Date().toISOString() : null,
+        },
+        receipt: { privacyStatus, publishAt: scheduledIso },
+        toolId: "video-publisher",
+      })
+      const remote = await getUnifiedVideo(videoId) as { items?: Array<{ snippet?: { title?: string }; status?: { privacyStatus?: string; publishAt?: string } }> }
+      const actual = remote.items?.[0]
+      if (!actual) throw new Error("YouTube did not return the video during final verification.")
+      if (actual.snippet?.title !== result.titleSets[0]?.title || actual.status?.privacyStatus !== privacyStatus) {
+        throw new Error("Final YouTube verification did not match the intended publishing state.")
+      }
+      next = completePublishStep({
+        transactionId: next.id,
+        step: "verify-remote-state",
+        youtubeVideoId: videoId,
+        youtubeBinding: {
+          status: scheduledIso ? "scheduled" : privacyStatus === "public" ? "published" : privacyStatus,
+          scheduledAt: scheduledIso,
+          publishedAt: privacyStatus === "public" ? new Date().toISOString() : null,
+          lastVerifiedAt: new Date().toISOString(),
+        },
+        receipt: { final: true, privacyStatus: actual.status?.privacyStatus, publishAt: actual.status?.publishAt || null },
+        toolId: "video-publisher",
+      })
+      next = completePublishTransaction(next.id, "video-publisher")
+      setPublishTransaction(next)
+    } catch (error) {
+      const failed = failPublishTransaction(publishTransaction.id, "verify-remote-state", error, "video-publisher")
+      setPublishTransaction(failed)
+      setUploadError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
   const handleExport = async () => {
     if (!result) return
     setIsExporting(true)
@@ -570,6 +651,25 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
                   />
                   <SubToolboxButton tone="success" onClick={applyAndVerifyPublishingPackage}>
                     Apply Package + Verify
+                  </SubToolboxButton>
+                </>
+              ) : null}
+              {remoteVerified && publishTransaction?.youtubeVideoId ? (
+                <>
+                  <input aria-label="Caption file" type="file" accept=".srt,.vtt,text/vtt,application/x-subrip" onChange={(event) => setCaptionFile(event.target.files?.[0] || null)} />
+                  <SubToolboxInput value={captionLanguage} onChange={(event) => setCaptionLanguage(event.target.value)} placeholder="Caption language · en" />
+                  <SubToolboxInput value={playlistId} onChange={(event) => setPlaylistId(event.target.value)} placeholder="Optional YouTube playlist ID" />
+                  <SubToolboxSelect value={publishMode} onChange={(event) => setPublishMode(event.target.value as typeof publishMode)}>
+                    <option value="private">Keep Private</option>
+                    <option value="unlisted">Unlisted</option>
+                    <option value="public">Publish Now</option>
+                    <option value="scheduled">Schedule</option>
+                  </SubToolboxSelect>
+                  {publishMode === "scheduled" ? (
+                    <SubToolboxInput type="datetime-local" value={publishAt} onChange={(event) => setPublishAt(event.target.value)} />
+                  ) : null}
+                  <SubToolboxButton tone="success" disabled={publishMode === "scheduled" && !publishAt} onClick={finishPublishingTransaction}>
+                    Apply Final State + Complete
                   </SubToolboxButton>
                 </>
               ) : null}
