@@ -53,7 +53,7 @@ const ComponentLibraryTrack: React.FC<ComponentLibraryTrackProps> = ({
           : "Studio Hub Component Library — Primitive"}
         subtitle={isHardcoded
           ? "Frozen visual baseline. Component anatomy remains hardcoded for comparison."
-          : "Migration surface. Families move one-by-one to canonical primitives and shared CSS."}
+          : "Production-import surface. Every family renders inside the same SubToolbox shell, 12-color title/icon pairing, primitives and shared CSS used by Studio tools."}
         icon={<Layers3 size={40} strokeWidth={3} />}
         paletteIndex={paletteIndex}
         collapsible={collapsible}
@@ -62,7 +62,7 @@ const ComponentLibraryTrack: React.FC<ComponentLibraryTrackProps> = ({
         unmountWhenClosed
         helpText={isHardcoded
           ? "Frozen baseline used only to compare visual parity while the production primitive system is migrated."
-          : "Primitive migration copy. A family is moved only after it can match the frozen baseline through shared tokens, primitives and CSS."}
+          : "Primitive production track. Each family is mounted inside a real SubToolbox; nested components inherit that SubToolbox title/icon color pair and shared production styling instead of choosing local colors."}
         headerActions={
           <div className="flex items-center gap-1" style={primitiveContextStyle}>
             <SubToolboxButton
