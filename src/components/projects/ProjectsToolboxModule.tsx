@@ -8,6 +8,7 @@ type ProjectsToolboxModuleProps = {
  paletteIndex: number
  children: React.ReactNode
  isOpenInitial?: boolean
+ headerActions?: React.ReactNode
 }
 
 /** Canonical level-0 Projects toolbox: one exterior shell, then subtoolboxes/components. */
@@ -18,6 +19,7 @@ const ProjectsToolboxModule: React.FC<ProjectsToolboxModuleProps> = ({
  paletteIndex,
  children,
  isOpenInitial = true,
+ headerActions,
 }) => (
  <Toolbox
   variant="scaffold"
@@ -27,6 +29,7 @@ const ProjectsToolboxModule: React.FC<ProjectsToolboxModuleProps> = ({
   paletteIndex={paletteIndex}
   collapsible
   isOpenInitial={isOpenInitial}
+  headerActions={headerActions}
   contentClassName="bg-white p-0"
   outerClassName="w-full"
  >
