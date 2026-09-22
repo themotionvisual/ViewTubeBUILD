@@ -3,6 +3,7 @@ import { Boxes, CalendarDays, FolderKanban, Gauge, Plus, Workflow } from "lucide
 import { useBrain } from "../../context/useBrain"
 import type { Project } from "../../types"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
+import { syncProjectToContentBuild } from "../../services/asset-engine/ProjectContentBuildBridge"
 import { SubToolbox } from "../Toolbox"
 import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../subtoolbox/SubToolboxLayouts"
 import {
