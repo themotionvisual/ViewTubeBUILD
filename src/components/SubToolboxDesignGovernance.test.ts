@@ -80,6 +80,9 @@ describe("subtoolbox design governance", () => {
   }
 
   expect(manager).toContain("SubToolboxMetric")
+  expect(manager).toContain('title="Choose Video"')
+  expect(manager).not.toContain("chooseVideoPalette")
+  expect(manager).not.toContain("accentColor={card.accentColor}")
   expect(publisher).toContain("SubToolboxOutputCard")
   expect(publisher).toContain("SubToolboxFileTarget")
   expect(registry).toContain('{ id: 2, status: "complete", surfaces: ["VideoManager", "VideoPublisher"] }')
