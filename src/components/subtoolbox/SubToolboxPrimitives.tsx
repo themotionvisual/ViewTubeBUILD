@@ -227,8 +227,6 @@ export interface SubToolboxTopTitleDropdownProps extends Omit<React.HTMLAttribut
   multiSelect?: boolean
   selectedValues?: string[]
   ariaLabel?: string
-  toneColor?: string
-  shadowColor?: string
 }
 
 export const SubToolboxTopTitleDropdown: React.FC<SubToolboxTopTitleDropdownProps> = ({
@@ -240,8 +238,6 @@ export const SubToolboxTopTitleDropdown: React.FC<SubToolboxTopTitleDropdownProp
   multiSelect = false,
   selectedValues = [],
   ariaLabel = "Choose an option",
-  toneColor,
-  shadowColor,
   className,
   style,
   ...props
@@ -278,11 +274,7 @@ export const SubToolboxTopTitleDropdown: React.FC<SubToolboxTopTitleDropdownProp
     }
   }, [open, recalcMenuRect])
 
-  const mergedStyle = withComponentLevelStyle(level, {
-    ...(style ?? {}),
-    ...(toneColor ? { ["--pair-b" as string]: toneColor } : {}),
-    ...(shadowColor ? { ["--vt-top-title-shadow" as string]: shadowColor } : {}),
-  } as React.CSSProperties)
+  const mergedStyle = withComponentLevelStyle(level, style)
 
   return (
     <div
@@ -1181,9 +1173,9 @@ export const SubToolboxCommandPalette: React.FC<SubToolboxCommandPaletteProps> =
 
 export const SubToolboxSurface: React.FC<React.HTMLAttributes<HTMLDivElement> & { tone?: "white" | "subtle" | "accent"; scroll?: boolean; children: React.ReactNode; level?: ToolboxControlLevel }> = ({ tone = "white", scroll = false, level, className, children, style, ...props }) => <div data-vt-control-level={level} style={withComponentLevelStyle(level, style)} className={classes("vt-subtoolbox-surface", `is-${tone}`, scroll && "is-scroll", level && "has-component-level", className)} {...props}>{children}</div>
 
-export const SubToolboxMetric: React.FC<{ label: React.ReactNode; value: React.ReactNode; accentColor?: string; className?: string; level?: ToolboxControlLevel; style?: React.CSSProperties }> = ({ label, value, accentColor, className, level, style }) => <SubToolboxSurface level={level} className={classes("vt-subtoolbox-metric", className)} style={{ ...style, ...(accentColor ? { ["--vt-subtoolbox-card-fill" as string]: accentColor } : {}) }}><div className="vt-subtoolbox-metric-label">{label}</div><div className="vt-subtoolbox-metric-value">{value}</div></SubToolboxSurface>
+export const SubToolboxMetric: React.FC<{ label: React.ReactNode; value: React.ReactNode; className?: string; level?: ToolboxControlLevel; style?: React.CSSProperties }> = ({ label, value, className, level, style }) => <SubToolboxSurface level={level} className={classes("vt-subtoolbox-metric", className)} style={style}><div className="vt-subtoolbox-metric-label">{label}</div><div className="vt-subtoolbox-metric-value">{value}</div></SubToolboxSurface>
 
-export const SubToolboxOutputCard: React.FC<Omit<React.HTMLAttributes<HTMLElement>, "title"> & { title: React.ReactNode; icon?: React.ReactNode; accentColor?: string; badge?: React.ReactNode; action?: React.ReactNode; scroll?: boolean; children: React.ReactNode; level?: ToolboxControlLevel }> = ({ title, icon, accentColor, badge, action, scroll = false, level, className, children, style, ...props }) => <article data-vt-control-level={level} className={classes("vt-subtoolbox-output", scroll && "is-scroll", level && "has-component-level", className)} style={{ ...(withComponentLevelStyle(level, style) ?? {}), ...(accentColor ? { ["--vt-subtoolbox-card-fill" as string]: accentColor } : {}) }} {...props}><header className="vt-subtoolbox-output-header"><div className="vt-subtoolbox-output-title">{icon ? <span aria-hidden="true">{icon}</span> : null}<span>{title}</span></div>{action ?? (badge ? <span className="vt-subtoolbox-output-badge">{badge}</span> : null)}</header><div className="vt-subtoolbox-output-body">{children}</div></article>
+export const SubToolboxOutputCard: React.FC<Omit<React.HTMLAttributes<HTMLElement>, "title"> & { title: React.ReactNode; icon?: React.ReactNode; badge?: React.ReactNode; action?: React.ReactNode; scroll?: boolean; children: React.ReactNode; level?: ToolboxControlLevel }> = ({ title, icon, badge, action, scroll = false, level, className, children, style, ...props }) => <article data-vt-control-level={level} className={classes("vt-subtoolbox-output", scroll && "is-scroll", level && "has-component-level", className)} style={withComponentLevelStyle(level, style)} {...props}><header className="vt-subtoolbox-output-header"><div className="vt-subtoolbox-output-title">{icon ? <span aria-hidden="true">{icon}</span> : null}<span>{title}</span></div>{action ?? (badge ? <span className="vt-subtoolbox-output-badge">{badge}</span> : null)}</header><div className="vt-subtoolbox-output-body">{children}</div></article>
 
 /* Canonical Toolbox upload primitive: Tight Reveal (#05).
  * Seven flush nested bands replace the legacy dashed drop-zone treatment. */
