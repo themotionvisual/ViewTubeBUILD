@@ -22,7 +22,7 @@ const STAGES:StageCard[]=[
  {id:"production",title:"Production",subtitle:"Storyboard, media, audio and editor handoff",route:"/storyboard-studio",icon:Clapperboard,ready:p=>(p.storyboard?.length||0)>0},
  {id:"package",title:"Packaging",subtitle:"Title, thumbnail and discovery package",route:"/thumbnail-studio",icon:Boxes,ready:p=>Boolean(p.videoTitle&&p.thumbnailUrl)},
  {id:"publish",title:"Publish",subtitle:"Metadata, schedule, readiness and launch",route:"/video-publisher",icon:Rocket,ready:p=>Boolean(p.publishDate&&p.description&&p.tags)},
- {id:"learn",title:"Performance",subtitle:"Analytics, outcomes and reusable learning",route:"/channelytics",icon:BarChart3,ready:p=>["published","completed"].includes(String(p.status))},
+ {id:"learn",title:"Performance",subtitle:"Analytics, outcomes and reusable learning",route:"/analytics",icon:BarChart3,ready:p=>["published","completed"].includes(String(p.status))},
 ]
 
 const ProjectAssetEngineSimple:React.FC<{project:Project}> = ({project}) => {
