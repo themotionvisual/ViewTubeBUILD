@@ -14,37 +14,6 @@ const project = (contentBuildId = "cb-a"): Project => ({
   videoTitle: "Project A working title",
   status: "ideation",
   plan: { concept: "A test concept", niche: "History", format: "long" },
-  it("selects a Vault thumbnail into the package without forking ContentBuild identity", () => {
-    const asset: VaultAsset = {
-      id: "vault-thumb-a",
-      name: "Thumbnail A",
-      kind: "image",
-      source: "generated",
-      createdAt: 1,
-      updatedAt: 1,
-      projectId: "project-a",
-      projectName: "Project A",
-      tags: ["thumbnail"],
-      url: "https://example.com/thumb.jpg",
-      previewUrl: "https://example.com/thumb-preview.jpg",
-    }
-
-    const updated = selectProjectVideoPackageThumbnail(project(), asset, {
-      channelId: "channel-a",
-      sourceToolId: "project-builder",
-      now: "2026-09-22T20:20:00.000Z",
-    })
-
-    expect(updated?.contentBuildId).toBe("cb-a")
-    expect(updated?.packaging.selectedThumbnailId).toBe("thumbnail:vault-thumb-a")
-    expect(updated?.packaging.thumbnailVariants).toContainEqual(expect.objectContaining({
-      id: "thumbnail:vault-thumb-a",
-      vaultAssetId: "vault-thumb-a",
-      kind: "thumbnail",
-    }))
-    expect(listVideoPackages()).toHaveLength(1)
-  })
-
 })
 
 describe("Project Video Package bridge", () => {
@@ -84,5 +53,36 @@ describe("Project Video Package bridge", () => {
   it("defers package creation until a channel scope exists", () => {
     expect(ensureVideoPackageForProject(project(), { channelId: null })).toBeNull()
     expect(listVideoPackages()).toHaveLength(0)
+  })
+
+  it("selects a Vault thumbnail into the package without forking ContentBuild identity", () => {
+    const asset: VaultAsset = {
+      id: "vault-thumb-a",
+      name: "Thumbnail A",
+      kind: "image",
+      source: "generated",
+      createdAt: 1,
+      updatedAt: 1,
+      projectId: "project-a",
+      projectName: "Project A",
+      tags: ["thumbnail"],
+      url: "https://example.com/thumb.jpg",
+      previewUrl: "https://example.com/thumb-preview.jpg",
+    }
+
+    const updated = selectProjectVideoPackageThumbnail(project(), asset, {
+      channelId: "channel-a",
+      sourceToolId: "project-builder",
+      now: "2026-09-22T20:20:00.000Z",
+    })
+
+    expect(updated?.contentBuildId).toBe("cb-a")
+    expect(updated?.packaging.selectedThumbnailId).toBe("thumbnail:vault-thumb-a")
+    expect(updated?.packaging.thumbnailVariants).toContainEqual(expect.objectContaining({
+      id: "thumbnail:vault-thumb-a",
+      vaultAssetId: "vault-thumb-a",
+      kind: "thumbnail",
+    }))
+    expect(listVideoPackages()).toHaveLength(1)
   })
 })
