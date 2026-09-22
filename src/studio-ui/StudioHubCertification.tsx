@@ -47,7 +47,7 @@ export const StudioHubCertification: React.FC = () => {
             <StudioInput aria-label="Disabled input specimen" value="Disabled" disabled readOnly />
           </SubToolboxGrid>
           <SubToolboxFieldLabel htmlFor="studio-cert-textarea">Textarea</SubToolboxFieldLabel>
-          <StudioTextArea id="studio-cert-textarea" defaultValue="Textarea shares the same structural border, radius, accent focus outline and colored shadow." />
+          <StudioTextArea id="studio-cert-textarea" defaultValue="Textarea inherits its SubToolbox title/icon pair: 50% title-color fill and inset at rest; white body, retained inset, colored caret, and icon-color glow on focus." />
         </SubToolboxSection>
 
         <SubToolboxSection label="Dropdowns">

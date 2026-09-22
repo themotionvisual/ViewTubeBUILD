@@ -121,6 +121,16 @@ describe("subtoolbox design governance", () => {
   expect(migrationCss).not.toContain("[data-vt-studio-control]")
  })
 
+ it("keeps legacy Studio field wrappers on the same inherited pair and field-state contract", () => {
+  const studioCss = source("src/styles/studio-control-system.css")
+
+  expect(studioCss).toContain("--vt-studio-control-accent: var(--pair-a")
+  expect(studioCss).toContain("--vt-studio-control-secondary: var(--pair-b")
+  expect(studioCss).toContain("color-mix(in srgb, var(--vt-studio-control-accent) 50%, #fff)")
+  expect(studioCss).toContain("inset 0 0 0 var(--vt-studio-control-stroke) var(--vt-studio-control-accent)")
+  expect(studioCss).toContain("color-mix(in srgb, var(--vt-studio-control-secondary) 78%, transparent)")
+ })
+
  it("derives every SubToolbox component pair from the canonical 12-color title/icon pattern", () => {
   const palette = source("src/styles/toolboxPalette.ts")
   const toolboxSource = source("src/components/Toolbox.tsx")

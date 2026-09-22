@@ -7,8 +7,9 @@
   --vt-studio-control-stroke: 3px;
   --vt-studio-control-radius: 8px;
   --vt-studio-control-shadow: 4px;
-  --vt-studio-control-accent: var(--vt-subtoolbox-fill, #36e0f6);
-  --vt-studio-control-shadow-color: color-mix(in srgb, var(--vt-studio-control-accent) 45%, transparent);
+  --vt-studio-control-accent: var(--pair-a, var(--vt-subtoolbox-fill, #36e0f6));
+  --vt-studio-control-secondary: var(--pair-b, #ff7f6b);
+  --vt-studio-control-shadow-color: color-mix(in srgb, var(--vt-studio-control-secondary) 45%, transparent);
   box-sizing: border-box;
 }
 
@@ -16,14 +17,17 @@
 [data-vt-studio-control][data-size="standard"] { --vt-studio-control-height: 48px; }
 [data-vt-studio-control][data-size="action"] { --vt-studio-control-height: 56px; }
 
+/* Compatibility controls consume the same inherited SubToolbox pair as
+   SubToolboxPrimitives. They are not a second color authority. */
 [data-vt-studio-control]:is(input, textarea, select) {
   width: 100%;
   min-width: 0;
   min-height: var(--vt-studio-control-height);
   border: var(--vt-studio-control-stroke) solid #000;
   border-radius: var(--vt-studio-control-radius);
-  background: color-mix(in srgb, var(--vt-studio-control-accent) 16%, #fff);
-  box-shadow: var(--vt-studio-control-shadow) var(--vt-studio-control-shadow) 0 0 var(--vt-studio-control-shadow-color);
+  background: color-mix(in srgb, var(--vt-studio-control-accent) 50%, #fff);
+  box-shadow: inset 0 0 0 var(--vt-studio-control-stroke) var(--vt-studio-control-accent);
+  caret-color: var(--vt-studio-control-accent);
   color: #000;
   font-size: 14px;
   font-weight: 800;
@@ -33,11 +37,17 @@
   transition: background-color 180ms ease-out, box-shadow 180ms ease-out, transform 180ms ease-out, outline-color 180ms ease-out;
 }
 
+[data-vt-studio-control]:is(input, textarea, select):focus,
 [data-vt-studio-control]:is(input, textarea, select):focus-visible {
   border-color: #000;
-  outline: 3px solid var(--vt-studio-control-accent);
-  outline-offset: 3px;
-  box-shadow: var(--vt-studio-control-shadow) var(--vt-studio-control-shadow) 0 0 var(--vt-studio-control-shadow-color);
+  background: #fff;
+  outline: 0;
+  caret-color: var(--vt-studio-control-accent);
+  box-shadow:
+    inset 0 0 0 var(--vt-studio-control-stroke) var(--vt-studio-control-accent),
+    0 0 3px calc(var(--vt-studio-control-stroke) * .75) color-mix(in srgb, var(--vt-studio-control-secondary) 78%, transparent),
+    0 0 calc(var(--vt-studio-control-height) * .20) calc(var(--vt-studio-control-stroke) * 1.1) color-mix(in srgb, var(--vt-studio-control-secondary) 48%, transparent),
+    0 0 calc(var(--vt-studio-control-height) * .42) calc(var(--vt-studio-control-stroke) * .25) color-mix(in srgb, var(--vt-studio-control-secondary) 24%, transparent);
 }
 
 [data-vt-studio-control]:is(input, textarea, select):disabled,
@@ -109,7 +119,7 @@ button[data-vt-studio-control][data-split-left="true"] {
   place-items: center;
   align-self: stretch;
   border-right: var(--vt-studio-control-stroke) solid #000;
-  background: color-mix(in srgb, var(--vt-studio-control-accent) 82%, #fff);
+  background: var(--vt-studio-control-secondary);
 }
 
 [data-vt-studio-split-label] {
@@ -134,7 +144,7 @@ button[data-vt-studio-control][data-split-left="true"] {
 button[data-vt-studio-control][data-dropdown-trigger="true"] {
   width: 100%;
   justify-content: space-between;
-  background: color-mix(in srgb, var(--vt-studio-control-accent) 16%, #fff);
+  background: color-mix(in srgb, var(--vt-studio-control-accent) 50%, #fff);
   text-align: left;
 }
 
