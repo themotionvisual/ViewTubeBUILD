@@ -1,8 +1,10 @@
 .vt-subtoolbox-split-button,
 .vt-subtoolbox-split-dropdown {
-  --vt-split-rail: var(--vt-subtoolbox-fill, #c0f240);
-  --vt-split-label: color-mix(in srgb, var(--vt-subtoolbox-fill, #ff5d8f) 74%, white);
-  --vt-split-shadow: var(--vt-subtoolbox-shadow, color-mix(in srgb, var(--vt-split-label) 45%, transparent));
+  /* The rail mirrors the owning SubToolbox icon section; the label/body mirrors
+     its title section. No component chooses an independent palette pair. */
+  --vt-split-rail: var(--pair-b, #c0f240);
+  --vt-split-label: var(--pair-a, #ff5d8f);
+  --vt-split-shadow: color-mix(in srgb, var(--pair-a, var(--vt-split-label)) 45%, transparent);
 }
 
 .vt-subtoolbox-split-button {
@@ -148,8 +150,8 @@
 .vt-subtoolbox-split-dropdown-option:disabled { opacity: .45; cursor: not-allowed; }
 
 .vt-subtoolbox-kpi-card {
-  --vt-kpi-accent: var(--vt-subtoolbox-fill, #36e0f6);
-  --vt-kpi-rail: color-mix(in srgb, var(--vt-kpi-accent) 76%, white);
+  --vt-kpi-accent: var(--pair-a, #36e0f6);
+  --vt-kpi-rail: var(--pair-b, #4ee4be);
   min-width: 0;
   overflow: hidden;
   border: var(--vt-subtoolbox-inner-stroke, 3px) solid #000;
