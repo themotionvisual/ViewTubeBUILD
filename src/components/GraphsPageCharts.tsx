@@ -2488,17 +2488,87 @@ export const Packaging: React.FC<GChartProps> = ({ data }) => {
 /* 7. Engagement Map */
 export const EngagementMap: React.FC<GChartProps> = ({ data }) => {
  const [selectedCount, setSelectedCount] = useState(15)
- const [selectedFormat, setSelectedFormat] = useState<"All" | …21011 tokens truncated…INKS: "SHORTS_CONTENT_LINKS",
- LIVE_REDIRECT: "LIVE_REDIRECT",
- IMMERSIVE_LIVE: "LIVE_REDIRECT",
- ADVERTISING: "ADVERTISING",
- BROWSE: "BROWSE",
- CAMPAIGN_CARD: "CAMPAIGN_CARD",
- CARD: "CARD",
- YT_PLAYLIST_PAGE: "YT_PLAYLIST_PAGE",
- NO_LINK_EMBEDDED: "NO_LINK_EMBEDDED",
+ const [selectedFormat, setSelectedFormat] = useState<"All" | "Shorts" | "Long">("All")
+ const [sortBy, setSortBy] = useState<"best" | "newest">("best")
+ const cd = useMemo(() => {
+  const filtered = data.filter((r) => {
+   if (selectedFormat === "Shorts") return r.format === "shorts"
+   if (selectedFormat === "Long") return r.format !== "shorts"
+   return true
+  })
+  const sorted =
+   sortBy === "newest"
+    ? [...filtered].sort((a, b) => new Date(String(b.uploadDate || "")).getTime() - new Date(String(a.uploadDate || "")).getTime())
+    : [...filtered].sort((a, b) => mv(b, "likes") - mv(a, "likes"))
+  return sorted.slice(0, selectedCount).map((r) => ({
+   name: r.title.substring(0, 28),
+   likes: mv(r, "likes"),
+   comments: mv(r, "comments"),
+   shares: mv(r, "shares"),
+  }))
+ }, [data, selectedCount, selectedFormat, sortBy])
+ const top = cd[0]
+ return (
+  <SubToolboxChartModule
+   header={{ title: "ENGAGEMENT MAP", subtitle: "LIKES \u00b7 COMMENTS \u00b7 SHARES", icon: <CustomIcon name="analytics" size={18} /> }}
+   theme={{ headerBandBg: "#FF9900", iconBlockBg: "#FFB158", shadowColor: "rgba(255,153,0,0.45)" }}
+   activeContext={{
+    title: top?.name?.toUpperCase() || "NO DATA",
+    stats: [
+     { label: "LATEST", value: String(cd.length), tone: "orange" },
+     { label: "CMT PEAK", value: String(Math.max(0, ...cd.map((d) => d.comments))), tone: "cyan" },
+     { label: "LIKES", value: String(top?.likes || 0), tone: "pink" },
+     { label: "CMTS", value: String(top?.comments || 0), tone: "cyan" },
+     { label: "SHARES", value: String(top?.shares || 0), tone: "lime" },
+    ],
+   }}
+   controllerRows={[
+    {
+     type: "dropdown",
+     value: sortBy,
+     options: [{ label: "BEST VIDEOS", value: "best" }, { label: "NEWEST FIRST", value: "newest" }],
+     onSelect: (v) => setSortBy(v as "best" | "newest"),
+     bgTone: "#FF9900",
+     fgTone: "#000000",
+    },
+    {
+     type: "dropdown",
+     value: String(selectedCount),
+     options: [10, 15, 20, 25, 50].map((n) => ({ label: `TOP ${n}`, value: String(n) })),
+     onSelect: (v) => setSelectedCount(Number(v)),
+     bgTone: "#FFB158",
+     fgTone: "#000000",
+    },
+    {
+     type: "dropdown",
+     value: selectedFormat,
+     options: ["All", "Shorts", "Long"].map((f) => ({ label: f.toUpperCase(), value: f })),
+     onSelect: (v) => setSelectedFormat(v as "All" | "Shorts" | "Long"),
+     bgTone: "#FFEA00",
+     fgTone: "#000000",
+    },
+   ]}
+   legendLayout={{ left: <span className="text-[10px] font-black uppercase text-black"><span className="inline-block w-3 h-3 bg-[#FF7497] border border-black mr-1" />LIKES</span>, center: <span className="text-[10px] font-black uppercase text-black"><span className="inline-block w-3 h-3 bg-[#00E5FF] border border-black mr-1" />COMMENTS</span>, right: <span className="text-[10px] font-black uppercase text-black"><span className="inline-block w-3 h-3 bg-[#CCFF00] border border-black mr-1" />SHARES</span> }}
+   insight={{ personalInsight: "Compares social interaction signatures across recent top-comment videos." }}
+  >
+   <div className="p-4 h-[340px]">
+    <StableChartFrame minHeightClassName="min-h-[300px]">
+     <BarChart data={cd} margin={{ top: 10, right: 10, left: -20, bottom: 40 }}>
+      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+      <XAxis dataKey="name" tick={{ fontSize: 8, fontWeight: 900 }} interval={0} angle={-45} textAnchor="end" />
+      <YAxis tick={{ fontSize: 10, fontWeight: 900 }} />
+      <Tooltip content={<ChartTip />} />
+      <Bar dataKey="likes" name="Likes" fill="#FF7497" radius={[4, 4, 0, 0]} />
+      <Bar dataKey="comments" name="Comments" fill="#00E5FF" radius={[4, 4, 0, 0]} />
+      <Bar dataKey="shares" name="Shares" fill="#CCFF00" radius={[4, 4, 0, 0]} />
+     </BarChart>
+    </StableChartFrame>
+   </div>
+  </SubToolboxChartModule>
+ )
 }
 
+/* 8. Performance Trend */
 export const PerformanceTrend: React.FC<GChartProps> = ({ data }) => {
  const cd = useMemo(() => [...data].sort((a,b) => new Date(a.uploadDate).getTime()-new Date(b.uploadDate).getTime())
   .map(r => ({ title: r.title.substring(0,20), date: new Date(r.uploadDate).toLocaleDateString(undefined,{month:"short",day:"numeric"}),
