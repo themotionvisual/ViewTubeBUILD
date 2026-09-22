@@ -68,8 +68,6 @@ import {
  SubToolboxTopTitleDropdown,
 } from "../components/subtoolbox/SubToolboxPrimitives"
 import { SubToolboxSplitButton, SubToolboxSplitDropdown } from "../studio-ui"
-import { getToolboxPaletteColors } from "../styles/toolboxPalette"
-import { hexToRgba } from "../components/ToolboxUISystem"
 
 const TagBadge: React.FC<{
  tag: string
@@ -192,7 +190,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false)
  const [videoListLoadState, setVideoListLoadState] = useState<VideoListLoadState>("idle")
  const hasTriggeredInitialLoadRef = useRef(false)
- const updateDetailsPalette = getToolboxPaletteColors(basePalette + 5)
 
  const showHeaderLoadAssetsButton = connected && videos.length === 0
 
@@ -771,17 +768,16 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        </SubToolboxStack>
       </SubToolbox>
 
-      <SubToolboxGridActionButton
-       onClick={connected ? handleSave : () => auth.login("/video-manager")}
-       disabled={connected ? saving || !selectedVideoId : auth.loading}
-       tone="blue"
-       surfaceColor={updateDetailsPalette.header}
-       controlColor={updateDetailsPalette.icon}
-       shadowColor={hexToRgba(updateDetailsPalette.header, 0.45)}
-       iconName="settings"
-       showIconSection
-       label={!connected ? connectionLabel : catalogLoading ? "Loading Video Catalog..." : saving ? "Transmitting to Server..." : "Update Video Details"}
-      />
+      <SubToolbox title="Save Video Changes" icon={<Settings size={20} strokeWidth={3} />} paletteIndex={basePalette + 5} collapsible isOpenInitial>
+       <SubToolboxGridActionButton
+        onClick={connected ? handleSave : () => auth.login("/video-manager")}
+        disabled={connected ? saving || !selectedVideoId : auth.loading}
+        tone="blue"
+        iconName="settings"
+        showIconSection
+        label={!connected ? connectionLabel : catalogLoading ? "Loading Video Catalog..." : saving ? "Transmitting to Server..." : "Update Video Details"}
+       />
+      </SubToolbox>
      </div>
     ) : (
      <div className="h-[500px] flex flex-col items-center justify-center gap-5 font-black uppercase text-3xl tracking-tighter text-black/20"><Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />Awaiting Asset Selection</div>
