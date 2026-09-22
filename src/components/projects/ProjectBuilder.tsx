@@ -24,14 +24,14 @@ import ProjectBuildCommand from "./ProjectBuildCommand"
 import ProjectBriefSubtoolbox from "./ProjectBriefSubtoolbox"
 import ProjectPackagingSubtoolbox from "./ProjectPackagingSubtoolbox"
 import ProjectAssetEngineSimple from "./ProjectAssetEngineSimple"
+import { useProjectsWorkspace } from "./ProjectsWorkspaceContext"
 
-type BuilderScope = "channel" | "project"
 type AssetMode = "simple" | "full"
 
 const ProjectBuilder: React.FC = () => {
   const { brain, updateProject, setActiveProject, channelIdentity } = useBrain()
+  const { builderScope: scope, setBuilderScope: setScope } = useProjectsWorkspace()
   const projects = Array.isArray(brain.projects) ? brain.projects : []
-  const [scope, setScope] = useState<BuilderScope>(projects.length ? "project" : "channel")
   const [assetMode, setAssetMode] = useState<AssetMode>("simple")
   const [showCreate, setShowCreate] = useState(false)
 
@@ -76,7 +76,7 @@ const ProjectBuilder: React.FC = () => {
             <SubToolboxSection label="Workspace">
               <SubToolboxSegmentedToggle
                 value={scope}
-                onValueChange={(value) => setScope(value as BuilderScope)}
+                onValueChange={(value) => setScope(value as "channel" | "project")}
                 ariaLabel="Choose Project Builder scope"
                 options={[
                   { value: "channel", label: "Channel" },
