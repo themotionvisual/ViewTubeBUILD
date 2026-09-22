@@ -16,8 +16,11 @@ import {
 import {
   approvePublishTransaction,
   beginPublishTransaction,
+  completePublishStep,
+  failPublishTransaction,
   type ContentBuildPublishTransaction,
 } from "../services/asset-engine/PublishTransaction"
+import { YouTubeUploadService } from "../services/youtube/youtubeUploadService"
 import { nexusSyncService } from "../services/nexusSyncService"
 import { sheetsService } from "../services/sheetsService"
 import type { SeoResult } from "../types"
@@ -125,6 +128,9 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
   const [missingFields, setMissingFields] = useState({ concept: false, niche: false })
   const [insightsImported, setInsightsImported] = useState(false)
   const [publishTransaction, setPublishTransaction] = useState<ContentBuildPublishTransaction | null>(null)
+  const [publishFile, setPublishFile] = useState<File | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadError, setUploadError] = useState("")
 
   useEffect(() => {
     registerProvider("VIDEO_PUBLISHER")
@@ -307,6 +313,43 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
     setPublishTransaction(approvePublishTransaction(publishTransaction.id, "video-publisher"))
   }
 
+  const uploadApprovedPublish = async () => {
+    if (!publishTransaction || publishTransaction.status !== "approved" || !publishFile || !result) return
+    setUploadError("")
+    setUploadProgress(0)
+    try {
+      const title = result.titleSets[0]?.title?.trim()
+      if (!title) throw new Error("A final publishing title is required.")
+      const uploaded = await YouTubeUploadService.uploadVideo(
+        publishFile,
+        {
+          title,
+          description: result.description,
+          tags: result.tags.split(",").map(tag => tag.trim()).filter(Boolean),
+          privacyStatus: "private",
+        },
+        setUploadProgress,
+      ) as { id?: string }
+      if (!uploaded?.id) throw new Error("YouTube completed the upload without returning a video ID.")
+      const next = completePublishStep({
+        transactionId: publishTransaction.id,
+        step: "upload-video",
+        youtubeVideoId: uploaded.id,
+        youtubeBinding: {
+          status: "private",
+          uploadCompletedAt: new Date().toISOString(),
+        },
+        receipt: { videoId: uploaded.id, privacyStatus: "private", filename: publishFile.name, size: publishFile.size },
+        toolId: "video-publisher",
+      })
+      setPublishTransaction(next)
+    } catch (error) {
+      const failed = failPublishTransaction(publishTransaction.id, "upload-video", error, "video-publisher")
+      setPublishTransaction(failed)
+      setUploadError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
   const handleExport = async () => {
     if (!result) return
     setIsExporting(true)
@@ -436,11 +479,26 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
                 </SubToolboxButton>
               </SubToolboxActions>
               {publishTransaction?.status === "approved" ? (
-                <SubToolboxStatePanel
-                  state="ready"
-                  message="Creator approval recorded. Resumable YouTube upload is the next transaction step; this build does not fake or duplicate an upload endpoint."
-                />
+                <>
+                  <SubToolboxStatePanel
+                    state="ready"
+                    message="Creator approval recorded. Choose the final rendered video file, then upload it privately through the canonical resumable YouTube transport."
+                  />
+                  <input
+                    aria-label="Final video file"
+                    type="file"
+                    accept="video/*"
+                    onChange={(event) => setPublishFile(event.target.files?.[0] || null)}
+                  />
+                  <SubToolboxButton tone="success" disabled={!publishFile} onClick={uploadApprovedPublish}>
+                    {uploadProgress > 0 && uploadProgress < 100 ? `Uploading ${Math.round(uploadProgress)}%` : "Upload Private Video"}
+                  </SubToolboxButton>
+                </>
               ) : null}
+              {publishTransaction?.youtubeVideoId ? (
+                <SubToolboxStatePanel state="ready" message={`YouTube video ${publishTransaction.youtubeVideoId} is now bound to this ContentBuild. Continue with thumbnail, captions, metadata/status and verification.`} />
+              ) : null}
+              {uploadError ? <SubToolboxStatePanel state="error" message={uploadError} /> : null}
             </SubToolboxStack>
           </SubToolbox>
           <ConsolidatedCopyBox label="Title Options" items={result.titleSets.map((title) => title.title)} accentColor="#ff4d6f" icon={<Type size={20} />} />
