@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { Boxes, CalendarDays, FolderKanban, Gauge, Plus, Workflow } from "lucide-react"
+import { Boxes, CalendarDays, Plus, Workflow } from "lucide-react"
 import { useBrain } from "../../context/useBrain"
 import type { Project } from "../../types"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
@@ -7,7 +7,6 @@ import { syncProjectToContentBuild } from "../../services/asset-engine/ProjectCo
 import { SubToolbox } from "../Toolbox"
 import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../subtoolbox/SubToolboxLayouts"
 import {
-  SubToolboxBadge,
   SubToolboxButton,
   SubToolboxInput,
   SubToolboxSegmentedToggle,
@@ -21,19 +20,13 @@ import ProjectPlanningSubtoolboxes from "./ProjectPlanningSubtoolboxes"
 import { ProjectStudioProjectFields } from "./ProjectStudioCanonicalControls"
 import ContentAssetEngine from "./ContentAssetEngine"
 import ProjectCreationDialog from "./ProjectCreationDialog"
+import ProjectBuildCommand from "./ProjectBuildCommand"
+import ProjectBriefSubtoolbox from "./ProjectBriefSubtoolbox"
+import ProjectPackagingSubtoolbox from "./ProjectPackagingSubtoolbox"
+import ProjectAssetEngineSimple from "./ProjectAssetEngineSimple"
 
 type BuilderScope = "channel" | "project"
 type AssetMode = "simple" | "full"
-
-const lifecycle = [
-  ["IDEA", "idea"],
-  ["RESEARCH", "research"],
-  ["SCRIPT", "script"],
-  ["PRODUCE", "produce"],
-  ["PACKAGE", "package"],
-  ["PUBLISH", "publish"],
-  ["LEARN", "learn"],
-] as const
 
 const ProjectBuilder: React.FC = () => {
   const { brain, updateProject, setActiveProject, channelIdentity } = useBrain()
@@ -62,22 +55,6 @@ const ProjectBuilder: React.FC = () => {
     }
   }, [activeProject, channelIdentity.channelId, updateProject])
 
-  const completion = useMemo(() => {
-    if (!activeProject) return { complete: 0, total: 8, percent: 0 }
-    const checks = [
-      activeProject.concept || activeProject.plan?.concept,
-      activeProject.videoTitle,
-      activeProject.script,
-      activeProject.thumbnailUrl,
-      activeProject.description,
-      activeProject.tags,
-      activeProject.publishDate,
-      (activeProject.tasks || []).length > 0,
-    ]
-    const complete = checks.filter(Boolean).length
-    return { complete, total: checks.length, percent: Math.round((complete / checks.length) * 100) }
-  }, [activeProject])
-
   const patchPlan = (field: string, value: unknown) => {
     if (!activeProject) return
     updateProject(activeProject.id, {
@@ -90,19 +67,6 @@ const ProjectBuilder: React.FC = () => {
     })
   }
 
-  const simpleStageState = (stage: string) => {
-    if (!activeProject) return "EMPTY"
-    switch (stage) {
-      case "idea": return (activeProject.concept || activeProject.plan?.concept) ? "READY" : "EMPTY"
-      case "research": return (activeProject.plan?.references?.length || 0) > 0 ? "READY" : "OPEN"
-      case "script": return activeProject.script?.trim() ? "READY" : "OPEN"
-      case "produce": return (activeProject.storyboard?.length || 0) > 0 ? "IN PROGRESS" : "OPEN"
-      case "package": return activeProject.videoTitle && activeProject.thumbnailUrl ? "READY" : "OPEN"
-      case "publish": return activeProject.publishDate && activeProject.description && activeProject.tags ? "READY" : "OPEN"
-      case "learn": return activeProject.status === "published" || activeProject.status === "completed" ? "CONNECTED" : "WAITING"
-      default: return "OPEN"
-    }
-  }
 
   return (
     <>
@@ -152,44 +116,7 @@ const ProjectBuilder: React.FC = () => {
           />
         ) : (
           <>
-            <SubToolbox
-              title={activeProject.name.toUpperCase()}
-              subtitle="One project identity from idea through publishing and learning"
-              icon={<FolderKanban />}
-              collapsible
-              isOpenInitial
-              openUnits={4}
-            >
-              <SubToolboxStack density="comfortable">
-                <div
-                  className="grid gap-3 rounded-[var(--vt-subtoolbox-radius,10px)] p-3 md:grid-cols-[minmax(0,1fr)_auto]"
-                  style={{ backgroundColor: `${activeProject.color || VT_SPECTRUM_PALETTE_06[0]}22`, border: `3px solid ${activeProject.color || VT_SPECTRUM_PALETTE_06[0]}` }}
-                >
-                  <div className="min-w-0">
-                    <div className="text-[22px] font-[1000] uppercase leading-none tracking-[-0.04em]">{activeProject.videoTitle || activeProject.name}</div>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <SubToolboxBadge>{activeProject.status || "ideation"}</SubToolboxBadge>
-                      <SubToolboxBadge>{completion.percent}% build</SubToolboxBadge>
-                      <SubToolboxBadge>{activeProject.contentBuildId ? "ContentBuild linked" : "ContentBuild pending"}</SubToolboxBadge>
-                      {activeProject.publishDate ? <SubToolboxBadge>{activeProject.publishDate}</SubToolboxBadge> : null}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Gauge size={22} />
-                    <strong className="text-[20px] font-[1000]">{completion.complete}/{completion.total}</strong>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
-                  {lifecycle.map(([label, id]) => (
-                    <SubToolboxSurface key={id} tone="subtle" className="min-w-0 p-2 text-center">
-                      <div className="truncate text-[10px] font-[1000] uppercase">{label}</div>
-                      <div className="mt-1 text-[8px] font-black uppercase opacity-50">{simpleStageState(id)}</div>
-                    </SubToolboxSurface>
-                  ))}
-                </div>
-              </SubToolboxStack>
-            </SubToolbox>
+            <ProjectBuildCommand project={activeProject} />
 
             <SubToolbox title="PROJECT IDENTITY" subtitle="Name, schedule, format and visual identity" icon={<CalendarDays />} collapsible isOpenInitial openUnits={4}>
               <SubToolboxStack density="comfortable">
@@ -208,8 +135,16 @@ const ProjectBuilder: React.FC = () => {
                       <option value="other">Other</option>
                     </SubToolboxSelect>
                   </SubToolboxSection>
-                  <SubToolboxSection label="Thumbnail">
-                    <SubToolboxInput value={activeProject.thumbnailUrl || ""} onChange={(event) => updateProject(activeProject.id, { thumbnailUrl: event.target.value })} placeholder="Thumbnail asset / URL…" />
+                  <SubToolboxSection label="Status">
+                    <SubToolboxSelect value={activeProject.status || "ideation"} onChange={(event) => updateProject(activeProject.id, { status: event.target.value })}>
+                      <option value="ideation">Ideation</option>
+                      <option value="planned">Planned</option>
+                      <option value="scripting">Scripting</option>
+                      <option value="production">Production</option>
+                      <option value="review">Review</option>
+                      <option value="ready">Ready</option>
+                      <option value="published">Published</option>
+                    </SubToolboxSelect>
                   </SubToolboxSection>
                 </SubToolboxGrid>
 
@@ -233,7 +168,19 @@ const ProjectBuilder: React.FC = () => {
               </SubToolboxStack>
             </SubToolbox>
 
-            <SubToolbox title="VIDEO PACKAGE" subtitle="Working YouTube package and script" icon={<Boxes />} collapsible isOpenInitial openUnits={6}>
+            <SubToolboxGrid minItemWidth="wide" density="comfortable">
+              <ProjectBriefSubtoolbox
+                project={activeProject}
+                targetNiche={brain.targetNiche}
+                onUpdate={(updates) => updateProject(activeProject.id, updates)}
+              />
+              <ProjectPackagingSubtoolbox
+                project={activeProject}
+                onUpdate={(updates) => updateProject(activeProject.id, updates)}
+              />
+            </SubToolboxGrid>
+
+            <SubToolbox title="VIDEO PACKAGE" subtitle="Working YouTube metadata and script" icon={<Boxes />} collapsible isOpenInitial openUnits={6}>
               <ProjectStudioProjectFields
                 title={activeProject.videoTitle || ""}
                 tags={activeProject.tags || ""}
@@ -247,7 +194,7 @@ const ProjectBuilder: React.FC = () => {
 
             <ProjectPlanningSubtoolboxes />
 
-            <SubToolbox title="ASSET ENGINE" subtitle="Simple lifecycle view or the complete ContentBuild asset system" icon={<Workflow />} collapsible isOpenInitial openUnits={6}>
+            <SubToolbox title="ASSET ENGINE" subtitle="Simple lifecycle controls or the complete ContentBuild asset system" icon={<Workflow />} collapsible isOpenInitial openUnits={6}>
               <SubToolboxStack density="comfortable">
                 <SubToolboxSection label="Asset Engine depth">
                   <SubToolboxSegmentedToggle
@@ -261,20 +208,7 @@ const ProjectBuilder: React.FC = () => {
                   />
                 </SubToolboxSection>
 
-                {assetMode === "simple" ? (
-                  <SubToolboxGrid minItemWidth="compact" density="dense">
-                    {lifecycle.map(([label, id]) => (
-                      <SubToolboxSurface key={id} tone="subtle">
-                        <div className="flex items-center justify-between gap-2">
-                          <strong className="text-[11px] font-[1000] uppercase">{label}</strong>
-                          <SubToolboxBadge>{simpleStageState(id)}</SubToolboxBadge>
-                        </div>
-                      </SubToolboxSurface>
-                    ))}
-                  </SubToolboxGrid>
-                ) : (
-                  <ContentAssetEngine />
-                )}
+                {assetMode === "simple" ? <ProjectAssetEngineSimple project={activeProject} /> : <ContentAssetEngine />}
               </SubToolboxStack>
             </SubToolbox>
           </>
