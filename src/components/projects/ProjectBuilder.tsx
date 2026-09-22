@@ -4,6 +4,7 @@ import { useBrain } from "../../context/useBrain"
 import type { Project } from "../../types"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import { syncProjectToContentBuild } from "../../services/asset-engine/ProjectContentBuildBridge"
+import { ensureVideoPackageForProject } from "../../services/video-package/ProjectVideoPackageBridge"
 import { SubToolbox } from "../Toolbox"
 import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../subtoolbox/SubToolboxLayouts"
 import {
@@ -49,6 +50,13 @@ const ProjectBuilder: React.FC<ProjectBuilderProps> = ({ onCreateProject }) => {
   useEffect(() => {
     if (!activeProject) return
     const build = syncProjectToContentBuild(activeProject, {
+      channelId: channelIdentity.channelId || null,
+      sourceToolId: "project-builder",
+    })
+    const scopedProject = activeProject.contentBuildId === build.id
+      ? activeProject
+      : { ...activeProject, contentBuildId: build.id }
+    ensureVideoPackageForProject(scopedProject, {
       channelId: channelIdentity.channelId || null,
       sourceToolId: "project-builder",
     })
