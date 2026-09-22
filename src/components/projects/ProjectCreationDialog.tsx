@@ -4,6 +4,7 @@ import { useBrain } from "../../context/useBrain"
 import type { Project } from "../../types"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import { syncProjectToContentBuild } from "../../services/asset-engine/ProjectContentBuildBridge"
+import { ensureVideoPackageForProject } from "../../services/video-package/ProjectVideoPackageBridge"
 import type { ProjectPriority } from "../../features/projects/projectWorkspace"
 import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../subtoolbox/SubToolboxLayouts"
 import {
@@ -94,6 +95,10 @@ const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({ open, onC
         sourceToolId: "project-builder",
       })
       const canonicalProject: Project = { ...project, contentBuildId: build.id }
+      ensureVideoPackageForProject(canonicalProject, {
+        channelId: channelIdentity.channelId || null,
+        sourceToolId: "project-builder",
+      })
       addProject(canonicalProject)
       setActiveProject(canonicalProject.id)
       onCreated?.(canonicalProject, priority)
@@ -110,7 +115,7 @@ const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({ open, onC
         <div className="flex items-center justify-between gap-3 border-b-[var(--vt-subtoolbox-stroke,3px)] border-black px-4 py-3">
           <div>
             <div className="text-[20px] font-[1000] uppercase leading-none tracking-[-0.04em]">Create Project</div>
-            <div className="mt-1 text-[10px] font-black uppercase opacity-50">Project + ContentBuild + Asset Engine identity</div>
+            <div className="mt-1 text-[10px] font-black uppercase opacity-50">Project + ContentBuild + Video Package identity</div>
           </div>
           <SubToolboxButton size="compact" tone="neutral" icon={<X size={15} />} onClick={close}>Close</SubToolboxButton>
         </div>
