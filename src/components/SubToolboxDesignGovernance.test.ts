@@ -149,6 +149,20 @@ describe("subtoolbox design governance", () => {
   expect(publisher).toContain('title="Generated Assets"')
  })
 
+ it("keeps legacy production dropdowns on pair A / pair B even through portals", () => {
+  const toolbox = source("src/components/Toolbox.tsx")
+  const css = source("src/styles/subtoolbox-system.css")
+
+  expect(toolbox).toContain("const resolvedSurface = `var(--pair-a")
+  expect(toolbox).toContain("const resolvedSecondary = `var(--pair-b")
+  expect(toolbox).toContain("const resolvedTitle = `var(--pair-a")
+  expect(toolbox).toContain("const resolvedBody = `var(--pair-b")
+  expect(toolbox).toContain('data-vt-subtoolbox-dropdown-portal="true"')
+  expect(toolbox).toContain('getPropertyValue("--pair-a")')
+  expect(toolbox).toContain('getPropertyValue("--pair-b")')
+  expect(css).toContain('[data-vt-subtoolbox-dropdown-portal="true"]')
+ })
+
  it("bridges the owning SubToolbox pair into detached dropdown portals", () => {
   const primitives = source("src/components/subtoolbox/SubToolboxPrimitives.tsx")
   const css = source("src/styles/subtoolbox-system.css")
