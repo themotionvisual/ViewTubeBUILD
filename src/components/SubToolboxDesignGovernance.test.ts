@@ -106,6 +106,8 @@ describe("subtoolbox design governance", () => {
   expect(migrationCatalog).not.toContain('import "./studio-hub-complete-primitive-catalog.css"')
   expect(migrationCatalog).toContain('className="vt-primitive-migration-catalog"')
   expect(migrationCatalog).toContain('import { SubToolbox } from "../Toolbox"')
+  expect(migrationCatalog).toContain('import type { ToolboxControlLevel } from "../subtoolbox/tokens"')
+  expect(migrationCatalog).not.toContain('from "./StudioHubCompletePrimitiveCatalog"')
   expect(migrationCatalog).toContain('paletteIndex={paletteIndex + index}')
   expect(migrationCatalog).not.toContain("VT_SPECTRUM_PALETTE_06")
   expect(migrationCatalog).not.toContain("const pair =")
