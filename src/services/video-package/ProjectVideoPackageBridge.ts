@@ -98,3 +98,34 @@ export const selectProjectVideoPackageThumbnail = (
     ],
   })
 }
+
+
+export const clearProjectVideoPackageThumbnail = (
+  project: Project,
+  input: { sourceToolId?: string; now?: string } = {},
+) => {
+  if (!project.contentBuildId) return null
+  const videoPackage = findVideoPackageByProject(project.id, project.contentBuildId)
+  if (!videoPackage || !videoPackage.packaging.selectedThumbnailId) return videoPackage
+
+  const now = input.now || new Date().toISOString()
+  const sourceToolId = input.sourceToolId || "project-builder"
+  const previous = videoPackage.packaging.selectedThumbnailId
+  return saveVideoPackage({
+    ...videoPackage,
+    version: videoPackage.version + 1,
+    identity: { ...videoPackage.identity, updatedAt: now },
+    packaging: { ...videoPackage.packaging, selectedThumbnailId: null },
+    provenance: [
+      ...videoPackage.provenance,
+      {
+        id: `${videoPackage.id}:thumbnail-cleared:${now}`,
+        action: "thumbnail_selection_cleared",
+        sourceToolId,
+        artifactIds: [previous],
+        evidenceIds: [],
+        createdAt: now,
+      },
+    ],
+  })
+}
