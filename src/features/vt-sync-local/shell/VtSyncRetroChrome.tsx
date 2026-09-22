@@ -73,8 +73,8 @@ export const RetroAnalogToggle: React.FC<{
   title={`${label}: ${active ? "on" : "off"}`}
  >
   <span className="vt-retro-analog-toggle__plate" aria-hidden="true">
-   <span className="vt-retro-analog-toggle__led"><i /></span>
    <span className="vt-retro-analog-toggle__track"><i /></span>
+   <span className="vt-retro-analog-toggle__led"><i /></span>
   </span>
   <span className="vt-retro-analog-toggle__label">{label}</span>
  </button>
@@ -85,10 +85,6 @@ export const RetroSyncExecutionSwitch: React.FC<{
  idleLabel: string
  onClick?: () => void
  disabled?: boolean
- selected?: boolean
- onSelectedChange?: (next: boolean) => void
- selectionDisabled?: boolean
- selectionLabel?: string
  labelOverride?: string
  className?: string
 }> = ({
@@ -96,23 +92,18 @@ export const RetroSyncExecutionSwitch: React.FC<{
  idleLabel,
  onClick,
  disabled = false,
- selected,
- onSelectedChange,
- selectionDisabled = false,
- selectionLabel = "Batch selection",
  labelOverride,
  className = "",
 }) => {
  const statusClass = executionStatusClass(status)
  const statusLabel = labelOverride || executionStatusLabel(status, idleLabel)
  const isBusyState = status === "running" || status === "queued"
- const hasSelectionControl = typeof selected === "boolean" && Boolean(onSelectedChange)
 
  return (
   <div
-   className={`vt-retro-pcb-group is-category-action ${status === "running" ? "is-active" : ""} ${statusClass} ${hasSelectionControl ? "has-batch-selection" : ""} ${selected ? "is-batch-selected" : ""} ${className}`}
+   className={`vt-retro-pcb-group is-category-action ${status === "running" ? "is-active" : ""} ${statusClass} ${className}`}
    data-sync-status={status}
-   data-batch-selected={selected ? "true" : "false"}
+   data-sync-label={statusLabel}
    style={{
     "--active-col": "var(--led-green)",
     "--active-col-rgb": "var(--led-green-rgb)",
@@ -120,9 +111,6 @@ export const RetroSyncExecutionSwitch: React.FC<{
   >
    <div className="vt-retro-pcb-controls">
     <div className="vt-retro-dual-plate">
-     <div className="led-rim vt-retro-status-led" aria-hidden="true">
-      <div className="led-bulb" />
-     </div>
      <button
       type="button"
       disabled={disabled || isBusyState || !onClick}
@@ -136,26 +124,9 @@ export const RetroSyncExecutionSwitch: React.FC<{
        <div className="sw-slide-nub" />
       </div>
      </button>
-     {hasSelectionControl ? (
-      <button
-       type="button"
-       disabled={selectionDisabled}
-       onClick={() => onSelectedChange?.(!selected)}
-       className="vt-retro-batch-hitbox"
-       aria-pressed={selected}
-       aria-label={`${selectionLabel}: ${selected ? "selected" : "not selected"}`}
-       title={`${selectionLabel}: ${selected ? "selected" : "not selected"}`}
-      >
-       <span className="vt-retro-batch-track" aria-hidden="true">
-        <i className="vt-retro-batch-nub" />
-       </span>
-      </button>
-     ) : null}
-     {hasSelectionControl ? (
-      <div className="led-rim vt-retro-selection-led" aria-hidden="true">
-       <div className="led-bulb" />
-      </div>
-     ) : null}
+     <div className="led-rim vt-retro-status-led" aria-hidden="true">
+      <div className="led-bulb" />
+     </div>
     </div>
    </div>
    <div className="comp-label">{statusLabel}</div>

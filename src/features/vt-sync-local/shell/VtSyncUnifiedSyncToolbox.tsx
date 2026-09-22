@@ -1,9 +1,9 @@
 import React, { useMemo, useRef, useState } from "react"
 import { CheckSquare, ChevronDown, ChevronRight, Copy, RefreshCw, ShieldCheck, Square } from "lucide-react"
 import { ToolboxScaffold } from "../../../components/Toolbox"
-import { SubToolboxBadge } from "../../../components/subtoolbox/SubToolboxPrimitives"
-import { getPaletteColor, VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
-import { RetroAnalogToggle, RetroBatchSelectionSwitch, RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
+import { SubToolboxAlphabeticalTag, SubToolboxCheckControl } from "../../../components/subtoolbox/SubToolboxPrimitives"
+import { getPaletteColor } from "../../../styles/toolboxPalette"
+import { RetroAnalogToggle, RetroRivets, RetroSyncExecutionSwitch, type RetroSyncExecutionStatus } from "./VtSyncRetroChrome"
 import type {
  VtSyncAnalyticsWindow,
  VtSyncCategoryGroup,
@@ -49,45 +49,32 @@ export type VtSyncRetentionVideoOption = {
 }
 
 const GROUP_COLORS: Record<string, string> = Object.fromEntries(VT_SYNC_GROUP_ORDER.map((group, index) => [group, getPaletteColor(index * 2)]))
-const formatPlainLabel = (value: string) => value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
-
-type SyncBadgeTone = "neutral" | "live" | "good" | "warn" | "bad" | "info" | "accent"
-
-const SYNC_BADGE_COLORS: Record<SyncBadgeTone, string> = {
- neutral: VT_SPECTRUM_PALETTE_06[8],
- live: VT_SPECTRUM_PALETTE_06[7],
- good: VT_SPECTRUM_PALETTE_06[5],
- warn: VT_SPECTRUM_PALETTE_06[3],
- bad: VT_SPECTRUM_PALETTE_06[0],
- info: VT_SPECTRUM_PALETTE_06[6],
- accent: VT_SPECTRUM_PALETTE_06[9],
-}
-
-const SyncMetaBadge: React.FC<{
- tone?: SyncBadgeTone
- children: React.ReactNode
+type SyncSpectrumTagProps = {
+ text: string
+ spectrumKey: string
  onClick?: () => void
  title?: string
-}> = ({ tone = "neutral", children, onClick, title }) => {
- const badge = (
-  <SubToolboxBadge
+}
+
+const SyncSpectrumTag: React.FC<SyncSpectrumTagProps> = ({ text, spectrumKey, onClick, title }) => {
+ const content = (
+  <SubToolboxAlphabeticalTag
    level="l2"
-   className="vt-sync-standard-badge"
-   style={{ ["--pair-a" as string]: SYNC_BADGE_COLORS[tone] } as React.CSSProperties}
+   className="vt-sync-meta-tag"
+   label={text}
+   spectrumKey={spectrumKey}
    title={title}
-  >
-   {children}
-  </SubToolboxBadge>
+  />
  )
- if (!onClick) return badge
+ if (!onClick) return content
  return (
   <button
    type="button"
-   className="vt-sync-standard-badge-action"
+   className="vt-sync-meta-tag-action"
    onClick={onClick}
    title={title}
   >
-   {badge}
+   {content}
   </button>
  )
 }
@@ -268,15 +255,6 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
   return "NEVER"
  }
 
- const statusTone = (status?: string) => {
-  if (status === "running") return "#3FEE56"
-  if (status === "pending") return "#FFDA47"
-  if (status === "synced" || status === "complete") return "#3FEE56"
-  if (status === "partial" || status === "stale" || status === "skipped") return "#FFDA47"
-  if (status === "failed") return "#FA618A"
-  return "#B9BEC8"
- }
-
  const formatDuration = (durationMs?: number) => {
   if (durationMs === undefined || !Number.isFinite(durationMs)) return "—"
   const totalSeconds = Math.max(0, Math.round(durationMs / 1000))
@@ -301,26 +279,18 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
    ? `${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1)}K`
    : value.toLocaleString()
 
- const formatDurationLong = (durationMs?: number) => {
-  if (durationMs === undefined || !Number.isFinite(durationMs)) return "No sync time"
-  const totalSeconds = Math.max(0, Math.round(durationMs / 1000))
-  if (totalSeconds < 60) return `${totalSeconds} second${totalSeconds === 1 ? "" : "s"}`
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${minutes} minute${minutes === 1 ? "" : "s"}${seconds ? ` ${seconds} second${seconds === 1 ? "" : "s"}` : ""}`
- }
-
- const formatFullLastSync = (iso?: string) => {
-  if (!iso) return ""
+ const formatCompactLastSync = (iso?: string) => {
+  if (!iso) return "NEVER"
   const value = new Date(iso)
-  if (!Number.isFinite(value.getTime())) return ""
-  return value.toLocaleString([], {
-   year: "numeric",
-   month: "short",
-   day: "numeric",
-   hour: "numeric",
-   minute: "2-digit",
-  })
+  if (!Number.isFinite(value.getTime())) return "NEVER"
+  const month = String(value.getMonth() + 1).padStart(2, "0")
+  const day = String(value.getDate()).padStart(2, "0")
+  const year = String(value.getFullYear()).slice(-2)
+  const hours = value.getHours()
+  const hour = hours % 12 || 12
+  const minute = String(value.getMinutes()).padStart(2, "0")
+  const suffix = hours >= 12 ? "P" : "A"
+  return `${month}/${day}/${year} · ${hour}:${minute}${suffix}`
  }
 
  const resultNounForUnit = (unitId: string, rows: number, fallbackLabel: string) => {
@@ -356,16 +326,15 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
   return pair ? (singular ? pair[0] : pair[1]) : singular ? "result" : "results"
  }
 
- const statusBadgeForUnit = (status: string, lastSyncedAt?: string, isNext = false): { tone: SyncBadgeTone; text: string } => {
-  const stamp = formatFullLastSync(lastSyncedAt)
-  if (status === "running") return { tone: "live", text: "SYNCING · NOW" }
-  if (status === "pending") return { tone: "warn", text: isNext ? "QUEUED · UP NEXT" : "QUEUED · WAITING" }
-  if (status === "synced" || status === "complete") return { tone: "good", text: `SYNCED · ${stamp || "COMPLETE"}` }
-  if (status === "partial") return { tone: "warn", text: `PARTIAL · ${stamp || "INCOMPLETE DATA"}` }
-  if (status === "failed") return { tone: "bad", text: `FAILED · ${stamp || "RETRY NEEDED"}` }
-  if (status === "stale") return { tone: "warn", text: `STALE · ${stamp || "UPDATE NEEDED"}` }
-  if (status === "skipped") return { tone: "warn", text: "SKIPPED · NOT RUN" }
-  return { tone: "neutral", text: "NEVER · DATASET NOT AVAILABLE" }
+ const statusLabelForUnit = (status: string, isNext = false) => {
+  if (status === "running") return "SYNCING"
+  if (status === "pending") return isNext ? "UP NEXT" : "QUEUED"
+  if (status === "synced" || status === "complete") return "COMPLETE"
+  if (status === "partial") return "PARTIAL"
+  if (status === "failed") return "FAILED"
+  if (status === "stale") return "STALE"
+  if (status === "skipped") return "SKIPPED"
+  return "NEVER"
  }
 
  const immediateLabelForUnit = (status: string, isNext = false, hasPriorData = false) => {
@@ -572,7 +541,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
 
       return (
        <section key={group} className="border-b-[3px] border-black bg-white last:border-b-0">
-        <div className="flex items-stretch" style={{ backgroundColor: GROUP_COLORS[group] }}>
+        <div className="vt-sync-group-header flex items-stretch" style={{ backgroundColor: GROUP_COLORS[group] }}>
          <h3 className="min-w-0 flex-1">
           <button
            ref={(node) => {
@@ -590,20 +559,31 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
              {expanded ? <ChevronDown className="h-4 w-4" strokeWidth={3.5} /> : <ChevronRight className="h-4 w-4" strokeWidth={3.5} />}
             </span>
             <span className="min-w-0">
-             <span className="vt-retro-acc-label block truncate text-[15px] font-[1000] tracking-tighter">{label}</span>
-             <span className="block truncate text-[8px] font-black uppercase tracking-[0.04em] text-black/55">{groupSummary}</span>
+             <span className="vt-retro-acc-label vt-sync-category-title block truncate text-[18px] font-[1000] tracking-tighter">{label}</span>
+             <span className="vt-sync-category-summary block truncate text-[9px] font-black uppercase tracking-[0.04em] text-black/55">{groupSummary}</span>
             </span>
            </span>
           </button>
          </h3>
-         <div className={`grid shrink-0 place-items-center border-l-[3px] border-black px-2 py-1 ${expanded ? "border-b-[2px]" : ""}`}>
+         <div
+          className={`flex shrink-0 items-center gap-1.5 border-l-[3px] border-black px-1.5 py-1 ${expanded ? "border-b-[2px]" : ""}`}
+          style={{ ["--vt-subtoolbox-fill" as string]: GROUP_COLORS[group] } as React.CSSProperties}
+         >
+          <SubToolboxCheckControl
+           level="l2"
+           checked={groupSelected}
+           onClick={() => toggleMany(groupCategoryIds)}
+           aria-label={`${label} batch selection`}
+           className="vt-sync-batch-checkbox"
+           style={{
+            ["--pair-a" as string]: "#ffffff",
+            ["--pair-b" as string]: GROUP_COLORS[group],
+           } as React.CSSProperties}
+          />
           <RetroSyncExecutionSwitch
            idleLabel="SYNC ALL"
            status={toExecutionStatus(groupStatus)}
            onClick={() => void startCategories(groupCategoryIds, units.some((unit) => unit.id === "retention"))}
-           selected={groupSelected}
-           onSelectedChange={() => toggleMany(groupCategoryIds)}
-           selectionLabel={`${label} batch selection`}
           />
          </div>
         </div>
@@ -619,14 +599,22 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
            (model?.issueCount || 0) > 0
            || unit.id === "retention"
            || unit.id === "video_catalog"
-           || unit.categoryIds.length > 1
           )
           const unitContentId = `vt-sync-unified-unit-${unit.id}`
           const isNextUnit = queueSummary.nextLabel === unit.label
            || Boolean(model?.rows.some((row) => queueSummary.nextLabel.includes(row.category.label)))
-          const statusBadge = statusBadgeForUnit(unitStatus, model?.lastSyncedAt, isNextUnit)
-          const resultBadge = `${formatDurationLong(model?.durationMs)} · ${(model?.displayRows || 0).toLocaleString()} ${resultNounForUnit(unit.id, model?.displayRows || 0, unit.label)}`
+          const statusValue = statusLabelForUnit(unitStatus, isNextUnit)
+          const lastSyncValue = formatCompactLastSync(model?.lastSyncedAt)
+          const statusAndSyncValue = lastSyncValue === "NEVER"
+           ? `STATUS: ${statusValue}`
+           : `STATUS: ${statusValue} - ${lastSyncValue}`
+          const durationValue = formatDuration(model?.durationMs)
+          const resultValue = `RESULT: ${durationValue === "—" ? "" : `${durationValue} - `}${compactRows(model?.displayRows || 0)} ${resultNounForUnit(unit.id, model?.displayRows || 0, unit.label)}`
+          const issueValue = `ISSUES: ${model?.issueCount || 0}`
           const immediateLabel = immediateLabelForUnit(unitStatus, isNextUnit, hasPriorData)
+          const groupColor = GROUP_COLORS[group]
+          const rowFill = `color-mix(in srgb, ${groupColor} ${selectedForBatch ? 30 : 10}%, white)`
+          const titleFontSize = unit.label.length > 29 ? "14px" : unit.label.length > 24 ? "15px" : "17px"
           const toggleUnitDetails = () => {
            if (!hasExtraDetail) return
            setExpandedUnitIds((current) => {
@@ -638,27 +626,72 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
           }
 
           return (
-           <article key={unit.id} className="border-b-[2px] border-black last:border-b-0">
-            <div className="grid min-h-[50px] grid-cols-[66px_minmax(0,1fr)_96px] items-stretch bg-white">
-             <div className="grid place-items-center border-r-[2px] border-black bg-[#f4f4f4] px-0.5 py-1">
-              <RetroBatchSelectionSwitch
-               selected={selectedForBatch}
-               onChange={() => toggleMany(unit.categoryIds)}
-               label={`${unit.label} batch selection`}
+           <article
+            key={unit.id}
+            className="border-b-[2px] border-black last:border-b-0"
+            style={{
+             ["--vt-sync-group-color" as string]: groupColor,
+             ["--vt-subtoolbox-fill" as string]: groupColor,
+            } as React.CSSProperties}
+           >
+            <div className="vt-sync-row-shell" style={{ backgroundColor: rowFill }}>
+             <div className="vt-sync-row-check grid place-items-center">
+              <SubToolboxCheckControl
+               level="l2"
+               checked={selectedForBatch}
+               onClick={() => toggleMany(unit.categoryIds)}
+               aria-label={`${unit.label} batch selection`}
+               className="vt-sync-batch-checkbox"
+               style={{
+                ["--pair-a" as string]: "#ffffff",
+                ["--pair-b" as string]: groupColor,
+               } as React.CSSProperties}
               />
              </div>
 
-             <div className="grid min-w-0 content-center gap-1 px-2.5 py-1.5">
-              <strong className="block min-w-0 truncate text-[11px] font-[1000] uppercase leading-none">{unit.label}</strong>
-              <span
-               className="block min-w-0 truncate text-[7.5px] font-black uppercase tracking-[0.035em] text-black/45"
-               title={unit.description}
+             <div className="vt-sync-row-copy flex min-w-0 flex-col justify-center gap-1">
+              <strong
+               className="vt-sync-dataset-title block min-w-0 whitespace-nowrap font-[1000] uppercase leading-none tracking-[-0.045em]"
+               style={{ fontSize: titleFontSize }}
+               title={unit.label}
               >
+               {unit.label}
+              </strong>
+              <span className="vt-sync-dataset-subtitle block min-w-0 whitespace-normal break-words font-black uppercase leading-[1.16] tracking-[0.02em] text-black/50">
                {unit.description}
               </span>
              </div>
 
-             <div className="grid place-items-center border-l-[2px] border-black bg-[#f4f4f4] px-1 py-1">
+             <div className="vt-sync-meta-rail custom-scrollbar">
+              <SyncSpectrumTag text={statusAndSyncValue} spectrumKey={`STATUS-${statusValue}`} />
+              <SyncSpectrumTag text={resultValue} spectrumKey="RESULT" />
+              {(model?.issueCount || 0) > 0 ? (
+               <SyncSpectrumTag
+                text={issueValue}
+                spectrumKey="ISSUES"
+                onClick={toggleUnitDetails}
+                title={expandedUnit ? "Hide issue details" : "Show issue details"}
+               />
+              ) : null}
+              {unit.id === "video_catalog" ? (
+               <SyncSpectrumTag
+                text="OPTIONS: METADATA"
+                spectrumKey="OPTIONS"
+                onClick={toggleUnitDetails}
+                title={expandedUnit ? "Hide metadata options" : "Show metadata options"}
+               />
+              ) : null}
+              {unit.id === "retention" ? (
+               <SyncSpectrumTag
+                text="OPTIONS: VIDEOS"
+                spectrumKey="OPTIONS"
+                onClick={toggleUnitDetails}
+                title={expandedUnit ? "Hide retention options" : "Show retention options"}
+               />
+              ) : null}
+             </div>
+
+             <div className="vt-sync-row-sync grid place-items-center">
               <RetroSyncExecutionSwitch
                idleLabel={hasPriorData ? "UPDATE" : "FULL SYNC"}
                labelOverride={immediateLabel}
@@ -667,33 +700,6 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
                disabled={selectedWindows.length === 0}
               />
              </div>
-            </div>
-
-            <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto border-t border-black/15 bg-[#f7f7f7] px-2 py-1.5 custom-scrollbar">
-             <SyncMetaBadge tone={statusBadge.tone} title={statusBadge.text}>{statusBadge.text}</SyncMetaBadge>
-             <SyncMetaBadge tone={model?.displayRows ? "info" : "neutral"} title={resultBadge}>{resultBadge}</SyncMetaBadge>
-             <SyncMetaBadge tone={unit.defaultEnabled ? "good" : "accent"}>{formatPlainLabel(unit.refreshPolicy)}</SyncMetaBadge>
-             <SyncMetaBadge
-              tone={(model?.issueCount || 0) > 0 ? "bad" : "good"}
-              onClick={hasExtraDetail ? toggleUnitDetails : undefined}
-              title={hasExtraDetail ? (expandedUnit ? "Hide dataset details" : "Show dataset details") : undefined}
-             >
-              {(model?.issueCount || 0) > 0
-               ? `${model?.issueCount} ISSUE${model?.issueCount === 1 ? "" : "S"}`
-               : "NO ISSUES"}
-             </SyncMetaBadge>
-             {unit.categoryIds.length > 1 ? (
-              <SyncMetaBadge tone="accent" onClick={toggleUnitDetails} title={expandedUnit ? "Hide child queries" : "Show child queries"}>
-               {unit.categoryIds.length} QUERIES
-              </SyncMetaBadge>
-             ) : null}
-             {unit.id === "video_catalog" ? (
-              <SyncMetaBadge tone="warn" onClick={toggleUnitDetails}>METADATA OPTIONS</SyncMetaBadge>
-             ) : null}
-             {unit.id === "retention" ? (
-              <SyncMetaBadge tone="accent" onClick={toggleUnitDetails}>VIDEO OPTIONS</SyncMetaBadge>
-             ) : null}
-             {model?.sourceLabels[0] ? <SyncMetaBadge tone="neutral">{model.sourceLabels[0]}</SyncMetaBadge> : null}
             </div>
 
             {hasExtraDetail ? (
