@@ -4,6 +4,7 @@ import ProjectBuilderModule from "../components/projects/ProjectBuilderModule"
 import ProjectBoardWorkspace from "../components/projects/ProjectBoardWorkspace"
 import ProjectsToolboxModule from "../components/projects/ProjectsToolboxModule"
 import StoryboardStudio from "./StoryboardStudio"
+import { ProjectsWorkspaceProvider } from "../components/projects/ProjectsWorkspaceContext"
 
 /**
  * Projects is deliberately narrow:
@@ -12,6 +13,7 @@ import StoryboardStudio from "./StoryboardStudio"
  * - Storyboard Studio remains a specialist production tool during migration.
  */
 const ProjectCalendarPage: React.FC = () => (
+ <ProjectsWorkspaceProvider>
  <div className="mx-auto flex max-w-[1800px] flex-col gap-6 pb-24">
   <section id="project-builder" className="scroll-mt-[86px]">
    <ProjectBuilderModule />
@@ -40,6 +42,7 @@ const ProjectCalendarPage: React.FC = () => (
    </ProjectsToolboxModule>
   </section>
  </div>
+ </ProjectsWorkspaceProvider>
 )
 
 export default ProjectCalendarPage
