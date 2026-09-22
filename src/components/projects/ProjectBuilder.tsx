@@ -24,6 +24,7 @@ import ProjectBuildCommand from "./ProjectBuildCommand"
 import ProjectBriefSubtoolbox from "./ProjectBriefSubtoolbox"
 import ProjectPackagingSubtoolbox from "./ProjectPackagingSubtoolbox"
 import ProjectAssetEngineSimple from "./ProjectAssetEngineSimple"
+import ProjectScheduleContextSubtoolbox from "./ProjectScheduleContextSubtoolbox"
 import { useProjectsWorkspace } from "./ProjectsWorkspaceContext"
 
 type AssetMode = "simple" | "full"
@@ -161,6 +162,8 @@ const ProjectBuilder: React.FC<ProjectBuilderProps> = ({ onCreateProject }) => {
               </SubToolboxSection>
             </SubToolboxStack>
           </SubToolbox>
+
+          <ProjectScheduleContextSubtoolbox project={activeProject} />
 
           <SubToolboxGrid minItemWidth="wide" density="comfortable">
             <ProjectBriefSubtoolbox
