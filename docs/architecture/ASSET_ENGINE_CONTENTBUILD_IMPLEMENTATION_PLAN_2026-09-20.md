@@ -210,7 +210,7 @@ Final render becomes a canonical Asset Engine asset with lineage to timeline sta
 
 ## Wave 8 — Publisher transaction
 
-Status: TRANSACTION FOUNDATION + EXPLICIT APPROVAL IMPLEMENTED; REMOTE UPLOAD ADAPTER STILL MISSING.
+Status: TRANSACTION FOUNDATION + EXPLICIT APPROVAL + RESUMABLE PRIVATE VIDEO UPLOAD CONNECTED.
 
 Implemented on this branch:
 
@@ -222,7 +222,7 @@ Implemented on this branch:
 - YouTube binding helper that records the returned video ID and exact selected package assets,
 - stage transition to scheduled/published only after verified binding state.
 
-The repository capability registry declares upload capability, but the stabilization tracker still explicitly lists the resumable Video Publisher upload endpoint/session as unfinished. Therefore this pass does not fake a successful upload. The approved transaction is ready for that adapter.
+Repository inspection found the canonical account server now implements a server-owned resumable upload session at /api/account/youtube/uploads and the client write transport already chunks uploads through it. Video Publisher now uses that transport only after explicit approval, uploads initially as private, captures the returned YouTube video ID, and binds that ID to the same ContentBuild transaction. The stabilization tracker is stale on this item and should be reconciled after verification. Remaining Publisher sequence work is thumbnail, captions, routing, final metadata/status, remote verification and completion.
 
 Complete the real publishing sequence:
 
