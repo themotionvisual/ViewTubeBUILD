@@ -713,8 +713,12 @@ Project thumbnail is still partly represented as a URL/reference field. Target i
 The lifecycle launcher is on main. The current follow-up branch adds durable asset-slot projection for script, storyboard, title, thumbnail, description, tags/SEO and final video, including EMPTY / LEGACY / WORKING / VARIANTS / SELECTED / FINAL states.
 
 ### Calendar duplication / ownership
-**Status:** ARCHITECTURAL DECISION  
-Target is one full calendar under Project Board plus compact schedule context in Builder. Do not restore two independently owned calendars.
+**Status:** IMPLEMENTED ON CURRENT FEATURE BRANCH / VERIFY  
+One full calendar remains under Project Board. The current follow-up branch adds compact schedule context in Builder and routes OPEN FULL CALENDAR into the Board calendar instead of creating another calendar owner.
+
+### Publishing Package summary
+**Status:** IMPLEMENTED ON CURRENT FEATURE BRANCH / VERIFY  
+Builder now has a compact readiness summary for title, thumbnail, description, tags/SEO, category, audience, visibility and schedule, plus Video Package blockers and a direct Publisher handoff. The full editing surface remains owned by the existing Asset Engine / Publisher implementation.
 
 ### Project workspace metadata
 **Status:** PARTIAL  
@@ -757,6 +761,7 @@ Project Builder and Board must use current canonical Toolbox/Subtoolbox primitiv
 | Compact Builder schedule context | FEATURE BRANCH / VERIFY | current workflow-authority branch |
 | Project -> same-ContentBuild Video Package bridge | FEATURE BRANCH / VERIFY | current workflow-authority branch |
 | Simple Asset Engine durable asset slots | FEATURE BRANCH / VERIFY | current workflow-authority branch |
+| Compact Publishing Package readiness summary | FEATURE BRANCH / VERIFY | current workflow-authority branch |
 
 ---
 
@@ -874,6 +879,7 @@ Whenever this system changes:
 | 2026-09-22 | Added compact Builder schedule context linked to the Board calendar | FEATURE BRANCH |
 | 2026-09-22 | Added deterministic Project -> same-ContentBuild Video Package repository bridge + tests | FEATURE BRANCH |
 | 2026-09-22 | Expanded Simple Asset Engine with durable asset-slot states | FEATURE BRANCH |
+| 2026-09-22 | Added compact Publishing Package readiness and blocker summary | FEATURE BRANCH |
 
 ---
 
