@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 import type { Project } from "../../types"
 import { SubToolbox } from "../Toolbox"
 import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../subtoolbox/SubToolboxLayouts"
-import { SubToolboxButton, SubToolboxMediaCard, SubToolboxStatePanel } from "../subtoolbox/SubToolboxPrimitives"
+import { SubToolboxButton, SubToolboxInput, SubToolboxMediaCard, SubToolboxStatePanel } from "../subtoolbox/SubToolboxPrimitives"
 
 const ProjectPackagingSubtoolbox:React.FC<{
  project:Project
@@ -34,6 +34,15 @@ const ProjectPackagingSubtoolbox:React.FC<{
     ):(
      <SubToolboxStatePanel state="empty" message="No thumbnail has been selected for this project yet." />
     )}
+   </SubToolboxSection>
+
+   <SubToolboxSection label="Thumbnail asset reference">
+    <SubToolboxInput
+     value={project.thumbnailUrl||""}
+     onChange={event=>onUpdate({thumbnailUrl:event.target.value})}
+     placeholder="Paste or hand off a thumbnail asset reference…"
+     aria-label="Thumbnail asset reference"
+    />
    </SubToolboxSection>
 
    <SubToolboxGrid minItemWidth="compact" density="dense">
