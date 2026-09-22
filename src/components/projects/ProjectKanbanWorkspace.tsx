@@ -92,6 +92,7 @@ const ProjectCard: React.FC<{
    className="rounded-[10px] border-[3px] border-black bg-white shadow-[4px_4px_0_rgba(0,0,0,0.18)]"
   >
    <div className="flex items-stretch border-b-[2px] border-black">
+    <span className="w-2 shrink-0 border-r-[2px] border-black" style={{ backgroundColor: project.color || laneTone[meta.lane] }} aria-hidden="true" />
     <button
      type="button"
      aria-label={`Drag ${project.name}`}
