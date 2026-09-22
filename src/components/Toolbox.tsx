@@ -907,17 +907,24 @@ export const SubToolboxDropdownControl: React.FC<SubToolboxDropdownControlProps>
   className = "",
 }) => {
   const theme = SUBTOOLBOX_CONTROL_THEMES[tone];
-  const resolvedSurface = `var(--vt-subtoolbox-fill, ${theme.surface})`;
-  const resolvedShadow = `var(--vt-subtoolbox-shadow, ${hexToRgba(theme.shadow, 0.45)})`;
+  const resolvedSurface = `var(--pair-a, var(--vt-subtoolbox-fill, ${theme.surface}))`;
+  const resolvedSecondary = `var(--pair-b, ${theme.control})`;
+  const resolvedShadow = `color-mix(in srgb, var(--pair-a, ${theme.shadow}) 45%, transparent)`;
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const [menuRect, setMenuRect] = useState<{ left: number; top: number; width: number } | null>(null);
+  const [inheritedPair, setInheritedPair] = useState({ pairA: "", pairB: "" });
 
   const recalcMenuRect = () => {
     if (!rootRef.current) return;
     const trigger = rootRef.current.querySelector("button");
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
+    const inheritedStyle = getComputedStyle(rootRef.current);
+    setInheritedPair({
+      pairA: inheritedStyle.getPropertyValue("--pair-a").trim(),
+      pairB: inheritedStyle.getPropertyValue("--pair-b").trim(),
+    });
     setMenuRect({
       left: rect.left,
       top: rect.bottom - CONTROL_SHELL.stroke,
@@ -960,7 +967,7 @@ export const SubToolboxDropdownControl: React.FC<SubToolboxDropdownControlProps>
           open ? "rounded-t-[8px] rounded-b-none" : "rounded-[8px]"
         }`}
         style={{
-          backgroundColor: resolvedSurface,
+          backgroundColor: resolvedBody,
           height: `${CONTROL_SHELL.height}px`,
           boxShadow: `${SUB_TOOLBOX_INNER_SHADOW}px ${SUB_TOOLBOX_INNER_SHADOW}px 0px 0px ${resolvedShadow}`,
         }}
@@ -974,19 +981,25 @@ export const SubToolboxDropdownControl: React.FC<SubToolboxDropdownControlProps>
               {value}
             </span>
           </div>
-          <ChevronDown size={22} strokeWidth={3} className={`text-black transition-transform ${open ? "rotate-180" : ""}`} />
+          <span className="h-8 w-8 shrink-0 rounded-[6px] border-[2px] border-black grid place-items-center" style={{ backgroundColor: resolvedSecondary }}>
+            <ChevronDown size={20} strokeWidth={3} className={`text-black transition-transform ${open ? "rotate-180" : ""}`} />
+          </span>
         </div>
       </button>
       {open && menuRect &&
         createPortal(
           <div
+            data-vt-subtoolbox-dropdown-portal="true"
             className="border-x-[3px] border-b-[3px] border-black rounded-b-[8px] overflow-hidden bg-white"
             style={{
+              ...(inheritedPair.pairA ? { ["--pair-a" as string]: inheritedPair.pairA } : {}),
+              ...(inheritedPair.pairB ? { ["--pair-b" as string]: inheritedPair.pairB } : {}),
               position: "fixed",
               left: menuRect.left,
               top: menuRect.top,
               width: menuRect.width,
               zIndex: 1200,
+              boxShadow: `${SUB_TOOLBOX_INNER_SHADOW}px ${SUB_TOOLBOX_INNER_SHADOW}px 0px 0px ${resolvedShadow}`,
             }}
           >
             {options.map((option) => (
@@ -997,7 +1010,8 @@ export const SubToolboxDropdownControl: React.FC<SubToolboxDropdownControlProps>
                   onChange(option);
                   setOpen(false);
                 }}
-                className="w-full h-11 border-t-[3px] border-black bg-white hover:brightness-95 text-left px-4 text-[20px] font-[900] uppercase tracking-tighter leading-none"
+                data-selected={option === value ? "true" : "false"}
+                className="w-full h-11 border-t-[3px] border-black bg-white text-left px-4 text-[20px] font-[900] uppercase tracking-tighter leading-none"
               >
                 {option}
               </button>
@@ -1021,11 +1035,13 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
   borderWidth = 3,
 }) => {
   const theme = SUBTOOLBOX_CONTROL_THEMES[tone];
-  const resolvedSurface = `var(--vt-subtoolbox-fill, ${theme.surface})`;
-  const resolvedShadow = `var(--vt-subtoolbox-shadow, ${hexToRgba(theme.shadow, 0.45)})`;
+  const resolvedTitle = `var(--pair-a, var(--vt-subtoolbox-fill, ${theme.surface}))`;
+  const resolvedBody = `var(--pair-b, ${theme.control})`;
+  const resolvedShadow = `color-mix(in srgb, var(--pair-a, ${theme.shadow}) 45%, transparent)`;
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const [menuRect, setMenuRect] = useState<{ left: number; top: number; width: number } | null>(null);
+  const [inheritedPair, setInheritedPair] = useState({ pairA: "", pairB: "" });
   const borderClass = borderWidth === 3 ? "border-[3px]" : "border-[4px]";
   const rowBorderClass = borderWidth === 3 ? "border-b-[3px]" : "border-b-[4px]";
 
@@ -1034,6 +1050,11 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
     const trigger = rootRef.current.querySelector("button");
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
+    const inheritedStyle = getComputedStyle(rootRef.current);
+    setInheritedPair({
+      pairA: inheritedStyle.getPropertyValue("--pair-a").trim(),
+      pairB: inheritedStyle.getPropertyValue("--pair-b").trim(),
+    });
     setMenuRect({
       left: rect.left,
       top: rect.bottom - borderWidth,
@@ -1082,7 +1103,10 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
         }}
       >
         <div className="h-full w-full flex flex-col">
-          <div className={`h-1/2 ${rowBorderClass} border-black text-[9px] font-black uppercase tracking-[0.14em] flex items-center justify-center px-2 leading-none`}>
+          <div
+            className={`h-1/2 ${rowBorderClass} border-black text-[9px] font-black uppercase tracking-[0.14em] flex items-center justify-center px-2 leading-none`}
+            style={{ backgroundColor: resolvedTitle }}
+          >
             {label}
           </div>
           <div className="h-1/2 flex items-center justify-between px-3">
@@ -1096,8 +1120,11 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
       {open && menuRect &&
         createPortal(
           <div
+            data-vt-subtoolbox-dropdown-portal="true"
             className={`${borderClass} border-black rounded-b-[8px] overflow-hidden bg-white`}
             style={{
+              ...(inheritedPair.pairA ? { ["--pair-a" as string]: inheritedPair.pairA } : {}),
+              ...(inheritedPair.pairB ? { ["--pair-b" as string]: inheritedPair.pairB } : {}),
               position: "fixed",
               left: menuRect.left,
               top: menuRect.top,
@@ -1114,7 +1141,8 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
                   onChange(option.value);
                   if (!multiSelect) setOpen(false);
                 }}
-                className={`w-full h-11 ${rowBorderClass} last:border-b-0 border-black bg-white hover:brightness-95 text-left px-4 text-[20px] font-[900] uppercase tracking-tighter leading-none`}
+                data-selected={selectedValues.includes(option.value) ? "true" : "false"}
+                className={`w-full h-11 ${rowBorderClass} last:border-b-0 border-black bg-white text-left px-4 text-[20px] font-[900] uppercase tracking-tighter leading-none`}
               >
                 {multiSelect && (
                   <span className="inline-block w-6 mr-2 text-center">
