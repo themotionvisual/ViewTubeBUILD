@@ -55,6 +55,19 @@ local :5173  →  feature branch  →  PR  →  main  →  Vercel  →  viewtube
    just cut a new feature branch. Local can drift as far as you want; the
    moment you want the drift live, open a PR.
 
+## Living architecture references
+
+For work touching Projects, Asset Engine, ContentBuild, Video Package, Publishing
+Package, creator workflow continuity, or post-publish attribution, read and
+update:
+
+- `docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md`
+- `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md`
+
+The first file is the cross-system current-state / target-state / bugs / planned
+work authority. Do not split Project, ContentBuild and Video Package identity
+without explicitly updating that reference.
+
 ## Loss-safety pattern for big consolidations
 
 When multiple branches or long-lived local edits are being merged and any of
