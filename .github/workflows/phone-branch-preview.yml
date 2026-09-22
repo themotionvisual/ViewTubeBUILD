@@ -1,6 +1,9 @@
 name: Phone Branch Preview
 
 on:
+  push:
+    branches:
+      - feature/project-builder-reassembly-2026-09-21
   workflow_dispatch:
     inputs:
       branch:
@@ -25,7 +28,7 @@ jobs:
       - name: Checkout selected branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.branch || github.ref_name }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
