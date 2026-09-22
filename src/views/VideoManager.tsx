@@ -192,7 +192,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false)
  const [videoListLoadState, setVideoListLoadState] = useState<VideoListLoadState>("idle")
  const hasTriggeredInitialLoadRef = useRef(false)
- const chooseVideoPalette = getToolboxPaletteColors(basePalette + 1)
  const updateDetailsPalette = getToolboxPaletteColors(basePalette + 5)
 
  const showHeaderLoadAssetsButton = connected && videos.length === 0
@@ -555,14 +554,14 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  }, [selectedVideoId, videoStats, videoAnalytics])
 
  const kpiCards = [
-  { key: "views", label: "Views", value: formatViews(String(selectedVideoMetrics.views || 0)), accentColor: "#40C6E9" },
-  { key: "watch", label: "Watch Hrs", value: selectedVideoMetrics.watchHours.toFixed(2), accentColor: "#B9FF58" },
-  { key: "likes", label: "Likes", value: formatViews(String(selectedVideoMetrics.likes || 0)), accentColor: "#FF83EA" },
-  { key: "comments", label: "Comments", value: formatViews(String(selectedVideoMetrics.comments || 0)), accentColor: "#FFFF61" },
-  { key: "shares", label: "Shares", value: formatViews(String(selectedVideoMetrics.shares || 0)), accentColor: "#FFB570" },
-  { key: "revenue", label: "Revenue", value: `$${selectedVideoMetrics.revenue.toFixed(2)}`, accentColor: "#4FFF5B" },
-  { key: "length", label: "Length", value: formatDuration(videoStats?.duration || "0"), accentColor: "#FFE357" },
-  { key: "end-screen", label: "End Screen %", value: `${selectedVideoMetrics.endScreenClickRate.toFixed(1)}%`, accentColor: "#9CEBFF" },
+  { key: "views", label: "Views", value: formatViews(String(selectedVideoMetrics.views || 0)) },
+  { key: "watch", label: "Watch Hrs", value: selectedVideoMetrics.watchHours.toFixed(2) },
+  { key: "likes", label: "Likes", value: formatViews(String(selectedVideoMetrics.likes || 0)) },
+  { key: "comments", label: "Comments", value: formatViews(String(selectedVideoMetrics.comments || 0)) },
+  { key: "shares", label: "Shares", value: formatViews(String(selectedVideoMetrics.shares || 0)) },
+  { key: "revenue", label: "Revenue", value: `${selectedVideoMetrics.revenue.toFixed(2)}` },
+  { key: "length", label: "Length", value: formatDuration(videoStats?.duration || "0") },
+  { key: "end-screen", label: "End Screen %", value: `${selectedVideoMetrics.endScreenClickRate.toFixed(1)}%` },
  ]
 
  const categoryOptions = [
@@ -661,54 +660,55 @@ const VideoManager: React.FC<VideoManagerProps> = ({
      <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]"><div className="w-24 h-24 bg-[#FF3399] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black] -rotate-12"><FileVideo size={48} className="text-[#CCFF00]" /></div><div className="space-y-4 max-w-lg"><h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">Zero Assets Detected</h2><p className="text-black/50 font-bold uppercase text-xs tracking-widest leading-relaxed">Your YouTube channel is connected, but we couldn't detect any videos. Upload your first video to YouTube to unlock the full power of Creator OS Pro.</p><SubToolboxLinkButton level="l0" tone="success" href="https://studio.youtube.com" target="_blank" rel="noopener noreferrer">Open YouTube Studio</SubToolboxLinkButton><SubToolboxButton level="l1" tone="neutral" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Reloading..." : "Reload Assets"}</SubToolboxButton></div></div>
     ) : (selectedVideo || !connected || catalogLoading) ? (
      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="relative z-20 space-y-2">
-       <label className="text-[12px] font-black uppercase tracking-widest text-black/50 ml-1">Choose Video</label>
-       {catalogLoading ? (
-        <SubToolboxSplitButton
-         icon={<FileVideo size={20} strokeWidth={3} />}
-         railColor={chooseVideoPalette.icon}
-         labelColor={chooseVideoPalette.header}
-         disabled
-        >
-         LOADING YOUR YOUTUBE VIDEO CATALOG…
-        </SubToolboxSplitButton>
-       ) : connected ? (
-        <SubToolboxSplitDropdown
-         value={selectedVideoId || ""}
-         options={selectorOptions}
-         onChange={(videoId) => void handleSelectVideo(videoId)}
-         icon={<FileVideo size={20} strokeWidth={3} />}
-         ariaLabel="Choose video"
-         railColor={chooseVideoPalette.icon}
-         labelColor={chooseVideoPalette.header}
-        />
-       ) : (
-        <SubToolboxSplitButton
-         icon={<FileVideo size={20} strokeWidth={3} />}
-         railColor={chooseVideoPalette.icon}
-         labelColor={chooseVideoPalette.header}
-         onClick={() => auth.login("/video-manager")}
-         disabled={auth.loading}
-        >
-         {connectionLabel}
-        </SubToolboxSplitButton>
-       )}
-       {connected && (
-        <SubToolboxInput
-         aria-label="Search videos"
-         value={videoSearchQuery}
-         onChange={(event) => setVideoSearchQuery(event.target.value)}
-         placeholder={catalogLoading ? "LOADING VIDEOS..." : "SEARCH VIDEOS..."}
-         disabled={catalogLoading}
-        />
-       )}
-      </div>
+      <SubToolbox
+       title="Choose Video"
+       icon={<FileVideo size={20} strokeWidth={3} />}
+       collapsible
+       isOpenInitial
+       overflowVisible
+      >
+       <SubToolboxStack density="dense">
+        {catalogLoading ? (
+         <SubToolboxSplitButton
+          icon={<FileVideo size={20} strokeWidth={3} />}
+          disabled
+         >
+          LOADING YOUR YOUTUBE VIDEO CATALOG…
+         </SubToolboxSplitButton>
+        ) : connected ? (
+         <SubToolboxSplitDropdown
+          value={selectedVideoId || ""}
+          options={selectorOptions}
+          onChange={(videoId) => void handleSelectVideo(videoId)}
+          icon={<FileVideo size={20} strokeWidth={3} />}
+          ariaLabel="Choose video"
+         />
+        ) : (
+         <SubToolboxSplitButton
+          icon={<FileVideo size={20} strokeWidth={3} />}
+          onClick={() => auth.login("/video-manager")}
+          disabled={auth.loading}
+         >
+          {connectionLabel}
+         </SubToolboxSplitButton>
+        )}
+        {connected && (
+         <SubToolboxInput
+          aria-label="Search videos"
+          value={videoSearchQuery}
+          onChange={(event) => setVideoSearchQuery(event.target.value)}
+          placeholder={catalogLoading ? "LOADING VIDEOS..." : "SEARCH VIDEOS..."}
+          disabled={catalogLoading}
+         />
+        )}
+       </SubToolboxStack>
+      </SubToolbox>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
        <SubToolbox title="Video Details" icon={<Settings size={20} strokeWidth={3} />} collapsible isOpenInitial={true} shellClassName="h-full" contentClassName="h-full">
         <SubToolboxStack>
          <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="video-manager-title">Title</SubToolboxFieldLabel>}><SubToolboxInput id="video-manager-title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder={!connected ? "CONNECT CHANNEL TO LOAD TITLE" : catalogLoading ? "LOADING VIDEO TITLE..." : "TITLE..."} disabled={!connected || !selectedVideo} /></SubToolboxSection>
-         <SubToolboxSection label="Video Stats"><SubToolboxGrid minItemWidth="compact">{kpiCards.map((card) => <SubToolboxMetric key={card.key} label={card.label} value={card.value} accentColor={card.accentColor} />)}</SubToolboxGrid></SubToolboxSection>
+         <SubToolboxSection label="Video Stats"><SubToolboxGrid minItemWidth="compact">{kpiCards.map((card) => <SubToolboxMetric key={card.key} label={card.label} value={card.value} />)}</SubToolboxGrid></SubToolboxSection>
          <SubToolboxSection label="Publishing Controls">
           <SubToolboxGrid minItemWidth="compact">
            <SubToolboxTopTitleDropdown

@@ -56,6 +56,8 @@ Production palette authority is `src/styles/toolboxPalette.ts` -> `VT_SPECTRUM_P
 
 `#FA618A`, `#FF7F6B`, `#FFA85C`, `#FFDA47`, `#C0F240`, `#3FEE56`, `#4EE4BE`, `#36E0F6`, `#528FFA`, `#A467F4`, `#F55EFC`, `#FF7AC8`.
 
+Canonical color inheritance is **12-color palette -> SubToolbox title/icon pair -> nested component pair**. `getToolboxPaletteColors(index)` owns the pairing rule: the SubToolbox title/header uses `getPaletteColor(index)`; the icon section uses `getPaletteColor(index + 4)`, wrapping through the same 12-color palette. `SubToolbox` exposes those two resolved colors to every nested primitive as `--pair-a` (title/header) and `--pair-b` (icon section). Components must consume that inherited pair and must not select, rotate, or synthesize their own palette pair. Component-specific props may change anatomy/state, but not silently replace the owning SubToolbox pair.
+
 Older standalone/documented palette sequences are historical references only unless production tokens are deliberately changed.
 
 ## 5. Primitive families

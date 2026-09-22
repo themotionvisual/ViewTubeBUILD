@@ -742,6 +742,10 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
               // Provide parent accent to all inner controls via CSS vars
               ["--vt-subtoolbox-fill" as any]: headerHex,
               ["--vt-subtoolbox-shadow" as any]: shadowColor,
+              // Canonical two-color control pair. Production primitives and the
+              // imported Studio Hub component library read the same inherited DNA.
+              ["--pair-a" as any]: headerHex,
+              ["--pair-b" as any]: iconBg,
               ["--vt-inner-stroke" as any]: `${SUBTOOLBOX_TOKENS.interior.stroke}px`,
               ["--vt-inner-shadow" as any]: `${SUBTOOLBOX_TOKENS.interior.shadowOffset}px`,
             }}
