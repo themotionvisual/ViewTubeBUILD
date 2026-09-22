@@ -68,6 +68,12 @@ export const updateUnifiedComment = async (commentId: string, text: string) => {
  return response.json()
 }
 
+export const getUnifiedVideo = async (videoId: string) => {
+ const response = await request(`/api/account/youtube/videos/${encodeURIComponent(videoId)}`)
+ if (!response.ok) return parseError(response, "Failed to verify video state.")
+ return response.json()
+}
+
 export const updateUnifiedVideo = async (videoId: string, details: Record<string, unknown>) => {
  const response = await request(`/api/account/youtube/videos/${encodeURIComponent(videoId)}`, {
   method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(details),
