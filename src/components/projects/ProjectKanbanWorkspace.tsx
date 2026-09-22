@@ -32,6 +32,7 @@ import {
 import { useBrain } from "../../context/useBrain"
 import type { Project } from "../../types"
 import ProjectCreationDialog from "./ProjectCreationDialog"
+import { syncProjectToContentBuild } from "../../services/asset-engine/ProjectContentBuildBridge"
 import {
  PROJECT_LANES,
  hydrateProjectWorkspace,
@@ -208,7 +209,7 @@ const BoardLane: React.FC<{
 }
 
 const ProjectKanbanWorkspace: React.FC = () => {
- const { brain, updateProject, setActiveProject } = useBrain()
+ const { brain, updateProject, setActiveProject, channelIdentity } = useBrain()
  const projects = useMemo(() => Array.isArray(brain.projects) ? brain.projects : [], [brain.projects])
  const [workspace, setWorkspace] = useState<ProjectWorkspaceState>(() => hydrateProjectWorkspace(readProjectWorkspace(), projects))
  const [showCreate, setShowCreate] = useState(false)
@@ -237,7 +238,17 @@ const ProjectKanbanWorkspace: React.FC = () => {
    .sort((a, b) => (workspace.projects[a.id]?.order ?? 0) - (workspace.projects[b.id]?.order ?? 0))
   const nextOrder = order ?? laneProjects.length
   patchWorkspace((state) => patchProjectMeta(state, projectId, { lane, order: nextOrder }))
-  updateProject(projectId, { status: statusForLane(lane) } as Partial<Project>)
+  const nextStatus = statusForLane(lane)
+  updateProject(projectId, { status: nextStatus } as Partial<Project>)
+
+  const project = projects.find((candidate) => candidate.id === projectId)
+  if (project) {
+   const build = syncProjectToContentBuild(
+    { ...project, status: nextStatus },
+    { channelId: channelIdentity.channelId || null, sourceToolId: "project-board" },
+   )
+   if (project.contentBuildId !== build.id) updateProject(projectId, { contentBuildId: build.id })
+  }
  }
 
  const moveByDirection = (projectId: string, direction: -1 | 1) => {
