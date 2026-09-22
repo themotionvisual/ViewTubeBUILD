@@ -343,7 +343,8 @@ export const VideoManagerWidget = ({ data, ...common }: WidgetProps) => {
             }}
             options={videoOptions}
             label="Published video"
-            placeholder="Select a published video…"
+            placeholder="Select a video…"
+            className="video-manager-video-select"
             height={38}
             tone="default"
             searchable
@@ -398,15 +399,25 @@ export const VideoManagerWidget = ({ data, ...common }: WidgetProps) => {
                   </section>
 
                   <section className="video-manager-metadata-panel">
-                    <Field label="Video title">
+                    <div className="widget-control-field video-manager-counted-field">
+                      <span className="video-manager-field-heading">
+                        <span>Video title</span>
+                        <small className="widget-character-count">{title.length}/100</small>
+                      </span>
                       <input className="vt-input" aria-label="Video title" value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} />
-                      <small className="widget-character-count">{title.length}/100</small>
-                    </Field>
-                    <Field label="Description">
+                    </div>
+                    <div className="widget-control-field video-manager-counted-field">
+                      <span className="video-manager-field-heading">
+                        <span>Description</span>
+                        <small className="widget-character-count">{description.length}/5000</small>
+                      </span>
                       <textarea className="vt-textarea video-manager-description" aria-label="Description" value={description} maxLength={5000} onChange={(event) => setDescription(event.target.value)} rows={4} />
-                      <small className="widget-character-count">{description.length}/5000</small>
-                    </Field>
+                    </div>
                     <div className="video-manager-tags">
+                      <div className="video-manager-field-heading">
+                        <span>Tags</span>
+                        <small className="widget-character-count">{tags.join(", ").length}/{TAG_CHARACTER_LIMIT}</small>
+                      </div>
                       <div className="widget-tag-list">
                         {tags.map((tag) => (
                           <WidgetTag key={tag} onRemove={() => setTags((current) => current.filter((item) => item !== tag))}>{tag}</WidgetTag>
