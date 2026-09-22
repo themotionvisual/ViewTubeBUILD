@@ -26,6 +26,7 @@ type PublishingScheduleArchitectProps = {
  collapsible?: boolean
  isOpenInitial?: boolean
  paletteIndex?: number
+ onOpenProject?: (projectId: string) => void
 }
 
 const priorityTone: Record<ProjectPriority, string> = {
@@ -76,14 +77,15 @@ const ProjectScheduleCard: React.FC<{
  meta?: ProjectWorkspaceMeta
  compact?: boolean
  onClear?: () => void
-}> = ({ project, meta, compact = false, onClear }) => (
+ onOpen?: () => void
+}> = ({ project, meta, compact = false, onClear, onOpen }) => (
  <article className="rounded-[8px] border-[2px] border-black bg-white shadow-[2px_2px_0_rgba(0,0,0,.16)]">
   <div className="flex min-w-0 items-stretch">
    <div
     className="w-2 shrink-0 border-r-[2px] border-black"
-    style={{ backgroundColor: priorityTone[meta?.priority || "medium"] }}
+    style={{ backgroundColor: project.color || priorityTone[meta?.priority || "medium"] }}
    />
-   <div className={`min-w-0 flex-1 ${compact ? "px-2 py-1.5" : "px-2.5 py-2"}`}>
+   <button type="button" onClick={onOpen} className={`min-w-0 flex-1 text-left ${compact ? "px-2 py-1.5" : "px-2.5 py-2"}`}>
     <div className="truncate text-[10px] font-[1000] uppercase leading-tight">{projectLabel(project)}</div>
     {!compact ? (
      <div className="mt-1 flex flex-wrap gap-1 text-[7px] font-black uppercase text-black/45">
@@ -92,7 +94,7 @@ const ProjectScheduleCard: React.FC<{
       <span>{meta?.lane?.replace("-", " ") || project.status || "project"}</span>
      </div>
     ) : null}
-   </div>
+   </button>
    {onClear ? (
     <button type="button" onClick={onClear} aria-label={`Unschedule ${projectLabel(project)}`} className="w-7 shrink-0 border-l-[2px] border-black hover:bg-black/5">
      <X size={12} className="mx-auto" />
@@ -102,7 +104,7 @@ const ProjectScheduleCard: React.FC<{
  </article>
 )
 
-const PublishingScheduleArchitect: React.FC<PublishingScheduleArchitectProps> = ({ collapsible = false, isOpenInitial = true }) => {
+const PublishingScheduleArchitect: React.FC<PublishingScheduleArchitectProps> = ({ collapsible = false, isOpenInitial = true, onOpenProject }) => {
  const { brain, updateProject } = useBrain()
  const projects = useMemo(() => Array.isArray(brain.projects) ? brain.projects : [], [brain.projects])
  const workspace = useMemo(() => hydrateProjectWorkspace(readProjectWorkspace(), projects), [projects])
@@ -246,7 +248,7 @@ const PublishingScheduleArchitect: React.FC<PublishingScheduleArchitectProps> = 
              {dayProjects.length ? <span className="text-[7px] font-black text-black/40">{dayProjects.length}</span> : null}
             </div>
             <div className="grid gap-1">
-             {dayProjects.slice(0, 3).map((project) => <ProjectScheduleCard key={project.id} project={project} meta={workspace.projects[project.id]} compact onClear={() => clearProjectDate(project.id)} />)}
+             {dayProjects.slice(0, 3).map((project) => <ProjectScheduleCard key={project.id} project={project} meta={workspace.projects[project.id]} compact onOpen={() => onOpenProject?.(project.id)} onClear={() => clearProjectDate(project.id)} />)}
              {dayProjects.length > 3 ? <div className="px-1 text-[7px] font-black uppercase text-black/40">+{dayProjects.length - 3} more</div> : null}
             </div>
            </section>
@@ -270,7 +272,7 @@ const PublishingScheduleArchitect: React.FC<PublishingScheduleArchitectProps> = 
             <div className="text-[16px] font-[1000]">{day.getDate()}</div>
            </header>
            <div className="grid gap-2 p-2">
-            {dayProjects.map((project) => <ProjectScheduleCard key={project.id} project={project} meta={workspace.projects[project.id]} onClear={() => clearProjectDate(project.id)} />)}
+            {dayProjects.map((project) => <ProjectScheduleCard key={project.id} project={project} meta={workspace.projects[project.id]} onOpen={() => onOpenProject?.(project.id)} onClear={() => clearProjectDate(project.id)} />)}
             {!dayProjects.length ? <div className="rounded-[7px] border-[2px] border-dashed border-black/15 px-2 py-6 text-center text-[8px] font-black uppercase text-black/25">Open</div> : null}
            </div>
           </section>
@@ -296,7 +298,7 @@ const PublishingScheduleArchitect: React.FC<PublishingScheduleArchitectProps> = 
               <div className="text-[7px] font-black uppercase text-black/45">{daysAway === 0 ? "Today" : daysAway > 0 ? `${daysAway} days away` : `${Math.abs(daysAway)} days ago`}</div>
              </div>
             </div>
-            <ProjectScheduleCard project={project} meta={workspace.projects[project.id]} onClear={() => clearProjectDate(project.id)} />
+            <ProjectScheduleCard project={project} meta={workspace.projects[project.id]} onOpen={() => onOpenProject?.(project.id)} onClear={() => clearProjectDate(project.id)} />
            </div>
           )
          })}
