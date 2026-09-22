@@ -2045,3 +2045,33 @@
   font-size:calc(var(--vt-component-font-size)*.9);
   line-height:1;
 }
+
+
+/* ==========================================================================
+   CANONICAL TEXT FIELD STATE CONTRACT — production + imported library parity.
+   Text inputs and textareas are flat controls: no offset/drop shadow.
+   Rest  = 50% pair-A tint + pair-A inset stroke + pair-A caret.
+   Focus = white body + retained pair-A inset + blurred pair-B outer glow.
+   Geometry remains owned by the control level when one is supplied.
+   ========================================================================== */
+.vt-subtoolbox-input{
+  --field-accent:var(--pair-a,var(--vt-subtoolbox-fill,#36e0f6));
+  --field-glow:var(--pair-b,var(--vt-subtoolbox-pair-b,#ff7f6b));
+  --field-stroke:var(--vt-component-stroke,var(--vt-subtoolbox-inner-stroke,3px));
+  --field-height:var(--vt-component-height,var(--vt-subtoolbox-control-standard,48px));
+  background:color-mix(in srgb,var(--field-accent) 50%,white)!important;
+  caret-color:var(--field-accent)!important;
+  box-shadow:inset 0 0 0 var(--field-stroke) var(--field-accent)!important;
+  outline:0!important;
+}
+.vt-subtoolbox-input:focus,
+.vt-subtoolbox-input:focus-visible{
+  background:#fff!important;
+  caret-color:var(--field-accent)!important;
+  outline:0!important;
+  box-shadow:
+    inset 0 0 0 var(--field-stroke) var(--field-accent),
+    0 0 3px calc(var(--field-stroke)*.75) color-mix(in srgb,var(--field-glow) 78%,transparent),
+    0 0 calc(var(--field-height)*.20) calc(var(--field-stroke)*1.1) color-mix(in srgb,var(--field-glow) 48%,transparent),
+    0 0 calc(var(--field-height)*.42) calc(var(--field-stroke)*.25) color-mix(in srgb,var(--field-glow) 24%,transparent)!important;
+}
