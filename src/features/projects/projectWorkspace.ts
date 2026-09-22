@@ -67,7 +67,9 @@ const normalizeMeta = (project: Project, candidate: Partial<ProjectWorkspaceMeta
  order: Number.isFinite(candidate?.order) ? Number(candidate?.order) : order,
  priority: ["low", "medium", "high", "urgent"].includes(String(candidate?.priority))
   ? candidate!.priority as ProjectPriority
-  : "medium",
+  : ["low", "medium", "high", "urgent"].includes(String(project.plan?.projectPriority))
+   ? project.plan!.projectPriority as ProjectPriority
+   : "medium",
  owner: typeof candidate?.owner === "string" ? candidate.owner : "",
  tags: Array.isArray(candidate?.tags) ? candidate.tags.filter((tag): tag is string => typeof tag === "string") : [],
  archived: Boolean(candidate?.archived),
