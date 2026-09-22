@@ -1,0 +1,17 @@
+{
+  "threadId": "brain-channel-contracts-2026-09-22",
+  "verb": "FIX",
+  "tier": "T2",
+  "stage": "RECORD",
+  "taskIds": [],
+  "owner": "Brain runtime / capability registry / existing Gemini provider service",
+  "base": "b282a86f274855776821c5208175b0cb38c041ff",
+  "branch": "fix/brain-channel-contracts-2026-09-22",
+  "writerLock": null,
+  "nextAction": "Review draft PR; next slice evidence projection and anomaly wiring",
+  "verification": {
+    "focusedTests": "26 passed",
+    "build": "passed",
+    "typecheck": "50 errors, identical to baseline"
+  }
+}

@@ -25,7 +25,7 @@ describe("BrainRuntime", () => {
   gatewayGenerate.mockReset()
  })
 
- it("delegates creator behavior to the existing orchestrator without forwarding additive runtime-only fields", async () => {
+ it("forwards project and evidence context while keeping surface metadata in the runtime", async () => {
   const orchestratorResult = {
    response: { id: "response-1" },
    modules: [],
@@ -68,6 +68,9 @@ describe("BrainRuntime", () => {
    modelGenerator: gatewayGenerate,
    nicheResolver: undefined,
    currentResearcher: undefined,
+   projectId: "project-1",
+   visibleContext: { selectedVideoId: "video-1" },
+   artifactRefs: ["asset-1", "asset-1", "asset-2"],
   })
   expect(result).toEqual({
    ...orchestratorResult,

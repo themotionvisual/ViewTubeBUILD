@@ -4883,3 +4883,30 @@ export const generateCommunityPostSchedule = async (
     }
   })
 }
+
+
+/** Provider-owned JSON generation for the shared Brain gateway. */
+export const generateBrainJsonObject = async (input: {
+ userText: string
+ systemInstruction: string
+ history?: any[]
+}): Promise<unknown> => {
+  return executeWithRetry(async () => {
+   const response = await getAiClient().models.generateContent({
+    model: getActiveModel("thinking"),
+    contents: [
+     ...(input.history || []).slice(-6),
+     { role: "user", parts: [{ text: input.userText }] },
+    ],
+    config: {
+     systemInstruction: {
+      role: "system",
+      parts: [{ text: input.systemInstruction }],
+     },
+     responseMimeType: "application/json",
+    },
+   })
+   if (!response.text) throw new Error("The Brain model returned an empty tool-plan response")
+   return JSON.parse(cleanJsonString(response.text))
+  })
+}
