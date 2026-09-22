@@ -79,7 +79,7 @@ const ProjectPublishingPackageSummary: React.FC<{ project: Project }> = ({ proje
 
       {blockers.length ? <SubToolboxSection label="Blocking issues">
         <SubToolboxStack density="dense">
-          {blockers.map(blocker => <SubToolboxStatePanel key={blocker.id} state="blocked" message={blocker.message || blocker.id} />)}
+          {blockers.map(blocker => <SubToolboxStatePanel key={blocker.id} state="blocked" message={blocker.label || blocker.id} />)}
         </SubToolboxStack>
       </SubToolboxSection> : null}
 
