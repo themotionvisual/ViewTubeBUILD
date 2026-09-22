@@ -21,6 +21,11 @@ import {
   type ContentBuildPublishTransaction,
 } from "../services/asset-engine/PublishTransaction"
 import { YouTubeUploadService } from "../services/youtube/youtubeUploadService"
+import {
+  getUnifiedVideo,
+  updateUnifiedThumbnail,
+  updateUnifiedVideo,
+} from "../services/youtube/youtubeWriteTransport"
 import { nexusSyncService } from "../services/nexusSyncService"
 import { sheetsService } from "../services/sheetsService"
 import type { SeoResult } from "../types"
@@ -131,6 +136,8 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
   const [publishFile, setPublishFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState("")
+  const [publishThumbnailFile, setPublishThumbnailFile] = useState<File | null>(null)
+  const [remoteVerified, setRemoteVerified] = useState(false)
 
   useEffect(() => {
     registerProvider("VIDEO_PUBLISHER")
@@ -350,6 +357,61 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
     }
   }
 
+  const applyAndVerifyPublishingPackage = async () => {
+    if (!publishTransaction?.youtubeVideoId || !result) return
+    setUploadError("")
+    setRemoteVerified(false)
+    const videoId = publishTransaction.youtubeVideoId
+    try {
+      const title = result.titleSets[0]?.title?.trim()
+      if (!title) throw new Error("A final title is required.")
+      await updateUnifiedVideo(videoId, {
+        title,
+        description: result.description,
+        tags: result.tags.split(",").map(tag => tag.trim()).filter(Boolean),
+        privacyStatus: "private",
+      })
+      let next = completePublishStep({
+        transactionId: publishTransaction.id,
+        step: "apply-metadata",
+        receipt: { title, privacyStatus: "private" },
+        toolId: "video-publisher",
+      })
+      if (publishThumbnailFile) {
+        await updateUnifiedThumbnail(videoId, publishThumbnailFile)
+        next = completePublishStep({
+          transactionId: publishTransaction.id,
+          step: "apply-thumbnail",
+          receipt: { filename: publishThumbnailFile.name, size: publishThumbnailFile.size, type: publishThumbnailFile.type },
+          toolId: "video-publisher",
+        })
+      }
+      const remote = await getUnifiedVideo(videoId) as { items?: Array<{ snippet?: { title?: string; description?: string }; status?: { privacyStatus?: string } }> }
+      const actual = remote.items?.[0]
+      if (!actual) throw new Error("YouTube did not return the uploaded video during remote verification.")
+      const mismatches = [
+        actual.snippet?.title !== title ? "title" : null,
+        actual.snippet?.description !== result.description ? "description" : null,
+        actual.status?.privacyStatus !== "private" ? "privacyStatus" : null,
+      ].filter(Boolean)
+      if (mismatches.length) throw new Error(`Remote verification mismatch: ${mismatches.join(", ")}`)
+      next = completePublishStep({
+        transactionId: publishTransaction.id,
+        step: "verify-remote-state",
+        youtubeVideoId: videoId,
+        youtubeBinding: { status: "private", lastVerifiedAt: new Date().toISOString() },
+        receipt: { verified: true, title: actual.snippet?.title, privacyStatus: actual.status?.privacyStatus },
+        toolId: "video-publisher",
+      })
+      setPublishTransaction(next)
+      setRemoteVerified(true)
+    } catch (error) {
+      const failed = failPublishTransaction(publishTransaction.id, "verify-remote-state", error, "video-publisher")
+      setPublishTransaction(failed)
+      setUploadError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
   const handleExport = async () => {
     if (!result) return
     setIsExporting(true)
@@ -496,7 +558,20 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
                 </>
               ) : null}
               {publishTransaction?.youtubeVideoId ? (
-                <SubToolboxStatePanel state="ready" message={`YouTube video ${publishTransaction.youtubeVideoId} is now bound to this ContentBuild. Continue with thumbnail, captions, metadata/status and verification.`} />
+                <>
+                  <SubToolboxStatePanel state={remoteVerified ? "ready" : "warning"} message={remoteVerified
+                    ? `YouTube video ${publishTransaction.youtubeVideoId} matches the intended private publishing state.`
+                    : `YouTube video ${publishTransaction.youtubeVideoId} is bound. Apply the canonical package and verify the remote state before changing visibility.`} />
+                  <input
+                    aria-label="YouTube thumbnail file"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(event) => setPublishThumbnailFile(event.target.files?.[0] || null)}
+                  />
+                  <SubToolboxButton tone="success" onClick={applyAndVerifyPublishingPackage}>
+                    Apply Package + Verify
+                  </SubToolboxButton>
+                </>
               ) : null}
               {uploadError ? <SubToolboxStatePanel state="error" message={uploadError} /> : null}
             </SubToolboxStack>
