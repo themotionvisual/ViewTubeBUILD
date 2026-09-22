@@ -17,7 +17,7 @@ import {
   updateVideoThumbnail,
   uploadVideo,
 } from "../../../services/youtubeService"
-import { generateEducationalTimestampQuestions } from "../../../services/gemini"
+import { generateEducationalTimestampQuestions, generateSeoData, generateTagSuggestions } from "../../../services/gemini"
 import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
 import type { DashboardData } from "../useDashboardData"
 import type { CommonWidgetProps } from "../types"
@@ -113,6 +113,7 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
   const [defaultsLoading, setDefaultsLoading] = useState<"description" | "tags" | null>(null)
+  const [generationLoading, setGenerationLoading] = useState<"description" | "tags" | null>(null)
   const [timestampQuestions, setTimestampQuestions] = useState<string[]>([])
   const [timestampsLoading, setTimestampsLoading] = useState(false)
 
@@ -207,6 +208,57 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
     }
   }
 
+  const generateDescription = async () => {
+    const concept = title.trim() || String(data.brain?.coreConcept || "").trim()
+    if (!concept) {
+      setError("Add a video title or set a Brain concept before generating a description.")
+      return
+    }
+    setGenerationLoading("description")
+    setError("")
+    try {
+      const generated = await generateSeoData(
+        concept,
+        String(data.brain?.targetNiche || "General").trim() || "General",
+        "",
+        "",
+        "10:00",
+        "",
+        "",
+        "Longform",
+        undefined,
+        data.brain,
+      )
+      setDescription(String(generated.description || "").slice(0, 5000))
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to generate a description.")
+    } finally {
+      setGenerationLoading(null)
+    }
+  }
+
+  const generateTags = async () => {
+    const concept = title.trim() || String(data.brain?.coreConcept || "").trim()
+    if (!concept) {
+      setError("Add a video title or set a Brain concept before generating tags.")
+      return
+    }
+    setGenerationLoading("tags")
+    setError("")
+    try {
+      const suggestions = await generateTagSuggestions(concept, description, data.brain)
+      setTags(limitTagsToCharacterBudget(
+        [...suggestions]
+          .sort((left, right) => right.score - left.score)
+          .map((suggestion) => suggestion.tag),
+      ))
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to generate tags.")
+    } finally {
+      setGenerationLoading(null)
+    }
+  }
+
   const generateTimestampQuestions = async () => {
     setTimestampsLoading(true)
     setError("")
@@ -271,11 +323,10 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
 
   const tagCharacterCount = tags.join(", ").length
   const remainingTagInputLength = Math.max(0, TAG_CHARACTER_LIMIT - tagCharacterCount - (tags.length ? 2 : 0))
-  const tabs: { id: WorkspacePage; label: string }[] = [
+  const tabs: { id: Exclude<WorkspacePage, "timestamps">; label: string }[] = [
     { id: "details", label: "Details" },
     { id: "options", label: "Options" },
     { id: "ads", label: "Ad suitability" },
-    ...(categoryId === "27" ? [{ id: "timestamps" as const, label: "Timestamps" }] : []),
   ]
 
   const helpContent = (
@@ -309,7 +360,7 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
                   icon={<FileVideo2 />}
                   title="Source video"
                   detail="Choose or drop the video file to publish"
-                  actionLabel={videoFile ? "Replace source video" : "Choose source video"}
+                  actionLabel={videoFile ? "Replace video" : "Upload video"}
                   hasValue={Boolean(videoFile)}
                   preview={videoFile ? (
                     <span className="video-uploader-source-file">
@@ -328,7 +379,7 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
                   icon={<ImagePlus />}
                   title="Thumbnail"
                   detail="Choose or drop a 16:9 image"
-                  actionLabel={thumbnailPreview ? "Replace thumbnail" : "Choose thumbnail"}
+                  actionLabel={thumbnailPreview ? "Replace thumbnail" : "Upload thumbnail"}
                   hasValue={Boolean(thumbnailPreview)}
                   preview={thumbnailPreview ? <img src={thumbnailPreview} alt="Thumbnail preview" /> : undefined}
                   onBrowse={() => thumbnailInputRef.current?.click()}
@@ -337,18 +388,36 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
               </section>
 
               <section className="video-uploader-copy-grid" aria-label="Video metadata">
-                <Field label="Video title">
+                <label className="widget-control-field video-uploader-counted-field">
+                  <span className="video-uploader-field-heading">
+                    <span>Video title</span>
+                    <small className="widget-character-count">{title.length}/100</small>
+                  </span>
                   <input className="vt-input" aria-label="Video title" placeholder="Video title" value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} />
-                  <small className="widget-character-count">{title.length}/100</small>
-                </Field>
-                <Field label="Description">
+                </label>
+                <label className="widget-control-field video-uploader-counted-field">
+                  <span className="video-uploader-field-heading">
+                    <span>Description</span>
+                    <small className="widget-character-count">{description.length}/5000</small>
+                  </span>
                   <textarea className="vt-textarea video-uploader-description" aria-label="Description" placeholder="Description" value={description} maxLength={5000} onChange={(event) => setDescription(event.target.value)} rows={4} />
-                  <small className="widget-character-count">{description.length}/5000</small>
-                </Field>
+                  <span className="video-uploader-paired-actions">
+                    <WidgetSizedButton height={24} tone="secondary" textFit="adaptive" disabled={defaultsLoading !== null || generationLoading !== null} onClick={() => void applyChannelDefaults("description")}>
+                      {defaultsLoading === "description" ? "Loading…" : "Use default description"}
+                    </WidgetSizedButton>
+                    <WidgetSizedButton height={24} tone="primary" textFit="adaptive" disabled={defaultsLoading !== null || generationLoading !== null} onClick={() => void generateDescription()}>
+                      {generationLoading === "description" ? "Generating…" : "Generate description"}
+                    </WidgetSizedButton>
+                  </span>
+                </label>
               </section>
 
               <section className="video-uploader-package-row" aria-label="Publishing package">
                 <div className="video-uploader-tags">
+                  <div className="video-uploader-field-heading">
+                    <span>Tags</span>
+                    <small className="widget-character-count">{tagCharacterCount}/{TAG_CHARACTER_LIMIT}</small>
+                  </div>
                   <div className="widget-tag-list">
                     {tags.map((tag) => (
                       <WidgetTag key={tag} onRemove={() => setTags((current) => current.filter((item) => item !== tag))}>{tag}</WidgetTag>
@@ -372,18 +441,32 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
                     />
                     <WidgetIconButton icon={<Plus />} label="Add tag" height={32} tone="primary" onClick={addTag} />
                   </div>
-                  <div className="video-uploader-default-actions">
-                    <WidgetSizedButton height={24} tone="secondary" textFit="adaptive" disabled={defaultsLoading !== null} onClick={() => void applyChannelDefaults("description")}>
-                      {defaultsLoading === "description" ? "Loading…" : "Use default description"}
-                    </WidgetSizedButton>
-                    <WidgetSizedButton height={24} tone="secondary" textFit="adaptive" disabled={defaultsLoading !== null} onClick={() => void applyChannelDefaults("tags")}>
+                  <div className="video-uploader-paired-actions">
+                    <WidgetSizedButton height={24} tone="secondary" textFit="adaptive" disabled={defaultsLoading !== null || generationLoading !== null} onClick={() => void applyChannelDefaults("tags")}>
                       {defaultsLoading === "tags" ? "Loading…" : "Use default tags"}
+                    </WidgetSizedButton>
+                    <WidgetSizedButton height={24} tone="primary" textFit="adaptive" disabled={defaultsLoading !== null || generationLoading !== null} onClick={() => void generateTags()}>
+                      {generationLoading === "tags" ? "Generating…" : "Generate tags"}
                     </WidgetSizedButton>
                   </div>
                 </div>
                 <div className="video-uploader-selects">
                   <WidgetSizedSelect height={32} value={privacyStatus} onChange={setPrivacyStatus} label="Visibility" options={[{ value: "public", label: "Public" }, { value: "unlisted", label: "Unlisted" }, { value: "private", label: "Private" }]} placeholder="Visibility" />
-                  <WidgetSizedSelect height={32} value={categoryId} onChange={setCategoryId} label="Category" options={categories} placeholder="Category" />
+                  <div className={`video-uploader-category-row ${categoryId === "27" ? "has-timestamps" : ""}`.trim()}>
+                    <WidgetSizedSelect className="video-uploader-category-select" height={32} value={categoryId} onChange={setCategoryId} label="Category" options={categories} placeholder="Category" />
+                    {categoryId === "27" ? (
+                      <WidgetSizedButton
+                        className="video-uploader-timestamps-button"
+                        height={32}
+                        tone={page === "timestamps" ? "primary" : "default"}
+                        textFit="adaptive"
+                        aria-pressed={page === "timestamps"}
+                        onClick={() => setPage("timestamps")}
+                      >
+                        Timestamps
+                      </WidgetSizedButton>
+                    ) : null}
+                  </div>
                   <WidgetSizedSelect height={32} value={playlistId} onChange={setPlaylistId} label="Playlist" options={playlists} placeholder="Playlist" />
                 </div>
               </section>
@@ -460,7 +543,7 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
             {tabs.map((tab) => (
               <WidgetSizedButton
                 key={tab.id}
-                height={24}
+                height={32}
                 textFit="adaptive"
                 tone={page === tab.id ? "primary" : "default"}
                 aria-pressed={page === tab.id}
@@ -470,10 +553,10 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
               </WidgetSizedButton>
             ))}
           </nav>
-          <WidgetSplitButton type="button" tone="primary" width="full" icon={<Save />} disabled={saving} onClick={() => void publish()}>
+          <WidgetSplitButton type="button" tone="primary" size="large" width="full" icon={<Save />} disabled={saving} onClick={() => void publish()}>
             {saving ? "Publishing…" : saved ? "Published" : "Publish video"}
           </WidgetSplitButton>
-          <WidgetIconButton icon={<RotateCcw />} label="Reset upload package" height={32} tone="secondary" onClick={reset} />
+          <WidgetIconButton icon={<RotateCcw />} label="Reset upload package" height={38} tone="secondary" onClick={reset} />
         </WidgetFooter>
       </div>
     </WidgetShell>
