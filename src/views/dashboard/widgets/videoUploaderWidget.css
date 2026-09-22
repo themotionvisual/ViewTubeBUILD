@@ -109,6 +109,59 @@
   resize: vertical;
 }
 
+:where(.dashboard-barrier) .video-uploader-counted-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+:where(.dashboard-barrier) .video-uploader-field-heading {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--widget-component-gap);
+  color: var(--widget-border);
+  font-size: var(--widget-type-label);
+  font-weight: 950;
+  letter-spacing: .06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+:where(.dashboard-barrier) .video-uploader-field-heading .widget-character-count {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: inherit;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+:where(.dashboard-barrier) .video-uploader-paired-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--widget-component-gap);
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-uploader-category-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--widget-component-gap);
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-uploader-category-row.has-timestamps {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+:where(.dashboard-barrier) .video-uploader-category-select,
+:where(.dashboard-barrier) .video-uploader-timestamps-button {
+  min-width: 0;
+  width: 100%;
+}
+
 :where(.dashboard-barrier) .video-uploader-package-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--video-uploader-side);
@@ -141,12 +194,6 @@
 :where(.dashboard-barrier) .video-uploader-tag-entry .vt-input {
   min-width: 0;
   height: var(--widget-control-height);
-}
-
-:where(.dashboard-barrier) .video-uploader-default-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--widget-component-gap);
 }
 
 :where(.dashboard-barrier) .video-uploader-disclosures,
@@ -212,7 +259,7 @@
 
 :where(.dashboard-barrier) .video-uploader-pages {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--widget-component-gap);
   min-width: 0;
 }
@@ -220,12 +267,48 @@
 @container video-uploader-widget (max-width: 620px) {
   :where(.dashboard-barrier) .video-uploader-widget {
     --video-uploader-side: minmax(0, 1fr);
-    --video-uploader-media-h: clamp(6.5rem, 30cqw, 9rem);
   }
 
-  :where(.dashboard-barrier) .video-uploader-gantry,
-  :where(.dashboard-barrier) .video-uploader-package-row {
+  /* Mobile gantry is one shared 2×2 matrix: both upload controls on row one,
+     both 16:9 drop frames directly beneath them on row two. */
+  :where(.dashboard-barrier) .video-uploader-gantry {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto auto;
+    align-items: start;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-gantry .widget-media-upload {
+    display: contents;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-source-frame .widget-media-upload-action {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-thumbnail-frame .widget-media-upload-action {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-source-frame .widget-media-upload-frame {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-thumbnail-frame .widget-media-upload-frame {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-gantry .widget-media-upload-frame {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-package-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   :where(.dashboard-barrier) .video-uploader-copy-grid {
@@ -242,18 +325,20 @@
 }
 
 @container video-uploader-widget (max-width: 430px) {
-  :where(.dashboard-barrier) .video-uploader-gantry,
-  :where(.dashboard-barrier) .video-uploader-package-row,
   :where(.dashboard-barrier) .video-uploader-control-grid,
   :where(.dashboard-barrier) .video-uploader-ad-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  :where(.dashboard-barrier) .video-uploader-default-actions {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   :where(.dashboard-barrier) .video-uploader-footer {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-paired-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :where(.dashboard-barrier) .video-uploader-category-row.has-timestamps {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   }
 }
