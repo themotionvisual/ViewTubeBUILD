@@ -1,4 +1,5 @@
 import React from "react"
+import { createPortal } from "react-dom"
 import "../../styles/toolbox-entry.css"
 import { getComponentLevelCssVars } from "./tokens"
 import type { SubToolboxControlSize, SubToolboxState, ToolboxControlLevel } from "./tokens"
@@ -210,6 +211,142 @@ export const SubToolboxSegmentedToggle: React.FC<SubToolboxSegmentedToggleProps>
   </div>
 )
 
+
+export interface SubToolboxTopTitleDropdownOption {
+  value: string
+  label: React.ReactNode
+  disabled?: boolean
+}
+
+export interface SubToolboxTopTitleDropdownProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
+  level?: ToolboxControlLevel
+  label: React.ReactNode
+  value: React.ReactNode
+  options: SubToolboxTopTitleDropdownOption[]
+  onValueChange?: (value: string) => void
+  multiSelect?: boolean
+  selectedValues?: string[]
+  ariaLabel?: string
+  toneColor?: string
+  shadowColor?: string
+}
+
+export const SubToolboxTopTitleDropdown: React.FC<SubToolboxTopTitleDropdownProps> = ({
+  level = "l1",
+  label,
+  value,
+  options,
+  onValueChange,
+  multiSelect = false,
+  selectedValues = [],
+  ariaLabel = "Choose an option",
+  toneColor,
+  shadowColor,
+  className,
+  style,
+  ...props
+}) => {
+  const [open, setOpen] = React.useState(false)
+  const rootRef = React.useRef<HTMLDivElement>(null)
+  const [menuRect, setMenuRect] = React.useState<{ left: number; top: number; width: number } | null>(null)
+
+  const recalcMenuRect = React.useCallback(() => {
+    const trigger = rootRef.current?.querySelector<HTMLButtonElement>(".vt-subtoolbox-top-title-dropdown-trigger")
+    if (!trigger) return
+    const rect = trigger.getBoundingClientRect()
+    const stroke = Number.parseFloat(getComputedStyle(trigger).getPropertyValue("--vt-component-stroke")) || 3
+    setMenuRect({ left: rect.left, top: rect.bottom - stroke, width: rect.width })
+  }, [])
+
+  React.useEffect(() => {
+    const onPointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", onPointerDown)
+    return () => document.removeEventListener("mousedown", onPointerDown)
+  }, [])
+
+  React.useEffect(() => {
+    if (!open) return
+    recalcMenuRect()
+    const sync = () => recalcMenuRect()
+    window.addEventListener("resize", sync)
+    window.addEventListener("scroll", sync, true)
+    return () => {
+      window.removeEventListener("resize", sync)
+      window.removeEventListener("scroll", sync, true)
+    }
+  }, [open, recalcMenuRect])
+
+  const mergedStyle = withComponentLevelStyle(level, {
+    ...(style ?? {}),
+    ...(toneColor ? { ["--pair-b" as string]: toneColor } : {}),
+    ...(shadowColor ? { ["--vt-top-title-shadow" as string]: shadowColor } : {}),
+  } as React.CSSProperties)
+
+  return (
+    <div
+      ref={rootRef}
+      className={classes("vt-subtoolbox-top-title-dropdown", open && "is-open", className)}
+      data-vt-control-level={level}
+      style={mergedStyle}
+      {...props}
+    >
+      <button
+        type="button"
+        className="vt-subtoolbox-top-title-dropdown-trigger"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={ariaLabel}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span className="vt-subtoolbox-top-title-dropdown-title">{label}</span>
+        <span className="vt-subtoolbox-top-title-dropdown-value">
+          <b>{value}</b>
+          <span className="vt-subtoolbox-top-title-dropdown-chevron" aria-hidden="true">⌄</span>
+        </span>
+      </button>
+      {open && menuRect ? createPortal(
+        <div
+          className="vt-subtoolbox-top-title-dropdown-panel"
+          role="menu"
+          aria-label={ariaLabel}
+          data-vt-control-level={level}
+          style={{
+            ...withComponentLevelStyle(level, mergedStyle),
+            position: "fixed",
+            left: menuRect.left,
+            top: menuRect.top,
+            width: menuRect.width,
+          }}
+        >
+          {options.map((option) => {
+            const selected = multiSelect ? selectedValues.includes(option.value) : false
+            return (
+              <button
+                type="button"
+                role={multiSelect ? "menuitemcheckbox" : "menuitem"}
+                aria-checked={multiSelect ? selected : undefined}
+                key={option.value}
+                disabled={option.disabled}
+                className={selected ? "is-selected" : ""}
+                onClick={() => {
+                  if (option.disabled) return
+                  onValueChange?.(option.value)
+                  if (!multiSelect) setOpen(false)
+                }}
+              >
+                {multiSelect ? <span className="vt-subtoolbox-top-title-dropdown-check" aria-hidden="true">{selected ? "×" : ""}</span> : null}
+                <span>{option.label}</span>
+              </button>
+            )
+          })}
+        </div>,
+        document.body,
+      ) : null}
+    </div>
+  )
+}
 
 export interface SubToolboxMenuOption {
   value: string

@@ -50,7 +50,21 @@ describe("Video Manager canonical Studio Hub contract", () => {
   expect(toolboxCss).toContain("--vt-toolbox-content-gap: 4px")
  })
 
- it("uses the canonical split-left selector family", () => {
+ it("uses Studio Hub primitives for all visible buttons, fields, tags, and publishing controls", () => {
+  expect(source).toContain("SubToolboxTopTitleDropdown")
+  expect(source.match(/<SubToolboxTopTitleDropdown/g)).toHaveLength(3)
+  expect(source).toContain("SubToolboxRemovableTag")
+  expect(source).toContain("SubToolboxSelectableTag")
+  expect(source).toContain("SubToolboxInput")
+  expect(source).toContain("SubToolboxTextArea")
+  expect(source).toContain("SubToolboxIconButton")
+  expect(source).toContain("SubToolboxLinkButton")
+  expect(source).not.toContain("<button")
+  expect(source).not.toContain("<textarea")
+  expect(source).not.toContain("SubToolboxDropdownTopTitleControl")
+ })
+
+  it("uses the canonical split-left selector family", () => {
   expect(source).toContain("SubToolboxSplitDropdown")
   expect(source).toContain("SubToolboxSplitButton")
   expect(source).toContain('from "../studio-ui"')

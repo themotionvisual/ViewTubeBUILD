@@ -1919,3 +1919,129 @@
 .vt-subtoolbox-knob-label{
   text-align:center;font-size:calc(var(--vt-component-font-size)*.70);letter-spacing:.06em
 }
+
+
+/* ==========================================================================
+   TOP TITLE DROPDOWN PRIMITIVE
+   Two-row publishing-control anatomy: title rail above the large selected value.
+   Geometry is owned by L0 / L1 / L2 component DNA.
+   ========================================================================== */
+.vt-subtoolbox-top-title-dropdown{
+  position:relative;
+  width:100%;
+  min-width:0;
+  --vt-top-title-fill:var(--pair-b,#ff7f6b);
+  --vt-top-title-shadow:color-mix(in srgb,var(--vt-top-title-fill) 42%,transparent);
+  z-index:1;
+}
+.vt-subtoolbox-top-title-dropdown.is-open{z-index:180}
+.vt-subtoolbox-top-title-dropdown-trigger{
+  width:100%;
+  height:calc(var(--vt-component-height)*1.62);
+  min-height:calc(var(--vt-component-height)*1.62);
+  padding:0;
+  overflow:hidden;
+  border:var(--vt-component-stroke) solid #000;
+  border-radius:var(--vt-component-radius);
+  background:var(--vt-top-title-fill);
+  box-shadow:var(--vt-component-shadow-offset) var(--vt-component-shadow-offset) 0 var(--vt-top-title-shadow);
+  color:#000;
+  appearance:none;
+  cursor:pointer;
+  display:grid;
+  grid-template-rows:.46fr .54fr;
+}
+.vt-subtoolbox-top-title-dropdown.is-open .vt-subtoolbox-top-title-dropdown-trigger{
+  border-bottom-left-radius:0;
+  border-bottom-right-radius:0;
+}
+.vt-subtoolbox-top-title-dropdown-title{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+  padding:0 calc(var(--vt-component-height)*.18);
+  border-bottom:var(--vt-component-stroke) solid #000;
+  font:1000 calc(var(--vt-component-font-size)*.72)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.vt-subtoolbox-top-title-dropdown-value{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) calc(var(--vt-component-height)*.7);
+  align-items:center;
+  min-width:0;
+  padding-left:calc(var(--vt-component-height)*.22);
+}
+.vt-subtoolbox-top-title-dropdown-value>b{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:left;
+  font:1000 calc(var(--vt-component-font-size)*1.42)/.86 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.065em;
+  text-transform:uppercase;
+}
+.vt-subtoolbox-top-title-dropdown-chevron{
+  height:100%;
+  display:grid;
+  place-items:center;
+  font:1000 calc(var(--vt-component-font-size)*1.45)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  transform:translateY(-4%);
+  transition:transform 160ms ease-out;
+}
+.vt-subtoolbox-top-title-dropdown.is-open .vt-subtoolbox-top-title-dropdown-chevron{
+  transform:rotate(180deg) translateY(4%);
+}
+.vt-subtoolbox-top-title-dropdown-trigger:focus-visible{
+  outline:3px solid var(--vt-top-title-fill);
+  outline-offset:3px;
+}
+.vt-subtoolbox-top-title-dropdown-panel{
+  z-index:1600;
+  overflow:hidden;
+  border:var(--vt-component-stroke) solid #000;
+  border-top:0;
+  border-radius:0 0 var(--vt-component-radius) var(--vt-component-radius);
+  background:#fff;
+  box-shadow:var(--vt-component-shadow-offset) var(--vt-component-shadow-offset) 0 var(--vt-top-title-shadow);
+}
+.vt-subtoolbox-top-title-dropdown-panel>button{
+  width:100%;
+  min-height:var(--vt-component-height);
+  padding:0 calc(var(--vt-component-height)*.2);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border:0;
+  border-bottom:var(--vt-component-stroke) solid #000;
+  background:#fff;
+  color:#000;
+  text-align:left;
+  font:1000 var(--vt-component-font-size)/.9 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.055em;
+  text-transform:uppercase;
+}
+.vt-subtoolbox-top-title-dropdown-panel>button:last-child{border-bottom:0}
+.vt-subtoolbox-top-title-dropdown-panel>button:is(:hover,:focus-visible,.is-selected){
+  background:color-mix(in srgb,var(--vt-top-title-fill) 78%,white);
+  outline:none;
+}
+.vt-subtoolbox-top-title-dropdown-panel>button:disabled{opacity:.45;cursor:not-allowed}
+.vt-subtoolbox-top-title-dropdown-check{
+  width:calc(var(--vt-component-height)*.5);
+  height:calc(var(--vt-component-height)*.5);
+  flex:0 0 calc(var(--vt-component-height)*.5);
+  display:grid;
+  place-items:center;
+  border:var(--vt-component-stroke) solid #000;
+  border-radius:calc(var(--vt-component-radius)*.5);
+  background:var(--vt-top-title-fill);
+  font-size:calc(var(--vt-component-font-size)*.9);
+  line-height:1;
+}

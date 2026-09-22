@@ -23,7 +23,6 @@ import {
  analyzeExistingTags,
  hasGeminiKey,
 } from "../services/gemini"
-import { StandardButton } from "../components/NativeUIKit"
 import type { TagSuggestion } from "../services/gemini"
 import {
  X,
@@ -52,16 +51,21 @@ import {
  SubToolboxGridActionButton,
  ToolboxScaffold,
  SubToolbox,
- SubToolboxDropdownTopTitleControl,
 } from "../components/Toolbox"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../components/subtoolbox/SubToolboxLayouts"
 import {
  SubToolboxButton,
  SubToolboxFieldLabel,
+ SubToolboxIconButton,
  SubToolboxInput,
+ SubToolboxLinkButton,
  SubToolboxMetric,
+ SubToolboxRemovableTag,
+ SubToolboxSelectableTag,
  SubToolboxSurface,
+ SubToolboxTag,
  SubToolboxTextArea,
+ SubToolboxTopTitleDropdown,
 } from "../components/subtoolbox/SubToolboxPrimitives"
 import { SubToolboxSplitButton, SubToolboxSplitDropdown } from "../studio-ui"
 import { getToolboxPaletteColors } from "../styles/toolboxPalette"
@@ -75,87 +79,57 @@ const TagBadge: React.FC<{
  isSuggested?: boolean
  isAdded?: boolean
 }> = ({ tag, analysis, onRemove, onAdd, isSuggested, isAdded }) => {
- const [showTooltip, setShowTooltip] = useState(false)
- const [tooltipPos, setTooltipPos] = useState<{ left: number; top: number } | null>(null)
- const [isHovered, setIsHovered] = useState(false)
- const badgeRef = useRef<HTMLButtonElement>(null)
-
  const getRankColor = (rank?: number) => {
-  if (typeof rank !== "number") return "#ffffff"
-  if (rank >= 1 && rank <= 10) return "#45C8E9"
-  if (rank >= 11 && rank <= 20) return "#57F15C"
-  if (rank >= 21 && rank <= 30) return "#F9F36B"
-  if (rank >= 31 && rank <= 40) return "#FFB158"
-  return "#FF7497"
+  if (typeof rank !== "number") return "#36E0F6"
+  if (rank >= 1 && rank <= 10) return "#36E0F6"
+  if (rank >= 11 && rank <= 20) return "#3FEE56"
+  if (rank >= 21 && rank <= 30) return "#FFDA47"
+  if (rank >= 31 && rank <= 40) return "#FFA85C"
+  return "#FA618A"
  }
 
- return (
-  <div className="relative group">
-   <button
-    ref={badgeRef}
-    type="button"
-    onClick={isAdded ? undefined : onAdd || onRemove}
-    onMouseEnter={() => {
-     setIsHovered(true)
-     if (badgeRef.current) {
-      const rect = badgeRef.current.getBoundingClientRect()
-      setTooltipPos({ left: rect.left + rect.width / 2, top: rect.top })
-     }
-     setShowTooltip(true)
-    }}
-    onMouseLeave={() => {
-     setShowTooltip(false)
-     setIsHovered(false)
-    }}
-    className="inline-flex items-center px-3 py-1 text-xs font-[900] uppercase border-[3px] border-black rounded-full shadow-[3px_3px_0px_0px_var(--vt-subtoolbox-shadow,rgba(0,0,0,0.35))]"
-    style={{
-     backgroundColor: isAdded
-      ? "#E5E7EB"
-      : isHovered
-        ? "#FFFFFF"
-        : analysis
-          ? getRankColor(analysis.rank)
-          : "#FFFFFF",
-     opacity: isAdded ? 0.65 : 1,
-     cursor: isAdded ? "not-allowed" : "pointer",
-    }}>
-    <span className="whitespace-nowrap text-black">{tag}</span>
-    {analysis && <span className="ml-1 font-[1000] text-black">#{analysis.rank}</span>}
-    {(onRemove || (isSuggested && !isAdded)) && (
-     <span
-      className="w-4 h-4 flex shrink-0 items-center justify-center rounded-full bg-black text-white ml-2 border border-transparent hover:bg-[#ff3b30] hover:text-black hover:border-transparent"
-      onClick={(e) => {
-       e.stopPropagation()
-       if (onRemove) onRemove()
-      }}>
-      {onRemove ? <X size={10} strokeWidth={3.2} /> : <Plus size={10} strokeWidth={3.2} />}
-     </span>
-    )}
-   </button>
-   {showTooltip && analysis && tooltipPos && (
-    <div
-     className="fixed z-[200] w-52 bg-white text-black p-3 rounded-2xl border-[4px] border-black shadow-[6px_6px_0px_0px_black] pointer-events-none"
-     style={{ left: tooltipPos.left, top: tooltipPos.top - 12, transform: "translate(-50%, -100%)" }}>
-     <div className="space-y-2 text-[10px] font-bold uppercase">
-      <div className="flex justify-between border-b border-black/20 pb-1 mb-1">
-       <span className="text-black/60">SEO Metrics</span>
-       <span className="text-black px-2 py-0.5 rounded-full font-black border border-black" style={{ backgroundColor: getRankColor(analysis.rank) }}>
-        {analysis.score}
-       </span>
-      </div>
-      <div className="flex justify-between"><span>Search Vol:</span><span>{(analysis.searchVolume / 1000).toFixed(1)}K</span></div>
-      <div className="flex justify-between"><span>Comp:</span><span>{analysis.competition}</span></div>
-      <div className="flex justify-between"><span>Rank:</span><span className="text-black">#{analysis.rank}</span></div>
-      <div className="flex justify-between mt-1 pt-1 border-t border-black/20">
-       <span>Triple Keyword:</span>
-       <span>{analysis.tripleKeyword ? <span className="text-black flex items-center gap-1"><CheckCircle size={10} /> YES</span> : <span className="text-black flex items-center gap-1"><X size={10} /> NO</span>}</span>
-      </div>
-     </div>
-     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rotate-45 border-r border-b border-black" />
-    </div>
-   )}
-  </div>
- )
+ const rankColor = getRankColor(analysis?.rank)
+ const title = analysis
+  ? `SEO score ${analysis.score} · search volume ${analysis.searchVolume.toLocaleString()} · competition ${analysis.competition.toLocaleString()} · rank #${analysis.rank}${analysis.tripleKeyword ? " · triple keyword" : ""}`
+  : undefined
+ const label = <>{tag}{analysis ? <span aria-hidden="true"> · #{analysis.rank}</span> : null}</>
+ const style = {
+  ["--pair-a" as string]: rankColor,
+  ["--pair-b" as string]: "#ffffff",
+ } as React.CSSProperties
+
+ if (onRemove) {
+  return (
+   <SubToolboxRemovableTag
+    level="l2"
+    onRemove={onRemove}
+    removeIcon={<X size={12} strokeWidth={3.2} />}
+    style={style}
+    title={title}
+   >
+    {label}
+   </SubToolboxRemovableTag>
+  )
+ }
+
+ if (isSuggested) {
+  return (
+   <SubToolboxSelectableTag
+    level="l2"
+    selected={Boolean(isAdded)}
+    selectedIcon={<CheckCircle size={12} strokeWidth={3} />}
+    unselectedIcon={<Plus size={12} strokeWidth={3} />}
+    disabled={isAdded}
+    onClick={() => { if (!isAdded) onAdd?.() }}
+    style={style}
+    title={title}
+   >
+    {label}
+   </SubToolboxSelectableTag>
+  )
+ }
+
+ return <SubToolboxTag level="l2" style={style} title={title}>{label}</SubToolboxTag>
 }
 
 interface VideoManagerProps {
@@ -607,9 +581,15 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    {subtitleStep > 2 && <span className="uppercase tracking-[0.12em]">{subtitleAdditions[2]}</span>}
    {subtitleStep > 3 && <span className="uppercase tracking-[0.12em]">{subtitleAdditions[3]}</span>}
    {subtitleStep < subtitleButtonLabels.length && (
-    <button type="button" onClick={(event) => { event.stopPropagation(); setSubtitleStep((prev) => Math.min(prev + 1, subtitleButtonLabels.length + 1)) }} className="h-7 px-3 rounded-full border-[3px] border-black bg-white text-[9px] font-black uppercase tracking-[0.12em] shadow-[2px_2px_0px_0px_black] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all">
+    <SubToolboxButton
+     level="l2"
+     size="compact"
+     tone="neutral"
+     className="!w-auto"
+     onClick={(event) => { event.stopPropagation(); setSubtitleStep((prev) => Math.min(prev + 1, subtitleButtonLabels.length + 1)) }}
+    >
      {subtitleButtonLabels[subtitleStep]}
-    </button>
+    </SubToolboxButton>
    )}
   </div>
  )
@@ -639,9 +619,16 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    embedded={embedded}
    helpText={subtitleHelpRail}
    headerActions={showHeaderLoadAssetsButton ? (
-    <button type="button" onClick={(event) => { event.stopPropagation(); lastSearchRef.current = ""; setVideoSearchQuery(""); void loadInitialData(true) }} disabled={loading} className={`h-[38px] px-4 rounded-[12px] border-[3px] border-black bg-black text-white text-[10px] font-black uppercase tracking-[0.14em] shadow-[2px_2px_0px_0px_black] transition-all ${loading ? "opacity-60 cursor-not-allowed" : "hover:bg-[#111] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_black]"}`}>
+    <SubToolboxButton
+     level="l2"
+     size="compact"
+     tone="ink"
+     className="!w-auto"
+     onClick={(event) => { event.stopPropagation(); lastSearchRef.current = ""; setVideoSearchQuery(""); void loadInitialData(true) }}
+     disabled={loading}
+    >
      {loading ? "REFRESHING..." : "LOAD SPACE ASSETS"}
-    </button>
+    </SubToolboxButton>
    ) : null}
    shellClassName="animate-fade-in"
    contentClassName={embedded ? "p-0" : "p-8"}>
@@ -654,7 +641,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       <div className="w-full max-w-4xl bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden">
        <div className="bg-[#CCFF00] border-b-[4px] border-black px-5 py-4 flex items-center justify-between">
         <div><h3 className="text-2xl font-[1000] uppercase tracking-tight">Tag Rank Calculations</h3><p className="text-[10px] font-black uppercase tracking-[0.18em] text-black/50 mt-1">Score balances search volume, competition, title match, and triple keyword signal.</p></div>
-        <button onClick={() => setShowRankDetails(false)} className="h-10 w-10 rounded-lg border-[4px] border-black bg-white flex items-center justify-center"><X size={18} /></button>
+        <SubToolboxIconButton level="l1" icon={<X size={18} />} ariaLabel="Close tag rankings" onClick={() => setShowRankDetails(false)} />
        </div>
        <div className="p-4 overflow-x-auto">
         <table className="w-full border-collapse min-w-[760px]">
@@ -667,11 +654,11 @@ const VideoManager: React.FC<VideoManagerProps> = ({
     )}
 
     {connected && videoListLoadState === "idle" && !hasLoadedInitialData ? (
-     <div className="h-[500px] flex flex-col items-center justify-center gap-5 font-black uppercase text-3xl tracking-tighter text-black/30"><Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />Ready To Load Channel Catalog<button onClick={() => void loadInitialData(true)} disabled={loading} className="bg-[#CCFF00] text-black px-8 py-4 rounded-xl border-[4px] border-black shadow-[6px_6px_0px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-sm">{loading ? "Loading..." : "Load Channel Catalog"}</button></div>
+     <div className="h-[500px] flex flex-col items-center justify-center gap-5 font-black uppercase text-3xl tracking-tighter text-black/30"><Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />Ready To Load Channel Catalog<SubToolboxButton level="l0" tone="success" className="!w-auto" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Loading..." : "Load Channel Catalog"}</SubToolboxButton></div>
     ) : connected && videoListLoadState === "error" && videos.length === 0 ? (
-     <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]"><div className="w-24 h-24 bg-[#ffb158] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black]"><AlertCircle size={48} className="text-black" /></div><div className="space-y-4 max-w-lg"><h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">Sync Failed</h2><p className="text-black/60 font-bold uppercase text-xs tracking-widest leading-relaxed">{error || "We couldn't load your YouTube assets. Try reload, or reconnect your channel in Settings."}</p><button onClick={() => void loadInitialData(true)} disabled={loading} className="inline-block w-full bg-[#CCFF00] border-[4px] border-black rounded-xl p-5 font-black uppercase text-xl text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all mt-4 disabled:opacity-50">{loading ? "Retrying..." : "Retry Catalog Load"}</button></div></div>
+     <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]"><div className="w-24 h-24 bg-[#ffb158] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black]"><AlertCircle size={48} className="text-black" /></div><div className="space-y-4 max-w-lg"><h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">Sync Failed</h2><p className="text-black/60 font-bold uppercase text-xs tracking-widest leading-relaxed">{error || "We couldn't load your YouTube assets. Try reload, or reconnect your channel in Settings."}</p><SubToolboxButton level="l0" tone="warning" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Retrying..." : "Retry Catalog Load"}</SubToolboxButton></div></div>
     ) : connected && videoListLoadState === "empty" ? (
-     <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]"><div className="w-24 h-24 bg-[#FF3399] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black] -rotate-12"><FileVideo size={48} className="text-[#CCFF00]" /></div><div className="space-y-4 max-w-lg"><h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">Zero Assets Detected</h2><p className="text-black/50 font-bold uppercase text-xs tracking-widest leading-relaxed">Your YouTube channel is connected, but we couldn't detect any videos. Upload your first video to YouTube to unlock the full power of Creator OS Pro.</p><a href="https://studio.youtube.com" target="_blank" rel="noopener noreferrer" className="inline-block w-full bg-[#CCFF00] border-[4px] border-black rounded-xl p-5 font-black uppercase text-xl text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all mt-4">Open YouTube Studio</a><button onClick={() => void loadInitialData(true)} disabled={loading} className="inline-block w-full bg-white border-[4px] border-black rounded-xl p-4 font-black uppercase text-sm text-black shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50">{loading ? "Reloading..." : "Reload Assets"}</button></div></div>
+     <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]"><div className="w-24 h-24 bg-[#FF3399] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black] -rotate-12"><FileVideo size={48} className="text-[#CCFF00]" /></div><div className="space-y-4 max-w-lg"><h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">Zero Assets Detected</h2><p className="text-black/50 font-bold uppercase text-xs tracking-widest leading-relaxed">Your YouTube channel is connected, but we couldn't detect any videos. Upload your first video to YouTube to unlock the full power of Creator OS Pro.</p><SubToolboxLinkButton level="l0" tone="success" href="https://studio.youtube.com" target="_blank" rel="noopener noreferrer">Open YouTube Studio</SubToolboxLinkButton><SubToolboxButton level="l1" tone="neutral" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Reloading..." : "Reload Assets"}</SubToolboxButton></div></div>
     ) : (selectedVideo || !connected || catalogLoading) ? (
      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="relative z-20 space-y-2">
@@ -724,9 +711,32 @@ const VideoManager: React.FC<VideoManagerProps> = ({
          <SubToolboxSection label="Video Stats"><SubToolboxGrid minItemWidth="compact">{kpiCards.map((card) => <SubToolboxMetric key={card.key} label={card.label} value={card.value} accentColor={card.accentColor} />)}</SubToolboxGrid></SubToolboxSection>
          <SubToolboxSection label="Publishing Controls">
           <SubToolboxGrid minItemWidth="compact">
-           <SubToolboxDropdownTopTitleControl label="PRIVACY" value={editPrivacy} options={[{ value: "public", label: "public" }, { value: "unlisted", label: "unlisted" }, { value: "private", label: "private" }]} onChange={setEditPrivacy} tone="green" borderWidth={3} />
-           <SubToolboxDropdownTopTitleControl label="CATEGORY" value={selectedCategoryLabel} options={categoryOptions.map((option) => ({ value: option.value, label: option.label }))} onChange={setEditCategoryId} tone="green" borderWidth={3} />
-           <SubToolboxDropdownTopTitleControl label="PLAYLISTS" value={!connected ? "CONNECT CHANNEL" : catalogLoading ? "LOADING..." : selectedPlaylistIds.length === 0 ? "NONE SELECTED" : `${selectedPlaylistIds.length} LINKED`} options={userPlaylists.map((playlist) => ({ value: playlist.id, label: playlist.title }))} onChange={togglePlaylist} multiSelect selectedValues={selectedPlaylistIds} tone="green" borderWidth={3} />
+           <SubToolboxTopTitleDropdown
+            level="l1"
+            label="PRIVACY"
+            value={editPrivacy}
+            options={[{ value: "public", label: "public" }, { value: "unlisted", label: "unlisted" }, { value: "private", label: "private" }]}
+            onValueChange={setEditPrivacy}
+            ariaLabel="Video privacy"
+           />
+           <SubToolboxTopTitleDropdown
+            level="l1"
+            label="CATEGORY"
+            value={selectedCategoryLabel}
+            options={categoryOptions.map((option) => ({ value: option.value, label: option.label }))}
+            onValueChange={setEditCategoryId}
+            ariaLabel="Video category"
+           />
+           <SubToolboxTopTitleDropdown
+            level="l1"
+            label="PLAYLISTS"
+            value={!connected ? "CONNECT CHANNEL" : catalogLoading ? "LOADING..." : selectedPlaylistIds.length === 0 ? "NONE SELECTED" : `${selectedPlaylistIds.length} LINKED`}
+            options={userPlaylists.map((playlist) => ({ value: playlist.id, label: playlist.title }))}
+            onValueChange={togglePlaylist}
+            multiSelect
+            selectedValues={selectedPlaylistIds}
+            ariaLabel="Video playlists"
+           />
           </SubToolboxGrid>
          </SubToolboxSection>
         </SubToolboxStack>

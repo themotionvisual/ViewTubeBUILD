@@ -66,6 +66,7 @@ import {
   SubToolboxToolbar,
   SubToolboxTagEditor,
   SubToolboxTextArea,
+  SubToolboxTopTitleDropdown,
   SubToolboxToast,
   SubToolboxToggleSwitch,
   SubToolboxTooltip,
@@ -88,6 +89,7 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Head Tail Action",
   "Split Menu",
   "Dropdown",
+  "Top Title Dropdown",
   "Select Menu",
   "Context Menu",
   "Text Input",
@@ -281,6 +283,17 @@ const PrimitiveMigrationControl: React.FC<{
   }
   if (name === "Dropdown" || name === "Select Menu" || name === "Context Menu") {
     return <SubToolboxMenu level={level} style={style} variant={name === "Context Menu" ? "context" : name === "Select Menu" ? "select" : "dropdown"} value={menuChoice} options={["OPTION 1","OPTION 2","OPTION 3"].map((option) => ({ value: option, label: option }))} onValueChange={setMenuChoice} triggerLabel={name === "Dropdown" ? "MENU" : menuChoice} triggerIcon={<MoreHorizontal />} chevronIcon={<ChevronDown />} ariaLabel={name} />
+  }
+  if (name === "Top Title Dropdown") {
+    return <SubToolboxTopTitleDropdown
+      level={level}
+      label="PRIVACY"
+      value={menuChoice}
+      options={["PUBLIC","UNLISTED","PRIVATE"].map((option) => ({ value: option, label: option }))}
+      onValueChange={setMenuChoice}
+      ariaLabel="Publishing control dropdown"
+      style={style}
+    />
   }
   if (name === "Split Search") {
     return <SubToolboxSplitField level={level} style={style} variant="search" icon={<Search />} actionIcon={<X />} actionLabel="Clear search" onAction={() => setSearchQuery("")} inputProps={{ "aria-label": "Search", placeholder: "SEARCH", value: searchQuery, onChange: (event) => setSearchQuery(event.target.value) }} />
