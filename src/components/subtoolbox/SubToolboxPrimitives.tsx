@@ -245,12 +245,20 @@ export const SubToolboxTopTitleDropdown: React.FC<SubToolboxTopTitleDropdownProp
   const [open, setOpen] = React.useState(false)
   const rootRef = React.useRef<HTMLDivElement>(null)
   const [menuRect, setMenuRect] = React.useState<{ left: number; top: number; width: number } | null>(null)
+  const [inheritedPair, setInheritedPair] = React.useState({ pairA: "", pairB: "" })
 
   const recalcMenuRect = React.useCallback(() => {
-    const trigger = rootRef.current?.querySelector<HTMLButtonElement>(".vt-subtoolbox-top-title-dropdown-trigger")
-    if (!trigger) return
+    const root = rootRef.current
+    const trigger = root?.querySelector<HTMLButtonElement>(".vt-subtoolbox-top-title-dropdown-trigger")
+    if (!root || !trigger) return
     const rect = trigger.getBoundingClientRect()
-    const stroke = Number.parseFloat(getComputedStyle(trigger).getPropertyValue("--vt-component-stroke")) || 3
+    const triggerStyle = getComputedStyle(trigger)
+    const inheritedStyle = getComputedStyle(root)
+    const stroke = Number.parseFloat(triggerStyle.getPropertyValue("--vt-component-stroke")) || 3
+    setInheritedPair({
+      pairA: inheritedStyle.getPropertyValue("--pair-a").trim(),
+      pairB: inheritedStyle.getPropertyValue("--pair-b").trim(),
+    })
     setMenuRect({ left: rect.left, top: rect.bottom - stroke, width: rect.width })
   }, [])
 
@@ -306,6 +314,8 @@ export const SubToolboxTopTitleDropdown: React.FC<SubToolboxTopTitleDropdownProp
           data-vt-control-level={level}
           style={{
             ...withComponentLevelStyle(level, mergedStyle),
+            ...(inheritedPair.pairA ? { ["--pair-a" as string]: inheritedPair.pairA } : {}),
+            ...(inheritedPair.pairB ? { ["--pair-b" as string]: inheritedPair.pairB } : {}),
             position: "fixed",
             left: menuRect.left,
             top: menuRect.top,
