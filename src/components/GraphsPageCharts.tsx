@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 71011)
-Total output lines: 6931
-
 import { CONTROLLER_LAYOUT_WIDTH } from "./controllerRowWidth"
 import React, { useEffect, useId, useMemo, useRef, useState } from "react"
 import "./marquee.css"
