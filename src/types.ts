@@ -1320,6 +1320,13 @@ export interface AIBrainEvidenceSignal {
  views: number | null
 }
 
+export interface AIBrainEvidenceItem {
+ id: string
+ label: string
+ source: string
+ detail?: string
+}
+
 export interface AIBrainEvidencePack {
  promptVersion: "brain-chat-v2"
  intent: AIBrainEvidenceIntent
@@ -1332,6 +1339,7 @@ export interface AIBrainEvidencePack {
  recentVideos: AIBrainEvidenceVideo[]
  searchTerms: AIBrainEvidenceSignal[]
  trafficSources: AIBrainEvidenceSignal[]
+ items: AIBrainEvidenceItem[]
  availableMetrics: string[]
  missingInputs: string[]
  evidenceIds: string[]

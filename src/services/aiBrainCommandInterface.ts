@@ -3,6 +3,7 @@ import type {
  AIBrainConversationTurn,
  AIBrainEvidencePack,
  AIBrainEvidenceSignal,
+ AIBrainEvidenceItem,
  AIBrainEvidenceVideo,
  AIBrainAnswerModule,
  BrainMemorySchema,
@@ -670,6 +671,33 @@ export const buildAIBrainEvidencePack = (
   ...searchTerms.map((row) => row.evidenceId),
   ...trafficSources.map((row) => row.evidenceId),
  ])).filter(Boolean)
+ const items: AIBrainEvidenceItem[] = [
+  ...topVideos.map((video) => ({
+   id: video.evidenceId,
+   label: video.title,
+   source: "video analytics",
+   detail: video.publishedAt ? `published ${video.publishedAt}` : undefined,
+  })),
+  ...recentVideos.map((video) => ({
+   id: video.evidenceId,
+   label: video.title,
+   source: "recent video",
+   detail: video.publishedAt ? `published ${video.publishedAt}` : undefined,
+  })),
+  ...searchTerms.map((signal) => ({
+   id: signal.evidenceId,
+   label: signal.value,
+   source: signal.label,
+   detail: signal.views === null ? undefined : `${signal.views} views`,
+  })),
+  ...trafficSources.map((signal) => ({
+   id: signal.evidenceId,
+   label: signal.value,
+   source: signal.label,
+   detail: signal.views === null ? undefined : `${signal.views} views`,
+  })),
+ ]
+ const uniqueItems = Array.from(new Map(items.map((item) => [item.id, item])).values())
  const stopReason = cleanProfileText(snapshot.syncManifest?.stop_reason)
  const dataStatus = snapshot.source === "empty"
   ? "missing" as const
@@ -689,6 +717,7 @@ export const buildAIBrainEvidencePack = (
   recentVideos,
   searchTerms,
   trafficSources,
+  items: uniqueItems,
   availableMetrics,
   missingInputs,
   evidenceIds,
