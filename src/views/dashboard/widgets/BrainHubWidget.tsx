@@ -61,7 +61,7 @@ import {
 } from "../../../services/brain/AlgorithmIntelligenceAccess"
 import type { AlgorithmIntelligencePortfolio } from "../../../services/brain/AlgorithmIntelligenceOrchestrator"
 import { searchVaultForBrain } from "../../../services/brain/BrainVaultAdapter"
-import type { AIBrainConversationTurn } from "../../../types"
+import type { AIBrainConversationTurn, AIBrainEvidenceItem } from "../../../types"
 import "./BrainHubWidget.css"
 
 interface BrainHubWidgetProps extends CommonWidgetProps {
@@ -70,13 +70,6 @@ interface BrainHubWidgetProps extends CommonWidgetProps {
 
 type MainPage = "chat" | "controls"
 type ChatPage = "conversation" | "intelligence" | "evidence" | "packages"
-
-type EvidenceItem = {
- id: string
- label?: string
- source?: string
- detail?: string
-}
 
 const MAIN_PAGES = [
  { id: "chat", label: "Chat" },
@@ -173,8 +166,7 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
  )
 
  const evidence = useMemo(() => {
-  const items = ((snapshot.evidencePack as { items?: EvidenceItem[] } | undefined)?.items || [])
-  return items.slice(0, engines.maxEvidenceItems)
+  return snapshot.evidencePack.items.slice(0, engines.maxEvidenceItems) as AIBrainEvidenceItem[]
  }, [snapshot.evidencePack, engines.maxEvidenceItems])
 
  const updateUserControl = <K extends keyof BrainUserControls>(key: K, value: BrainUserControls[K]) => {
@@ -195,7 +187,10 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
 
   setIntelStatus("Building portfolio…")
   const result: AlgorithmIntelligenceAccessResult<AlgorithmIntelligencePortfolio> =
-   await readAlgorithmIntelligenceForBrain({ channelId })
+   await readAlgorithmIntelligenceForBrain({
+    channelId,
+    includeAnomalies: engines.anomalyIntelligence,
+   })
 
   if (result.status === "ok") {
    setPortfolio(result.value)
