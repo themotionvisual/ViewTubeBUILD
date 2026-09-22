@@ -1146,9 +1146,6 @@ type SubToolboxRefineButtonStyleProps = {
   showIconSection?: boolean;
   onClick: () => void;
   tone?: SubtoolboxControlTone;
-  surfaceColor?: string;
-  controlColor?: string;
-  shadowColor?: string;
   disabled?: boolean;
   className?: string;
   borderWidth: 3 | 4;
@@ -1160,9 +1157,6 @@ const SubToolboxRefineButtonBase: React.FC<SubToolboxRefineButtonStyleProps> = (
   showIconSection = false,
   onClick,
   tone = "yellow",
-  surfaceColor,
-  controlColor,
-  shadowColor,
   disabled = false,
   className = "",
   borderWidth,
@@ -1170,9 +1164,9 @@ const SubToolboxRefineButtonBase: React.FC<SubToolboxRefineButtonStyleProps> = (
   const [isHovering, setIsHovering] = useState(false);
   const [isPressing, setIsPressing] = useState(false);
   const theme = SUBTOOLBOX_CONTROL_THEMES[tone];
-  const resolvedSurface = surfaceColor ?? `var(--vt-subtoolbox-fill, ${theme.surface})`;
-  const resolvedControl = controlColor ?? theme.control;
-  const resolvedShadow = shadowColor ?? `var(--vt-subtoolbox-shadow, ${hexToRgba(theme.shadow, 0.45)})`;
+  const resolvedSurface = `var(--pair-a, var(--vt-subtoolbox-fill, ${theme.surface}))`;
+  const resolvedControl = `var(--pair-b, ${theme.control})`;
+  const resolvedShadow = `var(--vt-subtoolbox-shadow, color-mix(in srgb, var(--pair-a, ${theme.shadow}) 45%, transparent))`;
   const border = `${borderWidth}px solid black`;
   const baseShadow = borderWidth === 4 ? SUB_TOOLBOX_SHADOW : SUB_TOOLBOX_INNER_SHADOW;
   const hoverShadow = Math.max(1, Math.floor(baseShadow / 2));
