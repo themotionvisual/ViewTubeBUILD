@@ -734,6 +734,16 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
   }
 
   const videoMatch = pathname.match(/^\/api\/account\/youtube\/videos\/([A-Za-z0-9_-]{6,128})$/);
+  if (method === "GET" && videoMatch) {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.readonly");
+    if (!userId) return true;
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,status&id=${encodeURIComponent(videoMatch[1])}`, {
+      headers: { Authorization: `Bearer ${accessToken}` }, signal: AbortSignal.timeout(30_000),
+    });
+    await sendGoogleJson(json, res, response, "Failed to verify video state.");
+    return true;
+  }
   if (method === "PUT" && videoMatch) {
     const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
     if (!userId) return true;
