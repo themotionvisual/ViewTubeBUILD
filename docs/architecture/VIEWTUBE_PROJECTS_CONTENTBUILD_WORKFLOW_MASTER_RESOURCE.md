@@ -2,8 +2,8 @@
 
 **Status:** Living architecture + implementation authority  
 **Created:** 2026-09-22  
-**Last audited main:** `046c9ab5d5aa3b6424991e32d52acc2f31440fad`  
-**Primary donor:** PR #302 / `feature/project-builder-reassembly-2026-09-21`  
+**Last audited main:** `606db369b873992e426cefe642c1b1a4a4c02f86`  
+**Primary reassembly baseline:** PR #302 / merge commit `3f9cb2dab3e2bb3247ce9bd904051ae8b0b93d2d`  
 **Scope:** Projects page, Project Builder, Project Board, calendar/scheduling, channel planning, project planning, Asset Engine, ContentBuild, Video Package, Publishing Package, Vault handoffs, Studio tools, editor handoffs, YouTube binding, analytics and learning.
 
 ---
@@ -111,16 +111,15 @@ These behaviors are parity references, not an instruction to restore obsolete CS
 
 ## 4. Current main state
 
-At the 2026-09-22 audit, current `main` still mounts these independent top-level Project Toolboxes:
+PR #302 is now merged into current `main`. The Projects page has already been reassembled around three top-level tools:
 
-1. Project Board
-2. Channel Planning
-3. Content Asset Engine
-4. Publishing Schedule
-5. Project Studio
-6. Storyboard Studio
+1. **Project Builder**
+2. **Project Board** with **BOARD / CALENDAR**
+3. **Storyboard Studio**
 
-This means creator-facing ownership is still fragmented even though the underlying project and Asset Engine backbones are substantially better than the legacy implementation.
+Channel Planning, full Content Asset Engine, Publishing Schedule and the restored Project Studio now survive as capabilities embedded behind Builder / Board rather than competing top-level owners.
+
+The remaining work is continuity and identity hardening: move the CHANNEL / PROJECT switch into the Builder header, add compact schedule context, make the Simple Asset Engine expose durable asset slots, and ensure Project creation initializes/reuses a Video Package against the same ContentBuild.
 
 ### Current useful production pieces
 
@@ -139,13 +138,13 @@ This means creator-facing ownership is still fragmented even though the underlyi
 
 ---
 
-## 5. Recent donor work: PR #302
+## 5. Reassembly baseline: PR #302
 
-PR #302, **Reassemble Projects page around Project Builder + Board**, is the primary implementation donor.
+PR #302, **Reassemble Projects page around Project Builder + Board**, merged to `main` on 2026-09-22.
 
-It must not be blindly merged because it has diverged from current main. Port valuable work onto a fresh branch based on current main.
+It is now the production baseline for the Projects-page composition described below.
 
-### PR #302 already implements
+### PR #302 implements
 
 #### Project Builder
 - CHANNEL / PROJECT scope
@@ -698,20 +697,20 @@ The purpose is to know not only what was published, but **which exact assets and
 Six independent top-level tools currently divide one workflow.
 
 ### Header toggle placement
-**Status:** DONOR IMPLEMENTED, TARGET NOT COMPLETE  
-PR #302 restores CHANNEL / PROJECT but inside Builder body. Target is header-level control, matching the original integrated tool.
+**Status:** IMPLEMENTED ON CURRENT FEATURE BRANCH / NOT YET MAIN  
+PR #302 restored CHANNEL / PROJECT inside Builder body. The current follow-up branch moves that control into the main Project Builder Toolbox header and makes the header the single scope owner.
 
 ### Project creation identity transaction
-**Status:** PARTIAL  
-Project + ContentBuild initialization exists in donor work. Default Video Package initialization against the same ContentBuild remains to be completed.
+**Status:** IMPLEMENTED ON CURRENT FEATURE BRANCH / VERIFY  
+Project + ContentBuild initialization is already on main. The current follow-up branch adds a canonical Video Package repository/bridge that initializes or reuses one package against the same project `contentBuildId` and refuses silent ContentBuild forks.
 
 ### Thumbnail ownership
 **Status:** PARTIAL  
 Project thumbnail is still partly represented as a URL/reference field. Target is selected Asset/Vault identity with compatibility rendering.
 
 ### Simplified Asset Engine
-**Status:** DONOR IMPLEMENTED / EXPAND  
-Lifecycle launcher exists. Asset-slot/status manifestation still needs to be added.
+**Status:** EXPANDED ON CURRENT FEATURE BRANCH / VERIFY  
+The lifecycle launcher is on main. The current follow-up branch adds durable asset-slot projection for script, storyboard, title, thumbnail, description, tags/SEO and final video, including EMPTY / LEGACY / WORKING / VARIANTS / SELECTED / FINAL states.
 
 ### Calendar duplication / ownership
 **Status:** ARCHITECTURAL DECISION  
@@ -749,37 +748,41 @@ Project Builder and Board must use current canonical Toolbox/Subtoolbox primitiv
 | Video Package -> ContentBuild bridge | MERGED | current main |
 | ContentBuild YouTube binding | MERGED | current main |
 | Project Board new-project visibility | MERGED | PR #235 |
-| Project Builder reassembly | DONOR / NOT MAIN | PR #302 |
-| Simple Asset Engine | DONOR / NOT MAIN | PR #302 |
-| Builder / Board shared workspace context | DONOR / NOT MAIN | PR #302 |
-| Board / Calendar unified surface | DONOR / NOT MAIN | PR #302 |
-| Expanded Project-status -> ContentBuild-stage mapping | DONOR / NOT MAIN | PR #302 |
+| Project Builder reassembly | MERGED | PR #302 / `3f9cb2d` |
+| Simple Asset Engine lifecycle launcher | MERGED | PR #302 |
+| Builder / Board shared workspace context | MERGED | PR #302 |
+| Board / Calendar unified surface | MERGED | PR #302 |
+| Expanded Project-status -> ContentBuild-stage mapping | MERGED | PR #302 |
+| Header-level CHANNEL / PROJECT toggle | FEATURE BRANCH / VERIFY | current workflow-authority branch |
+| Compact Builder schedule context | FEATURE BRANCH / VERIFY | current workflow-authority branch |
+| Project -> same-ContentBuild Video Package bridge | FEATURE BRANCH / VERIFY | current workflow-authority branch |
+| Simple Asset Engine durable asset slots | FEATURE BRANCH / VERIFY | current workflow-authority branch |
 
 ---
 
 ## 19. Implementation plan
 
 ### Wave 1 — Authority + safe foundation
-- create/update this living reference
-- port Project Builder donor components onto fresh main
-- keep current canonical UI primitives
-- restore primary Builder / Board page hierarchy
-- preserve Storyboard Studio
-- add header-level CHANNEL / PROJECT control
+- living reference created
+- Project Builder / Board hierarchy already merged via PR #302
+- preserve current canonical UI primitives
+- move CHANNEL / PROJECT control into Builder header
 - keep one shared New Project flow
+- add compact schedule context without duplicating the full calendar
 
 ### Wave 2 — Creation identity
-- Project + ContentBuild atomic creation flow
-- initialize/reuse same-scope Video Package
-- workspace priority/color initialization
-- tests for no duplicate ContentBuild
+- Project + ContentBuild creation already exists
+- initialize/reuse one same-scope Video Package
+- reject silent package ContentBuild forks
+- keep workspace priority/color initialization
+- test deterministic Project/ContentBuild/Video Package identity
 
 ### Wave 3 — Simplified Asset Engine
-- lifecycle stage cards
-- durable asset-slot projection
-- selected/final/variant/version states
-- ContentBuild event/revision summary
-- contextual tool actions
+- lifecycle stage cards already exist
+- add durable asset-slot projection
+- show selected/final/variant/version states
+- keep ContentBuild event/revision summary
+- add contextual tool actions
 
 ### Wave 4 — Packaging / publishing
 - canonical thumbnail identity
@@ -865,7 +868,12 @@ Whenever this system changes:
 | 2026-09-22 | Chose Project Builder + Project Board as intended Projects hierarchy | CURRENT |
 | 2026-09-22 | Chose one full calendar under Board + compact schedule context in Builder | CURRENT |
 | 2026-09-22 | Required Project -> ContentBuild -> Video Package shared identity at creation | CURRENT |
-| 2026-09-22 | Began safe port from PR #302 onto current main | IN PROGRESS |
+| 2026-09-22 | PR #302 merged and became the Projects-page production baseline | MERGED |
+| 2026-09-22 | Added living Projects / ContentBuild workflow authority and repo-session pointer | FEATURE BRANCH |
+| 2026-09-22 | Moved CHANNEL / PROJECT scope control and NEW PROJECT into the Project Builder header | FEATURE BRANCH |
+| 2026-09-22 | Added compact Builder schedule context linked to the Board calendar | FEATURE BRANCH |
+| 2026-09-22 | Added deterministic Project -> same-ContentBuild Video Package repository bridge + tests | FEATURE BRANCH |
+| 2026-09-22 | Expanded Simple Asset Engine with durable asset-slot states | FEATURE BRANCH |
 
 ---
 
