@@ -133,19 +133,12 @@ export const projectContentBuildSelectionsToVideoPackage = (
 
  const titleId = packageArtifactId(videoPackage.packaging.titleVariants, titleAssetId)
  const thumbnailId = packageArtifactId(videoPackage.packaging.thumbnailVariants, thumbnailAssetId)
- const scriptMatches = scriptAssetId && videoPackage.creative.script
-  ? assetIdOf(videoPackage.creative.script) === scriptAssetId
-  : false
  const renderIds = finalRenderAssetId && !videoPackage.production.renderIds.includes(finalRenderAssetId)
   ? [...videoPackage.production.renderIds, finalRenderAssetId]
   : videoPackage.production.renderIds
 
  return {
   ...videoPackage,
-  creative: {
-   ...videoPackage.creative,
-   script: scriptMatches ? videoPackage.creative.script : videoPackage.creative.script,
-  },
   packaging: {
    ...videoPackage.packaging,
    selectedTitleId: titleId || videoPackage.packaging.selectedTitleId || null,
