@@ -4,7 +4,7 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "./SubToolboxLayouts"
-import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAspectRatioFrame, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataStats, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxMeter, SubToolboxMetric, SubToolboxMetricStrip, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxScrollbar, SubToolboxSplitField, SubToolboxStatePanel, SubToolboxTag, SubToolboxTagEditor, SubToolboxTextArea, SubToolboxToolbar, SubToolboxTooltip, SubToolboxProgressValue, SubToolboxTree, SubToolboxVaultAsset } from "./SubToolboxPrimitives"
+import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAspectRatioFrame, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataStats, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxMeter, SubToolboxMetric, SubToolboxMetricStrip, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxScrollbar, SubToolboxSplitField, SubToolboxStatePanel, SubToolboxTag, SubToolboxTagEditor, SubToolboxTextArea, SubToolboxTopTitleDropdown, SubToolboxToolbar, SubToolboxTooltip, SubToolboxProgressValue, SubToolboxTree, SubToolboxVaultAsset } from "./SubToolboxPrimitives"
 import { CONTROL_SHELL, SUBTOOLBOX_CONTROL_SIZES, SUBTOOLBOX_STATES, SUBTOOLBOX_TOKENS, TOOLBOX_LEVEL_DNA, resolveSubtoolboxMinHeight } from "./tokens"
 
 describe("Subtoolbox Primitive System", () => {
@@ -90,6 +90,9 @@ describe("Subtoolbox Primitive System", () => {
     expect(css).toContain("border-radius:var(--vt-component-radius)!important")
     expect(css).toContain("COMPONENT LIBRARY CORRECTION V5 — tag editor parity")
     expect(css).toContain("--field-body:var(--pair-b")
+    expect(css).toContain("TOP TITLE DROPDOWN PRIMITIVE")
+    expect(css).toContain(".vt-subtoolbox-top-title-dropdown-trigger")
+    expect(css).toContain("height:calc(var(--vt-component-height)*1.62)")
   })
 
   it("gives every declared subtoolbox state default copy", () => {
@@ -121,6 +124,13 @@ describe("Subtoolbox Primitive System", () => {
         <SubToolboxSplitField level="l1" variant="search" icon="S" actionIcon="X" inputProps={{ "aria-label": "Search", defaultValue: "Napoleon" }} />
         <SubToolboxSplitField level="l1" variant="action" actionIcon="+" inputProps={{ "aria-label": "Add item", defaultValue: "Item" }} />
         <SubToolboxTagEditor level="l1" tags={["HISTORY"]} onTagsChange={() => undefined} />
+        <SubToolboxTopTitleDropdown
+          level="l1"
+          label="PRIVACY"
+          value="PUBLIC"
+          options={[{ value: "PUBLIC", label: "PUBLIC" }, { value: "PRIVATE", label: "PRIVATE" }]}
+          onValueChange={() => undefined}
+        />
         <SubToolboxProgressValue level="l1" value={68} label="Sync" />
         <SubToolboxAlphabeticalSpectrumTags level="l2" />
         <SubToolboxDataTable
@@ -173,6 +183,10 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("vt-subtoolbox-split-field is-search has-action")
     expect(html).toContain("vt-subtoolbox-split-field is-action has-action")
     expect(html).toContain("vt-subtoolbox-tag-editor-tags")
+    expect(html).toContain("vt-subtoolbox-top-title-dropdown")
+    expect(html).toContain("vt-subtoolbox-top-title-dropdown-title")
+    expect(html).toContain(">PRIVACY<")
+    expect(html).toContain(">PUBLIC<")
     expect(html).not.toContain("vt-subtoolbox-tag-editor-label")
     expect(html).toContain('role="progressbar"')
     expect(html).toContain(">Sync<")
