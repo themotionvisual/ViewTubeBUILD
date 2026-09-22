@@ -81,7 +81,7 @@ const ProjectScheduleCard: React.FC<{
   <div className="flex min-w-0 items-stretch">
    <div
     className="w-2 shrink-0 border-r-[2px] border-black"
-    style={{ backgroundColor: priorityTone[meta?.priority || "medium"] }}
+    style={{ backgroundColor: project.color || priorityTone[meta?.priority || "medium"] }}
    />
    <div className={`min-w-0 flex-1 ${compact ? "px-2 py-1.5" : "px-2.5 py-2"}`}>
     <div className="truncate text-[10px] font-[1000] uppercase leading-tight">{projectLabel(project)}</div>
