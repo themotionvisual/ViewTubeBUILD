@@ -1,6 +1,7 @@
 import React from "react"
 import { FolderKanban } from "lucide-react"
 import { useBrain } from "../../context/useBrain"
+import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import ProjectsToolboxModule from "./ProjectsToolboxModule"
 import ProjectBuilder from "./ProjectBuilder"
 
