@@ -4,11 +4,13 @@ import EmbeddedProjectKanbanWorkspace from "./EmbeddedProjectKanbanWorkspace"
 import EmbeddedPublishingSchedule from "./EmbeddedPublishingSchedule"
 import { SubToolboxSection, SubToolboxStack } from "../subtoolbox/SubToolboxLayouts"
 import { SubToolboxSegmentedToggle, SubToolboxSurface } from "../subtoolbox/SubToolboxPrimitives"
+import { useProjectsWorkspace } from "./ProjectsWorkspaceContext"
 
 type BoardView="board"|"calendar"
 
 const ProjectBoardWorkspace:React.FC = () => {
  const [view,setView]=useState<BoardView>("board")
+ const {openProject}=useProjectsWorkspace()
  return <SubToolboxStack density="comfortable">
   <SubToolboxSurface tone="subtle">
    <SubToolboxSection label="Project Board view">
@@ -23,7 +25,7 @@ const ProjectBoardWorkspace:React.FC = () => {
     />
    </SubToolboxSection>
   </SubToolboxSurface>
-  {view==="board"?<EmbeddedProjectKanbanWorkspace/>:<EmbeddedPublishingSchedule/>}
+  {view==="board"?<EmbeddedProjectKanbanWorkspace/>:<EmbeddedPublishingSchedule onOpenProject={openProject}/>}
  </SubToolboxStack>
 }
 
