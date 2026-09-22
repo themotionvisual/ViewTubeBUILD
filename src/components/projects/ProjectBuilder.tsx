@@ -186,6 +186,7 @@ const ProjectBuilder: React.FC = () => {
                 tags={activeProject.tags || ""}
                 description={activeProject.description || ""}
                 status={activeProject.status || "ideation"}
+                showStatus={false}
                 script={activeProject.script || ""}
                 notes={activeProject.notes || ""}
                 onChange={(field, value) => updateProject(activeProject.id, { [field]: value } as Partial<Project>)}
