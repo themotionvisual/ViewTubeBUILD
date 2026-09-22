@@ -3,6 +3,7 @@ import { getContentBuild, resetContentBuildRepositoryForTests } from "../asset-e
 import { createVideoPackage } from "./packageValidation"
 import {
   getVideoPackageRecoverySnapshot,
+  listVideoPackages,
   resetVideoPackageRepositoryForTests,
   saveVideoPackage,
 } from "./VideoPackageRepository"
@@ -37,7 +38,6 @@ describe("VideoPackageRepository consolidation", () => {
     expect(getVideoPackageRecoverySnapshot()).toBeNull()
 
     // Reading triggers repair while preserving the exact corrupt payload for diagnosis/recovery.
-    const { listVideoPackages } = require("./VideoPackageRepository") as typeof import("./VideoPackageRepository")
     expect(listVideoPackages()).toEqual([])
     expect(getVideoPackageRecoverySnapshot()).toBe("{broken-json")
   })
