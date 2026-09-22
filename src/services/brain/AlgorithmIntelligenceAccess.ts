@@ -9,6 +9,8 @@ import type { OpportunityEvidence } from "./OpportunityIntelligence"
 import type { AlgorithmSignal } from "./AlgorithmStrategyEngine"
 import { createAlgorithmRecommendationHandoff } from "./AlgorithmWorkflowRecipes"
 import { createPrimingStepHandoff } from "./AlgorithmPrimingWorkflow"
+import { getVtSyncSnapshot } from "../../features/vt-sync-local"
+import { scanCanonicalSnapshotForAnomalies } from "../anomaly-intelligence/service"
 
 export type AlgorithmIntelligenceAccessResult<T> =
  | { status: "ok"; value: T }
@@ -18,6 +20,7 @@ export const readAlgorithmIntelligenceForBrain = async (input: {
  channelId: string
  project?: AlgorithmProjectContext | null
  anomalies?: ExternalAnomalySignal[]
+ includeAnomalies?: boolean
  opportunities?: OpportunityEvidence[]
  directSignals?: AlgorithmSignal[]
 }): Promise<AlgorithmIntelligenceAccessResult<AlgorithmIntelligencePortfolio>> => {
@@ -31,7 +34,26 @@ export const readAlgorithmIntelligenceForBrain = async (input: {
  if (input.project && !canBrainUseCapability(controls, "projects")) {
   return { status: "projects_disabled", message: "Project access is disabled in Brain User Controls." }
  }
- const value = await buildAlgorithmIntelligencePortfolio(input)
+ const anomalies = input.anomalies || (input.includeAnomalies
+  ? scanCanonicalSnapshotForAnomalies(getVtSyncSnapshot())
+   .filter((anomaly) => anomaly.channelId === input.channelId || !anomaly.channelId)
+   .map((anomaly): ExternalAnomalySignal => ({
+    id: anomaly.id,
+    channelId: anomaly.channelId || input.channelId,
+    family: anomaly.family,
+    anomalyType: anomaly.kind,
+    datasetId: anomaly.datasetId,
+    entity: anomaly.entity || null,
+    metric: anomaly.metric,
+    currentValue: anomaly.currentValue,
+    baselineValue: anomaly.baselineValue,
+    relativeDelta: anomaly.relativeDelta,
+    impactScore: anomaly.impactScore,
+    confidence: anomaly.confidence,
+    evidenceIds: anomaly.evidence.map((evidence) => evidence.id),
+   }))
+  : [])
+ const value = await buildAlgorithmIntelligencePortfolio({ ...input, anomalies })
  return { status: "ok", value }
 }
 

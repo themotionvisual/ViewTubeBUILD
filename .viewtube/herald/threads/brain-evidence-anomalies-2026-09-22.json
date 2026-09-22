@@ -1,0 +1,31 @@
+{
+  "threadId": "brain-evidence-anomalies-2026-09-22",
+  "date": "2026-09-22",
+  "title": "Restore Brain evidence projection and activate anomaly intelligence",
+  "tier": "T2",
+  "status": "implemented-awaiting-verification",
+  "currentOwners": [
+    "analytics-canon",
+    "Signal / Anomaly Intelligence",
+    "Brain Runtime / Algorithm Intelligence",
+    "Brain Hub UI"
+  ],
+  "problem": "Brain Hub read an unowned evidencePack.items field while the canonical evidence builder exposed typed source arrays; anomaly scanning existed without a Brain portfolio caller.",
+  "decision": "Project a typed items view from the canonical evidence builder and let the Brain algorithm access service optionally scan the current VT-SYNC snapshot, map only channel-scoped anomalies, and pass them through the existing anomaly bridge.",
+  "tracePath": "VT-SYNC -> analytics-canon -> anomaly scan -> ExternalAnomalySignal -> Algorithm Intelligence portfolio -> Brain Hub",
+  "creatorDecision": "Make Brain evidence visible and surface material unusual changes as explainable intelligence without automatic external action.",
+  "unknowns": [
+    "No causal claim is made from an anomaly alone.",
+    "Opportunity intelligence remains empty until its evidence producer is connected.",
+    "Outcome and evaluation ledgers remain downstream follow-up work."
+  ],
+  "evaluationPlan": [
+    "Evidence projection regression test",
+    "Focused algorithm/anomaly regression tests",
+    "Production build and diff check",
+    "Compare anomaly counts and unsupported-claim behavior before/after"
+  ],
+  "approval": "No publish or external write is introduced; recommendation handoffs remain approval-aware.",
+  "nextAction": "Run verification, publish draft PR, request review; do not merge or deploy without approval.",
+  "visual": "not applicable; existing Brain Hub layout preserved"
+}
