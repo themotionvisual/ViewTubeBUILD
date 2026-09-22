@@ -29,16 +29,13 @@ import {
   SubToolboxStatePanel,
   SubToolboxTextArea,
 } from "../components/subtoolbox/SubToolboxPrimitives"
-import { hexToRgba } from "../components/ToolboxUISystem"
-import { getToolboxPaletteColors } from "../styles/toolboxPalette"
 
 const CopyBox: React.FC<{
   label: string
   content: string
   multiline?: boolean
-  accentColor?: string
   icon?: React.ReactNode
-}> = ({ label, content, multiline = false, accentColor = "#ccff00", icon }) => {
+}> = ({ label, content, multiline = false, icon }) => {
   const [copied, setCopied] = useState(false)
   const handleCopy = () => {
     void navigator.clipboard.writeText(content)
@@ -50,7 +47,6 @@ const CopyBox: React.FC<{
     <SubToolboxOutputCard
       title={label}
       icon={icon}
-      accentColor={accentColor}
       scroll
       action={
         <SubToolboxButton aria-label={`Copy ${label}`} size="compact" tone="ink" icon={copied ? <Check size={18} /> : <Copy size={18} />} onClick={handleCopy} className="!w-10 shrink-0" />
@@ -64,9 +60,8 @@ const CopyBox: React.FC<{
 const ConsolidatedCopyBox: React.FC<{
   label: string
   items: string[]
-  accentColor?: string
   icon?: React.ReactNode
-}> = ({ label, items, accentColor = "#00d2ff", icon }) => {
+}> = ({ label, items, icon }) => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const handleCopy = (text: string, index: number) => {
     void navigator.clipboard.writeText(text)
@@ -77,7 +72,7 @@ const ConsolidatedCopyBox: React.FC<{
   if (!items.length) return null
 
   return (
-    <SubToolboxOutputCard title={label} icon={icon} accentColor={accentColor} badge={items.length} scroll>
+    <SubToolboxOutputCard title={label} icon={icon} badge={items.length} scroll>
       <SubToolboxStack density="dense">
         {items.map((item, index) => (
           <div key={`${index}-${item}`} className="flex items-start gap-3 border-b-2 border-black/10 pb-2 last:border-0 last:pb-0">
@@ -100,7 +95,6 @@ interface VideoPublisherProps {
 
 const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, collapsible = false, isOpenInitial = true, paletteIndex }) => {
   const basePalette = paletteIndex ?? 0
-  const generateAssetsPalette = getToolboxPaletteColors(basePalette + 3)
   const { brain, updateBrain, registerProvider, unregisterProvider, setSeoState, authState } = useBrain()
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<SeoResult | null>(null)
@@ -334,10 +328,6 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
           columns={2}
           className="mr-2 w-[210px]"
           aria-label="Video format"
-          style={{
-            ["--vt-subtoolbox-fill" as string]: "#CCFF00",
-            ["--vt-subtoolbox-shadow" as string]: hexToRgba("#CCFF00", 0.45),
-          }}
         >
           <SubToolboxButton size="compact" tone={formatMode === "longform" ? "ink" : "neutral"} selected={formatMode === "longform"} aria-pressed={formatMode === "longform"} onClick={(event) => { event.stopPropagation(); setFormatMode("longform") }}>Longform</SubToolboxButton>
           <SubToolboxButton size="compact" tone={formatMode === "shorts" ? "ink" : "neutral"} selected={formatMode === "shorts"} aria-pressed={formatMode === "shorts"} onClick={(event) => { event.stopPropagation(); setFormatMode("shorts") }}>Shorts</SubToolboxButton>
@@ -369,11 +359,13 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
               <SubToolboxInput aria-label="Description links or imported context" value={resourceLinks} onChange={(event) => setResourceLinks(event.target.value)} placeholder="Description links / imported context" />
             </SubToolboxStack>
           </SubToolbox>
-          {!hasGeminiKey() ? (
+          <SubToolbox title="Generate Assets" icon={<Zap size={20} strokeWidth={3} />} paletteIndex={basePalette + 3} collapsible isOpenInitial>
+           {!hasGeminiKey() ? (
             <SubToolboxButton size="action" tone="warning" onClick={() => { window.location.href = "/settings" }}>Missing AI Key: Connect in Settings</SubToolboxButton>
-          ) : (
-            <SubToolboxGridActionButton onClick={handleGenerate} disabled={loading} tone="yellow" surfaceColor={generateAssetsPalette.header} controlColor={generateAssetsPalette.icon} shadowColor={hexToRgba(generateAssetsPalette.header, 0.45)} iconName="zap" showIconSection label={loading ? "Generating..." : "Generate All Assets"} />
-          )}
+           ) : (
+            <SubToolboxGridActionButton onClick={handleGenerate} disabled={loading} tone="yellow" iconName="zap" showIconSection label={loading ? "Generating..." : "Generate All Assets"} />
+           )}
+          </SubToolbox>
         </SubToolboxStack>
       ) : (
         <SubToolboxStack density="comfortable">
@@ -383,10 +375,14 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
             <SubToolboxButton tone="success" disabled={isSyncing} onClick={handleSyncToDrive}>{isSyncing ? "Syncing…" : "Vault"}</SubToolboxButton>
             <SubToolboxButton tone="warning" onClick={handleDownloadZip}>ZIP</SubToolboxButton>
           </SubToolboxActions>
-          <ConsolidatedCopyBox label="Title Options" items={result.titleSets.map((title) => title.title)} accentColor="#ff4d6f" icon={<Type size={20} />} />
-          <CopyBox label="Description" content={result.description} multiline accentColor="#00d2ff" icon={<FileText size={20} />} />
-          <CopyBox label="Tags" content={result.tags} multiline accentColor="#ccff00" icon={<BarChart3 size={20} />} />
-          {exportUrl ? <SubToolboxLinkButton href={exportUrl} target="_blank" rel="noreferrer">Open exported sheet</SubToolboxLinkButton> : null}
+          <SubToolbox title="Generated Assets" icon={<Sparkles size={20} strokeWidth={3} />} paletteIndex={basePalette + 4} collapsible isOpenInitial>
+           <SubToolboxStack density="comfortable">
+            <ConsolidatedCopyBox label="Title Options" items={result.titleSets.map((title) => title.title)} icon={<Type size={20} />} />
+            <CopyBox label="Description" content={result.description} multiline icon={<FileText size={20} />} />
+            <CopyBox label="Tags" content={result.tags} multiline icon={<BarChart3 size={20} />} />
+            {exportUrl ? <SubToolboxLinkButton href={exportUrl} target="_blank" rel="noreferrer">Open exported sheet</SubToolboxLinkButton> : null}
+           </SubToolboxStack>
+          </SubToolbox>
           <PostActionReflection toolId="VIDEO_PUBLISHER" />
         </SubToolboxStack>
       )}
