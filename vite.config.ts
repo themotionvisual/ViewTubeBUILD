@@ -149,6 +149,12 @@ export default defineConfig(() => ({
       },
     },
   },
+  preview: {
+    host: true,
+    allowedHosts: [
+      'viewtube-project-builder-preview-live.onrender.com',
+    ],
+  },
   // Pre-bundle the heavy dependency graphs used on first paint so cold dev
   // starts don't dogpile Vite's on-demand transformer with hundreds of
   // Radix/lucide primitives at once.

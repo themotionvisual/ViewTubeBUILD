@@ -7,7 +7,7 @@ import PublishingScheduleArchitect from "../../views/PublishingScheduleArchitect
  * seven-column calendar surfaces vertically so the scheduler stays usable without
  * page-level horizontal overflow. Native agenda-first selection remains follow-up work.
  */
-const EmbeddedPublishingSchedule: React.FC = () => (
+const EmbeddedPublishingSchedule: React.FC<{ onOpenProject?: (projectId: string) => void }> = ({ onOpenProject }) => (
  <div className="vt-projects-embedded-schedule min-w-0">
   <style>{`
    .vt-projects-embedded-schedule > div { overflow: visible !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
@@ -21,7 +21,7 @@ const EmbeddedPublishingSchedule: React.FC = () => (
     .vt-projects-embedded-schedule [class*="min-h-[500px]"] { min-height: auto !important; border-right: 0 !important; border-bottom: 2px solid #000; }
    }
   `}</style>
-  <PublishingScheduleArchitect collapsible={false} isOpenInitial />
+  <PublishingScheduleArchitect collapsible={false} isOpenInitial onOpenProject={onOpenProject} />
  </div>
 )
 

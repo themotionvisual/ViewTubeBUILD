@@ -67,7 +67,9 @@ const normalizeMeta = (project: Project, candidate: Partial<ProjectWorkspaceMeta
  order: Number.isFinite(candidate?.order) ? Number(candidate?.order) : order,
  priority: ["low", "medium", "high", "urgent"].includes(String(candidate?.priority))
   ? candidate!.priority as ProjectPriority
-  : "medium",
+  : ["low", "medium", "high", "urgent"].includes(String(project.plan?.projectPriority))
+   ? project.plan!.projectPriority as ProjectPriority
+   : "medium",
  owner: typeof candidate?.owner === "string" ? candidate.owner : "",
  tags: Array.isArray(candidate?.tags) ? candidate.tags.filter((tag): tag is string => typeof tag === "string") : [],
  archived: Boolean(candidate?.archived),
@@ -145,11 +147,11 @@ export const patchProjectMeta = (
 export const statusForLane = (lane: ProjectLaneId): string => {
  switch (lane) {
   case "ideas": return "ideation"
-  case "planned": return "scripting"
-  case "in-progress": return "editing"
-  case "review": return "editing"
-  case "ready": return "publishing"
-  case "blocked": return "editing"
+  case "planned": return "planned"
+  case "in-progress": return "production"
+  case "review": return "review"
+  case "ready": return "ready"
+  case "blocked": return "blocked"
   case "published": return "published"
  }
 }

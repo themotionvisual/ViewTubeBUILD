@@ -17,20 +17,37 @@ import {
   type ChannelPlanningSuggestion,
 } from "../../services/channelPlanningIntelligence"
 
-type ChannelItem = { id: string; text: string; completed?: boolean; category?: string }
+type ChannelTodo = { id: string; text: string; completed: boolean }
+type ChannelGoal = { id: string; text: string; category: string; completed: boolean }
+type ChannelItem = ChannelTodo | ChannelGoal
 
 const ChannelPlanningList: React.FC<{ kind: ChannelPlanningKind }> = ({ kind }) => {
   const { brain, setChannelHub } = useBrain()
   const isTodo = kind === "todo"
-  const items: ChannelItem[] = Array.isArray(isTodo ? brain.channelHub?.toDos : brain.channelHub?.goals)
-    ? (isTodo ? brain.channelHub?.toDos : brain.channelHub?.goals)
-    : []
+  const items: ChannelItem[] = isTodo
+    ? (Array.isArray(brain.channelHub?.toDos) ? brain.channelHub.toDos : [])
+    : (Array.isArray(brain.channelHub?.goals) ? brain.channelHub.goals : [])
   const [draft, setDraft] = useState("")
   const [suggestions, setSuggestions] = useState<ChannelPlanningSuggestion[]>([])
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState("")
 
-  const saveItems = (next: ChannelItem[]) => setChannelHub(isTodo ? { toDos: next } : { goals: next })
+  const saveItems = (next: ChannelItem[]) => {
+    if (isTodo) {
+      setChannelHub({
+        toDos: next.map((item) => ({ id: item.id, text: item.text, completed: Boolean(item.completed) })),
+      })
+      return
+    }
+    setChannelHub({
+      goals: next.map((item) => ({
+        id: item.id,
+        text: item.text,
+        completed: Boolean(item.completed),
+        category: "category" in item && item.category ? item.category : "Growth",
+      })),
+    })
+  }
   const addText = (text: string, category = "Growth") => {
     const value = text.trim()
     if (!value) return
@@ -95,7 +112,7 @@ const ChannelPlanningList: React.FC<{ kind: ChannelPlanningKind }> = ({ kind }) 
                       onChange={() => toggle(item.id)}
                       label={<span className={item.completed ? "line-through opacity-40" : ""}>{item.text}</span>}
                     />
-                    {!isTodo && item.category ? <SubToolboxBadge>{item.category}</SubToolboxBadge> : null}
+                    {!isTodo && "category" in item && item.category ? <SubToolboxBadge>{item.category}</SubToolboxBadge> : null}
                   </div>
                 </SubToolboxSurface>
               ))}

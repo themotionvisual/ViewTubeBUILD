@@ -13,14 +13,26 @@ const nonEmpty = (value: unknown): value is string =>
 const projectStage = (project: Project): ContentBuildStage => {
  const planStage = project.plan?.contentBuildStage
  if (typeof planStage === "string") return planStage as ContentBuildStage
- switch (project.status) {
-  case "completed":
-   return "evaluation"
-  case "archived":
-   return "archived"
-  default:
-   return "idea"
- }
+
+ const status = String(project.status || "").trim().toLowerCase()
+ if (!status || ["idea", "ideas", "ideation", "draft"].includes(status)) return "idea"
+ if (status.includes("research")) return "research"
+ if (["planning", "planned", "concept"].includes(status)) return "concept"
+ if (status.includes("outline")) return "outline"
+ if (["script", "scripting"].includes(status)) return "script"
+ if (status.includes("storyboard")) return "storyboard"
+ if (["production", "producing", "filming", "media"].includes(status)) return "media"
+ if (["package", "packaging"].includes(status)) return "package"
+ if (["editing", "edit", "in-progress"].includes(status)) return "edit"
+ if (["review", "approval"].includes(status)) return "review"
+ if (["ready", "publishing", "scheduled", "queued"].includes(status)) return "scheduled"
+ if (status === "published" || status === "live") return "published"
+ if (status.includes("launch")) return "launch"
+ if (status.includes("monitor")) return "monitor"
+ if (["completed", "evaluation"].includes(status)) return "evaluation"
+ if (status.includes("learning")) return "learning"
+ if (status === "archived") return "archived"
+ return "idea"
 }
 
 export const contentBuildProfileFromProject = (project: Project): ContentBuildProfile => {
