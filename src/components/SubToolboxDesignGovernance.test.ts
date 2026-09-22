@@ -84,4 +84,29 @@ describe("subtoolbox design governance", () => {
   expect(publisher).toContain("SubToolboxFileTarget")
   expect(registry).toContain('{ id: 2, status: "complete", surfaces: ["VideoManager", "VideoPublisher"] }')
  })
+
+ it("keeps production fields and the imported component library on one styling authority", () => {
+  const toolboxSource = source("src/components/Toolbox.tsx")
+  const systemCss = source("src/styles/subtoolbox-system.css")
+  const migrationCatalog = source("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
+  const migrationCss = source("src/components/studio-hub/studio-hub-primitive-migration-catalog.css")
+
+  expect(toolboxSource).toContain('["--pair-a" as any]: headerHex')
+  expect(toolboxSource).toContain('["--pair-b" as any]: iconBg')
+
+  expect(systemCss).toContain("CANONICAL TEXT FIELD STATE CONTRACT")
+  expect(systemCss).toContain("color-mix(in srgb,var(--field-accent) 50%,white)")
+  expect(systemCss).toContain("caret-color:var(--field-accent)!important")
+  expect(systemCss).toContain("inset 0 0 0 var(--field-stroke) var(--field-accent)")
+  expect(systemCss).toContain("color-mix(in srgb,var(--field-glow) 78%,transparent)")
+
+  expect(migrationCatalog).toContain('from "../subtoolbox/SubToolboxPrimitives"')
+  expect(migrationCatalog).toContain('from "../subtoolbox/SubToolboxSplitPrimitives"')
+  expect(migrationCatalog).toContain('import "./studio-hub-primitive-migration-catalog.css"')
+  expect(migrationCatalog).not.toContain('import "./studio-hub-complete-primitive-catalog.css"')
+  expect(migrationCatalog).toContain('className="vt-primitive-migration-catalog"')
+  expect(migrationCss).not.toContain(".vt-subtoolbox-input")
+  expect(migrationCss).not.toContain(".vt-subtoolbox-textarea")
+  expect(migrationCss).not.toContain("[data-vt-studio-control]")
+ })
 })
