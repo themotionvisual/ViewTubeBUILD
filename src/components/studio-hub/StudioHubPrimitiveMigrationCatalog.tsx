@@ -75,7 +75,7 @@ import {
 } from "../subtoolbox/SubToolboxPrimitives"
 import { SubToolboxKpiCard, SubToolboxSplitButton, SubToolboxSplitDropdown } from "../subtoolbox/SubToolboxSplitPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
-import "./studio-hub-complete-primitive-catalog.css"
+import "./studio-hub-primitive-migration-catalog.css"
 
 const LEVELS: StudioHubComponentLevel[] = ["l0", "l1", "l2"]
 
@@ -519,7 +519,7 @@ export const StudioHubPrimitiveMigrationCatalog: React.FC<StudioHubPrimitiveMigr
   paletteIndex = 7,
 }) => (
   <section
-    className="vt-complete-catalog"
+    className="vt-primitive-migration-catalog"
     aria-labelledby="studio-hub-primitive-migration-catalog-title"
     data-palette-index={paletteIndex}
     data-vt-catalog-track="primitive-migration"
