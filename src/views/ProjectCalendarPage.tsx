@@ -1,8 +1,7 @@
 import React from "react"
 import { Columns3, PanelsTopLeft } from "lucide-react"
-import EmbeddedProjectKanbanWorkspace from "../components/projects/EmbeddedProjectKanbanWorkspace"
-import EmbeddedPublishingSchedule from "../components/projects/EmbeddedPublishingSchedule"
 import ProjectBuilderModule from "../components/projects/ProjectBuilderModule"
+import ProjectBoardWorkspace from "../components/projects/ProjectBoardWorkspace"
 import ProjectsToolboxModule from "../components/projects/ProjectsToolboxModule"
 import StoryboardStudio from "./StoryboardStudio"
 
@@ -25,10 +24,7 @@ const ProjectCalendarPage: React.FC = () => (
     icon={<Columns3 />}
     paletteIndex={7}
    >
-    <div className="grid gap-4">
-     <EmbeddedProjectKanbanWorkspace />
-     <EmbeddedPublishingSchedule />
-    </div>
+    <ProjectBoardWorkspace />
    </ProjectsToolboxModule>
   </section>
 
