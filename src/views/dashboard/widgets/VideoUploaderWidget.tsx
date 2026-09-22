@@ -388,14 +388,14 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
               </section>
 
               <section className="video-uploader-copy-grid" aria-label="Video metadata">
-                <label className="widget-control-field video-uploader-counted-field">
+                <div className="widget-control-field video-uploader-counted-field">
                   <span className="video-uploader-field-heading">
                     <span>Video title</span>
                     <small className="widget-character-count">{title.length}/100</small>
                   </span>
                   <input className="vt-input" aria-label="Video title" placeholder="Video title" value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} />
-                </label>
-                <label className="widget-control-field video-uploader-counted-field">
+                </div>
+                <div className="widget-control-field video-uploader-counted-field">
                   <span className="video-uploader-field-heading">
                     <span>Description</span>
                     <small className="widget-character-count">{description.length}/5000</small>
@@ -409,7 +409,7 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
                       {generationLoading === "description" ? "Generating…" : "Generate description"}
                     </WidgetSizedButton>
                   </span>
-                </label>
+                </div>
               </section>
 
               <section className="video-uploader-package-row" aria-label="Publishing package">
