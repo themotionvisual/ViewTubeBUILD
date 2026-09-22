@@ -18,6 +18,14 @@ vi.mock("../../../services/youtubeService", () => ({
  uploadVideo: vi.fn().mockResolvedValue({ id: "uploaded123" }),
 }))
 
+vi.mock("../../../services/gemini", () => ({
+ generateEducationalTimestampQuestions: vi.fn().mockResolvedValue(["00:10 What happens here?"]),
+ generateSeoData: vi.fn().mockResolvedValue({ description: "Generated description" }),
+ generateTagSuggestions: vi.fn().mockResolvedValue([
+  { tag: "history", score: 95, searchVolume: 1000, competition: 200, rank: 3, tripleKeyword: true },
+ ]),
+}))
+
 vi.mock("../../../context/UnifiedAccountContext", () => ({
  useUnifiedAccount: () => ({
   serverEnabled: false,
@@ -78,7 +86,11 @@ describe("split video publishing widgets", () => {
   expect(container.querySelector('[aria-label="Video title"].vt-input')).not.toBeNull()
   expect(container.querySelector('[aria-label="Description"].video-uploader-description')).not.toBeNull()
   expect(container.querySelectorAll(".video-uploader-selects .widget-select-trigger")).toHaveLength(3)
+  expect(container.querySelectorAll(".video-uploader-paired-actions")).toHaveLength(2)
+  expect(container.querySelectorAll(".video-uploader-paired-actions .vt-button")).toHaveLength(4)
   expect(container.querySelectorAll(".video-uploader-pages > .vt-button")).toHaveLength(3)
+  expect(container.querySelector(".video-uploader-pages > .vt-button")?.className).toContain("is-height-32")
+  expect(container.querySelector(".video-uploader-footer .widget-split-button")?.className).toContain("is-large")
   expect(container.querySelector(".video-uploader-footer .widget-split-button")?.textContent).toContain("Publish video")
   expect(container.querySelector(".video-manager-widget")).toBeNull()
  })
@@ -118,6 +130,8 @@ describe("split video publishing widgets", () => {
   const trigger = container.querySelector<HTMLButtonElement>('[aria-label="Published video"]')
   expect(trigger).not.toBeNull()
   expect(trigger?.className).toContain("widget-video-select-trigger")
+  expect(trigger?.closest(".widget-video-select")?.className).toContain("video-manager-video-select")
+  expect(trigger?.textContent).toContain("Select a video")
 
   await act(async () => trigger?.click())
   const option = [...container.querySelectorAll<HTMLElement>('[role="option"]')]
@@ -159,6 +173,10 @@ describe("split video publishing widgets", () => {
    .find((option) => option.textContent === "Education")
   await act(async () => education?.click())
 
-  expect(container.querySelector(".video-uploader-pages")?.textContent).toContain("Timestamps")
+  const educationRow = container.querySelector(".video-uploader-category-row.has-timestamps")
+  expect(educationRow).not.toBeNull()
+  expect(educationRow?.querySelector(".video-uploader-category-select")).not.toBeNull()
+  expect(educationRow?.querySelector(".video-uploader-timestamps-button")?.textContent).toContain("Timestamps")
+  expect(container.querySelector(".video-uploader-pages")?.textContent).not.toContain("Timestamps")
  })
 })
