@@ -31,6 +31,7 @@ export const ensureVideoPackageForProject = (
   }
 
   const videoPackage = createVideoPackage({
+    id: `vp:${project.id}:${project.contentBuildId}`,
     channelId,
     projectId: project.id,
     workingTitle: project.videoTitle || project.name,
