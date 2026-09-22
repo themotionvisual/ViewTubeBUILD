@@ -36,7 +36,7 @@ const EmbeddedProjectKanbanWorkspace: React.FC = () => (
     }
    }
   `}</style>
-  <ProjectKanbanWorkspace />
+  <ProjectKanbanWorkspace embedded />
  </div>
 )
 
