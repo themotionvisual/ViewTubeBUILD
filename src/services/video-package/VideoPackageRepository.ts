@@ -1,5 +1,6 @@
 import type { ViewTubeVideoPackage } from "./contracts"
 import { validateVideoPackage } from "./packageValidation"
+import { syncVideoPackageToContentBuild } from "../asset-engine/VideoPackageContentBuildBridge"
 
 export const VIDEO_PACKAGE_STORAGE_KEY = "viewtube_video_packages_v1"
 
@@ -63,6 +64,7 @@ export const saveVideoPackage = (videoPackage: ViewTubeVideoPackage): ViewTubeVi
     ? [...packages, videoPackage]
     : packages.map((candidate, candidateIndex) => candidateIndex === index ? videoPackage : candidate)
   writeStored(next)
+  syncVideoPackageToContentBuild(videoPackage)
   return videoPackage
 }
 
