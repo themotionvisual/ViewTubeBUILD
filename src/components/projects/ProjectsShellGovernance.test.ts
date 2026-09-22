@@ -19,6 +19,7 @@ const pageSource = read("src/views/ProjectCalendarPage.tsx")
 const projectStudioSource = read("src/components/ProjectStudio.tsx")
 const storyboardSource = read("src/views/StoryboardStudio.tsx")
 const embeddedStudioSource = read("src/components/projects/EmbeddedProjectStudio.tsx")
+const projectBuilderModuleSource = read("src/components/projects/ProjectBuilderModule.tsx")
 
 describe("Projects level-0 shell ownership", () => {
   // ProjectsToolboxModule owns the frame. A tool mounted inside it that renders
@@ -50,9 +51,12 @@ describe("Projects level-0 shell ownership", () => {
   })
 
   it("keeps one level-0 module per Projects section", () => {
-    const mounts = pageSource.match(/<ProjectsToolboxModule\b/g) ?? []
+    const directMounts = pageSource.match(/<ProjectsToolboxModule\\b/g) ?? []
+    const builderMounts = pageSource.match(/<ProjectBuilderModule\\b/g) ?? []
     const sections = pageSource.match(/<section id="/g) ?? []
-    expect(mounts.length).toBe(sections.length)
-    expect(mounts.length).toBeGreaterThan(0)
+
+    expect(projectBuilderModuleSource.match(/<ProjectsToolboxModule\\b/g) ?? []).toHaveLength(1)
+    expect(directMounts.length + builderMounts.length).toBe(sections.length)
+    expect(sections.length).toBeGreaterThan(0)
   })
 })
