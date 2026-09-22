@@ -35,6 +35,11 @@ import ProjectCreationDialog from "./ProjectCreationDialog"
 import { syncProjectToContentBuild } from "../../services/asset-engine/ProjectContentBuildBridge"
 import { useProjectsWorkspace } from "./ProjectsWorkspaceContext"
 import {
+ SubToolboxButton,
+ SubToolboxSelect,
+ SubToolboxSplitField,
+} from "../subtoolbox/SubToolboxPrimitives"
+import {
  PROJECT_LANES,
  hydrateProjectWorkspace,
  patchProjectMeta,
@@ -292,12 +297,12 @@ const ProjectKanbanWorkspace: React.FC<{ embedded?: boolean }> = ({ embedded = f
  const owners = useMemo(() => Array.from(new Set(Object.values(workspace.projects).map((meta) => meta.owner).filter(Boolean))).sort(), [workspace.projects])
  
  const boardActions = <div className="flex flex-wrap gap-2">
-  <button type="button" onClick={() => setWorkspace((state) => ({ ...state, showArchived: !state.showArchived }))} className="flex h-9 items-center gap-1.5 rounded-[7px] border-[2px] border-black bg-white px-3 text-[9px] font-black uppercase shadow-[2px_2px_0_black]">
-   <Archive size={14} /> {workspace.showArchived ? "Active" : "Archived"}
-  </button>
-  <button type="button" onClick={() => setShowCreate(true)} className="flex h-9 items-center gap-1.5 rounded-[7px] border-[2px] border-black bg-black px-3 text-[9px] font-black uppercase text-white shadow-[2px_2px_0_rgba(0,0,0,.25)]">
-   <Plus size={14} /> New Project
-  </button>
+  <SubToolboxButton size="compact" tone="neutral" icon={<Archive size={14}/>} onClick={() => setWorkspace((state) => ({ ...state, showArchived: !state.showArchived }))}>
+   {workspace.showArchived ? "Active" : "Archived"}
+  </SubToolboxButton>
+  <SubToolboxButton size="compact" tone="accent" icon={<Plus size={14}/>} onClick={() => setShowCreate(true)}>
+   New Project
+  </SubToolboxButton>
  </div>
 
  return (
@@ -317,25 +322,28 @@ const ProjectKanbanWorkspace: React.FC<{ embedded?: boolean }> = ({ embedded = f
    )}
 
    <div className="grid gap-2 border-b-[3px] border-black bg-white p-2 md:grid-cols-[minmax(180px,1fr)_140px_150px_auto]">
-    <label className="flex h-9 items-center gap-2 rounded-[7px] border-[2px] border-black px-2">
-     <Search size={14} />
-     <input value={workspace.query} onChange={(event) => setWorkspace((state) => ({ ...state, query: event.target.value }))} placeholder="Search projects" className="min-w-0 flex-1 bg-transparent text-[10px] font-bold outline-none" />
-    </label>
-    <label className="flex h-9 items-center rounded-[7px] border-[2px] border-black px-2">
-     <SlidersHorizontal size={13} className="mr-1" />
-     <select value={workspace.priorityFilter} onChange={(event) => setWorkspace((state) => ({ ...state, priorityFilter: event.target.value as ProjectWorkspaceState["priorityFilter"] }))} className="min-w-0 flex-1 bg-transparent text-[9px] font-black uppercase outline-none">
-      <option value="all">All priorities</option>
-      <option value="urgent">Urgent</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
-     </select>
-    </label>
-    <label className="flex h-9 items-center rounded-[7px] border-[2px] border-black px-2">
-     <UserRound size={13} className="mr-1" />
-     <select value={workspace.ownerFilter} onChange={(event) => setWorkspace((state) => ({ ...state, ownerFilter: event.target.value }))} className="min-w-0 flex-1 bg-transparent text-[9px] font-black uppercase outline-none">
-      <option value="all">All owners</option>
-      {owners.map((owner) => <option key={owner} value={owner}>{owner}</option>)}
-     </select>
-    </label>
-    <button type="button" onClick={() => setWorkspace((state) => ({ ...state, query: "", priorityFilter: "all", ownerFilter: "all" }))} className="h-9 rounded-[7px] border-[2px] border-black px-3 text-[9px] font-black uppercase hover:bg-black hover:text-white">Clear</button>
+    <SubToolboxSplitField
+     level="l1"
+     variant="search"
+     icon={<Search size={14}/>}
+     inputProps={{
+      value:workspace.query,
+      onChange:(event)=>setWorkspace((state)=>({...state,query:event.currentTarget.value})),
+      placeholder:"Search projects",
+      "aria-label":"Search projects",
+     }}
+    />
+    <SubToolboxSelect value={workspace.priorityFilter} onChange={(event) => setWorkspace((state) => ({ ...state, priorityFilter: event.target.value as ProjectWorkspaceState["priorityFilter"] }))} aria-label="Priority filter">
+     <option value="all">All priorities</option>
+     <option value="urgent">Urgent</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
+    </SubToolboxSelect>
+    <SubToolboxSelect value={workspace.ownerFilter} onChange={(event) => setWorkspace((state) => ({ ...state, ownerFilter: event.target.value }))} aria-label="Owner filter">
+     <option value="all">All owners</option>
+     {owners.map((owner) => <option key={owner} value={owner}>{owner}</option>)}
+    </SubToolboxSelect>
+    <SubToolboxButton size="compact" tone="neutral" icon={<SlidersHorizontal size={14}/>} onClick={() => setWorkspace((state) => ({ ...state, query: "", priorityFilter: "all", ownerFilter: "all" }))}>
+     Clear
+    </SubToolboxButton>
    </div>
 
    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
