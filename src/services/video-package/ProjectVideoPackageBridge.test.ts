@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import type { Project, VaultAsset } from "../../types"
-import { ensureVideoPackageForProject, selectProjectVideoPackageThumbnail } from "./ProjectVideoPackageBridge"
+import { clearProjectVideoPackageThumbnail, ensureVideoPackageForProject, selectProjectVideoPackageThumbnail } from "./ProjectVideoPackageBridge"
 import {
   findVideoPackageByProject,
   listVideoPackages,
@@ -53,6 +53,33 @@ describe("Project Video Package bridge", () => {
   it("defers package creation until a channel scope exists", () => {
     expect(ensureVideoPackageForProject(project(), { channelId: null })).toBeNull()
     expect(listVideoPackages()).toHaveLength(0)
+  })
+
+  it("clears the selected package thumbnail without deleting the candidate variant", () => {
+    const asset: VaultAsset = {
+      id: "vault-thumb-a",
+      name: "Thumbnail A",
+      kind: "image",
+      source: "generated",
+      createdAt: 1,
+      updatedAt: 1,
+      projectId: "project-a",
+      projectName: "Project A",
+      tags: ["thumbnail"],
+      url: "https://example.com/thumb.jpg",
+    }
+    selectProjectVideoPackageThumbnail(project(), asset, { channelId: "channel-a" })
+
+    const cleared = clearProjectVideoPackageThumbnail(project(), {
+      sourceToolId: "project-builder",
+      now: "2026-09-22T20:22:00.000Z",
+    })
+
+    expect(cleared?.packaging.selectedThumbnailId).toBeNull()
+    expect(cleared?.packaging.thumbnailVariants).toContainEqual(expect.objectContaining({
+      id: "thumbnail:vault-thumb-a",
+      vaultAssetId: "vault-thumb-a",
+    }))
   })
 
   it("selects a Vault thumbnail into the package without forking ContentBuild identity", () => {
