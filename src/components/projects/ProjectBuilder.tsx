@@ -72,38 +72,24 @@ const ProjectBuilder: React.FC<ProjectBuilderProps> = ({ onCreateProject }) => {
   return (
     <SubToolboxStack density="comfortable">
       <SubToolboxSurface tone="subtle">
-        <SubToolboxGrid minItemWidth="wide" density="dense">
-          <SubToolboxSection label="Workspace">
-            <SubToolboxSegmentedToggle
-              value={scope}
-              onValueChange={(value) => setScope(value as "channel" | "project")}
-              ariaLabel="Choose Project Builder scope"
-              options={[
-                { value: "channel", label: "Channel" },
-                { value: "project", label: "Project" },
-              ]}
-            />
+        {scope === "project" ? (
+          <SubToolboxSection label="Active project">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+              <SubToolboxSelect
+                value={activeProject?.id || ""}
+                onChange={(event) => setActiveProject(event.target.value)}
+                aria-label="Active project"
+              >
+                {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+              </SubToolboxSelect>
+              <SubToolboxButton tone="accent" onClick={onCreateProject}>New</SubToolboxButton>
+            </div>
           </SubToolboxSection>
-
-          {scope === "project" ? (
-            <SubToolboxSection label="Active project">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-                <SubToolboxSelect
-                  value={activeProject?.id || ""}
-                  onChange={(event) => setActiveProject(event.target.value)}
-                  aria-label="Active project"
-                >
-                  {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-                </SubToolboxSelect>
-                <SubToolboxButton tone="accent" onClick={onCreateProject}>New</SubToolboxButton>
-              </div>
-            </SubToolboxSection>
-          ) : (
-            <SubToolboxSection label="Channel scope">
-              <SubToolboxStatePanel state="ready" message="Channel tasks and goals use the connected channel profile plus AI Brain context." />
-            </SubToolboxSection>
-          )}
-        </SubToolboxGrid>
+        ) : (
+          <SubToolboxSection label="Channel scope">
+            <SubToolboxStatePanel state="ready" message="Channel tasks and goals use the connected channel profile plus AI Brain context." />
+          </SubToolboxSection>
+        )}
       </SubToolboxSurface>
 
       {scope === "channel" ? (
