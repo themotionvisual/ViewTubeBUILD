@@ -33,6 +33,7 @@ import { useBrain } from "../../context/useBrain"
 import type { Project } from "../../types"
 import ProjectCreationDialog from "./ProjectCreationDialog"
 import { syncProjectToContentBuild } from "../../services/asset-engine/ProjectContentBuildBridge"
+import { useProjectsWorkspace } from "./ProjectsWorkspaceContext"
 import {
  PROJECT_LANES,
  hydrateProjectWorkspace,
@@ -210,7 +211,8 @@ const BoardLane: React.FC<{
 }
 
 const ProjectKanbanWorkspace: React.FC = () => {
- const { brain, updateProject, setActiveProject, channelIdentity } = useBrain()
+ const { brain, updateProject, channelIdentity } = useBrain()
+ const { openProject } = useProjectsWorkspace()
  const projects = useMemo(() => Array.isArray(brain.projects) ? brain.projects : [], [brain.projects])
  const [workspace, setWorkspace] = useState<ProjectWorkspaceState>(() => hydrateProjectWorkspace(readProjectWorkspace(), projects))
  const [showCreate, setShowCreate] = useState(false)
@@ -288,15 +290,7 @@ const ProjectKanbanWorkspace: React.FC = () => {
  }, [projects, workspace])
 
  const owners = useMemo(() => Array.from(new Set(Object.values(workspace.projects).map((meta) => meta.owner).filter(Boolean))).sort(), [workspace.projects])
-  const openProject = (projectId: string) => {
-  setActiveProject(projectId)
-  if (typeof document !== "undefined") {
-   window.requestAnimationFrame(() => {
-    document.getElementById("project-builder")?.scrollIntoView({ behavior: "smooth", block: "start" })
-   })
-  }
- }
-
+ 
  return (
   <div className="w-full overflow-hidden rounded-[14px] border-[4px] border-black bg-white shadow-[8px_8px_0_rgba(0,0,0,0.16)]">
    <header className="border-b-[4px] border-black bg-[#00CCFF] px-3 py-3 sm:px-4">
