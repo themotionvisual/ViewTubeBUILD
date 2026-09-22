@@ -38,6 +38,7 @@ const ProjectBuilder: React.FC<ProjectBuilderProps> = ({ onCreateProject }) => {
   const { builderScope: scope } = useProjectsWorkspace()
   const projects = Array.isArray(brain.projects) ? brain.projects : []
   const [assetMode, setAssetMode] = useState<AssetMode>("simple")
+  const [packageWarning, setPackageWarning] = useState("")
 
   const activeProject = useMemo(
     () => projects.find((project) => project.id === brain.activeProjectId) || projects[0] || null,
@@ -57,10 +58,16 @@ const ProjectBuilder: React.FC<ProjectBuilderProps> = ({ onCreateProject }) => {
     const scopedProject = activeProject.contentBuildId === build.id
       ? activeProject
       : { ...activeProject, contentBuildId: build.id }
-    ensureVideoPackageForProject(scopedProject, {
-      channelId: channelIdentity.channelId || null,
-      sourceToolId: "project-builder",
-    })
+    try {
+      ensureVideoPackageForProject(scopedProject, {
+        channelId: channelIdentity.channelId || null,
+        sourceToolId: "project-builder",
+      })
+      setPackageWarning("")
+    } catch (cause) {
+      console.error("Unable to bind Project Video Package", cause)
+      setPackageWarning(cause instanceof Error ? cause.message : "Video Package identity could not be reconciled.")
+    }
     if (activeProject.contentBuildId !== build.id) {
       updateProject(activeProject.id, { contentBuildId: build.id })
     }
@@ -112,6 +119,7 @@ const ProjectBuilder: React.FC<ProjectBuilderProps> = ({ onCreateProject }) => {
       ) : (
         <>
           <ProjectBuildCommand project={activeProject} />
+          {packageWarning ? <SubToolboxStatePanel state="error" message={packageWarning} /> : null}
 
           <SubToolbox title="PROJECT IDENTITY" subtitle="Name, schedule, format and visual identity" icon={<CalendarDays />} collapsible isOpenInitial openUnits={4}>
             <SubToolboxStack density="comfortable">
