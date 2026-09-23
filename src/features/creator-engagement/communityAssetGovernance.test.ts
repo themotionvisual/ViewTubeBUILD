@@ -14,8 +14,8 @@ describe("Community Post governed asset boundary", () => {
 
  it("records creator decisions for generated assets", () => {
   expect(source).toContain("recordAssetOutcome")
-  expect(source).toContain('kind: "edited"')
-  expect(source).toContain('kind: "accepted"')
-  expect(source).toContain('kind: "exported"')
+  expect(source).toMatch(/kind\s*:\s*"edited"/)
+  expect(source).toContain('recordGeneratedDecision("accepted")')
+  expect(source).toContain('recordGeneratedDecision("exported")')
  })
 })
