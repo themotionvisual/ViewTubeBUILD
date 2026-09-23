@@ -1083,6 +1083,7 @@ const AIBrainCommandInterface: React.FC = () => {
         </div>
         <div className="min-h-0 overflow-hidden" aria-label="Channel context">
          <BrainContextRail
+          channelId={authState.channelId || null}
           snapshot={snapshot}
           growthContext={creatorGrowthContext}
           insights={railInsights}
@@ -1137,7 +1138,7 @@ const AIBrainCommandInterface: React.FC = () => {
          <button ref={contextCloseRef} type="button" className={kpiButton} onClick={() => setContextRailOpen(false)}><X size={14} aria-hidden="true" /> Close</button>
         </div>
         <div className="vt-scrollless min-h-0 overflow-y-auto overscroll-contain" aria-label="Channel context" tabIndex={0}>
-         <BrainContextRail snapshot={snapshot} growthContext={creatorGrowthContext} insights={railInsights} questions={learningQuestions} responseQuestions={latestResponseQuestions} quickActions={quickActions} onAskInsight={handleAskInsight} onAcceptQuickAction={handleAcceptQuickAction} onAnswerQuestion={handleAnswerQuestion} />
+         <BrainContextRail channelId={authState.channelId || null} snapshot={snapshot} growthContext={creatorGrowthContext} insights={railInsights} questions={learningQuestions} responseQuestions={latestResponseQuestions} quickActions={quickActions} onAskInsight={handleAskInsight} onAcceptQuickAction={handleAcceptQuickAction} onAnswerQuestion={handleAnswerQuestion} />
         </div>
        </div>
       ) : null}

@@ -1,3 +1,7 @@
+import { upsertAlgorithmIntelligenceEvents, type AlgorithmIntelligenceEvent } from "./AlgorithmIntelligenceEventLedger"
+import { upsertAlgorithmLifecycleObservations } from "./AlgorithmLifecycleObservationStore"
+import type { AlgorithmLifecycleObservation } from "./AlgorithmLifecycleCohorts"
+
 const endpoint = (channelId: string) => `/api/brain-intelligence?channelId=${encodeURIComponent(channelId)}`
 
 export interface BrainIntelligencePersistenceResult {
@@ -74,4 +78,17 @@ export const persistBrainIntelligence = async (input: {
   batches += 1
  }
  return { ok: true, channelId: input.channelId, eventCount, observationCount, batches }
+}
+
+
+export const hydrateBrainIntelligenceFromPersistence = async (channelId: string) => {
+ const durable = await loadPersistedBrainIntelligence(channelId)
+ if (!durable) return null
+ const events = (durable.events || [])
+  .filter((row): row is AlgorithmIntelligenceEvent => Boolean(row && typeof row === "object" && String((row as AlgorithmIntelligenceEvent).channelId || "") === channelId))
+ const observations = (durable.observations || [])
+  .filter((row): row is AlgorithmLifecycleObservation => Boolean(row && typeof row === "object" && String((row as AlgorithmLifecycleObservation).channelId || "") === channelId))
+ upsertAlgorithmIntelligenceEvents(events)
+ upsertAlgorithmLifecycleObservations(observations)
+ return { channelId, events: events.length, observations: observations.length }
 }

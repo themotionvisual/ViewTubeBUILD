@@ -112,6 +112,27 @@ export const listAlgorithmIntelligenceEvents = (input: {
  .filter((event) => !input.kind || event.kind === input.kind)
  .sort((left, right) => right.createdAt - left.createdAt)
 
+export const upsertAlgorithmIntelligenceEvents = (incoming: AlgorithmIntelligenceEvent[]) => {
+ const existing = read()
+ const byId = new Map(existing.map((event) => [event.id, event]))
+ incoming.forEach((event) => {
+  if (!event?.id || !event?.channelId) return
+  const current = byId.get(event.id)
+  byId.set(event.id, current ? {
+   ...event,
+   ...current,
+   parentEventIds: [...new Set([...(event.parentEventIds || []), ...(current.parentEventIds || [])])],
+   evidenceIds: [...new Set([...(event.evidenceIds || []), ...(current.evidenceIds || [])])],
+   evaluationTargets: current.evaluationTargets?.length ? current.evaluationTargets : event.evaluationTargets || [],
+   metadata: { ...(event.metadata || {}), ...(current.metadata || {}) },
+   createdAt: Math.min(event.createdAt || Date.now(), current.createdAt || Date.now()),
+  } : event)
+ })
+ const next = [...byId.values()].sort((left, right) => right.createdAt - left.createdAt)
+ write(next)
+ return incoming.length
+}
+
 export const findAlgorithmEventByActionPacket = (actionPacketId: string) =>
  read().find((event) => event.actionPacketId === actionPacketId) || null
 
