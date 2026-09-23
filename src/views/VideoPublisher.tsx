@@ -548,7 +548,7 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
           {insightsImported ? <SubToolboxStatePanel state="ready" message="Incoming Brain/tool context loaded. Review before generating or publishing." /> : null}
           <SubToolboxGrid minItemWidth="wide">
             <SubToolbox title="Video Upload" icon={<Upload size={20} strokeWidth={3} />} collapsible isOpenInitial shellClassName="h-full">
-              <SubToolboxFileTarget label={<>Drop files or click to upload<br />Upload video</>} icon={<Upload size={28} strokeWidth={3} />} minHeight={220} />
+              <SubToolboxFileTarget label={videoFile ? <>{videoFile.name}<br />Final video selected</> : <>Drop files or click to upload<br />Upload video</>} icon={<Upload size={28} strokeWidth={3} />} accept="video/*" minHeight={220} onFiles={files => setVideoFile(files?.[0] || null)} />
             </SubToolbox>
             <SubToolbox title="Video Script" icon={<FileText size={20} strokeWidth={3} />} collapsible isOpenInitial shellClassName="h-full" contentClassName="h-full">
               <SubToolboxTextArea aria-label="Video script" value={script} onChange={(event) => setScript(event.target.value)} placeholder="Paste your script here..." height="fill" className="text-base" />
