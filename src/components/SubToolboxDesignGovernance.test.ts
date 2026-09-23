@@ -49,7 +49,7 @@ describe("subtoolbox design governance", () => {
   const toolboxSource = source("src/components/Toolbox.tsx")
   const tokenSource = source("src/components/subtoolbox/tokens.ts")
 
-  expect(tokenSource).toContain('duration-300 ease-out motion-reduce:transition-none')
+  expect(tokenSource).toContain('duration-[600ms] ease-out motion-reduce:transition-none')
   expect(toolboxSource).toContain('borderBottom: `var(--vt-toolbox-stroke, ${stroke}px) solid black`')
   expect(toolboxSource).toContain('borderBottom: `var(--vt-subtoolbox-stroke, ${SUB_TOOLBOX_INNER_STROKE}px) solid black`')
   expect(toolboxSource).toContain('SHELL_COLLAPSE_DURATION_MS = SUBTOOLBOX_TOKENS.motion.collapseMs')
