@@ -64,6 +64,20 @@ describe("Video Manager canonical Studio Hub contract", () => {
   expect(source).not.toContain("SubToolboxDropdownTopTitleControl")
  })
 
+ it("uses canonical generic state, alert, output, and data-table primitives", () => {
+  expect(source).toContain("SubToolboxAlert")
+  expect(source).toContain("SubToolboxStatePanel")
+  expect(source).toContain("SubToolboxOutputCard")
+  expect(source).toContain("SubToolboxDataTable")
+  expect(source).toContain('state="ready"')
+  expect(source).toContain('state="error"')
+  expect(source).toContain('state="empty"')
+  expect(source).not.toContain("<table")
+  expect(source).not.toContain('border-[6px] border-black')
+  expect(source).not.toContain('bg-[#ffb158]/20 border-[4px]')
+  expect(source).not.toContain('bg-[#00ff99]/20 border-[4px]')
+ })
+
   it("uses the canonical split-left selector family", () => {
   expect(source).toContain("SubToolboxSplitDropdown")
   expect(source).toContain("SubToolboxSplitButton")
