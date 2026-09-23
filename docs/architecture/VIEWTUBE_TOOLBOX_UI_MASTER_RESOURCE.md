@@ -1,7 +1,7 @@
 # ViewTube Toolbox UI Master Resource
 
 **Status:** Living design-system authority  
-**Updated:** 2026-09-14  
+**Updated:** 2026-09-22  
 **Scope:** Toolbox, Subtoolbox, Studio Hub controls, reusable layouts, states, responsive behavior, certification, migration, audits and page-specific exceptions.
 
 ## Living update log
@@ -10,7 +10,8 @@ Append one concise row for every system-level update. Use Notes for conflicts, v
 
 | Date / time | Conversation | AI / tool | Change | Repo evidence | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2026-09-14 | Toolbox UI master handoff / 56-44 unification | GPT-5.6 Sol + GitHub | Added reusable handoff protocol and reconciled current shell authority | PR #207 -> `844a708f`; PR #211 -> `400269c5`; PR #215 -> `b2e4a534` | IMPLEMENTED / DOC UPDATED | T0=56px/28px; T1=44px/22px; separate compact shell authority removed. Visual certification remains distinct from merge state. |
+| 2026-09-22 | Toolbox geometry authority reconciliation | GPT-5.6 Sol + GitHub | Reconciled production shell geometry with the accepted Component Library authority and removed its private shell override | `fix/toolbox-geometry-authority-2026-09-22` | IMPLEMENTED ON BRANCH / VISUAL CERTIFICATION REQUIRED | Current authority: T0=80px/26px; T1=56px/20px; T2=48px/18px; T3=32px/12px. Historical 56/44 implementation remains traceability only. |
+| 2026-09-14 | Toolbox UI master handoff / 56-44 unification | GPT-5.6 Sol + GitHub | Added reusable handoff protocol and reconciled then-current shell authority | PR #207 -> `844a708f`; PR #211 -> `400269c5`; PR #215 -> `b2e4a534` | SUPERSEDED BY 2026-09-22 GEOMETRY AUTHORITY | Historical T0=56px/28px; T1=44px/22px; separate compact shell authority removed. |
 | YYYY-MM-DD HH:MM | Conversation title | AI / tool | Single-row update summary | Branch / PR / commit | STATUS | Evidence, risk, validation, next action |
 
 ## 1. Governing laws
@@ -30,17 +31,17 @@ Append one concise row for every system-level update. Use Notes for conflicts, v
 
 | Semantic level | Legacy label | Primary use | Height | Stroke | Radius | Shadow | Default type |
 | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| T0 | Toolbox shell | Top-level tool/module | 56px | 5px | 16px | 10px | 28px / 1000 |
-| T1 | L0 / Subtoolbox | Direct Toolbox child / peer action | 44px | 4px | 12px | 6px | 22px / 900-1000 |
+| T0 | Toolbox shell | Top-level tool/module | 80px | 5px | 16px | 10px | 26px / 1000 |
+| T1 | L0 / Subtoolbox | Direct Toolbox child / peer action | 56px | 4px | 12px | 6px | 20px / 1000 |
 | Former compact shell | Historical compatibility label only | No second shell geometry | - | - | - | - | SUPERSEDED |
-| T2 | L1 child | Standard interior peer | 48px | 3px | 8px | 4px | ~14px |
-| T3 | L2 dense child | Dense/compact peer | 32px | 2px | 6px | 2px | 9-10px |
+| T2 | L1 child | Standard interior peer | 48px | 3px | 8px | 4px | 18px / 1000 |
+| T3 | L2 dense child | Dense/compact peer | 32px | 2px | 6px | 2px | 12px / 1000 |
 
 The former separate Compact Subtoolbox shell geometry is **SUPERSEDED**. Existing `heightMode="compact"` callers are compatibility-only and must not receive alternate shell height/stroke/radius/shadow geometry. Compactness may describe content density only.
 
 ### Paired-height equations
 
-- T1: `20 + 4 + 20 = 44px`
+- T1: `26 + 4 + 26 = 56px`
 - T2: `22 + 4 + 22 = 48px`
 - T3: `14 + 4 + 14 = 32px`
 - Split-left rail width = full row height.
@@ -48,7 +49,7 @@ The former separate Compact Subtoolbox shell geometry is **SUPERSEDED**. Existin
 
 ## 3. Token architecture
 
-Current implementation authority remains `src/components/subtoolbox/tokens.ts`; it now contains one SubToolbox shell authority: `headerHeight: 44`, `stroke: 4`, `radius: 12`, `shadowOffset: 6`, `titleSize: 22`, with `toolboxTitle: 28`. The former `compactShell` token authority was removed in PR #215.
+Current implementation authority remains `src/components/subtoolbox/tokens.ts`: Main Toolbox `80 / 5 / 16 / 10 / 26`, SubToolbox/L0 `56 / 4 / 12 / 6 / 20`, L1 `48 / 3 / 8 / 4 / 18`, and L2 `32 / 2 / 6 / 2 / 12`. The former `compactShell` token authority remains removed; compactness describes density, not a second shell geometry.
 
 ## 4. Color system
 
@@ -146,7 +147,7 @@ Use status vocabulary: `CANONICAL`, `IMPLEMENTED`, `VERIFIED`, `MIGRATE`, `LEGAC
 
 | Primitive/family | Code | Reference Library | Tests | Current status |
 | --- | --- | --- | --- | --- |
-| Toolbox/Subtoolbox shells | yes | yes | visual required | IMPLEMENTED; 56/44 authority merged PR #215 |
+| Toolbox/Subtoolbox shells | yes | yes | visual required | 80/56 authority implemented on `fix/toolbox-geometry-authority-2026-09-22`; visual certification required before VERIFIED |
 | Standard buttons | yes | yes | required | IMPLEMENTED |
 | Split-left actions | yes | yes | partial | IMPLEMENTED |
 | Analytics split-left dropdown | yes | yes | static-render yes | IMPLEMENTED / TEST-CERTIFIED; visual certification open |
@@ -159,9 +160,9 @@ Use status vocabulary: `CANONICAL`, `IMPLEMENTED`, `VERIFIED`, `MIGRATE`, `LEGAC
 
 ## 18. Current audit findings
 
-**Resolved/advanced:** Analytics split-left anatomy is in production code with static-render coverage; separate compact shell token authority is removed; current shell hierarchy is T0 56px/28px title and T1 44px/22px title.
+**Resolved/advanced:** Analytics split-left anatomy is in production code with static-render coverage; separate compact shell token authority is removed; current shell hierarchy is T0 80px/26px title, T1 56px/20px title, T2 48px/18px and T3 32px/12px.
 
-**Remaining:** visual desktop/mobile certification of 56/44 hierarchy; historical `heightMode="compact"` callers/labels cleanup; CSS ownership leaks; bounded-height/mobile regressions; duplicate embedded shells; Projects feature-local shell debt; motion authority reconciliation by system.
+**Remaining:** visual desktop/mobile certification of the 80/56 hierarchy; historical `heightMode="compact"` callers/labels cleanup; CSS ownership leaks; bounded-height/mobile regressions; duplicate embedded shells; Projects feature-local shell debt; motion authority reconciliation by system.
 
 ## 19. Page-specific notes
 
@@ -254,18 +255,21 @@ Editor timeline controls are a separate system. Reuse tokens selectively; do not
 | 2026-09-13 | 600ms shell/module open-close documented as direction | SUPERSEDED / CONFLICT FOUND |
 | 2026-09-14 | Production Subtoolbox tokens verified at 300ms collapse and 180ms control | REGRESSION / OPEN ISSUE |
 | 2026-09-14 | Analytics split-left anatomy merged PR #207; regression assertions merged PR #211 | IMPLEMENTED / TEST-CERTIFIED |
-| 2026-09-14 | Main Toolbox header 56px/28px; Subtoolbox 44px/22px | IMPLEMENTED ON MAIN / PR #215 |
+| 2026-09-14 | Main Toolbox header 56px/28px; Subtoolbox 44px/22px | SUPERSEDED / HISTORICAL PR #215 |
+| 2026-09-22 | Main Toolbox 80px/26px; Subtoolbox 56px/20px; L1 48px/18px; L2 32px/12px | CURRENT AUTHORITY / VISUAL CERTIFICATION REQUIRED |
 | 2026-09-14 | Separate Compact Subtoolbox shell geometry eliminated | SUPERSEDED / PR #215 |
-| 2026-09-14 | T1 paired-height equation becomes 20 + 4 + 20 = 44 | CANONICAL |
+| 2026-09-14 | T1 paired-height equation 20 + 4 + 20 = 44 | SUPERSEDED / HISTORICAL |
+| 2026-09-22 | T1 paired-height equation becomes 26 + 4 + 26 = 56 | CURRENT |
 | 2026-09-14 | Projects page-level switcher is not accepted composition | SUPERSEDED |
 | 2026-09-14 | Project Board duplicate inner shell is migration debt | MIGRATE |
 | 2026-09-14 | `studio-ui/tokens.ts` still read the `compactShell` geometry removed by PR #215, so `STUDIO_TOKENS` threw on load and every Studio Hub render failed; compact aliases now resolve to the single canonical shell | REGRESSION FIXED |
 | 2026-09-14 | Header divider spans the full header width, icon rail included | CURRENT |
-| 2026-09-14 | Phone header geometry sized to its own title: T0 36px/22px, T1 30px/16px, square rail follows row height | CURRENT |
+| 2026-09-14 | Phone-only 36px/30px shell geometry | SUPERSEDED / HISTORICAL |
+| 2026-09-22 | Mobile preserves canonical shell hierarchy: T0 80px and T1 56px; square rail follows row height; titles may wrap to two lines | CURRENT / VISUAL CERTIFICATION REQUIRED |
 | 2026-09-14 | Toolbox/SubToolbox title columns carry `min-w-0`; flex `min-width:auto` was overflowing the phone viewport | REGRESSION FIXED |
 | 2026-09-14 | Landscape edge-rail navigation keys off the shell's own 760px mobile breakpoint, not a separate `max-height: 560px` test | REGRESSION FIXED |
 | 2026-09-14 | Diagnostic overlay is opt-in from Navigation → Diagnostics; DIAG and Brain launchers do not render on phones | CURRENT |
-| 2026-09-14 | Reference Library certification for the phone header geometry above is outstanding | REFERENCE UPDATE REQUIRED |
+| 2026-09-22 | Reference Library consumes production shell geometry directly; desktop/mobile visual capture remains outstanding | VISUAL CERTIFICATION REQUIRED |
 
 ## 24. Document editing protocol
 
@@ -311,7 +315,7 @@ Use: CANONICAL, IMPLEMENTED, VERIFIED, MIGRATE, LEGACY COMPATIBILITY, EXCEPTION,
 Record repository, branch, PR, commit, merged-to-main YES/NO/UNKNOWN, files, components, primitives, selectors, tokens, recipes, tests, previous/new behavior, affected pages, desktop/mobile/open/closed/connection/data-state verification and regression risk when available.
 
 ### 27.4 Authority checks
-T0=56/5/16/10/28. T1=44/4/12/6/22. Former Compact shell=SUPERSEDED. T2=48/3/8/4/~14. T3=32/2/6/2/~9-10. Level owns geometry; component owns anatomy. Base rhythm 4px. Paired heights T1 20+4+20=44, T2 22+4+22=48, T3 14+4+14=32. Split rail width=row height. Preserve mobile full-width/bounded behavior and state separation.
+T0=80/5/16/10/26. T1=56/4/12/6/20. Former Compact shell=SUPERSEDED. T2=48/3/8/4/18. T3=32/2/6/2/12. Level owns geometry; component owns anatomy. Base rhythm 4px. Paired heights T1 26+4+26=56, T2 22+4+22=48, T3 14+4+14=32. Split rail width=row height. Preserve canonical shell geometry on mobile; collapse layout before shrinking registered controls.
 
 ### 27.5 Code <-> Reference Library
 `TOKENS -> CODED PRIMITIVE -> UI REFERENCE LIBRARY EXAMPLE -> PRODUCTION CONSUMER`.
