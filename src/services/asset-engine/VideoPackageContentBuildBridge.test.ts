@@ -196,7 +196,7 @@ describe("VideoPackage ContentBuild bridge", () => {
  })
 
 
- it("only finalizes a selected option when that artifact has explicit approval", () => {
+ it("finalizes an already-selected option only after explicit approval arrives", () => {
   const base = createVideoPackage({
    id: "package-approved-option",
    contentBuildId: "cb-approved-option",
@@ -205,8 +205,7 @@ describe("VideoPackage ContentBuild bridge", () => {
    workingTitle: "Approved option test",
    format: "long",
   })
-  const approvedAt = "2026-09-22T21:00:00.000Z"
-  const videoPackage = {
+  const selectedPackage = {
    ...base,
    packaging: {
     ...base.packaging,
@@ -218,17 +217,33 @@ describe("VideoPackage ContentBuild bridge", () => {
      sourceToolId: "packaging-lab-pro",
      vaultAssetId: "vault-title-approved",
      createdAt: base.identity.createdAt,
-     approvedAt,
     }],
     selectedTitleId: "title-approved",
    },
   }
 
-  const build = syncVideoPackageToContentBuild(videoPackage, { mode: "strict" })
-  const group = build.variantGroups.find(candidate => candidate.slot === "title")
-  expect(group?.selectedAssetId).toBe("vault-title-approved")
-  expect(group?.finalAssetId).toBe("vault-title-approved")
-  expect(group?.members.find(member => member.assetId === "vault-title-approved")?.status).toBe("final")
+  const selectedBuild = syncVideoPackageToContentBuild(selectedPackage, { mode: "strict" })
+  const selectedGroup = selectedBuild.variantGroups.find(candidate => candidate.slot === "title")
+  expect(selectedGroup?.selectedAssetId).toBe("vault-title-approved")
+  expect(selectedGroup?.finalAssetId).toBeNull()
+
+  const approvedAt = "2026-09-22T21:00:00.000Z"
+  const approvedPackage = {
+   ...selectedPackage,
+   packaging: {
+    ...selectedPackage.packaging,
+    titleVariants: selectedPackage.packaging.titleVariants.map(artifact => ({
+     ...artifact,
+     approvedAt,
+    })),
+   },
+  }
+
+  const finalizedBuild = syncVideoPackageToContentBuild(approvedPackage, { mode: "strict" })
+  const finalizedGroup = finalizedBuild.variantGroups.find(candidate => candidate.slot === "title")
+  expect(finalizedGroup?.selectedAssetId).toBe("vault-title-approved")
+  expect(finalizedGroup?.finalAssetId).toBe("vault-title-approved")
+  expect(finalizedGroup?.members.find(member => member.assetId === "vault-title-approved")?.status).toBe("final")
  })
 
  it("rejects strict synchronization when a package has no canonical ContentBuild identity", () => {
