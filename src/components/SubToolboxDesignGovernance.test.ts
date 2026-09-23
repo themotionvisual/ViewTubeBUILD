@@ -35,6 +35,26 @@ describe("subtoolbox design governance", () => {
   expect(systemCss).toContain('[data-vt-toolbox-level="sub"]')
  })
 
+ it("locks the mobile shell density and restored header anatomy", () => {
+  const toolboxCss = source("src/styles/toolbox-system.css")
+  const systemCss = source("src/styles/subtoolbox-system.css")
+  const primitives = source("src/components/subtoolbox/SubToolboxPrimitives.tsx")
+  const catalog = source("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
+
+  expect(toolboxCss).toContain("--vt-toolbox-header-height: 68px")
+  expect(toolboxCss).toContain("--vt-subtoolbox-header-height: 50px")
+  expect(toolboxCss).toContain("--vt-toolbox-shadow-offset: 7px")
+  expect(toolboxCss).toContain("--vt-subtoolbox-shadow-offset: 4px")
+  expect(toolboxCss).toContain("--vt-toolbox-radius: 14px")
+  expect(toolboxCss).toContain("--vt-subtoolbox-radius: 10px")
+  expect(systemCss).toContain(".vt-toolbox-header-toggle")
+  expect(systemCss).toContain(".vt-subtoolbox-file-target.vt-upload-tight-reveal")
+  expect(systemCss).toContain("box-shadow: none !important")
+  expect(primitives).toContain("export const ToolboxHeaderToggle")
+  expect(catalog).toContain('"Toolbox Header Toggle"')
+  expect(catalog).toContain('"SubToolbox Header Toggle"')
+ })
+
  it("keeps the compact inner-control hierarchy below the subtoolbox shell", () => {
   const tokenSource = source("src/components/subtoolbox/tokens.ts")
   const systemCss = source("src/styles/subtoolbox-system.css")
