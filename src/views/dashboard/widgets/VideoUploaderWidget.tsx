@@ -458,9 +458,9 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
                       <WidgetSizedButton
                         className="video-uploader-timestamps-button"
                         height={32}
-                        tone={page === "timestamps" ? "primary" : "default"}
+                        tone="default"
                         textFit="adaptive"
-                        aria-pressed={page === "timestamps"}
+                        aria-pressed={false}
                         onClick={() => setPage("timestamps")}
                       >
                         Timestamps
