@@ -3,7 +3,6 @@ import { PAGE_REGISTRY, type PageRegistryEntry } from "../app/pageRegistry"
 export const RECENT_DESTINATIONS_STORAGE_KEY = "viewtube:recent-destinations:v1"
 export const RECENT_DESTINATIONS_CHANGED_EVENT = "viewtube:recent-destinations-changed"
 const MAX_RECENT_DESTINATIONS = 8
-let cachedRecentDestinations: RecentDestination[] | null = null
 
 export interface RecentDestination {
   path: string
@@ -11,6 +10,12 @@ export interface RecentDestination {
   section: PageRegistryEntry["section"]
   visitedAt: number
 }
+
+const EMPTY_RECENT_DESTINATIONS: RecentDestination[] = []
+let cachedRecentDestinations: RecentDestination[] | null = null
+
+export const getRecentDestinationsServerSnapshot = (): RecentDestination[] =>
+  EMPTY_RECENT_DESTINATIONS
 
 const safeStorage = (): Storage | null => {
   if (typeof window === "undefined") return null
