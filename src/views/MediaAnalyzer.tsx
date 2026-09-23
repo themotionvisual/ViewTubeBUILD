@@ -13,8 +13,14 @@ import {
  ResponsiveContainer,
 } from "recharts"
 import { Search, Upload, AlignLeft, Target, FileText } from "lucide-react"
-import { ToolboxScaffold, SubToolbox, StandardInput, StandardUploadBox, StandardTextArea } from "../components/Toolbox"
+import { ToolboxScaffold, SubToolbox } from "../components/Toolbox"
 import { PostActionReflection } from "../components/PostActionReflection"
+import {
+ SubToolboxButton,
+ SubToolboxFileTarget,
+ SubToolboxInput,
+ SubToolboxTextArea,
+} from "../components/subtoolbox/SubToolboxPrimitives"
 
 interface MediaAnalyzerProps {
  embedded?: boolean
@@ -358,18 +364,20 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        shellClassName="h-full"
        contentClassName="p-5 h-full flex flex-col">
        <div className="flex flex-col gap-3">
-       <StandardUploadBox 
-        label={file ? file.name : "UPLOAD VIDEO / AUDIO"} 
-        minHeight="128px" 
-        iconBgColor="#FF3399" 
-        onUpload={(files) => setFile(files?.[0] || null)}
+       <SubToolboxFileTarget
+        level="l1"
+        label={file ? file.name : "UPLOAD VIDEO / AUDIO"}
+        icon={<Upload size={28} strokeWidth={3} />}
+        accept="video/*,audio/*"
+        minHeight={128}
+        onFiles={(files) => setFile(files?.[0] || null)}
        />
-       <button
+       <SubToolboxButton level="l1" tone="warning"
         onClick={() => fileInputRef.current?.click()}
         className="w-full bg-[#FFDD00] border-[3px] border-black p-2 font-black uppercase text-[10px] rounded-xl shadow-[3px_3px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
        >
         Upload Video / Audio
-       </button>
+       </SubToolboxButton>
        </div>
       </SubToolbox>
 
@@ -380,26 +388,26 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        shellClassName="h-full"
        contentClassName="p-5 h-full flex flex-col">
        <div className="flex flex-col gap-3 h-full min-h-0">
-        <StandardTextArea
+        <SubToolboxTextArea level="l1"
          value={script}
          onChange={(e) => setScript(e.target.value)}
          placeholder="PASTE YOUR SCRIPT HERE..."
-         sizeMode="fill"
+         height="fill"
          className="text-base"
         />
         <div className="grid grid-cols-2 gap-2 mt-auto">
-         <button
+         <SubToolboxButton level="l1" tone="warning"
           onClick={() => scriptUploadRef.current?.click()}
           className="w-full bg-[#FFB570] border-[3px] border-black p-2 font-black uppercase text-[10px] rounded-xl shadow-[3px_3px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
          >
           Upload Script File
-         </button>
-         <button
+         </SubToolboxButton>
+         <SubToolboxButton level="l1" tone="accent"
           onClick={() => scriptAudioUploadRef.current?.click()}
           className="w-full bg-[#00CCFF] border-[3px] border-black p-2 font-black uppercase text-[10px] rounded-xl shadow-[3px_3px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
          >
           Upload MP3
-         </button>
+         </SubToolboxButton>
         </div>
         <input
          ref={scriptUploadRef}
@@ -433,7 +441,7 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        shellClassName="h-full"
        contentClassName="p-5 h-full grid grid-cols-1 gap-4">
        <div className="space-y-1">
-       <StandardInput
+       <SubToolboxInput level="l1"
         value={videoConcept}
         onChange={(e) => setVideoConcept(e.target.value)}
         placeholder="Concept"
@@ -444,7 +452,7 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        </p>
        </div>
        <div className="space-y-1">
-       <StandardInput
+       <SubToolboxInput level="l1"
         value={targetNiche}
         onChange={(e) => setTargetNiche(e.target.value)}
         placeholder="Target niche"
@@ -455,7 +463,7 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        </p>
        </div>
        <div className="space-y-1">
-       <StandardInput
+       <SubToolboxInput level="l1"
         value={intendedAudience}
         onChange={(e) => setIntendedAudience(e.target.value)}
         placeholder="Intended audience"
@@ -474,22 +482,22 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        shellClassName="h-full"
        contentClassName="p-5 h-full flex flex-col">
        <div className="flex flex-col h-full min-h-0">
-       <StandardTextArea
+       <SubToolboxTextArea level="l1"
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        sizeMode="fill"
+        height="fill"
         className="text-base"
         placeholder="PACING, RETENTION DROPS, CLARITY, STRUCTURE..."
        />
        <div className="h-4" />
        <div className="mt-auto">
-        <button
+        <SubToolboxButton level="l0" tone="accent"
          onClick={handleAnalyze}
          disabled={isLoading || !file}
          className="w-full bg-[#00CCFF] border-[3px] border-black py-4 px-3 font-black uppercase text-sm rounded-xl shadow-[3px_3px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:cursor-not-allowed"
         >
          {isLoading ? "Processing..." : "Run Analysis"}
-        </button>
+        </SubToolboxButton>
        </div>
        </div>
        <input
@@ -627,13 +635,13 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
 
       <div className="mt-4">
        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <button
+        <SubToolboxButton level="l0" tone="success"
          onClick={handleSendInsightsToPublisher}
          className="w-full bg-[#CCFF00] border-[4px] border-black p-3 font-black uppercase text-sm rounded-xl shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
         >
          Send Insights to Video Publisher
-        </button>
-        <button
+        </SubToolboxButton>
+        <SubToolboxButton level="l0" tone="neutral"
          onClick={() => {
           setAnalysisResult(null)
           try {
@@ -645,7 +653,7 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
          className="w-full bg-white border-[4px] border-black p-3 font-black uppercase text-sm rounded-xl shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
         >
          Remove Latest Analysis
-        </button>
+        </SubToolboxButton>
        </div>
       </div>
       <div className="mt-6 animate-in slide-in-from-bottom-4 duration-700">
