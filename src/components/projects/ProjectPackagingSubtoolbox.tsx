@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom"
 import { useBrain } from "../../context/useBrain"
 import type { Project, VaultAsset } from "../../types"
 import { getContentBuild } from "../../services/asset-engine/ContentBuildRepository"
-import { listAssets, selectContentBuildAsset } from "../../services/assetEngine"
+import { listAssets } from "../../services/assetEngine"
+import { createLocalVaultAsset } from "../../services/vaultAdapter"
 import {
  clearProjectVideoPackageThumbnail,
  selectProjectVideoPackageThumbnail,
@@ -21,7 +22,8 @@ const isThumbnailCandidate = (
  const thumbnailTag = asset.tags.some(tag => tag.toLowerCase().includes("thumbnail"))
  const isImage = asset.kind === "image" || asset.mimeType?.startsWith("image/") || thumbnailTag
  const belongsToProject = asset.projectId === project.id || buildAssetIds.includes(asset.id)
- return Boolean(isImage && (belongsToProject || thumbnailTag))
+ const reusableUnscopedThumbnail = !asset.projectId && thumbnailTag
+ return Boolean(isImage && (belongsToProject || reusableUnscopedThumbnail))
 }
 
 const ProjectPackagingSubtoolbox: React.FC<{
@@ -42,13 +44,6 @@ const ProjectPackagingSubtoolbox: React.FC<{
 
  const selectThumbnail = (asset: VaultAsset) => {
   if (!project.contentBuildId) return
-  selectContentBuildAsset({
-   contentBuildId: project.contentBuildId,
-   slot: "thumbnail",
-   assetId: asset.id,
-   sourceToolId: "project-builder",
-   final: true,
-  })
   selectProjectVideoPackageThumbnail(project, asset, {
    channelId: channelIdentity.channelId || null,
    sourceToolId: "project-builder",
@@ -58,15 +53,31 @@ const ProjectPackagingSubtoolbox: React.FC<{
 
  const clearThumbnail = () => {
   if (project.contentBuildId) {
-   selectContentBuildAsset({
-    contentBuildId: project.contentBuildId,
-    slot: "thumbnail",
-    assetId: null,
-    sourceToolId: "project-builder",
-   })
    clearProjectVideoPackageThumbnail(project, { sourceToolId: "project-builder" })
   }
   onUpdate({ thumbnailUrl: "" })
+ }
+
+ const importCompatibilityUrl = () => {
+  const url = project.thumbnailUrl?.trim()
+  if (!url || !project.contentBuildId) return
+  const existing = assets.find(asset =>
+   asset.projectId === project.id &&
+   (asset.url === url || asset.previewUrl === url)
+  )
+  const asset = existing || createLocalVaultAsset({
+   name: `${project.videoTitle || project.name} thumbnail`,
+   kind: "image",
+   projectId: project.id,
+   projectName: project.name,
+   url,
+   tags: ["thumbnail", "project-builder", "imported-url"],
+   metadata: {
+    contentBuildId: project.contentBuildId,
+    sourceToolId: "project-builder",
+   },
+  })
+  selectThumbnail(asset)
  }
 
  return <SubToolbox
@@ -116,12 +127,21 @@ const ProjectPackagingSubtoolbox: React.FC<{
    </SubToolboxSection>
 
    <SubToolboxSection label="Compatibility thumbnail URL">
-    <SubToolboxInput
-     value={project.thumbnailUrl || ""}
-     onChange={event => onUpdate({ thumbnailUrl: event.target.value })}
-     placeholder="Legacy/external thumbnail URL…"
-     aria-label="Compatibility thumbnail URL"
-    />
+    <SubToolboxGrid minItemWidth="wide" density="dense">
+     <SubToolboxInput
+      value={project.thumbnailUrl || ""}
+      onChange={event => onUpdate({ thumbnailUrl: event.target.value })}
+      placeholder="Legacy/external thumbnail URL…"
+      aria-label="Compatibility thumbnail URL"
+     />
+     <SubToolboxButton
+      tone="neutral"
+      disabled={!project.thumbnailUrl?.trim() || !project.contentBuildId}
+      onClick={importCompatibilityUrl}
+     >
+      Import URL to Vault
+     </SubToolboxButton>
+    </SubToolboxGrid>
    </SubToolboxSection>
 
    <SubToolboxGrid minItemWidth="compact" density="dense">

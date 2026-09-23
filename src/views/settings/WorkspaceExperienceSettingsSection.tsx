@@ -1,10 +1,13 @@
 import React from "react"
 import {
   ArrowLeftRight,
+  Command,
+  History,
   Keyboard,
   LayoutPanelTop,
   Navigation,
   PanelTopClose,
+  PanelsTopLeft,
   Save,
   Smartphone,
   StickyNote,
@@ -74,6 +77,27 @@ const CONTINUITY_ITEMS: PreferenceItem[] = [
     description: "On mobile, closing the on-screen keyboard returns the workspace to its pre-keyboard position.",
     icon: <Keyboard size={21} />,
   },
+  {
+    key: "rememberToolboxState",
+    title: "Remember toolbox state",
+    description: "Toolboxes and subtoolboxes reopen in the same expanded or collapsed state you left them.",
+    icon: <PanelsTopLeft size={21} />,
+  },
+]
+
+const DESKTOP_ITEMS: PreferenceItem[] = [
+  {
+    key: "restoreLastWorkspace",
+    title: "Restore last workspace",
+    description: "When ViewTube opens at the Dashboard, return to the last Studio, Projects, Brain, Analytics, or Editor workspace you were using.",
+    icon: <History size={21} />,
+  },
+  {
+    key: "desktopKeyboardNavigation",
+    title: "Desktop keyboard navigation",
+    description: "Use Command/Ctrl + Shift + 1–8 to jump directly between ViewTube's primary sections.",
+    icon: <Command size={21} />,
+  },
 ]
 
 const ToggleRow: React.FC<{ item: PreferenceItem; enabled: boolean }> = ({ item, enabled }) => (
@@ -141,6 +165,14 @@ export const WorkspaceExperienceSettingsSection: React.FC = () => {
         description="Choose which parts of the workspace remember where you were as you rotate, navigate, type, and move between tools."
         accent="#CCFF00"
         items={CONTINUITY_ITEMS}
+        values={preferences}
+      />
+      <PreferenceGroup
+        eyebrow="Desktop behavior"
+        title="Fast navigation"
+        description="Optional shortcuts that make returning to work and moving around ViewTube faster on a keyboard-and-pointer setup."
+        accent="#FF83EA"
+        items={DESKTOP_ITEMS}
         values={preferences}
       />
     </div>

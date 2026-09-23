@@ -1,5 +1,6 @@
 import type { Project, VaultAsset } from "../../types"
 import { createVideoPackage } from "./packageValidation"
+import { getContentBuild, setContentBuildSelection } from "../asset-engine/ContentBuildRepository"
 import { findVideoPackageByProject, saveVideoPackage } from "./VideoPackageRepository"
 
 const packageFormatForProject = (project: Project): "short" | "long" | "live" => {
@@ -51,11 +52,21 @@ export const selectProjectVideoPackageThumbnail = (
     now?: string
   } = {},
 ) => {
+  if (!project.contentBuildId || !getContentBuild(project.contentBuildId)) {
+    throw new Error(`Cannot select thumbnail: Project ${project.id} has no resolved ContentBuild.`)
+  }
+
+  const sourceToolId = input.sourceToolId || "project-builder"
+  setContentBuildSelection(project.contentBuildId, "thumbnail", asset.id, {
+    toolId: sourceToolId,
+    actorType: "creator",
+    final: true,
+  })
+
   const videoPackage = ensureVideoPackageForProject(project, input)
   if (!videoPackage) return null
 
   const now = input.now || new Date().toISOString()
-  const sourceToolId = input.sourceToolId || "project-builder"
   const existing = videoPackage.packaging.thumbnailVariants.find(candidate => candidate.vaultAssetId === asset.id)
   const artifact = existing || {
     id: `thumbnail:${asset.id}`,
@@ -105,11 +116,20 @@ export const clearProjectVideoPackageThumbnail = (
   input: { sourceToolId?: string; now?: string } = {},
 ) => {
   if (!project.contentBuildId) return null
+  if (!getContentBuild(project.contentBuildId)) {
+    throw new Error(`Cannot clear thumbnail: Project ${project.id} has no resolved ContentBuild.`)
+  }
+
+  const sourceToolId = input.sourceToolId || "project-builder"
+  setContentBuildSelection(project.contentBuildId, "thumbnail", null, {
+    toolId: sourceToolId,
+    actorType: "creator",
+  })
+
   const videoPackage = findVideoPackageByProject(project.id, project.contentBuildId)
   if (!videoPackage || !videoPackage.packaging.selectedThumbnailId) return videoPackage
 
   const now = input.now || new Date().toISOString()
-  const sourceToolId = input.sourceToolId || "project-builder"
   const previous = videoPackage.packaging.selectedThumbnailId
   return saveVideoPackage({
     ...videoPackage,

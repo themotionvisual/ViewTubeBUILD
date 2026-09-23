@@ -17,6 +17,6 @@ describe("Studio primitive rollout wave 1", () => {
     expect(source.match(/<SubToolboxSegmentedToggle\b/g)?.length ?? 0).toBeGreaterThanOrEqual(2)
     expect(source).toContain('ariaLabel="Thumbnail Studio mode"')
     expect(source).toContain('ariaLabel="Thumbnail preview surface"')
-    expect(source).not.toContain('import { StandardButton }')
+    expect(source).not.toContain("StandardButton")
   })
 })
