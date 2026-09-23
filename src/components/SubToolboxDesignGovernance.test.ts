@@ -94,6 +94,19 @@ describe("subtoolbox design governance", () => {
   expect(endScreen).toContain('label={genLoading ? "Creating..." : "Generate Template"}')
  })
 
+ it("keeps first-layer interior strokes uniform with the upload-frame exception", () => {
+  const css = source("src/styles/subtoolbox-system.css")
+  const toolboxCss = source("src/styles/toolbox-system.css")
+
+  expect(css).toContain("First visual layer inside a SubToolbox shares one 3px interior stroke")
+  expect(css).toContain(":not(.vt-subtoolbox-file-target)")
+  expect(css).toContain("--vt-component-stroke: var(--vt-subtoolbox-inner-stroke,3px)!important")
+  expect(css).toContain(".vt-subtoolbox-file-target.vt-upload-tight-reveal")
+  expect(css).toContain("box-shadow: none !important")
+  expect(toolboxCss).toContain(".vt-subtoolbox-inset")
+  expect(toolboxCss).toContain("padding: 4px 4px 0 !important")
+ })
+
  it("keeps the compact inner-control hierarchy below the subtoolbox shell", () => {
   const tokenSource = source("src/components/subtoolbox/tokens.ts")
   const systemCss = source("src/styles/subtoolbox-system.css")
