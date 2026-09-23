@@ -1,4 +1,5 @@
 import type { BrainConfidenceLevel } from "../../types"
+import { loadPersistedBrainIntelligence, persistBrainIntelligence } from "./BrainIntelligencePersistence"
 
 const STORAGE_KEY = "vt_algorithm_intelligence_events_v1"
 export const ALGORITHM_INTELLIGENCE_EVENT_CHANGED = "vt_algorithm_intelligence_event_changed"
@@ -67,8 +68,31 @@ const read = (): AlgorithmIntelligenceEvent[] => {
 
 const write = (events: AlgorithmIntelligenceEvent[]) => {
  if (!canUseStorage()) return
- localStorage.setItem(STORAGE_KEY, JSON.stringify(events.slice(0, 2000)))
- window.dispatchEvent(new CustomEvent(ALGORITHM_INTELLIGENCE_EVENT_CHANGED, { detail: events }))
+ const bounded = events.slice(0, 2000)
+ localStorage.setItem(STORAGE_KEY, JSON.stringify(bounded))
+ window.dispatchEvent(new CustomEvent(ALGORITHM_INTELLIGENCE_EVENT_CHANGED, { detail: bounded }))
+}
+
+const persistEvent = (event: AlgorithmIntelligenceEvent) => {
+ void persistBrainIntelligence({ channelId: event.channelId, events: [event] }).catch((error) => {
+  console.warn("[AlgorithmIntelligenceEventLedger] durable sync deferred:", error)
+ })
+}
+
+export const hydrateAlgorithmIntelligenceEvents = async (channelId: string) => {
+ const persisted = await loadPersistedBrainIntelligence(channelId)
+ if (!persisted) return { hydrated: 0 }
+ const remote = (persisted.events || []) as AlgorithmIntelligenceEvent[]
+ const local = read()
+ const byId = new Map(local.map((event) => [event.id, event]))
+ remote.forEach((event) => {
+  if (!event?.id || event.channelId !== channelId) return
+  const current = byId.get(event.id)
+  if (!current || Number(event.createdAt || 0) >= Number(current.createdAt || 0)) byId.set(event.id, event)
+ })
+ const merged = [...byId.values()].sort((a, b) => b.createdAt - a.createdAt)
+ write(merged)
+ return { hydrated: remote.length }
 }
 
 export const recordAlgorithmIntelligenceEvent = (
@@ -93,6 +117,7 @@ export const recordAlgorithmIntelligenceEvent = (
   createdAt: existing?.createdAt || Date.now(),
  }
  write([event, ...events.filter((candidate) => candidate.id !== event.id)])
+ persistEvent(event)
  return event
 }
 
