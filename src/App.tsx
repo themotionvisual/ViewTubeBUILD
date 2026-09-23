@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useSyncExternalStore } from "react"
-import { BrowserRouter, useLocation } from "react-router-dom"
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react"
+import { BrowserRouter, useLocation, useNavigate } from "react-router-dom"
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { GlobalDataProvider } from "./context/GlobalDataContext"
 import { UnifiedAccountProvider } from "./context/UnifiedAccountContext"
@@ -13,6 +13,8 @@ import { DiagnosticOverlay } from "./app/DiagnosticOverlay"
 import { recordBootPhase } from "./app/onScreenDiagnostics"
 import { isDiagnosticOverlayEnabled, subscribeDiagnosticOverlay } from "./services/diagnostics"
 import { SimpleAuthProvider } from "./auth/AuthProvider"
+import { useWorkspaceUxPreferences } from "./hooks/useWorkspaceUxPreferences"
+import { getLastWorkspaceRoute, isRestorableWorkspaceRoute, saveLastWorkspaceRoute } from "./services/workspaceUiPersistence"
 
 const DARK_THEME_CSS = `
   .dark-theme-override {
@@ -55,6 +57,9 @@ const DARK_THEME_CSS = `
  */
 function AppInner() {
  const location = useLocation()
+ const navigate = useNavigate()
+ const workspaceUx = useWorkspaceUxPreferences()
+ const initialWorkspaceRestoreHandled = useRef(false)
  const isBareRoute = location.pathname.startsWith("/render-bench")
  // The diagnostic panel is opt-in from Navigation → Diagnostics (or
  // ?vtDiagnostics=1). useSyncExternalStore so flipping the toggle shows and
@@ -64,6 +69,36 @@ function AppInner() {
   isDiagnosticOverlayEnabled,
   () => false,
  )
+
+ useEffect(() => {
+  const route = `${location.pathname}${location.search}${location.hash}`
+
+  if (!initialWorkspaceRestoreHandled.current) {
+   initialWorkspaceRestoreHandled.current = true
+   if (
+    workspaceUx.restoreLastWorkspace &&
+    location.pathname === "/" &&
+    !location.search &&
+    !location.hash
+   ) {
+    const lastRoute = getLastWorkspaceRoute()
+    if (lastRoute) {
+     navigate(lastRoute, { replace: true })
+     return
+    }
+   }
+  }
+
+  if (workspaceUx.restoreLastWorkspace && isRestorableWorkspaceRoute(route)) {
+   saveLastWorkspaceRoute(route)
+  }
+ }, [
+  location.hash,
+  location.pathname,
+  location.search,
+  navigate,
+  workspaceUx.restoreLastWorkspace,
+ ])
 
  if (isBareRoute) {
   return (
