@@ -7,8 +7,39 @@ import {
 
 export const VIDEO_PACKAGE_STORAGE_KEY = "viewtube_video_packages_v1"
 export const VIDEO_PACKAGE_RECOVERY_KEY = "viewtube_video_packages_recovery_v1"
+export const VIDEO_PACKAGE_STORE_VERSION = 1 as const
+
+type VideoPackageStoreEnvelope = {
+  storeVersion: typeof VIDEO_PACKAGE_STORE_VERSION
+  updatedAt: string
+  packages: ViewTubeVideoPackage[]
+}
+
+type LegacyVideoPackageStoreEnvelope = {
+  storeVersion?: number
+  updatedAt?: string
+  items?: unknown
+  packages?: unknown
+}
+
+type NormalizedVideoPackageStore = {
+  packages: ViewTubeVideoPackage[]
+  migrated: boolean
+  repaired: boolean
+}
 
 let memoryPackages: ViewTubeVideoPackage[] = []
+
+const nowIso = () => new Date().toISOString()
+
+const createStoreEnvelope = (
+  packages: ViewTubeVideoPackage[],
+  updatedAt = nowIso(),
+): VideoPackageStoreEnvelope => ({
+  storeVersion: VIDEO_PACKAGE_STORE_VERSION,
+  updatedAt,
+  packages,
+})
 
 const canUseStorage = () => {
   try {
@@ -30,18 +61,62 @@ const recoverValidPackages = (value: unknown): ViewTubeVideoPackage[] => {
   })
 }
 
+const normalizeStoredValue = (value: unknown): NormalizedVideoPackageStore => {
+  if (Array.isArray(value)) {
+    const packages = recoverValidPackages(value)
+    return {
+      packages,
+      migrated: true,
+      repaired: packages.length !== value.length,
+    }
+  }
+
+  if (!value || typeof value !== "object") {
+    throw new Error("Stored Video Package data must be an array or versioned envelope.")
+  }
+
+  const candidate = value as LegacyVideoPackageStoreEnvelope
+
+  if (candidate.storeVersion === VIDEO_PACKAGE_STORE_VERSION && Array.isArray(candidate.packages)) {
+    const packages = recoverValidPackages(candidate.packages)
+    return {
+      packages,
+      migrated: false,
+      repaired: packages.length !== candidate.packages.length,
+    }
+  }
+
+  if (
+    (candidate.storeVersion === 0 || candidate.storeVersion === undefined) &&
+    (Array.isArray(candidate.items) || Array.isArray(candidate.packages))
+  ) {
+    const source = Array.isArray(candidate.items) ? candidate.items : candidate.packages as unknown[]
+    const packages = recoverValidPackages(source)
+    return {
+      packages,
+      migrated: true,
+      repaired: packages.length !== source.length,
+    }
+  }
+
+  throw new Error(`Unsupported Video Package store version: ${String(candidate.storeVersion)}`)
+}
+
 const readStored = (): ViewTubeVideoPackage[] => {
   if (!canUseStorage()) return memoryPackages
   const raw = localStorage.getItem(VIDEO_PACKAGE_STORAGE_KEY)
   if (!raw) return []
+
   try {
-    const parsed = JSON.parse(raw)
-    const recovered = recoverValidPackages(parsed)
-    if (recovered.length !== (Array.isArray(parsed) ? parsed.length : 0)) {
+    const normalized = normalizeStoredValue(JSON.parse(raw))
+    if (normalized.migrated || normalized.repaired) {
       localStorage.setItem(VIDEO_PACKAGE_RECOVERY_KEY, raw)
-      localStorage.setItem(VIDEO_PACKAGE_STORAGE_KEY, JSON.stringify(recovered))
+      localStorage.setItem(
+        VIDEO_PACKAGE_STORAGE_KEY,
+        JSON.stringify(createStoreEnvelope(normalized.packages)),
+      )
     }
-    return recovered
+    return normalized.packages
   } catch {
     try {
       localStorage.setItem(VIDEO_PACKAGE_RECOVERY_KEY, raw)
@@ -59,7 +134,10 @@ const writeStored = (packages: ViewTubeVideoPackage[]) => {
     return
   }
   try {
-    localStorage.setItem(VIDEO_PACKAGE_STORAGE_KEY, JSON.stringify(packages))
+    localStorage.setItem(
+      VIDEO_PACKAGE_STORAGE_KEY,
+      JSON.stringify(createStoreEnvelope(packages)),
+    )
   } catch {
     memoryPackages = packages
   }

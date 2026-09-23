@@ -2,36 +2,30 @@
   "threadId": "herald-2026-09-22-project-content-convergence",
   "verb": "BUILD",
   "tier": "T2",
-  "stage": "EXECUTE",
+  "stage": "VERIFY",
   "taskIds": [],
   "missionId": null,
   "owner": "Projects / ContentBuild / Video Package / Asset Engine convergence",
-  "writerLock": {
-    "paths": [
-      "src/services/asset-engine/VideoPackageContentBuildBridge.ts",
-      "src/services/asset-engine/VideoPackageContentBuildBridge.test.ts",
-      "src/services/video-package/VideoPackageRepository.ts",
-      "src/services/video-package/VideoPackageRepository.test.ts",
-      "docs/architecture/PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md",
-      ".viewtube/herald/threads/herald-2026-09-22-project-content-convergence.json",
-      ".viewtube/herald/ledger/2026-09-22.jsonl"
-    ],
-    "acquired": "2026-09-22T21:43:00-04:00"
-  },
+  "writerLock": null,
   "reconRef": "docs/architecture/PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md",
   "openQuestions": [
-    "Selected title/thumbnail must not be implicitly finalized.",
-    "Video Package recovery snapshot must survive corrupt-store repair.",
-    "Automatic synchronization must remain idempotent across repeated saves."
+    "Versioned Video Package envelope migration is implemented; CI verification remains in progress.",
+    "Next persistence slice should evaluate adapter boundaries, optimistic revision checks and autosave without introducing a second store.",
+    "Publishing transaction work remains a selective donor port after persistence authority is stable."
   ],
-  "nextAction": "Harden selection/finalization authority and recovery semantics with focused tests before extending identity/persistence migration.",
+  "nextAction": "Finish PR #321 release-gate review; if branch-specific gates are clean, merge the versioned canonical store slice, then begin storage adapter / optimistic revision work.",
   "entries": [
     {
       "ts": "2026-09-22T21:43:00-04:00",
       "status": "in-progress",
       "note": "Current integration branch audited at 12 ahead / 3 behind main; preserve existing work and patch in place."
+    },
+    {
+      "ts": "2026-09-22T22:05:00-04:00",
+      "status": "partial-verified",
+      "note": "Wave 2: versioned canonical Video Package envelope + in-place raw-array migration + unsupported-version quarantine. Corrected stale authority test so approvedAt does not imply final; explicit creator finalization required. PR #321 draft/mergeable. First run: VideoPackageRepository tests 7/7 green; production-build/source-governance/local-smoke green; focused/full/static retain unrelated base failures. Second run in progress with source-governance green."
     }
   ],
   "lastApp": "chatgpt",
-  "lastTs": "2026-09-22T21:43:00-04:00"
+  "lastTs": "2026-09-22T22:05:00-04:00"
 }
