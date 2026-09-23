@@ -1,4 +1,3 @@
-import { CONTROLLER_LAYOUT_WIDTH } from "./controllerRowWidth"
 import React, { useEffect, useId, useMemo, useRef, useState } from "react"
 import "./marquee.css"
 import {
@@ -839,7 +838,7 @@ export const RevenueDistribution: React.FC<GChartProps> = ({ data }) => {
     shadowColor: "rgba(204,255,0,0.45)",
    }}
    layout={{ moduleMinHeight: "250px", moduleWidth: "100%" }}
-   controllerWidth={CONTROLLER_LAYOUT_WIDTH.chart}
+   controllerWidth={210}
    controllerRows={controllerRows}
    activeContext={{
     title: cd[0]?.name?.toUpperCase() || "NO DATA",
@@ -1138,7 +1137,7 @@ export const WatchTimeDistribution: React.FC<GChartProps> = ({ data }) => {
     shadowColor: "rgba(255,234,0,0.45)",
    }}
    layout={{ moduleMinHeight: "250px", moduleWidth: "100%" }}
-   controllerWidth={CONTROLLER_LAYOUT_WIDTH.chart}
+   controllerWidth={210}
    controllerRows={controllerRows}
    activeContext={{
     title: cd[0]?.name?.toUpperCase() || "NO DATA",
@@ -1216,7 +1215,7 @@ export const SubscribersGained: React.FC<GChartProps> = ({ data }) => {
     shadowColor: "rgba(255,234,0,0.45)",
    }}
    layout={{ moduleMinHeight: "250px", moduleWidth: "100%" }}
-   controllerWidth={CONTROLLER_LAYOUT_WIDTH.chart}
+   controllerWidth={210}
    controllerRows={controllerRows}
    activeContext={{
     title: cd[0]?.name?.toUpperCase() || "NO DATA",
@@ -2510,7 +2509,7 @@ export const EngagementMap: React.FC<GChartProps> = ({ data }) => {
  const top = cd[0]
  return (
   <SubToolboxChartModule
-   header={{ title: "ENGAGEMENT MAP", subtitle: "LIKES \u00b7 COMMENTS \u00b7 SHARES", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "ENGAGEMENT MAP", subtitle: "Likes, comments and shares plotted together for each video.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#FF9900", iconBlockBg: "#FFB158", shadowColor: "rgba(255,153,0,0.45)" }}
    activeContext={{
     title: top?.name?.toUpperCase() || "NO DATA",
@@ -2524,28 +2523,39 @@ export const EngagementMap: React.FC<GChartProps> = ({ data }) => {
    }}
    controllerRows={[
     {
-     type: "dropdown",
-     value: sortBy,
-     options: [{ label: "BEST VIDEOS", value: "best" }, { label: "NEWEST FIRST", value: "newest" }],
-     onSelect: (v) => setSortBy(v as "best" | "newest"),
+     type: "number",
+     value: selectedCount,
+     onPrev: () => {
+      const values = [10, 15, 20, 25, 50]
+      const index = values.indexOf(selectedCount)
+      setSelectedCount(values[(index - 1 + values.length) % values.length])
+     },
+     onNext: () => {
+      const values = [10, 15, 20, 25, 50]
+      const index = values.indexOf(selectedCount)
+      setSelectedCount(values[(index + 1) % values.length])
+     },
      bgTone: "#FF9900",
      fgTone: "#000000",
     },
     {
-     type: "dropdown",
-     value: String(selectedCount),
-     options: [10, 15, 20, 25, 50].map((n) => ({ label: `TOP ${n}`, value: String(n) })),
-     onSelect: (v) => setSelectedCount(Number(v)),
-     bgTone: "#FFB158",
-     fgTone: "#000000",
+     type: "split",
+     leftValue: sortBy === "newest" ? "LATEST" : "GREATEST",
+     rightValue: selectedFormat === "All" ? "VIDEOS" : selectedFormat === "Long" ? "LONGFORM" : "SHORTS",
+     leftWidthValues: ["LATEST", "GREATEST"],
+     rightWidthValues: ["VIDEOS", "LONGFORM", "SHORTS"],
+     onPrev: () => setSortBy((current) => current === "newest" ? "best" : "newest"),
+     onNext: () => setSelectedFormat((current) => current === "All" ? "Long" : current === "Long" ? "Shorts" : "All"),
+     leftBgTone: "#FF7497",
+     rightBgTone: "#33FF99",
+     leftFgTone: "#000000",
+     rightFgTone: "#000000",
     },
     {
-     type: "dropdown",
-     value: selectedFormat,
-     options: ["All", "Shorts", "Long"].map((f) => ({ label: f.toUpperCase(), value: f })),
-     onSelect: (v) => setSelectedFormat(v as "All" | "Shorts" | "Long"),
-     bgTone: "#FFEA00",
-     fgTone: "#000000",
+     type: "label",
+     value: "RANKED BY LIKES",
+     bgTone: "#000000",
+     fgTone: "#FFEA00",
     },
    ]}
    legendLayout={{ left: <span className="text-[10px] font-black uppercase text-black"><span className="inline-block w-3 h-3 bg-[#FF7497] border border-black mr-1" />LIKES</span>, center: <span className="text-[10px] font-black uppercase text-black"><span className="inline-block w-3 h-3 bg-[#00E5FF] border border-black mr-1" />COMMENTS</span>, right: <span className="text-[10px] font-black uppercase text-black"><span className="inline-block w-3 h-3 bg-[#CCFF00] border border-black mr-1" />SHARES</span> }}
@@ -2553,10 +2563,21 @@ export const EngagementMap: React.FC<GChartProps> = ({ data }) => {
   >
    <div className="p-4 h-[340px]">
     <StableChartFrame minHeightClassName="min-h-[300px]">
-     <BarChart data={cd} margin={{ top: 10, right: 10, left: -20, bottom: 40 }}>
+     <BarChart data={cd} margin={{ top: 10, right: 4, left: 4, bottom: 40 }}>
       <CartesianGrid strokeDasharray="3 3" vertical={false} />
       <XAxis dataKey="name" tick={{ fontSize: 8, fontWeight: 900 }} interval={0} angle={-45} textAnchor="end" />
-      <YAxis tick={{ fontSize: 10, fontWeight: 900 }} />
+      <YAxis tick={{ fontSize: 10, fontWeight: 900,
+                      fill: "#B8B8B8",}} 
+       axisLine={viewTubeAxisLine}
+      
+       tickLine={false}
+      
+       mirror={true}
+      
+       tickMargin={6}
+      
+       width={1}
+      />
       <Tooltip content={<ChartTip />} />
       <Bar dataKey="likes" name="Likes" fill="#FF7497" radius={[4, 4, 0, 0]} />
       <Bar dataKey="comments" name="Comments" fill="#00E5FF" radius={[4, 4, 0, 0]} />
@@ -2575,9 +2596,31 @@ export const PerformanceTrend: React.FC<GChartProps> = ({ data }) => {
    views: mv(r,"views"), subs: mv(r,"subscribersGained") })), [data])
  return (
   <Card title="PERFORMANCE TREND" subtitle="Views vs. Subscriber Trends" headerColor="#FFEA00">
-   <ComposedChart data={cd} margin={{top:10,right:10,left:-10,bottom:0}}>
+   <ComposedChart data={cd} margin={{top:10,right:4,left:4,bottom:0}}>
     <CartesianGrid strokeDasharray="3 3"/><XAxis dataKey="date" tick={{fontSize:9,fontWeight:900}}/>
-    <YAxis yAxisId="l" tick={{fontSize:10,fontWeight:900}}/><YAxis yAxisId="r" orientation="right" tick={{fontSize:10,fontWeight:900}}/>
+    <YAxis yAxisId="l" tick={{fontSize:10,fontWeight:900,
+                      fill: "#B8B8B8",}}
+       axisLine={viewTubeAxisLine}
+      
+       tickLine={false}
+      
+       mirror={true}
+      
+       tickMargin={6}
+      
+       width={1}
+      /><YAxis yAxisId="r" orientation="right" tick={{fontSize:10,fontWeight:900,
+                      fill: "#B8B8B8",}}
+       axisLine={viewTubeAxisLine}
+      
+       tickLine={false}
+      
+       mirror={true}
+      
+       tickMargin={6}
+      
+       width={1}
+      />
     <Tooltip content={<ChartTip/>}/>
     <Area yAxisId="l" type="monotone" dataKey="views" fill="#FF749730" stroke="#FF7497" strokeWidth={2} name="Views"/>
     <Line yAxisId="r" type="monotone" dataKey="subs" stroke="#00E5FF" strokeWidth={3} dot={false} name="Subscribers"/>
@@ -2593,9 +2636,20 @@ export const DurationSweetSpot: React.FC<GChartProps> = ({ data }) => {
  })).filter(d=>d.dur>0&&d.views>0), [data])
  return (
   <Card title="DURATION SWEET SPOT" subtitle="Video Length × Avg Views" headerColor="#CCFF00">
-   <ScatterChart margin={{top:10,right:10,bottom:10,left:-10}}>
+   <ScatterChart margin={viewTubeCartesianMargin("scatter", 32)}>
     <CartesianGrid strokeDasharray="3 3"/><XAxis type="number" dataKey="dur" name="Duration (min)" tick={{fontWeight:900,fontSize:10}}/>
-    <YAxis type="number" dataKey="views" name="Views" tick={{fontWeight:900,fontSize:10}} tickFormatter={v=>v>1000?`${(v/1000).toFixed(0)}K`:v}/>
+    <YAxis type="number" dataKey="views" name="Views" tick={{fontWeight:900,fontSize:10,
+                      fill: "#B8B8B8",}} tickFormatter={v=>v>1000?`${(v/1000).toFixed(0)}K`:v}
+       axisLine={viewTubeAxisLine}
+      
+       tickLine={false}
+      
+       mirror={true}
+      
+       tickMargin={6}
+      
+       width={1}
+      />
     <ZAxis type="number" dataKey="avp" range={[30,300]}/>
     <Tooltip content={<ChartTip/>}/><Scatter data={cd} fill="#FF7497" stroke="#000" strokeWidth={1}/></ScatterChart>
   </Card>
@@ -2611,7 +2665,18 @@ export const AudienceGrowth: React.FC<GChartProps> = ({ data }) => {
  return (
   <Card title="AUDIENCE GROWTH" subtitle="Discovery vs. Community" headerColor="#FF9900">
    <AreaChart data={cd} margin={{top:10,right:10,left:-10,bottom:0}}>
-    <CartesianGrid strokeDasharray="3 3"/><XAxis dataKey="date" tick={{fontSize:9,fontWeight:900}}/><YAxis tick={{fontSize:10,fontWeight:900}}/>
+    <CartesianGrid strokeDasharray="3 3"/><XAxis dataKey="date" tick={{fontSize:9,fontWeight:900}}/><YAxis tick={{fontSize:10,fontWeight:900,
+                      fill: "#B8B8B8",}}
+       axisLine={viewTubeAxisLine}
+      
+       tickLine={false}
+      
+       mirror={true}
+      
+       tickMargin={6}
+      
+       width={1}
+      />
     <Tooltip content={<ChartTip/>}/><Area type="monotone" dataKey="subs" fill="#CCFF00" stroke="#000" strokeWidth={2} name="Subscribers Gained"/></AreaChart>
   </Card>
  )
@@ -2632,7 +2697,7 @@ export const GoldenRatioRadar: React.FC<GChartProps> = ({ data }) => {
  }, [data])
  return (
   <SubToolboxChartModule
-   header={{ title: "GOLDEN RATIO RADAR", subtitle: "CTR \u00b7 AVP \u00b7 LIKES \u00b7 CMTS \u00b7 SHARES \u00b7 SUBS", icon: <CustomIcon name="analytics" size={18} /> }}
+   header={{ title: "GOLDEN RATIO RADAR", subtitle: "Six performance axes drawn as one shape, so a video's balance reads at a glance.", icon: <CustomIcon name="analytics" size={18} /> }}
    theme={{ headerBandBg: "#00E5FF", iconBlockBg: "#0088FF", shadowColor: "rgba(0,229,255,0.45)" }}
    activeContext={{ title: "CHANNEL AVERAGES", stats: [
     { label: "CTR", value: `${rd[0]?.A ?? 0}%`, tone: "cyan" },
@@ -2664,7 +2729,7 @@ export const HookEffectiveness: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
     title: "HOOK EFFECTIVENESS",
-    subtitle: "30-SECOND RETENTION",
+    subtitle: "How much of the first 30 seconds each video holds.",
     icon: <CustomIcon name="analytics" size={18} />,
     headerStyle: "subtoolbox",
    }}
@@ -2693,10 +2758,10 @@ export const HookEffectiveness: React.FC<GChartProps> = ({ data }) => {
   >
    <div className="h-[340px] p-4">
     <StableChartFrame minHeightClassName="min-h-[300px]">
-     <BarChart data={cd} layout="vertical" margin={{top:10,right:30,left:10,bottom:5}}>
+     <BarChart data={cd} layout="vertical" margin={{top:10,right:4,left:4,bottom:5}}>
       <CartesianGrid strokeDasharray="3 3" horizontal={false}/>
-      <XAxis type="number" domain={[0,100]} unit="%" tick={{fontWeight:900,fontSize:11}} axisLine={{ stroke: '#000', strokeWidth: 3 }}/>
-      <YAxis dataKey="name" type="category" tick={{fontWeight:900,fontSize:9}} width={120} axisLine={{ stroke: '#000', strokeWidth: 3 }}/>
+      <XAxis type="number" domain={[0,100]} unit="%" tick={{fontWeight:900,fontSize:11}} axisLine={viewTubeAxisLine}/>
+      <YAxis dataKey="name" type="category" tick={{fontWeight:900,fontSize:9}} width={120} axisLine={viewTubeAxisLine}/>
       <Tooltip content={<ChartTip/>}/>
       <Bar dataKey="avp" fill="#33FF99" name="AVP %" radius={[0,4,4,0]}/>
      </BarChart>
@@ -2830,7 +2895,7 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
   <SubToolboxChartModule
    header={{
     title: "GROWTH PULSE",
-    subtitle: "PERIOD AMOUNT • RUNNING TOTAL",
+    subtitle: "Per-period totals with the running cumulative line above them.",
     icon: <CustomIcon name="analytics" size={18} />,
    }}
    theme={{
@@ -2855,7 +2920,9 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
     },
     {
       type: "text",
+      labelPrefix: "PAST",
       value: TIME_RANGE_OPTIONS.find((o) => o.value === timeRange)?.label || timeRange,
+      widthValues: TIME_RANGE_OPTIONS.map((option) => option.label),
       onPrev: () => {
        const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
        setTimeRange(TIME_RANGE_OPTIONS[(idx - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value)
@@ -2883,7 +2950,7 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
     <StableChartFrame minHeightClassName="min-h-[260px]">
      <LineChart
       data={chartData}
-      margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+      margin={{ top: 10, right: 4, left: 4, bottom: 0 }}
       onMouseMove={(state: any) => {
        if (typeof state?.activeTooltipIndex === "number") {
         setHoveredIdx(state.activeTooltipIndex)
@@ -2893,7 +2960,17 @@ export const GrowthPulse: React.FC<GChartProps> = ({ data }) => {
      >
       <CartesianGrid strokeDasharray="3 3" stroke="#333" />
       <XAxis dataKey="title" tick={{ fill: "#666", fontSize: 8, fontWeight: 900 }} />
-      <YAxis tick={{ fill: "#666", fontSize: 10 }} />
+      <YAxis tick={{ fill: "#B8B8B8", fontSize: 10 }} 
+       axisLine={viewTubeAxisLine}
+      
+       tickLine={false}
+      
+       mirror={true}
+      
+       tickMargin={6}
+      
+       width={1}
+      />
       <Tooltip content={<ChartTip />} />
       <Line type="monotone" dataKey="views" stroke="#FF7497" strokeWidth={3} dot={false} name="Views" />
       <Line type="monotone" dataKey="subs" stroke="#00E5FF" strokeWidth={3} dot={false} name="Subscribers" />
@@ -2985,9 +3062,10 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
 
  return (
   <SubToolboxChartModule
+   heroVisualId="format-dominance"
    header={{
     title: "FORMAT DOMINANCE",
-    subtitle: `DATA: FORMATS • ${contentTypeTotals ? "CREATOR CONTENT TYPE" : "VIDEO CATALOG FALLBACK"} • HOW EACH FORMAT DRIVES CORE METRICS`,
+    subtitle: "How each format splits the channel's core metrics.",
     headerStyle: "subtoolbox",
     icon: <CustomIcon name="layers" size={18} />,
    }}
@@ -3001,7 +3079,7 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
     leftTitle: "LONGFORM",
     leftStats: longStats,
     title: (
-     <div className="w-full h-full flex items-center justify-center">
+     <div className="relative w-full h-full flex items-center justify-center">
       <div className="flex items-center gap-8">
        <div className="flex items-center gap-1.5">
         <div className="w-4 h-4 rounded-full bg-[#00E5FF] border-[2px] border-black" />
@@ -3018,9 +3096,9 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
     rightStats: shortsStats
    }}
    controllerRows={[
-    { type: "number", value: filteredData.length, bgTone: "#00E5FF" },
-    { type: "label", value: "LONG + SHORTS", bgTone: "#FF7497", fgTone: "#000000" },
-    { type: "toggle", value: aggregationMode.toUpperCase(), options: ["TOTAL", "AVERAGE"], onSelect: (value) => setAggregationMode(value.toLowerCase() as "total" | "average"), bgTone: "#FFEA00", fgTone: "#000000" },
+    { type: "number", value: filteredData.length, unitLabel: "VIDEOS", bgTone: "#00E5FF" },
+    { type: "label", value: "LONGFORM VS SHORTS" },
+    { type: "toggle", labelPrefix: "SHOW AS", value: aggregationMode.toUpperCase(), options: ["TOTAL", "AVERAGE"], onSelect: (value) => setAggregationMode(value.toLowerCase() as "total" | "average"), bgTone: "#FFEA00", fgTone: "#000000" },
    ]}
    footer={
     <InsightMarquee 
@@ -3030,7 +3108,8 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
    }
    footerBorderless
   >
-   <div className="flex flex-row items-stretch justify-center gap-0 p-0 bg-white h-[352px] overflow-hidden">
+   <HeroIntroBoundary visualId="format-dominance" replayKey={aggregationMode}>
+    <div className="flex flex-row items-stretch justify-center gap-0 p-0 bg-white h-[352px] overflow-hidden">
     {cd.map((metric) => (
      <div key={metric.key} className="flex-1 h-full min-w-0 relative bg-white flex flex-col">
       <div className="flex-1 min-h-0 relative">
@@ -3085,7 +3164,8 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
       </div>
      </div>
     ))}
-   </div>
+    </div>
+   </HeroIntroBoundary>
   </SubToolboxChartModule>
  )
 }
@@ -3096,7 +3176,8 @@ export const FormatComparisonDonuts: React.FC<GChartProps> = ({ data, contentTyp
 const REVENUE_EFFICIENCY_COUNT_VALUES = [25, 50, 75, 100]
 
 export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
-  const [mode, setMode] = useState<"best-revenue" | "best-watch-hours" | "most-recent">("best-revenue")
+  const [selectionMode, setSelectionMode] = useState<"recent" | "greatest">("greatest")
+  const [rankMetric, setRankMetric] = useState<"watch-hours" | "revenue" | "views">("revenue")
   const [formatFilter, setFormatFilter] = useState<ShortsFormatFilter>("all")
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
   const [selectedCount, setSelectedCount] = useState(50)
@@ -3126,13 +3207,21 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
           uploadTs: new Date(String(r.uploadDate || "")).getTime() || 0,
         }
       })
-      .filter(d => d.wh > 0 && (mode !== "best-revenue" || (d.revenueAvailable && d.rev > 0)))
+      .filter(d => {
+        if (d.wh <= 0) return false
+        if (selectionMode === "greatest" && rankMetric === "revenue") {
+          return d.revenueAvailable && d.rev > 0
+        }
+        return true
+      })
 
-    const points = mode === "most-recent"
+    const points = selectionMode === "recent"
       ? [...raw].sort((a, b) => b.uploadTs - a.uploadTs).slice(0, selectedCount)
-      : mode === "best-watch-hours"
+      : rankMetric === "watch-hours"
         ? [...raw].sort((a, b) => b.wh - a.wh).slice(0, selectedCount)
-        : [...raw].sort((a, b) => b.rev - a.rev).slice(0, selectedCount)
+        : rankMetric === "views"
+          ? [...raw].sort((a, b) => b.views - a.views).slice(0, selectedCount)
+          : [...raw].sort((a, b) => b.rev - a.rev).slice(0, selectedCount)
 
     const revenuePercentiles = buildTieAwarePercentiles(
       points.map((point) => point.revenueAvailable ? point.rev : null),
@@ -3141,12 +3230,8 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
       minRadius: 4,
       maxRadius: 36,
     })
-    const watchHoursScale = buildAdaptiveZeroScale(points.map((point) => point.wh), {
-      fallbackMax: 100,
-    })
-    const revScale = buildAdaptiveZeroScale(points.map((point) => point.rev), {
-      fallbackMax: 100,
-    })
+    const watchHoursScale = { domain: getRelativeScatterDomain(points.map((point) => point.wh)), ticks: undefined }
+    const revScale = { domain: getRelativeScatterDomain(points.map((point) => point.rev)), ticks: undefined }
     const chartPoints = points.map((d, index) => {
       const key = `${d.title}-${d.uploadTs}-${d.rev}`
       const revenuePosition = revenuePercentiles[index]
@@ -3165,32 +3250,19 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
       watchHoursScale,
       revScale,
     }
-  }, [data, formatFilter, mode, selectedCount])
+  }, [data, formatFilter, selectionMode, rankMetric, selectedCount])
 
   const bubbleShape = (props: any) => {
     const { cx, cy, payload } = props
-    const isActive = hoveredKey === payload.key
-    const scale = isActive ? 1.25 : 1
     return (
-      <circle
+      <ViewTubeScatterBubble
         cx={cx}
         cy={cy}
-        r={payload.radius * scale}
+        radius={payload.radius}
         fill={payload.color}
-        fillOpacity={isActive ? 0.72 : 0.55}
-        stroke={payload.color}
-        strokeWidth={isActive ? 2.5 : 1.5}
-        strokeOpacity={1}
-        onMouseEnter={() => setHoveredKey(payload.key)}
-        onMouseLeave={() => setHoveredKey(null)}
-        style={{
-          shapeRendering: "geometricPrecision",
-          mixBlendMode: "blend",
-          transitionProperty: "r, fill-opacity, stroke-width",
-          transitionDuration: "250ms",
-          transitionTimingFunction: "cubic-bezier(0.34,1.56,0.64,1)",
-          cursor: "pointer",
-        }}
+        isHovered={hoveredKey === payload.key}
+        onEnter={() => setHoveredKey(payload.key)}
+        onLeave={() => setHoveredKey(null)}
       />
     )
   }
@@ -3201,7 +3273,7 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
     <SubToolboxChartModule
       header={{
         title: "REVENUE EFFICIENCY",
-        subtitle: "WATCH HOURS × EST. REVENUE",
+        subtitle: "Each video placed by watch hours against estimated revenue.",
         headerStyle: "subtoolbox",
         icon: <CustomIcon name="analytics" size={18} />,
       }}
@@ -3212,25 +3284,75 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
       }}
       layout={{ moduleMinHeight: "420px", moduleWidth: "100%" }}
       controllerRows={[
-        { type: "number", value: selectedCount, onPrev: () => cycleCount(-1), onNext: () => cycleCount(1), bgTone: "#45DDB0" },
         {
-          type: "dropdown",
-          value: mode,
-          options: [
-            { value: "best-revenue", label: "BEST BY EST. REVENUE" },
-            { value: "best-watch-hours", label: "BEST BY WATCH HOURS" },
-            { value: "most-recent", label: "LATEST PUBLISHED" },
-          ],
-          onSelect: (value) => setMode(value as "best-revenue" | "best-watch-hours" | "most-recent"),
-          bgTone: "#FF7497",
+          type: "number",
+          value: selectedCount,
+          onPrev: () => cycleCount(-1),
+          onNext: () => cycleCount(1),
         },
-        {
-          type: "toggle",
-          value: formatFilter === "all" ? "ALL VIDEOS" : formatFilter === "shorts" ? "SHORTS" : "LONG FORMAT",
-          options: ["ALL VIDEOS", "SHORTS", "LONG FORMAT"],
-          onSelect: (value) => setFormatFilter(value === "SHORTS" ? "shorts" : value === "LONG FORMAT" ? "longform" : "all"),
-          bgTone: "#26C7EC",
-        },
+        ...(selectionMode === "recent"
+          ? [
+              {
+                type: "toggle" as const,
+                value: "RECENTLY PUBLISHED",
+                options: ["RECENTLY PUBLISHED", "GREATEST"] as const,
+                onSelect: (value: string) =>
+                  setSelectionMode(value === "GREATEST" ? "greatest" : "recent"),
+              },
+              {
+                type: "toggle" as const,
+                value:
+                  formatFilter === "all"
+                    ? "VIDEOS"
+                    : formatFilter === "shorts"
+                      ? "SHORTS"
+                      : "LONGFORM",
+                options: ["VIDEOS", "LONGFORM", "SHORTS"] as const,
+                onSelect: (value: string) =>
+                  setFormatFilter(
+                    value === "SHORTS"
+                      ? "shorts"
+                      : value === "LONGFORM"
+                        ? "longform"
+                        : "all",
+                  ),
+              },
+            ]
+          : [
+              {
+                type: "split" as const,
+                leftValue: "GREATEST",
+                rightValue:
+                  formatFilter === "all"
+                    ? "VIDEOS"
+                    : formatFilter === "shorts"
+                      ? "SHORTS"
+                      : "LONGFORM",
+                leftWidthValues: ["GREATEST", "RECENT"],
+                rightWidthValues: ["VIDEOS", "LONGFORM", "SHORTS"],
+                onPrev: () => setSelectionMode("recent"),
+                onNext: () =>
+                  setFormatFilter((current) =>
+                    current === "all"
+                      ? "longform"
+                      : current === "longform"
+                        ? "shorts"
+                        : "all",
+                  ),
+              },
+              {
+                type: "dropdown" as const,
+                labelPrefix: "RANKED BY",
+                value: rankMetric,
+                options: [
+                  { value: "watch-hours", label: "WATCH HOURS" },
+                  { value: "revenue", label: "REVENUE" },
+                  { value: "views", label: "VIEWS" },
+                ],
+                onSelect: (value: string) =>
+                  setRankMetric(value as "watch-hours" | "revenue" | "views"),
+              },
+            ]),
       ]}
       activeContext={{
         title: activePoint?.title?.toUpperCase() || "SELECT DATA POINT",
@@ -3247,11 +3369,12 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
         />
       }
     >
-      <div className="min-h-[400px] w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
-        <div className="h-[400px] relative">
-          <StableChartFrame minHeightClassName="min-h-[400px]">
-              <ScatterChart 
-                margin={{ top: 20, right: 30, bottom: 28, left: 10 }}
+      <div className="min-h-[400px] w-full min-w-0 max-w-full border-[0px] border-black rounded-none bg-white p-0 overflow-hidden flex flex-col">
+        <div className="h-[400px] min-h-[400px] flex flex-col overflow-hidden">
+     <div className="h-[348px] min-h-[348px] relative shrink-0">
+      <StableChartFrame minHeightClassName="min-h-[348px]">
+       <ScatterChart 
+                margin={viewTubeCartesianMargin("scatter", 36)}
                 onMouseLeave={() => setHoveredKey(null)}
               >
                 <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={true} />
@@ -3260,10 +3383,14 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
                   dataKey="wh" 
                   name="Watch Hours" 
                   domain={cd.watchHoursScale.domain}
-                  ticks={cd.watchHoursScale.ticks}
-                  tickFormatter={(value) => `${formatCompact(value)}h`}
-                  tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
-                  axisLine={{ stroke: '#000', strokeWidth: 3 }}
+                  padding={getBubbleSafePadding(36).x}
+                  tick={(props: any) => (
+                    <ViewTubeXAxisTick
+                      {...props}
+                      formatter={(value: number) => formatRoundedAxisTick(value, { unit: "h" })}
+                    />
+                  )}
+                  axisLine={viewTubeAxisLine}
                   tickLine={false}
                 />
                 <YAxis 
@@ -3271,19 +3398,22 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
                   dataKey="rev"
                   name="Est. Revenue"
                   domain={cd.revScale.domain}
-                  ticks={cd.revScale.ticks}
-                  tickFormatter={(value) => `$${formatCompact(value)}`}
-                  tick={{ fontWeight: 1000, fontSize: 10, fill: '#000' }}
-                  axisLine={{ stroke: '#000', strokeWidth: 3 }}
-                  tickLine={false}
-                  label={{ 
-                    value: 'EST. REVENUE ($)',
-                    angle: -90, 
-                    position: 'insideLeft', 
-                    offset: 15, 
-                    style: { fontWeight: 1000, fontSize: 14, fill: '#000', letterSpacing: '0.1em', textAnchor: 'middle' } 
-                  }}
-                />
+                  padding={getBubbleSafePadding(36).y}
+       tick={(props: any) => (
+                    <ViewTubeYAxisTick
+                      {...props}
+                      formatter={(value: number) => formatRoundedAxisTick(value, { currency: true })}
+                    />
+                  )}
+                  axisLine={viewTubeAxisLine}
+       tickLine={false}
+                
+       mirror={true}
+      
+       tickMargin={6}
+      
+       width={1}
+      />
                 <Tooltip content={<ChartTip />} />
                 <Scatter data={cd.points} shape={bubbleShape} />
                 <Customized component={({ offset, width, height }: any) => {
@@ -3294,16 +3424,16 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
                   const bottom = offset.top + offset.height
                   return (
                     <g pointerEvents="none">
-                      <line x1={left} y1={top} x2={left} y2={0} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
-                      <line x1={right} y1={bottom} x2={width} y2={bottom} stroke="#000" strokeWidth={3} shapeRendering="crispEdges" />
+                      <line x1={left} y1={top} x2={left} y2={0} stroke="#000" strokeWidth={2} strokeLinecap="round" shapeRendering="geometricPrecision" />
+                      <line x1={right} y1={bottom} x2={width} y2={bottom} stroke="#000" strokeWidth={2} strokeLinecap="round" shapeRendering="geometricPrecision" />
                     </g>
                   )
                 }} />
               </ScatterChart>
           </StableChartFrame>
-          
-          <div className="absolute bottom-[0px] left-[14px] right-[14px] grid grid-cols-3 items-center pointer-events-none">
-            <div className="flex items-center gap-2 justify-self-end">
+     </div>
+     <div className="h-[52px] min-h-[52px] shrink-0 px-[24px] grid grid-cols-[minmax(0,1fr)_minmax(200px,auto)_minmax(0,1fr)] gap-x-12 items-center pointer-events-none bg-white">
+            <div className="min-w-0 flex items-center gap-2 justify-self-end">
               <span className="text-[14px] font-[1000] uppercase tracking-[0.05em] text-black">Revenue</span>
               <div
                 className="w-36 h-6 border-[2px] border-[#B14AED] rounded-[2px]"
@@ -3317,7 +3447,7 @@ export const RevenueEfficiency: React.FC<GChartProps> = ({ data }) => {
               </span>
               <span className="text-black font-[1000] text-[16px] leading-none">▶</span>
             </div>
-            <div className="flex items-center gap-2 justify-self-start">
+            <div className="min-w-0 flex items-center gap-2 justify-self-start">
               <div className="flex items-center gap-2">
                 {[2, 3, 4, 5, 6].map((size, index) => (
                   <span
@@ -3362,8 +3492,7 @@ const bucketLabelForChannelProgress = (
   const d = new Date(startMs)
 
 if (timeRange === "1y") {
-    const end = new Date(endMs)
-    return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.getDate()}`
+    return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
   }
 
   if (timeRange === "6m" || timeRange === "3m") {
@@ -3399,12 +3528,33 @@ const mixChannelProgressTone = (hex: string, target: "#FFFFFF" | "#000000", amou
  return `#${channels.join("")}`.toUpperCase()
 }
 
+
 export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics, monthlyMetrics, visualStyle }) => {
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(["views"])
   const [timeRange, setTimeRange] = useState<"lifetime" | "3y" | "2y" | "1y" | "6m" | "3m">("1y")
   const [viewMode, setViewMode] = useState<"progress" | "delta">("progress")
   const [layoutMode, setLayoutMode] = useState<"overlay" | "individual">("overlay")
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+
+  // Composition, from the registered contract: how thick a mark may be drawn,
+  // how many per-metric panels may be stacked, and how many metrics may share
+  // one plot. The canvas owns the height, so a phone already gets a shorter
+  // plot; these keep the marks INSIDE it from being desktop-sized.
+  const progressBucket = useDataVisualViewportBucket()
+  const { scale: scaleProgressMark } = useDataVisualMarks("channel-progress")
+  const progressPanelBudget = useDataVisualPanelBudget("channel-progress", 4)
+  const progressSeriesBudget = useDataVisualSeriesBudget("channel-progress", 5)
+  const plotHostRef = useRef<HTMLDivElement | null>(null)
+  const progressPlotBox = useVisualCanvasBox(plotHostRef)
+  /**
+   * Height of one plot, measured rather than assumed. In the per-metric grid
+   * the panels split the canvas, so each one gets its share.
+   */
+  const progressPlotHeight = (isIndividualGrid: boolean) => {
+    const measured = progressPlotBox.height
+    if (!(measured > 1)) return isIndividualGrid ? 285 : 340
+    return isIndividualGrid ? measured / Math.max(1, visiblePanelRows) : measured
+  }
 
   const METRIC_OPTIONS = [
     { value: "subscribersGained", label: "SUBSCRIBERS", tone: VT_VISUAL_METRIC_COLORS.subscribers, isRevenue: false },
@@ -3578,10 +3728,13 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
 
   const periodRangeLabel = useMemo(() => {
     if (chartData.length === 0) return "NO PERIOD RANGE"
-    const start = chartData[0]?.start
-    const end = chartData[chartData.length - 1]?.end
-    if (!(start instanceof Date) || !(end instanceof Date)) return "NO PERIOD RANGE"
-    return formatRange(start, end)
+    // Buckets carry epoch milliseconds, not Date objects — the old
+    // `instanceof Date` guard was never true, so the module printed
+    // "NO PERIOD RANGE" over a plot that had a perfectly good range.
+    const start = Number(chartData[0]?.start)
+    const end = Number(chartData[chartData.length - 1]?.end)
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return "NO PERIOD RANGE"
+    return formatRange(new Date(start), new Date(end))
   }, [chartData])
 
   const hoveredPeriod = hoveredIdx !== null ? chartData[hoveredIdx] ?? null : null
@@ -3601,8 +3754,8 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     : null
   const activePeriodLabel = hoveredPeriod
    ? usesMonthlyGrain
-    ? hoveredPeriod.start.toLocaleDateString(undefined, { month: "long", year: "numeric" }).toUpperCase()
-    : formatRange(hoveredPeriod.start, hoveredPeriod.end)
+    ? new Date(Number(hoveredPeriod.start)).toLocaleDateString(undefined, { month: "long", year: "numeric" }).toUpperCase()
+    : formatRange(new Date(Number(hoveredPeriod.start)), new Date(Number(hoveredPeriod.end)))
    : periodRangeLabel
 
   const channelProgressTooltip = ({ active, payload }: any) => {
@@ -3641,7 +3794,24 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     )
   }
 
-  const activeMetrics = METRIC_OPTIONS.filter((option) => selectedMetrics.includes(option.value))
+  /*
+   * Metrics actually drawn. The control still owns WHICH metrics are selected;
+   * the series budget owns how many of them may share one canvas, so a phone
+   * plots the reader's top choices rather than slicing the bar width five ways.
+   */
+  const activeMetrics = METRIC_OPTIONS
+    .filter((option) => selectedMetrics.includes(option.value))
+    .slice(0, Math.max(1, progressSeriesBudget))
+  /*
+   * Panels the grid layout may stack at once, and the rows they occupy. Beyond
+   * one panel the grid is 2x2 on desktop; a landscape phone stacks two bands
+   * and a portrait phone shows one plot at a time.
+   */
+  const visiblePanels = activeMetrics.slice(0, Math.max(1, progressPanelBudget))
+  const useIndividualGrid = layoutMode === "individual" && visiblePanels.length > 1
+  const visiblePanelRows = !useIndividualGrid
+    ? 1
+    : visiblePanels.length <= 2 ? visiblePanels.length : 2
 
   const CustomCandle = (props: any) => {
     const { x, y, width, height, payload, optionKey } = props
@@ -3677,12 +3847,40 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
     )
   }
 
-  const renderChartForMetrics = (metricsToRender: typeof METRIC_OPTIONS, isIndividualGrid = false) => {
+  const renderChartForMetrics = (metricsToRender: typeof METRIC_OPTIONS, isIndividualGrid = false, showXAxisLabels = true) => {
+    // Progress mode deliberately uses TWO DIFFERENT Y scales:
+    //   LEFT  = raw period values used by the bars
+    //   RIGHT = cumulative totals used by the progress line.
+    //
+    // Every selected metric still gets its own hidden pair of axes so metrics with
+    // wildly different units can overlay without flattening each other. Only the
+    // first selected metric exposes tick labels on the left/right edges.
+    /*
+     * Rotated axis titles are a guide, and a guide only earns its place when
+     * the plot has room for it. In the per-metric grid each panel already
+     * carries a coloured metric label, and the titles are longer than a
+     * landscape panel is tall — they collided across stacked panels. On a
+     * portrait phone they cost a sixth of the plot width on each side, and the
+     * legend under the canvas already names the metric.
+     */
+    const showAxisTitles = !isIndividualGrid && progressBucket !== "portrait"
+    const getPeriodAxisId = (metricKey: string) => `period-axis-${metricKey}`
+    const getTotalAxisId = (metricKey: string) => `total-axis-${metricKey}`
+
+    const getPeriodScale = (metricKey: string) =>
+      getRelativeBarScale(chartData.map((point) => Number(point[`period_${metricKey}`] ?? 0)))
+
+    const getTotalScale = (metricKey: string) =>
+      getNiceScale(
+        chartData.map((point) => Number(point[`total_${metricKey}`] ?? 0)),
+        { targetIntervals: 4, includeZero: true },
+      )
+
     return (
       <ComposedChart
         data={chartData}
-        margin={{ top: 20, right: 30, bottom: 35, left: 10 }}
-        barGap={metricsToRender.length === 2 ? 5 : metricsToRender.length === 3 ? 3.5 : 4}
+        margin={viewTubeCartesianMargin("composed")}
+        barGap={metricsToRender.length === 2 && !isIndividualGrid ? 0 : metricsToRender.length === 3 ? 2 : 3}
         onMouseMove={(state: any) => {
           if (typeof state?.activeTooltipIndex === "number") {
             setHoveredIdx(state.activeTooltipIndex)
@@ -3691,34 +3889,203 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         onMouseLeave={() => setHoveredIdx(null)}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-        <XAxis dataKey="name" tick={{ fontWeight: 900, fontSize: isIndividualGrid ? 8 : 10 }} axisLine={{ stroke: "#000", strokeWidth: 3 }} />
-        {metricsToRender.map((option, idx) => (
-          <YAxis
-            key={`yaxis-${option.value}`}
-            yAxisId={option.value}
-            orientation={idx === 0 ? "right" : "left"}
-            hide={idx > 1}
-            tick={{ 
-              fontWeight: 900, 
-              fontSize: isIndividualGrid ? 8 : 10,
-              fill: mixChannelProgressTone(option.tone, "#000000", 0.4)
-            }}
-            tickFormatter={(v) => formatCompact(v)}
-            axisLine={{ stroke: mixChannelProgressTone(option.tone, "#000000", 0.2), strokeWidth: 3 }}
-            width={45}
-          />
-        ))}
+      <XAxis 
+  dataKey="name" 
+  axisLine={viewTubeAxisLine}
+  tick={(props: any) => {
+    if (!showXAxisLabels) return <g />
+    const { x, y, payload, index } = props
+    const labelColor = mixChannelProgressTone(activeMetrics[0].tone, "#000000", 0.4)
+
+    // Custom label spanning for the 1-year view
+    if (timeRange === "1y") {
+      if (index % 2 !== 0) return <g /> 
+      
+      const d = new Date(chartData[index].start)
+      return (
+        <text 
+          x={x} 
+          y={y + 12} 
+          dx={isIndividualGrid ? 2 : 6} 
+          textAnchor="start" 
+          fill={labelColor} 
+          fontSize={isIndividualGrid ? 8 : 10} 
+          fontWeight={900}
+        >
+          {d.toLocaleDateString("en-US", { month: "short", year: "2-digit" })}
+        </text>
+      )
+    }
+
+    // Two-tier label spanning for the 6-month view
+    if (timeRange === "6m") {
+      const d = new Date(chartData[index].start)
+      const weekNum = (index % 4) + 1
+      const isSecondWeek = index % 4 === 1
+      
+      return (
+        <g transform={`translate(${x},${y})`}>
+          {/* Top Tier: Week Number */}
+          <text 
+            x={0} 
+            y={12} 
+            textAnchor="middle" 
+            fill={labelColor} 
+            fontSize={isIndividualGrid ? 7 : 9} 
+            fontWeight={900}
+          >
+            W{weekNum}
+          </text>
+          
+          {/* Bottom Tier: Month Label (Anchored to W2 to span across the 4 weeks) */}
+          {isSecondWeek && (
+            <text 
+              x={0} 
+              y={26} 
+              dx={isIndividualGrid ? 4 : 8}
+              textAnchor="start" 
+              fill={labelColor} 
+              fontSize={isIndividualGrid ? 9 : 11} 
+              fontWeight={900}
+            >
+              {d.toLocaleDateString("en-US", { month: "short" })}
+            </text>
+          )}
+        </g>
+      )
+    }
+
+    // Default centered label for all other time ranges
+    return (
+      <text 
+        x={x} 
+        y={y + 12} 
+        textAnchor="middle" 
+        fill={labelColor} 
+        fontSize={isIndividualGrid ? 8 : 10} 
+        fontWeight={900}
+      >
+        {payload.value}
+      </text>
+    )
+  }} 
+/>
+
+        {viewMode === "progress" ? (
+          <>
+            {metricsToRender.map((option, idx) => {
+              const isPrimary = idx === 0
+              const periodScale = getPeriodScale(option.value)
+              const totalScale = getTotalScale(option.value)
+              const metricFormatter = (value: number) =>
+                value === 0 ? "" : formatMetricValue(option.value, Number(value))
+
+              return (
+                <React.Fragment key={`progress-axes-${option.value}`}>
+                  <YAxis
+                    yAxisId={getPeriodAxisId(option.value)}
+                    {...viewTubeNumericYAxisProps("left")}
+                    domain={periodScale.domain}
+                    ticks={periodScale.ticks}
+                    hide={!isPrimary}
+                    tick={(props: any) => (
+                      <ViewTubeYAxisTick {...props} orientation="left" formatter={metricFormatter} />
+                    )}
+                    label={isPrimary && showAxisTitles ? {
+                      content: (props: any) => (
+                        <ViewTubeYAxisTitle {...props} title={`${option.label} PERIOD`} orientation="left" />
+                      ),
+                    } : undefined}
+                    allowDecimals={option.value === "revenue" || option.value === "watchHours"}
+                  />
+                  <YAxis
+                    yAxisId={getTotalAxisId(option.value)}
+                    {...viewTubeNumericYAxisProps("right")}
+                    domain={totalScale.domain}
+                    ticks={totalScale.ticks}
+                    hide={!isPrimary}
+                    tick={(props: any) => (
+                      <ViewTubeYAxisTick {...props} orientation="right" formatter={metricFormatter} />
+                    )}
+                    label={isPrimary && showAxisTitles ? {
+                      content: (props: any) => (
+                        <ViewTubeYAxisTitle {...props} title={`${option.label} TOTAL`} orientation="right" />
+                      ),
+                    } : undefined}
+                    allowDecimals={option.value === "revenue" || option.value === "watchHours"}
+                  />
+                </React.Fragment>
+              )
+            })}
+          </>
+        ) : (
+          metricsToRender.map((option, idx) => {
+            const orientation = idx === 0 ? "left" : "right"
+            return (
+              <YAxis
+                key={`delta-axis-${option.value}`}
+                yAxisId={option.value}
+                {...viewTubeNumericYAxisProps(orientation)}
+                hide={idx > 1}
+                tick={(props: any) => (
+                  <ViewTubeYAxisTick
+                    {...props}
+                    orientation={orientation}
+                    formatter={(value: number) =>
+                      value === 0 ? "" : formatMetricValue(option.value, Number(value))
+                    }
+                  />
+                )}
+                label={idx < 2 && showAxisTitles ? {
+                  content: (props: any) => (
+                    <ViewTubeYAxisTitle {...props} title={`${option.label} DELTA`} orientation={orientation} />
+                  ),
+                } : undefined}
+              />
+            )
+          })
+        )}
+
         <Tooltip content={channelProgressTooltip} />
+
         {metricsToRender.map((option) => {
           const lightTone = mixChannelProgressTone(option.tone, "#FFFFFF", 0.38)
           const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
-          const barSize = isIndividualGrid
-            ? 28
-            : metricsToRender.length === 1
-              ? 46
-              : metricsToRender.length === 2
-                ? 20.5
-                : Math.max(3, Math.floor((46 - (metricsToRender.length - 1) * 3) / metricsToRender.length))
+          const metricCount = Math.max(1, metricsToRender.length)
+          const isTwoMetricOverlay = metricCount === 2 && !isIndividualGrid
+          const lightLineWidth = scaleProgressMark(
+            metricCount === 1 ? 5 :
+            metricCount === 2 ? 4 :
+            metricCount === 3 ? 3 :
+            metricCount === 4 ? 2.5 : 2,
+            "strokeWidth",
+          )
+          const dotRadius = scaleProgressMark(
+            metricCount === 1 ? 6 :
+            metricCount === 2 ? 5 :
+            metricCount === 3 ? 4.5 :
+            metricCount === 4 ? 4 : 3.5,
+            "bubbleRadius",
+          )
+          const dotStrokeWidth = scaleProgressMark(
+            metricCount <= 2 ? 3 : metricCount === 3 ? 2.5 : 2,
+            "strokeWidth",
+          )
+          const activeDotRadius = dotRadius + 1
+          // Bar thickness is a mark, so it scales with the composition. The
+          // floor is 3px rather than the touch floor: this is a hover field,
+          // and a 24px minimum at five metrics would draw a PHONE bar wider
+          // than the desktop bar it is supposed to be a reduction of.
+          const barSize = scaleProgressMark(
+            isIndividualGrid
+              ? 28
+              : metricsToRender.length === 1
+                ? 46
+                : metricsToRender.length === 2
+                  ? 23
+                  : Math.max(3, Math.floor((48 - (metricsToRender.length - 1) * 2) / metricsToRender.length)),
+            3,
+          )
 
           if (viewMode === "delta") {
             return (
@@ -3742,24 +4109,58 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
           return (
             <React.Fragment key={option.value}>
               <Bar
-                yAxisId={option.value}
+                yAxisId={getPeriodAxisId(option.value)}
                 dataKey={`period_${option.value}`}
                 name={`${option.label} PERIOD`}
+                className={`channel-progress-bar-${option.value}`}
                 fill={lightTone}
-                stroke={darkTone}
-                strokeWidth={2}
+                stroke="none"
+                strokeWidth={0}
                 barSize={barSize}
-                radius={[3, 3, 0, 0]}
+                radius={[4, 4, 0, 0]}
+                isAnimationActive={false}
+                // A 10–12px minimum keeps very small non-zero periods visible.
+                // At the normal Channel Progress plot heights this is roughly
+                // 3.5%+ of the usable chart area.
+                // Keyed to the plot the canvas actually handed us. The old
+                // constants (285 / 340) were desktop guesses, so on a phone
+                // canvas a third of a 203px plot was reserved for bars that
+                // carry almost no value.
+                minPointSize={getRelativeBarMinPointSize(progressPlotHeight(isIndividualGrid))}
               />
+
+              {/* Cumulative line uses the light metric tone only. */}
               <Line
-                yAxisId={option.value}
+                yAxisId={getTotalAxisId(option.value)}
                 type="monotone"
                 dataKey={`total_${option.value}`}
                 name={`${option.label} TOTAL`}
-                stroke={darkTone}
-                strokeWidth={metricsToRender.length === 1 ? 3.5 : 2}
-                dot={{ r: metricsToRender.length === 1 ? 3.5 : 2, fill: lightTone, stroke: darkTone, strokeWidth: 4 }}
-                activeDot={{ r: 5, fill: "#FFFFFF", stroke: darkTone, strokeWidth: 5 }}
+                className={`channel-progress-line-${option.value}`}
+                stroke={lightTone}
+                strokeWidth={isTwoMetricOverlay ? scaleProgressMark(4, "strokeWidth") : lightLineWidth}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                isAnimationActive={false}
+                dot={{
+                  r: isTwoMetricOverlay ? scaleProgressMark(5, "bubbleRadius") : dotRadius,
+                  fill: lightTone,
+                  stroke: darkTone,
+                  strokeWidth: isTwoMetricOverlay ? scaleProgressMark(2, "strokeWidth") : dotStrokeWidth,
+                  style: {
+                    transition:
+                      "r 350ms cubic-bezier(0.22, 1, 0.36, 1), stroke-width 350ms ease, fill 350ms ease",
+                  },
+                }}
+                activeDot={{
+                  r: isTwoMetricOverlay ? scaleProgressMark(6, "bubbleRadius") : activeDotRadius,
+                  fill: lightTone,
+                  stroke: darkTone,
+                  strokeWidth: isTwoMetricOverlay ? scaleProgressMark(2.5, "strokeWidth") : dotStrokeWidth,
+                  style: {
+                    transition:
+                      "r 750ms cubic-bezier(0.22, 1, 0.36, 1), stroke-width 750ms ease, fill 750ms ease",
+                  },
+                }}
               />
             </React.Fragment>
           )
@@ -3770,21 +4171,52 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
 
   return (
     <SubToolboxChartModule
+      heroVisualId="channel-progress"
       header={{
         title: "CHANNEL PROGRESS",
-        subtitle: `DATA: ${usesMonthlyGrain ? "MONTHLY STATS" : "DAILY STATS"} • ${viewMode.toUpperCase()} VIEW • RAW METRICS`,
+        subtitle: "Per-period totals with the cumulative growth line above them.",
         icon: visualShellIcon(visualStyle, "calendar"),
       }}
       theme={visualShellTheme(visualStyle, "#FF82B0", "#26C7EC")}
+      // The canvas owns height now, so the shell contributes none of its own.
+      layout={{ moduleMinHeight: "0px", moduleWidth: "100%" }}
+      controllerWidth={300}
       controllerRows={[
         {
-          type: "label",
-          value: "METRICS",
-          bgTone: "#000000",
-          fgTone: "#CCFF00",
+          type: "custom",
+          render: () => {
+            const modeLabel = viewMode === "progress" ? "PROGRESS TOTALS" : "PERFORMANCE CHANGES"
+            const cycleMode = () => setViewMode((mode) => (mode === "progress" ? "delta" : "progress"))
+            return (
+              <div className="flex h-[30px] min-h-[30px] w-full items-stretch">
+                <div className="flex min-w-[58px] shrink-0 items-center justify-center bg-black px-1">
+                  <span className="text-[15px] font-[999] uppercase leading-none tracking-[-0.05em] text-[var(--vt-controller-prev)]">
+                    CHANNEL
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={cycleMode}
+                  className="group flex min-w-0 flex-1 items-center border-0 border-l-[4px] border-black bg-[var(--vt-controller-prev)] px-0"
+                  aria-label="Change Channel Progress view"
+                >
+                  <span className="min-w-0 flex-1 truncate px-1 text-center text-[15px] font-[999] uppercase leading-none tracking-[-0.05em] text-black">
+                    {modeLabel}
+                  </span>
+                  <span
+                    className="mr-1 inline-flex w-[22px] shrink-0 items-center justify-center text-[15px] font-[999] leading-none text-black transition-transform duration-100 group-hover:scale-125"
+                    aria-hidden="true"
+                  >
+                    ►
+                  </span>
+                </button>
+              </div>
+            )
+          },
         },
         {
           type: "metricMultiSelect",
+          label: "FOR",
           options: METRIC_OPTIONS.map((option) => ({
             label: option.label,
             value: option.value,
@@ -3794,12 +4226,17 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
           onToggleValue: toggleMetric,
           minimumSelected: 1,
           maximumSelected: 5,
-          maxLabels: 3,
-          bgTone: "#FF7497",
+          // Combined: keep the animation branch's `maxLabels: 2` cap with
+          // codex/unified-account-auth-billing's `bgTone` + time-range picker.
+          maxLabels: 2,
+          displayMode: "timeline",
+          bgTone: "#FFFFFF",
+          fgTone: "#000000",
         },
         {
           type: "text",
           value: TIME_RANGE_OPTIONS.find((o) => o.value === timeRange)?.label || timeRange,
+          widthValues: TIME_RANGE_OPTIONS.map((option) => option.label),
           onPrev: () => {
             const idx = TIME_RANGE_OPTIONS.findIndex((o) => o.value === timeRange)
             setTimeRange(TIME_RANGE_OPTIONS[(idx - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value)
@@ -3812,32 +4249,70 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         },
         {
           type: "custom",
-          render: () => (
-            <div className="flex h-full items-center gap-1 px-2 bg-[#FF7497]">
-              <button
-                type="button"
-                onClick={() => setViewMode((m) => (m === "progress" ? "delta" : "progress"))}
-                className="h-6 px-2 rounded-[4px] text-[9px] font-black uppercase border-[2px] border-black transition-colors"
-                style={{
-                  background: viewMode === "delta" ? "#000000" : "#FFFFFF",
-                  color: viewMode === "delta" ? "#3FEE56" : "#000000",
-                }}
-              >
-                {viewMode === "delta" ? "CANDLE DELTA" : "BAR PROGRESS"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setLayoutMode((m) => (m === "overlay" ? "individual" : "overlay"))}
-                className="h-6 px-2 rounded-[4px] text-[9px] font-black uppercase border-[2px] border-black transition-colors"
-                style={{
-                  background: layoutMode === "individual" ? "#000000" : "#FFFFFF",
-                  color: layoutMode === "individual" ? "#4EE4BE" : "#000000",
-                }}
-              >
-                {layoutMode === "individual" ? "GRID" : "OVERLAY"}
-              </button>
-            </div>
-          ),
+          render: () => {
+            const timeLabel = TIME_RANGE_OPTIONS.find((option) => option.value === timeRange)?.label || timeRange
+            const layoutLabel = selectedMetrics.length >= 2
+              ? (layoutMode === "individual" ? "GRID" : "COMBO")
+              : "COMBO"
+
+            const cycleTime = () => {
+              const index = TIME_RANGE_OPTIONS.findIndex((option) => option.value === timeRange)
+              setTimeRange(TIME_RANGE_OPTIONS[(index - 1 + TIME_RANGE_OPTIONS.length) % TIME_RANGE_OPTIONS.length].value)
+            }
+
+            const cycleLayout = () => {
+              if (selectedMetrics.length < 2) return
+              setLayoutMode((mode) => (mode === "overlay" ? "individual" : "overlay"))
+            }
+
+            return (
+              <div className="flex h-[30px] min-h-[30px] w-full items-stretch">
+                <div className="flex min-w-0 flex-1 items-stretch bg-[#33FF99]">
+                  <button
+                    type="button"
+                    onClick={cycleTime}
+                    className="group flex w-[24px] shrink-0 appearance-none items-center justify-center border-0 bg-transparent outline-none focus:outline-none focus-visible:outline-none"
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                    aria-label="Previous time window"
+                  >
+                    <span className="inline-block rotate-180 text-[15px] font-[999] leading-none text-black transition-transform duration-100 group-hover:scale-125">
+                      ►
+                    </span>
+                  </button>
+                  <div className="flex min-w-0 flex-1 items-center justify-center truncate px-1 text-[15px] font-[999] uppercase leading-none tracking-[-0.05em] text-black">
+                    {timeLabel}
+                  </div>
+                </div>
+
+                <span className="w-[4px] shrink-0 bg-black" aria-hidden="true" />
+
+                <div className="flex min-w-0 flex-1 items-stretch bg-[var(--vt-controller-middle)]">
+                  <button
+                    type="button"
+                    onClick={cycleLayout}
+                    disabled={selectedMetrics.length < 2}
+                    className="flex min-w-0 flex-1 appearance-none items-center justify-center truncate border-0 bg-transparent px-1 text-[15px] font-[999] uppercase leading-none tracking-[-0.05em] text-black outline-none focus:outline-none focus-visible:outline-none disabled:cursor-default"
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                    aria-label="Change chart layout"
+                  >
+                    {layoutLabel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cycleLayout}
+                    disabled={selectedMetrics.length < 2}
+                    className="group flex w-[24px] shrink-0 appearance-none items-center justify-center border-0 bg-transparent outline-none focus:outline-none focus-visible:outline-none disabled:cursor-default disabled:opacity-30"
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                    aria-label="Next chart layout"
+                  >
+                    <span className="text-[15px] font-[999] leading-none text-black transition-transform duration-100 group-hover:scale-125">
+                      ►
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )
+          },
         },
       ]}
       activeContext={{
@@ -3845,48 +4320,71 @@ export const ComboChannelProgress: React.FC<GChartProps> = ({ data, dailyMetrics
         stats: hoveredStats || selectedWindowStats,
       }}
       footer={
-        <InsightMarquee
-          chartInsight="Cumulative growth tracking identifies the long-term compound value of your content periods."
-          personalInsight="Toggle CANDLE DELTA to analyze period-over-period performance gains or losses."
-        />
+        <>
+          {/* Keys live in the bottom section, never inside the evidence canvas. */}
+          <div data-vt-data-visual-guides>
+            <div className="flex flex-row flex-nowrap items-center gap-3 overflow-x-auto bg-white px-2 py-1.5">
+              {activeMetrics.map((option) => {
+                const lightTone = mixChannelProgressTone(option.tone, "#FFFFFF", 0.38)
+                const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
+                return (
+                  <div key={option.value} className="flex shrink-0 items-center gap-1.5">
+                    <span className="h-[10px] w-[18px] shrink-0 border border-black" style={{ background: lightTone, borderColor: darkTone }} />
+                    <span className="h-[3px] w-[18px] shrink-0" style={{ background: darkTone }} />
+                    <span className="whitespace-nowrap text-[9px] font-[1000] uppercase tracking-[0.04em] text-black">{option.label}</span>
+                  </div>
+                )
+              })}
+              {activeMetrics.length < selectedMetrics.length ? (
+                <span className="shrink-0 whitespace-nowrap text-[9px] font-[1000] uppercase tracking-[0.04em] text-black/40">
+                  +{selectedMetrics.length - activeMetrics.length} hidden
+                </span>
+              ) : null}
+            </div>
+          </div>
+          <InsightMarquee
+            chartInsight="Cumulative growth tracking identifies the long-term compound value of your content periods."
+            personalInsight="Toggle CANDLE DELTA to analyze period-over-period performance gains or losses."
+          />
+        </>
       }
     >
-      <div className="p-4 min-h-[400px] relative">
-        {layoutMode === "individual" && activeMetrics.length > 1 ? (
-          <div className={`grid gap-3 h-[420px] ${activeMetrics.length === 2 ? 'grid-cols-1 grid-rows-2' : 'grid-cols-2 grid-rows-2'}`}>
-            {activeMetrics.map((metricOpt) => (
-              <div key={metricOpt.value} className="relative h-full rounded-lg border-2 border-black/20 bg-white/50 p-1">
-                <div className="absolute top-1 left-2 z-10 text-[9px] font-black uppercase tracking-wider" style={{ color: metricOpt.tone }}>
-                  {metricOpt.label}
-                </div>
-                <StableChartFrame minHeightClassName="h-full">
-                  {renderChartForMetrics([metricOpt], true)}
-                </StableChartFrame>
+      <HeroIntroBoundary
+        visualId="channel-progress"
+        replayKey={`${viewMode}-${layoutMode}-${timeRange}-${selectedMetrics.join("|")}-${chartData.length}`}
+        className="relative"
+      >
+        <DataVisualCanvas id="channel-progress">
+          <div ref={plotHostRef} className="h-full min-h-0 w-full min-w-0 bg-white">
+            {useIndividualGrid ? (
+              <div
+                className={`grid h-full min-h-0 gap-1 ${visiblePanelRows === 1 ? "grid-cols-1 grid-rows-1" : visiblePanels.length <= 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-2 grid-rows-2"}`}
+              >
+                {visiblePanels.map((metricOpt, metricIndex) => {
+                  const isBottomChart =
+                    visiblePanels.length <= 2
+                      ? metricIndex === visiblePanels.length - 1
+                      : metricIndex >= Math.max(0, visiblePanels.length - 2)
+                  return (
+                    <div key={metricOpt.value} className="relative h-full min-h-0 bg-white">
+                      <div className="absolute top-0 left-2 z-10 text-[9px] font-black uppercase tracking-wider" style={{ color: metricOpt.tone }}>
+                        {metricOpt.label}
+                      </div>
+                      <StableChartFrame minHeightClassName="min-h-0">
+                        {renderChartForMetrics([metricOpt], true, isBottomChart)}
+                      </StableChartFrame>
+                    </div>
+                  )
+                })}
               </div>
-            ))}
+            ) : (
+              <StableChartFrame minHeightClassName="min-h-0">
+                {renderChartForMetrics(activeMetrics, false)}
+              </StableChartFrame>
+            )}
           </div>
-        ) : (
-          <div className="h-[400px]">
-            <StableChartFrame minHeightClassName="min-h-[360px]">
-              {renderChartForMetrics(activeMetrics, false)}
-            </StableChartFrame>
-          </div>
-        )}
-
-        <div className="pointer-events-none absolute bottom-0 left-[14px] right-[14px] flex h-8 items-center justify-center gap-3 overflow-hidden bg-white/90 px-2">
-          {activeMetrics.map((option) => {
-            const lightTone = mixChannelProgressTone(option.tone, "#FFFFFF", 0.38)
-            const darkTone = mixChannelProgressTone(option.tone, "#000000", 0.2)
-            return (
-              <div key={option.value} className="flex min-w-0 items-center gap-1.5">
-                <span className="h-[10px] w-[18px] shrink-0 border border-black" style={{ background: lightTone, borderColor: darkTone }} />
-                <span className="h-[3px] w-[18px] shrink-0" style={{ background: darkTone }} />
-                <span className="truncate text-[9px] font-[1000] uppercase tracking-[0.04em] text-black">{option.label}</span>
-              </div>
-            )
-          })}
-        </div>
-      </div>
+        </DataVisualCanvas>
+      </HeroIntroBoundary>
     </SubToolboxChartModule>
   )
 }
@@ -3962,6 +4460,55 @@ const csvSourceGroup = (sourceRaw: string): string => {
  return sourceRaw || "Other"
 }
 
+const normalizeTrafficSourceKey = (source: string): string => {
+ const prefix = String(source || "").trim().toUpperCase().split(".")[0] || "UNKNOWN"
+ return TRAFFIC_SOURCE_ALIASES[prefix] || prefix
+}
+
+const trafficSourceDisplayName = (value: string): string => {
+ const raw = String(value || "").trim()
+ if (!raw) return "Unknown"
+ const prefix = normalizeTrafficSourceKey(raw)
+ const sourceLabels: Record<string, string> = {
+  SHORTS: "Shorts Feed",
+  SUBSCRIBER: "Subscribers Feed",
+  YT_SEARCH: "YouTube Search",
+  EXT_URL: "External Websites",
+  YT_CHANNEL: "Channel Pages",
+  RELATED_VIDEO: "Suggested Videos",
+  YT_OTHER_PAGE: "YouTube Features",
+  PLAYLIST: "YouTube Playlists",
+  NO_LINK_OTHER: "Direct / Unknown",
+  NOTIFICATION: "Notifications",
+  SOUND_PAGE: "Audio Pages",
+  SHORTS_CONTENT_LINKS: "Shorts Links",
+  END_SCREEN: "End Screens",
+  HASHTAGS: "Hashtag Pages",
+  ADVERTISING: "Advertising",
+  LIVE_REDIRECT: "Live Streams",
+  BROWSE: "Browse Features",
+  CAMPAIGN_CARD: "Campaign Card",
+  CARD: "Cards",
+  YT_PLAYLIST_PAGE: "Playlist Page",
+  NO_LINK_EMBEDDED: "Embedded / Unknown",
+  ANNOTATION: "Annotations",
+ }
+ return sourceLabels[prefix] || raw
+}
+
+const TRAFFIC_SOURCE_ALIASES: Record<string, string> = {
+ "OTHER YOUTUBE FEATURES": "YT_OTHER_PAGE",
+ SHORTS_CONTENT_LINK: "SHORTS_CONTENT_LINKS",
+ SHORTS_CONTENT_LINKS: "SHORTS_CONTENT_LINKS",
+ LIVE_REDIRECT: "LIVE_REDIRECT",
+ IMMERSIVE_LIVE: "LIVE_REDIRECT",
+ ADVERTISING: "ADVERTISING",
+ BROWSE: "BROWSE",
+ CAMPAIGN_CARD: "CAMPAIGN_CARD",
+ CARD: "CARD",
+ YT_PLAYLIST_PAGE: "YT_PLAYLIST_PAGE",
+ NO_LINK_EMBEDDED: "NO_LINK_EMBEDDED",
+}
 
 const TRAFFIC_SOURCE_ORDER = [
  "SHORTS",
