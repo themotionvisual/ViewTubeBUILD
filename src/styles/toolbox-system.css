@@ -3,7 +3,7 @@
  * never recreated by feature-local CSS.
  */
 [data-vt-toolbox][data-vt-toolbox-level="main"] {
-  --vt-toolbox-header-height: 56px;
+  --vt-toolbox-header-height: 80px;
   --vt-toolbox-stroke: 5px;
   --vt-toolbox-radius: 16px;
   --vt-toolbox-shadow-offset: 10px;
@@ -23,9 +23,9 @@
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-  height: 56px !important;
-  min-height: 56px !important;
-  max-height: 56px !important;
+  height: 80px !important;
+  min-height: 80px !important;
+  max-height: 80px !important;
   border-bottom: 0 !important;
   overflow: hidden !important;
 }
@@ -49,10 +49,10 @@
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-  width: 56px !important;
-  min-width: 56px !important;
-  height: 56px !important;
-  flex: 0 0 56px !important;
+  width: 80px !important;
+  min-width: 80px !important;
+  height: 80px !important;
+  flex: 0 0 80px !important;
   aspect-ratio: 1 / 1 !important;
   border-right: 5px solid #000 !important;
 }
@@ -127,15 +127,15 @@
   --vt-subtoolbox-stroke: 4px;
   --vt-subtoolbox-radius: 12px;
   --vt-subtoolbox-shadow-offset: 6px;
-  --vt-subtoolbox-header-height: 44px;
+  --vt-subtoolbox-header-height: 56px;
   --vt-subtoolbox-title-size: 20px;
   box-sizing: border-box;
 }
 
 [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
-  height: 44px !important;
-  min-height: 44px !important;
-  max-height: 44px !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
   border-bottom: 0 !important;
   overflow: hidden !important;
 }
@@ -206,7 +206,7 @@
 
 /* Compatibility accordion resolves to the same single SubToolbox geometry. */
 [data-vt-toolbox][data-vt-toolbox-level="main"][data-vt-toolbox-variant="accordion"] {
-  --vt-toolbox-header-height: 44px;
+  --vt-toolbox-header-height: 56px;
   --vt-toolbox-radius: 12px;
   --vt-toolbox-title-size: 20px;
   border-width: 4px !important;
@@ -269,16 +269,16 @@
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-    height: 56px !important;
-    min-height: 56px !important;
-    max-height: 56px !important;
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-    width: 56px !important;
-    min-width: 56px !important;
-    height: 56px !important;
-    flex-basis: 56px !important;
+    width: 80px !important;
+    min-width: 80px !important;
+    height: 80px !important;
+    flex-basis: 80px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :last-child {
@@ -347,22 +347,22 @@
    -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) {
-    --vt-toolbox-header-height: 56px;
+    --vt-toolbox-header-height: 80px;
     --vt-toolbox-title-size: 26px;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-    height: 56px !important;
-    min-height: 56px !important;
-    max-height: 56px !important;
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-    width: 56px !important;
-    min-width: 56px !important;
-    max-width: 56px !important;
-    height: 56px !important;
-    flex-basis: 56px !important;
+    width: 80px !important;
+    min-width: 80px !important;
+    max-width: 80px !important;
+    height: 80px !important;
+    flex-basis: 80px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
@@ -396,22 +396,22 @@
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"],
   [data-vt-toolbox-level="sub"],
   [data-vt-subtoolbox-module="true"] {
-    --vt-subtoolbox-header-height: 44px;
+    --vt-subtoolbox-header-height: 56px;
     --vt-subtoolbox-title-size: 20px;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
-    height: 44px !important;
-    min-height: 44px !important;
-    max-height: 44px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child {
-    width: 44px !important;
-    min-width: 44px !important;
-    max-width: 44px !important;
-    height: 44px !important;
-    flex-basis: 44px !important;
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    height: 56px !important;
+    flex-basis: 56px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header h3 {
