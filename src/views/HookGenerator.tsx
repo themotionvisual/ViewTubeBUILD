@@ -6,7 +6,8 @@ import {
 } from "../services/gemini"
 import type { HookResult } from "../types"
 import { Magnet } from "lucide-react"
-import { ToolboxScaffold, Toolbox, SubToolbox, StandardTextArea } from "../components/Toolbox"
+import { ToolboxScaffold, Toolbox, SubToolbox } from "../components/Toolbox"
+import { SubToolboxButton, SubToolboxFieldLabel, SubToolboxTextArea } from "../components/subtoolbox/SubToolboxPrimitives"
 import { useBrain } from "../context/useBrain"
 import { PostActionReflection } from "../components/PostActionReflection"
 import { createAsset } from "../services/assetEngine"
@@ -279,23 +280,25 @@ const HookGenerator: React.FC<HookGeneratorProps> = ({
      >
       <div className="p-6 space-y-6 bg-white">
        <div className="space-y-2">
-        <label className="text-[10px] font-black uppercase tracking-widest text-black/50 ml-1">
+        <SubToolboxFieldLabel level="l1" className="ml-1">
          Script Intro / Concept
-        </label>
-        <StandardTextArea
+        </SubToolboxFieldLabel>
+        <SubToolboxTextArea
+         level="l1"
          value={localScript}
          onChange={(e) => setLocalScript(e.target.value)}
          placeholder="PASTE YOUR SCRIPT INTRO HERE..."
-         minHeight="160px"
-         className="uppercase focus:bg-gray-50"
+         style={{ minHeight: 160 }}
+         className="uppercase"
         />
        </div>
-       <button
+       <SubToolboxButton
+        level="l0"
+        size="action"
         onClick={handleGenerate}
-        disabled={loading || !localScript.trim()}
-        className="w-full bg-[#FF7497] border-[4px] border-black p-4 font-black uppercase text-xl rounded-xl shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-y-0.5 transition-all disabled:opacity-50">
+        disabled={loading || !localScript.trim()}>
         {loading ? "TUNING HOOKS..." : "GENERATE HOOKS"}
-       </button>
+       </SubToolboxButton>
       </div>
      </SubToolbox>
     </div>
