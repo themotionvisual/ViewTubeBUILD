@@ -673,7 +673,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
     )}
 
     {connected && videoListLoadState === "idle" && !hasLoadedInitialData ? (
-     <div className="min-h-[500px] flex items-center justify-center">
+     <div className="min-h-[200px] sm:min-h-[320px] lg:min-h-[500px] flex items-center justify-center">
       <SubToolboxStatePanel
        level="l0"
        state="ready"
@@ -683,7 +683,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       />
      </div>
     ) : connected && videoListLoadState === "error" && videos.length === 0 ? (
-     <div className="min-h-[500px] flex items-center justify-center">
+     <div className="min-h-[200px] sm:min-h-[320px] lg:min-h-[500px] flex items-center justify-center">
       <SubToolboxStatePanel
        level="l0"
        state="error"
@@ -693,7 +693,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       />
      </div>
     ) : connected && videoListLoadState === "empty" ? (
-     <div className="min-h-[500px] flex items-center justify-center">
+     <div className="min-h-[200px] sm:min-h-[320px] lg:min-h-[500px] flex items-center justify-center">
       <SubToolboxStatePanel
        level="l0"
        state="empty"
@@ -703,7 +703,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       />
      </div>
     ) : (selectedVideo || !connected || catalogLoading) ? (
-     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+     <div className="space-y-2 sm:space-y-4 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <SubToolbox
        title="Choose Video"
        icon={<FileVideo size={20} strokeWidth={3} />}
@@ -748,7 +748,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        </SubToolboxStack>
       </SubToolbox>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 sm:gap-4 lg:gap-6 items-stretch">
        <SubToolbox title="Video Details" icon={<Settings size={20} strokeWidth={3} />} collapsible isOpenInitial={true} shellClassName="h-full" contentClassName="h-full">
         <SubToolboxStack>
          <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="video-manager-title">Title</SubToolboxFieldLabel>}><SubToolboxInput id="video-manager-title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder={!connected ? "CONNECT CHANNEL TO LOAD TITLE" : catalogLoading ? "LOADING VIDEO TITLE..." : "TITLE..."} disabled={!connected || !selectedVideo} /></SubToolboxSection>
@@ -789,7 +789,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        <SubToolbox title="Thumbnail" icon={<ImageIcon size={20} strokeWidth={3} />} collapsible isOpenInitial={true} shellClassName="h-full" contentClassName="h-full">
         <SubToolboxStack className="h-full">
          <div className="flex items-center justify-between gap-3 px-1"><span className="text-[10px] font-black uppercase tracking-[0.12em] text-black/50 ml-auto">{!connected ? "Connect Channel to Load Thumbnail" : catalogLoading ? "Loading Thumbnail" : "Drag + Drop to Replace"}</span></div>
-         <SubToolboxSurface className={`relative flex min-h-[220px] flex-1 flex-col items-center justify-center overflow-hidden !p-3 transition-colors ${isDraggingThumbnail ? "!bg-[#FF83EA]/10" : "!bg-gray-50"}`} onDragOver={(e) => { if (!connected || !selectedVideo) return; e.preventDefault(); setIsDraggingThumbnail(true) }} onDragLeave={() => setIsDraggingThumbnail(false)} onDrop={(e) => { if (!connected || !selectedVideo) return; e.preventDefault(); setIsDraggingThumbnail(false); if (e.dataTransfer.files[0]) handleThumbnailChange(e.dataTransfer.files[0]) }}>
+         <SubToolboxSurface className={`relative flex min-h-[140px] sm:min-h-[180px] lg:min-h-[220px] flex-1 flex-col items-center justify-center overflow-hidden !p-2 sm:!p-3 transition-colors ${isDraggingThumbnail ? "!bg-[#FF83EA]/10" : "!bg-gray-50"}`} onDragOver={(e) => { if (!connected || !selectedVideo) return; e.preventDefault(); setIsDraggingThumbnail(true) }} onDragLeave={() => setIsDraggingThumbnail(false)} onDrop={(e) => { if (!connected || !selectedVideo) return; e.preventDefault(); setIsDraggingThumbnail(false); if (e.dataTransfer.files[0]) handleThumbnailChange(e.dataTransfer.files[0]) }}>
           {thumbnailPreview || selectedVideo?.thumbnail ? (
            <div className="relative w-full aspect-video group"><img src={thumbnailPreview || selectedVideo?.thumbnail} alt="Preview" className="w-full h-full object-cover rounded-lg" /><div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 rounded-lg backdrop-blur-sm"><SubToolboxButton aria-label="Replace thumbnail" onClick={() => fileInputRef.current?.click()} size="compact" tone="warning" icon={<Upload size={20} strokeWidth={3} />} className="!w-12" />{thumbnailPreview && <SubToolboxButton aria-label="Remove replacement thumbnail" onClick={() => { setThumbnailFile(null); setThumbnailPreview(null) }} size="compact" tone="danger" icon={<Trash2 size={20} strokeWidth={3} />} className="!w-12" />}</div></div>
           ) : (
@@ -801,13 +801,13 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       </div>
 
       <SubToolbox title="Description" icon={<AlignLeft size={18} strokeWidth={3} />} collapsible isOpenInitial={true}>
-       <SubToolboxTextArea aria-label="Video description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="!min-h-80 text-base vm-scrollless" placeholder={!connected ? "CONNECT CHANNEL TO LOAD DESCRIPTION" : catalogLoading ? "LOADING DESCRIPTION..." : "DESCRIPTION..."} disabled={!connected || !selectedVideo} />
+       <SubToolboxTextArea aria-label="Video description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="!min-h-[180px] sm:!min-h-64 lg:!min-h-80 text-base vm-scrollless" placeholder={!connected ? "CONNECT CHANNEL TO LOAD DESCRIPTION" : catalogLoading ? "LOADING DESCRIPTION..." : "DESCRIPTION..."} disabled={!connected || !selectedVideo} />
       </SubToolbox>
 
       <SubToolbox title="Video Tags" icon={<Tag size={20} strokeWidth={3} />} collapsible isOpen={isTagsExpanded} onToggle={() => setIsTagsExpanded((prev) => !prev)}>
        <SubToolboxStack density="comfortable">
         <SubToolboxActions columns={2}><SubToolboxInput aria-label="Add video tag" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddTag(tagInput)} placeholder={!connected ? "CONNECT CHANNEL TO LOAD TAGS" : catalogLoading ? "LOADING TAGS..." : "ADD TAG..."} maxLength={MAX_TAG_CHARS} disabled={!connected || !selectedVideo} /><SubToolboxButton onClick={() => handleAddTag(tagInput)} disabled={!connected || !selectedVideo || [...editTags.split(",").map((t) => t.trim()).filter(Boolean), tagInput.trim()].filter(Boolean).join(", ").length > MAX_TAG_CHARS}>{tagInput.split(",").map((t) => t.trim()).filter(Boolean).length <= 1 ? "Add Tag" : "Add Tags"}</SubToolboxButton></SubToolboxActions>
-        <SubToolboxSurface className="relative flex min-h-[132px] w-full flex-wrap content-start gap-2 !pb-9">
+        <SubToolboxSurface className="relative flex min-h-[96px] sm:min-h-[112px] lg:min-h-[132px] w-full flex-wrap content-start gap-2 !pb-9">
          {editTags ? editTags.split(",").map((t) => t.trim()).filter(Boolean).map((t) => <TagBadge key={t} tag={t} onRemove={() => handleRemoveTag(t)} analysis={existingTagAnalysis.find((a) => a.tag.toLowerCase() === t.toLowerCase())} />) : <p className="text-black/30 font-black uppercase text-sm w-full text-center py-6">{!connected ? "Connect channel to load tags" : catalogLoading ? "Loading tags..." : "No tags populated..."}</p>}
          <span className="absolute right-3 bottom-2 text-[11px] font-black uppercase tracking-[0.08em] text-black/55">{editTags.length}/{MAX_TAG_CHARS}</span>
         </SubToolboxSurface>
@@ -827,7 +827,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       </SubToolbox>
      </div>
     ) : (
-     <div className="h-[500px] flex flex-col items-center justify-center gap-5 font-black uppercase text-3xl tracking-tighter text-black/20"><Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />Awaiting Asset Selection</div>
+     <div className="min-h-[180px] sm:min-h-[320px] lg:h-[500px] flex flex-col items-center justify-center gap-3 sm:gap-5 font-black uppercase text-xl sm:text-2xl lg:text-3xl tracking-tighter text-black/20"><Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />Awaiting Asset Selection</div>
     )}
 
     <input type="file" ref={fileInputRef} onChange={(e) => e.target.files?.[0] && handleThumbnailChange(e.target.files[0])} className="hidden" accept="image/*" />
