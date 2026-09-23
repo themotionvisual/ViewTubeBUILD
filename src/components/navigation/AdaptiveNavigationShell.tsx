@@ -473,8 +473,10 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
       if (target?.closest("input, textarea, select, [contenteditable='true']")) return
       if (!(event.metaKey || event.ctrlKey) || !event.shiftKey || event.altKey) return
 
-      const index = Number(event.key) - 1
-      if (!Number.isInteger(index) || index < 0 || index >= PRIMARY_NAV_ITEMS.length) return
+      const digitMatch = /^Digit([1-8])$/.exec(event.code)
+      if (!digitMatch) return
+      const index = Number(digitMatch[1]) - 1
+      if (index < 0 || index >= PRIMARY_NAV_ITEMS.length) return
 
       const item = PRIMARY_NAV_ITEMS[index]
       event.preventDefault()
