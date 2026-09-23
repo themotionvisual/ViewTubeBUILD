@@ -90,7 +90,7 @@ const MiniToolbox: React.FC<MiniToolboxProps> = ({
 
   return (
     <article
-      className={`min-w-0 self-start overflow-hidden border-[3px] border-black rounded-[10px] bg-white transition-[min-height] duration-300 ease-out motion-reduce:transition-none ${open ? sizeClasses[size].height : "min-h-0"} ${embedded ? "" : sizeClasses[size].span}`}
+      className={`min-w-0 self-start overflow-hidden border-[3px] border-black rounded-[10px] bg-white transition-[min-height] duration-[600ms] ease-out motion-reduce:transition-none ${open ? sizeClasses[size].height : "min-h-0"} ${embedded ? "" : sizeClasses[size].span}`}
       style={{ boxShadow: `4px 4px 0 ${palette.header}70` }}
     >
       <header
@@ -125,7 +125,7 @@ const MiniToolbox: React.FC<MiniToolboxProps> = ({
       </header>
       <div
         id={contentId}
-        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+        className={`grid transition-[grid-template-rows,opacity] duration-[600ms] ease-out motion-reduce:transition-none ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
         style={{ marginTop: "-3px" }}
       >
         <div className="min-h-0 overflow-hidden">{children}</div>
@@ -174,7 +174,7 @@ const MicroToolbox: React.FC<MicroToolboxProps> = ({ label, marker, accent, chil
       </header>
       <div
         id={contentId}
-        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+        className={`grid transition-[grid-template-rows,opacity] duration-[600ms] ease-out motion-reduce:transition-none ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
         style={{ marginTop: "-2px" }}
       >
         <div className="min-h-0 overflow-hidden"><div className="p-2">{children}</div></div>
