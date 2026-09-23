@@ -51,7 +51,7 @@ export const CommentResponder: React.FC = () => {
      </StudioIconButton>
     </div>
     <div role="status" aria-live="polite" className="mt-2 sm:mt-3 min-h-5 text-[10px] font-black uppercase">{queueStatus}</div>
-    {!context.connected && <StudioButton type="button" sizeVariant="action" className="mt-2 sm:mt-3 w-full" onClick={comments.reconnect}>Connect YouTube Channel</StudioButton>}
+    {!context.connected && <div className="mt-2 sm:mt-3"><SubToolboxGridActionButton label="Connect YouTube Channel" iconName="link" tone="green" onClick={comments.reconnect} /></div>}
    </SubToolbox>
 
    <SubToolbox title="Video Context" icon={<MessageCircle />} collapsible isOpenInitial>
