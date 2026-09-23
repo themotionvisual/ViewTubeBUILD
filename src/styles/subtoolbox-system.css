@@ -927,7 +927,7 @@
   --vt-controller-track-pad:calc(var(--vt-component-stroke) + 2px);
   width:calc(var(--vt-component-height)*2.08);height:var(--vt-component-height);display:block;padding:0;
   border:var(--vt-component-stroke) solid #000;border-radius:999px;overflow:hidden;
-  background:color-mix(in srgb,var(--pair-b,#ff7f6b) 34%,white);color:#fff;
+  background:color-mix(in srgb,var(--pair-b,#ff7f6b) 34%,transparent);color:#fff;
   transition:background 320ms ease-out
 }
 .vt-subtoolbox-controller-track{position:relative;display:block;width:100%;height:100%}
@@ -942,7 +942,7 @@
   color:#fff;font:1000 calc(var(--vt-component-font-size)*.43)/1 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
   letter-spacing:-.04em;text-transform:uppercase
 }
-.vt-subtoolbox-controller-switch.is-on{background:color-mix(in srgb,var(--pair-a,#36e0f6) 34%,white)}
+.vt-subtoolbox-controller-switch.is-on{background:color-mix(in srgb,var(--pair-a,#36e0f6) 34%,transparent)}
 .vt-subtoolbox-controller-switch.is-on .vt-subtoolbox-controller-thumb{
   background:var(--pair-b,#ff7f6b);transform:translateX(calc(var(--vt-component-height)*1.08))
 }
