@@ -2,12 +2,18 @@ import type { ContentBuildSnapshot } from "./contracts"
 import { getContentBuild } from "./ContentBuildRepository"
 import type { PackageArtifactRef, ViewTubeVideoPackage } from "../video-package/contracts"
 
+export const PUBLISHING_PACKAGE_PROJECTION_VERSION = 1 as const
+
 export interface PublishingPackageProjection {
+ schemaVersion: typeof PUBLISHING_PACKAGE_PROJECTION_VERSION
  contentBuildId: string
+ projectId: string
  videoPackageId: string
  revision: number
  titleAssetId: string | null
  thumbnailAssetId: string | null
+ scriptAssetId: string | null
+ storyboardAssetId: string | null
  finalRenderAssetId: string | null
  descriptionAssetId: string | null
  tagsAssetId: string | null
@@ -67,6 +73,8 @@ export const projectPublishingPackage = (
   "thumbnail",
   selectedPackageAsset(videoPackage.packaging.thumbnailVariants, videoPackage.packaging.selectedThumbnailId),
  )
+ const scriptAssetId = resolveSelection(build, "script", assetIdOf(videoPackage.creative.script))
+ const storyboardAssetId = resolveSelection(build, "storyboard", assetIdOf(videoPackage.creative.storyboard))
  const finalRenderAssetId = resolveSelection(
   build,
   "final-render",
@@ -87,11 +95,15 @@ export const projectPublishingPackage = (
  if (videoPackage.workflow.blockers.some(blocker => blocker.severity === "blocking" && !blocker.resolved)) missing.push("blockers")
 
  return {
+  schemaVersion: PUBLISHING_PACKAGE_PROJECTION_VERSION,
   contentBuildId: build.id,
+  projectId: videoPackage.projectId,
   videoPackageId: videoPackage.id,
   revision: build.revision,
   titleAssetId,
   thumbnailAssetId,
+  scriptAssetId,
+  storyboardAssetId,
   finalRenderAssetId,
   descriptionAssetId,
   tagsAssetId,
