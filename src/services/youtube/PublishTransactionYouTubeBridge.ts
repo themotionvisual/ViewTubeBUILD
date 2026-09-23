@@ -7,7 +7,15 @@ import {
  type ContentBuildPublishTransaction,
  type PublishTransactionStep,
 } from "../asset-engine/PublishTransaction"
-import { getUnifiedVideo, uploadUnifiedVideo, type UploadMetadata } from "./youtubeWriteTransport"
+import {
+ addUnifiedPlaylistItem,
+ getUnifiedVideo,
+ updateUnifiedThumbnail,
+ updateUnifiedVideo,
+ uploadUnifiedCaptions,
+ uploadUnifiedVideo,
+ type UploadMetadata,
+} from "./youtubeWriteTransport"
 
 const extractVideoId=(value:unknown):string|null=>{
  if(!value||typeof value!=="object")return null
@@ -78,3 +86,52 @@ export const verifyPublishTransactionRemoteState=async(transactionId:string)=>{
   throw error
  }
 }
+
+
+const requireRemoteVideoId=(transaction:ContentBuildPublishTransaction)=>{
+ if(!transaction.youtubeVideoId)throw new Error("Publish transaction has no bound YouTube video ID.")
+ return transaction.youtubeVideoId
+}
+
+export const applyPublishMetadata=(transactionId:string,details:Record<string,unknown>)=>
+ runPublishTransactionStep({
+  transactionId,step:"apply-metadata",
+  execute:transaction=>updateUnifiedVideo(requireRemoteVideoId(transaction),details),
+  receipt:()=>({applied:true}),
+ })
+
+export const applyPublishThumbnail=(transactionId:string,file:File)=>
+ runPublishTransactionStep({
+  transactionId,step:"apply-thumbnail",
+  execute:transaction=>updateUnifiedThumbnail(requireRemoteVideoId(transaction),file),
+  receipt:()=>({applied:true,size:file.size,type:file.type}),
+ })
+
+export const applyPublishCaptions=(transactionId:string,file:Blob,options:{language?:string;name?:string}={})=>
+ runPublishTransactionStep({
+  transactionId,step:"apply-captions",
+  execute:transaction=>uploadUnifiedCaptions(requireRemoteVideoId(transaction),file,options),
+  receipt:()=>({applied:true,size:file.size,language:options.language||"en"}),
+ })
+
+export const applyPublishRouting=(transactionId:string,playlistIds:string[])=>
+ runPublishTransactionStep({
+  transactionId,step:"apply-routing",
+  execute:async transaction=>{
+   const videoId=requireRemoteVideoId(transaction)
+   const receipts=[]
+   for(const playlistId of playlistIds)receipts.push(await addUnifiedPlaylistItem(playlistId,videoId))
+   return receipts
+  },
+  receipt:result=>({applied:true,playlistCount:result.length}),
+ })
+
+export const applyPublishSchedulePrivacy=(
+ transactionId:string,
+ details:{privacyStatus:"public"|"private"|"unlisted";publishAt?:string|null},
+)=>
+ runPublishTransactionStep({
+  transactionId,step:"apply-schedule-privacy",
+  execute:transaction=>updateUnifiedVideo(requireRemoteVideoId(transaction),details),
+  receipt:()=>({applied:true,privacyStatus:details.privacyStatus,publishAt:details.publishAt||null}),
+ })
