@@ -34,14 +34,14 @@ export const CommentResponder: React.FC = () => {
      ? comments.tab === "history" ? "No reply history yet." : "No unreplied comments found."
      : `${comments.currentIndex + 1} of ${comments.displayThreads.length}`
 
- return <div data-vt-comment-responder data-state={dataState} className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start w-full p-4 sm:p-6 lg:p-8 bg-white">
-  <div className="flex flex-col gap-6 min-w-0">
+ return <div data-vt-comment-responder data-state={dataState} className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4 lg:gap-8 items-start w-full p-1 sm:p-3 lg:p-8 bg-white">
+  <div className="flex flex-col gap-2 sm:gap-4 lg:gap-6 min-w-0">
    <SubToolbox title="Comment Queue" icon={<MessagesSquare />} collapsible isOpenInitial>
     <div className="grid grid-cols-2 gap-2" aria-label="Comment queue view">
      <SubToolboxInnerActionButton label={`New · ${comments.tab === "unreplied" ? comments.displayThreads.length : ""}`} iconName="message" tone={comments.tab === "unreplied" ? "pink" : "cyan"} onClick={() => comments.setTab("unreplied")} />
      <SubToolboxInnerActionButton label={`History · ${comments.tab === "history" ? comments.displayThreads.length : ""}`} iconName="history" tone={comments.tab === "history" ? "pink" : "cyan"} onClick={() => comments.setTab("history")} />
     </div>
-    <div className="grid grid-cols-[1fr_auto] gap-2 mt-4">
+    <div className="grid grid-cols-[1fr_auto] gap-2 mt-2 sm:mt-3 lg:mt-4">
      <div className="grid grid-cols-2 gap-2">
       <StudioButton type="button" aria-label="Previous comment" disabled={!context.connected || comments.currentIndex === 0} onClick={() => comments.setCurrentIndex(Math.max(0, comments.currentIndex - 1))} tone="neutral">Previous</StudioButton>
       <StudioButton type="button" aria-label="Next comment" disabled={!context.connected || comments.currentIndex >= comments.displayThreads.length - 1} onClick={() => comments.setCurrentIndex(Math.min(comments.displayThreads.length - 1, comments.currentIndex + 1))} tone="neutral">Next</StudioButton>
@@ -50,8 +50,8 @@ export const CommentResponder: React.FC = () => {
       {context.connected ? <RefreshCw size={17} className={comments.loading ? "animate-spin" : ""} aria-hidden="true" /> : <Link2 size={17} aria-hidden="true" />}
      </StudioIconButton>
     </div>
-    <div role="status" aria-live="polite" className="mt-3 min-h-5 text-[10px] font-black uppercase">{queueStatus}</div>
-    {!context.connected && <StudioButton type="button" sizeVariant="action" className="mt-3 w-full" onClick={comments.reconnect}>Connect YouTube Channel</StudioButton>}
+    <div role="status" aria-live="polite" className="mt-2 sm:mt-3 min-h-5 text-[10px] font-black uppercase">{queueStatus}</div>
+    {!context.connected && <StudioButton type="button" sizeVariant="action" className="mt-2 sm:mt-3 w-full" onClick={comments.reconnect}>Connect YouTube Channel</StudioButton>}
    </SubToolbox>
 
    <SubToolbox title="Video Context" icon={<MessageCircle />} collapsible isOpenInitial>
@@ -64,12 +64,12 @@ export const CommentResponder: React.FC = () => {
    {comments.inboundImageUrl && <SubToolbox title="Received Image" icon={<Link2 />} collapsible isOpenInitial={false}><div className="flex items-center gap-3"><StudioTextArea readOnly value={comments.inboundImageUrl} aria-label="Received image URL" className="min-h-[72px]" /><StudioButton type="button" onClick={() => navigator.clipboard.writeText(comments.inboundImageUrl || "")}>Copy URL</StudioButton></div></SubToolbox>}
   </div>
 
-  <div className="flex flex-col gap-6 min-w-0">
+  <div className="flex flex-col gap-2 sm:gap-4 lg:gap-6 min-w-0">
    <SubToolbox title="Current Comment" icon={<MessageCircle />} collapsible isOpenInitial>
     {snippet ? <div className="border-[3px] border-black rounded-2xl bg-[#FFF9E8] p-5">
      <div className="flex items-center justify-between gap-3"><strong className="min-w-0 truncate text-sm">{plainText(snippet.authorDisplayName || "Viewer")}</strong><span className="shrink-0 text-[9px] font-black uppercase opacity-45">{Number(snippet.likeCount || 0).toLocaleString()} Likes</span></div>
      <p className="mt-4 whitespace-pre-wrap break-words text-base font-bold leading-snug">{plainText(snippet.textDisplay || snippet.textOriginal || "")}</p>
-    </div> : <div className="min-h-44 grid place-items-center border-[3px] border-black rounded-2xl bg-white/60 opacity-50 font-black uppercase text-center p-6">{dataState === "disconnected" ? "Connect your channel to load comments." : dataState === "loading" ? "Loading comments…" : dataState === "error" ? "Comments unavailable. Use refresh or reconnect and try again." : "No comment selected."}</div>}
+    </div> : <div className="min-h-24 sm:min-h-32 lg:min-h-44 grid place-items-center border-[3px] border-black rounded-xl sm:rounded-2xl bg-white/60 opacity-50 font-black uppercase text-center p-3 sm:p-4 lg:p-6">{dataState === "disconnected" ? "Connect your channel to load comments." : dataState === "loading" ? "Loading comments…" : dataState === "error" ? "Comments unavailable. Use refresh or reconnect and try again." : "No comment selected."}</div>}
     {comments.error && context.connected && <div role="alert" className="mt-4 border-[3px] border-black bg-[#FFB158] p-3 rounded-xl text-xs font-black">{comments.error}</div>}
    </SubToolbox>
 
@@ -79,14 +79,14 @@ export const CommentResponder: React.FC = () => {
 
    <SubToolbox title={comments.tab === "history" ? "Follow-Up Reply" : "Reply Composer"} icon={<Sparkles />} collapsible isOpenInitial>
     <label htmlFor="comment-reply-copy" className="text-[10px] font-black uppercase">Reply</label>
-    <StudioTextArea id="comment-reply-copy" name="commentReply" value={comments.replyText} onChange={(event) => comments.setReplyText(event.target.value)} placeholder={!context.connected ? "Connect your YouTube channel to reply…" : comments.tab === "history" ? "Add a follow-up reply…" : "Write or generate a reply…"} className="mt-2 min-h-[150px]" disabled={!context.connected || !thread} />
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+    <StudioTextArea id="comment-reply-copy" name="commentReply" value={comments.replyText} onChange={(event) => comments.setReplyText(event.target.value)} placeholder={!context.connected ? "Connect your YouTube channel to reply…" : comments.tab === "history" ? "Add a follow-up reply…" : "Write or generate a reply…"} className="mt-2 min-h-[110px] sm:min-h-[130px] lg:min-h-[150px]" disabled={!context.connected || !thread} />
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-2 sm:mt-4">
      <SubToolboxInnerActionButton label={comments.generating ? "Working…" : comments.replyText.trim() ? "Refine" : "Draft"} iconName="sparkles" tone="yellow" disabled={!context.connected || !thread || comments.generating} onClick={comments.draftReply} />
      <SubToolboxInnerActionButton label="Suggest Video" iconName="link" tone="cyan" disabled={!context.connected || !thread || comments.generating} onClick={comments.suggestVideo} />
     </div>
    </SubToolbox>
 
-   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
     {commentUrl ? <a href={commentUrl} target="_blank" rel="noreferrer" className="min-h-14 border-[4px] border-black rounded-[16px] bg-[#FFC587] shadow-[5px_5px_0_0_#F59E46] font-black uppercase text-lg flex items-center justify-center gap-2 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"><ThumbsUp size={18} aria-hidden="true" />Open on YouTube</a> : <SubToolboxGridActionButton label="Open Comment" iconName="external-link" tone="orange" disabled onClick={() => {}} />}
     <SubToolboxGridActionButton label={comments.canPostReply ? "Post Reply" : context.connected ? "Reconnect Channel" : "Connect Channel"} iconName={comments.canPostReply ? "send" : "link"} tone="green" disabled={comments.canPostReply && (!thread || !comments.replyText.trim() || comments.loading)} onClick={comments.canPostReply ? comments.postReply : comments.reconnect} />
    </div>
