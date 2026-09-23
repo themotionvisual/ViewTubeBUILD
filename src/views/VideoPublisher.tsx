@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { BarChart3, Check, Copy, FileText, Sparkles, Type, Upload, Zap } from "lucide-react"
+import { BarChart3, Check, Copy, FileText, ImageIcon, RefreshCcw, Send, ShieldCheck, Sparkles, Type, Upload, Zap } from "lucide-react"
 import JSZip from "jszip"
 import { useBrain } from "../context/useBrain"
 import { generateSeoData, hasGeminiKey } from "../services/gemini"
@@ -14,6 +14,10 @@ import {
  resolveWorkspaceContentBuildToolContext,
 } from "../services/asset-engine/ToolContext"
 import { nexusSyncService } from "../services/nexusSyncService"
+import { listVideoPackages } from "../services/video-package/VideoPackageRepository"
+import { projectPublishingPackage } from "../services/asset-engine/PublishingPackageProjection"
+import { beginYouTubePublishing, verifyPublishTransactionRemoteState } from "../services/youtube/PublishTransactionYouTubeBridge"
+import { completePublishTransaction, listPublishTransactions } from "../services/asset-engine/PublishTransaction"
 import { sheetsService } from "../services/sheetsService"
 import type { SeoResult } from "../types"
 import BrainLiveToolInbox from "../components/brain/BrainLiveToolInbox"
@@ -113,6 +117,46 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
   const [isOpen, setIsOpen] = useState(isOpenInitial)
   const [missingFields, setMissingFields] = useState({ concept: false, niche: false })
   const [insightsImported, setInsightsImported] = useState(false)
+  const [publishRefresh, setPublishRefresh] = useState(0)
+  const [publishBusy, setPublishBusy] = useState(false)
+  const [publishError, setPublishError] = useState<string | null>(null)
+
+  const publishState = React.useMemo(() => {
+    const videoPackage = listVideoPackages()[0] || null
+    if (!videoPackage) return { videoPackage: null, projection: null, transaction: null }
+    try {
+      const projection = projectPublishingPackage(videoPackage)
+      return { videoPackage, projection, transaction: listPublishTransactions(projection.contentBuildId)[0] || null }
+    } catch {
+      return { videoPackage, projection: null, transaction: null }
+    }
+  }, [publishRefresh])
+
+  const beginOrResumePublishing = () => {
+    if (!publishState.projection) return
+    try {
+      beginYouTubePublishing(publishState.projection)
+      setPublishError(null)
+      setPublishRefresh(value => value + 1)
+    } catch (error) {
+      setPublishError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  const verifyAndCompletePublishing = async () => {
+    if (!publishState.transaction) return
+    setPublishBusy(true)
+    try {
+      await verifyPublishTransactionRemoteState(publishState.transaction.id)
+      completePublishTransaction(publishState.transaction.id)
+      setPublishError(null)
+      setPublishRefresh(value => value + 1)
+    } catch (error) {
+      setPublishError(error instanceof Error ? error.message : String(error))
+    } finally {
+      setPublishBusy(false)
+    }
+  }
 
   useEffect(() => {
     registerProvider("VIDEO_PUBLISHER")
@@ -334,6 +378,42 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
         </SubToolboxActions>
       }
     >
+      {publishState.projection ? (
+        <SubToolboxStack density="comfortable">
+          <SubToolbox title="Publishing Control" icon={<Send size={20} strokeWidth={3} />} paletteIndex={basePalette + 1} collapsible isOpenInitial>
+            <SubToolboxStack density="comfortable">
+              <SubToolboxGrid minItemWidth="compact">
+                <SubToolboxOutputCard title="PREFLIGHT" icon={<ShieldCheck size={18} />}>
+                  <div className="text-xl font-black">{publishState.projection.ready ? "READY" : publishState.projection.missing.length + " MISSING"}</div>
+                  <div>{publishState.projection.ready ? "Canonical package approved." : publishState.projection.missing.join(" · ")}</div>
+                </SubToolboxOutputCard>
+                <SubToolboxOutputCard title="TRANSACTION" icon={<RefreshCcw size={18} />}>
+                  <div className="text-xl font-black">{publishState.transaction?.status.toUpperCase() || "NOT STARTED"}</div>
+                  <div>{publishState.transaction ? Object.values(publishState.transaction.steps).filter(step => step?.status === "completed").length + "/10 STEPS COMPLETE" : "Start only after preflight is ready."}</div>
+                </SubToolboxOutputCard>
+              </SubToolboxGrid>
+              <SubToolboxGrid minItemWidth="compact">
+                <SubToolboxOutputCard title="TITLE" icon={<Type size={18} />}><div className="font-black break-all">{publishState.transaction?.assetLock.titleAssetId || publishState.projection.titleAssetId || "MISSING"}</div></SubToolboxOutputCard>
+                <SubToolboxOutputCard title="THUMBNAIL" icon={<ImageIcon size={18} />}><div className="font-black break-all">{publishState.transaction?.assetLock.thumbnailAssetId || publishState.projection.thumbnailAssetId || "MISSING"}</div></SubToolboxOutputCard>
+                <SubToolboxOutputCard title="FINAL RENDER" icon={<Upload size={18} />}><div className="font-black break-all">{publishState.transaction?.assetLock.finalRenderAssetId || publishState.projection.finalRenderAssetId || "MISSING"}</div></SubToolboxOutputCard>
+                <SubToolboxOutputCard title="YOUTUBE"><div className="font-black break-all">{publishState.transaction?.youtubeVideoId || publishState.projection.publishedVideoId || "NOT BOUND"}</div></SubToolboxOutputCard>
+              </SubToolboxGrid>
+              {publishError ? <SubToolboxStatePanel state="error" message={publishError} /> : null}
+              <SubToolboxActions columns={3}>
+                <SubToolboxButton tone={publishState.projection.ready ? "success" : "warning"} disabled={!publishState.projection.ready || publishBusy} onClick={beginOrResumePublishing}>
+                  {publishState.transaction ? "RESUME TRANSACTION" : "START PUBLISHING"}
+                </SubToolboxButton>
+                <SubToolboxButton tone="neutral" disabled={!publishState.transaction?.youtubeVideoId || publishBusy} onClick={() => void verifyAndCompletePublishing()}>
+                  {publishBusy ? "VERIFYING…" : "VERIFY + COMPLETE"}
+                </SubToolboxButton>
+                <SubToolboxButton tone="neutral" onClick={() => setPublishRefresh(value => value + 1)}>REFRESH STATE</SubToolboxButton>
+              </SubToolboxActions>
+            </SubToolboxStack>
+          </SubToolbox>
+        </SubToolboxStack>
+      ) : (
+        <SubToolboxStatePanel state="empty" message="No canonical Publishing Package is available. Finish the active Project package before publishing." />
+      )}
       {!result ? (
         <SubToolboxStack density="comfortable">
           <BrainLiveToolInbox destinationToolId="video-publisher" channelId={(authState as any)?.channelId ?? null} onPrefill={applyPrefill} />
