@@ -21,7 +21,7 @@ export const toolboxStateStorageKey = ({
   paletteIndex,
   persistenceId,
 }: ToolboxPersistenceDescriptor): string => {
-  const route = typeof window === "undefined" ? "server" : window.location.pathname
+  const route = typeof window === "undefined" ? "server" : window.location?.pathname || "unknown-route"
   const identity = persistenceId || [
     level,
     variant || "default",
