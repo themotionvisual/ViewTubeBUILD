@@ -7,9 +7,51 @@ import type { NavIconId } from "./navIcons"
 export type NavigationLayout = "top" | "wide" | "thin" | "rail"
 
 export const NAVIGATION_STORAGE_KEY = "vt_navigation_layout"
+export const NAVIGATION_LAYOUT_CHANGED_EVENT = "viewtube:navigation-layout-changed"
 
 export const parseNavigationLayout = (value: string | null): NavigationLayout =>
   value === "wide" || value === "thin" || value === "top" || value === "rail" ? value : "top"
+
+export const getNavigationLayout = (): NavigationLayout => {
+  if (typeof window === "undefined") return "top"
+  try {
+    return parseNavigationLayout(window.localStorage?.getItem(NAVIGATION_STORAGE_KEY) || null)
+  } catch {
+    return "top"
+  }
+}
+
+export const getNavigationLayoutServerSnapshot = (): NavigationLayout => "top"
+
+export const setNavigationLayoutPreference = (layout: NavigationLayout): NavigationLayout => {
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage?.setItem(NAVIGATION_STORAGE_KEY, layout)
+    } catch {
+      // The live shell can still switch layouts when browser storage is unavailable.
+    }
+    window.dispatchEvent(new CustomEvent(NAVIGATION_LAYOUT_CHANGED_EVENT, { detail: layout }))
+  }
+  return layout
+}
+
+export const subscribeNavigationLayout = (listener: () => void): (() => void) => {
+  if (typeof window === "undefined") return () => undefined
+
+  const onLayoutChange = () => listener()
+  const onStorage = (event: StorageEvent) => {
+    if (event.key && event.key !== NAVIGATION_STORAGE_KEY) return
+    listener()
+  }
+
+  window.addEventListener(NAVIGATION_LAYOUT_CHANGED_EVENT, onLayoutChange)
+  window.addEventListener("storage", onStorage)
+
+  return () => {
+    window.removeEventListener(NAVIGATION_LAYOUT_CHANGED_EVENT, onLayoutChange)
+    window.removeEventListener("storage", onStorage)
+  }
+}
 
 export const PRIMARY_NAV_ITEMS: ReadonlyArray<{
   id: string
