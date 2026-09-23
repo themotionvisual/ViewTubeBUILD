@@ -2,43 +2,40 @@ import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
 const readComponentSource = (name: string) =>
-  readFileSync(new URL(name, import.meta.url), "utf8")
+ readFileSync(new URL(name, import.meta.url), "utf8")
 
 const componentSlice = (source: string, start: string, end: string) => {
-  const startIndex = source.indexOf(start)
-  const endIndex = source.indexOf(end, startIndex + start.length)
-  expect(startIndex).toBeGreaterThanOrEqual(0)
-  expect(endIndex).toBeGreaterThan(startIndex)
-  return source.slice(startIndex, endIndex)
-}
-
-const expectSingleBoundaryOwner = (source: string, visualId: string) => {
-  expect(source.match(new RegExp(`HeroIntroBoundary visualId=["']${visualId}["']`, "g")))
-    .toHaveLength(1)
-  expect(source).not.toContain('addEventListener("vt:replay-hero-intro"')
-  expect(source).not.toContain("ReplayTick")
+ const startIndex = source.indexOf(start)
+ const endIndex = source.indexOf(end, startIndex + start.length)
+ expect(startIndex).toBeGreaterThanOrEqual(0)
+ expect(endIndex).toBeGreaterThan(startIndex)
+ return source.slice(startIndex, endIndex)
 }
 
 describe("hero replay ownership", () => {
-  it("gives Format Dominance one HeroIntroBoundary replay owner", () => {
-    const source = readComponentSource("./GraphsPageCharts.tsx")
-    const formatDominance = componentSlice(
-      source,
-      "export const FormatComparisonDonuts",
-      "export const RevenueEfficiency",
-    )
+ it("keeps Format Dominance on its native chart animation without a duplicate custom replay owner", () => {
+  const source = readComponentSource("./GraphsPageCharts.tsx")
+  const formatDominance = componentSlice(
+   source,
+   "export const FormatComparisonDonuts",
+   "export const RevenueEfficiency",
+  )
 
-    expectSingleBoundaryOwner(formatDominance, "format-dominance")
-  })
+  expect(formatDominance).not.toContain('addEventListener("vt:replay-hero-intro"')
+  expect(formatDominance).not.toContain('visualId="format-dominance"')
+  expect(formatDominance).not.toContain("ReplayTick")
+ })
 
-  it("gives Heat Matrix one HeroIntroBoundary replay owner", () => {
-    const source = readComponentSource("./TubeExplorerVisualModules.tsx")
-    const heatMatrix = componentSlice(
-      source,
-      "export const TubeExplorerThermalImaging",
-      "export const TubeExplorerChannelVitalSigns",
-    )
+ it("routes Heat Matrix replay ownership through ModuleFrame exactly once", () => {
+  const source = readComponentSource("./TubeExplorerVisualModules.tsx")
+  const heatMatrix = componentSlice(
+   source,
+   "export const TubeExplorerThermalImaging",
+   "export const TubeExplorerChannelVitalSigns",
+  )
 
-    expectSingleBoundaryOwner(heatMatrix, "heat-matrix")
-  })
+  expect(heatMatrix.match(/heroVisualId=["']heat-matrix["']/g)).toHaveLength(1)
+  expect(heatMatrix).not.toContain('addEventListener("vt:replay-hero-intro"')
+  expect(heatMatrix).not.toContain("ReplayTick")
+ })
 })
