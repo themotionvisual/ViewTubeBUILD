@@ -547,7 +547,7 @@ export const SubToolboxSplitField: React.FC<SubToolboxSplitFieldProps> = ({
   style,
   ...props
 }) => (
-  <div className={classes("vt-subtoolbox-split-field", `is-${variant}`, actionIcon && "has-action", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
+  <div className={classes("vt-subtoolbox-split-field", `is-${variant}`, Boolean(actionIcon) && "has-action", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
     {variant === "search" && icon ? <span className="vt-subtoolbox-split-field-rail" aria-hidden="true">{icon}</span> : null}
     <input {...inputProps} />
     {actionIcon ? <button type="button" className="vt-subtoolbox-split-field-action" aria-label={actionLabel} onClick={onAction}>{actionIcon}</button> : null}
@@ -1291,7 +1291,7 @@ export const SubToolboxCarousel: React.FC<SubToolboxCarouselProps> = ({ level = 
   )
 }
 
-export interface SubToolboxCommandPaletteProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SubToolboxCommandPaletteProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onSelect"> {
   level?: ToolboxControlLevel
   items: Array<{ id: string; label: React.ReactNode; keywords?: string }>
   onSelect?: (id: string) => void
