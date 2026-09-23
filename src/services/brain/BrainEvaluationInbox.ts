@@ -10,6 +10,7 @@ export type BrainEvaluationInboxItemKind =
  | "insufficient_data"
  | "measured_outcome"
  | "learning_review"
+ | "learning_promotion"
 
 export type BrainEvaluationInboxPriority = "critical" | "high" | "medium" | "low"
 
@@ -176,6 +177,31 @@ const learningItems = (channelId: string): BrainEvaluationInboxItem[] =>
    metadata: { candidate, review: review || null },
   }))
 
+const promotionItems = (channelId: string): BrainEvaluationInboxItem[] => {
+ const promotedCandidateIds = new Set(
+  listAlgorithmIntelligenceEvents({ channelId, kind: "LEARNING_PROMOTED" })
+   .map((event) => event.sourceId)
+   .filter(Boolean) as string[],
+ )
+ return listAlgorithmLearningCandidatesForReview(channelId)
+  .filter((row) => row.review?.decision === "approve_for_profile_review")
+  .filter((row) => !promotedCandidateIds.has(row.candidate.id))
+  .map(({ candidate, sourceEvent, review }) => ({
+   id: `evaluation-inbox:promotion:${candidate.id}`,
+   kind: "learning_promotion" as const,
+   priority: "high" as const,
+   channelId,
+   title: "Promote measured channel learning",
+   summary: candidate.statement,
+   sourceEventId: sourceEvent.id,
+   evidenceIds: candidate.evidenceIds,
+   createdAt: review?.reviewedAt || sourceEvent.createdAt,
+   requiredMetrics: [],
+   lineageEventIds: getAlgorithmEventLineage(sourceEvent.id).map((event) => event.id),
+   metadata: { candidate, review: review || null, creatorApprovalRequired: true },
+  }))
+}
+
 const priorityRank: Record<BrainEvaluationInboxPriority, number> = { critical: 4, high: 3, medium: 2, low: 1 }
 
 export const buildBrainEvaluationInbox = (input: {
@@ -189,6 +215,7 @@ export const buildBrainEvaluationInbox = (input: {
   ...dueItems(input.channelId, now),
   ...insufficientDataItems(input.channelId),
   ...learningItems(input.channelId),
+  ...promotionItems(input.channelId),
   ...monitoringItems(input.channelId, now),
   ...(input.includeMeasuredOutcomes === false ? [] : measuredOutcomeItems(input.channelId)),
  ]
@@ -207,6 +234,7 @@ export const buildBrainEvaluationInbox = (input: {
    insufficientData: items.filter((item) => item.kind === "insufficient_data").length,
    measuredOutcomes: items.filter((item) => item.kind === "measured_outcome").length,
    learningReviews: items.filter((item) => item.kind === "learning_review").length,
+   promotionReady: items.filter((item) => item.kind === "learning_promotion").length,
   },
   learningLoop: summarizeAlgorithmLearningLoop(input.channelId),
   governance: summarizeAlgorithmLearningGovernance(input.channelId),
