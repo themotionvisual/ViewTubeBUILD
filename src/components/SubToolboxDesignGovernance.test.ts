@@ -29,7 +29,9 @@ describe("subtoolbox design governance", () => {
 
   expect(responsiveCss).not.toMatch(/\.vt-toolbox\[data-vt-toolbox\][^{]*\{[^}]*currentColor/s)
   expect(responsiveCss).not.toContain('--vt-subtoolbox-shadow-offset')
-  expect(systemCss).toMatch(/--vt-subtoolbox-shadow-offset:\s*4px/)
+  expect(systemCss).toMatch(/--vt-subtoolbox-shadow-offset:\s*6px/)
+  expect(systemCss).not.toContain("--vt-subtoolbox-header-height:44px")
+  expect(systemCss).not.toContain("--vt-subtoolbox-shadow-offset:4px")
   expect(systemCss).toContain('[data-vt-toolbox-level="sub"]')
  })
 
