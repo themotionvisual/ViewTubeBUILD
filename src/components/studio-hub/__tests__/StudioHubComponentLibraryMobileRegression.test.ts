@@ -14,12 +14,17 @@ describe("Studio Hub Component Library mobile regression", () => {
     expect(library).toContain('data-vt-library-track={track}')
   })
 
-  it("keeps main toolbox geometry larger than subtoolbox geometry", () => {
+  it("keeps 80px / 56px shell geometry in production authority rather than a library override", () => {
     const library = read("src/components/ToolboxUIReferenceLibrary.tsx")
-    expect(library).toContain('--vt-toolbox-header-height: 80px !important')
-    expect(library).toContain('--vt-toolbox-stroke: 5px !important')
-    expect(library).toContain('--vt-toolbox-radius: 16px !important')
-    expect(library).toContain('--vt-toolbox-shadow-offset: 10px !important')
+    const tokens = read("src/components/subtoolbox/tokens.ts")
+    const css = read("src/styles/toolbox-system.css")
+
+    expect(library).not.toContain("--vt-toolbox-header-height:")
+    expect(tokens).toContain("height: 80")
+    expect(tokens).toContain("height: TOOLBOX_LEVEL_DNA.l0.height")
+    expect(css).toContain("--vt-toolbox-header-height: 80px")
+    expect(css).toContain("--vt-subtoolbox-header-height: 56px")
+    expect(css).not.toContain("--vt-subtoolbox-header-height: 44px")
   })
 
   it("keeps the primitive comparison track on shared component DNA", () => {
