@@ -1,5 +1,18 @@
 import React, { useEffect, useMemo, useSyncExternalStore } from "react"
-import { Clock3, CornerDownLeft, Search, Sparkles, Star, StarOff } from "lucide-react"
+import {
+  Clock3,
+  CornerDownLeft,
+  Eraser,
+  Navigation,
+  PanelLeft,
+  PanelTop,
+  PanelsTopLeft,
+  Search,
+  Settings,
+  Sparkles,
+  Star,
+  StarOff,
+} from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { DialogDescription, DialogTitle } from "../ui/dialog"
 import {
@@ -15,18 +28,30 @@ import { useWorkspaceUxPreferences } from "../../hooks/useWorkspaceUxPreferences
 import {
   getRecentDestinationsServerSnapshot,
   quickSwitcherPages,
+  clearRecentDestinations,
   readRecentDestinations,
   recordRecentDestination,
   resolveQuickSwitcherPage,
   subscribeRecentDestinations,
 } from "../../services/recentDestinationHistory"
 import {
+  clearPinnedDestinations,
   getPinnedDestinationsServerSnapshot,
   isDestinationPinned,
   readPinnedDestinations,
   subscribePinnedDestinations,
   togglePinnedDestination,
 } from "../../services/pinnedDestinationStore"
+import {
+  getNavigationLayout,
+  getNavigationLayoutServerSnapshot,
+  setNavigationLayoutPreference,
+  subscribeNavigationLayout,
+} from "./navigationContract"
+import {
+  QUICK_SWITCHER_COMMANDS,
+  type QuickSwitcherCommand,
+} from "./quickSwitcherCommandCatalog"
 
 export interface QuickSwitcherContextItem {
   id: string
@@ -71,6 +96,11 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
     readPinnedDestinations,
     getPinnedDestinationsServerSnapshot,
   )
+  const navigationLayout = useSyncExternalStore(
+    subscribeNavigationLayout,
+    getNavigationLayout,
+    getNavigationLayoutServerSnapshot,
+  )
   const pages = useMemo(() => quickSwitcherPages(), [])
 
   useEffect(() => {
@@ -108,6 +138,36 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
     navigate(path)
   }
 
+  const runCommand = (command: QuickSwitcherCommand) => {
+    if (command.kind === "navigate") {
+      go(command.path)
+      return
+    }
+
+    if (command.kind === "layout") {
+      setNavigationLayoutPreference(command.layout)
+      return
+    }
+
+    if (command.target === "recent") {
+      clearRecentDestinations()
+    } else {
+      clearPinnedDestinations()
+    }
+  }
+
+  const commandIcon = (command: QuickSwitcherCommand) => {
+    if (command.kind === "navigate") return <Settings aria-hidden="true" />
+    if (command.kind === "clear-local") return command.target === "recent"
+      ? <Eraser aria-hidden="true" />
+      : <StarOff aria-hidden="true" />
+
+    if (command.layout === "top") return <PanelTop aria-hidden="true" />
+    if (command.layout === "wide") return <PanelLeft aria-hidden="true" />
+    if (command.layout === "thin") return <PanelsTopLeft aria-hidden="true" />
+    return <Navigation aria-hidden="true" />
+  }
+
   const pinnedPathSet = new Set(pinnedPaths)
   const recentUnpinned = recent.filter((item) => !pinnedPathSet.has(item.path))
   const recentPaths = new Set(recentUnpinned.map((item) => item.path))
@@ -116,6 +176,10 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
     .filter((page): page is (typeof pages)[number] => Boolean(page))
   const currentPage = resolveQuickSwitcherPage(location.pathname)
   const currentPagePinned = currentPage ? isDestinationPinned(currentPage.path) : false
+  const availableCommands = QUICK_SWITCHER_COMMANDS.filter((command) => {
+    if (command.kind !== "clear-local") return true
+    return command.target === "recent" ? recent.length > 0 : pinnedPaths.length > 0
+  })
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
@@ -136,7 +200,7 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
           className="vt-quick-switcher__input"
         />
         <CommandList className="vt-quick-switcher__list">
-          <CommandEmpty className="vt-quick-switcher__empty">No matching ViewTube destination.</CommandEmpty>
+          <CommandEmpty className="vt-quick-switcher__empty">No matching ViewTube destination or command.</CommandEmpty>
 
           {currentPage ? (
             <CommandGroup heading="Quick action" className="vt-quick-switcher__group">
@@ -153,6 +217,35 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
               </CommandItem>
             </CommandGroup>
           ) : null}
+
+          <CommandGroup heading="Commands" className="vt-quick-switcher__group">
+            {availableCommands.map((command) => {
+              const isCurrentLayout =
+                command.kind === "layout" && command.layout === navigationLayout
+              const shortcut =
+                command.kind === "layout"
+                  ? isCurrentLayout ? "Current" : "Switch"
+                  : command.kind === "clear-local"
+                    ? String(command.target === "recent" ? recent.length : pinnedPaths.length)
+                    : "Open"
+
+              return (
+                <CommandItem
+                  key={command.id}
+                  value={`${command.label} ${command.description} ${command.keywords.join(" ")}`}
+                  onSelect={() => runCommand(command)}
+                  className="vt-quick-switcher__item"
+                >
+                  {commandIcon(command)}
+                  <span>
+                    <strong>{command.label}</strong>
+                    <small>{command.description}</small>
+                  </span>
+                  <CommandShortcut>{shortcut}</CommandShortcut>
+                </CommandItem>
+              )
+            })}
+          </CommandGroup>
 
           {pinnedPages.length ? (
             <CommandGroup heading="Pinned" className="vt-quick-switcher__group">
