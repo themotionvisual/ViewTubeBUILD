@@ -1,7 +1,7 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {
-  Activity,AudioLines,CircleHelp,Command,Columns2,Combine,Copy,EyeOff,Focus,Group,LayoutTemplate,LockKeyhole,Map as MapIcon,
-  Maximize2,PanelRight,Palette,Pencil,Redo2,Rows3,ScanSearch,Scissors,Trash2,Type,Undo2,Ungroup,VolumeX,Zap,
+  Activity,CircleHelp,Command,Combine,Copy,EyeOff,Focus,Group,LayoutTemplate,LockKeyhole,Map as MapIcon,
+  Maximize2,PanelRight,Redo2,Rows3,ScanSearch,Scissors,Trash2,Type,Undo2,Ungroup,VolumeX,Zap,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {PREVIEW_TRANSPORT_HEIGHT,PreviewPane} from '../components/PreviewPane';
@@ -16,7 +16,7 @@ import {TouchEditorGuide} from '../components/TouchEditorGuide';
 import {MobileCommandPalette,type MobileEditorCommand} from '../components/MobileCommandPalette';
 import {EditorCoachOverlay,type EditorCoachStep} from '../components/EditorCoachOverlay';
 import {WorkspaceDivider} from './WorkspaceDivider';
-import {WORKSPACE_PRESETS,presetPatch,useMobileWorkspacePreferences,type WorkspaceFocus} from './mobileWorkspacePreferences';
+import {useMobileWorkspacePreferences,type WorkspaceFocus} from './mobileWorkspacePreferences';
 
 export interface MobileWorkspaceLayoutProps{
   orientation:'portrait'|'landscape';
@@ -119,18 +119,21 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const effectiveMainSplit=moduleDraggingEnabled
     ?prefs.mainSplit
     :orientation==='portrait'&&isPortraitVideo
-      ?.64
+      ?.72
       :orientation==='landscape'&&isPortraitVideo
-        ?.38
-        :prefs.mainSplit;
+        ?.46
+        :orientation==='portrait'
+          ?.42
+          :.62;
   const resolvedEditorSettings=useMemo<EditorSettingsModel|undefined>(()=>editorSettings?{
     ...editorSettings,
     layoutDraggingEnabled:moduleDraggingEnabled,
     onLayoutDraggingEnabled:(enabled:boolean)=>patchPrefs({layoutDraggingEnabled:enabled}),
   }:undefined,[editorSettings,moduleDraggingEnabled,patchPrefs]);
-  const visibleTrackCount=store.state.project.tracks.filter(track=>!track.hidden).length;
   const effectiveTimelineScale=moduleDraggingEnabled?prefs.timelineScale:1;
-  const timelineHeight=Math.min(timelinePreferredHeight(visibleTrackCount)*effectiveTimelineScale,Math.max(96,containerHeight*.52));
+  const actionHeight=showActionLabels?40:34;
+  const timelineCoreHeight=timelinePreferredHeight(Math.max(1,store.state.project.tracks.length))*effectiveTimelineScale;
+  const timelineHeight=Math.min(timelineCoreHeight+actionHeight+(showMap?MAP_HEIGHT:0)+4,Math.max(132,containerHeight*.58));
 
   const selectionKey=`${store.state.selection.clipIds.join(',')}|${store.state.selection.trackId??''}|${store.state.selection.transitionId??''}`;
   useEffect(()=>{
@@ -171,22 +174,6 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const timelineResize=useRef<{y:number;scale:number}|null>(null);
 
   const setFocus=(next:WorkspaceFocus)=>patchPrefs({focus:focus===next?null:next});
-  const applyPreset=(id:(typeof WORKSPACE_PRESETS)[number]['id'])=>{
-    const next=presetPatch(id);
-    patchPrefs(next);
-    if(next.lastPage&&EDITOR_NAV_ITEMS.some(item=>item.id===next.lastPage))setPage(next.lastPage as EditorNavPage);
-    if(id==='timeline')onWorkspaceModeChange('split');
-    else if(id==='edit')onWorkspaceModeChange('split');
-  };
-
-  const presetIcons={
-    edit:<Pencil size={11}/>,
-    animate:<Activity size={11}/>,
-    audio:<AudioLines size={11}/>,
-    color:<Palette size={11}/>,
-    template:<LayoutTemplate size={11}/>,
-    timeline:<Rows3 size={11}/>,
-  } as const;
 
   const rootPointerDown=(event:React.PointerEvent<HTMLDivElement>)=>{
     if(event.pointerType!=='touch')return;
@@ -234,7 +221,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const trackMenuFor=(track:EditorStore['state']['project']['tracks'][number]):ContextMenuItem[]=>[
     {label:track.muted?'Unmute':'Mute',icon:<VolumeX size={14}/>,onSelect:()=>store.dispatch({type:'muteTrack',id:track.id})},
     {label:track.locked?'Unlock':'Lock',icon:<LockKeyhole size={14}/>,onSelect:()=>store.dispatch({type:'lockTrack',id:track.id})},
-    {label:'Hide',icon:<EyeOff size={14}/>,onSelect:()=>store.dispatch({type:'hideTrack',id:track.id})},
+    {label:track.hidden?'Show':'Hide',icon:<EyeOff size={14}/>,onSelect:()=>store.dispatch({type:'hideTrack',id:track.id})},
     {label:'Inspect',icon:<ScanSearch size={14}/>,onSelect:()=>{store.dispatch({type:'selectTrack',id:track.id});openPage('select')}},
     {label:'Delete empty',icon:<Trash2 size={14}/>,destructive:true,disabled:store.clipsOnTrack(track.id).length>0||store.state.project.tracks.length<=1,onSelect:()=>store.dispatch({type:'removeTrack',id:track.id})},
   ];
@@ -284,9 +271,6 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     {key:'delete',label:'Delete',icon:<Trash2 size={13}/>,enabled:selectedIds.length>0,danger:true,onClick:()=>selectedIds.length&&store.dispatch({type:'deleteClips',ids:selectedIds})},
     {key:'group',label:selectedGroupId?'Ungroup':'Group',icon:selectedGroupId?<Ungroup size={13}/>:<Group size={13}/>,enabled:selectedGroupId?selectedIds.length>0:selectedIds.length>=2,onClick:()=>selectedGroupId?store.dispatch({type:'ungroupClips',ids:selectedIds}):store.dispatch({type:'groupClips',ids:selectedIds})},
     {key:'combine',label:selectedCompound?'Uncombine':'Combine',icon:<Combine size={13}/>,enabled:selectedCompound||canCombine,onClick:()=>selectedCompound&&selected?store.dispatch({type:'uncombineClip',id:selected.id}):store.dispatch({type:'combineClips',ids:selectedIds})},
-    {key:'split-ui',label:'Split UI',icon:<Columns2 size={13}/>,enabled:true,active:workspaceMode==='split',onClick:()=>onWorkspaceModeChange('split')},
-    {key:'edit-ui',label:'Edit UI',icon:<PanelRight size={13}/>,enabled:true,active:workspaceMode==='edit',onClick:()=>onWorkspaceModeChange('edit')},
-    {key:'timeline',label:'Timeline',icon:<Rows3 size={13}/>,enabled:true,active:showTimeline,onClick:()=>patchPrefs({showTimeline:!showTimeline})},
     {key:'map',label:'Map',icon:<MapIcon size={13}/>,enabled:true,active:showMap,onClick:()=>patchPrefs({showMap:!showMap})},
     {key:'command',label:'Commands',icon:<Command size={13}/>,enabled:true,onClick:()=>setShowCommands(true)},
     {key:'guide',label:'Guide',icon:<CircleHelp size={13}/>,enabled:true,onClick:()=>setShowCoach(true)},
@@ -419,47 +403,27 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
 
   const timeline=(showTimeline||focus==='timeline')?<div
     data-guide-id="timeline"
-    onDoubleClick={()=>setFocus('timeline')}
-    style={{position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}
+    style={{position:'relative',width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden',display:'grid',gridTemplateRows:`${actionHeight}px minmax(0,1fr) ${showMap?MAP_HEIGHT:0}px`,gap:showMap?3:0}}
   >
-    {moduleFocusButton('timeline')}
-    {moduleDraggingEnabled?<div
-      role="separator"
-      aria-label="Resize timeline"
-      onPointerDown={event=>{
-        event.stopPropagation();
-        event.currentTarget.setPointerCapture?.(event.pointerId);
-        timelineResize.current={y:event.clientY,scale:prefs.timelineScale};
-      }}
-      onPointerMove={event=>{
-        const active=timelineResize.current;
-        if(!active)return;
-        patchPrefs({timelineScale:active.scale+(active.y-event.clientY)/120});
-      }}
-      onPointerUp={()=>{timelineResize.current=null}}
-      onPointerCancel={()=>{timelineResize.current=null}}
-      style={{
-        position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',zIndex:25,
-        width:34,height:12,display:'grid',placeItems:'start center',touchAction:'none',
-      }}
-    ><span style={{width:24,height:5,border:`1.5px solid ${INK}`,borderRadius:4,background:CYAN}}/></div> :null}
-
-    <TimelineStrip
-      store={store}
-      height="100%"
-      scrollToSec={scrollToSec}
-      onViewportChange={setTimelineViewport}
-      onClipContextMenu={(clip,at)=>setMenu({items:clipMenuFor(clip),at,title:String(clip.id),layout:'tray'})}
-      onTrackContextMenu={(track,at)=>setMenu({items:trackMenuFor(track),at,title:track.name,layout:'tray'})}
-      onKeyframeContextMenu={(clip,keyframeId,at)=>setMenu({items:keyframeMenuFor(clip,keyframeId),at,title:'Keyframe',layout:'tray'})}
-      onEmptyContextMenu={at=>setMenu({items:emptyMenu,at,title:'Timeline',layout:'tray'})}
-      actionLabelsVisible={showActionLabels}
-      onToggleActionLabels={()=>patchPrefs({showActionLabels:!showActionLabels})}
-    />
-  </div>:null;
-
-  const map=showMap?<div data-guide-id="map" style={{width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}>
-    <MiniTimelineMap store={store} height="100%" viewport={timelineViewport} onViewportNavigate={setScrollToSec}/>
+    <div style={{minWidth:0,minHeight:0}}>{actionRow}</div>
+    <div style={{position:'relative',minWidth:0,minHeight:0,overflow:'hidden'}}>
+      {moduleDraggingEnabled?<div role="separator" aria-label="Resize timeline"
+        onPointerDown={event=>{event.stopPropagation();event.currentTarget.setPointerCapture?.(event.pointerId);timelineResize.current={y:event.clientY,scale:prefs.timelineScale}}}
+        onPointerMove={event=>{const active=timelineResize.current;if(active)patchPrefs({timelineScale:active.scale+(active.y-event.clientY)/120})}}
+        onPointerUp={()=>{timelineResize.current=null}} onPointerCancel={()=>{timelineResize.current=null}}
+        style={{position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',zIndex:25,width:34,height:12,display:'grid',placeItems:'start center',touchAction:'none'}}
+      ><span style={{width:24,height:5,border:`1.5px solid ${INK}`,borderRadius:4,background:CYAN}}/></div>:null}
+      <TimelineStrip store={store} height="100%" scrollToSec={scrollToSec} onViewportChange={setTimelineViewport}
+        onClipContextMenu={(clip,at)=>setMenu({items:clipMenuFor(clip),at,title:String(clip.id),layout:'tray'})}
+        onTrackContextMenu={(track,at)=>setMenu({items:trackMenuFor(track),at,title:track.name,layout:'tray'})}
+        onKeyframeContextMenu={(clip,keyframeId,at)=>setMenu({items:keyframeMenuFor(clip,keyframeId),at,title:'Keyframe',layout:'tray'})}
+        onEmptyContextMenu={at=>setMenu({items:emptyMenu,at,title:'Timeline',layout:'tray'})}
+        actionLabelsVisible={showActionLabels} onToggleActionLabels={()=>patchPrefs({showActionLabels:!showActionLabels})}
+      />
+    </div>
+    {showMap?<div data-guide-id="map" style={{width:'100%',height:MAP_HEIGHT,minWidth:0,minHeight:0,overflow:'hidden'}}>
+      <MiniTimelineMap store={store} height="100%" viewport={timelineViewport} onViewportNavigate={setScrollToSec}/>
+    </div>:null}
   </div>:null;
 
   const rows=focus
@@ -467,27 +431,8 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     :[
       'minmax(0,1fr)',
       `${NAV_ROW_HEIGHT}px`,
-      `${showActionLabels?40:34}px`,
       ...(showTimeline?[`${timelineHeight}px`]:[]),
-      ...(showMap?[`${MAP_HEIGHT}px`]:[]),
     ].join(' ');
-
-  const presetBar=focus?null:<div data-guide-id="presets" style={{
-    position:'absolute',top:7,left:7,zIndex:60,display:'grid',
-    gridTemplateColumns:'repeat(6,24px)',gap:2,padding:2,
-    border:`2px solid ${INK}`,borderRadius:6,background:'rgba(255,255,255,.92)',
-  }}>
-    {WORKSPACE_PRESETS.map(item=><button
-      key={item.id}
-      title={item.label}
-      aria-label={`Workspace preset: ${item.label}`}
-      onClick={()=>applyPreset(item.id)}
-      style={{
-        width:24,height:24,border:`1.5px solid ${INK}`,borderRadius:4,
-        background:prefs.preset===item.id?CYAN:'#fff',padding:0,display:'grid',placeItems:'center',
-      }}
-    >{presetIcons[item.id]}</button>)}
-  </div>;
 
   const commands:MobileEditorCommand[]=[
     {id:'undo',label:'Undo',group:'Edit',icon:<Undo2 size={12}/>,disabled:!store.canUndo,run:()=>store.dispatch({type:'undo'})},
@@ -512,7 +457,6 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     position:'absolute',right:7,bottom:7,zIndex:70,display:'flex',gap:3,
   }}>
     {!showTimeline&&focus==null?<button title="Restore timeline" aria-label="Restore timeline" onClick={()=>patchPrefs({showTimeline:true})} style={{...toolbarButton(false,false),width:26,height:26}}><Rows3 size={12}/></button>:null}
-    {!showMap&&focus==null?<button title="Restore map" aria-label="Restore map" onClick={()=>patchPrefs({showMap:true})} style={{...toolbarButton(false,false),width:26,height:26}}><MapIcon size={12}/></button>:null}
     {focus?<button title="Restore workspace" aria-label="Restore workspace" onClick={()=>patchPrefs({focus:null})} style={{...toolbarButton(true,false),width:26,height:26}}><Focus size={12}/></button>:null}
   </div>;
 
@@ -544,10 +488,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   >
     {focus!=='timeline'?<div style={{width:'100%',height:'100%',minWidth:0,minHeight:0,overflow:'hidden'}}>{mainSurface}</div>:null}
     {!focus?navigationRow:null}
-    {!focus?actionRow:null}
     {focus==='timeline'||(!focus&&showTimeline)?timeline:null}
-    {!focus&&showMap?map:null}
-    {presetBar}
     {occupancyStrip}
     {menu?<ContextMenu {...menu} onDismiss={()=>setMenu(null)}/>:null}
     {showCommands?<MobileCommandPalette commands={commands} onClose={()=>setShowCommands(false)}/>:null}
