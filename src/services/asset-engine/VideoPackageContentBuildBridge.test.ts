@@ -190,4 +190,54 @@ describe("VideoPackage ContentBuild bridge", () => {
  })
 
 
+ it("only finalizes a selected option when that artifact has explicit approval", () => {
+  const base = createVideoPackage({
+   id: "package-approved-option",
+   contentBuildId: "cb-approved-option",
+   channelId: "channel-a",
+   projectId: "project-a",
+   workingTitle: "Approved option test",
+   format: "long",
+  })
+  const approvedAt = "2026-09-22T21:00:00.000Z"
+  const videoPackage = {
+   ...base,
+   packaging: {
+    ...base.packaging,
+    titleVariants: [{
+     id: "title-approved",
+     kind: "title" as const,
+     version: 1,
+     label: "Approved",
+     sourceToolId: "packaging-lab-pro",
+     vaultAssetId: "vault-title-approved",
+     createdAt: base.identity.createdAt,
+     approvedAt,
+    }],
+    selectedTitleId: "title-approved",
+   },
+  }
+
+  const build = syncVideoPackageToContentBuild(videoPackage, { mode: "strict" })
+  const group = build.variantGroups.find(candidate => candidate.slot === "title")
+  expect(group?.selectedAssetId).toBe("vault-title-approved")
+  expect(group?.finalAssetId).toBe("vault-title-approved")
+  expect(group?.members.find(member => member.assetId === "vault-title-approved")?.status).toBe("final")
+ })
+
+ it("rejects strict synchronization when a package has no canonical ContentBuild identity", () => {
+  const base = createVideoPackage({
+   id: "package-missing-build",
+   contentBuildId: "cb-temporary",
+   channelId: "channel-a",
+   projectId: "project-a",
+   workingTitle: "Missing build",
+   format: "long",
+  })
+  const legacyShape = { ...base, contentBuildId: undefined }
+
+  expect(() => syncVideoPackageToContentBuild(legacyShape, { mode: "strict" }))
+   .toThrow("canonical contentBuildId")
+ })
+
 })
