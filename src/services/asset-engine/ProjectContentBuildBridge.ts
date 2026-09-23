@@ -5,35 +5,12 @@ import {
  patchContentBuildProfile,
  setContentBuildStage,
 } from "./ContentBuildRepository"
-import type { ContentBuildProfile, ContentBuildStage } from "./contracts"
+import type { ContentBuildProfile } from "./contracts"
+import { contentBuildStageForProjectStatus } from "../../features/projects/projectLifecycleVocabulary"
 
 const nonEmpty = (value: unknown): value is string =>
  typeof value === "string" && value.trim().length > 0
 
-const projectStage = (project: Project): ContentBuildStage => {
- const planStage = project.plan?.contentBuildStage
- if (typeof planStage === "string") return planStage as ContentBuildStage
-
- const status = String(project.status || "").trim().toLowerCase()
- if (!status || ["idea", "ideas", "ideation", "draft"].includes(status)) return "idea"
- if (status.includes("research")) return "research"
- if (["planning", "planned", "concept"].includes(status)) return "concept"
- if (status.includes("outline")) return "outline"
- if (["script", "scripting"].includes(status)) return "script"
- if (status.includes("storyboard")) return "storyboard"
- if (["production", "producing", "filming", "media"].includes(status)) return "media"
- if (["package", "packaging"].includes(status)) return "package"
- if (["editing", "edit", "in-progress"].includes(status)) return "edit"
- if (["review", "approval"].includes(status)) return "review"
- if (["ready", "publishing", "scheduled", "queued"].includes(status)) return "scheduled"
- if (status === "published" || status === "live") return "published"
- if (status.includes("launch")) return "launch"
- if (status.includes("monitor")) return "monitor"
- if (["completed", "evaluation"].includes(status)) return "evaluation"
- if (status.includes("learning")) return "learning"
- if (status === "archived") return "archived"
- return "idea"
-}
 
 export const contentBuildProfileFromProject = (project: Project): ContentBuildProfile => {
  const plan = project.plan || { concept: "", niche: "" }
@@ -106,7 +83,9 @@ export const ensureContentBuildForProject = (
   channelId: input.channelId || null,
   legacyProjectId: project.id,
   legacyProjectName: project.name,
-  stage: projectStage(project),
+  stage: contentBuildStageForProjectStatus(project.status, {
+   explicitStage: project.plan?.contentBuildStage,
+  }),
   profile: contentBuildProfileFromProject(project),
   toolId: input.sourceToolId || "project-command-kanban",
  })
@@ -129,7 +108,10 @@ export const syncProjectToContentBuild = (
   })
  }
 
- const desiredStage = projectStage(project)
+ const desiredStage = contentBuildStageForProjectStatus(project.status, {
+  explicitStage: project.plan?.contentBuildStage,
+  currentStage: next.stage,
+ })
  if (next.stage !== desiredStage) {
   next = setContentBuildStage(next.id, desiredStage, {
    actorType: "tool",
