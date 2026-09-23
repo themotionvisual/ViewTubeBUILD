@@ -1,5 +1,5 @@
 import { listAlgorithmIntelligenceEvents, recordAlgorithmIntelligenceEvent, type AlgorithmIntelligenceEvent } from "./AlgorithmIntelligenceEventLedger"
-import { listAlgorithmLifecycleObservations, type AlgorithmLifecycleObservation } from "./AlgorithmLifecycleObservationStore"
+import { listAlgorithmLifecycleObservations } from "./AlgorithmLifecycleObservationStore"\nimport type { AlgorithmLifecycleObservation } from "./AlgorithmLifecycleCohorts"
 import { listDueAlgorithmMonitoringCheckpoints, type AlgorithmMonitoringCheckpoint } from "./AlgorithmMonitoringSchedule"
 
 export interface ResolvedMonitoringMetric {
