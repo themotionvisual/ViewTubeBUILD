@@ -2144,3 +2144,94 @@
   .vt-toolbox-header-toggle { height: 30px; min-width: 72px; }
   .vt-toolbox-header-toggle.is-subtoolbox { height: 26px; min-width: 64px; }
 }
+
+
+/* Canonical Toolbox/SubToolbox header anatomy primitives. */
+.vt-toolbox-header-icon-rail {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  height:100%;
+  transition:all var(--vt-subtoolbox-motion-collapse,600ms) ease-out;
+}
+.vt-toolbox-header-icon-rail.is-toolbox {
+  width:var(--vt-toolbox-header-height,80px);
+  border-right:var(--vt-toolbox-stroke,5px) solid #000;
+}
+.vt-toolbox-header-icon-rail.is-subtoolbox {
+  width:var(--vt-subtoolbox-header-height,56px);
+  border-right:var(--vt-subtoolbox-stroke,4px) solid #000;
+}
+.vt-toolbox-header-title {
+  min-width:0;
+  max-width:100%;
+  margin:0;
+  padding:0;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  overflow:hidden;
+  white-space:normal;
+  text-overflow:clip;
+  overflow-wrap:anywhere;
+  text-transform:uppercase;
+  letter-spacing:-.055em;
+}
+.vt-toolbox-header-title.is-toolbox {
+  font-size:var(--vt-toolbox-title-size,26px);
+  font-weight:1000;
+  line-height:.82;
+}
+.vt-toolbox-header-title.is-subtoolbox {
+  font-size:var(--vt-subtoolbox-title-size,20px);
+  font-weight:1000;
+  line-height:.82;
+}
+.vt-toolbox-header-control {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100%;
+  border:0;
+  background:transparent;
+  color:inherit;
+  cursor:pointer;
+  padding:0;
+}
+.vt-toolbox-header-help.is-toolbox { width:44px; min-width:44px; }
+.vt-toolbox-header-help.is-subtoolbox { width:38px; min-width:38px; }
+.vt-toolbox-header-help>span {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:3px solid #000;
+  border-radius:999px;
+  background:#fff;
+  transition:all var(--vt-subtoolbox-motion-control,180ms) ease-out;
+}
+.vt-toolbox-header-help.is-toolbox>span {
+  width:40px;height:40px;
+  box-shadow:4px 4px 0 0 #000;
+}
+.vt-toolbox-header-help.is-subtoolbox>span {
+  width:36px;height:36px;
+  box-shadow:4px 4px 0 0 var(--vt-subtoolbox-shell-shadow,#000);
+}
+.vt-toolbox-header-help.is-toolbox svg { width:24px;height:24px;stroke-width:2.6; }
+.vt-toolbox-header-help.is-subtoolbox svg { width:22px;height:22px;stroke-width:2.6; }
+.vt-toolbox-header-collapse.is-toolbox { width:44px; min-width:44px; }
+.vt-toolbox-header-collapse.is-subtoolbox { width:38px; min-width:38px; }
+.vt-toolbox-header-collapse.is-toolbox svg { width:38px;height:38px; }
+.vt-toolbox-header-collapse.is-subtoolbox svg { width:34px;height:34px; }
+
+@media (max-width:767px) {
+  .vt-toolbox-header-icon-rail.is-toolbox { width:68px; }
+  .vt-toolbox-header-icon-rail.is-subtoolbox { width:50px; }
+  .vt-toolbox-header-help.is-toolbox,
+  .vt-toolbox-header-collapse.is-toolbox { width:40px; min-width:40px; }
+  .vt-toolbox-header-help.is-toolbox>span { width:36px;height:36px;box-shadow:3px 3px 0 0 #000; }
+  .vt-toolbox-header-help.is-toolbox svg { width:22px;height:22px; }
+  .vt-toolbox-header-collapse.is-toolbox svg { width:34px;height:34px; }
+}
