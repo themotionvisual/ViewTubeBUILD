@@ -1,0 +1,33 @@
+# Mobile Editor Consolidation Tasks
+
+- [ ] 1. Extract shared Clip FX catalog from desktop VT_E1.
+- [ ] 2. Extract shared Transition catalog/presets.
+- [ ] 3. Separate template metadata from rendered template content.
+- [ ] Checkpoint A: shared contracts + template render verification.
+- [ ] 4. Build unified Design Library browser.
+- [ ] 5. Make all library cards visual-first thumbnails.
+- [ ] 6. Fold Custom Template editing into selected-item details.
+- [ ] Checkpoint B: mobile Design Library visual certification.
+- [ ] 7. Reformat Clip Settings as one column.
+- [ ] 8. Add desktop-parity Clip FX Library to Clips.
+- [ ] 9. Unify Clip FX and visual/motion asset effects navigation.
+- [ ] Checkpoint C: desktop/mobile/Remotion FX parity.
+- [ ] 10. Move editing shortcuts into Timeline header.
+- [ ] 11. Move Timeline Map into Timeline footer.
+- [ ] 12. Remove Workspace Presets and occupancy modules.
+- [ ] 13. Add hidden-track recovery.
+- [ ] 14. Keep fixed timeline row geometry.
+- [ ] Checkpoint D: Timeline compound-module certification.
+- [ ] 15. Build shared mobile transition seam component.
+- [ ] 16. Replace reduced mobile transition panel with shared catalog.
+- [ ] 17. Certify transition render parity.
+- [ ] Checkpoint E: touch transition workflow.
+- [ ] 18. Implement constraint-based elastic workspace.
+- [ ] 19. Aspect-lock Preview module + canvas.
+- [ ] 20. Simplify workspace drag controls.
+- [ ] Checkpoint F: portrait/landscape 9:16 + 16:9 certification.
+- [ ] 21. Remove superseded routes/components after parity.
+- [ ] 22. Complete accessibility/iOS touch pass.
+- [ ] 23. Add editor contract tests.
+- [ ] 24. Capture built mobile visual evidence.
+- [ ] 25. Run release gates and Remotion sample renders.
