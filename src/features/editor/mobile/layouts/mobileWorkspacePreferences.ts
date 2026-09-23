@@ -54,22 +54,32 @@ export function useMobileWorkspacePreferences(
   isPortraitVideo:boolean,
 ){
   const key=storageKey(orientation,isPortraitVideo);
-  const[prefs,setPrefs]=React.useState<MobileWorkspacePreferences>(()=>read(orientation,isPortraitVideo));
+  const[saved,setSaved]=React.useState<{key:string;value:MobileWorkspacePreferences}>(
+    ()=>({key,value:read(orientation,isPortraitVideo)}),
+  );
+  // A rotation renders with a new key before effects run. Never expose the
+  // previous orientation's settings under that key, even for one render.
+  const prefs=saved.key===key?saved.value:read(orientation,isPortraitVideo);
 
-  React.useEffect(()=>setPrefs(read(orientation,isPortraitVideo)),[key,orientation,isPortraitVideo]);
   React.useEffect(()=>{
-    if(typeof window==='undefined')return;
-    localStorage.setItem(key,JSON.stringify(prefs));
-  },[key,prefs]);
+    setSaved(current=>current.key===key?current:{key,value:read(orientation,isPortraitVideo)});
+  },[key,orientation,isPortraitVideo]);
+  React.useEffect(()=>{
+    if(typeof window==='undefined'||saved.key!==key)return;
+    try{localStorage.setItem(key,JSON.stringify(saved.value))}catch{/* Private browsing can block storage. */}
+  },[key,saved]);
 
   const patch=React.useCallback((next:Partial<MobileWorkspacePreferences>)=>{
-    setPrefs(current=>({
-      ...current,
-      ...next,
-      mainSplit:next.mainSplit==null?current.mainSplit:clamp(next.mainSplit,.28,.72),
-      timelineScale:next.timelineScale==null?current.timelineScale:clamp(next.timelineScale,.55,1.65),
-    }));
-  },[]);
+    setSaved(current=>{
+      const base=current.key===key?current.value:read(orientation,isPortraitVideo);
+      return{key,value:{
+        ...base,
+        ...next,
+        mainSplit:next.mainSplit==null?base.mainSplit:clamp(next.mainSplit,.28,.72),
+        timelineScale:next.timelineScale==null?base.timelineScale:clamp(next.timelineScale,.55,1.65),
+      }};
+    });
+  },[key,orientation,isPortraitVideo]);
 
   return[prefs,patch] as const;
 }
