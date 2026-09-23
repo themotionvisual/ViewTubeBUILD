@@ -14,7 +14,7 @@ describe("Studio Hub Component Library mobile regression", () => {
     expect(library).toContain('data-vt-library-track={track}')
   })
 
-  it("keeps 80px / 56px shell geometry in production authority rather than a library override", () => {
+  it("keeps desktop and compact mobile shell geometry in production authority rather than a library override", () => {
     const library = read("src/components/ToolboxUIReferenceLibrary.tsx")
     const tokens = read("src/components/subtoolbox/tokens.ts")
     const css = read("src/styles/toolbox-system.css")
@@ -24,7 +24,8 @@ describe("Studio Hub Component Library mobile regression", () => {
     expect(tokens).toContain("height: TOOLBOX_LEVEL_DNA.l0.height")
     expect(css).toContain("--vt-toolbox-header-height: 80px")
     expect(css).toContain("--vt-subtoolbox-header-height: 56px")
-    expect(css).not.toContain("--vt-subtoolbox-header-height: 44px")
+    expect(tokens).toContain("TOOLBOX_MOBILE_HEADER_DNA")
+    expect(css).toContain("--vt-subtoolbox-header-height: 44px")
   })
 
   it("keeps the primitive comparison track on shared component DNA", () => {
@@ -49,6 +50,26 @@ describe("Studio Hub Component Library mobile regression", () => {
     expect(migration).not.toContain("forceOpen content=\"TOOLTIP\"")
   })
 
+
+  it("keeps the redesigned floating/status/data primitives in the production track", () => {
+    const primitive = read("src/components/subtoolbox/SubToolboxPrimitives.tsx")
+    const migration = read("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
+    const css = read("src/styles/subtoolbox-system.css")
+
+    expect(primitive).toContain("useSubToolboxOverlayPosition")
+    expect(primitive).toContain("SubToolboxLedDot")
+    expect(migration).toContain('"LED Dot"')
+    expect(migration).toContain('"Loader Progress"')
+    expect(migration).toContain('"Loader Split"')
+    expect(migration).toContain('"Loader Orbit"')
+    expect(migration).toContain('"Loader Bars"')
+    expect(migration).toContain('name === "Calendar" ? (["l0"]')
+    expect(css).toContain("--vt-floating-overlay-z:2147483000")
+    expect(css).toContain("vt-subtoolbox-led-ripple")
+    expect(css).toContain("vt-subtoolbox-controller-thumb")
+    expect(css).toContain("vt-subtoolbox-loader-progress")
+    expect(css).toContain("vt-subtoolbox-tree-row[data-depth=\"1\"]")
+  })
 
   it("exposes both tracks to the automated A/B certification harness", () => {
     const hardcoded = read("src/components/studio-hub/StudioHubCompletePrimitiveCatalog.tsx")
