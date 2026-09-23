@@ -12,6 +12,7 @@ import VideoManager from "./VideoManager"
 import { CommunityPostGenerator } from "../components/CommunityPostGenerator"
 import { CommentResponder } from "../components/CommentResponder"
 import { EndScreenTool } from "../components/EndScreenTool"
+import StudioPublishingCockpit from "../components/studio-hub/StudioPublishingCockpit"
 
 const ToolboxUIReferenceLibrary = React.lazy(() => import("../components/ToolboxUIReferenceLibrary"))
 const VideoDirector = React.lazy(() => import("./VideoDirector"))
@@ -48,6 +49,7 @@ const StudioHub: React.FC = () => {
     <React.Suspense fallback={null}>
      <VideoDirector collapsible isOpenInitial={false} paletteIndex={11} />
     </React.Suspense>
+    <StudioPublishingCockpit />
     <VideoPublisher collapsible isOpenInitial={false} paletteIndex={1} />
     <MediaAnalyzer collapsible isOpenInitial={false} paletteIndex={2} />
     <ThumbnailStudio collapsible isOpenInitial={false} paletteIndex={3} />
