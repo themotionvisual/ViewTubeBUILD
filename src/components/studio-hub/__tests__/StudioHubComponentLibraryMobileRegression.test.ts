@@ -44,6 +44,25 @@ describe("Studio Hub Component Library mobile regression", () => {
     expect(migration).not.toContain("forceOpen content=\"TOOLTIP\"")
   })
 
+
+  it("exposes both tracks to the automated A/B certification harness", () => {
+    const hardcoded = read("src/components/studio-hub/StudioHubCompletePrimitiveCatalog.tsx")
+    const primitive = read("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
+    const capture = read("scripts/capture-studio-component-certification.mjs")
+
+    expect(hardcoded).toContain("data-vt-family={name}")
+    expect(hardcoded).toContain('data-vt-certification-state="hardcoded-reference"')
+    expect(primitive).toContain("data-vt-family={name}")
+    expect(capture).toContain('{ label: "desktop", width: 1440, height: 1000 }')
+    expect(capture).toContain('{ label: "mobile", width: 390, height: 844 }')
+    expect(capture).toContain('{ label: "mobile-landscape", width: 844, height: 390 }')
+    for (const family of [
+      "Split Menu", "Split Left Button", "Split Search", "Input Action", "Tag Editor",
+      "Slider", "Range Slider", "Settings Switch", "Checkbox", "Radio", "Tooltip",
+      "Progress Value", "Knob Dial",
+    ]) expect(capture).toContain(`["${family}"`)
+  })
+
   it("keeps the requested missing families in the canonical registry", () => {
     const catalog = read("src/components/studio-hub/StudioHubCompletePrimitiveCatalog.tsx")
     for (const family of [

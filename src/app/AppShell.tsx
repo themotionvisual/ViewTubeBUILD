@@ -4,6 +4,8 @@ import { CircleHelp } from "lucide-react";
 import { AdaptiveNavigationShell } from "../components/navigation/AdaptiveNavigationShell";
 import { GlobalBrainSidecar } from "../components/brain/GlobalBrainSidecar";
 import { usePreserveOrientationPosition } from "../hooks/usePreserveOrientationPosition";
+import { useRestoreKeyboardPosition } from "../hooks/useRestoreKeyboardPosition";
+import { useWorkspaceUxPreferences } from "../hooks/useWorkspaceUxPreferences";
 import { DashboardProvider } from "../context/DashboardContext";
 import { EntitlementProvider } from "../context/EntitlementProvider";
 import {
@@ -23,10 +25,11 @@ interface AppShellProps {
 }
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
-  // Global mobile orientation-position preservation: remember which visual
-  // module / toolbox / row the user was looking at before rotation, and
-  // restore it to ~10px below the top of the newly-sized viewport after.
-  usePreserveOrientationPosition();
+  const workspaceUx = useWorkspaceUxPreferences();
+
+  // Global continuity behaviors are user-controlled in Settings → Experience.
+  usePreserveOrientationPosition(workspaceUx.preserveOrientationPosition);
+  useRestoreKeyboardPosition(workspaceUx.keyboardPositionRestore);
 
   const location = useLocation();
   const account = useUnifiedAccount();

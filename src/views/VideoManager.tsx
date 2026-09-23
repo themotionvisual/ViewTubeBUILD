@@ -54,14 +54,18 @@ import {
 } from "../components/Toolbox"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../components/subtoolbox/SubToolboxLayouts"
 import {
+ SubToolboxAlert,
  SubToolboxButton,
+ SubToolboxDataTable,
  SubToolboxFieldLabel,
  SubToolboxIconButton,
  SubToolboxInput,
  SubToolboxLinkButton,
  SubToolboxMetric,
+ SubToolboxOutputCard,
  SubToolboxRemovableTag,
  SubToolboxSelectableTag,
+ SubToolboxStatePanel,
  SubToolboxSurface,
  SubToolboxTag,
  SubToolboxTextArea,
@@ -629,32 +633,75 @@ const VideoManager: React.FC<VideoManagerProps> = ({
    shellClassName="animate-fade-in"
    contentClassName={embedded ? "p-0" : "p-8"}>
    <div className="flex flex-col h-full">
-    {error && <div className="mb-6 bg-[#ffb158]/20 border-[4px] border-[#ffb158] p-4 rounded-2xl flex items-center gap-4 text-[#ffb158] font-black uppercase shadow-[4px_4px_0px_0px_#ffb158]"><AlertCircle size={24} /><p>{error}</p></div>}
-    {saveSuccess && <div className="mb-6 bg-[#00ff99]/20 border-[4px] border-[#00ff99] p-4 rounded-2xl flex items-center gap-4 text-black font-black uppercase shadow-[4px_4px_0px_0px_#00ff99]"><CheckCircle size={24} className="text-[#00ff99]" /><p>Asset Deployed Successfully</p></div>}
+    {error && <SubToolboxAlert level="l1" tone="danger" className="mb-6" icon={<AlertCircle size={20} />} title="Video Manager Issue" detail={error} />}
+    {saveSuccess && <SubToolboxAlert level="l1" tone="success" className="mb-6" icon={<CheckCircle size={20} />} title="Asset Deployed Successfully" />}
 
     {showRankDetails && existingTagAnalysis.length > 0 && (
-     <div className="fixed inset-0 z-[110] bg-black/75 backdrop-blur-sm flex items-center justify-center p-6">
-      <div className="w-full max-w-4xl bg-white border-[6px] border-black rounded-2xl shadow-[12px_12px_0px_0px_black] overflow-hidden">
-       <div className="bg-[#CCFF00] border-b-[4px] border-black px-5 py-4 flex items-center justify-between">
-        <div><h3 className="text-2xl font-[1000] uppercase tracking-tight">Tag Rank Calculations</h3><p className="text-[10px] font-black uppercase tracking-[0.18em] text-black/50 mt-1">Score balances search volume, competition, title match, and triple keyword signal.</p></div>
-        <SubToolboxIconButton level="l1" icon={<X size={18} />} ariaLabel="Close tag rankings" onClick={() => setShowRankDetails(false)} />
-       </div>
-       <div className="p-4 overflow-x-auto">
-        <table className="w-full border-collapse min-w-[760px]">
-         <thead><tr className="bg-black text-white text-left"><th className="p-2 text-[10px] font-black uppercase tracking-wider">Tag</th><th className="p-2 text-[10px] font-black uppercase tracking-wider">Score</th><th className="p-2 text-[10px] font-black uppercase tracking-wider">Search Vol</th><th className="p-2 text-[10px] font-black uppercase tracking-wider">Competition</th><th className="p-2 text-[10px] font-black uppercase tracking-wider">Rank</th><th className="p-2 text-[10px] font-black uppercase tracking-wider">Triple Keyword</th></tr></thead>
-         <tbody>{existingTagAnalysis.map((analysis) => <tr key={analysis.tag} className="border-b border-black/10"><td className="p-2 text-xs font-black uppercase">{analysis.tag}</td><td className="p-2 text-xs font-black">{analysis.score}</td><td className="p-2 text-xs font-black">{analysis.searchVolume.toLocaleString()}</td><td className="p-2 text-xs font-black">{analysis.competition.toLocaleString()}</td><td className="p-2 text-xs font-black"><span className="px-2 py-0.5 rounded-md border border-black" style={{ backgroundColor: analysis.rank <= 10 ? "#ccff00" : analysis.rank <= 20 ? "#ffdd00" : "#ffffff" }}>#{analysis.rank}</span></td><td className="p-2 text-xs font-black">{analysis.tripleKeyword ? "YES" : "NO"}</td></tr>)}</tbody>
-        </table>
-       </div>
-      </div>
+     <div className="fixed inset-0 z-[110] bg-black/75 backdrop-blur-sm flex items-center justify-center p-6" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) setShowRankDetails(false) }}>
+      <SubToolboxOutputCard
+       level="l0"
+       role="dialog"
+       aria-modal="true"
+       aria-label="Tag Rank Calculations"
+       className="w-full max-w-4xl !overflow-hidden"
+       title={<span className="flex min-w-0 flex-col"><strong>Tag Rank Calculations</strong><small>Score balances search volume, competition, title match, and triple keyword signal.</small></span>}
+       action={<SubToolboxIconButton level="l1" icon={<X size={18} />} ariaLabel="Close tag rankings" onClick={() => setShowRankDetails(false)} />}
+      >
+       <SubToolboxDataTable
+        level="l1"
+        className="max-h-[70vh]"
+        columns={[
+         { key: "tag", label: "Tag" },
+         { key: "score", label: "Score", align: "right" },
+         { key: "searchVolume", label: "Search Vol", align: "right" },
+         { key: "competition", label: "Competition", align: "right" },
+         { key: "rank", label: "Rank", align: "center" },
+         { key: "tripleKeyword", label: "Triple Keyword", align: "center" },
+        ]}
+        rows={existingTagAnalysis.map((analysis) => ({
+         tag: <strong className="uppercase">{analysis.tag}</strong>,
+         score: analysis.score,
+         searchVolume: analysis.searchVolume.toLocaleString(),
+         competition: analysis.competition.toLocaleString(),
+         rank: <SubToolboxTag level="l2">#{analysis.rank}</SubToolboxTag>,
+         tripleKeyword: analysis.tripleKeyword ? "YES" : "NO",
+        }))}
+        getRowKey={(_row, index) => existingTagAnalysis[index]?.tag ?? index}
+       />
+      </SubToolboxOutputCard>
      </div>
     )}
 
     {connected && videoListLoadState === "idle" && !hasLoadedInitialData ? (
-     <div className="h-[500px] flex flex-col items-center justify-center gap-5 font-black uppercase text-3xl tracking-tighter text-black/30"><Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />Ready To Load Channel Catalog<SubToolboxButton level="l0" tone="success" className="!w-auto" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Loading..." : "Load Channel Catalog"}</SubToolboxButton></div>
+     <div className="min-h-[500px] flex items-center justify-center">
+      <SubToolboxStatePanel
+       level="l0"
+       state="ready"
+       className="w-full max-w-2xl"
+       message="Ready to load your YouTube channel catalog."
+       action={<SubToolboxButton level="l0" tone="success" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Loading..." : "Load Channel Catalog"}</SubToolboxButton>}
+      />
+     </div>
     ) : connected && videoListLoadState === "error" && videos.length === 0 ? (
-     <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]"><div className="w-24 h-24 bg-[#ffb158] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black]"><AlertCircle size={48} className="text-black" /></div><div className="space-y-4 max-w-lg"><h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">Sync Failed</h2><p className="text-black/60 font-bold uppercase text-xs tracking-widest leading-relaxed">{error || "We couldn't load your YouTube assets. Try reload, or reconnect your channel in Settings."}</p><SubToolboxButton level="l0" tone="warning" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Retrying..." : "Retry Catalog Load"}</SubToolboxButton></div></div>
+     <div className="min-h-[500px] flex items-center justify-center">
+      <SubToolboxStatePanel
+       level="l0"
+       state="error"
+       className="w-full max-w-2xl"
+       message={error || "We couldn't load your YouTube assets. Try reload, or reconnect your channel in Settings."}
+       action={<SubToolboxButton level="l0" tone="warning" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Retrying..." : "Retry Catalog Load"}</SubToolboxButton>}
+      />
+     </div>
     ) : connected && videoListLoadState === "empty" ? (
-     <div className="flex flex-col items-center justify-center p-20 text-center space-y-6 min-h-[500px]"><div className="w-24 h-24 bg-[#FF3399] rounded-full flex items-center justify-center border-[4px] border-black shadow-[4px_4px_0px_0px_black] -rotate-12"><FileVideo size={48} className="text-[#CCFF00]" /></div><div className="space-y-4 max-w-lg"><h2 className="text-5xl font-[1000] uppercase tracking-tighter leading-none">Zero Assets Detected</h2><p className="text-black/50 font-bold uppercase text-xs tracking-widest leading-relaxed">Your YouTube channel is connected, but we couldn't detect any videos. Upload your first video to YouTube to unlock the full power of Creator OS Pro.</p><SubToolboxLinkButton level="l0" tone="success" href="https://studio.youtube.com" target="_blank" rel="noopener noreferrer">Open YouTube Studio</SubToolboxLinkButton><SubToolboxButton level="l1" tone="neutral" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Reloading..." : "Reload Assets"}</SubToolboxButton></div></div>
+     <div className="min-h-[500px] flex items-center justify-center">
+      <SubToolboxStatePanel
+       level="l0"
+       state="empty"
+       className="w-full max-w-2xl"
+       message="Your YouTube channel is connected, but no videos were detected yet."
+       action={<SubToolboxActions columns={2}><SubToolboxLinkButton level="l0" tone="success" href="https://studio.youtube.com" target="_blank" rel="noopener noreferrer">Open YouTube Studio</SubToolboxLinkButton><SubToolboxButton level="l0" tone="neutral" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Reloading..." : "Reload Assets"}</SubToolboxButton></SubToolboxActions>}
+      />
+     </div>
     ) : (selectedVideo || !connected || catalogLoading) ? (
      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <SubToolbox

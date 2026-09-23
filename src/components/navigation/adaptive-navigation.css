@@ -1169,3 +1169,179 @@
 .vt-adaptive-nav__diagnostics-toggle[aria-checked="true"] { background: #c0f240; }
 .vt-adaptive-nav__diagnostics-toggle[aria-checked="true"] .vt-adaptive-nav__diagnostics-state { background: #fff; }
 .vt-adaptive-nav__diagnostics-toggle:active { box-shadow: 1px 1px 0 0 #000; transform: translate(2px, 2px); }
+
+
+/* =====================================================================
+   WORKSPACE EXPERIENCE PREFERENCES
+   User-controlled behaviors from Settings → Experience. The shell exposes
+   data attributes so navigation and toolbox geometry remain CSS-owned rather
+   than being duplicated in feature components.
+   ===================================================================== */
+
+/* Compact mobile navigation is the new default: the 70px mobile row becomes
+   35px while preserving all three controls. Touch targets are visually
+   compact but receive a larger invisible hit area through ::after below. */
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] {
+  grid-template-rows: 35px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] > .vt-adaptive-nav--mobile {
+  grid-template-columns: 31px minmax(0, 1fr) 31px;
+  gap: 4px;
+  height: 35px;
+  padding: 2px 6px;
+}
+
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] .vt-adaptive-nav__mobile-control,
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] .vt-adaptive-nav__account-trigger {
+  position: relative;
+  width: 31px;
+  height: 31px;
+  min-width: 31px;
+  min-height: 31px;
+  padding: 2px;
+}
+
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] .vt-adaptive-nav__mobile-control::after,
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] .vt-adaptive-nav__account-trigger::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] .vt-adaptive-nav__mobile-control svg {
+  width: 18px;
+  height: 18px;
+}
+
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] .vt-adaptive-nav__logo span {
+  font-size: clamp(19px, 6.6vw, 25px);
+  line-height: 1;
+}
+
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] .vt-adaptive-nav__account-trigger {
+  grid-template-columns: 25px;
+}
+
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] .vt-adaptive-nav__avatar,
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] .vt-adaptive-nav__avatar > span {
+  width: 25px !important;
+  height: 25px !important;
+}
+
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] .vt-adaptive-nav__avatar svg {
+  width: 16px;
+  height: 16px;
+}
+
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] .vt-adaptive-nav__account-menu {
+  top: 41px;
+  max-height: calc(100dvh - 49px);
+}
+
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-compact-nav="true"] > .vt-adaptive-nav__drawer-backdrop {
+  inset: 35px 0 0;
+}
+
+/* Navigation auto-hide reclaims the row instead of merely translating the
+   header offscreen and leaving an empty strip. Scroll-up/top restores it. */
+.vt-adaptive-shell[data-layout="mobile"] {
+  transition: grid-template-rows 150ms ease;
+}
+
+.vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-nav--mobile {
+  transition: transform 150ms ease, opacity 120ms ease;
+}
+
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-nav-hidden="true"] {
+  grid-template-rows: 0 minmax(0, 1fr);
+}
+
+.vt-adaptive-shell[data-layout="mobile"][data-mobile-nav-hidden="true"] > .vt-adaptive-nav--mobile {
+  transform: translateY(-110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Sticky headers are deliberately opt-in. Main toolbox headers pin to the
+   scroll viewport; subtoolbox headers sit immediately beneath them. */
+.vt-adaptive-shell[data-sticky-module-headers="true"] [data-vt-toolbox][data-vt-toolbox-level="main"] > header {
+  position: sticky !important;
+  top: 4px;
+  z-index: 72 !important;
+}
+
+.vt-adaptive-shell[data-sticky-module-headers="true"] [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
+  position: sticky !important;
+  top: 64px;
+  z-index: 68 !important;
+}
+
+/* Optional thumb-zone navigator: previous / menu / next. It sits above the
+   safe area and below modal/drawer z-layers. */
+.vt-mobile-thumb-zone {
+  position: fixed;
+  z-index: 118;
+  left: 50%;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(3, 48px);
+  gap: 4px;
+  padding: 4px;
+  transform: translateX(-50%);
+  border: 3px solid #000;
+  border-radius: 13px;
+  background: rgba(243, 244, 246, .96);
+  box-shadow: 5px 5px 0 #000;
+  backdrop-filter: blur(8px);
+}
+
+.vt-mobile-thumb-zone button {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 3px solid #000;
+  border-radius: 8px;
+  background: #fff;
+  color: #000;
+  touch-action: manipulation;
+}
+
+.vt-mobile-thumb-zone button:not(:disabled):active {
+  transform: translate(2px, 2px);
+}
+
+.vt-mobile-thumb-zone button:disabled {
+  opacity: .3;
+}
+
+.vt-mobile-thumb-zone__menu {
+  background: #4ee4be !important;
+}
+
+.vt-mobile-thumb-zone svg {
+  width: 23px;
+  height: 23px;
+  stroke-width: 3;
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .vt-mobile-thumb-zone {
+    grid-template-columns: repeat(3, 40px);
+    bottom: max(6px, env(safe-area-inset-bottom));
+  }
+
+  .vt-mobile-thumb-zone button {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vt-adaptive-shell[data-layout="mobile"],
+  .vt-adaptive-shell[data-layout="mobile"] > .vt-adaptive-nav--mobile {
+    transition: none !important;
+  }
+}

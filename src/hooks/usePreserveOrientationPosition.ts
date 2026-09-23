@@ -95,8 +95,9 @@ const currentOrientationIsPortrait = (): boolean => {
   return window.innerHeight >= window.innerWidth
 }
 
-export const usePreserveOrientationPosition = (): void => {
+export const usePreserveOrientationPosition = (enabled = true): void => {
   useEffect(() => {
+    if (!enabled) return
     let anchorId: string | null = null
     let settleTimer: number | null = null
     let restoreFrame: number | null = null
@@ -132,8 +133,19 @@ export const usePreserveOrientationPosition = (): void => {
       if (!target) return
 
       const rect = target.getBoundingClientRect()
-      const targetTop = window.scrollY + rect.top - TOP_MARGIN
+      const viewport = document.getElementById("main-content")
 
+      if (viewport) {
+        const viewportRect = viewport.getBoundingClientRect()
+        const targetTop = viewport.scrollTop + rect.top - viewportRect.top - TOP_MARGIN
+        viewport.scrollTo({
+          top: Math.max(0, targetTop),
+          behavior: "auto",
+        })
+        return
+      }
+
+      const targetTop = window.scrollY + rect.top - TOP_MARGIN
       window.scrollTo({
         top: Math.max(0, targetTop),
         behavior: "auto",
@@ -196,5 +208,5 @@ export const usePreserveOrientationPosition = (): void => {
       if (settleTimer !== null) window.clearTimeout(settleTimer)
       if (restoreFrame !== null) cancelAnimationFrame(restoreFrame)
     }
-  }, [])
+  }, [enabled])
 }

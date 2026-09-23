@@ -2,7 +2,7 @@
 
 **Status:** Living architecture + implementation authority  
 **Created:** 2026-09-22  
-**Last audited main:** `606db369b873992e426cefe642c1b1a4a4c02f86`  
+**Last audited main:** `814216c9ebad3ee599d840e66cb60eabdc74eb69`  
 **Primary reassembly baseline:** PR #302 / merge commit `3f9cb2dab3e2bb3247ce9bd904051ae8b0b93d2d`  
 **Scope:** Projects page, Project Builder, Project Board, calendar/scheduling, channel planning, project planning, Asset Engine, ContentBuild, Video Package, Publishing Package, Vault handoffs, Studio tools, editor handoffs, YouTube binding, analytics and learning.
 
@@ -697,24 +697,28 @@ The purpose is to know not only what was published, but **which exact assets and
 Six independent top-level tools currently divide one workflow.
 
 ### Header toggle placement
-**Status:** IMPLEMENTED ON CURRENT FEATURE BRANCH / NOT YET MAIN  
+**Status:** MERGED / PR #309  
 PR #302 restored CHANNEL / PROJECT inside Builder body. The current follow-up branch moves that control into the main Project Builder Toolbox header and makes the header the single scope owner.
 
 ### Project creation identity transaction
-**Status:** IMPLEMENTED ON CURRENT FEATURE BRANCH / VERIFY  
+**Status:** MERGED / PR #309; SERVER AUTHORITY STILL PLANNED  
 Project + ContentBuild initialization is already on main. The current follow-up branch adds a canonical Video Package repository/bridge that initializes or reuses one package against the same project `contentBuildId` and refuses silent ContentBuild forks.
 
 ### Thumbnail ownership
-**Status:** PARTIAL  
-Project thumbnail is still partly represented as a URL/reference field. Target is selected Asset/Vault identity with compatibility rendering.
+**Status:** IN PROGRESS ON CURRENT FEATURE BRANCH  
+PR #309 still allowed legacy URL/reference thumbnails. The current thumbnail-continuity branch lets Project Packaging select a canonical Vault image, writes that asset into the ContentBuild `thumbnail` slot, mirrors the selected Vault asset into the Project Video Package, and retains the URL field only as compatibility rendering/input.
 
 ### Simplified Asset Engine
-**Status:** EXPANDED ON CURRENT FEATURE BRANCH / VERIFY  
+**Status:** MERGED / PR #309; VISUAL CERTIFICATION OPEN  
 The lifecycle launcher is on main. The current follow-up branch adds durable asset-slot projection for script, storyboard, title, thumbnail, description, tags/SEO and final video, including EMPTY / LEGACY / WORKING / VARIANTS / SELECTED / FINAL states.
 
 ### Calendar duplication / ownership
-**Status:** ARCHITECTURAL DECISION  
+**Status:** MERGED / PR #309; VISUAL CERTIFICATION OPEN  
 Target is one full calendar under Project Board plus compact schedule context in Builder. Do not restore two independently owned calendars.
+
+### Publishing Package summary
+**Status:** MERGED / PR #309; VISUAL CERTIFICATION OPEN  
+Project Builder now has a compact publishing readiness summary for title, thumbnail, description, tags/SEO, category, audience, visibility and schedule, plus unresolved Video Package blockers and direct Publisher navigation.
 
 ### Project workspace metadata
 **Status:** PARTIAL  
@@ -753,10 +757,12 @@ Project Builder and Board must use current canonical Toolbox/Subtoolbox primitiv
 | Builder / Board shared workspace context | MERGED | PR #302 |
 | Board / Calendar unified surface | MERGED | PR #302 |
 | Expanded Project-status -> ContentBuild-stage mapping | MERGED | PR #302 |
-| Header-level CHANNEL / PROJECT toggle | FEATURE BRANCH / VERIFY | current workflow-authority branch |
-| Compact Builder schedule context | FEATURE BRANCH / VERIFY | current workflow-authority branch |
-| Project -> same-ContentBuild Video Package bridge | FEATURE BRANCH / VERIFY | current workflow-authority branch |
-| Simple Asset Engine durable asset slots | FEATURE BRANCH / VERIFY | current workflow-authority branch |
+| Header-level CHANNEL / PROJECT toggle | MERGED | PR #309 |
+| Compact Builder schedule context | MERGED | PR #309 |
+| Project -> same-ContentBuild Video Package bridge | MERGED | PR #309 |
+| Simple Asset Engine durable asset slots | MERGED | PR #309 |
+| Compact Publishing Package readiness summary | MERGED | PR #309 |
+| Canonical Vault-backed Project thumbnail selection | FEATURE BRANCH / VERIFY | current thumbnail-continuity branch |
 
 ---
 
@@ -785,10 +791,11 @@ Project Builder and Board must use current canonical Toolbox/Subtoolbox primitiv
 - add contextual tool actions
 
 ### Wave 4 — Packaging / publishing
-- canonical thumbnail identity
-- compact Publishing Package summary
-- package blockers/readiness
-- package-to-Publisher handoff
+- compact Publishing Package summary: MERGED PR #309
+- package blockers/readiness: MERGED PR #309
+- package-to-Publisher handoff: MERGED PR #309
+- canonical thumbnail identity: IN PROGRESS
+- replace remaining URL-only thumbnail ownership with Vault/ContentBuild selection while preserving compatibility
 
 ### Wave 5 — Tool continuity
 - ContentBuild-aware Script Architect
@@ -872,8 +879,11 @@ Whenever this system changes:
 | 2026-09-22 | Added living Projects / ContentBuild workflow authority and repo-session pointer | FEATURE BRANCH |
 | 2026-09-22 | Moved CHANNEL / PROJECT scope control and NEW PROJECT into the Project Builder header | FEATURE BRANCH |
 | 2026-09-22 | Added compact Builder schedule context linked to the Board calendar | FEATURE BRANCH |
-| 2026-09-22 | Added deterministic Project -> same-ContentBuild Video Package repository bridge + tests | FEATURE BRANCH |
-| 2026-09-22 | Expanded Simple Asset Engine with durable asset-slot states | FEATURE BRANCH |
+| 2026-09-22 | Added deterministic Project -> same-ContentBuild Video Package repository bridge + tests | MERGED PR #309 |
+| 2026-09-22 | Expanded Simple Asset Engine with durable asset-slot states | MERGED PR #309 |
+| 2026-09-22 | Added compact Publishing Package readiness and blocker summary | MERGED PR #309 |
+| 2026-09-22 | PR #309 merged Project Builder header controls, schedule context, package identity and Simple Asset Engine expansion | MERGED |
+| 2026-09-22 | Began Vault-backed thumbnail selection with ContentBuild + Video Package synchronization | FEATURE BRANCH |
 
 ---
 
