@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import {
  createContentBuild,
+ listContentBuildEvents,
  resetContentBuildRepositoryForTests,
  setContentBuildSelection,
 } from "./ContentBuildRepository"
@@ -50,6 +51,7 @@ describe("VideoPackage ContentBuild bridge", () => {
      sourceToolId: "packaging-lab-pro",
      vaultAssetId: "vault-title-v4",
      createdAt: "2026-09-20T18:10:00.000Z",
+     approvedAt: "2026-09-20T18:12:00.000Z",
     }],
     thumbnailVariants: [{
      id: "thumb-ref-v3",
@@ -59,6 +61,7 @@ describe("VideoPackage ContentBuild bridge", () => {
      sourceToolId: "thumbnail-studio",
      vaultAssetId: "vault-thumb-v3",
      createdAt: "2026-09-20T18:11:00.000Z",
+     approvedAt: "2026-09-20T18:13:00.000Z",
     }],
     selectedTitleId: "title-ref-v4",
     selectedThumbnailId: "thumb-ref-v3",
@@ -183,6 +186,9 @@ describe("VideoPackage ContentBuild bridge", () => {
   expect(repeated.variantGroups.find(group => group.slot === "title")?.finalAssetId).toBeNull()
   expect(repeated.variantGroups.find(group => group.slot === "thumbnail")?.selectedAssetId).toBe("vault-thumb-a")
   expect(repeated.variantGroups.find(group => group.slot === "thumbnail")?.finalAssetId).toBeNull()
+  const selectedEvents = listContentBuildEvents(repeated.id).filter(event => event.eventType === "asset.selected")
+  expect(selectedEvents.filter(event => event.entityId === "title")).toHaveLength(1)
+  expect(selectedEvents.filter(event => event.entityId === "thumbnail")).toHaveLength(1)
 
   const projected = projectContentBuildSelectionsToVideoPackage(videoPackage)
   expect(projected.packaging.titleVariants).toHaveLength(2)
