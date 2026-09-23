@@ -73,6 +73,11 @@ import {
   SubToolboxTooltip,
   SubToolboxTree,
   SubToolboxVaultAsset,
+  ToolboxHeaderCollapseButton,
+  ToolboxHeaderHelpButton,
+  ToolboxHeaderIconRail,
+  ToolboxHeaderTitle,
+  ToolboxHeaderToggle,
 } from "../subtoolbox/SubToolboxPrimitives"
 import { SubToolboxKpiCard, SubToolboxSplitButton, SubToolboxSplitDropdown } from "../subtoolbox/SubToolboxSplitPrimitives"
 import "./studio-hub-primitive-migration-catalog.css"
@@ -175,6 +180,16 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Dashboard Pill Tags",
   "Aspect Ratio Frame",
   "Toolbar",
+  "Toolbox Header Icon Rail",
+  "SubToolbox Header Icon Rail",
+  "Toolbox Header Title",
+  "SubToolbox Header Title",
+  "Toolbox Header Help",
+  "SubToolbox Header Help",
+  "Toolbox Header Collapse",
+  "SubToolbox Header Collapse",
+  "Toolbox Header Toggle",
+  "SubToolbox Header Toggle",
 ] as const
 
 const DemoShell: React.FC<{ level: StudioHubComponentLevel; children: React.ReactNode }> = ({ level, children }) => (
@@ -215,6 +230,7 @@ const PrimitiveMigrationControl: React.FC<{
   const [carouselIndex, setCarouselIndex] = React.useState(0)
   const [scrollPos, setScrollPos] = React.useState(30)
   const [vaultSelected, setVaultSelected] = React.useState(true)
+  const [headerMode, setHeaderMode] = React.useState("A")
 
   // Primitive track rule: only production primitives + shared CSS render here.
   // Unmigrated hardcoded families remain exclusively in the frozen baseline.
@@ -497,6 +513,36 @@ const PrimitiveMigrationControl: React.FC<{
   }
   if (name === "Toolbar") {
     return <SubToolboxToolbar level={level} leading={<strong>TOOLS</strong>} trailing={<SubToolboxIconButton level={level} icon={<Settings2 />} ariaLabel="Toolbar settings" />}><SubToolboxButton level={level}>EDIT</SubToolboxButton><SubToolboxButton level={level}>SAVE</SubToolboxButton></SubToolboxToolbar>
+  }
+  if (name === "Toolbox Header Icon Rail") {
+    return <div style={{ height: 80, display: "flex" }}><ToolboxHeaderIconRail level="toolbox" backgroundColor="var(--pair-b)"><Settings2 /></ToolboxHeaderIconRail></div>
+  }
+  if (name === "SubToolbox Header Icon Rail") {
+    return <div style={{ height: 56, display: "flex" }}><ToolboxHeaderIconRail level="subtoolbox" backgroundColor="var(--pair-b)"><Settings2 /></ToolboxHeaderIconRail></div>
+  }
+  if (name === "Toolbox Header Title") {
+    return <ToolboxHeaderTitle level="toolbox">VIDEO MANAGER</ToolboxHeaderTitle>
+  }
+  if (name === "SubToolbox Header Title") {
+    return <ToolboxHeaderTitle level="subtoolbox">VIDEO DETAILS</ToolboxHeaderTitle>
+  }
+  if (name === "Toolbox Header Help") {
+    return <div style={{ height: 80 }}><ToolboxHeaderHelpButton level="toolbox" aria-label="Toolbox help" /></div>
+  }
+  if (name === "SubToolbox Header Help") {
+    return <div style={{ height: 56 }}><ToolboxHeaderHelpButton level="subtoolbox" aria-label="Subtoolbox help" /></div>
+  }
+  if (name === "Toolbox Header Collapse") {
+    return <div style={{ height: 80 }}><ToolboxHeaderCollapseButton level="toolbox" open icon={<X />} aria-label="Collapse toolbox" /></div>
+  }
+  if (name === "SubToolbox Header Collapse") {
+    return <div style={{ height: 56 }}><ToolboxHeaderCollapseButton level="subtoolbox" open icon={<X />} aria-label="Collapse subtoolbox" /></div>
+  }
+  if (name === "Toolbox Header Toggle") {
+    return <ToolboxHeaderToggle value={headerMode} onValueChange={setHeaderMode} options={[{ value: "A", label: "ON" }, { value: "B", label: "OFF" }]} />
+  }
+  if (name === "SubToolbox Header Toggle") {
+    return <ToolboxHeaderToggle level="subtoolbox" value={headerMode} onValueChange={setHeaderMode} options={[{ value: "A", label: "A" }, { value: "B", label: "B" }]} />
   }
 
   return null

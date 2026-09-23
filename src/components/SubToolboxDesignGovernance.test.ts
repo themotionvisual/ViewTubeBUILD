@@ -35,6 +35,78 @@ describe("subtoolbox design governance", () => {
   expect(systemCss).toContain('[data-vt-toolbox-level="sub"]')
  })
 
+ it("locks the mobile shell density and restored header anatomy", () => {
+  const toolboxCss = source("src/styles/toolbox-system.css")
+  const systemCss = source("src/styles/subtoolbox-system.css")
+  const primitives = source("src/components/subtoolbox/SubToolboxPrimitives.tsx")
+  const catalog = source("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
+
+  expect(toolboxCss).toContain("--vt-toolbox-header-height: 68px")
+  expect(toolboxCss).toContain("--vt-subtoolbox-header-height: 50px")
+  expect(toolboxCss).toContain("--vt-toolbox-shadow-offset: 7px")
+  expect(toolboxCss).toContain("--vt-subtoolbox-shadow-offset: 4px")
+  expect(toolboxCss).toContain("--vt-toolbox-radius: 14px")
+  expect(toolboxCss).toContain("--vt-subtoolbox-radius: 10px")
+  expect(systemCss).toContain(".vt-toolbox-header-toggle")
+  expect(systemCss).toContain(".vt-subtoolbox-file-target.vt-upload-tight-reveal")
+  expect(systemCss).toContain("box-shadow: none !important")
+  expect(primitives).toContain("export const ToolboxHeaderToggle")
+  expect(catalog).toContain('"Toolbox Header Toggle"')
+  expect(catalog).toContain('"SubToolbox Header Toggle"')
+ })
+
+ it("keeps header anatomy and primary actions on canonical primitives", () => {
+  const toolbox = source("src/components/Toolbox.tsx")
+  const primitives = source("src/components/subtoolbox/SubToolboxPrimitives.tsx")
+  const catalog = source("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
+  const manager = source("src/views/VideoManager.tsx")
+  const commentResponder = source("src/components/CommentResponder.tsx")
+  const endScreen = source("src/components/EndScreenTool.tsx")
+
+  for (const primitive of [
+    "ToolboxHeaderIconRail",
+    "ToolboxHeaderTitle",
+    "ToolboxHeaderHelpButton",
+    "ToolboxHeaderCollapseButton",
+    "ToolboxHeaderToggle",
+  ]) {
+    expect(primitives).toContain(`export const ${primitive}`)
+    expect(toolbox).toContain(primitive)
+  }
+
+  for (const family of [
+    "Toolbox Header Icon Rail",
+    "SubToolbox Header Icon Rail",
+    "Toolbox Header Title",
+    "SubToolbox Header Title",
+    "Toolbox Header Help",
+    "SubToolbox Header Help",
+    "Toolbox Header Collapse",
+    "SubToolbox Header Collapse",
+    "Toolbox Header Toggle",
+    "SubToolbox Header Toggle",
+  ]) expect(catalog).toContain(`"${family}"`)
+
+  expect(toolbox).toContain('data-vt-split-left={isSubtoolboxPeer && showIconSection ? "true" : undefined}')
+  expect(toolbox).toContain('showIconSection={props.showIconSection ?? true}')
+  expect(manager).toContain('<SubToolboxGridActionButton')
+  expect(commentResponder).toContain('label="Connect YouTube Channel"')
+  expect(endScreen).toContain('label={genLoading ? "Creating..." : "Generate Template"}')
+ })
+
+ it("keeps first-layer interior strokes uniform with the upload-frame exception", () => {
+  const css = source("src/styles/subtoolbox-system.css")
+  const toolboxCss = source("src/styles/toolbox-system.css")
+
+  expect(css).toContain("First visual layer inside a SubToolbox shares one 3px interior stroke")
+  expect(css).toContain(":not(.vt-subtoolbox-file-target)")
+  expect(css).toContain("--vt-component-stroke: var(--vt-subtoolbox-inner-stroke,3px)!important")
+  expect(css).toContain(".vt-subtoolbox-file-target.vt-upload-tight-reveal")
+  expect(css).toContain("box-shadow: none !important")
+  expect(toolboxCss).toContain(".vt-subtoolbox-inset")
+  expect(toolboxCss).toContain("padding: 4px 4px 0 !important")
+ })
+
  it("keeps the compact inner-control hierarchy below the subtoolbox shell", () => {
   const tokenSource = source("src/components/subtoolbox/tokens.ts")
   const systemCss = source("src/styles/subtoolbox-system.css")

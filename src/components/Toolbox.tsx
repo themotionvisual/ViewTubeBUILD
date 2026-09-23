@@ -4,7 +4,13 @@ import '../styles/toolbox-entry.css';
 import { CustomIcon } from './CustomIcon';
 import { getToolboxPaletteColors } from '../styles/toolboxPalette';
 import { hexToRgba, AnimatedToggleIcon } from './ToolboxUISystem';
-import { ChevronDown, CircleQuestionMark, Cloud, Zap } from 'lucide-react';
+import { ChevronDown, Cloud, Zap } from 'lucide-react';
+import {
+  ToolboxHeaderCollapseButton,
+  ToolboxHeaderHelpButton,
+  ToolboxHeaderIconRail,
+  ToolboxHeaderTitle,
+} from './subtoolbox/SubToolboxPrimitives';
 import { persistToolboxOpen, readPersistedToolboxOpen } from '../services/workspaceUiPersistence';
 import {
   CONTROL_SHELL,
@@ -35,25 +41,6 @@ export const SUBTOOLBOX_ICON_PROPS = { size: 28, strokeWidth: 3.1, absoluteStrok
 const SUB_TOOLBOX_RADIUS = SUBTOOLBOX_TOKENS.shell.radius;
 const SUB_TOOLBOX_INNER_STROKE = SUBTOOLBOX_TOKENS.shell.stroke;
 const SUB_TOOLBOX_INNER_SHADOW = SUBTOOLBOX_TOKENS.interior.shadowOffset;
-
-interface IconRailProps {
-  backgroundColor: string;
-  stroke?: number;
-  children: React.ReactNode;
-}
-
-const IconRail: React.FC<IconRailProps> = ({ backgroundColor, stroke = 2, children }) => (
-  <div
-    className="h-full flex items-center justify-center shrink-0 transition-all duration-500"
-    style={{
-      width: `var(--vt-subtoolbox-header-height, ${CONTROL_SHELL.headerHeight}px)`,
-      backgroundColor,
-      borderRight: `var(--vt-subtoolbox-stroke, ${stroke}px) solid black`,
-    }}
-  >
-    {children}
-  </div>
-);
 
 type PaletteCycleContextValue = {
   mainPaletteIndex: number | null;
@@ -305,24 +292,18 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           }}
         >
           <div className="flex items-center h-full flex-1 min-w-0">
-            <div
-              className={`${iconBoxColor} flex items-center justify-center transition-all shrink-0`}
-              style={{
-                ...iconStyle,
-                height: '100%',
-                width: `var(--vt-toolbox-header-height, ${headerHeight}px)`,
-                borderRight: `var(--vt-toolbox-stroke, ${stroke}px) solid black`
-              }}
+            <ToolboxHeaderIconRail
+              level={variant === "accordion" ? "subtoolbox" : "toolbox"}
+              className={iconBoxColor}
+              style={iconStyle}
             >
               {resolvedIcon}
-            </div>
+            </ToolboxHeaderIconRail>
 
-            <div className={`flex flex-col pl-4 justify-center min-w-0 pointer-events-none select-none`}>
-              {variant === 'accordion' ? (
-                <h3 className="text-[20px] font-[900] uppercase tracking-tighter leading-none mt-0.5">{title}</h3>
-              ) : (
-                <h1 className="vt-toolbox-title min-w-0 max-w-full font-[1000] uppercase leading-[1.04] text-[length:var(--vt-toolbox-title-size,26px)]">{title}</h1>
-              )}
+            <div className="flex flex-col pl-4 justify-center min-w-0 pointer-events-none select-none">
+              <ToolboxHeaderTitle level={variant === "accordion" ? "subtoolbox" : "toolbox"}>
+                {title}
+              </ToolboxHeaderTitle>
             </div>
           </div>
 
@@ -332,35 +313,27 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           >
             {headerActions}
             {isCollapsible && (subtitle || helpText || (helpGuide && helpGuide.length > 0)) && (
-              <button
-                type="button"
+              <ToolboxHeaderHelpButton
+                level={variant === "accordion" ? "subtoolbox" : "toolbox"}
                 onClick={() => setShowHelpRail((prev) => !prev)}
-                className="group h-full flex items-center justify-center cursor-pointer transition-all hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px]" data-vt-toolbox-help="true"
-                style={{ width: variant === "accordion" ? "40px" : "44px" }}
                 aria-label="Toggle toolbox help"
-              >
-                <span className="inline-flex items-center justify-center w-10 h-10 border-[3px] border-black rounded-full bg-white shadow-[4px_4px_0px_0px_black] transition-all group-active:shadow-[2px_2px_0px_0px_black]">
-                  <CircleQuestionMark size={variant === 'accordion' ? 22 : 24} strokeWidth={2.6} />
-                </span>
-              </button>
+              />
             )}
             {indicator === 'symbols' && isCollapsible && (
-              <div
+              <ToolboxHeaderCollapseButton
+                level={variant === "accordion" ? "subtoolbox" : "toolbox"}
+                open={open}
                 onClick={setOpen}
-                className="h-full flex items-center justify-center cursor-pointer" data-vt-toolbox-toggle="true"
-                style={{ 
-                  width: variant === "accordion" ? "40px" : "44px"
-                }}
-              >
-                <AnimatedToggleIcon open={open} size={variant === 'accordion' ? 34 : 38} />
-              </div>
+                aria-label={open ? "Collapse toolbox" : "Expand toolbox"}
+                icon={<AnimatedToggleIcon open={open} size={variant === 'accordion' ? 34 : 38} />}
+              />
             )}
           </div>
         </header>
 
         {(subtitle || helpText || (helpGuide && helpGuide.length > 0)) && (
           <div
-            className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            className={`grid transition-[grid-template-rows,opacity] ${SHELL_COLLAPSE_TRANSITION} ${
               showHelpRail ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
             }`}
             style={{ marginTop: 0 }}
@@ -731,42 +704,39 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
         }}
       >
         <div className="flex items-center h-full flex-1 min-w-0">
-          <IconRail backgroundColor={iconBg} stroke={SUB_TOOLBOX_INNER_STROKE}>
+          <ToolboxHeaderIconRail level="subtoolbox" backgroundColor={iconBg}>
             <div className="text-black">{finalIcon}</div>
-          </IconRail>
+          </ToolboxHeaderIconRail>
 
           <div className="flex items-center pl-2.5 h-full min-w-0 pointer-events-none select-none">
-            <h3 className="vt-subtoolbox-title min-w-0 font-[900] uppercase tracking-tighter leading-[1.04] text-[length:var(--vt-subtoolbox-title-size,20px)]">
-              {title}
-            </h3>
+            <ToolboxHeaderTitle level="subtoolbox">{title}</ToolboxHeaderTitle>
           </div>
         </div>
 
         <div className="flex items-center gap-2 pr-3 h-full shrink-0" onClick={e => e.stopPropagation()}>
           {actionButton}
           {collapsible && (subtitle || helpText) && (
-            <button
-              type="button"
+            <ToolboxHeaderHelpButton
+              level="subtoolbox"
               onClick={() => setShowHelpRail((prev) => !prev)}
-              className="group h-full flex items-center justify-center transition-all hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px]" data-vt-subtoolbox-help="true"
               aria-label="Toggle subtoolbox help"
-            >
-              <span className="inline-flex items-center justify-center w-9 h-9 border-[3px] border-black rounded-full bg-white shadow-[4px_4px_0px_0px_var(--vt-subtoolbox-shell-shadow)] transition-all group-active:shadow-[2px_2px_0px_0px_var(--vt-subtoolbox-shell-shadow)]">
-                <CircleQuestionMark size={22} strokeWidth={2.6} />
-              </span>
-            </button>
+            />
           )}
           {collapsible && (
-            <div className="h-full flex items-center justify-center" data-vt-subtoolbox-toggle="true" onClick={setOpen}>
-              <AnimatedToggleIcon open={open} size={34} />
-            </div>
+            <ToolboxHeaderCollapseButton
+              level="subtoolbox"
+              open={open}
+              onClick={setOpen}
+              aria-label={open ? "Collapse subtoolbox" : "Expand subtoolbox"}
+              icon={<AnimatedToggleIcon open={open} size={34} />}
+            />
           )}
         </div>
       </header>
 
       {(subtitle || helpText) && (
         <div
-          className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          className={`grid transition-[grid-template-rows,opacity] ${SHELL_COLLAPSE_TRANSITION} ${
             showHelpRail ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
           }`}
           style={{ marginTop: 0 }}
@@ -1253,9 +1223,15 @@ const SubToolboxRefineButtonBase: React.FC<SubToolboxRefineButtonStyleProps> = (
   const hoverShadow = Math.max(1, Math.floor(baseShadow / 2));
   const appliedShadow = isPressing ? 0 : isHovering ? hoverShadow : baseShadow;
 
+  const isSubtoolboxPeer = borderWidth === 4;
+  const peerHeight = isSubtoolboxPeer
+    ? `var(--vt-subtoolbox-header-height, ${SUBTOOLBOX_TOKENS.shell.headerHeight}px)`
+    : `${CONTROL_SHELL.height}px`;
+
   return (
     <button
       type="button"
+      data-vt-split-left={isSubtoolboxPeer && showIconSection ? "true" : undefined}
       onClick={onClick}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => {
@@ -1265,35 +1241,45 @@ const SubToolboxRefineButtonBase: React.FC<SubToolboxRefineButtonStyleProps> = (
       onMouseDown={() => setIsPressing(true)}
       onMouseUp={() => setIsPressing(false)}
       disabled={disabled}
-      className={`w-full rounded-[8px] overflow-hidden transition-all shrink-0 flex items-center justify-center appearance-none p-0 hover:translate-y-[1.5px] active:translate-y-[3px] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${className}`}
+      className={`w-full overflow-hidden transition-all shrink-0 flex items-stretch appearance-none p-0 hover:translate-y-[1.5px] active:translate-y-[3px] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${isSubtoolboxPeer && showIconSection ? "vt-split-left-module-action" : ""} ${className}`}
       style={{
-        height: `${CONTROL_SHELL.height}px`,
+        height: peerHeight,
+        borderRadius: isSubtoolboxPeer
+          ? `var(--vt-subtoolbox-radius, ${SUBTOOLBOX_TOKENS.shell.radius}px)`
+          : "8px",
         backgroundColor: resolvedSurface,
         border,
         boxShadow: `${appliedShadow}px ${appliedShadow}px 0px 0px ${resolvedShadow}`,
       }}
     >
-      <div className="h-full w-full flex items-center">
-        {showIconSection && (
-          <div
-            className="h-full shrink-0 flex items-center justify-center"
-            style={{
-              width: borderWidth === 4 ? "56px" : "48px",
-              backgroundColor: resolvedControl,
-              borderRight: border,
-            }}
-          >
-            <CustomIcon name={iconName} size={borderWidth === 4 ? 20 : 18} />
-          </div>
-        )}
-        <div className="h-full flex-1 flex items-center justify-center px-3">
+      {showIconSection && (
+        <div
+          data-vt-split-left-rail={isSubtoolboxPeer ? "true" : undefined}
+          className="h-full shrink-0 flex items-center justify-center"
+          style={{
+            width: isSubtoolboxPeer ? peerHeight : "48px",
+            backgroundColor: resolvedControl,
+            borderRight: border,
+          }}
+        >
+          <CustomIcon name={iconName} size={isSubtoolboxPeer ? 22 : 18} />
+        </div>
+      )}
+      <div
+        data-vt-split-left-label={isSubtoolboxPeer && showIconSection ? "true" : undefined}
+        className="h-full flex-1 flex items-center justify-center px-3 min-w-0"
+      >
         <span
-          className="font-[900] uppercase tracking-tighter leading-none mt-0.5 text-black text-center"
-          style={{ fontSize: borderWidth === 4 ? "30px" : "20px" }}
+          className="font-[1000] uppercase tracking-tighter mt-0.5 text-black text-center"
+          style={{
+            fontSize: isSubtoolboxPeer
+              ? `var(--vt-subtoolbox-title-size, ${SUBTOOLBOX_TOKENS.shell.titleSize}px)`
+              : "20px",
+            lineHeight: 0.88,
+          }}
         >
           {label}
         </span>
-        </div>
       </div>
     </button>
   );
@@ -1304,7 +1290,7 @@ type SubToolboxInnerActionButtonProps = Omit<SubToolboxRefineButtonStyleProps, "
 
 // 4px standard: for sub-toolbox grids (sub-toolbox color behavior, larger type)
 export const SubToolboxGridActionButton: React.FC<SubToolboxGridActionButtonProps> = (props) => (
-  <SubToolboxRefineButtonBase {...props} borderWidth={4} />
+  <SubToolboxRefineButtonBase {...props} showIconSection={props.showIconSection ?? true} borderWidth={4} />
 );
 
 // 3px standard: for controls inside sub-toolboxes (same shell, compact stroke)

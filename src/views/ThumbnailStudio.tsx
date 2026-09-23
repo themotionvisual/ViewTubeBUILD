@@ -378,7 +378,7 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
   embedded={embedded}
   helpText="Build strong thumbnail ideas fast. Get overlay text, visual direction, and composition prompts in one place."
   shellClassName="animate-fade-in"
-   contentClassName={embedded ? "p-0" : "p-8 min-h-[600px] relative bg-white"}
+   contentClassName={embedded ? "p-0" : "p-2 sm:p-4 lg:p-8 min-h-0 lg:min-h-[600px] relative bg-white"}
    headerActions={
     <div className="mr-2 my-auto" onClick={(event) => event.stopPropagation()}>
      <SubToolboxSegmentedToggle
@@ -395,7 +395,7 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
    }>
    {/* Generated History Bar */}
    {activeTab === "generate" && history.length > 0 && (
-    <div className="w-full mb-8 flex gap-6 overflow-x-auto pb-4 custom-scrollbar">
+    <div className="w-full mb-2 sm:mb-4 lg:mb-8 flex gap-2 sm:gap-4 lg:gap-6 overflow-x-auto pb-2 sm:pb-4 custom-scrollbar">
      {history.map((item) => (
       <div
        key={item.id}
@@ -417,9 +417,9 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
    {/* Studio Tab — Animated Transition */}
    <div
     className={`transition-all duration-500 transform ${activeTab === "generate" ? "opacity-100 scale-100 translate-x-0 relative" : "opacity-0 scale-95 -translate-x-10 pointer-events-none absolute inset-8"}`}>
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch h-full">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4 lg:gap-8 items-stretch h-full">
      {/* Column 1: Narrower Tool Stack */}
-     <div className="flex flex-col h-full gap-6">
+     <div className="flex flex-col h-full gap-2 sm:gap-4 lg:gap-6">
       <SubToolbox
        collapsible
        title="Concept"
@@ -620,8 +620,8 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
      </div>
 
      {/* Column 2: Canvas (Matched Width) + Controls */}
-     <div className="flex flex-col h-full gap-6 min-h-0">
-      <div className="flex-1 min-h-0 w-full border-[4px] border-black bg-[#f1f5f9] rounded-[48px] shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-8 overflow-hidden transition-all duration-700">
+     <div className="flex flex-col h-full gap-2 sm:gap-4 lg:gap-6 min-h-0">
+      <div className="flex-1 min-h-[240px] sm:min-h-[320px] lg:min-h-0 w-full border-[4px] border-black bg-[#f1f5f9] rounded-[20px] sm:rounded-[32px] lg:rounded-[48px] shadow-[5px_5px_0px_0px_black] sm:shadow-[8px_8px_0px_0px_black] lg:shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-3 sm:p-5 lg:p-8 overflow-hidden transition-all duration-700">
        {generatedImage ? (
         <>
          <img
@@ -657,7 +657,7 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        )}
       </div>
 
-      <div className="grid grid-cols-3 gap-4 items-end">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 items-end">
        <div>
         <SubToolboxDropdownControl
          label="Ratio"
@@ -731,7 +731,7 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
    <div
     className={`transition-all duration-500 transform ${activeTab === "analyze" ? "opacity-100 scale-100 translate-x-0 relative" : "opacity-0 scale-95 translate-x-10 pointer-events-none absolute inset-8"}`}>
     <div className="flex flex-col lg:flex-row gap-10 h-full">
-     <div className="w-full lg:w-1/2 flex flex-col gap-6">
+     <div className="w-full lg:w-1/2 flex flex-col gap-2 sm:gap-4 lg:gap-6">
       <div
        onClick={() => fileInputRef.current?.click()}
        className="w-full border-[4px] border-black bg-white rounded-2xl shadow-[8px_8px_0px_0px_black] group cursor-pointer overflow-hidden">
