@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest"
 
-const generateSchemaJsonObject = vi.fn()
+const { generateSchemaJsonObject } = vi.hoisted(() => ({
+ generateSchemaJsonObject: vi.fn(),
+}))
 
 vi.mock("../../gemini", () => ({
  generateSchemaJsonObject,
