@@ -1,17 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { AlertTriangle, CheckCircle2, Clock3, CloudUpload, GitBranch, RefreshCw, Sparkles } from "lucide-react"
 import { buildBrainEvaluationInbox, type BrainEvaluationInboxItem } from "../../services/brain/BrainEvaluationInbox"
-import {
- ALGORITHM_INTELLIGENCE_EVENT_CHANGED,
- hydrateAlgorithmIntelligenceEvents,
-} from "../../services/brain/AlgorithmIntelligenceEventLedger"
+import { ALGORITHM_INTELLIGENCE_EVENT_CHANGED } from "../../services/brain/AlgorithmIntelligenceEventLedger"
 import { BRAIN_OUTCOME_EVENT } from "../../services/brain/BrainOutcomeLedger"
 import { reviewAlgorithmLearningCandidate } from "../../services/brain/AlgorithmLearningGovernance"
-import {
- captureCanonicalLifecycleObservations,
- hydrateAlgorithmLifecycleObservations,
-} from "../../services/brain/AlgorithmLifecycleObservationStore"
+import { captureCanonicalLifecycleObservations } from "../../services/brain/AlgorithmLifecycleObservationStore"
 import { backfillLocalBrainIntelligence } from "../../services/brain/BrainIntelligenceBackfill"
+import { hydrateBrainIntelligenceFromPersistence } from "../../services/brain/BrainIntelligencePersistence"
+import { promoteApprovedAlgorithmLearningToProfile } from "../../services/brain/AlgorithmLearningProfilePromotion"
 import { resolveDueAlgorithmMonitoringCheckpoints } from "../../services/brain/AlgorithmMonitoringResolver"
 import { processResolvableFinalAlgorithmEvaluations } from "../../services/brain/AlgorithmFinalEvaluationResolver"
 import { BrainAttributionDetailPanel } from "./BrainAttributionDetailPanel"
@@ -21,12 +17,13 @@ const toneFor = (item: BrainEvaluationInboxItem) => {
  if (item.priority === "critical") return "#FF6B6B"
  if (item.priority === "high") return "#FFDA47"
  if (item.kind === "learning_review") return "#FF7AC8"
+ if (item.kind === "learning_promotion") return "#3FEE56"
  if (item.kind === "measured_outcome") return "#3FEE56"
  return "#36E0F6"
 }
 
 const iconFor = (item: BrainEvaluationInboxItem) => {
- if (item.kind === "learning_review") return <Sparkles size={13} aria-hidden="true" />
+ if (item.kind === "learning_review" || item.kind === "learning_promotion") return <Sparkles size={13} aria-hidden="true" />
  if (item.kind === "measured_outcome") return <CheckCircle2 size={13} aria-hidden="true" />
  if (item.kind === "overdue_checkpoint") return <Clock3 size={13} aria-hidden="true" />
  return <AlertTriangle size={13} aria-hidden="true" />
@@ -37,6 +34,7 @@ export const BrainEvaluationInboxPanel: React.FC<{ channelId: string | null; max
  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
  const [syncingHistory, setSyncingHistory] = useState(false)
  const [historySyncStatus, setHistorySyncStatus] = useState<string | null>(null)
+ const [promotingCandidateId, setPromotingCandidateId] = useState<string | null>(null)
 
  useEffect(() => {
   if (typeof window === "undefined") return
@@ -67,11 +65,9 @@ export const BrainEvaluationInboxPanel: React.FC<{ channelId: string | null; max
    }
   }
 
-  void Promise.all([
-   hydrateAlgorithmIntelligenceEvents(channelId),
-   hydrateAlgorithmLifecycleObservations(channelId),
-  ]).catch((error) => {
+  void hydrateBrainIntelligenceFromPersistence(channelId).catch((error) => {
    console.warn("[BrainEvaluationInbox] durable intelligence hydration unavailable; using local cache:", error)
+   return null
   }).finally(() => {
    if (cancelled) return
    advance()
@@ -93,6 +89,35 @@ export const BrainEvaluationInboxPanel: React.FC<{ channelId: string | null; max
   if (!candidate?.id) return
   reviewAlgorithmLearningCandidate({ channelId, candidateId: candidate.id, decision })
   setRevision((value) => value + 1)
+ }
+
+ const promote = async (item: BrainEvaluationInboxItem) => {
+  if (!channelId || item.kind !== "learning_promotion") return
+  const candidate = item.metadata?.candidate as { id?: string } | undefined
+  if (!candidate?.id || promotingCandidateId) return
+  setPromotingCandidateId(candidate.id)
+  setHistorySyncStatus(null)
+  try {
+   const result = await promoteApprovedAlgorithmLearningToProfile({
+    channelId,
+    candidateId: candidate.id,
+    creatorApproved: true,
+   })
+   setHistorySyncStatus(
+    result.status === "promoted"
+     ? "Measured learning promoted to the channel profile."
+     : result.status === "promotion_held"
+      ? "Promotion was held by the existing Brain learning policy."
+      : result.status === "learning_disabled"
+       ? "Brain learning is disabled for this channel."
+       : "This learning candidate is not ready for promotion.",
+   )
+   setRevision((value) => value + 1)
+  } catch (error) {
+   setHistorySyncStatus(error instanceof Error ? error.message : "Learning promotion failed.")
+  } finally {
+   setPromotingCandidateId(null)
+  }
  }
 
  const syncLocalHistory = async () => {
@@ -134,6 +159,7 @@ export const BrainEvaluationInboxPanel: React.FC<{ channelId: string | null; max
         {item.requiredMetrics.length ? <div className="flex flex-wrap gap-1">{item.requiredMetrics.slice(0, 4).map((metric) => <span key={metric} className="rounded-[4px] border border-black px-1 py-0.5 text-[7px] font-black uppercase">{metric}</span>)}</div> : null}
         <button type="button" onClick={() => setSelectedEventId(item.sourceEventId)} className="flex items-center justify-center gap-1 rounded-[5px] border-[2px] border-black bg-white px-1 py-1 text-[7px] font-black uppercase hover:bg-[#36E0F6]"><GitBranch size={9} /> Trace evidence</button>
         {item.kind === "learning_review" ? <div className="grid grid-cols-3 gap-1 pt-1"><button type="button" onClick={() => review(item, "hold")} className="rounded-[5px] border-[2px] border-black bg-white px-1 py-1 text-[7px] font-black uppercase hover:bg-[#FFDA47]">Hold</button><button type="button" onClick={() => review(item, "reject")} className="rounded-[5px] border-[2px] border-black bg-white px-1 py-1 text-[7px] font-black uppercase hover:bg-[#FF6B6B]">Reject</button><button type="button" onClick={() => review(item, "approve_for_profile_review")} className="rounded-[5px] border-[2px] border-black bg-[#3FEE56] px-1 py-1 text-[7px] font-black uppercase">Review</button></div> : null}
+        {item.kind === "learning_promotion" ? <button type="button" disabled={Boolean(promotingCandidateId)} onClick={() => void promote(item)} className="rounded-[5px] border-[2px] border-black bg-[#3FEE56] px-2 py-1 text-[8px] font-black uppercase disabled:opacity-50">{promotingCandidateId === (item.metadata?.candidate as { id?: string } | undefined)?.id ? "Promoting…" : "Promote to channel profile"}</button> : null}
        </div>
       </article>
      ))}
