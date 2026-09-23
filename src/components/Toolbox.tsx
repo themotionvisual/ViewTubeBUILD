@@ -1253,9 +1253,15 @@ const SubToolboxRefineButtonBase: React.FC<SubToolboxRefineButtonStyleProps> = (
   const hoverShadow = Math.max(1, Math.floor(baseShadow / 2));
   const appliedShadow = isPressing ? 0 : isHovering ? hoverShadow : baseShadow;
 
+  const isSubtoolboxPeer = borderWidth === 4;
+  const peerHeight = isSubtoolboxPeer
+    ? `var(--vt-subtoolbox-header-height, ${SUBTOOLBOX_TOKENS.shell.headerHeight}px)`
+    : `${CONTROL_SHELL.height}px`;
+
   return (
     <button
       type="button"
+      data-vt-split-left={isSubtoolboxPeer && showIconSection ? "true" : undefined}
       onClick={onClick}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => {
@@ -1265,35 +1271,45 @@ const SubToolboxRefineButtonBase: React.FC<SubToolboxRefineButtonStyleProps> = (
       onMouseDown={() => setIsPressing(true)}
       onMouseUp={() => setIsPressing(false)}
       disabled={disabled}
-      className={`w-full rounded-[8px] overflow-hidden transition-all shrink-0 flex items-center justify-center appearance-none p-0 hover:translate-y-[1.5px] active:translate-y-[3px] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${className}`}
+      className={`w-full overflow-hidden transition-all shrink-0 flex items-stretch appearance-none p-0 hover:translate-y-[1.5px] active:translate-y-[3px] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${isSubtoolboxPeer && showIconSection ? "vt-split-left-module-action" : ""} ${className}`}
       style={{
-        height: `${CONTROL_SHELL.height}px`,
+        height: peerHeight,
+        borderRadius: isSubtoolboxPeer
+          ? `var(--vt-subtoolbox-radius, ${SUBTOOLBOX_TOKENS.shell.radius}px)`
+          : "8px",
         backgroundColor: resolvedSurface,
         border,
         boxShadow: `${appliedShadow}px ${appliedShadow}px 0px 0px ${resolvedShadow}`,
       }}
     >
-      <div className="h-full w-full flex items-center">
-        {showIconSection && (
-          <div
-            className="h-full shrink-0 flex items-center justify-center"
-            style={{
-              width: borderWidth === 4 ? "56px" : "48px",
-              backgroundColor: resolvedControl,
-              borderRight: border,
-            }}
-          >
-            <CustomIcon name={iconName} size={borderWidth === 4 ? 20 : 18} />
-          </div>
-        )}
-        <div className="h-full flex-1 flex items-center justify-center px-3">
+      {showIconSection && (
+        <div
+          data-vt-split-left-rail={isSubtoolboxPeer ? "true" : undefined}
+          className="h-full shrink-0 flex items-center justify-center"
+          style={{
+            width: isSubtoolboxPeer ? peerHeight : "48px",
+            backgroundColor: resolvedControl,
+            borderRight: border,
+          }}
+        >
+          <CustomIcon name={iconName} size={isSubtoolboxPeer ? 22 : 18} />
+        </div>
+      )}
+      <div
+        data-vt-split-left-label={isSubtoolboxPeer && showIconSection ? "true" : undefined}
+        className="h-full flex-1 flex items-center justify-center px-3 min-w-0"
+      >
         <span
-          className="font-[900] uppercase tracking-tighter leading-none mt-0.5 text-black text-center"
-          style={{ fontSize: borderWidth === 4 ? "30px" : "20px" }}
+          className="font-[1000] uppercase tracking-tighter mt-0.5 text-black text-center"
+          style={{
+            fontSize: isSubtoolboxPeer
+              ? `var(--vt-subtoolbox-title-size, ${SUBTOOLBOX_TOKENS.shell.titleSize}px)`
+              : "20px",
+            lineHeight: 0.88,
+          }}
         >
           {label}
         </span>
-        </div>
       </div>
     </button>
   );
@@ -1304,7 +1320,7 @@ type SubToolboxInnerActionButtonProps = Omit<SubToolboxRefineButtonStyleProps, "
 
 // 4px standard: for sub-toolbox grids (sub-toolbox color behavior, larger type)
 export const SubToolboxGridActionButton: React.FC<SubToolboxGridActionButtonProps> = (props) => (
-  <SubToolboxRefineButtonBase {...props} borderWidth={4} />
+  <SubToolboxRefineButtonBase {...props} showIconSection={props.showIconSection ?? true} borderWidth={4} />
 );
 
 // 3px standard: for controls inside sub-toolboxes (same shell, compact stroke)
