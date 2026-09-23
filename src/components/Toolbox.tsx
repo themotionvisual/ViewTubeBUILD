@@ -9,6 +9,7 @@ import {
   CONTROL_SHELL,
   SUBTOOLBOX_COLLAPSE_TRANSITION,
   SUBTOOLBOX_TOKENS,
+  TOOLBOX_HEADER_DNA,
   resolveSubtoolboxMinHeight,
 } from './subtoolbox/tokens';
 
@@ -226,7 +227,10 @@ export const Toolbox: React.FC<ToolboxProps> = ({
     ? "duration-0 ease-linear"
     : SHELL_COLLAPSE_TRANSITION;
   
-  const headerHeight = variant === 'accordion' ? 44 : 56;
+  const headerHeight =
+    variant === 'accordion'
+      ? SUBTOOLBOX_TOKENS.shell.headerHeight
+      : TOOLBOX_HEADER_DNA.toolbox.height;
   const paletteCycleContextValue = useMemo<PaletteCycleContextValue>(() => {
     return {
       mainPaletteIndex: paletteIndex ?? null,
