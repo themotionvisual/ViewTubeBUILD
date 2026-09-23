@@ -2,7 +2,7 @@
 
 **Status:** Living architecture + implementation authority  
 **Created:** 2026-09-22  
-**Last audited main:** `814216c9ebad3ee599d840e66cb60eabdc74eb69`  
+**Last audited main:** `6d13836b04c3694c188346b6dd427cf6a4110e7b`  
 **Primary reassembly baseline:** PR #302 / merge commit `3f9cb2dab3e2bb3247ce9bd904051ae8b0b93d2d`  
 **Scope:** Projects page, Project Builder, Project Board, calendar/scheduling, channel planning, project planning, Asset Engine, ContentBuild, Video Package, Publishing Package, Vault handoffs, Studio tools, editor handoffs, YouTube binding, analytics and learning.
 
@@ -705,8 +705,8 @@ PR #302 restored CHANNEL / PROJECT inside Builder body. The current follow-up br
 Project + ContentBuild initialization is already on main. The current follow-up branch adds a canonical Video Package repository/bridge that initializes or reuses one package against the same project `contentBuildId` and refuses silent ContentBuild forks.
 
 ### Thumbnail ownership
-**Status:** IN PROGRESS ON CURRENT FEATURE BRANCH  
-PR #309 still allowed legacy URL/reference thumbnails. The current thumbnail-continuity branch lets Project Packaging select a canonical Vault image, writes that asset into the ContentBuild `thumbnail` slot, mirrors the selected Vault asset into the Project Video Package, and retains the URL field only as compatibility rendering/input.
+**Status:** MERGED PR #312 + FOLLOW-UP HARDENING IN PROGRESS  
+PR #312 added canonical Vault-backed thumbnail selection in Project Packaging. The current follow-up makes ContentBuild the single thumbnail-selection owner, mirrors that selection into the Project Video Package when channel scope exists, preserves selection even while disconnected, restricts candidates to project/build assets plus reusable unscoped thumbnail assets, and lets a legacy URL be imported into Vault before selection.
 
 ### Simplified Asset Engine
 **Status:** MERGED / PR #309; VISUAL CERTIFICATION OPEN  
@@ -762,7 +762,8 @@ Project Builder and Board must use current canonical Toolbox/Subtoolbox primitiv
 | Project -> same-ContentBuild Video Package bridge | MERGED | PR #309 |
 | Simple Asset Engine durable asset slots | MERGED | PR #309 |
 | Compact Publishing Package readiness summary | MERGED | PR #309 |
-| Canonical Vault-backed Project thumbnail selection | FEATURE BRANCH / VERIFY | current thumbnail-continuity branch |
+| Canonical Vault-backed Project thumbnail selection | MERGED | PR #312 |
+| ContentBuild-first thumbnail ownership + URL-to-Vault import | FEATURE BRANCH / VERIFY | current thumbnail-continuity follow-up |
 
 ---
 
@@ -794,8 +795,9 @@ Project Builder and Board must use current canonical Toolbox/Subtoolbox primitiv
 - compact Publishing Package summary: MERGED PR #309
 - package blockers/readiness: MERGED PR #309
 - package-to-Publisher handoff: MERGED PR #309
-- canonical thumbnail identity: IN PROGRESS
-- replace remaining URL-only thumbnail ownership with Vault/ContentBuild selection while preserving compatibility
+- canonical thumbnail identity: MERGED PR #312
+- make ContentBuild the selection authority across connected/disconnected states: IN PROGRESS
+- import compatibility URLs into Vault rather than leaving them as URL-only ownership: IN PROGRESS
 
 ### Wave 5 — Tool continuity
 - ContentBuild-aware Script Architect
@@ -883,7 +885,8 @@ Whenever this system changes:
 | 2026-09-22 | Expanded Simple Asset Engine with durable asset-slot states | MERGED PR #309 |
 | 2026-09-22 | Added compact Publishing Package readiness and blocker summary | MERGED PR #309 |
 | 2026-09-22 | PR #309 merged Project Builder header controls, schedule context, package identity and Simple Asset Engine expansion | MERGED |
-| 2026-09-22 | Began Vault-backed thumbnail selection with ContentBuild + Video Package synchronization | FEATURE BRANCH |
+| 2026-09-22 | Added Vault-backed thumbnail selection with ContentBuild + Video Package synchronization | MERGED PR #312 |
+| 2026-09-22 | Hardened thumbnail flow so ContentBuild remains authoritative without channel scope and legacy URLs can become Vault assets | FEATURE BRANCH |
 
 ---
 
