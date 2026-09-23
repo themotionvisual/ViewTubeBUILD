@@ -458,7 +458,7 @@ const TrackRow:React.FC<{
         }).map((transition,index)=><TransitionChip
           key={String((transition as {id?:unknown}).id??`${transition.leftClipId}-${transition.rightClipId}-${index}`)}
           transition={transition} clips={state.project.clips} pxPerSec={pxPerSec}
-          selectedId={state.selection.transitionId} onSelect={id=>dispatch({type:'selectTransition',id})}
+          selectedId={state.selection.transitionId??undefined} onSelect={id=>dispatch({type:'selectTransition',id})}
         />):null}
       </div>
       <div style={{position:'absolute',left:0,right:0,top:CLIP_BODY_HEIGHT,height:KEYFRAME_LANE_HEIGHT,borderTop:`1px solid ${INK}`,background:'rgba(54,224,246,.035)'}}>
