@@ -90,6 +90,23 @@ export const updateUnifiedThumbnail = async (videoId: string, file: File) => {
  return response.json()
 }
 
+export const uploadUnifiedCaptions = async (
+ videoId: string,
+ file: Blob,
+ options: { language?: string; name?: string } = {},
+) => {
+ const headers = new Headers({
+  "Content-Type": file.type || "text/vtt",
+  "X-Caption-Language": options.language || "en",
+  "X-Caption-Name": options.name || "ViewTube captions",
+ })
+ const response = await request(`/api/account/youtube/captions/${encodeURIComponent(videoId)}`, {
+  method: "POST", headers, body: file,
+ })
+ if (!response.ok) return parseError(response, "Failed to upload captions.")
+ return response.json()
+}
+
 export const addUnifiedPlaylistItem = async (playlistId: string, videoId: string) => {
  const response = await request("/api/account/youtube/playlist-items", {
   method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ playlistId, videoId }),
