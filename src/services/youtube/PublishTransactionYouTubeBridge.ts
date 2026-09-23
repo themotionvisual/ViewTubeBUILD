@@ -129,10 +129,22 @@ export const applyPublishRouting=(transactionId:string,playlistIds:string[])=>
 
 export const applyPublishSchedulePrivacy=(
  transactionId:string,
- details:{privacyStatus:"public"|"private"|"unlisted";publishAt?:string|null},
+ details:{privacyStatus:"public"|"private"|"unlisted";publishAt?:string|null;title:string;description?:string;tags?:string[];categoryId?:string},
 )=>
  runPublishTransactionStep({
   transactionId,step:"apply-schedule-privacy",
   execute:transaction=>updateUnifiedVideo(requireRemoteVideoId(transaction),details),
   receipt:()=>({applied:true,privacyStatus:details.privacyStatus,publishAt:details.publishAt||null}),
  })
+
+
+export const skipOptionalPublishStep=(
+ transactionId:string,
+ step:"apply-captions"|"apply-routing",
+ reason:string,
+)=>runPublishTransactionStep({
+ transactionId,
+ step,
+ execute:async()=>({skipped:true,reason}),
+ receipt:result=>result,
+})
