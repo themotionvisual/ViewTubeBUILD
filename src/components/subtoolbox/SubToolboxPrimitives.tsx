@@ -47,6 +47,48 @@ export const SubToolboxIconButton: React.FC<SubToolboxIconButtonProps> = ({ leve
   <button type={type} aria-label={ariaLabel} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} className={classes("vt-subtoolbox-icon-button", className)} {...props}>{icon}</button>
 )
 
+export interface ToolboxHeaderToggleOption {
+  value: string
+  label: React.ReactNode
+  ariaLabel?: string
+}
+export interface ToolboxHeaderToggleProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
+  value: string
+  options: ToolboxHeaderToggleOption[]
+  onValueChange?: (value: string) => void
+  level?: "toolbox" | "subtoolbox"
+}
+export const ToolboxHeaderToggle: React.FC<ToolboxHeaderToggleProps> = ({
+  value,
+  options,
+  onValueChange,
+  level = "toolbox",
+  className,
+  style,
+  ...props
+}) => (
+  <div
+    className={classes("vt-toolbox-header-toggle", level === "subtoolbox" && "is-subtoolbox", className)}
+    data-vt-header-toggle={level}
+    style={{ ...style, ["--vt-header-toggle-count" as string]: Math.max(1, options.length) } as React.CSSProperties}
+    role="group"
+    {...props}
+  >
+    {options.map((option) => (
+      <button
+        key={option.value}
+        type="button"
+        className={classes(option.value === value && "is-active")}
+        aria-pressed={option.value === value}
+        aria-label={option.ariaLabel}
+        onClick={() => onValueChange?.(option.value)}
+      >
+        {option.label}
+      </button>
+    ))}
+  </div>
+)
+
 export interface SubToolboxToggleSwitchProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   level?: ToolboxControlLevel
   pressed: boolean
