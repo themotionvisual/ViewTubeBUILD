@@ -322,6 +322,10 @@ Rendering lives in:
 
 Never add a second ID for an existing creator job without explicit migration/alias reasoning.
 
+### Independent top-level widget ownership
+
+One stable widget ID must resolve to one independently editable top-level widget TSX owner. A widget may consume shared primitives, utilities, data adapters, services, types, and deliberately reusable compound components, but it must not be implemented merely as a mode/configuration of another widget's top-level component. Prefer limited duplicated widget composition over a shared mode-driven owner when independent editing would otherwise create cross-widget side effects.
+
 Current main contains **65 registered widget definitions**; older documents that say 59 are historical snapshots.
 
 ## 16. UI Reference Library contract

@@ -2,7 +2,8 @@
 import React, { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { DataEditWidget, VideoUploaderWidget } from "../widgets/DataEditWidget"
+import { VideoUploaderWidget } from "../widgets/VideoUploaderWidget"
+import { VideoManagerWidget } from "../widgets/VideoManagerWidget"
 import { DASHBOARD_WIDGET_BY_ID } from "../WidgetRegistry"
 
 vi.mock("../../../services/youtubeService", () => ({
@@ -11,8 +12,18 @@ vi.mock("../../../services/youtubeService", () => ({
  fetchVideoSnippetDetails: vi.fn().mockResolvedValue({
   video123: { description: "Published description", tags: ["history"], categoryId: "27" },
  }),
+ fetchChannelPublishingDefaults: vi.fn().mockResolvedValue({ description: "", tags: [] }),
  updateVideo: vi.fn().mockResolvedValue(undefined),
- uploadVideo: vi.fn().mockResolvedValue(undefined),
+ updateVideoThumbnail: vi.fn().mockResolvedValue(undefined),
+ uploadVideo: vi.fn().mockResolvedValue({ id: "uploaded123" }),
+}))
+
+vi.mock("../../../services/gemini", () => ({
+ generateEducationalTimestampQuestions: vi.fn().mockResolvedValue(["00:10 What happens here?"]),
+ generateSeoData: vi.fn().mockResolvedValue({ description: "Generated description" }),
+ generateTagSuggestions: vi.fn().mockResolvedValue([
+  { tag: "history", score: 95, searchVolume: 1000, competition: 200, rank: 3, tripleKeyword: true },
+ ]),
 }))
 
 vi.mock("../../../context/UnifiedAccountContext", () => ({
@@ -48,7 +59,7 @@ describe("split video publishing widgets", () => {
   container.remove()
  })
 
- it("builds the uploader with a simple upload action and footer step navigation", async () => {
+ it("builds the uploader around its independent upload gantry", async () => {
   const widget = DASHBOARD_WIDGET_BY_ID["video-uploader"]
   await act(async () => {
    root.render(
@@ -68,28 +79,27 @@ describe("split video publishing widgets", () => {
    )
   })
 
-  expect(container.querySelectorAll(".widget-media-upload")).toHaveLength(1)
-  expect(container.querySelector(".video-uploader-title-row .video-upload-file-action")?.textContent).toContain("Upload video")
-  expect(container.querySelector(".video-thumbnail-column .widget-media-upload-action")?.textContent).toContain("Upload thumbnail")
-  expect(container.querySelectorAll(".video-uploader-description-row .widget-media-upload-frame")).toHaveLength(1)
-  expect(container.querySelectorAll(".video-uploader-meta-row .video-uploader-selects .widget-select-trigger")).toHaveLength(3)
-  expect(container.querySelectorAll(".widget-footer.widget-toolbar .widget-workflow-buttons > .vt-button")).toHaveLength(3)
+  expect(container.querySelector(".video-uploader-widget")).not.toBeNull()
+  expect(container.querySelectorAll(".video-uploader-gantry .widget-media-upload")).toHaveLength(2)
+  expect(container.querySelector(".video-uploader-source-frame")).not.toBeNull()
+  expect(container.querySelector(".video-uploader-thumbnail-frame")).not.toBeNull()
   expect(container.querySelector('[aria-label="Video title"].vt-input')).not.toBeNull()
-  expect(container.querySelector(".widget-counted-input")).toBeNull()
-  expect(container.querySelectorAll(".video-uploader-meta-row .video-uploader-selects .widget-select-trigger")).toHaveLength(3)
-  expect(container.querySelector('[aria-label="Category"]')?.textContent).toContain("Category")
-  expect(container.querySelector('[aria-label="Playlist"]')?.textContent).toContain("Playlist")
-  expect(container.querySelector('[aria-label="Description"].widget-description-textarea')).not.toBeNull()
-  expect(container.querySelectorAll(".widget-control-disclosure")).toHaveLength(0)
-  expect(container.querySelector(".is-green, .is-blue, .is-pink")).toBeNull()
-  expect(container.querySelector(".video-meta-workspace, .video-meta-footer")).toBeNull()
+  expect(container.querySelector('[aria-label="Description"].video-uploader-description')).not.toBeNull()
+  expect(container.querySelectorAll(".video-uploader-selects .widget-select-trigger")).toHaveLength(3)
+  expect(container.querySelectorAll(".video-uploader-paired-actions")).toHaveLength(2)
+  expect(container.querySelectorAll(".video-uploader-paired-actions .vt-button")).toHaveLength(4)
+  expect(container.querySelectorAll(".video-uploader-pages > .vt-button")).toHaveLength(3)
+  expect(container.querySelector(".video-uploader-pages > .vt-button")?.className).toContain("is-height-32")
+  expect(container.querySelector(".video-uploader-footer .widget-split-button")?.className).toContain("is-large")
+  expect(container.querySelector(".video-uploader-footer .widget-split-button")?.textContent).toContain("Publish video")
+  expect(container.querySelector(".video-manager-widget")).toBeNull()
  })
 
- it("shows the selected published video's thumbnail and keeps editor modules collapsed by default", async () => {
+ it("builds the manager around its independent video package desk and canonical video selector", async () => {
   const widget = DASHBOARD_WIDGET_BY_ID["data-edit"]
   await act(async () => {
    root.render(
-    <DataEditWidget
+    <VideoManagerWidget
      widget={widget}
      instance={{ collapsed: false, size: "half", height: "xtall" }}
      editMode={false}
@@ -116,20 +126,28 @@ describe("split video publishing widgets", () => {
    )
   })
 
-  const trigger = document.querySelector<HTMLButtonElement>('[aria-label="Published video"]')
+  expect(container.querySelector(".video-manager-widget")).not.toBeNull()
+  const trigger = container.querySelector<HTMLButtonElement>('[aria-label="Published video"]')
   expect(trigger).not.toBeNull()
+  expect(trigger?.className).toContain("widget-video-select-trigger")
+  expect(trigger?.closest(".widget-video-select")?.className).toContain("video-manager-video-select")
+  expect(trigger?.textContent).toContain("Select a video")
+
   await act(async () => trigger?.click())
-  const option = [...document.querySelectorAll<HTMLElement>('[role="option"]')]
+  const option = [...container.querySelectorAll<HTMLElement>('[role="option"]')]
    .find((element) => element.textContent?.includes("Published test video"))
   expect(option).not.toBeUndefined()
   await act(async () => option?.click())
+  await act(async () => Promise.resolve())
 
   const thumbnail = container.querySelector<HTMLImageElement>('img[alt="Thumbnail for Published test video"]')
   expect(thumbnail?.src).toBe("https://example.com/video123.jpg")
-  expect([...container.querySelectorAll("details")].every((module) => !module.open)).toBe(true)
+  expect(container.querySelector(".video-manager-package-desk")).not.toBeNull()
+  expect(container.querySelector(".video-manager-package-status")?.textContent).toContain("PACKAGE LOADED")
+  expect(container.querySelector(".video-uploader-widget")).toBeNull()
  })
 
- it("adds the educational timestamps page when Education is selected", async () => {
+ it("adds the uploader timestamps page when Education is selected", async () => {
   const widget = DASHBOARD_WIDGET_BY_ID["video-uploader"]
   await act(async () => {
    root.render(
@@ -155,6 +173,10 @@ describe("split video publishing widgets", () => {
    .find((option) => option.textContent === "Education")
   await act(async () => education?.click())
 
-  expect(container.querySelector('.widget-workflow-buttons button')?.parentElement?.textContent).toContain("Timestamps")
+  const educationRow = container.querySelector(".video-uploader-category-row.has-timestamps")
+  expect(educationRow).not.toBeNull()
+  expect(educationRow?.querySelector(".video-uploader-category-select")).not.toBeNull()
+  expect(educationRow?.querySelector(".video-uploader-timestamps-button")?.textContent).toContain("Timestamps")
+  expect(container.querySelector(".video-uploader-pages")?.textContent).not.toContain("Timestamps")
  })
 })
