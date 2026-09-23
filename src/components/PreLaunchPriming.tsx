@@ -7,6 +7,12 @@ import type { AlgorithmDiagnosis, PollBlueprint, ShortsConcept } from "../types"
 import { Rocket, Zap, Sparkles, Copy, Check, MessageSquare } from "lucide-react"
 import { ToolboxScaffold, SubToolbox } from "./Toolbox"
 import { PostActionReflection } from "./PostActionReflection"
+import {
+ SubToolboxButton,
+ SubToolboxFieldLabel,
+ SubToolboxInput,
+ SubToolboxSelectableListRow,
+} from "./subtoolbox/SubToolboxPrimitives"
 
 interface PreLaunchPrimingProps {
  embedded?: boolean
@@ -105,27 +111,21 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
     targeted content designed to warm up your audience and algorithm signals.
    </p>
 
-   <div className="grid grid-cols-2 gap-6">
-    <button
+   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <SubToolboxSelectableListRow
+     level="l0"
+     title="Community Poll"
+     detail="Seeds algorithm with topic interest"
+     selected={activeAction === "seeding"}
      onClick={() => handleSwitchAction("seeding")}
-     className={`flex flex-col items-center justify-center gap-2 p-6 border-[4px] border-black rounded-[20px] text-center transition-all ${activeAction === "seeding" ? "bg-[#FF7497] shadow-none translate-y-1" : "bg-white shadow-[6px_6px_0px_0px_black] hover:bg-gray-50"}`}>
-     <p className="font-[1000] text-2xl uppercase leading-none text-black tracking-tighter">
-      Community Poll
-     </p>
-     <p className="text-[10px] font-black text-black/60 uppercase tracking-widest">
-      Seeds algorithm with topic interest
-     </p>
-    </button>
-    <button
+    />
+    <SubToolboxSelectableListRow
+     level="l0"
+     title="Shorts Script"
+     detail="Creates viral teaser to drive views"
+     selected={activeAction === "teaser"}
      onClick={() => handleSwitchAction("teaser")}
-     className={`flex flex-col items-center justify-center gap-2 p-6 border-[4px] border-black rounded-[20px] text-center transition-all ${activeAction === "teaser" ? "bg-[#00CCFF] shadow-none translate-y-1" : "bg-white shadow-[6px_6px_0px_0px_black] hover:bg-gray-50"}`}>
-     <p className="font-[1000] text-2xl uppercase leading-none text-black tracking-tighter">
-      Shorts Script
-     </p>
-     <p className="text-[10px] font-black text-black/60 uppercase tracking-widest">
-      Creates viral teaser to drive views
-     </p>
-    </button>
+    />
    </div>
 
    {activeAction !== "none" && (
@@ -142,71 +142,71 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
        <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
          <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase text-black/50 tracking-widest ml-1">
+          <SubToolboxFieldLabel level="l1" className="ml-1">
            Video Topic
-          </label>
-          <input
+          </SubToolboxFieldLabel>
+          <SubToolboxInput level="l1"
            type="text"
            value={inputData.topic}
            onChange={(e) =>
             setInputData({ ...inputData, topic: e.target.value })
            }
            placeholder="E.G. HOW TO PLAN A WEEKLY CONTENT SYSTEM"
-           className="vt-input-standard w-full p-4 font-black uppercase text-sm border-[4px] border-black"
+           className="font-black uppercase text-sm"
           />
          </div>
          <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase text-black/50 tracking-widest ml-1">
+          <SubToolboxFieldLabel level="l1" className="ml-1">
            Niche / Category
-          </label>
-          <input
+          </SubToolboxFieldLabel>
+          <SubToolboxInput level="l1"
            type="text"
            value={inputData.niche}
            onChange={(e) =>
             setInputData({ ...inputData, niche: e.target.value })
            }
            placeholder="E.G. CREATOR EDUCATION"
-           className="vt-input-standard w-full p-4 font-black uppercase text-sm border-[4px] border-black"
+           className="font-black uppercase text-sm"
           />
          </div>
         </div>
         {activeAction === "seeding" ? (
          <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase text-black/50 tracking-widest ml-1">
+          <SubToolboxFieldLabel level="l1" className="ml-1">
            Target Audience
-          </label>
-          <input
+          </SubToolboxFieldLabel>
+          <SubToolboxInput level="l1"
            type="text"
            value={inputData.audience}
            onChange={(e) =>
             setInputData({ ...inputData, audience: e.target.value })
            }
            placeholder="E.G. HISTORY BUFFS"
-           className="vt-input-standard w-full p-4 font-black uppercase text-sm border-[4px] border-black"
+           className="font-black uppercase text-sm"
           />
          </div>
         ) : (
          <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase text-black/50 tracking-widest ml-1">
+          <SubToolboxFieldLabel level="l1" className="ml-1">
            Your Long-Form Title
-          </label>
-          <input
+          </SubToolboxFieldLabel>
+          <SubToolboxInput level="l1"
            type="text"
            value={inputData.longFormTitle}
            onChange={(e) =>
             setInputData({ ...inputData, longFormTitle: e.target.value })
            }
            placeholder="E.G. THE BATTLE OF WATERLOO"
-           className="vt-input-standard w-full p-4 font-black uppercase text-sm border-[4px] border-black"
+           className="font-black uppercase text-sm"
           />
          </div>
         )}
-        <button
+        <SubToolboxButton level="l0" size="action" tone="success"
          onClick={handleActionGenerate}
          disabled={actionLoading || !inputData.topic || !inputData.niche}
          className="w-full bg-[#CCFF00] border-[4px] border-black rounded-xl p-5 font-[1000] uppercase text-2xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 mt-4">
          {actionLoading ? "TRANSMITTING..." : "INITIALIZE SEQUENCE"}
-        </button>
+        </SubToolboxButton>
        </>
       ) : (
        <div className="space-y-6 animate-fade-in">
@@ -231,11 +231,11 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
           </div>
          </div>
         )}
-         <button
+         <SubToolboxButton level="l1" size="standard" tone="neutral"
           onClick={resetAction}
           className="w-full py-4 font-black uppercase text-sm border-[4px] border-black rounded-xl hover:bg-black hover:text-white transition-colors">
           Reset & Generate Another
-         </button>
+         </SubToolboxButton>
 
          {/* Brain Reflection UI */}
          <div className="mt-8 animate-in slide-in-from-bottom-4 duration-700">
