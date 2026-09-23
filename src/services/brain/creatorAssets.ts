@@ -96,6 +96,7 @@ export const generateCommunityPostDraft = async (input: {
  postType?: string
  /** Format, linked video and poll context the caller already renders. */
  mediaContext?: string
+ mediaAttachments?: string[]
  projectId?: string
 }): Promise<CommunityPostDraftResult> => {
  const evidence = buildChannelAssetEvidence(
@@ -117,6 +118,9 @@ export const generateCommunityPostDraft = async (input: {
   strategy: communitySinglePostStrategy,
   evidence,
   runner: geminiAssetModelRunner,
+  ...(input.mediaAttachments?.length
+   ? { mediaAttachments: input.mediaAttachments }
+   : {}),
  })
 
  if (result.record.status === "failed") {
