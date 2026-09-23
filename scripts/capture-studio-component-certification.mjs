@@ -193,7 +193,14 @@ async function capturePriorityStates(page, viewport, trackId, trackName, familyN
       try {
         await applyState(level, familyName, state)
         const file = `${out}/${slug(familyName)}-${trackName}-${levelName}-${state}-${viewport.label}.png`
-        await captureLocator(level, file)
+        const floatingOverlayFamily = ["Tooltip", "Tooltip Color", "Hover Card"].includes(familyName)
+        if (floatingOverlayFamily && state !== "default") {
+          await level.scrollIntoViewIfNeeded()
+          await page.waitForTimeout(80)
+          await page.screenshot({ path: file })
+        } else {
+          await captureLocator(level, file)
+        }
         manifest.captures.push({
           kind: "state",
           family: familyName,
@@ -202,6 +209,7 @@ async function capturePriorityStates(page, viewport, trackId, trackName, familyN
           state,
           viewport: viewport.label,
           file,
+          captureMode: floatingOverlayFamily && state !== "default" ? "viewport" : "locator",
         })
       } catch (error) {
         manifest.errors.push({
