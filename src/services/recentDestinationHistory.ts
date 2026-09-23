@@ -3,6 +3,7 @@ import { PAGE_REGISTRY, type PageRegistryEntry } from "../app/pageRegistry"
 export const RECENT_DESTINATIONS_STORAGE_KEY = "viewtube:recent-destinations:v1"
 export const RECENT_DESTINATIONS_CHANGED_EVENT = "viewtube:recent-destinations-changed"
 const MAX_RECENT_DESTINATIONS = 8
+let cachedRecentDestinations: RecentDestination[] | null = null
 
 export interface RecentDestination {
   path: string
@@ -37,12 +38,19 @@ export const resolveQuickSwitcherPage = (route: string): PageRegistryEntry | nul
 }
 
 export const readRecentDestinations = (): RecentDestination[] => {
+  if (cachedRecentDestinations) return cachedRecentDestinations
   const storage = safeStorage()
-  if (!storage) return []
+  if (!storage) {
+    cachedRecentDestinations = []
+    return cachedRecentDestinations
+  }
   try {
     const raw = JSON.parse(storage.getItem(RECENT_DESTINATIONS_STORAGE_KEY) || "[]")
-    if (!Array.isArray(raw)) return []
-    return raw
+    if (!Array.isArray(raw)) {
+      cachedRecentDestinations = []
+      return cachedRecentDestinations
+    }
+    cachedRecentDestinations = raw
       .filter((item): item is RecentDestination =>
         Boolean(item) &&
         typeof item.path === "string" &&
@@ -51,8 +59,10 @@ export const readRecentDestinations = (): RecentDestination[] => {
         Number.isFinite(Number(item.visitedAt)),
       )
       .slice(0, MAX_RECENT_DESTINATIONS)
+    return cachedRecentDestinations
   } catch {
-    return []
+    cachedRecentDestinations = []
+    return cachedRecentDestinations
   }
 }
 
@@ -72,6 +82,7 @@ export const recordRecentDestination = (route: string): RecentDestination[] => {
     ...readRecentDestinations().filter((recent) => recent.path !== item.path),
   ].slice(0, MAX_RECENT_DESTINATIONS)
 
+  cachedRecentDestinations = next
   storage.setItem(RECENT_DESTINATIONS_STORAGE_KEY, JSON.stringify(next))
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(RECENT_DESTINATIONS_CHANGED_EVENT, { detail: next }))
@@ -82,6 +93,7 @@ export const recordRecentDestination = (route: string): RecentDestination[] => {
 export const clearRecentDestinations = (): void => {
   const storage = safeStorage()
   if (!storage) return
+  cachedRecentDestinations = []
   storage.removeItem(RECENT_DESTINATIONS_STORAGE_KEY)
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(RECENT_DESTINATIONS_CHANGED_EVENT, { detail: [] }))
@@ -93,6 +105,7 @@ export const subscribeRecentDestinations = (listener: () => void): (() => void) 
   const onChanged = () => listener()
   const onStorage = (event: StorageEvent) => {
     if (event.key && event.key !== RECENT_DESTINATIONS_STORAGE_KEY) return
+    cachedRecentDestinations = null
     listener()
   }
   window.addEventListener(RECENT_DESTINATIONS_CHANGED_EVENT, onChanged)
