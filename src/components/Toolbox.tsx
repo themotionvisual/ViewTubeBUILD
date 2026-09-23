@@ -5,6 +5,7 @@ import { CustomIcon } from './CustomIcon';
 import { getToolboxPaletteColors } from '../styles/toolboxPalette';
 import { hexToRgba, AnimatedToggleIcon } from './ToolboxUISystem';
 import { ChevronDown, CircleQuestionMark, Cloud, Zap } from 'lucide-react';
+import { persistToolboxOpen, readPersistedToolboxOpen } from '../services/workspaceUiPersistence';
 import {
   CONTROL_SHELL,
   SUBTOOLBOX_COLLAPSE_TRANSITION,
@@ -90,6 +91,8 @@ interface ToolboxProps {
   collapsible?: boolean;
   isOpen?: boolean;
   isOpenInitial?: boolean;
+  /** Optional stable identity for persisted open/closed state. Falls back to route + level + title + palette. */
+  persistenceId?: string;
   onToggle?: () => void;
   unmountWhenClosed?: boolean;
   headerActions?: React.ReactNode;
@@ -133,6 +136,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   collapsible = false,
   isOpen,
   isOpenInitial = true,
+  persistenceId,
   onToggle,
   unmountWhenClosed = true,
   headerActions,
@@ -147,10 +151,21 @@ export const Toolbox: React.FC<ToolboxProps> = ({
   hardShadow = false,
   chrome = "full",
 }) => {
-  const [internalOpen, setInternalOpen] = useState(isOpenInitial);
+  const controlled = typeof isOpen === 'boolean';
+  const mainPersistenceDescriptor = {
+    level: "main" as const,
+    title,
+    variant,
+    paletteIndex,
+    persistenceId,
+  };
+  const [internalOpen, setInternalOpen] = useState(() =>
+    controlled
+      ? isOpenInitial
+      : readPersistedToolboxOpen(mainPersistenceDescriptor, isOpenInitial)
+  );
   const [showHelpRail, setShowHelpRail] = useState(false);
   const subPaletteCursorRef = useRef(0);
-  const controlled = typeof isOpen === 'boolean';
   const open = controlled ? Boolean(isOpen) : internalOpen;
   const [keepClosingContentMounted, setKeepClosingContentMounted] = useState(open);
 
@@ -170,7 +185,13 @@ export const Toolbox: React.FC<ToolboxProps> = ({
       onToggle();
       return;
     }
-    if (!controlled) setInternalOpen((prev) => !prev);
+    if (!controlled) {
+      setInternalOpen((prev) => {
+        const next = !prev;
+        persistToolboxOpen(mainPersistenceDescriptor, next);
+        return next;
+      });
+    }
   };
 
   const isCollapsible = collapsible || indicator === 'plusminus' || indicator === 'symbols';
@@ -471,6 +492,8 @@ interface ToolboxScaffoldProps {
   paletteIndex?: number;
   collapsible?: boolean;
   isOpen?: boolean;
+  isOpenInitial?: boolean;
+  persistenceId?: string;
   onToggle?: () => void;
   unmountWhenClosed?: boolean;
   embedded?: boolean;
@@ -498,7 +521,9 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
   textColor = "text-black",
   paletteIndex,
   collapsible = false,
-  isOpen = true,
+  isOpen,
+  isOpenInitial = true,
+  persistenceId,
   onToggle,
   unmountWhenClosed = false,
   embedded = false,
@@ -527,6 +552,8 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     paletteIndex={paletteIndex}
     collapsible={collapsible}
     isOpen={isOpen}
+    isOpenInitial={isOpenInitial}
+    persistenceId={persistenceId}
     onToggle={onToggle}
     unmountWhenClosed={unmountWhenClosed}
     embedded={embedded}
@@ -561,6 +588,8 @@ interface SubToolboxProps {
   collapsible?: boolean;
   isOpen?: boolean;
   isOpenInitial?: boolean;
+  /** Optional stable identity for persisted open/closed state. Falls back to route + level + title + palette. */
+  persistenceId?: string;
   onToggle?: () => void;
   unmountOnClose?: boolean;
   openUnits?: number;
@@ -584,6 +613,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   collapsible = true,
   isOpen,
   isOpenInitial = true,
+  persistenceId,
   onToggle,
   unmountOnClose = false,
   openUnits = 3,
@@ -598,9 +628,22 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
     allocatedPaletteRef.current = paletteCycle.allocateSubPaletteIndex();
   }
 
-  const [internalOpen, setInternalOpen] = useState(isOpenInitial);
-  const [showHelpRail, setShowHelpRail] = useState(false);
   const controlled = typeof isOpen === 'boolean';
+  const effectivePersistencePalette =
+    paletteIndex !== undefined && paletteIndex !== null ? paletteIndex : allocatedPaletteRef.current;
+  const subPersistenceDescriptor = {
+    level: "sub" as const,
+    title,
+    variant: "sub",
+    paletteIndex: effectivePersistencePalette,
+    persistenceId,
+  };
+  const [internalOpen, setInternalOpen] = useState(() =>
+    controlled
+      ? isOpenInitial
+      : readPersistedToolboxOpen(subPersistenceDescriptor, isOpenInitial)
+  );
+  const [showHelpRail, setShowHelpRail] = useState(false);
   const open = controlled ? Boolean(isOpen) : internalOpen;
   const [keepClosingContentMounted, setKeepClosingContentMounted] = useState(open);
 
@@ -620,7 +663,13 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
       onToggle();
       return;
     }
-    if (!controlled) setInternalOpen((prev) => !prev);
+    if (!controlled) {
+      setInternalOpen((prev) => {
+        const next = !prev;
+        persistToolboxOpen(subPersistenceDescriptor, next);
+        return next;
+      });
+    }
   };
   const effectivePaletteIndex =
     paletteIndex !== undefined && paletteIndex !== null ? paletteIndex : allocatedPaletteRef.current;
