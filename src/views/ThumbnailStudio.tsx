@@ -363,27 +363,6 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
   }
  }
 
- // Helper for flush buttons in V2.1.2
-
- const StudioButton = ({
-  onClick,
-  color,
-  icon,
-  label,
- }: {
-  onClick: () => void
-  color: string
-  icon: string
-  label: string
- }) => (
-  <StandardButton
-   accentColor={color.replace('bg-[', '').replace(']', '')}
-   onClick={onClick}
-   className="flex items-center w-full h-12">
-   <CustomIcon name={icon} size={16} className="mr-2" />
-   {label}
-  </StandardButton>
- )
 
  return (
  <ToolboxScaffold
