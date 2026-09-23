@@ -25,7 +25,13 @@ export type AlgorithmMomentumCommand =
  | "INSPECT"
 
 /** Which intelligence surface raised a signal. */
-export type AlgorithmSignalOrigin = "anomaly" | "opportunity" | "creator"
+export type AlgorithmSignalOrigin =
+ | "anomaly"
+ | "opportunity"
+ | "channel_intelligence"
+ | "project"
+ | "creator"
+ | "priming_feedback"
 
 export interface AlgorithmSignal {
  id: string
