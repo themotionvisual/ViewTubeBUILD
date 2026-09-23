@@ -5,7 +5,6 @@ import {
   Eraser,
   PanelLeft,
   PanelTop,
-  Rows3,
   Star,
   Command,
   History,
@@ -160,7 +159,7 @@ const NAV_LAYOUT_OPTIONS: Array<{
     value: "thin",
     label: "Thin Sidebar",
     description: "Narrower labeled sidebar for more canvas room.",
-    icon: <Rows3 size={22} />,
+    icon: <PanelsTopLeft size={22} />,
   },
   {
     value: "rail",
