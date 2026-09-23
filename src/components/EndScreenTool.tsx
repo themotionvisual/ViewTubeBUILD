@@ -11,9 +11,19 @@ import {
 } from "../types"
 import { useBrain } from "../context/useBrain"
 import { CustomIcon } from "./CustomIcon"
-import { SubToolbox, StandardTextArea } from "./Toolbox"
-import { SubToolboxFileTarget } from "./subtoolbox/SubToolboxPrimitives"
-import { StandardButton } from "./StandardButton"
+import { SubToolbox } from "./Toolbox"
+import {
+  SubToolboxButton,
+  SubToolboxColorPicker,
+  SubToolboxFieldLabel,
+  SubToolboxFileTarget,
+  SubToolboxIconButton,
+  SubToolboxInput,
+  SubToolboxLinkButton,
+  SubToolboxSelect,
+  SubToolboxSelectableTag,
+  SubToolboxTextArea,
+} from "./subtoolbox/SubToolboxPrimitives"
 import { PostActionReflection } from "./PostActionReflection"
 
 interface ReferenceImage {
@@ -208,9 +218,9 @@ export const EndScreenTool: React.FC = () => {
             isOpenInitial={true}>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-black/40 tracking-[0.2em] pl-1">
+                <SubToolboxFieldLabel level="l2" className="pl-1">
                   Layout Structure
-                </label>
+                </SubToolboxFieldLabel>
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                   {LAYOUTS.map((r) => (
                     <LayoutPreview
@@ -223,21 +233,22 @@ export const EndScreenTool: React.FC = () => {
                 </div>
               </div>
 
-              <StandardTextArea
+              <SubToolboxTextArea
+                level="l1"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Describe the overall visual theme..."
-                minHeight="112px"
-                hasBorder={false}
-                className="w-full p-0 text-sm font-bold bg-transparent outline-none resize-none placeholder:text-black/10 text-black leading-tight"
+                style={{ minHeight: 112 }}
+                className="w-full text-sm font-bold"
               />
               <div className="flex justify-end">
-                <button
+                <SubToolboxButton
+                  level="l2"
+                  size="compact"
                   onClick={handleManualConceptGen}
-                  disabled={conceptLoading}
-                  className="bg-[#C9F830] text-[10px] font-black uppercase text-black px-4 py-1.5 rounded-lg border-[2px] border-black shadow-[2px_2px_0px_0px_black] hover:shadow-none hover:translate-y-0.5 transition-all">
+                  disabled={conceptLoading}>
                   {conceptLoading ? "REFRESHING..." : "✨ AUTO-REFINE"}
-                </button>
+                </SubToolboxButton>
               </div>
             </div>
           </SubToolbox>
@@ -248,12 +259,13 @@ export const EndScreenTool: React.FC = () => {
             icon={<CustomIcon name="!!!COLLECTION" size={20} />}>
             <div className="grid grid-cols-3 gap-2">
               {END_SCREEN_STYLES.map((style) => (
-                <button
+                <SubToolboxSelectableTag
                   key={style}
-                  onClick={() => handleStyleToggle(style)}
-                  className={`px-2 py-2 border-[2px] border-black rounded-lg font-black uppercase text-[9px] shadow-[2px_2px_0px_0px_black] active:translate-y-0.5 active:shadow-none transition-all ${selectedStyles.includes(style) ? "bg-[#FFB158]" : "bg-white"}`}>
+                  level="l2"
+                  selected={selectedStyles.includes(style)}
+                  onClick={() => handleStyleToggle(style)}>
                   {style}
-                </button>
+                </SubToolboxSelectableTag>
               ))}
             </div>
           </SubToolbox>
@@ -263,17 +275,19 @@ export const EndScreenTool: React.FC = () => {
             title="Text & Copy"
             icon={<CustomIcon name="!!!TEXT" size={20} />}>
             <div className="space-y-4">
-              <input
+              <SubToolboxInput
+                level="l1"
                 value={largeText}
                 onChange={(e) => setLargeText(e.target.value)}
                 placeholder="TITLE (e.g. WATCH NEXT)"
-                className="vt-input-standard w-full text-lg"
+                className="w-full text-lg"
               />
-              <input
+              <SubToolboxInput
+                level="l1"
                 value={smallText}
                 onChange={(e) => setSmallText(e.target.value)}
                 placeholder="SUBTITLE (e.g. Subscribe for more)"
-                className="vt-input-standard w-full text-lg"
+                className="w-full text-lg"
               />
             </div>
           </SubToolbox>
@@ -282,37 +296,19 @@ export const EndScreenTool: React.FC = () => {
             collapsible
             title="Palette"
             icon={<CustomIcon name="paint-bucket" size={20} />}>
-            <div className="flex justify-between items-start gap-3 py-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
               {palette.map((c, i) => (
-                <div key={i} className="flex flex-col items-center gap-2 flex-1">
-                  <div
-                    style={{ backgroundColor: c || "#f3f4f6" }}
-                    onClick={() => document.getElementById(`cp-end-${i}`)?.click()}
-                    className="w-full aspect-[2/3] border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_black] relative overflow-hidden flex items-center justify-center cursor-pointer group">
-                    <input
-                      id={`cp-end-${i}`}
-                      type="color"
-                      value={c || "#ffffff"}
-                      onChange={(e) => {
-                        const n = [...palette]
-                        n[i] = e.target.value
-                        setPalette(n)
-                      }}
-                      className="absolute inset-0 opacity-0 pointer-events-none"
-                    />
-                    {!c && <span className="text-black/10 font-black text-lg">+</span>}
-                  </div>
-                  <input
-                    value={c}
-                    onChange={(e) => {
-                      const n = [...palette]
-                      n[i] = e.target.value
-                      setPalette(n)
-                    }}
-                    className="vt-input-standard w-full p-1.5 text-xs font-mono text-center border-[2px] rounded-md uppercase font-black"
-                    maxLength={7}
-                  />
-                </div>
+                <SubToolboxColorPicker
+                  key={i}
+                  level="l1"
+                  value={c || "#ffffff"}
+                  label={i < 2 ? `Color ${i + 1}` : `Optional ${i + 1}`}
+                  onValueChange={(value) => {
+                    const next = [...palette]
+                    next[i] = value
+                    setPalette(next)
+                  }}
+                />
               ))}
             </div>
           </SubToolbox>
@@ -349,17 +345,18 @@ export const EndScreenTool: React.FC = () => {
                       className="w-10 h-10 object-cover border-[2px] border-black rounded-md"
                       alt="ref"
                     />
-                    <select className="vt-input-standard flex-1 p-1 text-[9px] font-black uppercase border-[2px] rounded-md">
+                    <SubToolboxSelect controlSize="micro" className="flex-1" defaultValue="Style Reference">
                       <option>Style Reference</option>
                       <option>Background</option>
-                    </select>
-                    <button
+                    </SubToolboxSelect>
+                    <SubToolboxIconButton
+                      level="l2"
+                      ariaLabel="Remove reference image"
+                      icon={<span aria-hidden="true">×</span>}
                       onClick={() =>
                         setReferenceImages((prev) => prev.filter((i) => i.id !== img.id))
                       }
-                      className="text-xl font-black px-2 hover:text-red-500 transition-colors">
-                      ×
-                    </button>
+                    />
                   </div>
                 ))}
               </div>
@@ -391,32 +388,23 @@ export const EndScreenTool: React.FC = () => {
           </div>
 
           {!hasGeminiKey() ? (
-            <button
-              onClick={() => (window.location.href = "/settings")}
-              className="w-full h-14 bg-black border-[2px] border-black rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.01] active:scale-[0.98] shadow-[6px_6px_0px_0px_#FFDD00] hover:shadow-[6px_6px_0px_0px_white] translate-y-0 hover:translate-y-1 hover:translate-x-1">
-              <CustomIcon name="zap" size={24} className="text-[#FFDD00]" />
-              <span className="text-[20px] sm:text-[24px] font-[1000] uppercase tracking-tighter text-[#FFDD00] leading-none mt-[-2px]">
-                MISSING API KEY: SETTINGS
-              </span>
-            </button>
+            <SubToolboxLinkButton
+              level="l0"
+              size="action"
+              tone="warning"
+              href="/settings"
+              icon={<CustomIcon name="zap" size={24} />}>
+              MISSING API KEY: SETTINGS
+            </SubToolboxLinkButton>
           ) : (
-            <button
+            <SubToolboxButton
+              level="l0"
+              size="action"
               onClick={handleGenerate}
               disabled={genLoading || !prompt}
-              className="w-full h-14 bg-[#f3f4f6] border-[2px] border-black rounded-2xl overflow-hidden flex items-center group transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-[6px_6px_0px_0px_black] hover:shadow-none translate-y-0 hover:translate-y-1 hover:translate-x-1">
-              <div className="bg-gray-200 h-full w-14 flex items-center justify-center border-r-[4px] border-black flex-shrink-0 group-hover:bg-[#FFB158] transition-colors">
-                <CustomIcon
-                  name="zap"
-                  size={32}
-                  className="opacity-40 group-hover:opacity-100 transition-opacity"
-                />
-              </div>
-              <div className="flex-1 flex items-center justify-center pr-14">
-                <span className="text-[36px] font-[1000] uppercase tracking-tighter text-black/30 group-hover:text-black transition-colors leading-none mt-[-2px]">
-                  {genLoading ? "CREATING..." : "GENERATE TEMPLATE"}
-                </span>
-              </div>
-            </button>
+              icon={<CustomIcon name="zap" size={24} />}>
+              {genLoading ? "CREATING..." : "GENERATE TEMPLATE"}
+            </SubToolboxButton>
           )}
 
           {generatedImage && (
