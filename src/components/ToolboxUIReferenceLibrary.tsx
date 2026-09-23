@@ -118,35 +118,7 @@ export const ToolboxUIReferenceLibrary: React.FC<ToolboxUIReferenceLibraryProps>
 
   return (
     <div id="toolbox-ui-library" className="space-y-6" data-vt-library-comparison="true">
-      {/*
-        Preserve the existing Component Library shell geometry for both tracks.
-        The dual-track migration changes ownership, not appearance.
-      */}
-      <style>{`
-        .vt-studio-hub-component-library [data-vt-toolbox][data-vt-toolbox-level="main"] {
-          --vt-toolbox-header-height: 80px !important;
-          --vt-toolbox-stroke: 5px !important;
-          --vt-toolbox-radius: 16px !important;
-          --vt-toolbox-shadow-offset: 10px !important;
-          --vt-toolbox-title-size: 26px !important;
-        }
-        .vt-studio-hub-component-library [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-          height: 80px !important;
-          min-height: 80px !important;
-          max-height: 80px !important;
-        }
-        .vt-studio-hub-component-library [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-          width: 80px !important;
-          min-width: 80px !important;
-          height: 80px !important;
-          flex-basis: 80px !important;
-        }
-        .vt-studio-hub-component-library [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
-          font-size: 26px !important;
-          line-height: .92 !important;
-        }
-      `}</style>
-
+      {/* Geometry comes from the production Toolbox/SubToolbox token authority. */}
       <ComponentLibraryTrack
         track="hardcoded"
         collapsible={collapsible}
