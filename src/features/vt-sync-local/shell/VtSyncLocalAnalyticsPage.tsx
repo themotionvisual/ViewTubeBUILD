@@ -10,7 +10,7 @@ import {
  type VtSyncLocalSyncProgress,
  type VtSyncSnapshot,
  VT_SYNC_SERVER_ACCOUNT_TOKEN,
- expandVtSyncCategoryDependencies,
+ resolveVtSyncRequestedCategoryIds,
  getVtSyncDefaultUnitIds,
  getVtSyncUnitCategoryIds,
  applyVtSyncPrivacyFilters,
@@ -448,7 +448,7 @@ const refreshManualImports = useCallback(async (payload?: {
    syncQueueRef.current.shift()
    updateQueuedCategories()
    activeSyncRequestKeyRef.current = vtSyncQueueRequestKey(request)
-   const requestedCategoryIds = expandVtSyncCategoryDependencies(request.categoryIds)
+   const requestedCategoryIds = resolveVtSyncRequestedCategoryIds(request.categoryIds)
    const next = await runVtSyncLocalSync({
     token,
     selectedCategories: requestedCategoryIds,
@@ -492,7 +492,7 @@ const refreshManualImports = useCallback(async (payload?: {
   forceFullVideoMetadata = false,
   windows?: VtSyncAnalyticsWindow[],
  ) => {
-  const requestedCategoryIds = expandVtSyncCategoryDependencies(categoryIds)
+  const requestedCategoryIds = resolveVtSyncRequestedCategoryIds(categoryIds)
   const request: VtSyncQueuedRequest = { categoryIds: requestedCategoryIds, retentionVideoIds, forceFullVideoMetadata, windows }
   const requestKey = vtSyncQueueRequestKey(request)
   const alreadyActive = activeSyncRequestKeyRef.current === requestKey
