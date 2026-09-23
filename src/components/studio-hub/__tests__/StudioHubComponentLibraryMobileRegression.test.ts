@@ -85,8 +85,12 @@ describe("Studio Hub Component Library mobile regression", () => {
     for (const family of [
       "Split Menu", "Split Left Button", "Split Search", "Input Action", "Tag Editor",
       "Slider", "Range Slider", "Settings Switch", "Checkbox", "Radio", "Tooltip",
-      "Progress Value", "Knob Dial",
+      "Progress Value", "Knob Dial", "Tooltip Color", "Hover Card", "Controller Switch",
+      "LED Light", "LED Dot", "Horizontal Scrollbar", "Vertical Scrollbar", "Calendar",
+      "Loader", "Loader Progress", "Loader Split", "Loader Orbit", "Loader Bars", "Tree View",
     ]) expect(capture).toContain(`["${family}"`)
+    expect(capture).toContain('["Tooltip", "Tooltip Color", "Hover Card"].includes(familyName)')
+    expect(capture).toContain('captureMode: floatingOverlayFamily && state !== "default" ? "viewport" : "locator"')
   })
 
   it("keeps the requested missing families in the canonical registry", () => {
