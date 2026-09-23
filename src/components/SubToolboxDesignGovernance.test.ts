@@ -55,6 +55,45 @@ describe("subtoolbox design governance", () => {
   expect(catalog).toContain('"SubToolbox Header Toggle"')
  })
 
+ it("keeps header anatomy and primary actions on canonical primitives", () => {
+  const toolbox = source("src/components/Toolbox.tsx")
+  const primitives = source("src/components/subtoolbox/SubToolboxPrimitives.tsx")
+  const catalog = source("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
+  const manager = source("src/views/VideoManager.tsx")
+  const commentResponder = source("src/components/CommentResponder.tsx")
+  const endScreen = source("src/components/EndScreenTool.tsx")
+
+  for (const primitive of [
+    "ToolboxHeaderIconRail",
+    "ToolboxHeaderTitle",
+    "ToolboxHeaderHelpButton",
+    "ToolboxHeaderCollapseButton",
+    "ToolboxHeaderToggle",
+  ]) {
+    expect(primitives).toContain(`export const ${primitive}`)
+    expect(toolbox).toContain(primitive)
+  }
+
+  for (const family of [
+    "Toolbox Header Icon Rail",
+    "SubToolbox Header Icon Rail",
+    "Toolbox Header Title",
+    "SubToolbox Header Title",
+    "Toolbox Header Help",
+    "SubToolbox Header Help",
+    "Toolbox Header Collapse",
+    "SubToolbox Header Collapse",
+    "Toolbox Header Toggle",
+    "SubToolbox Header Toggle",
+  ]) expect(catalog).toContain(`"${family}"`)
+
+  expect(toolbox).toContain('data-vt-split-left={isSubtoolboxPeer && showIconSection ? "true" : undefined}')
+  expect(toolbox).toContain('showIconSection={props.showIconSection ?? true}')
+  expect(manager).toContain('<SubToolboxGridActionButton')
+  expect(commentResponder).toContain('label="Connect YouTube Channel"')
+  expect(endScreen).toContain('label={genLoading ? "Creating..." : "Generate Template"}')
+ })
+
  it("keeps the compact inner-control hierarchy below the subtoolbox shell", () => {
   const tokenSource = source("src/components/subtoolbox/tokens.ts")
   const systemCss = source("src/styles/subtoolbox-system.css")
