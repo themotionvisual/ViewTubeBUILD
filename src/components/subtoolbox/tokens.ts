@@ -50,21 +50,21 @@ export const getComponentLevelCssVars = (level: ToolboxControlLevel) => {
 
 export const TOOLBOX_LEVEL_DNA = {
   toolbox: {
-    height: 56,
+    height: 80,
     stroke: 5,
     radius: 16,
     shadowOffset: 10,
     titleSize: 26,
   },
   l0: {
-    height: 48,
+    height: 56,
     stroke: 4,
     radius: 12,
     shadowOffset: 6,
     titleSize: 20,
   },
   l1: {
-    height: 38,
+    height: 48,
     stroke: 3,
     radius: 8,
     shadowOffset: 4,
@@ -97,7 +97,7 @@ export const TOOLBOX_HEADER_DNA = {
     iconStroke: 3.1,
   },
   subtoolbox: {
-    height: 44,
+    height: TOOLBOX_LEVEL_DNA.l0.height,
     titleSize: TOOLBOX_LEVEL_DNA.l0.titleSize,
     titleLineHeight: 0.82,
     titleMaxLines: 2,
