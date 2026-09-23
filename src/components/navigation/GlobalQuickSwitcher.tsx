@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useSyncExternalStore } from "react"
 import { Clock3, CornerDownLeft, Search, Sparkles } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
+import { DialogDescription, DialogTitle } from "../ui/dialog"
 import {
   CommandDialog,
   CommandEmpty,
@@ -12,6 +13,7 @@ import {
 } from "../ui/command"
 import { useWorkspaceUxPreferences } from "../../hooks/useWorkspaceUxPreferences"
 import {
+  getRecentDestinationsServerSnapshot,
   quickSwitcherPages,
   readRecentDestinations,
   recordRecentDestination,
@@ -54,7 +56,7 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
   const recent = useSyncExternalStore(
     subscribeRecentDestinations,
     readRecentDestinations,
-    () => [],
+    getRecentDestinationsServerSnapshot,
   )
   const pages = useMemo(() => quickSwitcherPages(), [])
 
@@ -96,6 +98,8 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
+      <DialogTitle className="sr-only">ViewTube Quick Switcher</DialogTitle>
+      <DialogDescription className="sr-only">Search recent work and production ViewTube destinations.</DialogDescription>
       <div className="vt-quick-switcher">
         <div className="vt-quick-switcher__title">
           <span className="vt-quick-switcher__title-icon"><Search aria-hidden="true" /></span>
