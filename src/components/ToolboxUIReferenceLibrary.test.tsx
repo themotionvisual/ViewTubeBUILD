@@ -112,11 +112,16 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).not.toContain("forceOpen content=\"TOOLTIP\"")
   })
 
-  it("restores the 80px main toolbox header authority instead of inheriting subtoolbox height", () => {
+  it("consumes the production-owned 80px / 56px shell authority without a local override", () => {
     const source = readFileSync(resolve(process.cwd(), "src/components/ToolboxUIReferenceLibrary.tsx"), "utf8")
-    expect(source).toContain('--vt-toolbox-header-height: 80px !important')
-    expect(source).toContain('height: 80px !important')
-    expect(source).toContain('width: 80px !important')
+    const tokens = readFileSync(resolve(process.cwd(), "src/components/subtoolbox/tokens.ts"), "utf8")
+    const css = readFileSync(resolve(process.cwd(), "src/styles/toolbox-system.css"), "utf8")
+
+    expect(source).not.toContain("--vt-toolbox-header-height:")
+    expect(tokens).toContain("height: 80")
+    expect(tokens).toContain("height: TOOLBOX_LEVEL_DNA.l0.height")
+    expect(css).toContain("--vt-toolbox-header-height: 80px")
+    expect(css).toContain("--vt-subtoolbox-header-height: 56px")
   })
 
   it("is lazy-mounted once while the library component renders both comparison tracks", () => {
