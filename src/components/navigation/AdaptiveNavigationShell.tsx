@@ -36,9 +36,11 @@ import { GeminiKeySettings } from "../GeminiKeySettings"
 import { ApplicationAccountMenu, type ApplicationMenuRecentItem } from "./ApplicationAccountMenu"
 import { GlobalQuickSwitcher } from "./GlobalQuickSwitcher"
 import {
-  NAVIGATION_STORAGE_KEY,
   PRIMARY_NAV_ITEMS,
-  parseNavigationLayout,
+  getNavigationLayout,
+  getNavigationLayoutServerSnapshot,
+  setNavigationLayoutPreference,
+  subscribeNavigationLayout,
   type NavigationLayout,
 } from "./navigationContract"
 import { useNavLayoutMorph } from "./useNavLayoutMorph"
@@ -273,10 +275,11 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     syncChannelData,
   } = useBrain()
 
-  const [layout, setLayoutState] = useState<NavigationLayout>(() => {
-    if (typeof window === "undefined") return "top"
-    return parseNavigationLayout(localStorage.getItem(NAVIGATION_STORAGE_KEY))
-  })
+  const layout = useSyncExternalStore(
+    subscribeNavigationLayout,
+    getNavigationLayout,
+    getNavigationLayoutServerSnapshot,
+  )
   const [mobile, setMobile] = useState(isMobileViewport)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [mobileNavHidden, setMobileNavHidden] = useState(false)
@@ -424,7 +427,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   }
 
   const setLayout = (nextLayout: NavigationLayout) => {
-    setLayoutState(nextLayout)
+    setNavigationLayoutPreference(nextLayout)
     closeAccountMenu()
     const label =
       nextLayout === "top" ? "Top bar"
@@ -458,10 +461,6 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     layout,
     setLayout,
   })
-
-  useEffect(() => {
-    localStorage.setItem(NAVIGATION_STORAGE_KEY, layout)
-  }, [layout])
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(MOBILE_QUERY)
