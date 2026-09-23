@@ -32,7 +32,9 @@ describe("Publishing Package projection", () => {
 
   const projection = projectPublishingPackage(videoPackage)
   expect(projection).toMatchObject({
+   schemaVersion: 1,
    contentBuildId: "cb-publish",
+   projectId: "project-a",
    titleAssetId: "title-final",
    thumbnailAssetId: "thumb-final",
    finalRenderAssetId: "render-final",
