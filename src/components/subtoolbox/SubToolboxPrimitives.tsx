@@ -248,6 +248,7 @@ export const SubToolboxTag: React.FC<React.ButtonHTMLAttributes<HTMLButtonElemen
 interface SubToolboxOverlayPosition {
   left: number
   top: number
+  placement: "above" | "below"
   pairA?: string
   pairB?: string
 }
@@ -265,16 +266,22 @@ const useSubToolboxOverlayPosition = (
     if (!anchor || typeof window === "undefined") return
 
     const rect = anchor.getBoundingClientRect()
-    const panelWidth = panelRef.current?.getBoundingClientRect().width ?? 220
+    const panelRect = panelRef.current?.getBoundingClientRect()
+    const panelWidth = panelRect?.width ?? 220
+    const panelHeight = panelRect?.height ?? 84
     const viewportPadding = 12
     const idealLeft = rect.left + rect.width / 2
     const minLeft = viewportPadding + panelWidth / 2
     const maxLeft = Math.max(minLeft, window.innerWidth - viewportPadding - panelWidth / 2)
+    const roomAbove = rect.top - viewportPadding
+    const roomBelow = window.innerHeight - rect.bottom - viewportPadding
+    const placement: "above" | "below" = roomAbove >= panelHeight + gap || roomAbove >= roomBelow ? "above" : "below"
     const rootStyle = getComputedStyle(anchor)
 
     setPosition({
       left: Math.min(maxLeft, Math.max(minLeft, idealLeft)),
-      top: Math.max(viewportPadding, rect.top - gap),
+      top: placement === "above" ? rect.top - gap : rect.bottom + gap,
+      placement,
       pairA: rootStyle.getPropertyValue("--pair-a").trim() || rootStyle.getPropertyValue("--vt-subtoolbox-fill").trim(),
       pairB: rootStyle.getPropertyValue("--pair-b").trim() || rootStyle.getPropertyValue("--vt-subtoolbox-shadow").trim(),
     })
@@ -365,6 +372,7 @@ export const SubToolboxTooltip: React.FC<SubToolboxTooltipProps> = ({
           role="tooltip"
           className={classes("vt-subtoolbox-tooltip-bubble", `is-${level}`, `is-${variant}`, "is-portal-open")}
           data-vt-overlay="tooltip"
+          data-placement={position.placement}
           data-vt-control-level={level}
           style={{
             ...withComponentLevelStyle(level, mergedStyle),
@@ -1402,6 +1410,7 @@ export const SubToolboxHoverCard: React.FC<SubToolboxHoverCardProps> = ({ level 
           className={classes("vt-subtoolbox-hover-card-panel", `is-${level}`, "is-portal-open")}
           role="note"
           data-vt-overlay="hover-card"
+          data-placement={position.placement}
           data-vt-control-level={level}
           style={{
             ...withComponentLevelStyle(level, mergedStyle),
