@@ -355,6 +355,9 @@ export const SubToolboxTooltip: React.FC<SubToolboxTooltipProps> = ({
       >
         {triggerLabel}
       </button>
+      {open && typeof document === "undefined" ? (
+        <span id={tooltipId} role="tooltip" className={classes("vt-subtoolbox-tooltip-bubble", `is-${level}`, `is-${variant}`)}>{content}</span>
+      ) : null}
       {open && position && typeof document !== "undefined" ? createPortal(
         <span
           ref={panelRef}
@@ -1633,7 +1636,7 @@ export const SubToolboxTree: React.FC<SubToolboxTreeProps> = ({ level = "l0", no
   const renderNodes = (items: SubToolboxTreeNode[], depth = 0): React.ReactNode => items.map((node) => {
     const hasChildren = Boolean(node.children?.length)
     const open = openIds.includes(node.id)
-    const opacity = Math.max(.2, .5 - depth * .15)
+    const opacity = `${Math.max(20, 50 - depth * 15)}%`
     return <React.Fragment key={node.id}>
       <button
         type="button"
