@@ -59,7 +59,7 @@ Use this file to locate current production owners quickly. All links point to `m
 | `content-pipeline` | [src/views/dashboard/widgets/ContentPipelineWidget.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/ContentPipelineWidget.tsx) |
 | `cpm-geo` | [src/views/dashboard/widgets/CpmGeoWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/CpmGeoWidget) |
 | `daily-oracle` | [src/views/dashboard/widgets/DailyOracleWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/DailyOracleWidget) |
-| `data-edit` | [src/views/dashboard/widgets/DataEditWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/DataEditWidget) |
+| `data-edit` | [src/views/dashboard/widgets/VideoManagerWidget.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/VideoManagerWidget.tsx) |
 | `description-editor` | [src/views/dashboard/widgets/DescriptionEditorWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/DescriptionEditorWidget) |
 | `device-matrix` | [src/views/dashboard/widgets/DeviceMatrixWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/DeviceMatrixWidget) |
 | `flight-check` | [src/views/dashboard/widgets/FlightCheckWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/FlightCheckWidget) |
@@ -88,7 +88,7 @@ Use this file to locate current production owners quickly. All links point to `m
 | `video-autopsy` | [src/views/dashboard/widgets/VideoAutopsyWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/VideoAutopsyWidget) |
 | `video-comment-operator` | [src/views/dashboard/widgets/VideoCommentOperatorWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/VideoCommentOperatorWidget) |
 | `video-director` | [src/views/dashboard/widgets/video-director/VideoDirectorWidget.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/video-director/VideoDirectorWidget.tsx) |
-| `video-uploader` | [src/views/dashboard/widgets/DataEditWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/DataEditWidget) |
+| `video-uploader` | [src/views/dashboard/widgets/VideoUploaderWidget.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/VideoUploaderWidget.tsx) |
 
 ### Special extraction
 
