@@ -1,0 +1,37 @@
+{
+  "threadId": "herald-2026-09-22-project-content-convergence",
+  "verb": "BUILD",
+  "tier": "T2",
+  "stage": "EXECUTE",
+  "taskIds": [],
+  "missionId": null,
+  "owner": "Projects / ContentBuild / Video Package / Asset Engine convergence",
+  "writerLock": {
+    "paths": [
+      "src/services/asset-engine/VideoPackageContentBuildBridge.ts",
+      "src/services/asset-engine/VideoPackageContentBuildBridge.test.ts",
+      "src/services/video-package/VideoPackageRepository.ts",
+      "src/services/video-package/VideoPackageRepository.test.ts",
+      "docs/architecture/PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md",
+      ".viewtube/herald/threads/herald-2026-09-22-project-content-convergence.json",
+      ".viewtube/herald/ledger/2026-09-22.jsonl"
+    ],
+    "acquired": "2026-09-22T21:43:00-04:00"
+  },
+  "reconRef": "docs/architecture/PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md",
+  "openQuestions": [
+    "Selected title/thumbnail must not be implicitly finalized.",
+    "Video Package recovery snapshot must survive corrupt-store repair.",
+    "Automatic synchronization must remain idempotent across repeated saves."
+  ],
+  "nextAction": "Harden selection/finalization authority and recovery semantics with focused tests before extending identity/persistence migration.",
+  "entries": [
+    {
+      "ts": "2026-09-22T21:43:00-04:00",
+      "status": "in-progress",
+      "note": "Current integration branch audited at 12 ahead / 3 behind main; preserve existing work and patch in place."
+    }
+  ],
+  "lastApp": "chatgpt",
+  "lastTs": "2026-09-22T21:43:00-04:00"
+}
