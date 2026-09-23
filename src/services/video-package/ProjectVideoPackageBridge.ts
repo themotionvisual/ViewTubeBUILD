@@ -1,4 +1,4 @@
-import type { Project } from "../../types"
+import type { Project, VaultAsset } from "../../types"
 import { createVideoPackage } from "./packageValidation"
 import { findVideoPackageByProject, saveVideoPackage } from "./VideoPackageRepository"
 
@@ -39,4 +39,93 @@ export const ensureVideoPackageForProject = (
     sourceToolId: input.sourceToolId || "project-builder",
   })
   return saveVideoPackage(videoPackage)
+}
+
+
+export const selectProjectVideoPackageThumbnail = (
+  project: Project,
+  asset: VaultAsset,
+  input: {
+    channelId?: string | null
+    sourceToolId?: string
+    now?: string
+  } = {},
+) => {
+  const videoPackage = ensureVideoPackageForProject(project, input)
+  if (!videoPackage) return null
+
+  const now = input.now || new Date().toISOString()
+  const sourceToolId = input.sourceToolId || "project-builder"
+  const existing = videoPackage.packaging.thumbnailVariants.find(candidate => candidate.vaultAssetId === asset.id)
+  const artifact = existing || {
+    id: `thumbnail:${asset.id}`,
+    kind: "thumbnail" as const,
+    version: 1,
+    label: asset.name,
+    sourceToolId,
+    vaultAssetId: asset.id,
+    createdAt: now,
+    metadata: {
+      url: asset.url || null,
+      previewUrl: asset.previewUrl || null,
+      mimeType: asset.mimeType || null,
+    },
+  }
+
+  const thumbnailVariants = existing
+    ? videoPackage.packaging.thumbnailVariants
+    : [...videoPackage.packaging.thumbnailVariants, artifact]
+
+  return saveVideoPackage({
+    ...videoPackage,
+    version: videoPackage.version + 1,
+    identity: { ...videoPackage.identity, updatedAt: now },
+    packaging: {
+      ...videoPackage.packaging,
+      thumbnailVariants,
+      selectedThumbnailId: artifact.id,
+    },
+    provenance: [
+      ...videoPackage.provenance,
+      {
+        id: `${videoPackage.id}:thumbnail:${asset.id}:${now}`,
+        action: "thumbnail_selected",
+        sourceToolId,
+        artifactIds: [artifact.id],
+        evidenceIds: [],
+        createdAt: now,
+      },
+    ],
+  })
+}
+
+
+export const clearProjectVideoPackageThumbnail = (
+  project: Project,
+  input: { sourceToolId?: string; now?: string } = {},
+) => {
+  if (!project.contentBuildId) return null
+  const videoPackage = findVideoPackageByProject(project.id, project.contentBuildId)
+  if (!videoPackage || !videoPackage.packaging.selectedThumbnailId) return videoPackage
+
+  const now = input.now || new Date().toISOString()
+  const sourceToolId = input.sourceToolId || "project-builder"
+  const previous = videoPackage.packaging.selectedThumbnailId
+  return saveVideoPackage({
+    ...videoPackage,
+    version: videoPackage.version + 1,
+    identity: { ...videoPackage.identity, updatedAt: now },
+    packaging: { ...videoPackage.packaging, selectedThumbnailId: null },
+    provenance: [
+      ...videoPackage.provenance,
+      {
+        id: `${videoPackage.id}:thumbnail-cleared:${now}`,
+        action: "thumbnail_selection_cleared",
+        sourceToolId,
+        artifactIds: [previous],
+        evidenceIds: [],
+        createdAt: now,
+      },
+    ],
+  })
 }
