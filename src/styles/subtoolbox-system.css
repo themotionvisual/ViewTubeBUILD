@@ -2248,3 +2248,11 @@
     padding-top:4px!important;
   }
 }
+
+
+/* First visual layer inside a SubToolbox shares one 3px interior stroke.
+   Deeper L2 controls retain their own DNA; upload frames remain the exception. */
+.vt-subtoolbox-content > [data-vt-control-level]:not(.vt-subtoolbox-file-target),
+.vt-subtoolbox-content > :is(.vt-subtoolbox-stack,.vt-subtoolbox-grid,.vt-subtoolbox-actions,.vt-subtoolbox-section) > [data-vt-control-level]:not(.vt-subtoolbox-file-target) {
+  --vt-component-stroke: var(--vt-subtoolbox-inner-stroke,3px)!important;
+}
