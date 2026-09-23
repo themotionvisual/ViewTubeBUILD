@@ -4923,6 +4923,7 @@ export const generateSchemaJsonObject = async <TOutput = unknown>(input: {
  systemInstruction: string
  responseSchema: Schema
  capability?: Parameters<typeof getActiveModel>[0]
+ mediaAttachments?: string[]
 }): Promise<{
  output: TOutput
  requestedModel: string
@@ -4932,11 +4933,23 @@ export const generateSchemaJsonObject = async <TOutput = unknown>(input: {
  const { modelPreference } = getAiSettings()
  const requestedModel = toCanonicalModel(modelPreference)
  const servedModel = getActiveModel(capability)
+ const mediaParts = (input.mediaAttachments || []).flatMap((attachment) => {
+  const match = attachment.match(/^data:(image\/[\w.+-]+);base64,(.+)$/)
+  return match ? [{ inlineData: { mimeType: match[1], data: match[2] } }] : []
+ })
 
  return executeWithRetry(async () => {
   const response = await getAiClient().models.generateContent({
    model: servedModel,
-   contents: [{ role: "user", parts: [{ text: input.userText }] }],
+   contents: [{
+    role: "user",
+    parts: [
+     { text: mediaParts.length
+      ? `${input.userText}\n\nUse the attached media as visual context. Do not invent details that are not visible.`
+      : input.userText },
+     ...mediaParts,
+    ],
+   }],
    config: {
     systemInstruction: {
      role: "system",
