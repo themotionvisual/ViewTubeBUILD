@@ -25,6 +25,8 @@ describe("workspace UX preferences", () => {
     expect(preferences.rememberToolboxState).toBe(true)
     expect(preferences.restoreLastWorkspace).toBe(false)
     expect(preferences.desktopKeyboardNavigation).toBe(false)
+    expect(preferences.globalQuickSwitcher).toBe(true)
+    expect(preferences.rememberRecentDestinations).toBe(true)
     expect(preferences.mobileNavigationAutoHide).toBe(false)
     expect(preferences.edgeSwipeNavigation).toBe(false)
     expect(preferences.thumbZoneShortcuts).toBe(false)

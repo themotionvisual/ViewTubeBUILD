@@ -7,6 +7,7 @@ import {
   Menu,
   PanelLeft,
   PanelTop,
+  Search,
   Sparkles,
   UserRound,
   X,
@@ -33,6 +34,7 @@ import { getSuperTool } from "../../services/superToolRegistry"
 import { getNavPaletteColor, VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
 import { GeminiKeySettings } from "../GeminiKeySettings"
 import { ApplicationAccountMenu, type ApplicationMenuRecentItem } from "./ApplicationAccountMenu"
+import { GlobalQuickSwitcher } from "./GlobalQuickSwitcher"
 import {
   NAVIGATION_STORAGE_KEY,
   PRIMARY_NAV_ITEMS,
@@ -286,6 +288,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     () => false,
   )
   const [accountOpen, setAccountOpen] = useState(false)
+  const [quickSwitcherOpen, setQuickSwitcherOpen] = useState(false)
   const [geminiSettingsOpen, setGeminiSettingsOpen] = useState(false)
   const [announcement, setAnnouncement] = useState("")
   const accountButtonRef = useRef<HTMLButtonElement | null>(null)
@@ -354,7 +357,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     : Math.max(0, Math.min(100, Math.round((Math.max(0, entitlement.creditBalance) / creditCap) * 100)))
   const canSeeApiKeys = entitlement.subscriptionPlanId === "executive" || isOwnerEmail(knownEmail())
   const applicationMenuRecentItems = useMemo<ApplicationMenuRecentItem[]>(() => {
-    if (!accountOpen) return []
+    if (!accountOpen && !quickSwitcherOpen) return []
 
     const items: ApplicationMenuRecentItem[] = []
     const activeProject = brain.projects.find((project) => project.id === brain.activeProjectId)
@@ -389,7 +392,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     }
 
     return items
-  }, [accountOpen, brain.activeProjectId, brain.projects])
+  }, [accountOpen, brain.activeProjectId, brain.projects, quickSwitcherOpen])
   const shellLayout = mobile ? "mobile" : layout
   const hideMobileEditorChrome = mobile && isEditorSurface
   const isBrainWorkspace = location.pathname === "/ai-brain"
@@ -411,6 +414,13 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const closeAccountMenu = (restoreFocus = false) => {
     setAccountOpen(false)
     if (restoreFocus) requestAnimationFrame(() => accountButtonRef.current?.focus())
+  }
+
+  const openQuickSwitcher = () => {
+    setDrawerOpen(false)
+    closeAccountMenu()
+    setMobileNavHidden(false)
+    setQuickSwitcherOpen(true)
   }
 
   const setLayout = (nextLayout: NavigationLayout) => {
@@ -849,6 +859,17 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
                 <div className="vt-adaptive-nav__drawer-head"><strong>Navigation</strong><button type="button" onClick={() => setDrawerOpen(false)} aria-label="Close navigation"><X aria-hidden="true" /></button></div>
                 {renderPrimaryNavigation(true)}
                 <div className="vt-adaptive-nav__drawer-tools">
+                  {workspaceUx.globalQuickSwitcher ? (
+                    <button
+                      type="button"
+                      className="vt-adaptive-nav__quick-switcher-drawer"
+                      onClick={openQuickSwitcher}
+                    >
+                      <Search aria-hidden="true" />
+                      <span>Quick Switcher</span>
+                      <kbd>⌘K</kbd>
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     className="vt-adaptive-nav__diagnostics-toggle"
@@ -870,6 +891,19 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
           <div className="vt-adaptive-nav__brand">{logo}</div>
           {renderPrimaryNavigation()}
           <div className="vt-adaptive-nav__utilities">
+            {workspaceUx.globalQuickSwitcher ? (
+              <button
+                type="button"
+                className="vt-adaptive-nav__quick-switcher-trigger"
+                onClick={openQuickSwitcher}
+                aria-label="Open Quick Switcher"
+                title="Quick Switcher (Command/Ctrl + K)"
+              >
+                <Search aria-hidden="true" />
+                <span>Search</span>
+                <kbd>⌘K</kbd>
+              </button>
+            ) : null}
             {layout === "top" ? (
               <button ref={registerControl} type="button" className="vt-adaptive-nav__enter-sidebar" onClick={animateToSidebar} aria-label="Use wide sidebar" title="Wide sidebar">
                 <PanelLeft aria-hidden="true" />
@@ -934,6 +968,11 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
         <div className="vt-adaptive-legal"><a href="/privacy.html">Privacy Policy</a><span>|</span><a href="/terms.html">Terms of Service</a></div>
       ) : null}
       <span className="vt-adaptive-announcement" role="status" aria-live="polite">{announcement}</span>
+      <GlobalQuickSwitcher
+        open={quickSwitcherOpen}
+        onOpenChange={setQuickSwitcherOpen}
+        contextItems={applicationMenuRecentItems}
+      />
       <GeminiKeySettings open={geminiSettingsOpen} onOpenChange={setGeminiSettingsOpen} />
     </div>
   )
