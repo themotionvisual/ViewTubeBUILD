@@ -27,13 +27,16 @@ export const createPrimingStepHandoff = async (input: {
   payload: {
    primingPlanId: input.plan.id,
    primingStepId: step.id,
+   videoId: input.plan.videoId || null,
+   launchAt: input.plan.launchAt || null,
    phase: step.phase,
    objective: step.objective,
    relativeTiming: step.relativeTiming,
    outputKind: step.outputKind,
+   stepPayload: step.payload,
    ...step.payload,
   },
-  evidenceIds: step.evidenceIds,
+  evidenceIds: [...new Set([...input.plan.evidenceIds, ...step.evidenceIds])],
   creatorDecisions: input.creatorDecisions,
   confidence: input.plan.confidence,
  })
@@ -42,3 +45,9 @@ export const createPrimingStepHandoff = async (input: {
 
 export const getExecutablePrimingSteps = (plan: AlgorithmPrimingPlan) =>
  plan.steps.filter((step) => Boolean(step.targetToolId))
+
+
+export const getReadyPrimingSteps = (plan: AlgorithmPrimingPlan, completedStepIds: string[]) => {
+ const complete = new Set(completedStepIds)
+ return plan.steps.filter((step) => step.dependsOn.every((dependency) => complete.has(dependency)))
+}
