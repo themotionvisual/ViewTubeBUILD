@@ -71,7 +71,7 @@ import {
  SubToolboxTextArea,
  SubToolboxTopTitleDropdown,
 } from "../components/subtoolbox/SubToolboxPrimitives"
-import { SubToolboxSplitButton, SubToolboxSplitDropdown } from "../studio-ui"
+import { SubToolboxSplitDropdown } from "../studio-ui"
 
 const TagBadge: React.FC<{
  tag: string
@@ -679,7 +679,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        state="ready"
        className="w-full max-w-2xl"
        message="Ready to load your YouTube channel catalog."
-       action={<SubToolboxButton level="l0" tone="success" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Loading..." : "Load Channel Catalog"}</SubToolboxButton>}
+       action={<SubToolboxGridActionButton label={loading ? "Loading..." : "Load Channel Catalog"} iconName="video" tone="green" onClick={() => void loadInitialData(true)} disabled={loading} />}
       />
      </div>
     ) : connected && videoListLoadState === "error" && videos.length === 0 ? (
@@ -689,7 +689,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        state="error"
        className="w-full max-w-2xl"
        message={error || "We couldn't load your YouTube assets. Try reload, or reconnect your channel in Settings."}
-       action={<SubToolboxButton level="l0" tone="warning" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Retrying..." : "Retry Catalog Load"}</SubToolboxButton>}
+       action={<SubToolboxGridActionButton label={loading ? "Retrying..." : "Retry Catalog Load"} iconName="video" tone="orange" onClick={() => void loadInitialData(true)} disabled={loading} />}
       />
      </div>
     ) : connected && videoListLoadState === "empty" ? (
@@ -699,7 +699,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
        state="empty"
        className="w-full max-w-2xl"
        message="Your YouTube channel is connected, but no videos were detected yet."
-       action={<SubToolboxActions columns={2}><SubToolboxLinkButton level="l0" tone="success" href="https://studio.youtube.com" target="_blank" rel="noopener noreferrer">Open YouTube Studio</SubToolboxLinkButton><SubToolboxButton level="l0" tone="neutral" onClick={() => void loadInitialData(true)} disabled={loading}>{loading ? "Reloading..." : "Reload Assets"}</SubToolboxButton></SubToolboxActions>}
+       action={<SubToolboxActions columns={2}><SubToolboxLinkButton level="l0" tone="success" href="https://studio.youtube.com" target="_blank" rel="noopener noreferrer">Open YouTube Studio</SubToolboxLinkButton><SubToolboxGridActionButton label={loading ? "Reloading..." : "Reload Assets"} iconName="video" tone="blue" onClick={() => void loadInitialData(true)} disabled={loading} /></SubToolboxActions>}
       />
      </div>
     ) : (selectedVideo || !connected || catalogLoading) ? (
@@ -713,12 +713,12 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       >
        <SubToolboxStack density="dense">
         {catalogLoading ? (
-         <SubToolboxSplitButton
-          icon={<FileVideo size={20} strokeWidth={3} />}
+         <SubToolboxGridActionButton
+          label="Loading Your YouTube Video Catalog…"
+          iconName="video"
+          tone="blue"
           disabled
-         >
-          LOADING YOUR YOUTUBE VIDEO CATALOG…
-         </SubToolboxSplitButton>
+         />
         ) : connected ? (
          <SubToolboxSplitDropdown
           value={selectedVideoId || ""}
@@ -728,13 +728,13 @@ const VideoManager: React.FC<VideoManagerProps> = ({
           ariaLabel="Choose video"
          />
         ) : (
-         <SubToolboxSplitButton
-          icon={<FileVideo size={20} strokeWidth={3} />}
+         <SubToolboxGridActionButton
+          label={connectionLabel}
+          iconName="video"
+          tone="green"
           onClick={() => auth.login("/video-manager")}
           disabled={auth.loading}
-         >
-          {connectionLabel}
-         </SubToolboxSplitButton>
+         />
         )}
         {connected && (
          <SubToolboxInput
