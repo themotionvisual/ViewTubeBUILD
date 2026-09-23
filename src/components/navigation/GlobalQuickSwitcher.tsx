@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useSyncExternalStore } from "react"
-import { Clock3, CornerDownLeft, Search, Sparkles } from "lucide-react"
+import { Clock3, CornerDownLeft, Search, Sparkles, Star, StarOff } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { DialogDescription, DialogTitle } from "../ui/dialog"
 import {
@@ -17,8 +17,16 @@ import {
   quickSwitcherPages,
   readRecentDestinations,
   recordRecentDestination,
+  resolveQuickSwitcherPage,
   subscribeRecentDestinations,
 } from "../../services/recentDestinationHistory"
+import {
+  getPinnedDestinationsServerSnapshot,
+  isDestinationPinned,
+  readPinnedDestinations,
+  subscribePinnedDestinations,
+  togglePinnedDestination,
+} from "../../services/pinnedDestinationStore"
 
 export interface QuickSwitcherContextItem {
   id: string
@@ -58,6 +66,11 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
     readRecentDestinations,
     getRecentDestinationsServerSnapshot,
   )
+  const pinnedPaths = useSyncExternalStore(
+    subscribePinnedDestinations,
+    readPinnedDestinations,
+    getPinnedDestinationsServerSnapshot,
+  )
   const pages = useMemo(() => quickSwitcherPages(), [])
 
   useEffect(() => {
@@ -95,7 +108,14 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
     navigate(path)
   }
 
-  const recentPaths = new Set(recent.map((item) => item.path))
+  const pinnedPathSet = new Set(pinnedPaths)
+  const recentUnpinned = recent.filter((item) => !pinnedPathSet.has(item.path))
+  const recentPaths = new Set(recentUnpinned.map((item) => item.path))
+  const pinnedPages = pinnedPaths
+    .map((path) => pages.find((page) => page.path === path))
+    .filter((page): page is (typeof pages)[number] => Boolean(page))
+  const currentPage = resolveQuickSwitcherPage(location.pathname)
+  const currentPagePinned = currentPage ? isDestinationPinned(currentPage.path) : false
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
@@ -118,6 +138,42 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
         <CommandList className="vt-quick-switcher__list">
           <CommandEmpty className="vt-quick-switcher__empty">No matching ViewTube destination.</CommandEmpty>
 
+          {currentPage ? (
+            <CommandGroup heading="Quick action" className="vt-quick-switcher__group">
+              <CommandItem
+                value={`${currentPagePinned ? "unpin" : "pin"} ${currentPage.title} favorite shortcut`}
+                onSelect={() => togglePinnedDestination(currentPage.path)}
+                className="vt-quick-switcher__item"
+              >
+                {currentPagePinned ? <StarOff aria-hidden="true" /> : <Star aria-hidden="true" />}
+                <span>
+                  <strong>{currentPagePinned ? "Unpin current page" : "Pin current page"}</strong>
+                  <small>{currentPage.title}</small>
+                </span>
+              </CommandItem>
+            </CommandGroup>
+          ) : null}
+
+          {pinnedPages.length ? (
+            <CommandGroup heading="Pinned" className="vt-quick-switcher__group">
+              {pinnedPages.map((page) => (
+                <CommandItem
+                  key={page.path}
+                  value={`${page.title} ${SECTION_LABELS[page.section] || page.section} pinned favorite`}
+                  onSelect={() => go(page.path)}
+                  className="vt-quick-switcher__item"
+                >
+                  <Star aria-hidden="true" />
+                  <span>
+                    <strong>{page.title}</strong>
+                    <small>{page.description || SECTION_LABELS[page.section] || page.section}</small>
+                  </span>
+                  <CommandShortcut><CornerDownLeft aria-hidden="true" /></CommandShortcut>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ) : null}
+
           {contextItems.length ? (
             <CommandGroup heading="Continue working" className="vt-quick-switcher__group">
               {contextItems.map((item) => (
@@ -135,9 +191,9 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
             </CommandGroup>
           ) : null}
 
-          {preferences.rememberRecentDestinations && recent.length ? (
+          {preferences.rememberRecentDestinations && recentUnpinned.length ? (
             <CommandGroup heading="Recent" className="vt-quick-switcher__group">
-              {recent.map((item) => (
+              {recentUnpinned.map((item) => (
                 <CommandItem
                   key={item.path}
                   value={`${item.title} ${SECTION_LABELS[item.section] || item.section} recent`}
@@ -153,7 +209,7 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
           ) : null}
 
           <CommandGroup heading="Destinations" className="vt-quick-switcher__group">
-            {pages.filter((page) => !recentPaths.has(page.path)).map((page) => (
+            {pages.filter((page) => !pinnedPathSet.has(page.path) && !recentPaths.has(page.path)).map((page) => (
               <CommandItem
                 key={page.path}
                 value={`${page.title} ${SECTION_LABELS[page.section] || page.section} ${page.description || ""}`}
