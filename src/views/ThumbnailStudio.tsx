@@ -18,14 +18,21 @@ import {
  ToolboxScaffold,
  SubToolbox,
  StandardInput,
- StandardUploadBox,
  StandardTextArea,
  SubToolboxActionButton,
  SubToolboxGridActionButton,
  SubToolboxDropdownControl,
 } from "../components/Toolbox"
 import { PostActionReflection } from "../components/PostActionReflection"
-import { SubToolboxSegmentedToggle } from "../components/subtoolbox/SubToolboxPrimitives"
+import {
+ SubToolboxButton,
+ SubToolboxFileTarget,
+ SubToolboxIconButton,
+ SubToolboxSegmentedToggle,
+ SubToolboxSelect,
+ SubToolboxSelectableListRow,
+ SubToolboxSelectableTag,
+} from "../components/subtoolbox/SubToolboxPrimitives"
 import {
  addAssetVariant,
  createAssetVariantGroup,
@@ -463,12 +470,13 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        isOpenInitial={false}>
        <div className="grid grid-cols-3 gap-2">
         {THUMBNAIL_STYLES.map((style) => (
-         <button
+         <SubToolboxSelectableTag
           key={style}
-          onClick={() => handleStyleToggle(style)}
-          className={`px-2 py-2 border-[2px] border-black rounded-lg font-black uppercase text-[9px] shadow-[2px_2px_0px_0px_black] active:translate-y-0.5 active:shadow-none transition-all ${selectedStyles.includes(style) ? "bg-[#FFE357]" : "bg-white"}`}>
+          level="l1"
+          selected={selectedStyles.includes(style)}
+          onClick={() => handleStyleToggle(style)}>
           {style}
-         </button>
+         </SubToolboxSelectableTag>
         ))}
        </div>
       </SubToolbox>
@@ -480,16 +488,15 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        isOpenInitial={false}>
        <div className="grid grid-cols-2 gap-2">
         {EXPRESSIONS.map((expr) => (
-         <button
+         <SubToolboxSelectableListRow
           key={expr.id}
+          level="l1"
+          selected={expression === expr.id}
+          leading={<span className="text-xl">{expr.emoji}</span>}
+          title={expr.label}
+          detail={`${expr.stat} · ${expr.niche}`}
           onClick={() => setExpression(expression === expr.id ? "none" : expr.id)}
-          className={`p-3 border-[2px] border-black rounded-lg text-left transition-all active:translate-y-0.5 active:shadow-none ${expression === expr.id ? "bg-[#FFE357] shadow-[3px_3px_0px_0px_black]" : "bg-white shadow-[2px_2px_0px_0px_black]"}`}>
-          <div className="flex items-center gap-2 mb-1">
-           <span className="text-xl">{expr.emoji}</span>
-           <span className="font-[1000] uppercase text-[10px] tracking-tight">{expr.label}</span>
-          </div>
-          <p className="text-[8px] font-black text-black/40 uppercase">{expr.stat} · {expr.niche}</p>
-         </button>
+         />
         ))}
        </div>
       </SubToolbox>
@@ -529,22 +536,25 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        icon={<CustomIcon name="image" size={20} />}
        isOpenInitial={false}>
        <div className="space-y-4">
-        <StandardUploadBox
-          label="DROP FILES OR CLICK TO UPLOAD\nUpload Images"
-          minHeight="112px"
-          iconBgColor="#00CCFF"
-          onUpload={(files) => {
-           if (files) {
-            const news = Array.from(files).map((f) => ({
-             id: crypto.randomUUID(),
-             file: f,
-             previewUrl: URL.createObjectURL(f),
-             usageType: "background",
-            }))
-            setReferenceImages((prev) => [...prev, ...news])
-           }
-          }}
-         />
+        <SubToolboxFileTarget
+         level="l1"
+         label="Upload Images"
+         icon={<CustomIcon name="image" size={28} />}
+         accept="image/*"
+         multiple
+         minHeight={112}
+         onFiles={(files) => {
+          if (files) {
+           const news = Array.from(files).map((f) => ({
+            id: crypto.randomUUID(),
+            file: f,
+            previewUrl: URL.createObjectURL(f),
+            usageType: "background",
+           }))
+           setReferenceImages((prev) => [...prev, ...news])
+          }
+         }}
+        />
         <div className="grid grid-cols-1 gap-2">
          {referenceImages.map((img) => (
           <div
@@ -555,17 +565,16 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
             className="w-10 h-10 object-cover border-[2px] border-black rounded-md"
             alt="ref"
            />
-           <select className="vt-input-standard flex-1 p-1 text-[9px] font-black uppercase border-[2px] rounded-md">
+           <SubToolboxSelect controlSize="micro" className="flex-1" defaultValue="Background" aria-label="Reference image usage">
             <option>Background</option>
             <option>Subject</option>
-           </select>
-           <button
-            onClick={() =>
-             setReferenceImages((prev) => prev.filter((i) => i.id !== img.id))
-            }
-            className="text-xl font-black px-2 hover:text-red-500 transition-colors">
-            ×
-           </button>
+           </SubToolboxSelect>
+           <SubToolboxIconButton
+            level="l1"
+            ariaLabel="Remove reference image"
+            icon={<span aria-hidden="true">×</span>}
+            onClick={() => setReferenceImages((prev) => prev.filter((i) => i.id !== img.id))}
+           />
           </div>
          ))}
         </div>
@@ -692,22 +701,22 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
       </div>
 
       {generatedImage && (
-       <button
-        onClick={() => setShowSquintTest(!showSquintTest)}
-        className={`w-full py-3 border-[3px] border-black rounded-xl font-[1000] text-[11px] uppercase tracking-tight transition-all shadow-[3px_3px_0px_0px_black] active:translate-y-0.5 active:shadow-none ${showSquintTest ? "bg-[#00CCFF] text-black" : "bg-white text-black/50 hover:text-black"}`}>
+       <SubToolboxButton
+        level="l1"
+        tone="neutral"
+        selected={showSquintTest}
+        onClick={() => setShowSquintTest(!showSquintTest)}>
         📱 {showSquintTest ? "HIDE SQUINT TEST" : "SQUINT TEST (130px)"}
-       </button>
+       </SubToolboxButton>
       )}
 
       {!hasGeminiKey() ? (
-       <button
+       <SubToolboxGridActionButton
+        label="Missing API Key: Settings"
+        iconName="zap"
+        tone="yellow"
         onClick={() => (window.location.href = "/settings")}
-        className="w-full h-14 bg-black border-[4px] border-black rounded-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.01] active:scale-[0.98] shadow-[6px_6px_0px_0px_#FFDD00] hover:shadow-[6px_6px_0px_0px_white] translate-y-0 hover:translate-y-1 hover:translate-x-1">
-        <CustomIcon name="zap" size={24} className="text-[#FFDD00]" />
-        <span className="text-[20px] sm:text-[24px] font-[1000] uppercase tracking-tighter text-[#FFDD00] leading-none mt-[-2px]">
-         MISSING API KEY: SETTINGS
-        </span>
-       </button>
+       />
       ) : (
        <SubToolboxGridActionButton
         label={genLoading ? "Creating..." : "Generate Art"}
@@ -773,12 +782,13 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
 
        </div>
       </div>
-      <button
+      <SubToolboxGridActionButton
+       label={analyzeLoading ? "Scanning..." : "Scan Potential"}
+       iconName="search"
+       tone="yellow"
        onClick={handleAnalyze}
        disabled={!analysisFile || analyzeLoading}
-       className="w-full h-20 border-[6px] border-black bg-[#FFDD00] shadow-[8px_8px_0px_0px_black] rounded-2xl text-4xl font-[1000] uppercase tracking-tighter text-black hover:shadow-none hover:translate-y-1 transition-all disabled:opacity-50">
-       {analyzeLoading ? "SCANNING..." : "SCAN POTENTIAL"}
-      </button>
+      />
      </div>
      <div className="flex-1 bg-gray-50 rounded-2xl border-[4px] border-black p-6">
       <div className="flex items-center justify-between gap-3 mb-4">
