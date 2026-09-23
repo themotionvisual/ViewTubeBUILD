@@ -375,11 +375,11 @@ The compact view is a manifestation of the full ContentBuild lifecycle, not a se
 
 ---
 
-## 9. Simplified Asset Engine target
+## 9. Simplified Asset Engine
 
-The donor `ProjectAssetEngineSimple.tsx` is a strong starting point.
+The Simple Asset Engine is now merged and should remain a compact manifestation of the canonical ContentBuild rather than a second state machine or second asset store.
 
-Its seven lifecycle cards should be retained, then expanded into a compact asset-state instrument.
+Its seven lifecycle cards remain the creator-facing lifecycle, while durable asset slots expose the current ContentBuild selections, variants and versions.
 
 ### Required asset slots
 
@@ -570,7 +570,7 @@ Do not create the Project and leave its ContentBuild/Video Package identity for 
 
 ---
 
-## 13. Video Package integration gap
+## 13. Video Package integration and repository authority
 
 The Video Package contract is already capable of correct identity:
 
@@ -586,19 +586,22 @@ CreateVideoPackageInput {
 
 The project creation path must use this.
 
-### Current gap
+### Current state
 
-Project -> ContentBuild bridging is implemented, and Video Package -> ContentBuild bridging is implemented, but the Project Builder creation flow does not yet guarantee one initialized project-scoped Video Package against the same ContentBuild.
+PR #309 added the deterministic Project -> Video Package bridge. PR #313 then hardened the repository so every validated Video Package save requires a canonical `contentBuildId`, rejects cross-ContentBuild Project conflicts, automatically synchronizes package assets back into ContentBuild, and reads canonical ContentBuild selections back as package projections.
 
-### Intended fix
+The remaining repository gap is persistence authority: browser storage is still a compatibility adapter. A server-backed repository may replace it later without changing the Project/ContentBuild/Video Package identity contract.
 
-Add one Project/VideoPackage bridge or creation service that:
+### Required invariant
 
-- resolves the Project's ContentBuild,
-- finds an existing Video Package for `projectId + contentBuildId`,
-- otherwise creates one with the existing ContentBuild ID,
-- persists it through the current canonical package owner,
-- never forks identity silently.
+The package repository must:
+
+- resolve the Project's existing ContentBuild identity,
+- reuse the existing Project package for `projectId + contentBuildId`,
+- reject silent ContentBuild forks,
+- synchronize package artifacts into ContentBuild,
+- project canonical selections back into package reads,
+- preserve recovery data when stored package records are malformed.
 
 ---
 
@@ -693,8 +696,8 @@ The purpose is to know not only what was published, but **which exact assets and
 ## 17. Current bugs / architectural gaps
 
 ### Projects page fragmentation
-**Status:** OPEN  
-Six independent top-level tools currently divide one workflow.
+**Status:** RESOLVED / PR #302  
+The Projects page now uses Project Builder + Project Board/Calendar + Storyboard Studio as its top-level hierarchy. Former Channel Planning, full Asset Engine, Publishing Schedule and legacy Project Studio capabilities are embedded or routed from those owners rather than mounted as competing top-level toolboxes.
 
 ### Header toggle placement
 **Status:** MERGED / PR #309  
@@ -762,6 +765,9 @@ Project Builder and Board must use current canonical Toolbox/Subtoolbox primitiv
 | Project -> same-ContentBuild Video Package bridge | MERGED | PR #309 |
 | Simple Asset Engine durable asset slots | MERGED | PR #309 |
 | Compact Publishing Package readiness summary | MERGED | PR #309 |
+| Video Package repository strict ContentBuild ownership + automatic synchronization | MERGED | PR #313 |
+| Canonical ContentBuild -> Video Package selection projection | MERGED | PR #313 |
+| Explicit package selection/finalization semantics | MERGED | PR #311/#313 follow-up |
 | Canonical Vault-backed Project thumbnail selection | MERGED | PR #312 |
 | ContentBuild-first thumbnail ownership + URL-to-Vault import | FEATURE BRANCH / VERIFY | current thumbnail-continuity follow-up |
 
@@ -885,6 +891,7 @@ Whenever this system changes:
 | 2026-09-22 | Expanded Simple Asset Engine with durable asset-slot states | MERGED PR #309 |
 | 2026-09-22 | Added compact Publishing Package readiness and blocker summary | MERGED PR #309 |
 | 2026-09-22 | PR #309 merged Project Builder header controls, schedule context, package identity and Simple Asset Engine expansion | MERGED |
+| 2026-09-22 | PR #313 made Video Package saves strict, recoverable and automatically synchronized with ContentBuild selections | MERGED |
 | 2026-09-22 | Added Vault-backed thumbnail selection with ContentBuild + Video Package synchronization | MERGED PR #312 |
 | 2026-09-22 | Hardened thumbnail flow so ContentBuild remains authoritative without channel scope and legacy URLs can become Vault assets | FEATURE BRANCH |
 
