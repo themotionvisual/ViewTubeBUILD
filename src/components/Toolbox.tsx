@@ -44,7 +44,7 @@ interface IconRailProps {
 
 const IconRail: React.FC<IconRailProps> = ({ backgroundColor, stroke = 2, children }) => (
   <div
-    className="h-full flex items-center justify-center shrink-0 transition-all duration-500"
+    className={`h-full flex items-center justify-center shrink-0 transition-all ${SHELL_COLLAPSE_TRANSITION}`}
     style={{
       width: `var(--vt-subtoolbox-header-height, ${CONTROL_SHELL.headerHeight}px)`,
       backgroundColor,
@@ -360,7 +360,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
 
         {(subtitle || helpText || (helpGuide && helpGuide.length > 0)) && (
           <div
-            className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            className={`grid transition-[grid-template-rows,opacity] ${SHELL_COLLAPSE_TRANSITION} ${
               showHelpRail ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
             }`}
             style={{ marginTop: 0 }}
@@ -766,7 +766,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
 
       {(subtitle || helpText) && (
         <div
-          className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          className={`grid transition-[grid-template-rows,opacity] ${SHELL_COLLAPSE_TRANSITION} ${
             showHelpRail ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
           }`}
           style={{ marginTop: 0 }}
