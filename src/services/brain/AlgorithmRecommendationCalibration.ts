@@ -79,7 +79,7 @@ export const buildAlgorithmRecommendationCalibration = (channelId: string): Algo
 
  const commands = new Map<string, { measured: number; positive: number; negative: number }>()
  rows.forEach(({ recommendation, evaluation }) => {
-  const command = String(recommendation?.metadata?.command || recommendation?.metadata?.recommendation?.command || "unknown")
+  const command = recommendationCommandOf(recommendation)
   const bucket = commands.get(command) || { measured: 0, positive: 0, negative: 0 }
   bucket.measured += 1
   if (evaluation.status === "positive") bucket.positive += 1
