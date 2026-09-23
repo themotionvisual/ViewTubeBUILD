@@ -407,7 +407,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
        <strong className="block truncate text-[11px] font-[1000] uppercase leading-tight">{queueSummary.nextLabel}</strong>
        <span className="block truncate text-[7px] font-bold uppercase tracking-[0.03em] text-black/50">{queueSummary.nextMessage}</span>
       </div>
-      <div className="min-w-0 border-l-[2px] border-black bg-[#f4f4f4] px-2.5 py-1.5 sm:border-l-0">
+      <div className="min-w-0 bg-[#f4f4f4] px-2.5 py-1.5">
        <span className="block text-[8px] font-black uppercase tracking-[0.1em] text-black/55">Last update</span>
        <strong className="block truncate text-[11px] font-[1000] uppercase leading-tight">{formatLastSync(latestDatasetAt)}</strong>
       </div>
