@@ -266,6 +266,7 @@ export const projectContentBuildSelectionsToVideoPackage = (
 
  return {
   ...videoPackage,
+  contentBuildRevision: build.revision,
   packaging: {
    ...videoPackage.packaging,
    titleVariants,
