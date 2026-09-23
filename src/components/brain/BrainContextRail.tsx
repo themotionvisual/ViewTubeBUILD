@@ -10,6 +10,7 @@ import type { AIBrainContextSnapshot } from "../../services/aiBrainCommandInterf
 import { sanitizeCreatorFacingBrainCopy } from "../../services/aiBrainConversationStore"
 import { BrainQuestionPrompt } from "./BrainQuestionPrompt"
 import { BrainQuickActionCard } from "./BrainAnswerModules"
+import { BrainEvaluationInboxPanel } from "./BrainEvaluationInboxPanel"
 
 const Panel: React.FC<{ title: string; tone: string; children: React.ReactNode }> = ({
  title,
@@ -36,6 +37,7 @@ const Panel: React.FC<{ title: string; tone: string; children: React.ReactNode }
  * both places is what previously made this surface feel repetitive and endless.
  */
 export const BrainContextRail: React.FC<{
+ channelId?: string | null
  snapshot: AIBrainContextSnapshot
  growthContext: CreatorGrowthContext
  insights: CreatorInitialInsight[]
@@ -47,6 +49,7 @@ export const BrainContextRail: React.FC<{
  onAnswerQuestion: (question: CreatorBrainLearningQuestion, answer: string) => void
  compactGrid?: boolean
 }> = ({
+ channelId = null,
  snapshot,
  growthContext,
  insights,
@@ -94,6 +97,12 @@ export const BrainContextRail: React.FC<{
      {goal || "Not set. Tell me what matters most this month."}
     </p>
    </Panel>
+
+   <BrainEvaluationInboxPanel
+    channelId={channelId}
+    maximumItems={compactGrid ? 3 : 5}
+    compact={compactGrid}
+   />
 
    {quickActions.length ? (
     <Panel title="Do this next" tone="#C0F240">
