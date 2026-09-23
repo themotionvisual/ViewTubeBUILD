@@ -1,6 +1,15 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import type { Project, VaultAsset } from "../../types"
-import { clearProjectVideoPackageThumbnail, ensureVideoPackageForProject, selectProjectVideoPackageThumbnail } from "./ProjectVideoPackageBridge"
+import {
+  createContentBuild,
+  getContentBuild,
+  resetContentBuildRepositoryForTests,
+} from "../asset-engine/ContentBuildRepository"
+import {
+  clearProjectVideoPackageThumbnail,
+  ensureVideoPackageForProject,
+  selectProjectVideoPackageThumbnail,
+} from "./ProjectVideoPackageBridge"
 import {
   findVideoPackageByProject,
   listVideoPackages,
@@ -16,9 +25,25 @@ const project = (contentBuildId = "cb-a"): Project => ({
   plan: { concept: "A test concept", niche: "History", format: "long" },
 })
 
+const thumbnailAsset = (): VaultAsset => ({
+  id: "vault-thumb-a",
+  name: "Thumbnail A",
+  kind: "image",
+  source: "generated",
+  createdAt: 1,
+  updatedAt: 1,
+  projectId: "project-a",
+  projectName: "Project A",
+  tags: ["thumbnail"],
+  url: "https://example.com/thumb.jpg",
+  previewUrl: "https://example.com/thumb-preview.jpg",
+})
+
 describe("Project Video Package bridge", () => {
   beforeEach(() => {
     resetVideoPackageRepositoryForTests()
+    resetContentBuildRepositoryForTests()
+    createContentBuild({ id: "cb-a", legacyProjectId: "project-a", legacyProjectName: "Project A" })
   })
 
   it("creates one package on the Project ContentBuild identity", () => {
@@ -55,54 +80,14 @@ describe("Project Video Package bridge", () => {
     expect(listVideoPackages()).toHaveLength(0)
   })
 
-  it("clears the selected package thumbnail without deleting the candidate variant", () => {
-    const asset: VaultAsset = {
-      id: "vault-thumb-a",
-      name: "Thumbnail A",
-      kind: "image",
-      source: "generated",
-      createdAt: 1,
-      updatedAt: 1,
-      projectId: "project-a",
-      projectName: "Project A",
-      tags: ["thumbnail"],
-      url: "https://example.com/thumb.jpg",
-    }
-    selectProjectVideoPackageThumbnail(project(), asset, { channelId: "channel-a" })
-
-    const cleared = clearProjectVideoPackageThumbnail(project(), {
-      sourceToolId: "project-builder",
-      now: "2026-09-22T20:22:00.000Z",
-    })
-
-    expect(cleared?.packaging.selectedThumbnailId).toBeNull()
-    expect(cleared?.packaging.thumbnailVariants).toContainEqual(expect.objectContaining({
-      id: "thumbnail:vault-thumb-a",
-      vaultAssetId: "vault-thumb-a",
-    }))
-  })
-
-  it("selects a Vault thumbnail into the package without forking ContentBuild identity", () => {
-    const asset: VaultAsset = {
-      id: "vault-thumb-a",
-      name: "Thumbnail A",
-      kind: "image",
-      source: "generated",
-      createdAt: 1,
-      updatedAt: 1,
-      projectId: "project-a",
-      projectName: "Project A",
-      tags: ["thumbnail"],
-      url: "https://example.com/thumb.jpg",
-      previewUrl: "https://example.com/thumb-preview.jpg",
-    }
-
-    const updated = selectProjectVideoPackageThumbnail(project(), asset, {
+  it("selects a Vault thumbnail into ContentBuild and Video Package without forking identity", () => {
+    const updated = selectProjectVideoPackageThumbnail(project(), thumbnailAsset(), {
       channelId: "channel-a",
       sourceToolId: "project-builder",
       now: "2026-09-22T20:20:00.000Z",
     })
 
+    expect(getContentBuild("cb-a")?.selections.thumbnail).toBe("vault-thumb-a")
     expect(updated?.contentBuildId).toBe("cb-a")
     expect(updated?.packaging.selectedThumbnailId).toBe("thumbnail:vault-thumb-a")
     expect(updated?.packaging.thumbnailVariants).toContainEqual(expect.objectContaining({
@@ -111,5 +96,32 @@ describe("Project Video Package bridge", () => {
       kind: "thumbnail",
     }))
     expect(listVideoPackages()).toHaveLength(1)
+  })
+
+  it("still selects the canonical ContentBuild thumbnail when channel package scope is unavailable", () => {
+    const updated = selectProjectVideoPackageThumbnail(project(), thumbnailAsset(), {
+      channelId: null,
+      sourceToolId: "project-builder",
+    })
+
+    expect(updated).toBeNull()
+    expect(getContentBuild("cb-a")?.selections.thumbnail).toBe("vault-thumb-a")
+    expect(listVideoPackages()).toHaveLength(0)
+  })
+
+  it("clears package selection and canonical ContentBuild selection without deleting the candidate variant", () => {
+    selectProjectVideoPackageThumbnail(project(), thumbnailAsset(), { channelId: "channel-a" })
+
+    const cleared = clearProjectVideoPackageThumbnail(project(), {
+      sourceToolId: "project-builder",
+      now: "2026-09-22T20:22:00.000Z",
+    })
+
+    expect(getContentBuild("cb-a")?.selections.thumbnail).toBeNull()
+    expect(cleared?.packaging.selectedThumbnailId).toBeNull()
+    expect(cleared?.packaging.thumbnailVariants).toContainEqual(expect.objectContaining({
+      id: "thumbnail:vault-thumb-a",
+      vaultAssetId: "vault-thumb-a",
+    }))
   })
 })
