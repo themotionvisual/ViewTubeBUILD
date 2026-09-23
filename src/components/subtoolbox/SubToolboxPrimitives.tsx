@@ -1,5 +1,6 @@
 import React from "react"
 import { createPortal } from "react-dom"
+import { CircleQuestionMark } from "lucide-react"
 import "../../styles/toolbox-entry.css"
 import { getComponentLevelCssVars } from "./tokens"
 import type { SubToolboxControlSize, SubToolboxState, ToolboxControlLevel } from "./tokens"
@@ -45,6 +46,89 @@ export interface SubToolboxIconButtonProps extends React.ButtonHTMLAttributes<HT
 }
 export const SubToolboxIconButton: React.FC<SubToolboxIconButtonProps> = ({ level = "l0", icon, ariaLabel, className, style, type = "button", ...props }) => (
   <button type={type} aria-label={ariaLabel} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} className={classes("vt-subtoolbox-icon-button", className)} {...props}>{icon}</button>
+)
+
+export type ToolboxHeaderPrimitiveLevel = "toolbox" | "subtoolbox"
+
+export interface ToolboxHeaderIconRailProps extends React.HTMLAttributes<HTMLDivElement> {
+  level?: ToolboxHeaderPrimitiveLevel
+  backgroundColor?: string
+  children: React.ReactNode
+}
+export const ToolboxHeaderIconRail: React.FC<ToolboxHeaderIconRailProps> = ({
+  level = "toolbox",
+  backgroundColor,
+  className,
+  style,
+  children,
+  ...props
+}) => (
+  <div
+    data-vt-header-icon-rail={level}
+    className={classes("vt-toolbox-header-icon-rail", `is-${level}`, className)}
+    style={{ ...style, backgroundColor }}
+    {...props}
+  >
+    {children}
+  </div>
+)
+
+export interface ToolboxHeaderTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  level?: ToolboxHeaderPrimitiveLevel
+  children: React.ReactNode
+}
+export const ToolboxHeaderTitle: React.FC<ToolboxHeaderTitleProps> = ({
+  level = "toolbox",
+  className,
+  children,
+  ...props
+}) => level === "toolbox"
+  ? <h1 className={classes("vt-toolbox-title", "vt-toolbox-header-title", "is-toolbox", className)} {...props}>{children}</h1>
+  : <h3 className={classes("vt-subtoolbox-title", "vt-toolbox-header-title", "is-subtoolbox", className)} {...props}>{children}</h3>
+
+export interface ToolboxHeaderHelpButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  level?: ToolboxHeaderPrimitiveLevel
+}
+export const ToolboxHeaderHelpButton: React.FC<ToolboxHeaderHelpButtonProps> = ({
+  level = "toolbox",
+  className,
+  type = "button",
+  ...props
+}) => (
+  <button
+    type={type}
+    data-vt-toolbox-help={level === "toolbox" ? "true" : undefined}
+    data-vt-subtoolbox-help={level === "subtoolbox" ? "true" : undefined}
+    className={classes("vt-toolbox-header-control", "vt-toolbox-header-help", `is-${level}`, className)}
+    {...props}
+  >
+    <span><CircleQuestionMark aria-hidden="true" /></span>
+  </button>
+)
+
+export interface ToolboxHeaderCollapseButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  level?: ToolboxHeaderPrimitiveLevel
+  open: boolean
+  icon: React.ReactNode
+}
+export const ToolboxHeaderCollapseButton: React.FC<ToolboxHeaderCollapseButtonProps> = ({
+  level = "toolbox",
+  open,
+  icon,
+  className,
+  type = "button",
+  ...props
+}) => (
+  <button
+    type={type}
+    data-vt-toolbox-toggle={level === "toolbox" ? "true" : undefined}
+    data-vt-subtoolbox-toggle={level === "subtoolbox" ? "true" : undefined}
+    aria-expanded={open}
+    className={classes("vt-toolbox-header-control", "vt-toolbox-header-collapse", `is-${level}`, className)}
+    {...props}
+  >
+    {icon}
+  </button>
 )
 
 export interface ToolboxHeaderToggleOption {
