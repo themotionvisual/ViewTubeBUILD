@@ -2227,8 +2227,8 @@
 .vt-toolbox-header-collapse.is-subtoolbox svg { width:34px;height:34px; }
 
 @media (max-width:767px) {
-  .vt-toolbox-header-icon-rail.is-toolbox { width:68px; }
-  .vt-toolbox-header-icon-rail.is-subtoolbox { width:50px; }
+  .vt-toolbox-header-icon-rail.is-toolbox { width:56px; }
+  .vt-toolbox-header-icon-rail.is-subtoolbox { width:44px; }
   .vt-toolbox-header-help.is-toolbox,
   .vt-toolbox-header-collapse.is-toolbox { width:40px; min-width:40px; }
   .vt-toolbox-header-help.is-toolbox>span { width:36px;height:36px;box-shadow:3px 3px 0 0 #000; }

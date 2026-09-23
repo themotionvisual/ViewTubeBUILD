@@ -84,6 +84,19 @@ export const TOOLBOX_LEVEL_DNA = {
  * tight lines; action rails never shrink. Toolbox and SubToolbox header icons
  * share one visual box/stroke contract even when the glyph source differs.
  */
+export const TOOLBOX_MOBILE_HEADER_DNA = {
+  toolbox: {
+    height: 56,
+    radius: 14,
+    shadowOffset: 6,
+  },
+  subtoolbox: {
+    height: 44,
+    radius: 10,
+    shadowOffset: 4,
+  },
+} as const
+
 export const TOOLBOX_HEADER_DNA = {
   toolbox: {
     height: TOOLBOX_LEVEL_DNA.toolbox.height,

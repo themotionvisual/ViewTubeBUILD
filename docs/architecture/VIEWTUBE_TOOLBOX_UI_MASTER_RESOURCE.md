@@ -257,6 +257,7 @@ Editor timeline controls are a separate system. Reuse tokens selectively; do not
 | 2026-09-14 | Analytics split-left anatomy merged PR #207; regression assertions merged PR #211 | IMPLEMENTED / TEST-CERTIFIED |
 | 2026-09-14 | Main Toolbox header 56px/28px; Subtoolbox 44px/22px | SUPERSEDED / HISTORICAL PR #215 |
 | 2026-09-22 | Main Toolbox 80px/26px; Subtoolbox 56px/20px; L1 48px/18px; L2 32px/12px | CURRENT AUTHORITY / VISUAL CERTIFICATION REQUIRED |
+| 2026-09-22 | Mobile-only shell density: Main Toolbox 56px / 14px radius / 6px shadow; SubToolbox 44px / 10px radius / 4px shadow; 26px/20px title sizes unchanged | CURRENT MOBILE AUTHORITY / VISUAL CERTIFICATION REQUIRED |
 | 2026-09-14 | Separate Compact Subtoolbox shell geometry eliminated | SUPERSEDED / PR #215 |
 | 2026-09-14 | T1 paired-height equation 20 + 4 + 20 = 44 | SUPERSEDED / HISTORICAL |
 | 2026-09-22 | T1 paired-height equation becomes 26 + 4 + 26 = 56 | CURRENT |
@@ -265,7 +266,7 @@ Editor timeline controls are a separate system. Reuse tokens selectively; do not
 | 2026-09-14 | `studio-ui/tokens.ts` still read the `compactShell` geometry removed by PR #215, so `STUDIO_TOKENS` threw on load and every Studio Hub render failed; compact aliases now resolve to the single canonical shell | REGRESSION FIXED |
 | 2026-09-14 | Header divider spans the full header width, icon rail included | CURRENT |
 | 2026-09-14 | Phone-only 36px/30px shell geometry | SUPERSEDED / HISTORICAL |
-| 2026-09-22 | Mobile preserves canonical shell hierarchy: T0 80px and T1 56px; square rail follows row height; titles may wrap to two lines | CURRENT / VISUAL CERTIFICATION REQUIRED |
+| 2026-09-22 | Mobile density revised from screenshot certification: T0 56px and T1 44px; square rail follows row height; 26px/20px titles remain and may wrap to two lines | CURRENT / VISUAL CERTIFICATION REQUIRED |
 | 2026-09-14 | Toolbox/SubToolbox title columns carry `min-w-0`; flex `min-width:auto` was overflowing the phone viewport | REGRESSION FIXED |
 | 2026-09-14 | Landscape edge-rail navigation keys off the shell's own 760px mobile breakpoint, not a separate `max-height: 560px` test | REGRESSION FIXED |
 | 2026-09-14 | Diagnostic overlay is opt-in from Navigation → Diagnostics; DIAG and Brain launchers do not render on phones | CURRENT |

@@ -486,30 +486,30 @@
    ========================================================================== */
 @media (max-width: 767px) {
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) {
-    --vt-toolbox-header-height: 68px;
+    --vt-toolbox-header-height: 56px;
     --vt-toolbox-radius: 14px;
-    --vt-toolbox-shadow-offset: 7px;
+    --vt-toolbox-shadow-offset: 6px;
   }
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) {
     border-radius: 14px !important;
   }
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-    height: 68px !important;
-    min-height: 68px !important;
-    max-height: 68px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
   }
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-    width: 68px !important;
-    min-width: 68px !important;
-    max-width: 68px !important;
-    height: 68px !important;
-    flex-basis: 68px !important;
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    height: 56px !important;
+    flex-basis: 56px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"],
   [data-vt-toolbox-level="sub"],
   [data-vt-subtoolbox-module="true"] {
-    --vt-subtoolbox-header-height: 50px;
+    --vt-subtoolbox-header-height: 44px;
     --vt-subtoolbox-radius: 10px;
     --vt-subtoolbox-shadow-offset: 4px;
   }
@@ -517,16 +517,16 @@
     border-radius: 10px !important;
   }
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
-    height: 50px !important;
-    min-height: 50px !important;
-    max-height: 50px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
   }
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child {
-    width: 50px !important;
-    min-width: 50px !important;
-    max-width: 50px !important;
-    height: 50px !important;
-    flex-basis: 50px !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    height: 44px !important;
+    flex-basis: 44px !important;
   }
 
   /* Main header actions must never be visually weaker than SubToolbox actions. */
@@ -569,20 +569,20 @@
 @media (max-width: 767px) {
   [data-vt-split-left],
   .vt-split-left-module-action {
-    min-height: 50px !important;
-    height: 50px !important;
-    font-size: 18px !important;
+    min-height: 44px !important;
+    height: 44px !important;
+    font-size: 20px !important;
   }
   [data-vt-split-left] > [data-vt-split-left-rail],
   .vt-split-left-module-action > [data-vt-split-left-rail] {
-    width: 50px !important;
-    min-width: 50px !important;
-    height: 50px !important;
-    flex-basis: 50px !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    flex-basis: 44px !important;
   }
   [data-vt-split-left] > [data-vt-split-left-label],
   .vt-split-left-module-action > [data-vt-split-left-label] {
-    font-size: 18px !important;
+    font-size: 20px !important;
     line-height: .88 !important;
     white-space: normal !important;
     text-wrap: balance;
