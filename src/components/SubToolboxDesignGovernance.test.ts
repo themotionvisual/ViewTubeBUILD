@@ -41,9 +41,9 @@ describe("subtoolbox design governance", () => {
   const primitives = source("src/components/subtoolbox/SubToolboxPrimitives.tsx")
   const catalog = source("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
 
-  expect(toolboxCss).toContain("--vt-toolbox-header-height: 68px")
-  expect(toolboxCss).toContain("--vt-subtoolbox-header-height: 50px")
-  expect(toolboxCss).toContain("--vt-toolbox-shadow-offset: 7px")
+  expect(toolboxCss).toContain("--vt-toolbox-header-height: 56px")
+  expect(toolboxCss).toContain("--vt-subtoolbox-header-height: 44px")
+  expect(toolboxCss).toContain("--vt-toolbox-shadow-offset: 6px")
   expect(toolboxCss).toContain("--vt-subtoolbox-shadow-offset: 4px")
   expect(toolboxCss).toContain("--vt-toolbox-radius: 14px")
   expect(toolboxCss).toContain("--vt-subtoolbox-radius: 10px")
@@ -105,6 +105,18 @@ describe("subtoolbox design governance", () => {
   expect(css).toContain("box-shadow: none !important")
   expect(toolboxCss).toContain(".vt-subtoolbox-inset")
   expect(toolboxCss).toContain("padding: 4px 4px 0 !important")
+ })
+
+ it("keeps Thumbnail Studio primitive-native in the mobile density pass", () => {
+  const thumbnail = source("src/views/ThumbnailStudio.tsx")
+
+  expect(thumbnail).not.toContain("<button")
+  expect(thumbnail).not.toContain("<select")
+  expect(thumbnail).not.toContain("StandardUploadBox")
+  expect(thumbnail).toContain("SubToolboxFileTarget")
+  expect(thumbnail).toContain("SubToolboxSelectableTag")
+  expect(thumbnail).toContain("SubToolboxSelectableListRow")
+  expect(thumbnail).toContain('label={analyzeLoading ? "Scanning..." : "Scan Potential"}')
  })
 
  it("keeps the compact inner-control hierarchy below the subtoolbox shell", () => {
