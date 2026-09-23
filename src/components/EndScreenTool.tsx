@@ -190,7 +190,7 @@ export const EndScreenTool: React.FC = () => {
   return (
     <div className="w-full animate-fade-in bg-white relative">
       {history.length > 0 && (
-        <div className="w-full mb-8 flex gap-6 overflow-x-auto pb-4 custom-scrollbar">
+        <div className="w-full mb-2 sm:mb-4 lg:mb-8 flex gap-2 sm:gap-4 lg:gap-6 overflow-x-auto pb-2 sm:pb-4 custom-scrollbar">
           {history.map((item) => (
             <div
               key={item.id}
@@ -209,8 +209,8 @@ export const EndScreenTool: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch h-full">
-        <div className="flex flex-col h-full gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4 lg:gap-8 items-stretch h-full">
+        <div className="flex flex-col h-full gap-2 sm:gap-4 lg:gap-6">
           <SubToolbox
             collapsible
             title="Concept & Layout"
@@ -364,8 +364,8 @@ export const EndScreenTool: React.FC = () => {
           </SubToolbox>
         </div>
 
-        <div className="flex flex-col h-full gap-6 min-h-0">
-          <div className="flex-1 min-h-0 w-full border-[2px] border-black bg-[#f1f5f9] rounded-[48px] shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-8 overflow-hidden transition-all duration-700">
+        <div className="flex flex-col h-full gap-2 sm:gap-4 lg:gap-6 min-h-0">
+          <div className="flex-1 min-h-[220px] sm:min-h-[300px] lg:min-h-0 w-full border-[2px] border-black bg-[#f1f5f9] rounded-[20px] sm:rounded-[32px] lg:rounded-[48px] shadow-[5px_5px_0px_0px_black] sm:shadow-[8px_8px_0px_0px_black] lg:shadow-[12px_12px_0px_0px_black] relative flex items-center justify-center p-3 sm:p-5 lg:p-8 overflow-hidden transition-all duration-700">
             {generatedImage ? (
               <img
                 src={generatedImage}
@@ -373,11 +373,11 @@ export const EndScreenTool: React.FC = () => {
                 className="max-w-full max-h-full object-contain border-[2px] border-black rounded-3xl shadow-[8px_8px_0px_0px_black]"
               />
             ) : (
-              <div className="text-center p-12 bg-white border-[2px] border-black rounded-[48px] shadow-[8px_8px_0px_0px_black] w-full max-w-sm transform hover:scale-[1.02] transition-transform duration-500">
-                <div className="w-20 h-20 bg-[#FFB158] border-[2px] border-black rounded-full mx-auto mb-8 flex items-center justify-center shadow-[6px_6px_0px_0px_black] animate-pulse">
+              <div className="text-center p-5 sm:p-8 lg:p-12 bg-white border-[2px] border-black rounded-[20px] sm:rounded-[32px] lg:rounded-[48px] shadow-[4px_4px_0px_0px_black] sm:shadow-[6px_6px_0px_0px_black] lg:shadow-[8px_8px_0px_0px_black] w-full max-w-sm transform hover:scale-[1.02] transition-transform duration-500">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-[#FFB158] border-[2px] border-black rounded-full mx-auto mb-4 sm:mb-6 lg:mb-8 flex items-center justify-center shadow-[4px_4px_0px_0px_black] sm:shadow-[5px_5px_0px_0px_black] lg:shadow-[6px_6px_0px_0px_black] animate-pulse">
                   <CustomIcon name="!!!POST-VIDEO" size={32} />
                 </div>
-                <h3 className="text-4xl font-[1000] uppercase tracking-tighter text-black leading-none mb-4 italic">
+                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-[1000] uppercase tracking-tighter text-black leading-none mb-2 sm:mb-3 lg:mb-4 italic">
                   CANVAS STANDBY
                 </h3>
                 <p className="font-black text-black/20 uppercase tracking-[0.3em] text-[10px]">
