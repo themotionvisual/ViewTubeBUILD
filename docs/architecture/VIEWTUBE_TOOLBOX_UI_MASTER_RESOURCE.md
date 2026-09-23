@@ -104,7 +104,7 @@ Shells remain present for loading/empty/error/disconnected. Connection state and
 
 ## 11. Motion authority
 
-**MOTION AUTHORITY CONFLICT — REQUIRES RECONCILIATION.** Current Subtoolbox token evidence is 180ms control feedback and 300ms collapse/open. A documented 600ms direction is not current production Subtoolbox authority. Audit Toolbox, Subtoolbox, Widget and Dropdown motion independently. Reduced-motion mode remains required.
+**MOTION AUTHORITY — RECONCILED 2026-09-22.** Toolbox/Subtoolbox/module/disclosure open-close motion is 600ms ease-out. Micro-interactions such as hover, focus, toggle feedback and icon state changes remain faster at 150–300ms. Reduced-motion mode is required.
 
 ## 12. Responsive contract
 
@@ -252,8 +252,8 @@ Editor timeline controls are a separate system. Reuse tokens selectively; do not
 | 2026-09-13 | Structural level owns geometry | DEFINED |
 | 2026-09-13 | Added loose binary controls | IMPLEMENTING |
 | 2026-09-13 | Tight Reveal canonical upload | IMPLEMENTED |
-| 2026-09-13 | 600ms shell/module open-close documented as direction | SUPERSEDED / CONFLICT FOUND |
-| 2026-09-14 | Production Subtoolbox tokens verified at 300ms collapse and 180ms control | REGRESSION / OPEN ISSUE |
+| 2026-09-13 | 600ms shell/module open-close documented as direction | PROMOTED TO CURRENT AUTHORITY 2026-09-22 |
+| 2026-09-14 | Production Subtoolbox tokens verified at 300ms collapse and 180ms control | SUPERSEDED BY 2026-09-22 MOTION RECONCILIATION |
 | 2026-09-14 | Analytics split-left anatomy merged PR #207; regression assertions merged PR #211 | IMPLEMENTED / TEST-CERTIFIED |
 | 2026-09-14 | Main Toolbox header 56px/28px; Subtoolbox 44px/22px | SUPERSEDED / HISTORICAL PR #215 |
 | 2026-09-22 | Main Toolbox 80px/26px; Subtoolbox 56px/20px; L1 48px/18px; L2 32px/12px | CURRENT AUTHORITY / VISUAL CERTIFICATION REQUIRED |
@@ -326,7 +326,7 @@ Code changed without library -> REFERENCE LIBRARY UPDATE REQUIRED. Library outru
 For changed components record canonical name, family, levels, source, Reference Library section, states, palette/mobile/accessibility behavior, consumers, status, replacement, last verification and notes. Add dated decisions. Update affected pages with CURRENT STATE, WHAT CHANGED, WHAT REMAINS, NEXT SAFE MIGRATION, KNOWN REGRESSIONS and CERTIFICATION STATUS.
 
 ### 27.7 Motion
-Verify Toolbox, Subtoolbox, Widget, Dropdown and other disclosure motion independently. Do not assume 300ms or 600ms globally. If code/docs disagree, record MOTION AUTHORITY CONFLICT — REQUIRES RECONCILIATION.
+Verify Toolbox, Subtoolbox, module and disclosure shells at the 600ms open-close authority while keeping micro-interactions in the 150–300ms range. Dropdown-specific menu motion may remain faster where it is a micro-interaction rather than a shell disclosure. Reduced-motion behavior must remain intact.
 
 ### 27.8 Required output
 A. IMPORTANT INFORMATION FOUND  
