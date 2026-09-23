@@ -4,6 +4,7 @@ import {
   projectContentBuildSelectionsToVideoPackage,
   syncVideoPackageToContentBuild,
 } from "../asset-engine/VideoPackageContentBuildBridge"
+import { getContentBuild } from "../asset-engine/ContentBuildRepository"
 
 export const VIDEO_PACKAGE_STORAGE_KEY = "viewtube_video_packages_v1"
 export const VIDEO_PACKAGE_RECOVERY_KEY = "viewtube_video_packages_recovery_v1"
@@ -159,13 +160,30 @@ export const saveVideoPackage = (videoPackage: ViewTubeVideoPackage): ViewTubeVi
       `Project ${videoPackage.projectId} already has a Video Package scoped to a different ContentBuild (${conflictingProjectPackage.contentBuildId || "missing"}).`,
     )
   }
+
+  const currentBuild = getContentBuild(videoPackage.contentBuildId)
+  if (
+    currentBuild &&
+    videoPackage.contentBuildRevision !== undefined &&
+    videoPackage.contentBuildRevision !== currentBuild.revision
+  ) {
+    throw new Error(
+      `Stale Video Package ${videoPackage.id}: observed ContentBuild revision ${videoPackage.contentBuildRevision}, current revision is ${currentBuild.revision}. Refresh the Project before saving.`,
+    )
+  }
+
+  const syncedBuild = syncVideoPackageToContentBuild(videoPackage, { mode: "strict" })
+  const persistedPackage = projectContentBuildSelectionsToVideoPackage({
+    ...videoPackage,
+    contentBuildRevision: syncedBuild.revision,
+  })
+
   const index = packages.findIndex((candidate) => candidate.id === videoPackage.id)
   const next = index < 0
-    ? [...packages, videoPackage]
-    : packages.map((candidate, candidateIndex) => candidateIndex === index ? videoPackage : candidate)
+    ? [...packages, persistedPackage]
+    : packages.map((candidate, candidateIndex) => candidateIndex === index ? persistedPackage : candidate)
   writeStored(next)
-  syncVideoPackageToContentBuild(videoPackage, { mode: "strict" })
-  return videoPackage
+  return persistedPackage
 }
 
 export const resetVideoPackageRepositoryForTests = () => {
