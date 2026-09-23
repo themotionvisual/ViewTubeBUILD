@@ -26,7 +26,7 @@ const StudioHub: React.FC = () => {
   setStates((prev) => ({ ...prev, [id]: !prev[id] }))
 
  return (
-  <div className="flex flex-col space-y-6 max-w-[1500px] mx-auto pb-24">
+  <div className="flex flex-col space-y-2 sm:space-y-4 lg:space-y-6 max-w-[1500px] mx-auto pb-8 sm:pb-16 lg:pb-24">
    {/* Page Header */}
    <div className="mb-10 px-2 mt-4 text-center">
     <h2 className="text-7xl font-[1000] uppercase tracking-[calc(-0.06em)] leading-none text-black">
@@ -38,7 +38,7 @@ const StudioHub: React.FC = () => {
    </div>
 
    {/* Accordion Modules */}
-   <div className="space-y-6">
+   <div className="space-y-2 sm:space-y-4 lg:space-y-6">
     <React.Suspense fallback={null}>
      <ToolboxUIReferenceLibrary collapsible isOpenInitial={false} paletteIndex={7} />
     </React.Suspense>
