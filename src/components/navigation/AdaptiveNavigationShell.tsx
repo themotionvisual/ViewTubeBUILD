@@ -466,6 +466,27 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   }, [])
 
   useEffect(() => {
+    if (mobile || !workspaceUx.desktopKeyboardNavigation) return
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target instanceof Element ? event.target : null
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return
+      if (!(event.metaKey || event.ctrlKey) || !event.shiftKey || event.altKey) return
+
+      const index = Number(event.key) - 1
+      if (!Number.isInteger(index) || index < 0 || index >= PRIMARY_NAV_ITEMS.length) return
+
+      const item = PRIMARY_NAV_ITEMS[index]
+      event.preventDefault()
+      setAnnouncement(`Opening ${item.label}`)
+      navigate(item.path)
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [mobile, navigate, workspaceUx.desktopKeyboardNavigation])
+
+  useEffect(() => {
     if (!mobile || !workspaceUx.mobileNavigationAutoHide || hideMobileEditorChrome) {
       setMobileNavHidden(false)
       lastMobileScrollTopRef.current = mainViewportRef.current?.scrollTop || 0
