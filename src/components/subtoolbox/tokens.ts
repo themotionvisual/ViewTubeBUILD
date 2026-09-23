@@ -176,7 +176,7 @@ export const SUBTOOLBOX_TOKENS = {
   },
   motion: {
     controlMs: 180,
-    collapseMs: 300,
+    collapseMs: 600,
     easing: "ease-out",
   },
 } as const
@@ -194,7 +194,7 @@ export const CONTROL_SHELL = {
 } as const
 
 export const SUBTOOLBOX_COLLAPSE_TRANSITION =
-  "duration-300 ease-out motion-reduce:transition-none"
+  "duration-[600ms] ease-out motion-reduce:transition-none"
 
 export const resolveSubtoolboxMinHeight = (
   openUnits: number,

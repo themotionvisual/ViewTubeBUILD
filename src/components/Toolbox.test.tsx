@@ -44,7 +44,7 @@ describe("SubToolbox", () => {
   expect(open).toContain("border-bottom:var(--vt-subtoolbox-stroke, 4px) solid black")
   expect(closed).toContain("margin-top:calc(var(--vt-subtoolbox-stroke, 4px) * -1)")
   expect(open).toContain("margin-top:calc(var(--vt-subtoolbox-stroke, 4px) * -1)")
-  expect(closed).toContain("duration-300 ease-out motion-reduce:transition-none")
+  expect(closed).toContain("duration-[600ms] ease-out motion-reduce:transition-none")
  })
 
  it("is collapsible by default and keeps the canonical arrow", () => {
@@ -87,6 +87,6 @@ describe("ToolboxScaffold", () => {
   expect(html).toContain("padding-left:var(--vt-toolbox-content-padding, 4px)")
   expect(html).toContain("border-bottom:var(--vt-toolbox-stroke, 5px) solid black")
   expect(html).toContain("margin-top:calc(var(--vt-toolbox-stroke, 5px) * -1)")
-  expect(html).toContain("duration-300 ease-out motion-reduce:transition-none")
+  expect(html).toContain("duration-[600ms] ease-out motion-reduce:transition-none")
  })
 })
