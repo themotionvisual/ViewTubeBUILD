@@ -46,7 +46,6 @@ const readStored = (): ViewTubeVideoPackage[] => {
     try {
       localStorage.setItem(VIDEO_PACKAGE_RECOVERY_KEY, raw)
       localStorage.removeItem(VIDEO_PACKAGE_STORAGE_KEY)
-    localStorage.removeItem(VIDEO_PACKAGE_RECOVERY_KEY)
     } catch {
       // Preserve the in-memory fallback if browser storage cannot be repaired.
     }
@@ -99,18 +98,32 @@ export const findVideoPackageByProject = (
   })()
 
 export const saveVideoPackage = (videoPackage: ViewTubeVideoPackage): ViewTubeVideoPackage => {
+  if (!videoPackage.contentBuildId?.trim()) {
+    throw new Error(`Video Package ${videoPackage.id} cannot be saved without a canonical contentBuildId.`)
+  }
+
   const validation = validateVideoPackage(videoPackage)
   if (!validation.valid) {
     throw new Error(validation.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; "))
   }
 
   const packages = readStored()
+  const conflictingProjectPackage = packages.find((candidate) =>
+    candidate.id !== videoPackage.id &&
+    candidate.projectId === videoPackage.projectId &&
+    candidate.contentBuildId !== videoPackage.contentBuildId
+  )
+  if (conflictingProjectPackage) {
+    throw new Error(
+      `Project ${videoPackage.projectId} already has a Video Package scoped to a different ContentBuild (${conflictingProjectPackage.contentBuildId || "missing"}).`,
+    )
+  }
   const index = packages.findIndex((candidate) => candidate.id === videoPackage.id)
   const next = index < 0
     ? [...packages, videoPackage]
     : packages.map((candidate, candidateIndex) => candidateIndex === index ? videoPackage : candidate)
   writeStored(next)
-  syncVideoPackageToContentBuild(videoPackage)
+  syncVideoPackageToContentBuild(videoPackage, { mode: "strict" })
   return videoPackage
 }
 
@@ -119,6 +132,7 @@ export const resetVideoPackageRepositoryForTests = () => {
   if (!canUseStorage()) return
   try {
     localStorage.removeItem(VIDEO_PACKAGE_STORAGE_KEY)
+    localStorage.removeItem(VIDEO_PACKAGE_RECOVERY_KEY)
   } catch {
     // Best-effort compatibility cleanup.
   }
