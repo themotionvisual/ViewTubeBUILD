@@ -49,6 +49,7 @@ import {
   SubToolboxFieldLabel,
   SubToolboxFileTarget,
   SubToolboxMetric,
+  SubToolboxSelectableListRow,
   SubToolboxSurface,
   SubToolboxTag,
   SubToolboxToggle,
@@ -1000,18 +1001,14 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                       {[...project.shots].sort((a, b) => a.order - b.order).map((shot, index) => (
                         <SubToolboxSurface key={shot.id} tone={scopeKey === `shot:${shot.id}` ? "accent" : "subtle"}>
                           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
-                            <button
-                              type="button"
-                              className="min-w-0 text-left"
+                            <SubToolboxSelectableListRow
+                              level="l2"
+                              className="min-w-0"
+                              selected={scopeKey === `shot:${shot.id}`}
+                              title={`${String(index + 1).padStart(2, "0")} · ${shot.label}`}
+                              detail={`${shot.startSeconds.toFixed(2)}s → ${(shot.startSeconds + shot.durationSeconds).toFixed(2)}s · ${Object.keys(shot.categoryOverrides).length} override categor${Object.keys(shot.categoryOverrides).length === 1 ? "y" : "ies"}`}
                               onClick={() => setScopeKey(`shot:${shot.id}`)}
-                            >
-                              <strong className="block text-[12px] font-black uppercase truncate">
-                                {String(index + 1).padStart(2, "0")} · {shot.label}
-                              </strong>
-                              <span className="block text-[9px] font-black uppercase opacity-50">
-                                {shot.startSeconds.toFixed(2)}s → {(shot.startSeconds + shot.durationSeconds).toFixed(2)}s · {Object.keys(shot.categoryOverrides).length} override categor{Object.keys(shot.categoryOverrides).length === 1 ? "y" : "ies"}
-                              </span>
-                            </button>
+                            />
                             <div className="flex gap-1">
                               <StudioButton sizeVariant="compact" tone="neutral" disabled={index === 0} onClick={() => setProject((current) => reorderVideoDirectorShot(current, shot.id, -1))}>↑</StudioButton>
                               <StudioButton sizeVariant="compact" tone="neutral" disabled={index === project.shots.length - 1} onClick={() => setProject((current) => reorderVideoDirectorShot(current, shot.id, 1))}>↓</StudioButton>
@@ -1450,19 +1447,16 @@ const VideoDirector: React.FC<VideoDirectorProps> = ({
                   <div className="flex flex-col gap-2">
                     {recipes.map((recipe) => (
                       <div key={recipe.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center border-[2px] border-current rounded-[8px] p-2 bg-white">
-                        <button
-                          type="button"
-                          className="min-w-0 text-left"
+                        <SubToolboxSelectableListRow
+                          level="l2"
+                          className="min-w-0"
+                          title={recipe.name}
+                          detail={`${recipe.scope} · v${recipe.version} · ${recipe.categories.length} categor${recipe.categories.length === 1 ? "y" : "ies"}`}
                           onClick={() => {
                             setProject((current) => applyVideoDirectorConflicts(applyVideoDirectorRecipe(current, recipe)))
                             setNotice(`${recipe.name} applied without replacing later user overrides.`)
                           }}
-                        >
-                          <strong className="block truncate text-[12px] font-black uppercase">{recipe.name}</strong>
-                          <span className="block text-[9px] font-black uppercase opacity-50">
-                            {recipe.scope} · v{recipe.version} · {recipe.categories.length} categor{recipe.categories.length === 1 ? "y" : "ies"}
-                          </span>
-                        </button>
+                        />
                         <SubToolboxBadge>◆</SubToolboxBadge>
                       </div>
                     ))}
