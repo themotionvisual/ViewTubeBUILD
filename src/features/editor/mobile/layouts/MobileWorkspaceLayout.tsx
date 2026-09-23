@@ -140,7 +140,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     const contextual=pageForSelection(store);
     const clip=store.selectedClips[0] as (VtE1Clip&{clipType?:unknown})|undefined;
     const layer=store.selectedLayer;
-    let next:EditorNavPage|undefined=contextual;
+    let next:EditorNavPage|undefined=contextual??undefined;
     if(clip?.clipType==='design-template')next='custom-templates';
     else if(layer?.type==='text')next='text';
     else if(layer?.type==='audio')next='audio';
