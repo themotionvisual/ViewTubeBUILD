@@ -3,19 +3,26 @@ import type {EditorStore} from '../state/editorState';
 import {filterTemplateCatalog, templateCatalog} from '../../../../editor-design-library/catalog';
 import type {TemplateCategory, TemplateDefinition} from '../../../../editor-design-library/core/schema';
 import {templateToTimelineClip} from '../../../../editor-design-library/integration/timelineAdapter';
+import {TemplateVisualPreview} from './TemplateVisualPreview';
 
 interface Props {store: EditorStore; initialCategory?:TemplateCategory; title?:string}
 const categories: Array<{label:string; value?:TemplateCategory}> = [{label:'All'},{label:'Backgrounds',value:'background'},{label:'Patterns',value:'pattern'},{label:'Text',value:'text'},{label:'Graphics',value:'graphic'},{label:'Scenes',value:'scene'}];
 
-const TemplateCard:React.FC<{template:TemplateDefinition; onAdd:()=>void}> = ({template,onAdd}) => {
-  const accent = template.palette?.[0] ?? '#34cdea';
-  return <button onClick={onAdd} style={{textAlign:'left',padding:0,border:'2px solid #171717',borderRadius:10,overflow:'hidden',background:'#fff',color:'#171717',boxShadow:`4px 4px 0 ${accent}88`,cursor:'pointer'}}>
-    <div style={{aspectRatio:'16 / 9',background:template.background ?? `${accent}55`,display:'flex',alignItems:'center',justifyContent:'center',padding:10,overflow:'hidden'}}>
-      <strong style={{fontSize:template.category==='text'?16:12,lineHeight:.95,fontWeight:900,textTransform:'uppercase'}}>{template.elements.find(e=>e.type==='text')?.text ?? template.name}</strong>
-    </div>
-    <div style={{padding:'7px 8px',borderTop:'2px solid #171717'}}><div style={{fontSize:10,fontWeight:900,textTransform:'uppercase'}}>{template.name}</div><div style={{fontSize:8,opacity:.6,textTransform:'uppercase'}}>{template.category}</div></div>
-  </button>;
-};
+const TemplateCard:React.FC<{template:TemplateDefinition; onAdd:()=>void}> = ({template,onAdd}) => (
+  <button
+    onClick={onAdd}
+    title={template.name}
+    aria-label={`Add template: ${template.name}`}
+    style={{
+      position:'relative',minWidth:0,aspectRatio:'16 / 9',padding:0,
+      border:'2px solid #248b99',borderRadius:7,overflow:'hidden',
+      background:'#fff',boxShadow:'2px 2px 0 rgba(54,224,246,.28)',cursor:'pointer',
+      userSelect:'none',WebkitUserSelect:'none',WebkitTouchCallout:'none',WebkitTapHighlightColor:'transparent',
+    }}
+  >
+    <TemplateVisualPreview template={template}/>
+  </button>
+);
 
 export const TemplateLibraryPanel:React.FC<Props> = ({store,initialCategory,title='Design Library'}) => {
   const [category,setCategory] = useState<TemplateCategory|undefined>(initialCategory);
