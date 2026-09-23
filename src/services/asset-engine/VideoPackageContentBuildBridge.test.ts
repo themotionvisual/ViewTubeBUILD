@@ -133,4 +133,43 @@ describe("VideoPackage ContentBuild bridge", () => {
   expect(projected.packaging.selectedThumbnailId).toBe("thumb-ref-b")
  })
 
+ it("turns package title and thumbnail options into canonical versions and VariantGroups", () => {
+  const base = createVideoPackage({
+   id: "package-options",
+   contentBuildId: "cb-options",
+   channelId: "channel-a",
+   projectId: "project-a",
+   workingTitle: "Options test",
+   format: "long",
+  })
+  const videoPackage = {
+   ...base,
+   packaging: {
+    ...base.packaging,
+    titleVariants: [
+     { id: "title-a", kind: "title" as const, version: 1, label: "Title A", sourceToolId: "packaging-lab-pro", vaultAssetId: "vault-title-a", createdAt: base.identity.createdAt },
+     { id: "title-b", kind: "title" as const, version: 2, label: "Title B", sourceToolId: "packaging-lab-pro", vaultAssetId: "vault-title-b", createdAt: base.identity.createdAt },
+    ],
+    thumbnailVariants: [
+     { id: "thumb-a", kind: "thumbnail" as const, version: 1, label: "Thumb A", sourceToolId: "thumbnail-studio", vaultAssetId: "vault-thumb-a", createdAt: base.identity.createdAt },
+    ],
+    selectedTitleId: "title-b",
+    selectedThumbnailId: "thumb-a",
+   },
+  }
+
+  const build = syncVideoPackageToContentBuild(videoPackage)
+  expect(build.versions.filter(version => version.slot === "title")).toHaveLength(2)
+  expect(build.versions.filter(version => version.slot === "thumbnail")).toHaveLength(1)
+  expect(build.variantGroups.find(group => group.slot === "title")?.members).toHaveLength(2)
+  expect(build.variantGroups.find(group => group.slot === "thumbnail")?.members).toHaveLength(1)
+  expect(build.selections.title).toBe("vault-title-b")
+  expect(build.selections.thumbnail).toBe("vault-thumb-a")
+
+  const projected = projectContentBuildSelectionsToVideoPackage(videoPackage)
+  expect(projected.packaging.titleVariants).toHaveLength(2)
+  expect(projected.packaging.selectedTitleId).toBe("title-b")
+ })
+
+
 })
