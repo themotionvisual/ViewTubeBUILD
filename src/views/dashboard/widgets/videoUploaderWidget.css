@@ -1,0 +1,344 @@
+:where(.dashboard-barrier) .video-uploader-widget {
+  --video-uploader-side: clamp(10rem, 28cqw, 15rem);
+  --video-uploader-media-h: clamp(7rem, 20cqw, 11rem);
+  container: video-uploader-widget / inline-size;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: var(--widget-component-gap);
+  color: var(--widget-border);
+}
+
+:where(.dashboard-barrier) .video-uploader-main {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+
+:where(.dashboard-barrier) .video-uploader-gantry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--video-uploader-side);
+  gap: var(--widget-component-gap);
+  align-items: stretch;
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-uploader-gantry .widget-media-upload {
+  min-width: 0;
+  grid-template-rows: var(--widget-control-height) var(--video-uploader-media-h);
+  gap: var(--widget-component-gap);
+}
+
+:where(.dashboard-barrier) .video-uploader-gantry .widget-media-upload-action {
+  min-height: var(--widget-control-height) !important;
+  height: var(--widget-control-height) !important;
+  font-size: var(--widget-type-body) !important;
+}
+
+:where(.dashboard-barrier) .video-uploader-gantry .widget-media-upload-frame {
+  width: 100%;
+  height: var(--video-uploader-media-h);
+  border-style: solid;
+}
+
+:where(.dashboard-barrier) .video-uploader-source-file {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  align-items: center;
+  column-gap: var(--widget-component-gap);
+  padding: var(--widget-component-gap);
+  text-align: left;
+}
+
+:where(.dashboard-barrier) .video-uploader-source-file > svg {
+  grid-row: 1 / 3;
+  width: calc(var(--widget-control-height) * .8);
+  height: calc(var(--widget-control-height) * .8);
+}
+
+:where(.dashboard-barrier) .video-uploader-source-file strong,
+:where(.dashboard-barrier) .video-uploader-source-file small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:where(.dashboard-barrier) .video-uploader-source-file strong {
+  font-size: var(--widget-type-body);
+  font-weight: 950;
+}
+
+:where(.dashboard-barrier) .video-uploader-source-file small {
+  font-size: var(--widget-type-label);
+  font-weight: 850;
+  opacity: .7;
+}
+
+:where(.dashboard-barrier) .video-uploader-thumbnail-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+:where(.dashboard-barrier) .video-uploader-copy-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.35fr);
+  gap: var(--widget-component-gap);
+  align-items: stretch;
+}
+
+:where(.dashboard-barrier) .video-uploader-copy-grid .widget-control-field {
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-uploader-copy-grid .vt-input,
+:where(.dashboard-barrier) .video-uploader-copy-grid .vt-textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+:where(.dashboard-barrier) .video-uploader-description {
+  min-height: calc((var(--widget-control-height) * 2) + var(--widget-component-gap));
+  resize: vertical;
+}
+
+:where(.dashboard-barrier) .video-uploader-counted-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+:where(.dashboard-barrier) .video-uploader-field-heading {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--widget-component-gap);
+  color: var(--widget-border);
+  font-size: var(--widget-type-label);
+  font-weight: 950;
+  letter-spacing: .06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+:where(.dashboard-barrier) .video-uploader-field-heading .widget-character-count {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: inherit;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+:where(.dashboard-barrier) .video-uploader-paired-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--widget-component-gap);
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-uploader-category-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--widget-component-gap);
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-uploader-category-row.has-timestamps {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+:where(.dashboard-barrier) .video-uploader-category-select,
+:where(.dashboard-barrier) .video-uploader-timestamps-button {
+  min-width: 0;
+  width: 100%;
+}
+
+:where(.dashboard-barrier) .video-uploader-package-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--video-uploader-side);
+  gap: var(--widget-component-gap);
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-uploader-tags,
+:where(.dashboard-barrier) .video-uploader-selects {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--widget-component-gap);
+}
+
+:where(.dashboard-barrier) .video-uploader-tags {
+  padding: var(--widget-component-gap);
+  border: var(--widget-module-stroke) solid var(--widget-border);
+  border-radius: var(--widget-control-radius);
+  background: color-mix(in srgb, var(--widget-color) 10%, white);
+}
+
+:where(.dashboard-barrier) .video-uploader-tag-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--widget-component-gap);
+  align-items: stretch;
+}
+
+:where(.dashboard-barrier) .video-uploader-tag-entry .vt-input {
+  min-width: 0;
+  height: var(--widget-control-height);
+}
+
+:where(.dashboard-barrier) .video-uploader-disclosures,
+:where(.dashboard-barrier) .video-uploader-clearance,
+:where(.dashboard-barrier) .video-uploader-timestamps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--widget-component-gap);
+  min-width: 0;
+}
+
+:where(.dashboard-barrier) .video-uploader-control-grid,
+:where(.dashboard-barrier) .video-uploader-ad-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--widget-component-gap);
+}
+
+:where(.dashboard-barrier) .video-uploader-clearance > header,
+:where(.dashboard-barrier) .video-uploader-timestamps > header {
+  display: flex;
+  align-items: center;
+  gap: var(--widget-component-gap);
+  padding: var(--widget-component-gap);
+  border: var(--widget-module-stroke) solid var(--widget-border);
+  border-radius: var(--widget-control-radius);
+  background: color-mix(in srgb, var(--widget-color) 16%, white);
+}
+
+:where(.dashboard-barrier) .video-uploader-clearance > header svg,
+:where(.dashboard-barrier) .video-uploader-timestamps > header svg {
+  flex: 0 0 auto;
+  width: var(--widget-control-height);
+  height: var(--widget-control-height);
+}
+
+:where(.dashboard-barrier) .video-uploader-clearance > header div,
+:where(.dashboard-barrier) .video-uploader-timestamps > header div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:where(.dashboard-barrier) .video-uploader-clearance > header strong,
+:where(.dashboard-barrier) .video-uploader-timestamps > header strong {
+  font-size: var(--widget-type-body);
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+:where(.dashboard-barrier) .video-uploader-clearance > header span,
+:where(.dashboard-barrier) .video-uploader-timestamps > header span {
+  font-size: var(--widget-type-label);
+  font-weight: 800;
+}
+
+:where(.dashboard-barrier) .video-uploader-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(10rem, 1fr) auto;
+  gap: var(--widget-component-gap);
+  align-items: center;
+}
+
+:where(.dashboard-barrier) .video-uploader-pages {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--widget-component-gap);
+  min-width: 0;
+}
+
+@container video-uploader-widget (max-width: 620px) {
+  :where(.dashboard-barrier) .video-uploader-widget {
+    --video-uploader-side: minmax(0, 1fr);
+  }
+
+  /* Mobile gantry is one shared 2×2 matrix: both upload controls on row one,
+     both 16:9 drop frames directly beneath them on row two. */
+  :where(.dashboard-barrier) .video-uploader-gantry {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto auto;
+    align-items: start;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-gantry .widget-media-upload {
+    display: contents;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-source-frame .widget-media-upload-action {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-thumbnail-frame .widget-media-upload-action {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-source-frame .widget-media-upload-frame {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-thumbnail-frame .widget-media-upload-frame {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-gantry .widget-media-upload-frame {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-package-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :where(.dashboard-barrier) .video-uploader-copy-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :where(.dashboard-barrier) .video-uploader-footer {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-pages {
+    grid-column: 1 / -1;
+  }
+}
+
+@container video-uploader-widget (max-width: 430px) {
+  :where(.dashboard-barrier) .video-uploader-control-grid,
+  :where(.dashboard-barrier) .video-uploader-ad-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :where(.dashboard-barrier) .video-uploader-footer {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  :where(.dashboard-barrier) .video-uploader-paired-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :where(.dashboard-barrier) .video-uploader-category-row.has-timestamps {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+}
