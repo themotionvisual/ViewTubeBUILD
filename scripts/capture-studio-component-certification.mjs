@@ -32,6 +32,20 @@ const priorityStates = new Map([
   ["Tooltip", ["default", "hover", "focus"]],
   ["Progress Value", ["default"]],
   ["Knob Dial", ["default", "focus", "changed"]],
+  ["Tooltip Color", ["default", "hover", "focus"]],
+  ["Hover Card", ["default", "hover", "focus"]],
+  ["Controller Switch", ["default", "focus", "selected"]],
+  ["LED Light", ["default"]],
+  ["LED Dot", ["default"]],
+  ["Horizontal Scrollbar", ["default"]],
+  ["Vertical Scrollbar", ["default"]],
+  ["Calendar", ["default", "selected"]],
+  ["Loader", ["default"]],
+  ["Loader Progress", ["default"]],
+  ["Loader Split", ["default"]],
+  ["Loader Orbit", ["default"]],
+  ["Loader Bars", ["default"]],
+  ["Tree View", ["default"]],
 ])
 
 const slug = (value) =>
@@ -124,6 +138,11 @@ async function applyState(level, family, state) {
     return
   }
   if (state === "selected") {
+    if (family === "Calendar") {
+      const day = level.getByRole("button", { name: "19" }).first()
+      if (await day.count()) await day.click()
+      return
+    }
     if (await interactive.count()) await interactive.click()
     return
   }
