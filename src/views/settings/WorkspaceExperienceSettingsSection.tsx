@@ -1,7 +1,11 @@
-import React from "react"
+import React, { useSyncExternalStore } from "react"
 import {
   ArrowLeftRight,
   Clock3,
+  Eraser,
+  PanelLeft,
+  PanelTop,
+  Star,
   Command,
   History,
   Keyboard,
@@ -19,6 +23,25 @@ import {
   setWorkspaceUxToggle,
   type WorkspaceUxToggleKey,
 } from "../../services/workspaceUxPreferences"
+import {
+  getNavigationLayout,
+  getNavigationLayoutServerSnapshot,
+  setNavigationLayoutPreference,
+  subscribeNavigationLayout,
+  type NavigationLayout,
+} from "../../components/navigation/navigationContract"
+import {
+  clearRecentDestinations,
+  getRecentDestinationsServerSnapshot,
+  readRecentDestinations,
+  subscribeRecentDestinations,
+} from "../../services/recentDestinationHistory"
+import {
+  clearPinnedDestinations,
+  getPinnedDestinationsServerSnapshot,
+  readPinnedDestinations,
+  subscribePinnedDestinations,
+} from "../../services/pinnedDestinationStore"
 
 type PreferenceItem = {
   key: WorkspaceUxToggleKey
@@ -114,6 +137,118 @@ const DESKTOP_ITEMS: PreferenceItem[] = [
   },
 ]
 
+const NAV_LAYOUT_OPTIONS: Array<{
+  value: NavigationLayout
+  label: string
+  description: string
+  icon: React.ReactNode
+}> = [
+  {
+    value: "top",
+    label: "Top Bar",
+    description: "Horizontal navigation across the top.",
+    icon: <PanelTop size={22} />,
+  },
+  {
+    value: "wide",
+    label: "Wide Sidebar",
+    description: "Full sidebar with labels and account controls.",
+    icon: <PanelLeft size={22} />,
+  },
+  {
+    value: "thin",
+    label: "Thin Sidebar",
+    description: "Narrower labeled sidebar for more canvas room.",
+    icon: <PanelsTopLeft size={22} />,
+  },
+  {
+    value: "rail",
+    label: "Icon Rail",
+    description: "Compact icon-only rail with maximum workspace width.",
+    icon: <Navigation size={22} />,
+  },
+]
+
+const NavigationLayoutPreference: React.FC<{ value: NavigationLayout }> = ({ value }) => (
+  <section className="overflow-hidden rounded-[20px] border-[4px] border-black bg-white shadow-[7px_7px_0_0_#36E0F6]">
+    <header className="border-b-[4px] border-black bg-[#36E0F6] p-5">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-black/60">Desktop navigation</p>
+      <h2 className="mt-1 text-3xl font-[1000] uppercase tracking-[-0.05em]">Navigation layout</h2>
+      <p className="mt-2 max-w-3xl text-sm font-bold leading-6 text-black/65">
+        Choose the desktop navigation arrangement ViewTube should use. Changes apply immediately and persist for future sessions.
+      </p>
+    </header>
+    <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4 md:p-5">
+      {NAV_LAYOUT_OPTIONS.map((option) => {
+        const selected = option.value === value
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => setNavigationLayoutPreference(option.value)}
+            className={`grid min-h-[118px] grid-cols-[42px_minmax(0,1fr)] items-start gap-3 rounded-xl border-[3px] border-black p-3 text-left shadow-[3px_3px_0_0_#000] transition-transform hover:translate-x-[1px] hover:translate-y-[1px] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 ${selected ? "bg-[#CCFF00]" : "bg-white"}`}
+          >
+            <span className="grid size-[42px] place-items-center rounded-lg border-[3px] border-black bg-white" aria-hidden="true">
+              {option.icon}
+            </span>
+            <span className="min-w-0">
+              <strong className="block text-sm font-[1000] uppercase tracking-[-0.03em]">{option.label}</strong>
+              <span className="mt-1 block text-xs font-bold leading-5 text-black/60">{option.description}</span>
+              <span className="mt-3 inline-block rounded-md border-2 border-black bg-white px-2 py-1 text-[9px] font-black uppercase">
+                {selected ? "Current" : "Use layout"}
+              </span>
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  </section>
+)
+
+const NavigationDataControls: React.FC<{
+  recentCount: number
+  pinnedCount: number
+}> = ({ recentCount, pinnedCount }) => (
+  <section className="overflow-hidden rounded-[20px] border-[4px] border-black bg-white shadow-[7px_7px_0_0_#FFDA47]">
+    <header className="border-b-[4px] border-black bg-[#FFDA47] p-5">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-black/60">Navigation data</p>
+      <h2 className="mt-1 text-3xl font-[1000] uppercase tracking-[-0.05em]">Recent + pinned</h2>
+      <p className="mt-2 max-w-3xl text-sm font-bold leading-6 text-black/65">
+        Manage only the local convenience data used by the Quick Switcher. These actions do not affect projects, account data, or analytics.
+      </p>
+    </header>
+    <div className="grid gap-3 p-4 md:grid-cols-2 md:p-5">
+      <button
+        type="button"
+        disabled={!recentCount}
+        onClick={clearRecentDestinations}
+        className="grid min-h-[92px] grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border-[3px] border-black bg-white p-3 text-left shadow-[3px_3px_0_0_#000] disabled:cursor-not-allowed disabled:opacity-45"
+      >
+        <span className="grid size-11 place-items-center rounded-lg border-[3px] border-black bg-[#f3f4f6]" aria-hidden="true"><Eraser size={21} /></span>
+        <span>
+          <strong className="block text-sm font-[1000] uppercase">Clear recent history</strong>
+          <span className="mt-1 block text-xs font-bold text-black/60">Remove recently opened destinations from Quick Switcher.</span>
+        </span>
+        <span className="rounded-md border-2 border-black px-2 py-1 text-[10px] font-black">{recentCount}</span>
+      </button>
+      <button
+        type="button"
+        disabled={!pinnedCount}
+        onClick={clearPinnedDestinations}
+        className="grid min-h-[92px] grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border-[3px] border-black bg-white p-3 text-left shadow-[3px_3px_0_0_#000] disabled:cursor-not-allowed disabled:opacity-45"
+      >
+        <span className="grid size-11 place-items-center rounded-lg border-[3px] border-black bg-[#f3f4f6]" aria-hidden="true"><Star size={21} /></span>
+        <span>
+          <strong className="block text-sm font-[1000] uppercase">Clear pinned destinations</strong>
+          <span className="mt-1 block text-xs font-bold text-black/60">Remove all Quick Switcher favorites; pages themselves are unchanged.</span>
+        </span>
+        <span className="rounded-md border-2 border-black px-2 py-1 text-[10px] font-black">{pinnedCount}</span>
+      </button>
+    </div>
+  </section>
+)
+
 const ToggleRow: React.FC<{ item: PreferenceItem; enabled: boolean }> = ({ item, enabled }) => (
   <button
     type="button"
@@ -162,9 +297,29 @@ const PreferenceGroup: React.FC<{
 
 export const WorkspaceExperienceSettingsSection: React.FC = () => {
   const preferences = useWorkspaceUxPreferences()
+  const navigationLayout = useSyncExternalStore(
+    subscribeNavigationLayout,
+    getNavigationLayout,
+    getNavigationLayoutServerSnapshot,
+  )
+  const recentDestinations = useSyncExternalStore(
+    subscribeRecentDestinations,
+    readRecentDestinations,
+    getRecentDestinationsServerSnapshot,
+  )
+  const pinnedDestinations = useSyncExternalStore(
+    subscribePinnedDestinations,
+    readPinnedDestinations,
+    getPinnedDestinationsServerSnapshot,
+  )
 
   return (
     <div className="grid gap-6">
+      <NavigationLayoutPreference value={navigationLayout} />
+      <NavigationDataControls
+        recentCount={recentDestinations.length}
+        pinnedCount={pinnedDestinations.length}
+      />
       <PreferenceGroup
         eyebrow="Mobile behavior"
         title="Mobile navigation"
