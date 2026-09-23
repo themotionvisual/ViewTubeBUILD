@@ -15,7 +15,7 @@ import {
   LockKeyhole,
   ShieldCheck,
   Sparkles,
-  Trash2, LayoutGrid,
+  Trash2, LayoutGrid, SlidersHorizontal,
 } from "lucide-react"
 import { AccountActionButton } from "../../components/account/AccountActionButton"
 import { AIModelSelector } from "../../components/ui/AIModelSelector"
@@ -23,6 +23,7 @@ import { TOPUP_DEFINITIONS, getReferralCode, type EntitlementState } from "../..
 import type { IngestMode } from "../../services/productArchitecture"
 import type { SubscriptionPlanId } from "../../services/subscriptionPlans"
 import type { SettingsPanel, SettingsReadiness } from "./settingsControlDeck"
+import { WorkspaceExperienceSettingsSection } from "./WorkspaceExperienceSettingsSection"
 
 const PLANS: Array<{ id: SubscriptionPlanId; label: string; price: string; bullets: string[]; accent: string }> = [
   { id: "basic", label: "Basic", price: "$0", bullets: ["Core tools", "Manual sync", "Basic analytics"], accent: "#C9F830" },
@@ -38,6 +39,7 @@ const PANELS: Array<{ id: SettingsPanel; label: string; description: string; ico
   { id: "account", label: "Account", description: "Identity and channel", icon: <CircleUserRound size={19} /> },
   { id: "ai", label: "AI Runtime", description: "Brain, models, API key", icon: <Bot size={19} /> },
   { id: "widgets", label: "Dashboard Widgets", description: "Show or hide widgets", icon: <LayoutGrid size={19} /> },
+  { id: "experience", label: "Experience", description: "Navigation and workspace behavior", icon: <SlidersHorizontal size={19} /> },
   { id: "billing", label: "Plan + Credits", description: "Billing and referrals", icon: <CreditCard size={19} /> },
   { id: "data", label: "Data + Privacy", description: "Sources and recovery", icon: <Database size={19} /> },
   { id: "help", label: "Help + Legal", description: "Guides and policies", icon: <ShieldCheck size={19} /> },
@@ -171,6 +173,8 @@ export const UnifiedAccountSettingsSection: React.FC<UnifiedAccountSettingsSecti
             </div>
           </>
         ) : null}
+
+        {activePanel === "experience" ? <WorkspaceExperienceSettingsSection /> : null}
 
         {activePanel === "account" ? (
           <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
