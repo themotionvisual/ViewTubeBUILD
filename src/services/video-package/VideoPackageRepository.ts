@@ -7,8 +7,21 @@ import {
 
 export const VIDEO_PACKAGE_STORAGE_KEY = "viewtube_video_packages_v1"
 export const VIDEO_PACKAGE_RECOVERY_KEY = "viewtube_video_packages_recovery_v1"
+export const VIDEO_PACKAGE_STORE_VERSION = 1 as const
+
+type VideoPackageStoreEnvelope = {
+  storeVersion: typeof VIDEO_PACKAGE_STORE_VERSION
+  updatedAt: string
+  packages: ViewTubeVideoPackage[]
+}
 
 let memoryPackages: ViewTubeVideoPackage[] = []
+
+const createStoreEnvelope = (packages: ViewTubeVideoPackage[]): VideoPackageStoreEnvelope => ({
+  storeVersion: VIDEO_PACKAGE_STORE_VERSION,
+  updatedAt: new Date().toISOString(),
+  packages,
+})
 
 const canUseStorage = () => {
   try {
@@ -30,21 +43,49 @@ const recoverValidPackages = (value: unknown): ViewTubeVideoPackage[] => {
   })
 }
 
+const writeEnvelope = (packages: ViewTubeVideoPackage[]) => {
+  localStorage.setItem(VIDEO_PACKAGE_STORAGE_KEY, JSON.stringify(createStoreEnvelope(packages)))
+}
+
+const preserveRecoverySnapshot = (raw: string) => {
+  localStorage.setItem(VIDEO_PACKAGE_RECOVERY_KEY, raw)
+}
+
 const readStored = (): ViewTubeVideoPackage[] => {
   if (!canUseStorage()) return memoryPackages
   const raw = localStorage.getItem(VIDEO_PACKAGE_STORAGE_KEY)
   if (!raw) return []
+
   try {
     const parsed = JSON.parse(raw)
-    const recovered = recoverValidPackages(parsed)
-    if (recovered.length !== (Array.isArray(parsed) ? parsed.length : 0)) {
-      localStorage.setItem(VIDEO_PACKAGE_RECOVERY_KEY, raw)
-      localStorage.setItem(VIDEO_PACKAGE_STORAGE_KEY, JSON.stringify(recovered))
+
+    // Legacy v0 storage was a raw package array. Preserve it exactly once,
+    // then normalize it into the canonical versioned envelope.
+    if (Array.isArray(parsed)) {
+      const recovered = recoverValidPackages(parsed)
+      preserveRecoverySnapshot(raw)
+      writeEnvelope(recovered)
+      return recovered
+    }
+
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error("Stored video package data is not an object.")
+    }
+
+    const envelope = parsed as Partial<VideoPackageStoreEnvelope> & { storeVersion?: unknown }
+    if (envelope.storeVersion !== VIDEO_PACKAGE_STORE_VERSION || !Array.isArray(envelope.packages)) {
+      throw new Error(`Unsupported video package store version: ${String(envelope.storeVersion)}`)
+    }
+
+    const recovered = recoverValidPackages(envelope.packages)
+    if (recovered.length !== envelope.packages.length) {
+      preserveRecoverySnapshot(raw)
+      writeEnvelope(recovered)
     }
     return recovered
   } catch {
     try {
-      localStorage.setItem(VIDEO_PACKAGE_RECOVERY_KEY, raw)
+      preserveRecoverySnapshot(raw)
       localStorage.removeItem(VIDEO_PACKAGE_STORAGE_KEY)
     } catch {
       // Preserve the in-memory fallback if browser storage cannot be repaired.
@@ -59,7 +100,7 @@ const writeStored = (packages: ViewTubeVideoPackage[]) => {
     return
   }
   try {
-    localStorage.setItem(VIDEO_PACKAGE_STORAGE_KEY, JSON.stringify(packages))
+    writeEnvelope(packages)
   } catch {
     memoryPackages = packages
   }
