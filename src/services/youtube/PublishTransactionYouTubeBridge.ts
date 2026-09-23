@@ -48,7 +48,8 @@ export const uploadPublishTransactionVideo=async(input:{
   const uploaded=await uploadUnifiedVideo(input.file,input.metadata,input.onProgress)
   const videoId=extractVideoId(uploaded)
   if(!videoId)throw new Error("YouTube upload completed without returning a video ID.")
-  return completePublishStep({transactionId:transaction.id,step:"upload-video",youtubeVideoId:videoId,receipt:{remoteVideoId:videoId},youtubeBinding:{status:"uploaded",uploadCompletedAt:new Date().toISOString()},toolId:"video-publisher"})
+  const uploadedTransaction=completePublishStep({transactionId:transaction.id,step:"upload-video",youtubeVideoId:videoId,receipt:{remoteVideoId:videoId},youtubeBinding:{status:"uploaded",uploadCompletedAt:new Date().toISOString()},toolId:"video-publisher"})
+  return completePublishStep({transactionId:uploadedTransaction.id,step:"bind-youtube",youtubeVideoId:videoId,receipt:{boundImmediatelyAfterUpload:true},youtubeBinding:{status:"uploaded"},toolId:"video-publisher"})
  }catch(error){
   failPublishTransaction(transaction.id,"upload-video",error,"video-publisher")
   throw error
