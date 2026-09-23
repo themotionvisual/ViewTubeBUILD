@@ -9,7 +9,7 @@ import {EditorViewSwitcher} from './EditorViewSwitcher';
 import {ClipSettingsPanel} from './ClipSettingsPanel';
 import {ProjectSettingsPanel} from './ProjectSettingsPanel';
 import {EffectsLibrariesPanel} from './EffectsLibrariesPanel';
-import {CustomTemplatePanel} from './CustomTemplatePanel';
+import {UnifiedDesignLibraryPanel} from './UnifiedDesignLibraryPanel';
 import {ExportRenderPanel} from './ExportRenderPanel';
 import {capabilitiesForCategory,type EditorCapabilityStatus} from '../../editorCapabilities';
 import {AcceleratingStepper,LinkToggle} from './MobileEditorPrimitives';
@@ -85,10 +85,10 @@ export const EditorNavigationPage:React.FC<{page:EditorNavPage;store:EditorStore
   if(page==='project')return <ProjectSettingsPanel store={store}/>;
   if(page==='select')return <Inspector store={store}/>;
   if(page==='media')return <Clips store={store} onNavigate={onNavigate}/>;
-  if(page==='graphics')return <TemplateLibraryPanel store={store} initialCategory="graphic" title="Graphics & SVG"/>;
+  if(page==='graphics')return <UnifiedDesignLibraryPanel store={store} initialView="graphics"/>;
   if(page==='effects')return <EffectsLibrariesPanel store={store}/>;
-  if(page==='templates')return <TemplateLibraryPanel store={store}/>;
-  if(page==='custom-templates')return <CustomTemplatePanel store={store}/>;
+  if(page==='templates')return <UnifiedDesignLibraryPanel store={store}/>;
+  if(page==='custom-templates')return <UnifiedDesignLibraryPanel store={store} initialView="custom"/>;
   if(page==='export')return <ExportRenderPanel store={store}/>;
   if(page==='settings')return <Settings model={settings}/>;
   return <div>{renderPanelBody(page,store)}</div>;
@@ -100,11 +100,9 @@ export const EDITOR_NAV_ITEMS:Array<{id:EditorNavPage;label:string;icon:React.Re
   {id:'select',label:'Inspect',icon:<ScanSearch size={13}/>},
   {id:'text',label:'Text',icon:<Type size={13}/>},
   {id:'audio',label:'Audio',icon:<AudioLines size={13}/>},
-  {id:'graphics',label:'Graphics',icon:<Shapes size={13}/>},
   {id:'effects',label:'Effects',icon:<SlidersHorizontal size={13}/>},
   {id:'transitions',label:'Transitions',icon:<Shuffle size={13}/>},
-  {id:'templates',label:'Templates',icon:<LayoutTemplate size={13}/>},
-  {id:'custom-templates',label:'Custom',icon:<WandSparkles size={13}/>},
+  {id:'templates',label:'Library',icon:<LayoutTemplate size={13}/>},
   {id:'export',label:'Export',icon:<Upload size={13}/>},
   {id:'settings',label:'Settings',icon:<SettingsIcon size={13}/>},
 ];
