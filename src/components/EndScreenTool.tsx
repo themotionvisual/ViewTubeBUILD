@@ -11,7 +11,7 @@ import {
 } from "../types"
 import { useBrain } from "../context/useBrain"
 import { CustomIcon } from "./CustomIcon"
-import { SubToolbox } from "./Toolbox"
+import { SubToolbox, SubToolboxGridActionButton } from "./Toolbox"
 import {
   SubToolboxButton,
   SubToolboxColorPicker,
@@ -397,14 +397,13 @@ export const EndScreenTool: React.FC = () => {
               MISSING API KEY: SETTINGS
             </SubToolboxLinkButton>
           ) : (
-            <SubToolboxButton
-              level="l0"
-              size="action"
+            <SubToolboxGridActionButton
+              label={genLoading ? "Creating..." : "Generate Template"}
+              iconName="zap"
+              tone="orange"
               onClick={handleGenerate}
               disabled={genLoading || !prompt}
-              icon={<CustomIcon name="zap" size={24} />}>
-              {genLoading ? "CREATING..." : "GENERATE TEMPLATE"}
-            </SubToolboxButton>
+            />
           )}
 
           {generatedImage && (
