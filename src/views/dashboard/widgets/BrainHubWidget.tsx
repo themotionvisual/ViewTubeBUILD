@@ -166,8 +166,9 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
  )
 
  const evidence = useMemo(() => {
+  if (!controls.enabled || !controls.allowAnalytics || snapshot.evidencePack.channelId !== channelId) return []
   return snapshot.evidencePack.items.slice(0, engines.maxEvidenceItems) as AIBrainEvidenceItem[]
- }, [snapshot.evidencePack, engines.maxEvidenceItems])
+ }, [snapshot.evidencePack, engines.maxEvidenceItems, controls.enabled, controls.allowAnalytics, channelId])
 
  const updateUserControl = <K extends keyof BrainUserControls>(key: K, value: BrainUserControls[K]) => {
   const next = writeBrainUserControls({ ...controls, [key]: value }, channelId)
