@@ -113,6 +113,7 @@ export interface AssetModelCall {
  systemInstruction: string
  userText: string
  schema: Schema
+ mediaAttachments?: string[]
 }
 
 export interface AssetModelResponse<TOutput> {
@@ -306,6 +307,8 @@ export const generateAsset = async <TOutput>(input: {
  strategy: AssetGeneratorStrategy<TOutput>
  evidence?: AssetEvidence
  runner: AssetModelRunner
+ /** Inline media is forwarded to the provider runner, never embedded into prompt text. */
+ mediaAttachments?: string[]
  /** Override style resolution, chiefly for tests and previews. */
  styleProfile?: StyleProfile | null
 }): Promise<AssetGenerationResult<TOutput>> => {
@@ -375,6 +378,9 @@ export const generateAsset = async <TOutput>(input: {
    systemInstruction,
    userText: request.instruction,
    schema: strategy.schema,
+   ...(input.mediaAttachments?.length
+    ? { mediaAttachments: input.mediaAttachments }
+    : {}),
   })
  }
 
