@@ -2,7 +2,7 @@
 
 **Status:** Living architecture + implementation authority  
 **Created:** 2026-09-22  
-**Last audited main:** `6d13836b04c3694c188346b6dd427cf6a4110e7b`  
+**Last audited main:** `cbc50be80bb6bf9c218ff3d7af0c6f232a41891b`  
 **Primary reassembly baseline:** PR #302 / merge commit `3f9cb2dab3e2bb3247ce9bd904051ae8b0b93d2d`  
 **Scope:** Projects page, Project Builder, Project Board, calendar/scheduling, channel planning, project planning, Asset Engine, ContentBuild, Video Package, Publishing Package, Vault handoffs, Studio tools, editor handoffs, YouTube binding, analytics and learning.
 
@@ -693,16 +693,16 @@ The purpose is to know not only what was published, but **which exact assets and
 ## 17. Current bugs / architectural gaps
 
 ### Projects page fragmentation
-**Status:** OPEN  
-Six independent top-level tools currently divide one workflow.
+**Status:** RESOLVED / PR #302  
+The Projects page now uses Project Builder + Project Board/Calendar + Storyboard Studio as its top-level hierarchy. Former Channel Planning, full Asset Engine, Publishing Schedule and legacy Project Studio capabilities are embedded or routed from those owners rather than mounted as competing top-level toolboxes.
 
 ### Header toggle placement
 **Status:** MERGED / PR #309  
 PR #302 restored CHANNEL / PROJECT inside Builder body. The current follow-up branch moves that control into the main Project Builder Toolbox header and makes the header the single scope owner.
 
 ### Project creation identity transaction
-**Status:** MERGED / PR #309; SERVER AUTHORITY STILL PLANNED  
-Project + ContentBuild initialization is already on main. The current follow-up branch adds a canonical Video Package repository/bridge that initializes or reuses one package against the same project `contentBuildId` and refuses silent ContentBuild forks.
+**Status:** CANONICAL SERVICE ON CURRENT FEATURE BRANCH  
+PR #309 established the Project -> ContentBuild -> Video Package identity rule. The current branch centralizes that rule in `ProjectContentIdentityService`, so New Project and active-project recovery call one idempotent transaction instead of duplicating bridge logic in UI components. It creates/resolves ContentBuild first, attaches `Project.contentBuildId`, then initializes/reuses a Video Package only against that same ContentBuild. Disconnected mode still resolves the Project + ContentBuild and leaves Video Package pending until channel scope exists.
 
 ### Thumbnail ownership
 **Status:** MERGED PR #312 + FOLLOW-UP HARDENING IN PROGRESS  
@@ -781,6 +781,7 @@ Project Builder and Board must use current canonical Toolbox/Subtoolbox primitiv
 - Project + ContentBuild creation already exists
 - initialize/reuse one same-scope Video Package
 - reject silent package ContentBuild forks
+- centralize Project creation/recovery through one idempotent identity transaction service: IN PROGRESS
 - keep workspace priority/color initialization
 - test deterministic Project/ContentBuild/Video Package identity
 
@@ -893,6 +894,8 @@ Whenever this system changes:
 | 2026-09-22 | Added compact Publishing Package readiness and blocker summary | MERGED PR #309 |
 | 2026-09-22 | PR #309 merged Project Builder header controls, schedule context, package identity and Simple Asset Engine expansion | MERGED |
 | 2026-09-22 | Added Vault-backed thumbnail selection with ContentBuild + Video Package synchronization | MERGED PR #312 |
+| 2026-09-22 | Hardened ContentBuild-first thumbnail ownership and URL-to-Vault import | MERGED PR #323 |
+| 2026-09-22 | Centralized Project creation/recovery in ProjectContentIdentityService | FEATURE BRANCH |
 | 2026-09-22 | Hardened thumbnail flow so ContentBuild remains authoritative without channel scope and legacy URLs can become Vault assets | FEATURE BRANCH |
 
 ---

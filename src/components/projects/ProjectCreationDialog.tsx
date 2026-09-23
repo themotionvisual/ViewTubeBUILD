@@ -3,8 +3,7 @@ import { Plus, X } from "lucide-react"
 import { useBrain } from "../../context/useBrain"
 import type { Project } from "../../types"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
-import { syncProjectToContentBuild } from "../../services/asset-engine/ProjectContentBuildBridge"
-import { ensureVideoPackageForProject } from "../../services/video-package/ProjectVideoPackageBridge"
+import { initializeProjectContentIdentity } from "../../services/projects/ProjectContentIdentityService"
 import type { ProjectPriority } from "../../features/projects/projectWorkspace"
 import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../subtoolbox/SubToolboxLayouts"
 import {
@@ -90,15 +89,11 @@ const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({ open, onC
     }
 
     try {
-      const build = syncProjectToContentBuild(project, {
+      const identity = initializeProjectContentIdentity(project, {
         channelId: channelIdentity.channelId || null,
         sourceToolId: "project-builder",
       })
-      const canonicalProject: Project = { ...project, contentBuildId: build.id }
-      ensureVideoPackageForProject(canonicalProject, {
-        channelId: channelIdentity.channelId || null,
-        sourceToolId: "project-builder",
-      })
+      const canonicalProject = identity.project
       addProject(canonicalProject)
       setActiveProject(canonicalProject.id)
       onCreated?.(canonicalProject, priority)

@@ -3,8 +3,7 @@ import { Boxes, CalendarDays, Workflow } from "lucide-react"
 import { useBrain } from "../../context/useBrain"
 import type { Project } from "../../types"
 import { VT_SPECTRUM_PALETTE_06 } from "../../styles/toolboxPalette"
-import { syncProjectToContentBuild } from "../../services/asset-engine/ProjectContentBuildBridge"
-import { ensureVideoPackageForProject } from "../../services/video-package/ProjectVideoPackageBridge"
+import { initializeProjectContentIdentity } from "../../services/projects/ProjectContentIdentityService"
 import { SubToolbox } from "../Toolbox"
 import { SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../subtoolbox/SubToolboxLayouts"
 import {
@@ -52,25 +51,18 @@ const ProjectBuilder: React.FC<ProjectBuilderProps> = ({ onCreateProject }) => {
 
   useEffect(() => {
     if (!activeProject) return
-    const build = syncProjectToContentBuild(activeProject, {
-      channelId: channelIdentity.channelId || null,
-      sourceToolId: "project-builder",
-    })
-    const scopedProject = activeProject.contentBuildId === build.id
-      ? activeProject
-      : { ...activeProject, contentBuildId: build.id }
     try {
-      ensureVideoPackageForProject(scopedProject, {
+      const identity = initializeProjectContentIdentity(activeProject, {
         channelId: channelIdentity.channelId || null,
         sourceToolId: "project-builder",
       })
       setPackageWarning("")
+      if (activeProject.contentBuildId !== identity.contentBuildId) {
+        updateProject(activeProject.id, { contentBuildId: identity.contentBuildId })
+      }
     } catch (cause) {
-      console.error("Unable to bind Project Video Package", cause)
-      setPackageWarning(cause instanceof Error ? cause.message : "Video Package identity could not be reconciled.")
-    }
-    if (activeProject.contentBuildId !== build.id) {
-      updateProject(activeProject.id, { contentBuildId: build.id })
+      console.error("Unable to resolve Project content identity", cause)
+      setPackageWarning(cause instanceof Error ? cause.message : "Project content identity could not be reconciled.")
     }
   }, [activeProject, channelIdentity.channelId, updateProject])
 
