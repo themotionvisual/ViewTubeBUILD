@@ -47,14 +47,20 @@ export const MobileProjectPreview:React.FC<{store:EditorStore}>=({store})=>{
       const sat=fxBypass||fxDisabled.saturation?1:Math.max(0,Number(payload.saturation??1));
       const bright=fxBypass||fxDisabled.brightness?1:Math.max(0,Number(payload.brightness??1));
       const hue=fxBypass||fxDisabled.hue?0:Number(payload.hue??0);
-      const fxOrder=Array.isArray(payload.fxOrder)?payload.fxOrder.map(String):['blur','saturation','brightness','hue'];
+      const contrast=fxBypass||fxDisabled.contrast?1:Math.max(0,Number(payload.contrast??1));
+      const sepia=fxBypass||fxDisabled.sepia?0:Math.max(0,Math.min(1,Number(payload.sepia??0)));
+      const grayscale=fxBypass||fxDisabled.grayscale?0:Math.max(0,Math.min(1,Number(payload.grayscale??0)));
+      const fxOrder=Array.isArray(payload.fxOrder)?payload.fxOrder.map(String):['blur','saturation','brightness','hue','contrast','sepia','grayscale'];
       const filterByKey:Record<string,string>={
         blur:blur?`blur(${blur}px)`:'',
         saturation:`saturate(${sat})`,
         brightness:`brightness(${bright})`,
         hue:hue?`hue-rotate(${hue}deg)`:'',
+        contrast:`contrast(${contrast})`,
+        sepia:sepia?`sepia(${sepia})`:'',
+        grayscale:grayscale?`grayscale(${grayscale})`:'',
       };
-      const filter=[...fxOrder.filter(key=>filterByKey[key]!=null),...['blur','saturation','brightness','hue'].filter(key=>!fxOrder.includes(key))]
+      const filter=[...fxOrder.filter(key=>filterByKey[key]!=null),...['blur','saturation','brightness','hue','contrast','sepia','grayscale'].filter(key=>!fxOrder.includes(key))]
         .filter(key=>!fxDisabled[key])
         .map(key=>filterByKey[key])
         .filter(Boolean)
