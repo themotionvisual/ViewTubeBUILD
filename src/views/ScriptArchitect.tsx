@@ -25,6 +25,7 @@ import {
  ToolboxScaffold,
 } from "../components/Toolbox"
 import { PostActionReflection } from "../components/PostActionReflection"
+import { SubToolboxButton } from "../components/subtoolbox/SubToolboxPrimitives"
 import { formatClock } from "../services/scriptBudget"
 import {
  FRAGMENT_MODES,
@@ -102,23 +103,23 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
           minHeight="48px"
          />
         </div>
-        <button
+        <SubToolboxButton level="l1"
          type="button"
          onClick={architect.saveDraft}
          className="shrink-0 px-4 min-h-12 border-[3px] border-black rounded-xl bg-[#FFE357] font-black uppercase text-[10px] shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none">
          Save
-        </button>
-        <button
+        </SubToolboxButton>
+        <SubToolboxButton level="l1"
          type="button"
          onClick={architect.startNewDraft}
          title="Clear the workspace — saved drafts are untouched"
          className="shrink-0 px-4 min-h-12 border-[3px] border-black rounded-xl bg-white font-black uppercase text-[10px] shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none">
          New
-        </button>
+        </SubToolboxButton>
        </div>
        {architect.drafts.map((draft) => (
         <div key={draft.id} className="grid grid-cols-[1fr_auto] gap-2 border-[2px] border-black rounded-lg p-2">
-         <button
+         <SubToolboxButton level="l1"
           type="button"
           className="text-left min-w-0"
           onClick={() => architect.loadDraft(draft.id)}>
@@ -129,14 +130,14 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
           <span className="block truncate text-xs font-black uppercase">
            {draft.name || draft.project.topic || "Untitled script"}
           </span>
-         </button>
-         <button
+         </SubToolboxButton>
+         <SubToolboxButton level="l1"
           type="button"
           aria-label={`Delete draft ${draft.name}`}
           onClick={() => architect.deleteDraft(draft.id)}
           className="size-10 border-[2px] border-black rounded-lg grid place-items-center bg-[#FF77D6]">
           <Trash2 size={15} strokeWidth={3} />
-         </button>
+         </SubToolboxButton>
         </div>
        ))}
        {!architect.drafts.length && (
@@ -235,23 +236,23 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
        <div className="flex items-center justify-between gap-3 flex-wrap">
         <span className={fieldLabel}>Target length</span>
         <div className="flex items-center gap-2">
-         <button
+         <SubToolboxButton level="l1"
           type="button"
           aria-label="Decrease target length"
           onClick={() => architect.setField("targetMinutes", Math.max(1, project.targetMinutes - 1))}
           className="size-10 border-[3px] border-black rounded-xl bg-white font-black grid place-items-center shadow-[2px_2px_0_0_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
           −
-         </button>
+         </SubToolboxButton>
          <span className="min-w-[96px] text-center border-[3px] border-black rounded-full bg-white px-4 py-2 font-black text-sm">
           {project.targetMinutes} MIN
          </span>
-         <button
+         <SubToolboxButton level="l1"
           type="button"
           aria-label="Increase target length"
           onClick={() => architect.setField("targetMinutes", Math.min(90, project.targetMinutes + 1))}
           className="size-10 border-[3px] border-black rounded-xl bg-white font-black grid place-items-center shadow-[2px_2px_0_0_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
           +
-         </button>
+         </SubToolboxButton>
         </div>
        </div>
 
@@ -259,7 +260,7 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
         <span className={fieldLabel}>Pacing</span>
         <div className="grid grid-cols-3 gap-2 mt-2" aria-label="Pacing">
          {PACING_OPTIONS.map((option) => (
-          <button
+          <SubToolboxButton level="l1"
            key={option.id}
            type="button"
            aria-pressed={project.pacing === option.id}
@@ -268,7 +269,7 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
             project.pacing === option.id ? "bg-[#FFE357]" : "bg-white"
            }`}>
            {option.label}
-          </button>
+          </SubToolboxButton>
          ))}
         </div>
        </div>
@@ -280,7 +281,7 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
           ["includeOutro", "Outro / CTA"],
          ] as const
         ).map(([key, label]) => (
-         <button
+         <SubToolboxButton level="l1"
           key={key}
           type="button"
           aria-pressed={project[key]}
@@ -289,7 +290,7 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
            project[key] ? "bg-[#CCFF00]" : "bg-white"
           }`}>
           {project[key] ? `✓ ${label}` : label}
-         </button>
+         </SubToolboxButton>
         ))}
        </div>
 
@@ -332,29 +333,29 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
             minHeight="48px"
            />
           </div>
-          <button
+          <SubToolboxButton level="l1"
            type="button"
            aria-label={`Move chapter ${index + 1} up`}
            disabled={index === 0}
            onClick={() => architect.moveChapter(chapter.id, -1)}
            className="size-9 border-[2px] border-black rounded-lg bg-white grid place-items-center disabled:opacity-30">
            <ArrowUp size={14} strokeWidth={3} />
-          </button>
-          <button
+          </SubToolboxButton>
+          <SubToolboxButton level="l1"
            type="button"
            aria-label={`Move chapter ${index + 1} down`}
            disabled={index === project.chapters.length - 1}
            onClick={() => architect.moveChapter(chapter.id, 1)}
            className="size-9 border-[2px] border-black rounded-lg bg-white grid place-items-center disabled:opacity-30">
            <ArrowDown size={14} strokeWidth={3} />
-          </button>
-          <button
+          </SubToolboxButton>
+          <SubToolboxButton level="l1"
            type="button"
            aria-label={`Remove chapter ${index + 1}`}
            onClick={() => architect.removeChapter(chapter.id)}
            className="size-9 border-[2px] border-black rounded-lg bg-[#FF77D6] grid place-items-center">
            <Trash2 size={14} strokeWidth={3} />
-          </button>
+          </SubToolboxButton>
          </div>
          <div className="grid grid-cols-[1fr_88px] gap-2">
           <div className="min-w-0">
@@ -395,12 +396,12 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
          No chapters — the engine will infer a structure.
         </p>
        )}
-       <button
+       <SubToolboxButton level="l1"
         type="button"
         onClick={architect.addChapter}
         className="w-full min-h-12 border-[3px] border-black rounded-xl bg-[#D08BFF] font-black uppercase text-xs flex items-center justify-center gap-2 shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none">
         <Plus size={16} strokeWidth={3} /> Add chapter
-       </button>
+       </SubToolboxButton>
       </div>
      </SubToolbox>
 
@@ -424,13 +425,13 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
             minHeight="48px"
            />
           </div>
-          <button
+          <SubToolboxButton level="l1"
            type="button"
            aria-label={`Remove reference ${index + 1}`}
            onClick={() => architect.removeReference(reference.id)}
            className="size-11 shrink-0 border-[2px] border-black rounded-lg bg-[#FF77D6] grid place-items-center">
            <Trash2 size={14} strokeWidth={3} />
-          </button>
+          </SubToolboxButton>
          </div>
          <StandardTextArea
           aria-label={`Reference ${index + 1} note`}
@@ -446,12 +447,12 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
          No references — specific stats and quotes will be avoided.
         </p>
        )}
-       <button
+       <SubToolboxButton level="l1"
         type="button"
         onClick={architect.addReference}
         className="w-full min-h-12 border-[3px] border-black rounded-xl bg-[#8CFF8F] font-black uppercase text-xs flex items-center justify-center gap-2 shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none">
         <Plus size={16} strokeWidth={3} /> Add reference
-       </button>
+       </SubToolboxButton>
       </div>
      </SubToolbox>
 
@@ -475,18 +476,18 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
             minHeight="48px"
            />
           </div>
-          <button
+          <SubToolboxButton level="l1"
            type="button"
            aria-label={`Remove piece ${index + 1}`}
            onClick={() => architect.removeFragment(fragment.id)}
            className="size-11 shrink-0 border-[2px] border-black rounded-lg bg-white grid place-items-center">
            <Trash2 size={14} strokeWidth={3} />
-          </button>
+          </SubToolboxButton>
          </div>
          <div className="p-3 space-y-2">
           <div className="grid grid-cols-3 gap-2" aria-label={`Piece ${index + 1} mode`}>
            {FRAGMENT_MODES.map((mode) => (
-            <button
+            <SubToolboxButton level="l1"
              key={mode.id}
              type="button"
              title={mode.hint}
@@ -496,7 +497,7 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
               fragment.mode === mode.id ? FRAGMENT_TONE[mode.id] : "bg-white"
              }`}>
              {mode.label}
-            </button>
+            </SubToolboxButton>
            ))}
           </div>
           <StandardTextArea
@@ -532,12 +533,12 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
          Nothing pasted yet — the script will be written from scratch.
         </p>
        )}
-       <button
+       <SubToolboxButton level="l1"
         type="button"
         onClick={architect.addFragment}
         className="w-full min-h-12 border-[3px] border-black rounded-xl bg-[#FF9CD8] font-black uppercase text-xs flex items-center justify-center gap-2 shadow-[3px_3px_0_0_black] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none">
         <Plus size={16} strokeWidth={3} /> Add script piece
-       </button>
+       </SubToolboxButton>
       </div>
      </SubToolbox>
     </div>

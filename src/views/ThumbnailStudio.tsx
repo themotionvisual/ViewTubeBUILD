@@ -24,8 +24,8 @@ import {
  SubToolboxGridActionButton,
  SubToolboxDropdownControl,
 } from "../components/Toolbox"
-import { StandardButton } from "../components/StandardButton"
 import { PostActionReflection } from "../components/PostActionReflection"
+import { SubToolboxSegmentedToggle } from "../components/subtoolbox/SubToolboxPrimitives"
 import {
  addAssetVariant,
  createAssetVariantGroup,
@@ -401,23 +401,17 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
   shellClassName="animate-fade-in"
    contentClassName={embedded ? "p-0" : "p-8 min-h-[600px] relative bg-white"}
    headerActions={
-    <div className="flex bg-white border-[4px] border-black p-1 rounded-xl shadow-[3px_3px_0px_0px_black] mr-2 h-12 my-auto">
-     <button
-      onClick={(e) => {
-       e.stopPropagation()
-       setActiveTab("generate")
-      }}
-      className={`px-5 text-[11px] font-[1000] uppercase tracking-tighter rounded-lg transition-all flex items-center gap-2 ${activeTab === "generate" ? "bg-black text-white" : "text-black/30 hover:text-black"}`}>
-      Studio
-     </button>
-     <button
-      onClick={(e) => {
-       e.stopPropagation()
-       setActiveTab("analyze")
-      }}
-      className={`px-5 text-[11px] font-[1000] uppercase tracking-tighter rounded-lg transition-all flex items-center gap-2 ${activeTab === "analyze" ? "bg-black text-white" : "text-black/30 hover:text-black"}`}>
-      Analyzer
-     </button>
+    <div className="mr-2 my-auto" onClick={(event) => event.stopPropagation()}>
+     <SubToolboxSegmentedToggle
+      level="l1"
+      ariaLabel="Thumbnail Studio mode"
+      value={activeTab}
+      options={[
+       { value: "generate", label: "Studio" },
+       { value: "analyze", label: "Analyzer" },
+      ]}
+      onValueChange={(value) => setActiveTab(value as "generate" | "analyze")}
+     />
     </div>
    }>
    {/* Generated History Bar */}
@@ -705,18 +699,16 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
        </div>
        <div>
         <p className="text-[9px] font-[1000] uppercase tracking-wider text-black/40 mb-1">Surface</p>
-        <div className="flex bg-white border-[3px] border-black rounded-lg overflow-hidden shadow-[3px_3px_0px_0px_black]">
-         <button
-          onClick={() => setSurfaceMode("mobile")}
-          className={`flex-1 py-2.5 text-[9px] font-[1000] uppercase tracking-tight transition-all ${surfaceMode === "mobile" ? "bg-black text-white" : "text-black/30 hover:text-black"}`}>
-          📱 Mobile
-         </button>
-         <button
-          onClick={() => setSurfaceMode("ctv")}
-          className={`flex-1 py-2.5 text-[9px] font-[1000] uppercase tracking-tight transition-all ${surfaceMode === "ctv" ? "bg-black text-white" : "text-black/30 hover:text-black"}`}>
-          📺 CTV
-         </button>
-        </div>
+        <SubToolboxSegmentedToggle
+         level="l1"
+         ariaLabel="Thumbnail preview surface"
+         value={surfaceMode}
+         options={[
+          { value: "mobile", label: "📱 Mobile" },
+          { value: "ctv", label: "📺 CTV" },
+         ]}
+         onValueChange={(value) => setSurfaceMode(value as "mobile" | "ctv")}
+        />
        </div>
       </div>
 
