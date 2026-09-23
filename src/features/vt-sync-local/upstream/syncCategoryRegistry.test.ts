@@ -6,6 +6,7 @@ import {
  VT_SYNC_DISABLED_UNVALIDATED_CATEGORY_OPTIONS,
  expandVtSyncCategoryDependencies,
  filterVtSyncVisibleCategoryIds,
+ resolveVtSyncRequestedCategoryIds,
  getVtSyncDefaultCategoryIds,
  getVtSyncVisibleCategoryIds,
 } from "./syncCategoryRegistry"
@@ -55,6 +56,15 @@ describe("VT Sync category registry", () => {
   expect(new Set(expanded).size).toBe(expanded.length)
   expect(retentionOnly).toEqual(["retention"])
   expect(dailyOnly).toEqual(["daily_metrics"])
+ })
+
+ it("keeps user-facing requests exact instead of auto-running dependencies", () => {
+  expect(resolveVtSyncRequestedCategoryIds(["videos_analytics"])).toEqual(["videos_analytics"])
+  expect(resolveVtSyncRequestedCategoryIds(["video_metadata", "videos_analytics", "videos_analytics"])).toEqual([
+   "video_metadata",
+   "videos_analytics",
+  ])
+  expect(resolveVtSyncRequestedCategoryIds(["traffic_overview", "traffic_shorts"])).toEqual(["traffic_overview"])
  })
 
  it("keeps hidden categories in code as disabled_unvalidated", () => {
