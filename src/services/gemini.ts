@@ -4910,3 +4910,49 @@ export const generateBrainJsonObject = async (input: {
    return JSON.parse(cleanJsonString(response.text))
   })
 }
+
+
+/**
+ * Provider-owned schema JSON generation for governed creator assets and other typed callers.
+ *
+ * Provider credentials, retry policy, model selection and raw model invocation stay here.
+ * Callers receive both requested and served model IDs so traces can attribute substitutions.
+ */
+export const generateSchemaJsonObject = async <TOutput = unknown>(input: {
+ userText: string
+ systemInstruction: string
+ responseSchema: Schema
+ capability?: Parameters<typeof getActiveModel>[0]
+}): Promise<{
+ output: TOutput
+ requestedModel: string
+ servedModel: string
+}> => {
+ const capability = input.capability || "text"
+ const { modelPreference } = getAiSettings()
+ const requestedModel = toCanonicalModel(modelPreference)
+ const servedModel = getActiveModel(capability)
+
+ return executeWithRetry(async () => {
+  const response = await getAiClient().models.generateContent({
+   model: servedModel,
+   contents: [{ role: "user", parts: [{ text: input.userText }] }],
+   config: {
+    systemInstruction: {
+     role: "system",
+     parts: [{ text: input.systemInstruction }],
+    },
+    responseMimeType: "application/json",
+    responseSchema: input.responseSchema,
+   },
+  })
+
+  if (!response.text) throw new Error("The model returned an empty schema JSON response")
+
+  return {
+   output: JSON.parse(cleanJsonString(response.text)) as TOutput,
+   requestedModel,
+   servedModel,
+  }
+ })
+}
