@@ -40,5 +40,8 @@ describe("VideoPackageRepository consolidation", () => {
     // Reading triggers repair while preserving the exact corrupt payload for diagnosis/recovery.
     expect(listVideoPackages()).toEqual([])
     expect(getVideoPackageRecoverySnapshot()).toBe("{broken-json")
+
+    resetVideoPackageRepositoryForTests()
+    expect(getVideoPackageRecoverySnapshot()).toBeNull()
   })
 })
