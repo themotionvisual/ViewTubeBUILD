@@ -119,16 +119,17 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const effectiveMainSplit=moduleDraggingEnabled
     ?prefs.mainSplit
     :orientation==='portrait'&&isPortraitVideo
-      ?.64
+      ?.72
       :orientation==='landscape'&&isPortraitVideo
-        ?.38
-        :prefs.mainSplit;
+        ?.46
+        :orientation==='portrait'
+          ?.42
+          :.62;
   const resolvedEditorSettings=useMemo<EditorSettingsModel|undefined>(()=>editorSettings?{
     ...editorSettings,
     layoutDraggingEnabled:moduleDraggingEnabled,
     onLayoutDraggingEnabled:(enabled:boolean)=>patchPrefs({layoutDraggingEnabled:enabled}),
   }:undefined,[editorSettings,moduleDraggingEnabled,patchPrefs]);
-  const visibleTrackCount=store.state.project.tracks.filter(track=>!track.hidden).length;
   const effectiveTimelineScale=moduleDraggingEnabled?prefs.timelineScale:1;
   const actionHeight=showActionLabels?40:34;
   const timelineCoreHeight=timelinePreferredHeight(Math.max(1,store.state.project.tracks.length))*effectiveTimelineScale;
