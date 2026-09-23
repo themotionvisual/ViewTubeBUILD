@@ -1,30 +1,60 @@
 import { useEffect } from "react"
 import { useLocation } from "react-router-dom"
+import { useWorkspaceUxPreferences } from "../hooks/useWorkspaceUxPreferences"
+
+const scrollStorageKey = (routeKey: string) =>
+  `viewtube:page-scroll:${encodeURIComponent(routeKey)}`
+
+const getScrollTop = (viewport: HTMLElement | null): number =>
+  viewport?.scrollTop ?? window.scrollY
+
+const setScrollTop = (viewport: HTMLElement | null, top: number) => {
+  if (viewport) {
+    viewport.scrollTo({ top, left: 0, behavior: "auto" })
+    return
+  }
+  window.scrollTo({ top, left: 0, behavior: "auto" })
+}
 
 /**
- * Reset window scroll to (0, 0) on every route change so a normal navigation
- * ("Dashboard" → "Analytics") always starts at the top of the page, matching
- * what users expect from a multi-page site. Without this, react-router
- * preserves the previous route's scroll offset, which reads as a bug on
- * long-scroll views (Performance Hub, Reference Studio, …).
+ * Route-aware scroll continuity.
  *
- * Hash navigation (`/foo#bar`) is exempt — a hash implies the caller wants
- * to jump to a specific anchor, not the top.
+ * When Settings → Experience → Remember page position is enabled, every route
+ * keeps its own scroll offset for the current browser session. Returning to a
+ * page restores that position. When disabled, navigation uses the traditional
+ * reset-to-top behavior.
  *
- * Mount this once, inside `<BrowserRouter>`. It renders nothing.
+ * Hash navigation is exempt because an explicit hash owns the destination.
  */
 export const ScrollToTop = () => {
- const { pathname, hash } = useLocation()
+  const { pathname, search, hash } = useLocation()
+  const { preservePagePosition } = useWorkspaceUxPreferences()
+  const routeKey = `${pathname}${search}`
 
- useEffect(() => {
-  if (hash) return
-  // Cast avoids the TS lib.dom mismatch on "instant" in some setups.
-  try {
-   window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior })
-  } catch {
-   window.scrollTo(0, 0)
-  }
- }, [pathname, hash])
+  useEffect(() => {
+    if (hash) return
 
- return null
+    const viewport = document.getElementById("main-content")
+    let cancelled = false
+
+    const frame = window.requestAnimationFrame(() => {
+      if (cancelled) return
+      const stored = preservePagePosition
+        ? Number(window.sessionStorage.getItem(scrollStorageKey(routeKey)) || 0)
+        : 0
+      setScrollTop(viewport, Number.isFinite(stored) ? Math.max(0, stored) : 0)
+    })
+
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(frame)
+      if (!preservePagePosition) return
+      window.sessionStorage.setItem(
+        scrollStorageKey(routeKey),
+        String(Math.max(0, getScrollTop(viewport))),
+      )
+    }
+  }, [hash, preservePagePosition, routeKey])
+
+  return null
 }
