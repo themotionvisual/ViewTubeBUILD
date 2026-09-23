@@ -478,3 +478,84 @@
 [data-vt-toolbox-level="sub"] .vt-subtoolbox-inset{
   padding:4px!important;
 }
+
+
+/* ==========================================================================
+   Mobile density authority — 2026-09-22 screenshot certification.
+   Preserve title type sizes; reduce structural chrome around the two-line cap.
+   ========================================================================== */
+@media (max-width: 767px) {
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) {
+    --vt-toolbox-header-height: 68px;
+    --vt-toolbox-radius: 14px;
+    --vt-toolbox-shadow-offset: 7px;
+  }
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) {
+    border-radius: 14px !important;
+  }
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
+    height: 68px !important;
+    min-height: 68px !important;
+    max-height: 68px !important;
+  }
+  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
+    width: 68px !important;
+    min-width: 68px !important;
+    max-width: 68px !important;
+    height: 68px !important;
+    flex-basis: 68px !important;
+  }
+
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"],
+  [data-vt-toolbox-level="sub"],
+  [data-vt-subtoolbox-module="true"] {
+    --vt-subtoolbox-header-height: 50px;
+    --vt-subtoolbox-radius: 10px;
+    --vt-subtoolbox-shadow-offset: 4px;
+  }
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] {
+    border-radius: 10px !important;
+  }
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
+    height: 50px !important;
+    min-height: 50px !important;
+    max-height: 50px !important;
+  }
+  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child {
+    width: 50px !important;
+    min-width: 50px !important;
+    max-width: 50px !important;
+    height: 50px !important;
+    flex-basis: 50px !important;
+  }
+
+  /* Main header actions must never be visually weaker than SubToolbox actions. */
+  [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-help="true"],
+  [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-toggle="true"] {
+    width: 40px !important;
+    min-width: 40px !important;
+  }
+  [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-help="true"] > span {
+    width: 36px !important;
+    height: 36px !important;
+    box-shadow: 3px 3px 0 0 #000 !important;
+  }
+  [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-help="true"] svg {
+    width: 22px !important;
+    height: 22px !important;
+    max-width: 22px !important;
+    max-height: 22px !important;
+  }
+  [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-toggle="true"] svg {
+    width: 34px !important;
+    height: 34px !important;
+    max-width: 34px !important;
+    max-height: 34px !important;
+  }
+
+  /* Shell-to-shell rhythm mirrors the compact 4px horizontal body inset. */
+  [data-vt-toolbox][data-vt-toolbox-level="main"] .vt-main-toolbox-content,
+  [data-vt-toolbox-level="sub"] .vt-subtoolbox-content {
+    gap: 4px !important;
+  }
+}
