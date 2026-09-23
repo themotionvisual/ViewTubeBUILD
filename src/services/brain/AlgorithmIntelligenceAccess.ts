@@ -9,7 +9,8 @@ import type { OpportunityEvidence } from "./OpportunityIntelligence"
 import type { AlgorithmSignal } from "./AlgorithmStrategyEngine"
 import { createAlgorithmRecommendationHandoff } from "./AlgorithmWorkflowRecipes"
 import { createPrimingStepHandoff } from "./AlgorithmPrimingWorkflow"
-import { getVtSyncSnapshot } from "../../features/vt-sync-local"
+import { getVtSyncSnapshot, applyVtSyncPrivacyFilters } from "../../features/vt-sync-local"
+import { readBrainEngineControls } from "./BrainEngineControls"
 import { scanCanonicalSnapshotForAnomalies } from "../anomaly-intelligence/service"
 
 export type AlgorithmIntelligenceAccessResult<T> =
@@ -34,9 +35,12 @@ export const readAlgorithmIntelligenceForBrain = async (input: {
  if (input.project && !canBrainUseCapability(controls, "projects")) {
   return { status: "projects_disabled", message: "Project access is disabled in Brain User Controls." }
  }
- const anomalies = input.anomalies || (input.includeAnomalies
-  ? scanCanonicalSnapshotForAnomalies(getVtSyncSnapshot())
-   .filter((anomaly) => anomaly.channelId === input.channelId || !anomaly.channelId)
+ const engines = readBrainEngineControls(input.channelId)
+ const snapshot = engines.anomalyIntelligence && input.includeAnomalies && !input.anomalies
+  ? getVtSyncSnapshot() : null
+ const anomalies = !engines.anomalyIntelligence || input.includeAnomalies === false ? [] : input.anomalies || (snapshot?.channelId === input.channelId
+  ? scanCanonicalSnapshotForAnomalies(applyVtSyncPrivacyFilters(snapshot))
+   .filter((anomaly) => anomaly.channelId === input.channelId)
    .map((anomaly): ExternalAnomalySignal => ({
     id: anomaly.id,
     channelId: anomaly.channelId || input.channelId,
@@ -53,7 +57,14 @@ export const readAlgorithmIntelligenceForBrain = async (input: {
     evidenceIds: anomaly.evidence.map((evidence) => evidence.id),
    }))
   : [])
- const value = await buildAlgorithmIntelligencePortfolio({ ...input, anomalies })
+ const value = await buildAlgorithmIntelligencePortfolio({
+  ...input,
+  anomalies: anomalies.filter((anomaly) => anomaly.channelId === input.channelId),
+  anomalyThresholds: {
+   minimumImpact: Math.round(engines.anomalyMinimumImpact * 100),
+   minimumConfidence: Math.round(engines.anomalyMinimumConfidence * 100),
+  },
+ })
  return { status: "ok", value }
 }
 
