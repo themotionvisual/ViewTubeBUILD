@@ -725,8 +725,8 @@ Project Builder now has a compact publishing readiness summary for title, thumbn
 Lane/priority/owner/tags use local workspace metadata. Core content identity must remain in Project/ContentBuild and must not depend on workspace local storage.
 
 ### Status vocabulary
-**Status:** OPEN  
-Legacy Project statuses, Board lanes, Video Package status and ContentBuild lifecycle overlap but are not identical. Mapping must stay explicit and tested.
+**Status:** CENTRALIZED ON CURRENT FEATURE BRANCH  
+Project status, Board lane, ContentBuild stage and Video Package status are related but intentionally not identical. The current branch centralizes those translations in `projectLifecycleVocabulary.ts`, keeps Board `blocked` orthogonal to lifecycle progression so blocking a project does not reset ContentBuild stage, and treats the ContentBuild -> Video Package mapping as descriptive only. Actual Video Package transitions remain governed by `VIDEO_PACKAGE_TRANSITIONS`.
 
 ### Legacy generation paths
 **Status:** MIGRATE  
@@ -798,6 +798,13 @@ Project Builder and Board must use current canonical Toolbox/Subtoolbox primitiv
 - canonical thumbnail identity: MERGED PR #312
 - make ContentBuild the selection authority across connected/disconnected states: IN PROGRESS
 - import compatibility URLs into Vault rather than leaving them as URL-only ownership: IN PROGRESS
+
+### Wave 4.5 — Lifecycle vocabulary
+- centralize Project status -> Board lane mapping
+- centralize Board lane -> Project status mapping
+- centralize Project status -> ContentBuild stage mapping
+- preserve current ContentBuild stage while a Project is in the orthogonal Blocked lane
+- document ContentBuild stage -> Video Package status projection without auto-mutating package state
 
 ### Wave 5 — Tool continuity
 - ContentBuild-aware Script Architect

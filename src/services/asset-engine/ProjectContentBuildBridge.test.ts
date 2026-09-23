@@ -80,4 +80,11 @@ describe("Project ContentBuild bridge", () => {
   expect(build.stage).toBe(expectedStage)
  })
 
+ it("does not reset lifecycle progress when a Project is moved to the orthogonal blocked lane", () => {
+  const producing = syncProjectToContentBuild(project({ status: "production" }))
+  const blocked = syncProjectToContentBuild(project({ contentBuildId: producing.id, status: "blocked" }))
+
+  expect(producing.stage).toBe("media")
+  expect(blocked.stage).toBe("media")
+ })
 })
