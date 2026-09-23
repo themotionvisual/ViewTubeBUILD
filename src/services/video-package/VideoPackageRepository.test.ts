@@ -6,6 +6,8 @@ import {
   listVideoPackages,
   resetVideoPackageRepositoryForTests,
   saveVideoPackage,
+  VIDEO_PACKAGE_STORAGE_KEY,
+  VIDEO_PACKAGE_STORE_VERSION,
 } from "./VideoPackageRepository"
 
 describe("VideoPackageRepository consolidation", () => {
@@ -70,9 +72,62 @@ describe("VideoPackageRepository consolidation", () => {
     expect(listVideoPackages()).toHaveLength(1)
   })
 
+  it("persists one versioned envelope behind the canonical storage key", () => {
+    if (typeof localStorage === "undefined") return
+    const videoPackage = createVideoPackage({
+      id: "vp-envelope",
+      contentBuildId: "cb-envelope",
+      channelId: "channel-a",
+      projectId: "project-envelope",
+      workingTitle: "Envelope",
+      format: "long",
+    })
+
+    saveVideoPackage(videoPackage)
+
+    const raw = localStorage.getItem(VIDEO_PACKAGE_STORAGE_KEY)
+    expect(raw).not.toBeNull()
+    const stored = JSON.parse(raw!)
+    expect(Array.isArray(stored)).toBe(false)
+    expect(stored.storeVersion).toBe(VIDEO_PACKAGE_STORE_VERSION)
+    expect(stored.packages).toHaveLength(1)
+    expect(stored.packages[0].id).toBe("vp-envelope")
+  })
+
+  it("migrates the legacy raw-array store in place and preserves the pre-migration payload", () => {
+    if (typeof localStorage === "undefined") return
+    const legacyPackage = createVideoPackage({
+      id: "vp-legacy-array",
+      contentBuildId: "cb-legacy-array",
+      channelId: "channel-a",
+      projectId: "project-legacy-array",
+      workingTitle: "Legacy array",
+      format: "long",
+    })
+    const legacyRaw = JSON.stringify([legacyPackage])
+    localStorage.setItem(VIDEO_PACKAGE_STORAGE_KEY, legacyRaw)
+
+    expect(listVideoPackages().map(videoPackage => videoPackage.id)).toEqual(["vp-legacy-array"])
+
+    const migrated = JSON.parse(localStorage.getItem(VIDEO_PACKAGE_STORAGE_KEY)!)
+    expect(migrated.storeVersion).toBe(VIDEO_PACKAGE_STORE_VERSION)
+    expect(migrated.packages).toHaveLength(1)
+    expect(getVideoPackageRecoverySnapshot()).toBe(legacyRaw)
+  })
+
+  it("quarantines an unsupported store version instead of guessing how to load it", () => {
+    if (typeof localStorage === "undefined") return
+    const unsupportedRaw = JSON.stringify({ storeVersion: 999, updatedAt: "2026-09-22T00:00:00.000Z", packages: [] })
+    localStorage.setItem(VIDEO_PACKAGE_STORAGE_KEY, unsupportedRaw)
+
+    expect(listVideoPackages()).toEqual([])
+    expect(localStorage.getItem(VIDEO_PACKAGE_STORAGE_KEY)).toBeNull()
+    expect(getVideoPackageRecoverySnapshot()).toBe(unsupportedRaw)
+  })
+
   it("preserves malformed browser data in a recovery snapshot instead of creating a second package store", () => {
     if (typeof localStorage === "undefined") return
-    localStorage.setItem("viewtube_video_packages_v1", "{broken-json")
+    localStorage.setItem(VIDEO_PACKAGE_STORAGE_KEY, "{broken-json")
     expect(getVideoPackageRecoverySnapshot()).toBeNull()
 
     // Reading triggers repair while preserving the exact corrupt payload for diagnosis/recovery.
