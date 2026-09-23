@@ -98,11 +98,11 @@ describe("VideoPackage ContentBuild bridge", () => {
   const titleGroup = build.variantGroups.find(group => group.slot === "title")
   const thumbnailGroup = build.variantGroups.find(group => group.slot === "thumbnail")
   expect(titleGroup?.selectedAssetId).toBe("vault-title-v4")
-  expect(titleGroup?.finalAssetId).toBeNull()
-  expect(titleGroup?.members.find(member => member.assetId === "vault-title-v4")?.status).toBe("selected")
+  expect(titleGroup?.finalAssetId).toBe("vault-title-v4")
+  expect(titleGroup?.members.find(member => member.assetId === "vault-title-v4")?.status).toBe("final")
   expect(thumbnailGroup?.selectedAssetId).toBe("vault-thumb-v3")
-  expect(thumbnailGroup?.finalAssetId).toBeNull()
-  expect(thumbnailGroup?.members.find(member => member.assetId === "vault-thumb-v3")?.status).toBe("selected")
+  expect(thumbnailGroup?.finalAssetId).toBe("vault-thumb-v3")
+  expect(thumbnailGroup?.members.find(member => member.assetId === "vault-thumb-v3")?.status).toBe("final")
   expect(build.youtube).toMatchObject({
    videoId: "youtube-123",
    status: "published",
