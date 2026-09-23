@@ -204,7 +204,7 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
         <SubToolboxButton level="l0" size="action" tone="success"
          onClick={handleActionGenerate}
          disabled={actionLoading || !inputData.topic || !inputData.niche}
-         className="w-full bg-[#CCFF00] border-[4px] border-black rounded-xl p-5 font-[1000] uppercase text-2xl shadow-[6px_6px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 mt-4">
+         className="w-full mt-4">
          {actionLoading ? "TRANSMITTING..." : "INITIALIZE SEQUENCE"}
         </SubToolboxButton>
        </>
@@ -233,7 +233,7 @@ const PreLaunchPriming: React.FC<PreLaunchPrimingProps> = ({
         )}
          <SubToolboxButton level="l1" size="standard" tone="neutral"
           onClick={resetAction}
-          className="w-full py-4 font-black uppercase text-sm border-[4px] border-black rounded-xl hover:bg-black hover:text-white transition-colors">
+          className="w-full">
           Reset & Generate Another
          </SubToolboxButton>
 
