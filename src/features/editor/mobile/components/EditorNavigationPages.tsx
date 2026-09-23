@@ -1,8 +1,7 @@
 import React from 'react';
-import {AudioLines,Film,FolderKanban,LayoutTemplate,ScanSearch,Settings as SettingsIcon,Shapes,Shuffle,SlidersHorizontal,Type,Upload,WandSparkles} from 'lucide-react';
+import {AudioLines,Film,FolderKanban,LayoutTemplate,ScanSearch,Settings as SettingsIcon,Shuffle,SlidersHorizontal,Type,Upload} from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
 import {readClipVisualTransform} from '../state/editorState';
-import {TemplateLibraryPanel} from './TemplateLibraryPanel';
 import {renderPanelBody} from './PanelBodies';
 import {EditorFeatureManifest} from './EditorFeatureManifest';
 import {EditorViewSwitcher} from './EditorViewSwitcher';
