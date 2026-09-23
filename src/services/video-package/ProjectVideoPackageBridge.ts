@@ -1,5 +1,6 @@
 import type { Project, VaultAsset } from "../../types"
 import { createVideoPackage } from "./packageValidation"
+import { getContentBuild, setContentBuildSelection } from "../asset-engine/ContentBuildRepository"
 import { findVideoPackageByProject, saveVideoPackage } from "./VideoPackageRepository"
 
 const packageFormatForProject = (project: Project): "short" | "long" | "live" => {
@@ -53,6 +54,9 @@ export const selectProjectVideoPackageThumbnail = (
 ) => {
   const videoPackage = ensureVideoPackageForProject(project, input)
   if (!videoPackage) return null
+  if (!project.contentBuildId || !getContentBuild(project.contentBuildId)) {
+    throw new Error(`Cannot select thumbnail: Project ${project.id} has no resolved ContentBuild.`)
+  }
 
   const now = input.now || new Date().toISOString()
   const sourceToolId = input.sourceToolId || "project-builder"
@@ -76,7 +80,7 @@ export const selectProjectVideoPackageThumbnail = (
     ? videoPackage.packaging.thumbnailVariants
     : [...videoPackage.packaging.thumbnailVariants, artifact]
 
-  return saveVideoPackage({
+  const updatedPackage = saveVideoPackage({
     ...videoPackage,
     version: videoPackage.version + 1,
     identity: { ...videoPackage.identity, updatedAt: now },
@@ -97,6 +101,13 @@ export const selectProjectVideoPackageThumbnail = (
       },
     ],
   })
+
+  setContentBuildSelection(project.contentBuildId, "thumbnail", asset.id, {
+    toolId: sourceToolId,
+    actorType: "creator",
+    final: true,
+  })
+  return updatedPackage
 }
 
 
@@ -107,11 +118,14 @@ export const clearProjectVideoPackageThumbnail = (
   if (!project.contentBuildId) return null
   const videoPackage = findVideoPackageByProject(project.id, project.contentBuildId)
   if (!videoPackage || !videoPackage.packaging.selectedThumbnailId) return videoPackage
+  if (!getContentBuild(project.contentBuildId)) {
+    throw new Error(`Cannot clear thumbnail: Project ${project.id} has no resolved ContentBuild.`)
+  }
 
   const now = input.now || new Date().toISOString()
   const sourceToolId = input.sourceToolId || "project-builder"
   const previous = videoPackage.packaging.selectedThumbnailId
-  return saveVideoPackage({
+  const updatedPackage = saveVideoPackage({
     ...videoPackage,
     version: videoPackage.version + 1,
     identity: { ...videoPackage.identity, updatedAt: now },
@@ -128,4 +142,9 @@ export const clearProjectVideoPackageThumbnail = (
       },
     ],
   })
+  setContentBuildSelection(project.contentBuildId, "thumbnail", null, {
+    toolId: sourceToolId,
+    actorType: "creator",
+  })
+  return updatedPackage
 }
