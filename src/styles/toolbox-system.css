@@ -214,8 +214,8 @@
 }
 
 /* Split-left module actions are peers of a collapsed SubToolbox. */
-[data-vt-toolbox-level="sub"] [data-vt-split-left],
-[data-vt-toolbox-level="sub"] .vt-split-left-module-action {
+[data-vt-split-left],
+.vt-split-left-module-action {
   min-height: 48px !important;
   height: 48px !important;
   border-width: 4px !important;
@@ -230,8 +230,8 @@
   font-weight: 1000 !important;
   line-height: .82 !important;
 }
-[data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-rail],
-[data-vt-toolbox-level="sub"] .vt-split-left-module-action > :first-child {
+[data-vt-split-left] > [data-vt-split-left-rail],
+.vt-split-left-module-action > [data-vt-split-left-rail] {
   width: 48px !important;
   min-width: 48px !important;
   height: 48px !important;
@@ -242,8 +242,8 @@
   justify-content: center;
   border-right: 4px solid #000 !important;
 }
-[data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-label],
-[data-vt-toolbox-level="sub"] .vt-split-left-module-action > :last-child {
+[data-vt-split-left] > [data-vt-split-left-label],
+.vt-split-left-module-action > [data-vt-split-left-label] {
   min-width: 0;
   flex: 1 1 auto;
   display: flex;
@@ -567,21 +567,21 @@
   padding: 4px 4px 0 !important;
 }
 @media (max-width: 767px) {
-  [data-vt-toolbox-level="sub"] [data-vt-split-left],
-  [data-vt-toolbox-level="sub"] .vt-split-left-module-action {
+  [data-vt-split-left],
+  .vt-split-left-module-action {
     min-height: 50px !important;
     height: 50px !important;
     font-size: 18px !important;
   }
-  [data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-rail],
-  [data-vt-toolbox-level="sub"] .vt-split-left-module-action > :first-child {
+  [data-vt-split-left] > [data-vt-split-left-rail],
+  .vt-split-left-module-action > [data-vt-split-left-rail] {
     width: 50px !important;
     min-width: 50px !important;
     height: 50px !important;
     flex-basis: 50px !important;
   }
-  [data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-label],
-  [data-vt-toolbox-level="sub"] .vt-split-left-module-action > :last-child {
+  [data-vt-split-left] > [data-vt-split-left-label],
+  .vt-split-left-module-action > [data-vt-split-left-label] {
     font-size: 18px !important;
     line-height: .88 !important;
     white-space: normal !important;
