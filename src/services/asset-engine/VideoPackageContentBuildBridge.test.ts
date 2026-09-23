@@ -92,6 +92,14 @@ describe("VideoPackage ContentBuild bridge", () => {
    title: "vault-title-v4",
    thumbnail: "vault-thumb-v3",
   })
+  const titleGroup = build.variantGroups.find(group => group.slot === "title")
+  const thumbnailGroup = build.variantGroups.find(group => group.slot === "thumbnail")
+  expect(titleGroup?.selectedAssetId).toBe("vault-title-v4")
+  expect(titleGroup?.finalAssetId).toBeNull()
+  expect(titleGroup?.members.find(member => member.assetId === "vault-title-v4")?.status).toBe("selected")
+  expect(thumbnailGroup?.selectedAssetId).toBe("vault-thumb-v3")
+  expect(thumbnailGroup?.finalAssetId).toBeNull()
+  expect(thumbnailGroup?.members.find(member => member.assetId === "vault-thumb-v3")?.status).toBe("selected")
   expect(build.youtube).toMatchObject({
    videoId: "youtube-123",
    status: "published",
@@ -165,6 +173,16 @@ describe("VideoPackage ContentBuild bridge", () => {
   expect(build.variantGroups.find(group => group.slot === "thumbnail")?.members).toHaveLength(1)
   expect(build.selections.title).toBe("vault-title-b")
   expect(build.selections.thumbnail).toBe("vault-thumb-a")
+
+  const repeated = syncVideoPackageToContentBuild(videoPackage)
+  expect(repeated.variantGroups.filter(group => group.slot === "title")).toHaveLength(1)
+  expect(repeated.variantGroups.filter(group => group.slot === "thumbnail")).toHaveLength(1)
+  expect(repeated.versions.filter(version => version.slot === "title")).toHaveLength(2)
+  expect(repeated.versions.filter(version => version.slot === "thumbnail")).toHaveLength(1)
+  expect(repeated.variantGroups.find(group => group.slot === "title")?.selectedAssetId).toBe("vault-title-b")
+  expect(repeated.variantGroups.find(group => group.slot === "title")?.finalAssetId).toBeNull()
+  expect(repeated.variantGroups.find(group => group.slot === "thumbnail")?.selectedAssetId).toBe("vault-thumb-a")
+  expect(repeated.variantGroups.find(group => group.slot === "thumbnail")?.finalAssetId).toBeNull()
 
   const projected = projectContentBuildSelectionsToVideoPackage(videoPackage)
   expect(projected.packaging.titleVariants).toHaveLength(2)
