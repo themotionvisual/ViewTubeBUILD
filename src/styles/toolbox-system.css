@@ -559,3 +559,32 @@
     gap: 4px !important;
   }
 }
+
+
+/* Second mobile-density pass: align primary split-left actions and remove the
+   doubled bottom moat inside SubToolboxes. */
+[data-vt-toolbox-level="sub"] .vt-subtoolbox-inset {
+  padding: 4px 4px 0 !important;
+}
+@media (max-width: 767px) {
+  [data-vt-toolbox-level="sub"] [data-vt-split-left],
+  [data-vt-toolbox-level="sub"] .vt-split-left-module-action {
+    min-height: 50px !important;
+    height: 50px !important;
+    font-size: 18px !important;
+  }
+  [data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-rail],
+  [data-vt-toolbox-level="sub"] .vt-split-left-module-action > :first-child {
+    width: 50px !important;
+    min-width: 50px !important;
+    height: 50px !important;
+    flex-basis: 50px !important;
+  }
+  [data-vt-toolbox-level="sub"] [data-vt-split-left] > [data-vt-split-left-label],
+  [data-vt-toolbox-level="sub"] .vt-split-left-module-action > :last-child {
+    font-size: 18px !important;
+    line-height: .88 !important;
+    white-space: normal !important;
+    text-wrap: balance;
+  }
+}
