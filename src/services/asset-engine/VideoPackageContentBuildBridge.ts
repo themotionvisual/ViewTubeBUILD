@@ -114,6 +114,24 @@ export const syncVideoPackageToContentBuild = (
 
  synchronizeVersionedArtifact("script", videoPackage.creative.script)
  synchronizeVersionedArtifact("storyboard", videoPackage.creative.storyboard)
+ const publicationArtifacts: Array<[string, PackageArtifactRef | undefined]> = [
+  ["description", videoPackage.packaging.description],
+  ["tags", videoPackage.packaging.tags],
+  ["end-screen", videoPackage.packaging.endScreen],
+  ["outro", videoPackage.packaging.outro],
+ ]
+ publicationArtifacts.forEach(([slot, artifact]) => {
+  const assetId = assetIdOf(artifact)
+  if (!assetId) return
+  const current = getContentBuild(build.id)!
+  if (current.selections[slot] !== assetId) {
+   setContentBuildSelection(build.id, slot, assetId, {
+    toolId: "video-package",
+    actorType: "sync",
+    final: Boolean(artifact?.approvedAt),
+   })
+  }
+ })
  videoPackage.production.renderIds.forEach(renderId =>
   synchronizeVersionedArtifact("final-render", null, renderId)
  )
