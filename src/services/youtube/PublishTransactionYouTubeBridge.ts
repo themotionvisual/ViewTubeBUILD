@@ -1,4 +1,5 @@
 import type { PublishingPackageProjection } from "../asset-engine/PublishingPackageProjection"
+import type { ContentBuildYouTubeBinding } from "../asset-engine/contracts"
 import {
  beginPublishTransaction,
  completePublishStep,
@@ -61,13 +62,14 @@ export const runPublishTransactionStep=async<T>(input:{
  step:Exclude<PublishTransactionStep,"upload-video"|"verify-remote-state">
  execute:(transaction:ContentBuildPublishTransaction)=>Promise<T>
  receipt?:(result:T)=>Record<string,unknown>
+ youtubeBinding?:(result:T,transaction:ContentBuildPublishTransaction)=>Partial<Omit<ContentBuildYouTubeBinding,"videoId"|"canonicalUrl"|"status">>&{status?:ContentBuildYouTubeBinding["status"]}
 })=>{
  const transaction=getPublishTransaction(input.transactionId)
  if(!transaction)throw new Error("Unknown publish transaction: "+input.transactionId)
  if(transaction.steps[input.step]?.status==="completed")return transaction
  try{
   const result=await input.execute(transaction)
-  return completePublishStep({transactionId:transaction.id,step:input.step,receipt:input.receipt?.(result),toolId:"video-publisher"})
+  return completePublishStep({transactionId:transaction.id,step:input.step,receipt:input.receipt?.(result),youtubeBinding:input.youtubeBinding?.(result,transaction),toolId:"video-publisher"})
  }catch(error){
   failPublishTransaction(transaction.id,input.step,error,"video-publisher")
   throw error
@@ -135,6 +137,11 @@ export const applyPublishSchedulePrivacy=(
   transactionId,step:"apply-schedule-privacy",
   execute:transaction=>updateUnifiedVideo(requireRemoteVideoId(transaction),details),
   receipt:()=>({applied:true,privacyStatus:details.privacyStatus,publishAt:details.publishAt||null}),
+  youtubeBinding:()=>({
+   status: details.publishAt ? "scheduled" : details.privacyStatus === "public" ? "published" : details.privacyStatus,
+   scheduledAt: details.publishAt || null,
+   publishedAt: !details.publishAt && details.privacyStatus === "public" ? new Date().toISOString() : null,
+  }),
  })
 
 
