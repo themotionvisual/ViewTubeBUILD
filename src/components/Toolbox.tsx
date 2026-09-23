@@ -488,6 +488,8 @@ interface ToolboxScaffoldProps {
   paletteIndex?: number;
   collapsible?: boolean;
   isOpen?: boolean;
+  isOpenInitial?: boolean;
+  persistenceId?: string;
   onToggle?: () => void;
   unmountWhenClosed?: boolean;
   embedded?: boolean;
@@ -515,7 +517,9 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
   textColor = "text-black",
   paletteIndex,
   collapsible = false,
-  isOpen = true,
+  isOpen,
+  isOpenInitial = true,
+  persistenceId,
   onToggle,
   unmountWhenClosed = false,
   embedded = false,
@@ -544,6 +548,8 @@ export const ToolboxScaffold: React.FC<ToolboxScaffoldProps> = ({
     paletteIndex={paletteIndex}
     collapsible={collapsible}
     isOpen={isOpen}
+    isOpenInitial={isOpenInitial}
+    persistenceId={persistenceId}
     onToggle={onToggle}
     unmountWhenClosed={unmountWhenClosed}
     embedded={embedded}
