@@ -24,10 +24,7 @@ import { selectVtSyncBaseRetentionVideos } from "../adapters/retentionSelection"
 // QW#2 — classify LOGIN_ABORTED / AbortError / popup-closed rejections so
 // mid-flow user cancels don't propagate as unhandled promise rejections.
 import { isLoginAbortError } from "../../../services/auth/loginErrors"
-import {
- expandVtSyncCategoryDependencies,
- filterVtSyncVisibleCategoryIds,
-} from "../upstream/syncCategoryRegistry"
+import { resolveVtSyncRequestedCategoryIds } from "../upstream/syncCategoryRegistry"
 import {
  VT_SYNC_GROUP_LABELS,
  VT_SYNC_GROUP_ORDER,
@@ -219,7 +216,7 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
    // Post-login auth check — user may have cancelled mid-flow.
    if (!isAuthenticated) return
   }
-  await onStartSync(expandVtSyncCategoryDependencies(filterVtSyncVisibleCategoryIds(selected)), retentionEnabled ? retentionVideoIds : undefined, false, selectedWindows)
+  await onStartSync(resolveVtSyncRequestedCategoryIds(selected), retentionEnabled ? retentionVideoIds : undefined, false, selectedWindows)
  }
 
  const startCategories = async (categoryIds: string[], includeRetentionVideoIds = false, forceFullVideoMetadata = false) => {
@@ -231,8 +228,8 @@ export const VtSyncUnifiedSyncToolbox: React.FC<{
    }
    if (!isAuthenticated) return
   }
-  const expanded = expandVtSyncCategoryDependencies(categoryIds)
-  await onStartSync(expanded, includeRetentionVideoIds ? retentionVideoIds : undefined, forceFullVideoMetadata, selectedWindows)
+  const requested = resolveVtSyncRequestedCategoryIds(categoryIds)
+  await onStartSync(requested, includeRetentionVideoIds ? retentionVideoIds : undefined, forceFullVideoMetadata, selectedWindows)
  }
 
  const toExecutionStatus = (status?: string): RetroSyncExecutionStatus => {
