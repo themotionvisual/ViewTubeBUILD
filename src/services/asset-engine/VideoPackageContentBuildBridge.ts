@@ -1,8 +1,11 @@
 import type { PackageArtifactRef, ViewTubeVideoPackage } from "../video-package/contracts"
 import {
  attachAssetToContentBuild,
+ addContentBuildVariant,
  bindYouTubeVideo,
  createContentBuild,
+ createContentBuildAssetVersion,
+ createContentBuildVariantGroup,
  getContentBuild,
  setContentBuildSelection,
 } from "./ContentBuildRepository"
@@ -64,6 +67,45 @@ export const syncVideoPackageToContentBuild = (videoPackage: ViewTubeVideoPackag
    metadata: { packageId: videoPackage.id },
   })
  })
+
+ const synchronizeOptionGroup = (slot: "title" | "thumbnail", artifacts: PackageArtifactRef[]) => {
+  if (!artifacts.length) return
+  const group = createContentBuildVariantGroup({
+   contentBuildId: build.id,
+   slot,
+   label: slot === "title" ? "Video Package Title Options" : "Video Package Thumbnail Options",
+   sourceToolId: "video-package",
+   metadata: { packageId: videoPackage.id },
+  })
+  artifacts.forEach(artifact => {
+   const assetId = assetIdOf(artifact)
+   if (!assetId) return
+   const current = getContentBuild(build.id)!
+   const existingVersion = current.versions.find(version =>
+    version.assetId === assetId && version.slot === slot
+   )
+   const version = existingVersion || createContentBuildAssetVersion({
+    contentBuildId: build.id,
+    assetId,
+    slot,
+    label: artifact.label,
+    sourceToolId: artifact.sourceToolId,
+    metadata: { packageId: videoPackage.id, packageArtifactId: artifact.id, packageVersion: artifact.version },
+   })
+   addContentBuildVariant({
+    contentBuildId: build.id,
+    groupId: group.id,
+    assetId,
+    versionId: version.id,
+    label: artifact.label,
+    sourceToolId: artifact.sourceToolId,
+    metadata: { packageId: videoPackage.id, packageArtifactId: artifact.id },
+   })
+  })
+ }
+
+ synchronizeOptionGroup("title", videoPackage.packaging.titleVariants)
+ synchronizeOptionGroup("thumbnail", videoPackage.packaging.thumbnailVariants)
 
  const selectedTitle = videoPackage.packaging.titleVariants.find(
   artifact => artifact.id === videoPackage.packaging.selectedTitleId,
