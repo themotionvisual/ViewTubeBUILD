@@ -27,7 +27,7 @@ const setScrollTop = (viewport: HTMLElement | null, top: number) => {
  * Hash navigation is exempt because an explicit hash owns the destination.
  */
 export const ScrollToTop = () => {
-  const { pathname, search, hash } = useLocation()
+  const { pathname, search = "", hash } = useLocation()
   const { preservePagePosition } = useWorkspaceUxPreferences()
   const routeKey = `${pathname}${search}`
 
@@ -35,19 +35,12 @@ export const ScrollToTop = () => {
     if (hash) return
 
     const viewport = document.getElementById("main-content")
-    let cancelled = false
-
-    const frame = window.requestAnimationFrame(() => {
-      if (cancelled) return
-      const stored = preservePagePosition
-        ? Number(window.sessionStorage.getItem(scrollStorageKey(routeKey)) || 0)
-        : 0
-      setScrollTop(viewport, Number.isFinite(stored) ? Math.max(0, stored) : 0)
-    })
+    const stored = preservePagePosition
+      ? Number(window.sessionStorage.getItem(scrollStorageKey(routeKey)) || 0)
+      : 0
+    setScrollTop(viewport, Number.isFinite(stored) ? Math.max(0, stored) : 0)
 
     return () => {
-      cancelled = true
-      window.cancelAnimationFrame(frame)
       if (!preservePagePosition) return
       window.sessionStorage.setItem(
         scrollStorageKey(routeKey),
