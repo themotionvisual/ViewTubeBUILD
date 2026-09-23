@@ -200,7 +200,7 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
           className="vt-quick-switcher__input"
         />
         <CommandList className="vt-quick-switcher__list">
-          <CommandEmpty className="vt-quick-switcher__empty">No matching ViewTube destination.</CommandEmpty>
+          <CommandEmpty className="vt-quick-switcher__empty">No matching ViewTube destination or command.</CommandEmpty>
 
           {currentPage ? (
             <CommandGroup heading="Quick action" className="vt-quick-switcher__group">
@@ -247,7 +247,7 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
             })}
           </CommandGroup>
 
-                    {pinnedPages.length ? (
+          {pinnedPages.length ? (
             <CommandGroup heading="Pinned" className="vt-quick-switcher__group">
               {pinnedPages.map((page) => (
                 <CommandItem
