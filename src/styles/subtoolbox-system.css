@@ -2235,3 +2235,16 @@
   .vt-toolbox-header-help.is-toolbox svg { width:22px;height:22px; }
   .vt-toolbox-header-collapse.is-toolbox svg { width:34px;height:34px; }
 }
+
+
+@media (max-width:767px) {
+  [data-vt-toolbox-level="sub"],
+  [data-vt-subtoolbox-module="true"] {
+    --vt-subtoolbox-gap-dense:4px;
+    --vt-subtoolbox-gap:6px;
+    --vt-subtoolbox-section-gap:8px;
+  }
+  [data-vt-toolbox-level="sub"] .vt-subtoolbox-content {
+    padding-top:4px!important;
+  }
+}
