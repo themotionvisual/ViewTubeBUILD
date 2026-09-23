@@ -140,27 +140,31 @@ export const syncVideoPackageToContentBuild = (
  const selectedThumbnailAssetId = assetIdOf(selectedThumbnail)
  const scriptAssetId = assetIdOf(videoPackage.creative.script)
 
- if (selectedTitleAssetId && titleGroup) {
+ if (selectedTitleAssetId && titleGroup && titleGroup.selectedAssetId !== selectedTitleAssetId) {
   selectContentBuildVariant({
    contentBuildId: build.id,
    groupId: titleGroup.id,
    assetId: selectedTitleAssetId,
    sourceToolId: "video-package",
-   final: Boolean(selectedTitle?.approvedAt),
+   actorType: "sync",
+   final: false,
   })
  }
- if (selectedThumbnailAssetId && thumbnailGroup) {
+ if (selectedThumbnailAssetId && thumbnailGroup && thumbnailGroup.selectedAssetId !== selectedThumbnailAssetId) {
   selectContentBuildVariant({
    contentBuildId: build.id,
    groupId: thumbnailGroup.id,
    assetId: selectedThumbnailAssetId,
    sourceToolId: "video-package",
-   final: Boolean(selectedThumbnail?.approvedAt),
+   actorType: "sync",
+   final: false,
   })
  }
- if (scriptAssetId) {
+ const currentAfterPackaging = getContentBuild(build.id)!
+ if (scriptAssetId && currentAfterPackaging.selections.script !== scriptAssetId) {
   setContentBuildSelection(build.id, "script", scriptAssetId, {
    toolId: "video-package",
+   actorType: "sync",
    final: Boolean(videoPackage.creative.script?.approvedAt),
   })
  }
