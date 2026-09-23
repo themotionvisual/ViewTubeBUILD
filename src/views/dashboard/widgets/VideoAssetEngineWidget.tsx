@@ -14,6 +14,9 @@ import {
 } from "lucide-react"
 import type { VaultAsset } from "@/types"
 import { getAssetLineage, listAssets } from "../../../services/assetEngine"
+import { listVideoPackages } from "../../../services/video-package/VideoPackageRepository"
+import { projectPublishingPackage } from "../../../services/asset-engine/PublishingPackageProjection"
+import { listPublishTransactions } from "../../../services/asset-engine/PublishTransaction"
 import { WidgetShell } from "../WidgetShell"
 import {
   WidgetActionButton,
@@ -29,7 +32,7 @@ import type { CommonWidgetProps } from "../types"
 import type { DashboardData } from "../useDashboardData"
 import "./VideoAssetEngineWidget.css"
 
-type AssetEngineMode = "package" | "assets" | "handoff"
+type AssetEngineMode = "package" | "publish" | "assets" | "handoff"
 
 type PackageSlot = {
   id: string
@@ -113,6 +116,18 @@ export const VideoAssetEngineWidget: React.FC<
   )
   const packageName = selectedAsset?.projectName || previewAsset?.projectName || "LATEST VIDEO PACKAGE"
 
+  const publishingState = useMemo(() => {
+    const videoPackage = listVideoPackages()[0] || null
+    if (!videoPackage) return { videoPackage: null, projection: null, transaction: null }
+    try {
+      const projection = projectPublishingPackage(videoPackage)
+      const transaction = listPublishTransactions(projection.contentBuildId)[0] || null
+      return { videoPackage, projection, transaction }
+    } catch {
+      return { videoPackage, projection: null, transaction: null }
+    }
+  }, [assets])
+
   const packageView = (
     <div className="vt-asset-engine-package">
       <div className="vt-asset-engine-composer">
@@ -178,6 +193,39 @@ export const VideoAssetEngineWidget: React.FC<
         </WidgetSizedButton>
       </div>
     </div>
+  )
+
+  const publishView = publishingState.projection ? (
+    <div className="vt-asset-engine-handoff">
+      <section className="vt-asset-engine-handoff-card">
+        <div className="vt-asset-engine-handoff-head">
+          <span>PUBLISHING PACKAGE</span>
+          <WidgetBadge status={publishingState.projection.ready ? "positive" : "warning"} height={18}>
+            {publishingState.projection.ready ? "READY" : publishingState.projection.missing.length + " MISSING"}
+          </WidgetBadge>
+        </div>
+        <strong className="vt-asset-engine-handoff-title">{publishingState.videoPackage?.identity.workingTitle || "VIDEO PACKAGE"}</strong>
+        <p>{publishingState.transaction
+          ? "Transaction " + publishingState.transaction.status.toUpperCase() + " · " + Object.values(publishingState.transaction.steps).filter(step => step?.status === "completed").length + " STEPS COMPLETE"
+          : publishingState.projection.ready ? "Canonical package is approved and ready to enter the resumable publishing pipeline." : "Resolve: " + publishingState.projection.missing.join(" · ")}</p>
+      </section>
+      <WidgetProgressBar
+        value={publishingState.transaction ? Object.values(publishingState.transaction.steps).filter(step => step?.status === "completed").length : (publishingState.projection.ready ? 10 : Math.max(0, 10 - publishingState.projection.missing.length))}
+        max={10}
+        label="PUBLISH PIPELINE"
+        displayValue={publishingState.transaction?.status.toUpperCase() || (publishingState.projection.ready ? "READY" : "PREFLIGHT")}
+        height={24}
+        tone={publishingState.projection.ready ? "primary" : "secondary"}
+      />
+      <div className="vt-asset-engine-destinations">
+        <WidgetActionButton tone="primary" height={32} onClick={() => onNavigate?.("/video-publisher")}>
+          {publishingState.transaction ? "RESUME PUBLISHING" : publishingState.projection.ready ? "PUBLISH VIDEO" : "FIX PUBLISH PACKAGE"}
+        </WidgetActionButton>
+        <WidgetActionButton height={32} onClick={() => onNavigate?.("/studio")}>OPEN STUDIO HUB</WidgetActionButton>
+      </div>
+    </div>
+  ) : (
+    <WidgetStatePanel state={{ status: "empty", data: null, message: "No canonical Publishing Package is available yet. Open Studio Hub to finish the video package." }} />
   )
 
   const assetsView = assets.length ? (
@@ -257,13 +305,14 @@ export const VideoAssetEngineWidget: React.FC<
           value={mode}
           items={[
             { id: "package", label: "PACKAGE" },
+            { id: "publish", label: "PUBLISH" },
             { id: "assets", label: "ASSETS" },
             { id: "handoff", label: "HANDOFF" },
           ]}
           onChange={setMode}
         />
         <main className="vt-asset-engine-main">
-          {mode === "package" ? packageView : mode === "assets" ? assetsView : handoffView}
+          {mode === "package" ? packageView : mode === "publish" ? publishView : mode === "assets" ? assetsView : handoffView}
         </main>
         <footer className="vt-asset-engine-footer">
           <WidgetActionButton tone="primary" height={32} onClick={() => onNavigate?.("/studio")}>
