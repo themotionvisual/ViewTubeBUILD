@@ -59,6 +59,7 @@ import {
   SubToolboxStepIndicator,
   SubToolboxIconRailControl,
   SubToolboxLed,
+  SubToolboxLedDot,
   SubToolboxNameValueList,
   SubToolboxStepper,
   SubToolboxSurface,
@@ -190,6 +191,11 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "SubToolbox Header Collapse",
   "Toolbox Header Toggle",
   "SubToolbox Header Toggle",
+  "LED Dot",
+  "Loader Progress",
+  "Loader Split",
+  "Loader Orbit",
+  "Loader Bars",
 ] as const
 
 const DemoShell: React.FC<{ level: StudioHubComponentLevel; children: React.ReactNode }> = ({ level, children }) => (
@@ -409,6 +415,18 @@ const PrimitiveMigrationControl: React.FC<{
   if (name === "Loader") {
     return <SubToolboxLoader level={level} variant="spinner" label="LOADING" />
   }
+  if (name === "Loader Progress") {
+    return <SubToolboxLoader level={level} variant="progress" label="LOADING" />
+  }
+  if (name === "Loader Split") {
+    return <SubToolboxLoader level={level} variant="split" label="LOADING" />
+  }
+  if (name === "Loader Orbit") {
+    return <SubToolboxLoader level={level} variant="orbit" label="LOADING" />
+  }
+  if (name === "Loader Bars") {
+    return <SubToolboxLoader level={level} variant="bars" label="LOADING" />
+  }
   if (name === "Skeleton") {
     return <SubToolboxSkeleton level={level} lines={3} />
   }
@@ -434,6 +452,9 @@ const PrimitiveMigrationControl: React.FC<{
   }
   if (name === "LED Light") {
     return <SubToolboxLed level={level} active label="ACTIVE" />
+  }
+  if (name === "LED Dot") {
+    return <SubToolboxLedDot level={level} active label="Active status light" />
   }
   if (name === "Icon Rail Control") {
     return <SubToolboxIconRailControl level={level} icon={<SlidersHorizontal />} label="CONTROL" />
@@ -468,7 +489,7 @@ const PrimitiveMigrationControl: React.FC<{
     return <SubToolboxScrollbar level={level} orientation="horizontal" value={scrollPos} onValueChange={setScrollPos} />
   }
   if (name === "Vertical Scrollbar") {
-    return <SubToolboxScrollbar level={level} orientation="vertical" value={scrollPos} onValueChange={setScrollPos} decrementIcon="↑" incrementIcon="↓" />
+    return <SubToolboxScrollbar level={level} orientation="vertical" value={scrollPos} onValueChange={setScrollPos} />
   }
   if (name === "Data Stats Module") {
     return <SubToolboxDataStats level={level} label="TOTAL VIEWS" value="128,442" delta="+12.4%" variant="standard" />
@@ -482,7 +503,28 @@ const PrimitiveMigrationControl: React.FC<{
     return <SubToolboxVaultAsset level={level} kind={kind} title={name.replace("Vault ","")} icon={<Icon />} tags="ASSET" notes="NOTES" selected={vaultSelected} onSelectedChange={setVaultSelected} removeIcon={<X />} />
   }
   if (name === "Tree View") {
-    return <SubToolboxTree level={level} defaultOpenIds={["root"]} nodes={[{ id: "root", label: "PROJECT", children: [{ id: "script", label: "SCRIPT" }, { id: "assets", label: "ASSETS", children: [{ id: "thumb", label: "THUMBNAIL" }, { id: "audio", label: "AUDIO" }] }] }]} />
+    return <SubToolboxTree
+      level={level}
+      defaultOpenIds={["root", "assets"]}
+      nodes={[{
+        id: "root",
+        label: "PROJECT",
+        icon: <Lightbulb />,
+        children: [
+          { id: "script", label: "SCRIPT", icon: <FileText />, secondaryIcon: <FileText /> },
+          {
+            id: "assets",
+            label: "ASSETS",
+            icon: <Image />,
+            secondaryIcon: <ChevronDown />,
+            children: [
+              { id: "thumb", label: "THUMBNAIL", icon: <Image />, secondaryIcon: <Image /> },
+              { id: "audio", label: "AUDIO", icon: <Music />, secondaryIcon: <Music /> },
+            ],
+          },
+        ],
+      }]}
+    />
   }
   if (name === "Disabled Button") {
     return <SubToolboxButton level={level} disabled>DISABLED</SubToolboxButton>
@@ -569,7 +611,7 @@ export const StudioHubPrimitiveMigrationCatalog: React.FC<StudioHubPrimitiveMigr
           <p>Only production primitives are rendered here. Unmigrated hardcoded families stay exclusively in the baseline toolbox.</p>
         </div>
       </div>
-      <strong>{STUDIO_HUB_MIGRATED_FAMILIES.length} PRIMITIVE FAMILIES · {STUDIO_HUB_MIGRATED_FAMILIES.length * LEVELS.length} EXAMPLES</strong>
+      <strong>{STUDIO_HUB_MIGRATED_FAMILIES.length} PRIMITIVE FAMILIES · {STUDIO_HUB_MIGRATED_FAMILIES.reduce((total, family) => total + (family === "Calendar" ? 1 : LEVELS.length), 0)} EXAMPLES</strong>
     </header>
 
     <div className="vt-complete-catalog-grid">
@@ -590,7 +632,7 @@ export const StudioHubPrimitiveMigrationCatalog: React.FC<StudioHubPrimitiveMigr
             contentClassName="p-3"
           >
             <div className="vt-catalog-levels">
-              {LEVELS.map((level) => (
+              {(name === "Calendar" ? (["l0"] as StudioHubComponentLevel[]) : LEVELS).map((level) => (
                 <DemoShell level={level} key={level}>
                   <PrimitiveMigrationControl name={name} level={level} />
                 </DemoShell>
