@@ -10,6 +10,8 @@ export type WorkspaceUxToggleKey =
   | "restoreLastWorkspace"
   | "rememberToolboxState"
   | "desktopKeyboardNavigation"
+  | "globalQuickSwitcher"
+  | "rememberRecentDestinations"
 
 export interface WorkspaceUxPreferences {
   version: 1
@@ -24,6 +26,8 @@ export interface WorkspaceUxPreferences {
   restoreLastWorkspace: boolean
   rememberToolboxState: boolean
   desktopKeyboardNavigation: boolean
+  globalQuickSwitcher: boolean
+  rememberRecentDestinations: boolean
   updatedAt: number
 }
 
@@ -43,6 +47,8 @@ export const DEFAULT_WORKSPACE_UX_PREFERENCES: WorkspaceUxPreferences = {
   restoreLastWorkspace: false,
   rememberToolboxState: true,
   desktopKeyboardNavigation: false,
+  globalQuickSwitcher: true,
+  rememberRecentDestinations: true,
   updatedAt: 0,
 }
 
@@ -63,6 +69,8 @@ const sanitizePreferences = (raw: Partial<WorkspaceUxPreferences> | null | undef
   restoreLastWorkspace: Boolean(raw?.restoreLastWorkspace),
   rememberToolboxState: raw?.rememberToolboxState !== false,
   desktopKeyboardNavigation: Boolean(raw?.desktopKeyboardNavigation),
+  globalQuickSwitcher: raw?.globalQuickSwitcher !== false,
+  rememberRecentDestinations: raw?.rememberRecentDestinations !== false,
   updatedAt: Number(raw?.updatedAt || 0),
 })
 
