@@ -277,8 +277,11 @@ const layerFilter = (payload: Record<string, unknown>) => {
     saturation: `saturate(${Math.max(0, Number(payload.saturation ?? 1))})`,
     brightness: `brightness(${Math.max(0, Number(payload.brightness ?? 1))})`,
     hue: Number(payload.hue || 0) ? `hue-rotate(${Number(payload.hue || 0)}deg)` : '',
+    contrast: `contrast(${Math.max(0, Number(payload.contrast ?? 1))})`,
+    sepia: Number(payload.sepia || 0) ? `sepia(${Math.max(0, Math.min(1, Number(payload.sepia || 0)))})` : '',
+    grayscale: Number(payload.grayscale || 0) ? `grayscale(${Math.max(0, Math.min(1, Number(payload.grayscale || 0)))})` : '',
   };
-  const known = ['blur', 'saturation', 'brightness', 'hue'];
+  const known = ['blur', 'saturation', 'brightness', 'hue', 'contrast', 'sepia', 'grayscale'];
   return [...order.filter(key => known.includes(key)), ...known.filter(key => !order.includes(key))]
     .filter(key => !disabled[key])
     .map(key => filters[key])
