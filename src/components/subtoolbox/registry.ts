@@ -48,7 +48,7 @@ export const TOOLBOX_COMPONENT_RULES = {
 export const SUBTOOLBOX_MIGRATION_WAVES = [
   { id: 1, status: "complete", surfaces: ["ThumbnailStudio", "CommunityPostGenerator"] },
   { id: 2, status: "complete", surfaces: ["VideoManager", "VideoPublisher"] },
-  { id: 3, status: "migrating", surfaces: ["ScriptArchitect", "ActionableTactics", "MediaAnalyzer", "PreLaunchPriming"] },
+  { id: 3, status: "migrating", surfaces: ["ScriptArchitect", "ActionableTactics", "MediaAnalyzer", "PreLaunchPriming", "EndScreenTool", "VideoDirector", "HookGenerator"] },
   { id: 4, status: "planned", surfaces: ["ProjectStudio", "StoryboardStudio"] },
   { id: 5, status: "planned", surfaces: ["SubToolboxChartModule", "SystemStatisticsSubToolbox", "remaining-consumers"] },
 ] as const

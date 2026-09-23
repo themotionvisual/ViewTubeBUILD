@@ -24,6 +24,7 @@ import {
 } from "../components/Toolbox"
 import { toolboxSystem } from "../components/toolboxSystem"
 import { PostActionReflection } from "../components/PostActionReflection"
+import { SubToolboxButton } from "../components/subtoolbox/SubToolboxPrimitives"
 import {
  StudioButton,
  StudioInput,
@@ -71,20 +72,15 @@ const TacticCard: React.FC<{
       <h3 className="font-black uppercase tracking-tight text-xl text-black">
        {tactic.title}
       </h3>
-      <button
+      <SubToolboxButton
+       level="l2"
+       size="compact"
+       tone="neutral"
+       selected={expanded}
        onClick={handleExpand}
-       className={`flex items-center gap-2 px-4 py-2 rounded-xl font-black uppercase text-[10px] tracking-wider transition-all border-[3px] border-black shadow-[3px_3px_0px_0px_black] active:shadow-none active:translate-y-0.5 ${
-        expanded ? "bg-[#CCFF00]" : "bg-white hover:bg-gray-50"
-       }`}>
-       {loading ? (
-        <Loader2 className="animate-spin" size={14} />
-       ) : expanded ? (
-        <ChevronUp size={14} />
-       ) : (
-        <Sparkles size={14} />
-       )}
+       icon={loading ? <Loader2 className="animate-spin" size={14} /> : expanded ? <ChevronUp size={14} /> : <Sparkles size={14} />}>
        {expanded ? "Hide Details" : "Elaborate"}
-      </button>
+      </SubToolboxButton>
      </div>
      <p className="text-sm font-bold leading-relaxed text-black/70">
       {tactic.action}
@@ -102,15 +98,17 @@ const TacticCard: React.FC<{
        ) : (
         <div className="space-y-4">
          <div className="flex justify-end">
-          <button
+          <SubToolboxButton
+           level="l2"
+           size="compact"
+           tone="neutral"
+           icon={<Copy size={12} />}
            onClick={() => {
             navigator.clipboard.writeText(elaboration || "")
             setToast("Copied to clipboard")
-           }}
-           className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 border-[2px] border-black font-black text-[9px] uppercase tracking-widest shadow-[2px_2px_0px_0px_black] active:shadow-none active:translate-y-0.5">
-           <Copy size={12} />
+           }}>
            Copy Analysis
-          </button>
+          </SubToolboxButton>
          </div>
          <div className="prose prose-sm max-w-none font-bold text-black/80">
           <Markdown>{elaboration || ""}</Markdown>
