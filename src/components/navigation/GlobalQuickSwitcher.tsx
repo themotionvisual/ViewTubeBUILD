@@ -61,12 +61,13 @@ export const GlobalQuickSwitcher: React.FC<GlobalQuickSwitcherProps> = ({
   const pages = useMemo(() => quickSwitcherPages(), [])
 
   useEffect(() => {
-    if (!preferences.rememberRecentDestinations) return
+    if (!preferences.globalQuickSwitcher || !preferences.rememberRecentDestinations) return
     recordRecentDestination(`${location.pathname}${location.search}${location.hash}`)
   }, [
     location.hash,
     location.pathname,
     location.search,
+    preferences.globalQuickSwitcher,
     preferences.rememberRecentDestinations,
   ])
 
