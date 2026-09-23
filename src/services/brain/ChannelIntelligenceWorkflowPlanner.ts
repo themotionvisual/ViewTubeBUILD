@@ -4,15 +4,15 @@ import {
  type BrainOrchestrationGoal,
  type BrainOrchestrationMode,
 } from "../brainAdaptiveOrchestrator"
+import type { ChannelIntelligenceSnapshot } from "./ChannelIntelligence"
 import {
- buildChannelIntelligenceSnapshot,
- type ChannelIntelligenceSnapshot,
-} from "./ChannelIntelligence"
-import {
- rankAlgorithmRecommendations,
- type AlgorithmRecommendation,
- type AlgorithmSignal,
-} from "./AlgorithmStrategyEngine"
+ buildAlgorithmIntelligencePortfolio,
+ type AlgorithmIntelligencePortfolio,
+ type AlgorithmProjectContext,
+} from "./AlgorithmIntelligenceOrchestrator"
+import type { ExternalAnomalySignal } from "./AnomalySignalBridge"
+import type { OpportunityEvidence } from "./OpportunityIntelligence"
+import type { AlgorithmRecommendation, AlgorithmSignal } from "./AlgorithmStrategyEngine"
 import { createAlgorithmRecommendationHandoff } from "./AlgorithmWorkflowRecipes"
 
 export interface ChannelIntelligenceWorkflowPlan {
@@ -20,6 +20,7 @@ export interface ChannelIntelligenceWorkflowPlan {
  generatedAt: string
  intelligence: ChannelIntelligenceSnapshot
  algorithmRecommendations: AlgorithmRecommendation[]
+ portfolio: AlgorithmIntelligencePortfolio
  workflow: ReturnType<typeof recommendNextViewTubeWorkflow>
  primaryAlgorithmRecommendation: AlgorithmRecommendation | null
 }
@@ -37,18 +38,25 @@ const profileToolPreferences = (intelligence: ChannelIntelligenceSnapshot) => {
 export const planChannelIntelligenceWorkflow = async (input: {
  channelId: string
  goal: BrainOrchestrationGoal
- signals: AlgorithmSignal[]
+ signals?: AlgorithmSignal[]
+ anomalies?: ExternalAnomalySignal[]
+ opportunities?: OpportunityEvidence[]
+ project?: AlgorithmProjectContext | null
  payloadKind?: ViewTubePayloadKind
  sourceToolId?: string
  mode?: BrainOrchestrationMode
  niche?: string | null
  formats?: string[]
 }): Promise<ChannelIntelligenceWorkflowPlan> => {
- const intelligence = await buildChannelIntelligenceSnapshot(input.channelId)
- const algorithmRecommendations = rankAlgorithmRecommendations({
-  signals: input.signals,
-  intelligence,
+ const portfolio = await buildAlgorithmIntelligencePortfolio({
+  channelId: input.channelId,
+  project: input.project,
+  anomalies: input.anomalies,
+  opportunities: input.opportunities,
+  directSignals: input.signals,
  })
+ const intelligence = portfolio.channelIntelligence
+ const algorithmRecommendations = portfolio.recommendations
  const preferences = profileToolPreferences(intelligence)
  const workflow = recommendNextViewTubeWorkflow({
   goal: input.goal,
@@ -67,11 +75,12 @@ export const planChannelIntelligenceWorkflow = async (input: {
 
  return {
   channelId: input.channelId,
-  generatedAt: new Date().toISOString(),
+  generatedAt: portfolio.generatedAt,
   intelligence,
   algorithmRecommendations,
+  portfolio,
   workflow,
-  primaryAlgorithmRecommendation: algorithmRecommendations[0] || null,
+  primaryAlgorithmRecommendation: portfolio.primaryRecommendation,
  }
 }
 
