@@ -20,6 +20,7 @@ import {
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { useUnifiedAccount } from "../../context/UnifiedAccountContext"
 import { useBrain } from "../../context/useBrain"
+import { useWorkspaceUxPreferences } from "../../hooks/useWorkspaceUxPreferences"
 // Direct import — the feature barrel would drag in the entire VT-SYNC engine
 // (tableRegistry, localSyncEngine, adapters) on every first paint even though
 // the shell only needs the lightweight snapshot reader.
@@ -258,6 +259,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
 }) => {
   const location = useLocation()
   const navigate = useNavigate()
+  const workspaceUx = useWorkspaceUxPreferences()
   const account = useUnifiedAccount()
   const {
     brain,
@@ -275,6 +277,7 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   })
   const [mobile, setMobile] = useState(isMobileViewport)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [mobileNavHidden, setMobileNavHidden] = useState(false)
   // Diagnostics visibility lives in one store so the menu switch and the
   // overlay agree without a reload.
   const diagnosticsOn = useSyncExternalStore(
@@ -289,6 +292,8 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const accountMenuRef = useRef<HTMLDivElement | null>(null)
   const drawerRef = useRef<HTMLDivElement | null>(null)
   const mainViewportRef = useRef<HTMLElement | null>(null)
+  const lastMobileScrollTopRef = useRef(0)
+  const edgeSwipeStartRef = useRef<{ x: number; y: number; edge: "left" | "right"; target: EventTarget | null } | null>(null)
 
   const accountAuthenticated =
     account.snapshot.authentication.status === "authenticated" ||
@@ -388,6 +393,20 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const shellLayout = mobile ? "mobile" : layout
   const hideMobileEditorChrome = mobile && isEditorSurface
   const isBrainWorkspace = location.pathname === "/ai-brain"
+  const activePrimaryNavIndex = useMemo(() => {
+    const pathname = location.pathname
+    return PRIMARY_NAV_ITEMS.findIndex((item) => (
+      item.path === "/"
+        ? pathname === "/"
+        : pathname === item.path || pathname.startsWith(`${item.path}/`)
+    ))
+  }, [location.pathname])
+  const previousPrimaryNavItem = activePrimaryNavIndex > 0
+    ? PRIMARY_NAV_ITEMS[activePrimaryNavIndex - 1]
+    : null
+  const nextPrimaryNavItem = activePrimaryNavIndex >= 0 && activePrimaryNavIndex < PRIMARY_NAV_ITEMS.length - 1
+    ? PRIMARY_NAV_ITEMS[activePrimaryNavIndex + 1]
+    : null
 
   const closeAccountMenu = (restoreFocus = false) => {
     setAccountOpen(false)
@@ -445,6 +464,111 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
     mediaQuery.addEventListener("change", updateViewport)
     return () => mediaQuery.removeEventListener("change", updateViewport)
   }, [])
+
+  useEffect(() => {
+    if (!mobile || !workspaceUx.mobileNavigationAutoHide || hideMobileEditorChrome) {
+      setMobileNavHidden(false)
+      lastMobileScrollTopRef.current = mainViewportRef.current?.scrollTop || 0
+      return
+    }
+
+    const viewport = mainViewportRef.current
+    if (!viewport) return
+
+    lastMobileScrollTopRef.current = viewport.scrollTop
+
+    const onScroll = () => {
+      const current = Math.max(0, viewport.scrollTop)
+      const previous = lastMobileScrollTopRef.current
+      const delta = current - previous
+
+      if (drawerOpen || accountOpen || current < 16) {
+        setMobileNavHidden(false)
+      } else if (delta > 8 && current > 32) {
+        setMobileNavHidden(true)
+      } else if (delta < -8) {
+        setMobileNavHidden(false)
+      }
+
+      lastMobileScrollTopRef.current = current
+    }
+
+    viewport.addEventListener("scroll", onScroll, { passive: true })
+    return () => viewport.removeEventListener("scroll", onScroll)
+  }, [
+    accountOpen,
+    drawerOpen,
+    hideMobileEditorChrome,
+    mobile,
+    workspaceUx.mobileNavigationAutoHide,
+  ])
+
+  useEffect(() => {
+    if (drawerOpen || accountOpen) setMobileNavHidden(false)
+  }, [accountOpen, drawerOpen])
+
+  useEffect(() => {
+    if (!mobile || !workspaceUx.edgeSwipeNavigation || hideMobileEditorChrome) return
+
+    const interactiveSelector = "input, textarea, select, [contenteditable='true'], [data-vt-horizontal-scroll], [role='slider']"
+
+    const onTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1 || drawerOpen || accountOpen) return
+      const touch = event.touches[0]
+      const edgeSize = 22
+      const edge = touch.clientX <= edgeSize
+        ? "left"
+        : touch.clientX >= window.innerWidth - edgeSize
+          ? "right"
+          : null
+      if (!edge) return
+
+      const target = event.target instanceof Element ? event.target : null
+      if (target?.closest(interactiveSelector)) return
+
+      edgeSwipeStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        edge,
+        target: event.target,
+      }
+    }
+
+    const onTouchEnd = (event: TouchEvent) => {
+      const start = edgeSwipeStartRef.current
+      edgeSwipeStartRef.current = null
+      if (!start || event.changedTouches.length !== 1) return
+
+      const touch = event.changedTouches[0]
+      const dx = touch.clientX - start.x
+      const dy = touch.clientY - start.y
+      if (Math.abs(dy) > 56 || Math.abs(dx) < 72) return
+
+      if (start.edge === "left" && dx > 0 && previousPrimaryNavItem) {
+        setAnnouncement(`Opening ${previousPrimaryNavItem.label}`)
+        navigate(previousPrimaryNavItem.path)
+      } else if (start.edge === "right" && dx < 0 && nextPrimaryNavItem) {
+        setAnnouncement(`Opening ${nextPrimaryNavItem.label}`)
+        navigate(nextPrimaryNavItem.path)
+      }
+    }
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true })
+    window.addEventListener("touchend", onTouchEnd, { passive: true })
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart)
+      window.removeEventListener("touchend", onTouchEnd)
+    }
+  }, [
+    accountOpen,
+    drawerOpen,
+    hideMobileEditorChrome,
+    mobile,
+    navigate,
+    nextPrimaryNavItem,
+    previousPrimaryNavItem,
+    workspaceUx.edgeSwipeNavigation,
+  ])
 
   useEffect(() => {
     if (!accountOpen) return
@@ -661,7 +785,15 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   )
 
   return (
-    <div className="vt-adaptive-shell" data-layout={shellLayout} data-editor-chromeless={hideMobileEditorChrome ? "true" : "false"} ref={shellRef}>
+    <div
+      className="vt-adaptive-shell"
+      data-layout={shellLayout}
+      data-editor-chromeless={hideMobileEditorChrome ? "true" : "false"}
+      data-mobile-compact-nav={workspaceUx.mobileCompactTopBar ? "true" : "false"}
+      data-mobile-nav-hidden={workspaceUx.mobileNavigationAutoHide && mobileNavHidden ? "true" : "false"}
+      data-sticky-module-headers={workspaceUx.stickyModuleHeaders ? "true" : "false"}
+      ref={shellRef}
+    >
       {mobile && !hideMobileEditorChrome ? (
         <>
           <header className="vt-adaptive-nav vt-adaptive-nav--mobile">
@@ -738,6 +870,42 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
           it on mobile removes a permanent layout listener from data-heavy
           pages that was contributing to touch-scroll freezes. */}
       {!isBrainWorkspace && !mobile ? <ApplicationScrollbar viewportRef={mainViewportRef} /> : null}
+
+      {mobile && workspaceUx.thumbZoneShortcuts && !hideMobileEditorChrome ? (
+        <nav className="vt-mobile-thumb-zone" aria-label="Mobile quick navigation">
+          <button
+            type="button"
+            disabled={!previousPrimaryNavItem}
+            onClick={() => previousPrimaryNavItem && navigate(previousPrimaryNavItem.path)}
+            aria-label={previousPrimaryNavItem ? `Go to ${previousPrimaryNavItem.label}` : "No previous primary section"}
+            title={previousPrimaryNavItem?.label}
+          >
+            <ChevronsLeft aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="vt-mobile-thumb-zone__menu"
+            onClick={() => {
+              setMobileNavHidden(false)
+              setDrawerOpen((value) => !value)
+            }}
+            aria-label={drawerOpen ? "Close navigation" : "Open navigation"}
+            aria-expanded={drawerOpen}
+            aria-controls="vt-mobile-navigation-drawer"
+          >
+            {drawerOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+          </button>
+          <button
+            type="button"
+            disabled={!nextPrimaryNavItem}
+            onClick={() => nextPrimaryNavItem && navigate(nextPrimaryNavItem.path)}
+            aria-label={nextPrimaryNavItem ? `Go to ${nextPrimaryNavItem.label}` : "No next primary section"}
+            title={nextPrimaryNavItem?.label}
+          >
+            <ChevronsRight aria-hidden="true" />
+          </button>
+        </nav>
+      ) : null}
 
       {location.pathname === "/" && !mobile && layout === "top" ? (
         <div className="vt-adaptive-legal"><a href="/privacy.html">Privacy Policy</a><span>|</span><a href="/terms.html">Terms of Service</a></div>
