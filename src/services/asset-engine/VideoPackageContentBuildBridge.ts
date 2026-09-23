@@ -140,24 +140,41 @@ export const syncVideoPackageToContentBuild = (
  const selectedThumbnailAssetId = assetIdOf(selectedThumbnail)
  const scriptAssetId = assetIdOf(videoPackage.creative.script)
 
- if (selectedTitleAssetId && titleGroup && titleGroup.selectedAssetId !== selectedTitleAssetId) {
+ const titleApproved = Boolean(selectedTitle?.approvedAt)
+ const thumbnailApproved = Boolean(selectedThumbnail?.approvedAt)
+
+ if (
+  selectedTitleAssetId &&
+  titleGroup &&
+  (
+   titleGroup.selectedAssetId !== selectedTitleAssetId ||
+   (titleApproved && titleGroup.finalAssetId !== selectedTitleAssetId)
+  )
+ ) {
   selectContentBuildVariant({
    contentBuildId: build.id,
    groupId: titleGroup.id,
    assetId: selectedTitleAssetId,
    sourceToolId: "video-package",
    actorType: "sync",
-   final: false,
+   final: titleApproved,
   })
  }
- if (selectedThumbnailAssetId && thumbnailGroup && thumbnailGroup.selectedAssetId !== selectedThumbnailAssetId) {
+ if (
+  selectedThumbnailAssetId &&
+  thumbnailGroup &&
+  (
+   thumbnailGroup.selectedAssetId !== selectedThumbnailAssetId ||
+   (thumbnailApproved && thumbnailGroup.finalAssetId !== selectedThumbnailAssetId)
+  )
+ ) {
   selectContentBuildVariant({
    contentBuildId: build.id,
    groupId: thumbnailGroup.id,
    assetId: selectedThumbnailAssetId,
    sourceToolId: "video-package",
    actorType: "sync",
-   final: false,
+   final: thumbnailApproved,
   })
  }
  const currentAfterPackaging = getContentBuild(build.id)!
