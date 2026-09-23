@@ -38,6 +38,9 @@ export const MobileProjectPreview:React.FC<{store:EditorStore}>=({store})=>{
 
   return <div style={{position:'absolute',inset:0,overflow:'hidden',background:'#111'}}>
     {active.map((clip,index)=>{
+      // Design-template clips are rendered by TemplateCanvasRenderer in PreviewPane.
+      // Do not render the generic clip-id fallback underneath it.
+      if(String((clip as VtE1Clip&{clipType?:unknown}).clipType??'')==='design-template')return null;
       const geometry=resolveClipPreviewGeometry(store,clip);
       const {layer,payload,type,projectWidth,projectHeight,x,y,width,height,scaleX,scaleY,rotation,opacity}=geometry;
       if(layer?.visible===false)return null;
