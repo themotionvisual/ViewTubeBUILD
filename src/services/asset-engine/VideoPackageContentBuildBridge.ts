@@ -8,6 +8,7 @@ import {
  createContentBuildVariantGroup,
  getContentBuild,
  setContentBuildSelection,
+ selectContentBuildVariant,
 } from "./ContentBuildRepository"
 
 const assetIdOf = (artifact?: PackageArtifactRef | null) =>
@@ -31,12 +32,29 @@ const packageArtifacts = (videoPackage: ViewTubeVideoPackage): PackageArtifactRe
  ...videoPackage.packaging.communityAssets,
 ].filter((artifact): artifact is PackageArtifactRef => Boolean(artifact))
 
-export const ensureContentBuildForVideoPackage = (videoPackage: ViewTubeVideoPackage) => {
- const explicitId = videoPackage.contentBuildId || videoPackage.id
- const existing = getContentBuild(explicitId)
- if (existing) return existing
+export type VideoPackageContentBuildSyncMode = "strict" | "legacy"
+
+export const ensureContentBuildForVideoPackage = (
+ videoPackage: ViewTubeVideoPackage,
+ input: { mode?: VideoPackageContentBuildSyncMode } = {},
+) => {
+ const explicitId = videoPackage.contentBuildId?.trim() || null
+ if (!explicitId && (input.mode || "legacy") === "strict") {
+  throw new Error(`Video Package ${videoPackage.id} must carry a canonical contentBuildId before it can be saved or synchronized.`)
+ }
+ const contentBuildId = explicitId || videoPackage.id
+ const existing = getContentBuild(contentBuildId)
+ if (existing) {
+  if (existing.legacyProjectId && existing.legacyProjectId !== videoPackage.projectId) {
+   throw new Error(`ContentBuild ${contentBuildId} belongs to a different Project (${existing.legacyProjectId}).`)
+  }
+  if (existing.channelId && existing.channelId !== videoPackage.channelId) {
+   throw new Error(`ContentBuild ${contentBuildId} belongs to a different channel (${existing.channelId}).`)
+  }
+  return existing
+ }
  return createContentBuild({
-  id: explicitId,
+  id: contentBuildId,
   channelId: videoPackage.channelId,
   legacyProjectId: videoPackage.projectId,
   legacyProjectName: videoPackage.identity.workingTitle,
@@ -51,8 +69,11 @@ export const ensureContentBuildForVideoPackage = (videoPackage: ViewTubeVideoPac
  })
 }
 
-export const syncVideoPackageToContentBuild = (videoPackage: ViewTubeVideoPackage) => {
- const build = ensureContentBuildForVideoPackage(videoPackage)
+export const syncVideoPackageToContentBuild = (
+ videoPackage: ViewTubeVideoPackage,
+ input: { mode?: VideoPackageContentBuildSyncMode } = {},
+) => {
+ const build = ensureContentBuildForVideoPackage(videoPackage, input)
 
  const assetIds = new Set<string>(videoPackage.production.vaultAssetIds)
  packageArtifacts(videoPackage).forEach(artifact => {
@@ -69,7 +90,7 @@ export const syncVideoPackageToContentBuild = (videoPackage: ViewTubeVideoPackag
  })
 
  const synchronizeOptionGroup = (slot: "title" | "thumbnail", artifacts: PackageArtifactRef[]) => {
-  if (!artifacts.length) return
+  if (!artifacts.length) return null
   const group = createContentBuildVariantGroup({
    contentBuildId: build.id,
    slot,
@@ -102,10 +123,11 @@ export const syncVideoPackageToContentBuild = (videoPackage: ViewTubeVideoPackag
     metadata: { packageId: videoPackage.id, packageArtifactId: artifact.id },
    })
   })
+  return group
  }
 
- synchronizeOptionGroup("title", videoPackage.packaging.titleVariants)
- synchronizeOptionGroup("thumbnail", videoPackage.packaging.thumbnailVariants)
+ const titleGroup = synchronizeOptionGroup("title", videoPackage.packaging.titleVariants)
+ const thumbnailGroup = synchronizeOptionGroup("thumbnail", videoPackage.packaging.thumbnailVariants)
 
  const selectedTitle = videoPackage.packaging.titleVariants.find(
   artifact => artifact.id === videoPackage.packaging.selectedTitleId,
@@ -118,11 +140,23 @@ export const syncVideoPackageToContentBuild = (videoPackage: ViewTubeVideoPackag
  const selectedThumbnailAssetId = assetIdOf(selectedThumbnail)
  const scriptAssetId = assetIdOf(videoPackage.creative.script)
 
- if (selectedTitleAssetId) {
-  setContentBuildSelection(build.id, "title", selectedTitleAssetId, { toolId: "video-package", final: true })
+ if (selectedTitleAssetId && titleGroup) {
+  selectContentBuildVariant({
+   contentBuildId: build.id,
+   groupId: titleGroup.id,
+   assetId: selectedTitleAssetId,
+   sourceToolId: "video-package",
+   final: Boolean(selectedTitle?.approvedAt),
+  })
  }
- if (selectedThumbnailAssetId) {
-  setContentBuildSelection(build.id, "thumbnail", selectedThumbnailAssetId, { toolId: "video-package", final: true })
+ if (selectedThumbnailAssetId && thumbnailGroup) {
+  selectContentBuildVariant({
+   contentBuildId: build.id,
+   groupId: thumbnailGroup.id,
+   assetId: selectedThumbnailAssetId,
+   sourceToolId: "video-package",
+   final: Boolean(selectedThumbnail?.approvedAt),
+  })
  }
  if (scriptAssetId) {
   setContentBuildSelection(build.id, "script", scriptAssetId, {
