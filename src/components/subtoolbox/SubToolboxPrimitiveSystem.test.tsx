@@ -121,7 +121,7 @@ describe("Subtoolbox Primitive System", () => {
     expect(css).toContain("37.5%{opacity:0;transform:scale(5)}")
     expect(css).toContain(".vt-subtoolbox-led-dot")
     expect(css).toContain(".vt-subtoolbox-controller-thumb")
-    expect(css).toContain("color-mix(in srgb,var(--pair-b,#ff7f6b) 34%,white)")
+    expect(css).toContain("color-mix(in srgb,var(--pair-b,#ff7f6b) 34%,transparent)")
     expect(css).toContain(".vt-subtoolbox-loader-progress")
     expect(css).toContain(".vt-subtoolbox-loader-split-title")
     expect(css).toContain(".vt-subtoolbox-loader-orbit")
