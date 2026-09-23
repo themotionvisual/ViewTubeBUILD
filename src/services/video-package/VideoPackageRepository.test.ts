@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest"
-import { getContentBuild, resetContentBuildRepositoryForTests } from "../asset-engine/ContentBuildRepository"
+import {
+  attachAssetToContentBuild,
+  getContentBuild,
+  resetContentBuildRepositoryForTests,
+} from "../asset-engine/ContentBuildRepository"
 import { createVideoPackage } from "./packageValidation"
 import {
+  getVideoPackage,
   getVideoPackageRecoverySnapshot,
   listVideoPackages,
   resetVideoPackageRepositoryForTests,
@@ -32,6 +37,38 @@ describe("VideoPackageRepository consolidation", () => {
     expect(build).not.toBeNull()
     expect(build?.legacyProjectId).toBe("project-a")
     expect(build?.channelId).toBe("channel-a")
+  })
+
+  it("records the observed ContentBuild revision and rejects stale package writes", () => {
+    const initial = createVideoPackage({
+      id: "vp-revision",
+      contentBuildId: "cb-revision",
+      channelId: "channel-a",
+      projectId: "project-revision",
+      workingTitle: "Revision guard",
+      format: "long",
+    })
+
+    const saved = saveVideoPackage(initial)
+    const firstBuild = getContentBuild("cb-revision")
+    expect(firstBuild).not.toBeNull()
+    expect(saved.contentBuildRevision).toBe(firstBuild?.revision)
+
+    attachAssetToContentBuild("cb-revision", "external-asset", { toolId: "external-tool" })
+    const advancedBuild = getContentBuild("cb-revision")
+    expect(advancedBuild?.revision).toBeGreaterThan(saved.contentBuildRevision || 0)
+
+    expect(() => saveVideoPackage({
+      ...saved,
+      identity: { ...saved.identity, workingTitle: "Stale edit" },
+    })).toThrow("Stale Video Package")
+
+    const refreshed = getVideoPackage(saved.id)
+    expect(refreshed?.contentBuildRevision).toBe(advancedBuild?.revision)
+    expect(() => saveVideoPackage({
+      ...refreshed!,
+      identity: { ...refreshed!.identity, workingTitle: "Fresh edit" },
+    })).not.toThrow()
   })
 
   it("rejects packages that do not carry the canonical ContentBuild identity", () => {
