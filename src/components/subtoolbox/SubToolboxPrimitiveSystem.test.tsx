@@ -30,6 +30,14 @@ describe("Subtoolbox Primitive System", () => {
   // 32db8dc lowered two levels of the ladder and left a third behind, which put
   // a level-1 control above the level-0 shell for weeks without failing a gate.
   // Assert the whole ladder, not one pair, so the next retune cannot repeat it.
+  it("locks the reconciled structural height ladder", () => {
+    expect(TOOLBOX_LEVEL_DNA.toolbox.height).toBe(80)
+    expect(TOOLBOX_LEVEL_DNA.l0.height).toBe(56)
+    expect(TOOLBOX_LEVEL_DNA.l1.height).toBe(48)
+    expect(TOOLBOX_LEVEL_DNA.l2.height).toBe(32)
+    expect(SUBTOOLBOX_TOKENS.shell.headerHeight).toBe(56)
+  })
+
   it("keeps every level-owned axis strictly descending", () => {
     const ladder = ["toolbox", "l0", "l1", "l2"] as const
     const axes = ["height", "stroke", "radius", "shadowOffset", "titleSize"] as const
