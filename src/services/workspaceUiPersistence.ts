@@ -14,6 +14,15 @@ type ToolboxPersistenceDescriptor = {
 const normalize = (value: string) =>
   value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
 
+const safeLocalStorage = (): Storage | null => {
+  if (typeof window === "undefined") return null
+  try {
+    return window.localStorage || null
+  } catch {
+    return null
+  }
+}
+
 export const toolboxStateStorageKey = ({
   level,
   title,
@@ -35,8 +44,9 @@ export const readPersistedToolboxOpen = (
   descriptor: ToolboxPersistenceDescriptor,
   fallback: boolean,
 ): boolean => {
-  if (typeof window === "undefined" || !getWorkspaceUxPreferences().rememberToolboxState) return fallback
-  const raw = window.localStorage.getItem(toolboxStateStorageKey(descriptor))
+  const storage = safeLocalStorage()
+  if (!storage || !getWorkspaceUxPreferences().rememberToolboxState) return fallback
+  const raw = storage.getItem(toolboxStateStorageKey(descriptor))
   if (raw === "open") return true
   if (raw === "closed") return false
   return fallback
@@ -46,8 +56,9 @@ export const persistToolboxOpen = (
   descriptor: ToolboxPersistenceDescriptor,
   open: boolean,
 ): void => {
-  if (typeof window === "undefined" || !getWorkspaceUxPreferences().rememberToolboxState) return
-  window.localStorage.setItem(toolboxStateStorageKey(descriptor), open ? "open" : "closed")
+  const storage = safeLocalStorage()
+  if (!storage || !getWorkspaceUxPreferences().rememberToolboxState) return
+  storage.setItem(toolboxStateStorageKey(descriptor), open ? "open" : "closed")
 }
 
 const RESTORABLE_WORKSPACE_PREFIXES = [
@@ -65,12 +76,14 @@ export const isRestorableWorkspaceRoute = (route: string): boolean => {
 }
 
 export const getLastWorkspaceRoute = (): string | null => {
-  if (typeof window === "undefined") return null
-  const route = window.localStorage.getItem(LAST_WORKSPACE_ROUTE_KEY)
+  const storage = safeLocalStorage()
+  if (!storage) return null
+  const route = storage.getItem(LAST_WORKSPACE_ROUTE_KEY)
   return route && isRestorableWorkspaceRoute(route) ? route : null
 }
 
 export const saveLastWorkspaceRoute = (route: string): void => {
-  if (typeof window === "undefined" || !isRestorableWorkspaceRoute(route)) return
-  window.localStorage.setItem(LAST_WORKSPACE_ROUTE_KEY, route)
+  const storage = safeLocalStorage()
+  if (!storage || !isRestorableWorkspaceRoute(route)) return
+  storage.setItem(LAST_WORKSPACE_ROUTE_KEY, route)
 }
