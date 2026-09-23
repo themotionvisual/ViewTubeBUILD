@@ -374,7 +374,7 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        />
        <SubToolboxButton level="l1" tone="warning"
         onClick={() => fileInputRef.current?.click()}
-        className="w-full bg-[#FFDD00] border-[3px] border-black p-2 font-black uppercase text-[10px] rounded-xl shadow-[3px_3px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+        size="standard" className="w-full"
        >
         Upload Video / Audio
        </SubToolboxButton>
@@ -398,13 +398,13 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
         <div className="grid grid-cols-2 gap-2 mt-auto">
          <SubToolboxButton level="l1" tone="warning"
           onClick={() => scriptUploadRef.current?.click()}
-          className="w-full bg-[#FFB570] border-[3px] border-black p-2 font-black uppercase text-[10px] rounded-xl shadow-[3px_3px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+          size="standard" className="w-full"
          >
           Upload Script File
          </SubToolboxButton>
          <SubToolboxButton level="l1" tone="accent"
           onClick={() => scriptAudioUploadRef.current?.click()}
-          className="w-full bg-[#00CCFF] border-[3px] border-black p-2 font-black uppercase text-[10px] rounded-xl shadow-[3px_3px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+          size="standard" className="w-full"
          >
           Upload MP3
          </SubToolboxButton>
@@ -494,7 +494,7 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
         <SubToolboxButton level="l0" tone="accent"
          onClick={handleAnalyze}
          disabled={isLoading || !file}
-         className="w-full bg-[#00CCFF] border-[3px] border-black py-4 px-3 font-black uppercase text-sm rounded-xl shadow-[3px_3px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all disabled:cursor-not-allowed"
+         size="action" className="w-full"
         >
          {isLoading ? "Processing..." : "Run Analysis"}
         </SubToolboxButton>
@@ -637,7 +637,7 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <SubToolboxButton level="l0" tone="success"
          onClick={handleSendInsightsToPublisher}
-         className="w-full bg-[#CCFF00] border-[4px] border-black p-3 font-black uppercase text-sm rounded-xl shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+         size="action" className="w-full"
         >
          Send Insights to Video Publisher
         </SubToolboxButton>
@@ -650,7 +650,7 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
            // no-op
           }
          }}
-         className="w-full bg-white border-[4px] border-black p-3 font-black uppercase text-sm rounded-xl shadow-[4px_4px_0px_0px_black] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
+         size="action" className="w-full"
         >
          Remove Latest Analysis
         </SubToolboxButton>
