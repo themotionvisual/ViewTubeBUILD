@@ -4,6 +4,7 @@ import type {EditorLayer,EditorStore} from '../state/editorState';
 import type {EditorNavPage} from './EditorNavigationPages';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
 import {AcceleratingStepper as HoldStepper,LinkToggle,RotationDial,XYJoystick} from './MobileEditorPrimitives';
+import {ClipEffects} from './EffectsLibrariesPanel';
 
 const BLACK='#111111';
 const MAGENTA='#ff00ff';
@@ -306,7 +307,7 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
     if(typeof window!=='undefined')localStorage.setItem(CONTROL_PRESETS_KEY,JSON.stringify(next));
   };
 
-  return <div style={{width:'100%',minWidth:0,maxWidth:196}}>
+  return <div style={{width:'100%',minWidth:0,maxWidth:'100%'}}>
     <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:4,alignItems:'center',marginBottom:8}}>
       <div style={{minWidth:0}}>
         <div style={{fontSize:9,fontWeight:900,textTransform:'uppercase',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{String(payload.layerName||clip.id)}</div>
@@ -361,7 +362,7 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
         <RotationDial value={rotationValue} onChange={rotation=>patch({rotation})} onReset={()=>patch({rotation:0})}/>
       </div>
     </div>
-    <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,104px))',gap:'0 6px',alignItems:'start'}}>
+    <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:2,alignItems:'start'}}>
       {SETTINGS.filter(def=>!['x','y','rotation','width','height'].includes(def.prop)).map(def=><SettingRow key={def.prop} def={def} payload={payload} clip={clip} store={store} onPatch={patch}/>)}
       <HoldStepper label="WIDTH" value={widthValue} min={1} max={5000} step={1} defaultValue={100} precision={0}
         rightSlot={<LinkToggle linked={linkedSize} onChange={setLinkedSize} label="dimensions"/>}
@@ -397,8 +398,8 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
       {controlPresets.slice(0,6).map((preset,index)=><button key={preset.name+index} style={{...miniButton,minWidth:0,overflow:'hidden',textOverflow:'ellipsis'}} onClick={()=>patch(preset.payload)}>{preset.name}</button>)}
     </div>:null}
 
-    <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:6,width:'100%',minWidth:0,marginTop:3}}>
-      <div style={{gridColumn:'1/-1',...sectionLabel,marginBottom:0}}>APPEARANCE</div>
+    <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr)',gap:6,width:'100%',minWidth:0,marginTop:3}}>
+      <div style={{...sectionLabel,marginBottom:0}}>APPEARANCE</div>
       <ColorControl label="Fill" prop="fillColor" payload={payload} clip={clip} store={store} onPatch={patch}/>
       <ColorControl label="Stroke" prop="strokeColor" payload={payload} clip={clip} store={store} onPatch={patch}/>
     </div>
@@ -463,6 +464,7 @@ export const ClipSettingsPanel:React.FC<{store:EditorStore;onNavigate?:(page:Edi
       <input ref={audioRef} type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg" hidden onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void addFileClip(store,file,'audio')}}/>
 
       <SelectedClipSettings store={store} onNavigate={onNavigate}/>
+      <div style={{marginTop:8}}><ClipEffects store={store}/></div>
     </div>
 
     <div style={{boxSizing:'border-box',border:`2px solid ${BLACK}`,padding:8,background:'#fff',borderRadius:8,width:'100%',minWidth:0,maxWidth:220,marginTop:8,overflow:'hidden'}}>

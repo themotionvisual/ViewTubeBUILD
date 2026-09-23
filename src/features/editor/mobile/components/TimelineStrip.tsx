@@ -1,7 +1,7 @@
 /** Phone timeline with touch-arbitrated select/move/trim, keyframes and collision-safe tracks. */
 import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {
-  AlertTriangle,EyeOff,GripVertical,Layers3,ListPlus,LocateFixed,LockKeyhole,Magnet,Minus,Plus,
+  AlertTriangle,Eye,EyeOff,GripVertical,Layers3,ListPlus,LocateFixed,LockKeyhole,Magnet,Minus,Plus,
   SkipBack,SkipForward,StepBack,StepForward,Trash2,Type,VolumeX,X,
 } from 'lucide-react';
 import type {EditorStore} from '../state/editorState';
@@ -183,7 +183,7 @@ export const TimelineStrip:React.FC<TimelineStripProps>=({
 
   const focusedCompound=compoundFocusId?state.project.clips.find(clip=>clip.id===compoundFocusId):undefined;
   const focusedChildren=focusedCompound?compoundChildren(focusedCompound):[];
-  const tracks=state.project.tracks.filter(track=>!track.hidden).filter(track=>!focusedCompound||track.id===focusedCompound.trackId);
+  const tracks=state.project.tracks.filter(track=>!focusedCompound||track.id===focusedCompound.trackId);
   const trackRows=useMemo(()=>tracks.map((track,index)=>{
     const clips=focusedCompound?focusedChildren.filter(clip=>clip.trackId===track.id||focusedCompound.trackId===track.id):clipsOnTrack(track.id);
     const selectedClip=clips.find(clip=>state.selection.clipIds.includes(clip.id));
@@ -378,7 +378,7 @@ const TrackRow:React.FC<{
   const trackIndex=state.project.tracks.findIndex(item=>item.id===track.id);
   const finishReorder=()=>{reorder.current=null};
 
-  return <div data-vt-track-id={track.id} style={{position:'absolute',top:y,left:0,right:0,height:rowHeight,display:'flex'}}>
+  return <div data-vt-track-id={track.id} style={{position:'absolute',top:y,left:0,right:0,height:rowHeight,display:'flex',opacity:track.hidden?.58:1}}>
     <div
       onClick={()=>!readOnly&&dispatch({type:'selectTrack',id:track.id})}
       onContextMenu={event=>{
@@ -419,8 +419,8 @@ const TrackRow:React.FC<{
           onClick={event=>{event.stopPropagation();dispatch({type:'muteTrack',id:track.id})}} style={miniBtn(track.muted?PINK:'#fff')}><VolumeX size={10}/></button>
         <button title={track.locked?'Unlock track':'Lock track'} aria-label={track.locked?'Unlock track':'Lock track'}
           onClick={event=>{event.stopPropagation();dispatch({type:'lockTrack',id:track.id})}} style={miniBtn(track.locked?YELLOW:'#fff')}><LockKeyhole size={10}/></button>
-        <button title="Hide track" aria-label="Hide track"
-          onClick={event=>{event.stopPropagation();dispatch({type:'hideTrack',id:track.id})}} style={miniBtn('#fff')}><EyeOff size={10}/></button>
+        <button title={track.hidden?'Show track':'Hide track'} aria-label={track.hidden?'Show track':'Hide track'}
+          onClick={event=>{event.stopPropagation();dispatch({type:'hideTrack',id:track.id})}} style={miniBtn(track.hidden?CYAN:'#fff')}>{track.hidden?<Eye size={10}/>:<EyeOff size={10}/>}</button>
         <button title={removable?'Remove empty track':'Track must be empty before removal'} aria-label="Remove track"
           disabled={!removable}
           onClick={event=>{event.stopPropagation();if(removable)dispatch({type:'removeTrack',id:track.id})}}
@@ -451,12 +451,36 @@ const TrackRow:React.FC<{
           onOpenCompound={onOpenCompound}
           onContextMenu={onClipContextMenu}
         />)}
+        {!readOnly?(state.project.transitions??[]).filter(transition=>{
+          const left=state.project.clips.find(item=>item.id===transition.leftClipId);
+          const right=state.project.clips.find(item=>item.id===transition.rightClipId);
+          return left?.trackId===track.id&&right?.trackId===track.id;
+        }).map((transition,index)=><TransitionChip
+          key={String((transition as {id?:unknown}).id??`${transition.leftClipId}-${transition.rightClipId}-${index}`)}
+          transition={transition} clips={state.project.clips} pxPerSec={pxPerSec}
+          selectedId={state.selection.transitionId??undefined} onSelect={id=>dispatch({type:'selectTransition',id})}
+        />):null}
       </div>
       <div style={{position:'absolute',left:0,right:0,top:CLIP_BODY_HEIGHT,height:KEYFRAME_LANE_HEIGHT,borderTop:`1px solid ${INK}`,background:'rgba(54,224,246,.035)'}}>
         {showKeyframeLane&&selectedClip&&!readOnly?<KeyframeLane clip={selectedClip} store={store} pxPerSec={pxPerSec} top={0} onContextMenu={onKeyframeContextMenu}/>:null}
       </div>
     </div>
   </div>;
+};
+
+const TransitionChip:React.FC<{
+  transition:NonNullable<EditorStore['state']['project']['transitions']>[number];clips:VtE1Clip[];pxPerSec:number;selectedId?:string;onSelect:(id:string)=>void;
+}>=({transition,clips,pxPerSec,selectedId,onSelect})=>{
+  const left=clips.find(clip=>clip.id===transition.leftClipId),right=clips.find(clip=>clip.id===transition.rightClipId);
+  if(!left||!right)return null;
+  const id=String((transition as {id?:unknown}).id??`${transition.leftClipId}-${transition.rightClipId}`);
+  const seam=(left.end+right.start)/2,duration=Math.max(.12,Number(transition.durationSec??.4)),width=Math.max(18,duration*pxPerSec);
+  const label=String((transition as {presentation?:unknown;type?:unknown}).presentation??(transition as {type?:unknown}).type??'FX');
+  return <button title={`Transition: ${label}`} aria-label={`Select transition ${label}`} onPointerDown={event=>event.stopPropagation()} onClick={event=>{event.stopPropagation();onSelect(id)}} style={{
+    position:'absolute',left:seam*pxPerSec-width/2,top:2,width,height:22,zIndex:8,border:`2px solid ${selectedId===id?CYAN:INK}`,
+    borderRadius:4,background:YELLOW,color:'#111',padding:'0 3px',fontSize:6,fontWeight:1000,textTransform:'uppercase',
+    overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',boxShadow:selectedId===id?'0 0 0 2px #fff,2px 2px 0 rgba(36,139,153,.35)':'2px 2px 0 rgba(36,139,153,.25)',...IOS_TOUCH_SAFE,
+  }}>{label}</button>;
 };
 
 const KeyframeLane:React.FC<{clip:VtE1Clip;store:EditorStore;pxPerSec:number;top:number;onContextMenu?:TimelineStripProps['onKeyframeContextMenu']}>=({clip,store,pxPerSec,top,onContextMenu})=>{

@@ -23,6 +23,9 @@ const FX_DEFS=[
   {key:'saturation',label:'Saturation',min:0,max:3,step:.05,precision:2,defaultValue:1},
   {key:'brightness',label:'Brightness',min:0,max:3,step:.05,precision:2,defaultValue:1},
   {key:'hue',label:'Hue',min:-180,max:180,step:2,precision:0,defaultValue:0},
+  {key:'contrast',label:'Contrast',min:0,max:3,step:.05,precision:2,defaultValue:1},
+  {key:'sepia',label:'Sepia',min:0,max:1,step:.05,precision:2,defaultValue:0},
+  {key:'grayscale',label:'Grayscale',min:0,max:1,step:.05,precision:2,defaultValue:0},
   {key:'opacity',label:'Opacity',min:0,max:1,step:.02,precision:2,defaultValue:1},
 ] as const;
 const DEFAULT_FX_ORDER=FX_DEFS.map(def=>def.key);
@@ -36,10 +39,13 @@ const CLIP_PRESETS=[
   {name:'Punch',patch:{blur:0,saturation:1.35,brightness:1.08,hue:0,opacity:1}},
   {name:'Muted',patch:{blur:0,saturation:.35,brightness:.96,hue:0,opacity:1}},
   {name:'Cool',patch:{blur:0,saturation:1.08,brightness:1,hue:20,opacity:1}},
-  {name:'Warm',patch:{blur:0,saturation:1.12,brightness:1.03,hue:-18,opacity:1}},
+  {name:'Warm',patch:{blur:0,saturation:1.12,brightness:1.03,hue:-18,contrast:1.05,sepia:.08,grayscale:0,opacity:1}},
+  {name:'Kodachrome',patch:{blur:0,saturation:1.42,brightness:1.04,hue:-8,contrast:1.24,sepia:.12,grayscale:0,opacity:1}},
+  {name:'Chrome',patch:{blur:0,saturation:.72,brightness:1.08,hue:8,contrast:1.48,sepia:0,grayscale:.08,opacity:1}},
+  {name:'Duotone',patch:{blur:0,saturation:.28,brightness:1.05,hue:32,contrast:1.62,sepia:.72,grayscale:.18,opacity:1}},
 ] as const;
 
-function ClipEffects({store}:{store:EditorStore}){
+export function ClipEffects({store}:{store:EditorStore}){
   const clip=store.selectedClips[0];
   const layer=store.selectedLayer;
   if(!clip||!layer)return <section style={card}><div style={{fontSize:10,fontWeight:1000,textTransform:'uppercase'}}>Clip FX</div><div style={{fontSize:9,fontWeight:800,opacity:.6,marginTop:5}}>Select a text, shape, image, video, audio-visual, or generated layer clip.</div></section>;
@@ -83,10 +89,10 @@ function ClipEffects({store}:{store:EditorStore}){
       <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:5}}>
         {CLIP_PRESETS.map(preset=><button key={preset.name} style={btn(false)} onClick={()=>patch({...preset.patch,fxBypass:false,fxDisabled:{}})}>{preset.name}</button>)}
       </div>
-      <button style={{...btn(false),width:'100%',marginTop:5}} onClick={()=>patch({blur:0,saturation:1,brightness:1,hue:0,opacity:1,fxBypass:false,fxDisabled:{},fxOrder:DEFAULT_FX_ORDER})}><RotateCcw size={12}/>Reset FX</button>
+      <button style={{...btn(false),width:'100%',marginTop:5}} onClick={()=>patch({blur:0,saturation:1,brightness:1,hue:0,contrast:1,sepia:0,grayscale:0,opacity:1,fxBypass:false,fxDisabled:{},fxOrder:DEFAULT_FX_ORDER})}><RotateCcw size={12}/>Reset FX</button>
       <button style={{...btn(true),width:'100%',marginTop:5}} onClick={()=>{
         const preset={name:`FX ${userPresets.length+1}`,patch:{
-          blur:number('blur',0),saturation:number('saturation',1),brightness:number('brightness',1),hue:number('hue',0),opacity:number('opacity',1),
+          blur:number('blur',0),saturation:number('saturation',1),brightness:number('brightness',1),hue:number('hue',0),contrast:number('contrast',1),sepia:number('sepia',0),grayscale:number('grayscale',0),opacity:number('opacity',1),
           fxBypass:false,fxDisabled:{...disabled},fxOrder:[...order],
         }};
         const next=[preset,...userPresets].slice(0,12);
