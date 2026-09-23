@@ -1,4 +1,6 @@
 import type { Project } from "../../types"
+import { projectLaneForStatus, projectStatusForLane, type ProjectLaneId } from "./projectLifecycleVocabulary"
+export type { ProjectLaneId } from "./projectLifecycleVocabulary"
 
 export const PROJECT_WORKSPACE_STORAGE_KEY = "viewtube.projects.workspace.v1"
 
@@ -12,7 +14,6 @@ export const PROJECT_LANES = [
  { id: "published", label: "Published", description: "Live and complete" },
 ] as const
 
-export type ProjectLaneId = (typeof PROJECT_LANES)[number]["id"]
 export type ProjectPriority = "low" | "medium" | "high" | "urgent"
 export type ProjectWorkspaceView = "board" | "calendar" | "list" | "timeline"
 
@@ -50,20 +51,9 @@ const DEFAULT_STATE: ProjectWorkspaceState = {
 const isLane = (value: unknown): value is ProjectLaneId =>
  PROJECT_LANES.some((lane) => lane.id === value)
 
-const inferLane = (project: Project): ProjectLaneId => {
- const status = String(project.status || "").toLowerCase()
- if (status.includes("publish") && status !== "publishing") return "published"
- if (status === "publishing" || status.includes("ready")) return "ready"
- if (status.includes("review") || status.includes("approval")) return "review"
- if (status.includes("block")) return "blocked"
- if (["scripting", "filming", "editing", "production", "active", "in-progress"].includes(status)) return "in-progress"
- if (["planned", "queued", "scheduled"].includes(status)) return "planned"
- return "ideas"
-}
-
 const normalizeMeta = (project: Project, candidate: Partial<ProjectWorkspaceMeta> | undefined, order: number): ProjectWorkspaceMeta => ({
  projectId: project.id,
- lane: isLane(candidate?.lane) ? candidate.lane : inferLane(project),
+ lane: isLane(candidate?.lane) ? candidate.lane : projectLaneForStatus(project.status),
  order: Number.isFinite(candidate?.order) ? Number(candidate?.order) : order,
  priority: ["low", "medium", "high", "urgent"].includes(String(candidate?.priority))
   ? candidate!.priority as ProjectPriority
@@ -144,14 +134,4 @@ export const patchProjectMeta = (
  }
 }
 
-export const statusForLane = (lane: ProjectLaneId): string => {
- switch (lane) {
-  case "ideas": return "ideation"
-  case "planned": return "planned"
-  case "in-progress": return "production"
-  case "review": return "review"
-  case "ready": return "ready"
-  case "blocked": return "blocked"
-  case "published": return "published"
- }
-}
+export const statusForLane = projectStatusForLane
