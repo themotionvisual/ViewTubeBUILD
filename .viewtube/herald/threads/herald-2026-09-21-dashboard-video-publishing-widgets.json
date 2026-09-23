@@ -1,0 +1,39 @@
+{
+  "threadId": "herald-2026-09-21-dashboard-video-publishing-widgets",
+  "verb": "BUILD",
+  "tier": "T2",
+  "stage": "VERIFY",
+  "taskIds": [],
+  "missionId": null,
+  "owner": "ViewTube Design / Widget System + Packaging / Video Publisher",
+  "writerLock": {
+    "paths": [
+      "src/views/dashboard/widgets/VideoUploaderWidget.tsx",
+      "src/views/dashboard/widgets/VideoManagerWidget.tsx",
+      "src/views/dashboard/widgets/videoUploaderWidget.css",
+      "src/views/dashboard/widgets/videoManagerWidget.css",
+      "src/views/dashboard/widgets/DataEditWidget.tsx",
+      "src/views/dashboard/WidgetRendererBase.tsx",
+      "src/views/dashboard/__tests__/VideoPublishingWidgets.test.tsx",
+      "src/views/dashboard/__tests__/WidgetControlContract.test.ts",
+      ".claude/skills/viewtube-widget-dashboard-system/references/current-widget-inventory.md",
+      ".claude/skills/viewtube-widget-dashboard-system/references/source-code-map.md",
+      ".viewtube/herald/threads/herald-2026-09-21-dashboard-video-publishing-widgets.json",
+      ".viewtube/herald/ledger/2026-09-21.jsonl",
+      ".claude/skills/viewtube-widget-dashboard-system/SKILL.md",
+      "src/views/dashboard/widgetMobileContract.css",
+      "src/views/dashboard/DashboardCanvas.tsx"
+    ],
+    "acquired": "2026-09-21T20:15:00Z",
+    "holder": "chatgpt"
+  },
+  "reconRef": "main@b282a86f274855776821c5208175b0cb38c041ff",
+  "openQuestions": [
+    "Visual re-check is required on the refreshed Netlify PR #301 preview after the mobile composition update.",
+    "Vercel remains a separate deployment concern; the current PR head has successful Netlify deploy-preview status."
+  ],
+  "nextAction": "Refresh deploy-preview-301 on a phone and certify Uploader/Manager portrait geometry: ~8px dashboard gutter, 2x2 media gantry, inline counters/actions, Education+Timestamps row, larger footer controls, and one-line Manager video selector.",
+  "entries": 3,
+  "lastApp": "chatgpt",
+  "lastTs": "2026-09-22T21:12:00Z"
+}

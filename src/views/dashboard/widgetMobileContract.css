@@ -7,6 +7,11 @@
     .dashboard-barrier {
       --vt-mobile-widget-gap: 8px;
       --vt-mobile-widget-gutter: 8px;
+      /* The app shell reserves 16px per side on phones. Reclaim most of that
+         only for the dashboard so full-width widgets land at an 8px screen gutter. */
+      width: calc(100% + 24px);
+      max-width: none;
+      margin-inline: -12px;
       --vt-mobile-height-short: 150px;
       --vt-mobile-height-medium: 250px;
       --vt-mobile-height-tall: 350px;
