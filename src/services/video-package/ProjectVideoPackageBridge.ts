@@ -52,14 +52,21 @@ export const selectProjectVideoPackageThumbnail = (
     now?: string
   } = {},
 ) => {
-  const videoPackage = ensureVideoPackageForProject(project, input)
-  if (!videoPackage) return null
   if (!project.contentBuildId || !getContentBuild(project.contentBuildId)) {
     throw new Error(`Cannot select thumbnail: Project ${project.id} has no resolved ContentBuild.`)
   }
 
-  const now = input.now || new Date().toISOString()
   const sourceToolId = input.sourceToolId || "project-builder"
+  setContentBuildSelection(project.contentBuildId, "thumbnail", asset.id, {
+    toolId: sourceToolId,
+    actorType: "creator",
+    final: true,
+  })
+
+  const videoPackage = ensureVideoPackageForProject(project, input)
+  if (!videoPackage) return null
+
+  const now = input.now || new Date().toISOString()
   const existing = videoPackage.packaging.thumbnailVariants.find(candidate => candidate.vaultAssetId === asset.id)
   const artifact = existing || {
     id: `thumbnail:${asset.id}`,
@@ -80,7 +87,7 @@ export const selectProjectVideoPackageThumbnail = (
     ? videoPackage.packaging.thumbnailVariants
     : [...videoPackage.packaging.thumbnailVariants, artifact]
 
-  const updatedPackage = saveVideoPackage({
+  return saveVideoPackage({
     ...videoPackage,
     version: videoPackage.version + 1,
     identity: { ...videoPackage.identity, updatedAt: now },
@@ -101,13 +108,6 @@ export const selectProjectVideoPackageThumbnail = (
       },
     ],
   })
-
-  setContentBuildSelection(project.contentBuildId, "thumbnail", asset.id, {
-    toolId: sourceToolId,
-    actorType: "creator",
-    final: true,
-  })
-  return updatedPackage
 }
 
 
@@ -116,16 +116,22 @@ export const clearProjectVideoPackageThumbnail = (
   input: { sourceToolId?: string; now?: string } = {},
 ) => {
   if (!project.contentBuildId) return null
-  const videoPackage = findVideoPackageByProject(project.id, project.contentBuildId)
-  if (!videoPackage || !videoPackage.packaging.selectedThumbnailId) return videoPackage
   if (!getContentBuild(project.contentBuildId)) {
     throw new Error(`Cannot clear thumbnail: Project ${project.id} has no resolved ContentBuild.`)
   }
 
-  const now = input.now || new Date().toISOString()
   const sourceToolId = input.sourceToolId || "project-builder"
+  setContentBuildSelection(project.contentBuildId, "thumbnail", null, {
+    toolId: sourceToolId,
+    actorType: "creator",
+  })
+
+  const videoPackage = findVideoPackageByProject(project.id, project.contentBuildId)
+  if (!videoPackage || !videoPackage.packaging.selectedThumbnailId) return videoPackage
+
+  const now = input.now || new Date().toISOString()
   const previous = videoPackage.packaging.selectedThumbnailId
-  const updatedPackage = saveVideoPackage({
+  return saveVideoPackage({
     ...videoPackage,
     version: videoPackage.version + 1,
     identity: { ...videoPackage.identity, updatedAt: now },
@@ -142,9 +148,4 @@ export const clearProjectVideoPackageThumbnail = (
       },
     ],
   })
-  setContentBuildSelection(project.contentBuildId, "thumbnail", null, {
-    toolId: sourceToolId,
-    actorType: "creator",
-  })
-  return updatedPackage
 }
