@@ -1,6 +1,7 @@
 import React from "react"
 import {
   ArrowLeftRight,
+  Clock3,
   Command,
   History,
   Keyboard,
@@ -9,6 +10,7 @@ import {
   PanelTopClose,
   PanelsTopLeft,
   Save,
+  Search,
   Smartphone,
   StickyNote,
 } from "lucide-react"
@@ -86,6 +88,18 @@ const CONTINUITY_ITEMS: PreferenceItem[] = [
 ]
 
 const DESKTOP_ITEMS: PreferenceItem[] = [
+  {
+    key: "globalQuickSwitcher",
+    title: "Global quick switcher",
+    description: "Show the global destination launcher and open it anywhere with Command/Ctrl + K.",
+    icon: <Search size={21} />,
+  },
+  {
+    key: "rememberRecentDestinations",
+    title: "Remember recent destinations",
+    description: "Keep a short local history of recently opened ViewTube pages inside the quick switcher.",
+    icon: <Clock3 size={21} />,
+  },
   {
     key: "restoreLastWorkspace",
     title: "Restore last workspace",
