@@ -76,6 +76,8 @@ const PreviewElement:React.FC<{
     onSelectElement?.(element);
   };
 
+  if(element.type==='text'&&!String(element.text??'').trim())return null;
+
   if(element.type==='text')return <div
     onPointerDown={activate}
     style={{
@@ -87,7 +89,7 @@ const PreviewElement:React.FC<{
       display:'flex',alignItems:'center',
       whiteSpace:'pre-wrap',textAlign:'left',
     }}
-  >{element.text??element.name}</div>;
+  >{element.text}</div>;
 
   if(element.type==='svg'&&element.svg)return <div onPointerDown={activate} style={base}>
     <img alt="" draggable={false} src={svgDataUri(element.svg)} style={{width:'100%',height:'100%',display:'block',objectFit:'contain',pointerEvents:'none'}}/>
