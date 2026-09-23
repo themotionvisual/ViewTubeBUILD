@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { Activity, BrainCircuit, CheckCircle2, CircleStop, Database, Eye, LockKeyhole, Play, ShieldCheck, SlidersHorizontal, Target, Wrench } from "lucide-react"
+import { Activity, BrainCircuit, CheckCircle2, CircleStop, Eye, LockKeyhole, Play, ShieldCheck, SlidersHorizontal, Target, Wrench } from "lucide-react"
 import { useBrain } from "../../../context/useBrain"
 import { readBrainEngineControls, writeBrainEngineControls, type BrainEngineControls } from "../../../services/brain/BrainEngineControls"
 import { readBrainUserControls, setActiveBrainControlChannel, writeBrainUserControls, type BrainUserControls } from "../../../services/brain/BrainUserControls"
@@ -15,10 +15,10 @@ type AuditOutcome = "info" | "approved" | "stopped" | "changed"
 type AuditEntry = { id: string; at: string; action: string; detail: string; outcome: AuditOutcome }
 
 const PAGES = [
-  { id: "observe", label: "Observe" },
-  { id: "direct", label: "Direct" },
-  { id: "permissions", label: "Permissions" },
-  { id: "audit", label: "Audit" },
+  { id: "observe", label: "Status" },
+  { id: "direct", label: "Give Direction" },
+  { id: "permissions", label: "Access" },
+  { id: "audit", label: "Activity" },
 ] as const
 
 const DEFAULT_OBJECTIVE = "Protect creator intent while preparing the next best action."
@@ -81,7 +81,7 @@ export const BrainControlWidget: React.FC<CommonWidgetProps & { data: DashboardD
     return memory && typeof memory === "object" ? Object.keys(memory as unknown as Record<string, unknown>).length : 0
   }, [controls.personalization, getBrainMemory])
   const scopeReady = controls.enabled && enabledTools > 0 && permissions > 0
-  const mode = !controls.enabled ? "OFFLINE" : status === "awaiting-approval" ? "APPROVAL" : status === "approved" ? "READY" : status === "stopped" ? "STOPPED" : "OBSERVE"
+  const mode = !controls.enabled ? "OFF" : status === "awaiting-approval" ? "WAITING" : status === "approved" ? "READY" : status === "stopped" ? "STOPPED" : "WATCHING"
 
   const saveObjective = () => {
     const value = objective.trim() || DEFAULT_OBJECTIVE
@@ -100,39 +100,41 @@ export const BrainControlWidget: React.FC<CommonWidgetProps & { data: DashboardD
   const approve = () => { if (status === "awaiting-approval") { setStatus("approved"); log("Directive approved", directive, "approved") } }
   const stop = () => { if (status === "awaiting-approval" || status === "approved") { setStatus("stopped"); log("Directive stopped", directive, "stopped") } }
 
-  const core = <section className="brain-control-core" aria-label="Governed Brain command core">
-    <button type="button" className="brain-control-ring is-execution" onClick={() => setPage("audit")} aria-label={`Execution: ${mode}`}><span>EXECUTION</span><strong>{mode}</strong></button>
-    <button type="button" className="brain-control-ring is-tools" onClick={() => setPage("permissions")} aria-label={`Tools: ${enabledTools} of 5 enabled`}><span>TOOLS</span><strong>{enabledTools}/5</strong></button>
-    <button type="button" className="brain-control-ring is-context" onClick={() => setPage("observe")} aria-label={`Context: ${memories} memory fields`}><span>CONTEXT</span><strong>{memories + (channelId ? 1 : 0)}</strong></button>
-    <button type="button" className="brain-control-ring is-objective" onClick={() => setPage("direct")} aria-label={`Objective: ${objective}`}><span>OBJECTIVE</span><strong>SET</strong></button>
-    <div className="brain-control-nucleus" aria-live="polite"><BrainCircuit aria-hidden="true" /><strong>{mode}</strong><span>{scopeReady ? "SCOPE VALID" : "SCOPE BLOCKED"}</span></div>
+  const core = <section className="brain-control-core" aria-label="Brain Control map. Select a ring to change that part of Brain Control.">
+    <button type="button" className="brain-control-ring is-execution" onClick={() => setPage("audit")} aria-label={`Action mode: ${mode}. Open activity history.`}><span>ACTION MODE</span><strong>{mode}</strong></button>
+    <button type="button" className="brain-control-ring is-tools" onClick={() => setPage("permissions")} aria-label={`Intelligence tools: ${enabledTools} of 5 enabled. Open access controls.`}><span>TOOLS ENABLED</span><strong>{enabledTools} OF 5</strong></button>
+    <button type="button" className="brain-control-ring is-context" onClick={() => setPage("observe")} aria-label={`Creator context: ${memories + (channelId ? 1 : 0)} signals available.`}><span>CONTEXT SIGNALS</span><strong>{memories + (channelId ? 1 : 0)}</strong></button>
+    <button type="button" className="brain-control-ring is-objective" onClick={() => setPage("direct")} aria-label={`Creator objective is set. Open direction controls.`}><span>YOUR GOAL</span><strong>SET</strong></button>
+    <div className={`brain-control-nucleus ${scopeReady ? "is-ready" : "is-blocked"}`} aria-live="polite"><BrainCircuit aria-hidden="true" /><strong>BRAIN</strong><span>{scopeReady ? "READY" : "NEEDS ACCESS"}</span></div>
     <ol className="vt-visually-hidden"><li>Objective: {objective}</li><li>Context: {memories} memory fields</li><li>Tools: {enabledTools} of 5</li><li>Execution: {mode}</li></ol>
   </section>
 
   const observe = <div className="brain-control-observe">
     {core}
-    <section className="brain-control-status-rail" aria-label="Brain control status">
-      <Status icon={<Eye />} value={controls.enabled ? "OBSERVING" : "DISABLED"} label="Operating mode" />
-      <Status icon={<Database />} value={String(memories)} label="Memory fields" />
-      <Status icon={<Wrench />} value={`${enabledTools}/5`} label="Tools enabled" />
-      <Status icon={<ShieldCheck />} value={`${permissions}/5`} label="Permissions" />
+    <section className="brain-control-explainer" aria-label="What Brain Control is doing">
+      <div className="brain-control-explainer-heading"><Eye aria-hidden="true" /><div><strong>{controls.enabled ? "Brain is watching your channel" : "Brain is currently turned off"}</strong><span>{controls.enabled ? "It can study signals and prepare a recommendation. It cannot publish or change YouTube without the access you allow." : "Turn on Brain access to analyze your channel and prepare recommendations."}</span></div></div>
+      <div className="brain-control-readiness" aria-label="Brain readiness">
+        <div><strong>{enabledTools} OF 5</strong><span>intelligence tools can help</span></div>
+        <div><strong>{permissions} OF 5</strong><span>channel sources are allowed</span></div>
+      </div>
+      <div className="brain-control-safety"><ShieldCheck aria-hidden="true" /><span><strong>{controls.externalActionsRequireApproval ? "You approve external actions" : "Automatic external actions are allowed"}</strong><small>{controls.externalActionsRequireApproval ? "Publishing, replies, and other writes wait for your confirmation." : "Turn approval back on in Access if you want every external write to wait."}</small></span></div>
     </section>
-    <section className="brain-control-objective-summary"><span>CURRENT OBJECTIVE</span><strong>{objective}</strong><WidgetSizedButton height={24} tone="secondary" onClick={() => setPage("direct")}>EDIT DIRECTIVE</WidgetSizedButton></section>
+    <section className="brain-control-objective-summary"><span>Brain will use this goal when it evaluates every recommendation.</span><strong>{objective}</strong><WidgetSizedButton height={32} tone="secondary" onClick={() => setPage("direct")}>CHANGE GOAL OR GIVE DIRECTION</WidgetSizedButton></section>
   </div>
 
   const direct = <div className="brain-control-direct">
-    <ControlCard icon={<Target />} title="OBJECTIVE" detail="Persistent intent used to judge every directive">
+    <ControlCard icon={<Target />} title="YOUR CREATOR GOAL" detail="Brain uses this long-term goal to judge whether a recommendation fits your intent.">
       <WidgetTextInput height={38} tone="secondary" aria-label="Brain objective" value={objective} onChange={(event) => setObjective(event.currentTarget.value)} onBlur={saveObjective} />
     </ControlCard>
-    <ControlCard icon={<SlidersHorizontal />} title="DIRECTIVE" detail="One governed instruction for Brain handoff" badge={status.replace("-", " ").toUpperCase()} badgeStatus={status === "approved" ? "positive" : status === "stopped" ? "danger" : status === "awaiting-approval" ? "warning" : "neutral"} large>
+    <ControlCard icon={<SlidersHorizontal />} title="WHAT SHOULD BRAIN DO NEXT?" detail="Give Brain one instruction. It will prepare the work and pause for approval when required." badge={status.replace("-", " ").toUpperCase()} badgeStatus={status === "approved" ? "positive" : status === "stopped" ? "danger" : status === "awaiting-approval" ? "warning" : "neutral"} large>
       <WidgetTextInput height={38} tone="primary" aria-label="Brain directive" placeholder="Describe the governed action…" value={directive} onChange={(event) => { setDirective(event.currentTarget.value); setStatus(event.currentTarget.value.trim() ? "draft" : "idle") }} />
       <div className="brain-control-direct-actions">
-        <WidgetLeftSplitButton icon={<LockKeyhole />} height={32} tone="primary" width="full" disabled={!directive.trim() || !scopeReady} onClick={stageDirective}>STAGE DIRECTIVE</WidgetLeftSplitButton>
+        <WidgetLeftSplitButton icon={<LockKeyhole />} height={32} tone="primary" width="full" disabled={!directive.trim() || !scopeReady} onClick={stageDirective}>PREPARE DIRECTION</WidgetLeftSplitButton>
         {status === "awaiting-approval" ? <WidgetLeftSplitButton icon={<CheckCircle2 />} height={32} tone="secondary" width="full" onClick={approve}>APPROVE</WidgetLeftSplitButton> : null}
         {status === "awaiting-approval" || status === "approved" ? <WidgetLeftSplitButton icon={<CircleStop />} height={32} tone="default" width="full" className="brain-control-stop" onClick={stop}>STOP</WidgetLeftSplitButton> : null}
       </div>
     </ControlCard>
-    <section className="brain-control-handoff"><div><Play aria-hidden="true" /><span><strong>EXECUTION HANDOFF</strong><small>Approved directives open in the full Brain workspace. This widget never silently performs an external write.</small></span></div><WidgetSizedButton height={32} tone="primary" disabled={status !== "approved"} onClick={() => onNavigate?.("/ai-brain")}>OPEN BRAIN</WidgetSizedButton></section>
+    <section className="brain-control-handoff"><div><Play aria-hidden="true" /><span><strong>CONTINUE IN THE BRAIN WORKSPACE</strong><small>After approval, open the full workspace to review progress. This widget never silently performs an external write.</small></span></div><WidgetSizedButton height={32} tone="primary" disabled={status !== "approved"} onClick={() => onNavigate?.("/ai-brain")}>OPEN BRAIN</WidgetSizedButton></section>
   </div>
 
   const permissionRows = [
@@ -152,19 +154,17 @@ export const BrainControlWidget: React.FC<CommonWidgetProps & { data: DashboardD
     ["Algorithm Priming", "Pre-launch and sustain plans.", engines.algorithmPriming, (v: boolean) => updateEngine("algorithmPriming", v)],
     ["Video Packages", "Asset Engine package context.", engines.videoPackages, (v: boolean) => updateEngine("videoPackages", v)],
   ] as const
-  const permissionsPage = <div className="brain-control-permissions"><SwitchGroup title="PERMISSIONS" detail={`${permissions}/5 context capabilities available`} icon={<ShieldCheck />} rows={permissionRows} /><SwitchGroup title="TOOLS" detail={`${enabledTools}/5 intelligence engines enabled`} icon={<Wrench />} rows={engineRows} /></div>
+  const permissionsPage = <div className="brain-control-permissions"><SwitchGroup title="WHAT BRAIN MAY READ OR PREPARE" detail={`${permissions}/5 channel sources available`} icon={<ShieldCheck />} rows={permissionRows} /><SwitchGroup title="WHICH INTELLIGENCE TOOLS MAY HELP" detail={`${enabledTools}/5 tools enabled`} icon={<Wrench />} rows={engineRows} /></div>
 
   const auditPage = <div className="brain-control-audit">
-    <div className="brain-control-audit-summary"><WidgetProgressBar value={audit.length} max={40} label="AUDIT BUFFER" displayValue={`${audit.length}/40`} height={24} tone="secondary" /><WidgetBadge status={status === "stopped" ? "danger" : status === "approved" ? "positive" : "neutral"}>{mode}</WidgetBadge></div>
+    <div className="brain-control-audit-summary"><WidgetProgressBar value={audit.length} max={40} label="SAVED ACTIVITY" displayValue={`${audit.length}/40`} height={24} tone="secondary" /><WidgetBadge status={status === "stopped" ? "danger" : status === "approved" ? "positive" : "neutral"}>{mode}</WidgetBadge></div>
     {audit.length ? audit.map((entry) => <article className="brain-control-audit-row" key={entry.id}><span className={`brain-control-audit-mark is-${entry.outcome}`} aria-hidden="true" /><div><strong>{entry.action}</strong><small>{entry.detail}</small></div><div className="brain-control-audit-meta"><WidgetBadge status={entry.outcome === "approved" ? "positive" : entry.outcome === "stopped" ? "danger" : entry.outcome === "changed" ? "warning" : "neutral"}>{entry.outcome.toUpperCase()}</WidgetBadge><time dateTime={entry.at}>{new Date(entry.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time></div></article>) : <div className="brain-control-empty"><Activity aria-hidden="true" /><strong>NO CONTROL EVENTS YET</strong><span>Permission, objective, directive, approval, and Stop events will appear here.</span></div>}
   </div>
 
-  return <WidgetShell {...common} icon={<BrainCircuit size={22} />} controlDensity="compact" headerContent={<WidgetBadge status={scopeReady ? "positive" : "warning"}>{mode}</WidgetBadge>}>
+  return <WidgetShell {...common} icon={<BrainCircuit size={22} />} controlDensity="compact" headerContent={<span className={`brain-control-header-state ${scopeReady ? "is-ready" : "is-blocked"}`}>{mode}</span>}>
     <div className="brain-control-widget"><WidgetStepTabs label="Brain Control pages" value={page} items={PAGES} onChange={setPage} /><WidgetScrollArea ariaLabel={`${PAGES.find((item) => item.id === page)?.label || "Brain Control"} page`} className="brain-control-scroll">{page === "observe" ? observe : page === "direct" ? direct : page === "permissions" ? permissionsPage : auditPage}</WidgetScrollArea></div>
   </WidgetShell>
 }
-
-const Status: React.FC<{ icon: React.ReactNode; value: string; label: string }> = ({ icon, value, label }) => <div><span aria-hidden="true">{icon}</span><span><strong>{value}</strong><small>{label}</small></span></div>
 
 const ControlCard: React.FC<{ icon: React.ReactNode; title: string; detail: string; badge?: string; badgeStatus?: "positive" | "warning" | "danger" | "neutral"; large?: boolean; children: React.ReactNode }> = ({ icon, title, detail, badge, badgeStatus, large, children }) => <section className={`brain-control-directive-card ${large ? "is-large" : ""}`}><div className="brain-control-section-heading"><span>{icon}</span><div><strong>{title}</strong><small>{detail}</small></div>{badge ? <WidgetBadge status={badgeStatus}>{badge}</WidgetBadge> : null}</div>{children}</section>
 
