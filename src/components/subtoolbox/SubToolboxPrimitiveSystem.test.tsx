@@ -4,7 +4,7 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "./SubToolboxLayouts"
-import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAspectRatioFrame, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataStats, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxMeter, SubToolboxMetric, SubToolboxMetricStrip, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxScrollbar, SubToolboxSplitField, SubToolboxStatePanel, SubToolboxTag, SubToolboxTagEditor, SubToolboxTextArea, SubToolboxTopTitleDropdown, SubToolboxToolbar, SubToolboxTooltip, SubToolboxProgressValue, SubToolboxTree, SubToolboxVaultAsset } from "./SubToolboxPrimitives"
+import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAspectRatioFrame, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCalendar, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataStats, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxLedDot, SubToolboxLoader, SubToolboxMeter, SubToolboxMetric, SubToolboxMetricStrip, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxScrollbar, SubToolboxSplitField, SubToolboxStatePanel, SubToolboxTag, SubToolboxTagEditor, SubToolboxTextArea, SubToolboxTopTitleDropdown, SubToolboxToolbar, SubToolboxTooltip, SubToolboxProgressValue, SubToolboxTree, SubToolboxVaultAsset } from "./SubToolboxPrimitives"
 import { CONTROL_SHELL, SUBTOOLBOX_CONTROL_SIZES, SUBTOOLBOX_STATES, SUBTOOLBOX_TOKENS, TOOLBOX_LEVEL_DNA, resolveSubtoolboxMinHeight } from "./tokens"
 
 describe("Subtoolbox Primitive System", () => {
@@ -103,6 +103,33 @@ describe("Subtoolbox Primitive System", () => {
     expect(css).toContain("height:calc(var(--vt-component-height)*1.62)")
   })
 
+  it("locks the corrected overlay, LED, controller, loader, calendar, scrollbar and tree contracts", () => {
+    const css = readFileSync(resolve(process.cwd(), "src/styles/subtoolbox-system.css"), "utf8")
+    const source = readFileSync(resolve(process.cwd(), "src/components/subtoolbox/SubToolboxPrimitives.tsx"), "utf8")
+
+    expect(source).toContain("useSubToolboxOverlayPosition")
+    expect(source).toContain('data-vt-overlay="tooltip"')
+    expect(source).toContain('data-vt-overlay="hover-card"')
+    expect(css).toContain("--vt-floating-overlay-z:2147483000")
+    expect(css).toContain(".vt-subtoolbox-tooltip-bubble::after")
+    expect(css).toContain("border-right:var(--vt-component-stroke) solid #000")
+    expect(css).toContain("vt-subtoolbox-led-ripple")
+    expect(css).toContain("37.5%{opacity:0;transform:scale(5)}")
+    expect(css).toContain(".vt-subtoolbox-led-dot")
+    expect(css).toContain(".vt-subtoolbox-controller-thumb")
+    expect(css).toContain("color-mix(in srgb,var(--pair-b,#ff7f6b) 34%,white)")
+    expect(css).toContain(".vt-subtoolbox-loader-progress")
+    expect(css).toContain(".vt-subtoolbox-loader-split-title")
+    expect(css).toContain(".vt-subtoolbox-loader-orbit")
+    expect(css).toContain(".vt-subtoolbox-loader-bars")
+    expect(css).toContain(".vt-subtoolbox-calendar-weekdays")
+    expect(css).toContain("font-size:calc(var(--vt-component-font-size)*.945)")
+    expect(css).toContain(".vt-subtoolbox-scrollbar-track{position:relative")
+    expect(css).toContain("background:#000;overflow:visible")
+    expect(css).toContain(".vt-subtoolbox-tree-row[data-depth=\"1\"]")
+    expect(css).toContain("--vt-tree-row-opacity")
+  })
+
   it("gives every declared subtoolbox state default copy", () => {
     // The Record is typed, but a missing key renders an empty panel rather than
     // failing the build, so assert the rendered output instead of the type.
@@ -151,6 +178,13 @@ describe("Subtoolbox Primitive System", () => {
         <SubToolboxPagination level="l2" page={2} pages={3} />
         <SubToolboxControllerSwitch level="l2" pressed />
         <SubToolboxLed level="l2" active label="Active" />
+        <SubToolboxLedDot level="l2" active />
+        <SubToolboxLoader level="l2" variant="spinner" label="Loading" />
+        <SubToolboxLoader level="l2" variant="progress" label="Loading" />
+        <SubToolboxLoader level="l2" variant="split" label="Loading" />
+        <SubToolboxLoader level="l2" variant="orbit" label="Loading" />
+        <SubToolboxLoader level="l2" variant="bars" label="Loading" />
+        <SubToolboxCalendar level="l2" selectedDay={19} />
         <SubToolboxHoverCard level="l2" trigger="Hover" content="Details" />
         <SubToolboxMeter level="l2" value={73} label="Quality" />
         <SubToolboxAvatar level="l2" name="View Tube" meta="Creator" />
@@ -204,6 +238,14 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("vt-subtoolbox-pagination")
     expect(html).toContain("vt-subtoolbox-controller-switch")
     expect(html).toContain("vt-subtoolbox-led")
+    expect(html).toContain("vt-subtoolbox-led-dot")
+    expect(html).toContain("vt-subtoolbox-loader is-spinner")
+    expect(html).toContain("vt-subtoolbox-loader is-progress")
+    expect(html).toContain("vt-subtoolbox-loader is-split")
+    expect(html).toContain("vt-subtoolbox-loader is-orbit")
+    expect(html).toContain("vt-subtoolbox-loader is-bars")
+    expect(html).toContain("vt-subtoolbox-calendar")
+    expect(html).toContain('data-vt-control-level="l0"')
     expect(html).toContain("vt-subtoolbox-hover-card")
     expect(html).toContain("vt-subtoolbox-meter")
     expect(html).toContain("vt-subtoolbox-avatar")
