@@ -52,6 +52,12 @@ export const validateVideoPackage = (videoPackage: ViewTubeVideoPackage): VideoP
  if (!nonEmpty(videoPackage.channelId)) issues.push({ path: "channelId", code: "scope", message: "Channel ownership is required." })
  if (!nonEmpty(videoPackage.projectId)) issues.push({ path: "projectId", code: "scope", message: "Project ownership is required." })
  if (!Number.isInteger(videoPackage.version) || videoPackage.version < 1) issues.push({ path: "version", code: "invalid", message: "Package version must be a positive integer." })
+ if (
+  videoPackage.contentBuildRevision !== undefined &&
+  (!Number.isInteger(videoPackage.contentBuildRevision) || videoPackage.contentBuildRevision < 1)
+ ) {
+  issues.push({ path: "contentBuildRevision", code: "invalid", message: "Observed ContentBuild revision must be a positive integer." })
+ }
  if (!nonEmpty(videoPackage.identity.workingTitle)) issues.push({ path: "identity.workingTitle", code: "required", message: "A working title is required." })
 
  const artifacts = allArtifacts(videoPackage)
