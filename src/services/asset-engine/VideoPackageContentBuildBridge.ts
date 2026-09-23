@@ -168,13 +168,43 @@ export const projectContentBuildSelectionsToVideoPackage = (
  const scriptAssetId = build.selections.script || null
  const finalRenderAssetId = build.selections["final-render"] || build.youtube?.finalRenderAssetId || null
 
+ const projectOptionArtifacts = (
+  slot: "title" | "thumbnail",
+  stored: PackageArtifactRef[],
+ ): PackageArtifactRef[] => {
+  const groups = build.variantGroups.filter(group => group.slot === slot)
+  const members = groups.flatMap(group => group.members)
+  if (!members.length) return stored
+  const known = new Map(stored.map(artifact => [assetIdOf(artifact), artifact]))
+  const versions = build.versions.filter(version => version.slot === slot)
+  const projected = members.map(member => {
+   const existing = known.get(member.assetId)
+   if (existing) return existing
+   const version = versions.find(candidate => candidate.id === member.versionId || candidate.assetId === member.assetId)
+   return {
+    id: member.assetId,
+    kind: slot,
+    version: version?.version || 1,
+    label: member.label || version?.label || (slot === "title" ? "Title option" : "Thumbnail option"),
+    sourceToolId: version?.sourceToolId || groups.find(group => group.members.some(item => item.assetId === member.assetId))?.sourceToolId || "asset-engine",
+    vaultAssetId: member.assetId,
+    createdAt: member.createdAt,
+    metadata: { canonicalProjection: true, versionId: member.versionId || version?.id || null },
+   } satisfies PackageArtifactRef
+  })
+  return projected
+ }
+
+ const titleVariants = projectOptionArtifacts("title", videoPackage.packaging.titleVariants)
+ const thumbnailVariants = projectOptionArtifacts("thumbnail", videoPackage.packaging.thumbnailVariants)
+
  const packageArtifactId = (artifacts: PackageArtifactRef[], canonicalAssetId: string | null) => {
   if (!canonicalAssetId) return null
   return artifacts.find(artifact => assetIdOf(artifact) === canonicalAssetId)?.id || null
  }
 
- const titleId = packageArtifactId(videoPackage.packaging.titleVariants, titleAssetId)
- const thumbnailId = packageArtifactId(videoPackage.packaging.thumbnailVariants, thumbnailAssetId)
+ const titleId = packageArtifactId(titleVariants, titleAssetId)
+ const thumbnailId = packageArtifactId(thumbnailVariants, thumbnailAssetId)
  const renderIds = finalRenderAssetId && !videoPackage.production.renderIds.includes(finalRenderAssetId)
   ? [...videoPackage.production.renderIds, finalRenderAssetId]
   : videoPackage.production.renderIds
@@ -183,6 +213,8 @@ export const projectContentBuildSelectionsToVideoPackage = (
   ...videoPackage,
   packaging: {
    ...videoPackage.packaging,
+   titleVariants,
+   thumbnailVariants,
    selectedTitleId: titleId || videoPackage.packaging.selectedTitleId || null,
    selectedThumbnailId: thumbnailId || videoPackage.packaging.selectedThumbnailId || null,
   },
