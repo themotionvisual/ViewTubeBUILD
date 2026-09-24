@@ -106,4 +106,24 @@ describe("BrainRuntimePanel", () => {
   expect(html).toContain("Gemini 2.5 Pro")
   expect(html).toContain("75%")
  })
+
+ it("supports the flat embedded composition used by the Brain Hub mobile surface", () => {
+  const html = renderToStaticMarkup(
+   <BrainRuntimePanel
+    embedded
+    snapshot={{
+     project: null,
+     build: null,
+     generation: { requestCount: 0, receiptCount: 0, latestRequest: null, latestReceipt: null },
+     brain: { capabilityCount: 14, traceCount: 0, latestTrace: null },
+     outcomes: { total: 0, accepted: 0, negative: 0, acceptanceRate: 0, completed: 0, corrected: 0, rejected: 0, abandoned: 0 },
+     lifecycle: { latestEventType: null, latestEventAt: null, publishEventCount: 0, analyticsCheckpointCount: 0, commentEventCount: 0, experimentEventCount: 0, learningEventCount: 0 },
+    }}
+   />,
+  )
+
+  expect(html).toContain('data-vt-brain-runtime-shell="flat"')
+  expect(html).toContain("max-md:whitespace-normal")
+  expect(html).toContain("md:line-clamp-2")
+ })
 })
