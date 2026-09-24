@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewtube.live/schemas/ai-systems/prompt-reference.schema.json",
+  "title": "ViewTube Prompt Reference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "promptId",
+    "registryVersion",
+    "family",
+    "status",
+    "sourceRef"
+  ],
+  "properties": {
+    "promptId": {
+      "type": "string"
+    },
+    "registryVersion": {
+      "type": "string"
+    },
+    "family": {
+      "type": "string"
+    },
+    "version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "enum": [
+        "production",
+        "governed_current_main",
+        "legacy_migration_required",
+        "experimental",
+        "historical",
+        "unknown"
+      ]
+    },
+    "sourceRef": {
+      "type": "string"
+    },
+    "constitutionVersion": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "contextResolverVersion": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "outputSchemaVersion": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "requestedModel": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "servedModel": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "evaluationRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}
