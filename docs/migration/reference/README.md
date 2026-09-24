@@ -101,3 +101,15 @@ VT-SYNC
 - Secrets, local account stores, private backups, generated caches and credentials never belong here.
 - Standalone HTML/UI artifacts are reference/prototype evidence unless explicitly mounted in the application.
 - The long-term goal is to derive documentation from canonical route/tool/system registries so docs cannot drift from product truth.
+
+
+## PR #241 AI/Brain donor references — harvested 2026-09-24
+
+PR #241 (`claude/ai-audit-content-optimization-gdwwp9`) is treated as a historical donor, never a wholesale merge source.
+
+- [PR241_VIEWTUBE_AI_SYSTEMS_VERIFIED_AUDIT_AND_IMPLEMENTATION_PLAN_2026-09-12.md](PR241_VIEWTUBE_AI_SYSTEMS_VERIFIED_AUDIT_AND_IMPLEMENTATION_PLAN_2026-09-12.md) — preserved point-in-time reachability/AI systems audit. Historical counts and maturity ratings are superseded; audit methods and requirements remain donor evidence.
+- [PR241_VIEWTUBE_AI_BRAIN_BRAINSTORM_AND_FRONTEND_DESIGN_2026-09-12.md](PR241_VIEWTUBE_AI_BRAIN_BRAINSTORM_AND_FRONTEND_DESIGN_2026-09-12.md) — preserved Brain/product design brainstorm including knowledge, style, asset, evidence, trace and autonomy surfaces.
+- [../../brain/PR241_DONOR_HARVEST_AUDIT_2026-09-24.md](../../brain/PR241_DONOR_HARVEST_AUDIT_2026-09-24.md) — current 34-file disposition matrix and feature/skill harvest decisions.
+- [../../brain/PR241_DONOR_HARVEST_IMPLEMENTATION_PLAN_2026-09-24.md](../../brain/PR241_DONOR_HARVEST_IMPLEMENTATION_PLAN_2026-09-24.md) — current forward-port sequence.
+
+Current code/authority always wins over the 2026-09-12 snapshots.
