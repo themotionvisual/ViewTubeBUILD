@@ -183,4 +183,148 @@ describe("ChannelKnowledgeProjection", () => {
   expect(retrieved.records[0].id).toBe("specific")
   expect(retrieved.contradictions).toHaveLength(1)
  })
+
+ it("deduplicates equivalent durable and model knowledge while preserving all provenance", () => {
+  const projection = buildChannelKnowledgeProjection({
+   channelId: "channel-1",
+   claims: [claim({
+    id: "durable-title-rule",
+    value: "Prefer concise titles with one strong historical subject.",
+    evidence: ["creator:preference:1"],
+    confirmationState: "explicit",
+    confidence: "high",
+   })],
+   knowledgeModel: model({
+    creatorCommunication: [{
+     id: "model-title-rule",
+     label: "Title preference",
+     summary: "Prefer concise titles with one strong historical subject.",
+     confidence: "medium",
+     evidenceIds: ["model:observation:1"],
+    }],
+   }),
+   learningCandidates: [],
+   now: "2026-09-24T00:00:00.000Z",
+  })
+
+  const retrieved = retrieveChannelKnowledge(projection, {
+   query: "concise historical titles",
+   limit: 5,
+  })
+
+  expect(retrieved.records).toHaveLength(1)
+  expect(retrieved.records[0]).toMatchObject({
+   id: "durable-title-rule",
+   source: "brain_memory_claim",
+   confirmationState: "explicit",
+  })
+  expect(retrieved.records[0].evidenceRefs).toEqual([
+   "creator:preference:1",
+   "model:observation:1",
+  ])
+  expect(retrieved.records[0].metadata).toMatchObject({
+   mergedRecordIds: ["durable-title-rule", "model-title-rule"],
+  })
+ })
+
+ it("uses canonical source authority before retrieval-score tie breaking for duplicate statements", () => {
+  const projection = buildChannelKnowledgeProjection({
+   channelId: "channel-1",
+   claims: [claim({
+    id: "confirmed-pattern",
+    scope: "channel",
+    category: "channel_fact",
+    value: "Napoleon battle videos perform best with a named character in the promise.",
+    confirmationState: "confirmed",
+    confidence: "medium",
+    evidence: ["creator:confirmed:1"],
+   })],
+   knowledgeModel: model({
+    successDrivers: [{
+     id: "model-pattern",
+     label: "Packaging pattern",
+     summary: "Napoleon battle videos perform best with a named character in the promise.",
+     confidence: "high",
+     evidenceIds: ["model:pattern:1", "model:pattern:2"],
+    }],
+   }),
+   learningCandidates: [],
+   now: "2026-09-24T00:00:00.000Z",
+  })
+
+  const retrieved = retrieveChannelKnowledge(projection, {
+   query: "named character Napoleon battle promise",
+  })
+
+  expect(retrieved.records[0].id).toBe("confirmed-pattern")
+  expect(retrieved.records[0].evidenceRefs).toEqual([
+   "creator:confirmed:1",
+   "model:pattern:1",
+   "model:pattern:2",
+  ])
+ })
+
+ it("keeps contradictions separate even when their normalized statement matches an ordinary record", () => {
+  const statement = "Character-led thumbnails are the strongest packaging pattern."
+  const projection = buildChannelKnowledgeProjection({
+   channelId: "channel-1",
+   claims: [claim({
+    id: "active-pattern",
+    value: statement,
+    evidence: ["creator:visual:2"],
+   })],
+   knowledgeModel: model({
+    contradictions: [{
+     id: "contradiction-same-text",
+     label: "Visual contradiction",
+     summary: statement,
+     confidence: "medium",
+     evidenceIds: ["outcome:contradiction:1"],
+    }],
+   }),
+   learningCandidates: [],
+   now: "2026-09-24T00:00:00.000Z",
+  })
+
+  const retrieved = retrieveChannelKnowledge(projection, {
+   query: "character thumbnails packaging",
+  })
+
+  expect(retrieved.records).toHaveLength(1)
+  expect(retrieved.contradictions).toHaveLength(1)
+  expect(retrieved.records[0].id).toBe("active-pattern")
+  expect(retrieved.contradictions[0].id).toBe("contradiction-same-text")
+ })
+
+ it("applies the result limit after deduplication so duplicates do not consume retrieval slots", () => {
+  const projection = buildChannelKnowledgeProjection({
+   channelId: "channel-1",
+   claims: [
+    claim({ id: "claim-a", value: "Use concise Napoleon titles.", evidence: ["a"] }),
+    claim({ id: "claim-b", value: "Use a clear first-frame battle image.", evidence: ["b"] }),
+   ],
+   knowledgeModel: model({
+    creatorCommunication: [{
+     id: "duplicate-a",
+     label: "Title preference",
+     summary: "Use concise Napoleon titles.",
+     confidence: "medium",
+     evidenceIds: ["a2"],
+    }],
+   }),
+   learningCandidates: [],
+   now: "2026-09-24T00:00:00.000Z",
+  })
+
+  const retrieved = retrieveChannelKnowledge(projection, {
+   query: "Napoleon titles battle image",
+   limit: 2,
+  })
+
+  expect(retrieved.records.map((record) => record.id)).toEqual(
+   expect.arrayContaining(["claim-a", "claim-b"]),
+  )
+  expect(retrieved.records).toHaveLength(2)
+ })
+
 })
