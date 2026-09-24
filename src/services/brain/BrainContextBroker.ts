@@ -9,6 +9,7 @@ import { buildRelevantNicheKnowledgeContext } from "./NicheKnowledge"
 import { readBrainUserControls } from "./BrainUserControls"
 import type { StatisticsIntelligenceSnapshot } from "./StatisticsIntelligence"
 import type { AudienceIntelligenceSnapshot } from "./AudienceIntelligence"
+import type { BrainEvidenceQualityReport } from "./BrainEvidenceQuality"
 import { buildAlgorithmIntelligenceContext, type AlgorithmIntelligencePortfolio } from "./AlgorithmIntelligenceOrchestrator"
 
 const clip = (value: string, maximum: number): string => value.slice(0, Math.max(0, maximum))
@@ -22,6 +23,7 @@ export const buildBrainContextPack = (input: {
  userText: string
  currentResearch?: string
  statisticsIntelligence?: StatisticsIntelligenceSnapshot | null
+ evidenceQuality?: BrainEvidenceQualityReport | null
  audienceIntelligence?: AudienceIntelligenceSnapshot | null
  algorithmIntelligence?: AlgorithmIntelligencePortfolio | null
  maximumCharacters?: number
@@ -66,6 +68,17 @@ export const buildBrainContextPack = (input: {
   : "Analytics evidence access is disabled by the creator in Brain User Controls. Do not infer private channel metrics or quote stored analytics values."
  if (!controls.allowAnalytics) omittedSections.push("analytics_access_disabled")
 
+ const evidenceQuality = controls.allowAnalytics && input.evidenceQuality
+  ? clip([
+    `confidence=${input.evidenceQuality.confidence}; coverage=${Math.round(input.evidenceQuality.coverageRatio * 100)}%; scope=${input.evidenceQuality.scopeMatch}; refs=${input.evidenceQuality.evidenceReferenceCount}`,
+    ...input.evidenceQuality.missingness.unavailableDatasetIds.slice(0, 10).map((id) => `Missing dataset: ${id}`),
+    ...input.evidenceQuality.missingness.failedDatasetIds.slice(0, 10).map((id) => `Failed dataset: ${id}`),
+    ...input.evidenceQuality.freshness.staleDatasetIds.slice(0, 10).map((id) => `Stale dataset: ${id}`),
+    ...input.evidenceQuality.missingness.partialDatasetIds.slice(0, 10).map((id) => `Partial dataset: ${id}`),
+    ...input.evidenceQuality.limitations.map((value) => `Limitation: ${value}`),
+   ].join("\n"), 3200)
+  : ""
+
  const statistics = controls.allowAnalytics && input.statisticsIntelligence
   ? clip([
     `confidence=${input.statisticsIntelligence.confidence}; coverage=${Math.round(input.statisticsIntelligence.coverageRatio * 100)}%; window=${input.statisticsIntelligence.selectedWindow}`,
@@ -105,6 +118,7 @@ export const buildBrainContextPack = (input: {
   system,
   controlInstruction,
   "\nCHANNEL EVIDENCE\n" + evidence,
+  evidenceQuality ? "\nEVIDENCE QUALITY\n" + evidenceQuality : "",
   statistics ? "\nDETERMINISTIC STATISTICS INTELLIGENCE\n" + statistics : "",
   audience ? "\nAUDIENCE INTELLIGENCE\n" + audience : "",
   algorithm ? "\nALGORITHM / CHANNEL / OPPORTUNITY INTELLIGENCE\n" + algorithm : "",
@@ -125,7 +139,7 @@ export const buildBrainContextPack = (input: {
   budget: {
    maximumCharacters,
    systemCharacters: system.length,
-   evidenceCharacters: evidence.length + statistics.length + audience.length + algorithm.length,
+   evidenceCharacters: evidence.length + evidenceQuality.length + statistics.length + audience.length + algorithm.length,
    memoryCharacters: memory.length,
    knowledgeCharacters: knowledge.length + research.length,
    conversationCharacters: clippedConversation.length,
