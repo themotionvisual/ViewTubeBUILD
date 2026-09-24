@@ -516,13 +516,13 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
               {uploadProgress > 0 && uploadProgress < 100 ? <SubToolboxStatePanel state="loading" message={"VIDEO UPLOAD " + Math.round(uploadProgress) + "%"} /> : null}
 
               <SubToolbox title="10-Step Transaction" icon={<RefreshCcw size={20}/>} collapsible isOpenInitial>
-                <SubToolboxStack density="dense">
+                <SubToolboxGrid minItemWidth="compact" density="dense" aria-label="Publishing transaction progress">
                   {(["validate-package","creator-approval","upload-video","bind-youtube","apply-metadata","apply-thumbnail","apply-captions","apply-routing","apply-schedule-privacy","verify-remote-state"] as const).map((step,index) => (
                     <SubToolboxOutputCard key={step} title={(index+1).toString().padStart(2,"0")+" · "+step.replaceAll("-"," ").toUpperCase()}>
                       <strong>{publishState.transaction?.steps[step]?.status?.toUpperCase() || "PENDING"}</strong>
                     </SubToolboxOutputCard>
                   ))}
-                </SubToolboxStack>
+                </SubToolboxGrid>
               </SubToolbox>
 
               <SubToolboxActions columns={3}>
