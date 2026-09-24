@@ -349,7 +349,8 @@ const CreatorVaultOS: React.FC = () => {
           label={pending.length ? `Ingest All (${pending.length})` : "Ingest All"}
           iconName="database"
           tone="green"
-          onClick={pending.length ? ingestAll : undefined}
+          onClick={ingestAll}
+          disabled={!pending.length}
          />
         </div>
        </div>
