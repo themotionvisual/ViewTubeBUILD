@@ -257,6 +257,51 @@ describe("BrainOrchestrator", () => {
   expect(evaluation.unsupportedNumbers).toEqual(expect.arrayContaining(["83%", "999999"]))
  })
 
+ it("accepts a rounded numeric restatement when canonical evidence supports the magnitude", () => {
+  const snapshot = makeSnapshot()
+  const response = {
+   id: "rounded-response",
+   mode: "analytics_diagnosis" as const,
+   body: "Alder's Cavalry Explained has about 120K views.",
+   evidenceIds: snapshot.evidencePack.evidenceIds,
+   headline: "Performance read",
+   keyInsight: "Alder's Cavalry Explained has about 120K views.",
+   evidenceChips: [],
+   modules: [],
+   actions: ["Review that video's packaging."],
+   learningSummary: "",
+   questions: [],
+   confidence: "high" as const,
+  }
+
+  const evaluation = validateBrainResponse({ response, snapshot })
+
+  expect(evaluation.unsupportedNumbers).not.toContain("120K")
+ })
+
+ it("rejects a percentage that only appears as a substring of a larger evidence number", () => {
+  const snapshot = makeSnapshot()
+  const response = {
+   id: "substring-response",
+   mode: "analytics_diagnosis" as const,
+   body: "Your CTR is 42%.",
+   evidenceIds: snapshot.evidencePack.evidenceIds,
+   headline: "CTR read",
+   keyInsight: "Your CTR is 42%.",
+   evidenceChips: [],
+   modules: [],
+   actions: ["Review the thumbnail."],
+   learningSummary: "",
+   questions: [],
+   confidence: "high" as const,
+  }
+
+  const evaluation = validateBrainResponse({ response, snapshot })
+
+  expect(evaluation.unsupportedNumbers).toContain("42%")
+  expect(evaluation.passed).toBe(false)
+ })
+
  it("rejects channel-specific advice that does not answer an audience-language task", () => {
   const snapshot = makeSnapshot()
   const response = {
