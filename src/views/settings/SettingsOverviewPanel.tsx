@@ -16,6 +16,13 @@ export interface SettingsOverviewPanelProps {
   onPanelChange: (panel: SettingsPanel) => void
 }
 
+const READINESS_LABELS = {
+  account: "Account",
+  youtube: "YouTube",
+  billing: "Plan",
+  brain: "Brain",
+} as const
+
 export const SettingsOverviewPanel: React.FC<SettingsOverviewPanelProps> = ({
   model,
   onPanelChange,
@@ -35,7 +42,7 @@ export const SettingsOverviewPanel: React.FC<SettingsOverviewPanelProps> = ({
           level="l1"
           aria-label="Settings readiness"
           items={model.readiness.items.map((item) => ({
-            label: item.label,
+            label: READINESS_LABELS[item.id],
             value: item.state,
           }))}
         />
