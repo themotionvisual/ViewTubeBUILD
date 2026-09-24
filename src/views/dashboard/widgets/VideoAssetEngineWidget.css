@@ -165,3 +165,8 @@
 @media (prefers-reduced-motion:reduce){
   .vt-asset-engine-slot,.vt-asset-engine-asset-row{transition:none}
 }
+
+.vt-asset-engine-build-summary{display:grid;gap:2px;padding:6px;border:2px solid var(--widget-border);border-radius:6px;background:color-mix(in srgb,var(--widget-color) 9%,white);color:var(--widget-border)}
+.vt-asset-engine-build-summary span,.vt-asset-engine-build-summary small{font-size:8px;font-weight:900;line-height:1;text-transform:uppercase;opacity:.64}
+.vt-asset-engine-build-summary strong{font-size:11px;font-weight:1000;line-height:1;text-transform:uppercase}
+@container vt-widget (max-width:430px){.vt-asset-engine-build-summary small{line-height:1.2}}
