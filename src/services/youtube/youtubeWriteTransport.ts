@@ -68,6 +68,12 @@ export const updateUnifiedComment = async (commentId: string, text: string) => {
  return response.json()
 }
 
+export const getUnifiedVideo = async (videoId: string) => {
+ const response = await request(`/api/account/youtube/videos/${encodeURIComponent(videoId)}`, { method: "GET" })
+ if (!response.ok) return parseError(response, "Failed to verify video state.")
+ return response.json()
+}
+
 export const updateUnifiedVideo = async (videoId: string, details: Record<string, unknown>) => {
  const response = await request(`/api/account/youtube/videos/${encodeURIComponent(videoId)}`, {
   method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(details),
@@ -81,6 +87,23 @@ export const updateUnifiedThumbnail = async (videoId: string, file: File) => {
   method: "POST", headers: { "Content-Type": file.type }, body: file,
  })
  if (!response.ok) return parseError(response, "Failed to update thumbnail.")
+ return response.json()
+}
+
+export const uploadUnifiedCaptions = async (
+ videoId: string,
+ file: Blob,
+ options: { language?: string; name?: string } = {},
+) => {
+ const headers = new Headers({
+  "Content-Type": file.type || "text/vtt",
+  "X-Caption-Language": options.language || "en",
+  "X-Caption-Name": options.name || "ViewTube captions",
+ })
+ const response = await request(`/api/account/youtube/captions/${encodeURIComponent(videoId)}`, {
+  method: "POST", headers, body: file,
+ })
+ if (!response.ok) return parseError(response, "Failed to upload captions.")
  return response.json()
 }
 
