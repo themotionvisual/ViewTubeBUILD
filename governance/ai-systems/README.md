@@ -44,3 +44,26 @@ npm run audit:ai-systems
 The focused test specifies the health-gate behavior. The audit reads the seed system registry, checks record integrity, competing current owners and referenced repository paths, and exits non-zero on findings.
 
 Claim staleness is implemented as a pure audit primitive; wiring live claims from Herald is a later slice so this governance layer does not create a second work ledger.
+
+
+## Herald projection
+
+`scripts/audit/ai-systems-herald-projection.mjs` is a **read-only adapter** over existing Herald thread/ledger records.
+
+It projects:
+- active thread state / writer locks → AI Systems work claims;
+- verified/completed ledger records → completion receipts.
+
+It deliberately does **not**:
+- write another repository-work ledger;
+- alter Herald thread state;
+- mark branch work as present on `main`;
+- turn unverified in-progress records into completion receipts.
+
+Run:
+
+```bash
+npm run test:ai-systems-herald
+```
+
+A projected receipt defaults `mainIntegrationState` to `unknown`; git ancestry/current-code verification must upgrade that state separately.
