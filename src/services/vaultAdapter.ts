@@ -110,6 +110,24 @@ export const addVaultAsset = (
  return asset
 }
 
+export const updateVaultAsset = (
+ id: string,
+ patch: Partial<Omit<VaultAsset, "id" | "createdAt">>,
+): VaultAsset | null => {
+ const assets = readAssets()
+ const existing = assets.find((asset) => asset.id === id)
+ if (!existing) return null
+ const updated: VaultAsset = {
+  ...existing,
+  ...patch,
+  id: existing.id,
+  createdAt: existing.createdAt,
+  updatedAt: Date.now(),
+ }
+ writeAssets(assets.map((asset) => (asset.id === id ? updated : asset)))
+ return updated
+}
+
 export const upsertVaultAsset = (
  matcher: (asset: VaultAsset) => boolean,
  input: Omit<VaultAsset, "id" | "createdAt" | "updatedAt">,
