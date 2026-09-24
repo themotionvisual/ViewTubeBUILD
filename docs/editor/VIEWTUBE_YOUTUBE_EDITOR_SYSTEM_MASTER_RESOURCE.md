@@ -520,9 +520,9 @@ For any branch audit, record:
 
 | Work item | Status | Owner / surface | Verification target | Next action |
 | --- | --- | --- | --- | --- |
-| Living editor authority + shared update log | started | docs/editor + agent guidance | PR review; references resolve | merge authority PR after review |
-| Editor-specific agent skill | started | skills/.claude/.codex | identical skill content, discoverable paths | merge authority PR |
-| Cross-agent editor update requirement | started | AGENTS / CLAUDE / Herald | agents point to master resource | merge authority PR |
+| Living editor authority + shared update log | partial | docs/editor + agent guidance | PR #400 review + release gates | merge after gates/review; authority is complete on branch |
+| Editor-specific agent skill | partial | skills/.claude/.codex | identical skill content, discoverable paths | merge PR #400; skill implementation complete on branch |
+| Cross-agent editor update requirement | partial | AGENTS / CLAUDE / Herald / Gemini / Copilot / Cursor | all agent pointers route to living authority | merge PR #400; distribution pointers complete on branch |
 | Mobile/desktop capability parity | planned | editor state + UI | round-trip fixtures + capability matrix | audit current capability registry |
 | Shared FX/transition catalogs | planned | editor core | same IDs and rendering on both surfaces | inventory desktop/mobile catalogs |
 | Preview ↔ final Remotion parity | planned | editor + remotion | frame fixtures pass | establish fixture set |
@@ -628,6 +628,7 @@ Ask before:
 | Date / time | Agent / conversation | Branch / PR | Status | Work completed / begun / planned | Changed or created paths | Verification / evidence | New references / sources | Next action |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-09-24 | ChatGPT editor-system living authority pass | feature/editor-system-living-authority-2026-09-24 | started | Created canonical living editor resource; planned Brain Hub assistant; created editor skill and cross-agent update contract; indexed research, skills, branches and references | docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md and linked files | main baseline 96a3cb13fcdfd36720aebd845e0ac5f7a5ab12c1; GitHub source/branch searches; Deep Research source audit | official Remotion + Google Veo/Gemini docs; current repo authorities | open PR, review, then begin Phase A |
+| 2026-09-24 | ChatGPT editor-system living authority pass | PR #400 / feature/editor-system-living-authority-2026-09-24 | partial | Opened PR #400; verified exact 50-item backlog and identical 196-line skill mirrors; added Gemini, Copilot and Cursor editor-authority pointers. Release gates are in progress. Vercel preview failed only because the project exceeded the free daily deployment quota, so no preview evidence is claimed. | GEMINI.md; .github/copilot-instructions.md; .cursor/rules/viewtube-youtube-editor-system.mdc; master resource status | GitHub compare: branch ahead 13 before final pointer commits and behind 0; PR mergeable; structural document/skill checks passed; runtime code unchanged | PR #400; Vercel quota comment; agent distribution targets from Herald contract | wait for release gates, refresh PR status, then merge if gates allow |
 
 ## 18. Handoff template for future agents
 
