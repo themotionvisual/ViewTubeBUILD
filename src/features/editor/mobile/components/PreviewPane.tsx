@@ -73,8 +73,9 @@ export const PreviewPane:React.FC<PreviewPaneProps>=({
       .map(keyframe=>{
         const id=String(keyframe.id);
         const preview=motionPreview[id];
-        const x=preview?.x??Number(keyframe.values?.x??baseX);
-        const y=preview?.y??Number(keyframe.values?.y??baseY);
+        const values=(keyframe.values??{}) as Record<string,unknown>;
+        const x=preview?.x??Number(values.x??baseX);
+        const y=preview?.y??Number(values.y??baseY);
         return{id,x,y,offsetSec:Number(keyframe.offsetSec??0)};
       })
       .sort((a,b)=>a.offsetSec-b.offsetSec);
