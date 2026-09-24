@@ -1,6 +1,7 @@
 export type EditorCapabilityStatus = 'active' | 'available' | 'planned';
 export type EditorCapabilityCategory = 'media' | 'edit' | 'text' | 'audio' | 'transitions' | 'effects' | 'templates' | 'export' | 'settings';
 export type EditorSelectionKind = 'none' | 'video' | 'audio' | 'overlay' | 'caption' | 'transition' | 'track';
+export type EditorCapabilitySurface = 'desktop' | 'mobile' | 'preview' | 'render';
 
 export interface EditorCapability {
   id: string;
@@ -10,6 +11,7 @@ export interface EditorCapability {
   selection?: EditorSelectionKind[];
   action?: string;
   keywords?: string[];
+  surfaces?: Partial<Record<EditorCapabilitySurface, EditorCapabilityStatus>>;
 }
 
 export const EDITOR_CAPABILITIES: EditorCapability[] = [
@@ -39,8 +41,24 @@ export const EDITOR_CAPABILITIES: EditorCapability[] = [
   {id:'transition.add',category:'transitions',label:'Add Transition',status:'active',selection:['video'],action:'addTransition'},
   {id:'transition.remove',category:'transitions',label:'Remove Transition',status:'active',selection:['transition'],action:'removeTransition'},
   {id:'transition.presentation',category:'transitions',label:'Transition Presentation',status:'available',selection:['transition']},
-  {id:'effects.color',category:'effects',label:'Color',status:'planned',selection:['video','overlay']},
-  {id:'effects.blur',category:'effects',label:'Blur',status:'planned',selection:['video','overlay']},
+  {
+    id:'effects.color',
+    category:'effects',
+    label:'Color Adjustments',
+    status:'available',
+    selection:['video','overlay'],
+    keywords:['saturation','brightness','hue','contrast','sepia','grayscale','opacity'],
+    surfaces:{desktop:'planned',mobile:'active',preview:'active',render:'active'},
+  },
+  {
+    id:'effects.blur',
+    category:'effects',
+    label:'Blur',
+    status:'available',
+    selection:['video','overlay'],
+    keywords:['blur','filter','soften'],
+    surfaces:{desktop:'planned',mobile:'active',preview:'active',render:'active'},
+  },
   {id:'templates.library',category:'templates',label:'Template Library',status:'active'},
   {id:'export.render',category:'export',label:'Render Video',status:'active',action:'createRenderJob'},
   {id:'settings.timeline',category:'settings',label:'Timeline Settings',status:'available'},
@@ -52,3 +70,9 @@ export const EDITOR_CAPABILITIES: EditorCapability[] = [
 export const capabilitiesForCategory=(category:EditorCapabilityCategory)=>EDITOR_CAPABILITIES.filter(c=>c.category===category);
 export const capabilityById=(id:string)=>EDITOR_CAPABILITIES.find(c=>c.id===id);
 export const capabilitiesForSelection=(kind:EditorSelectionKind)=>EDITOR_CAPABILITIES.filter(c=>!c.selection||c.selection.includes(kind));
+
+
+export const capabilityStatusForSurface=(id:string,surface:EditorCapabilitySurface):EditorCapabilityStatus|undefined=>{
+  const capability=capabilityById(id);
+  return capability?.surfaces?.[surface]??capability?.status;
+};

@@ -10,6 +10,7 @@ import {
 import { expandCompoundClips } from '../../shared/vtE1CompoundClips.js';
 import { normalizeVtE1TransitionType } from '../../shared/vtE1TransitionCatalog.js';
 import { transitionFrameStyleFor } from '../../shared/vtE1TransitionFrame.js';
+import { VT_E1_ANIMATED_FX_KEYS, buildVtE1Filter, resolveVtE1FxOpacity } from '../../shared/vtE1FxCatalog.js';
 import {
   sourceTimeAtTimelineSec as sharedSourceTimeAtTimelineSec,
   transitionWindowFor as sharedTransitionWindowFor,
@@ -176,15 +177,11 @@ const ANIMATED_PAYLOAD_PROPS = [
   'y',
   'scale',
   'rotation',
-  'opacity',
   'width',
   'height',
   'fontSize',
   'strokeWidth',
-  'blur',
-  'saturation',
-  'brightness',
-  'hue',
+  ...VT_E1_ANIMATED_FX_KEYS,
 ];
 const NUMERIC_PAYLOAD_PROPS = new Set(ANIMATED_PAYLOAD_PROPS);
 
@@ -248,31 +245,6 @@ const evaluatePayloadAtFrame = (
     nextPayload[prop] = valueFromKeyframes(nextPayload[prop], clip.keyframes, prop, localSeconds);
   });
   return nextPayload;
-};
-
-const layerFilter = (payload: Record<string, unknown>) => {
-  if (Boolean(payload.fxBypass)) return '';
-  const disabled = payload.fxDisabled && typeof payload.fxDisabled === 'object'
-    ? payload.fxDisabled as Record<string, boolean>
-    : {};
-  const order = Array.isArray(payload.fxOrder)
-    ? payload.fxOrder.map(String)
-    : ['blur', 'saturation', 'brightness', 'hue'];
-  const filters: Record<string, string> = {
-    blur: Math.max(0, Number(payload.blur || 0)) ? `blur(${Math.max(0, Number(payload.blur || 0))}px)` : '',
-    saturation: `saturate(${Math.max(0, Number(payload.saturation ?? 1))})`,
-    brightness: `brightness(${Math.max(0, Number(payload.brightness ?? 1))})`,
-    hue: Number(payload.hue || 0) ? `hue-rotate(${Number(payload.hue || 0)}deg)` : '',
-    contrast: `contrast(${Math.max(0, Number(payload.contrast ?? 1))})`,
-    sepia: Number(payload.sepia || 0) ? `sepia(${Math.max(0, Math.min(1, Number(payload.sepia || 0)))})` : '',
-    grayscale: Number(payload.grayscale || 0) ? `grayscale(${Math.max(0, Math.min(1, Number(payload.grayscale || 0)))})` : '',
-  };
-  const known = ['blur', 'saturation', 'brightness', 'hue', 'contrast', 'sepia', 'grayscale'];
-  return [...order.filter(key => known.includes(key)), ...known.filter(key => !order.includes(key))]
-    .filter(key => !disabled[key])
-    .map(key => filters[key])
-    .filter(Boolean)
-    .join(' ');
 };
 
 const getShortsRenderConfig = (payload: Record<string, unknown>, sourceSeconds: number) => {
@@ -587,8 +559,7 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
         const top = (height / 2) + Number(payload.y || 0);
         const scale = Number(payload.scale || 1);
         const rotation = Number(payload.rotation || 0);
-        const fxDisabled = payload.fxDisabled && typeof payload.fxDisabled === 'object' ? payload.fxDisabled as Record<string, boolean> : {};
-        const opacity = Boolean(payload.fxBypass) || fxDisabled.opacity ? 1 : clamp(Number(payload.opacity ?? 1), 0, 1);
+        const opacity = resolveVtE1FxOpacity(payload, Number(payload.opacity ?? 1));
         const zIndex = Math.max(1, orderedTrackIds.indexOf(layer.trackId) + 1);
         const commonStyle: React.CSSProperties = {
           position: 'absolute',
@@ -601,7 +572,7 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
           opacity: opacity * transitionFx.opacity,
           zIndex,
           overflow: 'hidden',
-          filter: [layerFilter(payload), transitionFx.filterExtra].filter(Boolean).join(' '),
+          filter: [buildVtE1Filter(payload), transitionFx.filterExtra].filter(Boolean).join(' '),
           clipPath: transitionFx.clipPath || undefined,
           display: 'flex',
           alignItems: 'center',
