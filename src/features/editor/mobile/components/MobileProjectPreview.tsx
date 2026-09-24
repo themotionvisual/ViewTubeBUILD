@@ -3,6 +3,7 @@ import type {EditorStore} from '../state/editorState';
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
 import {resolveClipPreviewGeometry} from './mobilePreviewGeometry';
 import {expandCompoundClips} from '../../../../shared/vtE1CompoundClips.js';
+import {vtE1FilterCss,vtE1FxOpacity} from '../../../../shared/vtE1FxCatalog.js';
 
 const clamp=(v:number,min:number,max:number)=>Math.min(max,Math.max(min,v));
 const isVideo=(src:string)=>/\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(src);
@@ -41,30 +42,8 @@ export const MobileProjectPreview:React.FC<{store:EditorStore}>=({store})=>{
       const geometry=resolveClipPreviewGeometry(store,clip);
       const {layer,payload,type,projectWidth,projectHeight,x,y,width,height,scaleX,scaleY,rotation,opacity}=geometry;
       if(layer?.visible===false)return null;
-      const fxBypass=Boolean(payload.fxBypass);
-      const fxDisabled=payload.fxDisabled&&typeof payload.fxDisabled==='object'?payload.fxDisabled as Record<string,boolean>:{};
-      const blur=fxBypass||fxDisabled.blur?0:Math.max(0,Number(payload.blur??0));
-      const sat=fxBypass||fxDisabled.saturation?1:Math.max(0,Number(payload.saturation??1));
-      const bright=fxBypass||fxDisabled.brightness?1:Math.max(0,Number(payload.brightness??1));
-      const hue=fxBypass||fxDisabled.hue?0:Number(payload.hue??0);
-      const contrast=fxBypass||fxDisabled.contrast?1:Math.max(0,Number(payload.contrast??1));
-      const sepia=fxBypass||fxDisabled.sepia?0:Math.max(0,Math.min(1,Number(payload.sepia??0)));
-      const grayscale=fxBypass||fxDisabled.grayscale?0:Math.max(0,Math.min(1,Number(payload.grayscale??0)));
-      const fxOrder=Array.isArray(payload.fxOrder)?payload.fxOrder.map(String):['blur','saturation','brightness','hue','contrast','sepia','grayscale'];
-      const filterByKey:Record<string,string>={
-        blur:blur?`blur(${blur}px)`:'',
-        saturation:`saturate(${sat})`,
-        brightness:`brightness(${bright})`,
-        hue:hue?`hue-rotate(${hue}deg)`:'',
-        contrast:`contrast(${contrast})`,
-        sepia:sepia?`sepia(${sepia})`:'',
-        grayscale:grayscale?`grayscale(${grayscale})`:'',
-      };
-      const filter=[...fxOrder.filter(key=>filterByKey[key]!=null),...['blur','saturation','brightness','hue','contrast','sepia','grayscale'].filter(key=>!fxOrder.includes(key))]
-        .filter(key=>!fxDisabled[key])
-        .map(key=>filterByKey[key])
-        .filter(Boolean)
-        .join(' ');
+      const filter=vtE1FilterCss(payload);
+      const fxOpacity=vtE1FxOpacity(payload);
       const style:React.CSSProperties={
         position:'absolute',
         left:`${50+(x/projectWidth)*100}%`,
@@ -73,7 +52,7 @@ export const MobileProjectPreview:React.FC<{store:EditorStore}>=({store})=>{
         height:`${(height/projectHeight)*100}%`,
         transform:`translate(-50%,-50%) scale(${scaleX},${scaleY}) rotate(${rotation}deg)`,
         transformOrigin:'center',
-        opacity:fxBypass||fxDisabled.opacity?1:opacity,
+        opacity:opacity*fxOpacity,
         zIndex:index+1,
         overflow:'hidden',
         filter,
