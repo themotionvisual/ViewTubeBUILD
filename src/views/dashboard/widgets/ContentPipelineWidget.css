@@ -1,0 +1,171 @@
+.vt-content-pipeline-widget{
+  height:100%;
+  min-height:0;
+  display:grid;
+  grid-template-rows:auto minmax(88px,.62fr) minmax(0,1fr) auto;
+  gap:8px;
+  color:var(--widget-border,var(--vt-ink,#24343a));
+}
+.vt-content-pipeline-widget__source{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.vt-content-pipeline-widget__source>span{
+  font-size:8px;
+  font-weight:1000;
+  letter-spacing:.06em;
+  opacity:.6;
+}
+.vt-content-lifecycle-rail{
+  position:relative;
+  min-height:0;
+  display:grid;
+  grid-template-columns:repeat(9,minmax(0,1fr));
+  align-items:center;
+  gap:4px;
+  padding:8px;
+  border:3px solid var(--widget-border,var(--vt-ink,#24343a));
+  border-radius:12px;
+  background:color-mix(in srgb,var(--widget-color) 7%,white);
+}
+.vt-content-lifecycle-rail__track{
+  position:absolute;
+  left:9%;
+  right:9%;
+  top:50%;
+  height:4px;
+  transform:translateY(-50%);
+  border-radius:99px;
+  background:var(--widget-border,var(--vt-ink,#24343a));
+  opacity:.28;
+}
+.vt-content-lifecycle-rail__station{
+  position:relative;
+  z-index:2;
+  min-width:0;
+  min-height:62px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:1px;
+  padding:4px;
+  border:2px solid var(--widget-border,var(--vt-ink,#24343a));
+  border-radius:10px;
+  background:white;
+  color:inherit;
+  cursor:pointer;
+}
+.vt-content-lifecycle-rail__station span{
+  font-size:7px;
+  font-weight:950;
+  opacity:.48;
+}
+.vt-content-lifecycle-rail__station b{
+  font-size:20px;
+  line-height:.9;
+  font-weight:1000;
+}
+.vt-content-lifecycle-rail__station strong{
+  font-size:7px;
+  line-height:1;
+  font-weight:1000;
+}
+.vt-content-lifecycle-rail__station[data-active="true"]{
+  background:var(--widget-color);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--widget-color) 24%,transparent),3px 3px 0 color-mix(in srgb,var(--widget-color) 46%,transparent);
+}
+.vt-content-lifecycle-rail__station:focus-visible{
+  outline:3px solid var(--widget-border,var(--vt-ink,#24343a));
+  outline-offset:2px;
+}
+.vt-content-lifecycle-rail__connector{
+  position:relative;
+  z-index:2;
+  justify-self:center;
+  width:15px;
+  height:15px;
+  opacity:.44;
+}
+.vt-content-pipeline-widget__build-inspector,
+.vt-content-pipeline-widget__queue{
+  min-height:0;
+  display:grid;
+  gap:8px;
+  padding:8px;
+  border:3px solid var(--widget-border,var(--vt-ink,#24343a));
+  border-radius:12px;
+  background:white;
+}
+.vt-content-pipeline-widget__build-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+}
+.vt-content-pipeline-widget__build-head>div{
+  min-width:0;
+  display:grid;
+  gap:2px;
+}
+.vt-content-pipeline-widget__build-head span,
+.vt-content-pipeline-widget__queue span{
+  font-size:7px;
+  font-weight:1000;
+  letter-spacing:.05em;
+  opacity:.58;
+}
+.vt-content-pipeline-widget__build-head strong,
+.vt-content-pipeline-widget__queue strong{
+  font-size:15px;
+  font-weight:1000;
+  line-height:1.02;
+  text-transform:uppercase;
+  overflow-wrap:anywhere;
+}
+.vt-content-pipeline-widget__build-head small,
+.vt-content-pipeline-widget__queue small{
+  font-size:7px;
+  font-weight:900;
+  opacity:.58;
+}
+.vt-content-pipeline-widget__build-metrics{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:5px;
+}
+.vt-content-pipeline-widget__queue{
+  align-content:center;
+}
+.vt-content-pipeline-widget__actions{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,.72fr);
+  gap:4px;
+}
+.vt-content-pipeline-widget__actions>*{
+  width:100%;
+  min-width:0;
+}
+
+@container (max-width:520px){
+  .vt-content-lifecycle-rail{
+    grid-template-columns:repeat(5,minmax(0,1fr));
+  }
+  .vt-content-lifecycle-rail__connector{display:none}
+  .vt-content-pipeline-widget__actions{grid-template-columns:1fr}
+}
+@container (max-width:380px){
+  .vt-content-lifecycle-rail{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    align-content:start;
+  }
+  .vt-content-lifecycle-rail__station:last-of-type{
+    grid-column:1/-1;
+  }
+  .vt-content-pipeline-widget__build-head{display:grid}
+  .vt-content-pipeline-widget__build-metrics{grid-template-columns:1fr}
+}
+@media (pointer:coarse){
+  .vt-content-lifecycle-rail__station{min-height:64px}
+}
