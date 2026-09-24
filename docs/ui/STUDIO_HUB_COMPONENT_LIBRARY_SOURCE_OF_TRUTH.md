@@ -74,13 +74,22 @@ The following rules supersede older local family styling and are production prim
 These rules apply to the Component Library presentation layer and do **not** change production-control anatomy.
 
 ### Catalog shells and width
-- Numbered Component Library SubToolboxes do not draw a second heavy outer black rectangle around the family.
+- Numbered Component Library SubToolboxes do not draw a second heavy outer rectangle around the family.
 - L0/L1/L2 demo shells are borderless labels, not nested cards.
-- Most examples render at intrinsic / fit-content width with minimal catalog padding.
-- Controls that inherently need an editing/data canvas use a bounded standard catalog width instead of the full SubToolbox width.
-- Desktop and mobile landscape show L0/L1/L2 on one comparison row whenever practical.
-- Mobile portrait uses two comparison columns so three levels occupy two rows.
-- Naturally wide families (tables, calendars, media/upload frames, tree views, and similar canvases) may span the portrait comparison width.
+- **The catalog owns placement; the primitive owns geometry.** Catalog CSS must not override a production primitive root with `width: fit-content !important`, `width: 100% !important`, or family-specific pixel widths.
+- Component preview widths are expressed as multiples of the canonical L0/L1/L2 component height, so each level preserves the same anatomy at a different scale.
+- Preview families declare one sizing mode: `intrinsic`, `fixed`, `compound`, `field`, or `canvas`.
+- `intrinsic` families shrink-wrap their own content. `fixed` families derive both axes from component height. `compound` families own fixed square rails plus a proportional body minimum. `field` and `canvas` families fill an explicit preview slot rather than the entire SubToolbox.
+- Desktop and mobile landscape show L0/L1/L2 on one comparison row whenever the declared geometry fits without clipping.
+- Mobile portrait keeps intrinsic/fixed families in the compact two-column comparison, but compound/field/canvas families stack one level per row when their real minimum width cannot fit a half-column.
+- Responsive layout must move or stack a component before violating its square rails, text body, center alignment, or canonical level ratios.
+
+### Level parity
+- L0/L1/L2 are one component anatomy, not three separately tuned designs.
+- Height, stroke, radius, shadow, font, icon size, rail width, padding, and compound body minimums derive from shared component-level variables.
+- Split-left rails are literal 1:1 squares and never shrink to make room for the label.
+- Canonical library sample labels must render without ellipsis or clipping at their declared preview size.
+- Geometry certification compares normalized ratios such as rail-width / component-height and total-width / component-height rather than only raw pixels.
 
 ### Visual Key tooltip
 - `SubToolboxLegendTooltip` is the dense visual-key / legend tooltip primitive.
