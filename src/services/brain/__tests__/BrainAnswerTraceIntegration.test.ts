@@ -26,7 +26,7 @@ describe("Brain answer trace integration", () => {
 
   const result = await runBrainTurn({
    channelId: null,
-   userText: "Give me a strategy for my next video.",
+   userText: "Give me a growth strategy.",
    snapshot: fixture.snapshot,
    growthContext: fixture.growthContext,
    systemPrompt: "Use supplied evidence.",
@@ -59,7 +59,7 @@ describe("Brain answer trace integration", () => {
 
   await runBrainTurn({
    channelId: null,
-   userText: "Give me a strategy for my next video.",
+   userText: "Give me a growth strategy.",
    snapshot: fixture.snapshot,
    growthContext: fixture.growthContext,
    systemPrompt: "Use supplied evidence.",
