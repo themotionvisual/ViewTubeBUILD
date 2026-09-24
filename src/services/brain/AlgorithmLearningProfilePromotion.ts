@@ -58,6 +58,15 @@ export const promoteApprovedAlgorithmLearningToProfile = async (
   detail: input.note || `Promoted from measured Algorithm Intelligence learning candidate ${candidate.id}.`,
   category: "channel_fact",
   evidence: candidate.evidenceIds,
+  metadata: {
+   knowledgeClass: "VALIDATED_LEARNING",
+   algorithmCandidateId: candidate.id,
+   sourceEventIds: candidate.sourceEventIds,
+   decisiveSampleSize: candidate.decisiveSampleSize,
+   positiveRate: candidate.positiveRate,
+   traceIds: candidate.traceIds,
+   outputRefs: candidate.outputRefs,
+  },
  })
 
  const event = recordAlgorithmIntelligenceEvent({
