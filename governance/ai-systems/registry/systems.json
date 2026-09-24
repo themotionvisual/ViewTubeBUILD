@@ -1,0 +1,847 @@
+{
+  "schemaVersion": "vt-ai-systems-registry-v1",
+  "generatedAt": "2026-09-24T18:55:00-04:00",
+  "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+  "authority": "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+  "note": "Seed registry. Records point to canonical owners; this registry is not a replacement runtime/data store.",
+  "records": [
+    {
+      "id": "vt-ai-system:vt-sync",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "system",
+      "title": "VT-SYNC",
+      "summary": "Raw YouTube analytics/API/import acquisition and freshness owner.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "VT-SYNC",
+        "concern": "raw YouTube analytics acquisition and freshness",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-24T18:55:00-04:00",
+        "updatedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/analytics"
+        ],
+        "docs": [
+          "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [],
+        "provides": [
+          "raw-analytics"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "verificationRefs": [
+          "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "analytics",
+        "data"
+      ]
+    },
+    {
+      "id": "vt-ai-system:analytics-canon",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "system",
+      "title": "analytics-canon",
+      "summary": "Normalized analytics boundary consumed by AI and product features.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "analytics-canon",
+        "concern": "normalized analytics truth and consumer API",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-24T18:55:00-04:00",
+        "updatedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/analytics-canon"
+        ],
+        "docs": [
+          "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:vt-sync"
+        ],
+        "provides": [
+          "normalized-analytics-evidence"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "verificationRefs": [
+          "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "analytics",
+        "evidence"
+      ]
+    },
+    {
+      "id": "vt-ai-system:brain-runtime",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "system",
+      "title": "Brain Runtime",
+      "summary": "Creator-facing reasoning, orchestration, capability routing and explanation entrypoint.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "BrainRuntime",
+        "concern": "creator-facing AI reasoning and orchestration",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-24T18:55:00-04:00",
+        "updatedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md",
+          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:analytics-canon",
+          "vt-ai-system:channel-knowledge",
+          "vt-ai-system:projects-contentbuild"
+        ],
+        "provides": [
+          "creator-reasoning",
+          "recommendations"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "verificationRefs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md",
+          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain",
+        "runtime"
+      ]
+    },
+    {
+      "id": "vt-ai-system:model-gateway",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "system",
+      "title": "Brain Model Gateway",
+      "summary": "Provider-neutral boundary for creator-facing Brain model invocation.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "BrainModelGateway",
+        "concern": "provider-neutral Brain model execution",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-24T18:55:00-04:00",
+        "updatedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "model-execution"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "verificationRefs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain",
+        "provider"
+      ]
+    },
+    {
+      "id": "vt-ai-system:channel-knowledge",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "system",
+      "title": "Channel Profile / Channel Knowledge",
+      "summary": "Durable creator/channel knowledge, confirmed preferences and governed learnings.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "Channel Profile / Channel Knowledge",
+        "concern": "durable creator and channel knowledge",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-24T18:55:00-04:00",
+        "updatedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/ChannelProfileAdapter.ts",
+          "src/services/brain/ChannelKnowledgeProjection.ts",
+          "src/services/brain/BrainMemoryClaims.ts"
+        ],
+        "docs": [
+          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [],
+        "provides": [
+          "personalization",
+          "validated-learning"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "verificationRefs": [
+          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "knowledge",
+        "profile"
+      ]
+    },
+    {
+      "id": "vt-ai-system:projects-contentbuild",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "system",
+      "title": "Projects / ContentBuild",
+      "summary": "Project intent, work identity, lifecycle and cross-tool continuity owner.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "Projects / ContentBuild",
+        "concern": "project intent and work identity",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-24T18:55:00-04:00",
+        "updatedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services"
+        ],
+        "docs": [
+          "docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [],
+        "provides": [
+          "project-context",
+          "content-build-identity"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "verificationRefs": [
+          "docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "project",
+        "contentbuild"
+      ]
+    },
+    {
+      "id": "vt-ai-system:asset-engine",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "system",
+      "title": "Vault / Asset Engine",
+      "summary": "Canonical asset identity, versions, variants, lineage, selection and provenance owner.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "Vault / Asset Engine",
+        "concern": "creator asset identity, lineage and provenance",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-24T18:55:00-04:00",
+        "updatedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services"
+        ],
+        "docs": [
+          "docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:projects-contentbuild"
+        ],
+        "provides": [
+          "asset-lineage",
+          "generation-artifacts"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "verificationRefs": [
+          "docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "assets",
+        "vault"
+      ]
+    },
+    {
+      "id": "vt-ai-system:prompt-system",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "system",
+      "title": "Prompt System",
+      "summary": "Prompt family, version, precedence, personalization and modernization authority.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "Prompt System Authority",
+        "concern": "prompt inventory, versions and governance",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-24T18:55:00-04:00",
+        "updatedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/prompts.ts",
+          "src/services/gemini.ts",
+          "src/services/brain",
+          "src/services/oracle/prompts.ts"
+        ],
+        "docs": [
+          "docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md",
+          "docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "prompt-governance"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "verificationRefs": [
+          "docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md",
+          "docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "prompt",
+        "model"
+      ]
+    },
+    {
+      "id": "vt-ai-system:herald",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "system",
+      "title": "Herald",
+      "summary": "Repository-agent orientation, evidence discipline, writer-lock, reporting and continuity owner.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "Herald",
+        "concern": "repository-agent work governance",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-24T18:55:00-04:00",
+        "updatedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "agent/contracts",
+          "scripts/herald-sync.mjs"
+        ],
+        "docs": [
+          "agent/contracts/herald-out.md",
+          "agent/contracts/herald-workflow.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [],
+        "provides": [
+          "agent-continuity",
+          "repo-work-ledger"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "verificationRefs": [
+          "agent/contracts/herald-out.md",
+          "agent/contracts/herald-workflow.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "agent",
+        "governance"
+      ]
+    },
+    {
+      "id": "vt-ai-system:brain-trace",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "system",
+      "title": "BrainTrace",
+      "summary": "Runtime trace identity and AI execution observability for Brain operations.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "BrainTrace",
+        "concern": "runtime AI execution provenance",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-24T18:55:00-04:00",
+        "updatedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainTrace.ts"
+        ],
+        "docs": [
+          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "runtime-trace"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "verificationRefs": [
+          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "trace",
+        "observability"
+      ]
+    },
+    {
+      "id": "vt-ai-system:outcome-evaluation-learning",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "system",
+      "title": "Outcome / Evaluation / Learning",
+      "summary": "Creator outcome, measured evaluation and governed learning chain using existing domain owners.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "Brain/Algorithm outcome and learning owners",
+        "concern": "creator decision, measured performance, evaluation and learning promotion",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-24T18:55:00-04:00",
+        "updatedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain"
+        ],
+        "docs": [
+          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+          "tasks/ai-brain-quality/plan.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-trace",
+          "vt-ai-system:channel-knowledge"
+        ],
+        "provides": [
+          "outcome",
+          "evaluation",
+          "learning"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "verificationRefs": [
+          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+          "tasks/ai-brain-quality/plan.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "outcome",
+        "learning"
+      ]
+    },
+    {
+      "id": "vt-ai-system:ai-systems-management",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "system",
+      "title": "AI Systems Management",
+      "summary": "Agent-facing authority-of-authorities for AI ownership, status, claims, provenance, plans and health.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "viewtube-ai-system-governor",
+        "concern": "AI systems management and cross-authority coordination",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-24T18:55:00-04:00",
+        "updatedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedAt": "2026-09-24T18:55:00-04:00",
+        "lastAuditedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          ".claude/skills/viewtube-ai-system-governor"
+        ],
+        "docs": [
+          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+          "tasks/ai-systems-management/plan.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime",
+          "vt-ai-system:herald",
+          "vt-ai-system:prompt-system"
+        ],
+        "provides": [
+          "system-map",
+          "work-claims",
+          "health-projection"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbaaff8de14c5948959251b0552519685c24c83e",
+        "verificationRefs": [
+          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+          "tasks/ai-systems-management/plan.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "governance",
+        "management"
+      ]
+    }
+  ]
+}
