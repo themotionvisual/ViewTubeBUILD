@@ -20,13 +20,15 @@ const inclusiveBucketRange = <T extends string>(order: readonly T[], minimum: T,
 const NEW_REGISTERED_WIDGETS: WidgetDefinition[] = NEW_WIDGET_DEFINITIONS.map((widget, index) => {
  const supportedSizes = inclusiveBucketRange<DashboardSizeBucket>(SIZE_BUCKET_ORDER, widget.minSize, widget.maxSize)
  const supportedHeights = inclusiveBucketRange<DashboardHeightBucket>(HEIGHT_BUCKET_ORDER, widget.minHeight, widget.maxHeight)
+ const supportedOrder = SUPPORTED_DASHBOARD_WIDGET_IDS.indexOf(widget.id)
+ const isSupportedDefault = supportedOrder >= 0
  return {
   ...widget,
   status: "ready",
   rendererKey: widget.id,
-  releaseTier: "preview",
-  defaultVisible: false,
-  defaultOrder: BASE_WIDGET_REGISTRY.length + index,
+  releaseTier: isSupportedDefault ? "supported" : "preview",
+  defaultVisible: isSupportedDefault,
+  defaultOrder: isSupportedDefault ? supportedOrder : BASE_WIDGET_REGISTRY.length + index,
   supportedSizes,
   supportedHeights,
   supportedDimensions: supportedSizes.flatMap((size) => supportedHeights.map((height) => ({ size, height }))),
