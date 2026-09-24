@@ -8,6 +8,7 @@ import {
  listAIBrainSkillResources,
  promoteAIBrainLearning,
  scoreAIBrainAnswerUsefulness,
+ teachAIBrainExplicitly,
 } from "../aiBrainSelfImprovement"
 import {
  listActiveBrainMemoryClaims,
@@ -255,6 +256,29 @@ describe("aiBrainSelfImprovement", () => {
    relatedEntryIds: [],
   })
   expect(repeatedEvidence.steps.find((step) => step.id === "next_action")?.decision).toBe("promote")
+ })
+
+
+ it("persists creator-approved measured learning with its validated knowledge class", async () => {
+  const channelId = `channel-${Date.now()}-validated-learning`
+  const result = await teachAIBrainExplicitly({
+   channelId,
+   summary: "Controlled repackaging repeatedly improved measured outcomes.",
+   category: "channel_fact",
+   evidence: ["outcome-1", "outcome-2", "outcome-3"],
+   metadata: {
+    knowledgeClass: "VALIDATED_LEARNING",
+    algorithmCandidateId: "candidate-1",
+    traceIds: ["trace-1", "trace-2", "trace-3"],
+   },
+  })
+
+  expect(result.promotion.allowed).toBe(true)
+  const claims = await listActiveBrainMemoryClaims(channelId)
+  expect(claims[0]).toMatchObject({
+   knowledgeClass: "VALIDATED_LEARNING",
+   confirmationState: "explicit",
+  })
  })
 
 })
