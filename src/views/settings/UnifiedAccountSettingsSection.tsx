@@ -1,22 +1,11 @@
 import React from "react"
-import {
-  ArrowRight,
-  Bell,
-  Bot,
-  Check,
-  CircleUserRound,
-  CreditCard,
-  Database,
-  Download,
+import {  Bell,  Check,  Download,
   Eye,
   EyeOff,
-  KeyRound,
-  LayoutDashboard,
-  LockKeyhole,
+  KeyRound,  LockKeyhole,
   ShieldCheck,
   Sparkles,
-  Trash2, LayoutGrid, SlidersHorizontal,
-} from "lucide-react"
+  Trash2,} from "lucide-react"
 import { AccountActionButton } from "../../components/account/AccountActionButton"
 import { AIModelSelector } from "../../components/ui/AIModelSelector"
 import { TOPUP_DEFINITIONS, getReferralCode, type EntitlementState } from "../../services/billingEntitlement"
@@ -24,6 +13,8 @@ import type { IngestMode } from "../../services/productArchitecture"
 import type { SubscriptionPlanId } from "../../services/subscriptionPlans"
 import type { SettingsPanel, SettingsReadiness } from "./settingsControlDeck"
 import { WorkspaceExperienceSettingsSection } from "./WorkspaceExperienceSettingsSection"
+import { SettingsOverviewPanel } from "./SettingsOverviewPanel"
+import { buildSettingsOverviewModel } from "./settingsWorkspaceModel"
 
 const PLANS: Array<{ id: SubscriptionPlanId; label: string; price: string; bullets: string[]; accent: string }> = [
   { id: "basic", label: "Basic", price: "$0", bullets: ["Core tools", "Manual sync", "Basic analytics"], accent: "#C9F830" },
@@ -32,17 +23,6 @@ const PLANS: Array<{ id: SubscriptionPlanId; label: string; price: string; bulle
   { id: "creator_plus", label: "Creator Plus", price: "$19.99/mo", bullets: ["More included credits", "Priority capacity", "Creator workflows"], accent: "#FFE357" },
   { id: "creator_pro", label: "Creator Pro", price: "$39.99/mo", bullets: ["Highest creator credits", "Full strategy stack", "Heavy reasoning"], accent: "#FFB570" },
   { id: "executive", label: "Executive", price: "$69.99/mo", bullets: ["Unlimited generation", "Executive priority", "Full platform"], accent: "#FF83EA" },
-]
-
-const PANELS: Array<{ id: SettingsPanel; label: string; description: string; icon: React.ReactNode }> = [
-  { id: "overview", label: "Overview", description: "System readiness", icon: <LayoutDashboard size={19} /> },
-  { id: "account", label: "Account", description: "Identity and channel", icon: <CircleUserRound size={19} /> },
-  { id: "ai", label: "AI Runtime", description: "Brain, models, API key", icon: <Bot size={19} /> },
-  { id: "widgets", label: "Dashboard Widgets", description: "Show or hide widgets", icon: <LayoutGrid size={19} /> },
-  { id: "experience", label: "Experience", description: "Navigation and workspace behavior", icon: <SlidersHorizontal size={19} /> },
-  { id: "billing", label: "Plan + Credits", description: "Billing and referrals", icon: <CreditCard size={19} /> },
-  { id: "data", label: "Data + Privacy", description: "Sources and recovery", icon: <Database size={19} /> },
-  { id: "help", label: "Help + Legal", description: "Guides and policies", icon: <ShieldCheck size={19} /> },
 ]
 
 const buttonClass = "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-[3px] border-black px-4 py-3 text-xs font-black uppercase tracking-[0.08em] shadow-[3px_3px_0_0_#000] transition-transform hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_0_#000] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -57,19 +37,6 @@ const Card: React.FC<React.PropsWithChildren<{ accent: string; description?: str
     </header>
     <div className="grid gap-5 p-5">{children}</div>
   </section>
-)
-
-const ReadinessGrid: React.FC<{ readiness: SettingsReadiness }> = ({ readiness }) => (
-  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-    {readiness.items.map((item) => (
-      <article key={item.id} className={`rounded-2xl border-[3px] border-black p-4 ${item.ready ? "bg-[#CCFF00]" : "bg-[#f8f7f1]"}`}>
-        <div className="flex items-start justify-between gap-3">
-          <div><p className={labelClass}>{item.label}</p><p className="mt-2 text-lg font-black uppercase">{item.state}</p></div>
-          <span className="grid size-8 shrink-0 place-items-center rounded-full border-[2px] border-black bg-white" aria-hidden="true">{item.ready ? <Check size={17} strokeWidth={4} /> : <ArrowRight size={17} strokeWidth={4} />}</span>
-        </div>
-      </article>
-    ))}
-  </div>
 )
 
 export type UnifiedAccountSettingsSectionProps = {
@@ -138,40 +105,20 @@ export const UnifiedAccountSettingsSection: React.FC<UnifiedAccountSettingsSecti
     readiness, resolveStatus, settingsSaveStatus, showInternalOpsLink, showKey,
   } = props
 
-  return (
-    <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[270px_minmax(0,1fr)]">
-      <aside className="min-w-0 max-w-full xl:sticky xl:top-24">
-        <nav aria-label="Settings sections" className="max-w-full overflow-x-auto rounded-[20px] border-[4px] border-black bg-[#111] p-3 text-white shadow-[7px_7px_0_0_#FF4FD8]">
-          <div className="flex min-w-max gap-2 xl:min-w-0 xl:flex-col">
-            {PANELS.map((panel) => {
-              const active = activePanel === panel.id
-              return (
-                <button key={panel.id} type="button" aria-current={active ? "page" : undefined} onClick={() => onPanelChange(panel.id)} className={`flex min-h-14 min-w-[170px] items-center gap-3 rounded-xl border-[3px] px-3 py-2 text-left focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 xl:min-w-0 ${active ? "border-black bg-[#CCFF00] text-black shadow-[3px_3px_0_0_#fff]" : "border-white/20 bg-white/5 text-white hover:border-white/60"}`}>
-                  <span aria-hidden="true">{panel.icon}</span>
-                  <span><span className="block text-xs font-black uppercase tracking-[0.12em]">{panel.label}</span><span className={`mt-1 block text-[11px] font-bold ${active ? "text-black/60" : "text-white/55"}`}>{panel.description}</span></span>
-                </button>
-              )
-            })}
-          </div>
-        </nav>
-      </aside>
+  const overviewModel = buildSettingsOverviewModel({
+    readiness,
+    profileName,
+    currentHandleValue,
+    currentEmail,
+    planId: entitlement.subscriptionPlanId,
+    creditsLabel: entitlement.tier === "large" ? "Unlimited credits" : `${meterLeft.toLocaleString()} credits available`,
+    ingestMode,
+  })
 
-      <section id={`settings-panel-${activePanel}`} aria-label={`${activePanel} settings`} tabIndex={-1} className="min-w-0 space-y-6">
+  return (
+    <>
         {activePanel === "overview" ? (
-          <>
-            <Card accent="#00F0FF" title="System readiness" description={`${readiness.completed} of ${readiness.items.length} creator systems ready.`}>
-              <ReadinessGrid readiness={readiness} />
-              <div className="flex flex-col justify-between gap-4 rounded-2xl border-[3px] border-black bg-[#111] p-5 text-white sm:flex-row sm:items-center">
-                <div><p className="text-xs font-black uppercase tracking-[0.18em] text-[#CCFF00]">Next best action</p><p className="mt-2 text-xl font-black uppercase">{readiness.nextLabel}</p></div>
-                {readiness.nextPanel !== "overview" ? <button type="button" onClick={() => onPanelChange(readiness.nextPanel)} className={`${buttonClass} bg-[#CCFF00] text-black shadow-[3px_3px_0_0_#fff]`}>Open control <ArrowRight size={17} /></button> : null}
-              </div>
-            </Card>
-            <div className="grid gap-6 lg:grid-cols-3">
-              <Card accent="#FF83EA" title="Creator identity"><div><p className={labelClass}>Connected creator</p><p className="mt-2 text-2xl font-black uppercase">{profileName || "No creator loaded"}</p><p className="mt-1 break-words font-bold text-black/60">{currentHandleValue || currentEmail || "Connect to load identity"}</p></div><button type="button" onClick={() => onPanelChange("account")} className={`${buttonClass} bg-white`}>Manage account</button></Card>
-              <Card accent="#FFE357" title="Plan + credits"><div className="grid grid-cols-2 gap-3"><div><p className={labelClass}>Plan</p><p className="mt-2 text-xl font-black uppercase">{entitlement.subscriptionPlanId}</p></div><div><p className={labelClass}>Available</p><p className="mt-2 text-xl font-black uppercase">{entitlement.tier === "large" ? "Unlimited" : meterLeft.toLocaleString()}</p></div></div><button type="button" onClick={() => onPanelChange("billing")} className={`${buttonClass} bg-[#CCFF00]`}>Open billing</button></Card>
-              <Card accent="#40C6E9" title="Data source"><div><p className={labelClass}>Active mode</p><p className="mt-2 text-xl font-black uppercase">{ingestMode.replace("_", " ")}</p></div><button type="button" onClick={() => onPanelChange("data")} className={`${buttonClass} bg-white`}>Manage data</button></Card>
-            </div>
-          </>
+          <SettingsOverviewPanel model={overviewModel} onPanelChange={onPanelChange} />
         ) : null}
 
         {activePanel === "experience" ? <WorkspaceExperienceSettingsSection /> : null}
@@ -213,7 +160,6 @@ export const UnifiedAccountSettingsSection: React.FC<UnifiedAccountSettingsSecti
         ) : null}
 
         {activePanel === "help" ? <Card accent="#CCFF00" title="Help and policies" description="The support library is loaded below this control deck."><p className="text-sm font-bold leading-6 text-black/65">Use the guide cards for account connection, billing, AI, analytics, and troubleshooting. Legal policies remain available beside the guide actions.</p></Card> : null}
-      </section>
-    </div>
+    </>
   )
 }
