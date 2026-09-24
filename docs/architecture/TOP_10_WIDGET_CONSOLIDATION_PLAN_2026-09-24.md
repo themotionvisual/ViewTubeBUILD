@@ -97,8 +97,12 @@ Status: active implementation.
 - remaining Wave 4 work: improve slot resolution from explicit ContentBuild selections/versions before heuristic text matching, add active-build selection when multiple packages are present, and complete state/mobile certification.
 
 ### Wave 5 — Audience + Series
-- upgrade `audience-requests`;
-- determine the smallest non-duplicative dashboard manifestation for Series/Franchise from existing Series Generator + Projects/Creator Canvas data.
+Status: active implementation.
+- `audience-requests`: now clusters request-like comments into explicit normalized themes, exposes repeat count/viewer evidence, preserves a source request, and hands work to Projects, Audience Loop Studio, or Series Fit.
+- Audience Loop Studio remains the deeper mining/reply/community workflow owner; the dashboard widget is the compact evidence funnel, not a second Studio.
+- Series/Franchise ownership audit: `series-and-theme-generator` already owns Theme Clusters, Sequel Tree, Cadence Fit and Franchise Map and is intentionally designed to fold into Creator Canvas + Projects.
+- Do **not** register a separate Series & Franchise Tracker yet. The current Series Generator prototype does not expose a durable persisted series/franchise record set suitable for a truthful dashboard tracker. A dashboard manifestation should be added only after persisted series identity/status/episode relationships exist, or should be embedded into an existing Projects/Creator Canvas dashboard owner if that becomes canonical first.
+- remaining Wave 5 work: replace simple normalized request grouping with canonical comment/request intelligence when that service is connected, persist promoted request packets, and connect persisted series records when available.
 
 ### Wave 6 — Publishing command consolidation
 - audit `flight-check`, `upload-scheduler`, Content Pipeline, Video Publisher, Publishing Schedule Architect;
