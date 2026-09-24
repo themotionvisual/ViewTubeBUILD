@@ -23,6 +23,36 @@
     "releaseGates": "latest main run pending; older runs cancelled by subsequent pushes",
     "visual": "latest-sha built-app desktop/phone captures still required"
   },
-  "nextAction": "When latest main deployment is READY, inspect release gates, capture built-app Dashboard screenshots at 1440x1000 and 390x844, then fix responsive/layout defects found.",
-  "date": "2026-09-24"
+  "nextAction": "Verify latest Render deploy and GitHub dashboard integration contract, then perform visual certification.",
+  "date": "2026-09-24",
+  "visibilityIntegration": {
+    "status": "implemented",
+    "commit": "36fc7644f550558a2de497e0ef2aadadc920783c",
+    "redesignedWidgetIds": [
+      "daily-oracle",
+      "brain-hub",
+      "flight-check",
+      "channel-progress",
+      "next-best-action",
+      "anomaly-radar",
+      "opportunity-radar",
+      "content-pipeline",
+      "audience-requests",
+      "video-director",
+      "video-asset-engine"
+    ],
+    "registry": "supported/default-visible",
+    "renderer": "registered",
+    "settings": "manageable and visible",
+    "persistedLayouts": "one-time reveal migration added",
+    "defaultLayout": "redesigned widgets promoted into supported default order"
+  },
+  "previewDeployment": {
+    "provider": "Render",
+    "service": "viewtube-widget-redesign-preview",
+    "url": "https://viewtube-widget-redesign-preview.onrender.com",
+    "deployId": "dep-daqph7nlk1mc73eko46g",
+    "commit": "36fc7644f550558a2de497e0ef2aadadc920783c",
+    "status": "build_in_progress"
+  }
 }
