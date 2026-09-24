@@ -10,6 +10,7 @@ import { readBrainUserControls } from "./BrainUserControls"
 import type { StatisticsIntelligenceSnapshot } from "./StatisticsIntelligence"
 import type { AudienceIntelligenceSnapshot } from "./AudienceIntelligence"
 import type { BrainEvidenceQualityReport } from "./BrainEvidenceQuality"
+import type { ChannelKnowledgeRetrieval } from "./ChannelKnowledgeProjection"
 import { buildAlgorithmIntelligenceContext, type AlgorithmIntelligencePortfolio } from "./AlgorithmIntelligenceOrchestrator"
 
 const clip = (value: string, maximum: number): string => value.slice(0, Math.max(0, maximum))
@@ -26,6 +27,7 @@ export const buildBrainContextPack = (input: {
  evidenceQuality?: BrainEvidenceQualityReport | null
  audienceIntelligence?: AudienceIntelligenceSnapshot | null
  algorithmIntelligence?: AlgorithmIntelligencePortfolio | null
+ channelKnowledge?: ChannelKnowledgeRetrieval | null
  maximumCharacters?: number
 }): { systemInstruction: string; budget: BrainContextBudget } => {
  const controls = readBrainUserControls(input.channelId)
@@ -102,6 +104,15 @@ export const buildBrainContextPack = (input: {
   ? clip(buildAlgorithmIntelligenceContext(input.algorithmIntelligence), 4800)
   : ""
 
+ const channelKnowledge = controls.personalization && input.channelKnowledge
+  ? clip([
+    ...input.channelKnowledge.records.slice(0, 10).map((record) =>
+     `[${record.knowledgeClass}/${record.confidence}; state=${record.lifecycleState}] ${record.statement} | evidence=${record.evidenceRefs.join(",") || "none"}`),
+    ...input.channelKnowledge.contradictions.slice(0, 6).map((record) =>
+     `Contradiction: [${record.confidence}] ${record.statement} | evidence=${record.evidenceRefs.join(",") || "none"}`),
+   ].join("\n"), 4200)
+  : ""
+
  const knowledge = clip(buildRelevantNicheKnowledgeContext(input.nicheKnowledge || null, input.userText, 2200), 2200)
  const research = clip(input.currentResearch || "", 1800)
  const taskInstruction = buildBrainTaskInstruction(resolveBrainTaskProfile(input.userText))
@@ -122,6 +133,7 @@ export const buildBrainContextPack = (input: {
   statistics ? "\nDETERMINISTIC STATISTICS INTELLIGENCE\n" + statistics : "",
   audience ? "\nAUDIENCE INTELLIGENCE\n" + audience : "",
   algorithm ? "\nALGORITHM / CHANNEL / OPPORTUNITY INTELLIGENCE\n" + algorithm : "",
+  channelKnowledge ? "\nCHANNEL KNOWLEDGE\n" + channelKnowledge : "",
   memory ? "\nCONFIRMED CREATOR CONTEXT\n" + memory : "",
   clippedConversation ? "\nRECENT CONVERSATION\n" + clippedConversation : "",
   knowledge ? "\nPUBLIC NICHE KNOWLEDGE\n" + knowledge : "",
@@ -140,7 +152,7 @@ export const buildBrainContextPack = (input: {
    maximumCharacters,
    systemCharacters: system.length,
    evidenceCharacters: evidence.length + evidenceQuality.length + statistics.length + audience.length + algorithm.length,
-   memoryCharacters: memory.length,
+   memoryCharacters: memory.length + channelKnowledge.length,
    knowledgeCharacters: knowledge.length + research.length,
    conversationCharacters: clippedConversation.length,
    omittedSections,
