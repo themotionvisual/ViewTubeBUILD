@@ -1,4 +1,6 @@
 import React from 'react';
+import {resolveVtE1TransitionDefinition} from '../../../shared/vtE1TransitionCatalog.js';
+import {transitionFrameStyleFor} from '../../../shared/vtE1TransitionFrame.js';
 
 export type VtE1TransitionDirection = 'entering' | 'exiting';
 export type VtE1TransitionPresentationId =
@@ -7,7 +9,8 @@ export type VtE1TransitionPresentationId =
   | 'wipe'
   | 'iris'
   | 'flip'
-  | 'clock-wipe';
+  | 'clock-wipe'
+  | 'zoom';
 
 export interface VtE1TransitionPresentationProps {
   progress: number;
@@ -29,12 +32,8 @@ const Fade: React.FC<VtE1TransitionPresentationProps> = ({
   direction,
   children,
 }) => {
-  const p = clamp01(progress);
-  return (
-    <div style={{ ...layerStyle, opacity: direction === 'entering' ? p : 1 - p }}>
-      {children}
-    </div>
-  );
+  const frame = transitionFrameStyleFor('fade', progress, direction);
+  return <div style={{ ...layerStyle, opacity: frame.opacity }}>{children}</div>;
 };
 
 const Slide: React.FC<VtE1TransitionPresentationProps> = ({
@@ -43,22 +42,10 @@ const Slide: React.FC<VtE1TransitionPresentationProps> = ({
   params,
   children,
 }) => {
-  const p = clamp01(progress);
-  const from =
-    (params?.direction as 'from-left' | 'from-right' | 'from-top' | 'from-bottom' | undefined)
-    ?? 'from-right';
-  const horizontal = from === 'from-left' || from === 'from-right';
-  const sign = from === 'from-left' || from === 'from-top' ? -1 : 1;
-  const value = direction === 'entering'
-    ? sign * (1 - p) * 100
-    : -sign * p * 100;
+  const type = params?.direction === 'from-right' ? 'slideRight' : 'slideLeft';
+  const frame = transitionFrameStyleFor(type, progress, direction, params);
   return (
-    <div
-      style={{
-        ...layerStyle,
-        transform: horizontal ? `translateX(${value}%)` : `translateY(${value}%)`,
-      }}
-    >
+    <div style={{ ...layerStyle, opacity: frame.opacity, transform: frame.transform || undefined }}>
       {children}
     </div>
   );
@@ -70,18 +57,9 @@ const Wipe: React.FC<VtE1TransitionPresentationProps> = ({
   params,
   children,
 }) => {
-  const raw = clamp01(progress);
-  const p = direction === 'entering' ? raw : 1 - raw;
-  const from =
-    (params?.direction as 'from-left' | 'from-right' | 'from-top' | 'from-bottom' | undefined)
-    ?? 'from-left';
-  const clipPath = {
-    'from-left': `inset(0 ${(1 - p) * 100}% 0 0)`,
-    'from-right': `inset(0 0 0 ${(1 - p) * 100}%)`,
-    'from-top': `inset(0 0 ${(1 - p) * 100}% 0)`,
-    'from-bottom': `inset(${(1 - p) * 100}% 0 0 0)`,
-  }[from];
-  return <div style={{ ...layerStyle, clipPath }}>{children}</div>;
+  const type = params?.direction === 'from-right' ? 'wipeRight' : 'wipeLeft';
+  const frame = transitionFrameStyleFor(type, progress, direction, params);
+  return <div style={{ ...layerStyle, opacity: frame.opacity, clipPath: frame.clipPath || undefined }}>{children}</div>;
 };
 
 const Iris: React.FC<VtE1TransitionPresentationProps> = ({
@@ -144,6 +122,20 @@ const ClockWipe: React.FC<VtE1TransitionPresentationProps> = ({
   );
 };
 
+const Zoom: React.FC<VtE1TransitionPresentationProps> = ({
+  progress,
+  direction,
+  params,
+  children,
+}) => {
+  const frame = transitionFrameStyleFor('zoom', progress, direction, params);
+  return (
+    <div style={{ ...layerStyle, opacity: frame.opacity, transform: frame.transform || undefined }}>
+      {children}
+    </div>
+  );
+};
+
 export const VT_E1_TRANSITION_PRESENTATIONS: Record<
   VtE1TransitionPresentationId,
   React.FC<VtE1TransitionPresentationProps>
@@ -154,6 +146,7 @@ export const VT_E1_TRANSITION_PRESENTATIONS: Record<
   iris: Iris,
   flip: Flip,
   'clock-wipe': ClockWipe,
+  zoom: Zoom,
 };
 
 export function resolveVtE1TransitionPresentation(
@@ -162,7 +155,8 @@ export function resolveVtE1TransitionPresentation(
   if (id && id in VT_E1_TRANSITION_PRESENTATIONS) {
     return VT_E1_TRANSITION_PRESENTATIONS[id as VtE1TransitionPresentationId];
   }
-  return Fade;
+  const definition = resolveVtE1TransitionDefinition(id);
+  return VT_E1_TRANSITION_PRESENTATIONS[definition.presentation as VtE1TransitionPresentationId] ?? Fade;
 }
 
 /**
@@ -174,7 +168,8 @@ export function resolveVtE1TransitionPresentation(
  */
 export const VtE1TransitionLayer: React.FC<
   VtE1TransitionPresentationProps & { presentation?: string | null }
-> = ({ presentation, ...props }) => {
+> = ({ presentation, params, ...props }) => {
+  const definition = resolveVtE1TransitionDefinition(presentation);
   const Presentation = resolveVtE1TransitionPresentation(presentation);
-  return <Presentation {...props} />;
+  return <Presentation {...props} params={{ ...definition.params, ...(params ?? {}) }} />;
 };
