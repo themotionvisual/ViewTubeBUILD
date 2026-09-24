@@ -13,6 +13,11 @@ import {
 } from "./Persistence"
 import { listActiveBrainMemoryClaims } from "./BrainMemoryClaims"
 import { readBrainUserControls } from "./BrainUserControls"
+import {
+ buildChannelKnowledgeProjection,
+ retrieveChannelKnowledge,
+ type ChannelKnowledgeRetrieval,
+} from "./ChannelKnowledgeProjection"
 
 export interface BrainChannelProfileBundle {
  channelId: string
@@ -72,6 +77,41 @@ export const loadBrainChannelProfile = async (
   loadedAt: new Date().toISOString(),
  }
 }
+
+export const buildChannelKnowledgeContextFromProfile = (input: {
+ profile: BrainChannelProfileBundle
+ query: string
+ limit?: number
+}): ChannelKnowledgeRetrieval | null => {
+ if (!input.profile.personalizationEnabled) return null
+
+ const projection = buildChannelKnowledgeProjection({
+  channelId: input.profile.channelId,
+  claims: input.profile.memoryClaims,
+  knowledgeModel: input.profile.knowledgeModel,
+  learningCandidates: [],
+  now: input.profile.loadedAt,
+ })
+
+ return retrieveChannelKnowledge(projection, {
+  query: input.query,
+  limit: input.limit || 10,
+  includeCandidates: false,
+  includeStale: false,
+  now: input.profile.loadedAt,
+ })
+}
+
+export const loadRelevantChannelKnowledge = async (input: {
+ channelId: string
+ query: string
+ limit?: number
+}): Promise<ChannelKnowledgeRetrieval | null> =>
+ buildChannelKnowledgeContextFromProfile({
+  profile: await loadBrainChannelProfile(input.channelId),
+  query: input.query,
+  limit: input.limit,
+ })
 
 const clip = (value: unknown, maximum = 1200): string => {
  const text = typeof value === "string" ? value : JSON.stringify(value || "")
