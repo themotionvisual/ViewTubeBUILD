@@ -1563,6 +1563,8 @@ export interface NicheKnowledgeRefreshPolicy {
 
 export interface BrainMemoryClaim {
  id: string
+ /** Optional durable taxonomy override for governed measured learning. */
+ knowledgeClass?: "VALIDATED_LEARNING"
  channelId: string | null
  scope: "creator" | "channel" | "analytics" | "answer_policy" | "workflow"
  category: AIBrainLearningCategory
