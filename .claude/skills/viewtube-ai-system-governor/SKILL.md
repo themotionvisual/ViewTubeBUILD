@@ -176,3 +176,15 @@ When AI work changes cross-system ownership, reachability, prompt families, cont
 3. update `docs/DOCUMENTATION_REGISTRY.md` when lifecycle/authority changed;
 4. add a work claim/finished-work receipt through the current agent-work governance flow;
 5. preserve or archive superseded documents only after reference and unique-information checks.
+
+
+## AI Systems Management references
+
+Load only what the current branch of work needs:
+
+- [references/ai-systems-management.md](references/ai-systems-management.md) — orientation, ownership, status and handoff rules.
+- [references/work-claims-and-receipts.md](references/work-claims-and-receipts.md) — claim/collision/completion receipt contract.
+- [references/authority-and-freshness.md](references/authority-and-freshness.md) — canonical/historical/freshness/supersession rules.
+- [references/prompt-and-model-governance.md](references/prompt-and-model-governance.md) — prompt/model/provenance management.
+- [references/donor-migration.md](references/donor-migration.md) — donor branches, stacked PRs and historical-doc migration.
+- [references/operational-health-check.md](references/operational-health-check.md) — reachability and architectural decay checks.
