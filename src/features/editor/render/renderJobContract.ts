@@ -10,7 +10,7 @@ export interface RenderValidation{valid?:boolean;errors?:string[];warnings?:stri
 export interface RenderJobEnvelope{job:RenderJob;validation?:RenderValidation}
 export interface RenderJobClientOptions{baseUrl?:string;fetchImpl?:typeof fetch}
 
-const json=async<T>(response:Response):Promise<T>=>{if(!response.ok){let message=`Render request failed (${response.status})`;try{const body=await response.json() as {error?:string;message?:string;validation?:{errors?:string[]}};message=body.message||body.validation?.errors?.join(' · ')||body.error||message}catch{}throw new Error(message)}return response.json() as Promise<T>};
+const json=async<T>(input:Response|Promise<Response>):Promise<T>=>{const response=await input;if(!response.ok){let message=`Render request failed (${response.status})`;try{const body=await response.json() as {error?:string;message?:string;validation?:{errors?:string[]}};message=body.message||body.validation?.errors?.join(' · ')||body.error||message}catch{}throw new Error(message)}return response.json() as Promise<T>};
 const normalizeBase=(value:string)=>value.replace(/\/$/,'');
 
 /** Browser-safe client for the canonical VT_E1 render proxy/worker protocol. */
