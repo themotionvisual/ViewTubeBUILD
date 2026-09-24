@@ -76,10 +76,19 @@ export const promoteBrainClaim = async (
  const now = new Date().toISOString()
  const scope = claimScope(entry)
  const value = normalizedValue(entry)
+ const knowledgeClass = entry.metadata?.knowledgeClass === "VALIDATED_LEARNING"
+  ? "VALIDATED_LEARNING" as const
+  : undefined
  const claims = await listBrainMemoryClaimsDB(entry.channelId)
  const equivalent = claims.find((claim) => claim.status === "active" && claim.scope === scope && claim.category === entry.category && claim.value.toLowerCase() === value.toLowerCase())
  if (equivalent) {
-  const claim = { ...equivalent, updatedAt: now, evidence: Array.from(new Set([...equivalent.evidence, ...entry.evidence])), learningEntryIds: Array.from(new Set([...equivalent.learningEntryIds, entry.id])) }
+  const claim = {
+   ...equivalent,
+   ...(knowledgeClass ? { knowledgeClass } : {}),
+   updatedAt: now,
+   evidence: Array.from(new Set([...equivalent.evidence, ...entry.evidence])),
+   learningEntryIds: Array.from(new Set([...equivalent.learningEntryIds, entry.id])),
+  }
   await saveBrainMemoryClaimDB(claim)
   return { claim, decision: { ...decision, claimId: claim.id } }
  }
@@ -88,6 +97,7 @@ export const promoteBrainClaim = async (
  const claim: BrainMemoryClaim = {
   id: makeId("brain_claim"),
   channelId: entry.channelId,
+  ...(knowledgeClass ? { knowledgeClass } : {}),
   scope,
   category: entry.category,
   value,
