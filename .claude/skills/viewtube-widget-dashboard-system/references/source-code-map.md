@@ -123,8 +123,8 @@ These still live in the shared renderer and are migration candidates. Do not res
 - [src/services/analytics](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/services/analytics) — analytics service family; verify exact canonical owner before adding new queries.
 - [src/context/UnifiedAccountContext.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/context/UnifiedAccountContext.tsx) — unified account state used by dashboard renderer.
 - [docs/brain/ASSET_ENGINE_CANONICAL_BACKBONE.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/docs/brain/ASSET_ENGINE_CANONICAL_BACKBONE.md) — asset/package flow.
-- [docs/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/docs/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md) — AI/Brain integration reference.
-- [docs/brain/PHASE_1_CLOSEOUT_PHASE_2_START.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/docs/brain/PHASE_1_CLOSEOUT_PHASE_2_START.md) — planned evidence/context/handoff improvements.
+- [docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md) — AI/Brain integration reference.
+- [docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md) — planned evidence/context/handoff improvements.
 
 ## Testing / certification sources
 
