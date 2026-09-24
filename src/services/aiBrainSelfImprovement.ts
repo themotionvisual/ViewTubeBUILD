@@ -44,8 +44,14 @@ const confidenceRank: Record<BrainConfidenceLevel, number> = {
  high: 3,
 }
 
-const isHighEnoughForPromotion = (entry: AIBrainLearningEntry): boolean =>
- entry.confidence === "high" || entry.recurrenceCount >= 3
+const creatorConfirmedLearning = (entry: AIBrainLearningEntry): boolean =>
+ ["journal", "micro_poll"].includes(entry.source)
+ || creatorInitiatedLearning(entry.metadata)
+
+const inferredLearningReadyForPromotion = (entry: AIBrainLearningEntry): boolean =>
+ entry.recurrenceCount >= 3
+ && entry.evidence.length > 0
+ && entry.confidence !== "low"
 
 const creatorInitiatedLearning = (metadata?: Record<string, unknown>): boolean =>
  metadata?.creatorInitiated === true || metadata?.confirmed === true
@@ -173,7 +179,10 @@ export const buildAIBrainReflectionTrace = (
  const weakConfidence = entry.confidence === "low"
  const evidenceConfidence: BrainConfidenceLevel = hasEvidence ? entry.confidence : "low"
  const contradictionDecision = isCorrection ? "hold" : weakConfidence ? "ask_user" : "proceed"
- const finalDecision = isHighEnoughForPromotion(entry) && !isCorrection ? "promote" : "hold"
+ const finalDecision = !isCorrection
+  && (creatorConfirmedLearning(entry) || inferredLearningReadyForPromotion(entry))
+  ? "promote"
+  : "hold"
  const steps: AIBrainReflectionStep[] = [
   {
    id: "observation",
