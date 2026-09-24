@@ -32,3 +32,15 @@ Never infer current-main integration from PR merge state alone.
 - Later: capabilities, integrations, donors, plans and agents.
 
 Generated projections must not silently become canonical authority.
+
+
+## Commands
+
+```bash
+npm run test:ai-systems-governance
+npm run audit:ai-systems
+```
+
+The focused test specifies the health-gate behavior. The audit reads the seed system registry, checks record integrity, competing current owners and referenced repository paths, and exits non-zero on findings.
+
+Claim staleness is implemented as a pure audit primitive; wiring live claims from Herald is a later slice so this governance layer does not create a second work ledger.
