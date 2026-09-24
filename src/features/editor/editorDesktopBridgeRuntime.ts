@@ -19,25 +19,24 @@ export interface DesktopBridgeRestoreResult {
   applied: boolean;
 }
 
+function stableProjectValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stableProjectValue);
+  if (!value || typeof value !== 'object') {
+    if (typeof value === 'number' && !Number.isFinite(value)) return null;
+    return value;
+  }
+  return Object.keys(value as Record<string, unknown>)
+    .sort()
+    .reduce<Record<string, unknown>>((result, key) => {
+      const next = (value as Record<string, unknown>)[key];
+      if (typeof next !== 'undefined') result[key] = stableProjectValue(next);
+      return result;
+    }, {});
+}
+
 export function editorProjectFingerprint(project: VtE1Project | null | undefined): string {
   if (!project) return '';
-  const clips = Array.isArray(project.clips)
-    ? project.clips.map((clip) => [clip.id, clip.trackId, clip.start, clip.end, clip.sourceInSec, clip.sourceOutSec])
-    : [];
-  const transitions = Array.isArray(project.transitions)
-    ? project.transitions.map((transition) => [
-        transition.leftClipId,
-        transition.rightClipId,
-        transition.durationSec,
-        transition.nominalSeamSec,
-      ])
-    : [];
-  const record = project as DesktopProjectRecord;
-  const tracks = Array.isArray(record.tracks)
-    ? record.tracks.map((track) => [track.id, track.kind, track.muted, track.locked, track.visible])
-    : [];
-  const duration = Number(record.durationSec ?? record.meta?.durationSec ?? 0);
-  return JSON.stringify({ clips, transitions, tracks, duration });
+  return JSON.stringify(stableProjectValue(project));
 }
 
 export function publishDesktopProjectToBridge(
