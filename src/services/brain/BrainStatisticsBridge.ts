@@ -1,16 +1,45 @@
-import { getCurrentCanonicalIntelligenceEvidence } from "../analytics-canon"
-import { buildStatisticsIntelligence, type StatisticsIntelligenceSnapshot } from "./StatisticsIntelligence"
+import {
+ getCurrentCanonicalIntelligenceEvidence,
+ type CanonicalIntelligenceEvidenceBundle,
+} from "../analytics-canon"
+import {
+ buildBrainEvidenceQuality,
+ type BrainEvidenceQualityReport,
+} from "./BrainEvidenceQuality"
+import {
+ buildStatisticsIntelligence,
+ type StatisticsIntelligenceSnapshot,
+} from "./StatisticsIntelligence"
+
+export interface BrainEvidenceIntelligenceSnapshot {
+ canonicalEvidence: CanonicalIntelligenceEvidenceBundle
+ evidenceQuality: BrainEvidenceQualityReport
+ statisticsIntelligence: StatisticsIntelligenceSnapshot
+}
 
 /**
- * Canonical imperative bridge for BrainRuntime analytics evidence.
- *
- * analytics-canon owns current evidence access and normalized evidence shape;
- * Statistics Intelligence only derives deterministic summaries.
+ * Builds one canonical evidence snapshot for a Brain turn, then derives all
+ * deterministic evidence-quality/statistics projections from that same source.
  */
-export const buildBrainStatisticsIntelligence = (): StatisticsIntelligenceSnapshot => {
- const evidence = getCurrentCanonicalIntelligenceEvidence({
-  maximumRowsPerDataset: 0,
-  maximumCharacters: 12_000,
+export const buildBrainEvidenceIntelligence = (input: {
+ expectedChannelId?: string | null
+ includeAudienceRows?: boolean
+} = {}): BrainEvidenceIntelligenceSnapshot => {
+ const canonicalEvidence = getCurrentCanonicalIntelligenceEvidence({
+  maximumRowsPerDataset: input.includeAudienceRows ? 5 : 0,
+  maximumCharacters: input.includeAudienceRows ? 16_000 : 12_000,
  })
- return buildStatisticsIntelligence(evidence)
+ return {
+  canonicalEvidence,
+  evidenceQuality: buildBrainEvidenceQuality(canonicalEvidence, {
+   expectedChannelId: input.expectedChannelId,
+  }),
+  statisticsIntelligence: buildStatisticsIntelligence(canonicalEvidence),
+ }
 }
+
+/**
+ * Compatibility wrapper for existing consumers that only need statistics.
+ */
+export const buildBrainStatisticsIntelligence = (): StatisticsIntelligenceSnapshot =>
+ buildBrainEvidenceIntelligence().statisticsIntelligence
