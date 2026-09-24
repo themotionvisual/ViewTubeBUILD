@@ -398,7 +398,7 @@ export interface SubToolboxLegendTooltipItem {
   icon?: React.ReactNode
 }
 
-export interface SubToolboxLegendTooltipProps extends Omit<SubToolboxTooltipProps, "content" | "variant" | "triggerLabel"> {
+export interface SubToolboxLegendTooltipProps extends Omit<SubToolboxTooltipProps, "content" | "variant" | "triggerLabel" | "title"> {
   title?: React.ReactNode
   items: SubToolboxLegendTooltipItem[]
   note?: React.ReactNode
