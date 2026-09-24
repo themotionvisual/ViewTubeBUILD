@@ -40,6 +40,7 @@ import { buildBrainEvidenceIntelligence } from "./BrainStatisticsBridge"
 import { buildBrainAudienceIntelligence } from "./BrainAudienceBridge"
 import { readAlgorithmIntelligenceForBrain } from "./AlgorithmIntelligenceAccess"
 import { readBrainEngineControls } from "./BrainEngineControls"
+import { loadRelevantChannelKnowledge } from "./ChannelProfileAdapter"
 import {
  cacheCurrentNicheResearch,
  readCachedCurrentNicheResearch,
@@ -341,6 +342,13 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   ? await readAlgorithmIntelligenceForBrain({ channelId: input.channelId, project: engineControls.algorithmPriming ? projectContext : null }).catch(() => null)
   : null
  const algorithmIntelligence = algorithmAccess?.status === "ok" ? algorithmAccess.value : null
+ const channelKnowledge = input.channelId
+  ? await loadRelevantChannelKnowledge({
+    channelId: input.channelId,
+    query: input.userText,
+    limit: 10,
+   }).catch(() => null)
+  : null
  let nicheKnowledge: NicheKnowledgeProfile | null = null
  let currentResearch = ""
  let citations: BrainResponseCitation[] = []
@@ -354,6 +362,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   evidenceQuality,
   audienceIntelligence,
   algorithmIntelligence,
+  channelKnowledge,
  })
  try {
   if (capabilities.some((capability) => capability.id === "niche-knowledge")) {
@@ -395,6 +404,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    evidenceQuality,
    audienceIntelligence,
    algorithmIntelligence,
+   channelKnowledge,
   })
 
   let response = buildFallback(input.userText, input.snapshot, input.growthContext)
