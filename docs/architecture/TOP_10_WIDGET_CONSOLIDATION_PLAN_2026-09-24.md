@@ -105,9 +105,14 @@ Status: active implementation.
 - remaining Wave 5 work: replace simple normalized request grouping with canonical comment/request intelligence when that service is connected, persist promoted request packets, and connect persisted series records when available.
 
 ### Wave 6 — Publishing command consolidation
-- audit `flight-check`, `upload-scheduler`, Content Pipeline, Video Publisher, Publishing Schedule Architect;
-- assign each publishing function to one owner;
-- merge launch readiness and command functions without parallel cards.
+Status: active implementation.
+- `flight-check` is the compact Publishing Command dashboard owner because it already represents launch preflight/readiness.
+- `upload-scheduler` remains upload-time/schedule queue owner; it is not duplicated inside Publishing Command.
+- Video Publisher remains execution owner for package generation, upload and publish transactions.
+- Publishing Schedule Architect remains deeper schedule/planning owner.
+- Flight Check now reads canonical Publishing Package + PublishTransaction state when available and renders PACKAGE / CHECK / SCHEDULE / READY / LIVE stages, blockers, readiness, transaction status, Publisher handoff and Schedule Architect handoff.
+- the previous manual checklist remains only as fallback when no canonical Publishing Package is available.
+- remaining Wave 6 work: reconcile Upload Scheduler's local queue/file state with canonical Projects/ContentBuild scheduling and remove authored black/inline legacy styling from that separate widget without conflating ownership.
 
 ### Wave 7 — certification
 For every resulting canonical widget:
