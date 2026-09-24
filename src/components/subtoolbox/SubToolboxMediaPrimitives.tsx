@@ -369,7 +369,7 @@ export const SubToolboxMediaTransportBar: React.FC<SubToolboxMediaTransportBarPr
   </div>
 )
 
-export interface SubToolboxMediaPlayerProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SubToolboxMediaPlayerProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   level?: ToolboxControlLevel
   src?: string
   poster?: string
@@ -565,7 +565,7 @@ export const SubToolboxMediaQueue: React.FC<SubToolboxMediaQueueProps> = ({
   </div>
 )
 
-export interface SubToolboxMediaInspectorProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SubToolboxMediaInspectorProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   level?: ToolboxControlLevel
   title: React.ReactNode
   poster?: string
@@ -600,7 +600,7 @@ export const SubToolboxMediaInspector: React.FC<SubToolboxMediaInspectorProps> =
   </div>
 )
 
-export interface SubToolboxMediaReviewPanelProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SubToolboxMediaReviewPanelProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   level?: ToolboxControlLevel
   title?: React.ReactNode
   player: React.ReactNode
