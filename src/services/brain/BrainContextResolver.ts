@@ -1,6 +1,5 @@
 import type { AIBrainEvidenceIntent, CreatorBrainResponse } from "../../types"
 import type {
- BrainCreatorAssetKind,
  BrainTaskProfile,
  BrainTaskProfileId,
 } from "./BrainTaskProfileRegistry"
@@ -49,7 +48,7 @@ const maximumCharactersFor = (task: BrainTaskProfile): number => {
 }
 
 const outputKindsFor = (task: BrainTaskProfile): string[] => {
- if (task.assetKind) return [task.assetKind satisfies BrainCreatorAssetKind]
+ if (task.assetKind) return [task.assetKind]
  return [task.answerMode]
 }
 
