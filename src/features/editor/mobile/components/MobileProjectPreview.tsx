@@ -5,26 +5,48 @@ import {resolveClipPreviewGeometry} from './mobilePreviewGeometry';
 import {expandCompoundClips} from '../../../../shared/vtE1CompoundClips.js';
 import {buildVtE1Filter,resolveVtE1FxOpacity} from '../../../../shared/vtE1FxCatalog.js';
 import {sortVtE1Tracks,vtE1MediaCropStyle} from '../../../../shared/vtE1VisualFrame.js';
+import {resolveVtE1AudioFrame} from '../../../../shared/vtE1AudioFrame.js';
 
 const clamp=(v:number,min:number,max:number)=>Math.min(max,Math.max(min,v));
 const isVideo=(src:string)=>/\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(src);
 
-function VideoPreview({src,clip,playheadSec,playing,playbackRate,payload}:{src:string;clip:VtE1Clip;playheadSec:number;playing:boolean;playbackRate:number;payload:Record<string,unknown>}){
+function VideoPreview({src,clip,playheadSec,playing,playbackRate,payload,trackMuted}:{src:string;clip:VtE1Clip;playheadSec:number;playing:boolean;playbackRate:number;payload:Record<string,unknown>;trackMuted:boolean}){
   const ref=React.useRef<HTMLVideoElement>(null);
   const cropStyle=vtE1MediaCropStyle(clip);
+  const localSec=Math.max(0,playheadSec-clip.start);
+  const audioFrame=resolveVtE1AudioFrame(payload,clip,localSec,Math.max(.001,clip.end-clip.start),trackMuted);
   React.useEffect(()=>{
     const el=ref.current;if(!el)return;
     const sourceIn=Number(clip.sourceInSec??0);
-    const target=Math.max(0,sourceIn+Math.max(0,playheadSec-clip.start));
+    const target=Math.max(0,sourceIn+(Math.max(0,playheadSec-clip.start)*audioFrame.playbackRate));
     if(!playing||Math.abs((el.currentTime||0)-target)>.35){
       try{el.currentTime=target}catch{}
     }
-    el.playbackRate=Math.max(.1,Math.min(4,playbackRate));
-    el.muted=Boolean(payload.muted);
-    el.volume=clamp(Number(payload.volume??1),0,1);
+    el.playbackRate=Math.max(.1,Math.min(4,playbackRate*audioFrame.playbackRate));
+    el.muted=audioFrame.muted;
+    el.volume=clamp(audioFrame.volume,0,1);
     if(playing){void el.play().catch(()=>{})}else el.pause();
-  },[src,clip.start,clip.sourceInSec,playheadSec,playing,playbackRate,payload.muted,payload.volume]);
+  },[src,clip.start,clip.sourceInSec,playheadSec,playing,playbackRate,audioFrame.playbackRate,audioFrame.muted,audioFrame.volume]);
   return <video ref={ref} src={src} playsInline preload="metadata" style={{width:'100%',height:'100%',objectFit:String(payload.fit||'cover') as React.CSSProperties['objectFit'],display:'block',...cropStyle}}/>;
+}
+
+function AudioPreview({src,clip,playheadSec,playing,playbackRate,payload,trackMuted}:{src:string;clip:VtE1Clip;playheadSec:number;playing:boolean;playbackRate:number;payload:Record<string,unknown>;trackMuted:boolean}){
+  const ref=React.useRef<HTMLAudioElement>(null);
+  const localSec=Math.max(0,playheadSec-clip.start);
+  const audioFrame=resolveVtE1AudioFrame(payload,clip,localSec,Math.max(.001,clip.end-clip.start),trackMuted);
+  React.useEffect(()=>{
+    const el=ref.current;if(!el)return;
+    const sourceIn=Number(clip.sourceInSec??0);
+    const target=Math.max(0,sourceIn+(Math.max(0,playheadSec-clip.start)*audioFrame.playbackRate));
+    if(!playing||Math.abs((el.currentTime||0)-target)>.35){
+      try{el.currentTime=target}catch{}
+    }
+    el.playbackRate=Math.max(.1,Math.min(4,playbackRate*audioFrame.playbackRate));
+    el.muted=audioFrame.muted;
+    el.volume=clamp(audioFrame.volume,0,1);
+    if(playing){void el.play().catch(()=>{})}else el.pause();
+  },[src,clip.start,clip.sourceInSec,playheadSec,playing,playbackRate,audioFrame.playbackRate,audioFrame.muted,audioFrame.volume]);
+  return <audio ref={ref} src={src} preload="metadata" style={{display:'none'}}/>;
 }
 
 export const MobileProjectPreview:React.FC<{store:EditorStore}>=({store})=>{
@@ -62,7 +84,8 @@ export const MobileProjectPreview:React.FC<{store:EditorStore}>=({store})=>{
         placeItems:'center',
       };
       const src=String(payload.mediaUrl??payload.src??payload.url??'');
-      if(type==='audio')return null;
+      const trackMuted=Boolean(store.trackById(clip.trackId)?.muted);
+      if(type==='audio')return src?<AudioPreview key={clip.id} src={src} clip={clip} playheadSec={state.playheadSec} playing={state.playing} playbackRate={state.playbackRate} payload={payload} trackMuted={trackMuted}/>:null;
       if(type==='text'||payload.text)return <div key={clip.id} style={style}><div style={{
         width:'100%',color:String(payload.fillColor??payload.fill??'#fff'),
         fontFamily:String(payload.fontFamily??'Arial Black, Arial, sans-serif'),
@@ -78,7 +101,7 @@ export const MobileProjectPreview:React.FC<{store:EditorStore}>=({store})=>{
         borderRadius:String(payload.shape)==='circle'?'50%':Math.max(0,Number(payload.cornerRadius??0)),
       }}/></div>;
       if(src)return <div key={clip.id} style={style}>{isVideo(src)||String(payload.mediaKind??'')==='video'
-        ?<VideoPreview src={src} clip={clip} playheadSec={state.playheadSec} playing={state.playing} playbackRate={state.playbackRate} payload={payload}/>
+        ?<VideoPreview src={src} clip={clip} playheadSec={state.playheadSec} playing={state.playing} playbackRate={state.playbackRate} payload={payload} trackMuted={trackMuted}/>
         :<img alt="" src={src} draggable={false} style={{width:'100%',height:'100%',objectFit:String(payload.fit||'cover') as React.CSSProperties['objectFit'],display:'block',...vtE1MediaCropStyle(clip)}}/>
       }</div>;
       return <div key={clip.id} style={{...style,border:'1px dashed rgba(255,255,255,.35)',color:'#fff',fontSize:10,fontWeight:900}}>{String(clip.id).slice(0,18)}</div>;
