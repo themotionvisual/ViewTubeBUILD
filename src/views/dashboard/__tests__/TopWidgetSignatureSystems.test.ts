@@ -51,6 +51,12 @@ describe("Top widget signature systems", () => {
     expect(source).toContain("<WidgetSizedButton")
   })
 
+  it("registry names flight-check as Publishing Command", () => {
+    const registry = read("src/views/dashboard/WidgetRegistryBase.ts")
+    expect(registry).toContain('id: "flight-check"')
+    expect(registry).toContain('title: "Publishing Command"')
+  })
+
   it("Flight Check owns a launch gantry when canonical publishing state exists", () => {
     const source = read("src/views/dashboard/widgets/FlightCheckWidget.tsx")
     expect(source).toContain("LaunchGantry")
