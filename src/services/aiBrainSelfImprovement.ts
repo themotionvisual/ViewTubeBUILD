@@ -386,6 +386,7 @@ export const teachAIBrainExplicitly = async (input: {
  detail?: string
  category?: AIBrainLearningCategory
  evidence?: string[]
+ metadata?: Record<string, unknown>
 }) => {
  const controls = readBrainUserControls(input.channelId)
  if (!controls.enabled || !controls.personalization) {
@@ -399,7 +400,7 @@ export const teachAIBrainExplicitly = async (input: {
   category: input.category,
   confidence: "high",
   evidence: input.evidence,
-  metadata: { confirmed: true, creatorInitiated: true },
+  metadata: { ...(input.metadata || {}), confirmed: true, creatorInitiated: true },
  })
  const promotion = await promoteAIBrainLearning(entry)
  return { entry, promotion }
