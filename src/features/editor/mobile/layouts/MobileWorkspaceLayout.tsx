@@ -1,4 +1,4 @@
-import React,{useEffect,useMemo,useRef,useState} from 'react';
+import React,{useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {
   Activity,CircleHelp,Command,Combine,Copy,EyeOff,Focus,Group,LayoutTemplate,LockKeyhole,Map as MapIcon,
   Maximize2,PanelRight,Redo2,Rows3,ScanSearch,Scissors,Trash2,Type,Undo2,Ungroup,VolumeX,Zap,
@@ -108,7 +108,29 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const[showCommands,setShowCommands]=useState(false);
   const previewPress=useRef<{pointerId:number;x:number;y:number;timer:number|null}|null>(null);
 
-  const containerHeight=height??(typeof window!=='undefined'?window.innerHeight:(orientation==='portrait'?800:480));
+  // The editor is nested inside the app shell. On iOS the shell's CSS viewport
+  // and window.innerHeight can disagree as Safari's bars expand or collapse.
+  // Size the rows from the space the shell actually gives this element.
+  const[measuredHeight,setMeasuredHeight]=useState(0);
+  useLayoutEffect(()=>{
+    const node=rootRef.current;
+    if(!node)return;
+    const measure=()=>setMeasuredHeight(current=>{
+      const next=node.getBoundingClientRect().height;
+      return next>0&&Math.abs(current-next)>.5?next:current;
+    });
+    measure();
+    if(typeof ResizeObserver==='undefined'){
+      window.addEventListener('resize',measure);
+      return()=>window.removeEventListener('resize',measure);
+    }
+    const observer=new ResizeObserver(measure);
+    observer.observe(node);
+    return()=>observer.disconnect();
+  },[]);
+  const containerHeight=measuredHeight||height||(
+    typeof window!=='undefined'?window.innerHeight:(orientation==='portrait'?800:480)
+  );
   const isPortraitVideo=compositionAspect<1;
   const[prefs,patchPrefs]=useMobileWorkspacePreferences(orientation,isPortraitVideo);
   const showTimeline=prefs.showTimeline;
@@ -133,7 +155,11 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
   const effectiveTimelineScale=moduleDraggingEnabled?prefs.timelineScale:1;
   const actionHeight=showActionLabels?40:34;
   const timelineCoreHeight=timelinePreferredHeight(Math.max(1,store.state.project.tracks.length))*effectiveTimelineScale;
-  const timelineHeight=Math.min(timelineCoreHeight+actionHeight+(showMap?MAP_HEIGHT:0)+4,Math.max(132,containerHeight*.58));
+  const timelineHeight=Math.min(
+    timelineCoreHeight+actionHeight+(showMap?MAP_HEIGHT:0)+4,
+    Math.max(0,containerHeight-NAV_ROW_HEIGHT-120),
+    containerHeight*.58,
+  );
 
   const selectionKey=`${store.state.selection.clipIds.join(',')}|${store.state.selection.trackId??''}|${store.state.selection.transitionId??''}`;
   useEffect(()=>{
@@ -479,7 +505,7 @@ export const MobileWorkspaceLayout:React.FC<MobileWorkspaceLayoutProps>=({
     data-timeline-visible={showTimeline?'true':'false'}
     data-map-visible={showMap?'true':'false'}
     style={{
-      position:'relative',width:'100%',height:containerHeight,maxWidth:'100%',maxHeight:'100%',
+      position:'relative',width:'100%',height:'100%',maxWidth:'100%',maxHeight:'100%',
       minWidth:0,minHeight:0,background:'#f3f3f3',color:'#000',display:'grid',gap:4,
       padding:4,paddingBottom:6,boxSizing:'border-box',overflow:'hidden',touchAction:'manipulation',
       WebkitTapHighlightColor:'transparent',
