@@ -14,6 +14,37 @@ describe("settings control deck", () => {
     expect(resolveSettingsPanel(null)).toBe("overview")
   })
 
+  it("preserves every public settings panel alias used by deep links", () => {
+    const aliases = {
+      overview: "overview",
+      account: "account",
+      profile: "account",
+      connections: "account",
+      ai: "ai",
+      "ai-brain-context": "ai",
+      "api-keys": "ai",
+      widgets: "widgets",
+      "dashboard-widgets": "widgets",
+      dashboard: "widgets",
+      experience: "experience",
+      usability: "experience",
+      navigation: "experience",
+      workspace: "experience",
+      billing: "billing",
+      "billing-meter": "billing",
+      data: "data",
+      "workspace-data": "data",
+      privacy: "data",
+      help: "help",
+      "help-policies": "help",
+      "guide-protocols": "help",
+    } as const
+
+    for (const [alias, panel] of Object.entries(aliases)) {
+      expect(resolveSettingsPanel(alias)).toBe(panel)
+    }
+  })
+
   it("prioritizes account and channel recovery before optional setup", () => {
     const anonymous = resolveSettingsReadiness(ANONYMOUS_ACCOUNT_SNAPSHOT, false, false)
     expect(anonymous.nextPanel).toBe("account")

@@ -2,22 +2,29 @@ import React, { useSyncExternalStore } from "react"
 import {
   ArrowLeftRight,
   Clock3,
-  Eraser,
-  PanelLeft,
-  PanelTop,
-  Star,
   Command,
+  Eraser,
   History,
   Keyboard,
   LayoutPanelTop,
   Navigation,
-  PanelTopClose,
+  PanelLeft,
+  PanelTop,
   PanelsTopLeft,
   Save,
   Search,
   Smartphone,
+  Star,
   StickyNote,
 } from "lucide-react"
+import { SubToolbox } from "../../components/Toolbox"
+import { SubToolboxStack } from "../../components/subtoolbox/SubToolboxLayouts"
+import {
+  SubToolboxAlert,
+  SubToolboxButton,
+  SubToolboxSegmentedToggle,
+  SubToolboxSettingsSwitch,
+} from "../../components/subtoolbox/SubToolboxPrimitives"
 import { useWorkspaceUxPreferences } from "../../hooks/useWorkspaceUxPreferences"
 import {
   setWorkspaceUxToggle,
@@ -54,26 +61,26 @@ const MOBILE_ITEMS: PreferenceItem[] = [
   {
     key: "mobileCompactTopBar",
     title: "Compact mobile top bar",
-    description: "Uses the shorter mobile navigation bar so more of the active tool stays visible.",
-    icon: <PanelTopClose size={21} />,
+    description: "Keep more of the active tool visible.",
+    icon: <PanelTop size={20} />,
   },
   {
     key: "mobileNavigationAutoHide",
     title: "Auto-hide mobile navigation",
-    description: "Hides the top navigation while scrolling down and reveals it when scrolling back up.",
-    icon: <LayoutPanelTop size={21} />,
+    description: "Hide navigation while scrolling down; reveal it when scrolling up.",
+    icon: <LayoutPanelTop size={20} />,
   },
   {
     key: "edgeSwipeNavigation",
     title: "Edge-swipe navigation",
-    description: "Swipe inward from the left or right screen edge to move between primary ViewTube sections.",
-    icon: <ArrowLeftRight size={21} />,
+    description: "Swipe from a screen edge to move between primary sections.",
+    icon: <ArrowLeftRight size={20} />,
   },
   {
     key: "thumbZoneShortcuts",
     title: "Thumb-zone shortcuts",
-    description: "Shows a compact bottom control for previous section, navigation menu, and next section.",
-    icon: <Navigation size={21} />,
+    description: "Show compact previous, menu and next controls near the thumb zone.",
+    icon: <Navigation size={20} />,
   },
 ]
 
@@ -81,218 +88,102 @@ const CONTINUITY_ITEMS: PreferenceItem[] = [
   {
     key: "preserveOrientationPosition",
     title: "Preserve position on rotation",
-    description: "Keeps the same visible module in view when switching between portrait and landscape.",
-    icon: <Smartphone size={21} />,
+    description: "Keep the same visible module when portrait and landscape change.",
+    icon: <Smartphone size={20} />,
   },
   {
     key: "preservePagePosition",
     title: "Remember page position",
-    description: "Each page remembers its own scroll position when you leave and return.",
-    icon: <Save size={21} />,
+    description: "Restore each page to the scroll position you left.",
+    icon: <Save size={20} />,
   },
   {
     key: "stickyModuleHeaders",
     title: "Sticky module headers",
-    description: "Keeps toolbox and subtoolbox headers reachable while scrolling through long tools.",
-    icon: <StickyNote size={21} />,
+    description: "Keep toolbox headers reachable while long tools scroll.",
+    icon: <StickyNote size={20} />,
   },
   {
     key: "keyboardPositionRestore",
     title: "Restore position after keyboard",
-    description: "On mobile, closing the on-screen keyboard returns the workspace to its pre-keyboard position.",
-    icon: <Keyboard size={21} />,
+    description: "Return mobile workspaces to their pre-keyboard position.",
+    icon: <Keyboard size={20} />,
   },
   {
     key: "rememberToolboxState",
     title: "Remember toolbox state",
-    description: "Toolboxes and subtoolboxes reopen in the same expanded or collapsed state you left them.",
-    icon: <PanelsTopLeft size={21} />,
+    description: "Reopen toolboxes and subtoolboxes in their previous state.",
+    icon: <PanelsTopLeft size={20} />,
   },
 ]
 
 const DESKTOP_ITEMS: PreferenceItem[] = [
   {
-    key: "globalQuickSwitcher",
-    title: "Global quick switcher",
-    description: "Show the global destination launcher and open it anywhere with Command/Ctrl + K.",
-    icon: <Search size={21} />,
-  },
-  {
-    key: "rememberRecentDestinations",
-    title: "Remember recent destinations",
-    description: "Keep a short local history of recently opened ViewTube pages inside the quick switcher.",
-    icon: <Clock3 size={21} />,
-  },
-  {
     key: "restoreLastWorkspace",
     title: "Restore last workspace",
-    description: "When ViewTube opens at the Dashboard, return to the last Studio, Projects, Brain, Analytics, or Editor workspace you were using.",
-    icon: <History size={21} />,
+    description: "Return from Dashboard to the last creator workspace you used.",
+    icon: <History size={20} />,
   },
   {
     key: "desktopKeyboardNavigation",
     title: "Desktop keyboard navigation",
-    description: "Use Command/Ctrl + Shift + 1–8 to jump directly between ViewTube's primary sections.",
-    icon: <Command size={21} />,
+    description: "Use Command/Ctrl + Shift + 1–8 for primary ViewTube sections.",
+    icon: <Command size={20} />,
   },
 ]
 
-const NAV_LAYOUT_OPTIONS: Array<{
-  value: NavigationLayout
-  label: string
-  description: string
-  icon: React.ReactNode
-}> = [
+const QUICK_SWITCHER_ITEMS: PreferenceItem[] = [
   {
-    value: "top",
-    label: "Top Bar",
-    description: "Horizontal navigation across the top.",
-    icon: <PanelTop size={22} />,
+    key: "globalQuickSwitcher",
+    title: "Global quick switcher",
+    description: "Open destination search anywhere with Command/Ctrl + K.",
+    icon: <Search size={20} />,
   },
   {
-    value: "wide",
-    label: "Wide Sidebar",
-    description: "Full sidebar with labels and account controls.",
-    icon: <PanelLeft size={22} />,
-  },
-  {
-    value: "thin",
-    label: "Thin Sidebar",
-    description: "Narrower labeled sidebar for more canvas room.",
-    icon: <PanelsTopLeft size={22} />,
-  },
-  {
-    value: "rail",
-    label: "Icon Rail",
-    description: "Compact icon-only rail with maximum workspace width.",
-    icon: <Navigation size={22} />,
+    key: "rememberRecentDestinations",
+    title: "Remember recent destinations",
+    description: "Keep a short local history inside Quick Switcher.",
+    icon: <Clock3 size={20} />,
   },
 ]
 
-const NavigationLayoutPreference: React.FC<{ value: NavigationLayout }> = ({ value }) => (
-  <section className="overflow-hidden rounded-[20px] border-[4px] border-black bg-white shadow-[7px_7px_0_0_#36E0F6]">
-    <header className="border-b-[4px] border-black bg-[#36E0F6] p-5">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-black/60">Desktop navigation</p>
-      <h2 className="mt-1 text-3xl font-[1000] uppercase tracking-[-0.05em]">Navigation layout</h2>
-      <p className="mt-2 max-w-3xl text-sm font-bold leading-6 text-black/65">
-        Choose the desktop navigation arrangement ViewTube should use. Changes apply immediately and persist for future sessions.
-      </p>
-    </header>
-    <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4 md:p-5">
-      {NAV_LAYOUT_OPTIONS.map((option) => {
-        const selected = option.value === value
-        return (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={selected}
-            onClick={() => setNavigationLayoutPreference(option.value)}
-            className={`grid min-h-[118px] grid-cols-[42px_minmax(0,1fr)] items-start gap-3 rounded-xl border-[3px] border-black p-3 text-left shadow-[3px_3px_0_0_#000] transition-transform hover:translate-x-[1px] hover:translate-y-[1px] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 ${selected ? "bg-[#CCFF00]" : "bg-white"}`}
-          >
-            <span className="grid size-[42px] place-items-center rounded-lg border-[3px] border-black bg-white" aria-hidden="true">
-              {option.icon}
-            </span>
-            <span className="min-w-0">
-              <strong className="block text-sm font-[1000] uppercase tracking-[-0.03em]">{option.label}</strong>
-              <span className="mt-1 block text-xs font-bold leading-5 text-black/60">{option.description}</span>
-              <span className="mt-3 inline-block rounded-md border-2 border-black bg-white px-2 py-1 text-[9px] font-black uppercase">
-                {selected ? "Current" : "Use layout"}
-              </span>
-            </span>
-          </button>
-        )
-      })}
-    </div>
-  </section>
+const NAV_LAYOUT_OPTIONS: Array<{ value: NavigationLayout; label: string }> = [
+  { value: "top", label: "Top" },
+  { value: "wide", label: "Wide" },
+  { value: "thin", label: "Thin" },
+  { value: "rail", label: "Rail" },
+]
+
+const PreferenceRow: React.FC<{
+  item: PreferenceItem
+  enabled: boolean
+}> = ({ item, enabled }) => (
+  <SubToolboxAlert
+    level="l1"
+    tone="info"
+    icon={item.icon}
+    title={item.title}
+    detail={item.description}
+    action={
+      <SubToolboxSettingsSwitch
+        level="l1"
+        pressed={enabled}
+        aria-label={`${enabled ? "Disable" : "Enable"} ${item.title}`}
+        onClick={() => setWorkspaceUxToggle(item.key, !enabled)}
+      />
+    }
+  />
 )
 
-const NavigationDataControls: React.FC<{
-  recentCount: number
-  pinnedCount: number
-}> = ({ recentCount, pinnedCount }) => (
-  <section className="overflow-hidden rounded-[20px] border-[4px] border-black bg-white shadow-[7px_7px_0_0_#FFDA47]">
-    <header className="border-b-[4px] border-black bg-[#FFDA47] p-5">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-black/60">Navigation data</p>
-      <h2 className="mt-1 text-3xl font-[1000] uppercase tracking-[-0.05em]">Recent + pinned</h2>
-      <p className="mt-2 max-w-3xl text-sm font-bold leading-6 text-black/65">
-        Manage only the local convenience data used by the Quick Switcher. These actions do not affect projects, account data, or analytics.
-      </p>
-    </header>
-    <div className="grid gap-3 p-4 md:grid-cols-2 md:p-5">
-      <button
-        type="button"
-        disabled={!recentCount}
-        onClick={clearRecentDestinations}
-        className="grid min-h-[92px] grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border-[3px] border-black bg-white p-3 text-left shadow-[3px_3px_0_0_#000] disabled:cursor-not-allowed disabled:opacity-45"
-      >
-        <span className="grid size-11 place-items-center rounded-lg border-[3px] border-black bg-[#f3f4f6]" aria-hidden="true"><Eraser size={21} /></span>
-        <span>
-          <strong className="block text-sm font-[1000] uppercase">Clear recent history</strong>
-          <span className="mt-1 block text-xs font-bold text-black/60">Remove recently opened destinations from Quick Switcher.</span>
-        </span>
-        <span className="rounded-md border-2 border-black px-2 py-1 text-[10px] font-black">{recentCount}</span>
-      </button>
-      <button
-        type="button"
-        disabled={!pinnedCount}
-        onClick={clearPinnedDestinations}
-        className="grid min-h-[92px] grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border-[3px] border-black bg-white p-3 text-left shadow-[3px_3px_0_0_#000] disabled:cursor-not-allowed disabled:opacity-45"
-      >
-        <span className="grid size-11 place-items-center rounded-lg border-[3px] border-black bg-[#f3f4f6]" aria-hidden="true"><Star size={21} /></span>
-        <span>
-          <strong className="block text-sm font-[1000] uppercase">Clear pinned destinations</strong>
-          <span className="mt-1 block text-xs font-bold text-black/60">Remove all Quick Switcher favorites; pages themselves are unchanged.</span>
-        </span>
-        <span className="rounded-md border-2 border-black px-2 py-1 text-[10px] font-black">{pinnedCount}</span>
-      </button>
-    </div>
-  </section>
-)
-
-const ToggleRow: React.FC<{ item: PreferenceItem; enabled: boolean }> = ({ item, enabled }) => (
-  <button
-    type="button"
-    role="switch"
-    aria-checked={enabled}
-    onClick={() => setWorkspaceUxToggle(item.key, !enabled)}
-    className="grid w-full grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border-[3px] border-black bg-white p-3 text-left shadow-[3px_3px_0_0_#000] transition-transform hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_0_#000] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2"
-  >
-    <span className="grid size-11 place-items-center rounded-lg border-[3px] border-black bg-[#f3f4f6]" aria-hidden="true">
-      {item.icon}
-    </span>
-    <span className="min-w-0">
-      <strong className="block text-sm font-[1000] uppercase tracking-[-0.02em]">{item.title}</strong>
-      <span className="mt-1 block text-xs font-bold leading-5 text-black/60">{item.description}</span>
-    </span>
-    <span
-      className={`relative h-8 w-14 rounded-full border-[3px] border-black transition-colors ${enabled ? "bg-[#CCFF00]" : "bg-[#e6e8ec]"}`}
-      aria-hidden="true"
-    >
-      <span className={`absolute top-1/2 size-5 -translate-y-1/2 rounded-full border-[2px] border-black bg-white transition-[left] ${enabled ? "left-7" : "left-1"}`} />
-    </span>
-  </button>
-)
-
-const PreferenceGroup: React.FC<{
-  eyebrow: string
-  title: string
-  description: string
-  accent: string
+const PreferenceRows: React.FC<{
   items: PreferenceItem[]
   values: ReturnType<typeof useWorkspaceUxPreferences>
-}> = ({ eyebrow, title, description, accent, items, values }) => (
-  <section className="overflow-hidden rounded-[20px] border-[4px] border-black bg-white shadow-[7px_7px_0_0_var(--vt-settings-accent)]" style={{ "--vt-settings-accent": accent } as React.CSSProperties}>
-    <header className="border-b-[4px] border-black p-5" style={{ backgroundColor: accent }}>
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-black/60">{eyebrow}</p>
-      <h2 className="mt-1 text-3xl font-[1000] uppercase tracking-[-0.05em]">{title}</h2>
-      <p className="mt-2 max-w-3xl text-sm font-bold leading-6 text-black/65">{description}</p>
-    </header>
-    <div className="grid gap-3 p-4 md:p-5">
-      {items.map((item) => (
-        <ToggleRow key={item.key} item={item} enabled={values[item.key]} />
-      ))}
-    </div>
-  </section>
+}> = ({ items, values }) => (
+  <SubToolboxStack density="dense">
+    {items.map((item) => (
+      <PreferenceRow key={item.key} item={item} enabled={values[item.key]} />
+    ))}
+  </SubToolboxStack>
 )
 
 export const WorkspaceExperienceSettingsSection: React.FC = () => {
@@ -314,36 +205,102 @@ export const WorkspaceExperienceSettingsSection: React.FC = () => {
   )
 
   return (
-    <div className="grid gap-6">
-      <NavigationLayoutPreference value={navigationLayout} />
-      <NavigationDataControls
-        recentCount={recentDestinations.length}
-        pinnedCount={pinnedDestinations.length}
-      />
-      <PreferenceGroup
-        eyebrow="Mobile behavior"
-        title="Mobile navigation"
-        description="Control how ViewTube uses limited phone space. These options change navigation behavior without changing your projects or data."
-        accent="#40C6E9"
-        items={MOBILE_ITEMS}
-        values={preferences}
-      />
-      <PreferenceGroup
-        eyebrow="Workspace continuity"
-        title="Position + focus"
-        description="Choose which parts of the workspace remember where you were as you rotate, navigate, type, and move between tools."
-        accent="#CCFF00"
-        items={CONTINUITY_ITEMS}
-        values={preferences}
-      />
-      <PreferenceGroup
-        eyebrow="Desktop behavior"
-        title="Fast navigation"
-        description="Optional shortcuts that make returning to work and moving around ViewTube faster on a keyboard-and-pointer setup."
-        accent="#FF83EA"
-        items={DESKTOP_ITEMS}
-        values={preferences}
-      />
+    <div className="grid gap-3">
+      <SubToolbox
+        title="Mobile Navigation"
+        icon={<Smartphone />}
+        paletteIndex={4}
+        collapsible
+        isOpenInitial
+        persistenceId="settings-experience-mobile-navigation"
+        helpText="Phone navigation controls that save screen space without changing projects or data."
+      >
+        <PreferenceRows items={MOBILE_ITEMS} values={preferences} />
+      </SubToolbox>
+
+      <SubToolbox
+        title="Workspace Continuity"
+        icon={<Save />}
+        paletteIndex={5}
+        collapsible
+        isOpenInitial
+        persistenceId="settings-experience-continuity"
+        helpText="Choose which parts of the workspace remember position, focus and open state."
+      >
+        <PreferenceRows items={CONTINUITY_ITEMS} values={preferences} />
+      </SubToolbox>
+
+      <SubToolbox
+        title="Desktop Navigation"
+        icon={<PanelLeft />}
+        paletteIndex={6}
+        collapsible
+        isOpenInitial
+        persistenceId="settings-experience-desktop-navigation"
+        helpText="Choose the desktop navigation arrangement and optional keyboard behavior."
+      >
+        <SubToolboxStack density="dense">
+          <SubToolboxSegmentedToggle
+            level="l1"
+            ariaLabel="Desktop navigation layout"
+            value={navigationLayout}
+            options={NAV_LAYOUT_OPTIONS}
+            onValueChange={(value) => setNavigationLayoutPreference(value as NavigationLayout)}
+            style={{ ["--vt-segment-count" as string]: NAV_LAYOUT_OPTIONS.length } as React.CSSProperties}
+          />
+          <PreferenceRows items={DESKTOP_ITEMS} values={preferences} />
+        </SubToolboxStack>
+      </SubToolbox>
+
+      <SubToolbox
+        title="Quick Switcher"
+        icon={<Search />}
+        paletteIndex={7}
+        collapsible
+        isOpenInitial
+        persistenceId="settings-experience-quick-switcher"
+        helpText="Control global destination search plus its local recent and pinned convenience data."
+      >
+        <SubToolboxStack density="dense">
+          <PreferenceRows items={QUICK_SWITCHER_ITEMS} values={preferences} />
+          <SubToolboxAlert
+            level="l1"
+            tone="warning"
+            icon={<Eraser size={20} />}
+            title="Clear recent history"
+            detail={`${recentDestinations.length} recent destination${recentDestinations.length === 1 ? "" : "s"} stored locally.`}
+            action={
+              <SubToolboxButton
+                level="l2"
+                size="compact"
+                tone="warning"
+                disabled={!recentDestinations.length}
+                onClick={clearRecentDestinations}
+              >
+                Clear
+              </SubToolboxButton>
+            }
+          />
+          <SubToolboxAlert
+            level="l1"
+            tone="warning"
+            icon={<Star size={20} />}
+            title="Clear pinned destinations"
+            detail={`${pinnedDestinations.length} pinned destination${pinnedDestinations.length === 1 ? "" : "s"} stored locally.`}
+            action={
+              <SubToolboxButton
+                level="l2"
+                size="compact"
+                tone="warning"
+                disabled={!pinnedDestinations.length}
+                onClick={clearPinnedDestinations}
+              >
+                Clear
+              </SubToolboxButton>
+            }
+          />
+        </SubToolboxStack>
+      </SubToolbox>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
-import { Check, Settings as SettingsIcon, ShieldCheck, X } from "lucide-react"
+import { Check, ShieldCheck, X } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useBrain } from "../context/useBrain"
 import { useUnifiedAccount } from "../context/UnifiedAccountContext"
@@ -29,6 +29,7 @@ import {
 import { resolvePublicChannel } from "../services/publicHandleMode"
 import type { SubscriptionPlanId } from "../services/subscriptionPlans"
 import { SettingsHelpSection } from "./settings/SettingsHelpSection"
+import { SettingsWorkspace } from "./settings/SettingsWorkspace"
 import { DashboardWidgetsSettingsSection } from "./settings/DashboardWidgetsSettingsSection"
 import { UnifiedAccountSettingsSection } from "./settings/UnifiedAccountSettingsSection"
 import {
@@ -302,22 +303,12 @@ const Settings: React.FC = () => {
   const confirmationReady = confirmationText.trim().toUpperCase() === confirmationRequiredText
 
   return (
-    <div className="mx-auto flex max-w-[1600px] flex-col gap-8 px-4 pb-32 animate-fade-in">
-      <header className="overflow-hidden rounded-[24px] border-[5px] border-black bg-[#111] text-white shadow-[12px_12px_0_0_#FF4FD8]">
-        <div className="grid gap-6 p-6 md:p-8 xl:grid-cols-[1fr_auto] xl:items-end">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-[#CCFF00]">Creator control deck</p>
-            <h1 className="mt-3 text-5xl font-[1000] uppercase leading-[0.9] tracking-[-0.06em] md:text-7xl">Settings</h1>
-            <p className="mt-4 max-w-3xl text-sm font-bold leading-6 text-white/65">Account, YouTube, AI, billing, analytics sources, privacy, and recovery—organized around the next action that matters.</p>
-          </div>
-          <div className="grid min-w-[240px] gap-3 rounded-2xl border-[3px] border-white/25 bg-white/5 p-4">
-            <div className="flex items-center justify-between gap-4"><span className="text-xs font-black uppercase tracking-[0.14em] text-white/55">System readiness</span><span className="text-3xl font-[1000] text-[#CCFF00]">{readiness.completed}/{readiness.items.length}</span></div>
-            <div role="progressbar" aria-label="Settings readiness" aria-valuemin={0} aria-valuemax={readiness.items.length} aria-valuenow={readiness.completed} className="h-3 overflow-hidden rounded-full border-2 border-white/30 bg-black"><div className="h-full bg-[#CCFF00] motion-safe:transition-[width]" style={{ width: `${(readiness.completed / readiness.items.length) * 100}%` }} /></div>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 border-t-[4px] border-black bg-[#00F0FF] px-5 py-3 text-black"><SettingsIcon size={20} strokeWidth={3} aria-hidden="true" /><p className="text-xs font-black uppercase tracking-[0.14em]">{readiness.nextLabel}</p></div>
-      </header>
-
+    <div className="animate-fade-in">
+      <SettingsWorkspace
+        activePanel={activePanel}
+        readiness={readiness}
+        onPanelChange={changePanel}
+      >
       <UnifiedAccountSettingsSection
         activePanel={activePanel}
         billingStatus={billingStatus}
@@ -375,6 +366,7 @@ const Settings: React.FC = () => {
 
       {activePanel === "widgets" ? <DashboardWidgetsSettingsSection /> : null}
       {activePanel === "help" ? <SettingsHelpSection onNavigate={navigate} /> : null}
+      </SettingsWorkspace>
 
       {confirmation ? (
         <div className="fixed inset-0 z-[200] grid place-items-center bg-black/70 p-4" role="presentation" onKeyDown={(event) => {
