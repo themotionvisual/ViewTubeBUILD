@@ -57,6 +57,7 @@ describe("Toolbox UI Reference Library", () => {
       "Vault Document Asset", "Tree View", "Disabled Button", "Disabled Split Button",
       "Two Color Data Stats", "Monochrome Data Stats", "Tiny Data Stats", "Tooltip Dark",
       "Tooltip Color", "Dashboard Pill Tags", "Aspect Ratio Frame", "Toolbar",
+      "LED Dot", "Loader Progress", "Loader Split", "Loader Orbit", "Loader Bars",
     ]) expect(source).toContain(`"${family}"`)
     expect(source).not.toContain("HardcodedGenericControl")
     expect(source).not.toContain("hardcoded-fallback")
@@ -88,6 +89,11 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).toContain("<SubToolboxPagination")
     expect(source).toContain("<SubToolboxControllerSwitch")
     expect(source).toContain("<SubToolboxLed")
+    expect(source).toContain("<SubToolboxLedDot")
+    expect(source).toContain('variant="progress"')
+    expect(source).toContain('variant="split"')
+    expect(source).toContain('variant="orbit"')
+    expect(source).toContain('variant="bars"')
     expect(source).toContain("<SubToolboxHoverCard")
     expect(source).toContain("<SubToolboxMeter")
     expect(source).toContain("<SubToolboxAvatar")
