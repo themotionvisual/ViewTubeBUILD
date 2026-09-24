@@ -49,7 +49,7 @@ describe("SettingsBillingPanel", () => {
 
     expect(html).toContain("Top Up Credits")
     expect(html).toContain("Referral Rewards")
-    expect(html).not.toContain("8,000")
-    expect(html).not.toContain("CREATOR")
+    expect((html.match(/data-state="closed"/g) || []).length).toBeGreaterThanOrEqual(2)
+    expect((html.match(/aria-expanded="false"/g) || []).length).toBeGreaterThanOrEqual(2)
   })
 })
