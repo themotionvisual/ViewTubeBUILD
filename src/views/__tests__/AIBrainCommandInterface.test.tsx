@@ -203,6 +203,17 @@ describe("AIBrainCommandInterface", () => {
   expect(html).not.toContain("shrink-0 border-t-[4px] border-black bg-[#f8f8f4]")
  })
 
+ it("keeps the mobile Brain workspace scrollable and removes nested-card chrome", () => {
+  const html = renderHub()
+
+  expect(html).toContain("max-xl:!h-auto")
+  expect(html).toContain("max-xl:overflow-visible")
+  expect(html).toContain("max-xl:min-h-[520px]")
+  expect(html).toContain('data-vt-brain-runtime-shell="flat"')
+  expect(html).toContain("max-xl:rounded-none")
+  expect(html).toContain("max-xl:border-x-0")
+ })
+
  it("keeps internal diagnostics out of the creator workspace", () => {
   const html = renderHub()
 
