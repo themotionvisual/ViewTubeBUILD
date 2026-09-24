@@ -327,4 +327,29 @@ describe("ChannelKnowledgeProjection", () => {
   expect(retrieved.records).toHaveLength(2)
  })
 
+
+ it("projects a governed measured memory claim as VALIDATED_LEARNING instead of a generic fact", () => {
+  const projection = buildChannelKnowledgeProjection({
+   channelId: "channel-1",
+   claims: [claim({
+    id: "validated-learning-1",
+    scope: "channel",
+    category: "channel_fact",
+    value: "Repackaging repeatedly improved measured outcomes under matched evidence conditions.",
+    evidence: ["outcome-1", "outcome-2", "outcome-3"],
+    confirmationState: "explicit",
+    knowledgeClass: "VALIDATED_LEARNING",
+   })],
+   knowledgeModel: null,
+   learningCandidates: [],
+   now: "2026-09-24T00:00:00.000Z",
+  })
+
+  expect(projection.records[0]).toMatchObject({
+   id: "validated-learning-1",
+   knowledgeClass: "VALIDATED_LEARNING",
+   confirmationState: "explicit",
+  })
+ })
+
 })
