@@ -258,4 +258,38 @@ describe("VideoPackage ContentBuild bridge", () => {
    .toThrow("canonical contentBuildId")
  })
 
+ it("keeps script storyboard and final render as version chains rather than option groups", () => {
+  const base = createVideoPackage({
+   id: "package-version-chain",
+   contentBuildId: "cb-version-chain",
+   channelId: "channel-a",
+   projectId: "project-a",
+   workingTitle: "Version chain test",
+   format: "long",
+  })
+  const artifact = (id: string, kind: "script" | "storyboard", version: number) => ({
+   id, kind, version, label: `${kind} V${version}`,
+   sourceToolId: kind === "script" ? "script-architect" : "storyboard-studio",
+   vaultAssetId: `vault-${id}`, createdAt: base.identity.createdAt,
+  })
+  const videoPackage = {
+   ...base,
+   creative: {
+    ...base.creative,
+    script: artifact("script-v4", "script", 4),
+    storyboard: artifact("storyboard-v2", "storyboard", 2),
+   },
+   production: { ...base.production, renderIds: ["render-v1", "render-v2"] },
+  }
+
+  const build = syncVideoPackageToContentBuild(videoPackage)
+  expect(build.versions.filter(version => version.slot === "script")).toHaveLength(1)
+  expect(build.versions.filter(version => version.slot === "storyboard")).toHaveLength(1)
+  expect(build.versions.filter(version => version.slot === "final-render")).toHaveLength(2)
+  expect(build.variantGroups.some(group => ["script", "storyboard", "final-render"].includes(group.slot))).toBe(false)
+  expect(build.selections.script).toBe("vault-script-v4")
+  expect(build.selections.storyboard).toBe("vault-storyboard-v2")
+  expect(build.selections["final-render"]).toBe("render-v2")
+ })
+
 })

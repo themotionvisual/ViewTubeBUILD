@@ -89,6 +89,53 @@ export const syncVideoPackageToContentBuild = (
   })
  })
 
+ const synchronizeVersionedArtifact = (
+  slot: "script" | "storyboard" | "final-render",
+  artifact: PackageArtifactRef | null | undefined,
+  assetIdOverride?: string | null,
+ ) => {
+  const assetId = assetIdOverride || assetIdOf(artifact)
+  if (!assetId) return null
+  const current = getContentBuild(build.id)!
+  const existing = current.versions.find(version => version.assetId === assetId && version.slot === slot)
+  return existing || createContentBuildAssetVersion({
+   contentBuildId: build.id,
+   assetId,
+   slot,
+   label: artifact?.label || (slot === "final-render" ? "Final render" : slot),
+   sourceToolId: artifact?.sourceToolId || "video-package",
+   metadata: {
+    packageId: videoPackage.id,
+    packageArtifactId: artifact?.id || null,
+    packageVersion: artifact?.version || null,
+   },
+  })
+ }
+
+ synchronizeVersionedArtifact("script", videoPackage.creative.script)
+ synchronizeVersionedArtifact("storyboard", videoPackage.creative.storyboard)
+ const publicationArtifacts: Array<[string, PackageArtifactRef | undefined]> = [
+  ["description", videoPackage.packaging.description],
+  ["tags", videoPackage.packaging.tags],
+  ["end-screen", videoPackage.packaging.endScreen],
+  ["outro", videoPackage.packaging.outro],
+ ]
+ publicationArtifacts.forEach(([slot, artifact]) => {
+  const assetId = assetIdOf(artifact)
+  if (!assetId) return
+  const current = getContentBuild(build.id)!
+  if (current.selections[slot] !== assetId) {
+   setContentBuildSelection(build.id, slot, assetId, {
+    toolId: "video-package",
+    actorType: "sync",
+    final: Boolean(artifact?.approvedAt),
+   })
+  }
+ })
+ videoPackage.production.renderIds.forEach(renderId =>
+  synchronizeVersionedArtifact("final-render", null, renderId)
+ )
+
  const synchronizeOptionGroup = (slot: "title" | "thumbnail", artifacts: PackageArtifactRef[]) => {
   if (!artifacts.length) return null
   const group = createContentBuildVariantGroup({
@@ -139,8 +186,14 @@ export const syncVideoPackageToContentBuild = (
  const selectedTitleAssetId = assetIdOf(selectedTitle)
  const selectedThumbnailAssetId = assetIdOf(selectedThumbnail)
  const scriptAssetId = assetIdOf(videoPackage.creative.script)
+ const storyboardAssetId = assetIdOf(videoPackage.creative.storyboard)
+ const finalRenderAssetId = videoPackage.production.renderIds.at(-1) || null
 
- if (selectedTitleAssetId && titleGroup && titleGroup.selectedAssetId !== selectedTitleAssetId) {
+ if (
+  selectedTitleAssetId &&
+  titleGroup &&
+  titleGroup.selectedAssetId !== selectedTitleAssetId
+ ) {
   selectContentBuildVariant({
    contentBuildId: build.id,
    groupId: titleGroup.id,
@@ -150,7 +203,11 @@ export const syncVideoPackageToContentBuild = (
    final: false,
   })
  }
- if (selectedThumbnailAssetId && thumbnailGroup && thumbnailGroup.selectedAssetId !== selectedThumbnailAssetId) {
+ if (
+  selectedThumbnailAssetId &&
+  thumbnailGroup &&
+  thumbnailGroup.selectedAssetId !== selectedThumbnailAssetId
+ ) {
   selectContentBuildVariant({
    contentBuildId: build.id,
    groupId: thumbnailGroup.id,
@@ -168,6 +225,22 @@ export const syncVideoPackageToContentBuild = (
    final: Boolean(videoPackage.creative.script?.approvedAt),
   })
  }
+ const currentAfterScript = getContentBuild(build.id)!
+ if (storyboardAssetId && currentAfterScript.selections.storyboard !== storyboardAssetId) {
+  setContentBuildSelection(build.id, "storyboard", storyboardAssetId, {
+   toolId: "video-package",
+   actorType: "sync",
+   final: Boolean(videoPackage.creative.storyboard?.approvedAt),
+  })
+ }
+ const currentAfterStoryboard = getContentBuild(build.id)!
+ if (finalRenderAssetId && currentAfterStoryboard.selections["final-render"] !== finalRenderAssetId) {
+  setContentBuildSelection(build.id, "final-render", finalRenderAssetId, {
+   toolId: "video-package",
+   actorType: "sync",
+   final: videoPackage.identity.status === "scheduled" || videoPackage.identity.status === "published" || videoPackage.identity.status === "measuring",
+  })
+ }
 
  if (videoPackage.publishing.publishedVideoId) {
   return bindYouTubeVideo({
@@ -180,7 +253,7 @@ export const syncVideoPackageToContentBuild = (
    scheduledAt: videoPackage.publishing.scheduledAt || null,
    initialTitleAssetId: selectedTitleAssetId,
    initialThumbnailAssetId: selectedThumbnailAssetId,
-   finalRenderAssetId: videoPackage.production.renderIds.length ? videoPackage.production.renderIds[videoPackage.production.renderIds.length - 1] : null,
+   finalRenderAssetId,
    toolId: "video-package",
   })
  }
@@ -249,6 +322,7 @@ export const projectContentBuildSelectionsToVideoPackage = (
 
  return {
   ...videoPackage,
+  contentBuildRevision: build.revision,
   packaging: {
    ...videoPackage.packaging,
    titleVariants,

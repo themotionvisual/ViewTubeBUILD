@@ -704,6 +704,31 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
     return true;
   }
 
+  const captionsMatch = pathname.match(/^\/api\/account\/youtube\/captions\/([A-Za-z0-9_-]{6,128})$/);
+  if (method === "POST" && captionsMatch) {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
+    if (!userId) return true;
+    const contentType = String(req.headers["content-type"] || "").toLowerCase();
+    if (!/^(text\/vtt|application\/x-subrip|text\/plain)/.test(contentType)) return json(res, 400, { error: "Captions must be VTT or SRT text." }), true;
+    const language = plainText(req.headers["x-caption-language"], 32) || "en";
+    const name = plainText(req.headers["x-caption-name"], 150) || "ViewTube captions";
+    const body = await readBody(req, 5 * 1024 * 1024);
+    if (!body.length) return json(res, 400, { error: "Caption file is empty." }), true;
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const boundary = `viewtube-${Date.now().toString(36)}`;
+    const metadata = Buffer.from(JSON.stringify({ snippet: { videoId: captionsMatch[1], language, name, isDraft: false } }));
+    const multipart = Buffer.concat([
+      Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`), metadata,
+      Buffer.from(`\r\n--${boundary}\r\nContent-Type: ${contentType}\r\n\r\n`), body,
+      Buffer.from(`\r\n--${boundary}--\r\n`),
+    ]);
+    const response = await fetch("https://www.googleapis.com/upload/youtube/v3/captions?uploadType=multipart&part=snippet", {
+      method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": `multipart/related; boundary=${boundary}` }, body: multipart, signal: AbortSignal.timeout(60_000),
+    });
+    await sendGoogleJson(json, res, response, "Failed to upload captions.");
+    return true;
+  }
+
   if (method === "POST" && pathname === "/api/account/youtube/playlist-items") {
     const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
     if (!userId) return true;
@@ -734,6 +759,17 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
   }
 
   const videoMatch = pathname.match(/^\/api\/account\/youtube\/videos\/([A-Za-z0-9_-]{6,128})$/);
+  if (method === "GET" && videoMatch) {
+    const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.readonly");
+    if (!userId) return true;
+    const accessToken = await getServerGoogleAccessToken(userId);
+    const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,status&id=${encodeURIComponent(videoMatch[1])}`, {
+      headers: { Authorization: `Bearer ${accessToken}` }, signal: AbortSignal.timeout(30_000),
+    });
+    await sendGoogleJson(json, res, response, "Failed to verify video state.");
+    return true;
+  }
+
   if (method === "PUT" && videoMatch) {
     const userId = await requireGoogleScope(req, res, "https://www.googleapis.com/auth/youtube.force-ssl");
     if (!userId) return true;
@@ -745,7 +781,14 @@ export const handleAccountRoute = async ({ req, res, method, pathname, parsedUrl
     const accessToken = await getServerGoogleAccessToken(userId);
     const response = await fetch("https://www.googleapis.com/youtube/v3/videos?part=snippet,status", {
       method: "PUT", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ id: videoMatch[1], snippet: { title, description: plainText(payload.description, 5_000), tags, categoryId: plainText(payload.categoryId, 8) || "22" }, status: { privacyStatus } }),
+      body: JSON.stringify({
+        id: videoMatch[1],
+        snippet: { title, description: plainText(payload.description, 5_000), tags, categoryId: plainText(payload.categoryId, 8) || "22" },
+        status: {
+          privacyStatus,
+          ...(privacyStatus === "private" && payload.publishAt ? { publishAt: plainText(payload.publishAt, 64) } : {}),
+        },
+      }),
       signal: AbortSignal.timeout(30_000),
     });
     await sendGoogleJson(json, res, response, "Failed to update video.");
