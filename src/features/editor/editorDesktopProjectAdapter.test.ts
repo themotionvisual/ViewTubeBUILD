@@ -97,7 +97,7 @@ describe('editorDesktopProjectAdapter', () => {
         payload: { x: 12, y: -8, fontFamily: 'Inter' },
         customLayerFlag: 'keep-me',
       }],
-    } as typeof desktopProject & {customDesktopState: {inspectorWidth: number}});
+    } as unknown as typeof desktopProject & {customDesktopState: {inspectorWidth: number}});
 
     const restored = mobileBridgeProjectToDesktopProject(mobile, desktopProject);
 
