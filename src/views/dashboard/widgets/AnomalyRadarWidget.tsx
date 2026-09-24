@@ -110,7 +110,7 @@ export const AnomalyRadarWidget: React.FC<CommonWidgetProps & { data: DashboardD
 
     return METRICS.flatMap((metric) => {
       const values = rows.map((row: any) => read(row, ...metric.keys))
-      const baseline = values.slice(1).reduce((sum, value) => sum + value, 0) / Math.max(values.length - 1, 1)
+      const baseline = values.slice(1).reduce((sum: number, value: number) => sum + value, 0) / Math.max(values.length - 1, 1)
       const current = values[0] || 0
       const delta = baseline > 0 ? ((current - baseline) / baseline) * 100 : 0
       if (Math.abs(delta) < activeThreshold) return []
