@@ -10,7 +10,10 @@ const mocks = vi.hoisted(() => {
   sourceEventIds: ["outcome-1", "outcome-2", "outcome-3"],
   evidenceIds: ["evidence-1", "evidence-2"],
   sampleSize: 3,
+  decisiveSampleSize: 3,
   positiveRate: 1,
+  traceIds: ["trace-1", "trace-2", "trace-3"],
+  outputRefs: ["response-1", "response-2", "response-3"],
   status: "candidate" as const,
  }
  const sourceEvent = { id: "candidate-event-1" }
@@ -117,6 +120,13 @@ describe("AlgorithmLearningProfilePromotion", () => {
    summary: mocks.candidate.statement,
    category: "channel_fact",
    evidence: mocks.candidate.evidenceIds,
+   metadata: expect.objectContaining({
+    knowledgeClass: "VALIDATED_LEARNING",
+    algorithmCandidateId: mocks.candidate.id,
+    decisiveSampleSize: 3,
+    traceIds: mocks.candidate.traceIds,
+    outputRefs: mocks.candidate.outputRefs,
+   }),
   }))
   expect(mocks.recordAlgorithmIntelligenceEvent).toHaveBeenCalledWith(expect.objectContaining({
    kind: "LEARNING_PROMOTED",
