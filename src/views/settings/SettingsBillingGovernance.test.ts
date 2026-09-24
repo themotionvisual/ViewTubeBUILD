@@ -14,7 +14,7 @@ describe("Settings Billing primitive governance", () => {
   it("removes the six-card billing wall and uses canonical controls", () => {
     expect(billing).toContain("SubToolboxMeter")
     expect(billing).toContain("SubToolboxSplitDropdown")
-    expect(billing).toContain("SubToolboxDisclosure")
+    expect(billing).toContain("SubToolboxMetricStrip")
     expect(billing).toContain("StudioNumberInput")
     expect(billing).not.toContain("xl:grid-cols-3")
     expect(billing).not.toContain("rounded-2xl")
