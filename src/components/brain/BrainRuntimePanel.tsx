@@ -26,6 +26,9 @@ const titleCase = (value: string | null | undefined): string =>
   .replace(/[._-]+/g, " ")
   .replace(/\b\w/g, match => match.toUpperCase())
 
+const modelLabel = (value: string | null | undefined): string =>
+ value ? titleCase(value.replace(/^gemini\s*/i, "Gemini ")) : ""
+
 const compactId = (value: string | null | undefined): string => {
  if (!value) return "—"
  if (value.length <= 18) return value
@@ -137,7 +140,7 @@ export const BrainRuntimePanel: React.FC<BrainRuntimePanelProps> = ({ snapshot }
      label="Context"
      icon={<FileStack size={13} strokeWidth={2.5} />}
      accent="#34CDEA"
-     value={request ? `Revision ${request.contextRevision}` : "No context manifest"}
+     value={request ? `Revision ${request.contextRevision}` : "No context yet"}
      detail={request
       ? `${request.requestedSlotCount} slots · ${request.selectedAssetCount} selected · ${request.evidenceCount} evidence refs`
       : "A generative tool has not prepared context yet."}
@@ -164,7 +167,7 @@ export const BrainRuntimePanel: React.FC<BrainRuntimePanelProps> = ({ snapshot }
      label="Brain Trace"
      icon={<Activity size={13} strokeWidth={2.5} />}
      accent="#50C878"
-     value={trace?.modelServed || (trace ? titleCase(trace.status) : "No trace yet")}
+     value={trace?.modelServed ? modelLabel(trace.modelServed) : (trace ? titleCase(trace.status) : "No trace yet")}
      detail={trace
       ? `${titleCase(trace.kind)} · ${trace.evidenceReturned} evidence · ${trace.gradeAverage ?? "—"} grade · ${formatLatency(trace.latencyMs)}`
       : "Model, evidence, grading, repair, and latency will appear here."}
