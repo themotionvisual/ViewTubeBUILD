@@ -2,7 +2,7 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 
-import { SettingsWorkspace } from "./SettingsWorkspace"
+import { SettingsWorkspace, getSettingsWorkspaceBottomPadding } from "./SettingsWorkspace"
 import type { SettingsReadiness } from "./settingsControlDeck"
 
 const READY: SettingsReadiness = {
@@ -18,6 +18,12 @@ const READY: SettingsReadiness = {
 }
 
 describe("SettingsWorkspace", () => {
+  it("reserves extra bottom space only when mobile thumb shortcuts need it", () => {
+    expect(getSettingsWorkspaceBottomPadding(false)).toBe("pb-4 sm:pb-5")
+    expect(getSettingsWorkspaceBottomPadding(true)).toBe("pb-4 sm:pb-5 max-[760px]:pb-20")
+  })
+
+
   it("renders compact workspace chrome and the active panel body", () => {
     const html = renderToStaticMarkup(
       <SettingsWorkspace
