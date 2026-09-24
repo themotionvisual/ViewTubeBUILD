@@ -280,6 +280,9 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
   const isAudio=type==='audio';
   const audioVolume=number(payload.volume,.6);
   const audioRate=number(payload.playbackRate,1);
+  const audioFadeIn=number(payload.fadeInSec,0);
+  const audioFadeOut=number(payload.fadeOutSec,0);
+  const clipDuration=Math.max(.1,clip.end-clip.start);
   const widthValue=number(payload.width,100),heightValue=number(payload.height,100);
   const xValue=number(payload.x,0),yValue=number(payload.y,0),rotationValue=number(payload.rotation,0);
   const ratio=widthValue>0?heightValue/widthValue:1;
@@ -432,7 +435,19 @@ function SelectedClipSettings({store,onNavigate}:{store:EditorStore;onNavigate?:
 
     {isAudio?<div style={{marginTop:10}}>
       <div style={sectionLabel}>AUDIO</div>
-      <HoldStepper label="VOLUME" value={audioVolume} min={0} max={1} step={.01} precision={2} onChange={volume=>patch({volume})}/>
+      <HoldStepper
+        label="VOLUME"
+        value={audioVolume}
+        min={0}
+        max={1}
+        step={.01}
+        precision={2}
+        keyframeState={keyframeState(clip,'volume',store.state.playheadSec)}
+        onKeyframe={()=>store.dispatch({type:'addClipKeyframeValue',clipId:clip.id,prop:'volume',value:audioVolume})}
+        onChange={volume=>patch({volume})}
+      />
+      <HoldStepper label="FADE IN" value={audioFadeIn} min={0} max={clipDuration} step={.05} precision={2} suffix="s" onChange={fadeInSec=>patch({fadeInSec})}/>
+      <HoldStepper label="FADE OUT" value={audioFadeOut} min={0} max={clipDuration} step={.05} precision={2} suffix="s" onChange={fadeOutSec=>patch({fadeOutSec})}/>
       <HoldStepper label="PLAYBACK RATE" value={audioRate} min={.1} max={4} step={.1} precision={1} suffix="×" onChange={playbackRate=>patch({playbackRate})}/>
       <button style={{...miniButton,width:'100%',marginTop:4,background:Boolean(payload.muted)?'#fff':BLUE}} onClick={()=>patch({muted:!Boolean(payload.muted)})}>{Boolean(payload.muted)?'UNMUTE':'MUTE'}</button>
     </div>:null}
