@@ -1,12 +1,87 @@
 # ViewTube Unified AI System — Canonical Consolidation Contract
 
 **Date:** 2026-09-17  
-**Status:** implementation authority for staged consolidation  
+**Status:** CANONICAL LIVING AI / BRAIN ARCHITECTURE AUTHORITY  
+**Last audited main:** `6e5df12c2f0d3d3f8d2d1ca88e6fe2b87ce366dc`  
+**Canonical owner / concern:** creator-facing Brain runtime, AI orchestration, evidence/context policy, specialist intelligence integration, model gateway, outcome/evaluation/learning boundaries, creator controls, and strangler migration away from direct legacy generation paths.  
+**Executable authority:** `src/services/brain/runtime/**`, `BrainOrchestrator.ts`, `BrainContextBroker.ts`, `BrainEvidenceQuality.ts`, Brain intelligence/evaluation/outcome/learning services, and their tests.  
+**Related active work:** `tasks/ai-brain-quality/**` and `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`.  
+**Herald boundary:** repository AI-work governance is owned by `agent/contracts/herald-in.md`, `herald-out.md`, `herald-workflow.md`, and `.viewtube/herald/**`; Herald is not the creator Brain runtime.  
 **Rule:** unionize capabilities, not duplicate owners.
 
 ## Goal
 
 All creator-facing AI, Brain, intelligence, packaging, analytics reasoning, audience reasoning and asset-generation workflows operate as one system while preserving specialist modules.
+
+## Current audited implementation state
+
+On main `6e5df12c2f0d3d3f8d2d1ca88e6fe2b87ce366dc`, the consolidation is substantially beyond the original September 17 staged plan.
+
+### Live canonical path
+
+```text
+SidebarChatbot / AIBrainCommandInterface / BrainHubWidget
+        ↓
+runBrainTask
+        ↓
+BrainRuntime
+        ↓
+BrainOrchestrator
+        ↓
+BrainContextBroker + capability/task profiles
+        ↓
+BrainModelGateway
+        ↓
+provider adapter
+```
+
+Verified production foundations now include:
+
+- `runBrainTask` / BrainRuntime as the creator-facing Brain facade;
+- provider-neutral `BrainModelGateway` injection, while the current default gateway still adapts `generateStructuredBrainResponse` from the legacy Gemini service;
+- canonical analytics evidence available through `analytics-canon`, including the imperative `getCurrentCanonicalIntelligenceEvidence()` entry point;
+- `BrainEvidenceQuality` for source/scope/freshness/missingness-aware confidence;
+- deterministic Statistics Intelligence and Audience Intelligence;
+- Channel, Algorithm, Anomaly and Opportunity intelligence modules;
+- Brain user controls and channel-scoped context policy;
+- Brain outcome recording;
+- algorithm evaluation checkpoints, canonical evaluation evidence, lifecycle cohorts, learning candidates and governed promotion;
+- Brain intelligence persistence for algorithm events/lifecycle observations;
+- durable conversation-controller and handoff/inbox infrastructure;
+- Asset Engine / generation workflows that can preserve ContentBuild identity and provenance.
+
+### Still-open consolidation seams
+
+The system is **not** complete merely because the modules exist.
+
+Code-backed open seams include:
+
+- `HookGenerator` still reaches the legacy `generateHook` path directly;
+- Script Architect still reaches the legacy `generateScript` path directly;
+- the default Brain model gateway still depends on the legacy `gemini.ts` provider adapter;
+- outcome/evaluation coverage is uneven across publisher, editor, project, comments/community, experiments and all creator-generation paths;
+- active Project context and Opportunity evidence are not yet supplied consistently across every Brain portfolio path;
+- immutable `ApprovedPublishSnapshot` remains a publishing-system gap;
+- one canonical metric comparability guard for unit/scope/window/format is still an active Finish Program requirement;
+- durable learning must continue to be governed rather than inferred from one-off actions or missing evidence.
+
+Definitions, tests, registry entries and phase documents are not proof of production reachability. Current code paths and runtime tests remain the evidence standard.
+
+## Herald boundary
+
+HERALD governs **work on the ViewTube repository**, not creator-facing reasoning inside ViewTube.
+
+Current implemented Herald authority is:
+
+- `agent/contracts/herald-in.md` — intake/readback contract;
+- `agent/contracts/herald-out.md` — canonical response/tier/evidence contract;
+- `agent/contracts/herald-workflow.md` — workflow/gate/thread protocol;
+- `.viewtube/herald/threads/*.json` — resumable thread state;
+- `.viewtube/herald/ledger/*.jsonl` — chronological execution ledger;
+- `.viewtube/exchange/` — cross-agent mission/work-order/receipt/handoff records where applicable.
+
+The September 15 HERALD plan remains useful design history, but its original "PLAN ONLY" status is obsolete.
+
 
 ```
 UI / Widget / Tool
@@ -78,7 +153,7 @@ Runtime enrichment adds:
 - current research only when required
 - evidence freshness, coverage and provenance
 
-## Consolidation waves
+## Historical staged consolidation roadmap
 
 ### Wave 0 — lock architecture
 

@@ -1,5 +1,9 @@
 # AI Cross-Branch Harvest — Pass 1
 
+**Status:** HISTORICAL DONOR / BRANCH HARVEST AUDIT  
+**Current authority:** `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+**Wave 5 note (2026-09-24):** substantial evaluation, lifecycle, learning-governance and persistence capabilities identified here now exist on current main. Preserve branch dispositions and donor provenance; never use the old ahead/behind counts as current branch status.
+
 **Date:** 2026-09-18  
 **Herald verb:** BUILD / CONSOLIDATE  
 **Canonical destination:** BrainRuntime architecture  

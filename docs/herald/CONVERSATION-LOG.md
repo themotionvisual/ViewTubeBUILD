@@ -1,5 +1,9 @@
 # Herald conversation log
 
+**Status:** HISTORICAL / PARTIAL CONVERSATION INDEX — evidence only  
+**Current Herald authority:** `../../agent/contracts/herald-in.md`, `../../agent/contracts/herald-out.md`, `../../agent/contracts/herald-workflow.md`, and `../../.viewtube/herald/**`.  
+**Wave 5 note (2026-09-24):** this file predates the implemented thread/ledger contract and contains only an early generated-log shape. Keep it as evidence; do not use it to determine current conversation state, writer locks, workflow gates, or completed work.
+
 One row per AI conversation about ViewTube.
 
 **Generated file** — `npm run log:build` rebuilds it from each conversation's

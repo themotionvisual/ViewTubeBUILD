@@ -1,5 +1,9 @@
 # Brain Runtime Phase 1 — Model and Orchestration Inventory
 
+**Status:** HISTORICAL PHASE-1 INVENTORY / provider-migration evidence  
+**Current authority:** `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+**Wave 5 note (2026-09-24):** BrainRuntime is now a live facade and the provider gateway seam exists. Preserve this inventory for direct-provider debt history and migration rationale; current reachability must be verified from main.
+
 **Date:** 2026-09-11  
 **Branch:** `feat/brain-runtime-phase-one-consolidation-2026-09-11`
 

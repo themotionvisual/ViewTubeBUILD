@@ -23,12 +23,12 @@
 
 ## Baseline summary
 
-- **active-plan:** 15
+- **active-plan:** 12
 - **artifact:** 12
 - **canonical:** 7
-- **evidence:** 10
-- **historical:** 31
-- **reference:** 36
+- **evidence:** 11
+- **historical:** 42
+- **reference:** 27
 - **retirement-candidate:** 3
 - **review:** 5
 
@@ -53,7 +53,7 @@
 - `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md` — Current Studio Hub component-library presentation and primitive-correction authority.
 - `docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md` — Living cross-system Project/ContentBuild workflow authority referenced by CLAUDE.md.
 - `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md` — Canonical Asset Engine product/architecture reference referenced by CLAUDE.md.
-- `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` — Canonical consolidation contract for the unified AI system.
+- `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` — Canonical living AI / Brain architecture authority, reconciled against current runtime/evidence/evaluation systems in Wave 5.
 
 - `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` — Canonical production Toolbox/Subtoolbox design-system authority reconciled in Wave 3.
 
@@ -96,17 +96,17 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 31 | `docs/architecture/WIDGET_SYSTEM_CERTIFICATION_MASTER_2026-09-14.md` | architecture | `active-plan` | `retain-active-scoped` | 11478 | Active Dashboard widget certification program; WidgetRegistry remains canonical metadata and this plan does not own Toolbox geometry. |
 | 32 | `docs/architecture/YOUTUBE_API_STABILIZATION_V1_TRACKER.md` | architecture | `active-plan` | `status-audit` | 5981 | Plan/work-order/tracker requires completion check before consolidation or archive. |
 | 33 | `docs/architecture/YOUTUBE_AUTH_API_SIMPLIFICATION_PLAN.md` | architecture | `review` | `audit-before-move` | 8247 | Design direction differs from the currently deployed flat+compatibility route implementation; reconcile against code. |
-| 34 | `docs/brain/AI_BRAIN_REACHABILITY_AUDIT_PASS1_2026-09-17.md` | brain | `reference` | `retain-or-consolidate` | 8018 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
-| 35 | `docs/brain/AI_BRAIN_REACHABILITY_AUDIT_WORK_ORDER_2026-09-17.md` | brain | `active-plan` | `status-audit` | 2284 | Plan/work-order/tracker requires completion check before consolidation or archive. |
-| 36 | `docs/brain/AI_CROSS_BRANCH_HARVEST_PASS1_2026-09-18.md` | brain | `reference` | `retain-or-consolidate` | 5711 | General documentation; verify current scope and merge target during its domain wave. |
-| 37 | `docs/brain/AI_INTELLIGENCE_ENGINE_PHASE0_SYSTEM_MANIFEST_2026-09-17.md` | brain | `reference` | `retain-or-consolidate` | 5753 | General documentation; verify current scope and merge target during its domain wave. |
+| 34 | `docs/brain/AI_BRAIN_REACHABILITY_AUDIT_PASS1_2026-09-17.md` | brain | `historical` | `retain-as-history` | 8018 | Historical production-reachability snapshot; retain audit method and direct-generation debt evidence. |
+| 35 | `docs/brain/AI_BRAIN_REACHABILITY_AUDIT_WORK_ORDER_2026-09-17.md` | brain | `historical` | `retain-as-history` | 2284 | Completed reachability audit work order; retain as reusable audit recipe/provenance. |
+| 36 | `docs/brain/AI_CROSS_BRANCH_HARVEST_PASS1_2026-09-18.md` | brain | `historical` | `retain-as-history` | 5711 | Historical donor-branch harvest audit; many harvested capabilities now exist on current main. |
+| 37 | `docs/brain/AI_INTELLIGENCE_ENGINE_PHASE0_SYSTEM_MANIFEST_2026-09-17.md` | brain | `historical` | `retain-as-history` | 5753 | Historical Phase-0 ownership/reachability baseline. |
 | 38 | `docs/brain/ASSET_ENGINE_CANONICAL_BACKBONE.md` | brain | `historical` | `retain-as-foundation-reference` | 11199 | Foundational ownership/backbone document superseded for current authority by the Asset Engine master and Projects/ContentBuild master. |
-| 39 | `docs/brain/BRAIN_RUNTIME_PHASE_1_MODEL_AND_ORCHESTRATION_INVENTORY_2026-09-11.md` | brain | `reference` | `retain-or-consolidate` | 7369 | General documentation; verify current scope and merge target during its domain wave. |
-| 40 | `docs/brain/BRAIN_SHARED_CONVERSATION_CONTROLLER_PHASE_2_2026-09-12.md` | brain | `reference` | `retain-or-consolidate` | 3133 | General documentation; verify current scope and merge target during its domain wave. |
-| 41 | `docs/brain/PHASE_1_CLOSEOUT_PHASE_2_START.md` | brain | `reference` | `retain-or-consolidate` | 3553 | General documentation; verify current scope and merge target during its domain wave. |
-| 42 | `docs/brain/PHASE_4_LIVE_TOOL_INTEGRATION.md` | brain | `reference` | `retain-or-consolidate` | 2342 | General documentation; verify current scope and merge target during its domain wave. |
+| 39 | `docs/brain/BRAIN_RUNTIME_PHASE_1_MODEL_AND_ORCHESTRATION_INVENTORY_2026-09-11.md` | brain | `historical` | `retain-as-history` | 7369 | Historical Phase-1 provider/orchestration inventory; useful migration provenance. |
+| 40 | `docs/brain/BRAIN_SHARED_CONVERSATION_CONTROLLER_PHASE_2_2026-09-12.md` | brain | `historical` | `retain-as-history` | 3133 | Historical implementation slice for the still-live shared conversation controller. |
+| 41 | `docs/brain/PHASE_1_CLOSEOUT_PHASE_2_START.md` | brain | `historical` | `retain-as-history` | 3553 | Historical branch closeout/phase-transition record. |
+| 42 | `docs/brain/PHASE_4_LIVE_TOOL_INTEGRATION.md` | brain | `historical` | `retain-as-history` | 2342 | Historical phase closeout; retain live-tool handoff integration pattern as provenance. |
 | 43 | `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` | brain | `canonical` | `retain-current` | 5638 | Canonical consolidation contract for the unified AI system. |
-| 44 | `docs/brain/UNIVERSAL_TOOL_HANDOFFS_AND_SUGGESTED_CHAINS.md` | brain | `reference` | `retain-or-consolidate` | 5570 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
+| 44 | `docs/brain/UNIVERSAL_TOOL_HANDOFFS_AND_SUGGESTED_CHAINS.md` | brain | `reference` | `retain-production-linked` | 5570 | Current cross-tool ActionPacket/suggested-chain architecture reference; subordinate to unified AI authority and domain owners. |
 | 45 | `docs/community/COMMUNITY_BULK_CAMPAIGN_IMPLEMENTATION.md` | community | `reference` | `retain-or-consolidate` | 3384 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
 | 46 | `docs/DATA_VISUAL_MODULE_UNIFICATION_STATUS.md` | analytics | `evidence` | `keep-as-evidence` | 236 | Verification/status snapshot; useful evidence but not architectural authority. |
 | 47 | `docs/DATA_VISUAL_MODULE_UNIFICATION.md` | analytics | `historical` | `retain-as-foundation-reference` | 2359 | Early DataVisualCanvas migration bridge; current canvas/responsive authority now lives in scoped contracts and Analytics master. |
@@ -130,7 +130,7 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 65 | `docs/herald/artifacts/2026-09-18--data-visual-controller-unification/screenshots/heat-matrix--390x844.png` | brain/herald | `artifact` | `keep-as-evidence` | 109166 | Herald run artifact/evidence; preserve provenance, do not treat as current authority. |
 | 66 | `docs/herald/artifacts/2026-09-18--data-visual-controller-unification/screenshots/publish-optimal-clock--1440x1000.png` | brain/herald | `artifact` | `keep-as-evidence` | 157484 | Herald run artifact/evidence; preserve provenance, do not treat as current authority. |
 | 67 | `docs/herald/artifacts/2026-09-18--data-visual-controller-unification/screenshots/publish-optimal-clock--390x844.png` | brain/herald | `artifact` | `keep-as-evidence` | 84922 | Herald run artifact/evidence; preserve provenance, do not treat as current authority. |
-| 68 | `docs/herald/CONVERSATION-LOG.md` | brain/herald | `reference` | `retain-or-consolidate` | 1259 | General documentation; verify current scope and merge target during its domain wave. |
+| 68 | `docs/herald/CONVERSATION-LOG.md` | brain/herald | `evidence` | `retain-as-herald-evidence` | 1259 | Early partial/generated conversation-log shape; current Herald state lives in agent contracts and .viewtube/herald threads/ledgers. |
 | 69 | `docs/MASTER_DATA_OVERLAY_PORTAL_PLAN_2026-09-14.md` | analytics | `active-plan` | `status-audit` | 1671 | Plan/work-order/tracker requires completion check before consolidation or archive. |
 | 70 | `docs/migration/data-visual-canvas-contract.md` | migration | `canonical` | `retain-current` | 5358 | Canonical scoped Analytics Data Visual canvas ownership/geometry contract; migration compatibility remains until all renderers are native. |
 | 71 | `docs/migration/data-visual-controller-unification-plan.md` | migration | `active-plan` | `consolidate-after-status-audit` | 14091 | Explicitly marked in progress in the current document. |
@@ -177,9 +177,9 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 112 | `docs/ui/toolbox-system/MANIFEST.md` | ui | `reference` | `retain-or-consolidate` | 4017 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
 | 113 | `docs/ui/toolbox-system/README.md` | ui | `reference` | `retain-or-consolidate` | 5392 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
 | 114 | `docs/user-guide-v2/PHASE_1_2_AUDIT_AND_TRUTH_REGISTRY.md` | user-guide-v2 | `review` | `audit-before-move` | 6543 | Guide truth model is valuable but its baseline predates later September changes; refresh before authority promotion. |
-| 115 | `docs/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md` | brain | `reference` | `retain-or-consolidate` | 39897 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
-| 116 | `docs/VIEWTUBE_AI_CREATOR_INTELLIGENCE_OS_IMPLEMENTATION_PLAN_2026-09-11.md` | brain | `active-plan` | `consolidate-after-status-audit` | 23217 | AI implementation plan; reconcile shipped vs remaining work against the current unified AI contract. |
-| 117 | `docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md` | brain | `active-plan` | `consolidate-after-status-audit` | 61545 | Cross-app AI conversation plan; reconcile against current Brain/Herald runtime before closure. |
+| 115 | `docs/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md` | brain | `historical` | `retain-as-history` | 39897 | Broad September 11 AI/Brain audit; current runtime has advanced materially and the unified contract is current authority. |
+| 116 | `docs/VIEWTUBE_AI_CREATOR_INTELLIGENCE_OS_IMPLEMENTATION_PLAN_2026-09-11.md` | brain | `historical` | `retain-as-history` | 23217 | Original AI Creator Intelligence OS roadmap; current execution has moved to unified AI authority plus current task/finish plans. |
+| 117 | `docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md` | brain | `historical` | `retain-as-history` | 61545 | Original Herald design plan; implemented authority now lives in agent/contracts/herald-* plus .viewtube/herald and exchange records. |
 | 118 | `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` | governance | `review` | `audit-before-move` | 25225 | Broad unfinished-work inventory can conflict with newer domain-specific state; verify item-by-item. |
 | 119 | `docs/vt-e1-render-worker.md` | editor | `reference` | `retain-or-consolidate` | 1417 | General documentation; verify current scope and merge target during its domain wave. |
 
@@ -197,8 +197,9 @@ These files were created after the original 119-file baseline and therefore are 
 - **Wave 1 — complete/merged:** registry, entrypoint and governance contract.
 - **Wave 2 — complete/merged:** Projects / ContentBuild / Asset Engine current authority consolidated into the two living masters.
 - **Wave 3 — complete/merged:** Studio UI / Toolbox / widget/mobile authority reconciled against production code/tokens.
-- **Wave 4 — Analytics / Data Visuals / migrations:** Analytics/VT-SYNC master created; the old migration README is historical; canvas and mobile-responsive contracts are scoped canonical authorities; dataset/window/controller/mark-scale/portal plans remain active where code-backed work is still open.
+- **Wave 4 — complete/merged:** Analytics / VT-SYNC / Data Visual authority consolidated around the living Analytics master and scoped production contracts.
+- **Wave 5 — Brain / AI / Herald:** unified AI contract refreshed against current Brain runtime, evidence-quality, evaluation, learning and persistence systems; old phase/audit/branch documents demoted to history; Herald authority separated from creator Brain and mapped to implemented agent contracts + thread/ledger records.
 
 ## Next action
 
-Wave 5 should consolidate Brain / AI / Herald documentation around the unified AI consolidation contract and current runtime/evidence systems, then demote superseded AI plans/audits and preserve Herald artifacts as evidence.
+Wave 6 should consolidate Auth / Editor / deployment / user-guide documentation, reconcile each family against current main, and demote obsolete stabilization plans/status snapshots without erasing troubleshooting or migration evidence.

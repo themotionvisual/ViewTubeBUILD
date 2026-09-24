@@ -1,6 +1,8 @@
 # ViewTube HERALD — Cross-Application AI Conversation System
 
-**Status:** PLAN ONLY — no runtime wiring, no behaviour change.
+**Status:** HISTORICAL DESIGN PLAN — implemented contracts now live elsewhere.  
+**Current Herald authority:** `../agent/contracts/herald-in.md`, `../agent/contracts/herald-out.md`, `../agent/contracts/herald-workflow.md`, `.viewtube/herald/**`, and `.viewtube/exchange/**`.  
+**Wave 5 note (2026-09-24):** the original "PLAN ONLY" statement is obsolete. Thread files, ledgers and canonical response/workflow contracts now exist. Preserve this document for rationale, prior-art analysis, local-corpus/index ideas and the original rollout design; do not use it as current execution/status authority.  
 **Date:** 2026-09-15
 **Branch:** `claude/iewtuve-ai-system-aedxj4`
 **Base:** `6bab2df` (main @ 2026-09-14)

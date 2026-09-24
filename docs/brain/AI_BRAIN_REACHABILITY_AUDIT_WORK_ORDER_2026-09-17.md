@@ -1,5 +1,9 @@
 # AI / Brain Reachability Audit Work Order
 
+**Status:** HISTORICAL COMPLETED WORK ORDER  
+**Current authority:** `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+**Wave 5 note (2026-09-24):** retain the inventory questions and verification method as an audit recipe. The work order itself is no longer the active execution owner.
+
 ## Herald intake
 - Verb: BUILD
 - Tier: T2

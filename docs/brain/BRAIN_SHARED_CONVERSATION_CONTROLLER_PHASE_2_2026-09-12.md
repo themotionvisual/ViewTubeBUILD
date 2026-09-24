@@ -1,5 +1,9 @@
 # ViewTube Brain Shared Conversation Controller — Phase 2
 
+**Status:** HISTORICAL IMPLEMENTATION SLICE / production-linked reference  
+**Current authority:** `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+**Wave 5 note (2026-09-24):** `BrainConversationController` remains in current source. This document explains the phase that introduced the shared surface contract; it no longer owns overall Brain status.
+
 Date: 2026-09-12
 
 ## Purpose

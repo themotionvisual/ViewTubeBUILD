@@ -1,5 +1,9 @@
 # ViewTube AI / Brain Systems Audit and Modernization Reference
 
+**Status:** HISTORICAL SYSTEM AUDIT / modernization reference  
+**Current authority:** `brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+**Wave 5 note (2026-09-24):** preserve this document for the broad September 11 audit, ownership reasoning and modernization ideas. Its maturity percentages and "current main" statements predate major evaluation, persistence, evidence-quality and intelligence work and are not current status.
+
 **Date:** 2026-09-11  
 **Repository:** `themotionvisual/ViewTubeBUILD`  
 **Scope:** Current `main` branch, Brain/Channel Intelligence/Algorithm systems, Intelligence Hub, analytics/evidence boundaries, self-evaluation, learning, tools/workflows, AI integrations, widgets, prompts, Channel Profile, statistics/data analysis, and target-state modernization.

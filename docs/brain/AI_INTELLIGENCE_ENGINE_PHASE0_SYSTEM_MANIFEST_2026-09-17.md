@@ -1,5 +1,9 @@
 # ViewTube AI / Brain System Manifest — Phase 0
 
+**Status:** HISTORICAL PHASE-0 BASELINE  
+**Current authority:** `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+**Wave 5 note (2026-09-24):** Statistics, Audience, evaluation, persistence, learning-governance and other systems described as planned/foundation below have advanced substantially. Keep this manifest for ownership/reachability baseline history, not present-state status.
+
 **Status:** implementation baseline  
 **Branch:** `feat/ai-intelligence-engine-phase0-2026-09-17`  
 **Authority:** `.claude/skills/viewtube-ai-system-governor/SKILL.md`  

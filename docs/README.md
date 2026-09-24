@@ -21,7 +21,8 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | Analytics / VT-SYNC architecture + migration | [Analytics / VT-SYNC Master Resource](./analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md) |
 | Analytics Data Visual canvas | [Data Visual Canvas Contract](./migration/data-visual-canvas-contract.md) (scoped canonical contract) |
 | Analytics Data Visual mobile composition | [Mobile Visual Responsive Contract](./MOBILE_VISUAL_RESPONSIVE_CONTRACT.md) (scoped canonical contract) |
-| Unified AI consolidation contract | [Unified AI System Canonical Consolidation Contract](./brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md) |
+| AI / Brain runtime architecture | [Unified AI System Canonical Consolidation Contract](./brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md) |
+| Herald repository-work governance | [HERALD-OUT](../agent/contracts/herald-out.md) + [workflow](../agent/contracts/herald-workflow.md) (implemented code/record authority) |
 
 These are scoped authorities. They do not make every neighboring plan or reference obsolete automatically.
 
@@ -45,6 +46,8 @@ When beginning work:
 
 **Wave 4:** Analytics/VT-SYNC now has one living architecture authority. The old migration README is historical, canvas/responsive contracts are scoped canonical authorities, and implementation plans remain active only where the audited code still has real gaps.
 
+**Wave 5:** the unified AI contract is now the living Brain architecture authority. Older AI audits, phase manifests, donor harvests and roadmap documents are historical references. Herald is explicitly separated from creator BrainRuntime and points to its implemented agent contracts, thread ledger and exchange records.
+
 No baseline document has been deleted. Future waves continue one domain at a time, preserving unique information and references before archival or retirement.
 
 ### Planned waves
@@ -53,8 +56,8 @@ No baseline document has been deleted. Future waves continue one domain at a tim
 2. Projects / ContentBuild / Asset Engine — **complete in Wave 2**
 3. Studio UI / Toolbox / widgets / mobile — **complete in Wave 3**
 4. Analytics / Data Visuals / migrations — **complete in Wave 4**
-5. Brain / AI / Herald — **next**
-6. Auth / Editor / deployment / user guide
+5. Brain / AI / Herald — **complete in Wave 5**
+6. Auth / Editor / deployment / user guide — **next**
 7. Archive/evidence re-homing + root cleanup
 8. Automated governance + broken-link certification
 
@@ -102,3 +105,15 @@ Current shell geometry:
 - **Active implementation programs:** dataset expansion, time-window migration, controller unification, mark-scale migration, and Master Data overlay portal.
 
 The August `migration/README.md` remains valuable history but is no longer current-state authority.
+
+
+## Brain / AI / Herald authority boundaries
+
+- **Creator-facing reasoning/orchestration:** `brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` plus current `src/services/brain/**`.
+- **Canonical analytics evidence for Brain:** `services/analytics-canon`; Brain derives evidence quality but does not own analytics storage.
+- **Outcome/evaluation/learning:** existing Brain/Algorithm outcome, evaluation and governed-learning owners; never create a second generic ledger.
+- **Cross-tool handoffs:** `brain/UNIVERSAL_TOOL_HANDOFFS_AND_SUGGESTED_CHAINS.md` is a production-linked protocol reference, subordinate to domain owners.
+- **Repository AI-work governance (Herald):** `agent/contracts/herald-in.md`, `herald-out.md`, `herald-workflow.md`, `.viewtube/herald/**`, and `.viewtube/exchange/**`.
+- **Historical Herald design:** `VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md` explains the design evolution but is no longer current status authority.
+
+BrainRuntime serves ViewTube creators. Herald governs AI agents working on the ViewTube repository. They exchange context/provenance where useful but are not one runtime.

@@ -1,5 +1,10 @@
 # ViewTube Universal Tool Handoffs + Suggested Chains
 
+**Status:** PRODUCTION-LINKED ARCHITECTURE REFERENCE  
+**Current AI authority:** `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+**Last audited main:** `6e5df12c2f0d3d3f8d2d1ca88e6fe2b87ce366dc`  
+**Scope:** ViewTubeActionPacket / suggested-chain product rules and creator-controlled cross-tool handoffs. This is a protocol reference, not a second Brain runtime or persistence owner.
+
 ## Decision
 
 Action packets and workflow chains are a ViewTube-wide protocol. They are not owned by unfinished Super Tools.
