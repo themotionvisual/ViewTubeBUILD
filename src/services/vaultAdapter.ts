@@ -33,6 +33,9 @@ export interface VaultAssetSearchInput {
  kind?: VaultAssetKind | null
  generationId?: string | null
  tags?: string[]
+ tagMode?: "all" | "any"
+ source?: VaultAsset["source"] | null
+ sort?: "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
  limit?: number
 }
 
@@ -44,18 +47,23 @@ export interface VaultAssetSearchInput {
 export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset[] => {
  const query = String(input.query || "").trim().toLowerCase()
  const tags = (input.tags || []).map((tag) => tag.trim().toLowerCase()).filter(Boolean)
+ const tagMode = input.tagMode || "all"
  const limit = Math.max(1, Math.min(100, input.limit || 25))
 
- return listVaultAssets()
+ const filtered = listVaultAssets()
   .filter((asset) => {
    if (input.projectId != null && asset.projectId !== input.projectId) return false
    if (input.projectName != null && asset.projectName !== input.projectName) return false
    if (input.toolId != null && asset.toolId !== input.toolId) return false
    if (input.kind != null && asset.kind !== input.kind) return false
    if (input.generationId != null && asset.generationId !== input.generationId) return false
+   if (input.source != null && asset.source !== input.source) return false
    if (tags.length) {
     const assetTags = (asset.tags || []).map((tag) => String(tag).toLowerCase())
-    if (!tags.every((tag) => assetTags.includes(tag))) return false
+    const matchesTags = tagMode === "any"
+     ? tags.some((tag) => assetTags.includes(tag))
+     : tags.every((tag) => assetTags.includes(tag))
+    if (!matchesTags) return false
    }
    if (query) {
     const haystack = [
@@ -70,7 +78,22 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
    }
    return true
   })
-  .slice(0, limit)
+
+ const sorted = [...filtered].sort((a, b) => {
+  switch (input.sort || "updated-desc") {
+   case "updated-asc":
+    return a.updatedAt - b.updatedAt
+   case "name-asc":
+    return a.name.localeCompare(b.name)
+   case "name-desc":
+    return b.name.localeCompare(a.name)
+   case "updated-desc":
+   default:
+    return b.updatedAt - a.updatedAt
+  }
+ })
+
+ return sorted.slice(0, limit)
 }
 
 export const addVaultAsset = (
