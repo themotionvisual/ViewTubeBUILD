@@ -996,7 +996,7 @@ const AIBrainCommandInterface: React.FC = () => {
  }
 
  return (
-  <main className="h-full min-h-0 overflow-hidden bg-[#f3f4f6] text-black">
+  <main className="h-full min-h-0 overflow-y-auto overscroll-contain bg-[#f3f4f6] text-black xl:overflow-hidden">
    <Toolbox
     title="ViewTube Brain Hub"
     subtitle="One assistant for channel strategy, analytics, goals, content planning, SEO, and publishing."
@@ -1005,7 +1005,9 @@ const AIBrainCommandInterface: React.FC = () => {
     collapsible={false}
     indicator="none"
     fillAvailable
-    contentClassName="h-full min-h-0 overflow-hidden bg-[#f3f4f6]"
+    embedded
+    outerClassName="max-xl:!h-auto max-xl:min-h-full xl:h-full"
+    contentClassName="min-h-0 overflow-visible bg-[#f3f4f6] max-xl:!h-auto xl:h-full xl:overflow-hidden"
    >
     {intakeOpen ? (
      <CreatorIntakeWizard
@@ -1015,12 +1017,12 @@ const AIBrainCommandInterface: React.FC = () => {
       onDefer={handleDeferIntake}
      />
     ) : (
-     <section className="relative flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="shrink-0 bg-[#f3f4f6] px-3 pt-3">
-       <BrainRuntimePanel snapshot={runtimeSnapshot} />
+     <section className="relative flex min-h-0 flex-col max-xl:h-auto max-xl:overflow-visible xl:h-full xl:overflow-hidden">
+      <div className="shrink-0 bg-[#f3f4f6] xl:px-3 xl:pt-3">
+       <BrainRuntimePanel snapshot={runtimeSnapshot} embedded />
       </div>
-      <div className="grid min-h-0 flex-1 gap-3 bg-[#f3f4f6] px-3 pb-3 pt-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(520px,1fr)]">
-       <div className={`${innerCard} flex min-h-0 flex-col overflow-hidden`}>
+      <div className="grid min-h-0 gap-3 bg-[#f3f4f6] max-xl:flex-none max-xl:min-h-[520px] max-xl:px-0 max-xl:pb-0 max-xl:pt-2 xl:flex-1 xl:px-3 xl:pb-3 xl:pt-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(520px,1fr)]">
+       <div className={`${innerCard} flex min-h-0 flex-col overflow-hidden max-xl:rounded-none max-xl:border-x-0 max-xl:border-b-0`}>
         <div className="grid min-h-0 flex-1 bg-white">
          {!hydrated && messages.length === 0 ? (
           <div className="min-h-0 flex-1" aria-hidden="true" />
