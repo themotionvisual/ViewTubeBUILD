@@ -30,6 +30,7 @@ import {
  type StructuredBrainModelOutput,
 } from "../gemini"
 import { buildBrainContextPack } from "./BrainContextBroker"
+import { auditNumericClaims } from "./numericClaims"
 import {
  inferBrainIntent,
  selectBrainCapabilities,
@@ -93,17 +94,18 @@ const unsupportedNumbers = (
  response: CreatorBrainResponse,
  snapshot: AIBrainContextSnapshot,
 ): string[] => {
- const known = JSON.stringify({
-  channel: snapshot.channel,
-  profile: snapshot.inferredProfile,
-  evidence: snapshot.evidencePack,
- }).replace(/,/g, "")
- const matches = responseText(response).match(/\b\d[\d,]*(?:\.\d+)?%?(?![\w])/g) || []
- return Array.from(new Set(matches.filter((value) => {
-  const normalized = value.replace(/,/g, "")
-  if (["1", "2", "3", "4", "5", "7", "30", "60", "90"].includes(normalized)) return false
-  return !known.includes(normalized)
- })))
+ const audit = auditNumericClaims({
+  text: responseText(response),
+  evidence: {
+   channel: snapshot.channel,
+   profile: snapshot.inferredProfile,
+   evidence: snapshot.evidencePack,
+  },
+ })
+ return Array.from(new Set([
+  ...audit.fabricated.map((claim) => claim.token),
+  ...audit.unverifiedDerived.map((claim) => claim.token),
+ ]))
 }
 
 export const validateBrainResponse = (input: {
