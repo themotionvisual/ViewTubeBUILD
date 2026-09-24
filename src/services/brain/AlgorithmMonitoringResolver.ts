@@ -77,6 +77,8 @@ export const resolveAlgorithmMonitoringCheckpoint = (input: {
   primingStepId: event.primingStepId,
   actionPacketId: event.actionPacketId,
   workflowId: event.workflowId,
+  traceId: event.traceId || null,
+  outputRef: event.outputRef || null,
   evidenceIds: [...event.evidenceIds, ...resolvedMetrics.map((metric) => metric.evidenceId).filter(Boolean) as string[]],
   confidence: event.confidence,
   title: `${checkpoint.label} monitoring checkpoint`,

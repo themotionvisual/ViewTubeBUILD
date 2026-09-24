@@ -1987,6 +1987,8 @@ export interface SuperToolActionPacket {
  id: string
  toolId: SuperToolId
  moduleId: string
+ traceId?: string | null
+ outputRef?: string | null
  title: string
  summary: string
  contentBuildId?: string | null

@@ -15,6 +15,8 @@ export interface BrainSuperToolHandoffInput {
  evidenceIds?: string[]
  creatorDecisions?: Array<{ type: string; choice: string }>
  confidence?: "low" | "medium" | "high"
+ traceId?: string | null
+ outputRef?: string | null
 }
 
 /**
@@ -42,6 +44,8 @@ export const createBrainSuperToolHandoff = async (
   contentBuildId: input.contentBuildId || null,
   projectId: input.projectId || null,
   channelId: input.channelId || null,
+  traceId: input.traceId || null,
+  outputRef: input.outputRef || null,
   moduleId: "brain-handoff",
   title: `${sourceTool.title} → ${destinationTool.title}`,
   summary: input.objective,
@@ -89,6 +93,8 @@ export const createBrainSuperToolHandoff = async (
   actionPacketId: result.packet.id,
   generationRecordId: result.recordId,
   workflowId: result.chain.id,
+  traceId: input.traceId || null,
+  outputRef: input.outputRef || null,
  })
 
  return result

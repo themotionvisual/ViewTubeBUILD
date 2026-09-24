@@ -150,6 +150,8 @@ export const recordDueAlgorithmMonitoringCheckpoints = (input: {
   primingStepId: event.primingStepId,
   actionPacketId: event.actionPacketId,
   workflowId: event.workflowId,
+  traceId: event.traceId || null,
+  outputRef: event.outputRef || null,
   evidenceIds: event.evidenceIds,
   confidence: event.confidence,
   title: `${checkpoint.label} monitoring checkpoint`,

@@ -74,6 +74,8 @@ export const executeAlgorithmRecommendationForBrain = async (input: {
  projectId?: string | null
  creatorApproved?: boolean
  creatorDecisions?: Array<{ type: string; choice: string }>
+ traceId?: string | null
+ outputRef?: string | null
 }) => {
  const controls = readBrainUserControls(input.portfolio.channelId)
  if (!controls.enabled) return { status: "disabled" as const, message: "ViewTube Brain is disabled by the creator." }
@@ -82,7 +84,13 @@ export const executeAlgorithmRecommendationForBrain = async (input: {
  if (controls.externalActionsRequireApproval && input.creatorApproved !== true) {
   return { status: "approval_required" as const, message: "Creator approval is required before the recommendation can create a tool handoff." }
  }
- return createAlgorithmRecommendationHandoff({ recommendation, projectId: input.projectId, creatorDecisions: input.creatorDecisions })
+ return createAlgorithmRecommendationHandoff({
+  recommendation,
+  projectId: input.projectId,
+  creatorDecisions: input.creatorDecisions,
+  traceId: input.traceId || null,
+  outputRef: input.outputRef || null,
+ })
 }
 
 export const executePrimingStepForBrain = async (input: {

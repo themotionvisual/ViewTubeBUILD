@@ -38,6 +38,8 @@ export interface CreateSuperToolActionPacketInput {
  projectName?: string | null
  channelId?: string | null
  videoId?: string | null
+ traceId?: string | null
+ outputRef?: string | null
  inputs: Record<string, unknown>
  outputs: Record<string, unknown>
  confidence: SuperToolActionPacket["confidence"]
@@ -85,6 +87,8 @@ export const createSuperToolActionPacket = (
    summary: input.summary,
    metadata: {
     moduleId: input.moduleId,
+    traceId: input.traceId || null,
+    outputRef: input.outputRef || null,
     projectId: scope.projectId,
     channelId: scope.channelId,
     videoId: scope.videoId,
@@ -103,6 +107,8 @@ export const createSuperToolActionPacket = (
   projectId: scope.projectId,
   channelId: scope.channelId,
   videoId: scope.videoId,
+  traceId: input.traceId || null,
+  outputRef: input.outputRef || null,
   inputs: input.inputs,
   outputs: input.outputs,
   confidence: input.confidence,
@@ -141,6 +147,8 @@ export const createSuperToolActionPacket = (
    projectId: scope.projectId,
    channelId: scope.channelId,
    videoId: scope.videoId,
+   traceId: input.traceId || null,
+   outputRef: input.outputRef || null,
    selfImprovement,
   },
  })
@@ -180,7 +188,12 @@ export const createSuperToolActionPacket = (
    toolId: input.toolId,
    evidenceIds: input.evidence,
    generationRecordId: record.id,
-   metadata: { moduleId: input.moduleId, actionPacketId: packet.id },
+   metadata: {
+    moduleId: input.moduleId,
+    actionPacketId: packet.id,
+    traceId: input.traceId || null,
+    outputRef: input.outputRef || null,
+   },
   })
   recordContentBuildToolOutput({
    contentBuildId: scope.contentBuildId,
@@ -192,6 +205,8 @@ export const createSuperToolActionPacket = (
    metadata: {
     moduleId: input.moduleId,
     actionPacketId: packet.id,
+    traceId: input.traceId || null,
+    outputRef: input.outputRef || null,
     workflowTitle: input.workflowTitle,
    },
   })
@@ -205,6 +220,8 @@ export const createSuperToolActionPacket = (
   steps: input.workflowSteps.map(step => createWorkflowStep(step.title, step.surface, step.toolId, step.details)),
   provenance: [
    `${input.toolId}.${input.moduleId}.${packet.id}`,
+   ...(input.traceId ? [`brain-trace:${input.traceId}`] : []),
+   ...(input.outputRef ? [`brain-output:${input.outputRef}`] : []),
    ...(scope.contentBuildId ? [`content-build:${scope.contentBuildId}`] : []),
    ...input.evidence,
    ...input.handoffTargets,
@@ -239,11 +256,15 @@ export const createSuperToolActionPacket = (
     missingInputs: input.missingInputs,
     workflowId: chain.id,
     sourceActionPacketId: packet.id,
+    traceId: input.traceId || null,
+    outputRef: input.outputRef || null,
    },
    evidence: input.evidence,
    provenance: [
     `${input.toolId}.${input.moduleId}.${packet.id}`,
     `workflow:${chain.id}`,
+    ...(input.traceId ? [`brain-trace:${input.traceId}`] : []),
+    ...(input.outputRef ? [`brain-output:${input.outputRef}`] : []),
     ...(scope.contentBuildId ? [`content-build:${scope.contentBuildId}`] : []),
    ],
    suggestedTargets: liveTargets,

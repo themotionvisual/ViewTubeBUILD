@@ -40,6 +40,10 @@ export interface AlgorithmIntelligenceEvent {
  primingStepId?: string | null
  actionPacketId?: string | null
  workflowId?: string | null
+ /** Originating Brain generation trace, when this action came from a Brain recommendation. */
+ traceId?: string | null
+ /** Response/asset id produced by that trace. */
+ outputRef?: string | null
  evidenceIds: string[]
  confidence: BrainConfidenceLevel
  title: string
