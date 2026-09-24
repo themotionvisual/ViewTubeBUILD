@@ -71,6 +71,38 @@ describe("Studio Hub Component Library mobile regression", () => {
     expect(css).toContain("vt-subtoolbox-tree-row[data-depth=\"1\"]")
   })
 
+  it("keeps the primitive catalog compact instead of drawing nested full-width demo boxes", () => {
+    const css = read("src/components/studio-hub/studio-hub-primitive-migration-catalog.css")
+
+    expect(css).toContain('[data-vt-subtoolbox="true"] > div:first-child')
+    expect(css).toContain("border:0!important")
+    expect(css).toContain(".vt-catalog-demo{")
+    expect(css).toContain("width:max-content")
+    expect(css).toContain("border:0")
+    expect(css).toContain("width:fit-content!important")
+    expect(css).toContain("grid-template-columns:repeat(3,minmax(0,max-content))")
+    expect(css).toContain("@media(max-width:520px) and (orientation:portrait)")
+    expect(css).toContain("grid-template-columns:repeat(2,minmax(0,1fr))")
+    expect(css).toContain("@media(max-height:520px) and (orientation:landscape)")
+  })
+
+  it("registers the visual-key tooltip and both new skeleton anatomies", () => {
+    const primitive = read("src/components/subtoolbox/SubToolboxPrimitives.tsx")
+    const migration = read("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
+    const css = read("src/styles/subtoolbox-system.css")
+
+    expect(primitive).toContain("SubToolboxLegendTooltip")
+    expect(primitive).toContain('variant?: "lines" | "compact" | "media"')
+    expect(primitive).toContain('ratio?: "16:9" | "1:1" | "4:5"')
+    expect(migration).toContain('"Tooltip Visual Key"')
+    expect(migration).toContain('"Skeleton Compact"')
+    expect(migration).toContain('"Skeleton Media"')
+    expect(css).toContain(".vt-subtoolbox-tooltip-bubble.is-legend")
+    expect(css).toContain(".vt-subtoolbox-tooltip-legend-row")
+    expect(css).toContain(".vt-subtoolbox-skeleton.is-compact")
+    expect(css).toContain(".vt-subtoolbox-skeleton.is-media")
+  })
+
   it("exposes both tracks to the automated A/B certification harness", () => {
     const hardcoded = read("src/components/studio-hub/StudioHubCompletePrimitiveCatalog.tsx")
     const primitive = read("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
@@ -88,8 +120,9 @@ describe("Studio Hub Component Library mobile regression", () => {
       "Progress Value", "Knob Dial", "Tooltip Color", "Hover Card", "Controller Switch",
       "LED Light", "LED Dot", "Horizontal Scrollbar", "Vertical Scrollbar", "Calendar",
       "Loader", "Loader Progress", "Loader Split", "Loader Orbit", "Loader Bars", "Tree View",
+      "Tooltip Visual Key", "Skeleton Compact", "Skeleton Media",
     ]) expect(capture).toContain(`["${family}"`)
-    expect(capture).toContain('["Tooltip", "Tooltip Color", "Hover Card"].includes(familyName)')
+    expect(capture).toContain('["Tooltip", "Tooltip Color", "Tooltip Visual Key", "Hover Card"].includes(familyName)')
     expect(capture).toContain('captureMode: floatingOverlayFamily && state !== "default" ? "viewport" : "locator"')
   })
 
