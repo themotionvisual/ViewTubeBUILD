@@ -104,6 +104,7 @@ export interface ViewTubeVideoPackage {
  schemaVersion: typeof VIDEO_PACKAGE_SCHEMA_VERSION
  id: string
  contentBuildId?: string
+ contentBuildRevision?: number
  version: number
  channelId: string
  projectId: string
