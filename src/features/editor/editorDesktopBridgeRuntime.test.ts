@@ -23,6 +23,30 @@ describe('editorDesktopBridgeRuntime', () => {
       .not.toBe(editorProjectFingerprint(desktop));
   });
 
+  it('fingerprints transition presentation and layer payload changes, not just clip timing', () => {
+    expect(editorProjectFingerprint({
+      ...desktop,
+      transitions: [{ ...desktop.transitions[0], type: 'slideRight', presentation: 'slide', params: { direction: 'from-right' } }],
+    })).not.toBe(editorProjectFingerprint(desktop));
+
+    expect(editorProjectFingerprint({
+      ...desktop,
+      layers: [{ ...desktop.layers[0], payload: { x: 24 } }],
+    })).not.toBe(editorProjectFingerprint(desktop));
+  });
+
+  it('keeps fingerprints stable when object keys are reordered', () => {
+    const reordered = {
+      transitions: desktop.transitions,
+      clips: desktop.clips,
+      layers: desktop.layers,
+      tracks: desktop.tracks,
+      meta: desktop.meta,
+      schemaVersion: desktop.schemaVersion,
+    };
+    expect(editorProjectFingerprint(reordered)).toBe(editorProjectFingerprint(desktop));
+  });
+
   it('publishes a valid desktop project without needing a browser runtime', () => {
     const snapshot = publishDesktopProjectToBridge(desktop, 100);
     expect(snapshot).toMatchObject({
