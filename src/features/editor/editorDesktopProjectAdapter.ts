@@ -17,6 +17,7 @@ export type DesktopProjectRecord = VtE1Project & {
     muted?: boolean;
     locked?: boolean;
     visible?: boolean;
+    order?: number;
     color?: string;
   }>;
   layers?: Array<Record<string, unknown>>;
@@ -31,6 +32,7 @@ export type MobileBridgeTrack = {
   muted?: boolean;
   locked?: boolean;
   hidden?: boolean;
+  order?: number;
   color?: string;
   desktopKind?: string;
   desktopVisible?: boolean;
@@ -99,6 +101,7 @@ export function desktopProjectToMobileBridgeProject(project: DesktopProjectRecor
         muted: Boolean(track.muted),
         locked: Boolean(track.locked),
         hidden: track.visible === false,
+        order: Number.isFinite(Number(track.order)) ? Number(track.order) : undefined,
         color: typeof track.color === 'string' ? track.color : undefined,
         desktopKind: typeof track.kind === 'string' ? track.kind : undefined,
         desktopVisible: typeof track.visible === 'boolean' ? track.visible : undefined,
@@ -146,6 +149,7 @@ export function mobileBridgeProjectToDesktopProject(
       muted: Boolean(track.muted),
       locked: Boolean(track.locked),
       visible,
+      order: Number.isFinite(Number(track.order)) ? Number(track.order) : prior?.order,
       color: track.color ?? prior?.color,
     };
   });
