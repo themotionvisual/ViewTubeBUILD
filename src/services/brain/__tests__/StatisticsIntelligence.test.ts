@@ -40,6 +40,29 @@ describe("buildStatisticsIntelligence", () => {
   expect(result.metrics[0]).toMatchObject({ metric: "views", sum: 300, average: 150, range: 100, evidenceRef: "analytics:videos" })
  })
 
+ it("does not coerce invalid numeric evidence to zero", () => {
+  const source = bundle()
+  const result = buildStatisticsIntelligence(bundle({
+   datasets: [{
+    ...source.datasets[0],
+    metrics: {
+     views: {
+      count: 2,
+      sum: Number.NaN,
+      average: Number.NaN,
+      minimum: Number.NaN,
+      maximum: Number.NaN,
+     },
+    },
+   }],
+  }))
+
+  expect(result.metrics).toHaveLength(0)
+  expect(result.limitations).toContain(
+   "Ignored invalid canonical metric summaries rather than coercing them to zero.",
+  )
+ })
+
  it("fails closed when evidence is absent", () => {
   const result = buildStatisticsIntelligence(bundle({
    coverage: { total: 1, available: 0, partial: 0, stale: 0, failed: 0, unavailable: 1, represented: 0 },
