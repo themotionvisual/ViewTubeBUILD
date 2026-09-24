@@ -1,5 +1,9 @@
 # Editor Recovery Phases 1–3 — 2026-09-18
 
+**Status:** HISTORICAL RECOVERY / MERGE EVIDENCE  
+**Current authority:** `VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md`  
+**Wave 6 note (2026-09-24):** phases 1–3 are preserved as recovery provenance. Current editor architecture/status is owned by the living master and current code.
+
 ## Authority
 Current main remains the sole integration baseline. Donor branches are archaeological sources only; no stale branch is merged wholesale.
 

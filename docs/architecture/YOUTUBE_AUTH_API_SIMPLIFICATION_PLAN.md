@@ -1,5 +1,9 @@
 # ViewTube Google / YouTube Auth + API Simplification Plan
 
+**Status:** HISTORICAL DESIGN PLAN  
+**Superseded for current auth authority:** `SIMPLE_AUTH_V1.md`  
+**Wave 6 note (2026-09-24):** the current implementation uses flat browser-facing auth routes with nested compatibility aliases resolved through the same simple-auth router. Preserve this plan for design rationale and deletion sequencing; do not use its proposed route layout as present-state truth.
+
 ## Goal
 
 Replace the current multi-path auth system with one boring, server-owned flow:

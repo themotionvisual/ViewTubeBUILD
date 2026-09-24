@@ -1,10 +1,15 @@
-# YouTube API Stabilization V1 — Branch-Only Migration Tracker
+# YouTube API Stabilization V1 — Migration Tracker
+
+**Status:** ACTIVE MIGRATION TRACKER — partially complete  
+**Canonical auth authority:** `SIMPLE_AUTH_V1.md`  
+**Last re-audited:** 2026-09-24 against main `2efe0f56eb52c1029c71543291cf65e2b1a2245f`  
+**Scope:** remaining typed YouTube API migrations, parity verification and legacy deletion. This tracker does not redefine browser auth ownership.
 
 > Safety rule: do not merge this branch into `main` until the verification checklist at the end is complete.
 
 ## Canonical architecture
 
-- Browser auth truth: `GET /api/auth/session`
+- Browser auth truth: `GET /api/auth-session` (flat canonical route; `/api/auth/session` remains a compatibility alias)
 - Google credentials: server-only refresh/access tokens
 - Data API v3: typed `/api/youtube/*` routes
 - Analytics API v2: server-side matrix-validated query service

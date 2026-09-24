@@ -1,5 +1,9 @@
 # Mobile Editor Workspace Repair — 2026-09-18
 
+**Status:** HISTORICAL IMPLEMENTATION / VISUAL-REPAIR EVIDENCE  
+**Current authority:** `VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md`  
+**Wave 6 note (2026-09-24):** retain the repair rationale and acceptance gates; current mobile workspace geometry must be verified against current code/visual certification.
+
 ## Scope
 Repair the phone editor without creating a second editor engine. The mobile surface continues to use the shared VT_E1 project/store/timeline bridge.
 

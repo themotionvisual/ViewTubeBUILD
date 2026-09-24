@@ -1,5 +1,9 @@
 # VT_E1 Desktop Project Bridge Hook Handoff
 
+**Status:** COMPLETED IMPLEMENTATION HANDOFF / historical evidence  
+**Current authority:** `editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md`  
+**Wave 6 verification:** current `VT_E1.jsx` imports and mounts `useDesktopProjectBridge({ project, setProject, normalizeProject })`. The desktop adapter is no longer pending.
+
 Branch: `feat/editor-desktop-project-bridge-hook-2026-09-12`
 
 ## Goal
