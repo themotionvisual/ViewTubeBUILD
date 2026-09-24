@@ -12,6 +12,7 @@ import { normalizeVtE1TransitionType } from '../../shared/vtE1TransitionCatalog.
 import { transitionFrameStyleFor } from '../../shared/vtE1TransitionFrame.js';
 import { buildVtE1Filter, resolveVtE1FxOpacity } from '../../shared/vtE1FxCatalog.js';
 import { resolveVtE1VisualFrame, sortVtE1Tracks, vtE1MediaCropStyle } from '../../shared/vtE1VisualFrame.js';
+import { resolveVtE1AudioFrame } from '../../shared/vtE1AudioFrame.js';
 import {
   sourceTimeAtTimelineSec as sharedSourceTimeAtTimelineSec,
   transitionWindowFor as sharedTransitionWindowFor,
@@ -442,14 +443,18 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
   const background = String(project.meta?.chromaEnabled ? project.meta?.chromaColor || '#00ff00' : '#111111');
   const tracks = useMemo(() => sortTracks(Array.isArray(project.tracks) ? project.tracks : []), [project]);
   const orderedTrackIds = tracks.map((track) => track.id);
-  const activeTrackIds = useMemo(() => {
+  const renderableTrackIds = useMemo(() => {
     if (!tracks.length) return null;
     const soloTrackIds = tracks.filter((track) => track.solo).map((track) => track.id);
-    const activeTracks = soloTrackIds.length
+    const renderableTracks = soloTrackIds.length
       ? tracks.filter((track) => soloTrackIds.includes(track.id))
-      : tracks.filter((track) => !track.muted);
-    return new Set(activeTracks.filter((track) => track.visible !== false).map((track) => track.id));
+      : tracks;
+    return new Set(renderableTracks.filter((track) => track.visible !== false).map((track) => track.id));
   }, [tracks]);
+  const mutedTrackIds = useMemo(
+    () => new Set(tracks.filter((track) => track.muted).map((track) => track.id)),
+    [tracks],
+  );
   const layers = Array.isArray(project.layers) ? project.layers : [];
   const clips = expandCompoundClips(Array.isArray(project.clips) ? project.clips : []);
   const currentSec = frame / Math.max(1, fps);
@@ -463,7 +468,7 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
         const durationInFrames = Math.max(1, toFrame(Math.max(0, bounds.endSec - bounds.startSec), fps));
 
         if (String((clip as VTClip & {clipType?:string}).clipType || '') === 'design-template' && (clip as VTClip & {templateDefinition?:unknown}).templateDefinition) {
-          if (activeTrackIds && !activeTrackIds.has(clip.trackId)) return null;
+          if (renderableTrackIds && !renderableTrackIds.has(clip.trackId)) return null;
           const zIndex = Math.max(1, orderedTrackIds.indexOf(clip.trackId) + 1);
           return (
             <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
@@ -475,7 +480,7 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
         }
 
         if (!layer || layer.visible === false) return null;
-        if (activeTrackIds && !activeTrackIds.has(layer.trackId)) return null;
+        if (renderableTrackIds && !renderableTrackIds.has(layer.trackId)) return null;
         const basePayload = {
           ...((layer.payload || {}) as Record<string, unknown>),
           ...(clip as unknown as Record<string, unknown>),
@@ -517,12 +522,20 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
           const src = String(payload.mediaUrl || payload.src || payload.url || '');
           if (!src) return null;
           const startFrom = toFrame(Math.max(0, sourceTimeForClipAt(project, clip, bounds.startSec)), fps);
+          const audioFrame = resolveVtE1AudioFrame(
+            payload,
+            clip,
+            localSeconds,
+            Math.max(0.001, Number(clip.end || 0) - Number(clip.start || 0)),
+            mutedTrackIds.has(layer.trackId),
+          );
           return (
             <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
               <Audio
                 src={src}
                 startFrom={startFrom}
-                volume={Boolean(payload.muted) ? 0 : clamp(Number(payload.volume ?? 0.6), 0, 1)}
+                volume={audioFrame.volume}
+                playbackRate={audioFrame.playbackRate}
               />
             </Sequence>
           );
@@ -599,6 +612,13 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
           if (!src) return null;
           const startFrom = toFrame(Math.max(0, sourceTimeForClipAt(project, clip, bounds.startSec)), fps);
           const sourceSeconds = sourceTimeForClipAt(project, clip, currentSec);
+          const mediaAudioFrame = resolveVtE1AudioFrame(
+            payload,
+            clip,
+            localSeconds,
+            Math.max(0.001, Number(clip.end || 0) - Number(clip.start || 0)),
+            mutedTrackIds.has(layer.trackId),
+          );
           return (
             <Sequence key={clip.id} from={from} durationInFrames={durationInFrames}>
               <div style={commonStyle}>
@@ -608,8 +628,9 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
                   <OffthreadVideo
                     src={src}
                     startFrom={startFrom}
-                    muted={Boolean(payload.muted)}
-                    volume={Boolean(payload.muted) ? 0 : clamp(Number(payload.volume ?? 1), 0, 1)}
+                    muted={mediaAudioFrame.muted}
+                    volume={mediaAudioFrame.volume}
+                    playbackRate={mediaAudioFrame.playbackRate}
                     style={{
                       width: '100%',
                       height: '100%',
