@@ -98,7 +98,7 @@ The prompt should receive **bounded selected context**, not a raw dump of every 
 
 ## Explicit prompt-constant inventory
 
-`src/services/prompts.ts` currently exports 45 prompt/instruction/version constants.
+`src/services/prompts.ts` currently exports 49 prompt/instruction/version constants.
 
 ### Packaging / SEO
 - `SCULPTING_ENGINE_SYSTEM_PROMPT`
