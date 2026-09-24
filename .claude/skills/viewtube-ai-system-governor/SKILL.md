@@ -150,3 +150,14 @@ Return:
 ## Handoff
 
 For code implementation, hand off clear acceptance criteria to the repository execution workflow. Preserve canonical owners and attach verification receipts.
+
+
+## Operational health / reachability ratchet
+
+PR #241 identified a recurring class of failures where correct-looking AI systems were built but unreachable, writer-less, inert or bypassed by surface-specific provider code.
+
+For AI-affecting release work and periodic health reviews, read:
+
+- [references/operational-health-check.md](references/operational-health-check.md)
+
+Use `node scripts/audit/reach.mjs` as the first reachability signal, then classify every apparent orphan/bypass against current architecture before deleting or wiring it. Re-measure current counts; never reuse historical PR #241 counts as present truth.
