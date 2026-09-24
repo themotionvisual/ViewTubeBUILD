@@ -27,6 +27,7 @@ import {
   filterDashboardWidgetSettings,
   getManageableDashboardWidgets,
   summarizeDashboardWidgetVisibility,
+  getDashboardWidgetSignatureLabel,
   type DashboardWidgetSettingsCategory,
 } from "./dashboardWidgetSettingsModel"
 
@@ -202,7 +203,9 @@ export const DashboardWidgetsSettingsSection: React.FC = () => {
                   tone={visible ? "info" : "warning"}
                   icon={<span className="size-5" style={{ background: widget.headerColor }} />}
                   title={widget.title}
-                  detail={widget.subtitle}
+                  detail={getDashboardWidgetSignatureLabel(widget.id)
+                    ? `${widget.subtitle} · Signature: ${getDashboardWidgetSignatureLabel(widget.id)}`
+                    : widget.subtitle}
                   action={
                     <span className="flex items-center gap-2">
                       {widget.status !== "ready" ? (
