@@ -36,10 +36,12 @@ import {
  shouldUseCurrentGrounding,
 } from "./BrainCapabilityRegistry"
 import { resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
+import { resolveBrainContextPlan } from "./BrainContextResolver"
 import { buildBrainEvidenceIntelligence } from "./BrainStatisticsBridge"
 import { buildBrainAudienceIntelligence } from "./BrainAudienceBridge"
 import { readAlgorithmIntelligenceForBrain } from "./AlgorithmIntelligenceAccess"
 import { readBrainEngineControls } from "./BrainEngineControls"
+import { readBrainUserControls } from "./BrainUserControls"
 import { loadRelevantChannelKnowledge } from "./ChannelProfileAdapter"
 import {
  cacheCurrentNicheResearch,
@@ -309,10 +311,22 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
  const capabilities = selectBrainCapabilities({ channelId: input.channelId, userText: input.userText, snapshot: input.snapshot })
  const capabilityIds = capabilities.map((capability) => capability.id)
  const brainIntent = inferBrainIntent(input.userText)
- const evidenceIntelligence = capabilityIds.includes("statistics-intelligence")
+ const engineControls = readBrainEngineControls(input.channelId)
+ const userControls = readBrainUserControls(input.channelId)
+ const contextPlan = resolveBrainContextPlan({
+  taskProfile,
+  capabilityIds,
+  channelId: input.channelId,
+  projectId: input.projectId,
+  personalizationEnabled: userControls.personalization,
+  analyticsEnabled: userControls.allowAnalytics,
+  algorithmEnabled: engineControls.channelIntelligence,
+  timelyRequest: shouldUseCurrentGrounding(input.userText),
+ })
+ const evidenceIntelligence = contextPlan.requires.statistics
   ? buildBrainEvidenceIntelligence({
     expectedChannelId: input.channelId,
-    includeAudienceRows: brainIntent === "audience",
+    includeAudienceRows: contextPlan.requires.audience,
    })
   : null
  const evidenceQuality = evidenceIntelligence?.evidenceQuality || null
@@ -322,12 +336,11 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
  const statisticsIntelligence = canonicalEvidence
   ? evidenceIntelligence?.statisticsIntelligence || null
   : null
- const audienceIntelligence = canonicalEvidence && brainIntent === "audience"
+ const audienceIntelligence = canonicalEvidence && contextPlan.requires.audience
   ? buildBrainAudienceIntelligence(canonicalEvidence)
   : null
- const engineControls = readBrainEngineControls(input.channelId)
- const wantsAlgorithmIntelligence = capabilityIds.includes("algorithm-intelligence") && engineControls.channelIntelligence
- const projectContext = input.projectId && input.channelId
+ const wantsAlgorithmIntelligence = contextPlan.requires.algorithm
+ const projectContext = contextPlan.requires.projectContext && input.projectId && input.channelId
   ? {
     channelId: input.channelId,
     projectId: input.projectId,
@@ -342,11 +355,11 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   ? await readAlgorithmIntelligenceForBrain({ channelId: input.channelId, project: engineControls.algorithmPriming ? projectContext : null }).catch(() => null)
   : null
  const algorithmIntelligence = algorithmAccess?.status === "ok" ? algorithmAccess.value : null
- const channelKnowledge = input.channelId
+ const channelKnowledge = contextPlan.requires.channelKnowledge && input.channelId
   ? await loadRelevantChannelKnowledge({
     channelId: input.channelId,
     query: input.userText,
-    limit: 10,
+    limit: contextPlan.budget.channelKnowledgeRecords,
    }).catch(() => null)
   : null
  let nicheKnowledge: NicheKnowledgeProfile | null = null
@@ -363,9 +376,11 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   audienceIntelligence,
   algorithmIntelligence,
   channelKnowledge,
+  contextOmissions: contextPlan.omissions,
+  maximumCharacters: contextPlan.budget.maximumCharacters,
  })
  try {
-  if (capabilities.some((capability) => capability.id === "niche-knowledge")) {
+  if (contextPlan.requires.nicheKnowledge) {
    nicheKnowledge = await (input.nicheResolver || resolveNicheKnowledge)({
     channelId: input.channelId,
     niche: input.snapshot.inferredProfile.niche,
@@ -381,7 +396,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     accessedAt: source.accessedAt,
    })))
   }
-  if (input.allowModel && nicheKnowledge?.canonicalNiche && shouldUseCurrentGrounding(input.userText)) {
+  if (input.allowModel && nicheKnowledge?.canonicalNiche && contextPlan.requires.currentResearch) {
    const grounded = readCachedCurrentNicheResearch(nicheKnowledge) || await (input.currentResearcher || groundCurrentNicheResearch)({
      canonicalNiche: nicheKnowledge.canonicalNiche,
      publicQuestion: input.userText,
@@ -405,6 +420,8 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    audienceIntelligence,
    algorithmIntelligence,
    channelKnowledge,
+   contextOmissions: contextPlan.omissions,
+   maximumCharacters: contextPlan.budget.maximumCharacters,
   })
 
   let response = buildFallback(input.userText, input.snapshot, input.growthContext)
