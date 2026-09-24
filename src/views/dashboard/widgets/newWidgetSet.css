@@ -14,3 +14,7 @@ color-mix(in srgb,var(--vt-widget-header-color,#fff) 12%,#fff)}
 @container vt-widget (width < 520px){.vt-opportunity-field{min-height:160px;flex-basis:38%}.vt-opportunity-row{grid-template-columns:22px minmax(0,1fr) auto}.vt-opportunity-row small{font-size:7px}}
 @media (pointer:coarse){.vt-opportunity-dot{min-width:44px;min-height:44px}}
 @media (prefers-reduced-motion:reduce){.vt-opportunity-dot{transition:none}}
+
+.vt-radar-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+.vt-radar-actions>*{width:100%;min-width:0}
+@container vt-widget (width < 380px){.vt-radar-actions{grid-template-columns:1fr}}
