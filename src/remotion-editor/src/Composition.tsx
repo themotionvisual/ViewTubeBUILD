@@ -8,6 +8,7 @@ import {
   interpolateShortsConfig as interpolateSharedShortsConfig,
 } from '../../shared/vtE1Shorts';
 import { expandCompoundClips } from '../../shared/vtE1CompoundClips.js';
+import { normalizeVtE1TransitionType } from '../../shared/vtE1TransitionCatalog.js';
 import {
   sourceTimeAtTimelineSec as sharedSourceTimeAtTimelineSec,
   transitionWindowFor as sharedTransitionWindowFor,
@@ -150,7 +151,7 @@ const transitionInfluenceAt = (project: NonNullable<RenderJob['project']>, trans
   const fadeIn = p;
   const opacity = isLeft ? fadeOut : fadeIn;
   const amt = (1 - p) * intensity * amount;
-  switch (String(transition.type || 'fade')) {
+  switch (normalizeVtE1TransitionType(transition.type)) {
     case 'cut':
       return { opacity: isLeft ? 1 : 0, transformExtra: '', filterExtra: '' };
     case 'fade':
