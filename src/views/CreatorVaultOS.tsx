@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import {
  Archive,
  Database,
@@ -30,9 +30,13 @@ import {
  listVaultAssets,
  searchVaultAssets,
 } from "../services/vaultAdapter"
+import {
+ readVaultWorkspaceState,
+ writeVaultWorkspaceState,
+ type VaultWorkspaceSort,
+ type VaultWorkspaceViewMode,
+} from "../services/vaultWorkspaceState"
 import type { VaultAsset, VaultAssetKind } from "../types"
-
-type VaultViewMode = "grid" | "list"
 
 type PendingImport = {
  id: string
@@ -80,11 +84,14 @@ const assetIcon = (asset: VaultAsset) => {
 }
 
 const CreatorVaultOS: React.FC = () => {
+ const initialWorkspace = useMemo(() => readVaultWorkspaceState(), [])
  const [refreshTick, setRefreshTick] = useState(0)
- const [query, setQuery] = useState("")
- const [filterKind, setFilterKind] = useState<"all" | VaultAssetKind>("all")
- const [selectedTag, setSelectedTag] = useState<string | null>(null)
- const [viewMode, setViewMode] = useState<VaultViewMode>("grid")
+ const [query, setQuery] = useState(initialWorkspace.query)
+ const [filterKind, setFilterKind] = useState<"all" | VaultAssetKind>(initialWorkspace.filterKind)
+ const [selectedTag, setSelectedTag] = useState<string | null>(initialWorkspace.selectedTag)
+ const [source, setSource] = useState(initialWorkspace.source)
+ const [sort, setSort] = useState<VaultWorkspaceSort>(initialWorkspace.sort)
+ const [viewMode, setViewMode] = useState<VaultWorkspaceViewMode>(initialWorkspace.viewMode)
  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null)
  const [pending, setPending] = useState<PendingImport[]>([])
  const [importProject, setImportProject] = useState("")
@@ -96,9 +103,22 @@ const CreatorVaultOS: React.FC = () => {
    query,
    kind: filterKind === "all" ? null : filterKind,
    tags: selectedTag ? [selectedTag] : [],
+   source: source === "all" ? null : source,
+   sort,
    limit: 100,
   })
- }, [query, filterKind, selectedTag, refreshTick])
+ }, [query, filterKind, selectedTag, source, sort, refreshTick])
+
+ useEffect(() => {
+  writeVaultWorkspaceState({
+   query,
+   selectedTag,
+   filterKind,
+   source,
+   sort,
+   viewMode,
+  })
+ }, [query, selectedTag, filterKind, source, sort, viewMode])
 
  const selectedAsset = useMemo(
   () => allAssets.find((asset) => asset.id === selectedAssetId) || null,
@@ -193,7 +213,7 @@ const CreatorVaultOS: React.FC = () => {
          level="l1"
          ariaLabel="Vault view"
          value={viewMode}
-         onValueChange={(value) => setViewMode(value as VaultViewMode)}
+         onValueChange={(value) => setViewMode(value as VaultWorkspaceViewMode)}
          options={[
           { value: "grid", label: "GRID" },
           { value: "list", label: "LIST" },
@@ -204,6 +224,18 @@ const CreatorVaultOS: React.FC = () => {
          value={filterKind}
          onChange={(value) => setFilterKind(value as "all" | VaultAssetKind)}
          options={["all", "image", "video", "audio", "document", "font", "template", "generated", "other"]}
+        />
+        <SubToolboxDropdownControl
+         label="Source"
+         value={source}
+         onChange={(value) => setSource(value as typeof source)}
+         options={["all", "local", "drive", "generated", "project", "imported"]}
+        />
+        <SubToolboxDropdownControl
+         label="Sort"
+         value={sort}
+         onChange={(value) => setSort(value as VaultWorkspaceSort)}
+         options={["updated-desc", "updated-asc", "name-asc", "name-desc"]}
         />
         <SubToolboxInnerActionButton
          label={selectedTag ? `Clear Tag: ${selectedTag}` : "All Spectrum Tags"}
