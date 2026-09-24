@@ -74,6 +74,8 @@ export const executeAlgorithmRecommendationForBrain = async (input: {
  projectId?: string | null
  creatorApproved?: boolean
  creatorDecisions?: Array<{ type: string; choice: string }>
+ traceId?: string | null
+ outputRef?: string | null
 }) => {
  const controls = readBrainUserControls(input.portfolio.channelId)
  if (!controls.enabled) return { status: "disabled" as const, message: "ViewTube Brain is disabled by the creator." }
