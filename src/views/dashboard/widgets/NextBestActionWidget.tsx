@@ -6,6 +6,7 @@ import type { DashboardData } from "../useDashboardData"
 import type { CommonWidgetProps } from "../types"
 import { useBrain } from "../../../context/useBrain"
 import { readAlgorithmIntelligenceForBrain } from "../../../services/brain/AlgorithmIntelligenceAccess"
+import { readBrainUserControls } from "../../../services/brain/BrainUserControls"
 import type { AlgorithmRecommendation } from "../../../services/brain/AlgorithmStrategyEngine"
 import { buildDashboardAlgorithmProjectContext } from "./dashboardAlgorithmContext"
 import { buildNextBestActionModel } from "./nextBestActionModel"
@@ -33,9 +34,10 @@ export const NextBestActionWidget: React.FC<CommonWidgetProps & { data: Dashboar
     }
 
     setStatus("loading")
+    const controls = readBrainUserControls(channelId)
     void readAlgorithmIntelligenceForBrain({
       channelId,
-      project: projectContext,
+      project: controls.allowProjects ? projectContext : null,
       includeAnomalies: true,
     }).then((result) => {
       if (cancelled) return
