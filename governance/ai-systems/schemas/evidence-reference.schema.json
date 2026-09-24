@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewtube.live/schemas/ai-systems/evidence-reference.schema.json",
+  "title": "ViewTube Evidence Reference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "evidenceId",
+    "schemaVersion",
+    "owner",
+    "epistemicState",
+    "sourceId"
+  ],
+  "properties": {
+    "evidenceId": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "vt-evidence-ref-v1"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "epistemicState": {
+      "enum": [
+        "KNOWN",
+        "OBSERVED",
+        "CALCULATED",
+        "USER_PROVIDED",
+        "INFERRED",
+        "HYPOTHESIS",
+        "ESTIMATE",
+        "STALE",
+        "MISSING",
+        "CONFLICTING"
+      ]
+    },
+    "sourceId": {
+      "type": "string"
+    },
+    "scope": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "channelId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "projectId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "contentBuildId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "videoId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "observedAt": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "freshness": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "confidence": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  }
+}
