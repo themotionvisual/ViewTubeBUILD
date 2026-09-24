@@ -135,6 +135,10 @@ describe("Studio Hub Component Library mobile regression", () => {
     ]) expect(capture).toContain(`["${family}"`)
     expect(capture).toContain('["Tooltip", "Tooltip Color", "Tooltip Visual Key", "Hover Card"].includes(familyName)')
     expect(capture).toContain('captureMode: floatingOverlayFamily && state !== "default" ? "viewport" : "locator"')
+    expect(capture).toContain("geometryMinimumUnits")
+    expect(capture).toContain("inspectPrimitiveGeometry")
+    expect(capture).toContain("squareRailDelta")
+    expect(capture).toContain("canonical label clipped")
   })
 
   it("keeps the requested missing families in the canonical registry", () => {
