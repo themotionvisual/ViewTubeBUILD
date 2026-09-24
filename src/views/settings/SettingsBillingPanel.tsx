@@ -80,6 +80,10 @@ export const SettingsBillingPanel: React.FC<SettingsBillingPanelProps> = ({
     setSelectedPlanId(activePlanId)
   }, [activePlanId])
 
+  const activePlan = useMemo(
+    () => getSettingsPlanOption(activePlanId),
+    [activePlanId],
+  )
   const selectedPlan = useMemo(
     () => getSettingsPlanOption(selectedPlanId),
     [selectedPlanId],
@@ -94,7 +98,7 @@ export const SettingsBillingPanel: React.FC<SettingsBillingPanelProps> = ({
   return (
     <div className="grid gap-3">
       <SubToolbox
-        title="Current Plan"
+        title={`Current Plan · ${activePlan.label}`}
         icon={<CreditCard />}
         paletteIndex={5}
         collapsible
@@ -106,7 +110,6 @@ export const SettingsBillingPanel: React.FC<SettingsBillingPanelProps> = ({
           <SubToolboxMetricStrip
             level="l1"
             items={[
-              { label: "Plan", value: getSettingsPlanOption(activePlanId).label },
               { label: "Available", value: unlimited ? "∞" : meterLeft.toLocaleString() },
               { label: "Used", value: meterUsed.toLocaleString() },
               { label: "Total", value: unlimited ? "∞" : meterTotal.toLocaleString() },
