@@ -10,7 +10,7 @@
 
 @layer shell-grid {
  /* Width is now intrinsic to the dashboard grid at every viewport. No md breakpoint silently forces full width. */
- .dashboard-widget-slot { container-type:inline-size; container-name:vt-widget; min-width:0; }
+ .dashboard-widget-slot { container-type:inline-size; container-name:vt-widget; min-width:0; transition:height var(--vt-widget-collapse-duration,600ms) var(--vt-widget-collapse-easing,ease-out); }
  .dashboard-widget-slot.vt-size-full { grid-column:span 24/span 24; }
  .dashboard-widget-slot.vt-size-three-quarters { grid-column:span 18/span 18; }
  .dashboard-widget-slot.vt-size-two-thirds { grid-column:span 16/span 16; }
