@@ -7,6 +7,7 @@ import {assetRegistry} from '../../../../remotion-editor/src/assets/catalog';
 import {createAssetTimelineObject} from '../../../../remotion-editor/src/assets/editorAdapter';
 import type {AssetDefinition} from '../../../../remotion-editor/src/assets/types';
 import {AcceleratingStepper as HoldStepper} from './MobileEditorPrimitives';
+import {VT_E1_FX_CATALOG,VT_E1_VT_E1_DEFAULT_FX_ORDER,normalizeVtE1FxOrder,resetVtE1FxPatch,resolveVtE1FxDisabled,resolveVtE1FxValue} from '../../../../shared/vtE1FxCatalog.js';
 
 const INK='#248b99',CYAN='#36E0F6',YELLOW='#FFFF61',PINK='#FA618A';
 const card:React.CSSProperties={border:`2px solid ${INK}`,borderRadius:7,background:'#fff',padding:7,marginBottom:7,boxShadow:'2px 2px 0 rgba(54,224,246,.22)'};
@@ -18,17 +19,6 @@ const btn=(active=false):React.CSSProperties=>({
 
 function uid(prefix:string){return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`}
 
-const FX_DEFS=[
-  {key:'blur',label:'Blur',min:0,max:40,step:.25,precision:2,defaultValue:0},
-  {key:'saturation',label:'Saturation',min:0,max:3,step:.05,precision:2,defaultValue:1},
-  {key:'brightness',label:'Brightness',min:0,max:3,step:.05,precision:2,defaultValue:1},
-  {key:'hue',label:'Hue',min:-180,max:180,step:2,precision:0,defaultValue:0},
-  {key:'contrast',label:'Contrast',min:0,max:3,step:.05,precision:2,defaultValue:1},
-  {key:'sepia',label:'Sepia',min:0,max:1,step:.05,precision:2,defaultValue:0},
-  {key:'grayscale',label:'Grayscale',min:0,max:1,step:.05,precision:2,defaultValue:0},
-  {key:'opacity',label:'Opacity',min:0,max:1,step:.02,precision:2,defaultValue:1},
-] as const;
-const DEFAULT_FX_ORDER=FX_DEFS.map(def=>def.key);
 const FAVORITES_KEY='viewtube.editor.asset-favorites.v1';
 const RECENTS_KEY='viewtube.editor.asset-recents.v1';
 const FX_PRESETS_KEY='viewtube.editor.fx-presets.v1';
@@ -55,11 +45,10 @@ export function ClipEffects({store}:{store:EditorStore}){
     if(typeof window==='undefined')return[];
     try{const raw=JSON.parse(localStorage.getItem(FX_PRESETS_KEY)||'[]');return Array.isArray(raw)?raw.slice(0,12):[]}catch{return[]}
   });
-  const number=(key:string,fallback:number)=>Number.isFinite(Number(payload[key]))?Number(payload[key]):fallback;
+  const number=(key:string,fallback:number)=>Number.isFinite(resolveVtE1FxValue(payload,key))?resolveVtE1FxValue(payload,key):fallback;
   const bypass=Boolean(payload.fxBypass);
-  const disabled=(payload.fxDisabled&&typeof payload.fxDisabled==='object'?payload.fxDisabled:{}) as Record<string,boolean>;
-  const rawOrder=Array.isArray(payload.fxOrder)?payload.fxOrder.map(String):DEFAULT_FX_ORDER;
-  const order=[...rawOrder.filter(key=>DEFAULT_FX_ORDER.includes(key as typeof DEFAULT_FX_ORDER[number])),...DEFAULT_FX_ORDER.filter(key=>!rawOrder.includes(key))];
+  const disabled=resolveVtE1FxDisabled(payload) as Record<string,boolean>;
+  const order=normalizeVtE1FxOrder(payload.fxOrder);
   const moveFx=(key:string,direction:-1|1)=>{
     const index=order.indexOf(key);if(index<0)return;
     const next=[...order],target=Math.max(0,Math.min(next.length-1,index+direction));
@@ -76,7 +65,7 @@ export function ClipEffects({store}:{store:EditorStore}){
       </div>
       <div style={{display:'grid',gap:3,marginBottom:6}}>
         {order.map((key,index)=>{
-          const def=FX_DEFS.find(item=>item.key===key)!;
+          const def=VT_E1_FX_CATALOG.find(item=>item.key===key)!;
           const off=Boolean(disabled[key]);
           return <div key={key} style={{display:'grid',gridTemplateColumns:'24px minmax(0,1fr) 22px 22px',gap:3,alignItems:'center',border:`1.5px solid ${INK}`,borderRadius:5,padding:3,background:off?'#f4f4f4':'#fff'}}>
             <button title={off?`Enable ${def.label}`:`Disable ${def.label}`} aria-label={off?`Enable ${def.label}`:`Disable ${def.label}`} onClick={()=>toggleFx(key)} style={{...btn(!off),minHeight:22,width:22,padding:0}}>{off?<EyeOff size={10}/>:<Eye size={10}/>}</button>
@@ -89,7 +78,7 @@ export function ClipEffects({store}:{store:EditorStore}){
       <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:5}}>
         {CLIP_PRESETS.map(preset=><button key={preset.name} style={btn(false)} onClick={()=>patch({...preset.patch,fxBypass:false,fxDisabled:{}})}>{preset.name}</button>)}
       </div>
-      <button style={{...btn(false),width:'100%',marginTop:5}} onClick={()=>patch({blur:0,saturation:1,brightness:1,hue:0,contrast:1,sepia:0,grayscale:0,opacity:1,fxBypass:false,fxDisabled:{},fxOrder:DEFAULT_FX_ORDER})}><RotateCcw size={12}/>Reset FX</button>
+      <button style={{...btn(false),width:'100%',marginTop:5}} onClick={()=>patch(resetVtE1FxPatch())}><RotateCcw size={12}/>Reset FX</button>
       <button style={{...btn(true),width:'100%',marginTop:5}} onClick={()=>{
         const preset={name:`FX ${userPresets.length+1}`,patch:{
           blur:number('blur',0),saturation:number('saturation',1),brightness:number('brightness',1),hue:number('hue',0),contrast:number('contrast',1),sepia:number('sepia',0),grayscale:number('grayscale',0),opacity:number('opacity',1),
@@ -106,7 +95,7 @@ export function ClipEffects({store}:{store:EditorStore}){
       <div style={{fontSize:9,fontWeight:1000,textTransform:'uppercase',marginBottom:6}}>Adjust</div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:'0 8px'}}>
         {order.map(key=>{
-          const def=FX_DEFS.find(item=>item.key===key)!;
+          const def=VT_E1_FX_CATALOG.find(item=>item.key===key)!;
           return <div key={key} style={{opacity:bypass||disabled[key]?.42:1}}>
             <HoldStepper label={def.label} value={number(def.key,def.defaultValue)} min={def.min} max={def.max} step={def.step} precision={def.precision} defaultValue={def.defaultValue} onChange={value=>patch({[def.key]:value})}/>
           </div>;
