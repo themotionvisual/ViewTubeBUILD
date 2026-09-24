@@ -30,6 +30,7 @@ import {
  type StructuredBrainModelOutput,
 } from "../gemini"
 import { buildBrainContextPack } from "./BrainContextBroker"
+import { beginBrainTrace, type BrainTraceRecorder } from "./BrainTrace"
 import { auditNumericClaims } from "./numericClaims"
 import {
  inferBrainIntent,
@@ -90,18 +91,53 @@ const responseText = (response: CreatorBrainResponse): string => [
  ...response.actions,
 ].join(" ")
 
+const numericAuditForResponse = (
+ response: CreatorBrainResponse,
+ snapshot: AIBrainContextSnapshot,
+) => auditNumericClaims({
+ text: responseText(response),
+ evidence: {
+  channel: snapshot.channel,
+  profile: snapshot.inferredProfile,
+  evidence: snapshot.evidencePack,
+ },
+})
+
+const finalizeAnswerTrace = (input: {
+ trace: BrainTraceRecorder
+ response: CreatorBrainResponse
+ evaluation: BrainAnswerEvaluation
+ snapshot: AIBrainContextSnapshot
+ repairOutcome: BrainRepairOutcome
+ status: "complete" | "fallback"
+ fallbackReason?: BrainFallbackReason
+}) => {
+ const numeric = numericAuditForResponse(input.response, input.snapshot)
+ input.trace.recordClaims({
+  fabricated: numeric.fabricated.map((claim) => claim.token),
+  unverifiedDerived: numeric.unverifiedDerived.map((claim) => claim.token),
+ })
+ Object.entries(input.evaluation.scores).forEach(([name, score]) => {
+  input.trace.recordGrade(name, score)
+ })
+ const scores = Object.values(input.evaluation.scores)
+ input.trace.recordGrade(
+  "answerQuality",
+  scores.length ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length) : 0,
+ )
+ if (input.repairOutcome.attempted) input.trace.recordRepairAttempt()
+ return input.trace.complete({
+  status: input.status,
+  outputRef: input.response.id,
+  ...(input.fallbackReason ? { failureReason: input.fallbackReason } : {}),
+ })
+}
+
 const unsupportedNumbers = (
  response: CreatorBrainResponse,
  snapshot: AIBrainContextSnapshot,
 ): string[] => {
- const audit = auditNumericClaims({
-  text: responseText(response),
-  evidence: {
-   channel: snapshot.channel,
-   profile: snapshot.inferredProfile,
-   evidence: snapshot.evidencePack,
-  },
- })
+ const audit = numericAuditForResponse(response, snapshot)
  return Array.from(new Set([
   ...audit.fabricated.map((claim) => claim.token),
   ...audit.unverifiedDerived.map((claim) => claim.token),
@@ -387,6 +423,52 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   contextOmissions: contextPlan.omissions,
   maximumCharacters: contextPlan.budget.maximumCharacters,
  })
+ const trace = beginBrainTrace({ kind: "question", channelId: input.channelId })
+ trace.setIntent({ intent: taskProfile.intent, taskProfileId: taskProfile.id })
+ trace.recordCapabilities(capabilityIds)
+ trace.recordPromptVersion("orchestrator", BRAIN_PROMPT_VERSION)
+ trace.recordPromptVersion("shared_constitution", BRAIN_PROMPT_CONSTITUTION_VERSION)
+ trace.recordPromptVersion("prompt_family", promptFamilyVersion)
+ const requestedEvidence = [
+  contextPlan.requires.canonicalAnalytics ? "canonical_analytics" : "",
+  contextPlan.requires.statistics ? "statistics" : "",
+  contextPlan.requires.audience ? "audience" : "",
+  contextPlan.requires.algorithm ? "algorithm_intelligence" : "",
+  contextPlan.requires.channelKnowledge ? "channel_knowledge" : "",
+  contextPlan.requires.nicheKnowledge ? "niche_knowledge" : "",
+  contextPlan.requires.currentResearch ? "current_research" : "",
+  contextPlan.requires.projectContext ? "project_context" : "",
+ ].filter(Boolean)
+ const baseEvidenceRefs = Array.from(new Set([
+  ...input.snapshot.evidencePack.evidenceIds,
+  ...(canonicalEvidence?.datasets.flatMap((dataset) => dataset.evidenceRefs) || []),
+  ...(channelKnowledge?.records.flatMap((record) => record.evidenceRefs) || []),
+  ...(channelKnowledge?.contradictions.flatMap((record) => record.evidenceRefs) || []),
+  ...(input.artifactRefs || []),
+ ]))
+ trace.recordEvidence({
+  requested: requestedEvidence,
+  returned: baseEvidenceRefs,
+  missing: Array.from(new Set([
+   ...contextPlan.omissions,
+   ...(input.snapshot.evidencePack.missingInputs || []),
+   ...(evidenceQuality?.missingness.unavailableDatasetIds.map((id) => `dataset:${id}`) || []),
+   ...(evidenceQuality?.missingness.failedDatasetIds.map((id) => `failed:${id}`) || []),
+  ])),
+ })
+ trace.recordContext({
+  tokensEstimated: Math.ceil(context.systemInstruction.length / 4),
+  sectionsIncluded: [
+   "prompt_constitution",
+   "controls",
+   "channel_evidence",
+   ...(statisticsIntelligence ? ["statistics"] : []),
+   ...(audienceIntelligence ? ["audience"] : []),
+   ...(algorithmIntelligence ? ["algorithm_intelligence"] : []),
+   ...(channelKnowledge ? ["channel_knowledge"] : []),
+  ],
+  sectionsDropped: context.budget.omittedSections,
+ })
  try {
   if (contextPlan.requires.nicheKnowledge) {
    nicheKnowledge = await (input.nicheResolver || resolveNicheKnowledge)({
@@ -430,6 +512,28 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    channelKnowledge,
    contextOmissions: contextPlan.omissions,
    maximumCharacters: contextPlan.budget.maximumCharacters,
+  })
+  trace.recordEvidence({
+   returned: Array.from(new Set([
+    ...baseEvidenceRefs,
+    ...citations.map((citation) => citation.id),
+    ...(nicheKnowledge?.sources.map((source) => source.id) || []),
+   ])),
+  })
+  trace.recordContext({
+   tokensEstimated: Math.ceil(context.systemInstruction.length / 4),
+   sectionsIncluded: [
+    "prompt_constitution",
+    "controls",
+    "channel_evidence",
+    ...(statisticsIntelligence ? ["statistics"] : []),
+    ...(audienceIntelligence ? ["audience"] : []),
+    ...(algorithmIntelligence ? ["algorithm_intelligence"] : []),
+    ...(channelKnowledge ? ["channel_knowledge"] : []),
+    ...(nicheKnowledge ? ["niche_knowledge"] : []),
+    ...(currentResearch ? ["current_research"] : []),
+   ],
+   sectionsDropped: context.budget.omittedSections,
   })
 
   let response = buildFallback(input.userText, input.snapshot, input.growthContext)
@@ -532,6 +636,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     promptConstitutionVersion: BRAIN_PROMPT_CONSTITUTION_VERSION,
     promptFamily,
     promptFamilyVersion,
+    traceId: trace.id,
     repairReasons: repairOutcome.reasons,
    },
   })
@@ -555,10 +660,20 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     promptConstitutionVersion: BRAIN_PROMPT_CONSTITUTION_VERSION,
     promptFamily,
     promptFamilyVersion,
+    traceId: trace.id,
     evaluationId: evaluation.id,
     repairReasons: repairOutcome.reasons,
     repaired: repairOutcome.attempted,
    },
+  })
+  finalizeAnswerTrace({
+   trace,
+   response,
+   evaluation,
+   snapshot: input.snapshot,
+   repairOutcome,
+   status,
+   fallbackReason,
   })
   return {
    turn,
@@ -597,6 +712,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     promptConstitutionVersion: BRAIN_PROMPT_CONSTITUTION_VERSION,
     promptFamily,
     promptFamilyVersion,
+    traceId: trace.id,
    },
   })
   const turn = await completeAIBrainTurn({
@@ -619,9 +735,19 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     promptConstitutionVersion: BRAIN_PROMPT_CONSTITUTION_VERSION,
     promptFamily,
     promptFamilyVersion,
+    traceId: trace.id,
     evaluationId: evaluation.id,
     repaired: false,
    },
+  })
+  finalizeAnswerTrace({
+   trace,
+   response,
+   evaluation,
+   snapshot: input.snapshot,
+   repairOutcome,
+   status: "fallback",
+   fallbackReason,
   })
   return {
    turn,
