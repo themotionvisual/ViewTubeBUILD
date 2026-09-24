@@ -26,8 +26,14 @@ const titleCase = (value: string | null | undefined): string =>
   .replace(/[._-]+/g, " ")
   .replace(/\b\w/g, match => match.toUpperCase())
 
-const modelLabel = (value: string | null | undefined): string =>
- value ? titleCase(value.replace(/^gemini\s*/i, "Gemini ")) : ""
+const modelLabel = (value: string | null | undefined): string => {
+ if (!value) return ""
+ return value
+  .replace(/^gemini[-_ ]*/i, "Gemini ")
+  .replace(/[-_]+/g, " ")
+  .replace(/\bpro\b/i, "Pro")
+  .trim()
+}
 
 const compactId = (value: string | null | undefined): string => {
  if (!value) return "—"
