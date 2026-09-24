@@ -114,3 +114,19 @@ SEO/metadata → hooks → thumbnail/package → scripts/storyboards → communi
 ## Next recon pass
 
 Deep-diff the Phase 6 durable-persistence branch against current main, beginning with evaluation/outcome/persistence modules. Separately audit current `src/services/assetEngine.ts` before designing Creator Asset Engine work.
+
+
+## PR #241 donor — `claude/ai-audit-content-optimization-gdwwp9`
+
+**2026-09-24 refresh:** PR #241 has now been audited file-by-file against current main and the current Brain-quality stack.
+
+Disposition:
+- **DO NOT MERGE WHOLESALE.**
+- Most runtime foundations were already incorporated, frequently byte-identically: BrainTrace, StyleProfile, style metrics, numeric claims, model routing, asset outcomes, community-post strategy and related tests.
+- Current main is stronger for AssetGenerator media support, provider-owned schema generation, creator asset media, community-post controller behavior, evidence/intelligence/context orchestration and current Gemini provider helpers.
+- Unique donor assets retained/forward-ported: historical AI docs, reachability audit, AI operational-health discipline, Brain eval skill, creator-asset-generation skill.
+- Runtime donor deltas still requiring/admitting selective forward-port: SendToMenu skip-above negative preference signals and the fabricated-number blocker vs derived-number warning distinction.
+
+Current detailed authority:
+- `PR241_DONOR_HARVEST_AUDIT_2026-09-24.md`
+- `PR241_DONOR_HARVEST_IMPLEMENTATION_PLAN_2026-09-24.md`
