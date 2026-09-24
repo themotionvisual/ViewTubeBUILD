@@ -40,23 +40,31 @@ export interface StatisticsIntelligenceSnapshot {
  limitations: string[]
 }
 
-const finite = (value: number): number => Number.isFinite(value) ? value : 0
-
 const metricEvidence = (
  dataset: CanonicalIntelligenceDatasetManifest,
  metric: string,
  summary: CanonicalIntelligenceMetricSummary,
-): StatisticsMetricEvidence => ({
- datasetId: dataset.id,
- metric,
- count: finite(summary.count),
- sum: finite(summary.sum),
- average: finite(summary.average),
- minimum: finite(summary.minimum),
- maximum: finite(summary.maximum),
- range: finite(summary.maximum) - finite(summary.minimum),
- evidenceRef: dataset.evidenceRefs[0] || null,
-})
+): StatisticsMetricEvidence | null => {
+ const values = [
+  summary.count,
+  summary.sum,
+  summary.average,
+  summary.minimum,
+  summary.maximum,
+ ]
+ if (values.some((value) => !Number.isFinite(value))) return null
+ return {
+  datasetId: dataset.id,
+  metric,
+  count: summary.count,
+  sum: summary.sum,
+  average: summary.average,
+  minimum: summary.minimum,
+  maximum: summary.maximum,
+  range: summary.maximum - summary.minimum,
+  evidenceRef: dataset.evidenceRefs[0] || null,
+ }
+}
 
 const confidenceFor = (
  bundle: CanonicalIntelligenceEvidenceBundle,
@@ -81,11 +89,17 @@ const confidenceFor = (
 export const buildStatisticsIntelligence = (
  bundle: CanonicalIntelligenceEvidenceBundle,
 ): StatisticsIntelligenceSnapshot => {
- const metrics = bundle.datasets.flatMap((dataset) =>
-  Object.entries(dataset.metrics).map(([metric, summary]) =>
-   metricEvidence(dataset, metric, summary),
-  ),
+ const metricEntries = bundle.datasets.flatMap((dataset) =>
+  Object.entries(dataset.metrics).map(([metric, summary]) => ({
+   dataset,
+   metric,
+   summary,
+  })),
  )
+ const metrics = metricEntries.flatMap(({ dataset, metric, summary }) => {
+  const projected = metricEvidence(dataset, metric, summary)
+  return projected ? [projected] : []
+ })
  const updated = bundle.datasets
   .map((dataset) => dataset.updatedAt)
   .filter((value): value is string => Boolean(value))
@@ -99,6 +113,9 @@ export const buildStatisticsIntelligence = (
  if (bundle.coverage.stale > 0) limitations.push("Some canonical datasets are stale.")
  if (bundle.coverage.partial > 0) limitations.push("Some canonical datasets have partial coverage.")
  if (bundle.coverage.failed > 0) limitations.push("One or more canonical datasets failed.")
+ if (metrics.length < metricEntries.length) {
+  limitations.push("Ignored invalid canonical metric summaries rather than coercing them to zero.")
+ }
  if (bundle.omittedDatasetIds.length > 0) limitations.push("Evidence bundle omitted datasets because of request/context limits.")
  if (metrics.length === 0) limitations.push("No deterministic metric summaries were available.")
 
