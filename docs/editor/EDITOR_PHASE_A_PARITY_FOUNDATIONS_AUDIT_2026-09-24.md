@@ -154,10 +154,10 @@ This avoids turning real mobile/render capability into a false claim of desktop 
 
 1. **Capability-surface matrix:** the registry exists, but desktop/mobile/render implementation evidence is not yet generated from tests into one parity table.
 2. **Desktop FX parity:** the shared FX contract is implemented and mobile/preview/render support is explicit, but the desktop host is intentionally still marked planned until its controls/actions are verified against the same contract.
-3. **Whole-project fixture:** implementation started in the current rich-parity branch. It now covers media, text, audio, keyframes, FX, transitions, templates, Remotion assets, ContentBuild identity, forward-compatible metadata, and all current track kinds; CI verification is pending.
+3. **Whole-project fixture:** verified in PR #410. It covers media, text, audio, keyframes, FX, transitions, templates, Remotion assets, ContentBuild identity, forward-compatible metadata, and all current track kinds. The rich fixture passed 4/4, bridge runtime 8/8, bridge hook 2/2, and desktop timeline adapter 5/5 on runtime head `e2bea9e2...`.
 4. **Preview ↔ final beyond transitions:** transform, crop, keyframes, layer visibility/order, template assets, and audio need deterministic parity fixtures.
 5. **Desktop host integration:** shared adapters exist, but the legacy desktop host still owns significant behavior separately and needs measured adoption rather than an assumption of parity.
-6. **Editor static-quality debt:** current rich-parity branch repairs renderJobContract Promise<Response> typing, ExportRenderPanel project ID narrowing, PreviewPane keyframe value narrowing, bridge-test layer typing, and the missing desktopTimelineAdapter declaration. Remaining non-editor static errors are outside this Phase A slice.
+6. **Editor static-quality debt:** PR #410 repairs renderJobContract Promise<Response> typing, ExportRenderPanel project ID narrowing, PreviewPane keyframe value narrowing, bridge-test layer typing, desktop timeline adapter declarations, and truthful optional layer visibility. The latest static-quality run reports no remaining errors in these changed editor files; remaining errors are outside this slice.
 7. **Visual certification:** this slice primarily changes contracts and transition semantics; responsive UI screenshots should be taken when the next visible editor-shell slice is implemented.
 
 ## Acceptance gates for Phase A
