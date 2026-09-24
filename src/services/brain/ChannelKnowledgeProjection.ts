@@ -308,6 +308,109 @@ const retrievalScore = (
  + confidenceWeight(record.confidence) * 0.25
  + freshnessWeight(record, nowMs) * 0.15
 
+
+type ScoredChannelKnowledgeRecord = ChannelKnowledgeRecord & { retrievalScore: number }
+
+const normalizedStatementKey = (value: string): string =>
+ value
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, " ")
+  .trim()
+  .replace(/\s+/g, " ")
+
+const confirmationAuthority = (
+ state: ChannelKnowledgeRecord["confirmationState"],
+): number => {
+ if (state === "confirmed") return 4
+ if (state === "explicit") return 3
+ if (state === "inferred") return 2
+ return 0
+}
+
+const sourceAuthority = (source: ChannelKnowledgeRecord["source"]): number => {
+ if (source === "brain_memory_claim") return 3
+ if (source === "learning_candidate") return 2
+ return 1
+}
+
+const lifecycleAuthority = (state: ChannelKnowledgeLifecycleState): number => {
+ if (state === "active") return 5
+ if (state === "hypothesis") return 4
+ if (state === "candidate") return 3
+ if (state === "stale") return 2
+ if (state === "superseded") return 1
+ return 0
+}
+
+const confidenceAuthority = (confidence: BrainConfidenceLevel): number =>
+ confidence === "high" ? 3 : confidence === "medium" ? 2 : 1
+
+const preferredDuplicate = (
+ left: ScoredChannelKnowledgeRecord,
+ right: ScoredChannelKnowledgeRecord,
+): ScoredChannelKnowledgeRecord => {
+ const leftAuthority = [
+  confirmationAuthority(left.confirmationState),
+  sourceAuthority(left.source),
+  lifecycleAuthority(left.lifecycleState),
+  confidenceAuthority(left.confidence),
+  left.retrievalScore,
+  Date.parse(left.updatedAt) || 0,
+ ]
+ const rightAuthority = [
+  confirmationAuthority(right.confirmationState),
+  sourceAuthority(right.source),
+  lifecycleAuthority(right.lifecycleState),
+  confidenceAuthority(right.confidence),
+  right.retrievalScore,
+  Date.parse(right.updatedAt) || 0,
+ ]
+ for (let index = 0; index < leftAuthority.length; index += 1) {
+  if (leftAuthority[index] !== rightAuthority[index]) {
+   return leftAuthority[index] > rightAuthority[index] ? left : right
+  }
+ }
+ return left.id.localeCompare(right.id) <= 0 ? left : right
+}
+
+const mergeDuplicateGroup = (
+ records: ScoredChannelKnowledgeRecord[],
+): ScoredChannelKnowledgeRecord => {
+ const winner = records.reduce(preferredDuplicate)
+ const ordered = [
+  winner,
+  ...records.filter((record) => record.id !== winner.id),
+ ]
+ const mergedRecordIds = [...new Set(ordered.map((record) => record.id))]
+ const mergedSources = [...new Set(ordered.map((record) => record.source))]
+ const evidenceRefs = [...new Set(ordered.flatMap((record) => record.evidenceRefs))]
+ return {
+  ...winner,
+  evidenceRefs,
+  retrievalScore: Math.max(...records.map((record) => record.retrievalScore)),
+  metadata: {
+   ...winner.metadata,
+   mergedRecordIds,
+   mergedSources,
+  },
+ }
+}
+
+const deduplicateKnowledgeRecords = (
+ records: ScoredChannelKnowledgeRecord[],
+): ScoredChannelKnowledgeRecord[] => {
+ const groups = new Map<string, ScoredChannelKnowledgeRecord[]>()
+ records.forEach((record) => {
+  const key = normalizedStatementKey(record.statement) || `id:${record.id}`
+  const rows = groups.get(key) || []
+  rows.push(record)
+  groups.set(key, rows)
+ })
+ return [...groups.values()]
+  .map(mergeDuplicateGroup)
+  .sort((left, right) => right.retrievalScore - left.retrievalScore)
+}
+
 export const retrieveChannelKnowledge = (
  projection: ChannelKnowledgeProjection,
  input: {
@@ -337,9 +440,15 @@ export const retrieveChannelKnowledge = (
   }))
   .sort((left, right) => right.retrievalScore - left.retrievalScore)
 
+ const records = deduplicateKnowledgeRecords(
+  scored.filter((record) => !record.contradiction),
+ )
+ const contradictions = deduplicateKnowledgeRecords(
+  scored.filter((record) => record.contradiction),
+ )
  const limit = Math.max(1, input.limit || 12)
  return {
-  records: scored.filter((record) => !record.contradiction).slice(0, limit),
-  contradictions: scored.filter((record) => record.contradiction).slice(0, limit),
+  records: records.slice(0, limit),
+  contradictions: contradictions.slice(0, limit),
  }
 }
