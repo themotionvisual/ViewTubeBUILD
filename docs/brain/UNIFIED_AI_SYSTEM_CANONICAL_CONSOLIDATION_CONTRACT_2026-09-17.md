@@ -250,3 +250,20 @@ It is unified when:
 ## Non-destructive migration rule
 
 Do not wholesale-rewrite `gemini.ts`. Strangle it gradually: migrate one exported capability, redirect consumers, verify tests/build/runtime, then remove only the unreachable implementation.
+
+
+## Prompt System authority
+
+Prompt behavior is part of the unified AI architecture, not an independent text-template concern.
+
+Current planning/registry authority:
+- `VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md`
+- `VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md`
+- `VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json`
+
+Target rule:
+`Prompt Constitution → prompt family → Context Resolver → selected Channel/Profile/Project evidence → output schema → deterministic validation → bounded repair/eval`.
+
+Legacy `src/services/prompts.ts` mega-prompts and creator-facing `gemini.ts` generator prompts are migration debt. They must be strangled by family after production-caller parity, not rewritten wholesale or silently edited in place.
+
+Channel personalization must be selected by task relevance and provenance. Creator-confirmed/current Project context outranks inferred historical patterns; current measured evidence outranks stale learning.
