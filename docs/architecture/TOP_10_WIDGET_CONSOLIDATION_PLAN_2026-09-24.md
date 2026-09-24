@@ -89,9 +89,12 @@ Status: active implementation.
 - remaining Wave 3 work: connect canonical Opportunity Evidence when its builder is available, finish runtime state certification, and visually verify narrow/mobile layouts.
 
 ### Wave 4 — Asset + Lifecycle
-- upgrade `video-asset-engine`;
-- upgrade `content-pipeline` against ContentBuild lifecycle;
-- preserve Vault/Projects/Asset Engine ownership.
+Status: active implementation.
+- `video-asset-engine`: package readiness is now scoped to the active ContentBuild's explicit asset membership instead of matching arbitrary assets across the whole Vault; ContentBuild stage, revision, assets, selections, finals, and variants are surfaced.
+- `content-pipeline`: canonical ContentBuild stages now populate IDEA / BUILD / PACKAGE / LIVE / LEARN buckets; the former task/upload heuristic is retained only when no ContentBuild snapshots exist.
+- shared `contentBuildWidgetModel` owns ContentBuild stage bucketing, scoped Vault membership, and readiness summaries.
+- Vault remains durable asset owner; ContentBuild remains lifecycle/membership owner; Projects remains project intent/workflow owner.
+- remaining Wave 4 work: improve slot resolution from explicit ContentBuild selections/versions before heuristic text matching, add active-build selection when multiple packages are present, and complete state/mobile certification.
 
 ### Wave 5 — Audience + Series
 - upgrade `audience-requests`;
