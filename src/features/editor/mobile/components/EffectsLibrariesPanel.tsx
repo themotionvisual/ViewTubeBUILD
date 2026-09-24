@@ -7,7 +7,8 @@ import {assetRegistry} from '../../../../remotion-editor/src/assets/catalog';
 import {createAssetTimelineObject} from '../../../../remotion-editor/src/assets/editorAdapter';
 import type {AssetDefinition} from '../../../../remotion-editor/src/assets/types';
 import {AcceleratingStepper as HoldStepper} from './MobileEditorPrimitives';
-import {VT_E1_FX_CATALOG,VT_E1_VT_E1_DEFAULT_FX_ORDER,normalizeVtE1FxOrder,resetVtE1FxPatch,resolveVtE1FxDisabled,resolveVtE1FxValue} from '../../../../shared/vtE1FxCatalog.js';
+import {VT_E1_FX_CATALOG,normalizeVtE1FxOrder,resetVtE1FxPatch,resolveVtE1FxDisabled,resolveVtE1FxValue} from '../../../../shared/vtE1FxCatalog.js';
+import type {VtE1FxKey} from '../../../../shared/vtE1FxCatalog.js';
 
 const INK='#248b99',CYAN='#36E0F6',YELLOW='#FFFF61',PINK='#FA618A';
 const card:React.CSSProperties={border:`2px solid ${INK}`,borderRadius:7,background:'#fff',padding:7,marginBottom:7,boxShadow:'2px 2px 0 rgba(54,224,246,.22)'};
@@ -49,14 +50,14 @@ export function ClipEffects({store}:{store:EditorStore}){
   const bypass=Boolean(payload.fxBypass);
   const disabled=resolveVtE1FxDisabled(payload) as Record<string,boolean>;
   const order=normalizeVtE1FxOrder(payload.fxOrder);
-  const moveFx=(key:string,direction:-1|1)=>{
+  const moveFx=(key:VtE1FxKey,direction:-1|1)=>{
     const index=order.indexOf(key);if(index<0)return;
     const next=[...order],target=Math.max(0,Math.min(next.length-1,index+direction));
     if(target===index)return;
     const[moved]=next.splice(index,1);next.splice(target,0,moved);
     patch({fxOrder:next});
   };
-  const toggleFx=(key:string)=>patch({fxDisabled:{...disabled,[key]:!disabled[key]}});
+  const toggleFx=(key:VtE1FxKey)=>patch({fxDisabled:{...disabled,[key]:!disabled[key]}});
   return <>
     <section style={card}>
       <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',alignItems:'center',gap:5,marginBottom:6}}>
