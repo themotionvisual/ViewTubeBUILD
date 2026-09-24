@@ -15,8 +15,9 @@ import {
 import type { VaultAsset } from "@/types"
 import { getAssetLineage, listAssets } from "../../../services/assetEngine"
 import { listVideoPackages } from "../../../services/video-package/VideoPackageRepository"
-import { projectPublishingPackage } from "../../../services/asset-engine/PublishingPackageProjection"
-import { listPublishTransactions } from "../../../services/asset-engine/PublishTransaction"
+import { projectPublishingPackage, type PublishingPackageProjection } from "../../../services/asset-engine/PublishingPackageProjection"
+import { listPublishTransactions, type ContentBuildPublishTransaction } from "../../../services/asset-engine/PublishTransaction"
+import type { ViewTubeVideoPackage } from "../../../services/video-package/contracts"
 import { WidgetShell } from "../WidgetShell"
 import {
   WidgetActionButton,
@@ -33,6 +34,12 @@ import type { DashboardData } from "../useDashboardData"
 import "./VideoAssetEngineWidget.css"
 
 type AssetEngineMode = "package" | "publish" | "assets" | "handoff"
+
+type PublishingWidgetState = {
+  videoPackage: ViewTubeVideoPackage | null
+  projection: PublishingPackageProjection | null
+  transaction: ContentBuildPublishTransaction | null
+}
 
 type PackageSlot = {
   id: string
@@ -116,7 +123,7 @@ export const VideoAssetEngineWidget: React.FC<
   )
   const packageName = selectedAsset?.projectName || previewAsset?.projectName || "LATEST VIDEO PACKAGE"
 
-  const publishingState = useMemo(() => {
+  const publishingState = useMemo<PublishingWidgetState>(() => {
     const videoPackage = listVideoPackages()[0] || null
     if (!videoPackage) return { videoPackage: null, projection: null, transaction: null }
     try {
