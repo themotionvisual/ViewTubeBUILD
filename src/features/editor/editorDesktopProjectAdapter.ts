@@ -46,7 +46,7 @@ export type MobileBridgeLayer = Record<string, unknown> & {
 
 export type MobileBridgeProject = VtE1Project & {
   tracks: MobileBridgeTrack[];
-  layers: MobileBridgeLayer[];
+  layers?: MobileBridgeLayer[];
   durationSec: number;
   meta?: DesktopProjectRecord['meta'];
   seamLinks?: DesktopProjectRecord['seamLinks'];
