@@ -586,7 +586,7 @@ export const DailyOracleWidget = ({
                         <strong>{task.text}</strong>
                       </div>
                     ))}
-                    {creatorTasks.length > 6 ? <small>+${creatorTasks.length - 6} MORE IN PROJECTS</small> : null}
+                    {creatorTasks.length > 6 ? <small>+{creatorTasks.length - 6} MORE IN PROJECTS</small> : null}
                   </div>
                 ) : null}
                 <small className="daily-oracle-v2__execution-note">FOCUS SESSION STAYS ON THIS DEVICE · TASK ORDER IS CALENDAR ORDER, NOT AUTOMATIC AI RANKING</small>
