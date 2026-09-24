@@ -6,7 +6,7 @@
 | ID | Workstream | Task | Priority | Status | Depends on | Evidence / next action |
 |---|---|---|---|---|---|---|
 | VT-001 | Analytics | Define typed MetricComparabilityPolicy | P0 | VERIFYING | — | `MetricComparabilityPolicy.ts` + behavior tests added; integrate into evaluation in VT-023 after CI certification |
-| VT-002 | Publishing | Define ApprovedPublishSnapshot schema/hash | P0 | READY | — | architecture masters explicitly mark gap open |
+| VT-002 | Publishing | Define ApprovedPublishSnapshot schema/hash | P0 | VERIFYING | — | immutable schema + deterministic identity/hash + tamper verification tests added; persistence remains VT-014 |
 | VT-003 | Brain | Resolve active Project/ContentBuild context uniformly | P0 | READY | — | runtime supports projectId; supply consistently |
 | VT-004 | Brain | Build canonical Opportunity evidence feed | P0 | READY | VT-003 | module exists; production evidence supply uneven |
 | VT-005 | Reliability | Define cross-system correlation/idempotency envelope | P0 | READY | — | use existing event contracts; avoid second event store |
