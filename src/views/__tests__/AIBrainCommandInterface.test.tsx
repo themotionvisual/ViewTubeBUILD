@@ -197,7 +197,7 @@ describe("AIBrainCommandInterface", () => {
   expect(html).not.toContain("grid min-h-0 flex-1 gap-2 bg-white p-2")
   expect(html).toContain("grid min-h-0 flex-1 bg-white")
   expect(html).toContain("xl:grid-cols-[minmax(0,1.45fr)_minmax(520px,1fr)]")
-  expect(html).toContain("pt-5")
+  expect(html).toContain("xl:pt-3")
   expect(html).toContain("brain-chat-scrollbar")
   expect(html).toContain('aria-label="Open AI Journal"')
   expect(html).not.toContain("shrink-0 border-t-[4px] border-black bg-[#f8f8f4]")
@@ -208,10 +208,13 @@ describe("AIBrainCommandInterface", () => {
 
   expect(html).toContain("max-xl:!h-auto")
   expect(html).toContain("max-xl:overflow-visible")
-  expect(html).toContain("max-xl:min-h-[520px]")
-  expect(html).toContain('data-vt-brain-runtime-shell="flat"')
+  expect(html).toContain("max-xl:min-h-[70dvh]")
+  expect(html).toContain("max-xl:min-h-[420px]")
+  expect(html).toContain('data-vt-brain-runtime-shell="merged"')
   expect(html).toContain("max-xl:rounded-none")
   expect(html).toContain("max-xl:border-x-0")
+  expect(html).not.toContain("max-xl:min-h-[520px]")
+  expect(html).not.toContain("LIVE BRAIN RUNTIME")
  })
 
  it("keeps internal diagnostics out of the creator workspace", () => {

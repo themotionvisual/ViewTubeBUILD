@@ -122,8 +122,9 @@ describe("BrainRuntimePanel", () => {
    />,
   )
 
-  expect(html).toContain('data-vt-brain-runtime-shell="flat"')
-  expect(html).toContain("max-md:whitespace-normal")
-  expect(html).toContain("md:line-clamp-2")
+  expect(html).toContain('data-vt-brain-runtime-shell="merged"')
+  expect(html).not.toContain("LIVE BRAIN RUNTIME")
+  expect(html).toContain('data-vt-runtime-cell="compact"')
+  expect(html).toContain("md:flex")
  })
 })
