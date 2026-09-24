@@ -1,13 +1,13 @@
 # ViewTube capability registry — what is available right now
 
-Read this before proposing anything new. Verified 2026-09-16 against this checkout.
+Read this before proposing anything new. Verified 2026-09-24 for the Editor System addition; the remaining baseline inventory dates from 2026-09-16.
 Regenerate with `node scripts/herald-capabilities.mjs` once it exists (phase H1).
 
 ## Surface coverage — 3 of 8 in use
 
 | Surface | State | Notes |
 |---|---|---|
-| Skills | ✅ **in use** | 19 repo · 60 external · built-ins |
+| Skills | ✅ **in use** | 21 repo · 60 external · built-ins |
 | MCP servers | ✅ **in use** | 8 connected |
 | CI workflows | ✅ **in use** | 4 |
 | Scripts | ⚠️ **partial** | 28 present; 2 npm entries point at missing files |
@@ -22,14 +22,14 @@ rather than self-reported.
 
 ## Skills
 
-**Repo (19)** — `.claude/skills/`
+**Repo (21)** — `.claude/skills/`
 
 | Domain | Skills |
 |---|---|
 | Coordination | `viewtube-crown` · `viewtube-king-emperor-bridge` · `viewtube-conflict-arbiter` · `viewtube-task-artifact-bridge` |
 | Princes | `prince-brain` · `prince-citadel` · `prince-compass` · `prince-forge` · `prince-observatory` |
 | Discipline | `viewtube-skill-finder` · `viewtube-solution-finder` · `viewtube-docs-grill` · `viewtube-skill-authoring` · `viewtube-verification-chancellor` |
-| Domain | `viewtube-ai-system-governor` · `viewtube-widget-dashboard` · `viewtube-mobile-widget-system` · `viewtube-toolbox-builder` · `youtube-api-expert` |
+| Domain | `viewtube-ai-system-governor` · `viewtube-youtube-editor-system` · `viewtube-widget-dashboard` · `viewtube-mobile-widget-system` · `viewtube-toolbox-builder` · `youtube-api-expert` |
 
 **Orphaned** — `skills/viewtube-youtube-auth-api-stabilization/` is loaded by nothing.
 `skills/viewtube-toolbox-builder/` duplicates the `.claude/` copy byte-for-byte.
@@ -105,3 +105,12 @@ Any new gate must be green on `main` at merge or it inherits that irrelevance.
 2. **A `/vt` slash command** running intake + recon before an answer is drafted.
 3. **A permission allowlist** in `.claude/settings.json` — use `fewer-permission-prompts`.
 4. **A `viewtube-herald-recon` sub-agent** wrapping `Explore` over the branch corpus.
+
+
+### Editor-system addition — 2026-09-24
+
+- Lead editor skill: .claude/skills/viewtube-youtube-editor-system/SKILL.md.
+- Mirrors: .codex/skills/viewtube-youtube-editor-system/SKILL.md and skills/viewtube-youtube-editor-system/SKILL.md.
+- Living authority: docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md.
+- Mandatory handoff: every editor-related conversation/agent updates the living authority Update Log.
+- Official Remotion Agent Skills are preferred upstream guidance when available; repository vendoring/pinning remains subject to the external skill supply-chain audit.
