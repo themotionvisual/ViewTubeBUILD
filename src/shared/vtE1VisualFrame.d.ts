@@ -60,4 +60,4 @@ export function vtE1MediaCropStyle(clip: VtE1VisualClipLike | null | undefined):
   transform: string;
   transformOrigin: '0 0';
 };
-export function sortVtE1Tracks<T extends { order?: number }>(tracks: readonly T[] | null | undefined): T[];
+export function sortVtE1Tracks<T>(tracks: readonly T[] | null | undefined): T[];
