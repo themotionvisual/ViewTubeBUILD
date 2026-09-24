@@ -205,6 +205,8 @@ export const createSuperToolActionPacket = (
    metadata: {
     moduleId: input.moduleId,
     actionPacketId: packet.id,
+    traceId: input.traceId || null,
+    outputRef: input.outputRef || null,
     workflowTitle: input.workflowTitle,
    },
   })
@@ -218,6 +220,8 @@ export const createSuperToolActionPacket = (
   steps: input.workflowSteps.map(step => createWorkflowStep(step.title, step.surface, step.toolId, step.details)),
   provenance: [
    `${input.toolId}.${input.moduleId}.${packet.id}`,
+   ...(input.traceId ? [`brain-trace:${input.traceId}`] : []),
+   ...(input.outputRef ? [`brain-output:${input.outputRef}`] : []),
    ...(scope.contentBuildId ? [`content-build:${scope.contentBuildId}`] : []),
    ...input.evidence,
    ...input.handoffTargets,
