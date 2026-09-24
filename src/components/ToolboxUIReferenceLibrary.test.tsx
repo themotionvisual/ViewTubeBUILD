@@ -58,6 +58,7 @@ describe("Toolbox UI Reference Library", () => {
       "Two Color Data Stats", "Monochrome Data Stats", "Tiny Data Stats", "Tooltip Dark",
       "Tooltip Color", "Dashboard Pill Tags", "Aspect Ratio Frame", "Toolbar",
       "LED Dot", "Loader Progress", "Loader Split", "Loader Orbit", "Loader Bars",
+      "Tooltip Visual Key", "Skeleton Compact", "Skeleton Media",
     ]) expect(source).toContain(`"${family}"`)
     expect(source).not.toContain("HardcodedGenericControl")
     expect(source).not.toContain("hardcoded-fallback")
@@ -83,6 +84,10 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).toContain("<SubToolboxCalendar")
     expect(source).toContain("<SubToolboxLoader")
     expect(source).toContain("<SubToolboxSkeleton")
+    expect(source).toContain("<SubToolboxLegendTooltip")
+    expect(source).toContain('variant="compact"')
+    expect(source).toContain('variant="media"')
+    expect(source).toContain('ratio="16:9"')
     expect(source).toContain("<SubToolboxToast")
     expect(source).toContain("<SubToolboxPopover")
     expect(source).toContain("<SubToolboxDisclosure")
