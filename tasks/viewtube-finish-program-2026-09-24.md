@@ -1,3 +1,5 @@
+> **Expanded registry available:** this original 27-task list remains a useful phase index, but the current complete backlog now lives in `tasks/viewtube-finish-program/BACKLOG-REGISTRY.md`, `plan.md`, and `todo.md`. The expanded registry includes Asset Engine Studio, Launch Package, Asset Slot Registry, Project facade, destination Context Resolver recipes, AI prompt modernization, widget cohort, provider experiments, AI editor sidecar and other post-#322/#360 gaps.
+
 # ViewTube Finish Program — Task List
 
 Source: `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`
@@ -77,3 +79,26 @@ Source: `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`
 - [ ] All relevant tests/build/release gates pass against current-main baseline.
 - [ ] Living docs updated.
 - [ ] Superseded production paths removed or quarantined after parity.
+
+
+## Added cross-program tracks
+
+- [ ] Full Asset Engine Studio workspace.
+- [ ] Launch Package.
+- [ ] Asset Slot Registry.
+- [ ] Complete Project Workspace facade + Continue/readiness routing.
+- [ ] Destination-specific Context Resolver recipes.
+- [ ] AI generation observability/evals.
+- [ ] Daily Creator Command Center / Daily Oracle completion.
+- [ ] AI source-of-truth/registry completion.
+- [ ] Project-grounded RAG.
+- [ ] NVIDIA experiment lane.
+- [ ] Google/Veo media-provider adapter.
+- [ ] AI editor sidecar / typed edit patches.
+- [ ] 10-widget production cohort.
+- [ ] Prompt System Authority + modernization program.
+
+Prompt sub-track authority:
+- `docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md`
+- `docs/brain/VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md`
+- `docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json`

@@ -71,3 +71,14 @@ Every behavioral slice: focused tests → architecture guards → typecheck → 
 
 ## Rollout
 Each wave lands as small reversible PRs. Current main is rebased/merged forward before each PR. Historical branches are donors only; never wholesale merge stale AI branches.
+
+
+## Prompt modernization authority
+
+Wave 4 and all later creator-generation migrations use these current references:
+
+- `docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md`
+- `docs/brain/VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md`
+- `docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json`
+
+The registry expands the original Brain-only Prompt System wave to cover legacy `prompts.ts`, legacy `gemini.ts` generation/refinement functions, Oracle/editor prompt templates, Brain task profiles and governed AssetGenerator strategies. Do not create a second prompt modernization track.

@@ -349,3 +349,52 @@ The 2026-09-12 PR #241 brainstorm is preserved historically, but several ideas r
 | Opportunity Radar | MERGE WITH CURRENT OPPORTUNITY/WIDGET WORK | retain the spatial impact/effort idea only if it fits current Opportunity Intelligence and widget standards. |
 
 Detailed provenance and file-level decisions live in `docs/brain/PR241_DONOR_HARVEST_AUDIT_2026-09-24.md`.
+
+
+## 2026-09-24 Expanded Completion Registry
+
+The post-#322/#360 re-audit identified a broader set of still-open capabilities than the original 27-task execution list. The canonical detailed registry now lives at:
+
+- `tasks/viewtube-finish-program/BACKLOG-REGISTRY.md`
+- `tasks/viewtube-finish-program/plan.md`
+- `tasks/viewtube-finish-program/todo.md`
+
+The work is grouped into four completion programs:
+
+1. **Project / Asset / Publish** — Asset Engine Studio, Launch Package, Asset Slot Registry, complete Project facade, destination Context Resolver recipes, ApprovedPublishSnapshot, publish recovery, post-publish identity, Editor→Asset closure, eventual durable server authority.
+2. **Publishing / Analytics / Evaluation / Learning** — outcome coverage, evaluation targets, metric comparability, comment/audience learning, analytics/data-visual certification, AI observability/evals.
+3. **Brain / Context / Intelligence / Prompts** — active Project context, Opportunity evidence, Daily Command, AI registries, Project-grounded retrieval, provider experiments, AI editor sidecar and Prompt System modernization.
+4. **UI / Editor / Analytics / Cleanup** — Remotion parity, four-layout editor certification, 10-widget cohort, duplicate-authority cleanup, full responsive/state matrix and public agent readiness.
+
+### Prompt System completion authority
+
+Prompt modernization is now a named Finish Program capability rather than an implicit AI-cleanup task.
+
+References:
+- `docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md`
+- `docs/brain/VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md`
+- `docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json`
+
+Finish requirements:
+- every production prompt/generator registered and reachability-classified;
+- shared evidence/uncertainty/creator-control constitution;
+- prompt-family versions;
+- task-specific context recipes;
+- bounded Channel/Profile/Project personalization;
+- deterministic calculations/validators outside prompts;
+- structured outputs for high-value assets;
+- model/prompt/context/evidence provenance;
+- rich/sparse/empty/stale/disabled fixture evals;
+- legacy `prompts.ts` / `gemini.ts` generation strangled incrementally after parity.
+
+### Highest-leverage current order
+
+1. ApprovedPublishSnapshot.
+2. Publish retry/recovery binding.
+3. post-publish ContentBuild identity + outcome coverage.
+4. metric comparability/evaluation targets.
+5. Brain Project/Opportunity context.
+6. Prompt System modernization/evals.
+7. Asset/Project UX completion.
+8. editor/widgets/analytics certification.
+9. server durability + dead-path cleanup + agent readiness.
