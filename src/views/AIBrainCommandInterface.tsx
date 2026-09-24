@@ -66,6 +66,8 @@ import { BrainConfidenceChip, confidenceForEvidence } from "../components/brain/
 import { BrainContextRail } from "../components/brain/BrainContextRail"
 import { BrainEvidenceDrawer } from "../components/brain/BrainEvidenceDrawer"
 import { BrainQuestionPrompt } from "../components/brain/BrainQuestionPrompt"
+import { BrainRuntimePanel } from "../components/brain/BrainRuntimePanel"
+import { readBrainRuntimeSnapshot } from "../services/brain/BrainRuntimeSnapshot"
 import type {
  AIBrainAnswerModule,
  AIBrainConversationTurn,
@@ -573,6 +575,14 @@ const AIBrainCommandInterface: React.FC = () => {
  const canUseGemini = hasGeminiKey()
  const promptCards = useMemo(() => buildCreatorBrainPromptCards(), [])
  const channelId = authState.channelHandle || authState.channelId || null
+ const runtimeSnapshot = useMemo(
+  () => readBrainRuntimeSnapshot({
+   channelId,
+   activeProjectId: brain.activeProjectId,
+   projects: brain.projects,
+  }),
+  [channelId, brain.activeProjectId, brain.projects, recentTurns, learningEntries],
+ )
 
  const snapshot = useMemo(
   () =>
@@ -1006,6 +1016,9 @@ const AIBrainCommandInterface: React.FC = () => {
      />
     ) : (
      <section className="relative flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="shrink-0 bg-[#f3f4f6] px-3 pt-3">
+       <BrainRuntimePanel snapshot={runtimeSnapshot} />
+      </div>
       <div className="grid min-h-0 flex-1 gap-3 bg-[#f3f4f6] px-3 pb-3 pt-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(520px,1fr)]">
        <div className={`${innerCard} flex min-h-0 flex-col overflow-hidden`}>
         <div className="grid min-h-0 flex-1 bg-white">
