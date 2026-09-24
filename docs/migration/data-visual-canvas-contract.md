@@ -1,5 +1,11 @@
 # Data Visual canvas contract
 
+**Status:** CANONICAL SCOPED PRODUCTION CONTRACT / migration still in progress  
+**Last audited main:** `e8313cceb2b6ab1fbcff6ff28a9648192f559854`  
+**Scope:** Analytics Data Visual evidence-canvas ownership and bounded geometry only.  
+**Executable authority:** `src/components/DataVisualCanvas.tsx`, `src/components/dataVisualModuleContract.ts`, canvas CSS and contract tests.  
+**Current state:** `DataVisualCanvas` is production and 8 module contracts are registered. Legacy preview/title-matching compatibility still exists, so migration/deletion gates below remain active.
+
 Scope: the individual Analytics **Data Visual** modules and their canvas /
 evidence regions. Nothing here applies to the Toolbox or SubToolbox systems,
 Studio Hub, Projects, the Editor, generic widget primitives, or the rest of the

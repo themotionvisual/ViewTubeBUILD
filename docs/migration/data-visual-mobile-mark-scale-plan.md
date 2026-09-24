@@ -1,5 +1,10 @@
 # Data Visual mobile mark-scale plan
 
+**Status:** ACTIVE IMPLEMENTATION PLAN — partially landed  
+**Current authority:** `../analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md`  
+**Last re-audited:** 2026-09-24 against main `e8313cceb2b6ab1fbcff6ff28a9648192f559854`  
+**Current state:** the canvas registry now contains 8 production module contracts and mark-scale helpers exist. Per-module status tables below are historical planning checkpoints; verify each renderer against `DATA_VISUAL_MODULE_CONTRACTS` before treating a prerequisite as still open.
+
 Follow-up to `data-visual-canvas-contract.md`. That work gave every migrated
 Data Visual a bounded, predictable **canvas**. This plan addresses what the
 screenshots then made obvious: the canvas is correct, but the **marks drawn

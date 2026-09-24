@@ -18,8 +18,9 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | Toolbox / Subtoolbox / Studio UI system | [Toolbox UI Master Resource](./architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md) |
 | Studio component library / primitive corrections | [Studio Hub Component Library Source of Truth](./ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md) |
 | Dashboard widget production metadata | [WidgetRegistry.ts](../src/views/dashboard/WidgetRegistry.ts) (code authority); [Widget Certification Master](./architecture/WIDGET_SYSTEM_CERTIFICATION_MASTER_2026-09-14.md) tracks certification |
-| Analytics Data Visual mobile composition | [Mobile Visual Responsive Contract](./MOBILE_VISUAL_RESPONSIVE_CONTRACT.md) (scoped contract) |
-| Analytics/auth migration program | [Migration README](./migration/README.md) |
+| Analytics / VT-SYNC architecture + migration | [Analytics / VT-SYNC Master Resource](./analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md) |
+| Analytics Data Visual canvas | [Data Visual Canvas Contract](./migration/data-visual-canvas-contract.md) (scoped canonical contract) |
+| Analytics Data Visual mobile composition | [Mobile Visual Responsive Contract](./MOBILE_VISUAL_RESPONSIVE_CONTRACT.md) (scoped canonical contract) |
 | Unified AI consolidation contract | [Unified AI System Canonical Consolidation Contract](./brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md) |
 
 These are scoped authorities. They do not make every neighboring plan or reference obsolete automatically.
@@ -42,6 +43,8 @@ When beginning work:
 
 **Wave 3:** Toolbox/Studio UI authority is reconciled to production tokens/tests; stale desktop 56/44 migration documents are clearly historical, the Component Library index is derived from its 62-family production registry, and Dashboard/Analytics responsive systems remain explicitly scoped rather than being folded into Toolbox geometry.
 
+**Wave 4:** Analytics/VT-SYNC now has one living architecture authority. The old migration README is historical, canvas/responsive contracts are scoped canonical authorities, and implementation plans remain active only where the audited code still has real gaps.
+
 No baseline document has been deleted. Future waves continue one domain at a time, preserving unique information and references before archival or retirement.
 
 ### Planned waves
@@ -49,8 +52,8 @@ No baseline document has been deleted. Future waves continue one domain at a tim
 1. Registry / governance / entrypoint — **complete**
 2. Projects / ContentBuild / Asset Engine — **complete in Wave 2**
 3. Studio UI / Toolbox / widgets / mobile — **complete in Wave 3**
-4. Analytics / Data Visuals / migrations — **next**
-5. Brain / AI / Herald
+4. Analytics / Data Visuals / migrations — **complete in Wave 4**
+5. Brain / AI / Herald — **next**
 6. Auth / Editor / deployment / user guide
 7. Archive/evidence re-homing + root cleanup
 8. Automated governance + broken-link certification
@@ -85,3 +88,17 @@ Preserved donors (historical/reference, not current authority):
 Current shell geometry:
 - desktop: Main 80 / SubToolbox 56 / L1 48 / L2 32;
 - mobile shell: Main 56 / SubToolbox 44, preserving 26px / 20px title sizes.
+
+
+## Analytics / VT-SYNC authority boundaries
+
+- **Raw analytics truth:** VT-SYNC Local.
+- **Visible dataset identity:** `VT_SYNC_VISIBLE_TABLE_DEFINITIONS`.
+- **Normalized consumer API:** `services/analytics-canon`.
+- **Window vocabulary/ranges:** `src/services/analytics/windows.ts`.
+- **Living documentation authority:** `analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md`.
+- **Canvas geometry:** `migration/data-visual-canvas-contract.md`.
+- **Phone/desktop visual composition:** `MOBILE_VISUAL_RESPONSIVE_CONTRACT.md`.
+- **Active implementation programs:** dataset expansion, time-window migration, controller unification, mark-scale migration, and Master Data overlay portal.
+
+The August `migration/README.md` remains valuable history but is no longer current-state authority.

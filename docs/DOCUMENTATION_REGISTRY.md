@@ -25,10 +25,10 @@
 
 - **active-plan:** 15
 - **artifact:** 12
-- **canonical:** 6
+- **canonical:** 7
 - **evidence:** 10
-- **historical:** 28
-- **reference:** 40
+- **historical:** 31
+- **reference:** 36
 - **retirement-candidate:** 3
 - **review:** 5
 
@@ -49,7 +49,7 @@
 
 ## Explicit current authorities identified in Wave 1
 
-- `docs/migration/README.md` — Analytics/auth migration north star; explicitly declares itself the migration source of truth.
+- `docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md` — Canonical living Analytics / VT-SYNC architecture and migration authority created in Wave 4.
 - `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md` — Current Studio Hub component-library presentation and primitive-correction authority.
 - `docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md` — Living cross-system Project/ContentBuild workflow authority referenced by CLAUDE.md.
 - `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md` — Canonical Asset Engine product/architecture reference referenced by CLAUDE.md.
@@ -109,7 +109,7 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 44 | `docs/brain/UNIVERSAL_TOOL_HANDOFFS_AND_SUGGESTED_CHAINS.md` | brain | `reference` | `retain-or-consolidate` | 5570 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
 | 45 | `docs/community/COMMUNITY_BULK_CAMPAIGN_IMPLEMENTATION.md` | community | `reference` | `retain-or-consolidate` | 3384 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
 | 46 | `docs/DATA_VISUAL_MODULE_UNIFICATION_STATUS.md` | analytics | `evidence` | `keep-as-evidence` | 236 | Verification/status snapshot; useful evidence but not architectural authority. |
-| 47 | `docs/DATA_VISUAL_MODULE_UNIFICATION.md` | analytics | `reference` | `retain-or-consolidate` | 2359 | General documentation; verify current scope and merge target during its domain wave. |
+| 47 | `docs/DATA_VISUAL_MODULE_UNIFICATION.md` | analytics | `historical` | `retain-as-foundation-reference` | 2359 | Early DataVisualCanvas migration bridge; current canvas/responsive authority now lives in scoped contracts and Analytics master. |
 | 48 | `docs/demos/ViewTube_Crown_Control_Room.html` | demos | `artifact` | `keep-as-evidence` | 8188 | Demo/visual/prototype artifact; evidence rather than normative documentation. |
 | 49 | `docs/deployment/PRODUCTION_DEPLOY_TRIGGER.md` | deployment | `retirement-candidate` | `verify-before-delete` | 362 | Deployment trigger marker rather than durable documentation; verify no references, then delete in cleanup wave. |
 | 50 | `docs/EDITOR_DESKTOP_PROJECT_BRIDGE_HOOK_HANDOFF.md` | editor | `reference` | `retain-or-consolidate` | 3978 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
@@ -132,11 +132,11 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 67 | `docs/herald/artifacts/2026-09-18--data-visual-controller-unification/screenshots/publish-optimal-clock--390x844.png` | brain/herald | `artifact` | `keep-as-evidence` | 84922 | Herald run artifact/evidence; preserve provenance, do not treat as current authority. |
 | 68 | `docs/herald/CONVERSATION-LOG.md` | brain/herald | `reference` | `retain-or-consolidate` | 1259 | General documentation; verify current scope and merge target during its domain wave. |
 | 69 | `docs/MASTER_DATA_OVERLAY_PORTAL_PLAN_2026-09-14.md` | analytics | `active-plan` | `status-audit` | 1671 | Plan/work-order/tracker requires completion check before consolidation or archive. |
-| 70 | `docs/migration/data-visual-canvas-contract.md` | migration | `reference` | `retain-or-consolidate` | 5358 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
+| 70 | `docs/migration/data-visual-canvas-contract.md` | migration | `canonical` | `retain-current` | 5358 | Canonical scoped Analytics Data Visual canvas ownership/geometry contract; migration compatibility remains until all renderers are native. |
 | 71 | `docs/migration/data-visual-controller-unification-plan.md` | migration | `active-plan` | `consolidate-after-status-audit` | 14091 | Explicitly marked in progress in the current document. |
 | 72 | `docs/migration/data-visual-mobile-mark-scale-plan.md` | migration | `active-plan` | `status-audit` | 21420 | Plan/work-order/tracker requires completion check before consolidation or archive. |
 | 73 | `docs/migration/pending-features-inventory.md` | migration | `reference` | `retain-or-consolidate` | 9975 | General documentation; verify current scope and merge target during its domain wave. |
-| 74 | `docs/migration/README.md` | migration | `canonical` | `retain-current` | 14314 | Analytics/auth migration north star; explicitly declares itself the migration source of truth. |
+| 74 | `docs/migration/README.md` | migration | `historical` | `retain-as-migration-ledger` | 14314 | Original Analytics/auth migration program and PR ledger; current Analytics authority moved to docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md. |
 | 75 | `docs/migration/reference/BRANCH_CHECK_TO_VIEWTUBEX_RELOCATION_2026-08-30.md` | migration | `historical` | `archive` | 13262 | Migration reference snapshot retained for provenance; not current architecture authority. |
 | 76 | `docs/migration/reference/CHANNEL_INTELLIGENCE_ALGORITHM_WORKFLOW_SYSTEMS_2026-09-03.md` | migration | `historical` | `archive` | 6303 | Migration reference snapshot retained for provenance; not current architecture authority. |
 | 77 | `docs/migration/reference/PARENT_DOCUMENTATION_UPDATES_2026-08-30.patch` | migration | `historical` | `archive` | 3299 | Migration reference snapshot retained for provenance; not current architecture authority. |
@@ -159,11 +159,11 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 94 | `docs/migration/reference/VIEWTUBEX_VS_BRANCH_CHECK_REFRESH_2026-08-29.md` | migration | `historical` | `archive` | 16898 | Migration reference snapshot retained for provenance; not current architecture authority. |
 | 95 | `docs/migration/TIME_WINDOW_IMPLEMENTATION_PLAN_2026-09-11.md` | migration | `active-plan` | `consolidate-after-status-audit` | 26044 | Implementation plan with open gap-period policy noted; retain active until status audit closes it. |
 | 96 | `docs/MOBILE_ANALYTICS_CONTROLLER_ACCEPTANCE_2026-09-14.md` | analytics | `evidence` | `keep-as-evidence` | 652 | Verification/status snapshot; useful evidence but not architectural authority. |
-| 97 | `docs/MOBILE_ANALYTICS_CONTROLLER_CORRECTION_2026-09-14.md` | analytics | `reference` | `retain-or-consolidate` | 1581 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
+| 97 | `docs/MOBILE_ANALYTICS_CONTROLLER_CORRECTION_2026-09-14.md` | analytics | `historical` | `retain-as-implementation-evidence` | 1581 | September 14 collision/correction evidence; current controller/responsive contracts supersede its CSS-precedence wording. |
 | 98 | `docs/MOBILE_ANALYTICS_CONTROLLER_TEST_MATRIX_2026-09-14.md` | analytics | `evidence` | `keep-as-evidence` | 1017 | Verification/status snapshot; useful evidence but not architectural authority. |
 | 99 | `docs/MOBILE_VISUAL_PHASE2_CHANGELOG.md` | ui | `evidence` | `keep-as-evidence` | 715 | Verification/status snapshot; useful evidence but not architectural authority. |
 | 100 | `docs/MOBILE_VISUAL_QA_MATRIX.md` | ui | `evidence` | `keep-as-evidence` | 1435 | Verification/status snapshot; useful evidence but not architectural authority. |
-| 101 | `docs/MOBILE_VISUAL_RESPONSIVE_CONTRACT.md` | ui | `reference` | `retain-or-consolidate` | 2596 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
+| 101 | `docs/MOBILE_VISUAL_RESPONSIVE_CONTRACT.md` | ui | `canonical` | `retain-current` | 2596 | Canonical scoped Analytics Data Visual responsive contract; separate from Studio Toolbox and Dashboard widget geometry. |
 | 102 | `docs/PRIMITIVE_FIX_PREVIEW_TRIGGER.md` | ui | `retirement-candidate` | `verify-before-delete` | 104 | No-runtime-impact preview/deployment marker; verify no references, then delete in cleanup wave. |
 | 103 | `docs/production-deployment-trigger.md` | deployment | `retirement-candidate` | `verify-before-delete` | 252 | No-runtime-impact deployment marker; verify no references, then delete in cleanup wave. |
 | 104 | `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_CHANGELOG_2026-09-17.md` | ui | `evidence` | `keep-as-evidence` | 614 | Verification/status snapshot; useful evidence but not architectural authority. |
@@ -183,20 +183,22 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 118 | `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` | governance | `review` | `audit-before-move` | 25225 | Broad unfinished-work inventory can conflict with newer domain-specific state; verify item-by-item. |
 | 119 | `docs/vt-e1-render-worker.md` | editor | `reference` | `retain-or-consolidate` | 1417 | General documentation; verify current scope and merge target during its domain wave. |
 
-## Wave 1 control documents
+## Post-baseline documents created by consolidation
 
-These files are created by Wave 1 and therefore are **not** part of the 119-file baseline count:
+These files were created after the original 119-file baseline and therefore are **not** included in the baseline lifecycle counts above:
 
 - `docs/README.md` — documentation entrypoint and authority map.
 - `docs/DOCUMENTATION_GOVERNANCE.md` — lifecycle, authority, supersession, placement, and deletion-safety contract.
 - `docs/DOCUMENTATION_REGISTRY.md` — this baseline registry.
+- `docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md` — Wave 4 living Analytics / VT-SYNC authority.
 
 ## Consolidation progress
 
 - **Wave 1 — complete/merged:** registry, entrypoint and governance contract.
 - **Wave 2 — complete/merged:** Projects / ContentBuild / Asset Engine current authority consolidated into the two living masters.
-- **Wave 3 — Studio UI / Toolbox / widgets / mobile:** production token/code authority reconciled. Toolbox master promoted to canonical; Component Library source-of-truth remains canonical for catalog/primitive-correction scope; stale desktop 56/44 Studio docs are historical; Dashboard widgets and Analytics Data Visuals retain separate scoped contracts.
+- **Wave 3 — complete/merged:** Studio UI / Toolbox / widget/mobile authority reconciled against production code/tokens.
+- **Wave 4 — Analytics / Data Visuals / migrations:** Analytics/VT-SYNC master created; the old migration README is historical; canvas and mobile-responsive contracts are scoped canonical authorities; dataset/window/controller/mark-scale/portal plans remain active where code-backed work is still open.
 
 ## Next action
 
-Wave 4 should consolidate Analytics / Data Visual / migration documentation, including controller/canvas/mobile plans, time-window work, dataset expansion, status snapshots and historical migration references.
+Wave 5 should consolidate Brain / AI / Herald documentation around the unified AI consolidation contract and current runtime/evidence systems, then demote superseded AI plans/audits and preserve Herald artifacts as evidence.

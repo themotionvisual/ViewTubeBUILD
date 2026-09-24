@@ -1,5 +1,9 @@
 # Data Visual Module Unification
 
+**Status:** HISTORICAL FOUNDATION / MIGRATION BRIDGE  
+**Superseded for current authority:** `migration/data-visual-canvas-contract.md` + `MOBILE_VISUAL_RESPONSIVE_CONTRACT.md` + `analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md`  
+**Wave 4 note (2026-09-24):** the source-native canvas foundation is now production. Preserve this short document for the original migration rule/priority set; do not use its feature-branch implementation-status lines as current truth.
+
 Scope: individual Analytics Data Visual modules and their evidence/canvas regions only. This work does not redefine Toolbox/SubToolbox geometry, Projects, Editor, Studio Hub, or the general widget system.
 
 ## Canonical ownership

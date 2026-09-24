@@ -1,6 +1,10 @@
 # Data Visual controller unification — plan
 
-Status: **in progress**. Phases 0, 1 and 4 landed in PR #289. Phase 2 is implemented on `codex/data-visual-controller-unification-phase2-2026-09-21`: both declarative shells use `VisualControllerRail`, width floors live in `controllerRowWidth.ts`, and the existing controller shape snapshot is unchanged. Phases 3 and 5–7 remain pending. The inventory below describes the original baseline, not the current tree.
+**Status:** ACTIVE IMPLEMENTATION PLAN — partially landed  
+**Current authority:** `../analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md`  
+**Last re-audited:** 2026-09-24 against main `e8313cceb2b6ab1fbcff6ff28a9648192f559854`
+
+Code-backed state: both declarative Analytics shells use `VisualControllerRail`; controller width-floor infrastructure is present; row-order authority has moved to module-authored order. The migration is still open because live `controllerSpec` metadata remains and the later vocabulary/orientation phases are not fully retired. The inventory below describes the original baseline where noted, not a guarantee about every current file.
 
 ## 2026-09-21 verification
 

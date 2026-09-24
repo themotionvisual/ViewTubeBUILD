@@ -1,3 +1,5 @@
 # Data Visual module migration status
 
-The source-native canvas foundation is ready. Production renderer conversion is intentionally incremental so existing Data Visual modules remain unchanged until individually migrated and verified.
+**Status:** HISTORICAL STATUS SNAPSHOT / evidence only  
+**Superseded for current status:** `analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md` and the production Data Visual registries.  
+**Original snapshot:** The source-native canvas foundation was ready and renderer conversion was intentionally incremental.

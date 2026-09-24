@@ -1,5 +1,9 @@
 # Migration to /analytics (VT Sync) as the source of truth
 
+**Status:** HISTORICAL MIGRATION PROGRAM / PR LEDGER  
+**Superseded for current authority:** `../analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md`  
+**Wave 4 note (2026-09-24):** preserve this document for migration history, extraction decisions and old consumer inventories. Its August status snapshot and phase counters are not current completion truth. Current ownership/status must be read from the Analytics / VT-SYNC master plus production registries/code.
+
 **Purpose.** ViewTube's analytics data, auth signals, and legacy Performance-Hub-era tools currently live across three parallel systems. This directory tracks the migration to a single source of truth: **VT Sync Local (`/analytics`)** for data, and a single unified auth signal for identity.
 
 This document is the north star. Every migration PR is scoped from here. Every feature we discover during migration gets logged here so nothing gets dropped by accident.

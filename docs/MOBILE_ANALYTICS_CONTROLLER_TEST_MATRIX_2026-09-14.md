@@ -1,5 +1,9 @@
 # Mobile Analytics Controller Test Matrix
 
+**Status:** HISTORICAL / REUSABLE REGRESSION EVIDENCE MATRIX  
+**Current authority:** current controller plan + mobile visual responsive contract.  
+**Wave 4 note (2026-09-24):** the viewport expectations remain useful as regression evidence, but this matrix is not proof that current main has passed those screenshots.
+
 Verify the responsive controller correction at these minimum viewports before merging:
 
 | Viewport | Orientation | Expected controller composition |

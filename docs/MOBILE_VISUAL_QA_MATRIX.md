@@ -1,5 +1,9 @@
 # Mobile Visual QA Matrix
 
+**Status:** ACTIVE CERTIFICATION EVIDENCE MATRIX  
+**Current authority:** `MOBILE_VISUAL_RESPONSIVE_CONTRACT.md`  
+**Last re-audited:** 2026-09-24 against main `e8313cceb2b6ab1fbcff6ff28a9648192f559854`
+
 Use this matrix for each migrated Data Visual renderer.
 
 | Viewport | Orientation | Required result |
