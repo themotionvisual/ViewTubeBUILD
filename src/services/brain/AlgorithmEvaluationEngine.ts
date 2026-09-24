@@ -110,6 +110,8 @@ export const recordAlgorithmEvaluation = (input: {
   primingStepId: event.primingStepId,
   actionPacketId: event.actionPacketId,
   workflowId: event.workflowId,
+  traceId: event.traceId || null,
+  outputRef: event.outputRef || null,
   evidenceIds: evaluation.evidenceIds,
   confidence: evaluation.confidence,
   title: `Evaluation: ${event.title}`,
