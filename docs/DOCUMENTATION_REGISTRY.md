@@ -23,11 +23,11 @@
 
 ## Baseline summary
 
-- **active-plan:** 15
+- **active-plan:** 13
 - **artifact:** 12
 - **canonical:** 5
 - **evidence:** 9
-- **historical:** 25
+- **historical:** 27
 - **reference:** 44
 - **retirement-candidate:** 3
 - **review:** 6
@@ -63,13 +63,13 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | ---: | --- | --- | --- | --- | ---: | --- |
 | 1 | `docs/analytics/YOUTUBE_ANALYTICS_DATASET_EXPANSION_PLAN.md` | analytics | `active-plan` | `consolidate-after-status-audit` | 21714 | Active analytics dataset expansion plan with supporting matrix. |
 | 2 | `docs/analytics/youtube-analytics-dataset-expansion-matrix.csv` | analytics | `reference` | `retain-or-consolidate` | 9570 | Supporting machine-readable/reference artifact; preserve unless an owning canonical registry replaces it. |
-| 3 | `docs/architecture/ASSET_ENGINE_CONTENTBUILD_IMPLEMENTATION_PLAN_2026-09-20.md` | architecture | `active-plan` | `consolidate-after-status-audit` | 10084 | Recent implementation plan; reconcile completion state before archiving. |
+| 3 | `docs/architecture/ASSET_ENGINE_CONTENTBUILD_IMPLEMENTATION_PLAN_2026-09-20.md` | architecture | `historical` | `retain-as-milestone-reference` | 10084 | Wave 2 reconciled implemented/open requirements into the two living masters; preserve as implementation history. |
 | 4 | `docs/architecture/AUTH_PR_CONSOLIDATION_AUDIT.md` | architecture | `reference` | `retain-or-consolidate` | 7493 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
 | 5 | `docs/architecture/CSS_SYSTEM_ISOLATION_PLAN_2026-09-14.md` | architecture | `active-plan` | `status-audit` | 5190 | Plan/work-order/tracker requires completion check before consolidation or archive. |
 | 6 | `docs/architecture/dashboard-baseline.json` | architecture | `evidence` | `keep-as-evidence` | 2254 | Verification/status snapshot; useful evidence but not architectural authority. |
 | 7 | `docs/architecture/dashboard-style-snapshot.json` | architecture | `evidence` | `keep-as-evidence` | 83646 | Verification/status snapshot; useful evidence but not architectural authority. |
 | 8 | `docs/architecture/MOBILE_WIDGET_PHASE2_CLASSIFICATION.md` | architecture | `reference` | `retain-or-consolidate` | 3231 | General documentation; verify current scope and merge target during its domain wave. |
-| 9 | `docs/architecture/PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md` | architecture | `active-plan` | `consolidate-after-status-audit` | 21441 | Recent active consolidation authority to fold into the living Project and Asset Engine masters once reconciled. |
+| 9 | `docs/architecture/PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md` | architecture | `historical` | `retain-as-consolidation-record` | 21441 | Wave 2 promoted hard identity/persistence/publishing rules into the living masters; preserve this convergence plan for provenance. |
 | 10 | `docs/architecture/SIMPLE_AUTH_V1.md` | architecture | `review` | `audit-before-move` | 1188 | Useful implementation reference but auth routes have evolved; reconcile into one current-state auth authority. |
 | 11 | `docs/architecture/STUDIO_HUB_COMPONENT_STANDARDIZATION_V1.md` | architecture | `historical` | `archive-after-extraction` | 6526 | Older Studio standardization generation; newer component-library source-of-truth contains superseding corrections. |
 | 12 | `docs/architecture/STUDIO_HUB_MIGRATION_MATRIX_V1.md` | architecture | `historical` | `archive-after-extraction` | 5414 | Migration-era matrix; preserve as history/evidence after extracting still-open work. |
@@ -77,7 +77,7 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 14 | `docs/architecture/SUBTOOLBOX_PRIMITIVE_SYSTEM_V1.md` | architecture | `reference` | `retain-or-consolidate` | 4276 | General documentation; verify current scope and merge target during its domain wave. |
 | 15 | `docs/architecture/toolbox-ui-master-resource/HANDOFF_UPDATE_PROTOCOL.md` | architecture | `reference` | `retain-or-consolidate` | 3648 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
 | 16 | `docs/architecture/toolbox-ui-master-resource/README.md` | architecture | `reference` | `retain-or-consolidate` | 2796 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
-| 17 | `docs/architecture/VIDEO_ASSET_ENGINE_WIDGET_IDEAS_2026-09-20.md` | architecture | `reference` | `retain-or-consolidate` | 4247 | General documentation; verify current scope and merge target during its domain wave. |
+| 17 | `docs/architecture/VIDEO_ASSET_ENGINE_WIDGET_IDEAS_2026-09-20.md` | architecture | `reference` | `retain-as-idea-catalog` | 4247 | Durable dashboard requirements were folded into the Asset Engine master; retain the 25-item catalog as non-authoritative product backlog/reference. |
 | 18 | `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md` | architecture | `canonical` | `retain-current` | 38239 | Canonical Asset Engine product/architecture reference referenced by CLAUDE.md. |
 | 19 | `docs/architecture/VIEWTUBE_AUTH_API_STABILIZATION_REFERENCE.md` | architecture | `review` | `audit-before-move` | 8890 | High-value troubleshooting/current-state reference; consolidate with Simple Auth and route truth. |
 | 20 | `docs/architecture/VIEWTUBE_CROWN_DOMAIN_MISSION_PACK.md` | architecture | `reference` | `retain-or-consolidate` | 1962 | General documentation; verify current scope and merge target during its domain wave. |
@@ -98,7 +98,7 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 35 | `docs/brain/AI_BRAIN_REACHABILITY_AUDIT_WORK_ORDER_2026-09-17.md` | brain | `active-plan` | `status-audit` | 2284 | Plan/work-order/tracker requires completion check before consolidation or archive. |
 | 36 | `docs/brain/AI_CROSS_BRANCH_HARVEST_PASS1_2026-09-18.md` | brain | `reference` | `retain-or-consolidate` | 5711 | General documentation; verify current scope and merge target during its domain wave. |
 | 37 | `docs/brain/AI_INTELLIGENCE_ENGINE_PHASE0_SYSTEM_MANIFEST_2026-09-17.md` | brain | `reference` | `retain-or-consolidate` | 5753 | General documentation; verify current scope and merge target during its domain wave. |
-| 38 | `docs/brain/ASSET_ENGINE_CANONICAL_BACKBONE.md` | brain | `historical` | `archive-after-extraction` | 11199 | Foundational Asset Engine backbone retained as reference; expanded by the later Asset Engine master resource. |
+| 38 | `docs/brain/ASSET_ENGINE_CANONICAL_BACKBONE.md` | brain | `historical` | `retain-as-foundation-reference` | 11199 | Foundational ownership/backbone document superseded for current authority by the Asset Engine master and Projects/ContentBuild master. |
 | 39 | `docs/brain/BRAIN_RUNTIME_PHASE_1_MODEL_AND_ORCHESTRATION_INVENTORY_2026-09-11.md` | brain | `reference` | `retain-or-consolidate` | 7369 | General documentation; verify current scope and merge target during its domain wave. |
 | 40 | `docs/brain/BRAIN_SHARED_CONVERSATION_CONTROLLER_PHASE_2_2026-09-12.md` | brain | `reference` | `retain-or-consolidate` | 3133 | General documentation; verify current scope and merge target during its domain wave. |
 | 41 | `docs/brain/PHASE_1_CLOSEOUT_PHASE_2_START.md` | brain | `reference` | `retain-or-consolidate` | 3553 | General documentation; verify current scope and merge target during its domain wave. |
@@ -189,6 +189,11 @@ These files are created by Wave 1 and therefore are **not** part of the 119-file
 - `docs/DOCUMENTATION_GOVERNANCE.md` — lifecycle, authority, supersession, placement, and deletion-safety contract.
 - `docs/DOCUMENTATION_REGISTRY.md` — this baseline registry.
 
+## Consolidation progress
+
+- **Wave 1 — complete/merged:** registry, entrypoint and governance contract.
+- **Wave 2 — Projects / ContentBuild / Asset Engine:** current authority consolidated into the two living master resources. The September 20 implementation plan, September 22 convergence plan and Brain backbone are retained as historical records; the dashboard ideas file remains a reference catalog. No donor was deleted or moved.
+
 ## Next action
 
-Wave 2 should begin with the Projects / ContentBuild / Asset Engine family because `CLAUDE.md` already names its two living master resources. Reconcile unique content from implementation/consolidation/backbone documents into those authorities, mark supersession explicitly, update this registry, and only then move historical material.
+Wave 3 should reconcile Studio UI / Toolbox / component-library / widget/mobile documentation, using current token/code tests to resolve conflicting geometry before demoting older standards.

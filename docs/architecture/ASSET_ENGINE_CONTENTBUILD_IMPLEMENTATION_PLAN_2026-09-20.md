@@ -1,7 +1,10 @@
 # Asset Engine ContentBuild Spine — Implementation Plan
 
 Date: 2026-09-20
-Status: ACTIVE IMPLEMENTATION
+Status: HISTORICAL IMPLEMENTATION PLAN / MILESTONE REFERENCE
+Superseded for current authority: docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md
+Cross-system authority: docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md
+Wave 2 consolidation note (2026-09-24): Implemented foundations and still-open requirements from this plan were reconciled into the two living master resources. Preserve this file for implementation history; do not use its phase labels as current status without checking the masters and current code.
 Parent: docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md
 
 ## Goal

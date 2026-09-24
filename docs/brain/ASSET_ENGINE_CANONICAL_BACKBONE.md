@@ -1,5 +1,11 @@
 # Asset Engine — Canonical Workflow Backbone
 
+**Status:** FOUNDATIONAL HISTORICAL REFERENCE  
+**Originally:** canonical cross-system workflow backbone  
+**Current authority:** `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md`  
+**Related cross-system authority:** `docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md`  
+**Wave 2 consolidation note (2026-09-24):** ownership boundaries and still-valid workflow requirements from this backbone are preserved in the current masters. Keep this document for architectural provenance; when wording differs, the masters and current code/contracts win.
+
 ## Decision
 
 The Creator Asset Engine is the standard vehicle for durable work moving between ViewTube tools and systems.

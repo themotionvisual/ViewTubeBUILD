@@ -2,7 +2,10 @@
 
 **Status:** Living architecture + implementation authority  
 **Created:** 2026-09-22  
-**Last audited main:** `cbc50be80bb6bf9c218ff3d7af0c6f232a41891b`  
+**Last audited main:** `c7d9f55268af61569fdba9c2afab256a5cfbf6ff` (2026-09-24 docs consolidation Wave 2)  
+**Canonical owner / concern:** Cross-system Project → ContentBuild → Video Package workflow, creator-facing Project continuity, and ownership boundaries.  
+**Related canonical authority:** `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md` owns detailed Asset Engine asset/version/variant/generation/publishing contracts.  
+**Supersedes for current-state authority:** `ASSET_ENGINE_CONTENTBUILD_IMPLEMENTATION_PLAN_2026-09-20.md` and `PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md`; those files remain historical implementation/consolidation records.  
 **Primary reassembly baseline:** PR #302 / merge commit `3f9cb2dab3e2bb3247ce9bd904051ae8b0b93d2d`  
 **Scope:** Projects page, Project Builder, Project Board, calendar/scheduling, channel planning, project planning, Asset Engine, ContentBuild, Video Package, Publishing Package, Vault handoffs, Studio tools, editor handoffs, YouTube binding, analytics and learning.
 
@@ -119,7 +122,7 @@ PR #302 is now merged into current `main`. The Projects page has already been re
 
 Channel Planning, full Content Asset Engine, Publishing Schedule and the restored Project Studio now survive as capabilities embedded behind Builder / Board rather than competing top-level owners.
 
-The remaining work is continuity and identity hardening: move the CHANNEL / PROJECT switch into the Builder header, add compact schedule context, make the Simple Asset Engine expose durable asset slots, and ensure Project creation initializes/reuses a Video Package against the same ContentBuild.
+The original reassembly work is now substantially beyond that baseline. On the audited main, Project creation/recovery is centralized through `ProjectContentIdentityService`; Video Package persistence requires canonical ContentBuild scope; ContentBuild revisions protect against stale package writes; VariantGroups/versions exist; and the shared Generation workflow exposes `GenerationRequest` + `ToolReceipt`. Remaining work is concentrated in publication transaction hardening, immutable approved-publish snapshots, deeper post-publish writers/evaluation, legacy-path cleanup, and visual/mobile certification.
 
 ### Current useful production pieces
 
@@ -328,6 +331,27 @@ Do not create a second unrelated ContentBuild for the Video Package.
 When the working project owns `contentBuildId = CB-123`, its default Video Package must be initialized with that same ContentBuild identity.
 
 ---
+
+## 7A. Consolidated hard invariants
+
+Wave 2 documentation consolidation promotes the still-valid hard rules from the September implementation/convergence plans into this living authority.
+
+| Invariant | Audited state |
+| --- | --- |
+| One Project maps to one durable ContentBuild identity | Implemented baseline |
+| Normal Video Package persistence requires canonical `contentBuildId` | Implemented baseline |
+| One Project cannot silently persist packages against conflicting ContentBuilds | Implemented baseline |
+| Stale package writes cannot overwrite a newer ContentBuild revision | Implemented baseline |
+| Version and Option/Variant are different concepts | Implemented in ContentBuild contracts/repository |
+| Selected is reversible and does not imply Final | Implemented baseline |
+| Finalization/approval is explicit | Implemented baseline |
+| Publishing/Launch/Readiness are projections or services, not parallel truth stores | Architectural invariant |
+| Exact publication inputs must be frozen before external publish | Open: ApprovedPublishSnapshot |
+| Publish retry must be resumable/idempotent and must not duplicate uploads | Open target |
+| Analytics remains canonical metric truth; ContentBuild stores identity/checkpoint references | Architectural invariant |
+| Learning remains governed; outcomes never rewrite historical creative truth | Architectural invariant |
+
+Strong command boundaries should mutate canonical state synchronously and emit downstream events/projections idempotently. Avoid circular choreography such as Project → ContentBuild → Package → Project loops.
 
 ## 8. Lifecycle
 
@@ -570,35 +594,51 @@ Do not create the Project and leave its ContentBuild/Video Package identity for 
 
 ---
 
-## 13. Video Package integration gap
+## 13. Video Package identity and persistence contract
 
-The Video Package contract is already capable of correct identity:
+The normal Project creation/recovery path now uses one canonical identity transaction:
 
-```ts
-CreateVideoPackageInput {
-  channelId
-  projectId
-  workingTitle
-  format
-  contentBuildId?
-}
+```text
+Project
+  -> ProjectContentIdentityService
+  -> create/resolve ContentBuild
+  -> persist Project.contentBuildId
+  -> find/reuse or initialize Video Package
+  -> require the SAME contentBuildId
 ```
 
-The project creation path must use this.
+### Code-backed invariants on the audited main
 
-### Current gap
+- `ProjectContentIdentityService` centralizes Project → ContentBuild → Video Package initialization/recovery.
+- `VideoPackageRepository` rejects normal saves without canonical ContentBuild identity and rejects a Project package scoped to a conflicting ContentBuild.
+- Package writes carry the observed ContentBuild revision and reject stale writes rather than overwriting newer canonical state.
+- `VideoPackageContentBuildBridge` synchronizes package-owned durable artifacts into ContentBuild and projects canonical selections back into the package.
+- Title/thumbnail options use ContentBuild VariantGroups; selected and final remain distinct states.
+- Explicit approval/finalization is required before a selected candidate becomes final.
+- Legacy identity fallback is migration compatibility, not the normal save contract.
 
-Project -> ContentBuild bridging is implemented, and Video Package -> ContentBuild bridging is implemented, but the Project Builder creation flow does not yet guarantee one initialized project-scoped Video Package against the same ContentBuild.
+### Required invariant
 
-### Intended fix
+```text
+Project.contentBuildId
+=
+VideoPackage.contentBuildId
+=
+Asset.contentBuildId
+=
+Editor/Publisher scope.contentBuildId
+```
 
-Add one Project/VideoPackage bridge or creation service that:
+A mismatch is an error condition. No surface may silently choose or create a second ContentBuild.
 
-- resolves the Project's ContentBuild,
-- finds an existing Video Package for `projectId + contentBuildId`,
-- otherwise creates one with the existing ContentBuild ID,
-- persists it through the current canonical package owner,
-- never forks identity silently.
+### Directional reconciliation rule
+
+```text
+Video Package owned specification/state -> ContentBuild
+ContentBuild canonical selections/finals -> Video Package projection
+```
+
+Selection/finalization commands mutate canonical ContentBuild state first; projections must not become a competing selection store.
 
 ---
 
@@ -628,6 +668,10 @@ Then expose contextual actions:
 - Resolve Blocker
 
 The full publishing implementation remains owned by the existing Asset Engine / Publisher systems.
+
+### Publication freeze still required
+
+Before external publication, the system must create an immutable approved-publish snapshot containing the ContentBuild ID + revision, exact final render/title/thumbnail/caption asset IDs, metadata/routing/visibility/schedule, approver/timestamp, and snapshot hash. The audited main has a Publishing Package projection but does **not** yet have a code-backed `ApprovedPublishSnapshot` implementation. Treat that snapshot plus a resumable/idempotent PublishTransaction as an open target, not shipped behavior.
 
 ---
 
@@ -701,8 +745,8 @@ The Projects page now uses Project Builder + Project Board/Calendar + Storyboard
 PR #302 restored CHANNEL / PROJECT inside Builder body. The current follow-up branch moves that control into the main Project Builder Toolbox header and makes the header the single scope owner.
 
 ### Project creation identity transaction
-**Status:** CANONICAL SERVICE ON CURRENT FEATURE BRANCH  
-PR #309 established the Project -> ContentBuild -> Video Package identity rule. The current branch centralizes that rule in `ProjectContentIdentityService`, so New Project and active-project recovery call one idempotent transaction instead of duplicating bridge logic in UI components. It creates/resolves ContentBuild first, attaches `Project.contentBuildId`, then initializes/reuses a Video Package only against that same ContentBuild. Disconnected mode still resolves the Project + ContentBuild and leaves Video Package pending until channel scope exists.
+**Status:** PRESENT ON AUDITED MAIN  
+`ProjectContentIdentityService` now centralizes New Project and active-project recovery. It creates/resolves ContentBuild first, attaches `Project.contentBuildId`, then initializes/reuses a Video Package only against that same ContentBuild. Disconnected mode can still resolve Project + ContentBuild while package creation waits for channel scope.
 
 ### Thumbnail ownership
 **Status:** MERGED PR #312 + FOLLOW-UP HARDENING IN PROGRESS  
@@ -725,7 +769,7 @@ Project Builder now has a compact publishing readiness summary for title, thumbn
 Lane/priority/owner/tags use local workspace metadata. Core content identity must remain in Project/ContentBuild and must not depend on workspace local storage.
 
 ### Status vocabulary
-**Status:** CENTRALIZED ON CURRENT FEATURE BRANCH  
+**Status:** PRESENT ON AUDITED MAIN  
 Project status, Board lane, ContentBuild stage and Video Package status are related but intentionally not identical. The current branch centralizes those translations in `projectLifecycleVocabulary.ts`, keeps Board `blocked` orthogonal to lifecycle progression so blocking a project does not reset ContentBuild stage, and treats the ContentBuild -> Video Package mapping as descriptive only. Actual Video Package transitions remain governed by `VIDEO_PACKAGE_TRANSITIONS`.
 
 ### Legacy generation paths
@@ -763,7 +807,7 @@ Project Builder and Board must use current canonical Toolbox/Subtoolbox primitiv
 | Simple Asset Engine durable asset slots | MERGED | PR #309 |
 | Compact Publishing Package readiness summary | MERGED | PR #309 |
 | Canonical Vault-backed Project thumbnail selection | MERGED | PR #312 |
-| ContentBuild-first thumbnail ownership + URL-to-Vault import | FEATURE BRANCH / VERIFY | current thumbnail-continuity follow-up |
+| ContentBuild-first thumbnail ownership + URL-to-Vault import | PRESENT ON AUDITED MAIN / REVERIFY VISUALLY | current source tree |
 
 ---
 
@@ -781,7 +825,7 @@ Project Builder and Board must use current canonical Toolbox/Subtoolbox primitiv
 - Project + ContentBuild creation already exists
 - initialize/reuse one same-scope Video Package
 - reject silent package ContentBuild forks
-- centralize Project creation/recovery through one idempotent identity transaction service: IN PROGRESS
+- centralize Project creation/recovery through one idempotent identity transaction service: PRESENT ON AUDITED MAIN
 - keep workspace priority/color initialization
 - test deterministic Project/ContentBuild/Video Package identity
 
@@ -808,19 +852,20 @@ Project Builder and Board must use current canonical Toolbox/Subtoolbox primitiv
 - document ContentBuild stage -> Video Package status projection without auto-mutating package state
 
 ### Wave 5 — Tool continuity
-- ContentBuild-aware Script Architect
-- Storyboard
-- Thumbnail
-- Video Director
-- Editor
-- Vault
-- Publisher
-- launch tools
+- shared `ContentBuildToolContext`: PRESENT ON AUDITED MAIN
+- canonical `GenerationRequest` + `ToolReceipt`: PRESENT ON AUDITED MAIN
+- Script / Storyboard / Thumbnail / Video Director / Publisher context integrations: PARTIAL/PRESENT; continue parity audit
+- Editor identity continuity: continue certification
+- Vault handoffs: continue certification
+- launch/community tools: remaining migration
 
 ### Wave 6 — Publication / analytics loop
+- Publishing Package projection: PRESENT ON AUDITED MAIN
+- immutable `ApprovedPublishSnapshot`: OPEN
+- resumable/idempotent canonical PublishTransaction + remote verification: OPEN / selective donor work
 - YouTube bind verification
-- analytics checkpoints
-- exact used-variant attribution
+- analytics checkpoint writers
+- immutable exact-used-variant / PublishedSelectionReceipt attribution
 - outcome/evaluation records
 - governed learning candidates
 
@@ -895,8 +940,8 @@ Whenever this system changes:
 | 2026-09-22 | PR #309 merged Project Builder header controls, schedule context, package identity and Simple Asset Engine expansion | MERGED |
 | 2026-09-22 | Added Vault-backed thumbnail selection with ContentBuild + Video Package synchronization | MERGED PR #312 |
 | 2026-09-22 | Hardened ContentBuild-first thumbnail ownership and URL-to-Vault import | MERGED PR #323 |
-| 2026-09-22 | Centralized Project creation/recovery in ProjectContentIdentityService | FEATURE BRANCH |
-| 2026-09-22 | Hardened thumbnail flow so ContentBuild remains authoritative without channel scope and legacy URLs can become Vault assets | FEATURE BRANCH |
+| 2026-09-22 | Centralized Project creation/recovery in ProjectContentIdentityService | PRESENT ON AUDITED MAIN |
+| 2026-09-22 | Hardened thumbnail flow so ContentBuild remains authoritative without channel scope and legacy URLs can become Vault assets | PRESENT ON AUDITED MAIN / REVERIFY VISUALLY |
 
 ---
 
