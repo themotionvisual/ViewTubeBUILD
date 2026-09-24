@@ -3,6 +3,7 @@ import { Eye, EyeOff, LayoutGrid, RotateCcw, Search } from "lucide-react"
 import { SubToolbox } from "../../components/Toolbox"
 import { SubToolboxGrid, SubToolboxStack } from "../../components/subtoolbox/SubToolboxLayouts"
 import {
+  SubToolboxAlert,
   SubToolboxButton,
   SubToolboxMetricStrip,
   SubToolboxSettingsSwitch,
@@ -193,39 +194,29 @@ export const DashboardWidgetsSettingsSection: React.FC = () => {
             {filtered.map((widget) => {
               const visible = !hiddenSet.has(widget.id)
               return (
-                <div
+                <SubToolboxAlert
                   key={widget.id}
-                  data-vt-control-level="l1"
-                  className="grid min-h-12 min-w-0 grid-cols-[48px_minmax(0,1fr)_auto] overflow-hidden border-[3px] border-black bg-white"
-                  style={{ borderRadius: "8px" }}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="border-r-[3px] border-black"
-                    style={{ background: widget.headerColor }}
-                  />
-                  <span className="grid min-w-0 content-center px-2 py-1">
-                    <span className="flex min-w-0 items-center gap-2">
-                      <strong className="min-w-0 truncate text-[12px] font-[1000] uppercase">
-                        {widget.title}
-                      </strong>
+                  level="l1"
+                  role="group"
+                  aria-label={widget.title}
+                  tone={visible ? "info" : "warning"}
+                  icon={<span className="size-5" style={{ background: widget.headerColor }} />}
+                  title={widget.title}
+                  detail={widget.subtitle}
+                  action={
+                    <span className="flex items-center gap-2">
                       {widget.status !== "ready" ? (
                         <SubToolboxStatusBadge level="l2">Preview</SubToolboxStatusBadge>
                       ) : null}
+                      <SubToolboxSettingsSwitch
+                        level="l1"
+                        pressed={visible}
+                        aria-label={`${visible ? "Hide" : "Show"} ${widget.title}`}
+                        onClick={() => toggleWidget(widget.id)}
+                      />
                     </span>
-                    <small className="truncate text-[9px] font-black text-black/50">
-                      {widget.subtitle}
-                    </small>
-                  </span>
-                  <span className="grid place-items-center px-2">
-                    <SubToolboxSettingsSwitch
-                      level="l1"
-                      pressed={visible}
-                      aria-label={`${visible ? "Hide" : "Show"} ${widget.title}`}
-                      onClick={() => toggleWidget(widget.id)}
-                    />
-                  </span>
-                </div>
+                  }
+                />
               )
             })}
           </SubToolboxGrid>
