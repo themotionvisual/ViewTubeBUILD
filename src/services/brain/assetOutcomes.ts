@@ -233,6 +233,8 @@ export const recordAssetOutcome = async (input: {
    channelId: asset.channelId,
    sourceToolId: tool,
    targetToolId: null,
+   traceId: asset.traceId,
+   outputRef: asset.id,
    outcome: BRAIN_OUTCOME_FOR_KIND[input.kind],
    summary: `${asset.assetType} ${input.kind}${input.note ? `: ${input.note}` : ""}`,
    evidence: asset.evidenceRefs,
