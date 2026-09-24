@@ -619,8 +619,8 @@ const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
  },
  {
   id: "flight-check",
-  title: "Upload Flight Check",
-  subtitle: "Pre-publish checklist",
+  title: "Publishing Command",
+  subtitle: "Canonical preflight, readiness and launch control",
   category: "creation",
   defaultSize: "half",
   minSize: "quarter",
@@ -1172,7 +1172,7 @@ export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: stri
    detailed: "Track how well your end screens and cards convert viewers. Use this to build a 'bridge' that keeps viewers on your channel."
   },
   "flight-check": {
-   short: "PRE-PUBLISH CHECKLIST FOR PERFECT UPLOADS.",
+   short: "CANONICAL PREFLIGHT, READINESS AND LAUNCH CONTROL.",
    detailed: "Ensure every video has optimal SEO, links, and settings before going live. Use this as a final safety net for every release."
   },
   "data-edit": {
