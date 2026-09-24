@@ -1,0 +1,395 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewtube.live/schemas/ai-systems/authority-record.schema.json",
+  "title": "ViewTube AI Authority Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "schemaVersion",
+    "recordVersion",
+    "kind",
+    "title",
+    "summary",
+    "lifecycle",
+    "ownership",
+    "audit",
+    "sourceRefs",
+    "relations",
+    "integration",
+    "tags"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "schemaVersion": {
+      "const": "vt-ai-authority-record-v1"
+    },
+    "recordVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "kind": {
+      "enum": [
+        "system",
+        "capability",
+        "agent",
+        "prompt-family",
+        "integration",
+        "plan",
+        "task",
+        "decision",
+        "donor",
+        "risk",
+        "reference"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lifecycle": {
+      "enum": [
+        "canonical",
+        "active",
+        "planned",
+        "claimed",
+        "in_progress",
+        "blocked",
+        "partial",
+        "implemented_branch",
+        "merged_non_main",
+        "landed_main_unverified",
+        "landed_main_tested",
+        "certified",
+        "experimental",
+        "historical",
+        "superseded",
+        "retired",
+        "retirement_candidate"
+      ]
+    },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canonicalOwner",
+        "concern"
+      ],
+      "properties": {
+        "canonicalOwner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "concern": {
+          "type": "string",
+          "minLength": 1
+        },
+        "codeOwner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "documentationOwner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "createdAt",
+        "updatedAt",
+        "lastAuditedAt",
+        "lastAuditedMainSha",
+        "changedBy"
+      ],
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "lastAuditedAt": {
+          "type": "string"
+        },
+        "lastAuditedMainSha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "changedBy": {
+          "type": "string"
+        },
+        "changeEventId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recordHash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "sourceRefs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "docs",
+        "prs",
+        "commits",
+        "tests"
+      ],
+      "properties": {
+        "code": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "docs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "prs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "commits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "tests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "ci": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "relations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dependsOn",
+        "provides",
+        "supersedes",
+        "supersededBy",
+        "overlapsWith",
+        "donorSources"
+      ],
+      "properties": {
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "provides": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "supersedes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "supersededBy": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "overlapsWith": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "donorSources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "integration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prMerged",
+        "currentMainState"
+      ],
+      "properties": {
+        "prMerged": {
+          "type": "boolean"
+        },
+        "prBase": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mergedCommit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "currentMainState": {
+          "enum": [
+            "absent",
+            "partial",
+            "equivalent",
+            "present",
+            "superseded",
+            "unknown"
+          ]
+        },
+        "verifiedMainSha": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "verificationRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "promptRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "traceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "artifactRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "roadmap": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "planIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "taskIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "milestoneIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "priority": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "statusEvidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "managedActionRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  }
+}
