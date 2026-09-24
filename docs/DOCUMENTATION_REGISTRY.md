@@ -203,3 +203,13 @@ These files were created after the original 119-file baseline and therefore are 
 ## Next action
 
 Wave 6 should consolidate Auth / Editor / deployment / user-guide documentation, reconcile each family against current main, and demote obsolete stabilization plans/status snapshots without erasing troubleshooting or migration evidence.
+
+
+## Post-baseline editor additions — 2026-09-24
+
+These files were added after the original 119-file Wave 1 baseline and therefore do not change the baseline counts above.
+
+| Path | Domain | Lifecycle | Disposition | Notes |
+| --- | --- | --- | --- | --- |
+| docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md | editor | canonical | retain-current | Living unified editor integration authority; owns desktop/mobile parity program, editor AI/generation integration map, skill/resource/branch registry and append-only update log. |
+| docs/editor/EDITOR_BRAIN_HUB_ASSISTANT_PLAN.md | editor/brain | active-plan | retain-active-scoped | Implementation plan for BrainRuntime-powered editor guide/assistant, typed proposals, semantic actions, captions and generative-media handoffs. |
