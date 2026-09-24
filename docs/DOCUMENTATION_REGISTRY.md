@@ -56,6 +56,7 @@
 - `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` — Canonical living AI / Brain architecture authority, reconciled against current runtime/evidence/evaluation systems in Wave 5.
 
 - `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` — Canonical production Toolbox/Subtoolbox design-system authority reconciled in Wave 3.
+- `docs/architecture/VIEWTUBE_ONE_GOAL_COMPLETION_OPERATING_SYSTEM.md` — Cross-domain living completion/audit/status/agent-handoff entry point. It coordinates but does not replace scoped domain masters.
 
 - `docs/architecture/SIMPLE_AUTH_V1.md` — Canonical living browser auth/session authority reconciled in Wave 6.
 - `docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md` — Post-baseline canonical living Editor system authority.
