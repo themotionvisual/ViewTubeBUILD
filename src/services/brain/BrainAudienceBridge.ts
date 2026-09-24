@@ -1,12 +1,17 @@
-import { getCurrentCanonicalIntelligenceEvidence } from "../analytics-canon"
+import {
+ getCurrentCanonicalIntelligenceEvidence,
+ type CanonicalIntelligenceEvidenceBundle,
+} from "../analytics-canon"
 import { buildStatisticsIntelligence } from "./StatisticsIntelligence"
 import {
  buildAudienceIntelligence,
  type AudienceIntelligenceSnapshot,
 } from "./AudienceIntelligence"
 
-export const buildBrainAudienceIntelligence = (): AudienceIntelligenceSnapshot => {
- const evidence = getCurrentCanonicalIntelligenceEvidence({
+export const buildBrainAudienceIntelligence = (
+ canonicalEvidence?: CanonicalIntelligenceEvidenceBundle,
+): AudienceIntelligenceSnapshot => {
+ const evidence = canonicalEvidence || getCurrentCanonicalIntelligenceEvidence({
   sectionIds: ["channel-pulse", "comparative-analysis", "keyword-matrix"],
   maximumRowsPerDataset: 5,
   maximumCharacters: 16_000,
