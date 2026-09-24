@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import type {
  BrainMemoryClaim,
  ChannelKnowledgeModel,
-} from "../../types"
+} from "../../../types"
 import {
  buildChannelKnowledgeProjection,
  retrieveChannelKnowledge,
