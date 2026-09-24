@@ -74,7 +74,7 @@ function normalizeMobileBridgeLayer(
     id: String(layer.id ?? `layer_${index}`),
     trackId: String(layer.trackId ?? fallbackTrackId),
     type: String(layer.type ?? 'media'),
-    visible: typeof layer.visible === 'boolean' ? layer.visible : true,
+    ...(typeof layer.visible === 'boolean' ? { visible: layer.visible } : {}),
     payload: isRecord(layer.payload) ? { ...layer.payload } : {},
   };
 }
