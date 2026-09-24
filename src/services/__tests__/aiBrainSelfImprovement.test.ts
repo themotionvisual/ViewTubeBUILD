@@ -219,4 +219,42 @@ describe("aiBrainSelfImprovement", () => {
   expect(decision.reason).toContain("evidence")
  })
 
+
+ it("keeps the reflection trace aligned with governed promotion rules", () => {
+  const highConfidenceInference = buildAIBrainReflectionTrace({
+   id: "learning-trace-inferred",
+   channelId: "channel-governance",
+   category: "preference",
+   source: "copilot",
+   summary: "Creator prefers dramatic thumbnails",
+   detail: "Creator prefers dramatic thumbnails",
+   evidence: ["trace-1"],
+   confidence: "high",
+   status: "reflected",
+   createdAt: "2026-09-24T00:00:00.000Z",
+   updatedAt: "2026-09-24T00:00:00.000Z",
+   recurrenceCount: 1,
+   relatedEntryIds: [],
+  })
+  expect(highConfidenceInference.steps.find((step) => step.id === "next_action")?.decision).toBe("hold")
+  expect(highConfidenceInference.finalConclusion).toContain("should not overwrite durable memory yet")
+
+  const repeatedEvidence = buildAIBrainReflectionTrace({
+   id: "learning-trace-repeated",
+   channelId: "channel-governance",
+   category: "content_style",
+   source: "copilot",
+   summary: "Measured documentary pacing performs reliably",
+   detail: "Measured documentary pacing performs reliably",
+   evidence: ["outcome-1", "outcome-2", "outcome-3"],
+   confidence: "medium",
+   status: "reflected",
+   createdAt: "2026-09-24T00:00:00.000Z",
+   updatedAt: "2026-09-24T00:00:00.000Z",
+   recurrenceCount: 3,
+   relatedEntryIds: [],
+  })
+  expect(repeatedEvidence.steps.find((step) => step.id === "next_action")?.decision).toBe("promote")
+ })
+
 })
