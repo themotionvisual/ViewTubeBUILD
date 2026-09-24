@@ -55,7 +55,6 @@ export const MobileEditor:React.FC<MobileEditorProps>=({
   const common={
     store,
     renderPreview,
-    height:viewport.height,
     compositionAspect:aspectValue,
     editorSettings,
     workspaceMode,
@@ -67,7 +66,7 @@ export const MobileEditor:React.FC<MobileEditorProps>=({
     data-phone-orientation={chosen}
     data-composition-aspect={compositionAspect}
     data-workspace-mode={workspaceMode}
-    style={{position:'relative',width:'100%',height:'100dvh',minWidth:0,minHeight:0,overflow:'hidden',background:'#f3f3f3',WebkitTapHighlightColor:'transparent'}}
+    style={{position:'relative',width:'100%',height:'100%',maxHeight:'100%',minWidth:0,minHeight:0,overflow:'hidden',background:'#f3f3f3',WebkitTapHighlightColor:'transparent'}}
   >
     <MobileWorkspaceLayout orientation={chosen} {...common}/>
   </div>;
