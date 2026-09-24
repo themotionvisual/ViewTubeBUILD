@@ -310,7 +310,6 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
  })
  const capabilities = selectBrainCapabilities({ channelId: input.channelId, userText: input.userText, snapshot: input.snapshot })
  const capabilityIds = capabilities.map((capability) => capability.id)
- const brainIntent = inferBrainIntent(input.userText)
  const engineControls = readBrainEngineControls(input.channelId)
  const userControls = readBrainUserControls(input.channelId)
  const contextPlan = resolveBrainContextPlan({
