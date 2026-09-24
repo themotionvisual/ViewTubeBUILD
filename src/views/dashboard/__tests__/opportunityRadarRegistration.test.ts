@@ -17,7 +17,7 @@ describe("Opportunity Radar dashboard registration", () => {
     expect(widget.minHeight).toBe("medium")
     expect(widget.maxHeight).toBe("xtall")
     expect(widget.responsiveMode).toBe("container")
-    expect(widget.releaseTier).toBe("preview")
+    expect(widget.releaseTier).toBe("supported")
   })
 
   it("has renderer, instrument, and help ownership", () => {
