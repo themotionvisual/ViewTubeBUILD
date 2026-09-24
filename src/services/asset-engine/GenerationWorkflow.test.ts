@@ -55,6 +55,8 @@ describe("GenerationWorkflow", () => {
    contextManifestId: prepared.contextManifest.id,
    targetSlot: "title",
    mode: "new-option",
+   generationRequest: prepared.request,
+   contextManifest: prepared.contextManifest,
   })
  })
 
@@ -141,6 +143,7 @@ describe("GenerationWorkflow", () => {
    versionIds: ["version-1", "version-2"],
    variantGroupId: "variant-group-1",
    relationshipIds: ["relation-1"],
+   toolReceipt: receipt,
   })
  })
 })
