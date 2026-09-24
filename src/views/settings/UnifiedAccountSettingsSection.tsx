@@ -1,11 +1,10 @@
 import React from "react"
-import {  Bell,  Check,  Download,
-  Eye,
-  EyeOff,
-  KeyRound,  LockKeyhole,
+import {
+  Check,  Download, LockKeyhole,
   ShieldCheck,
   Sparkles,
-  Trash2,} from "lucide-react"
+  Trash2,
+} from "lucide-react"
 import { AccountActionButton } from "../../components/account/AccountActionButton"
 import { AIModelSelector } from "../../components/ui/AIModelSelector"
 import { TOPUP_DEFINITIONS, getReferralCode, type EntitlementState } from "../../services/billingEntitlement"
@@ -14,6 +13,8 @@ import type { SubscriptionPlanId } from "../../services/subscriptionPlans"
 import type { SettingsPanel, SettingsReadiness } from "./settingsControlDeck"
 import { WorkspaceExperienceSettingsSection } from "./WorkspaceExperienceSettingsSection"
 import { SettingsOverviewPanel } from "./SettingsOverviewPanel"
+import { SettingsAccountPanel } from "./SettingsAccountPanel"
+import { SettingsAiPanel } from "./SettingsAiPanel"
 import { buildSettingsOverviewModel } from "./settingsWorkspaceModel"
 
 const PLANS: Array<{ id: SubscriptionPlanId; label: string; price: string; bullets: string[]; accent: string }> = [
@@ -124,27 +125,45 @@ export const UnifiedAccountSettingsSection: React.FC<UnifiedAccountSettingsSecti
         {activePanel === "experience" ? <WorkspaceExperienceSettingsSection /> : null}
 
         {activePanel === "account" ? (
-          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <Card accent="#FF83EA" title="Creator passport" description="Your verified account and YouTube identity.">
-              <dl className="grid gap-4 sm:grid-cols-2">
-                {[["Display name", profileName || "Not loaded"], ["Channel", currentHandleValue || "Not connected"], ["Email", currentEmail || "Sign in to load email"], ["Connection", channelConnection.isConnected ? "Connected" : "Not connected"]].map(([term, value]) => <div key={term} className="rounded-xl border-[3px] border-black bg-[#f8f7f1] p-4"><dt className={labelClass}>{term}</dt><dd className="mt-2 break-words text-base font-black">{value}</dd></div>)}
-              </dl>
-              {channelConnection.isConnected ? <button type="button" onClick={onDisconnectChannel} className={`${buttonClass} bg-black text-white`}>Disconnect channel</button> : <AccountActionButton surface="settings" channelSyncing={channelConnection.state === "syncing" || channelConnection.state === "authorizing"} onLegacyAction={onConnectChannel} className={`${buttonClass} w-full bg-[#CCFF00] text-black`} />}
-              <p className="text-sm font-bold leading-6 text-black/65">{channelConnection.helper || channelConnection.settingsLabel}</p>
-            </Card>
-            <div className="grid gap-6">
-              <Card accent="#96F5A6" title="Public channel mode" description="Resolve public analytics without OAuth on Basic."><label htmlFor="settings-public-channel" className={labelClass}>Channel handle or URL</label><input id="settings-public-channel" value={currentHandleValue} onChange={(event) => onHandleInputChange(event.target.value)} disabled={!canResolvePublicHandle} placeholder="@channelhandle or channel URL" className={inputClass} /><button type="button" onClick={onPublicResolve} disabled={!canResolvePublicHandle} className={`${buttonClass} bg-[#96F5A6]`}>Resolve channel</button>{resolveStatus ? <p role="status" aria-live="polite" className="text-sm font-bold text-black/65">{resolveStatus}</p> : null}</Card>
-              <Card accent="#FFE357" title="Account preferences"><button type="button" aria-pressed={notifyBilling} onClick={onToggleNotifyBilling} className={`${buttonClass} w-full ${notifyBilling ? "bg-[#CCFF00]" : "bg-white"}`}><Bell size={16} /> Billing alerts {notifyBilling ? "on" : "off"}</button><p className="text-sm font-bold leading-6 text-black/65">Identity is server-owned and read-only. Preferences apply locally until account preference sync is enabled.</p></Card>
-            </div>
-          </div>
+          <SettingsAccountPanel
+            profileName={profileName}
+            currentHandleValue={currentHandleValue}
+            currentEmail={currentEmail}
+            connected={channelConnection.isConnected}
+            connectionHelper={channelConnection.helper || channelConnection.settingsLabel}
+            connectionState={channelConnection.state}
+            canResolvePublicHandle={canResolvePublicHandle}
+            resolveStatus={resolveStatus}
+            notifyBilling={notifyBilling}
+            connectAction={
+              <AccountActionButton
+                surface="settings"
+                channelSyncing={channelConnection.state === "syncing" || channelConnection.state === "authorizing"}
+                onLegacyAction={onConnectChannel}
+                data-vt-studio-control="true"
+                data-size="compact"
+                data-tone="accent"
+              />
+            }
+            onDisconnect={onDisconnectChannel}
+            onHandleInputChange={onHandleInputChange}
+            onPublicResolve={onPublicResolve}
+            onToggleNotifyBilling={onToggleNotifyBilling}
+          />
         ) : null}
 
         {activePanel === "ai" ? (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card accent="#FF4FD8" title="Creator Brain" description="One profile powers Copilot, Oracle, Journal, and creator coaching."><div className="grid gap-3 sm:grid-cols-2"><div className="rounded-xl border-[3px] border-black bg-[#f8f7f1] p-4"><p className={labelClass}>What it captures</p><p className="mt-2 text-sm font-bold leading-6">Niche, audience, goals, strengths, weaknesses, and creator direction.</p></div><div className="rounded-xl border-[3px] border-black bg-[#FFFF61] p-4"><p className={labelClass}>What it improves</p><p className="mt-2 text-sm font-bold leading-6">Recommendations, titles, thumbnails, publishing plans, and monetization moves.</p></div></div><button type="button" onClick={onOpenAiBrainIntake} className={`${buttonClass} bg-[#CCFF00]`}><Sparkles size={17} /> Open Brain intake</button></Card>
-            <Card accent="#00F0FF" title="Model orchestration" description="Set the default model for creator workflows."><AIModelSelector /><div className="grid grid-cols-2 gap-3">{[["Flash", "1–1.5x", "#CCFF00"], ["Pro", "10–15x", "#FF83EA"]].map(([label, value, accent]) => <div key={label} className="rounded-xl border-[3px] border-black p-4" style={{ backgroundColor: accent }}><p className={labelClass}>{label}</p><p className="mt-2 text-2xl font-black uppercase">{value}</p><p className="mt-1 text-xs font-bold">Credit multiplier</p></div>)}</div></Card>
-            {canViewGeminiKey ? <Card accent="#FFFF61" title="Bring your own key" description="Run Gemini generation against your own quota and billing."><form onSubmit={(event) => { event.preventDefault(); onSaveGeminiKey() }} className="grid gap-4"><label htmlFor="settings-gemini-key" className={labelClass}>Gemini API key</label><div className="relative"><input id="settings-gemini-key" type={showKey ? "text" : "password"} autoComplete="new-password" value={geminiKey} onChange={(event) => onUpdateGeminiKey(event.target.value)} placeholder="Enter your Gemini API key" className={`${inputClass} pr-14`} /><button type="button" onClick={onToggleShowKey} aria-label={showKey ? "Hide API key" : "Show API key"} className="absolute right-3 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg border-2 border-black bg-white focus-visible:outline focus-visible:outline-4"><span aria-hidden="true">{showKey ? <EyeOff size={19} /> : <Eye size={19} />}</span></button></div><button type="submit" className={`${buttonClass} bg-[#CCFF00]`}><KeyRound size={17} /> Save API key</button>{settingsSaveStatus ? <p role="status" aria-live="polite" className="text-sm font-black uppercase">{settingsSaveStatus}</p> : null}</form></Card> : null}
-          </div>
+          <SettingsAiPanel
+            canViewGeminiKey={canViewGeminiKey}
+            geminiKey={geminiKey}
+            showKey={showKey}
+            settingsSaveStatus={settingsSaveStatus}
+            modelSelector={<AIModelSelector />}
+            onOpenAiBrainIntake={onOpenAiBrainIntake}
+            onSaveGeminiKey={onSaveGeminiKey}
+            onToggleShowKey={onToggleShowKey}
+            onUpdateGeminiKey={onUpdateGeminiKey}
+          />
         ) : null}
 
         {activePanel === "billing" ? (
