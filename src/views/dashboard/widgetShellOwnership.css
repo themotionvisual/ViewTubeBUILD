@@ -37,16 +37,17 @@
     min-width:0;
     min-height:0;
     grid-template-rows:1fr;
-    opacity:1;
-    transition:
-      grid-template-rows var(--vt-widget-collapse-duration) var(--vt-widget-collapse-easing),
-      opacity var(--vt-widget-collapse-duration) var(--vt-widget-collapse-easing);
+    transition:grid-template-rows var(--vt-widget-collapse-duration) var(--vt-widget-collapse-easing);
   }
 
   .vt-widget-collapse-region.is-closed {
     grid-template-rows:0fr;
-    opacity:0;
     flex-basis:0;
+  }
+
+  .widget-mobile-controls-trigger,
+  .widget-mobile-control-row {
+    display:none;
   }
 
   .vt-widget-collapse-inner {
