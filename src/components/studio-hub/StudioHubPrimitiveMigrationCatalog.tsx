@@ -202,8 +202,101 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Skeleton Media",
 ] as const
 
-const DemoShell: React.FC<{ level: StudioHubComponentLevel; children: React.ReactNode }> = ({ level, children }) => (
-  <div className={`vt-catalog-demo is-${level}`} data-level={level}>{children}</div>
+type StudioHubMigratedFamily = (typeof STUDIO_HUB_MIGRATED_FAMILIES)[number]
+
+type CatalogPreviewMode = "intrinsic" | "fixed" | "compound" | "field" | "canvas"
+
+type CatalogPreviewGeometry = {
+  mode: CatalogPreviewMode
+  inlineUnits?: number
+  portraitStack?: boolean
+}
+
+const CATALOG_PREVIEW_GEOMETRY: Partial<Record<StudioHubMigratedFamily, CatalogPreviewGeometry>> = {
+  "Square Icon Button": { mode: "fixed" },
+  "Toggle": { mode: "fixed" },
+  "Settings Switch": { mode: "fixed" },
+  "Checkbox": { mode: "fixed" },
+  "Radio": { mode: "fixed" },
+  "Controller Switch": { mode: "fixed" },
+  "LED Dot": { mode: "fixed" },
+  "Knob Dial": { mode: "fixed" },
+
+  "Split Left Button": { mode: "compound", inlineUnits: 4.15, portraitStack: true },
+  "Head Tail Action": { mode: "compound", inlineUnits: 4.15, portraitStack: true },
+  "Split Menu": { mode: "compound", inlineUnits: 4.8, portraitStack: true },
+  "Dropdown": { mode: "compound", inlineUnits: 4.75, portraitStack: true },
+  "Select Menu": { mode: "compound", inlineUnits: 4.75, portraitStack: true },
+  "Top Title Dropdown": { mode: "compound", inlineUnits: 4.9, portraitStack: true },
+  "Split Search": { mode: "compound", inlineUnits: 5.15, portraitStack: true },
+  "Input Action": { mode: "compound", inlineUnits: 4.7, portraitStack: true },
+  "Stepper": { mode: "compound", inlineUnits: 3.2, portraitStack: true },
+  "Segmented Choice": { mode: "compound", inlineUnits: 4.2, portraitStack: true },
+  "Button Group": { mode: "compound", inlineUnits: 4.1, portraitStack: true },
+  "Progress Value": { mode: "compound", inlineUnits: 4.8, portraitStack: true },
+  "Pagination": { mode: "compound", inlineUnits: 4.6, portraitStack: true },
+  "Breadcrumb": { mode: "compound", inlineUnits: 5.4, portraitStack: true },
+  "Icon Rail Control": { mode: "compound", inlineUnits: 4.4, portraitStack: true },
+  "Loader Split": { mode: "compound", inlineUnits: 4.8, portraitStack: true },
+
+  "Text Input": { mode: "field", inlineUnits: 5.4, portraitStack: true },
+  "Textarea": { mode: "field", inlineUnits: 5.6, portraitStack: true },
+  "Number Field": { mode: "field", inlineUnits: 4.2, portraitStack: true },
+  "Slider": { mode: "field", inlineUnits: 5.4, portraitStack: true },
+  "Range Slider": { mode: "field", inlineUnits: 5.7, portraitStack: true },
+  "Tag Editor": { mode: "field", inlineUnits: 5.6, portraitStack: true },
+  "Progress Bar": { mode: "field", inlineUnits: 5.2, portraitStack: true },
+  "Surface": { mode: "field", inlineUnits: 5.4, portraitStack: true },
+  "State Panel": { mode: "field", inlineUnits: 5.4, portraitStack: true },
+  "Output Card": { mode: "field", inlineUnits: 5.7, portraitStack: true },
+  "Selectable List Row": { mode: "field", inlineUnits: 5.8, portraitStack: true },
+  "Reorderable Row": { mode: "field", inlineUnits: 6.2, portraitStack: true },
+  "Tabs": { mode: "field", inlineUnits: 5.2, portraitStack: true },
+  "Alert": { mode: "field", inlineUnits: 5.8, portraitStack: true },
+  "Step Indicator": { mode: "field", inlineUnits: 5.8, portraitStack: true },
+  "Skeleton": { mode: "field", inlineUnits: 5.4, portraitStack: true },
+  "Skeleton Compact": { mode: "field", inlineUnits: 5.4, portraitStack: true },
+  "Toast": { mode: "field", inlineUnits: 5.6, portraitStack: true },
+  "Disclosure": { mode: "field", inlineUnits: 5.4, portraitStack: true },
+  "Meter": { mode: "field", inlineUnits: 5.2, portraitStack: true },
+  "Name Value List": { mode: "field", inlineUnits: 5.5, portraitStack: true },
+  "Metric Strip": { mode: "field", inlineUnits: 5.8, portraitStack: true },
+  "Horizontal Scrollbar": { mode: "field", inlineUnits: 5.8, portraitStack: true },
+  "Data Stats Module": { mode: "field", inlineUnits: 5.6, portraitStack: true },
+  "Toolbar": { mode: "field", inlineUnits: 6.0, portraitStack: true },
+  "Loader Progress": { mode: "field", inlineUnits: 5.3, portraitStack: true },
+
+  "Data Table": { mode: "canvas", inlineUnits: 7.2, portraitStack: true },
+  "Media Card": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
+  "Calendar": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
+  "Upload Frame": { mode: "canvas", inlineUnits: 6.2, portraitStack: true },
+  "Vault Landscape Asset": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
+  "Vault Portrait Asset": { mode: "canvas", inlineUnits: 6.0, portraitStack: true },
+  "Vault Audio Asset": { mode: "canvas", inlineUnits: 6.0, portraitStack: true },
+  "Vault Document Asset": { mode: "canvas", inlineUnits: 6.0, portraitStack: true },
+  "Tree View": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
+  "Aspect Ratio Frame": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
+  "Carousel": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
+  "Command Palette": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
+}
+
+const getCatalogPreviewGeometry = (name: StudioHubMigratedFamily): CatalogPreviewGeometry =>
+  CATALOG_PREVIEW_GEOMETRY[name] ?? { mode: "intrinsic" }
+
+
+const DemoShell: React.FC<{
+  level: StudioHubComponentLevel
+  geometry: CatalogPreviewGeometry
+  children: React.ReactNode
+}> = ({ level, geometry, children }) => (
+  <div
+    className={`vt-catalog-demo is-${level}`}
+    data-level={level}
+    data-vt-preview-mode={geometry.mode}
+    style={geometry.inlineUnits ? { ["--vt-catalog-inline-units" as string]: geometry.inlineUnits } as React.CSSProperties : undefined}
+  >
+    {children}
+  </div>
 )
 
 const PrimitiveMigrationControl: React.FC<{
@@ -646,6 +739,8 @@ export const StudioHubPrimitiveMigrationCatalog: React.FC<StudioHubPrimitiveMigr
           key={name}
           data-vt-family={name}
           data-vt-migration-state="primitive"
+          data-vt-preview-mode={getCatalogPreviewGeometry(name).mode}
+          data-vt-preview-portrait={getCatalogPreviewGeometry(name).portraitStack ? "stack" : "grid"}
         >
           <SubToolbox
             title={`${String(index + 1).padStart(2, "0")} ${name}`}
@@ -658,7 +753,7 @@ export const StudioHubPrimitiveMigrationCatalog: React.FC<StudioHubPrimitiveMigr
           >
             <div className="vt-catalog-levels">
               {(name === "Calendar" ? (["l0"] as StudioHubComponentLevel[]) : LEVELS).map((level) => (
-                <DemoShell level={level} key={level}>
+                <DemoShell level={level} geometry={getCatalogPreviewGeometry(name)} key={level}>
                   <PrimitiveMigrationControl name={name} level={level} />
                 </DemoShell>
               ))}

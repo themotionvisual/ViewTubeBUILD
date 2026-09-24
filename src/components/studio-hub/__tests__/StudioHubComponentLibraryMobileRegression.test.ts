@@ -71,19 +71,30 @@ describe("Studio Hub Component Library mobile regression", () => {
     expect(css).toContain("vt-subtoolbox-tree-row[data-depth=\"1\"]")
   })
 
-  it("keeps the primitive catalog compact instead of drawing nested full-width demo boxes", () => {
+  it("keeps catalog placement separate from production primitive geometry", () => {
+    const migration = read("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
     const css = read("src/components/studio-hub/studio-hub-primitive-migration-catalog.css")
+    const primitiveCss = read("src/styles/subtoolbox-system.css")
+    const splitCss = read("src/styles/subtoolbox-split-primitives.css")
 
     expect(css).toContain('[data-vt-subtoolbox="true"] > div:first-child')
     expect(css).toContain("border:0!important")
     expect(css).toContain(".vt-catalog-demo{")
-    expect(css).toContain("width:max-content")
-    expect(css).toContain("border:0")
-    expect(css).toContain("width:fit-content!important")
+    expect(css).toContain("--vt-catalog-level-height:56px")
+    expect(css).toContain('data-vt-preview-mode="compound"')
+    expect(css).not.toContain(".vt-catalog-demo > *{\n  width:fit-content!important")
+    expect(css).not.toContain("width:var(--vt-catalog-standard-inline)!important")
+    expect(migration).toContain("CATALOG_PREVIEW_GEOMETRY")
+    expect(migration).toContain('data-vt-preview-portrait={getCatalogPreviewGeometry(name).portraitStack ? "stack" : "grid"}')
+    expect(css).toContain('data-vt-preview-portrait="stack"')
     expect(css).toContain("grid-template-columns:repeat(3,minmax(0,max-content))")
     expect(css).toContain("@media(max-width:520px) and (orientation:portrait)")
-    expect(css).toContain("grid-template-columns:repeat(2,minmax(0,1fr))")
+    expect(css).toContain("grid-template-columns:minmax(0,1fr)")
     expect(css).toContain("@media(max-height:520px) and (orientation:landscape)")
+    expect(primitiveCss).toContain("CANONICAL INTRINSIC GEOMETRY — 2026-09-24")
+    expect(primitiveCss).toContain("min-width:calc(var(--vt-component-height)*5.15)")
+    expect(splitCss).toContain("min-width:calc(var(--vt-component-height)*4.15)")
+    expect(splitCss).toContain("min-width:calc(var(--vt-component-height)*4.8)")
   })
 
   it("registers the visual-key tooltip and both new skeleton anatomies", () => {
@@ -124,6 +135,10 @@ describe("Studio Hub Component Library mobile regression", () => {
     ]) expect(capture).toContain(`["${family}"`)
     expect(capture).toContain('["Tooltip", "Tooltip Color", "Tooltip Visual Key", "Hover Card"].includes(familyName)')
     expect(capture).toContain('captureMode: floatingOverlayFamily && state !== "default" ? "viewport" : "locator"')
+    expect(capture).toContain("geometryMinimumUnits")
+    expect(capture).toContain("inspectPrimitiveGeometry")
+    expect(capture).toContain("squareRailDelta")
+    expect(capture).toContain("canonical label clipped")
   })
 
   it("keeps the requested missing families in the canonical registry", () => {

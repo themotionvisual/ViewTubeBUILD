@@ -51,6 +51,22 @@ const priorityStates = new Map([
   ["Skeleton Media", ["default"]],
 ])
 
+const geometryMinimumUnits = new Map([
+  ["Split Left Button", 4.0],
+  ["Split Menu", 4.6],
+  ["Dropdown", 4.5],
+  ["Select Menu", 4.5],
+  ["Top Title Dropdown", 4.7],
+  ["Text Input", 5.0],
+  ["Textarea", 5.2],
+  ["Split Search", 5.0],
+  ["Number Field", 3.8],
+  ["Input Action", 4.5],
+  ["Stepper", 3.0],
+  ["Slider", 5.1],
+  ["Range Slider", 5.4],
+])
+
 const slug = (value) =>
   value
     .toLowerCase()
@@ -183,6 +199,96 @@ async function applyState(level, family, state) {
   }
 }
 
+async function inspectPrimitiveGeometry(family, familyName, viewport) {
+  const minUnits = geometryMinimumUnits.get(familyName)
+  if (!minUnits) return
+
+  for (const levelName of ["l0", "l1", "l2"]) {
+    const level = family.locator(`[data-level="${levelName}"]`).first()
+    if (!(await level.count())) continue
+    const root = level.locator("[data-vt-control-level]").first()
+    if (!(await root.count())) continue
+
+    const geometry = await root.evaluate((element, expectedUnits) => {
+      const rootRect = element.getBoundingClientRect()
+      const style = getComputedStyle(element)
+      const componentHeight = Number.parseFloat(style.getPropertyValue("--vt-component-height")) || rootRect.height
+      const widthUnits = componentHeight > 0 ? rootRect.width / componentHeight : 0
+      const rail = element.querySelector(
+        ".vt-subtoolbox-split-button-rail,.vt-subtoolbox-split-dropdown-rail,.vt-subtoolbox-split-field-rail",
+      )
+      const railRect = rail?.getBoundingClientRect() ?? null
+      const squareRailDelta = railRect ? Math.abs(railRect.width - railRect.height) : 0
+      const textNodes = Array.from(element.querySelectorAll(
+        ".vt-subtoolbox-split-button-label,.vt-subtoolbox-split-dropdown-label b,.vt-subtoolbox-menu-label b",
+      ))
+      const clippedLabels = textNodes
+        .filter((node) => node.scrollWidth > node.clientWidth + 1)
+        .map((node) => node.textContent?.trim() || node.className)
+      const field = element.querySelector("input,textarea")
+      const fieldRect = field?.getBoundingClientRect() ?? null
+      const fieldUnits = fieldRect && componentHeight > 0 ? fieldRect.width / componentHeight : null
+
+      return {
+        width: rootRect.width,
+        height: rootRect.height,
+        componentHeight,
+        widthUnits,
+        expectedUnits,
+        squareRailDelta,
+        clippedLabels,
+        fieldUnits,
+      }
+    }, minUnits)
+
+    manifest.captures.push({
+      kind: "geometry",
+      family: familyName,
+      track: "primitive",
+      level: levelName,
+      viewport: viewport.label,
+      geometry,
+    })
+
+    if (geometry.widthUnits + 0.08 < minUnits) {
+      manifest.errors.push({
+        phase: "geometry",
+        family: familyName,
+        level: levelName,
+        viewport: viewport.label,
+        message: `width ratio ${geometry.widthUnits.toFixed(2)} is below required ${minUnits.toFixed(2)} component-height units`,
+      })
+    }
+    if (geometry.squareRailDelta > 1.1) {
+      manifest.errors.push({
+        phase: "geometry",
+        family: familyName,
+        level: levelName,
+        viewport: viewport.label,
+        message: `split rail is not square (delta ${geometry.squareRailDelta.toFixed(2)}px)`,
+      })
+    }
+    if (geometry.clippedLabels.length > 0) {
+      manifest.errors.push({
+        phase: "geometry",
+        family: familyName,
+        level: levelName,
+        viewport: viewport.label,
+        message: `canonical label clipped: ${geometry.clippedLabels.join(", ")}`,
+      })
+    }
+    if (familyName === "Split Search" && geometry.fieldUnits !== null && geometry.fieldUnits < 2.35) {
+      manifest.errors.push({
+        phase: "geometry",
+        family: familyName,
+        level: levelName,
+        viewport: viewport.label,
+        message: `search body collapsed to ${geometry.fieldUnits.toFixed(2)} component-height units`,
+      })
+    }
+  }
+}
+
 async function capturePriorityStates(page, viewport, trackId, trackName, familyName) {
   const family = page.locator(`#${trackId} ${attrSelector(familyName)}`).first()
   if (!(await family.count())) return
@@ -261,6 +367,8 @@ for (const viewport of viewports) {
       const primitiveBox = await primitive.boundingBox()
       const primitiveFile = `${out}/${slug(familyName)}-primitive-default-${viewport.label}.png`
       await captureLocator(primitive, primitiveFile)
+
+      await inspectPrimitiveGeometry(primitive, familyName, viewport)
 
       let hardcodedBox = null
       let hardcodedFile = null

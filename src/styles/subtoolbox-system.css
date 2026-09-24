@@ -2607,3 +2607,74 @@
 .vt-subtoolbox-content > :is(.vt-subtoolbox-stack,.vt-subtoolbox-grid,.vt-subtoolbox-actions,.vt-subtoolbox-section) > [data-vt-control-level]:not(.vt-subtoolbox-file-target) {
   --vt-component-stroke: var(--vt-subtoolbox-inner-stroke,3px)!important;
 }
+
+
+/* ==========================================================================
+   CANONICAL INTRINSIC GEOMETRY — 2026-09-24
+   Component roots own their natural footprint. Width:100% remains valid for
+   fields/canvases inside an allocated slot; intrinsic controls shrink-wrap,
+   and compound controls publish a proportional minimum width so fixed square
+   rails never consume the text body.
+   ========================================================================== */
+.vt-subtoolbox-button.has-component-level{
+  width:max-content!important;
+  max-width:100%!important;
+  padding-inline:calc(var(--vt-component-height)*.24)!important;
+}
+.vt-subtoolbox-menu:not(.is-context){
+  width:calc(var(--vt-component-height)*4.75);
+  min-width:calc(var(--vt-component-height)*4.75);
+  max-width:100%;
+}
+.vt-subtoolbox-menu:not(.is-context) .vt-subtoolbox-menu-trigger{
+  width:100%;
+  min-width:0;
+}
+.vt-subtoolbox-menu-label>b{
+  min-width:0;
+  padding-left:calc(var(--vt-component-height)*.22);
+  overflow:visible;
+  text-overflow:clip;
+  white-space:nowrap;
+}
+.vt-subtoolbox-split-field.is-search.has-action{
+  min-width:calc(var(--vt-component-height)*5.15);
+}
+.vt-subtoolbox-split-field.is-action.has-action{
+  min-width:calc(var(--vt-component-height)*4.7);
+}
+.vt-subtoolbox-stepper{
+  min-width:calc(var(--vt-component-height)*3.2);
+}
+.vt-subtoolbox-slider{
+  min-width:calc(var(--vt-component-height)*5.4);
+}
+.vt-subtoolbox-range{
+  min-width:calc(var(--vt-component-height)*5.7);
+}
+.vt-subtoolbox-segmented{
+  min-width:calc(var(--vt-component-height)*4.2);
+}
+.vt-subtoolbox-button-group{
+  min-width:calc(var(--vt-component-height)*4.1);
+}
+.vt-subtoolbox-top-title-dropdown{
+  min-width:calc(var(--vt-component-height)*4.9);
+}
+.vt-subtoolbox-progress-value{
+  min-width:calc(var(--vt-component-height)*4.8);
+}
+.vt-subtoolbox-pagination{
+  min-width:calc(var(--vt-component-height)*4.6);
+}
+
+/* Square/fixed families use the component height as their only scale source. */
+.vt-subtoolbox-icon-button{
+  min-width:var(--vt-component-height);
+  max-width:var(--vt-component-height);
+  aspect-ratio:1/1;
+}
+.vt-subtoolbox-check-control,
+.vt-subtoolbox-radio-control{
+  aspect-ratio:1/1;
+}

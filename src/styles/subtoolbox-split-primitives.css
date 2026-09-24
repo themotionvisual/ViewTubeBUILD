@@ -511,3 +511,27 @@
   opacity:1!important;
   visibility:visible!important;
 }
+
+
+/* ==========================================================================
+   CANONICAL INTRINSIC GEOMETRY — 2026-09-24
+   Compound controls own a proportional minimum footprint. The surrounding
+   layout may place them, but must not shrink their square rail/body anatomy.
+   L0/L1/L2 use the same ratios because every value derives from component
+   height rather than independent pixel widths.
+   ========================================================================== */
+.vt-subtoolbox-split-button.has-component-level{
+  width:max-content;
+  min-width:calc(var(--vt-component-height)*4.15);
+  max-width:100%;
+}
+.vt-subtoolbox-split-dropdown.has-component-level{
+  width:calc(var(--vt-component-height)*4.8);
+  min-width:calc(var(--vt-component-height)*4.8);
+  max-width:100%;
+}
+.vt-subtoolbox-split-button.has-component-level .vt-subtoolbox-split-button-label,
+.vt-subtoolbox-split-dropdown.has-component-level .vt-subtoolbox-split-dropdown-label>b{
+  overflow:visible;
+  text-overflow:clip;
+}
