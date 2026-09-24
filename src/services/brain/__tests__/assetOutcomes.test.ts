@@ -138,10 +138,16 @@ describe("recordAssetOutcome", () => {
   await expect(recordAssetOutcome({ assetId: "missing", kind: "accepted" })).resolves.toBeNull()
  })
 
- it("links the outcome back to the generating trace", async () => {
+ it("links both outcome stores back to the generating trace and asset", async () => {
   const asset = await makeAsset()
   const outcome = await recordAssetOutcome({ assetId: asset.id, kind: "published" })
   expect(outcome?.traceId).toBe(asset.traceId)
+
+  const brainOutcome = listBrainOutcomes("channel-1")[0]
+  expect(brainOutcome).toMatchObject({
+   traceId: asset.traceId,
+   outputRef: asset.id,
+  })
  })
 })
 
