@@ -72,6 +72,7 @@ import {
   SubToolboxToast,
   SubToolboxToggleSwitch,
   SubToolboxTooltip,
+  SubToolboxLegendTooltip,
   SubToolboxTree,
   SubToolboxVaultAsset,
   ToolboxHeaderCollapseButton,
@@ -196,6 +197,9 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Loader Split",
   "Loader Orbit",
   "Loader Bars",
+  "Tooltip Visual Key",
+  "Skeleton Compact",
+  "Skeleton Media",
 ] as const
 
 const DemoShell: React.FC<{ level: StudioHubComponentLevel; children: React.ReactNode }> = ({ level, children }) => (
@@ -353,6 +357,21 @@ const PrimitiveMigrationControl: React.FC<{
   if (name === "Tooltip") {
     return <SubToolboxTooltip level={level} content="TOOLTIP" />
   }
+  if (name === "Tooltip Visual Key") {
+    return (
+      <SubToolboxLegendTooltip
+        level={level}
+        title="VISUAL KEY"
+        triggerLabel="KEY"
+        items={[
+          { label: "READY", detail: "Complete and available", color: "#3FEE56", icon: <Check /> },
+          { label: "IN REVIEW", detail: "Needs creator attention", color: "#FFDA47", icon: <Lightbulb /> },
+          { label: "MEDIA", detail: "Visual or asset reference", color: "#36E0F6", icon: <Image /> },
+        ]}
+        note="Use visual keys for legends, chart states, workflow status, and dense explanatory metadata."
+      />
+    )
+  }
   if (name === "Knob Dial") {
     return <SubToolboxKnob level={level} value={knobValue} onValueChange={setKnobValue} label="VALUE" />
   }
@@ -429,6 +448,12 @@ const PrimitiveMigrationControl: React.FC<{
   }
   if (name === "Skeleton") {
     return <SubToolboxSkeleton level={level} lines={3} />
+  }
+  if (name === "Skeleton Compact") {
+    return <SubToolboxSkeleton level={level} variant="compact" />
+  }
+  if (name === "Skeleton Media") {
+    return <SubToolboxSkeleton level={level} variant="media" ratio="16:9" />
   }
   if (name === "Toast") {
     return toastVisible

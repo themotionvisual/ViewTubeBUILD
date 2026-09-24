@@ -46,6 +46,9 @@ const priorityStates = new Map([
   ["Loader Orbit", ["default"]],
   ["Loader Bars", ["default"]],
   ["Tree View", ["default"]],
+  ["Tooltip Visual Key", ["default", "hover", "focus"]],
+  ["Skeleton Compact", ["default"]],
+  ["Skeleton Media", ["default"]],
 ])
 
 const slug = (value) =>
@@ -193,7 +196,7 @@ async function capturePriorityStates(page, viewport, trackId, trackName, familyN
       try {
         await applyState(level, familyName, state)
         const file = `${out}/${slug(familyName)}-${trackName}-${levelName}-${state}-${viewport.label}.png`
-        const floatingOverlayFamily = ["Tooltip", "Tooltip Color", "Hover Card"].includes(familyName)
+        const floatingOverlayFamily = ["Tooltip", "Tooltip Color", "Tooltip Visual Key", "Hover Card"].includes(familyName)
         if (floatingOverlayFamily && state !== "default") {
           await level.scrollIntoViewIfNeeded()
           await page.waitForTimeout(80)

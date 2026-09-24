@@ -317,7 +317,7 @@ export interface SubToolboxTooltipProps extends Omit<React.HTMLAttributes<HTMLSp
   content?: React.ReactNode
   level?: SubToolboxTooltipLevel
   forceOpen?: boolean
-  variant?: "default" | "dark" | "color"
+  variant?: "default" | "dark" | "color" | "legend"
   triggerLabel?: React.ReactNode
   triggerAriaLabel?: string
 }
@@ -390,6 +390,59 @@ export const SubToolboxTooltip: React.FC<SubToolboxTooltipProps> = ({
     </span>
   )
 }
+
+export interface SubToolboxLegendTooltipItem {
+  label: React.ReactNode
+  detail?: React.ReactNode
+  color?: string
+  icon?: React.ReactNode
+}
+
+export interface SubToolboxLegendTooltipProps extends Omit<SubToolboxTooltipProps, "content" | "variant" | "triggerLabel" | "title"> {
+  title?: React.ReactNode
+  items: SubToolboxLegendTooltipItem[]
+  note?: React.ReactNode
+  triggerLabel?: React.ReactNode
+}
+
+export const SubToolboxLegendTooltip: React.FC<SubToolboxLegendTooltipProps> = ({
+  title = "VISUAL KEY",
+  items,
+  note,
+  triggerLabel = "KEY",
+  triggerAriaLabel = "Show visual key",
+  ...props
+}) => (
+  <SubToolboxTooltip
+    {...props}
+    variant="legend"
+    triggerLabel={triggerLabel}
+    triggerAriaLabel={triggerAriaLabel}
+    content={(
+      <span className="vt-subtoolbox-tooltip-legend">
+        <span className="vt-subtoolbox-tooltip-legend-title">{title}</span>
+        <span className="vt-subtoolbox-tooltip-legend-list">
+          {items.map((item, index) => (
+            <span className="vt-subtoolbox-tooltip-legend-row" key={index}>
+              <span
+                className="vt-subtoolbox-tooltip-legend-key"
+                style={item.color ? { background: item.color } : undefined}
+                aria-hidden="true"
+              >
+                {item.icon}
+              </span>
+              <span className="vt-subtoolbox-tooltip-legend-copy">
+                <b>{item.label}</b>
+                {item.detail ? <small>{item.detail}</small> : null}
+              </span>
+            </span>
+          ))}
+        </span>
+        {note ? <span className="vt-subtoolbox-tooltip-legend-note">{note}</span> : null}
+      </span>
+    )}
+  />
+)
 
 
 export interface SubToolboxStepperProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
@@ -1192,10 +1245,56 @@ export const SubToolboxLoader: React.FC<SubToolboxLoaderProps> = ({ level = "l0"
 export interface SubToolboxSkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   level?: ToolboxControlLevel
   lines?: number
+  variant?: "lines" | "compact" | "media"
+  ratio?: "16:9" | "1:1" | "4:5"
 }
-export const SubToolboxSkeleton: React.FC<SubToolboxSkeletonProps> = ({ level = "l0", lines = 3, className, style, ...props }) => (
-  <div className={classes("vt-subtoolbox-skeleton", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} aria-busy="true" aria-label="Loading content" {...props}>
-    {Array.from({ length: Math.max(1, lines) }, (_, index) => <span key={index} style={{ width: `${Math.max(42, 100 - index * 16)}%` }} />)}
+export const SubToolboxSkeleton: React.FC<SubToolboxSkeletonProps> = ({
+  level = "l0",
+  lines = 3,
+  variant = "lines",
+  ratio = "16:9",
+  className,
+  style,
+  ...props
+}) => (
+  <div
+    className={classes("vt-subtoolbox-skeleton", `is-${variant}`, className)}
+    data-vt-control-level={level}
+    data-ratio={variant === "media" ? ratio : undefined}
+    style={withComponentLevelStyle(level, style)}
+    aria-busy="true"
+    aria-label="Loading content"
+    {...props}
+  >
+    {variant === "lines"
+      ? Array.from({ length: Math.max(1, lines) }, (_, index) => (
+          <span
+            className="vt-subtoolbox-skeleton-line vt-subtoolbox-skeleton-shimmer"
+            key={index}
+            style={{ width: `${Math.max(42, 100 - index * 16)}%` }}
+          />
+        ))
+      : null}
+    {variant === "compact" ? (
+      <>
+        <span className="vt-subtoolbox-skeleton-compact-icon vt-subtoolbox-skeleton-shimmer" />
+        <span className="vt-subtoolbox-skeleton-compact-copy">
+          <i className="vt-subtoolbox-skeleton-shimmer" />
+          <i className="vt-subtoolbox-skeleton-shimmer" />
+        </span>
+        <span className="vt-subtoolbox-skeleton-compact-action vt-subtoolbox-skeleton-shimmer" />
+      </>
+    ) : null}
+    {variant === "media" ? (
+      <>
+        <span className="vt-subtoolbox-skeleton-media-frame vt-subtoolbox-skeleton-shimmer" />
+        <span className="vt-subtoolbox-skeleton-media-meta">
+          <i className="vt-subtoolbox-skeleton-shimmer" />
+          <i className="vt-subtoolbox-skeleton-shimmer" />
+          <i className="vt-subtoolbox-skeleton-shimmer" />
+        </span>
+      </>
+    ) : null}
   </div>
 )
 

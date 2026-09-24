@@ -1480,3 +1480,125 @@
 /* 29 Tag Editor is a labeled tag tray using the canonical A-Z spectrum. */
 /* 33 Progress Value reads as one instrument, not a bar plus detached badge. */
 /* 52 Knob Dial: large radial controller with genuine pointer/keyboard behavior. */
+
+
+/* ==========================================================================
+   COMPONENT LIBRARY PRESENTATION COMPACTION — 2026-09-24
+   Presentation-only. The hardcoded control anatomy remains the frozen
+   certification reference; only the catalog chrome/layout is compacted.
+   ========================================================================== */
+.vt-complete-catalog .vt-catalog-family{
+  border:0!important;
+  border-radius:0!important;
+  padding:4px 0 6px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.vt-complete-catalog .vt-catalog-levels{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,max-content))!important;
+  align-items:start!important;
+  justify-content:start!important;
+  gap:8px 12px!important;
+  margin-top:8px!important;
+}
+.vt-complete-catalog .vt-catalog-demo{
+  --vt-catalog-standard-inline:300px;
+  min-width:0!important;
+  width:max-content!important;
+  max-width:100%!important;
+  padding:2px 3px 4px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+}
+.vt-complete-catalog .vt-catalog-demo.is-l1{--vt-catalog-standard-inline:260px}
+.vt-complete-catalog .vt-catalog-demo.is-l2{--vt-catalog-standard-inline:220px}
+.vt-complete-catalog .vt-catalog-demo:before{
+  width:max-content!important;
+  margin:0 0 4px 1px!important;
+  padding:0!important;
+  line-height:1!important
+}
+.vt-complete-catalog .vt-catalog-demo > *{
+  width:fit-content!important;
+  max-width:100%!important;
+}
+.vt-complete-catalog :is(
+  [data-vt-family="Text Input"],
+  [data-vt-family="Textarea"],
+  [data-vt-family="Split Search"],
+  [data-vt-family="Number Field"],
+  [data-vt-family="Input Action"],
+  [data-vt-family="Slider"],
+  [data-vt-family="Range Slider"],
+  [data-vt-family="Tag Editor"],
+  [data-vt-family="Progress Bar"],
+  [data-vt-family="Progress Value"],
+  [data-vt-family="Surface"],
+  [data-vt-family="State Panel"],
+  [data-vt-family="Output Card"],
+  [data-vt-family="Data Table"],
+  [data-vt-family="Media Card"],
+  [data-vt-family="Selectable List Row"],
+  [data-vt-family="Reorderable Row"],
+  [data-vt-family="Tabs"],
+  [data-vt-family="Alert"],
+  [data-vt-family="Step Indicator"],
+  [data-vt-family="Dialog"],
+  [data-vt-family="Drawer"],
+  [data-vt-family="Skeleton"],
+  [data-vt-family="Toast"],
+  [data-vt-family="Disclosure"],
+  [data-vt-family="Meter"],
+  [data-vt-family="Name Value List"],
+  [data-vt-family="Carousel"],
+  [data-vt-family="Command Palette"],
+  [data-vt-family="Metric Strip"],
+  [data-vt-family="Horizontal Scrollbar"],
+  [data-vt-family="Data Stats Module"],
+  [data-vt-family="Upload Frame"],
+  [data-vt-family^="Vault "],
+  [data-vt-family="Tree View"],
+  [data-vt-family="Aspect Ratio Frame"],
+  [data-vt-family="Toolbar"]
+) .vt-catalog-demo > *{
+  width:var(--vt-catalog-standard-inline)!important;
+  max-width:100%!important;
+}
+.vt-complete-catalog [data-vt-family="Calendar"] .vt-catalog-levels{
+  grid-template-columns:minmax(0,max-content)!important;
+}
+@media(max-width:520px) and (orientation:portrait){
+  .vt-complete-catalog .vt-catalog-levels{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:9px 8px!important;
+  }
+  .vt-complete-catalog .vt-catalog-demo{
+    width:100%!important;
+    max-width:100%!important;
+    padding:2px 1px 3px!important;
+  }
+  .vt-complete-catalog :is(
+    [data-vt-family="Data Table"],
+    [data-vt-family="Media Card"],
+    [data-vt-family="Calendar"],
+    [data-vt-family="Upload Frame"],
+    [data-vt-family^="Vault "],
+    [data-vt-family="Tree View"],
+    [data-vt-family="Aspect Ratio Frame"],
+    [data-vt-family="Toolbar"]
+  ) .vt-catalog-demo{
+    grid-column:1/-1!important;
+    width:min(100%,var(--vt-catalog-standard-inline))!important;
+  }
+  .vt-complete-catalog [data-vt-family="Calendar"] .vt-catalog-levels{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+}
+@media(max-height:520px) and (orientation:landscape){
+  .vt-complete-catalog .vt-catalog-levels{
+    grid-template-columns:repeat(3,minmax(0,max-content))!important;
+    gap:8px!important;
+  }
+}

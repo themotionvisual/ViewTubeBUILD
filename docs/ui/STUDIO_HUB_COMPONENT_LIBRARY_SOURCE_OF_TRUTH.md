@@ -67,3 +67,29 @@ The following rules supersede older local family styling and are production prim
 ### Certification
 - Floating overlays require viewport captures when open because their panels are portaled outside the component locator.
 - Tooltip Color, Hover Card, Controller Switch, LED Light, LED Dot, both Scrollbars, Calendar, all Loader variants, and Tree View are priority visual-certification families.
+
+
+## Component Library Presentation Contract — 2026-09-24
+
+These rules apply to the Component Library presentation layer and do **not** change production-control anatomy.
+
+### Catalog shells and width
+- Numbered Component Library SubToolboxes do not draw a second heavy outer black rectangle around the family.
+- L0/L1/L2 demo shells are borderless labels, not nested cards.
+- Most examples render at intrinsic / fit-content width with minimal catalog padding.
+- Controls that inherently need an editing/data canvas use a bounded standard catalog width instead of the full SubToolbox width.
+- Desktop and mobile landscape show L0/L1/L2 on one comparison row whenever practical.
+- Mobile portrait uses two comparison columns so three levels occupy two rows.
+- Naturally wide families (tables, calendars, media/upload frames, tree views, and similar canvases) may span the portrait comparison width.
+
+### Visual Key tooltip
+- `SubToolboxLegendTooltip` is the dense visual-key / legend tooltip primitive.
+- It reuses the canonical floating-overlay positioning, viewport flipping, spout geometry, and z-index authority.
+- Its body adds a colored title band, repeated key rows, optional swatch/icon markers, primary labels, secondary explanations, and an optional note band.
+- It is intended for chart legends, status keys, workflow-state explanations, and dense visual metadata—not ordinary one-line help copy.
+
+### Skeleton variants
+- `SubToolboxSkeleton` supports `lines`, `compact`, and `media` variants.
+- `compact` represents short horizontal controls/list rows with icon, text, and trailing-action geometry.
+- `media` represents ratio-aware media/card loading states and supports 16:9, 1:1, and 4:5.
+- All variants inherit the owning pair colors and share the canonical shimmer motion/reduced-motion behavior.

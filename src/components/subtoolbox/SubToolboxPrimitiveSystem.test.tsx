@@ -4,7 +4,7 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "./SubToolboxLayouts"
-import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAspectRatioFrame, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCalendar, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataStats, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxLedDot, SubToolboxLoader, SubToolboxMeter, SubToolboxMetric, SubToolboxMetricStrip, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxScrollbar, SubToolboxSplitField, SubToolboxStatePanel, SubToolboxTag, SubToolboxTagEditor, SubToolboxTextArea, SubToolboxTopTitleDropdown, SubToolboxToolbar, SubToolboxTooltip, SubToolboxProgressValue, SubToolboxTree, SubToolboxVaultAsset } from "./SubToolboxPrimitives"
+import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAspectRatioFrame, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCalendar, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataStats, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxLedDot, SubToolboxLegendTooltip, SubToolboxLoader, SubToolboxMeter, SubToolboxMetric, SubToolboxMetricStrip, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxScrollbar, SubToolboxSplitField, SubToolboxSkeleton, SubToolboxStatePanel, SubToolboxTag, SubToolboxTagEditor, SubToolboxTextArea, SubToolboxTopTitleDropdown, SubToolboxToolbar, SubToolboxTooltip, SubToolboxProgressValue, SubToolboxTree, SubToolboxVaultAsset } from "./SubToolboxPrimitives"
 import { CONTROL_SHELL, SUBTOOLBOX_CONTROL_SIZES, SUBTOOLBOX_STATES, SUBTOOLBOX_TOKENS, TOOLBOX_LEVEL_DNA, resolveSubtoolboxMinHeight } from "./tokens"
 
 describe("Subtoolbox Primitive System", () => {
@@ -204,6 +204,14 @@ describe("Subtoolbox Primitive System", () => {
         <SubToolboxTree level="l2" defaultOpenIds={["root"]} nodes={[{ id: "root", label: "Root", children: [{ id: "child", label: "Child" }] }]} />
         <SubToolboxTooltip level="l2" variant="dark" content="Dark" />
         <SubToolboxTooltip level="l2" variant="color" content="Color" />
+        <SubToolboxLegendTooltip
+          level="l2"
+          forceOpen
+          items={[{ label: "Ready", detail: "Complete", color: "#3FEE56" }]}
+          note="Legend note"
+        />
+        <SubToolboxSkeleton level="l2" variant="compact" />
+        <SubToolboxSkeleton level="l2" variant="media" ratio="16:9" />
         <SubToolboxTag level="l2" variant="dashboard-pill">Pill</SubToolboxTag>
         <SubToolboxAspectRatioFrame level="l2" ratio="16:9" label="16:9">Frame</SubToolboxAspectRatioFrame>
         <SubToolboxToolbar level="l2"><SubToolboxButton level="l2">Save</SubToolboxButton></SubToolboxToolbar>
@@ -264,6 +272,11 @@ describe("Subtoolbox Primitive System", () => {
     expect(html).toContain("vt-subtoolbox-tree")
     expect(html).toContain("is-dark")
     expect(html).toContain("is-color")
+    expect(html).toContain("is-legend")
+    expect(html).toContain("vt-subtoolbox-tooltip-legend")
+    expect(html).toContain("vt-subtoolbox-skeleton is-compact")
+    expect(html).toContain("vt-subtoolbox-skeleton is-media")
+    expect(html).toContain('data-ratio="16:9"')
     expect(html).toContain("is-dashboard-pill")
     expect(html).toContain("vt-subtoolbox-aspect-frame")
     expect(html).toContain("vt-subtoolbox-toolbar")
