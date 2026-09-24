@@ -9,10 +9,12 @@ import {
  createVersionedAsset,
 } from "../services/assetEngine"
 import {
- recordContentBuildToolInput,
- recordContentBuildToolOutput,
  resolveWorkspaceContentBuildToolContext,
 } from "../services/asset-engine/ToolContext"
+import {
+ prepareGenerationRequest,
+ recordToolReceipt,
+} from "../services/asset-engine/GenerationWorkflow"
 import { nexusSyncService } from "../services/nexusSyncService"
 import { sheetsService } from "../services/sheetsService"
 import type { SeoResult } from "../types"
@@ -158,21 +160,30 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
         "video-publisher",
         ["script", "title", "thumbnail", "description", "tags"],
       )
-      if (contentContext) {
-        recordContentBuildToolInput({
-          contentBuildId: contentContext.contentBuildId,
-          toolId: "video-publisher",
-          assetIds: Object.values(contentContext.selectedAssets).filter(Boolean).map(asset => asset!.id),
-          summary: "Generate publishing metadata from the active ContentBuild package.",
-          metadata: { concept, niche, formatMode, videoLength },
-        })
-      }
+      const generationRequest = contentContext
+        ? prepareGenerationRequest({
+            contentBuildId: contentContext.contentBuildId,
+            channelId: contentContext.build.channelId || null,
+            projectId: contentContext.build.legacyProjectId || null,
+            toolId: "video-publisher",
+            operation: "generate-package",
+            targetSlot: "title",
+            mode: "new-option",
+            creatorIntent: "Generate publishing metadata from the active ContentBuild package.",
+            requestedSlots: ["script", "title", "thumbnail", "description", "tags"],
+            sourceAssetIds: Object.values(contentContext.selectedAssets).filter(Boolean).map(asset => asset!.id),
+            evidenceIds: contentContext.evidenceIds,
+            constraints: { concept, niche, formatMode, videoLength },
+            outputSpec: { titleCandidates: 6, description: true, tags: true },
+            parentAssetId: contentContext.selectedAssets.title?.id || null,
+          })
+        : null
 
       const data = await generateSeoData(concept, niche, script, "", videoLength, channelHandle, resourceLinks, formatMode === "longform" ? "Longform" : "Shorts", undefined, brain)
       setResult(data)
       setSeoState({ winningTitle: data.titleSets[0].title, winningKeywords: data.tags.split(",").map((keyword) => keyword.trim()).slice(0, 5), descriptionDraft: data.description })
 
-      if (contentContext) {
+      if (contentContext && generationRequest) {
         const titleGroup = createAssetVariantGroup({
           contentBuildId: contentContext.contentBuildId,
           slot: "title",
@@ -251,12 +262,24 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
             stage: "metadata",
           },
         })
-        recordContentBuildToolOutput({
-          contentBuildId: contentContext.contentBuildId,
-          toolId: "video-publisher",
-          assetIds: [...titleAssets.map(item => item.asset.id), descriptionAsset.asset.id, tagsAsset.asset.id],
+        const versionIds = [
+          ...titleAssets.map(item => item.version?.id),
+          descriptionAsset.version?.id,
+          tagsAsset.version?.id,
+        ].filter((id): id is string => Boolean(id))
+        recordToolReceipt({
+          request: generationRequest.request,
+          outputAssetIds: [...titleAssets.map(item => item.asset.id), descriptionAsset.asset.id, tagsAsset.asset.id],
+          generationRecordId: null,
+          versionIds,
+          variantGroupId: titleGroup.id,
+          relationshipIds: [],
+          traceId: null,
           summary: `Created ${titleAssets.length} title variants plus description and tags for the active ContentBuild.`,
-          metadata: { titleVariantGroupId: titleGroup.id },
+          metadata: {
+            providerPath: "legacy-generateSeoData",
+            titleVariantGroupId: titleGroup.id,
+          },
         })
       }
     } catch (error: any) {
