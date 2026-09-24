@@ -25,6 +25,7 @@ const desktopProject = {
   ],
   clips: [
     { id: 'clip-1', trackId: 'v1', layerId: 'layer-1', start: 0, end: 4 },
+    { id: 'clip-2', trackId: 'v1', layerId: 'layer-1', start: 4, end: 8 },
   ],
   transitions: [{
     id: 'transition-1',
@@ -96,7 +97,7 @@ describe('editorDesktopProjectAdapter', () => {
         payload: { x: 12, y: -8, fontFamily: 'Inter' },
         customLayerFlag: 'keep-me',
       }],
-    });
+    } as typeof desktopProject & {customDesktopState: {inspectorWidth: number}});
 
     const restored = mobileBridgeProjectToDesktopProject(mobile, desktopProject);
 
