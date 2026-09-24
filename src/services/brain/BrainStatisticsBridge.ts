@@ -1,18 +1,14 @@
-import { buildCanonicalIntelligenceEvidence } from "../analytics-canon"
-import { getVtSyncSnapshot } from "../../features/vt-sync-local"
+import { getCurrentCanonicalIntelligenceEvidence } from "../analytics-canon"
 import { buildStatisticsIntelligence, type StatisticsIntelligenceSnapshot } from "./StatisticsIntelligence"
 
 /**
  * Canonical imperative bridge for BrainRuntime analytics evidence.
  *
- * The snapshot read is isolated here so reasoning/orchestration code does not
- * grow another analytics access path. analytics-canon still owns normalized
- * evidence; Statistics Intelligence only derives deterministic summaries.
+ * analytics-canon owns current evidence access and normalized evidence shape;
+ * Statistics Intelligence only derives deterministic summaries.
  */
 export const buildBrainStatisticsIntelligence = (): StatisticsIntelligenceSnapshot => {
- const snapshot = getVtSyncSnapshot()
- const evidence = buildCanonicalIntelligenceEvidence(snapshot, {
-  window: snapshot.selectedTimeWindow || "28d",
+ const evidence = getCurrentCanonicalIntelligenceEvidence({
   maximumRowsPerDataset: 0,
   maximumCharacters: 12_000,
  })
