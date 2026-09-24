@@ -8,6 +8,8 @@ import {
   interpolateShortsConfig as interpolateSharedShortsConfig,
 } from '../../shared/vtE1Shorts';
 import { expandCompoundClips } from '../../shared/vtE1CompoundClips.js';
+import { normalizeVtE1TransitionType } from '../../shared/vtE1TransitionCatalog.js';
+import { transitionFrameStyleFor } from '../../shared/vtE1TransitionFrame.js';
 import {
   sourceTimeAtTimelineSec as sharedSourceTimeAtTimelineSec,
   transitionWindowFor as sharedTransitionWindowFor,
@@ -132,44 +134,28 @@ const sourceTimeForClipAt = (project: NonNullable<RenderJob['project']>, clip: V
   return sharedSourceTimeAtTimelineSec(project, clip, sec);
 };
 const transitionInfluenceAt = (project: NonNullable<RenderJob['project']>, transition: VTTransition | undefined, clip: VTClip, sec: number) => {
-  if (!transition) return { opacity: 1, transformExtra: '', filterExtra: '' };
+  const neutral = { opacity: 1, transformExtra: '', filterExtra: '', clipPath: '' };
+  if (!transition) return neutral;
   const left = (project.clips || []).find((entry) => entry.id === transition.leftClipId);
   const right = (project.clips || []).find((entry) => entry.id === transition.rightClipId);
-  if (!left || !right) return { opacity: 1, transformExtra: '', filterExtra: '' };
-  if (!sharedValidateTransitionSeam(left, right).valid) return { opacity: 1, transformExtra: '', filterExtra: '' };
+  if (!left || !right) return neutral;
+  if (!sharedValidateTransitionSeam(left, right).valid) return neutral;
   const win = transitionWindow(transition, left, right);
-  if (sec < win.startSec || sec > win.endSec) return { opacity: 1, transformExtra: '', filterExtra: '' };
+  if (sec < win.startSec || sec > win.endSec) return neutral;
   const p = clamp((sec - win.startSec) / win.durationSec, 0, 1);
-  const isLeft = clip.id === left.id;
-  const params = transition.params || {};
-  const intensity = clamp(Number(params.intensity ?? 1), 0, 3);
-  const amount = clamp(Number(params.amount ?? 1), 0, 2);
-  const direction = String(params.direction || 'left');
-  const dirSignX = direction === 'right' ? 1 : direction === 'left' ? -1 : (isLeft ? -1 : 1);
-  const fadeOut = 1 - p;
-  const fadeIn = p;
-  const opacity = isLeft ? fadeOut : fadeIn;
-  const amt = (1 - p) * intensity * amount;
-  switch (String(transition.type || 'fade')) {
-    case 'cut':
-      return { opacity: isLeft ? 1 : 0, transformExtra: '', filterExtra: '' };
-    case 'fade':
-    case 'crossfade':
-      return { opacity, transformExtra: '', filterExtra: '' };
-    case 'slide':
-    case 'slideLeft':
-      return { opacity, transformExtra: ` translateX(${dirSignX * amt * 40}px)`, filterExtra: '' };
-    case 'slideRight':
-      return { opacity, transformExtra: ` translateX(${dirSignX * -amt * 40}px)`, filterExtra: '' };
-    case 'wipeLeft':
-      return { opacity, transformExtra: ` translateX(${dirSignX * amt * 24}px)`, filterExtra: '' };
-    case 'wipeRight':
-      return { opacity, transformExtra: ` translateX(${dirSignX * -amt * 24}px)`, filterExtra: '' };
-    case 'zoom':
-      return { opacity, transformExtra: ` scale(${isLeft ? 1 + (p * 0.2 * intensity) : 0.86 + (p * 0.14 * intensity)})`, filterExtra: '' };
-    default:
-      return { opacity, transformExtra: '', filterExtra: '' };
-  }
+  const direction = clip.id === left.id ? 'exiting' : 'entering';
+  const frame = transitionFrameStyleFor(
+    normalizeVtE1TransitionType(transition.type),
+    p,
+    direction,
+    transition.params || {},
+  );
+  return {
+    opacity: frame.opacity,
+    transformExtra: frame.transform ? ` ${frame.transform}` : '',
+    filterExtra: '',
+    clipPath: frame.clipPath || '',
+  };
 };
 const sequenceBoundsForClip = (project: NonNullable<RenderJob['project']>, clip: VTClip) => {
   let startSec = Number(clip.start || 0);
@@ -616,6 +602,7 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
           zIndex,
           overflow: 'hidden',
           filter: [layerFilter(payload), transitionFx.filterExtra].filter(Boolean).join(' '),
+          clipPath: transitionFx.clipPath || undefined,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

@@ -11,9 +11,9 @@ const desktop = {
   schemaVersion: 'EditorProjectV2',
   meta: { durationSec: 30, aspectRatio: '16:9' },
   tracks: [{ id: 'v1', name: 'V1', kind: 'visual', visible: true }],
-  layers: [{ id: 'l1', trackId: 'v1', type: 'text' }],
-  clips: [{ id: 'c1', trackId: 'v1', layerId: 'l1', start: 0, end: 4 }],
-  transitions: [],
+  layers: [{ id: 'l1', trackId: 'v1', type: 'text', payload: {} }],
+  clips: [{ id: 'c1', trackId: 'v1', layerId: 'l1', start: 0, end: 4 }, { id: 'c2', trackId: 'v1', layerId: 'l1', start: 4, end: 8 }],
+  transitions: [{ id: 'tr1', leftClipId: 'c1', rightClipId: 'c2', durationSec: 0.4, nominalSeamSec: 4, type: 'fade', presentation: 'fade', params: {} }],
 };
 
 describe('editorDesktopBridgeRuntime', () => {
@@ -21,6 +21,30 @@ describe('editorDesktopBridgeRuntime', () => {
     expect(editorProjectFingerprint(desktop)).toBe(editorProjectFingerprint({ ...desktop }));
     expect(editorProjectFingerprint({ ...desktop, clips: [{ ...desktop.clips[0], end: 5 }] }))
       .not.toBe(editorProjectFingerprint(desktop));
+  });
+
+  it('fingerprints transition presentation and layer payload changes, not just clip timing', () => {
+    expect(editorProjectFingerprint({
+      ...desktop,
+      transitions: [{ ...desktop.transitions[0], type: 'slideRight', presentation: 'slide', params: { direction: 'from-right' } }],
+    })).not.toBe(editorProjectFingerprint(desktop));
+
+    expect(editorProjectFingerprint({
+      ...desktop,
+      layers: [{ ...desktop.layers[0], payload: { x: 24 } }],
+    })).not.toBe(editorProjectFingerprint(desktop));
+  });
+
+  it('keeps fingerprints stable when object keys are reordered', () => {
+    const reordered = {
+      transitions: desktop.transitions,
+      clips: desktop.clips,
+      layers: desktop.layers,
+      tracks: desktop.tracks,
+      meta: desktop.meta,
+      schemaVersion: desktop.schemaVersion,
+    };
+    expect(editorProjectFingerprint(reordered)).toBe(editorProjectFingerprint(desktop));
   });
 
   it('publishes a valid desktop project without needing a browser runtime', () => {
@@ -72,6 +96,29 @@ describe('editorDesktopBridgeRuntime', () => {
     expect(seed?.durationSec).toBe(30);
     expect(seed?.tracks[0]).toMatchObject({ kind: 'video', desktopKind: 'visual' });
     expect(seed?.layers).toEqual(desktop.layers);
+    expect(seed?.transitions).toEqual(desktop.transitions);
+  });
+
+  it('survives a desktop to mobile to desktop round-trip with canonical transition identity intact', () => {
+    const mobileSeed = mobileSeedFromBridgeSnapshot({
+      version: 1,
+      source: 'desktop',
+      updatedAt: 275,
+      project: desktop,
+    });
+    expect(mobileSeed).toBeDefined();
+
+    const result = restoreDesktopProjectFromSnapshot({
+      version: 1,
+      source: 'mobile',
+      updatedAt: 276,
+      project: mobileSeed!,
+    }, desktop);
+
+    expect(result.applied).toBe(true);
+    expect(result.project.layers).toEqual(desktop.layers);
+    expect(result.project.transitions).toEqual(desktop.transitions);
+    expect(result.project.tracks?.[0]?.kind).toBe('visual');
   });
 
   it('does not re-apply stale or equivalent bridge snapshots', () => {

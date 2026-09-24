@@ -36,18 +36,47 @@ export type MobileBridgeTrack = {
   desktopVisible?: boolean;
 };
 
+export type MobileBridgeLayer = Record<string, unknown> & {
+  id: string;
+  trackId: string;
+  type: string;
+  visible?: boolean;
+  payload: Record<string, unknown>;
+};
+
 export type MobileBridgeProject = VtE1Project & {
   tracks: MobileBridgeTrack[];
+  layers?: MobileBridgeLayer[];
   durationSec: number;
   meta?: DesktopProjectRecord['meta'];
-  layers?: DesktopProjectRecord['layers'];
   seamLinks?: DesktopProjectRecord['seamLinks'];
   schemaVersion?: string;
+  contentBuildId?: string;
+  legacyProjectId?: string;
 };
 
 function finiteNumber(value: unknown, fallback = 0): number {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeMobileBridgeLayer(
+  layer: Record<string, unknown>,
+  index: number,
+  fallbackTrackId: string,
+): MobileBridgeLayer {
+  return {
+    ...layer,
+    id: String(layer.id ?? `layer_${index}`),
+    trackId: String(layer.trackId ?? fallbackTrackId),
+    type: String(layer.type ?? 'media'),
+    visible: typeof layer.visible === 'boolean' ? layer.visible : true,
+    payload: isRecord(layer.payload) ? { ...layer.payload } : {},
+  };
 }
 
 export function mobileTrackKindForDesktopTrack(kind: unknown, name?: unknown): MobileBridgeTrack['kind'] {
@@ -76,11 +105,17 @@ export function desktopProjectToMobileBridgeProject(project: DesktopProjectRecor
       }))
     : [];
 
+  const fallbackLayerTrackId = tracks.find((track) => track.kind === 'overlay')?.id ?? tracks[0]?.id ?? 't_overlay';
+  const layers = Array.isArray(project.layers)
+    ? project.layers.map((layer, index) => normalizeMobileBridgeLayer(layer, index, fallbackLayerTrackId))
+    : [];
+
   return {
     ...project,
     clips: Array.isArray(project.clips) ? project.clips : [],
     transitions: Array.isArray(project.transitions) ? project.transitions : [],
     tracks,
+    layers,
     durationSec: Math.max(0.1, durationSec),
   } as MobileBridgeProject;
 }
