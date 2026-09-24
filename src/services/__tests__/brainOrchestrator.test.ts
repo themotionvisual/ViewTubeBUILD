@@ -235,18 +235,18 @@ describe("BrainOrchestrator", () => {
   expect(BRAIN_REPAIR_TIMEOUT_MS).toBe(20_000)
  })
 
- it("rejects unsupported numbers and high similarity", () => {
+ it("blocks fabricated magnitudes but records unverified derived rates as warnings", () => {
   const snapshot = makeSnapshot()
   const response = {
    id: "response",
    mode: "analytics_diagnosis" as const,
-   body: "Your CTR is 83% and revenue is 999999 dollars.",
-   evidenceIds: [],
+   body: "Alder's Cavalry Explained has 120K views. CTR is 83% and revenue is 999999 dollars.",
+   evidenceIds: snapshot.evidencePack.evidenceIds,
    headline: "Analytics read",
-   keyInsight: "Your CTR is 83% and revenue is 999999 dollars.",
+   keyInsight: "Alder's Cavalry Explained has 120K views. CTR is 83% and revenue is 999999 dollars.",
    evidenceChips: [],
    modules: [],
-   actions: [],
+   actions: ["Review the packaging against the 120K-view control."],
    learningSummary: "",
    questions: [],
    confidence: "high" as const,
@@ -254,7 +254,58 @@ describe("BrainOrchestrator", () => {
   const evaluation = validateBrainResponse({ response, snapshot })
 
   expect(evaluation.passed).toBe(false)
-  expect(evaluation.unsupportedNumbers).toEqual(expect.arrayContaining(["83%", "999999"]))
+  expect(evaluation.unsupportedNumbers).toEqual(["999999"])
+  expect(evaluation.fabricatedNumbers).toEqual(["999999"])
+  expect(evaluation.unverifiedDerivedNumbers).toEqual(["83%"])
+  expect(evaluation.repairReasons.join(" ")).toContain("999999")
+  expect(evaluation.repairReasons.join(" ")).not.toContain("83%")
+ })
+
+ it("does not fail solely because an otherwise useful answer contains an unverified derived percentage", () => {
+  const snapshot = makeSnapshot()
+  const response = {
+   id: "derived-only",
+   mode: "analytics_diagnosis" as const,
+   body: "Alder's Cavalry Explained is the 120K-view control. CTR is 83%; verify that rate before acting on it.",
+   evidenceIds: snapshot.evidencePack.evidenceIds,
+   headline: "Analytics read",
+   keyInsight: "Alder's Cavalry Explained is the 120K-view control.",
+   evidenceChips: [],
+   modules: [],
+   actions: ["Compare the current package with Alder's Cavalry Explained before changing it."],
+   learningSummary: "",
+   questions: [],
+   confidence: "medium" as const,
+  }
+  const evaluation = validateBrainResponse({ response, snapshot })
+
+  expect(evaluation.unsupportedNumbers).toEqual([])
+  expect(evaluation.unverifiedDerivedNumbers).toEqual(["83%"])
+  expect(evaluation.repairReasons.join(" ")).not.toContain("83%")
+  expect(evaluation.passed).toBe(true)
+ })
+
+ it("accepts rounded grounded magnitudes and does not substring-match a percentage against a larger count", () => {
+  const snapshot = makeSnapshot()
+  const response = {
+   id: "numeric-parsing",
+   mode: "analytics_diagnosis" as const,
+   body: "Alder's Cavalry Explained has 120K views. Do not assume CTR is 42% just because another video has 42,000 views.",
+   evidenceIds: snapshot.evidencePack.evidenceIds,
+   headline: "Analytics read",
+   keyInsight: "Alder's Cavalry Explained has 120K views.",
+   evidenceChips: [],
+   modules: [],
+   actions: ["Verify CTR from the canonical analytics evidence before changing the thumbnail."],
+   learningSummary: "",
+   questions: [],
+   confidence: "high" as const,
+  }
+  const evaluation = validateBrainResponse({ response, snapshot })
+
+  expect(evaluation.fabricatedNumbers).toEqual([])
+  expect(evaluation.unverifiedDerivedNumbers).toEqual(["42%"])
+  expect(evaluation.unsupportedNumbers).toEqual([])
  })
 
  it("rejects channel-specific advice that does not answer an audience-language task", () => {
