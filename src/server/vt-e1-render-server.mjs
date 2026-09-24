@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
 import { chromium } from 'playwright';
 import { expandCompoundClips } from '../shared/vtE1CompoundClips.js';
+import { VT_E1_ACCEPTED_TRANSITION_TYPES } from '../shared/vtE1TransitionCatalog.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -260,7 +261,7 @@ const isBlockedAssetUrl = (value) => {
   const url = String(value || '').trim().toLowerCase();
   return !url || url.startsWith('blob:') || url.startsWith('data:');
 };
-const SUPPORTED_TRANSITION_TYPES = new Set(['cut', 'fade', 'crossfade', 'slide', 'slideLeft', 'slideRight', 'wipeLeft', 'wipeRight', 'zoom']);
+const SUPPORTED_TRANSITION_TYPES = new Set(VT_E1_ACCEPTED_TRANSITION_TYPES);
 const clipDuration = (clip) => Math.max(0.05, Number(clip?.end || 0) - Number(clip?.start || 0));
 const transitionWindow = (transition, leftClip, rightClip) => {
   const durationSec = Math.max(0.05, Math.min(8, Number(transition?.durationSec || 0.35)));
