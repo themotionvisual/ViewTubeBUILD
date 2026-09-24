@@ -34,3 +34,5 @@ export {
  getCanonicalIntelligenceDatasetRows,
  buildCanonicalIntelligenceEvidence,
 } from "./intelligenceEvidence"
+
+export { getCurrentCanonicalIntelligenceEvidence } from "./currentEvidence"
