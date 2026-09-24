@@ -29,9 +29,10 @@ const claimScope = (entry: AIBrainLearningEntry): BrainMemoryClaim["scope"] => {
  return "channel"
 }
 
-const explicitEntry = (entry: AIBrainLearningEntry): boolean =>
+const creatorConfirmedEntry = (entry: AIBrainLearningEntry): boolean =>
  ["journal", "micro_poll"].includes(entry.source)
- || (entry.source === "copilot" && entry.confidence === "high" && ["creator_goal", "channel_fact", "content_style", "preference"].includes(entry.category))
+ || entry.metadata?.confirmed === true
+ || entry.metadata?.creatorInitiated === true
 
 const normalizedValue = (entry: AIBrainLearningEntry): string =>
  `${entry.summary}${entry.detail && entry.detail !== entry.summary ? `: ${entry.detail}` : ""}`.replace(/\s+/g, " ").trim()
@@ -53,10 +54,18 @@ export const reflectBrainOutcome = async (
  if (entry.category === "answer_quality" && entry.recurrenceCount < 3) {
   return { learningEntryId: entry.id, decision: "hold", confidence: entry.confidence, reason: "Answer policy changes require a recurring pattern.", affectedContextPacks }
  }
- if (!explicitEntry(entry) && entry.confidence !== "high" && entry.recurrenceCount < 3) {
-  return { learningEntryId: entry.id, decision: "ask_user", confidence: entry.confidence, reason: "The inferred learning needs repetition or creator confirmation.", affectedContextPacks }
+ if (!creatorConfirmedEntry(entry)) {
+  if (entry.recurrenceCount < 3) {
+   return { learningEntryId: entry.id, decision: "ask_user", confidence: entry.confidence, reason: "The inferred learning needs repetition or creator confirmation before durable promotion.", affectedContextPacks }
+  }
+  if (entry.evidence.length === 0) {
+   return { learningEntryId: entry.id, decision: "ask_user", confidence: entry.confidence, reason: "The repeated inference still needs supporting evidence before durable promotion.", affectedContextPacks }
+  }
+  if (entry.confidence === "low") {
+   return { learningEntryId: entry.id, decision: "ask_user", confidence: entry.confidence, reason: "The repeated inference still has low confidence and needs stronger evidence or creator confirmation.", affectedContextPacks }
+  }
  }
- return { learningEntryId: entry.id, decision: "promote", confidence: entry.confidence, reason: explicitEntry(entry) ? "The creator stated this directly." : "Repeated evidence passed the promotion threshold.", affectedContextPacks }
+ return { learningEntryId: entry.id, decision: "promote", confidence: entry.confidence, reason: creatorConfirmedEntry(entry) ? "The creator confirmed this directly." : "Repeated evidence passed the promotion threshold.", affectedContextPacks }
 }
 
 export const promoteBrainClaim = async (
@@ -89,7 +98,7 @@ export const promoteBrainClaim = async (
   updatedAt: now,
   validFrom: now,
   validTo: scope === "analytics" ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null,
-  confirmationState: explicitEntry(entry) ? "explicit" : "inferred",
+  confirmationState: creatorConfirmedEntry(entry) ? "explicit" : "inferred",
   status: "active",
   supersedesClaimId: superseded?.id,
   learningEntryIds: [entry.id],
