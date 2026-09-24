@@ -19,6 +19,36 @@ const readSignals = (): WorkflowPreferenceSignal[] => {
  try { return JSON.parse(window.localStorage.getItem(KEY) || "[]") as WorkflowPreferenceSignal[] } catch { return [] }
 }
 
+export const buildWorkflowSelectionSignals = (input: {
+ sourceToolId: string
+ payloadKind: string
+ rankedTargetIds: string[]
+ chosenTargetId: string
+ channelId?: string | null
+ projectId?: string | null
+}): Array<Omit<WorkflowPreferenceSignal, "id" | "at">> => {
+ const chosenIndex = input.rankedTargetIds.indexOf(input.chosenTargetId)
+ const skippedAbove = chosenIndex > 0
+  ? input.rankedTargetIds.slice(0, chosenIndex)
+  : []
+
+ const base = {
+  sourceToolId: input.sourceToolId,
+  payloadKind: input.payloadKind,
+  channelId: input.channelId,
+  projectId: input.projectId,
+ }
+
+ return [
+  { ...base, targetToolId: input.chosenTargetId, accepted: true },
+  ...skippedAbove.map((targetToolId) => ({
+   ...base,
+   targetToolId,
+   accepted: false,
+  })),
+ ]
+}
+
 export const recordWorkflowPreferenceSignal = (signal: Omit<WorkflowPreferenceSignal, "id" | "at">) => {
  if (!evaluateViewTubeControl("creator-learning").allowed) return null
  const item = { ...signal, id: crypto.randomUUID(), at: Date.now() }
