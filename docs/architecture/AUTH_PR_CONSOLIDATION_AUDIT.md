@@ -1,5 +1,10 @@
 # ViewTube Auth / Authorization Pull Request Consolidation Audit
 
+**Status:** HISTORICAL PR CONSOLIDATION / DECISION RECORD  
+**Current auth authority:** `SIMPLE_AUTH_V1.md`  
+**Current migration tracker:** `YOUTUBE_API_STABILIZATION_V1_TRACKER.md`  
+**Wave 6 note (2026-09-24):** preserve PR dispositions and salvage reasoning. Branch/PR freshness and "current base" wording below are historical.
+
 **Base:** main @ 8fa2c52
 **Rule:** no historical auth PR is to be re-merged wholesale. The simple server-owned session introduced by PR #64 and made authoritative by PR #68 is the destination architecture.
 

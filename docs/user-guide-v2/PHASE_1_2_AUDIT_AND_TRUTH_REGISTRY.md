@@ -1,5 +1,9 @@
 # ViewTube User Guide V2 — Phase 1 Discovery Audit
 
+**Status:** HISTORICAL DISCOVERY / TRUTH-MODEL AUDIT  
+**Current authority:** `VIEWTUBE_USER_GUIDE_V2_MASTER_RESOURCE.md` + `src/content/guide-v2/**`  
+**Wave 6 note (2026-09-24):** the registry-derived Guide V2 implementation now exists. Preserve this audit for the decisions that established canonical route/dataset/tool ownership; do not read its "current guide" findings as present-state implementation status.
+
 Audit date: 2026-08-27
 Baseline: `main` at the Simple Auth V1 landing commit.
 Purpose: freeze what the guide must document before the V2 UI is built.

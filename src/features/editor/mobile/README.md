@@ -36,10 +36,10 @@ Current bridge status:
 - mobile -> shared bridge: implemented
 - shared bridge -> mobile project seed on route mount: implemented
 - route-owned mobile store survives frontend switching: implemented
-- desktop VT_E1 -> shared bridge adapter: pending
-- shared bridge -> live desktop VT_E1 apply: pending
+- desktop VT_E1 -> shared bridge adapter: implemented through `useDesktopProjectBridge`
+- shared bridge -> live desktop VT_E1 apply: implemented for newer mobile snapshots through the same hook
 
-The next phase is explicitly the desktop adapter. Do not describe desktop/mobile project synchronization as complete until the canonical `VT_E1.jsx` model is connected to this same bridge contract.
+The canonical `VT_E1.jsx` model is connected to the shared bridge. Remaining work is parity/round-trip certification and schema-capability coverage, not initial desktop bridge wiring.
 
 ## Quick start
 

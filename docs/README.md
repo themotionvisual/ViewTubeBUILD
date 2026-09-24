@@ -21,6 +21,10 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | Analytics / VT-SYNC architecture + migration | [Analytics / VT-SYNC Master Resource](./analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md) |
 | Analytics Data Visual canvas | [Data Visual Canvas Contract](./migration/data-visual-canvas-contract.md) (scoped canonical contract) |
 | Analytics Data Visual mobile composition | [Mobile Visual Responsive Contract](./MOBILE_VISUAL_RESPONSIVE_CONTRACT.md) (scoped canonical contract) |
+| Auth / browser session | [Simple Auth V1](./architecture/SIMPLE_AUTH_V1.md) |
+| Editor system | [Editor System Master Resource](./editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md) |
+| Deployment / release | [Deployment & Release Master Resource](./deployment/VIEWTUBE_DEPLOYMENT_RELEASE_MASTER_RESOURCE.md) |
+| User Guide V2 | [User Guide V2 Master Resource](./user-guide-v2/VIEWTUBE_USER_GUIDE_V2_MASTER_RESOURCE.md) |
 | AI / Brain runtime architecture | [Unified AI System Canonical Consolidation Contract](./brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md) |
 | Herald repository-work governance | [HERALD-OUT](../agent/contracts/herald-out.md) + [workflow](../agent/contracts/herald-workflow.md) (implemented code/record authority) |
 
@@ -48,6 +52,8 @@ When beginning work:
 
 **Wave 5:** the unified AI contract is now the living Brain architecture authority. Older AI audits, phase manifests, donor harvests and roadmap documents are historical references. Herald is explicitly separated from creator BrainRuntime and points to its implemented agent contracts, thread ledger and exchange records.
 
+**Wave 6:** Simple Auth V1 is the canonical browser-session contract; Editor documentation is reconciled to the live desktop/mobile bridge; deployment/release has a script-backed living master; Guide V2 has a living authority over its derived route/dataset/tool/widget/metric/visual registries.
+
 No baseline document has been deleted. Future waves continue one domain at a time, preserving unique information and references before archival or retirement.
 
 ### Planned waves
@@ -57,8 +63,8 @@ No baseline document has been deleted. Future waves continue one domain at a tim
 3. Studio UI / Toolbox / widgets / mobile — **complete in Wave 3**
 4. Analytics / Data Visuals / migrations — **complete in Wave 4**
 5. Brain / AI / Herald — **complete in Wave 5**
-6. Auth / Editor / deployment / user guide — **next**
-7. Archive/evidence re-homing + root cleanup
+6. Auth / Editor / deployment / user guide — **complete in Wave 6**
+7. Archive/evidence re-homing + root cleanup — **next**
 8. Automated governance + broken-link certification
 
 ## Important rule
@@ -127,3 +133,12 @@ The unified desktop/mobile editor program now has a single living integration au
 - editor/EDITOR_BRAIN_HUB_ASSISTANT_PLAN.md
 
 Every editor-related agent/conversation must update the master resource Current Work and append-only Update Log before handoff. Specialized editor/Brain/Asset/Toolbox documents remain authoritative for their bounded concerns as declared by DOCUMENTATION_REGISTRY.md.
+
+
+## Auth / Editor / Deployment / Guide boundaries
+
+- **Auth:** `architecture/SIMPLE_AUTH_V1.md`; flat `/api/auth-*` routes are the browser contract, nested routes are compatibility aliases through the same server router.
+- **YouTube API migration:** `architecture/YOUTUBE_API_STABILIZATION_V1_TRACKER.md` remains active until typed-route parity and legacy deletion finish.
+- **Editor:** `editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md`; VT_E1 and mobile share the versioned project bridge, with remaining work focused on parity/certification rather than first bridge wiring.
+- **Deployment/release:** `deployment/VIEWTUBE_DEPLOYMENT_RELEASE_MASTER_RESOURCE.md`; live production truth is the exact commit reported by `/api/release`, not repository state alone.
+- **User Guide V2:** `user-guide-v2/VIEWTUBE_USER_GUIDE_V2_MASTER_RESOURCE.md`; product inventories derive from canonical registries instead of being copied into prose.

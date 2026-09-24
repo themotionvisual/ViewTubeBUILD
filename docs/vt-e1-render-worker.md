@@ -1,5 +1,9 @@
 # VT_E1 Render Worker
 
+**Status:** CURRENT SCOPED DEPLOYMENT / RENDER CONTRACT  
+**Related authorities:** `editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md` and `deployment/VIEWTUBE_DEPLOYMENT_RELEASE_MASTER_RESOURCE.md`  
+**Scope:** dedicated VT_E1 server render worker, proxy contract and output formats; not proof that a worker is currently deployed.
+
 The editor always calls same-origin endpoints such as `/api/vt-e1/render`.
 The web deployment proxies those requests to a dedicated worker running
 `src/server/vt-e1-render-server.mjs`. Do not point browser code at a worker

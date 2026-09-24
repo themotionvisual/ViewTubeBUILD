@@ -23,14 +23,14 @@
 
 ## Baseline summary
 
-- **active-plan:** 12
+- **active-plan:** 11
 - **artifact:** 12
-- **canonical:** 7
+- **canonical:** 8
 - **evidence:** 11
-- **historical:** 42
-- **reference:** 27
+- **historical:** 49
+- **reference:** 24
 - **retirement-candidate:** 3
-- **review:** 5
+- **review:** 1
 
 ### Domain counts
 
@@ -57,6 +57,11 @@
 
 - `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` — Canonical production Toolbox/Subtoolbox design-system authority reconciled in Wave 3.
 
+- `docs/architecture/SIMPLE_AUTH_V1.md` — Canonical living browser auth/session authority reconciled in Wave 6.
+- `docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md` — Post-baseline canonical living Editor system authority.
+- `docs/deployment/VIEWTUBE_DEPLOYMENT_RELEASE_MASTER_RESOURCE.md` — Post-baseline canonical deployment/release authority.
+- `docs/user-guide-v2/VIEWTUBE_USER_GUIDE_V2_MASTER_RESOURCE.md` — Post-baseline canonical living User Guide V2 authority.
+
 These authorities are scoped, not global. For example, the Studio component-library source-of-truth does not replace the Project/ContentBuild master resource.
 
 ## Full 119-file baseline registry
@@ -66,13 +71,13 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 1 | `docs/analytics/YOUTUBE_ANALYTICS_DATASET_EXPANSION_PLAN.md` | analytics | `active-plan` | `consolidate-after-status-audit` | 21714 | Active analytics dataset expansion plan with supporting matrix. |
 | 2 | `docs/analytics/youtube-analytics-dataset-expansion-matrix.csv` | analytics | `reference` | `retain-or-consolidate` | 9570 | Supporting machine-readable/reference artifact; preserve unless an owning canonical registry replaces it. |
 | 3 | `docs/architecture/ASSET_ENGINE_CONTENTBUILD_IMPLEMENTATION_PLAN_2026-09-20.md` | architecture | `historical` | `retain-as-milestone-reference` | 10084 | Wave 2 reconciled implemented/open requirements into the two living masters; preserve as implementation history. |
-| 4 | `docs/architecture/AUTH_PR_CONSOLIDATION_AUDIT.md` | architecture | `reference` | `retain-or-consolidate` | 7493 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
+| 4 | `docs/architecture/AUTH_PR_CONSOLIDATION_AUDIT.md` | architecture | `historical` | `retain-as-pr-decision-record` | 7493 | Historical auth PR consolidation/salvage record; branch freshness and current-base language superseded. |
 | 5 | `docs/architecture/CSS_SYSTEM_ISOLATION_PLAN_2026-09-14.md` | architecture | `active-plan` | `status-audit` | 5190 | Plan/work-order/tracker requires completion check before consolidation or archive. |
 | 6 | `docs/architecture/dashboard-baseline.json` | architecture | `evidence` | `keep-as-evidence` | 2254 | Verification/status snapshot; useful evidence but not architectural authority. |
 | 7 | `docs/architecture/dashboard-style-snapshot.json` | architecture | `evidence` | `keep-as-evidence` | 83646 | Verification/status snapshot; useful evidence but not architectural authority. |
 | 8 | `docs/architecture/MOBILE_WIDGET_PHASE2_CLASSIFICATION.md` | architecture | `reference` | `retain-or-consolidate` | 3231 | General documentation; verify current scope and merge target during its domain wave. |
 | 9 | `docs/architecture/PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md` | architecture | `historical` | `retain-as-consolidation-record` | 21441 | Wave 2 promoted hard identity/persistence/publishing rules into the living masters; preserve this convergence plan for provenance. |
-| 10 | `docs/architecture/SIMPLE_AUTH_V1.md` | architecture | `review` | `audit-before-move` | 1188 | Useful implementation reference but auth routes have evolved; reconcile into one current-state auth authority. |
+| 10 | `docs/architecture/SIMPLE_AUTH_V1.md` | architecture | `canonical` | `retain-current` | 1188 | Canonical living browser auth/session contract; flat routes are canonical and nested paths are compatibility aliases. |
 | 11 | `docs/architecture/STUDIO_HUB_COMPONENT_STANDARDIZATION_V1.md` | architecture | `historical` | `retain-as-migration-reference` | 6526 | Specialized Studio migration reference; current rules live in the Toolbox UI master. |
 | 12 | `docs/architecture/STUDIO_HUB_MIGRATION_MATRIX_V1.md` | architecture | `historical` | `retain-as-execution-ledger` | 5414 | 2026-09 migration status snapshot; verify current tool status against code before scheduling work. |
 | 13 | `docs/architecture/STUDIO_HUB_UNIFORM_PRIMITIVE_AUDIT_PLAN_2026-09-16.md` | architecture | `historical` | `retain-as-audit-record` | 8469 | Audit method/evidence retained; desktop 56/44 baseline superseded by current 80/56 desktop and 56/44 mobile contracts. |
@@ -81,7 +86,7 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 16 | `docs/architecture/toolbox-ui-master-resource/README.md` | architecture | `reference` | `retain-or-consolidate` | 2796 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
 | 17 | `docs/architecture/VIDEO_ASSET_ENGINE_WIDGET_IDEAS_2026-09-20.md` | architecture | `reference` | `retain-as-idea-catalog` | 4247 | Durable dashboard requirements were folded into the Asset Engine master; retain the 25-item catalog as non-authoritative product backlog/reference. |
 | 18 | `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md` | architecture | `canonical` | `retain-current` | 38239 | Canonical Asset Engine product/architecture reference referenced by CLAUDE.md. |
-| 19 | `docs/architecture/VIEWTUBE_AUTH_API_STABILIZATION_REFERENCE.md` | architecture | `review` | `audit-before-move` | 8890 | High-value troubleshooting/current-state reference; consolidate with Simple Auth and route truth. |
+| 19 | `docs/architecture/VIEWTUBE_AUTH_API_STABILIZATION_REFERENCE.md` | architecture | `reference` | `retain-troubleshooting-reference` | 8890 | High-value current troubleshooting/stabilization reference; subordinate to Simple Auth V1. |
 | 20 | `docs/architecture/VIEWTUBE_CROWN_DOMAIN_MISSION_PACK.md` | architecture | `reference` | `retain-or-consolidate` | 1962 | General documentation; verify current scope and merge target during its domain wave. |
 | 21 | `docs/architecture/VIEWTUBE_CROWN_INTEGRATION_SYSTEM.md` | architecture | `reference` | `retain-or-consolidate` | 6108 | General documentation; verify current scope and merge target during its domain wave. |
 | 22 | `docs/architecture/VIEWTUBE_CROWN_MAIN_AUDIT_2026-09-11.md` | architecture | `reference` | `retain-or-consolidate` | 3410 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
@@ -95,7 +100,7 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 30 | `docs/architecture/WIDGET_FUTURES_RECOVERY_REGISTRY_2026-09-14.md` | architecture | `active-plan` | `retain-active-scoped` | 6811 | Active widget concept recovery/deduplication registry; explicitly not a production widget registry. |
 | 31 | `docs/architecture/WIDGET_SYSTEM_CERTIFICATION_MASTER_2026-09-14.md` | architecture | `active-plan` | `retain-active-scoped` | 11478 | Active Dashboard widget certification program; WidgetRegistry remains canonical metadata and this plan does not own Toolbox geometry. |
 | 32 | `docs/architecture/YOUTUBE_API_STABILIZATION_V1_TRACKER.md` | architecture | `active-plan` | `status-audit` | 5981 | Plan/work-order/tracker requires completion check before consolidation or archive. |
-| 33 | `docs/architecture/YOUTUBE_AUTH_API_SIMPLIFICATION_PLAN.md` | architecture | `review` | `audit-before-move` | 8247 | Design direction differs from the currently deployed flat+compatibility route implementation; reconcile against code. |
+| 33 | `docs/architecture/YOUTUBE_AUTH_API_SIMPLIFICATION_PLAN.md` | architecture | `historical` | `retain-as-design-history` | 8247 | Historical auth/API design direction; current flat+compatibility implementation is owned by Simple Auth V1. |
 | 34 | `docs/brain/AI_BRAIN_REACHABILITY_AUDIT_PASS1_2026-09-17.md` | brain | `historical` | `retain-as-history` | 8018 | Historical production-reachability snapshot; retain audit method and direct-generation debt evidence. |
 | 35 | `docs/brain/AI_BRAIN_REACHABILITY_AUDIT_WORK_ORDER_2026-09-17.md` | brain | `historical` | `retain-as-history` | 2284 | Completed reachability audit work order; retain as reusable audit recipe/provenance. |
 | 36 | `docs/brain/AI_CROSS_BRANCH_HARVEST_PASS1_2026-09-18.md` | brain | `historical` | `retain-as-history` | 5711 | Historical donor-branch harvest audit; many harvested capabilities now exist on current main. |
@@ -112,12 +117,12 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 47 | `docs/DATA_VISUAL_MODULE_UNIFICATION.md` | analytics | `historical` | `retain-as-foundation-reference` | 2359 | Early DataVisualCanvas migration bridge; current canvas/responsive authority now lives in scoped contracts and Analytics master. |
 | 48 | `docs/demos/ViewTube_Crown_Control_Room.html` | demos | `artifact` | `keep-as-evidence` | 8188 | Demo/visual/prototype artifact; evidence rather than normative documentation. |
 | 49 | `docs/deployment/PRODUCTION_DEPLOY_TRIGGER.md` | deployment | `retirement-candidate` | `verify-before-delete` | 362 | Deployment trigger marker rather than durable documentation; verify no references, then delete in cleanup wave. |
-| 50 | `docs/EDITOR_DESKTOP_PROJECT_BRIDGE_HOOK_HANDOFF.md` | editor | `reference` | `retain-or-consolidate` | 3978 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
+| 50 | `docs/EDITOR_DESKTOP_PROJECT_BRIDGE_HOOK_HANDOFF.md` | editor | `historical` | `retain-as-completed-handoff` | 3978 | Current VT_E1 mounts useDesktopProjectBridge; handoff is completed implementation evidence. |
 | 51 | `docs/editor/component-style-default.md` | editor | `reference` | `retain-or-consolidate` | 928 | General documentation; verify current scope and merge target during its domain wave. |
-| 52 | `docs/editor/EDITOR_RECOVERY_PHASES_1_3_2026-09-18.md` | editor | `reference` | `retain-or-consolidate` | 1929 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
-| 53 | `docs/editor/EDITOR_SVG_TEMPLATE_ASSET_CONSOLIDATION_PLAN_2026-09-18.md` | editor | `active-plan` | `status-audit` | 8120 | Plan/work-order/tracker requires completion check before consolidation or archive. |
+| 52 | `docs/editor/EDITOR_RECOVERY_PHASES_1_3_2026-09-18.md` | editor | `historical` | `retain-as-recovery-evidence` | 1929 | Completed recovery phases retained as provenance; current Editor status lives in the post-baseline Editor master. |
+| 53 | `docs/editor/EDITOR_SVG_TEMPLATE_ASSET_CONSOLIDATION_PLAN_2026-09-18.md` | editor | `historical` | `retain-as-donor-plan` | 8120 | Unique inspector/direct-selection/measured-preview requirements promoted into the living Editor master; preserve donor branch analysis. |
 | 54 | `docs/editor/MOBILE_EDITOR_PRIMITIVES_AND_TOUCH_CONTROLS_2026-09-19.md` | editor | `reference` | `retain-or-consolidate` | 6058 | General documentation; verify current scope and merge target during its domain wave. |
-| 55 | `docs/editor/MOBILE_EDITOR_WORKSPACE_REPAIR_2026-09-18.md` | editor | `reference` | `retain-or-consolidate` | 2769 | General documentation; verify current scope and merge target during its domain wave. |
+| 55 | `docs/editor/MOBILE_EDITOR_WORKSPACE_REPAIR_2026-09-18.md` | editor | `historical` | `retain-as-implementation-evidence` | 2769 | Historical mobile workspace repair/visual evidence; current geometry requires current-code certification. |
 | 56 | `docs/herald/artifacts/2026-09-18--data-visual-controller-unification/documents/data-visual-controller-unification-plan.md` | brain/herald | `historical` | `archive-after-extraction` | 12727 | Captured proposed version; newer migration plan records implementation progress. |
 | 57 | `docs/herald/artifacts/2026-09-18--data-visual-controller-unification/meta.json` | brain/herald | `artifact` | `keep-as-evidence` | 463 | Herald run artifact/evidence; preserve provenance, do not treat as current authority. |
 | 58 | `docs/herald/artifacts/2026-09-18--data-visual-controller-unification/README.md` | brain/herald | `artifact` | `keep-as-evidence` | 1779 | Herald run artifact/evidence; preserve provenance, do not treat as current authority. |
@@ -176,35 +181,39 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 111 | `docs/ui/toolbox-system/audits/MASTER_RESOURCE_50_IMPROVEMENTS_2026-09-13.md` | ui | `reference` | `retain-or-consolidate` | 4954 | General documentation; verify current scope and merge target during its domain wave. |
 | 112 | `docs/ui/toolbox-system/MANIFEST.md` | ui | `reference` | `retain-or-consolidate` | 4017 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
 | 113 | `docs/ui/toolbox-system/README.md` | ui | `reference` | `retain-or-consolidate` | 5392 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
-| 114 | `docs/user-guide-v2/PHASE_1_2_AUDIT_AND_TRUTH_REGISTRY.md` | user-guide-v2 | `review` | `audit-before-move` | 6543 | Guide truth model is valuable but its baseline predates later September changes; refresh before authority promotion. |
+| 114 | `docs/user-guide-v2/PHASE_1_2_AUDIT_AND_TRUTH_REGISTRY.md` | user-guide-v2 | `historical` | `retain-as-discovery-audit` | 6543 | Guide V2 derived registry implementation now exists; original audit retained for truth-model decisions. |
 | 115 | `docs/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md` | brain | `historical` | `retain-as-history` | 39897 | Broad September 11 AI/Brain audit; current runtime has advanced materially and the unified contract is current authority. |
 | 116 | `docs/VIEWTUBE_AI_CREATOR_INTELLIGENCE_OS_IMPLEMENTATION_PLAN_2026-09-11.md` | brain | `historical` | `retain-as-history` | 23217 | Original AI Creator Intelligence OS roadmap; current execution has moved to unified AI authority plus current task/finish plans. |
 | 117 | `docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md` | brain | `historical` | `retain-as-history` | 61545 | Original Herald design plan; implemented authority now lives in agent/contracts/herald-* plus .viewtube/herald and exchange records. |
 | 118 | `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` | governance | `review` | `audit-before-move` | 25225 | Broad unfinished-work inventory can conflict with newer domain-specific state; verify item-by-item. |
 | 119 | `docs/vt-e1-render-worker.md` | editor | `reference` | `retain-or-consolidate` | 1417 | General documentation; verify current scope and merge target during its domain wave. |
 
-## Post-baseline documents created by consolidation
+## Post-baseline living/control documents
 
 These files were created after the original 119-file baseline and therefore are **not** included in the baseline lifecycle counts above:
 
 - `docs/README.md` — documentation entrypoint and authority map.
 - `docs/DOCUMENTATION_GOVERNANCE.md` — lifecycle, authority, supersession, placement, and deletion-safety contract.
-- `docs/DOCUMENTATION_REGISTRY.md` — this baseline registry.
+- `docs/DOCUMENTATION_REGISTRY.md` — baseline registry and consolidation ledger.
 - `docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md` — Wave 4 living Analytics / VT-SYNC authority.
+- `docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md` — living Editor system authority.
+- `docs/editor/EDITOR_BRAIN_HUB_ASSISTANT_PLAN.md` — active scoped Editor/Brain implementation plan.
+- `docs/deployment/VIEWTUBE_DEPLOYMENT_RELEASE_MASTER_RESOURCE.md` — Wave 6 living deployment/release authority.
+- `docs/user-guide-v2/VIEWTUBE_USER_GUIDE_V2_MASTER_RESOURCE.md` — Wave 6 living User Guide V2 authority.
+- `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md` — current-main completion/convergence plan; not a replacement for domain authorities.
 
 ## Consolidation progress
 
 - **Wave 1 — complete/merged:** registry, entrypoint and governance contract.
-- **Wave 2 — complete/merged:** Projects / ContentBuild / Asset Engine current authority consolidated into the two living masters.
-- **Wave 3 — complete/merged:** Studio UI / Toolbox / widget/mobile authority reconciled against production code/tokens.
-- **Wave 4 — complete/merged:** Analytics / VT-SYNC / Data Visual authority consolidated around the living Analytics master and scoped production contracts.
-- **Wave 5 — Brain / AI / Herald:** unified AI contract refreshed against current Brain runtime, evidence-quality, evaluation, learning and persistence systems; old phase/audit/branch documents demoted to history; Herald authority separated from creator Brain and mapped to implemented agent contracts + thread/ledger records.
+- **Wave 2 — complete/merged:** Projects / ContentBuild / Asset Engine authority.
+- **Wave 3 — complete/merged:** Studio UI / Toolbox / widget/mobile authority.
+- **Wave 4 — complete/merged:** Analytics / VT-SYNC / Data Visual authority.
+- **Wave 5 — complete/merged:** Brain / AI / Herald authority.
+- **Wave 6 — Auth / Editor / deployment / User Guide:** Simple Auth V1 promoted to canonical; current troubleshooting/migration docs scoped; Editor master refreshed and donor requirements preserved; deployment/release master created from executable release tooling; User Guide V2 master created from live derived registries/governance tests.
 
 ## Next action
 
-Wave 6 should consolidate Auth / Editor / deployment / user-guide documentation, reconcile each family against current main, and demote obsolete stabilization plans/status snapshots without erasing troubleshooting or migration evidence.
-
-
+Wave 7 should perform archive/evidence re-homing and root cleanup: verify inbound references, move historical/evidence artifacts into stable archive/evidence locations where beneficial, delete only proven no-op retirement candidates, and produce a current full-tree inventory beyond the original 119-file baseline.
 ## Post-baseline editor additions — 2026-09-24
 
 These files were added after the original 119-file Wave 1 baseline and therefore do not change the baseline counts above.

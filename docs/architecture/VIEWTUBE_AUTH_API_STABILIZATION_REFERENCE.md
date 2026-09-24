@@ -1,5 +1,10 @@
 # ViewTube Authorization + YouTube API Stabilization Reference
 
+**Status:** CURRENT TROUBLESHOOTING / STABILIZATION REFERENCE — not the auth owner  
+**Canonical auth authority:** `SIMPLE_AUTH_V1.md`  
+**Last audited main:** `2efe0f56eb52c1029c71543291cf65e2b1a2245f`  
+**Use this for:** production diagnostics, deployment/source confusion, route migration lessons, serverless-function constraints, reconnect semantics and failure-pattern history.
+
 ## Why this document exists
 This records the concrete failure patterns and architectural lessons discovered while stabilizing ViewTube's Google/YouTube connection system in August 2026. Read it before changing auth, account state, YouTube API gateways, Analytics/Reporting connections, or Vercel API routes.
 

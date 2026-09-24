@@ -1,5 +1,9 @@
 # Editor SVG / Template / Background / Asset Consolidation Plan — 2026-09-18
 
+**Status:** HISTORICAL DONOR / CONSOLIDATION PLAN  
+**Current authority:** `VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md`  
+**Wave 6 note (2026-09-24):** unique remaining requirements (template element inspector, direct selection, measured preview dimensions, browser/background customization and responsive-canvas verification) have been promoted into the living master as re-verification work. Preserve branch dispositions and donor details here; do not treat old branch status as current.
+
 ## Authority
 - Base branch: `main`
 - Main SHA at consolidation start: `08c3627422c02bc41614bafc6ca21e3a8cbacd3b`

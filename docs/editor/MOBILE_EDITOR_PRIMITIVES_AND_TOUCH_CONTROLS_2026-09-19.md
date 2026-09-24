@@ -1,5 +1,9 @@
 # Mobile Editor Primitive & Touch Control Authority
 
+**Status:** CURRENT SCOPED IMPLEMENTATION REFERENCE — subordinate to the Editor master  
+**Last audited main:** `2efe0f56eb52c1029c71543291cf65e2b1a2245f`  
+**Scope:** phone-editor touch primitives/controls and direct-manipulation rules. It does not own overall Editor architecture, project identity or render truth.
+
 Status: implementation authority for the phone editor controls introduced in the 26–50 improvement pass.
 
 ## Purpose
