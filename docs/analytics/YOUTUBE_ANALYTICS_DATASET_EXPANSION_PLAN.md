@@ -1,9 +1,12 @@
 # YouTube Analytics Dataset, Window, and Video Deep-Dive Expansion Plan
 
-**Status:** implementation plan
+**Status:** ACTIVE EXPANSION PLAN — partially implemented
 **Authoritative product surface:** `/analytics` / VT-SYNC
 **Runtime data policy:** real YouTube responses and user imports only; no mock, estimated, or fabricated runtime rows
-**Last audited:** 2026-08-27 against `origin/main` and the live VT-SYNC registries
+**Last audited:** 2026-09-24 against main `0c4610629bfba98ffc0703a42e422352d5f31514`
+**Current authority:** `VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md` summarizes shipped vs open state; this file owns the detailed expansion backlog.
+
+**2026-09-24 code-backed status:** the standard five-window vocabulary is production, VT-SYNC has window-aware persistence/projections, Analytics report registry v1 exists with 27 definitions, and Intelligence remains on the 34-visible-dataset compatibility contract. `custom` is not yet a canonical AnalyticsWindow; content-owner-only expansion remains separately gated; do not read the original gap list as if none of its foundations have landed.
 
 ## Outcome
 

@@ -1,8 +1,10 @@
 # Mobile Visual Responsive Contract
 
-**Status:** Scoped Analytics Data Visual responsive contract  
-**Last audited documentation baseline:** `988098840050f4b658a266e1a7d6fe1c4d939c81`  
-**Authority boundary:** This contract governs registered Analytics/VT-SYNC Data Visual modules. It does not define Studio Toolbox shell heights or Dashboard widget buckets.
+**Status:** CANONICAL SCOPED ANALYTICS DATA VISUAL RESPONSIVE CONTRACT  
+**Last audited main:** `0c4610629bfba98ffc0703a42e422352d5f31514`  
+**Canonical owner / concern:** portrait-phone, landscape-phone and desktop responsive intent for registered Analytics/VT-SYNC Data Visuals.  
+**Executable authority:** `VtSyncVisualFrame` + `mobileVisualResponsiveContract.ts` + visual registry/test contracts.  
+**Authority boundary:** This contract does not define Studio Toolbox shell heights or Dashboard widget buckets.
 
 This document is the implementation contract for Data Visuals on phone portrait, phone landscape, and desktop.
 

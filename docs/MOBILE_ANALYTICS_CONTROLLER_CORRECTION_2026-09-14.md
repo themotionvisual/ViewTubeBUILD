@@ -1,5 +1,9 @@
 # Mobile Analytics Controller Correction — 2026-09-14
 
+**Status:** HISTORICAL IMPLEMENTATION EVIDENCE  
+**Current authority:** `migration/data-visual-controller-unification-plan.md` + `MOBILE_VISUAL_RESPONSIVE_CONTRACT.md`  
+**Wave 4 note (2026-09-24):** this document records the collision/root-cause analysis and corrective composition from that branch. Do not treat its `perf.css` / public-CSS precedence wording as current architecture without checking production code.
+
 ## Scope
 
 This correction addresses the Analytics visual controller collisions visible on phone portrait and short phone landscape layouts after the Master Data mobile geometry pass.

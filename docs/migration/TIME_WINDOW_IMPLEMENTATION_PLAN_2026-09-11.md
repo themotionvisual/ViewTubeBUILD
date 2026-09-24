@@ -1,5 +1,10 @@
 # ViewTube — 7 / 28 / 90 / 365 Day Time Window Implementation Plan
 
+**Status:** ACTIVE IMPLEMENTATION HISTORY + REMAINING MIGRATION PLAN  
+**Current authority:** `../analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md`  
+**Last re-audited:** 2026-09-24 against main `0c4610629bfba98ffc0703a42e422352d5f31514`  
+**Current state:** `analytics/windows.ts` owns the vocabulary/range resolver, VT-SYNC aliases that type, IndexedDB v2 keys dataset windows, `datasetsByWindow` exists, and per-video `metricsByWindow`/window-source projection exists. Consumer and dataset coverage remains incomplete, so the plan is not archival yet. Treat phase-local "shipped" notes below as implementation history, not a substitute for the current master.
+
 **Date:** 2026-09-11
 **Branch:** `claude/time-window-implementation-plan-lyyj7f`
 **Scope:** every analytics dataset, all three sync engines, their storage keys, the

@@ -1,5 +1,9 @@
 # Mobile Visual Phase 2
 
+**Status:** HISTORICAL CHANGELOG / implementation evidence  
+**Current authority:** `MOBILE_VISUAL_RESPONSIVE_CONTRACT.md` + production responsive registry.  
+**Wave 4 note (2026-09-24):** preserve the shipped Phase-2 changes below as evidence; the "next renderer migrations" line is a point-in-time backlog, not current status.
+
 - Started from current `main`, which already contains the responsive `VtSyncVisualFrame` contract.
 - Promoted Heat Matrix to the reference spatial visual in the mobile CSS contract.
 - Removed legacy phone minimum-height behavior at the registered visual boundary.
