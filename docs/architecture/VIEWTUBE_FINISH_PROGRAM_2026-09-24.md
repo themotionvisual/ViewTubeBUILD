@@ -328,3 +328,24 @@ The finish program is complete when:
 ## Tooling Notes
 
 The agent.spot workflow search surfaced optional third-party products for codebase completion and QA, but none is required and no integration between them is implied. ViewTube's existing GitHub, tests, browser/runtime tooling, deployment tooling, Agent Skills, and Herald process remain the primary execution environment.
+
+
+## PR #241 Brain/Product Donor Candidates
+
+The 2026-09-12 PR #241 brainstorm is preserved historically, but several ideas remain useful against today's stronger backend. These are **candidate finish features**, not automatically approved scope.
+
+| Donor concept | Current disposition | Dependency / rationale |
+| --- | --- | --- |
+| Editable Channel Knowledge / Knowledge Map | KEEP / evaluate for Brain Hub | Channel Knowledge projection/runtime now exists; UI should expose source, confidence, contradiction, confirmation/correction and expiry. |
+| Style Fingerprint | KEEP | StyleProfile/styleMetrics already exist; a creator-facing comparison/teaching view would make the backend legible. |
+| Diff-as-teaching | KEEP | asset edit outcomes already capture high-value correction signal; expose it only with creator controls and clear provenance. |
+| Variant Comparator | KEEP | fits governed AssetGenerator and package-first generation; should compare evidence/style/rubric dimensions without fake precision. |
+| Universal “Why?” / evidence trace | KEEP | aligns with BrainTrace + evidence quality + assistant continuity; use current toolbox/UI primitives. |
+| Evidence Explorer / evidence-health view | KEEP | evidence quality backend now exists; surface freshness, missingness, scope and permission blocks. |
+| Impact Cards / Calibration Chart | DEFER UNTIL OUTCOME COVERAGE | only meaningful when prediction/recommendation identity joins enough measured outcomes. |
+| Trace Timeline | KEEP, operator-first | BrainTrace exists; creator view should be simplified and never expose hidden chain-of-thought. |
+| Activity Feed | DEFER / integrate with canonical action history | do not create a second action log. |
+| Autonomy Matrix / Schedule Builder | DEFER | requires server-side scheduling, approval tiers, budgets/quiet hours and reversible action semantics. |
+| Opportunity Radar | MERGE WITH CURRENT OPPORTUNITY/WIDGET WORK | retain the spatial impact/effort idea only if it fits current Opportunity Intelligence and widget standards. |
+
+Detailed provenance and file-level decisions live in `docs/brain/PR241_DONOR_HARVEST_AUDIT_2026-09-24.md`.
