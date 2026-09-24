@@ -220,6 +220,8 @@ export const prepareGenerationRequest = (input: {
    requestedSlots: contextManifest.requestedSlots,
    parentAssetId: request.parentAssetId,
    variantGroupId: request.variantGroupId,
+   generationRequest: request,
+   contextManifest,
   },
  })
 
@@ -284,6 +286,7 @@ export const recordToolReceipt = (input: {
    versionIds: receipt.versionIds,
    variantGroupId: receipt.variantGroupId,
    relationshipIds: receipt.relationshipIds,
+   toolReceipt: receipt,
    ...(input.metadata || {}),
   },
  })
