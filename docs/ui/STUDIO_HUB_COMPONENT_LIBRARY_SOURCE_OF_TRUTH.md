@@ -1,5 +1,10 @@
 # Studio Hub Component Library source of truth
 
+**Status:** Canonical scoped Component Library / primitive-correction authority  
+**Last audited main:** `988098840050f4b658a266e1a7d6fe1c4d939c81`  
+**Scope:** Studio Hub Component Library catalog wiring, catalog presentation, demonstrated primitive families, and named primitive-correction contracts.  
+**Related authority:** `../architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` owns the production Toolbox/Subtoolbox system globally. Production tokens/code/tests win over catalog-only CSS.
+
 `ToolboxUIReferenceLibrary.tsx` is the Studio Hub entry point and shell. It must not maintain an independent subset of component examples.
 
 `StudioHubCompletePrimitiveCatalog.tsx` owns the canonical family registry and rendered examples. Add reusable component families there so they automatically appear in the Studio Hub toolbox.
@@ -8,7 +13,7 @@
 
 Main Toolbox and SubToolbox are separate structural levels. Main Toolbox authority is 80px header / 5px stroke / 16px radius / 10px shadow / 26px title. Standard SubToolbox authority remains 56px / 4px / 12px / 6px / 20px. Do not globally map the main toolbox header to 56px.
 
-Mobile shell density is intentionally tighter: main Toolbox 56px header / 14px radius / 6px shadow offset, SubToolbox 44px header / 10px radius / 4px shadow offset. Mobile preserves the 26px and 20px title sizes and two-line wrapping; header height is derived from two tight title lines plus roughly 10px total vertical breathing room.
+Mobile shell density is intentionally tighter and **fixed by token contract**: main Toolbox 56px header / 14px radius / 6px shadow offset, SubToolbox 44px header / 10px radius / 4px shadow offset. Mobile preserves the 26px and 20px title sizes and permits up to two tight wrapped lines. The fixed mobile heights do not redefine the desktop 80px / 56px shell authority.
 
 
 ## Primitive Correction Authority — 2026-09-23

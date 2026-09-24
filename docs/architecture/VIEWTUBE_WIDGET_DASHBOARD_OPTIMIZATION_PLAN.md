@@ -1,6 +1,8 @@
 # ViewTube Widget Dashboard Optimization Plan
 
-Status: implementation-ready
+Status: implementation-ready / active optimization plan
+Last audited documentation baseline: `988098840050f4b658a266e1a7d6fe1c4d939c81`
+Authority boundary: Dashboard widget optimization only. It may reuse shared visual principles but does not own Studio Toolbox/SubToolbox geometry.
 Measured: 2026-09-11, branch `fix/deploy-topology-and-widget-skill` (base `origin/main` @ `1a863c98`)
 Owner skill: `.claude/skills/viewtube-widget-dashboard/`
 

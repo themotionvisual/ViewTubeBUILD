@@ -1,5 +1,9 @@
 # ViewTube Toolbox UI System Documentation
 
+**Status:** Companion navigation/reference document  
+**Current canonical master:** `../../architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`  
+**Last audited main:** `988098840050f4b658a266e1a7d6fe1c4d939c81`
+
 This folder is the stable documentation and reference home for the ViewTube Toolbox / Subtoolbox / Studio Hub UI system.
 
 ## Authority order
@@ -14,7 +18,9 @@ A primitive is not complete merely because it appears in an HTML prototype. It b
 
 ## Folder system
 
-- `master/` — one stable canonical Master Resource document. Git history replaces chains of `FINAL`, `FINAL_UPDATED`, etc.
+The folder scheme below was an intended companion-artifact organization and is only partially realized. Do **not** create a second canonical Master Resource under `master/`; the live canonical document is `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`.
+
+- `master/` — historical intended location for imported companion master artifacts; not the current canonical Markdown path.
 - `libraries/complete/` — current complete standalone UI-system library.
 - `libraries/components/` — specialized component libraries.
 - `libraries/guides/` — Guide Subtoolbox / instructional recipe libraries.

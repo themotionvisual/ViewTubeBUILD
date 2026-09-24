@@ -1,5 +1,9 @@
 # Toolbox UI Master Resource — 50 Improvement Ideas
 
+**Status:** REFERENCE IDEA BACKLOG — not current authority  
+**Current authority:** `../../../architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`  
+**Wave 3 note (2026-09-24):** many authority/registry/mobile/certification ideas have since been implemented or absorbed. Keep this list for future improvement discovery; verify every item before treating it as open work.
+
 1. Create a one-page executive authority map: Code → Reference Library → Master Resource → Feature Consumers → Historical Prototypes.
 2. Adopt one canonical level naming scheme and publish aliases for historical names.
 3. Separate structural hierarchy levels from control size variants.

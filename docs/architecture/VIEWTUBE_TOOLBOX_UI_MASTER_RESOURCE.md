@@ -1,7 +1,11 @@
 # ViewTube Toolbox UI Master Resource
 
-**Status:** Living design-system authority  
-**Updated:** 2026-09-22  
+**Status:** Canonical living design-system authority  
+**Updated:** 2026-09-24  
+**Last audited main:** `988098840050f4b658a266e1a7d6fe1c4d939c81`  
+**Canonical owner / concern:** Production Toolbox/Subtoolbox shell hierarchy, Studio control/layout rules, responsive shell behavior, shared state/motion/accessibility rules, certification and migration policy.  
+**Executable authority:** `src/components/subtoolbox/tokens.ts`, `src/components/Toolbox.tsx`, `src/styles/toolbox-system.css`, `src/styles/subtoolbox-system.css`, and their contract tests.  
+**Related scoped authority:** `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md` owns Component Library/catalog presentation and primitive-correction notes. Dashboard widgets and Analytics Data Visuals retain separate registries/contracts.  
 **Scope:** Toolbox, Subtoolbox, Studio Hub controls, reusable layouts, states, responsive behavior, certification, migration, audits and page-specific exceptions.
 
 ## Living update log
@@ -10,6 +14,7 @@ Append one concise row for every system-level update. Use Notes for conflicts, v
 
 | Date / time | Conversation | AI / tool | Change | Repo evidence | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-09-24 | Documentation authority consolidation | GPT-5.6 Sol + GitHub | Re-audited tokens/CSS/tests, separated shell vs control ladders, and demoted stale Studio migration geometry | `988098840050f4b658a266e1a7d6fe1c4d939c81` | CURRENT CODE AUTHORITY / VISUAL CERTIFICATION STILL REQUIRED | Desktop shell: T0=80/26, T1=56/20, T2=48/18, T3=32/12. Mobile shell: Toolbox=56, SubToolbox=44 with desktop title sizes preserved. |
 | 2026-09-22 | Toolbox geometry authority reconciliation | GPT-5.6 Sol + GitHub | Reconciled production shell geometry with the accepted Component Library authority and removed its private shell override | `fix/toolbox-geometry-authority-2026-09-22` | IMPLEMENTED ON BRANCH / VISUAL CERTIFICATION REQUIRED | Current authority: T0=80px/26px; T1=56px/20px; T2=48px/18px; T3=32px/12px. Historical 56/44 implementation remains traceability only. |
 | 2026-09-14 | Toolbox UI master handoff / 56-44 unification | GPT-5.6 Sol + GitHub | Added reusable handoff protocol and reconciled then-current shell authority | PR #207 -> `844a708f`; PR #211 -> `400269c5`; PR #215 -> `b2e4a534` | SUPERSEDED BY 2026-09-22 GEOMETRY AUTHORITY | Historical T0=56px/28px; T1=44px/22px; separate compact shell authority removed. |
 | YYYY-MM-DD HH:MM | Conversation title | AI / tool | Single-row update summary | Branch / PR / commit | STATUS | Evidence, risk, validation, next action |
@@ -38,6 +43,29 @@ Append one concise row for every system-level update. Use Notes for conflicts, v
 | T3 | L2 dense child | Dense/compact peer | 32px | 2px | 6px | 2px | 12px / 1000 |
 
 The former separate Compact Subtoolbox shell geometry is **SUPERSEDED**. Existing `heightMode="compact"` callers are compatibility-only and must not receive alternate shell height/stroke/radius/shadow geometry. Compactness may describe content density only.
+
+### Executable desktop/mobile shell matrix
+
+| Surface | Desktop | Mobile | Notes |
+| --- | --- | --- | --- |
+| Main Toolbox shell | 80px / 5px / 16px / 10px / 26px title | 56px height / 14px radius / 6px shadow | Mobile keeps the 26px title and permits two tight wrapped lines. |
+| SubToolbox shell | 56px / 4px / 12px / 6px / 20px title | 44px height / 10px radius / 4px shadow | Mobile keeps the 20px title and permits two tight wrapped lines. |
+| L1 interior structural level | 48px / 3px / 8px / 4px / 18px title | responsive composition, not a new shell | Structural level, not a Compact Subtoolbox shell. |
+| L2 dense structural level | 32px / 2px / 6px / 2px / 12px title | responsive composition | Dense structural level. |
+
+`TOOLBOX_MOBILE_HEADER_DNA` is an intentional mobile shell override, not evidence that desktop 56/44 geometry returned.
+
+### Structural level vs component/control size
+
+Do not conflate the shell/structural ladder with component-size variants.
+
+| Component level | Height | Stroke | Radius | Shadow | Font |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| L0 action | 56px | 4px | 12px | 6px | 24px |
+| L1 standard | 48px | 3px | 8px | 5px | 18px |
+| L2 compact/dense | 32px | 2px | 6px | 4px | 12px |
+
+Separate control-size aliases may expose micro 26px / compact 32px / standard 48px / action 56px. A size variant changes component anatomy/density; it does not create another Toolbox/SubToolbox structural shell.
 
 ### Paired-height equations
 
@@ -103,6 +131,15 @@ Guide Subtoolbox remains an instruction-first T1 module with Info, Instructions 
 Shells remain present for loading/empty/error/disconnected. Connection state and data state are independent. DISCONNECTED != EMPTY; DISCONNECTED != ERROR; DISCONNECTED != MISSING UI.
 
 ## 11. Motion authority
+
+Current executable tokens on the audited main define:
+
+- shell/SubToolbox collapse: **600ms ease-out** via `SUBTOOLBOX_COLLAPSE_TRANSITION`;
+- control/micro interaction token: **180ms**;
+- reduced-motion: transitions disabled/reduced through the production motion classes.
+
+A historical 300ms shell rule is superseded. Feature-specific data/widget animation timing does not redefine Toolbox disclosure timing.
+
 
 **MOTION AUTHORITY — RECONCILED 2026-09-22.** Toolbox/Subtoolbox/module/disclosure open-close motion is 600ms ease-out. Micro-interactions such as hover, focus, toggle feedback and icon state changes remain faster at 150–300ms. Reduced-motion mode is required.
 

@@ -1,5 +1,9 @@
 # ViewTube Toolbox UI Companion Artifact Manifest
 
+**Status:** HISTORICAL / OPTIONAL IMPORT MANIFEST — not production authority  
+**Current master:** `../../architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`  
+**Wave 3 note (2026-09-24):** several listed standalone DOCX/HTML/PNG destinations were planned import targets rather than current repository authority. Do not create/import them merely to satisfy this manifest; only import a source artifact when it is still useful and can be reconciled against current code.
+
 This manifest prevents standalone references from becoming competing production authorities.
 
 | Artifact | Intended repository path | Type | Status | Canonical? | Production relationship |

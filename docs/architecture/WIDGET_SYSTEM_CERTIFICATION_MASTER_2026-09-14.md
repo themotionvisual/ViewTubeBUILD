@@ -1,6 +1,8 @@
 # ViewTube Widget System Certification Master
 
-Status: ACTIVE AUDIT / IMPLEMENTATION TRACKER
+Status: ACTIVE AUDIT / IMPLEMENTATION TRACKER — scoped to Dashboard widgets, not Studio Toolbox geometry
+Last audited documentation baseline: `988098840050f4b658a266e1a7d6fe1c4d939c81`
+Authority boundary: `src/views/dashboard/WidgetRegistry.ts` remains canonical widget metadata. This tracker defines readiness/certification gates and must not redefine Toolbox/SubToolbox shell DNA.
 Date: 2026-09-14
 Branch: `audit/widget-system-certification-2026-09-14`
 

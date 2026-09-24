@@ -2,7 +2,9 @@
 
 > **Authority notice (2026-09-13):** Global geometry, state, responsive, accessibility, motion and certification rules live in [`VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`](./VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md). This file is an execution ledger only; it must not become a parallel design authority.
 
-This ledger tracks migration of feature-owned presentation into the canonical Toolbox/Subtoolbox system without removing working behavior.
+**Status:** HISTORICAL EXECUTION LEDGER — tool statuses are a 2026-09 migration snapshot, not current completion truth.
+
+This ledger tracks migration of feature-owned presentation into the canonical Toolbox/Subtoolbox system without removing working behavior. Use it for migration provenance and tool-by-tool concerns; verify current status against code/current plans before scheduling work.
 
 | Tool / Surface | Primary issues | Canonical direction | Risk | Status |
 | --- | --- | --- | --- | --- |

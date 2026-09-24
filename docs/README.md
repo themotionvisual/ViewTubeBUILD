@@ -15,7 +15,10 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | --- | --- |
 | Project / ContentBuild workflow | [Projects / ContentBuild Workflow Master Resource](./architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md) |
 | Asset Engine | [Asset Engine Master Resource](./architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md) |
+| Toolbox / Subtoolbox / Studio UI system | [Toolbox UI Master Resource](./architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md) |
 | Studio component library / primitive corrections | [Studio Hub Component Library Source of Truth](./ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md) |
+| Dashboard widget production metadata | [WidgetRegistry.ts](../src/views/dashboard/WidgetRegistry.ts) (code authority); [Widget Certification Master](./architecture/WIDGET_SYSTEM_CERTIFICATION_MASTER_2026-09-14.md) tracks certification |
+| Analytics Data Visual mobile composition | [Mobile Visual Responsive Contract](./MOBILE_VISUAL_RESPONSIVE_CONTRACT.md) (scoped contract) |
 | Analytics/auth migration program | [Migration README](./migration/README.md) |
 | Unified AI consolidation contract | [Unified AI System Canonical Consolidation Contract](./brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md) |
 
@@ -37,14 +40,16 @@ When beginning work:
 
 **Wave 2:** Projects / ContentBuild / Asset Engine authority consolidated. The two living masters now absorb current-state identity, persistence, generation, publishing and frontend-manifestation requirements; older implementation/backbone/convergence documents remain in place as clearly labeled history/reference.
 
+**Wave 3:** Toolbox/Studio UI authority is reconciled to production tokens/tests; stale desktop 56/44 migration documents are clearly historical, the Component Library index is derived from its 62-family production registry, and Dashboard/Analytics responsive systems remain explicitly scoped rather than being folded into Toolbox geometry.
+
 No baseline document has been deleted. Future waves continue one domain at a time, preserving unique information and references before archival or retirement.
 
 ### Planned waves
 
 1. Registry / governance / entrypoint — **complete**
 2. Projects / ContentBuild / Asset Engine — **complete in Wave 2**
-3. Studio UI / Toolbox / widgets / mobile — **next**
-4. Analytics / Data Visuals / migrations
+3. Studio UI / Toolbox / widgets / mobile — **complete in Wave 3**
+4. Analytics / Data Visuals / migrations — **next**
 5. Brain / AI / Herald
 6. Auth / Editor / deployment / user guide
 7. Archive/evidence re-homing + root cleanup
@@ -68,3 +73,15 @@ Preserved donors (historical/reference, not current authority):
 - `architecture/PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md`
 - `brain/ASSET_ENGINE_CANONICAL_BACKBONE.md`
 - `architecture/VIDEO_ASSET_ENGINE_WIDGET_IDEAS_2026-09-20.md`
+
+
+## UI authority boundaries
+
+- **Toolbox/SubToolbox production system:** `architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`, verified against production tokens/CSS/tests.
+- **Component Library catalog + primitive corrections:** `ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md`.
+- **Dashboard widgets:** production identity/metadata comes from `src/views/dashboard/WidgetRegistry.ts`; certification and recovery plans are scoped Dashboard documents.
+- **Analytics Data Visuals:** `MOBILE_VISUAL_RESPONSIVE_CONTRACT.md` and VT-SYNC visual registries own chart/module responsive intent; they do not redefine Toolbox shell geometry.
+
+Current shell geometry:
+- desktop: Main 80 / SubToolbox 56 / L1 48 / L2 32;
+- mobile shell: Main 56 / SubToolbox 44, preserving 26px / 20px title sizes.
