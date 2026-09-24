@@ -29,6 +29,7 @@ import {
  createLocalVaultAsset,
  listVaultAssets,
  searchVaultAssets,
+ updateVaultAsset,
 } from "../services/vaultAdapter"
 import {
  readVaultWorkspaceState,
@@ -92,7 +93,8 @@ const CreatorVaultOS: React.FC = () => {
  const [source, setSource] = useState(initialWorkspace.source)
  const [sort, setSort] = useState<VaultWorkspaceSort>(initialWorkspace.sort)
  const [viewMode, setViewMode] = useState<VaultWorkspaceViewMode>(initialWorkspace.viewMode)
- const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null)
+ const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([])
+ const [batchTag, setBatchTag] = useState("")
  const [pending, setPending] = useState<PendingImport[]>([])
  const [importProject, setImportProject] = useState("")
  const [importTags, setImportTags] = useState<string[]>(["imported"])
@@ -121,8 +123,8 @@ const CreatorVaultOS: React.FC = () => {
  }, [query, selectedTag, filterKind, source, sort, viewMode])
 
  const selectedAsset = useMemo(
-  () => allAssets.find((asset) => asset.id === selectedAssetId) || null,
-  [allAssets, selectedAssetId],
+  () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
+  [allAssets, selectedAssetIds],
  )
 
  const availableTags = useMemo(
@@ -164,6 +166,20 @@ const CreatorVaultOS: React.FC = () => {
    },
   })
   setPending((current) => current.filter((candidate) => candidate.id !== item.id))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const applyBatchTag = () => {
+  const tag = batchTag.trim()
+  if (!tag || !selectedAssetIds.length) return
+  selectedAssetIds.forEach((assetId) => {
+   const asset = allAssets.find((candidate) => candidate.id === assetId)
+   if (!asset) return
+   updateVaultAsset(asset.id, {
+    tags: Array.from(new Set([...(asset.tags || []), tag])),
+   })
+  })
+  setBatchTag("")
   setRefreshTick((value) => value + 1)
  }
 
@@ -308,8 +324,12 @@ const CreatorVaultOS: React.FC = () => {
             kind={vaultCardKind(asset)}
             title={asset.name}
             icon={assetIcon(asset)}
-            selected={selectedAssetId === asset.id}
-            onSelectedChange={(selected) => setSelectedAssetId(selected ? asset.id : null)}
+            selected={selectedAssetIds.includes(asset.id)}
+            onSelectedChange={(selected) => setSelectedAssetIds((current) => (
+             selected
+              ? Array.from(new Set([...current, asset.id]))
+              : current.filter((id) => id !== asset.id)
+            ))}
             tags={(
              <div className="flex flex-wrap gap-1">
               {(asset.tags || []).slice(0, 5).map((tag) => (
@@ -411,6 +431,41 @@ const CreatorVaultOS: React.FC = () => {
      </div>
 
      <div className="flex min-w-0 flex-col gap-4">
+      <SubToolbox
+       title="Batch Processor"
+       subtitle="Apply organization changes to the current asset selection"
+       icon={<Database />}
+       paletteIndex={1}
+       isOpenInitial
+       persistenceId="vault-batch-processor"
+      >
+       <div className="flex flex-col gap-3">
+        <div className="text-sm font-black uppercase">
+         {selectedAssetIds.length} selected
+        </div>
+        <StandardInput
+         value={batchTag}
+         onChange={(event) => setBatchTag(event.target.value)}
+         placeholder="Add tag to selection"
+         aria-label="Batch tag"
+        />
+        <SubToolboxInnerActionButton
+         label="Apply Tag"
+         iconName="tag"
+         tone="pink"
+         onClick={applyBatchTag}
+         disabled={!selectedAssetIds.length || !batchTag.trim()}
+        />
+        <SubToolboxInnerActionButton
+         label="Clear Selection"
+         iconName="x"
+         tone="cyan"
+         onClick={() => setSelectedAssetIds([])}
+         disabled={!selectedAssetIds.length}
+        />
+       </div>
+      </SubToolbox>
+
       <SubToolbox
        title="Inspector"
        subtitle="Selected asset details and provenance"
