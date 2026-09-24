@@ -2,11 +2,12 @@
 
 **Status:** active implementation audit  
 **Date:** 2026-09-24  
-**Audited main:** 2ce55f065af83369bffcd5c1a3b73869bcc9dc24  
-**Current implementation branch:** feat/editor-phase-a-visual-frame-parity-v2-2026-09-24  
+**Audited main:** 4495d84c5fb80d521092953e34b95072ac7f626f  
+**Current implementation branch:** feat/editor-phase-a-audio-parity-2026-09-24  
 **Transition/project-bridge slice merged:** PR #405 → 052ff0294b5f8c9b05867a85ab4e2d407a27ec06  
 **Shared FX slice merged:** PR #408 → 56e2c0c03f83a168bf385dd2f71d32bc87166d08  
 **Rich project parity slice merged:** PR #410 → 4719274d63f37f2164c67641eb885de6104afdba  
+**Visual-frame parity slice merged:** PR #417 → 4495d84c5fb80d521092953e34b95072ac7f626f  
 **Parent authority:** docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md
 
 ## Purpose
@@ -156,7 +157,7 @@ This avoids turning real mobile/render capability into a false claim of desktop 
 1. **Capability-surface matrix:** the registry exists, but desktop/mobile/render implementation evidence is not yet generated from tests into one parity table.
 2. **Desktop FX parity:** the shared FX contract is implemented and mobile/preview/render support is explicit, but the desktop host is intentionally still marked planned until its controls/actions are verified against the same contract.
 3. **Whole-project fixture:** verified in PR #410. It covers media, text, audio, keyframes, FX, transitions, templates, Remotion assets, ContentBuild identity, forward-compatible metadata, and all current track kinds. The rich fixture passed 4/4, bridge runtime 8/8, bridge hook 2/2, and desktop timeline adapter 5/5 on runtime head `e2bea9e2...`.
-4. **Preview ↔ final beyond transitions:** transform, crop, keyframe interpolation, and track ordering are now routed through a canonical visual-frame contract in this branch. Template assets, audio-critical state, and explicit rendered fixture evidence still remain.
+4. **Preview ↔ final beyond transitions:** transform, crop, keyframe interpolation, and track ordering are merged through PR #417. This audio slice adds a canonical preview/final audio-frame contract for volume keyframes, fades, mute state, playback rate, track mute behavior, and audible standalone-audio preview. Template/Remotion asset rendered parity and explicit rendered fixture evidence still remain.
 5. **Desktop host integration:** shared adapters exist, but the legacy desktop host still owns significant behavior separately and needs measured adoption rather than an assumption of parity.
 6. **Editor static-quality debt:** PR #410 repairs renderJobContract Promise<Response> typing, ExportRenderPanel project ID narrowing, PreviewPane keyframe value narrowing, bridge-test layer typing, desktop timeline adapter declarations, and truthful optional layer visibility. The latest static-quality run reports no remaining errors in these changed editor files; remaining errors are outside this slice.
 7. **Visual certification:** this slice primarily changes contracts and transition semantics; responsive UI screenshots should be taken when the next visible editor-shell slice is implemented.
@@ -173,6 +174,21 @@ The slice closes four concrete divergences:
 - desktop track `order` now survives the desktop→mobile→desktop bridge, while preview and final both consume the same stable ordering helper.
 
 The final renderer also accepts the same media source aliases (`mediaUrl`, `src`, `url`) and `fit` semantics used by mobile preview.
+
+## Audio parity slice — 2026-09-24
+
+This branch adds `src/shared/vtE1AudioFrame.js` as the framework-free preview/final authority for audio volume keyframes, fade envelopes, mute state, playback rate, and preserved pan metadata.
+
+The slice closes several concrete divergences:
+
+- standalone audio clips are now actually audible in mobile preview instead of being dropped from preview rendering;
+- mobile preview and final Remotion output use the same volume-keyframe and fade-envelope math;
+- track mute now mutes audio without making visual clips disappear in final output;
+- embedded video audio consumes the same clip/track mute, volume, fade, and playback-rate contract;
+- the mobile audio inspector exposes volume keyframes plus fade-in/fade-out controls already represented by project metadata;
+- the rich desktop/mobile fixture now explicitly preserves audio playback-rate metadata.
+
+Stereo pan remains preserved metadata but is not yet claimed as a rendered Remotion behavior; that needs an explicit supported rendering path before certification.
 
 ## Acceptance gates for Phase A
 
