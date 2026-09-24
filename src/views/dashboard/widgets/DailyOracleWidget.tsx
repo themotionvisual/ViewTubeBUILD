@@ -9,7 +9,10 @@ import {
   Eye,
   Flame,
   Heart,
+  Pause,
+  Play,
   RefreshCw,
+  RotateCcw,
   Sparkles,
   Target,
   Users,
@@ -42,6 +45,7 @@ import "./DailyOracleWidget.css"
 
 const ORACLE_UI_KEY = "vt_daily_oracle_v2"
 const ORACLE_STREAK_KEY = "vt_daily_oracle_streak_v1"
+const FOCUS_SESSION_SECONDS = 25 * 60
 
 type OraclePage = "today" | "focus"
 type OracleTodayPanel = "move" | "calendar"
@@ -134,6 +138,97 @@ const uploadDate = (row: any): Date | null => {
 
 const scorePercent = (value: number) => Math.max(0, Math.min(100, Math.round((value / 3) * 100)))
 
+const formatFocusTime = (seconds: number) => {
+  const safe = Math.max(0, Math.floor(seconds))
+  const minutes = Math.floor(safe / 60).toString().padStart(2, "0")
+  const remainder = (safe % 60).toString().padStart(2, "0")
+  return `${minutes}:${remainder}`
+}
+
+const CreatorFocusConsole: React.FC<{
+  focusMetric: DailyOracleGoalMetric
+  onMetricChange: (metric: DailyOracleGoalMetric) => void
+  remaining: number
+  running: boolean
+  onToggleTimer: () => void
+  onResetTimer: () => void
+  nextTask: DayTask | null
+  openTaskCount: number
+}> = ({
+  focusMetric,
+  onMetricChange,
+  remaining,
+  running,
+  onToggleTimer,
+  onResetTimer,
+  nextTask,
+  openTaskCount,
+}) => {
+  const progress = Math.max(0, Math.min(1, remaining / FOCUS_SESSION_SECONDS))
+
+  return (
+    <WidgetSection className="daily-oracle-v2__focus-console">
+      <div className="daily-oracle-v2__focus-console-lens">
+        <span>GOAL LENS</span>
+        <div role="group" aria-label="Creator Command focus metric">
+          {METRICS.map(({ id, compactLabel, Icon }) => (
+            <WidgetSizedButton
+              key={id}
+              height={24}
+              textFit="adaptive"
+              tone={focusMetric === id ? "primary" : "default"}
+              aria-pressed={focusMetric === id}
+              onClick={() => onMetricChange(id)}
+            >
+              <Icon aria-hidden="true" />
+              {compactLabel}
+            </WidgetSizedButton>
+          ))}
+        </div>
+      </div>
+
+      <div
+        className="daily-oracle-v2__focus-dial"
+        style={{ "--focus-progress": `${progress * 360}deg` } as React.CSSProperties}
+        aria-label={`Focus timer ${formatFocusTime(remaining)}`}
+      >
+        <div>
+          <small>FOCUS SESSION</small>
+          <strong>{formatFocusTime(remaining)}</strong>
+          <span>{running ? "RUNNING" : remaining === 0 ? "COMPLETE" : "READY"}</span>
+        </div>
+        <div className="daily-oracle-v2__focus-dial-controls">
+          <WidgetIconButton
+            height={32}
+            tone={running ? "primary" : "default"}
+            label={running ? "Pause focus session" : "Start focus session"}
+            icon={running ? <Pause /> : <Play />}
+            disabled={remaining === 0}
+            onClick={onToggleTimer}
+          />
+          <WidgetIconButton
+            height={32}
+            tone="default"
+            label="Reset focus session"
+            icon={<RotateCcw />}
+            onClick={onResetTimer}
+          />
+        </div>
+      </div>
+
+      <div className="daily-oracle-v2__focus-console-task">
+        <span>NEXT EXECUTION</span>
+        <strong>{nextTask?.text || "NO OPEN TASKS TODAY"}</strong>
+        <small>{openTaskCount} OPEN · CALENDAR ORDER</small>
+        <div className="daily-oracle-v2__focus-task-state">
+          <i aria-hidden="true" />
+          <b>{nextTask ? "READY TO FOCUS" : "QUEUE CLEAR"}</b>
+        </div>
+      </div>
+    </WidgetSection>
+  )
+}
+
 export const DailyOracleWidget = ({
   widget,
   instance,
@@ -153,13 +248,18 @@ export const DailyOracleWidget = ({
   const [streak, setStreak] = useState<OracleStreakState>(readStreakState)
   const [notice, setNotice] = useState("")
   const [todayPanel, setTodayPanel] = useState<OracleTodayPanel>("move")
+  const [focusRemaining, setFocusRemaining] = useState(FOCUS_SESSION_SECONDS)
+  const [focusRunning, setFocusRunning] = useState(false)
 
   const common = {
     widget,
     instance,
     editMode,
     canEdit: true,
-    onToggleCollapse,
+    onToggleCollapse: () => {
+      setFocusRunning(false)
+      onToggleCollapse()
+    },
     onCycleSize,
     onRemove,
     onDecSize,
@@ -176,6 +276,20 @@ export const DailyOracleWidget = ({
     if (typeof window === "undefined") return
     window.localStorage.setItem(ORACLE_STREAK_KEY, JSON.stringify(streak))
   }, [streak])
+
+  useEffect(() => {
+    if (!focusRunning) return
+    const interval = window.setInterval(() => {
+      setFocusRemaining((seconds) => {
+        if (seconds <= 1) {
+          setFocusRunning(false)
+          return 0
+        }
+        return seconds - 1
+      })
+    }, 1000)
+    return () => window.clearInterval(interval)
+  }, [focusRunning])
 
   const snapshot = useMemo(
     () => buildAIBrainContextSnapshot({
@@ -259,6 +373,9 @@ export const DailyOracleWidget = ({
   const todaysTasks: DayTask[] = Array.isArray(brain.calendarState?.dayTasks?.[todayKey])
     ? brain.calendarState.dayTasks[todayKey]
     : []
+
+  const openTasks = todaysTasks.filter((task) => !task.completed)
+  const nextTask = openTasks[0] || null
 
   const isTaskAdded = (candidate: DailyOracleCandidate) =>
     todaysTasks.some((task) => task.text.trim().toLowerCase() === candidate.taskText.trim().toLowerCase())
@@ -505,32 +622,19 @@ export const DailyOracleWidget = ({
             </>
           ) : (
             <>
-              <WidgetSection className="daily-oracle-v2__focus-intro">
-                <div>
-                  <WidgetBadge height={18}>GOAL LENS</WidgetBadge>
-                  <strong>WHAT SHOULD TODAY OPTIMIZE?</strong>
-                </div>
-                <p>Change the lens; the Oracle reranks actions without losing the same decision model.</p>
-              </WidgetSection>
-
-              <WidgetSection className="daily-oracle-v2__metric-grid-section">
-                <div className="daily-oracle-v2__metric-grid" role="group" aria-label="Daily Oracle focus metric">
-                  {METRICS.map(({ id, compactLabel, Icon }) => (
-                    <WidgetSizedButton
-                      key={id}
-                      height={24}
-                      textFit="adaptive"
-                      tone={ui.focusMetric === id ? "primary" : "default"}
-                      className={`is-${id}`}
-                      aria-pressed={ui.focusMetric === id}
-                      onClick={() => setFocusMetric(id)}
-                    >
-                      <Icon aria-hidden="true" />
-                      {compactLabel}
-                    </WidgetSizedButton>
-                  ))}
-                </div>
-              </WidgetSection>
+              <CreatorFocusConsole
+                focusMetric={ui.focusMetric}
+                onMetricChange={setFocusMetric}
+                remaining={focusRemaining}
+                running={focusRunning}
+                onToggleTimer={() => setFocusRunning((value) => !value)}
+                onResetTimer={() => {
+                  setFocusRunning(false)
+                  setFocusRemaining(FOCUS_SESSION_SECONDS)
+                }}
+                nextTask={nextTask}
+                openTaskCount={openTasks.length}
+              />
 
               <WidgetSection className="daily-oracle-v2__focus-plan">
                 <div className="daily-oracle-v2__section-heading">
