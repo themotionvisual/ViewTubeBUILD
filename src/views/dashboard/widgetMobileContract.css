@@ -6,17 +6,112 @@
   @media (max-width: 767px) {
     .dashboard-barrier {
       --vt-mobile-widget-gap: 8px;
-      --vt-mobile-widget-gutter: 8px;
-      /* The app shell reserves 16px per side on phones. Reclaim most of that
-         only for the dashboard so full-width widgets land at an 8px screen gutter. */
-      width: calc(100% + 24px);
-      max-width: none;
-      margin-inline: -12px;
+      --vt-mobile-widget-gutter: 4px;
+      /* Keep phone gutters symmetric. The dashboard canvas already owns the
+         outer 4px inset, so the barrier must not over-expand or shift itself. */
+      width: 100%;
+      max-width: 100%;
+      margin-inline: 0;
+      box-sizing: border-box;
       --vt-mobile-height-short: 150px;
       --vt-mobile-height-medium: 250px;
       --vt-mobile-height-tall: 350px;
       --vt-mobile-height-xtall: 450px;
       --vt-mobile-height-massive: 850px;
+    }
+
+
+    /* Portrait widget chrome: one top-right trigger replaces the crowded
+       first-row control rail. Opening it reveals a colored second header row
+       containing square widget controls. Widget-specific header content keeps
+       the newly available first-row space. */
+    .dashboard-barrier .vt-widget-header .toggle {
+      display: none !important;
+    }
+
+    .dashboard-barrier .widget-mobile-controls-trigger {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      flex: 0 0 34px;
+      margin-inline: 4px;
+      padding: 0;
+      border: 2px solid var(--widget-border);
+      border-radius: 7px;
+      background: color-mix(in srgb, var(--widget-color) 20%, white);
+      color: var(--widget-border);
+      box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color) 50%, transparent);
+    }
+
+    .dashboard-barrier .vt-widget-header .left {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .dashboard-barrier .vt-widget-header .header-extra {
+      flex: 0 1 auto !important;
+      min-width: 0;
+      max-width: 42%;
+      overflow: hidden;
+    }
+
+    .dashboard-barrier .widget-mobile-control-row {
+      display: grid;
+      grid-template-rows: 0fr;
+      min-width: 0;
+      background: var(--widget-color, #40C6E9);
+      border-bottom: 0 solid var(--widget-border);
+      transition:
+        grid-template-rows 600ms ease-out,
+        border-bottom-width 600ms ease-out;
+    }
+
+    .dashboard-barrier .widget-mobile-control-row.is-open {
+      grid-template-rows: 1fr;
+      border-bottom-width: 3px;
+    }
+
+    .dashboard-barrier .widget-mobile-control-row-inner {
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 0 6px;
+      transition: padding-block 600ms ease-out;
+    }
+
+    .dashboard-barrier .widget-mobile-control-row.is-open .widget-mobile-control-row-inner {
+      padding-block: 6px;
+    }
+
+    .dashboard-barrier .widget-mobile-square-control {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      min-height: 36px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 2px solid var(--widget-border);
+      border-radius: 7px;
+      background: white;
+      color: var(--widget-border);
+      box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color) 50%, transparent);
+      font-size: 11px;
+      font-weight: 1000;
+      line-height: 1;
+    }
+
+    .dashboard-barrier .widget-mobile-square-control.is-active {
+      background: color-mix(in srgb, var(--widget-color) 34%, white);
+    }
+
+    .dashboard-barrier .widget-mobile-square-control.is-danger {
+      background: color-mix(in srgb, var(--widget-color) 12%, white);
     }
 
     .dashboard-barrier .vt-dash-cell {
