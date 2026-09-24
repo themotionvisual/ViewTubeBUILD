@@ -9,7 +9,7 @@ describe("portrait widget header control deck", () => {
   it("uses one portrait menu trigger and a dedicated extended control row", () => {
     expect(shell).toContain("widget-mobile-controls-trigger")
     expect(shell).toContain("widget-mobile-control-row")
-    expect(shell).toContain("aria-label={`Open widget controls for")
+    expect(shell).toContain('aria-label={`${mobileControlsOpen?"Close":"Open"} widget controls for')
     expect(shell).toContain("Decrease widget width")
     expect(shell).toContain("Increase widget width")
     expect(shell).toContain("Decrease widget height")
