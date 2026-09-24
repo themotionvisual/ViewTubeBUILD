@@ -633,6 +633,7 @@ export const useDashboardData = () => {
     alerts,
     revenueMomentum,
     trafficSources,
+    overviewChartData: vtSyncSnapshot,
     revenueByWeek: Array.from(canonicalRows.reduce((acc, row) => {
       const dt = new Date(row.uploadDate)
       if (Number.isNaN(dt.getTime())) return acc

@@ -1,0 +1,15 @@
+.overview-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--widget-component-gap,8px);min-width:0}
+.overview-chart-tile{min-width:0;min-height:126px;overflow:hidden;border:2px solid var(--widget-border,#24263c);border-radius:8px;background:var(--bg-inner,#fff);padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--widget-ink,#050505)}
+.overview-chart-tile h3{align-self:stretch;margin:0;font-size:12px;font-weight:900;line-height:1.2;text-transform:uppercase;color:var(--widget-ink,#050505)}
+.overview-donut-wrap{width:clamp(62px,25cqw,82px);height:clamp(62px,25cqw,82px);position:relative;flex:none}
+.overview-donut-wrap svg{width:100%;height:100%}.overview-donut-track{stroke:color-mix(in srgb,var(--widget-color,#C0F240) 15%,transparent)}
+.overview-donut-value{position:absolute;inset:0;display:grid;place-items:center;font-size:16px;font-weight:900;pointer-events:none}
+.overview-chart-caption{font-size:11px;font-weight:800;text-align:center;overflow-wrap:anywhere}
+.overview-chart-tile details{width:100%;font-size:11px}.overview-chart-tile summary{cursor:pointer;font-weight:800}.overview-chart-tile ul{margin:4px 0;padding-left:18px}
+.overview-chart-empty{margin:auto 0;font-size:11px;line-height:1.4;text-align:center}
+.overview-chart-traffic{grid-column:1/-1;align-items:stretch;min-height:140px}
+.overview-traffic-svg{display:block;width:100%;height:72px;flex:none;background:var(--bg-inner,#fff)}.overview-area-grid{fill:none;stroke:var(--widget-border,#24263c);stroke-width:.5;vector-effect:non-scaling-stroke}
+.overview-traffic-axis{display:flex;justify-content:space-between;gap:4px;font-size:10px;font-weight:800}
+.overview-traffic-select{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800}.overview-traffic-select input{flex:1;min-width:0;accent-color:var(--widget-color,#C0F240)}
+.overview-traffic-detail{display:flex;flex-wrap:wrap;gap:4px 9px;font-size:11px;font-weight:800}.overview-traffic-detail span{white-space:nowrap}.overview-traffic-detail i{display:inline-block;width:8px;height:8px;margin-right:3px}
+@container (max-width:360px){.overview-charts{grid-template-columns:1fr}.overview-chart-traffic{grid-column:auto}.overview-donut-wrap{width:82px;height:82px}}
