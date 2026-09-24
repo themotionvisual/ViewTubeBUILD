@@ -1019,7 +1019,7 @@ const AIBrainCommandInterface: React.FC = () => {
       <div className="shrink-0 bg-[#f3f4f6] px-3 pt-3">
        <BrainRuntimePanel snapshot={runtimeSnapshot} />
       </div>
-      <div className="grid min-h-0 flex-1 gap-3 bg-[#f3f4f6] px-3 pb-3 pt-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(520px,1fr)]">
+      <div className="grid min-h-0 flex-1 gap-3 bg-[#f3f4f6] px-3 pb-3 pt-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(520px,1fr)]">
        <div className={`${innerCard} flex min-h-0 flex-col overflow-hidden`}>
         <div className="grid min-h-0 flex-1 bg-white">
          {!hydrated && messages.length === 0 ? (
