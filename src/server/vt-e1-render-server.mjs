@@ -8,6 +8,7 @@ import JSZip from 'jszip';
 import { chromium } from 'playwright';
 import { expandCompoundClips } from '../shared/vtE1CompoundClips.js';
 import { VT_E1_ACCEPTED_TRANSITION_TYPES } from '../shared/vtE1TransitionCatalog.js';
+import { VT_E1_ANIMATED_FX_KEYS } from '../shared/vtE1FxCatalog.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -822,7 +823,7 @@ const valueFromKeyframes = (base, keyframes, prop, localT) => {
 const evaluateLayerPayloadAt = (layer, clip, sec) => {
   const payload = JSON.parse(JSON.stringify(layer?.payload || {}));
   const localT = clamp(Number(sec) - Number(clip?.start || 0), 0, Math.max(0.001, Number(clip?.end || 0) - Number(clip?.start || 0)));
-  ['x', 'y', 'scale', 'rotation', 'opacity', 'width', 'height', 'fontSize', 'strokeWidth', 'blur', 'saturation', 'brightness', 'hue'].forEach((prop) => {
+  ['x', 'y', 'scale', 'rotation', 'width', 'height', 'fontSize', 'strokeWidth', ...VT_E1_ANIMATED_FX_KEYS].forEach((prop) => {
     payload[prop] = valueFromKeyframes(payload[prop], clip?.keyframes || [], prop, localT);
   });
   return payload;
