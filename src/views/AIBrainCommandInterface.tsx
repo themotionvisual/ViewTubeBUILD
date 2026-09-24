@@ -1004,10 +1004,9 @@ const AIBrainCommandInterface: React.FC = () => {
     paletteIndex={5}
     collapsible={false}
     indicator="none"
-    fillAvailable
     embedded
-    outerClassName="max-xl:!h-auto max-xl:min-h-full xl:h-full"
-    contentClassName="min-h-0 overflow-visible bg-[#f3f4f6] max-xl:!h-auto xl:h-full xl:overflow-hidden"
+    outerClassName="min-h-full max-xl:!h-auto xl:h-full"
+    contentClassName="min-h-0 overflow-visible bg-[#f3f4f6] max-xl:!h-auto xl:overflow-hidden"
    >
     {intakeOpen ? (
      <CreatorIntakeWizard
@@ -1018,18 +1017,18 @@ const AIBrainCommandInterface: React.FC = () => {
      />
     ) : (
      <section className="relative flex min-h-0 flex-col max-xl:h-auto max-xl:overflow-visible xl:h-full xl:overflow-hidden">
-      <div className="shrink-0 bg-[#f3f4f6] xl:px-3 xl:pt-3">
+      <div className="shrink-0 bg-[#f3f4f6]">
        <BrainRuntimePanel snapshot={runtimeSnapshot} embedded />
       </div>
-      <div className="grid min-h-0 gap-3 bg-[#f3f4f6] max-xl:flex-none max-xl:min-h-[520px] max-xl:px-0 max-xl:pb-0 max-xl:pt-2 xl:flex-1 xl:px-3 xl:pb-3 xl:pt-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(520px,1fr)]">
-       <div className={`${innerCard} flex min-h-0 flex-col overflow-hidden max-xl:rounded-none max-xl:border-x-0 max-xl:border-b-0`}>
-        <div className="grid min-h-0 flex-1 bg-white">
+      <div className="grid min-h-0 gap-3 bg-[#f3f4f6] max-xl:min-h-[70dvh] max-xl:px-0 max-xl:pb-0 max-xl:pt-1 xl:flex-1 xl:px-3 xl:pb-3 xl:pt-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(520px,1fr)]">
+       <div className={`${innerCard} flex min-h-0 flex-col overflow-hidden max-xl:min-h-[70dvh] max-xl:overflow-visible max-xl:rounded-none max-xl:border-x-0 max-xl:border-b-0`}>
+        <div className="grid min-h-0 flex-1 bg-white max-xl:min-h-[420px]">
          {!hydrated && messages.length === 0 ? (
           <div className="min-h-0 flex-1" aria-hidden="true" />
          ) : messages.length === 0 ? (
           <OpeningBriefing snapshot={snapshot} />
          ) : (
-          <div className="brain-chat-scrollbar flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto overscroll-contain" aria-label="Brain conversation" aria-live="polite" role="log" tabIndex={0}>
+          <div className="brain-chat-scrollbar flex min-h-0 w-full flex-1 flex-col gap-2 overscroll-contain max-xl:overflow-visible xl:overflow-y-auto" aria-label="Brain conversation" aria-live="polite" role="log" tabIndex={0}>
            {messages.map((message) => message.role === "user" ? (
             <UserMessage key={message.id} text={message.text} />
            ) : (
