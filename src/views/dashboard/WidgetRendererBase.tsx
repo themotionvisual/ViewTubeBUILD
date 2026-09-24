@@ -42,6 +42,7 @@ const GoalsTrackerWidget = React.lazy(() =>
 import { WidgetShell } from "./WidgetShell"
 import { formatUploadDate } from "./widgetFormatters"
 import { WidgetFooter, WidgetHeaderStepper, WidgetScrollArea } from "./WidgetPrimitives"
+import { ChannelOverviewCharts } from "./widgets/ChannelOverviewCharts"
 
 const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
  "tag-generator": React.lazy(() => import("./widgets/TagGeneratorWidget").then((module) => ({ default: module.TagGeneratorWidget }))),
@@ -371,6 +372,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
    return (
     <WidgetShell {...common} icon={<TrendingUp size={22} />} headerContent={timeWindowToggle}>
      <div className="channel-overview-layout">
+      <WidgetScrollArea ariaLabel="Channel overview metrics and charts" className="channel-overview-scroll">
       <div className="kpi-cluster-row channel-overview-main">
        {/* Circular Avatar Sidebar — replaced with a sign-up nudge when no account is connected */}
        {!data.authState.isAuthenticated ? (
@@ -496,60 +498,9 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
         })}
        </div>
 
-       {/* Donuts + Stacked Bars Panel */}
-       <div className="channel-overview-breakdown">
-        {/* 4 Donut Charts */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "4px" }}>
-         {[
-          { color: "#FA618A", bg: `conic-gradient(#FA618A 0 82%, #528FFA 82% 95%, #3FEE56 95% 100%)`, icon: <><path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5Z"/><circle cx="12" cy="12" r="2.7"/></>, label: "Views" },
-          { color: "#FFA85C", bg: `conic-gradient(#FA618A 0 60%, #528FFA 60% 92%, #3FEE56 92% 100%)`, icon: <><circle cx="12" cy="7.2" r="3.2"/><path d="M5.3 20c0-4.1 2.8-6.3 6.7-6.3s6.7 2.2 6.7 6.3"/></>, label: "Subs" },
-          { color: "#FFDA47", bg: `conic-gradient(#FA618A 0 30%, #528FFA 30% 90%, #3FEE56 90% 100%)`, icon: <><circle cx="12" cy="12" r="8"/><path d="M12 7.2v5l3.2 2"/></>, label: "Hours" },
-          { color: "#528FFA", bg: `conic-gradient(#FA618A 0 20%, #528FFA 20% 95%, #3FEE56 95% 100%)`, icon: <><path d="M15 6.5c-.8-.8-1.8-1.2-3.1-1.2-1.9 0-3.1.8-3.1 2.2 0 3.2 6.5 1.4 6.5 5.2 0 1.7-1.4 2.8-3.5 2.8-1.6 0-2.9-.5-3.8-1.5"/><path d="M12 3v18"/></>, label: "Rev" },
-         ].map((d, i) => (
-          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-           <div style={{ position: "relative", width: "100%", aspectRatio: "1/1", borderRadius: "50%", background: d.bg }}>
-            <div style={{ position: "absolute", inset: "29%", borderRadius: "50%", background: "#fff" }} />
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: "29%", aspectRatio: "1/1", display: "grid", placeItems: "center", zIndex: 2 }}>
-             <svg viewBox="0 0 24 24" style={{ width: "100%", height: "100%", fill: "none", stroke: "#050505", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}>{d.icon}</svg>
-            </div>
-           </div>
-           <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.04em", color: "#050505", lineHeight: 1 }}>{d.label}</span>
-          </div>
-         ))}
-        </div>
-
-        {/* 3 Stacked Bar Charts */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-         {[
-          {
-           icon: <><circle cx="9" cy="8" r="3"/><path d="M3.8 20c0-4 2.3-6 5.2-6s5.2 2 5.2 6"/><path d="M17 5h4M19 3v4"/></>,
-           segs: [{ label: "Male", pct: "78%", bg: "#36E0F6" }, { label: "Female", pct: "22%", bg: "#FF7AC8" }],
-          },
-          {
-           icon: <><rect x="7" y="4" width="10" height="17" rx="2"/><circle cx="12" cy="8" r=".5"/><circle cx="12" cy="12" r=".5"/><circle cx="12" cy="16" r=".5"/></>,
-           segs: [{ label: "Shorts", pct: "35%", bg: "#FA618A" }, { label: "Browse", pct: "20%", bg: "#FFA85C" }, { label: "Search", pct: "20%", bg: "#FFDA47" }, { label: "Subs", pct: "15%", bg: "#4EE4BE" }, { label: "Ext", pct: "10%", bg: "#C0F240" }],
-          },
-          {
-           icon: <><circle cx="12" cy="12" r="8"/><path d="M14.8 8.1c-.7-.7-1.6-1.1-2.8-1.1-1.6 0-2.8.7-2.8 1.9 0 2.8 6 1.3 6 4.7 0 1.5-1.3 2.5-3.2 2.5-1.4 0-2.6-.5-3.4-1.3"/><path d="M12 5v14"/></>,
-           segs: [{ label: "Ads", pct: "52%", bg: "#528FFA" }, { label: "Premium", pct: "22%", bg: "#FA618A" }, { label: "Members", pct: "26%", bg: "#C0F240" }],
-          },
-         ].map((bar, i) => (
-          <div key={i} style={{ position: "relative" }}>
-           <div style={{ position: "absolute", left: "8px", top: 0, height: "100%", display: "flex", alignItems: "center", zIndex: 2, pointerEvents: "none" }}>
-            <svg viewBox="0 0 24 24" style={{ width: "18px", height: "18px", fill: "none", stroke: "#050505", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }}>{bar.icon}</svg>
-           </div>
-           <div style={{ display: "flex", height: "28px", borderRadius: "3px", overflow: "hidden" }}>
-            {bar.segs.map((seg, j) => (
-             <div key={j} style={{ width: seg.pct, background: seg.bg, display: "flex", alignItems: "center", justifyContent: "center", paddingLeft: j === 0 ? "28px" : "0", overflow: "hidden" }}>
-              <span style={{ fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.01em", whiteSpace: "nowrap", color: "#050505" }}>{seg.label}</span>
-             </div>
-            ))}
-           </div>
-          </div>
-         ))}
-        </div>
-       </div>
       </div>
+      <ChannelOverviewCharts data={data.overviewChartData} days={timeWindows[kpiTimeWindowIdx] === "LIFETIME" ? 99999 : parseInt(timeWindows[kpiTimeWindowIdx])} syncing={data.isSyncing} />
+      </WidgetScrollArea>
 
       {/* Full Width Footer */}
       <WidgetFooter surface="subtle" className="channel-overview-footer" style={{
