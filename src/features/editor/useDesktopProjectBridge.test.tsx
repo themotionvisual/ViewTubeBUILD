@@ -38,6 +38,9 @@ const mobileProject: MobileBridgeProject = {
       desktopVisible: true,
     },
   ],
+  layers: [
+    { id: 'layer-1', trackId: 'v1', type: 'text', visible: true, payload: {} },
+  ],
   clips: [
     { id: 'clip-1', trackId: 'v1', layerId: 'layer-1', start: 2, end: 6 },
   ],
