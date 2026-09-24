@@ -13,7 +13,7 @@ import {
   Type,
 } from "lucide-react"
 import type { VaultAsset } from "@/types"
-import { getAssetLineage, listAssets } from "../../../services/assetEngine"
+import { getAssetLineage, listAssets, listContentBuildSnapshots } from "../../../services/assetEngine"
 import { listVideoPackages } from "../../../services/video-package/VideoPackageRepository"
 import { projectPublishingPackage, type PublishingPackageProjection } from "../../../services/asset-engine/PublishingPackageProjection"
 import { listPublishTransactions, type ContentBuildPublishTransaction } from "../../../services/asset-engine/PublishTransaction"
@@ -31,6 +31,7 @@ import {
 } from "../WidgetPrimitives"
 import type { CommonWidgetProps } from "../types"
 import type { DashboardData } from "../useDashboardData"
+import { describeContentBuildReadiness, scopeAssetsToContentBuild } from "./contentBuildWidgetModel"
 import "./VideoAssetEngineWidget.css"
 
 type AssetEngineMode = "package" | "publish" | "assets" | "handoff"
@@ -106,25 +107,34 @@ export const VideoAssetEngineWidget: React.FC<
     refreshAssets()
   }, [refreshAssets])
 
+  const videoPackages = useMemo(() => listVideoPackages(), [assets])
+  const contentBuilds = useMemo(() => listContentBuildSnapshots(), [assets])
+  const activeVideoPackage = videoPackages[0] || null
+  const activeBuild = contentBuilds.find((build) => build.id === activeVideoPackage?.contentBuildId) || contentBuilds[0] || null
+  const scopedAssets = useMemo(
+    () => scopeAssetsToContentBuild(assets, activeBuild),
+    [assets, activeBuild],
+  )
   const slotAssets = useMemo(
-    () => PACKAGE_SLOTS.map((slot) => ({ slot, asset: matchSlotAsset(assets, slot) })),
-    [assets],
+    () => PACKAGE_SLOTS.map((slot) => ({ slot, asset: matchSlotAsset(scopedAssets, slot) })),
+    [scopedAssets],
   )
   const readyCount = slotAssets.filter((entry) => Boolean(entry.asset)).length
   const readiness = Math.round((readyCount / PACKAGE_SLOTS.length) * 100)
-  const selectedAsset = assets.find((asset) => asset.id === selectedAssetId) || null
+  const selectedAsset = scopedAssets.find((asset) => asset.id === selectedAssetId) || null
   const previewAsset = selectedAsset?.previewUrl || selectedAsset?.url
     ? selectedAsset
-    : assets.find((asset) => Boolean(asset.previewUrl || asset.url)) || null
+    : scopedAssets.find((asset) => Boolean(asset.previewUrl || asset.url)) || null
   const previewUrl = previewAsset?.previewUrl || previewAsset?.url || null
   const lineage = useMemo(
     () => selectedAsset ? getAssetLineage(selectedAsset.id).slice(0, 5) : [],
     [selectedAsset],
   )
-  const packageName = selectedAsset?.projectName || previewAsset?.projectName || "LATEST VIDEO PACKAGE"
+  const packageName = activeBuild?.legacyProjectName || selectedAsset?.projectName || previewAsset?.projectName || "LATEST VIDEO PACKAGE"
+  const buildReadiness = describeContentBuildReadiness(activeBuild)
 
   const publishingState = useMemo<PublishingWidgetState>(() => {
-    const videoPackage = listVideoPackages()[0] || null
+    const videoPackage = activeVideoPackage
     if (!videoPackage) return { videoPackage: null, projection: null, transaction: null }
     try {
       const projection = projectPublishingPackage(videoPackage)
@@ -133,7 +143,7 @@ export const VideoAssetEngineWidget: React.FC<
     } catch {
       return { videoPackage, projection: null, transaction: null }
     }
-  }, [assets])
+  }, [activeVideoPackage, assets])
 
   const packageView = (
     <div className="vt-asset-engine-package">
@@ -148,12 +158,19 @@ export const VideoAssetEngineWidget: React.FC<
           <WidgetMediaUploadFrame
             icon={<PackageOpen />}
             title={packageName}
-            detail={assets.length ? "Open the canonical Vault to select or replace package media." : "No durable Asset Engine media is available yet."}
+            detail={scopedAssets.length ? "Open the canonical Vault to inspect or replace assets attached to this ContentBuild." : activeBuild ? "This ContentBuild has no attached durable assets yet." : "No durable Asset Engine media is available yet."}
             hasValue={Boolean(previewUrl)}
             preview={previewUrl ? <img src={previewUrl} alt="" /> : undefined}
             onBrowse={() => onNavigate?.("/vault")}
             className="vt-asset-engine-preview"
           />
+          {activeBuild ? (
+            <div className="vt-asset-engine-build-summary">
+              <span>CONTENTBUILD</span>
+              <strong>{activeBuild.stage.toUpperCase()} · REV {activeBuild.revision}</strong>
+              <small>{buildReadiness.assetCount} ASSETS · {buildReadiness.selectedCount} SELECTED · {buildReadiness.finalCount} FINAL · {buildReadiness.variantCount} VARIANTS</small>
+            </div>
+          ) : null}
           <WidgetProgressBar
             value={readyCount}
             max={PACKAGE_SLOTS.length}
@@ -235,10 +252,10 @@ export const VideoAssetEngineWidget: React.FC<
     <WidgetStatePanel state={{ status: "empty", data: null, message: "No canonical Publishing Package is available yet. Open Studio Hub to finish the video package." }} />
   )
 
-  const assetsView = assets.length ? (
+  const assetsView = scopedAssets.length ? (
     <WidgetScrollArea ariaLabel="Recent Asset Engine assets" className="vt-asset-engine-scroll">
       <div className="vt-asset-engine-asset-list">
-        {assets.slice(0, 24).map((asset) => (
+        {scopedAssets.slice(0, 24).map((asset) => (
           <button
             key={asset.id}
             type="button"
@@ -260,7 +277,7 @@ export const VideoAssetEngineWidget: React.FC<
       state={{
         status: "empty",
         data: null,
-        message: "No durable Vault assets exist yet. Generate or save an asset from a creator tool to populate this engine.",
+        message: activeBuild ? "No durable Vault assets are attached to the active ContentBuild yet." : "No durable Vault assets exist yet. Generate or save an asset from a creator tool to populate this engine.",
       }}
     />
   )
