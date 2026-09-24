@@ -197,7 +197,7 @@ describe("AIBrainCommandInterface", () => {
   expect(html).not.toContain("grid min-h-0 flex-1 gap-2 bg-white p-2")
   expect(html).toContain("grid min-h-0 flex-1 bg-white")
   expect(html).toContain("xl:grid-cols-[minmax(0,1.45fr)_minmax(520px,1fr)]")
-  expect(html).toContain("pt-5")
+  expect(html).toContain("xl:pt-3")
   expect(html).toContain("brain-chat-scrollbar")
   expect(html).toContain('aria-label="Open AI Journal"')
   expect(html).not.toContain("shrink-0 border-t-[4px] border-black bg-[#f8f8f4]")
