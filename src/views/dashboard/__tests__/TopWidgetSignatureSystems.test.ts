@@ -29,6 +29,14 @@ describe("Top widget signature systems", () => {
     expect(source).toContain("<WidgetSizedButton")
   })
 
+  it("Daily Oracle owns the Creator Command focus console while preserving canonical primitives", () => {
+    const source = read("src/views/dashboard/widgets/DailyOracleWidget.tsx")
+    expect(source).toContain("CreatorFocusConsole")
+    expect(source).toContain("daily-oracle-v2__focus-console")
+    expect(source).toContain("<WidgetSizedButton")
+    expect(source).toContain("<WidgetIconButton")
+  })
+
   it("the shared new-widget stylesheet no longer owns the signature systems", () => {
     const sharedCss = read("src/views/dashboard/widgets/newWidgetSet.css")
     expect(sharedCss).not.toContain(".vt-opportunity-compass")
