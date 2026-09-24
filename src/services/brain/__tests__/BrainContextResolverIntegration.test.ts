@@ -20,5 +20,7 @@ describe("Brain Context Resolver integration", () => {
   expect(orchestrator).toContain("contextPlan.requires.statistics")
   expect(orchestrator).toContain("contextPlan.requires.channelKnowledge")
   expect(orchestrator).toContain("maximumCharacters: contextPlan.budget.maximumCharacters")
+  expect(orchestrator).toContain("contextResolverVersion: contextPlan.version")
+  expect(orchestrator).toContain("contextOmissions: contextPlan.omissions")
  })
 })
