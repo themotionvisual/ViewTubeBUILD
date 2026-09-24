@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewtube.live/schemas/ai-systems/managed-action.schema.json",
+  "title": "ViewTube Managed Action",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "actionId",
+    "label",
+    "mode",
+    "systemId",
+    "description",
+    "preconditions",
+    "approval",
+    "sideEffects",
+    "reversible",
+    "expectedResult",
+    "status"
+  ],
+  "properties": {
+    "actionId": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "DO",
+        "UNDO"
+      ]
+    },
+    "systemId": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "preconditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "approval": {
+      "enum": [
+        "none",
+        "creator",
+        "developer",
+        "admin"
+      ]
+    },
+    "sideEffects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "reversible": {
+      "type": "boolean"
+    },
+    "semanticToolId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "operationRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "expectedResult": {
+      "type": "string"
+    },
+    "verificationRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "rollbackActionId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "rollbackRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "destructiveRisk": {
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "status": {
+      "enum": [
+        "available",
+        "disabled",
+        "executed",
+        "failed",
+        "superseded"
+      ]
+    }
+  }
+}
