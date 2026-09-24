@@ -583,8 +583,7 @@
       },
       "sourceRefs": {
         "code": [
-          "agent/contracts",
-          "scripts/herald-sync.mjs"
+          "agent/contracts"
         ],
         "docs": [
           "agent/contracts/herald-out.md",
