@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { BarChart3, Check, Copy, FileText, Sparkles, Type, Upload, Zap } from "lucide-react"
+import { BarChart3, Check, Copy, FileText, ImageIcon, RefreshCcw, Send, ShieldCheck, Sparkles, Type, Upload, Zap } from "lucide-react"
 import JSZip from "jszip"
 import { useBrain } from "../context/useBrain"
 import { generateSeoData, hasGeminiKey } from "../services/gemini"
@@ -14,6 +14,20 @@ import {
  resolveWorkspaceContentBuildToolContext,
 } from "../services/asset-engine/ToolContext"
 import { nexusSyncService } from "../services/nexusSyncService"
+import { listVideoPackages } from "../services/video-package/VideoPackageRepository"
+import { projectPublishingPackage } from "../services/asset-engine/PublishingPackageProjection"
+import {
+  applyPublishCaptions,
+  applyPublishMetadata,
+  applyPublishRouting,
+  applyPublishSchedulePrivacy,
+  applyPublishThumbnail,
+  beginYouTubePublishing,
+  skipOptionalPublishStep,
+  uploadPublishTransactionVideo,
+  verifyPublishTransactionRemoteState,
+} from "../services/youtube/PublishTransactionYouTubeBridge"
+import { completePublishTransaction, listPublishTransactions } from "../services/asset-engine/PublishTransaction"
 import { sheetsService } from "../services/sheetsService"
 import type { SeoResult } from "../types"
 import BrainLiveToolInbox from "../components/brain/BrainLiveToolInbox"
@@ -26,6 +40,7 @@ import {
   SubToolboxInput,
   SubToolboxLinkButton,
   SubToolboxOutputCard,
+  SubToolboxSelect,
   SubToolboxStatePanel,
   SubToolboxTextArea,
 } from "../components/subtoolbox/SubToolboxPrimitives"
@@ -113,6 +128,128 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
   const [isOpen, setIsOpen] = useState(isOpenInitial)
   const [missingFields, setMissingFields] = useState({ concept: false, niche: false })
   const [insightsImported, setInsightsImported] = useState(false)
+  const [publishRefresh, setPublishRefresh] = useState(0)
+  const [publishBusy, setPublishBusy] = useState(false)
+  const [publishError, setPublishError] = useState<string | null>(null)
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [captionFile, setCaptionFile] = useState<File | null>(null)
+  const [publishTitle, setPublishTitle] = useState("")
+  const [publishDescription, setPublishDescription] = useState("")
+  const [publishTags, setPublishTags] = useState("")
+  const [playlistIds, setPlaylistIds] = useState("")
+  const [privacyStatus, setPrivacyStatus] = useState<"public"|"private"|"unlisted">("private")
+  const [publishAt, setPublishAt] = useState("")
+  const [uploadProgress, setUploadProgress] = useState(0)
+
+  const publishState = React.useMemo(() => {
+    const videoPackage = listVideoPackages()[0] || null
+    if (!videoPackage) return { videoPackage: null, projection: null, transaction: null }
+    try {
+      const projection = projectPublishingPackage(videoPackage)
+      return { videoPackage, projection, transaction: listPublishTransactions(projection.contentBuildId)[0] || null }
+    } catch {
+      return { videoPackage, projection: null, transaction: null }
+    }
+  }, [publishRefresh])
+
+  useEffect(() => {
+    if (!publishTitle && publishState.videoPackage?.identity.workingTitle) setPublishTitle(publishState.videoPackage.identity.workingTitle)
+  }, [publishState.videoPackage?.id])
+
+  useEffect(() => {
+    if (!result) return
+    setPublishTitle(result.titleSets[0]?.title || publishTitle)
+    setPublishDescription(result.description || "")
+    setPublishTags(result.tags || "")
+  }, [result])
+
+
+  const beginOrResumePublishing = () => {
+    if (!publishState.projection) return
+    try {
+      beginYouTubePublishing(publishState.projection)
+      setPublishError(null)
+      setPublishRefresh(value => value + 1)
+    } catch (error) {
+      setPublishError(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  const requireTransaction = () => {
+    const transaction = listPublishTransactions(publishState.projection?.contentBuildId || "")[0] || publishState.transaction
+    if (!transaction) throw new Error("Start the publishing transaction first.")
+    return transaction
+  }
+
+  const runPublishAction = async (action: () => Promise<unknown>) => {
+    setPublishBusy(true)
+    try {
+      await action()
+      setPublishError(null)
+      setPublishRefresh(value => value + 1)
+    } catch (error) {
+      setPublishError(error instanceof Error ? error.message : String(error))
+    } finally {
+      setPublishBusy(false)
+    }
+  }
+
+  const uploadVideo = () => runPublishAction(async () => {
+    const transaction = requireTransaction()
+    if (!videoFile && !transaction.youtubeVideoId) throw new Error("Choose the final video file before uploading.")
+    if (transaction.youtubeVideoId) return
+    await uploadPublishTransactionVideo({
+      transactionId: transaction.id,
+      file: videoFile!,
+      metadata: { title: publishTitle || publishState.videoPackage?.identity.workingTitle || "ViewTube video", description: publishDescription, tags: publishTags.split(",").map(tag => tag.trim()).filter(Boolean), privacyStatus: "private" },
+      onProgress: setUploadProgress,
+    })
+  })
+
+  const applyMetadata = () => runPublishAction(async () => {
+    const transaction = requireTransaction()
+    await applyPublishMetadata(transaction.id, { title: publishTitle, description: publishDescription, tags: publishTags.split(",").map(tag => tag.trim()).filter(Boolean), privacyStatus: "private" })
+  })
+  const applyThumbnail = () => runPublishAction(async () => {
+    if (!thumbnailFile) throw new Error("Choose a thumbnail file first.")
+    await applyPublishThumbnail(requireTransaction().id, thumbnailFile)
+  })
+  const applyCaptions = () => runPublishAction(async () => {
+    const transaction = requireTransaction()
+    if (captionFile) await applyPublishCaptions(transaction.id, captionFile)
+    else await skipOptionalPublishStep(transaction.id, "apply-captions", "No captions selected.")
+  })
+  const applyRouting = () => runPublishAction(async () => {
+    const transaction = requireTransaction()
+    const ids = playlistIds.split(/[\n,]/).map(value => value.trim()).filter(Boolean)
+    if (ids.length) await applyPublishRouting(transaction.id, ids)
+    else await skipOptionalPublishStep(transaction.id, "apply-routing", "No playlists selected.")
+  })
+  const applySchedule = () => runPublishAction(async () => {
+    await applyPublishSchedulePrivacy(requireTransaction().id, {
+      title: publishTitle,
+      description: publishDescription,
+      tags: publishTags.split(",").map(tag => tag.trim()).filter(Boolean),
+      privacyStatus,
+      publishAt: publishAt ? new Date(publishAt).toISOString() : null,
+    })
+  })
+
+  const verifyAndCompletePublishing = async () => {
+    if (!publishState.transaction) return
+    setPublishBusy(true)
+    try {
+      await verifyPublishTransactionRemoteState(publishState.transaction.id)
+      completePublishTransaction(publishState.transaction.id)
+      setPublishError(null)
+      setPublishRefresh(value => value + 1)
+    } catch (error) {
+      setPublishError(error instanceof Error ? error.message : String(error))
+    } finally {
+      setPublishBusy(false)
+    }
+  }
 
   useEffect(() => {
     registerProvider("VIDEO_PUBLISHER")
@@ -334,13 +471,84 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
         </SubToolboxActions>
       }
     >
+      {publishState.projection ? (
+        <SubToolboxStack density="comfortable">
+          <SubToolbox title="Publishing Control" icon={<Send size={20} strokeWidth={3} />} paletteIndex={basePalette + 1} collapsible isOpenInitial>
+            <SubToolboxStack density="comfortable">
+              <SubToolboxGrid minItemWidth="compact">
+                <SubToolboxOutputCard title="PREFLIGHT" icon={<ShieldCheck size={18} />}>
+                  <div className="text-xl font-black">{publishState.projection.ready ? "READY" : publishState.projection.missing.length + " MISSING"}</div>
+                  <div>{publishState.projection.ready ? "Canonical package approved." : publishState.projection.missing.join(" · ")}</div>
+                </SubToolboxOutputCard>
+                <SubToolboxOutputCard title="TRANSACTION" icon={<RefreshCcw size={18} />}>
+                  <div className="text-xl font-black">{publishState.transaction?.status.toUpperCase() || "NOT STARTED"}</div>
+                  <div>{publishState.transaction ? Object.values(publishState.transaction.steps).filter(step => step?.status === "completed").length + "/10 STEPS COMPLETE" : "Start only after preflight is ready."}</div>
+                </SubToolboxOutputCard>
+              </SubToolboxGrid>
+
+              <SubToolbox title="Publication Files" icon={<Upload size={20} />} collapsible isOpenInitial>
+                <SubToolboxGrid minItemWidth="compact">
+                  <SubToolboxFileTarget label={videoFile ? videoFile.name : <>Final video<br/>Select file</>} icon={<Upload size={24}/>} accept="video/*" minHeight={150} onFiles={files => setVideoFile(files?.[0] || null)} />
+                  <SubToolboxFileTarget label={thumbnailFile ? thumbnailFile.name : <>Thumbnail<br/>Select image</>} icon={<ImageIcon size={24}/>} accept="image/jpeg,image/png,image/webp" minHeight={150} onFiles={files => setThumbnailFile(files?.[0] || null)} />
+                  <SubToolboxFileTarget label={captionFile ? captionFile.name : <>Captions<br/>VTT / SRT optional</>} icon={<FileText size={24}/>} accept=".vtt,.srt,text/vtt,application/x-subrip,text/plain" minHeight={150} onFiles={files => setCaptionFile(files?.[0] || null)} />
+                </SubToolboxGrid>
+              </SubToolbox>
+
+              <SubToolbox title="YouTube Metadata" icon={<Type size={20}/>} collapsible isOpenInitial>
+                <SubToolboxStack>
+                  <SubToolboxInput value={publishTitle} onChange={event=>setPublishTitle(event.target.value)} placeholder="YouTube title" aria-label="YouTube title" />
+                  <SubToolboxTextArea value={publishDescription} onChange={event=>setPublishDescription(event.target.value)} placeholder="Description" aria-label="YouTube description" />
+                  <SubToolboxInput value={publishTags} onChange={event=>setPublishTags(event.target.value)} placeholder="Tags, comma separated" aria-label="YouTube tags" />
+                  <SubToolboxInput value={playlistIds} onChange={event=>setPlaylistIds(event.target.value)} placeholder="Playlist IDs, comma separated" aria-label="Playlist IDs" />
+                </SubToolboxStack>
+              </SubToolbox>
+
+              <SubToolbox title="Privacy + Schedule" icon={<ShieldCheck size={20}/>} collapsible isOpenInitial>
+                <SubToolboxGrid minItemWidth="compact">
+                  <SubToolboxSelect value={privacyStatus} onChange={event=>setPrivacyStatus(event.target.value as "public"|"private"|"unlisted")} aria-label="Privacy status">
+                    <option value="private">Private</option><option value="unlisted">Unlisted</option><option value="public">Public</option>
+                  </SubToolboxSelect>
+                  <SubToolboxInput type="datetime-local" value={publishAt} onChange={event=>setPublishAt(event.target.value)} aria-label="Scheduled publish time" disabled={privacyStatus !== "private"} />
+                </SubToolboxGrid>
+              </SubToolbox>
+
+              {publishError ? <SubToolboxStatePanel state="error" message={publishError} /> : null}
+              {uploadProgress > 0 && uploadProgress < 100 ? <SubToolboxStatePanel state="loading" message={"VIDEO UPLOAD " + Math.round(uploadProgress) + "%"} /> : null}
+
+              <SubToolbox title="10-Step Transaction" icon={<RefreshCcw size={20}/>} collapsible isOpenInitial>
+                <SubToolboxStack density="dense">
+                  {(["validate-package","creator-approval","upload-video","bind-youtube","apply-metadata","apply-thumbnail","apply-captions","apply-routing","apply-schedule-privacy","verify-remote-state"] as const).map((step,index) => (
+                    <SubToolboxOutputCard key={step} title={(index+1).toString().padStart(2,"0")+" · "+step.replaceAll("-"," ").toUpperCase()}>
+                      <strong>{publishState.transaction?.steps[step]?.status?.toUpperCase() || "PENDING"}</strong>
+                    </SubToolboxOutputCard>
+                  ))}
+                </SubToolboxStack>
+              </SubToolbox>
+
+              <SubToolboxActions columns={3}>
+                <SubToolboxButton tone={publishState.projection.ready ? "success" : "warning"} disabled={!publishState.projection.ready || publishBusy} onClick={beginOrResumePublishing}>{publishState.transaction ? "RESUME" : "START"}</SubToolboxButton>
+                <SubToolboxButton disabled={!publishState.transaction || publishBusy} onClick={()=>void uploadVideo()}>{publishState.transaction?.youtubeVideoId ? "VIDEO BOUND" : "UPLOAD VIDEO"}</SubToolboxButton>
+                <SubToolboxButton disabled={!publishState.transaction?.youtubeVideoId || publishBusy} onClick={()=>void applyMetadata()}>APPLY METADATA</SubToolboxButton>
+                <SubToolboxButton disabled={!publishState.transaction?.youtubeVideoId || publishBusy} onClick={()=>void applyThumbnail()}>THUMBNAIL</SubToolboxButton>
+                <SubToolboxButton disabled={!publishState.transaction?.youtubeVideoId || publishBusy} onClick={()=>void applyCaptions()}>{captionFile ? "CAPTIONS" : "SKIP CAPTIONS"}</SubToolboxButton>
+                <SubToolboxButton disabled={!publishState.transaction?.youtubeVideoId || publishBusy} onClick={()=>void applyRouting()}>{playlistIds.trim() ? "PLAYLISTS" : "SKIP ROUTING"}</SubToolboxButton>
+                <SubToolboxButton disabled={!publishState.transaction?.youtubeVideoId || publishBusy} onClick={()=>void applySchedule()}>PRIVACY / SCHEDULE</SubToolboxButton>
+                <SubToolboxButton tone="success" disabled={!publishState.transaction?.youtubeVideoId || publishBusy} onClick={() => void verifyAndCompletePublishing()}>{publishBusy ? "WORKING…" : "VERIFY + COMPLETE"}</SubToolboxButton>
+                <SubToolboxButton tone="neutral" onClick={() => setPublishRefresh(value => value + 1)}>REFRESH</SubToolboxButton>
+              </SubToolboxActions>
+            </SubToolboxStack>
+          </SubToolbox>
+        </SubToolboxStack>
+      ) : (
+        <SubToolboxStatePanel state="empty" message="No canonical Publishing Package is available. Finish the active Project package before publishing." />
+      )}
       {!result ? (
         <SubToolboxStack density="comfortable">
           <BrainLiveToolInbox destinationToolId="video-publisher" channelId={(authState as any)?.channelId ?? null} onPrefill={applyPrefill} />
           {insightsImported ? <SubToolboxStatePanel state="ready" message="Incoming Brain/tool context loaded. Review before generating or publishing." /> : null}
           <SubToolboxGrid minItemWidth="wide">
             <SubToolbox title="Video Upload" icon={<Upload size={20} strokeWidth={3} />} collapsible isOpenInitial shellClassName="h-full">
-              <SubToolboxFileTarget label={<>Drop files or click to upload<br />Upload video</>} icon={<Upload size={28} strokeWidth={3} />} minHeight={220} />
+              <SubToolboxFileTarget label={videoFile ? <>{videoFile.name}<br />Final video selected</> : <>Drop files or click to upload<br />Upload video</>} icon={<Upload size={28} strokeWidth={3} />} accept="video/*" minHeight={220} onFiles={files => setVideoFile(files?.[0] || null)} />
             </SubToolbox>
             <SubToolbox title="Video Script" icon={<FileText size={20} strokeWidth={3} />} collapsible isOpenInitial shellClassName="h-full" contentClassName="h-full">
               <SubToolboxTextArea aria-label="Video script" value={script} onChange={(event) => setScript(event.target.value)} placeholder="Paste your script here..." height="fill" className="text-base" />
