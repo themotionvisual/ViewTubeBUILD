@@ -13,6 +13,10 @@ export interface BrainOutcomeRecord {
  targetToolId: SuperToolId | null
  actionPacketId?: string | null
  workflowId?: string | null
+ /** Join back to the exact BrainTrace that produced the recommendation or asset. */
+ traceId?: string | null
+ /** Stable id of the generated response/asset referenced by that trace. */
+ outputRef?: string | null
  outcome: BrainOutcomeKind
  summary: string
  evidence: string[]
@@ -43,6 +47,9 @@ export const listBrainOutcomes = (channelId?: string | null) => {
  return channelId ? records.filter((record) => record.channelId === channelId) : records
 }
 
+export const listBrainOutcomesForTrace = (traceId: string): BrainOutcomeRecord[] =>
+ listBrainOutcomes().filter((record) => record.traceId === traceId)
+
 export const recordBrainOutcome = async (input: Omit<BrainOutcomeRecord, "id" | "createdAt">) => {
  const record: BrainOutcomeRecord = {
   ...input,
@@ -67,6 +74,8 @@ export const recordBrainOutcome = async (input: Omit<BrainOutcomeRecord, "id" | 
    corrective,
    actionPacketId: input.actionPacketId || null,
    workflowId: input.workflowId || null,
+   traceId: input.traceId || null,
+   outputRef: input.outputRef || null,
    sourceToolId: input.sourceToolId,
    targetToolId: input.targetToolId,
   },
