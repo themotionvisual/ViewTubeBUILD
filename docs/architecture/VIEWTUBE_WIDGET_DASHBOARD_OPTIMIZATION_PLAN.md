@@ -362,6 +362,23 @@ compare screenshots and the performance baseline.
 
 Exit: one production path per widget behaviour.
 
+## Queued Post-Current Consolidation Program
+
+After the currently active widget redesign/certification phases complete, continue with:
+
+**[VIEWTUBE_WIDGET_POST_CURRENT_CONSOLIDATION_PLAN_2026-09-24.md](./VIEWTUBE_WIDGET_POST_CURRENT_CONSOLIDATION_PLAN_2026-09-24.md)**
+
+That follow-on program is authoritative for these queued changes:
+
+1. rename the Dashboard `video-uploader` widget to **Video Publisher** through an explicit persisted-layout/schema migration;
+2. bring Dashboard + Studio Hub Video Publisher to functional parity against the same canonical publishing backend;
+3. bring Dashboard + Studio Hub Video Manager to functional parity against the same canonical video-management backend;
+4. upgrade Daily Oracle from mostly channel-level advice to evidence-backed channel-, video-, project-, and content-specific advice;
+5. absorb the useful backend capabilities of `next-best-action` — including the stronger Algorithm Intelligence/project/evidence work preserved in PR #413 — into Daily Oracle;
+6. retire `next-best-action` only after feature-parity tests and persisted-layout migration are proven.
+
+This work is deliberately sequenced **after** the current widget program so it does not destabilize the active signature-component, primitive, CSS-ownership, responsive, and visual-certification work.
+
 ## Pull Request Sequence
 
 1. Baseline measurements, tests, and the three Phase 0 quick wins.
