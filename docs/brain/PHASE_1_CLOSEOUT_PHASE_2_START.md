@@ -1,5 +1,9 @@
 # Phase 1 Closeout → Phase 2 Start
 
+**Status:** HISTORICAL BRANCH CLOSEOUT / phase-transition record  
+**Current authority:** `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+**Wave 5 note (2026-09-24):** preserve the original handoff/control decisions and remaining-wiring list as provenance. The named feature branch and "next phase" state are no longer current.
+
 ## Scope lock
 
 This branch remains `themotionvisual/feat/brain-phase-one-integration`. Do not commit this work directly to the deploy/main branch.

@@ -1,4 +1,9 @@
 # ViewTube AI Creator Intelligence OS
+
+**Status:** HISTORICAL ARCHITECTURE / IMPLEMENTATION ROADMAP  
+**Current authority:** `brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+**Current execution plans:** `../tasks/ai-brain-quality/**` and `architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`  
+**Wave 5 note (2026-09-24):** many foundations proposed below now exist in current main. Preserve this as the product vision/roadmap that informed the consolidation; do not treat its phase checklist as current work status.
 ## Architecture, Brainstorm, Implementation Plan, Front-End System, and Management Skill Draft
 **Date:** 2026-09-11  
 **Repository:** `themotionvisual/ViewTubeBUILD`

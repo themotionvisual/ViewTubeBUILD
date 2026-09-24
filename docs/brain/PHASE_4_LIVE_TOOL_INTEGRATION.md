@@ -1,5 +1,9 @@
 # ViewTube Brain Phase 4 — Live Tool Integration
 
+**Status:** HISTORICAL PHASE CLOSEOUT / live-tool integration reference  
+**Current authority:** `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+**Wave 5 note (2026-09-24):** retain the destination-inbox/handoff integration pattern; phase numbering and branch-closeout status are historical. Verify current consumers before claiming a destination is wired.
+
 ## Goal
 Turn the Phase 1–3 intelligence, ActionPacket, Handoff Inbox, learning and adaptive workflow foundations into a reusable live-tool integration contract.
 

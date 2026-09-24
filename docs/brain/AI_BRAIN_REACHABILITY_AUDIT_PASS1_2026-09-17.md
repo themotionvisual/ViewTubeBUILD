@@ -1,5 +1,9 @@
 # ViewTube AI / Brain Reachability Audit — Pass 1
 
+**Status:** HISTORICAL REACHABILITY AUDIT / evidence snapshot  
+**Current authority:** `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+**Wave 5 note (2026-09-24):** the audit method and the identified direct-generation debt remain useful. Current main now contains substantially more evaluation, learning, persistence and evidence-quality infrastructure; re-run production reachability before using any row below as present-state status.
+
 **Date:** 2026-09-17  
 **Evidence basis:** production imports/invocations on `main`; tests/docs are corroboration, not reachability proof.
 
