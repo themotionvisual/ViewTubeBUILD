@@ -165,3 +165,49 @@
 @media (prefers-reduced-motion:reduce){
   .vt-asset-engine-slot,.vt-asset-engine-asset-row{transition:none}
 }
+
+
+.vt-asset-engine-build-readiness{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:2px 8px;
+  align-items:end;
+  padding:6px 7px;
+  border:2px solid var(--widget-border,var(--widget-ink,#243247));
+  border-radius:var(--widget-control-radius,6px);
+  background:color-mix(in srgb,var(--widget-color) 10%,#fff);
+}
+.vt-asset-engine-build-readiness span{
+  grid-column:1;
+  font-size:7px;
+  font-weight:1000;
+  letter-spacing:.05em;
+  opacity:.56;
+}
+.vt-asset-engine-build-readiness strong{
+  grid-column:2;
+  grid-row:1;
+  justify-self:end;
+  font-size:9px;
+  font-weight:1000;
+}
+.vt-asset-engine-build-readiness small{
+  grid-column:1/-1;
+  font-size:7px;
+  font-weight:900;
+  line-height:1.15;
+  opacity:.62;
+}
+@container (max-width:420px){
+  .vt-asset-engine-build-readiness{
+    grid-template-columns:1fr;
+    align-items:start;
+  }
+  .vt-asset-engine-build-readiness strong,
+  .vt-asset-engine-build-readiness span,
+  .vt-asset-engine-build-readiness small{
+    grid-column:auto;
+    grid-row:auto;
+    justify-self:start;
+  }
+}
