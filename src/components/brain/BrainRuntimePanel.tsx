@@ -17,6 +17,7 @@ import type {
 
 export interface BrainRuntimePanelProps {
  snapshot: BrainRuntimeSnapshot
+ embedded?: boolean
 }
 
 const INK = "#26324A"
@@ -65,13 +66,13 @@ const RuntimeCell: React.FC<{
    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-[5px] bg-white/75" aria-hidden="true">
     {icon}
    </span>
-   <span className="truncate text-[9px] font-[1000] uppercase tracking-[0.1em]" style={{ color: INK }}>
+   <span className="min-w-0 break-words text-[9px] font-[1000] uppercase tracking-[0.1em] md:truncate" style={{ color: INK }}>
     {label}
    </span>
   </div>
   <div className="grid min-h-[54px] content-center gap-0.5 px-2 py-1.5" style={{ color: INK }}>
-   <div className="truncate text-[11px] font-[1000] leading-4">{value}</div>
-   <div className="line-clamp-2 text-[9px] font-bold leading-[12px] opacity-65">{detail}</div>
+   <div className="min-w-0 break-words text-[11px] font-[1000] leading-4 md:truncate">{value}</div>
+   <div className="text-[9px] font-bold leading-[12px] opacity-65 md:line-clamp-2">{detail}</div>
   </div>
  </article>
 )
@@ -89,7 +90,7 @@ const RuntimePill: React.FC<{
  </span>
 )
 
-export const BrainRuntimePanel: React.FC<BrainRuntimePanelProps> = ({ snapshot }) => {
+export const BrainRuntimePanel: React.FC<BrainRuntimePanelProps> = ({ snapshot, embedded = false }) => {
  const { project, build, generation, brain, outcomes, lifecycle } = snapshot
  const request = generation.latestRequest
  const receipt = generation.latestReceipt
@@ -98,8 +99,11 @@ export const BrainRuntimePanel: React.FC<BrainRuntimePanelProps> = ({ snapshot }
  return (
   <section
    aria-label="Live Brain runtime"
-   className="overflow-hidden rounded-[11px] border-[2px] bg-[#F8FAFC] shadow-[3px_3px_0_0_rgba(38,50,74,0.16)]"
-   style={{ borderColor: INK }}
+   data-vt-brain-runtime-shell={embedded ? "flat" : "card"}
+   className={embedded
+    ? "overflow-visible bg-[#F8FAFC]"
+    : "overflow-hidden rounded-[11px] border-[2px] bg-[#F8FAFC] shadow-[3px_3px_0_0_rgba(38,50,74,0.16)]"}
+   style={embedded ? undefined : { borderColor: INK }}
   >
    <header
     className="flex flex-wrap items-center justify-between gap-2 border-b-[2px] px-2.5 py-1.5"
@@ -110,10 +114,10 @@ export const BrainRuntimePanel: React.FC<BrainRuntimePanelProps> = ({ snapshot }
       <Brain size={16} strokeWidth={2.5} />
      </span>
      <div className="min-w-0">
-      <h2 className="truncate text-[11px] font-[1000] uppercase leading-4 tracking-[0.11em]" style={{ color: INK }}>
+      <h2 className="max-md:whitespace-normal md:truncate text-[11px] font-[1000] uppercase leading-4 tracking-[0.11em]" style={{ color: INK }}>
        LIVE BRAIN RUNTIME
       </h2>
-      <p className="truncate text-[9px] font-bold leading-3 opacity-65" style={{ color: INK }}>
+      <p className="max-md:whitespace-normal md:truncate text-[9px] font-bold leading-3 opacity-65" style={{ color: INK }}>
        Project → ContentBuild → Context → Generation → Receipt → learning
       </p>
      </div>
