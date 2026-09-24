@@ -1,3 +1,9 @@
+> **Historical migration-reference index**  
+> This file preserves the 2026-09-03 reference branch context. It is not current application-status authority.  
+> Current documentation entrypoint: `docs/README.md`  
+> Current documentation registry: `docs/DOCUMENTATION_REGISTRY.md`  
+> Current AI systems management authority: `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`
+
 # ViewTube system reference — consolidated branch
 
 **Current refresh:** 2026-09-03  
@@ -113,3 +119,12 @@ PR #241 (`claude/ai-audit-content-optimization-gdwwp9`) is treated as a historic
 - [../../brain/PR241_DONOR_HARVEST_IMPLEMENTATION_PLAN_2026-09-24.md](../../brain/PR241_DONOR_HARVEST_IMPLEMENTATION_PLAN_2026-09-24.md) — current forward-port sequence.
 
 Current code/authority always wins over the 2026-09-12 snapshots.
+
+
+## Brain / AI historical archive — 2026-09-24
+
+Superseded broad AI audits, phase manifests and phase-closeout records have been re-homed under:
+
+- [brain-ai-history/README.md](brain-ai-history/README.md)
+
+These files are historical provenance only. Durable rules were promoted into the current AI Systems Living Master Resource and bounded authorities before archival.

@@ -272,7 +272,7 @@ Lazy-load heavy widget implementations and libraries.
 
 - [VIEWTUBE_WIDGET_DASHBOARD_OPTIMIZATION_PLAN.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_OPTIMIZATION_PLAN.md)
 - [ASSET_ENGINE_CANONICAL_BACKBONE.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/docs/brain/ASSET_ENGINE_CANONICAL_BACKBONE.md)
-- [PHASE_1_CLOSEOUT_PHASE_2_START.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/docs/brain/PHASE_1_CLOSEOUT_PHASE_2_START.md)
-- [VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/docs/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md)
+- [PHASE_1_CLOSEOUT_PHASE_2_START.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md)
+- [VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md)
 - [WidgetRegistry.ts](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/WidgetRegistry.ts)
 - [useDashboardData.ts](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/useDashboardData.ts)

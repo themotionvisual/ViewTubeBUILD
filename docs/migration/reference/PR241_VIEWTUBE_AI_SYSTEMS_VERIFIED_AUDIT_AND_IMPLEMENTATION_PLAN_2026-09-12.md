@@ -9,7 +9,7 @@
 **Date:** 2026-09-12
 **Repository:** `themotionvisual/ViewTubeBUILD`
 **Branch audited:** `claude/ai-audit-content-optimization-gdwwp9` (parity with `main` at time of audit)
-**Supersedes (as evidence):** `docs/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md`
+**Supersedes (as evidence):** `docs/migration/reference/brain-ai-history/brain-ai-history/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md`
 
 ---
 

@@ -25,7 +25,9 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | Editor system | [Editor System Master Resource](./editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md) |
 | Deployment / release | [Deployment & Release Master Resource](./deployment/VIEWTUBE_DEPLOYMENT_RELEASE_MASTER_RESOURCE.md) |
 | User Guide V2 | [User Guide V2 Master Resource](./user-guide-v2/VIEWTUBE_USER_GUIDE_V2_MASTER_RESOURCE.md) |
+| AI systems management / agent orientation | [AI Systems Living Master Resource](./brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md) |
 | AI / Brain runtime architecture | [Unified AI System Canonical Consolidation Contract](./brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md) |
+| Prompt system | [Prompt System Authority](./brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md) |
 | Herald repository-work governance | [HERALD-OUT](../agent/contracts/herald-out.md) + [workflow](../agent/contracts/herald-workflow.md) (implemented code/record authority) |
 
 These are scoped authorities. They do not make every neighboring plan or reference obsolete automatically.
@@ -50,11 +52,11 @@ When beginning work:
 
 **Wave 4:** Analytics/VT-SYNC now has one living architecture authority. The old migration README is historical, canvas/responsive contracts are scoped canonical authorities, and implementation plans remain active only where the audited code still has real gaps.
 
-**Wave 5:** the unified AI contract is now the living Brain architecture authority. Older AI audits, phase manifests, donor harvests and roadmap documents are historical references. Herald is explicitly separated from creator BrainRuntime and points to its implemented agent contracts, thread ledger and exchange records.
+**Wave 5:** the unified AI contract is the Brain runtime architecture authority. The AI Systems Living Master Resource is the management/orientation authority for agents working across AI systems. Eight obsolete broad audits/phase documents were harvested and re-homed under `migration/reference/brain-ai-history/`; active AI planning now routes through the living master, Finish Program, Brain-quality tasks and Prompt System Authority. Herald remains separate from creator BrainRuntime.
 
 **Wave 6:** Simple Auth V1 is the canonical browser-session contract; Editor documentation is reconciled to the live desktop/mobile bridge; deployment/release has a script-backed living master; Guide V2 has a living authority over its derived route/dataset/tool/widget/metric/visual registries.
 
-No baseline document has been deleted. Future waves continue one domain at a time, preserving unique information and references before archival or retirement.
+Wave 7 archival has now begun for the AI domain: superseded AI audits/phase documents were preserved under `migration/reference/brain-ai-history/` and removed from active authority paths only after unique-rule harvest and inbound-reference review. Other domains remain subject to the same non-destructive rules.
 
 ### Planned waves
 
@@ -115,6 +117,7 @@ The August `migration/README.md` remains valuable history but is no longer curre
 
 ## Brain / AI / Herald authority boundaries
 
+- **AI systems management / agent orientation:** `brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`.
 - **Creator-facing reasoning/orchestration:** `brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` plus current `src/services/brain/**`.
 - **Canonical analytics evidence for Brain:** `services/analytics-canon`; Brain derives evidence quality but does not own analytics storage.
 - **Outcome/evaluation/learning:** existing Brain/Algorithm outcome, evaluation and governed-learning owners; never create a second generic ledger.
@@ -142,3 +145,8 @@ Every editor-related agent/conversation must update the master resource Current 
 - **Editor:** `editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md`; VT_E1 and mobile share the versioned project bridge, with remaining work focused on parity/certification rather than first bridge wiring.
 - **Deployment/release:** `deployment/VIEWTUBE_DEPLOYMENT_RELEASE_MASTER_RESOURCE.md`; live production truth is the exact commit reported by `/api/release`, not repository state alone.
 - **User Guide V2:** `user-guide-v2/VIEWTUBE_USER_GUIDE_V2_MASTER_RESOURCE.md`; product inventories derive from canonical registries instead of being copied into prose.
+
+
+## AI historical archive
+
+Superseded broad AI audits, phase manifests and phase-closeout records are preserved under `migration/reference/brain-ai-history/`. They are provenance only; current status comes from the AI Systems Living Master Resource, bounded canonical authorities, current code/tests, and the Finish Program.

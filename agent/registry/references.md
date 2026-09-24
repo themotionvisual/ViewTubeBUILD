@@ -1,7 +1,7 @@
 # ViewTube reference registry — what to read, and what it proves
 
 On-file index of documents, artifacts, standalone HTML and folder sets.
-Verified 2026-09-16 against this checkout. Append anything you needed that was not here.
+Re-audited 2026-09-24 against current main `c494d96aad9cbcf073e7d157685cb8b0269f123d`. Append anything you needed that was not here.
 
 **Classes:** `canonical` · `prototype` · `demo` · `recovery` · `quarantined` · `superseded`
 
@@ -11,7 +11,10 @@ Verified 2026-09-16 against this checkout. Append anything you needed that was n
 
 | Path | Covers |
 |---|---|
-| `docs/migration/reference/VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json` | **28 systems** with owner, status, dependencies, consumers, integration rule. **Start here for §3 OWNER.** |
+| `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md` | **Start here for cross-system AI work**: current AI ownership/status, work claims, provenance, plans, prompts, evidence, outcomes, historical donors and agent update protocol. |
+| `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` | Canonical creator-facing Brain/AI runtime architecture and owner boundaries. |
+| `docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md` | Current prompt-system architecture, precedence, personalization and migration authority. |
+| `docs/migration/reference/VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json` | Historical 2026-09-03 system-owner registry; useful migration evidence, **not current status authority**. |
 | `docs/architecture/VIEWTUBE_CROWN_INTEGRATION_SYSTEM.md` | the constitution: KING/EMPEROR, 5 record types, lifecycle, conflict levels |
 | `docs/architecture/viewtube-crown-protocols.schema.json` | schema for the five Crown records |
 | `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` | toolbox/subtoolbox UI contracts |
@@ -20,7 +23,7 @@ Verified 2026-09-16 against this checkout. Append anything you needed that was n
 | `docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md` | **canonical living Editor System integration authority**: desktop/mobile parity, Remotion, Editor Brain, generative media, skill/resource/branch registry and append-only update log. |
 | `docs/architecture/dashboard-baseline.json` · `dashboard-style-snapshot.json` | dashboard regression baselines |
 | `docs/MOBILE_VISUAL_RESPONSIVE_CONTRACT.md` · `MOBILE_VISUAL_QA_MATRIX.md` | mobile geometry contract + QA matrix |
-| `docs/brain/` (6) | Brain runtime, shared conversation controller, tool handoffs, asset engine |
+| `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md` · `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` | AI systems management/orientation + creator-facing Brain runtime architecture |
 | `docs/architecture/SIMPLE_AUTH_V1.md` · `VIEWTUBE_AUTH_API_STABILIZATION_REFERENCE.md` | auth boundaries |
 | `.viewtube/exchange/README.md` | Royal Exchange record contract |
 | `CLAUDE.md` | deployment topology, golden rules, known lint debt |
@@ -124,3 +127,15 @@ entries below marked *external, unverified* stay unverified.
 | .claude/skills/viewtube-youtube-editor-system/SKILL.md | agent-skill | editor-specific workflow/ownership/parity/update discipline |
 | .codex/skills/viewtube-youtube-editor-system/SKILL.md | agent-skill mirror | same editor workflow for Codex-compatible sessions |
 | skills/viewtube-youtube-editor-system/SKILL.md | portable skill mirror | portable copy of the editor domain skill |
+
+
+## AI systems living resources — 2026-09-24
+
+| Path | Class | Covers |
+|---|---|---|
+| `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md` | canonical | AI systems management, cross-authority map, work claims/receipts, current-status and agent orientation |
+| `docs/brain/ai-systems/AGENT_READY_REPORT_2026-09-24.md` | reference | external public agent-readiness scan and remediation evidence |
+| `docs/brain/ai-systems/DOCUMENT_CONSOLIDATION_REGISTER_2026-09-24.md` | migration-receipt | AI document merge/archive/delete dispositions |
+| `docs/migration/reference/brain-ai-history/README.md` | historical-index | archived broad AI audits/phase inventories after durable-rule harvest |
+| `tasks/ai-brain-quality/` | active-plan | evidence → knowledge → context → prompt → outcome → learning → assistant continuity |
+| `tasks/viewtube-finish-program/` | active-plan | cross-system finish backlog including AI registries/observability/prompt convergence |

@@ -5,6 +5,10 @@ description: Govern, streamline, audit, extend, and optimize ViewTube's AI Brain
 
 # ViewTube AI System Governor
 
+**Primary orientation resource:** `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`
+
+Read the living master resource before planning or modifying a cross-system AI concern. It is the management/orientation authority; bounded runtime/data/domain owners remain canonical for implementation.
+
 Keep ViewTube's AI system powerful, explainable, source-grounded, and consolidated.
 
 ## Core rule
@@ -161,3 +165,26 @@ For AI-affecting release work and periodic health reviews, read:
 - [references/operational-health-check.md](references/operational-health-check.md)
 
 Use `node scripts/audit/reach.mjs` as the first reachability signal, then classify every apparent orphan/bypass against current architecture before deleting or wiring it. Re-measure current counts; never reuse historical PR #241 counts as present truth.
+
+
+## Living master update rule
+
+When AI work changes cross-system ownership, reachability, prompt families, context/evidence flow, persistence, action permissions, outcome/evaluation/learning paths, or deprecates a prior authority:
+
+1. update the bounded owner document;
+2. update `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`;
+3. update `docs/DOCUMENTATION_REGISTRY.md` when lifecycle/authority changed;
+4. add a work claim/finished-work receipt through the current agent-work governance flow;
+5. preserve or archive superseded documents only after reference and unique-information checks.
+
+
+## AI Systems Management references
+
+Load only what the current branch of work needs:
+
+- [references/ai-systems-management.md](references/ai-systems-management.md) — orientation, ownership, status and handoff rules.
+- [references/work-claims-and-receipts.md](references/work-claims-and-receipts.md) — claim/collision/completion receipt contract.
+- [references/authority-and-freshness.md](references/authority-and-freshness.md) — canonical/historical/freshness/supersession rules.
+- [references/prompt-and-model-governance.md](references/prompt-and-model-governance.md) — prompt/model/provenance management.
+- [references/donor-migration.md](references/donor-migration.md) — donor branches, stacked PRs and historical-doc migration.
+- [references/operational-health-check.md](references/operational-health-check.md) — reachability and architectural decay checks.

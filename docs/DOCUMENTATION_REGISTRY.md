@@ -53,7 +53,8 @@
 - `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md` — Current Studio Hub component-library presentation and primitive-correction authority.
 - `docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md` — Living cross-system Project/ContentBuild workflow authority referenced by CLAUDE.md.
 - `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md` — Canonical Asset Engine product/architecture reference referenced by CLAUDE.md.
-- `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` — Canonical living AI / Brain architecture authority, reconciled against current runtime/evidence/evaluation systems in Wave 5.
+- `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md` — Canonical AI systems management / agent-orientation authority. Coordinates current status, work claims, cross-system ownership and provenance without replacing bounded runtime/data/domain owners.
+- `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` — Canonical living AI / Brain runtime architecture authority, reconciled against current runtime/evidence/evaluation systems in Wave 5.
 
 - `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` — Canonical production Toolbox/Subtoolbox design-system authority reconciled in Wave 3.
 - `docs/architecture/VIEWTUBE_ONE_GOAL_COMPLETION_OPERATING_SYSTEM.md` — Cross-domain living completion/audit/status/agent-handoff entry point. It coordinates but does not replace scoped domain masters.
@@ -102,15 +103,15 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 31 | `docs/architecture/WIDGET_SYSTEM_CERTIFICATION_MASTER_2026-09-14.md` | architecture | `active-plan` | `retain-active-scoped` | 11478 | Active Dashboard widget certification program; WidgetRegistry remains canonical metadata and this plan does not own Toolbox geometry. |
 | 32 | `docs/architecture/YOUTUBE_API_STABILIZATION_V1_TRACKER.md` | architecture | `active-plan` | `status-audit` | 5981 | Plan/work-order/tracker requires completion check before consolidation or archive. |
 | 33 | `docs/architecture/YOUTUBE_AUTH_API_SIMPLIFICATION_PLAN.md` | architecture | `historical` | `retain-as-design-history` | 8247 | Historical auth/API design direction; current flat+compatibility implementation is owned by Simple Auth V1. |
-| 34 | `docs/brain/AI_BRAIN_REACHABILITY_AUDIT_PASS1_2026-09-17.md` | brain | `historical` | `retain-as-history` | 8018 | Historical production-reachability snapshot; retain audit method and direct-generation debt evidence. |
-| 35 | `docs/brain/AI_BRAIN_REACHABILITY_AUDIT_WORK_ORDER_2026-09-17.md` | brain | `historical` | `retain-as-history` | 2284 | Completed reachability audit work order; retain as reusable audit recipe/provenance. |
+| 34 | `docs/migration/reference/brain-ai-history/AI_BRAIN_REACHABILITY_AUDIT_PASS1_2026-09-17.md` | brain | `historical` | `retain-as-history` | 8018 | Historical production-reachability snapshot; retain audit method and direct-generation debt evidence. |
+| 35 | `docs/migration/reference/brain-ai-history/AI_BRAIN_REACHABILITY_AUDIT_WORK_ORDER_2026-09-17.md` | brain | `historical` | `retain-as-history` | 2284 | Completed reachability audit work order; retain as reusable audit recipe/provenance. |
 | 36 | `docs/brain/AI_CROSS_BRANCH_HARVEST_PASS1_2026-09-18.md` | brain | `historical` | `retain-as-history` | 5711 | Historical donor-branch harvest audit; many harvested capabilities now exist on current main. |
-| 37 | `docs/brain/AI_INTELLIGENCE_ENGINE_PHASE0_SYSTEM_MANIFEST_2026-09-17.md` | brain | `historical` | `retain-as-history` | 5753 | Historical Phase-0 ownership/reachability baseline. |
+| 37 | `docs/migration/reference/brain-ai-history/AI_INTELLIGENCE_ENGINE_PHASE0_SYSTEM_MANIFEST_2026-09-17.md` | brain | `historical` | `retain-as-history` | 5753 | Historical Phase-0 ownership/reachability baseline. |
 | 38 | `docs/brain/ASSET_ENGINE_CANONICAL_BACKBONE.md` | brain | `historical` | `retain-as-foundation-reference` | 11199 | Foundational ownership/backbone document superseded for current authority by the Asset Engine master and Projects/ContentBuild master. |
-| 39 | `docs/brain/BRAIN_RUNTIME_PHASE_1_MODEL_AND_ORCHESTRATION_INVENTORY_2026-09-11.md` | brain | `historical` | `retain-as-history` | 7369 | Historical Phase-1 provider/orchestration inventory; useful migration provenance. |
+| 39 | `docs/migration/reference/brain-ai-history/BRAIN_RUNTIME_PHASE_1_MODEL_AND_ORCHESTRATION_INVENTORY_2026-09-11.md` | brain | `historical` | `retain-as-history` | 7369 | Historical Phase-1 provider/orchestration inventory; useful migration provenance. |
 | 40 | `docs/brain/BRAIN_SHARED_CONVERSATION_CONTROLLER_PHASE_2_2026-09-12.md` | brain | `historical` | `retain-as-history` | 3133 | Historical implementation slice for the still-live shared conversation controller. |
-| 41 | `docs/brain/PHASE_1_CLOSEOUT_PHASE_2_START.md` | brain | `historical` | `retain-as-history` | 3553 | Historical branch closeout/phase-transition record. |
-| 42 | `docs/brain/PHASE_4_LIVE_TOOL_INTEGRATION.md` | brain | `historical` | `retain-as-history` | 2342 | Historical phase closeout; retain live-tool handoff integration pattern as provenance. |
+| 41 | `docs/migration/reference/brain-ai-history/PHASE_1_CLOSEOUT_PHASE_2_START.md` | brain | `historical` | `retain-as-history` | 3553 | Historical branch closeout/phase-transition record. |
+| 42 | `docs/migration/reference/brain-ai-history/PHASE_4_LIVE_TOOL_INTEGRATION.md` | brain | `historical` | `retain-as-history` | 2342 | Historical phase closeout; retain live-tool handoff integration pattern as provenance. |
 | 43 | `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` | brain | `canonical` | `retain-current` | 5638 | Canonical consolidation contract for the unified AI system. |
 | 44 | `docs/brain/UNIVERSAL_TOOL_HANDOFFS_AND_SUGGESTED_CHAINS.md` | brain | `reference` | `retain-production-linked` | 5570 | Current cross-tool ActionPacket/suggested-chain architecture reference; subordinate to unified AI authority and domain owners. |
 | 45 | `docs/community/COMMUNITY_BULK_CAMPAIGN_IMPLEMENTATION.md` | community | `reference` | `retain-or-consolidate` | 3384 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
@@ -183,8 +184,8 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 112 | `docs/ui/toolbox-system/MANIFEST.md` | ui | `reference` | `retain-or-consolidate` | 4017 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
 | 113 | `docs/ui/toolbox-system/README.md` | ui | `reference` | `retain-or-consolidate` | 5392 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
 | 114 | `docs/user-guide-v2/PHASE_1_2_AUDIT_AND_TRUTH_REGISTRY.md` | user-guide-v2 | `historical` | `retain-as-discovery-audit` | 6543 | Guide V2 derived registry implementation now exists; original audit retained for truth-model decisions. |
-| 115 | `docs/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md` | brain | `historical` | `retain-as-history` | 39897 | Broad September 11 AI/Brain audit; current runtime has advanced materially and the unified contract is current authority. |
-| 116 | `docs/VIEWTUBE_AI_CREATOR_INTELLIGENCE_OS_IMPLEMENTATION_PLAN_2026-09-11.md` | brain | `historical` | `retain-as-history` | 23217 | Original AI Creator Intelligence OS roadmap; current execution has moved to unified AI authority plus current task/finish plans. |
+| 115 | `docs/migration/reference/brain-ai-history/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md` | brain | `historical` | `retain-as-history` | 39897 | Broad September 11 AI/Brain audit; current runtime has advanced materially and the unified contract is current authority. |
+| 116 | `docs/migration/reference/brain-ai-history/VIEWTUBE_AI_CREATOR_INTELLIGENCE_OS_IMPLEMENTATION_PLAN_2026-09-11.md` | brain | `historical` | `retain-as-history` | 23217 | Original AI Creator Intelligence OS roadmap; current execution has moved to unified AI authority plus current task/finish plans. |
 | 117 | `docs/VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md` | brain | `historical` | `retain-as-history` | 61545 | Original Herald design plan; implemented authority now lives in agent/contracts/herald-* plus .viewtube/herald and exchange records. |
 | 118 | `docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md` | governance | `review` | `audit-before-move` | 25225 | Broad unfinished-work inventory can conflict with newer domain-specific state; verify item-by-item. |
 | 119 | `docs/vt-e1-render-worker.md` | editor | `reference` | `retain-or-consolidate` | 1417 | General documentation; verify current scope and merge target during its domain wave. |
@@ -223,3 +224,16 @@ These files were added after the original 119-file Wave 1 baseline and therefore
 | --- | --- | --- | --- | --- |
 | docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md | editor | canonical | retain-current | Living unified editor integration authority; owns desktop/mobile parity program, editor AI/generation integration map, skill/resource/branch registry and append-only update log. |
 | docs/editor/EDITOR_BRAIN_HUB_ASSISTANT_PLAN.md | editor/brain | active-plan | retain-active-scoped | Implementation plan for BrainRuntime-powered editor guide/assistant, typed proposals, semantic actions, captions and generative-media handoffs. |
+
+
+## Wave 7 AI archival update — 2026-09-24
+
+The AI/Brain documentation family was re-audited against current main `c494d96aad9cbcf073e7d157685cb8b0269f123d`.
+
+- Added canonical management/orientation authority: `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`.
+- Preserved the runtime architecture authority: `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`.
+- Preserved Prompt System Authority and Prompt Registry as bounded current authorities.
+- Moved eight superseded broad AI audits/inventories/phase-closeouts into `docs/migration/reference/brain-ai-history/` after extracting durable rules.
+- Added `docs/brain/ai-systems/AGENT_READY_REPORT_2026-09-24.md` as external agent-readiness evidence.
+- Added `docs/brain/ai-systems/DOCUMENT_CONSOLIDATION_REGISTER_2026-09-24.md` as the deletion/migration receipt.
+- Historical path entries in the baseline table now point to their current archive location; baseline counts remain historical Wave-1 counts rather than a claim about the present tree.

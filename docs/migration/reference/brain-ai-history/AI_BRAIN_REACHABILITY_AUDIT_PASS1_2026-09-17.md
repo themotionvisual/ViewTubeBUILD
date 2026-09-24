@@ -1,3 +1,10 @@
+> **Historical AI reference — archived 2026-09-24**  
+> **Original path:** `docs/brain/AI_BRAIN_REACHABILITY_AUDIT_PASS1_2026-09-17.md`  
+> **Current AI systems management authority:** `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`  
+> **Current runtime architecture authority:** `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+> Unique durable rules from this document were harvested into current authorities before archival. Historical phase labels, maturity estimates, branch state and “current” claims below are not current status.  
+> See `docs/brain/ai-systems/DOCUMENT_CONSOLIDATION_REGISTER_2026-09-24.md` for the migration disposition.
+
 # ViewTube AI / Brain Reachability Audit — Pass 1
 
 **Status:** HISTORICAL REACHABILITY AUDIT / evidence snapshot  

@@ -1,3 +1,10 @@
+> **Historical AI reference — archived 2026-09-24**  
+> **Original path:** `docs/VIEWTUBE_AI_BRAIN_SYSTEMS_AUDIT_AND_MODERNIZATION_REFERENCE_2026-09-11.md`  
+> **Current AI systems management authority:** `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`  
+> **Current runtime architecture authority:** `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`  
+> Unique durable rules from this document were harvested into current authorities before archival. Historical phase labels, maturity estimates, branch state and “current” claims below are not current status.  
+> See `docs/brain/ai-systems/DOCUMENT_CONSOLIDATION_REGISTER_2026-09-24.md` for the migration disposition.
+
 # ViewTube AI / Brain Systems Audit and Modernization Reference
 
 **Status:** HISTORICAL SYSTEM AUDIT / modernization reference  
