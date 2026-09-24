@@ -1,5 +1,8 @@
 # Subtoolbox Primitive System V1
 
+**Status:** Production-linked implementation reference; subordinate to the Toolbox UI Master Resource  
+**Last audited main:** `988098840050f4b658a266e1a7d6fe1c4d939c81`
+
 > **Authority notice (2026-09-13):** Canonical cross-system rules now live in [`VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`](./VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md). This file documents the Subtoolbox implementation specialization. The Master Resource supersedes conflicting historical geometry/motion/state guidance after reconciliation with canonical code.
 
 ## Purpose
@@ -26,15 +29,15 @@ Use the Master Resource semantic mapping:
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | T0 | Main Toolbox | 5px | 16px | 10px | 80px | 26px |
 | T1 | Standard Subtoolbox / peer action | 4px | 12px | 6px | 56px | 20px |
-| T1 Compact | Compact Subtoolbox | 3px | 10px | 4px | 44px | 17-20px |
-| T2 | Standard interior peer | 3px | 8px | 4px | 48px | ~14px |
-| T3 | Dense interior peer | 2px | 6px | 2px | 32px | 9-10px |
+| Historical Compact alias | No independent shell geometry; compatibility/content-density label only | — | — | — | — | SUPERSEDED |
+| T2 | Standard interior peer | 3px | 8px | 4px | 48px | 18px |
+| T3 | Dense interior peer | 2px | 6px | 2px | 32px | 12px |
 
 Level owns stroke/radius/height/shadow. Component anatomy does not silently thin geometry.
 
 ## Motion reconciliation
 
-Historical versions of this file specified 300ms collapse. That blanket rule is **SUPERSEDED**. Current accepted Toolbox direction is 600ms ease-out for Toolbox/Subtoolbox/module/disclosure open-close motion, with faster 150-300ms micro-interactions and reduced-motion support. Where production tokens still use 300ms for shell motion, treat that as explicit reconciliation work rather than a second accepted standard.
+Historical versions of this file specified 300ms collapse. That blanket rule is **SUPERSEDED**. Current production tokens use 600ms ease-out for SubToolbox shell collapse and 180ms for control micro-interactions, with reduced-motion support.
 
 ## Primitive rules
 

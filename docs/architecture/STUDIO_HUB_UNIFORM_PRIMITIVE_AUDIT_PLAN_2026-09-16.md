@@ -1,6 +1,7 @@
 # Studio Hub Uniform Primitive Audit Plan — 2026-09-16
 
-Status: PLANNED / evidence-first migration plan
+Status: HISTORICAL AUDIT / MIGRATION PLAN — geometry baseline superseded
+Superseded geometry note (2026-09-24): this plan recorded the then-current desktop 56px Main / 44px SubToolbox implementation. Current production authority is desktop 80/56/48/32 and mobile shell 56/44. Preserve the defect evidence and audit method, but do not reuse the old desktop dimensions.
 Herald verb: FIX + AUDIT/PLAN
 Canonical page: `src/views/StudioHub.tsx`
 Canonical shell owner: `src/components/Toolbox.tsx`

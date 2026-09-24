@@ -2,7 +2,8 @@
 
 > **Authority notice (2026-09-13):** The consolidated governing resource is [`VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`](./VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md). This file remains the Studio Hub implementation/migration specialization. If geometry, motion, accessibility, responsive, state or certification rules conflict, reconcile against the Master Resource and current canonical code rather than creating a second authority.
 
-Status: implementation reference for Studio Hub migration.
+Status: HISTORICAL / SPECIALIZED MIGRATION REFERENCE — current rules live in VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md.
+Wave 3 note (2026-09-24): retain this file for migration rationale and control-family inventory; do not use it to establish geometry, motion, mobile shell sizing, or certification status.
 
 ## Governing rule
 

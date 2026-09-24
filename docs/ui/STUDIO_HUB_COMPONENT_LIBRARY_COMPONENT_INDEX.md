@@ -1,6 +1,11 @@
 # Studio Hub Component Library component index
 
-The production certification surface is generated from `STUDIO_HUB_COMPONENT_FAMILIES` in `src/components/studio-hub/StudioHubCompletePrimitiveCatalog.tsx`. Every family is rendered at L0, L1 and L2.
+**Status:** Generated production-registry reference  
+**Audited main:** `988098840050f4b658a266e1a7d6fe1c4d939c81`  
+**Source:** `src/components/studio-hub/StudioHubCompletePrimitiveCatalog.tsx` → `STUDIO_HUB_COMPONENT_FAMILIES`  
+**Count:** 62 registered component families
+
+Do not hand-add a family here without adding it to the production registry. The Component Library also contains migration/certification examples outside this base family array; keep those separately identified rather than silently inflating this registry count.
 
 1. Primary Button
 2. Secondary Button
@@ -58,3 +63,9 @@ The production certification surface is generated from `STUDIO_HUB_COMPONENT_FAM
 54. LED Light
 55. Alphabetical Spectrum Tags
 56. Icon Rail Control
+57. Two Color Data Stats
+58. Monochrome Data Stats
+59. Tiny Data Stats
+60. Tooltip Dark
+61. Tooltip Color
+62. Dashboard Pill Tags

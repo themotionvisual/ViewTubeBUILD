@@ -23,14 +23,14 @@
 
 ## Baseline summary
 
-- **active-plan:** 13
+- **active-plan:** 15
 - **artifact:** 12
-- **canonical:** 5
-- **evidence:** 9
-- **historical:** 27
-- **reference:** 44
+- **canonical:** 6
+- **evidence:** 10
+- **historical:** 28
+- **reference:** 40
 - **retirement-candidate:** 3
-- **review:** 6
+- **review:** 5
 
 ### Domain counts
 
@@ -55,6 +55,8 @@
 - `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md` — Canonical Asset Engine product/architecture reference referenced by CLAUDE.md.
 - `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` — Canonical consolidation contract for the unified AI system.
 
+- `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` — Canonical production Toolbox/Subtoolbox design-system authority reconciled in Wave 3.
+
 These authorities are scoped, not global. For example, the Studio component-library source-of-truth does not replace the Project/ContentBuild master resource.
 
 ## Full 119-file baseline registry
@@ -71,9 +73,9 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 8 | `docs/architecture/MOBILE_WIDGET_PHASE2_CLASSIFICATION.md` | architecture | `reference` | `retain-or-consolidate` | 3231 | General documentation; verify current scope and merge target during its domain wave. |
 | 9 | `docs/architecture/PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md` | architecture | `historical` | `retain-as-consolidation-record` | 21441 | Wave 2 promoted hard identity/persistence/publishing rules into the living masters; preserve this convergence plan for provenance. |
 | 10 | `docs/architecture/SIMPLE_AUTH_V1.md` | architecture | `review` | `audit-before-move` | 1188 | Useful implementation reference but auth routes have evolved; reconcile into one current-state auth authority. |
-| 11 | `docs/architecture/STUDIO_HUB_COMPONENT_STANDARDIZATION_V1.md` | architecture | `historical` | `archive-after-extraction` | 6526 | Older Studio standardization generation; newer component-library source-of-truth contains superseding corrections. |
-| 12 | `docs/architecture/STUDIO_HUB_MIGRATION_MATRIX_V1.md` | architecture | `historical` | `archive-after-extraction` | 5414 | Migration-era matrix; preserve as history/evidence after extracting still-open work. |
-| 13 | `docs/architecture/STUDIO_HUB_UNIFORM_PRIMITIVE_AUDIT_PLAN_2026-09-16.md` | architecture | `historical` | `archive-after-extraction` | 8469 | Older Studio primitive audit; later September authority has superseding geometry/corrections. |
+| 11 | `docs/architecture/STUDIO_HUB_COMPONENT_STANDARDIZATION_V1.md` | architecture | `historical` | `retain-as-migration-reference` | 6526 | Specialized Studio migration reference; current rules live in the Toolbox UI master. |
+| 12 | `docs/architecture/STUDIO_HUB_MIGRATION_MATRIX_V1.md` | architecture | `historical` | `retain-as-execution-ledger` | 5414 | 2026-09 migration status snapshot; verify current tool status against code before scheduling work. |
+| 13 | `docs/architecture/STUDIO_HUB_UNIFORM_PRIMITIVE_AUDIT_PLAN_2026-09-16.md` | architecture | `historical` | `retain-as-audit-record` | 8469 | Audit method/evidence retained; desktop 56/44 baseline superseded by current 80/56 desktop and 56/44 mobile contracts. |
 | 14 | `docs/architecture/SUBTOOLBOX_PRIMITIVE_SYSTEM_V1.md` | architecture | `reference` | `retain-or-consolidate` | 4276 | General documentation; verify current scope and merge target during its domain wave. |
 | 15 | `docs/architecture/toolbox-ui-master-resource/HANDOFF_UPDATE_PROTOCOL.md` | architecture | `reference` | `retain-or-consolidate` | 3648 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
 | 16 | `docs/architecture/toolbox-ui-master-resource/README.md` | architecture | `reference` | `retain-or-consolidate` | 2796 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
@@ -87,11 +89,11 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 24 | `docs/architecture/VIEWTUBE_CROWN_PHASE3_READ_ONLY_BRIDGE.md` | architecture | `reference` | `retain-or-consolidate` | 2234 | General documentation; verify current scope and merge target during its domain wave. |
 | 25 | `docs/architecture/VIEWTUBE_CROWN_RUNTIME_CONTROL_ROOM_PLAN.md` | architecture | `active-plan` | `status-audit` | 1659 | Plan/work-order/tracker requires completion check before consolidation or archive. |
 | 26 | `docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md` | architecture | `canonical` | `retain-current` | 29531 | Living cross-system Project/ContentBuild workflow authority referenced by CLAUDE.md. |
-| 27 | `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` | architecture | `review` | `audit-before-move` | 25194 | Master-resource label overlaps newer Studio component-library authority; reconcile before promotion. |
+| 27 | `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` | architecture | `canonical` | `retain-current` | 25194 | Wave 3 resolved code/token geometry conflicts; global Toolbox/Subtoolbox living design-system authority. |
 | 28 | `docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_OPTIMIZATION_PLAN.md` | architecture | `active-plan` | `consolidate-after-status-audit` | 21251 | Active widget/dashboard optimization planning; verify merged portions before consolidation. |
 | 29 | `docs/architecture/viewtube-crown-protocols.schema.json` | architecture | `reference` | `retain-or-consolidate` | 6147 | Supporting machine-readable/reference artifact; preserve unless an owning canonical registry replaces it. |
-| 30 | `docs/architecture/WIDGET_FUTURES_RECOVERY_REGISTRY_2026-09-14.md` | architecture | `reference` | `retain-or-consolidate` | 6811 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
-| 31 | `docs/architecture/WIDGET_SYSTEM_CERTIFICATION_MASTER_2026-09-14.md` | architecture | `reference` | `retain-or-consolidate` | 11478 | General documentation; verify current scope and merge target during its domain wave. |
+| 30 | `docs/architecture/WIDGET_FUTURES_RECOVERY_REGISTRY_2026-09-14.md` | architecture | `active-plan` | `retain-active-scoped` | 6811 | Active widget concept recovery/deduplication registry; explicitly not a production widget registry. |
+| 31 | `docs/architecture/WIDGET_SYSTEM_CERTIFICATION_MASTER_2026-09-14.md` | architecture | `active-plan` | `retain-active-scoped` | 11478 | Active Dashboard widget certification program; WidgetRegistry remains canonical metadata and this plan does not own Toolbox geometry. |
 | 32 | `docs/architecture/YOUTUBE_API_STABILIZATION_V1_TRACKER.md` | architecture | `active-plan` | `status-audit` | 5981 | Plan/work-order/tracker requires completion check before consolidation or archive. |
 | 33 | `docs/architecture/YOUTUBE_AUTH_API_SIMPLIFICATION_PLAN.md` | architecture | `review` | `audit-before-move` | 8247 | Design direction differs from the currently deployed flat+compatibility route implementation; reconcile against code. |
 | 34 | `docs/brain/AI_BRAIN_REACHABILITY_AUDIT_PASS1_2026-09-17.md` | brain | `reference` | `retain-or-consolidate` | 8018 | Implementation/audit/reference material; reconcile unique content into the owning authority when appropriate. |
@@ -168,9 +170,9 @@ These authorities are scoped, not global. For example, the Studio component-libr
 | 105 | `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_COMPONENT_INDEX.md` | ui | `reference` | `retain-or-consolidate` | 1222 | General documentation; verify current scope and merge target during its domain wave. |
 | 106 | `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_HERALD_FIX_2026-09-17.md` | ui | `reference` | `retain-or-consolidate` | 1434 | General documentation; verify current scope and merge target during its domain wave. |
 | 107 | `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_HERALD_STATUS.md` | ui | `evidence` | `keep-as-evidence` | 612 | Verification/status snapshot; useful evidence but not architectural authority. |
-| 108 | `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_MOBILE_NOTES.md` | ui | `reference` | `retain-or-consolidate` | 899 | General documentation; verify current scope and merge target during its domain wave. |
+| 108 | `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_MOBILE_NOTES.md` | ui | `historical` | `retain-as-visual-evidence` | 899 | Historical screenshot finding; mobile geometry interpretation corrected to current 56/44 mobile shell contract. |
 | 109 | `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md` | ui | `canonical` | `retain-current` | 6872 | Current Studio Hub component-library presentation and primitive-correction authority. |
-| 110 | `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_VISUAL_CHECKLIST.md` | ui | `reference` | `retain-or-consolidate` | 1058 | General documentation; verify current scope and merge target during its domain wave. |
+| 110 | `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_VISUAL_CHECKLIST.md` | ui | `evidence` | `retain-as-certification-checklist` | 1058 | Active visual evidence checklist updated to desktop 80/56 and mobile 56/44 shell contracts. |
 | 111 | `docs/ui/toolbox-system/audits/MASTER_RESOURCE_50_IMPROVEMENTS_2026-09-13.md` | ui | `reference` | `retain-or-consolidate` | 4954 | General documentation; verify current scope and merge target during its domain wave. |
 | 112 | `docs/ui/toolbox-system/MANIFEST.md` | ui | `reference` | `retain-or-consolidate` | 4017 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
 | 113 | `docs/ui/toolbox-system/README.md` | ui | `reference` | `retain-or-consolidate` | 5392 | Durable reference/contract material; verify scope and ownership during domain consolidation. |
@@ -192,8 +194,9 @@ These files are created by Wave 1 and therefore are **not** part of the 119-file
 ## Consolidation progress
 
 - **Wave 1 — complete/merged:** registry, entrypoint and governance contract.
-- **Wave 2 — Projects / ContentBuild / Asset Engine:** current authority consolidated into the two living master resources. The September 20 implementation plan, September 22 convergence plan and Brain backbone are retained as historical records; the dashboard ideas file remains a reference catalog. No donor was deleted or moved.
+- **Wave 2 — complete/merged:** Projects / ContentBuild / Asset Engine current authority consolidated into the two living masters.
+- **Wave 3 — Studio UI / Toolbox / widgets / mobile:** production token/code authority reconciled. Toolbox master promoted to canonical; Component Library source-of-truth remains canonical for catalog/primitive-correction scope; stale desktop 56/44 Studio docs are historical; Dashboard widgets and Analytics Data Visuals retain separate scoped contracts.
 
 ## Next action
 
-Wave 3 should reconcile Studio UI / Toolbox / component-library / widget/mobile documentation, using current token/code tests to resolve conflicting geometry before demoting older standards.
+Wave 4 should consolidate Analytics / Data Visual / migration documentation, including controller/canvas/mobile plans, time-window work, dataset expansion, status snapshots and historical migration references.

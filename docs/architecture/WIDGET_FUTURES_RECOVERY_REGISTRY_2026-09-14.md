@@ -1,6 +1,8 @@
 # ViewTube Widget Futures & Recovery Registry
 
 Status: ACTIVE DISCOVERY — NOT A PRODUCTION REGISTRY
+Last audited documentation baseline: `988098840050f4b658a266e1a7d6fe1c4d939c81`
+Authority boundary: this file is concept recovery/deduplication only. Production widget identity lives in `WidgetRegistry.ts`; Studio Toolbox/primitive authority lives in the Toolbox UI master.
 Date: 2026-09-14
 Companion: `WIDGET_SYSTEM_CERTIFICATION_MASTER_2026-09-14.md`
 
