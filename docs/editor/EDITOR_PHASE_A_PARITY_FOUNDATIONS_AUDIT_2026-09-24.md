@@ -3,7 +3,7 @@
 **Status:** active implementation audit  
 **Date:** 2026-09-24  
 **Audited main:** 4a273685fcae36403977e28be9804b02217717c4  
-**Implementation branch:** feat/editor-phase-a-parity-foundations-2026-09-24  
+**Implementation branch:** feat/editor-phase-a-fx-contract-2026-09-24 (Phase A continuation after PR #405 merged)  
 **Parent authority:** docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md
 
 ## Purpose
@@ -109,6 +109,18 @@ Canonical transition frame state is now a pure shared contract consumed by brows
 - cut has deterministic midpoint ownership;
 - zoom/fade/slide state is fixture-tested.
 
+### Shared FX contract
+
+This Phase A continuation adds:
+
+- `src/shared/vtE1FxCatalog.js`
+- `src/shared/vtE1FxCatalog.d.ts`
+- `src/shared/vtE1FxCatalog.test.ts`
+
+The catalog now owns the currently renderer-backed layer effects: blur, saturation, brightness, hue, contrast, sepia, grayscale, and opacity. It also owns bounds/defaults, order normalization, disabled/bypass behavior, CSS filter generation, and reset state.
+
+Mobile FX controls no longer maintain a private definition list. Mobile preview and final Remotion composition now call the same FX evaluator, removing duplicated filter-order/default/clamping code. Motion blur and masks remain planned because they do not yet have the same verified shared render contract.
+
 ### Desktop/mobile project round trip
 
 - introduced a strict mobile bridge layer shape with required `payload`;
@@ -120,7 +132,7 @@ Canonical transition frame state is now a pure shared contract consumed by brows
 ## Remaining Phase A gaps
 
 1. **Capability-surface matrix:** the registry exists, but desktop/mobile/render implementation evidence is not yet generated from tests into one parity table.
-2. **Shared FX contract:** final Remotion already renders several payload-based filters while the capability registry still marks color/blur as planned. This mismatch needs a typed FX catalog and verified editor actions before controls are promoted.
+2. **Shared FX contract:** started and materially implemented. Canonical definitions now live in `src/shared/vtE1FxCatalog.js` with typed sidecar/tests. Mobile FX controls, mobile preview, and final Remotion composition consume the shared contract. Color/Blur capabilities are promoted from planned to available. Remaining work is desktop-surface parity plus richer preview/final fixtures.
 3. **Whole-project fixture:** add one richer fixture with media, text, audio, keyframes, effects, transitions, templates/assets, ContentBuild identity, and multiple track kinds, then round-trip it desktop → mobile → desktop.
 4. **Preview ↔ final beyond transitions:** transform, crop, keyframes, layer visibility/order, template assets, and audio need deterministic parity fixtures.
 5. **Desktop host integration:** shared adapters exist, but the legacy desktop host still owns significant behavior separately and needs measured adoption rather than an assumption of parity.
@@ -142,9 +154,9 @@ Phase A is complete only when:
 ## Next implementation order
 
 1. finish/verify this transition + project-bridge slice;
-2. build typed shared FX catalog from fields the final renderer already truly supports;
-3. wire FX controls to the shared catalog and project payload contract;
-4. add rich whole-project round-trip fixture;
+2. verify the shared FX catalog + controls across CI and desktop/mobile surfaces;
+3. add rich whole-project round-trip fixture;
+4. expand preview/final fixture coverage beyond transitions and FX;
 5. expand preview/final fixture coverage beyond transitions;
 6. generate the capability parity matrix from those verified contracts;
 7. then proceed into Phase B UI consolidation and Phase C Editor Brain guide/proposal assistant.
