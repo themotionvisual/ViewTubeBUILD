@@ -74,6 +74,7 @@ const richProject:DesktopProjectRecord={
         pan:-0.15,
         fadeInSec:0.4,
         fadeOutSec:0.8,
+        playbackRate:1.25,
         muted:false,
       },
     },
@@ -289,6 +290,7 @@ describe('rich desktop/mobile editor project parity fixture',()=>{
       pan:-0.15,
       fadeInSec:0.4,
       fadeOutSec:0.8,
+      playbackRate:1.25,
     });
     expect(restored.clips.find(clip=>clip.id==='caption-1')).toMatchObject({
       captionId:'caption-source-1',
