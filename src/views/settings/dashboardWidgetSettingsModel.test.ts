@@ -4,6 +4,7 @@ import {
   filterDashboardWidgetSettings,
   getManageableDashboardWidgets,
   summarizeDashboardWidgetVisibility,
+  getDashboardWidgetSignatureLabel,
   type DashboardWidgetSettingsEntry,
 } from "./dashboardWidgetSettingsModel"
 
@@ -54,6 +55,13 @@ describe("dashboard widget settings model", () => {
     expect(filterDashboardWidgetSettings(manageable, "all", "summary").map((widget) => widget.id)).toEqual([
       "core-ready",
     ])
+  })
+
+  it("names the redesigned signature systems so settings can expose their ownership", () => {
+    expect(getDashboardWidgetSignatureLabel("daily-oracle")).toBe("Creator Command Focus Console")
+    expect(getDashboardWidgetSignatureLabel("next-best-action")).toBe("Decision Junction")
+    expect(getDashboardWidgetSignatureLabel("opportunity-radar")).toBe("Opportunity Compass")
+    expect(getDashboardWidgetSignatureLabel("unknown")).toBeNull()
   })
 
   it("reports visible and preview counts from the same manageable set", () => {
