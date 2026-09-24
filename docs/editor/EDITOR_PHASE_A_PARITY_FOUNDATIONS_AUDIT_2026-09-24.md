@@ -2,8 +2,8 @@
 
 **Status:** active implementation audit  
 **Date:** 2026-09-24  
-**Audited main:** 4495d84c5fb80d521092953e34b95072ac7f626f  
-**Current implementation branch:** feat/editor-phase-a-audio-parity-2026-09-24  
+**Audited main:** bc948ec3b2fa4c81228d2ca4e24b2687a408e94c  
+**Current implementation branch:** feat/editor-phase-a-audio-parity-v2-2026-09-24  
 **Transition/project-bridge slice merged:** PR #405 → 052ff0294b5f8c9b05867a85ab4e2d407a27ec06  
 **Shared FX slice merged:** PR #408 → 56e2c0c03f83a168bf385dd2f71d32bc87166d08  
 **Rich project parity slice merged:** PR #410 → 4719274d63f37f2164c67641eb885de6104afdba  
