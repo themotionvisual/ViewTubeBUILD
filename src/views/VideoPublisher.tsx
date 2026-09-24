@@ -271,7 +271,7 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
           request: generationRequest.request,
           outputAssetIds: [...titleAssets.map(item => item.asset.id), descriptionAsset.asset.id, tagsAsset.asset.id],
           generationRecordId: null,
-          versionIds,
+          versionIds: versionIds,
           variantGroupId: titleGroup.id,
           relationshipIds: [],
           traceId: null,
