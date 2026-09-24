@@ -17,20 +17,147 @@
 .vt-primitive-migration-catalog .vt-complete-catalog-heading>strong{display:block;margin-top:8px;font-size:11px}
 .vt-primitive-migration-catalog .vt-complete-catalog-grid{display:grid;gap:16px}
 .vt-primitive-migration-catalog .vt-primitive-migration-family{min-width:0}
+
+/* Component Library only: numbered family SubToolboxes keep their colored
+   headers and internal anatomy but drop the heavy outer black rectangle/shadow.
+   Production SubToolboxes are unaffected. */
+.vt-primitive-migration-catalog .vt-primitive-migration-family [data-vt-subtoolbox="true"]{
+  box-shadow:none!important;
+}
+.vt-primitive-migration-catalog .vt-primitive-migration-family [data-vt-subtoolbox="true"] > div:first-child{
+  border:0!important;
+}
 .vt-primitive-migration-catalog .vt-catalog-levels{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,max-content));
+  align-items:start;
+  justify-content:start;
+  gap:8px 12px;
+  margin-top:8px;
 }
 .vt-primitive-migration-catalog .vt-catalog-demo{
-  min-width:0;border:3px solid #000;border-radius:8px;padding:8px;background:#fff
+  --vt-catalog-standard-inline:300px;
+  min-width:0;
+  width:max-content;
+  max-width:100%;
+  padding:2px 3px 4px;
+  border:0;
+  border-radius:0;
+  background:transparent;
 }
+.vt-primitive-migration-catalog .vt-catalog-demo.is-l1{--vt-catalog-standard-inline:260px}
+.vt-primitive-migration-catalog .vt-catalog-demo.is-l2{--vt-catalog-standard-inline:220px}
 .vt-primitive-migration-catalog .vt-catalog-demo:before{
-  content:attr(data-level);display:block;text-transform:uppercase;
-  font-size:10px;font-weight:1000;margin-bottom:6px
+  content:attr(data-level);
+  display:block;
+  width:max-content;
+  margin:0 0 4px 1px;
+  padding:0;
+  text-transform:uppercase;
+  font-size:10px;
+  font-weight:1000;
+  line-height:1;
 }
-@media(max-width:900px){
-  .vt-primitive-migration-catalog .vt-catalog-levels{grid-template-columns:1fr}
+
+/* The library demonstrates the primitive's natural footprint rather than
+   stretching every example to the SubToolbox content width. Production
+   consumers keep their own width behavior; this is catalog presentation only. */
+.vt-primitive-migration-catalog .vt-primitive-migration-family .vt-catalog-demo > *{
+  width:fit-content!important;
+  max-width:100%!important;
 }
-@media(max-width:520px){
+
+/* Controls whose job inherently needs an editing/data canvas receive one
+   standard catalog width instead of the entire SubToolbox width. */
+.vt-primitive-migration-catalog :is(
+  [data-vt-family="Text Input"],
+  [data-vt-family="Textarea"],
+  [data-vt-family="Split Search"],
+  [data-vt-family="Number Field"],
+  [data-vt-family="Input Action"],
+  [data-vt-family="Slider"],
+  [data-vt-family="Range Slider"],
+  [data-vt-family="Tag Editor"],
+  [data-vt-family="Progress Bar"],
+  [data-vt-family="Progress Value"],
+  [data-vt-family="Surface"],
+  [data-vt-family="State Panel"],
+  [data-vt-family="Output Card"],
+  [data-vt-family="Data Table"],
+  [data-vt-family="Media Card"],
+  [data-vt-family="Selectable List Row"],
+  [data-vt-family="Reorderable Row"],
+  [data-vt-family="Tabs"],
+  [data-vt-family="Alert"],
+  [data-vt-family="Step Indicator"],
+  [data-vt-family="Dialog"],
+  [data-vt-family="Drawer"],
+  [data-vt-family="Skeleton"],
+  [data-vt-family="Skeleton Compact"],
+  [data-vt-family="Skeleton Media"],
+  [data-vt-family="Toast"],
+  [data-vt-family="Disclosure"],
+  [data-vt-family="Meter"],
+  [data-vt-family="Name Value List"],
+  [data-vt-family="Carousel"],
+  [data-vt-family="Command Palette"],
+  [data-vt-family="Metric Strip"],
+  [data-vt-family="Horizontal Scrollbar"],
+  [data-vt-family="Data Stats Module"],
+  [data-vt-family="Upload Frame"],
+  [data-vt-family^="Vault "],
+  [data-vt-family="Tree View"],
+  [data-vt-family="Aspect Ratio Frame"],
+  [data-vt-family="Toolbar"],
+  [data-vt-family="Loader Progress"],
+  [data-vt-family="Loader Split"]
+) .vt-catalog-demo > *{
+  width:var(--vt-catalog-standard-inline)!important;
+  max-width:100%!important;
+}
+
+.vt-primitive-migration-catalog [data-vt-family="Calendar"] .vt-catalog-levels{
+  grid-template-columns:minmax(0,max-content);
+}
+
+/* Portrait uses two level columns, so the three L0/L1/L2 examples occupy two
+   rows instead of becoming three vertically stacked full-width cards. */
+@media(max-width:520px) and (orientation:portrait){
+  .vt-primitive-migration-catalog .vt-catalog-levels{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px 8px;
+  }
+  .vt-primitive-migration-catalog .vt-catalog-demo{
+    width:100%;
+    max-width:100%;
+    padding:2px 1px 3px;
+  }
+  .vt-primitive-migration-catalog .vt-catalog-demo > *{
+    max-width:100%!important;
+  }
+  .vt-primitive-migration-catalog :is(
+    [data-vt-family="Data Table"],
+    [data-vt-family="Media Card"],
+    [data-vt-family="Calendar"],
+    [data-vt-family="Upload Frame"],
+    [data-vt-family^="Vault "],
+    [data-vt-family="Tree View"],
+    [data-vt-family="Aspect Ratio Frame"],
+    [data-vt-family="Toolbar"]
+  ) .vt-catalog-demo{
+    grid-column:1/-1;
+    width:min(100%,var(--vt-catalog-standard-inline));
+  }
+  .vt-primitive-migration-catalog [data-vt-family="Calendar"] .vt-catalog-levels{
+    grid-template-columns:minmax(0,1fr);
+  }
   .vt-primitive-migration-catalog .vt-complete-catalog-heading h2{font-size:20px}
-  .vt-primitive-migration-catalog .vt-catalog-demo{padding:7px}
+}
+
+/* Landscape phones keep the same one-row L0/L1/L2 comparison used on desktop. */
+@media(max-height:520px) and (orientation:landscape){
+  .vt-primitive-migration-catalog .vt-catalog-levels{
+    grid-template-columns:repeat(3,minmax(0,max-content));
+    gap:8px;
+  }
 }
