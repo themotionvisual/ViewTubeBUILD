@@ -208,10 +208,13 @@ describe("AIBrainCommandInterface", () => {
 
   expect(html).toContain("max-xl:!h-auto")
   expect(html).toContain("max-xl:overflow-visible")
-  expect(html).toContain("max-xl:min-h-[520px]")
-  expect(html).toContain('data-vt-brain-runtime-shell="flat"')
+  expect(html).toContain("max-xl:min-h-[70dvh]")
+  expect(html).toContain("max-xl:min-h-[420px]")
+  expect(html).toContain('data-vt-brain-runtime-shell="merged"')
   expect(html).toContain("max-xl:rounded-none")
   expect(html).toContain("max-xl:border-x-0")
+  expect(html).not.toContain("max-xl:min-h-[520px]")
+  expect(html).not.toContain("LIVE BRAIN RUNTIME")
  })
 
  it("keeps internal diagnostics out of the creator workspace", () => {
