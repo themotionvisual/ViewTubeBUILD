@@ -871,3 +871,130 @@
     transition-duration: 0s !important;
   }
 }
+
+
+/* Creator Command donor features: execution lives inside the canonical Daily Oracle focus page. */
+.daily-oracle-v2__execution {
+  display: grid;
+  gap: 6px;
+  background: color-mix(in srgb, var(--widget-color) 8%, white);
+  color: var(--widget-border);
+}
+
+.daily-oracle-v2__execution-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.daily-oracle-v2__execution-target {
+  display: grid;
+  gap: 3px;
+  padding: 7px;
+  border: 2px solid color-mix(in srgb, var(--widget-color) 62%, var(--widget-border));
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--widget-color) 11%, white);
+}
+
+.daily-oracle-v2__execution-target span,
+.daily-oracle-v2__execution-note,
+.daily-oracle-v2__execution-list small {
+  font-size: clamp(7px, 1.05cqi, 9px);
+  font-weight: 900;
+  line-height: 1.1;
+  text-transform: uppercase;
+  opacity: .64;
+}
+
+.daily-oracle-v2__execution-target strong {
+  min-width: 0;
+  font-size: clamp(11px, 1.8cqi, 15px);
+  font-weight: 1000;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.daily-oracle-v2__execution-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.daily-oracle-v2__execution-controls > * {
+  width: 100%;
+  min-width: 0;
+}
+
+.daily-oracle-v2__execution-list {
+  display: grid;
+  gap: 3px;
+  max-height: 122px;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
+.daily-oracle-v2__execution-list > div {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 4px 6px;
+  border: 2px solid color-mix(in srgb, var(--widget-color) 54%, var(--widget-border));
+  border-radius: 4px;
+  background: white;
+}
+
+.daily-oracle-v2__execution-list > div > span {
+  font-size: 12px;
+  font-weight: 1000;
+  text-align: center;
+}
+
+.daily-oracle-v2__execution-list > div > strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(8px, 1.25cqi, 10px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.daily-oracle-v2__execution-list > div.is-complete {
+  opacity: .58;
+}
+
+.daily-oracle-v2__execution-list > div.is-complete > strong {
+  text-decoration: line-through;
+}
+
+.daily-oracle-v2__execution-note {
+  text-align: center;
+}
+
+@container vt-widget (max-width: 470px) {
+  .daily-oracle-v2__execution-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .daily-oracle-v2__execution-controls > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  .daily-oracle-v2__execution-list {
+    max-height: 96px;
+  }
+}
+
+@container vt-widget (max-width: 360px) {
+  .daily-oracle-v2__execution-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (pointer: coarse) {
+  .daily-oracle-v2__execution-controls .vt-sized-control {
+    min-height: 44px;
+  }
+}
