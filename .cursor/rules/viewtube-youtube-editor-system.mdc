@@ -1,0 +1,17 @@
+---
+description: ViewTube YouTube editor system authority and mandatory living-resource handoff
+globs:
+  - "src/features/editor/**"
+  - "src/editor-design-library/**"
+  - "src/remotion-editor/**"
+  - "src/features/video-director/**"
+  - "server/video-director-*"
+  - "docs/editor/**"
+alwaysApply: false
+---
+
+For ViewTube editor work, read docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md and follow skills/viewtube-youtube-editor-system/SKILL.md.
+
+Use one desktop/mobile project model. BrainRuntime owns creator AI reasoning/orchestration; Video Director owns async media generation; Asset Engine/Vault owns generated asset provenance; Remotion owns deterministic render/time.
+
+Before handoff, update Current Work and append the living master resource Update Log with branch/PR/commit, paths, verification, references, status, and next action.

@@ -17,6 +17,7 @@ Verified 2026-09-16 against this checkout. Append anything you needed that was n
 | `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` | toolbox/subtoolbox UI contracts |
 | `docs/architecture/SUBTOOLBOX_PRIMITIVE_SYSTEM_V1.md` | primitive system |
 | `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md` | **master Asset Engine / ContentBuild product and architecture definition**: backend services, assets, lineage, generation, publishing, 15 frontend manifestations, integrations, mobile/UI contracts, migration and acceptance criteria |
+| `docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md` | **canonical living Editor System integration authority**: desktop/mobile parity, Remotion, Editor Brain, generative media, skill/resource/branch registry and append-only update log. |
 | `docs/architecture/dashboard-baseline.json` · `dashboard-style-snapshot.json` | dashboard regression baselines |
 | `docs/MOBILE_VISUAL_RESPONSIVE_CONTRACT.md` · `MOBILE_VISUAL_QA_MATRIX.md` | mobile geometry contract + QA matrix |
 | `docs/brain/` (6) | Brain runtime, shared conversation controller, tool handoffs, asset engine |
@@ -112,3 +113,14 @@ entries below marked *external, unverified* stay unverified.
   registry is the first, and plan §15 is the mechanism.
 - `docs/*` is gitignored except `docs/migration/**`. Most docs here were force-added, so
   **a new doc added without `git add -f` will not be tracked** (plan O1).
+
+
+## Editor living resources — 2026-09-24
+
+| Path | Class | Covers |
+|---|---|---|
+| docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md | canonical | unified desktop/mobile editor program, living work/resource/skill/branch log |
+| docs/editor/EDITOR_BRAIN_HUB_ASSISTANT_PLAN.md | active-plan | contextual BrainRuntime assistant, typed edit proposals, guidance and generative-media actions |
+| .claude/skills/viewtube-youtube-editor-system/SKILL.md | agent-skill | editor-specific workflow/ownership/parity/update discipline |
+| .codex/skills/viewtube-youtube-editor-system/SKILL.md | agent-skill mirror | same editor workflow for Codex-compatible sessions |
+| skills/viewtube-youtube-editor-system/SKILL.md | portable skill mirror | portable copy of the editor domain skill |

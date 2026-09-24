@@ -27,3 +27,5 @@ entry exists, cite it and advance its verdict rather than raising it again.
 | 2026-09-16 | embeddings / vector store for corpus search | approach | fuzzy semantic retrieval | `defer` | identifier linking via `vt-####` answers the common case exactly, free and incrementally (plan §15.9) |
 | 2026-09-16 | `scripts/herald-shot.mjs` | internal | capture any route/viewport on demand for the VISUAL block | `adopt-now` | thin wrapper over `capture-phase5-built-ui.mjs`; reuse its auth-wall detection and manifest format |
 | 2026-09-16 | before/after diff images | internal | make UI regressions obvious at a glance | `evaluate` | pairs with `dashboard-style-snapshot.mjs`, which already snapshots styles |
+
+| 2026-09-24 | [remotion-dev/skills](https://github.com/remotion-dev/skills) | official skill suite | current Remotion authoring/render/Studio/captions/SaaS/docs/upgrade guidance for the editor | adopt-now | Official upstream; available in the current ChatGPT Remotion environment. Before vendoring or adding to skills-lock.json, complete source review + hash pinning rather than silently expanding the unreviewed external instruction supply chain. |

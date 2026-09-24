@@ -68,6 +68,17 @@ The Projects/ContentBuild master resource is the cross-system current-state,
 target-state, bugs and planned-work authority. Do not split Project,
 ContentBuild and Video Package identity without explicitly updating it.
 
+
+
+## Living YouTube editor system authority
+
+For any work touching the desktop/mobile editor, editor project state, timeline, preview, templates/design library, FX, transitions, captions, Remotion, Video Director integration, editor AI/generation, export, or editor-related widgets, read and update:
+
+- docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md
+- .claude/skills/viewtube-youtube-editor-system/SKILL.md
+
+The master resource is the shared current-state, plan, reference/resource, branch-donor and update-log authority for the editor program. Every editor-related agent/conversation must append its work to the Update Log before handoff. Desktop and mobile remain one product with one project model; AI routes through BrainRuntime, generative media through Video Director, generated assets through Asset Engine/Vault, and deterministic output through Remotion.
+
 ## Loss-safety pattern for big consolidations
 
 When multiple branches or long-lived local edits are being merged and any of

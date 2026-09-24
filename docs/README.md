@@ -117,3 +117,13 @@ The August `migration/README.md` remains valuable history but is no longer curre
 - **Historical Herald design:** `VIEWTUBE_HERALD_CROSS_APP_AI_CONVERSATION_SYSTEM_PLAN_2026-09-15.md` explains the design evolution but is no longer current status authority.
 
 BrainRuntime serves ViewTube creators. Herald governs AI agents working on the ViewTube repository. They exchange context/provenance where useful but are not one runtime.
+
+
+## Editor living authority
+
+The unified desktop/mobile editor program now has a single living integration authority:
+
+- editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md
+- editor/EDITOR_BRAIN_HUB_ASSISTANT_PLAN.md
+
+Every editor-related agent/conversation must update the master resource Current Work and append-only Update Log before handoff. Specialized editor/Brain/Asset/Toolbox documents remain authoritative for their bounded concerns as declared by DOCUMENTATION_REGISTRY.md.
