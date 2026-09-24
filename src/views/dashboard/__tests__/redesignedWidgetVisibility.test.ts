@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { DASHBOARD_WIDGET_BY_ID } from "../WidgetRegistry"
+import { DASHBOARD_WIDGET_BY_ID, DASHBOARD_WIDGET_REGISTRY } from "../WidgetRegistry"
+import { DASHBOARD_WIDGET_RENDERER_KEYS } from "../WidgetRenderer"
+import { getManageableDashboardWidgets } from "../../settings/dashboardWidgetSettingsModel"
 import {
   buildDefaultDashboardLayout,
   revealRedesignedDashboardWidgets,
@@ -9,6 +11,7 @@ const REDESIGNED_WIDGET_IDS = [
   "daily-oracle",
   "brain-hub",
   "flight-check",
+  "channel-progress",
   "next-best-action",
   "anomaly-radar",
   "opportunity-radar",
@@ -24,7 +27,13 @@ describe("redesigned dashboard widget visibility", () => {
       expect(DASHBOARD_WIDGET_BY_ID[id], id).toBeTruthy()
       expect(DASHBOARD_WIDGET_BY_ID[id]?.status, id).toBe("ready")
       expect(DASHBOARD_WIDGET_BY_ID[id]?.releaseTier, id).not.toBe("hidden")
+      expect(DASHBOARD_WIDGET_RENDERER_KEYS.has(id), id).toBe(true)
     }
+  })
+
+  it("lists every redesigned widget in Widget Settings", () => {
+    const manageable = new Set(getManageableDashboardWidgets(DASHBOARD_WIDGET_REGISTRY).map((widget) => widget.id))
+    for (const id of REDESIGNED_WIDGET_IDS) expect(manageable.has(id), id).toBe(true)
   })
 
   it("shows every redesigned widget in a fresh dashboard layout", () => {
