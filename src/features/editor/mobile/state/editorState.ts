@@ -3,6 +3,7 @@ import {useCallback,useMemo,useReducer} from 'react';
 import type {VtE1Clip,VtE1Project,VtE1Transition} from '../../../../shared/vtE1TimelineContract';
 import {rippleDeleteTimelineClips,slideTimelineClip,slipTimelineClip,splitTimelineClip} from '../../../../shared/vtE1TimelineOperations.js';
 import {readVtE1ClipVisualTransform,VT_E1_VISUAL_ANIMATED_PROPS} from '../../../../shared/vtE1VisualFrame.js';
+import {VT_E1_AUDIO_ANIMATED_PROPS} from '../../../../shared/vtE1AudioFrame.js';
 
 export type TrackKind='video'|'audio'|'overlay'|'caption';
 export interface Track{id:string;name:string;kind:TrackKind;muted?:boolean;locked?:boolean;hidden?:boolean;color?:string}
@@ -94,6 +95,7 @@ export type EditorAction=
 
 const ANIMATABLE_LAYER_PROPS=new Set([
   ...VT_E1_VISUAL_ANIMATED_PROPS,
+  ...VT_E1_AUDIO_ANIMATED_PROPS,
   'cornerRadius','fillColor','strokeColor',
 ]);
 
