@@ -7,6 +7,7 @@
     "audit:reach": "node scripts/audit/reach.mjs",
     "audit:ai-systems": "node scripts/audit/ai-systems-governance.mjs",
     "test:ai-systems-governance": "node --test scripts/audit/ai-systems-governance.test.mjs",
+    "test:ai-systems-herald": "node --test scripts/audit/ai-systems-herald-projection.test.mjs",
     "x": "node --env-file-if-exists=.env.local scripts/dev-all.mjs",
     "dev": "node --env-file-if-exists=.env.local scripts/dev-all.mjs",
     "dev:all": "node --env-file-if-exists=.env.local scripts/dev-all.mjs",
