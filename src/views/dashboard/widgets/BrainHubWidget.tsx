@@ -86,6 +86,66 @@ const CHAT_PAGES: readonly {
  { id: "evidence", label: "Evidence", icon: <Database /> },
  { id: "packages", label: "Packages", icon: <Package /> },
 ]
+const BrainIntelligenceNexus: React.FC<{
+ portfolio: AlgorithmIntelligencePortfolio | null
+ status: string
+ onRefresh: () => void
+}> = ({ portfolio, status, onRefresh }) => {
+ const patterns = portfolio?.channelIntelligence.patterns.length || 0
+ const anomalies = portfolio?.anomalySignals.length || 0
+ const opportunities = portfolio?.opportunitySignals.length || 0
+ const recommendation = portfolio?.primaryRecommendation || null
+
+ return (
+  <section className="brain-hub-intelligence-nexus" aria-label="Brain Intelligence Nexus">
+   <div className="brain-hub-intelligence-nexus__orbit" aria-hidden="true" />
+
+   <div className="brain-hub-intelligence-nexus__core">
+    <Brain aria-hidden="true" />
+    <strong>{portfolio ? "INTEL" : "IDLE"}</strong>
+    <small>{status}</small>
+   </div>
+
+   <div className="brain-hub-intelligence-nexus__node is-patterns">
+    <BarChart3 aria-hidden="true" />
+    <span>CHANNEL</span>
+    <strong>{patterns}</strong>
+    <small>PATTERNS</small>
+   </div>
+
+   <div className="brain-hub-intelligence-nexus__node is-anomalies">
+    <Radar aria-hidden="true" />
+    <span>ANOMALY</span>
+    <strong>{anomalies}</strong>
+    <small>SIGNALS</small>
+   </div>
+
+   <div className="brain-hub-intelligence-nexus__node is-opportunities">
+    <Target aria-hidden="true" />
+    <span>OPPORTUNITY</span>
+    <strong>{opportunities}</strong>
+    <small>SIGNALS</small>
+   </div>
+
+   <div className="brain-hub-intelligence-nexus__recommendation">
+    <WidgetBadge tone="yellow">PRIMARY</WidgetBadge>
+    <strong>{recommendation?.title || "NO GOVERNED RECOMMENDATION YET"}</strong>
+    <small>{recommendation
+     ? `${recommendation.confidence.toUpperCase()} CONFIDENCE · ${recommendation.evidenceIds.length} EVIDENCE`
+     : "REFRESH INTELLIGENCE TO BUILD A RECOMMENDATION."}</small>
+   </div>
+
+   <WidgetIconButton
+    icon={<RefreshCw />}
+    label="Refresh algorithm intelligence"
+    height={32}
+    tone="secondary"
+    className="brain-hub-intelligence-nexus__refresh"
+    onClick={onRefresh}
+   />
+  </section>
+ )
+}
 
 export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...common }) => {
  const { brain, authState, channelConnection, getBrainMemory } = useBrain()
@@ -350,20 +410,13 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
             <strong>Algorithm Intelligence</strong>
             <span>{intelStatus}</span>
            </div>
-           <WidgetIconButton
-            icon={<RefreshCw />}
-            label="Refresh algorithm intelligence"
-            height={32}
-            tone="secondary"
-            onClick={() => void loadIntelligence()}
-           />
           </div>
 
-          <div className="brain-hub-kpis">
-           <div><BarChart3 /><strong>{portfolio?.channelIntelligence.patterns.length || 0}</strong><span>patterns</span></div>
-           <div><Radar /><strong>{portfolio?.anomalySignals.length || 0}</strong><span>anomalies</span></div>
-           <div><Target /><strong>{portfolio?.opportunitySignals.length || 0}</strong><span>opportunities</span></div>
-          </div>
+          <BrainIntelligenceNexus
+           portfolio={portfolio}
+           status={intelStatus}
+           onRefresh={() => void loadIntelligence()}
+          />
 
           {portfolio?.primaryRecommendation ? (
            <div className="brain-hub-recommendation">
