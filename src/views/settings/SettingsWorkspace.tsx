@@ -18,6 +18,7 @@ import {
   SubToolboxSplitDropdown,
   type SubToolboxSplitDropdownOption,
 } from "../../components/subtoolbox/SubToolboxSplitPrimitives"
+import { useWorkspaceUxPreferences } from "../../hooks/useWorkspaceUxPreferences"
 import type { SettingsPanel, SettingsReadiness } from "./settingsControlDeck"
 import {
   SETTINGS_PANEL_DEFINITIONS,
@@ -35,6 +36,9 @@ const PANEL_ICONS: Record<SettingsPanel, React.ReactNode> = {
   help: <ShieldCheck size={18} />,
 }
 
+export const getSettingsWorkspaceBottomPadding = (thumbZoneShortcuts: boolean): string =>
+  thumbZoneShortcuts ? "pb-4 sm:pb-5 max-[760px]:pb-20" : "pb-4 sm:pb-5"
+
 export interface SettingsWorkspaceProps {
   activePanel: SettingsPanel
   readiness: SettingsReadiness
@@ -48,6 +52,7 @@ export const SettingsWorkspace: React.FC<SettingsWorkspaceProps> = ({
   onPanelChange,
   children,
 }) => {
+  const workspaceUx = useWorkspaceUxPreferences()
   const activeDefinition = getSettingsPanelDefinition(activePanel)
   const mobileOptions: SubToolboxSplitDropdownOption[] = SETTINGS_PANEL_DEFINITIONS.map((panel) => ({
     value: panel.id,
@@ -58,7 +63,7 @@ export const SettingsWorkspace: React.FC<SettingsWorkspaceProps> = ({
   return (
     <div
       data-vt-settings-workspace="true"
-      className="mx-auto w-full max-w-[1680px] min-w-0 px-2 pb-28 sm:px-3 lg:px-4"
+      className={`mx-auto w-full max-w-[1680px] min-w-0 px-2 sm:px-3 lg:px-4 ${getSettingsWorkspaceBottomPadding(workspaceUx.thumbZoneShortcuts)}`}
     >
       <header className="sticky top-0 z-30 mb-2 flex min-h-14 items-center gap-3 bg-white py-1">
         <span
