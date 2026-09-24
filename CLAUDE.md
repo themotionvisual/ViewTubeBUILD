@@ -5,6 +5,22 @@ this repo. Keep it short. Longer notes belong in `docs/` or per-feature READMEs.
 
 ---
 
+## One-goal completion program
+
+For any audit, plan, implementation, review, merge, or status work intended to
+finish/optimize ViewTube, start with:
+
+- `docs/architecture/VIEWTUBE_ONE_GOAL_COMPLETION_OPERATING_SYSTEM.md`
+- `tasks/viewtube-one-goal-status.md`
+- `.claude/skills/viewtube-one-goal-completion/SKILL.md`
+
+These are the cross-domain completion entry point. Domain masters remain
+authoritative for their bounded concerns, and current code/tests outrank prose.
+Every meaningful completion slice must update task evidence/status and leave a
+bounded handoff so another agent can continue without reconstructing history.
+
+---
+
 ## Deployment topology
 
 ```
