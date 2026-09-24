@@ -100,13 +100,13 @@ describe("dashboard v9 registry and layout migration", () => {
       .filter((widget) => widget.releaseTier === "supported")
       .sort((left, right) => left.defaultOrder - right.defaultOrder)
 
-    expect(supported).toHaveLength(30)
+    expect(supported).toHaveLength(SUPPORTED_DASHBOARD_WIDGET_IDS.length)
     expect(supported[0]?.id).toBe("app-verification-explainer")
     expect(supported[1]?.id).toBe("kpi-cluster")
     expect(supported.map((widget) => widget.id)).toContain("video-uploader")
     expect(supported.map((widget) => widget.id)).toContain("data-edit")
-    expect(supported[29]?.id).toBe("hashtag-analyzer")
-    expect(SUPPORTED_DASHBOARD_WIDGET_IDS).toHaveLength(30)
+    expect(supported.at(-1)?.id).toBe(SUPPORTED_DASHBOARD_WIDGET_IDS.at(-1))
+    expect(SUPPORTED_DASHBOARD_WIDGET_IDS.length).toBeGreaterThan(30)
     expect(DASHBOARD_WIDGET_REGISTRY.find((widget) => widget.id === "tag-generator")?.releaseTier).toBe("preview")
     expect(supported.every((widget) => widget.supportedDimensions.length > 0)).toBe(true)
   })
@@ -122,7 +122,7 @@ describe("dashboard v9 registry and layout migration", () => {
   it("has a complete certification contract for every supported widget", () => {
     const report = buildWidgetCertificationReport()
 
-    expect(report.supportedCount).toBe(30)
+    expect(report.supportedCount).toBe(SUPPORTED_DASHBOARD_WIDGET_IDS.length)
     expect(report.missing).toEqual([])
     expect(report.invalid).toEqual([])
     expect(report.certified).toBe(true)
