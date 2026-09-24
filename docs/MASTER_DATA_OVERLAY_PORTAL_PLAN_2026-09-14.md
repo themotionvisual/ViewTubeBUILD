@@ -2,7 +2,7 @@
 
 **Status:** ACTIVE FOCUSED MIGRATION PLAN  
 **Current authority:** `analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md`  
-**Last re-audited:** 2026-09-24 against main `e8313cceb2b6ab1fbcff6ff28a9648192f559854`  
+**Last re-audited:** 2026-09-24 against main `0c4610629bfba98ffc0703a42e422352d5f31514`  
 **Open gap confirmed:** no production `VtSyncToolboxDataTable.tsx` `createPortal` implementation was found in the Wave 4 audit, so this plan remains open. It is a floating-menu migration only, not a new Analytics data authority.
 
 ## Current state

@@ -2,7 +2,7 @@
 
 **Status:** ACTIVE IMPLEMENTATION PLAN — partially landed  
 **Current authority:** `../analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md`  
-**Last re-audited:** 2026-09-24 against main `e8313cceb2b6ab1fbcff6ff28a9648192f559854`
+**Last re-audited:** 2026-09-24 against main `0c4610629bfba98ffc0703a42e422352d5f31514`
 
 Code-backed state: both declarative Analytics shells use `VisualControllerRail`; controller width-floor infrastructure is present; row-order authority has moved to module-authored order. The migration is still open because live `controllerSpec` metadata remains and the later vocabulary/orientation phases are not fully retired. The inventory below describes the original baseline where noted, not a guarantee about every current file.
 

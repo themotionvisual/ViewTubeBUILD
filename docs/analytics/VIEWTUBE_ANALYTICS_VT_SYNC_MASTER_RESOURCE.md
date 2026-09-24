@@ -2,7 +2,7 @@
 
 **Status:** Canonical living analytics architecture / migration authority  
 **Created:** 2026-09-24  
-**Last audited main:** `e8313cceb2b6ab1fbcff6ff28a9648192f559854`  
+**Last audited main:** `0c4610629bfba98ffc0703a42e422352d5f31514`  
 **Canonical owner / concern:** Analytics data ownership, VT-SYNC dataset/sync contracts, analytics-canon consumer boundary, time-window semantics, Data Visual contract boundaries, and legacy analytics migration state.  
 **Executable authorities:** `src/features/vt-sync-local/**`, `src/services/analytics-canon/**`, `src/services/analytics/windows.ts`, and their contract tests.  
 **Related scoped authorities:** `docs/migration/data-visual-canvas-contract.md` owns bounded Data Visual canvas geometry; `docs/MOBILE_VISUAL_RESPONSIVE_CONTRACT.md` owns Analytics Data Visual responsive composition; controller and mark-scale documents remain active implementation plans.
@@ -45,7 +45,7 @@ No page, widget, Brain service, or visualization should invent another analytics
 
 ## 2. Audited production state
 
-The following is code-backed on main `e8313cceb2b6ab1fbcff6ff28a9648192f559854`.
+The following is code-backed on main `0c4610629bfba98ffc0703a42e422352d5f31514`.
 
 ### Dataset and evidence system
 
@@ -72,6 +72,7 @@ Implemented foundations include:
 - `VtSyncSnapshot.datasetsByWindow` stores non-lifetime aggregate windows without corrupting lifetime compatibility fields.
 - video records can carry `metricsByWindow`.
 - analytics-canon projects requested-window video metrics and explicitly labels `window_exact`, `lifetime_fallback`, or `unavailable`.
+- `getCurrentCanonicalIntelligenceEvidence()` now provides a public imperative analytics-canon evidence entry point for non-React consumers such as BrainRuntime, so Brain services do not need to reach into VT-SYNC internals.
 - selected Analytics time-window state is present in the VT-SYNC snapshot/tooling.
 
 Still open:
