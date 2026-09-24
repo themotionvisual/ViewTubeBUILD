@@ -411,3 +411,20 @@
  .brain-hub-nav { grid-template-columns: 1fr; }
  .brain-hub-footer-meta { align-items: flex-start; flex-direction: column; gap: 3px; }
 }
+
+
+.brain-hub-recommendation{display:grid;gap:4px}
+.brain-hub-recommendation>small{font-size:8px;font-weight:800;line-height:1.25;opacity:.68}
+.brain-hub-recommendation-list{display:grid;gap:4px}
+.brain-hub-recommendation-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;padding:6px;border:2px solid var(--widget-border);border-radius:6px;background:color-mix(in srgb,var(--widget-color) 8%,white);color:var(--widget-border);text-decoration:none}
+.brain-hub-recommendation-row>span{min-width:0;display:grid;gap:2px}
+.brain-hub-recommendation-row strong{font-size:10px;font-weight:1000;line-height:1}
+.brain-hub-recommendation-row small{font-size:7px;font-weight:900;line-height:1;opacity:.62}
+.brain-hub-recommendation-row>b{font-size:16px;font-weight:1000}
+.brain-hub-recommendation-row:focus-visible{outline:3px solid var(--widget-color);outline-offset:2px}
+.brain-hub-priming{display:grid;gap:5px}
+.brain-hub-priming-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+.brain-hub-priming-steps>div{display:grid;gap:2px;min-width:0;padding:6px;border:2px solid color-mix(in srgb,var(--widget-color) 55%,var(--widget-border));border-radius:5px;background:white}
+.brain-hub-priming-steps span,.brain-hub-priming-steps small{font-size:7px;font-weight:900;line-height:1;text-transform:uppercase;opacity:.62}
+.brain-hub-priming-steps strong{min-width:0;font-size:9px;font-weight:1000;line-height:1.05;text-transform:uppercase}
+@container vt-widget (max-width:430px){.brain-hub-priming-steps{grid-template-columns:1fr}}
