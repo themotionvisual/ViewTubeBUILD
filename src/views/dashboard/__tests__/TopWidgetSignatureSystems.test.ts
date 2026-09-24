@@ -37,6 +37,28 @@ describe("Top widget signature systems", () => {
     expect(source).toContain("<WidgetIconButton")
   })
 
+  it("Content Pipeline owns a lifecycle rail compound system", () => {
+    const source = read("src/views/dashboard/widgets/ContentPipelineWidget.tsx")
+    expect(source).toContain("LifecycleRail")
+    expect(source).toContain("vt-content-lifecycle-rail")
+    expect(source).toContain("<WidgetSizedButton")
+  })
+
+  it("Audience Requests owns a request-cluster map and canonical actions", () => {
+    const source = read("src/views/dashboard/widgets/AudienceRequestsWidget.tsx")
+    expect(source).toContain("RequestClusterMap")
+    expect(source).toContain("vt-request-cluster-map")
+    expect(source).toContain("<WidgetSizedButton")
+  })
+
+  it("Flight Check owns a launch gantry when canonical publishing state exists", () => {
+    const source = read("src/views/dashboard/widgets/FlightCheckWidget.tsx")
+    expect(source).toContain("LaunchGantry")
+    expect(source).toContain("vt-launch-gantry")
+    expect(source).toContain("<WidgetProgressBar")
+    expect(source).toContain("<WidgetSizedButton")
+  })
+
   it("the shared new-widget stylesheet no longer owns the signature systems", () => {
     const sharedCss = read("src/views/dashboard/widgets/newWidgetSet.css")
     expect(sharedCss).not.toContain(".vt-opportunity-compass")
