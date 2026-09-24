@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 const shell = readFileSync(new URL("../WidgetShell.tsx", import.meta.url), "utf8")
 const mobile = readFileSync(new URL("../widgetMobileContract.css", import.meta.url), "utf8")
 const shellCss = readFileSync(new URL("../widgetShellOwnership.css", import.meta.url), "utf8")
+const canvas = readFileSync(new URL("../DashboardCanvas.tsx", import.meta.url), "utf8")
 
 describe("portrait widget header control deck", () => {
   it("uses one portrait menu trigger and a dedicated extended control row", () => {
@@ -38,5 +39,7 @@ describe("portrait widget header control deck", () => {
     expect(shellCss).toContain("grid-template-rows:1fr")
     expect(shellCss).toContain("grid-template-rows:0fr")
     expect(shellCss).not.toContain("opacity:0")
+    expect(canvas).not.toContain("<motion.div ref={setNodeRef} layout")
+    expect(canvas).not.toContain("useReducedMotion")
   })
 })
