@@ -11,6 +11,7 @@ import {
  type AssetEvidence,
 } from "../AssetGenerator"
 import { communityPostStrategy, type CommunityPostPlan } from "../assetStrategies/communityPost"
+import { BRAIN_PROMPT_CONSTITUTION_VERSION } from "../PromptConstitution"
 import { createStyleProfile } from "../StyleProfile"
 
 const terseSamples = [
@@ -114,6 +115,7 @@ describe("generateAsset", () => {
    request, strategy: communityPostStrategy, evidence, runner, styleProfile: null,
   })
   expect(result.record.promptVersions).toEqual({
+   shared_constitution: BRAIN_PROMPT_CONSTITUTION_VERSION,
    constitution: ASSET_CONSTITUTION_VERSION,
    community_post: "community-post-v1",
   })

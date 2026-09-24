@@ -5,6 +5,7 @@ import type {
 } from "../../types"
 import type { AIBrainContextSnapshot } from "../aiBrainCommandInterface"
 import { buildBrainTaskInstruction, resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
+import { buildBrainPromptConstitution } from "./PromptConstitution"
 import { buildRelevantNicheKnowledgeContext } from "./NicheKnowledge"
 import { readBrainUserControls } from "./BrainUserControls"
 import type { StatisticsIntelligenceSnapshot } from "./StatisticsIntelligence"
@@ -32,6 +33,8 @@ export const buildBrainContextPack = (input: {
  maximumCharacters?: number
 }): { systemInstruction: string; budget: BrainContextBudget } => {
  const controls = readBrainUserControls(input.channelId)
+ const taskProfile = resolveBrainTaskProfile(input.userText)
+ const promptConstitution = clip(buildBrainPromptConstitution(taskProfile), 5200)
  const maximumCharacters = input.maximumCharacters || 24_000
  const omittedSections: string[] = [...(input.contextOmissions || [])]
  const system = clip(input.systemPrompt, 11_000)
@@ -116,7 +119,7 @@ export const buildBrainContextPack = (input: {
 
  const knowledge = clip(buildRelevantNicheKnowledgeContext(input.nicheKnowledge || null, input.userText, 2200), 2200)
  const research = clip(input.currentResearch || "", 1800)
- const taskInstruction = buildBrainTaskInstruction(resolveBrainTaskProfile(input.userText))
+ const taskInstruction = buildBrainTaskInstruction(taskProfile)
  const controlInstruction = [
   "\nCREATOR CONTROL POLICY",
   `Brain enabled: ${controls.enabled ? "yes" : "no"}`,
@@ -128,6 +131,7 @@ export const buildBrainContextPack = (input: {
 
  const sections = [
   system,
+  "\nPROMPT CONSTITUTION\n" + promptConstitution,
   controlInstruction,
   "\nCHANNEL EVIDENCE\n" + evidence,
   evidenceQuality ? "\nEVIDENCE QUALITY\n" + evidenceQuality : "",
@@ -151,7 +155,7 @@ export const buildBrainContextPack = (input: {
   systemInstruction,
   budget: {
    maximumCharacters,
-   systemCharacters: system.length,
+   systemCharacters: system.length + promptConstitution.length,
    evidenceCharacters: evidence.length + evidenceQuality.length + statistics.length + audience.length + algorithm.length,
    memoryCharacters: memory.length + channelKnowledge.length,
    knowledgeCharacters: knowledge.length + research.length,

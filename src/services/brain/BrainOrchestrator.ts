@@ -37,6 +37,11 @@ import {
 } from "./BrainCapabilityRegistry"
 import { resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
 import { resolveBrainContextPlan } from "./BrainContextResolver"
+import {
+ BRAIN_PROMPT_CONSTITUTION_VERSION,
+ BRAIN_PROMPT_FAMILY_VERSIONS,
+ resolveBrainPromptFamily,
+} from "./PromptConstitution"
 import { buildBrainEvidenceIntelligence } from "./BrainStatisticsBridge"
 import { buildBrainAudienceIntelligence } from "./BrainAudienceBridge"
 import { readAlgorithmIntelligenceForBrain } from "./AlgorithmIntelligenceAccess"
@@ -312,6 +317,8 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
  const capabilityIds = capabilities.map((capability) => capability.id)
  const engineControls = readBrainEngineControls(input.channelId)
  const userControls = readBrainUserControls(input.channelId)
+ const promptFamily = resolveBrainPromptFamily(taskProfile)
+ const promptFamilyVersion = BRAIN_PROMPT_FAMILY_VERSIONS[promptFamily]
  const contextPlan = resolveBrainContextPlan({
   taskProfile,
   capabilityIds,
@@ -520,6 +527,9 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     promptVersion: BRAIN_PROMPT_VERSION,
     contextResolverVersion: contextPlan.version,
     contextOmissions: contextPlan.omissions,
+    promptConstitutionVersion: BRAIN_PROMPT_CONSTITUTION_VERSION,
+    promptFamily,
+    promptFamilyVersion,
     repairReasons: repairOutcome.reasons,
    },
   })
@@ -540,6 +550,9 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     promptVersion: BRAIN_PROMPT_VERSION,
     contextResolverVersion: contextPlan.version,
     contextOmissions: contextPlan.omissions,
+    promptConstitutionVersion: BRAIN_PROMPT_CONSTITUTION_VERSION,
+    promptFamily,
+    promptFamilyVersion,
     evaluationId: evaluation.id,
     repairReasons: repairOutcome.reasons,
     repaired: repairOutcome.attempted,
@@ -579,6 +592,9 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     promptVersion: BRAIN_PROMPT_VERSION,
     contextResolverVersion: contextPlan.version,
     contextOmissions: contextPlan.omissions,
+    promptConstitutionVersion: BRAIN_PROMPT_CONSTITUTION_VERSION,
+    promptFamily,
+    promptFamilyVersion,
    },
   })
   const turn = await completeAIBrainTurn({
@@ -598,6 +614,9 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     promptVersion: BRAIN_PROMPT_VERSION,
     contextResolverVersion: contextPlan.version,
     contextOmissions: contextPlan.omissions,
+    promptConstitutionVersion: BRAIN_PROMPT_CONSTITUTION_VERSION,
+    promptFamily,
+    promptFamilyVersion,
     evaluationId: evaluation.id,
     repaired: false,
    },
