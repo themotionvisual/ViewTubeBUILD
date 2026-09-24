@@ -1,6 +1,7 @@
 import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
 import type {EditorStore} from '../state/editorState';
 import {readClipVisualTransform} from '../state/editorState';
+import {VT_E1_ANIMATED_FX_KEYS} from '../../../../shared/vtE1FxCatalog.js';
 
 type Keyframe={offsetSec?:number;values?:Record<string,unknown>;interp?:string};
 type LayerLike={id?:string;type?:string;visible?:boolean;payload?:Record<string,unknown>};
@@ -61,7 +62,7 @@ export function resolveClipPreviewGeometry(store:EditorStore,clip:VtE1Clip):Clip
   const base={...((layer?.payload??{}) as Record<string,unknown>),...(clip as Record<string,unknown>)};
   const localSec=Math.max(0,store.state.playheadSec-clip.start);
   const animated={...base};
-  for(const prop of ['x','y','scale','rotation','opacity','width','height','fontSize','strokeWidth','blur','saturation','brightness','hue']){
+  for(const prop of ['x','y','scale','rotation','width','height','fontSize','strokeWidth',...VT_E1_ANIMATED_FX_KEYS]){
     animated[prop]=keyframedValue(animated[prop],clip.keyframes as Keyframe[]|undefined,prop,localSec);
   }
   const mobile=readClipVisualTransform(clip);
