@@ -36,7 +36,7 @@ import {
  shouldUseCurrentGrounding,
 } from "./BrainCapabilityRegistry"
 import { resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
-import { buildBrainStatisticsIntelligence } from "./BrainStatisticsBridge"
+import { buildBrainEvidenceIntelligence } from "./BrainStatisticsBridge"
 import { buildBrainAudienceIntelligence } from "./BrainAudienceBridge"
 import { readAlgorithmIntelligenceForBrain } from "./AlgorithmIntelligenceAccess"
 import { readBrainEngineControls } from "./BrainEngineControls"
@@ -307,11 +307,22 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
  })
  const capabilities = selectBrainCapabilities({ channelId: input.channelId, userText: input.userText, snapshot: input.snapshot })
  const capabilityIds = capabilities.map((capability) => capability.id)
- const statisticsIntelligence = capabilityIds.includes("statistics-intelligence")
-  ? buildBrainStatisticsIntelligence()
+ const brainIntent = inferBrainIntent(input.userText)
+ const evidenceIntelligence = capabilityIds.includes("statistics-intelligence")
+  ? buildBrainEvidenceIntelligence({
+    expectedChannelId: input.channelId,
+    includeAudienceRows: brainIntent === "audience",
+   })
   : null
- const audienceIntelligence = statisticsIntelligence && inferBrainIntent(input.userText) === "audience"
-  ? buildBrainAudienceIntelligence()
+ const evidenceQuality = evidenceIntelligence?.evidenceQuality || null
+ const canonicalEvidence = evidenceQuality?.scopeMatch === "mismatch"
+  ? null
+  : evidenceIntelligence?.canonicalEvidence || null
+ const statisticsIntelligence = canonicalEvidence
+  ? evidenceIntelligence?.statisticsIntelligence || null
+  : null
+ const audienceIntelligence = canonicalEvidence && brainIntent === "audience"
+  ? buildBrainAudienceIntelligence(canonicalEvidence)
   : null
  const engineControls = readBrainEngineControls(input.channelId)
  const wantsAlgorithmIntelligence = capabilityIds.includes("algorithm-intelligence") && engineControls.channelIntelligence
@@ -340,6 +351,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   recentTurns: input.recentTurns || [],
   userText: input.userText,
   statisticsIntelligence,
+  evidenceQuality,
   audienceIntelligence,
   algorithmIntelligence,
  })
@@ -380,6 +392,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    currentResearch,
    userText: input.userText,
    statisticsIntelligence,
+   evidenceQuality,
    audienceIntelligence,
    algorithmIntelligence,
   })
