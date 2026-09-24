@@ -61,7 +61,8 @@ export const ExportRenderPanel:React.FC<{store:EditorStore}>=({store})=>{
     const fps=30;
     const duration=Math.max(.1,store.state.project.durationSec);
     const meta=(store.state.project.meta??{}) as Record<string,unknown>;
-    const projectScope=store.state.project as typeof store.state.project&{contentBuildId?:string};
+    const projectScope=store.state.project as typeof store.state.project&{contentBuildId?:string;id?:unknown};
+    const projectId=typeof projectScope.id==='string'?projectScope.id:undefined;
     const contentBuildId=typeof projectScope.contentBuildId==='string'
       ?projectScope.contentBuildId
       :typeof meta.contentBuildId==='string'?meta.contentBuildId:null;
@@ -74,7 +75,7 @@ export const ExportRenderPanel:React.FC<{store:EditorStore}>=({store})=>{
           renderMode:'remotion-mp4',outputFormat:format,compositionId:'VTE1Renderer',
           compositionMeta:{fps,width,height,durationInFrames:Math.max(1,Math.ceil(duration*fps)),durationInSeconds:duration,aspectRatio:landscape?'16:9':'9:16'},
           project:store.state.project,
-          projectId:store.state.project.id,
+          projectId,
           contentBuildId:contentBuildId||undefined,
         });
         setJobs(current=>({...current,[format]:created.job}));

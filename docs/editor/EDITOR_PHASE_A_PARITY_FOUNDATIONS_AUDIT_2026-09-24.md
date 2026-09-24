@@ -2,9 +2,10 @@
 
 **Status:** active implementation audit  
 **Date:** 2026-09-24  
-**Audited main:** 052ff0294b5f8c9b05867a85ab4e2d407a27ec06  
+**Audited main:** 56e2c0c03f83a168bf385dd2f71d32bc87166d08  
 **Current implementation branch:** feat/editor-phase-a-shared-fx-2026-09-24
-**Transition/project-bridge slice merged:** PR #405 → 052ff0294b5f8c9b05867a85ab4e2d407a27ec06  
+**Transition/project-bridge slice merged:** PR #405 → 052ff0294b5f8c9b05867a85ab4e2d407a27ec06
+**Shared FX slice merged:** PR #408 → 56e2c0c03f83a168bf385dd2f71d32bc87166d08  
 **Parent authority:** docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md
 
 ## Purpose
@@ -153,10 +154,10 @@ This avoids turning real mobile/render capability into a false claim of desktop 
 
 1. **Capability-surface matrix:** the registry exists, but desktop/mobile/render implementation evidence is not yet generated from tests into one parity table.
 2. **Desktop FX parity:** the shared FX contract is implemented and mobile/preview/render support is explicit, but the desktop host is intentionally still marked planned until its controls/actions are verified against the same contract.
-3. **Whole-project fixture:** add one richer fixture with media, text, audio, keyframes, effects, transitions, templates/assets, ContentBuild identity, and multiple track kinds, then round-trip it desktop → mobile → desktop.
+3. **Whole-project fixture:** verified in PR #410. It covers media, text, audio, keyframes, FX, transitions, templates, Remotion assets, ContentBuild identity, forward-compatible metadata, and all current track kinds. The rich fixture passed 4/4, bridge runtime 8/8, bridge hook 2/2, and desktop timeline adapter 5/5 on runtime head `e2bea9e2...`.
 4. **Preview ↔ final beyond transitions:** transform, crop, keyframes, layer visibility/order, template assets, and audio need deterministic parity fixtures.
 5. **Desktop host integration:** shared adapters exist, but the legacy desktop host still owns significant behavior separately and needs measured adoption rather than an assumption of parity.
-6. **Render client baseline debt:** renderJobContract.ts has existing Promise<Response> typing errors and should be repaired in a bounded follow-up.
+6. **Editor static-quality debt:** PR #410 repairs renderJobContract Promise<Response> typing, ExportRenderPanel project ID narrowing, PreviewPane keyframe value narrowing, bridge-test layer typing, desktop timeline adapter declarations, and truthful optional layer visibility. The latest static-quality run reports no remaining errors in these changed editor files; remaining errors are outside this slice.
 7. **Visual certification:** this slice primarily changes contracts and transition semantics; responsive UI screenshots should be taken when the next visible editor-shell slice is implemented.
 
 ## Acceptance gates for Phase A
@@ -173,10 +174,9 @@ Phase A is complete only when:
 
 ## Next implementation order
 
-1. verify/merge the shared FX slice;
-2. add a rich whole-project round-trip fixture covering media, text, audio, keyframes, FX, transitions, assets/templates, ContentBuild identity, and multiple track kinds;
-3. expand preview/final fixture coverage to transforms, crop, layer visibility/order, templates/assets, and audio-critical state;
-4. verify and wire the desktop FX surface to the canonical FX contract;
-5. generate the capability parity matrix from verified tests/contracts;
-6. repair bounded editor render-client typing debt that blocks clean static-quality evidence;
-7. then proceed into Phase B UI consolidation and Phase C Editor Brain guide/proposal assistant.
+1. verify/merge the rich whole-project round-trip + bounded editor-health slice;
+2. expand preview/final fixture coverage to transforms, crop, layer visibility/order, templates/assets, and audio-critical state;
+3. verify and wire the desktop FX surface to the canonical FX contract;
+4. generate the capability parity matrix from verified tests/contracts;
+5. close any remaining editor-owned static-quality errors surfaced by the parity work;
+6. then proceed into Phase B UI consolidation and Phase C Editor Brain guide/proposal assistant.
