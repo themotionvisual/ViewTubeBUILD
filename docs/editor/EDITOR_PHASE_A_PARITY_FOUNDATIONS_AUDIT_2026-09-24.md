@@ -2,8 +2,9 @@
 
 **Status:** active implementation audit  
 **Date:** 2026-09-24  
-**Audited main:** 4a273685fcae36403977e28be9804b02217717c4  
-**Implementation branch:** feat/editor-phase-a-parity-foundations-2026-09-24  
+**Audited main:** 052ff0294b5f8c9b05867a85ab4e2d407a27ec06  
+**Current implementation branch:** feat/editor-phase-a-shared-fx-2026-09-24
+**Transition/project-bridge slice merged:** PR #405 → 052ff0294b5f8c9b05867a85ab4e2d407a27ec06  
 **Parent authority:** docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md
 
 ## Purpose
@@ -117,10 +118,41 @@ Canonical transition frame state is now a pure shared contract consumed by brows
 - tests now round-trip layers, transition identity/presentation/params, seam links, project metadata, and unknown desktop fields;
 - complete stable project fingerprinting detects semantic edits beyond clip timing.
 
+### Shared FX contract
+
+After PR #405 merged, the next audit found a second duplicated semantic owner: the FX rack, mobile preview, final Remotion composition, and render-worker keyframe evaluator each carried their own lists/defaults/order/filter rules.
+
+The shared authority is now:
+
+- src/shared/vtE1FxCatalog.js
+- src/shared/vtE1FxCatalog.d.ts
+- src/shared/vtE1FxCatalog.test.ts
+
+Canonical FX keys are:
+
+- blur
+- saturation
+- brightness
+- hue
+- contrast
+- sepia
+- grayscale
+- opacity
+
+The contract owns defaults, min/max clamping, step/precision metadata, keyframeability, default ordering, custom-order normalization, bypass and per-effect disable semantics, and CSS filter generation. Mobile controls no longer own a private definition list. Mobile preview and final Remotion output use the same filter builder. Mobile preview geometry, final Remotion keyframe evaluation, and the render worker now consume one animated-FX key list, which closes the prior gap where contrast/sepia/grayscale were statically rendered but omitted from animation evaluation.
+
+The capability registry now records surface-specific truth for color adjustments and blur:
+- mobile: active
+- preview: active
+- render: active
+- desktop: planned until the legacy/current desktop host is verified and wired
+
+This avoids turning real mobile/render capability into a false claim of desktop parity.
+
 ## Remaining Phase A gaps
 
 1. **Capability-surface matrix:** the registry exists, but desktop/mobile/render implementation evidence is not yet generated from tests into one parity table.
-2. **Shared FX contract:** final Remotion already renders several payload-based filters while the capability registry still marks color/blur as planned. This mismatch needs a typed FX catalog and verified editor actions before controls are promoted.
+2. **Desktop FX parity:** the shared FX contract is implemented and mobile/preview/render support is explicit, but the desktop host is intentionally still marked planned until its controls/actions are verified against the same contract.
 3. **Whole-project fixture:** add one richer fixture with media, text, audio, keyframes, effects, transitions, templates/assets, ContentBuild identity, and multiple track kinds, then round-trip it desktop → mobile → desktop.
 4. **Preview ↔ final beyond transitions:** transform, crop, keyframes, layer visibility/order, template assets, and audio need deterministic parity fixtures.
 5. **Desktop host integration:** shared adapters exist, but the legacy desktop host still owns significant behavior separately and needs measured adoption rather than an assumption of parity.
@@ -141,10 +173,10 @@ Phase A is complete only when:
 
 ## Next implementation order
 
-1. finish/verify this transition + project-bridge slice;
-2. build typed shared FX catalog from fields the final renderer already truly supports;
-3. wire FX controls to the shared catalog and project payload contract;
-4. add rich whole-project round-trip fixture;
-5. expand preview/final fixture coverage beyond transitions;
-6. generate the capability parity matrix from those verified contracts;
+1. verify/merge the shared FX slice;
+2. add a rich whole-project round-trip fixture covering media, text, audio, keyframes, FX, transitions, assets/templates, ContentBuild identity, and multiple track kinds;
+3. expand preview/final fixture coverage to transforms, crop, layer visibility/order, templates/assets, and audio-critical state;
+4. verify and wire the desktop FX surface to the canonical FX contract;
+5. generate the capability parity matrix from verified tests/contracts;
+6. repair bounded editor render-client typing debt that blocks clean static-quality evidence;
 7. then proceed into Phase B UI consolidation and Phase C Editor Brain guide/proposal assistant.
