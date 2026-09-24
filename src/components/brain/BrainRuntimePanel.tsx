@@ -90,20 +90,110 @@ const RuntimePill: React.FC<{
  </span>
 )
 
+const RuntimeCompactCell: React.FC<{
+ label: string
+ value: React.ReactNode
+ detail: string
+ icon: React.ReactNode
+ accent: string
+}> = ({ label, value, detail, icon, accent }) => (
+ <article
+  data-vt-runtime-cell="compact"
+  title={detail}
+  className="flex min-w-0 items-center gap-1.5 rounded-[7px] border-[2px] bg-white px-1.5 py-1"
+  style={{ borderColor: INK, color: INK }}
+ >
+  <span
+   className="grid h-7 w-7 shrink-0 place-items-center rounded-[5px]"
+   style={{ backgroundColor: accent }}
+   aria-hidden="true"
+  >
+   {icon}
+  </span>
+  <div className="min-w-0">
+   <div className="truncate text-[7px] font-[1000] uppercase leading-3 tracking-[0.08em] opacity-60">{label}</div>
+   <div className="truncate text-[10px] font-[1000] leading-4">{value}</div>
+  </div>
+ </article>
+)
+
 export const BrainRuntimePanel: React.FC<BrainRuntimePanelProps> = ({ snapshot, embedded = false }) => {
  const { project, build, generation, brain, outcomes, lifecycle } = snapshot
  const request = generation.latestRequest
  const receipt = generation.latestReceipt
  const trace = brain.latestTrace
 
+ if (embedded) {
+  return (
+   <section
+    aria-label="Brain runtime status"
+    data-vt-brain-runtime-shell="merged"
+    className="border-b-[2px] border-black bg-[#EEF2F7] px-2 py-2"
+   >
+    <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-6">
+     <RuntimeCompactCell
+      label="Project"
+      icon={<Sparkles size={13} strokeWidth={2.5} />}
+      accent="#FFDA47"
+      value={project?.name || "No project"}
+      detail={project ? `${titleCase(project.status)} · ${compactId(project.id)}` : "Brain is operating channel-wide."}
+     />
+     <RuntimeCompactCell
+      label="ContentBuild"
+      icon={<Boxes size={13} strokeWidth={2.5} />}
+      accent="#A8DC4A"
+      value={build ? `${titleCase(build.stage)} · r${build.revision}` : "Unbound"}
+      detail={build ? `${build.assetCount} assets · ${build.versionCount} versions` : "No durable build is bound yet."}
+     />
+     <RuntimeCompactCell
+      label="Context"
+      icon={<FileStack size={13} strokeWidth={2.5} />}
+      accent="#34CDEA"
+      value={request ? `Revision ${request.contextRevision}` : "Waiting"}
+      detail={request ? `${request.requestedSlotCount} slots · ${request.evidenceCount} evidence refs` : "No generation context prepared yet."}
+     />
+     <RuntimeCompactCell
+      label="Generation"
+      icon={<Workflow size={13} strokeWidth={2.5} />}
+      accent="#8C68E8"
+      value={request ? titleCase(request.toolId) : "Idle"}
+      detail={request ? `${titleCase(request.mode)} ${titleCase(request.targetSlot)}` : "No generation request yet."}
+     />
+     <RuntimeCompactCell
+      label="Receipt"
+      icon={<ReceiptText size={13} strokeWidth={2.5} />}
+      accent="#F36BB5"
+      value={receipt ? `${receipt.outputAssetCount} outputs` : "None"}
+      detail={receipt ? `${receipt.versionCount} versions · ${generation.receiptCount} receipts` : "No completed tool receipt yet."}
+     />
+     <RuntimeCompactCell
+      label="Brain Trace"
+      icon={<Activity size={13} strokeWidth={2.5} />}
+      accent="#50C878"
+      value={trace?.modelServed ? modelLabel(trace.modelServed) : (trace ? titleCase(trace.status) : "Idle")}
+      detail={trace ? `${trace.evidenceReturned} evidence · ${trace.gradeAverage ?? "—"} grade · ${formatLatency(trace.latencyMs)}` : "No model trace yet."}
+     />
+    </div>
+
+    <div className="mt-1 hidden flex-wrap gap-1 md:flex">
+     <RuntimePill label="Capabilities" value={brain.capabilityCount} />
+     <RuntimePill label="Outcomes" value={outcomes.total} />
+     <RuntimePill label="Accepted" value={`${outcomes.acceptanceRate}%`} />
+     <RuntimePill label="Selected" value={build?.selectedSlotCount || 0} />
+     <RuntimePill label="Events" value={build?.eventCount || 0} />
+     <RuntimePill label="YouTube" value={titleCase(build?.youtubeStatus || "unbound")} />
+     <RuntimePill label="Latest" value={titleCase(lifecycle.latestEventType || "none")} />
+    </div>
+   </section>
+  )
+ }
+
  return (
   <section
    aria-label="Live Brain runtime"
-   data-vt-brain-runtime-shell={embedded ? "flat" : "card"}
-   className={embedded
-    ? "overflow-visible bg-[#F8FAFC]"
-    : "overflow-hidden rounded-[11px] border-[2px] bg-[#F8FAFC] shadow-[3px_3px_0_0_rgba(38,50,74,0.16)]"}
-   style={embedded ? undefined : { borderColor: INK }}
+   data-vt-brain-runtime-shell="card"
+   className="overflow-hidden rounded-[11px] border-[2px] bg-[#F8FAFC] shadow-[3px_3px_0_0_rgba(38,50,74,0.16)]"
+   style={{ borderColor: INK }}
   >
    <header
     className="flex flex-wrap items-center justify-between gap-2 border-b-[2px] px-2.5 py-1.5"
