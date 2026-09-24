@@ -518,6 +518,8 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     generationPath,
     fallbackReason,
     promptVersion: BRAIN_PROMPT_VERSION,
+    contextResolverVersion: contextPlan.version,
+    contextOmissions: contextPlan.omissions,
     repairReasons: repairOutcome.reasons,
    },
   })
@@ -536,6 +538,8 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     generationPath,
     fallbackReason,
     promptVersion: BRAIN_PROMPT_VERSION,
+    contextResolverVersion: contextPlan.version,
+    contextOmissions: contextPlan.omissions,
     evaluationId: evaluation.id,
     repairReasons: repairOutcome.reasons,
     repaired: repairOutcome.attempted,
@@ -573,6 +577,8 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     generationPath,
     fallbackReason,
     promptVersion: BRAIN_PROMPT_VERSION,
+    contextResolverVersion: contextPlan.version,
+    contextOmissions: contextPlan.omissions,
    },
   })
   const turn = await completeAIBrainTurn({
@@ -590,6 +596,8 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
     generationPath,
     fallbackReason,
     promptVersion: BRAIN_PROMPT_VERSION,
+    contextResolverVersion: contextPlan.version,
+    contextOmissions: contextPlan.omissions,
     evaluationId: evaluation.id,
     repaired: false,
    },
