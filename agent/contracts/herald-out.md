@@ -226,3 +226,11 @@ Adopted verbatim from the Task Index `sourcePriority`. Do not invent another.
    because it makes implementation easier.
 8. **End every turn by writing the ledger line.** A turn that wrote no ledger line did not
    happen.
+
+9. **Editor work updates the editor living authority.** Any plan, audit, build, fix, verify or
+   documentation pass that touches the desktop/mobile editor, Remotion, editor AI/generation,
+   Video Director integration, captions, templates/design library, editor project state, or
+   editor-related widgets must read
+   docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md and append its Update Log
+   before handoff. Register new plans, skills, standalone HTML/prototypes, donor branches and
+   important sources there as well.
