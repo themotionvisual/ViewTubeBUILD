@@ -99,7 +99,7 @@ export function ClipEffects({store}:{store:EditorStore}){
         {order.map(key=>{
           const def=FX_DEFS.find(item=>item.key===key)!;
           return <div key={key} style={{opacity:bypass||disabled[key]?.42:1}}>
-            <HoldStepper label={def.label} value={number(def.key,def.defaultValue)} min={def.min} max={def.max} step={def.step} precision={def.precision} defaultValue={def.defaultValue} onChange={value=>patch({[def.key]:value})}/>
+            <HoldStepper label={def.label} value={number(def.id,def.defaultValue)} min={def.min} max={def.max} step={def.step} precision={def.precision} defaultValue={def.defaultValue} onChange={value=>patch({[def.id]:value})}/>
           </div>;
         })}
       </div>
