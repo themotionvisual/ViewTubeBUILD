@@ -7,7 +7,7 @@ import {
  type ViewTubeActionPacket,
 } from "../services/viewTubeToolChains"
 import { appendViewTubeAuditEvent } from "../services/viewTubeUserControls"
-import { rankWorkflowTargets, recordWorkflowPreferenceSignal } from "../services/viewTubeWorkflowLearning"
+import { buildWorkflowSelectionSignals, rankWorkflowTargets, recordWorkflowPreferenceSignal } from "../services/viewTubeWorkflowLearning"
 
 type Props = {
  packet: ViewTubeActionPacket
@@ -36,7 +36,14 @@ export const SendToMenu: React.FC<Props> = ({ packet, compact = false, onSend })
   const target = getViewTubeToolCapability(targetId)
   if (!target) return
   persistViewTubeActionPacket({ ...packet, suggestedTargets: [targetId, ...packet.suggestedTargets.filter((id) => id !== targetId)] })
-  recordWorkflowPreferenceSignal({ sourceToolId: packet.sourceToolId, payloadKind: packet.payloadKind, targetToolId: targetId, accepted: true, channelId: packet.channelId, projectId: packet.projectId })
+  buildWorkflowSelectionSignals({
+   sourceToolId: packet.sourceToolId,
+   payloadKind: packet.payloadKind,
+   rankedTargetIds: ranked.map((tool) => tool.id),
+   chosenTargetId: targetId,
+   channelId: packet.channelId,
+   projectId: packet.projectId,
+  }).forEach((signal) => recordWorkflowPreferenceSignal(signal))
   appendViewTubeAuditEvent({ action: "internal-tool-handoff", allowed: true, reason: `${packet.sourceToolId} → ${targetId}`, metadata: { packetId: packet.id, payloadKind: packet.payloadKind } })
   setSentTo(target.label)
   onSend?.(targetId, packet)
