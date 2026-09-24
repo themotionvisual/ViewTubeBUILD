@@ -81,10 +81,12 @@ Avoid:
 - replacing Daily Oracle's decision engine with timer logic.
 
 ### Wave 3 — Anomaly + Intelligence + Next Action
-- upgrade `anomaly-radar`;
-- upgrade `brain-hub`;
-- upgrade `next-best-action`;
-- share provenance/action packet semantics rather than duplicating logic.
+Status: active implementation.
+- `anomaly-radar`: connected to channel-scoped Brain/VT-SYNC anomaly intelligence with the former local baseline retained as fallback; significance, impact, confidence, evidence count, OPEN SIGNALS and COMPARE added.
+- `brain-hub`: active project context now feeds Algorithm Intelligence when Projects access is allowed; ranked recommendations and project priming are surfaced in the existing Intel page.
+- `next-best-action`: governed Algorithm Intelligence recommendations now outrank the prior local branch tree when available; local dashboard evidence remains an explicit fallback.
+- shared dashboard Algorithm Intelligence context owns active-project mapping and recommendation-to-route presentation so the three widgets do not create parallel intelligence logic.
+- remaining Wave 3 work: connect canonical Opportunity Evidence when its builder is available, finish runtime state certification, and visually verify narrow/mobile layouts.
 
 ### Wave 4 — Asset + Lifecycle
 - upgrade `video-asset-engine`;

@@ -61,6 +61,7 @@ import {
 } from "../../../services/brain/AlgorithmIntelligenceAccess"
 import type { AlgorithmIntelligencePortfolio } from "../../../services/brain/AlgorithmIntelligenceOrchestrator"
 import { searchVaultForBrain } from "../../../services/brain/BrainVaultAdapter"
+import { buildDashboardAlgorithmProjectContext, describeDashboardRecommendation } from "./dashboardAlgorithmContext"
 import type { AIBrainConversationTurn, AIBrainEvidenceItem } from "../../../types"
 import "./BrainHubWidget.css"
 
@@ -158,6 +159,15 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
   [snapshot, turns],
  )
 
+ const projectContext = useMemo(
+  () => buildDashboardAlgorithmProjectContext({
+   channelId,
+   activeProjectId: brain.activeProjectId,
+   projects: brain.projects,
+  }),
+  [channelId, brain.activeProjectId, brain.projects],
+ )
+
  const packages = useMemo(
   () => controls.allowVault && engines.videoPackages
    ? searchVaultForBrain({ query: "package", limit: 8 })
@@ -190,6 +200,7 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
   const result: AlgorithmIntelligenceAccessResult<AlgorithmIntelligencePortfolio> =
    await readAlgorithmIntelligenceForBrain({
     channelId,
+    project: controls.allowProjects ? projectContext : null,
     includeAnomalies: engines.anomalyIntelligence,
    })
 
@@ -287,6 +298,7 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
        <WidgetBadge tone="cyan">{channelId ? "Channel" : "No channel"}</WidgetBadge>
        <WidgetBadge tone="yellow">{evidence.length} evidence</WidgetBadge>
        <WidgetBadge tone="purple">{portfolio ? "Intel ready" : "Intel idle"}</WidgetBadge>
+       {projectContext ? <WidgetBadge tone="orange">Project · {projectContext.title || projectContext.projectId}</WidgetBadge> : null}
        {turns.length ? <WidgetBadge tone="green">{turns.length} turns</WidgetBadge> : null}
        {controls.externalActionsRequireApproval ? <WidgetBadge tone="royal">Approval gated</WidgetBadge> : null}
       </div>
@@ -369,6 +381,44 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
            <div className="brain-hub-recommendation">
             <WidgetBadge tone="yellow">Primary</WidgetBadge>
             <strong>{portfolio.primaryRecommendation.title}</strong>
+            <small>{portfolio.primaryRecommendation.rationale}</small>
+           </div>
+          ) : null}
+
+          {portfolio?.recommendations?.length ? (
+           <div className="brain-hub-recommendation-list" aria-label="Ranked governed recommendations">
+            {portfolio.recommendations.slice(0, 3).map((recommendation) => {
+             const item = describeDashboardRecommendation(recommendation)
+             return (
+              <Link key={item.id} to={item.route} className="brain-hub-recommendation-row">
+               <span>
+                <strong>{item.command}</strong>
+                <small>{item.confidence.toUpperCase()} CONF · {item.evidenceCount} EVIDENCE</small>
+               </span>
+               <b>{item.score}</b>
+              </Link>
+             )
+            })}
+           </div>
+          ) : null}
+
+          {portfolio?.primingPlan ? (
+           <div className="brain-hub-priming">
+            <div className="brain-hub-section-head">
+             <div>
+              <strong>Active project priming</strong>
+              <span>{projectContext?.title || projectContext?.projectId || "Project context"} · {portfolio.primingPlan.steps.length} steps</span>
+             </div>
+            </div>
+            <div className="brain-hub-priming-steps">
+             {portfolio.primingPlan.steps.slice(0, 4).map((step) => (
+              <div key={step.id}>
+               <span>{step.phase.replaceAll("_", " ")}</span>
+               <strong>{step.title}</strong>
+               <small>{step.relativeTiming}</small>
+              </div>
+             ))}
+            </div>
            </div>
           ) : null}
          </div>
