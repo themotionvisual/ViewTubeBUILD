@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import {
   Activity,
   ChevronDown,
@@ -298,6 +298,12 @@ export const AdaptiveNavigationShell: React.FC<AdaptiveNavigationShellProps> = (
   const accountMenuRef = useRef<HTMLDivElement | null>(null)
   const drawerRef = useRef<HTMLDivElement | null>(null)
   const mainViewportRef = useRef<HTMLElement | null>(null)
+  // The main element survives route changes. A previous page's scroll offset
+  // remains even when the editor switches it to overflow:hidden, which can
+  // place the preview above the visible viewport on a portrait phone.
+  useLayoutEffect(() => {
+    if (isEditorSurface && mainViewportRef.current) mainViewportRef.current.scrollTop = 0
+  }, [isEditorSurface])
   const lastMobileScrollTopRef = useRef(0)
   const edgeSwipeStartRef = useRef<{ x: number; y: number; edge: "left" | "right"; target: EventTarget | null } | null>(null)
 
