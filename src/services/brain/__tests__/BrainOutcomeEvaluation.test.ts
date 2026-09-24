@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { BrainTrace } from "../BrainTrace"
 import type { BrainOutcomeRecord } from "../BrainOutcomeLedger"
+import type { AlgorithmIntelligenceEvent } from "../AlgorithmIntelligenceEventLedger"
 import {
  buildBrainOutcomeEvaluation,
  readBrainOutcomeEvaluation,
@@ -130,4 +131,122 @@ describe("BrainOutcomeEvaluation", () => {
 
   expect(result).toBeNull()
  })
+
+ const measuredEvent = (
+  status: "positive" | "neutral" | "negative" | "mixed" | "insufficient_data",
+  overrides: Partial<AlgorithmIntelligenceEvent> = {},
+ ): AlgorithmIntelligenceEvent => ({
+  id: `measured-${status}`,
+  channelId: "channel-1",
+  kind: "OUTCOME_MEASURED",
+  sourceSystem: "evaluation",
+  sourceId: "execution-1",
+  parentEventIds: ["execution-1"],
+  recommendationId: "recommendation-1",
+  traceId: "trace-1",
+  outputRef: "response-1",
+  evidenceIds: ["metric-evidence-1"],
+  confidence: status === "insufficient_data" ? "low" : "high",
+  title: "Measured outcome",
+  summary: status,
+  evaluationTargets: [],
+  metadata: {
+   evaluation: {
+    eventId: "execution-1",
+    channelId: "channel-1",
+    status,
+    confidence: status === "insufficient_data" ? "low" : "high",
+    targetResults: [],
+    evidenceIds: ["metric-evidence-1"],
+    explanation: status,
+    evaluatedAt: 2,
+   },
+  },
+  createdAt: 2,
+  ...overrides,
+ })
+
+ it("combines creator acceptance with positive measured performance without treating either as the other", () => {
+  const result = buildBrainOutcomeEvaluation({
+   trace: trace(),
+   outcomes: [outcome("accepted")],
+   measuredEvents: [measuredEvent("positive")],
+  })
+
+  expect(result.creatorDecision).toBe("positive")
+  expect(result.performanceState).toBe("positive")
+  expect(result.creatorPerformanceAlignment).toBe("aligned")
+  expect(result.measuredEventIds).toEqual(["measured-positive"])
+  expect(result.performanceEvidenceRefs).toEqual(["metric-evidence-1"])
+  expect(result.learningDisposition).toBe("measured_observation")
+ })
+
+ it("surfaces disagreement when creator acceptance is followed by negative measured performance", () => {
+  const result = buildBrainOutcomeEvaluation({
+   trace: trace(),
+   outcomes: [outcome("accepted")],
+   measuredEvents: [measuredEvent("negative")],
+  })
+
+  expect(result.creatorDecision).toBe("positive")
+  expect(result.performanceState).toBe("negative")
+  expect(result.creatorPerformanceAlignment).toBe("conflicted")
+  expect(result.learningDisposition).toBe("measured_observation")
+ })
+
+ it("keeps insufficient measurement distinct from negative performance", () => {
+  const result = buildBrainOutcomeEvaluation({
+   trace: trace(),
+   outcomes: [outcome("completed")],
+   measuredEvents: [measuredEvent("insufficient_data")],
+  })
+
+  expect(result.performanceState).toBe("insufficient_data")
+  expect(result.creatorPerformanceAlignment).toBe("unknown")
+  expect(result.learningDisposition).toBe("insufficient_measurement")
+ })
+
+ it("combines conflicting measured results as mixed instead of selecting a convenient winner", () => {
+  const result = buildBrainOutcomeEvaluation({
+   trace: trace(),
+   outcomes: [outcome("accepted")],
+   measuredEvents: [
+    measuredEvent("positive", { id: "measured-a" }),
+    measuredEvent("negative", { id: "measured-b" }),
+   ],
+  })
+
+  expect(result.performanceState).toBe("mixed")
+  expect(result.creatorPerformanceAlignment).toBe("not_applicable")
+  expect(result.measuredEventIds).toEqual(["measured-a", "measured-b"])
+ })
+
+ it("ignores measured events that do not match both the Brain trace and output ref", () => {
+  const result = buildBrainOutcomeEvaluation({
+   trace: trace(),
+   outcomes: [outcome("accepted")],
+   measuredEvents: [
+    measuredEvent("positive", { traceId: "trace-other" }),
+    measuredEvent("negative", { outputRef: "response-other" }),
+   ],
+  })
+
+  expect(result.performanceState).toBe("not_measured")
+  expect(result.measuredEventIds).toEqual([])
+ })
+
+ it("reads measured Algorithm outcomes from the canonical event ledger source", () => {
+  const result = readBrainOutcomeEvaluation("trace-1", {
+   listBrainTraces: () => [trace()],
+   listBrainOutcomesForTrace: () => [outcome("accepted")],
+   listAlgorithmIntelligenceEvents: () => [measuredEvent("positive")],
+  })
+
+  expect(result).toMatchObject({
+   creatorDecision: "positive",
+   performanceState: "positive",
+   creatorPerformanceAlignment: "aligned",
+  })
+ })
+
 })
