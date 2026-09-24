@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
-import { Check, ShieldCheck, X } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { useBrain } from "../context/useBrain"
 import { useUnifiedAccount } from "../context/UnifiedAccountContext"
@@ -29,6 +28,7 @@ import {
 import { resolvePublicChannel } from "../services/publicHandleMode"
 import type { SubscriptionPlanId } from "../services/subscriptionPlans"
 import { SettingsHelpSection } from "./settings/SettingsHelpSection"
+import { SettingsConfirmationDialog, type SettingsConfirmationKind } from "./settings/SettingsConfirmationDialog"
 import { SettingsWorkspace } from "./settings/SettingsWorkspace"
 import { DashboardWidgetsSettingsSection } from "./settings/DashboardWidgetsSettingsSection"
 import { UnifiedAccountSettingsSection } from "./settings/UnifiedAccountSettingsSection"
@@ -37,8 +37,6 @@ import {
   resolveSettingsReadiness,
   type SettingsPanel,
 } from "./settings/settingsControlDeck"
-
-type ConfirmationKind = "cache" | "factory" | "delete"
 
 const isTopupStripeConfigError = (message: string): boolean => {
   const lower = String(message || "").toLowerCase()
@@ -66,7 +64,7 @@ const Settings: React.FC = () => {
   const [customReferralCode, setCustomReferralCode] = useState("")
   const [customTopupAmount, setCustomTopupAmount] = useState("50")
   const [notifyBilling, setNotifyBilling] = useState(() => localStorage.getItem("vt.settings.billing-alerts") !== "off")
-  const [confirmation, setConfirmation] = useState<ConfirmationKind | null>(null)
+  const [confirmation, setConfirmation] = useState<SettingsConfirmationKind | null>(null)
   const [confirmationText, setConfirmationText] = useState("")
   const confirmationTriggerRef = useRef<HTMLElement | null>(null)
 
@@ -266,7 +264,7 @@ const Settings: React.FC = () => {
     }
   }
 
-  const openConfirmation = (kind: ConfirmationKind) => {
+  const openConfirmation = (kind: SettingsConfirmationKind) => {
     confirmationTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     setConfirmationText("")
     setConfirmation(kind)
@@ -369,34 +367,15 @@ const Settings: React.FC = () => {
       </SettingsWorkspace>
 
       {confirmation ? (
-        <div className="fixed inset-0 z-[200] grid place-items-center bg-black/70 p-4" role="presentation" onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            closeConfirmation()
-            return
-          }
-          if (event.key !== "Tab") return
-          const dialog = event.currentTarget.querySelector<HTMLElement>("[role='dialog']")
-          const focusable = Array.from(dialog?.querySelectorAll<HTMLElement>("button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex='-1'])") || [])
-          if (!focusable.length) return
-          const first = focusable[0]
-          const last = focusable[focusable.length - 1]
-          if (event.shiftKey && document.activeElement === first) {
-            event.preventDefault()
-            last.focus()
-          } else if (!event.shiftKey && document.activeElement === last) {
-            event.preventDefault()
-            first.focus()
-          }
-        }} onMouseDown={(event) => { if (event.target === event.currentTarget) closeConfirmation() }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="settings-confirm-title" className="w-full max-w-xl overflow-hidden rounded-[22px] border-[5px] border-black bg-white shadow-[10px_10px_0_0_#FF4FD8]">
-            <header className="flex items-center justify-between gap-4 border-b-[4px] border-black bg-[#FF8AAF] p-5"><div><p className="text-xs font-black uppercase tracking-[0.16em]">Danger zone</p><h2 id="settings-confirm-title" className="mt-1 text-3xl font-[1000] uppercase tracking-[-0.04em]">Confirm {confirmation === "cache" ? "local data clear" : confirmation === "factory" ? "factory reset" : "account deletion"}</h2></div><button type="button" onClick={closeConfirmation} aria-label="Cancel and close confirmation" className="grid size-11 place-items-center rounded-xl border-[3px] border-black bg-white shadow-[3px_3px_0_0_#000] focus-visible:outline focus-visible:outline-4"><X size={20} /></button></header>
-            <div className="grid gap-5 p-5">
-              <div className="rounded-xl border-[3px] border-black bg-[#f8f7f1] p-4 text-sm font-bold leading-6">{confirmation === "cache" ? "Clears all ViewTube data stored on this device, including local settings, API keys, authentication cookies, cached analytics, IndexedDB, and service-worker caches. Your server account is not deleted, but you may be signed out. Export first if you need a recovery copy." : confirmation === "factory" ? "Clears all local ViewTube data, settings, keys, and authentication from this device. Export first if you need a recovery copy." : "Permanently deletes the ViewTube account and its server-side onboarding and AI-credit records. Active subscriptions must be canceled first."}</div>
-              {confirmationRequiredText ? <div><label htmlFor="settings-confirm-text" className="text-xs font-black uppercase tracking-[0.14em]">Type {confirmationRequiredText} to continue</label><input id="settings-confirm-text" autoFocus value={confirmationText} onChange={(event) => setConfirmationText(event.target.value)} className="mt-2 min-h-12 w-full rounded-xl border-[3px] border-black px-4 font-black uppercase outline-none focus-visible:ring-4 focus-visible:ring-[#00F0FF]" /></div> : null}
-              <div className="grid gap-3 sm:grid-cols-2"><button type="button" onClick={closeConfirmation} className="inline-flex min-h-12 items-center justify-center rounded-xl border-[3px] border-black bg-white px-4 font-black uppercase shadow-[3px_3px_0_0_#000] focus-visible:outline focus-visible:outline-4"><ShieldCheck size={18} className="mr-2" /> Cancel</button><button type="button" disabled={!confirmationReady} onClick={() => void runConfirmedAction()} className="inline-flex min-h-12 items-center justify-center rounded-xl border-[3px] border-black bg-[#FF1744] px-4 font-black uppercase text-white shadow-[3px_3px_0_0_#000] focus-visible:outline focus-visible:outline-4 disabled:opacity-50"><Check size={18} className="mr-2" /> Confirm action</button></div>
-            </div>
-          </section>
-        </div>
+        <SettingsConfirmationDialog
+          kind={confirmation}
+          requiredText={confirmationRequiredText}
+          value={confirmationText}
+          ready={confirmationReady}
+          onChange={setConfirmationText}
+          onClose={closeConfirmation}
+          onConfirm={() => void runConfirmedAction()}
+        />
       ) : null}
     </div>
   )
