@@ -1,7 +1,6 @@
 import React from "react"
 import { Bell, CircleUserRound, Link2, Radio } from "lucide-react"
 import { SubToolbox } from "../../components/Toolbox"
-import { AccountActionButton } from "../../components/account/AccountActionButton"
 import { SubToolboxActions, SubToolboxStack } from "../../components/subtoolbox/SubToolboxLayouts"
 import {
   SubToolboxAlert,
@@ -74,11 +73,16 @@ export const SettingsAccountPanel: React.FC<SettingsAccountPanelProps> = ({
                 Disconnect
               </SubToolboxButton>
             ) : (
-              <AccountActionButton
-                surface="settings"
-                channelSyncing={channelConnection.state === "syncing" || channelConnection.state === "authorizing"}
-                onLegacyAction={onConnectChannel}
-              />
+              <SubToolboxButton
+                level="l2"
+                size="compact"
+                disabled={channelConnection.state === "syncing" || channelConnection.state === "authorizing"}
+                onClick={onConnectChannel}
+              >
+                {channelConnection.state === "syncing" || channelConnection.state === "authorizing"
+                  ? "Connecting…"
+                  : "Connect"}
+              </SubToolboxButton>
             )
           }
         />
