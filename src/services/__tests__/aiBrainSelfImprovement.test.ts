@@ -12,6 +12,7 @@ import {
 import {
  listActiveBrainMemoryClaims,
  promoteBrainClaim,
+ reflectBrainOutcome,
  undoBrainMemoryClaim,
 } from "../brain/BrainMemoryClaims"
 
@@ -131,4 +132,91 @@ describe("aiBrainSelfImprovement", () => {
   expect(trace.steps.some((step) => step.decision === "ask_user" || step.decision === "hold")).toBe(true)
   expect(scoreAIBrainAnswerUsefulness({ response: "**bad** `format`", feedback: "inaccurate" })).toBeLessThan(30)
  })
+
+ it("does not treat a high-confidence Copilot inference as an explicit creator statement", async () => {
+  const decision = await reflectBrainOutcome({
+   id: "learning-copilot-high",
+   channelId: "channel-governance",
+   category: "preference",
+   source: "copilot",
+   summary: "Creator prefers dramatic thumbnails",
+   detail: "Creator prefers dramatic thumbnails",
+   evidence: ["brain-trace:trace-1"],
+   confidence: "high",
+   status: "reflected",
+   createdAt: "2026-09-24T00:00:00.000Z",
+   updatedAt: "2026-09-24T00:00:00.000Z",
+   recurrenceCount: 1,
+   relatedEntryIds: [],
+  })
+
+  expect(decision.decision).toBe("ask_user")
+  expect(decision.reason).toContain("repetition")
+ })
+
+ it("allows explicit creator-confirmed Copilot teaching without requiring artificial recurrence", async () => {
+  const channelId = `channel-${Date.now()}-confirmed-copilot`
+  const entry = await captureAIBrainLearningEvent({
+   channelId,
+   source: "copilot",
+   summary: "Use subject-first titles",
+   detail: "Use subject-first titles",
+   category: "preference",
+   confidence: "high",
+   evidence: ["creator-confirmation-1"],
+   metadata: { confirmed: true, creatorInitiated: true },
+  })
+  const promoted = await promoteBrainClaim(entry)
+
+  expect(promoted.decision.decision).toBe("promote")
+  expect(promoted.claim?.confirmationState).toBe("explicit")
+ })
+
+ it("can promote repeated evidence-backed inference without mislabeling it as explicit", async () => {
+  const channelId = `channel-${Date.now()}-repeated-inference`
+  const base = {
+   channelId,
+   source: "copilot" as const,
+   summary: "Measured documentary pacing performs reliably",
+   detail: "Measured documentary pacing performs reliably",
+   category: "content_style" as const,
+   confidence: "medium" as const,
+   evidence: ["outcome-1"],
+  }
+  await captureAIBrainLearningEvent(base)
+  await captureAIBrainLearningEvent({ ...base, evidence: ["outcome-2"] })
+  const third = await captureAIBrainLearningEvent({ ...base, evidence: ["outcome-3"] })
+  const promoted = await promoteBrainClaim(third)
+
+  expect(third.recurrenceCount).toBe(3)
+  expect(promoted.decision.decision).toBe("promote")
+  expect(promoted.claim?.confirmationState).toBe("inferred")
+  expect(promoted.claim?.evidence).toEqual(expect.arrayContaining([
+   "outcome-1",
+   "outcome-2",
+   "outcome-3",
+  ]))
+ })
+
+ it("holds repeated inference when it still has no evidence", async () => {
+  const decision = await reflectBrainOutcome({
+   id: "learning-no-evidence",
+   channelId: "channel-governance",
+   category: "content_style",
+   source: "copilot",
+   summary: "Maybe use faster pacing",
+   detail: "Maybe use faster pacing",
+   evidence: [],
+   confidence: "high",
+   status: "reflected",
+   createdAt: "2026-09-24T00:00:00.000Z",
+   updatedAt: "2026-09-24T00:00:00.000Z",
+   recurrenceCount: 4,
+   relatedEntryIds: [],
+  })
+
+  expect(decision.decision).toBe("ask_user")
+  expect(decision.reason).toContain("evidence")
+ })
+
 })
