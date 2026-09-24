@@ -2,6 +2,7 @@
 import {useCallback,useMemo,useReducer} from 'react';
 import type {VtE1Clip,VtE1Project,VtE1Transition} from '../../../../shared/vtE1TimelineContract';
 import {rippleDeleteTimelineClips,slideTimelineClip,slipTimelineClip,splitTimelineClip} from '../../../../shared/vtE1TimelineOperations.js';
+import {readVtE1ClipVisualTransform,VT_E1_VISUAL_ANIMATED_PROPS} from '../../../../shared/vtE1VisualFrame.js';
 
 export type TrackKind='video'|'audio'|'overlay'|'caption';
 export interface Track{id:string;name:string;kind:TrackKind;muted?:boolean;locked?:boolean;hidden?:boolean;color?:string}
@@ -18,18 +19,10 @@ export const DEFAULT_CLIP_VISUAL_TRANSFORM:ClipVisualTransform={
   x:0,y:0,scaleX:1,scaleY:1,rotation:0,opacity:1,
   cropLeft:0,cropRight:0,cropTop:0,cropBottom:0,
 };
-export const readClipVisualTransform=(clip:VtE1Clip):ClipVisualTransform=>{
-  const raw=(clip as VtE1Clip&{transform?:Partial<ClipVisualTransform>;cropLeft?:number;cropRight?:number;cropTop?:number;cropBottom?:number}).transform??{};
-  const c=clip as VtE1Clip&Partial<ClipVisualTransform>;
-  return {
-    ...DEFAULT_CLIP_VISUAL_TRANSFORM,
-    ...raw,
-    cropLeft:c.cropLeft??raw.cropLeft??0,
-    cropRight:c.cropRight??raw.cropRight??0,
-    cropTop:c.cropTop??raw.cropTop??0,
-    cropBottom:c.cropBottom??raw.cropBottom??0,
-  };
-};
+export const readClipVisualTransform=(clip:VtE1Clip):ClipVisualTransform=>({
+  ...DEFAULT_CLIP_VISUAL_TRANSFORM,
+  ...readVtE1ClipVisualTransform(clip as VtE1Clip&Record<string,unknown>),
+});
 
 export type EditorProject=VtE1Project&{tracks:Track[];layers:EditorLayer[];durationSec:number};
 export interface EditorState{
@@ -100,8 +93,8 @@ export type EditorAction=
   |{type:'redo'};
 
 const ANIMATABLE_LAYER_PROPS=new Set([
-  'x','y','scale','rotation','opacity','fontSize','blur','saturation','hue','brightness',
-  'width','height','strokeWidth','cornerRadius','fillColor','strokeColor',
+  ...VT_E1_VISUAL_ANIMATED_PROPS,
+  'cornerRadius','fillColor','strokeColor',
 ]);
 
 const snapshot=(s:EditorState)=>JSON.stringify({project:s.project,playhead:s.playheadSec,selection:s.selection});

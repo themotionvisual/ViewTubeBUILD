@@ -2,10 +2,11 @@
 
 **Status:** active implementation audit  
 **Date:** 2026-09-24  
-**Audited main:** 56e2c0c03f83a168bf385dd2f71d32bc87166d08  
-**Current implementation branch:** feat/editor-phase-a-shared-fx-2026-09-24
-**Transition/project-bridge slice merged:** PR #405 → 052ff0294b5f8c9b05867a85ab4e2d407a27ec06
+**Audited main:** 2ce55f065af83369bffcd5c1a3b73869bcc9dc24  
+**Current implementation branch:** feat/editor-phase-a-visual-frame-parity-v2-2026-09-24  
+**Transition/project-bridge slice merged:** PR #405 → 052ff0294b5f8c9b05867a85ab4e2d407a27ec06  
 **Shared FX slice merged:** PR #408 → 56e2c0c03f83a168bf385dd2f71d32bc87166d08  
+**Rich project parity slice merged:** PR #410 → 4719274d63f37f2164c67641eb885de6104afdba  
 **Parent authority:** docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md
 
 ## Purpose
@@ -155,10 +156,23 @@ This avoids turning real mobile/render capability into a false claim of desktop 
 1. **Capability-surface matrix:** the registry exists, but desktop/mobile/render implementation evidence is not yet generated from tests into one parity table.
 2. **Desktop FX parity:** the shared FX contract is implemented and mobile/preview/render support is explicit, but the desktop host is intentionally still marked planned until its controls/actions are verified against the same contract.
 3. **Whole-project fixture:** verified in PR #410. It covers media, text, audio, keyframes, FX, transitions, templates, Remotion assets, ContentBuild identity, forward-compatible metadata, and all current track kinds. The rich fixture passed 4/4, bridge runtime 8/8, bridge hook 2/2, and desktop timeline adapter 5/5 on runtime head `e2bea9e2...`.
-4. **Preview ↔ final beyond transitions:** transform, crop, keyframes, layer visibility/order, template assets, and audio need deterministic parity fixtures.
+4. **Preview ↔ final beyond transitions:** transform, crop, keyframe interpolation, and track ordering are now routed through a canonical visual-frame contract in this branch. Template assets, audio-critical state, and explicit rendered fixture evidence still remain.
 5. **Desktop host integration:** shared adapters exist, but the legacy desktop host still owns significant behavior separately and needs measured adoption rather than an assumption of parity.
 6. **Editor static-quality debt:** PR #410 repairs renderJobContract Promise<Response> typing, ExportRenderPanel project ID narrowing, PreviewPane keyframe value narrowing, bridge-test layer typing, desktop timeline adapter declarations, and truthful optional layer visibility. The latest static-quality run reports no remaining errors in these changed editor files; remaining errors are outside this slice.
 7. **Visual certification:** this slice primarily changes contracts and transition semantics; responsive UI screenshots should be taken when the next visible editor-shell slice is implemented.
+
+## Visual-frame parity slice — 2026-09-24
+
+This branch adds `src/shared/vtE1VisualFrame.js` as the framework-free preview/final authority for visual keyframe interpolation, clip transforms, non-destructive crop math, and explicit track ordering.
+
+The slice closes four concrete divergences:
+
+- mobile preview and final Remotion now share the same `easeIn`, `easeOut`, `easeInOut`, `springy`, and `bell` interpolation semantics;
+- clip-level transform controls (x/y, independent scaleX/scaleY, rotation, opacity) now affect final output instead of preview only;
+- clip crop controls now affect both browser preview and final image/video rendering with the same non-destructive transform;
+- desktop track `order` now survives the desktop→mobile→desktop bridge, while preview and final both consume the same stable ordering helper.
+
+The final renderer also accepts the same media source aliases (`mediaUrl`, `src`, `url`) and `fit` semantics used by mobile preview.
 
 ## Acceptance gates for Phase A
 

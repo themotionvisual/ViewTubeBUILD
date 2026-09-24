@@ -10,7 +10,8 @@ import {
 import { expandCompoundClips } from '../../shared/vtE1CompoundClips.js';
 import { normalizeVtE1TransitionType } from '../../shared/vtE1TransitionCatalog.js';
 import { transitionFrameStyleFor } from '../../shared/vtE1TransitionFrame.js';
-import { VT_E1_ANIMATED_FX_KEYS, buildVtE1Filter, resolveVtE1FxOpacity } from '../../shared/vtE1FxCatalog.js';
+import { buildVtE1Filter, resolveVtE1FxOpacity } from '../../shared/vtE1FxCatalog.js';
+import { resolveVtE1VisualFrame, sortVtE1Tracks, vtE1MediaCropStyle } from '../../shared/vtE1VisualFrame.js';
 import {
   sourceTimeAtTimelineSec as sharedSourceTimeAtTimelineSec,
   transitionWindowFor as sharedTransitionWindowFor,
@@ -123,10 +124,12 @@ const isVideoPayload = (payload: Record<string, unknown>) => (
   payload.mediaKind === 'video'
   || String(payload.mediaMime || '').toLowerCase().startsWith('video/')
   || isVideo(payload.mediaUrl)
+  || isVideo(payload.src)
+  || isVideo(payload.url)
   || isVideo(payload.mediaName)
 );
 const toFrame = (seconds: number, fps: number) => Math.max(0, Math.round(seconds * fps));
-const sortTracks = (tracks: VTTrack[]) => [...tracks].sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
+const sortTracks = (tracks: VTTrack[]) => sortVtE1Tracks(tracks);
 const durationOf = (clip: VTClip) => Math.max(0.05, Number(clip.end || 0) - Number(clip.start || 0));
 const transitionWindow = (transition: VTTransition, leftClip: VTClip, rightClip: VTClip) => {
   return sharedTransitionWindowFor(transition, leftClip, rightClip);
@@ -172,81 +175,6 @@ const sequenceBoundsForClip = (project: NonNullable<RenderJob['project']>, clip:
   });
   return { startSec: Math.max(0, startSec), endSec: Math.max(startSec + 0.01, endSec) };
 };
-const ANIMATED_PAYLOAD_PROPS = [
-  'x',
-  'y',
-  'scale',
-  'rotation',
-  'width',
-  'height',
-  'fontSize',
-  'strokeWidth',
-  ...VT_E1_ANIMATED_FX_KEYS,
-];
-const NUMERIC_PAYLOAD_PROPS = new Set(ANIMATED_PAYLOAD_PROPS);
-
-const easeKeyframeProgress = (rawT: number, interp: string) => {
-  if (interp === 'easeIn') return rawT * rawT;
-  if (interp === 'easeOut') return 1 - (1 - rawT) * (1 - rawT);
-  if (interp === 'easeInOut') return rawT < 0.5 ? 2 * rawT * rawT : 1 - Math.pow(-2 * rawT + 2, 2) / 2;
-  if (interp === 'springy') return clamp(1 - Math.cos(rawT * Math.PI * 2.25) * Math.exp(-rawT * 4.2), 0, 1);
-  if (interp === 'bell') return clamp(Math.sin(rawT * Math.PI), 0, 1);
-  return rawT;
-};
-
-const valueFromKeyframes = (
-  base: unknown,
-  keyframes: VTClip['keyframes'],
-  prop: string,
-  localSeconds: number,
-) => {
-  const list = (keyframes || [])
-    .filter((keyframe) => keyframe.values && Object.prototype.hasOwnProperty.call(keyframe.values, prop))
-    .sort((a, b) => Number(a.offsetSec || 0) - Number(b.offsetSec || 0));
-
-  if (!list.length) return base;
-  if (localSeconds <= Number(list[0].offsetSec || 0)) return list[0].values?.[prop] ?? base;
-  const last = list[list.length - 1];
-  if (localSeconds >= Number(last.offsetSec || 0)) return last.values?.[prop] ?? base;
-
-  let left = list[0];
-  let right = last;
-  for (let index = 0; index < list.length - 1; index += 1) {
-    const current = list[index];
-    const next = list[index + 1];
-    if (localSeconds >= Number(current.offsetSec || 0) && localSeconds <= Number(next.offsetSec || 0)) {
-      left = current;
-      right = next;
-      break;
-    }
-  }
-
-  const leftValue = left.values?.[prop];
-  const rightValue = right.values?.[prop];
-  const span = Number(right.offsetSec || 0) - Number(left.offsetSec || 0) || 1;
-  const rawT = clamp((localSeconds - Number(left.offsetSec || 0)) / span, 0, 1);
-  if (NUMERIC_PAYLOAD_PROPS.has(prop)) {
-    const easedT = easeKeyframeProgress(rawT, String(right.interp || left.interp || 'linear'));
-    return Number(leftValue) + (Number(rightValue) - Number(leftValue)) * easedT;
-  }
-
-  return rawT < 1 ? leftValue : rightValue;
-};
-
-const evaluatePayloadAtFrame = (
-  payload: Record<string, unknown>,
-  clip: VTClip,
-  localFrame: number,
-  fps: number,
-) => {
-  const localSeconds = localFrame / Math.max(1, fps);
-  const nextPayload = { ...payload };
-  ANIMATED_PAYLOAD_PROPS.forEach((prop) => {
-    nextPayload[prop] = valueFromKeyframes(nextPayload[prop], clip.keyframes, prop, localSeconds);
-  });
-  return nextPayload;
-};
-
 const getShortsRenderConfig = (payload: Record<string, unknown>, sourceSeconds: number) => {
   const extractor = (payload.shortsExtractor || {}) as Record<string, unknown>;
   return interpolateSharedShortsConfig(
@@ -548,18 +476,24 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
 
         if (!layer || layer.visible === false) return null;
         if (activeTrackIds && !activeTrackIds.has(layer.trackId)) return null;
-        const basePayload = (layer.payload || {}) as Record<string, unknown>;
-        const localFrame = Math.max(0, toFrame(Math.max(0, currentSec - Number(clip.start || 0)), fps));
-        const payload = evaluatePayloadAtFrame(basePayload, clip, localFrame, fps);
+        const basePayload = {
+          ...((layer.payload || {}) as Record<string, unknown>),
+          ...(clip as unknown as Record<string, unknown>),
+        };
+        const localSeconds = Math.max(0, currentSec - Number(clip.start || 0));
+        const localFrame = Math.max(0, toFrame(localSeconds, fps));
+        const visualFrame = resolveVtE1VisualFrame(basePayload, clip, localSeconds, width, height);
+        const payload = visualFrame.payload;
         const clipTransition = (project.transitions || []).find((entry) => entry.leftClipId === clip.id || entry.rightClipId === clip.id);
         const transitionFx = transitionInfluenceAt(project, clipTransition, clip, currentSec);
-        const layerWidth = Math.max(1, Number(payload.width || 320));
-        const layerHeight = Math.max(1, Number(payload.height || 180));
-        const left = (width / 2) + Number(payload.x || 0);
-        const top = (height / 2) + Number(payload.y || 0);
-        const scale = Number(payload.scale || 1);
-        const rotation = Number(payload.rotation || 0);
-        const opacity = resolveVtE1FxOpacity(payload, Number(payload.opacity ?? 1));
+        const layerWidth = visualFrame.width;
+        const layerHeight = visualFrame.height;
+        const left = (width / 2) + visualFrame.x;
+        const top = (height / 2) + visualFrame.y;
+        const scaleX = visualFrame.scaleX;
+        const scaleY = visualFrame.scaleY;
+        const rotation = visualFrame.rotation;
+        const opacity = resolveVtE1FxOpacity(payload, visualFrame.opacity);
         const zIndex = Math.max(1, orderedTrackIds.indexOf(layer.trackId) + 1);
         const commonStyle: React.CSSProperties = {
           position: 'absolute',
@@ -567,7 +501,7 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
           top,
           width: layerWidth,
           height: layerHeight,
-          transform: `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)${transitionFx.transformExtra || ''}`,
+          transform: `translate(-50%, -50%) scale(${scaleX}, ${scaleY}) rotate(${rotation}deg)${transitionFx.transformExtra || ''}`,
           transformOrigin: 'center center',
           opacity: opacity * transitionFx.opacity,
           zIndex,
@@ -580,7 +514,7 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
         };
 
         if (layer.type === 'audio') {
-          const src = String(payload.mediaUrl || '');
+          const src = String(payload.mediaUrl || payload.src || payload.url || '');
           if (!src) return null;
           const startFrom = toFrame(Math.max(0, sourceTimeForClipAt(project, clip, bounds.startSec)), fps);
           return (
@@ -661,7 +595,7 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
         }
 
         if (layer.type === 'media') {
-          const src = String(payload.mediaUrl || '');
+          const src = String(payload.mediaUrl || payload.src || payload.url || '');
           if (!src) return null;
           const startFrom = toFrame(Math.max(0, sourceTimeForClipAt(project, clip, bounds.startSec)), fps);
           const sourceSeconds = sourceTimeForClipAt(project, clip, currentSec);
@@ -676,10 +610,23 @@ export const MyComposition: React.FC<Props> = ({ renderJob }) => {
                     startFrom={startFrom}
                     muted={Boolean(payload.muted)}
                     volume={Boolean(payload.muted) ? 0 : clamp(Number(payload.volume ?? 1), 0, 1)}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: String(payload.fit || 'cover') as React.CSSProperties['objectFit'],
+                      ...vtE1MediaCropStyle(clip),
+                    }}
                   />
                 ) : (
-                  <Img src={src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <Img
+                    src={src}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: String(payload.fit || 'cover') as React.CSSProperties['objectFit'],
+                      ...vtE1MediaCropStyle(clip),
+                    }}
+                  />
                 )}
               </div>
             </Sequence>

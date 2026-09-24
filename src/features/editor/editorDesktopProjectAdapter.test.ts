@@ -17,8 +17,8 @@ const desktopProject = {
     contentBuildId: 'cb-bridge-test',
   },
   tracks: [
-    { id: 'v1', name: 'V1', kind: 'visual', visible: true, locked: false, muted: false, color: '#f00' },
-    { id: 'a1', name: 'AUDIO', kind: 'audio', visible: true, locked: false, muted: true, color: '#0ff' },
+    { id: 'v1', name: 'V1', kind: 'visual', visible: true, locked: false, muted: false, order: 20, color: '#f00' },
+    { id: 'a1', name: 'AUDIO', kind: 'audio', visible: true, locked: false, muted: true, order: 10, color: '#0ff' },
   ],
   layers: [
     { id: 'layer-1', trackId: 'v1', type: 'text', visible: true },
@@ -50,12 +50,14 @@ describe('editorDesktopProjectAdapter', () => {
       kind: 'video',
       desktopKind: 'visual',
       desktopVisible: true,
+      order: 20,
     });
     expect(mobile.tracks[1]).toMatchObject({
       id: 'a1',
       kind: 'audio',
       desktopKind: 'audio',
       muted: true,
+      order: 10,
     });
     expect(mobile.layers).toEqual([
       { ...desktopProject.layers[0], payload: {} },
@@ -84,6 +86,7 @@ describe('editorDesktopProjectAdapter', () => {
       id: 'v1',
       kind: 'visual',
       visible: false,
+      order: 20,
     });
     expect(restored.clips[0]).toMatchObject({ start: 1, end: 5, layerId: 'layer-1' });
   });

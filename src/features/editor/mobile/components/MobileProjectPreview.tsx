@@ -4,12 +4,14 @@ import type {VtE1Clip} from '../../../../shared/vtE1TimelineContract';
 import {resolveClipPreviewGeometry} from './mobilePreviewGeometry';
 import {expandCompoundClips} from '../../../../shared/vtE1CompoundClips.js';
 import {buildVtE1Filter,resolveVtE1FxOpacity} from '../../../../shared/vtE1FxCatalog.js';
+import {sortVtE1Tracks,vtE1MediaCropStyle} from '../../../../shared/vtE1VisualFrame.js';
 
 const clamp=(v:number,min:number,max:number)=>Math.min(max,Math.max(min,v));
 const isVideo=(src:string)=>/\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(src);
 
 function VideoPreview({src,clip,playheadSec,playing,playbackRate,payload}:{src:string;clip:VtE1Clip;playheadSec:number;playing:boolean;playbackRate:number;payload:Record<string,unknown>}){
   const ref=React.useRef<HTMLVideoElement>(null);
+  const cropStyle=vtE1MediaCropStyle(clip);
   React.useEffect(()=>{
     const el=ref.current;if(!el)return;
     const sourceIn=Number(clip.sourceInSec??0);
@@ -22,12 +24,13 @@ function VideoPreview({src,clip,playheadSec,playing,playbackRate,payload}:{src:s
     el.volume=clamp(Number(payload.volume??1),0,1);
     if(playing){void el.play().catch(()=>{})}else el.pause();
   },[src,clip.start,clip.sourceInSec,playheadSec,playing,playbackRate,payload.muted,payload.volume]);
-  return <video ref={ref} src={src} playsInline preload="metadata" style={{width:'100%',height:'100%',objectFit:String(payload.fit||'cover') as React.CSSProperties['objectFit'],display:'block'}}/>;
+  return <video ref={ref} src={src} playsInline preload="metadata" style={{width:'100%',height:'100%',objectFit:String(payload.fit||'cover') as React.CSSProperties['objectFit'],display:'block',...cropStyle}}/>;
 }
 
 export const MobileProjectPreview:React.FC<{store:EditorStore}>=({store})=>{
   const {state}=store;
-  const trackOrder=new Map(state.project.tracks.map((t,i)=>[t.id,i]));
+  const orderedTracks=sortVtE1Tracks(state.project.tracks);
+  const trackOrder=new Map(orderedTracks.map((t,i)=>[t.id,i]));
   const active=expandCompoundClips(state.project.clips)
     .filter(c=>state.playheadSec>=c.start&&state.playheadSec<c.end)
     .filter(c=>!store.trackById(c.trackId)?.hidden)
@@ -76,7 +79,7 @@ export const MobileProjectPreview:React.FC<{store:EditorStore}>=({store})=>{
       }}/></div>;
       if(src)return <div key={clip.id} style={style}>{isVideo(src)||String(payload.mediaKind??'')==='video'
         ?<VideoPreview src={src} clip={clip} playheadSec={state.playheadSec} playing={state.playing} playbackRate={state.playbackRate} payload={payload}/>
-        :<img alt="" src={src} draggable={false} style={{width:'100%',height:'100%',objectFit:String(payload.fit||'cover') as React.CSSProperties['objectFit'],display:'block'}}/>
+        :<img alt="" src={src} draggable={false} style={{width:'100%',height:'100%',objectFit:String(payload.fit||'cover') as React.CSSProperties['objectFit'],display:'block',...vtE1MediaCropStyle(clip)}}/>
       }</div>;
       return <div key={clip.id} style={{...style,border:'1px dashed rgba(255,255,255,.35)',color:'#fff',fontSize:10,fontWeight:900}}>{String(clip.id).slice(0,18)}</div>;
     })}
