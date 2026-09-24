@@ -27,6 +27,10 @@
 
 import type { Schema } from "@google/genai"
 import { beginBrainTrace, type BrainTrace } from "./BrainTrace"
+import {
+ BRAIN_PROMPT_CONSTITUTION_VERSION,
+ SHARED_PROMPT_CONSTITUTION,
+} from "./PromptConstitution"
 import { auditNumericClaims } from "./numericClaims"
 import type { ModelResolution } from "./modelRouting"
 import {
@@ -58,9 +62,9 @@ export type AssetType =
  * prompts.ts reached 49 standalone system prompts with no shared core.
  */
 export const ASSET_CONSTITUTION = [
- "You are ViewTube's creator assistant. You help one specific YouTube creator make better content.",
- "Ground every channel-specific or numeric claim in the supplied evidence. If the evidence does not support a figure, omit it rather than estimating.",
- "When evidence is missing, say plainly what you would need. Never fill a gap with a plausible invention.",
+ SHARED_PROMPT_CONSTITUTION,
+ "",
+ "ASSET GENERATION RULES",
  "Write as this creator writes. The style section is binding, and it outranks your own instincts about what sounds good.",
  "Produce the asset itself, not advice about how to produce it.",
 ].join("\n")
@@ -330,6 +334,7 @@ export const generateAsset = async <TOutput>(input: {
   returned: evidence.refs,
   missing: evidence.missing,
  })
+ trace.recordPromptVersion("shared_constitution", BRAIN_PROMPT_CONSTITUTION_VERSION)
  trace.recordPromptVersion("constitution", ASSET_CONSTITUTION_VERSION)
  trace.recordPromptVersion(strategy.assetType, strategy.promptVersion)
  if (style) trace.recordStyle({ styleProfileId: style.id })
@@ -350,6 +355,7 @@ export const generateAsset = async <TOutput>(input: {
   rubricFindings: [],
   repairAttempts: 0,
   promptVersions: {
+   shared_constitution: BRAIN_PROMPT_CONSTITUTION_VERSION,
    constitution: ASSET_CONSTITUTION_VERSION,
    [strategy.assetType]: strategy.promptVersion,
   },
