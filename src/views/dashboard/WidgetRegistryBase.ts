@@ -38,6 +38,26 @@ export const DEFAULT_DASHBOARD_ROWS = [
   { id: "ai-journal", size: "third", height: "xtall" },
  ],
  [
+  { id: "brain-hub", size: "half", height: "xtall" },
+  { id: "next-best-action", size: "half", height: "tall" },
+ ],
+ [
+  { id: "anomaly-radar", size: "half", height: "tall" },
+  { id: "opportunity-radar", size: "half", height: "tall" },
+ ],
+ [
+  { id: "content-pipeline", size: "half", height: "tall" },
+  { id: "audience-requests", size: "half", height: "tall" },
+ ],
+ [
+  { id: "video-asset-engine", size: "half", height: "tall" },
+  { id: "flight-check", size: "half", height: "tall" },
+ ],
+ [
+  { id: "channel-progress", size: "half", height: "medium" },
+  { id: "video-director", size: "half", height: "massive" },
+ ],
+ [
   { id: "image-generator", size: "half", height: "xtall" },
   { id: "video-uploader", size: "half", height: "xtall" },
  ],
@@ -56,8 +76,7 @@ export const DEFAULT_DASHBOARD_ROWS = [
   { id: "retention-sim", size: "quarter", height: "tall" },
  ],
  [
-  { id: "upload-scheduler", size: "half", height: "xtall" },
-  { id: "brain-hub", size: "half", height: "xtall" },
+  { id: "upload-scheduler", size: "full", height: "xtall" },
  ],
  [
   { id: "thumb-ai", size: "half", height: "medium" },
