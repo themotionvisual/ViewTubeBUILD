@@ -17,6 +17,21 @@ export type DashboardWidgetSettingsEntry = Pick<
   | "headerColor"
 >
 
+const DASHBOARD_WIDGET_SIGNATURE_LABELS: Readonly<Record<string, string>> = {
+  "daily-oracle": "Creator Command Focus Console",
+  "next-best-action": "Decision Junction",
+  "opportunity-radar": "Opportunity Compass",
+  "anomaly-radar": "Anomaly Scope",
+  "content-pipeline": "Content Lifecycle Rail",
+  "audience-requests": "Audience Request Cluster Map",
+  "flight-check": "Publishing Command Launch Gantry",
+  "video-asset-engine": "Package Composer",
+  "brain-hub": "Brain Intelligence Nexus",
+}
+
+export const getDashboardWidgetSignatureLabel = (widgetId: string): string | null =>
+  DASHBOARD_WIDGET_SIGNATURE_LABELS[widgetId] ?? null
+
 export const DASHBOARD_WIDGET_SETTINGS_CATEGORIES: ReadonlyArray<{
   id: DashboardWidgetSettingsCategory
   label: string
