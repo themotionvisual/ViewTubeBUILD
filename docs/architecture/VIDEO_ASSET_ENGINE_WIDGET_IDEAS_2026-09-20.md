@@ -1,7 +1,9 @@
 # Video Asset Engine Dashboard Widget — 25 Consolidated Ideas
 
 Date: 2026-09-20
-Status: build wave / implementation reference
+Status: REFERENCE / IDEA CATALOG — not a current architecture authority
+Current authority: docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md
+Wave 2 consolidation note (2026-09-24): durable dashboard requirements from this catalog were folded into the Asset Engine master. Keep the 25 ideas as a product/reference backlog; they do not define a separate Asset Engine or data owner.
 
 These ideas consolidate the strongest Asset Engine, Vault, packaging, publishing, provenance, handoff, generation and video-package concepts into one dashboard-scale creator instrument. The dashboard widget is a compact manifestation; the full Asset Engine remains the expanded workflow owner.
 

@@ -2,6 +2,10 @@
 
 **Status:** Canonical architecture / product reference  
 **Date:** 2026-09-20  
+**Last audited main:** `c7d9f55268af61569fdba9c2afab256a5cfbf6ff` (2026-09-24 docs consolidation Wave 2)  
+**Canonical owner / concern:** Asset Engine domain contracts: ContentBuild assets, versions/options, selections/finalization, generation context/receipts, publishing/launch projections, provenance, handoffs, and outcome attribution.  
+**Related canonical authority:** `docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md` owns the creator-facing Project workflow and cross-system identity/ownership boundary.  
+**Supersedes for current-state authority:** `docs/brain/ASSET_ENGINE_CANONICAL_BACKBONE.md`, `ASSET_ENGINE_CONTENTBUILD_IMPLEMENTATION_PLAN_2026-09-20.md`, and the Asset Engine portions of `PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md`.  
 **Scope:** Asset Engine, ContentBuild, Video Package, creator assets, generation, provenance, variants, publishing, handoffs, frontend manifestations, post-publish learning
 
 ## 1. Purpose
@@ -29,7 +33,7 @@ The representation may change. The identity, selected assets, provenance, packag
 
 ## 2. Relationship to existing canonical ownership
 
-This document expands the existing `docs/brain/ASSET_ENGINE_CANONICAL_BACKBONE.md`. It does not replace the ownership boundaries already established there.
+This document now carries the current Asset Engine authority that was originally introduced in `docs/brain/ASSET_ENGINE_CANONICAL_BACKBONE.md`. The backbone remains preserved as a foundational historical reference; when wording differs, this master resource plus current code/contracts wins.
 
 Canonical ownership remains:
 
@@ -527,6 +531,38 @@ The receiving tool generates candidates and attaches them back to the same Conte
 
 ---
 
+### ToolReceipt and context-manifest contract
+
+The audited main includes a shared generation boundary in `src/services/asset-engine/GenerationWorkflow.ts`.
+
+A prepared generation operation preserves:
+
+- ContentBuild ID and observed revision,
+- Project/channel/tool scope,
+- requested target slot,
+- selected/source asset IDs,
+- evidence IDs,
+- creator intent and constraints,
+- output specification,
+- parent asset / VariantGroup,
+- trace ID and request timestamp.
+
+Every important specialist operation should close with a durable `ToolReceipt` containing:
+
+- request ID,
+- Project and ContentBuild IDs,
+- tool ID,
+- input and output asset IDs,
+- evidence IDs,
+- generation-record ID,
+- created version IDs,
+- VariantGroup ID,
+- relationship IDs,
+- trace ID,
+- completion timestamp.
+
+These receipts belong in ContentBuild event/history rather than a tool-local permanent history store. The context manifest records **what the tool saw** at the requested ContentBuild revision; the receipt records **what it produced**.
+
 ## 13. Context Resolver
 
 The Context Resolver determines what a tool needs to know without dumping the entire ContentBuild into every operation.
@@ -712,6 +748,26 @@ Every video ContentBuild should expose one canonical Publishing Package consumed
 - community posts.
 
 The final package must preserve what was actually sent to YouTube.
+
+### Approved publication snapshot — required next authority boundary
+
+The Publishing Package is a live projection. External publication needs a separate immutable approval receipt before execution:
+
+```text
+ApprovedPublishSnapshot
+- ContentBuild ID + revision
+- final render asset ID
+- final title asset ID
+- final thumbnail asset ID
+- caption asset IDs
+- exact metadata/routing/visibility/schedule
+- approver + timestamp
+- snapshot hash
+```
+
+A canonical PublishTransaction should key idempotency to `contentBuildId + approved snapshot identity/hash`, persist resumable state and step receipts, verify remote YouTube state, and prevent retries from duplicating the uploaded video.
+
+**Audited implementation state:** the current source tree contains a Publishing Package projection, strict ContentBuild/package persistence, revisions and YouTube binding. No code-backed `ApprovedPublishSnapshot` was found on the Wave 2 baseline, so snapshot/transaction freezing remains an explicit open target.
 
 ---
 
@@ -968,6 +1024,26 @@ It should prioritize:
 - direct contextual handoffs.
 
 The dashboard should not become a miniature Studio Hub.
+
+
+### Consolidated compact-widget requirements
+
+The September dashboard idea catalog remains a reference, but its durable requirements are consolidated here. A compact dashboard Asset Engine should prioritize:
+
+1. active Project/Video package composer,
+2. publish-readiness spine,
+3. canonical asset-slot matrix,
+4. missing-asset launcher into the correct specialist tool,
+5. title/thumbnail/creative option tray with Selected vs Final distinction,
+6. provenance + lineage inspection,
+7. recent durable assets,
+8. contextual Studio / Editor / Publisher / Vault handoffs,
+9. launch/routing/community readiness where relevant,
+10. experiment and used-variant attribution,
+11. post-publish evaluation linkage,
+12. asset-health warnings without creating a second store.
+
+Package / Assets / Handoff modes may change composition, but all modes resolve the same ContentBuild and Vault identities.
 
 ---
 
@@ -1755,14 +1831,24 @@ The Asset Engine architecture is functioning when all of the following are true:
 
 Current implementation and architecture references include:
 
-- `src/services/assetEngine.ts` — canonical Asset Engine service facade.
-- `docs/brain/ASSET_ENGINE_CANONICAL_BACKBONE.md` — canonical cross-system workflow and ownership contract.
-- `src/components/projects/ContentAssetEngine.tsx` — current Projects manifestation.
-- `src/views/dashboard/widgets/VideoAssetEngineWidget.tsx` — current dashboard manifestation.
-- `docs/architecture/VIDEO_ASSET_ENGINE_WIDGET_IDEAS_2026-09-20.md` — dashboard widget idea consolidation.
-- `src/views/dashboard/WidgetRegistry.ts` — dashboard widget registration/help contract.
-- `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` — Studio Toolbox UI authority.
-- `.claude/skills/viewtube-widget-dashboard-system/` — dashboard widget implementation/design authority.
+- `src/services/assetEngine.ts` — Asset Engine service facade.
+- `src/services/asset-engine/ContentBuildRepository.ts` — ContentBuild projection, events, versions, VariantGroups, relationships and selections.
+- `src/services/asset-engine/VideoPackageContentBuildBridge.ts` — Video Package ↔ ContentBuild reconciliation.
+- `src/services/asset-engine/GenerationWorkflow.ts` — GenerationRequest, context manifest and ToolReceipt contracts.
+- `src/services/asset-engine/PublishingPackageProjection.ts` — current publishing projection/readiness boundary.
+- `src/services/video-package/VideoPackageRepository.ts` — canonical package persistence, recovery/migration and stale-write protection.
+- `src/components/projects/ContentAssetEngine.tsx` and `ProjectAssetEngineSimple.tsx` — Projects manifestations.
+- `src/views/dashboard/widgets/VideoAssetEngineWidget.tsx` — dashboard manifestation.
+- `src/views/dashboard/WidgetRegistry.ts` — dashboard registration/help contract.
+- `docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md` — canonical cross-system Project/ContentBuild workflow authority.
+- `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md` — Studio Toolbox UI reference pending the UI documentation consolidation wave.
 - `.claude/skills/viewtube-ai-system-governor/` — AI ownership/integration authority.
 
-This document should be treated as the **master product/system definition** for what the Asset Engine is intended to become. The lower-level backbone remains authoritative for cross-system ownership boundaries and current service contracts.
+Historical/reference donors retained for provenance:
+
+- `docs/brain/ASSET_ENGINE_CANONICAL_BACKBONE.md`
+- `docs/architecture/ASSET_ENGINE_CONTENTBUILD_IMPLEMENTATION_PLAN_2026-09-20.md`
+- `docs/architecture/PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md`
+- `docs/architecture/VIDEO_ASSET_ENGINE_WIDGET_IDEAS_2026-09-20.md`
+
+This document is the **current master Asset Engine product/system definition**. Donor documents may explain how the architecture evolved, but they no longer override this file or the cross-system Projects/ContentBuild master.

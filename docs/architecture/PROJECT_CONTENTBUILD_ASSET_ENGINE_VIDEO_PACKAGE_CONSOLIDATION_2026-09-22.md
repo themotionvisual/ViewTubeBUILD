@@ -1,8 +1,10 @@
 # ViewTube Unified Project / ContentBuild / Video Package / Asset Engine Consolidation Authority
 
 Date: 2026-09-22  
-Status: Active implementation authority  
-Branch: `integration/projects-contentbuild-asset-engine-video-package-2026-09-22`
+Status: HISTORICAL CONSOLIDATION PLAN / DECISION RECORD  
+Superseded for current authority: `VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md` + `VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md`  
+Wave 2 consolidation note (2026-09-24): hard identity rules, directional reconciliation, GenerationRequest/ToolReceipt requirements, version-vs-option rules, publishing snapshot requirements, migration rules and remaining lifecycle work were promoted into the living masters. Keep this file as provenance for the convergence program; its branch/status language is no longer current.  
+Branch at time of writing: `integration/projects-contentbuild-asset-engine-video-package-2026-09-22`
 
 ## Final product rule
 

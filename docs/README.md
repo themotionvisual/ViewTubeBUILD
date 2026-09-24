@@ -33,15 +33,17 @@ When beginning work:
 
 ## Current consolidation status
 
-**Wave 1:** registry + governance + entrypoint.
+**Wave 1:** merged — registry + governance + entrypoint.
 
-No baseline file has been moved or deleted. Future waves consolidate one domain at a time, preserving unique information and references before any archival or retirement.
+**Wave 2:** Projects / ContentBuild / Asset Engine authority consolidated. The two living masters now absorb current-state identity, persistence, generation, publishing and frontend-manifestation requirements; older implementation/backbone/convergence documents remain in place as clearly labeled history/reference.
+
+No baseline document has been deleted. Future waves continue one domain at a time, preserving unique information and references before archival or retirement.
 
 ### Planned waves
 
-1. Registry / governance / entrypoint
-2. Projects / ContentBuild / Asset Engine
-3. Studio UI / Toolbox / widgets / mobile
+1. Registry / governance / entrypoint — **complete**
+2. Projects / ContentBuild / Asset Engine — **complete in Wave 2**
+3. Studio UI / Toolbox / widgets / mobile — **next**
 4. Analytics / Data Visuals / migrations
 5. Brain / AI / Herald
 6. Auth / Editor / deployment / user guide
@@ -51,3 +53,18 @@ No baseline file has been moved or deleted. Future waves consolidate one domain 
 ## Important rule
 
 A filename containing **MASTER**, **CANONICAL**, **SOURCE OF TRUTH**, or **AUTHORITY** is not enough to establish current truth. Use the registry, the declared scope, and current repository evidence.
+
+
+## Projects / ContentBuild / Asset Engine document family
+
+Current authority is intentionally split by scope:
+
+- [Projects / ContentBuild Workflow Master](./architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md) — creator-facing Project workflow, shared identity, system ownership and cross-system continuity.
+- [Asset Engine Master Resource](./architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md) — assets, versions/options, generation context/receipts, selections/finalization, publishing/launch projections, provenance and evaluation linkage.
+
+Preserved donors (historical/reference, not current authority):
+
+- `architecture/ASSET_ENGINE_CONTENTBUILD_IMPLEMENTATION_PLAN_2026-09-20.md`
+- `architecture/PROJECT_CONTENTBUILD_ASSET_ENGINE_VIDEO_PACKAGE_CONSOLIDATION_2026-09-22.md`
+- `brain/ASSET_ENGINE_CANONICAL_BACKBONE.md`
+- `architecture/VIDEO_ASSET_ENGINE_WIDGET_IDEAS_2026-09-20.md`
