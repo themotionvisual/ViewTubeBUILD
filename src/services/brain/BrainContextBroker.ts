@@ -28,11 +28,12 @@ export const buildBrainContextPack = (input: {
  audienceIntelligence?: AudienceIntelligenceSnapshot | null
  algorithmIntelligence?: AlgorithmIntelligencePortfolio | null
  channelKnowledge?: ChannelKnowledgeRetrieval | null
+ contextOmissions?: string[]
  maximumCharacters?: number
 }): { systemInstruction: string; budget: BrainContextBudget } => {
  const controls = readBrainUserControls(input.channelId)
  const maximumCharacters = input.maximumCharacters || 24_000
- const omittedSections: string[] = []
+ const omittedSections: string[] = [...(input.contextOmissions || [])]
  const system = clip(input.systemPrompt, 11_000)
  if (system.length < input.systemPrompt.length) omittedSections.push("system_overflow")
 
