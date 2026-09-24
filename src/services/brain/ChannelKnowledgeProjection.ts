@@ -84,6 +84,7 @@ export interface ChannelKnowledgeRetrieval {
 }
 
 const claimClass = (claim: BrainMemoryClaim): ChannelKnowledgeClass => {
+ if (claim.knowledgeClass === "VALIDATED_LEARNING") return "VALIDATED_LEARNING"
  switch (claim.category) {
   case "preference":
    return "CREATOR_PREFERENCE"
@@ -145,6 +146,7 @@ const recordFromClaim = (
   contradiction: false,
   metadata: {
    category: claim.category,
+   knowledgeClass: claim.knowledgeClass || null,
    learningEntryIds: [...claim.learningEntryIds],
   },
  }
