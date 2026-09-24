@@ -115,6 +115,12 @@ export const VideoAssetEngineWidget: React.FC<
     () => scopeAssetsToContentBuild(assets, activeBuild),
     [assets, activeBuild],
   )
+  useEffect(() => {
+    setSelectedAssetId((current) => current && scopedAssets.some((asset) => asset.id === current)
+      ? current
+      : scopedAssets[0]?.id || null)
+  }, [scopedAssets])
+
   const slotAssets = useMemo(
     () => PACKAGE_SLOTS.map((slot) => ({ slot, asset: matchSlotAsset(scopedAssets, slot) })),
     [scopedAssets],
