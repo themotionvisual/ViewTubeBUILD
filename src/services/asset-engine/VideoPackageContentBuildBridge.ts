@@ -189,16 +189,10 @@ export const syncVideoPackageToContentBuild = (
  const storyboardAssetId = assetIdOf(videoPackage.creative.storyboard)
  const finalRenderAssetId = videoPackage.production.renderIds.at(-1) || null
 
- const titleApproved = Boolean(selectedTitle?.approvedAt)
- const thumbnailApproved = Boolean(selectedThumbnail?.approvedAt)
-
  if (
   selectedTitleAssetId &&
   titleGroup &&
-  (
-   titleGroup.selectedAssetId !== selectedTitleAssetId ||
-   (titleApproved && titleGroup.finalAssetId !== selectedTitleAssetId)
-  )
+  titleGroup.selectedAssetId !== selectedTitleAssetId
  ) {
   selectContentBuildVariant({
    contentBuildId: build.id,
@@ -206,16 +200,13 @@ export const syncVideoPackageToContentBuild = (
    assetId: selectedTitleAssetId,
    sourceToolId: "video-package",
    actorType: "sync",
-   final: titleApproved,
+   final: false,
   })
  }
  if (
   selectedThumbnailAssetId &&
   thumbnailGroup &&
-  (
-   thumbnailGroup.selectedAssetId !== selectedThumbnailAssetId ||
-   (thumbnailApproved && thumbnailGroup.finalAssetId !== selectedThumbnailAssetId)
-  )
+  thumbnailGroup.selectedAssetId !== selectedThumbnailAssetId
  ) {
   selectContentBuildVariant({
    contentBuildId: build.id,
@@ -223,7 +214,7 @@ export const syncVideoPackageToContentBuild = (
    assetId: selectedThumbnailAssetId,
    sourceToolId: "video-package",
    actorType: "sync",
-   final: thumbnailApproved,
+   final: false,
   })
  }
  const currentAfterPackaging = getContentBuild(build.id)!
