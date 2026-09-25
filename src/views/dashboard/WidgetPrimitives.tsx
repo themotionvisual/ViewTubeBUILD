@@ -494,11 +494,13 @@ export const WidgetHeaderToggle = <T extends string>({
   value,
   items,
   onChange,
+  className = "",
 }: {
   label: string
   value: T
   items: readonly { id: T; label: string }[]
   onChange: (value: T) => void
+  className?: string
 }) => {
   const activeIndex = Math.max(0, items.findIndex((item) => item.id === value))
   const toggleStyle = {
@@ -507,7 +509,7 @@ export const WidgetHeaderToggle = <T extends string>({
   } as React.CSSProperties
 
   return (
-  <div className="widget-header-toggle" role="group" aria-label={label} style={toggleStyle}>
+  <div className={`widget-header-toggle ${className}`.trim()} role="group" aria-label={label} style={toggleStyle}>
     <span className="widget-header-toggle-indicator" aria-hidden="true" />
     {items.map((item) => (
       <button
