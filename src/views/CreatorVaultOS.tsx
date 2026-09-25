@@ -112,6 +112,7 @@ const CreatorVaultOS: React.FC = () => {
  const [collectionRefresh, setCollectionRefresh] = useState(0)
  const [selectionProjectName, setSelectionProjectName] = useState("")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
+ const selectionProjectInputRef = useRef<HTMLInputElement | null>(null)
 
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
  const smartCollections = useMemo(() => listVaultSmartCollections(), [collectionRefresh])
@@ -193,6 +194,11 @@ const CreatorVaultOS: React.FC = () => {
     searchInputRef.current?.focus()
     return
    }
+   if (command === "project-selection" && selectedAssetIds.length) {
+    event.preventDefault()
+    selectionProjectInputRef.current?.focus()
+    return
+   }
    if (command === "toggle-quick-look" && selectedAsset) {
     event.preventDefault()
     setQuickLookOpen((open) => !open)
@@ -209,7 +215,7 @@ const CreatorVaultOS: React.FC = () => {
   }
   window.addEventListener("keydown", handleKeyDown)
   return () => window.removeEventListener("keydown", handleKeyDown)
- }, [selectedAsset])
+ }, [selectedAsset, selectedAssetIds.length])
 
  const createImportedRecord = (item: PendingVaultImport, mode: "direct" | "staged") => {
   return createImportedVaultAsset({
@@ -412,6 +418,7 @@ const CreatorVaultOS: React.FC = () => {
          onValueChange={(value) => setSpecial(value as typeof special)}
          options={[
           { value: "active", label: "LIBRARY" },
+          { value: "inbox", label: "INBOX" },
           { value: "favorites", label: "FAVORITES" },
           { value: "archive", label: "ARCHIVE" },
           { value: "trash", label: "TRASH" },
@@ -734,6 +741,7 @@ const CreatorVaultOS: React.FC = () => {
          disabled={!selectedAssetIds.length || !batchProject.trim()}
         />
         <StandardInput
+         ref={selectionProjectInputRef}
          value={selectionProjectName}
          onChange={(event) => setSelectionProjectName(event.target.value)}
          placeholder="New project from selection"
