@@ -1,9 +1,9 @@
 # ViewTube One-Goal Completion Operating System
 
 **Status:** CANONICAL LIVING COMPLETION / AUDIT / STATUS / AGENT-HANDOFF AUTHORITY  
-**Date:** 2026-09-24  
+**Date:** 2026-09-25  
 **Goal:** Finish ViewTube as one coherent production YouTube creator operating system by converging existing capabilities onto canonical owners, closing measurable workflow loops, eliminating duplicate authorities, and continuously proving production readiness.  
-**Current-main audit basis:** main after PRs #382, #385, #386 and #387.  
+**Current-main audit basis:** `239babb1fb5cf1defc451b63554e5353cfba9a7a` on 2026-09-25, including PRs #406–#430 and the new living dashboard/AI governance authorities.  
 **Companion task ledger:** `tasks/viewtube-one-goal-status.md`  
 **Companion agent skill:** `.claude/skills/viewtube-one-goal-completion/SKILL.md`
 
@@ -302,14 +302,68 @@ Every agent leaves:
 - domain-master links;
 - automatic stale-status detection where feasible.
 
+## 6A. 2026-09-25 Current-Main Reconciliation
+
+The repository moved materially after the original 2026-09-24 audit. The plan is therefore narrowed as follows:
+
+- **Do not rebuild MetricComparabilityPolicy.** PR #419 is merged. Remaining work is certification plus VT-023/024 consumer integration.
+- **Do not rebuild ApprovedPublishSnapshot.** PR #420 is merged. Remaining work is persistence, transaction binding and recovery certification (VT-014–016).
+- **Do not rebuild dashboard Project context.** PR #413 introduced a shared bounded dashboard adapter. VT-003 now means completing uniform BrainRuntime/ContentBuild context outside that dashboard path.
+- **Do not treat Opportunity Radar as the canonical Opportunity evidence service.** PR #406 provides honest connected evidence for the widget; VT-004 is the reusable cross-runtime evidence feed that should prevent widgets and Brain from inventing separate opportunity logic.
+- **Do not restart editor visual-frame parity.** PR #417 already unified easing, transforms, crop, track ordering and media fit across preview/final output. Continue only the documented remaining parity gaps.
+- **Do not reopen the Video Manager structural migration.** PR #430 moved that surface to canonical primitives and fixed major portrait clipping/spacing. VT-032/033 now target remaining production consumers and certification.
+- **Agent governance is significantly farther ahead.** PRs #421–424 established the living AI Systems authority, machine-readable schemas/registry, validator health gate, and Herald claims/receipts projection. VT-039 and VT-040 are complete; VT-042 should extend those freshness checks to the One-Goal ledger rather than create a second governance mechanism.
+- **Dashboard/widget work gained its own living master resource on current main.** One-Goal UI work must defer widget-specific status/design to that authority and keep this program focused on cross-system completion seams.
+
+### Revised immediate critical path
+
+```
+VT-014 snapshot persistence
+→ VT-015 PublishTransaction binding
+→ VT-005 correlation/idempotency envelope
+→ VT-016 publish recovery certification
+→ VT-017 post-publish ContentBuild lifecycle
+→ VT-018 analytics checkpoint/evaluation bridge
+```
+
+In parallel after contracts stabilize:
+
+```
+VT-003 runtime Project/ContentBuild context
+→ VT-004 shared Opportunity evidence
+→ VT-006 producer/ledger mapping
+→ VT-007..011 outcome writers
+→ VT-012 evaluation coverage
+→ VT-013 governed learning coverage
+```
+
+Analytics path:
+
+```
+VT-001 certification
+→ VT-023 evaluation integration
+→ VT-024 visual/experiment integration
+→ VT-025..028 legacy/controller completion
+```
+
+Editor path:
+
+```
+VT-029 final-render identity certification
+→ VT-030 remaining parity fixtures
+→ VT-031 four-layout certification
+```
+
+**Planning constraint:** UI/widget/editor work may proceed in parallel, but it must not displace the publishing → post-publish → evaluation chain as the highest-leverage cross-system completion path.
+
 ## 7. Priority Order
 
 ### P0 — correctness and identity
-1. MetricComparabilityPolicy contract.
-2. ApprovedPublishSnapshot contract.
-3. Project/Opportunity Brain context.
-4. Outcome writer coverage contract.
-5. idempotency/correlation envelope.
+1. **Certify and consume** the merged MetricComparabilityPolicy (PR #419) through evaluation first, then visuals/experiments.
+2. **Persist and bind** the merged ApprovedPublishSnapshot contract (PR #420) to PublishTransaction; certify retry/recovery.
+3. Finish Project/ContentBuild context beyond the dashboard adapter introduced by PR #413.
+4. Promote Opportunity evidence from widget-local production evidence (PR #406) to one canonical reusable feed.
+5. Define the outcome-writer coverage map and the idempotency/correlation envelope before adding producer writers.
 
 ### P1 — close loops
 6. Publisher/Project/Comment/Editor outcomes.
@@ -450,17 +504,17 @@ ViewTube completion is achieved when:
 
 | Workstream | Status | Evidence | Next |
 |---|---|---|---|
-| Brain runtime convergence | NEARLY_FINISHED | canonical runtime/gateway + recent Brain docs consolidation | Project/Opportunity uniformity + legacy generator migration |
-| Channel Knowledge | NEARLY_FINISHED | typed projection/retrieval merged in PR #386 | connect broader evaluated outcomes |
-| Analytics/VT-SYNC | IN_PROGRESS | canonical master + 34 visible datasets + 27 report definitions | legacy migration + comparability |
-| Project/ContentBuild | NEARLY_FINISHED | identity/persistence/package sync present | approved publish + post-publish linkage |
+| Brain runtime convergence | IN_PROGRESS / HIGH MATURITY | canonical runtime/gateway; PR #413 adds bounded dashboard Project context; PRs #421–424 strengthen AI governance | finish runtime-wide Project/ContentBuild context, shared Opportunity evidence, legacy generator migration |
+| Channel Knowledge | NEARLY_FINISHED | typed projection/retrieval + governed AI Systems authority | connect broader evaluated outcomes |
+| Analytics/VT-SYNC | IN_PROGRESS | canonical master; MetricComparabilityPolicy merged in PR #419 | certify policy, integrate VT-023/024, retire migration debt |
+| Project/ContentBuild | NEARLY_FINISHED | identity/persistence/package sync present | snapshot persistence/binding + post-publish linkage |
 | Asset Engine | NEARLY_FINISHED | versioning/provenance/editor export integration | exact used-variant evaluation |
-| Publisher | IN_PROGRESS | resumable transaction foundation | immutable snapshot + recovery certification |
-| Editor/Remotion | IN_PROGRESS | timeline/mobile/render foundations | parity + four-layout certification |
-| UI primitives/toolboxes | IN_PROGRESS | canonical authorities and large migration | remaining production consumers/certification |
-| Outcome/evaluation/learning | IN_PROGRESS | asset outcomes + algorithm evaluation/governance | producer coverage |
-| Reliability/observability | PARTIAL | diagnostics/release patterns exist | correlation/idempotency/failure matrix |
-| Agent continuity | STARTED | Herald + docs registry + this program | wire repository entrypoint + task receipts |
+| Publisher | IN_PROGRESS | resumable transaction foundation + ApprovedPublishSnapshot contract merged in PR #420 | persist/bind snapshot, then recovery certification |
+| Editor/Remotion | IN_PROGRESS / HIGH MATURITY | PR #417 unified major preview/final visual semantics | remaining template/audio/FX parity + four-layout certification |
+| UI primitives/toolboxes | IN_PROGRESS / HIGH MATURITY | canonical authorities; PR #430 restructures Video Manager; dashboard living master now exists | remaining consumers + responsive/state certification |
+| Outcome/evaluation/learning | IN_PROGRESS | asset outcomes + algorithm evaluation/governance | producer map/writers + post-publish measurement chain |
+| Reliability/observability | PARTIAL | diagnostics/release patterns + AI governance validator | correlation/idempotency envelope + failure matrix |
+| Agent continuity | HIGH MATURITY | One-Goal + Herald + AI Systems master + schemas/registry/validator/claim-receipt projection | extend stale-status automation to One-Goal ledger + maintain Create State mirror |
 
 ## 14. Update Rules
 
@@ -473,4 +527,4 @@ Update this artifact when:
 
 Do not copy implementation logs here. Put detailed execution evidence in the task ledger and domain masters.
 
-**Last updated:** 2026-09-24
+**Last updated:** 2026-09-25
