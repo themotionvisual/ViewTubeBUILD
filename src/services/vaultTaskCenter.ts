@@ -41,6 +41,9 @@ export const listVaultTasks = (): VaultTask[] => {
  }
 }
 
+export const getVaultTask = (id: string): VaultTask | null =>
+ listVaultTasks().find((task) => task.id === id) || null
+
 export const createVaultTask = (input: {
  type: VaultTaskType
  label: string
