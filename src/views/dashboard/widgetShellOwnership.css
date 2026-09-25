@@ -64,7 +64,8 @@
     flex-direction:column;
     min-width:0;
     min-height:0;
-    overflow:hidden;
+    overflow-y:hidden;
+    overflow-x:visible;
   }
 
   .vt-widget-body {
@@ -73,13 +74,12 @@
     flex-direction:column;
     min-width:0;
     min-height:0;
-    overflow:hidden;
-    overflow-x:var(--vt-shell-overflow-x);
+    overflow-y:hidden;
+    overflow-x:visible;
   }
 
-  .vt-widget,
-  .vt-widget-content {
-    overflow-x:var(--vt-shell-overflow-x);
+  .vt-widget {
+    overflow-x:visible;
   }
 
   .vt-widget-body--flush { --vt-widget-body-inset:0px; }
