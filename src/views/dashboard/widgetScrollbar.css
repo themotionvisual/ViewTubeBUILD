@@ -131,9 +131,9 @@
 
   :where(.dashboard-barrier) .widget-scroll-content {
     box-sizing: border-box;
-    width: calc(100% + (2 * var(--widget-shadow-clearance)));
-    margin-inline: calc(-1 * var(--widget-shadow-clearance));
-    padding-inline: var(--widget-shadow-clearance);
+    width: 100%;
+    margin-inline: 0;
+    padding-inline: 0;
   }
 }
 
