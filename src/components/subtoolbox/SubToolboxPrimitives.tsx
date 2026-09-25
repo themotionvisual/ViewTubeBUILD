@@ -602,6 +602,30 @@ export const SubToolboxTopTitleDropdown: React.FC<SubToolboxTopTitleDropdownProp
 
   const mergedStyle = withComponentLevelStyle(level, style)
 
+  React.useLayoutEffect(() => {
+    if (!open || typeof window === "undefined") {
+      setPanelRect(null)
+      return
+    }
+    const sync = () => {
+      const rect = rootRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const viewportPadding = 8
+      const width = Math.min(rect.width, window.innerWidth - viewportPadding * 2)
+      const left = Math.min(Math.max(viewportPadding, rect.left), Math.max(viewportPadding, window.innerWidth - viewportPadding - width))
+      setPanelRect({ left, top: rect.bottom + 6, width })
+    }
+    sync()
+    const frame = window.requestAnimationFrame(sync)
+    window.addEventListener("resize", sync)
+    window.addEventListener("scroll", sync, true)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener("resize", sync)
+      window.removeEventListener("scroll", sync, true)
+    }
+  }, [open])
+
   return (
     <div
       ref={rootRef}
@@ -709,6 +733,7 @@ export const SubToolboxVideoSelector: React.FC<SubToolboxVideoSelectorProps> = (
 }) => {
   const [open, setOpen] = React.useState(false)
   const rootRef = React.useRef<HTMLDivElement>(null)
+  const [panelRect, setPanelRect] = React.useState<{ left: number; top: number; width: number } | null>(null)
   const selected = options.find((option) => option.value === value)
   const filtered = React.useMemo(() => {
     const q = searchValue.trim().toLowerCase()
@@ -744,8 +769,20 @@ export const SubToolboxVideoSelector: React.FC<SubToolboxVideoSelectorProps> = (
         <span className="vt-subtoolbox-video-selector-chevron" aria-hidden="true">⌄</span>
       </button>
 
-      {open ? (
-        <div className="vt-subtoolbox-video-selector-panel" role="listbox" aria-label={ariaLabel}>
+      {open && panelRect && typeof document !== "undefined" ? createPortal(
+        <div
+          className="vt-subtoolbox-video-selector-panel"
+          role="listbox"
+          aria-label={ariaLabel}
+          data-vt-control-level={level}
+          style={{
+            ...withComponentLevelStyle(level, style),
+            position: "fixed",
+            left: panelRect.left,
+            top: panelRect.top,
+            width: panelRect.width,
+          }}
+        >
           <div className="vt-subtoolbox-video-selector-search">
             <SubToolboxSplitField
               level="l1"
@@ -786,7 +823,8 @@ export const SubToolboxVideoSelector: React.FC<SubToolboxVideoSelectorProps> = (
             ))}
             {filtered.length === 0 ? <div className="vt-subtoolbox-video-selector-empty">NO VIDEOS MATCH SEARCH</div> : null}
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </div>
   )
