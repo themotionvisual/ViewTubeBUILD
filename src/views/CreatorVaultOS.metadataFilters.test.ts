@@ -9,6 +9,8 @@ describe("CreatorVaultOS structured metadata filters UI", () => {
   for (const term of [
    "filterLifecycle",
    "filterOrientation",
+   "filterUpdatedFrom",
+   "filterUpdatedTo",
    "filterMimeType",
    "filterMinWidth",
    "filterMinHeight",
@@ -20,6 +22,8 @@ describe("CreatorVaultOS structured metadata filters UI", () => {
 
   expect(source).toContain("lifecycle: filterLifecycle")
   expect(source).toContain("orientation: filterOrientation")
+  expect(source).toContain("updatedAfter:")
+  expect(source).toContain("updatedBefore:")
   expect(source).toContain("mimeType: filterMimeType")
   expect(source).toContain("minWidth:")
   expect(source).toContain("maxBytes:")
@@ -28,6 +32,8 @@ describe("CreatorVaultOS structured metadata filters UI", () => {
  it("exposes advanced filters without replacing the compact primary controls", () => {
   expect(source).toContain("Advanced Metadata Filters")
   expect(source).toContain("Orientation")
+  expect(source).toContain("UPDATED FROM")
+  expect(source).toContain("UPDATED TO")
   expect(source).toContain("MIN WIDTH")
   expect(source).toContain("MAX SIZE MB")
  })
