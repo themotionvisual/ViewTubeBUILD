@@ -20,6 +20,7 @@ import {
 import {
  SubToolboxAlphabeticalTag,
  SubToolboxFileTarget,
+ SubToolboxInput,
  SubToolboxSegmentedToggle,
  SubToolboxSelect,
  SubToolboxSplitField,
