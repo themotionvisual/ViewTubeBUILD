@@ -29,6 +29,7 @@ Use these canonical building blocks instead of recreating them:
 - `WidgetProgressBar`
 - `WidgetSelect` / `WidgetSizedSelect`
 - `WidgetSizedButton`, `WidgetLeftSplitButton`
+- `WidgetHeaderAction` for a header-mounted action; `WidgetHeaderToggle` only for mode selection
 - `WidgetTextInput`
 - video and other domain selectors from the canonical `WidgetPrimitives` public API
 
@@ -57,6 +58,15 @@ Prefer structural breakpoints near actual content failures instead of universal 
 
 Do not rely on a widget's default grid span. Every declared dimension is a supported public state.
 
+## Content-edge contract
+
+Use three shared zones:
+
+- **Inset:** normal fields/cards/prose.
+- **Full bleed:** dividers, gradient bands, callout strips, horizontal rails and footers.
+- **Shadow safe:** focus glows and colored shadows with equal left/right clearance.
+
+Do not create one-sided right gutters or intermediate horizontal clipping to make room for shadows. Full-bleed elements must reach the true interior module edge; horizontal rails own their internal scroll padding. Portrait header controls must wrap before clipping and remain usable after collapse. Use icon components rather than emoji characters in widget UI.
 ## Data and Rendering
 
 - Subscribe to the smallest stable selector the widget needs.
