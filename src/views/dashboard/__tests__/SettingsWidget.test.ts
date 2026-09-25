@@ -23,6 +23,7 @@ describe("Settings dashboard control switchboard", () => {
     expect(widget).toContain("DATA")
     expect(widget).toContain("AI")
     expect(widget).toContain("ACCOUNT")
+    expect(widget).toContain("WidgetHeaderStepper")
   })
 
   it("retains existing settings actions while exposing current dashboard state", () => {
