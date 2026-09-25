@@ -566,3 +566,22 @@
   transform:none;
  }
 }
+
+@container vt-widget (max-width:430px){
+ .brain-hub-header-toggle{
+  width:100%!important;
+  min-width:124px!important;
+  max-width:148px!important;
+  height:auto!important;
+  min-height:30px!important;
+  overflow:visible!important;
+ }
+ .brain-hub-header-toggle button{
+  min-width:0!important;
+  padding:2px 4px!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  line-height:.82!important;
+ }
+}
