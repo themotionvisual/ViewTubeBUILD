@@ -258,6 +258,15 @@
       padding-inline: calc(var(--widget-content-inset) + var(--widget-shadow-clearance));
     }
 
+    .dashboard-barrier .widget-footer {
+      width: calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance))));
+      max-width: none;
+      margin-left: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance)));
+      margin-right: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance)));
+      padding-inline: calc(var(--widget-content-inset) + var(--widget-shadow-clearance));
+      box-sizing: border-box;
+    }
+
     .dashboard-barrier .vt-widget-shadow-safe {
       width: calc(100% + (2 * var(--vt-widget-edge-safe)));
       margin-inline: calc(-1 * var(--vt-widget-edge-safe));
