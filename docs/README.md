@@ -29,6 +29,7 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | AI / Brain runtime architecture | [Unified AI System Canonical Consolidation Contract](./brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md) |
 | Prompt system | [Prompt System Authority](./brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md) |
 | Herald repository-work governance | [HERALD-OUT](../agent/contracts/herald-out.md) + [workflow](../agent/contracts/herald-workflow.md) (implemented code/record authority) |
+| Cross-system product / Master Tool architecture | [Master Product, Tools & Workstation Architecture](./architecture/VIEWTUBE_MASTER_PRODUCT_TOOLS_WORKSTATION_ARCHITECTURE.md) — coordinates lifecycle/tool taxonomy and code-aware integration; scoped domain authorities still own internals |
 
 These are scoped authorities. They do not make every neighboring plan or reference obsolete automatically.
 
@@ -150,3 +151,10 @@ Every editor-related agent/conversation must update the master resource Current 
 ## AI historical archive
 
 Superseded broad AI audits, phase manifests and phase-closeout records are preserved under `migration/reference/brain-ai-history/`. They are provenance only; current status comes from the AI Systems Living Master Resource, bounded canonical authorities, current code/tests, and the Finish Program.
+
+
+## Cross-system Master Tool architecture
+
+- [Master Product, Tools & Workstation Architecture](./architecture/VIEWTUBE_MASTER_PRODUCT_TOOLS_WORKSTATION_ARCHITECTURE.md) owns the cross-system creator lifecycle, 12-Master-Tool taxonomy, consolidation map, integration planning vocabulary and code-awareness crosswalk.
+- It coordinates but does **not** replace Analytics/VT-SYNC, BrainRuntime, Projects/ContentBuild, Asset Engine, Toolbox UI, Widget Registry, Editor, Auth, Deployment or Herald authorities.
+- Future tool/widget ideas should be assigned to a Master Tool here before creating a new page, store, registry or runtime.
