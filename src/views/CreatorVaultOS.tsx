@@ -697,6 +697,19 @@ const CreatorVaultOS: React.FC = () => {
   setRefreshTick((value) => value + 1)
  }
 
+ const resolvePendingDuplicate = (item: PendingVaultImport) => {
+  const duplicateId = typeof item.metadata.duplicateAssetId === "string"
+   ? item.metadata.duplicateAssetId
+   : ""
+  if (!duplicateId) return
+  const existing = allAssets.find((asset) => asset.id === duplicateId)
+  if (!existing) return
+  setPending((current) => current.filter((candidate) => candidate.id !== item.id))
+  setSelectedAssetIds([duplicateId])
+  setSelectionAnchorId(duplicateId)
+  setRefreshTick((value) => value + 1)
+ }
+
  const applyBatchTag = () => {
   const tag = batchTag.trim()
   if (!tag || !selectedAssetIds.length) return
@@ -2038,11 +2051,19 @@ const CreatorVaultOS: React.FC = () => {
             options={["image", "video", "audio", "document", "json", "font", "template", "generated", "other"]}
            />
            {item.metadata.duplicateAssetId ? (
-            <SubToolboxStatePanel
-             level="l1"
-             state="stale"
-             message={`Exact duplicate of ${String(item.metadata.duplicateAssetName || "an existing Vault asset")}. Review before ingesting.`}
-            />
+            <>
+             <SubToolboxStatePanel
+              level="l1"
+              state="stale"
+              message={`Exact duplicate of ${String(item.metadata.duplicateAssetName || "an existing Vault asset")}. Review before ingesting.`}
+             />
+             <SubToolboxInnerActionButton
+              label="Use Existing Duplicate"
+              iconName="link"
+              tone="purple"
+              onClick={() => resolvePendingDuplicate(item)}
+             />
+            </>
            ) : null}
            <div className="text-xs font-bold opacity-60">
             {(item.size / 1024 / 1024).toFixed(2)} MB
