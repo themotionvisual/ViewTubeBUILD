@@ -61,6 +61,7 @@ import {
  computeVaultImagePerceptualHash,
  findVaultSimilarAssets,
 } from "../services/vaultImageSimilarity"
+import { computeVaultImagePalette } from "../services/vaultImagePalette"
 import { buildVaultExplorerGroups } from "../services/vaultExplorer"
 import { getAssetLineage } from "../services/assetEngine"
 import {
@@ -625,13 +626,14 @@ const CreatorVaultOS: React.FC = () => {
      setTaskRefresh((value) => value + 1)
     }
 
-    const [metadata, contentHash, imagePreviewUrl, videoPreviewUrl, exif, perceptualHash] = await Promise.all([
+    const [metadata, contentHash, imagePreviewUrl, videoPreviewUrl, exif, perceptualHash, imagePalette] = await Promise.all([
      extractVaultFileMetadata(file),
      computeVaultFileHash(file),
      extractVaultImagePreview(file),
      extractVaultVideoThumbnail(file),
      extractVaultExifMetadata(file),
      computeVaultImagePerceptualHash(file),
+     computeVaultImagePalette(file),
     ])
     const previewUrl = imagePreviewUrl || videoPreviewUrl
 
@@ -2792,6 +2794,33 @@ const CreatorVaultOS: React.FC = () => {
            />
           )}
          </div>
+         {Array.isArray(selectedAsset.metadata?.imagePalette)
+          && selectedAsset.metadata.imagePalette.length ? (
+          <div>
+           <div className="mb-2 text-xs font-black uppercase opacity-60">Color Palette</div>
+           <div className="flex flex-wrap gap-2">
+            {(selectedAsset.metadata.imagePalette as string[]).map((color) => (
+             <button
+              key={color}
+              type="button"
+              title={color}
+              aria-label={`Copy palette color ${color}`}
+              onClick={() => {
+               if (navigator.clipboard?.writeText) void navigator.clipboard.writeText(color)
+              }}
+              className="flex items-center gap-2 border-[2px] border-current px-2 py-1 text-[10px] font-black uppercase"
+             >
+              <span
+               aria-hidden="true"
+               className="h-4 w-4 border-[2px] border-current"
+               style={{ backgroundColor: color }}
+              />
+              {color}
+             </button>
+            ))}
+           </div>
+          </div>
+         ) : null}
          {(selectedAsset.metadata?.exifMake
           || selectedAsset.metadata?.exifModel
           || selectedAsset.metadata?.exifDateTimeOriginal
