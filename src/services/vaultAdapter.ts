@@ -36,7 +36,7 @@ export interface VaultAssetSearchInput {
  tagMode?: "all" | "any"
  source?: VaultAsset["source"] | null
  sort?: "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
- special?: "active" | "inbox" | "favorites" | "archive" | "trash" | null
+ special?: "active" | "recent" | "generated" | "inbox" | "favorites" | "archive" | "trash" | null
  mimeType?: string | null
  lifecycle?: string | null
  minWidth?: number | null
@@ -89,6 +89,16 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
    if (input.special === "inbox") {
     if (metadata.archivedAt || metadata.trashedAt) return false
     if (!getVaultAttentionReasons(asset).length) return false
+   }
+   if (input.special === "recent") {
+    if (metadata.archivedAt || metadata.trashedAt) return false
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000)
+    if (asset.updatedAt < thirtyDaysAgo) return false
+   }
+   if (input.special === "generated") {
+    if (metadata.archivedAt || metadata.trashedAt) return false
+    const generationBacked = asset.source === "generated" || asset.kind === "generated" || Boolean(asset.generationId)
+    if (!generationBacked) return false
    }
    if (input.special === "favorites" && metadata.favorite !== true) return false
    if (input.special === "archive" && !metadata.archivedAt) return false
