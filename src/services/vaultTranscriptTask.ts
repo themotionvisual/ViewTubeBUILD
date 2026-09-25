@@ -3,6 +3,7 @@ import { acquireYouTubeAssets } from "./youtubeAcquisition"
 import { addVaultAsset } from "./vaultAdapter"
 import {
  createVaultTask,
+ getVaultTask,
  updateVaultTask,
  type VaultTask,
 } from "./vaultTaskCenter"
@@ -12,16 +13,20 @@ type TranscriptAcquire = typeof acquireYouTubeAssets
 export const runVaultTranscriptTask = async (input: {
  asset: VaultAsset
  videoId: string
+ taskId?: string | null
  acquire?: TranscriptAcquire
 }): Promise<{ task: VaultTask; asset: VaultAsset | null }> => {
  const acquire = input.acquire || acquireYouTubeAssets
- let task = createVaultTask({
-  type: "transcript",
-  label: `Transcript · ${input.asset.name}`,
-  assetName: input.asset.name,
-  targetAssetId: input.asset.id,
-  detail: "Queued for YouTube transcript acquisition.",
- })
+ let task = input.taskId ? getVaultTask(input.taskId) : null
+ if (!task) {
+  task = createVaultTask({
+   type: "transcript",
+   label: `Transcript · ${input.asset.name}`,
+   assetName: input.asset.name,
+   targetAssetId: input.asset.id,
+   detail: "Queued for YouTube transcript acquisition.",
+  })
+ }
  task = updateVaultTask(task.id, {
   status: "processing",
   progress: 25,
