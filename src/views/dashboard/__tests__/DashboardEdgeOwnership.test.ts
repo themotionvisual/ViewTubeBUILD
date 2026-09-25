@@ -25,8 +25,10 @@ describe("dashboard edge and collapsed-control ownership", () => {
     expect(controlsIndex).toBeLessThan(collapseIndex)
   })
 
-  it("lets horizontal shadows and focus glows reach the content edge", () => {
+  it("lets open-widget shadows and focus glows reach the content edge", () => {
     expect(shellCss).toContain(".vt-widget-content")
-    expect(shellCss).toContain("overflow-x:visible")
+    expect(shellCss).toContain("overflow:visible")
+    expect(shellCss).toContain(".vt-widget-collapse-region.is-closed .vt-widget-collapse-inner")
+    expect(shellCss).toContain("overflow:hidden")
   })
 })
