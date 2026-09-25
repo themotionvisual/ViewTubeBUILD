@@ -433,7 +433,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
 
         {activeCategory === "video" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("2. Video Select", "Video Manager-derived dropdown")}
+            {sectionHeading("2. Video Select / Dropdown", "Video Manager-derived dropdown")}
             <p className="text-[10px] font-bold uppercase opacity-60">
               The closed selector uses a split-left VIDEO / chevron bay. The selected title wraps naturally into two or three lines without ellipsis.
             </p>
