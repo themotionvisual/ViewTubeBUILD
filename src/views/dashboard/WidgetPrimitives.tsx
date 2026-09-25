@@ -792,6 +792,7 @@ export {
   WidgetSizedButton,
   WidgetLeftSplitButton,
   WidgetTextInput,
+  WidgetTextArea,
   WidgetSizedSelect,
   WidgetVideoSelect,
   WidgetProgressBar,
