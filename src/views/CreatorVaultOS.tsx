@@ -40,6 +40,13 @@ import {
 import { createPendingVaultImport, type PendingVaultImport } from "../services/vaultImport"
 import { extractVaultFileMetadata } from "../services/vaultFileMetadata"
 import { resolveVaultSelection } from "../services/vaultSelection"
+import {
+ createVaultSmartCollection,
+ deleteVaultSmartCollection,
+ listVaultSmartCollections,
+ type VaultSmartCollection,
+} from "../services/vaultCollections"
+import { resolveVaultKeyboardCommand } from "../services/vaultKeyboard"
 import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
 import type { VaultAsset, VaultAssetKind } from "../types"
 
@@ -93,8 +100,13 @@ const CreatorVaultOS: React.FC = () => {
  const [quickLookMuted, setQuickLookMuted] = useState(false)
  const [quickLookVolume, setQuickLookVolume] = useState(0.8)
  const [quickLookSpeed, setQuickLookSpeed] = useState(1)
+ const [quickLookOpen, setQuickLookOpen] = useState(true)
+ const [smartCollectionName, setSmartCollectionName] = useState("")
+ const [collectionRefresh, setCollectionRefresh] = useState(0)
+ const searchInputRef = useRef<HTMLInputElement | null>(null)
 
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
+ const smartCollections = useMemo(() => listVaultSmartCollections(), [collectionRefresh])
  const visibleAssets = useMemo(() => {
   return searchVaultAssets({
    query,
@@ -127,6 +139,67 @@ const CreatorVaultOS: React.FC = () => {
    .sort((a, b) => a.localeCompare(b)),
   [allAssets],
  )
+
+ const saveSmartCollection = () => {
+  const name = smartCollectionName.trim()
+  if (!name) return
+  createVaultSmartCollection({
+   name,
+   query,
+   tags: selectedTag ? [selectedTag] : [],
+   kind: filterKind,
+   source,
+  })
+  setSmartCollectionName("")
+  setCollectionRefresh((value) => value + 1)
+ }
+
+ const applySmartCollection = (collection: VaultSmartCollection) => {
+  setQuery(collection.query)
+  setSelectedTag(collection.tags[0] || null)
+  setFilterKind(collection.kind)
+  setSource(collection.source)
+ }
+
+ const removeSmartCollection = (id: string) => {
+  deleteVaultSmartCollection(id)
+  setCollectionRefresh((value) => value + 1)
+ }
+
+ useEffect(() => {
+  const handleKeyDown = (event: KeyboardEvent) => {
+   const target = event.target as HTMLElement | null
+   const isTyping = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable
+   const command = resolveVaultKeyboardCommand({
+    key: event.key,
+    metaKey: event.metaKey,
+    ctrlKey: event.ctrlKey,
+   })
+   if (!command) return
+   if (isTyping && command !== "focus-search" && command !== "close-transient") return
+
+   if (command === "focus-search") {
+    event.preventDefault()
+    searchInputRef.current?.focus()
+    return
+   }
+   if (command === "toggle-quick-look" && selectedAsset) {
+    event.preventDefault()
+    setQuickLookOpen((open) => !open)
+    return
+   }
+   if (command === "toggle-mute" && selectedAsset && (selectedAsset.kind === "video" || selectedAsset.kind === "audio")) {
+    event.preventDefault()
+    setQuickLookMuted((muted) => !muted)
+    return
+   }
+   if (command === "close-transient") {
+    setQuickLookOpen(false)
+   }
+  }
+  window.addEventListener("keydown", handleKeyDown)
+  return () => window.removeEventListener("keydown", handleKeyDown)
+ }, [selectedAsset])
 
  const createImportedRecord = (item: PendingVaultImport, mode: "direct" | "staged") => {
   return createImportedVaultAsset({
@@ -280,6 +353,39 @@ const CreatorVaultOS: React.FC = () => {
          tone="cyan"
          onClick={() => setSelectedTag(null)}
         />
+        <StandardInput
+         value={smartCollectionName}
+         onChange={(event) => setSmartCollectionName(event.target.value)}
+         placeholder="Name current smart filter"
+         aria-label="Smart collection name"
+        />
+        <SubToolboxInnerActionButton
+         label="Save Smart Collection"
+         iconName="collection"
+         tone="green"
+         onClick={saveSmartCollection}
+         disabled={!smartCollectionName.trim()}
+        />
+        {smartCollections.length ? (
+         <div className="flex flex-col gap-2">
+          {smartCollections.map((collection) => (
+           <div key={collection.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <SubToolboxInnerActionButton
+             label={collection.name}
+             iconName="collection"
+             tone="cyan"
+             onClick={() => applySmartCollection(collection)}
+            />
+            <SubToolboxInnerActionButton
+             label="×"
+             iconName="x"
+             tone="pink"
+             onClick={() => removeSmartCollection(collection.id)}
+            />
+           </div>
+          ))}
+         </div>
+        ) : null}
        </div>
       </SubToolbox>
 
@@ -327,6 +433,7 @@ const CreatorVaultOS: React.FC = () => {
          variant="search"
          icon={<Search />}
          inputProps={{
+          ref: searchInputRef,
           value: query,
           onChange: (event) => setQuery(event.target.value),
           placeholder: "Search names, projects, tags, kinds, and metadata…",
@@ -562,7 +669,13 @@ const CreatorVaultOS: React.FC = () => {
         <div className="flex flex-col gap-3">
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Quick Look</div>
-          {selectedAsset.kind === "image" && (selectedAsset.previewUrl || selectedAsset.url) ? (
+          {!quickLookOpen ? (
+           <SubToolboxStatePanel
+            level="l1"
+            state="ready"
+            message="Quick Look is closed. Press Space to reopen it."
+           />
+          ) : selectedAsset.kind === "image" && (selectedAsset.previewUrl || selectedAsset.url) ? (
            <SubToolboxMediaInspector
             level="l1"
             title="Quick Look"
