@@ -733,7 +733,7 @@ const CreatorVaultOS: React.FC = () => {
            {item.metadata.duplicateAssetId ? (
             <SubToolboxStatePanel
              level="l1"
-             state="warning"
+             state="stale"
              message={`Exact duplicate of ${String(item.metadata.duplicateAssetName || "an existing Vault asset")}. Review before ingesting.`}
             />
            ) : null}
