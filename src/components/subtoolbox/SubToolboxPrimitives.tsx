@@ -710,6 +710,7 @@ export const SubToolboxVideoSelector: React.FC<SubToolboxVideoSelectorProps> = (
   const [open, setOpen] = React.useState(false)
   const rootRef = React.useRef<HTMLDivElement>(null)
   const [panelRect, setPanelRect] = React.useState<{ left: number; top: number; width: number } | null>(null)
+  const [inheritedPair, setInheritedPair] = React.useState({ pairA: "", pairB: "" })
   const selected = options.find((option) => option.value === value)
   const titleSizeFor = (title: string) => {
     const length = title.trim().length
@@ -734,6 +735,11 @@ export const SubToolboxVideoSelector: React.FC<SubToolboxVideoSelectorProps> = (
       const rect = rootRef.current?.getBoundingClientRect()
       if (!rect) return
       const viewportPadding = 8
+      const rootStyle = rootRef.current ? getComputedStyle(rootRef.current) : null
+      setInheritedPair({
+        pairA: rootStyle?.getPropertyValue("--pair-a").trim() || "",
+        pairB: rootStyle?.getPropertyValue("--pair-b").trim() || "",
+      })
       const width = Math.min(rect.width, window.innerWidth - viewportPadding * 2)
       const left = Math.min(Math.max(viewportPadding, rect.left), Math.max(viewportPadding, window.innerWidth - viewportPadding - width))
       setPanelRect({ left, top: rect.bottom + 6, width })
@@ -797,6 +803,8 @@ export const SubToolboxVideoSelector: React.FC<SubToolboxVideoSelectorProps> = (
           data-vt-control-level={level}
           style={{
             ...withComponentLevelStyle(level, style),
+            ...(inheritedPair.pairA ? { ["--pair-a" as string]: inheritedPair.pairA } : {}),
+            ...(inheritedPair.pairB ? { ["--pair-b" as string]: inheritedPair.pairB } : {}),
             position: "fixed",
             left: panelRect.left,
             top: panelRect.top,
