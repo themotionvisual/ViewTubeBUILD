@@ -129,7 +129,7 @@
 /* Community Post-derived split-left anatomy: a dedicated left action/icon bay. */
 .widget-split-button.is-left-split {
   display: inline-grid;
-  grid-template-columns: var(--vt-primitive-height, 32px) minmax(0, 1fr);
+  grid-template-columns: calc(var(--vt-primitive-height, 32px) * 1.16) minmax(0, 1fr);
   align-items: stretch;
   padding: 0 !important;
   overflow: hidden;
@@ -138,7 +138,7 @@
 }
 
 .widget-split-button.is-left-split .widget-split-button-icon {
-  width: var(--vt-primitive-height, 32px);
+  width: calc(var(--vt-primitive-height, 32px) * 1.16);
   height: 100%;
   display: grid;
   place-items: center;
@@ -152,9 +152,11 @@
   align-items: center;
   justify-content: center;
   padding-inline: 9px;
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
+  line-height: .9;
+  font-size: max(10px, var(--vt-primitive-font, 11px));
 }
 
 .widget-split-button.is-left-split.is-height-18 {
@@ -1061,4 +1063,12 @@
   border-color:var(--widget-color,#34cdea);
   background:color-mix(in srgb,var(--widget-color,#fff) 18%,white);
   box-shadow:0 0 0 1px var(--widget-color,#34cdea);
+}
+
+.widget-split-button.is-left-split .widget-split-button-icon svg{
+  width:72%;
+  height:72%;
+  max-width:28px;
+  max-height:28px;
+  stroke-width:2.6;
 }
