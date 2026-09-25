@@ -4,6 +4,7 @@ export type VaultKeyboardCommand =
  | "close-transient"
  | "toggle-mute"
  | "project-selection"
+ | "focus-inspector"
 
 export const resolveVaultKeyboardCommand = (input: {
  key: string
@@ -18,6 +19,7 @@ export const resolveVaultKeyboardCommand = (input: {
  if (!command && input.key === " ") return "toggle-quick-look"
  if (!command && input.key === "Escape") return "close-transient"
  if (!command && key === "m") return "toggle-mute"
+ if (!command && input.key === "Enter") return "focus-inspector"
  return null
 }
 
