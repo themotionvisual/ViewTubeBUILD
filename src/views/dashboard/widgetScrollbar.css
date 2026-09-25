@@ -133,7 +133,9 @@
   }
 
   :where(.dashboard-barrier) .widget-scroll-viewport {
-    padding-inline-end: 0;
+    width: calc(100% + (2 * var(--widget-shadow-clearance)));
+    margin-inline: calc(-1 * var(--widget-shadow-clearance));
+    padding-inline: var(--widget-shadow-clearance);
     -webkit-overflow-scrolling: touch;
   }
 
@@ -142,6 +144,7 @@
     width: 100%;
     margin-inline: 0;
     padding-inline: 0;
+    overflow: visible;
   }
 }
 
