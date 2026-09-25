@@ -77,6 +77,7 @@ Use this file to locate current production owners quickly. All links point to `m
 | `revenue-chart` | [src/views/dashboard/widgets/RevenueChartWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/RevenueChartWidget) |
 | `revenue-momentum` | [src/views/dashboard/widgets/RevenueMomentumWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/RevenueMomentumWidget) |
 | `sharing-dna` | [src/views/dashboard/widgets/SharingDnaWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/SharingDnaWidget) |
+| `system-micro-stack` | [src/views/dashboard/widgets/SettingsWidget.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/SettingsWidget.tsx) |
 | `shorts-vs-long` | [src/views/dashboard/widgets/FormatClashWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/FormatClashWidget) |
 | `superfan-card` | [src/views/dashboard/widgets/SuperfanCardWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/SuperfanCardWidget) |
 | `tag-generator` | [src/views/dashboard/widgets/TagGeneratorWidget](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/TagGeneratorWidget) |
@@ -112,7 +113,6 @@ These still live in the shared renderer and are migration candidates. Do not res
 | `top-performer` | [src/views/dashboard/WidgetRendererBase.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/WidgetRendererBase.tsx) |
 | `alerts-feed` | [src/views/dashboard/WidgetRendererBase.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/WidgetRendererBase.tsx) |
 | `ai-prompt-box` | [src/views/dashboard/WidgetRendererBase.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/WidgetRendererBase.tsx) |
-| `system-micro-stack` | [src/views/dashboard/widgets/SettingsWidget.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/widgets/SettingsWidget.tsx) |
 | `task-stack` | [src/views/dashboard/WidgetRendererBase.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/WidgetRendererBase.tsx) |
 | `alerts-ticker` | [src/views/dashboard/WidgetRendererBase.tsx](https://github.com/themotionvisual/ViewTubeBUILD/blob/main/src/views/dashboard/WidgetRendererBase.tsx) |
 
