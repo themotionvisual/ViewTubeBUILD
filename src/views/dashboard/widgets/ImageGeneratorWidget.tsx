@@ -55,6 +55,7 @@ export const ImageGeneratorWidget = ({
   const [lastTarget, setLastTarget] = useState<TargetWidget | null>(null)
   const templateToggle = (
     <WidgetHeaderToggle
+      className="image-generator-template-toggle"
       label="Image template type"
       value={mode}
       onChange={(value) => setMode(value as TemplateMode)}
