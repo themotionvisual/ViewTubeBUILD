@@ -45,6 +45,8 @@ import { extractVaultFileMetadata } from "../services/vaultFileMetadata"
 import { computeVaultFileHash } from "../services/vaultFileHash"
 import { extractVaultVideoThumbnail } from "../services/vaultVideoThumbnail"
 import { buildVaultExplorerGroups } from "../services/vaultExplorer"
+import { getAssetLineage } from "../services/assetEngine"
+import { getVaultAssetVersionStack } from "../services/vaultVersions"
 import {
  clearCompletedVaultTasks,
  createVaultTask,
@@ -165,6 +167,14 @@ const CreatorVaultOS: React.FC = () => {
  const selectedAsset = useMemo(
   () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
   [allAssets, selectedAssetIds],
+ )
+ const selectedVersionStack = useMemo(
+  () => selectedAsset ? getVaultAssetVersionStack(selectedAsset.id) : [],
+  [selectedAsset, refreshTick],
+ )
+ const selectedLineage = useMemo(
+  () => selectedAsset ? getAssetLineage(selectedAsset.id) : [],
+  [selectedAsset, refreshTick],
  )
 
  const availableTags = useMemo(
@@ -1097,6 +1107,53 @@ const CreatorVaultOS: React.FC = () => {
             <SubToolboxAlphabeticalTag key={tag} level="l2" label={tag} spectrumKey={tag} />
            ))}
           </div>
+         </div>
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Versions</div>
+          {selectedVersionStack.length ? (
+           <div className="flex gap-2 overflow-x-auto pb-1">
+            {selectedVersionStack.map((version) => {
+             const asset = allAssets.find((candidate) => candidate.id === version.assetId)
+             return (
+              <SubToolboxInnerActionButton
+               key={version.id}
+               label={`V${version.version} · ${version.label || asset?.name || version.assetId}`}
+               iconName="layers"
+               tone={version.assetId === selectedAsset.id ? "pink" : "cyan"}
+               onClick={() => setSelectedAssetIds([version.assetId])}
+              />
+             )
+            })}
+           </div>
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="empty"
+            message="No canonical version stack is recorded for this asset."
+           />
+          )}
+         </div>
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Lineage</div>
+          {selectedLineage.length > 1 ? (
+           <div className="flex flex-col gap-2">
+            {selectedLineage.map((asset, index) => (
+             <SubToolboxInnerActionButton
+              key={asset.id}
+              label={`${index === 0 ? "CURRENT" : `PARENT ${index}`} · ${asset.name}`}
+              iconName="layers"
+              tone={index === 0 ? "pink" : "cyan"}
+              onClick={() => setSelectedAssetIds([asset.id])}
+             />
+            ))}
+           </div>
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="empty"
+            message="No parent lineage is recorded for this asset."
+           />
+          )}
          </div>
          {(typeof selectedAsset.metadata?.width === "number"
           || typeof selectedAsset.metadata?.durationSeconds === "number") ? (
