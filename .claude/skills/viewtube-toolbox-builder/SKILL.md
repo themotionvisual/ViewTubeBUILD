@@ -168,3 +168,38 @@ Never let a quota failure interrupt editing.
   `executablePath`. Rendering is where the CSS gotchas above actually show up.
 - eslint: add no new errors. `main` carries ~1,900 pre-existing ones, so check your files
   specifically rather than the whole repo.
+
+
+## 2026-09-25 corrective contracts — read before building or migrating
+
+These rules are mandatory until folded into the main sections above.
+
+### Collapse control
+Use the established animated **four-direction arrow** expand/collapse icon for Toolbox and SubToolbox headers. Do not substitute a generic chevron/down-arrow button. The symbol may rotate/animate with the 600ms shell motion, but its hitbox must remain isolated from help and header extras.
+
+### Painted shell clearance
+Judge spacing by painted extents, not padding tokens alone. The first child under a Toolbox/SubToolbox/MiniSubToolbox header must have visibly equal top/side/bottom clearance after accounting for strokes, shadows and focus outlines. Never patch only one feature; fix the canonical shell/compound.
+
+### Mobile editable controls
+Keep effective editable text at **16px minimum** on touch/mobile WebKit. Preserve normal pinch zoom. Focused fields must remain in place when already visible or move only enough to sit above the virtual keyboard. Keyboard handling stays separate from orientation-position restoration.
+
+### Custom dropdowns are controlled components
+For every custom dropdown/select, the displayed trigger value comes from the current controlled value; choosing an option calls the owner callback exactly once; the parent state change visibly updates the trigger; and the menu closes only after selection dispatch. Cover single-select, multi-select, portal and split-left variants with interaction tests.
+
+### Palette sequence
+The 12-color palette is sequential. Multi-tool pages advance Toolbox palette indices in order. Inside each Toolbox, the first SubToolbox continues with the next palette index and siblings/nested children continue the sequence; do not restart locally or choose decorative one-off colors. Prefer a centralized allocator to scattered literals.
+
+### Canonical SubToolbox-level split-left action
+When a full-row action visually represents a collapsed SubToolbox, use/build the shared split-left SubToolbox action: square icon rail, exact level geometry, centered icon, inherited palette pair and full-row button semantics. The Video Manager YouTube-connect action is the acceptance case. Add this compound to the Component Library.
+
+### Thumbnail MiniSubToolbox
+Thumbnail header + Upload/Generate + media preview is a reusable compound. Header actions must stay paint-safe and collision-free; the preview uses aspect-aware contain/fitted media. Add it to the Component Library and do not duplicate local anatomy.
+
+### Vault asset cards
+`SubToolboxVaultAsset` must support inline editable title using the canonical input focus style; a large canonical selection checkbox/X control; adaptive contained image/video preview for 16:9, 9:16, 1:1 and intermediate source ratios while the outer card remains fixed; canonical notes input/textarea; canonical tag editor; and shared anatomy across landscape, portrait, audio and document variants.
+
+### Spectrum Tag L3 / Tag Editor #30
+Create/use a dense L3 Spectrum Tag for embedded asset metadata. It remains on the 12-color spectrum and combines with the Tag Editor #30 add/remove interaction, including integrated X removal. Demonstrate L0-L3 in the Component Library.
+
+### Certification gate
+Do not describe a changed primitive as VERIFIED from source inspection alone. Require portrait + landscape mobile screenshots and interaction proofs for dropdown selection, header controls, first-child clearance, keyboard focus, palette order and Vault asset editing.
