@@ -64,6 +64,10 @@ const priorityStates = new Map([
   ["Media Queue", ["default", "selected"]],
   ["Media Inspector", ["default"]],
   ["Media Review Panel", ["default"]],
+  ["Labeled Input", ["default", "focus", "changed"]],
+  ["Labeled Textarea", ["default", "focus", "changed"]],
+  ["Video Selector", ["default", "focus", "open"]],
+  ["Mini SubToolbox", ["default"]],
 ])
 
 const geometryMinimumUnits = new Map([
@@ -88,6 +92,10 @@ const geometryMinimumUnits = new Map([
   ["Media Queue", 7.5],
   ["Media Inspector", 7.0],
   ["Media Review Panel", 9.5],
+  ["Labeled Input", 5.2],
+  ["Labeled Textarea", 6.2],
+  ["Video Selector", 7.4],
+  ["Mini SubToolbox", 6.4],
 ])
 
 const slug = (value) =>
