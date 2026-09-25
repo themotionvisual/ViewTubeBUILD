@@ -39,6 +39,10 @@
 
 - [x] RH-B032 Asset-aware Send To launcher through canonical ActionPackets.
 - [x] RH-B033 Asset lifecycle + GOLDEN/protection controls.
+- [x] RH-B034 Manual creator-curated Collections using canonical asset IDs.
+- [x] RH-B035 Two-asset Compare Mode with mobile horizontal comparison.
+- [x] RH-B036 Detailed Finder-style LIST with canonical data-table primitive.
+- [x] RH-B037 Structured metadata filters for lifecycle/MIME/dimensions/duration/file size.
 
 ## Lane C — intake jobs
 - [x] RH-C040 Global workspace drag/drop.
