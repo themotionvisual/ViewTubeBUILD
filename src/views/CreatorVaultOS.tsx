@@ -327,6 +327,10 @@ const CreatorVaultOS: React.FC = () => {
   () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
   [allAssets, selectedAssetIds],
  )
+ const rightsLicense = selectedAsset ? String(selectedAsset.metadata?.license || "") : ""
+ const rightsSource = selectedAsset ? String(selectedAsset.metadata?.rightsSource || selectedAsset.metadata?.sourceAttribution || "") : ""
+ const rightsExpiry = selectedAsset ? String(selectedAsset.metadata?.rightsExpiry || "") : ""
+ const rightsRestrictions = selectedAsset ? String(selectedAsset.metadata?.rightsRestrictions || selectedAsset.metadata?.rights || "") : ""
  const comparePair = useMemo(
   () => resolveVaultComparePair({ selectedIds: selectedAssetIds, assets: allAssets }),
   [selectedAssetIds, allAssets],
@@ -914,6 +918,25 @@ const CreatorVaultOS: React.FC = () => {
     : rawValue
   setVaultCustomFieldValue(asset.id, fieldId, value)
   setRefreshTick((current) => current + 1)
+ }
+
+ const updateAssetRights = (
+  asset: VaultAsset,
+  patch: {
+   license?: string
+   rightsSource?: string
+   rightsExpiry?: string
+   rightsRestrictions?: string
+  },
+ ) => {
+  const metadata = { ...(asset.metadata || {}) }
+  for (const [key, value] of Object.entries(patch)) {
+   const trimmed = String(value || "").trim()
+   if (trimmed) metadata[key] = trimmed
+   else delete metadata[key]
+  }
+  updateVaultAsset(asset.id, { metadata })
+  setRefreshTick((value) => value + 1)
  }
 
  const updateAssetTitle = (asset: VaultAsset, nextName: string) => {
@@ -2877,44 +2900,35 @@ const CreatorVaultOS: React.FC = () => {
           </div>
          ) : null}
          <div>
-          <div className="mb-2 text-xs font-black uppercase opacity-60">Rights</div>
-          {selectedAsset.metadata?.license || selectedAsset.metadata?.rights || selectedAsset.metadata?.copyright ? (
-           <div className="flex flex-col gap-1 text-xs font-bold">
-            {selectedAsset.metadata?.license ? <div>LICENSE · {String(selectedAsset.metadata.license)}</div> : null}
-            {selectedAsset.metadata?.rights ? <div>RIGHTS · {String(selectedAsset.metadata.rights)}</div> : null}
-            {selectedAsset.metadata?.copyright ? <div>COPYRIGHT · {String(selectedAsset.metadata.copyright)}</div> : null}
-           </div>
-          ) : (
-           <SubToolboxStatePanel
-            level="l1"
-            state="empty"
-            message="No rights or license metadata is recorded for this asset."
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Rights & License</div>
+          <div className="flex flex-col gap-2">
+           <SubToolboxInput
+            defaultValue={rightsLicense}
+            placeholder="LICENSE · owned / licensed / CC / public domain"
+            aria-label="Asset license"
+            onBlur={(event) => updateAssetRights(selectedAsset, { license: event.target.value })}
            />
-          )}
-         </div>
-         {(selectedAsset.metadata?.exifMake
-          || selectedAsset.metadata?.exifModel
-          || selectedAsset.metadata?.exifOrientation
-          || selectedAsset.metadata?.exifDateTimeOriginal
-          || selectedAsset.metadata?.exifDateTime) ? (
-          <div>
-           <div className="mb-2 text-xs font-black uppercase opacity-60">EXIF Metadata</div>
-           <div className="grid grid-cols-2 gap-2 text-xs font-bold">
-            {selectedAsset.metadata?.exifMake ? (
-             <div><div className="font-black uppercase">Camera Make</div><div className="opacity-60">{String(selectedAsset.metadata.exifMake)}</div></div>
-            ) : null}
-            {selectedAsset.metadata?.exifModel ? (
-             <div><div className="font-black uppercase">Camera Model</div><div className="opacity-60">{String(selectedAsset.metadata.exifModel)}</div></div>
-            ) : null}
-            {selectedAsset.metadata?.exifOrientation ? (
-             <div><div className="font-black uppercase">Orientation</div><div className="opacity-60">{String(selectedAsset.metadata.exifOrientation)}</div></div>
-            ) : null}
-            {selectedAsset.metadata?.exifDateTimeOriginal || selectedAsset.metadata?.exifDateTime ? (
-             <div><div className="font-black uppercase">Captured</div><div className="opacity-60">{String(selectedAsset.metadata.exifDateTimeOriginal || selectedAsset.metadata.exifDateTime)}</div></div>
-            ) : null}
-           </div>
+           <SubToolboxInput
+            defaultValue={rightsSource}
+            placeholder="SOURCE / ATTRIBUTION"
+            aria-label="Asset rights source"
+            onBlur={(event) => updateAssetRights(selectedAsset, { rightsSource: event.target.value })}
+           />
+           <SubToolboxInput
+            type="date"
+            defaultValue={rightsExpiry}
+            aria-label="Asset rights expiry"
+            onBlur={(event) => updateAssetRights(selectedAsset, { rightsExpiry: event.target.value })}
+           />
+           <SubToolboxTextArea
+            height="compact"
+            defaultValue={rightsRestrictions}
+            placeholder="Usage restrictions, territory, platform, attribution notes…"
+            aria-label="Asset rights restrictions"
+            onBlur={(event) => updateAssetRights(selectedAsset, { rightsRestrictions: event.target.value })}
+           />
           </div>
-         ) : null}
+         </div>
          {(typeof selectedAsset.metadata?.width === "number"
           || typeof selectedAsset.metadata?.durationSeconds === "number") ? (
           <div className="grid grid-cols-2 gap-3">
