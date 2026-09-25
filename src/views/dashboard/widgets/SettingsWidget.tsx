@@ -279,6 +279,29 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
               <StatusCell label="CHANNEL CONTEXT" value={isConnected ? "AVAILABLE" : "PREVIEW"} status={isConnected ? "positive" : "warning"} />
             </div>
 
+            {!isConnected && (
+              <div className="settings-switchboard-preview" aria-label="Settings AI preview">
+                <div className="settings-switchboard-preview-head">
+                  <WidgetBadge height={18} status="warning">PREVIEW</WidgetBadge>
+                  <strong>CONNECT TO PERSONALIZE</strong>
+                </div>
+                <div className="settings-switchboard-preview-grid">
+                  <div>
+                    <span>EXAMPLE EVIDENCE</span>
+                    <strong>Performance + audience signals</strong>
+                  </div>
+                  <div>
+                    <span>EXAMPLE ADVICE</span>
+                    <strong>Prioritized creator action</strong>
+                  </div>
+                  <div>
+                    <span>EXAMPLE PROJECT CONTEXT</span>
+                    <strong>Active content + package state</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="settings-switchboard-actions">
               <WidgetSizedButton height={38} tone="primary" onClick={() => onNavigate("/ai-brain")}>
                 OPEN BRAIN HUB
