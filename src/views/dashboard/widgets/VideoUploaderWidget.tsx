@@ -32,6 +32,8 @@ import {
   WidgetSizedSelect,
   WidgetSplitButton,
   WidgetTag,
+  WidgetTextInput,
+  WidgetTextArea,
   WidgetWorkflowMain,
   type WidgetSelectOption as SelectOption,
 } from "../WidgetPrimitives"
@@ -393,14 +395,14 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
                     <span>Video title</span>
                     <small className="widget-character-count">{title.length}/100</small>
                   </span>
-                  <input className="vt-input" aria-label="Video title" placeholder="Video title" value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} />
+                  <WidgetTextInput aria-label="Video title" placeholder="Video title" value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} />
                 </div>
                 <div className="widget-control-field video-uploader-counted-field">
                   <span className="video-uploader-field-heading">
                     <span>Description</span>
                     <small className="widget-character-count">{description.length}/5000</small>
                   </span>
-                  <textarea className="vt-textarea video-uploader-description" aria-label="Description" placeholder="Description" value={description} maxLength={5000} onChange={(event) => setDescription(event.target.value)} rows={4} />
+                  <WidgetTextArea className="video-uploader-description" aria-label="Description" placeholder="Description" value={description} maxLength={5000} onChange={(event) => setDescription(event.target.value)} rows={4} />
                   <span className="video-uploader-paired-actions">
                     <WidgetSizedButton height={24} tone="secondary" textFit="adaptive" disabled={defaultsLoading !== null || generationLoading !== null} onClick={() => void applyChannelDefaults("description")}>
                       {defaultsLoading === "description" ? "Loading…" : "Use default description"}
