@@ -35,6 +35,7 @@ import {
   WidgetDisclosure,
   WidgetDropzone,
   WidgetFooter,
+  WidgetHeaderAction,
   WidgetHeaderStepper,
   WidgetHeaderToggle,
   WidgetMediaUploadAction,
@@ -982,6 +983,10 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
               ]}
               onChange={setHeaderToggleValue}
             />
+            <div className="flex flex-wrap gap-2 items-center">
+              <WidgetHeaderAction icon={<ArrowRight />} onClick={() => undefined}>Header Action</WidgetHeaderAction>
+              <span className="text-[8px] font-black uppercase opacity-55">Header-mounted action: icon + readable label, no emoji text.</span>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <WidgetHeaderStepper
                 label="Workflow step"
