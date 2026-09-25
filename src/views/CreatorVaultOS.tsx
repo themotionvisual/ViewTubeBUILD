@@ -222,6 +222,8 @@ const CreatorVaultOS: React.FC = () => {
  const [special, setSpecial] = useState(initialWorkspace.special)
  const [filterLifecycle, setFilterLifecycle] = useState(initialWorkspace.filterLifecycle)
  const [filterOrientation, setFilterOrientation] = useState(initialWorkspace.filterOrientation)
+ const [filterUpdatedFrom, setFilterUpdatedFrom] = useState(initialWorkspace.filterUpdatedFrom)
+ const [filterUpdatedTo, setFilterUpdatedTo] = useState(initialWorkspace.filterUpdatedTo)
  const [filterMimeType, setFilterMimeType] = useState(initialWorkspace.filterMimeType)
  const [filterMinWidth, setFilterMinWidth] = useState(initialWorkspace.filterMinWidth)
  const [filterMinHeight, setFilterMinHeight] = useState(initialWorkspace.filterMinHeight)
@@ -297,6 +299,8 @@ const CreatorVaultOS: React.FC = () => {
    special,
    lifecycle: filterLifecycle === "all" ? null : filterLifecycle,
    orientation: filterOrientation === "all" ? null : filterOrientation,
+   updatedAfter: filterUpdatedFrom ? new Date(`${filterUpdatedFrom}T00:00:00`).getTime() : null,
+   updatedBefore: filterUpdatedTo ? new Date(`${filterUpdatedTo}T23:59:59.999`).getTime() : null,
    mimeType: filterMimeType.trim() || null,
    minWidth: filterMinWidth ? Number(filterMinWidth) : null,
    minHeight: filterMinHeight ? Number(filterMinHeight) : null,
@@ -323,6 +327,8 @@ const CreatorVaultOS: React.FC = () => {
   special,
   filterLifecycle,
   filterOrientation,
+  filterUpdatedFrom,
+  filterUpdatedTo,
   filterMimeType,
   filterMinWidth,
   filterMinHeight,
@@ -346,6 +352,8 @@ const CreatorVaultOS: React.FC = () => {
    special,
    filterLifecycle,
    filterOrientation,
+   filterUpdatedFrom,
+   filterUpdatedTo,
    filterMimeType,
    filterMinWidth,
    filterMinHeight,
@@ -368,6 +376,8 @@ const CreatorVaultOS: React.FC = () => {
   special,
   filterLifecycle,
   filterOrientation,
+  filterUpdatedFrom,
+  filterUpdatedTo,
   filterMimeType,
   filterMinWidth,
   filterMinHeight,
@@ -672,6 +682,8 @@ const CreatorVaultOS: React.FC = () => {
    source,
    lifecycle: filterLifecycle,
    orientation: filterOrientation,
+   updatedFrom: filterUpdatedFrom,
+   updatedTo: filterUpdatedTo,
    mimeType: filterMimeType,
    minWidth: filterMinWidth,
    minHeight: filterMinHeight,
@@ -691,6 +703,8 @@ const CreatorVaultOS: React.FC = () => {
   setSource(collection.source)
   setFilterLifecycle(collection.lifecycle)
   setFilterOrientation(collection.orientation)
+  setFilterUpdatedFrom(collection.updatedFrom)
+  setFilterUpdatedTo(collection.updatedTo)
   setFilterMimeType(collection.mimeType)
   setFilterMinWidth(collection.minWidth)
   setFilterMinHeight(collection.minHeight)
@@ -1628,6 +1642,20 @@ const CreatorVaultOS: React.FC = () => {
            onChange={(value) => setFilterOrientation(value as typeof filterOrientation)}
            options={["all", "landscape", "portrait", "square"]}
           />
+          <div className="grid grid-cols-2 gap-2">
+           <SubToolboxInput
+            type="date"
+            value={filterUpdatedFrom}
+            onChange={(event) => setFilterUpdatedFrom(event.target.value)}
+            aria-label="UPDATED FROM"
+           />
+           <SubToolboxInput
+            type="date"
+            value={filterUpdatedTo}
+            onChange={(event) => setFilterUpdatedTo(event.target.value)}
+            aria-label="UPDATED TO"
+           />
+          </div>
           <SubToolboxInput
            value={filterMimeType}
            onChange={(event) => setFilterMimeType(event.target.value)}
@@ -1699,6 +1727,8 @@ const CreatorVaultOS: React.FC = () => {
            onClick={() => {
             setFilterLifecycle("all")
             setFilterOrientation("all")
+            setFilterUpdatedFrom("")
+            setFilterUpdatedTo("")
             setFilterMimeType("")
             setFilterMinWidth("")
             setFilterMinHeight("")
