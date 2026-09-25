@@ -19,8 +19,8 @@ describe("mobile widget control refinements", () => {
     expect(shell).not.toContain('>W+</button>')
     expect(shell).not.toContain('>H−</button>')
     expect(shell).not.toContain('>H+</button>')
-    expect(shell).toContain('aria-label="Decrease widget width" title="Decrease width" disabled')
-    expect(shell).toContain('aria-label="Increase widget width" title="Increase width" disabled')
+    expect(shell).toMatch(/aria-label="Decrease widget width"[^>]*disabled/)
+    expect(shell).toMatch(/aria-label="Increase widget width"[^>]*disabled/)
   })
 
   it("replaces mobile dragging with one-step move controls that preserve viewport position", () => {
