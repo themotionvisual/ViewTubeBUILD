@@ -7,14 +7,12 @@
     .dashboard-barrier {
       --vt-mobile-widget-gap: 8px;
       --vt-mobile-widget-gutter: 4px;
-      --vt-mobile-reclaim-left: 12px;
-      --vt-mobile-reclaim-right: 32px;
-      /* Reclaim more of the app shell on the right: live iPhone field QA
-         showed the page wrapper reserving materially more space there. */
-      width: calc(100% + var(--vt-mobile-reclaim-left) + var(--vt-mobile-reclaim-right));
+      --vt-widget-edge-safe: 4px;
+      /* Symmetric reclaim: outer widget geometry expands equally beyond the
+         app shell instead of compensating with a one-sided right overdraw. */
+      width: calc(100% + 24px);
       max-width: none;
-      margin-left: calc(-1 * var(--vt-mobile-reclaim-left));
-      margin-right: calc(-1 * var(--vt-mobile-reclaim-right));
+      margin-inline: -12px;
       box-sizing: border-box;
       --vt-mobile-height-short: 150px;
       --vt-mobile-height-medium: 250px;
@@ -53,25 +51,31 @@
       min-width: 0;
     }
 
-    .dashboard-barrier .vt-widget-header .header-extra {
-      flex: 0 1 auto !important;
-      min-width: 0;
-      max-width: 48%;
+    .dashboard-barrier .vt-widget-header .header-extra:has(.widget-header-toggle) {
+      flex: 1 1 132px !important;
+      min-width: 118px;
+      max-width: 50%;
       overflow: visible;
     }
 
     .dashboard-barrier .vt-widget-header .widget-header-toggle {
-      min-width: 0;
+      width: 100%;
+      min-width: 118px;
       max-width: 100%;
+      height: auto;
+      min-height: 30px;
+      overflow: visible;
     }
 
     .dashboard-barrier .vt-widget-header .widget-header-toggle button {
       min-width: 0;
+      padding: 2px 3px;
       white-space: normal;
       overflow: visible;
       text-overflow: clip;
-      overflow-wrap: anywhere;
-      line-height: .88;
+      overflow-wrap: normal;
+      word-break: normal;
+      line-height: .82;
     }
 
     .dashboard-barrier .widget-mobile-control-row {
@@ -100,6 +104,19 @@
       height: auto;
       min-height: 48px;
       overflow: visible;
+    }
+
+    .dashboard-barrier .dashboard-widget-slot.is-collapsed:has(.vt-widget.mobile-controls-open),
+    .dashboard-barrier .dashboard-widget-slot.is-collapsed:has(.vt-widget.mobile-controls-open) > *,
+    .dashboard-barrier .vt-widget.is-collapsed.mobile-controls-open {
+      min-height: calc(var(--header-height, 48px) + 44px);
+      overflow: visible;
+    }
+
+    .dashboard-barrier .vt-widget.is-collapsed.mobile-controls-open .widget-mobile-control-row {
+      display: grid;
+      position: relative;
+      z-index: 40;
     }
 
 
@@ -228,6 +245,22 @@
       width: calc(100% + (2 * var(--widget-content-inset)));
       max-width: none;
       margin-inline: calc(-1 * var(--widget-content-inset));
+    }
+
+    .dashboard-barrier .widget-section.is-full,
+    .dashboard-barrier .widget-divider.is-full {
+      width: calc(100% + (2 * var(--widget-content-inset)));
+      max-width: none;
+      margin-inline: calc(-1 * var(--widget-content-inset));
+      box-sizing: border-box;
+    }
+
+    .dashboard-barrier .vt-widget-shadow-safe {
+      width: calc(100% + (2 * var(--vt-widget-edge-safe)));
+      margin-inline: calc(-1 * var(--vt-widget-edge-safe));
+      padding-inline: var(--vt-widget-edge-safe);
+      box-sizing: border-box;
+      overflow: visible;
     }
 
 
