@@ -7683,19 +7683,21 @@ textarea.vt-textarea {
 /* Mobile density + label-fitting corrections from 2026-09-25 field QA. */
 @media (max-width:767px){
   :where(.dashboard-barrier) .image-generator-template-toggle{
-    width:min(136px,100%);
-    min-width:120px;
+    width:min(154px,100%);
+    min-width:144px;
     height:auto;
     min-height:32px;
   }
   :where(.dashboard-barrier) .image-generator-template-toggle button{
     min-width:0;
-    padding:3px 4px;
-    white-space:pre-line;
+    padding:2px 3px;
+    white-space:normal;
     overflow:visible;
     text-overflow:clip;
-    line-height:.84;
+    line-height:.8;
     overflow-wrap:normal;
+    word-break:normal;
+    font-size:9px;
   }
   :where(.dashboard-barrier) .image-generator-template-toggle button:last-child{
     line-height:.82;
