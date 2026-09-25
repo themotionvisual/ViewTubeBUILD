@@ -718,7 +718,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         />
 
         <SubToolboxSection label="Publishing Controls">
-         <SubToolboxGrid minItemWidth="compact">
+         <SubToolboxGrid minItemWidth="compact" className="vm-publishing-grid">
           <SubToolboxTopTitleDropdown
            level="l1"
            label="PRIVACY"
@@ -763,7 +763,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         />
         <span className="vm-tag-character-count">{editTags.length}/{MAX_TAG_CHARS}</span>
 
-        <SubToolboxActions columns={2}>
+        <SubToolboxActions columns={2} className="vm-tag-actions">
          <SubToolboxButton size="action" onClick={handleGenerateTags} disabled={!connected || !selectedVideo || isGeneratingTags || editTags.length >= MAX_TAG_CHARS}>
           {isGeneratingTags ? "Scanning Market..." : "Generate High Ranking Video Tags"}
          </SubToolboxButton>
