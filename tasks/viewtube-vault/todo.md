@@ -35,7 +35,7 @@
 - [ ] RH-B028 Arrange Mode/module reorder.
 - [ ] RH-B029 Module visibility preferences.
 - [ ] RH-B030 Workspace layout density preference.
-- [ ] RH-B031 Saved scratchpad/checklist panels.
+- [x] RH-B031 Saved scratchpad/checklist panels. (Scratchpads complete; checklist expansion can build on same workspace store)
 
 ## Lane C — intake jobs
 - [ ] RH-C040 Global workspace drag/drop.
