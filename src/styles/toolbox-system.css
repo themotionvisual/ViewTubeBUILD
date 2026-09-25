@@ -596,16 +596,21 @@
    ========================================================================== */
 :root{
   --vt-toolbox-shell-gutter:6px;
+  /* Painted edge clearance is intentionally larger than sibling spacing.
+     Thick shell dividers, component strokes and shadows need extra breathing
+     room so the first control does not visually collide with a header. */
+  --vt-toolbox-header-edge-clearance:8px;
+  --vt-keyboard-occlusion:0px;
 }
 [data-vt-toolbox][data-vt-toolbox-level="main"] .vt-main-toolbox-content{
-  padding:var(--vt-toolbox-shell-gutter)!important;
+  padding:var(--vt-toolbox-header-edge-clearance) var(--vt-toolbox-shell-gutter) var(--vt-toolbox-shell-gutter)!important;
   gap:var(--vt-toolbox-shell-gutter)!important;
 }
 [data-vt-toolbox-level="sub"] .vt-subtoolbox-inset{
   padding:0!important;
 }
 [data-vt-toolbox-level="sub"] .vt-subtoolbox-content{
-  padding:var(--vt-toolbox-shell-gutter)!important;
+  padding:var(--vt-toolbox-header-edge-clearance) var(--vt-toolbox-shell-gutter) var(--vt-toolbox-shell-gutter)!important;
   gap:var(--vt-toolbox-shell-gutter)!important;
 }
 [data-vt-toolbox-level="sub"] :is(.vt-subtoolbox-stack,.vt-subtoolbox-grid,.vt-subtoolbox-actions){
@@ -678,7 +683,7 @@
 }
 
 @media(max-width:767px){
-  :root{--vt-toolbox-shell-gutter:5px}
+  :root{--vt-toolbox-shell-gutter:5px;--vt-toolbox-header-edge-clearance:7px}
   .vt-mini-subtoolbox{--vt-mini-height:36px;--vt-mini-radius:7px;--vt-mini-shadow:3px}
   .vt-mini-subtoolbox-title{font-size:14px;padding-inline:7px}
   .vt-mini-subtoolbox-actions>button{padding-inline:7px!important;font-size:11px!important}
