@@ -7,11 +7,11 @@
     .dashboard-barrier {
       --vt-mobile-widget-gap: 8px;
       --vt-mobile-widget-gutter: 4px;
-      /* Keep phone gutters symmetric. The dashboard canvas already owns the
-         outer 4px inset, so the barrier must not over-expand or shift itself. */
-      width: 100%;
-      max-width: 100%;
-      margin-inline: 0;
+      /* Reclaim app-shell side padding so portrait widgets use more of the
+         physical screen width while keeping the dashboard centered. */
+      width: calc(100% + 24px);
+      max-width: none;
+      margin-inline: -12px;
       box-sizing: border-box;
       --vt-mobile-height-short: 150px;
       --vt-mobile-height-medium: 250px;
@@ -113,6 +113,32 @@
     .dashboard-barrier .widget-mobile-square-control.is-danger {
       background: color-mix(in srgb, var(--widget-color) 12%, white);
     }
+
+    .dashboard-barrier .widget-mobile-square-control:disabled {
+      opacity: .32;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .dashboard-barrier .widget-mobile-icon-pair {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .dashboard-barrier .widget-mobile-icon-pair svg {
+      width: 14px;
+      height: 14px;
+      position: absolute;
+      stroke-width: 2.6;
+    }
+
+    .dashboard-barrier .widget-mobile-icon-pair.is-horizontal svg:first-child { left: 0; }
+    .dashboard-barrier .widget-mobile-icon-pair.is-horizontal svg:last-child { right: 0; }
+    .dashboard-barrier .widget-mobile-icon-pair.is-vertical svg:first-child { top: 0; }
+    .dashboard-barrier .widget-mobile-icon-pair.is-vertical svg:last-child { bottom: 0; }
 
     .dashboard-barrier .vt-dash-cell {
       grid-column: 1 / -1;
