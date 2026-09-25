@@ -410,19 +410,19 @@ export const AnimatedToggleIcon: React.FC<{ open: boolean; size?: number }> = ({
 }) => {
  return (
   <div
-   className="relative group flex items-center justify-center shrink-0 cursor-pointer"
+   className="vt-animated-toggle-icon relative group flex items-center justify-center shrink-0 cursor-pointer"
    style={{ width: size, height: size }}>
    <div
-    className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out rotate-45 ${open ? "scale-90" : "scale-100"} group-hover:scale-110 group-active:scale-95`}>
+    className={`absolute inset-0 w-full h-full transition-all duration-[600ms] ease-out rotate-45 ${open ? "scale-90" : "scale-100"} group-hover:scale-110 group-active:scale-95`}>
     <Expand
      size={size}
      strokeWidth={2.8}
-     className={`absolute inset-0 m-auto text-black inline-block select-none pointer-events-none transition-all duration-1000 ease-in-out ${open ? "opacity-0 rotate-180 scale-75" : "opacity-80 rotate-0 scale-100 group-hover:opacity-100"}`}
+     className={`absolute inset-0 m-auto text-black inline-block select-none pointer-events-none transition-all duration-[600ms] ease-out ${open ? "opacity-0 rotate-180 scale-75" : "opacity-80 rotate-0 scale-100 group-hover:opacity-100"}`}
     />
     <Shrink
      size={size}
      strokeWidth={2.8}
-     className={`absolute inset-0 m-auto text-black inline-block select-none pointer-events-none transition-all duration-1000 ease-in-out ${open ? "opacity-80 rotate-180 scale-100 group-hover:opacity-100" : "opacity-0 rotate-0 scale-75"}`}
+     className={`absolute inset-0 m-auto text-black inline-block select-none pointer-events-none transition-all duration-[600ms] ease-out ${open ? "opacity-80 rotate-180 scale-100 group-hover:opacity-100" : "opacity-0 rotate-0 scale-75"}`}
     />
    </div>
   </div>
