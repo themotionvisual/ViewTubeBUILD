@@ -1293,7 +1293,7 @@ const CreatorVaultOS: React.FC = () => {
            {task.status === "failed" ? (
             <SubToolboxInnerActionButton
              label="Retry Task"
-             iconName="refresh"
+             iconName="checklist"
              tone="orange"
              onClick={() => retryTask(task.id)}
             />
