@@ -55,6 +55,7 @@ import { computeVaultFileHash } from "../services/vaultFileHash"
 import { extractVaultVideoThumbnail } from "../services/vaultVideoThumbnail"
 import { extractVaultImagePreview } from "../services/vaultImagePreview"
 import { extractVaultExifMetadata } from "../services/vaultExif"
+import { extractVaultExifMetadata } from "../services/vaultExif"
 import { buildVaultExplorerGroups } from "../services/vaultExplorer"
 import { getAssetLineage } from "../services/assetEngine"
 import {
@@ -499,6 +500,7 @@ const CreatorVaultOS: React.FC = () => {
      crypto.randomUUID(),
      {
       ...metadata,
+      ...exifMetadata,
       contentHash,
       exifMake: exif.make || null,
       exifModel: exif.model || null,
@@ -2095,6 +2097,28 @@ const CreatorVaultOS: React.FC = () => {
            />
           )}
          </div>
+         {(selectedAsset.metadata?.exifMake
+          || selectedAsset.metadata?.exifModel
+          || selectedAsset.metadata?.exifDateTimeOriginal
+          || typeof selectedAsset.metadata?.exifOrientation === "number") ? (
+          <div>
+           <div className="mb-2 text-xs font-black uppercase opacity-60">EXIF Metadata</div>
+           <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+            {selectedAsset.metadata?.exifMake ? (
+             <div><div className="font-black uppercase">Make</div><div className="opacity-60">{String(selectedAsset.metadata.exifMake)}</div></div>
+            ) : null}
+            {selectedAsset.metadata?.exifModel ? (
+             <div><div className="font-black uppercase">Model</div><div className="opacity-60">{String(selectedAsset.metadata.exifModel)}</div></div>
+            ) : null}
+            {typeof selectedAsset.metadata?.exifOrientation === "number" ? (
+             <div><div className="font-black uppercase">Orientation</div><div className="opacity-60">{String(selectedAsset.metadata.exifOrientation)}</div></div>
+            ) : null}
+            {selectedAsset.metadata?.exifDateTimeOriginal ? (
+             <div><div className="font-black uppercase">Captured</div><div className="opacity-60">{String(selectedAsset.metadata.exifDateTimeOriginal)}</div></div>
+            ) : null}
+           </div>
+          </div>
+         ) : null}
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Rights</div>
           {selectedAsset.metadata?.license || selectedAsset.metadata?.rights || selectedAsset.metadata?.copyright ? (
