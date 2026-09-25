@@ -387,6 +387,28 @@ Remaining visual verification:
 - verify Video Uploader input/textarea focus state parity;
 - re-check Settings at quarter width for compactness and header readability.
 
+## 5.6. Mobile edge + primitive correction wave II — 2026-09-25
+
+Field QA from the live iPhone preview identified a remaining shared geometry conflict rather than isolated widget defects.
+
+Implemented in this wave:
+- removed legacy widget right margins, stale viewport clamps, and horizontal clipping rules that competed with the canonical mobile contract;
+- removed the fake widened mobile scroll viewport previously used for shadow clearance; focus glows now rely on normal content inset plus visible shell overflow instead of a white layout lane;
+- compensated for the live app-shell's measured extra right-side lane with separate left/right reclaim variables so visible widget gutters can match;
+- upgraded full-bleed mobile sections to include both content inset and scroll-shadow allowance;
+- strengthened global portrait header toggles: minimum usable width, two-line labels, no ellipsis/clipping;
+- added `WidgetHeaderActionButton` and migrated Video Director's Studio handoff to it;
+- increased split-left icon bay/icon scale and readable label size for controls such as Publish Video / No Changes;
+- unified `WidgetTextInput` and `WidgetTextArea` default + focus styling under one final primitive owner;
+- removed residual right-padding / horizontal clipping from Video Uploader and Video Manager main surfaces;
+- added a portrait-specific Brain Hub header-toggle owner;
+- fixed Video Asset Engine's four-tab navigation, horizontal asset rail edge geometry and black-shadow override;
+- compacted Publishing Command, kept it package/video specific, retained Add Task, and moved blocker markers to canonical icon-badge primitives;
+- cataloged the new header-action primitive in the UI Reference Library; `WidgetVideoSelect` remains the canonical Video Manager dropdown and is already represented there;
+- added/updated regression contracts for these field-QA failures and certified Publishing Command's supported workflow intent.
+
+Acceptance still requires visual re-check on the fresh mobile preview, especially the outer right gutter, About/Daily Oracle edge bands, Brain Hub/Image Generator header toggles, Asset Engine rail, and collapsed-widget control deck.
+
 ## 6. Widget task backlog / to-do list
 
 ### P0 — System integrity
