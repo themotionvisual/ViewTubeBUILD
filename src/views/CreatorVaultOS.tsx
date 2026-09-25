@@ -55,7 +55,6 @@ import { computeVaultFileHash } from "../services/vaultFileHash"
 import { extractVaultVideoThumbnail } from "../services/vaultVideoThumbnail"
 import { extractVaultImagePreview } from "../services/vaultImagePreview"
 import { extractVaultExifMetadata } from "../services/vaultExif"
-import { extractVaultExifMetadata } from "../services/vaultExif"
 import { buildVaultExplorerGroups } from "../services/vaultExplorer"
 import { getAssetLineage } from "../services/assetEngine"
 import {
