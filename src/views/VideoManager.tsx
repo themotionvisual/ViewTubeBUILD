@@ -618,6 +618,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         label="Loading Your YouTube Video Catalog…"
         iconName="video"
         tone="blue"
+        onClick={() => undefined}
         disabled
        />
       ) : connected ? (
