@@ -1,8 +1,8 @@
 # ViewTube Toolbox UI Master Resource
 
 **Status:** Canonical living design-system authority  
-**Updated:** 2026-09-24  
-**Last audited main:** `988098840050f4b658a266e1a7d6fe1c4d939c81`  
+**Updated:** 2026-09-25  
+**Last audited main:** `3d9bb8fe26c4cc1419695715bd9c86ac3243b390`  
 **Canonical owner / concern:** Production Toolbox/Subtoolbox shell hierarchy, Studio control/layout rules, responsive shell behavior, shared state/motion/accessibility rules, certification and migration policy.  
 **Executable authority:** `src/components/subtoolbox/tokens.ts`, `src/components/Toolbox.tsx`, `src/styles/toolbox-system.css`, `src/styles/subtoolbox-system.css`, and their contract tests.  
 **Related scoped authority:** `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md` owns Component Library/catalog presentation and primitive-correction notes. Dashboard widgets and Analytics Data Visuals retain separate registries/contracts.  
@@ -14,6 +14,7 @@ Append one concise row for every system-level update. Use Notes for conflicts, v
 
 | Date / time | Conversation | AI / tool | Change | Repo evidence | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-09-25 | Mobile Render preview correction audit | GPT-5.6 Sol + GitHub + iPhone screenshots | Re-opened Toolbox spacing, dropdown state, collapse icon, Vault assets, palette order and Component Library contracts | PR #432 merged; main `3d9bb8fe` | OPEN CORRECTION WAVE | Keep PR #432 header-action isolation, 16px mobile inputs, VisualViewport handling and paint-safe spacing intent; restore the established four-arrow collapse icon. |
 | 2026-09-24 | Documentation authority consolidation | GPT-5.6 Sol + GitHub | Re-audited tokens/CSS/tests, separated shell vs control ladders, and demoted stale Studio migration geometry | `988098840050f4b658a266e1a7d6fe1c4d939c81` | CURRENT CODE AUTHORITY / VISUAL CERTIFICATION STILL REQUIRED | Desktop shell: T0=80/26, T1=56/20, T2=48/18, T3=32/12. Mobile shell: Toolbox=56, SubToolbox=44 with desktop title sizes preserved. |
 | 2026-09-22 | Toolbox geometry authority reconciliation | GPT-5.6 Sol + GitHub | Reconciled production shell geometry with the accepted Component Library authority and removed its private shell override | `fix/toolbox-geometry-authority-2026-09-22` | IMPLEMENTED ON BRANCH / VISUAL CERTIFICATION REQUIRED | Current authority: T0=80px/26px; T1=56px/20px; T2=48px/18px; T3=32px/12px. Historical 56/44 implementation remains traceability only. |
 | 2026-09-14 | Toolbox UI master handoff / 56-44 unification | GPT-5.6 Sol + GitHub | Added reusable handoff protocol and reconciled then-current shell authority | PR #207 -> `844a708f`; PR #211 -> `400269c5`; PR #215 -> `b2e4a534` | SUPERSEDED BY 2026-09-22 GEOMETRY AUTHORITY | Historical T0=56px/28px; T1=44px/22px; separate compact shell authority removed. |
@@ -388,3 +389,47 @@ Inspect current main before claims/writes; do not overwrite newer work; preserve
 - `docs/MOBILE_VISUAL_QA_MATRIX.md`
 
 **Rule:** if a supporting resource conflicts with this file, verify production code/current accepted direction, reconcile deliberately, and record the result here.
+
+
+## 24. 2026-09-25 mobile correction wave
+
+This wave comes directly from Render/iPhone visual review and overrides any earlier wording that treated the current mobile Toolbox system as visually certified.
+
+### 24.1 Keep the useful PR #432 fixes; restore the correct collapse symbol
+Keep the isolated header action/help/collapse layout, 16px minimum mobile editable text, VisualViewport keyboard handling, and the structural-gutter versus paint-safe-edge-clearance distinction. Revert only the chevron substitution: Toolbox and SubToolbox headers must use the established animated four-direction arrow expand/collapse symbol, with the repaired independent hitbox and 600ms shell motion. Do not add a second down-arrow button.
+
+### 24.2 Painted interior clearance
+Top spacing is certified by visible painted clearance, not raw padding numbers. The first control under a Toolbox, SubToolbox, or MiniSubToolbox header must have visually equal top/side/bottom clearance after accounting for child strokes, hard shadows and focus outlines. The Video Manager Thumbnail MiniSubToolbox is the primary acceptance case; Upload/Generate must not crowd the top or right header edges.
+
+### 24.3 P1 custom-dropdown state regression
+Observed behavior: choosing a new custom-dropdown option closes the menu but leaves the old visible value. Treat all custom Toolbox dropdown families as unverified until interaction-tested. Every controlled dropdown must derive its trigger from the current controlled value, dispatch the selection exactly once, reflect the parent state immediately, and close after dispatch. Audit `SubToolboxDropdownControl`, `SubToolboxTopTitleDropdown`, split-left dropdowns, StudioDropdown, video selectors and any legacy custom select still in production. Add interaction tests, not only static source tests.
+
+### 24.4 Vault asset-module redesign
+`SubToolboxVaultAsset` is not complete. The shared landscape/portrait/image/video/audio/document anatomy must support an inline editable title using the canonical input focus style; a much larger canonical selection checkbox/X control; an adaptive preview viewport that contains 16:9, 9:16, 1:1 and intermediate source ratios without changing the outer card dimensions; canonical notes input/textarea; and canonical tag editing instead of placeholder text. Audio/document variants keep the same card grammar and swap only the preview renderer.
+
+### 24.5 Spectrum Tag L3 + Tag Editor #30 compound
+Add a denser L3 Spectrum Tag for asset-card metadata. It remains on the 12-color spectrum and combines with Tag Editor #30 behavior: add new tags, integrated X removal, immediate asset update, and no Vault-local duplicate styling. The Component Library must show L0/L1/L2/L3 plus the removable/editable compound.
+
+### 24.6 New SubToolbox-level split-left action
+Create a canonical full-row split-left action whose collapsed appearance matches a collapsed SubToolbox: square icon rail, exact level stroke/radius/shadow, centered icon, inherited palette pair and full-row button semantics. Migrate the Video Manager "CONNECT YOUR YOUTUBE CHANNEL TO LOAD VIDEOS" action to this component and add it to the Component Library.
+
+### 24.7 New Thumbnail MiniSubToolbox compound
+Promote the Thumbnail header + Upload/Generate + preview composition into a reusable compound. Header actions must remain paint-safe and collision-free; media preview uses aspect-aware contain/fitted behavior; narrow layouts compact intentionally rather than overflow. Add the compound to the Component Library.
+
+### 24.8 Sequential 12-color allocation law
+The palette is an ordered allocation system, not just a color source. Top-level Toolboxes advance through the 12 colors in order. Inside each Toolbox, the first SubToolbox uses the next sequential palette pair, and siblings/nested children continue the sequence instead of restarting or choosing feature-local decorative colors. Prefer a centralized allocator over scattered numeric `paletteIndex` literals. Add wraparound and sample-tree tests.
+
+### 24.9 Component Library additions required by this wave
+Add and certify: restored four-arrow collapse control; interactive dropdown selection proof; SubToolbox-level split-left action; Thumbnail MiniSubToolbox; Spectrum Tag L3; L3 + Tag Editor #30 compound; Vault editable title; large Vault selection checkbox; Vault notes field; Vault tag editor; landscape/portrait/intermediate-ratio media states; and a deterministic palette-sequence specimen.
+
+### 24.10 Implementation order before final documentation/skill certification
+1. restore four-arrow collapse control while preserving PR #432 header isolation;
+2. fix painted top/interior clearance for Toolbox, SubToolbox and MiniSubToolbox;
+3. fix controlled custom-dropdown behavior and add interaction tests;
+4. formalize palette allocation and migrate Studio Hub/Vault/Video Manager ordering;
+5. build the SubToolbox split-left action and migrate the YouTube-connect row;
+6. build the Thumbnail MiniSubToolbox compound and migrate Video Manager;
+7. redesign Vault asset cards for editable/adaptive production behavior;
+8. add L3 Spectrum Tags + Tag Editor #30;
+9. add all changed/new states to the Component Library;
+10. certify portrait/landscape mobile plus desktop/narrow layouts before marking this wave VERIFIED.

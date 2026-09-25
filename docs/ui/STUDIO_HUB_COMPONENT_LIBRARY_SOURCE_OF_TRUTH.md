@@ -150,3 +150,22 @@ These rules apply to the Component Library presentation layer and do **not** cha
 8. Direct SubToolbox-level split-left Update Video Details action.
 
 Video Stats KPI cards are intentionally removed from the editing flow. Thumbnail Generate hands the selected video context to Thumbnail Studio. Mobile portrait may stack Publishing controls and long tag actions to prevent clipped values; landscape/desktop retain denser horizontal composition.
+
+
+## 2026-09-25 required certification additions
+
+The Render/iPhone audit adds these mandatory primitive/compound demonstrations before the Component Library can be considered visually current:
+
+- restored four-arrow Toolbox/SubToolbox collapse control, with no generic chevron replacement;
+- interactive custom dropdown proof where selecting a different option visibly changes the trigger value;
+- SubToolbox-level split-left full-row action at supported levels;
+- reusable Thumbnail MiniSubToolbox with paint-safe Upload/Generate header actions;
+- Spectrum Tag L3;
+- Spectrum Tag L3 + Tag Editor #30 removable/addable compound;
+- Vault Asset editable title;
+- Vault Asset large selection checkbox;
+- Vault Asset notes input/textarea and tag editor;
+- Vault Asset landscape, portrait and intermediate-ratio contained thumbnail/media states;
+- palette-sequence specimen proving Toolbox -> first SubToolbox -> sibling/nested SubToolbox ordering through the 12-color palette.
+
+Static source presence is insufficient for dropdown and editable-asset states; these examples must be interactable in the production-import track.
