@@ -38,8 +38,10 @@ export const DEFAULT_DASHBOARD_ROWS = [
   { id: "ai-journal", size: "third", height: "xtall" },
  ],
  [
-  { id: "brain-hub", size: "half", height: "xtall" },
-  { id: "next-best-action", size: "half", height: "tall" },
+  { id: "brain-hub", size: "full", height: "xtall" },
+ ],
+ [
+  { id: "next-best-action", size: "full", height: "tall" },
  ],
  [
   { id: "anomaly-radar", size: "half", height: "tall" },
@@ -54,8 +56,10 @@ export const DEFAULT_DASHBOARD_ROWS = [
   { id: "flight-check", size: "half", height: "tall" },
  ],
  [
-  { id: "channel-progress", size: "half", height: "medium" },
-  { id: "video-director", size: "half", height: "massive" },
+  { id: "channel-progress", size: "full", height: "medium" },
+ ],
+ [
+  { id: "video-director", size: "full", height: "massive" },
  ],
  [
   { id: "shorts-multiplier", size: "full", height: "massive" },
