@@ -34,6 +34,7 @@ export interface VaultWorkspaceState {
  sort: VaultWorkspaceSort
  special: "active" | "recent" | "generated" | "inbox" | "favorites" | "archive" | "trash"
  filterLifecycle: string
+ filterOrientation: "all" | "landscape" | "portrait" | "square"
  filterMimeType: string
  filterMinWidth: string
  filterMinHeight: string
@@ -58,6 +59,7 @@ export const DEFAULT_VAULT_WORKSPACE_STATE: VaultWorkspaceState = {
  sort: "updated-desc",
  special: "active",
  filterLifecycle: "all",
+ filterOrientation: "all",
  filterMimeType: "",
  filterMinWidth: "",
  filterMinHeight: "",
