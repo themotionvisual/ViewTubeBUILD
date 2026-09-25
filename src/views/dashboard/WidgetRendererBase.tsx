@@ -142,6 +142,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   onCycleHeight,
   onDecHeight,
   onRemoveWidget,
+  onMoveWidgetUp,
+  onMoveWidgetDown,
   dashboardControls,
 }) => {
   const account = useUnifiedAccount()
@@ -159,6 +161,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   onCycleHeight: () => onCycleHeight(widget.id),
   onDecHeight: () => onDecHeight(widget.id),
   onRemove: () => onRemoveWidget(widget.id),
+  onMoveUp: () => onMoveWidgetUp(widget.id),
+  onMoveDown: () => onMoveWidgetDown(widget.id),
  }
 
  // Visibility belongs to the dashboard layout. Widgets must not apply a second
