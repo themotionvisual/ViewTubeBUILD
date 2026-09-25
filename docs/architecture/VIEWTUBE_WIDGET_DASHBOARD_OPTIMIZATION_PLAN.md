@@ -3,6 +3,7 @@
 Status: implementation-ready / active optimization plan
 Last audited documentation baseline: `988098840050f4b658a266e1a7d6fe1c4d939c81`
 Authority boundary: Dashboard widget optimization only. It may reuse shared visual principles but does not own Studio Toolbox/SubToolbox geometry.
+Living coordination authority: `docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md`. This file remains the measured optimization/execution plan; do not use its older counts as current inventory without remeasurement.
 Measured: 2026-09-11, branch `fix/deploy-topology-and-widget-skill` (base `origin/main` @ `1a863c98`)
 Owner skill: `.claude/skills/viewtube-widget-dashboard/`
 
