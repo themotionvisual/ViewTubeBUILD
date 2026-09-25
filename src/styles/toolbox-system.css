@@ -87,14 +87,6 @@
   padding-right: 4px !important;
 }
 
-[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header svg {
-  width: 28px !important;
-  height: 28px !important;
-  max-width: 28px !important;
-  max-height: 28px !important;
-  stroke-width: 2 !important;
-}
-
 /* Main toolbox content establishes the level-1 module contract. */
 [data-vt-toolbox][data-vt-toolbox-level="main"] > div > div > main,
 [data-vt-toolbox][data-vt-toolbox-level="main"] .vt-main-toolbox-content {
@@ -307,10 +299,8 @@
 [data-vt-toolbox-level="sub"] > div > header h3.vt-subtoolbox-title {
   white-space: normal !important;
   text-overflow: clip !important;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  display: block;
+  max-height: 1.64em;
   overflow: hidden;
   overflow-wrap: anywhere;
 }
@@ -375,22 +365,6 @@
     max-width: 34px !important;
     max-height: 34px !important;
     stroke-width: 3.1px !important;
-  }
-
-  /* Keep action hit areas compact on phones without shrinking the shell itself. */
-  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > div:last-child > * {
-    width: 30px !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > div:last-child span {
-    width: 24px !important;
-    height: 24px !important;
-    box-shadow: 2px 2px 0 0 #000 !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > div:last-child svg {
-    width: 20px !important;
-    height: 20px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"],
