@@ -53,6 +53,12 @@ describe("Settings dashboard control switchboard", () => {
     expect(widget).toContain("CURRENT")
   })
 
+  it("uses canonical account and entitlement owners rather than the legacy plan cache", () => {
+    expect(widget).toContain("useUnifiedAccount")
+    expect(widget).toContain("getCurrentEntitlement")
+    expect(widget).not.toContain("vt_last_plan")
+  })
+
   it("uses canonical widget primitives and no authored black styling", () => {
     expect(widget).toContain("WidgetSizedButton")
     expect(widget).toContain("WidgetToggleSwitch")
