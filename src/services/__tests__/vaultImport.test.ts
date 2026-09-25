@@ -1,0 +1,26 @@
+// @vitest-environment jsdom
+import { describe, expect, it } from "vitest"
+import { createPendingVaultImport, inferVaultAssetKind } from "../vaultImport"
+
+describe("Vault import preparation", () => {
+ it("infers the canonical Vault kind from the browser file type", () => {
+  expect(inferVaultAssetKind(new File(["x"], "shot.png", { type: "image/png" }))).toBe("image")
+  expect(inferVaultAssetKind(new File(["x"], "clip.mp4", { type: "video/mp4" }))).toBe("video")
+  expect(inferVaultAssetKind(new File(["x"], "mix.wav", { type: "audio/wav" }))).toBe("audio")
+  expect(inferVaultAssetKind(new File(["x"], "notes.md", { type: "text/markdown" }))).toBe("document")
+ })
+
+ it("prepares a staged import without creating a canonical Vault identity", () => {
+  const file = new File(["hello"], "notes.txt", { type: "text/plain" })
+  const prepared = createPendingVaultImport(file, ["research", "imported"], "pending-1")
+
+  expect(prepared).toMatchObject({
+   id: "pending-1",
+   name: "notes.txt",
+   kind: "document",
+   mimeType: "text/plain",
+   size: 5,
+   tags: ["research", "imported"],
+  })
+ })
+})
