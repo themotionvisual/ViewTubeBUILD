@@ -18,9 +18,14 @@ export const overviewSlices = (data: OverviewChartData, kind: "audience" | "devi
  const dataset = kind === "audience" ? "subscription_status" : "device_type"
  const field = kind === "audience" ? "subscriptionStatuses" : "devices"
  if (window === "lifetime" && (data.storageMetadata?.fullRowCountByField?.[field] || 0) > (data.storageMetadata?.visiblePreviewRowCountByField?.[field] || 0)) return []
- const rows = window === "lifetime"
-  ? (kind === "audience" ? data.subscriptionStatuses : data.devices)
-  : data.datasetsByWindow?.[window]?.[dataset] || []
+ const aggregateRows = kind === "audience" ? data.subscriptionStatuses : data.devices
+ const exactRows = window === "lifetime" ? aggregateRows : data.datasetsByWindow?.[window]?.[dataset] || []
+ const fallbackWindows = ["7d", "28d", "90d", "365d", "lifetime"] as const
+ const fallbackRows = fallbackWindows
+  .filter((candidate) => candidate !== window)
+  .map((candidate) => candidate === "lifetime" ? aggregateRows : data.datasetsByWindow?.[candidate]?.[dataset] || [])
+  .find((candidateRows) => candidateRows.length > 0)
+ const rows = exactRows.length > 0 ? exactRows : (fallbackRows || aggregateRows)
  const counts = new Map<string, number>()
  rows.forEach((row) => {
   const code = String(kind === "audience" ? (row.status ?? row.subscribedStatus ?? "") : (row.device ?? row.deviceType ?? "")).trim()
