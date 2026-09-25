@@ -6,6 +6,7 @@ import { DASHBOARD_WIDGET_RENDERER_KEYS } from "../WidgetRenderer"
 const renderer = readFileSync(new URL("../WidgetRendererBase.tsx", import.meta.url), "utf8")
 const widget = readFileSync(new URL("../widgets/SettingsWidget.tsx", import.meta.url), "utf8")
 const css = readFileSync(new URL("../widgets/SettingsWidget.css", import.meta.url), "utf8")
+const shell = readFileSync(new URL("../WidgetShell.tsx", import.meta.url), "utf8")
 
 describe("Settings dashboard control switchboard", () => {
   it("owns Settings in a dedicated lazy widget instead of the inline base renderer", () => {
@@ -60,6 +61,11 @@ describe("Settings dashboard control switchboard", () => {
     expect(widget).not.toContain('border: "2px solid #000"')
     expect(widget).not.toContain('background: "#fff"')
     expect(css).not.toContain("#000")
+  })
+
+  it("removes the old Settings-only shell injection now that Settings owns its controls", () => {
+    expect(shell).not.toContain('widget.id==="system-micro-stack"')
+    expect(shell).not.toContain("handleShowAllWidgets")
   })
 
   it("keeps Settings supported and vertically resizable", () => {
