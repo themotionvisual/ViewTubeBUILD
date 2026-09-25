@@ -36,7 +36,7 @@ export interface VaultAssetSearchInput {
  tagMode?: "all" | "any"
  source?: VaultAsset["source"] | null
  sort?: "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
- special?: "active" | "favorites" | "archive" | "trash" | null
+ special?: "active" | "inbox" | "favorites" | "archive" | "trash" | null
  limit?: number
 }
 
@@ -60,6 +60,11 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
    if (input.generationId != null && asset.generationId !== input.generationId) return false
    if (input.source != null && asset.source !== input.source) return false
    const metadata = asset.metadata || {}
+   if (input.special === "inbox") {
+    if (metadata.archivedAt || metadata.trashedAt) return false
+    const needsAttention = metadata.needsAttention === true || !asset.projectName || !(asset.tags || []).length
+    if (!needsAttention) return false
+   }
    if (input.special === "favorites" && metadata.favorite !== true) return false
    if (input.special === "archive" && !metadata.archivedAt) return false
    if (input.special === "trash" && !metadata.trashedAt) return false
