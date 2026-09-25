@@ -2571,7 +2571,7 @@ stroke-width: 2px;
   box-sizing: border-box;
   height: var(--widget-control-height);
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--widget-step-count, 3), minmax(0, 1fr));
   border: var(--widget-module-stroke) solid var(--widget-border);
   border-radius: var(--widget-control-radius);
   overflow: hidden;
