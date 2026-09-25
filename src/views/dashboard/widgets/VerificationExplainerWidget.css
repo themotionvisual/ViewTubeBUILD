@@ -539,6 +539,7 @@
 /* Mobile visual correction: edge bands use the full body inset symmetrically. */
 .about-vt__intro,
 .about-vt__handoff {
+  width: calc(100% + (2 * var(--widget-content-inset)));
+  max-width: none;
   margin-inline: calc(-1 * var(--widget-content-inset));
-  width: auto;
 }
