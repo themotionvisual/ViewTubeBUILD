@@ -177,18 +177,21 @@
 
 /* Full-bleed utilities to let bottom bars, dividers, or edge boxes touch module borders */
 :where(.dashboard-barrier) .vt-full-bleed {
-  margin-inline: calc(-1 * var(--widget-content-inset)) !important;
-  width: auto !important;
+  margin-inline: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance))) !important;
+  width: calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))) !important;
+  max-width:none !important;
 }
 :where(.dashboard-barrier) .vt-full-bleed-bottom {
-  margin-inline: calc(-1 * var(--widget-content-inset)) !important;
+  margin-inline: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance))) !important;
   margin-bottom: calc(-1 * var(--widget-content-inset)) !important;
-  width: auto !important;
+  width: calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))) !important;
+  max-width:none !important;
 }
 :where(.dashboard-barrier) .vt-full-bleed-top {
-  margin-inline: calc(-1 * var(--widget-content-inset)) !important;
+  margin-inline: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance))) !important;
   margin-top: calc(-1 * var(--widget-content-inset)) !important;
-  width: auto !important;
+  width: calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))) !important;
+  max-width:none !important;
 }
 
 :where(.dashboard-barrier) .widget-section {
@@ -2524,7 +2527,7 @@ stroke-width: 2px;
   box-sizing: border-box;
   height: var(--widget-control-height);
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--widget-step-count, 3), minmax(0, 1fr));
   border: var(--widget-module-stroke) solid var(--widget-border);
   border-radius: var(--widget-control-radius);
   overflow: hidden;
