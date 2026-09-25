@@ -85,7 +85,6 @@ import {
 import { getDashboardWidgetPaletteColors } from "../../../styles/toolboxPalette"
 
 type ReferenceCategory =
-  | "all"
   | "controls"
   | "size"
   | "video"
@@ -96,6 +95,19 @@ type ReferenceCategory =
   | "matrix"
   | "states"
   | "alerts"
+
+const REFERENCE_CATEGORIES: ReadonlyArray<{ id: ReferenceCategory; label: string }> = [
+  { id: "controls", label: "CONTROLS" },
+  { id: "size", label: "SIZE" },
+  { id: "matrix", label: "MATRIX" },
+  { id: "video", label: "VIDEO" },
+  { id: "progress", label: "BARS" },
+  { id: "tags", label: "TAGS" },
+  { id: "media", label: "MEDIA" },
+  { id: "navigation", label: "NAV" },
+  { id: "states", label: "STATES" },
+  { id: "alerts", label: "ALERTS" },
+]
 
 const CONTROL_HEIGHTS: WidgetControlHeight[] = [18, 24, 32, 38]
 
@@ -189,7 +201,7 @@ const ToneRows = ({
 type UIReferenceLibraryWidgetProps = Omit<React.ComponentProps<typeof WidgetShell>, "children" | "headerContent" | "icon">
 
 export default function UIReferenceLibraryWidget({ widget, ...common }: UIReferenceLibraryWidgetProps) {
-  const [activeCategory, setActiveCategory] = useState<ReferenceCategory>("all")
+  const [activeCategory, setActiveCategory] = useState<ReferenceCategory>("controls")
   const [paletteIndex, setPaletteIndex] = useState(7)
   const [selectValue, setSelectValue] = useState("public")
   const [selectedVideo, setSelectedVideo] = useState("v1")
@@ -218,26 +230,20 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
     [paletteIndex, widget],
   )
 
+  const activeCategoryIndex = REFERENCE_CATEGORIES.findIndex((entry) => entry.id === activeCategory)
+  const stepReferenceCategory = (direction: -1 | 1) => {
+    const nextIndex = (activeCategoryIndex + direction + REFERENCE_CATEGORIES.length) % REFERENCE_CATEGORIES.length
+    setActiveCategory(REFERENCE_CATEGORIES[nextIndex].id)
+  }
+
   const headerContent = (
     <div className="widget-reference-header-controls">
-    <WidgetHeaderToggle
-      label="Reference category"
-      value={activeCategory}
-      items={[
-        { id: "all", label: "ALL" },
-        { id: "controls", label: "CONTROLS" },
-        { id: "size", label: "SIZE" },
-        { id: "matrix", label: "MATRIX" },
-        { id: "video", label: "VIDEO" },
-        { id: "progress", label: "BARS" },
-        { id: "tags", label: "TAGS" },
-        { id: "media", label: "MEDIA" },
-        { id: "navigation", label: "NAV" },
-        { id: "states", label: "STATES" },
-        { id: "alerts", label: "ALERTS" },
-      ]}
-      onChange={(value) => setActiveCategory(value as ReferenceCategory)}
-    />
+      <WidgetHeaderStepper
+        label="Reference section"
+        value={REFERENCE_CATEGORIES[activeCategoryIndex]?.label ?? "CONTROLS"}
+        onPrevious={() => stepReferenceCategory(-1)}
+        onNext={() => stepReferenceCategory(1)}
+      />
       <WidgetHeaderStepper
         label="Widget color palette"
         value={`${REFERENCE_PALETTE_NAMES[paletteIndex]} ${paletteIndex + 1}/12`}
@@ -289,7 +295,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
         ariaLabel="ViewTube Widget Component Reference Library"
         contentClassName="flex min-h-full flex-col gap-3 p-3"
       >
-        {(activeCategory === "all" || activeCategory === "controls") && (
+        {activeCategory === "controls" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("1. Standard Controls", "Default / Primary / Secondary")}
             <p className="text-[10px] font-bold uppercase opacity-60">
@@ -425,7 +431,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           </WidgetSection>
         )}
 
-        {(activeCategory === "all" || activeCategory === "video") && (
+        {activeCategory === "video" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("2. Video Select", "Video Manager-derived dropdown")}
             <p className="text-[10px] font-bold uppercase opacity-60">
@@ -452,7 +458,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           </WidgetSection>
         )}
 
-        {(activeCategory === "all" || activeCategory === "progress") && (
+        {activeCategory === "progress" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("3. Progress Bars", "Keyword Engine anatomy")}
             <div className="widget-reference-family">
@@ -472,7 +478,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           </WidgetSection>
         )}
 
-        {(activeCategory === "all" || activeCategory === "matrix") && (
+        {activeCategory === "matrix" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("3b. Matrix Primitives", "v12 library · 3 tones × 4 heights")}
 
@@ -838,7 +844,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           </WidgetSection>
         )}
 
-        {(activeCategory === "all" || activeCategory === "tags") && (
+        {activeCategory === "tags" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("4. Infinite Spectrum Tags", "A–Z receives 26 distinct continuous-spectrum hues")}
             <div className="widget-reference-family">
@@ -869,7 +875,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           </WidgetSection>
         )}
 
-        {(activeCategory === "all" || activeCategory === "alerts") && (
+        {activeCategory === "alerts" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("10. Alerts + Split Badges", "Toasts and the 12-slot split-left set")}
             <div className="widget-reference-family">
@@ -933,7 +939,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           </WidgetSection>
         )}
 
-        {(activeCategory === "all" || activeCategory === "media") && (
+        {activeCategory === "media" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("5. Media Uploaders", "Upload + dropzone primitives")}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
@@ -963,7 +969,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           </WidgetSection>
         )}
 
-        {(activeCategory === "all" || activeCategory === "navigation") && (
+        {activeCategory === "navigation" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("6. Navigation", "Toggles + steppers + tabs")}
             <WidgetHeaderToggle
@@ -1003,7 +1009,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           </WidgetSection>
         )}
 
-        {(activeCategory === "all" || activeCategory === "states") && (
+        {activeCategory === "states" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("7. Metrics + States", "Feedback system")}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
