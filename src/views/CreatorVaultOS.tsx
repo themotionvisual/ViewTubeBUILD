@@ -57,6 +57,10 @@ import { computeVaultFileHash } from "../services/vaultFileHash"
 import { extractVaultVideoThumbnail } from "../services/vaultVideoThumbnail"
 import { extractVaultImagePreview } from "../services/vaultImagePreview"
 import { extractVaultExifMetadata } from "../services/vaultExif"
+import {
+ computeVaultImagePerceptualHash,
+ findVaultSimilarAssets,
+} from "../services/vaultImageSimilarity"
 import { buildVaultExplorerGroups } from "../services/vaultExplorer"
 import { getAssetLineage } from "../services/assetEngine"
 import {
@@ -384,6 +388,10 @@ const CreatorVaultOS: React.FC = () => {
   () => selectedAsset ? getVaultAssetUsage(selectedAsset.id) : [],
   [selectedAsset, refreshTick],
  )
+ const selectedSimilarAssets = useMemo(
+  () => selectedAsset ? findVaultSimilarAssets(selectedAsset, 8) : [],
+  [selectedAsset, refreshTick],
+ )
  const selectedProject = useMemo(
   () => selectedAsset?.projectId
    ? brain.projects.find((project) => project.id === selectedAsset.projectId) || null
@@ -617,12 +625,13 @@ const CreatorVaultOS: React.FC = () => {
      setTaskRefresh((value) => value + 1)
     }
 
-    const [metadata, contentHash, imagePreviewUrl, videoPreviewUrl, exif] = await Promise.all([
+    const [metadata, contentHash, imagePreviewUrl, videoPreviewUrl, exif, perceptualHash] = await Promise.all([
      extractVaultFileMetadata(file),
      computeVaultFileHash(file),
      extractVaultImagePreview(file),
      extractVaultVideoThumbnail(file),
      extractVaultExifMetadata(file),
+     computeVaultImagePerceptualHash(file),
     ])
     const previewUrl = imagePreviewUrl || videoPreviewUrl
 
@@ -2544,6 +2553,38 @@ const CreatorVaultOS: React.FC = () => {
            />
           )}
          </div>
+         {selectedAsset.kind === "image" ? (
+          <div>
+           <div className="mb-2 text-xs font-black uppercase opacity-60">Find Similar</div>
+           {selectedAsset.metadata?.perceptualHash ? (
+            selectedSimilarAssets.length ? (
+             <div className="flex flex-col gap-2">
+              {selectedSimilarAssets.slice(0, 8).map((asset) => (
+               <SubToolboxInnerActionButton
+                key={asset.id}
+                label={asset.name}
+                iconName="search"
+                tone="cyan"
+                onClick={() => setSelectedAssetIds([asset.id])}
+               />
+              ))}
+             </div>
+            ) : (
+             <SubToolboxStatePanel
+              level="l1"
+              state="empty"
+              message="No visually similar imported images are currently indexed."
+             />
+            )
+           ) : (
+            <SubToolboxStatePanel
+             level="l1"
+             state="stale"
+             message="This image predates local perceptual indexing. Re-import or replace its preview source to generate a similarity fingerprint."
+            />
+           )}
+          </div>
+         ) : null}
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Lineage</div>
           {selectedLineage.length > 1 ? (
