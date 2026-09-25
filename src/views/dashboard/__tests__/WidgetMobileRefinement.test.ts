@@ -32,9 +32,10 @@ describe("mobile widget control refinements", () => {
     expect(canvas).toContain("window.scrollBy")
   })
 
-  it("restores the wider phone dashboard rendering hack", () => {
-    expect(mobile).toContain("width: calc(100% + 24px)")
-    expect(mobile).toContain("margin-inline: -12px")
+  it("reclaims the wider right app-shell lane measured in live phone QA", () => {
+    expect(mobile).toContain("--vt-mobile-reclaim-left: 12px")
+    expect(mobile).toContain("--vt-mobile-reclaim-right: 40px")
+    expect(mobile).toContain("width: calc(100% + var(--vt-mobile-reclaim-left) + var(--vt-mobile-reclaim-right))")
   })
 })
 
