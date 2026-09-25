@@ -1039,3 +1039,26 @@
     letter-spacing: -0.03em;
   }
 }
+
+/* Canonical textarea mirrors the input's default/focus geometry and palette. */
+.widget-text-area{
+  width:100%;
+  box-sizing:border-box;
+  border-width:2px;
+  border-style:solid;
+  border-color:var(--widget-border,var(--widget-ink,currentColor));
+  border-radius:var(--vt-primitive-radius,6px);
+  background:var(--bg-input,#fff);
+  color:var(--widget-ink,var(--widget-border,#243247));
+  caret-color:currentColor;
+  padding:8px 9px;
+  font:inherit;
+  resize:vertical;
+  outline:none;
+}
+:where(.dashboard-barrier) .widget-text-area:focus,
+:where(.dashboard-barrier) .widget-text-area:focus-visible{
+  border-color:var(--widget-color,#34cdea);
+  background:color-mix(in srgb,var(--widget-color,#fff) 18%,white);
+  box-shadow:0 0 0 1px var(--widget-color,#34cdea);
+}
