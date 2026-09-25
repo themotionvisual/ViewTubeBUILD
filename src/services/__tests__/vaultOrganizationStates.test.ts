@@ -18,6 +18,14 @@ describe("Vault organization states", () => {
   expect(searchVaultAssets({ special: "favorites" }).map((item) => item.id)).toEqual([asset.id])
  })
 
+ it("shows unorganized active assets in Inbox", () => {
+  const inbox = createLocalVaultAsset({ name: "Loose Asset", kind: "image", tags: [] })
+  const organized = createLocalVaultAsset({ name: "Assigned", kind: "image", tags: ["reference"], projectName: "Project A" })
+
+  expect(searchVaultAssets({ special: "inbox" }).map((item) => item.id)).toEqual([inbox.id])
+  expect(searchVaultAssets({ special: "inbox" }).map((item) => item.id)).not.toContain(organized.id)
+ })
+
  it("keeps trash distinct from archive", () => {
   const archived = createLocalVaultAsset({ name: "Old", kind: "image", tags: [] })
   const trashed = createLocalVaultAsset({ name: "Delete", kind: "image", tags: [] })
