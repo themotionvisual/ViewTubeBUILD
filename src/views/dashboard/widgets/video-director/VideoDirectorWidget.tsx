@@ -5,6 +5,7 @@ import {
   WidgetActionButton,
   WidgetBadge,
   WidgetFooter,
+  WidgetHeaderActionButton,
   WidgetProgressBar,
   WidgetScrollArea,
   WidgetSection,
@@ -809,16 +810,14 @@ export const VideoDirectorWidget: React.FC<
       aiDisabledReason="Add a brief before Auto-Fill Director."
       helpContent={<span>Compact Video Director execution surface. All project state is shared with Studio Hub.</span>}
       headerContent={
-        <DirectorButton
-          height={24}
-          tone="secondary"
-          className="widget-header-toggle vtdw-header-studio"
+        <WidgetHeaderActionButton
+          className="vtdw-header-studio"
+          icon={<ExternalLink size={14} />}
+          label="Studio"
           onClick={openStudio}
           aria-label="Open Video Director in Studio Hub"
           title="Open Video Director in Studio Hub"
-        >
-          <ExternalLink size={13} aria-hidden="true" /> STUDIO
-        </DirectorButton>
+        />
       }
     >
       <div className="vt-video-director-widget">
