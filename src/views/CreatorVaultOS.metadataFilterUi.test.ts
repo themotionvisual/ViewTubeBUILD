@@ -6,19 +6,19 @@ const source = fs.readFileSync(path.resolve(process.cwd(), "src/views/CreatorVau
 
 describe("CreatorVaultOS structured metadata filters", () => {
  it("routes UI metadata filters into canonical Vault search", () => {
-  expect(source).toContain("metadataLifecycle")
-  expect(source).toContain("metadataMimeType")
-  expect(source).toContain("metadataMinWidth")
-  expect(source).toContain("metadataMinHeight")
-  expect(source).toContain("metadataMaxDuration")
-  expect(source).toContain("metadataMaxSizeMb")
+  expect(source).toContain("filterLifecycle")
+  expect(source).toContain("filterMimeType")
+  expect(source).toContain("filterMinWidth")
+  expect(source).toContain("filterMinHeight")
+  expect(source).toContain("filterMaxDuration")
+  expect(source).toContain("filterMaxBytesMb")
   expect(source).toContain("minDurationSec")
   expect(source).toContain("maxDurationSec")
   expect(source).toContain("maxBytes")
  })
 
  it("keeps metadata filters in a dense two-column mobile-friendly block", () => {
-  expect(source).toContain("Metadata Filters")
+  expect(source).toContain("Advanced Metadata Filters")
   expect(source).toContain("grid-cols-2")
  })
 })
