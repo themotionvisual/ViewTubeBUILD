@@ -58,7 +58,11 @@ describe("Settings dashboard control switchboard", () => {
     expect(widget).toContain("EXAMPLE CHANNEL")
     expect(widget).toContain("EXAMPLE ANALYTICS")
     expect(widget).toContain("CONNECT TO PERSONALIZE")
+    expect(widget).toContain("EXAMPLE EVIDENCE")
+    expect(widget).toContain("EXAMPLE ADVICE")
+    expect(widget).toContain("EXAMPLE PROJECT CONTEXT")
     expect(widget).toContain('aria-label="Settings data preview"')
+    expect(widget).toContain('aria-label="Settings AI preview"')
   })
 
   it("defines compact, standard and wide container layouts for Settings", () => {
