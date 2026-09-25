@@ -548,6 +548,7 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
                 height={32}
                 textFit="adaptive"
                 tone={page === tab.id ? "primary" : "default"}
+                className="video-uploader-page-button"
                 aria-pressed={page === tab.id}
                 onClick={() => setPage(tab.id)}
               >
