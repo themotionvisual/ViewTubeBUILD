@@ -4,18 +4,30 @@ import { describe, expect, it } from "vitest"
 
 const source = fs.readFileSync(path.resolve(process.cwd(), "src/views/CreatorVaultOS.tsx"), "utf8")
 
-describe("CreatorVaultOS unified Asset Operations", () => {
- it("consolidates search tags import batch text groups and tools in one SubToolbox", () => {
+describe("CreatorVaultOS corrected Vault tool ownership", () => {
+ it("keeps Asset Operations focused on search batch groups and tools", () => {
   expect(source).toContain('title="Asset Operations"')
-  expect(source).toContain("assetOperationsMode")
-  for (const mode of ["search", "tags", "import", "batch", "text", "groups", "tools"]) {
+  for (const mode of ["search", "batch", "groups", "tools"]) {
    expect(source).toContain(`value: "${mode}"`)
   }
+  expect(source).not.toContain('{ value: "tags", label: "TAGS" }')
+  expect(source).not.toContain('{ value: "import", label: "IMPORT" }')
+  expect(source).not.toContain('{ value: "text", label: "TEXT" }')
  })
 
- it("does not render the old standalone operations SubToolboxes", () => {
-  expect(source).not.toContain('title="Spectrum Tags"')
-  expect(source).not.toContain('title="Import Station"')
-  expect(source).not.toContain('title="Batch Processor"')
+ it("combines Import Station and Spectrum Tags in one SubToolbox", () => {
+  expect(source).toContain('title="Import & Tags"')
+  expect(source).toContain("importTagsMode")
+  expect(source).toContain('{ value: "tags", label: "TAGS" }')
+  expect(source).toContain('{ value: "import", label: "IMPORT" }')
+  expect(source).toContain("Spectrum Tags")
+  expect(source).toContain("Import Station")
+ })
+
+ it("renders Text Editor as its own independent SubToolbox", () => {
+  expect(source).toContain('title="Text Editor"')
+  expect(source).toContain('persistenceId="vault-text-editor"')
+  expect(source).toContain("Create New Text Asset")
+  expect(source).toContain("Save Selected Text Asset")
  })
 })

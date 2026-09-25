@@ -48,6 +48,8 @@ import {
  readVaultWorkspaceState,
  writeVaultWorkspaceState,
  DEFAULT_VAULT_MODULE_ORDER,
+ type VaultAssetOperationsMode,
+ type VaultImportTagsMode,
  type VaultWorkspaceDensity,
  type VaultWorkspaceModuleId,
  type VaultWorkspaceSort,
@@ -152,17 +154,22 @@ import {
  resolveVaultTranscriptVideoId,
  runVaultTranscriptTask,
 } from "../services/vaultTranscriptTask"
+import {
+ createVaultTextDocument,
+ saveVaultTextDocument,
+ type VaultTextFormat,
+} from "../services/vaultTextDocuments"
 import type { VaultAsset, VaultAssetKind } from "../types"
 
 const VAULT_MODULE_LABELS: Record<VaultWorkspaceModuleId, string> = {
  navigator: "Navigator",
  explorer: "Explorer",
  "workspace-notes": "Workspace Notes",
- "spectrum-tags": "Spectrum Tags",
+ "asset-operations": "Asset Operations",
+ "import-tags": "Import & Tags",
+ "text-editor": "Text Editor",
  "asset-library": "Asset Library",
- "import-station": "Import Station",
  "task-center": "Task Center",
- "batch-processor": "Batch Processor",
  inspector: "Inspector",
 }
 
@@ -220,6 +227,8 @@ const CreatorVaultOS: React.FC = () => {
  const [source, setSource] = useState(initialWorkspace.source)
  const [sort, setSort] = useState<VaultWorkspaceSort>(initialWorkspace.sort)
  const [special, setSpecial] = useState(initialWorkspace.special)
+ const [assetOperationsMode, setAssetOperationsMode] = useState<VaultAssetOperationsMode>(initialWorkspace.assetOperationsMode)
+ const [importTagsMode, setImportTagsMode] = useState<VaultImportTagsMode>(initialWorkspace.importTagsMode)
  const [filterLifecycle, setFilterLifecycle] = useState(initialWorkspace.filterLifecycle)
  const [filterOrientation, setFilterOrientation] = useState(initialWorkspace.filterOrientation)
  const [filterUpdatedFrom, setFilterUpdatedFrom] = useState(initialWorkspace.filterUpdatedFrom)
@@ -241,7 +250,6 @@ const CreatorVaultOS: React.FC = () => {
  const selectionShiftRef = useRef(false)
  const [batchTag, setBatchTag] = useState("")
  const [batchPrefix, setBatchPrefix] = useState("")
- const [batchProject, setBatchProject] = useState("")
  const [pending, setPending] = useState<PendingVaultImport[]>([])
  const [importMode, setImportMode] = useState<"direct" | "staged">("staged")
  const [importProject, setImportProject] = useState("")
@@ -271,10 +279,14 @@ const CreatorVaultOS: React.FC = () => {
  const [customFieldRefresh, setCustomFieldRefresh] = useState(0)
  const [customFieldName, setCustomFieldName] = useState("")
  const [attentionNoteDraft, setAttentionNoteDraft] = useState("")
+ const [textEditorTitle, setTextEditorTitle] = useState("Untitled Text Document")
+ const [textEditorContent, setTextEditorContent] = useState("")
+ const [textEditorFormat, setTextEditorFormat] = useState<VaultTextFormat>("plain")
  const [customFieldType, setCustomFieldType] = useState<VaultCustomFieldType>("text")
  const [explorerProject, setExplorerProject] = useState<"all" | "unassigned" | string>("all")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
  const selectionProjectInputRef = useRef<HTMLInputElement | null>(null)
+ const assetLibraryRef = useRef<HTMLDivElement | null>(null)
  const inspectorRef = useRef<HTMLDivElement | null>(null)
 
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
@@ -361,6 +373,8 @@ const CreatorVaultOS: React.FC = () => {
    filterMaxDuration,
    filterMinBytesMb,
    filterMaxBytesMb,
+   assetOperationsMode,
+   importTagsMode,
    viewMode,
    density,
    arrangeMode,
@@ -385,6 +399,8 @@ const CreatorVaultOS: React.FC = () => {
   filterMaxDuration,
   filterMinBytesMb,
   filterMaxBytesMb,
+  assetOperationsMode,
+  importTagsMode,
   viewMode,
   density,
   arrangeMode,
@@ -396,6 +412,12 @@ const CreatorVaultOS: React.FC = () => {
   () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
   [allAssets, selectedAssetIds],
  )
+ const editableTextAsset = useMemo(() => {
+  if (!selectedAsset || selectedAsset.kind !== "document") return null
+  const hasTextContent = typeof selectedAsset.metadata?.textContent === "string"
+  const textMime = typeof selectedAsset.mimeType === "string" && selectedAsset.mimeType.startsWith("text/")
+  return hasTextContent || textMime ? selectedAsset : null
+ }, [selectedAsset])
  const attentionReasons = useMemo(
   () => selectedAsset ? getVaultAttentionReasons(selectedAsset) : [],
   [selectedAsset, refreshTick],
@@ -584,6 +606,13 @@ const CreatorVaultOS: React.FC = () => {
     : "",
   )
  }, [selectedAsset?.id])
+
+ useEffect(() => {
+  if (!editableTextAsset) return
+  setTextEditorTitle(editableTextAsset.name)
+  setTextEditorContent(String(editableTextAsset.metadata?.textContent || ""))
+  setTextEditorFormat(editableTextAsset.metadata?.textFormat === "markdown" ? "markdown" : "plain")
+ }, [editableTextAsset?.id])
 
  useEffect(() => {
   const stored = activeCaptionAsset?.metadata?.captionLines
@@ -1438,15 +1467,31 @@ const CreatorVaultOS: React.FC = () => {
   setRefreshTick((value) => value + 1)
  }
 
- const applyBatchProject = () => {
-  const projectName = batchProject.trim()
-  if (!projectName || !selectedAssetIds.length) return
-  selectedAssetIds.forEach((assetId) => {
-   updateVaultAsset(assetId, { projectName })
+ const createTextAssetFromEditor = () => {
+  const created = createVaultTextDocument({
+   name: textEditorTitle,
+   text: textEditorContent,
+   format: textEditorFormat,
+   projectId: selectedAsset?.projectId || null,
+   projectName: selectedAsset?.projectName || null,
   })
-  setBatchProject("")
+  setSelectedAssetIds([created.id])
+  setSelectionAnchorId(created.id)
   setRefreshTick((value) => value + 1)
  }
+
+ const saveSelectedTextAsset = () => {
+  if (!editableTextAsset) return
+  const saved = saveVaultTextDocument(editableTextAsset.id, {
+   name: textEditorTitle,
+   text: textEditorContent,
+   format: textEditorFormat,
+  })
+  if (!saved) return
+  setSelectedAssetIds([saved.id])
+  setRefreshTick((value) => value + 1)
+ }
+
 
  const patchPending = (id: string, patch: Partial<Omit<PendingVaultImport, "id">>) => {
   setPending((current) => current.map((item) => (
@@ -1981,48 +2026,609 @@ const CreatorVaultOS: React.FC = () => {
        </div>
       </SubToolbox>
 
-      <SubToolbox
-       style={moduleStyle("spectrum-tags" as VaultWorkspaceModuleId)}
-       title="Spectrum Tags"
-       subtitle="Canonical alphabetical spectrum labels"
-       icon={<Database />}
-       paletteIndex={9}
-       isOpenInitial
-       persistenceId="vault-spectrum-tags"
-      >
-       <div className="flex flex-wrap gap-2">
-        {availableTags.map((tag) => (
-         <button
-          key={tag}
-          type="button"
-          aria-pressed={selectedTag === tag}
-          aria-label={`Zone Tag ${tag}. Drop files here to import with this tag.`}
-          title={`Zone Tag · drop files to import with ${tag}`}
-          onDragOver={(event) => {
-           if (event.dataTransfer?.types?.includes("Files")) event.preventDefault()
-          }}
-          onDrop={(event) => {
-           if (!event.dataTransfer?.files?.length) return
-           event.preventDefault()
-           event.stopPropagation()
-           void stageFiles(event.dataTransfer.files, [tag])
-          }}
-          onClick={() => setSelectedTag((current) => current === tag ? null : tag)}
-          className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-         >
-          <SubToolboxAlphabeticalTag
-           level="l2"
-           label={tag}
-           spectrumKey={tag}
-           className={selectedTag === tag ? "is-selected" : ""}
-          />
-         </button>
-        ))}
-       </div>
-      </SubToolbox>
+
      </div>
 
      <div className="flex min-w-0 flex-col gap-4">
+      <SubToolbox
+       style={moduleStyle("asset-operations" as VaultWorkspaceModuleId)}
+       title="Asset Operations"
+       subtitle="Search, batch-edit, group, and route canonical Vault assets"
+       icon={<Database />}
+       paletteIndex={9}
+       isOpenInitial
+       persistenceId="vault-asset-operations"
+      >
+       <div className="flex flex-col gap-3">
+        <SubToolboxSegmentedToggle
+         level="l1"
+         ariaLabel="Asset Operations tool"
+         value={assetOperationsMode}
+         onValueChange={(value) => setAssetOperationsMode(value as VaultAssetOperationsMode)}
+         options={[
+          { value: "search", label: "SEARCH" },
+          { value: "batch", label: "BATCH" },
+          { value: "groups", label: "GROUPS" },
+          { value: "tools", label: "TOOLS" },
+         ]}
+        />
+
+        {assetOperationsMode === "search" ? (
+         <div className="flex flex-col gap-3">
+          <SubToolboxSplitField
+           level="l1"
+           variant="search"
+           icon={<Search />}
+           inputProps={{
+            ref: searchInputRef,
+            value: query,
+            onChange: (event) => setQuery(event.target.value),
+            placeholder: "Search names, projects, tags, kinds, and metadata…",
+            "aria-label": "Search Vault assets",
+           }}
+          />
+          <div className="text-xs font-black uppercase opacity-60">
+           {visibleAssets.length} visible · {allAssets.length} total
+          </div>
+          <SubToolboxInnerActionButton
+           label="Clear Asset Search"
+           iconName="x"
+           tone="cyan"
+           onClick={() => setQuery("")}
+           disabled={!query}
+          />
+         </div>
+        ) : null}
+
+        {assetOperationsMode === "batch" ? (
+         <div className="flex flex-col gap-3">
+          <div className="text-xs font-black uppercase opacity-60">Batch Processor · {selectedAssetIds.length} selected</div>
+          <StandardInput
+           value={batchTag}
+           onChange={(event) => setBatchTag(event.target.value)}
+           placeholder="Add tag to selection"
+           aria-label="Batch tag"
+          />
+          <SubToolboxInnerActionButton
+           label="Apply Tag"
+           iconName="tag"
+           tone="pink"
+           onClick={applyBatchTag}
+           disabled={!selectedAssetIds.length || !batchTag.trim()}
+          />
+          <StandardInput
+           value={batchPrefix}
+           onChange={(event) => setBatchPrefix(event.target.value)}
+           placeholder="Rename prefix, e.g. EP01_"
+           aria-label="Batch rename prefix"
+          />
+          <SubToolboxInnerActionButton
+           label="Apply Prefix"
+           iconName="edit"
+           tone="orange"
+           onClick={applyBatchPrefix}
+           disabled={!selectedAssetIds.length || !batchPrefix.trim()}
+          />
+          <SubToolboxInnerActionButton
+           label="Toggle Favorite"
+           iconName="sparkles"
+           tone="orange"
+           onClick={toggleFavoriteSelection}
+           disabled={!selectedAssetIds.length}
+          />
+          {special === "archive" || special === "trash" ? (
+           <SubToolboxInnerActionButton
+            label="Restore Selection"
+            iconName="checklist"
+            tone="green"
+            onClick={restoreSelection}
+            disabled={!selectedAssetIds.length}
+           />
+          ) : (
+           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <SubToolboxInnerActionButton
+             label="Archive Selection"
+             iconName="archive"
+             tone="cyan"
+             onClick={archiveSelection}
+             disabled={!selectedAssetIds.length}
+            />
+            <SubToolboxInnerActionButton
+             label="Move to Trash"
+             iconName="eye-off"
+             tone="pink"
+             onClick={trashSelection}
+             disabled={!selectedAssetIds.length}
+            />
+           </div>
+          )}
+          <SubToolboxInnerActionButton
+           label="Clear Selection"
+           iconName="x"
+           tone="cyan"
+           onClick={() => setSelectedAssetIds([])}
+           disabled={!selectedAssetIds.length}
+          />
+         </div>
+        ) : null}
+
+        {assetOperationsMode === "groups" ? (
+         <div className="flex flex-col gap-3">
+          <div className="text-xs font-black uppercase opacity-60">Project / Asset Group Builder</div>
+          <div className="text-sm font-black uppercase">{selectedAssetIds.length} selected</div>
+          {brain.projects.length ? (
+           <>
+            <SubToolboxSelect
+             value={existingProjectId}
+             onChange={(event) => setExistingProjectId(event.target.value)}
+             aria-label="Existing project for selected Vault assets"
+            >
+             <option value="">Attach to existing project…</option>
+             {brain.projects.map((project) => (
+              <option key={project.id} value={project.id}>{project.name}</option>
+             ))}
+            </SubToolboxSelect>
+            <SubToolboxInnerActionButton
+             label="Attach Selection to Project"
+             iconName="link"
+             tone="blue"
+             onClick={attachSelectionToExistingProject}
+             disabled={!selectedAssetIds.length || !existingProjectId}
+            />
+           </>
+          ) : null}
+          <StandardInput
+           ref={selectionProjectInputRef}
+           value={selectionProjectName}
+           onChange={(event) => setSelectionProjectName(event.target.value)}
+           placeholder="New project from selection"
+           aria-label="New project from selected assets"
+          />
+          <SubToolboxInnerActionButton
+           label="Create Project From Selection"
+           iconName="checklist"
+           tone="purple"
+           onClick={createProjectFromSelection}
+           disabled={!selectedAssetIds.length || !selectionProjectName.trim()}
+          />
+          <div className="border-t-[3px] border-current pt-3">
+           <StandardInput
+            value={manualCollectionName}
+            onChange={(event) => setManualCollectionName(event.target.value)}
+            placeholder="New asset group / collection name"
+            aria-label="New Vault collection name"
+           />
+           <SubToolboxInnerActionButton
+            label="Create Collection From Selection"
+            iconName="collection"
+            tone="green"
+            onClick={createManualCollection}
+            disabled={!selectedAssetIds.length || !manualCollectionName.trim()}
+           />
+          </div>
+          {manualCollections.length ? (
+           <>
+            <SubToolboxSelect
+             value={targetCollectionId}
+             onChange={(event) => setTargetCollectionId(event.target.value)}
+             aria-label="Target Vault collection"
+            >
+             <option value="">Choose asset group / collection…</option>
+             {manualCollections.map((collection) => (
+              <option key={collection.id} value={collection.id}>
+               {collection.role === "brand-kit" ? "★ " : ""}{collection.name}
+              </option>
+             ))}
+            </SubToolboxSelect>
+            <SubToolboxInnerActionButton
+             label="Add Selection to Collection"
+             iconName="collection"
+             tone="blue"
+             onClick={addSelectionToCollection}
+             disabled={!selectedAssetIds.length || !targetCollectionId}
+            />
+            {targetCollectionId
+             && manualCollections.find((collection) => collection.id === targetCollectionId)?.role !== "brand-kit" ? (
+             <SubToolboxInnerActionButton
+              label="Set Target Collection as Brand Kit"
+              iconName="sparkles"
+              tone="yellow"
+              onClick={() => makeBrandKit(targetCollectionId)}
+             />
+            ) : null}
+           </>
+          ) : null}
+          <SubToolboxInnerActionButton
+           label="Create Brand Kit From Selection"
+           iconName="sparkles"
+           tone="yellow"
+           onClick={createBrandKitFromSelection}
+           disabled={!selectedAssetIds.length}
+          />
+          {activeCollectionId && selectedAsset ? (
+           <SubToolboxInnerActionButton
+            label="Remove Selected Asset From Active Collection"
+            iconName="x"
+            tone="orange"
+            onClick={removeSelectedAssetFromActiveCollection}
+           />
+          ) : null}
+         </div>
+        ) : null}
+
+        {assetOperationsMode === "tools" ? (
+         <div className="flex flex-col gap-3">
+          <div className="text-xs font-black uppercase opacity-60">Compatible Tools</div>
+          {selectedAsset && selectedToolTargets.length ? (
+           <div className="flex flex-wrap gap-2">
+            {selectedToolTargets.map((target) => (
+             <SubToolboxInnerActionButton
+              key={target.id}
+              label={target.label}
+              iconName="link"
+              tone="blue"
+              onClick={() => sendSelectedAssetToTool(target.id)}
+             />
+            ))}
+           </div>
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="empty"
+            message="Select an asset to reveal compatible ViewTube tools and handoff destinations."
+           />
+          )}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+           <SubToolboxInnerActionButton
+            label="Open Quick Look"
+            iconName="search"
+            tone="cyan"
+            onClick={() => {
+             setQuickLookOpen(true)
+             inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }}
+            disabled={!selectedAsset}
+           />
+           <SubToolboxInnerActionButton
+            label="Compare Selected Pair"
+            iconName="layers"
+            tone="purple"
+            onClick={() => assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            disabled={selectedAssetIds.length !== 2}
+           />
+           <SubToolboxInnerActionButton
+            label="Open Filmstrip"
+            iconName="layers"
+            tone="yellow"
+            onClick={() => {
+             setViewMode("filmstrip")
+             assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }}
+           />
+           <SubToolboxInnerActionButton
+            label="Open Lineage"
+            iconName="layers"
+            tone="orange"
+            onClick={() => {
+             setViewMode("lineage")
+             assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }}
+            disabled={!selectedAsset}
+           />
+          </div>
+          <SubToolboxInnerActionButton
+           label="Copy Asset ID"
+           iconName="database"
+           tone="cyan"
+           onClick={() => {
+            if (selectedAsset && navigator.clipboard?.writeText) void navigator.clipboard.writeText(selectedAsset.id)
+           }}
+           disabled={!selectedAsset}
+          />
+          <SubToolboxInnerActionButton
+           label="Open Selected Asset Inspector"
+           iconName="search"
+           tone="cyan"
+           onClick={() => inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+           disabled={!selectedAsset}
+          />
+          <SubToolboxInnerActionButton
+           label="Download Selection Manifest"
+           iconName="database"
+           tone="yellow"
+           onClick={exportSelectionManifest}
+           disabled={!selectedAssetIds.length}
+          />
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+           <SubToolboxInnerActionButton
+            label="Export Selected Metadata JSON"
+            iconName="database"
+            tone="cyan"
+            onClick={() => exportVaultMetadata(
+             allAssets.filter((asset) => selectedAssetIds.includes(asset.id)),
+             "json",
+            )}
+            disabled={!selectedAssetIds.length}
+           />
+           <SubToolboxInnerActionButton
+            label="Export Selected Metadata CSV"
+            iconName="database"
+            tone="cyan"
+            onClick={() => exportVaultMetadata(
+             allAssets.filter((asset) => selectedAssetIds.includes(asset.id)),
+             "csv",
+            )}
+            disabled={!selectedAssetIds.length}
+           />
+          </div>
+         </div>
+        ) : null}
+       </div>
+      </SubToolbox>
+
+      <SubToolbox
+       style={moduleStyle("import-tags" as VaultWorkspaceModuleId)}
+       title="Import & Tags"
+       subtitle="Spectrum tagging and canonical file intake in one tool"
+       icon={<UploadCloud />}
+       paletteIndex={11}
+       isOpenInitial
+       persistenceId="vault-import-tags"
+      >
+       <div className="flex flex-col gap-3">
+        <SubToolboxSegmentedToggle
+         level="l1"
+         ariaLabel="Import and Tags tool"
+         value={importTagsMode}
+         onValueChange={(value) => setImportTagsMode(value as VaultImportTagsMode)}
+         options={[
+          { value: "tags", label: "TAGS" },
+          { value: "import", label: "IMPORT" },
+         ]}
+        />
+        {importTagsMode === "tags" ? (
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Spectrum Tags</div>
+          <div className="mb-2 text-[10px] font-bold uppercase opacity-55">
+           Click to filter · 1–9 applies visible tags to selection · drop files on a tag for Zone Tag import
+          </div>
+          <div className="flex flex-wrap gap-2">
+           {availableTags.map((tag) => (
+            <button
+             key={tag}
+             type="button"
+             aria-pressed={selectedTag === tag}
+             aria-label={`Zone Tag ${tag}. Drop files here to import with this tag.`}
+             title={`Zone Tag · drop files to import with ${tag}`}
+             onDragOver={(event) => {
+              if (event.dataTransfer?.types?.includes("Files")) event.preventDefault()
+             }}
+             onDrop={(event) => {
+              if (!event.dataTransfer?.files?.length) return
+              event.preventDefault()
+              event.stopPropagation()
+              void stageFiles(event.dataTransfer.files, [tag])
+             }}
+             onClick={() => setSelectedTag((current) => current === tag ? null : tag)}
+             className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            >
+             <SubToolboxAlphabeticalTag
+              level="l2"
+              label={tag}
+              spectrumKey={tag}
+              className={selectedTag === tag ? "is-selected" : ""}
+             />
+            </button>
+           ))}
+          </div>
+         </div>
+        ) : null}
+
+        {importTagsMode === "import" ? (
+         <div className="flex flex-col gap-4">
+          <div className="text-xs font-black uppercase opacity-60">Import Station</div>
+          <SubToolboxSegmentedToggle
+           level="l1"
+           ariaLabel="Import mode"
+           value={importMode}
+           onValueChange={(value) => setImportMode(value as "direct" | "staged")}
+           options={[
+            { value: "direct", label: "DIRECT" },
+            { value: "staged", label: "STAGED" },
+           ]}
+          />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(260px,0.9fr)]">
+           <SubToolboxFileTarget
+            level="l1"
+            multiple
+            minHeight={180}
+            icon={<UploadCloud />}
+            label={importMode === "direct" ? "DROP OR CHOOSE · IMPORT DIRECTLY" : "DROP OR CHOOSE · REVIEW IN STAGING"}
+            onFiles={stageFiles}
+           />
+           <div className="flex min-w-0 flex-col gap-3">
+            <StandardInput
+             value={importProject}
+             onChange={(event) => setImportProject(event.target.value)}
+             placeholder="Optional project name"
+             aria-label="Import project name"
+            />
+            <div>
+             <div className="mb-2 text-xs font-black uppercase tracking-wide">Import Spectrum Tags</div>
+             <div className="flex flex-wrap gap-2">
+              {CORE_TAGS.map((tag) => (
+               <button
+                key={tag}
+                type="button"
+                aria-pressed={importTags.includes(tag)}
+                onClick={() => toggleImportTag(tag)}
+                className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+               >
+                <SubToolboxAlphabeticalTag
+                 level="l2"
+                 label={importTags.includes(tag) ? `× ${tag}` : `+ ${tag}`}
+                 spectrumKey={tag}
+                />
+               </button>
+              ))}
+             </div>
+            </div>
+            <SubToolboxInnerActionButton
+             label={pending.length ? `Ingest All (${pending.length})` : "Ingest All"}
+             iconName="database"
+             tone="green"
+             onClick={ingestAll}
+             disabled={!pending.length}
+            />
+           </div>
+          </div>
+          <div className="flex flex-col gap-2">
+           {pending.length ? pending.map((item) => (
+            <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+             <div className="min-w-0 flex flex-col gap-2">
+              {item.previewUrl ? (
+               <SubToolboxMediaInspector
+                level="l1"
+                title="Staged Preview"
+                poster={item.previewUrl}
+                items={[
+                 { label: "TYPE", value: item.kind.toUpperCase() },
+                 { label: "STATUS", value: item.metadata.duplicateAssetId ? "DUPLICATE REVIEW" : "READY" },
+                ]}
+               />
+              ) : null}
+              <StandardInput
+               value={item.name}
+               onChange={(event) => patchPending(item.id, { name: event.target.value })}
+               aria-label={`Pending asset name ${item.name}`}
+              />
+              <SubToolboxDropdownControl
+               label="Type"
+               value={item.kind}
+               onChange={(value) => patchPending(item.id, { kind: value as VaultAssetKind })}
+               options={["image", "video", "audio", "document", "json", "font", "template", "generated", "other"]}
+              />
+              <div>
+               <div className="mb-2 text-[10px] font-black uppercase opacity-60">Pending tags for {item.name}</div>
+               <div className="mb-2 flex flex-wrap gap-1">
+                {item.tags.map((tag) => (
+                 <button
+                  key={tag}
+                  type="button"
+                  aria-label={`Remove pending tag ${tag}`}
+                  onClick={() => togglePendingTag(item.id, tag)}
+                 >
+                  <SubToolboxAlphabeticalTag level="l2" label={`× ${tag}`} spectrumKey={tag} />
+                 </button>
+                ))}
+               </div>
+               <SubToolboxInput
+                placeholder="+ TAG"
+                aria-label={`Pending tags for ${item.name}`}
+                onKeyDown={(event) => {
+                 if (event.key !== "Enter") return
+                 event.preventDefault()
+                 addPendingTag(item.id, event.currentTarget.value)
+                 event.currentTarget.value = ""
+                }}
+               />
+              </div>
+              {item.metadata.duplicateAssetId ? (
+               <>
+                <SubToolboxStatePanel
+                 level="l1"
+                 state="stale"
+                 message={`Exact duplicate of ${String(item.metadata.duplicateAssetName || "an existing Vault asset")}. Review before ingesting.`}
+                />
+                <SubToolboxInnerActionButton
+                 label="Use Existing Duplicate"
+                 iconName="link"
+                 tone="purple"
+                 onClick={() => resolvePendingDuplicate(item)}
+                />
+               </>
+              ) : null}
+              <div className="text-xs font-bold opacity-60">
+               {(item.size / 1024 / 1024).toFixed(2)} MB
+               {typeof item.metadata.width === "number" && typeof item.metadata.height === "number"
+                ? ` · ${item.metadata.width}×${item.metadata.height}`
+                : ""}
+               {typeof item.metadata.durationSeconds === "number"
+                ? ` · ${Number(item.metadata.durationSeconds).toFixed(1)}s`
+                : ""}
+              </div>
+             </div>
+             <div className="grid grid-cols-2 gap-2">
+              <SubToolboxInnerActionButton label="Ingest" iconName="plus" tone="cyan" onClick={() => ingestOne(item)} />
+              <SubToolboxInnerActionButton label="Reject" iconName="x" tone="pink" onClick={() => rejectPending(item.id)} />
+             </div>
+            </div>
+           )) : (
+            <SubToolboxStatePanel level="l1" state="ready" message="Import Station is ready for a batch." />
+           )}
+          </div>
+         </div>
+        ) : null}
+
+       </div>
+      </SubToolbox>
+
+      <SubToolbox
+       style={moduleStyle("text-editor" as VaultWorkspaceModuleId)}
+       title="Text Editor"
+       subtitle="Create and edit canonical Vault text and Markdown documents"
+       icon={<FileText />}
+       paletteIndex={4}
+       isOpenInitial={false}
+       persistenceId="vault-text-editor"
+      >
+         <div className="flex flex-col gap-3">
+          <div className="text-xs font-black uppercase opacity-60">Text Editor</div>
+          <StandardInput
+           value={textEditorTitle}
+           onChange={(event) => setTextEditorTitle(event.target.value)}
+           placeholder="Text asset title"
+           aria-label="Text asset title"
+          />
+          <SubToolboxSelect
+           value={textEditorFormat}
+           aria-label="Text asset format"
+           onChange={(event) => setTextEditorFormat(event.target.value as VaultTextFormat)}
+          >
+           <option value="plain">PLAIN TEXT</option>
+           <option value="markdown">MARKDOWN</option>
+          </SubToolboxSelect>
+          <SubToolboxTextArea
+           value={textEditorContent}
+           onChange={(event) => setTextEditorContent(event.target.value)}
+           placeholder="Write notes, copy, research, script fragments, prompts, or documentation…"
+           aria-label="Vault Text Editor"
+           rows={12}
+          />
+          {editableTextAsset ? (
+           <SubToolboxInnerActionButton
+            label="Save Selected Text Asset"
+            iconName="edit"
+            tone="green"
+            onClick={saveSelectedTextAsset}
+           />
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="ready"
+            message="Create a new text asset, or select a text/Markdown document in the library to edit it here."
+           />
+          )}
+          <SubToolboxInnerActionButton
+           label="Create New Text Asset"
+           iconName="plus"
+           tone="purple"
+           onClick={createTextAssetFromEditor}
+          />
+         </div>
+      </SubToolbox>
+
+      <div ref={assetLibraryRef} tabIndex={-1}>
       <SubToolbox
        style={moduleStyle("asset-library" as VaultWorkspaceModuleId)}
        title="Asset Library"
@@ -2033,18 +2639,6 @@ const CreatorVaultOS: React.FC = () => {
        persistenceId="vault-asset-library"
       >
        <div className="flex flex-col gap-3">
-        <SubToolboxSplitField
-         level="l1"
-         variant="search"
-         icon={<Search />}
-         inputProps={{
-          ref: searchInputRef,
-          value: query,
-          onChange: (event) => setQuery(event.target.value),
-          placeholder: "Search names, projects, tags, kinds, and metadata…",
-          "aria-label": "Search Vault assets",
-         }}
-        />
         {comparePair ? (
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Compare Selection</div>
@@ -2429,174 +3023,9 @@ const CreatorVaultOS: React.FC = () => {
         )}
        </div>
       </SubToolbox>
+      </div>
 
-      <SubToolbox
-       style={moduleStyle("import-station" as VaultWorkspaceModuleId)}
-       title="Import Station"
-       subtitle="Stage multiple files before creating canonical Vault records"
-       icon={<UploadCloud />}
-       paletteIndex={11}
-       isOpenInitial
-       persistenceId="vault-import-station"
-      >
-       <div className="mb-4">
-        <SubToolboxSegmentedToggle
-         level="l1"
-         ariaLabel="Import mode"
-         value={importMode}
-         onValueChange={(value) => setImportMode(value as "direct" | "staged")}
-         options={[
-          { value: "direct", label: "DIRECT" },
-          { value: "staged", label: "STAGED" },
-         ]}
-        />
-       </div>
-       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(260px,0.9fr)]">
-        <SubToolboxFileTarget
-         level="l1"
-         multiple
-         minHeight={180}
-         icon={<UploadCloud />}
-         label={importMode === "direct" ? "DROP OR CHOOSE · IMPORT DIRECTLY" : "DROP OR CHOOSE · REVIEW IN STAGING"}
-         onFiles={stageFiles}
-        />
-        <div className="flex min-w-0 flex-col gap-3">
-         <StandardInput
-          value={importProject}
-          onChange={(event) => setImportProject(event.target.value)}
-          placeholder="Optional project name"
-          aria-label="Import project name"
-         />
-         <div>
-          <div className="mb-2 text-xs font-black uppercase tracking-wide">Import Spectrum Tags</div>
-          <div className="flex flex-wrap gap-2">
-           {CORE_TAGS.map((tag) => (
-            <button
-             key={tag}
-             type="button"
-             aria-pressed={importTags.includes(tag)}
-             onClick={() => toggleImportTag(tag)}
-             className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-            >
-             <SubToolboxAlphabeticalTag
-              level="l2"
-              label={importTags.includes(tag) ? `× ${tag}` : `+ ${tag}`}
-              spectrumKey={tag}
-             />
-            </button>
-           ))}
-          </div>
-         </div>
-         <SubToolboxInnerActionButton
-          label={pending.length ? `Ingest All (${pending.length})` : "Ingest All"}
-          iconName="database"
-          tone="green"
-          onClick={ingestAll}
-          disabled={!pending.length}
-         />
-        </div>
-       </div>
 
-       <div className="mt-4 flex flex-col gap-2">
-        {pending.length ? pending.map((item) => (
-         <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-          <div className="min-w-0 flex flex-col gap-2">
-           {item.previewUrl ? (
-            <SubToolboxMediaInspector
-             level="l1"
-             title="Staged Preview"
-             poster={item.previewUrl}
-             items={[
-              { label: "TYPE", value: item.kind.toUpperCase() },
-              { label: "STATUS", value: item.metadata.duplicateAssetId ? "DUPLICATE REVIEW" : "READY" },
-             ]}
-            />
-           ) : null}
-           <StandardInput
-            value={item.name}
-            onChange={(event) => patchPending(item.id, { name: event.target.value })}
-            aria-label={`Pending asset name ${item.name}`}
-           />
-           <SubToolboxDropdownControl
-            label="Type"
-            value={item.kind}
-            onChange={(value) => patchPending(item.id, { kind: value as VaultAssetKind })}
-            options={["image", "video", "audio", "document", "json", "font", "template", "generated", "other"]}
-           />
-           <div>
-            <div className="mb-2 text-[10px] font-black uppercase opacity-60">Pending tags for {item.name}</div>
-            <div className="mb-2 flex flex-wrap gap-1">
-             {item.tags.map((tag) => (
-              <button
-               key={tag}
-               type="button"
-               aria-label={`Remove pending tag ${tag}`}
-               onClick={() => togglePendingTag(item.id, tag)}
-              >
-               <SubToolboxAlphabeticalTag
-                level="l2"
-                label={`× ${tag}`}
-                spectrumKey={tag}
-               />
-              </button>
-             ))}
-            </div>
-            <SubToolboxInput
-             placeholder="+ TAG"
-             aria-label={`Pending tags for ${item.name}`}
-             onKeyDown={(event) => {
-              if (event.key !== "Enter") return
-              event.preventDefault()
-              addPendingTag(item.id, event.currentTarget.value)
-              event.currentTarget.value = ""
-             }}
-            />
-           </div>
-           {item.metadata.duplicateAssetId ? (
-            <>
-             <SubToolboxStatePanel
-              level="l1"
-              state="stale"
-              message={`Exact duplicate of ${String(item.metadata.duplicateAssetName || "an existing Vault asset")}. Review before ingesting.`}
-             />
-             <SubToolboxInnerActionButton
-              label="Use Existing Duplicate"
-              iconName="link"
-              tone="purple"
-              onClick={() => resolvePendingDuplicate(item)}
-             />
-            </>
-           ) : null}
-           <div className="text-xs font-bold opacity-60">
-            {(item.size / 1024 / 1024).toFixed(2)} MB
-            {typeof item.metadata.width === "number" && typeof item.metadata.height === "number"
-             ? ` · ${item.metadata.width}×${item.metadata.height}`
-             : ""}
-            {typeof item.metadata.durationSeconds === "number"
-             ? ` · ${Number(item.metadata.durationSeconds).toFixed(1)}s`
-             : ""}
-           </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-           <SubToolboxInnerActionButton
-            label="Ingest"
-            iconName="plus"
-            tone="cyan"
-            onClick={() => ingestOne(item)}
-           />
-           <SubToolboxInnerActionButton
-            label="Reject"
-            iconName="x"
-            tone="pink"
-            onClick={() => rejectPending(item.id)}
-           />
-          </div>
-         </div>
-        )) : (
-         <SubToolboxStatePanel level="l1" state="ready" message="Import Station is ready for a batch." />
-        )}
-       </div>
-      </SubToolbox>
      </div>
 
      <div className="flex min-w-0 flex-col gap-4">
@@ -2648,187 +3077,7 @@ const CreatorVaultOS: React.FC = () => {
        </div>
       </SubToolbox>
 
-      <SubToolbox
-       style={moduleStyle("batch-processor" as VaultWorkspaceModuleId)}
-       title="Batch Processor"
-       subtitle="Apply organization changes to the current asset selection"
-       icon={<Database />}
-       paletteIndex={1}
-       isOpenInitial
-       persistenceId="vault-batch-processor"
-      >
-       <div className="flex flex-col gap-3">
-        <div className="text-sm font-black uppercase">
-         {selectedAssetIds.length} selected
-        </div>
-        <StandardInput
-         value={batchTag}
-         onChange={(event) => setBatchTag(event.target.value)}
-         placeholder="Add tag to selection"
-         aria-label="Batch tag"
-        />
-        <SubToolboxInnerActionButton
-         label="Apply Tag"
-         iconName="tag"
-         tone="pink"
-         onClick={applyBatchTag}
-         disabled={!selectedAssetIds.length || !batchTag.trim()}
-        />
-        <StandardInput
-         value={batchPrefix}
-         onChange={(event) => setBatchPrefix(event.target.value)}
-         placeholder="Rename prefix, e.g. EP01_"
-         aria-label="Batch rename prefix"
-        />
-        <SubToolboxInnerActionButton
-         label="Apply Prefix"
-         iconName="edit"
-         tone="orange"
-         onClick={applyBatchPrefix}
-         disabled={!selectedAssetIds.length || !batchPrefix.trim()}
-        />
-        <StandardInput
-         value={batchProject}
-         onChange={(event) => setBatchProject(event.target.value)}
-         placeholder="Assign project name"
-         aria-label="Batch project"
-        />
-        <SubToolboxInnerActionButton
-         label="Assign Project"
-         iconName="folder"
-         tone="green"
-         onClick={applyBatchProject}
-         disabled={!selectedAssetIds.length || !batchProject.trim()}
-        />
-        {brain.projects.length ? (
-         <>
-          <SubToolboxSelect
-           value={existingProjectId}
-           onChange={(event) => setExistingProjectId(event.target.value)}
-           aria-label="Existing project for selected Vault assets"
-          >
-           <option value="">Attach to existing project…</option>
-           {brain.projects.map((project) => (
-            <option key={project.id} value={project.id}>{project.name}</option>
-           ))}
-          </SubToolboxSelect>
-          <SubToolboxInnerActionButton
-           label="Attach Selection to Project"
-           iconName="link"
-           tone="blue"
-           onClick={attachSelectionToExistingProject}
-           disabled={!selectedAssetIds.length || !existingProjectId}
-          />
-         </>
-        ) : null}
-        <StandardInput
-         ref={selectionProjectInputRef}
-         value={selectionProjectName}
-         onChange={(event) => setSelectionProjectName(event.target.value)}
-         placeholder="New project from selection"
-         aria-label="New project from selected assets"
-        />
-        <SubToolboxInnerActionButton
-         label="Create Project From Selection"
-         iconName="checklist"
-         tone="purple"
-         onClick={createProjectFromSelection}
-         disabled={!selectedAssetIds.length || !selectionProjectName.trim()}
-        />
-        <div className="border-t-[3px] border-current pt-3">
-         <div className="mb-2 text-xs font-black uppercase opacity-60">Collections</div>
-         <StandardInput
-          value={manualCollectionName}
-          onChange={(event) => setManualCollectionName(event.target.value)}
-          placeholder="New collection name"
-          aria-label="New Vault collection name"
-         />
-         <SubToolboxInnerActionButton
-          label="Create Collection"
-          iconName="collection"
-          tone="green"
-          onClick={createManualCollection}
-          disabled={!manualCollectionName.trim()}
-         />
-         {manualCollections.length ? (
-          <>
-           <SubToolboxSelect
-            value={targetCollectionId}
-            onChange={(event) => setTargetCollectionId(event.target.value)}
-            aria-label="Target Vault collection"
-           >
-            <option value="">Choose collection…</option>
-            {manualCollections.map((collection) => (
-             <option key={collection.id} value={collection.id}>{collection.name}</option>
-            ))}
-           </SubToolboxSelect>
-           <SubToolboxInnerActionButton
-            label="Add Selection to Collection"
-            iconName="collection"
-            tone="blue"
-            onClick={addSelectionToCollection}
-            disabled={!selectedAssetIds.length || !targetCollectionId}
-           />
-           {activeCollectionId && selectedAsset ? (
-            <SubToolboxInnerActionButton
-             label="Remove Selected Asset From Active Collection"
-             iconName="x"
-             tone="orange"
-             onClick={removeSelectedAssetFromActiveCollection}
-            />
-           ) : null}
-          </>
-         ) : null}
-        </div>
-        <SubToolboxInnerActionButton
-         label="Download Selection Manifest"
-         iconName="database"
-         tone="yellow"
-         onClick={exportSelectionManifest}
-         disabled={!selectedAssetIds.length}
-        />
-        <SubToolboxInnerActionButton
-         label="Toggle Favorite"
-         iconName="sparkles"
-         tone="orange"
-         onClick={toggleFavoriteSelection}
-         disabled={!selectedAssetIds.length}
-        />
-        {special === "archive" || special === "trash" ? (
-         <SubToolboxInnerActionButton
-          label="Restore Selection"
-          iconName="checklist"
-          tone="green"
-          onClick={restoreSelection}
-          disabled={!selectedAssetIds.length}
-         />
-        ) : (
-         <>
-          <SubToolboxInnerActionButton
-           label="Archive Selection"
-           iconName="archive"
-           tone="cyan"
-           onClick={archiveSelection}
-           disabled={!selectedAssetIds.length}
-          />
-          <SubToolboxInnerActionButton
-           label="Move to Trash"
-           iconName="eye-off"
-           tone="pink"
-           onClick={trashSelection}
-           disabled={!selectedAssetIds.length}
-          />
-         </>
-        )}
-        <SubToolboxInnerActionButton
-         label="Clear Selection"
-         iconName="x"
-         tone="cyan"
-         onClick={() => setSelectedAssetIds([])}
-         disabled={!selectedAssetIds.length}
-        />
-       </div>
-      </SubToolbox>
+
 
       <div ref={inspectorRef} tabIndex={-1}>
        <SubToolbox
@@ -3296,28 +3545,6 @@ const CreatorVaultOS: React.FC = () => {
            />
           </div>
          </div>
-         <div>
-          <div className="mb-2 text-xs font-black uppercase opacity-60">Send To</div>
-          {selectedToolTargets.length ? (
-           <div className="flex flex-wrap gap-2">
-            {selectedToolTargets.map((target) => (
-             <SubToolboxInnerActionButton
-              key={target.id}
-              label={target.label}
-              iconName="link"
-              tone="blue"
-              onClick={() => sendSelectedAssetToTool(target.id)}
-             />
-            ))}
-           </div>
-          ) : (
-           <SubToolboxStatePanel
-            level="l1"
-            state="empty"
-            message="No compatible ViewTube tools are registered for this asset type."
-           />
-          )}
-         </div>
          {selectedReadiness ? (
           <div>
            <div className="mb-2 text-xs font-black uppercase opacity-60">Project Readiness</div>
@@ -3476,23 +3703,6 @@ const CreatorVaultOS: React.FC = () => {
            ) : null}
           </div>
          ) : null}
-         <div>
-          <div className="mb-2 text-xs font-black uppercase opacity-60">Metadata Export</div>
-          <div className="grid grid-cols-2 gap-2">
-           <SubToolboxInnerActionButton
-            label="Export Metadata JSON"
-            iconName="database"
-            tone="cyan"
-            onClick={() => exportVaultMetadata([selectedAsset], "json")}
-           />
-           <SubToolboxInnerActionButton
-            label="Export Metadata CSV"
-            iconName="database"
-            tone="cyan"
-            onClick={() => exportVaultMetadata([selectedAsset], "csv")}
-           />
-          </div>
-         </div>
          <div>
           <div className="text-xs font-black uppercase opacity-60">Updated</div>
           <div className="text-sm font-bold">{new Date(selectedAsset.updatedAt).toLocaleString()}</div>

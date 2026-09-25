@@ -3,12 +3,15 @@ import type { VaultAssetKind } from "@/types"
 export type VaultWorkspaceViewMode = "grid" | "masonry" | "filmstrip" | "lineage" | "list" | "timeline"
 export type VaultWorkspaceSort = "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
 export type VaultWorkspaceDensity = "comfortable" | "compact"
-export type VaultAssetOperationsMode = "search" | "tags" | "import" | "batch" | "text" | "groups" | "tools"
+export type VaultAssetOperationsMode = "search" | "batch" | "groups" | "tools"
+export type VaultImportTagsMode = "tags" | "import"
 export type VaultWorkspaceModuleId =
  | "navigator"
  | "explorer"
  | "workspace-notes"
  | "asset-operations"
+ | "import-tags"
+ | "text-editor"
  | "asset-library"
  | "task-center"
  | "inspector"
@@ -18,6 +21,8 @@ export const DEFAULT_VAULT_MODULE_ORDER: VaultWorkspaceModuleId[] = [
  "explorer",
  "workspace-notes",
  "asset-operations",
+ "import-tags",
+ "text-editor",
  "asset-library",
  "task-center",
  "inspector",
@@ -42,6 +47,7 @@ export interface VaultWorkspaceState {
  filterMinBytesMb: string
  filterMaxBytesMb: string
  assetOperationsMode: VaultAssetOperationsMode
+ importTagsMode: VaultImportTagsMode
  viewMode: VaultWorkspaceViewMode
  density: VaultWorkspaceDensity
  arrangeMode: boolean
@@ -70,6 +76,7 @@ export const DEFAULT_VAULT_WORKSPACE_STATE: VaultWorkspaceState = {
  filterMinBytesMb: "",
  filterMaxBytesMb: "",
  assetOperationsMode: "search",
+ importTagsMode: "tags",
  viewMode: "grid",
  density: "comfortable",
  arrangeMode: false,
@@ -85,25 +92,53 @@ export const readVaultWorkspaceState = (): VaultWorkspaceState => {
   const raw = localStorage.getItem(STORAGE_KEY)
   if (!raw) return DEFAULT_VAULT_WORKSPACE_STATE
   const parsed = JSON.parse(raw) as Partial<VaultWorkspaceState>
-  const legacyOperations = new Set(["spectrum-tags", "import-station", "batch-processor"])
   const normalizeModules = (items: unknown[]): VaultWorkspaceModuleId[] => {
    const next: VaultWorkspaceModuleId[] = []
    for (const raw of items) {
     const id = String(raw)
-    const normalized = legacyOperations.has(id) ? "asset-operations" : id
+    const normalized = id === "spectrum-tags" || id === "import-station"
+     ? "import-tags"
+     : id === "batch-processor"
+      ? "asset-operations"
+      : id
     if (!DEFAULT_VAULT_MODULE_ORDER.includes(normalized as VaultWorkspaceModuleId)) continue
     if (!next.includes(normalized as VaultWorkspaceModuleId)) next.push(normalized as VaultWorkspaceModuleId)
    }
    return next
   }
+
   const rawVisible = Array.isArray(parsed.visibleModules) ? parsed.visibleModules : [...DEFAULT_VAULT_MODULE_ORDER]
-  const visibleModules = normalizeModules(rawVisible)
   const rawOrder = Array.isArray(parsed.moduleOrder) ? parsed.moduleOrder : []
-  const storedOrder = normalizeModules(rawOrder)
+  const migratedFromUnified = rawVisible.includes("asset-operations")
+   && !rawVisible.includes("import-tags")
+   && !rawVisible.includes("text-editor")
+  const visibleSeed = migratedFromUnified
+   ? [...rawVisible, "import-tags", "text-editor"]
+   : rawVisible
+  const orderSeed = migratedFromUnified
+   ? [...rawOrder, "import-tags", "text-editor"]
+   : rawOrder
+  const visibleModules = normalizeModules(visibleSeed)
+  const storedOrder = normalizeModules(orderSeed)
   const moduleOrder = [...storedOrder, ...DEFAULT_VAULT_MODULE_ORDER.filter((id) => !storedOrder.includes(id))]
+
+  const rawOperationsMode = String(parsed.assetOperationsMode || "")
+  const assetOperationsMode: VaultAssetOperationsMode = (
+   ["search", "batch", "groups", "tools"] as VaultAssetOperationsMode[]
+  ).includes(rawOperationsMode as VaultAssetOperationsMode)
+   ? rawOperationsMode as VaultAssetOperationsMode
+   : "search"
+  const rawImportTagsMode = String(parsed.importTagsMode || "")
+  const importTagsMode: VaultImportTagsMode = rawImportTagsMode === "import"
+   || rawOperationsMode === "import"
+   ? "import"
+   : "tags"
+
   return {
    ...DEFAULT_VAULT_WORKSPACE_STATE,
    ...parsed,
+   assetOperationsMode,
+   importTagsMode,
    visibleModules,
    moduleOrder,
   }
