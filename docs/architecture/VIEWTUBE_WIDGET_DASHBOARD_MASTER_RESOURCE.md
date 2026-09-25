@@ -119,12 +119,12 @@ Current `main` exposes **68 registered widget IDs** across system, core, analyti
 
 **Started:** 2026-09-25  
 **Current implementation phase:** Phase 2 dashboard controls + data-state hardening  
-**Latest implementation commit in this wave:** `7058c9c11c0b1357f256f075f8250791992d3002`
+**Latest implementation commit in this wave:** `21fa291c0661d44c5f54de74632d5e4edcd44a14`
 
 Implemented so far:
 - extracted `system-micro-stack` from the inline `WidgetRendererBase.tsx` branch;
 - created `src/views/dashboard/widgets/SettingsWidget.tsx` and `SettingsWidget.css`;
-- converted Settings to a lazy-loaded dedicated widget owner;
+- converted Settings to a lazy-loaded dedicated widget owner and removed the old Settings-only `WidgetShell` injection;
 - added DASHBOARD / DATA / AI / ACCOUNT pages;
 - preserved edit-mode, show-all, connect/sync, account, billing and user-guide actions;
 - added live registered/visible/hidden widget counts through the Dashboard control bridge;
@@ -140,7 +140,6 @@ Implemented so far:
 Still required before the Settings task is complete:
 - visually certify all supported size/height pairs;
 - add the final preview/disconnected treatment and stale/error status details;
-- add optional layout presets and guarded reset/export/import controls if they fit the compact widget;
 - verify the latest production build + focused contract run;
 - add desktop/mobile acceptance screenshots;
 - remove any now-unused legacy imports/classes discovered by static quality;
@@ -148,9 +147,9 @@ Still required before the Settings task is complete:
 
 ## 3. Settings widget redesign plan
 
-### Current problem
+### Current state
 
-The Settings widget (`system-micro-stack`) is still an inline branch in `WidgetRendererBase.tsx`. It mixes account state, last sync, AI model, plan, edit-mode visibility, “show all widgets,” sync, account, billing and user-guide navigation with direct inline styling and hard-coded colors. That no longer reflects the expanded Dashboard system.
+The Settings widget (`system-micro-stack`) has been extracted from `WidgetRendererBase.tsx` into the dedicated lazy module `src/views/dashboard/widgets/SettingsWidget.tsx`. Phase 1–2 now provide the four-page Dashboard Control Switchboard, live dashboard counts, presets, layout lock, visibility management, import/export/reset controls, data freshness states, AI status and account handoffs using canonical widget primitives. Remaining work is visual certification, richer stale/error detail where the data model supports it, acceptance screenshots and user-guide synchronization.
 
 ### Target identity: **Dashboard Control Switchboard**
 
