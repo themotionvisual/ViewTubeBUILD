@@ -1510,6 +1510,8 @@ const CreatorVaultOS: React.FC = () => {
          onValueChange={(value) => setSpecial(value as typeof special)}
          options={[
           { value: "active", label: "LIBRARY" },
+          { value: "recent", label: "RECENT" },
+          { value: "generated", label: "GENERATED" },
           { value: "inbox", label: "INBOX" },
           { value: "favorites", label: "FAVORITES" },
           { value: "archive", label: "ARCHIVE" },
