@@ -133,62 +133,64 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
               tone="primary"
             />
 
-            <div className="settings-switchboard-control-row">
-              <div>
-                <strong>DASHBOARD CONTROLS</strong>
-                <span>Show resize, hide and arrangement controls.</span>
+            <div className="settings-switchboard-control-grid">
+              <div className="settings-switchboard-control-row">
+                <div>
+                  <strong>DASHBOARD CONTROLS</strong>
+                  <span>Show resize, hide and arrangement controls.</span>
+                </div>
+                <WidgetToggleSwitch
+                  checked={Boolean(dashboardControls?.editMode)}
+                  onChange={() => dashboardControls?.setEditMode?.((previous) => !previous)}
+                  label="Dashboard controls"
+                  height={24}
+                  tone="primary"
+                />
               </div>
-              <WidgetToggleSwitch
-                checked={Boolean(dashboardControls?.editMode)}
-                onChange={() => dashboardControls?.setEditMode?.((previous) => !previous)}
-                label="Dashboard controls"
-                height={32}
-                tone="primary"
-              />
-            </div>
 
-            <div className="settings-switchboard-control-row">
-              <div>
-                <strong>LAYOUT LOCK</strong>
-                <span>Prevent accidental layout changes while keeping widget tools usable.</span>
+              <div className="settings-switchboard-control-row">
+                <div>
+                  <strong>LAYOUT LOCK</strong>
+                  <span>Prevent accidental layout changes while keeping widget tools usable.</span>
+                </div>
+                <WidgetToggleSwitch
+                  checked={Boolean(dashboardControls?.locked)}
+                  onChange={() => dashboardControls?.toggleLock?.()}
+                  label="Layout lock"
+                  height={24}
+                  tone="secondary"
+                />
               </div>
-              <WidgetToggleSwitch
-                checked={Boolean(dashboardControls?.locked)}
-                onChange={() => dashboardControls?.toggleLock?.()}
-                label="Layout lock"
-                height={32}
-                tone="secondary"
-              />
             </div>
 
             <div className="settings-switchboard-preset-grid" role="group" aria-label="Dashboard layout presets">
-              <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.applyPreset?.("focus")}>FOCUS</WidgetSizedButton>
-              <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.applyPreset?.("creation")}>CREATION</WidgetSizedButton>
-              <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.applyPreset?.("analytics")}>ANALYTICS</WidgetSizedButton>
-              <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.applyPreset?.("all")}>ALL</WidgetSizedButton>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => dashboardControls?.applyPreset?.("focus")}>FOCUS</WidgetSizedButton>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => dashboardControls?.applyPreset?.("creation")}>CREATION</WidgetSizedButton>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => dashboardControls?.applyPreset?.("analytics")}>ANALYTICS</WidgetSizedButton>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => dashboardControls?.applyPreset?.("all")}>ALL</WidgetSizedButton>
             </div>
 
             <div className="settings-switchboard-actions">
-              <WidgetSizedButton height={32} tone="primary" onClick={() => dashboardControls?.openPicker?.()}>
+              <WidgetSizedButton height={24} tone="primary" textFit="adaptive" onClick={() => dashboardControls?.openPicker?.()}>
                 MANAGE WIDGETS
               </WidgetSizedButton>
-              <WidgetSizedButton height={32} tone="secondary" disabled={!hidden} onClick={() => dashboardControls?.showAllWidgets?.()}>
+              <WidgetSizedButton height={24} tone="secondary" textFit="adaptive" disabled={!hidden} onClick={() => dashboardControls?.showAllWidgets?.()}>
                 SHOW ALL WIDGETS{hidden ? ` (${hidden})` : ""}
               </WidgetSizedButton>
-              <WidgetSizedButton height={32} tone="default" onClick={() => onNavigate("/settings?panel=widgets")}>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => onNavigate("/settings?panel=widgets")}>
                 FULL SETTINGS
               </WidgetSizedButton>
             </div>
 
             <div className="settings-switchboard-actions">
-              <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.handleExport?.()}>EXPORT</WidgetSizedButton>
-              <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.handleImportClick?.()}>IMPORT</WidgetSizedButton>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => dashboardControls?.handleExport?.()}>EXPORT</WidgetSizedButton>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => dashboardControls?.handleImportClick?.()}>IMPORT</WidgetSizedButton>
               {!resetArmed ? (
-                <WidgetSizedButton height={32} tone="secondary" onClick={() => setResetArmed(true)}>RESET LAYOUT</WidgetSizedButton>
+                <WidgetSizedButton height={24} tone="secondary" textFit="adaptive" onClick={() => setResetArmed(true)}>RESET LAYOUT</WidgetSizedButton>
               ) : (
                 <div className="settings-switchboard-reset-confirm">
-                  <WidgetSizedButton height={32} tone="secondary" onClick={() => { dashboardControls?.resetLayout?.(); setResetArmed(false) }}>CONFIRM RESET</WidgetSizedButton>
-                  <WidgetSizedButton height={32} tone="default" onClick={() => setResetArmed(false)}>CANCEL RESET</WidgetSizedButton>
+                  <WidgetSizedButton height={24} tone="secondary" textFit="adaptive" onClick={() => { dashboardControls?.resetLayout?.(); setResetArmed(false) }}>CONFIRM RESET</WidgetSizedButton>
+                  <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => setResetArmed(false)}>CANCEL RESET</WidgetSizedButton>
                 </div>
               )}
             </div>
