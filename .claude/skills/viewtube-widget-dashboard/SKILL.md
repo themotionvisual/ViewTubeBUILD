@@ -73,6 +73,14 @@ Treat the repository as the source of truth. Preserve working behavior while red
 - Overflow belongs in an explicit `WidgetScrollArea`; headers and titles do not scroll.
 - Data visuals include text labels or patterns; color is never the sole carrier of meaning.
 
+## Edge, overflow, and header-control contract
+
+- Distinguish inset, full-bleed, and shadow-safe content zones. Do not use one-sided shell padding or hidden right gutters to protect shadows.
+- Dividers, gradient bands, horizontal rails, callout strips, and full-width footers must meet the true interior module edge through canonical full-bleed primitives/utilities.
+- Focus outlines, glows, and colored shadows must remain visible on both left and right edges.
+- Header toggles and header actions must remain reachable in portrait; allow two-line labels before clipping or ellipsis.
+- Use `WidgetHeaderAction` for header-mounted actions and `WidgetHeaderToggle` only for mode selection.
+- Widget interface copy must not use emoji characters as icons. Use the canonical icon component set.
 ## Verification and Handoff
 
 Run the narrowest relevant checks, then the dashboard contract suite and production build for structural work:
