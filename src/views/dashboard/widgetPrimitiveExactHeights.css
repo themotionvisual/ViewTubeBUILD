@@ -43,16 +43,19 @@
 
   /* Required header controls survive portrait. Nonessential extras may hide,
      but a primary toggle/action never disappears to make room for the title. */
-  .vt-widget-header .header-extra:not(:has(.widget-header-toggle)) { display:none !important; }
-  .vt-widget-header .header-extra:has(.widget-header-toggle) {
+  .vt-widget-header .header-extra:not(:has(.widget-header-toggle)):not(:has(.widget-header-action)) { display:none !important; }
+  .vt-widget-header .header-extra:has(.widget-header-toggle),
+  .vt-widget-header .header-extra:has(.widget-header-action) {
     display:flex !important;
     flex:1 1 132px !important;
-    min-width:118px;
+    min-width:72px;
     max-width:50%;
     overflow:visible;
     justify-content:center !important;
   }
-  .vt-widget-header:has(.header-extra .widget-header-toggle) .left {
+  .vt-widget-header .header-extra:has(.widget-header-toggle) { min-width:118px; }
+  .vt-widget-header:has(.header-extra .widget-header-toggle) .left,
+  .vt-widget-header:has(.header-extra .widget-header-action) .left {
     flex:1 1 auto;
     min-width:0;
     max-width:48%;
