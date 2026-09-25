@@ -1584,6 +1584,7 @@ const CreatorVaultOS: React.FC = () => {
          options={[
           { value: "grid", label: "GRID" },
           { value: "masonry", label: "MASONRY" },
+          { value: "filmstrip", label: "FILMSTRIP" },
           { value: "list", label: "LIST" },
           { value: "timeline", label: "TIMELINE" },
          ]}
@@ -2133,7 +2134,54 @@ const CreatorVaultOS: React.FC = () => {
          </div>
         ) : null}
         {visibleAssets.length ? (
-         viewMode === "list" ? (
+         viewMode === "filmstrip" ? (
+          <div>
+           <div className="mb-2 text-xs font-black uppercase opacity-60">Vault Filmstrip</div>
+           <div className="flex gap-2 overflow-x-auto pb-3">
+            {visibleAssets.map((asset) => {
+             const selected = selectedAssetIds.includes(asset.id)
+             return (
+              <button
+               key={asset.id}
+               type="button"
+               aria-pressed={selected}
+               onClick={(event) => {
+                const next = resolveVaultSelection({
+                 visibleIds: visibleAssets.map((item) => item.id),
+                 selectedIds: selectedAssetIds,
+                 clickedId: asset.id,
+                 nextSelected: !selected,
+                 anchorId: selectionAnchorId,
+                 shiftKey: event.shiftKey,
+                })
+                setSelectedAssetIds(next.selectedIds)
+                setSelectionAnchorId(next.anchorId)
+               }}
+               className={`w-44 shrink-0 border-[3px] border-current p-1 text-left ${selected ? "outline outline-[3px] outline-offset-2" : ""}`}
+              >
+               <div className="aspect-video overflow-hidden border-[2px] border-current">
+                {asset.previewUrl || asset.url ? (
+                 <img
+                  src={asset.previewUrl || asset.url || undefined}
+                  alt=""
+                  className="h-full w-full object-cover"
+                 />
+                ) : (
+                 <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
+                )}
+               </div>
+               <div className="mt-1 truncate text-[11px] font-black uppercase" title={asset.name}>
+                {asset.name}
+               </div>
+               <div className="truncate text-[9px] font-bold uppercase opacity-60">
+                {asset.kind} · {asset.projectName || "UNASSIGNED"}
+               </div>
+              </button>
+             )
+            })}
+           </div>
+          </div>
+         ) : viewMode === "list" ? (
           <div className="overflow-x-auto">
            <div className="min-w-[1080px]">
             <SubToolboxDataTable
