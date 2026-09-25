@@ -364,13 +364,19 @@ A widget-specific mobile fix may not weaken a shared primitive/shell guarantee. 
 
 On phones:
 
-- outer widget is full available row width;
+- outer widget is full available row width with visually equal left/right gutters;
 - persisted desktop width remains stored;
 - deterministic height remains selected;
 - no horizontal page overflow;
 - title stays full-size and may wrap;
-- primary header toggles remain reachable;
-- touch interaction cannot depend on hover.
+- primary header toggles remain reachable and their labels may wrap to two lines rather than clip;
+- touch interaction cannot depend on hover;
+- do not reserve invisible scrollbar gutters when the custom scroll rail is hidden;
+- preserve symmetric clearance for component shadows/glows instead of clipping them at an interior edge;
+- prefer dense 2-column or 3-column control grids over long vertical stacks when labels remain readable;
+- prefer 24px compact controls for secondary mobile actions; use 32/38px only when the action hierarchy or touch geometry requires them;
+- full-bleed dividers, gradient bands and emphasis panels must reach the same usable edge on both sides;
+- important labels and supporting text wrap before they ellipsize; ellipsis is an exception, not the default.
 
 Portrait and landscape must both be verified because they stress width and height differently.
 
