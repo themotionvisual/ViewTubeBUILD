@@ -76,8 +76,8 @@
 
 .daily-oracle-v2__source-strip > span:nth-child(2) {
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-overflow:clip;
+  white-space:normal;
 }
 
 .daily-oracle-v2__compass-section {
@@ -156,8 +156,8 @@
 .daily-oracle-v2__primary > small {
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-overflow:clip;
+  white-space:normal;
   font-size: clamp(8px, 1.15cqi, 9px);
   font-weight: 900;
   line-height: 1;
@@ -386,8 +386,8 @@
 .daily-oracle-v2__goal-strip strong {
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-overflow:clip;
+  white-space:normal;
   font-size: clamp(9px, 1.35cqi, 11px);
   font-weight: 900;
   line-height: 1;
@@ -1016,4 +1016,16 @@
   .daily-oracle-v2__focus-console-task{
     grid-column:auto;
   }
+}
+
+.daily-oracle-v2__source-strip,
+.daily-oracle-v2__footer {
+  margin-inline: calc(-1 * var(--widget-content-inset));
+  width: auto;
+}
+.daily-oracle-v2__source-strip > span:nth-child(2),
+.daily-oracle-v2__primary > small {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
