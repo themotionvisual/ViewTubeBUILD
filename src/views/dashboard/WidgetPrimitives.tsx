@@ -489,6 +489,16 @@ export const WidgetChoice: React.FC<{
   </label>
 )
 
+export const WidgetHeaderActionButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  icon?: React.ReactNode
+  label: React.ReactNode
+}> = ({ icon, label, className = "", type = "button", ...props }) => (
+  <button type={type} className={`widget-header-action ${className}`.trim()} {...props}>
+    {icon ? <span className="widget-header-action-icon" aria-hidden="true">{icon}</span> : null}
+    <span className="widget-header-action-label">{label}</span>
+  </button>
+)
+
 export const WidgetHeaderToggle = <T extends string>({
   label,
   value,
