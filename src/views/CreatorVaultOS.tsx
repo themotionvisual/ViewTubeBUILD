@@ -426,6 +426,14 @@ const CreatorVaultOS: React.FC = () => {
   setRefreshTick((value) => value + 1)
  }
 
+ const replaceAssetPreview = async (asset: VaultAsset, file: File | null) => {
+  if (!file) return
+  const previewUrl = await extractVaultImagePreview(file)
+  if (!previewUrl) return
+  updateVaultAsset(asset.id, { previewUrl })
+  setRefreshTick((value) => value + 1)
+ }
+
  const updateAssetNotes = (asset: VaultAsset, notes: string) => {
   if (String(asset.metadata?.notes || "") === notes) return
   updateVaultAsset(asset.id, {
@@ -912,6 +920,18 @@ const CreatorVaultOS: React.FC = () => {
                 ? `${new Date(asset.createdAt).toLocaleString()} · ${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`
                 : `${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`}
               </div>
+              <SubToolboxInput
+               type="file"
+               accept="image/*"
+               aria-label={`Replace preview for ${asset.name}`}
+               title="Replace Preview"
+               onChange={(event) => {
+                const file = event.currentTarget.files?.[0] || null
+                void replaceAssetPreview(asset, file)
+                event.currentTarget.value = ""
+               }}
+              />
+              <span className="text-[10px] font-black uppercase opacity-60">Replace Preview</span>
               <SubToolboxTextArea
                height="compact"
                defaultValue={String(asset.metadata?.notes || "")}
