@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react"
 import {
   ArrowRight,
+  ExternalLink,
   Award,
   BarChart3,
   Bell,
@@ -35,6 +36,7 @@ import {
   WidgetDisclosure,
   WidgetDropzone,
   WidgetFooter,
+  WidgetHeaderActionButton,
   WidgetHeaderStepper,
   WidgetHeaderToggle,
   WidgetMediaUploadAction,
@@ -740,6 +742,26 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   }
                 >
                   <p className="text-[9px] font-bold uppercase opacity-65">The canonical header stepper becomes the time-window controller used by an analytics widget.</p>
+                </WidgetModuleFrame>
+
+                <WidgetModuleFrame
+                  header={
+                    <WidgetModuleHeader
+                      icon={<Sparkles />}
+                      title="Header Action"
+                      subtitle="Single destination"
+                      controls={
+                        <WidgetHeaderActionButton
+                          icon={<ExternalLink />}
+                          label="Studio"
+                          onClick={() => undefined}
+                          aria-label="Open Studio example"
+                        />
+                      }
+                    />
+                  }
+                >
+                  <p className="text-[9px] font-bold uppercase opacity-65">Canonical header action for one destination or handoff; use instead of emoji links or ad-hoc header buttons.</p>
                 </WidgetModuleFrame>
 
                 <WidgetModuleFrame
