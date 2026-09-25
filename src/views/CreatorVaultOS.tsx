@@ -282,6 +282,7 @@ const CreatorVaultOS: React.FC = () => {
  const [explorerProject, setExplorerProject] = useState<"all" | "unassigned" | string>("all")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
  const selectionProjectInputRef = useRef<HTMLInputElement | null>(null)
+ const assetLibraryRef = useRef<HTMLDivElement | null>(null)
  const inspectorRef = useRef<HTMLDivElement | null>(null)
 
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
@@ -2505,6 +2506,53 @@ const CreatorVaultOS: React.FC = () => {
             message="Select an asset to reveal compatible ViewTube tools and handoff destinations."
            />
           )}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+           <SubToolboxInnerActionButton
+            label="Open Quick Look"
+            iconName="search"
+            tone="cyan"
+            onClick={() => {
+             setQuickLookOpen(true)
+             inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }}
+            disabled={!selectedAsset}
+           />
+           <SubToolboxInnerActionButton
+            label="Compare Selected Pair"
+            iconName="layers"
+            tone="purple"
+            onClick={() => assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            disabled={selectedAssetIds.length !== 2}
+           />
+           <SubToolboxInnerActionButton
+            label="Open Filmstrip"
+            iconName="layers"
+            tone="yellow"
+            onClick={() => {
+             setViewMode("filmstrip")
+             assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }}
+           />
+           <SubToolboxInnerActionButton
+            label="Open Lineage"
+            iconName="layers"
+            tone="orange"
+            onClick={() => {
+             setViewMode("lineage")
+             assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }}
+            disabled={!selectedAsset}
+           />
+          </div>
+          <SubToolboxInnerActionButton
+           label="Copy Asset ID"
+           iconName="database"
+           tone="cyan"
+           onClick={() => {
+            if (selectedAsset && navigator.clipboard?.writeText) void navigator.clipboard.writeText(selectedAsset.id)
+           }}
+           disabled={!selectedAsset}
+          />
           <SubToolboxInnerActionButton
            label="Open Selected Asset Inspector"
            iconName="search"
@@ -2546,6 +2594,7 @@ const CreatorVaultOS: React.FC = () => {
        </div>
       </SubToolbox>
 
+      <div ref={assetLibraryRef} tabIndex={-1}>
       <SubToolbox
        style={moduleStyle("asset-library" as VaultWorkspaceModuleId)}
        title="Asset Library"
@@ -2940,6 +2989,7 @@ const CreatorVaultOS: React.FC = () => {
         )}
        </div>
       </SubToolbox>
+      </div>
 
 
      </div>
