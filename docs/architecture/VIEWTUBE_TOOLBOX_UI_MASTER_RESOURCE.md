@@ -2,7 +2,7 @@
 
 **Status:** Canonical living design-system authority  
 **Updated:** 2026-09-25  
-**Last audited main:** `eb4097e2749d69414ec18a22470cd0aa16cbb859`  
+**Last audited main:** `3d9bb8fe26c4cc1419695715bd9c86ac3243b390`  
 **Canonical owner / concern:** Production Toolbox/Subtoolbox shell hierarchy, Studio control/layout rules, responsive shell behavior, shared state/motion/accessibility rules, certification and migration policy.  
 **Executable authority:** `src/components/subtoolbox/tokens.ts`, `src/components/Toolbox.tsx`, `src/styles/toolbox-system.css`, `src/styles/subtoolbox-system.css`, and their contract tests.  
 **Related scoped authority:** `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md` owns Component Library/catalog presentation and primitive-correction notes. Dashboard widgets and Analytics Data Visuals retain separate registries/contracts.  
@@ -14,7 +14,7 @@ Append one concise row for every system-level update. Use Notes for conflicts, v
 
 | Date / time | Conversation | AI / tool | Change | Repo evidence | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2026-09-25 | Mobile Render preview correction audit | GPT-5.6 Sol + GitHub + iPhone screenshots | Re-opened Toolbox spacing, dropdown state, collapse icon, Vault assets, palette order and Component Library contracts | PR #432 merged; main `eb4097e2` | OPEN CORRECTION WAVE | Keep PR #432 header-action isolation, 16px mobile inputs, VisualViewport handling and paint-safe spacing intent; restore the established four-arrow collapse icon. |
+| 2026-09-25 | Mobile Render preview correction audit | GPT-5.6 Sol + GitHub + iPhone screenshots | Re-opened Toolbox spacing, dropdown state, collapse icon, Vault assets, palette order and Component Library contracts | PR #432 merged; main `3d9bb8fe` | OPEN CORRECTION WAVE | Keep PR #432 header-action isolation, 16px mobile inputs, VisualViewport handling and paint-safe spacing intent; restore the established four-arrow collapse icon. |
 | 2026-09-24 | Documentation authority consolidation | GPT-5.6 Sol + GitHub | Re-audited tokens/CSS/tests, separated shell vs control ladders, and demoted stale Studio migration geometry | `988098840050f4b658a266e1a7d6fe1c4d939c81` | CURRENT CODE AUTHORITY / VISUAL CERTIFICATION STILL REQUIRED | Desktop shell: T0=80/26, T1=56/20, T2=48/18, T3=32/12. Mobile shell: Toolbox=56, SubToolbox=44 with desktop title sizes preserved. |
 | 2026-09-22 | Toolbox geometry authority reconciliation | GPT-5.6 Sol + GitHub | Reconciled production shell geometry with the accepted Component Library authority and removed its private shell override | `fix/toolbox-geometry-authority-2026-09-22` | IMPLEMENTED ON BRANCH / VISUAL CERTIFICATION REQUIRED | Current authority: T0=80px/26px; T1=56px/20px; T2=48px/18px; T3=32px/12px. Historical 56/44 implementation remains traceability only. |
 | 2026-09-14 | Toolbox UI master handoff / 56-44 unification | GPT-5.6 Sol + GitHub | Added reusable handoff protocol and reconciled then-current shell authority | PR #207 -> `844a708f`; PR #211 -> `400269c5`; PR #215 -> `b2e4a534` | SUPERSEDED BY 2026-09-22 GEOMETRY AUTHORITY | Historical T0=56px/28px; T1=44px/22px; separate compact shell authority removed. |
