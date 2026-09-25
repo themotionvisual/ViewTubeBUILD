@@ -398,47 +398,83 @@ const CreatorVaultOS: React.FC = () => {
   () => resolveVaultComparePair({ selectedIds: selectedAssetIds, assets: allAssets }),
   [selectedAssetIds, allAssets],
  )
- const finderListRows = useMemo(() => visibleAssets.map((asset) => ({
-  select: (
-   <input
-    type="checkbox"
-    aria-label={`Select ${asset.name}`}
-    checked={selectedAssetIds.includes(asset.id)}
-    onChange={(event) => {
-     const checked = event.target.checked
-     setSelectedAssetIds((current) => checked
-      ? Array.from(new Set([...current, asset.id]))
-      : current.filter((id) => id !== asset.id))
-     setSelectionAnchorId(asset.id)
-    }}
-   />
-  ),
-  preview: (
-   <div className="h-10 w-16 overflow-hidden border-[2px] border-current">
-    {asset.previewUrl || asset.url ? (
-     <img src={asset.previewUrl || asset.url || undefined} alt="" className="h-full w-full object-cover" />
-    ) : (
-     <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
-    )}
-   </div>
-  ),
-  name: <strong className="block max-w-[220px] truncate" title={asset.name}>{asset.name}</strong>,
-  type: asset.kind.toUpperCase(),
-  project: asset.projectName || "UNASSIGNED",
-  source: asset.source.toUpperCase(),
-  dimensions: typeof asset.metadata?.width === "number" && typeof asset.metadata?.height === "number"
-   ? `${asset.metadata.width}×${asset.metadata.height}`
-   : "—",
-  duration: typeof asset.metadata?.durationSeconds === "number"
-   ? `${Number(asset.metadata.durationSeconds).toFixed(1)}s`
-   : "—",
-  size: typeof asset.metadata?.byteSize === "number"
-   ? formatVaultBytes(Number(asset.metadata.byteSize))
-   : "—",
-  lifecycle: String(asset.metadata?.lifecycle || "DRAFT"),
-  updated: new Date(asset.updatedAt).toLocaleDateString(),
-  assetId: asset.id,
- })), [visibleAssets, selectedAssetIds])
+ const finderListRows = useMemo(() => visibleAssets.map((asset) => {
+  const customValues = asset.metadata?.customFields
+  const customFieldValues = customValues && typeof customValues === "object" && !Array.isArray(customValues)
+   ? customValues as Record<string, unknown>
+   : {}
+  const schemaValues = Object.fromEntries(customFields.map((field) => {
+   const value = customFieldValues[field.id]
+   const display = value == null || value === ""
+    ? "—"
+    : typeof value === "boolean"
+     ? (value ? "TRUE" : "FALSE")
+     : String(value)
+   return [`custom_${field.id}`, display]
+  }))
+
+  return {
+   select: (
+    <input
+     type="checkbox"
+     aria-label={`Select ${asset.name}`}
+     checked={selectedAssetIds.includes(asset.id)}
+     onChange={(event) => {
+      const checked = event.target.checked
+      setSelectedAssetIds((current) => checked
+       ? Array.from(new Set([...current, asset.id]))
+       : current.filter((id) => id !== asset.id))
+      setSelectionAnchorId(asset.id)
+     }}
+    />
+   ),
+   preview: (
+    <div className="h-10 w-16 overflow-hidden border-[2px] border-current">
+     {asset.previewUrl || asset.url ? (
+      <img src={asset.previewUrl || asset.url || undefined} alt="" className="h-full w-full object-cover" />
+     ) : (
+      <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
+     )}
+    </div>
+   ),
+   name: <strong className="block max-w-[220px] truncate" title={asset.name}>{asset.name}</strong>,
+   type: asset.kind.toUpperCase(),
+   project: asset.projectName || "UNASSIGNED",
+   source: asset.source.toUpperCase(),
+   dimensions: typeof asset.metadata?.width === "number" && typeof asset.metadata?.height === "number"
+    ? `${asset.metadata.width}×${asset.metadata.height}`
+    : "—",
+   duration: typeof asset.metadata?.durationSeconds === "number"
+    ? `${Number(asset.metadata.durationSeconds).toFixed(1)}s`
+    : "—",
+   size: typeof asset.metadata?.byteSize === "number"
+    ? formatVaultBytes(Number(asset.metadata.byteSize))
+    : "—",
+   lifecycle: String(asset.metadata?.lifecycle || "DRAFT"),
+   updated: new Date(asset.updatedAt).toLocaleDateString(),
+   ...schemaValues,
+   assetId: asset.id,
+  }
+ }), [visibleAssets, selectedAssetIds, customFields])
+
+ const finderListColumns = useMemo(() => [
+  { key: "select", label: "" },
+  { key: "preview", label: "PREVIEW" },
+  { key: "name", label: "NAME" },
+  { key: "type", label: "TYPE" },
+  { key: "project", label: "PROJECT" },
+  { key: "source", label: "SOURCE" },
+  { key: "dimensions", label: "DIMENSIONS" },
+  { key: "duration", label: "DURATION" },
+  { key: "size", label: "SIZE" },
+  { key: "lifecycle", label: "LIFECYCLE" },
+  ...customFields.map((field) => ({
+   key: `custom_${field.id}`,
+   label: field.name.toUpperCase(),
+  })),
+  { key: "updated", label: "UPDATED" },
+ ], [customFields])
+
  const selectedVersionStack = useMemo(
   () => selectedAsset ? getVaultAssetVersionStack(selectedAsset.id) : [],
   [selectedAsset, refreshTick],
@@ -2013,19 +2049,7 @@ const CreatorVaultOS: React.FC = () => {
            <div className="min-w-[1080px]">
             <SubToolboxDataTable
              level="l1"
-             columns={[
-              { key: "select", label: "" },
-              { key: "preview", label: "PREVIEW" },
-              { key: "name", label: "NAME" },
-              { key: "type", label: "TYPE" },
-              { key: "project", label: "PROJECT" },
-              { key: "source", label: "SOURCE" },
-              { key: "dimensions", label: "DIMENSIONS" },
-              { key: "duration", label: "DURATION" },
-              { key: "size", label: "SIZE" },
-              { key: "lifecycle", label: "LIFECYCLE" },
-              { key: "updated", label: "UPDATED" },
-             ]}
+             columns={finderListColumns}
              rows={finderListRows}
              getRowKey={(row) => String(row.assetId)}
             />
