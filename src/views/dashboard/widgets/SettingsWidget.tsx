@@ -208,7 +208,7 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
             </div>
 
             <div className="settings-switchboard-actions">
-              <WidgetSizedButton height={38} tone="primary" onClick={() => onNavigate("/brain")}>
+              <WidgetSizedButton height={38} tone="primary" onClick={() => onNavigate("/ai-brain")}>
                 OPEN BRAIN HUB
               </WidgetSizedButton>
               <WidgetSizedButton height={38} tone="default" onClick={() => onNavigate("/settings?panel=ai")}>
