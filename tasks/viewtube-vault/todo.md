@@ -43,6 +43,9 @@
 - [x] RH-B035 Two-asset Compare Mode with mobile horizontal comparison.
 - [x] RH-B036 Detailed Finder-style LIST with canonical data-table primitive.
 - [x] RH-B037 Structured metadata filters for lifecycle/MIME/dimensions/duration/file size.
+- [x] RH-B038 Typed custom fields / schema metadata in Inspector.
+- [x] RH-B039 Archive/Trash recovery + guarded permanent delete.
+- [x] RH-B040 Exact-duplicate review action resolves to existing canonical asset.
 
 ## Lane C — intake jobs
 - [x] RH-C040 Global workspace drag/drop.
@@ -55,7 +58,7 @@
 - [x] RH-C047 Content hash/duplicate preflight.
 - [x] RH-C048 EXIF metadata task.
 - [ ] RH-C049 Vision/suggested-tag task.
-- [ ] RH-C050 Transcript task. (Real YouTube-linked transcript acquisition + retry complete; arbitrary local-file speech-to-text backend still pending)
+- [ ] RH-C050 Transcript task. (YouTube-linked acquisition + durable retry complete; arbitrary local-file speech-to-text backend still pending)
 - [ ] RH-C051 Proxy derivative task.
 - [x] RH-C052 Background task center/retry/error.
 
