@@ -5,7 +5,7 @@ import type { DashboardData } from "../useDashboardData"
 import { WidgetShell } from "../WidgetShell"
 import {
   WidgetBadge,
-  WidgetHeaderToggle,
+  WidgetHeaderStepper,
   WidgetProgressBar,
   WidgetScrollArea,
   WidgetSizedButton,
@@ -99,12 +99,13 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
     [total, visible],
   )
 
+  const pageIndex = Math.max(0, SETTINGS_PAGES.findIndex((item) => item.id === page))
   const headerContent = (
-    <WidgetHeaderToggle
+    <WidgetHeaderStepper
       label="Settings control room page"
-      value={page}
-      items={SETTINGS_PAGES}
-      onChange={setPage}
+      value={SETTINGS_PAGES[pageIndex]?.label ?? "DASHBOARD"}
+      onPrevious={() => setPage(SETTINGS_PAGES[(pageIndex + SETTINGS_PAGES.length - 1) % SETTINGS_PAGES.length].id)}
+      onNext={() => setPage(SETTINGS_PAGES[(pageIndex + 1) % SETTINGS_PAGES.length].id)}
     />
   )
 
