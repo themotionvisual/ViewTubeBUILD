@@ -23,6 +23,22 @@ At phone widths below 768px every `.vt-dash-cell` renders across the complete 24
 
 All nested grid/flex children must be shrinkable: use `min-width: 0`; for flexible tracks use `minmax(0, 1fr)` or `minmax(min(100%, <preferred-min>), 1fr)` when a preferred minimum is required. Never hide horizontal overflow as a substitute for fixing a track that cannot shrink.
 
+## Mobile content-edge zones
+
+Every widget must support three explicit content zones instead of solving edge problems with one-off margins:
+
+1. **Inset content** — forms, cards, prose and ordinary controls use the canonical body inset.
+2. **Full bleed** — dividers, gradient bands, horizontal rails, callout strips and edge-to-edge footers extend to the true interior module border.
+3. **Shadow safe** — focused inputs, raised controls and shadowed cards receive equal clearance on both sides without reserving a hidden white lane.
+
+Rules:
+
+- Never reserve hidden right-side space to protect scrollbars or shadows on touch layouts.
+- Never clip full-bleed content with an intermediate `overflow-x: hidden` wrapper.
+- Use `WidgetSection edge="full"`, `WidgetDivider edge="full"`, `WidgetFooter`, `vt-widget-full-bleed`, or the shared shadow-safe utility before adding widget-local negative margins.
+- Horizontal rails must use the full usable widget width and place their visual padding inside the scrolling content.
+- Header toggles/actions must remain reachable in portrait; labels may wrap to two lines and must wrap before clipping.
+- Widget UI uses icon components, not emoji characters, for interface affordances.
 ## Height contract
 
 Height buckets are deterministic outer geometry at a given breakpoint:
