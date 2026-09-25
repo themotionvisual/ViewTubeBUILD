@@ -39,6 +39,9 @@ import {
 import {
  readVaultWorkspaceState,
  writeVaultWorkspaceState,
+ DEFAULT_VAULT_MODULE_ORDER,
+ type VaultWorkspaceDensity,
+ type VaultWorkspaceModuleId,
  type VaultWorkspaceSort,
  type VaultWorkspaceViewMode,
 } from "../services/vaultWorkspaceState"
@@ -95,6 +98,18 @@ import {
 } from "../services/vaultCaptions"
 import type { VaultAsset, VaultAssetKind } from "../types"
 
+const VAULT_MODULE_LABELS: Record<VaultWorkspaceModuleId, string> = {
+ navigator: "Navigator",
+ explorer: "Explorer",
+ "workspace-notes": "Workspace Notes",
+ "spectrum-tags": "Spectrum Tags",
+ "asset-library": "Asset Library",
+ "import-station": "Import Station",
+ "task-center": "Task Center",
+ "batch-processor": "Batch Processor",
+ inspector: "Inspector",
+}
+
 const CORE_TAGS = [
  "B-Roll",
  "Brand",
@@ -132,6 +147,10 @@ const CreatorVaultOS: React.FC = () => {
  const [sort, setSort] = useState<VaultWorkspaceSort>(initialWorkspace.sort)
  const [special, setSpecial] = useState(initialWorkspace.special)
  const [viewMode, setViewMode] = useState<VaultWorkspaceViewMode>(initialWorkspace.viewMode)
+ const [density, setDensity] = useState<VaultWorkspaceDensity>(initialWorkspace.density)
+ const [arrangeMode, setArrangeMode] = useState(initialWorkspace.arrangeMode)
+ const [visibleModules, setVisibleModules] = useState<VaultWorkspaceModuleId[]>(initialWorkspace.visibleModules)
+ const [moduleOrder, setModuleOrder] = useState<VaultWorkspaceModuleId[]>(initialWorkspace.moduleOrder)
  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([])
  const [selectionAnchorId, setSelectionAnchorId] = useState<string | null>(null)
  const selectionShiftRef = useRef(false)
@@ -190,8 +209,12 @@ const CreatorVaultOS: React.FC = () => {
    sort,
    special,
    viewMode,
+   density,
+   arrangeMode,
+   visibleModules,
+   moduleOrder,
   })
- }, [query, selectedTag, filterKind, source, sort, special, viewMode])
+ }, [query, selectedTag, filterKind, source, sort, special, viewMode, density, arrangeMode, visibleModules, moduleOrder])
 
  const selectedAsset = useMemo(
   () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
@@ -451,6 +474,32 @@ const CreatorVaultOS: React.FC = () => {
   setBatchPrefix("")
   setRefreshTick((value) => value + 1)
  }
+
+ const isModuleVisible = (id: VaultWorkspaceModuleId) => visibleModules.includes(id)
+
+ const toggleModuleVisibility = (id: VaultWorkspaceModuleId) => {
+  setVisibleModules((current) => current.includes(id)
+   ? current.filter((item) => item !== id)
+   : [...current, id])
+ }
+
+ const moveModule = (id: VaultWorkspaceModuleId, direction: -1 | 1) => {
+  setModuleOrder((current) => {
+   const normalized = [...current, ...DEFAULT_VAULT_MODULE_ORDER.filter((item) => !current.includes(item))]
+   const index = normalized.indexOf(id)
+   const target = index + direction
+   if (index < 0 || target < 0 || target >= normalized.length) return normalized
+   const next = [...normalized]
+   const [item] = next.splice(index, 1)
+   next.splice(target, 0, item)
+   return next
+  })
+ }
+
+ const moduleStyle = (id: VaultWorkspaceModuleId): React.CSSProperties => ({
+  order: moduleOrder.indexOf(id),
+  display: isModuleVisible(id) ? undefined : "none",
+ })
 
  const retryTask = (taskId: string) => {
   const task = retryVaultTask(taskId)
@@ -749,7 +798,9 @@ const CreatorVaultOS: React.FC = () => {
  }
 
  return (
-  <main className="mx-auto flex w-full max-w-[1800px] flex-col gap-4 p-3 sm:p-4 lg:p-6">
+  <main className={density === "compact"
+   ? "mx-auto flex w-full max-w-[1800px] flex-col gap-2 p-2 sm:p-3 lg:p-4"
+   : "mx-auto flex w-full max-w-[1800px] flex-col gap-4 p-3 sm:p-4 lg:p-6"}>
    <Toolbox
     title="ViewTube Vault"
     subtitle="Canonical creator assets, intake, organization, inspection, and cross-tool reuse."
@@ -760,9 +811,68 @@ const CreatorVaultOS: React.FC = () => {
     persistenceId="creator-vault-production"
     contentClassName="p-3 sm:p-4"
    >
-    <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(220px,0.72fr)_minmax(0,2.1fr)_minmax(260px,0.9fr)]">
+    <SubToolbox
+     title="Workspace Controls"
+     subtitle="Density, module visibility, and Arrange Mode"
+     icon={<Filter />}
+     paletteIndex={5}
+     isOpenInitial={false}
+     persistenceId="vault-workspace-controls"
+    >
+     <div className="flex flex-col gap-3">
+      <SubToolboxSegmentedToggle
+       level="l1"
+       ariaLabel="Vault workspace density"
+       value={density}
+       onValueChange={(value) => setDensity(value as VaultWorkspaceDensity)}
+       options={[
+        { value: "comfortable", label: "COMFORTABLE" },
+        { value: "compact", label: "COMPACT" },
+       ]}
+      />
+      <SubToolboxInnerActionButton
+       label={arrangeMode ? "Exit Arrange Mode" : "Enter Arrange Mode"}
+       iconName="layers"
+       tone={arrangeMode ? "pink" : "cyan"}
+       onClick={() => setArrangeMode((current) => !current)}
+      />
+      <div className="flex flex-col gap-2">
+       {DEFAULT_VAULT_MODULE_ORDER.map((id) => (
+        <div key={id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+         <SubToolboxInnerActionButton
+          label={`${isModuleVisible(id) ? "Hide" : "Show"} · ${VAULT_MODULE_LABELS[id]}`}
+          iconName={isModuleVisible(id) ? "eye-off" : "plus"}
+          tone={isModuleVisible(id) ? "cyan" : "green"}
+          onClick={() => toggleModuleVisibility(id)}
+         />
+         {arrangeMode ? (
+          <div className="grid grid-cols-2 gap-1">
+           <SubToolboxInnerActionButton
+            label="↑"
+            iconName="layers"
+            tone="yellow"
+            onClick={() => moveModule(id, -1)}
+           />
+           <SubToolboxInnerActionButton
+            label="↓"
+            iconName="layers"
+            tone="yellow"
+            onClick={() => moveModule(id, 1)}
+           />
+          </div>
+         ) : null}
+        </div>
+       ))}
+      </div>
+     </div>
+    </SubToolbox>
+
+    <div className={density === "compact"
+     ? "grid grid-cols-1 gap-2 xl:grid-cols-[minmax(220px,0.72fr)_minmax(0,2.1fr)_minmax(260px,0.9fr)]"
+     : "grid grid-cols-1 gap-4 xl:grid-cols-[minmax(220px,0.72fr)_minmax(0,2.1fr)_minmax(260px,0.9fr)]"}>
      <div className="flex min-w-0 flex-col gap-4">
       <SubToolbox
+       style={moduleStyle("navigator" as VaultWorkspaceModuleId)}
        title="Navigator"
        subtitle="Library views and smart filters"
        icon={<Filter />}
@@ -856,6 +966,7 @@ const CreatorVaultOS: React.FC = () => {
       </SubToolbox>
 
       <SubToolbox
+       style={moduleStyle("explorer" as VaultWorkspaceModuleId)}
        title="Explorer"
        subtitle="Logical project views over canonical Vault assets"
        icon={<Archive />}
@@ -891,6 +1002,7 @@ const CreatorVaultOS: React.FC = () => {
       </SubToolbox>
 
       <SubToolbox
+       style={moduleStyle("workspace-notes" as VaultWorkspaceModuleId)}
        title="Workspace Notes"
        subtitle="Saved Vault scratchpads that do not become assets or Brain memory"
        icon={<FileText />}
@@ -935,6 +1047,7 @@ const CreatorVaultOS: React.FC = () => {
       </SubToolbox>
 
       <SubToolbox
+       style={moduleStyle("spectrum-tags" as VaultWorkspaceModuleId)}
        title="Spectrum Tags"
        subtitle="Canonical alphabetical spectrum labels"
        icon={<Database />}
@@ -965,6 +1078,7 @@ const CreatorVaultOS: React.FC = () => {
 
      <div className="flex min-w-0 flex-col gap-4">
       <SubToolbox
+       style={moduleStyle("asset-library" as VaultWorkspaceModuleId)}
        title="Asset Library"
        subtitle="Search, select, preview, and organize canonical Vault assets"
        icon={<Search />}
@@ -1139,6 +1253,7 @@ const CreatorVaultOS: React.FC = () => {
       </SubToolbox>
 
       <SubToolbox
+       style={moduleStyle("import-station" as VaultWorkspaceModuleId)}
        title="Import Station"
        subtitle="Stage multiple files before creating canonical Vault records"
        icon={<UploadCloud />}
@@ -1271,6 +1386,7 @@ const CreatorVaultOS: React.FC = () => {
 
      <div className="flex min-w-0 flex-col gap-4">
       <SubToolbox
+       style={moduleStyle("task-center" as VaultWorkspaceModuleId)}
        title="Task Center"
        subtitle="Ingest and background processing jobs"
        icon={<Database />}
@@ -1318,6 +1434,7 @@ const CreatorVaultOS: React.FC = () => {
       </SubToolbox>
 
       <SubToolbox
+       style={moduleStyle("batch-processor" as VaultWorkspaceModuleId)}
        title="Batch Processor"
        subtitle="Apply organization changes to the current asset selection"
        icon={<Database />}
@@ -1454,6 +1571,7 @@ const CreatorVaultOS: React.FC = () => {
       </SubToolbox>
 
       <SubToolbox
+       style={moduleStyle("inspector" as VaultWorkspaceModuleId)}
        title="Inspector"
        subtitle="Selected asset details and provenance"
        icon={<Database />}
