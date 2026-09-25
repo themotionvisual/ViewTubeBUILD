@@ -36,6 +36,11 @@
   letter-spacing:.06em;
   opacity:.58;
 }
+.settings-switchboard-control-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
 .settings-switchboard-control-row,
 .settings-switchboard-mobile-note,
 .settings-switchboard-hero{
@@ -154,6 +159,23 @@
 }
 
 @container vt-widget (max-width:420px){
+  :where(.dashboard-barrier) [data-widget-id="system-micro-stack"] .vt-widget-header .header-extra:has(.widget-header-toggle){
+    flex:0 1 150px!important;
+    min-width:136px;
+    max-width:48%;
+    overflow:visible;
+  }
+  :where(.dashboard-barrier) [data-widget-id="system-micro-stack"] .widget-header-stepper{
+    width:100%;
+    min-width:136px;
+  }
+  :where(.dashboard-barrier) [data-widget-id="system-micro-stack"] .widget-header-stepper-value{
+    min-width:0;
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+    line-height:.9;
+  }
   .settings-switchboard{
     gap:8px;
   }
@@ -165,9 +187,24 @@
   .settings-switchboard-preset-grid{
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
+  .settings-switchboard-control-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
+  }
+  .settings-switchboard-control-row{
+    grid-template-columns:minmax(0,1fr) auto;
+    min-width:0;
+    gap:5px;
+    padding:6px;
+  }
+  .settings-switchboard-control-row span{
+    font-size:7px;
+    line-height:1.1;
+  }
   .settings-switchboard-actions,
   .settings-switchboard-actions.is-account{
-    grid-template-columns:1fr;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
   }
   .settings-switchboard-reset-confirm{
     grid-template-columns:1fr 1fr;
