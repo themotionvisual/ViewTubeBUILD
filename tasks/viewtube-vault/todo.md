@@ -55,7 +55,7 @@
 ## Lane D — versions/captions/dependencies
 - [x] RH-D060 Version carousel.
 - [x] RH-D061 Detach version preserving lineage.
-- [ ] RH-D062 Lineage/usage/rights inspector. (Lineage complete; usage + rights pending)
+- [x] RH-D062 Lineage/usage/rights inspector.
 - [ ] RH-D063 Caption artifact editor.
 - [ ] RH-D064 SRT/VTT export.
 - [ ] RH-D065 Transcript→Script derivative.
