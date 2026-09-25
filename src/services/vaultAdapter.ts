@@ -46,6 +46,8 @@ export interface VaultAssetSearchInput {
  minBytes?: number | null
  maxBytes?: number | null
  orientation?: "all" | "landscape" | "portrait" | "square" | null
+ updatedAfter?: number | null
+ updatedBefore?: number | null
  limit?: number
 }
 
@@ -93,6 +95,8 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
     const orientation = ratio > 1.05 ? "landscape" : ratio < 0.95 ? "portrait" : "square"
     if (orientation !== input.orientation) return false
    }
+   if (input.updatedAfter != null && asset.updatedAt < input.updatedAfter) return false
+   if (input.updatedBefore != null && asset.updatedAt > input.updatedBefore) return false
    if (input.special === "inbox") {
     if (metadata.archivedAt || metadata.trashedAt) return false
     if (!getVaultAttentionReasons(asset).length) return false
