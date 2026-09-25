@@ -2066,9 +2066,9 @@
 :where(.dashboard-barrier) .widget-split-button.is-compact .widget-split-button-label { padding-inline: 6px; }
 :where(.dashboard-barrier) .widget-split-button.is-auto { width: auto; }
 :where(.dashboard-barrier) .widget-split-button.is-large,
-:where(.dashboard-barrier) .vt-button.split.lg { height: 38px; min-height:38px; font-size: 14px; }
+:where(.dashboard-barrier) .vt-button.split.lg { height: 38px; min-height:38px; font-size: 16px; line-height:.9; overflow:hidden; }
 :where(.dashboard-barrier) .widget-split-button.is-large .widget-split-button-icon,
-:where(.dashboard-barrier) .vt-button.split.lg .split-icon { width: 44px; flex-basis: 44px; }
+:where(.dashboard-barrier) .vt-button.split.lg .split-icon { width: 48px; flex-basis: 48px; }
 :where(.dashboard-barrier) .widget-split-button.is-compact,
 :where(.dashboard-barrier) .vt-button.split.compact { width: 148px; }
 :where(.dashboard-barrier) .widget-split-button.is-wide,
