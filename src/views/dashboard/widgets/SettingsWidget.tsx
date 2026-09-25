@@ -142,6 +142,20 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
               />
             </div>
 
+            <div className="settings-switchboard-control-row">
+              <div>
+                <strong>LAYOUT LOCK</strong>
+                <span>Prevent accidental layout changes while keeping widget tools usable.</span>
+              </div>
+              <WidgetToggleSwitch
+                checked={Boolean(dashboardControls?.locked)}
+                onChange={() => dashboardControls?.toggleLock?.()}
+                label="Layout lock"
+                height={32}
+                tone="secondary"
+              />
+            </div>
+
             <div className="settings-switchboard-preset-grid" role="group" aria-label="Dashboard layout presets">
               <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.applyPreset?.("focus")}>FOCUS</WidgetSizedButton>
               <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.applyPreset?.("creation")}>CREATION</WidgetSizedButton>
@@ -167,7 +181,10 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
               {!resetArmed ? (
                 <WidgetSizedButton height={32} tone="secondary" onClick={() => setResetArmed(true)}>RESET LAYOUT</WidgetSizedButton>
               ) : (
-                <WidgetSizedButton height={32} tone="secondary" onClick={() => { dashboardControls?.resetLayout?.(); setResetArmed(false) }}>CONFIRM RESET</WidgetSizedButton>
+                <div className="settings-switchboard-reset-confirm">
+                  <WidgetSizedButton height={32} tone="secondary" onClick={() => { dashboardControls?.resetLayout?.(); setResetArmed(false) }}>CONFIRM RESET</WidgetSizedButton>
+                  <WidgetSizedButton height={32} tone="default" onClick={() => setResetArmed(false)}>CANCEL RESET</WidgetSizedButton>
+                </div>
               )}
             </div>
 
