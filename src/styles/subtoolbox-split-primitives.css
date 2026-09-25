@@ -535,3 +535,55 @@
   overflow:visible;
   text-overflow:clip;
 }
+
+
+/* Canonical collapsed-SubToolbox action compound. */
+.vt-subtoolbox-shell-action{
+  width:100%;
+  min-width:0;
+  height:var(--vt-component-height);
+  min-height:var(--vt-component-height);
+  display:grid;
+  grid-template-columns:var(--vt-component-height) minmax(0,1fr);
+  align-items:stretch;
+  padding:0;
+  overflow:hidden;
+  border:var(--vt-component-stroke) solid #000;
+  border-radius:var(--vt-component-radius);
+  background:var(--pair-a,#36e0f6);
+  color:#000;
+  box-shadow:var(--vt-component-shadow-offset) var(--vt-component-shadow-offset) 0 color-mix(in srgb,var(--pair-a,#36e0f6) 42%,transparent);
+  text-align:left;
+}
+.vt-subtoolbox-shell-action-rail{
+  display:grid;
+  place-items:center;
+  width:var(--vt-component-height);
+  height:100%;
+  border-right:var(--vt-component-stroke) solid #000;
+  background:var(--pair-b,#ff7f6b);
+}
+.vt-subtoolbox-shell-action-rail svg{
+  width:58%;
+  height:58%;
+  stroke-width:3.1;
+}
+.vt-subtoolbox-shell-action-title{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  padding:0 calc(var(--vt-component-height)*.18);
+  font:1000 var(--vt-component-font-size)/.88 var(--vt-studio-toolbox-font,var(--font-sans,ui-sans-serif,system-ui));
+  letter-spacing:-.05em;
+  text-transform:uppercase;
+  white-space:normal;
+}
+.vt-subtoolbox-shell-action:focus-visible{
+  outline:3px solid var(--pair-b,#ff7f6b);
+  outline-offset:2px;
+}
+.vt-subtoolbox-shell-action:active{
+  transform:translate(2px,2px);
+  box-shadow:calc(var(--vt-component-shadow-offset) - 2px) calc(var(--vt-component-shadow-offset) - 2px) 0 color-mix(in srgb,var(--pair-a,#36e0f6) 42%,transparent);
+}
+.vt-subtoolbox-shell-action:disabled{opacity:.45;cursor:not-allowed;transform:none}
