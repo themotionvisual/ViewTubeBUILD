@@ -55,6 +55,15 @@ const CERTIFICATION_INTENT: Record<string, readonly [string, string, WidgetPerfo
   "title-rewriter": ["Improve video title options", "Rewrite a title", "heavy"],
   "description-editor": ["Improve video description copy", "Save description draft", "moderate"],
   "hashtag-analyzer": ["Evaluate hashtag fit", "Analyze hashtags", "heavy"],
+  "channel-progress": ["Show trajectory against active channel targets", "Inspect the next growth focus", "moderate"],
+  "next-best-action": ["Rank evidence-backed creator actions", "Open the selected decision branch", "moderate"],
+  "anomaly-radar": ["Detect material performance deviations", "Investigate a selected anomaly", "moderate"],
+  "opportunity-radar": ["Rank defensible follow-up and refresh opportunities", "Open the selected opportunity", "moderate"],
+  "content-pipeline": ["Show ContentBuild movement from idea through learning", "Open the selected lifecycle stage", "moderate"],
+  "audience-requests": ["Cluster repeated viewer requests into content opportunities", "Promote a supported request into production", "moderate"],
+  "video-director": ["Coordinate a generated-video direction plan", "Continue the direction in Studio", "heavy"],
+  "video-asset-engine": ["Show canonical package assets and readiness", "Inspect or hand off the active package", "moderate"],
+  "shorts-multiplier": ["Create a scheduled family of frame-trimmed Shorts variants", "Prepare the variant set and continue into Editor or Publisher", "moderate"],
 }
 
 export const WIDGET_CERTIFICATION_MATRIX: Record<string, WidgetCertificationContract> =
