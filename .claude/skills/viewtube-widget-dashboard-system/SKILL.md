@@ -380,6 +380,24 @@ On phones:
 
 Portrait and landscape must both be verified because they stress width and height differently.
 
+### Mobile content-edge contract
+
+Every widget body must distinguish three geometry zones:
+
+1. **Inset zone** — ordinary cards, forms and reading content.
+2. **Full-bleed zone** — dividers, gradient bands, horizontal rails, footer/callout strips and other surfaces intended to touch the usable module edge.
+3. **Shadow-safe zone** — controls/cards whose focus glow or shadow must remain visible without creating a one-sided white gutter.
+
+Rules:
+- never reserve a hidden scrollbar lane on only one side;
+- full-bleed sections include the scroll shadow-clearance allowance, not only the ordinary content inset;
+- horizontal rails must be able to reach the usable widget edge and scroll internally without being cropped by their parent;
+- focused inputs, textareas and raised controls may not be clipped by an interior wrapper;
+- segmented/header toggles derive space from their real item count and allow two-line labels in portrait;
+- do not use emoji as widget icons, header actions, status glyphs or navigation affordances; use the canonical Lucide/icon primitive;
+- single header destinations use `WidgetHeaderActionButton`, not an ad-hoc button styled to resemble a toggle;
+- step-tab column count comes from the number of tab items; do not hard-code three columns for four-tab tools.
+
 ## 19. States
 
 Implement deliberate states as applicable:
