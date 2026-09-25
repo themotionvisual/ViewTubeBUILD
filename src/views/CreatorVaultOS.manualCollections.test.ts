@@ -13,8 +13,8 @@ describe("CreatorVaultOS manual collections UI", () => {
  })
 
  it("filters the Explorer by manual collection without changing asset identity", () => {
-  expect(source).toContain("activeManualCollectionId")
-  expect(source).toContain("collection.assetIds.includes(asset.id)")
+  expect(source).toContain("activeCollectionId")
+  expect(source).toContain("new Set(collection.assetIds)")
  })
 
  it("removes membership and deletes collections independently from assets", () => {
