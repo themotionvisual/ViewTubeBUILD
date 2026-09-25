@@ -5,10 +5,10 @@
 
 | ID | Workstream | Task | Priority | Status | Depends on | Evidence / next action |
 |---|---|---|---|---|---|---|
-| VT-001 | Analytics | Define typed MetricComparabilityPolicy | P0 | VERIFYING | — | `MetricComparabilityPolicy.ts` + behavior tests added; integrate into evaluation in VT-023 after CI certification |
-| VT-002 | Publishing | Define ApprovedPublishSnapshot schema/hash | P0 | VERIFYING | — | immutable schema + deterministic identity/hash + tamper verification tests added; persistence remains VT-014 |
-| VT-003 | Brain | Resolve active Project/ContentBuild context uniformly | P0 | READY | — | runtime supports projectId; supply consistently |
-| VT-004 | Brain | Build canonical Opportunity evidence feed | P0 | READY | VT-003 | module exists; production evidence supply uneven |
+| VT-001 | Analytics | Define typed MetricComparabilityPolicy | P0 | VERIFYING | — | PR #419 merged; contract + behavior tests are on main. Branch CI was obscured by Vercel build-rate limits, so focused certification remains before DONE; consumer integration stays VT-023/024. |
+| VT-002 | Publishing | Define ApprovedPublishSnapshot schema/hash | P0 | VERIFYING | — | PR #420 merged; immutable schema/hash + tamper tests are on main. Branch CI was obscured by Vercel build-rate limits; durable persistence remains VT-014. |
+| VT-003 | Brain | Resolve active Project/ContentBuild context uniformly | P0 | IN_PROGRESS | — | PR #413 added bounded active-Project context for Brain Hub/Next Best Action via shared dashboard adapter; finish uniform BrainRuntime/ContentBuild supply outside dashboard. |
+| VT-004 | Brain | Build canonical Opportunity evidence feed | P0 | IN_PROGRESS | VT-003 | PR #406 added evidence-backed Opportunity Radar, but PR #413 still records canonical shared Opportunity Evidence input as remaining. Build one reusable evidence feed for runtime + widgets. |
 | VT-005 | Reliability | Define cross-system correlation/idempotency envelope | P0 | READY | — | use existing event contracts; avoid second event store |
 | VT-006 | Outcomes | Map producer families to existing ledgers/events | P0 | READY | VT-005 | Publisher/Project/Comment/Editor/Experiment |
 | VT-007 | Outcomes | Publisher outcome writers | P1 | NOT_STARTED | VT-006 | preserve publish transaction/contentBuild identity |
@@ -34,19 +34,19 @@
 | VT-027 | Data Visuals | Complete controller vocabulary/orientation/mark-scale migration | P2 | IN_PROGRESS | — | certify modules |
 | VT-028 | Analytics UI | Portal Master Data transfer menus | P2 | READY | — | current toolbox table lacks createPortal |
 | VT-029 | Editor | Certify canonical final-render Asset Engine identity | P1 | VERIFYING | — | ExportRenderPanel already creates/selects versioned assets |
-| VT-030 | Editor | Preview/final-render golden parity fixtures | P1 | NOT_STARTED | VT-029 | transforms/crop/timing/templates/transitions/audio |
+| VT-030 | Editor | Preview/final-render golden parity fixtures | P1 | IN_PROGRESS | VT-029 | PR #417 unified visual-frame semantics, easing, transforms, crop, ordering and media fit with deterministic fixtures. Remaining: template/asset render parity, audio-critical parity, desktop FX host and generated capability matrix. |
 | VT-031 | Editor | Four-layout runtime certification | P1 | NOT_STARTED | VT-030 | device orientation × project aspect |
-| VT-032 | UI | Audit remaining bespoke controls vs canonical primitives | P2 | IN_PROGRESS | — | fix primitive first |
-| VT-033 | UI | Remove nested duplicate shells/intrinsic sizing defects | P2 | IN_PROGRESS | VT-032 | Studio/Projects production surfaces |
+| VT-032 | UI | Audit remaining bespoke controls vs canonical primitives | P2 | IN_PROGRESS | — | PR #430 moved Video Manager onto canonical primitives and added Mini SubToolbox/Labeled fields/Video Selector; continue remaining production surfaces. |
+| VT-033 | UI | Remove nested duplicate shells/intrinsic sizing defects | P2 | IN_PROGRESS | VT-032 | PR #430 removed redundant Video Manager shells and repaired portrait clipping/spacing; continue Studio/Projects/dashboard certification rather than reopening Video Manager structure. |
 | VT-034 | Reliability | Persistence schema/channel/project namespace audit | P1 | NOT_STARTED | — | distinguish cache vs truth |
 | VT-035 | Reliability | Add correlation IDs across creator loop | P1 | NOT_STARTED | VT-005 | Brain→build→publish→evaluation |
 | VT-036 | Reliability | Structured error/failure-state taxonomy | P1 | NOT_STARTED | VT-035 | auth/API/sync/AI/render/publish |
 | VT-037 | Quality | Establish changed-file no-new-debt gate | P1 | NOT_STARTED | — | global lint debt remains separate |
 | VT-038 | Quality | Create lint-debt burn-down program | P2 | NOT_STARTED | VT-037 | progressively restore blocking gates |
-| VT-039 | Agent OS | Point repository agent guidance to One-Goal artifact | P0 | READY | — | CLAUDE.md + new AGENTS.md/agent entry |
-| VT-040 | Agent OS | Standardize Herald work receipt from task ledger | P0 | READY | VT-039 | task ID/status/evidence/handoff |
-| VT-041 | Agent OS | Mirror material status/decisions to Create State | P1 | IN_PROGRESS | VT-039 | ViewTube world model exists |
-| VT-042 | Agent OS | Add stale-status/current-main audit routine | P1 | NOT_STARTED | VT-039 | never trust old PR/task status |
+| VT-039 | Agent OS | Point repository agent guidance to One-Goal artifact | P0 | DONE | — | CLAUDE.md points to One-Goal authority; PR #421 added the AI Systems living authority/governor and registry integration. |
+| VT-040 | Agent OS | Standardize Herald work receipt from task ledger | P0 | DONE | VT-039 | PR #424 projects Herald active claims and verified completion receipts into the AI Systems management read model without creating another ledger. |
+| VT-041 | Agent OS | Mirror material status/decisions to Create State | P1 | IN_PROGRESS | VT-039 | Create State world model exists; PRs #421-424 add repository-native AI governance/claims/receipts. Keep Create State as continuity mirror, not repository truth. |
+| VT-042 | Agent OS | Add stale-status/current-main audit routine | P1 | IN_PROGRESS | VT-039 | PR #423 validator detects stale active claims, owner conflicts and missing source paths; extend this pattern to One-Goal task freshness/current-main evidence. |
 | VT-043 | Cleanup | Audit direct provider reachability | P2 | NOT_STARTED | VT-020,VT-021 | shrink allowlist |
 | VT-044 | Cleanup | Audit duplicate state/mutation owners | P2 | NOT_STARTED | major migrations | Projects/editor/analytics/package |
 | VT-045 | Certification | Golden-path creator-loop E2E | P1 | NOT_STARTED | VT-018,VT-030 | data→learn full loop |
