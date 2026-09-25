@@ -385,6 +385,28 @@ const CreatorVaultOS: React.FC = () => {
   setRefreshTick((value) => value + 1)
  }
 
+ const exportSelectionManifest = () => {
+  const selected = allAssets.filter((asset) => selectedAssetIds.includes(asset.id))
+  if (!selected.length) return
+  const manifest = createVaultSelectionManifest({
+   assets: selected,
+   usageByAssetId: Object.fromEntries(
+    selected.map((asset) => [asset.id, getVaultAssetUsage(asset.id)]),
+   ),
+  })
+  const blob = new Blob([serializeVaultSelectionManifest(manifest)], {
+   type: "application/json",
+  })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = `viewtube-vault-selection-${new Date().toISOString().slice(0, 10)}.json`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+ }
+
  const toggleFavoriteSelection = () => {
   if (!selectedAssetIds.length) return
   const selected = allAssets.filter((asset) => selectedAssetIds.includes(asset.id))
@@ -1005,6 +1027,13 @@ const CreatorVaultOS: React.FC = () => {
          tone="purple"
          onClick={createProjectFromSelection}
          disabled={!selectedAssetIds.length || !selectionProjectName.trim()}
+        />
+        <SubToolboxInnerActionButton
+         label="Download Selection Manifest"
+         iconName="database"
+         tone="yellow"
+         onClick={exportSelectionManifest}
+         disabled={!selectedAssetIds.length}
         />
         <SubToolboxInnerActionButton
          label="Toggle Favorite"
