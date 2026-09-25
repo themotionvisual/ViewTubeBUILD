@@ -15,6 +15,7 @@ const referenceSource = readFileSync(new URL("../widgets/UIReferenceLibraryWidge
 const assetCss = readFileSync(new URL("../widgets/VideoAssetEngineWidget.css", import.meta.url), "utf8")
 const legacy = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
 const flightCss = readFileSync(new URL("../widgets/FlightCheckWidget.css", import.meta.url), "utf8")
+const primitiveSource = readFileSync(new URL("../WidgetPrimitives.tsx", import.meta.url), "utf8")
 
 describe("mobile widget density and edge contracts", () => {
   it("does not reserve an invisible mobile scroll gutter and does not re-clamp cells in legacy CSS", () => {
@@ -22,7 +23,8 @@ describe("mobile widget density and edge contracts", () => {
     expect(scrollbar).toContain("padding-inline: var(--widget-shadow-clearance)")
     expect(mobile).toContain("scrollbar-gutter: auto")
     expect(mobile).toContain("--vt-mobile-widget-gutter: 4px")
-    expect(mobile).toContain("width: calc(100% + 24px)")
+    expect(mobile).toContain("--vt-mobile-reclaim-right: 40px")
+    expect(mobile).toContain("width: calc(100% + var(--vt-mobile-reclaim-left) + var(--vt-mobile-reclaim-right))")
     expect(legacy).not.toContain("max-width: calc(100vw - 32px)")
     expect(legacy).not.toContain("margin-right: 8px")
   })
@@ -55,13 +57,13 @@ describe("mobile widget density and edge contracts", () => {
     expect(mobile).toContain(".vt-widget-full-bleed")
     expect(mobile).toContain(".widget-section.is-full")
     expect(assetCss).toContain("vt-asset-engine-slot-panel")
-    expect(assetCss).toContain("margin-inline:calc(-1 * var(--widget-content-inset))")
+    expect(assetCss).toContain("margin-inline:calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))")
   })
 
   it("keeps Publishing Command full width and compact", () => {
     expect(flightCss).toContain(".vt-publishing-command__manual-list")
-    expect(flightCss).toContain("min-height:24px")
-    expect(flightCss).toContain("margin-inline:calc(-1 * var(--widget-content-inset))")
+    expect(flightCss).toContain("min-height:28px")
+    expect(flightCss).toContain("margin-inline:calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))")
   })
 
   it("uses canonical text field primitives in Video Uploader", () => {
@@ -79,9 +81,11 @@ describe("mobile widget density and edge contracts", () => {
     expect(directorCss).toContain("align-content:start")
   })
 
-  it("documents the canonical video dropdown in the UI reference library", () => {
-    expect(referenceSource).toContain("Video Select / Dropdown")
+  it("documents canonical video-select and header-action primitives in the UI reference library", () => {
     expect(referenceSource).toContain("WidgetVideoSelect")
+    expect(referenceSource).toContain("WidgetHeaderActionButton")
+    expect(referenceSource).toContain("Canonical header action for one destination")
+    expect(primitiveSource).toContain("export const WidgetHeaderActionButton")
   })
 })
 
