@@ -84,3 +84,21 @@ export const runVaultTranscriptTask = async (input: {
   return { task, asset: null }
  }
 }
+
+
+export const resolveVaultTranscriptVideoId = (input: {
+ asset: Pick<VaultAsset, "metadata">
+ contentBuildVideoId?: string | null
+}): string | null => {
+ const metadata = input.asset.metadata || {}
+ const candidates = [
+  metadata.youtubeVideoId,
+  metadata.videoId,
+  metadata.youtubeId,
+  input.contentBuildVideoId,
+ ]
+ for (const candidate of candidates) {
+  if (typeof candidate === "string" && candidate.trim()) return candidate.trim()
+ }
+ return null
+}
