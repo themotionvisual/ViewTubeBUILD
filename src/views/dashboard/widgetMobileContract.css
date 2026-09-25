@@ -7,11 +7,14 @@
     .dashboard-barrier {
       --vt-mobile-widget-gap: 8px;
       --vt-mobile-widget-gutter: 4px;
-      /* Reclaim app-shell side padding so portrait widgets use more of the
-         physical screen width while keeping the dashboard centered. */
-      width: calc(100% + 24px);
+      --vt-mobile-reclaim-left: 12px;
+      --vt-mobile-reclaim-right: 32px;
+      /* Reclaim more of the app shell on the right: live iPhone field QA
+         showed the page wrapper reserving materially more space there. */
+      width: calc(100% + var(--vt-mobile-reclaim-left) + var(--vt-mobile-reclaim-right));
       max-width: none;
-      margin-inline: -12px;
+      margin-left: calc(-1 * var(--vt-mobile-reclaim-left));
+      margin-right: calc(-1 * var(--vt-mobile-reclaim-right));
       box-sizing: border-box;
       --vt-mobile-height-short: 150px;
       --vt-mobile-height-medium: 250px;
@@ -72,6 +75,19 @@
       grid-template-rows: 1fr;
       border-bottom-width: 3px;
     }
+
+    .dashboard-barrier .dashboard-widget-slot.is-collapsed:has(.vt-widget.mobile-controls-open) {
+      height: auto;
+      min-height: 48px;
+      max-height: none;
+    }
+
+    .dashboard-barrier .dashboard-widget-slot.is-collapsed:has(.vt-widget.mobile-controls-open) .vt-widget {
+      height: auto;
+      min-height: 48px;
+      overflow: visible;
+    }
+
 
     .dashboard-barrier .widget-mobile-control-row-inner {
       min-height: 0;
@@ -192,6 +208,14 @@
       min-width: 0;
       max-width: 100%;
     }
+
+    .dashboard-barrier .vt-widget-body > .vt-widget-full-bleed,
+    .dashboard-barrier .vt-widget-body > * > .vt-widget-full-bleed {
+      width: calc(100% + (2 * var(--widget-content-inset)));
+      max-width: none;
+      margin-inline: calc(-1 * var(--widget-content-inset));
+    }
+
 
     /* Shared mobile composition registry. Internal layouts recompose according
        to available component width; these rules do not change primitive style. */
