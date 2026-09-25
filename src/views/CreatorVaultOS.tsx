@@ -49,6 +49,7 @@ import {
  writeVaultWorkspaceState,
  DEFAULT_VAULT_MODULE_ORDER,
  type VaultAssetOperationsMode,
+ type VaultImportTagsMode,
  type VaultWorkspaceDensity,
  type VaultWorkspaceModuleId,
  type VaultWorkspaceSort,
@@ -165,6 +166,8 @@ const VAULT_MODULE_LABELS: Record<VaultWorkspaceModuleId, string> = {
  explorer: "Explorer",
  "workspace-notes": "Workspace Notes",
  "asset-operations": "Asset Operations",
+ "import-tags": "Import & Tags",
+ "text-editor": "Text Editor",
  "asset-library": "Asset Library",
  "task-center": "Task Center",
  inspector: "Inspector",
@@ -225,6 +228,7 @@ const CreatorVaultOS: React.FC = () => {
  const [sort, setSort] = useState<VaultWorkspaceSort>(initialWorkspace.sort)
  const [special, setSpecial] = useState(initialWorkspace.special)
  const [assetOperationsMode, setAssetOperationsMode] = useState<VaultAssetOperationsMode>(initialWorkspace.assetOperationsMode)
+ const [importTagsMode, setImportTagsMode] = useState<VaultImportTagsMode>(initialWorkspace.importTagsMode)
  const [filterLifecycle, setFilterLifecycle] = useState(initialWorkspace.filterLifecycle)
  const [filterOrientation, setFilterOrientation] = useState(initialWorkspace.filterOrientation)
  const [filterUpdatedFrom, setFilterUpdatedFrom] = useState(initialWorkspace.filterUpdatedFrom)
@@ -370,6 +374,7 @@ const CreatorVaultOS: React.FC = () => {
    filterMinBytesMb,
    filterMaxBytesMb,
    assetOperationsMode,
+   importTagsMode,
    viewMode,
    density,
    arrangeMode,
@@ -395,6 +400,7 @@ const CreatorVaultOS: React.FC = () => {
   filterMinBytesMb,
   filterMaxBytesMb,
   assetOperationsMode,
+  importTagsMode,
   viewMode,
   density,
   arrangeMode,
@@ -2027,7 +2033,7 @@ const CreatorVaultOS: React.FC = () => {
       <SubToolbox
        style={moduleStyle("asset-operations" as VaultWorkspaceModuleId)}
        title="Asset Operations"
-       subtitle="Search, tag, ingest, batch-edit, write, group, and route Vault assets from one tool"
+       subtitle="Search, batch-edit, group, and route canonical Vault assets"
        icon={<Database />}
        paletteIndex={9}
        isOpenInitial
@@ -2041,10 +2047,7 @@ const CreatorVaultOS: React.FC = () => {
          onValueChange={(value) => setAssetOperationsMode(value as VaultAssetOperationsMode)}
          options={[
           { value: "search", label: "SEARCH" },
-          { value: "tags", label: "TAGS" },
-          { value: "import", label: "IMPORT" },
           { value: "batch", label: "BATCH" },
-          { value: "text", label: "TEXT" },
           { value: "groups", label: "GROUPS" },
           { value: "tools", label: "TOOLS" },
          ]}
@@ -2074,190 +2077,6 @@ const CreatorVaultOS: React.FC = () => {
            onClick={() => setQuery("")}
            disabled={!query}
           />
-         </div>
-        ) : null}
-
-        {assetOperationsMode === "tags" ? (
-         <div>
-          <div className="mb-2 text-xs font-black uppercase opacity-60">Spectrum Tags</div>
-          <div className="mb-2 text-[10px] font-bold uppercase opacity-55">
-           Click to filter · 1–9 applies visible tags to selection · drop files on a tag for Zone Tag import
-          </div>
-          <div className="flex flex-wrap gap-2">
-           {availableTags.map((tag) => (
-            <button
-             key={tag}
-             type="button"
-             aria-pressed={selectedTag === tag}
-             aria-label={`Zone Tag ${tag}. Drop files here to import with this tag.`}
-             title={`Zone Tag · drop files to import with ${tag}`}
-             onDragOver={(event) => {
-              if (event.dataTransfer?.types?.includes("Files")) event.preventDefault()
-             }}
-             onDrop={(event) => {
-              if (!event.dataTransfer?.files?.length) return
-              event.preventDefault()
-              event.stopPropagation()
-              void stageFiles(event.dataTransfer.files, [tag])
-             }}
-             onClick={() => setSelectedTag((current) => current === tag ? null : tag)}
-             className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-            >
-             <SubToolboxAlphabeticalTag
-              level="l2"
-              label={tag}
-              spectrumKey={tag}
-              className={selectedTag === tag ? "is-selected" : ""}
-             />
-            </button>
-           ))}
-          </div>
-         </div>
-        ) : null}
-
-        {assetOperationsMode === "import" ? (
-         <div className="flex flex-col gap-4">
-          <div className="text-xs font-black uppercase opacity-60">Import Station</div>
-          <SubToolboxSegmentedToggle
-           level="l1"
-           ariaLabel="Import mode"
-           value={importMode}
-           onValueChange={(value) => setImportMode(value as "direct" | "staged")}
-           options={[
-            { value: "direct", label: "DIRECT" },
-            { value: "staged", label: "STAGED" },
-           ]}
-          />
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(260px,0.9fr)]">
-           <SubToolboxFileTarget
-            level="l1"
-            multiple
-            minHeight={180}
-            icon={<UploadCloud />}
-            label={importMode === "direct" ? "DROP OR CHOOSE · IMPORT DIRECTLY" : "DROP OR CHOOSE · REVIEW IN STAGING"}
-            onFiles={stageFiles}
-           />
-           <div className="flex min-w-0 flex-col gap-3">
-            <StandardInput
-             value={importProject}
-             onChange={(event) => setImportProject(event.target.value)}
-             placeholder="Optional project name"
-             aria-label="Import project name"
-            />
-            <div>
-             <div className="mb-2 text-xs font-black uppercase tracking-wide">Import Spectrum Tags</div>
-             <div className="flex flex-wrap gap-2">
-              {CORE_TAGS.map((tag) => (
-               <button
-                key={tag}
-                type="button"
-                aria-pressed={importTags.includes(tag)}
-                onClick={() => toggleImportTag(tag)}
-                className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-               >
-                <SubToolboxAlphabeticalTag
-                 level="l2"
-                 label={importTags.includes(tag) ? `× ${tag}` : `+ ${tag}`}
-                 spectrumKey={tag}
-                />
-               </button>
-              ))}
-             </div>
-            </div>
-            <SubToolboxInnerActionButton
-             label={pending.length ? `Ingest All (${pending.length})` : "Ingest All"}
-             iconName="database"
-             tone="green"
-             onClick={ingestAll}
-             disabled={!pending.length}
-            />
-           </div>
-          </div>
-          <div className="flex flex-col gap-2">
-           {pending.length ? pending.map((item) => (
-            <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-             <div className="min-w-0 flex flex-col gap-2">
-              {item.previewUrl ? (
-               <SubToolboxMediaInspector
-                level="l1"
-                title="Staged Preview"
-                poster={item.previewUrl}
-                items={[
-                 { label: "TYPE", value: item.kind.toUpperCase() },
-                 { label: "STATUS", value: item.metadata.duplicateAssetId ? "DUPLICATE REVIEW" : "READY" },
-                ]}
-               />
-              ) : null}
-              <StandardInput
-               value={item.name}
-               onChange={(event) => patchPending(item.id, { name: event.target.value })}
-               aria-label={`Pending asset name ${item.name}`}
-              />
-              <SubToolboxDropdownControl
-               label="Type"
-               value={item.kind}
-               onChange={(value) => patchPending(item.id, { kind: value as VaultAssetKind })}
-               options={["image", "video", "audio", "document", "json", "font", "template", "generated", "other"]}
-              />
-              <div>
-               <div className="mb-2 text-[10px] font-black uppercase opacity-60">Pending tags for {item.name}</div>
-               <div className="mb-2 flex flex-wrap gap-1">
-                {item.tags.map((tag) => (
-                 <button
-                  key={tag}
-                  type="button"
-                  aria-label={`Remove pending tag ${tag}`}
-                  onClick={() => togglePendingTag(item.id, tag)}
-                 >
-                  <SubToolboxAlphabeticalTag level="l2" label={`× ${tag}`} spectrumKey={tag} />
-                 </button>
-                ))}
-               </div>
-               <SubToolboxInput
-                placeholder="+ TAG"
-                aria-label={`Pending tags for ${item.name}`}
-                onKeyDown={(event) => {
-                 if (event.key !== "Enter") return
-                 event.preventDefault()
-                 addPendingTag(item.id, event.currentTarget.value)
-                 event.currentTarget.value = ""
-                }}
-               />
-              </div>
-              {item.metadata.duplicateAssetId ? (
-               <>
-                <SubToolboxStatePanel
-                 level="l1"
-                 state="stale"
-                 message={`Exact duplicate of ${String(item.metadata.duplicateAssetName || "an existing Vault asset")}. Review before ingesting.`}
-                />
-                <SubToolboxInnerActionButton
-                 label="Use Existing Duplicate"
-                 iconName="link"
-                 tone="purple"
-                 onClick={() => resolvePendingDuplicate(item)}
-                />
-               </>
-              ) : null}
-              <div className="text-xs font-bold opacity-60">
-               {(item.size / 1024 / 1024).toFixed(2)} MB
-               {typeof item.metadata.width === "number" && typeof item.metadata.height === "number"
-                ? ` · ${item.metadata.width}×${item.metadata.height}`
-                : ""}
-               {typeof item.metadata.durationSeconds === "number"
-                ? ` · ${Number(item.metadata.durationSeconds).toFixed(1)}s`
-                : ""}
-              </div>
-             </div>
-             <div className="grid grid-cols-2 gap-2">
-              <SubToolboxInnerActionButton label="Ingest" iconName="plus" tone="cyan" onClick={() => ingestOne(item)} />
-              <SubToolboxInnerActionButton label="Reject" iconName="x" tone="pink" onClick={() => rejectPending(item.id)} />
-             </div>
-            </div>
-           )) : (
-            <SubToolboxStatePanel level="l1" state="ready" message="Import Station is ready for a batch." />
-           )}
-          </div>
          </div>
         ) : null}
 
@@ -2329,53 +2148,6 @@ const CreatorVaultOS: React.FC = () => {
            tone="cyan"
            onClick={() => setSelectedAssetIds([])}
            disabled={!selectedAssetIds.length}
-          />
-         </div>
-        ) : null}
-
-        {assetOperationsMode === "text" ? (
-         <div className="flex flex-col gap-3">
-          <div className="text-xs font-black uppercase opacity-60">Text Editor</div>
-          <StandardInput
-           value={textEditorTitle}
-           onChange={(event) => setTextEditorTitle(event.target.value)}
-           placeholder="Text asset title"
-           aria-label="Text asset title"
-          />
-          <SubToolboxSelect
-           value={textEditorFormat}
-           aria-label="Text asset format"
-           onChange={(event) => setTextEditorFormat(event.target.value as VaultTextFormat)}
-          >
-           <option value="plain">PLAIN TEXT</option>
-           <option value="markdown">MARKDOWN</option>
-          </SubToolboxSelect>
-          <SubToolboxTextArea
-           value={textEditorContent}
-           onChange={(event) => setTextEditorContent(event.target.value)}
-           placeholder="Write notes, copy, research, script fragments, prompts, or documentation…"
-           aria-label="Vault Text Editor"
-           rows={12}
-          />
-          {editableTextAsset ? (
-           <SubToolboxInnerActionButton
-            label="Save Selected Text Asset"
-            iconName="edit"
-            tone="green"
-            onClick={saveSelectedTextAsset}
-           />
-          ) : (
-           <SubToolboxStatePanel
-            level="l1"
-            state="ready"
-            message="Create a new text asset, or select a text/Markdown document in the library to edit it here."
-           />
-          )}
-          <SubToolboxInnerActionButton
-           label="Create New Text Asset"
-           iconName="plus"
-           tone="purple"
-           onClick={createTextAssetFromEditor}
           />
          </div>
         ) : null}
@@ -2592,6 +2364,268 @@ const CreatorVaultOS: React.FC = () => {
          </div>
         ) : null}
        </div>
+      </SubToolbox>
+
+      <SubToolbox
+       style={moduleStyle("import-tags" as VaultWorkspaceModuleId)}
+       title="Import & Tags"
+       subtitle="Spectrum tagging and canonical file intake in one tool"
+       icon={<UploadCloud />}
+       paletteIndex={11}
+       isOpenInitial
+       persistenceId="vault-import-tags"
+      >
+       <div className="flex flex-col gap-3">
+        <SubToolboxSegmentedToggle
+         level="l1"
+         ariaLabel="Import and Tags tool"
+         value={importTagsMode}
+         onValueChange={(value) => setImportTagsMode(value as VaultImportTagsMode)}
+         options={[
+          { value: "tags", label: "TAGS" },
+          { value: "import", label: "IMPORT" },
+         ]}
+        />
+        {importTagsMode === "tags" ? (
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Spectrum Tags</div>
+          <div className="mb-2 text-[10px] font-bold uppercase opacity-55">
+           Click to filter · 1–9 applies visible tags to selection · drop files on a tag for Zone Tag import
+          </div>
+          <div className="flex flex-wrap gap-2">
+           {availableTags.map((tag) => (
+            <button
+             key={tag}
+             type="button"
+             aria-pressed={selectedTag === tag}
+             aria-label={`Zone Tag ${tag}. Drop files here to import with this tag.`}
+             title={`Zone Tag · drop files to import with ${tag}`}
+             onDragOver={(event) => {
+              if (event.dataTransfer?.types?.includes("Files")) event.preventDefault()
+             }}
+             onDrop={(event) => {
+              if (!event.dataTransfer?.files?.length) return
+              event.preventDefault()
+              event.stopPropagation()
+              void stageFiles(event.dataTransfer.files, [tag])
+             }}
+             onClick={() => setSelectedTag((current) => current === tag ? null : tag)}
+             className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            >
+             <SubToolboxAlphabeticalTag
+              level="l2"
+              label={tag}
+              spectrumKey={tag}
+              className={selectedTag === tag ? "is-selected" : ""}
+             />
+            </button>
+           ))}
+          </div>
+         </div>
+        ) : null}
+
+        {importTagsMode === "import" ? (
+         <div className="flex flex-col gap-4">
+          <div className="text-xs font-black uppercase opacity-60">Import Station</div>
+          <SubToolboxSegmentedToggle
+           level="l1"
+           ariaLabel="Import mode"
+           value={importMode}
+           onValueChange={(value) => setImportMode(value as "direct" | "staged")}
+           options={[
+            { value: "direct", label: "DIRECT" },
+            { value: "staged", label: "STAGED" },
+           ]}
+          />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(260px,0.9fr)]">
+           <SubToolboxFileTarget
+            level="l1"
+            multiple
+            minHeight={180}
+            icon={<UploadCloud />}
+            label={importMode === "direct" ? "DROP OR CHOOSE · IMPORT DIRECTLY" : "DROP OR CHOOSE · REVIEW IN STAGING"}
+            onFiles={stageFiles}
+           />
+           <div className="flex min-w-0 flex-col gap-3">
+            <StandardInput
+             value={importProject}
+             onChange={(event) => setImportProject(event.target.value)}
+             placeholder="Optional project name"
+             aria-label="Import project name"
+            />
+            <div>
+             <div className="mb-2 text-xs font-black uppercase tracking-wide">Import Spectrum Tags</div>
+             <div className="flex flex-wrap gap-2">
+              {CORE_TAGS.map((tag) => (
+               <button
+                key={tag}
+                type="button"
+                aria-pressed={importTags.includes(tag)}
+                onClick={() => toggleImportTag(tag)}
+                className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+               >
+                <SubToolboxAlphabeticalTag
+                 level="l2"
+                 label={importTags.includes(tag) ? `× ${tag}` : `+ ${tag}`}
+                 spectrumKey={tag}
+                />
+               </button>
+              ))}
+             </div>
+            </div>
+            <SubToolboxInnerActionButton
+             label={pending.length ? `Ingest All (${pending.length})` : "Ingest All"}
+             iconName="database"
+             tone="green"
+             onClick={ingestAll}
+             disabled={!pending.length}
+            />
+           </div>
+          </div>
+          <div className="flex flex-col gap-2">
+           {pending.length ? pending.map((item) => (
+            <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+             <div className="min-w-0 flex flex-col gap-2">
+              {item.previewUrl ? (
+               <SubToolboxMediaInspector
+                level="l1"
+                title="Staged Preview"
+                poster={item.previewUrl}
+                items={[
+                 { label: "TYPE", value: item.kind.toUpperCase() },
+                 { label: "STATUS", value: item.metadata.duplicateAssetId ? "DUPLICATE REVIEW" : "READY" },
+                ]}
+               />
+              ) : null}
+              <StandardInput
+               value={item.name}
+               onChange={(event) => patchPending(item.id, { name: event.target.value })}
+               aria-label={`Pending asset name ${item.name}`}
+              />
+              <SubToolboxDropdownControl
+               label="Type"
+               value={item.kind}
+               onChange={(value) => patchPending(item.id, { kind: value as VaultAssetKind })}
+               options={["image", "video", "audio", "document", "json", "font", "template", "generated", "other"]}
+              />
+              <div>
+               <div className="mb-2 text-[10px] font-black uppercase opacity-60">Pending tags for {item.name}</div>
+               <div className="mb-2 flex flex-wrap gap-1">
+                {item.tags.map((tag) => (
+                 <button
+                  key={tag}
+                  type="button"
+                  aria-label={`Remove pending tag ${tag}`}
+                  onClick={() => togglePendingTag(item.id, tag)}
+                 >
+                  <SubToolboxAlphabeticalTag level="l2" label={`× ${tag}`} spectrumKey={tag} />
+                 </button>
+                ))}
+               </div>
+               <SubToolboxInput
+                placeholder="+ TAG"
+                aria-label={`Pending tags for ${item.name}`}
+                onKeyDown={(event) => {
+                 if (event.key !== "Enter") return
+                 event.preventDefault()
+                 addPendingTag(item.id, event.currentTarget.value)
+                 event.currentTarget.value = ""
+                }}
+               />
+              </div>
+              {item.metadata.duplicateAssetId ? (
+               <>
+                <SubToolboxStatePanel
+                 level="l1"
+                 state="stale"
+                 message={`Exact duplicate of ${String(item.metadata.duplicateAssetName || "an existing Vault asset")}. Review before ingesting.`}
+                />
+                <SubToolboxInnerActionButton
+                 label="Use Existing Duplicate"
+                 iconName="link"
+                 tone="purple"
+                 onClick={() => resolvePendingDuplicate(item)}
+                />
+               </>
+              ) : null}
+              <div className="text-xs font-bold opacity-60">
+               {(item.size / 1024 / 1024).toFixed(2)} MB
+               {typeof item.metadata.width === "number" && typeof item.metadata.height === "number"
+                ? ` · ${item.metadata.width}×${item.metadata.height}`
+                : ""}
+               {typeof item.metadata.durationSeconds === "number"
+                ? ` · ${Number(item.metadata.durationSeconds).toFixed(1)}s`
+                : ""}
+              </div>
+             </div>
+             <div className="grid grid-cols-2 gap-2">
+              <SubToolboxInnerActionButton label="Ingest" iconName="plus" tone="cyan" onClick={() => ingestOne(item)} />
+              <SubToolboxInnerActionButton label="Reject" iconName="x" tone="pink" onClick={() => rejectPending(item.id)} />
+             </div>
+            </div>
+           )) : (
+            <SubToolboxStatePanel level="l1" state="ready" message="Import Station is ready for a batch." />
+           )}
+          </div>
+         </div>
+        ) : null}
+
+       </div>
+      </SubToolbox>
+
+      <SubToolbox
+       style={moduleStyle("text-editor" as VaultWorkspaceModuleId)}
+       title="Text Editor"
+       subtitle="Create and edit canonical Vault text and Markdown documents"
+       icon={<FileText />}
+       paletteIndex={4}
+       isOpenInitial={false}
+       persistenceId="vault-text-editor"
+      >
+         <div className="flex flex-col gap-3">
+          <div className="text-xs font-black uppercase opacity-60">Text Editor</div>
+          <StandardInput
+           value={textEditorTitle}
+           onChange={(event) => setTextEditorTitle(event.target.value)}
+           placeholder="Text asset title"
+           aria-label="Text asset title"
+          />
+          <SubToolboxSelect
+           value={textEditorFormat}
+           aria-label="Text asset format"
+           onChange={(event) => setTextEditorFormat(event.target.value as VaultTextFormat)}
+          >
+           <option value="plain">PLAIN TEXT</option>
+           <option value="markdown">MARKDOWN</option>
+          </SubToolboxSelect>
+          <SubToolboxTextArea
+           value={textEditorContent}
+           onChange={(event) => setTextEditorContent(event.target.value)}
+           placeholder="Write notes, copy, research, script fragments, prompts, or documentation…"
+           aria-label="Vault Text Editor"
+           rows={12}
+          />
+          {editableTextAsset ? (
+           <SubToolboxInnerActionButton
+            label="Save Selected Text Asset"
+            iconName="edit"
+            tone="green"
+            onClick={saveSelectedTextAsset}
+           />
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="ready"
+            message="Create a new text asset, or select a text/Markdown document in the library to edit it here."
+           />
+          )}
+          <SubToolboxInnerActionButton
+           label="Create New Text Asset"
+           iconName="plus"
+           tone="purple"
+           onClick={createTextAssetFromEditor}
+          />
+         </div>
       </SubToolbox>
 
       <div ref={assetLibraryRef} tabIndex={-1}>
