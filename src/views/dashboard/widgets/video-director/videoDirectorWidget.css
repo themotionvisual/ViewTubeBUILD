@@ -158,3 +158,19 @@
 }
 .vtdw-shot-strip{scroll-snap-type:x proximity}
 .vtdw-shot{scroll-snap-align:start}
+
+@container vt-widget (max-width:430px){
+  .vt-video-director-widget .vtdw-mode-row,
+  .vt-video-director-widget .vtdw-page-row,
+  .vt-video-director-widget .vtdw-field-grid{
+    row-gap:6px;
+    align-content:start;
+  }
+  .vt-video-director-widget .vtdw-mode-row,
+  .vt-video-director-widget .vtdw-page-row{
+    margin-block:2px;
+  }
+  .vt-video-director-widget .vtdw-field{
+    min-height:0;
+  }
+}
