@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { Image as ImageIcon, Send, Sparkles } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
-import { WidgetFooter, WidgetHeaderToggle, WidgetWorkflowMain, WidgetSizedButton } from "../WidgetPrimitives"
+import { WidgetFooter, WidgetHeaderToggle, WidgetWorkflowMain, WidgetSizedButton, WidgetTextArea, WidgetTextInput } from "../WidgetPrimitives"
 import { AspectRatio, ImageSize } from "../../../types"
 import { generateEndScreenImage, generateThumbnail, hasGeminiKey } from "../../../services/gemini"
 
@@ -121,15 +121,14 @@ export const ImageGeneratorWidget = ({
       <div className="widget-workspace image-generator-workspace">
       <WidgetWorkflowMain className="image-generator-main">
         <div className="image-generator-copy-grid">
-          <textarea
-            className="vt-textarea"
+          <WidgetTextArea
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
             placeholder={mode === "thumbnail" ? "Describe thumbnail concept..." : "Describe end screen template background..."}
           />
           <div className="image-generator-text-fields">
-            <input className="vt-input" value={headline} onChange={(event) => setHeadline(event.target.value)} placeholder="Large text" />
-            <input className="vt-input" value={subline} onChange={(event) => setSubline(event.target.value)} placeholder="Small text" />
+            <WidgetTextInput value={headline} onChange={(event) => setHeadline(event.target.value)} placeholder="Large text" />
+            <WidgetTextInput value={subline} onChange={(event) => setSubline(event.target.value)} placeholder="Small text" />
           </div>
         </div>
 
