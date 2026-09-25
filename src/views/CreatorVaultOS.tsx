@@ -24,6 +24,7 @@ import {
  SubToolboxSelect,
  SubToolboxSplitField,
  SubToolboxStatePanel,
+ SubToolboxTextArea,
  SubToolboxVaultAsset,
 } from "../components/subtoolbox/SubToolboxPrimitives"
 import {
@@ -130,6 +131,9 @@ const CreatorVaultOS: React.FC = () => {
  const [smartCollectionName, setSmartCollectionName] = useState("")
  const [collectionRefresh, setCollectionRefresh] = useState(0)
  const [taskRefresh, setTaskRefresh] = useState(0)
+ const [scratchpadRefresh, setScratchpadRefresh] = useState(0)
+ const [scratchpadTitle, setScratchpadTitle] = useState("")
+ const [scratchpadContent, setScratchpadContent] = useState("")
  const [selectionProjectName, setSelectionProjectName] = useState("")
  const [existingProjectId, setExistingProjectId] = useState("")
  const [explorerProject, setExplorerProject] = useState<"all" | "unassigned" | string>("all")
@@ -139,6 +143,7 @@ const CreatorVaultOS: React.FC = () => {
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
  const smartCollections = useMemo(() => listVaultSmartCollections(), [collectionRefresh])
  const tasks = useMemo(() => listVaultTasks(), [taskRefresh])
+ const scratchpads = useMemo(() => listVaultScratchpads(), [scratchpadRefresh])
  const explorerGroups = useMemo(() => buildVaultExplorerGroups(allAssets), [allAssets])
  const visibleAssets = useMemo(() => {
   const base = searchVaultAssets({
@@ -383,6 +388,22 @@ const CreatorVaultOS: React.FC = () => {
   })
   setBatchPrefix("")
   setRefreshTick((value) => value + 1)
+ }
+
+ const saveScratchpad = () => {
+  if (!scratchpadTitle.trim() && !scratchpadContent.trim()) return
+  createVaultScratchpad({
+   title: scratchpadTitle,
+   content: scratchpadContent,
+  })
+  setScratchpadTitle("")
+  setScratchpadContent("")
+  setScratchpadRefresh((value) => value + 1)
+ }
+
+ const removeScratchpad = (id: string) => {
+  deleteVaultScratchpad(id)
+  setScratchpadRefresh((value) => value + 1)
  }
 
  const exportSelectionManifest = () => {
@@ -662,6 +683,50 @@ const CreatorVaultOS: React.FC = () => {
           tone={explorerProject === project.name ? "pink" : "cyan"}
           onClick={() => setExplorerProject(project.name)}
          />
+        ))}
+       </div>
+      </SubToolbox>
+
+      <SubToolbox
+       title="Workspace Notes"
+       subtitle="Saved Vault scratchpads that do not become assets or Brain memory"
+       icon={<FileText />}
+       paletteIndex={6}
+       isOpenInitial={false}
+       persistenceId="vault-workspace-notes"
+      >
+       <div className="flex flex-col gap-3">
+        <StandardInput
+         value={scratchpadTitle}
+         onChange={(event) => setScratchpadTitle(event.target.value)}
+         placeholder="Note title"
+         aria-label="Vault note title"
+        />
+        <SubToolboxTextArea
+         value={scratchpadContent}
+         onChange={(event) => setScratchpadContent(event.target.value)}
+         placeholder="Write a Vault workspace note…"
+         aria-label="Vault note content"
+         rows={4}
+        />
+        <SubToolboxInnerActionButton
+         label="Save Workspace Note"
+         iconName="archive"
+         tone="yellow"
+         onClick={saveScratchpad}
+         disabled={!scratchpadTitle.trim() && !scratchpadContent.trim()}
+        />
+        {scratchpads.map((note) => (
+         <div key={note.id} className="flex flex-col gap-2">
+          <div className="text-sm font-black uppercase">{note.title}</div>
+          <div className="whitespace-pre-wrap text-xs font-bold opacity-70">{note.content}</div>
+          <SubToolboxInnerActionButton
+           label="Delete Note"
+           iconName="eye-off"
+           tone="pink"
+           onClick={() => removeScratchpad(note.id)}
+          />
+         </div>
         ))}
        </div>
       </SubToolbox>
