@@ -8,6 +8,7 @@ export type PendingVaultImport = {
  size: number
  tags: string[]
  metadata: Record<string, unknown>
+ previewUrl: string | null
 }
 
 export const inferVaultAssetKind = (file: File): VaultAssetKind => {
@@ -25,6 +26,7 @@ export const createPendingVaultImport = (
  tags: string[],
  id = crypto.randomUUID(),
  metadata: Record<string, unknown> = {},
+ previewUrl: string | null = null,
 ): PendingVaultImport => ({
  id,
  name: file.name,
@@ -33,6 +35,7 @@ export const createPendingVaultImport = (
  size: file.size,
  tags: [...tags],
  metadata: { ...metadata },
+ previewUrl,
 })
 
 
