@@ -124,6 +124,14 @@
     display: none;
   }
 
+  :where(.dashboard-barrier) .widget-scroll-area {
+    margin-inline-end: 0;
+  }
+
+  :where(.dashboard-barrier) .widget-scroll-area.is-full {
+    margin-inline: calc(-1 * var(--widget-content-inset));
+  }
+
   :where(.dashboard-barrier) .widget-scroll-viewport {
     padding-inline-end: 0;
     -webkit-overflow-scrolling: touch;
