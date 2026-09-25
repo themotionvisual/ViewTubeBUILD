@@ -25,6 +25,16 @@ describe("Vault archive and trash recovery", () => {
   expect(restoredTrash?.metadata?.trashedAt).toBeUndefined()
  })
 
+ it("restores the lifecycle that existed before archive or trash", () => {
+  const asset = createLocalVaultAsset({ name: "Final Master", kind: "video", tags: [] })
+  setVaultAssetLifecycle(asset.id, "FINAL")
+  setVaultAssetState(asset.id, { archived: true })
+  expect(setVaultAssetState(asset.id, { archived: false })?.metadata?.lifecycle).toBe("FINAL")
+
+  setVaultAssetState(asset.id, { trashed: true })
+  expect(setVaultAssetState(asset.id, { trashed: false })?.metadata?.lifecycle).toBe("FINAL")
+ })
+
  it("permanently deletes only already-trashed unprotected assets", () => {
   const asset = createLocalVaultAsset({ name: "Delete Me", kind: "image", tags: [] })
   expect(deleteVaultAsset(asset.id)).toBe(false)
