@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { ChevronLeft, ChevronRight, Layers3 } from "lucide-react"
 import { ToolboxScaffold } from "./Toolbox"
-import { SubToolboxButton } from "./subtoolbox/SubToolboxPrimitives"
+import { SubToolboxIconButton } from "./subtoolbox/SubToolboxPrimitives"
 import { getToolboxPaletteColors } from "../styles/toolboxPalette"
 import { StudioHubCompletePrimitiveCatalog } from "./studio-hub/StudioHubCompletePrimitiveCatalog"
 import { StudioHubPrimitiveMigrationCatalog } from "./studio-hub/StudioHubPrimitiveMigrationCatalog"
