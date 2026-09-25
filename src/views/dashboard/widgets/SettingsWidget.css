@@ -81,6 +81,11 @@
   min-height:62px;
   background:color-mix(in srgb,var(--widget-color) 13%,white);
 }
+.settings-switchboard-preset-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+}
 .settings-switchboard-actions{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -98,6 +103,9 @@
   }
   .settings-switchboard-control-row{
     grid-template-columns:minmax(0,1fr) auto;
+  }
+  .settings-switchboard-preset-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
   }
   .settings-switchboard-actions,
   .settings-switchboard-actions.is-account{
