@@ -42,4 +42,16 @@ describe("Vault structured metadata filters", () => {
    maxBytes: 10_000_000,
   }).map((asset) => asset.name)).toEqual(["Wide Final"])
  })
+
+ it("uses the actual imported durationSeconds metadata key", () => {
+  createLocalVaultAsset({
+   name: "Imported Duration",
+   kind: "video",
+   mimeType: "video/mp4",
+   tags: [],
+   metadata: { durationSeconds: 55 },
+  })
+  expect(searchVaultAssets({ minDurationSec: 50 }).map((asset) => asset.name))
+   .toEqual(["Imported Duration"])
+ })
 })
