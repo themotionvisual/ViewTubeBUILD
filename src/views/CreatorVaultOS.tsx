@@ -3511,28 +3511,6 @@ const CreatorVaultOS: React.FC = () => {
            />
           </div>
          </div>
-         <div>
-          <div className="mb-2 text-xs font-black uppercase opacity-60">Send To</div>
-          {selectedToolTargets.length ? (
-           <div className="flex flex-wrap gap-2">
-            {selectedToolTargets.map((target) => (
-             <SubToolboxInnerActionButton
-              key={target.id}
-              label={target.label}
-              iconName="link"
-              tone="blue"
-              onClick={() => sendSelectedAssetToTool(target.id)}
-             />
-            ))}
-           </div>
-          ) : (
-           <SubToolboxStatePanel
-            level="l1"
-            state="empty"
-            message="No compatible ViewTube tools are registered for this asset type."
-           />
-          )}
-         </div>
          {selectedReadiness ? (
           <div>
            <div className="mb-2 text-xs font-black uppercase opacity-60">Project Readiness</div>
@@ -3691,23 +3669,6 @@ const CreatorVaultOS: React.FC = () => {
            ) : null}
           </div>
          ) : null}
-         <div>
-          <div className="mb-2 text-xs font-black uppercase opacity-60">Metadata Export</div>
-          <div className="grid grid-cols-2 gap-2">
-           <SubToolboxInnerActionButton
-            label="Export Metadata JSON"
-            iconName="database"
-            tone="cyan"
-            onClick={() => exportVaultMetadata([selectedAsset], "json")}
-           />
-           <SubToolboxInnerActionButton
-            label="Export Metadata CSV"
-            iconName="database"
-            tone="cyan"
-            onClick={() => exportVaultMetadata([selectedAsset], "csv")}
-           />
-          </div>
-         </div>
          <div>
           <div className="text-xs font-black uppercase opacity-60">Updated</div>
           <div className="text-sm font-bold">{new Date(selectedAsset.updatedAt).toLocaleString()}</div>
