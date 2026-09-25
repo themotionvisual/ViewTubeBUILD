@@ -598,9 +598,9 @@ export const VideoDirectorWidget: React.FC<
           </Field>
         </div>
         <div className="vtdw-quick-row">
-          <DirectorActionButton tone="primary" height={24} disabled={autoFillLoading} onClick={() => void runAutoFill()}>
+          <DirectorButton className="vtdw-autofill" tone="primary" height={24} disabled={autoFillLoading} onClick={() => void runAutoFill()}>
             <Sparkles size={15} aria-hidden="true" /> {autoFillLoading ? "DIRECTING…" : "AUTO-FILL DIRECTOR"}
-          </DirectorActionButton>
+          </DirectorButton>
         </div>
       </WidgetSection>
 
@@ -817,7 +817,7 @@ export const VideoDirectorWidget: React.FC<
           aria-label="Open Video Director in Studio Hub"
           title="Open Video Director in Studio Hub"
         >
-          STUDIO ↗
+          <ExternalLink size={13} aria-hidden="true" /> STUDIO
         </DirectorButton>
       }
     >
