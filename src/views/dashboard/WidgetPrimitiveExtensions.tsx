@@ -20,9 +20,9 @@ export const WidgetTextArea:React.FC<React.TextareaHTMLAttributes<HTMLTextAreaEl
 const selectMenuClass = (height:WidgetControlHeight,tone:WidgetPrimitiveTone) => `vt-size-${height} is-height-${height} vt-tone-${tone} is-tone-${tone}`
 const SELECT_MENU_METRICS:Record<WidgetControlHeight,{font:number;icon:number;iconStroke:number;radius:number;stroke:number}> = {
   18:{font:8,icon:12,iconStroke:2,radius:2,stroke:0},
-  24:{font:16,icon:18,iconStroke:2.25,radius:3,stroke:2},
-  32:{font:21,icon:24,iconStroke:2.5,radius:4,stroke:2},
-  38:{font:26,icon:29,iconStroke:2.75,radius:6,stroke:2},
+  24:{font:14,icon:18,iconStroke:2.25,radius:3,stroke:2},
+  32:{font:18,icon:24,iconStroke:2.5,radius:4,stroke:2},
+  38:{font:22,icon:29,iconStroke:2.75,radius:6,stroke:2},
 }
 const selectMenuStyle = (height:WidgetControlHeight) => {
  const metric=SELECT_MENU_METRICS[height]
