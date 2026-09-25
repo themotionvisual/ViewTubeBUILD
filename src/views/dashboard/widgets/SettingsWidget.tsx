@@ -34,6 +34,7 @@ interface DashboardControlBridge {
   totalWidgetCount?: number
   handleExport?: () => void
   handleImportClick?: () => void
+  applyPreset?: (preset: "focus" | "creation" | "analytics" | "all") => void
 }
 
 interface SettingsWidgetProps extends CommonWidgetProps {
@@ -75,6 +76,7 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
   ...common
 }) => {
   const [page, setPage] = useState<SettingsPage>("dashboard")
+  const [resetArmed, setResetArmed] = useState(false)
   const isConnected = data.authState.isAuthenticated
   const hidden = Math.max(0, dashboardControls?.hiddenWidgetCount ?? 0)
   const total = Math.max(0, dashboardControls?.totalWidgetCount ?? 68)
@@ -83,6 +85,14 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
   const planId = readLocal("vt_last_plan", "basic").toUpperCase()
   const lastSyncTimestamp = data.lastSyncComplete ? Date.parse(data.lastSyncComplete) : null
   const lastSync = data.formatRelativeTime(Number.isFinite(lastSyncTimestamp) ? lastSyncTimestamp : null)
+  const syncAgeMs = Number.isFinite(lastSyncTimestamp) ? Date.now() - Number(lastSyncTimestamp) : null
+  const dataState = !isConnected
+    ? "DISCONNECTED"
+    : !Number.isFinite(lastSyncTimestamp)
+      ? "NEVER SYNCED"
+      : syncAgeMs !== null && syncAgeMs > 24 * 60 * 60 * 1000
+        ? "STALE"
+        : "CURRENT"
 
   const dashboardProgress = useMemo(
     () => total > 0 ? Math.round((visible / total) * 100) : 0,
@@ -132,6 +142,13 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
               />
             </div>
 
+            <div className="settings-switchboard-preset-grid" role="group" aria-label="Dashboard layout presets">
+              <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.applyPreset?.("focus")}>FOCUS</WidgetSizedButton>
+              <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.applyPreset?.("creation")}>CREATION</WidgetSizedButton>
+              <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.applyPreset?.("analytics")}>ANALYTICS</WidgetSizedButton>
+              <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.applyPreset?.("all")}>ALL</WidgetSizedButton>
+            </div>
+
             <div className="settings-switchboard-actions">
               <WidgetSizedButton height={32} tone="primary" onClick={() => dashboardControls?.openPicker?.()}>
                 MANAGE WIDGETS
@@ -142,6 +159,16 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
               <WidgetSizedButton height={32} tone="default" onClick={() => onNavigate("/settings?panel=widgets")}>
                 FULL SETTINGS
               </WidgetSizedButton>
+            </div>
+
+            <div className="settings-switchboard-actions">
+              <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.handleExport?.()}>EXPORT</WidgetSizedButton>
+              <WidgetSizedButton height={32} tone="default" onClick={() => dashboardControls?.handleImportClick?.()}>IMPORT</WidgetSizedButton>
+              {!resetArmed ? (
+                <WidgetSizedButton height={32} tone="secondary" onClick={() => setResetArmed(true)}>RESET LAYOUT</WidgetSizedButton>
+              ) : (
+                <WidgetSizedButton height={32} tone="secondary" onClick={() => { dashboardControls?.resetLayout?.(); setResetArmed(false) }}>CONFIRM RESET</WidgetSizedButton>
+              )}
             </div>
 
             <div className="settings-switchboard-mobile-note">
@@ -162,18 +189,18 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
                 <strong>{isConnected ? "CHANNEL DATA CONNECTED" : "CONNECT YOUR CHANNEL"}</strong>
                 <span>{isConnected ? `Last successful sync: ${lastSync}` : "Connect YouTube to activate personalized analytics and creator intelligence."}</span>
               </div>
-              <WidgetBadge height={24} status={isConnected ? "positive" : "warning"}>
-                {isConnected ? "LIVE" : "DISCONNECTED"}
+              <WidgetBadge height={24} status={dataState === "CURRENT" ? "positive" : "warning"}>
+                {data.isSyncing ? "SYNCING" : dataState}
               </WidgetBadge>
             </div>
 
             <WidgetProgressBar
-              value={isConnected ? 2 : 0}
+              value={!isConnected ? 0 : dataState === "CURRENT" ? 2 : 1}
               max={2}
               label="DATA READINESS"
-              displayValue={isConnected ? "READY" : "0 / 2"}
+              displayValue={!isConnected ? "0 / 2" : dataState === "CURRENT" ? "READY" : "REVIEW"}
               height={24}
-              tone={isConnected ? "primary" : "secondary"}
+              tone={dataState === "CURRENT" ? "primary" : "secondary"}
             />
 
             <div className="settings-switchboard-actions">
