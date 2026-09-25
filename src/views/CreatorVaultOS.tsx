@@ -37,6 +37,7 @@ import {
  findVaultDuplicateByHash,
  listVaultAssets,
  searchVaultAssets,
+ setVaultAssetAttention,
  setVaultAssetLifecycle,
  setVaultAssetProtection,
  setVaultAssetState,
@@ -266,6 +267,7 @@ const CreatorVaultOS: React.FC = () => {
  const [captionLines, setCaptionLines] = useState<VaultCaptionLine[]>([])
  const [customFieldRefresh, setCustomFieldRefresh] = useState(0)
  const [customFieldName, setCustomFieldName] = useState("")
+ const [attentionNoteDraft, setAttentionNoteDraft] = useState("")
  const [customFieldType, setCustomFieldType] = useState<VaultCustomFieldType>("text")
  const [explorerProject, setExplorerProject] = useState<"all" | "unassigned" | string>("all")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
@@ -522,6 +524,14 @@ const CreatorVaultOS: React.FC = () => {
    .sort((a, b) => a.localeCompare(b)),
   [allAssets],
  )
+
+ useEffect(() => {
+  setAttentionNoteDraft(
+   selectedAsset && typeof selectedAsset.metadata?.attentionNote === "string"
+    ? selectedAsset.metadata.attentionNote
+    : "",
+  )
+ }, [selectedAsset?.id])
 
  useEffect(() => {
   const stored = activeCaptionAsset?.metadata?.captionLines
@@ -1049,6 +1059,19 @@ const CreatorVaultOS: React.FC = () => {
    else delete metadata[key]
   }
   updateVaultAsset(asset.id, { metadata })
+  setRefreshTick((value) => value + 1)
+ }
+
+ const flagSelectedAssetForReview = () => {
+  if (!selectedAsset) return
+  setVaultAssetAttention(selectedAsset.id, true, attentionNoteDraft)
+  setRefreshTick((value) => value + 1)
+ }
+
+ const clearSelectedAssetReviewFlag = () => {
+  if (!selectedAsset) return
+  setVaultAssetAttention(selectedAsset.id, false)
+  setAttentionNoteDraft("")
   setRefreshTick((value) => value + 1)
  }
 
@@ -2716,16 +2739,46 @@ const CreatorVaultOS: React.FC = () => {
            ) : null}
           </div>
          </div>
-         {attentionReasons.length ? (
-          <div>
-           <div className="mb-2 text-xs font-black uppercase opacity-60">Needs Attention</div>
-           <div className="flex flex-col gap-1">
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Needs Attention</div>
+          {attentionReasons.length ? (
+           <div className="mb-2 flex flex-col gap-1">
             {attentionReasons.map((reason) => (
              <div key={reason} className="text-xs font-bold">• {reason}</div>
             ))}
            </div>
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="ready"
+            message="No current organization or review issues."
+           />
+          )}
+          <div className="mt-2 flex flex-col gap-2">
+           <SubToolboxTextArea
+            height="compact"
+            value={attentionNoteDraft}
+            placeholder="Review note…"
+            aria-label="Vault review note"
+            onChange={(event) => setAttentionNoteDraft(event.target.value)}
+           />
+           {selectedAsset.metadata?.needsAttention === true ? (
+            <SubToolboxInnerActionButton
+             label="Clear Review Flag"
+             iconName="checklist"
+             tone="green"
+             onClick={clearSelectedAssetReviewFlag}
+            />
+           ) : (
+            <SubToolboxInnerActionButton
+             label="Flag for Review"
+             iconName="flag"
+             tone="orange"
+             onClick={flagSelectedAssetForReview}
+            />
+           )}
           </div>
-         ) : null}
+         </div>
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Spectrum Tags</div>
           <div className="flex flex-wrap gap-1">
