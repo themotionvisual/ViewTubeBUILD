@@ -2519,10 +2519,8 @@
   max-width:100%;
   margin:0;
   padding:0;
-  display:-webkit-box;
-  -webkit-box-orient:vertical;
-  -webkit-line-clamp:2;
-  line-clamp:2;
+  display:block;
+  max-height:1.64em;
   overflow:hidden;
   white-space:normal;
   text-overflow:clip;
@@ -3286,5 +3284,166 @@
   .vm-tag-actions>*{
     width:100%!important;
     max-width:100%!important;
+  }
+}
+
+
+/* ==========================================================================
+   Mobile editable-control contract — 2026-09-25
+   WebKit may visually zoom the page when focusing editable controls whose
+   computed text size is below 16px. Keep the page zoom user-controlled and
+   make the control itself mobile-safe instead of disabling pinch zoom.
+   ========================================================================== */
+@media (max-width:767px), (hover:none) and (pointer:coarse) {
+  [data-vt-toolbox] :is(
+    input[type="text"],
+    input[type="search"],
+    input[type="email"],
+    input[type="url"],
+    input[type="tel"],
+    input[type="password"],
+    input[type="number"],
+    input:not([type]),
+    textarea,
+    select
+  ) {
+    font-size:16px!important;
+    scroll-margin-block:12px calc(var(--vt-keyboard-occlusion,0px) + 20px);
+  }
+
+  .vt-subtoolbox-input,
+  .vt-subtoolbox-labeled-control {
+    font-size:16px!important;
+  }
+}
+
+
+/* ==========================================================================
+   CANONICAL HEADER ACTION CLUSTER — 2026-09-25
+   Header extras, help and collapse are independent controls. Never resize
+   arbitrary descendants of the action slot: that previously forced wrapper
+   divs/spans/SVGs to 30/24/20px and caused the overlap visible on iPhone.
+   ========================================================================== */
+.vt-toolbox-header-actions{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  flex:0 0 auto!important;
+  min-width:0!important;
+  height:100%!important;
+  gap:6px!important;
+  padding-right:8px!important;
+}
+.vt-toolbox-header-actions.is-subtoolbox{
+  gap:4px!important;
+  padding-right:6px!important;
+}
+.vt-toolbox-header-extras{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  min-width:0!important;
+  max-width:min(32vw,220px);
+  gap:4px!important;
+}
+.vt-toolbox-header-control{
+  box-sizing:border-box!important;
+  flex:0 0 auto!important;
+}
+.vt-toolbox-header-help.is-toolbox{
+  width:40px!important;min-width:40px!important;height:40px!important;
+}
+.vt-toolbox-header-help.is-subtoolbox{
+  width:34px!important;min-width:34px!important;height:34px!important;
+}
+.vt-toolbox-header-help.is-toolbox>span{
+  width:36px!important;height:36px!important;
+}
+.vt-toolbox-header-help.is-subtoolbox>span{
+  width:32px!important;height:32px!important;
+}
+.vt-toolbox-header-collapse{
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:3px solid #000!important;
+  background:#fff!important;
+  color:#000!important;
+  box-shadow:3px 3px 0 #000!important;
+  overflow:hidden!important;
+}
+.vt-toolbox-header-collapse.is-toolbox{
+  width:40px!important;min-width:40px!important;height:40px!important;
+  border-radius:8px!important;
+}
+.vt-toolbox-header-collapse.is-subtoolbox{
+  width:34px!important;min-width:34px!important;height:34px!important;
+  border-radius:7px!important;
+  box-shadow:2px 2px 0 #000!important;
+}
+.vt-toolbox-header-collapse svg{
+  width:58%!important;height:58%!important;
+  max-width:none!important;max-height:none!important;
+  stroke-width:3.2!important;
+  transition:transform var(--vt-subtoolbox-motion-control,180ms) ease-out!important;
+}
+.vt-toolbox-header-collapse svg.is-open{transform:rotate(180deg)!important}
+.vt-toolbox-header-collapse:focus-visible,
+.vt-toolbox-header-help:focus-visible{
+  outline:3px solid var(--pair-b,var(--pair-a,#36e0f6))!important;
+  outline-offset:2px!important;
+}
+.vt-toolbox-header-extras .vt-subtoolbox-button{
+  max-width:min(180px,28vw)!important;
+}
+.vt-toolbox-header-palette-button{
+  width:34px!important;min-width:34px!important;height:34px!important;
+  --vt-component-height:34px!important;
+  padding:0!important;
+}
+
+@media (max-width:767px){
+  .vt-toolbox-header-actions{
+    gap:3px!important;
+    padding-right:4px!important;
+  }
+  .vt-toolbox-header-actions.is-subtoolbox{
+    gap:2px!important;
+    padding-right:3px!important;
+  }
+  .vt-toolbox-header-extras{
+    gap:2px!important;
+    max-width:88px!important;
+  }
+  .vt-toolbox-header-help.is-toolbox,
+  .vt-toolbox-header-collapse.is-toolbox{
+    width:34px!important;min-width:34px!important;height:34px!important;
+  }
+  .vt-toolbox-header-help.is-toolbox>span{
+    width:32px!important;height:32px!important;
+  }
+  .vt-toolbox-header-help.is-subtoolbox,
+  .vt-toolbox-header-collapse.is-subtoolbox{
+    width:30px!important;min-width:30px!important;height:30px!important;
+  }
+  .vt-toolbox-header-help.is-subtoolbox>span{
+    width:28px!important;height:28px!important;
+  }
+  .vt-toolbox-header-palette-button{
+    width:30px!important;min-width:30px!important;height:30px!important;
+    --vt-component-height:30px!important;
+  }
+  .vt-toolbox-header-extras .vt-subtoolbox-button{
+    width:32px!important;
+    min-width:32px!important;
+    height:32px!important;
+    min-height:32px!important;
+    padding:0!important;
+  }
+  .vt-toolbox-header-extras .vt-subtoolbox-button-label{
+    display:none!important;
+  }
+  .vt-toolbox-header-extras .vt-subtoolbox-button-icon{
+    margin:0!important;
   }
 }

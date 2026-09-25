@@ -204,6 +204,55 @@ describe("subtoolbox design governance", () => {
   expect(service).toContain("duration?: string")
  })
 
+ it("locks paint-safe shell edges and mobile keyboard-safe editing", () => {
+  const toolboxCss = source("src/styles/toolbox-system.css")
+  const systemCss = source("src/styles/subtoolbox-system.css")
+  const keyboardHook = source("src/hooks/useRestoreKeyboardPosition.ts")
+
+  expect(toolboxCss).toContain("--vt-toolbox-header-edge-clearance:8px")
+  expect(toolboxCss).toContain("--vt-toolbox-header-edge-clearance:7px")
+  expect(toolboxCss).toContain("padding:var(--vt-toolbox-header-edge-clearance) var(--vt-toolbox-shell-gutter) var(--vt-toolbox-shell-gutter)!important")
+  expect(toolboxCss).toContain("--vt-keyboard-occlusion:0px")
+  expect(systemCss).toContain("Mobile editable-control contract — 2026-09-25")
+  expect(systemCss).toContain("font-size:16px!important")
+  expect(systemCss).toContain("scroll-margin-block:12px calc(var(--vt-keyboard-occlusion,0px) + 20px)")
+
+  expect(keyboardHook).toContain('window.visualViewport?.addEventListener("resize", onVisualViewportChange)')
+  expect(keyboardHook).toContain('window.visualViewport?.addEventListener("scroll", onVisualViewportChange)')
+  expect(keyboardHook).toContain('document.documentElement.style.setProperty("--vt-keyboard-occlusion"')
+  expect(keyboardHook).toContain('document.documentElement.dataset.vtMobileEditing = "true"')
+  expect(keyboardHook).toContain('main.scrollBy({ top: delta, behavior: "auto" })')
+ })
+
+ it("keeps Toolbox header controls isolated, square, and mobile-safe", () => {
+  const toolbox = source("src/components/Toolbox.tsx")
+  const toolboxCss = source("src/styles/toolbox-system.css")
+  const systemCss = source("src/styles/subtoolbox-system.css")
+  const library = source("src/components/ToolboxUIReferenceLibrary.tsx")
+  const manager = source("src/views/VideoManager.tsx")
+
+  expect(toolbox).toContain("vt-toolbox-header-actions")
+  expect(toolbox).toContain("vt-toolbox-header-extras")
+  expect(toolbox).toContain("<ChevronDown")
+  expect(toolbox).not.toContain("AnimatedToggleIcon open={open}")
+
+  expect(toolboxCss).not.toContain('> header > div:last-child > *')
+  expect(toolboxCss).not.toContain('> header > div:last-child span')
+  expect(toolboxCss).not.toContain('> header > div:last-child svg')
+
+  expect(systemCss).toContain("CANONICAL HEADER ACTION CLUSTER — 2026-09-25")
+  expect(systemCss).toContain(".vt-toolbox-header-actions")
+  expect(systemCss).toContain(".vt-toolbox-header-extras")
+  expect(systemCss).toContain(".vt-toolbox-header-collapse.is-toolbox")
+  expect(systemCss).toContain(".vt-toolbox-header-palette-button")
+  expect(systemCss).toContain(".vt-toolbox-header-collapse svg.is-open")
+
+  expect(library).toContain("SubToolboxIconButton")
+  expect(library).toContain("vt-toolbox-header-palette-button")
+  expect(library).not.toContain("Studio Hub Component Library — Hardcoded")
+  expect(manager).toContain("RefreshCw")
+ })
+
  it("keeps production fields and the imported component library on one styling authority", () => {
   const toolboxSource = source("src/components/Toolbox.tsx")
   const systemCss = source("src/styles/subtoolbox-system.css")

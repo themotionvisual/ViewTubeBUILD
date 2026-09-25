@@ -87,14 +87,6 @@
   padding-right: 4px !important;
 }
 
-[data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header svg {
-  width: 28px !important;
-  height: 28px !important;
-  max-width: 28px !important;
-  max-height: 28px !important;
-  stroke-width: 2 !important;
-}
-
 /* Main toolbox content establishes the level-1 module contract. */
 [data-vt-toolbox][data-vt-toolbox-level="main"] > div > div > main,
 [data-vt-toolbox][data-vt-toolbox-level="main"] .vt-main-toolbox-content {
@@ -307,10 +299,8 @@
 [data-vt-toolbox-level="sub"] > div > header h3.vt-subtoolbox-title {
   white-space: normal !important;
   text-overflow: clip !important;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  display: block;
+  max-height: 1.64em;
   overflow: hidden;
   overflow-wrap: anywhere;
 }
@@ -375,22 +365,6 @@
     max-width: 34px !important;
     max-height: 34px !important;
     stroke-width: 3.1px !important;
-  }
-
-  /* Keep action hit areas compact on phones without shrinking the shell itself. */
-  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > div:last-child > * {
-    width: 30px !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > div:last-child span {
-    width: 24px !important;
-    height: 24px !important;
-    box-shadow: 2px 2px 0 0 #000 !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"] > header > div:last-child svg {
-    width: 20px !important;
-    height: 20px !important;
   }
 
   [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"],
@@ -596,16 +570,21 @@
    ========================================================================== */
 :root{
   --vt-toolbox-shell-gutter:6px;
+  /* Painted edge clearance is intentionally larger than sibling spacing.
+     Thick shell dividers, component strokes and shadows need extra breathing
+     room so the first control does not visually collide with a header. */
+  --vt-toolbox-header-edge-clearance:8px;
+  --vt-keyboard-occlusion:0px;
 }
 [data-vt-toolbox][data-vt-toolbox-level="main"] .vt-main-toolbox-content{
-  padding:var(--vt-toolbox-shell-gutter)!important;
+  padding:var(--vt-toolbox-header-edge-clearance) var(--vt-toolbox-shell-gutter) var(--vt-toolbox-shell-gutter)!important;
   gap:var(--vt-toolbox-shell-gutter)!important;
 }
 [data-vt-toolbox-level="sub"] .vt-subtoolbox-inset{
   padding:0!important;
 }
 [data-vt-toolbox-level="sub"] .vt-subtoolbox-content{
-  padding:var(--vt-toolbox-shell-gutter)!important;
+  padding:var(--vt-toolbox-header-edge-clearance) var(--vt-toolbox-shell-gutter) var(--vt-toolbox-shell-gutter)!important;
   gap:var(--vt-toolbox-shell-gutter)!important;
 }
 [data-vt-toolbox-level="sub"] :is(.vt-subtoolbox-stack,.vt-subtoolbox-grid,.vt-subtoolbox-actions){
@@ -678,7 +657,7 @@
 }
 
 @media(max-width:767px){
-  :root{--vt-toolbox-shell-gutter:5px}
+  :root{--vt-toolbox-shell-gutter:5px;--vt-toolbox-header-edge-clearance:7px}
   .vt-mini-subtoolbox{--vt-mini-height:36px;--vt-mini-radius:7px;--vt-mini-shadow:3px}
   .vt-mini-subtoolbox-title{font-size:14px;padding-inline:7px}
   .vt-mini-subtoolbox-actions>button{padding-inline:7px!important;font-size:11px!important}

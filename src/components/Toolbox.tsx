@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import '../styles/toolbox-entry.css';
 import { CustomIcon } from './CustomIcon';
 import { getToolboxPaletteColors } from '../styles/toolboxPalette';
-import { hexToRgba, AnimatedToggleIcon } from './ToolboxUISystem';
+import { hexToRgba } from './ToolboxUISystem';
 import { ChevronDown, Cloud, Zap } from 'lucide-react';
 import {
   ToolboxHeaderCollapseButton,
@@ -309,10 +309,10 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           </div>
 
           <div
-            className={`flex items-center shrink-0 ${variant === 'accordion' ? 'gap-3 pr-4' : 'gap-6 pr-6'} h-full`}
+            className={`vt-toolbox-header-actions ${variant === 'accordion' ? 'is-subtoolbox' : 'is-toolbox'}`}
             onClick={(event) => event.stopPropagation()}
           >
-            {headerActions}
+            {headerActions ? <div className="vt-toolbox-header-extras">{headerActions}</div> : null}
             {isCollapsible && (subtitle || helpText || (helpGuide && helpGuide.length > 0)) && (
               <ToolboxHeaderHelpButton
                 level={variant === "accordion" ? "subtoolbox" : "toolbox"}
@@ -326,7 +326,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
                 open={open}
                 onClick={setOpen}
                 aria-label={open ? "Collapse toolbox" : "Expand toolbox"}
-                icon={<AnimatedToggleIcon open={open} size={variant === 'accordion' ? 34 : 38} />}
+                icon={<ChevronDown aria-hidden="true" className={open ? "is-open" : ""} />}
               />
             )}
           </div>
@@ -714,8 +714,8 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 pr-3 h-full shrink-0" onClick={e => e.stopPropagation()}>
-          {actionButton}
+        <div className="vt-toolbox-header-actions is-subtoolbox" onClick={e => e.stopPropagation()}>
+          {actionButton ? <div className="vt-toolbox-header-extras">{actionButton}</div> : null}
           {collapsible && (subtitle || helpText) && (
             <ToolboxHeaderHelpButton
               level="subtoolbox"
@@ -729,7 +729,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
               open={open}
               onClick={setOpen}
               aria-label={open ? "Collapse subtoolbox" : "Expand subtoolbox"}
-              icon={<AnimatedToggleIcon open={open} size={34} />}
+              icon={<ChevronDown aria-hidden="true" className={open ? "is-open" : ""} />}
             />
           )}
         </div>
