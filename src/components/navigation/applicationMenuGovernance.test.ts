@@ -13,11 +13,13 @@ describe("application menu governance", () => {
     expect(shell).not.toContain("Dashboard Layout")
   })
 
-  it("keeps the dashboard controls toggle in the Settings widget", () => {
+  it("keeps the dashboard controls toggle in the dedicated Settings widget", () => {
     const renderer = read("src/views/dashboard/WidgetRendererBase.tsx")
-    expect(renderer).toContain('widget.id === "system-micro-stack"')
-    expect(renderer).toContain("SHOW DASHBOARD CONTROLS")
-    expect(renderer).toContain("HIDE DASHBOARD CONTROLS")
+    const settings = read("src/views/dashboard/widgets/SettingsWidget.tsx")
+    expect(renderer).toContain('"system-micro-stack": React.lazy(() => import("./widgets/SettingsWidget")')
+    expect(renderer).not.toContain('widget.id === "system-micro-stack"')
+    expect(settings).toContain("DASHBOARD CONTROLS")
+    expect(settings).toContain("SHOW ALL WIDGETS")
   })
 
   it("maps every routed dropdown destination to a current application route", () => {
