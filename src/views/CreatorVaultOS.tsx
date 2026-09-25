@@ -377,6 +377,12 @@ const CreatorVaultOS: React.FC = () => {
   () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
   [allAssets, selectedAssetIds],
  )
+ const selectedCollectionMemberships = useMemo(
+  () => selectedAsset
+   ? manualCollections.filter((collection) => collection.assetIds.includes(selectedAsset.id))
+   : [],
+  [selectedAsset, manualCollections],
+ )
  const rightsLicense = selectedAsset ? String(selectedAsset.metadata?.license || "") : ""
  const rightsSource = selectedAsset ? String(selectedAsset.metadata?.rightsSource || selectedAsset.metadata?.sourceAttribution || "") : ""
  const rightsExpiry = selectedAsset ? String(selectedAsset.metadata?.rightsExpiry || "") : ""
@@ -546,6 +552,18 @@ const CreatorVaultOS: React.FC = () => {
  const addSelectionToCollection = () => {
   if (!targetCollectionId || !selectedAssetIds.length) return
   addAssetsToVaultCollection(targetCollectionId, selectedAssetIds)
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const addSelectedAssetToCollection = () => {
+  if (!selectedAsset || !targetCollectionId) return
+  addAssetsToVaultCollection(targetCollectionId, [selectedAsset.id])
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const removeSelectedAssetFromCollection = (collectionId: string) => {
+  if (!selectedAsset) return
+  removeAssetFromVaultCollection(collectionId, selectedAsset.id)
   setManualCollectionRefresh((value) => value + 1)
  }
 
@@ -2642,6 +2660,56 @@ const CreatorVaultOS: React.FC = () => {
          <div>
           <div className="text-xs font-black uppercase opacity-60">Project</div>
           <div className="text-sm font-black uppercase">{selectedAsset.projectName || "Unassigned"}</div>
+         </div>
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Collection Membership</div>
+          <div className="flex flex-col gap-2">
+           {selectedCollectionMemberships.length ? selectedCollectionMemberships.map((collection) => (
+            <div key={collection.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+             <SubToolboxInnerActionButton
+              label={`${collection.role === "brand-kit" ? "★ " : ""}${collection.name}`}
+              iconName="collection"
+              tone={collection.role === "brand-kit" ? "yellow" : "cyan"}
+              onClick={() => setActiveCollectionId(collection.id)}
+             />
+             <SubToolboxInnerActionButton
+              label="Remove from Collection"
+              iconName="x"
+              tone="pink"
+              onClick={() => removeSelectedAssetFromCollection(collection.id)}
+             />
+            </div>
+           )) : (
+            <SubToolboxStatePanel
+             level="l1"
+             state="empty"
+             message="This asset is not in a manual collection yet."
+            />
+           )}
+           {manualCollections.length ? (
+            <>
+             <SubToolboxSelect
+              value={targetCollectionId}
+              aria-label="Collection for selected asset"
+              onChange={(event) => setTargetCollectionId(event.target.value)}
+             >
+              <option value="">SELECT COLLECTION</option>
+              {manualCollections.map((collection) => (
+               <option key={collection.id} value={collection.id}>
+                {collection.role === "brand-kit" ? "★ " : ""}{collection.name}
+               </option>
+              ))}
+             </SubToolboxSelect>
+             <SubToolboxInnerActionButton
+              label="Add Asset to Collection"
+              iconName="plus"
+              tone="green"
+              onClick={addSelectedAssetToCollection}
+              disabled={!targetCollectionId}
+             />
+            </>
+           ) : null}
+          </div>
          </div>
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Spectrum Tags</div>
