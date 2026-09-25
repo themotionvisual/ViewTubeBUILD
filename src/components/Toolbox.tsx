@@ -782,6 +782,45 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   );
 };
 
+export interface MiniSubToolboxProps {
+  title: React.ReactNode;
+  icon?: React.ReactNode;
+  actions?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+  contentClassName?: string;
+  headerColor?: string;
+  iconColor?: string;
+}
+
+export const MiniSubToolbox: React.FC<MiniSubToolboxProps> = ({
+  title,
+  icon,
+  actions,
+  children,
+  className = "",
+  contentClassName = "",
+  headerColor = "var(--pair-a, #36E0F6)",
+  iconColor = "var(--pair-b, #FF7F6B)",
+}) => (
+  <section
+    data-vt-toolbox
+    data-vt-toolbox-level="mini"
+    className={`vt-mini-subtoolbox ${className}`}
+    style={{
+      ["--vt-mini-header" as any]: headerColor,
+      ["--vt-mini-icon" as any]: iconColor,
+    }}
+  >
+    <header className="vt-mini-subtoolbox-header">
+      <span className="vt-mini-subtoolbox-icon" aria-hidden="true">{icon}</span>
+      <strong className="vt-mini-subtoolbox-title">{title}</strong>
+      {actions ? <span className="vt-mini-subtoolbox-actions">{actions}</span> : null}
+    </header>
+    <div className={`vt-mini-subtoolbox-content ${contentClassName}`}>{children}</div>
+  </section>
+);
+
 export interface StandardUploadBoxProps {
   label?: string;
   icon?: React.ReactNode;
