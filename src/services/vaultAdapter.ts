@@ -154,18 +154,57 @@ export const setVaultAssetState = (
  const existing = readAssets().find((asset) => asset.id === id)
  if (!existing) return null
  const metadata = { ...(existing.metadata || {}) }
+ const lifecycle = String(metadata.lifecycle || "").toUpperCase()
+ const protectedAsset = metadata.protected === true || (lifecycle === "GOLDEN" && metadata.protected !== false)
+ const destructiveRequested = input.archived === true || input.trashed === true
+ if (protectedAsset && destructiveRequested) return null
 
  if (typeof input.favorite === "boolean") metadata.favorite = input.favorite
  if (typeof input.archived === "boolean") {
-  if (input.archived) metadata.archivedAt = Date.now()
-  else delete metadata.archivedAt
+  if (input.archived) {
+   metadata.archivedAt = Date.now()
+   metadata.lifecycle = "ARCHIVED"
+  } else {
+   delete metadata.archivedAt
+   if (metadata.lifecycle === "ARCHIVED") metadata.lifecycle = "DRAFT"
+  }
  }
  if (typeof input.trashed === "boolean") {
-  if (input.trashed) metadata.trashedAt = Date.now()
-  else delete metadata.trashedAt
+  if (input.trashed) {
+   metadata.trashedAt = Date.now()
+   metadata.lifecycle = "TRASHED"
+  } else {
+   delete metadata.trashedAt
+   if (metadata.lifecycle === "TRASHED") metadata.lifecycle = "DRAFT"
+  }
  }
 
  return updateVaultAsset(id, { metadata })
+}
+
+export const setVaultAssetLifecycle = (
+ id: string,
+ lifecycle: VaultAssetLifecycle,
+): VaultAsset | null => {
+ const existing = readAssets().find((asset) => asset.id === id)
+ if (!existing) return null
+ const metadata = { ...(existing.metadata || {}), lifecycle }
+ if (lifecycle === "GOLDEN" && metadata.protected === undefined) metadata.protected = true
+ return updateVaultAsset(id, { metadata })
+}
+
+export const setVaultAssetProtection = (
+ id: string,
+ protectedAsset: boolean,
+): VaultAsset | null => {
+ const existing = readAssets().find((asset) => asset.id === id)
+ if (!existing) return null
+ return updateVaultAsset(id, {
+  metadata: {
+   ...(existing.metadata || {}),
+   protected: protectedAsset,
+  },
+ })
 }
 
 export const upsertVaultAsset = (
