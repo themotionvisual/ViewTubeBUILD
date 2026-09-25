@@ -10,11 +10,11 @@ No git merge, subtree merge, or wholesale file transplant from Vault-Tool.
 
 Every donor capability is reimplemented in the current canonical owner.
 
-## Rule 2 — Pause feature expansion in PR #426 until reconciliation
+## Rule 2 — Treat merged PR #426 as Lane A baseline
 
-PR #426 contains useful Wave-1 Vault work. It should not be discarded, but it must be reconciled against this plan before merge.
+PR #426 merged before this re-harvest plan was finalized. Its code is now part of current main and must be audited, not rebased.
 
-Keep if compatible:
+Baseline retained from #426:
 - production /vault route;
 - Toolbox/SubToolbox shell;
 - Asset Library / Navigator / Inspector;
@@ -24,15 +24,15 @@ Keep if compatible:
 - identity-safe Vault mutations;
 - multi-select and basic batch tagging/rename/project assignment.
 
-Rework before merge where required:
-- add current-main changes from PR #427;
-- align media preview with newly merged media-player primitives;
+Required follow-up audit on current main:
+- align media preview with PR #427 media-player primitives;
 - separate pre-ingest intake batching from post-ingest Batch Processor;
-- ensure direct/staged ingest contract;
-- add range selection behavior;
-- ensure route/tests still match newest main.
+- add direct/staged ingest contract;
+- add Shift range selection;
+- verify tests/build/browser behavior;
+- repair any merge interaction introduced by #427 or newer main.
 
-Do not add more unrelated owner features to #426.
+Do not reopen #426 as a catch-all donor branch. Follow-on owner features move through Lanes B-G.
 
 ## Merge lanes
 
@@ -112,14 +112,13 @@ Separate scoped PRs:
 
 ## Merge order
 
-1. Merge this planning/re-harvest authority.
-2. Rebase PR #426 on newest main.
-3. Run focused tests/typecheck/build and browser certification.
-4. Merge Lane A only if green.
-5. Build Lanes B/C in parallel after Lane A contracts are stable.
-6. Build Lane E independently against current Projects contracts.
-7. Build Lane D after Asset Engine/version relation audit.
-8. Schedule F/G only after owner-specific current-code gap checks.
+1. Merge this planning/re-harvest authority (#428).
+2. Audit the already-merged Lane A baseline from #426 on current main.
+3. Repair Lane A gaps in a small follow-up PR: range selection, direct/staged ingest, media-player alignment, verification.
+4. Build Lanes B/C in parallel after Lane A contracts are stable.
+5. Build Lane E independently against current Projects contracts.
+6. Build Lane D after Asset Engine/version relation audit.
+7. Schedule F/G only after owner-specific current-code gap checks.
 
 ## Completion guard
 
