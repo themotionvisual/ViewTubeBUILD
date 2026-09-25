@@ -1,91 +1,97 @@
-# ViewTube Creator Vault — Implementation Tasks
+# ViewTube Vault Donor Re-Harvest — Task Ledger
 
-## Wave 0 — contracts
-- [ ] VTV-001 Audit current VaultAsset/Asset Engine/ContentBuild/Generation/Package contracts.
-- [ ] VTV-002 Define backward-compatible Vault asset schema/version migration.
-- [ ] VTV-003 Define Vault query/view-model contract.
-- [ ] VTV-004 Define Import Station ingest job/result contract.
-- [ ] VTV-005 Define Project donor-field mapping to existing Project/ContentBuild types.
+## Planning / reconciliation
+- [x] RH-P001 Unzip and audit uploaded donor source.
+- [x] RH-P002 Reclassify donor as multi-owner harvest.
+- [x] RH-P003 Create full donor re-harvest authority.
+- [x] RH-P004 Create 44-item gap registry.
+- [x] RH-P005 Create owner-based revised merge plan.
+- [ ] RH-P006 Merge revised planning authority.
+- [ ] RH-P007 Mark prior planning PR #425 superseded/close or retarget after comparison.
+- [ ] RH-P008 Rebase PR #426 on current main.
+- [ ] RH-P009 Reconcile PR #426 against Lane A scope.
 
-## Wave 1 — route/library
-- [ ] VTV-010 Replace /vault redirect with production Vault page mount.
-- [ ] VTV-011 Build canonical Toolbox Vault shell and page modes.
-- [ ] VTV-012 Build Asset Matrix grid/list owner.
-- [ ] VTV-013 Build Asset Inspector shell.
-- [ ] VTV-014 Add existing-record compatibility tests.
+## Lane A — Vault foundation
+- [x] RH-A010 Production /vault route exists in PR #426.
+- [x] RH-A011 Toolbox/SubToolbox Vault shell exists in PR #426.
+- [x] RH-A012 Search/kind/source/sort basics exist in PR #426.
+- [x] RH-A013 Spectrum Tags basics exist in PR #426.
+- [x] RH-A014 Base Import Station exists in PR #426.
+- [x] RH-A015 Base multi-select/Batch Processor exists in PR #426.
+- [ ] RH-A016 Add Shift range selection.
+- [ ] RH-A017 Reconcile Import Station with direct-vs-staged contract.
+- [ ] RH-A018 Use current media-player primitives where appropriate.
+- [ ] RH-A019 Run/repair tests and build after rebase.
 
-## Wave 2 — search/tags
-- [ ] VTV-020 Implement canonical Vault search/filter selector.
-- [ ] VTV-021 Integrate Spectrum Tags.
-- [ ] VTV-022 Add metadata/project/type/lifecycle filter controls.
-- [ ] VTV-023 Add saved filter and Smart Collection query persistence.
+## Lane B — interaction / organization
+- [ ] RH-B020 Space Quick Look.
+- [ ] RH-B021 Escape close contract.
+- [ ] RH-B022 Cmd/Ctrl+K Vault command/search.
+- [ ] RH-B023 Cmd/Ctrl+G selected-assets Project/ContentBuild handoff.
+- [ ] RH-B024 Split-pane explorer.
+- [ ] RH-B025 Timeline view.
+- [ ] RH-B026 Smart Collections.
+- [ ] RH-B027 Favorites/Inbox/Archive/Trash.
+- [ ] RH-B028 Arrange Mode/module reorder.
+- [ ] RH-B029 Module visibility preferences.
+- [ ] RH-B030 Workspace layout density preference.
+- [ ] RH-B031 Saved scratchpad/checklist panels.
 
-## Wave 3 — Import Station
-- [ ] VTV-030 Build batch intake queue.
-- [ ] VTV-031 Add per-item metadata/tag/project configuration.
-- [ ] VTV-032 Add content hash / duplicate preflight.
-- [ ] VTV-033 Add metadata extraction and background progress states.
-- [ ] VTV-034 Add accept/reject/accept-all canonical ingestion.
+## Lane C — intake jobs
+- [ ] RH-C040 Global workspace drag/drop.
+- [ ] RH-C041 File type/MIME/size extraction.
+- [ ] RH-C042 Image dimension extraction.
+- [ ] RH-C043 Video duration/resolution extraction.
+- [ ] RH-C044 Video thumbnail frame extraction.
+- [ ] RH-C045 Direct import path.
+- [ ] RH-C046 Editable staged intake drafts.
+- [ ] RH-C047 Content hash/duplicate preflight.
+- [ ] RH-C048 EXIF metadata task.
+- [ ] RH-C049 Vision/suggested-tag task.
+- [ ] RH-C050 Transcript task.
+- [ ] RH-C051 Proxy derivative task.
+- [ ] RH-C052 Background task center/retry/error.
 
-## Wave 4 — organization/memory
-- [ ] VTV-040 Add manual Collections.
-- [ ] VTV-041 Add Smart Collections.
-- [ ] VTV-042 Add Inbox/Favorites/Archive/Trash.
-- [ ] VTV-043 Add custom metadata fields.
-- [ ] VTV-044 Add recent assets/search/view preference workspace memory.
+## Lane D — versions/captions/dependencies
+- [ ] RH-D060 Version carousel.
+- [ ] RH-D061 Detach version preserving lineage.
+- [ ] RH-D062 Lineage/usage/rights inspector.
+- [ ] RH-D063 Caption artifact editor.
+- [ ] RH-D064 SRT/VTT export.
+- [ ] RH-D065 Transcript→Script derivative.
+- [ ] RH-D066 Selected assets→new Project/ContentBuild.
+- [ ] RH-D067 Attach selected assets→existing Project.
+- [ ] RH-D068 Dependency/readiness projection.
+- [ ] RH-D069 Manifest JSON export.
+- [ ] RH-D070 Factual package/storage sizing.
 
-## Wave 5 — batch
-- [ ] VTV-050 Add range/multi-select behavior.
-- [ ] VTV-051 Build selection Action Rail.
-- [ ] VTV-052 Build Mass Tagging/Batch Processor.
-- [ ] VTV-053 Add batch rename/project/collection/lifecycle operations.
-- [ ] VTV-054 Add JSON/CSV export and ZIP bundle.
-- [ ] VTV-055 Add background task center/progress.
+## Lane E — Projects
+- [ ] RH-E080 Nine-stage creator-lane mapping.
+- [ ] RH-E081 Priority.
+- [ ] RH-E082 Due date.
+- [ ] RH-E083 Detail tabs.
+- [ ] RH-E084 Core promise/audience/runtime.
+- [ ] RH-E085 Phase progress.
+- [ ] RH-E086 Storyboard shot records.
+- [ ] RH-E087 Title drafts/primary.
+- [ ] RH-E088 Phase checklists.
+- [ ] RH-E089 Checklist-derived progress.
+- [ ] RH-E090 Script word/read time.
+- [ ] RH-E091 Linked Vault picker.
+- [ ] RH-E092 Brain project research handoff.
+- [ ] RH-E093 Published stats projection.
 
-## Wave 6 — lineage
-- [ ] VTV-060 Add version/derivative/duplicate selectors.
-- [ ] VTV-061 Build Version Stack.
-- [ ] VTV-062 Build Asset Lineage Map.
-- [ ] VTV-063 Build Usage and Rights inspector tabs.
-- [ ] VTV-064 Add golden/protected lifecycle guard.
+## Lane F — Editor/media
+- [ ] RH-F100 Audit VT_E1 before scheduling donor transformations.
+- [ ] RH-F101 Create derivative vs overwrite semantics.
+- [ ] RH-F102 Protected asset overwrite guard.
+- [ ] RH-F103 Batch transform request.
+- [ ] RH-F104 Fill only verified crop/color/LUT/trim gaps.
 
-## Wave 7 — text/preview
-- [ ] VTV-070 Build SubToolbox document/text editor.
-- [ ] VTV-071 Add version-safe document saves.
-- [ ] VTV-072 Connect AI refine to BrainRuntime.
-- [ ] VTV-073 Build Quick Look media preview.
-- [ ] VTV-074 Build compare / before-after mode.
-
-## Wave 8 — mini-tools
-- [ ] VTV-080 Add metadata inspector.
-- [ ] VTV-081 Add OCR and auto-tag suggestion pipeline.
-- [ ] VTV-082 Add frame extraction.
-- [ ] VTV-083 Add smart crop/aspect derivative.
-- [ ] VTV-084 Add color palette extraction.
-- [ ] VTV-085 Add find-similar projection.
-- [ ] VTV-086 Wire specialist processing handoffs.
-
-## Wave 9 — Projects donor upgrades
-- [ ] VTV-090 Reconcile donor 9-stage pipeline with current Project/ContentBuild statuses.
-- [ ] VTV-091 Add missing priority/due/progress metadata to Project Board presentation.
-- [ ] VTV-092 Add Project detail tabs for overview/notes/script/storyboard/assets/packaging/checklist.
-- [ ] VTV-093 Add title drafts, storyboard shots and phased checklists through canonical project models.
-- [ ] VTV-094 Add linked Vault asset selection through canonical IDs.
-- [ ] VTV-095 Add published stats projection without storing duplicate analytics truth.
-
-## Wave 10 — storage
-- [ ] VTV-100 Define durable Vault repository/provider boundary.
-- [ ] VTV-101 Add managed metadata persistence.
-- [ ] VTV-102 Integrate Google Drive provider through current auth.
-- [ ] VTV-103 Add proxy/thumbnail/blob storage strategy.
-- [ ] VTV-104 Migrate browser-local Vault data safely.
-
-## Wave 11 — certification
-- [ ] VTV-110 Typecheck and targeted tests.
-- [ ] VTV-111 Route/governance regression tests.
-- [ ] VTV-112 Production build.
-- [ ] VTV-113 Desktop/narrow visual certification.
-- [ ] VTV-114 Mobile portrait certification.
-- [ ] VTV-115 Mobile landscape certification.
-- [ ] VTV-116 Keyboard/touch/accessibility verification.
-- [ ] VTV-117 Large-library performance verification.
+## Lane G — matching tools
+- [ ] RH-G110 Packaging/End Screen audit + donor slice.
+- [ ] RH-G111 Hook polish modes.
+- [ ] RH-G112 Hook timed preview simulator.
+- [ ] RH-G113 Video Manager donor interaction audit.
+- [ ] RH-G114 Analytics report donor audit.
+- [ ] RH-G115 Shorts/VT_E1 conditional donor audit.
