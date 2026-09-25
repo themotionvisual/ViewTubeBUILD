@@ -53,9 +53,9 @@
 - [ ] RH-C052 Background task center/retry/error. (Task Center + queued/processing/completed/failed states complete; retry action pending)
 
 ## Lane D — versions/captions/dependencies
-- [ ] RH-D060 Version carousel.
-- [ ] RH-D061 Detach version preserving lineage.
-- [ ] RH-D062 Lineage/usage/rights inspector.
+- [x] RH-D060 Version carousel.
+- [x] RH-D061 Detach version preserving lineage.
+- [ ] RH-D062 Lineage/usage/rights inspector. (Lineage complete; usage + rights pending)
 - [ ] RH-D063 Caption artifact editor.
 - [ ] RH-D064 SRT/VTT export.
 - [ ] RH-D065 Transcript→Script derivative.
