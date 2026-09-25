@@ -30,7 +30,7 @@ import {
   WidgetMediaUploadFrame,
   WidgetSizedButton,
   WidgetSizedSelect,
-  WidgetSplitButton,
+  WidgetLeftSplitButton,
   WidgetTag,
   WidgetTextInput,
   WidgetTextArea,
@@ -556,9 +556,9 @@ export const VideoUploaderWidget = ({ data, ...common }: WidgetProps) => {
               </WidgetSizedButton>
             ))}
           </nav>
-          <WidgetSplitButton type="button" tone="primary" size="large" width="full" icon={<Save />} disabled={saving} onClick={() => void publish()}>
+          <WidgetLeftSplitButton type="button" height={38} textFit="adaptive" tone="primary" width="full" icon={<Save />} disabled={saving} onClick={() => void publish()}>
             {saving ? "Publishing…" : saved ? "Published" : "Publish video"}
-          </WidgetSplitButton>
+          </WidgetLeftSplitButton>
           <WidgetIconButton icon={<RotateCcw />} label="Reset upload package" height={38} tone="secondary" onClick={reset} />
         </WidgetFooter>
       </div>
