@@ -60,6 +60,10 @@
 - [x] RH-B052 Factual Needs Attention reasons + manual review flag/note.
 - [x] RH-B053 Numeric 1–9 Spectrum Tag hotkeys.
 - [x] RH-B054 Enter shortcut scrolls selected asset Inspector into view.
+- [x] RH-B055 Orientation metadata filter persisted through workspace + Smart Collections.
+- [x] RH-B056 Updated date-range filter persisted through workspace + Smart Collections.
+- [x] RH-B057 Persistent horizontal Filmstrip library view.
+- [x] RH-B058 Persistent canonical Lineage library view.
 
 ## Lane C — intake jobs
 - [x] RH-C040 Global workspace drag/drop.
