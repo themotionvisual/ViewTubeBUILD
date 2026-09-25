@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import '../styles/toolbox-entry.css';
 import { CustomIcon } from './CustomIcon';
 import { getToolboxPaletteColors } from '../styles/toolboxPalette';
-import { hexToRgba } from './ToolboxUISystem';
-import { ChevronDown, Cloud, Zap } from 'lucide-react';
+import { AnimatedToggleIcon, hexToRgba } from './ToolboxUISystem';
+import { Cloud, Upload, Zap } from 'lucide-react';
 import {
   ToolboxHeaderCollapseButton,
   ToolboxHeaderHelpButton,
@@ -326,7 +326,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
                 open={open}
                 onClick={setOpen}
                 aria-label={open ? "Collapse toolbox" : "Expand toolbox"}
-                icon={<ChevronDown aria-hidden="true" className={open ? "is-open" : ""} />}
+                icon={<AnimatedToggleIcon open={open} size={variant === "accordion" ? 30 : 34} />}
               />
             )}
           </div>
@@ -598,13 +598,17 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
 }) => {
   const paletteCycle = React.useContext(PaletteCycleContext);
   const allocatedPaletteRef = useRef<number | null>(null);
-  if (allocatedPaletteRef.current === null && (paletteIndex === undefined || paletteIndex === null)) {
+  if (allocatedPaletteRef.current === null && paletteCycle.mainPaletteIndex !== null) {
+    allocatedPaletteRef.current = paletteCycle.allocateSubPaletteIndex();
+  } else if (allocatedPaletteRef.current === null && (paletteIndex === undefined || paletteIndex === null)) {
     allocatedPaletteRef.current = paletteCycle.allocateSubPaletteIndex();
   }
 
   const controlled = typeof isOpen === 'boolean';
   const effectivePersistencePalette =
-    paletteIndex !== undefined && paletteIndex !== null ? paletteIndex : allocatedPaletteRef.current;
+    paletteCycle.mainPaletteIndex !== null
+      ? allocatedPaletteRef.current
+      : (paletteIndex !== undefined && paletteIndex !== null ? paletteIndex : allocatedPaletteRef.current);
   const subPersistenceDescriptor = {
     level: "sub" as const,
     title,
@@ -646,7 +650,9 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
     }
   };
   const effectivePaletteIndex =
-    paletteIndex !== undefined && paletteIndex !== null ? paletteIndex : allocatedPaletteRef.current;
+    paletteCycle.mainPaletteIndex !== null
+      ? allocatedPaletteRef.current
+      : (paletteIndex !== undefined && paletteIndex !== null ? paletteIndex : allocatedPaletteRef.current);
   const palette = effectivePaletteIndex !== undefined && effectivePaletteIndex !== null
     ? getToolboxPaletteColors(effectivePaletteIndex)
     : null;
@@ -729,7 +735,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
               open={open}
               onClick={setOpen}
               aria-label={open ? "Collapse subtoolbox" : "Expand subtoolbox"}
-              icon={<ChevronDown aria-hidden="true" className={open ? "is-open" : ""} />}
+              icon={<AnimatedToggleIcon open={open} size={30} />}
             />
           )}
         </div>
@@ -824,6 +830,51 @@ export const MiniSubToolbox: React.FC<MiniSubToolboxProps> = ({
     </header>
     <div className={`vt-mini-subtoolbox-content ${contentClassName}`}>{children}</div>
   </section>
+);
+
+export interface ThumbnailMiniSubToolboxProps extends Omit<MiniSubToolboxProps, "children"> {
+  src?: string | null;
+  alt?: string;
+  emptyLabel?: React.ReactNode;
+  previewClassName?: string;
+  onDragOver?: React.DragEventHandler<HTMLDivElement>;
+  onDragLeave?: React.DragEventHandler<HTMLDivElement>;
+  onDrop?: React.DragEventHandler<HTMLDivElement>;
+}
+
+export const ThumbnailMiniSubToolbox: React.FC<ThumbnailMiniSubToolboxProps> = ({
+  src,
+  alt = "Thumbnail",
+  emptyLabel = "SELECT A VIDEO TO LOAD THUMBNAIL",
+  previewClassName = "",
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  className = "",
+  contentClassName = "",
+  ...props
+}) => (
+  <MiniSubToolbox
+    {...props}
+    className={`vt-thumbnail-mini-subtoolbox ${className}`}
+    contentClassName={`vt-thumbnail-mini-content ${contentClassName}`}
+  >
+    <div
+      className={`vt-thumbnail-mini-preview ${previewClassName}`}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    >
+      {src ? (
+        <img src={src} alt={alt} />
+      ) : (
+        <div className="vt-thumbnail-mini-empty">
+          <Upload aria-hidden="true" />
+          <strong>{emptyLabel}</strong>
+        </div>
+      )}
+    </div>
+  </MiniSubToolbox>
 );
 
 export interface StandardUploadBoxProps {
@@ -979,6 +1030,7 @@ export const SubToolboxDropdownControl: React.FC<SubToolboxDropdownControlProps>
   const resolvedShadow = `color-mix(in srgb, var(--pair-a, ${theme.shadow}) 45%, transparent)`;
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const [menuRect, setMenuRect] = useState<{ left: number; top: number; width: number } | null>(null);
   const [inheritedPair, setInheritedPair] = useState({ pairA: "", pairB: "" });
 
@@ -1001,7 +1053,8 @@ export const SubToolboxDropdownControl: React.FC<SubToolboxDropdownControlProps>
 
   useEffect(() => {
     const onOutside = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (!rootRef.current?.contains(target) && !panelRef.current?.contains(target)) setOpen(false);
     };
     document.addEventListener("mousedown", onOutside);
     return () => document.removeEventListener("mousedown", onOutside);
@@ -1056,6 +1109,7 @@ export const SubToolboxDropdownControl: React.FC<SubToolboxDropdownControlProps>
       {open && menuRect &&
         createPortal(
           <div
+            ref={panelRef}
             data-vt-subtoolbox-dropdown-portal="true"
             className="border-x-[3px] border-b-[3px] border-black rounded-b-[8px] overflow-hidden bg-white"
             style={{
@@ -1107,6 +1161,7 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
   const resolvedShadow = `color-mix(in srgb, var(--pair-a, ${theme.shadow}) 45%, transparent)`;
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const [menuRect, setMenuRect] = useState<{ left: number; top: number; width: number } | null>(null);
   const [inheritedPair, setInheritedPair] = useState({ pairA: "", pairB: "" });
   const borderClass = borderWidth === 3 ? "border-[3px]" : "border-[4px]";
@@ -1131,7 +1186,8 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
 
   useEffect(() => {
     const onOutside = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (!rootRef.current?.contains(target) && !panelRef.current?.contains(target)) setOpen(false);
     };
     document.addEventListener("mousedown", onOutside);
     return () => document.removeEventListener("mousedown", onOutside);
@@ -1187,6 +1243,7 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
       {open && menuRect &&
         createPortal(
           <div
+            ref={panelRef}
             data-vt-subtoolbox-dropdown-portal="true"
             className={`${borderClass} border-black rounded-b-[8px] overflow-hidden bg-white`}
             style={{
