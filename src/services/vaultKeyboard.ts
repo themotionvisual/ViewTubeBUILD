@@ -20,3 +20,14 @@ export const resolveVaultKeyboardCommand = (input: {
  if (!command && key === "m") return "toggle-mute"
  return null
 }
+
+
+export const resolveVaultTagHotkey = (input: {
+ key: string
+ metaKey: boolean
+ ctrlKey: boolean
+}): number | null => {
+ if (input.metaKey || input.ctrlKey) return null
+ if (!/^[1-9]$/.test(input.key)) return null
+ return Number(input.key) - 1
+}
