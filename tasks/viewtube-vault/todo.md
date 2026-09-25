@@ -42,7 +42,7 @@
 - [ ] RH-C041 File type/MIME/size extraction.
 - [ ] RH-C042 Image dimension extraction.
 - [ ] RH-C043 Video duration/resolution extraction.
-- [ ] RH-C044 Video thumbnail frame extraction.
+- [x] RH-C044 Video thumbnail frame extraction.
 - [ ] RH-C045 Direct import path.
 - [x] RH-C046 Editable staged intake drafts.
 - [x] RH-C047 Content hash/duplicate preflight.
