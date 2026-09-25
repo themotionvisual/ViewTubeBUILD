@@ -58,6 +58,7 @@ describe("Vault corrected tool ownership", () => {
   const state = readVaultWorkspaceState()
   expect(state.visibleModules.filter((id) => id === "asset-operations")).toHaveLength(1)
   expect(state.visibleModules.filter((id) => id === "import-tags")).toHaveLength(1)
+  expect(state.visibleModules.filter((id) => id === "text-editor")).toHaveLength(1)
   expect(state.visibleModules).not.toContain("spectrum-tags")
   expect(state.visibleModules).not.toContain("import-station")
   expect(state.visibleModules).not.toContain("batch-processor")

@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest"
 
 const source = fs.readFileSync(path.resolve(process.cwd(), "src/views/CreatorVaultOS.tsx"), "utf8")
 
-describe("CreatorVaultOS Asset Operations tools", () => {
- it("includes the canonical text editor workflow", () => {
+describe("CreatorVaultOS Vault tool workflows", () => {
+ it("includes the standalone canonical text editor workflow", () => {
   expect(source).toContain("Text Editor")
   expect(source).toContain("Create New Text Asset")
   expect(source).toContain("Save Selected Text Asset")

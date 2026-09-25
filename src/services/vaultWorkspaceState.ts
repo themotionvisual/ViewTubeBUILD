@@ -109,13 +109,11 @@ export const readVaultWorkspaceState = (): VaultWorkspaceState => {
 
   const rawVisible = Array.isArray(parsed.visibleModules) ? parsed.visibleModules : [...DEFAULT_VAULT_MODULE_ORDER]
   const rawOrder = Array.isArray(parsed.moduleOrder) ? parsed.moduleOrder : []
-  const migratedFromUnified = rawVisible.includes("asset-operations")
-   && !rawVisible.includes("import-tags")
-   && !rawVisible.includes("text-editor")
-  const visibleSeed = migratedFromUnified
+  const legacyWorkspace = parsed.importTagsMode == null
+  const visibleSeed = legacyWorkspace
    ? [...rawVisible, "import-tags", "text-editor"]
    : rawVisible
-  const orderSeed = migratedFromUnified
+  const orderSeed = legacyWorkspace
    ? [...rawOrder, "import-tags", "text-editor"]
    : rawOrder
   const visibleModules = normalizeModules(visibleSeed)
