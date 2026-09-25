@@ -4,7 +4,6 @@ import { VTLottie } from "../../components/VTLottie"
 import { cn } from "../../lib/utils"
 import type { DashboardHeightBucket, DashboardSizeBucket, WidgetDefinition, WidgetInstanceState } from "./types"
 import { WIDGET_DESCRIPTIONS } from "./WidgetRegistry"
-import { loadDashboardLayout, saveDashboardLayout } from "./storage"
 import { SUBTOOLBOX_TOKENS } from "../../components/subtoolbox/tokens"
 
 export interface WidgetDragHandleBindings {
@@ -39,7 +38,6 @@ export const WidgetShell: React.FC<{
  const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
  const [keepClosingContentMounted, setKeepClosingContentMounted] = useState(!instance.collapsed)
  const description = WIDGET_DESCRIPTIONS[widget.id] || { short: "INTERACTIVE SOURCE PREVIEW RETAINED AS IDEA-BANK.", detailed: "View raw data streams and historical references before promoting components to the main dashboard." }
- const handleShowAllWidgets = () => { const layout = loadDashboardLayout(); if (layout.hidden.length === 0) return; saveDashboardLayout({ ...layout, hidden: [] }); window.location.reload() }
 
  useEffect(() => {
   if (!instance.collapsed) {
@@ -93,7 +91,7 @@ export const WidgetShell: React.FC<{
    <div className="vt-widget-collapse-inner">
     {shouldRenderContent && <>
      <div className={`widget-subtitle ${isSubtitleOpen?'open':''}`}><div className="widget-subtitle-content" style={{flexDirection:"column",alignItems:"stretch",gap:"8px"}}><div><div style={{fontWeight:900,textTransform:"uppercase",fontSize:"12px",lineHeight:1.2}}>{description.short}</div><div style={{fontWeight:600,fontSize:"11px",opacity:.7,lineHeight:1.3,textTransform:"none"}}>{description.detailed}</div></div>{helpContent ? <div className="widget-help-guide">{helpContent}</div> : null}</div></div>
-     <div className="vt-widget-content"><div className={cn("vt-widget-body",contentLayout==="flush"&&"vt-widget-body--flush")} onPointerDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()}>{widget.id==="system-micro-stack"&&<button type="button" className="vt-button" onClick={handleShowAllWidgets} style={{width:"100%",minHeight:"34px",fontSize:"9px",marginBottom:"8px",background:"#fff"}}><Eye size={14} aria-hidden="true"/>SHOW ALL WIDGETS</button>}{children}</div></div>
+     <div className="vt-widget-content"><div className={cn("vt-widget-body",contentLayout==="flush"&&"vt-widget-body--flush")} onPointerDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()}>{children}</div></div>
     </>}
    </div>
   </div>
