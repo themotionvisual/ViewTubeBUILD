@@ -14,6 +14,8 @@ describe("Vault Smart Collection advanced criteria", () => {
    query: "napoleon",
    lifecycle: "FINAL",
    orientation: "landscape",
+   updatedFrom: "2026-09-01",
+   updatedTo: "2026-09-30",
    mimeType: "video/mp4",
    minWidth: "3840",
    minHeight: "2160",
@@ -26,6 +28,8 @@ describe("Vault Smart Collection advanced criteria", () => {
   expect(listVaultSmartCollections()[0]).toMatchObject({
    lifecycle: "FINAL",
    orientation: "landscape",
+   updatedFrom: "2026-09-01",
+   updatedTo: "2026-09-30",
    mimeType: "video/mp4",
    minWidth: "3840",
    minHeight: "2160",
@@ -50,6 +54,8 @@ describe("Vault Smart Collection advanced criteria", () => {
   expect(listVaultSmartCollections()[0]).toMatchObject({
    lifecycle: "all",
    orientation: "all",
+   updatedFrom: "",
+   updatedTo: "",
    mimeType: "",
    minWidth: "",
    minHeight: "",
