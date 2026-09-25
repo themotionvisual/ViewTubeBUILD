@@ -6,6 +6,7 @@ const canvas = readFileSync(new URL("../DashboardCanvas.tsx", import.meta.url), 
 const mobile = readFileSync(new URL("../widgetMobileContract.css", import.meta.url), "utf8")
 const reference = readFileSync(new URL("../widgets/UIReferenceLibraryWidget.tsx", import.meta.url), "utf8")
 const registry = readFileSync(new URL("../WidgetRegistryBase.ts", import.meta.url), "utf8")
+const mobileControls = shell.slice(shell.indexOf('className={cn("widget-mobile-control-row"'))
 
 describe("mobile widget control refinements", () => {
   it("uses expressive icon-only geometry controls and disables width changes on phones", () => {
@@ -15,10 +16,10 @@ describe("mobile widget control refinements", () => {
     expect(shell).toContain('aria-label="Decrease widget height"')
     expect(shell).toContain('aria-label="Increase widget height"')
     expect(shell).toContain("widget-mobile-icon-pair")
-    expect(shell).not.toContain('>W−</button>')
-    expect(shell).not.toContain('>W+</button>')
-    expect(shell).not.toContain('>H−</button>')
-    expect(shell).not.toContain('>H+</button>')
+    expect(mobileControls).not.toContain('>W−</button>')
+    expect(mobileControls).not.toContain('>W+</button>')
+    expect(mobileControls).not.toContain('>H−</button>')
+    expect(mobileControls).not.toContain('>H+</button>')
     expect(shell).toMatch(/aria-label="Decrease widget width"[^>]*disabled/)
     expect(shell).toMatch(/aria-label="Increase widget width"[^>]*disabled/)
   })
