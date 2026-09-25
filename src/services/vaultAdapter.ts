@@ -254,6 +254,7 @@ export const createImportedVaultAsset = (input: {
  projectName?: string | null
  toolId?: SuperToolId | null
  url?: string | null
+ previewUrl?: string | null
  mimeType?: string | null
  tags?: string[]
  metadata?: Record<string, unknown>
@@ -269,7 +270,7 @@ export const createImportedVaultAsset = (input: {
   driveFileId: null,
   folderId: null,
   url: input.url || null,
-  previewUrl: input.url || null,
+  previewUrl: input.previewUrl || input.url || null,
   mimeType: input.mimeType || null,
   tags: input.tags || [],
   metadata: input.metadata || {},
