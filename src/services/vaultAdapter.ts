@@ -107,6 +107,14 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
  return sorted.slice(0, limit)
 }
 
+export const findVaultDuplicateByHash = (contentHash: string): VaultAsset | null => {
+ const normalized = contentHash.trim().toLowerCase()
+ if (!normalized) return null
+ return readAssets().find((asset) => (
+  String(asset.metadata?.contentHash || "").trim().toLowerCase() === normalized
+ )) || null
+}
+
 export const addVaultAsset = (
  input: Omit<VaultAsset, "id" | "createdAt" | "updatedAt">,
 ): VaultAsset => {
