@@ -23,6 +23,7 @@ export interface BrainRuntimeMetadata {
  runtimeVersion: string
  surface: string
  projectId: string | null
+ contentBuildId: string | null
  artifactRefs: string[]
  hasVisibleContext: boolean
 }
