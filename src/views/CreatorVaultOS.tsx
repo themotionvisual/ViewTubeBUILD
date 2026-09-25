@@ -109,6 +109,10 @@ import {
  serializeVaultSelectionManifest,
 } from "../services/vaultManifest"
 import {
+ serializeVaultAssetsCsv,
+ serializeVaultAssetsJson,
+} from "../services/vaultMetadataExport"
+import {
  createVaultScratchpad,
  deleteVaultScratchpad,
  listVaultScratchpads,
@@ -1110,6 +1114,36 @@ const CreatorVaultOS: React.FC = () => {
  const removeScratchpad = (id: string) => {
   deleteVaultScratchpad(id)
   setScratchpadRefresh((value) => value + 1)
+ }
+
+ const downloadVaultText = (content: string, fileName: string, mimeType: string) => {
+  const blob = new Blob([content], { type: mimeType })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = fileName
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+ }
+
+ const exportVaultMetadata = (assets: VaultAsset[], format: "json" | "csv") => {
+  if (!assets.length) return
+  const date = new Date().toISOString().slice(0, 10)
+  if (format === "json") {
+   downloadVaultText(
+    serializeVaultAssetsJson(assets),
+    `viewtube-vault-metadata-${date}.json`,
+    "application/json",
+   )
+   return
+  }
+  downloadVaultText(
+   serializeVaultAssetsCsv(assets),
+   `viewtube-vault-metadata-${date}.csv`,
+   "text/csv;charset=utf-8",
+  )
  }
 
  const exportSelectionManifest = () => {
@@ -3028,6 +3062,23 @@ const CreatorVaultOS: React.FC = () => {
            ) : null}
           </div>
          ) : null}
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Metadata Export</div>
+          <div className="grid grid-cols-2 gap-2">
+           <SubToolboxInnerActionButton
+            label="Export Metadata JSON"
+            iconName="database"
+            tone="cyan"
+            onClick={() => exportVaultMetadata([selectedAsset], "json")}
+           />
+           <SubToolboxInnerActionButton
+            label="Export Metadata CSV"
+            iconName="database"
+            tone="cyan"
+            onClick={() => exportVaultMetadata([selectedAsset], "csv")}
+           />
+          </div>
+         </div>
          <div>
           <div className="text-xs font-black uppercase opacity-60">Updated</div>
           <div className="text-sm font-bold">{new Date(selectedAsset.updatedAt).toLocaleString()}</div>
