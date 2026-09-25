@@ -781,8 +781,9 @@ const CreatorVaultOS: React.FC = () => {
   })
  }
 
- const stageFiles = async (files: FileList | null) => {
+ const stageFiles = async (files: FileList | null, forcedTags: string[] = []) => {
   if (!files?.length) return
+  const initialTags = Array.from(new Set([...importTags, ...forcedTags]))
   const prepared = await Promise.all(Array.from(files).map(async (file) => {
    const task = createVaultTask({
     type: "ingest-preflight",
@@ -846,7 +847,7 @@ const CreatorVaultOS: React.FC = () => {
     setTaskRefresh((value) => value + 1)
     return createPendingVaultImport(
      file,
-     importTags,
+     initialTags,
      crypto.randomUUID(),
      {
       ...metadata,
@@ -870,7 +871,7 @@ const CreatorVaultOS: React.FC = () => {
      detail: error instanceof Error ? error.message : "Preflight failed.",
     })
     setTaskRefresh((value) => value + 1)
-    return createPendingVaultImport(file, importTags)
+    return createPendingVaultImport(file, initialTags)
    }
   }))
   if (importMode === "direct") {
@@ -1942,6 +1943,17 @@ const CreatorVaultOS: React.FC = () => {
           key={tag}
           type="button"
           aria-pressed={selectedTag === tag}
+          aria-label={`Zone Tag ${tag}. Drop files here to import with this tag.`}
+          title={`Zone Tag · drop files to import with ${tag}`}
+          onDragOver={(event) => {
+           if (event.dataTransfer?.types?.includes("Files")) event.preventDefault()
+          }}
+          onDrop={(event) => {
+           if (!event.dataTransfer?.files?.length) return
+           event.preventDefault()
+           event.stopPropagation()
+           void stageFiles(event.dataTransfer.files, [tag])
+          }}
           onClick={() => setSelectedTag((current) => current === tag ? null : tag)}
           className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
          >
