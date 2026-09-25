@@ -12,6 +12,7 @@ import {
   WidgetDisclosure,
   WidgetDropzone,
   WidgetField,
+  WidgetHeaderAction,
   WidgetHeaderToggle,
   WidgetHeaderStepper,
   WidgetDivider,
@@ -88,6 +89,15 @@ describe("widget viewport indicator geometry", () => {
   })
 })
 
+describe("widget header actions", () => {
+  it("renders a canonical header action without borrowing toggle semantics", () => {
+    const markup = renderToStaticMarkup(<WidgetHeaderAction icon={<span aria-hidden="true">→</span>}>Studio</WidgetHeaderAction>)
+    expect(markup).toContain("widget-header-action")
+    expect(markup).toContain("widget-header-action-icon")
+    expect(markup).toContain("widget-header-action-label")
+    expect(markup).not.toContain("widget-header-toggle")
+  })
+})
 describe("shared widget layout primitives", () => {
   it("renders inset and full-bleed structure through one contract", () => {
     const markup = renderToStaticMarkup(
@@ -409,9 +419,9 @@ describe("expanded widget compound primitives", () => {
   it("binds each portalled standard dropdown to its own height, type and icon metrics", () => {
     expect(extensionSource).toContain("SELECT_MENU_METRICS")
     expect(extensionSource).toContain("18:{font:8,icon:12")
-    expect(extensionSource).toContain("24:{font:16,icon:18")
-    expect(extensionSource).toContain("32:{font:21,icon:24")
-    expect(extensionSource).toContain("38:{font:26,icon:29")
+    expect(extensionSource).toContain("24:{font:14,icon:18")
+    expect(extensionSource).toContain("32:{font:18,icon:24")
+    expect(extensionSource).toContain("38:{font:22,icon:29")
     expect(extensionSource).toContain("contentStyle={selectMenuStyle(height)}")
     expect(variantsCss).toContain("height: var(--vt-primitive-height, 32px) !important")
     expect(variantsCss).toContain("font-size: var(--vt-primitive-font, 11px) !important")
