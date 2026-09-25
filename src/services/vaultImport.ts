@@ -34,3 +34,15 @@ export const createPendingVaultImport = (
  tags: [...tags],
  metadata: { ...metadata },
 })
+
+
+export const updatePendingVaultImport = (
+ item: PendingVaultImport,
+ patch: Partial<Omit<PendingVaultImport, "id">>,
+): PendingVaultImport => ({
+ ...item,
+ ...patch,
+ id: item.id,
+ tags: patch.tags ? [...patch.tags] : item.tags,
+ metadata: patch.metadata ? { ...item.metadata, ...patch.metadata } : item.metadata,
+})
