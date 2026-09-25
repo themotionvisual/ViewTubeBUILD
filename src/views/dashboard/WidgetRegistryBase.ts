@@ -58,6 +58,9 @@ export const DEFAULT_DASHBOARD_ROWS = [
   { id: "video-director", size: "half", height: "massive" },
  ],
  [
+  { id: "shorts-multiplier", size: "full", height: "massive" },
+ ],
+ [
   { id: "image-generator", size: "half", height: "xtall" },
   { id: "video-uploader", size: "half", height: "xtall" },
  ],
