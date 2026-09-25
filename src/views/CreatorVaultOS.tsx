@@ -63,6 +63,7 @@ import {
 import {
  clearCompletedVaultTasks,
  createVaultTask,
+ getVaultTask,
  listVaultTasks,
  retryVaultTask,
  updateVaultTask,
@@ -78,7 +79,10 @@ import { resolveVaultKeyboardCommand } from "../services/vaultKeyboard"
 import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
 import { useBrain } from "../context/useBrain"
 import { initializeProjectContentIdentity } from "../services/projects/ProjectContentIdentityService"
-import { attachAssetToContentBuild } from "../services/asset-engine/ContentBuildRepository"
+import {
+ attachAssetToContentBuild,
+ getContentBuild,
+} from "../services/asset-engine/ContentBuildRepository"
 import {
  attachVaultAssetIdsToProject,
  buildVaultSelectionProjectDraft,
@@ -101,6 +105,7 @@ import {
  type VaultCaptionLine,
 } from "../services/vaultCaptions"
 import { getVaultProjectReadiness } from "../services/vaultReadiness"
+import { runVaultTranscriptTask } from "../services/vaultTranscriptTask"
 import {
  createVaultAssetHandoff,
  getVaultAssetToolTargets,
@@ -272,6 +277,19 @@ const CreatorVaultOS: React.FC = () => {
   () => selectedAsset ? getVaultAssetToolTargets(selectedAsset.kind) : [],
   [selectedAsset],
  )
+ const selectedYouTubeVideoId = useMemo(() => {
+  if (!selectedAsset) return null
+  const direct = selectedAsset.metadata?.youtubeVideoId || selectedAsset.metadata?.videoId
+  if (typeof direct === "string" && direct.trim()) return direct.trim()
+  for (const usage of selectedUsage) {
+   const videoId = getContentBuild(usage.contentBuildId)?.youtube?.videoId
+   if (videoId) return videoId
+  }
+  if (selectedProject?.contentBuildId) {
+   return getContentBuild(selectedProject.contentBuildId)?.youtube?.videoId || null
+  }
+  return null
+ }, [selectedAsset, selectedUsage, selectedProject])
  const activeCaptionAsset = useMemo(() => {
   if (!selectedAsset) return null
   if (selectedAsset.metadata?.captionFormat === "timed-lines") return selectedAsset
@@ -547,7 +565,44 @@ const CreatorVaultOS: React.FC = () => {
   navigate(result.route)
  }
 
- const retryTask = (taskId: string) => {
+ const resolveAssetYouTubeVideoId = (asset: VaultAsset): string | null => {
+  const direct = asset.metadata?.youtubeVideoId || asset.metadata?.videoId
+  if (typeof direct === "string" && direct.trim()) return direct.trim()
+  const usage = getVaultAssetUsage(asset.id)
+  for (const item of usage) {
+   const videoId = getContentBuild(item.contentBuildId)?.youtube?.videoId
+   if (videoId) return videoId
+  }
+  return null
+ }
+
+ const acquireTranscriptForAsset = async (asset: VaultAsset, taskId?: string | null) => {
+  const videoId = resolveAssetYouTubeVideoId(asset)
+  if (!videoId) return
+  const result = await runVaultTranscriptTask({
+   asset,
+   videoId,
+   taskId: taskId || null,
+  })
+  setTaskRefresh((value) => value + 1)
+  setRefreshTick((value) => value + 1)
+  if (result.asset) setSelectedAssetIds([result.asset.id])
+ }
+
+ const retryTask = async (taskId: string) => {
+  const existing = getVaultTask(taskId)
+  if (!existing) return
+  if (existing.type === "transcript" && existing.targetAssetId) {
+   const asset = allAssets.find((candidate) => candidate.id === existing.targetAssetId)
+   if (!asset) return
+   const videoId = resolveAssetYouTubeVideoId(asset)
+   if (!videoId) return
+   const retried = retryVaultTask(taskId)
+   if (!retried) return
+   setTaskRefresh((value) => value + 1)
+   await acquireTranscriptForAsset(asset, taskId)
+   return
+  }
   const task = retryVaultTask(taskId)
   if (!task) return
   setTaskRefresh((value) => value + 1)
@@ -1740,6 +1795,20 @@ const CreatorVaultOS: React.FC = () => {
           <div>
            <div className="mb-2 text-xs font-black uppercase opacity-60">Captions & Transcript</div>
            <div className="flex flex-col gap-2">
+            {captionSourceAsset && selectedYouTubeVideoId ? (
+             <SubToolboxInnerActionButton
+              label="Acquire YouTube Transcript"
+              iconName="database"
+              tone="green"
+              onClick={() => void acquireTranscriptForAsset(captionSourceAsset)}
+             />
+            ) : captionSourceAsset && (captionSourceAsset.kind === "video" || captionSourceAsset.kind === "audio") ? (
+             <SubToolboxStatePanel
+              level="l1"
+              state="blocked"
+              message="Transcript acquisition requires a linked YouTube video ID. Local-only media is not simulated."
+             />
+            ) : null}
             {captionLines.map((line, index) => (
              <div key={line.id} className="grid grid-cols-[72px_72px_minmax(0,1fr)_auto] gap-2">
               <SubToolboxInput
