@@ -17,7 +17,7 @@ const assetCss = readFileSync(new URL("../widgets/VideoAssetEngineWidget.css", i
 describe("mobile widget density and edge contracts", () => {
   it("does not reserve an invisible mobile scroll gutter and reclaims extra right-side space", () => {
     expect(scrollbar).toContain("@media (pointer: coarse), (max-width: 767px)")
-    expect(scrollbar).toContain("padding-inline-end: 0")
+    expect(scrollbar).toContain("padding-inline: var(--widget-shadow-clearance)")
     expect(mobile).toContain("scrollbar-gutter: auto")
     expect(mobile).toContain("--vt-mobile-reclaim-left: 12px")
     expect(mobile).toContain("--vt-mobile-reclaim-right: 32px")
