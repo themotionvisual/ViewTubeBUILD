@@ -70,6 +70,8 @@
 - [x] RH-B062 Project / Asset Group Builder creates or attaches canonical Projects/ContentBuilds and Vault Collections.
 - [x] RH-B063 Asset-aware Tools mode centralizes compatible Send To actions, selection manifests and metadata export.
 - [x] RH-B064 Remove noncanonical batch project-name assignment path.
+- [x] RH-B065 Asset Operations utility shelf: Quick Look, Compare Pair, Filmstrip, Lineage, Copy Asset ID.
+- [x] RH-B066 Centralize Send To + metadata export ownership in Asset Operations instead of duplicating Inspector actions.
 
 ## Lane C — intake jobs
 - [x] RH-C040 Global workspace drag/drop.
