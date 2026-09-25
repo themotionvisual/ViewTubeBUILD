@@ -126,6 +126,13 @@ import {
  getVaultAssetToolTargets,
 } from "../services/vaultToolLauncher"
 import {
+ createVaultCustomField,
+ deleteVaultCustomField,
+ listVaultCustomFields,
+ setVaultCustomFieldValue,
+ type VaultCustomFieldType,
+} from "../services/vaultCustomFields"
+import {
  resolveVaultTranscriptVideoId,
  runVaultTranscriptTask,
 } from "../services/vaultTranscriptTask"
@@ -231,6 +238,9 @@ const CreatorVaultOS: React.FC = () => {
  const [selectionProjectName, setSelectionProjectName] = useState("")
  const [existingProjectId, setExistingProjectId] = useState("")
  const [captionLines, setCaptionLines] = useState<VaultCaptionLine[]>([])
+ const [customFieldRefresh, setCustomFieldRefresh] = useState(0)
+ const [customFieldName, setCustomFieldName] = useState("")
+ const [customFieldType, setCustomFieldType] = useState<VaultCustomFieldType>("text")
  const [explorerProject, setExplorerProject] = useState<"all" | "unassigned" | string>("all")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
  const selectionProjectInputRef = useRef<HTMLInputElement | null>(null)
@@ -241,6 +251,7 @@ const CreatorVaultOS: React.FC = () => {
  const tasks = useMemo(() => listVaultTasks(), [taskRefresh])
  const scratchpads = useMemo(() => listVaultScratchpads(), [scratchpadRefresh])
  const checklistItems = useMemo(() => listVaultChecklistItems(), [checklistRefresh])
+ const customFields = useMemo(() => listVaultCustomFields(), [customFieldRefresh])
  const explorerGroups = useMemo(() => buildVaultExplorerGroups(allAssets), [allAssets])
  const visibleAssets = useMemo(() => {
   const base = searchVaultAssets({
@@ -849,6 +860,34 @@ const CreatorVaultOS: React.FC = () => {
   const script = transcriptToScriptAsset(source, captionLines)
   setRefreshTick((value) => value + 1)
   setSelectedAssetIds([script.id])
+ }
+
+ const createCustomField = () => {
+  if (!customFieldName.trim()) return
+  createVaultCustomField({ name: customFieldName, type: customFieldType })
+  setCustomFieldName("")
+  setCustomFieldRefresh((value) => value + 1)
+ }
+
+ const removeCustomField = (fieldId: string) => {
+  deleteVaultCustomField(fieldId)
+  setCustomFieldRefresh((value) => value + 1)
+  setRefreshTick((value) => value + 1)
+ }
+
+ const updateCustomFieldValue = (
+  asset: VaultAsset,
+  fieldId: string,
+  type: VaultCustomFieldType,
+  rawValue: string | boolean,
+ ) => {
+  const value = type === "number"
+   ? (rawValue === "" ? null : Number(rawValue))
+   : type === "boolean"
+    ? Boolean(rawValue)
+    : rawValue
+  setVaultCustomFieldValue(asset.id, fieldId, value)
+  setRefreshTick((current) => current + 1)
  }
 
  const updateAssetTitle = (asset: VaultAsset, nextName: string) => {
@@ -2450,6 +2489,89 @@ const CreatorVaultOS: React.FC = () => {
             message="No parent lineage is recorded for this asset."
            />
           )}
+         </div>
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Custom Fields</div>
+          <div className="flex flex-col gap-2">
+           <div className="grid grid-cols-[minmax(0,1fr)_120px] gap-2">
+            <SubToolboxInput
+             value={customFieldName}
+             onChange={(event) => setCustomFieldName(event.target.value)}
+             placeholder="FIELD NAME"
+             aria-label="Custom field name"
+             onKeyDown={(event) => {
+              if (event.key === "Enter") createCustomField()
+             }}
+            />
+            <SubToolboxSelect
+             value={customFieldType}
+             aria-label="Custom field type"
+             onChange={(event) => setCustomFieldType(event.target.value as VaultCustomFieldType)}
+            >
+             <option value="text">TEXT</option>
+             <option value="number">NUMBER</option>
+             <option value="date">DATE</option>
+             <option value="boolean">BOOLEAN</option>
+            </SubToolboxSelect>
+           </div>
+           <SubToolboxInnerActionButton
+            label="Create Custom Field"
+            iconName="plus"
+            tone="green"
+            onClick={createCustomField}
+            disabled={!customFieldName.trim()}
+           />
+           {customFields.map((field) => {
+            const values = selectedAsset.metadata?.customFields
+            const currentValue = values && typeof values === "object" && !Array.isArray(values)
+             ? (values as Record<string, unknown>)[field.id]
+             : undefined
+            return (
+             <div key={field.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
+              <div className="min-w-0">
+               <div className="mb-1 text-[10px] font-black uppercase opacity-60">{field.name}</div>
+               {field.type === "boolean" ? (
+                <SubToolboxSelect
+                 value={currentValue === true ? "true" : currentValue === false ? "false" : ""}
+                 aria-label={`Custom field ${field.name}`}
+                 onChange={(event) => {
+                  if (!event.target.value) {
+                   setVaultCustomFieldValue(selectedAsset.id, field.id, null)
+                   setRefreshTick((value) => value + 1)
+                   return
+                  }
+                  updateCustomFieldValue(selectedAsset, field.id, field.type, event.target.value === "true")
+                 }}
+                >
+                 <option value="">UNSET</option>
+                 <option value="true">TRUE</option>
+                 <option value="false">FALSE</option>
+                </SubToolboxSelect>
+               ) : (
+                <SubToolboxInput
+                 type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
+                 value={currentValue == null ? "" : String(currentValue)}
+                 aria-label={`Custom field ${field.name}`}
+                 onChange={(event) => updateCustomFieldValue(
+                  selectedAsset,
+                  field.id,
+                  field.type,
+                  event.target.value,
+                 )}
+                />
+               )}
+              </div>
+              <SubToolboxInnerActionButton
+               label="×"
+               iconName="x"
+               tone="pink"
+               onClick={() => removeCustomField(field.id)}
+               aria-label={`Delete custom field ${field.name}`}
+              />
+             </div>
+            )
+           })}
+          </div>
          </div>
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Lifecycle & Protection</div>
