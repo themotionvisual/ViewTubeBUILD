@@ -29,6 +29,7 @@ import {
  createImportedVaultAsset,
  listVaultAssets,
  searchVaultAssets,
+ setVaultAssetState,
  updateVaultAsset,
 } from "../services/vaultAdapter"
 import {
@@ -84,6 +85,7 @@ const CreatorVaultOS: React.FC = () => {
  const [selectedTag, setSelectedTag] = useState<string | null>(initialWorkspace.selectedTag)
  const [source, setSource] = useState(initialWorkspace.source)
  const [sort, setSort] = useState<VaultWorkspaceSort>(initialWorkspace.sort)
+ const [special, setSpecial] = useState(initialWorkspace.special)
  const [viewMode, setViewMode] = useState<VaultWorkspaceViewMode>(initialWorkspace.viewMode)
  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([])
  const [selectionAnchorId, setSelectionAnchorId] = useState<string | null>(null)
@@ -114,9 +116,10 @@ const CreatorVaultOS: React.FC = () => {
    tags: selectedTag ? [selectedTag] : [],
    source: source === "all" ? null : source,
    sort,
+   special,
    limit: 100,
   })
- }, [query, filterKind, selectedTag, source, sort, refreshTick])
+ }, [query, filterKind, selectedTag, source, sort, special, refreshTick])
 
  useEffect(() => {
   writeVaultWorkspaceState({
@@ -125,9 +128,10 @@ const CreatorVaultOS: React.FC = () => {
    filterKind,
    source,
    sort,
+   special,
    viewMode,
   })
- }, [query, selectedTag, filterKind, source, sort, viewMode])
+ }, [query, selectedTag, filterKind, source, sort, special, viewMode])
 
  const selectedAsset = useMemo(
   () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
@@ -274,6 +278,31 @@ const CreatorVaultOS: React.FC = () => {
   setRefreshTick((value) => value + 1)
  }
 
+ const toggleFavoriteSelection = () => {
+  if (!selectedAssetIds.length) return
+  const selected = allAssets.filter((asset) => selectedAssetIds.includes(asset.id))
+  const shouldFavorite = selected.some((asset) => asset.metadata?.favorite !== true)
+  selected.forEach((asset) => setVaultAssetState(asset.id, { favorite: shouldFavorite }))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const archiveSelection = () => {
+  selectedAssetIds.forEach((id) => setVaultAssetState(id, { archived: true, trashed: false }))
+  setSelectedAssetIds([])
+  setRefreshTick((value) => value + 1)
+ }
+
+ const trashSelection = () => {
+  selectedAssetIds.forEach((id) => setVaultAssetState(id, { trashed: true, archived: false }))
+  setSelectedAssetIds([])
+  setRefreshTick((value) => value + 1)
+ }
+
+ const restoreSelection = () => {
+  selectedAssetIds.forEach((id) => setVaultAssetState(id, { archived: false, trashed: false }))
+  setRefreshTick((value) => value + 1)
+ }
+
  const applyBatchProject = () => {
   const projectName = batchProject.trim()
   if (!projectName || !selectedAssetIds.length) return
@@ -327,6 +356,7 @@ const CreatorVaultOS: React.FC = () => {
          options={[
           { value: "grid", label: "GRID" },
           { value: "list", label: "LIST" },
+          { value: "timeline", label: "TIMELINE" },
          ]}
         />
         <SubToolboxDropdownControl
@@ -334,6 +364,18 @@ const CreatorVaultOS: React.FC = () => {
          value={filterKind}
          onChange={(value) => setFilterKind(value as "all" | VaultAssetKind)}
          options={["all", "image", "video", "audio", "document", "font", "template", "generated", "other"]}
+        />
+        <SubToolboxSegmentedToggle
+         level="l1"
+         ariaLabel="Vault library state"
+         value={special}
+         onValueChange={(value) => setSpecial(value as typeof special)}
+         options={[
+          { value: "active", label: "LIBRARY" },
+          { value: "favorites", label: "FAVORITES" },
+          { value: "archive", label: "ARCHIVE" },
+          { value: "trash", label: "TRASH" },
+         ]}
         />
         <SubToolboxDropdownControl
          label="Source"
@@ -443,7 +485,9 @@ const CreatorVaultOS: React.FC = () => {
         {visibleAssets.length ? (
          <div className={viewMode === "grid"
           ? "grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3"
-          : "flex flex-col gap-2"}
+          : viewMode === "timeline"
+           ? "flex flex-col gap-4 border-l-[4px] border-current pl-4"
+           : "flex flex-col gap-2"}
          >
           {visibleAssets.map((asset) => (
            <SubToolboxVaultAsset
@@ -476,7 +520,9 @@ const CreatorVaultOS: React.FC = () => {
               ))}
              </div>
             )}
-            notes={`${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`}
+            notes={viewMode === "timeline"
+             ? `${new Date(asset.createdAt).toLocaleString()} · ${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`
+             : `${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`}
            />
           ))}
          </div>
@@ -647,6 +693,39 @@ const CreatorVaultOS: React.FC = () => {
          onClick={applyBatchProject}
          disabled={!selectedAssetIds.length || !batchProject.trim()}
         />
+        <SubToolboxInnerActionButton
+         label="Toggle Favorite"
+         iconName="star"
+         tone="orange"
+         onClick={toggleFavoriteSelection}
+         disabled={!selectedAssetIds.length}
+        />
+        {special === "archive" || special === "trash" ? (
+         <SubToolboxInnerActionButton
+          label="Restore Selection"
+          iconName="restore"
+          tone="green"
+          onClick={restoreSelection}
+          disabled={!selectedAssetIds.length}
+         />
+        ) : (
+         <>
+          <SubToolboxInnerActionButton
+           label="Archive Selection"
+           iconName="archive"
+           tone="cyan"
+           onClick={archiveSelection}
+           disabled={!selectedAssetIds.length}
+          />
+          <SubToolboxInnerActionButton
+           label="Move to Trash"
+           iconName="trash"
+           tone="pink"
+           onClick={trashSelection}
+           disabled={!selectedAssetIds.length}
+          />
+         </>
+        )}
         <SubToolboxInnerActionButton
          label="Clear Selection"
          iconName="x"
