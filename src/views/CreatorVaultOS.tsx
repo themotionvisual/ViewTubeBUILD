@@ -48,6 +48,7 @@ import {
  readVaultWorkspaceState,
  writeVaultWorkspaceState,
  DEFAULT_VAULT_MODULE_ORDER,
+ type VaultAssetOperationsMode,
  type VaultWorkspaceDensity,
  type VaultWorkspaceModuleId,
  type VaultWorkspaceSort,
@@ -152,17 +153,20 @@ import {
  resolveVaultTranscriptVideoId,
  runVaultTranscriptTask,
 } from "../services/vaultTranscriptTask"
+import {
+ createVaultTextDocument,
+ saveVaultTextDocument,
+ type VaultTextFormat,
+} from "../services/vaultTextDocuments"
 import type { VaultAsset, VaultAssetKind } from "../types"
 
 const VAULT_MODULE_LABELS: Record<VaultWorkspaceModuleId, string> = {
  navigator: "Navigator",
  explorer: "Explorer",
  "workspace-notes": "Workspace Notes",
- "spectrum-tags": "Spectrum Tags",
+ "asset-operations": "Asset Operations",
  "asset-library": "Asset Library",
- "import-station": "Import Station",
  "task-center": "Task Center",
- "batch-processor": "Batch Processor",
  inspector: "Inspector",
 }
 
@@ -220,6 +224,7 @@ const CreatorVaultOS: React.FC = () => {
  const [source, setSource] = useState(initialWorkspace.source)
  const [sort, setSort] = useState<VaultWorkspaceSort>(initialWorkspace.sort)
  const [special, setSpecial] = useState(initialWorkspace.special)
+ const [assetOperationsMode, setAssetOperationsMode] = useState<VaultAssetOperationsMode>(initialWorkspace.assetOperationsMode)
  const [filterLifecycle, setFilterLifecycle] = useState(initialWorkspace.filterLifecycle)
  const [filterOrientation, setFilterOrientation] = useState(initialWorkspace.filterOrientation)
  const [filterUpdatedFrom, setFilterUpdatedFrom] = useState(initialWorkspace.filterUpdatedFrom)
@@ -271,6 +276,9 @@ const CreatorVaultOS: React.FC = () => {
  const [customFieldRefresh, setCustomFieldRefresh] = useState(0)
  const [customFieldName, setCustomFieldName] = useState("")
  const [attentionNoteDraft, setAttentionNoteDraft] = useState("")
+ const [textEditorTitle, setTextEditorTitle] = useState("Untitled Text Document")
+ const [textEditorContent, setTextEditorContent] = useState("")
+ const [textEditorFormat, setTextEditorFormat] = useState<VaultTextFormat>("plain")
  const [customFieldType, setCustomFieldType] = useState<VaultCustomFieldType>("text")
  const [explorerProject, setExplorerProject] = useState<"all" | "unassigned" | string>("all")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
@@ -361,6 +369,7 @@ const CreatorVaultOS: React.FC = () => {
    filterMaxDuration,
    filterMinBytesMb,
    filterMaxBytesMb,
+   assetOperationsMode,
    viewMode,
    density,
    arrangeMode,
@@ -385,6 +394,7 @@ const CreatorVaultOS: React.FC = () => {
   filterMaxDuration,
   filterMinBytesMb,
   filterMaxBytesMb,
+  assetOperationsMode,
   viewMode,
   density,
   arrangeMode,
