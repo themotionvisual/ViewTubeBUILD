@@ -1790,3 +1790,5 @@ export const SubToolboxToolbar: React.FC<SubToolboxToolbarProps> = ({ level = "l
     {trailing ? <div className="vt-subtoolbox-toolbar-trailing">{trailing}</div> : null}
   </div>
 )
+
+export * from "./SubToolboxMediaPrimitives"

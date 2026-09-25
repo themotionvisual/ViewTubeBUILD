@@ -1,5 +1,5 @@
 import React from "react"
-import { Check, ChevronDown, ChevronRight, FileText, Image, Lightbulb, Menu, Minus, MoreHorizontal, Music, Plus, Search, Settings2, SlidersHorizontal, Upload, X } from "lucide-react"
+import { Captions, Check, ChevronDown, ChevronRight, Expand, FileText, Gauge, Image, Lightbulb, ListVideo, Menu, Minus, MoreHorizontal, Music, Pause, Play, Plus, Search, Settings2, SlidersHorizontal, Upload, Volume2, X } from "lucide-react"
 import { SubToolbox } from "../Toolbox"
 import type { ToolboxControlLevel } from "../subtoolbox/tokens"
 import {
@@ -29,6 +29,21 @@ import {
   SubToolboxLinkButton,
   SubToolboxLoader,
   SubToolboxMediaCard,
+  SubToolboxMediaCaptionToggle,
+  SubToolboxMediaControlButton,
+  SubToolboxMediaDurationBadge,
+  SubToolboxMediaInspector,
+  SubToolboxMediaPlayer,
+  SubToolboxMediaPlayToggle,
+  SubToolboxMediaPoster,
+  SubToolboxMediaQueue,
+  SubToolboxMediaReviewPanel,
+  SubToolboxMediaSeekBar,
+  SubToolboxMediaSpeedControl,
+  SubToolboxMediaStatus,
+  SubToolboxMediaTimecode,
+  SubToolboxMediaTransportBar,
+  SubToolboxMediaVolumeControl,
   SubToolboxMenu,
   SubToolboxMeter,
   SubToolboxMetric,
@@ -200,6 +215,21 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Tooltip Visual Key",
   "Skeleton Compact",
   "Skeleton Media",
+  "Media Control Button",
+  "Media Play Toggle",
+  "Media Seek Bar",
+  "Media Volume Control",
+  "Media Timecode",
+  "Media Duration Badge",
+  "Media Caption Toggle",
+  "Media Speed Control",
+  "Media Poster Frame",
+  "Media Status",
+  "Media Player",
+  "Media Transport Bar",
+  "Media Queue",
+  "Media Inspector",
+  "Media Review Panel",
 ] as const
 
 type StudioHubMigratedFamily = (typeof STUDIO_HUB_MIGRATED_FAMILIES)[number]
@@ -221,6 +251,8 @@ const CATALOG_PREVIEW_GEOMETRY: Partial<Record<StudioHubMigratedFamily, CatalogP
   "Controller Switch": { mode: "fixed" },
   "LED Dot": { mode: "fixed" },
   "Knob Dial": { mode: "fixed" },
+  "Media Control Button": { mode: "fixed" },
+  "Media Play Toggle": { mode: "fixed" },
 
   "Split Left Button": { mode: "compound", inlineUnits: 4.15, portraitStack: true },
   "Head Tail Action": { mode: "compound", inlineUnits: 4.15, portraitStack: true },
@@ -238,6 +270,9 @@ const CATALOG_PREVIEW_GEOMETRY: Partial<Record<StudioHubMigratedFamily, CatalogP
   "Breadcrumb": { mode: "compound", inlineUnits: 5.4, portraitStack: true },
   "Icon Rail Control": { mode: "compound", inlineUnits: 4.4, portraitStack: true },
   "Loader Split": { mode: "compound", inlineUnits: 4.8, portraitStack: true },
+  "Media Volume Control": { mode: "compound", inlineUnits: 4.0, portraitStack: true },
+  "Media Speed Control": { mode: "compound", inlineUnits: 2.3, portraitStack: true },
+  "Media Transport Bar": { mode: "compound", inlineUnits: 8.2, portraitStack: true },
 
   "Text Input": { mode: "field", inlineUnits: 5.4, portraitStack: true },
   "Textarea": { mode: "field", inlineUnits: 5.6, portraitStack: true },
@@ -265,6 +300,7 @@ const CATALOG_PREVIEW_GEOMETRY: Partial<Record<StudioHubMigratedFamily, CatalogP
   "Data Stats Module": { mode: "field", inlineUnits: 5.6, portraitStack: true },
   "Toolbar": { mode: "field", inlineUnits: 6.0, portraitStack: true },
   "Loader Progress": { mode: "field", inlineUnits: 5.3, portraitStack: true },
+  "Media Seek Bar": { mode: "field", inlineUnits: 6.0, portraitStack: true },
 
   "Data Table": { mode: "canvas", inlineUnits: 7.2, portraitStack: true },
   "Media Card": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
@@ -278,6 +314,11 @@ const CATALOG_PREVIEW_GEOMETRY: Partial<Record<StudioHubMigratedFamily, CatalogP
   "Aspect Ratio Frame": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
   "Carousel": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
   "Command Palette": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
+  "Media Poster Frame": { mode: "canvas", inlineUnits: 6.2, portraitStack: true },
+  "Media Player": { mode: "canvas", inlineUnits: 8.4, portraitStack: true },
+  "Media Queue": { mode: "canvas", inlineUnits: 8.1, portraitStack: true },
+  "Media Inspector": { mode: "canvas", inlineUnits: 7.6, portraitStack: true },
+  "Media Review Panel": { mode: "canvas", inlineUnits: 10.8, portraitStack: true },
 }
 
 const getCatalogPreviewGeometry = (name: StudioHubMigratedFamily): CatalogPreviewGeometry =>
@@ -334,6 +375,13 @@ const PrimitiveMigrationControl: React.FC<{
   const [scrollPos, setScrollPos] = React.useState(30)
   const [vaultSelected, setVaultSelected] = React.useState(true)
   const [headerMode, setHeaderMode] = React.useState("A")
+  const [mediaPlaying, setMediaPlaying] = React.useState(false)
+  const [mediaCurrent, setMediaCurrent] = React.useState(22)
+  const [mediaVolume, setMediaVolume] = React.useState(.76)
+  const [mediaMuted, setMediaMuted] = React.useState(false)
+  const [mediaSpeed, setMediaSpeed] = React.useState(1)
+  const [mediaCaptions, setMediaCaptions] = React.useState(true)
+  const [mediaQueueActive, setMediaQueueActive] = React.useState("a")
 
   // Primitive track rule: only production primitives + shared CSS render here.
   // Unmigrated hardcoded families remain exclusively in the frozen baseline.
@@ -642,6 +690,125 @@ const PrimitiveMigrationControl: React.FC<{
           },
         ],
       }]}
+    />
+  }
+  if (name === "Media Control Button") {
+    return <SubToolboxMediaControlButton level={level} icon={<Volume2 />} label="Media control" />
+  }
+  if (name === "Media Play Toggle") {
+    return <SubToolboxMediaPlayToggle level={level} playing={mediaPlaying} onClick={() => setMediaPlaying((value) => !value)} />
+  }
+  if (name === "Media Seek Bar") {
+    return <SubToolboxMediaSeekBar level={level} value={mediaCurrent} duration={90} buffered={58} onValueChange={setMediaCurrent} />
+  }
+  if (name === "Media Volume Control") {
+    return <SubToolboxMediaVolumeControl level={level} value={mediaVolume} muted={mediaMuted} onValueChange={setMediaVolume} onMutedChange={setMediaMuted} />
+  }
+  if (name === "Media Timecode") {
+    return <SubToolboxMediaTimecode level={level} current={mediaCurrent} duration={90} />
+  }
+  if (name === "Media Duration Badge") {
+    return <SubToolboxMediaDurationBadge level={level} seconds={90} />
+  }
+  if (name === "Media Caption Toggle") {
+    return <SubToolboxMediaCaptionToggle level={level} enabled={mediaCaptions} onClick={() => setMediaCaptions((value) => !value)} />
+  }
+  if (name === "Media Speed Control") {
+    return <SubToolboxMediaSpeedControl level={level} value={mediaSpeed} onValueChange={setMediaSpeed} />
+  }
+  if (name === "Media Poster Frame") {
+    return <SubToolboxMediaPoster level={level} ratio="16:9" overlay={<SubToolboxMediaDurationBadge level={level} seconds={90} />}><Play /></SubToolboxMediaPoster>
+  }
+  if (name === "Media Status") {
+    return <SubToolboxMediaStatus level={level} status={mediaPlaying ? "playing" : "ready"} />
+  }
+  if (name === "Media Transport Bar") {
+    return <SubToolboxMediaTransportBar
+      level={level}
+      playing={mediaPlaying}
+      current={mediaCurrent}
+      duration={90}
+      speed={mediaSpeed}
+      captions={mediaCaptions}
+      onPlayingChange={setMediaPlaying}
+      onCurrentChange={setMediaCurrent}
+      onSpeedChange={setMediaSpeed}
+      onCaptionsChange={setMediaCaptions}
+      onFullscreen={() => undefined}
+    />
+  }
+  if (name === "Media Player") {
+    return <SubToolboxMediaPlayer
+      level={level}
+      title="AUSTERLITZ PREVIEW"
+      meta="16:9 · 1080P"
+      current={mediaCurrent}
+      duration={90}
+      buffered={58}
+      playing={mediaPlaying}
+      muted={mediaMuted}
+      volume={mediaVolume}
+      speed={mediaSpeed}
+      captions={mediaCaptions}
+      onCurrentChange={setMediaCurrent}
+      onPlayingChange={setMediaPlaying}
+      onMutedChange={setMediaMuted}
+      onVolumeChange={setMediaVolume}
+      onSpeedChange={setMediaSpeed}
+      onCaptionsChange={setMediaCaptions}
+      onFullscreen={() => undefined}
+    />
+  }
+  if (name === "Media Queue") {
+    return <SubToolboxMediaQueue
+      level={level}
+      activeId={mediaQueueActive}
+      onActiveChange={setMediaQueueActive}
+      items={[
+        { id: "a", title: "AUSTERLITZ MASTER", meta: "FINAL CUT", duration: 90, status: "ready" },
+        { id: "b", title: "SHORTS CUT", meta: "9:16", duration: 38, status: "processing" },
+        { id: "c", title: "ALT OPENING", meta: "VERSION 03", duration: 74, status: "paused" },
+      ]}
+    />
+  }
+  if (name === "Media Inspector") {
+    return <SubToolboxMediaInspector
+      level={level}
+      title="AUSTERLITZ MASTER"
+      duration={90}
+      status="ready"
+      items={[
+        { label: "FORMAT", value: "16:9" },
+        { label: "RESOLUTION", value: "1920×1080" },
+        { label: "FPS", value: "30" },
+      ]}
+      actions={<SubToolboxMediaControlButton level={level} icon={<Expand />} label="Open media" />}
+    />
+  }
+  if (name === "Media Review Panel") {
+    return <SubToolboxMediaReviewPanel
+      level={level}
+      title="MEDIA REVIEW"
+      status={<SubToolboxMediaStatus level={level} status="ready" />}
+      player={<SubToolboxMediaPlayer
+        level={level}
+        title="REVIEW CUT"
+        current={mediaCurrent}
+        duration={90}
+        playing={mediaPlaying}
+        muted={mediaMuted}
+        volume={mediaVolume}
+        speed={mediaSpeed}
+        captions={mediaCaptions}
+        onCurrentChange={setMediaCurrent}
+        onPlayingChange={setMediaPlaying}
+        onMutedChange={setMediaMuted}
+        onVolumeChange={setMediaVolume}
+        onSpeedChange={setMediaSpeed}
+        onCaptionsChange={setMediaCaptions}
+      />}
+      notes={<><strong>REVIEW NOTES</strong><div>Check first 8 seconds, caption timing, and final CTA.</div></>}
+      actions={<><SubToolboxMediaControlButton level={level} icon={<Check />} label="Approve" active /><SubToolboxMediaControlButton level={level} icon={<Settings2 />} label="Review settings" /></>}
     />
   }
   if (name === "Disabled Button") {

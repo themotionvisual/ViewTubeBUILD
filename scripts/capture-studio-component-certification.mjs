@@ -49,6 +49,21 @@ const priorityStates = new Map([
   ["Tooltip Visual Key", ["default", "hover", "focus"]],
   ["Skeleton Compact", ["default"]],
   ["Skeleton Media", ["default"]],
+  ["Media Control Button", ["default", "hover", "focus"]],
+  ["Media Play Toggle", ["default", "selected"]],
+  ["Media Seek Bar", ["default", "focus", "changed"]],
+  ["Media Volume Control", ["default", "focus", "changed"]],
+  ["Media Timecode", ["default"]],
+  ["Media Duration Badge", ["default"]],
+  ["Media Caption Toggle", ["default", "selected"]],
+  ["Media Speed Control", ["default", "focus", "changed"]],
+  ["Media Poster Frame", ["default"]],
+  ["Media Status", ["default"]],
+  ["Media Player", ["default", "changed"]],
+  ["Media Transport Bar", ["default", "changed"]],
+  ["Media Queue", ["default", "selected"]],
+  ["Media Inspector", ["default"]],
+  ["Media Review Panel", ["default"]],
 ])
 
 const geometryMinimumUnits = new Map([
@@ -65,6 +80,14 @@ const geometryMinimumUnits = new Map([
   ["Stepper", 3.0],
   ["Slider", 5.1],
   ["Range Slider", 5.4],
+  ["Media Seek Bar", 5.5],
+  ["Media Volume Control", 3.7],
+  ["Media Speed Control", 2.1],
+  ["Media Player", 7.8],
+  ["Media Transport Bar", 7.5],
+  ["Media Queue", 7.5],
+  ["Media Inspector", 7.0],
+  ["Media Review Panel", 9.5],
 ])
 
 const slug = (value) =>

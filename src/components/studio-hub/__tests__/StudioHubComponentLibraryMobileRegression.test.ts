@@ -114,6 +114,28 @@ describe("Studio Hub Component Library mobile regression", () => {
     expect(css).toContain(".vt-subtoolbox-skeleton.is-media")
   })
 
+  it("registers the canonical media primitive and compound families", () => {
+    const media = read("src/components/subtoolbox/SubToolboxMediaPrimitives.tsx")
+    const migration = read("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
+    const css = read("src/styles/subtoolbox-system.css")
+
+    for (const family of [
+      "Media Control Button", "Media Play Toggle", "Media Seek Bar", "Media Volume Control",
+      "Media Timecode", "Media Duration Badge", "Media Caption Toggle", "Media Speed Control",
+      "Media Poster Frame", "Media Status", "Media Player", "Media Transport Bar",
+      "Media Queue", "Media Inspector", "Media Review Panel",
+    ]) expect(migration).toContain(`"${family}"`)
+
+    expect(media).toContain("SubToolboxMediaPlayer")
+    expect(media).toContain("SubToolboxMediaTransportBar")
+    expect(media).toContain("SubToolboxMediaQueue")
+    expect(media).toContain("SubToolboxMediaInspector")
+    expect(media).toContain("SubToolboxMediaReviewPanel")
+    expect(css).toContain(".vt-subtoolbox-media-player")
+    expect(css).toContain(".vt-subtoolbox-media-transport")
+    expect(css).toContain("@media(max-width:620px)")
+  })
+
   it("exposes both tracks to the automated A/B certification harness", () => {
     const hardcoded = read("src/components/studio-hub/StudioHubCompletePrimitiveCatalog.tsx")
     const primitive = read("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
