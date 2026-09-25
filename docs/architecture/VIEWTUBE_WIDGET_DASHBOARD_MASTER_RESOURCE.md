@@ -115,6 +115,32 @@ Current `main` exposes **68 registered widget IDs** across system, core, analyti
 
 ---
 
+## 2.5. Active implementation status — Settings widget
+
+**Started:** 2026-09-25  
+**Current implementation phase:** Phase 1 extraction + four-page switchboard shell  
+**Latest implementation commit in this wave:** `7058c9c11c0b1357f256f075f8250791992d3002`
+
+Implemented so far:
+- extracted `system-micro-stack` from the inline `WidgetRendererBase.tsx` branch;
+- created `src/views/dashboard/widgets/SettingsWidget.tsx` and `SettingsWidget.css`;
+- converted Settings to a lazy-loaded dedicated widget owner;
+- added DASHBOARD / DATA / AI / ACCOUNT pages;
+- preserved edit-mode, show-all, connect/sync, account, billing and user-guide actions;
+- added live registered/visible/hidden widget counts through the Dashboard control bridge;
+- replaced legacy raw control styling with canonical widget primitives for the new surface;
+- routed AI handoff to the canonical `/ai-brain` route;
+- added a focused Settings widget contract test.
+
+Still required before the Settings task is complete:
+- visually certify all supported size/height pairs;
+- add the final preview/disconnected treatment and stale/error status details;
+- add optional layout presets and guarded reset/export/import controls if they fit the compact widget;
+- verify the latest production build + focused contract run;
+- add desktop/mobile acceptance screenshots;
+- remove any now-unused legacy imports/classes discovered by static quality;
+- update User Guide screenshots/help text.
+
 ## 3. Settings widget redesign plan
 
 ### Current problem
