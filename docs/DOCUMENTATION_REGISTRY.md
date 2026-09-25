@@ -237,3 +237,4 @@ The AI/Brain documentation family was re-audited against current main `c494d96aa
 - Added `docs/brain/ai-systems/AGENT_READY_REPORT_2026-09-24.md` as external agent-readiness evidence.
 - Added `docs/brain/ai-systems/DOCUMENT_CONSOLIDATION_REGISTER_2026-09-24.md` as the deletion/migration receipt.
 - Historical path entries in the baseline table now point to their current archive location; baseline counts remain historical Wave-1 counts rather than a claim about the present tree.
+| 120 | `docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md` | architecture | `canonical` | `retain-current` | living | Canonical living coordination resource for widget/dashboard architecture, settings redesign, consolidation decisions, task backlog, state/preview policy, inventories, QA and handoff. |
