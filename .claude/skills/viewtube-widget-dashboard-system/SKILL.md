@@ -17,7 +17,7 @@ A ViewTube widget is not a differently colored copy of a template. Every widget 
 
 ## Mandatory reading
 
-Before changing widget code, read the relevant references in this skill:
+Before changing widget code, read `docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md` for the current living program state, consolidation decisions, task backlog, settings-widget plan, preview-state policy, and file inventories. Then read the relevant references in this skill:
 
 - `references/design-doctrine-and-utility.md`
 - `references/composition-mathematics-and-resizing.md`
