@@ -819,7 +819,16 @@ const CreatorVaultOS: React.FC = () => {
  }
 
  return (
-  <main className={density === "compact"
+  <main
+   onDragOver={(event) => {
+    if (event.dataTransfer?.types?.includes("Files")) event.preventDefault()
+   }}
+   onDrop={(event) => {
+    if (!event.dataTransfer?.files?.length) return
+    event.preventDefault()
+    void stageFiles(event.dataTransfer.files)
+   }}
+   className={density === "compact"
    ? "mx-auto flex w-full max-w-[1800px] flex-col gap-2 p-2 sm:p-3 lg:p-4"
    : "mx-auto flex w-full max-w-[1800px] flex-col gap-4 p-3 sm:p-4 lg:p-6"}>
    <Toolbox
