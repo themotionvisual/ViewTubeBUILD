@@ -180,7 +180,7 @@
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
-      scrollbar-gutter: stable;
+      scrollbar-gutter: auto;
     }
 
     .dashboard-barrier .vt-widget-body:has(.widget-scroll-controller) {
