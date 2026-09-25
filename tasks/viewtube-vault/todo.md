@@ -6,10 +6,10 @@
 - [x] RH-P003 Create full donor re-harvest authority.
 - [x] RH-P004 Create 44-item gap registry.
 - [x] RH-P005 Create owner-based revised merge plan.
-- [ ] RH-P006 Merge revised planning authority.
+- [x] RH-P006 Merge revised planning authority.
 - [x] RH-P007 Confirm PR #425 merged as historical planning provenance; supersede its donor analysis with #428.
 - [x] RH-P008 Confirm PR #426 already merged as Lane A baseline.
-- [ ] RH-P009 Audit merged #426 code on current main against revised Lane A scope.
+- [x] RH-P009 Audit merged #426 code on current main against revised Lane A scope.
 
 ## Lane A — Vault foundation
 - [x] RH-A010 Production /vault route exists in PR #426.
@@ -32,18 +32,21 @@
 - [x] RH-B025 Timeline view.
 - [x] RH-B026 Smart Collections.
 - [x] RH-B027 Favorites/Inbox/Archive/Trash.
-- [ ] RH-B028 Arrange Mode/module reorder.
-- [ ] RH-B029 Module visibility preferences.
-- [ ] RH-B030 Workspace layout density preference.
+- [x] RH-B028 Arrange Mode/module reorder.
+- [x] RH-B029 Module visibility preferences.
+- [x] RH-B030 Workspace layout density preference.
 - [x] RH-B031 Saved scratchpad/checklist panels. (Scratchpads complete; checklist expansion can build on same workspace store)
 
+- [x] RH-B032 Asset-aware Send To launcher through canonical ActionPackets.
+- [x] RH-B033 Asset lifecycle + GOLDEN/protection controls.
+
 ## Lane C — intake jobs
-- [ ] RH-C040 Global workspace drag/drop.
-- [ ] RH-C041 File type/MIME/size extraction.
-- [ ] RH-C042 Image dimension extraction.
-- [ ] RH-C043 Video duration/resolution extraction.
+- [x] RH-C040 Global workspace drag/drop.
+- [x] RH-C041 File type/MIME/size extraction.
+- [x] RH-C042 Image dimension extraction.
+- [x] RH-C043 Video duration/resolution extraction.
 - [x] RH-C044 Video thumbnail frame extraction.
-- [ ] RH-C045 Direct import path.
+- [x] RH-C045 Direct import path.
 - [x] RH-C046 Editable staged intake drafts.
 - [x] RH-C047 Content hash/duplicate preflight.
 - [ ] RH-C048 EXIF metadata task.
@@ -61,9 +64,9 @@
 - [x] RH-D065 Transcript→Script derivative.
 - [x] RH-D066 Selected assets→new Project/ContentBuild.
 - [x] RH-D067 Attach selected assets→existing Project.
-- [ ] RH-D068 Dependency/readiness projection.
+- [x] RH-D068 Dependency/readiness projection.
 - [x] RH-D069 Manifest JSON export.
-- [ ] RH-D070 Factual package/storage sizing.
+- [x] RH-D070 Factual package/storage sizing.
 
 ## Lane E — Projects
 - [ ] RH-E080 Nine-stage creator-lane mapping.
