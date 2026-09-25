@@ -18,9 +18,9 @@
 - [x] RH-A013 Spectrum Tags basics exist in PR #426.
 - [x] RH-A014 Base Import Station exists in PR #426.
 - [x] RH-A015 Base multi-select/Batch Processor exists in PR #426.
-- [ ] RH-A016 Add Shift range selection.
-- [ ] RH-A017 Reconcile Import Station with direct-vs-staged contract.
-- [ ] RH-A018 Use current media-player primitives where appropriate.
+- [x] RH-A016 Add Shift range selection.
+- [x] RH-A017 Reconcile Import Station with direct-vs-staged contract.
+- [x] RH-A018 Use current media-player primitives where appropriate.
 - [ ] RH-A019 Run/repair tests, build and browser verification on current main baseline.
 
 ## Lane B — interaction / organization
