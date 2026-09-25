@@ -9,7 +9,7 @@ export interface VaultWorkspaceState {
  filterKind: "all" | VaultAssetKind
  source: "all" | "local" | "drive" | "generated" | "project" | "imported"
  sort: VaultWorkspaceSort
- special: "active" | "favorites" | "archive" | "trash"
+ special: "active" | "inbox" | "favorites" | "archive" | "trash"
  viewMode: VaultWorkspaceViewMode
 }
 
