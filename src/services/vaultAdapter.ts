@@ -390,3 +390,24 @@ export const linkDriveVaultFolder = async (projectName: string) => {
   },
  )
 }
+
+
+export const setVaultAssetAttention = (
+ id: string,
+ flagged: boolean,
+ note = "",
+): VaultAsset | null => {
+ const existing = readAssets().find((asset) => asset.id === id)
+ if (!existing) return null
+ const metadata = { ...(existing.metadata || {}) }
+ if (flagged) {
+  metadata.needsAttention = true
+  const trimmed = note.trim()
+  if (trimmed) metadata.attentionNote = trimmed
+  else delete metadata.attentionNote
+ } else {
+  delete metadata.needsAttention
+  delete metadata.attentionNote
+ }
+ return updateVaultAsset(id, { metadata })
+}
