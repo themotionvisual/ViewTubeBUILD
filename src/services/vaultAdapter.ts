@@ -72,9 +72,11 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
    const lifecycle = String(metadata.lifecycle || "DRAFT").toUpperCase()
    const width = typeof metadata.width === "number" ? metadata.width : null
    const height = typeof metadata.height === "number" ? metadata.height : null
-   const durationSec = typeof metadata.durationSec === "number"
-    ? metadata.durationSec
-    : typeof metadata.duration === "number" ? metadata.duration : null
+   const durationSec = typeof metadata.durationSeconds === "number"
+    ? metadata.durationSeconds
+    : typeof metadata.durationSec === "number"
+     ? metadata.durationSec
+     : typeof metadata.duration === "number" ? metadata.duration : null
    const byteSize = typeof metadata.byteSize === "number" ? metadata.byteSize : null
 
    if (input.lifecycle != null && lifecycle !== input.lifecycle.trim().toUpperCase()) return false
