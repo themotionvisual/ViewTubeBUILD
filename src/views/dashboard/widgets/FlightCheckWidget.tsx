@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { Check, Rocket, RotateCcw, ShieldCheck } from "lucide-react"
+import { Check, Plus, Rocket, RotateCcw, ShieldCheck } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
 import {
   WidgetBadge,
+  WidgetCheckbox,
   WidgetProgressBar,
   WidgetScrollArea,
   WidgetSizedButton,
+  WidgetSizedSelect,
+  WidgetTextInput,
 } from "../WidgetPrimitives"
 import { listVideoPackages } from "../../../services/video-package/VideoPackageRepository"
 import { projectPublishingPackage } from "../../../services/asset-engine/PublishingPackageProjection"
@@ -67,6 +70,15 @@ export const FlightCheckWidget = ({
     onDecHeight,
   }
 
+  const packages = useMemo(() => listVideoPackages(), [instance?.collapsed])
+  const [selectedPackageId, setSelectedPackageId] = useState(() => packages[0]?.id || "")
+  const [newTask, setNewTask] = useState("")
+
+  useEffect(() => {
+    if (!selectedPackageId && packages[0]?.id) setSelectedPackageId(packages[0].id)
+    if (selectedPackageId && !packages.some((item) => item.id === selectedPackageId)) setSelectedPackageId(packages[0]?.id || "")
+  }, [packages, selectedPackageId])
+
   const [items, setItems] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || DEFAULT_ITEMS
@@ -80,7 +92,7 @@ export const FlightCheckWidget = ({
   }, [items])
 
   const canonical = useMemo(() => {
-    const videoPackage = listVideoPackages()[0] || null
+    const videoPackage = packages.find((item) => item.id === selectedPackageId) || packages[0] || null
     if (!videoPackage) return { videoPackage: null, projection: null, transaction: null }
     try {
       const projection = projectPublishingPackage(videoPackage)
@@ -92,7 +104,7 @@ export const FlightCheckWidget = ({
     } catch {
       return { videoPackage, projection: null, transaction: null }
     }
-  }, [instance?.collapsed])
+  }, [packages, selectedPackageId])
 
   const model = buildPublishingCommandModel({
     projection: canonical.projection,
@@ -101,6 +113,13 @@ export const FlightCheckWidget = ({
 
   const toggle = (idx: number) => {
     setItems((prev: any[]) => prev.map((item, index) => index === idx ? { ...item, done: !item.done } : item))
+  }
+
+  const addTask = () => {
+    const text = newTask.trim()
+    if (!text) return
+    setItems((current: any[]) => [...current, { text, done: false }])
+    setNewTask("")
   }
 
   const reset = () => setItems(DEFAULT_ITEMS)
@@ -118,13 +137,27 @@ export const FlightCheckWidget = ({
           <>
             <div className="vt-publishing-command__header">
               <div>
-                <span>PUBLISHING COMMAND</span>
+                <span>PUBLISHING COMMAND · PROJECT {canonical.videoPackage?.projectId || "—"}</span>
                 <strong>{canonical.videoPackage?.identity.workingTitle || "ACTIVE VIDEO PACKAGE"}</strong>
               </div>
               <WidgetBadge height={24} status={model.ready ? "positive" : "warning"}>
                 {model.transactionStatus?.toUpperCase() || (model.ready ? "READY" : "PREFLIGHT")}
               </WidgetBadge>
             </div>
+
+            {packages.length > 1 ? (
+              <WidgetSizedSelect
+                height={24}
+                tone="secondary"
+                value={canonical.videoPackage?.id || ""}
+                onChange={setSelectedPackageId}
+                label="Publishing package / video"
+                options={packages.map((item) => ({
+                  value: item.id,
+                  label: `${item.identity.workingTitle} · ${item.projectId}`,
+                }))}
+              />
+            ) : null}
 
             <LaunchGantry stages={model.stages} />
 
@@ -200,17 +233,31 @@ export const FlightCheckWidget = ({
 
             <WidgetScrollArea ariaLabel="Flight check items" className="vt-publishing-command__manual-list">
               {items.map((item: any, idx: number) => (
-                <button
-                  key={item.text}
-                  type="button"
-                  className="vt-publishing-command__manual-item"
-                  data-done={item.done ? "true" : "false"}
-                  onClick={() => toggle(idx)}
-                >
-                  <span aria-hidden="true">{item.done ? "✓" : "×"}</span>
+                <div key={`${item.text}-${idx}`} className="vt-publishing-command__task-row" data-done={item.done ? "true" : "false"}>
+                  <WidgetCheckbox
+                    height={24}
+                    tone={item.done ? "primary" : "default"}
+                    checked={Boolean(item.done)}
+                    onChange={() => toggle(idx)}
+                    label={`Mark ${item.text} ${item.done ? "incomplete" : "complete"}`}
+                  />
                   <strong>{item.text}</strong>
-                </button>
+                </div>
               ))}
+              <div className="vt-publishing-command__task-add">
+                <WidgetTextInput
+                  height={24}
+                  tone="default"
+                  value={newTask}
+                  onChange={(event) => setNewTask(event.currentTarget.value)}
+                  onKeyDown={(event) => { if (event.key === "Enter") addTask() }}
+                  placeholder="Add publishing task…"
+                  aria-label="New publishing task"
+                />
+                <WidgetSizedButton height={24} tone="primary" textFit="adaptive" onClick={addTask} disabled={!newTask.trim()}>
+                  <Plus aria-hidden="true" /> ADD TASK
+                </WidgetSizedButton>
+              </div>
             </WidgetScrollArea>
 
             <div className="vt-publishing-command__actions">
