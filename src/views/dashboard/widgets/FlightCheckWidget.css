@@ -1,9 +1,9 @@
 .vt-publishing-command{
   height:100%;
   min-height:0;
-  display:grid;
-  grid-template-rows:auto minmax(92px,.72fr) auto minmax(0,1fr) auto;
-  gap:8px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
   color:var(--widget-border,var(--vt-ink,#24343a));
 }
 .vt-publishing-command__header{
@@ -127,17 +127,24 @@
 
 .vt-publishing-command__blockers,
 .vt-publishing-command__manual-list{
+  flex:1 1 auto;
   min-height:0;
+  width:calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance))));
+  max-width:none;
+  margin-inline:calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance)));
+  padding-inline:calc(var(--widget-content-inset) + var(--widget-shadow-clearance));
+  box-sizing:border-box;
   border:2px solid color-mix(in srgb,var(--widget-border) 28%,transparent);
   border-radius:8px;
+  overflow:visible;
 }
 .vt-publishing-command__blocker{
   display:grid;
   grid-template-columns:22px minmax(0,1fr);
   align-items:center;
   gap:6px;
-  min-height:34px;
-  padding:5px 7px;
+  min-height:28px;
+  padding:3px 6px;
   border-bottom:2px solid color-mix(in srgb,var(--widget-border) 16%,transparent);
 }
 .vt-publishing-command__blocker:last-child{border-bottom:0}
@@ -265,10 +272,37 @@
 }
 @container (max-width:520px){
   .vt-publishing-command{
-    grid-template-rows:auto auto auto minmax(0,1fr) auto;
     gap:5px;
   }
   .vt-publishing-command__task-row{min-height:28px;padding-block:2px}
   .vt-publishing-command__blocker{min-height:28px;padding-block:3px}
   .vt-publishing-command__actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+.vt-publishing-command__manual-list .widget-scroll-content,
+.vt-publishing-command__blockers .widget-scroll-content{
+  padding-inline:0!important;
+  margin-inline:0!important;
+  width:100%!important;
+  max-width:none!important;
+}
+.vt-publishing-command__task-add{
+  min-width:0;
+}
+.vt-publishing-command__task-add .widget-text-input,
+.vt-publishing-command__task-add .vt-button{
+  min-width:0;
+}
+@container (max-width:520px){
+  .vt-launch-gantry{
+    min-height:72px;
+    padding:6px;
+  }
+  .vt-launch-gantry__station{
+    min-height:48px;
+    padding:3px;
+  }
+  .vt-publishing-command__actions{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
 }
