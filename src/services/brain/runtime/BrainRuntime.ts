@@ -31,6 +31,7 @@ export const buildBrainRuntimeMetadata = (
  runtimeVersion: BRAIN_RUNTIME_VERSION,
  surface: input.surface || "unknown",
  projectId: input.projectId || null,
+ contentBuildId: typeof input.visibleContext?.contentBuildId === "string" ? input.visibleContext.contentBuildId : null,
  artifactRefs: Array.from(new Set(input.artifactRefs || [])).slice(0, 50),
  hasVisibleContext: Boolean(input.visibleContext && Object.keys(input.visibleContext).length),
 })

@@ -280,9 +280,15 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
     recentConversationTurns: controls.personalization ? turns : [],
    }) + `\n\nBRAIN HUB WIDGET POLICY\nAnalytics=${controls.allowAnalytics}; Projects=${controls.allowProjects}; Vault=${controls.allowVault}; Publisher=${controls.allowPublisher}; ApprovalRequired=${controls.externalActionsRequireApproval}.\nEngine policy: channelIntelligence=${engines.channelIntelligence}; anomalyIntelligence=${engines.anomalyIntelligence}; opportunityIntelligence=${engines.opportunityIntelligence}; algorithmPriming=${engines.algorithmPriming}; videoPackages=${engines.videoPackages}.\nNever claim an engine supplied evidence when it is disabled or absent. External write or publish actions remain explicit approval-aware handoffs.`
 
+   const activeProject = controls.allowProjects
+    ? brain.projects.find((project) => project.id === brain.activeProjectId)
+      || brain.projects.find((project) => project.status === "active")
+      || null
+    : null
    const result = await runBrainTask({
     surface: "brain-hub-widget",
     channelId,
+    projectId: activeProject?.id || null,
     userText: text,
     snapshot,
     systemPrompt,
@@ -292,6 +298,10 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
     allowModel: hasGeminiKey(),
     visibleContext: {
      dashboardWidget: "brain-hub",
+     contentBuildId: activeProject?.contentBuildId || null,
+     title: activeProject?.videoTitle || activeProject?.name || null,
+     topic: activeProject?.videoTitle || activeProject?.name || null,
+     plannedPublishAt: activeProject?.publishDate || null,
      mainPage,
      chatPage,
      evidenceCount: evidence.length,
