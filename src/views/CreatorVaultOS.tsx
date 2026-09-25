@@ -44,6 +44,12 @@ import { extractVaultFileMetadata } from "../services/vaultFileMetadata"
 import { computeVaultFileHash } from "../services/vaultFileHash"
 import { extractVaultVideoThumbnail } from "../services/vaultVideoThumbnail"
 import { buildVaultExplorerGroups } from "../services/vaultExplorer"
+import {
+ clearCompletedVaultTasks,
+ createVaultTask,
+ listVaultTasks,
+ updateVaultTask,
+} from "../services/vaultTaskCenter"
 import { resolveVaultSelection } from "../services/vaultSelection"
 import {
  createVaultSmartCollection,
@@ -114,6 +120,7 @@ const CreatorVaultOS: React.FC = () => {
  const [quickLookOpen, setQuickLookOpen] = useState(true)
  const [smartCollectionName, setSmartCollectionName] = useState("")
  const [collectionRefresh, setCollectionRefresh] = useState(0)
+ const [taskRefresh, setTaskRefresh] = useState(0)
  const [selectionProjectName, setSelectionProjectName] = useState("")
  const [explorerProject, setExplorerProject] = useState<"all" | "unassigned" | string>("all")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
@@ -121,6 +128,7 @@ const CreatorVaultOS: React.FC = () => {
 
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
  const smartCollections = useMemo(() => listVaultSmartCollections(), [collectionRefresh])
+ const tasks = useMemo(() => listVaultTasks(), [taskRefresh])
  const explorerGroups = useMemo(() => buildVaultExplorerGroups(allAssets), [allAssets])
  const visibleAssets = useMemo(() => {
   const base = searchVaultAssets({
@@ -247,24 +255,56 @@ const CreatorVaultOS: React.FC = () => {
  const stageFiles = async (files: FileList | null) => {
   if (!files?.length) return
   const prepared = await Promise.all(Array.from(files).map(async (file) => {
-   const [metadata, contentHash, previewUrl] = await Promise.all([
-    extractVaultFileMetadata(file),
-    computeVaultFileHash(file),
-    extractVaultVideoThumbnail(file),
-   ])
-   const duplicate = contentHash ? findVaultDuplicateByHash(contentHash) : null
-   return createPendingVaultImport(
-    file,
-    importTags,
-    crypto.randomUUID(),
-    {
-     ...metadata,
-     contentHash,
-     duplicateAssetId: duplicate?.id || null,
-     duplicateAssetName: duplicate?.name || null,
-    },
-    previewUrl,
-   )
+   const task = createVaultTask({
+    type: "ingest-preflight",
+    label: `Preflight · ${file.name}`,
+    assetName: file.name,
+    detail: "Queued for metadata, hash and preview extraction.",
+   })
+   setTaskRefresh((value) => value + 1)
+   updateVaultTask(task.id, {
+    status: "processing",
+    progress: 20,
+    detail: "Reading browser file metadata.",
+   })
+   setTaskRefresh((value) => value + 1)
+
+   try {
+    const [metadata, contentHash, previewUrl] = await Promise.all([
+     extractVaultFileMetadata(file),
+     computeVaultFileHash(file),
+     extractVaultVideoThumbnail(file),
+    ])
+    const duplicate = contentHash ? findVaultDuplicateByHash(contentHash) : null
+    updateVaultTask(task.id, {
+     status: "completed",
+     progress: 100,
+     detail: duplicate
+      ? `Exact duplicate found: ${duplicate.name}`
+      : "Metadata, content hash and preview are ready.",
+    })
+    setTaskRefresh((value) => value + 1)
+    return createPendingVaultImport(
+     file,
+     importTags,
+     crypto.randomUUID(),
+     {
+      ...metadata,
+      contentHash,
+      duplicateAssetId: duplicate?.id || null,
+      duplicateAssetName: duplicate?.name || null,
+     },
+     previewUrl,
+    )
+   } catch (error) {
+    updateVaultTask(task.id, {
+     status: "failed",
+     progress: 100,
+     detail: error instanceof Error ? error.message : "Preflight failed.",
+    })
+    setTaskRefresh((value) => value + 1)
+    return createPendingVaultImport(file, importTags)
+   }
   }))
   if (importMode === "direct") {
    const duplicates = prepared.filter((item) => item.metadata.duplicateAssetId)
@@ -785,6 +825,43 @@ const CreatorVaultOS: React.FC = () => {
      </div>
 
      <div className="flex min-w-0 flex-col gap-4">
+      <SubToolbox
+       title="Task Center"
+       subtitle="Ingest and background processing jobs"
+       icon={<Database />}
+       paletteIndex={2}
+       isOpenInitial
+       persistenceId="vault-task-center"
+      >
+       <div className="flex flex-col gap-2">
+        {tasks.length ? tasks.slice(0, 12).map((task) => (
+         <div key={task.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="min-w-0">
+           <div className="truncate text-sm font-black uppercase">{task.label}</div>
+           <div className="text-xs font-bold opacity-60">
+            {task.status.toUpperCase()} · {Math.round(task.progress)}%
+            {task.detail ? ` · ${task.detail}` : ""}
+           </div>
+          </div>
+          <div className="text-xs font-black uppercase">{task.type.replace("-", " ")}</div>
+         </div>
+        )) : (
+         <SubToolboxStatePanel level="l1" state="empty" message="No Vault background tasks yet." />
+        )}
+        {tasks.some((task) => task.status === "completed") ? (
+         <SubToolboxInnerActionButton
+          label="Clear Completed"
+          iconName="checklist"
+          tone="cyan"
+          onClick={() => {
+           clearCompletedVaultTasks()
+           setTaskRefresh((value) => value + 1)
+          }}
+         />
+        ) : null}
+       </div>
+      </SubToolbox>
+
       <SubToolbox
        title="Batch Processor"
        subtitle="Apply organization changes to the current asset selection"
