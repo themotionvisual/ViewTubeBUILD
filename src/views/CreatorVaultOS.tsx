@@ -27,6 +27,7 @@ import {
 } from "../components/subtoolbox/SubToolboxPrimitives"
 import {
  createImportedVaultAsset,
+ findVaultDuplicateByHash,
  listVaultAssets,
  searchVaultAssets,
  setVaultAssetState,
@@ -40,6 +41,8 @@ import {
 } from "../services/vaultWorkspaceState"
 import { createPendingVaultImport, updatePendingVaultImport, type PendingVaultImport } from "../services/vaultImport"
 import { extractVaultFileMetadata } from "../services/vaultFileMetadata"
+import { computeVaultFileHash } from "../services/vaultFileHash"
+import { buildVaultExplorerGroups } from "../services/vaultExplorer"
 import { resolveVaultSelection } from "../services/vaultSelection"
 import {
  createVaultSmartCollection,
@@ -111,13 +114,15 @@ const CreatorVaultOS: React.FC = () => {
  const [smartCollectionName, setSmartCollectionName] = useState("")
  const [collectionRefresh, setCollectionRefresh] = useState(0)
  const [selectionProjectName, setSelectionProjectName] = useState("")
+ const [explorerProject, setExplorerProject] = useState<"all" | "unassigned" | string>("all")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
  const selectionProjectInputRef = useRef<HTMLInputElement | null>(null)
 
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
  const smartCollections = useMemo(() => listVaultSmartCollections(), [collectionRefresh])
+ const explorerGroups = useMemo(() => buildVaultExplorerGroups(allAssets), [allAssets])
  const visibleAssets = useMemo(() => {
-  return searchVaultAssets({
+  const base = searchVaultAssets({
    query,
    kind: filterKind === "all" ? null : filterKind,
    tags: selectedTag ? [selectedTag] : [],
@@ -126,7 +131,10 @@ const CreatorVaultOS: React.FC = () => {
    special,
    limit: 100,
   })
- }, [query, filterKind, selectedTag, source, sort, special, refreshTick])
+  if (explorerProject === "all") return base
+  if (explorerProject === "unassigned") return base.filter((asset) => !asset.projectName)
+  return base.filter((asset) => asset.projectName === explorerProject)
+ }, [query, filterKind, selectedTag, source, sort, special, explorerProject, refreshTick])
 
  useEffect(() => {
   writeVaultWorkspaceState({
@@ -236,16 +244,31 @@ const CreatorVaultOS: React.FC = () => {
 
  const stageFiles = async (files: FileList | null) => {
   if (!files?.length) return
-  const prepared = await Promise.all(Array.from(files).map(async (file) => (
-   createPendingVaultImport(
+  const prepared = await Promise.all(Array.from(files).map(async (file) => {
+   const [metadata, contentHash] = await Promise.all([
+    extractVaultFileMetadata(file),
+    computeVaultFileHash(file),
+   ])
+   const duplicate = contentHash ? findVaultDuplicateByHash(contentHash) : null
+   return createPendingVaultImport(
     file,
     importTags,
     crypto.randomUUID(),
-    await extractVaultFileMetadata(file),
+    {
+     ...metadata,
+     contentHash,
+     duplicateAssetId: duplicate?.id || null,
+     duplicateAssetName: duplicate?.name || null,
+    },
    )
-  )))
+  }))
   if (importMode === "direct") {
-   prepared.forEach((item) => createImportedRecord(item, "direct"))
+   const duplicates = prepared.filter((item) => item.metadata.duplicateAssetId)
+   const unique = prepared.filter((item) => !item.metadata.duplicateAssetId)
+   unique.forEach((item) => createImportedRecord(item, "direct"))
+   if (duplicates.length) {
+    setPending((current) => [...current, ...duplicates])
+   }
    setRefreshTick((value) => value + 1)
    return
   }
@@ -485,6 +508,41 @@ const CreatorVaultOS: React.FC = () => {
       </SubToolbox>
 
       <SubToolbox
+       title="Explorer"
+       subtitle="Logical project views over canonical Vault assets"
+       icon={<Archive />}
+       paletteIndex={7}
+       isOpenInitial
+       persistenceId="vault-explorer"
+      >
+       <div className="flex flex-col gap-2">
+        <SubToolboxInnerActionButton
+         label={`All Assets · ${allAssets.length}`}
+         iconName="collection"
+         tone={explorerProject === "all" ? "pink" : "cyan"}
+         onClick={() => setExplorerProject("all")}
+        />
+        {explorerGroups.unassignedCount ? (
+         <SubToolboxInnerActionButton
+          label={`Unassigned · ${explorerGroups.unassignedCount}`}
+          iconName="collection"
+          tone={explorerProject === "unassigned" ? "pink" : "cyan"}
+          onClick={() => setExplorerProject("unassigned")}
+         />
+        ) : null}
+        {explorerGroups.projects.map((project) => (
+         <SubToolboxInnerActionButton
+          key={project.name}
+          label={`${project.name} · ${project.count}`}
+          iconName="collection"
+          tone={explorerProject === project.name ? "pink" : "cyan"}
+          onClick={() => setExplorerProject(project.name)}
+         />
+        ))}
+       </div>
+      </SubToolbox>
+
+      <SubToolbox
        title="Spectrum Tags"
        subtitle="Canonical alphabetical spectrum labels"
        icon={<Database />}
@@ -672,6 +730,13 @@ const CreatorVaultOS: React.FC = () => {
             onChange={(value) => patchPending(item.id, { kind: value as VaultAssetKind })}
             options={["image", "video", "audio", "document", "json", "font", "template", "generated", "other"]}
            />
+           {item.metadata.duplicateAssetId ? (
+            <SubToolboxStatePanel
+             level="l1"
+             state="warning"
+             message={`Exact duplicate of ${String(item.metadata.duplicateAssetName || "an existing Vault asset")}. Review before ingesting.`}
+            />
+           ) : null}
            <div className="text-xs font-bold opacity-60">
             {(item.size / 1024 / 1024).toFixed(2)} MB
             {typeof item.metadata.width === "number" && typeof item.metadata.height === "number"
