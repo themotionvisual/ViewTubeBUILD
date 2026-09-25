@@ -12,7 +12,12 @@ describe("Vault import preparation", () => {
 
  it("prepares a staged import without creating a canonical Vault identity", () => {
   const file = new File(["hello"], "notes.txt", { type: "text/plain" })
-  const prepared = createPendingVaultImport(file, ["research", "imported"], "pending-1")
+  const prepared = createPendingVaultImport(
+   file,
+   ["research", "imported"],
+   "pending-1",
+   { width: 1200, height: 800 },
+  )
 
   expect(prepared).toMatchObject({
    id: "pending-1",
@@ -21,6 +26,7 @@ describe("Vault import preparation", () => {
    mimeType: "text/plain",
    size: 5,
    tags: ["research", "imported"],
+   metadata: { width: 1200, height: 800 },
   })
  })
 })
