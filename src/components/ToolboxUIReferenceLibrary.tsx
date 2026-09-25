@@ -49,8 +49,8 @@ const ComponentLibraryTrack: React.FC<ComponentLibraryTrackProps> = ({
     >
       <ToolboxScaffold
         title={isHardcoded
-          ? "Studio Hub Component Library — Hardcoded"
-          : "Studio Hub Component Library — Primitive"}
+          ? "Component Library — Hardcoded"
+          : "Component Library — Primitive"}
         subtitle={isHardcoded
           ? "Frozen visual baseline. Component anatomy remains hardcoded for comparison."
           : "Production-import surface. Every family renders inside the same SubToolbox shell, 12-color title/icon pairing, primitives and shared CSS used by Studio tools."}
@@ -65,12 +65,11 @@ const ComponentLibraryTrack: React.FC<ComponentLibraryTrackProps> = ({
           : "Primitive production track. Each family is mounted inside a real SubToolbox; nested components inherit that SubToolbox title/icon color pair and shared production styling instead of choosing local colors."}
         headerActions={
           <div className="flex items-center gap-1" style={primitiveContextStyle}>
-            <SubToolboxButton
-              size="compact"
-              tone="neutral"
-              aria-label="Previous toolbox palette"
-              icon={<ChevronLeft size={16} strokeWidth={3} />}
-              className="!w-9"
+            <SubToolboxIconButton
+              level="l1"
+              ariaLabel="Previous toolbox palette"
+              icon={<ChevronLeft aria-hidden="true" />}
+              className="vt-toolbox-header-palette-button"
               onClick={(event) => {
                 event.stopPropagation()
                 onPaletteIndexChange((paletteIndex + 11) % 12)
@@ -79,12 +78,11 @@ const ComponentLibraryTrack: React.FC<ComponentLibraryTrackProps> = ({
             <span className="hidden min-w-14 text-center text-[9px] font-black uppercase sm:block">
               {PALETTE_NAMES[paletteIndex]}
             </span>
-            <SubToolboxButton
-              size="compact"
-              tone="neutral"
-              aria-label="Next toolbox palette"
-              icon={<ChevronRight size={16} strokeWidth={3} />}
-              className="!w-9"
+            <SubToolboxIconButton
+              level="l1"
+              ariaLabel="Next toolbox palette"
+              icon={<ChevronRight aria-hidden="true" />}
+              className="vt-toolbox-header-palette-button"
               onClick={(event) => {
                 event.stopPropagation()
                 onPaletteIndexChange((paletteIndex + 1) % 12)
