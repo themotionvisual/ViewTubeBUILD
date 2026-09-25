@@ -70,6 +70,7 @@ import {
  updateVaultTask,
 } from "../services/vaultTaskCenter"
 import { resolveVaultSelection } from "../services/vaultSelection"
+import { resolveVaultComparePair } from "../services/vaultCompare"
 import {
  createVaultSmartCollection,
  deleteVaultSmartCollection,
@@ -282,6 +283,10 @@ const CreatorVaultOS: React.FC = () => {
  const selectedAsset = useMemo(
   () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
   [allAssets, selectedAssetIds],
+ )
+ const comparePair = useMemo(
+  () => resolveVaultComparePair({ selectedIds: selectedAssetIds, assets: allAssets }),
+  [selectedAssetIds, allAssets],
  )
  const selectedVersionStack = useMemo(
   () => selectedAsset ? getVaultAssetVersionStack(selectedAsset.id) : [],
@@ -1529,6 +1534,63 @@ const CreatorVaultOS: React.FC = () => {
           "aria-label": "Search Vault assets",
          }}
         />
+        {comparePair ? (
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Compare Selection</div>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+           {comparePair.map((asset, index) => (
+            <div key={asset.id} className="min-w-[260px] flex-1 border-[3px] border-current p-2">
+             <div className="mb-2 text-xs font-black uppercase opacity-60">
+              {index === 0 ? "A" : "B"} · {asset.kind.toUpperCase()}
+             </div>
+             <div className="text-sm font-black uppercase">{asset.name}</div>
+             <div className="mt-2 aspect-video overflow-hidden border-[3px] border-current">
+              {asset.previewUrl || asset.url ? (
+               <img
+                src={asset.previewUrl || asset.url || undefined}
+                alt=""
+                className="h-full w-full object-cover"
+               />
+              ) : (
+               <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
+              )}
+             </div>
+             <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] font-bold">
+              <div>
+               <div className="font-black uppercase opacity-60">Project</div>
+               <div>{asset.projectName || "UNASSIGNED"}</div>
+              </div>
+              <div>
+               <div className="font-black uppercase opacity-60">Source</div>
+               <div>{asset.source.toUpperCase()}</div>
+              </div>
+              <div>
+               <div className="font-black uppercase opacity-60">Dimensions</div>
+               <div>
+                {typeof asset.metadata?.width === "number" && typeof asset.metadata?.height === "number"
+                 ? `${asset.metadata.width}×${asset.metadata.height}`
+                 : "—"}
+               </div>
+              </div>
+              <div>
+               <div className="font-black uppercase opacity-60">Size</div>
+               <div>
+                {typeof asset.metadata?.byteSize === "number"
+                 ? formatVaultBytes(Number(asset.metadata.byteSize))
+                 : "—"}
+               </div>
+              </div>
+             </div>
+             <div className="mt-2 flex flex-wrap gap-1">
+              {(asset.tags || []).map((tag) => (
+               <SubToolboxAlphabeticalTag key={tag} level="l2" label={tag} spectrumKey={tag} />
+              ))}
+             </div>
+            </div>
+           ))}
+          </div>
+         </div>
+        ) : null}
         {visibleAssets.length ? (
          <div className={viewMode === "grid"
           ? "grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3"
