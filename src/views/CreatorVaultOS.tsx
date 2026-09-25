@@ -1239,6 +1239,23 @@ const CreatorVaultOS: React.FC = () => {
   )))
  }
 
+ const togglePendingTag = (id: string, tag: string) => {
+  const item = pending.find((candidate) => candidate.id === id)
+  if (!item) return
+  const nextTags = item.tags.includes(tag)
+   ? item.tags.filter((value) => value !== tag)
+   : [...item.tags, tag]
+  patchPending(id, { tags: Array.from(new Set(nextTags)) })
+ }
+
+ const addPendingTag = (id: string, rawTag: string) => {
+  const tag = rawTag.trim()
+  if (!tag) return
+  const item = pending.find((candidate) => candidate.id === id)
+  if (!item) return
+  patchPending(id, { tags: Array.from(new Set([...item.tags, tag])) })
+ }
+
  const rejectPending = (id: string) => {
   setPending((current) => current.filter((item) => item.id !== id))
  }
@@ -2149,6 +2166,35 @@ const CreatorVaultOS: React.FC = () => {
             onChange={(value) => patchPending(item.id, { kind: value as VaultAssetKind })}
             options={["image", "video", "audio", "document", "json", "font", "template", "generated", "other"]}
            />
+           <div>
+            <div className="mb-2 text-[10px] font-black uppercase opacity-60">Pending tags for {item.name}</div>
+            <div className="mb-2 flex flex-wrap gap-1">
+             {item.tags.map((tag) => (
+              <button
+               key={tag}
+               type="button"
+               aria-label={`Remove pending tag ${tag}`}
+               onClick={() => togglePendingTag(item.id, tag)}
+              >
+               <SubToolboxAlphabeticalTag
+                level="l2"
+                label={`× ${tag}`}
+                spectrumKey={tag}
+               />
+              </button>
+             ))}
+            </div>
+            <SubToolboxInput
+             placeholder="+ TAG"
+             aria-label={`Pending tags for ${item.name}`}
+             onKeyDown={(event) => {
+              if (event.key !== "Enter") return
+              event.preventDefault()
+              addPendingTag(item.id, event.currentTarget.value)
+              event.currentTarget.value = ""
+             }}
+            />
+           </div>
            {item.metadata.duplicateAssetId ? (
             <>
              <SubToolboxStatePanel
