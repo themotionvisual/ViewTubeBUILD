@@ -3098,7 +3098,7 @@
   -webkit-box-orient:vertical;
   -webkit-line-clamp:2;
   color:#000;
-  font-size:clamp(14px,3.4vw,22px);
+  font-size:var(--vt-video-title-size,20px);
   font-weight:1000;
   line-height:.94;
   letter-spacing:-.045em;
@@ -3173,7 +3173,7 @@
   }
   .vt-subtoolbox-video-selector-title{
     padding-inline:7px;
-    font-size:clamp(13px,4.3vw,19px);
+    font-size:min(var(--vt-video-title-size,18px),18px);
   }
   .vt-subtoolbox-video-selector-badges>b{font-size:7px}
   .vt-subtoolbox-video-selector-option{--vt-video-selector-row:72px}
@@ -3261,4 +3261,8 @@
 @media(max-width:767px){
   .vm-description-field{min-height:168px!important}
   .vm-thumbnail-empty strong{font-size:11px}
+}
+
+.vt-subtoolbox-labeled-field:focus-within>.vt-subtoolbox-labeled-control{
+  background:#fff!important;
 }
