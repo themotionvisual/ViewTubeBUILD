@@ -42,6 +42,7 @@ import {
 import { createPendingVaultImport, updatePendingVaultImport, type PendingVaultImport } from "../services/vaultImport"
 import { extractVaultFileMetadata } from "../services/vaultFileMetadata"
 import { computeVaultFileHash } from "../services/vaultFileHash"
+import { extractVaultVideoThumbnail } from "../services/vaultVideoThumbnail"
 import { buildVaultExplorerGroups } from "../services/vaultExplorer"
 import { resolveVaultSelection } from "../services/vaultSelection"
 import {
@@ -232,6 +233,7 @@ const CreatorVaultOS: React.FC = () => {
    projectName: importProject.trim() || null,
    toolId: "creator-vault-os",
    mimeType: item.mimeType,
+   previewUrl: item.previewUrl,
    tags: item.tags,
    metadata: {
     ...item.metadata,
@@ -245,9 +247,10 @@ const CreatorVaultOS: React.FC = () => {
  const stageFiles = async (files: FileList | null) => {
   if (!files?.length) return
   const prepared = await Promise.all(Array.from(files).map(async (file) => {
-   const [metadata, contentHash] = await Promise.all([
+   const [metadata, contentHash, previewUrl] = await Promise.all([
     extractVaultFileMetadata(file),
     computeVaultFileHash(file),
+    extractVaultVideoThumbnail(file),
    ])
    const duplicate = contentHash ? findVaultDuplicateByHash(contentHash) : null
    return createPendingVaultImport(
@@ -260,6 +263,7 @@ const CreatorVaultOS: React.FC = () => {
      duplicateAssetId: duplicate?.id || null,
      duplicateAssetName: duplicate?.name || null,
     },
+    previewUrl,
    )
   }))
   if (importMode === "direct") {
@@ -719,6 +723,17 @@ const CreatorVaultOS: React.FC = () => {
         {pending.length ? pending.map((item) => (
          <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0 flex flex-col gap-2">
+           {item.previewUrl ? (
+            <SubToolboxMediaInspector
+             level="l1"
+             title="Staged Preview"
+             poster={item.previewUrl}
+             items={[
+              { label: "TYPE", value: item.kind.toUpperCase() },
+              { label: "STATUS", value: item.metadata.duplicateAssetId ? "DUPLICATE REVIEW" : "READY" },
+             ]}
+            />
+           ) : null}
            <StandardInput
             value={item.name}
             onChange={(event) => patchPending(item.id, { name: event.target.value })}
