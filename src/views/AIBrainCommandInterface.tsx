@@ -786,9 +786,20 @@ const AIBrainCommandInterface: React.FC = () => {
     creatorGrowthContext,
    })
    const historyPayload = buildBrainConversationHistory(recentTurns)
+   const activeProject = brain.projects.find((project) => project.id === brain.activeProjectId)
+    || brain.projects.find((project) => project.status === "active")
+    || null
    const result = await runBrainTask({
     surface: "ai-brain",
     channelId,
+    projectId: activeProject?.id || null,
+    visibleContext: activeProject ? {
+     contentBuildId: activeProject.contentBuildId || null,
+     title: activeProject.videoTitle || activeProject.name || null,
+     topic: activeProject.videoTitle || activeProject.name || null,
+     format: null,
+     plannedPublishAt: activeProject.publishDate || null,
+    } : null,
     userText,
     snapshot,
     systemPrompt,
