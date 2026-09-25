@@ -3180,3 +3180,83 @@
     max-height:56vh;
   }
 }
+
+
+/* ==========================================================================
+   Video Manager production composition — 2026-09-25
+   ========================================================================== */
+.vm-manager-stack{
+  display:flex;
+  flex-direction:column;
+  gap:var(--vt-toolbox-shell-gutter,6px);
+}
+.vm-manager-stack>.vt-subtoolbox-video-selector{
+  width:100%;
+}
+.vm-thumbnail-mini .vt-mini-subtoolbox-content{
+  padding:0!important;
+}
+.vm-thumbnail-canvas{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  overflow:hidden;
+  background:color-mix(in srgb,var(--pair-a,#36e0f6) 12%,white);
+  transition:box-shadow 160ms ease,background 160ms ease;
+}
+.vm-thumbnail-canvas.is-dragging{
+  background:color-mix(in srgb,var(--pair-b,#ff7f6b) 18%,white);
+  box-shadow:inset 0 0 0 4px color-mix(in srgb,var(--pair-b,#ff7f6b) 70%,transparent);
+}
+.vm-thumbnail-canvas>img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+.vm-thumbnail-empty{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:8px;
+  padding:16px;
+  color:rgb(0 0 0/.34);
+  text-align:center;
+}
+.vm-thumbnail-empty svg{width:32px;height:32px}
+.vm-thumbnail-empty strong{
+  max-width:28ch;
+  font-size:13px;
+  font-weight:1000;
+  line-height:.95;
+  text-transform:uppercase;
+}
+.vm-description-field{
+  min-height:180px!important;
+  resize:vertical!important;
+}
+.vm-tag-character-count{
+  align-self:flex-end;
+  margin-top:-2px;
+  padding-right:2px;
+  color:rgb(0 0 0/.52);
+  font-size:11px;
+  font-weight:1000;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.vm-update-video-action{
+  width:100%!important;
+}
+@media(min-width:768px){
+  .vm-description-field{min-height:240px!important}
+}
+@media(min-width:1024px){
+  .vm-description-field{min-height:300px!important}
+}
+@media(max-width:767px){
+  .vm-description-field{min-height:168px!important}
+  .vm-thumbnail-empty strong{font-size:11px}
+}
