@@ -32,6 +32,7 @@ import {
 } from "../components/subtoolbox/SubToolboxPrimitives"
 import {
  createImportedVaultAsset,
+ deleteVaultAsset,
  findVaultDuplicateByHash,
  listVaultAssets,
  searchVaultAssets,
@@ -954,7 +955,30 @@ const CreatorVaultOS: React.FC = () => {
  }
 
  const archiveAsset = (asset: VaultAsset) => {
-  setVaultAssetState(asset.id, { archived: true, trashed: false })
+  const updated = setVaultAssetState(asset.id, { archived: true, trashed: false })
+  if (!updated) return
+  setSelectedAssetIds((current) => current.filter((id) => id !== asset.id))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const trashAsset = (asset: VaultAsset) => {
+  const updated = setVaultAssetState(asset.id, { trashed: true, archived: false })
+  if (!updated) return
+  setSelectedAssetIds((current) => current.filter((id) => id !== asset.id))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const restoreAsset = (asset: VaultAsset) => {
+  setVaultAssetState(asset.id, { archived: false, trashed: false })
+  setRefreshTick((value) => value + 1)
+ }
+
+ const permanentlyDeleteAsset = (asset: VaultAsset) => {
+  const accepted = typeof window === "undefined"
+   ? false
+   : window.confirm(`Permanently delete "${asset.name}"? This cannot be undone.`)
+  if (!accepted) return
+  if (!deleteVaultAsset(asset.id)) return
   setSelectedAssetIds((current) => current.filter((id) => id !== asset.id))
   setRefreshTick((value) => value + 1)
  }
@@ -1840,14 +1864,45 @@ const CreatorVaultOS: React.FC = () => {
                   onClick={() => toggleAssetFavorite(asset)}
                   aria-label="Toggle asset favorite"
                  />
-                 <SubToolboxInnerActionButton
-                  label="Archive"
-                  iconName="archive"
-                  tone="cyan"
-                  onClick={() => archiveAsset(asset)}
-                  aria-label="Archive asset"
-                 />
+                 {special === "archive" ? (
+                  <SubToolboxInnerActionButton
+                   label="Restore from Archive"
+                   iconName="archive"
+                   tone="green"
+                   onClick={() => restoreAsset(asset)}
+                  />
+                 ) : special === "trash" ? (
+                  <SubToolboxInnerActionButton
+                   label="Restore from Trash"
+                   iconName="archive"
+                   tone="green"
+                   onClick={() => restoreAsset(asset)}
+                  />
+                 ) : (
+                  <SubToolboxInnerActionButton
+                   label="Archive"
+                   iconName="archive"
+                   tone="cyan"
+                   onClick={() => archiveAsset(asset)}
+                   aria-label="Archive asset"
+                  />
+                 )}
                 </div>
+                {special === "trash" ? (
+                 <SubToolboxInnerActionButton
+                  label="Delete Permanently"
+                  iconName="x"
+                  tone="pink"
+                  onClick={() => permanentlyDeleteAsset(asset)}
+                 />
+                ) : (
+                 <SubToolboxInnerActionButton
+                  label="Move to Trash"
+                  iconName="x"
+                  tone="pink"
+                  onClick={() => trashAsset(asset)}
+                 />
+                )}
                 <SubToolboxInput
                  type="file"
                  accept="image/*"
