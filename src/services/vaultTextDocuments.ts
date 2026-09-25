@@ -1,4 +1,4 @@
-import { createLocalVaultAsset, updateVaultAsset } from "./vaultAdapter"
+import { createLocalVaultAsset, listVaultAssets, updateVaultAsset } from "./vaultAdapter"
 import type { VaultAsset } from "../types"
 
 export type VaultTextFormat = "plain" | "markdown"
@@ -36,14 +36,16 @@ export const saveVaultTextDocument = (
   format: VaultTextFormat
  },
 ): VaultAsset | null => {
- const updated = updateVaultAsset(assetId, {
+ const existing = listVaultAssets().find((asset) => asset.id === assetId)
+ if (!existing || existing.kind !== "document") return null
+ return updateVaultAsset(assetId, {
   name: input.name.trim() || "Untitled Text Document",
   mimeType: mimeForFormat(input.format),
   metadata: {
+   ...(existing.metadata || {}),
    textContent: input.text,
    textFormat: input.format,
    editor: "vault-text-editor",
   },
  })
- return updated
 }
