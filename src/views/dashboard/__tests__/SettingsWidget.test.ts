@@ -40,6 +40,8 @@ describe("Settings dashboard control switchboard", () => {
     expect(widget).toContain("IMPORT")
     expect(widget).toContain("RESET LAYOUT")
     expect(widget).toContain("CONFIRM RESET")
+    expect(widget).toContain("CANCEL RESET")
+    expect(widget).toContain("LAYOUT LOCK")
   })
 
   it("distinguishes disconnected, never-synced, stale and current data states", () => {
