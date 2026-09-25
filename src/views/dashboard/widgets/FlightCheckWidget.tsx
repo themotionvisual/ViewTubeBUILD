@@ -145,7 +145,7 @@ export const FlightCheckWidget = ({
               </WidgetBadge>
             </div>
 
-            {packages.length > 1 ? (
+            {packages.length > 0 ? (
               <WidgetSizedSelect
                 height={24}
                 tone="secondary"
@@ -185,7 +185,7 @@ export const FlightCheckWidget = ({
               </div>
             </section>
 
-            <WidgetScrollArea ariaLabel="Publishing blockers" className="vt-publishing-command__blockers">
+            <WidgetScrollArea ariaLabel="Publishing blockers" edge="full" className="vt-publishing-command__blockers">
               {model.blockers.length ? model.blockers.map((blocker) => (
                 <div key={blocker} className="vt-publishing-command__blocker">
                   <span aria-hidden="true">×</span>
@@ -231,7 +231,7 @@ export const FlightCheckWidget = ({
               tone={fallbackReady ? "primary" : "secondary"}
             />
 
-            <WidgetScrollArea ariaLabel="Flight check items" className="vt-publishing-command__manual-list">
+            <WidgetScrollArea ariaLabel="Flight check items" edge="full" className="vt-publishing-command__manual-list">
               {items.map((item: any, idx: number) => (
                 <div key={`${item.text}-${idx}`} className="vt-publishing-command__task-row" data-done={item.done ? "true" : "false"}>
                   <WidgetCheckbox
