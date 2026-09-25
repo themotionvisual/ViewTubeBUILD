@@ -84,13 +84,6 @@ import {
  listVaultCollections,
  removeAssetFromVaultCollection,
 } from "../services/vaultManualCollections"
-import {
- addAssetsToVaultCollection,
- createVaultCollection,
- deleteVaultCollection,
- listVaultCollections,
- removeAssetFromVaultCollection,
-} from "../services/vaultManualCollections"
 import { resolveVaultKeyboardCommand } from "../services/vaultKeyboard"
 import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
 import { useBrain } from "../context/useBrain"
