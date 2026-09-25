@@ -88,8 +88,7 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
    if (input.maxBytes != null && (byteSize == null || byteSize > input.maxBytes)) return false
    if (input.special === "inbox") {
     if (metadata.archivedAt || metadata.trashedAt) return false
-    const needsAttention = metadata.needsAttention === true || !asset.projectName || !(asset.tags || []).length
-    if (!needsAttention) return false
+    if (!getVaultAttentionReasons(asset).length) return false
    }
    if (input.special === "favorites" && metadata.favorite !== true) return false
    if (input.special === "archive" && !metadata.archivedAt) return false
