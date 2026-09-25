@@ -83,6 +83,13 @@ import {
  listVaultCollections,
  removeAssetFromVaultCollection,
 } from "../services/vaultManualCollections"
+import {
+ addAssetsToVaultCollection,
+ createVaultCollection,
+ deleteVaultCollection,
+ listVaultCollections,
+ removeAssetFromVaultCollection,
+} from "../services/vaultManualCollections"
 import { resolveVaultKeyboardCommand } from "../services/vaultKeyboard"
 import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
 import { useBrain } from "../context/useBrain"
@@ -208,6 +215,10 @@ const CreatorVaultOS: React.FC = () => {
  const [quickLookOpen, setQuickLookOpen] = useState(true)
  const [smartCollectionName, setSmartCollectionName] = useState("")
  const [collectionRefresh, setCollectionRefresh] = useState(0)
+ const [manualCollectionName, setManualCollectionName] = useState("")
+ const [manualCollectionRefresh, setManualCollectionRefresh] = useState(0)
+ const [activeManualCollectionId, setActiveManualCollectionId] = useState<string | null>(null)
+ const [targetManualCollectionId, setTargetManualCollectionId] = useState("")
  const [manualCollectionRefresh, setManualCollectionRefresh] = useState(0)
  const [manualCollectionName, setManualCollectionName] = useState("")
  const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null)
@@ -401,6 +412,42 @@ const CreatorVaultOS: React.FC = () => {
   deleteVaultCollection(id)
   if (activeCollectionId === id) setActiveCollectionId(null)
   if (targetCollectionId === id) setTargetCollectionId("")
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const createManualCollection = () => {
+  const name = manualCollectionName.trim()
+  if (!name) return
+  const collection = createVaultCollection(name)
+  setManualCollectionName("")
+  setTargetManualCollectionId(collection.id)
+  setActiveManualCollectionId(collection.id)
+  setExplorerProject("all")
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const addSelectionToManualCollection = () => {
+  if (!targetManualCollectionId || !selectedAssetIds.length) return
+  addAssetsToVaultCollection(targetManualCollectionId, selectedAssetIds)
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const activateManualCollection = (id: string) => {
+  setActiveManualCollectionId((current) => current === id ? null : id)
+  setExplorerProject("all")
+ }
+
+ const removeSelectedAssetFromManualCollection = (assetId: string) => {
+  if (!activeManualCollectionId) return
+  removeAssetFromVaultCollection(activeManualCollectionId, assetId)
+  setManualCollectionRefresh((value) => value + 1)
+  setRefreshTick((value) => value + 1)
+ }
+
+ const removeManualCollection = (id: string) => {
+  deleteVaultCollection(id)
+  if (activeManualCollectionId === id) setActiveManualCollectionId(null)
+  if (targetManualCollectionId === id) setTargetManualCollectionId("")
   setManualCollectionRefresh((value) => value + 1)
  }
 
@@ -1222,23 +1269,94 @@ const CreatorVaultOS: React.FC = () => {
          label={`All Assets · ${allAssets.length}`}
          iconName="collection"
          tone={explorerProject === "all" ? "pink" : "cyan"}
-         onClick={() => setExplorerProject("all")}
+         onClick={() => {
+          setActiveManualCollectionId(null)
+          setExplorerProject("all")
+         }}
         />
         {explorerGroups.unassignedCount ? (
          <SubToolboxInnerActionButton
           label={`Unassigned · ${explorerGroups.unassignedCount}`}
           iconName="collection"
           tone={explorerProject === "unassigned" ? "pink" : "cyan"}
-          onClick={() => setExplorerProject("unassigned")}
+          onClick={() => {
+           setActiveManualCollectionId(null)
+           setExplorerProject("unassigned")
+          }}
          />
         ) : null}
+        <div className="mt-2 border-t-[3px] border-current pt-3">
+         <div className="mb-2 text-xs font-black uppercase opacity-60">Collections</div>
+         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+          <StandardInput
+           value={manualCollectionName}
+           onChange={(event) => setManualCollectionName(event.target.value)}
+           placeholder="New collection"
+           aria-label="Manual collection name"
+           onKeyDown={(event) => {
+            if (event.key === "Enter") createManualCollection()
+           }}
+          />
+          <SubToolboxInnerActionButton
+           label="Create Collection"
+           iconName="plus"
+           tone="green"
+           onClick={createManualCollection}
+           disabled={!manualCollectionName.trim()}
+          />
+         </div>
+         {manualCollections.length ? (
+          <>
+           <SubToolboxSelect
+            value={targetManualCollectionId}
+            aria-label="Target manual collection"
+            onChange={(event) => setTargetManualCollectionId(event.target.value)}
+           >
+            <option value="">SELECT COLLECTION</option>
+            {manualCollections.map((collection) => (
+             <option key={collection.id} value={collection.id}>
+              {collection.name} · {collection.assetIds.length}
+             </option>
+            ))}
+           </SubToolboxSelect>
+           <SubToolboxInnerActionButton
+            label="Add Selection to Collection"
+            iconName="collection"
+            tone="purple"
+            onClick={addSelectionToManualCollection}
+            disabled={!targetManualCollectionId || !selectedAssetIds.length}
+           />
+           <div className="mt-2 flex flex-col gap-2">
+            {manualCollections.map((collection) => (
+             <div key={collection.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+              <SubToolboxInnerActionButton
+               label={`${collection.name} · ${collection.assetIds.length}`}
+               iconName="collection"
+               tone={activeManualCollectionId === collection.id ? "pink" : "cyan"}
+               onClick={() => activateManualCollection(collection.id)}
+              />
+              <SubToolboxInnerActionButton
+               label="×"
+               iconName="x"
+               tone="pink"
+               onClick={() => removeManualCollection(collection.id)}
+              />
+             </div>
+            ))}
+           </div>
+          </>
+         ) : null}
+        </div>
         {explorerGroups.projects.map((project) => (
          <SubToolboxInnerActionButton
           key={project.name}
           label={`${project.name} · ${project.count}`}
           iconName="collection"
           tone={explorerProject === project.name ? "pink" : "cyan"}
-          onClick={() => setExplorerProject(project.name)}
+          onClick={() => {
+           setActiveManualCollectionId(null)
+           setExplorerProject(project.name)
+          }}
          />
         ))}
         <div className="mt-2 border-t-[3px] border-current pt-3">
@@ -1498,6 +1616,14 @@ const CreatorVaultOS: React.FC = () => {
               </div>
               {selectedAssetIds.includes(asset.id) ? (
                <>
+                {activeManualCollection?.assetIds.includes(asset.id) ? (
+                 <SubToolboxInnerActionButton
+                  label="Remove from Collection"
+                  iconName="x"
+                  tone="pink"
+                  onClick={() => removeSelectedAssetFromManualCollection(asset.id)}
+                 />
+                ) : null}
                 <SubToolboxSelect
                  value={asset.projectId || ""}
                  aria-label="Asset project assignment"
