@@ -50,7 +50,7 @@
 - [ ] RH-C049 Vision/suggested-tag task.
 - [ ] RH-C050 Transcript task.
 - [ ] RH-C051 Proxy derivative task.
-- [ ] RH-C052 Background task center/retry/error.
+- [ ] RH-C052 Background task center/retry/error. (Task Center + queued/processing/completed/failed states complete; retry action pending)
 
 ## Lane D — versions/captions/dependencies
 - [ ] RH-D060 Version carousel.
