@@ -366,17 +366,17 @@ Targeted corrections completed in this pass:
 - **Settings:** Dashboard Controls + Layout Lock use a two-column compact grid; secondary dashboard actions use 24px compact controls; phone header stepper receives more width so labels are not cut off.
 
 Second correction wave now implemented:
-- mobile dashboard reclaim is asymmetric by design to compensate for the app-shell/browser right-side reserve measured in live iPhone screenshots;
+- mobile dashboard reclaim is now symmetric: widgets expand equally left/right and no hidden right-side lane is reserved;
 - collapsed widgets temporarily expand their slot when the mobile control deck opens, so the expand control remains reachable;
 - header toggle containers no longer clip wrapped labels on portrait layouts;
 - WidgetStepTabs now derive their column count from the number of items instead of assuming three;
 - Video Asset Engine now uses four correctly sized tabs, a full-width horizontal package-slot rail on mobile, and canonical footer buttons without black shadows;
-- Publishing Command now always exposes package/video context when available, uses canonical checkboxes/text input for editable tasks, supports ADD TASK, uses full-bleed blocker/task rails, and compresses task rows to 28px minimum;
+- Publishing Command now always exposes package/video context when available, uses canonical checkboxes/text input for editable tasks, supports ADD TASK, uses full-bleed blocker/task rails, and compresses task rows to 24px minimum;
 - Video Director Studio handoff now uses a proper header action with an ExternalLink icon and no arrow/emoji text; Auto-Fill uses the canonical sized button/shadow path;
 - Image Generator and Video Uploader now share the same canonical WidgetTextInput / WidgetTextArea field primitives;
 - the legacy split-action primitive now has a larger left icon bay and larger label text; its large size matches the 38px footer icon-button height;
 - Video Uploader section controls wrap rather than overflow and its publish/reset controls share height;
-- UI Reference Library explicitly documents the canonical Video Select / Dropdown component used by Video Manager.
+- UI Reference Library explicitly documents the canonical Video Select / Dropdown component used by Video Manager and the canonical WidgetHeaderAction used by header-mounted actions.
 
 Remaining visual verification:
 - confirm live left/right outer gutter symmetry on iPhone portrait after deployment;
