@@ -24,14 +24,14 @@
 - [ ] RH-A019 Run/repair tests, build and browser verification on current main baseline.
 
 ## Lane B — interaction / organization
-- [ ] RH-B020 Space Quick Look.
-- [ ] RH-B021 Escape close contract.
-- [ ] RH-B022 Cmd/Ctrl+K Vault command/search.
-- [ ] RH-B023 Cmd/Ctrl+G selected-assets Project/ContentBuild handoff.
+- [x] RH-B020 Space Quick Look.
+- [x] RH-B021 Escape close contract.
+- [x] RH-B022 Cmd/Ctrl+K Vault command/search.
+- [ ] RH-B023 Cmd/Ctrl+G selected-assets Project/ContentBuild handoff. (Button handoff complete; shortcut pending)
 - [ ] RH-B024 Split-pane explorer.
-- [ ] RH-B025 Timeline view.
-- [ ] RH-B026 Smart Collections.
-- [ ] RH-B027 Favorites/Inbox/Archive/Trash.
+- [x] RH-B025 Timeline view.
+- [x] RH-B026 Smart Collections.
+- [ ] RH-B027 Favorites/Inbox/Archive/Trash. (Favorites/Archive/Trash complete; Inbox pending)
 - [ ] RH-B028 Arrange Mode/module reorder.
 - [ ] RH-B029 Module visibility preferences.
 - [ ] RH-B030 Workspace layout density preference.
@@ -59,7 +59,7 @@
 - [ ] RH-D063 Caption artifact editor.
 - [ ] RH-D064 SRT/VTT export.
 - [ ] RH-D065 Transcript→Script derivative.
-- [ ] RH-D066 Selected assets→new Project/ContentBuild.
+- [x] RH-D066 Selected assets→new Project/ContentBuild.
 - [ ] RH-D067 Attach selected assets→existing Project.
 - [ ] RH-D068 Dependency/readiness projection.
 - [ ] RH-D069 Manifest JSON export.
