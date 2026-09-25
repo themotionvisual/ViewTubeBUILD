@@ -46,7 +46,10 @@ import { computeVaultFileHash } from "../services/vaultFileHash"
 import { extractVaultVideoThumbnail } from "../services/vaultVideoThumbnail"
 import { buildVaultExplorerGroups } from "../services/vaultExplorer"
 import { getAssetLineage } from "../services/assetEngine"
-import { getVaultAssetVersionStack } from "../services/vaultVersions"
+import {
+ detachVaultAssetVersion,
+ getVaultAssetVersionStack,
+} from "../services/vaultVersions"
 import {
  clearCompletedVaultTasks,
  createVaultTask,
@@ -171,6 +174,12 @@ const CreatorVaultOS: React.FC = () => {
  const selectedVersionStack = useMemo(
   () => selectedAsset ? getVaultAssetVersionStack(selectedAsset.id) : [],
   [selectedAsset, refreshTick],
+ )
+ const selectedVersionRecord = useMemo(
+  () => selectedAsset
+   ? selectedVersionStack.find((version) => version.assetId === selectedAsset.id) || null
+   : null,
+  [selectedAsset, selectedVersionStack],
  )
  const selectedLineage = useMemo(
   () => selectedAsset ? getAssetLineage(selectedAsset.id) : [],
@@ -394,6 +403,15 @@ const CreatorVaultOS: React.FC = () => {
 
  const restoreSelection = () => {
   selectedAssetIds.forEach((id) => setVaultAssetState(id, { archived: false, trashed: false }))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const detachSelectedVersion = () => {
+  if (!selectedAsset || !selectedVersionRecord) return
+  const detached = detachVaultAssetVersion(selectedAsset, {
+   versionId: selectedVersionRecord.id,
+  })
+  setSelectedAssetIds([detached.id])
   setRefreshTick((value) => value + 1)
  }
 
@@ -1111,7 +1129,8 @@ const CreatorVaultOS: React.FC = () => {
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Versions</div>
           {selectedVersionStack.length ? (
-           <div className="flex gap-2 overflow-x-auto pb-1">
+           <>
+            <div className="flex gap-2 overflow-x-auto pb-1">
             {selectedVersionStack.map((version) => {
              const asset = allAssets.find((candidate) => candidate.id === version.assetId)
              return (
@@ -1124,7 +1143,16 @@ const CreatorVaultOS: React.FC = () => {
               />
              )
             })}
-           </div>
+            </div>
+            {selectedVersionRecord ? (
+             <SubToolboxInnerActionButton
+              label="Detach Version as Independent Asset"
+              iconName="layers"
+              tone="purple"
+              onClick={detachSelectedVersion}
+             />
+            ) : null}
+           </>
           ) : (
            <SubToolboxStatePanel
             level="l1"
