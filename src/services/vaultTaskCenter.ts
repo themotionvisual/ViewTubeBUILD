@@ -17,6 +17,7 @@ export type VaultTask = {
  detail: string
  createdAt: number
  updatedAt: number
+ retryCount: number
 }
 
 const STORAGE_KEY = "vt_creator_vault_tasks_v1"
@@ -56,6 +57,7 @@ export const createVaultTask = (input: {
   detail: input.detail || "",
   createdAt: now,
   updatedAt: now,
+  retryCount: 0,
  }
  writeVaultTasks([task, ...listVaultTasks()].slice(0, 100))
  return task
@@ -80,4 +82,21 @@ export const updateVaultTask = (
 
 export const clearCompletedVaultTasks = (): void => {
  writeVaultTasks(listVaultTasks().filter((task) => task.status !== "completed"))
+}
+
+
+export const retryVaultTask = (id: string): VaultTask | null => {
+ const tasks = listVaultTasks()
+ const current = tasks.find((task) => task.id === id)
+ if (!current || current.status !== "failed") return null
+ const updated: VaultTask = {
+  ...current,
+  status: "queued",
+  progress: 0,
+  detail: "Retry queued.",
+  retryCount: (current.retryCount || 0) + 1,
+  updatedAt: Date.now(),
+ }
+ writeVaultTasks(tasks.map((task) => (task.id === id ? updated : task)))
+ return updated
 }
