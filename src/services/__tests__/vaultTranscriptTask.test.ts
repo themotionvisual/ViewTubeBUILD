@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createLocalVaultAsset, listVaultAssets } from "../vaultAdapter"
-import { listVaultTasks } from "../vaultTaskCenter"
+import { createVaultTask, listVaultTasks, updateVaultTask } from "../vaultTaskCenter"
 import { runVaultTranscriptTask } from "../vaultTranscriptTask"
 
 describe("runVaultTranscriptTask", () => {
@@ -33,6 +33,35 @@ describe("runVaultTranscriptTask", () => {
    status: "completed",
    targetAssetId: source.id,
   })
+ })
+
+ it("reuses an existing failed task when retrying transcript acquisition", async () => {
+  const source = createLocalVaultAsset({ name: "Retry Video", kind: "video", tags: [] })
+  const task = createVaultTask({
+   type: "transcript",
+   label: "Transcript · Retry Video",
+   targetAssetId: source.id,
+  })
+  updateVaultTask(task.id, { status: "failed", progress: 100, detail: "Offline" })
+  const acquire = vi.fn().mockResolvedValue({
+   ok: true,
+   transcript: {
+    status: "available",
+    source: "auto_subtitles",
+    text: "Recovered transcript.",
+   },
+  })
+
+  const result = await runVaultTranscriptTask({
+   asset: source,
+   videoId: "yt-retry",
+   taskId: task.id,
+   acquire,
+  })
+
+  expect(result.task.id).toBe(task.id)
+  expect(listVaultTasks()).toHaveLength(1)
+  expect(result.task.status).toBe("completed")
  })
 
  it("records a failed durable transcript task when acquisition has no transcript", async () => {
