@@ -63,6 +63,7 @@ const CrownControlRoom = lazy(() => import("../views/CrownControlRoom"))
 const AccountConnectPage = lazy(() => import("../views/AccountConnectPage"))
 const SuperToolIndex = lazy(() => import("../views/SuperToolIndex"))
 const SuperToolRoute = lazy(() => import("../views/SuperToolRoute"))
+const CreatorVaultOS = lazy(() => import("../views/CreatorVaultOS"))
 
 /**
  * Honors the legacy "/data-transparency?internalTool=<id>" address.
@@ -178,10 +179,7 @@ export const AppRoutes: React.FC = () => {
 
     <Route path="/video-manager" element={<Navigate to="/studio" replace />} />
     <Route path="/strategy" element={<Navigate to="/studio" replace />} />
-    <Route
-     path="/vault"
-     element={<Navigate to="/reference-studio/toolbox-system" replace />}
-    />
+    <Route path="/vault" element={<CreatorVaultOS />} />
 
     {/* Hidden Routes - Access by typing URL directly */}
     <Route path="/simple-analytics" element={<SimpleAnalytics />} />
