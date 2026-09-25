@@ -406,6 +406,12 @@ const CreatorVaultOS: React.FC = () => {
   () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
   [allAssets, selectedAssetIds],
  )
+ const editableTextAsset = useMemo(() => {
+  if (!selectedAsset || selectedAsset.kind !== "document") return null
+  const hasTextContent = typeof selectedAsset.metadata?.textContent === "string"
+  const textMime = typeof selectedAsset.mimeType === "string" && selectedAsset.mimeType.startsWith("text/")
+  return hasTextContent || textMime ? selectedAsset : null
+ }, [selectedAsset])
  const attentionReasons = useMemo(
   () => selectedAsset ? getVaultAttentionReasons(selectedAsset) : [],
   [selectedAsset, refreshTick],
@@ -594,6 +600,13 @@ const CreatorVaultOS: React.FC = () => {
     : "",
   )
  }, [selectedAsset?.id])
+
+ useEffect(() => {
+  if (!editableTextAsset) return
+  setTextEditorTitle(editableTextAsset.name)
+  setTextEditorContent(String(editableTextAsset.metadata?.textContent || ""))
+  setTextEditorFormat(editableTextAsset.metadata?.textFormat === "markdown" ? "markdown" : "plain")
+ }, [editableTextAsset?.id])
 
  useEffect(() => {
   const stored = activeCaptionAsset?.metadata?.captionLines
@@ -1445,6 +1458,31 @@ const CreatorVaultOS: React.FC = () => {
   addProject(project)
   setActiveProject(project.id)
   setSelectionProjectName("")
+  setRefreshTick((value) => value + 1)
+ }
+
+ const createTextAssetFromEditor = () => {
+  const created = createVaultTextDocument({
+   name: textEditorTitle,
+   text: textEditorContent,
+   format: textEditorFormat,
+   projectId: selectedAsset?.projectId || null,
+   projectName: selectedAsset?.projectName || null,
+  })
+  setSelectedAssetIds([created.id])
+  setSelectionAnchorId(created.id)
+  setRefreshTick((value) => value + 1)
+ }
+
+ const saveSelectedTextAsset = () => {
+  if (!editableTextAsset) return
+  const saved = saveVaultTextDocument(editableTextAsset.id, {
+   name: textEditorTitle,
+   text: textEditorContent,
+   format: textEditorFormat,
+  })
+  if (!saved) return
+  setSelectedAssetIds([saved.id])
   setRefreshTick((value) => value + 1)
  }
 
