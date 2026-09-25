@@ -25,6 +25,7 @@ import {
  SubToolboxSelect,
  SubToolboxSplitField,
  SubToolboxStatePanel,
+ SubToolboxTagEditor,
  SubToolboxTextArea,
  SubToolboxVaultAsset,
 } from "../components/subtoolbox/SubToolboxPrimitives"
@@ -123,10 +124,20 @@ const CORE_TAGS = [
  "Thumbnail",
 ] as const
 
+const vaultPreviewAspectRatio = (asset: VaultAsset): number => {
+ const metadata = asset.metadata || {}
+ const width = Number(metadata.width ?? metadata.pixelWidth ?? metadata.previewWidth ?? 0)
+ const height = Number(metadata.height ?? metadata.pixelHeight ?? metadata.previewHeight ?? 0)
+ if (width > 0 && height > 0) return width / height
+ const explicitRatio = Number(metadata.aspectRatio ?? 0)
+ if (Number.isFinite(explicitRatio) && explicitRatio > 0) return explicitRatio
+ return 16 / 9
+}
+
 const vaultCardKind = (asset: VaultAsset): "landscape" | "portrait" | "audio" | "document" => {
  if (asset.kind === "audio") return "audio"
  if (asset.kind === "document" || asset.kind === "font" || asset.kind === "template") return "document"
- return "landscape"
+ return vaultPreviewAspectRatio(asset) < 0.9 ? "portrait" : "landscape"
 }
 
 const assetIcon = (asset: VaultAsset) => {
@@ -1111,15 +1122,107 @@ const CreatorVaultOS: React.FC = () => {
             key={asset.id}
             level="l1"
             kind={vaultCardKind(asset)}
-            title={(
-             <StandardInput
-              defaultValue={asset.name}
-              aria-label={`Edit title for ${asset.name}`}
-              onBlur={(event) => updateAssetTitle(asset, event.target.value)}
-              onKeyDown={(event) => {
-               if (event.key === "Enter") event.currentTarget.blur()
-              }}
+            title={asset.name}
+            onTitleChange={(nextTitle) => updateAssetTitle(asset, nextTitle)}
+            titleAriaLabel={`Edit title for ${asset.name}`}
+            previewAspectRatio={vaultPreviewAspectRatio(asset)}
+            preview={(asset.previewUrl || asset.url) ? (
+             <img
+              src={asset.previewUrl || asset.url || undefined}
+              alt=""
+              className="vt-subtoolbox-vault-media"
              />
+            ) : assetIcon(asset)}
+            selected={selectedAssetIds.includes(asset.id)}
+            onClickCapture={(event) => {
+             selectionShiftRef.current = event.shiftKey
+            }}
+            onSelectedChange={(selected) => {
+             const next = resolveVaultSelection({
+              visibleIds: visibleAssets.map((item) => item.id),
+              selectedIds: selectedAssetIds,
+              clickedId: asset.id,
+              nextSelected: selected,
+              anchorId: selectionAnchorId,
+              shiftKey: selectionShiftRef.current,
+             })
+             selectionShiftRef.current = false
+             setSelectedAssetIds(next.selectedIds)
+             setSelectionAnchorId(next.anchorId)
+            }}
+            tags={(
+             <SubToolboxTagEditor
+              level="l2"
+              tagLevel="l3"
+              spectrum
+              tags={asset.tags || []}
+              onTagsChange={(tags) => {
+               updateVaultAsset(asset.id, { tags })
+               setRefreshTick((value) => value + 1)
+              }}
+              label="TAGS"
+             />
+            )}
+            notes={(
+             <div className="flex h-full min-h-0 flex-col gap-2">
+              <div className="text-[10px] font-black uppercase opacity-60">
+               {viewMode === "timeline"
+                ? `${new Date(asset.createdAt).toLocaleString()} · ${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`
+                : `${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`}
+              </div>
+              <SubToolboxTextArea
+               level="l2"
+               height="fill"
+               defaultValue={String(asset.metadata?.notes || "")}
+               placeholder="NOTES"
+               aria-label={`Notes for ${asset.name}`}
+               onBlur={(event) => updateAssetNotes(asset, event.currentTarget.value)}
+              />
+              {selectedAssetIds.includes(asset.id) ? (
+               <>
+                <SubToolboxSelect
+                 value={asset.projectId || ""}
+                 aria-label="Asset project assignment"
+                 onChange={(event) => assignAssetToProject(asset, event.target.value)}
+                >
+                 <option value="">UNASSIGNED</option>
+                 {brain.projects.map((project) => (
+                  <option key={project.id} value={project.id}>{project.name}</option>
+                 ))}
+                </SubToolboxSelect>
+                <div className="grid grid-cols-2 gap-2">
+                 <SubToolboxInnerActionButton
+                  label={asset.metadata?.favorite === true ? "Unfavorite" : "Favorite"}
+                  iconName="sparkles"
+                  tone="orange"
+                  onClick={() => toggleAssetFavorite(asset)}
+                  aria-label="Toggle asset favorite"
+                 />
+                 <SubToolboxInnerActionButton
+                  label="Archive"
+                  iconName="archive"
+                  tone="cyan"
+                  onClick={() => archiveAsset(asset)}
+                  aria-label="Archive asset"
+                 />
+                </div>
+                <SubToolboxInput
+                 type="file"
+                 accept="image/*"
+                 aria-label={`Replace preview for ${asset.name}`}
+                 title="Replace Preview"
+                 onChange={(event) => {
+                  const file = event.currentTarget.files?.[0] || null
+                  void replaceAssetPreview(asset, file)
+                  event.currentTarget.value = ""
+                 }}
+                />
+                <span className="text-[10px] font-black uppercase opacity-60">Replace Preview</span>
+               </>
+              ) : null}
+             </div>
+            )}
+           />
             )}
             preview={(asset.previewUrl || asset.url) ? (
              <img
