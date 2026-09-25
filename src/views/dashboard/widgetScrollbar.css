@@ -125,7 +125,7 @@
   }
 
   :where(.dashboard-barrier) .widget-scroll-viewport {
-    padding-inline-end: var(--widget-content-inset);
+    padding-inline-end: 0;
     -webkit-overflow-scrolling: touch;
   }
 }
