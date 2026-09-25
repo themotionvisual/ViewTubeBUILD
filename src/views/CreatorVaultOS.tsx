@@ -96,6 +96,7 @@ import {
  transcriptToScriptAsset,
  type VaultCaptionLine,
 } from "../services/vaultCaptions"
+import { getVaultProjectReadiness } from "../services/vaultReadiness"
 import type { VaultAsset, VaultAssetKind } from "../types"
 
 const VAULT_MODULE_LABELS: Record<VaultWorkspaceModuleId, string> = {
@@ -127,6 +128,13 @@ const vaultCardKind = (asset: VaultAsset): "landscape" | "portrait" | "audio" | 
  if (asset.kind === "audio") return "audio"
  if (asset.kind === "document" || asset.kind === "font" || asset.kind === "template") return "document"
  return "landscape"
+}
+
+const formatVaultBytes = (bytes: number) => {
+ if (bytes < 1024) return `${bytes} B`
+ if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+ if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+ return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`
 }
 
 const assetIcon = (asset: VaultAsset) => {
@@ -237,6 +245,19 @@ const CreatorVaultOS: React.FC = () => {
  const selectedUsage = useMemo(
   () => selectedAsset ? getVaultAssetUsage(selectedAsset.id) : [],
   [selectedAsset, refreshTick],
+ )
+ const selectedProject = useMemo(
+  () => selectedAsset?.projectId
+   ? brain.projects.find((project) => project.id === selectedAsset.projectId) || null
+   : null,
+  [selectedAsset, brain.projects],
+ )
+ const selectedReadiness = useMemo(
+  () => selectedProject ? getVaultProjectReadiness({
+   project: selectedProject,
+   assets: allAssets.filter((asset) => asset.projectId === selectedProject.id),
+  }) : null,
+  [selectedProject, allAssets, refreshTick],
  )
  const activeCaptionAsset = useMemo(() => {
   if (!selectedAsset) return null
@@ -1784,6 +1805,42 @@ const CreatorVaultOS: React.FC = () => {
            />
           )}
          </div>
+         {selectedReadiness ? (
+          <div>
+           <div className="mb-2 text-xs font-black uppercase opacity-60">Project Readiness</div>
+           <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-2 gap-2">
+             <SubToolboxStatePanel
+              level="l1"
+              state={selectedReadiness.packageReady ? "ready" : "stale"}
+              message={selectedReadiness.packageReady ? "PACKAGE READY" : `${selectedReadiness.missingPackaging.length} PACKAGING DEPENDENCIES MISSING`}
+             />
+             <SubToolboxStatePanel
+              level="l1"
+              state={selectedReadiness.publishReady ? "ready" : "stale"}
+              message={selectedReadiness.publishReady ? "PUBLISH READY" : "FINAL RENDER NOT READY"}
+             />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+             {selectedReadiness.slots.map((slot) => (
+              <div key={slot.id} className="text-xs font-bold">
+               <div className="font-black uppercase">{slot.label}</div>
+               <div className="opacity-60">{slot.state.toUpperCase()}</div>
+              </div>
+             ))}
+            </div>
+            <div className="text-xs font-bold">
+             <div className="font-black uppercase">Known Package Size</div>
+             <div className="opacity-60">
+              {formatVaultBytes(selectedReadiness.storage.knownBytes)}
+              {selectedReadiness.storage.unknownSizeCount
+               ? ` · ${selectedReadiness.storage.unknownSizeCount} asset(s) with unknown size`
+               : ""}
+             </div>
+            </div>
+           </div>
+          </div>
+         ) : null}
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Usage</div>
           {selectedUsage.length ? (
