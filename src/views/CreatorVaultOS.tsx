@@ -1585,6 +1585,7 @@ const CreatorVaultOS: React.FC = () => {
           { value: "grid", label: "GRID" },
           { value: "masonry", label: "MASONRY" },
           { value: "filmstrip", label: "FILMSTRIP" },
+          { value: "lineage", label: "LINEAGE" },
           { value: "list", label: "LIST" },
           { value: "timeline", label: "TIMELINE" },
          ]}
@@ -2133,7 +2134,58 @@ const CreatorVaultOS: React.FC = () => {
           />
          </div>
         ) : null}
-        {visibleAssets.length ? (
+        {viewMode === "lineage" ? (
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Vault Lineage</div>
+          {selectedAsset ? (
+           selectedLineage.length ? (
+            <div className="flex gap-3 overflow-x-auto pb-3">
+             {selectedLineage.map((asset, index) => (
+              <button
+               key={asset.id}
+               type="button"
+               onClick={() => {
+                setSelectedAssetIds([asset.id])
+                setSelectionAnchorId(asset.id)
+               }}
+               className="w-52 shrink-0 border-[3px] border-current p-2 text-left"
+              >
+               <div className="mb-1 text-[10px] font-black uppercase opacity-60">
+                {index === 0 ? "CURRENT" : `PARENT ${index}`}
+               </div>
+               <div className="aspect-video overflow-hidden border-[2px] border-current">
+                {asset.previewUrl || asset.url ? (
+                 <img
+                  src={asset.previewUrl || asset.url || undefined}
+                  alt=""
+                  className="h-full w-full object-cover"
+                 />
+                ) : (
+                 <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
+                )}
+               </div>
+               <div className="mt-1 truncate text-xs font-black uppercase" title={asset.name}>
+                {asset.name}
+               </div>
+              </button>
+             ))}
+            </div>
+           ) : (
+            <SubToolboxStatePanel
+             level="l1"
+             state="empty"
+             message="No canonical parent lineage is recorded for this asset."
+            />
+           )
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="empty"
+            message="Select an asset to view its canonical lineage."
+           />
+          )}
+         </div>
+        ) : visibleAssets.length ? (
          viewMode === "filmstrip" ? (
           <div>
            <div className="mb-2 text-xs font-black uppercase opacity-60">Vault Filmstrip</div>
