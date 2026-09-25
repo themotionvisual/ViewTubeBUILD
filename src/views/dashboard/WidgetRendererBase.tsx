@@ -5,7 +5,6 @@ import {
   Bell,
   Bot,
   CalendarDays,
-  Database,
   DollarSign,
   Layers,
   TrendingUp,
@@ -90,6 +89,7 @@ const LAZY_WIDGET_RENDERERS: Record<string, React.LazyExoticComponent<React.Comp
  "app-verification-explainer": React.lazy(() => import("./widgets/VerificationExplainerWidget").then((module) => ({ default: module.VerificationExplainerWidget }))),
  "revenue-momentum": React.lazy(() => import("./widgets/RevenueMomentumWidget").then((module) => ({ default: module.RevenueMomentumWidget }))),
  "superfan-card": React.lazy(() => import("./widgets/SuperfanCardWidget").then((module) => ({ default: module.SuperfanCardWidget }))),
+ "system-micro-stack": React.lazy(() => import("./widgets/SettingsWidget").then((module) => ({ default: module.SettingsWidget }))),
 }
 
 const INLINE_WIDGET_RENDERER_KEYS = [
@@ -106,7 +106,6 @@ const INLINE_WIDGET_RENDERER_KEYS = [
  "goals-tracker",
  "alerts-feed",
  "ai-prompt-box",
- "system-micro-stack",
  "task-stack",
  "alerts-ticker",
 ] as const
@@ -177,6 +176,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
     data={data}
     editMode={editMode}
     onNavigate={onNavigate}
+    dashboardControls={dashboardControls}
    />
   )
  }
@@ -931,105 +931,6 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
       style={{ height: "36px" }}
       placeholder="Drop a question..."
      />
-    </div>
-   </WidgetShell>
-  )
- }
-
- // 14. SETTINGS (merged: system + sync)
- if (widget.id === "system-micro-stack") {
-  const model = localStorage.getItem("GEMINI_MODEL") || "gemini-3.0-flash"
-  const isConnected = data.authState.isAuthenticated
-  const lastSyncTimestamp = data.lastSyncComplete ? Date.parse(data.lastSyncComplete) : null
-  const lastSync = data.formatRelativeTime(Number.isFinite(lastSyncTimestamp) ? lastSyncTimestamp : null)
-  const planId = String(localStorage.getItem("vt_last_plan") || "basic").toUpperCase()
-  const currentModelLabel =
-   model === "gemini-3.1-pro-preview"
-    ? "GEMINI 3.1 PRO PREVIEW"
-    : model === "gemini-3.1-flash-lite"
-     ? "GEMINI 3.1 FLASH LITE"
-     : model === "gemini-3-flash-preview"
-      ? "GEMINI 3 FLASH PREVIEW"
-      : model === "gemini-3.1-flash-image-preview"
-       ? "GEMINI 3.1 FLASH IMAGE"
-       : "GEMINI 3.1 FLASH LITE"
-
-  return (
-   <WidgetShell {...common} icon={<Database size={22} />}>
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px", height: "100%" }}>
-     <div style={{ display: "flex", gap: "6px" }}>
-      <div style={{ flex: 1, border: "2px solid #000", borderRadius: "8px", padding: "6px 8px", background: isConnected ? "#4FFF5B" : "#FF1744" }}>
-       <div style={{ fontSize: "8px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase" }}>Channel</div>
-       <div style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase" }}>{isConnected ? "Connected" : "Not connected"}</div>
-      </div>
-      <div style={{ flex: 1, border: "2px solid #000", borderRadius: "8px", padding: "6px 8px", background: "#fff" }}>
-       <div style={{ fontSize: "8px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase" }}>Last Sync</div>
-       <div style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase" }}>{isConnected ? lastSync : "Never"}</div>
-      </div>
-     </div>
-
-     <div style={{ border: "2px solid #000", borderRadius: "8px", padding: "6px 8px", background: "#fff", display: "flex", flexDirection: "column", gap: "4px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-       <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase" }}>Active AI Brain</span>
-       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", border: "2px solid #000", borderRadius: "6px", padding: "1px 6px", background: "#f3f4f6" }}>{currentModelLabel}</span>
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-       <span style={{ fontSize: "8px", fontWeight: 900, opacity: 0.7, textTransform: "uppercase" }}>Plan</span>
-       <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", border: "2px solid #000", borderRadius: "6px", padding: "1px 6px", background: "#f3f4f6" }}>{planId}</span>
-      </div>
-     </div>
-
-     <button
-      type="button"
-      className="vt-button"
-      aria-pressed={Boolean(dashboardControls?.editMode)}
-      style={{ width: "100%", minHeight: "34px", fontSize: "9px", background: dashboardControls?.editMode ? "#C9F830" : "#fff" }}
-      onClick={() => dashboardControls?.setEditMode((previous: boolean) => !previous)}
-     >
-      <Edit3 size={14} aria-hidden="true" />
-      {dashboardControls?.editMode ? "HIDE DASHBOARD CONTROLS" : "SHOW DASHBOARD CONTROLS"}
-     </button>
-
-     <button
-      type="button"
-      className="vt-button"
-      disabled={!dashboardControls?.hiddenWidgetCount}
-      style={{ width: "100%", minHeight: "34px", fontSize: "9px", background: dashboardControls?.hiddenWidgetCount ? "#C9F830" : "#eee" }}
-      onClick={() => dashboardControls?.showAllWidgets?.()}
-     >
-      <Layers size={14} aria-hidden="true" />
-      {dashboardControls?.hiddenWidgetCount
-       ? `SHOW ALL READY WIDGETS (${dashboardControls.hiddenWidgetCount})`
-       : "ALL READY WIDGETS VISIBLE"}
-     </button>
-
-     <div style={{ display: "flex", gap: "6px", marginTop: "auto" }}>
-      <button
-       className="vt-button primary"
-       style={{ flex: 1, height: "32px", fontSize: "9px", background: "#00D2FF" }}
-       onClick={async () => {
-        if (isConnected) await data.globalSyncData({ batchMode: "initial" })
-        else onNavigate("/connect")
-       }}
-      >
-       {isConnected ? "SYNC NOW" : "CONNECT"}
-      </button>
-      <button
-       className="vt-button"
-       style={{ flex: 1, height: "32px", fontSize: "9px", background: "#eee" }}
-       onClick={() => onNavigate("/account")}
-      >
-       ACCOUNT
-      </button>
-     </div>
-     <div style={{ display: "flex", gap: "6px" }}>
-      <button className="vt-button" style={{ flex: 1, height: "30px", fontSize: "9px", background: "#f3f4f6" }} onClick={() => onNavigate("/account?panel=billing")}>
-       BILLING
-      </button>
-      <button className="vt-button" style={{ flex: 1, height: "30px", fontSize: "9px", background: "#f3f4f6" }} onClick={() => onNavigate("/user-guide")}>
-       USER GUIDE
-      </button>
-     </div>
     </div>
    </WidgetShell>
   )
