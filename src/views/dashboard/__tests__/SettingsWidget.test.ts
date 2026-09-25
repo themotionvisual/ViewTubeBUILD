@@ -53,6 +53,21 @@ describe("Settings dashboard control switchboard", () => {
     expect(widget).toContain("CURRENT")
   })
 
+  it("shows an honest generic preview when no channel is connected", () => {
+    expect(widget).toContain("PREVIEW")
+    expect(widget).toContain("EXAMPLE CHANNEL")
+    expect(widget).toContain("EXAMPLE ANALYTICS")
+    expect(widget).toContain("CONNECT TO PERSONALIZE")
+    expect(widget).toContain('aria-label="Settings data preview"')
+  })
+
+  it("defines compact, standard and wide container layouts for Settings", () => {
+    expect(css).toContain("@container vt-widget (max-width:420px)")
+    expect(css).toContain("@container vt-widget (min-width:421px) and (max-width:760px)")
+    expect(css).toContain("@container vt-widget (min-width:761px)")
+    expect(css).toContain(".settings-switchboard-preview")
+  })
+
   it("uses canonical account and entitlement owners rather than the legacy plan cache", () => {
     expect(widget).toContain("useUnifiedAccount")
     expect(widget).toContain("getCurrentEntitlement")
