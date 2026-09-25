@@ -63,6 +63,7 @@ describe("Toolbox UI Reference Library", () => {
       "Media Timecode", "Media Duration Badge", "Media Caption Toggle", "Media Speed Control",
       "Media Poster Frame", "Media Status", "Media Player", "Media Transport Bar",
       "Media Queue", "Media Inspector", "Media Review Panel",
+      "Labeled Input", "Labeled Textarea", "Video Selector", "Mini SubToolbox",
     ]) expect(source).toContain(`"${family}"`)
     expect(source).not.toContain("HardcodedGenericControl")
     expect(source).not.toContain("hardcoded-fallback")
@@ -94,6 +95,10 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).toContain("<SubToolboxMediaQueue")
     expect(source).toContain("<SubToolboxMediaInspector")
     expect(source).toContain("<SubToolboxMediaReviewPanel")
+    expect(source).toContain("<SubToolboxLabeledInput")
+    expect(source).toContain("<SubToolboxLabeledTextArea")
+    expect(source).toContain("<SubToolboxVideoSelector")
+    expect(source).toContain("<MiniSubToolbox")
     expect(source).toContain('variant="compact"')
     expect(source).toContain('variant="media"')
     expect(source).toContain('ratio="16:9"')
