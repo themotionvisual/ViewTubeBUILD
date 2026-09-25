@@ -602,7 +602,6 @@ const CreatorVaultOS: React.FC = () => {
      crypto.randomUUID(),
      {
       ...metadata,
-      ...exifMetadata,
       contentHash,
       exifMake: exif.make || null,
       exifModel: exif.model || null,
