@@ -3,6 +3,7 @@
 **Status:** CANONICAL LIVING COORDINATION RESOURCE — bounded cross-system product/tool architecture  
 **Created:** 2026-09-25  
 **Last updated:** 2026-09-25  
+**Last code-awareness audit:** `52f655a5d3cb5bc2d16fc8a285a8b129bb3b9f1a`  
 **Repository baseline at creation:** `f3898dc3f7199d7f0433b16641f618b9c6d04b36`  
 **Scope owner:** cross-system creator lifecycle, Master Tool taxonomy, product-surface coordination, integration planning, widget/tool consolidation, product-level capability boundaries  
 **Does not replace:** scoped authorities for Analytics/VT-SYNC, BrainRuntime, Projects/ContentBuild, Asset Engine, Toolbox UI, Dashboard Widget Registry, Editor, Auth, Deployment, User Guide, or Herald  
@@ -568,91 +569,373 @@ Every new Master Tool, subtool or widget must pass:
 
 ---
 
-# 19. Ten additional sections that would make this document substantially more useful
 
-These are the recommended next additions. They are intentionally code-aware and living-document oriented.
+# 19. Live Code Ownership Map
 
-## Idea 1 — Live Code Ownership Map
+**Audit baseline:** 52f655a5d3cb5bc2d16fc8a285a8b129bb3b9f1a
 
-**What it adds:** a maintained table of each Master Tool → frontend routes/components → services → stores → registries → tests → canonical documents.
+This map is the product-level answer to “where does this capability actually live?” It is intentionally narrower than a full file inventory. Scoped domain masters remain responsible for their internal details.
 
-**Why it matters:** a future agent can see whether a concept already exists before creating another implementation.
+| Master Tool | Current production anchors | Current status | Verification / authority |
+| --- | --- | --- | --- |
+| Opportunity Radar | Dashboard Widget Registry; opportunity-radar registration/certification; Brain opportunity/anomaly evidence; analytics-canon evidence | PARTIAL / VERIFYING | src/views/dashboard/WidgetRegistry.ts; src/views/dashboard/__tests__/opportunityRadarRegistration.test.ts; One-Goal VT-004 |
+| Channel Intelligence Hub | VT-SYNC Local; analytics-canon; Data Visual contracts; analytics widgets | IMPLEMENTED FOUNDATION / MIGRATION ACTIVE | src/services/analytics-canon/**; docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md |
+| Content Strategy Lab | Projects/ContentBuild context; BrainRuntime; opportunity evidence; project briefs/goals | PARTIAL | Project/ContentBuild master; Brain master; current Projects UI |
+| Project & Production Command | ProjectBuilder; ProjectCreationDialog; ProjectContentIdentityService; ProjectContentBuildBridge; Board/Calendar | IMPLEMENTED FOUNDATION / ACTIVE CONSOLIDATION | docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md |
+| Script & Story Studio | Hook Generator; script tooling; Brain/provider generation paths; GenerationRequest/ToolReceipt | PARTIAL | src/services/asset-engine/GenerationWorkflow.ts; prompt/Brain authorities |
+| Visual Development Studio | Asset Engine; Vault; Video Director; generated media assets/receipts | PARTIAL | Asset Engine master; Video Director project store; generation contracts |
+| Vault & Asset Engine | /vault; Asset Engine facade; ContentBuildRepository; Vault services; recent Asset Operations/Text Editor/Import Tags work | IMPLEMENTED FOUNDATION / ACTIVE UX EVOLUTION | Asset Engine master; current Vault code/tests |
+| Video Director & Editor | /editor; Video Director; renderJobContract; render/export asset paths | PARTIAL / VERIFYING | Editor master; One-Goal VT-029–031 |
+| Packaging & Experiment Lab | ab-thumbnail widget; ContentBuild selections/versions; packaging fields; experiment/evaluation owners | PARTIAL | Widget Registry; Asset Engine; outcome/evaluation owners |
+| Publisher & Distribution Center | VideoPublisher; PublishingPackageProjection; ApprovedPublishSnapshot contract; PublishTransaction | PARTIAL / HIGH-PRIORITY HARDENING | One-Goal VT-002, VT-014–018; Asset Engine/Projects masters |
+| Audience & Community Desk | Community post controller; comment/community widgets; handoff/action rules | IMPLEMENTED FOUNDATION / PARTIAL OUTCOMES | creator-engagement controller; Dashboard Widget Registry; One-Goal VT-009 |
+| Monetization & Operations Hub | Revenue/RPM analytics widgets; monetary analytics evidence; sponsor/ops planning | PARTIAL / PROVIDER DEPENDENT | analytics-canon + widget registry; product-level provider capability checks required |
 
-**Suggested fields:** Master Tool, capability, code owner, files, current status, canonical contract, tests, last verified commit.
+### Ownership update rule
 
-## Idea 2 — Cross-System Dependency & Data-Flow Graph
+When a capability moves:
 
-**What it adds:** explicit upstream/downstream relationships between Project, ContentBuild, Vault, Analytics, Brain, Publisher, Editor, experiments and outcomes.
-
-**Why it matters:** makes hidden coupling visible and prevents a local feature from bypassing canonical owners.
-
-**Maintain as:** Mermaid graph plus a machine-readable companion registry if needed.
-
-## Idea 3 — Implementation Reality Matrix
-
-**What it adds:** every major feature labeled IMPLEMENTED / PARTIAL / PLANNED / DONOR ONLY / PROVIDER DEPENDENT / DEFERRED / RETIRED.
-
-**Why it matters:** eliminates ambiguity between brainstorms and production behavior.
-
-**Rule:** status changes require a code/test/PR receipt.
-
-## Idea 4 — Integration & API Capability Ledger
-
-**What it adds:** per provider, list exactly what ViewTube can read/write, required scope, quota, webhook support, limitations, current adapter and fallback.
-
-**Why it matters:** prevents product plans from assuming nonexistent YouTube or third-party APIs.
-
-**Include:** YouTube Data, Analytics, Reporting, Ads where applicable, AI/image/video/voice vendors, storage, distribution, commerce and signing.
-
-## Idea 5 — UI Surface / Route / Widget Crosswalk
-
-**What it adds:** maps each capability to its actual page, toolbox/subtoolbox, dashboard widget, modal/popover and mobile composition.
-
-**Why it matters:** turns architecture into a navigable product map and exposes duplicate UI.
-
-**Link to:** Widget Registry and Toolbox/Component authorities rather than duplicating their detailed geometry.
-
-## Idea 6 — Event, Contract & Handoff Matrix
-
-**What it adds:** named events/contracts for Project transitions, generation receipts, asset creation, publication changes, analytics arrival, handoffs and outcomes.
-
-**Why it matters:** integrations fail most often at system boundaries. This section makes those boundaries reviewable.
-
-**Rule:** reuse existing event/ledger owners; do not create a second generic event bus or outcome store.
-
-## Idea 7 — Verification, Test & Observability Index
-
-**What it adds:** capability → unit/integration/e2e/visual tests → diagnostics → telemetry → last verified commit/PR.
-
-**Why it matters:** converts "finished" from a prose claim into evidence.
-
-**Include:** known unverified areas and tests blocked by infrastructure/rate limits.
-
-## Idea 8 — Agent Responsibility & Automation Map
-
-**What it adds:** which agent may read, recommend, generate, mutate, publish or spend; required tools, approvals and failure behavior.
-
-**Why it matters:** makes Brain Hub and future automation safer and easier to reason about.
-
-**Include:** repository-agent/Herald boundary so product agents and coding agents are never conflated.
-
-## Idea 9 — Decision, Supersession & Change Ledger
-
-**What it adds:** append-only decisions: date, decision, reason, evidence, supersedes, affected systems, PR/commit, follow-up.
-
-**Why it matters:** prevents old plans from silently returning as "current" requirements and makes the document genuinely living.
-
-## Idea 10 — Gaps, Opportunities & Next-Best-Work Board
-
-**What it adds:** a prioritized editable list of missing integrations, duplicated tools, orphan systems, weak UX, unsupported API ideas and high-leverage vertical slices.
-
-**Why it matters:** turns the document from reference material into an operating instrument.
-
-**Suggested fields:** item, user value, current state, dependencies, risk, owner, evidence, next action, acceptance test, status.
+1. update its scoped authority first;
+2. update this table to the new owner;
+3. update route/widget/contract/test crosswalks below;
+4. attach the PR/commit receipt in the Decision Ledger;
+5. do not preserve a second “temporary” owner after migration is complete.
 
 ---
 
-## 20. Living-document maintenance protocol
+# 20. Cross-System Dependency & Data-Flow Graph
+
+## 20.1 Canonical creator loop
+
+Channel / Workspace  
+→ Project  
+→ ContentBuild  
+→ Research / Script / Assets / Packaging  
+→ Publishing Package  
+→ Approved Publish Snapshot  
+→ Publish Transaction  
+→ YouTube binding / Publication  
+→ VT-SYNC / analytics-canon evidence  
+→ Brain / evaluation  
+→ outcome + governed learning  
+→ future channel/project context
+
+Parallel production path:
+
+Project + ContentBuild  
+→ GenerationRequest + ContextManifest  
+→ provider/tool execution  
+→ ToolReceipt  
+→ Asset Engine / Vault  
+→ selection/version/finalization  
+→ Editor / Publisher
+
+Internal orchestration path:
+
+Evidence + Project context  
+→ BrainRuntime  
+→ recommendation / ActionPacket  
+→ destination ViewTube tool  
+→ creator decision  
+→ domain action  
+→ outcome/evaluation
+
+## 20.2 Boundary matrix
+
+| Producer | Boundary / contract | Consumer | Bypass risk |
+| --- | --- | --- | --- |
+| Project UI | ProjectContentIdentityService / ProjectContentBuildBridge | ContentBuild | duplicate or missing project identity |
+| Video Package | VideoPackageContentBuildBridge | ContentBuild / packaging | stale package identity or selections |
+| Brain / generation tool | GenerationRequest + ContextManifest | provider/tool runtime | missing context/provenance/cost lineage |
+| Generation runtime | ToolReceipt | Asset Engine / BrainTrace | orphan outputs and unverifiable generations |
+| BrainRuntime | ActionPacket / handoff | destination tool | Brain duplicates domain logic or mutates externally |
+| Asset Engine | version/selection relationships | Editor / Publisher | wrong variant reaches final output |
+| Publishing projection | PublishingPackageProjection | approval/publisher | mutable late edits leak into execution |
+| Approval | ApprovedPublishSnapshot | PublishTransaction | retry sees different approved inputs |
+| PublishTransaction | YouTube binding / receipts | ContentBuild | duplicate upload or broken post-publish lineage |
+| VT-SYNC | analytics-canon | Dashboard / Brain / evaluations | multiple analytics truths |
+| Domain action | BrainOutcomeLedger / domain outcome owner | evaluation | creator preference confused with measured performance |
+| Evaluation | governed learning candidate | Channel Knowledge | correlation promoted as durable truth |
+
+### Dependency rule
+
+New work must join an existing boundary whenever one exists. A UI event or localStorage key may support an implementation, but it is not automatically a canonical cross-system contract.
+
+---
+
+# 21. Implementation Reality Matrix
+
+This matrix translates architecture prose into current-main reality. Status follows the vocabulary defined earlier in this resource.
+
+| Capability | Reality status | Evidence on current main | What remains |
+| --- | --- | --- | --- |
+| Canonical Project → ContentBuild identity | IMPLEMENTED | ProjectContentIdentityService, ProjectContentBuildBridge, Projects master | broader certification and legacy cleanup |
+| Video Package scoped to ContentBuild | IMPLEMENTED FOUNDATION | package repository/bridge and current master | certify every production caller/handoff |
+| Asset versions, variant groups and selections | IMPLEMENTED | ContentBuildRepository + Asset Engine/Vault tests | surface consistency and readiness UX |
+| GenerationRequest / ContextManifest / ToolReceipt | IMPLEMENTED FOUNDATION | GenerationWorkflow.ts + focused tests | migrate remaining direct/legacy generation paths |
+| Dashboard widget registry | IMPLEMENTED | 68 registered widget IDs in current Widget master | certification/backend quality varies by widget |
+| Opportunity Radar evidence | PARTIAL / VERIFYING | registered widget + evidence feed work | finish one reusable canonical opportunity evidence path |
+| Analytics canonical consumer API | IMPLEMENTED FOUNDATION | analytics-canon | legacy selectors/cache consumers still need retirement |
+| Intelligence dataset boundary | IMPLEMENTED | 34 active canonical intelligence datasets; registry v1 tracks report definitions | dataset expansion/real-account validation continues |
+| Metric comparability policy | PARTIAL / VERIFYING | One-Goal VT-001 | integrate into evaluation + visual/experiment consumers |
+| Sync/Data Visual controller migration | PARTIAL | shared controllers/canvas contracts exist | controllerSpec/legacy preview/mark-scale cleanup |
+| ApprovedPublishSnapshot contract | PARTIAL / VERIFYING | immutable schema/hash landed in PR #420 | durable persistence and runtime binding |
+| PublishTransaction snapshot binding | PLANNED / NOT STARTED | explicit One-Goal task | bind retries/recovery to immutable approved identity |
+| Post-publish ContentBuild checkpoint chain | PLANNED / NOT STARTED | One-Goal VT-017–018 | YouTube binding + analytics checkpoint → evaluation |
+| Generic outcome/evaluation infrastructure | IMPLEMENTED FOUNDATION | BrainOutcomeLedger and existing evaluation/learning owners | production writers across Publisher/Projects/Community/Editor/Experiments |
+| Editor final-render ContentBuild identity | PARTIAL / VERIFYING | renderJobContract carries contentBuildId; final asset path under certification | parity + four-layout/runtime certification |
+| Vault asset operations | IMPLEMENTED FOUNDATION | /vault + canonical asset services + recent organization/editor work | continue UX consolidation without parallel lifecycle state |
+| Cross-system correlation/idempotency envelope | PLANNED / READY | One-Goal VT-005 | define reusable envelope before adding producer writers |
+| Structured failure taxonomy | PLANNED | One-Goal VT-036 | auth/API/sync/AI/render/publish error contract |
+| External provider expansion | PROVIDER DEPENDENT | adapter/generation contracts exist | capability, cost, permission and data-rights validation per provider |
+
+### Status rule
+
+A document, test, registry entry or type definition alone does not prove runtime reachability. “IMPLEMENTED” should mean a production path reaches the capability; otherwise use PARTIAL or PLANNED.
+
+---
+
+# 22. Integration & API Capability Ledger
+
+This ledger records ViewTube integration posture, not a substitute for official provider documentation. Before enabling a new external write, verify the provider’s current official API, scopes, quotas, terms and account eligibility.
+
+| Provider / integration class | ViewTube use | Read / write posture | Current owner / adapter direction | Product rule |
+| --- | --- | --- | --- | --- |
+| YouTube Data API | channel/video metadata, upload/publishing-related operations where supported | READ + SELECTIVE WRITE | auth + YouTube/publishing services | capability-check every write; unsupported Studio surfaces stay manual/workflow-only |
+| YouTube Analytics API | targeted authorized analytics | READ ONLY | VT-SYNC / analytics-canon | only verified report contracts; missing is not zero |
+| YouTube Reporting API | bulk/historical report ingestion | READ ONLY | VT-SYNC ingestion/report registry | use for compatible bulk jobs; keep targeted Analytics queries for interactive needs |
+| Google Ads / paid media | optional campaign/financial workflows | PROVIDER DEPENDENT | not a core product owner yet | never auto-spend from organic signals; separate scopes + approvals |
+| LLM / Gemini-class providers | reasoning/generation | EXTERNAL COMPUTE | BrainModelGateway/provider layer | creator UI must not bypass governed provider layer |
+| Image generation providers | thumbnails/concepts/assets | EXTERNAL GENERATION | ImageProvider-style adapter + Asset Engine | store output provenance, model/version/cost and ContentBuild relationship |
+| Video generation providers | generated clips/video | EXTERNAL GENERATION | VideoProvider-style adapter + Video Director/Asset Engine | stable job identity, status, cost disclosure and canonical asset ingestion |
+| Voice/dubbing providers | narration, translation, dubbing | EXTERNAL GENERATION | VoiceProvider-style adapter | consent/voice identity/provenance required |
+| Storage providers | asset persistence/sync | READ/WRITE | Vault / Asset Engine adapter | canonical asset IDs and lineage remain ViewTube-owned |
+| Social distribution providers | cross-platform publishing/scheduling | PROVIDER DEPENDENT | SocialDistributionProvider direction | per-network capability map; creator approval for external writes |
+| E-signature | releases/contracts | PROVIDER DEPENDENT | SignatureProvider direction | documents and signature status only after explicit integration |
+| Commerce / affiliate | product/link/attribution | PROVIDER DEPENDENT | CommerceProvider direction | attribution uncertainty must stay explicit |
+
+### Required fields for every future adapter
+
+- provider and API version;
+- supported capability IDs;
+- read/write classification;
+- OAuth/API-key requirements;
+- quota/rate limit model;
+- webhook/polling behavior;
+- data-retention and privacy constraints;
+- cost model;
+- idempotency/retry semantics;
+- approval class;
+- current adapter implementation;
+- fallback/manual path;
+- last verified date and source.
+
+---
+
+# 23. UI Surface / Route / Widget Crosswalk
+
+## 23.1 Primary application routes
+
+Current navigation contract on the audited main defines:
+
+| Route | Surface |
+| --- | --- |
+| / | Dashboard / Mission Control |
+| /studio | Studio |
+| /projects | Projects |
+| /ai-brain | AI Brain |
+| /local-analytics | Analytics / VT-SYNC |
+| /editor | Editor |
+| /vault | Vault |
+| /settings | Settings |
+| /user-guide | User Guide |
+
+Primary route authority: src/components/navigation/navigationContract.ts. AppShell/AppRoutes own runtime route composition.
+
+## 23.2 Master Tool surface mapping
+
+| Master Tool | Primary surface(s) | Existing widget/tool examples | Coordination rule |
+| --- | --- | --- | --- |
+| Opportunity Radar | Dashboard; AI Brain; Research-oriented project context | opportunity-radar, anomaly-radar, keyword tools | opportunity selection and anomaly detection remain distinct jobs sharing evidence |
+| Channel Intelligence Hub | Analytics; Dashboard | Channel Overview, traffic, retention, device, CPM, realtime, progress | Analytics owns data truth; widgets own presentation |
+| Content Strategy Lab | Projects; AI Brain; Studio | goals/tasks, Next Best Action, research/brief tooling | write into Project/ContentBuild rather than separate strategy store |
+| Project & Production Command | /projects | Project Builder, Board, Calendar, task/goal systems | Project is lifecycle owner |
+| Script & Story Studio | /studio; project tool surfaces | Hook Generator, script tools | generation must preserve Project/ContentBuild + receipts |
+| Visual Development Studio | /studio; /vault; Video Director | image/video generation, storyboard/visual assets | generated media becomes canonical assets |
+| Vault & Asset Engine | /vault; Projects; Studio | Asset Operations, import/tags, text editor, Video Asset Engine widget | Vault must not create a second content lifecycle |
+| Video Director & Editor | Studio; /editor | video-director widget, editor/render surfaces | carry ContentBuild identity into render/export |
+| Packaging & Experiment Lab | Dashboard; Projects; Publisher | ab-thumbnail, thumbnail/title tools | exact variant IDs must survive to outcomes |
+| Publisher & Distribution Center | Publisher surfaces; Projects; Dashboard Publishing Command | flight-check, Video Publisher, uploader/scheduler | approval snapshot + transaction should own execution |
+| Audience & Community Desk | Dashboard; Studio/engagement surfaces | comment-replier, video-comment-operator, audience-requests, community-post | external mutations remain approval-gated |
+| Monetization & Operations Hub | Dashboard; Analytics; Projects | revenue widgets, CPM geo, sponsor/project operations | financial assumptions and scopes stay explicit |
+
+### UI duplication rule
+
+Before creating a new page or widget, answer:
+
+1. Is this a new job or another view of an existing Master Tool?
+2. Does an existing primary route already own the workflow?
+3. Can the feature be a widget/compound component inside that route?
+4. Would a new surface create a second persistence/data owner?
+5. Which mobile portrait/landscape composition is required?
+
+---
+
+# 24. Event, Contract & Handoff Matrix
+
+| Lifecycle transition | Canonical contract / owner | Current state | Required identity/provenance |
+| --- | --- | --- | --- |
+| Project create/open | ProjectContentIdentityService | IMPLEMENTED | projectId + contentBuildId |
+| Project status/lifecycle sync | ProjectContentBuildBridge | IMPLEMENTED FOUNDATION | projectId, contentBuildId, stage/status |
+| Video Package reconciliation | VideoPackageContentBuildBridge | IMPLEMENTED FOUNDATION | videoPackageId + contentBuildId + revision |
+| Generation request | GenerationRequest | IMPLEMENTED | request ID, project/contentBuild, tool/provider intent |
+| Generation context | GenerationContextManifest | IMPLEMENTED FOUNDATION | evidence/context refs, scope, model/tool intent |
+| Generation completion | ToolReceipt | IMPLEMENTED FOUNDATION | request/output asset IDs, versions, provider/model provenance |
+| Internal tool continuation | ActionPacket / handoff system | IMPLEMENTED FOUNDATION | source, destination, inputs, evidence, confidence, contentBuild scope |
+| Asset attach/version/select | ContentBuildRepository + Asset Engine | IMPLEMENTED | asset ID, relation, version/variant/selection |
+| Editor render request/status | renderJobContract | IMPLEMENTED FOUNDATION | projectId/contentBuildId, render job ID, composition, diagnostics |
+| Publishing projection | PublishingPackageProjection | IMPLEMENTED | exact current package projection |
+| Creator approval freeze | ApprovedPublishSnapshot | PARTIAL / VERIFYING | contentBuild revision + exact assets/metadata + approver + hash |
+| Publish execution | PublishTransaction | PARTIAL | snapshot identity, durable step receipts, retries/recovery |
+| Remote publication binding | YouTube binding / ContentBuild checkpoints | PARTIAL / OPEN LOOP | remote video ID + exact approved variant lineage |
+| Analytics arrival | VT-SYNC → analytics-canon | IMPLEMENTED FOUNDATION | channel/video/window/dataset/report provenance |
+| Creator outcome | BrainOutcomeLedger / domain outcome owners | IMPLEMENTED FOUNDATION | action/asset/variant identity + creator decision |
+| Measured evaluation | Algorithm/Brain evaluation owners | PARTIAL | target metric, compatible scope/window, insufficient-data state |
+| Learning promotion | governed learning → Channel Knowledge | PARTIAL | repeated evidence + creator confirmation/promotion rule |
+
+### Event discipline
+
+- Prefer domain contracts over ad hoc browser events for durable cross-system behavior.
+- DOM/custom events may notify UI surfaces, but durable identity belongs in canonical repositories/contracts.
+- Correlation/idempotency must be added through one cross-system envelope, not per-feature bespoke IDs.
+
+---
+
+# 25. Verification, Test & Observability Index
+
+| Capability | Existing evidence/tests | Observability surface | Open verification |
+| --- | --- | --- | --- |
+| ContentBuild repository | src/services/asset-engine/ContentBuildRepository.test.ts | ContentBuild event history | end-to-end lifecycle receipts |
+| Project identity | src/services/projects/ProjectContentIdentityService.test.ts; ProjectContentBuildBridge.test.ts | project/contentBuild IDs | certify all creation/recovery paths |
+| Video Package bridge | ProjectVideoPackageBridge.test.ts; VideoPackageContentBuildBridge.test.ts | package recovery/revision state | production caller/handoff coverage |
+| Generation workflow | src/services/asset-engine/GenerationWorkflow.test.ts | GenerationRequest, ToolReceipt, BrainTrace | migrate remaining legacy/direct paths |
+| Publishing projection | PublishingPackageProjection.test.ts | publishing readiness/projection | approval snapshot persistence |
+| Publish transaction | PublishTransaction.test.ts | transaction steps/receipts | retry/recovery + immutable snapshot binding |
+| Analytics intelligence evidence | src/services/analytics-canon/intelligenceEvidence.test.ts | sync status, evidence freshness/coverage | report capability + real-account certification |
+| Brain outcome path | src/services/brain/__tests__/assetOutcomes.test.ts | BrainOutcomeLedger / runtime snapshot | writers across all consequential producer families |
+| Dashboard registry | dashboardPhase0Contracts.test.ts; routeRegistryGovernance.test.ts | registry/certification metadata | full responsive/visual acceptance |
+| Opportunity Radar | opportunityRadarRegistration.test.ts | widget evidence/confidence | reusable evidence feed + runtime validation |
+| Video Asset Engine widget | videoAssetEngineRegistration.test.ts | widget registry + Asset Engine | end-to-end generation/selection/publish loop |
+| Settings widget | SettingsWidget.test.ts | connection/sync/AI/account states | acceptance screenshots + stale/error detail |
+| Editor render | renderJobContract + Editor master test program | render job status/progress/diagnostics | preview/final golden parity + four-layout certification |
+
+## 25.1 Shared observability anchors
+
+- DiagnosticOverlay and on-screen diagnostics for client/runtime troubleshooting.
+- Vercel Speed Insights for route/device performance telemetry in production.
+- VT-SYNC dataset/job status and freshness.
+- BrainTrace, GenerationRequest and ToolReceipt for AI/generation provenance.
+- PublishTransaction step receipts for publishing recovery.
+- RenderJob status/progress/diagnostics for Editor renders.
+- Herald claims/receipts for repository-agent work.
+
+### Completion rule
+
+A capability is not DONE because a type, test or UI exists. Completion evidence should combine:
+
+1. current-main reachability;
+2. focused tests;
+3. integration/runtime verification;
+4. failure-state verification;
+5. mobile/visual certification where user-facing;
+6. receipt in the relevant living master/ledger.
+
+---
+
+# 26. Agent Responsibility & Automation Map
+
+| Agent / actor | May read | May recommend/generate | May mutate ViewTube state | May mutate external systems | Approval rule |
+| --- | --- | --- | --- | --- | --- |
+| Research Agent | research sources, approved channel/project evidence | Research Signals, clusters, opportunity candidates | save research artifacts when authorized | no by default | external acquisition/tools follow connector permissions |
+| Analyst Agent | analytics-canon and verified report contracts | analyses, anomaly explanations, comparisons | save Insight/evidence artifacts | no | never invent unavailable metrics |
+| Strategy Agent | evidence, Channel Knowledge, Project context | briefs, hypotheses, next actions | project drafts/proposals | no | creator chooses strategic direction |
+| Script Agent | brief, style, evidence, ContentBuild | scripts/hooks/story variants | versioned draft assets through governed generation path | provider generation only through approved tool gateway | generated assets retain receipts/provenance |
+| Packaging Agent | content/asset variants + performance evidence | title/thumbnail variants and experiment plans | package drafts/selections when user chooses | no direct platform mutation | platform testing/write capability is separately gated |
+| Production Agent | Project/ContentBuild/assets | shot plans, generation requests, production tasks | project/assets through canonical services | provider generation via adapters | cost/permission policy applies |
+| Publisher Agent | approved package + publication state | readiness checks, execution plan | publishing records/transaction state | yes, only supported provider writes | explicit creator approval + immutable approved snapshot |
+| Community Agent | comments/community context | triage/reply drafts | ViewTube queue/drafts | comment/community writes only through domain owner | explicit mutation control |
+| Learning Agent | outcomes, evaluations, current evidence | learning candidates | candidate/validated learning state through governance | no | cannot silently promote weak correlation |
+| Herald / repository agents | repository code/docs/tests/tasks | code/document changes and work receipts | repository state through Git workflow | repository/deployment actions only per repo permissions | separate from creator BrainRuntime |
+
+### Automation classes
+
+- **READ:** safe retrieval within granted scopes.
+- **DRAFT:** create local draft/proposal; no external effect.
+- **INTERNAL WRITE:** mutate canonical ViewTube state with audit trail.
+- **EXTERNAL WRITE:** publish/comment/upload/modify third-party state; requires capability and approval.
+- **FINANCIAL:** spend/commit money; separate explicit approval.
+- **DESTRUCTIVE:** delete/revoke/overwrite authoritative state; explicit confirmation + recovery plan where possible.
+
+---
+
+# 27. Decision, Supersession & Change Ledger
+
+Append decisions here when they affect more than one Master Tool. Scoped implementation details remain in their owning masters.
+
+| Date | Decision | Reason | Evidence / supersession | Follow-up |
+| --- | --- | --- | --- | --- |
+| 2026-09-25 | Consolidate donor research into 12 Master Tools | reduce duplicate shallow tools and preserve one creator lifecycle | PR #442 + this resource | map all existing tools/widgets to owners |
+| 2026-09-25 | Widgets are views, not independent data owners | prevent duplicated stores and inconsistent truth | Widget Registry + domain masters | enforce during new widget design |
+| 2026-09-25 | analytics-canon is the normalized analytics consumer boundary | keep VT-SYNC raw ownership separate from consumers | Analytics master + analytics-canon README/contracts | retire legacy consumers |
+| 2026-09-25 | Project + ContentBuild remain shared workflow identity | keep creator work continuous across Studio/Vault/Editor/Publisher | Projects master + ContentBuildRepository | finish post-publish continuity |
+| 2026-09-25 | BrainRuntime remains creator reasoning/orchestration owner | avoid another general Brain/runtime | AI Systems master + canonical Brain contract | route remaining direct providers/tools |
+| 2026-09-25 | Existing outcome/evaluation/learning systems must be extended, not replaced | prevent a second generic ledger | BrainOutcomeLedger + Finish Program | add producer-family writers |
+| 2026-09-25 | External writes are capability-checked and approval-gated | API availability and user intent differ by provider/surface | AI/hand-off governance + publishing contracts | complete capability ledger per provider |
+| 2026-09-25 | Ten code-aware operating sections become part of this living master | make the document actionable, editable and aware of current implementation | current-main audit 52f655a5d3cb5bc2d16fc8a285a8b129bb3b9f1a | update sections whenever ownership/status changes |
+
+### Supersession rule
+
+A newer decision does not delete old evidence. Mark the prior decision superseded, link the new decision/PR, and preserve the reason for the change.
+
+---
+
+# 28. Gaps, Opportunities & Next-Best-Work Board
+
+This board summarizes cross-system work only. The One-Goal ledger remains the detailed execution authority.
+
+| Priority | Gap / opportunity | Current state | Dependencies | Next action | Acceptance signal |
+| --- | --- | --- | --- | --- | --- |
+| P0 | Persist immutable ApprovedPublishSnapshot | contract/schema landed; runtime persistence open | publishing package | store exact approved inputs/approver/hash | later edits cannot change an in-flight publish |
+| P0 | Bind PublishTransaction to approved snapshot | NOT STARTED | approved snapshot persistence | key transaction/retries to snapshot identity | retries observe same approved state and never duplicate upload |
+| P0 | Cross-system correlation/idempotency envelope | READY | existing domain events | define shared envelope before producer writers | Brain→build→publish→evaluate can be traced end-to-end |
+| P0 | Metric comparability integration | policy VERIFYING | analytics contracts | wire into evaluation + visual/experiment consumers | incompatible comparisons fail with structured reasons |
+| P0 | Outcome producer coverage | generic ledger exists; domain writers incomplete | correlation envelope | map/write Publisher, Project, Community, Editor, Experiment outcomes | consequential actions produce lineage-preserving outcomes |
+| P1 | Post-publish ContentBuild checkpoint chain | OPEN | publisher snapshot/transaction | persist YouTube binding + used variants + checkpoints | analytics/evaluation refers to exact published variants |
+| P1 | Opportunity evidence consolidation | VERIFYING | project context + analytics evidence | expose one reusable evidence feed to Brain/widgets | no widget-local duplicate opportunity truth |
+| P1 | Brain channel/project scoping cleanup | PARTIAL | project context adapter | remove remaining implicit control/context reads | all relevant runtime calls carry explicit scope |
+| P1 | Retire legacy analytics consumers | IN PROGRESS | analytics-canon | migrate selectors/caches and prove parity | no new direct legacy reads; reachability trends to zero |
+| P1 | Editor final-render parity + identity | VERIFYING/IN PROGRESS | render contracts + Asset Engine | golden preview/final fixtures + four-layout certification | final render is canonical asset tied to ContentBuild |
+| P1 | Persistence/namespace audit | NOT STARTED | domain ownership map | classify cache vs truth and channel/project namespaces | no cross-channel/project leakage or ambiguous truth stores |
+| P1 | Structured failure taxonomy | NOT STARTED | correlation/observability | unify auth/API/sync/AI/render/publish failures | UI/agents receive machine-readable failure states |
+| P2 | Data Visual/controller cleanup | IN PROGRESS | analytics migration | retire controllerSpec/legacy preview and finish mark-scale | one registry-native control/layout path |
+| P2 | Remaining bespoke UI controls/shell duplication | IN PROGRESS | Toolbox/UI authorities | continue production surface audit | canonical primitives + no nested duplicate shells |
+| P2 | Provider capability registry | PLANNED | adapter contracts | version capability/scope/cost matrix | UI can disable/route unsupported actions explicitly |
+| P2 | Auto-generated code ownership/test crosswalk | PLANNED | registries/tests | derive portions of sections 19/23/25 from code | stale manual inventories decrease over time |
+
+## 28.1 How to choose the next slice
+
+Prefer work that:
+
+1. closes an end-to-end creator loop rather than adding another isolated tool;
+2. removes ambiguity about identity, authority or data truth;
+3. enables multiple Master Tools through one shared contract;
+4. has a measurable acceptance test;
+5. reduces unsupported API assumptions or manual synchronization;
+6. improves failure recovery, provenance or creator control.
+
+---
+
+## 29. Living-document maintenance protocol
 
 ### Before changing this resource
 
@@ -700,7 +983,7 @@ Update:
 
 ---
 
-## 21. Source and evidence foundation
+## 30. Source and evidence foundation
 
 This resource began by consolidating two supplied creator-workstation/project-planner research reports, then reconciling their ideas with current ViewTube documentation and code ownership.
 
@@ -723,7 +1006,14 @@ This is not a substitute for re-verifying current code after later merges.
 
 ---
 
-## 22. Update log
+## 31. Update log
+
+### 2026-09-25 — Populated code-aware operating sections
+
+- converted all ten recommended additions into populated living sections grounded in current main `52f655a5d3cb5bc2d16fc8a285a8b129bb3b9f1a`;
+- added code ownership, data-flow, implementation-reality, integration/API, UI surface, contract/handoff, test/observability, agent responsibility, decision and next-best-work maps;
+- explicitly linked open work to the One-Goal status ledger instead of duplicating implementation state silently;
+- preserved scoped-domain authority: this resource coordinates across systems and does not replace their internal contracts.
 
 ### 2026-09-25 — Initial repository version
 
