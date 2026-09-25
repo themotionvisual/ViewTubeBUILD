@@ -10,12 +10,18 @@ const imageSource = readFileSync(new URL("../widgets/ImageGeneratorWidget.tsx", 
 const uploaderSource = readFileSync(new URL("../widgets/VideoUploaderWidget.tsx", import.meta.url), "utf8")
 const settingsCss = readFileSync(new URL("../widgets/SettingsWidget.css", import.meta.url), "utf8")
 const directorCss = readFileSync(new URL("../widgets/video-director/videoDirectorWidget.css", import.meta.url), "utf8")
+const shellSource = readFileSync(new URL("../WidgetShell.tsx", import.meta.url), "utf8")
+const referenceSource = readFileSync(new URL("../widgets/UIReferenceLibraryWidget.tsx", import.meta.url), "utf8")
+const assetCss = readFileSync(new URL("../widgets/VideoAssetEngineWidget.css", import.meta.url), "utf8")
 
 describe("mobile widget density and edge contracts", () => {
-  it("does not reserve an invisible mobile scroll gutter", () => {
+  it("does not reserve an invisible mobile scroll gutter and reclaims extra right-side space", () => {
     expect(scrollbar).toContain("@media (pointer: coarse), (max-width: 767px)")
     expect(scrollbar).toContain("padding-inline-end: 0")
     expect(mobile).toContain("scrollbar-gutter: auto")
+    expect(mobile).toContain("--vt-mobile-reclaim-left: 12px")
+    expect(mobile).toContain("--vt-mobile-reclaim-right: 32px")
+    expect(mobile).toContain("width: calc(100% + var(--vt-mobile-reclaim-left) + var(--vt-mobile-reclaim-right))")
   })
 
   it("uses full-bleed interior bands for About and Oracle", () => {
@@ -26,6 +32,16 @@ describe("mobile widget density and edge contracts", () => {
 
   it("lets image template labels wrap instead of collide", () => {
     expect(imageSource).toContain("image-generator-template-toggle")
+  })
+
+  it("keeps the mobile control deck visible while a widget is collapsed", () => {
+    expect(mobile).toContain('.dashboard-widget-slot.is-collapsed:has(.vt-widget.mobile-controls-open)')
+    expect(shellSource).toContain("mobileControlsOpen")
+  })
+
+  it("provides a full-bleed utility for bands and horizontal rails", () => {
+    expect(mobile).toContain(".vt-widget-full-bleed")
+    expect(assetCss).toContain("vt-asset-engine-slot-panel")
   })
 
   it("uses canonical text field primitives in Video Uploader", () => {
@@ -41,6 +57,11 @@ describe("mobile widget density and edge contracts", () => {
   it("separates Video Director rows vertically on narrow containers", () => {
     expect(directorCss).toContain("row-gap:6px")
     expect(directorCss).toContain("align-content:start")
+  })
+
+  it("documents the canonical video dropdown in the UI reference library", () => {
+    expect(referenceSource).toContain("Video Select / Dropdown")
+    expect(referenceSource).toContain("WidgetVideoSelect")
   })
 })
 
