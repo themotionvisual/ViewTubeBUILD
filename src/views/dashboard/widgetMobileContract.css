@@ -56,8 +56,22 @@
     .dashboard-barrier .vt-widget-header .header-extra {
       flex: 0 1 auto !important;
       min-width: 0;
-      max-width: 42%;
-      overflow: hidden;
+      max-width: 48%;
+      overflow: visible;
+    }
+
+    .dashboard-barrier .vt-widget-header .widget-header-toggle {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .dashboard-barrier .vt-widget-header .widget-header-toggle button {
+      min-width: 0;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      overflow-wrap: anywhere;
+      line-height: .88;
     }
 
     .dashboard-barrier .widget-mobile-control-row {
