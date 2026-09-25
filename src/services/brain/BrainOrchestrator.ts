@@ -40,6 +40,8 @@ import { buildBrainEvidenceIntelligence } from "./BrainStatisticsBridge"
 import { buildBrainAudienceIntelligence } from "./BrainAudienceBridge"
 import { readAlgorithmIntelligenceForBrain } from "./AlgorithmIntelligenceAccess"
 import { readBrainEngineControls } from "./BrainEngineControls"
+import { buildAlgorithmProjectContext } from "./BrainProjectContext"
+import { buildOpportunityEvidenceFromBrainPack } from "./OpportunityEvidenceAdapter"
 import { loadRelevantChannelKnowledge } from "./ChannelProfileAdapter"
 import {
  cacheCurrentNicheResearch,
@@ -327,19 +329,25 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   : null
  const engineControls = readBrainEngineControls(input.channelId)
  const wantsAlgorithmIntelligence = capabilityIds.includes("algorithm-intelligence") && engineControls.channelIntelligence
- const projectContext = input.projectId && input.channelId
-  ? {
+ const projectContext = buildAlgorithmProjectContext({
+  channelId: input.channelId,
+  projectId: input.projectId,
+  visibleContext: input.visibleContext,
+  artifactRefs: input.artifactRefs,
+ })
+ const opportunityEvidence = engineControls.opportunityIntelligence && input.channelId
+  ? buildOpportunityEvidenceFromBrainPack({
     channelId: input.channelId,
-    projectId: input.projectId,
-    title: typeof input.visibleContext?.title === "string" ? input.visibleContext.title : null,
-    topic: typeof input.visibleContext?.topic === "string" ? input.visibleContext.topic : null,
-    format: typeof input.visibleContext?.format === "string" ? input.visibleContext.format : null,
-    plannedPublishAt: typeof input.visibleContext?.plannedPublishAt === "string" ? input.visibleContext.plannedPublishAt : null,
-    evidenceIds: input.artifactRefs || [],
-   }
-  : null
+    evidencePack: input.snapshot.evidencePack,
+   })
+  : []
  const algorithmAccess = wantsAlgorithmIntelligence && input.channelId
-  ? await readAlgorithmIntelligenceForBrain({ channelId: input.channelId, project: engineControls.algorithmPriming ? projectContext : null }).catch(() => null)
+  ? await readAlgorithmIntelligenceForBrain({
+    channelId: input.channelId,
+    project: engineControls.algorithmPriming ? projectContext : null,
+    includeAnomalies: engineControls.anomalyIntelligence,
+    opportunities: opportunityEvidence,
+   }).catch(() => null)
   : null
  const algorithmIntelligence = algorithmAccess?.status === "ok" ? algorithmAccess.value : null
  const channelKnowledge = input.channelId
