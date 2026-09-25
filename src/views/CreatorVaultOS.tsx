@@ -187,6 +187,14 @@ const CreatorVaultOS: React.FC = () => {
  const [source, setSource] = useState(initialWorkspace.source)
  const [sort, setSort] = useState<VaultWorkspaceSort>(initialWorkspace.sort)
  const [special, setSpecial] = useState(initialWorkspace.special)
+ const [filterLifecycle, setFilterLifecycle] = useState("all")
+ const [filterMimeType, setFilterMimeType] = useState("")
+ const [filterMinWidth, setFilterMinWidth] = useState("")
+ const [filterMinHeight, setFilterMinHeight] = useState("")
+ const [filterMinDuration, setFilterMinDuration] = useState("")
+ const [filterMaxDuration, setFilterMaxDuration] = useState("")
+ const [filterMinBytesMb, setFilterMinBytesMb] = useState("")
+ const [filterMaxBytesMb, setFilterMaxBytesMb] = useState("")
  const [viewMode, setViewMode] = useState<VaultWorkspaceViewMode>(initialWorkspace.viewMode)
  const [density, setDensity] = useState<VaultWorkspaceDensity>(initialWorkspace.density)
  const [arrangeMode, setArrangeMode] = useState(initialWorkspace.arrangeMode)
@@ -242,6 +250,14 @@ const CreatorVaultOS: React.FC = () => {
    source: source === "all" ? null : source,
    sort,
    special,
+   lifecycle: filterLifecycle === "all" ? null : filterLifecycle,
+   mimeType: filterMimeType.trim() || null,
+   minWidth: filterMinWidth ? Number(filterMinWidth) : null,
+   minHeight: filterMinHeight ? Number(filterMinHeight) : null,
+   minDurationSec: filterMinDuration ? Number(filterMinDuration) : null,
+   maxDurationSec: filterMaxDuration ? Number(filterMaxDuration) : null,
+   minBytes: filterMinBytesMb ? Number(filterMinBytesMb) * 1024 * 1024 : null,
+   maxBytes: filterMaxBytesMb ? Number(filterMaxBytesMb) * 1024 * 1024 : null,
    limit: 100,
   })
   let scoped = base
@@ -252,7 +268,26 @@ const CreatorVaultOS: React.FC = () => {
   if (!collection) return scoped
   const ids = new Set(collection.assetIds)
   return scoped.filter((asset) => ids.has(asset.id))
- }, [query, filterKind, selectedTag, source, sort, special, explorerProject, activeCollectionId, manualCollections, refreshTick])
+ }, [
+  query,
+  filterKind,
+  selectedTag,
+  source,
+  sort,
+  special,
+  filterLifecycle,
+  filterMimeType,
+  filterMinWidth,
+  filterMinHeight,
+  filterMinDuration,
+  filterMaxDuration,
+  filterMinBytesMb,
+  filterMaxBytesMb,
+  explorerProject,
+  activeCollectionId,
+  manualCollections,
+  refreshTick,
+ ])
 
  useEffect(() => {
   writeVaultWorkspaceState({
@@ -1218,6 +1253,96 @@ const CreatorVaultOS: React.FC = () => {
          tone="cyan"
          onClick={() => setSelectedTag(null)}
         />
+        <details className="border-t-[3px] border-current pt-3">
+         <summary className="cursor-pointer text-xs font-black uppercase">Advanced Metadata Filters</summary>
+         <div className="mt-3 flex flex-col gap-2">
+          <SubToolboxDropdownControl
+           label="Lifecycle"
+           value={filterLifecycle}
+           onChange={setFilterLifecycle}
+           options={["all", "DRAFT", "CANDIDATE", "APPROVED", "FINAL", "GOLDEN", "SUPERSEDED", "ARCHIVED", "TRASHED"]}
+          />
+          <SubToolboxInput
+           value={filterMimeType}
+           onChange={(event) => setFilterMimeType(event.target.value)}
+           placeholder="MIME TYPE · video/mp4"
+           aria-label="Vault MIME type filter"
+          />
+          <div className="grid grid-cols-2 gap-2">
+           <SubToolboxInput
+            type="number"
+            min={0}
+            value={filterMinWidth}
+            onChange={(event) => setFilterMinWidth(event.target.value)}
+            placeholder="MIN WIDTH"
+            aria-label="Minimum asset width"
+           />
+           <SubToolboxInput
+            type="number"
+            min={0}
+            value={filterMinHeight}
+            onChange={(event) => setFilterMinHeight(event.target.value)}
+            placeholder="MIN HEIGHT"
+            aria-label="Minimum asset height"
+           />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+           <SubToolboxInput
+            type="number"
+            min={0}
+            step="0.1"
+            value={filterMinDuration}
+            onChange={(event) => setFilterMinDuration(event.target.value)}
+            placeholder="MIN DURATION S"
+            aria-label="Minimum asset duration seconds"
+           />
+           <SubToolboxInput
+            type="number"
+            min={0}
+            step="0.1"
+            value={filterMaxDuration}
+            onChange={(event) => setFilterMaxDuration(event.target.value)}
+            placeholder="MAX DURATION S"
+            aria-label="Maximum asset duration seconds"
+           />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+           <SubToolboxInput
+            type="number"
+            min={0}
+            step="0.1"
+            value={filterMinBytesMb}
+            onChange={(event) => setFilterMinBytesMb(event.target.value)}
+            placeholder="MIN SIZE MB"
+            aria-label="Minimum asset size megabytes"
+           />
+           <SubToolboxInput
+            type="number"
+            min={0}
+            step="0.1"
+            value={filterMaxBytesMb}
+            onChange={(event) => setFilterMaxBytesMb(event.target.value)}
+            placeholder="MAX SIZE MB"
+            aria-label="Maximum asset size megabytes"
+           />
+          </div>
+          <SubToolboxInnerActionButton
+           label="Clear Metadata Filters"
+           iconName="x"
+           tone="cyan"
+           onClick={() => {
+            setFilterLifecycle("all")
+            setFilterMimeType("")
+            setFilterMinWidth("")
+            setFilterMinHeight("")
+            setFilterMinDuration("")
+            setFilterMaxDuration("")
+            setFilterMinBytesMb("")
+            setFilterMaxBytesMb("")
+           }}
+          />
+         </div>
+        </details>
         <StandardInput
          value={smartCollectionName}
          onChange={(event) => setSmartCollectionName(event.target.value)}
