@@ -562,6 +562,7 @@ export const SubToolboxTopTitleDropdown: React.FC<SubToolboxTopTitleDropdownProp
 }) => {
   const [open, setOpen] = React.useState(false)
   const rootRef = React.useRef<HTMLDivElement>(null)
+  const panelRef = React.useRef<HTMLDivElement>(null)
   const [menuRect, setMenuRect] = React.useState<{ left: number; top: number; width: number } | null>(null)
   const [inheritedPair, setInheritedPair] = React.useState({ pairA: "", pairB: "" })
 
@@ -582,7 +583,8 @@ export const SubToolboxTopTitleDropdown: React.FC<SubToolboxTopTitleDropdownProp
 
   React.useEffect(() => {
     const onPointerDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+      const target = event.target as Node
+      if (!rootRef.current?.contains(target) && !panelRef.current?.contains(target)) setOpen(false)
     }
     document.addEventListener("mousedown", onPointerDown)
     return () => document.removeEventListener("mousedown", onPointerDown)
@@ -626,6 +628,7 @@ export const SubToolboxTopTitleDropdown: React.FC<SubToolboxTopTitleDropdownProp
       </button>
       {open && menuRect ? createPortal(
         <div
+          ref={panelRef}
           className="vt-subtoolbox-top-title-dropdown-panel"
           role="menu"
           aria-label={ariaLabel}
@@ -1012,6 +1015,42 @@ export const SubToolboxSelectableTag: React.FC<SubToolboxSelectableTagProps> = (
   <button type={type} className={classes("vt-subtoolbox-selectable-tag", selected && "is-selected", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} aria-pressed={selected} {...props}><span aria-hidden="true">{selected ? selectedIcon : unselectedIcon}</span><span>{children}</span></button>
 )
 
+export interface SubToolboxSpectrumRemovableTagProps extends React.HTMLAttributes<HTMLSpanElement> {
+  level?: SubToolboxSpectrumTagLevel
+  label: string
+  spectrumKey?: string
+  onRemove?: () => void
+  removeIcon?: React.ReactNode
+}
+export const SubToolboxSpectrumRemovableTag: React.FC<SubToolboxSpectrumRemovableTagProps> = ({
+  level = "l3",
+  label,
+  spectrumKey,
+  onRemove,
+  removeIcon = "×",
+  className,
+  style,
+  ...props
+}) => {
+  const color = getAlphabeticalSpectrumColor(spectrumKey || label)
+  const structuralLevel: ToolboxControlLevel = level === "l3" ? "l2" : level
+  return (
+    <span
+      className={classes("vt-subtoolbox-alpha-tag", "vt-subtoolbox-spectrum-removable", level === "l3" && "is-l3", className)}
+      data-vt-control-level={structuralLevel}
+      data-vt-spectrum-level={level}
+      style={{
+        ...(withComponentLevelStyle(structuralLevel, style) ?? {}),
+        ["--vt-alpha-color" as string]: color,
+      } as React.CSSProperties}
+      {...props}
+    >
+      <span>{label}</span>
+      <button type="button" aria-label={`Remove tag ${label}`} onClick={onRemove}>{removeIcon}</button>
+    </span>
+  )
+}
+
 export interface SubToolboxTagEditorProps extends React.HTMLAttributes<HTMLDivElement> {
   level?: ToolboxControlLevel
   tags: string[]
@@ -1020,6 +1059,8 @@ export interface SubToolboxTagEditorProps extends React.HTMLAttributes<HTMLDivEl
   saveIcon?: React.ReactNode
   removeIcon?: React.ReactNode
   label?: React.ReactNode
+  tagLevel?: SubToolboxSpectrumTagLevel
+  spectrum?: boolean
 }
 export const SubToolboxTagEditor: React.FC<SubToolboxTagEditorProps> = ({
   level = "l0",
@@ -1029,6 +1070,8 @@ export const SubToolboxTagEditor: React.FC<SubToolboxTagEditorProps> = ({
   saveIcon = "✓",
   removeIcon = "×",
   label,
+  tagLevel,
+  spectrum = false,
   className,
   style,
   ...props
@@ -1046,7 +1089,16 @@ export const SubToolboxTagEditor: React.FC<SubToolboxTagEditorProps> = ({
     <div className={classes("vt-subtoolbox-tag-editor", editing && "is-editing", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
       {label ? <strong className="vt-subtoolbox-tag-editor-label">{label}</strong> : null}
       <div className="vt-subtoolbox-tag-editor-tags">
-        {tags.map((tag) => (
+        {tags.map((tag) => spectrum ? (
+          <SubToolboxSpectrumRemovableTag
+            key={tag}
+            level={tagLevel ?? "l3"}
+            label={tag}
+            spectrumKey={tag}
+            onRemove={() => onTagsChange?.(tags.filter((item) => item !== tag))}
+            removeIcon={removeIcon}
+          />
+        ) : (
           <SubToolboxRemovableTag
             key={tag}
             level={level}
@@ -1196,8 +1248,10 @@ export const SubToolboxKnob: React.FC<SubToolboxKnobProps> = ({
   )
 }
 
+export type SubToolboxSpectrumTagLevel = ToolboxControlLevel | "l3"
+
 export interface SubToolboxAlphabeticalTagProps extends React.HTMLAttributes<HTMLSpanElement> {
-  level?: ToolboxControlLevel
+  level?: SubToolboxSpectrumTagLevel
   label: string
   spectrumKey?: string
 }
@@ -1210,12 +1264,14 @@ export const SubToolboxAlphabeticalTag: React.FC<SubToolboxAlphabeticalTagProps>
   ...props
 }) => {
   const color = getAlphabeticalSpectrumColor(spectrumKey || label)
+  const structuralLevel: ToolboxControlLevel = level === "l3" ? "l2" : level
   return (
     <span
-      className={classes("vt-subtoolbox-alpha-tag", className)}
-      data-vt-control-level={level}
+      className={classes("vt-subtoolbox-alpha-tag", level === "l3" && "is-l3", className)}
+      data-vt-control-level={structuralLevel}
+      data-vt-spectrum-level={level}
       style={{
-        ...(withComponentLevelStyle(level, style) ?? {}),
+        ...(withComponentLevelStyle(structuralLevel, style) ?? {}),
         ["--vt-alpha-color" as string]: color,
       } as React.CSSProperties}
       {...props}
@@ -1914,7 +1970,10 @@ export interface SubToolboxVaultAssetProps extends Omit<React.HTMLAttributes<HTM
   level?: ToolboxControlLevel
   kind: SubToolboxVaultAssetKind
   title: React.ReactNode
+  onTitleChange?: (title: string) => void
+  titleAriaLabel?: string
   preview?: React.ReactNode
+  previewAspectRatio?: number
   tags?: React.ReactNode
   notes?: React.ReactNode
   icon?: React.ReactNode
@@ -1924,21 +1983,85 @@ export interface SubToolboxVaultAssetProps extends Omit<React.HTMLAttributes<HTM
   removeIcon?: React.ReactNode
 }
 export const SubToolboxVaultAsset: React.FC<SubToolboxVaultAssetProps> = ({
-  level = "l0", kind, title, preview, tags, notes, icon, selected = false, onSelectedChange, onRemove, removeIcon = "×",
-  className, style, ...props
-}) => (
-  <article className={classes("vt-subtoolbox-vault-asset", `is-${kind}`, selected && "is-selected", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
-    <header><button type="button" className="select" aria-pressed={selected} aria-label="Select asset" onClick={() => onSelectedChange?.(!selected)}><span /></button><strong>{title}</strong></header>
-    <div className="vt-subtoolbox-vault-body">
-      <div className="vt-subtoolbox-vault-preview">{preview ?? icon}</div>
-      <div className="vt-subtoolbox-vault-meta">
-        <div className="tags">{tags ?? "ASSET"}</div>
-        <div className="notes">{notes ?? "NOTES"}</div>
+  level = "l0",
+  kind,
+  title,
+  onTitleChange,
+  titleAriaLabel,
+  preview,
+  previewAspectRatio,
+  tags,
+  notes,
+  icon,
+  selected = false,
+  onSelectedChange,
+  onRemove,
+  removeIcon = "×",
+  className,
+  style,
+  ...props
+}) => {
+  const editableTitle = typeof title === "string" && Boolean(onTitleChange)
+  const [titleDraft, setTitleDraft] = React.useState(typeof title === "string" ? title : "")
+  React.useEffect(() => {
+    if (typeof title === "string") setTitleDraft(title)
+  }, [title])
+  const commitTitle = () => {
+    const next = titleDraft.trim()
+    if (next && typeof title === "string" && next !== title) onTitleChange?.(next)
+    else if (!next && typeof title === "string") setTitleDraft(title)
+  }
+
+  const safeRatio = Number.isFinite(previewAspectRatio)
+    ? Math.min(16 / 9, Math.max(9 / 16, Number(previewAspectRatio)))
+    : kind === "portrait" ? 9 / 16 : 16 / 9
+  const normalized = (safeRatio - 9 / 16) / (16 / 9 - 9 / 16)
+  const previewShare = kind === "audio" || kind === "document"
+    ? 44
+    : Math.round(42 + normalized * 18)
+
+  const mergedStyle = {
+    ...(withComponentLevelStyle(level, style) ?? {}),
+    ["--vt-vault-preview-share" as string]: `${previewShare}%`,
+  } as React.CSSProperties
+
+  return (
+    <article
+      className={classes("vt-subtoolbox-vault-asset", `is-${kind}`, selected && "is-selected", className)}
+      data-vt-control-level={level}
+      style={mergedStyle}
+      {...props}
+    >
+      <header>
+        <button type="button" className="select" aria-pressed={selected} aria-label="Select asset" onClick={() => onSelectedChange?.(!selected)}><span /></button>
+        {editableTitle ? (
+          <input
+            className="vt-subtoolbox-vault-title-input"
+            value={titleDraft}
+            aria-label={titleAriaLabel ?? `Edit title ${String(title)}`}
+            onChange={(event) => setTitleDraft(event.target.value)}
+            onBlur={commitTitle}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur()
+              if (event.key === "Escape") {
+                setTitleDraft(typeof title === "string" ? title : "")
+                event.currentTarget.blur()
+              }
+            }}
+          />
+        ) : <strong>{title}</strong>}
+      </header>
+      <div className="vt-subtoolbox-vault-body">
+        <div className="vt-subtoolbox-vault-preview">{preview ?? icon}</div>
+        <div className="vt-subtoolbox-vault-meta">
+          <div className="tags">{tags ?? "ASSET"}</div>
+          <div className="notes">{notes ?? "NOTES"}</div>
+        </div>
       </div>
-    </div>
-    <button type="button" className="remove" aria-label="Remove asset" onClick={onRemove}>{removeIcon}</button>
-  </article>
-)
+      {onRemove ? <button type="button" className="remove" aria-label="Remove asset" onClick={onRemove}>{removeIcon}</button> : null}
+    </article>
+  )
+}
 
 export interface SubToolboxTreeNode {
   id: string

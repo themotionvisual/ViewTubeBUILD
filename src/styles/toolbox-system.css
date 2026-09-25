@@ -573,7 +573,7 @@
   /* Painted edge clearance is intentionally larger than sibling spacing.
      Thick shell dividers, component strokes and shadows need extra breathing
      room so the first control does not visually collide with a header. */
-  --vt-toolbox-header-edge-clearance:8px;
+  --vt-toolbox-header-edge-clearance:10px;
   --vt-keyboard-occlusion:0px;
 }
 [data-vt-toolbox][data-vt-toolbox-level="main"] .vt-main-toolbox-content{
@@ -634,31 +634,73 @@
 }
 .vt-mini-subtoolbox-actions{
   display:flex;
-  align-items:stretch;
+  align-items:center;
+  justify-content:flex-end;
   min-width:max-content;
+  gap:4px;
+  padding:4px 5px 4px 4px;
 }
 .vt-mini-subtoolbox-actions>button{
   min-width:auto!important;
   width:auto!important;
-  height:100%!important;
-  min-height:var(--vt-mini-height)!important;
-  padding:0 10px!important;
-  border:0!important;
-  border-left:var(--vt-mini-stroke) solid #000!important;
-  border-radius:0!important;
-  box-shadow:none!important;
+  height:calc(var(--vt-mini-height) - 8px)!important;
+  min-height:0!important;
+  padding:0 9px!important;
+  border:2px solid #000!important;
+  border-radius:5px!important;
+  box-shadow:2px 2px 0 color-mix(in srgb,var(--vt-mini-header) 48%,transparent)!important;
   font-size:12px!important;
   font-weight:1000!important;
   text-transform:uppercase;
 }
 .vt-mini-subtoolbox-content{
-  padding:var(--vt-toolbox-shell-gutter);
+  padding:var(--vt-toolbox-header-edge-clearance) var(--vt-toolbox-shell-gutter) var(--vt-toolbox-shell-gutter);
   background:#fff;
+}
+.vt-thumbnail-mini-content{
+  padding:0!important;
+}
+.vt-thumbnail-mini-preview{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  background:color-mix(in srgb,var(--pair-a,#36e0f6) 12%,white);
+}
+.vt-thumbnail-mini-preview>img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  object-position:center;
+}
+.vt-thumbnail-mini-empty{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:8px;
+  padding:16px;
+  color:rgb(0 0 0/.34);
+  text-align:center;
+}
+.vt-thumbnail-mini-empty svg{width:32px;height:32px}
+.vt-thumbnail-mini-empty strong{
+  max-width:30ch;
+  font-size:13px;
+  font-weight:1000;
+  line-height:.95;
+  text-transform:uppercase;
 }
 
 @media(max-width:767px){
-  :root{--vt-toolbox-shell-gutter:5px;--vt-toolbox-header-edge-clearance:7px}
+  :root{--vt-toolbox-shell-gutter:5px;--vt-toolbox-header-edge-clearance:9px}
   .vt-mini-subtoolbox{--vt-mini-height:36px;--vt-mini-radius:7px;--vt-mini-shadow:3px}
   .vt-mini-subtoolbox-title{font-size:14px;padding-inline:7px}
-  .vt-mini-subtoolbox-actions>button{padding-inline:7px!important;font-size:11px!important}
+  .vt-mini-subtoolbox-actions{gap:3px;padding:4px}
+  .vt-mini-subtoolbox-actions>button{height:calc(var(--vt-mini-height) - 8px)!important;padding-inline:7px!important;font-size:11px!important}
+  .vt-thumbnail-mini-empty strong{font-size:11px}
 }

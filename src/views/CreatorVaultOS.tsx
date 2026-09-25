@@ -25,6 +25,7 @@ import {
  SubToolboxSelect,
  SubToolboxSplitField,
  SubToolboxStatePanel,
+ SubToolboxTagEditor,
  SubToolboxTextArea,
  SubToolboxVaultAsset,
 } from "../components/subtoolbox/SubToolboxPrimitives"
@@ -123,10 +124,20 @@ const CORE_TAGS = [
  "Thumbnail",
 ] as const
 
+const vaultPreviewAspectRatio = (asset: VaultAsset): number => {
+ const metadata = asset.metadata || {}
+ const width = Number(metadata.width ?? metadata.pixelWidth ?? metadata.previewWidth ?? 0)
+ const height = Number(metadata.height ?? metadata.pixelHeight ?? metadata.previewHeight ?? 0)
+ if (width > 0 && height > 0) return width / height
+ const explicitRatio = Number(metadata.aspectRatio ?? 0)
+ if (Number.isFinite(explicitRatio) && explicitRatio > 0) return explicitRatio
+ return 16 / 9
+}
+
 const vaultCardKind = (asset: VaultAsset): "landscape" | "portrait" | "audio" | "document" => {
  if (asset.kind === "audio") return "audio"
  if (asset.kind === "document" || asset.kind === "font" || asset.kind === "template") return "document"
- return "landscape"
+ return vaultPreviewAspectRatio(asset) < 0.9 ? "portrait" : "landscape"
 }
 
 const assetIcon = (asset: VaultAsset) => {
@@ -573,21 +584,7 @@ const CreatorVaultOS: React.FC = () => {
   setRefreshTick((value) => value + 1)
  }
 
- const addAssetTag = (asset: VaultAsset, rawTag: string) => {
-  const tag = rawTag.trim()
-  if (!tag) return
-  updateVaultAsset(asset.id, {
-   tags: Array.from(new Set([...(asset.tags || []), tag])),
-  })
-  setRefreshTick((value) => value + 1)
- }
 
- const removeAssetTag = (asset: VaultAsset, tag: string) => {
-  updateVaultAsset(asset.id, {
-   tags: (asset.tags || []).filter((value) => value !== tag),
-  })
-  setRefreshTick((value) => value + 1)
- }
 
  const assignAssetToProject = (asset: VaultAsset, projectId: string) => {
   if (!projectId) {
@@ -1111,21 +1108,15 @@ const CreatorVaultOS: React.FC = () => {
             key={asset.id}
             level="l1"
             kind={vaultCardKind(asset)}
-            title={(
-             <StandardInput
-              defaultValue={asset.name}
-              aria-label={`Edit title for ${asset.name}`}
-              onBlur={(event) => updateAssetTitle(asset, event.target.value)}
-              onKeyDown={(event) => {
-               if (event.key === "Enter") event.currentTarget.blur()
-              }}
-             />
-            )}
+            title={asset.name}
+            onTitleChange={(nextTitle) => updateAssetTitle(asset, nextTitle)}
+            titleAriaLabel={`Edit title for ${asset.name}`}
+            previewAspectRatio={vaultPreviewAspectRatio(asset)}
             preview={(asset.previewUrl || asset.url) ? (
              <img
               src={asset.previewUrl || asset.url || undefined}
               alt=""
-              className="h-full w-full object-cover"
+              className="vt-subtoolbox-vault-media"
              />
             ) : assetIcon(asset)}
             selected={selectedAssetIds.includes(asset.id)}
@@ -1146,44 +1137,33 @@ const CreatorVaultOS: React.FC = () => {
              setSelectionAnchorId(next.anchorId)
             }}
             tags={(
-             <div className="flex flex-col gap-2">
-              <div className="flex flex-wrap gap-1">
-               {(asset.tags || []).map((tag) => (
-                <button
-                 key={tag}
-                 type="button"
-                 aria-label={`Remove tag ${tag}`}
-                 onClick={() => removeAssetTag(asset, tag)}
-                >
-                 <SubToolboxAlphabeticalTag
-                  level="l2"
-                  label={`× ${tag}`}
-                  spectrumKey={tag}
-                 />
-                </button>
-               ))}
-              </div>
-              {selectedAssetIds.includes(asset.id) ? (
-               <StandardInput
-                placeholder="+ TAG"
-                aria-label={`Add tag to ${asset.name}`}
-                onKeyDown={(event) => {
-                 if (event.key !== "Enter") return
-                 event.preventDefault()
-                 addAssetTag(asset, event.currentTarget.value)
-                 event.currentTarget.value = ""
-                }}
-               />
-              ) : null}
-             </div>
+             <SubToolboxTagEditor
+              level="l2"
+              tagLevel="l3"
+              spectrum
+              tags={asset.tags || []}
+              onTagsChange={(tags) => {
+               updateVaultAsset(asset.id, { tags })
+               setRefreshTick((value) => value + 1)
+              }}
+              label="TAGS"
+             />
             )}
             notes={(
-             <div className="flex flex-col gap-2">
-              <div className="text-xs font-black uppercase opacity-60">
+             <div className="flex h-full min-h-0 flex-col gap-2">
+              <div className="text-[10px] font-black uppercase opacity-60">
                {viewMode === "timeline"
                 ? `${new Date(asset.createdAt).toLocaleString()} · ${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`
                 : `${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`}
               </div>
+              <SubToolboxTextArea
+               level="l2"
+               height="fill"
+               defaultValue={String(asset.metadata?.notes || "")}
+               placeholder="NOTES"
+               aria-label={`Notes for ${asset.name}`}
+               onBlur={(event) => updateAssetNotes(asset, event.currentTarget.value)}
+              />
               {selectedAssetIds.includes(asset.id) ? (
                <>
                 <SubToolboxSelect
@@ -1224,17 +1204,8 @@ const CreatorVaultOS: React.FC = () => {
                  }}
                 />
                 <span className="text-[10px] font-black uppercase opacity-60">Replace Preview</span>
-                <SubToolboxTextArea
-                 height="compact"
-                 defaultValue={String(asset.metadata?.notes || "")}
-                 placeholder="Add notes…"
-                 aria-label={`Notes for ${asset.name}`}
-                 onBlur={(event) => updateAssetNotes(asset, event.target.value)}
-                />
                </>
-              ) : (
-               <div className="text-[10px] font-black uppercase opacity-50">SELECT TO EDIT DETAILS</div>
-              )}
+              ) : null}
              </div>
             )}
            />

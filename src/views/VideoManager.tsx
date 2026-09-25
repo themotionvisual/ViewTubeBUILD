@@ -37,12 +37,13 @@ import {
  RefreshCw,
 } from "lucide-react"
 import {
- MiniSubToolbox,
+ ThumbnailMiniSubToolbox,
  SubToolboxGridActionButton,
  ToolboxScaffold,
  SubToolbox,
 } from "../components/Toolbox"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxSection, SubToolboxStack } from "../components/subtoolbox/SubToolboxLayouts"
+import { SubToolboxShellAction } from "../components/subtoolbox/SubToolboxSplitPrimitives"
 import {
  SubToolboxAlert,
  SubToolboxButton,
@@ -636,13 +637,14 @@ const VideoManager: React.FC<VideoManagerProps> = ({
         ariaLabel="Choose video"
        />
       ) : (
-       <SubToolboxGridActionButton
-        label={connectionLabel}
-        iconName="video"
-        tone="green"
+       <SubToolboxShellAction
+        level="l0"
+        icon={<FileVideo aria-hidden="true" />}
         onClick={() => auth.login("/video-manager")}
         disabled={auth.loading}
-       />
+       >
+        {connectionLabel}
+       </SubToolboxShellAction>
       )}
 
       <SubToolbox
@@ -663,10 +665,22 @@ const VideoManager: React.FC<VideoManagerProps> = ({
          disabled={!connected || !selectedVideo}
         />
 
-        <MiniSubToolbox
+        <ThumbnailMiniSubToolbox
          title="Thumbnail"
          icon={<ImageIcon size={18} strokeWidth={3} />}
          className="vm-thumbnail-mini"
+         src={thumbnailPreview || selectedVideo?.thumbnail || null}
+         alt={`${editTitle || "Video"} thumbnail`}
+         emptyLabel={catalogLoading ? "LOADING THUMBNAIL" : "SELECT A VIDEO TO LOAD THUMBNAIL"}
+         previewClassName={isDraggingThumbnail ? "is-dragging" : ""}
+         onDragOver={(event) => { if (!connected || !selectedVideo) return; event.preventDefault(); setIsDraggingThumbnail(true) }}
+         onDragLeave={() => setIsDraggingThumbnail(false)}
+         onDrop={(event) => {
+          if (!connected || !selectedVideo) return
+          event.preventDefault()
+          setIsDraggingThumbnail(false)
+          if (event.dataTransfer.files[0]) handleThumbnailChange(event.dataTransfer.files[0])
+         }}
          actions={(
           <>
            <SubToolboxButton
@@ -685,28 +699,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
            </SubToolboxButton>
           </>
          )}
-        >
-         <div
-          className={`vm-thumbnail-canvas ${isDraggingThumbnail ? "is-dragging" : ""}`}
-          onDragOver={(event) => { if (!connected || !selectedVideo) return; event.preventDefault(); setIsDraggingThumbnail(true) }}
-          onDragLeave={() => setIsDraggingThumbnail(false)}
-          onDrop={(event) => {
-           if (!connected || !selectedVideo) return
-           event.preventDefault()
-           setIsDraggingThumbnail(false)
-           if (event.dataTransfer.files[0]) handleThumbnailChange(event.dataTransfer.files[0])
-          }}
-         >
-          {thumbnailPreview || selectedVideo?.thumbnail ? (
-           <img src={thumbnailPreview || selectedVideo?.thumbnail} alt={`${editTitle || "Video"} thumbnail`} />
-          ) : (
-           <div className="vm-thumbnail-empty">
-            <Upload size={32} />
-            <strong>{catalogLoading ? "LOADING THUMBNAIL" : "SELECT A VIDEO TO LOAD THUMBNAIL"}</strong>
-           </div>
-          )}
-         </div>
-        </MiniSubToolbox>
+        />
 
         <SubToolboxLabeledTextArea
          level="l1"
