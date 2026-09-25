@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState } from "react"
-import { CircleQuestionMark, Eye, GripVertical, Layers, Menu, Minus, Plus, Settings2, Trash2 } from "lucide-react"
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CircleQuestionMark, Eye, GripVertical, Layers, Minus, PanelTopOpen, Plus, Settings2, Trash2 } from "lucide-react"
 import { VTLottie } from "../../components/VTLottie"
 import { cn } from "../../lib/utils"
 import type { DashboardHeightBucket, DashboardSizeBucket, WidgetDefinition, WidgetInstanceState } from "./types"
@@ -30,10 +30,11 @@ export const WidgetShell: React.FC<{
  widget: WidgetDefinition; instance: WidgetInstanceState; editMode: boolean; canEdit: boolean
  onToggleCollapse?: () => void; onCycleSize?: () => void; onDecSize?: () => void
  onCycleHeight?: () => void; onDecHeight?: () => void; onRemove?: () => void
+ onMoveUp?: () => void; onMoveDown?: () => void
  children: React.ReactNode; icon?: React.ReactNode; headerContent?: React.ReactNode; helpContent?: React.ReactNode
  contentLayout?: "inset" | "flush"; controlDensity?: "default" | "compact"; hasAI?: boolean; onRegenerate?: () => void
  aiCost?: number; aiDisabled?: boolean; aiDisabledReason?: string
-}> = ({ widget, instance, editMode, canEdit, onToggleCollapse = () => {}, onCycleSize = () => {}, onDecSize = () => {}, onCycleHeight = () => {}, onDecHeight = () => {}, onRemove = () => {}, children, icon, headerContent, helpContent, contentLayout = "inset", controlDensity = "default", hasAI, onRegenerate, aiCost, aiDisabled, aiDisabledReason }) => {
+}> = ({ widget, instance, editMode, canEdit, onToggleCollapse = () => {}, onCycleSize = () => {}, onDecSize = () => {}, onCycleHeight = () => {}, onDecHeight = () => {}, onRemove = () => {}, onMoveUp = () => {}, onMoveDown = () => {}, children, icon, headerContent, helpContent, contentLayout = "inset", controlDensity = "default", hasAI, onRegenerate, aiCost, aiDisabled, aiDisabledReason }) => {
  const [isSubtitleOpen, setIsSubtitleOpen] = useState(false)
  const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
  const [keepClosingContentMounted, setKeepClosingContentMounted] = useState(!instance.collapsed)
@@ -57,7 +58,7 @@ export const WidgetShell: React.FC<{
   <div className="vt-widget-header">
    <div className="left"><div className="icon-rail">{icon || <Layers size={22}/>}</div><span className="title">{widget.title}</span></div>
    {headerContent && <div className="header-extra" onClick={e=>e.stopPropagation()} onPointerDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()} style={{flex:1,display:"flex",justifyContent:"center"}}>{headerContent}</div>}
-   <button type="button" className="widget-mobile-controls-trigger" onClick={()=>setMobileControlsOpen(open=>!open)} aria-label={`${mobileControlsOpen?"Close":"Open"} widget controls for ${widget.title}`} aria-expanded={mobileControlsOpen} title="Widget controls"><Menu size={18} strokeWidth={2.6}/></button>
+   <button type="button" className="widget-mobile-controls-trigger" onClick={()=>setMobileControlsOpen(open=>!open)} aria-label={`${mobileControlsOpen?"Close":"Open"} widget controls for ${widget.title}`} aria-expanded={mobileControlsOpen} title="Widget controls"><PanelTopOpen size={19} strokeWidth={2.6}/></button>
    <div className="toggle flex items-center gap-2" onClick={e=>e.stopPropagation()} onPointerDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()}>
     {hasAI && <div className="flex items-center gap-1.5 mr-1">{typeof aiCost === "number" && <span className="widget-ai-cost-chip">{aiCost}T</span>}<button className="widget-header-btn ai-btn" title={aiDisabled && aiDisabledReason ? aiDisabledReason : "Regenerate with AI"} onClick={onRegenerate} disabled={aiDisabled}><VTLottie animationUrl="https://assets3.lottiefiles.com/packages/lf20_m6cu8sh9.json" size={16}/></button></div>}
     <div className="flex flex-row items-center gap-1">
@@ -77,11 +78,12 @@ export const WidgetShell: React.FC<{
     <button type="button" onClick={()=>setIsSubtitleOpen(!isSubtitleOpen)} className={`widget-mobile-square-control ${isSubtitleOpen?"is-active":""}`} aria-label="Widget information" aria-expanded={isSubtitleOpen} title="Widget information"><CircleQuestionMark size={18} strokeWidth={2.5}/></button>
     {hasAI && <button type="button" className="widget-mobile-square-control" aria-label="Regenerate with AI" title={aiDisabled && aiDisabledReason ? aiDisabledReason : "Regenerate with AI"} onClick={onRegenerate} disabled={aiDisabled}><VTLottie animationUrl="https://assets3.lottiefiles.com/packages/lf20_m6cu8sh9.json" size={18}/></button>}
     {canEdit && editMode && <>
-     <button type="button" onClick={onDecSize} className="widget-mobile-square-control" aria-label="Decrease widget width" title="Decrease width">W−</button>
-     <button type="button" onClick={onCycleSize} className="widget-mobile-square-control" aria-label="Increase widget width" title="Increase width">W+</button>
-     <button type="button" onClick={onDecHeight} className="widget-mobile-square-control" aria-label="Decrease widget height" title="Decrease height">H−</button>
-     <button type="button" onClick={onCycleHeight} className="widget-mobile-square-control" aria-label="Increase widget height" title="Increase height">H+</button>
-     <WidgetDragHandleContext.Consumer>{dragHandle=><button type="button" {...dragHandle.attributes} {...dragHandle.listeners} className="widget-mobile-square-control cursor-grab active:cursor-grabbing" aria-label="Drag to reorder" title="Drag to reorder" disabled={dragHandle.disabled}><GripVertical size={19} strokeWidth={2.3}/></button>}</WidgetDragHandleContext.Consumer>
+     <button type="button" onClick={onDecSize} className="widget-mobile-square-control" aria-label="Decrease widget width" title="Decrease width" disabled><span className="widget-mobile-icon-pair is-horizontal is-inward"><ArrowRight/><ArrowLeft/></span></button>
+     <button type="button" onClick={onCycleSize} className="widget-mobile-square-control" aria-label="Increase widget width" title="Increase width" disabled><span className="widget-mobile-icon-pair is-horizontal is-outward"><ArrowLeft/><ArrowRight/></span></button>
+     <button type="button" onClick={onDecHeight} className="widget-mobile-square-control" aria-label="Decrease widget height" title="Decrease height"><span className="widget-mobile-icon-pair is-vertical is-inward"><ArrowDown/><ArrowUp/></span></button>
+     <button type="button" onClick={onCycleHeight} className="widget-mobile-square-control" aria-label="Increase widget height" title="Increase height"><span className="widget-mobile-icon-pair is-vertical is-outward"><ArrowUp/><ArrowDown/></span></button>
+     <button type="button" onClick={onMoveUp} className="widget-mobile-square-control" aria-label="Move widget up one position" title="Move widget up"><ArrowUp size={19} strokeWidth={2.6}/></button>
+     <button type="button" onClick={onMoveDown} className="widget-mobile-square-control" aria-label="Move widget down one position" title="Move widget down"><ArrowDown size={19} strokeWidth={2.6}/></button>
      <button type="button" onClick={onRemove} className="widget-mobile-square-control is-danger" aria-label="Hide widget" title="Hide widget"><Eye size={18} strokeWidth={2.4}/></button>
     </>}
     <button type="button" onClick={handleToggleCollapse} className="widget-mobile-square-control" aria-label={`${instance.collapsed?"Expand":"Collapse"} ${widget.title}`} aria-expanded={!instance.collapsed} title={instance.collapsed?"Expand widget":"Collapse widget"}>{instance.collapsed?<Plus size={18} strokeWidth={2.4}/>:<Minus size={18} strokeWidth={2.4}/>}</button>
