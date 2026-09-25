@@ -602,30 +602,6 @@ export const SubToolboxTopTitleDropdown: React.FC<SubToolboxTopTitleDropdownProp
 
   const mergedStyle = withComponentLevelStyle(level, style)
 
-  React.useLayoutEffect(() => {
-    if (!open || typeof window === "undefined") {
-      setPanelRect(null)
-      return
-    }
-    const sync = () => {
-      const rect = rootRef.current?.getBoundingClientRect()
-      if (!rect) return
-      const viewportPadding = 8
-      const width = Math.min(rect.width, window.innerWidth - viewportPadding * 2)
-      const left = Math.min(Math.max(viewportPadding, rect.left), Math.max(viewportPadding, window.innerWidth - viewportPadding - width))
-      setPanelRect({ left, top: rect.bottom + 6, width })
-    }
-    sync()
-    const frame = window.requestAnimationFrame(sync)
-    window.addEventListener("resize", sync)
-    window.addEventListener("scroll", sync, true)
-    return () => {
-      window.cancelAnimationFrame(frame)
-      window.removeEventListener("resize", sync)
-      window.removeEventListener("scroll", sync, true)
-    }
-  }, [open])
-
   return (
     <div
       ref={rootRef}
@@ -740,6 +716,42 @@ export const SubToolboxVideoSelector: React.FC<SubToolboxVideoSelectorProps> = (
     if (!q) return options
     return options.filter((option) => option.title.toLowerCase().includes(q))
   }, [options, searchValue])
+
+  React.useLayoutEffect(() => {
+    if (!open || typeof window === "undefined") {
+      setPanelRect(null)
+      return
+    }
+    const sync = () => {
+      const rect = rootRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const viewportPadding = 8
+      const width = Math.min(rect.width, window.innerWidth - viewportPadding * 2)
+      const left = Math.min(Math.max(viewportPadding, rect.left), Math.max(viewportPadding, window.innerWidth - viewportPadding - width))
+      setPanelRect({ left, top: rect.bottom + 6, width })
+    }
+    sync()
+    const frame = window.requestAnimationFrame(sync)
+    window.addEventListener("resize", sync)
+    window.addEventListener("scroll", sync, true)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener("resize", sync)
+      window.removeEventListener("scroll", sync, true)
+    }
+  }, [open])
+
+  React.useEffect(() => {
+    if (!open) return
+    const onPointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        const target = event.target as HTMLElement
+        if (!target.closest(".vt-subtoolbox-video-selector-panel")) setOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", onPointerDown)
+    return () => document.removeEventListener("mousedown", onPointerDown)
+  }, [open])
 
   return (
     <div
