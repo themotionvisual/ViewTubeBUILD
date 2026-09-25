@@ -42,7 +42,7 @@ describe("Video Manager canonical Studio Hub contract", () => {
   expect(tokenSource).toContain("MINI_SUBTOOLBOX_DNA")
   expect(toolboxCss).toContain("--vt-toolbox-header-height: 56px")
   expect(toolboxCss).toContain("--vt-subtoolbox-header-height: 44px")
-  expect(toolboxCss).toContain("-webkit-line-clamp: 2")
+  expect(toolboxCss).toContain("max-height: 1.64em")
   expect(toolboxCss).toContain("line-height: .82 !important")
   expect(toolboxCss).toContain("--vt-toolbox-shell-gutter:6px")
   expect(toolboxCss).toContain("--vt-toolbox-shell-gutter:5px")
