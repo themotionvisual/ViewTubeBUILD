@@ -427,6 +427,40 @@ const CreatorVaultOS: React.FC = () => {
   setRefreshTick((value) => value + 1)
  }
 
+ const assignAssetToProject = (asset: VaultAsset, projectId: string) => {
+  if (!projectId) {
+   updateVaultAsset(asset.id, { projectId: null, projectName: null })
+   setRefreshTick((value) => value + 1)
+   return
+  }
+  const project = brain.projects.find((candidate) => candidate.id === projectId)
+  if (!project) return
+  const identity = attachVaultAssetIdsToProject({
+   project,
+   assetIds: [asset.id],
+   channelId: channelIdentity.channelId || null,
+  })
+  if (identity.project.contentBuildId !== project.contentBuildId) {
+   updateProject(project.id, { contentBuildId: identity.project.contentBuildId })
+  }
+  updateVaultAsset(asset.id, {
+   projectId: project.id,
+   projectName: project.name,
+  })
+  setRefreshTick((value) => value + 1)
+ }
+
+ const toggleAssetFavorite = (asset: VaultAsset) => {
+  setVaultAssetState(asset.id, { favorite: asset.metadata?.favorite !== true })
+  setRefreshTick((value) => value + 1)
+ }
+
+ const archiveAsset = (asset: VaultAsset) => {
+  setVaultAssetState(asset.id, { archived: true, trashed: false })
+  setSelectedAssetIds((current) => current.filter((id) => id !== asset.id))
+  setRefreshTick((value) => value + 1)
+ }
+
  const replaceAssetPreview = async (asset: VaultAsset, file: File | null) => {
   if (!file) return
   const previewUrl = await extractVaultImagePreview(file)
@@ -920,6 +954,32 @@ const CreatorVaultOS: React.FC = () => {
                {viewMode === "timeline"
                 ? `${new Date(asset.createdAt).toLocaleString()} · ${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`
                 : `${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`}
+              </div>
+              <SubToolboxSelect
+               value={asset.projectId || ""}
+               aria-label="Asset project assignment"
+               onChange={(event) => assignAssetToProject(asset, event.target.value)}
+              >
+               <option value="">UNASSIGNED</option>
+               {brain.projects.map((project) => (
+                <option key={project.id} value={project.id}>{project.name}</option>
+               ))}
+              </SubToolboxSelect>
+              <div className="grid grid-cols-2 gap-2">
+               <SubToolboxInnerActionButton
+                label={asset.metadata?.favorite === true ? "Unfavorite" : "Favorite"}
+                iconName="sparkles"
+                tone="orange"
+                onClick={() => toggleAssetFavorite(asset)}
+                aria-label="Toggle asset favorite"
+               />
+               <SubToolboxInnerActionButton
+                label="Archive"
+                iconName="archive"
+                tone="cyan"
+                onClick={() => archiveAsset(asset)}
+                aria-label="Archive asset"
+               />
               </div>
               <SubToolboxInput
                type="file"
