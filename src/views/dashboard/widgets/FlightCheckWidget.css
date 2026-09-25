@@ -233,7 +233,7 @@
 
 .vt-publishing-command__task-row{
   width:100%;
-  min-height:28px;
+  min-height:24px;
   display:grid;
   grid-template-columns:24px minmax(0,1fr);
   align-items:center;
@@ -268,7 +268,7 @@
     grid-template-rows:auto auto auto minmax(0,1fr) auto;
     gap:5px;
   }
-  .vt-publishing-command__task-row{min-height:28px;padding-block:2px}
-  .vt-publishing-command__blocker{min-height:28px;padding-block:3px}
+  .vt-publishing-command__task-row{min-height:24px;padding-block:1px}
+  .vt-publishing-command__blocker{min-height:24px;padding-block:2px}
   .vt-publishing-command__actions{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
