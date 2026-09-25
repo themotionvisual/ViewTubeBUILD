@@ -76,6 +76,13 @@ import {
  listVaultSmartCollections,
  type VaultSmartCollection,
 } from "../services/vaultCollections"
+import {
+ addAssetsToVaultCollection,
+ createVaultCollection,
+ deleteVaultCollection,
+ listVaultCollections,
+ removeAssetFromVaultCollection,
+} from "../services/vaultManualCollections"
 import { resolveVaultKeyboardCommand } from "../services/vaultKeyboard"
 import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
 import { useBrain } from "../context/useBrain"
@@ -201,6 +208,10 @@ const CreatorVaultOS: React.FC = () => {
  const [quickLookOpen, setQuickLookOpen] = useState(true)
  const [smartCollectionName, setSmartCollectionName] = useState("")
  const [collectionRefresh, setCollectionRefresh] = useState(0)
+ const [manualCollectionRefresh, setManualCollectionRefresh] = useState(0)
+ const [manualCollectionName, setManualCollectionName] = useState("")
+ const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null)
+ const [targetCollectionId, setTargetCollectionId] = useState("")
  const [taskRefresh, setTaskRefresh] = useState(0)
  const [scratchpadRefresh, setScratchpadRefresh] = useState(0)
  const [scratchpadTitle, setScratchpadTitle] = useState("")
@@ -216,6 +227,7 @@ const CreatorVaultOS: React.FC = () => {
 
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
  const smartCollections = useMemo(() => listVaultSmartCollections(), [collectionRefresh])
+ const manualCollections = useMemo(() => listVaultCollections(), [manualCollectionRefresh])
  const tasks = useMemo(() => listVaultTasks(), [taskRefresh])
  const scratchpads = useMemo(() => listVaultScratchpads(), [scratchpadRefresh])
  const checklistItems = useMemo(() => listVaultChecklistItems(), [checklistRefresh])
@@ -230,10 +242,15 @@ const CreatorVaultOS: React.FC = () => {
    special,
    limit: 100,
   })
-  if (explorerProject === "all") return base
-  if (explorerProject === "unassigned") return base.filter((asset) => !asset.projectName)
-  return base.filter((asset) => asset.projectName === explorerProject)
- }, [query, filterKind, selectedTag, source, sort, special, explorerProject, refreshTick])
+  let scoped = base
+  if (explorerProject === "unassigned") scoped = base.filter((asset) => !asset.projectName)
+  else if (explorerProject !== "all") scoped = base.filter((asset) => asset.projectName === explorerProject)
+  if (!activeCollectionId) return scoped
+  const collection = manualCollections.find((item) => item.id === activeCollectionId)
+  if (!collection) return scoped
+  const ids = new Set(collection.assetIds)
+  return scoped.filter((asset) => ids.has(asset.id))
+ }, [query, filterKind, selectedTag, source, sort, special, explorerProject, activeCollectionId, manualCollections, refreshTick])
 
  useEffect(() => {
   writeVaultWorkspaceState({
@@ -356,6 +373,36 @@ const CreatorVaultOS: React.FC = () => {
   }
   setCaptionLines([])
  }, [activeCaptionAsset?.id, captionSourceAsset?.id])
+
+ const createManualCollection = () => {
+  const name = manualCollectionName.trim()
+  if (!name) return
+  const collection = createVaultCollection(name)
+  if (selectedAssetIds.length) addAssetsToVaultCollection(collection.id, selectedAssetIds)
+  setManualCollectionName("")
+  setActiveCollectionId(collection.id)
+  setTargetCollectionId(collection.id)
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const addSelectionToCollection = () => {
+  if (!targetCollectionId || !selectedAssetIds.length) return
+  addAssetsToVaultCollection(targetCollectionId, selectedAssetIds)
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const removeSelectedAssetFromActiveCollection = () => {
+  if (!activeCollectionId || !selectedAsset) return
+  removeAssetFromVaultCollection(activeCollectionId, selectedAsset.id)
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const removeManualCollection = (id: string) => {
+  deleteVaultCollection(id)
+  if (activeCollectionId === id) setActiveCollectionId(null)
+  if (targetCollectionId === id) setTargetCollectionId("")
+  setManualCollectionRefresh((value) => value + 1)
+ }
 
  const saveSmartCollection = () => {
   const name = smartCollectionName.trim()
@@ -1194,6 +1241,31 @@ const CreatorVaultOS: React.FC = () => {
           onClick={() => setExplorerProject(project.name)}
          />
         ))}
+        <div className="mt-2 border-t-[3px] border-current pt-3">
+         <div className="mb-2 text-xs font-black uppercase opacity-60">Collections</div>
+         <SubToolboxInnerActionButton
+          label="All Collections / Clear Filter"
+          iconName="collection"
+          tone={!activeCollectionId ? "pink" : "cyan"}
+          onClick={() => setActiveCollectionId(null)}
+         />
+         {manualCollections.map((collection) => (
+          <div key={collection.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+           <SubToolboxInnerActionButton
+            label={`${collection.name} · ${collection.assetIds.length}`}
+            iconName="collection"
+            tone={activeCollectionId === collection.id ? "pink" : "cyan"}
+            onClick={() => setActiveCollectionId(collection.id)}
+           />
+           <SubToolboxInnerActionButton
+            label="×"
+            iconName="x"
+            tone="pink"
+            onClick={() => removeManualCollection(collection.id)}
+           />
+          </div>
+         ))}
+        </div>
        </div>
       </SubToolbox>
 
@@ -1777,6 +1849,51 @@ const CreatorVaultOS: React.FC = () => {
          onClick={createProjectFromSelection}
          disabled={!selectedAssetIds.length || !selectionProjectName.trim()}
         />
+        <div className="border-t-[3px] border-current pt-3">
+         <div className="mb-2 text-xs font-black uppercase opacity-60">Collections</div>
+         <StandardInput
+          value={manualCollectionName}
+          onChange={(event) => setManualCollectionName(event.target.value)}
+          placeholder="New collection name"
+          aria-label="New Vault collection name"
+         />
+         <SubToolboxInnerActionButton
+          label="Create Collection"
+          iconName="collection"
+          tone="green"
+          onClick={createManualCollection}
+          disabled={!manualCollectionName.trim()}
+         />
+         {manualCollections.length ? (
+          <>
+           <SubToolboxSelect
+            value={targetCollectionId}
+            onChange={(event) => setTargetCollectionId(event.target.value)}
+            aria-label="Target Vault collection"
+           >
+            <option value="">Choose collection…</option>
+            {manualCollections.map((collection) => (
+             <option key={collection.id} value={collection.id}>{collection.name}</option>
+            ))}
+           </SubToolboxSelect>
+           <SubToolboxInnerActionButton
+            label="Add Selection to Collection"
+            iconName="collection"
+            tone="blue"
+            onClick={addSelectionToCollection}
+            disabled={!selectedAssetIds.length || !targetCollectionId}
+           />
+           {activeCollectionId && selectedAsset ? (
+            <SubToolboxInnerActionButton
+             label="Remove Selected Asset From Active Collection"
+             iconName="x"
+             tone="orange"
+             onClick={removeSelectedAssetFromActiveCollection}
+            />
+           ) : null}
+          </>
+         ) : null}
+        </div>
         <SubToolboxInnerActionButton
          label="Download Selection Manifest"
          iconName="database"
