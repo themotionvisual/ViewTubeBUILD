@@ -34,6 +34,7 @@ import {
  Edit,
  Settings,
  Search,
+ RefreshCw,
 } from "lucide-react"
 import {
  MiniSubToolbox,
@@ -532,6 +533,7 @@ const VideoManager: React.FC<VideoManagerProps> = ({
      level="l2"
      size="compact"
      tone="ink"
+     icon={<RefreshCw aria-hidden="true" size={16} />}
      className="!w-auto"
      onClick={(event) => { event.stopPropagation(); lastSearchRef.current = ""; setVideoSearchQuery(""); void loadInitialData(true) }}
      disabled={loading}
