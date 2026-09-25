@@ -95,6 +95,8 @@ const CreatorVaultOS: React.FC = () => {
  const [viewMode, setViewMode] = useState<VaultWorkspaceViewMode>(initialWorkspace.viewMode)
  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([])
  const [batchTag, setBatchTag] = useState("")
+ const [batchPrefix, setBatchPrefix] = useState("")
+ const [batchProject, setBatchProject] = useState("")
  const [pending, setPending] = useState<PendingImport[]>([])
  const [importProject, setImportProject] = useState("")
  const [importTags, setImportTags] = useState<string[]>(["imported"])
@@ -181,6 +183,32 @@ const CreatorVaultOS: React.FC = () => {
   })
   setBatchTag("")
   setRefreshTick((value) => value + 1)
+ }
+
+ const applyBatchPrefix = () => {
+  const prefix = batchPrefix.trim()
+  if (!prefix || !selectedAssetIds.length) return
+  selectedAssetIds.forEach((assetId) => {
+   const asset = allAssets.find((candidate) => candidate.id === assetId)
+   if (!asset) return
+   updateVaultAsset(asset.id, { name: `${prefix}${asset.name}` })
+  })
+  setBatchPrefix("")
+  setRefreshTick((value) => value + 1)
+ }
+
+ const applyBatchProject = () => {
+  const projectName = batchProject.trim()
+  if (!projectName || !selectedAssetIds.length) return
+  selectedAssetIds.forEach((assetId) => {
+   updateVaultAsset(assetId, { projectName })
+  })
+  setBatchProject("")
+  setRefreshTick((value) => value + 1)
+ }
+
+ const rejectPending = (id: string) => {
+  setPending((current) => current.filter((item) => item.id !== id))
  }
 
  const ingestAll = () => {
@@ -416,12 +444,20 @@ const CreatorVaultOS: React.FC = () => {
             {item.kind.toUpperCase()} · {(item.size / 1024 / 1024).toFixed(2)} MB
            </div>
           </div>
-          <SubToolboxInnerActionButton
-           label="Ingest"
-           iconName="plus"
-           tone="cyan"
-           onClick={() => ingestOne(item)}
-          />
+          <div className="grid grid-cols-2 gap-2">
+           <SubToolboxInnerActionButton
+            label="Ingest"
+            iconName="plus"
+            tone="cyan"
+            onClick={() => ingestOne(item)}
+           />
+           <SubToolboxInnerActionButton
+            label="Reject"
+            iconName="x"
+            tone="pink"
+            onClick={() => rejectPending(item.id)}
+           />
+          </div>
          </div>
         )) : (
          <SubToolboxStatePanel level="l1" state="ready" message="Import Station is ready for a batch." />
@@ -455,6 +491,32 @@ const CreatorVaultOS: React.FC = () => {
          tone="pink"
          onClick={applyBatchTag}
          disabled={!selectedAssetIds.length || !batchTag.trim()}
+        />
+        <StandardInput
+         value={batchPrefix}
+         onChange={(event) => setBatchPrefix(event.target.value)}
+         placeholder="Rename prefix, e.g. EP01_"
+         aria-label="Batch rename prefix"
+        />
+        <SubToolboxInnerActionButton
+         label="Apply Prefix"
+         iconName="edit"
+         tone="orange"
+         onClick={applyBatchPrefix}
+         disabled={!selectedAssetIds.length || !batchPrefix.trim()}
+        />
+        <StandardInput
+         value={batchProject}
+         onChange={(event) => setBatchProject(event.target.value)}
+         placeholder="Assign project name"
+         aria-label="Batch project"
+        />
+        <SubToolboxInnerActionButton
+         label="Assign Project"
+         iconName="folder"
+         tone="green"
+         onClick={applyBatchProject}
+         disabled={!selectedAssetIds.length || !batchProject.trim()}
         />
         <SubToolboxInnerActionButton
          label="Clear Selection"
