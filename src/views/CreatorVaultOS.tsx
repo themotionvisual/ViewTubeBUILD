@@ -587,6 +587,14 @@ const CreatorVaultOS: React.FC = () => {
    tags: selectedTag ? [selectedTag] : [],
    kind: filterKind,
    source,
+   lifecycle: filterLifecycle,
+   mimeType: filterMimeType,
+   minWidth: filterMinWidth,
+   minHeight: filterMinHeight,
+   minDuration: filterMinDuration,
+   maxDuration: filterMaxDuration,
+   minBytesMb: filterMinBytesMb,
+   maxBytesMb: filterMaxBytesMb,
   })
   setSmartCollectionName("")
   setCollectionRefresh((value) => value + 1)
@@ -597,6 +605,14 @@ const CreatorVaultOS: React.FC = () => {
   setSelectedTag(collection.tags[0] || null)
   setFilterKind(collection.kind)
   setSource(collection.source)
+  setFilterLifecycle(collection.lifecycle)
+  setFilterMimeType(collection.mimeType)
+  setFilterMinWidth(collection.minWidth)
+  setFilterMinHeight(collection.minHeight)
+  setFilterMinDuration(collection.minDuration)
+  setFilterMaxDuration(collection.maxDuration)
+  setFilterMinBytesMb(collection.minBytesMb)
+  setFilterMaxBytesMb(collection.maxBytesMb)
  }
 
  const removeSmartCollection = (id: string) => {
