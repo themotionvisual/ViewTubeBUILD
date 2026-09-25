@@ -496,7 +496,7 @@ export const DailyOracleWidget = ({
         >
           {page === "today" ? (
             <>
-              <WidgetSection className="daily-oracle-v2__source-strip">
+              <WidgetSection edge="full" className="daily-oracle-v2__source-strip">
                 <WidgetBadge height={18} icon={<Brain size={11} />}>
                   {Math.round(growth.profileConfidenceScore)}% CHANNEL READ
                 </WidgetBadge>
