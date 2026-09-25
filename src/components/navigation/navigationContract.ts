@@ -69,8 +69,9 @@ export const PRIMARY_NAV_ITEMS: ReadonlyArray<{
   { id: "AI_BRAIN",   path: "/ai-brain",         label: "AI Brain",   paletteIndex: 3, iconId: "ai_brain"   },
   { id: "VT_SYNC",    path: "/local-analytics",  label: "Analytics",  paletteIndex: 4, iconId: "analytics"  },
   { id: "EDITOR",     path: "/editor",           label: "Editor",     paletteIndex: 5, iconId: "editor"     },
-  { id: "SETTINGS",   path: "/settings",         label: "Settings",   paletteIndex: 6, iconId: "settings"   },
-  { id: "USER_GUIDE", path: "/user-guide",       label: "User Guide", paletteIndex: 7, iconId: "user_guide" },
+  { id: "VAULT",      path: "/vault",            label: "Vault",      paletteIndex: 6, iconId: "vault"      },
+  { id: "SETTINGS",   path: "/settings",         label: "Settings",   paletteIndex: 7, iconId: "settings"   },
+  { id: "USER_GUIDE", path: "/user-guide",       label: "User Guide", paletteIndex: 8, iconId: "user_guide" },
 ] as const
 
 if (import.meta.env.DEV) {

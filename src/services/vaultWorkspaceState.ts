@@ -1,7 +1,30 @@
 import type { VaultAssetKind } from "@/types"
 
-export type VaultWorkspaceViewMode = "grid" | "list"
+export type VaultWorkspaceViewMode = "grid" | "list" | "timeline"
 export type VaultWorkspaceSort = "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
+export type VaultWorkspaceDensity = "comfortable" | "compact"
+export type VaultWorkspaceModuleId =
+ | "navigator"
+ | "explorer"
+ | "workspace-notes"
+ | "spectrum-tags"
+ | "asset-library"
+ | "import-station"
+ | "task-center"
+ | "batch-processor"
+ | "inspector"
+
+export const DEFAULT_VAULT_MODULE_ORDER: VaultWorkspaceModuleId[] = [
+ "navigator",
+ "explorer",
+ "workspace-notes",
+ "spectrum-tags",
+ "asset-library",
+ "import-station",
+ "task-center",
+ "batch-processor",
+ "inspector",
+]
 
 export interface VaultWorkspaceState {
  query: string
@@ -9,7 +32,12 @@ export interface VaultWorkspaceState {
  filterKind: "all" | VaultAssetKind
  source: "all" | "local" | "drive" | "generated" | "project" | "imported"
  sort: VaultWorkspaceSort
+ special: "active" | "inbox" | "favorites" | "archive" | "trash"
  viewMode: VaultWorkspaceViewMode
+ density: VaultWorkspaceDensity
+ arrangeMode: boolean
+ visibleModules: VaultWorkspaceModuleId[]
+ moduleOrder: VaultWorkspaceModuleId[]
 }
 
 const STORAGE_KEY = "vt_creator_vault_workspace_v1"
@@ -20,7 +48,12 @@ export const DEFAULT_VAULT_WORKSPACE_STATE: VaultWorkspaceState = {
  filterKind: "all",
  source: "all",
  sort: "updated-desc",
+ special: "active",
  viewMode: "grid",
+ density: "comfortable",
+ arrangeMode: false,
+ visibleModules: [...DEFAULT_VAULT_MODULE_ORDER],
+ moduleOrder: [...DEFAULT_VAULT_MODULE_ORDER],
 }
 
 const canUseStorage = () => typeof window !== "undefined" && typeof localStorage !== "undefined"
@@ -31,9 +64,18 @@ export const readVaultWorkspaceState = (): VaultWorkspaceState => {
   const raw = localStorage.getItem(STORAGE_KEY)
   if (!raw) return DEFAULT_VAULT_WORKSPACE_STATE
   const parsed = JSON.parse(raw) as Partial<VaultWorkspaceState>
+  const visibleModules = Array.isArray(parsed.visibleModules)
+   ? parsed.visibleModules.filter((id): id is VaultWorkspaceModuleId => DEFAULT_VAULT_MODULE_ORDER.includes(id as VaultWorkspaceModuleId))
+   : [...DEFAULT_VAULT_MODULE_ORDER]
+  const storedOrder = Array.isArray(parsed.moduleOrder)
+   ? parsed.moduleOrder.filter((id): id is VaultWorkspaceModuleId => DEFAULT_VAULT_MODULE_ORDER.includes(id as VaultWorkspaceModuleId))
+   : []
+  const moduleOrder = [...storedOrder, ...DEFAULT_VAULT_MODULE_ORDER.filter((id) => !storedOrder.includes(id))]
   return {
    ...DEFAULT_VAULT_WORKSPACE_STATE,
    ...parsed,
+   visibleModules,
+   moduleOrder,
   }
  } catch {
   return DEFAULT_VAULT_WORKSPACE_STATE

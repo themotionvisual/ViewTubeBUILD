@@ -18,51 +18,51 @@
 - [x] RH-A013 Spectrum Tags basics exist in PR #426.
 - [x] RH-A014 Base Import Station exists in PR #426.
 - [x] RH-A015 Base multi-select/Batch Processor exists in PR #426.
-- [ ] RH-A016 Add Shift range selection.
-- [ ] RH-A017 Reconcile Import Station with direct-vs-staged contract.
-- [ ] RH-A018 Use current media-player primitives where appropriate.
+- [x] RH-A016 Add Shift range selection.
+- [x] RH-A017 Reconcile Import Station with direct-vs-staged contract.
+- [x] RH-A018 Use current media-player primitives where appropriate.
 - [ ] RH-A019 Run/repair tests, build and browser verification on current main baseline.
 
 ## Lane B — interaction / organization
-- [ ] RH-B020 Space Quick Look.
-- [ ] RH-B021 Escape close contract.
-- [ ] RH-B022 Cmd/Ctrl+K Vault command/search.
-- [ ] RH-B023 Cmd/Ctrl+G selected-assets Project/ContentBuild handoff.
-- [ ] RH-B024 Split-pane explorer.
-- [ ] RH-B025 Timeline view.
-- [ ] RH-B026 Smart Collections.
-- [ ] RH-B027 Favorites/Inbox/Archive/Trash.
+- [x] RH-B020 Space Quick Look.
+- [x] RH-B021 Escape close contract.
+- [x] RH-B022 Cmd/Ctrl+K Vault command/search.
+- [x] RH-B023 Cmd/Ctrl+G selected-assets Project/ContentBuild handoff.
+- [x] RH-B024 Split-pane explorer.
+- [x] RH-B025 Timeline view.
+- [x] RH-B026 Smart Collections.
+- [x] RH-B027 Favorites/Inbox/Archive/Trash.
 - [ ] RH-B028 Arrange Mode/module reorder.
 - [ ] RH-B029 Module visibility preferences.
 - [ ] RH-B030 Workspace layout density preference.
-- [ ] RH-B031 Saved scratchpad/checklist panels.
+- [x] RH-B031 Saved scratchpad/checklist panels. (Scratchpads complete; checklist expansion can build on same workspace store)
 
 ## Lane C — intake jobs
 - [ ] RH-C040 Global workspace drag/drop.
 - [ ] RH-C041 File type/MIME/size extraction.
 - [ ] RH-C042 Image dimension extraction.
 - [ ] RH-C043 Video duration/resolution extraction.
-- [ ] RH-C044 Video thumbnail frame extraction.
+- [x] RH-C044 Video thumbnail frame extraction.
 - [ ] RH-C045 Direct import path.
-- [ ] RH-C046 Editable staged intake drafts.
-- [ ] RH-C047 Content hash/duplicate preflight.
+- [x] RH-C046 Editable staged intake drafts.
+- [x] RH-C047 Content hash/duplicate preflight.
 - [ ] RH-C048 EXIF metadata task.
 - [ ] RH-C049 Vision/suggested-tag task.
 - [ ] RH-C050 Transcript task.
 - [ ] RH-C051 Proxy derivative task.
-- [ ] RH-C052 Background task center/retry/error.
+- [x] RH-C052 Background task center/retry/error.
 
 ## Lane D — versions/captions/dependencies
-- [ ] RH-D060 Version carousel.
-- [ ] RH-D061 Detach version preserving lineage.
-- [ ] RH-D062 Lineage/usage/rights inspector.
-- [ ] RH-D063 Caption artifact editor.
-- [ ] RH-D064 SRT/VTT export.
-- [ ] RH-D065 Transcript→Script derivative.
-- [ ] RH-D066 Selected assets→new Project/ContentBuild.
-- [ ] RH-D067 Attach selected assets→existing Project.
+- [x] RH-D060 Version carousel.
+- [x] RH-D061 Detach version preserving lineage.
+- [x] RH-D062 Lineage/usage/rights inspector.
+- [x] RH-D063 Caption artifact editor.
+- [x] RH-D064 SRT/VTT export.
+- [x] RH-D065 Transcript→Script derivative.
+- [x] RH-D066 Selected assets→new Project/ContentBuild.
+- [x] RH-D067 Attach selected assets→existing Project.
 - [ ] RH-D068 Dependency/readiness projection.
-- [ ] RH-D069 Manifest JSON export.
+- [x] RH-D069 Manifest JSON export.
 - [ ] RH-D070 Factual package/storage sizing.
 
 ## Lane E — Projects

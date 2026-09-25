@@ -36,6 +36,7 @@ export interface VaultAssetSearchInput {
  tagMode?: "all" | "any"
  source?: VaultAsset["source"] | null
  sort?: "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
+ special?: "active" | "inbox" | "favorites" | "archive" | "trash" | null
  limit?: number
 }
 
@@ -58,6 +59,16 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
    if (input.kind != null && asset.kind !== input.kind) return false
    if (input.generationId != null && asset.generationId !== input.generationId) return false
    if (input.source != null && asset.source !== input.source) return false
+   const metadata = asset.metadata || {}
+   if (input.special === "inbox") {
+    if (metadata.archivedAt || metadata.trashedAt) return false
+    const needsAttention = metadata.needsAttention === true || !asset.projectName || !(asset.tags || []).length
+    if (!needsAttention) return false
+   }
+   if (input.special === "favorites" && metadata.favorite !== true) return false
+   if (input.special === "archive" && !metadata.archivedAt) return false
+   if (input.special === "trash" && !metadata.trashedAt) return false
+   if (input.special === "active" && (metadata.archivedAt || metadata.trashedAt)) return false
    if (tags.length) {
     const assetTags = (asset.tags || []).map((tag) => String(tag).toLowerCase())
     const matchesTags = tagMode === "any"
@@ -96,6 +107,14 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
  return sorted.slice(0, limit)
 }
 
+export const findVaultDuplicateByHash = (contentHash: string): VaultAsset | null => {
+ const normalized = contentHash.trim().toLowerCase()
+ if (!normalized) return null
+ return readAssets().find((asset) => (
+  String(asset.metadata?.contentHash || "").trim().toLowerCase() === normalized
+ )) || null
+}
+
 export const addVaultAsset = (
  input: Omit<VaultAsset, "id" | "createdAt" | "updatedAt">,
 ): VaultAsset => {
@@ -126,6 +145,27 @@ export const updateVaultAsset = (
  }
  writeAssets(assets.map((asset) => (asset.id === id ? updated : asset)))
  return updated
+}
+
+export const setVaultAssetState = (
+ id: string,
+ input: { favorite?: boolean; archived?: boolean; trashed?: boolean },
+): VaultAsset | null => {
+ const existing = readAssets().find((asset) => asset.id === id)
+ if (!existing) return null
+ const metadata = { ...(existing.metadata || {}) }
+
+ if (typeof input.favorite === "boolean") metadata.favorite = input.favorite
+ if (typeof input.archived === "boolean") {
+  if (input.archived) metadata.archivedAt = Date.now()
+  else delete metadata.archivedAt
+ }
+ if (typeof input.trashed === "boolean") {
+  if (input.trashed) metadata.trashedAt = Date.now()
+  else delete metadata.trashedAt
+ }
+
+ return updateVaultAsset(id, { metadata })
 }
 
 export const upsertVaultAsset = (
@@ -184,6 +224,7 @@ export const createLocalVaultAsset = (input: {
  projectName?: string | null
  toolId?: SuperToolId | null
  url?: string | null
+ previewUrl?: string | null
  mimeType?: string | null
  tags?: string[]
  metadata?: Record<string, unknown>
@@ -199,7 +240,37 @@ export const createLocalVaultAsset = (input: {
   driveFileId: null,
   folderId: null,
   url: input.url || null,
-  previewUrl: input.url || null,
+  previewUrl: input.previewUrl || input.url || null,
+  mimeType: input.mimeType || null,
+  tags: input.tags || [],
+  metadata: input.metadata || {},
+ })
+
+
+export const createImportedVaultAsset = (input: {
+ name: string
+ kind: VaultAssetKind
+ projectId?: string | null
+ projectName?: string | null
+ toolId?: SuperToolId | null
+ url?: string | null
+ previewUrl?: string | null
+ mimeType?: string | null
+ tags?: string[]
+ metadata?: Record<string, unknown>
+}): VaultAsset =>
+ addVaultAsset({
+  name: input.name,
+  kind: input.kind,
+  source: "imported",
+  projectId: input.projectId || null,
+  projectName: input.projectName || null,
+  toolId: input.toolId || null,
+  generationId: null,
+  driveFileId: null,
+  folderId: null,
+  url: input.url || null,
+  previewUrl: input.previewUrl || input.url || null,
   mimeType: input.mimeType || null,
   tags: input.tags || [],
   metadata: input.metadata || {},
