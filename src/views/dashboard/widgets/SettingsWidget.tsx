@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react"
+import { useUnifiedAccount } from "../../../context/UnifiedAccountContext"
+import { getCurrentEntitlement } from "../../../services/billingEntitlement"
 import { Bot, CreditCard, Database, LayoutGrid, Settings2, UserCircle2 } from "lucide-react"
 import type { CommonWidgetProps } from "../types"
 import type { DashboardData } from "../useDashboardData"
@@ -77,12 +79,14 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
 }) => {
   const [page, setPage] = useState<SettingsPage>("dashboard")
   const [resetArmed, setResetArmed] = useState(false)
-  const isConnected = data.authState.isAuthenticated
+  const account = useUnifiedAccount()
+  const entitlement = getCurrentEntitlement()
+  const isConnected = account.snapshot.google.status === "connected" || data.authState.isAuthenticated
   const hidden = Math.max(0, dashboardControls?.hiddenWidgetCount ?? 0)
   const total = Math.max(0, dashboardControls?.totalWidgetCount ?? 68)
   const visible = Math.max(0, total - hidden)
   const model = readLocal("GEMINI_MODEL", "gemini-3.1-flash-lite")
-  const planId = readLocal("vt_last_plan", "basic").toUpperCase()
+  const planId = String(entitlement.subscriptionPlanId || "basic").toUpperCase()
   const lastSyncTimestamp = data.lastSyncComplete ? Date.parse(data.lastSyncComplete) : null
   const lastSync = data.formatRelativeTime(Number.isFinite(lastSyncTimestamp) ? lastSyncTimestamp : null)
   const syncAgeMs = Number.isFinite(lastSyncTimestamp) ? Date.now() - Number(lastSyncTimestamp) : null
