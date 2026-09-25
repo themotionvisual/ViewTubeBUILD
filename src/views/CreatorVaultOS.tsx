@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import {
  Archive,
  Database,
@@ -26,7 +26,7 @@ import {
  SubToolboxVaultAsset,
 } from "../components/subtoolbox/SubToolboxPrimitives"
 import {
- createLocalVaultAsset,
+ createImportedVaultAsset,
  listVaultAssets,
  searchVaultAssets,
  updateVaultAsset,
@@ -37,16 +37,10 @@ import {
  type VaultWorkspaceSort,
  type VaultWorkspaceViewMode,
 } from "../services/vaultWorkspaceState"
+import { createPendingVaultImport, type PendingVaultImport } from "../services/vaultImport"
+import { resolveVaultSelection } from "../services/vaultSelection"
+import { SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
 import type { VaultAsset, VaultAssetKind } from "../types"
-
-type PendingImport = {
- id: string
- name: string
- kind: VaultAssetKind
- mimeType: string | null
- size: number
- tags: string[]
-}
 
 const CORE_TAGS = [
  "B-Roll",
@@ -60,16 +54,6 @@ const CORE_TAGS = [
  "SFX",
  "Thumbnail",
 ] as const
-
-const kindFromFile = (file: File): VaultAssetKind => {
- if (file.type.startsWith("image/")) return "image"
- if (file.type.startsWith("video/")) return "video"
- if (file.type.startsWith("audio/")) return "audio"
- if (file.type.startsWith("font/")) return "font"
- if (file.type.includes("json")) return "document"
- if (file.type.startsWith("text/") || file.type.includes("pdf")) return "document"
- return "other"
-}
 
 const vaultCardKind = (asset: VaultAsset): "landscape" | "portrait" | "audio" | "document" => {
  if (asset.kind === "audio") return "audio"
@@ -94,12 +78,20 @@ const CreatorVaultOS: React.FC = () => {
  const [sort, setSort] = useState<VaultWorkspaceSort>(initialWorkspace.sort)
  const [viewMode, setViewMode] = useState<VaultWorkspaceViewMode>(initialWorkspace.viewMode)
  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([])
+ const [selectionAnchorId, setSelectionAnchorId] = useState<string | null>(null)
+ const selectionShiftRef = useRef(false)
  const [batchTag, setBatchTag] = useState("")
  const [batchPrefix, setBatchPrefix] = useState("")
  const [batchProject, setBatchProject] = useState("")
- const [pending, setPending] = useState<PendingImport[]>([])
+ const [pending, setPending] = useState<PendingVaultImport[]>([])
+ const [importMode, setImportMode] = useState<"direct" | "staged">("staged")
  const [importProject, setImportProject] = useState("")
  const [importTags, setImportTags] = useState<string[]>(["imported"])
+ const [quickLookCurrent, setQuickLookCurrent] = useState(0)
+ const [quickLookPlaying, setQuickLookPlaying] = useState(false)
+ const [quickLookMuted, setQuickLookMuted] = useState(false)
+ const [quickLookVolume, setQuickLookVolume] = useState(0.8)
+ const [quickLookSpeed, setQuickLookSpeed] = useState(1)
 
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
  const visibleAssets = useMemo(() => {
@@ -135,27 +127,8 @@ const CreatorVaultOS: React.FC = () => {
   [allAssets],
  )
 
- const stageFiles = (files: FileList | null) => {
-  if (!files?.length) return
-  const staged = Array.from(files).map<PendingImport>((file) => ({
-   id: crypto.randomUUID(),
-   name: file.name,
-   kind: kindFromFile(file),
-   mimeType: file.type || null,
-   size: file.size,
-   tags: [...importTags],
-  }))
-  setPending((current) => [...current, ...staged])
- }
-
- const toggleImportTag = (tag: string) => {
-  setImportTags((current) => (
-   current.includes(tag) ? current.filter((value) => value !== tag) : [...current, tag]
-  ))
- }
-
- const ingestOne = (item: PendingImport) => {
-  createLocalVaultAsset({
+ const createImportedRecord = (item: PendingVaultImport, mode: "direct" | "staged") => {
+  return createImportedVaultAsset({
    name: item.name,
    kind: item.kind,
    projectName: importProject.trim() || null,
@@ -165,8 +138,30 @@ const CreatorVaultOS: React.FC = () => {
    metadata: {
     byteSize: item.size,
     ingestSource: "vault-import-station",
+    importMode: mode,
    },
   })
+ }
+
+ const stageFiles = (files: FileList | null) => {
+  if (!files?.length) return
+  const prepared = Array.from(files).map((file) => createPendingVaultImport(file, importTags))
+  if (importMode === "direct") {
+   prepared.forEach((item) => createImportedRecord(item, "direct"))
+   setRefreshTick((value) => value + 1)
+   return
+  }
+  setPending((current) => [...current, ...prepared])
+ }
+
+ const toggleImportTag = (tag: string) => {
+  setImportTags((current) => (
+   current.includes(tag) ? current.filter((value) => value !== tag) : [...current, tag]
+  ))
+ }
+
+ const ingestOne = (item: PendingVaultImport) => {
+  createImportedRecord(item, "staged")
   setPending((current) => current.filter((candidate) => candidate.id !== item.id))
   setRefreshTick((value) => value + 1)
  }
@@ -213,18 +208,7 @@ const CreatorVaultOS: React.FC = () => {
 
  const ingestAll = () => {
   pending.forEach((item) => {
-   createLocalVaultAsset({
-    name: item.name,
-    kind: item.kind,
-    projectName: importProject.trim() || null,
-    toolId: "creator-vault-os",
-    mimeType: item.mimeType,
-    tags: item.tags,
-    metadata: {
-     byteSize: item.size,
-     ingestSource: "vault-import-station",
-    },
-   })
+   createImportedRecord(item, "staged")
   })
   setPending([])
   setRefreshTick((value) => value + 1)
@@ -353,11 +337,22 @@ const CreatorVaultOS: React.FC = () => {
             title={asset.name}
             icon={assetIcon(asset)}
             selected={selectedAssetIds.includes(asset.id)}
-            onSelectedChange={(selected) => setSelectedAssetIds((current) => (
-             selected
-              ? Array.from(new Set([...current, asset.id]))
-              : current.filter((id) => id !== asset.id)
-            ))}
+            onClickCapture={(event) => {
+             selectionShiftRef.current = event.shiftKey
+            }}
+            onSelectedChange={(selected) => {
+             const next = resolveVaultSelection({
+              visibleIds: visibleAssets.map((item) => item.id),
+              selectedIds: selectedAssetIds,
+              clickedId: asset.id,
+              nextSelected: selected,
+              anchorId: selectionAnchorId,
+              shiftKey: selectionShiftRef.current,
+             })
+             selectionShiftRef.current = false
+             setSelectedAssetIds(next.selectedIds)
+             setSelectionAnchorId(next.anchorId)
+            }}
             tags={(
              <div className="flex flex-wrap gap-1">
               {(asset.tags || []).slice(0, 5).map((tag) => (
@@ -389,13 +384,25 @@ const CreatorVaultOS: React.FC = () => {
        isOpenInitial
        persistenceId="vault-import-station"
       >
+       <div className="mb-4">
+        <SubToolboxSegmentedToggle
+         level="l1"
+         ariaLabel="Import mode"
+         value={importMode}
+         onValueChange={(value) => setImportMode(value as "direct" | "staged")}
+         options={[
+          { value: "direct", label: "DIRECT" },
+          { value: "staged", label: "STAGED" },
+         ]}
+        />
+       </div>
        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(260px,0.9fr)]">
         <SubToolboxFileTarget
          level="l1"
          multiple
          minHeight={180}
          icon={<UploadCloud />}
-         label="DROP OR CHOOSE A BATCH"
+         label={importMode === "direct" ? "DROP OR CHOOSE · IMPORT DIRECTLY" : "DROP OR CHOOSE · REVIEW IN STAGING"}
          onFiles={stageFiles}
         />
         <div className="flex min-w-0 flex-col gap-3">
@@ -538,6 +545,39 @@ const CreatorVaultOS: React.FC = () => {
       >
        {selectedAsset ? (
         <div className="flex flex-col gap-3">
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Quick Look</div>
+          {selectedAsset.url || selectedAsset.previewUrl ? (
+           <SubToolboxMediaPlayer
+            level="l1"
+            title="Quick Look"
+            meta={`${selectedAsset.kind.toUpperCase()} · ${selectedAsset.projectName || "UNASSIGNED"}`}
+            src={selectedAsset.kind === "video" || selectedAsset.kind === "audio"
+             ? selectedAsset.url || selectedAsset.previewUrl || undefined
+             : undefined}
+            poster={selectedAsset.kind === "image"
+             ? selectedAsset.previewUrl || selectedAsset.url || undefined
+             : selectedAsset.previewUrl || undefined}
+            current={quickLookCurrent}
+            duration={Number(selectedAsset.metadata?.durationSeconds || selectedAsset.metadata?.duration || 60)}
+            playing={quickLookPlaying}
+            muted={quickLookMuted}
+            volume={quickLookVolume}
+            speed={quickLookSpeed}
+            onCurrentChange={setQuickLookCurrent}
+            onPlayingChange={setQuickLookPlaying}
+            onMutedChange={setQuickLookMuted}
+            onVolumeChange={setQuickLookVolume}
+            onSpeedChange={setQuickLookSpeed}
+           />
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="empty"
+            message="This Vault record does not have a preview source yet."
+           />
+          )}
+         </div>
          <div>
           <div className="text-xs font-black uppercase opacity-60">Name</div>
           <div className="text-lg font-black uppercase">{selectedAsset.name}</div>
