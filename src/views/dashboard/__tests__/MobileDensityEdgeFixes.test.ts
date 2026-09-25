@@ -13,15 +13,24 @@ const directorCss = readFileSync(new URL("../widgets/video-director/videoDirecto
 const shellSource = readFileSync(new URL("../WidgetShell.tsx", import.meta.url), "utf8")
 const referenceSource = readFileSync(new URL("../widgets/UIReferenceLibraryWidget.tsx", import.meta.url), "utf8")
 const assetCss = readFileSync(new URL("../widgets/VideoAssetEngineWidget.css", import.meta.url), "utf8")
+const legacy = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
+const flightCss = readFileSync(new URL("../widgets/FlightCheckWidget.css", import.meta.url), "utf8")
 
 describe("mobile widget density and edge contracts", () => {
-  it("does not reserve an invisible mobile scroll gutter and reclaims extra right-side space", () => {
+  it("does not reserve an invisible mobile scroll gutter and does not re-clamp cells in legacy CSS", () => {
     expect(scrollbar).toContain("@media (pointer: coarse), (max-width: 767px)")
     expect(scrollbar).toContain("padding-inline: var(--widget-shadow-clearance)")
     expect(mobile).toContain("scrollbar-gutter: auto")
-    expect(mobile).toContain("--vt-mobile-reclaim-left: 12px")
-    expect(mobile).toContain("--vt-mobile-reclaim-right: 32px")
-    expect(mobile).toContain("width: calc(100% + var(--vt-mobile-reclaim-left) + var(--vt-mobile-reclaim-right))")
+    expect(mobile).toContain("--vt-mobile-widget-gutter: 4px")
+    expect(mobile).toContain("width: calc(100% + 24px)")
+    expect(legacy).not.toContain("max-width: calc(100vw - 32px)")
+    expect(legacy).not.toContain("margin-right: 8px")
+  })
+
+  it("removes legacy horizontal clipping that chops full-bleed bands, glows and shadows", () => {
+    expect(legacy).not.toContain("overflow-x: hidden !important")
+    expect(mobile).toContain("--vt-widget-edge-safe")
+    expect(mobile).toContain(".vt-widget-shadow-safe")
   })
 
   it("uses full-bleed interior bands for About and Oracle", () => {
@@ -30,8 +39,11 @@ describe("mobile widget density and edge contracts", () => {
     expect(oracle).not.toContain("text-overflow: ellipsis")
   })
 
-  it("lets image template labels wrap instead of collide", () => {
+  it("lets header toggle labels wrap instead of collide", () => {
     expect(imageSource).toContain("image-generator-template-toggle")
+    expect(mobile).toContain(".widget-header-toggle button")
+    expect(mobile).toContain("white-space: normal")
+    expect(mobile).toContain("text-overflow: clip")
   })
 
   it("keeps the mobile control deck visible while a widget is collapsed", () => {
@@ -41,7 +53,15 @@ describe("mobile widget density and edge contracts", () => {
 
   it("provides a full-bleed utility for bands and horizontal rails", () => {
     expect(mobile).toContain(".vt-widget-full-bleed")
+    expect(mobile).toContain(".widget-section.is-full")
     expect(assetCss).toContain("vt-asset-engine-slot-panel")
+    expect(assetCss).toContain("margin-inline:calc(-1 * var(--widget-content-inset))")
+  })
+
+  it("keeps Publishing Command full width and compact", () => {
+    expect(flightCss).toContain(".vt-publishing-command__manual-list")
+    expect(flightCss).toContain("min-height:24px")
+    expect(flightCss).toContain("margin-inline:calc(-1 * var(--widget-content-inset))")
   })
 
   it("uses canonical text field primitives in Video Uploader", () => {
