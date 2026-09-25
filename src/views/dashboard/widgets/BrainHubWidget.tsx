@@ -330,6 +330,7 @@ export const BrainHubWidget: React.FC<BrainHubWidgetProps> = ({ data: _data, ...
 
  const headerContent = (
   <WidgetHeaderToggle
+   className="brain-hub-header-toggle"
    label="Brain workspace"
    value={mainPage}
    items={MAIN_PAGES}
