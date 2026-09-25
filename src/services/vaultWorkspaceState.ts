@@ -32,7 +32,7 @@ export interface VaultWorkspaceState {
  filterKind: "all" | VaultAssetKind
  source: "all" | "local" | "drive" | "generated" | "project" | "imported"
  sort: VaultWorkspaceSort
- special: "active" | "inbox" | "favorites" | "archive" | "trash"
+ special: "active" | "recent" | "generated" | "inbox" | "favorites" | "archive" | "trash"
  filterLifecycle: string
  filterMimeType: string
  filterMinWidth: string
