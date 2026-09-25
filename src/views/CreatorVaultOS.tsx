@@ -185,6 +185,10 @@ const CreatorVaultOS: React.FC = () => {
   () => selectedAsset ? getAssetLineage(selectedAsset.id) : [],
   [selectedAsset, refreshTick],
  )
+ const selectedUsage = useMemo(
+  () => selectedAsset ? getVaultAssetUsage(selectedAsset.id) : [],
+  [selectedAsset, refreshTick],
+ )
 
  const availableTags = useMemo(
   () => Array.from(new Set([...CORE_TAGS, ...allAssets.flatMap((asset) => asset.tags || [])]))
@@ -1180,6 +1184,44 @@ const CreatorVaultOS: React.FC = () => {
             level="l1"
             state="empty"
             message="No parent lineage is recorded for this asset."
+           />
+          )}
+         </div>
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Usage</div>
+          {selectedUsage.length ? (
+           <div className="flex flex-col gap-2">
+            {selectedUsage.map((usage) => (
+             <div key={usage.contentBuildId} className="text-xs font-bold">
+              <div className="font-black uppercase">{usage.projectName || usage.contentBuildId}</div>
+              <div className="opacity-60">
+               {usage.stage.toUpperCase()}
+               {usage.selectedSlots.length ? ` · SELECTED: ${usage.selectedSlots.join(", ").toUpperCase()}` : ""}
+              </div>
+             </div>
+            ))}
+           </div>
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="empty"
+            message="This asset is not attached to a ContentBuild yet."
+           />
+          )}
+         </div>
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Rights</div>
+          {selectedAsset.metadata?.license || selectedAsset.metadata?.rights || selectedAsset.metadata?.copyright ? (
+           <div className="flex flex-col gap-1 text-xs font-bold">
+            {selectedAsset.metadata?.license ? <div>LICENSE · {String(selectedAsset.metadata.license)}</div> : null}
+            {selectedAsset.metadata?.rights ? <div>RIGHTS · {String(selectedAsset.metadata.rights)}</div> : null}
+            {selectedAsset.metadata?.copyright ? <div>COPYRIGHT · {String(selectedAsset.metadata.copyright)}</div> : null}
+           </div>
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="empty"
+            message="No rights or license metadata is recorded for this asset."
            />
           )}
          </div>
