@@ -4,7 +4,7 @@ import '../styles/toolbox-entry.css';
 import { CustomIcon } from './CustomIcon';
 import { getToolboxPaletteColors } from '../styles/toolboxPalette';
 import { AnimatedToggleIcon, hexToRgba } from './ToolboxUISystem';
-import { Cloud, Upload, Zap } from 'lucide-react';
+import { ChevronDown, Cloud, Upload, Zap } from 'lucide-react';
 import {
   ToolboxHeaderCollapseButton,
   ToolboxHeaderHelpButton,
