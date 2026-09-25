@@ -38,6 +38,7 @@ import {
  type VaultWorkspaceViewMode,
 } from "../services/vaultWorkspaceState"
 import { createPendingVaultImport, type PendingVaultImport } from "../services/vaultImport"
+import { extractVaultFileMetadata } from "../services/vaultFileMetadata"
 import { resolveVaultSelection } from "../services/vaultSelection"
 import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
 import type { VaultAsset, VaultAssetKind } from "../types"
@@ -136,6 +137,7 @@ const CreatorVaultOS: React.FC = () => {
    mimeType: item.mimeType,
    tags: item.tags,
    metadata: {
+    ...item.metadata,
     byteSize: item.size,
     ingestSource: "vault-import-station",
     importMode: mode,
@@ -143,9 +145,16 @@ const CreatorVaultOS: React.FC = () => {
   })
  }
 
- const stageFiles = (files: FileList | null) => {
+ const stageFiles = async (files: FileList | null) => {
   if (!files?.length) return
-  const prepared = Array.from(files).map((file) => createPendingVaultImport(file, importTags))
+  const prepared = await Promise.all(Array.from(files).map(async (file) => (
+   createPendingVaultImport(
+    file,
+    importTags,
+    crypto.randomUUID(),
+    await extractVaultFileMetadata(file),
+   )
+  )))
   if (importMode === "direct") {
    prepared.forEach((item) => createImportedRecord(item, "direct"))
    setRefreshTick((value) => value + 1)
@@ -449,6 +458,12 @@ const CreatorVaultOS: React.FC = () => {
            <div className="truncate text-sm font-black uppercase">{item.name}</div>
            <div className="text-xs font-bold opacity-60">
             {item.kind.toUpperCase()} · {(item.size / 1024 / 1024).toFixed(2)} MB
+            {typeof item.metadata.width === "number" && typeof item.metadata.height === "number"
+             ? ` · ${item.metadata.width}×${item.metadata.height}`
+             : ""}
+            {typeof item.metadata.durationSeconds === "number"
+             ? ` · ${item.metadata.durationSeconds.toFixed(1)}s`
+             : ""}
            </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -610,6 +625,27 @@ const CreatorVaultOS: React.FC = () => {
            ))}
           </div>
          </div>
+         {(typeof selectedAsset.metadata?.width === "number"
+          || typeof selectedAsset.metadata?.durationSeconds === "number") ? (
+          <div className="grid grid-cols-2 gap-3">
+           {typeof selectedAsset.metadata?.width === "number" && typeof selectedAsset.metadata?.height === "number" ? (
+            <div>
+             <div className="text-xs font-black uppercase opacity-60">Dimensions</div>
+             <div className="text-sm font-black uppercase">
+              {String(selectedAsset.metadata.width)}×{String(selectedAsset.metadata.height)}
+             </div>
+            </div>
+           ) : null}
+           {typeof selectedAsset.metadata?.durationSeconds === "number" ? (
+            <div>
+             <div className="text-xs font-black uppercase opacity-60">Duration</div>
+             <div className="text-sm font-black uppercase">
+              {Number(selectedAsset.metadata.durationSeconds).toFixed(1)}s
+             </div>
+            </div>
+           ) : null}
+          </div>
+         ) : null}
          <div>
           <div className="text-xs font-black uppercase opacity-60">Updated</div>
           <div className="text-sm font-bold">{new Date(selectedAsset.updatedAt).toLocaleString()}</div>
