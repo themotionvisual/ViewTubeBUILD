@@ -15,6 +15,7 @@ Non-negotiable summary:
 - Use FIT, ADAPT, or SCROLL composition behavior; do not create ad-hoc per-widget mobile geometry.
 - Prefer `minmax(0, 1fr)` or container-safe minimum tracks for nested grids.
 - Mobile changes composition, not ViewTube primitives, colors, typography, borders, radii, shadows, or control states.
+- Preserve the canonical inset/full-bleed/shadow-safe content zones; never reserve a hidden right gutter or clip edge-to-edge bands/glows.
 - W−/W+ are disabled/hidden on phone; H−/H+ remain active.
 - Verify 320, 375, 390, 430, 767px and a >=768px desktop restoration case.
 - Fix the highest shared ownership layer and do not add new `!important` rules.
