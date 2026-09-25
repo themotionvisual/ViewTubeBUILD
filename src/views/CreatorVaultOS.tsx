@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import {
  Archive,
  Database,
@@ -97,6 +98,10 @@ import {
  type VaultCaptionLine,
 } from "../services/vaultCaptions"
 import { getVaultProjectReadiness } from "../services/vaultReadiness"
+import {
+ createVaultAssetHandoff,
+ getVaultAssetToolTargets,
+} from "../services/vaultToolLauncher"
 import type { VaultAsset, VaultAssetKind } from "../types"
 
 const VAULT_MODULE_LABELS: Record<VaultWorkspaceModuleId, string> = {
@@ -145,6 +150,7 @@ const assetIcon = (asset: VaultAsset) => {
 }
 
 const CreatorVaultOS: React.FC = () => {
+ const navigate = useNavigate()
  const { brain, addProject, updateProject, setActiveProject, channelIdentity } = useBrain()
  const initialWorkspace = useMemo(() => readVaultWorkspaceState(), [])
  const [refreshTick, setRefreshTick] = useState(0)
@@ -258,6 +264,10 @@ const CreatorVaultOS: React.FC = () => {
    assets: allAssets.filter((asset) => asset.projectId === selectedProject.id),
   }) : null,
   [selectedProject, allAssets, refreshTick],
+ )
+ const selectedToolTargets = useMemo(
+  () => selectedAsset ? getVaultAssetToolTargets(selectedAsset.kind) : [],
+  [selectedAsset],
  )
  const activeCaptionAsset = useMemo(() => {
   if (!selectedAsset) return null
@@ -521,6 +531,18 @@ const CreatorVaultOS: React.FC = () => {
   order: moduleOrder.indexOf(id),
   display: isModuleVisible(id) ? undefined : "none",
  })
+
+ const sendSelectedAssetToTool = (targetToolId: string) => {
+  if (!selectedAsset) return
+  const result = createVaultAssetHandoff({
+   asset: selectedAsset,
+   targetToolId,
+   contentBuildId: selectedProject?.contentBuildId || null,
+   projectId: selectedProject?.id || selectedAsset.projectId || null,
+   channelId: channelIdentity.channelId || null,
+  })
+  navigate(result.route)
+ }
 
  const retryTask = (taskId: string) => {
   const task = retryVaultTask(taskId)
@@ -1811,6 +1833,28 @@ const CreatorVaultOS: React.FC = () => {
             level="l1"
             state="empty"
             message="No parent lineage is recorded for this asset."
+           />
+          )}
+         </div>
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Send To</div>
+          {selectedToolTargets.length ? (
+           <div className="flex flex-wrap gap-2">
+            {selectedToolTargets.map((target) => (
+             <SubToolboxInnerActionButton
+              key={target.id}
+              label={target.label}
+              iconName="link"
+              tone="blue"
+              onClick={() => sendSelectedAssetToTool(target.id)}
+             />
+            ))}
+           </div>
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="empty"
+            message="No compatible ViewTube tools are registered for this asset type."
            />
           )}
          </div>
