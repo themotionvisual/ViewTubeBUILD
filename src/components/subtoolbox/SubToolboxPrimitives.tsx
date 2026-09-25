@@ -711,6 +711,14 @@ export const SubToolboxVideoSelector: React.FC<SubToolboxVideoSelectorProps> = (
   const rootRef = React.useRef<HTMLDivElement>(null)
   const [panelRect, setPanelRect] = React.useState<{ left: number; top: number; width: number } | null>(null)
   const selected = options.find((option) => option.value === value)
+  const titleSizeFor = (title: string) => {
+    const length = title.trim().length
+    if (length > 92) return "12px"
+    if (length > 72) return "13px"
+    if (length > 54) return "15px"
+    if (length > 38) return "17px"
+    return "20px"
+  }
   const filtered = React.useMemo(() => {
     const q = searchValue.trim().toLowerCase()
     if (!q) return options
@@ -777,7 +785,7 @@ export const SubToolboxVideoSelector: React.FC<SubToolboxVideoSelectorProps> = (
             {selected?.durationLabel ? <b>{selected.durationLabel}</b> : null}
           </span>
         </span>
-        <span className="vt-subtoolbox-video-selector-title">{selected?.title || placeholder}</span>
+        <span className="vt-subtoolbox-video-selector-title" style={{ ["--vt-video-title-size" as string]: titleSizeFor(selected?.title || placeholder) }}>{selected?.title || placeholder}</span>
         <span className="vt-subtoolbox-video-selector-chevron" aria-hidden="true">⌄</span>
       </button>
 
@@ -830,7 +838,7 @@ export const SubToolboxVideoSelector: React.FC<SubToolboxVideoSelectorProps> = (
                     {option.durationLabel ? <b>{option.durationLabel}</b> : null}
                   </span>
                 </span>
-                <span className="vt-subtoolbox-video-selector-title">{option.title}</span>
+                <span className="vt-subtoolbox-video-selector-title" style={{ ["--vt-video-title-size" as string]: titleSizeFor(option.title) }}>{option.title}</span>
               </button>
             ))}
             {filtered.length === 0 ? <div className="vt-subtoolbox-video-selector-empty">NO VIDEOS MATCH SEARCH</div> : null}
