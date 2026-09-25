@@ -936,16 +936,18 @@ const CreatorVaultOS: React.FC = () => {
                 </button>
                ))}
               </div>
-              <StandardInput
-               placeholder="+ TAG"
-               aria-label={`Add tag to ${asset.name}`}
-               onKeyDown={(event) => {
-                if (event.key !== "Enter") return
-                event.preventDefault()
-                addAssetTag(asset, event.currentTarget.value)
-                event.currentTarget.value = ""
-               }}
-              />
+              {selectedAssetIds.includes(asset.id) ? (
+               <StandardInput
+                placeholder="+ TAG"
+                aria-label={`Add tag to ${asset.name}`}
+                onKeyDown={(event) => {
+                 if (event.key !== "Enter") return
+                 event.preventDefault()
+                 addAssetTag(asset, event.currentTarget.value)
+                 event.currentTarget.value = ""
+                }}
+               />
+              ) : null}
              </div>
             )}
             notes={(
@@ -955,51 +957,57 @@ const CreatorVaultOS: React.FC = () => {
                 ? `${new Date(asset.createdAt).toLocaleString()} · ${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`
                 : `${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`}
               </div>
-              <SubToolboxSelect
-               value={asset.projectId || ""}
-               aria-label="Asset project assignment"
-               onChange={(event) => assignAssetToProject(asset, event.target.value)}
-              >
-               <option value="">UNASSIGNED</option>
-               {brain.projects.map((project) => (
-                <option key={project.id} value={project.id}>{project.name}</option>
-               ))}
-              </SubToolboxSelect>
-              <div className="grid grid-cols-2 gap-2">
-               <SubToolboxInnerActionButton
-                label={asset.metadata?.favorite === true ? "Unfavorite" : "Favorite"}
-                iconName="sparkles"
-                tone="orange"
-                onClick={() => toggleAssetFavorite(asset)}
-                aria-label="Toggle asset favorite"
-               />
-               <SubToolboxInnerActionButton
-                label="Archive"
-                iconName="archive"
-                tone="cyan"
-                onClick={() => archiveAsset(asset)}
-                aria-label="Archive asset"
-               />
-              </div>
-              <SubToolboxInput
-               type="file"
-               accept="image/*"
-               aria-label={`Replace preview for ${asset.name}`}
-               title="Replace Preview"
-               onChange={(event) => {
-                const file = event.currentTarget.files?.[0] || null
-                void replaceAssetPreview(asset, file)
-                event.currentTarget.value = ""
-               }}
-              />
-              <span className="text-[10px] font-black uppercase opacity-60">Replace Preview</span>
-              <SubToolboxTextArea
-               height="compact"
-               defaultValue={String(asset.metadata?.notes || "")}
-               placeholder="Add notes…"
-               aria-label={`Notes for ${asset.name}`}
-               onBlur={(event) => updateAssetNotes(asset, event.target.value)}
-              />
+              {selectedAssetIds.includes(asset.id) ? (
+               <>
+                <SubToolboxSelect
+                 value={asset.projectId || ""}
+                 aria-label="Asset project assignment"
+                 onChange={(event) => assignAssetToProject(asset, event.target.value)}
+                >
+                 <option value="">UNASSIGNED</option>
+                 {brain.projects.map((project) => (
+                  <option key={project.id} value={project.id}>{project.name}</option>
+                 ))}
+                </SubToolboxSelect>
+                <div className="grid grid-cols-2 gap-2">
+                 <SubToolboxInnerActionButton
+                  label={asset.metadata?.favorite === true ? "Unfavorite" : "Favorite"}
+                  iconName="sparkles"
+                  tone="orange"
+                  onClick={() => toggleAssetFavorite(asset)}
+                  aria-label="Toggle asset favorite"
+                 />
+                 <SubToolboxInnerActionButton
+                  label="Archive"
+                  iconName="archive"
+                  tone="cyan"
+                  onClick={() => archiveAsset(asset)}
+                  aria-label="Archive asset"
+                 />
+                </div>
+                <SubToolboxInput
+                 type="file"
+                 accept="image/*"
+                 aria-label={`Replace preview for ${asset.name}`}
+                 title="Replace Preview"
+                 onChange={(event) => {
+                  const file = event.currentTarget.files?.[0] || null
+                  void replaceAssetPreview(asset, file)
+                  event.currentTarget.value = ""
+                 }}
+                />
+                <span className="text-[10px] font-black uppercase opacity-60">Replace Preview</span>
+                <SubToolboxTextArea
+                 height="compact"
+                 defaultValue={String(asset.metadata?.notes || "")}
+                 placeholder="Add notes…"
+                 aria-label={`Notes for ${asset.name}`}
+                 onBlur={(event) => updateAssetNotes(asset, event.target.value)}
+                />
+               </>
+              ) : (
+               <div className="text-[10px] font-black uppercase opacity-50">SELECT TO EDIT DETAILS</div>
+              )}
              </div>
             )}
            />
