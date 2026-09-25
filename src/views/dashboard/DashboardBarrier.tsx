@@ -11,7 +11,7 @@ import "./widget-entry.css"
  * can reorder layers and restore desktop spans/heights over the phone contract.
  */
 export const DashboardBarrier: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="dashboard-barrier vtw-dashboard" style={{ isolation:"isolate", contain:"layout style paint" }}>
+  <div className="dashboard-barrier vtw-dashboard" style={{ isolation:"isolate", contain:"layout style" }}>
     {children}
   </div>
 )
