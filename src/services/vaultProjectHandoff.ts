@@ -1,3 +1,5 @@
+import { attachAssetToContentBuild } from "./asset-engine/ContentBuildRepository"
+import { initializeProjectContentIdentity } from "./projects/ProjectContentIdentityService"
 import type { Project } from "../types"
 
 export const buildVaultSelectionProjectDraft = (input: {
@@ -29,4 +31,23 @@ export const buildVaultSelectionProjectDraft = (input: {
    sourceVaultAssetNames: [...input.assetNames],
   },
  }
+}
+
+
+export const attachVaultAssetIdsToProject = (input: {
+ project: Project
+ assetIds: string[]
+ channelId?: string | null
+}) => {
+ const identity = initializeProjectContentIdentity(input.project, {
+  channelId: input.channelId || null,
+  sourceToolId: "creator-vault-os",
+ })
+ for (const assetId of Array.from(new Set(input.assetIds))) {
+  attachAssetToContentBuild(identity.contentBuildId, assetId, {
+   toolId: "creator-vault-os",
+   metadata: { source: "vault-existing-project-attachment" },
+  })
+ }
+ return identity
 }
