@@ -34,6 +34,7 @@ const CERTIFICATION_INTENT: Record<string, readonly [string, string, WidgetPerfo
   "goals-tracker": ["Track creator targets", "Update a goal", "light"],
   "keyword-engine": ["Discover search opportunities", "Analyze a keyword", "heavy"],
   "daily-oracle": ["Rank the highest-leverage creator action from current evidence", "Complete today’s move and extend the streak", "moderate"],
+  "flight-check": ["Show package-specific publishing readiness, blockers and tasks", "Clear the selected video/project package for publish", "moderate"],
   "ask-me": ["Answer a focused channel question", "Ask the Brain", "heavy"],
   "ai-journal": ["Capture creator context", "Add journal entry", "moderate"],
   "image-generator": ["Create campaign imagery", "Generate an image", "heavy"],
