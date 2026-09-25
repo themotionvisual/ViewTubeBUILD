@@ -12,8 +12,8 @@
 
 :where(.dashboard-barrier) .video-uploader-main {
   overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 2px;
+  overflow-x: visible;
+  padding-right: 0;
 }
 
 :where(.dashboard-barrier) .video-uploader-gantry {
@@ -359,8 +359,12 @@
   :where(.dashboard-barrier) .video-uploader-page-button{
     height:32px;
     min-height:32px;
-    padding-inline:4px;
-    font-size:11px;
+    padding-inline:2px;
+    font-size:13px;
+    line-height:.78;
+    white-space:normal;
+    overflow:hidden;
+    text-overflow:clip;
   }
   :where(.dashboard-barrier) .video-uploader-footer>.widget-split-button.is-large,
   :where(.dashboard-barrier) .video-uploader-footer>.widget-icon-button{
