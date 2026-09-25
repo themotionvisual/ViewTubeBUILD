@@ -21,6 +21,7 @@ import {
  SubToolboxAlphabeticalTag,
  SubToolboxFileTarget,
  SubToolboxSegmentedToggle,
+ SubToolboxSelect,
  SubToolboxSplitField,
  SubToolboxStatePanel,
  SubToolboxVaultAsset,
@@ -62,7 +63,10 @@ import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/s
 import { useBrain } from "../context/useBrain"
 import { initializeProjectContentIdentity } from "../services/projects/ProjectContentIdentityService"
 import { attachAssetToContentBuild } from "../services/asset-engine/ContentBuildRepository"
-import { buildVaultSelectionProjectDraft } from "../services/vaultProjectHandoff"
+import {
+ attachVaultAssetIdsToProject,
+ buildVaultSelectionProjectDraft,
+} from "../services/vaultProjectHandoff"
 import type { VaultAsset, VaultAssetKind } from "../types"
 
 const CORE_TAGS = [
@@ -92,7 +96,7 @@ const assetIcon = (asset: VaultAsset) => {
 }
 
 const CreatorVaultOS: React.FC = () => {
- const { brain, addProject, setActiveProject, channelIdentity } = useBrain()
+ const { brain, addProject, updateProject, setActiveProject, channelIdentity } = useBrain()
  const initialWorkspace = useMemo(() => readVaultWorkspaceState(), [])
  const [refreshTick, setRefreshTick] = useState(0)
  const [query, setQuery] = useState(initialWorkspace.query)
@@ -122,6 +126,7 @@ const CreatorVaultOS: React.FC = () => {
  const [collectionRefresh, setCollectionRefresh] = useState(0)
  const [taskRefresh, setTaskRefresh] = useState(0)
  const [selectionProjectName, setSelectionProjectName] = useState("")
+ const [existingProjectId, setExistingProjectId] = useState("")
  const [explorerProject, setExplorerProject] = useState<"all" | "unassigned" | string>("all")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
  const selectionProjectInputRef = useRef<HTMLInputElement | null>(null)
@@ -379,6 +384,27 @@ const CreatorVaultOS: React.FC = () => {
 
  const restoreSelection = () => {
   selectedAssetIds.forEach((id) => setVaultAssetState(id, { archived: false, trashed: false }))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const attachSelectionToExistingProject = () => {
+  const project = brain.projects.find((candidate) => candidate.id === existingProjectId)
+  if (!project || !selectedAssetIds.length) return
+  const identity = attachVaultAssetIdsToProject({
+   project,
+   assetIds: selectedAssetIds,
+   channelId: channelIdentity.channelId || null,
+  })
+  if (identity.project.contentBuildId !== project.contentBuildId) {
+   updateProject(project.id, { contentBuildId: identity.project.contentBuildId })
+  }
+  selectedAssetIds.forEach((assetId) => {
+   updateVaultAsset(assetId, {
+    projectId: project.id,
+    projectName: project.name,
+   })
+  })
+  setActiveProject(project.id)
   setRefreshTick((value) => value + 1)
  }
 
@@ -913,6 +939,27 @@ const CreatorVaultOS: React.FC = () => {
          onClick={applyBatchProject}
          disabled={!selectedAssetIds.length || !batchProject.trim()}
         />
+        {brain.projects.length ? (
+         <>
+          <SubToolboxSelect
+           value={existingProjectId}
+           onChange={(event) => setExistingProjectId(event.target.value)}
+           aria-label="Existing project for selected Vault assets"
+          >
+           <option value="">Attach to existing project…</option>
+           {brain.projects.map((project) => (
+            <option key={project.id} value={project.id}>{project.name}</option>
+           ))}
+          </SubToolboxSelect>
+          <SubToolboxInnerActionButton
+           label="Attach Selection to Project"
+           iconName="link"
+           tone="blue"
+           onClick={attachSelectionToExistingProject}
+           disabled={!selectedAssetIds.length || !existingProjectId}
+          />
+         </>
+        ) : null}
         <StandardInput
          ref={selectionProjectInputRef}
          value={selectionProjectName}
