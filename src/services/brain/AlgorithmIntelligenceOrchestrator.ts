@@ -21,6 +21,7 @@ import {
 export interface AlgorithmProjectContext {
  channelId: string
  projectId?: string | null
+ contentBuildId?: string | null
  videoId?: string | null
  title?: string | null
  topic?: string | null
