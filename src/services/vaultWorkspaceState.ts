@@ -1,6 +1,6 @@
 import type { VaultAssetKind } from "@/types"
 
-export type VaultWorkspaceViewMode = "grid" | "list" | "timeline"
+export type VaultWorkspaceViewMode = "grid" | "masonry" | "list" | "timeline"
 export type VaultWorkspaceSort = "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
 export type VaultWorkspaceDensity = "comfortable" | "compact"
 export type VaultWorkspaceModuleId =
@@ -33,6 +33,14 @@ export interface VaultWorkspaceState {
  source: "all" | "local" | "drive" | "generated" | "project" | "imported"
  sort: VaultWorkspaceSort
  special: "active" | "inbox" | "favorites" | "archive" | "trash"
+ filterLifecycle: string
+ filterMimeType: string
+ filterMinWidth: string
+ filterMinHeight: string
+ filterMinDuration: string
+ filterMaxDuration: string
+ filterMinBytesMb: string
+ filterMaxBytesMb: string
  viewMode: VaultWorkspaceViewMode
  density: VaultWorkspaceDensity
  arrangeMode: boolean
@@ -49,6 +57,14 @@ export const DEFAULT_VAULT_WORKSPACE_STATE: VaultWorkspaceState = {
  source: "all",
  sort: "updated-desc",
  special: "active",
+ filterLifecycle: "all",
+ filterMimeType: "",
+ filterMinWidth: "",
+ filterMinHeight: "",
+ filterMinDuration: "",
+ filterMaxDuration: "",
+ filterMinBytesMb: "",
+ filterMaxBytesMb: "",
  viewMode: "grid",
  density: "comfortable",
  arrangeMode: false,

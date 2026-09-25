@@ -37,6 +37,14 @@ export interface VaultAssetSearchInput {
  source?: VaultAsset["source"] | null
  sort?: "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
  special?: "active" | "inbox" | "favorites" | "archive" | "trash" | null
+ mimeType?: string | null
+ lifecycle?: string | null
+ minWidth?: number | null
+ minHeight?: number | null
+ minDurationSec?: number | null
+ maxDurationSec?: number | null
+ minBytes?: number | null
+ maxBytes?: number | null
  limit?: number
 }
 
@@ -59,7 +67,25 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
    if (input.kind != null && asset.kind !== input.kind) return false
    if (input.generationId != null && asset.generationId !== input.generationId) return false
    if (input.source != null && asset.source !== input.source) return false
+   if (input.mimeType != null && asset.mimeType !== input.mimeType) return false
    const metadata = asset.metadata || {}
+   const lifecycle = String(metadata.lifecycle || "DRAFT").toUpperCase()
+   const width = typeof metadata.width === "number" ? metadata.width : null
+   const height = typeof metadata.height === "number" ? metadata.height : null
+   const durationSec = typeof metadata.durationSeconds === "number"
+    ? metadata.durationSeconds
+    : typeof metadata.durationSec === "number"
+     ? metadata.durationSec
+     : typeof metadata.duration === "number" ? metadata.duration : null
+   const byteSize = typeof metadata.byteSize === "number" ? metadata.byteSize : null
+
+   if (input.lifecycle != null && lifecycle !== input.lifecycle.trim().toUpperCase()) return false
+   if (input.minWidth != null && (width == null || width < input.minWidth)) return false
+   if (input.minHeight != null && (height == null || height < input.minHeight)) return false
+   if (input.minDurationSec != null && (durationSec == null || durationSec < input.minDurationSec)) return false
+   if (input.maxDurationSec != null && (durationSec == null || durationSec > input.maxDurationSec)) return false
+   if (input.minBytes != null && (byteSize == null || byteSize < input.minBytes)) return false
+   if (input.maxBytes != null && (byteSize == null || byteSize > input.maxBytes)) return false
    if (input.special === "inbox") {
     if (metadata.archivedAt || metadata.trashedAt) return false
     const needsAttention = metadata.needsAttention === true || !asset.projectName || !(asset.tags || []).length
@@ -154,18 +180,85 @@ export const setVaultAssetState = (
  const existing = readAssets().find((asset) => asset.id === id)
  if (!existing) return null
  const metadata = { ...(existing.metadata || {}) }
+ const lifecycle = String(metadata.lifecycle || "DRAFT").toUpperCase()
+ const protectedAsset = metadata.protected === true || (lifecycle === "GOLDEN" && metadata.protected !== false)
+ const destructiveRequested = input.archived === true || input.trashed === true
+ if (protectedAsset && destructiveRequested) return null
 
  if (typeof input.favorite === "boolean") metadata.favorite = input.favorite
- if (typeof input.archived === "boolean") {
-  if (input.archived) metadata.archivedAt = Date.now()
-  else delete metadata.archivedAt
+
+ const priorLifecycle = lifecycle === "ARCHIVED" || lifecycle === "TRASHED"
+  ? String(metadata.previousLifecycle || "DRAFT").toUpperCase()
+  : lifecycle || "DRAFT"
+
+ if (input.archived === true) {
+  if (!metadata.previousLifecycle) metadata.previousLifecycle = priorLifecycle
+  metadata.archivedAt = Date.now()
+  delete metadata.trashedAt
+  metadata.lifecycle = "ARCHIVED"
+ } else if (input.archived === false) {
+  delete metadata.archivedAt
+  if (String(metadata.lifecycle || "").toUpperCase() === "ARCHIVED" && input.trashed !== true) {
+   metadata.lifecycle = String(metadata.previousLifecycle || "DRAFT").toUpperCase()
+   delete metadata.previousLifecycle
+  }
  }
- if (typeof input.trashed === "boolean") {
-  if (input.trashed) metadata.trashedAt = Date.now()
-  else delete metadata.trashedAt
+
+ if (input.trashed === true) {
+  if (!metadata.previousLifecycle) metadata.previousLifecycle = priorLifecycle
+  metadata.trashedAt = Date.now()
+  delete metadata.archivedAt
+  metadata.lifecycle = "TRASHED"
+ } else if (input.trashed === false) {
+  delete metadata.trashedAt
+  if (String(metadata.lifecycle || "").toUpperCase() === "TRASHED" && input.archived !== true) {
+   metadata.lifecycle = String(metadata.previousLifecycle || "DRAFT").toUpperCase()
+   delete metadata.previousLifecycle
+  }
  }
 
  return updateVaultAsset(id, { metadata })
+}
+
+export const setVaultAssetLifecycle = (
+ id: string,
+ lifecycle: VaultAssetLifecycle,
+): VaultAsset | null => {
+ const existing = readAssets().find((asset) => asset.id === id)
+ if (!existing) return null
+ const metadata = { ...(existing.metadata || {}), lifecycle }
+ if (lifecycle === "GOLDEN" && metadata.protected === undefined) metadata.protected = true
+ return updateVaultAsset(id, { metadata })
+}
+
+export const setVaultAssetProtection = (
+ id: string,
+ protectedAsset: boolean,
+): VaultAsset | null => {
+ const existing = readAssets().find((asset) => asset.id === id)
+ if (!existing) return null
+ return updateVaultAsset(id, {
+  metadata: {
+   ...(existing.metadata || {}),
+   protected: protectedAsset,
+  },
+ })
+}
+
+export const deleteVaultAsset = (id: string): boolean => {
+ const assets = readAssets()
+ const existing = assets.find((asset) => asset.id === id)
+ if (!existing) return false
+
+ const metadata = existing.metadata || {}
+ const lifecycle = String(metadata.lifecycle || "").toUpperCase()
+ const protectedAsset = metadata.protected === true || (lifecycle === "GOLDEN" && metadata.protected !== false)
+ const isTrashed = Boolean(metadata.trashedAt) || lifecycle === "TRASHED"
+
+ if (!isTrashed || protectedAsset) return false
+
+ writeAssets(assets.filter((asset) => asset.id !== id))
+ return true
 }
 
 export const upsertVaultAsset = (
