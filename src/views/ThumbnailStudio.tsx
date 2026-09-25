@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react"
+import React, { useEffect, useState, useRef } from "react"
+import { useLocation } from "react-router-dom"
 import {
  generateThumbnail,
  rateThumbnail,
@@ -65,6 +66,8 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
  paletteIndex,
 }) => {
  const { brain } = useBrain()
+ const location = useLocation()
+ const videoManagerHandoff = location.state as { source?: string; videoId?: string | null; title?: string; thumbnail?: string | null } | null
 
  // Tab State
  const [activeTab, setActiveTab] = useState<"generate" | "analyze">("generate")
@@ -78,6 +81,14 @@ const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
  // Core States
  const [prompt, setPrompt] = useState("")
  const [hookText, setHookText] = useState("")
+
+ useEffect(() => {
+  if (videoManagerHandoff?.source !== "video-manager") return
+  if (videoManagerHandoff.title) {
+   setHookText((current) => current || videoManagerHandoff.title || "")
+   setPrompt((current) => current || `Create a high-impact YouTube thumbnail for: ${videoManagerHandoff.title}`)
+  }
+ }, [videoManagerHandoff?.source, videoManagerHandoff?.title])
  const [aspectRatio, setAspectRatio] = useState<AspectRatio>(
   AspectRatio.LANDSCAPE_16_9,
  )
