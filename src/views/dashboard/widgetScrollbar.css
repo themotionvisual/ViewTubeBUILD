@@ -128,6 +128,13 @@
     padding-inline-end: 0;
     -webkit-overflow-scrolling: touch;
   }
+
+  :where(.dashboard-barrier) .widget-scroll-content {
+    box-sizing: border-box;
+    width: calc(100% + (2 * var(--widget-shadow-clearance)));
+    margin-inline: calc(-1 * var(--widget-shadow-clearance));
+    padding-inline: var(--widget-shadow-clearance);
+  }
 }
 
 @media (forced-colors: active) {
