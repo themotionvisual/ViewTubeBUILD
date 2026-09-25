@@ -43,7 +43,7 @@ const CERTIFICATION_INTENT: Record<string, readonly [string, string, WidgetPerfo
   "shorts-vs-long": ["Compare publishing formats", "Inspect format performance", "moderate"],
   "publish-momentum": ["Show publishing trajectory", "Inspect momentum period", "moderate"],
   "audience-matrix": ["Segment audience behavior", "Inspect an audience segment", "moderate"],
-  "system-micro-stack": ["Expose dashboard system controls", "Show or hide dashboard card controls", "light"],
+  "system-micro-stack": ["Summarize and control dashboard layout, data readiness, AI configuration and account state", "Change a dashboard or system setting from the control switchboard", "light"],
   "keyword-overlap-intelligence": ["Reveal competing keyword clusters", "Compare keyword overlap", "heavy"],
   "retention-sim": ["Model retention changes", "Run retention simulation", "heavy"],
   "upload-scheduler": ["Plan publishing time", "Schedule an upload", "moderate"],
