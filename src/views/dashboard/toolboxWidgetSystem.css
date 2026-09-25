@@ -7636,10 +7636,10 @@ textarea.vt-textarea {
   :where(.dashboard-barrier) .image-generator-template-toggle button{
     min-width:0;
     padding:3px 4px;
-    white-space:normal;
+    white-space:pre-line;
     overflow:visible;
     text-overflow:clip;
-    line-height:.9;
+    line-height:.84;
     overflow-wrap:normal;
   }
   :where(.dashboard-barrier) .image-generator-template-toggle button:last-child{
