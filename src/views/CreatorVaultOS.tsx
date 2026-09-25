@@ -91,6 +91,7 @@ import {
  deleteVaultCollection,
  listVaultCollections,
  removeAssetFromVaultCollection,
+ renameVaultCollection,
  setVaultCollectionRole,
 } from "../services/vaultManualCollections"
 import { resolveVaultKeyboardCommand } from "../services/vaultKeyboard"
@@ -550,6 +551,12 @@ const CreatorVaultOS: React.FC = () => {
  const removeSelectedAssetFromActiveCollection = () => {
   if (!activeCollectionId || !selectedAsset) return
   removeAssetFromVaultCollection(activeCollectionId, selectedAsset.id)
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const renameManualCollection = (id: string, nextName: string) => {
+  const updated = renameVaultCollection(id, nextName)
+  if (!updated) return
   setManualCollectionRefresh((value) => value + 1)
  }
 
@@ -1652,6 +1659,16 @@ const CreatorVaultOS: React.FC = () => {
          />
          {manualCollections.map((collection) => (
           <div key={collection.id} className="flex flex-col gap-1">
+           {activeCollectionId === collection.id ? (
+            <StandardInput
+             defaultValue={collection.name}
+             aria-label={`Rename collection ${collection.name}`}
+             onBlur={(event) => renameManualCollection(collection.id, event.target.value)}
+             onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur()
+             }}
+            />
+           ) : null}
            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <SubToolboxInnerActionButton
              label={`${collection.role === "brand-kit" ? "★ " : ""}${collection.name} · ${collection.assetIds.length}`}
