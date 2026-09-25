@@ -38,7 +38,7 @@ import {
  type VaultWorkspaceSort,
  type VaultWorkspaceViewMode,
 } from "../services/vaultWorkspaceState"
-import { createPendingVaultImport, type PendingVaultImport } from "../services/vaultImport"
+import { createPendingVaultImport, updatePendingVaultImport, type PendingVaultImport } from "../services/vaultImport"
 import { extractVaultFileMetadata } from "../services/vaultFileMetadata"
 import { resolveVaultSelection } from "../services/vaultSelection"
 import {
@@ -359,6 +359,12 @@ const CreatorVaultOS: React.FC = () => {
   setRefreshTick((value) => value + 1)
  }
 
+ const patchPending = (id: string, patch: Partial<Omit<PendingVaultImport, "id">>) => {
+  setPending((current) => current.map((item) => (
+   item.id === id ? updatePendingVaultImport(item, patch) : item
+  )))
+ }
+
  const rejectPending = (id: string) => {
   setPending((current) => current.filter((item) => item.id !== id))
  }
@@ -654,15 +660,25 @@ const CreatorVaultOS: React.FC = () => {
        <div className="mt-4 flex flex-col gap-2">
         {pending.length ? pending.map((item) => (
          <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-          <div className="min-w-0">
-           <div className="truncate text-sm font-black uppercase">{item.name}</div>
+          <div className="min-w-0 flex flex-col gap-2">
+           <StandardInput
+            value={item.name}
+            onChange={(event) => patchPending(item.id, { name: event.target.value })}
+            aria-label={`Pending asset name ${item.name}`}
+           />
+           <SubToolboxDropdownControl
+            label="Type"
+            value={item.kind}
+            onChange={(value) => patchPending(item.id, { kind: value as VaultAssetKind })}
+            options={["image", "video", "audio", "document", "json", "font", "template", "generated", "other"]}
+           />
            <div className="text-xs font-bold opacity-60">
-            {item.kind.toUpperCase()} · {(item.size / 1024 / 1024).toFixed(2)} MB
+            {(item.size / 1024 / 1024).toFixed(2)} MB
             {typeof item.metadata.width === "number" && typeof item.metadata.height === "number"
              ? ` · ${item.metadata.width}×${item.metadata.height}`
              : ""}
             {typeof item.metadata.durationSeconds === "number"
-             ? ` · ${item.metadata.durationSeconds.toFixed(1)}s`
+             ? ` · ${Number(item.metadata.durationSeconds).toFixed(1)}s`
              : ""}
            </div>
           </div>
