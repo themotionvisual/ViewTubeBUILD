@@ -1,181 +1,136 @@
-# ViewTube Creator Vault — Implementation Plan
+# ViewTube Creator Vault — Revised Implementation Plan
 
-## Planning state
+## Reset reason
 
-Requirements are frozen enough to begin implementation after this planning branch is reviewed/merged.
+The uploaded donor ZIP proved the earlier plan captured the large systems but missed several interaction/workflow details and cross-tool donor opportunities. This plan replaces the previous single-owner merge assumption.
 
-This plan intentionally uses a dedicated task workspace because root tasks/plan.md and tasks/todo.md are occupied by the active Settings redesign.
+## Phase 0 — planning and merge reset
 
-## Architectural decisions
+- merge the re-harvest authority documents;
+- PR #425 is historical planning provenance; this plan supersedes its donor analysis;
+- PR #426 already merged and is the Lane A implementation baseline;
+- do not wholesale merge Vault-Tool;
+- audit current main against this revised plan before continuing follow-on donor features.
 
-1. Vault-Tool is a reference donor, not a source-code transplant.
-2. Vault is the user-facing durable asset workspace; Asset Engine remains the production-semantics layer.
-3. All new Vault UI uses current Toolbox/SubToolbox primitives and CSS.
-4. Spectrum Tags use the current ViewTube tag system, not donor-private color utilities.
-5. Project/Kanban donor features land in current Project Builder/Board.
-6. Import Station is a staged ingestion workflow, not a direct blind upload.
-7. Batch Processor mutates metadata/organization locally and hands specialist processing to owning tools.
-8. Vault memory is workspace continuity and retrieval state, not a competing Brain memory system.
-9. Version, derivative and duplicate are distinct relationships.
-10. Physical storage provider is separated from logical Vault organization.
+## Phase 1 — Lane A: Vault foundation
 
-## Vertical slices
+- real /vault route;
+- canonical Toolbox/SubToolbox shell;
+- Asset Library / Navigator / Inspector;
+- search/filter/sort;
+- Spectrum Tags;
+- base workspace persistence;
+- multi-select;
+- base Batch Processor;
+- base Import Station.
 
-### Wave 0 — Contract reconciliation
-- audit VaultAsset, Asset Engine contracts, ContentBuild relations, Generation Store, video package and current Project models
-- write compatibility/migration shape
-- define stable UI view models
-- register donor reference
+Follow-up repairs on the merged baseline:
+- Shift range selection;
+- direct/staged intake distinction;
+- compatibility with PR #427 media-player primitives;
+- route + service tests and rendered verification.
 
-Checkpoint: no duplicate ownership introduced.
+## Phase 2 — Lane B: interaction and organization
 
-### Wave 1 — Production route + Library shell
-- mount real /vault page
-- Toolbox page shell
-- Asset Matrix
-- grid/list views
-- Inspector shell
-- existing record compatibility
+- Space Quick Look using canonical media-player primitives;
+- Esc close behavior;
+- Cmd/Ctrl+K Vault command/search action;
+- Cmd/Ctrl+G create/attach project from selection;
+- split-pane explorer;
+- chronological timeline;
+- Smart Collections;
+- Favorites / Inbox / Archive / Trash;
+- workspace Arrange Mode;
+- module visibility preferences;
+- optional 2/3-column density preference;
+- saved scratchpad/checklist panels.
 
-Checkpoint: creator can open Vault and browse real current assets.
+## Phase 3 — Lane C: intake and processing jobs
 
-### Wave 2 — Search, Spectrum Tags, smart filters
-- canonical query model
-- name/tag/project/type/metadata filters
-- Spectrum Tag controls
-- saved filters
-- Smart Collections groundwork
+- global drag/drop capture;
+- file metadata extraction;
+- image dimensions;
+- video duration/resolution;
+- video thumbnail frame extraction;
+- direct import;
+- staged editable intake drafts;
+- content hash;
+- duplicate check;
+- per-item accept/reject;
+- real scanner/job lanes for EXIF/vision/transcript only when backed;
+- proxy derivative job;
+- progress/retry/error/task center.
 
-Checkpoint: creator can find/filter assets without folder dependence.
+## Phase 4 — Lane D: versions, captions, dependency projection
 
-### Wave 3 — Import Station
-- batch file intake
-- pending queue
-- per-item metadata/tag/project destination
-- duplicate/hash preflight
-- metadata extraction
-- processing progress contract
-- accept/reject / ingest all
+- version carousel;
+- detach version preserving lineage;
+- lineage/usage/rights;
+- transcript/caption linked artifact;
+- timestamped caption editor;
+- real SRT/VTT export when available;
+- transcript → Script derivative;
+- project/content-build creation from selected assets;
+- dependency/readiness projection;
+- manifest JSON;
+- factual package/storage size.
 
-Checkpoint: batch import creates canonical Vault identities and preserves failures/retries.
+## Phase 5 — Lane E: Project Builder / Board donor upgrades
 
-### Wave 4 — Organization + memory
-- Collections
-- Smart Collections
-- Inbox
-- Favorites
-- Archive
-- Trash/recovery
-- recent assets/searches/view preferences
-- custom metadata fields
+- map donor nine-stage creator lanes to canonical ContentBuild lifecycle;
+- priority;
+- due date;
+- detail tabs;
+- core promise/audience/runtime;
+- phase progress;
+- storyboard shot records;
+- title drafts + primary selection;
+- phased checklists;
+- derive phase progress from checklist completion;
+- script word/read-time;
+- linked Vault picker;
+- BrainRuntime project research handoff;
+- published metric projection.
 
-Checkpoint: reopening Vault restores useful workspace context without creating Brain memory.
+## Phase 6 — Lane F: Editor/media donor upgrades
 
-### Wave 5 — Selection + Batch Processor
-- shift/cmd multi-select
-- selection Action Rail
-- batch tags/rename/project/collection/lifecycle
-- export metadata
-- ZIP bundle
-- Send To
-- background job/progress surface
+Only after VT_E1 gap audit:
+- default Create Derivative;
+- explicit overwrite guard;
+- batch transform request;
+- trim/crop/color/LUT gaps;
+- alias filename;
+- protected asset enforcement.
 
-Checkpoint: large asset sets can be organized efficiently.
+## Phase 7 — Lane G: other matching-tool harvests
 
-### Wave 6 — Inspector, versions, lineage, usage
-- details/rights/notes
-- versions
-- derivatives
-- duplicate relation
-- lineage graph
-- usage references
-- protected/golden assets
+Separate PRs:
+- End Screen/Packaging reference image + 16:9 + layout/palette controls;
+- Hook polish modes + timing simulator;
+- Video Manager tag/playlist UX if missing;
+- Analytics report structured chart suggestions if useful;
+- Shorts/keyframe/snapping only if current VT_E1 lacks equivalent.
 
-Checkpoint: creator can trace where an asset came from and where it is used.
+## Testing and certification
 
-### Wave 7 — Text/doc workbench + Quick Look
-- document editor
-- version-safe save
-- BrainRuntime refine handoff
-- templates/snippets where appropriate
-- image/video/audio/document Quick Look
-- compare/before-after
-
-Checkpoint: lightweight asset work no longer requires leaving Vault unnecessarily.
-
-### Wave 8 — Media mini-tools/handoffs
-- frame extractor
-- smart crop/aspect derivative
-- OCR
-- auto-tag suggestions
-- metadata inspector
-- palette extraction
-- similar asset search
-- specialist tool handoffs
-
-Checkpoint: every processing action either safely creates a derivative or routes to canonical owner.
-
-### Wave 9 — Project Builder / Board donor upgrades
-- reconcile current board lanes with donor stage model
-- add missing priority/date/progress/card metadata
-- detail tabs
-- script/notes/storyboard/title drafts/checklists
-- linked Vault assets
-- post-publish metrics projection
-- ensure all movement writes canonical Project/ContentBuild state
-
-Checkpoint: no embedded donor Kanban state remains in Vault.
-
-### Wave 10 — durable storage evolution
-- server metadata persistence
-- storage provider abstraction
-- Drive integration via current auth
-- blobs/proxies/thumbnails
-- migration from browser-only metadata where appropriate
-
-Checkpoint: multi-device persistence without invalidating existing identities.
-
-### Wave 11 — certification
-- typecheck
-- targeted tests
-- route/governance tests
-- build
-- desktop
-- narrow desktop
-- mobile portrait
-- mobile landscape
-- keyboard/touch
-- accessibility
-- performance with large libraries
-
-## Risks and mitigations
-
-### Risk: duplicating Asset Engine/ContentBuild fields
-Mitigation: every proposed Vault field is checked against canonical owners before schema changes.
-
-### Risk: Vault becomes an editor clone
-Mitigation: metadata/lightweight derivative tools live in Vault; specialist processing remains in Editor/Studio services.
-
-### Risk: huge page/component
-Mitigation: modular feature folders and one canonical asset-query/view-model layer.
-
-### Risk: browser localStorage ceiling
-Mitigation: compatibility adapter first, durable repository/provider evolution later.
-
-### Risk: large-library rendering
-Mitigation: virtualization, lazy preview loading, stable selectors, bounded Inspector state.
-
-### Risk: donor UI conflicts with current ViewTube
-Mitigation: donor layout is prior art only; rebuild with current Toolbox/SubToolbox authority.
-
-## Parallelizable work
-
-After Wave 0:
-- Library UI and query model can proceed in parallel.
-- Import Station UI can proceed against frozen ingest contract.
-- Project donor audit can proceed independently but merges only after canonical mapping.
-- Lineage UI can be developed against Asset Engine relation selectors.
+Every lane:
+- tests first for behavior changes;
+- typecheck;
+- focused Vitest;
+- full relevant suite;
+- build;
+- changed-file lint;
+- browser verification;
+- desktop/mobile portrait/mobile landscape;
+- keyboard/touch/accessibility;
+- no simulated processor presented as real.
 
 ## Definition of done
 
-Vault is a production route, not a redirect; its storage/metadata operations preserve canonical identity; Import Station and Batch Processor work; smart search/Spectrum Tags/collections are usable; document tools and previews exist; versions/lineage/usage are visible; cross-tool handoffs preserve IDs; donor planning improvements exist in Projects; and desktop/mobile certifications pass.
+The donor is fully harvested when every useful behavior has one of:
+- implemented in canonical owner;
+- explicitly scheduled in gap registry;
+- verified already present;
+- explicitly rejected with reason.
+
+No valuable donor capability should remain discoverable only inside the donor ZIP.
