@@ -73,6 +73,16 @@ import {
  attachVaultAssetIdsToProject,
  buildVaultSelectionProjectDraft,
 } from "../services/vaultProjectHandoff"
+import { getVaultAssetUsage } from "../services/vaultUsage"
+import {
+ createVaultSelectionManifest,
+ serializeVaultSelectionManifest,
+} from "../services/vaultManifest"
+import {
+ createVaultScratchpad,
+ deleteVaultScratchpad,
+ listVaultScratchpads,
+} from "../services/vaultScratchpads"
 import type { VaultAsset, VaultAssetKind } from "../types"
 
 const CORE_TAGS = [
