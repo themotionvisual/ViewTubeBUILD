@@ -37,6 +37,14 @@ export interface VaultAssetSearchInput {
  source?: VaultAsset["source"] | null
  sort?: "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
  special?: "active" | "inbox" | "favorites" | "archive" | "trash" | null
+ mimeType?: string | null
+ lifecycle?: string | null
+ minWidth?: number | null
+ minHeight?: number | null
+ minDurationSec?: number | null
+ maxDurationSec?: number | null
+ minBytes?: number | null
+ maxBytes?: number | null
  limit?: number
 }
 
@@ -59,7 +67,23 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
    if (input.kind != null && asset.kind !== input.kind) return false
    if (input.generationId != null && asset.generationId !== input.generationId) return false
    if (input.source != null && asset.source !== input.source) return false
+   if (input.mimeType != null && asset.mimeType !== input.mimeType) return false
    const metadata = asset.metadata || {}
+   const lifecycle = String(metadata.lifecycle || "DRAFT").toUpperCase()
+   const width = typeof metadata.width === "number" ? metadata.width : null
+   const height = typeof metadata.height === "number" ? metadata.height : null
+   const durationSec = typeof metadata.durationSec === "number"
+    ? metadata.durationSec
+    : typeof metadata.duration === "number" ? metadata.duration : null
+   const byteSize = typeof metadata.byteSize === "number" ? metadata.byteSize : null
+
+   if (input.lifecycle != null && lifecycle !== input.lifecycle.trim().toUpperCase()) return false
+   if (input.minWidth != null && (width == null || width < input.minWidth)) return false
+   if (input.minHeight != null && (height == null || height < input.minHeight)) return false
+   if (input.minDurationSec != null && (durationSec == null || durationSec < input.minDurationSec)) return false
+   if (input.maxDurationSec != null && (durationSec == null || durationSec > input.maxDurationSec)) return false
+   if (input.minBytes != null && (byteSize == null || byteSize < input.minBytes)) return false
+   if (input.maxBytes != null && (byteSize == null || byteSize > input.maxBytes)) return false
    if (input.special === "inbox") {
     if (metadata.archivedAt || metadata.trashedAt) return false
     const needsAttention = metadata.needsAttention === true || !asset.projectName || !(asset.tags || []).length
