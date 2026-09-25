@@ -30,6 +30,30 @@ SubToolboxInput.displayName = "SubToolboxInput"
 export const SubToolboxTextArea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement> & { height?: "compact" | "standard" | "fill"; level?: ToolboxControlLevel }>(({ className, height = "standard", level, style, ...props }, ref) => <textarea ref={ref} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} className={classes("vt-subtoolbox-input", "vt-subtoolbox-textarea", `is-${height}`, level && "has-component-level", className)} {...props} />)
 SubToolboxTextArea.displayName = "SubToolboxTextArea"
 
+export interface SubToolboxLabeledInputProps extends SubToolboxInputProps {
+  overlayLabel: React.ReactNode
+}
+export const SubToolboxLabeledInput = React.forwardRef<HTMLInputElement, SubToolboxLabeledInputProps>(({ overlayLabel, className, level = "l1", style, ...props }, ref) => (
+  <label className="vt-subtoolbox-labeled-field" data-vt-control-level={level} style={withComponentLevelStyle(level, style)}>
+    <SubToolboxInput ref={ref} level={level} className={classes("vt-subtoolbox-labeled-control", className)} {...props} />
+    <span className="vt-subtoolbox-labeled-field-overlay" aria-hidden="true">{overlayLabel}</span>
+  </label>
+))
+SubToolboxLabeledInput.displayName = "SubToolboxLabeledInput"
+
+export interface SubToolboxLabeledTextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  overlayLabel: React.ReactNode
+  height?: "compact" | "standard" | "fill"
+  level?: ToolboxControlLevel
+}
+export const SubToolboxLabeledTextArea = React.forwardRef<HTMLTextAreaElement, SubToolboxLabeledTextAreaProps>(({ overlayLabel, className, height = "standard", level = "l1", style, ...props }, ref) => (
+  <label className="vt-subtoolbox-labeled-field is-textarea" data-vt-control-level={level} style={withComponentLevelStyle(level, style)}>
+    <SubToolboxTextArea ref={ref} level={level} height={height} className={classes("vt-subtoolbox-labeled-control", className)} {...props} />
+    <span className="vt-subtoolbox-labeled-field-overlay" aria-hidden="true">{overlayLabel}</span>
+  </label>
+))
+SubToolboxLabeledTextArea.displayName = "SubToolboxLabeledTextArea"
+
 export interface SubToolboxSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   controlSize?: "micro" | "standard"
 }
@@ -637,6 +661,196 @@ export const SubToolboxTopTitleDropdown: React.FC<SubToolboxTopTitleDropdownProp
               </button>
             )
           })}
+        </div>,
+        document.body,
+      ) : null}
+    </div>
+  )
+}
+
+export interface SubToolboxVideoSelectorOption {
+  value: string
+  title: string
+  thumbnail?: string
+  dateLabel?: string
+  durationLabel?: string
+  disabled?: boolean
+}
+
+export interface SubToolboxVideoSelectorProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
+  level?: ToolboxControlLevel
+  value: string
+  options: SubToolboxVideoSelectorOption[]
+  onValueChange?: (value: string) => void
+  searchValue?: string
+  onSearchValueChange?: (value: string) => void
+  searchIcon?: React.ReactNode
+  placeholder?: string
+  searchPlaceholder?: string
+  ariaLabel?: string
+  disabled?: boolean
+}
+
+export const SubToolboxVideoSelector: React.FC<SubToolboxVideoSelectorProps> = ({
+  level = "l0",
+  value,
+  options,
+  onValueChange,
+  searchValue = "",
+  onSearchValueChange,
+  searchIcon,
+  placeholder = "CHOOSE VIDEO",
+  searchPlaceholder = "SEARCH VIDEOS...",
+  ariaLabel = "Choose video",
+  disabled = false,
+  className,
+  style,
+  ...props
+}) => {
+  const [open, setOpen] = React.useState(false)
+  const rootRef = React.useRef<HTMLDivElement>(null)
+  const [panelRect, setPanelRect] = React.useState<{ left: number; top: number; width: number } | null>(null)
+  const [inheritedPair, setInheritedPair] = React.useState({ pairA: "", pairB: "" })
+  const selected = options.find((option) => option.value === value)
+  const titleSizeFor = (title: string) => {
+    const length = title.trim().length
+    if (length > 92) return "12px"
+    if (length > 72) return "13px"
+    if (length > 54) return "15px"
+    if (length > 38) return "17px"
+    return "20px"
+  }
+  const filtered = React.useMemo(() => {
+    const q = searchValue.trim().toLowerCase()
+    if (!q) return options
+    return options.filter((option) => option.title.toLowerCase().includes(q))
+  }, [options, searchValue])
+
+  React.useLayoutEffect(() => {
+    if (!open || typeof window === "undefined") {
+      setPanelRect(null)
+      return
+    }
+    const sync = () => {
+      const rect = rootRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const viewportPadding = 8
+      const rootStyle = rootRef.current ? getComputedStyle(rootRef.current) : null
+      setInheritedPair({
+        pairA: rootStyle?.getPropertyValue("--pair-a").trim() || "",
+        pairB: rootStyle?.getPropertyValue("--pair-b").trim() || "",
+      })
+      const width = Math.min(rect.width, window.innerWidth - viewportPadding * 2)
+      const left = Math.min(Math.max(viewportPadding, rect.left), Math.max(viewportPadding, window.innerWidth - viewportPadding - width))
+      setPanelRect({ left, top: rect.bottom + 6, width })
+    }
+    sync()
+    const frame = window.requestAnimationFrame(sync)
+    window.addEventListener("resize", sync)
+    window.addEventListener("scroll", sync, true)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener("resize", sync)
+      window.removeEventListener("scroll", sync, true)
+    }
+  }, [open])
+
+  React.useEffect(() => {
+    if (!open) return
+    const onPointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        const target = event.target as HTMLElement
+        if (!target.closest(".vt-subtoolbox-video-selector-panel")) setOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", onPointerDown)
+    return () => document.removeEventListener("mousedown", onPointerDown)
+  }, [open])
+
+  return (
+    <div
+      ref={rootRef}
+      className={classes("vt-subtoolbox-video-selector", open && "is-open", className)}
+      data-vt-control-level={level}
+      style={withComponentLevelStyle(level, style)}
+      {...props}
+    >
+      <button
+        type="button"
+        className="vt-subtoolbox-video-selector-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={ariaLabel}
+        disabled={disabled}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span className="vt-subtoolbox-video-selector-rail">
+          {selected?.thumbnail ? <img src={selected.thumbnail} alt="" /> : <span className="vt-subtoolbox-video-selector-empty-thumb" />}
+          <span className="vt-subtoolbox-video-selector-badges">
+            {selected?.dateLabel ? <b>{selected.dateLabel}</b> : null}
+            {selected?.durationLabel ? <b>{selected.durationLabel}</b> : null}
+          </span>
+        </span>
+        <span className="vt-subtoolbox-video-selector-title" style={{ ["--vt-video-title-size" as string]: titleSizeFor(selected?.title || placeholder) }}>{selected?.title || placeholder}</span>
+        <span className="vt-subtoolbox-video-selector-chevron" aria-hidden="true">⌄</span>
+      </button>
+
+      {open && panelRect && typeof document !== "undefined" ? createPortal(
+        <div
+          className="vt-subtoolbox-video-selector-panel"
+          role="listbox"
+          aria-label={ariaLabel}
+          data-vt-control-level={level}
+          style={{
+            ...withComponentLevelStyle(level, style),
+            ...(inheritedPair.pairA ? { ["--pair-a" as string]: inheritedPair.pairA } : {}),
+            ...(inheritedPair.pairB ? { ["--pair-b" as string]: inheritedPair.pairB } : {}),
+            position: "fixed",
+            left: panelRect.left,
+            top: panelRect.top,
+            width: panelRect.width,
+          }}
+        >
+          <div className="vt-subtoolbox-video-selector-search">
+            <SubToolboxSplitField
+              level="l1"
+              variant="search"
+              icon={searchIcon}
+              inputProps={{
+                "aria-label": "Search videos",
+                value: searchValue,
+                placeholder: searchPlaceholder,
+                onChange: (event) => onSearchValueChange?.(event.target.value),
+              }}
+            />
+          </div>
+          <div className="vt-subtoolbox-video-selector-options">
+            {filtered.map((option) => (
+              <button
+                type="button"
+                role="option"
+                aria-selected={value === option.value}
+                key={option.value}
+                className={classes("vt-subtoolbox-video-selector-option", value === option.value && "is-selected")}
+                disabled={option.disabled}
+                onClick={() => {
+                  if (option.disabled) return
+                  onValueChange?.(option.value)
+                  setOpen(false)
+                }}
+              >
+                <span className="vt-subtoolbox-video-selector-rail">
+                  {option.thumbnail ? <img src={option.thumbnail} alt="" /> : <span className="vt-subtoolbox-video-selector-empty-thumb" />}
+                  <span className="vt-subtoolbox-video-selector-badges">
+                    {option.dateLabel ? <b>{option.dateLabel}</b> : null}
+                    {option.durationLabel ? <b>{option.durationLabel}</b> : null}
+                  </span>
+                </span>
+                <span className="vt-subtoolbox-video-selector-title" style={{ ["--vt-video-title-size" as string]: titleSizeFor(option.title) }}>{option.title}</span>
+              </button>
+            ))}
+            {filtered.length === 0 ? <div className="vt-subtoolbox-video-selector-empty">NO VIDEOS MATCH SEARCH</div> : null}
+          </div>
         </div>,
         document.body,
       ) : null}

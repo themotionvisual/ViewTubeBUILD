@@ -107,3 +107,46 @@ These rules apply to the Component Library presentation layer and do **not** cha
 - `compact` represents short horizontal controls/list rows with icon, text, and trailing-action geometry.
 - `media` represents ratio-aware media/card loading states and supports 16:9, 1:1, and 4:5.
 - All variants inherit the owning pair colors and share the canonical shimmer motion/reduced-motion behavior.
+
+
+## Video Manager Structural Contract — 2026-09-25
+
+### Equal shell rhythm
+- Main Toolbox and SubToolbox content use one equal interior gutter on all four sides and between first-level children.
+- Desktop/narrow authority: 6px. Mobile authority: 5px.
+- SubToolbox inset wrappers do not add a second horizontal inset; the content gutter is the single spacing authority.
+- Toolbox content therefore gains a small amount of top/bottom clearance while SubToolbox interiors lose the former doubled side clearance.
+
+### Mini SubToolbox
+- Mini SubToolbox is the next structural level below SubToolbox, not a styled card pretending to be a shell.
+- Desktop authority: 40px header / 3px stroke / 8px radius / 4px shadow / 16px title.
+- Mobile authority: 36px header / 3px stroke / 7px radius / 3px shadow / 14px title.
+- Anatomy is square icon rail → title region → optional header actions → content.
+- It is appropriate for tightly scoped embedded workflows such as the Video Manager thumbnail editor.
+
+### Rich Video Selector
+- Video Selector is a direct L0 compound and must not require a surrounding SubToolbox.
+- Trigger anatomy follows SubToolbox split-left proportions.
+- The square left rail contains the thumbnail at the top with equal visible fill margin and compact publish-date/runtime badges below it.
+- Title uses up to two full lines, dynamically reduces type for long titles, uses clipping rather than ellipsis, and never deliberately renders an ellipsis.
+- The opened panel is portaled above shell overflow/stacking contexts and carries the owning pair-A/pair-B values into the portal.
+- Search is the first row of the opened panel and uses the canonical split-left Search field.
+
+### Overlay-labeled fields
+- Labeled Input and Labeled Textarea put the contextual label inside the field on the right instead of consuming a separate line above the control.
+- Resting field tint is 50% pair A. The contextual label uses pair A at 65% strength and weight 1000.
+- Typed/user text is black and visually above the contextual label when their areas overlap.
+- The contextual label disappears while the field has focus.
+- Focus remains the canonical white field + pair-A inset + pair-B glow state.
+
+### Video Manager production order
+1. Direct L0 Video Selector.
+2. Video Details SubToolbox.
+3. Labeled Title field.
+4. Thumbnail Mini SubToolbox with Upload and Generate header actions.
+5. Labeled Description field.
+6. Publishing controls.
+7. Video Tags SubToolbox using the canonical two-color Tag Editor.
+8. Direct SubToolbox-level split-left Update Video Details action.
+
+Video Stats KPI cards are intentionally removed from the editing flow. Thumbnail Generate hands the selected video context to Thumbnail Studio. Mobile portrait may stack Publishing controls and long tag actions to prevent clipped values; landscape/desktop retain denser horizontal composition.

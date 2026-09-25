@@ -1,6 +1,6 @@
 import React from "react"
 import { Captions, Check, ChevronDown, ChevronRight, Expand, FileText, Gauge, Image, Lightbulb, ListVideo, Menu, Minus, MoreHorizontal, Music, Pause, Play, Plus, Search, Settings2, SlidersHorizontal, Upload, Volume2, X } from "lucide-react"
-import { SubToolbox } from "../Toolbox"
+import { MiniSubToolbox, SubToolbox } from "../Toolbox"
 import type { ToolboxControlLevel } from "../subtoolbox/tokens"
 import {
   SubToolboxAlert,
@@ -25,6 +25,8 @@ import {
   SubToolboxFileTarget,
   SubToolboxIconButton,
   SubToolboxInput,
+  SubToolboxLabeledInput,
+  SubToolboxLabeledTextArea,
   SubToolboxKnob,
   SubToolboxLinkButton,
   SubToolboxLoader,
@@ -90,6 +92,7 @@ import {
   SubToolboxLegendTooltip,
   SubToolboxTree,
   SubToolboxVaultAsset,
+  SubToolboxVideoSelector,
   ToolboxHeaderCollapseButton,
   ToolboxHeaderHelpButton,
   ToolboxHeaderIconRail,
@@ -230,6 +233,10 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Media Queue",
   "Media Inspector",
   "Media Review Panel",
+  "Labeled Input",
+  "Labeled Textarea",
+  "Video Selector",
+  "Mini SubToolbox",
 ] as const
 
 type StudioHubMigratedFamily = (typeof STUDIO_HUB_MIGRATED_FAMILIES)[number]
@@ -319,6 +326,10 @@ const CATALOG_PREVIEW_GEOMETRY: Partial<Record<StudioHubMigratedFamily, CatalogP
   "Media Queue": { mode: "canvas", inlineUnits: 8.1, portraitStack: true },
   "Media Inspector": { mode: "canvas", inlineUnits: 7.6, portraitStack: true },
   "Media Review Panel": { mode: "canvas", inlineUnits: 10.8, portraitStack: true },
+  "Labeled Input": { mode: "field", inlineUnits: 5.2, portraitStack: true },
+  "Labeled Textarea": { mode: "field", inlineUnits: 6.2, portraitStack: true },
+  "Video Selector": { mode: "canvas", inlineUnits: 7.4, portraitStack: true },
+  "Mini SubToolbox": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
 }
 
 const getCatalogPreviewGeometry = (name: StudioHubMigratedFamily): CatalogPreviewGeometry =>
@@ -810,6 +821,34 @@ const PrimitiveMigrationControl: React.FC<{
       notes={<><strong>REVIEW NOTES</strong><div>Check first 8 seconds, caption timing, and final CTA.</div></>}
       actions={<><SubToolboxMediaControlButton level={level} icon={<Check />} label="Approve" active /><SubToolboxMediaControlButton level={level} icon={<Settings2 />} label="Review settings" /></>}
     />
+  }
+  if (name === "Labeled Input") {
+    return <SubToolboxLabeledInput level={level} overlayLabel="TITLE" defaultValue="EGYPT PART CLASH COPY" placeholder=" " aria-label="Labeled title input" />
+  }
+  if (name === "Labeled Textarea") {
+    return <SubToolboxLabeledTextArea level={level} overlayLabel="DESCRIPTION" defaultValue="A long-form video description fills the field while its contextual label remains behind the text until focus." placeholder=" " aria-label="Labeled description textarea" />
+  }
+  if (name === "Video Selector") {
+    return <SubToolboxVideoSelector
+      level={level}
+      value="a"
+      options={[
+        { value: "a", title: "EGYPT PART CLASH COPY", dateLabel: "SEP 24 26", durationLabel: "0:35" },
+        { value: "b", title: "THE ENTIRE NAPOLEONIC CAMPAIGN EXPLAINED IN ONE VERY LONG VIDEO TITLE", dateLabel: "SEP 20 26", durationLabel: "12:44" },
+      ]}
+      searchValue=""
+      onSearchValueChange={() => undefined}
+      searchIcon={<Search size={18} strokeWidth={3} />}
+    />
+  }
+  if (name === "Mini SubToolbox") {
+    return <MiniSubToolbox
+      title="Thumbnail"
+      icon={<Image size={18} strokeWidth={3} />}
+      actions={<><SubToolboxButton level="l2">Upload</SubToolboxButton><SubToolboxButton level="l2">Generate</SubToolboxButton></>}
+    >
+      <SubToolboxAspectRatioFrame level={level} ratio="16:9"><Image /></SubToolboxAspectRatioFrame>
+    </MiniSubToolbox>
   }
   if (name === "Disabled Button") {
     return <SubToolboxButton level={level} disabled>DISABLED</SubToolboxButton>

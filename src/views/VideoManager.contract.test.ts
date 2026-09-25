@@ -16,7 +16,7 @@ describe("Video Manager canonical Studio Hub contract", () => {
  it("keeps the normal workspace mounted while the connected catalog loads", () => {
   expect(source).toContain('const catalogLoading = connected && videoListLoadState === "loading"')
   expect(source).toContain("selectedVideo || !connected || catalogLoading")
-  expect(source).toContain("LOADING YOUR YOUTUBE VIDEO CATALOG…")
+  expect(source).toContain("Loading Your YouTube Video Catalog…")
   expect(source).not.toContain("Connecting Video Catalog...")
  })
 
@@ -37,18 +37,15 @@ describe("Video Manager canonical Studio Hub contract", () => {
   expect(tokenSource).toContain("height: 56")
   expect(tokenSource).toContain("height: 48")
   expect(tokenSource).toContain("height: 32")
-  expect(toolboxCss).toContain("--vt-toolbox-header-height: 80px")
-  expect(toolboxCss).toContain("height: 80px !important")
-  expect(toolboxCss).toContain("max-height: 80px !important")
-  expect(toolboxCss).toContain("--vt-subtoolbox-header-height: 56px")
-  expect(toolboxCss).toContain("height: 56px !important")
-  expect(toolboxCss).toContain("max-height: 56px !important")
-  expect(toolboxCss).not.toContain("--vt-subtoolbox-header-height: 44px")
+  expect(tokenSource).toContain("TOOLBOX_MOBILE_HEADER_DNA")
+  expect(tokenSource).toContain("TOOLBOX_SHELL_GUTTER")
+  expect(tokenSource).toContain("MINI_SUBTOOLBOX_DNA")
+  expect(toolboxCss).toContain("--vt-toolbox-header-height: 56px")
+  expect(toolboxCss).toContain("--vt-subtoolbox-header-height: 44px")
   expect(toolboxCss).toContain("-webkit-line-clamp: 2")
   expect(toolboxCss).toContain("line-height: .82 !important")
-  expect(toolboxCss).toContain("padding-left: max(4px, var(--vt-subtoolbox-content-inline-inset, 4px)) !important")
-  expect(toolboxCss).toContain("--vt-toolbox-content-padding: 4px")
-  expect(toolboxCss).toContain("--vt-toolbox-content-gap: 4px")
+  expect(toolboxCss).toContain("--vt-toolbox-shell-gutter:6px")
+  expect(toolboxCss).toContain("--vt-toolbox-shell-gutter:5px")
  })
 
  it("uses Studio Hub primitives for all visible buttons, fields, tags, and publishing controls", () => {
@@ -56,8 +53,10 @@ describe("Video Manager canonical Studio Hub contract", () => {
   expect(source.match(/<SubToolboxTopTitleDropdown/g)).toHaveLength(3)
   expect(source).toContain("SubToolboxRemovableTag")
   expect(source).toContain("SubToolboxSelectableTag")
-  expect(source).toContain("SubToolboxInput")
-  expect(source).toContain("SubToolboxTextArea")
+  expect(source).toContain("SubToolboxTagEditor")
+  expect(source).toContain("SubToolboxLabeledInput")
+  expect(source).toContain("SubToolboxLabeledTextArea")
+  expect(source).toContain("SubToolboxVideoSelector")
   expect(source).toContain("SubToolboxIconButton")
   expect(source).toContain("SubToolboxLinkButton")
   expect(source).not.toContain("<button")
@@ -79,10 +78,12 @@ describe("Video Manager canonical Studio Hub contract", () => {
   expect(source).not.toContain('bg-[#00ff99]/20 border-[4px]')
  })
 
-  it("uses the canonical split-left selector family", () => {
-  expect(source).toContain("SubToolboxSplitDropdown")
-  expect(source).toContain("SubToolboxSplitButton")
-  expect(source).toContain('from "../studio-ui"')
+ it("uses the canonical rich L0 video selector family", () => {
+  expect(source).toContain("SubToolboxVideoSelector")
+  expect(source).toContain('level="l0"')
+  expect(source).toContain('searchIcon={<Search')
+  expect(source).not.toContain('title="Choose Video"')
+  expect(source).not.toContain("SubToolboxSplitDropdown")
  })
 
  it("keeps selected metadata independent from the filtered catalog", () => {

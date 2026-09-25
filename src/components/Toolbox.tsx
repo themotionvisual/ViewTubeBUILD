@@ -14,6 +14,7 @@ import {
 import { persistToolboxOpen, readPersistedToolboxOpen } from '../services/workspaceUiPersistence';
 import {
   CONTROL_SHELL,
+  MINI_SUBTOOLBOX_DNA,
   SUBTOOLBOX_COLLAPSE_TRANSITION,
   SUBTOOLBOX_TOKENS,
   TOOLBOX_HEADER_DNA,
@@ -781,6 +782,49 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
     </div>
   );
 };
+
+export interface MiniSubToolboxProps {
+  title: React.ReactNode;
+  icon?: React.ReactNode;
+  actions?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+  contentClassName?: string;
+  headerColor?: string;
+  iconColor?: string;
+}
+
+export const MiniSubToolbox: React.FC<MiniSubToolboxProps> = ({
+  title,
+  icon,
+  actions,
+  children,
+  className = "",
+  contentClassName = "",
+  headerColor = "var(--pair-a, #36E0F6)",
+  iconColor = "var(--pair-b, #FF7F6B)",
+}) => (
+  <section
+    data-vt-toolbox
+    data-vt-toolbox-level="mini"
+    className={`vt-mini-subtoolbox ${className}`}
+    style={{
+      ["--vt-mini-header" as any]: headerColor,
+      ["--vt-mini-icon" as any]: iconColor,
+      ["--vt-mini-height" as any]: `${MINI_SUBTOOLBOX_DNA.desktop.headerHeight}px`,
+      ["--vt-mini-stroke" as any]: `${MINI_SUBTOOLBOX_DNA.desktop.stroke}px`,
+      ["--vt-mini-radius" as any]: `${MINI_SUBTOOLBOX_DNA.desktop.radius}px`,
+      ["--vt-mini-shadow" as any]: `${MINI_SUBTOOLBOX_DNA.desktop.shadowOffset}px`,
+    }}
+  >
+    <header className="vt-mini-subtoolbox-header">
+      <span className="vt-mini-subtoolbox-icon" aria-hidden="true">{icon}</span>
+      <strong className="vt-mini-subtoolbox-title">{title}</strong>
+      {actions ? <span className="vt-mini-subtoolbox-actions">{actions}</span> : null}
+    </header>
+    <div className={`vt-mini-subtoolbox-content ${contentClassName}`}>{children}</div>
+  </section>
+);
 
 export interface StandardUploadBoxProps {
   label?: string;
