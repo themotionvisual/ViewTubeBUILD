@@ -695,7 +695,7 @@ const CreatorVaultOS: React.FC = () => {
         />
         <SubToolboxInnerActionButton
          label="Toggle Favorite"
-         iconName="star"
+         iconName="sparkles"
          tone="orange"
          onClick={toggleFavoriteSelection}
          disabled={!selectedAssetIds.length}
@@ -703,7 +703,7 @@ const CreatorVaultOS: React.FC = () => {
         {special === "archive" || special === "trash" ? (
          <SubToolboxInnerActionButton
           label="Restore Selection"
-          iconName="restore"
+          iconName="checklist"
           tone="green"
           onClick={restoreSelection}
           disabled={!selectedAssetIds.length}
@@ -719,7 +719,7 @@ const CreatorVaultOS: React.FC = () => {
           />
           <SubToolboxInnerActionButton
            label="Move to Trash"
-           iconName="trash"
+           iconName="eye-off"
            tone="pink"
            onClick={trashSelection}
            disabled={!selectedAssetIds.length}
