@@ -24,7 +24,7 @@
   --vt-primitive-height: var(--vt-control-h-24);
   --vt-primitive-stroke: 2px;
   --vt-primitive-radius: 4px;
-  --vt-primitive-font: 16px;
+  --vt-primitive-font: 14px;
 }
 
 .vt-control-height-32,
@@ -32,7 +32,7 @@
   --vt-primitive-height: var(--vt-control-h-32);
   --vt-primitive-stroke: 2px;
   --vt-primitive-radius: 6px;
-  --vt-primitive-font: 21px;
+  --vt-primitive-font: 18px;
 }
 
 .vt-control-height-38,
@@ -40,7 +40,7 @@
   --vt-primitive-height: var(--vt-control-h-38);
   --vt-primitive-stroke: 2px;
   --vt-primitive-radius: 7px;
-  --vt-primitive-font: 26px;
+  --vt-primitive-font: 22px;
 }
 
 .widget-action.vt-sized-control,
@@ -721,11 +721,16 @@
   min-width: 0;
 }
 .widget-split-button.is-left-split {
-  grid-template-columns: calc(var(--vt-primitive-height) - 4px) minmax(0, 1fr);
+  grid-template-columns: calc(var(--vt-primitive-height) - 2px) minmax(0, 1fr);
 }
 .widget-split-button.is-left-split .widget-split-button-icon {
-  width: calc(var(--vt-primitive-height) - 4px);
-  min-width: calc(var(--vt-primitive-height) - 4px);
+  width: calc(var(--vt-primitive-height) - 2px);
+  min-width: calc(var(--vt-primitive-height) - 2px);
+}
+.widget-split-button.is-left-split .widget-split-button-icon svg {
+  width: min(calc(var(--vt-primitive-height) * .72), var(--vt-primitive-icon)) !important;
+  height: min(calc(var(--vt-primitive-height) * .72), var(--vt-primitive-icon)) !important;
+  stroke-width: var(--vt-primitive-icon-stroke, 2.5);
 }
 .widget-split-button.is-left-split.is-height-18 {
   grid-template-columns: var(--vt-primitive-height) minmax(0, 1fr);
@@ -791,6 +796,38 @@
   white-space: nowrap !important;
   overflow: visible;
   text-overflow: clip;
+}
+
+.vt-sized-control:is(.is-height-32,.is-height-38).vt-text-fit-adaptive {
+  --vt-primitive-font: clamp(12px, 3.2cqi, 18px);
+  --vt-font: var(--vt-primitive-font);
+  --vt-primitive-gap: clamp(2px, .8cqi, 6px);
+  min-width: 0;
+  font-size: var(--vt-primitive-font) !important;
+  gap: var(--vt-primitive-gap) !important;
+  padding-inline: clamp(4px, 1.2cqi, 10px) !important;
+  white-space: normal !important;
+  overflow: hidden;
+  text-overflow: clip;
+  line-height: .88 !important;
+}
+
+.vt-sized-control.is-height-38.vt-text-fit-adaptive {
+  --vt-primitive-font: clamp(14px, 3.5cqi, 22px);
+}
+
+.vt-sized-control:is(.is-height-32,.is-height-38).vt-text-fit-adaptive :is(
+  span,
+  strong,
+  small,
+  .widget-split-button-label
+) {
+  min-width: 0;
+  font-size: inherit !important;
+  white-space: normal !important;
+  overflow: hidden;
+  text-overflow: clip;
+  line-height: inherit !important;
 }
 
 
