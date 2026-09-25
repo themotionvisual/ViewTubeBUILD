@@ -31,6 +31,8 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = (props) => {
   onCycleHeight: () => props.onCycleHeight(props.widget.id),
   onDecHeight: () => props.onDecHeight(props.widget.id),
   onRemove: () => props.onRemoveWidget(props.widget.id),
+  onMoveUp: () => props.onMoveWidgetUp(props.widget.id),
+  onMoveDown: () => props.onMoveWidgetDown(props.widget.id),
  }
 
  return <NewRenderer {...common} data={props.data} onNavigate={props.onNavigate} />
