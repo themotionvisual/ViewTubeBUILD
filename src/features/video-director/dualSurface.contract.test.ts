@@ -138,8 +138,11 @@ describe("Video Director dual-surface architecture", () => {
     const css = read("src/views/dashboard/widgets/video-director/videoDirectorWidget.css")
     const primitiveCss = read("src/views/dashboard/widgetPrimitiveExactHeights.css")
 
-    expect(widget).toContain('className="widget-header-toggle vtdw-header-studio"')
-    expect(widget).toContain("STUDIO ↗")
+    expect(widget).toContain("WidgetHeaderAction")
+    expect(widget).toContain('className="vtdw-header-studio"')
+    expect(widget).toContain("ExternalLink")
+    expect(widget).not.toContain("STUDIO ↗")
+    expect(widget).not.toContain('className="widget-header-toggle vtdw-header-studio"')
     expect(widget).toContain('textFit = "adaptive"')
     expect(widget).not.toContain('controlDensity="compact"')
     expect(widget).not.toContain('contentLayout="flush"')
