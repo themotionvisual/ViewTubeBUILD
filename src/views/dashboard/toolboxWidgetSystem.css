@@ -154,7 +154,7 @@
 :where(.dashboard-barrier) .vt-widget,
 :where(.dashboard-barrier) .vt-widget-body,
 :where(.dashboard-barrier) .vt-widget-content {
-  overflow-x: hidden !important;
+  overflow-x: visible;
 }
 
 :where(.dashboard-barrier) .vt-widget-body {
@@ -1203,16 +1203,16 @@
      title or action rail is removed. Non-toggle extras may still hide. */
   :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) {
     display: flex !important;
-    flex: 1 1 120px !important;
-    min-width: 86px;
-    max-width: 44%;
-    overflow: hidden;
+    flex: 1 1 132px !important;
+    min-width: 118px;
+    max-width: 50%;
+    overflow: visible;
     justify-content: center !important;
   }
 
   :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) .left {
-    flex: 1 1 42%;
-    max-width: 42%;
+    flex: 1 1 38%;
+    max-width: 40%;
   }
 
   :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) .title {
@@ -1224,17 +1224,22 @@
     width: 100%;
     min-width: 0;
     max-width: 100%;
-    height: 28px;
+    height: auto;
+    min-height: 30px;
     padding-inline: 2px;
+    overflow: visible;
   }
 
   :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) .widget-header-toggle button {
     min-width: 0;
-    padding-inline: 4px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: clamp(8px, 2.4cqw, 10px);
+    padding: 2px 3px;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+    font-size: clamp(8px, 2.35cqw, 10px);
+    line-height: .82;
   }
 
   :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) > .toggle {
@@ -1268,8 +1273,8 @@
     display: flex !important;
     flex: 1 1 120px !important;
     min-width: 86px;
-    max-width: 44%;
-    overflow: hidden;
+    max-width: 50%;
+    overflow: visible;
     justify-content: center !important;
   }
 }
@@ -4143,10 +4148,11 @@ textarea.vt-input:focus {
 
 }
 
-/* Ensure the widget doesn't shrink, but leaves room for the shadow */
+/* Widget shadow clearance is owned by the slot/scroll safe-zone, never by
+   a one-sided margin that changes dashboard geometry. */
 .vt-widget {
   margin-bottom: 4px;
-  margin-right: 8px;
+  margin-right: 0;
 }
 
 /* Add padding to the parent container so the shadow has room to be visible */
@@ -4774,7 +4780,7 @@ textarea.vt-textarea {
   /* Cap the cell to the viewport (minus the main's 16px side padding) with an
      absolute value — a percentage would resolve against the grid track, which
      a wide grid item can itself inflate, so it must not be relied on here. */
-  :where(.dashboard-barrier) .vt-dash-cell { min-width: 0; max-width: calc(100vw - 32px); }
+  :where(.dashboard-barrier) .vt-dash-cell { min-width: 0; max-width: 100%; width: 100%; }
   :where(.dashboard-barrier) .vt-dash-cell .vt-widget { min-width: 0; max-width: 100%; }
   :where(.dashboard-barrier) .vt-dash-cell:not(.is-collapsed) { height: auto !important; }
   :where(.dashboard-barrier) .vt-dash-cell:not(.is-collapsed) .vt-widget { height: auto; }
