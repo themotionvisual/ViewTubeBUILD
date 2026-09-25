@@ -64,14 +64,15 @@
 - [x] RH-B056 Updated date-range filter persisted through workspace + Smart Collections.
 - [x] RH-B057 Persistent horizontal Filmstrip library view.
 - [x] RH-B058 Persistent canonical Lineage library view.
-- [x] RH-B059 Unified Asset Operations SubToolbox replaces separate Search/Spectrum Tags/Import/Batch modules.
-- [x] RH-B060 Persist Asset Operations internal mode and migrate legacy workspace module visibility/order.
-- [x] RH-B061 Vault Text Editor creates and edits canonical plain-text/Markdown document assets.
-- [x] RH-B062 Project / Asset Group Builder creates or attaches canonical Projects/ContentBuilds and Vault Collections.
-- [x] RH-B063 Asset-aware Tools mode centralizes compatible Send To actions, selection manifests and metadata export.
-- [x] RH-B064 Remove noncanonical batch project-name assignment path.
-- [x] RH-B065 Asset Operations utility shelf: Quick Look, Compare Pair, Filmstrip, Lineage, Copy Asset ID.
-- [x] RH-B066 Centralize Send To + metadata export ownership in Asset Operations instead of duplicating Inspector actions.
+- [x] RH-B059 Asset Operations SubToolbox owns Search, Batch, Groups and Tools.
+- [x] RH-B060 Import Station + Spectrum Tags consolidated into one independent Import & Tags SubToolbox.
+- [x] RH-B061 Text Editor is its own independent SubToolbox and creates/edits canonical plain-text/Markdown assets.
+- [x] RH-B062 Persist Asset Operations and Import & Tags internal modes; migrate legacy workspace module visibility/order.
+- [x] RH-B063 Project / Asset Group Builder creates or attaches canonical Projects/ContentBuilds and Vault Collections.
+- [x] RH-B064 Asset-aware Tools mode centralizes compatible Send To actions, selection manifests and metadata export.
+- [x] RH-B065 Remove noncanonical batch project-name assignment path.
+- [x] RH-B066 Asset Operations utility shelf: Quick Look, Compare Pair, Filmstrip, Lineage, Copy Asset ID.
+- [x] RH-B067 Centralize Send To + metadata export ownership in Asset Operations instead of duplicating Inspector actions.
 
 ## Lane C — intake jobs
 - [x] RH-C040 Global workspace drag/drop.
