@@ -13,6 +13,7 @@ describe("Vault advanced filter persistence", () => {
   writeVaultWorkspaceState({
    ...DEFAULT_VAULT_WORKSPACE_STATE,
    filterLifecycle: "FINAL",
+   filterOrientation: "portrait",
    filterMimeType: "video/mp4",
    filterMinWidth: "1280",
    filterMinHeight: "720",
@@ -24,6 +25,7 @@ describe("Vault advanced filter persistence", () => {
 
   expect(readVaultWorkspaceState()).toMatchObject({
    filterLifecycle: "FINAL",
+   filterOrientation: "portrait",
    filterMimeType: "video/mp4",
    filterMinWidth: "1280",
    filterMinHeight: "720",
