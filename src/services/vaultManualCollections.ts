@@ -112,3 +112,38 @@ export const setVaultCollectionRole = (
  writeCollections(nextItems)
  return nextItems.find((item) => item.id === id) || null
 }
+
+
+export const renameVaultCollection = (
+ id: string,
+ nextName: string,
+): VaultManualCollection | null => {
+ const name = nextName.trim()
+ if (!name) return null
+ const items = listVaultCollections()
+ const current = items.find((item) => item.id === id)
+ if (!current) return null
+ const duplicate = items.some((item) => item.id !== id && item.name.trim().toLowerCase() === name.toLowerCase())
+ if (duplicate) return null
+ const updated: VaultManualCollection = {
+  ...current,
+  name,
+  updatedAt: Date.now(),
+ }
+ writeCollections(items.map((item) => item.id === id ? updated : item))
+ return updated
+}
+
+
+export const createVaultBrandKit = (
+ assetIds: string[] = [],
+): VaultManualCollection => {
+ const existing = getVaultBrandKit()
+ if (existing) {
+  return addAssetsToVaultCollection(existing.id, assetIds) || existing
+ }
+
+ const collection = createVaultCollection("Brand Kit")
+ const promoted = setVaultCollectionRole(collection.id, "brand-kit") || collection
+ return addAssetsToVaultCollection(promoted.id, assetIds) || promoted
+}

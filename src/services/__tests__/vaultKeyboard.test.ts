@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { resolveVaultKeyboardCommand } from "../vaultKeyboard"
+import { resolveVaultKeyboardCommand, resolveVaultTagHotkey } from "../vaultKeyboard"
 
 describe("resolveVaultKeyboardCommand", () => {
  it("maps platform command search to focus-search", () => {
@@ -17,8 +17,27 @@ describe("resolveVaultKeyboardCommand", () => {
   expect(resolveVaultKeyboardCommand({ key: "Escape", metaKey: false, ctrlKey: false })).toBe("close-transient")
  })
 
+ it("maps Enter to the selected asset Inspector", () => {
+  expect(resolveVaultKeyboardCommand({ key: "Enter", metaKey: false, ctrlKey: false })).toBe("focus-inspector")
+  expect(resolveVaultKeyboardCommand({ key: "Enter", metaKey: true, ctrlKey: false })).toBeNull()
+ })
+
  it("maps m to mute only when not using a modifier", () => {
   expect(resolveVaultKeyboardCommand({ key: "m", metaKey: false, ctrlKey: false })).toBe("toggle-mute")
   expect(resolveVaultKeyboardCommand({ key: "m", metaKey: true, ctrlKey: false })).toBeNull()
+ })
+})
+
+
+describe("resolveVaultTagHotkey", () => {
+ it("maps unmodified 1-9 keys to zero-based tag indexes", () => {
+  expect(resolveVaultTagHotkey({ key: "1", metaKey: false, ctrlKey: false })).toBe(0)
+  expect(resolveVaultTagHotkey({ key: "9", metaKey: false, ctrlKey: false })).toBe(8)
+ })
+
+ it("ignores zero, non-digits and modified number keys", () => {
+  expect(resolveVaultTagHotkey({ key: "0", metaKey: false, ctrlKey: false })).toBeNull()
+  expect(resolveVaultTagHotkey({ key: "a", metaKey: false, ctrlKey: false })).toBeNull()
+  expect(resolveVaultTagHotkey({ key: "1", metaKey: true, ctrlKey: false })).toBeNull()
  })
 })

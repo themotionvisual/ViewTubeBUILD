@@ -37,6 +37,7 @@ import {
  findVaultDuplicateByHash,
  listVaultAssets,
  searchVaultAssets,
+ setVaultAssetAttention,
  setVaultAssetLifecycle,
  setVaultAssetProtection,
  setVaultAssetState,
@@ -63,6 +64,7 @@ import {
  findVaultSimilarAssets,
 } from "../services/vaultImageSimilarity"
 import { computeVaultImagePalette } from "../services/vaultImagePalette"
+import { getVaultAttentionReasons } from "../services/vaultAttention"
 import { buildVaultExplorerGroups } from "../services/vaultExplorer"
 import { getAssetLineage } from "../services/assetEngine"
 import {
@@ -87,13 +89,15 @@ import {
 } from "../services/vaultCollections"
 import {
  addAssetsToVaultCollection,
+ createVaultBrandKit,
  createVaultCollection,
  deleteVaultCollection,
  listVaultCollections,
  removeAssetFromVaultCollection,
+ renameVaultCollection,
  setVaultCollectionRole,
 } from "../services/vaultManualCollections"
-import { resolveVaultKeyboardCommand } from "../services/vaultKeyboard"
+import { resolveVaultKeyboardCommand, resolveVaultTagHotkey } from "../services/vaultKeyboard"
 import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
 import { useBrain } from "../context/useBrain"
 import { initializeProjectContentIdentity } from "../services/projects/ProjectContentIdentityService"
@@ -217,6 +221,9 @@ const CreatorVaultOS: React.FC = () => {
  const [sort, setSort] = useState<VaultWorkspaceSort>(initialWorkspace.sort)
  const [special, setSpecial] = useState(initialWorkspace.special)
  const [filterLifecycle, setFilterLifecycle] = useState(initialWorkspace.filterLifecycle)
+ const [filterOrientation, setFilterOrientation] = useState(initialWorkspace.filterOrientation)
+ const [filterUpdatedFrom, setFilterUpdatedFrom] = useState(initialWorkspace.filterUpdatedFrom)
+ const [filterUpdatedTo, setFilterUpdatedTo] = useState(initialWorkspace.filterUpdatedTo)
  const [filterMimeType, setFilterMimeType] = useState(initialWorkspace.filterMimeType)
  const [filterMinWidth, setFilterMinWidth] = useState(initialWorkspace.filterMinWidth)
  const [filterMinHeight, setFilterMinHeight] = useState(initialWorkspace.filterMinHeight)
@@ -263,10 +270,12 @@ const CreatorVaultOS: React.FC = () => {
  const [captionLines, setCaptionLines] = useState<VaultCaptionLine[]>([])
  const [customFieldRefresh, setCustomFieldRefresh] = useState(0)
  const [customFieldName, setCustomFieldName] = useState("")
+ const [attentionNoteDraft, setAttentionNoteDraft] = useState("")
  const [customFieldType, setCustomFieldType] = useState<VaultCustomFieldType>("text")
  const [explorerProject, setExplorerProject] = useState<"all" | "unassigned" | string>("all")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
  const selectionProjectInputRef = useRef<HTMLInputElement | null>(null)
+ const inspectorRef = useRef<HTMLDivElement | null>(null)
 
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
  const smartCollections = useMemo(() => listVaultSmartCollections(), [collectionRefresh])
@@ -289,6 +298,9 @@ const CreatorVaultOS: React.FC = () => {
    sort,
    special,
    lifecycle: filterLifecycle === "all" ? null : filterLifecycle,
+   orientation: filterOrientation === "all" ? null : filterOrientation,
+   updatedAfter: filterUpdatedFrom ? new Date(`${filterUpdatedFrom}T00:00:00`).getTime() : null,
+   updatedBefore: filterUpdatedTo ? new Date(`${filterUpdatedTo}T23:59:59.999`).getTime() : null,
    mimeType: filterMimeType.trim() || null,
    minWidth: filterMinWidth ? Number(filterMinWidth) : null,
    minHeight: filterMinHeight ? Number(filterMinHeight) : null,
@@ -314,6 +326,9 @@ const CreatorVaultOS: React.FC = () => {
   sort,
   special,
   filterLifecycle,
+  filterOrientation,
+  filterUpdatedFrom,
+  filterUpdatedTo,
   filterMimeType,
   filterMinWidth,
   filterMinHeight,
@@ -336,6 +351,9 @@ const CreatorVaultOS: React.FC = () => {
    sort,
    special,
    filterLifecycle,
+   filterOrientation,
+   filterUpdatedFrom,
+   filterUpdatedTo,
    filterMimeType,
    filterMinWidth,
    filterMinHeight,
@@ -357,6 +375,9 @@ const CreatorVaultOS: React.FC = () => {
   sort,
   special,
   filterLifecycle,
+  filterOrientation,
+  filterUpdatedFrom,
+  filterUpdatedTo,
   filterMimeType,
   filterMinWidth,
   filterMinHeight,
@@ -375,6 +396,16 @@ const CreatorVaultOS: React.FC = () => {
   () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
   [allAssets, selectedAssetIds],
  )
+ const attentionReasons = useMemo(
+  () => selectedAsset ? getVaultAttentionReasons(selectedAsset) : [],
+  [selectedAsset, refreshTick],
+ )
+ const selectedCollectionMemberships = useMemo(
+  () => selectedAsset
+   ? manualCollections.filter((collection) => collection.assetIds.includes(selectedAsset.id))
+   : [],
+  [selectedAsset, manualCollections],
+ )
  const rightsLicense = selectedAsset ? String(selectedAsset.metadata?.license || "") : ""
  const rightsSource = selectedAsset ? String(selectedAsset.metadata?.rightsSource || selectedAsset.metadata?.sourceAttribution || "") : ""
  const rightsExpiry = selectedAsset ? String(selectedAsset.metadata?.rightsExpiry || "") : ""
@@ -383,47 +414,83 @@ const CreatorVaultOS: React.FC = () => {
   () => resolveVaultComparePair({ selectedIds: selectedAssetIds, assets: allAssets }),
   [selectedAssetIds, allAssets],
  )
- const finderListRows = useMemo(() => visibleAssets.map((asset) => ({
-  select: (
-   <input
-    type="checkbox"
-    aria-label={`Select ${asset.name}`}
-    checked={selectedAssetIds.includes(asset.id)}
-    onChange={(event) => {
-     const checked = event.target.checked
-     setSelectedAssetIds((current) => checked
-      ? Array.from(new Set([...current, asset.id]))
-      : current.filter((id) => id !== asset.id))
-     setSelectionAnchorId(asset.id)
-    }}
-   />
-  ),
-  preview: (
-   <div className="h-10 w-16 overflow-hidden border-[2px] border-current">
-    {asset.previewUrl || asset.url ? (
-     <img src={asset.previewUrl || asset.url || undefined} alt="" className="h-full w-full object-cover" />
-    ) : (
-     <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
-    )}
-   </div>
-  ),
-  name: <strong className="block max-w-[220px] truncate" title={asset.name}>{asset.name}</strong>,
-  type: asset.kind.toUpperCase(),
-  project: asset.projectName || "UNASSIGNED",
-  source: asset.source.toUpperCase(),
-  dimensions: typeof asset.metadata?.width === "number" && typeof asset.metadata?.height === "number"
-   ? `${asset.metadata.width}×${asset.metadata.height}`
-   : "—",
-  duration: typeof asset.metadata?.durationSeconds === "number"
-   ? `${Number(asset.metadata.durationSeconds).toFixed(1)}s`
-   : "—",
-  size: typeof asset.metadata?.byteSize === "number"
-   ? formatVaultBytes(Number(asset.metadata.byteSize))
-   : "—",
-  lifecycle: String(asset.metadata?.lifecycle || "DRAFT"),
-  updated: new Date(asset.updatedAt).toLocaleDateString(),
-  assetId: asset.id,
- })), [visibleAssets, selectedAssetIds])
+ const finderListRows = useMemo(() => visibleAssets.map((asset) => {
+  const customValues = asset.metadata?.customFields
+  const customFieldValues = customValues && typeof customValues === "object" && !Array.isArray(customValues)
+   ? customValues as Record<string, unknown>
+   : {}
+  const schemaValues = Object.fromEntries(customFields.map((field) => {
+   const value = customFieldValues[field.id]
+   const display = value == null || value === ""
+    ? "—"
+    : typeof value === "boolean"
+     ? (value ? "TRUE" : "FALSE")
+     : String(value)
+   return [`custom_${field.id}`, display]
+  }))
+
+  return {
+   select: (
+    <input
+     type="checkbox"
+     aria-label={`Select ${asset.name}`}
+     checked={selectedAssetIds.includes(asset.id)}
+     onChange={(event) => {
+      const checked = event.target.checked
+      setSelectedAssetIds((current) => checked
+       ? Array.from(new Set([...current, asset.id]))
+       : current.filter((id) => id !== asset.id))
+      setSelectionAnchorId(asset.id)
+     }}
+    />
+   ),
+   preview: (
+    <div className="h-10 w-16 overflow-hidden border-[2px] border-current">
+     {asset.previewUrl || asset.url ? (
+      <img src={asset.previewUrl || asset.url || undefined} alt="" className="h-full w-full object-cover" />
+     ) : (
+      <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
+     )}
+    </div>
+   ),
+   name: <strong className="block max-w-[220px] truncate" title={asset.name}>{asset.name}</strong>,
+   type: asset.kind.toUpperCase(),
+   project: asset.projectName || "UNASSIGNED",
+   source: asset.source.toUpperCase(),
+   dimensions: typeof asset.metadata?.width === "number" && typeof asset.metadata?.height === "number"
+    ? `${asset.metadata.width}×${asset.metadata.height}`
+    : "—",
+   duration: typeof asset.metadata?.durationSeconds === "number"
+    ? `${Number(asset.metadata.durationSeconds).toFixed(1)}s`
+    : "—",
+   size: typeof asset.metadata?.byteSize === "number"
+    ? formatVaultBytes(Number(asset.metadata.byteSize))
+    : "—",
+   lifecycle: String(asset.metadata?.lifecycle || "DRAFT"),
+   updated: new Date(asset.updatedAt).toLocaleDateString(),
+   ...schemaValues,
+   assetId: asset.id,
+  }
+ }), [visibleAssets, selectedAssetIds, customFields])
+
+ const finderListColumns = useMemo(() => [
+  { key: "select", label: "" },
+  { key: "preview", label: "PREVIEW" },
+  { key: "name", label: "NAME" },
+  { key: "type", label: "TYPE" },
+  { key: "project", label: "PROJECT" },
+  { key: "source", label: "SOURCE" },
+  { key: "dimensions", label: "DIMENSIONS" },
+  { key: "duration", label: "DURATION" },
+  { key: "size", label: "SIZE" },
+  { key: "lifecycle", label: "LIFECYCLE" },
+  ...customFields.map((field) => ({
+   key: `custom_${field.id}`,
+   label: field.name.toUpperCase(),
+  })),
+  { key: "updated", label: "UPDATED" },
+ ], [customFields])
+
  const selectedVersionStack = useMemo(
   () => selectedAsset ? getVaultAssetVersionStack(selectedAsset.id) : [],
   [selectedAsset, refreshTick],
@@ -511,6 +578,14 @@ const CreatorVaultOS: React.FC = () => {
  )
 
  useEffect(() => {
+  setAttentionNoteDraft(
+   selectedAsset && typeof selectedAsset.metadata?.attentionNote === "string"
+    ? selectedAsset.metadata.attentionNote
+    : "",
+  )
+ }, [selectedAsset?.id])
+
+ useEffect(() => {
   const stored = activeCaptionAsset?.metadata?.captionLines
   if (Array.isArray(stored) && stored.length) {
    setCaptionLines(stored.filter((line): line is VaultCaptionLine => (
@@ -547,9 +622,34 @@ const CreatorVaultOS: React.FC = () => {
   setManualCollectionRefresh((value) => value + 1)
  }
 
+ const addSelectedAssetToCollection = () => {
+  if (!selectedAsset || !targetCollectionId) return
+  addAssetsToVaultCollection(targetCollectionId, [selectedAsset.id])
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const removeSelectedAssetFromCollection = (collectionId: string) => {
+  if (!selectedAsset) return
+  removeAssetFromVaultCollection(collectionId, selectedAsset.id)
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
  const removeSelectedAssetFromActiveCollection = () => {
   if (!activeCollectionId || !selectedAsset) return
   removeAssetFromVaultCollection(activeCollectionId, selectedAsset.id)
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const renameManualCollection = (id: string, nextName: string) => {
+  const updated = renameVaultCollection(id, nextName)
+  if (!updated) return
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const createBrandKitFromSelection = () => {
+  const kit = createVaultBrandKit(selectedAssetIds)
+  setActiveCollectionId(kit.id)
+  setTargetCollectionId(kit.id)
   setManualCollectionRefresh((value) => value + 1)
  }
 
@@ -580,6 +680,17 @@ const CreatorVaultOS: React.FC = () => {
    tags: selectedTag ? [selectedTag] : [],
    kind: filterKind,
    source,
+   lifecycle: filterLifecycle,
+   orientation: filterOrientation,
+   updatedFrom: filterUpdatedFrom,
+   updatedTo: filterUpdatedTo,
+   mimeType: filterMimeType,
+   minWidth: filterMinWidth,
+   minHeight: filterMinHeight,
+   minDuration: filterMinDuration,
+   maxDuration: filterMaxDuration,
+   minBytesMb: filterMinBytesMb,
+   maxBytesMb: filterMaxBytesMb,
   })
   setSmartCollectionName("")
   setCollectionRefresh((value) => value + 1)
@@ -590,6 +701,17 @@ const CreatorVaultOS: React.FC = () => {
   setSelectedTag(collection.tags[0] || null)
   setFilterKind(collection.kind)
   setSource(collection.source)
+  setFilterLifecycle(collection.lifecycle)
+  setFilterOrientation(collection.orientation)
+  setFilterUpdatedFrom(collection.updatedFrom)
+  setFilterUpdatedTo(collection.updatedTo)
+  setFilterMimeType(collection.mimeType)
+  setFilterMinWidth(collection.minWidth)
+  setFilterMinHeight(collection.minHeight)
+  setFilterMinDuration(collection.minDuration)
+  setFilterMaxDuration(collection.maxDuration)
+  setFilterMinBytesMb(collection.minBytesMb)
+  setFilterMaxBytesMb(collection.maxBytesMb)
  }
 
  const removeSmartCollection = (id: string) => {
@@ -597,10 +719,36 @@ const CreatorVaultOS: React.FC = () => {
   setCollectionRefresh((value) => value + 1)
  }
 
+ const applyTagToSelection = (tag: string) => {
+  if (!tag || !selectedAssetIds.length) return
+  for (const assetId of selectedAssetIds) {
+   const asset = allAssets.find((candidate) => candidate.id === assetId)
+   if (!asset) continue
+   updateVaultAsset(assetId, {
+    tags: Array.from(new Set([...(asset.tags || []), tag])),
+   })
+  }
+  setRefreshTick((value) => value + 1)
+ }
+
  useEffect(() => {
   const handleKeyDown = (event: KeyboardEvent) => {
    const target = event.target as HTMLElement | null
    const isTyping = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable
+   const tagIndex = resolveVaultTagHotkey({
+    key: event.key,
+    metaKey: event.metaKey,
+    ctrlKey: event.ctrlKey,
+   })
+   if (!isTyping && tagIndex != null && selectedAssetIds.length) {
+    const tag = availableTags[tagIndex]
+    if (tag) {
+     event.preventDefault()
+     applyTagToSelection(tag)
+    }
+    return
+   }
+
    const command = resolveVaultKeyboardCommand({
     key: event.key,
     metaKey: event.metaKey,
@@ -629,13 +777,19 @@ const CreatorVaultOS: React.FC = () => {
     setQuickLookMuted((muted) => !muted)
     return
    }
+   if (command === "focus-inspector" && selectedAsset) {
+    event.preventDefault()
+    inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    inspectorRef.current?.focus({ preventScroll: true })
+    return
+   }
    if (command === "close-transient") {
     setQuickLookOpen(false)
    }
   }
   window.addEventListener("keydown", handleKeyDown)
   return () => window.removeEventListener("keydown", handleKeyDown)
- }, [selectedAsset, selectedAssetIds.length])
+ }, [selectedAsset, selectedAssetIds, availableTags, allAssets])
 
  const createImportedRecord = (item: PendingVaultImport, mode: "direct" | "staged") => {
   return createImportedVaultAsset({
@@ -655,8 +809,9 @@ const CreatorVaultOS: React.FC = () => {
   })
  }
 
- const stageFiles = async (files: FileList | null) => {
+ const stageFiles = async (files: FileList | null, forcedTags: string[] = []) => {
   if (!files?.length) return
+  const initialTags = Array.from(new Set([...importTags, ...forcedTags]))
   const prepared = await Promise.all(Array.from(files).map(async (file) => {
    const task = createVaultTask({
     type: "ingest-preflight",
@@ -720,7 +875,7 @@ const CreatorVaultOS: React.FC = () => {
     setTaskRefresh((value) => value + 1)
     return createPendingVaultImport(
      file,
-     importTags,
+     initialTags,
      crypto.randomUUID(),
      {
       ...metadata,
@@ -744,7 +899,7 @@ const CreatorVaultOS: React.FC = () => {
      detail: error instanceof Error ? error.message : "Preflight failed.",
     })
     setTaskRefresh((value) => value + 1)
-    return createPendingVaultImport(file, importTags)
+    return createPendingVaultImport(file, initialTags)
    }
   }))
   if (importMode === "direct") {
@@ -995,6 +1150,19 @@ const CreatorVaultOS: React.FC = () => {
    else delete metadata[key]
   }
   updateVaultAsset(asset.id, { metadata })
+  setRefreshTick((value) => value + 1)
+ }
+
+ const flagSelectedAssetForReview = () => {
+  if (!selectedAsset) return
+  setVaultAssetAttention(selectedAsset.id, true, attentionNoteDraft)
+  setRefreshTick((value) => value + 1)
+ }
+
+ const clearSelectedAssetReviewFlag = () => {
+  if (!selectedAsset) return
+  setVaultAssetAttention(selectedAsset.id, false)
+  setAttentionNoteDraft("")
   setRefreshTick((value) => value + 1)
  }
 
@@ -1416,6 +1584,8 @@ const CreatorVaultOS: React.FC = () => {
          options={[
           { value: "grid", label: "GRID" },
           { value: "masonry", label: "MASONRY" },
+          { value: "filmstrip", label: "FILMSTRIP" },
+          { value: "lineage", label: "LINEAGE" },
           { value: "list", label: "LIST" },
           { value: "timeline", label: "TIMELINE" },
          ]}
@@ -1433,6 +1603,8 @@ const CreatorVaultOS: React.FC = () => {
          onValueChange={(value) => setSpecial(value as typeof special)}
          options={[
           { value: "active", label: "LIBRARY" },
+          { value: "recent", label: "RECENT" },
+          { value: "generated", label: "GENERATED" },
           { value: "inbox", label: "INBOX" },
           { value: "favorites", label: "FAVORITES" },
           { value: "archive", label: "ARCHIVE" },
@@ -1466,6 +1638,26 @@ const CreatorVaultOS: React.FC = () => {
            onChange={setFilterLifecycle}
            options={["all", "DRAFT", "CANDIDATE", "APPROVED", "FINAL", "GOLDEN", "SUPERSEDED", "ARCHIVED", "TRASHED"]}
           />
+          <SubToolboxDropdownControl
+           label="Orientation"
+           value={filterOrientation}
+           onChange={(value) => setFilterOrientation(value as typeof filterOrientation)}
+           options={["all", "landscape", "portrait", "square"]}
+          />
+          <div className="grid grid-cols-2 gap-2">
+           <SubToolboxInput
+            type="date"
+            value={filterUpdatedFrom}
+            onChange={(event) => setFilterUpdatedFrom(event.target.value)}
+            aria-label="UPDATED FROM"
+           />
+           <SubToolboxInput
+            type="date"
+            value={filterUpdatedTo}
+            onChange={(event) => setFilterUpdatedTo(event.target.value)}
+            aria-label="UPDATED TO"
+           />
+          </div>
           <SubToolboxInput
            value={filterMimeType}
            onChange={(event) => setFilterMimeType(event.target.value)}
@@ -1536,6 +1728,9 @@ const CreatorVaultOS: React.FC = () => {
            tone="cyan"
            onClick={() => {
             setFilterLifecycle("all")
+            setFilterOrientation("all")
+            setFilterUpdatedFrom("")
+            setFilterUpdatedTo("")
             setFilterMimeType("")
             setFilterMinWidth("")
             setFilterMinHeight("")
@@ -1643,7 +1838,14 @@ const CreatorVaultOS: React.FC = () => {
             disabled={!selectedAssetIds.length}
            />
           </div>
-         ) : null}
+         ) : (
+          <SubToolboxInnerActionButton
+           label="Create Brand Kit from Selection"
+           iconName="sparkles"
+           tone="yellow"
+           onClick={createBrandKitFromSelection}
+          />
+         )}
          <SubToolboxInnerActionButton
           label="All Collections / Clear Filter"
           iconName="collection"
@@ -1652,6 +1854,16 @@ const CreatorVaultOS: React.FC = () => {
          />
          {manualCollections.map((collection) => (
           <div key={collection.id} className="flex flex-col gap-1">
+           {activeCollectionId === collection.id ? (
+            <StandardInput
+             defaultValue={collection.name}
+             aria-label={`Rename collection ${collection.name}`}
+             onBlur={(event) => renameManualCollection(collection.id, event.target.value)}
+             onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur()
+             }}
+            />
+           ) : null}
            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <SubToolboxInnerActionButton
              label={`${collection.role === "brand-kit" ? "★ " : ""}${collection.name} · ${collection.assetIds.length}`}
@@ -1784,6 +1996,17 @@ const CreatorVaultOS: React.FC = () => {
           key={tag}
           type="button"
           aria-pressed={selectedTag === tag}
+          aria-label={`Zone Tag ${tag}. Drop files here to import with this tag.`}
+          title={`Zone Tag · drop files to import with ${tag}`}
+          onDragOver={(event) => {
+           if (event.dataTransfer?.types?.includes("Files")) event.preventDefault()
+          }}
+          onDrop={(event) => {
+           if (!event.dataTransfer?.files?.length) return
+           event.preventDefault()
+           event.stopPropagation()
+           void stageFiles(event.dataTransfer.files, [tag])
+          }}
           onClick={() => setSelectedTag((current) => current === tag ? null : tag)}
           className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
          >
@@ -1911,25 +2134,111 @@ const CreatorVaultOS: React.FC = () => {
           />
          </div>
         ) : null}
-        {visibleAssets.length ? (
-         viewMode === "list" ? (
+        {viewMode === "lineage" ? (
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Vault Lineage</div>
+          {selectedAsset ? (
+           selectedLineage.length ? (
+            <div className="flex gap-3 overflow-x-auto pb-3">
+             {selectedLineage.map((asset, index) => (
+              <button
+               key={asset.id}
+               type="button"
+               onClick={() => {
+                setSelectedAssetIds([asset.id])
+                setSelectionAnchorId(asset.id)
+               }}
+               className="w-52 shrink-0 border-[3px] border-current p-2 text-left"
+              >
+               <div className="mb-1 text-[10px] font-black uppercase opacity-60">
+                {index === 0 ? "CURRENT" : `PARENT ${index}`}
+               </div>
+               <div className="aspect-video overflow-hidden border-[2px] border-current">
+                {asset.previewUrl || asset.url ? (
+                 <img
+                  src={asset.previewUrl || asset.url || undefined}
+                  alt=""
+                  className="h-full w-full object-cover"
+                 />
+                ) : (
+                 <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
+                )}
+               </div>
+               <div className="mt-1 truncate text-xs font-black uppercase" title={asset.name}>
+                {asset.name}
+               </div>
+              </button>
+             ))}
+            </div>
+           ) : (
+            <SubToolboxStatePanel
+             level="l1"
+             state="empty"
+             message="No canonical parent lineage is recorded for this asset."
+            />
+           )
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="empty"
+            message="Select an asset to view its canonical lineage."
+           />
+          )}
+         </div>
+        ) : visibleAssets.length ? (
+         viewMode === "filmstrip" ? (
+          <div>
+           <div className="mb-2 text-xs font-black uppercase opacity-60">Vault Filmstrip</div>
+           <div className="flex gap-2 overflow-x-auto pb-3">
+            {visibleAssets.map((asset) => {
+             const selected = selectedAssetIds.includes(asset.id)
+             return (
+              <button
+               key={asset.id}
+               type="button"
+               aria-pressed={selected}
+               onClick={(event) => {
+                const next = resolveVaultSelection({
+                 visibleIds: visibleAssets.map((item) => item.id),
+                 selectedIds: selectedAssetIds,
+                 clickedId: asset.id,
+                 nextSelected: !selected,
+                 anchorId: selectionAnchorId,
+                 shiftKey: event.shiftKey,
+                })
+                setSelectedAssetIds(next.selectedIds)
+                setSelectionAnchorId(next.anchorId)
+               }}
+               className={`w-44 shrink-0 border-[3px] border-current p-1 text-left ${selected ? "outline outline-[3px] outline-offset-2" : ""}`}
+              >
+               <div className="aspect-video overflow-hidden border-[2px] border-current">
+                {asset.previewUrl || asset.url ? (
+                 <img
+                  src={asset.previewUrl || asset.url || undefined}
+                  alt=""
+                  className="h-full w-full object-cover"
+                 />
+                ) : (
+                 <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
+                )}
+               </div>
+               <div className="mt-1 truncate text-[11px] font-black uppercase" title={asset.name}>
+                {asset.name}
+               </div>
+               <div className="truncate text-[9px] font-bold uppercase opacity-60">
+                {asset.kind} · {asset.projectName || "UNASSIGNED"}
+               </div>
+              </button>
+             )
+            })}
+           </div>
+          </div>
+         ) : viewMode === "list" ? (
           <div className="overflow-x-auto">
            <div className="min-w-[1080px]">
             <SubToolboxDataTable
              level="l1"
-             columns={[
-              { key: "select", label: "" },
-              { key: "preview", label: "PREVIEW" },
-              { key: "name", label: "NAME" },
-              { key: "type", label: "TYPE" },
-              { key: "project", label: "PROJECT" },
-              { key: "source", label: "SOURCE" },
-              { key: "dimensions", label: "DIMENSIONS" },
-              { key: "duration", label: "DURATION" },
-              { key: "size", label: "SIZE" },
-              { key: "lifecycle", label: "LIFECYCLE" },
-              { key: "updated", label: "UPDATED" },
-             ]}
+             columns={finderListColumns}
              rows={finderListRows}
              getRowKey={(row) => String(row.assetId)}
             />
@@ -2521,7 +2830,8 @@ const CreatorVaultOS: React.FC = () => {
        </div>
       </SubToolbox>
 
-      <SubToolbox
+      <div ref={inspectorRef} tabIndex={-1}>
+       <SubToolbox
        style={moduleStyle("inspector" as VaultWorkspaceModuleId)}
        title="Inspector"
        subtitle="Selected asset details and provenance"
@@ -2594,6 +2904,96 @@ const CreatorVaultOS: React.FC = () => {
          <div>
           <div className="text-xs font-black uppercase opacity-60">Project</div>
           <div className="text-sm font-black uppercase">{selectedAsset.projectName || "Unassigned"}</div>
+         </div>
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Collection Membership</div>
+          <div className="flex flex-col gap-2">
+           {selectedCollectionMemberships.length ? selectedCollectionMemberships.map((collection) => (
+            <div key={collection.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+             <SubToolboxInnerActionButton
+              label={`${collection.role === "brand-kit" ? "★ " : ""}${collection.name}`}
+              iconName="collection"
+              tone={collection.role === "brand-kit" ? "yellow" : "cyan"}
+              onClick={() => setActiveCollectionId(collection.id)}
+             />
+             <SubToolboxInnerActionButton
+              label="Remove from Collection"
+              iconName="x"
+              tone="pink"
+              onClick={() => removeSelectedAssetFromCollection(collection.id)}
+             />
+            </div>
+           )) : (
+            <SubToolboxStatePanel
+             level="l1"
+             state="empty"
+             message="This asset is not in a manual collection yet."
+            />
+           )}
+           {manualCollections.length ? (
+            <>
+             <SubToolboxSelect
+              value={targetCollectionId}
+              aria-label="Collection for selected asset"
+              onChange={(event) => setTargetCollectionId(event.target.value)}
+             >
+              <option value="">SELECT COLLECTION</option>
+              {manualCollections.map((collection) => (
+               <option key={collection.id} value={collection.id}>
+                {collection.role === "brand-kit" ? "★ " : ""}{collection.name}
+               </option>
+              ))}
+             </SubToolboxSelect>
+             <SubToolboxInnerActionButton
+              label="Add Asset to Collection"
+              iconName="plus"
+              tone="green"
+              onClick={addSelectedAssetToCollection}
+              disabled={!targetCollectionId}
+             />
+            </>
+           ) : null}
+          </div>
+         </div>
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Needs Attention</div>
+          {attentionReasons.length ? (
+           <div className="mb-2 flex flex-col gap-1">
+            {attentionReasons.map((reason) => (
+             <div key={reason} className="text-xs font-bold">• {reason}</div>
+            ))}
+           </div>
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="ready"
+            message="No current organization or review issues."
+           />
+          )}
+          <div className="mt-2 flex flex-col gap-2">
+           <SubToolboxTextArea
+            height="compact"
+            value={attentionNoteDraft}
+            placeholder="Review note…"
+            aria-label="Vault review note"
+            onChange={(event) => setAttentionNoteDraft(event.target.value)}
+           />
+           {selectedAsset.metadata?.needsAttention === true ? (
+            <SubToolboxInnerActionButton
+             label="Clear Review Flag"
+             iconName="checklist"
+             tone="green"
+             onClick={clearSelectedAssetReviewFlag}
+            />
+           ) : (
+            <SubToolboxInnerActionButton
+             label="Flag for Review"
+             iconName="flag"
+             tone="orange"
+             onClick={flagSelectedAssetForReview}
+            />
+           )}
+          </div>
          </div>
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Spectrum Tags</div>
@@ -3106,6 +3506,7 @@ const CreatorVaultOS: React.FC = () => {
         />
        )}
       </SubToolbox>
+      </div>
      </div>
     </div>
    </Toolbox>

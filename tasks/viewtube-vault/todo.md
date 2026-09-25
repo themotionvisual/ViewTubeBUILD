@@ -52,6 +52,18 @@
 - [x] RH-B044 Editable Rights & License metadata.
 - [x] RH-B045 Persistent Masonry library view.
 - [x] RH-B046 Advanced metadata-filter workspace persistence.
+- [x] RH-B047 Brand Kit role, direct creation/reuse, and curated Explorer surface.
+- [x] RH-B048 Safe manual-collection rename + selected-asset membership management.
+- [x] RH-B049 Smart Collections preserve full advanced filter state.
+- [x] RH-B050 Recent and Generated primary library modes.
+- [x] RH-B051 Typed custom fields projected into Finder schema columns.
+- [x] RH-B052 Factual Needs Attention reasons + manual review flag/note.
+- [x] RH-B053 Numeric 1–9 Spectrum Tag hotkeys.
+- [x] RH-B054 Enter shortcut scrolls selected asset Inspector into view.
+- [x] RH-B055 Orientation metadata filter persisted through workspace + Smart Collections.
+- [x] RH-B056 Updated date-range filter persisted through workspace + Smart Collections.
+- [x] RH-B057 Persistent horizontal Filmstrip library view.
+- [x] RH-B058 Persistent canonical Lineage library view.
 
 ## Lane C — intake jobs
 - [x] RH-C040 Global workspace drag/drop.
@@ -68,6 +80,7 @@
 - [ ] RH-C051 Proxy derivative task.
 - [x] RH-C052 Background task center/retry/error.
 - [x] RH-C053 Per-item staged tag editing before canonical ingest.
+- [x] RH-C054 Zone Tag drag/drop ingestion through canonical preflight.
 
 ## Lane D — versions/captions/dependencies
 - [x] RH-D060 Version carousel.

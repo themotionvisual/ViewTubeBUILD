@@ -36,7 +36,7 @@ export interface VaultAssetSearchInput {
  tagMode?: "all" | "any"
  source?: VaultAsset["source"] | null
  sort?: "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
- special?: "active" | "inbox" | "favorites" | "archive" | "trash" | null
+ special?: "active" | "recent" | "generated" | "inbox" | "favorites" | "archive" | "trash" | null
  mimeType?: string | null
  lifecycle?: string | null
  minWidth?: number | null
@@ -45,6 +45,9 @@ export interface VaultAssetSearchInput {
  maxDurationSec?: number | null
  minBytes?: number | null
  maxBytes?: number | null
+ orientation?: "all" | "landscape" | "portrait" | "square" | null
+ updatedAfter?: number | null
+ updatedBefore?: number | null
  limit?: number
 }
 
@@ -86,10 +89,27 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
    if (input.maxDurationSec != null && (durationSec == null || durationSec > input.maxDurationSec)) return false
    if (input.minBytes != null && (byteSize == null || byteSize < input.minBytes)) return false
    if (input.maxBytes != null && (byteSize == null || byteSize > input.maxBytes)) return false
+   if (input.orientation && input.orientation !== "all") {
+    if (width == null || height == null || width <= 0 || height <= 0) return false
+    const ratio = width / height
+    const orientation = ratio > 1.05 ? "landscape" : ratio < 0.95 ? "portrait" : "square"
+    if (orientation !== input.orientation) return false
+   }
+   if (input.updatedAfter != null && asset.updatedAt < input.updatedAfter) return false
+   if (input.updatedBefore != null && asset.updatedAt > input.updatedBefore) return false
    if (input.special === "inbox") {
     if (metadata.archivedAt || metadata.trashedAt) return false
-    const needsAttention = metadata.needsAttention === true || !asset.projectName || !(asset.tags || []).length
-    if (!needsAttention) return false
+    if (!getVaultAttentionReasons(asset).length) return false
+   }
+   if (input.special === "recent") {
+    if (metadata.archivedAt || metadata.trashedAt) return false
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000)
+    if (asset.updatedAt < thirtyDaysAgo) return false
+   }
+   if (input.special === "generated") {
+    if (metadata.archivedAt || metadata.trashedAt) return false
+    const generationBacked = asset.source === "generated" || asset.kind === "generated" || Boolean(asset.generationId)
+    if (!generationBacked) return false
    }
    if (input.special === "favorites" && metadata.favorite !== true) return false
    if (input.special === "archive" && !metadata.archivedAt) return false
@@ -390,4 +410,25 @@ export const linkDriveVaultFolder = async (projectName: string) => {
    metadata: { projectName },
   },
  )
+}
+
+
+export const setVaultAssetAttention = (
+ id: string,
+ flagged: boolean,
+ note = "",
+): VaultAsset | null => {
+ const existing = readAssets().find((asset) => asset.id === id)
+ if (!existing) return null
+ const metadata = { ...(existing.metadata || {}) }
+ if (flagged) {
+  metadata.needsAttention = true
+  const trimmed = note.trim()
+  if (trimmed) metadata.attentionNote = trimmed
+  else delete metadata.attentionNote
+ } else {
+  delete metadata.needsAttention
+  delete metadata.attentionNote
+ }
+ return updateVaultAsset(id, { metadata })
 }
