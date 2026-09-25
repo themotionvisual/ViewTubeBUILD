@@ -39,7 +39,7 @@ import {
 } from "../services/vaultWorkspaceState"
 import { createPendingVaultImport, type PendingVaultImport } from "../services/vaultImport"
 import { resolveVaultSelection } from "../services/vaultSelection"
-import { SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
+import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
 import type { VaultAsset, VaultAssetKind } from "../types"
 
 const CORE_TAGS = [
@@ -547,17 +547,23 @@ const CreatorVaultOS: React.FC = () => {
         <div className="flex flex-col gap-3">
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Quick Look</div>
-          {selectedAsset.url || selectedAsset.previewUrl ? (
+          {selectedAsset.kind === "image" && (selectedAsset.previewUrl || selectedAsset.url) ? (
+           <SubToolboxMediaInspector
+            level="l1"
+            title="Quick Look"
+            poster={selectedAsset.previewUrl || selectedAsset.url || undefined}
+            items={[
+             { label: "KIND", value: selectedAsset.kind.toUpperCase() },
+             { label: "PROJECT", value: selectedAsset.projectName || "UNASSIGNED" },
+            ]}
+           />
+          ) : (selectedAsset.kind === "video" || selectedAsset.kind === "audio") && (selectedAsset.url || selectedAsset.previewUrl) ? (
            <SubToolboxMediaPlayer
             level="l1"
             title="Quick Look"
             meta={`${selectedAsset.kind.toUpperCase()} · ${selectedAsset.projectName || "UNASSIGNED"}`}
-            src={selectedAsset.kind === "video" || selectedAsset.kind === "audio"
-             ? selectedAsset.url || selectedAsset.previewUrl || undefined
-             : undefined}
-            poster={selectedAsset.kind === "image"
-             ? selectedAsset.previewUrl || selectedAsset.url || undefined
-             : selectedAsset.previewUrl || undefined}
+            src={selectedAsset.url || selectedAsset.previewUrl || undefined}
+            poster={selectedAsset.previewUrl || undefined}
             current={quickLookCurrent}
             duration={Number(selectedAsset.metadata?.durationSeconds || selectedAsset.metadata?.duration || 60)}
             playing={quickLookPlaying}
@@ -574,7 +580,7 @@ const CreatorVaultOS: React.FC = () => {
            <SubToolboxStatePanel
             level="l1"
             state="empty"
-            message="This Vault record does not have a preview source yet."
+            message="This Vault record does not have a compatible preview source yet."
            />
           )}
          </div>
