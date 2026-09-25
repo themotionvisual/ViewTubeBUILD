@@ -15,6 +15,7 @@ import {
  FilmStrip,
  Gear,
  Compass,
+ Database,
 } from "@phosphor-icons/react"
 
 export type NavIconId =
@@ -26,6 +27,7 @@ export type NavIconId =
  | "editor"
  | "settings"
  | "user_guide"
+ | "vault"
 
 const icons: Record<NavIconId, PhosphorIcon> = {
  dashboard:  Target,      // Concentric target — Dashboard's aim/focus metaphor
@@ -36,6 +38,7 @@ const icons: Record<NavIconId, PhosphorIcon> = {
  editor:     FilmStrip,   // Perforated film strip — Editor's video metaphor
  settings:   Gear,        // Dense-toothed cog
  user_guide: Compass,     // North-pointing compass rose
+ vault:      Database,    // Durable creator asset store
 }
 
 export interface NavIconProps {
