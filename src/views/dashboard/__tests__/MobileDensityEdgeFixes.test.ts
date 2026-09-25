@@ -33,9 +33,9 @@ describe("mobile widget density and edge contracts", () => {
     expect(mobile).toContain(".vt-widget-shadow-safe")
   })
 
-  it("uses full-bleed interior bands for About and Oracle", () => {
-    expect(about).toContain("margin-inline: calc(-1 * var(--widget-content-inset))")
-    expect(oracle).toContain("margin-inline: calc(-1 * var(--widget-content-inset))")
+  it("uses one canonical full-bleed owner for About and Oracle bands", () => {
+    expect(about).not.toContain(".about-vt__intro,\n.about-vt__handoff")
+    expect(oracle).not.toContain(".daily-oracle-v2__source-strip,\n.daily-oracle-v2__footer")
     expect(oracle).not.toContain("text-overflow: ellipsis")
   })
 
