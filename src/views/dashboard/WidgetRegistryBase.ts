@@ -1074,8 +1074,8 @@ export const WIDGET_DESCRIPTIONS: Record<string, { short: string, detailed: stri
    detailed: "Stay updated on major subscriber jumps, revenue spikes, or policy alerts. Check daily to catch urgent channel changes."
   },
   "system-micro-stack": {
-   short: "MINIATURE CONTROL CENTER FOR QUICK CHANNEL ACTIONS.",
-   detailed: "A compact stack for toggling visibility or quick settings. Keep this pinned for rapid-fire channel management."
+   short: "DASHBOARD CONTROL SWITCHBOARD FOR LAYOUT, DATA, AI AND ACCOUNT STATE.",
+   detailed: "Page through compact Dashboard, Data, AI and Account controls, inspect readiness, apply layout presets, manage widget visibility, sync channel data, and open deeper settings without leaving the dashboard."
   },
   "recent-uploads": {
    short: "PERFORMANCE AUDIT OF YOUR MOST RECENT VIDEO RELEASES.",
