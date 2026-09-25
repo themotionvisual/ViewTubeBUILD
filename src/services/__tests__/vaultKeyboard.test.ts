@@ -17,6 +17,11 @@ describe("resolveVaultKeyboardCommand", () => {
   expect(resolveVaultKeyboardCommand({ key: "Escape", metaKey: false, ctrlKey: false })).toBe("close-transient")
  })
 
+ it("maps Enter to the selected asset Inspector", () => {
+  expect(resolveVaultKeyboardCommand({ key: "Enter", metaKey: false, ctrlKey: false })).toBe("focus-inspector")
+  expect(resolveVaultKeyboardCommand({ key: "Enter", metaKey: true, ctrlKey: false })).toBeNull()
+ })
+
  it("maps m to mute only when not using a modifier", () => {
   expect(resolveVaultKeyboardCommand({ key: "m", metaKey: false, ctrlKey: false })).toBe("toggle-mute")
   expect(resolveVaultKeyboardCommand({ key: "m", metaKey: true, ctrlKey: false })).toBeNull()
