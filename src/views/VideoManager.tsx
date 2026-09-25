@@ -2,7 +2,6 @@ import React, { useCallback, useState, useEffect, useRef } from "react"
 import {
  addSimpleVideoToPlaylist,
  fetchSimplePlaylists,
- fetchSimpleSingleVideoAnalytics,
  fetchSimpleVideoBundle,
  fetchSimpleVideoInventory,
  fetchSimpleVideoPlaylistMemberships,
@@ -13,8 +12,6 @@ import {
  type SimplePlaylistMembership as PlaylistMembership,
  type SimpleVideoDetails as VideoDetails,
  type SimpleVideoSnippet as VideoSnippet,
- type SimpleVideoStats as VideoStats,
- type SimpleSingleVideoAnalytics as SingleVideoAnalytics,
 } from "../services/simpleYouTubeApi"
 import { useSimpleAuth } from "../auth/AuthProvider"
 import { useNavigate } from "react-router-dom"
@@ -46,8 +43,10 @@ import {
  AlignLeft,
  Edit,
  Settings,
+ Search,
 } from "lucide-react"
 import {
+ MiniSubToolbox,
  SubToolboxGridActionButton,
  ToolboxScaffold,
  SubToolbox,
@@ -57,21 +56,21 @@ import {
  SubToolboxAlert,
  SubToolboxButton,
  SubToolboxDataTable,
- SubToolboxFieldLabel,
  SubToolboxIconButton,
  SubToolboxInput,
+ SubToolboxLabeledInput,
+ SubToolboxLabeledTextArea,
  SubToolboxLinkButton,
- SubToolboxMetric,
  SubToolboxOutputCard,
  SubToolboxRemovableTag,
  SubToolboxSelectableTag,
  SubToolboxStatePanel,
  SubToolboxSurface,
  SubToolboxTag,
- SubToolboxTextArea,
+ SubToolboxTagEditor,
  SubToolboxTopTitleDropdown,
+ SubToolboxVideoSelector,
 } from "../components/subtoolbox/SubToolboxPrimitives"
-import { SubToolboxSplitDropdown } from "../studio-ui"
 
 const TagBadge: React.FC<{
  tag: string
@@ -160,8 +159,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
  const [videoSearchQuery, setVideoSearchQuery] = useState("")
  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null)
  const [videoDetails, setVideoDetails] = useState<VideoDetails | null>(null)
- const [videoStats, setVideoStats] = useState<VideoStats | null>(null)
- const [videoAnalytics, setVideoAnalytics] = useState<SingleVideoAnalytics | null>(null)
  const [loading, setLoading] = useState(false)
  const [saving, setSaving] = useState(false)
  const [saveSuccess, setSaveSuccess] = useState(false)
@@ -222,8 +219,6 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   activeChannelIdRef.current = channelId
   setSelectedVideoId(null)
   setVideoDetails(null)
-  setVideoStats(null)
-  setVideoAnalytics(null)
   setUserPlaylists([])
   setCurrentPlaylists([])
   setSelectedPlaylistIds([])
@@ -300,14 +295,9 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   setThumbnailPreview(null)
   setThumbnailFile(null)
   try {
-   const [videoBundle, analytics] = await Promise.all([
-    fetchSimpleVideoBundle(videoId),
-    fetchSimpleSingleVideoAnalytics(videoId),
-   ])
+   const videoBundle = await fetchSimpleVideoBundle(videoId)
    const details = videoBundle.details
    setVideoDetails(details)
-   setVideoStats(videoBundle.stats)
-   setVideoAnalytics(analytics)
    setEditTitle(details.title)
    setEditDescription(details.description)
    setEditTags(details.tags.join(", "))
@@ -408,6 +398,16 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   setExistingTagAnalysis((prev) => prev.filter((t) => t.tag.toLowerCase() !== tag.toLowerCase()))
  }
 
+ const handleManagedTagsChange = (nextTags: string[]) => {
+  const next = nextTags.map((tag) => tag.trim()).filter(Boolean).join(", ")
+  if (next.length > MAX_TAG_CHARS) {
+   alert("Character limit exceeded. Tags must be 500 characters or less including spaces.")
+   return
+  }
+  setEditTags(next)
+  setExistingTagAnalysis((prev) => prev.filter((analysis) => nextTags.some((tag) => tag.toLowerCase() === analysis.tag.toLowerCase())))
+ }
+
  const togglePlaylist = (playlistId: string) => {
   setSelectedPlaylistIds((prev) => prev.includes(playlistId) ? prev.filter((id) => id !== playlistId) : [...prev, playlistId])
  }
@@ -464,106 +464,12 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   }
  }
 
- const formatViews = (views: string) => {
-  const num = parseInt(views)
-  if (isNaN(num)) return "0"
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M"
-  if (num >= 1000) return (num / 1000).toFixed(1) + "K"
-  return num.toString()
+ const formatPublishedDate = (value?: string) => {
+  if (!value) return ""
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ""
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "2-digit" }).toUpperCase()
  }
-
- const parseNumeric = (value: unknown): number => {
-  const n = Number(String(value ?? "").replace(/[^0-9.-]/g, ""))
-  return Number.isFinite(n) ? n : 0
- }
-
- const parseIsoDurationToSeconds = (iso: string): number => {
-  if (!iso || typeof iso !== "string") return 0
-  const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
-  if (!match) return 0
-  return Number(match[1] || 0) * 3600 + Number(match[2] || 0) * 60 + Number(match[3] || 0)
- }
-
- const formatDuration = (durationValue: string) => {
-  const totalSeconds = /^\d+$/.test(String(durationValue)) ? parseInt(String(durationValue), 10) : parseIsoDurationToSeconds(String(durationValue))
-  if (isNaN(totalSeconds)) return "0:00"
-  const h = Math.floor(totalSeconds / 3600)
-  const m = Math.floor((totalSeconds % 3600) / 60)
-  const s = totalSeconds % 60
-  if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
-  return `${m}:${s.toString().padStart(2, "0")}`
- }
-
- const selectedVideoMetrics = React.useMemo(() => {
-  if (!selectedVideoId) {
-   return { views: 0, likes: 0, comments: 0, shares: 0, watchHours: 0, impressions: 0, ctr: 0, stw: 0, endScreenClickRate: 0, cardClickRate: 0, isShort: false, revenue: parseNumeric(videoAnalytics?.estimatedRevenue || 0) }
-  }
-  try {
-   const cacheRaw = localStorage.getItem("yt_analytics_cache")
-   if (!cacheRaw) throw new Error("No cache")
-   const cache = JSON.parse(cacheRaw) as any
-   const stats = cache?.stats?.[selectedVideoId] || {}
-   const analytics = cache?.analytics || {}
-   const headers = (analytics?.columnHeaders || []).map((h: any) => String(h?.name || ""))
-   const rows = Array.isArray(analytics?.rows) ? analytics.rows : []
-   const row = rows.find((r: any) => {
-    if (Array.isArray(r)) {
-     const idx = headers.findIndex((h: string) => h.toLowerCase() === "video")
-     return idx >= 0 ? String(r[idx] || "") === selectedVideoId : false
-    }
-    return String(r?.video || r?.Video || r?.["Video ID"] || r?.Dimension || "") === selectedVideoId
-   })
-   const getRowValue = (keyList: string[]): number => {
-    if (!row) return 0
-    if (Array.isArray(row)) {
-     for (const key of keyList) {
-      const idx = headers.findIndex((h: string) => h.toLowerCase() === key.toLowerCase())
-      if (idx >= 0) {
-       const n = Number(String(row[idx] ?? "").replace(/[^0-9.-]/g, ""))
-       if (Number.isFinite(n) && n > 0) return n
-      }
-     }
-     return 0
-    }
-    for (const key of keyList) {
-     const n = Number(String(row?.[key] ?? "").replace(/[^0-9.-]/g, ""))
-     if (Number.isFinite(n) && n > 0) return n
-    }
-    return 0
-   }
-   const watchHours = getRowValue(["Watch Time (Hours)", "Watch time (hours)", "Watch Hrs"]) || getRowValue(["estimatedMinutesWatched"]) / 60
-   const ctr = getRowValue(["Click-Through Rate (CTR)", "CTR (%)", "Impressions click-through rate (%)", "impressionClickThroughRate"]) || parseNumeric(videoAnalytics?.clickThroughRate || "0")
-   return {
-    views: parseNumeric(videoStats?.views || 0) || getRowValue(["Views", "views"]),
-    likes: parseNumeric(videoStats?.likes || 0) || getRowValue(["Likes", "likes"]),
-    comments: parseNumeric(videoStats?.comments || 0) || getRowValue(["Comments", "comments"]),
-    shares: getRowValue(["Shares", "shares"]) || parseNumeric(videoAnalytics?.shares || 0),
-    watchHours,
-    impressions: getRowValue(["Impressions", "impressions"]),
-    ctr: Number.isFinite(ctr) ? ctr : 0,
-    stw: getRowValue(["STW %", "Stayed to watch (%)"]),
-    endScreenClickRate: getRowValue(["End screen click rate", "Clicks per end screen element shown (%)"]),
-    cardClickRate: getRowValue(["Card click rate", "annotationClickThroughRate"]),
-    isShort: stats?.isShort === true || (Number(stats?.durationSeconds || videoStats?.duration || 0) <= 180 && stats?.contentType === "shorts"),
-    revenue: Number(videoAnalytics?.estimatedRevenue || 0) || getRowValue(["Revenue", "Estimated revenue", "estimatedRevenue"]),
-   }
-  } catch {
-   return {
-    views: parseNumeric(videoStats?.views || 0), likes: parseNumeric(videoStats?.likes || 0), comments: parseNumeric(videoStats?.comments || 0), shares: parseNumeric(videoAnalytics?.shares || 0), watchHours: 0, impressions: 0, ctr: parseNumeric(videoAnalytics?.clickThroughRate || "0"), stw: 0, endScreenClickRate: 0, cardClickRate: 0, isShort: Number(videoStats?.duration || 0) <= 180, revenue: Number(videoAnalytics?.estimatedRevenue || 0),
-   }
-  }
- }, [selectedVideoId, videoStats, videoAnalytics])
-
- const kpiCards = [
-  { key: "views", label: "Views", value: formatViews(String(selectedVideoMetrics.views || 0)) },
-  { key: "watch", label: "Watch Hrs", value: selectedVideoMetrics.watchHours.toFixed(2) },
-  { key: "likes", label: "Likes", value: formatViews(String(selectedVideoMetrics.likes || 0)) },
-  { key: "comments", label: "Comments", value: formatViews(String(selectedVideoMetrics.comments || 0)) },
-  { key: "shares", label: "Shares", value: formatViews(String(selectedVideoMetrics.shares || 0)) },
-  { key: "revenue", label: "Revenue", value: `${selectedVideoMetrics.revenue.toFixed(2)}` },
-  { key: "length", label: "Length", value: formatDuration(videoStats?.duration || "0") },
-  { key: "end-screen", label: "End Screen %", value: `${selectedVideoMetrics.endScreenClickRate.toFixed(1)}%` },
- ]
 
  const categoryOptions = [
   { value: "2", label: "Autos & Vehicles" }, { value: "23", label: "Comedy" }, { value: "27", label: "Education" }, { value: "24", label: "Entertainment" }, { value: "1", label: "Film & Animation" }, { value: "20", label: "Gaming" }, { value: "26", label: "Howto & Style" }, { value: "10", label: "Music" }, { value: "25", label: "News & Politics" }, { value: "29", label: "Nonprofits & Activism" }, { value: "22", label: "People & Blogs" }, { value: "15", label: "Pets & Animals" }, { value: "28", label: "Science & Technology" }, { value: "17", label: "Sports" }, { value: "19", label: "Travel & Events" },
@@ -596,8 +502,10 @@ const VideoManager: React.FC<VideoManagerProps> = ({
 
  const selectorOptions = videos.map((video) => ({
   value: video.videoId,
-  label: <span className="block min-w-0 truncate font-black uppercase">{video.title}</span>,
-  icon: <img src={video.thumbnail} alt="" className="h-full w-full object-cover" />,
+  title: video.title,
+  thumbnail: video.thumbnail,
+  dateLabel: formatPublishedDate(video.publishedAt),
+  durationLabel: video.duration ? formatDuration(video.duration) : "",
  }))
  const connectionLabel = auth.loading
   ? "CONNECTING YOUR YOUTUBE CHANNEL…"
@@ -703,128 +611,194 @@ const VideoManager: React.FC<VideoManagerProps> = ({
       />
      </div>
     ) : (selectedVideo || !connected || catalogLoading) ? (
-     <div className="space-y-2 sm:space-y-4 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+     <div className="vm-manager-stack animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {catalogLoading ? (
+       <SubToolboxGridActionButton
+        label="Loading Your YouTube Video Catalog…"
+        iconName="video"
+        tone="blue"
+        disabled
+       />
+      ) : connected ? (
+       <SubToolboxVideoSelector
+        level="l0"
+        value={selectedVideoId || ""}
+        options={selectorOptions}
+        onValueChange={(videoId) => void handleSelectVideo(videoId)}
+        searchValue={videoSearchQuery}
+        onSearchValueChange={setVideoSearchQuery}
+        searchIcon={<Search size={20} strokeWidth={3} />}
+        searchPlaceholder="SEARCH VIDEOS..."
+        ariaLabel="Choose video"
+       />
+      ) : (
+       <SubToolboxGridActionButton
+        label={connectionLabel}
+        iconName="video"
+        tone="green"
+        onClick={() => auth.login("/video-manager")}
+        disabled={auth.loading}
+       />
+      )}
+
       <SubToolbox
-       title="Choose Video"
-       icon={<FileVideo size={20} strokeWidth={3} />}
+       title="Video Details"
+       icon={<Settings size={20} strokeWidth={3} />}
        collapsible
        isOpenInitial
-       overflowVisible
       >
        <SubToolboxStack density="dense">
-        {catalogLoading ? (
-         <SubToolboxGridActionButton
-          label="Loading Your YouTube Video Catalog…"
-          iconName="video"
-          tone="blue"
-          disabled
-         />
-        ) : connected ? (
-         <SubToolboxSplitDropdown
-          value={selectedVideoId || ""}
-          options={selectorOptions}
-          onChange={(videoId) => void handleSelectVideo(videoId)}
-          icon={<FileVideo size={20} strokeWidth={3} />}
-          ariaLabel="Choose video"
-         />
-        ) : (
-         <SubToolboxGridActionButton
-          label={connectionLabel}
-          iconName="video"
-          tone="green"
-          onClick={() => auth.login("/video-manager")}
-          disabled={auth.loading}
-         />
-        )}
-        {connected && (
-         <SubToolboxInput
-          aria-label="Search videos"
-          value={videoSearchQuery}
-          onChange={(event) => setVideoSearchQuery(event.target.value)}
-          placeholder={catalogLoading ? "LOADING VIDEOS..." : "SEARCH VIDEOS..."}
-          disabled={catalogLoading}
-         />
-        )}
-       </SubToolboxStack>
-      </SubToolbox>
+        <SubToolboxLabeledInput
+         id="video-manager-title"
+         level="l1"
+         overlayLabel="TITLE"
+         aria-label="Video title"
+         value={editTitle}
+         onChange={(event) => setEditTitle(event.target.value)}
+         placeholder=" "
+         disabled={!connected || !selectedVideo}
+        />
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 sm:gap-4 lg:gap-6 items-stretch">
-       <SubToolbox title="Video Details" icon={<Settings size={20} strokeWidth={3} />} collapsible isOpenInitial={true} shellClassName="h-full" contentClassName="h-full">
-        <SubToolboxStack>
-         <SubToolboxSection label={<SubToolboxFieldLabel htmlFor="video-manager-title">Title</SubToolboxFieldLabel>}><SubToolboxInput id="video-manager-title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder={!connected ? "CONNECT CHANNEL TO LOAD TITLE" : catalogLoading ? "LOADING VIDEO TITLE..." : "TITLE..."} disabled={!connected || !selectedVideo} /></SubToolboxSection>
-         <SubToolboxSection label="Video Stats"><SubToolboxGrid minItemWidth="compact">{kpiCards.map((card) => <SubToolboxMetric key={card.key} label={card.label} value={card.value} />)}</SubToolboxGrid></SubToolboxSection>
-         <SubToolboxSection label="Publishing Controls">
-          <SubToolboxGrid minItemWidth="compact">
-           <SubToolboxTopTitleDropdown
-            level="l1"
-            label="PRIVACY"
-            value={editPrivacy}
-            options={[{ value: "public", label: "public" }, { value: "unlisted", label: "unlisted" }, { value: "private", label: "private" }]}
-            onValueChange={setEditPrivacy}
-            ariaLabel="Video privacy"
-           />
-           <SubToolboxTopTitleDropdown
-            level="l1"
-            label="CATEGORY"
-            value={selectedCategoryLabel}
-            options={categoryOptions.map((option) => ({ value: option.value, label: option.label }))}
-            onValueChange={setEditCategoryId}
-            ariaLabel="Video category"
-           />
-           <SubToolboxTopTitleDropdown
-            level="l1"
-            label="PLAYLISTS"
-            value={!connected ? "CONNECT CHANNEL" : catalogLoading ? "LOADING..." : selectedPlaylistIds.length === 0 ? "NONE SELECTED" : `${selectedPlaylistIds.length} LINKED`}
-            options={userPlaylists.map((playlist) => ({ value: playlist.id, label: playlist.title }))}
-            onValueChange={togglePlaylist}
-            multiSelect
-            selectedValues={selectedPlaylistIds}
-            ariaLabel="Video playlists"
-           />
-          </SubToolboxGrid>
-         </SubToolboxSection>
-        </SubToolboxStack>
-       </SubToolbox>
-
-       <SubToolbox title="Thumbnail" icon={<ImageIcon size={20} strokeWidth={3} />} collapsible isOpenInitial={true} shellClassName="h-full" contentClassName="h-full">
-        <SubToolboxStack className="h-full">
-         <div className="flex items-center justify-between gap-3 px-1"><span className="text-[10px] font-black uppercase tracking-[0.12em] text-black/50 ml-auto">{!connected ? "Connect Channel to Load Thumbnail" : catalogLoading ? "Loading Thumbnail" : "Drag + Drop to Replace"}</span></div>
-         <SubToolboxSurface className={`relative flex min-h-[140px] sm:min-h-[180px] lg:min-h-[220px] flex-1 flex-col items-center justify-center overflow-hidden !p-2 sm:!p-3 transition-colors ${isDraggingThumbnail ? "!bg-[#FF83EA]/10" : "!bg-gray-50"}`} onDragOver={(e) => { if (!connected || !selectedVideo) return; e.preventDefault(); setIsDraggingThumbnail(true) }} onDragLeave={() => setIsDraggingThumbnail(false)} onDrop={(e) => { if (!connected || !selectedVideo) return; e.preventDefault(); setIsDraggingThumbnail(false); if (e.dataTransfer.files[0]) handleThumbnailChange(e.dataTransfer.files[0]) }}>
+        <MiniSubToolbox
+         title="Thumbnail"
+         icon={<ImageIcon size={18} strokeWidth={3} />}
+         className="vm-thumbnail-mini"
+         actions={(
+          <>
+           <SubToolboxButton
+            level="l2"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={!connected || !selectedVideo}
+           >
+            Upload
+           </SubToolboxButton>
+           <SubToolboxButton
+            level="l2"
+            onClick={() => navigate("/thumbnail-studio", { state: { source: "video-manager", videoId: selectedVideoId, title: editTitle, thumbnail: thumbnailPreview || selectedVideo?.thumbnail || null } })}
+            disabled={!selectedVideoId}
+           >
+            Generate
+           </SubToolboxButton>
+          </>
+         )}
+        >
+         <div
+          className={`vm-thumbnail-canvas ${isDraggingThumbnail ? "is-dragging" : ""}`}
+          onDragOver={(event) => { if (!connected || !selectedVideo) return; event.preventDefault(); setIsDraggingThumbnail(true) }}
+          onDragLeave={() => setIsDraggingThumbnail(false)}
+          onDrop={(event) => {
+           if (!connected || !selectedVideo) return
+           event.preventDefault()
+           setIsDraggingThumbnail(false)
+           if (event.dataTransfer.files[0]) handleThumbnailChange(event.dataTransfer.files[0])
+          }}
+         >
           {thumbnailPreview || selectedVideo?.thumbnail ? (
-           <div className="relative w-full aspect-video group"><img src={thumbnailPreview || selectedVideo?.thumbnail} alt="Preview" className="w-full h-full object-cover rounded-lg" /><div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 rounded-lg backdrop-blur-sm"><SubToolboxButton aria-label="Replace thumbnail" onClick={() => fileInputRef.current?.click()} size="compact" tone="warning" icon={<Upload size={20} strokeWidth={3} />} className="!w-12" />{thumbnailPreview && <SubToolboxButton aria-label="Remove replacement thumbnail" onClick={() => { setThumbnailFile(null); setThumbnailPreview(null) }} size="compact" tone="danger" icon={<Trash2 size={20} strokeWidth={3} />} className="!w-12" />}</div></div>
+           <img src={thumbnailPreview || selectedVideo?.thumbnail} alt={`${editTitle || "Video"} thumbnail`} />
           ) : (
-           <div className="text-center"><Upload size={48} className="mx-auto mb-4 text-black/20" /><p className="font-black uppercase text-sm text-black/40">{!connected ? "Thumbnail Preview" : catalogLoading ? "Loading Thumbnail..." : "Select a Video to Load Thumbnail"}</p></div>
+           <div className="vm-thumbnail-empty">
+            <Upload size={32} />
+            <strong>{catalogLoading ? "LOADING THUMBNAIL" : "SELECT A VIDEO TO LOAD THUMBNAIL"}</strong>
+           </div>
           )}
-         </SubToolboxSurface>
-        </SubToolboxStack>
-       </SubToolbox>
-      </div>
+         </div>
+        </MiniSubToolbox>
 
-      <SubToolbox title="Description" icon={<AlignLeft size={18} strokeWidth={3} />} collapsible isOpenInitial={true}>
-       <SubToolboxTextArea aria-label="Video description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="!min-h-[180px] sm:!min-h-64 lg:!min-h-80 text-base vm-scrollless" placeholder={!connected ? "CONNECT CHANNEL TO LOAD DESCRIPTION" : catalogLoading ? "LOADING DESCRIPTION..." : "DESCRIPTION..."} disabled={!connected || !selectedVideo} />
+        <SubToolboxLabeledTextArea
+         level="l1"
+         overlayLabel="DESCRIPTION"
+         aria-label="Video description"
+         value={editDescription}
+         onChange={(event) => setEditDescription(event.target.value)}
+         height="fill"
+         className="vm-description-field"
+         placeholder=" "
+         disabled={!connected || !selectedVideo}
+        />
+
+        <SubToolboxSection label="Publishing Controls">
+         <SubToolboxGrid minItemWidth="compact">
+          <SubToolboxTopTitleDropdown
+           level="l1"
+           label="PRIVACY"
+           value={editPrivacy}
+           options={[{ value: "public", label: "public" }, { value: "unlisted", label: "unlisted" }, { value: "private", label: "private" }]}
+           onValueChange={setEditPrivacy}
+           ariaLabel="Video privacy"
+          />
+          <SubToolboxTopTitleDropdown
+           level="l1"
+           label="CATEGORY"
+           value={selectedCategoryLabel}
+           options={categoryOptions.map((option) => ({ value: option.value, label: option.label }))}
+           onValueChange={setEditCategoryId}
+           ariaLabel="Video category"
+          />
+          <SubToolboxTopTitleDropdown
+           level="l1"
+           label="PLAYLISTS"
+           value={!connected ? "CONNECT CHANNEL" : catalogLoading ? "LOADING..." : selectedPlaylistIds.length === 0 ? "NONE SELECTED" : `${selectedPlaylistIds.length} LINKED`}
+           options={userPlaylists.map((playlist) => ({ value: playlist.id, label: playlist.title }))}
+           onValueChange={togglePlaylist}
+           multiSelect
+           selectedValues={selectedPlaylistIds}
+           ariaLabel="Video playlists"
+          />
+         </SubToolboxGrid>
+        </SubToolboxSection>
+       </SubToolboxStack>
       </SubToolbox>
 
       <SubToolbox title="Video Tags" icon={<Tag size={20} strokeWidth={3} />} collapsible isOpen={isTagsExpanded} onToggle={() => setIsTagsExpanded((prev) => !prev)}>
-       <SubToolboxStack density="comfortable">
-        <SubToolboxActions columns={2}><SubToolboxInput aria-label="Add video tag" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddTag(tagInput)} placeholder={!connected ? "CONNECT CHANNEL TO LOAD TAGS" : catalogLoading ? "LOADING TAGS..." : "ADD TAG..."} maxLength={MAX_TAG_CHARS} disabled={!connected || !selectedVideo} /><SubToolboxButton onClick={() => handleAddTag(tagInput)} disabled={!connected || !selectedVideo || [...editTags.split(",").map((t) => t.trim()).filter(Boolean), tagInput.trim()].filter(Boolean).join(", ").length > MAX_TAG_CHARS}>{tagInput.split(",").map((t) => t.trim()).filter(Boolean).length <= 1 ? "Add Tag" : "Add Tags"}</SubToolboxButton></SubToolboxActions>
-        <SubToolboxSurface className="relative flex min-h-[96px] sm:min-h-[112px] lg:min-h-[132px] w-full flex-wrap content-start gap-2 !pb-9">
-         {editTags ? editTags.split(",").map((t) => t.trim()).filter(Boolean).map((t) => <TagBadge key={t} tag={t} onRemove={() => handleRemoveTag(t)} analysis={existingTagAnalysis.find((a) => a.tag.toLowerCase() === t.toLowerCase())} />) : <p className="text-black/30 font-black uppercase text-sm w-full text-center py-6">{!connected ? "Connect channel to load tags" : catalogLoading ? "Loading tags..." : "No tags populated..."}</p>}
-         <span className="absolute right-3 bottom-2 text-[11px] font-black uppercase tracking-[0.08em] text-black/55">{editTags.length}/{MAX_TAG_CHARS}</span>
-        </SubToolboxSurface>
-        <SubToolboxStack><SubToolboxActions columns={2}><SubToolboxButton size="action" onClick={handleGenerateTags} disabled={!connected || !selectedVideo || isGeneratingTags || editTags.length >= MAX_TAG_CHARS}>{isGeneratingTags ? "Scanning Market..." : "Generate High Ranking Video Tags"}</SubToolboxButton><SubToolboxButton type="button" size="action" tone="neutral" onClick={handleRankTags} disabled={!connected || !selectedVideo || isAnalyzingTags || !editTags}>{isAnalyzingTags ? "Ranking..." : existingTagAnalysis.length > 0 ? "View Rankings" : "Rank Tags"}</SubToolboxButton></SubToolboxActions>{suggestedTags.length > 0 && <SubToolboxSection label="Ranked Suggestions"><SubToolboxSurface className="flex flex-wrap gap-2">{suggestedTags.map((st) => <TagBadge key={st.tag} tag={st.tag} isSuggested isAdded={editTags.toLowerCase().includes(st.tag.toLowerCase())} onAdd={() => handleAddTag(st.tag, st)} analysis={st} />)}</SubToolboxSurface></SubToolboxSection>}</SubToolboxStack>
+       <SubToolboxStack density="dense">
+        <SubToolboxTagEditor
+         level="l1"
+         tags={editTags.split(",").map((tag) => tag.trim()).filter(Boolean)}
+         onTagsChange={handleManagedTagsChange}
+         addIcon={<Plus size={18} strokeWidth={3} />}
+         saveIcon={<CheckCircle size={18} strokeWidth={3} />}
+         removeIcon={<X size={13} strokeWidth={3.2} />}
+         label="VIDEO TAGS"
+        />
+        <span className="vm-tag-character-count">{editTags.length}/{MAX_TAG_CHARS}</span>
+
+        <SubToolboxActions columns={2}>
+         <SubToolboxButton size="action" onClick={handleGenerateTags} disabled={!connected || !selectedVideo || isGeneratingTags || editTags.length >= MAX_TAG_CHARS}>
+          {isGeneratingTags ? "Scanning Market..." : "Generate High Ranking Video Tags"}
+         </SubToolboxButton>
+         <SubToolboxButton type="button" size="action" tone="neutral" onClick={handleRankTags} disabled={!connected || !selectedVideo || isAnalyzingTags || !editTags}>
+          {isAnalyzingTags ? "Ranking..." : existingTagAnalysis.length > 0 ? "View Rankings" : "Rank Tags"}
+         </SubToolboxButton>
+        </SubToolboxActions>
+
+        {suggestedTags.length > 0 ? (
+         <SubToolboxSection label="Ranked Suggestions">
+          <SubToolboxSurface className="flex flex-wrap gap-2">
+           {suggestedTags.map((suggestion) => (
+            <TagBadge
+             key={suggestion.tag}
+             tag={suggestion.tag}
+             isSuggested
+             isAdded={editTags.toLowerCase().includes(suggestion.tag.toLowerCase())}
+             onAdd={() => handleAddTag(suggestion.tag, suggestion)}
+             analysis={suggestion}
+            />
+           ))}
+          </SubToolboxSurface>
+         </SubToolboxSection>
+        ) : null}
        </SubToolboxStack>
       </SubToolbox>
 
-      <SubToolbox title="Save Video Changes" icon={<Settings size={20} strokeWidth={3} />} paletteIndex={basePalette + 5} collapsible isOpenInitial>
-       <SubToolboxGridActionButton
-        onClick={connected ? handleSave : () => auth.login("/video-manager")}
-        disabled={connected ? saving || !selectedVideoId : auth.loading}
-        tone="blue"
-        iconName="settings"
-        showIconSection
-        label={!connected ? connectionLabel : catalogLoading ? "Loading Video Catalog..." : saving ? "Transmitting to Server..." : "Update Video Details"}
-       />
-      </SubToolbox>
+      <SubToolboxGridActionButton
+       onClick={connected ? handleSave : () => auth.login("/video-manager")}
+       disabled={connected ? saving || !selectedVideoId : auth.loading}
+       tone="blue"
+       iconName="settings"
+       showIconSection
+       className="vm-update-video-action"
+       label={!connected ? connectionLabel : catalogLoading ? "Loading Video Catalog..." : saving ? "Transmitting to Server..." : "Update Video Details"}
+      />
      </div>
     ) : (
      <div className="min-h-[180px] sm:min-h-[320px] lg:h-[500px] flex flex-col items-center justify-center gap-3 sm:gap-5 font-black uppercase text-xl sm:text-2xl lg:text-3xl tracking-tighter text-black/20"><Edit size={100} strokeWidth={1} className="mb-2 opacity-50" />Awaiting Asset Selection</div>
