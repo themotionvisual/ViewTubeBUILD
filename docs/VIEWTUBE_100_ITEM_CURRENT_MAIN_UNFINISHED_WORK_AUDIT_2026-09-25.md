@@ -5,6 +5,114 @@ Reconciled against current main, recent PR/branch history, project memory, Libra
 | **Authority rule: current main wins. Older PRs, branches, chats and prototypes are donors unless they contain a missing capability that has not been superseded. This report intentionally excludes several historical “missing” items that current main has already absorbed.** |
 |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
+# 100-Item Quick Index
+
+A compact copy of the full list. Each item below includes only its number, title, and a very brief explanation; the complete status, evidence, dependencies, implementation path, and definition of done remain in the detailed entries later in this document.
+
+| # | Item | Very brief explanation |
+|---:|---|---|
+| 1 | ApprovedPublishSnapshot runtime binding | the safety boundary that prevents a retry or last-minute edit from silently publishing different inputs than the creator approved. |
+| 2 | Publish retry and recovery receipts | Publishing is an irreversible external action; duplicate uploads or lost remote IDs are high-cost failures. |
+| 3 | Post-publish ContentBuild identity continuity | later analytics and learning cannot know which exact package, render, title or thumbnail actually produced the measured result. |
+| 4 | Remote YouTube verification and reconciliation | Local success is not sufficient if YouTube rejected, transformed, or partially applied settings. |
+| 5 | Publisher outcome writer | The system cannot learn from publish decisions if it only records asset generation and algorithm-specific events. |
+| 6 | Dashboard Video Publisher identity migration | A public-ID rename without migration can lose layouts, duplicate widgets, or leave two competing surfaces. |
+| 7 | Publisher capability parity: Dashboard vs Studio | Creators should not lose capabilities when switching surfaces or create incompatible drafts. |
+| 8 | Video Manager capability parity: Dashboard vs Studio | Two managers with divergent save semantics are a direct source of stale metadata and overwrite bugs. |
+| 9 | Video Manager rollback/retry and dirty-state model | Editing published content is consequential; users need to know what changed locally, what was saved, and what the remote platform… |
+| 10 | Launch Package / Flight Check final consolidation | A single readiness surface prevents duplicate checklists and contradictory “ready” states. |
+| 11 | Asset Slot Registry | A slot registry gives scripts, thumbnails, renders, captions and supporting assets one typed destination instead of ad-hoc fields. |
+| 12 | Asset Engine Studio production surface | Creators need one production workspace for generating, comparing, selecting, versioning and routing assets without duplicating… |
+| 13 | Creator Vault remaining production lanes | Vault is the durable creator asset memory layer; partial lane coverage leaves media types and workflows inconsistent. |
+| 14 | Vault import deduplication and provenance | Duplicate media wastes storage and breaks selection history; missing provenance weakens AI evidence and rights tracking. |
+| 15 | Vault Quick Look + canonical media player integration | One shared player avoids separate playback, scrubbing, metadata and keyboard behavior across Vault, Editor and Analyzer. |
+| 16 | Project facade and Context Resolver recipes | Every downstream tool needs the same project/contentBuild/video identity without reconstructing context from UI state. |
+| 17 | Project completion and abandonment outcomes | Project behavior is valuable evidence about which plans, tasks and workflows actually lead to completed uploads. |
+| 18 | ContentBuild revision graph and audit history | A revision graph makes undo, comparison, provenance, publish freeze and AI learning safer. |
+| 19 | Video Package variant lineage | Lineage is required for later “which title/thumbnail/render won?” analysis and safe variant comparison. |
+| 20 | Cross-surface handoff identity continuity | Context loss when switching tools causes duplicate selection, wrong project edits and fragile URL guessing. |
+| 21 | Brain active Project Context Adapter | Project-aware advice is necessary for specific creator decisions and prevents generic recommendations. |
+| 22 | Opportunity Intelligence production evidence builder | Opportunity scoring must be explainable and grounded rather than invented in the UI or prompt. |
+| 23 | Opportunity Radar / Intelligence UI convergence | One opportunity surface should visualize current opportunity data without creating a second intelligence engine. |
+| 24 | Unified outcome writer contract | A common contract prevents duplicate ledgers and enables one evaluation/learning loop. |
+| 25 | Evaluation-target coverage matrix | Without explicit targets, outcomes cannot be measured reliably and learning becomes anecdotal. |
+| 26 | Governed learning promotion expansion | Durable learning must improve over time without overfitting one comment, one anomaly or one successful upload. |
+| 27 | End-to-end Brain evidence ID propagation | Evidence IDs must survive specialist engines to the final answer so confidence/caveats and creator inspection are truthful. |
+| 28 | Evidence Explorer / evidence-health view | Creators need to see why advice is strong, stale, missing, permission-blocked or contradictory. |
+| 29 | Editable Channel Knowledge map | The creator needs a safe way to confirm, correct, expire and inspect durable channel facts instead of treating AI memory as opaque. |
+| 30 | Style Fingerprint creator view | A visual fingerprint makes the channel-style model teachable and useful for thumbnails, scripts and packaging. |
+| 31 | Diff-as-teaching correction signal | The difference between AI draft and creator-approved asset is stronger style feedback than generic ratings. |
+| 32 | Variant Comparator | Creators need a grounded way to compare titles/thumbnails/scripts/renders on style, evidence and rubric dimensions without fake scores. |
+| 33 | Universal “Why?” evidence trace | Users should be able to inspect evidence and decision provenance wherever the system recommends an action. |
+| 34 | Creator-safe Trace Timeline | A timeline helps debug what input, tool, evidence and action occurred without exposing hidden reasoning. |
+| 35 | Impact Cards and calibration chart | Calibration makes confidence meaningful only when enough measured history exists. |
+| 36 | Versioned AI regression corpus [NEW / NECESSARY] | Without stable cases, prompt/model/context changes can quietly regress groundedness, safety, formatting or usefulness. |
+| 37 | Prompt registry runtime reachability classification | A registry is only useful if every production generator is known, versioned and traceable to a caller. |
+| 38 | Prompt constitution versioning and migration | Versioning prevents silent behavior drift and makes evaluation, rollback and provenance possible. |
+| 39 | Task-specific context recipes | Different tasks need different channel/project/evidence context; dumping everything harms accuracy and privacy. |
+| 40 | Structured AI outputs + deterministic validators | Schemas make AI output safer to route, compare, version and test; deterministic math should never be delegated to free-form prompts. |
+| 41 | Canonical metric comparability validator | Incorrect comparisons can generate confident but false creator advice and invalid evaluations. |
+| 42 | Metric guard integration into visual controllers | A central validator has no value if charts and widgets can bypass it. |
+| 43 | Analytics checkpoint -\> evaluation bridge | This bridge closes the loop from recommendation/publish decision to actual measured creator outcome. |
+| 44 | Analytics metric/dimension registry completeness | Missing registry metadata causes ad-hoc queries, inconsistent units and UI gaps. |
+| 45 | CSV / report augmentation production importer | Import-only metrics can materially improve analytics without polluting canonical API sync ownership. |
+| 46 | Imported analytics join by video ID | Without deterministic identity joins, imported metrics can attach to the wrong video or remain unusable. |
+| 47 | Country / state / city / DMA mapping completion | Geographic analysis is a high-value creator insight and a common source of dimension/API edge cases. |
+| 48 | Retention schema/table/sync hardening | Retention is one of the strongest content-quality signals and directly feeds packaging/content decisions. |
+| 49 | Canonical time-window and lifecycle-window semantics | Mixing calendar windows with “days since publish” produces misleading comparisons. |
+| 50 | Deep Dive analytics tables completion | Detailed tables remain essential when charts hide exact values, missingness or dimensions. |
+| 51 | Traffic-source grouping and anomaly semantics closure | The remaining risk is stale legacy grouping logic or documentation reintroducing the old error. |
+| 52 | Missingness and coverage UX | Blank charts are easily mistaken for zero performance and weaken trust. |
+| 53 | Shorts vs long-form metric semantics | Creator decisions are distorted when fundamentally different formats are compared as if identical. |
+| 54 | Analytics provenance drawer | Creators and developers need to know where a number came from, when it was synced and what transformations were applied. |
+| 55 | Data Visual mobile/narrow/desktop certification | Charts that clip, resize incorrectly or lose controls on phones undermine the main product promise. |
+| 56 | Data Visual renderer extraction / CSS ownership | Clear ownership reduces cascade regressions and makes visual modules independently testable. |
+| 57 | Large-dashboard analytics performance budgets [NEW / NECESSARY] | High-volume channel data can make otherwise-correct dashboards unusable on mobile or older hardware. |
+| 58 | Canonical final render asset | The render must be the same durable asset that downstream publishing, provenance and outcomes reference. |
+| 59 | Preview-to-final render parity fixtures | Preview fidelity is core to editing trust; mismatches only discovered after export are expensive. |
+| 60 | Four-layout editor certification | Editing is layout-dense and failures often appear only on specific phone orientation or desktop width. |
+| 61 | Canonical transition component system | Transitions are a highly visible timeline primitive and prior duplicate experiments created design/code drift. |
+| 62 | Mobile timeline minimap | A minimap can make long timelines navigable on small screens without sacrificing two-layer editing space. |
+| 63 | Mobile editor feature parity | Mobile is a primary use case and cannot remain a reduced or brittle editor. |
+| 64 | FX/keyframe shared-contract certification | One shared contract prevents the same effect from looking different in control UI, preview and export. |
+| 65 | Single Remotion composition interpretation path | Parallel preview/render semantics are the root cause of visual drift and difficult debugging. |
+| 66 | Render worker progress/error/recovery model | Long renders must survive errors/reloads and tell the creator whether work can resume or must restart. |
+| 67 | Canonical media player adoption across creator surfaces | A shared player reduces duplicated playback state, accessibility bugs and inconsistent controls. |
+| 68 | Veo 3.1 production provider adapter | A provider adapter would let ViewTube use advanced video generation without baking provider-specific logic into Editor/Brain. |
+| 69 | Localization, dubbing and lipsync workflow [NEW / NECESSARY] | Localization can extend reach and repurposing while keeping outputs inside the same asset/provenance system. |
+| 70 | Transcript + waveform compound system | Transcript-synced navigation supports editing, captions, chaptering and analysis with one reusable interaction model. |
+| 71 | Chapter Navigator + annotation marker system | Structured markers make review, chapters, notes and collaborator/AI cues addressable by time. |
+| 72 | Asset Intake Dock + Batch Selection compounds | Shared compounds can prevent each Studio tool from re-implementing upload, selection, progress and batch action UX. |
+| 73 | Daily Oracle specific-target recommendation engine | The most useful “next move” is about a real video/project, not generic channel advice. |
+| 74 | Absorb useful Next Best Action capabilities into Daily Oracle | This reduces widget overlap while preserving high-value decision logic. |
+| 75 | Retire Next Best Action with persisted-layout migration | Retiring duplicate widgets reduces cognitive load and code ownership ambiguity without losing user layouts. |
+| 76 | Dashboard Top-10 cohort final certification | Feature consolidation is not finished until each widget works across intended sizes, states and mobile layouts. |
+| 77 | WidgetRenderer extraction and registry-driven rendering | A registry-driven renderer makes widgets easier to remove, migrate, lazy-load and test. |
+| 78 | Widget CSS ownership split and legacy override removal | Global override debt is a recurring cause of components changing ratio, text size or color unexpectedly. |
+| 79 | Shared Brain/dashboard selectors and narrow subscriptions | Large global subscriptions increase rerender cost and make UI state harder to reason about. |
+| 80 | Persisted widget visibility/settings schema migrations | Without versioned migration, widget renames and defaults can erase user layout/preferences. |
+| 81 | Studio capability-parity certification harness expansion | A visually consistent tool can still be functionally incomplete or use the wrong backend owner. |
+| 82 | Finish migration of remaining Studio controls to canonical primitives | Mixed control systems cause dropdown bugs, geometry drift and inconsistent mobile behavior. |
+| 83 | Legacy UStube / Reference Studio cleanup | Legacy naming and prototypes can confuse agents, developers and CSS ownership even when not user-facing. |
+| 84 | Quick Switcher exact-identity continuity | Fast navigation is most useful when the destination opens the current video/project/contentBuild rather than a generic page. |
+| 85 | Application-wide responsive + accessibility certification | Local fixes can regress adjacent screens; a single certification matrix is needed before calling the app shippable. |
+| 86 | Canonical auth/session/channel-readiness error model | Conflated auth errors cause sign-out loops, misleading “not connected” states and difficult support. |
+| 87 | OAuth / YouTube route consolidation regression closure | Duplicate routes and stale callers are a high-risk source of mobile connection failures. |
+| 88 | Permanent production diagnostics + Copy Bug Report | Fast diagnosis is essential in a rapidly moving app with mobile/browser/deployment-specific failures. |
+| 89 | Correlation IDs across request/tool/action pipelines [NEW / NECESSARY] | Cross-system failures are hard to debug when auth, sync, Brain, generation, publishing and UI actions cannot be joined. |
+| 90 | External-write idempotency framework [NEW / NECESSARY] | Duplicate comments, uploads, updates or generation jobs can cost money and damage user trust. |
+| 91 | Durable server authority for browser-persisted critical state [NEW / NECESSARY] | LocalStorage/browser-only state can be lost, diverge across devices or undermine recovery guarantees. |
+| 92 | Quality budgets and zero-new-failure release gates | Rapid PR volume makes regressions inevitable without explicit budgets and baseline-aware gates. |
+| 93 | End-to-end creator loop success + failure certification | Component-level success does not prove the product works as one creator operating system. |
+| 94 | Staging/production deployment certification | A correct merge is not useful if the wrong project/environment is deployed or mobile receives stale assets. |
+| 95 | Documentation authority lifecycle and stale-doc cleanup | Distributed documentation authority is a Create State known issue and a major agent-context hazard. |
+| 96 | PR/branch donor + supersession ledger | Without a ledger, future agents repeatedly rediscover or attempt to merge stale work. |
+| 97 | Resource Library + widget/HTML reference catalog completion | A searchable reference atlas prevents valuable design/function donors from being lost or reimplemented from memory. |
+| 98 | Public agent-readiness surface [NEW / NECESSARY] | AI agents cannot reliably discover, cite or understand the public product/docs even though internal agent workflows are central to… |
+| 99 | Valid OpenAPI + well-known protocol endpoint cleanup [NEW / NECESSARY] | False-positive protocol endpoints mislead agents and integrations more than a clean 404. |
+| 100 | Agent work receipts + ADR-lite + living backlog automation [NEW / NECESSARY] | High parallel-agent throughput needs durable “started/completed/changed/verified” records or work is duplicated and decisions are lost. |
+
+---
 # Executive Summary
 
 The main finding is that ViewTube is no longer primarily missing foundations. Between September 22 and 25, many older backlog claims were overtaken by merged work: Project/ContentBuild/Video Package convergence, Video Package→ContentBuild synchronization, Brain evidence and anomaly reachability, channel-scoped Brain controls, outcome attribution/evaluation/learning foundations, Studio primitive authority, mobile editor containment, Vault production routing, and major dashboard widget consolidation. The remaining highest-value work is concentrated in completion seams: frozen publishing intent and recovery, post-publish identity, uniform outcome/evaluation coverage, metric comparability, real Project/Opportunity context in Brain, final editor/render parity, Dashboard/Studio capability parity, application-wide certification, durable state/idempotency/observability, documentation authority, and public agent readability.
