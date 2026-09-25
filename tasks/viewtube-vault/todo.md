@@ -28,7 +28,7 @@
 - [x] RH-B021 Escape close contract.
 - [x] RH-B022 Cmd/Ctrl+K Vault command/search.
 - [x] RH-B023 Cmd/Ctrl+G selected-assets Project/ContentBuild handoff.
-- [ ] RH-B024 Split-pane explorer.
+- [x] RH-B024 Split-pane explorer.
 - [x] RH-B025 Timeline view.
 - [x] RH-B026 Smart Collections.
 - [x] RH-B027 Favorites/Inbox/Archive/Trash.
@@ -45,7 +45,7 @@
 - [ ] RH-C044 Video thumbnail frame extraction.
 - [ ] RH-C045 Direct import path.
 - [x] RH-C046 Editable staged intake drafts.
-- [ ] RH-C047 Content hash/duplicate preflight.
+- [x] RH-C047 Content hash/duplicate preflight.
 - [ ] RH-C048 EXIF metadata task.
 - [ ] RH-C049 Vision/suggested-tag task.
 - [ ] RH-C050 Transcript task.
