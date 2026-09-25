@@ -27,11 +27,11 @@
 - [x] RH-B020 Space Quick Look.
 - [x] RH-B021 Escape close contract.
 - [x] RH-B022 Cmd/Ctrl+K Vault command/search.
-- [ ] RH-B023 Cmd/Ctrl+G selected-assets Project/ContentBuild handoff. (Button handoff complete; shortcut pending)
+- [x] RH-B023 Cmd/Ctrl+G selected-assets Project/ContentBuild handoff.
 - [ ] RH-B024 Split-pane explorer.
 - [x] RH-B025 Timeline view.
 - [x] RH-B026 Smart Collections.
-- [ ] RH-B027 Favorites/Inbox/Archive/Trash. (Favorites/Archive/Trash complete; Inbox pending)
+- [x] RH-B027 Favorites/Inbox/Archive/Trash.
 - [ ] RH-B028 Arrange Mode/module reorder.
 - [ ] RH-B029 Module visibility preferences.
 - [ ] RH-B030 Workspace layout density preference.
