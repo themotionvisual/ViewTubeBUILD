@@ -118,7 +118,7 @@ Current `main` exposes **68 registered widget IDs** across system, core, analyti
 ## 2.5. Active implementation status — Settings widget
 
 **Started:** 2026-09-25  
-**Current implementation phase:** Phase 2 dashboard controls + data-state hardening  
+**Current implementation phase:** Phase 3 responsive certification + disconnected preview  
 **Latest implementation commit in this wave:** `21fa291c0661d44c5f54de74632d5e4edcd44a14`
 
 Implemented so far:
@@ -135,11 +135,15 @@ Implemented so far:
 - added export/import controls and guarded reset with cancel;
 - added a live Layout Lock toggle;
 - added explicit DISCONNECTED / NEVER SYNCED / STALE / CURRENT data states;
-- extracted preset selection into a pure tested dashboard preset model.
+- extracted preset selection into a pure tested dashboard preset model;
+- added explicit compact / standard / wide container tiers at <=420px, 421–760px and >=761px;
+- added clearly labeled generic PREVIEW / CONNECT TO PERSONALIZE panels for disconnected Data and AI states;
+- verified the Settings widget and dashboard preset tests pass in the full suite;
+- verified the updated application-menu governance test recognizes the dedicated Settings owner.
 
 Still required before the Settings task is complete:
-- visually certify all supported size/height pairs;
-- add the final preview/disconnected treatment and stale/error status details;
+- visually certify all supported size/height pairs with acceptance captures;
+- add richer stale/error detail where backend state exposes specific failures;
 - verify the latest production build + focused contract run;
 - add desktop/mobile acceptance screenshots;
 - remove any now-unused legacy imports/classes discovered by static quality;
