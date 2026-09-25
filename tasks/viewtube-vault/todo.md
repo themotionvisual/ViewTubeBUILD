@@ -7,9 +7,9 @@
 - [x] RH-P004 Create 44-item gap registry.
 - [x] RH-P005 Create owner-based revised merge plan.
 - [ ] RH-P006 Merge revised planning authority.
-- [ ] RH-P007 Mark prior planning PR #425 superseded/close or retarget after comparison.
-- [ ] RH-P008 Rebase PR #426 on current main.
-- [ ] RH-P009 Reconcile PR #426 against Lane A scope.
+- [x] RH-P007 Confirm PR #425 merged as historical planning provenance; supersede its donor analysis with #428.
+- [x] RH-P008 Confirm PR #426 already merged as Lane A baseline.
+- [ ] RH-P009 Audit merged #426 code on current main against revised Lane A scope.
 
 ## Lane A — Vault foundation
 - [x] RH-A010 Production /vault route exists in PR #426.
@@ -21,7 +21,7 @@
 - [ ] RH-A016 Add Shift range selection.
 - [ ] RH-A017 Reconcile Import Station with direct-vs-staged contract.
 - [ ] RH-A018 Use current media-player primitives where appropriate.
-- [ ] RH-A019 Run/repair tests and build after rebase.
+- [ ] RH-A019 Run/repair tests, build and browser verification on current main baseline.
 
 ## Lane B — interaction / organization
 - [ ] RH-B020 Space Quick Look.
