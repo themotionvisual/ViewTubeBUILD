@@ -16,7 +16,8 @@ describe("portrait widget header control deck", () => {
     expect(shell).toContain("Decrease widget height")
     expect(shell).toContain("Increase widget height")
     expect(shell).toContain("Widget information")
-    expect(shell).toContain("Drag to reorder")
+    expect(shell).toContain("Move widget up one position")
+    expect(shell).toContain("Move widget down one position")
     expect(shell).toContain("Hide widget")
   })
 
@@ -26,10 +27,11 @@ describe("portrait widget header control deck", () => {
     expect(mobile).toContain("background: var(--widget-color")
   })
 
-  it("reclaims the app-shell phone padding for a wider centered widget canvas", () => {
+  it("reclaims the asymmetric live app-shell phone padding so visible gutters match", () => {
     expect(mobile).toContain("--vt-mobile-widget-gutter: 4px")
-    expect(mobile).toContain("width: calc(100% + 24px)")
-    expect(mobile).toContain("margin-inline: -12px")
+    expect(mobile).toContain("--vt-mobile-reclaim-left: 12px")
+    expect(mobile).toContain("--vt-mobile-reclaim-right: 40px")
+    expect(mobile).toContain("width: calc(100% + var(--vt-mobile-reclaim-left) + var(--vt-mobile-reclaim-right))")
   })
 
   it("collapses only the canvas region while the header remains fixed", () => {
