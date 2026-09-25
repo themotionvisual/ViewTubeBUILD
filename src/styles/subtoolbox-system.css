@@ -3266,3 +3266,25 @@
 .vt-subtoolbox-labeled-field:focus-within>.vt-subtoolbox-labeled-control{
   background:#fff!important;
 }
+
+
+.vm-publishing-grid{
+  align-items:start;
+}
+.vm-tag-actions .vt-subtoolbox-button-label{
+  white-space:normal!important;
+  text-wrap:balance;
+  line-height:.9;
+}
+@media(max-width:520px) and (orientation:portrait){
+  .vm-publishing-grid{
+    grid-template-columns:1fr!important;
+  }
+  .vm-tag-actions{
+    grid-template-columns:1fr!important;
+  }
+  .vm-tag-actions>*{
+    width:100%!important;
+    max-width:100%!important;
+  }
+}
