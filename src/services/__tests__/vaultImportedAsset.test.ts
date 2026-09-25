@@ -11,9 +11,11 @@ describe("createImportedVaultAsset", () => {
    kind: "image",
    mimeType: "image/png",
    tags: ["reference"],
+   previewUrl: "data:image/jpeg;base64,thumb",
   })
 
   expect(asset.source).toBe("imported")
+  expect(asset.previewUrl).toBe("data:image/jpeg;base64,thumb")
   expect(listVaultAssets()[0].id).toBe(asset.id)
  })
 })
