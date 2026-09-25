@@ -49,6 +49,10 @@ import {
 } from "../services/vaultCollections"
 import { resolveVaultKeyboardCommand } from "../services/vaultKeyboard"
 import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
+import { useBrain } from "../context/useBrain"
+import { initializeProjectContentIdentity } from "../services/projects/ProjectContentIdentityService"
+import { attachAssetToContentBuild } from "../services/asset-engine/ContentBuildRepository"
+import { buildVaultSelectionProjectDraft } from "../services/vaultProjectHandoff"
 import type { VaultAsset, VaultAssetKind } from "../types"
 
 const CORE_TAGS = [
@@ -78,6 +82,7 @@ const assetIcon = (asset: VaultAsset) => {
 }
 
 const CreatorVaultOS: React.FC = () => {
+ const { brain, addProject, setActiveProject, channelIdentity } = useBrain()
  const initialWorkspace = useMemo(() => readVaultWorkspaceState(), [])
  const [refreshTick, setRefreshTick] = useState(0)
  const [query, setQuery] = useState(initialWorkspace.query)
@@ -105,6 +110,7 @@ const CreatorVaultOS: React.FC = () => {
  const [quickLookOpen, setQuickLookOpen] = useState(true)
  const [smartCollectionName, setSmartCollectionName] = useState("")
  const [collectionRefresh, setCollectionRefresh] = useState(0)
+ const [selectionProjectName, setSelectionProjectName] = useState("")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
 
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
@@ -300,6 +306,40 @@ const CreatorVaultOS: React.FC = () => {
 
  const restoreSelection = () => {
   selectedAssetIds.forEach((id) => setVaultAssetState(id, { archived: false, trashed: false }))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const createProjectFromSelection = () => {
+  const selected = allAssets.filter((asset) => selectedAssetIds.includes(asset.id))
+  const projectName = selectionProjectName.trim()
+  if (!selected.length || !projectName) return
+
+  const draft = buildVaultSelectionProjectDraft({
+   name: projectName,
+   targetNiche: brain.targetNiche,
+   assetNames: selected.map((asset) => asset.name),
+  })
+
+  const identity = initializeProjectContentIdentity(draft, {
+   channelId: channelIdentity.channelId || null,
+   sourceToolId: "creator-vault-os",
+  })
+  const project = identity.project
+
+  selected.forEach((asset) => {
+   attachAssetToContentBuild(identity.contentBuildId, asset.id, {
+    toolId: "creator-vault-os",
+    metadata: { source: "vault-selection-project" },
+   })
+   updateVaultAsset(asset.id, {
+    projectId: project.id,
+    projectName: project.name,
+   })
+  })
+
+  addProject(project)
+  setActiveProject(project.id)
+  setSelectionProjectName("")
   setRefreshTick((value) => value + 1)
  }
 
@@ -692,6 +732,19 @@ const CreatorVaultOS: React.FC = () => {
          tone="green"
          onClick={applyBatchProject}
          disabled={!selectedAssetIds.length || !batchProject.trim()}
+        />
+        <StandardInput
+         value={selectionProjectName}
+         onChange={(event) => setSelectionProjectName(event.target.value)}
+         placeholder="New project from selection"
+         aria-label="New project from selected assets"
+        />
+        <SubToolboxInnerActionButton
+         label="Create Project From Selection"
+         iconName="checklist"
+         tone="purple"
+         onClick={createProjectFromSelection}
+         disabled={!selectedAssetIds.length || !selectionProjectName.trim()}
         />
         <SubToolboxInnerActionButton
          label="Toggle Favorite"
