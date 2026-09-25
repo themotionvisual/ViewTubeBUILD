@@ -20,7 +20,8 @@ const primitiveSource = readFileSync(new URL("../WidgetPrimitives.tsx", import.m
 describe("mobile widget density and edge contracts", () => {
   it("does not reserve an invisible mobile scroll gutter and does not re-clamp cells in legacy CSS", () => {
     expect(scrollbar).toContain("@media (pointer: coarse), (max-width: 767px)")
-    expect(scrollbar).toContain("padding-inline: var(--widget-shadow-clearance)")
+    expect(scrollbar).toContain("padding-inline: 0")
+    expect(scrollbar).not.toContain("width: calc(100% + (2 * var(--widget-shadow-clearance)))")
     expect(mobile).toContain("scrollbar-gutter: auto")
     expect(mobile).toContain("--vt-mobile-widget-gutter: 4px")
     expect(mobile).toContain("--vt-mobile-reclaim-right: 40px")
