@@ -1,6 +1,6 @@
 import type { VaultAssetKind } from "@/types"
 
-export type VaultWorkspaceViewMode = "grid" | "list"
+export type VaultWorkspaceViewMode = "grid" | "list" | "timeline"
 export type VaultWorkspaceSort = "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
 
 export interface VaultWorkspaceState {
@@ -9,6 +9,7 @@ export interface VaultWorkspaceState {
  filterKind: "all" | VaultAssetKind
  source: "all" | "local" | "drive" | "generated" | "project" | "imported"
  sort: VaultWorkspaceSort
+ special: "active" | "favorites" | "archive" | "trash"
  viewMode: VaultWorkspaceViewMode
 }
 
@@ -20,6 +21,7 @@ export const DEFAULT_VAULT_WORKSPACE_STATE: VaultWorkspaceState = {
  filterKind: "all",
  source: "all",
  sort: "updated-desc",
+ special: "active",
  viewMode: "grid",
 }
 
