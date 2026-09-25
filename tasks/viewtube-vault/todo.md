@@ -46,6 +46,12 @@
 - [x] RH-B038 Typed custom fields / schema metadata in Inspector.
 - [x] RH-B039 Archive/Trash recovery + guarded permanent delete.
 - [x] RH-B040 Exact-duplicate review action resolves to existing canonical asset.
+- [x] RH-B041 Local perceptual image fingerprints + Find Similar.
+- [x] RH-B042 Deterministic local dominant-color palette extraction.
+- [x] RH-B043 Before/After reveal for two selected image assets.
+- [x] RH-B044 Editable Rights & License metadata.
+- [x] RH-B045 Persistent Masonry library view.
+- [x] RH-B046 Advanced metadata-filter workspace persistence.
 
 ## Lane C — intake jobs
 - [x] RH-C040 Global workspace drag/drop.
@@ -61,6 +67,7 @@
 - [ ] RH-C050 Transcript task. (YouTube-linked acquisition + durable retry complete; arbitrary local-file speech-to-text backend still pending)
 - [ ] RH-C051 Proxy derivative task.
 - [x] RH-C052 Background task center/retry/error.
+- [x] RH-C053 Per-item staged tag editing before canonical ingest.
 
 ## Lane D — versions/captions/dependencies
 - [x] RH-D060 Version carousel.
