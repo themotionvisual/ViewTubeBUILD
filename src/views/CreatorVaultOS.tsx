@@ -110,6 +110,10 @@ import {
  createVaultAssetHandoff,
  getVaultAssetToolTargets,
 } from "../services/vaultToolLauncher"
+import {
+ resolveVaultTranscriptVideoId,
+ runVaultTranscriptTask,
+} from "../services/vaultTranscriptTask"
 import type { VaultAsset, VaultAssetKind } from "../types"
 
 const VAULT_MODULE_LABELS: Record<VaultWorkspaceModuleId, string> = {
@@ -276,6 +280,17 @@ const CreatorVaultOS: React.FC = () => {
  const selectedToolTargets = useMemo(
   () => selectedAsset ? getVaultAssetToolTargets(selectedAsset.kind) : [],
   [selectedAsset],
+ )
+ const selectedContentBuild = useMemo(
+  () => selectedProject?.contentBuildId ? getContentBuild(selectedProject.contentBuildId) : null,
+  [selectedProject],
+ )
+ const selectedYouTubeVideoId = useMemo(
+  () => selectedAsset ? resolveVaultTranscriptVideoId({
+   asset: selectedAsset,
+   contentBuildVideoId: selectedContentBuild?.youtube?.videoId || null,
+  }) : null,
+  [selectedAsset, selectedContentBuild],
  )
  const selectedYouTubeVideoId = useMemo(() => {
   if (!selectedAsset) return null
@@ -1545,12 +1560,12 @@ const CreatorVaultOS: React.FC = () => {
           </div>
           <div className="flex flex-col items-end gap-2">
            <div className="text-xs font-black uppercase">{task.type.replace("-", " ")}</div>
-           {task.status === "failed" ? (
+           {task.status === "failed" && task.type === "transcript" ? (
             <SubToolboxInnerActionButton
              label="Retry Task"
              iconName="checklist"
              tone="orange"
-             onClick={() => retryTask(task.id)}
+             onClick={() => void retryTask(task.id)}
             />
            ) : null}
           </div>
@@ -1791,6 +1806,30 @@ const CreatorVaultOS: React.FC = () => {
            ))}
           </div>
          </div>
+         {selectedAsset && (selectedAsset.kind === "video" || selectedAsset.kind === "audio") ? (
+          <div>
+           <div className="mb-2 text-xs font-black uppercase opacity-60">Transcript Acquisition</div>
+           {selectedYouTubeVideoId ? (
+            <div className="flex flex-col gap-2">
+             <div className="text-xs font-bold opacity-60">
+              YOUTUBE VIDEO · {selectedYouTubeVideoId}
+             </div>
+             <SubToolboxInnerActionButton
+              label="Acquire YouTube Transcript"
+              iconName="database"
+              tone="green"
+              onClick={() => void acquireSelectedTranscript()}
+             />
+            </div>
+           ) : (
+            <SubToolboxStatePanel
+             level="l1"
+             state="blocked"
+             message="No YouTube video ID is available for this asset. Local-file speech transcription requires a real speech-to-text backend and is not simulated."
+            />
+           )}
+          </div>
+         ) : null}
          {(captionSourceAsset || activeCaptionAsset) ? (
           <div>
            <div className="mb-2 text-xs font-black uppercase opacity-60">Captions & Transcript</div>
