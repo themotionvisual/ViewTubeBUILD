@@ -97,7 +97,7 @@ import {
  renameVaultCollection,
  setVaultCollectionRole,
 } from "../services/vaultManualCollections"
-import { resolveVaultKeyboardCommand } from "../services/vaultKeyboard"
+import { resolveVaultKeyboardCommand, resolveVaultTagHotkey } from "../services/vaultKeyboard"
 import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
 import { useBrain } from "../context/useBrain"
 import { initializeProjectContentIdentity } from "../services/projects/ProjectContentIdentityService"
@@ -697,10 +697,36 @@ const CreatorVaultOS: React.FC = () => {
   setCollectionRefresh((value) => value + 1)
  }
 
+ const applyTagToSelection = (tag: string) => {
+  if (!tag || !selectedAssetIds.length) return
+  for (const assetId of selectedAssetIds) {
+   const asset = allAssets.find((candidate) => candidate.id === assetId)
+   if (!asset) continue
+   updateVaultAsset(assetId, {
+    tags: Array.from(new Set([...(asset.tags || []), tag])),
+   })
+  }
+  setRefreshTick((value) => value + 1)
+ }
+
  useEffect(() => {
   const handleKeyDown = (event: KeyboardEvent) => {
    const target = event.target as HTMLElement | null
    const isTyping = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable
+   const tagIndex = resolveVaultTagHotkey({
+    key: event.key,
+    metaKey: event.metaKey,
+    ctrlKey: event.ctrlKey,
+   })
+   if (!isTyping && tagIndex != null && selectedAssetIds.length) {
+    const tag = availableTags[tagIndex]
+    if (tag) {
+     event.preventDefault()
+     applyTagToSelection(tag)
+    }
+    return
+   }
+
    const command = resolveVaultKeyboardCommand({
     key: event.key,
     metaKey: event.metaKey,
@@ -735,7 +761,7 @@ const CreatorVaultOS: React.FC = () => {
   }
   window.addEventListener("keydown", handleKeyDown)
   return () => window.removeEventListener("keydown", handleKeyDown)
- }, [selectedAsset, selectedAssetIds.length])
+ }, [selectedAsset, selectedAssetIds, availableTags, allAssets])
 
  const createImportedRecord = (item: PendingVaultImport, mode: "direct" | "staged") => {
   return createImportedVaultAsset({
