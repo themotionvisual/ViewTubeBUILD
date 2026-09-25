@@ -45,6 +45,7 @@ import { createPendingVaultImport, updatePendingVaultImport, type PendingVaultIm
 import { extractVaultFileMetadata } from "../services/vaultFileMetadata"
 import { computeVaultFileHash } from "../services/vaultFileHash"
 import { extractVaultVideoThumbnail } from "../services/vaultVideoThumbnail"
+import { extractVaultImagePreview } from "../services/vaultImagePreview"
 import { buildVaultExplorerGroups } from "../services/vaultExplorer"
 import { getAssetLineage } from "../services/assetEngine"
 import {
@@ -313,11 +314,13 @@ const CreatorVaultOS: React.FC = () => {
    setTaskRefresh((value) => value + 1)
 
    try {
-    const [metadata, contentHash, previewUrl] = await Promise.all([
+    const [metadata, contentHash, imagePreviewUrl, videoPreviewUrl] = await Promise.all([
      extractVaultFileMetadata(file),
      computeVaultFileHash(file),
+     extractVaultImagePreview(file),
      extractVaultVideoThumbnail(file),
     ])
+    const previewUrl = imagePreviewUrl || videoPreviewUrl
     const duplicate = contentHash ? findVaultDuplicateByHash(contentHash) : null
     updateVaultTask(task.id, {
      status: "completed",
@@ -397,6 +400,40 @@ const CreatorVaultOS: React.FC = () => {
    updateVaultAsset(asset.id, { name: `${prefix}${asset.name}` })
   })
   setBatchPrefix("")
+  setRefreshTick((value) => value + 1)
+ }
+
+ const updateAssetTitle = (asset: VaultAsset, nextName: string) => {
+  const name = nextName.trim()
+  if (!name || name === asset.name) return
+  updateVaultAsset(asset.id, { name })
+  setRefreshTick((value) => value + 1)
+ }
+
+ const addAssetTag = (asset: VaultAsset, rawTag: string) => {
+  const tag = rawTag.trim()
+  if (!tag) return
+  updateVaultAsset(asset.id, {
+   tags: Array.from(new Set([...(asset.tags || []), tag])),
+  })
+  setRefreshTick((value) => value + 1)
+ }
+
+ const removeAssetTag = (asset: VaultAsset, tag: string) => {
+  updateVaultAsset(asset.id, {
+   tags: (asset.tags || []).filter((value) => value !== tag),
+  })
+  setRefreshTick((value) => value + 1)
+ }
+
+ const updateAssetNotes = (asset: VaultAsset, notes: string) => {
+  if (String(asset.metadata?.notes || "") === notes) return
+  updateVaultAsset(asset.id, {
+   metadata: {
+    ...(asset.metadata || {}),
+    notes,
+   },
+  })
   setRefreshTick((value) => value + 1)
  }
 
@@ -804,8 +841,23 @@ const CreatorVaultOS: React.FC = () => {
             key={asset.id}
             level="l1"
             kind={vaultCardKind(asset)}
-            title={asset.name}
-            icon={assetIcon(asset)}
+            title={(
+             <StandardInput
+              defaultValue={asset.name}
+              aria-label={`Edit title for ${asset.name}`}
+              onBlur={(event) => updateAssetTitle(asset, event.target.value)}
+              onKeyDown={(event) => {
+               if (event.key === "Enter") event.currentTarget.blur()
+              }}
+             />
+            )}
+            preview={(asset.previewUrl || asset.url) ? (
+             <img
+              src={asset.previewUrl || asset.url || undefined}
+              alt=""
+              className="h-full w-full object-cover"
+             />
+            ) : assetIcon(asset)}
             selected={selectedAssetIds.includes(asset.id)}
             onClickCapture={(event) => {
              selectionShiftRef.current = event.shiftKey
@@ -824,15 +876,51 @@ const CreatorVaultOS: React.FC = () => {
              setSelectionAnchorId(next.anchorId)
             }}
             tags={(
-             <div className="flex flex-wrap gap-1">
-              {(asset.tags || []).slice(0, 5).map((tag) => (
-               <SubToolboxAlphabeticalTag key={tag} level="l2" label={tag} spectrumKey={tag} />
-              ))}
+             <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap gap-1">
+               {(asset.tags || []).map((tag) => (
+                <button
+                 key={tag}
+                 type="button"
+                 aria-label={`Remove tag ${tag}`}
+                 onClick={() => removeAssetTag(asset, tag)}
+                >
+                 <SubToolboxAlphabeticalTag
+                  level="l2"
+                  label={`× ${tag}`}
+                  spectrumKey={tag}
+                 />
+                </button>
+               ))}
+              </div>
+              <StandardInput
+               placeholder="+ TAG"
+               aria-label={`Add tag to ${asset.name}`}
+               onKeyDown={(event) => {
+                if (event.key !== "Enter") return
+                event.preventDefault()
+                addAssetTag(asset, event.currentTarget.value)
+                event.currentTarget.value = ""
+               }}
+              />
              </div>
             )}
-            notes={viewMode === "timeline"
-             ? `${new Date(asset.createdAt).toLocaleString()} · ${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`
-             : `${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`}
+            notes={(
+             <div className="flex flex-col gap-2">
+              <div className="text-xs font-black uppercase opacity-60">
+               {viewMode === "timeline"
+                ? `${new Date(asset.createdAt).toLocaleString()} · ${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`
+                : `${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`}
+              </div>
+              <SubToolboxTextArea
+               height="compact"
+               defaultValue={String(asset.metadata?.notes || "")}
+               placeholder="Add notes…"
+               aria-label={`Notes for ${asset.name}`}
+               onBlur={(event) => updateAssetNotes(asset, event.target.value)}
+              />
+             </div>
+            )}
            />
           ))}
          </div>
