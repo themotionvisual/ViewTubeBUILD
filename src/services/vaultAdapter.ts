@@ -233,6 +233,22 @@ export const setVaultAssetProtection = (
  })
 }
 
+export const deleteVaultAsset = (id: string): boolean => {
+ const assets = readAssets()
+ const existing = assets.find((asset) => asset.id === id)
+ if (!existing) return false
+
+ const metadata = existing.metadata || {}
+ const lifecycle = String(metadata.lifecycle || "").toUpperCase()
+ const protectedAsset = metadata.protected === true || (lifecycle === "GOLDEN" && metadata.protected !== false)
+ const isTrashed = Boolean(metadata.trashedAt) || lifecycle === "TRASHED"
+
+ if (!isTrashed || protectedAsset) return false
+
+ writeAssets(assets.filter((asset) => asset.id !== id))
+ return true
+}
+
 export const upsertVaultAsset = (
  matcher: (asset: VaultAsset) => boolean,
  input: Omit<VaultAsset, "id" | "createdAt" | "updatedAt">,
