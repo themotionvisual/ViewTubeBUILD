@@ -118,7 +118,7 @@ Current `main` exposes **68 registered widget IDs** across system, core, analyti
 ## 2.5. Active implementation status — Settings widget
 
 **Started:** 2026-09-25  
-**Current implementation phase:** Phase 1 extraction + four-page switchboard shell  
+**Current implementation phase:** Phase 2 dashboard controls + data-state hardening  
 **Latest implementation commit in this wave:** `7058c9c11c0b1357f256f075f8250791992d3002`
 
 Implemented so far:
@@ -130,7 +130,12 @@ Implemented so far:
 - added live registered/visible/hidden widget counts through the Dashboard control bridge;
 - replaced legacy raw control styling with canonical widget primitives for the new surface;
 - routed AI handoff to the canonical `/ai-brain` route;
-- added a focused Settings widget contract test.
+- added a focused Settings widget contract test;
+- added tested Focus / Creation / Analytics / All layout presets;
+- added export/import controls and guarded reset with cancel;
+- added a live Layout Lock toggle;
+- added explicit DISCONNECTED / NEVER SYNCED / STALE / CURRENT data states;
+- extracted preset selection into a pure tested dashboard preset model.
 
 Still required before the Settings task is complete:
 - visually certify all supported size/height pairs;
