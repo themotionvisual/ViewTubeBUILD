@@ -535,3 +535,10 @@
     transition: none !important;
   }
 }
+
+/* Mobile visual correction: edge bands use the full body inset symmetrically. */
+.about-vt__intro,
+.about-vt__handoff {
+  margin-inline: calc(-1 * var(--widget-content-inset));
+  width: auto;
+}
