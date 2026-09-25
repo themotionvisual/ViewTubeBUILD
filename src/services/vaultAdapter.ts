@@ -205,6 +205,35 @@ export const createLocalVaultAsset = (input: {
   metadata: input.metadata || {},
  })
 
+
+export const createImportedVaultAsset = (input: {
+ name: string
+ kind: VaultAssetKind
+ projectId?: string | null
+ projectName?: string | null
+ toolId?: SuperToolId | null
+ url?: string | null
+ mimeType?: string | null
+ tags?: string[]
+ metadata?: Record<string, unknown>
+}): VaultAsset =>
+ addVaultAsset({
+  name: input.name,
+  kind: input.kind,
+  source: "imported",
+  projectId: input.projectId || null,
+  projectName: input.projectName || null,
+  toolId: input.toolId || null,
+  generationId: null,
+  driveFileId: null,
+  folderId: null,
+  url: input.url || null,
+  previewUrl: input.url || null,
+  mimeType: input.mimeType || null,
+  tags: input.tags || [],
+  metadata: input.metadata || {},
+ })
+
 export const linkDriveVaultFolder = async (projectName: string) => {
  const folderId = await nexusSyncService.ensureProjectVault(projectName)
  return upsertVaultAsset(
