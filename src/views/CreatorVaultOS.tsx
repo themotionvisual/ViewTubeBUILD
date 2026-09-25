@@ -34,8 +34,11 @@ import {
  findVaultDuplicateByHash,
  listVaultAssets,
  searchVaultAssets,
+ setVaultAssetLifecycle,
+ setVaultAssetProtection,
  setVaultAssetState,
  updateVaultAsset,
+ type VaultAssetLifecycle,
 } from "../services/vaultAdapter"
 import {
  readVaultWorkspaceState,
@@ -629,6 +632,18 @@ const CreatorVaultOS: React.FC = () => {
   updateVaultAsset(asset.id, {
    tags: (asset.tags || []).filter((value) => value !== tag),
   })
+  setRefreshTick((value) => value + 1)
+ }
+
+ const updateAssetLifecycle = (asset: VaultAsset, lifecycle: VaultAssetLifecycle) => {
+  setVaultAssetLifecycle(asset.id, lifecycle)
+  setRefreshTick((value) => value + 1)
+ }
+
+ const toggleAssetProtection = (asset: VaultAsset) => {
+  const lifecycle = String(asset.metadata?.lifecycle || "").toUpperCase()
+  const isProtected = asset.metadata?.protected === true || (lifecycle === "GOLDEN" && asset.metadata?.protected !== false)
+  setVaultAssetProtection(asset.id, !isProtected)
   setRefreshTick((value) => value + 1)
  }
 
@@ -1248,6 +1263,23 @@ const CreatorVaultOS: React.FC = () => {
                   <option key={project.id} value={project.id}>{project.name}</option>
                  ))}
                 </SubToolboxSelect>
+                <SubToolboxSelect
+                 value={String(asset.metadata?.lifecycle || "DRAFT")}
+                 aria-label="Asset lifecycle"
+                 onChange={(event) => updateAssetLifecycle(asset, event.target.value as VaultAssetLifecycle)}
+                >
+                 {["DRAFT", "CANDIDATE", "APPROVED", "FINAL", "GOLDEN", "SUPERSEDED"].map((value) => (
+                  <option key={value} value={value}>{value}</option>
+                 ))}
+                </SubToolboxSelect>
+                <SubToolboxInnerActionButton
+                 label={(asset.metadata?.protected === true || (String(asset.metadata?.lifecycle || "").toUpperCase() === "GOLDEN" && asset.metadata?.protected !== false))
+                  ? "Unlock Protected Asset"
+                  : "Protect Asset"}
+                 iconName="checklist"
+                 tone="purple"
+                 onClick={() => toggleAssetProtection(asset)}
+                />
                 <div className="grid grid-cols-2 gap-2">
                  <SubToolboxInnerActionButton
                   label={asset.metadata?.favorite === true ? "Unfavorite" : "Favorite"}
@@ -1835,6 +1867,28 @@ const CreatorVaultOS: React.FC = () => {
             message="No parent lineage is recorded for this asset."
            />
           )}
+         </div>
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Lifecycle & Protection</div>
+          <div className="flex flex-col gap-2">
+           <SubToolboxSelect
+            value={String(selectedAsset.metadata?.lifecycle || "DRAFT")}
+            aria-label="Asset lifecycle"
+            onChange={(event) => updateAssetLifecycle(selectedAsset, event.target.value as VaultAssetLifecycle)}
+           >
+            {["DRAFT", "CANDIDATE", "APPROVED", "FINAL", "GOLDEN", "SUPERSEDED"].map((value) => (
+             <option key={value} value={value}>{value}</option>
+            ))}
+           </SubToolboxSelect>
+           <SubToolboxInnerActionButton
+            label={(selectedAsset.metadata?.protected === true || (String(selectedAsset.metadata?.lifecycle || "").toUpperCase() === "GOLDEN" && selectedAsset.metadata?.protected !== false))
+             ? "Unlock Protected Asset"
+             : "Protect Asset"}
+            iconName="checklist"
+            tone="purple"
+            onClick={() => toggleAssetProtection(selectedAsset)}
+           />
+          </div>
          </div>
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Send To</div>
