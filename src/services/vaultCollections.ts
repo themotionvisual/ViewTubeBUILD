@@ -9,6 +9,8 @@ export type VaultSmartCollection = {
  source: "all" | VaultAsset["source"]
  lifecycle: string
  orientation: "all" | "landscape" | "portrait" | "square"
+ updatedFrom: string
+ updatedTo: string
  mimeType: string
  minWidth: string
  minHeight: string
@@ -38,6 +40,8 @@ export const listVaultSmartCollections = (): VaultSmartCollection[] => {
      source: (item.source || "all") as VaultSmartCollection["source"],
      lifecycle: String(item.lifecycle || "all"),
      orientation: (item.orientation || "all") as VaultSmartCollection["orientation"],
+     updatedFrom: String(item.updatedFrom || ""),
+     updatedTo: String(item.updatedTo || ""),
      mimeType: String(item.mimeType || ""),
      minWidth: String(item.minWidth || ""),
      minHeight: String(item.minHeight || ""),
@@ -61,6 +65,8 @@ export const createVaultSmartCollection = (input: {
  source?: "all" | VaultAsset["source"]
  lifecycle?: string
  orientation?: "all" | "landscape" | "portrait" | "square"
+ updatedFrom?: string
+ updatedTo?: string
  mimeType?: string
  minWidth?: string
  minHeight?: string
@@ -78,6 +84,8 @@ export const createVaultSmartCollection = (input: {
   source: input.source || "all",
   lifecycle: input.lifecycle || "all",
   orientation: input.orientation || "all",
+  updatedFrom: input.updatedFrom?.trim() || "",
+  updatedTo: input.updatedTo?.trim() || "",
   mimeType: input.mimeType?.trim() || "",
   minWidth: input.minWidth?.trim() || "",
   minHeight: input.minHeight?.trim() || "",
