@@ -98,4 +98,6 @@ export interface CommonWidgetProps {
   onCycleHeight: () => void
   onDecHeight: () => void
   onRemove: () => void
+  onMoveUp?: () => void
+  onMoveDown?: () => void
 }
