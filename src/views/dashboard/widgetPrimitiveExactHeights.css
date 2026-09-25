@@ -28,6 +28,10 @@
  .dashboard-widget-slot.vt-height-massive { --vt-widget-base-h:850px; --vt-widget-ratio-h:92cqi; }
  .dashboard-widget-slot:not(.is-collapsed) { height:clamp(calc(var(--vt-widget-base-h) * .72),var(--vt-widget-ratio-h),var(--vt-widget-base-h)); }
  .dashboard-widget-slot.is-collapsed { height:48px; }
+ @media (max-width:767px) {
+  .dashboard-widget-slot.is-collapsed:has(.vt-widget.mobile-controls-open) { height:96px; }
+  .dashboard-widget-slot.is-collapsed:has(.vt-widget.mobile-controls-open) .vt-widget { height:96px; }
+ }
  .dashboard-widget-slot > * { min-width:0; min-height:0; }
  .dashboard-widget-slot .vt-widget { width:100%; height:100%; }
  .dashboard-widget-slot .vt-widget-content,.dashboard-widget-slot .vt-widget-body { min-width:0; min-height:0; }
