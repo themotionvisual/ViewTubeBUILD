@@ -343,6 +343,37 @@ Create a reusable preview-state contract rather than hand-building one-offs:
 
 ---
 
+## 5.5. Mobile field-QA corrections — 2026-09-25
+
+Source: direct iPhone portrait screenshots of the live Dashboard.
+
+Implemented shared/system corrections:
+- removed the hidden mobile scroll-lane right inset that made widget interiors look narrower on the right;
+- added symmetric shadow/glow clearance inside mobile scroll content;
+- preserved the wide mobile dashboard rendering contract while keeping visual left/right gutters balanced;
+- promoted a canonical `WidgetTextArea` primitive so textarea default/focus geometry matches `WidgetTextInput`;
+- added mobile header-toggle wrapping support for long labels;
+- codified dense mobile composition: prefer compact 24px secondary controls and multi-column grids over long stacked action lists;
+- updated the widget skill so full-bleed dividers/gradient bands, equal gutters, label wrapping and shadow clearance are mandatory.
+
+Targeted corrections completed in this pass:
+- **About VIEWTUBE:** intro and handoff gradient bands now use symmetric full-bleed interior geometry.
+- **Daily Oracle:** source/footer bands are full-bleed; important supporting text wraps rather than ellipsizing.
+- **Channel Overview:** audience/device visualization falls back to another compatible synced window or aggregate synced rows before showing an empty state.
+- **Video Director:** narrow layouts now have explicit row gaps/alignment to prevent vertical control collision.
+- **Image Generator:** template header toggle has a dedicated responsive class and two-line label support.
+- **Video Uploader:** title and description now use canonical text field primitives with matching default/focus states.
+- **Settings:** Dashboard Controls + Layout Lock use a two-column compact grid; secondary dashboard actions use 24px compact controls; phone header stepper receives more width so labels are not cut off.
+
+Remaining visual verification:
+- confirm live left/right outer gutter symmetry on iPhone portrait after deployment;
+- confirm About VIEWTUBE and Daily Oracle full-bleed bands/dividers visually touch their intended usable edges;
+- verify Channel Overview audience/device charts against a channel with those datasets synced;
+- inspect Video Director at narrow portrait and short landscape heights;
+- verify Image Generator's END SCREEN label wraps cleanly to two lines;
+- verify Video Uploader input/textarea focus state parity;
+- re-check Settings at quarter width for compactness and header readability.
+
 ## 6. Widget task backlog / to-do list
 
 ### P0 — System integrity
