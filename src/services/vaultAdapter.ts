@@ -180,28 +180,40 @@ export const setVaultAssetState = (
  const existing = readAssets().find((asset) => asset.id === id)
  if (!existing) return null
  const metadata = { ...(existing.metadata || {}) }
- const lifecycle = String(metadata.lifecycle || "").toUpperCase()
+ const lifecycle = String(metadata.lifecycle || "DRAFT").toUpperCase()
  const protectedAsset = metadata.protected === true || (lifecycle === "GOLDEN" && metadata.protected !== false)
  const destructiveRequested = input.archived === true || input.trashed === true
  if (protectedAsset && destructiveRequested) return null
 
  if (typeof input.favorite === "boolean") metadata.favorite = input.favorite
- if (typeof input.archived === "boolean") {
-  if (input.archived) {
-   metadata.archivedAt = Date.now()
-   metadata.lifecycle = "ARCHIVED"
-  } else {
-   delete metadata.archivedAt
-   if (metadata.lifecycle === "ARCHIVED") metadata.lifecycle = "DRAFT"
+
+ const priorLifecycle = lifecycle === "ARCHIVED" || lifecycle === "TRASHED"
+  ? String(metadata.previousLifecycle || "DRAFT").toUpperCase()
+  : lifecycle || "DRAFT"
+
+ if (input.archived === true) {
+  if (!metadata.previousLifecycle) metadata.previousLifecycle = priorLifecycle
+  metadata.archivedAt = Date.now()
+  delete metadata.trashedAt
+  metadata.lifecycle = "ARCHIVED"
+ } else if (input.archived === false) {
+  delete metadata.archivedAt
+  if (String(metadata.lifecycle || "").toUpperCase() === "ARCHIVED" && input.trashed !== true) {
+   metadata.lifecycle = String(metadata.previousLifecycle || "DRAFT").toUpperCase()
+   delete metadata.previousLifecycle
   }
  }
- if (typeof input.trashed === "boolean") {
-  if (input.trashed) {
-   metadata.trashedAt = Date.now()
-   metadata.lifecycle = "TRASHED"
-  } else {
-   delete metadata.trashedAt
-   if (metadata.lifecycle === "TRASHED") metadata.lifecycle = "DRAFT"
+
+ if (input.trashed === true) {
+  if (!metadata.previousLifecycle) metadata.previousLifecycle = priorLifecycle
+  metadata.trashedAt = Date.now()
+  delete metadata.archivedAt
+  metadata.lifecycle = "TRASHED"
+ } else if (input.trashed === false) {
+  delete metadata.trashedAt
+  if (String(metadata.lifecycle || "").toUpperCase() === "TRASHED" && input.archived !== true) {
+   metadata.lifecycle = String(metadata.previousLifecycle || "DRAFT").toUpperCase()
+   delete metadata.previousLifecycle
   }
  }
 
