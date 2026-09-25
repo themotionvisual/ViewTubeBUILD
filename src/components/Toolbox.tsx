@@ -14,6 +14,7 @@ import {
 import { persistToolboxOpen, readPersistedToolboxOpen } from '../services/workspaceUiPersistence';
 import {
   CONTROL_SHELL,
+  MINI_SUBTOOLBOX_DNA,
   SUBTOOLBOX_COLLAPSE_TRANSITION,
   SUBTOOLBOX_TOKENS,
   TOOLBOX_HEADER_DNA,
@@ -810,6 +811,10 @@ export const MiniSubToolbox: React.FC<MiniSubToolboxProps> = ({
     style={{
       ["--vt-mini-header" as any]: headerColor,
       ["--vt-mini-icon" as any]: iconColor,
+      ["--vt-mini-height" as any]: `${MINI_SUBTOOLBOX_DNA.desktop.headerHeight}px`,
+      ["--vt-mini-stroke" as any]: `${MINI_SUBTOOLBOX_DNA.desktop.stroke}px`,
+      ["--vt-mini-radius" as any]: `${MINI_SUBTOOLBOX_DNA.desktop.radius}px`,
+      ["--vt-mini-shadow" as any]: `${MINI_SUBTOOLBOX_DNA.desktop.shadowOffset}px`,
     }}
   >
     <header className="vt-mini-subtoolbox-header">
