@@ -13,7 +13,7 @@ const componentSlice = (source: string, start: string, end: string) => {
 }
 
 describe("hero replay ownership", () => {
- it("keeps Format Dominance on its native chart animation without a duplicate custom replay owner", () => {
+ it("keeps Format Dominance on one standard boundary plus one header replay owner", () => {
   const source = readComponentSource("./GraphsPageCharts.tsx")
   const formatDominance = componentSlice(
    source,
@@ -22,7 +22,8 @@ describe("hero replay ownership", () => {
   )
 
   expect(formatDominance).not.toContain('addEventListener("vt:replay-hero-intro"')
-  expect(formatDominance).not.toContain('visualId="format-dominance"')
+  expect(formatDominance.match(/heroVisualId=["']format-dominance["']/g)).toHaveLength(1)
+  expect(formatDominance.match(/<HeroIntroBoundary visualId=["']format-dominance["']/g)).toHaveLength(1)
   expect(formatDominance).not.toContain("ReplayTick")
  })
 
