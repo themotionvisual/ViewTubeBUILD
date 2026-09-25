@@ -173,6 +173,7 @@ export interface SimpleVideoSnippet {
   title: string;
   publishedAt: string;
   thumbnail: string;
+  duration?: string;
 }
 
 export interface SimpleVideoDetails extends SimpleVideoSnippet {
@@ -210,6 +211,7 @@ export const toSimpleVideoSnippet = (item: any): SimpleVideoSnippet => ({
   title: String(item?.snippet?.title || ""),
   publishedAt: String(item?.snippet?.publishedAt || ""),
   thumbnail: bestThumbnail(item?.snippet),
+  duration: String(item?.contentDetails?.duration || ""),
 });
 
 export const toSimpleVideoDetails = (item: any): SimpleVideoDetails => ({
