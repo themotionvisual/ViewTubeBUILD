@@ -526,6 +526,15 @@ export const WidgetHeaderToggle = <T extends string>({
   )
 }
 
+export const WidgetHeaderAction: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  icon?: React.ReactNode
+}> = ({ icon, className = "", type = "button", children, ...props }) => (
+  <button type={type} className={`widget-header-action ${className}`.trim()} {...props}>
+    {icon ? <span className="widget-header-action-icon" aria-hidden="true">{icon}</span> : null}
+    <span className="widget-header-action-label">{children}</span>
+  </button>
+)
+
 export const WidgetHeaderStepper = ({
   label,
   value,
