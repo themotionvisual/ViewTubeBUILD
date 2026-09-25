@@ -325,13 +325,13 @@ function generateLocalResponse(question: string, data: any): string {
  const revenue = stats.find((s: any) => s.label.toLowerCase().includes("revenue"))?.value || "$0"
 
  if (q.includes("views") || q.includes("drop")) {
-  return `📊 **Views Analysis**\nYour 28-day views: ${views}\n\nPossible reasons for changes:\n• Upload consistency — gaps longer than 7 days reduce algorithmic reach\n• Title/thumbnail CTR — test more emotional or curiosity-driven hooks\n• Topic relevance — check if recent topics match what gained traction before\n\n**Action:** Upload within 48 hours and return to your highest-performing format.`
+  return `**Views Analysis**\nYour 28-day views: ${views}\n\nPossible reasons for changes:\n• Upload consistency — gaps longer than 7 days reduce algorithmic reach\n• Title/thumbnail CTR — test more emotional or curiosity-driven hooks\n• Topic relevance — check if recent topics match what gained traction before\n\n**Action:** Upload within 48 hours and return to your highest-performing format.`
  }
  if (q.includes("revenue") || q.includes("money") || q.includes("earn")) {
-  return `💰 **Revenue Snapshot**\n28-day revenue: ${revenue}\n\nTo increase:\n1. Focus on 10+ minute videos (mid-roll eligible)\n2. Target high-CPM topics in your niche\n3. Increase watch time — longer sessions = more ad impressions\n\n**Quick Win:** Add end screens to your top 5 videos to chain viewing sessions.`
+  return `**Revenue Snapshot**\n28-day revenue: ${revenue}\n\nTo increase:\n1. Focus on 10+ minute videos (mid-roll eligible)\n2. Target high-CPM topics in your niche\n3. Increase watch time — longer sessions = more ad impressions\n\n**Quick Win:** Add end screens to your top 5 videos to chain viewing sessions.`
  }
  if (q.includes("subscriber") || q.includes("growth") || q.includes("grow")) {
-  return `👥 **Growth Report**\nCurrent subscribers: ${subs}\n\nGrowth levers:\n1. Strong CTAs — ask for subs at peak engagement, not just the end\n2. Community Tab activity — polls drive notifications\n3. Shorts funnel — short-form content feeds long-form discovery\n\n**Action:** Create 3 Shorts this week from your best long-form moments.`
+  return `**Growth Report**\nCurrent subscribers: ${subs}\n\nGrowth levers:\n1. Strong CTAs — ask for subs at peak engagement, not just the end\n2. Community Tab activity — polls drive notifications\n3. Shorts funnel — short-form content feeds long-form discovery\n\n**Action:** Create 3 Shorts this week from your best long-form moments.`
  }
- return `🤖 **Analysis**\nHere's what I see:\n• Views (28d): ${views}\n• Subscribers: ${subs}\n• Revenue (28d): ${revenue}\n\nBased on your data, focus on upload consistency and thumbnail CTR optimization. Your highest-performing content format should guide your next 5 uploads.\n\nWant me to analyze something specific? Try asking about views, revenue, or growth.`
+ return `**Analysis**\nHere's what I see:\n• Views (28d): ${views}\n• Subscribers: ${subs}\n• Revenue (28d): ${revenue}\n\nBased on your data, focus on upload consistency and thumbnail CTR optimization. Your highest-performing content format should guide your next 5 uploads.\n\nWant me to analyze something specific? Try asking about views, revenue, or growth.`
 }
