@@ -58,6 +58,15 @@
       overflow: visible;
     }
 
+    .dashboard-barrier .vt-widget-header .header-extra:has(.widget-header-action) {
+      display: flex !important;
+      flex: 0 1 auto !important;
+      min-width: 72px;
+      max-width: 34%;
+      overflow: visible;
+      justify-content: center !important;
+    }
+
     .dashboard-barrier .vt-widget-header .widget-header-toggle {
       width: 100%;
       min-width: 118px;
