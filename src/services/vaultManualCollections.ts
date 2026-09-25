@@ -133,3 +133,17 @@ export const renameVaultCollection = (
  writeCollections(items.map((item) => item.id === id ? updated : item))
  return updated
 }
+
+
+export const createVaultBrandKit = (
+ assetIds: string[] = [],
+): VaultManualCollection => {
+ const existing = getVaultBrandKit()
+ if (existing) {
+  return addAssetsToVaultCollection(existing.id, assetIds) || existing
+ }
+
+ const collection = createVaultCollection("Brand Kit")
+ const promoted = setVaultCollectionRole(collection.id, "brand-kit") || collection
+ return addAssetsToVaultCollection(promoted.id, assetIds) || promoted
+}
