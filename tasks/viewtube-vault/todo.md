@@ -62,7 +62,7 @@
 - [x] RH-D066 Selected assets→new Project/ContentBuild.
 - [x] RH-D067 Attach selected assets→existing Project.
 - [ ] RH-D068 Dependency/readiness projection.
-- [ ] RH-D069 Manifest JSON export.
+- [x] RH-D069 Manifest JSON export.
 - [ ] RH-D070 Factual package/storage sizing.
 
 ## Lane E — Projects
