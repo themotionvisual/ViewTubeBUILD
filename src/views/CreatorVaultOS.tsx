@@ -90,6 +90,7 @@ import {
  deleteVaultCollection,
  listVaultCollections,
  removeAssetFromVaultCollection,
+ setVaultCollectionRole,
 } from "../services/vaultManualCollections"
 import { resolveVaultKeyboardCommand } from "../services/vaultKeyboard"
 import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
@@ -259,6 +260,10 @@ const CreatorVaultOS: React.FC = () => {
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
  const smartCollections = useMemo(() => listVaultSmartCollections(), [collectionRefresh])
  const manualCollections = useMemo(() => listVaultCollections(), [manualCollectionRefresh])
+ const brandKit = useMemo(
+  () => manualCollections.find((collection) => collection.role === "brand-kit") || null,
+  [manualCollections],
+ )
  const tasks = useMemo(() => listVaultTasks(), [taskRefresh])
  const scratchpads = useMemo(() => listVaultScratchpads(), [scratchpadRefresh])
  const checklistItems = useMemo(() => listVaultChecklistItems(), [checklistRefresh])
@@ -534,6 +539,17 @@ const CreatorVaultOS: React.FC = () => {
  const removeSelectedAssetFromActiveCollection = () => {
   if (!activeCollectionId || !selectedAsset) return
   removeAssetFromVaultCollection(activeCollectionId, selectedAsset.id)
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const makeBrandKit = (id: string) => {
+  setVaultCollectionRole(id, "brand-kit")
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const addSelectionToBrandKit = () => {
+  if (!brandKit || !selectedAssetIds.length) return
+  addAssetsToVaultCollection(brandKit.id, selectedAssetIds)
   setManualCollectionRefresh((value) => value + 1)
  }
 
@@ -1614,6 +1630,23 @@ const CreatorVaultOS: React.FC = () => {
         ))}
         <div className="mt-2 border-t-[3px] border-current pt-3">
          <div className="mb-2 text-xs font-black uppercase opacity-60">Collections</div>
+         {brandKit ? (
+          <div className="mb-3 flex flex-col gap-2">
+           <SubToolboxInnerActionButton
+            label={`Brand Kit · ${brandKit.assetIds.length}`}
+            iconName="sparkles"
+            tone={activeCollectionId === brandKit.id ? "pink" : "yellow"}
+            onClick={() => setActiveCollectionId(brandKit.id)}
+           />
+           <SubToolboxInnerActionButton
+            label="Add Selection to Brand Kit"
+            iconName="plus"
+            tone="green"
+            onClick={addSelectionToBrandKit}
+            disabled={!selectedAssetIds.length}
+           />
+          </div>
+         ) : null}
          <SubToolboxInnerActionButton
           label="All Collections / Clear Filter"
           iconName="collection"
@@ -1621,19 +1654,29 @@ const CreatorVaultOS: React.FC = () => {
           onClick={() => setActiveCollectionId(null)}
          />
          {manualCollections.map((collection) => (
-          <div key={collection.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-           <SubToolboxInnerActionButton
-            label={`${collection.name} · ${collection.assetIds.length}`}
-            iconName="collection"
-            tone={activeCollectionId === collection.id ? "pink" : "cyan"}
-            onClick={() => setActiveCollectionId(collection.id)}
-           />
-           <SubToolboxInnerActionButton
-            label="×"
-            iconName="x"
-            tone="pink"
-            onClick={() => removeManualCollection(collection.id)}
-           />
+          <div key={collection.id} className="flex flex-col gap-1">
+           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <SubToolboxInnerActionButton
+             label={`${collection.role === "brand-kit" ? "★ " : ""}${collection.name} · ${collection.assetIds.length}`}
+             iconName="collection"
+             tone={activeCollectionId === collection.id ? "pink" : collection.role === "brand-kit" ? "yellow" : "cyan"}
+             onClick={() => setActiveCollectionId(collection.id)}
+            />
+            <SubToolboxInnerActionButton
+             label="×"
+             iconName="x"
+             tone="pink"
+             onClick={() => removeManualCollection(collection.id)}
+            />
+           </div>
+           {collection.role !== "brand-kit" ? (
+            <SubToolboxInnerActionButton
+             label="Set as Brand Kit"
+             iconName="sparkles"
+             tone="yellow"
+             onClick={() => makeBrandKit(collection.id)}
+            />
+           ) : null}
           </div>
          ))}
         </div>
