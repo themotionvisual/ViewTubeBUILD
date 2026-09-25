@@ -1323,6 +1323,7 @@ const CreatorVaultOS: React.FC = () => {
          onValueChange={(value) => setViewMode(value as VaultWorkspaceViewMode)}
          options={[
           { value: "grid", label: "GRID" },
+          { value: "masonry", label: "MASONRY" },
           { value: "list", label: "LIST" },
           { value: "timeline", label: "TIMELINE" },
          ]}
@@ -1818,12 +1819,15 @@ const CreatorVaultOS: React.FC = () => {
          ) : (
          <div className={viewMode === "grid"
           ? "grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3"
-          : "flex flex-col gap-4 border-l-[4px] border-current pl-4"}
+          : viewMode === "masonry"
+           ? "columns-1 gap-3 sm:columns-2 2xl:columns-3"
+           : "flex flex-col gap-4 border-l-[4px] border-current pl-4"}
          >
           {visibleAssets.map((asset) => (
            <SubToolboxVaultAsset
             key={asset.id}
             level="l1"
+            className={viewMode === "masonry" ? "mb-3 break-inside-avoid" : undefined}
             kind={vaultCardKind(asset)}
             title={(
              <StandardInput
