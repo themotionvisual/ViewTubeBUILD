@@ -7,10 +7,10 @@ The uploaded donor ZIP proved the earlier plan captured the large systems but mi
 ## Phase 0 — planning and merge reset
 
 - merge the re-harvest authority documents;
-- mark PR #425 as superseded by this newer current-main plan;
+- PR #425 is historical planning provenance; this plan supersedes its donor analysis;
+- PR #426 already merged and is the Lane A implementation baseline;
 - do not wholesale merge Vault-Tool;
-- reconcile PR #426 against this plan;
-- keep PR #426 limited to Lane A.
+- audit current main against this revised plan before continuing follow-on donor features.
 
 ## Phase 1 — Lane A: Vault foundation
 
@@ -24,11 +24,11 @@ The uploaded donor ZIP proved the earlier plan captured the large systems but mi
 - base Batch Processor;
 - base Import Station.
 
-Before merge add:
+Follow-up repairs on the merged baseline:
 - Shift range selection;
-- direct/staged intake distinction or explicit follow-up contract;
-- compatibility with current main and media-player primitives;
-- route + service tests.
+- direct/staged intake distinction;
+- compatibility with PR #427 media-player primitives;
+- route + service tests and rendered verification.
 
 ## Phase 2 — Lane B: interaction and organization
 
