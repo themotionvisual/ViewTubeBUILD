@@ -12,6 +12,7 @@ export type VaultTask = {
  type: VaultTaskType
  label: string
  assetName?: string | null
+ targetAssetId?: string | null
  status: VaultTaskStatus
  progress: number
  detail: string
@@ -44,6 +45,7 @@ export const createVaultTask = (input: {
  type: VaultTaskType
  label: string
  assetName?: string | null
+ targetAssetId?: string | null
  detail?: string
 }): VaultTask => {
  const now = Date.now()
@@ -52,6 +54,7 @@ export const createVaultTask = (input: {
   type: input.type,
   label: input.label,
   assetName: input.assetName || null,
+  targetAssetId: input.targetAssetId || null,
   status: "queued",
   progress: 0,
   detail: input.detail || "",
