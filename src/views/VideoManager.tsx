@@ -460,6 +460,18 @@ const VideoManager: React.FC<VideoManagerProps> = ({
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "2-digit" }).toUpperCase()
  }
 
+ const formatDuration = (value?: string) => {
+  if (!value) return ""
+  const match = value.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
+  if (!match) return value
+  const hours = Number(match[1] || 0)
+  const minutes = Number(match[2] || 0)
+  const seconds = Number(match[3] || 0)
+  return hours > 0
+   ? `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+   : `${minutes}:${String(seconds).padStart(2, "0")}`
+ }
+
  const categoryOptions = [
   { value: "2", label: "Autos & Vehicles" }, { value: "23", label: "Comedy" }, { value: "27", label: "Education" }, { value: "24", label: "Entertainment" }, { value: "1", label: "Film & Animation" }, { value: "20", label: "Gaming" }, { value: "26", label: "Howto & Style" }, { value: "10", label: "Music" }, { value: "25", label: "News & Politics" }, { value: "29", label: "Nonprofits & Activism" }, { value: "22", label: "People & Blogs" }, { value: "15", label: "Pets & Animals" }, { value: "28", label: "Science & Technology" }, { value: "17", label: "Sports" }, { value: "19", label: "Travel & Events" },
  ]
