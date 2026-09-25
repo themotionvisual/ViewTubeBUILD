@@ -61,8 +61,8 @@
 
 :where(.dashboard-barrier) .video-manager-main {
   overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 2px;
+  overflow-x: visible;
+  padding-right: 0;
 }
 
 :where(.dashboard-barrier) .video-manager-package-desk {
