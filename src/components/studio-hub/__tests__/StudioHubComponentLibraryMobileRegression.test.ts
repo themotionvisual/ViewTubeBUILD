@@ -124,6 +124,7 @@ describe("Studio Hub Component Library mobile regression", () => {
       "Media Timecode", "Media Duration Badge", "Media Caption Toggle", "Media Speed Control",
       "Media Poster Frame", "Media Status", "Media Player", "Media Transport Bar",
       "Media Queue", "Media Inspector", "Media Review Panel",
+      "Labeled Input", "Labeled Textarea", "Video Selector", "Mini SubToolbox",
     ]) expect(migration).toContain(`"${family}"`)
 
     expect(media).toContain("SubToolboxMediaPlayer")
@@ -134,6 +135,25 @@ describe("Studio Hub Component Library mobile regression", () => {
     expect(css).toContain(".vt-subtoolbox-media-player")
     expect(css).toContain(".vt-subtoolbox-media-transport")
     expect(css).toContain("@media(max-width:620px)")
+  })
+
+  it("keeps Video Manager-specific primitive additions in the canonical library", () => {
+    const migration = read("src/components/studio-hub/StudioHubPrimitiveMigrationCatalog.tsx")
+    const primitives = read("src/components/subtoolbox/SubToolboxPrimitives.tsx")
+    const toolbox = read("src/components/Toolbox.tsx")
+    const css = read("src/styles/subtoolbox-system.css")
+    const toolboxCss = read("src/styles/toolbox-system.css")
+
+    for (const family of ["Labeled Input", "Labeled Textarea", "Video Selector", "Mini SubToolbox"]) {
+      expect(migration).toContain(`"${family}"`)
+    }
+    expect(primitives).toContain("SubToolboxLabeledInput")
+    expect(primitives).toContain("SubToolboxLabeledTextArea")
+    expect(primitives).toContain("SubToolboxVideoSelector")
+    expect(toolbox).toContain("MiniSubToolbox")
+    expect(css).toContain(".vt-subtoolbox-video-selector")
+    expect(css).toContain(".vt-subtoolbox-labeled-field")
+    expect(toolboxCss).toContain(".vt-mini-subtoolbox")
   })
 
   it("exposes both tracks to the automated A/B certification harness", () => {
