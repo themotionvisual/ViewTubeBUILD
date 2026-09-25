@@ -100,6 +100,12 @@ import {
  listVaultScratchpads,
 } from "../services/vaultScratchpads"
 import {
+ createVaultChecklistItem,
+ deleteVaultChecklistItem,
+ listVaultChecklistItems,
+ toggleVaultChecklistItem,
+} from "../services/vaultChecklists"
+import {
  captionLinesToSrt,
  captionLinesToVtt,
  createCaptionAsset,
@@ -200,6 +206,8 @@ const CreatorVaultOS: React.FC = () => {
  const [scratchpadRefresh, setScratchpadRefresh] = useState(0)
  const [scratchpadTitle, setScratchpadTitle] = useState("")
  const [scratchpadContent, setScratchpadContent] = useState("")
+ const [checklistRefresh, setChecklistRefresh] = useState(0)
+ const [checklistText, setChecklistText] = useState("")
  const [selectionProjectName, setSelectionProjectName] = useState("")
  const [existingProjectId, setExistingProjectId] = useState("")
  const [captionLines, setCaptionLines] = useState<VaultCaptionLine[]>([])
@@ -211,6 +219,7 @@ const CreatorVaultOS: React.FC = () => {
  const smartCollections = useMemo(() => listVaultSmartCollections(), [collectionRefresh])
  const tasks = useMemo(() => listVaultTasks(), [taskRefresh])
  const scratchpads = useMemo(() => listVaultScratchpads(), [scratchpadRefresh])
+ const checklistItems = useMemo(() => listVaultChecklistItems(), [checklistRefresh])
  const explorerGroups = useMemo(() => buildVaultExplorerGroups(allAssets), [allAssets])
  const visibleAssets = useMemo(() => {
   const base = searchVaultAssets({
@@ -803,6 +812,24 @@ const CreatorVaultOS: React.FC = () => {
   setRefreshTick((value) => value + 1)
  }
 
+ const addChecklistItem = () => {
+  const text = checklistText.trim()
+  if (!text) return
+  createVaultChecklistItem(text)
+  setChecklistText("")
+  setChecklistRefresh((value) => value + 1)
+ }
+
+ const toggleChecklistItem = (id: string) => {
+  toggleVaultChecklistItem(id)
+  setChecklistRefresh((value) => value + 1)
+ }
+
+ const removeChecklistItem = (id: string) => {
+  deleteVaultChecklistItem(id)
+  setChecklistRefresh((value) => value + 1)
+ }
+
  const saveScratchpad = () => {
   if (!scratchpadTitle.trim() && !scratchpadContent.trim()) return
   createVaultScratchpad({
@@ -1213,6 +1240,50 @@ const CreatorVaultOS: React.FC = () => {
           />
          </div>
         ))}
+        <div className="mt-2 border-t-[3px] border-current pt-3">
+         <div className="mb-2 text-xs font-black uppercase opacity-60">Workspace Checklist</div>
+         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+          <StandardInput
+           value={checklistText}
+           onChange={(event) => setChecklistText(event.target.value)}
+           placeholder="Add checklist item"
+           aria-label="Vault checklist item"
+           onKeyDown={(event) => {
+            if (event.key === "Enter") addChecklistItem()
+           }}
+          />
+          <SubToolboxInnerActionButton
+           label="+"
+           iconName="plus"
+           tone="green"
+           onClick={addChecklistItem}
+           disabled={!checklistText.trim()}
+          />
+         </div>
+         <div className="mt-2 flex flex-col gap-2">
+          {checklistItems.map((item) => (
+           <div key={item.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+            <button
+             type="button"
+             aria-label={item.done ? "Mark checklist item incomplete" : "Mark checklist item complete"}
+             onClick={() => toggleChecklistItem(item.id)}
+             className="text-lg font-black"
+            >
+             {item.done ? "☒" : "☐"}
+            </button>
+            <div className={item.done ? "text-xs font-bold line-through opacity-45" : "text-xs font-bold"}>
+             {item.text}
+            </div>
+            <SubToolboxInnerActionButton
+             label="×"
+             iconName="x"
+             tone="pink"
+             onClick={() => removeChecklistItem(item.id)}
+            />
+           </div>
+          ))}
+         </div>
+        </div>
        </div>
       </SubToolbox>
 
