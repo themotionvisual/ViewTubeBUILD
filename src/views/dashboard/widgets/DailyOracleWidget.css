@@ -1030,3 +1030,15 @@
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+@media (max-width:767px){
+  .daily-oracle-v2__content{overflow:visible}
+  .daily-oracle-v2__source-strip,
+  .daily-oracle-v2__footer{
+    box-sizing:border-box;
+    padding-inline:var(--widget-content-inset);
+  }
+  .daily-oracle-v2__source-strip > .vt-spectrum-badge{
+    margin-left:0;
+  }
+}
