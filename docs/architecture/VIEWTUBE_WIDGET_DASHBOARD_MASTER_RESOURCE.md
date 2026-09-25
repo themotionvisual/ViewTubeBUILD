@@ -137,7 +137,7 @@ Implemented so far:
 - added explicit DISCONNECTED / NEVER SYNCED / STALE / CURRENT data states;
 - extracted preset selection into a pure tested dashboard preset model;
 - added explicit compact / standard / wide container tiers at <=420px, 421–760px and >=761px;
-- added a clearly labeled generic PREVIEW / CONNECT TO PERSONALIZE panel for disconnected Data state;
+- added clearly labeled generic PREVIEW / CONNECT TO PERSONALIZE panels for disconnected Data and AI states;
 - verified the Settings widget and dashboard preset tests pass in the full suite;
 - verified the updated application-menu governance test recognizes the dedicated Settings owner.
 
