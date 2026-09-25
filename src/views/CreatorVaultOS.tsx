@@ -246,7 +246,6 @@ const CreatorVaultOS: React.FC = () => {
  const selectionShiftRef = useRef(false)
  const [batchTag, setBatchTag] = useState("")
  const [batchPrefix, setBatchPrefix] = useState("")
- const [batchProject, setBatchProject] = useState("")
  const [pending, setPending] = useState<PendingVaultImport[]>([])
  const [importMode, setImportMode] = useState<"direct" | "staged">("staged")
  const [importProject, setImportProject] = useState("")
@@ -1486,15 +1485,6 @@ const CreatorVaultOS: React.FC = () => {
   setRefreshTick((value) => value + 1)
  }
 
- const applyBatchProject = () => {
-  const projectName = batchProject.trim()
-  if (!projectName || !selectedAssetIds.length) return
-  selectedAssetIds.forEach((assetId) => {
-   updateVaultAsset(assetId, { projectName })
-  })
-  setBatchProject("")
-  setRefreshTick((value) => value + 1)
- }
 
  const patchPending = (id: string, patch: Partial<Omit<PendingVaultImport, "id">>) => {
   setPending((current) => current.map((item) => (
