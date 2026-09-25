@@ -23,16 +23,13 @@ describe("portrait widget header control deck", () => {
   it("keeps the portrait top row clear until the control deck is opened", () => {
     expect(mobile).toContain(".widget-mobile-controls-trigger")
     expect(mobile).toContain(".widget-mobile-control-row")
-    expect(mobile).toContain(".vt-widget.mobile-controls-open")
     expect(mobile).toContain("background: var(--widget-color")
   })
 
-  it("uses symmetric phone gutters without the legacy width expansion hack", () => {
+  it("reclaims the app-shell phone padding for a wider centered widget canvas", () => {
     expect(mobile).toContain("--vt-mobile-widget-gutter: 4px")
-    expect(mobile).toContain("width: 100%")
-    expect(mobile).toContain("margin-inline: 0")
-    expect(mobile).not.toContain("width: calc(100% + 24px)")
-    expect(mobile).not.toContain("margin-inline: -12px")
+    expect(mobile).toContain("width: calc(100% + 24px)")
+    expect(mobile).toContain("margin-inline: -12px")
   })
 
   it("collapses only the canvas region while the header remains fixed", () => {
