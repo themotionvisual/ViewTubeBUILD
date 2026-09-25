@@ -15,6 +15,7 @@ const referenceSource = readFileSync(new URL("../widgets/UIReferenceLibraryWidge
 const assetCss = readFileSync(new URL("../widgets/VideoAssetEngineWidget.css", import.meta.url), "utf8")
 const legacy = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
 const flightCss = readFileSync(new URL("../widgets/FlightCheckWidget.css", import.meta.url), "utf8")
+const flightSource = readFileSync(new URL("../widgets/FlightCheckWidget.tsx", import.meta.url), "utf8")
 
 describe("mobile widget density and edge contracts", () => {
   it("does not reserve an invisible mobile scroll gutter and does not re-clamp cells in legacy CSS", () => {
@@ -61,7 +62,8 @@ describe("mobile widget density and edge contracts", () => {
   it("keeps Publishing Command full width and compact", () => {
     expect(flightCss).toContain(".vt-publishing-command__manual-list")
     expect(flightCss).toContain("min-height:24px")
-    expect(flightCss).toContain("margin-inline:calc(-1 * var(--widget-content-inset))")
+    expect(flightSource).toContain('edge="full"')
+    expect(scrollbar).toContain(".widget-scroll-content > .widget-section.is-full")
   })
 
   it("uses canonical text field primitives in Video Uploader", () => {
