@@ -57,6 +57,7 @@ import {
  clearCompletedVaultTasks,
  createVaultTask,
  listVaultTasks,
+ retryVaultTask,
  updateVaultTask,
 } from "../services/vaultTaskCenter"
 import { resolveVaultSelection } from "../services/vaultSelection"
@@ -85,6 +86,13 @@ import {
  deleteVaultScratchpad,
  listVaultScratchpads,
 } from "../services/vaultScratchpads"
+import {
+ captionLinesToSrt,
+ captionLinesToVtt,
+ createCaptionAsset,
+ transcriptToScriptAsset,
+ type VaultCaptionLine,
+} from "../services/vaultCaptions"
 import type { VaultAsset, VaultAssetKind } from "../types"
 
 const CORE_TAGS = [
@@ -148,6 +156,7 @@ const CreatorVaultOS: React.FC = () => {
  const [scratchpadContent, setScratchpadContent] = useState("")
  const [selectionProjectName, setSelectionProjectName] = useState("")
  const [existingProjectId, setExistingProjectId] = useState("")
+ const [captionLines, setCaptionLines] = useState<VaultCaptionLine[]>([])
  const [explorerProject, setExplorerProject] = useState<"all" | "unassigned" | string>("all")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
  const selectionProjectInputRef = useRef<HTMLInputElement | null>(null)
@@ -206,12 +215,51 @@ const CreatorVaultOS: React.FC = () => {
   () => selectedAsset ? getVaultAssetUsage(selectedAsset.id) : [],
   [selectedAsset, refreshTick],
  )
+ const activeCaptionAsset = useMemo(() => {
+  if (!selectedAsset) return null
+  if (selectedAsset.metadata?.captionFormat === "timed-lines") return selectedAsset
+  if (selectedAsset.kind !== "video" && selectedAsset.kind !== "audio") return null
+  return allAssets.find((asset) => (
+   asset.metadata?.captionFormat === "timed-lines"
+   && Array.isArray(asset.metadata?.parentAssetIds)
+   && asset.metadata.parentAssetIds.includes(selectedAsset.id)
+  )) || null
+ }, [selectedAsset, allAssets])
+ const captionSourceAsset = useMemo(() => {
+  if (!selectedAsset) return null
+  if (selectedAsset.kind === "video" || selectedAsset.kind === "audio") return selectedAsset
+  if (selectedAsset.metadata?.captionFormat === "timed-lines" && Array.isArray(selectedAsset.metadata?.parentAssetIds)) {
+   const parentId = selectedAsset.metadata.parentAssetIds.find((id): id is string => typeof id === "string")
+   return parentId ? allAssets.find((asset) => asset.id === parentId) || null : null
+  }
+  return null
+ }, [selectedAsset, allAssets])
 
  const availableTags = useMemo(
   () => Array.from(new Set([...CORE_TAGS, ...allAssets.flatMap((asset) => asset.tags || [])]))
    .sort((a, b) => a.localeCompare(b)),
   [allAssets],
  )
+
+ useEffect(() => {
+  const stored = activeCaptionAsset?.metadata?.captionLines
+  if (Array.isArray(stored) && stored.length) {
+   setCaptionLines(stored.filter((line): line is VaultCaptionLine => (
+    Boolean(line)
+    && typeof line === "object"
+    && typeof (line as VaultCaptionLine).id === "string"
+    && typeof (line as VaultCaptionLine).startMs === "number"
+    && typeof (line as VaultCaptionLine).endMs === "number"
+    && typeof (line as VaultCaptionLine).text === "string"
+   )).map((line) => ({ ...line })))
+   return
+  }
+  if (captionSourceAsset) {
+   setCaptionLines([{ id: crypto.randomUUID(), startMs: 0, endMs: 3000, text: "" }])
+   return
+  }
+  setCaptionLines([])
+ }, [activeCaptionAsset?.id, captionSourceAsset?.id])
 
  const saveSmartCollection = () => {
   const name = smartCollectionName.trim()
@@ -402,6 +450,71 @@ const CreatorVaultOS: React.FC = () => {
   })
   setBatchPrefix("")
   setRefreshTick((value) => value + 1)
+ }
+
+ const retryTask = (taskId: string) => {
+  const task = retryVaultTask(taskId)
+  if (!task) return
+  setTaskRefresh((value) => value + 1)
+ }
+
+ const patchCaptionLine = (id: string, patch: Partial<VaultCaptionLine>) => {
+  setCaptionLines((current) => current.map((line) => line.id === id ? { ...line, ...patch, id } : line))
+ }
+
+ const addCaptionLine = () => {
+  const previous = captionLines[captionLines.length - 1]
+  const startMs = previous ? previous.endMs : 0
+  setCaptionLines((current) => [...current, {
+   id: crypto.randomUUID(),
+   startMs,
+   endMs: startMs + 3000,
+   text: "",
+  }])
+ }
+
+ const removeCaptionLine = (id: string) => {
+  setCaptionLines((current) => current.filter((line) => line.id !== id))
+ }
+
+ const saveCaptionArtifact = () => {
+  if (!captionSourceAsset || !captionLines.length) return
+  if (activeCaptionAsset) {
+   updateVaultAsset(activeCaptionAsset.id, {
+    metadata: {
+     ...(activeCaptionAsset.metadata || {}),
+     captionFormat: "timed-lines",
+     captionLines: captionLines.map((line) => ({ ...line })),
+     transcriptText: captionLines.map((line) => line.text.trim()).filter(Boolean).join("\n"),
+    },
+   })
+  } else {
+   createCaptionAsset(captionSourceAsset, captionLines)
+  }
+  setRefreshTick((value) => value + 1)
+ }
+
+ const downloadCaptionText = (format: "srt" | "vtt") => {
+  if (!captionLines.length) return
+  const content = format === "srt" ? captionLinesToSrt(captionLines) : captionLinesToVtt(captionLines)
+  const blob = new Blob([content], { type: format === "srt" ? "application/x-subrip" : "text/vtt" })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  const baseName = (captionSourceAsset?.name || selectedAsset?.name || "captions").replace(/\.[^.]+$/, "")
+  link.href = url
+  link.download = `${baseName}.${format}`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+ }
+
+ const createScriptFromTranscript = () => {
+  const source = activeCaptionAsset || captionSourceAsset
+  if (!source || !captionLines.length) return
+  const script = transcriptToScriptAsset(source, captionLines)
+  setRefreshTick((value) => value + 1)
+  setSelectedAssetIds([script.id])
  }
 
  const updateAssetTitle = (asset: VaultAsset, nextName: string) => {
@@ -1175,7 +1288,17 @@ const CreatorVaultOS: React.FC = () => {
             {task.detail ? ` · ${task.detail}` : ""}
            </div>
           </div>
-          <div className="text-xs font-black uppercase">{task.type.replace("-", " ")}</div>
+          <div className="flex flex-col items-end gap-2">
+           <div className="text-xs font-black uppercase">{task.type.replace("-", " ")}</div>
+           {task.status === "failed" ? (
+            <SubToolboxInnerActionButton
+             label="Retry Task"
+             iconName="refresh"
+             tone="orange"
+             onClick={() => retryTask(task.id)}
+            />
+           ) : null}
+          </div>
          </div>
         )) : (
          <SubToolboxStatePanel level="l1" state="empty" message="No Vault background tasks yet." />
@@ -1411,6 +1534,81 @@ const CreatorVaultOS: React.FC = () => {
            ))}
           </div>
          </div>
+         {(captionSourceAsset || activeCaptionAsset) ? (
+          <div>
+           <div className="mb-2 text-xs font-black uppercase opacity-60">Captions & Transcript</div>
+           <div className="flex flex-col gap-2">
+            {captionLines.map((line, index) => (
+             <div key={line.id} className="grid grid-cols-[72px_72px_minmax(0,1fr)_auto] gap-2">
+              <SubToolboxInput
+               type="number"
+               min={0}
+               step={100}
+               value={line.startMs}
+               aria-label={`Caption ${index + 1} start milliseconds`}
+               onChange={(event) => patchCaptionLine(line.id, { startMs: Number(event.target.value) || 0 })}
+              />
+              <SubToolboxInput
+               type="number"
+               min={0}
+               step={100}
+               value={line.endMs}
+               aria-label={`Caption ${index + 1} end milliseconds`}
+               onChange={(event) => patchCaptionLine(line.id, { endMs: Number(event.target.value) || 0 })}
+              />
+              <SubToolboxInput
+               value={line.text}
+               placeholder={`Caption line ${index + 1}`}
+               aria-label={`Caption ${index + 1} text`}
+               onChange={(event) => patchCaptionLine(line.id, { text: event.target.value })}
+              />
+              <SubToolboxInnerActionButton
+               label="×"
+               iconName="x"
+               tone="pink"
+               onClick={() => removeCaptionLine(line.id)}
+              />
+             </div>
+            ))}
+            <SubToolboxInnerActionButton
+             label="Add Caption Line"
+             iconName="plus"
+             tone="cyan"
+             onClick={addCaptionLine}
+            />
+            <SubToolboxInnerActionButton
+             label="Save Caption Artifact"
+             iconName="archive"
+             tone="green"
+             onClick={saveCaptionArtifact}
+             disabled={!captionLines.length}
+            />
+            <div className="grid grid-cols-2 gap-2">
+             <SubToolboxInnerActionButton
+              label="Export SRT"
+              iconName="database"
+              tone="yellow"
+              onClick={() => downloadCaptionText("srt")}
+              disabled={!captionLines.length}
+             />
+             <SubToolboxInnerActionButton
+              label="Export VTT"
+              iconName="database"
+              tone="yellow"
+              onClick={() => downloadCaptionText("vtt")}
+              disabled={!captionLines.length}
+             />
+            </div>
+            <SubToolboxInnerActionButton
+             label="Create Script From Transcript"
+             iconName="edit"
+             tone="purple"
+             onClick={createScriptFromTranscript}
+             disabled={!captionLines.some((line) => line.text.trim())}
+            />
+           </div>
+          </div>
+         ) : null}
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Versions</div>
           {selectedVersionStack.length ? (
