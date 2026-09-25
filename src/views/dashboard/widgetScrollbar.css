@@ -128,14 +128,26 @@
     margin-inline-end: 0;
   }
 
+  /* On touch devices the decorative scroll controller is absent. Make the
+     viewport itself reach the widget body's true interior edges, then put the
+     normal content inset back on the content layer. This removes the invisible
+     white edge that used to clip gradients, focus glows, shadows and rails. */
+  :where(.dashboard-barrier) .widget-scroll-area:not(.is-full) .widget-scroll-viewport {
+    width: calc(100% + (2 * var(--widget-content-inset)));
+    margin-inline: calc(-1 * var(--widget-content-inset));
+  }
+
   :where(.dashboard-barrier) .widget-scroll-area.is-full {
     margin-inline: calc(-1 * var(--widget-content-inset));
   }
 
+  :where(.dashboard-barrier) .widget-scroll-area.is-full .widget-scroll-viewport {
+    width: 100%;
+    margin-inline: 0;
+  }
+
   :where(.dashboard-barrier) .widget-scroll-viewport {
-    width: calc(100% + (2 * var(--widget-shadow-clearance)));
-    margin-inline: calc(-1 * var(--widget-shadow-clearance));
-    padding-inline: var(--widget-shadow-clearance);
+    padding-inline: 0;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -143,8 +155,15 @@
     box-sizing: border-box;
     width: 100%;
     margin-inline: 0;
-    padding-inline: 0;
-    overflow: visible;
+    padding-inline: var(--widget-content-inset);
+  }
+
+  :where(.dashboard-barrier) .widget-scroll-content > .widget-section.is-full,
+  :where(.dashboard-barrier) .widget-scroll-content > .widget-divider.is-full,
+  :where(.dashboard-barrier) .widget-scroll-content > .vt-widget-full-bleed {
+    width: calc(100% + (2 * var(--widget-content-inset)));
+    max-width: none;
+    margin-inline: calc(-1 * var(--widget-content-inset));
   }
 }
 
