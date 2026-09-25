@@ -43,4 +43,29 @@ describe("Vault text documents", () => {
   expect(saved?.metadata?.textContent).toBe("Revised")
   expect(listVaultAssets()).toHaveLength(1)
  })
+
+ it("preserves unrelated metadata when editing text content", () => {
+  const asset = createVaultTextDocument({
+   name: "Rights Notes",
+   text: "Draft",
+   format: "plain",
+  })
+  const seeded = listVaultAssets()[0]
+  localStorage.setItem("vt_creator_vault_assets_v1", JSON.stringify([{
+   ...seeded,
+   metadata: { ...seeded.metadata, license: "owned", customMarker: "keep" },
+  }]))
+
+  const saved = saveVaultTextDocument(asset.id, {
+   name: "Rights Notes",
+   text: "Updated",
+   format: "plain",
+  })
+
+  expect(saved?.metadata).toMatchObject({
+   license: "owned",
+   customMarker: "keep",
+   textContent: "Updated",
+  })
+ })
 })
