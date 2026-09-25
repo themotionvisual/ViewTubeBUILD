@@ -1072,3 +1072,24 @@
   max-height:28px;
   stroke-width:2.6;
 }
+
+/* Final canonical text-field ownership: input and textarea share the same
+   stroke/radius/surface/focus treatment in every widget. */
+:where(.dashboard-barrier) :is(.widget-text-input,.widget-text-area){
+  box-sizing:border-box;
+  width:100%;
+  border:2px solid var(--widget-border,var(--widget-ink,currentColor))!important;
+  border-radius:var(--vt-primitive-radius,6px)!important;
+  background:var(--bg-input,#fff)!important;
+  color:var(--widget-ink,var(--widget-border,#243247))!important;
+  outline:none!important;
+  box-shadow:none;
+}
+:where(.dashboard-barrier) :is(.widget-text-input,.widget-text-area):focus,
+:where(.dashboard-barrier) :is(.widget-text-input,.widget-text-area):focus-visible{
+  border-color:var(--widget-color,#34cdea)!important;
+  background:color-mix(in srgb,var(--widget-color,#34cdea) 18%,white)!important;
+  box-shadow:0 0 0 1px var(--widget-color,#34cdea)!important;
+  position:relative;
+  z-index:2;
+}
