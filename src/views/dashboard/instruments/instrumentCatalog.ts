@@ -80,6 +80,7 @@ export const WIDGET_INSTRUMENT_CATALOG: readonly WidgetInstrumentDefinition[] = 
   define("audience-requests", "flow", "Request opportunity funnel", "Viewer request", "Promote opportunity", "Turn audience needs into content opportunities.", "Collect, cluster and rank repeated requests.", "A supported request enters production."),
   define("video-director", "console", "Director control room", "Video DNA direction", "Direct or generate", "Direct generated video from one shared Video DNA system.", "Coordinate concept, shot, camera, audio, graphics, variation and output controls through purpose-built directing instruments.", "A coherent directed video plan is ready to storyboard, vary, generate or continue in Studio."),
   define("video-asset-engine", "forge", "Package composer", "Durable creator asset", "Inspect or hand off", "Assemble reusable video assets into one traceable package.", "Resolve canonical Vault assets into package slots, readiness, lineage and contextual destinations.", "A durable package is ready for the next creator workflow."),
+  define("shorts-multiplier", "forge", "Variant multiplication deck", "Short variant set", "Prepare render set", "Create a scheduled family of repost-ready Shorts variants.", "Generate deterministic frame-trim combinations, preserve packaging, and route package-backed sources into editor/render and publishing workflows.", "A reviewable set of uniquely trimmed Shorts variants is ready for rendering and scheduling."),
 ] as const
 
 export const WIDGET_INSTRUMENT_BY_ID = Object.fromEntries(
