@@ -87,6 +87,7 @@ import {
 } from "../services/vaultCollections"
 import {
  addAssetsToVaultCollection,
+ createVaultBrandKit,
  createVaultCollection,
  deleteVaultCollection,
  listVaultCollections,
@@ -557,6 +558,13 @@ const CreatorVaultOS: React.FC = () => {
  const renameManualCollection = (id: string, nextName: string) => {
   const updated = renameVaultCollection(id, nextName)
   if (!updated) return
+  setManualCollectionRefresh((value) => value + 1)
+ }
+
+ const createBrandKitFromSelection = () => {
+  const kit = createVaultBrandKit(selectedAssetIds)
+  setActiveCollectionId(kit.id)
+  setTargetCollectionId(kit.id)
   setManualCollectionRefresh((value) => value + 1)
  }
 
@@ -1666,7 +1674,14 @@ const CreatorVaultOS: React.FC = () => {
             disabled={!selectedAssetIds.length}
            />
           </div>
-         ) : null}
+         ) : (
+          <SubToolboxInnerActionButton
+           label="Create Brand Kit from Selection"
+           iconName="sparkles"
+           tone="yellow"
+           onClick={createBrandKitFromSelection}
+          />
+         )}
          <SubToolboxInnerActionButton
           label="All Collections / Clear Filter"
           iconName="collection"
