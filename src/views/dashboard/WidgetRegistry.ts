@@ -20,7 +20,7 @@ const inclusiveBucketRange = <T extends string>(order: readonly T[], minimum: T,
 const NEW_REGISTERED_WIDGETS: WidgetDefinition[] = NEW_WIDGET_DEFINITIONS.map((widget, index) => {
  const supportedSizes = inclusiveBucketRange<DashboardSizeBucket>(SIZE_BUCKET_ORDER, widget.minSize, widget.maxSize)
  const supportedHeights = inclusiveBucketRange<DashboardHeightBucket>(HEIGHT_BUCKET_ORDER, widget.minHeight, widget.maxHeight)
- const supportedOrder = SUPPORTED_DASHBOARD_WIDGET_IDS.indexOf(widget.id)
+ const supportedOrder = SUPPORTED_DASHBOARD_WIDGET_IDS.findIndex((id) => id === widget.id)
  const isSupportedDefault = supportedOrder >= 0
  return {
   ...widget,
