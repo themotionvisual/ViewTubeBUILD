@@ -40,6 +40,36 @@ export const SubToolboxSplitButton: React.FC<SubToolboxSplitButtonProps> = ({
   </button>
 )
 
+export interface SubToolboxShellActionProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  icon: React.ReactNode
+  children: React.ReactNode
+  level?: ToolboxControlLevel
+}
+
+export const SubToolboxShellAction: React.FC<SubToolboxShellActionProps> = ({
+  icon,
+  children,
+  level = "l0",
+  className,
+  style,
+  type = "button",
+  ...props
+}) => (
+  <button
+    type={type}
+    data-vt-control-level={level}
+    className={classes("vt-subtoolbox-shell-action", className)}
+    style={{
+      ...getComponentLevelCssVars(level),
+      ...style,
+    }}
+    {...props}
+  >
+    <span className="vt-subtoolbox-shell-action-rail" aria-hidden="true">{icon}</span>
+    <span className="vt-subtoolbox-shell-action-title">{children}</span>
+  </button>
+)
+
 export interface SubToolboxSplitDropdownOption {
   value: string
   label: React.ReactNode
