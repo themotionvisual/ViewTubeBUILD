@@ -44,7 +44,7 @@
 - [ ] RH-C043 Video duration/resolution extraction.
 - [ ] RH-C044 Video thumbnail frame extraction.
 - [ ] RH-C045 Direct import path.
-- [ ] RH-C046 Editable staged intake drafts.
+- [x] RH-C046 Editable staged intake drafts.
 - [ ] RH-C047 Content hash/duplicate preflight.
 - [ ] RH-C048 EXIF metadata task.
 - [ ] RH-C049 Vision/suggested-tag task.
