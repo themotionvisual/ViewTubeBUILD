@@ -87,7 +87,7 @@ export const BurnoutMonitorWidget = ({ widget, instance, editMode, onToggleColla
   if (score <= 30) return "Great balance! Keep up the current pace."
   if (score <= 60) return "Consider scheduling a rest day this week."
   if (score <= 80) return "You're pushing hard. Take a break before quality drops."
-  return "⚠️ High burnout risk. Take tomorrow off. Batch content instead of daily grinding."
+  return " High burnout risk. Take tomorrow off. Batch content instead of daily grinding."
  }
 
  const markRestDay = () => {
