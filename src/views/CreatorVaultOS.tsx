@@ -584,21 +584,7 @@ const CreatorVaultOS: React.FC = () => {
   setRefreshTick((value) => value + 1)
  }
 
- const addAssetTag = (asset: VaultAsset, rawTag: string) => {
-  const tag = rawTag.trim()
-  if (!tag) return
-  updateVaultAsset(asset.id, {
-   tags: Array.from(new Set([...(asset.tags || []), tag])),
-  })
-  setRefreshTick((value) => value + 1)
- }
 
- const removeAssetTag = (asset: VaultAsset, tag: string) => {
-  updateVaultAsset(asset.id, {
-   tags: (asset.tags || []).filter((value) => value !== tag),
-  })
-  setRefreshTick((value) => value + 1)
- }
 
  const assignAssetToProject = (asset: VaultAsset, projectId: string) => {
   if (!projectId) {
@@ -1220,124 +1206,6 @@ const CreatorVaultOS: React.FC = () => {
                 <span className="text-[10px] font-black uppercase opacity-60">Replace Preview</span>
                </>
               ) : null}
-             </div>
-            )}
-           />
-            )}
-            preview={(asset.previewUrl || asset.url) ? (
-             <img
-              src={asset.previewUrl || asset.url || undefined}
-              alt=""
-              className="h-full w-full object-cover"
-             />
-            ) : assetIcon(asset)}
-            selected={selectedAssetIds.includes(asset.id)}
-            onClickCapture={(event) => {
-             selectionShiftRef.current = event.shiftKey
-            }}
-            onSelectedChange={(selected) => {
-             const next = resolveVaultSelection({
-              visibleIds: visibleAssets.map((item) => item.id),
-              selectedIds: selectedAssetIds,
-              clickedId: asset.id,
-              nextSelected: selected,
-              anchorId: selectionAnchorId,
-              shiftKey: selectionShiftRef.current,
-             })
-             selectionShiftRef.current = false
-             setSelectedAssetIds(next.selectedIds)
-             setSelectionAnchorId(next.anchorId)
-            }}
-            tags={(
-             <div className="flex flex-col gap-2">
-              <div className="flex flex-wrap gap-1">
-               {(asset.tags || []).map((tag) => (
-                <button
-                 key={tag}
-                 type="button"
-                 aria-label={`Remove tag ${tag}`}
-                 onClick={() => removeAssetTag(asset, tag)}
-                >
-                 <SubToolboxAlphabeticalTag
-                  level="l2"
-                  label={`× ${tag}`}
-                  spectrumKey={tag}
-                 />
-                </button>
-               ))}
-              </div>
-              {selectedAssetIds.includes(asset.id) ? (
-               <StandardInput
-                placeholder="+ TAG"
-                aria-label={`Add tag to ${asset.name}`}
-                onKeyDown={(event) => {
-                 if (event.key !== "Enter") return
-                 event.preventDefault()
-                 addAssetTag(asset, event.currentTarget.value)
-                 event.currentTarget.value = ""
-                }}
-               />
-              ) : null}
-             </div>
-            )}
-            notes={(
-             <div className="flex flex-col gap-2">
-              <div className="text-xs font-black uppercase opacity-60">
-               {viewMode === "timeline"
-                ? `${new Date(asset.createdAt).toLocaleString()} · ${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`
-                : `${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`}
-              </div>
-              {selectedAssetIds.includes(asset.id) ? (
-               <>
-                <SubToolboxSelect
-                 value={asset.projectId || ""}
-                 aria-label="Asset project assignment"
-                 onChange={(event) => assignAssetToProject(asset, event.target.value)}
-                >
-                 <option value="">UNASSIGNED</option>
-                 {brain.projects.map((project) => (
-                  <option key={project.id} value={project.id}>{project.name}</option>
-                 ))}
-                </SubToolboxSelect>
-                <div className="grid grid-cols-2 gap-2">
-                 <SubToolboxInnerActionButton
-                  label={asset.metadata?.favorite === true ? "Unfavorite" : "Favorite"}
-                  iconName="sparkles"
-                  tone="orange"
-                  onClick={() => toggleAssetFavorite(asset)}
-                  aria-label="Toggle asset favorite"
-                 />
-                 <SubToolboxInnerActionButton
-                  label="Archive"
-                  iconName="archive"
-                  tone="cyan"
-                  onClick={() => archiveAsset(asset)}
-                  aria-label="Archive asset"
-                 />
-                </div>
-                <SubToolboxInput
-                 type="file"
-                 accept="image/*"
-                 aria-label={`Replace preview for ${asset.name}`}
-                 title="Replace Preview"
-                 onChange={(event) => {
-                  const file = event.currentTarget.files?.[0] || null
-                  void replaceAssetPreview(asset, file)
-                  event.currentTarget.value = ""
-                 }}
-                />
-                <span className="text-[10px] font-black uppercase opacity-60">Replace Preview</span>
-                <SubToolboxTextArea
-                 height="compact"
-                 defaultValue={String(asset.metadata?.notes || "")}
-                 placeholder="Add notes…"
-                 aria-label={`Notes for ${asset.name}`}
-                 onBlur={(event) => updateAssetNotes(asset, event.target.value)}
-                />
-               </>
-              ) : (
-               <div className="text-[10px] font-black uppercase opacity-50">SELECT TO EDIT DETAILS</div>
-              )}
              </div>
             )}
            />
