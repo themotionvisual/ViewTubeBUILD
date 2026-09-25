@@ -272,6 +272,7 @@ const CreatorVaultOS: React.FC = () => {
  const [explorerProject, setExplorerProject] = useState<"all" | "unassigned" | string>("all")
  const searchInputRef = useRef<HTMLInputElement | null>(null)
  const selectionProjectInputRef = useRef<HTMLInputElement | null>(null)
+ const inspectorRef = useRef<HTMLDivElement | null>(null)
 
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
  const smartCollections = useMemo(() => listVaultSmartCollections(), [collectionRefresh])
@@ -753,6 +754,12 @@ const CreatorVaultOS: React.FC = () => {
    if (command === "toggle-mute" && selectedAsset && (selectedAsset.kind === "video" || selectedAsset.kind === "audio")) {
     event.preventDefault()
     setQuickLookMuted((muted) => !muted)
+    return
+   }
+   if (command === "focus-inspector" && selectedAsset) {
+    event.preventDefault()
+    inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    inspectorRef.current?.focus({ preventScroll: true })
     return
    }
    if (command === "close-transient") {
@@ -2679,7 +2686,8 @@ const CreatorVaultOS: React.FC = () => {
        </div>
       </SubToolbox>
 
-      <SubToolbox
+      <div ref={inspectorRef} tabIndex={-1}>
+       <SubToolbox
        style={moduleStyle("inspector" as VaultWorkspaceModuleId)}
        title="Inspector"
        subtitle="Selected asset details and provenance"
@@ -3354,6 +3362,7 @@ const CreatorVaultOS: React.FC = () => {
         />
        )}
       </SubToolbox>
+      </div>
      </div>
     </div>
    </Toolbox>
