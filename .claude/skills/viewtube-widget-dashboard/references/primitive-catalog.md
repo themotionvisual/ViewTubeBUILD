@@ -34,6 +34,7 @@ Canonical consumer imports live in `src/views/dashboard/WidgetPrimitives.tsx`. `
 | --- | --- |
 | `WidgetSizedButton` | the standard button |
 | `WidgetActionButton` | the widget's primary action |
+| `WidgetHeaderAction` | a header-mounted action with a canonical icon + label treatment; do not fake one with a toggle |
 | `WidgetSplitButton`, `WidgetLeftSplitButton` | button with a split icon or menu cell |
 | `WidgetIconButton` | square icon-only button |
 | `WidgetSelect`, `WidgetSizedSelect` | dropdowns |
