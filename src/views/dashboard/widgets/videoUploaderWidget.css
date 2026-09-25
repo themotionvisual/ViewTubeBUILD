@@ -346,7 +346,8 @@
 :where(.dashboard-barrier) .video-uploader-page-button{
   min-width:0;
   white-space:normal;
-  overflow:visible;
+  overflow:hidden;
+  overflow-wrap:anywhere;
   text-overflow:clip;
   line-height:.86;
   font-size:12px;
@@ -362,7 +363,7 @@
     padding-inline:4px;
     font-size:11px;
   }
-  :where(.dashboard-barrier) .video-uploader-footer>.widget-split-button.is-large,
+  :where(.dashboard-barrier) .video-uploader-footer>.widget-split-button.is-left-split,
   :where(.dashboard-barrier) .video-uploader-footer>.widget-icon-button{
     height:38px;
     min-height:38px;
