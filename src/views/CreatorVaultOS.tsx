@@ -229,6 +229,7 @@ const CreatorVaultOS: React.FC = () => {
  const [quickLookVolume, setQuickLookVolume] = useState(0.8)
  const [quickLookSpeed, setQuickLookSpeed] = useState(1)
  const [quickLookOpen, setQuickLookOpen] = useState(true)
+ const [compareReveal, setCompareReveal] = useState(50)
  const [smartCollectionName, setSmartCollectionName] = useState("")
  const [collectionRefresh, setCollectionRefresh] = useState(0)
  const [manualCollectionName, setManualCollectionName] = useState("")
@@ -1733,6 +1734,38 @@ const CreatorVaultOS: React.FC = () => {
             </div>
            ))}
           </div>
+         </div>
+        ) : null}
+        {comparePair
+         && comparePair.every((asset) => asset.kind === "image" && (asset.previewUrl || asset.url)) ? (
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Before / After</div>
+          <div className="relative aspect-video overflow-hidden border-[3px] border-current">
+           <img
+            src={comparePair[0].previewUrl || comparePair[0].url || undefined}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+           />
+           <img
+            src={comparePair[1].previewUrl || comparePair[1].url || undefined}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ clipPath: `inset(0 ${100 - compareReveal}% 0 0)` }}
+           />
+           <div
+            aria-hidden="true"
+            className="absolute inset-y-0 w-[3px] bg-current"
+            style={{ left: `calc(${compareReveal}% - 1px)` }}
+           />
+          </div>
+          <SubToolboxInput
+           type="range"
+           min={0}
+           max={100}
+           value={compareReveal}
+           aria-label="Before after reveal"
+           onChange={(event) => setCompareReveal(Number(event.target.value))}
+          />
          </div>
         ) : null}
         {visibleAssets.length ? (
