@@ -3288,3 +3288,33 @@
     max-width:100%!important;
   }
 }
+
+
+/* ==========================================================================
+   Mobile editable-control contract — 2026-09-25
+   WebKit may visually zoom the page when focusing editable controls whose
+   computed text size is below 16px. Keep the page zoom user-controlled and
+   make the control itself mobile-safe instead of disabling pinch zoom.
+   ========================================================================== */
+@media (max-width:767px), (hover:none) and (pointer:coarse) {
+  [data-vt-toolbox] :is(
+    input[type="text"],
+    input[type="search"],
+    input[type="email"],
+    input[type="url"],
+    input[type="tel"],
+    input[type="password"],
+    input[type="number"],
+    input:not([type]),
+    textarea,
+    select
+  ) {
+    font-size:16px!important;
+    scroll-margin-block:12px calc(var(--vt-keyboard-occlusion,0px) + 20px);
+  }
+
+  .vt-subtoolbox-input,
+  .vt-subtoolbox-labeled-control {
+    font-size:16px!important;
+  }
+}
