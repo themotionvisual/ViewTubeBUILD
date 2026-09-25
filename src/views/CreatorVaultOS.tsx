@@ -221,6 +221,7 @@ const CreatorVaultOS: React.FC = () => {
  const [sort, setSort] = useState<VaultWorkspaceSort>(initialWorkspace.sort)
  const [special, setSpecial] = useState(initialWorkspace.special)
  const [filterLifecycle, setFilterLifecycle] = useState(initialWorkspace.filterLifecycle)
+ const [filterOrientation, setFilterOrientation] = useState(initialWorkspace.filterOrientation)
  const [filterMimeType, setFilterMimeType] = useState(initialWorkspace.filterMimeType)
  const [filterMinWidth, setFilterMinWidth] = useState(initialWorkspace.filterMinWidth)
  const [filterMinHeight, setFilterMinHeight] = useState(initialWorkspace.filterMinHeight)
@@ -295,6 +296,7 @@ const CreatorVaultOS: React.FC = () => {
    sort,
    special,
    lifecycle: filterLifecycle === "all" ? null : filterLifecycle,
+   orientation: filterOrientation === "all" ? null : filterOrientation,
    mimeType: filterMimeType.trim() || null,
    minWidth: filterMinWidth ? Number(filterMinWidth) : null,
    minHeight: filterMinHeight ? Number(filterMinHeight) : null,
@@ -320,6 +322,7 @@ const CreatorVaultOS: React.FC = () => {
   sort,
   special,
   filterLifecycle,
+  filterOrientation,
   filterMimeType,
   filterMinWidth,
   filterMinHeight,
@@ -342,6 +345,7 @@ const CreatorVaultOS: React.FC = () => {
    sort,
    special,
    filterLifecycle,
+   filterOrientation,
    filterMimeType,
    filterMinWidth,
    filterMinHeight,
@@ -363,6 +367,7 @@ const CreatorVaultOS: React.FC = () => {
   sort,
   special,
   filterLifecycle,
+  filterOrientation,
   filterMimeType,
   filterMinWidth,
   filterMinHeight,
@@ -666,6 +671,7 @@ const CreatorVaultOS: React.FC = () => {
    kind: filterKind,
    source,
    lifecycle: filterLifecycle,
+   orientation: filterOrientation,
    mimeType: filterMimeType,
    minWidth: filterMinWidth,
    minHeight: filterMinHeight,
@@ -684,6 +690,7 @@ const CreatorVaultOS: React.FC = () => {
   setFilterKind(collection.kind)
   setSource(collection.source)
   setFilterLifecycle(collection.lifecycle)
+  setFilterOrientation(collection.orientation)
   setFilterMimeType(collection.mimeType)
   setFilterMinWidth(collection.minWidth)
   setFilterMinHeight(collection.minHeight)
@@ -1615,6 +1622,12 @@ const CreatorVaultOS: React.FC = () => {
            onChange={setFilterLifecycle}
            options={["all", "DRAFT", "CANDIDATE", "APPROVED", "FINAL", "GOLDEN", "SUPERSEDED", "ARCHIVED", "TRASHED"]}
           />
+          <SubToolboxDropdownControl
+           label="Orientation"
+           value={filterOrientation}
+           onChange={(value) => setFilterOrientation(value as typeof filterOrientation)}
+           options={["all", "landscape", "portrait", "square"]}
+          />
           <SubToolboxInput
            value={filterMimeType}
            onChange={(event) => setFilterMimeType(event.target.value)}
@@ -1685,6 +1698,7 @@ const CreatorVaultOS: React.FC = () => {
            tone="cyan"
            onClick={() => {
             setFilterLifecycle("all")
+            setFilterOrientation("all")
             setFilterMimeType("")
             setFilterMinWidth("")
             setFilterMinHeight("")
