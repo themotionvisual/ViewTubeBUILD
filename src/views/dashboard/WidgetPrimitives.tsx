@@ -563,7 +563,7 @@ export const WidgetStepTabs = <T extends string>({
   items: readonly { id: T; label: string }[]
   onChange: (value: T) => void
 }) => (
-  <nav className="widget-step-tabs" aria-label={label}>
+  <nav className="widget-step-tabs" aria-label={label} style={{ ["--widget-step-count" as string]: items.length } as React.CSSProperties}>
     {items.map((item, index) => (
       <button
         key={item.id}
