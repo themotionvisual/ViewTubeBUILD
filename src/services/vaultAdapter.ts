@@ -36,6 +36,7 @@ export interface VaultAssetSearchInput {
  tagMode?: "all" | "any"
  source?: VaultAsset["source"] | null
  sort?: "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
+ special?: "active" | "favorites" | "archive" | "trash" | null
  limit?: number
 }
 
@@ -58,6 +59,11 @@ export const searchVaultAssets = (input: VaultAssetSearchInput = {}): VaultAsset
    if (input.kind != null && asset.kind !== input.kind) return false
    if (input.generationId != null && asset.generationId !== input.generationId) return false
    if (input.source != null && asset.source !== input.source) return false
+   const metadata = asset.metadata || {}
+   if (input.special === "favorites" && metadata.favorite !== true) return false
+   if (input.special === "archive" && !metadata.archivedAt) return false
+   if (input.special === "trash" && !metadata.trashedAt) return false
+   if (input.special === "active" && (metadata.archivedAt || metadata.trashedAt)) return false
    if (tags.length) {
     const assetTags = (asset.tags || []).map((tag) => String(tag).toLowerCase())
     const matchesTags = tagMode === "any"
@@ -126,6 +132,27 @@ export const updateVaultAsset = (
  }
  writeAssets(assets.map((asset) => (asset.id === id ? updated : asset)))
  return updated
+}
+
+export const setVaultAssetState = (
+ id: string,
+ input: { favorite?: boolean; archived?: boolean; trashed?: boolean },
+): VaultAsset | null => {
+ const existing = readAssets().find((asset) => asset.id === id)
+ if (!existing) return null
+ const metadata = { ...(existing.metadata || {}) }
+
+ if (typeof input.favorite === "boolean") metadata.favorite = input.favorite
+ if (typeof input.archived === "boolean") {
+  if (input.archived) metadata.archivedAt = Date.now()
+  else delete metadata.archivedAt
+ }
+ if (typeof input.trashed === "boolean") {
+  if (input.trashed) metadata.trashedAt = Date.now()
+  else delete metadata.trashedAt
+ }
+
+ return updateVaultAsset(id, { metadata })
 }
 
 export const upsertVaultAsset = (
