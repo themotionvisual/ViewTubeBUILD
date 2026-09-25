@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { Check, Plus, Rocket, RotateCcw, ShieldCheck } from "lucide-react"
+import { Check, Plus, Rocket, RotateCcw, ShieldCheck, X } from "lucide-react"
 import { WidgetShell } from "../WidgetShell"
 import {
   WidgetBadge,
   WidgetCheckbox,
+  WidgetIconBadge,
   WidgetProgressBar,
   WidgetScrollArea,
   WidgetSizedButton,
@@ -188,7 +189,7 @@ export const FlightCheckWidget = ({
             <WidgetScrollArea ariaLabel="Publishing blockers" edge="full" className="vt-publishing-command__blockers">
               {model.blockers.length ? model.blockers.map((blocker) => (
                 <div key={blocker} className="vt-publishing-command__blocker">
-                  <span aria-hidden="true">×</span>
+                  <WidgetIconBadge height={24} tone="secondary" label="Publishing blocker" icon={<X />} />
                   <strong>{blocker.replaceAll("-", " ").toUpperCase()}</strong>
                 </div>
               )) : (
