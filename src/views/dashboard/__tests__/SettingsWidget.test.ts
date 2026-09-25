@@ -33,6 +33,20 @@ describe("Settings dashboard control switchboard", () => {
     expect(widget).toContain("BILLING")
     expect(widget).toContain("USER GUIDE")
     expect(widget).toContain("REGISTERED")
+    expect(widget).toContain("FOCUS")
+    expect(widget).toContain("CREATION")
+    expect(widget).toContain("ANALYTICS")
+    expect(widget).toContain("EXPORT")
+    expect(widget).toContain("IMPORT")
+    expect(widget).toContain("RESET LAYOUT")
+    expect(widget).toContain("CONFIRM RESET")
+  })
+
+  it("distinguishes disconnected, never-synced, stale and current data states", () => {
+    expect(widget).toContain("DISCONNECTED")
+    expect(widget).toContain("NEVER SYNCED")
+    expect(widget).toContain("STALE")
+    expect(widget).toContain("CURRENT")
   })
 
   it("uses canonical widget primitives and no authored black styling", () => {
