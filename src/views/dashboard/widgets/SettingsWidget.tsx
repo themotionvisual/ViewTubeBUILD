@@ -225,6 +225,29 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
               tone={dataState === "CURRENT" ? "primary" : "secondary"}
             />
 
+            {!isConnected && (
+              <div className="settings-switchboard-preview" aria-label="Settings data preview">
+                <div className="settings-switchboard-preview-head">
+                  <WidgetBadge height={18} status="warning">PREVIEW</WidgetBadge>
+                  <strong>CONNECT TO PERSONALIZE</strong>
+                </div>
+                <div className="settings-switchboard-preview-grid">
+                  <div>
+                    <span>EXAMPLE CHANNEL</span>
+                    <strong>Connected creator profile</strong>
+                  </div>
+                  <div>
+                    <span>EXAMPLE ANALYTICS</span>
+                    <strong>Views · CTR · watch time</strong>
+                  </div>
+                  <div>
+                    <span>EXAMPLE SYNC</span>
+                    <strong>Freshness + dataset status</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="settings-switchboard-actions">
               <WidgetSizedButton
                 height={38}
