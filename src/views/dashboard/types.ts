@@ -83,6 +83,8 @@ export interface WidgetRenderCallbacks {
   onCycleHeight: (widgetId: string) => void
   onDecHeight: (widgetId: string) => void
   onRemoveWidget: (widgetId: string) => void
+  onMoveWidgetUp: (widgetId: string) => void
+  onMoveWidgetDown: (widgetId: string) => void
 }
 
 export interface CommonWidgetProps {
