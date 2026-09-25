@@ -291,7 +291,7 @@ const DASHBOARD_WIDGET_BASE_REGISTRY: WidgetDefinitionBase[] = [
   defaultSize: "quarter",
   minSize: "quarter",
   maxSize: "full",
-  defaultHeight: "medium",
+  defaultHeight: "tall",
   minHeight: "short",
   maxHeight: "xtall",
   ...getDashboardWidgetPaletteColors(11),
