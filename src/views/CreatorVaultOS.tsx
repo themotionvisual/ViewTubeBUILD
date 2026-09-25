@@ -63,6 +63,7 @@ import {
  findVaultSimilarAssets,
 } from "../services/vaultImageSimilarity"
 import { computeVaultImagePalette } from "../services/vaultImagePalette"
+import { getVaultAttentionReasons } from "../services/vaultAttention"
 import { buildVaultExplorerGroups } from "../services/vaultExplorer"
 import { getAssetLineage } from "../services/assetEngine"
 import {
@@ -376,6 +377,10 @@ const CreatorVaultOS: React.FC = () => {
  const selectedAsset = useMemo(
   () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
   [allAssets, selectedAssetIds],
+ )
+ const attentionReasons = useMemo(
+  () => selectedAsset ? getVaultAttentionReasons(selectedAsset) : [],
+  [selectedAsset, refreshTick],
  )
  const selectedCollectionMemberships = useMemo(
   () => selectedAsset
@@ -2711,6 +2716,16 @@ const CreatorVaultOS: React.FC = () => {
            ) : null}
           </div>
          </div>
+         {attentionReasons.length ? (
+          <div>
+           <div className="mb-2 text-xs font-black uppercase opacity-60">Needs Attention</div>
+           <div className="flex flex-col gap-1">
+            {attentionReasons.map((reason) => (
+             <div key={reason} className="text-xs font-bold">• {reason}</div>
+            ))}
+           </div>
+          </div>
+         ) : null}
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Spectrum Tags</div>
           <div className="flex flex-wrap gap-1">
