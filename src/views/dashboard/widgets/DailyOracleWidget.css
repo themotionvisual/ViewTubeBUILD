@@ -1020,8 +1020,9 @@
 
 .daily-oracle-v2__source-strip,
 .daily-oracle-v2__footer {
+  width: calc(100% + (2 * var(--widget-content-inset)));
+  max-width: none;
   margin-inline: calc(-1 * var(--widget-content-inset));
-  width: auto;
 }
 .daily-oracle-v2__source-strip > span:nth-child(2),
 .daily-oracle-v2__primary > small {
