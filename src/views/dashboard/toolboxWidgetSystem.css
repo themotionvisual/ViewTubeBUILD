@@ -1972,8 +1972,8 @@
 :where(.dashboard-barrier) .widget-split-button.is-soft { background: color-mix(in srgb, var(--widget-color) 24%, #fff); }
 :where(.dashboard-barrier) .widget-split-button-icon,
 :where(.dashboard-barrier) .vt-button.split .split-icon {
-  width: 34px;
-  flex: 0 0 34px;
+  width: 38px;
+  flex: 0 0 38px;
   display: grid;
   place-items: center;
   border-right: var(--widget-module-stroke) solid var(--widget-border);
@@ -1992,7 +1992,7 @@
   gap: 6px;
   padding: 0 12px 0 10px;
   color: inherit;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 999;
   letter-spacing: 0;
 }
@@ -2012,7 +2012,7 @@
 :where(.dashboard-barrier) .widget-split-button.is-compact .widget-split-button-label { padding-inline: 6px; }
 :where(.dashboard-barrier) .widget-split-button.is-auto { width: auto; }
 :where(.dashboard-barrier) .widget-split-button.is-large,
-:where(.dashboard-barrier) .vt-button.split.lg { height: 44px; font-size: 13px; }
+:where(.dashboard-barrier) .vt-button.split.lg { height: 38px; min-height:38px; font-size: 14px; }
 :where(.dashboard-barrier) .widget-split-button.is-large .widget-split-button-icon,
 :where(.dashboard-barrier) .vt-button.split.lg .split-icon { width: 44px; flex-basis: 44px; }
 :where(.dashboard-barrier) .widget-split-button.is-compact,
@@ -2023,8 +2023,8 @@
 :where(.dashboard-barrier) .vt-button.split.full { width: 100%; }
 :where(.dashboard-barrier) .widget-split-button-icon svg,
 :where(.dashboard-barrier) .vt-button.split .split-icon svg {
-  width: 15px;
-  height: 15px;
+  width: 20px;
+  height: 20px;
   color: var(--widget-border);
   stroke: var(--widget-border);
   stroke-width: 2px;
@@ -2034,7 +2034,7 @@
 :where(.dashboard-barrier) .widget-split-button.is-small svg,
 :where(.dashboard-barrier) .vt-button.split.sm svg { width: 17px; height: 17px; }
 :where(.dashboard-barrier) .widget-split-button.is-large svg,
-:where(.dashboard-barrier) .vt-button.split.lg svg { width: 24px; height: 24px; }
+:where(.dashboard-barrier) .vt-button.split.lg svg { width: 25px; height: 25px; }
 
 /* CUSTOM RESIZER */
 :where(.dashboard-barrier) .vt-textarea {
