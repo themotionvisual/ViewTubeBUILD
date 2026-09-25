@@ -50,15 +50,15 @@
 - [ ] RH-C049 Vision/suggested-tag task.
 - [ ] RH-C050 Transcript task.
 - [ ] RH-C051 Proxy derivative task.
-- [ ] RH-C052 Background task center/retry/error. (Task Center + queued/processing/completed/failed states complete; retry action pending)
+- [x] RH-C052 Background task center/retry/error.
 
 ## Lane D — versions/captions/dependencies
 - [x] RH-D060 Version carousel.
 - [x] RH-D061 Detach version preserving lineage.
 - [x] RH-D062 Lineage/usage/rights inspector.
-- [ ] RH-D063 Caption artifact editor.
-- [ ] RH-D064 SRT/VTT export.
-- [ ] RH-D065 Transcript→Script derivative.
+- [x] RH-D063 Caption artifact editor.
+- [x] RH-D064 SRT/VTT export.
+- [x] RH-D065 Transcript→Script derivative.
 - [x] RH-D066 Selected assets→new Project/ContentBuild.
 - [x] RH-D067 Attach selected assets→existing Project.
 - [ ] RH-D068 Dependency/readiness projection.
