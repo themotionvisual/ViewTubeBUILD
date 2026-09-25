@@ -325,7 +325,7 @@ export const UploadSchedulerWidget = ({ widget, instance, editMode, onToggleColl
     {view === "times" && (
      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px", overflow: "auto" }}>
       <span style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", opacity: 0.4 }}>
-       ⭐ Recommended upload windows (next 7 days)
+       Recommended upload windows (next 7 days)
       </span>
       {recommendedSlots.map((slot, idx) => (
        <button
