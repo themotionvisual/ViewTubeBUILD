@@ -346,12 +346,12 @@ export const VideoAssetEngineWidget: React.FC<
           {mode === "package" ? packageView : mode === "publish" ? publishView : mode === "assets" ? assetsView : handoffView}
         </main>
         <footer className="vt-asset-engine-footer">
-          <WidgetActionButton tone="primary" height={32} onClick={() => onNavigate?.("/studio")}>
+          <WidgetSizedButton tone="primary" height={32} textFit="adaptive" onClick={() => onNavigate?.("/studio")}>
             {readyCount < PACKAGE_SLOTS.length ? "FIX " + (PACKAGE_SLOTS.length - readyCount) + " MISSING ASSETS" : "OPEN FULL ASSET ENGINE"}
-          </WidgetActionButton>
-          <WidgetActionButton height={32} onClick={() => onNavigate?.("/vault")}>
+          </WidgetSizedButton>
+          <WidgetSizedButton tone="default" height={32} textFit="adaptive" onClick={() => onNavigate?.("/vault")}>
             VAULT
-          </WidgetActionButton>
+          </WidgetSizedButton>
         </footer>
       </div>
     </WidgetShell>
