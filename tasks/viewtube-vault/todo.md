@@ -35,7 +35,7 @@
 - [x] RH-B028 Arrange Mode/module reorder.
 - [x] RH-B029 Module visibility preferences.
 - [x] RH-B030 Workspace layout density preference.
-- [x] RH-B031 Saved scratchpad/checklist panels. (Scratchpads complete; checklist expansion can build on same workspace store)
+- [x] RH-B031 Saved scratchpad/checklist panels.
 
 - [x] RH-B032 Asset-aware Send To launcher through canonical ActionPackets.
 - [x] RH-B033 Asset lifecycle + GOLDEN/protection controls.
@@ -49,9 +49,9 @@
 - [x] RH-C045 Direct import path.
 - [x] RH-C046 Editable staged intake drafts.
 - [x] RH-C047 Content hash/duplicate preflight.
-- [ ] RH-C048 EXIF metadata task.
+- [x] RH-C048 EXIF metadata task.
 - [ ] RH-C049 Vision/suggested-tag task.
-- [ ] RH-C050 Transcript task.
+- [ ] RH-C050 Transcript task. (Real YouTube-linked transcript acquisition + retry complete; arbitrary local-file speech-to-text backend still pending)
 - [ ] RH-C051 Proxy derivative task.
 - [x] RH-C052 Background task center/retry/error.
 
