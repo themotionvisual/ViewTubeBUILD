@@ -200,14 +200,14 @@ const CreatorVaultOS: React.FC = () => {
  const [source, setSource] = useState(initialWorkspace.source)
  const [sort, setSort] = useState<VaultWorkspaceSort>(initialWorkspace.sort)
  const [special, setSpecial] = useState(initialWorkspace.special)
- const [filterLifecycle, setFilterLifecycle] = useState("all")
- const [filterMimeType, setFilterMimeType] = useState("")
- const [filterMinWidth, setFilterMinWidth] = useState("")
- const [filterMinHeight, setFilterMinHeight] = useState("")
- const [filterMinDuration, setFilterMinDuration] = useState("")
- const [filterMaxDuration, setFilterMaxDuration] = useState("")
- const [filterMinBytesMb, setFilterMinBytesMb] = useState("")
- const [filterMaxBytesMb, setFilterMaxBytesMb] = useState("")
+ const [filterLifecycle, setFilterLifecycle] = useState(initialWorkspace.filterLifecycle)
+ const [filterMimeType, setFilterMimeType] = useState(initialWorkspace.filterMimeType)
+ const [filterMinWidth, setFilterMinWidth] = useState(initialWorkspace.filterMinWidth)
+ const [filterMinHeight, setFilterMinHeight] = useState(initialWorkspace.filterMinHeight)
+ const [filterMinDuration, setFilterMinDuration] = useState(initialWorkspace.filterMinDuration)
+ const [filterMaxDuration, setFilterMaxDuration] = useState(initialWorkspace.filterMaxDuration)
+ const [filterMinBytesMb, setFilterMinBytesMb] = useState(initialWorkspace.filterMinBytesMb)
+ const [filterMaxBytesMb, setFilterMaxBytesMb] = useState(initialWorkspace.filterMaxBytesMb)
  const [viewMode, setViewMode] = useState<VaultWorkspaceViewMode>(initialWorkspace.viewMode)
  const [density, setDensity] = useState<VaultWorkspaceDensity>(initialWorkspace.density)
  const [arrangeMode, setArrangeMode] = useState(initialWorkspace.arrangeMode)
@@ -315,13 +315,41 @@ const CreatorVaultOS: React.FC = () => {
    source,
    sort,
    special,
+   filterLifecycle,
+   filterMimeType,
+   filterMinWidth,
+   filterMinHeight,
+   filterMinDuration,
+   filterMaxDuration,
+   filterMinBytesMb,
+   filterMaxBytesMb,
    viewMode,
    density,
    arrangeMode,
    visibleModules,
    moduleOrder,
   })
- }, [query, selectedTag, filterKind, source, sort, special, viewMode, density, arrangeMode, visibleModules, moduleOrder])
+ }, [
+  query,
+  selectedTag,
+  filterKind,
+  source,
+  sort,
+  special,
+  filterLifecycle,
+  filterMimeType,
+  filterMinWidth,
+  filterMinHeight,
+  filterMinDuration,
+  filterMaxDuration,
+  filterMinBytesMb,
+  filterMaxBytesMb,
+  viewMode,
+  density,
+  arrangeMode,
+  visibleModules,
+  moduleOrder,
+ ])
 
  const selectedAsset = useMemo(
   () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
