@@ -3,26 +3,23 @@ import type { VaultAssetKind } from "@/types"
 export type VaultWorkspaceViewMode = "grid" | "masonry" | "filmstrip" | "lineage" | "list" | "timeline"
 export type VaultWorkspaceSort = "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
 export type VaultWorkspaceDensity = "comfortable" | "compact"
+export type VaultAssetOperationsMode = "search" | "tags" | "import" | "batch" | "text" | "groups" | "tools"
 export type VaultWorkspaceModuleId =
  | "navigator"
  | "explorer"
  | "workspace-notes"
- | "spectrum-tags"
+ | "asset-operations"
  | "asset-library"
- | "import-station"
  | "task-center"
- | "batch-processor"
  | "inspector"
 
 export const DEFAULT_VAULT_MODULE_ORDER: VaultWorkspaceModuleId[] = [
  "navigator",
  "explorer",
  "workspace-notes",
- "spectrum-tags",
+ "asset-operations",
  "asset-library",
- "import-station",
  "task-center",
- "batch-processor",
  "inspector",
 ]
 
@@ -44,6 +41,7 @@ export interface VaultWorkspaceState {
  filterMaxDuration: string
  filterMinBytesMb: string
  filterMaxBytesMb: string
+ assetOperationsMode: VaultAssetOperationsMode
  viewMode: VaultWorkspaceViewMode
  density: VaultWorkspaceDensity
  arrangeMode: boolean
@@ -71,6 +69,7 @@ export const DEFAULT_VAULT_WORKSPACE_STATE: VaultWorkspaceState = {
  filterMaxDuration: "",
  filterMinBytesMb: "",
  filterMaxBytesMb: "",
+ assetOperationsMode: "search",
  viewMode: "grid",
  density: "comfortable",
  arrangeMode: false,
@@ -86,12 +85,21 @@ export const readVaultWorkspaceState = (): VaultWorkspaceState => {
   const raw = localStorage.getItem(STORAGE_KEY)
   if (!raw) return DEFAULT_VAULT_WORKSPACE_STATE
   const parsed = JSON.parse(raw) as Partial<VaultWorkspaceState>
-  const visibleModules = Array.isArray(parsed.visibleModules)
-   ? parsed.visibleModules.filter((id): id is VaultWorkspaceModuleId => DEFAULT_VAULT_MODULE_ORDER.includes(id as VaultWorkspaceModuleId))
-   : [...DEFAULT_VAULT_MODULE_ORDER]
-  const storedOrder = Array.isArray(parsed.moduleOrder)
-   ? parsed.moduleOrder.filter((id): id is VaultWorkspaceModuleId => DEFAULT_VAULT_MODULE_ORDER.includes(id as VaultWorkspaceModuleId))
-   : []
+  const legacyOperations = new Set(["spectrum-tags", "import-station", "batch-processor"])
+  const normalizeModules = (items: unknown[]): VaultWorkspaceModuleId[] => {
+   const next: VaultWorkspaceModuleId[] = []
+   for (const raw of items) {
+    const id = String(raw)
+    const normalized = legacyOperations.has(id) ? "asset-operations" : id
+    if (!DEFAULT_VAULT_MODULE_ORDER.includes(normalized as VaultWorkspaceModuleId)) continue
+    if (!next.includes(normalized as VaultWorkspaceModuleId)) next.push(normalized as VaultWorkspaceModuleId)
+   }
+   return next
+  }
+  const rawVisible = Array.isArray(parsed.visibleModules) ? parsed.visibleModules : [...DEFAULT_VAULT_MODULE_ORDER]
+  const visibleModules = normalizeModules(rawVisible)
+  const rawOrder = Array.isArray(parsed.moduleOrder) ? parsed.moduleOrder : []
+  const storedOrder = normalizeModules(rawOrder)
   const moduleOrder = [...storedOrder, ...DEFAULT_VAULT_MODULE_ORDER.filter((id) => !storedOrder.includes(id))]
   return {
    ...DEFAULT_VAULT_WORKSPACE_STATE,
