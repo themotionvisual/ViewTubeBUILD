@@ -7,6 +7,11 @@ describe("resolveVaultKeyboardCommand", () => {
   expect(resolveVaultKeyboardCommand({ key: "k", metaKey: false, ctrlKey: true })).toBe("focus-search")
  })
 
+ it("maps platform command g to project handoff", () => {
+  expect(resolveVaultKeyboardCommand({ key: "g", metaKey: true, ctrlKey: false })).toBe("project-selection")
+  expect(resolveVaultKeyboardCommand({ key: "g", metaKey: false, ctrlKey: true })).toBe("project-selection")
+ })
+
  it("maps space and escape to Quick Look controls", () => {
   expect(resolveVaultKeyboardCommand({ key: " ", metaKey: false, ctrlKey: false })).toBe("toggle-quick-look")
   expect(resolveVaultKeyboardCommand({ key: "Escape", metaKey: false, ctrlKey: false })).toBe("close-transient")
