@@ -518,7 +518,7 @@
 }
 
 @container (max-width: 420px) {
-  :where(.dashboard-barrier) .community-post-type-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  :where(.dashboard-barrier) .community-post-type-grid { grid-template-columns: repeat(var(--widget-step-count, 3), minmax(0, 1fr)); }
   :where(.dashboard-barrier) .community-poll-grid.is-image-poll .community-poll-option { grid-template-columns: minmax(0, 1fr) 82px; gap: 4px; }
   :where(.dashboard-barrier) .community-poll-media { padding-inline: 4px; font-size: 9px; }
   :where(.dashboard-barrier) .community-create-styles { grid-template-columns: repeat(5, minmax(0, 1fr)); }
