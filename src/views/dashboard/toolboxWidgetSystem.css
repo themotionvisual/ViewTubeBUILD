@@ -1271,8 +1271,8 @@
      widget-specific header rules appear later in the cascade. */
   :where(.dashboard-barrier) [data-widget-id] .header-extra:has(.widget-header-toggle) {
     display: flex !important;
-    flex: 1 1 120px !important;
-    min-width: 86px;
+    flex: 1 1 132px !important;
+    min-width: 118px;
     max-width: 50%;
     overflow: visible;
     justify-content: center !important;
@@ -1380,6 +1380,53 @@
   :where(.dashboard-barrier) .widget-header-toggle button {
     transition: none;
   }
+}
+
+:where(.dashboard-barrier) .widget-header-action {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 30px;
+  height: var(--widget-header-toggle-height, 32px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 2px 7px;
+  overflow: hidden;
+  border: 2px solid var(--widget-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--widget-border);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--widget-color) 40%, transparent);
+  font-family: inherit;
+  font-size: var(--widget-header-toggle-font-size, 10px);
+  font-weight: 900;
+  line-height: .9;
+  text-align: center;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+:where(.dashboard-barrier) .widget-header-action:hover {
+  background: color-mix(in srgb, var(--widget-color) 14%, #fff);
+}
+:where(.dashboard-barrier) .widget-header-action:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -3px;
+}
+:where(.dashboard-barrier) .widget-header-action-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+:where(.dashboard-barrier) .widget-header-action-icon svg {
+  width: 13px;
+  height: 13px;
+}
+:where(.dashboard-barrier) .widget-header-action-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: normal;
 }
 
 :where(.dashboard-barrier) .widget-header-stepper {
