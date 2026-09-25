@@ -1,6 +1,6 @@
 import type { VaultAssetKind } from "@/types"
 
-export type VaultWorkspaceViewMode = "grid" | "list" | "timeline"
+export type VaultWorkspaceViewMode = "grid" | "masonry" | "list" | "timeline"
 export type VaultWorkspaceSort = "updated-desc" | "updated-asc" | "name-asc" | "name-desc"
 export type VaultWorkspaceDensity = "comfortable" | "compact"
 export type VaultWorkspaceModuleId =
