@@ -6,11 +6,11 @@ Extend `viewtube-ai-system-governor` into the single AI Systems Management skill
 
 ## Phase 1 — Authority foundation
 
-- [ ] Finalize living master scope and current-owner map.
-- [ ] Add dedicated AI Governor reference modules.
-- [ ] Register living master in documentation authority map.
-- [ ] Complete AI-document archival/broken-reference certification.
-- [ ] Define stable ID naming rules.
+- [x] Finalize living master scope and current-owner map.
+- [x] Add dedicated AI Governor reference modules.
+- [x] Register living master in documentation authority map.
+- [x] Complete AI-document archival/broken-reference certification.
+- [x] Define stable ID naming rules.
 
 **Checkpoint**
 - [ ] A blind agent can identify the correct AI owner and current authority in under one orientation pass.
@@ -18,12 +18,12 @@ Extend `viewtube-ai-system-governor` into the single AI Systems Management skill
 
 ## Phase 2 — Machine registries and schemas
 
-- [ ] Define JSON Schema 2020-12 authority record.
-- [ ] Define agent-report event schema.
-- [ ] Define evidence/prompt/managed-action reference schemas.
-- [ ] Seed systems/capabilities/integrations/donors/plans registries from current main.
-- [ ] Import Prompt Registry by reference, not copy.
-- [ ] Record exact audited-main SHA per record.
+- [x] Define JSON Schema 2020-12 authority record.
+- [x] Define agent-report event schema.
+- [x] Define evidence/prompt/managed-action reference schemas.
+- [~] Seed systems/capabilities/integrations/donors/plans registries from current main. Systems, integrations, donors and plans are seeded; capabilities remains open.
+- [x] Import Prompt Registry by reference, not copy.
+- [x] Record exact audited-main SHA per record.
 
 **Checkpoint**
 - [ ] All seed records validate.
@@ -33,7 +33,7 @@ Extend `viewtube-ai-system-governor` into the single AI Systems Management skill
 ## Phase 3 — Claims, receipts and Herald integration
 
 - [ ] Define claim/release/block/handoff/completion event types.
-- [ ] Map them to Herald threads/JSONL rather than a second execution ledger.
+- [x] Map them to Herald threads/JSONL rather than a second execution ledger.
 - [ ] Add finished-work receipt validation.
 - [ ] Add collision/stale-claim detection.
 - [ ] Add plan/task references to Finish Program and Brain-quality tasks.
@@ -135,3 +135,23 @@ Use Skill Conductor lifecycle:
 | Generated docs overwrite human decisions | Generated views are projections; canonical edits remain reviewed |
 | Public agent docs leak internal data | public-safe projection boundary |
 | “merged” confused with “main” | distinct integration fields + verified main SHA |
+
+
+### 2026-09-26 status note
+
+Current forward-port branch: `feat/ai-systems-governance-mainline-2026-09-26`  
+Audited main: `fbc7d25c71fa89c312da32280d9f77182065b42a`
+
+Implemented on the branch:
+- current-main forward-port of schemas/validator/Herald projection from stacked PRs #422–#424;
+- systems/plans/donors/integrations registries;
+- 27 validated authority records with zero broken source refs;
+- corrected Herald sync-script contradiction.
+
+Not yet complete:
+- capabilities registry;
+- live Herald claim ingestion into `audit:ai-systems`;
+- collision/stale-claim enforcement from real thread state;
+- provenance projector over BrainTrace/ToolReceipt/ContentBuild/Vault/outcomes;
+- CI gate wiring;
+- Brain Hub read-only management workspace.
