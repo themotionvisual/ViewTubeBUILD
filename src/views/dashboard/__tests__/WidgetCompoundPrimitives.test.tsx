@@ -31,7 +31,7 @@ describe("compound widget primitives from Creator Operations donor", () => {
     expect(markup).toContain("is-tone-secondary")
     expect(markup).toContain("is-edge-full")
     expect(css).toContain("var(--widget-ink")
-    expect(css).toContain("margin-inline:calc(-1 * var(--widget-content-inset")
+    expect(css).toContain("margin-inline:calc(-1 * var(--vt-widget-body-inset")
     expect(css).toContain("font-size:18px")
     expect(css).toContain("background:color-mix(in srgb,var(--widget-color) 18%,white)")
     expect(css).toContain("background:color-mix(in srgb,var(--widget-color) 55%,white)")
@@ -118,7 +118,7 @@ describe("compound widget primitives from Creator Operations donor", () => {
     expect(css).toContain(".widget-speech-bubble-tail")
   })
 
-  it("registers all four compound primitives in the UI Reference Library", () => {
+  it("registers the compound primitive family in the UI Reference Library", () => {
     expect(reference).toContain('"compound"')
     expect(reference).toContain("WidgetSectionBand")
     expect(reference).toContain("WidgetDataGrid")
