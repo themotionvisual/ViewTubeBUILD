@@ -40,6 +40,30 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).not.toContain('title="Explorer"')
  })
 
+ it("preserves lifecycle batch operations inside the contextual selection workflow", () => {
+  for (const label of ["Toggle Favorite", "Archive Selection", "Trash Selection", "Restore Selection"]) {
+   expect(source).toContain(`label="${label}"`)
+  }
+  expect(source).toContain("setVaultAssetState(assetId")
+ })
+
+ it("preserves collection management inside Group Builder", () => {
+  expect(source).toContain('aria-label="Target Vault collection"')
+  for (const label of [
+   "Add Selection to Collection",
+   "Set Target Collection as Brand Kit",
+   "Remove Selected Asset From Active Collection",
+   "Rename Active Collection",
+   "Delete Active Collection",
+  ]) expect(source).toContain(`label="${label}"`)
+ })
+
+ it("keeps selected-asset utility actions contextual", () => {
+  for (const label of ["Open Quick Look", "Open Filmstrip", "Open Lineage", "Copy Asset ID", "Open Inspector"]) {
+   expect(source).toContain(`label="${label}"`)
+  }
+ })
+
  it("shows selection operations contextually instead of as a permanent Asset Operations toolbox", () => {
   expect(source).toContain('aria-label="Vault selection actions"')
   expect(source).toContain('selectedAssetIds.length ? (')
