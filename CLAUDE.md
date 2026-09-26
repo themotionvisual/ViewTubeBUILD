@@ -5,19 +5,23 @@ this repo. Keep it short. Longer notes belong in `docs/` or per-feature READMEs.
 
 ---
 
-## One-goal completion program
+## ViewTube product-completion operating system
 
-For any audit, plan, implementation, review, merge, or status work intended to
-finish/optimize ViewTube, start with:
+For any audit, plan, implementation, review, merge, status, product/system design, integration or documentation work intended to improve/finish ViewTube, start with:
 
-- `docs/architecture/VIEWTUBE_ONE_GOAL_COMPLETION_OPERATING_SYSTEM.md`
-- `tasks/viewtube-one-goal-status.md`
-- `.claude/skills/viewtube-one-goal-completion/SKILL.md`
+- `docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md`
+- `docs/architecture/PRODUCT_ARCHITECTURE.md`
+- `docs/architecture/capabilities.json`
+- `docs/programs/INTEGRATED_APPLICATION.md`
+- `docs/governance/DOCUMENTATION.md`
+- `docs/governance/VERIFICATION.md`
+- `.claude/skills/viewtube-document-system/SKILL.md` for documentation/product-system changes
 
-These are the cross-domain completion entry point. Domain masters remain
-authoritative for their bounded concerns, and current code/tests outrank prose.
-Every meaningful completion slice must update task evidence/status and leave a
-bounded handoff so another agent can continue without reconstructing history.
+The Product Completion Constitution defines what complete ViewTube means. Product Architecture defines the product/capability topology. Integrated Application owns cross-system convergence. Exact work/status belongs in the Task Index. Scoped domain authorities remain primary for bounded internals. Current code/tests/runtime verify implementation claims.
+
+The legacy One Goal / dated Finish Program / Master Product documents remain preserved consolidation sources during migration and must not override the new global authorities.
+
+For code changes, completion requires task-appropriate verification. User-visible work must be exercised in runtime and visually inspected; screenshot capture without analysis is insufficient.
 
 ---
 
