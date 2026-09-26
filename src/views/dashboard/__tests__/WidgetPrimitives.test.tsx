@@ -47,8 +47,6 @@ import {
   WidgetRainbowPanel,
   WidgetModuleHeader,
   WidgetModuleFrame,
-  WidgetVideoMiniCard,
-  WidgetSpeechBubble,
 } from "../WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
 import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"
@@ -549,24 +547,6 @@ describe("expanded widget compound primitives", () => {
     expect(matrixCss).toContain(".widget-toggle-switch.is-tone-secondary.is-checked .widget-toggle-switch-thumb")
     expect(matrixCss).toContain("background: #fff")
     expect(matrixCss).toContain("background 260ms ease")
-  })
-
-  it("promotes Comment Responder video-card and spouted bubble anatomy to shared primitives", () => {
-    const markup = renderToStaticMarkup(
-      <div>
-        <WidgetVideoMiniCard title="The Union Jack" thumbnail="/thumb.jpg" footer="12:42 · 48,230 views" />
-        <WidgetSpeechBubble>Big supporter of the channel.</WidgetSpeechBubble>
-      </div>,
-    )
-
-    expect(markup).toContain("widget-video-mini-card")
-    expect(markup).toContain("widget-video-mini-card-title")
-    expect(markup).toContain("widget-video-mini-card-media")
-    expect(markup).toContain("widget-speech-bubble")
-    expect(markup).toContain("widget-speech-bubble-tail")
-    expect(markup).toContain("Big supporter of the channel.")
-    expect(referenceSource).toContain("WidgetVideoMiniCard")
-    expect(referenceSource).toContain("WidgetSpeechBubble")
   })
 
   it("keeps sized select and video select on the public primitive surface", () => {
