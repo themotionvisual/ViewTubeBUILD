@@ -15,17 +15,17 @@
 
 ## Creator Context & Knowledge
 
-- [ ] Inventory ChannelProfileAdapter callers.
-- [ ] Inventory ChannelKnowledgeProjection callers.
-- [ ] Inventory StyleProfile callers.
-- [ ] Inventory BrainMemoryClaims/NicheKnowledge callers.
-- [ ] Inventory BrainProjectContext callers.
-- [ ] Inventory BrainSurfaceContext/Selection callers.
-- [ ] Define CreatorContextEnvelope.
-- [ ] Implement read-only CreatorContextResolver.
-- [ ] Add channel-scope/privacy tests.
+- [x] Inventory ChannelProfileAdapter callers.
+- [x] Inventory ChannelKnowledgeProjection callers.
+- [x] Inventory StyleProfile callers.
+- [x] Inventory BrainMemoryClaims/NicheKnowledge callers.
+- [x] Inventory BrainProjectContext callers.
+- [x] Inventory BrainSurfaceContext/Selection callers.
+- [x] Define CreatorContextEnvelope.
+- [x] Implement read-only CreatorContextResolver.
+- [x] Add channel-scope/privacy tests.
 - [ ] Add project/no-project tests.
-- [ ] Add personalization-disabled tests.
+- [x] Add personalization-disabled tests.
 - [ ] Migrate BrainContextBroker.
 - [ ] Migrate SidebarChatbot context assembly.
 - [ ] Migrate BrainHubWidget context assembly.
@@ -115,3 +115,12 @@
 - [ ] No promoted learning without evidence/outcome provenance.
 - [ ] All quarantined paths have successor and donor-harvest receipts.
 - [ ] Fresh reachability audit passes before removal.
+
+## Creator Context first runtime seam — 2026-09-26
+
+- [x] Migrate BrainOrchestrator Channel Knowledge read through CreatorContextResolver.
+- [x] Migrate BrainOrchestrator bounded algorithm Project context through CreatorContextResolver.
+- [x] Preserve existing canonical stores; no new persistence introduced.
+- [x] Prove RED→GREEN architecture tests in CI.
+- [ ] Replace visibleContext-derived Project details with canonical Project + ContentBuild resolution.
+- [ ] Add explicit no-project and canonical-ContentBuild resolver fixtures.
