@@ -86,14 +86,40 @@ export const WIDGET_CERTIFICATION_MATRIX: Record<string, WidgetCertificationCont
     } satisfies WidgetCertificationContract]]
   }))
 
+const dimensionKey = (size: DashboardSizeBucket, height: DashboardHeightBucket) => `${size}::${height}`
+
 export const buildWidgetCertificationReport = () => {
   const missing = SUPPORTED_DASHBOARD_WIDGET_IDS.filter((id) => !WIDGET_CERTIFICATION_MATRIX[id])
   const invalid = SUPPORTED_DASHBOARD_WIDGET_IDS.filter((id) => {
     const contract = WIDGET_CERTIFICATION_MATRIX[id]
-    return !contract
-      || contract.supportedSizes.length === 0
+    const definition = DASHBOARD_WIDGET_BY_ID[id]
+    if (!contract || !definition) return true
+
+    const expectedDimensions = new Set(
+      contract.supportedSizes.flatMap((size) =>
+        contract.supportedHeights.map((height) => dimensionKey(size, height)),
+      ),
+    )
+    const declaredDimensions = contract.supportedDimensions.map(({ size, height }) => dimensionKey(size, height))
+    const uniqueDimensions = new Set(declaredDimensions)
+    const dimensionsComplete = expectedDimensions.size === uniqueDimensions.size
+      && [...expectedDimensions].every((key) => uniqueDimensions.has(key))
+    const dimensionsLegal = contract.supportedDimensions.every(({ size, height }) =>
+      contract.supportedSizes.includes(size) && contract.supportedHeights.includes(height),
+    )
+
+    return contract.supportedSizes.length === 0
       || contract.supportedHeights.length === 0
       || contract.supportedDimensions.length === 0
+      || uniqueDimensions.size !== declaredDimensions.length
+      || !dimensionsComplete
+      || !dimensionsLegal
+      || !contract.supportedSizes.includes(definition.defaultSize)
+      || !contract.supportedHeights.includes(definition.defaultHeight)
+      || !contract.supportedSizes.includes(definition.minSize)
+      || !contract.supportedSizes.includes(definition.maxSize)
+      || !contract.supportedHeights.includes(definition.minHeight)
+      || !contract.supportedHeights.includes(definition.maxHeight)
       || contract.containerVariants.length !== 3
       || contract.dataStates.length !== STANDARD_STATES.length
       || !contract.primaryAction.trim()
@@ -102,6 +128,10 @@ export const buildWidgetCertificationReport = () => {
   return {
     certified: missing.length === 0 && invalid.length === 0,
     supportedCount: SUPPORTED_DASHBOARD_WIDGET_IDS.length,
+    dimensionCount: SUPPORTED_DASHBOARD_WIDGET_IDS.reduce(
+      (count, id) => count + (WIDGET_CERTIFICATION_MATRIX[id]?.supportedDimensions.length || 0),
+      0,
+    ),
     missing,
     invalid,
   }
