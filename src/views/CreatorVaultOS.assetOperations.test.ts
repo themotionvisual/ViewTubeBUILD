@@ -5,14 +5,12 @@ import { describe, expect, it } from "vitest"
 const source = fs.readFileSync(path.resolve(process.cwd(), "src/views/CreatorVaultOS.tsx"), "utf8")
 
 describe("CreatorVaultOS corrected Vault tool ownership", () => {
- it("keeps Asset Operations focused on search batch groups and tools", () => {
-  expect(source).toContain('title="Asset Operations"')
-  for (const mode of ["search", "batch", "groups", "tools"]) {
-   expect(source).toContain(`value: "${mode}"`)
-  }
-  expect(source).not.toContain('{ value: "tags", label: "TAGS" }')
-  expect(source).not.toContain('{ value: "import", label: "IMPORT" }')
-  expect(source).not.toContain('{ value: "text", label: "TEXT" }')
+ it("replaces permanent Asset Operations with contextual selection workflows", () => {
+  expect(source).not.toContain('title="Asset Operations"')
+  expect(source).toContain('aria-label="Vault selection actions"')
+  expect(source).toContain('aria-label="Vault batch operations"')
+  expect(source).toContain('aria-label="Vault group builder"')
+  expect(source).toContain('aria-label="Send to ViewTube"')
  })
 
  it("combines Import Station and Spectrum Tags in one SubToolbox", () => {

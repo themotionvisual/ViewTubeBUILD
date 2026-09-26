@@ -919,6 +919,7 @@ export interface SubToolboxSplitFieldProps extends React.HTMLAttributes<HTMLDivE
   actionLabel?: string
   onAction?: () => void
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>
+  inputRef?: React.Ref<HTMLInputElement>
 }
 export const SubToolboxSplitField: React.FC<SubToolboxSplitFieldProps> = ({
   level = "l0",
@@ -928,13 +929,14 @@ export const SubToolboxSplitField: React.FC<SubToolboxSplitFieldProps> = ({
   actionLabel = variant === "search" ? "Clear search" : "Submit",
   onAction,
   inputProps,
+  inputRef,
   className,
   style,
   ...props
 }) => (
   <div className={classes("vt-subtoolbox-split-field", `is-${variant}`, Boolean(actionIcon) && "has-action", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} {...props}>
     {variant === "search" && icon ? <span className="vt-subtoolbox-split-field-rail" aria-hidden="true">{icon}</span> : null}
-    <input {...inputProps} />
+    <input ref={inputRef} {...inputProps} />
     {actionIcon ? <button type="button" className="vt-subtoolbox-split-field-action" aria-label={actionLabel} onClick={onAction}>{actionIcon}</button> : null}
   </div>
 )

@@ -32,6 +32,7 @@ export interface VaultAssetModuleProps extends Omit<React.HTMLAttributes<HTMLEle
   mimeType?: string | null
   durationLabel?: string | null
   fileTypeLabel?: string | null
+  documentExcerpt?: string | null
   paletteIndex?: number
   selected?: boolean
   tags?: string[]
@@ -240,62 +241,6 @@ export const VaultAssetTagEditor: React.FC<{
   )
 }
 
-export const VaultAssetNotes: React.FC<{
-  value?: string
-  onChange?: (notes: string) => void
-}> = ({ value = "", onChange }) => {
-  const [draft, setDraft] = React.useState(value)
-  const [stored, setStored] = React.useState(value)
-  const [overflowing, setOverflowing] = React.useState(false)
-  const ref = React.useRef<HTMLTextAreaElement>(null)
-
-  React.useEffect(() => {
-    setDraft(value)
-    setStored(value)
-  }, [value])
-
-  const updateOverflow = React.useCallback(() => {
-    const input = ref.current
-    if (!input) return
-    setOverflowing(input.scrollHeight > input.clientHeight + 1)
-  }, [])
-
-  React.useEffect(() => {
-    updateOverflow()
-    const onResize = () => updateOverflow()
-    window.addEventListener("resize", onResize)
-    return () => window.removeEventListener("resize", onResize)
-  }, [updateOverflow])
-
-  const dirty = draft !== stored
-
-  return (
-    <div className={classes("vt-vault-note-panel", dirty && "is-dirty", overflowing && "has-overflow")}>
-      <textarea
-        ref={ref}
-        className="vt-vault-note-input"
-        placeholder="NOTES:"
-        aria-label="Asset notes"
-        value={draft}
-        onChange={(event) => {
-          setDraft(event.target.value)
-          requestAnimationFrame(updateOverflow)
-        }}
-      />
-      {dirty ? (
-        <button
-          type="button"
-          className="vt-vault-save-note"
-          onClick={() => {
-            setStored(draft)
-            onChange?.(draft)
-          }}
-        >SAVE</button>
-      ) : null}
-    </div>
-  )
-}
-
 const VaultMedia: React.FC<{
   kind: VaultAssetModuleKind
   previewSrc?: string | null
@@ -317,6 +262,14 @@ const VaultMedia: React.FC<{
     ) : (
       <AssetIcon kind={kind} />
     )}
+    {kind !== "video" && onPreviewAction ? (
+      <button
+        type="button"
+        className="vt-vault-media-open"
+        aria-label={`Preview ${title}`}
+        onClick={onPreviewAction}
+      />
+    ) : null}
     {showSelection ? (
       <VaultSelection
         checked={selected}
@@ -341,15 +294,29 @@ const AudioPreview: React.FC<{ durationLabel?: string | null; onPreviewAction?: 
   </div>
 )
 
-const DocumentPreview: React.FC<{ fileType?: string | null }> = ({ fileType }) => (
-  <div className="vt-vault-half-preview vt-vault-document-preview">
-    <div className="vt-vault-document-sheet">
-      <div className="vt-vault-document-line" />
-      <div className="vt-vault-document-line" />
-      <div className="vt-vault-document-line" />
-    </div>
+const DocumentPreview: React.FC<{
+  fileType?: string | null
+  excerpt?: string | null
+  title: string
+  onPreviewAction?: () => void
+}> = ({ fileType, excerpt, title, onPreviewAction }) => (
+  <button
+    type="button"
+    className="vt-vault-half-preview vt-vault-document-preview"
+    aria-label={`Preview ${title}`}
+    onClick={onPreviewAction}
+  >
+    {excerpt ? (
+      <div className="vt-vault-document-excerpt">{excerpt}</div>
+    ) : (
+      <div className="vt-vault-document-sheet">
+        <div className="vt-vault-document-line" />
+        <div className="vt-vault-document-line" />
+        <div className="vt-vault-document-line" />
+      </div>
+    )}
     <span className="vt-vault-file-type">{(fileType || "DOC").replace(".", "").toUpperCase()}</span>
-  </div>
+  </button>
 )
 
 export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
@@ -362,6 +329,7 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
   mimeType,
   durationLabel,
   fileTypeLabel,
+  documentExcerpt,
   paletteIndex = 0,
   selected = false,
   tags = [],
@@ -428,7 +396,7 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
           </div>
           {resolvedVariant === "audio"
             ? <AudioPreview durationLabel={durationLabel} onPreviewAction={onPreviewAction} />
-            : <DocumentPreview fileType={fileType} />}
+            : <DocumentPreview fileType={fileType} excerpt={documentExcerpt} title={title} onPreviewAction={onPreviewAction} />}
         </div>
       </article>
     )

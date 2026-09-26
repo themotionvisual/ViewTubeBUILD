@@ -581,6 +581,7 @@ interface SubToolboxProps {
   overflowVisible?: boolean;
   helpText?: React.ReactNode;
   headerStyle?: React.CSSProperties;
+  style?: React.CSSProperties;
 }
 
 export const SubToolbox: React.FC<SubToolboxProps> = ({
@@ -605,6 +606,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   overflowVisible = false,
   helpText,
   headerStyle,
+  style,
 }) => {
   const paletteCycle = React.useContext(PaletteCycleContext);
   const allocatedPaletteRef = useRef<number | null>(null);
@@ -699,6 +701,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
         boxShadow: `var(--vt-subtoolbox-shadow-offset, ${SUB_TOOLBOX_SHADOW}px) var(--vt-subtoolbox-shadow-offset, ${SUB_TOOLBOX_SHADOW}px) 0 0 var(--vt-subtoolbox-shell-shadow)`,
         ["--vt-subtoolbox-header" as any]: headerHex,
         ["--vt-subtoolbox-shell-shadow" as any]: shadowColor,
+        ...style,
       }}
     >
       <div
@@ -959,23 +962,25 @@ export interface StandardInputProps extends React.InputHTMLAttributes<HTMLInputE
   borderWidth?: 3 | 4;
 }
 
-export const StandardInput: React.FC<StandardInputProps> = ({
+export const StandardInput = React.forwardRef<HTMLInputElement, StandardInputProps>(({
   className,
   minHeight = "48px",
   hasBorder = true,
   sizeMode = "content",
   borderWidth = 3,
   ...props
-}) => {
+}, ref) => {
   return (
     <input
+      ref={ref}
       className={`vt-input-standard ${sizeMode === "fill" ? "vt-field-fill" : "vt-field-content"} ${hasBorder ? "" : "border-none bg-transparent p-0"} ${className || ""}`}
       data-border-width={borderWidth}
       style={{ minHeight }}
       {...props}
     />
   );
-};
+});
+StandardInput.displayName = "StandardInput";
 
 export const StandardTextArea: React.FC<StandardTextAreaProps> = ({
   className,

@@ -64,6 +64,33 @@ describe("VaultAssetModule", () => {
     expect(html).not.toContain('data-tag="DELTA"')
   })
 
+  it("makes image and document media surfaces natural preview targets without permanent action bars", () => {
+    const imageHtml = renderToStaticMarkup(
+      <VaultAssetModule kind="image" variant="landscape" title="IMAGE.PNG" onPreviewAction={() => {}} />,
+    )
+    const documentHtml = renderToStaticMarkup(
+      <VaultAssetModule kind="document" variant="document" title="RESEARCH.MD" onPreviewAction={() => {}} />,
+    )
+
+    expect(imageHtml).toContain('class="vt-vault-media-open"')
+    expect(imageHtml).toContain('aria-label="Preview IMAGE.PNG"')
+    expect(documentHtml).toContain('aria-label="Preview RESEARCH.MD"')
+  })
+
+  it("renders a factual document excerpt when canonical text content is available", () => {
+    const html = renderToStaticMarkup(
+      <VaultAssetModule
+        kind="document"
+        variant="document"
+        title="RESEARCH.MD"
+        documentExcerpt="Napoleon moved the Grande Armée toward the Danube."
+      />,
+    )
+
+    expect(html).toContain("vt-vault-document-excerpt")
+    expect(html).toContain("Napoleon moved the Grande Armée toward the Danube.")
+  })
+
   it("preserves half-height audio/document anatomy and portrait selection placement", () => {
     const audio = renderToStaticMarkup(<VaultAssetModule kind="audio" variant="audio" title="AUDIO.WAV" />)
     const document = renderToStaticMarkup(<VaultAssetModule kind="document" variant="document" title="NOTES.PDF" />)

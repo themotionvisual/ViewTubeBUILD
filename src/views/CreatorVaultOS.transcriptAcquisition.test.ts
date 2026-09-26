@@ -11,9 +11,10 @@ describe("CreatorVaultOS real transcript acquisition", () => {
   expect(source).toContain("runVaultTranscriptTask")
  })
 
- it("reruns failed durable transcript tasks from Task Center", () => {
-  expect(source).toContain('task.type === "transcript"')
-  expect(source).toContain("task.targetAssetId")
-  expect(source).toContain("taskId: task.id")
+ it("reruns failed durable transcript tasks from Task Center using the stored target asset identity", () => {
+  expect(source).toContain('existing.type === "transcript"')
+  expect(source).toContain("existing.targetAssetId")
+  expect(source).toContain("retryVaultTask(taskId)")
+  expect(source).toContain("acquireTranscriptForAsset(asset, taskId)")
  })
 })

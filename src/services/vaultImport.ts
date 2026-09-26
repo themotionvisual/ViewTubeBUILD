@@ -24,7 +24,7 @@ export const inferVaultAssetKind = (file: File): VaultAssetKind => {
 export const createPendingVaultImport = (
  file: File,
  tags: string[],
- id = crypto.randomUUID(),
+ id: string = crypto.randomUUID(),
  metadata: Record<string, unknown> = {},
  previewUrl: string | null = null,
 ): PendingVaultImport => ({
