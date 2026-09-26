@@ -134,7 +134,7 @@ describe("split video publishing widgets", () => {
   expect(trigger?.textContent).toContain("Select a video")
 
   await act(async () => trigger?.click())
-  const option = [...container.querySelectorAll<HTMLElement>('[role="option"]')]
+  const option = [...document.querySelectorAll<HTMLElement>('[role="option"]')]
    .find((element) => element.textContent?.includes("Published test video"))
   expect(option).not.toBeUndefined()
   await act(async () => option?.click())
