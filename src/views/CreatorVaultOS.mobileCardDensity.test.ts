@@ -62,6 +62,13 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).toContain('onClick={() => setFilterOrientation("all")}')
  })
 
+ it("renders navigation and advanced filters as contextual phone sheets instead of inline mobile chrome", () => {
+  expect(source).toContain('data-vault-mobile-sheet="library-navigation"')
+  expect(source).toContain('data-vault-mobile-sheet="filters"')
+  expect(source).toContain('setLibraryFiltersOpen(false)')
+  expect(source).toContain('setLibraryNavigationOpen(false)')
+ })
+
  it("moves project and collection navigation into a contextual library drawer", () => {
   expect(source).toContain('aria-label="Vault library navigation"')
   expect(source).not.toContain('title="Explorer"')
