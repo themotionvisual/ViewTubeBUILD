@@ -1,3 +1,5 @@
+> **PHASE D MIGRATION NOTICE — 2026-09-26:** This dated safety register is historical provenance. Current consolidation accounting is `archive/removed/manifests/CONSOL-BRAIN-AUTHORITY.json`; current Brain and Prompt authorities are `docs/domains/BRAIN.md` and `docs/specifications/PROMPTS.md`.
+
 # AI Documentation Consolidation Register — 2026-09-24
 
 **Status:** ACTIVE MIGRATION / DELETION SAFETY REGISTER  
