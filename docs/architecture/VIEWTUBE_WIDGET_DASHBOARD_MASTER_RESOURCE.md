@@ -2,7 +2,8 @@
 
 **Status:** CANONICAL LIVING WIDGET / DASHBOARD PLANNING + IMPLEMENTATION RESOURCE  
 **Created:** 2026-09-25  
-**Last audited main:** `0dcbd638a7cde9855d9245c6a8b4855e1543058c`  
+**Last edited:** 2026-09-26  
+**Last audited main:** `cf67573c2ce8eee58f5a63f7d2ae547e165ff3c8`  
 **Current registered widget count:** 68  
 **Executable authority:** `src/views/dashboard/WidgetRegistryBase.ts`, `src/views/dashboard/WidgetRegistry.ts`, `src/views/dashboard/WidgetRenderer.tsx`, `src/views/dashboard/WidgetRendererBase.tsx`, `src/views/dashboard/WidgetShell.tsx`, `src/views/dashboard/DashboardCanvas.tsx`, `src/views/dashboard/storage.ts`, `src/views/dashboard/widgetCertification.ts`, `src/views/dashboard/WidgetPrimitives.tsx`, and widget-local modules under `src/views/dashboard/widgets/`.  
 **Design-system authority:** `.claude/skills/viewtube-widget-dashboard-system/`, `.claude/skills/viewtube-widget-dashboard/`, `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`, and the canonical widget primitives.  
@@ -1097,21 +1098,30 @@ A local widget problem must not weaken a shared primitive guarantee. Before chan
 
 ## H. Next implementation sequence
 
-1. Reproduce and fix **mobile shell width symmetry + invisible clipping** globally.
-2. Introduce/normalize explicit **inset / full-bleed / shadow-safe** content utilities.
-3. Fix canonical **header toggle** portrait wrapping.
-4. Fix canonical **split-left compact button** proportions.
-5. Re-unify canonical **text input + textarea** geometry/focus treatment.
-6. Re-certify About ViewTube and Daily Oracle full-bleed bands/dividers.
-7. Repair Video Asset Engine tabs/rail/CTA shadow.
-8. Redesign Publishing Command around selected video/project + addable checklist + checkbox-driven readiness progress.
-9. Repair Video Director Studio header button, spacing and shadow ownership.
-10. Fix Image Generator portrait toggle and collapsed-controls recovery.
-11. Fix Video Uploader/Video Manager button rows and video-selector primitive.
-12. Add the four Creator Operations donor components to `WidgetPrimitives`/component owners and UI Reference Library.
-13. Certify the top widget cohort across width × height × disconnected/loading/empty/error/mobile states.
-14. Continue renderer/registry extraction, CSS ownership cleanup and persisted settings/schema migration work identified by the unfinished-work audit.
-15. Capture acceptance screenshots and update this document after each completed wave.
+### Wave 0 — geometry + primitive correction (implemented; visual certification pending)
+
+1. ✅ Remove the asymmetric mobile dashboard reclaim that pushed widget shells beyond the right viewport edge.
+2. ✅ Normalize explicit **inset / full-bleed / shadow-safe** interior geometry so full-width surfaces do not borrow shadow/scroll clearance.
+3. ✅ Upgrade the canonical **header toggle** to an intrinsic-width animated indicator that follows the selected label.
+4. ✅ Correct canonical **split-left** proportions and add deliberate two-line labels for narrow actions.
+5. ✅ Promote Comment Responder donor patterns into shared primitives: **video mini-card, split counter badge, speech bubble**, plus multiline split-button usage.
+6. ✅ Upgrade the video selector with a square split-left bay, larger VIDEO/chevron treatment, larger option titles, and a portalled up/down menu that escapes widget clipping.
+7. ✅ Make spectrum split badges use **global VT Ink** for glyph/text/divider ownership.
+8. ✅ Increase compound data-grid/calendar type and align full-width section bands to the real body inset.
+9. ⏳ Finalize legacy upload/file frames on the Toolbox-style solid-frame contract and enlarge/non-grey UI Reference Library supporting labels — **PR #456**.
+10. ⏳ Capture built-app acceptance evidence at **1440×1000** and **390×844** before declaring Wave 0 complete.
+
+### Wave 1 — remaining widget/system certification
+
+11. Re-unify canonical **text input + textarea** geometry/focus treatment.
+12. Re-certify About ViewTube and Daily Oracle full-bleed bands/dividers against the new shell contract.
+13. Repair Video Asset Engine tabs/rail/CTA shadow.
+14. Redesign Publishing Command around selected video/project + addable checklist + checkbox-driven readiness progress.
+15. Repair Video Director Studio header button, spacing and shadow ownership.
+16. Fix Image Generator portrait toggle and collapsed-controls recovery.
+17. Certify the top widget cohort across width × height × disconnected/loading/empty/error/mobile states.
+18. Continue renderer/registry extraction, CSS ownership cleanup and persisted settings/schema migration work identified by the unfinished-work audit.
+19. After geometry certification, resume the planned **WidgetPreviewState** system and Settings Widget certification rather than adding new one-off widgets.
 
 ## I. Completion protocol
 
@@ -1128,3 +1138,34 @@ For every widget/system change:
 - update this living master resource and the widget skill when the rule is systemic.
 
 **Handoff principle:** preserve **TOKENS → CODED PRIMITIVE → UI REFERENCE LIBRARY → PRODUCTION CONSUMER** alignment. A screenshot-only fix that bypasses this chain is incomplete.
+
+
+## J. 2026-09-26 field-QA correction receipt
+
+**Source:** creator-supplied iPhone screenshots of the live Dashboard and UI Reference Library.  
+**Scope:** shared shell/primitive correction, not widget-local cosmetic patching.
+
+### Implemented shared corrections
+
+- Mobile dashboard now uses the real viewport width rather than asymmetric left/right reclaim expansion.
+- Widget interior geometry separates normal inset content from full-width surfaces and shadow-safe clearance.
+- Header toggles size the selected indicator to the selected word instead of forcing equal segments.
+- Split-left actions support deliberate two-line copy and keep the icon bay structurally square.
+- Comment Responder donor patterns are available from the canonical primitive surface and demonstrated in the UI Reference Library.
+- Video selector menus are portalled above widget overflow and can open upward or downward according to available viewport space.
+- Spectrum split badges use ViewTube Ink instead of inheriting a cyan/widget-local foreground.
+- Compound bands/data grids/calendars use larger typography and the real full-width interior geometry.
+- Legacy upload-frame finalization and UI Reference Library caption cleanup are isolated in draft PR #456.
+
+### Verification state
+
+At PR #456 head `e27b43c7b4746b3312283372593db2fd1d24064c`:
+- **source-governance:** pass
+- **focused-contracts:** pass
+- **local-smoke:** pass
+- **production-build:** pass
+- **full-suite:** failing on unrelated current-main Vault/Editor/navigation/VT-SYNC assertions
+- **static-quality/typecheck:** failing on unrelated current-main Editor/Vault/Brain/template type debt
+- **visual evidence:** pending; this wave remains **partial** until built-app desktop + phone captures prove the visible changes.
+
+Do not reopen the old asymmetric reclaim or negative-margin/shadow-clearance geometry as a local widget fix. Any regression must be corrected at the canonical shell/primitive owner first.

@@ -2,7 +2,7 @@
   "threadId": "widget-geometry-primitives-2026-09-26",
   "verb": "FIX",
   "tier": "T2",
-  "stage": "EXECUTE",
+  "stage": "VERIFY",
   "owner": "dashboard-widget-system",
   "status": "partial",
   "intent": "Repair mobile widget shell width/clipping and promote the shared header, split-control, video-selector, comment, compound and upload-frame corrections into canonical widget primitives.",
@@ -17,7 +17,7 @@
   ],
   "writerLock": {
     "held": true,
-    "branch": "fix/widget-geometry-primitives-2026-09-26-r2",
+    "branch": "fix/widget-geometry-finalize-2026-09-26",
     "paths": [
       "src/views/dashboard/widgetMobileContract.css",
       "src/views/dashboard/widgetShellOwnership.css",
@@ -35,14 +35,24 @@
   "reconRef": "VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md + 2026-09-26 user field QA screenshots",
   "approval": "Explicit creator approval: Begin",
   "openQuestions": [],
-  "nextAction": "Fix mobile shell width first, then intrinsic header toggle geometry and shared split-control contracts before local widget migrations.",
+  "nextAction": "Verify PR #456 final-head release gates and capture built-app desktop 1440×1000 + phone 390×844 evidence; if clean, mark Wave 0 complete, release writer lock, and resume WidgetPreviewState/Settings certification.",
   "entries": [
     {
       "ts": "2026-09-26",
       "stage": "RECON",
       "note": "Current mobile contract uses asymmetric 12px/40px dashboard reclaim; screenshots show the compensation now overshoots right edge. Shared header toggle uses equal-width segments; split/video primitives retain hard-coded geometry."
+    },
+    {
+      "ts": "2026-09-26T01:52-04:00",
+      "stage": "FIX",
+      "note": "tested/changed shared widget geometry and primitive owners → current main absorbed the mobile width, intrinsic header toggle, split-control, donor primitive, compound, and video-select corrections; final branch now only fixes upload-frame styling and UI Reference Library caption scale/color → likely remaining risk is visual regression, so PR #456 CI + desktop/phone capture is next"
+    },
+    {
+      "ts": "2026-09-26T01:52-04:00",
+      "stage": "VERIFY",
+      "note": "PR #456 release gates on prior head: source-governance, focused-contracts, local-smoke and production-build passed; full-suite and static-quality failed only on unrelated current-main Vault/Editor/navigation/VT-SYNC/type debt. Widget master resource updated with Wave 0 receipt and revised next sequence. Visual proof remains pending."
     }
   ],
   "lastApp": "ChatGPT",
-  "lastTs": "2026-09-26"
+  "lastTs": "2026-09-26T01:52-04:00"
 }

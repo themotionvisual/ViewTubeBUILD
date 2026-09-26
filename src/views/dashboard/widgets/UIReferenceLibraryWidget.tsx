@@ -313,7 +313,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
         {activeCategory === "controls" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("1. Standard Controls", "Default / Primary / Secondary")}
-            <p className="text-[10px] font-bold uppercase opacity-60">
+            <p className="text-[10px] font-bold uppercase">
               Every component family uses the same three monochromatic color styles at 18 / 24 / 32 / 38px. Canonical type scale: 18px → 8px, 24px → 16px, 32px → 21px, 38px → 26px, all at weight 1000. 18px controls stay filled, borderless and shadowless; larger controls use a 2px stroke.
             </p>
 
@@ -397,7 +397,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("Size × Color Matrix", "18 → 24 → 32 → 38 · default / primary / secondary")}
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="m-0 max-w-[56ch] text-[10px] font-bold uppercase opacity-60">
+              <p className="m-0 max-w-[56ch] text-[10px] font-bold uppercase">
                 Flow mode keeps every component only as wide as its own content. Grid mode equalizes component widths and fixes every row to three columns.
               </p>
               <WidgetToggleSwitch
@@ -449,7 +449,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
         {activeCategory === "video" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("2. Video Select / Dropdown", "Video Manager-derived dropdown")}
-            <p className="text-[10px] font-bold uppercase opacity-60">
+            <p className="text-[10px] font-bold uppercase">
               The closed selector uses a split-left VIDEO / chevron bay. The selected title wraps naturally into two or three lines without ellipsis.
             </p>
             {(["white-on-color", "color-on-light"] as WidgetSplitIconStyle[]).map((iconStyle) => (
@@ -697,7 +697,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
               <WidgetRainbowPanel>
                 <div className="grid gap-1">
                   <strong className="text-[12px] font-black uppercase">ViewTube Spectrum Surface</strong>
-                  <span className="text-[9px] font-bold uppercase opacity-60">Gradient reaches every module edge; the divider spans left to right.</span>
+                  <span className="text-[9px] font-bold uppercase">Gradient reaches every module edge; the divider spans left to right.</span>
                 </div>
               </WidgetRainbowPanel>
               <WidgetRainbowDivider />
@@ -715,7 +715,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                         spectrum={metricIcon?.spectrum ?? WIDGET_BADGE_SPECTRUM[index % WIDGET_BADGE_SPECTRUM.length]}
                         label={metricIcon?.label ?? name}
                       />
-                      <small className="text-[7px] font-black uppercase opacity-55">{metricIcon?.label ?? name}</small>
+                      <small className="text-[7px] font-black uppercase">{metricIcon?.label ?? name}</small>
                     </div>
                   )
                 })}
@@ -728,7 +728,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                 {WIDGET_METRIC_ICON_SET.map((item) => (
                   <div key={item.metric} className="grid max-w-[74px] justify-items-center gap-1 text-center">
                     <WidgetTinySpectrumIcon name={item.name} spectrum={item.spectrum} label={item.label} height={24} />
-                    <small className="text-[7px] font-black uppercase leading-[1.05] opacity-65">{item.label}</small>
+                    <small className="text-[7px] font-black uppercase leading-[1.05]">{item.label}</small>
                   </div>
                 ))}
               </div>
@@ -754,7 +754,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                     />
                   }
                 >
-                  <p className="text-[9px] font-bold uppercase opacity-65">The canonical header stepper becomes the time-window controller used by an analytics widget.</p>
+                  <p className="text-[9px] font-bold uppercase">The canonical header stepper becomes the time-window controller used by an analytics widget.</p>
                 </WidgetModuleFrame>
 
                 <WidgetModuleFrame
@@ -774,7 +774,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                     />
                   }
                 >
-                  <p className="text-[9px] font-bold uppercase opacity-65">Canonical header action for one destination or handoff; use instead of emoji links or ad-hoc header buttons.</p>
+                  <p className="text-[9px] font-bold uppercase">Canonical header action for one destination or handoff; use instead of emoji links or ad-hoc header buttons.</p>
                 </WidgetModuleFrame>
 
                 <WidgetModuleFrame
@@ -804,7 +804,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                     />
                   }
                 >
-                  <p className="text-[9px] font-bold uppercase opacity-65">This mirrors the Comment Responder header: NEW/OLD mode plus the current comment counter.</p>
+                  <p className="text-[9px] font-bold uppercase">This mirrors the Comment Responder header: NEW/OLD mode plus the current comment counter.</p>
                 </WidgetModuleFrame>
 
                 <WidgetModuleFrame
@@ -828,7 +828,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                     />
                   }
                 >
-                  <p className="text-[9px] font-bold uppercase opacity-65">Step tabs can live directly in a widget header when the module itself has sequential pages.</p>
+                  <p className="text-[9px] font-bold uppercase">Step tabs can live directly in a widget header when the module itself has sequential pages.</p>
                 </WidgetModuleFrame>
 
                 <WidgetModuleFrame
@@ -841,7 +841,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                     />
                   }
                 >
-                  <p className="text-[9px] font-bold uppercase opacity-65">The navigation switch becomes a compact persistent header setting.</p>
+                  <p className="text-[9px] font-bold uppercase">The navigation switch becomes a compact persistent header setting.</p>
                 </WidgetModuleFrame>
 
                 <WidgetModuleFrame
@@ -854,7 +854,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                     />
                   }
                 >
-                  <p className="text-[9px] font-bold uppercase opacity-65">A canonical choice control can expose a persistent binary publishing option from the header.</p>
+                  <p className="text-[9px] font-bold uppercase">A canonical choice control can expose a persistent binary publishing option from the header.</p>
                 </WidgetModuleFrame>
 
                 <WidgetModuleFrame
@@ -872,7 +872,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                     />
                   }
                 >
-                  <p className="text-[9px] font-bold uppercase opacity-65">Radio choices can become a compact header mode selector without adding another interior toolbar.</p>
+                  <p className="text-[9px] font-bold uppercase">Radio choices can become a compact header mode selector without adding another interior toolbar.</p>
                 </WidgetModuleFrame>
               </div>
             </div>
@@ -1180,7 +1180,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
       </WidgetScrollArea>
 
       <WidgetFooter className="widget-toolbar widget-workflow-toolbar">
-        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.6 · size/color matrix + 62 icon set</span>
+        <span className="text-[9px] font-black uppercase">UI Reference Library v3.6 · size/color matrix + 62 icon set</span>
         <WidgetLeftSplitButton height={32} tone="primary" iconStyle="white-on-color" icon={<Check />}>
           Standard Compliant
         </WidgetLeftSplitButton>
