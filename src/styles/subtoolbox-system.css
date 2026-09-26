@@ -2721,9 +2721,6 @@
     --vt-subtoolbox-gap:6px;
     --vt-subtoolbox-section-gap:8px;
   }
-  [data-vt-toolbox-level="sub"] .vt-subtoolbox-content {
-    padding-top:4px!important;
-  }
 }
 
 
