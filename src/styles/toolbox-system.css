@@ -255,6 +255,7 @@
 
 @media (max-width: 767px) {
   [data-vt-toolbox][data-vt-toolbox-level="main"] {
+    --vt-toolbox-title-protected-width: 150px;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -280,6 +281,56 @@
 }
 
 /* ==========================================================================
+   CANONICAL HEADER ALLOCATION CONTRACT
+   Structural header geometry is owned here. Feature actions may consume only
+   unprotected space; on phone widths optional main-header actions move to the
+   secondary strip before the title, help, or collapse controls are compressed.
+   ========================================================================== */
+[data-vt-toolbox][data-vt-toolbox-level="main"] {
+  --vt-toolbox-title-protected-width: 168px;
+}
+.vt-toolbox-header-identity {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.vt-toolbox-header-title-slot {
+  flex: 1 1 var(--vt-toolbox-title-protected-width, 168px);
+  min-width: 0;
+  max-width: 100%;
+}
+.vt-toolbox-header-title-slot.is-subtoolbox {
+  flex-basis: var(--vt-subtoolbox-title-protected-width, 132px);
+}
+.vt-toolbox-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  min-width: 0;
+  height: 100%;
+  gap: 6px;
+  padding-right: 8px;
+}
+.vt-toolbox-header-actions.is-subtoolbox {
+  gap: 4px;
+  padding-right: 6px;
+}
+.vt-toolbox-header-extras {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  max-width: min(32vw, 220px);
+  gap: 4px;
+}
+.vt-toolbox-header-secondary-actions {
+  display: none;
+}
+.vt-subtoolbox-content {
+  min-height: var(--vt-subtoolbox-content-min-height, 0);
+}
+
+/* ==========================================================================
    Title wrapping, icon contract and sub-toolbox inset.
 
    A header row is a fixed height owned by its level. A title that does not fit
@@ -289,9 +340,9 @@
    lines, and each level's phone title size is derived from its own floor.
    ========================================================================== */
 
-/* perf.css asserts `white-space: nowrap !important` on every header title, which
-   defeats the two-line clamp the level rules above ask for. Re-assert wrapping
-   on the title classes themselves so the clamp is what actually renders. */
+/* This file is the sole structural owner of Toolbox title wrapping. Titles
+   keep their level-owned size and may use two lines; performance/page CSS must
+   never restore nowrap/ellipsis behavior for canonical Toolbox headers. */
 .vt-toolbox-title,
 .vt-subtoolbox-title,
 [data-vt-toolbox-level="main"] > header h1.vt-toolbox-title,
@@ -331,11 +382,47 @@
 }
 
 /* --------------------------------------------------------------------------
-   Phone geometry. The row is only a little taller than its title, the rail
-   follows the row so it stays square, and the title size is chosen so two
-   lines still fit inside the row.
+   Phone geometry. Titles retain their established size. Optional main-header
+   actions yield to the secondary action strip, and stacked SubToolboxes return
+   to intrinsic content height instead of inheriting desktop equalization.
    -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
+  .vt-toolbox-header-actions.is-toolbox .vt-toolbox-header-extras {
+    display: none !important;
+  }
+
+  .vt-toolbox-header-secondary-actions {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 56px;
+    padding: 6px 8px 8px;
+    gap: 8px;
+    background: #fff;
+    border-bottom: var(--vt-toolbox-stroke, 5px) solid #000;
+  }
+
+  .vt-toolbox-header-secondary-actions .vt-toolbox-header-toggle {
+    height: 44px;
+    min-height: 44px;
+    min-width: 148px;
+    max-width: 100%;
+  }
+
+  [data-vt-toolbox-level="sub"] {
+    height: auto !important;
+    min-height: 0 !important;
+    align-self: start;
+  }
+
+  [data-vt-toolbox-level="sub"] .vt-subtoolbox-content {
+    min-height: 0 !important;
+  }
+
+  .vt-subtoolbox-file-target.vt-upload-tight-reveal {
+    min-height: clamp(140px, 44vw, var(--vt-upload-target-min-height, 220px)) !important;
+  }
+
   [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) {
     --vt-toolbox-header-height: 80px;
     --vt-toolbox-title-size: 26px;
