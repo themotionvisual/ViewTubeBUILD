@@ -17,16 +17,19 @@ export type VaultWorkspaceModuleId =
  | "inspector"
 
 export const DEFAULT_VAULT_MODULE_ORDER: VaultWorkspaceModuleId[] = [
- "navigator",
- "explorer",
  "workspace-notes",
- "asset-operations",
  "import-tags",
  "text-editor",
  "asset-library",
  "task-center",
  "inspector",
 ]
+
+const LEGACY_FULL_PAGE_MODULES = new Set<VaultWorkspaceModuleId>([
+ "navigator",
+ "explorer",
+ "asset-operations",
+])
 
 export interface VaultWorkspaceState {
  query: string
@@ -101,6 +104,7 @@ export const readVaultWorkspaceState = (): VaultWorkspaceState => {
      : id === "batch-processor"
       ? "asset-operations"
       : id
+    if (LEGACY_FULL_PAGE_MODULES.has(normalized as VaultWorkspaceModuleId)) continue
     if (!DEFAULT_VAULT_MODULE_ORDER.includes(normalized as VaultWorkspaceModuleId)) continue
     if (!next.includes(normalized as VaultWorkspaceModuleId)) next.push(normalized as VaultWorkspaceModuleId)
    }

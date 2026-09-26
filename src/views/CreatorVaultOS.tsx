@@ -262,6 +262,7 @@ const CreatorVaultOS: React.FC = () => {
  const [viewMode, setViewMode] = useState<VaultWorkspaceViewMode>(initialWorkspace.viewMode)
  const [density, setDensity] = useState<VaultWorkspaceDensity>(initialWorkspace.density)
  const [arrangeMode, setArrangeMode] = useState(initialWorkspace.arrangeMode)
+ const [workspaceSettingsOpen, setWorkspaceSettingsOpen] = useState(false)
  const [visibleModules, setVisibleModules] = useState<VaultWorkspaceModuleId[]>(initialWorkspace.visibleModules)
  const [moduleOrder, setModuleOrder] = useState<VaultWorkspaceModuleId[]>(initialWorkspace.moduleOrder)
  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([])
@@ -1577,61 +1578,90 @@ const CreatorVaultOS: React.FC = () => {
     persistenceId="creator-vault-production"
     contentClassName="p-3 sm:p-4"
    >
-    <SubToolbox
-     title="Workspace Controls"
-     subtitle="Density, module visibility, and Arrange Mode"
-     icon={<Filter />}
-     paletteIndex={5}
-     isOpenInitial={false}
-     persistenceId="vault-workspace-controls"
-    >
-     <div className="flex flex-col gap-3">
-      <SubToolboxSegmentedToggle
-       level="l1"
-       ariaLabel="Vault workspace density"
-       value={density}
-       onValueChange={(value) => setDensity(value as VaultWorkspaceDensity)}
-       options={[
-        { value: "comfortable", label: "COMFORTABLE" },
-        { value: "compact", label: "COMPACT" },
-       ]}
-      />
-      <SubToolboxInnerActionButton
-       label={arrangeMode ? "Exit Arrange Mode" : "Enter Arrange Mode"}
-       iconName="layers"
-       tone={arrangeMode ? "pink" : "cyan"}
-       onClick={() => setArrangeMode((current) => !current)}
-      />
-      <div className="flex flex-col gap-2">
-       {DEFAULT_VAULT_MODULE_ORDER.map((id) => (
-        <div key={id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-         <SubToolboxInnerActionButton
-          label={`${isModuleVisible(id) ? "Hide" : "Show"} · ${VAULT_MODULE_LABELS[id]}`}
-          iconName={isModuleVisible(id) ? "eye-off" : "plus"}
-          tone={isModuleVisible(id) ? "cyan" : "green"}
-          onClick={() => toggleModuleVisibility(id)}
+    <div className="flex justify-end">
+     <button
+      type="button"
+      aria-label="Open workspace layout settings"
+      aria-expanded={workspaceSettingsOpen}
+      className="inline-flex min-h-9 items-center gap-2 rounded-md border-2 border-[var(--vt-ink,#16161d)] bg-white px-3 text-xs font-black uppercase tracking-wide shadow-[3px_3px_0_var(--vt-ink,#16161d)]"
+      onClick={() => setWorkspaceSettingsOpen(true)}
+     >
+      <Filter className="h-4 w-4" aria-hidden="true" />
+      Workspace
+     </button>
+    </div>
+
+    {workspaceSettingsOpen ? (
+     <div
+      className="fixed inset-0 z-[120] flex items-end justify-center bg-black/25 p-2 sm:items-center sm:p-4"
+      role="presentation"
+      onMouseDown={(event) => {
+       if (event.currentTarget === event.target) setWorkspaceSettingsOpen(false)
+      }}
+     >
+      <section
+       role="dialog"
+       aria-modal="true"
+       aria-label="Workspace layout settings"
+       className="max-h-[82vh] w-full max-w-xl overflow-auto rounded-xl bg-white p-3 shadow-2xl"
+      >
+       <SubToolbox
+        title="Workspace Layout"
+        subtitle="Density, tool visibility, and Arrange Mode"
+        icon={<Filter />}
+        paletteIndex={5}
+        isOpenInitial
+        persistenceId="vault-workspace-layout"
+       >
+        <div className="flex flex-col gap-3">
+         <div className="flex justify-end">
+          <button
+           type="button"
+           className="min-h-8 rounded-md border-2 border-[var(--vt-ink,#16161d)] px-3 text-xs font-black uppercase"
+           onClick={() => setWorkspaceSettingsOpen(false)}
+          >
+           Close
+          </button>
+         </div>
+         <SubToolboxSegmentedToggle
+          level="l1"
+          ariaLabel="Vault workspace density"
+          value={density}
+          onValueChange={(value) => setDensity(value as VaultWorkspaceDensity)}
+          options={[
+           { value: "comfortable", label: "COMFORTABLE" },
+           { value: "compact", label: "COMPACT" },
+          ]}
          />
-         {arrangeMode ? (
-          <div className="grid grid-cols-2 gap-1">
-           <SubToolboxInnerActionButton
-            label="↑"
-            iconName="layers"
-            tone="yellow"
-            onClick={() => moveModule(id, -1)}
-           />
-           <SubToolboxInnerActionButton
-            label="↓"
-            iconName="layers"
-            tone="yellow"
-            onClick={() => moveModule(id, 1)}
-           />
-          </div>
-         ) : null}
+         <SubToolboxInnerActionButton
+          label={arrangeMode ? "Exit Arrange Mode" : "Enter Arrange Mode"}
+          iconName="layers"
+          tone={arrangeMode ? "pink" : "cyan"}
+          onClick={() => setArrangeMode((current) => !current)}
+         />
+         <div className="flex flex-col gap-2">
+          {DEFAULT_VAULT_MODULE_ORDER.map((id) => (
+           <div key={id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <SubToolboxInnerActionButton
+             label={`${isModuleVisible(id) ? "Hide" : "Show"} · ${VAULT_MODULE_LABELS[id]}`}
+             iconName={isModuleVisible(id) ? "eye-off" : "plus"}
+             tone={isModuleVisible(id) ? "cyan" : "green"}
+             onClick={() => toggleModuleVisibility(id)}
+            />
+            {arrangeMode ? (
+             <div className="grid grid-cols-2 gap-1">
+              <SubToolboxInnerActionButton label="↑" iconName="layers" tone="yellow" onClick={() => moveModule(id, -1)} />
+              <SubToolboxInnerActionButton label="↓" iconName="layers" tone="yellow" onClick={() => moveModule(id, 1)} />
+             </div>
+            ) : null}
+           </div>
+          ))}
+         </div>
         </div>
-       ))}
-      </div>
+       </SubToolbox>
+      </section>
      </div>
-    </SubToolbox>
+    ) : null}
 
     <div className={density === "compact"
      ? "grid grid-cols-1 gap-2 xl:grid-cols-[minmax(220px,0.72fr)_minmax(0,2.1fr)_minmax(260px,0.9fr)]"
