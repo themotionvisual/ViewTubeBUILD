@@ -1,0 +1,69 @@
+# ViewTube AI Systems Governance Registry
+
+**Status:** additive governance/control-plane data.  
+**Audited main:** `fbaaff8de14c5948959251b0552519685c24c83e`
+
+This folder is the machine-readable companion to:
+
+- `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`
+- `.claude/skills/viewtube-ai-system-governor/`
+
+It does **not** own Brain runtime data, analytics evidence, Channel Knowledge, Projects/ContentBuild, Vault/Asset Engine, Prompt Registry, Herald, or outcomes. Registry records point to those owners.
+
+## Versioning
+
+- `schemaVersion` = contract version.
+- `recordVersion` = individual record edit version.
+- `lastAuditedMainSha` = exact repository state against which a status claim was checked.
+
+Never infer current-main integration from PR merge state alone.
+
+## Schema files
+
+- `schemas/authority-record.schema.json`
+- `schemas/agent-report.schema.json`
+- `schemas/evidence-reference.schema.json`
+- `schemas/prompt-reference.schema.json`
+- `schemas/managed-action.schema.json`
+
+## First registries
+
+- `registry/systems.json` — seed canonical system/owner map.
+- Later: capabilities, integrations, donors, plans and agents.
+
+Generated projections must not silently become canonical authority.
+
+
+## Commands
+
+```bash
+npm run test:ai-systems-governance
+npm run audit:ai-systems
+```
+
+The focused test specifies the health-gate behavior. The audit reads the seed system registry, checks record integrity, competing current owners and referenced repository paths, and exits non-zero on findings.
+
+Claim staleness is implemented as a pure audit primitive; wiring live claims from Herald is a later slice so this governance layer does not create a second work ledger.
+
+
+## Herald projection
+
+`scripts/audit/ai-systems-herald-projection.mjs` is a **read-only adapter** over existing Herald thread/ledger records.
+
+It projects:
+- active thread state / writer locks → AI Systems work claims;
+- verified/completed ledger records → completion receipts.
+
+It deliberately does **not**:
+- write another repository-work ledger;
+- alter Herald thread state;
+- mark branch work as present on `main`;
+- turn unverified in-progress records into completion receipts.
+
+Run:
+
+```bash
+npm run test:ai-systems-herald
+```
+
+A projected receipt defaults `mainIntegrationState` to `unknown`; git ancestry/current-code verification must upgrade that state separately.
