@@ -417,7 +417,7 @@ describe("subtoolbox design governance", () => {
 
   expect(mediaAnalyzer).not.toContain('shellClassName="h-full"')
   expect(mediaAnalyzer).toContain('shellClassName="md:h-full"')
-  expect(mediaAnalyzer).not.toMatch(/contentClassName="[^"]*\bh-full\b[^"]*"/)
+  expect(mediaAnalyzer).not.toMatch(/contentClassName="[^"]*(?:^|\s)h-full(?:\s|")/)
   expect(mediaAnalyzer).toContain('contentClassName="p-5 md:h-full flex flex-col"')
 
   expect(storyboard).not.toContain('shellClassName="h-full"')
