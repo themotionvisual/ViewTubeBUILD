@@ -47,6 +47,23 @@ describe("VaultAssetModule", () => {
     expect(known).toContain("00:42")
   })
 
+  it("keeps dense cards to three visible tags with an explicit overflow affordance", () => {
+    const html = renderToStaticMarkup(
+      <VaultAssetModule
+        kind="image"
+        variant="landscape"
+        title="DENSE.PNG"
+        tags={["ALPHA", "BRAVO", "CHARLIE", "DELTA", "ECHO"]}
+      />,
+    )
+
+    expect(html).toContain("ALPHA")
+    expect(html).toContain("BRAVO")
+    expect(html).toContain("CHARLIE")
+    expect(html).toContain("+2")
+    expect(html).not.toContain(">DELTA</button>")
+  })
+
   it("preserves half-height audio/document anatomy and portrait selection placement", () => {
     const audio = renderToStaticMarkup(<VaultAssetModule kind="audio" variant="audio" title="AUDIO.WAV" />)
     const document = renderToStaticMarkup(<VaultAssetModule kind="document" variant="document" title="NOTES.PDF" />)
