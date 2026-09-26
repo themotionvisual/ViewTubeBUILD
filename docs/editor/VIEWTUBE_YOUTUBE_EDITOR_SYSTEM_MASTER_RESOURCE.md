@@ -6,7 +6,7 @@
 **Date created:** 2026-09-24  
 **Last audited main commit:** 56e2c0c03f83a168bf385dd2f71d32bc87166d08  
 **Supersedes:** no specialized authority automatically; this document consolidates and indexes them. A specialized authority remains authoritative for its bounded concern until explicitly superseded here and in docs/DOCUMENTATION_REGISTRY.md.  
-**Related authorities:** docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md; docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md; docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md; docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md; docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md; docs/DOCUMENTATION_GOVERNANCE.md
+**Related authorities:** docs/domains/BRAIN.md; docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md; docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md; docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md; docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md; docs/DOCUMENTATION_GOVERNANCE.md
 
 ## 1. Mission
 
@@ -78,7 +78,7 @@ Generative models create source media; Remotion creates deterministic compositio
 BrainRuntime remains the creator-facing reasoning and orchestration owner:
 - src/services/brain/runtime/BrainRuntime.ts
 - src/services/brain/runtime/BrainModelGateway.ts
-- docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md
+- docs/domains/BRAIN.md
 
 Editor UI must not call a model provider directly. The editor asks BrainRuntime for a capability; BrainRuntime gathers bounded context/evidence and returns explanations, proposals, or semantic tool actions.
 
@@ -451,7 +451,7 @@ If a host lacks one of these, the repository skill and the official source docum
 - src/shared/vtE1FxCatalog.js — canonical VT_E1 FX keys, defaults, ordering, clamping, bypass/disable policy, keyframe vocabulary, and shared CSS filter math.
 - docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md — project/content identity.
 - docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md — assets, generation lineage, Vault integration.
-- docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md — BrainRuntime authority.
+- docs/domains/BRAIN.md — BrainRuntime authority.
 - docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md — Toolbox UI.
 - docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md — component/primitives UI authority.
 - docs/DOCUMENTATION_GOVERNANCE.md — documentation lifecycle rules.
@@ -528,7 +528,7 @@ For any branch audit, record:
 | --- | --- | --- | --- | --- |
 | Living editor authority + shared update log | present | docs/editor + agent guidance | authority file present on audited main | keep this file current after editor work |
 | Editor-specific agent skill | present | skills/.claude/.codex | discoverable editor-system skill references | maintain parity across agent surfaces |
-| Cross-agent editor update requirement | present | AGENTS / CLAUDE / Herald / Gemini / Copilot / Cursor | agent pointers route to living authority | keep pointers synchronized |
+| Cross-agent editor update requirement | present | AGENTS / CLAUDE / Conversation OS / Gemini / Copilot / Cursor | agent pointers route to living authority | keep pointers synchronized |
 | Desktop ↔ mobile shared project bridge | present | VT_E1 + editorProjectBridge + mobile host | bridge hook tests + round-trip fixtures | continue parity fixtures; do not describe adapter as pending |
 | Template element inspector / direct selection / measured preview requirements | needs re-verification | current Editor + template/design library | current-main capability audit + desktop/mobile visual evidence | requirements promoted from 2026-09-18 SVG/template donor plan; implement only missing gaps |
 | Mobile/desktop capability parity | partial | editor state + UI | rich round-trip fixture + capability matrix | rich round-trip fixture is verified; next expand evidence-backed capability matrix and visual-frame parity |
