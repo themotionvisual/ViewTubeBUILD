@@ -35,6 +35,18 @@ describe("CreatorVaultOS mobile card density", () => {
   ]) expect(source).toContain(`aria-label="${label}"`)
  })
 
+ it("provides an explicit compact search clear action without a second search owner", () => {
+  expect(source).toContain('aria-label="Clear Vault search"')
+  expect(source).toContain('onClick={() => setQuery("")}')
+ })
+
+ it("uses contextual mobile sheets for selection actions and Inspector", () => {
+  expect(source).toContain('data-vault-mobile-sheet="selection-actions"')
+  expect(source).toContain('data-vault-mobile-sheet="inspector"')
+  expect(source).toContain('fixed inset-x-2 bottom-2')
+  expect(source).toContain('xl:static')
+ })
+
  it("moves project and collection navigation into a contextual library drawer", () => {
   expect(source).toContain('aria-label="Vault library navigation"')
   expect(source).not.toContain('title="Explorer"')
