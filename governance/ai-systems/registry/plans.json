@@ -1,0 +1,388 @@
+{
+  "schemaVersion": "vt-ai-plans-registry-v1",
+  "generatedAt": "2026-09-26T01:10:00-04:00",
+  "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+  "authority": "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+  "records": [
+    {
+      "id": "vt-ai-plan:one-goal",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "plan",
+      "title": "ViewTube One-Goal Completion Program",
+      "summary": "Current cross-system completion operating system and status ledger.",
+      "lifecycle": "canonical",
+      "ownership": {
+        "canonicalOwner": "One-Goal Completion Program",
+        "concern": "cross-system completion sequencing and evidence-backed status",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:10:00-04:00",
+        "updatedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [],
+        "docs": [
+          "docs/architecture/VIEWTUBE_ONE_GOAL_COMPLETION_OPERATING_SYSTEM.md",
+          "tasks/viewtube-one-goal-status.md"
+        ],
+        "prs": [
+          431
+        ],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [],
+        "provides": [
+          "completion-status",
+          "critical-path"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [
+          "vt-ai-plan:finish-program"
+        ],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "docs/architecture/VIEWTUBE_ONE_GOAL_COMPLETION_OPERATING_SYSTEM.md",
+          "tasks/viewtube-one-goal-status.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": {
+        "planIds": [
+          "VT-ONE-GOAL"
+        ],
+        "taskIds": [],
+        "milestoneIds": [],
+        "priority": "current",
+        "statusEvidence": [
+          "tasks/viewtube-one-goal-status.md"
+        ]
+      },
+      "managedActionRefs": [],
+      "tags": [
+        "planning",
+        "completion",
+        "cross-system"
+      ]
+    },
+    {
+      "id": "vt-ai-plan:finish-program",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "plan",
+      "title": "ViewTube Finish Program",
+      "summary": "Detailed cross-system backlog and implementation sequencing that complements the One-Goal program.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "Finish Program",
+        "concern": "unfinished cross-system capability backlog and execution sequencing",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:10:00-04:00",
+        "updatedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [],
+        "docs": [
+          "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+          "tasks/viewtube-finish-program/BACKLOG-REGISTRY.md",
+          "tasks/viewtube-finish-program/plan.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [],
+        "provides": [
+          "cross-system-backlog"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [
+          "vt-ai-plan:one-goal"
+        ],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "tasks/viewtube-finish-program/BACKLOG-REGISTRY.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": {
+        "planIds": [
+          "VT-FINISH"
+        ],
+        "taskIds": [
+          "C21",
+          "C31",
+          "B22"
+        ],
+        "milestoneIds": [],
+        "priority": "active",
+        "statusEvidence": [
+          "tasks/viewtube-finish-program/BACKLOG-REGISTRY.md"
+        ]
+      },
+      "managedActionRefs": [],
+      "tags": [
+        "planning",
+        "finish-program"
+      ]
+    },
+    {
+      "id": "vt-ai-plan:brain-quality",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "plan",
+      "title": "Brain Quality & Learning",
+      "summary": "Evidence → knowledge → context → prompt → quality → outcome → learning → assistant continuity plan.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "Brain Quality & Learning",
+        "concern": "Brain evidence, context, prompt quality, evaluation and governed learning",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:10:00-04:00",
+        "updatedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [],
+        "docs": [
+          "tasks/ai-brain-quality/plan.md",
+          "tasks/ai-brain-quality/todo.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime",
+          "vt-ai-system:channel-knowledge",
+          "vt-ai-system:prompt-system"
+        ],
+        "provides": [
+          "brain-quality-roadmap"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "tasks/ai-brain-quality/plan.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain",
+        "quality",
+        "learning"
+      ]
+    },
+    {
+      "id": "vt-ai-plan:ai-systems-management",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "plan",
+      "title": "AI Systems Management",
+      "summary": "Machine-readable governance, claims/receipts, provenance projection, health gates and future Brain Hub management view.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "viewtube-ai-system-governor",
+        "concern": "AI systems management implementation program",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:10:00-04:00",
+        "updatedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [],
+        "docs": [
+          "tasks/ai-systems-management/plan.md",
+          "tasks/ai-systems-management/todo.md",
+          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+        ],
+        "prs": [
+          421,
+          422,
+          423,
+          424
+        ],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:ai-systems-management",
+          "vt-ai-system:herald"
+        ],
+        "provides": [
+          "registry-governance",
+          "claims-receipts"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "mixed",
+        "mergedCommit": null,
+        "currentMainState": "partial",
+        "verifiedMainSha": null,
+        "verificationRefs": [
+          "PR #421 is on main; #422-#424 were merged only into stacked feature bases and are being forward-ported on the current branch."
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "governance",
+        "management",
+        "agent"
+      ]
+    },
+    {
+      "id": "vt-ai-plan:prompt-improvement",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "plan",
+      "title": "Prompt Improvement Program",
+      "summary": "Prompt registry, constitution, task-specific context, structured outputs, evals and strangler migration.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "Prompt System Authority",
+        "concern": "prompt modernization and evaluation",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:10:00-04:00",
+        "updatedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [],
+        "docs": [
+          "docs/brain/VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md",
+          "docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md",
+          "docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:prompt-system",
+          "vt-ai-plan:brain-quality"
+        ],
+        "provides": [
+          "prompt-modernization"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "docs/brain/VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "prompt",
+        "eval",
+        "migration"
+      ]
+    }
+  ]
+}
