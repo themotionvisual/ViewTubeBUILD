@@ -292,7 +292,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
             borderBottom: `var(--vt-toolbox-stroke, ${stroke}px) solid black`,
           }}
         >
-          <div className="flex items-center h-full flex-1 min-w-0">
+          <div className="vt-toolbox-header-identity flex items-center h-full flex-1 min-w-0">
             <ToolboxHeaderIconRail
               level={variant === "accordion" ? "subtoolbox" : "toolbox"}
               className={iconBoxColor}
@@ -301,7 +301,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               {resolvedIcon}
             </ToolboxHeaderIconRail>
 
-            <div className="flex flex-col pl-4 justify-center min-w-0 pointer-events-none select-none">
+            <div className="vt-toolbox-header-title-slot flex flex-col pl-4 justify-center min-w-0 pointer-events-none select-none">
               <ToolboxHeaderTitle level={variant === "accordion" ? "subtoolbox" : "toolbox"}>
                 {title}
               </ToolboxHeaderTitle>
@@ -331,6 +331,16 @@ export const Toolbox: React.FC<ToolboxProps> = ({
             )}
           </div>
         </header>
+
+        {headerActions && variant !== "accordion" ? (
+          <div
+            className="vt-toolbox-header-secondary-actions"
+            onClick={(event) => event.stopPropagation()}
+            aria-label="Toolbox actions"
+          >
+            {headerActions}
+          </div>
+        ) : null}
 
         {(subtitle || helpText || (helpGuide && helpGuide.length > 0)) && (
           <div
@@ -668,7 +678,9 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
     : `color-mix(in srgb, ${headerHex} 50%, transparent)`;
   const minInnerHeight = resolveSubtoolboxMinHeight(openUnits, heightMode);
 
-  const contentSizeStyle = heightMode === "compact" ? undefined : { minHeight: `${Math.max(0, minInnerHeight)}px` };
+  const contentSizeStyle = heightMode === "compact"
+    ? undefined
+    : { ["--vt-subtoolbox-content-min-height" as any]: `${Math.max(0, minInnerHeight)}px` };
   const resolvedContentClassName = contentClassName || "p-4";
 
   const finalIcon = React.isValidElement(icon)
@@ -710,12 +722,12 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
           overflow: "hidden",
         }}
       >
-        <div className="flex items-center h-full flex-1 min-w-0">
+        <div className="vt-toolbox-header-identity is-subtoolbox flex items-center h-full flex-1 min-w-0">
           <ToolboxHeaderIconRail level="subtoolbox" backgroundColor={iconBg}>
             <div className="text-black">{finalIcon}</div>
           </ToolboxHeaderIconRail>
 
-          <div className="flex items-center pl-2.5 h-full min-w-0 pointer-events-none select-none">
+          <div className="vt-toolbox-header-title-slot is-subtoolbox flex items-center pl-2.5 h-full min-w-0 pointer-events-none select-none">
             <ToolboxHeaderTitle level="subtoolbox">{title}</ToolboxHeaderTitle>
           </div>
         </div>
