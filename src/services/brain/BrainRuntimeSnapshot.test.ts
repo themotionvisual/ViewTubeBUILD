@@ -446,6 +446,15 @@ it("projects an explicit provenance chain without fuzzy attribution", () => {
   unresolved: [],
  })
  expect(snapshot.provenance.latestChain?.traceOutputMatchesGenerationRecord).toBe(true)
+ expect(snapshot.provenance.latestChain?.promptVersions).toEqual({ title: "title-v1" })
+ expect(snapshot.provenance.latestChain?.modelRequested).toBe("gemini-2.5-pro")
+ expect(snapshot.provenance.latestChain?.modelServed).toBe("gemini-2.5-pro")
+ expect(snapshot.provenance.latestChain?.evidenceIds).toEqual(["evidence-1", "evidence-2"])
+ expect(snapshot.provenance.latestChain?.selectedAssetIds).toEqual(["asset-script"])
+ expect(snapshot.provenance.latestChain?.sourceAssetIds).toEqual(["asset-script"])
+ expect(snapshot.provenance.latestChain?.versionIds).toEqual(["version-1", "version-2"])
+ expect(snapshot.provenance.latestChain?.variantGroupId).toBe("variant-group-1")
+ expect(snapshot.provenance.latestChain?.relationshipIds).toEqual(["relation-1"])
 })
 
 it("keeps missing provenance links explicit instead of inferring from project scope", () => {
