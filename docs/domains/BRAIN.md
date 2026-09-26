@@ -7,7 +7,7 @@
 **Concern:** creator-facing AI reasoning, context, evidence use, specialist intelligence integration, model routing, actions, outcomes and governed learning  
 **Owner:** BrainRuntime  
 **Registry ID:** DOC-DOMAIN-BRAIN  
-**Last Audited Main SHA:** 82460536651d1de368e09a2fb685a335cd27f312  
+**Last Audited Main SHA:** e289ac7497010cc6c629c7273850f86f9c13ae89  
 **Supersedes:** docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md; docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md after Phase D migration certification  
 **Related Authorities:** docs/architecture/PRODUCT_ARCHITECTURE.md; docs/specifications/PROMPTS.md; docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md; docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md; docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md; docs/governance/CONVERSATION_OS.md
 
