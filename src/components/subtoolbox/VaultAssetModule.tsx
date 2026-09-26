@@ -240,62 +240,6 @@ export const VaultAssetTagEditor: React.FC<{
   )
 }
 
-export const VaultAssetNotes: React.FC<{
-  value?: string
-  onChange?: (notes: string) => void
-}> = ({ value = "", onChange }) => {
-  const [draft, setDraft] = React.useState(value)
-  const [stored, setStored] = React.useState(value)
-  const [overflowing, setOverflowing] = React.useState(false)
-  const ref = React.useRef<HTMLTextAreaElement>(null)
-
-  React.useEffect(() => {
-    setDraft(value)
-    setStored(value)
-  }, [value])
-
-  const updateOverflow = React.useCallback(() => {
-    const input = ref.current
-    if (!input) return
-    setOverflowing(input.scrollHeight > input.clientHeight + 1)
-  }, [])
-
-  React.useEffect(() => {
-    updateOverflow()
-    const onResize = () => updateOverflow()
-    window.addEventListener("resize", onResize)
-    return () => window.removeEventListener("resize", onResize)
-  }, [updateOverflow])
-
-  const dirty = draft !== stored
-
-  return (
-    <div className={classes("vt-vault-note-panel", dirty && "is-dirty", overflowing && "has-overflow")}>
-      <textarea
-        ref={ref}
-        className="vt-vault-note-input"
-        placeholder="NOTES:"
-        aria-label="Asset notes"
-        value={draft}
-        onChange={(event) => {
-          setDraft(event.target.value)
-          requestAnimationFrame(updateOverflow)
-        }}
-      />
-      {dirty ? (
-        <button
-          type="button"
-          className="vt-vault-save-note"
-          onClick={() => {
-            setStored(draft)
-            onChange?.(draft)
-          }}
-        >SAVE</button>
-      ) : null}
-    </div>
-  )
-}
-
 const VaultMedia: React.FC<{
   kind: VaultAssetModuleKind
   previewSrc?: string | null
