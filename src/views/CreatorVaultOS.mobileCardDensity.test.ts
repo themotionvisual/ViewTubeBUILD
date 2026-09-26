@@ -35,6 +35,13 @@ describe("CreatorVaultOS mobile card density", () => {
   ]) expect(source).toContain(`aria-label="${label}"`)
  })
 
+ it("uses a three-cell search row plus a wrapped secondary toolbar for phone widths", () => {
+  expect(source).toContain('grid-cols-[auto_minmax(0,1fr)_auto]')
+  expect(source).toContain('data-vault-toolbar-secondary')
+  expect(source).toContain('label="State"')
+  expect(source).not.toContain('ariaLabel="Vault library state"')
+ })
+
  it("provides an explicit compact search clear action without a second search owner", () => {
   expect(source).toContain('aria-label="Clear Vault search"')
   expect(source).toContain('onClick={() => setQuery("")}')
