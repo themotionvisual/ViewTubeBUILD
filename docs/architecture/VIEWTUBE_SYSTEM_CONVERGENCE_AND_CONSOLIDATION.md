@@ -1,3 +1,5 @@
+> **INTEGRATION NOTICE — 2026-09-26:** The six-system target architecture in this plan is now incorporated into `docs/architecture/PRODUCT_ARCHITECTURE.md`. This document remains an active implementation/donor source for detailed convergence classification and reachability work until its tasks are reconciled into the Task Index.
+
 # ViewTube System Convergence & Consolidation
 
 **Status:** ACTIVE ARCHITECTURE / CONSOLIDATION PLAN  
