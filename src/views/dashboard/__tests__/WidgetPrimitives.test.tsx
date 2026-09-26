@@ -598,7 +598,7 @@ describe("comment responder donor primitives", () => {
   it("exposes the video mini-card, split counter badge and speech bubble through the shared surface", () => {
     const markup = renderToStaticMarkup(
       <div>
-        <WidgetVideoMiniCard title="Napoleon's Last Great Victory" thumbnail="/thumb.jpg" meta="12:42" />
+        <WidgetVideoMiniCard title="Napoleon's Last Great Victory" thumbnail="/thumb.jpg" footer="12:42" />
         <WidgetSplitCounterBadge icon={<span>Like</span>} value={12} label="12 likes" />
         <WidgetSpeechBubble>Big supporter of the channel.</WidgetSpeechBubble>
       </div>,
