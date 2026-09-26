@@ -331,7 +331,8 @@ export const CommentReplyWidget = ({
           disabled={loading || isGenerating[currentThread.id]}
           icon={<Link2 />}
           tone="neutral"
-          width="full">
+          width="full"
+          multiline>
           Suggest video
         </WidgetSplitButton>
         <WidgetSplitButton
