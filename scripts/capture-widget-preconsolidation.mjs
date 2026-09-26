@@ -15,6 +15,12 @@ const SEEDED_LAYOUT = JSON.stringify({
     "opportunity-radar",
     "comment-replier",
     "revenue-chart",
+    "video-asset-engine",
+    "flight-check",
+    "video-director",
+    "image-generator",
+    "video-uploader",
+    "data-edit",
     "ui-reference-library",
   ],
   hidden: [],
@@ -25,6 +31,12 @@ const SEEDED_LAYOUT = JSON.stringify({
     "opportunity-radar": { collapsed: false, size: "half", height: "tall" },
     "comment-replier": { collapsed: false, size: "half", height: "tall" },
     "revenue-chart": { collapsed: false, size: "half", height: "tall" },
+    "video-asset-engine": { collapsed: false, size: "half", height: "tall" },
+    "flight-check": { collapsed: false, size: "half", height: "tall" },
+    "video-director": { collapsed: false, size: "full", height: "massive" },
+    "image-generator": { collapsed: false, size: "half", height: "xtall" },
+    "video-uploader": { collapsed: false, size: "half", height: "xtall" },
+    "data-edit": { collapsed: false, size: "half", height: "xtall" },
     "ui-reference-library": { collapsed: false, size: "full", height: "massive" },
   },
 })
@@ -36,6 +48,12 @@ const targets = [
   ["opportunity-preview", "opportunity-radar"],
   ["comment-preview", "comment-replier"],
   ["revenue-preview", "revenue-chart"],
+  ["video-asset-engine", "video-asset-engine"],
+  ["publishing-command", "flight-check"],
+  ["video-director", "video-director"],
+  ["image-generator", "image-generator"],
+  ["video-uploader", "video-uploader"],
+  ["video-manager", "data-edit"],
   ["ui-reference-preview", "ui-reference-library"],
 ]
 
@@ -113,6 +131,17 @@ for (const viewport of [
       await videoSelect.evaluate((button) => button.click())
     } else {
       await widget.screenshot({ path: `${outDir}/${viewport.label}-${name}.png` })
+    }
+
+    const titleMetrics = await widget.locator(".vt-widget-header .title").first().evaluate((title) => ({
+      text: title.textContent || "",
+      clientWidth: title.clientWidth,
+      scrollWidth: title.scrollWidth,
+      clientHeight: title.clientHeight,
+      scrollHeight: title.scrollHeight,
+    }))
+    if (titleMetrics.scrollWidth > titleMetrics.clientWidth + 1 || titleMetrics.scrollHeight > titleMetrics.clientHeight + 1) {
+      throw new Error(`${viewport.label} ${id} clips its header title "${titleMetrics.text}": ${JSON.stringify(titleMetrics)}`)
     }
 
     const box = await widget.boundingBox()
