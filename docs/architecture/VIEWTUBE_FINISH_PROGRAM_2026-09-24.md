@@ -398,3 +398,22 @@ Finish requirements:
 7. Asset/Project UX completion.
 8. editor/widgets/analytics certification.
 9. server durability + dead-path cleanup + agent readiness.
+
+## System Convergence Prerequisite
+
+The Finish Program now has an explicit pre-integration convergence layer:
+
+- `docs/architecture/VIEWTUBE_SYSTEM_CONVERGENCE_AND_CONSOLIDATION.md`
+- `tasks/system-convergence/plan.md`
+- `tasks/system-convergence/SYSTEM-CLASSIFICATION.md`
+
+Reason: current main contains several mature but overlapping adapters, projections, ledgers and package boundaries. Completing every existing subsystem independently would preserve avoidable duplication. Before broad Brain/Studio/widget/Project integration, classify each overlapping system and converge it toward six canonical domains:
+
+1. Creator Context & Knowledge;
+2. Evidence & Intelligence;
+3. Project / Content / Asset Graph;
+4. Creator Operations & Generation;
+5. Outcomes / Evaluation / Learning;
+6. Brain Runtime & Experience.
+
+This is a strangler program, not permission for destructive rewrites. Existing canonical data owners remain authoritative until caller migration, parity, donor harvest and zero-reachability certification are complete.
