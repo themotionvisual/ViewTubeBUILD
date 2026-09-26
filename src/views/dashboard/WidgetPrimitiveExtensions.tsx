@@ -152,11 +152,12 @@ export interface WidgetVideoMiniCardProps {
  alt?:string
  footer?:React.ReactNode
  placeholder?:React.ReactNode
+ size?:"compact"|"standard"|"large"
  className?:string
  onImageError?:React.ReactEventHandler<HTMLImageElement>
 }
-export const WidgetVideoMiniCard=React.forwardRef<HTMLDivElement,WidgetVideoMiniCardProps>(({title,thumbnail,alt="",footer,placeholder,className="",onImageError},ref)=>(
- <div ref={ref} className={`widget-video-mini-card ${className}`.trim()}>
+export const WidgetVideoMiniCard=React.forwardRef<HTMLDivElement,WidgetVideoMiniCardProps>(({title,thumbnail,alt="",footer,placeholder,size="standard",className="",onImageError},ref)=>(
+ <div ref={ref} className={`widget-video-mini-card is-size-${size} ${className}`.trim()}>
   <div className="widget-video-mini-card-title">{title}</div>
   <div className="widget-video-mini-card-media">
    {thumbnail?<img src={thumbnail} alt={alt} onError={onImageError}/>:<div className="widget-video-mini-card-placeholder">{placeholder??<Film aria-hidden="true"/>}</div>}

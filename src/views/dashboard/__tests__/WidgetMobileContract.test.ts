@@ -108,6 +108,19 @@ describe("mobile widget geometry contract", () => {
     expect(mobileCss).toContain(`.vt-dash-cell.vt-height-${bucket}:not(.is-collapsed)`)
   })
 
+  it("keeps full-bleed and shadow-safe geometry owned by the canonical shell instead of phone-only widening math", () => {
+    const shellCss = readFileSync(new URL("../widgetShellOwnership.css", import.meta.url), "utf8")
+    expect(shellCss).toContain("--vt-widget-zone-full-start:")
+    expect(shellCss).toContain("--vt-widget-zone-full-end:")
+    expect(shellCss).toContain(".vt-widget-zone-inset")
+    expect(shellCss).toContain(".vt-widget-zone-shadow-safe")
+    expect(shellCss).toContain(".vt-widget-zone-overlay")
+    expect(mobileCss).not.toContain("width: calc(100% + (2 * var(--vt-widget-body-inset)))")
+    expect(mobileCss).not.toContain("margin-inline: calc(-1 * var(--vt-widget-body-inset))")
+    expect(mobileCss).not.toContain("width: calc(100% + (2 * var(--vt-widget-edge-safe)))")
+    expect(mobileCss).not.toContain("margin-inline: calc(-1 * var(--vt-widget-edge-safe))")
+  })
+
   it("bounds content inside the height bucket and keeps overflow reachable", () => {
     expect(mobileCss).toContain("overflow-y: auto;")
     expect(mobileCss).toContain("overscroll-behavior: contain;")

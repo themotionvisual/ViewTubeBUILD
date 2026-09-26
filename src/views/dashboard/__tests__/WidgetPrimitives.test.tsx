@@ -632,6 +632,41 @@ describe("comment responder donor primitives", () => {
   })
 })
 
+describe("reference-library video module and full-width primitive sizing", () => {
+  it("offers compact, standard, and large video mini modules from one canonical primitive", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <WidgetVideoMiniCard size="compact" title="Compact" />
+        <WidgetVideoMiniCard size="standard" title="Standard" />
+        <WidgetVideoMiniCard size="large" title="Large" />
+      </div>,
+    )
+    expect(markup).toContain("is-size-compact")
+    expect(markup).toContain("is-size-standard")
+    expect(markup).toContain("is-size-large")
+    expect(referenceSource).toContain('size="compact"')
+    expect(referenceSource).toContain('size="standard"')
+    expect(referenceSource).toContain('size="large"')
+    expect(compoundCss).toContain(".widget-video-mini-card.is-size-compact")
+    expect(compoundCss).toContain(".widget-video-mini-card.is-size-large")
+  })
+
+  it("uses the shell FULL zone for full section bands instead of negative-margin widening", () => {
+    expect(compoundCss).toContain(".widget-section-band.is-edge-full")
+    expect(compoundCss).toContain("grid-column:full-start / full-end")
+    expect(compoundCss).not.toContain("width:calc(100% + (2 * var(--vt-widget-body-inset")
+    expect(compoundCss).not.toContain("margin-inline:calc(-1 * var(--vt-widget-body-inset")
+  })
+
+  it("catalogues icon primitives across all canonical size tiers and tones", () => {
+    expect(referenceSource).toContain('familyHeading("Square Icon Buttons"')
+    expect(referenceSource).toContain('familyHeading("Square Icon Badges"')
+    expect(referenceSource).toContain("ToneRows square")
+    expect(referenceSource).toContain("CONTROL_HEIGHTS")
+    expect(referenceSource).toContain('const CONTROL_TONES: WidgetPrimitiveTone[] = ["default", "primary", "secondary"]')
+  })
+})
+
 describe("video selector overlay geometry", () => {
   it("uses a square selector bay and a portalled fixed-position menu", () => {
     expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height")
