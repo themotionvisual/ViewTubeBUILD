@@ -84,8 +84,6 @@ import {
   WidgetRainbowDivider,
   WidgetModuleHeader,
   WidgetModuleFrame,
-  WidgetVideoMiniCard,
-  WidgetSpeechBubble,
   WidgetVideoSelect,
   WidgetVideoMiniCard,
   WidgetSplitCounterBadge,
@@ -454,17 +452,6 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             <p className="text-[10px] font-bold uppercase opacity-60">
               The closed selector uses a split-left VIDEO / chevron bay. The selected title wraps naturally into two or three lines without ellipsis.
             </p>
-            <div className="widget-reference-family">
-              {familyHeading("Video Mini Module", "Comment Responder donor · title + thumbnail + compact footer")}
-              <div style={{ width: "min(300px, 100%)" }}>
-                <WidgetVideoMiniCard
-                  title="Napoleon's Last Great Victory"
-                  thumbnail={VIDEO_OPTIONS[0].thumbnail}
-                  alt="Example video thumbnail"
-                  footer="12:42 · 48,230 views"
-                />
-              </div>
-            </div>
             {(["white-on-color", "color-on-light"] as WidgetSplitIconStyle[]).map((iconStyle) => (
               <div className="widget-reference-family" key={iconStyle}>
                 {familyHeading("Video Selector", iconStyle === "white-on-color" ? "White VIDEO/chevron on colored bay" : "Colored VIDEO/chevron on light bay")}
@@ -895,18 +882,6 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
         {activeCategory === "compound" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("Compound Workflow Primitives", "Creator Operations donor patterns rebuilt in widget UI/CSS")}
-
-            <div className="widget-reference-family">
-              {familyHeading("Comment Interaction", "Spouted bubble + split reaction counts + two-line split action")}
-              <div className="grid gap-3 pt-4">
-                <WidgetSpeechBubble tone="default">Big supporter of the channel — this would make a great follow-up video.</WidgetSpeechBubble>
-                <div className="flex flex-wrap gap-2">
-                  <WidgetLeftSplitBadge height={24} tone="primary" icon={<ThumbsUp strokeWidth={2.5} />}>184</WidgetLeftSplitBadge>
-                  <WidgetLeftSplitBadge height={24} tone="secondary" icon={<MessagesSquare strokeWidth={2.5} />}>12</WidgetLeftSplitBadge>
-                  <WidgetSplitButton icon={<Link2 strokeWidth={2.5} />} width="auto" multiline>Suggest video</WidgetSplitButton>
-                </div>
-              </div>
-            </div>
 
             <div className="widget-reference-family">
               {familyHeading("Comment + Video Mini Modules", "Comment Responder donor primitives promoted to the shared system")}
