@@ -15,7 +15,24 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).toContain('"aria-label": "Search Vault assets"')
   expect(source).toContain('aria-label="Open library navigation"')
   expect(source).toContain('aria-label="Open Vault filters"')
+  expect(source).toContain('ariaLabel="Vault media type"')
+  expect(source).toContain('label="View"')
+  expect(source).toContain('onChange={(value) => setViewMode(value as VaultWorkspaceViewMode)}')
   expect(source).not.toContain('title="Navigator"')
+ })
+
+ it("keeps advanced metadata filters available inside the contextual filter surface", () => {
+  for (const label of [
+   'Vault MIME type filter',
+   'Vault updated from filter',
+   'Vault updated to filter',
+   'Vault minimum width filter',
+   'Vault minimum height filter',
+   'Vault minimum duration filter',
+   'Vault maximum duration filter',
+   'Vault minimum size filter',
+   'Vault maximum size filter',
+  ]) expect(source).toContain(`aria-label="${label}"`)
  })
 
  it("moves project and collection navigation into a contextual library drawer", () => {
@@ -38,9 +55,29 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).not.toContain('duration || 60')
  })
 
+ it("keeps Notes editing in the contextual Inspector rather than permanent asset-card chrome", () => {
+  expect(source).toContain('aria-label="Asset notes"')
+  expect(source).toContain('onBlur={(event) => updateAssetNotes(selectedAsset, event.target.value)}')
+  expect(source).not.toContain('onNotesChange={(nextNotes) => updateAssetNotes(asset, nextNotes)}')
+ })
+
  it("renders Inspector only when an asset is selected", () => {
   expect(source).toContain('{selectedAsset ? (\n       <div ref={inspectorRef}')
   expect(source).not.toContain('message="Select an asset to inspect metadata, provenance, rights, versions, and relationships."')
+ })
+
+ it("renders the asset library before secondary Import & Tags and Text Editor tools", () => {
+  const libraryIndex = source.indexOf('data-vault-first-viewport="library"')
+  const importIndex = source.indexOf('title="Import & Tags"')
+  const textEditorIndex = source.indexOf('title="Text Editor"')
+  const workspaceNotesIndex = source.indexOf('title="Workspace Notes"')
+
+  expect(libraryIndex).toBeGreaterThan(-1)
+  expect(importIndex).toBeGreaterThan(libraryIndex)
+  expect(textEditorIndex).toBeGreaterThan(libraryIndex)
+  expect(workspaceNotesIndex).toBeGreaterThan(libraryIndex)
+  expect(source).toContain('persistenceId="vault-import-tags"')
+  expect(source).toContain('persistenceId="vault-text-editor"')
  })
 
  it("marks the library as the first-viewport content target on mobile", () => {

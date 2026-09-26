@@ -1672,7 +1672,7 @@ const CreatorVaultOS: React.FC = () => {
      : "grid grid-cols-1 gap-4 xl:grid-cols-[minmax(220px,0.72fr)_minmax(0,2.1fr)_minmax(260px,0.9fr)]"}>
      <div className="flex min-w-0 flex-col gap-4">
       <section aria-label="Vault library toolbar" className="flex flex-col gap-2">
-       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2">
+       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] items-center gap-2">
         <button
          type="button"
          aria-label="Open library navigation"
@@ -1709,8 +1709,27 @@ const CreatorVaultOS: React.FC = () => {
          onChange={(value) => setSort(value as VaultWorkspaceSort)}
          options={["updated-desc", "updated-asc", "name-asc", "name-desc"]}
         />
+        <SubToolboxDropdownControl
+         label="View"
+         value={viewMode}
+         onChange={(value) => setViewMode(value as VaultWorkspaceViewMode)}
+         options={["grid", "masonry", "list", "filmstrip", "lineage"]}
+        />
        </div>
        <div className="flex flex-wrap gap-2">
+        <SubToolboxSegmentedToggle
+         level="l1"
+         ariaLabel="Vault media type"
+         value={filterKind}
+         onValueChange={(value) => setFilterKind(value as "all" | VaultAssetKind)}
+         options={[
+          { value: "all", label: "ALL" },
+          { value: "video", label: "VIDEO" },
+          { value: "image", label: "IMAGE" },
+          { value: "audio", label: "AUDIO" },
+          { value: "document", label: "DOCS" },
+         ]}
+        />
         <SubToolboxSegmentedToggle
          level="l1"
          ariaLabel="Vault library state"
@@ -1814,6 +1833,17 @@ const CreatorVaultOS: React.FC = () => {
           options={["all", "landscape", "portrait", "square"]}
          />
         </div>
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+         <StandardInput value={filterMimeType} onChange={(event) => setFilterMimeType(event.target.value)} placeholder="MIME type" aria-label="Vault MIME type filter" />
+         <StandardInput type="date" value={filterUpdatedFrom} onChange={(event) => setFilterUpdatedFrom(event.target.value)} aria-label="Vault updated from filter" />
+         <StandardInput type="date" value={filterUpdatedTo} onChange={(event) => setFilterUpdatedTo(event.target.value)} aria-label="Vault updated to filter" />
+         <StandardInput type="number" min="0" value={filterMinWidth} onChange={(event) => setFilterMinWidth(event.target.value)} placeholder="Min width" aria-label="Vault minimum width filter" />
+         <StandardInput type="number" min="0" value={filterMinHeight} onChange={(event) => setFilterMinHeight(event.target.value)} placeholder="Min height" aria-label="Vault minimum height filter" />
+         <StandardInput type="number" min="0" step="0.1" value={filterMinDuration} onChange={(event) => setFilterMinDuration(event.target.value)} placeholder="Min duration (s)" aria-label="Vault minimum duration filter" />
+         <StandardInput type="number" min="0" step="0.1" value={filterMaxDuration} onChange={(event) => setFilterMaxDuration(event.target.value)} placeholder="Max duration (s)" aria-label="Vault maximum duration filter" />
+         <StandardInput type="number" min="0" step="0.1" value={filterMinBytesMb} onChange={(event) => setFilterMinBytesMb(event.target.value)} placeholder="Min size (MB)" aria-label="Vault minimum size filter" />
+         <StandardInput type="number" min="0" step="0.1" value={filterMaxBytesMb} onChange={(event) => setFilterMaxBytesMb(event.target.value)} placeholder="Max size (MB)" aria-label="Vault maximum size filter" />
+        </div>
         <div className="mt-2 flex flex-wrap gap-2">
          <SubToolboxInnerActionButton
           label={selectedTag ? `Clear Tag: ${selectedTag}` : "All Spectrum Tags"}
@@ -1850,94 +1880,7 @@ const CreatorVaultOS: React.FC = () => {
        </section>
       ) : null}
 
-      <SubToolbox
-       style={moduleStyle("workspace-notes" as VaultWorkspaceModuleId)}
-       title="Workspace Notes"
-       subtitle="Saved Vault scratchpads that do not become assets or Brain memory"
-       icon={<FileText />}
-       paletteIndex={6}
-       isOpenInitial={false}
-       persistenceId="vault-workspace-notes"
-      >
-       <div className="flex flex-col gap-3">
-        <StandardInput
-         value={scratchpadTitle}
-         onChange={(event) => setScratchpadTitle(event.target.value)}
-         placeholder="Note title"
-         aria-label="Vault note title"
-        />
-        <SubToolboxTextArea
-         value={scratchpadContent}
-         onChange={(event) => setScratchpadContent(event.target.value)}
-         placeholder="Write a Vault workspace note…"
-         aria-label="Vault note content"
-         rows={4}
-        />
-        <SubToolboxInnerActionButton
-         label="Save Workspace Note"
-         iconName="archive"
-         tone="yellow"
-         onClick={saveScratchpad}
-         disabled={!scratchpadTitle.trim() && !scratchpadContent.trim()}
-        />
-        {scratchpads.map((note) => (
-         <div key={note.id} className="flex flex-col gap-2">
-          <div className="text-sm font-black uppercase">{note.title}</div>
-          <div className="whitespace-pre-wrap text-xs font-bold opacity-70">{note.content}</div>
-          <SubToolboxInnerActionButton
-           label="Delete Note"
-           iconName="eye-off"
-           tone="pink"
-           onClick={() => removeScratchpad(note.id)}
-          />
-         </div>
-        ))}
-        <div className="mt-2 border-t-[3px] border-current pt-3">
-         <div className="mb-2 text-xs font-black uppercase opacity-60">Workspace Checklist</div>
-         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-          <StandardInput
-           value={checklistText}
-           onChange={(event) => setChecklistText(event.target.value)}
-           placeholder="Add checklist item"
-           aria-label="Vault checklist item"
-           onKeyDown={(event) => {
-            if (event.key === "Enter") addChecklistItem()
-           }}
-          />
-          <SubToolboxInnerActionButton
-           label="+"
-           iconName="plus"
-           tone="green"
-           onClick={addChecklistItem}
-           disabled={!checklistText.trim()}
-          />
-         </div>
-         <div className="mt-2 flex flex-col gap-2">
-          {checklistItems.map((item) => (
-           <div key={item.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
-            <button
-             type="button"
-             aria-label={item.done ? "Mark checklist item incomplete" : "Mark checklist item complete"}
-             onClick={() => toggleChecklistItem(item.id)}
-             className="text-lg font-black"
-            >
-             {item.done ? "☒" : "☐"}
-            </button>
-            <div className={item.done ? "text-xs font-bold line-through opacity-45" : "text-xs font-bold"}>
-             {item.text}
-            </div>
-            <SubToolboxInnerActionButton
-             label="×"
-             iconName="x"
-             tone="pink"
-             onClick={() => removeChecklistItem(item.id)}
-            />
-           </div>
-          ))}
-         </div>
-        </div>
-       </div>
-      </SubToolbox>
+
 
 
      </div>
@@ -2016,13 +1959,293 @@ const CreatorVaultOS: React.FC = () => {
        </section>
       ) : null}
 
+      <div ref={assetLibraryRef} tabIndex={-1} data-vault-first-viewport="library">
+      <SubToolbox
+       style={moduleStyle("asset-library" as VaultWorkspaceModuleId)}
+       title="Asset Library"
+       subtitle="Search, select, preview, and organize canonical Vault assets"
+       icon={<Search />}
+       paletteIndex={10}
+       isOpenInitial
+       persistenceId="vault-asset-library"
+      >
+       <div className="flex flex-col gap-3">
+        {comparePair ? (
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Compare Selection</div>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+           {comparePair.map((asset, index) => (
+            <div key={asset.id} className="min-w-[260px] flex-1 border-[3px] border-current p-2">
+             <div className="mb-2 text-xs font-black uppercase opacity-60">
+              {index === 0 ? "A" : "B"} · {asset.kind.toUpperCase()}
+             </div>
+             <div className="text-sm font-black uppercase">{asset.name}</div>
+             <div className="mt-2 aspect-video overflow-hidden border-[3px] border-current">
+              {asset.previewUrl || asset.url ? (
+               <img
+                src={asset.previewUrl || asset.url || undefined}
+                alt=""
+                className="h-full w-full object-cover"
+               />
+              ) : (
+               <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
+              )}
+             </div>
+             <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] font-bold">
+              <div>
+               <div className="font-black uppercase opacity-60">Project</div>
+               <div>{asset.projectName || "UNASSIGNED"}</div>
+              </div>
+              <div>
+               <div className="font-black uppercase opacity-60">Source</div>
+               <div>{asset.source.toUpperCase()}</div>
+              </div>
+              <div>
+               <div className="font-black uppercase opacity-60">Dimensions</div>
+               <div>
+                {typeof asset.metadata?.width === "number" && typeof asset.metadata?.height === "number"
+                 ? `${asset.metadata.width}×${asset.metadata.height}`
+                 : "—"}
+               </div>
+              </div>
+              <div>
+               <div className="font-black uppercase opacity-60">Size</div>
+               <div>
+                {typeof asset.metadata?.byteSize === "number"
+                 ? formatVaultBytes(Number(asset.metadata.byteSize))
+                 : "—"}
+               </div>
+              </div>
+             </div>
+             <div className="mt-2 flex flex-wrap gap-1">
+              {(asset.tags || []).map((tag) => (
+               <SubToolboxAlphabeticalTag key={tag} level="l2" label={tag} spectrumKey={tag} />
+              ))}
+             </div>
+            </div>
+           ))}
+          </div>
+         </div>
+        ) : null}
+        {comparePair
+         && comparePair.every((asset) => asset.kind === "image" && (asset.previewUrl || asset.url)) ? (
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Before / After</div>
+          <div className="relative aspect-video overflow-hidden border-[3px] border-current">
+           <img
+            src={comparePair[0].previewUrl || comparePair[0].url || undefined}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+           />
+           <img
+            src={comparePair[1].previewUrl || comparePair[1].url || undefined}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ clipPath: `inset(0 ${100 - compareReveal}% 0 0)` }}
+           />
+           <div
+            aria-hidden="true"
+            className="absolute inset-y-0 w-[3px] bg-current"
+            style={{ left: `calc(${compareReveal}% - 1px)` }}
+           />
+          </div>
+          <SubToolboxInput
+           type="range"
+           min={0}
+           max={100}
+           value={compareReveal}
+           aria-label="Before after reveal"
+           onChange={(event) => setCompareReveal(Number(event.target.value))}
+          />
+         </div>
+        ) : null}
+        {viewMode === "lineage" ? (
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Vault Lineage</div>
+          {selectedAsset ? (
+           selectedLineage.length ? (
+            <div className="flex gap-3 overflow-x-auto pb-3">
+             {selectedLineage.map((asset, index) => (
+              <button
+               key={asset.id}
+               type="button"
+               onClick={() => {
+                setSelectedAssetIds([asset.id])
+                setSelectionAnchorId(asset.id)
+               }}
+               className="w-52 shrink-0 border-[3px] border-current p-2 text-left"
+              >
+               <div className="mb-1 text-[10px] font-black uppercase opacity-60">
+                {index === 0 ? "CURRENT" : `PARENT ${index}`}
+               </div>
+               <div className="aspect-video overflow-hidden border-[2px] border-current">
+                {asset.previewUrl || asset.url ? (
+                 <img
+                  src={asset.previewUrl || asset.url || undefined}
+                  alt=""
+                  className="h-full w-full object-cover"
+                 />
+                ) : (
+                 <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
+                )}
+               </div>
+               <div className="mt-1 truncate text-xs font-black uppercase" title={asset.name}>
+                {asset.name}
+               </div>
+              </button>
+             ))}
+            </div>
+           ) : (
+            <SubToolboxStatePanel
+             level="l1"
+             state="empty"
+             message="No canonical parent lineage is recorded for this asset."
+            />
+           )
+          ) : (
+           <SubToolboxStatePanel
+            level="l1"
+            state="empty"
+            message="Select an asset to view its canonical lineage."
+           />
+          )}
+         </div>
+        ) : visibleAssets.length ? (
+         viewMode === "filmstrip" ? (
+          <div>
+           <div className="mb-2 text-xs font-black uppercase opacity-60">Vault Filmstrip</div>
+           <div className="flex gap-2 overflow-x-auto pb-3">
+            {visibleAssets.map((asset) => {
+             const selected = selectedAssetIds.includes(asset.id)
+             return (
+              <button
+               key={asset.id}
+               type="button"
+               aria-pressed={selected}
+               onClick={(event) => {
+                const next = resolveVaultSelection({
+                 visibleIds: visibleAssets.map((item) => item.id),
+                 selectedIds: selectedAssetIds,
+                 clickedId: asset.id,
+                 nextSelected: !selected,
+                 anchorId: selectionAnchorId,
+                 shiftKey: event.shiftKey,
+                })
+                setSelectedAssetIds(next.selectedIds)
+                setSelectionAnchorId(next.anchorId)
+               }}
+               className={`w-44 shrink-0 border-[3px] border-current p-1 text-left ${selected ? "outline outline-[3px] outline-offset-2" : ""}`}
+              >
+               <div className="aspect-video overflow-hidden border-[2px] border-current">
+                {asset.previewUrl || asset.url ? (
+                 <img
+                  src={asset.previewUrl || asset.url || undefined}
+                  alt=""
+                  className="h-full w-full object-cover"
+                 />
+                ) : (
+                 <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
+                )}
+               </div>
+               <div className="mt-1 truncate text-[11px] font-black uppercase" title={asset.name}>
+                {asset.name}
+               </div>
+               <div className="truncate text-[9px] font-bold uppercase opacity-60">
+                {asset.kind} · {asset.projectName || "UNASSIGNED"}
+               </div>
+              </button>
+             )
+            })}
+           </div>
+          </div>
+         ) : viewMode === "list" ? (
+          <div className="overflow-x-auto">
+           <div className="min-w-[1080px]">
+            <SubToolboxDataTable
+             level="l1"
+             columns={finderListColumns}
+             rows={finderListRows}
+             getRowKey={(row) => String(row.assetId)}
+            />
+           </div>
+          </div>
+         ) : (
+         <div className={viewMode === "grid"
+          ? "grid grid-cols-[repeat(auto-fill,276px)] justify-start gap-3"
+          : viewMode === "masonry"
+           ? "columns-1 gap-3 sm:columns-2 2xl:columns-3"
+           : "flex flex-col gap-4 border-l-[4px] border-current pl-4"}
+         >
+          {visibleAssets.map((asset, assetIndex) => (
+           <VaultAssetModule
+            key={asset.id}
+            level="l1"
+            className={viewMode === "masonry" ? "mb-3 break-inside-avoid" : undefined}
+            kind={vaultModuleKind(asset)}
+            variant={vaultModuleVariant(asset)}
+            title={asset.name}
+            previewUrl={asset.previewUrl || asset.url || null}
+            mediaUrl={asset.url || null}
+            mimeType={asset.mimeType}
+            durationLabel={typeof asset.metadata?.durationSeconds === "number"
+             ? `${Number(asset.metadata.durationSeconds).toFixed(1)}s`
+             : null}
+            paletteIndex={assetIndex}
+            selected={selectedAssetIds.includes(asset.id)}
+            tags={asset.tags || []}
+            sharedTags={vaultTagLibrary}
+            mediaFit="cover"
+            onTitleChange={(nextTitle) => updateAssetTitle(asset, nextTitle)}
+            onTagsChange={(tags) => {
+             updateVaultAsset(asset.id, { tags })
+             setRefreshTick((value) => value + 1)
+            }}
+            onClickCapture={(event) => {
+             selectionShiftRef.current = event.shiftKey
+            }}
+            onSelectedChange={(selected) => {
+             const next = resolveVaultSelection({
+              visibleIds: visibleAssets.map((item) => item.id),
+              selectedIds: selectedAssetIds,
+              clickedId: asset.id,
+              nextSelected: selected,
+              anchorId: selectionAnchorId,
+              shiftKey: selectionShiftRef.current,
+             })
+             selectionShiftRef.current = false
+             setSelectedAssetIds(next.selectedIds)
+             setSelectionAnchorId(next.anchorId)
+            }}
+            onPreviewAction={() => {
+             setSelectedAssetIds([asset.id])
+             setSelectionAnchorId(asset.id)
+             setQuickLookCurrent(assetIndex)
+             setQuickLookOpen(true)
+            }}
+           />
+          ))}
+         </div>
+         )
+        ) : (
+         <SubToolboxStatePanel
+          level="l1"
+          state={allAssets.length ? "filtered-empty" : "empty"}
+          message={allAssets.length
+           ? "No Vault assets match the current search and filters."
+           : "No Vault assets yet. Use Import Station to stage your first batch."}
+         />
+        )}
+       </div>
+      </SubToolbox>
+      </div>
+
       <SubToolbox
        style={moduleStyle("import-tags" as VaultWorkspaceModuleId)}
        title="Import & Tags"
        subtitle="Spectrum tagging and canonical file intake in one tool"
        icon={<UploadCloud />}
        paletteIndex={11}
-       isOpenInitial
+       isOpenInitial={false}
        persistenceId="vault-import-tags"
       >
        <div className="flex flex-col gap-3">
@@ -2278,287 +2501,96 @@ const CreatorVaultOS: React.FC = () => {
          </div>
       </SubToolbox>
 
-      <div ref={assetLibraryRef} tabIndex={-1} data-vault-first-viewport="library">
       <SubToolbox
-       style={moduleStyle("asset-library" as VaultWorkspaceModuleId)}
-       title="Asset Library"
-       subtitle="Search, select, preview, and organize canonical Vault assets"
-       icon={<Search />}
-       paletteIndex={10}
-       isOpenInitial
-       persistenceId="vault-asset-library"
+       style={moduleStyle("workspace-notes" as VaultWorkspaceModuleId)}
+       title="Workspace Notes"
+       subtitle="Saved Vault scratchpads that do not become assets or Brain memory"
+       icon={<FileText />}
+       paletteIndex={6}
+       isOpenInitial={false}
+       persistenceId="vault-workspace-notes"
       >
        <div className="flex flex-col gap-3">
-        {comparePair ? (
-         <div>
-          <div className="mb-2 text-xs font-black uppercase opacity-60">Compare Selection</div>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-           {comparePair.map((asset, index) => (
-            <div key={asset.id} className="min-w-[260px] flex-1 border-[3px] border-current p-2">
-             <div className="mb-2 text-xs font-black uppercase opacity-60">
-              {index === 0 ? "A" : "B"} · {asset.kind.toUpperCase()}
-             </div>
-             <div className="text-sm font-black uppercase">{asset.name}</div>
-             <div className="mt-2 aspect-video overflow-hidden border-[3px] border-current">
-              {asset.previewUrl || asset.url ? (
-               <img
-                src={asset.previewUrl || asset.url || undefined}
-                alt=""
-                className="h-full w-full object-cover"
-               />
-              ) : (
-               <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
-              )}
-             </div>
-             <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] font-bold">
-              <div>
-               <div className="font-black uppercase opacity-60">Project</div>
-               <div>{asset.projectName || "UNASSIGNED"}</div>
-              </div>
-              <div>
-               <div className="font-black uppercase opacity-60">Source</div>
-               <div>{asset.source.toUpperCase()}</div>
-              </div>
-              <div>
-               <div className="font-black uppercase opacity-60">Dimensions</div>
-               <div>
-                {typeof asset.metadata?.width === "number" && typeof asset.metadata?.height === "number"
-                 ? `${asset.metadata.width}×${asset.metadata.height}`
-                 : "—"}
-               </div>
-              </div>
-              <div>
-               <div className="font-black uppercase opacity-60">Size</div>
-               <div>
-                {typeof asset.metadata?.byteSize === "number"
-                 ? formatVaultBytes(Number(asset.metadata.byteSize))
-                 : "—"}
-               </div>
-              </div>
-             </div>
-             <div className="mt-2 flex flex-wrap gap-1">
-              {(asset.tags || []).map((tag) => (
-               <SubToolboxAlphabeticalTag key={tag} level="l2" label={tag} spectrumKey={tag} />
-              ))}
-             </div>
-            </div>
-           ))}
-          </div>
-         </div>
-        ) : null}
-        {comparePair
-         && comparePair.every((asset) => asset.kind === "image" && (asset.previewUrl || asset.url)) ? (
-         <div>
-          <div className="mb-2 text-xs font-black uppercase opacity-60">Before / After</div>
-          <div className="relative aspect-video overflow-hidden border-[3px] border-current">
-           <img
-            src={comparePair[0].previewUrl || comparePair[0].url || undefined}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-           />
-           <img
-            src={comparePair[1].previewUrl || comparePair[1].url || undefined}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ clipPath: `inset(0 ${100 - compareReveal}% 0 0)` }}
-           />
-           <div
-            aria-hidden="true"
-            className="absolute inset-y-0 w-[3px] bg-current"
-            style={{ left: `calc(${compareReveal}% - 1px)` }}
-           />
-          </div>
-          <SubToolboxInput
-           type="range"
-           min={0}
-           max={100}
-           value={compareReveal}
-           aria-label="Before after reveal"
-           onChange={(event) => setCompareReveal(Number(event.target.value))}
+        <StandardInput
+         value={scratchpadTitle}
+         onChange={(event) => setScratchpadTitle(event.target.value)}
+         placeholder="Note title"
+         aria-label="Vault note title"
+        />
+        <SubToolboxTextArea
+         value={scratchpadContent}
+         onChange={(event) => setScratchpadContent(event.target.value)}
+         placeholder="Write a Vault workspace note…"
+         aria-label="Vault note content"
+         rows={4}
+        />
+        <SubToolboxInnerActionButton
+         label="Save Workspace Note"
+         iconName="archive"
+         tone="yellow"
+         onClick={saveScratchpad}
+         disabled={!scratchpadTitle.trim() && !scratchpadContent.trim()}
+        />
+        {scratchpads.map((note) => (
+         <div key={note.id} className="flex flex-col gap-2">
+          <div className="text-sm font-black uppercase">{note.title}</div>
+          <div className="whitespace-pre-wrap text-xs font-bold opacity-70">{note.content}</div>
+          <SubToolboxInnerActionButton
+           label="Delete Note"
+           iconName="eye-off"
+           tone="pink"
+           onClick={() => removeScratchpad(note.id)}
           />
          </div>
-        ) : null}
-        {viewMode === "lineage" ? (
-         <div>
-          <div className="mb-2 text-xs font-black uppercase opacity-60">Vault Lineage</div>
-          {selectedAsset ? (
-           selectedLineage.length ? (
-            <div className="flex gap-3 overflow-x-auto pb-3">
-             {selectedLineage.map((asset, index) => (
-              <button
-               key={asset.id}
-               type="button"
-               onClick={() => {
-                setSelectedAssetIds([asset.id])
-                setSelectionAnchorId(asset.id)
-               }}
-               className="w-52 shrink-0 border-[3px] border-current p-2 text-left"
-              >
-               <div className="mb-1 text-[10px] font-black uppercase opacity-60">
-                {index === 0 ? "CURRENT" : `PARENT ${index}`}
-               </div>
-               <div className="aspect-video overflow-hidden border-[2px] border-current">
-                {asset.previewUrl || asset.url ? (
-                 <img
-                  src={asset.previewUrl || asset.url || undefined}
-                  alt=""
-                  className="h-full w-full object-cover"
-                 />
-                ) : (
-                 <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
-                )}
-               </div>
-               <div className="mt-1 truncate text-xs font-black uppercase" title={asset.name}>
-                {asset.name}
-               </div>
-              </button>
-             ))}
-            </div>
-           ) : (
-            <SubToolboxStatePanel
-             level="l1"
-             state="empty"
-             message="No canonical parent lineage is recorded for this asset."
-            />
-           )
-          ) : (
-           <SubToolboxStatePanel
-            level="l1"
-            state="empty"
-            message="Select an asset to view its canonical lineage."
-           />
-          )}
+        ))}
+        <div className="mt-2 border-t-[3px] border-current pt-3">
+         <div className="mb-2 text-xs font-black uppercase opacity-60">Workspace Checklist</div>
+         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+          <StandardInput
+           value={checklistText}
+           onChange={(event) => setChecklistText(event.target.value)}
+           placeholder="Add checklist item"
+           aria-label="Vault checklist item"
+           onKeyDown={(event) => {
+            if (event.key === "Enter") addChecklistItem()
+           }}
+          />
+          <SubToolboxInnerActionButton
+           label="+"
+           iconName="plus"
+           tone="green"
+           onClick={addChecklistItem}
+           disabled={!checklistText.trim()}
+          />
          </div>
-        ) : visibleAssets.length ? (
-         viewMode === "filmstrip" ? (
-          <div>
-           <div className="mb-2 text-xs font-black uppercase opacity-60">Vault Filmstrip</div>
-           <div className="flex gap-2 overflow-x-auto pb-3">
-            {visibleAssets.map((asset) => {
-             const selected = selectedAssetIds.includes(asset.id)
-             return (
-              <button
-               key={asset.id}
-               type="button"
-               aria-pressed={selected}
-               onClick={(event) => {
-                const next = resolveVaultSelection({
-                 visibleIds: visibleAssets.map((item) => item.id),
-                 selectedIds: selectedAssetIds,
-                 clickedId: asset.id,
-                 nextSelected: !selected,
-                 anchorId: selectionAnchorId,
-                 shiftKey: event.shiftKey,
-                })
-                setSelectedAssetIds(next.selectedIds)
-                setSelectionAnchorId(next.anchorId)
-               }}
-               className={`w-44 shrink-0 border-[3px] border-current p-1 text-left ${selected ? "outline outline-[3px] outline-offset-2" : ""}`}
-              >
-               <div className="aspect-video overflow-hidden border-[2px] border-current">
-                {asset.previewUrl || asset.url ? (
-                 <img
-                  src={asset.previewUrl || asset.url || undefined}
-                  alt=""
-                  className="h-full w-full object-cover"
-                 />
-                ) : (
-                 <div className="flex h-full items-center justify-center">{assetIcon(asset)}</div>
-                )}
-               </div>
-               <div className="mt-1 truncate text-[11px] font-black uppercase" title={asset.name}>
-                {asset.name}
-               </div>
-               <div className="truncate text-[9px] font-bold uppercase opacity-60">
-                {asset.kind} · {asset.projectName || "UNASSIGNED"}
-               </div>
-              </button>
-             )
-            })}
-           </div>
-          </div>
-         ) : viewMode === "list" ? (
-          <div className="overflow-x-auto">
-           <div className="min-w-[1080px]">
-            <SubToolboxDataTable
-             level="l1"
-             columns={finderListColumns}
-             rows={finderListRows}
-             getRowKey={(row) => String(row.assetId)}
+         <div className="mt-2 flex flex-col gap-2">
+          {checklistItems.map((item) => (
+           <div key={item.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+            <button
+             type="button"
+             aria-label={item.done ? "Mark checklist item incomplete" : "Mark checklist item complete"}
+             onClick={() => toggleChecklistItem(item.id)}
+             className="text-lg font-black"
+            >
+             {item.done ? "☒" : "☐"}
+            </button>
+            <div className={item.done ? "text-xs font-bold line-through opacity-45" : "text-xs font-bold"}>
+             {item.text}
+            </div>
+            <SubToolboxInnerActionButton
+             label="×"
+             iconName="x"
+             tone="pink"
+             onClick={() => removeChecklistItem(item.id)}
             />
            </div>
-          </div>
-         ) : (
-         <div className={viewMode === "grid"
-          ? "grid grid-cols-[repeat(auto-fill,276px)] justify-start gap-3"
-          : viewMode === "masonry"
-           ? "columns-1 gap-3 sm:columns-2 2xl:columns-3"
-           : "flex flex-col gap-4 border-l-[4px] border-current pl-4"}
-         >
-          {visibleAssets.map((asset, assetIndex) => (
-           <VaultAssetModule
-            key={asset.id}
-            level="l1"
-            className={viewMode === "masonry" ? "mb-3 break-inside-avoid" : undefined}
-            kind={vaultModuleKind(asset)}
-            variant={vaultModuleVariant(asset)}
-            title={asset.name}
-            previewUrl={asset.previewUrl || asset.url || null}
-            mediaUrl={asset.url || null}
-            mimeType={asset.mimeType}
-            durationLabel={typeof asset.metadata?.durationSeconds === "number"
-             ? `${Number(asset.metadata.durationSeconds).toFixed(1)}s`
-             : null}
-            paletteIndex={assetIndex}
-            selected={selectedAssetIds.includes(asset.id)}
-            tags={asset.tags || []}
-            sharedTags={vaultTagLibrary}
-            notes={String(asset.metadata?.notes || "")}
-            mediaFit="cover"
-            onTitleChange={(nextTitle) => updateAssetTitle(asset, nextTitle)}
-            onTagsChange={(tags) => {
-             updateVaultAsset(asset.id, { tags })
-             setRefreshTick((value) => value + 1)
-            }}
-            onNotesChange={(nextNotes) => updateAssetNotes(asset, nextNotes)}
-            onClickCapture={(event) => {
-             selectionShiftRef.current = event.shiftKey
-            }}
-            onSelectedChange={(selected) => {
-             const next = resolveVaultSelection({
-              visibleIds: visibleAssets.map((item) => item.id),
-              selectedIds: selectedAssetIds,
-              clickedId: asset.id,
-              nextSelected: selected,
-              anchorId: selectionAnchorId,
-              shiftKey: selectionShiftRef.current,
-             })
-             selectionShiftRef.current = false
-             setSelectedAssetIds(next.selectedIds)
-             setSelectionAnchorId(next.anchorId)
-            }}
-            onPreviewAction={() => {
-             setSelectedAssetIds([asset.id])
-             setSelectionAnchorId(asset.id)
-             setQuickLookCurrent(assetIndex)
-             setQuickLookOpen(true)
-            }}
-           />
           ))}
          </div>
-         )
-        ) : (
-         <SubToolboxStatePanel
-          level="l1"
-          state={allAssets.length ? "filtered-empty" : "empty"}
-          message={allAssets.length
-           ? "No Vault assets match the current search and filters."
-           : "No Vault assets yet. Use Import Station to stage your first batch."}
-         />
-        )}
+        </div>
        </div>
       </SubToolbox>
-      </div>
+
+
 
 
      </div>
@@ -2688,6 +2720,17 @@ const CreatorVaultOS: React.FC = () => {
          <div>
           <div className="text-xs font-black uppercase opacity-60">Project</div>
           <div className="text-sm font-black uppercase">{selectedAsset.projectName || "Unassigned"}</div>
+         </div>
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Notes</div>
+          <SubToolboxTextArea
+           key={selectedAsset.id}
+           height="compact"
+           defaultValue={String(selectedAsset.metadata?.notes || "")}
+           placeholder="Asset notes…"
+           aria-label="Asset notes"
+           onBlur={(event) => updateAssetNotes(selectedAsset, event.target.value)}
+          />
          </div>
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Collection Membership</div>

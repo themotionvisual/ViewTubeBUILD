@@ -22,13 +22,11 @@ describe("VaultAssetModule", () => {
           variant={variant}
           title="NAPOLEON_ASSET_01"
           tags={["NAPOLEON", "HISTORY"]}
-          notes="NOTES"
           selected
           previewUrl={kind === "video" ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" : null}
           onSelectedChange={() => undefined}
           onTitleChange={() => undefined}
           onTagsChange={() => undefined}
-          onNotesChange={() => undefined}
         />,
       )
       expect(html).toContain(`data-vt-vault-asset-variant="${variant}"`)
@@ -39,14 +37,32 @@ describe("VaultAssetModule", () => {
       expect(html).not.toContain("vt-vault-note-panel")
       expect(html).toContain("vt-vault-card-meta")
     }
-    it("only renders factual audio duration when one is provided", () => {
+  })
+
+  it("only renders factual audio duration when one is provided", () => {
     const unknown = renderToStaticMarkup(<VaultAssetModule kind="audio" variant="audio" title="UNKNOWN.WAV" />)
     const known = renderToStaticMarkup(<VaultAssetModule kind="audio" variant="audio" title="KNOWN.WAV" durationLabel="00:42" />)
 
     expect(unknown).not.toContain("vt-vault-audio-time")
     expect(known).toContain("00:42")
   })
-})
+
+  it("keeps dense cards to three visible tags with an explicit overflow affordance", () => {
+    const html = renderToStaticMarkup(
+      <VaultAssetModule
+        kind="image"
+        variant="landscape"
+        title="DENSE.PNG"
+        tags={["ALPHA", "BRAVO", "CHARLIE", "DELTA", "ECHO"]}
+      />,
+    )
+
+    expect(html).toContain("ALPHA")
+    expect(html).toContain("BRAVO")
+    expect(html).toContain("CHARLIE")
+    expect(html).toContain("+2")
+    expect(html).not.toContain('data-tag="DELTA"')
+  })
 
   it("preserves half-height audio/document anatomy and portrait selection placement", () => {
     const audio = renderToStaticMarkup(<VaultAssetModule kind="audio" variant="audio" title="AUDIO.WAV" />)
