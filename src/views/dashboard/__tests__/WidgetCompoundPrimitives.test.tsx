@@ -8,6 +8,9 @@ import {
   WidgetChecklistProgress,
   WidgetDataGrid,
   WidgetSectionBand,
+  WidgetVideoMiniCard,
+  WidgetSplitCounterBadge,
+  WidgetSpeechBubble,
 } from "../WidgetPrimitives"
 
 const css = readFileSync(new URL("../widgetCompoundPrimitives.css", import.meta.url), "utf8")
@@ -96,6 +99,23 @@ describe("compound widget primitives from Creator Operations donor", () => {
     expect(markup).toContain("widget-calendar-day")
     expect(markup).toContain("widget-calendar-event")
     expect(markup).toContain("Research")
+  })
+
+  it("promotes Comment Responder donor pieces into shared compound primitives", () => {
+    const markup = renderToStaticMarkup(
+      <>
+        <WidgetVideoMiniCard title="Austerlitz" thumbnail="thumb.jpg" meta="30:04 · 73,910 views" />
+        <WidgetSplitCounterBadge icon={<span>Like</span>} value={184} label="184 likes" height={24} tone="primary" />
+        <WidgetSpeechBubble>Big supporter</WidgetSpeechBubble>
+      </>,
+    )
+    expect(markup).toContain("widget-video-mini-card")
+    expect(markup).toContain("widget-split-counter-badge")
+    expect(markup).toContain('aria-label="184 likes"')
+    expect(markup).toContain("widget-speech-bubble")
+    expect(css).toContain(".widget-video-mini-card")
+    expect(css).toContain(".widget-split-counter-badge")
+    expect(css).toContain(".widget-speech-bubble-tail")
   })
 
   it("registers all four compound primitives in the UI Reference Library", () => {
