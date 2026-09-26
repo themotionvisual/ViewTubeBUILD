@@ -39,5 +39,6 @@ describe("CreatorVaultOS reference-parity asset modules", () => {
   expect(moduleSource).toContain('"landscape-swapped"')
   expect(source).toContain('"portrait-double"')
   expect(moduleSource).toContain('"portrait-double"')
+  expect(source).toContain('documentExcerpt={typeof asset.metadata?.textContent === "string"')
  })
 })
