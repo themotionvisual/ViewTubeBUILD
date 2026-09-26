@@ -8,15 +8,13 @@
       --vt-mobile-widget-gap: 8px;
       --vt-mobile-widget-gutter: 4px;
       --vt-widget-edge-safe: 4px;
-      --vt-mobile-reclaim-left: 12px;
-      --vt-mobile-reclaim-right: 40px;
-      /* Field-QA compensation for the mobile app shell: the live viewport
-         reserves ~28px more visual space on the right. Expand only that side
-         until the visible widget gutters are equal. */
-      width: calc(100% + var(--vt-mobile-reclaim-left) + var(--vt-mobile-reclaim-right));
-      max-width: none;
-      margin-left: calc(-1 * var(--vt-mobile-reclaim-left));
-      margin-right: calc(-1 * var(--vt-mobile-reclaim-right));
+      /* The dashboard owns the real phone viewport width. Earlier field-QA
+         compensation widened the row asymmetrically and eventually pushed
+         widget shells past the right edge. Keep outer gutter correction in the
+         app/grid owner instead of enlarging the dashboard canvas. */
+      width: 100%;
+      max-width: 100%;
+      margin-inline: 0;
       box-sizing: border-box;
       --vt-mobile-height-short: 150px;
       --vt-mobile-height-medium: 250px;
