@@ -35,7 +35,7 @@ describe("mobile widget density and edge contracts", () => {
   it("removes legacy horizontal clipping that chops full-bleed bands, glows and shadows", () => {
     expect(legacy).not.toContain("overflow-x: hidden !important")
     expect(mobile).toContain("--vt-widget-edge-safe")
-    expect(mobile).toContain(".vt-widget-shadow-safe")
+    expect(shellCss).toContain(".vt-widget-shadow-safe")
   })
 
   it("uses one canonical full-bleed owner for About and Oracle bands", () => {
