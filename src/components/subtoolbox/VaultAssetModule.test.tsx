@@ -61,7 +61,7 @@ describe("VaultAssetModule", () => {
     expect(html).toContain("BRAVO")
     expect(html).toContain("CHARLIE")
     expect(html).toContain("+2")
-    expect(html).not.toContain(">DELTA</button>")
+    expect(html).not.toContain('data-tag="DELTA"')
   })
 
   it("preserves half-height audio/document anatomy and portrait selection placement", () => {
