@@ -30,6 +30,7 @@ export type PageSection =
  | "account"
  | "editor"
  | "reference"
+ | "resources"
  | "system"
  | "onboarding"
  | "unclassified"
@@ -119,6 +120,7 @@ export const PAGE_REGISTRY: readonly PageRegistryEntry[] = Object.freeze([
  { path: "/video-manager", title: "Video Manager", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/strategy", title: "Strategy", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/vault", title: "Vault", section: "vault", navigationVisibility: "top-nav", lifecycle: "production" },
+ { path: "/resources", title: "Resource Library", section: "resources", navigationVisibility: "top-nav", lifecycle: "production", description: "Source-grounded creator guides, references, playbooks and reusable learning resources." },
  { path: "/simple-analytics", title: "Simple Analytics", section: "analytics", navigationVisibility: "hidden", lifecycle: "legacy" },
  { path: "/media-analyzer", title: "Media Analyzer", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
  { path: "/seo-generator", title: "SEO Generator", section: "studio", navigationVisibility: "drawer", lifecycle: "production" },
