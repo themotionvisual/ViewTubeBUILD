@@ -1,0 +1,1735 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ViewTube — Dashboard Widget + 40 Signature Systems Catalog</title>
+<style>
+:root{--ink:#000;--paper:#efefed;--white:#fff;--pink:#ff4d6f;--cyan:#36e0f6;--yellow:#ffd84d;--green:#3fee56;--blue:#528ffa;--purple:#a970ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:#000;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.page{width:min(1400px,calc(100% - 30px));margin:20px auto 80px}
+.hero{background:#fff;border:4px solid #000;border-radius:18px;box-shadow:10px 10px 0 rgba(0,0,0,.18);overflow:hidden;margin-bottom:22px}
+.hero-bar{height:16px;display:grid;grid-template-columns:repeat(6,1fr);border-bottom:4px solid #000}
+.hero-bar i:nth-child(1){background:var(--pink)}.hero-bar i:nth-child(2){background:var(--yellow)}.hero-bar i:nth-child(3){background:var(--green)}.hero-bar i:nth-child(4){background:var(--cyan)}.hero-bar i:nth-child(5){background:var(--blue)}.hero-bar i:nth-child(6){background:var(--purple)}
+.hero-copy{padding:22px 26px}
+.hero h1{font-size:clamp(28px,5vw,58px);line-height:.94;margin:0;text-transform:uppercase;letter-spacing:-.05em;font-weight:1000}
+.hero p{font-weight:850;max-width:95ch;margin:12px 0 0}
+.content{background:#fff;border:4px solid #000;border-radius:18px;padding:clamp(16px,3vw,34px);box-shadow:8px 8px 0 rgba(0,0,0,.14)}
+.inventory-alert{border:4px solid #000;border-radius:12px;background:var(--cyan);padding:12px 15px;margin:0 0 22px;font-weight:1000}
+h1{font-size:clamp(28px,4vw,48px);line-height:1;margin:8px 0 18px;font-weight:1000;letter-spacing:-.04em}
+h2{font-size:clamp(21px,3vw,34px);margin:34px 0 12px;padding:11px 14px;background:#000;color:#fff;border-radius:10px;text-transform:uppercase;font-weight:1000}
+h3{font-size:20px;margin:25px 0 9px;font-weight:1000;text-transform:uppercase}
+h4{font-size:15px;margin:20px 0 7px;font-weight:1000;text-transform:uppercase}
+p,li{font-size:14px;line-height:1.48;font-weight:650}
+strong{font-weight:1000}
+code{font-family:"SFMono-Regular",Consolas,monospace;background:#ececec;border:1.5px solid #000;border-radius:5px;padding:1px 4px;font-weight:800;font-size:.9em}
+pre{background:#111;color:#fff;border:3px solid #000;border-radius:11px;padding:14px;overflow:auto}
+pre code{background:none;border:0;color:inherit;padding:0}
+blockquote{margin:16px 0;border:3px solid #000;border-left:12px solid var(--yellow);border-radius:10px;padding:12px 14px;background:#fffbe0;font-weight:850}
+.table-wrap{overflow-x:auto;margin:12px 0 22px;border:3px solid #000;border-radius:12px;background:#fff}
+table{border-collapse:collapse;width:100%;min-width:760px}
+th,td{border-right:2px solid #000;border-bottom:2px solid #000;padding:9px 10px;text-align:left;vertical-align:top;font-size:12px;line-height:1.35}
+th:last-child,td:last-child{border-right:0}tr:last-child td{border-bottom:0}
+th{background:var(--yellow);font-weight:1000;text-transform:uppercase;letter-spacing:.02em;position:sticky;top:0}
+tbody tr:nth-child(even) td{background:#f7f7f7}
+ul,ol{padding-left:24px}
+.check{display:flex;gap:9px;align-items:flex-start;border-bottom:1px dashed #bbb;padding:5px 0;font-size:14px;font-weight:700}
+.check span{font-size:18px;line-height:1}
+@media(max-width:700px){
+ .page{width:calc(100% - 16px);margin-top:8px}
+ .content{border-width:3px;padding:12px}
+ .hero{border-width:3px}
+ h2{font-size:20px}
+ table{min-width:660px}
+ th,td{font-size:11px;padding:7px}
+}
+
+.ranking-callout{border:4px solid #000;border-radius:12px;background:#36e0f6;padding:13px 15px;margin:14px 0 18px;font-weight:750}.rubric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 14px}.rubric-grid>div{border:2px solid #000;border-radius:8px;padding:9px;background:#fff}.rubric-grid b{display:block;font-size:18px}.rubric-grid span{display:block;font-size:10px;font-weight:950;text-transform:uppercase}.family-readout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:13px 0 20px}.family-readout p{margin:0;border:2px solid #000;border-radius:9px;padding:10px;background:#f7f7f7}.rank-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0 24px}.rank-card{border:3px solid #000;border-radius:12px;padding:11px;background:#fff;box-shadow:4px 4px 0 rgba(0,0,0,.13)}.rank-card-top{display:flex;align-items:center;gap:6px}.rank-no{font-size:18px;font-weight:1000}.overall{margin-left:auto;font-size:22px;font-weight:1000}.rank-card h4{font-size:16px;margin:8px 0 2px;text-transform:none}.rank-family{font-size:9px;font-weight:900;text-transform:uppercase;opacity:.62}.scorechips{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}.scorechips span{font-size:8px;border:1.5px solid #000;border-radius:4px;padding:2px 4px;background:#f3f3f3;font-weight:850}.rank-card p{font-size:11px;margin:7px 0}.disposition,.disp{display:inline-block;border:2px solid #000;border-radius:5px;padding:3px 6px;background:#3fee56;font-size:9px;font-weight:1000;text-transform:uppercase}.tier{display:inline-grid;place-items:center;min-width:30px;height:24px;border:2px solid #000;border-radius:5px;font-size:10px;font-weight:1000}.tier-S{background:#3fee56}.tier-Ap{background:#36e0f6}.tier-A{background:#ffd84d}.tier-Bp{background:#ff9f43}.tier-B{background:#ff7ac8}.ranking-controls{display:grid;grid-template-columns:minmax(220px,1.7fr) minmax(190px,1fr) minmax(180px,1fr) auto auto;gap:7px;align-items:center;margin:12px 0}.ranking-controls input,.ranking-controls select,.ranking-controls button{height:36px;border:2px solid #000;border-radius:7px;background:#fff;padding:0 9px;font:inherit;font-size:11px;font-weight:850}.ranking-controls button{background:#ffd84d;font-weight:1000;text-transform:uppercase;cursor:pointer}.ranking-controls span{font-size:10px;font-weight:1000;text-transform:uppercase}.ranking-table{min-width:1350px}.ranking-table th{font-size:9px}.ranking-table td{font-size:10px}.ranking-table td small{display:block;margin-top:3px;font-size:8px;font-weight:800;opacity:.55}.ranking-table .num{text-align:center;font-variant-numeric:tabular-nums}.overallcell,.rankcell{text-align:center}.score-key{font-size:10px!important;background:#f5f5f5;border:2px solid #000;border-radius:7px;padding:8px}.family-rank{min-width:800px}
+@media(max-width:900px){.rank-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.family-readout{grid-template-columns:1fr}.ranking-controls{grid-template-columns:1fr 1fr}.ranking-controls input{grid-column:1/-1}.rubric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.rank-grid{grid-template-columns:1fr}.rubric-grid{grid-template-columns:1fr 1fr}.ranking-controls{grid-template-columns:1fr}.ranking-controls input{grid-column:auto}}
+
+</style>
+</head>
+<body>
+<div class="page">
+<section class="hero">
+<div class="hero-bar"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="hero-copy">
+<h1>Dashboard Widget + 40 Signature Systems Catalog</h1>
+<p>Canonical ViewTube widget registry, signature systems, production rules, and GPT Library HTML prototype inventory.</p>
+</div>
+</section>
+<main class="content">
+<div class="inventory-alert">UPDATED LIBRARY INVENTORY: includes the missed widget HTML families plus toolboxWidgetSystem, toolboxWidgetSystem(1), and toolboxWidgetSystem(2) from the GPT Library screenshots.</div>
+<h1>ViewTube Dashboard Widget Master Catalog + 40 Signature Widget / Tool Systems</h1>
+<p><strong>Combines:</strong> Resource 27 + Resource 28  </p>
+<p><strong>Resource type:</strong> Dashboard registry / certification / future signature systems  </p>
+<p><strong>Status:</strong> Current registry recovery + canonical 40-system planning catalog  </p>
+<p><strong>Last updated:</strong> August 23, 2026</p>
+<h2>Source Confidence Legend</h2>
+<ul><li><strong>CURRENT REGISTRY EVIDENCE</strong> - recovered from the Dashboard schema/order and widget source inventory.</li><li><strong>PLANNED SYSTEM</strong> - Task Index system with a stable VT task ID, not necessarily production-complete.</li><li><strong>VERIFY</strong> - runtime/data/certification status must be checked before describing a widget as ready.</li></ul>
+<h2>1. Dashboard Architecture</h2>
+<p>The dashboard is a configurable command surface built from a canonical Widget Registry and persisted layout state. A widget definition should declare:</p>
+<ul><li>stable widget ID;</li><li>category and renderer;</li><li>release tier/status;</li><li>data/API dependencies;</li><li>default visibility/order;</li><li>supported size and height pairs;</li><li>logged-out behavior;</li><li>persistence contract;</li><li>entitlement requirements;</li><li>mobile behavior;</li><li>help copy;</li><li>certification state.</li></ul>
+<p>Shell color is layout/position styling; metric/chart colors remain semantic and must not change meaning merely because a widget is moved.</p>
+<h2>2. Current Layout State Evidence</h2>
+<p>Recovered dashboard storage uses <strong>schema version 7</strong> and a default order containing <strong>47 widget IDs</strong>. Six are explicitly hidden in the recovered default state:</p>
+<ul><li>bridge-efficiency</li><li>reach-funnel</li><li>alerts-feed</li><li>mini-calendar</li><li>task-stack</li><li>collab-matchmaker</li></ul>
+<p>Current code uses size buckets including <code>quarter</code>, <code>third</code>, and <code>half</code>, plus multiple height buckets such as <code>medium</code>, <code>tall</code>, and <code>xtall</code>. A later dashboard-layout task calls for formalizing full/half/third widths and responsive spans. Therefore the production decision should explicitly migrate or grandfather <code>quarter</code> rather than pretending it never existed.</p>
+<h2>3. Current Dashboard Widget Catalog</h2>
+<div class="table-wrap"><table><thead><tr><th>Widget ID</th><th>Name</th><th>Family</th><th>Recovered size</th><th>Default state</th></tr></thead><tbody><tr><td><code>kpi-cluster</code></td><td>KPI Cluster</td><td>Analytics</td><td>third / tall</td><td>default</td></tr><tr><td><code>community-post</code></td><td>Community Post</td><td>Community / Creation</td><td>third / tall</td><td>default</td></tr><tr><td><code>comment-replier</code></td><td>Comment Responder</td><td>Community</td><td>third / tall</td><td>default</td></tr><tr><td><code>consistency-heatmap</code></td><td>Upload Consistency Heatmap</td><td>Analytics</td><td>quarter / medium</td><td>default</td></tr><tr><td><code>realtime-performance</code></td><td>Realtime Performance</td><td>Analytics</td><td>quarter / medium</td><td>default</td></tr><tr><td><code>goals-tracker</code></td><td>Goals Tracker</td><td>Planning</td><td>quarter / medium</td><td>default</td></tr><tr><td><code>keyword-engine</code></td><td>Keyword Engine</td><td>Discovery</td><td>quarter / medium</td><td>default</td></tr><tr><td><code>daily-oracle</code></td><td>Daily Oracle</td><td>AI Brain</td><td>third / xtall</td><td>default</td></tr><tr><td><code>ask-me</code></td><td>Ask Me</td><td>AI Brain</td><td>third / xtall</td><td>default</td></tr><tr><td><code>ai-journal</code></td><td>AI Journal</td><td>AI Brain</td><td>third / xtall</td><td>default</td></tr><tr><td><code>image-generator</code></td><td>Image Generator</td><td>Creation</td><td>half / xtall</td><td>default</td></tr><tr><td><code>data-edit</code></td><td>Data Edit</td><td>Analytics / Data</td><td>half / xtall</td><td>default</td></tr><tr><td><code>traffic-sources</code></td><td>Traffic Sources</td><td>Analytics</td><td>quarter / tall</td><td>default</td></tr><tr><td><code>shorts-vs-long</code></td><td>Shorts vs Long</td><td>Analytics</td><td>variable</td><td>default</td></tr><tr><td><code>publish-momentum</code></td><td>Publish Momentum</td><td>Publishing</td><td>variable</td><td>default</td></tr><tr><td><code>audience-matrix</code></td><td>Audience Matrix</td><td>Audience / Analytics</td><td>variable</td><td>default</td></tr><tr><td><code>system-micro-stack</code></td><td>System Micro Stack</td><td>System</td><td>variable</td><td>default</td></tr><tr><td><code>keyword-overlap-intelligence</code></td><td>Keyword Overlap Intelligence</td><td>Discovery / Analytics</td><td>variable</td><td>default</td></tr><tr><td><code>retention-sim</code></td><td>Retention Simulator</td><td>Retention / Analytics</td><td>variable</td><td>default</td></tr><tr><td><code>upload-scheduler</code></td><td>Upload Scheduler</td><td>Publishing</td><td>variable</td><td>default</td></tr><tr><td><code>brain-hub</code></td><td>Brain Hub</td><td>AI Brain</td><td>variable</td><td>default</td></tr><tr><td><code>thumb-ai</code></td><td>Thumbnail AI</td><td>Packaging</td><td>variable</td><td>default</td></tr><tr><td><code>quick-actions</code></td><td>Quick Actions</td><td>System</td><td>variable</td><td>default</td></tr><tr><td><code>ai-prompt-box</code></td><td>AI Prompt Box</td><td>AI Brain</td><td>variable</td><td>default</td></tr><tr><td><code>revenue-momentum</code></td><td>Revenue Momentum</td><td>Revenue</td><td>variable</td><td>default</td></tr><tr><td><code>title-rewriter</code></td><td>Title Rewriter</td><td>Packaging / Writing</td><td>variable</td><td>default</td></tr><tr><td><code>description-editor</code></td><td>Description Editor</td><td>Publishing / Writing</td><td>variable</td><td>default</td></tr><tr><td><code>hashtag-analyzer</code></td><td>Hashtag Analyzer</td><td>Discovery</td><td>variable</td><td>default</td></tr><tr><td><code>tag-generator</code></td><td>Tag Generator</td><td>Discovery</td><td>variable</td><td>default</td></tr><tr><td><code>superfan-card</code></td><td>Superfan Card</td><td>Audience</td><td>variable</td><td>default</td></tr><tr><td><code>flight-check</code></td><td>Flight Check</td><td>Publishing</td><td>variable</td><td>default</td></tr><tr><td><code>bridge-efficiency</code></td><td>Bridge Efficiency</td><td>Analytics</td><td>variable</td><td>hidden</td></tr><tr><td><code>reach-funnel</code></td><td>Reach Funnel</td><td>Analytics</td><td>variable</td><td>hidden</td></tr><tr><td><code>alerts-feed</code></td><td>Alerts Feed</td><td>System</td><td>variable</td><td>hidden</td></tr><tr><td><code>mini-calendar</code></td><td>Mini Calendar</td><td>Planning</td><td>variable</td><td>hidden</td></tr><tr><td><code>task-stack</code></td><td>Task Stack</td><td>Planning</td><td>variable</td><td>hidden</td></tr><tr><td><code>collab-matchmaker</code></td><td>Collab Matchmaker</td><td>Community</td><td>variable</td><td>hidden</td></tr><tr><td><code>channel-overview</code></td><td>Channel Overview</td><td>Analytics</td><td>variable</td><td>default</td></tr><tr><td><code>audience-retention</code></td><td>Audience Retention</td><td>Retention / Analytics</td><td>variable</td><td>default</td></tr><tr><td><code>relative-retention-benchmark</code></td><td>Relative Retention Benchmark</td><td>Retention / Analytics</td><td>variable</td><td>default</td></tr><tr><td><code>ad-stack-intelligence</code></td><td>Ad Stack Intelligence</td><td>Revenue / Analytics</td><td>variable</td><td>default</td></tr><tr><td><code>revenue-chart</code></td><td>Revenue Chart</td><td>Revenue</td><td>variable</td><td>default</td></tr><tr><td><code>recent-uploads</code></td><td>Recent Uploads</td><td>Publishing</td><td>variable</td><td>default</td></tr><tr><td><code>top-performer</code></td><td>Top Performer</td><td>Analytics</td><td>variable</td><td>default</td></tr><tr><td><code>alerts-ticker</code></td><td>Alerts Ticker</td><td>System</td><td>variable</td><td>default</td></tr><tr><td><code>burnout-monitor</code></td><td>Burnout Monitor</td><td>AI Brain / Planning</td><td>variable</td><td>default</td></tr><tr><td><code>ui-reference-library</code></td><td>UI Reference Library</td><td>System / Reference</td><td>variable</td><td>default</td></tr></tbody></table></div>
+<h2>4. Known Widget Renderer / Source Families</h2>
+<p>Recovered source inventory includes shared <code>WidgetRegistry.ts</code>, <code>WidgetRenderer.tsx</code>, and <code>WidgetShell.tsx</code>, plus dedicated widgets such as:</p>
+<ul><li>AudienceMatrixWidget</li><li>BridgeEfficiencyWidget</li><li>FormatClashWidget</li><li>KeywordOverlapWidget</li><li>RetentionSimWidget</li><li>RevenueChartWidget</li><li>TrafficSourcesWidget</li></ul>
+<p>The current dashboard also contains specialized inline renderer branches such as Upload Consistency and Ad Stack Intelligence. Inline branches should be moved into dedicated components where that improves maintainability without changing their accepted composition.</p>
+<h2>5. Widget Certification Queue</h2>
+<p>A prototype or preview widget should be individually promoted, not exposed en masse.</p>
+<p>Certification criteria:</p>
+<ol><li>1. useful and non-duplicative;</li><li>2. clear data availability;</li><li>3. production renderer selected;</li><li>4. logged-in and logged-out states defined;</li><li>5. no silent sample fallback;</li><li>6. desktop and mobile layout valid;</li><li>7. performance cost acceptable;</li><li>8. help/provenance copy present;</li><li>9. persistence and entitlement behavior defined;</li><li>10. registry metadata complete;</li><li>11. runtime error/empty/loading states tested.</li></ol>
+<p>Rejected/duplicate concepts are archived with a reason so they are not rediscovered repeatedly.</p>
+<h2>6. Logged-In / Logged-Out Population Rules</h2>
+<h3>Logged in</h3>
+<p>Default to real connected data or explicitly imported data. Do not swap in demo values simply to maintain visual density.</p>
+<h3>Logged out / disconnected</h3>
+<p>A widget that depends on Google/YouTube should show an intentional state such as:</p>
+<ul><li><code>requires_connection</code>;</li><li>signed out;</li><li>connected but expired/invalid;</li><li>loading;</li><li>API error;</li><li>empty valid result.</li></ul>
+<h3>Demo/sample</h3>
+<p>Sample/demo content may be offered when intentional, but it must be visibly labeled <strong>SAMPLE DATA</strong> and should not be indistinguishable from a real connected workspace.</p>
+<h2>7. Dashboard Layout Presets</h2>
+<p>Planned presets include:</p>
+<ul><li>Analytics</li><li>Publishing</li><li>Revenue</li><li>Community</li><li>Planning</li><li>Minimal</li></ul>
+<p>A preset is a starting layout over the same registry, not a second widget system.</p>
+<h2>8. The Canonical First 40 Signature Systems</h2>
+<p>The Task Index contains a stable contiguous first set of <strong>40 signature systems: VT-2531 through VT-2570</strong>. Later priming systems VT-2571 onward are extensions and are not silently counted inside this original 40.</p>
+<div class="table-wrap"><table><thead><tr><th>Task ID</th><th>Signature system</th><th>Domain</th><th>Purpose</th></tr></thead><tbody><tr><td>VT-2531</td><td>Suggested Traffic Network Architect</td><td>DISCOVER + OPPORTUNITY</td><td>Map which videos send viewers to other videos and identify stronger next-video routes.</td></tr><tr><td>VT-2532</td><td>Audience Intelligence Engine</td><td>DISCOVER + OPPORTUNITY</td><td>Combine demographics, behavior, subscriber status, geography, and format preferences into actionable audience clusters.</td></tr><tr><td>VT-2533</td><td>Content Opportunity Engine</td><td>DISCOVER + OPPORTUNITY</td><td>Find subjects the audience wants that the channel has not covered well enough.</td></tr><tr><td>VT-2534</td><td>Video Revival Engine</td><td>DISCOVER + OPPORTUNITY</td><td>Find older videos with remaining demand and explain what packaging or discovery changes could revive them.</td></tr><tr><td>VT-2535</td><td>Series and Sequel Architect</td><td>DISCOVER + OPPORTUNITY</td><td>Identify uploads that deserve follow-ups and turn isolated wins into deliberate series.</td></tr><tr><td>VT-2536</td><td>Search Intent Mapper</td><td>DISCOVER + OPPORTUNITY</td><td>Cluster real search terms by intent and connect them to videos, unanswered demand, and future ideas.</td></tr><tr><td>VT-2537</td><td>Discovery Landscape</td><td>DISCOVER + OPPORTUNITY</td><td>Compare topic saturation and public opportunity signals with the channel's existing strengths.</td></tr><tr><td>VT-2538</td><td>Archive Intelligence Engine</td><td>DISCOVER + OPPORTUNITY</td><td>Search the Vault and past project material for forgotten footage, images, research, scripts, and reusable assets.</td></tr><tr><td>VT-2539</td><td>Channel Content Graph</td><td>DISCOVER + OPPORTUNITY</td><td>Connect topics, series, traffic pathways, and audience journeys across the catalog.</td></tr><tr><td>VT-2540</td><td>Next Best Action Command Center</td><td>DECIDE + CHANNEL COMMAND</td><td>Rank the few actions most worth doing now with impact, confidence, effort, and direct handoffs.</td></tr><tr><td>VT-2541</td><td>Upload Timing Compass</td><td>DECIDE + CHANNEL COMMAND</td><td>Recommend the next publishing slot from historical performance and viewer activity.</td></tr><tr><td>VT-2542</td><td>Content Lifecycle Radar</td><td>DECIDE + CHANNEL COMMAND</td><td>Classify videos as launch, acceleration, plateau, evergreen, revival, or decline and recommend the right response.</td></tr><tr><td>VT-2543</td><td>Upload Halo Analyzer</td><td>DECIDE + CHANNEL COMMAND</td><td>Measure how each new upload lifts, cannibalizes, or redirects traffic to older videos.</td></tr><tr><td>VT-2544</td><td>Format Strategy Engine</td><td>DECIDE + CHANNEL COMMAND</td><td>Explain how Shorts, long-form, and live content acquire, bridge, or deepen audiences.</td></tr><tr><td>VT-2545</td><td>Revenue Opportunity Engine</td><td>DECIDE + CHANNEL COMMAND</td><td>Rank videos and subjects by revenue efficiency, longevity, watch hours, and future value.</td></tr><tr><td>VT-2546</td><td>Premium Audience Value Analyzer</td><td>DECIDE + CHANNEL COMMAND</td><td>Surface where Premium viewers create disproportionate watch time or value.</td></tr><tr><td>VT-2547</td><td>First 72 Hours Launch Monitor</td><td>DECIDE + CHANNEL COMMAND</td><td>Compare a new upload against channel baselines and similar historical launches.</td></tr><tr><td>VT-2548</td><td>Concept Forge Canvas</td><td>CREATE + PRODUCE</td><td>Turn a raw idea into premise, tension, promise, audience fit, and the strongest angle.</td></tr><tr><td>VT-2549</td><td>Creator Canvas OS</td><td>CREATE + PRODUCE</td><td>Move an opportunity, request, trend, or idea through angle selection, hooks, script beats, storyboard, and assets.</td></tr><tr><td>VT-2550</td><td>Narrative Architecture Studio</td><td>CREATE + PRODUCE</td><td>Structure hook, setup, escalation, reveals, payoff, and ending before generating prose.</td></tr><tr><td>VT-2551</td><td>Script Revision Workbench</td><td>CREATE + PRODUCE</td><td>Diagnose repetition, weak transitions, pacing, unsupported claims, and confusing sections one segment at a time.</td></tr><tr><td>VT-2552</td><td>Evidence and Claim Board</td><td>CREATE + PRODUCE</td><td>Connect script claims to research sources and supporting assets.</td></tr><tr><td>VT-2553</td><td>Scene Design Studio</td><td>CREATE + PRODUCE</td><td>Turn script beats into scenes with visual intent, duration, shot type, transition, and required assets.</td></tr><tr><td>VT-2554</td><td>Asset Coverage Matrix</td><td>CREATE + PRODUCE</td><td>Show each scene against required footage, graphics, images, maps, text, and audio to reveal production gaps.</td></tr><tr><td>VT-2555</td><td>B-Roll Director</td><td>CREATE + PRODUCE</td><td>Assign existing or generated B-roll directions to each script beat instead of producing a generic shot list.</td></tr><tr><td>VT-2556</td><td>Visual Continuity Director</td><td>CREATE + PRODUCE</td><td>Maintain palette, typography, labels, maps, motifs, and graphic rules throughout a project.</td></tr><tr><td>VT-2557</td><td>Caption and Emphasis Designer</td><td>CREATE + PRODUCE</td><td>Control caption timing, line breaks, emphasis words, labels, and on-screen hierarchy.</td></tr><tr><td>VT-2558</td><td>Repurpose Matrix</td><td>CREATE + PRODUCE</td><td>Turn one finished video into Shorts, posts, clips, follow-up ideas, descriptions, and pinned-comment material.</td></tr><tr><td>VT-2559</td><td>Final Production Packet</td><td>CREATE + PRODUCE</td><td>Combine script, storyboard, assets, captions, packaging direction, links, and publishing instructions into one handoff.</td></tr><tr><td>VT-2560</td><td>Packaging Intelligence Lab</td><td>PUBLISH + GROW NETWORK</td><td>Combine titles, thumbnails, metadata, CTR history, and AI variants in one workspace.</td></tr><tr><td>VT-2561</td><td>Thumbnail Deployment Manager</td><td>PUBLISH + GROW NETWORK</td><td>Manage thumbnail versions, deployment status, and performance from the catalog.</td></tr><tr><td>VT-2562</td><td>Metadata Change Impact Tracker</td><td>PUBLISH + GROW NETWORK</td><td>Record packaging changes and compare subsequent performance against the prior state.</td></tr><tr><td>VT-2563</td><td>Playlist Route Architect</td><td>PUBLISH + GROW NETWORK</td><td>Recommend playlist membership and order from viewer transitions, topic similarity, and performance.</td></tr><tr><td>VT-2564</td><td>End-Screen Route Optimizer</td><td>PUBLISH + GROW NETWORK</td><td>Identify weak destination links and propose stronger next-video choices.</td></tr><tr><td>VT-2565</td><td>Session Leak Detector</td><td>PUBLISH + GROW NETWORK</td><td>Find dead-end videos, weak end screens, poor suggested-video connections, and broken playlist progression.</td></tr><tr><td>VT-2566</td><td>Short-to-Long Bridge Builder</td><td>PUBLISH + GROW NETWORK</td><td>Identify the best long-form destination for each Short and the best Shorts candidates from long-form videos.</td></tr><tr><td>VT-2567</td><td>Audience Request Miner</td><td>PUBLISH + GROW NETWORK</td><td>Cluster recurring comment requests, questions, complaints, and interests into actionable content opportunities.</td></tr><tr><td>VT-2568</td><td>Comment-to-Video Recommendation</td><td>PUBLISH + GROW NETWORK</td><td>Recommend the most contextually relevant creator video inside a generated reply.</td></tr><tr><td>VT-2569</td><td>Pre-Publication Command Center</td><td>PRE-PUBLICATION PRIMING</td><td>Turn an upcoming release into one coordinated priming campaign.</td></tr><tr><td>VT-2570</td><td>Topic Authority Analyzer</td><td>PRE-PUBLICATION PRIMING</td><td>Estimate how strongly the channel is currently associated with the upcoming video's subject.</td></tr></tbody></table></div>
+<h2>9. How the 40 Relate to Widgets vs Super Tools</h2>
+<p>“Widget / Tool Systems” does not mean every idea should become a dashboard card.</p>
+<p>Use the appropriate form:</p>
+<ul><li><strong>Dashboard widget</strong> - compact at-a-glance state/action.</li><li><strong>Toolbox/subtoolbox</strong> - focused workflow within Studio.</li><li><strong>Full super tool</strong> - multi-step workspace that creates artifacts/handoffs.</li><li><strong>Brain action/engine</strong> - background/ranked analysis surfaced through another UI.</li><li><strong>Process row</strong> - progress/checklist across a known workflow.</li><li><strong>Visual</strong> - data encoding rather than a tool workflow.</li></ul>
+<p>For example, Next Best Action may have a compact dashboard widget plus a deeper command-center tool; Creator Canvas OS should remain a full workflow, not be squeezed into a tiny card.</p>
+<h2>10. Signature-System Handoff Principle</h2>
+<p>Every promoted signature system should reuse:</p>
+<ul><li>canonical channel/video/project/asset IDs;</li><li>VT-SYNC selectors where analytics are needed;</li><li>universal action/output packets;</li><li>automatic project/video context passing;</li><li>Brain evidence/provenance rules;</li><li>dashboard certification and Studio/toolbox architecture as appropriate.</li></ul>
+<h2>11. Suggested Production Grouping</h2>
+<h3>Discover + Opportunity</h3>
+<p>VT-2531 through VT-2539: traffic pathways, audience clusters, content gaps, revival, series, search intent, market/discovery landscape, archive intelligence, content graph.</p>
+<h3>Decide + Channel Command</h3>
+<p>VT-2540 through VT-2547: next actions, timing, lifecycle, upload halo, format strategy, revenue opportunity, Premium value, first 72 hours.</p>
+<h3>Create + Produce</h3>
+<p>VT-2548 through VT-2559: concept, Creator Canvas, narrative, revision, evidence, scenes, assets, B-roll, continuity, captions, repurposing, production packet.</p>
+<h3>Publish + Grow the Network</h3>
+<p>VT-2560 through VT-2568: packaging, thumbnail deployment, metadata impact, playlists, end screens, session leaks, Short-to-Long bridges, request mining, comment-to-video recommendation.</p>
+<h3>Pre-Publication Priming (first two in original 40)</h3>
+<p>VT-2569 and VT-2570: campaign command and topic authority. Later VT-2571 through VT-2580 extend this family.</p>
+<h2>12. Dashboard / Signature System Promotion Matrix</h2>
+<p>For every signature system, record:</p>
+<ul><li>primary form (widget / tool / engine / visual / process);</li><li>optional compact widget form;</li><li>owning route/surface;</li><li>VT-SYNC datasets;</li><li>required API/auth;</li><li>project/video context;</li><li>outputs/handoffs;</li><li>persistence;</li><li>entitlement tier;</li><li>mobile suitability;</li><li>performance cost;</li><li>certification state.</li></ul>
+<h2>13. Widget HTML Prototype File Inventory</h2>
+<p>The GPT Library contains a much larger family of ViewTube widget HTML prototypes than the two files originally captured here. Keep duplicate/versioned files listed until their contents are compared; do not collapse them by filename alone.</p>
+<h3>13.1 Complete GPT Library Widget HTML Filename Ledger</h3>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Family / role</th><th>Library status</th></tr></thead><tbody><tr><td><code>viewtube-widget-modules.html</code></td><td>Creator toolkit widget collection</td><td>Confirmed HTML; 20 widget prototypes</td></tr><tr><td><code>viewtube-widget-batch2.html</code></td><td>Creator toolkit extension</td><td>Confirmed HTML; 6 widget prototypes</td></tr><tr><td><code>viewtube-20-new-channel-widgets.html</code></td><td>Channel widget collection</td><td>Confirmed HTML</td></tr><tr><td><code>viewtube-20-new-channel-widgets-mobile-fixed.html</code></td><td>Channel widget collection</td><td>Confirmed HTML; mobile-fixed derivative</td></tr><tr><td><code>viewtube-20-awesome-youtuber-widgets-v4.html</code></td><td>YouTuber widget collection</td><td>Confirmed HTML; v4</td></tr><tr><td><code>viewtube_creator_operations_20_widgets.html</code></td><td>Creator operations collection</td><td>Confirmed HTML; 20-widget family</td></tr><tr><td><code>viewtube_creator_operations_20_widgets(1).html</code></td><td>Creator operations collection</td><td>Confirmed HTML; duplicate/versioned Library copy</td></tr><tr><td><code>viewtube_creator_operations_20_widgets_mobile_fixed.html</code></td><td>Creator operations collection</td><td>Confirmed HTML; mobile-fixed derivative</td></tr><tr><td><code>ViewTube_API_Creator_Tools_20_New_Widgets.html</code></td><td>API creator-tool widget collection</td><td>Confirmed HTML; 20-widget family</td></tr><tr><td><code>ViewTube_API_Creator_Tools_20_New_Widgets_COLOR_SYSTEM_V2.html</code></td><td>API creator-tool widget collection</td><td>Confirmed HTML; color-system v2</td></tr><tr><td><code>ViewTube_API_Creator_Tools_20_New_Widgets_COLOR_SYSTEM_V2(1).html</code></td><td>API creator-tool widget collection</td><td>Confirmed HTML; duplicate/versioned Library copy</td></tr><tr><td><code>ViewTube_NextGen_20_Widget_System.html</code></td><td>Next-generation widget system</td><td>Confirmed HTML</td></tr><tr><td><code>ViewTube_20_Real_Dashboard_Widgets.html</code></td><td>Dashboard widget collection</td><td>Confirmed HTML; real/current-data direction</td></tr><tr><td><code>ViewTube_20_Best_Dashboard_Widgets.html</code></td><td>Dashboard widget collection</td><td>Confirmed HTML; selected/best concepts</td></tr><tr><td><code>viewtube_micro_visuals_widget.html</code></td><td>Micro visual widget system</td><td>Confirmed HTML</td></tr><tr><td><code>toolboxWidgetSystem</code></td><td>Toolbox widget-system prototype</td><td>Visible in supplied GPT Library screenshot; iOS view hides extension</td></tr><tr><td><code>toolboxWidgetSystem(1)</code></td><td>Toolbox widget-system prototype</td><td>Visible in supplied GPT Library screenshot; duplicate/versioned copy</td></tr><tr><td><code>toolboxWidgetSystem(2)</code></td><td>Toolbox widget-system prototype</td><td>Visible in supplied GPT Library screenshot; duplicate/versioned copy</td></tr></tbody></table></div>
+<p><strong>Inventory scope note:</strong> This ledger includes files whose filename or Library grouping identifies them as widget/widget-system collections. General component libraries, tool-specific HTML, tooltip labs, visual-only modules, promo capture files, and Task Index HTML stay in their own inventories unless explicitly promoted into the widget registry. The three <code>toolboxWidgetSystem</code> entries are preserved exactly as displayed in the supplied GPT Library screenshot because the iOS Library view hides their extensions.</p>
+<h3>13.2 Individually Enumerated Prototype Contents</h3>
+<div class="table-wrap"><table><thead><tr><th>HTML file</th><th>Widgets</th><th>Role</th><th>Contained widget prototypes</th></tr></thead><tbody><tr><td><code>viewtube-widget-modules.html</code></td><td>20</td><td>Primary creator-toolkit widget prototype collection</td><td>Trend Radar &amp; Idea Generator; Script Studio; Hook &amp; Retention Analyzer; Auto-Chapter &amp; Timestamp Generator; Thumbnail A/B Test Lab; Title Optimizer; SEO &amp; Tag Metadata Engine; Analytics Command Center; Audience Retention Heatmap; Shorts Repurposing Engine; Content Calendar &amp; Upload Scheduler; Comment Command Center; Community Post Composer; Live Stream Chat Companion; Subscriber Growth &amp; Loyalty Tracker; Sponsorship &amp; Brand Deal CRM; Revenue &amp; Monetization Dashboard; Competitor Benchmarking Radar; Playlist Architect; Channel Health &amp; Brand Consistency Audit.</td></tr><tr><td><code>viewtube-widget-batch2.html</code></td><td>6</td><td>Second dedicated widget batch / extension set</td><td>End Screen &amp; Card Optimizer; Cross-Platform Repurposing Hub; Viewer Quiz Generator; Series &amp; Franchise Tracker; Localization &amp; Subtitle Manager; Evergreen Content Refresh Alert.</td></tr></tbody></table></div>
+<h3>Inventory rule</h3>
+<p>When another widget HTML file is created or recovered, add it here immediately with its filename, widget count where known, contained concepts, provenance, and production disposition. Do not silently delete duplicates until their contents are compared and the canonical source is identified.</p>
+<p><strong>Current widget-HTML Library baseline: 15 confirmed <code>.html</code> filenames plus 3 <code>toolboxWidgetSystem</code> Library entries visible in the supplied screenshot (18 filename entries total).</strong> The two dedicated creator-toolkit files contain 26 individually enumerated prototypes; the other collections still require a file-by-file audit before computing a deduplicated widget-concept total.</p>
+
+<h2>14. Complete Widget Design Ranking</h2>
+<p>This audit ranks <strong>190 distinct widget designs</strong> found in the retrievable canonical widget prototype families. Version-only duplicates such as mobile-fixed or color-system copies are not double-counted as new concepts; the strongest available implementation is used for the concept. The three <code>toolboxWidgetSystem</code> Library entries remain in the filename inventory, but their contents are not retrievable from the Library index, so they are not assigned fabricated design scores.</p>
+
+<div class="ranking-callout"><strong>Ranking goal:</strong> identify which designs should become production ViewTube widgets first, which should donate components or interaction patterns, and which are useful but lower-priority. This is a prototype-quality audit, not a claim that backend/API wiring is complete.</div>
+
+<h3>14.1 Scoring rubric</h3>
+<div class="rubric-grid">
+  <div><b>10%</b><span>Component design</span></div><div><b>10%</b><span>Layout</span></div><div><b>10%</b><span>Features</span></div><div><b>10%</b><span>Functions</span></div><div><b>10%</b><span>Build quality</span></div><div><b>15%</b><span>Immediate integration</span></div><div><b>15%</b><span>YouTuber usefulness</span></div><div><b>5%</b><span>Originality</span></div><div><b>15%</b><span>ViewTube alignment</span></div>
+</div>
+<p><strong>Tier guide:</strong> S = 95–100; A+ = 92–94.9; A = 89–91.9; B+ = 86–88.9; B = below 86. Immediate integration, creator usefulness, and ViewTube alignment receive the highest weighting because this ranking is intended to guide production prioritization rather than reward novelty alone.</p>
+
+<h3>14.2 Prototype-family leaderboard</h3>
+<div class="table-wrap"><table class="family-rank"><thead><tr><th>#</th><th>Prototype family</th><th>Designs</th><th>Average</th><th>Avg integration</th><th>Highest-ranked design</th></tr></thead><tbody><tr><td>1</td><td><strong>NextGen 20 Widget System</strong></td><td>20</td><td><strong>95.8</strong></td><td>9.0</td><td>Packaging Lab Pro</td></tr><tr><td>2</td><td><strong>Creator Operations 20</strong></td><td>20</td><td><strong>93.9</strong></td><td>8.8</td><td>Retention &amp; Audience-Journey Explorer</td></tr><tr><td>3</td><td><strong>API Creator Tools 20</strong></td><td>20</td><td><strong>92.0</strong></td><td>8.4</td><td>Suggested Traffic Network Architect</td></tr><tr><td>4</td><td><strong>20 Best Dashboard Widgets</strong></td><td>20</td><td><strong>92.0</strong></td><td>8.9</td><td>Retention Braids</td></tr><tr><td>5</td><td><strong>20 Real Dashboard Widgets</strong></td><td>20</td><td><strong>91.5</strong></td><td>9.4</td><td>ViewTube Brain Command</td></tr><tr><td>6</td><td><strong>Widget Batch 2</strong></td><td>6</td><td><strong>90.8</strong></td><td>8.7</td><td>End Screen &amp; Card Optimizer</td></tr><tr><td>7</td><td><strong>20 Awesome YouTuber Widgets v4</strong></td><td>20</td><td><strong>90.6</strong></td><td>8.7</td><td>Hook Surgery</td></tr><tr><td>8</td><td><strong>Creator Toolkit 20</strong></td><td>20</td><td><strong>89.9</strong></td><td>8.5</td><td>Comment Command Center</td></tr><tr><td>9</td><td><strong>20 New Channel Widgets — Mobile Fixed</strong></td><td>20</td><td><strong>87.5</strong></td><td>8.9</td><td>Traffic Anomaly Radar</td></tr><tr><td>10</td><td><strong>Micro Visuals Widget</strong></td><td>24</td><td><strong>85.2</strong></td><td>9.2</td><td>Channel progress · bars + cumulative line</td></tr></tbody></table></div>
+
+<div class="family-readout">
+  <p><strong>Best overall system:</strong> NextGen 20 Widget System. It has the strongest combination of dense component design, actual workflow behavior, modern ViewTube composition, and production-ready interaction patterns.</p>
+  <p><strong>Best immediately integrable dashboard set:</strong> 20 Real Dashboard Widgets. Its simpler controls, queues, filters, status panels, and launch surfaces map most directly to existing application infrastructure.</p>
+  <p><strong>Best analytics/visual design source:</strong> 20 Best Dashboard Widgets. Use these as the primary visual-language donors for dense analytics modules.</p>
+  <p><strong>Best originality/data-tool source:</strong> API Creator Tools 20. Many are high-value differentiators, but several require specific VT-SYNC/API datasets before they can be genuinely live.</p>
+  <p><strong>Best compact component donor:</strong> Micro Visuals Widget. These rank lower as complete tools because they are intentionally small, but many are excellent embedded chart primitives.</p>
+</div>
+
+<h3>14.3 Top 25 designs to preserve and productionize</h3>
+<div class="rank-grid"><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#1</span><span class="tier tier-S">S</span><span class="overall">98.6</span></div>
+      <h4>Packaging Lab Pro</h4>
+      <div class="rank-family">NextGen 20 Widget System</div>
+      <div class="scorechips"><span><b>DES</b> 10.0</span><span><b>LAY</b> 9.9</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.9</span><span><b>BLD</b> 9.8</span><span><b>INT</b> 9.4</span><span><b>USE</b> 10.0</span><span><b>ORG</b> 9.7</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Component design. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#2</span><span class="tier tier-S">S</span><span class="overall">98.0</span></div>
+      <h4>Analytics Diagnostic Lab II</h4>
+      <div class="rank-family">NextGen 20 Widget System</div>
+      <div class="scorechips"><span><b>DES</b> 10.0</span><span><b>LAY</b> 9.9</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.8</span><span><b>BLD</b> 9.7</span><span><b>INT</b> 9.3</span><span><b>USE</b> 9.9</span><span><b>ORG</b> 9.6</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Component design. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#3</span><span class="tier tier-S">S</span><span class="overall">98.0</span></div>
+      <h4>Daily Creator Command Center II</h4>
+      <div class="rank-family">NextGen 20 Widget System</div>
+      <div class="scorechips"><span><b>DES</b> 10.0</span><span><b>LAY</b> 9.9</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.8</span><span><b>BLD</b> 9.7</span><span><b>INT</b> 9.3</span><span><b>USE</b> 9.9</span><span><b>ORG</b> 9.6</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Component design. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#4</span><span class="tier tier-S">S</span><span class="overall">97.9</span></div>
+      <h4>Retention Fix Queue</h4>
+      <div class="rank-family">NextGen 20 Widget System</div>
+      <div class="scorechips"><span><b>DES</b> 9.9</span><span><b>LAY</b> 9.8</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.7</span><span><b>BLD</b> 9.7</span><span><b>INT</b> 9.3</span><span><b>USE</b> 10.0</span><span><b>ORG</b> 9.7</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Features. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#5</span><span class="tier tier-S">S</span><span class="overall">97.4</span></div>
+      <h4>Audience Loop Inbox II</h4>
+      <div class="rank-family">NextGen 20 Widget System</div>
+      <div class="scorechips"><span><b>DES</b> 9.8</span><span><b>LAY</b> 9.8</span><span><b>FEA</b> 9.9</span><span><b>FUN</b> 9.6</span><span><b>BLD</b> 9.7</span><span><b>INT</b> 9.3</span><span><b>USE</b> 9.9</span><span><b>ORG</b> 9.6</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: ViewTube alignment. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#6</span><span class="tier tier-S">S</span><span class="overall">97.3</span></div>
+      <h4>Publisher &amp; Quality Gate II</h4>
+      <div class="rank-family">NextGen 20 Widget System</div>
+      <div class="scorechips"><span><b>DES</b> 9.8</span><span><b>LAY</b> 9.7</span><span><b>FEA</b> 9.9</span><span><b>FUN</b> 9.6</span><span><b>BLD</b> 9.7</span><span><b>INT</b> 9.3</span><span><b>USE</b> 9.9</span><span><b>ORG</b> 9.6</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: ViewTube alignment. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#7</span><span class="tier tier-S">S</span><span class="overall">97.2</span></div>
+      <h4>Script Architect Pro</h4>
+      <div class="rank-family">NextGen 20 Widget System</div>
+      <div class="scorechips"><span><b>DES</b> 9.9</span><span><b>LAY</b> 9.8</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.7</span><span><b>BLD</b> 9.6</span><span><b>INT</b> 9.2</span><span><b>USE</b> 9.8</span><span><b>ORG</b> 9.5</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Features. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#8</span><span class="tier tier-S">S</span><span class="overall">97.2</span></div>
+      <h4>Traffic Strategy Router</h4>
+      <div class="rank-family">NextGen 20 Widget System</div>
+      <div class="scorechips"><span><b>DES</b> 9.9</span><span><b>LAY</b> 9.8</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.7</span><span><b>BLD</b> 9.5</span><span><b>INT</b> 9.2</span><span><b>USE</b> 9.8</span><span><b>ORG</b> 9.5</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Features. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#9</span><span class="tier tier-S">S</span><span class="overall">97.0</span></div>
+      <h4>Retention &amp; Audience-Journey Explorer</h4>
+      <div class="rank-family">Creator Operations 20</div>
+      <div class="scorechips"><span><b>DES</b> 9.8</span><span><b>LAY</b> 9.6</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.9</span><span><b>BLD</b> 9.5</span><span><b>INT</b> 9.1</span><span><b>USE</b> 9.9</span><span><b>ORG</b> 9.3</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Features. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Productionize next</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#10</span><span class="tier tier-S">S</span><span class="overall">97.0</span></div>
+      <h4>Title &amp; Thumbnail Packaging Studio</h4>
+      <div class="rank-family">Creator Operations 20</div>
+      <div class="scorechips"><span><b>DES</b> 9.8</span><span><b>LAY</b> 9.6</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.9</span><span><b>BLD</b> 9.5</span><span><b>INT</b> 9.1</span><span><b>USE</b> 9.9</span><span><b>ORG</b> 9.3</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Features. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Productionize next</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#11</span><span class="tier tier-S">S</span><span class="overall">96.8</span></div>
+      <h4>Opportunity Decision Desk</h4>
+      <div class="rank-family">NextGen 20 Widget System</div>
+      <div class="scorechips"><span><b>DES</b> 9.8</span><span><b>LAY</b> 9.7</span><span><b>FEA</b> 9.8</span><span><b>FUN</b> 9.5</span><span><b>BLD</b> 9.5</span><span><b>INT</b> 9.2</span><span><b>USE</b> 9.8</span><span><b>ORG</b> 9.9</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: ViewTube alignment. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#12</span><span class="tier tier-S">S</span><span class="overall">96.6</span></div>
+      <h4>Editing Assistant &amp; Clip Finder</h4>
+      <div class="rank-family">NextGen 20 Widget System</div>
+      <div class="scorechips"><span><b>DES</b> 9.8</span><span><b>LAY</b> 9.7</span><span><b>FEA</b> 9.9</span><span><b>FUN</b> 9.6</span><span><b>BLD</b> 9.6</span><span><b>INT</b> 9.2</span><span><b>USE</b> 9.6</span><span><b>ORG</b> 9.6</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: ViewTube alignment. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#13</span><span class="tier tier-S">S</span><span class="overall">96.6</span></div>
+      <h4>Production Board &amp; Shot System</h4>
+      <div class="rank-family">NextGen 20 Widget System</div>
+      <div class="scorechips"><span><b>DES</b> 9.9</span><span><b>LAY</b> 9.8</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.7</span><span><b>BLD</b> 9.5</span><span><b>INT</b> 9.1</span><span><b>USE</b> 9.5</span><span><b>ORG</b> 9.5</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Features. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Productionize next</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#14</span><span class="tier tier-S">S</span><span class="overall">96.4</span></div>
+      <h4>Content Opportunity Radar</h4>
+      <div class="rank-family">Creator Operations 20</div>
+      <div class="scorechips"><span><b>DES</b> 9.7</span><span><b>LAY</b> 9.5</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.8</span><span><b>BLD</b> 9.4</span><span><b>INT</b> 9.0</span><span><b>USE</b> 9.8</span><span><b>ORG</b> 9.6</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Features. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Productionize next</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#15</span><span class="tier tier-S">S</span><span class="overall">96.3</span></div>
+      <h4>Analytics Diagnostic Lab</h4>
+      <div class="rank-family">Creator Operations 20</div>
+      <div class="scorechips"><span><b>DES</b> 9.7</span><span><b>LAY</b> 9.6</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.8</span><span><b>BLD</b> 9.4</span><span><b>INT</b> 9.0</span><span><b>USE</b> 9.8</span><span><b>ORG</b> 9.2</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Features. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Productionize next</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#16</span><span class="tier tier-S">S</span><span class="overall">96.3</span></div>
+      <h4>Comment &amp; Community Inbox</h4>
+      <div class="rank-family">Creator Operations 20</div>
+      <div class="scorechips"><span><b>DES</b> 9.6</span><span><b>LAY</b> 9.5</span><span><b>FEA</b> 9.9</span><span><b>FUN</b> 9.7</span><span><b>BLD</b> 9.5</span><span><b>INT</b> 9.1</span><span><b>USE</b> 9.9</span><span><b>ORG</b> 9.3</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: ViewTube alignment. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Productionize next</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#17</span><span class="tier tier-S">S</span><span class="overall">96.3</span></div>
+      <h4>Daily Creator Command Center</h4>
+      <div class="rank-family">Creator Operations 20</div>
+      <div class="scorechips"><span><b>DES</b> 9.7</span><span><b>LAY</b> 9.6</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.8</span><span><b>BLD</b> 9.4</span><span><b>INT</b> 9.0</span><span><b>USE</b> 9.8</span><span><b>ORG</b> 9.2</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Features. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Productionize next</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#18</span><span class="tier tier-S">S</span><span class="overall">96.1</span></div>
+      <h4>ViewTube Brain Command</h4>
+      <div class="rank-family">20 Real Dashboard Widgets</div>
+      <div class="scorechips"><span><b>DES</b> 9.2</span><span><b>LAY</b> 9.4</span><span><b>FEA</b> 9.2</span><span><b>FUN</b> 9.4</span><span><b>BLD</b> 9.6</span><span><b>INT</b> 9.9</span><span><b>USE</b> 10.0</span><span><b>ORG</b> 8.8</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: YouTuber usefulness. Main constraint: originality relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#19</span><span class="tier tier-S">S</span><span class="overall">95.8</span></div>
+      <h4>Suggested Traffic Network Architect</h4>
+      <div class="rank-family">API Creator Tools 20</div>
+      <div class="scorechips"><span><b>DES</b> 9.5</span><span><b>LAY</b> 9.4</span><span><b>FEA</b> 10.0</span><span><b>FUN</b> 9.5</span><span><b>BLD</b> 9.3</span><span><b>INT</b> 8.8</span><span><b>USE</b> 9.9</span><span><b>ORG</b> 10.0</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Features. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Productionize next</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#20</span><span class="tier tier-S">S</span><span class="overall">95.5</span></div>
+      <h4>Back Catalog Revival Engine</h4>
+      <div class="rank-family">API Creator Tools 20</div>
+      <div class="scorechips"><span><b>DES</b> 9.4</span><span><b>LAY</b> 9.3</span><span><b>FEA</b> 9.8</span><span><b>FUN</b> 9.4</span><span><b>BLD</b> 9.4</span><span><b>INT</b> 8.8</span><span><b>USE</b> 10.0</span><span><b>ORG</b> 9.9</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: YouTuber usefulness. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Productionize next</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#21</span><span class="tier tier-S">S</span><span class="overall">95.4</span></div>
+      <h4>Retention Braids</h4>
+      <div class="rank-family">20 Best Dashboard Widgets</div>
+      <div class="scorechips"><span><b>DES</b> 10.0</span><span><b>LAY</b> 9.7</span><span><b>FEA</b> 9.4</span><span><b>FUN</b> 8.5</span><span><b>BLD</b> 9.3</span><span><b>INT</b> 9.3</span><span><b>USE</b> 9.7</span><span><b>ORG</b> 10.0</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Component design. Main constraint: functions relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#22</span><span class="tier tier-S">S</span><span class="overall">95.3</span></div>
+      <h4>First 72 Hours Launch Trajectory</h4>
+      <div class="rank-family">20 Best Dashboard Widgets</div>
+      <div class="scorechips"><span><b>DES</b> 10.0</span><span><b>LAY</b> 9.7</span><span><b>FEA</b> 9.4</span><span><b>FUN</b> 8.5</span><span><b>BLD</b> 9.3</span><span><b>INT</b> 9.3</span><span><b>USE</b> 9.7</span><span><b>ORG</b> 9.9</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Component design. Main constraint: functions relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#23</span><span class="tier tier-S">S</span><span class="overall">95.3</span></div>
+      <h4>Search Intent Mining Studio</h4>
+      <div class="rank-family">API Creator Tools 20</div>
+      <div class="scorechips"><span><b>DES</b> 9.5</span><span><b>LAY</b> 9.3</span><span><b>FEA</b> 9.9</span><span><b>FUN</b> 9.5</span><span><b>BLD</b> 9.3</span><span><b>INT</b> 8.7</span><span><b>USE</b> 9.9</span><span><b>ORG</b> 9.8</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: ViewTube alignment. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Merge / preserve</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#24</span><span class="tier tier-Ap">A+</span><span class="overall">94.8</span></div>
+      <h4>End Screen Routing Lab</h4>
+      <div class="rank-family">API Creator Tools 20</div>
+      <div class="scorechips"><span><b>DES</b> 9.4</span><span><b>LAY</b> 9.3</span><span><b>FEA</b> 9.9</span><span><b>FUN</b> 9.4</span><span><b>BLD</b> 9.2</span><span><b>INT</b> 8.7</span><span><b>USE</b> 9.8</span><span><b>ORG</b> 9.8</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: ViewTube alignment. Main constraint: immediate integration relative to the rest of the design.</p>
+      <div class="disposition">Merge / preserve</div>
+    </article><article class="rank-card">
+      <div class="rank-card-top"><span class="rank-no">#25</span><span class="tier tier-Ap">A+</span><span class="overall">94.8</span></div>
+      <h4>Traffic Source Evolution</h4>
+      <div class="rank-family">20 Best Dashboard Widgets</div>
+      <div class="scorechips"><span><b>DES</b> 9.9</span><span><b>LAY</b> 9.6</span><span><b>FEA</b> 9.2</span><span><b>FUN</b> 8.3</span><span><b>BLD</b> 9.3</span><span><b>INT</b> 9.3</span><span><b>USE</b> 9.7</span><span><b>ORG</b> 10.0</span><span><b>VT</b> 10.0</span></div>
+      <p>Strongest: Originality. Main constraint: functions relative to the rest of the design.</p>
+      <div class="disposition">Integrate now</div>
+    </article></div>
+
+<h3>14.4 Complete ranking — all 190 designs</h3>
+<div class="ranking-controls">
+  <input id="rankSearch" type="search" placeholder="Search widget name or family…" aria-label="Search ranked widgets">
+  <select id="rankFamily"><option value="">All families</option><option value="NextGen 20 Widget System">NextGen 20 Widget System</option><option value="Creator Operations 20">Creator Operations 20</option><option value="API Creator Tools 20">API Creator Tools 20</option><option value="20 Best Dashboard Widgets">20 Best Dashboard Widgets</option><option value="20 Real Dashboard Widgets">20 Real Dashboard Widgets</option><option value="Widget Batch 2">Widget Batch 2</option><option value="20 Awesome YouTuber Widgets v4">20 Awesome YouTuber Widgets v4</option><option value="Creator Toolkit 20">Creator Toolkit 20</option><option value="20 New Channel Widgets — Mobile Fixed">20 New Channel Widgets — Mobile Fixed</option><option value="Micro Visuals Widget">Micro Visuals Widget</option></select>
+  <select id="rankDisposition"><option value="">All recommendations</option><option>Integrate now</option><option>Productionize next</option><option>Merge / preserve</option><option>Component donor</option><option>Backlog / donor</option></select>
+  <button id="rankReset" type="button">Reset</button>
+  <span id="rankCount">190 designs</span>
+</div>
+<div class="table-wrap ranking-table-wrap"><table id="rankingTable" class="ranking-table"><thead><tr><th>Rank</th><th>Widget design / source</th><th>Tier</th><th>Overall</th><th title="Component design">DES</th><th title="Layout">LAY</th><th title="Features">FEA</th><th title="Functions">FUN</th><th title="Build quality">BLD</th><th title="Immediate integration">INT</th><th title="YouTuber usefulness">USE</th><th title="Originality">ORG</th><th title="ViewTube alignment">VT</th><th>Recommendation</th></tr></thead><tbody><tr data-rank="1" data-family="NextGen 20 Widget System" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#1</strong></td>
+      <td><strong>Packaging Lab Pro</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>98.6</strong></td>
+      <td class="num">10.0</td><td class="num">9.9</td><td class="num">10.0</td><td class="num">9.9</td><td class="num">9.8</td><td class="num">9.4</td><td class="num">10.0</td><td class="num">9.7</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="2" data-family="NextGen 20 Widget System" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#2</strong></td>
+      <td><strong>Analytics Diagnostic Lab II</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>98.0</strong></td>
+      <td class="num">10.0</td><td class="num">9.9</td><td class="num">10.0</td><td class="num">9.8</td><td class="num">9.7</td><td class="num">9.3</td><td class="num">9.9</td><td class="num">9.6</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="3" data-family="NextGen 20 Widget System" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#3</strong></td>
+      <td><strong>Daily Creator Command Center II</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>98.0</strong></td>
+      <td class="num">10.0</td><td class="num">9.9</td><td class="num">10.0</td><td class="num">9.8</td><td class="num">9.7</td><td class="num">9.3</td><td class="num">9.9</td><td class="num">9.6</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="4" data-family="NextGen 20 Widget System" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#4</strong></td>
+      <td><strong>Retention Fix Queue</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>97.9</strong></td>
+      <td class="num">9.9</td><td class="num">9.8</td><td class="num">10.0</td><td class="num">9.7</td><td class="num">9.7</td><td class="num">9.3</td><td class="num">10.0</td><td class="num">9.7</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="5" data-family="NextGen 20 Widget System" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#5</strong></td>
+      <td><strong>Audience Loop Inbox II</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>97.4</strong></td>
+      <td class="num">9.8</td><td class="num">9.8</td><td class="num">9.9</td><td class="num">9.6</td><td class="num">9.7</td><td class="num">9.3</td><td class="num">9.9</td><td class="num">9.6</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="6" data-family="NextGen 20 Widget System" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#6</strong></td>
+      <td><strong>Publisher &amp; Quality Gate II</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>97.3</strong></td>
+      <td class="num">9.8</td><td class="num">9.7</td><td class="num">9.9</td><td class="num">9.6</td><td class="num">9.7</td><td class="num">9.3</td><td class="num">9.9</td><td class="num">9.6</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="7" data-family="NextGen 20 Widget System" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#7</strong></td>
+      <td><strong>Script Architect Pro</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>97.2</strong></td>
+      <td class="num">9.9</td><td class="num">9.8</td><td class="num">10.0</td><td class="num">9.7</td><td class="num">9.6</td><td class="num">9.2</td><td class="num">9.8</td><td class="num">9.5</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="8" data-family="NextGen 20 Widget System" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#8</strong></td>
+      <td><strong>Traffic Strategy Router</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>97.2</strong></td>
+      <td class="num">9.9</td><td class="num">9.8</td><td class="num">10.0</td><td class="num">9.7</td><td class="num">9.5</td><td class="num">9.2</td><td class="num">9.8</td><td class="num">9.5</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="9" data-family="Creator Operations 20" data-tier="S" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#9</strong></td>
+      <td><strong>Retention &amp; Audience-Journey Explorer</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>97.0</strong></td>
+      <td class="num">9.8</td><td class="num">9.6</td><td class="num">10.0</td><td class="num">9.9</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">9.9</td><td class="num">9.3</td><td class="num">10.0</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="10" data-family="Creator Operations 20" data-tier="S" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#10</strong></td>
+      <td><strong>Title &amp; Thumbnail Packaging Studio</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>97.0</strong></td>
+      <td class="num">9.8</td><td class="num">9.6</td><td class="num">10.0</td><td class="num">9.9</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">9.9</td><td class="num">9.3</td><td class="num">10.0</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="11" data-family="NextGen 20 Widget System" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#11</strong></td>
+      <td><strong>Opportunity Decision Desk</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>96.8</strong></td>
+      <td class="num">9.8</td><td class="num">9.7</td><td class="num">9.8</td><td class="num">9.5</td><td class="num">9.5</td><td class="num">9.2</td><td class="num">9.8</td><td class="num">9.9</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="12" data-family="NextGen 20 Widget System" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#12</strong></td>
+      <td><strong>Editing Assistant &amp; Clip Finder</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>96.6</strong></td>
+      <td class="num">9.8</td><td class="num">9.7</td><td class="num">9.9</td><td class="num">9.6</td><td class="num">9.6</td><td class="num">9.2</td><td class="num">9.6</td><td class="num">9.6</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="13" data-family="NextGen 20 Widget System" data-tier="S" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#13</strong></td>
+      <td><strong>Production Board &amp; Shot System</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>96.6</strong></td>
+      <td class="num">9.9</td><td class="num">9.8</td><td class="num">10.0</td><td class="num">9.7</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">9.5</td><td class="num">9.5</td><td class="num">10.0</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="14" data-family="Creator Operations 20" data-tier="S" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#14</strong></td>
+      <td><strong>Content Opportunity Radar</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>96.4</strong></td>
+      <td class="num">9.7</td><td class="num">9.5</td><td class="num">10.0</td><td class="num">9.8</td><td class="num">9.4</td><td class="num">9.0</td><td class="num">9.8</td><td class="num">9.6</td><td class="num">10.0</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="15" data-family="Creator Operations 20" data-tier="S" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#15</strong></td>
+      <td><strong>Analytics Diagnostic Lab</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>96.3</strong></td>
+      <td class="num">9.7</td><td class="num">9.6</td><td class="num">10.0</td><td class="num">9.8</td><td class="num">9.4</td><td class="num">9.0</td><td class="num">9.8</td><td class="num">9.2</td><td class="num">10.0</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="16" data-family="Creator Operations 20" data-tier="S" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#16</strong></td>
+      <td><strong>Comment &amp; Community Inbox</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>96.3</strong></td>
+      <td class="num">9.6</td><td class="num">9.5</td><td class="num">9.9</td><td class="num">9.7</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">9.9</td><td class="num">9.3</td><td class="num">10.0</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="17" data-family="Creator Operations 20" data-tier="S" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#17</strong></td>
+      <td><strong>Daily Creator Command Center</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>96.3</strong></td>
+      <td class="num">9.7</td><td class="num">9.6</td><td class="num">10.0</td><td class="num">9.8</td><td class="num">9.4</td><td class="num">9.0</td><td class="num">9.8</td><td class="num">9.2</td><td class="num">10.0</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="18" data-family="20 Real Dashboard Widgets" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#18</strong></td>
+      <td><strong>ViewTube Brain Command</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>96.1</strong></td>
+      <td class="num">9.2</td><td class="num">9.4</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.6</td><td class="num">9.9</td><td class="num">10.0</td><td class="num">8.8</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="19" data-family="API Creator Tools 20" data-tier="S" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#19</strong></td>
+      <td><strong>Suggested Traffic Network Architect</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>95.8</strong></td>
+      <td class="num">9.5</td><td class="num">9.4</td><td class="num">10.0</td><td class="num">9.5</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">9.9</td><td class="num">10.0</td><td class="num">10.0</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="20" data-family="API Creator Tools 20" data-tier="S" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#20</strong></td>
+      <td><strong>Back Catalog Revival Engine</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>95.5</strong></td>
+      <td class="num">9.4</td><td class="num">9.3</td><td class="num">9.8</td><td class="num">9.4</td><td class="num">9.4</td><td class="num">8.8</td><td class="num">10.0</td><td class="num">9.9</td><td class="num">10.0</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="21" data-family="20 Best Dashboard Widgets" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#21</strong></td>
+      <td><strong>Retention Braids</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>95.4</strong></td>
+      <td class="num">10.0</td><td class="num">9.7</td><td class="num">9.4</td><td class="num">8.5</td><td class="num">9.3</td><td class="num">9.3</td><td class="num">9.7</td><td class="num">10.0</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="22" data-family="20 Best Dashboard Widgets" data-tier="S" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#22</strong></td>
+      <td><strong>First 72 Hours Launch Trajectory</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>95.3</strong></td>
+      <td class="num">10.0</td><td class="num">9.7</td><td class="num">9.4</td><td class="num">8.5</td><td class="num">9.3</td><td class="num">9.3</td><td class="num">9.7</td><td class="num">9.9</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="23" data-family="API Creator Tools 20" data-tier="S" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#23</strong></td>
+      <td><strong>Search Intent Mining Studio</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-S">S</span></td>
+      <td class="overallcell"><strong>95.3</strong></td>
+      <td class="num">9.5</td><td class="num">9.3</td><td class="num">9.9</td><td class="num">9.5</td><td class="num">9.3</td><td class="num">8.7</td><td class="num">9.9</td><td class="num">9.8</td><td class="num">10.0</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="24" data-family="API Creator Tools 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#24</strong></td>
+      <td><strong>End Screen Routing Lab</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>94.8</strong></td>
+      <td class="num">9.4</td><td class="num">9.3</td><td class="num">9.9</td><td class="num">9.4</td><td class="num">9.2</td><td class="num">8.7</td><td class="num">9.8</td><td class="num">9.8</td><td class="num">10.0</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="25" data-family="20 Best Dashboard Widgets" data-tier="A+" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#25</strong></td>
+      <td><strong>Traffic Source Evolution</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>94.8</strong></td>
+      <td class="num">9.9</td><td class="num">9.6</td><td class="num">9.2</td><td class="num">8.3</td><td class="num">9.3</td><td class="num">9.3</td><td class="num">9.7</td><td class="num">10.0</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="26" data-family="20 Real Dashboard Widgets" data-tier="A+" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#26</strong></td>
+      <td><strong>Data Health Monitor</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>94.6</strong></td>
+      <td class="num">9.1</td><td class="num">9.2</td><td class="num">9.0</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.7</td><td class="num">9.9</td><td class="num">8.6</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="27" data-family="20 Real Dashboard Widgets" data-tier="A+" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#27</strong></td>
+      <td><strong>Publish Readiness</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>94.6</strong></td>
+      <td class="num">9.1</td><td class="num">9.2</td><td class="num">9.0</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.7</td><td class="num">9.9</td><td class="num">8.6</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="28" data-family="NextGen 20 Widget System" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#28</strong></td>
+      <td><strong>Audience Segment CRM II</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>94.3</strong></td>
+      <td class="num">9.6</td><td class="num">9.4</td><td class="num">9.7</td><td class="num">9.4</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">9.5</td><td class="num">9.2</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="29" data-family="20 Best Dashboard Widgets" data-tier="A+" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#29</strong></td>
+      <td><strong>Channel Progress</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>94.2</strong></td>
+      <td class="num">9.8</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.2</td><td class="num">9.3</td><td class="num">9.3</td><td class="num">9.6</td><td class="num">9.8</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="30" data-family="NextGen 20 Widget System" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#30</strong></td>
+      <td><strong>Idea Portfolio Workbench</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>94.2</strong></td>
+      <td class="num">9.6</td><td class="num">9.4</td><td class="num">9.7</td><td class="num">9.4</td><td class="num">9.2</td><td class="num">8.8</td><td class="num">9.5</td><td class="num">9.5</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="31" data-family="20 Best Dashboard Widgets" data-tier="A+" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#31</strong></td>
+      <td><strong>Playback Origins Flow</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>94.2</strong></td>
+      <td class="num">10.0</td><td class="num">9.6</td><td class="num">9.3</td><td class="num">8.4</td><td class="num">9.2</td><td class="num">9.2</td><td class="num">9.3</td><td class="num">10.0</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="32" data-family="API Creator Tools 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#32</strong></td>
+      <td><strong>Release Window &amp; Collision Planner</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>94.1</strong></td>
+      <td class="num">9.4</td><td class="num">9.3</td><td class="num">9.8</td><td class="num">9.4</td><td class="num">9.2</td><td class="num">8.6</td><td class="num">9.5</td><td class="num">9.7</td><td class="num">10.0</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="33" data-family="API Creator Tools 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#33</strong></td>
+      <td><strong>Subscriber Conversion Cohort Inspector</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>94.1</strong></td>
+      <td class="num">9.2</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.2</td><td class="num">9.2</td><td class="num">8.7</td><td class="num">9.8</td><td class="num">9.8</td><td class="num">10.0</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="34" data-family="20 Real Dashboard Widgets" data-tier="A+" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#34</strong></td>
+      <td><strong>Sync Controller</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>94.1</strong></td>
+      <td class="num">9.0</td><td class="num">9.2</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">9.3</td><td class="num">9.7</td><td class="num">9.8</td><td class="num">8.5</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="35" data-family="NextGen 20 Widget System" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#35</strong></td>
+      <td><strong>Community Post Studio II</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>94.0</strong></td>
+      <td class="num">9.6</td><td class="num">9.4</td><td class="num">9.7</td><td class="num">9.4</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">9.3</td><td class="num">9.2</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="36" data-family="NextGen 20 Widget System" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#36</strong></td>
+      <td><strong>Adaptive Production Planner</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.8</strong></td>
+      <td class="num">9.6</td><td class="num">9.4</td><td class="num">9.7</td><td class="num">9.4</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">9.2</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="37" data-family="20 Awesome YouTuber Widgets v4" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#37</strong></td>
+      <td><strong>Hook Surgery</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.8</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">9.4</td><td class="num">9.0</td><td class="num">9.2</td><td class="num">9.1</td><td class="num">10.0</td><td class="num">10.0</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="38" data-family="20 Real Dashboard Widgets" data-tier="A+" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#38</strong></td>
+      <td><strong>Packaging Experiment</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.8</strong></td>
+      <td class="num">9.0</td><td class="num">9.1</td><td class="num">8.9</td><td class="num">9.1</td><td class="num">9.3</td><td class="num">9.6</td><td class="num">9.8</td><td class="num">8.5</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="39" data-family="API Creator Tools 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#39</strong></td>
+      <td><strong>Playlist Journey Optimizer</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.8</strong></td>
+      <td class="num">9.2</td><td class="num">9.1</td><td class="num">9.6</td><td class="num">9.2</td><td class="num">9.2</td><td class="num">8.6</td><td class="num">9.8</td><td class="num">9.7</td><td class="num">10.0</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="40" data-family="NextGen 20 Widget System" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#40</strong></td>
+      <td><strong>Revenue Scenario Builder II</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.8</strong></td>
+      <td class="num">9.6</td><td class="num">9.4</td><td class="num">9.7</td><td class="num">9.4</td><td class="num">9.3</td><td class="num">8.6</td><td class="num">9.5</td><td class="num">9.2</td><td class="num">9.8</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="41" data-family="20 Best Dashboard Widgets" data-tier="A+" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#41</strong></td>
+      <td><strong>Algorithm Trigger Scatter</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.6</strong></td>
+      <td class="num">9.8</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.2</td><td class="num">9.2</td><td class="num">9.2</td><td class="num">9.3</td><td class="num">10.0</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="42" data-family="20 Best Dashboard Widgets" data-tier="A+" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#42</strong></td>
+      <td><strong>Channel Barcode Fingerprint</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.6</strong></td>
+      <td class="num">9.8</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.2</td><td class="num">9.2</td><td class="num">9.2</td><td class="num">9.3</td><td class="num">10.0</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="43" data-family="Widget Batch 2" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#43</strong></td>
+      <td><strong>End Screen &amp; Card Optimizer</strong><small>Widget Batch 2</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.6</strong></td>
+      <td class="num">9.2</td><td class="num">9.1</td><td class="num">9.4</td><td class="num">9.2</td><td class="num">9.2</td><td class="num">9.0</td><td class="num">9.7</td><td class="num">9.2</td><td class="num">9.9</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="44" data-family="NextGen 20 Widget System" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#44</strong></td>
+      <td><strong>Sponsorship Pipeline II</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.6</strong></td>
+      <td class="num">9.6</td><td class="num">9.4</td><td class="num">9.7</td><td class="num">9.4</td><td class="num">9.3</td><td class="num">8.6</td><td class="num">9.3</td><td class="num">9.2</td><td class="num">9.8</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="45" data-family="NextGen 20 Widget System" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#45</strong></td>
+      <td><strong>Vault Console II</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.6</strong></td>
+      <td class="num">9.4</td><td class="num">9.3</td><td class="num">9.5</td><td class="num">9.2</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">9.5</td><td class="num">9.2</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="46" data-family="NextGen 20 Widget System" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#46</strong></td>
+      <td><strong>Hook Sequencer</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.4</strong></td>
+      <td class="num">9.4</td><td class="num">9.3</td><td class="num">9.5</td><td class="num">9.2</td><td class="num">9.2</td><td class="num">8.8</td><td class="num">9.5</td><td class="num">9.2</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="47" data-family="NextGen 20 Widget System" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#47</strong></td>
+      <td><strong>Live Stream Control Center II</strong><small>NextGen 20 Widget System</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.4</strong></td>
+      <td class="num">9.6</td><td class="num">9.4</td><td class="num">9.7</td><td class="num">9.4</td><td class="num">9.3</td><td class="num">8.6</td><td class="num">9.2</td><td class="num">9.2</td><td class="num">9.8</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="48" data-family="20 Awesome YouTuber Widgets v4" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#48</strong></td>
+      <td><strong>Sequel Predictor</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.4</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">9.4</td><td class="num">9.0</td><td class="num">9.2</td><td class="num">9.1</td><td class="num">9.7</td><td class="num">10.0</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="49" data-family="Creator Toolkit 20" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#49</strong></td>
+      <td><strong>Comment Command Center</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.3</strong></td>
+      <td class="num">9.2</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.3</td><td class="num">9.2</td><td class="num">8.8</td><td class="num">9.6</td><td class="num">8.8</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="50" data-family="Creator Operations 20" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#50</strong></td>
+      <td><strong>Content Calendar &amp; Project Planner</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.3</strong></td>
+      <td class="num">9.4</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.5</td><td class="num">9.2</td><td class="num">8.8</td><td class="num">9.5</td><td class="num">8.6</td><td class="num">9.7</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="51" data-family="20 Best Dashboard Widgets" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#51</strong></td>
+      <td><strong>Revenue Efficiency Matrix</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.3</strong></td>
+      <td class="num">9.9</td><td class="num">9.5</td><td class="num">9.2</td><td class="num">8.3</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">9.5</td><td class="num">9.7</td><td class="num">10.0</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="52" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#52</strong></td>
+      <td><strong>Hook &amp; First-30-Seconds Lab</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.2</strong></td>
+      <td class="num">9.4</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">9.5</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="53" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#53</strong></td>
+      <td><strong>Script Architect</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.2</strong></td>
+      <td class="num">9.4</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">9.5</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="54" data-family="20 Awesome YouTuber Widgets v4" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#54</strong></td>
+      <td><strong>Series Architect</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.2</strong></td>
+      <td class="num">9.1</td><td class="num">8.9</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">9.1</td><td class="num">9.0</td><td class="num">9.7</td><td class="num">9.8</td><td class="num">9.7</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="55" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#55</strong></td>
+      <td><strong>Subscriber CRM &amp; Audience Segments</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.2</strong></td>
+      <td class="num">9.4</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">9.5</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="56" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#56</strong></td>
+      <td><strong>Traffic &amp; Discovery Explorer</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.2</strong></td>
+      <td class="num">9.4</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">9.5</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="57" data-family="20 Best Dashboard Widgets" data-tier="A+" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#57</strong></td>
+      <td><strong>Engagement Pulse</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.1</strong></td>
+      <td class="num">9.8</td><td class="num">9.4</td><td class="num">9.0</td><td class="num">8.2</td><td class="num">9.2</td><td class="num">9.2</td><td class="num">9.2</td><td class="num">9.8</td><td class="num">10.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="58" data-family="20 Awesome YouTuber Widgets v4" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#58</strong></td>
+      <td><strong>Audience Session Builder</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.0</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">9.1</td><td class="num">9.0</td><td class="num">9.9</td><td class="num">10.0</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="59" data-family="20 Awesome YouTuber Widgets v4" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#59</strong></td>
+      <td><strong>Comment Demand Miner</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.0</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">9.1</td><td class="num">9.0</td><td class="num">9.9</td><td class="num">9.8</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="60" data-family="Creator Toolkit 20" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#60</strong></td>
+      <td><strong>Playlist Architect</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>93.0</strong></td>
+      <td class="num">9.2</td><td class="num">9.1</td><td class="num">9.6</td><td class="num">9.3</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">9.6</td><td class="num">8.8</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="61" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#61</strong></td>
+      <td><strong>Community Post Studio</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.9</strong></td>
+      <td class="num">9.4</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="62" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#62</strong></td>
+      <td><strong>Production Board &amp; Shot-List Builder</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.8</strong></td>
+      <td class="num">9.4</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">9.2</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="63" data-family="Creator Toolkit 20" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#63</strong></td>
+      <td><strong>Analytics Command Center</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.7</strong></td>
+      <td class="num">9.1</td><td class="num">9.1</td><td class="num">9.6</td><td class="num">9.2</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">9.5</td><td class="num">8.8</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="64" data-family="20 Real Dashboard Widgets" data-tier="A+" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#64</strong></td>
+      <td><strong>Global Filter Stack</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.7</strong></td>
+      <td class="num">8.9</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">9.1</td><td class="num">9.2</td><td class="num">9.6</td><td class="num">9.4</td><td class="num">8.4</td><td class="num">9.9</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="65" data-family="20 Awesome YouTuber Widgets v4" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#65</strong></td>
+      <td><strong>Shorts → Long Bridge</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.7</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">9.1</td><td class="num">9.0</td><td class="num">9.7</td><td class="num">9.8</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="66" data-family="20 Awesome YouTuber Widgets v4" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#66</strong></td>
+      <td><strong>Cannibalization Check</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.6</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">9.1</td><td class="num">9.0</td><td class="num">9.6</td><td class="num">10.0</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="67" data-family="20 Awesome YouTuber Widgets v4" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#67</strong></td>
+      <td><strong>First 30s Beat Map</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.6</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">9.1</td><td class="num">9.0</td><td class="num">9.6</td><td class="num">10.0</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="68" data-family="Creator Toolkit 20" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#68</strong></td>
+      <td><strong>Hook &amp; Retention Analyzer</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.5</strong></td>
+      <td class="num">9.0</td><td class="num">9.0</td><td class="num">9.4</td><td class="num">9.2</td><td class="num">9.2</td><td class="num">8.8</td><td class="num">9.6</td><td class="num">8.8</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="69" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#69</strong></td>
+      <td><strong>Idea Scorer &amp; Content Portfolio</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.5</strong></td>
+      <td class="num">9.2</td><td class="num">9.1</td><td class="num">9.5</td><td class="num">9.3</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">9.5</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="70" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#70</strong></td>
+      <td><strong>Upload Publisher &amp; Quality-Control Gate</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.5</strong></td>
+      <td class="num">9.2</td><td class="num">9.1</td><td class="num">9.5</td><td class="num">9.3</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">9.5</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="71" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#71</strong></td>
+      <td><strong>Video Library &amp; Asset Vault</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.5</strong></td>
+      <td class="num">9.2</td><td class="num">9.1</td><td class="num">9.5</td><td class="num">9.3</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">9.5</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="72" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#72</strong></td>
+      <td><strong>Sponsorship Pipeline &amp; Business Manager</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.4</strong></td>
+      <td class="num">9.4</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.4</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="73" data-family="Widget Batch 2" data-tier="A+" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#73</strong></td>
+      <td><strong>Evergreen Content Refresh Alert</strong><small>Widget Batch 2</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.3</strong></td>
+      <td class="num">9.1</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.1</td><td class="num">9.1</td><td class="num">8.9</td><td class="num">9.4</td><td class="num">9.1</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="74" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#74</strong></td>
+      <td><strong>Live Stream Control Center</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.3</strong></td>
+      <td class="num">9.4</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.4</td><td class="num">9.2</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="75" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#75</strong></td>
+      <td><strong>AI Editing Assistant &amp; Clip Finder</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.0</strong></td>
+      <td class="num">9.2</td><td class="num">9.1</td><td class="num">9.5</td><td class="num">9.3</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">9.2</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="76" data-family="Creator Operations 20" data-tier="A+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#76</strong></td>
+      <td><strong>Revenue Forecast &amp; Offer Tracker</strong><small>Creator Operations 20</small></td>
+      <td><span class="tier tier-Ap">A+</span></td>
+      <td class="overallcell"><strong>92.0</strong></td>
+      <td class="num">9.2</td><td class="num">9.1</td><td class="num">9.5</td><td class="num">9.3</td><td class="num">9.1</td><td class="num">8.4</td><td class="num">9.5</td><td class="num">8.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="77" data-family="Widget Batch 2" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#77</strong></td>
+      <td><strong>Series &amp; Franchise Tracker</strong><small>Widget Batch 2</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>91.8</strong></td>
+      <td class="num">9.1</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">9.1</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">9.1</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="78" data-family="20 Awesome YouTuber Widgets v4" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#78</strong></td>
+      <td><strong>Upload QA Gate</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>91.7</strong></td>
+      <td class="num">8.8</td><td class="num">8.8</td><td class="num">9.2</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">8.9</td><td class="num">9.5</td><td class="num">9.8</td><td class="num">9.7</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="79" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#79</strong></td>
+      <td><strong>Project Pipeline</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>91.4</strong></td>
+      <td class="num">8.9</td><td class="num">8.9</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.5</td><td class="num">8.2</td><td class="num">9.7</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="80" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="A" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#80</strong></td>
+      <td><strong>Traffic Anomaly Radar</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>91.2</strong></td>
+      <td class="num">8.6</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.6</td><td class="num">9.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="81" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="A" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#81</strong></td>
+      <td><strong>Viewer Journey Router</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>91.2</strong></td>
+      <td class="num">8.6</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.6</td><td class="num">9.0</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="82" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="A" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#82</strong></td>
+      <td><strong>Retention Repair Queue</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>91.1</strong></td>
+      <td class="num">8.5</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">9.3</td><td class="num">9.8</td><td class="num">9.3</td><td class="num">9.1</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="83" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="A" data-disposition="Integrate now">
+      <td class="rankcell"><strong>#83</strong></td>
+      <td><strong>Weekly Command Brief</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>91.1</strong></td>
+      <td class="num">8.5</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">9.3</td><td class="num">9.8</td><td class="num">9.3</td><td class="num">9.1</td>
+      <td><span class="disp">Integrate now</span></td>
+    </tr><tr data-rank="84" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#84</strong></td>
+      <td><strong>Channel Home Architecture Planner</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>91.0</strong></td>
+      <td class="num">9.1</td><td class="num">8.9</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.9</td><td class="num">8.3</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="85" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#85</strong></td>
+      <td><strong>Device &amp; Playback Adaptation Lab</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>91.0</strong></td>
+      <td class="num">9.1</td><td class="num">8.9</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.9</td><td class="num">8.3</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="86" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#86</strong></td>
+      <td><strong>Comment Triage</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.8</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.5</td><td class="num">8.2</td><td class="num">9.7</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="87" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#87</strong></td>
+      <td><strong>Recent Vault Assets</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.8</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.5</td><td class="num">8.2</td><td class="num">9.7</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="88" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#88</strong></td>
+      <td><strong>Thumbnail Reach Refresh Queue</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.8</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">8.9</td><td class="num">8.3</td><td class="num">9.5</td><td class="num">9.4</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="89" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#89</strong></td>
+      <td><strong>Caption &amp; Localization Studio</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.7</strong></td>
+      <td class="num">9.1</td><td class="num">8.9</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.9</td><td class="num">8.0</td><td class="num">9.3</td><td class="num">9.4</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="90" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#90</strong></td>
+      <td><strong>Geographic Expansion Planner</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.7</strong></td>
+      <td class="num">9.1</td><td class="num">8.9</td><td class="num">9.5</td><td class="num">9.1</td><td class="num">8.9</td><td class="num">8.0</td><td class="num">9.3</td><td class="num">9.4</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="91" data-family="20 Best Dashboard Widgets" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#91</strong></td>
+      <td><strong>Revenue Radar</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.6</strong></td>
+      <td class="num">9.6</td><td class="num">9.2</td><td class="num">8.9</td><td class="num">8.0</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.2</td><td class="num">9.8</td><td class="num">9.8</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="92" data-family="20 Best Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#92</strong></td>
+      <td><strong>Signal Matrix</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.6</strong></td>
+      <td class="num">9.6</td><td class="num">9.2</td><td class="num">8.9</td><td class="num">8.0</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.9</td><td class="num">9.8</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="93" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#93</strong></td>
+      <td><strong>Tool Launcher</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.6</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.5</td><td class="num">7.9</td><td class="num">9.7</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="94" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#94</strong></td>
+      <td><strong>Upload &amp; Publish Queue</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.6</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.5</td><td class="num">7.9</td><td class="num">9.7</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="95" data-family="20 Best Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#95</strong></td>
+      <td><strong>Content Treemap</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.5</strong></td>
+      <td class="num">9.6</td><td class="num">9.2</td><td class="num">8.9</td><td class="num">8.0</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.9</td><td class="num">9.4</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="96" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#96</strong></td>
+      <td><strong>Metadata Consistency Auditor</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.5</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">8.9</td><td class="num">8.3</td><td class="num">9.3</td><td class="num">9.4</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="97" data-family="20 Best Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#97</strong></td>
+      <td><strong>Performance Heat Matrix</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.5</strong></td>
+      <td class="num">9.6</td><td class="num">9.2</td><td class="num">8.9</td><td class="num">8.0</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.9</td><td class="num">9.4</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="98" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#98</strong></td>
+      <td><strong>Sharing Amplification Lab</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.5</strong></td>
+      <td class="num">9.1</td><td class="num">8.9</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">8.9</td><td class="num">8.3</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="99" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#99</strong></td>
+      <td><strong>Smart Benchmark Group Builder</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.5</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">8.9</td><td class="num">8.3</td><td class="num">9.3</td><td class="num">9.4</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="100" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#100</strong></td>
+      <td><strong>Card Interaction Optimizer</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.3</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">8.9</td><td class="num">8.3</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="101" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#101</strong></td>
+      <td><strong>Channel Goals</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.3</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.3</td><td class="num">7.9</td><td class="num">9.7</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="102" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#102</strong></td>
+      <td><strong>Connections &amp; API Status</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.3</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.3</td><td class="num">7.9</td><td class="num">9.7</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="103" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#103</strong></td>
+      <td><strong>Live Replay Repurposing Console</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.3</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">8.9</td><td class="num">8.3</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="104" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#104</strong></td>
+      <td><strong>Today’s Creator Agenda</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.3</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.2</td><td class="num">8.2</td><td class="num">9.7</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="105" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#105</strong></td>
+      <td><strong>Idea Capture</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.2</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.4</td><td class="num">8.6</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.5</td><td class="num">7.9</td><td class="num">9.7</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="106" data-family="20 Best Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#106</strong></td>
+      <td><strong>Publish Optimal Clock</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.2</strong></td>
+      <td class="num">9.4</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">7.8</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="107" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#107</strong></td>
+      <td><strong>Saved Views</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.2</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.2</td><td class="num">7.9</td><td class="num">9.7</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="108" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#108</strong></td>
+      <td><strong>Shorts Remix Ecosystem Hunter</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.2</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">8.9</td><td class="num">8.0</td><td class="num">9.3</td><td class="num">9.8</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="109" data-family="Creator Toolkit 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#109</strong></td>
+      <td><strong>Trend Radar &amp; Idea Generator</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.2</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">9.0</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="110" data-family="20 Best Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#110</strong></td>
+      <td><strong>Age × Gender Sunburst</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.0</strong></td>
+      <td class="num">9.4</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">7.8</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.9</td><td class="num">9.8</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="111" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#111</strong></td>
+      <td><strong>Audience Request Miner</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.0</strong></td>
+      <td class="num">8.4</td><td class="num">8.6</td><td class="num">9.0</td><td class="num">8.6</td><td class="num">9.0</td><td class="num">9.2</td><td class="num">9.7</td><td class="num">9.2</td><td class="num">9.0</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="112" data-family="20 Best Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#112</strong></td>
+      <td><strong>Clock Burst</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.0</strong></td>
+      <td class="num">9.4</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">7.8</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.9</td><td class="num">9.8</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="113" data-family="20 Best Dashboard Widgets" data-tier="A" data-disposition="Productionize next">
+      <td class="rankcell"><strong>#113</strong></td>
+      <td><strong>Metric Waterfall</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.0</strong></td>
+      <td class="num">9.4</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">7.8</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.9</td><td class="num">9.8</td><td class="num">9.8</td>
+      <td><span class="disp">Productionize next</span></td>
+    </tr><tr data-rank="114" data-family="Creator Toolkit 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#114</strong></td>
+      <td><strong>Script Studio</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.0</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">9.0</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.3</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="115" data-family="Creator Toolkit 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#115</strong></td>
+      <td><strong>Thumbnail A/B Test Lab</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>90.0</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">9.0</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.3</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="116" data-family="Creator Toolkit 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#116</strong></td>
+      <td><strong>Competitor Radar</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.9</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">9.0</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="117" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#117</strong></td>
+      <td><strong>Experiment Memory</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.9</strong></td>
+      <td class="num">8.4</td><td class="num">8.6</td><td class="num">9.0</td><td class="num">8.6</td><td class="num">9.0</td><td class="num">9.2</td><td class="num">9.5</td><td class="num">9.6</td><td class="num">9.0</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="118" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#118</strong></td>
+      <td><strong>External Referral Scout</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.9</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">8.9</td><td class="num">8.0</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="119" data-family="API Creator Tools 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#119</strong></td>
+      <td><strong>Notification View-Source Inspector</strong><small>API Creator Tools 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.9</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.9</td><td class="num">8.9</td><td class="num">8.0</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="120" data-family="20 Best Dashboard Widgets" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#120</strong></td>
+      <td><strong>Channel Vital Signs</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.8</strong></td>
+      <td class="num">9.4</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">7.8</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.9</td><td class="num">9.4</td><td class="num">9.8</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="121" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#121</strong></td>
+      <td><strong>Creator Notifications</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.8</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.4</td><td class="num">8.6</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.2</td><td class="num">7.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="122" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#122</strong></td>
+      <td><strong>Creator Quick Actions</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.8</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.4</td><td class="num">8.6</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">9.2</td><td class="num">7.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="123" data-family="20 Best Dashboard Widgets" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#123</strong></td>
+      <td><strong>Keyword Venn</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.8</strong></td>
+      <td class="num">9.4</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">7.8</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.9</td><td class="num">9.4</td><td class="num">9.8</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="124" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#124</strong></td>
+      <td><strong>User Requests &amp; Bug Inbox</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.7</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">8.2</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="125" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#125</strong></td>
+      <td><strong>Archive Rescue</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.6</strong></td>
+      <td class="num">8.4</td><td class="num">8.6</td><td class="num">9.0</td><td class="num">8.6</td><td class="num">9.0</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.2</td><td class="num">9.0</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="126" data-family="20 Awesome YouTuber Widgets v4" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#126</strong></td>
+      <td><strong>End Screen Router</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.5</strong></td>
+      <td class="num">8.7</td><td class="num">8.5</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">8.7</td><td class="num">8.6</td><td class="num">9.5</td><td class="num">9.4</td><td class="num">9.3</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="127" data-family="20 Best Dashboard Widgets" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#127</strong></td>
+      <td><strong>Geographic Footprint</strong><small>20 Best Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.5</strong></td>
+      <td class="num">9.4</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">7.8</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.0</td><td class="num">9.4</td><td class="num">9.8</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="128" data-family="20 Awesome YouTuber Widgets v4" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#128</strong></td>
+      <td><strong>Content Gap Radar</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.4</strong></td>
+      <td class="num">8.7</td><td class="num">8.5</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">8.7</td><td class="num">8.6</td><td class="num">9.3</td><td class="num">9.8</td><td class="num">9.3</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="129" data-family="Creator Toolkit 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#129</strong></td>
+      <td><strong>Retention Heatmap</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.3</strong></td>
+      <td class="num">8.7</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.3</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="130" data-family="Creator Toolkit 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#130</strong></td>
+      <td><strong>Subscriber Growth &amp; Loyalty</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.3</strong></td>
+      <td class="num">8.7</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.3</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="131" data-family="Creator Toolkit 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#131</strong></td>
+      <td><strong>Title Optimizer</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.3</strong></td>
+      <td class="num">8.7</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.3</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="132" data-family="20 Real Dashboard Widgets" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#132</strong></td>
+      <td><strong>Creator Scratchpad</strong><small>20 Real Dashboard Widgets</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.2</strong></td>
+      <td class="num">8.7</td><td class="num">8.8</td><td class="num">8.4</td><td class="num">8.6</td><td class="num">9.0</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">7.9</td><td class="num">9.7</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="133" data-family="Widget Batch 2" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#133</strong></td>
+      <td><strong>Cross-Platform Repurposing Hub</strong><small>Widget Batch 2</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.2</strong></td>
+      <td class="num">8.8</td><td class="num">8.7</td><td class="num">9.0</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.6</td><td class="num">9.0</td><td class="num">8.8</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="134" data-family="Widget Batch 2" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#134</strong></td>
+      <td><strong>Localization &amp; Subtitle Manager</strong><small>Widget Batch 2</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.2</strong></td>
+      <td class="num">8.8</td><td class="num">8.7</td><td class="num">9.0</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.3</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="135" data-family="Creator Toolkit 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#135</strong></td>
+      <td><strong>Sponsorship &amp; Brand Deal CRM</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.2</strong></td>
+      <td class="num">8.9</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">9.0</td><td class="num">8.8</td><td class="num">8.2</td><td class="num">9.1</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="136" data-family="20 Awesome YouTuber Widgets v4" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#136</strong></td>
+      <td><strong>Revenue Mix Planner</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.1</strong></td>
+      <td class="num">8.7</td><td class="num">8.5</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">8.7</td><td class="num">8.3</td><td class="num">9.5</td><td class="num">9.4</td><td class="num">9.3</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="137" data-family="20 Awesome YouTuber Widgets v4" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#137</strong></td>
+      <td><strong>Title Promise Tester</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.1</strong></td>
+      <td class="num">8.5</td><td class="num">8.4</td><td class="num">8.9</td><td class="num">8.5</td><td class="num">8.8</td><td class="num">8.7</td><td class="num">9.5</td><td class="num">9.4</td><td class="num">9.3</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="138" data-family="Creator Toolkit 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#138</strong></td>
+      <td><strong>Community Post</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.0</strong></td>
+      <td class="num">8.7</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.1</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="139" data-family="Creator Toolkit 20" data-tier="A" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#139</strong></td>
+      <td><strong>Shorts Repurposing Engine</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-A">A</span></td>
+      <td class="overallcell"><strong>89.0</strong></td>
+      <td class="num">8.7</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.1</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="140" data-family="Creator Toolkit 20" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#140</strong></td>
+      <td><strong>Channel Health Audit</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.8</strong></td>
+      <td class="num">8.7</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.0</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="141" data-family="20 Awesome YouTuber Widgets v4" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#141</strong></td>
+      <td><strong>Collab Match Board</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.8</strong></td>
+      <td class="num">8.7</td><td class="num">8.5</td><td class="num">9.1</td><td class="num">8.7</td><td class="num">8.7</td><td class="num">8.3</td><td class="num">9.3</td><td class="num">9.4</td><td class="num">9.3</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="142" data-family="Creator Toolkit 20" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#142</strong></td>
+      <td><strong>Content Calendar</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.8</strong></td>
+      <td class="num">8.7</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.1</td><td class="num">8.2</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="143" data-family="20 Awesome YouTuber Widgets v4" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#143</strong></td>
+      <td><strong>Playlist Funnel Builder</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.8</strong></td>
+      <td class="num">8.5</td><td class="num">8.4</td><td class="num">8.9</td><td class="num">8.5</td><td class="num">8.7</td><td class="num">8.6</td><td class="num">9.5</td><td class="num">9.4</td><td class="num">9.3</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="144" data-family="Creator Toolkit 20" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#144</strong></td>
+      <td><strong>Revenue &amp; Monetization</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.8</strong></td>
+      <td class="num">8.7</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.2</td><td class="num">9.3</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="145" data-family="Creator Toolkit 20" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#145</strong></td>
+      <td><strong>SEO &amp; Tag Engine</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.8</strong></td>
+      <td class="num">8.7</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">9.0</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="146" data-family="20 Awesome YouTuber Widgets v4" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#146</strong></td>
+      <td><strong>Thumbnail Squint Test</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.8</strong></td>
+      <td class="num">8.5</td><td class="num">8.4</td><td class="num">8.9</td><td class="num">8.5</td><td class="num">8.7</td><td class="num">8.6</td><td class="num">9.5</td><td class="num">9.4</td><td class="num">9.3</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="147" data-family="Widget Batch 2" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#147</strong></td>
+      <td><strong>Viewer Quiz Generator</strong><small>Widget Batch 2</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.7</strong></td>
+      <td class="num">8.8</td><td class="num">8.7</td><td class="num">9.0</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.6</td><td class="num">8.7</td><td class="num">8.8</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="148" data-family="Micro Visuals Widget" data-tier="B+" data-disposition="Component donor">
+      <td class="rankcell"><strong>#148</strong></td>
+      <td><strong>Channel progress · bars + cumulative line</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.5</strong></td>
+      <td class="num">9.5</td><td class="num">9.2</td><td class="num">7.7</td><td class="num">6.1</td><td class="num">9.2</td><td class="num">9.5</td><td class="num">8.9</td><td class="num">9.5</td><td class="num">9.6</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="149" data-family="20 Awesome YouTuber Widgets v4" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#149</strong></td>
+      <td><strong>Refresh Queue</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.5</strong></td>
+      <td class="num">8.5</td><td class="num">8.4</td><td class="num">8.9</td><td class="num">8.5</td><td class="num">8.7</td><td class="num">8.6</td><td class="num">9.3</td><td class="num">9.4</td><td class="num">9.3</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="150" data-family="Creator Toolkit 20" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#150</strong></td>
+      <td><strong>Auto-Chapters</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.4</strong></td>
+      <td class="num">8.7</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">8.7</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="151" data-family="20 Awesome YouTuber Widgets v4" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#151</strong></td>
+      <td><strong>Evergreen Decay Monitor</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.4</strong></td>
+      <td class="num">8.5</td><td class="num">8.4</td><td class="num">8.9</td><td class="num">8.5</td><td class="num">8.7</td><td class="num">8.6</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.3</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="152" data-family="Creator Toolkit 20" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#152</strong></td>
+      <td><strong>Live Chat Companion</strong><small>Creator Toolkit 20</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.4</strong></td>
+      <td class="num">8.7</td><td class="num">8.7</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.8</td><td class="num">8.5</td><td class="num">8.7</td><td class="num">8.5</td><td class="num">9.5</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="153" data-family="20 Awesome YouTuber Widgets v4" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#153</strong></td>
+      <td><strong>Upload Timing Compass</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.4</strong></td>
+      <td class="num">8.5</td><td class="num">8.4</td><td class="num">8.9</td><td class="num">8.5</td><td class="num">8.7</td><td class="num">8.6</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">9.3</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="154" data-family="Micro Visuals Widget" data-tier="B+" data-disposition="Component donor">
+      <td class="rankcell"><strong>#154</strong></td>
+      <td><strong>Keyword network · nodes</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.3</strong></td>
+      <td class="num">9.6</td><td class="num">9.3</td><td class="num">7.9</td><td class="num">6.2</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">8.6</td><td class="num">9.4</td><td class="num">9.6</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="155" data-family="Micro Visuals Widget" data-tier="B+" data-disposition="Component donor">
+      <td class="rankcell"><strong>#155</strong></td>
+      <td><strong>Top videos · barcode fingerprint</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.1</strong></td>
+      <td class="num">9.5</td><td class="num">9.2</td><td class="num">7.7</td><td class="num">6.1</td><td class="num">9.2</td><td class="num">9.5</td><td class="num">8.6</td><td class="num">9.8</td><td class="num">9.6</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="156" data-family="Micro Visuals Widget" data-tier="B+" data-disposition="Component donor">
+      <td class="rankcell"><strong>#156</strong></td>
+      <td><strong>Traffic evolution · stream ribbons</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.1</strong></td>
+      <td class="num">9.4</td><td class="num">9.2</td><td class="num">7.7</td><td class="num">6.0</td><td class="num">9.2</td><td class="num">9.4</td><td class="num">8.8</td><td class="num">9.8</td><td class="num">9.6</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="157" data-family="20 Awesome YouTuber Widgets v4" data-tier="B+" data-disposition="Merge / preserve">
+      <td class="rankcell"><strong>#157</strong></td>
+      <td><strong>Sponsor Fit Calculator</strong><small>20 Awesome YouTuber Widgets v4</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>88.0</strong></td>
+      <td class="num">8.5</td><td class="num">8.4</td><td class="num">8.9</td><td class="num">8.5</td><td class="num">8.7</td><td class="num">8.3</td><td class="num">9.3</td><td class="num">9.4</td><td class="num">9.3</td>
+      <td><span class="disp">Merge / preserve</span></td>
+    </tr><tr data-rank="158" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B+" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#158</strong></td>
+      <td><strong>Hook Timing Lab</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>86.8</strong></td>
+      <td class="num">8.2</td><td class="num">8.3</td><td class="num">8.8</td><td class="num">8.4</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="159" data-family="Micro Visuals Widget" data-tier="B+" data-disposition="Component donor">
+      <td class="rankcell"><strong>#159</strong></td>
+      <td><strong>Subscriber flow · waterfall</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>86.2</strong></td>
+      <td class="num">9.3</td><td class="num">9.0</td><td class="num">7.6</td><td class="num">6.0</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.6</td><td class="num">9.5</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="160" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B+" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#160</strong></td>
+      <td><strong>Idea Triage</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>86.1</strong></td>
+      <td class="num">8.0</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="161" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B+" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#161</strong></td>
+      <td><strong>Playlist Gap Finder</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>86.1</strong></td>
+      <td class="num">8.0</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="162" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B+" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#162</strong></td>
+      <td><strong>Publishing Rhythm</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>86.1</strong></td>
+      <td class="num">8.0</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="163" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B+" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#163</strong></td>
+      <td><strong>Thumbnail Clarity Check</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>86.1</strong></td>
+      <td class="num">8.0</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.3</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="164" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B+" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#164</strong></td>
+      <td><strong>Collaboration Pipeline</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-Bp">B+</span></td>
+      <td class="overallcell"><strong>86.0</strong></td>
+      <td class="num">8.2</td><td class="num">8.3</td><td class="num">8.8</td><td class="num">8.4</td><td class="num">8.6</td><td class="num">8.5</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="165" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#165</strong></td>
+      <td><strong>Engagement radar · spider</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.9</strong></td>
+      <td class="num">9.3</td><td class="num">9.0</td><td class="num">7.6</td><td class="num">6.0</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.4</td><td class="num">9.5</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="166" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#166</strong></td>
+      <td><strong>Community Mood</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.8</strong></td>
+      <td class="num">8.0</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="167" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#167</strong></td>
+      <td><strong>Series Path Builder</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.8</strong></td>
+      <td class="num">8.0</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="168" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#168</strong></td>
+      <td><strong>Content mix · treemap</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.6</strong></td>
+      <td class="num">9.3</td><td class="num">9.0</td><td class="num">7.6</td><td class="num">6.0</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.3</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="169" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#169</strong></td>
+      <td><strong>Income Goal Forecaster</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.6</strong></td>
+      <td class="num">8.0</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="170" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#170</strong></td>
+      <td><strong>Translation Priority</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.6</strong></td>
+      <td class="num">8.0</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">9.0</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="171" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#171</strong></td>
+      <td><strong>Sponsor Inventory</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.3</strong></td>
+      <td class="num">8.0</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.5</td><td class="num">9.1</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="172" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#172</strong></td>
+      <td><strong>Premiere Runbook</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.2</strong></td>
+      <td class="num">8.0</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.8</td><td class="num">8.7</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="173" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#173</strong></td>
+      <td><strong>Audience mix · nested doughnut</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.1</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.4</td><td class="num">5.8</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.5</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="174" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#174</strong></td>
+      <td><strong>Publishing funnel</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.1</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.4</td><td class="num">5.8</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.5</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="175" data-family="20 New Channel Widgets — Mobile Fixed" data-tier="B" data-disposition="Backlog / donor">
+      <td class="rankcell"><strong>#175</strong></td>
+      <td><strong>Rights Preflight</strong><small>20 New Channel Widgets — Mobile Fixed</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.1</strong></td>
+      <td class="num">8.0</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.2</td><td class="num">8.6</td><td class="num">8.5</td><td class="num">9.0</td><td class="num">8.8</td><td class="num">8.6</td>
+      <td><span class="disp">Backlog / donor</span></td>
+    </tr><tr data-rank="176" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#176</strong></td>
+      <td><strong>Search terms · ranked table</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.1</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.4</td><td class="num">5.8</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.5</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="177" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#177</strong></td>
+      <td><strong>Traffic sources · horizontal bars</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>85.1</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.4</td><td class="num">5.8</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.5</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="178" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#178</strong></td>
+      <td><strong>Revenue efficiency · micro scatter</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>84.7</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.4</td><td class="num">5.8</td><td class="num">8.9</td><td class="num">8.9</td><td class="num">8.5</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="179" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#179</strong></td>
+      <td><strong>Upload rhythm · heat map</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>84.7</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.4</td><td class="num">5.8</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.2</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="180" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#180</strong></td>
+      <td><strong>Watch-time split · stacked bar</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>84.7</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.4</td><td class="num">5.8</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.2</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="181" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#181</strong></td>
+      <td><strong>Retention · radial gauge</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>84.6</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.2</td><td class="num">5.5</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.5</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="182" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#182</strong></td>
+      <td><strong>CTR · bullet</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>84.1</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.2</td><td class="num">5.5</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.2</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="183" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#183</strong></td>
+      <td><strong>Completion · slope</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>84.1</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.2</td><td class="num">5.5</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.2</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="184" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#184</strong></td>
+      <td><strong>Device share · waffle</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>84.1</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.2</td><td class="num">5.5</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.2</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="185" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#185</strong></td>
+      <td><strong>RPM range · box plot</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>84.1</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.2</td><td class="num">5.5</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.2</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="186" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#186</strong></td>
+      <td><strong>Returning viewers · gauge</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>84.1</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.2</td><td class="num">5.5</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.2</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="187" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#187</strong></td>
+      <td><strong>Video rank · lollipop</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>84.1</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.2</td><td class="num">5.5</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.2</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="188" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#188</strong></td>
+      <td><strong>Views trend · sparkline + area</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>84.1</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.2</td><td class="num">5.5</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">8.2</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="189" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#189</strong></td>
+      <td><strong>Format tags · chip cloud</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>83.6</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.2</td><td class="num">5.5</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">7.8</td><td class="num">9.2</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr><tr data-rank="190" data-family="Micro Visuals Widget" data-tier="B" data-disposition="Component donor">
+      <td class="rankcell"><strong>#190</strong></td>
+      <td><strong>Notifications · ring</strong><small>Micro Visuals Widget</small></td>
+      <td><span class="tier tier-B">B</span></td>
+      <td class="overallcell"><strong>83.4</strong></td>
+      <td class="num">9.0</td><td class="num">8.9</td><td class="num">7.2</td><td class="num">5.5</td><td class="num">8.9</td><td class="num">9.2</td><td class="num">7.8</td><td class="num">8.9</td><td class="num">9.3</td>
+      <td><span class="disp">Component donor</span></td>
+    </tr></tbody></table></div>
+<p class="score-key"><strong>Score key:</strong> DES component design · LAY layout · FEA features · FUN functions · BLD build quality · INT immediate integration · USE YouTuber usefulness · ORG originality · VT ViewTube alignment.</p>
+
+<h3>14.5 Production priorities</h3>
+<ol>
+<li><strong>Integrate the top interaction systems first:</strong> Packaging Lab Pro, Daily Creator Command Center II, Analytics Diagnostic Lab II, Retention Fix Queue, Audience Loop Inbox II, Publisher & Quality Gate II, Script Architect Pro, and Traffic Strategy Router.</li>
+<li><strong>Use 20 Real Dashboard Widgets to fill the practical dashboard layer:</strong> ViewTube Brain Command, Sync Controller, Data Health Monitor, Publish Readiness, Global Filter Stack, Creator Quick Actions, and the status/queue widgets need comparatively little conceptual redesign.</li>
+<li><strong>Use 20 Best Dashboard Widgets as the analytics visual donor library:</strong> Retention Braids, First 72 Hours Launch Trajectory, Traffic Source Evolution, Channel Progress, Playback Origins Flow, Algorithm Trigger Scatter, Engagement Pulse, and Barcode Fingerprint should inform the canonical visual registry.</li>
+<li><strong>Promote the strongest API-native differentiators after VT-SYNC wiring:</strong> Suggested Traffic Network Architect, Search Intent Mining Studio, Back Catalog Revival Engine, End Screen Routing Lab, Subscriber Conversion Cohort Inspector, and Release Window & Collision Planner.</li>
+<li><strong>Merge duplicates rather than ship parallel tools:</strong> the NextGen “II/Pro” versions generally supersede equivalent Creator Operations versions; older Creator Toolkit/Channel Widget concepts should donate interaction ideas, copy, or compact components instead of becoming duplicate routes.</li>
+<li><strong>Embed micro visuals instead of treating them as standalone tools:</strong> Channel Progress micro, Traffic Evolution ribbons, Barcode Fingerprint, Keyword Network, Subscriber Waterfall, Content Treemap, and Engagement Radar are strongest as subcomponents inside larger widgets.</li>
+</ol>
+
+<h2>15. Implementation Checklist</h2>
+<div class="check"><span>☐</span>Freeze current 47-ID Dashboard registry snapshot before refactors.</div>
+<div class="check"><span>☐</span>Verify which current widgets are production-ready, prototype, hidden, or broken.</div>
+<div class="check"><span>☐</span>Move strong inline renderer branches into maintainable components where appropriate.</div>
+<div class="check"><span>☐</span>Define final size taxonomy and migrate/grandfather <code>quarter</code> explicitly.</div>
+<div class="check"><span>☐</span>Implement Analytics/Publishing/Revenue/Community/Planning/Minimal presets.</div>
+<div class="check"><span>☐</span>Add per-widget certification queue.</div>
+<div class="check"><span>☐</span>Audit every widget-idea HTML and legacy implementation.</div>
+<div class="check"><span>☐</span>Preserve strongest colorful compositions during React/TS migration.</div>
+<div class="check"><span>☐</span>Standardize signed-out/expired/error/empty/sample behavior.</div>
+<div class="check"><span>☐</span>Map each VT-2531..VT-2570 system to primary UI form and data dependencies.</div>
+<div class="check"><span>☐</span>Keep VT-2571+ priming extensions linked but outside the original 40 count.</div>
+<h2>16. Definition of Done</h2>
+<p>The Dashboard has a trustworthy registry, explicit population/certification rules, and reusable layout presets. The 40 signature systems are no longer an unstructured idea list: each has a stable task ID, domain, purpose, owning UI form, data/context requirements, and a path into the production ViewTube architecture.</p>
+</main>
+</div>
+
+<script>
+(function(){
+ const search=document.getElementById('rankSearch');
+ const family=document.getElementById('rankFamily');
+ const disp=document.getElementById('rankDisposition');
+ const reset=document.getElementById('rankReset');
+ const count=document.getElementById('rankCount');
+ const rows=[...document.querySelectorAll('#rankingTable tbody tr')];
+ function apply(){
+   const q=(search.value||'').trim().toLowerCase();
+   const f=family.value;
+   const d=disp.value;
+   let shown=0;
+   rows.forEach(r=>{
+     const matchQ=!q || r.textContent.toLowerCase().includes(q);
+     const matchF=!f || r.dataset.family===f;
+     const matchD=!d || r.dataset.disposition===d;
+     const on=matchQ&&matchF&&matchD;
+     r.hidden=!on;if(on)shown++;
+   });
+   count.textContent=shown+' designs';
+ }
+ [search,family,disp].forEach(el=>el&&el.addEventListener('input',apply));
+ reset&&reset.addEventListener('click',()=>{search.value='';family.value='';disp.value='';apply();});
+})();
+</script>
+
+</body>
+</html>
