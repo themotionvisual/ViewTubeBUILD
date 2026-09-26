@@ -45,3 +45,18 @@ Legacy global sources are preserved in place with migration notices. No source w
 - supersession target existence
 - entrypoint routing inspection
 - PR diff review
+
+
+## Master Source integration
+- established `docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md` as `sourceTier: MASTER_SOURCE`;
+- preserved the complete 852-line uploaded source body beneath governed metadata;
+- original upload SHA-256: `24a048e54a068eb6a6e48996466a0c94247e19ca25543661fbdd3b852593f1f6`;
+- linked the source into Documentation Governance, Product Architecture, Integrated Application Program, docs README, and the Document System skill;
+- defined Master Source as privileged strategic prior art, not a competing authority.
+
+## Verification update
+- document-system validator unit suite: 4/4 passing;
+- registry structure check: no duplicate document IDs or competing ACTIVE concerns at the time checked;
+- capability registry structure check: no duplicate capability IDs and no missing owner/authority fields at the time checked;
+- Deep Research source body exact-match check: PASS;
+- latest main advanced by one unrelated Vault-handoff commit after branch creation; branch changes do not touch that file.
