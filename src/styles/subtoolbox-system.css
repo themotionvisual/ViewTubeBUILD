@@ -166,7 +166,7 @@
 .vt-subtoolbox-metric{display:grid;min-height:106px;grid-template-rows:auto 1fr;overflow:hidden;padding:0}.vt-subtoolbox-metric-label{display:grid;min-height:28px;place-items:center;border-bottom:2px solid #000;background:var(--pair-a,var(--vt-subtoolbox-fill,#73deff));font-size:10px;font-weight:900;letter-spacing:.08em;text-align:center;text-transform:uppercase}.vt-subtoolbox-metric-value{display:grid;place-items:center;padding:var(--vt-subtoolbox-gap-dense,8px);font-size:28px;font-weight:1000;letter-spacing:-.04em;line-height:1;text-align:center}
 .vt-subtoolbox-output{min-width:0;overflow:hidden;border:var(--vt-subtoolbox-inner-stroke,3px) solid #000;border-radius:var(--vt-subtoolbox-inner-radius,8px);background:#fff;box-shadow:var(--vt-subtoolbox-inner-shadow,4px) var(--vt-subtoolbox-inner-shadow,4px) 0 0 color-mix(in srgb,var(--pair-b,var(--pair-a,var(--vt-subtoolbox-fill,#73deff))) 45%,transparent)}.vt-subtoolbox-output-header{display:flex;min-height:var(--vt-subtoolbox-control-standard,48px);align-items:center;justify-content:space-between;gap:var(--vt-subtoolbox-gap,12px);border-bottom:var(--vt-subtoolbox-inner-stroke,3px) solid #000;background:var(--pair-a,var(--vt-subtoolbox-fill,#73deff));padding:var(--vt-subtoolbox-gap-dense,8px) var(--vt-subtoolbox-gap,12px)}.vt-subtoolbox-output-title{display:flex;min-width:0;align-items:center;gap:var(--vt-subtoolbox-gap-dense,8px);font-size:14px;font-weight:900;letter-spacing:-.02em;text-transform:uppercase}.vt-subtoolbox-output-badge{border-radius:4px;background:#000;color:#fff;font-size:10px;font-weight:900;padding:3px 6px}.vt-subtoolbox-output-body{padding:var(--vt-subtoolbox-section-gap,16px)}.vt-subtoolbox-output.is-scroll .vt-subtoolbox-output-body{max-height:400px;overflow:auto}
 /* Tight Reveal (#05) is the canonical Toolbox upload frame. It preserves the source composition's seven 5px-inset nested bands, light interior and reveal animation, but derives its color from the owning Subtoolbox. */
-.vt-subtoolbox-file-target.vt-upload-tight-reveal{display:flex;position:relative;overflow:hidden;padding:0;aspect-ratio:16/9;min-height:0!important;background:#fff}.vt-upload-tight-reveal .vt-subtoolbox-file-target-button{position:relative;display:grid;width:100%;min-height:100%;place-items:center;overflow:hidden;border:0;border-radius:calc(var(--vt-subtoolbox-inner-radius,8px) - 1px);background:#fff;color:#000;cursor:pointer;padding:0;text-transform:uppercase;isolation:isolate}.vt-upload-tight-reveal-layers{position:absolute;inset:0;z-index:1}.vt-upload-tight-reveal-layer{position:absolute;display:block;border-radius:3px;background:var(--vt-subtoolbox-fill,#73deff);transition:opacity .35s ease,filter .35s ease}.vt-upload-tight-reveal-layer.is-l7{inset:0;opacity:.12}.vt-upload-tight-reveal-layer.is-l6{inset:5px;opacity:.12}.vt-upload-tight-reveal-layer.is-l5{inset:10px;opacity:.12}.vt-upload-tight-reveal-layer.is-l4{inset:15px;opacity:.12}.vt-upload-tight-reveal-layer.is-l3{inset:20px;opacity:.12}.vt-upload-tight-reveal-layer.is-l2{inset:25px;opacity:.12}.vt-upload-tight-reveal-layer.is-l1{inset:30px;opacity:1;background:color-mix(in srgb,var(--vt-subtoolbox-fill,#73deff) 22%,#fff)}.vt-upload-tight-reveal-center{position:relative;z-index:4;display:grid;place-items:center;gap:10px;padding:36px}.vt-upload-tight-reveal .vt-subtoolbox-file-target-icon{display:grid;width:78px;height:78px;place-items:center;border:0;border-radius:50%;background:var(--vt-subtoolbox-fill,#73deff);color:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--vt-subtoolbox-fill,#73deff) 16%,transparent);transition:transform .35s ease}.vt-upload-tight-reveal .vt-subtoolbox-file-target-icon svg{width:42px;height:42px;stroke:currentColor}.vt-upload-tight-reveal-label{font-size:20px;font-weight:1000;letter-spacing:.1em;color:#fff}.vt-upload-tight-reveal .vt-subtoolbox-file-target-button:hover .vt-subtoolbox-file-target-icon,.vt-upload-tight-reveal.is-dragging .vt-subtoolbox-file-target-icon{transform:scale(1.06)}.vt-upload-tight-reveal .vt-subtoolbox-file-target-button:hover .vt-upload-tight-reveal-layer,.vt-upload-tight-reveal.is-dragging .vt-upload-tight-reveal-layer{animation:vt-tight-reveal .55s both}.vt-upload-tight-reveal .is-l6{animation-delay:.04s!important}.vt-upload-tight-reveal .is-l5{animation-delay:.08s!important}.vt-upload-tight-reveal .is-l4{animation-delay:.12s!important}.vt-upload-tight-reveal .is-l3{animation-delay:.16s!important}.vt-upload-tight-reveal .is-l2{animation-delay:.2s!important}.vt-upload-tight-reveal .vt-subtoolbox-file-target-button:focus-visible{outline:3px solid var(--vt-subtoolbox-fill,#00ccff);outline-offset:-6px}@keyframes vt-tight-reveal{to{opacity:1}}
+.vt-subtoolbox-file-target.vt-upload-tight-reveal{display:flex;position:relative;overflow:hidden;padding:0;aspect-ratio:16/9;min-height:var(--vt-upload-target-min-height,220px)!important;background:#fff}.vt-upload-tight-reveal .vt-subtoolbox-file-target-button{position:relative;display:grid;width:100%;min-height:100%;place-items:center;overflow:hidden;border:0;border-radius:calc(var(--vt-subtoolbox-inner-radius,8px) - 1px);background:#fff;color:#000;cursor:pointer;padding:0;text-transform:uppercase;isolation:isolate}.vt-upload-tight-reveal-layers{position:absolute;inset:0;z-index:1}.vt-upload-tight-reveal-layer{position:absolute;display:block;border-radius:3px;background:var(--vt-subtoolbox-fill,#73deff);transition:opacity .35s ease,filter .35s ease}.vt-upload-tight-reveal-layer.is-l7{inset:0;opacity:.12}.vt-upload-tight-reveal-layer.is-l6{inset:5px;opacity:.12}.vt-upload-tight-reveal-layer.is-l5{inset:10px;opacity:.12}.vt-upload-tight-reveal-layer.is-l4{inset:15px;opacity:.12}.vt-upload-tight-reveal-layer.is-l3{inset:20px;opacity:.12}.vt-upload-tight-reveal-layer.is-l2{inset:25px;opacity:.12}.vt-upload-tight-reveal-layer.is-l1{inset:30px;opacity:1;background:color-mix(in srgb,var(--vt-subtoolbox-fill,#73deff) 22%,#fff)}.vt-upload-tight-reveal-center{position:relative;z-index:4;display:grid;place-items:center;gap:10px;padding:36px}.vt-upload-tight-reveal .vt-subtoolbox-file-target-icon{display:grid;width:78px;height:78px;place-items:center;border:0;border-radius:50%;background:var(--vt-subtoolbox-fill,#73deff);color:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--vt-subtoolbox-fill,#73deff) 16%,transparent);transition:transform .35s ease}.vt-upload-tight-reveal .vt-subtoolbox-file-target-icon svg{width:42px;height:42px;stroke:currentColor}.vt-upload-tight-reveal-label{font-size:20px;font-weight:1000;letter-spacing:.1em;color:#fff}.vt-upload-tight-reveal .vt-subtoolbox-file-target-button:hover .vt-subtoolbox-file-target-icon,.vt-upload-tight-reveal.is-dragging .vt-subtoolbox-file-target-icon{transform:scale(1.06)}.vt-upload-tight-reveal .vt-subtoolbox-file-target-button:hover .vt-upload-tight-reveal-layer,.vt-upload-tight-reveal.is-dragging .vt-upload-tight-reveal-layer{animation:vt-tight-reveal .55s both}.vt-upload-tight-reveal .is-l6{animation-delay:.04s!important}.vt-upload-tight-reveal .is-l5{animation-delay:.08s!important}.vt-upload-tight-reveal .is-l4{animation-delay:.12s!important}.vt-upload-tight-reveal .is-l3{animation-delay:.16s!important}.vt-upload-tight-reveal .is-l2{animation-delay:.2s!important}.vt-upload-tight-reveal .vt-subtoolbox-file-target-button:focus-visible{outline:3px solid var(--vt-subtoolbox-fill,#00ccff);outline-offset:-6px}@keyframes vt-tight-reveal{to{opacity:1}}
 .vt-subtoolbox-state{font-size:12px;font-weight:900;text-transform:uppercase}.vt-subtoolbox-state.is-error,.vt-subtoolbox-state.is-blocked{background:#ffb158}.vt-subtoolbox-state.is-stale{background:#ffe357}.vt-subtoolbox-state.is-ready{background:#57f15c}
 @container vt-subtoolbox (max-width:420px){.vt-subtoolbox-actions.has-3-columns,.vt-subtoolbox-actions.has-4-columns,.vt-subtoolbox-grid:not(.is-compact){grid-template-columns:minmax(0,1fr)}.vt-subtoolbox-actions{gap:8px}.vt-subtoolbox-split-action-title{font-size:18px}}
 @media(max-width:900px){[data-vt-toolbox-level="sub"]>div>header>div:last-child{gap:4px;padding-right:6px}.vt-upload-tight-reveal .vt-subtoolbox-file-target-icon{width:58px;height:58px}.vt-upload-tight-reveal .vt-subtoolbox-file-target-icon svg{width:32px;height:32px}.vt-upload-tight-reveal-label{font-size:16px}.vt-upload-tight-reveal-center{padding:24px}}
@@ -2721,9 +2721,6 @@
     --vt-subtoolbox-gap:6px;
     --vt-subtoolbox-section-gap:8px;
   }
-  [data-vt-toolbox-level="sub"] .vt-subtoolbox-content {
-    padding-top:4px!important;
-  }
 }
 
 
@@ -3451,42 +3448,23 @@
 
 
 /* ==========================================================================
-   CANONICAL HEADER ACTION CLUSTER — 2026-09-25
-   Header extras, help and collapse are independent controls. Never resize
-   arbitrary descendants of the action slot: that previously forced wrapper
-   divs/spans/SVGs to 30/24/20px and caused the overlap visible on iPhone.
+   CANONICAL HEADER CONTROL PRIMITIVES — 2026-09-26
+   Structural allocation belongs to toolbox-system.css. This file owns only
+   the help/collapse/palette control anatomy, interaction, and hit targets.
+   Mobile interactive targets never fall below the 44px accessibility floor.
    ========================================================================== */
-.vt-toolbox-header-actions{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-end!important;
-  flex:0 0 auto!important;
-  min-width:0!important;
-  height:100%!important;
-  gap:6px!important;
-  padding-right:8px!important;
-}
-.vt-toolbox-header-actions.is-subtoolbox{
-  gap:4px!important;
-  padding-right:6px!important;
-}
-.vt-toolbox-header-extras{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-end!important;
-  min-width:0!important;
-  max-width:min(32vw,220px);
-  gap:4px!important;
-}
 .vt-toolbox-header-control{
   box-sizing:border-box!important;
   flex:0 0 auto!important;
 }
-.vt-toolbox-header-help.is-toolbox{
-  width:40px!important;min-width:40px!important;height:40px!important;
-}
-.vt-toolbox-header-help.is-subtoolbox{
-  width:34px!important;min-width:34px!important;height:34px!important;
+.vt-toolbox-header-help.is-toolbox,
+.vt-toolbox-header-help.is-subtoolbox,
+.vt-toolbox-header-collapse.is-toolbox,
+.vt-toolbox-header-collapse.is-subtoolbox{
+  width:44px!important;
+  min-width:44px!important;
+  height:44px!important;
+  min-height:44px!important;
 }
 .vt-toolbox-header-help.is-toolbox>span{
   width:36px!important;height:36px!important;
@@ -3505,11 +3483,9 @@
   overflow:hidden!important;
 }
 .vt-toolbox-header-collapse.is-toolbox{
-  width:40px!important;min-width:40px!important;height:40px!important;
   border-radius:8px!important;
 }
 .vt-toolbox-header-collapse.is-subtoolbox{
-  width:34px!important;min-width:34px!important;height:34px!important;
   border-radius:7px!important;
   box-shadow:2px 2px 0 #000!important;
 }
@@ -3525,57 +3501,23 @@
   outline:3px solid var(--pair-b,var(--pair-a,#36e0f6))!important;
   outline-offset:2px!important;
 }
-.vt-toolbox-header-extras .vt-subtoolbox-button{
-  max-width:min(180px,28vw)!important;
-}
 .vt-toolbox-header-palette-button{
-  width:34px!important;min-width:34px!important;height:34px!important;
+  width:44px!important;
+  min-width:44px!important;
+  height:44px!important;
+  min-height:44px!important;
   --vt-component-height:34px!important;
-  padding:0!important;
+  padding:5px!important;
 }
 
 @media (max-width:767px){
-  .vt-toolbox-header-actions{
-    gap:3px!important;
-    padding-right:4px!important;
-  }
-  .vt-toolbox-header-actions.is-subtoolbox{
-    gap:2px!important;
-    padding-right:3px!important;
-  }
-  .vt-toolbox-header-extras{
-    gap:2px!important;
-    max-width:88px!important;
-  }
-  .vt-toolbox-header-help.is-toolbox,
-  .vt-toolbox-header-collapse.is-toolbox{
-    width:34px!important;min-width:34px!important;height:34px!important;
-  }
   .vt-toolbox-header-help.is-toolbox>span{
     width:32px!important;height:32px!important;
-  }
-  .vt-toolbox-header-help.is-subtoolbox,
-  .vt-toolbox-header-collapse.is-subtoolbox{
-    width:30px!important;min-width:30px!important;height:30px!important;
   }
   .vt-toolbox-header-help.is-subtoolbox>span{
     width:28px!important;height:28px!important;
   }
-  .vt-toolbox-header-palette-button{
-    width:30px!important;min-width:30px!important;height:30px!important;
-    --vt-component-height:30px!important;
-  }
-  .vt-toolbox-header-extras .vt-subtoolbox-button{
-    width:32px!important;
-    min-width:32px!important;
-    height:32px!important;
-    min-height:32px!important;
-    padding:0!important;
-  }
-  .vt-toolbox-header-extras .vt-subtoolbox-button-label{
-    display:none!important;
-  }
-  .vt-toolbox-header-extras .vt-subtoolbox-button-icon{
-    margin:0!important;
+  .vt-subtoolbox-file-target.vt-upload-tight-reveal{
+    min-height:clamp(140px,44vw,var(--vt-upload-target-min-height,220px))!important;
   }
 }

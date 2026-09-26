@@ -1,8 +1,8 @@
 # ViewTube Toolbox UI Master Resource
 
 **Status:** Canonical living design-system authority  
-**Updated:** 2026-09-25  
-**Last audited main:** `3d9bb8fe26c4cc1419695715bd9c86ac3243b390`  
+**Updated:** 2026-09-26  
+**Last audited main:** `36c16918283e1239d460f95e07478f6547412430`  
 **Canonical owner / concern:** Production Toolbox/Subtoolbox shell hierarchy, Studio control/layout rules, responsive shell behavior, shared state/motion/accessibility rules, certification and migration policy.  
 **Executable authority:** `src/components/subtoolbox/tokens.ts`, `src/components/Toolbox.tsx`, `src/styles/toolbox-system.css`, `src/styles/subtoolbox-system.css`, and their contract tests.  
 **Related scoped authority:** `docs/ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md` owns Component Library/catalog presentation and primitive-correction notes. Dashboard widgets and Analytics Data Visuals retain separate registries/contracts.  
@@ -14,6 +14,7 @@ Append one concise row for every system-level update. Use Notes for conflicts, v
 
 | Date / time | Conversation | AI / tool | Change | Repo evidence | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-09-26 | Toolbox responsive stabilization | GPT-5.6 Sol + GitHub | Protected mobile title allocation, moved optional main-header actions to a secondary strip, restored intrinsic mobile SubToolbox height, removed perf.css geometry ownership, normalized 44px header targets and responsive upload height | PR #468 / `fix/toolbox-responsive-contract-2026-09-26` | IMPLEMENTED / CI + VISUAL CERTIFICATION PENDING | Baseline audit 11/20: Accessibility 2, Performance 3, Responsive 1, Theming 3, Implementation Integrity 2. Target is 20/20 after screenshot certification. |
 | 2026-09-25 | Mobile Render preview correction audit | GPT-5.6 Sol + GitHub + iPhone screenshots | Re-opened Toolbox spacing, dropdown state, collapse icon, Vault assets, palette order and Component Library contracts | PR #432 merged; main `3d9bb8fe` | OPEN CORRECTION WAVE | Keep PR #432 header-action isolation, 16px mobile inputs, VisualViewport handling and paint-safe spacing intent; restore the established four-arrow collapse icon. |
 | 2026-09-24 | Documentation authority consolidation | GPT-5.6 Sol + GitHub | Re-audited tokens/CSS/tests, separated shell vs control ladders, and demoted stale Studio migration geometry | `988098840050f4b658a266e1a7d6fe1c4d939c81` | CURRENT CODE AUTHORITY / VISUAL CERTIFICATION STILL REQUIRED | Desktop shell: T0=80/26, T1=56/20, T2=48/18, T3=32/12. Mobile shell: Toolbox=56, SubToolbox=44 with desktop title sizes preserved. |
 | 2026-09-22 | Toolbox geometry authority reconciliation | GPT-5.6 Sol + GitHub | Reconciled production shell geometry with the accepted Component Library authority and removed its private shell override | `fix/toolbox-geometry-authority-2026-09-22` | IMPLEMENTED ON BRANCH / VISUAL CERTIFICATION REQUIRED | Current authority: T0=80px/26px; T1=56px/20px; T2=48px/18px; T3=32px/12px. Historical 56/44 implementation remains traceability only. |
@@ -146,7 +147,20 @@ A historical 300ms shell rule is superseded. Feature-specific data/widget animat
 
 ## 12. Responsive contract
 
-Phone top-level Toolbox/Widget modules are full width by default. Structural grids collapse semantically. Registered-height controls do not grow because children wrap. Headers never scroll. Long content uses bounded internal scrolling. T0/T1 shell geometry does not silently shrink on mobile; responsive changes must be explicit and certified.
+Phone top-level Toolbox/Widget modules are full width by default. Structural grids collapse semantically. Registered-height controls do not grow because children wrap. Headers never scroll. Long content uses bounded internal scrolling. T0/T1 shell geometry changes only through the canonical mobile DNA and must be explicit and certified.
+
+### Mobile header allocation law
+
+1. The icon rail, complete title, help target and collapse target are protected structural content.
+2. Main Toolbox titles retain the established 26px size and may wrap to two complete lines; SubToolbox titles retain the established 20px size.
+3. Optional header extras consume only remaining width. If that width is insufficient, the extras move to the canonical secondary action strip before any protected title/control is compressed.
+4. Page-local fixed-width header action clusters are forbidden.
+5. Mobile help/collapse interactive targets are at least 44px even when the visual glyph is smaller.
+6. `toolbox-system.css` owns structural responsive header allocation. `subtoolbox-system.css` owns control anatomy inside that geometry. `perf.css` may optimize rendering but must not resize, clamp or ellipsize canonical Toolbox headers.
+
+### Mobile vertical sizing law
+
+SubToolboxes are intrinsic-height by default on phone layouts. `openUnits` may provide desktop/tablet minimum-height guidance, but its generated minimum is disabled on stacked mobile modules. Equal-height behavior belongs to the parent layout and must never be recreated with page-local `h-full` on ordinary phone stacks. Upload/media targets publish a preferred height through the primitive and are responsively capped on phones.
 
 ## 13. Accessibility contract
 
@@ -198,6 +212,20 @@ Use status vocabulary: `CANONICAL`, `IMPLEMENTED`, `VERIFIED`, `MIGRATE`, `LEGAC
 
 ## 18. Current audit findings
 
+### Responsive stabilization baseline — 2026-09-26
+
+| Dimension | Baseline | Target |
+| --- | ---: | ---: |
+| Accessibility | 2/4 | 4/4 |
+| Performance | 3/4 | 4/4 |
+| Responsive | 1/4 | 4/4 |
+| Theming | 3/4 | 4/4 |
+| Implementation integrity | 2/4 | 4/4 |
+| **Total** | **11/20** | **20/20** |
+
+Primary failure: optional feature actions and competing CSS owners could consume or override protected mobile Toolbox geometry. PR #468 is the first stabilization wave. Do not mark this baseline superseded until 375px, 390px, 430px portrait, phone landscape, tablet/narrow desktop and desktop screenshots are visually certified.
+
+
 **Resolved/advanced:** Analytics split-left anatomy is in production code with static-render coverage; separate compact shell token authority is removed; current shell hierarchy is T0 80px/26px title, T1 56px/20px title, T2 48px/18px and T3 32px/12px.
 
 **Remaining:** visual desktop/mobile certification of the 80/56 hierarchy; historical `heightMode="compact"` callers/labels cleanup; CSS ownership leaks; bounded-height/mobile regressions; duplicate embedded shells; Projects feature-local shell debt; motion authority reconciliation by system.
@@ -233,7 +261,7 @@ Editor timeline controls are a separate system. Reuse tokens selectively; do not
 
 ## 20. Production migration order
 
-1. certify current 56/44 shell hierarchy on desktop/mobile/open/closed
+1. certify the current 80/56 desktop and 56/44 mobile shell hierarchy on desktop/mobile/open/closed
 2. migrate/rename historical compact-shell callers and Reference Library labels without changing geometry
 3. complete/certify Reference Library
 4. reconcile motion authority independently by system

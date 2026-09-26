@@ -45,6 +45,7 @@ import {
   SubToolboxSelect,
   SubToolboxStatePanel,
   SubToolboxTextArea,
+  ToolboxHeaderToggle,
 } from "../components/subtoolbox/SubToolboxPrimitives"
 
 const CopyBox: React.FC<{
@@ -473,8 +474,6 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
       title="VIDEO PUBLISHER"
       subtitle="Create SEO optimized titles, descriptions, tags + more for all your new + published content"
       icon={<Zap size={40} strokeWidth={3} className="text-black" />}
-      headerColor="bg-[#CCFF00]"
-      iconBoxColor="bg-[#00FF99]"
       paletteIndex={paletteIndex}
       collapsible={collapsible}
       isOpen={isOpen}
@@ -484,14 +483,15 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
       shellClassName="animate-fade-in"
       contentClassName={embedded ? "p-0" : "p-8"}
       headerActions={
-        <SubToolboxActions
-          columns={2}
-          className="mr-2 w-[210px]"
+        <ToolboxHeaderToggle
+          value={formatMode}
           aria-label="Video format"
-        >
-          <SubToolboxButton size="compact" tone={formatMode === "longform" ? "ink" : "neutral"} selected={formatMode === "longform"} aria-pressed={formatMode === "longform"} onClick={(event) => { event.stopPropagation(); setFormatMode("longform") }}>Longform</SubToolboxButton>
-          <SubToolboxButton size="compact" tone={formatMode === "shorts" ? "ink" : "neutral"} selected={formatMode === "shorts"} aria-pressed={formatMode === "shorts"} onClick={(event) => { event.stopPropagation(); setFormatMode("shorts") }}>Shorts</SubToolboxButton>
-        </SubToolboxActions>
+          options={[
+            { value: "longform", label: "Longform" },
+            { value: "shorts", label: "Shorts" },
+          ]}
+          onValueChange={(value) => setFormatMode(value === "shorts" ? "shorts" : "longform")}
+        />
       }
     >
       {publishState.projection ? (
@@ -570,11 +570,11 @@ const VideoPublisher: React.FC<VideoPublisherProps> = ({ embedded = false, colla
           <BrainLiveToolInbox destinationToolId="video-publisher" channelId={(authState as any)?.channelId ?? null} onPrefill={applyPrefill} />
           {insightsImported ? <SubToolboxStatePanel state="ready" message="Incoming Brain/tool context loaded. Review before generating or publishing." /> : null}
           <SubToolboxGrid minItemWidth="wide">
-            <SubToolbox title="Video Upload" icon={<Upload size={20} strokeWidth={3} />} collapsible isOpenInitial shellClassName="h-full">
-              <SubToolboxFileTarget label={videoFile ? <>{videoFile.name}<br />Final video selected</> : <>Drop files or click to upload<br />Upload video</>} icon={<Upload size={28} strokeWidth={3} />} accept="video/*" minHeight={220} onFiles={files => setVideoFile(files?.[0] || null)} />
+            <SubToolbox title="Video Upload" icon={<Upload size={20} strokeWidth={3} />} collapsible isOpenInitial>
+              <SubToolboxFileTarget label={videoFile ? <>{videoFile.name}<br />Final video selected</> : <>Drop files or click to upload<br />Upload video</>} icon={<Upload size={28} strokeWidth={3} />} accept="video/*" onFiles={files => setVideoFile(files?.[0] || null)} />
             </SubToolbox>
-            <SubToolbox title="Video Script" icon={<FileText size={20} strokeWidth={3} />} collapsible isOpenInitial shellClassName="h-full" contentClassName="h-full">
-              <SubToolboxTextArea aria-label="Video script" value={script} onChange={(event) => setScript(event.target.value)} placeholder="Paste your script here..." height="fill" className="text-base" />
+            <SubToolbox title="Video Script" icon={<FileText size={20} strokeWidth={3} />} collapsible isOpenInitial>
+              <SubToolboxTextArea aria-label="Video script" value={script} onChange={(event) => setScript(event.target.value)} placeholder="Paste your script here..." height="standard" className="text-base" />
             </SubToolbox>
           </SubToolboxGrid>
           <SubToolbox title="Video Info" icon={<Sparkles size={20} strokeWidth={3} />} collapsible isOpenInitial>
