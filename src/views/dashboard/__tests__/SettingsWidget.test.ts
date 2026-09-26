@@ -51,10 +51,15 @@ describe("Settings dashboard control switchboard", () => {
     expect(widget).toContain("NEVER SYNCED")
     expect(widget).toContain("STALE")
     expect(widget).toContain("CURRENT")
+    expect(widget).toContain("ERROR")
+    expect(widget).toContain("SOURCE HEALTH")
+    expect(widget).toContain("DATA SOURCE ISSUE")
   })
 
   it("shows an honest generic preview when no channel is connected", () => {
-    expect(widget).toContain("PREVIEW")
+    expect(widget).toContain("WidgetPreviewState")
+    expect(widget).toContain("SETTINGS_DATA_PREVIEW_ITEMS")
+    expect(widget).toContain("SETTINGS_AI_PREVIEW_ITEMS")
     expect(widget).toContain("EXAMPLE CHANNEL")
     expect(widget).toContain("EXAMPLE ANALYTICS")
     expect(widget).toContain("CONNECT TO PERSONALIZE")
@@ -69,7 +74,8 @@ describe("Settings dashboard control switchboard", () => {
     expect(css).toContain("@container vt-widget (max-width:420px)")
     expect(css).toContain("@container vt-widget (min-width:421px) and (max-width:760px)")
     expect(css).toContain("@container vt-widget (min-width:761px)")
-    expect(css).toContain(".settings-switchboard-preview")
+    expect(css).toContain(".settings-switchboard-preview-grid")
+    expect(css).toContain(".settings-switchboard-issue")
   })
 
   it("uses canonical account and entitlement owners rather than the legacy plan cache", () => {
