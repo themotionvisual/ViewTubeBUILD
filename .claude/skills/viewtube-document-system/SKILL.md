@@ -187,3 +187,11 @@ A document-system mission is complete only when:
 - references/verification-and-handoff.md
 - templates/document-template.md
 - templates/sub-skill-template.md
+
+
+## Built-in sub-skills
+
+- `viewtube-main-document-editor` — edit the main constitutions, architecture, program, capability registry and Domain Authorities when durable product/system meaning changes.
+- `viewtube-document-consolidation` — losslessly consolidate multi-version documents, plans, HTML/prototypes and skill families with manifests and Removed Archive preservation.
+
+The parent skill may author additional narrow sub-skills using `references/sub-skill-authoring.md` and `templates/sub-skill-template.md` when repeated specialized work justifies them.
