@@ -56,13 +56,13 @@ Extend `viewtube-ai-system-governor` into the single AI Systems Management skill
 
 ## Phase 5 — Health and CI
 
-- [ ] Validate registry schemas.
+- [x] Validate registry records and source references across all five registries.
 - [ ] Detect broken doc links and paths.
 - [ ] Detect duplicate authority claims.
 - [ ] Detect stale canonical audit SHAs.
 - [ ] Detect direct provider bypass and analytics-canon bypass.
 - [ ] Run `audit:reach`.
-- [ ] Detect open stale claims / missing completion receipts.
+- [~] Detect open stale claims / missing completion receipts. Live Herald stale writer-lock detection is implemented; missing completion-receipt enforcement remains open.
 - [ ] Add prompt/model provenance coverage checks.
 
 **Checkpoint**
@@ -149,7 +149,7 @@ Implemented on the branch:
 - corrected Herald sync-script contradiction.
 
 Not yet complete:
-- live Herald claim ingestion into `audit:ai-systems`;
+- missing completion-receipt enforcement and broader claim-collision semantics;
 - collision/stale-claim enforcement from real thread state;
 - provenance projector over BrainTrace/ToolReceipt/ContentBuild/Vault/outcomes;
 - CI gate wiring;
