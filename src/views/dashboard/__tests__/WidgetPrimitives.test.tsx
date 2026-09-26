@@ -575,6 +575,15 @@ describe("expanded widget compound primitives", () => {
     expect(extensionSource).toContain("createPortal")
     expect(extensionSource).toContain("widget-video-select-menu is-portalled")
   })
+
+  it("keeps video-selector menus on the overlay layer with square split bays", () => {
+    expect(extensionSource).toContain("createPortal")
+    expect(extensionSource).toContain("widget-video-select-menu--portal")
+    expect(extensionSource).toContain('data-side={menuSide}')
+    expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height")
+    expect(variantsCss).not.toContain(".widget-video-select-trigger.is-height-24 { --widget-video-split-bay: 40px; }")
+    expect(variantsCss).toContain("font-size: max(6px")
+  })
 })
 
 describe("split-left selected tone anatomy", () => {
