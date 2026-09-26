@@ -1,10 +1,12 @@
+> **MIGRATION NOTE — 2026-09-26:** This reference is retained for AI-domain orientation patterns only. Repository work/status/claims are now governed by Conversation OS, Crown and Task Authority. Current Brain architecture is `docs/domains/BRAIN.md`.
+
 # AI Systems Management
 
 Use this reference for cross-system orientation and coordination.
 
 ## Start
 
-1. Read `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`.
+1. Read `docs/domains/BRAIN.md`.
 2. Pin current main SHA.
 3. Resolve the canonical owner.
 4. Read the bounded authority.
