@@ -53,6 +53,7 @@ describe("mobile widget density and edge contracts", () => {
     expect(legacy).toContain("flex: 0 0 auto !important")
     expect(legacy).not.toContain("flex: 1 1 132px !important")
     expect(legacy).not.toContain('[data-widget-id="comment-replier"] .vt-widget-header .title')
+    expect(legacy).toContain("line-height: 1;")
   })
 
   it("keeps the mobile control deck visible while a widget is collapsed", () => {
