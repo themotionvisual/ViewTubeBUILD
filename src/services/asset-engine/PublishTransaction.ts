@@ -1,6 +1,7 @@
 import { appendContentBuildEvent, bindYouTubeVideo, getContentBuild, setContentBuildStage } from "./ContentBuildRepository"
 import type { ContentBuildYouTubeBinding } from "./contracts"
 import type { PublishingPackageProjection } from "./PublishingPackageProjection"
+import { persistApprovedPublishSnapshot } from "./ApprovedPublishSnapshot"
 
 export type PublishTransactionStep =
  | "validate-package" | "creator-approval" | "upload-video" | "bind-youtube"
@@ -21,6 +22,7 @@ export interface PublishAssetLock {
 }
 export interface ContentBuildPublishTransaction {
  id: string; contentBuildId: string; videoPackageId: string; idempotencyKey: string
+ approvedSnapshotId: string; approvedSnapshotHash: string
  status: PublishTransactionStatus; steps: Partial<Record<PublishTransactionStep, StepState>>
  assetLock: PublishAssetLock; youtubeVideoId?: string | null
  startedAt: string; updatedAt: string; completedAt?: string | null
@@ -40,20 +42,26 @@ export const getPublishTransaction=(id:string)=>read().find(x=>x.id===id)||null
 export const beginPublishTransaction=(projection:PublishingPackageProjection,toolId="video-publisher")=>{
  if(!projection.ready) throw new Error("Publishing Package is not ready: "+projection.missing.join(", "))
  if(!projection.titleAssetId||!projection.thumbnailAssetId||!projection.finalRenderAssetId||!projection.descriptionAssetId) throw new Error("Publishing Package lacks required canonical assets.")
- const key=`publish:${projection.contentBuildId}:${projection.finalRenderAssetId}`
- // Failed transactions are deliberately resumed too: a failure after remote upload
- // must never create a fresh transaction that can upload the same render again.
- const existing=read().find(x=>x.contentBuildId===projection.contentBuildId&&x.idempotencyKey===key)
+ // Preserve the strongest duplicate-upload guard first: if this exact final
+ // render already has a transaction, later metadata/package edits must resume it
+ // rather than silently creating another remote upload.
+ const existingForRender=read().find(x=>x.contentBuildId===projection.contentBuildId&&x.assetLock.finalRenderAssetId===projection.finalRenderAssetId)
+ if(existingForRender) return existingForRender
+
+ const approvedSnapshot=persistApprovedPublishSnapshot(projection)
+ const key=`publish:${approvedSnapshot.contentBuildId}:${approvedSnapshot.id}`
+ const existing=read().find(x=>x.contentBuildId===approvedSnapshot.contentBuildId&&x.approvedSnapshotId===approvedSnapshot.id)
  if(existing) return existing
  const timestamp=now()
  const transaction:ContentBuildPublishTransaction={
-  id:uuid(),contentBuildId:projection.contentBuildId,videoPackageId:projection.videoPackageId,idempotencyKey:key,
+  id:uuid(),contentBuildId:approvedSnapshot.contentBuildId,videoPackageId:approvedSnapshot.videoPackageId,idempotencyKey:key,
+  approvedSnapshotId:approvedSnapshot.id,approvedSnapshotHash:approvedSnapshot.hash,
   status:"approved",steps:{"validate-package":{status:"completed",completedAt:timestamp},"creator-approval":{status:"completed",completedAt:timestamp}},
-  assetLock:{projectionRevision:projection.revision,titleAssetId:projection.titleAssetId,thumbnailAssetId:projection.thumbnailAssetId,finalRenderAssetId:projection.finalRenderAssetId,descriptionAssetId:projection.descriptionAssetId,tagsAssetId:projection.tagsAssetId,scheduledAt:projection.scheduledAt,lockedAt:timestamp},
+  assetLock:{projectionRevision:approvedSnapshot.contentBuildRevision,titleAssetId:approvedSnapshot.assets.titleAssetId,thumbnailAssetId:approvedSnapshot.assets.thumbnailAssetId,finalRenderAssetId:approvedSnapshot.assets.finalRenderAssetId,descriptionAssetId:approvedSnapshot.assets.descriptionAssetId,tagsAssetId:approvedSnapshot.assets.tagsAssetId,scheduledAt:approvedSnapshot.scheduledAt,lockedAt:timestamp},
   youtubeVideoId:projection.publishedVideoId||null,startedAt:timestamp,updatedAt:timestamp,
  }
  save(transaction)
- appendContentBuildEvent({contentBuildId:transaction.contentBuildId,eventType:"publish.transaction.started",entityType:"publish-transaction",entityId:transaction.id,actorType:"tool",toolId,inputAssetIds:[transaction.assetLock.finalRenderAssetId,transaction.assetLock.titleAssetId,transaction.assetLock.thumbnailAssetId,transaction.assetLock.descriptionAssetId],metadata:{idempotencyKey:key,assetLock:transaction.assetLock}})
+ appendContentBuildEvent({contentBuildId:transaction.contentBuildId,eventType:"publish.transaction.started",entityType:"publish-transaction",entityId:transaction.id,actorType:"tool",toolId,inputAssetIds:[transaction.assetLock.finalRenderAssetId,transaction.assetLock.titleAssetId,transaction.assetLock.thumbnailAssetId,transaction.assetLock.descriptionAssetId],metadata:{idempotencyKey:key,approvedSnapshotId:transaction.approvedSnapshotId,approvedSnapshotHash:transaction.approvedSnapshotHash,assetLock:transaction.assetLock}})
  return transaction
 }
 
