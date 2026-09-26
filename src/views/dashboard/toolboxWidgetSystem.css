@@ -1376,21 +1376,27 @@
   z-index: 0;
   top: 2px;
   bottom: 2px;
-  left: 3px;
-  width: calc((100% - 6px) / var(--widget-header-toggle-count));
+  left: 0;
+  width: var(--widget-header-toggle-active-width, 0px);
   border: 2px solid var(--widget-border);
   border-radius: 5px;
   background: var(--widget-color, #ffb570);
   box-shadow: 1px 1px 0 var(--widget-shadow, color-mix(in srgb, var(--widget-color) 40%, transparent));
+  opacity: 0;
   pointer-events: none;
-  transform: translateX(calc(var(--widget-header-toggle-index) * 100%));
-  transition: transform 180ms cubic-bezier(.2, .8, .2, 1), background-color 150ms ease;
+  transform: translateX(var(--widget-header-toggle-active-left, 0px));
+  transition: transform 180ms cubic-bezier(.2, .8, .2, 1), width 180ms cubic-bezier(.2, .8, .2, 1), background-color 150ms ease;
+}
+
+:where(.dashboard-barrier) .widget-header-toggle[data-measured="true"] .widget-header-toggle-indicator {
+  opacity: 1;
 }
 
 :where(.dashboard-barrier) .widget-header-toggle button {
   position: relative;
   z-index: 1;
-  flex: 1 1 0;
+  flex: 0 0 auto;
+  width: auto;
   min-width: max-content;
   height: 100%;
   padding: 0 8px;
