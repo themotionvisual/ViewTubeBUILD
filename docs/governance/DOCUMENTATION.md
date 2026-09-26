@@ -114,3 +114,16 @@ Any implementation-affecting documentation claim must use docs/governance/VERIFI
 ## Mutation rule
 
 Documentation changes should be performed through the viewtube-document-system skill or an equivalent workflow following this contract. The skill may author supporting sub-skills, but those sub-skills remain subordinate to this governance contract.
+
+
+## Master Source tier
+
+A MASTER_SOURCE is an exceptional REFERENCE that contains unusually broad, high-value research, ideas, architectures, workflows, feature concepts, or donor material that should be consulted proactively across multiple domains.
+
+Rules:
+- MASTER_SOURCE is a source tier, not a competing authority class.
+- Master Sources are mandatory prior art for work within their declared scope.
+- Their ideas are not automatically accepted product behavior or implementation truth.
+- Current code/runtime, Product Architecture, Domain Authorities, Task Index state, and verified provider/API evidence still govern current claims.
+- Valuable material should be promoted into capabilities, authorities, specifications, decisions, opportunities, risks, or Task Index records rather than repeatedly copied.
+- Master Sources must remain preserved, registry-addressable, and included in consolidation lineage.
