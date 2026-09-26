@@ -326,6 +326,8 @@ const CreatorVaultOS: React.FC = () => {
   [manualCollections],
  )
  const tasks = useMemo(() => listVaultTasks(), [taskRefresh])
+ const activeVaultTasks = tasks.filter((task) => task.status === "queued" || task.status === "running")
+ const failedVaultTasks = tasks.filter((task) => task.status === "failed")
  const scratchpads = useMemo(() => listVaultScratchpads(), [scratchpadRefresh])
  const checklistItems = useMemo(() => listVaultChecklistItems(), [checklistRefresh])
  const customFields = useMemo(() => listVaultCustomFields(), [customFieldRefresh])
@@ -1568,8 +1570,8 @@ const CreatorVaultOS: React.FC = () => {
     void stageFiles(event.dataTransfer.files)
    }}
    className={density === "compact"
-   ? "mx-auto flex w-full max-w-[1800px] flex-col gap-2 p-2 sm:p-3 lg:p-4"
-   : "mx-auto flex w-full max-w-[1800px] flex-col gap-4 p-3 sm:p-4 lg:p-6"}>
+   ? "mx-auto flex w-full max-w-[1800px] min-w-0 flex-col gap-2 overflow-x-hidden p-2 sm:p-3 lg:p-4"
+   : "mx-auto flex w-full max-w-[1800px] min-w-0 flex-col gap-4 overflow-x-hidden p-3 sm:p-4 lg:p-6"}>
    <Toolbox
     title="ViewTube Vault"
     subtitle="Canonical creator assets, intake, organization, inspection, and cross-tool reuse."
@@ -2276,7 +2278,7 @@ const CreatorVaultOS: React.FC = () => {
          </div>
       </SubToolbox>
 
-      <div ref={assetLibraryRef} tabIndex={-1}>
+      <div ref={assetLibraryRef} tabIndex={-1} data-vault-first-viewport="library">
       <SubToolbox
        style={moduleStyle("asset-library" as VaultWorkspaceModuleId)}
        title="Asset Library"
@@ -2568,11 +2570,11 @@ const CreatorVaultOS: React.FC = () => {
        subtitle="Ingest and background processing jobs"
        icon={<Database />}
        paletteIndex={2}
-       isOpenInitial
+       isOpenInitial={Boolean(activeVaultTasks.length || failedVaultTasks.length)}
        persistenceId="vault-task-center"
       >
        <div className="flex flex-col gap-2">
-        {tasks.length ? tasks.slice(0, 12).map((task) => (
+        {activeVaultTasks.length || failedVaultTasks.length ? [...failedVaultTasks, ...activeVaultTasks].slice(0, 12).map((task) => (
          <div key={task.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
            <div className="truncate text-sm font-black uppercase">{task.label}</div>
@@ -2612,7 +2614,8 @@ const CreatorVaultOS: React.FC = () => {
 
 
 
-      <div ref={inspectorRef} tabIndex={-1}>
+      {selectedAsset ? (
+       <div ref={inspectorRef} tabIndex={-1}>
        <SubToolbox
        style={moduleStyle("inspector" as VaultWorkspaceModuleId)}
        title="Inspector"
@@ -2622,8 +2625,7 @@ const CreatorVaultOS: React.FC = () => {
        isOpenInitial
        persistenceId="vault-inspector"
       >
-       {selectedAsset ? (
-        <div className="flex flex-col gap-3">
+       <div className="flex flex-col gap-3">
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Quick Look</div>
           {!quickLookOpen ? (
@@ -2650,7 +2652,7 @@ const CreatorVaultOS: React.FC = () => {
             src={selectedAsset.url || selectedAsset.previewUrl || undefined}
             poster={selectedAsset.previewUrl || undefined}
             current={quickLookCurrent}
-            duration={Number(selectedAsset.metadata?.durationSeconds || selectedAsset.metadata?.duration || 60)}
+            duration={Number(selectedAsset.metadata?.durationSeconds || selectedAsset.metadata?.duration || 0)}
             playing={quickLookPlaying}
             muted={quickLookMuted}
             volume={quickLookVolume}
@@ -3241,15 +3243,9 @@ const CreatorVaultOS: React.FC = () => {
           <div className="text-sm font-bold">{new Date(selectedAsset.updatedAt).toLocaleString()}</div>
          </div>
         </div>
-       ) : (
-        <SubToolboxStatePanel
-         level="l1"
-         state="empty"
-         message="Select an asset in the library to inspect its canonical Vault record."
-        />
-       )}
       </SubToolbox>
-      </div>
+       </div>
+      ) : null}
      </div>
     </div>
    </Toolbox>
