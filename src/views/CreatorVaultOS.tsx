@@ -286,6 +286,7 @@ const CreatorVaultOS: React.FC = () => {
  const [smartCollectionName, setSmartCollectionName] = useState("")
  const [collectionRefresh, setCollectionRefresh] = useState(0)
  const [manualCollectionName, setManualCollectionName] = useState("")
+ const [collectionRename, setCollectionRename] = useState("")
  const [manualCollectionRefresh, setManualCollectionRefresh] = useState(0)
  const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null)
  const [targetCollectionId, setTargetCollectionId] = useState("")
@@ -1024,6 +1025,54 @@ const CreatorVaultOS: React.FC = () => {
   })
   setBatchPrefix("")
   setRefreshTick((value) => value + 1)
+ }
+
+ const toggleSelectedFavorites = () => {
+  const selected = allAssets.filter((asset) => selectedAssetIds.includes(asset.id))
+  if (!selected.length) return
+  const nextFavorite = !selected.every((asset) => asset.metadata?.favorite === true)
+  selected.forEach((asset) => setVaultAssetState(asset.id, { favorite: nextFavorite }))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const archiveSelection = () => {
+  selectedAssetIds.forEach((assetId) => setVaultAssetState(assetId, { archived: true }))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const trashSelection = () => {
+  selectedAssetIds.forEach((assetId) => setVaultAssetState(assetId, { trashed: true }))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const restoreSelection = () => {
+  selectedAssetIds.forEach((assetId) => setVaultAssetState(assetId, { archived: false, trashed: false }))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const renameActiveCollection = () => {
+  if (!activeCollectionId || !collectionRename.trim()) return
+  renameManualCollection(activeCollectionId, collectionRename.trim())
+  setCollectionRename("")
+ }
+
+ const openSelectedQuickLook = () => {
+  if (!selectedAsset) return
+  const index = visibleAssets.findIndex((asset) => asset.id === selectedAsset.id)
+  setQuickLookCurrent(index >= 0 ? index : 0)
+  setQuickLookOpen(true)
+  inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+ }
+
+ const openSelectedInspector = () => {
+  if (!selectedAsset) return
+  inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  inspectorRef.current?.focus({ preventScroll: true })
+ }
+
+ const copySelectedAssetId = () => {
+  if (!selectedAsset || typeof navigator === "undefined" || !navigator.clipboard) return
+  void navigator.clipboard.writeText(selectedAsset.id)
  }
 
  const isModuleVisible = (id: VaultWorkspaceModuleId) => visibleModules.includes(id)
