@@ -242,35 +242,10 @@
       max-width: 100%;
     }
 
-    .dashboard-barrier .vt-widget-body > .vt-widget-full-bleed,
-    .dashboard-barrier .vt-widget-body > * > .vt-widget-full-bleed,
-    .dashboard-barrier .widget-section.is-full,
-    .dashboard-barrier .widget-divider.is-full {
-      width: calc(100% + (2 * var(--vt-widget-body-inset)));
-      max-width: none;
-      margin-inline: calc(-1 * var(--vt-widget-body-inset));
-      box-sizing: border-box;
-    }
+    /* FULL / SHADOW-SAFE / INSET geometry is inherited from the canonical
+       shell grid. Phone mode owns only scrolling and composition, never width
+       compensation or negative-margin bleed math. */
 
-    .dashboard-barrier .widget-section.is-full {
-      padding-inline: var(--vt-widget-body-inset);
-    }
-
-    .dashboard-barrier .widget-footer {
-      width: calc(100% + (2 * var(--vt-widget-body-inset)));
-      max-width: none;
-      margin-inline: calc(-1 * var(--vt-widget-body-inset));
-      padding-inline: var(--vt-widget-body-inset);
-      box-sizing: border-box;
-    }
-
-    .dashboard-barrier .vt-widget-shadow-safe {
-      width: calc(100% + (2 * var(--vt-widget-edge-safe)));
-      margin-inline: calc(-1 * var(--vt-widget-edge-safe));
-      padding-inline: var(--vt-widget-edge-safe);
-      box-sizing: border-box;
-      overflow: visible;
-    }
 
 
     /* Shared mobile composition registry. Internal layouts recompose according
