@@ -180,5 +180,6 @@ The compact Vault asset family now has a dedicated production primitive: `VaultA
 - Creator Vault consumes the same component rendered in the Studio Hub primitive track.
 - The primitive track must use real editable title, shared spectrum tag editor, dirty-save notes, selection state, media preview, waveform and document-preview behavior.
 - The hardcoded catalog stays frozen as a comparison baseline; donor-only variants may therefore exist only in the primitive track.
+- Each Vault Asset Module represents one single image, video clip, audio file, or document. It is not a project/package/engine container, and higher-level Vault workflow controls must stay outside the compact module unless separately approved.
 - ViewTube palette/font/focus tokens may flow into the module, but generic Toolbox CSS must not change the donor's fixed dimensions or layout.
 
