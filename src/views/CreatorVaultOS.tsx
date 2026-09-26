@@ -442,6 +442,17 @@ const CreatorVaultOS: React.FC = () => {
   moduleOrder,
  ])
 
+ const advancedFilterCount = [
+  filterUpdatedFrom,
+  filterUpdatedTo,
+  filterMinWidth,
+  filterMinHeight,
+  filterMinDuration,
+  filterMaxDuration,
+  filterMinBytesMb,
+  filterMaxBytesMb,
+ ].filter((value) => String(value).trim()).length
+
  const selectedAsset = useMemo(
   () => allAssets.find((asset) => asset.id === selectedAssetIds[0]) || null,
   [allAssets, selectedAssetIds],
@@ -1786,7 +1797,7 @@ const CreatorVaultOS: React.FC = () => {
        </div>
       </section>
 
-      {selectedTag || source !== "all" || filterLifecycle !== "all" || filterOrientation !== "all" || filterMimeType.trim() ? (
+      {selectedTag || source !== "all" || filterLifecycle !== "all" || filterOrientation !== "all" || filterMimeType.trim() || advancedFilterCount ? (
        <section aria-label="Vault active filters" className="flex flex-wrap gap-1">
         {selectedTag ? (
          <button type="button" onClick={() => setSelectedTag(null)} aria-label={`Clear tag filter ${selectedTag}`}>
@@ -1811,6 +1822,28 @@ const CreatorVaultOS: React.FC = () => {
         {filterMimeType.trim() ? (
          <button type="button" onClick={() => setFilterMimeType("")} aria-label={`Clear MIME filter ${filterMimeType}`}>
           <SubToolboxAlphabeticalTag level="l2" label={`MIME · ${filterMimeType} ×`} spectrumKey={filterMimeType} />
+         </button>
+        ) : null}
+        {advancedFilterCount ? (
+         <button
+          type="button"
+          aria-label="Clear advanced Vault metadata filters"
+          onClick={() => {
+           setFilterUpdatedFrom("")
+           setFilterUpdatedTo("")
+           setFilterMinWidth("")
+           setFilterMinHeight("")
+           setFilterMinDuration("")
+           setFilterMaxDuration("")
+           setFilterMinBytesMb("")
+           setFilterMaxBytesMb("")
+          }}
+         >
+          <SubToolboxAlphabeticalTag
+           level="l2"
+           label={`ADVANCED · ${advancedFilterCount} ×`}
+           spectrumKey="advanced"
+          />
          </button>
         ) : null}
        </section>
