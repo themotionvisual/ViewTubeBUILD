@@ -1,0 +1,367 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewtube.live/schemas/ai-systems/agent-report.schema.json",
+  "title": "ViewTube AI Agent Report Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specversion",
+    "id",
+    "source",
+    "type",
+    "subject",
+    "time",
+    "datacontenttype",
+    "data"
+  ],
+  "properties": {
+    "specversion": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^com\\.viewtube\\.ai\\."
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1
+    },
+    "time": {
+      "type": "string"
+    },
+    "datacontenttype": {
+      "const": "application/json"
+    },
+    "traceparent": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "agent",
+        "task",
+        "event",
+        "repository",
+        "evidenceRefs",
+        "artifactRefs",
+        "traceRefs",
+        "promptRefs",
+        "tests",
+        "ci",
+        "blockers"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "vt-ai-agent-report-v1"
+        },
+        "agent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "agentId",
+            "agentClass",
+            "sessionId"
+          ],
+          "properties": {
+            "agentId": {
+              "type": "string"
+            },
+            "agentClass": {
+              "type": "string"
+            },
+            "provider": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "modelRequested": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "modelServed": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "agentVersion": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sessionId": {
+              "type": "string"
+            }
+          }
+        },
+        "task": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "taskId",
+            "intent",
+            "canonicalOwner"
+          ],
+          "properties": {
+            "taskId": {
+              "type": "string"
+            },
+            "parentTaskId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "missionId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "planId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "intent": {
+              "type": "string"
+            },
+            "canonicalOwner": {
+              "type": "string"
+            }
+          }
+        },
+        "event": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "summary"
+          ],
+          "properties": {
+            "state": {
+              "enum": [
+                "claimed",
+                "started",
+                "progress",
+                "blocked",
+                "released",
+                "completed",
+                "failed",
+                "superseded",
+                "rollback_started",
+                "rollback_completed"
+              ]
+            },
+            "progress": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 1
+            },
+            "summary": {
+              "type": "string"
+            }
+          }
+        },
+        "repository": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "observedMainSha"
+          ],
+          "properties": {
+            "branch": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "headSha": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "baseSha": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "observedMainSha": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "prRefs": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "artifactRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "traceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "promptRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "tests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "command",
+              "status"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "command": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "passed",
+                  "failed",
+                  "baseline_failure",
+                  "not_run"
+                ]
+              },
+              "durationMs": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "ci": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "provider": {
+                "type": "string"
+              },
+              "ref": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "passed",
+                  "failed",
+                  "pending",
+                  "not_run"
+                ]
+              }
+            }
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nextAction": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "usage": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "latencyMs": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "inputTokens": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "outputTokens": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "costAmount": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "costCurrency": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "costBasis": {
+              "enum": [
+                "observed",
+                "calculated",
+                "estimated",
+                "unknown"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
