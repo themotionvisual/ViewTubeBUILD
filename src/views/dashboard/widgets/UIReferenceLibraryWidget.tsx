@@ -600,10 +600,10 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             </div>
 
             <div className="widget-reference-family">
-              {familyHeading("Spectrum Fill Badges", "12 unique fills · 18/24px · white text")}
+              {familyHeading("Spectrum Fill Badges", "12 hues across 18 / 24 / 32 / 38px")}
               <div className="widget-reference-variants">
                 {WIDGET_BADGE_SPECTRUM.map((name, index) => {
-                  const height = index % 2 === 0 ? 18 : 24
+                  const height = CONTROL_HEIGHTS[index % CONTROL_HEIGHTS.length]
                   return (
                     <div className="widget-reference-variant" key={name}>
                       <small>{name} · {height}px</small>
@@ -962,7 +962,9 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
 
             <div className="widget-reference-family">
               {familyHeading("Text + Badge Data Grid", "Subscriber CRM-style cells with semantic status badges")}
-              <WidgetDataGrid
+              <div className="grid gap-3">
+                <WidgetDataGrid
+                size="small"
                 ariaLabel="Audience segment grid example"
                 columns={[
                   { key: "segment", label: "Segment", width: "1.2fr" },
@@ -976,7 +978,22 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   { id: "shorts", cells: { segment: "Shorts-only viewers", signal: "No longform click", action: "Pinned-video funnel", activity: "Today", status: <WidgetBadge status="warning">Opportunity</WidgetBadge> } },
                   { id: "members", cells: { segment: "Members", signal: "High retention", action: "Early-access post", activity: "Yesterday", status: <WidgetBadge status="neutral">Priority</WidgetBadge> } },
                 ]}
-              />
+                />
+                <WidgetDataGrid
+                  size="large"
+                  ariaLabel="Large audience segment grid example"
+                  minWidth={620}
+                  columns={[
+                    { key: "segment", label: "Segment", width: "1.2fr" },
+                    { key: "signal", label: "Signal", width: "1.1fr" },
+                    { key: "action", label: "Best Action", width: "1.15fr" },
+                  ]}
+                  rows={[
+                    { id: "longform", cells: { segment: "Longform regulars", signal: "High watch time", action: "Invite to next premiere" } },
+                    { id: "returning", cells: { segment: "Returning viewers", signal: "Strong repeat sessions", action: "Feature series playlist" } },
+                  ]}
+                />
+              </div>
             </div>
 
             <div className="widget-reference-family">
