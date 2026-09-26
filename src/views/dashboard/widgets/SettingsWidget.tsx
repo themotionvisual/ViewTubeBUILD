@@ -8,11 +8,13 @@ import { WidgetShell } from "../WidgetShell"
 import {
   WidgetBadge,
   WidgetHeaderStepper,
+  WidgetPreviewState,
   WidgetProgressBar,
   WidgetScrollArea,
   WidgetSizedButton,
   WidgetToggleSwitch,
 } from "../WidgetPrimitives"
+import { SETTINGS_AI_PREVIEW_ITEMS, SETTINGS_DATA_PREVIEW_ITEMS } from "../widgetPreviewFixtures"
 import "./SettingsWidget.css"
 
 type SettingsPage = "dashboard" | "data" | "ai" | "account"
@@ -63,7 +65,7 @@ const resolveModelLabel = (model: string) => {
 const StatusCell: React.FC<{
   label: string
   value: React.ReactNode
-  status?: "positive" | "warning" | "neutral"
+  status?: "positive" | "warning" | "danger" | "neutral"
 }> = ({ label, value, status = "neutral" }) => (
   <div className="settings-switchboard-status-cell">
     <span>{label}</span>
@@ -90,13 +92,16 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
   const lastSyncTimestamp = data.lastSyncComplete ? Date.parse(data.lastSyncComplete) : null
   const lastSync = data.formatRelativeTime(Number.isFinite(lastSyncTimestamp) ? lastSyncTimestamp : null)
   const syncAgeMs = Number.isFinite(lastSyncTimestamp) ? Date.now() - Number(lastSyncTimestamp) : null
+  const dataIssue = String(data.videoAssetCatalogError || "").trim()
   const dataState = !isConnected
     ? "DISCONNECTED"
-    : !Number.isFinite(lastSyncTimestamp)
-      ? "NEVER SYNCED"
-      : syncAgeMs !== null && syncAgeMs > 24 * 60 * 60 * 1000
-        ? "STALE"
-        : "CURRENT"
+    : dataIssue
+      ? "ERROR"
+      : !Number.isFinite(lastSyncTimestamp)
+        ? "NEVER SYNCED"
+        : syncAgeMs !== null && syncAgeMs > 24 * 60 * 60 * 1000
+          ? "STALE"
+          : "CURRENT"
 
   const dashboardProgress = useMemo(
     () => total > 0 ? Math.round((visible / total) * 100) : 0,
@@ -213,7 +218,7 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
                 <strong>{isConnected ? "CHANNEL DATA CONNECTED" : "CONNECT YOUR CHANNEL"}</strong>
                 <span>{isConnected ? `Last successful sync: ${lastSync}` : "Connect YouTube to activate personalized analytics and creator intelligence."}</span>
               </div>
-              <WidgetBadge height={24} status={dataState === "CURRENT" ? "positive" : "warning"}>
+              <WidgetBadge height={24} status={dataState === "CURRENT" ? "positive" : dataState === "ERROR" ? "danger" : "warning"}>
                 {data.isSyncing ? "SYNCING" : dataState}
               </WidgetBadge>
             </div>
@@ -228,37 +233,48 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
             />
 
             {!isConnected && (
-              <div className="settings-switchboard-preview" aria-label="Settings data preview">
-                <div className="settings-switchboard-preview-head">
-                  <WidgetBadge height={18} status="warning">PREVIEW</WidgetBadge>
-                  <strong>CONNECT TO PERSONALIZE</strong>
-                </div>
+              <WidgetPreviewState
+                compact
+                ariaLabel="Settings data preview"
+                previewReason="Connect to personalize this data-control surface."
+                recoveryAction="CONNECT CHANNEL"
+                onRecover={() => onNavigate("/connect")}
+              >
                 <div className="settings-switchboard-preview-grid">
-                  <div>
-                    <span>EXAMPLE CHANNEL</span>
-                    <strong>Connected creator profile</strong>
-                  </div>
-                  <div>
-                    <span>EXAMPLE ANALYTICS</span>
-                    <strong>Views · CTR · watch time</strong>
-                  </div>
-                  <div>
-                    <span>EXAMPLE SYNC</span>
-                    <strong>Freshness + dataset status</strong>
-                  </div>
+                  {SETTINGS_DATA_PREVIEW_ITEMS.map((item) => (
+                    <div key={item.label}>
+                      <span>{item.label}</span>
+                      <strong>{item.value}</strong>
+                    </div>
+                  ))}
                 </div>
+              </WidgetPreviewState>
+            )}
+
+            {isConnected && (
+              <div className="settings-switchboard-status-grid is-two">
+                <StatusCell label="LAST SYNC" value={lastSync} status={dataState === "CURRENT" ? "positive" : "warning"} />
+                <StatusCell label="SOURCE HEALTH" value={dataIssue ? "ISSUE" : data.isSyncing ? "SYNCING" : "READY"} status={dataIssue ? "danger" : data.isSyncing ? "warning" : "positive"} />
+              </div>
+            )}
+
+            {dataIssue && (
+              <div className="settings-switchboard-issue" role="alert">
+                <strong>DATA SOURCE ISSUE</strong>
+                <span>{dataIssue}</span>
               </div>
             )}
 
             <div className="settings-switchboard-actions">
               <WidgetSizedButton
-                height={38}
+                height={24}
                 tone="primary"
+                textFit="adaptive"
                 onClick={() => isConnected ? void data.globalSyncData({ batchMode: "initial" }) : onNavigate("/connect")}
               >
                 {isConnected ? "SYNC NOW" : "CONNECT"}
               </WidgetSizedButton>
-              <WidgetSizedButton height={38} tone="default" onClick={() => onNavigate("/settings?panel=data")}>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => onNavigate("/settings?panel=data")}>
                 DATA SETTINGS
               </WidgetSizedButton>
             </div>
@@ -282,33 +298,29 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
             </div>
 
             {!isConnected && (
-              <div className="settings-switchboard-preview" aria-label="Settings AI preview">
-                <div className="settings-switchboard-preview-head">
-                  <WidgetBadge height={18} status="warning">PREVIEW</WidgetBadge>
-                  <strong>CONNECT TO PERSONALIZE</strong>
-                </div>
+              <WidgetPreviewState
+                compact
+                ariaLabel="Settings AI preview"
+                previewReason="Connect a channel to ground AI advice in your evidence and active projects."
+                recoveryAction="CONNECT CHANNEL"
+                onRecover={() => onNavigate("/connect")}
+              >
                 <div className="settings-switchboard-preview-grid">
-                  <div>
-                    <span>EXAMPLE EVIDENCE</span>
-                    <strong>Performance + audience signals</strong>
-                  </div>
-                  <div>
-                    <span>EXAMPLE ADVICE</span>
-                    <strong>Prioritized creator action</strong>
-                  </div>
-                  <div>
-                    <span>EXAMPLE PROJECT CONTEXT</span>
-                    <strong>Active content + package state</strong>
-                  </div>
+                  {SETTINGS_AI_PREVIEW_ITEMS.map((item) => (
+                    <div key={item.label}>
+                      <span>{item.label}</span>
+                      <strong>{item.value}</strong>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              </WidgetPreviewState>
             )}
 
             <div className="settings-switchboard-actions">
-              <WidgetSizedButton height={38} tone="primary" onClick={() => onNavigate("/ai-brain")}>
+              <WidgetSizedButton height={24} tone="primary" textFit="adaptive" onClick={() => onNavigate("/ai-brain")}>
                 OPEN BRAIN HUB
               </WidgetSizedButton>
-              <WidgetSizedButton height={38} tone="default" onClick={() => onNavigate("/settings?panel=ai")}>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => onNavigate("/settings?panel=ai")}>
                 AI SETTINGS
               </WidgetSizedButton>
             </div>
@@ -327,13 +339,13 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
             </div>
 
             <div className="settings-switchboard-actions is-account">
-              <WidgetSizedButton height={38} tone="primary" onClick={() => onNavigate("/account")}>
+              <WidgetSizedButton height={24} tone="primary" textFit="adaptive" onClick={() => onNavigate("/account")}>
                 ACCOUNT
               </WidgetSizedButton>
-              <WidgetSizedButton height={38} tone="secondary" onClick={() => onNavigate("/account?panel=billing")}>
+              <WidgetSizedButton height={24} tone="secondary" textFit="adaptive" onClick={() => onNavigate("/account?panel=billing")}>
                 <CreditCard size={16} aria-hidden="true" /> BILLING
               </WidgetSizedButton>
-              <WidgetSizedButton height={38} tone="default" onClick={() => onNavigate("/user-guide")}>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => onNavigate("/user-guide")}>
                 USER GUIDE
               </WidgetSizedButton>
             </div>

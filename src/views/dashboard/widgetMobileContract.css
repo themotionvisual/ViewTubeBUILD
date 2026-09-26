@@ -54,9 +54,9 @@
     }
 
     .dashboard-barrier .vt-widget-header .header-extra:has(.widget-header-toggle) {
-      flex: 1 1 132px !important;
-      min-width: 118px;
-      max-width: 50%;
+      flex: 0 0 auto !important;
+      min-width: 0;
+      max-width: 46%;
       overflow: visible;
     }
 

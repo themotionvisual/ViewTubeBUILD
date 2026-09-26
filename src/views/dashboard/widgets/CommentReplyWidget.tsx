@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { WidgetFooter, WidgetHeaderStepper, WidgetHeaderToggle, WidgetScrollArea, WidgetSpeechBubble, WidgetSplitButton, WidgetSplitCounterBadge, WidgetTooltip, WidgetVideoMiniCard } from "../WidgetPrimitives"
+import { WidgetFooter, WidgetHeaderStepper, WidgetHeaderToggle, WidgetPreviewState, WidgetScrollArea, WidgetSpeechBubble, WidgetSplitButton, WidgetSplitCounterBadge, WidgetTooltip, WidgetVideoMiniCard } from "../WidgetPrimitives"
 import {
   MessageSquare,
   Sparkles,
@@ -21,6 +21,8 @@ import {
 } from "./commentResponderUtils"
 import { useCommentResponderController, useCreatorEngagementContext } from "../../../features/creator-engagement"
 import { InstrumentExplanation, InstrumentStages, WidgetInstrument } from "../instruments/WidgetInstrument"
+import { COMMENT_RESPONDER_PREVIEW } from "../widgetPreviewFixtures"
+import "./CommentReplyWidget.css"
 
 const htmlDecode = (input: string) => {
   const doc = new DOMParser().parseFromString(input, "text/html")
@@ -382,7 +384,31 @@ export const CommentReplyWidget = ({
               <div className="comment-responder-sync-footer"><Loader2 size={15} className="animate-spin" /> Syncing your first three comments…</div>
             </div>
           ) : !currentThread ? (
-            <div style={{ textAlign: "center", padding: "40px", opacity: 0.3, fontWeight: 900, fontSize: "11px" }}>NO COMMENTS FOUND.</div>
+            <WidgetPreviewState
+              compact
+              ariaLabel="Comment Responder preview"
+              previewReason="Example comment anatomy stays visible until real comment access returns a conversation."
+              recoveryAction={canPostReply ? "REFRESH COMMENTS" : "RECONNECT CHANNEL"}
+              onRecover={() => void sharedController.refresh()}
+            >
+              <div className="comment-responder-preview">
+                <WidgetVideoMiniCard
+                  title={COMMENT_RESPONDER_PREVIEW.videoTitle}
+                  placeholder={<MessageSquare size={24} />}
+                  footer="SAMPLE VIDEO"
+                />
+                <div className="comment-responder-preview-copy">
+                  <strong>{COMMENT_RESPONDER_PREVIEW.author}</strong>
+                  <WidgetSpeechBubble>
+                    {COMMENT_RESPONDER_PREVIEW.comment}
+                  </WidgetSpeechBubble>
+                  <div className="comment-responder-preview-badges">
+                    <WidgetSplitCounterBadge icon={<ThumbsUp />} value={COMMENT_RESPONDER_PREVIEW.likes} label="Sample likes" height={24} tone="primary" />
+                    <WidgetSplitCounterBadge icon={<MessagesSquare />} value={COMMENT_RESPONDER_PREVIEW.replies} label="Sample replies" height={24} tone="secondary" />
+                  </div>
+                </div>
+              </div>
+            </WidgetPreviewState>
           ) : (() => {
             const thread = currentThread
             const c = thread.snippet.topLevelComment.snippet

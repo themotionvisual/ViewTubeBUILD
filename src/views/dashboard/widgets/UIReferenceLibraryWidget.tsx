@@ -65,6 +65,7 @@ import {
   WidgetLeftSplitButton,
   WidgetLiveBadge,
   WidgetPagination,
+  WidgetPreviewState,
   WidgetProgressBar,
   WidgetRadio,
   WidgetSearchInput,
@@ -307,6 +308,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   return (
     <WidgetShell widget={previewWidget} headerContent={headerContent} icon={<Layers size={22} />} {...common}>
       <WidgetScrollArea
+        key={activeCategory}
         ariaLabel="ViewTube Widget Component Reference Library"
         contentClassName="flex min-h-full flex-col gap-3 p-3"
       >
@@ -882,6 +884,21 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
         {activeCategory === "compound" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("Compound Workflow Primitives", "Creator Operations donor patterns rebuilt in widget UI/CSS")}
+
+            <div className="widget-reference-family">
+              {familyHeading("Preview State", "Honest sample visualization for disconnected or empty widgets")}
+              <WidgetPreviewState
+                previewReason="Sample content demonstrates the widget signature without pretending to be creator data."
+                recoveryAction="CONNECT TO PERSONALIZE"
+                onRecover={() => {}}
+              >
+                <div className="grid grid-cols-3 gap-2">
+                  <WidgetBadge status="neutral">EXAMPLE KPI</WidgetBadge>
+                  <WidgetBadge status="warning">SAMPLE SIGNAL</WidgetBadge>
+                  <WidgetBadge status="positive">RECOVERY READY</WidgetBadge>
+                </div>
+              </WidgetPreviewState>
+            </div>
 
             <div className="widget-reference-family">
               {familyHeading("Comment + Video Mini Modules", "Comment Responder donor primitives promoted to the shared system")}

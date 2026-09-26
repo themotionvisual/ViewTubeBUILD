@@ -7,6 +7,7 @@ const renderer = readFileSync(new URL("../WidgetRendererBase.tsx", import.meta.u
 const widget = readFileSync(new URL("../widgets/SettingsWidget.tsx", import.meta.url), "utf8")
 const css = readFileSync(new URL("../widgets/SettingsWidget.css", import.meta.url), "utf8")
 const shell = readFileSync(new URL("../WidgetShell.tsx", import.meta.url), "utf8")
+const previewFixtures = readFileSync(new URL("../widgetPreviewFixtures.ts", import.meta.url), "utf8")
 
 describe("Settings dashboard control switchboard", () => {
   it("owns Settings in a dedicated lazy widget instead of the inline base renderer", () => {
@@ -51,25 +52,36 @@ describe("Settings dashboard control switchboard", () => {
     expect(widget).toContain("NEVER SYNCED")
     expect(widget).toContain("STALE")
     expect(widget).toContain("CURRENT")
+    expect(widget).toContain("ERROR")
+    expect(widget).toContain("SOURCE HEALTH")
+    expect(widget).toContain("DATA SOURCE ISSUE")
   })
 
   it("shows an honest generic preview when no channel is connected", () => {
-    expect(widget).toContain("PREVIEW")
-    expect(widget).toContain("EXAMPLE CHANNEL")
-    expect(widget).toContain("EXAMPLE ANALYTICS")
-    expect(widget).toContain("CONNECT TO PERSONALIZE")
-    expect(widget).toContain("EXAMPLE EVIDENCE")
-    expect(widget).toContain("EXAMPLE ADVICE")
-    expect(widget).toContain("EXAMPLE PROJECT CONTEXT")
-    expect(widget).toContain('aria-label="Settings data preview"')
-    expect(widget).toContain('aria-label="Settings AI preview"')
+    expect(widget).toContain("WidgetPreviewState")
+    expect(widget).toContain("SETTINGS_DATA_PREVIEW_ITEMS")
+    expect(widget).toContain("SETTINGS_AI_PREVIEW_ITEMS")
+    expect(previewFixtures).toContain("EXAMPLE CHANNEL")
+    expect(previewFixtures).toContain("EXAMPLE ANALYTICS")
+    expect(widget).toContain("Connect to personalize")
+    expect(previewFixtures).toContain("EXAMPLE EVIDENCE")
+    expect(previewFixtures).toContain("EXAMPLE ADVICE")
+    expect(previewFixtures).toContain("EXAMPLE PROJECT CONTEXT")
+    expect(widget).toContain('ariaLabel="Settings data preview"')
+    expect(widget).toContain('ariaLabel="Settings AI preview"')
   })
 
   it("defines compact, standard and wide container layouts for Settings", () => {
+    expect(css).toContain("@container vt-widget (max-width:260px)")
     expect(css).toContain("@container vt-widget (max-width:420px)")
+    expect(css).toContain("height:72px")
+    expect(css).toContain("padding-bottom:34px")
     expect(css).toContain("@container vt-widget (min-width:421px) and (max-width:760px)")
     expect(css).toContain("@container vt-widget (min-width:761px)")
-    expect(css).toContain(".settings-switchboard-preview")
+    expect(css).toContain(".settings-switchboard-preview-grid")
+    expect(css).toContain(".settings-switchboard-issue")
+    expect(css).toContain("min-width:78px")
+    expect(css).toContain("font-size:8px")
   })
 
   it("uses canonical account and entitlement owners rather than the legacy plan cache", () => {

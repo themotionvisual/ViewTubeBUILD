@@ -722,6 +722,16 @@
   .widget-reference-variants {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  /* On phone widths the section stepper is the required navigation control.
+     Palette stepping is secondary and yields its header space so the canonical
+     title can remain full-size and wrap to at most two lines. */
+  .widget-reference-header-controls > .widget-header-toggle:first-child {
+    display: flex;
+  }
+  .widget-reference-header-controls > .widget-header-toggle:last-child {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

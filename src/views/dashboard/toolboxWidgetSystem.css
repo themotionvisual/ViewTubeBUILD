@@ -121,7 +121,7 @@
   text-transform: uppercase;
   letter-spacing: -0.04em;
   color: color-mix(in srgb, var(--widget-color, #000) 60%, black);
-  line-height: 0.9;
+  line-height: 1;
   font-size: var(--widget-type-title);
   padding-left: 10px;
   pointer-events: none;
@@ -1207,7 +1207,7 @@
     padding-left: 7px;
     padding-right: 4px;
     font-size: var(--widget-type-title) !important;
-    line-height: .9;
+    line-height: 1;
     white-space: normal !important;
     overflow: hidden;
     text-overflow: clip !important;
@@ -1224,16 +1224,17 @@
      title or action rail is removed. Non-toggle extras may still hide. */
   :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) {
     display: flex !important;
-    flex: 1 1 132px !important;
-    min-width: 118px;
-    max-width: 50%;
+    flex: 0 0 auto !important;
+    min-width: 0;
+    max-width: 46%;
     overflow: visible;
     justify-content: center !important;
   }
 
   :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) .left {
-    flex: 1 1 38%;
-    max-width: 40%;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
   }
 
   :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) .title {
@@ -1292,20 +1293,15 @@
      widget-specific header rules appear later in the cascade. */
   :where(.dashboard-barrier) [data-widget-id] .header-extra:has(.widget-header-toggle) {
     display: flex !important;
-    flex: 1 1 132px !important;
-    min-width: 118px;
-    max-width: 50%;
+    flex: 0 0 auto !important;
+    min-width: 0;
+    max-width: 46%;
     overflow: visible;
     justify-content: center !important;
   }
 }
 
 @container (max-width: 460px) {
-  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .vt-widget-header .title {
-    max-width: 94px;
-    font-size: 13px;
-  }
-
   :where(.dashboard-barrier) [data-widget-id="comment-replier"] .header-extra > div {
     gap: 3px !important;
   }

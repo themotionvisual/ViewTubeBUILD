@@ -1,8 +1,10 @@
 import React, { useState } from "react"
 import { WidgetShell } from "../WidgetShell"
 import { DollarSign, BarChart2 } from "lucide-react"
+import { WidgetPreviewState } from "../WidgetPrimitives"
+import { REVENUE_CHART_PREVIEW_WEEKS } from "../widgetPreviewFixtures"
 
-export const RevenueChartWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data }: any) => {
+export const RevenueChartWidget = ({ widget, instance, editMode, onToggleCollapse, onCycleSize, onDecSize, onCycleHeight, onDecHeight, onRemove, data, onNavigate }: any) => {
  const common = {
   widget,
   instance,
@@ -23,20 +25,10 @@ export const RevenueChartWidget = ({ widget, instance, editMode, onToggleCollaps
   text: string
  } | null>(null)
 
- // Fallback data if API hasn't resolved revenue yet
- const displayWeeks =
-  weeks.length > 0
-   ? weeks
-   : [
-     { month: "Jan", week: "W1", revenue: 420, grossRevenue: 480 },
-     { month: "Jan", week: "W2", revenue: 580, grossRevenue: 640 },
-     { month: "Jan", week: "W3", revenue: 1100, grossRevenue: 1250 },
-     { month: "Jan", week: "W4", revenue: 890, grossRevenue: 980 },
-     { month: "Feb", week: "W1", revenue: 1050, grossRevenue: 1180 },
-     { month: "Feb", week: "W2", revenue: 1300, grossRevenue: 1440 },
-     { month: "Feb", week: "W3", revenue: 1550, grossRevenue: 1720 },
-     { month: "Feb", week: "W4", revenue: 1200, grossRevenue: 1350 },
-    ]
+ const isPreview = weeks.length === 0
+ const displayWeeks = isPreview
+  ? REVENUE_CHART_PREVIEW_WEEKS.map((week) => ({ ...week }))
+  : weeks
 
  const getRevValue = (w: any) =>
   revenueType === "gross" ? (w.grossRevenue || w.revenue) : w.revenue
@@ -79,6 +71,16 @@ export const RevenueChartWidget = ({ widget, instance, editMode, onToggleCollaps
      height: "100%",
      gap: "10px",
     }}>
+    {isPreview ? (
+     <WidgetPreviewState
+      compact
+      ariaLabel="Revenue Tracker preview"
+      previewReason="Sample revenue bars demonstrate the chart until monetization data is connected or synced."
+      recoveryAction="CONNECT DATA"
+      onRecover={() => onNavigate?.("/connect")}
+     />
+    ) : null}
+
     {/* Header Title */}
     <div
      style={{

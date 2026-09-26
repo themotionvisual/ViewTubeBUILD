@@ -187,3 +187,41 @@
   .vt-opportunity-compass__node{min-width:44px;min-height:44px}
   .vt-opportunity-radar__rank-row{min-height:44px}
 }
+
+
+.vt-opportunity-radar__preview-note{
+  color:var(--vt-ink,var(--widget-border));
+  font-size:9px;
+  font-weight:1000;
+  line-height:1.1;
+  letter-spacing:.035em;
+  text-align:center;
+  text-transform:uppercase;
+}
+
+
+/* Preview owns the full radar canvas instead of occupying one cell of the
+   ready-state two-column composition. */
+.vt-opportunity-radar > .widget-preview-state{
+  grid-column:1 / -1;
+  grid-row:1 / -1;
+  width:100%;
+  min-height:100%;
+  align-self:stretch;
+}
+.vt-opportunity-radar > .widget-preview-state .widget-preview-state-illustration{
+  min-height:170px;
+}
+.vt-opportunity-radar > .widget-preview-state .vt-opportunity-compass{
+  grid-row:auto;
+  width:100%;
+  min-height:170px;
+  height:clamp(170px,34cqh,230px);
+}
+
+@container (max-width:520px){
+  .vt-opportunity-radar > .widget-preview-state .widget-preview-state-illustration,
+  .vt-opportunity-radar > .widget-preview-state .vt-opportunity-compass{
+    min-height:185px;
+  }
+}

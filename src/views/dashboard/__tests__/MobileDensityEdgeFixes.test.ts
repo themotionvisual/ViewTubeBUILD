@@ -48,6 +48,12 @@ describe("mobile widget density and edge contracts", () => {
     expect(mobile).toContain(".widget-header-toggle button")
     expect(mobile).toContain("white-space: normal")
     expect(mobile).toContain("text-overflow: clip")
+    expect(mobile).toContain("flex: 0 0 auto !important")
+    expect(mobile).toContain("max-width: 46%")
+    expect(legacy).toContain("flex: 0 0 auto !important")
+    expect(legacy).not.toContain("flex: 1 1 132px !important")
+    expect(legacy).not.toContain('[data-widget-id="comment-replier"] .vt-widget-header .title')
+    expect(legacy).toContain("line-height: 1;")
   })
 
   it("keeps the mobile control deck visible while a widget is collapsed", () => {
