@@ -70,6 +70,13 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).toContain('xl:static')
  })
 
+ it("summarizes hidden metadata filters with a removable advanced-filter chip", () => {
+  expect(source).toContain("const advancedFilterCount =")
+  expect(source).toContain('label={`ADVANCED · ${advancedFilterCount} ×`}')
+  expect(source).toContain('setFilterUpdatedFrom("")')
+  expect(source).toContain('setFilterMaxBytesMb("")')
+ })
+
  it("shows removable applied-filter chips only when contextual filters are active", () => {
   expect(source).toContain('aria-label="Vault active filters"')
   expect(source).toContain('onClick={() => setSelectedTag(null)}')
