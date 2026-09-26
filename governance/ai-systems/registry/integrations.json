@@ -2,7 +2,7 @@
   "schemaVersion": "vt-ai-integrations-registry-v1",
   "generatedAt": "2026-09-26T01:10:00-04:00",
   "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
-  "authority": "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+  "authority": "docs/domains/BRAIN.md",
   "records": [
     {
       "id": "vt-ai-integration:analytics-to-brain",
@@ -34,7 +34,7 @@
         ],
         "docs": [
           "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md",
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -106,7 +106,7 @@
           "src/services/brain"
         ],
         "docs": [
-          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+          "docs/domains/BRAIN.md",
           "tasks/ai-brain-quality/plan.md"
         ],
         "prs": [],
@@ -250,8 +250,8 @@
           "src/services/gemini.ts"
         ],
         "docs": [
-          "docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md",
-          "docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json"
+          "docs/specifications/PROMPTS.md",
+          "docs/specifications/prompt-registry.json"
         ],
         "prs": [],
         "commits": [],
@@ -278,7 +278,7 @@
         "currentMainState": "partial",
         "verifiedMainSha": null,
         "verificationRefs": [
-          "docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md"
+          "docs/specifications/PROMPTS.md"
         ]
       },
       "promptRefs": [],
