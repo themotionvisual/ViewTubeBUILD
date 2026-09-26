@@ -567,6 +567,9 @@ describe("expanded widget compound primitives", () => {
         options={[{ value: "v1", label: "Long title", meta: "12:42 · 48,230 views" }]}
       />,
     )).toContain("is-height-38")
+    expect(variantsCss).toContain("--widget-video-split-bay: var(--vt-primitive-height")
+    expect(extensionSource).toContain("is-drop-up")
+    expect(variantsCss).toContain(".widget-video-select.is-drop-up .widget-video-select-menu")
   })
 })
 
