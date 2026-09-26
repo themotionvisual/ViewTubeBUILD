@@ -632,6 +632,33 @@ describe("comment responder donor primitives", () => {
   })
 })
 
+describe("reference-library interaction recovery contracts", () => {
+  it("keeps split-left rails square at every non-micro canonical size", () => {
+    expect(variantsCss).toContain("grid-template-columns: var(--vt-primitive-height, 32px) minmax(0, 1fr)")
+    expect(variantsCss).toContain("width: var(--vt-primitive-height, 32px)")
+    expect(variantsCss).not.toContain("calc(var(--vt-primitive-height, 32px) * 1.16)")
+  })
+
+  it("restores an external palette focus glow on canonical text inputs", () => {
+    expect(variantsCss).toContain(".widget-text-input.vt-sized-control:focus-visible")
+    expect(variantsCss).toContain("box-shadow: 0 0 0")
+    expect(variantsCss).toContain("color-mix(in srgb, var(--widget-color")
+  })
+
+  it("offers small and large toolbox media upload presentations from one primitive", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <WidgetMediaUploadFrame size="small" icon={<Plus />} title="Small upload" detail="Drop media" onBrowse={() => {}} />
+        <WidgetMediaUploadFrame size="large" icon={<Plus />} title="Large upload" detail="Drop media" onBrowse={() => {}} />
+      </div>,
+    )
+    expect(markup).toContain("is-size-small")
+    expect(markup).toContain("is-size-large")
+    expect(referenceSource).toContain('size="small"')
+    expect(referenceSource).toContain('size="large"')
+  })
+})
+
 describe("reference-library video module and full-width primitive sizing", () => {
   it("offers compact, standard, and large video mini modules from one canonical primitive", () => {
     const markup = renderToStaticMarkup(
