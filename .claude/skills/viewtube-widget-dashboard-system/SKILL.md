@@ -88,6 +88,13 @@ Decoration alone does not count.
 
 Use canonical primitives for buttons, icon buttons, split controls, inputs, selects, toggles, radios, checkboxes, sliders, tags, badges, steppers, pagination, upload frames, progress, states, scroll areas, and related reusable UI.
 
+Canonical compound workflow primitives also include:
+
+- `WidgetSectionBand` — full-bleed labeled divider/status band. It uses the standard `default / primary / secondary` monochromatic tones, widget-ink text, and must reach both usable module edges.
+- `WidgetDataGrid` — semantic text/cell/badge grid for CRM, comparison and operations tables. It owns its horizontal scrolling rather than being clipped by the widget shell.
+- `WidgetChecklistProgress` — controlled canonical-checkbox checklist whose progress fill is derived from checked items; do not maintain a second independent progress state.
+- `WidgetCalendarGrid` — production/calendar grid with canonical event controls; seven columns when space supports it and two columns in narrow widget containers.
+
 Do **not** flatten custom functional interiors to make widgets look identical.
 
 Preserve useful custom systems such as Comment Responder, Goals Tracker, Video Director, Brain Hub, Image Generator, or future purpose-built tools while bringing their shared geometry, tokens, colors, component sizing, state behavior, and accessibility into the canonical system.
