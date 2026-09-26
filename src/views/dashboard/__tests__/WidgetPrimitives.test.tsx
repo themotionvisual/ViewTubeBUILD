@@ -644,10 +644,18 @@ describe("reference-library interaction recovery contracts", () => {
     expect(variantsCss).not.toContain("calc(var(--vt-primitive-height, 32px) * 1.16)")
   })
 
-  it("restores an external palette focus glow on canonical text inputs", () => {
-    expect(variantsCss).toContain(".widget-text-input.vt-sized-control:focus-visible")
-    expect(variantsCss).toContain("box-shadow: 0 0 0")
-    expect(variantsCss).toContain("color-mix(in srgb, var(--widget-color")
+  it("matches the Community Post resting and focus states across editable widget primitives", () => {
+    expect(variantsCss).toContain("--widget-field-rest-stroke")
+    expect(variantsCss).toContain("caret-color:var(--widget-color,#34cdea)!important")
+    expect(variantsCss).toContain("border-color:var(--widget-field-rest-stroke)!important")
+    expect(variantsCss).toContain("background:var(--widget-field-focus-fill)!important")
+    expect(variantsCss).toContain("0 0 16px 2px var(--widget-field-focus-glow)")
+
+    expect(matrixCss).toContain(".widget-search-input:focus-within")
+    expect(matrixCss).toContain("border-color: var(--widget-field-focus-border)")
+    expect(matrixCss).toContain("background: var(--widget-field-focus-fill)")
+    expect(matrixCss).toContain("0 0 16px 2px var(--widget-field-focus-glow)")
+    expect(matrixCss).toContain("caret-color: var(--widget-color, #34cdea)")
   })
 
   it("offers small and large toolbox media upload presentations from one primitive", () => {
