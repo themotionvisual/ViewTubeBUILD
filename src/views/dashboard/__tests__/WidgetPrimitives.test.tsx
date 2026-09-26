@@ -668,7 +668,7 @@ describe("reference library full-width composition", () => {
   it("places edge-to-edge examples on a full scroll grid instead of inside inset wrappers", () => {
     expect(referenceSource).toContain('ariaLabel="ViewTube Widget Component Reference Library"')
     expect(referenceSource).toContain('edge="full"')
-    expect(referenceSource).toContain('className="widget-reference-scroll-content"')
+    expect(referenceSource).toContain('contentClassName="widget-reference-scroll-content"')
     expect(referenceSource).toContain('className="widget-reference-full-width-region')
     expect(referenceSource).toContain('edge="full" surface="transparent" className="widget-reference-full-width-region')
   })
