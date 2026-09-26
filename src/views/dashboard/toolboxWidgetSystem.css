@@ -1292,20 +1292,15 @@
      widget-specific header rules appear later in the cascade. */
   :where(.dashboard-barrier) [data-widget-id] .header-extra:has(.widget-header-toggle) {
     display: flex !important;
-    flex: 1 1 132px !important;
-    min-width: 118px;
-    max-width: 50%;
+    flex: 0 0 auto !important;
+    min-width: 0;
+    max-width: 46%;
     overflow: visible;
     justify-content: center !important;
   }
 }
 
 @container (max-width: 460px) {
-  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .vt-widget-header .title {
-    max-width: 94px;
-    font-size: 13px;
-  }
-
   :where(.dashboard-barrier) [data-widget-id="comment-replier"] .header-extra > div {
     gap: 3px !important;
   }
