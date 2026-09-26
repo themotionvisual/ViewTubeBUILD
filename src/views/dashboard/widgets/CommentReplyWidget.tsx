@@ -357,14 +357,14 @@ export const CommentReplyWidget = ({
     }>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: 0, minHeight: 0 }}>
         {inboundImageUrl && (
-          <div style={{ border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", borderRadius: "8px", padding: "6px 8px", margin: "10px 10px 0", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+          <div style={{ border: "2px solid var(--vt-ink, var(--widget-border))", borderRadius: "8px", padding: "6px 8px", margin: "10px 10px 0", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
             <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.7 }}>Image received from generator</span>
             <button className="vt-button" style={{ height: "24px", fontSize: "8px", padding: "0 8px" }} onClick={() => navigator.clipboard?.writeText(inboundImageUrl)}>COPY URL</button>
           </div>
         )}
 
         {error && (
-          <div role="alert" style={{ border: "2px solid #000", margin: "10px 10px 0", padding: "7px 9px", background: "#FFB158", color: "#000", fontSize: "10px", fontWeight: 900, lineHeight: 1.3 }}>
+          <div role="alert" style={{ border: "2px solid #000", margin: "10px 10px 0", padding: "7px 9px", background: "#FFB158", color: "var(--vt-ink, var(--widget-border))", fontSize: "10px", fontWeight: 900, lineHeight: 1.3 }}>
             {error}
           </div>
         )}
@@ -433,7 +433,7 @@ export const CommentReplyWidget = ({
                             <span style={{ color: "#3157ff", fontSize: "10px", fontWeight: 800, letterSpacing: "0.02em", lineHeight: 1.2 }}>
                               {timestamp.dateLabel}<span style={{ fontSize: "7px", verticalAlign: "text-bottom", marginLeft: "1px" }}>{timestamp.meridiem}</span>
                             </span>
-                            <span style={{ color: "#000", fontSize: "8px", fontWeight: 700, letterSpacing: "0.04em", lineHeight: 1 }}>
+                            <span style={{ color: "var(--vt-ink, var(--widget-border))", fontSize: "8px", fontWeight: 700, letterSpacing: "0.04em", lineHeight: 1 }}>
                               {timestamp.relative}
                             </span>
                           </div>
