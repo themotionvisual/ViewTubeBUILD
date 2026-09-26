@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "viewtube://schemas/document-metadata",
+  "title": "ViewTube Document Metadata",
+  "type": "object",
+  "required": [
+    "id",
+    "path",
+    "class",
+    "status",
+    "concern",
+    "owner",
+    "productionDate",
+    "lastEdited"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^DOC-[A-Z0-9-]+$"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "class": {
+      "enum": [
+        "CONSTITUTION",
+        "PRODUCT_ARCHITECTURE",
+        "PROGRAM",
+        "DOMAIN_AUTHORITY",
+        "SPECIFICATION",
+        "DECISION",
+        "REFERENCE",
+        "AUDIT",
+        "EVIDENCE",
+        "RECEIPT",
+        "DONOR",
+        "PROTOTYPE",
+        "HISTORICAL",
+        "SUPERSEDED",
+        "GENERATED"
+      ]
+    },
+    "status": {
+      "enum": [
+        "ACTIVE",
+        "NEEDS_REVIEW",
+        "MIGRATING",
+        "SUPERSEDED",
+        "ARCHIVED",
+        "DRAFT"
+      ]
+    },
+    "concern": {
+      "type": "string",
+      "minLength": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "productionDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "lastEdited": {
+      "type": "string",
+      "format": "date"
+    },
+    "lastAuditedMainSha": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "supersedes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "supersededBy": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "relatedAuthorities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "monitoredPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "generatedFrom": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "archiveRecord": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": true
+}
