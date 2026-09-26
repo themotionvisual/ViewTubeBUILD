@@ -158,8 +158,9 @@
 }
 
 :where(.dashboard-barrier) .vt-widget-body {
+  --vt-widget-body-inset: var(--widget-content-inset);
   background: var(--bg-widget);
-  padding: var(--vt-widget-body-inset, var(--widget-content-inset));
+  padding: var(--vt-widget-body-inset);
   color: var(--text-main);
   transition: background-color var(--transition), color var(--transition);
   display: flex;
@@ -175,23 +176,40 @@
   --vt-widget-body-inset: 0px;
 }
 
-/* Full-bleed utilities to let bottom bars, dividers, or edge boxes touch module borders */
-:where(.dashboard-barrier) .vt-full-bleed {
-  margin-inline: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance))) !important;
-  width: calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))) !important;
-  max-width:none !important;
+/* Widget interior zones:
+   INSET is the default body column.
+   FULL uses only the body's real inset and never borrows shadow clearance.
+   SHADOW-SAFE expands inside the usable edge without creating a fake white lane.
+   OVERLAY opts floating content out of the clipping hierarchy. */
+:where(.dashboard-barrier) .vt-full-bleed,
+:where(.dashboard-barrier) .vt-widget-zone-full {
+  margin-inline: calc(-1 * var(--vt-widget-body-inset)) !important;
+  width: calc(100% + (2 * var(--vt-widget-body-inset))) !important;
+  max-width: none !important;
+  box-sizing: border-box;
 }
 :where(.dashboard-barrier) .vt-full-bleed-bottom {
-  margin-inline: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance))) !important;
-  margin-bottom: calc(-1 * var(--widget-content-inset)) !important;
-  width: calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))) !important;
-  max-width:none !important;
+  margin-inline: calc(-1 * var(--vt-widget-body-inset)) !important;
+  margin-bottom: calc(-1 * var(--vt-widget-body-inset)) !important;
+  width: calc(100% + (2 * var(--vt-widget-body-inset))) !important;
+  max-width: none !important;
 }
 :where(.dashboard-barrier) .vt-full-bleed-top {
-  margin-inline: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance))) !important;
-  margin-top: calc(-1 * var(--widget-content-inset)) !important;
-  width: calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))) !important;
-  max-width:none !important;
+  margin-inline: calc(-1 * var(--vt-widget-body-inset)) !important;
+  margin-top: calc(-1 * var(--vt-widget-body-inset)) !important;
+  width: calc(100% + (2 * var(--vt-widget-body-inset))) !important;
+  max-width: none !important;
+}
+:where(.dashboard-barrier) .vt-widget-zone-shadow-safe {
+  margin-inline: calc(-1 * var(--widget-shadow-clearance));
+  padding-inline: var(--widget-shadow-clearance);
+  box-sizing: border-box;
+  overflow: visible;
+}
+:where(.dashboard-barrier) .vt-widget-zone-overlay {
+  position: relative;
+  z-index: 40;
+  overflow: visible;
 }
 
 :where(.dashboard-barrier) .widget-section {
@@ -211,8 +229,8 @@
 :where(.dashboard-barrier) .widget-workflow-main > * { min-width: 0; }
 
 :where(.dashboard-barrier) .widget-section.is-full {
-  margin-inline: calc(-1 * var(--widget-content-inset));
-  padding-inline: var(--widget-content-inset);
+  margin-inline: calc(-1 * var(--vt-widget-body-inset));
+  padding-inline: var(--vt-widget-body-inset);
 }
 
 /* ═══ UNIVERSAL WIDGET ARCHETYPE RECIPES ═══ */
