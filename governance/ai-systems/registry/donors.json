@@ -1,0 +1,208 @@
+{
+  "schemaVersion": "vt-ai-donors-registry-v1",
+  "generatedAt": "2026-09-26T01:10:00-04:00",
+  "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+  "authority": "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+  "records": [
+    {
+      "id": "vt-ai-donor:pr241",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "donor",
+      "title": "PR #241 AI audit/content optimization donor",
+      "summary": "34-file donor audited against current main; wholesale merge rejected, selective forward-port only.",
+      "lifecycle": "historical",
+      "ownership": {
+        "canonicalOwner": "AI Systems donor governance",
+        "concern": "PR #241 donor disposition and selective harvest",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:10:00-04:00",
+        "updatedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [],
+        "docs": [
+          "docs/brain/PR241_DONOR_HARVEST_AUDIT_2026-09-24.md",
+          "docs/brain/PR241_DONOR_HARVEST_IMPLEMENTATION_PLAN_2026-09-24.md",
+          "docs/migration/reference/PR241_VIEWTUBE_AI_SYSTEMS_VERIFIED_AUDIT_AND_IMPLEMENTATION_PLAN_2026-09-12.md"
+        ],
+        "prs": [
+          241
+        ],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [],
+        "provides": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": [
+          "claude/ai-audit-content-optimization-gdwwp9"
+        ]
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": null,
+        "mergedCommit": null,
+        "currentMainState": "partial",
+        "verifiedMainSha": null,
+        "verificationRefs": [
+          "docs/brain/PR241_DONOR_HARVEST_AUDIT_2026-09-24.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "donor",
+        "pr241",
+        "historical"
+      ]
+    },
+    {
+      "id": "vt-ai-donor:cross-branch-harvest-pass1",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "donor",
+      "title": "AI Cross-Branch Harvest Pass 1",
+      "summary": "Historical branch harvest inventory; runtime status counts are stale but donor dispositions remain useful.",
+      "lifecycle": "historical",
+      "ownership": {
+        "canonicalOwner": "AI Systems donor governance",
+        "concern": "historical AI branch provenance and selective-harvest guidance",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:10:00-04:00",
+        "updatedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [],
+        "docs": [
+          "docs/brain/AI_CROSS_BRANCH_HARVEST_PASS1_2026-09-18.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [],
+        "provides": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": [
+          "feat/ai-intelligence-engine-phase0-2026-09-17",
+          "feat/brain-phase-six-durable-intelligence-persistence",
+          "feat/brain-phase-six-evaluation-attribution-followup"
+        ]
+      },
+      "integration": {
+        "prMerged": false,
+        "prBase": null,
+        "mergedCommit": null,
+        "currentMainState": "superseded",
+        "verifiedMainSha": null,
+        "verificationRefs": [
+          "docs/brain/AI_CROSS_BRANCH_HARVEST_PASS1_2026-09-18.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "donor",
+        "branches",
+        "historical"
+      ]
+    },
+    {
+      "id": "vt-ai-donor:brain-ai-history",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "reference",
+      "title": "Brain / AI Historical Reference Archive",
+      "summary": "Archived AI audits, inventories and phase-closeout documents preserved after durable-rule harvest.",
+      "lifecycle": "historical",
+      "ownership": {
+        "canonicalOwner": "Documentation Governance",
+        "concern": "historical AI documentation provenance",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:10:00-04:00",
+        "updatedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:10:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [],
+        "docs": [
+          "docs/migration/reference/brain-ai-history/README.md",
+          "docs/brain/ai-systems/DOCUMENT_CONSOLIDATION_REGISTER_2026-09-24.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [],
+        "provides": [],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "docs/migration/reference/brain-ai-history/README.md"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "archive",
+        "documentation",
+        "historical"
+      ]
+    }
+  ]
+}

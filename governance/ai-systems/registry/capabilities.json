@@ -1,0 +1,1058 @@
+{
+  "schemaVersion": "vt-ai-capabilities-registry-v1",
+  "generatedAt": "2026-09-26T01:15:00-04:00",
+  "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+  "authority": "src/services/brain/BrainCapabilityRegistry.ts",
+  "note": "Generated from the 14 current main BRAIN_CAPABILITY_REGISTRY definitions; historical capability counts are not authoritative.",
+  "records": [
+    {
+      "id": "vt-ai-capability:channel-profile",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Channel profile",
+      "summary": "Uses inferred niche, pillars, formats, and creator goals.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: channel-profile",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:channel-profile"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "strategy",
+        "audience",
+        "content_analysis",
+        "requires-channel-data",
+        "no-current-research-required"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:signal-anomaly-intelligence",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Signal anomaly intelligence",
+      "summary": "Detects and explains unusual shifts in canonical VT-SYNC analytics while preserving evidence provenance and uncertainty.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: signal-anomaly-intelligence",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:signal-anomaly-intelligence"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "analytics",
+        "strategy",
+        "revenue",
+        "audience",
+        "requires-channel-data",
+        "no-current-research-required"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:statistics-intelligence",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Statistics intelligence",
+      "summary": "Computes deterministic metric summaries, coverage, freshness, and missingness from analytics-canon evidence before model reasoning.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: statistics-intelligence",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:statistics-intelligence"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "analytics",
+        "strategy",
+        "revenue",
+        "audience",
+        "requires-channel-data",
+        "no-current-research-required"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:algorithm-intelligence",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Algorithm intelligence",
+      "summary": "Combines channel patterns, anomaly/opportunity signals, project priming and ranked recommendations without executing actions.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: algorithm-intelligence",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:algorithm-intelligence"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "strategy",
+        "analytics",
+        "publishing",
+        "content_analysis",
+        "requires-channel-data",
+        "no-current-research-required"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:analytics-diagnosis",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Analytics diagnosis",
+      "summary": "Reads known channel and video performance without inventing missing values.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: analytics-diagnosis",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:analytics-diagnosis"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "analytics",
+        "revenue",
+        "requires-channel-data",
+        "no-current-research-required"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:top-performer-mining",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Top performer mining",
+      "summary": "Finds repeatable patterns in proven videos.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: top-performer-mining",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:top-performer-mining"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "strategy",
+        "content_analysis",
+        "seo",
+        "requires-channel-data",
+        "no-current-research-required"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:audience-promise",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Audience promise",
+      "summary": "Connects topics and formats to a clear viewer payoff.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: audience-promise",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:audience-promise"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "audience",
+        "strategy",
+        "publishing",
+        "channel-data-optional",
+        "no-current-research-required"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:seo-opportunity",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "SEO opportunity",
+      "summary": "Builds channel-relevant title, topic, and search opportunities.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: seo-opportunity",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:seo-opportunity"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "seo",
+        "publishing",
+        "channel-data-optional",
+        "no-current-research-required"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:goal-coach",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Goal coach",
+      "summary": "Ranks recommendations by the creator's stated outcome.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: goal-coach",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:goal-coach"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "strategy",
+        "analytics",
+        "revenue",
+        "channel-data-optional",
+        "no-current-research-required"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:daily-oracle",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Daily Oracle",
+      "summary": "Returns one priority, one quick win, and one measurable action.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: daily-oracle",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:daily-oracle"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "strategy",
+        "publishing",
+        "channel-data-optional",
+        "no-current-research-required"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:journal-memory",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Journal and memory",
+      "summary": "Uses confirmed notes, constraints, style, and decisions.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: journal-memory",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:journal-memory"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "strategy",
+        "audience",
+        "content_analysis",
+        "channel-data-optional",
+        "no-current-research-required"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:niche-knowledge",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Niche knowledge",
+      "summary": "Adds bounded public subject knowledge after the niche is stable.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: niche-knowledge",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:niche-knowledge"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "strategy",
+        "seo",
+        "audience",
+        "content_analysis",
+        "channel-data-optional",
+        "no-current-research-required"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:current-grounding",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Current grounding",
+      "summary": "Uses Google grounding only for timely public questions.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: current-grounding",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:current-grounding"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "strategy",
+        "seo",
+        "audience",
+        "channel-data-optional",
+        "requires-current-research"
+      ]
+    },
+    {
+      "id": "vt-ai-capability:content-generation",
+      "schemaVersion": "vt-ai-authority-record-v1",
+      "recordVersion": 1,
+      "kind": "capability",
+      "title": "Content generation",
+      "summary": "Drafts creator assets: scripts, hooks, pinned comments, descriptions, tags, titles, community posts, and replies.",
+      "lifecycle": "active",
+      "ownership": {
+        "canonicalOwner": "BrainCapabilityRegistry",
+        "concern": "Brain capability routing: content-generation",
+        "codeOwner": null,
+        "documentationOwner": null
+      },
+      "audit": {
+        "createdAt": "2026-09-26T01:15:00-04:00",
+        "updatedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedAt": "2026-09-26T01:15:00-04:00",
+        "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "changedBy": "ai-systems-management",
+        "changeEventId": null,
+        "recordHash": null
+      },
+      "sourceRefs": {
+        "code": [
+          "src/services/brain/BrainCapabilityRegistry.ts"
+        ],
+        "docs": [
+          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+        ],
+        "prs": [],
+        "commits": [],
+        "tests": [
+          "src/services/brain/__tests__/BrainChannelScope.test.ts"
+        ],
+        "ci": []
+      },
+      "relations": {
+        "dependsOn": [
+          "vt-ai-system:brain-runtime"
+        ],
+        "provides": [
+          "brain-capability:content-generation"
+        ],
+        "supersedes": [],
+        "supersededBy": [],
+        "overlapsWith": [],
+        "donorSources": []
+      },
+      "integration": {
+        "prMerged": true,
+        "prBase": "main",
+        "mergedCommit": null,
+        "currentMainState": "present",
+        "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
+        "verificationRefs": [
+          "src/services/brain/BrainCapabilityRegistry.ts",
+          "src/services/brain/BrainOrchestrator.ts"
+        ]
+      },
+      "promptRefs": [],
+      "evidenceRefs": [],
+      "traceRefs": [],
+      "artifactRefs": [],
+      "roadmap": null,
+      "managedActionRefs": [],
+      "tags": [
+        "brain-capability",
+        "content_generation",
+        "requires-channel-data",
+        "no-current-research-required"
+      ]
+    }
+  ]
+}

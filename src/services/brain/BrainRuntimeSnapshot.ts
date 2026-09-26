@@ -1,4 +1,4 @@
-import type { Project } from "../../types"
+import type { GenerationRecord, Project } from "../../types"
 import {
  listContentBuildEvents,
  listContentBuilds,
@@ -7,6 +7,7 @@ import type {
  ContentBuildEvent,
  ContentBuildSnapshot,
 } from "../asset-engine/contracts"
+import { listGenerationRecords } from "../generationStore"
 import type {
  GenerationContextManifest,
  GenerationRequest,
@@ -16,11 +17,17 @@ import {
  BRAIN_CAPABILITY_REGISTRY,
 } from "./BrainCapabilityRegistry"
 import {
+ listAlgorithmIntelligenceEvents,
+ type AlgorithmIntelligenceEvent,
+} from "./AlgorithmIntelligenceEventLedger"
+import {
  listBrainTraces,
  type BrainTrace,
 } from "./BrainTrace"
 import {
+ listBrainOutcomes,
  summarizeBrainOutcomes,
+ type BrainOutcomeRecord,
 } from "./BrainOutcomeLedger"
 
 export interface BrainRuntimeProjectSummary {
@@ -86,6 +93,48 @@ export interface BrainRuntimeTraceSummary {
  outputRef: string | null
 }
 
+export interface BrainRuntimeProvenanceChain {
+ requestId: string
+ requestedAt: string
+ contextManifestId: string
+ receiptId: string | null
+ traceId: string | null
+ contentBuildId: string
+ projectId: string | null
+ generationRecordId: string | null
+ generationProvider: string | null
+ generationModel: string | null
+ promptVersions: Record<string, string>
+ modelRequested: string | null
+ modelServed: string | null
+ evidenceIds: string[]
+ selectedAssetIds: string[]
+ sourceAssetIds: string[]
+ outputAssetIds: string[]
+ versionIds: string[]
+ variantGroupId: string | null
+ relationshipIds: string[]
+ actionPacketIds: string[]
+ workflowIds: string[]
+ brainOutcomeIds: string[]
+ algorithmEventIds: string[]
+ evaluationEventIds: string[]
+ learningCandidateEventIds: string[]
+ learningReviewEventIds: string[]
+ learningPromotionEventIds: string[]
+ traceOutputMatchesGenerationRecord: boolean | null
+ unresolved: string[]
+}
+
+export interface BrainRuntimeProvenanceSummary {
+ chainCount: number
+ unresolvedChainCount: number
+ attributedOutcomeChainCount: number
+ evaluatedChainCount: number
+ learningChainCount: number
+ latestChain: BrainRuntimeProvenanceChain | null
+}
+
 export interface BrainRuntimeLifecycleSummary {
  latestEventType: string | null
  latestEventAt: string | null
@@ -122,6 +171,7 @@ export interface BrainRuntimeSnapshot {
   latestTrace: BrainRuntimeTraceSummary | null
  }
  outcomes: BrainRuntimeOutcomeSummary
+ provenance: BrainRuntimeProvenanceSummary
  lifecycle: BrainRuntimeLifecycleSummary
 }
 
@@ -137,6 +187,9 @@ export interface BrainRuntimeSnapshotSources {
  listBrainTraces: (channelId?: string | null) => BrainTrace[]
  summarizeBrainOutcomes: (channelId?: string | null) => BrainRuntimeOutcomeSummary
  capabilityCount: number
+ listGenerationRecords?: () => GenerationRecord[]
+ listBrainOutcomes?: (channelId?: string | null) => BrainOutcomeRecord[]
+ listAlgorithmIntelligenceEvents?: () => AlgorithmIntelligenceEvent[]
 }
 
 const DEFAULT_SOURCES: BrainRuntimeSnapshotSources = {
@@ -145,6 +198,9 @@ const DEFAULT_SOURCES: BrainRuntimeSnapshotSources = {
  listBrainTraces,
  summarizeBrainOutcomes,
  capabilityCount: BRAIN_CAPABILITY_REGISTRY.length,
+ listGenerationRecords,
+ listBrainOutcomes,
+ listAlgorithmIntelligenceEvents: () => listAlgorithmIntelligenceEvents(),
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -242,6 +298,235 @@ const summarizeReceipt = (
  generationRecordId: receipt.generationRecordId || null,
 })
 
+const metadataString = (
+ metadata: Record<string, unknown> | undefined,
+ key: string,
+): string | null => {
+ const value = metadata?.[key]
+ return typeof value === "string" && value ? value : null
+}
+
+const uniqueStrings = (values: Array<string | null | undefined>): string[] =>
+ [...new Set(values.filter((value): value is string => Boolean(value)))]
+
+const eventExplicitlyMatchesRequest = (
+ event: ContentBuildEvent,
+ request: GenerationRequest,
+ receipt: ToolReceipt | null,
+ traceId: string | null,
+ generationRecordId: string | null,
+): boolean => {
+ const metadata = isRecord(event.metadata) ? event.metadata : undefined
+ const metadataRequestId = metadataString(metadata, "requestId")
+ const metadataRequest = isRecord(metadata?.generationRequest)
+  ? metadata.generationRequest
+  : null
+ const metadataReceipt = isRecord(metadata?.toolReceipt)
+  ? metadata.toolReceipt
+  : null
+
+ return metadataRequestId === request.id
+  || metadataRequest?.id === request.id
+  || metadataReceipt?.requestId === request.id
+  || Boolean(traceId && event.traceId === traceId)
+  || Boolean(generationRecordId && event.generationRecordId === generationRecordId)
+  || Boolean(receipt && event.entityId === receipt.id)
+}
+
+const descendantAlgorithmEvents = (
+ allEvents: AlgorithmIntelligenceEvent[],
+ seedIds: Set<string>,
+): AlgorithmIntelligenceEvent[] => {
+ const included = new Set(seedIds)
+ let changed = true
+ while (changed) {
+  changed = false
+  for (const event of allEvents) {
+   if (included.has(event.id)) continue
+   if (event.parentEventIds?.some(parentId => included.has(parentId))) {
+    included.add(event.id)
+    changed = true
+   }
+  }
+ }
+ return allEvents
+  .filter(event => included.has(event.id))
+  .sort((a, b) => a.createdAt - b.createdAt)
+}
+
+const buildProvenanceChain = (input: {
+ request: GenerationRequest
+ manifest: GenerationContextManifest | null
+ receipts: ToolReceipt[]
+ events: ContentBuildEvent[]
+ traces: BrainTrace[]
+ generationRecords: GenerationRecord[]
+ brainOutcomes: BrainOutcomeRecord[]
+ algorithmEvents: AlgorithmIntelligenceEvent[]
+}): BrainRuntimeProvenanceChain => {
+ const receipt = input.receipts
+  .filter(candidate => candidate.requestId === input.request.id)
+  .sort((a, b) => a.completedAt.localeCompare(b.completedAt))
+  .at(-1) || null
+
+ const traceId = receipt?.traceId || input.request.traceId || null
+ const trace = traceId
+  ? input.traces.find(candidate => candidate.id === traceId) || null
+  : null
+
+ const explicitGenerationRecordId = receipt?.generationRecordId || null
+ const traceGenerationRecordId = trace?.outputRef
+  && input.generationRecords.some(record => record.id === trace.outputRef)
+  ? trace.outputRef
+  : null
+ const generationRecordId = explicitGenerationRecordId || traceGenerationRecordId
+ const generationRecord = generationRecordId
+  ? input.generationRecords.find(record => record.id === generationRecordId) || null
+  : null
+
+ const relatedEvents = input.events.filter(event =>
+  eventExplicitlyMatchesRequest(
+   event,
+   input.request,
+   receipt,
+   traceId,
+   generationRecordId,
+  )
+ )
+
+ const actionPacketIds = uniqueStrings([
+  ...relatedEvents.map(event => event.actionPacketId),
+  metadataString(generationRecord?.metadata, "actionPacketId"),
+ ])
+ let workflowIds = uniqueStrings([
+  metadataString(generationRecord?.metadata, "workflowId"),
+ ])
+
+ const matchedOutcomes = input.brainOutcomes
+  .filter(outcome =>
+   Boolean(outcome.actionPacketId && actionPacketIds.includes(outcome.actionPacketId))
+   || Boolean(outcome.workflowId && workflowIds.includes(outcome.workflowId))
+  )
+  .sort((a, b) => a.createdAt - b.createdAt)
+
+ workflowIds = uniqueStrings([
+  ...workflowIds,
+  ...matchedOutcomes.map(outcome => outcome.workflowId),
+ ])
+
+ const directAlgorithmEvents = input.algorithmEvents.filter(event =>
+  Boolean(event.actionPacketId && actionPacketIds.includes(event.actionPacketId))
+  || Boolean(event.workflowId && workflowIds.includes(event.workflowId))
+ )
+ const algorithmEvents = descendantAlgorithmEvents(
+  input.algorithmEvents,
+  new Set(directAlgorithmEvents.map(event => event.id)),
+ )
+
+ const evidenceIds = uniqueStrings([
+  ...(input.request.evidenceIds || []),
+  ...(input.manifest?.evidenceIds || []),
+  ...(receipt?.evidenceIds || []),
+  ...(trace?.evidence?.returned || []),
+  ...relatedEvents.flatMap(event => event.evidenceIds || []),
+  ...matchedOutcomes.flatMap(outcome => outcome.evidence || []),
+  ...algorithmEvents.flatMap(event => event.evidenceIds || []),
+ ])
+
+ const unresolved: string[] = []
+ if (!input.manifest) unresolved.push("context_manifest")
+ if (!receipt) unresolved.push("tool_receipt")
+ if (!trace) unresolved.push("trace")
+ if (!generationRecord) unresolved.push("generation_record")
+ if (!actionPacketIds.length && !workflowIds.length) {
+  unresolved.push("outcome_attribution_key")
+ }
+
+ return {
+  requestId: input.request.id,
+  requestedAt: input.request.requestedAt,
+  contextManifestId: input.request.contextManifestId,
+  receiptId: receipt?.id || null,
+  traceId,
+  contentBuildId: input.request.contentBuildId,
+  projectId: input.request.projectId,
+  generationRecordId,
+  generationProvider: generationRecord?.provider || null,
+  generationModel: generationRecord?.model || null,
+  promptVersions: { ...(trace?.promptVersions || {}) },
+  modelRequested: trace?.model?.requested || null,
+  modelServed: trace?.model?.served || null,
+  evidenceIds,
+  selectedAssetIds: uniqueStrings(input.manifest?.selectedAssetIds || []),
+  sourceAssetIds: uniqueStrings(input.request.sourceAssetIds || []),
+  outputAssetIds: uniqueStrings(receipt?.outputAssetIds || []),
+  versionIds: uniqueStrings(receipt?.versionIds || []),
+  variantGroupId: receipt?.variantGroupId || null,
+  relationshipIds: uniqueStrings(receipt?.relationshipIds || []),
+  actionPacketIds,
+  workflowIds,
+  brainOutcomeIds: matchedOutcomes.map(outcome => outcome.id),
+  algorithmEventIds: algorithmEvents.map(event => event.id),
+  evaluationEventIds: algorithmEvents
+   .filter(event => event.kind === "OUTCOME_MEASURED")
+   .map(event => event.id),
+  learningCandidateEventIds: algorithmEvents
+   .filter(event => event.kind === "LEARNING_CANDIDATE_CREATED")
+   .map(event => event.id),
+  learningReviewEventIds: algorithmEvents
+   .filter(event => event.kind === "LEARNING_CANDIDATE_REVIEWED")
+   .map(event => event.id),
+  learningPromotionEventIds: algorithmEvents
+   .filter(event => event.kind === "LEARNING_PROMOTED")
+   .map(event => event.id),
+  traceOutputMatchesGenerationRecord: trace && generationRecordId
+   ? trace.outputRef
+    ? trace.outputRef === generationRecordId
+    : null
+   : null,
+  unresolved,
+ }
+}
+
+const buildProvenanceSummary = (input: {
+ requestRecords: Array<{
+  request: GenerationRequest
+  manifest: GenerationContextManifest | null
+ }>
+ receipts: ToolReceipt[]
+ events: ContentBuildEvent[]
+ traces: BrainTrace[]
+ generationRecords: GenerationRecord[]
+ brainOutcomes: BrainOutcomeRecord[]
+ algorithmEvents: AlgorithmIntelligenceEvent[]
+}): BrainRuntimeProvenanceSummary => {
+ const chains = input.requestRecords
+  .map(({ request, manifest }) => buildProvenanceChain({
+   request,
+   manifest,
+   receipts: input.receipts,
+   events: input.events,
+   traces: input.traces,
+   generationRecords: input.generationRecords,
+   brainOutcomes: input.brainOutcomes,
+   algorithmEvents: input.algorithmEvents,
+  }))
+  .sort((a, b) => b.requestedAt.localeCompare(a.requestedAt))
+
+ return {
+  chainCount: chains.length,
+  unresolvedChainCount: chains.filter(chain => chain.unresolved.length > 0).length,
+  attributedOutcomeChainCount: chains.filter(chain => chain.brainOutcomeIds.length > 0).length,
+  evaluatedChainCount: chains.filter(chain => chain.evaluationEventIds.length > 0).length,
+  learningChainCount: chains.filter(chain =>
+   chain.learningCandidateEventIds.length > 0
+   || chain.learningReviewEventIds.length > 0
+   || chain.learningPromotionEventIds.length > 0
+  ).length,
+  latestChain: chains[0] || null,
+ }
+}
+
 const traceTimestamp = (trace: BrainTrace): number => {
  const raw = trace.completedAt || trace.createdAt
  const parsed = Date.parse(raw)
@@ -324,6 +609,21 @@ export const readBrainRuntimeSnapshot = (
   .slice()
   .sort((a, b) => traceTimestamp(b) - traceTimestamp(a))
  const latestTrace = traces[0] || null
+ const generationRecords = sources.listGenerationRecords?.() || []
+ const brainOutcomes = sources.listBrainOutcomes?.(input.channelId) || []
+ const algorithmEvents = (sources.listAlgorithmIntelligenceEvents?.() || [])
+  .filter(event => !input.channelId || event.channelId === input.channelId)
+  .filter(event => !project || !event.projectId || event.projectId === project.id)
+
+ const provenance = buildProvenanceSummary({
+  requestRecords,
+  receipts,
+  events,
+  traces,
+  generationRecords,
+  brainOutcomes,
+  algorithmEvents,
+ })
 
  return {
   project: project
@@ -362,6 +662,7 @@ export const readBrainRuntimeSnapshot = (
    latestTrace: latestTrace ? summarizeTrace(latestTrace) : null,
   },
   outcomes: sources.summarizeBrainOutcomes(input.channelId),
+  provenance,
   lifecycle: summarizeLifecycle(events),
  }
 }

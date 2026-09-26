@@ -6,15 +6,7 @@
   "taskIds": [],
   "missionId": null,
   "owner": "Studio Hub · Video Director · generation orchestration contracts",
-  "writerLock": {
-    "paths": [
-      "src/features/video-director/**",
-      ".viewtube/herald/threads/herald-2026-09-19-video-director-foundation.json",
-      ".viewtube/herald/ledger/2026-09-19.jsonl"
-    ],
-    "acquired": "2026-09-19T05:35:00Z",
-    "holder": "chatgpt"
-  },
+  "writerLock": null,
   "reconRef": "main@dbaf6ae2d51dd27dd1d793194c4b7e847d100cdf",
   "openQuestions": [
     "Focused vitest/typecheck/build still need a runnable CI/build slot; the current Vercel integration is build-rate-limited.",
@@ -24,5 +16,18 @@
   "nextAction": "Run focused Video Director tests, npx tsc -b, and npm run build when CI capacity is available; then implement the canonical Studio Hub toolbox shell and capture desktop/mobile visual evidence.",
   "entries": 1,
   "lastApp": "chatgpt",
-  "lastTs": "2026-09-19T05:44:00Z"
+  "lastTs": "2026-09-19T05:44:00Z",
+  "previousWriterLock": {
+    "paths": [
+      "src/features/video-director/**",
+      ".viewtube/herald/threads/herald-2026-09-19-video-director-foundation.json",
+      ".viewtube/herald/ledger/2026-09-19.jsonl"
+    ],
+    "acquired": "2026-09-19T05:35:00Z",
+    "holder": "chatgpt"
+  },
+  "writerLockRelease": {
+    "releasedOn": "2026-09-26",
+    "reason": "Expired stale coordination lock detected by AI Systems governance. Underlying thread stage/status is intentionally unchanged."
+  }
 }

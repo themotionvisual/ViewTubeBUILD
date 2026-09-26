@@ -1,8 +1,10 @@
 # HERALD-OUT — the ViewTube response contract
 
-**Status:** canonical source. Generated copies live in `AGENTS.md`, `.claude/skills/`,
-`.codex/skills/`, `.cursor/rules/`, `GEMINI.md`. Edit **this** file, then run
-`node scripts/herald-sync.mjs`.
+**Status:** canonical source. Mirrored copies live in `AGENTS.md`, `.claude/skills/`,
+`.codex/skills/`, `.cursor/rules/`, `GEMINI.md`. The planned distributor
+`scripts/herald-sync.mjs` is **not implemented on current main**. Edit **this** canonical
+file first, then update affected mirrors manually until the distributor exists. Do not instruct
+agents to run a nonexistent sync command.
 
 Applies to every AI conversation about ViewTube, in every application.
 

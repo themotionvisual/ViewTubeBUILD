@@ -19,6 +19,9 @@ Edit these files. Everything else is generated.
 
 ## Distribution
 
+**Current distribution state:** manual. The diagram below is the planned H1 distributor; `scripts/herald-sync.mjs` is not implemented on current main.
+
+
 ```
 agent/contracts/  ──  node scripts/herald-sync.mjs  ──▶  AGENTS.md
                                                          .claude/skills/
@@ -28,7 +31,7 @@ agent/contracts/  ──  node scripts/herald-sync.mjs  ──▶  AGENTS.md
                                                          .github/copilot-instructions.md
 ```
 
-`herald-sync.mjs --check` fails on drift. It is not built yet (phase H1) — until it is,
+`herald-sync.mjs --check` is the planned drift gate. It is not built yet (phase H1) — until it is,
 the generated copies will drift, exactly as `.codex/` already has (103 and 115 diff lines).
 
 ## Rationale

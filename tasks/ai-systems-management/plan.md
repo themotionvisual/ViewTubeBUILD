@@ -6,11 +6,11 @@ Extend `viewtube-ai-system-governor` into the single AI Systems Management skill
 
 ## Phase 1 — Authority foundation
 
-- [ ] Finalize living master scope and current-owner map.
-- [ ] Add dedicated AI Governor reference modules.
-- [ ] Register living master in documentation authority map.
-- [ ] Complete AI-document archival/broken-reference certification.
-- [ ] Define stable ID naming rules.
+- [x] Finalize living master scope and current-owner map.
+- [x] Add dedicated AI Governor reference modules.
+- [x] Register living master in documentation authority map.
+- [x] Complete AI-document archival/broken-reference certification.
+- [x] Define stable ID naming rules.
 
 **Checkpoint**
 - [ ] A blind agent can identify the correct AI owner and current authority in under one orientation pass.
@@ -18,12 +18,12 @@ Extend `viewtube-ai-system-governor` into the single AI Systems Management skill
 
 ## Phase 2 — Machine registries and schemas
 
-- [ ] Define JSON Schema 2020-12 authority record.
-- [ ] Define agent-report event schema.
-- [ ] Define evidence/prompt/managed-action reference schemas.
-- [ ] Seed systems/capabilities/integrations/donors/plans registries from current main.
-- [ ] Import Prompt Registry by reference, not copy.
-- [ ] Record exact audited-main SHA per record.
+- [x] Define JSON Schema 2020-12 authority record.
+- [x] Define agent-report event schema.
+- [x] Define evidence/prompt/managed-action reference schemas.
+- [x] Seed systems/capabilities/integrations/donors/plans registries from current main.
+- [x] Import Prompt Registry by reference, not copy.
+- [x] Record exact audited-main SHA per record.
 
 **Checkpoint**
 - [ ] All seed records validate.
@@ -33,9 +33,9 @@ Extend `viewtube-ai-system-governor` into the single AI Systems Management skill
 ## Phase 3 — Claims, receipts and Herald integration
 
 - [ ] Define claim/release/block/handoff/completion event types.
-- [ ] Map them to Herald threads/JSONL rather than a second execution ledger.
-- [ ] Add finished-work receipt validation.
-- [ ] Add collision/stale-claim detection.
+- [x] Map them to Herald threads/JSONL rather than a second execution ledger.
+- [x] Add finished-work receipt validation.
+- [x] Add collision/stale-claim detection.
 - [ ] Add plan/task references to Finish Program and Brain-quality tasks.
 
 **Checkpoint**
@@ -56,13 +56,13 @@ Extend `viewtube-ai-system-governor` into the single AI Systems Management skill
 
 ## Phase 5 — Health and CI
 
-- [ ] Validate registry schemas.
+- [x] Validate registry records and source references across all five registries.
 - [ ] Detect broken doc links and paths.
-- [ ] Detect duplicate authority claims.
+- [x] Detect duplicate authority claims.
 - [ ] Detect stale canonical audit SHAs.
 - [ ] Detect direct provider bypass and analytics-canon bypass.
 - [ ] Run `audit:reach`.
-- [ ] Detect open stale claims / missing completion receipts.
+- [x] Detect open stale claims / missing completion receipts.
 - [ ] Add prompt/model provenance coverage checks.
 
 **Checkpoint**
@@ -135,3 +135,39 @@ Use Skill Conductor lifecycle:
 | Generated docs overwrite human decisions | Generated views are projections; canonical edits remain reviewed |
 | Public agent docs leak internal data | public-safe projection boundary |
 | “merged” confused with “main” | distinct integration fields + verified main SHA |
+
+
+### 2026-09-26 status note
+
+Current forward-port branch: `feat/ai-systems-governance-mainline-2026-09-26`  
+Audited main: `fbc7d25c71fa89c312da32280d9f77182065b42a`
+
+Implemented on the branch:
+- current-main forward-port of schemas/validator/Herald projection from stacked PRs #422–#424;
+- systems/plans/donors/integrations registries;
+- 27 validated authority records with zero broken source refs;
+- corrected Herald sync-script contradiction.
+
+Not yet complete:
+- missing completion-receipt enforcement and broader claim-collision semantics;
+- collision/stale-claim enforcement from real thread state;
+- provenance projector over BrainTrace/ToolReceipt/ContentBuild/Vault/outcomes;
+- CI gate wiring;
+- Brain Hub read-only management workspace.
+
+
+### Coordination certification — 2026-09-26
+
+Verified in PR #451 source-governance:
+- 12/12 AI Systems governance tests pass;
+- 8/8 Herald projection tests pass;
+- `audit:ai-systems` passes across 5 registries / 41 records;
+- 9 active Herald claims inspected;
+- 5 proven completion receipts projected;
+- 0 stale writer locks;
+- 0 claim collisions;
+- 0 missing completion receipts;
+- 0 authority conflicts;
+- 0 broken registered source references.
+
+Two abandoned writer locks discovered by the first live audit were explicitly released while preserving their previous lock metadata and leaving the underlying work state unchanged.

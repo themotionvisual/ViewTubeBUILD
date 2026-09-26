@@ -5,16 +5,8 @@
   "stage": "RECORD",
   "taskIds": [],
   "missionId": null,
-  "owner": "ViewTube Design / Widget System (shared tokens + shells) \u00b7 Studio Hub Toolboxes \u00b7 Video Assets / Video Catalog",
-  "writerLock": {
-    "paths": [
-      "src/components/Toolbox.tsx",
-      "src/styles/toolbox-system.css",
-      "src/views/VideoManager.tsx"
-    ],
-    "acquired": "2026-09-17T16:47:58Z",
-    "holder": "claude-code"
-  },
+  "owner": "ViewTube Design / Widget System (shared tokens + shells) · Studio Hub Toolboxes · Video Assets / Video Catalog",
+  "writerLock": null,
   "reconRef": null,
   "openQuestions": [
     "Rail is 36x41 not square when a phone title wraps to two lines; keeping it stretched preserves the split-left divider. Needs a design call.",
@@ -25,5 +17,18 @@
   "nextAction": "Open PR to main; creator review of the two-line rail deviation and the l0/l1 inversion.",
   "entries": 2,
   "lastApp": "claude-code",
-  "lastTs": "2026-09-17T22:09:10Z"
+  "lastTs": "2026-09-17T22:09:10Z",
+  "previousWriterLock": {
+    "paths": [
+      "src/components/Toolbox.tsx",
+      "src/styles/toolbox-system.css",
+      "src/views/VideoManager.tsx"
+    ],
+    "acquired": "2026-09-17T16:47:58Z",
+    "holder": "claude-code"
+  },
+  "writerLockRelease": {
+    "releasedOn": "2026-09-26",
+    "reason": "Expired stale coordination lock detected by AI Systems governance. Underlying thread stage/status is intentionally unchanged."
+  }
 }

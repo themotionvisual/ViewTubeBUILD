@@ -1,42 +1,42 @@
 # ViewTube AI Systems Management — To Do
 
 ## Authority / documentation
-- [ ] Finish AI historical archive link audit.
-- [ ] Register living master and supporting references everywhere agents orient.
-- [ ] Add stable document authority/freshness rules to AI Governor references.
-- [ ] Confirm no old AI audit/phase doc is still presented as current.
+- [x] Finish AI historical archive link audit.
+- [x] Register living master and supporting references everywhere agents orient.
+- [x] Add stable document authority/freshness rules to AI Governor references.
+- [x] Confirm no old AI audit/phase doc is still presented as current.
 
 ## Skill structure
-- [ ] Create `references/ai-systems-management.md`.
-- [ ] Create `references/work-claims-and-receipts.md`.
-- [ ] Create `references/authority-and-freshness.md`.
-- [ ] Create `references/prompt-and-model-governance.md`.
-- [ ] Create `references/donor-migration.md`.
+- [x] Create `references/ai-systems-management.md`.
+- [x] Create `references/work-claims-and-receipts.md`.
+- [x] Create `references/authority-and-freshness.md`.
+- [x] Create `references/prompt-and-model-governance.md`.
+- [x] Create `references/donor-migration.md`.
 - [ ] Keep SKILL.md under 500 lines and make it the MOC.
 
 ## Registries / schemas
-- [ ] Authority record schema.
-- [ ] Agent report schema.
-- [ ] Evidence reference schema.
-- [ ] Prompt reference schema.
-- [ ] Managed action schema.
-- [ ] Seed system registry.
-- [ ] Seed capability registry.
-- [ ] Seed integration registry.
-- [ ] Seed donor registry.
-- [ ] Seed plans registry.
-- [ ] Seed agents registry.
+- [x] Authority record schema.
+- [x] Agent report schema.
+- [x] Evidence reference schema.
+- [x] Prompt reference schema.
+- [x] Managed action schema.
+- [x] Seed system registry.
+- [x] Seed capability registry.
+- [x] Seed integration registry.
+- [x] Seed donor registry.
+- [x] Seed plans registry.
+- [ ] Seed agents registry. Prefer Herald-derived projection; add only if an agent-class registry proves necessary.
 
 ## Reporting / coordination
 - [ ] Claim event.
 - [ ] Progress checkpoint.
 - [ ] Blocked event.
 - [ ] Claim release.
-- [ ] Completion receipt.
+- [x] Completion receipt projection and validation.
 - [ ] Handoff receipt.
-- [ ] Stale claim detection.
-- [ ] Collision detection.
-- [ ] Herald adapter/normalization.
+- [x] Stale claim detection from live Herald writer locks.
+- [x] Collision detection from explicit Herald writer-lock paths.
+- [x] Herald adapter/normalization for current + legacy thread shapes.
 
 ## Runtime projection
 - [ ] BrainTrace projection.
@@ -47,16 +47,18 @@
 - [ ] Prompt/model provenance joins.
 
 ## Health / CI
-- [ ] JSON schema validation.
+- [x] Multi-registry audit coverage.
+- [x] Live Herald claim ingestion for stale-lock detection.
+- [~] JSON schema validation. Record-level validation is enforced; full JSON Schema engine validation remains open.
 - [ ] Broken docs refs.
-- [ ] Duplicate owner detection.
+- [x] Duplicate owner detection by bounded current concern.
 - [ ] stale audited-main detection.
 - [ ] reachability audit.
 - [ ] writer-less ledger/store detection.
 - [ ] direct provider bypass detection.
 - [ ] analytics-canon bypass detection.
-- [ ] unclosed claims.
-- [ ] completion without receipt.
+- [x] Unclosed/stale writer-lock detection.
+- [x] Explicit terminal-thread completion without PROVEN receipt.
 - [ ] prompt provenance coverage.
 
 ## Brain Hub UI
@@ -90,3 +92,17 @@
 - [ ] all canonical records expose freshness/main SHA.
 - [ ] all historical docs have explicit successors.
 - [ ] read-only AI Systems management workspace verified before any managed action is enabled.
+
+
+## Current branch evidence
+
+- audited main: `fbc7d25c71fa89c312da32280d9f77182065b42a`
+- branch: `feat/ai-systems-governance-mainline-2026-09-26`
+- authority records: 41
+- broken source refs: 0
+- governance commands present: 3
+- Herald work projection: read-only
+- governance tests: 12/12
+- Herald projection tests: 8/8
+- live governance audit: 5 registries / 41 records / 9 claims / 5 receipts / 0 blockers
+- current-main merge: pending
