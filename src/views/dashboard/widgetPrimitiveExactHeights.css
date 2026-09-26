@@ -63,7 +63,7 @@
     max-height:calc(var(--widget-type-title) * 1.9);
     padding-right:4px;
     font-size:var(--widget-type-title) !important;
-    line-height:.9;
+    line-height:1;
     white-space:normal !important;
     overflow:hidden;
     text-overflow:clip !important;
