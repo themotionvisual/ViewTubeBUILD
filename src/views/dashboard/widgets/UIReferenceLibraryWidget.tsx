@@ -903,11 +903,26 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             <div className="widget-reference-family">
               {familyHeading("Comment + Video Mini Modules", "Comment Responder donor primitives promoted to the shared system")}
               <div className="grid gap-3">
-                <WidgetVideoMiniCard
-                  title="Napoleon's Last Great Victory"
-                  thumbnail={VIDEO_OPTIONS[0].thumbnail}
-                  footer="12:42 · 48,230 views"
-                />
+                <div className="grid gap-3 md:grid-cols-3 items-start">
+                  <WidgetVideoMiniCard
+                    size="compact"
+                    title="Compact · Napoleon"
+                    thumbnail={VIDEO_OPTIONS[0].thumbnail}
+                    footer="12:42 · 48,230 views"
+                  />
+                  <WidgetVideoMiniCard
+                    size="standard"
+                    title="Standard · Austerlitz"
+                    thumbnail={VIDEO_OPTIONS[1].thumbnail}
+                    footer="30:04 · 73,910 views"
+                  />
+                  <WidgetVideoMiniCard
+                    size="large"
+                    title="Large · The Emperor's Men"
+                    thumbnail={VIDEO_OPTIONS[2].thumbnail}
+                    footer="08:18 · 31,845 views"
+                  />
+                </div>
                 <div className="flex flex-wrap gap-2">
                   <WidgetSplitCounterBadge icon={<ThumbsUp />} value={184} label="184 likes" height={24} tone="primary" />
                   <WidgetSplitCounterBadge icon={<MessagesSquare />} value={27} label="27 replies" height={24} tone="secondary" />
