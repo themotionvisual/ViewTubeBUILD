@@ -39,14 +39,15 @@ describe("VaultAssetModule", () => {
       expect(html).not.toContain("vt-vault-note-panel")
       expect(html).toContain("vt-vault-card-meta")
     }
-    it("only renders factual audio duration when one is provided", () => {
+  })
+
+  it("only renders factual audio duration when one is provided", () => {
     const unknown = renderToStaticMarkup(<VaultAssetModule kind="audio" variant="audio" title="UNKNOWN.WAV" />)
     const known = renderToStaticMarkup(<VaultAssetModule kind="audio" variant="audio" title="KNOWN.WAV" durationLabel="00:42" />)
 
     expect(unknown).not.toContain("vt-vault-audio-time")
     expect(known).toContain("00:42")
   })
-})
 
   it("preserves half-height audio/document anatomy and portrait selection placement", () => {
     const audio = renderToStaticMarkup(<VaultAssetModule kind="audio" variant="audio" title="AUDIO.WAV" />)
