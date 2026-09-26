@@ -54,6 +54,14 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).toContain('xl:static')
  })
 
+ it("shows removable applied-filter chips only when contextual filters are active", () => {
+  expect(source).toContain('aria-label="Vault active filters"')
+  expect(source).toContain('onClick={() => setSelectedTag(null)}')
+  expect(source).toContain('onClick={() => setSource("all")}')
+  expect(source).toContain('onClick={() => setFilterLifecycle("all")}')
+  expect(source).toContain('onClick={() => setFilterOrientation("all")}')
+ })
+
  it("moves project and collection navigation into a contextual library drawer", () => {
   expect(source).toContain('aria-label="Vault library navigation"')
   expect(source).not.toContain('title="Explorer"')
