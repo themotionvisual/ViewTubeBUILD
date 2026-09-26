@@ -56,10 +56,12 @@ describe("CreatorVaultOS mobile card density", () => {
   const libraryIndex = source.indexOf('data-vault-first-viewport="library"')
   const importIndex = source.indexOf('title="Import & Tags"')
   const textEditorIndex = source.indexOf('title="Text Editor"')
+  const workspaceNotesIndex = source.indexOf('title="Workspace Notes"')
 
   expect(libraryIndex).toBeGreaterThan(-1)
   expect(importIndex).toBeGreaterThan(libraryIndex)
   expect(textEditorIndex).toBeGreaterThan(libraryIndex)
+  expect(workspaceNotesIndex).toBeGreaterThan(libraryIndex)
   expect(source).toContain('persistenceId="vault-import-tags"')
   expect(source).toContain('persistenceId="vault-text-editor"')
  })
