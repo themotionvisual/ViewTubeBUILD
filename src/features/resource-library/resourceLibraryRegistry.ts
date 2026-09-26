@@ -152,7 +152,7 @@ export const RESOURCE_LIBRARY_ENTRIES: readonly ResourceLibraryEntry[] = [
       "docs/resources/library/how-youtube-recommendations-and-discovery-work.md",
     accentPaletteIndex: 8,
     markdown: recommendationsMarkdown,
-  },,
+  },
   {
     id: "youtube-metrics-dimensions-glossary",
     title: "YouTube Metrics and Dimensions Master Glossary",
