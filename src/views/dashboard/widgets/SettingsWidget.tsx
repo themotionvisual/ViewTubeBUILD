@@ -267,13 +267,14 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
 
             <div className="settings-switchboard-actions">
               <WidgetSizedButton
-                height={38}
+                height={24}
                 tone="primary"
+                textFit="adaptive"
                 onClick={() => isConnected ? void data.globalSyncData({ batchMode: "initial" }) : onNavigate("/connect")}
               >
                 {isConnected ? "SYNC NOW" : "CONNECT"}
               </WidgetSizedButton>
-              <WidgetSizedButton height={38} tone="default" onClick={() => onNavigate("/settings?panel=data")}>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => onNavigate("/settings?panel=data")}>
                 DATA SETTINGS
               </WidgetSizedButton>
             </div>
@@ -316,10 +317,10 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
             )}
 
             <div className="settings-switchboard-actions">
-              <WidgetSizedButton height={38} tone="primary" onClick={() => onNavigate("/ai-brain")}>
+              <WidgetSizedButton height={24} tone="primary" textFit="adaptive" onClick={() => onNavigate("/ai-brain")}>
                 OPEN BRAIN HUB
               </WidgetSizedButton>
-              <WidgetSizedButton height={38} tone="default" onClick={() => onNavigate("/settings?panel=ai")}>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => onNavigate("/settings?panel=ai")}>
                 AI SETTINGS
               </WidgetSizedButton>
             </div>
@@ -338,13 +339,13 @@ export const SettingsWidget: React.FC<SettingsWidgetProps> = ({
             </div>
 
             <div className="settings-switchboard-actions is-account">
-              <WidgetSizedButton height={38} tone="primary" onClick={() => onNavigate("/account")}>
+              <WidgetSizedButton height={24} tone="primary" textFit="adaptive" onClick={() => onNavigate("/account")}>
                 ACCOUNT
               </WidgetSizedButton>
-              <WidgetSizedButton height={38} tone="secondary" onClick={() => onNavigate("/account?panel=billing")}>
+              <WidgetSizedButton height={24} tone="secondary" textFit="adaptive" onClick={() => onNavigate("/account?panel=billing")}>
                 <CreditCard size={16} aria-hidden="true" /> BILLING
               </WidgetSizedButton>
-              <WidgetSizedButton height={38} tone="default" onClick={() => onNavigate("/user-guide")}>
+              <WidgetSizedButton height={24} tone="default" textFit="adaptive" onClick={() => onNavigate("/user-guide")}>
                 USER GUIDE
               </WidgetSizedButton>
             </div>
