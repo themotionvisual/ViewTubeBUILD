@@ -1274,7 +1274,7 @@
 
 .vt-adaptive-shell[data-sticky-module-headers="true"] [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
   position: sticky !important;
-  top: 64px;
+  top: calc(4px + var(--vt-toolbox-header-height, 80px) + var(--vt-toolbox-stroke, 5px));
   z-index: 68 !important;
 }
 
