@@ -1,3 +1,5 @@
+> **MIGRATION NOTICE — 2026-09-26:** This source is superseded by `docs/governance/CONVERSATION_OS.md` and `agent/contracts/conversation-os.md`. It remains intact below as donor/provenance material pending lossless Removed Archive consolidation. Do not treat it as current authority.
+
 # HERALD-OUT — the ViewTube response contract
 
 **Status:** canonical source. Mirrored copies live in `AGENTS.md`, `.claude/skills/`,
