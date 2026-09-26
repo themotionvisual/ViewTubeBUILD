@@ -7,6 +7,7 @@ const renderer = readFileSync(new URL("../WidgetRendererBase.tsx", import.meta.u
 const widget = readFileSync(new URL("../widgets/SettingsWidget.tsx", import.meta.url), "utf8")
 const css = readFileSync(new URL("../widgets/SettingsWidget.css", import.meta.url), "utf8")
 const shell = readFileSync(new URL("../WidgetShell.tsx", import.meta.url), "utf8")
+const previewFixtures = readFileSync(new URL("../widgetPreviewFixtures.ts", import.meta.url), "utf8")
 
 describe("Settings dashboard control switchboard", () => {
   it("owns Settings in a dedicated lazy widget instead of the inline base renderer", () => {
@@ -60,12 +61,12 @@ describe("Settings dashboard control switchboard", () => {
     expect(widget).toContain("WidgetPreviewState")
     expect(widget).toContain("SETTINGS_DATA_PREVIEW_ITEMS")
     expect(widget).toContain("SETTINGS_AI_PREVIEW_ITEMS")
-    expect(widget).toContain("EXAMPLE CHANNEL")
-    expect(widget).toContain("EXAMPLE ANALYTICS")
-    expect(widget).toContain("CONNECT TO PERSONALIZE")
-    expect(widget).toContain("EXAMPLE EVIDENCE")
-    expect(widget).toContain("EXAMPLE ADVICE")
-    expect(widget).toContain("EXAMPLE PROJECT CONTEXT")
+    expect(previewFixtures).toContain("EXAMPLE CHANNEL")
+    expect(previewFixtures).toContain("EXAMPLE ANALYTICS")
+    expect(widget).toContain("Connect to personalize")
+    expect(previewFixtures).toContain("EXAMPLE EVIDENCE")
+    expect(previewFixtures).toContain("EXAMPLE ADVICE")
+    expect(previewFixtures).toContain("EXAMPLE PROJECT CONTEXT")
     expect(widget).toContain('aria-label="Settings data preview"')
     expect(widget).toContain('aria-label="Settings AI preview"')
   })
