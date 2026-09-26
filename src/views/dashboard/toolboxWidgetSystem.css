@@ -176,41 +176,8 @@
   --vt-widget-body-inset: 0px;
 }
 
-/* Widget interior zones:
-   INSET is the default body column.
-   FULL uses only the body's real inset and never borrows shadow clearance.
-   SHADOW-SAFE expands inside the usable edge without creating a fake white lane.
-   OVERLAY opts floating content out of the clipping hierarchy. */
-:where(.dashboard-barrier) .vt-full-bleed,
-:where(.dashboard-barrier) .vt-widget-zone-full {
-  margin-inline: calc(-1 * var(--vt-widget-body-inset)) !important;
-  width: calc(100% + (2 * var(--vt-widget-body-inset))) !important;
-  max-width: none !important;
-  box-sizing: border-box;
-}
-:where(.dashboard-barrier) .vt-full-bleed-bottom {
-  margin-inline: calc(-1 * var(--vt-widget-body-inset)) !important;
-  margin-bottom: calc(-1 * var(--vt-widget-body-inset)) !important;
-  width: calc(100% + (2 * var(--vt-widget-body-inset))) !important;
-  max-width: none !important;
-}
-:where(.dashboard-barrier) .vt-full-bleed-top {
-  margin-inline: calc(-1 * var(--vt-widget-body-inset)) !important;
-  margin-top: calc(-1 * var(--vt-widget-body-inset)) !important;
-  width: calc(100% + (2 * var(--vt-widget-body-inset))) !important;
-  max-width: none !important;
-}
-:where(.dashboard-barrier) .vt-widget-zone-shadow-safe {
-  margin-inline: calc(-1 * var(--widget-shadow-clearance));
-  padding-inline: var(--widget-shadow-clearance);
-  box-sizing: border-box;
-  overflow: visible;
-}
-:where(.dashboard-barrier) .vt-widget-zone-overlay {
-  position: relative;
-  z-index: 40;
-  overflow: visible;
-}
+/* Widget interior geometry moved to widgetShellOwnership.css.
+   The legacy monolith no longer owns FULL / SHADOW-SAFE / INSET / OVERLAY. */
 
 :where(.dashboard-barrier) .widget-section {
   min-width: 0;
@@ -227,11 +194,6 @@
 }
 
 :where(.dashboard-barrier) .widget-workflow-main > * { min-width: 0; }
-
-:where(.dashboard-barrier) .widget-section.is-full {
-  margin-inline: calc(-1 * var(--vt-widget-body-inset));
-  padding-inline: var(--vt-widget-body-inset);
-}
 
 /* ═══ UNIVERSAL WIDGET ARCHETYPE RECIPES ═══ */
 
