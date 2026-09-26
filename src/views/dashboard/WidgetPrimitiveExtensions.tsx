@@ -4,6 +4,7 @@ import { WIDGET_BADGE_SPECTRUM, WidgetSelect, WidgetSplitButton, resolveBadgeHue
 import { VT_SPECTRUM_PALETTE_06, VT_VISUAL_METRIC_ORDER } from "../../styles/toolboxPalette"
 import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone as PrimitiveTone, type WidgetPrimitiveTextFit } from "./widgetPrimitiveSystem"
 import "./widgetVideoSelectButtonScroll.css"
+import "./widgetCompoundPrimitives.css"
 
 export type WidgetControlHeight = WidgetPrimitiveSize
 export type WidgetPrimitiveTone = PrimitiveTone
@@ -96,6 +97,59 @@ export const WidgetSpectrumFillBadge:React.FC<{children:React.ReactNode;spectrum
 export const WidgetToggleSwitch:React.FC<{checked:boolean;onChange:(checked:boolean)=>void;label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;disabled?:boolean;className?:string}> = ({checked,onChange,label,height=24,tone="default",disabled=false,className=""}) => <button type="button" role="switch" aria-checked={checked} aria-label={label} disabled={disabled} className={`widget-toggle-switch ${primitiveClass(height,tone)} ${checked?"is-checked":""} ${className}`.trim()} onClick={()=>onChange(!checked)}><span className="widget-toggle-switch-thumb" aria-hidden="true"/></button>
 export const WidgetRadio:React.FC<{checked:boolean;onChange:()=>void;label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;disabled?:boolean;className?:string}> = ({checked,onChange,label,height=24,tone="default",disabled=false,className=""}) => <button type="button" role="radio" aria-checked={checked} aria-label={label} disabled={disabled} className={`widget-radio vt-shape-round ${primitiveClass(height,tone)} ${checked?"is-checked":""} ${className}`.trim()} onClick={onChange}><span className="widget-radio-dot" aria-hidden="true"/></button>
 export const WidgetCheckbox:React.FC<{checked:boolean;onChange:(checked:boolean)=>void;label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;disabled?:boolean;className?:string}> = ({checked,onChange,label,height=24,tone="default",disabled=false,className=""}) => <button type="button" role="checkbox" aria-checked={checked} aria-label={label} disabled={disabled} className={`widget-checkbox vt-shape-square ${primitiveClass(height,tone)} ${checked?"is-checked":""} ${className}`.trim()} onClick={()=>onChange(!checked)}>{checked?<X aria-hidden="true" strokeLinecap="round" strokeLinejoin="round"/>:null}</button>
+
+
+export type WidgetSectionBandTone = WidgetPrimitiveTone
+export const WidgetSectionBand:React.FC<{children:React.ReactNode;tone?:WidgetSectionBandTone;edge?:"inset"|"full";className?:string}> = ({children,tone="primary",edge="full",className=""}) => (
+ <div className={`widget-section-band vt-tone-${tone} is-tone-${tone} is-edge-${edge} ${className}`.trim()}>{children}</div>
+)
+
+export interface WidgetDataGridColumn {key:string;label:React.ReactNode;width?:string;align?:"start"|"center"|"end"}
+export interface WidgetDataGridRow {id:string;cells:Record<string,React.ReactNode>}
+export const WidgetDataGrid:React.FC<{ariaLabel:string;columns:readonly WidgetDataGridColumn[];rows:readonly WidgetDataGridRow[];minWidth?:number;className?:string}> = ({ariaLabel,columns,rows,minWidth=520,className=""}) => {
+ const template=columns.map(column=>column.width||"minmax(0,1fr)").join(" ")
+ return <div className={`widget-data-grid-scroll ${className}`.trim()}>
+  <div className="widget-data-grid" role="table" aria-label={ariaLabel} style={{["--widget-data-grid-template" as string]:template,["--widget-data-grid-min" as string]:`${minWidth}px`}}>
+   <div className="widget-data-grid-row is-header" role="row">
+    {columns.map(column=><div key={column.key} className={`widget-data-grid-cell is-align-${column.align||"start"}`} role="columnheader">{column.label}</div>)}
+   </div>
+   {rows.map(row=><div key={row.id} className="widget-data-grid-row" role="row">
+    {columns.map(column=><div key={column.key} className={`widget-data-grid-cell is-align-${column.align||"start"}`} role="cell">{row.cells[column.key]??null}</div>)}
+   </div>)}
+  </div>
+ </div>
+}
+
+export interface WidgetChecklistProgressItem {id:string;label:React.ReactNode;detail?:React.ReactNode;badge?:React.ReactNode;disabled?:boolean}
+export const WidgetChecklistProgress:React.FC<{items:readonly WidgetChecklistProgressItem[];checkedIds:readonly string[];onChange:(checkedIds:string[])=>void;label?:React.ReactNode;tone?:WidgetPrimitiveTone;className?:string}> = ({items,checkedIds,onChange,label="Completion",tone="primary",className=""}) => {
+ const checked=new Set(checkedIds)
+ const completed=items.reduce((total,item)=>total+(checked.has(item.id)?1:0),0)
+ const percentage=items.length?Math.round((completed/items.length)*100):0
+ const toggle=(id:string,next:boolean)=>onChange(next?[...checkedIds.filter(entry=>entry!==id),id]:checkedIds.filter(entry=>entry!==id))
+ return <div className={`widget-checklist-progress ${className}`.trim()}>
+  <div className="widget-checklist-progress-list">
+   {items.map(item=><div key={item.id} className={`widget-checklist-progress-row ${checked.has(item.id)?"is-complete":""}`.trim()}>
+    <WidgetCheckbox checked={checked.has(item.id)} onChange={next=>toggle(item.id,next)} label={typeof item.label==="string"?item.label:`Toggle ${item.id}`} height={24} tone={tone} disabled={item.disabled}/>
+    <span className="widget-checklist-progress-copy"><strong>{item.label}</strong>{item.detail?<small>{item.detail}</small>:null}</span>
+    {item.badge?<span className="widget-checklist-progress-badge">{item.badge}</span>:null}
+   </div>)}
+  </div>
+  <WidgetProgressBar value={completed} max={Math.max(1,items.length)} label={label} displayValue={`${percentage}%`} height={24} tone={tone}/>
+ </div>
+}
+
+export interface WidgetCalendarEvent {id:string;label:React.ReactNode;tone?:WidgetPrimitiveTone;disabled?:boolean}
+export interface WidgetCalendarDay {id:string;label:React.ReactNode;events?:readonly WidgetCalendarEvent[]}
+export const WidgetCalendarGrid:React.FC<{ariaLabel:string;days:readonly WidgetCalendarDay[];onEventClick?:(event:WidgetCalendarEvent,day:WidgetCalendarDay)=>void;className?:string}> = ({ariaLabel,days,onEventClick,className=""}) => (
+ <div className={`widget-calendar-grid ${className}`.trim()} role="grid" aria-label={ariaLabel}>
+  {days.map(day=><section key={day.id} className="widget-calendar-day" role="gridcell">
+   <header className="widget-calendar-day-label">{day.label}</header>
+   <div className="widget-calendar-events">
+    {(day.events||[]).map(event=><button key={event.id} type="button" className={`widget-calendar-event vt-tone-${event.tone||"default"} is-tone-${event.tone||"default"}`} disabled={event.disabled} onClick={()=>onEventClick?.(event,day)}>{event.label}</button>)}
+   </div>
+  </section>)}
+ </div>
+)
 
 export const WidgetAlphabeticalTag:React.FC<{letter:string;children?:React.ReactNode;selected?:boolean;removable?:boolean;onClick?:()=>void;className?:string}> = ({letter,children,selected=false,removable=false,onClick,className=""}) => {const normalized=letter.trim().slice(0,1).toUpperCase();const index=Math.max(0,Math.min(25,normalized.charCodeAt(0)-65));const color=VT_SPECTRUM_PALETTE_06[Math.round((index/25)*(VT_SPECTRUM_PALETTE_06.length-1))]||VT_SPECTRUM_PALETTE_06[0];const content=<><span>{children??normalized}</span><span className="widget-alpha-tag-action" aria-hidden="true">{removable?"−":selected?"×":"+"}</span></>;const style={"--widget-alpha-color":color} as React.CSSProperties;return onClick?<button type="button" className={`widget-alpha-tag ${selected?"is-selected":""} ${removable?"is-removable":""} ${className}`.trim()} style={style} onClick={onClick}>{content}</button>:<span className={`widget-alpha-tag ${selected?"is-selected":""} ${removable?"is-removable":""} ${className}`.trim()} style={style}>{content}</span>}
 /**
