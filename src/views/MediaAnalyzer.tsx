@@ -439,7 +439,7 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        icon={<Target size={20} strokeWidth={3} className="text-black" />}
        collapsible
        shellClassName="md:h-full"
-       contentClassName="p-5 h-full grid grid-cols-1 gap-4">
+       contentClassName="p-5 md:h-full grid grid-cols-1 gap-4">
        <div className="space-y-1">
        <SubToolboxInput level="l1"
         value={videoConcept}
