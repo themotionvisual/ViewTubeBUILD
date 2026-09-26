@@ -48,7 +48,9 @@
     "release:preflight": "node scripts/release-preflight.mjs",
     "release:verify-live": "node scripts/release-verify-live.mjs",
     "smoke:local": "node scripts/release-smoke.mjs",
-    "vt-e1-render:dev": "node src/server/vt-e1-render-server.mjs"
+    "vt-e1-render:dev": "node src/server/vt-e1-render-server.mjs",
+    "audit:documents": "node scripts/audit/document-system.mjs",
+    "test:document-system": "node --test scripts/audit/document-system.test.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
