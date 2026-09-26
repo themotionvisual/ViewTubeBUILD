@@ -1091,21 +1091,3 @@
 }
 
 
-.widget-video-select.is-open{
-  z-index:1000;
-}
-.widget-video-select.is-drop-up .widget-video-select-menu{
-  top:auto;
-  bottom:calc(100% + 4px);
-}
-:where(.dashboard-barrier) .vt-widget:has(.widget-video-select.is-open){
-  z-index:900;
-}
-:where(.dashboard-barrier) .vt-widget:has(.widget-video-select.is-open) :is(
-  .vt-widget-content,
-  .vt-widget-body,
-  .vt-widget-collapse-inner,
-  .vt-widget-collapse-region
-){
-  overflow:visible !important;
-}
