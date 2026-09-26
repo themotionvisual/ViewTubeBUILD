@@ -34,8 +34,8 @@ Extend `viewtube-ai-system-governor` into the single AI Systems Management skill
 
 - [ ] Define claim/release/block/handoff/completion event types.
 - [x] Map them to Herald threads/JSONL rather than a second execution ledger.
-- [ ] Add finished-work receipt validation.
-- [ ] Add collision/stale-claim detection.
+- [x] Add finished-work receipt validation.
+- [x] Add collision/stale-claim detection.
 - [ ] Add plan/task references to Finish Program and Brain-quality tasks.
 
 **Checkpoint**
@@ -58,11 +58,11 @@ Extend `viewtube-ai-system-governor` into the single AI Systems Management skill
 
 - [x] Validate registry records and source references across all five registries.
 - [ ] Detect broken doc links and paths.
-- [ ] Detect duplicate authority claims.
+- [x] Detect duplicate authority claims.
 - [ ] Detect stale canonical audit SHAs.
 - [ ] Detect direct provider bypass and analytics-canon bypass.
 - [ ] Run `audit:reach`.
-- [~] Detect open stale claims / missing completion receipts. Live Herald stale writer-lock detection is implemented; missing completion-receipt enforcement remains open.
+- [x] Detect open stale claims / missing completion receipts.
 - [ ] Add prompt/model provenance coverage checks.
 
 **Checkpoint**
@@ -154,3 +154,20 @@ Not yet complete:
 - provenance projector over BrainTrace/ToolReceipt/ContentBuild/Vault/outcomes;
 - CI gate wiring;
 - Brain Hub read-only management workspace.
+
+
+### Coordination certification — 2026-09-26
+
+Verified in PR #451 source-governance:
+- 12/12 AI Systems governance tests pass;
+- 8/8 Herald projection tests pass;
+- `audit:ai-systems` passes across 5 registries / 41 records;
+- 9 active Herald claims inspected;
+- 5 proven completion receipts projected;
+- 0 stale writer locks;
+- 0 claim collisions;
+- 0 missing completion receipts;
+- 0 authority conflicts;
+- 0 broken registered source references.
+
+Two abandoned writer locks discovered by the first live audit were explicitly released while preserving their previous lock metadata and leaving the underlying work state unchanged.
