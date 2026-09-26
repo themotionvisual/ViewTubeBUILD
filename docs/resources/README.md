@@ -18,6 +18,12 @@ This folder contains the canonical Markdown source documents that populate the c
 
 **Initial creator-reference series:** 2 of 15 documents now authored and registered.
 
+## Handoff
+
+For the current implementation map, ingestion workflow, testing contract, known limitations, and next-agent instructions, read:
+
+`RESOURCE_LIBRARY_HANDOFF.md`
+
 ## Template
 
 Use:
