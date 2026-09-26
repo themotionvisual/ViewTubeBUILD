@@ -1,3 +1,5 @@
+> **MIGRATION NOTICE — 2026-09-26:** This source is superseded by `docs/governance/CROWN.md`. It remains intact below as donor/provenance material pending lossless Removed Archive consolidation. Do not treat it as current authority.
+
 # ViewTube Crown Integration System
 
 ## Purpose

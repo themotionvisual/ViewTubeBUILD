@@ -139,3 +139,17 @@ entries below marked *external, unverified* stay unverified.
 | `docs/migration/reference/brain-ai-history/README.md` | historical-index | archived broad AI audits/phase inventories after durable-rule harvest |
 | `tasks/ai-brain-quality/` | active-plan | evidence → knowledge → context → prompt → outcome → learning → assistant continuity |
 | `tasks/viewtube-finish-program/` | active-plan | cross-system finish backlog including AI registries/observability/prompt convergence |
+
+
+## Current governance references — 2026-09-26
+
+| Reference | Role |
+| --- | --- |
+| `docs/governance/CONVERSATION_OS.md` | current cross-agent conversation, prior-art, improvement and handoff authority |
+| `agent/contracts/conversation-os.md` | host-neutral runtime contract |
+| `docs/governance/CROWN.md` | mission coordination authority |
+| `docs/governance/TASK_AUTHORITY.md` | canonical task-mutation authority |
+| `docs/governance/VERIFICATION.md` | implementation completion and evidence contract |
+| `docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md` | MASTER_SOURCE strategic prior art |
+
+Legacy Herald and dated Crown integration sources are donor/provenance material, not current authority.

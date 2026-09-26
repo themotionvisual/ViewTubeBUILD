@@ -25,6 +25,9 @@
 - RECEIPT — compact evidence of work performed and observed.
 - CONVERSATION — interaction context that may propose work/decisions/evidence but owns no canonical truth.
 - REFERENCE — supporting source/resource.
+- OPPORTUNITY — noncommittal improvement candidate with evidence/confidence/impact.
+- RISK — evidence-backed concern that may need mitigation but is not automatically a task.
+- TASK_MUTATION_PROPOSAL — requested canonical task change submitted to Task Authority.
 
 ## Relationship rules
 
@@ -38,3 +41,12 @@ Receipt != DONE. Task Authority evaluates receipts against acceptance and verifi
 ## Anti-duplication rule
 
 Agents must reconcile new requests against systems, capabilities, tasks, active missions, current main, domain authorities, and donor artifacts before allocating a new canonical object.
+
+
+## Improvement-object rules
+
+Opportunity != Task. Risk != Task. They become committed work only after Task Authority reconciliation and acceptance.
+
+Task Mutation Proposal != canonical mutation. It is an input to Task Authority.
+
+Conversation Envelope != ledger. It points to governed objects for resumability.

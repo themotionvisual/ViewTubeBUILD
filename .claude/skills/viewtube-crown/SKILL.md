@@ -1,29 +1,43 @@
 ---
 name: viewtube-crown
-description: Coordinate ViewTube product intent and engineering execution across the Kingdom KING and Republic EMPEROR systems. Use for cross-domain missions that span plans/artifacts and production code; do not use for isolated copy edits.
+description: Coordinate substantial ViewTube missions across product intent, engineering execution, Task Authority, verification and handoff without creating competing product/task/domain truth.
 ---
 
-# VIEWTUBE CROWN · Two sovereigns, one constitution
+# ViewTube Crown
 
-The creator is sovereign. KING governs desired state; EMPEROR governs executable state.
+Canonical authority:
+- docs/governance/CROWN.md
 
-## Authority split
-- **KINGDOM / KING**: creator intent, mission, product architecture, UX meaning, plans, artifacts, acceptance criteria, tradeoffs.
-- **REPUBLIC / EMPEROR**: repository inspection, work orders, implementation, tests, services, deployment, runtime receipts.
-- **Shared bridge**: Grand Artifact Compiler + Crown protocol records.
-- **Task/artifact reconciliation**: `viewtube-task-artifact-bridge` reads canonical Task Index/artifact sources but does not change their authority.
+Required related authorities:
+- docs/governance/CONVERSATION_OS.md
+- docs/governance/TASK_AUTHORITY.md
+- docs/governance/VERIFICATION.md
+- docs/governance/DOCUMENTATION.md
+
+## Roles
+- KING: desired-state/product architecture coordination.
+- EMPEROR: executable-state/repository coordination.
+- TASK AUTHORITY: canonical work-state mutation.
+- ARCHIVIST: documentation/lineage.
+- VERIFIER: independent completion evidence.
+- DOMAIN SPECIALISTS: bounded execution/review.
+- CREATOR: consequential product/permission/billing/publishing/irreversible decisions.
 
 ## Required sequence
-1. Read `docs/architecture/VIEWTUBE_CROWN_MAIN_AUDIT_2026-09-11.md`, `VIEWTUBE_CROWN_INTEGRATION_SYSTEM.md`, and the current phase document.
-2. Discover current canonical owners in the target checkout before choosing a writer.
-3. Use `viewtube-skill-finder` before inventing another specialist; prefer current repo skills and owners.
-4. Create a `VT_MISSION` record: objective, non-goals, owners, evidence, authorization, acceptance, rollback.
-5. Use `viewtube-docs-grill` and `viewtube-solution-finder` when the plan depends on historical docs, recovery material or competing approaches.
-6. Route product/plan work to KING-side roles and executable work to EMPEROR-side roles.
-7. Never assign two writers to the same path. Use reviewers across boundaries instead.
-8. Record explicit `VT_DECISION`, `VT_HANDOFF` or `VT_CONFLICT` records when a boundary choice matters.
-9. Require `VT_RECEIPT` evidence for changed capability; code existence is not completion.
-10. Use `viewtube-task-artifact-bridge` to reconcile verified outcomes into task/artifact references in read-only mode. A separate Task Authority action is required for any canonical status mutation.
+1. ORIENT through Conversation OS and current repo state.
+2. Reconcile existing capabilities/tasks/missions/prior work.
+3. Create VT_MISSION only when the mission threshold in docs/governance/CROWN.md is met.
+4. Resolve canonical owners and acceptance.
+5. Create an executable VT_WORK_ORDER tied to a real base/head.
+6. Assign non-overlapping writer scopes; use expiring writer leases when coordination benefits.
+7. Execute through current domain skills/owners.
+8. Verify under docs/governance/VERIFICATION.md.
+9. Emit VT_RECEIPT / decisions / artifacts / handoffs as appropriate.
+10. Submit any task-state change to viewtube-task-authority.
 
-## Completion
-Return `complete`, `partial`, or `blocked` with changed paths, evidence, tests, runtime/deploy state, rollback, unresolved decisions, task/artifact links, and next action.
+## Do not
+- turn Crown into Task Index;
+- let a Mission or PR imply DONE;
+- invent new product/domain owners;
+- require royal terminology in normal user replies;
+- maintain a second conversation ledger.

@@ -5,7 +5,7 @@ description: Read and reconcile Crown mission records with ViewTube Task Index I
 
 # ViewTube Task + Artifact Bridge
 
-This skill is read-only unless a later mission explicitly authorizes a separate Task Authority write path.
+This skill is read-only. Canonical mutation is always routed through the separate `viewtube-task-authority` skill after the active Task Index writer path is positively resolved.
 
 ## Purpose
 Build one inspectable dossier linking:
@@ -17,7 +17,7 @@ Build one inspectable dossier linking:
 - verification receipts and deployment evidence.
 
 ## Procedure
-1. Read `.viewtube/exchange/README.md` and `docs/architecture/VIEWTUBE_CROWN_PHASE3_READ_ONLY_BRIDGE.md`.
+1. Read `.viewtube/exchange/README.md`, `docs/governance/TASK_AUTHORITY.md`, `docs/governance/CROWN.md`, and `docs/architecture/VIEWTUBE_CROWN_PHASE3_READ_ONLY_BRIDGE.md`.
 2. Locate the canonical Task Index copy for the current workspace; do not guess its path or status.
 3. Run or emulate `scripts/report-crown-links.mjs`, optionally supplying `--task-index=<path>`.
 4. Resolve `taskIds` from missions against the canonical Task Index and report missing references.

@@ -21,6 +21,9 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | Cross-system application convergence | [Integrated Application Program](./programs/INTEGRATED_APPLICATION.md) |
 | Documentation governance | [Documentation Governance](./governance/DOCUMENTATION.md) + [Machine Registry](./registry.json) |
 | Verification / completion evidence | [Verification](./governance/VERIFICATION.md) |
+| Conversation & Improvement OS | [Conversation OS](./governance/CONVERSATION_OS.md) |
+| Crown mission coordination | [Crown](./governance/CROWN.md) |
+| Canonical task mutation | [Task Authority](./governance/TASK_AUTHORITY.md) |
 
 ### Existing scoped authorities
 
