@@ -14,6 +14,25 @@ The uploaded standalone HTML is the visual and interaction donor for this compon
 
 The production component is therefore a fixed compound rather than another L0/L1/L2-scaled control. Its internal controls remain reusable primitives, while the module owns its own size and composition.
 
+
+## Single-asset scope
+
+These modules are the compact / medium representations of **one asset** in the Vault Asset Library. A module represents exactly one image, one video clip, one audio file, or one document.
+
+They are **not** projects, packages, engines, builds, collections, workflows, or project-management containers.
+
+The module itself may visually contain only the donor-backed single-asset anatomy:
+- preview / thumbnail (or audio / document representation);
+- editable asset title;
+- selection control;
+- editable spectrum tags;
+- editable notes;
+- donor-defined variant/layout treatment.
+
+Project assignment, lifecycle controls, favorite/archive/trash actions, protection, replacement workflows, content-build state, package state, and other higher-level Vault operations remain outside this compact module unless a later approved design explicitly adds them.
+
+Existing application systems may continue to act on the selected asset through Inspector, context menus, keyboard commands, or other Vault tools; those systems must not force additional visible sections into the compact asset module.
+
 ## Frozen donor geometry
 
 - module: 276 × 189 px
