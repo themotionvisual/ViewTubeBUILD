@@ -91,7 +91,6 @@ import {
   SubToolboxTooltip,
   SubToolboxLegendTooltip,
   SubToolboxTree,
-  SubToolboxVaultAsset,
   SubToolboxVideoSelector,
   ToolboxHeaderCollapseButton,
   ToolboxHeaderHelpButton,
@@ -100,6 +99,7 @@ import {
   ToolboxHeaderToggle,
 } from "../subtoolbox/SubToolboxPrimitives"
 import { SubToolboxKpiCard, SubToolboxSplitButton, SubToolboxSplitDropdown } from "../subtoolbox/SubToolboxSplitPrimitives"
+import { VaultAssetModule, type VaultAssetModuleKind, type VaultAssetModuleVariant } from "../subtoolbox/VaultAssetModule"
 import "./studio-hub-primitive-migration-catalog.css"
 
 type StudioHubComponentLevel = ToolboxControlLevel
@@ -186,7 +186,9 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Data Stats Module",
   "Upload Frame",
   "Vault Landscape Asset",
+  "Vault Landscape Swapped Asset",
   "Vault Portrait Asset",
+  "Vault Portrait Double Asset",
   "Vault Audio Asset",
   "Vault Document Asset",
   "Tree View",
@@ -385,6 +387,9 @@ const PrimitiveMigrationControl: React.FC<{
   const [carouselIndex, setCarouselIndex] = React.useState(0)
   const [scrollPos, setScrollPos] = React.useState(30)
   const [vaultSelected, setVaultSelected] = React.useState(true)
+  const [vaultTitle, setVaultTitle] = React.useState("NAPOLEON_ASSET_01")
+  const [vaultTags, setVaultTags] = React.useState(["NAPOLEON", "HISTORY"])
+  const [vaultNotes, setVaultNotes] = React.useState("NOTES: PRODUCTION REFERENCE MODULE")
   const [headerMode, setHeaderMode] = React.useState("A")
   const [mediaPlaying, setMediaPlaying] = React.useState(false)
   const [mediaCurrent, setMediaCurrent] = React.useState(22)
@@ -393,6 +398,10 @@ const PrimitiveMigrationControl: React.FC<{
   const [mediaSpeed, setMediaSpeed] = React.useState(1)
   const [mediaCaptions, setMediaCaptions] = React.useState(true)
   const [mediaQueueActive, setMediaQueueActive] = React.useState("a")
+  const vaultCatalogPreview = React.useMemo(() => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#36E0F6"/><stop offset="1" stop-color="#FF7F6B"/></linearGradient></defs><rect width="640" height="360" fill="url(#g)"/><circle cx="160" cy="120" r="54" fill="white" fill-opacity=".7"/><path d="M60 300 230 150l85 75 120-120 145 195Z" fill="black" fill-opacity=".22"/><text x="320" y="325" text-anchor="middle" font-family="Arial" font-weight="900" font-size="34">VIEWTUBE VAULT</text></svg>`
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+  }, [])
 
   // Primitive track rule: only production primitives + shared CSS render here.
   // Unmigrated hardcoded families remain exclusively in the frozen baseline.
@@ -675,9 +684,45 @@ const PrimitiveMigrationControl: React.FC<{
     return <SubToolboxFileTarget level={level} label="DROP OR CHOOSE FILE" icon={<Upload />} minHeight={level === "l0" ? 176 : level === "l1" ? 144 : 112} />
   }
   if (name.startsWith("Vault ")) {
-    const kind = name.includes("Landscape") ? "landscape" : name.includes("Portrait") ? "portrait" : name.includes("Audio") ? "audio" : "document"
-    const Icon = kind === "audio" ? Music : kind === "document" ? FileText : Image
-    return <SubToolboxVaultAsset level={level} kind={kind} title={name.replace("Vault ","")} icon={<Icon />} tags="ASSET" notes="NOTES" selected={vaultSelected} onSelectedChange={setVaultSelected} removeIcon={<X />} />
+    const moduleKind: VaultAssetModuleKind = name.includes("Audio")
+      ? "audio"
+      : name.includes("Document")
+        ? "document"
+        : (name.includes("Landscape") || name.includes("Portrait")) && name.includes("Asset")
+          ? (name.includes("Swapped") || name.includes("Double") ? "image" : "video")
+          : "image"
+    const moduleVariant: VaultAssetModuleVariant = name.includes("Landscape Swapped")
+      ? "landscape-swapped"
+      : name.includes("Landscape")
+        ? "landscape"
+        : name.includes("Portrait Double")
+          ? "portrait-double"
+          : name.includes("Portrait")
+            ? "portrait-single"
+            : name.includes("Audio")
+              ? "audio"
+              : "document"
+    return (
+      <VaultAssetModule
+        level={level}
+        kind={moduleKind}
+        variant={moduleVariant}
+        title={vaultTitle}
+        previewUrl={moduleKind === "audio" || moduleKind === "document" ? null : vaultCatalogPreview}
+        mimeType={moduleKind === "document" ? "application/pdf" : undefined}
+        fileTypeLabel={moduleKind === "document" ? "PDF" : undefined}
+        durationLabel={moduleKind === "video" || moduleKind === "audio" ? "00:35" : undefined}
+        selected={vaultSelected}
+        tags={vaultTags}
+        sharedTags={["APPLE", "BATTLE", "CAMERA", "HISTORY", "NAPOLEON", "THUMBNAIL", "VIDEO", "YOUTUBE"]}
+        notes={vaultNotes}
+        paletteIndex={7}
+        onSelectedChange={setVaultSelected}
+        onTitleChange={setVaultTitle}
+        onTagsChange={setVaultTags}
+        onNotesChange={setVaultNotes}
+      />
+    )
   }
   if (name === "Tree View") {
     return <SubToolboxTree
