@@ -134,3 +134,30 @@
 - [ ] RH-G113 Video Manager donor interaction audit.
 - [ ] RH-G114 Analytics report donor audit.
 - [ ] RH-G115 Shorts/VT_E1 conditional donor audit.
+
+
+## Lane UX — compact Vault information architecture redesign
+- [ ] RH-UX120 Remove Workspace Controls from normal page flow; replace with Workspace/Layout popover/sheet.
+- [ ] RH-UX121 Replace standalone Navigator with compact Library toolbar: search, state, filters, sort, view.
+- [ ] RH-UX122 Replace standalone mobile Explorer with Library drawer; keep optional compact desktop rail.
+- [ ] RH-UX123 Move Brand Kit / collection creation out of Explorer and into Group Builder.
+- [ ] RH-UX124 Replace persistent Asset Operations module with contextual Selection Action Bar.
+- [ ] RH-UX125 Split Vault-native utilities from external handoffs; external destinations live under “Send to ViewTube…”.
+- [ ] RH-UX126 Keep Import & Tags as one independent collapsed-by-default SubToolbox.
+- [ ] RH-UX127 Keep Text Editor as one independent collapsed-by-default SubToolbox.
+- [ ] RH-UX128 Redesign SubToolboxVaultAsset to media-first compact card with no always-reserved Notes panel.
+- [ ] RH-UX129 Add document text-excerpt preview, compact audio representation, and ratio-aware image/video previews.
+- [ ] RH-UX130 Make Task Center compact when idle and expand only for active/failed jobs.
+- [ ] RH-UX131 Make Inspector contextual on mobile and persistent right rail only at wide desktop.
+- [ ] RH-UX132 Remove duplicate tag/filter affordances from Navigator/Library once Import & Tags owns tag management.
+- [ ] RH-UX133 Reduce nested border/shadow hierarchy and full-width secondary actions while preserving neo-brutalist identity.
+- [ ] RH-UX134 Add mobile density acceptance tests for first-asset visibility, control-height budget, overflow and clipping.
+- [ ] RH-UX135 Verify portrait, landscape and desktop screenshots; re-run UI audit after fixes.
+
+### Checkpoint — UX architecture
+- [ ] Asset Library is reachable without scrolling through configuration modules.
+- [ ] Workspace configuration is off-canvas/contextual, not primary content.
+- [ ] Library navigation and filtering have one obvious owner.
+- [ ] Selection actions appear only when relevant.
+- [ ] External ViewTube tools are visibly handoff destinations.
+- [ ] Default asset cards prioritize media over metadata chrome.
