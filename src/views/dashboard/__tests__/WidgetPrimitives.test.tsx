@@ -447,18 +447,20 @@ describe("expanded widget compound primitives", () => {
     expect(extensionSource).toContain("<span>VIDEO</span>")
     expect(extensionSource).not.toContain("widget-video-select-trigger-chevron")
     expect(extensionSource).not.toContain("widget-video-select-trigger-icon")
-    expect(variantsCss).toContain("grid-template-rows: 52% 48%")
+    expect(variantsCss).toContain("grid-template-rows: 1fr 1fr")
     expect(variantsCss).toContain("white-space: normal")
     expect(variantsCss).toContain("text-overflow: clip")
   })
 
-  it("keeps the three larger VIDEO split bays wide enough for the label and chevron", () => {
-    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-24 { --widget-video-split-bay: 40px; }")
-    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-32 { --widget-video-split-bay: 48px; }")
-    expect(variantsCss).toContain(".widget-video-select-trigger.is-height-38 { --widget-video-split-bay: 54px; }")
-    expect(variantsCss).toContain("span:first-child { font-size: 6px")
-    expect(variantsCss).toContain("span:first-child { font-size: 7px")
-    expect(variantsCss).toContain("span:first-child { font-size: 8px")
+  it("keeps every VIDEO split bay square while scaling the label and chevron by control height", () => {
+    expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height")
+    expect(variantsCss).not.toContain("--widget-video-split-bay: 40px")
+    expect(variantsCss).not.toContain("--widget-video-split-bay: 48px")
+    expect(variantsCss).not.toContain("--widget-video-split-bay: 54px")
+    expect(variantsCss).toContain("is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 8px")
+    expect(variantsCss).toContain("is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 10px")
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 12px")
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector svg { width: 14px; height: 14px; }")
   })
 
   it("makes the video menu search and option rows truly edge-to-edge", () => {
@@ -570,9 +572,10 @@ describe("expanded widget compound primitives", () => {
         options={[{ value: "v1", label: "Long title", meta: "12:42 · 48,230 views" }]}
       />,
     )).toContain("is-height-38")
-    expect(variantsCss).toContain("--widget-video-split-bay: var(--vt-primitive-height")
-    expect(extensionSource).toContain("is-drop-up")
-    expect(variantsCss).toContain(".widget-video-select.is-drop-up .widget-video-select-menu")
+    expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height")
+    expect(extensionSource).toContain('placement:"down"|"up"')
+    expect(extensionSource).toContain("is-drop-${menuGeometry.placement}")
+    expect(videoSelectCss).toContain(".widget-video-select-menu.is-portalled.is-drop-up")
   })
 })
 
