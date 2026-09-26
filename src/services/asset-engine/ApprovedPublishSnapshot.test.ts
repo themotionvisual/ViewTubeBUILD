@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it } from "vitest"
 import {
  createApprovedPublishSnapshot,
+ getApprovedPublishSnapshot,
+ persistApprovedPublishSnapshot,
+ resetApprovedPublishSnapshotRepositoryForTests,
  verifyApprovedPublishSnapshot,
 } from "./ApprovedPublishSnapshot"
 import type { PublishingPackageProjection } from "./PublishingPackageProjection"
@@ -31,9 +34,25 @@ const projection = (): PublishingPackageProjection => ({
  blockers: [],
  ready: true,
  missing: [],
+ it("persists the immutable approved snapshot by stable identity", () => {
+  const saved = persistApprovedPublishSnapshot(projection())
+  const loaded = getApprovedPublishSnapshot(saved.id)
+
+  expect(loaded).toEqual(saved)
+  expect(loaded?.hash).toBe(saved.hash)
+ })
+
+ it("does not mutate a persisted snapshot when the current package later changes", () => {
+  const saved = persistApprovedPublishSnapshot(projection())
+  persistApprovedPublishSnapshot({ ...projection(), titleAssetId: "title-later", revision: 8 })
+
+  expect(getApprovedPublishSnapshot(saved.id)?.assets.titleAssetId).toBe("title-final")
+  expect(getApprovedPublishSnapshot(saved.id)?.contentBuildRevision).toBe(7)
+ })
 })
 
 describe("ApprovedPublishSnapshot", () => {
+ beforeEach(() => resetApprovedPublishSnapshotRepositoryForTests())
  it("freezes the exact approved package identity and assets", () => {
   const snapshot = createApprovedPublishSnapshot(projection())
 
