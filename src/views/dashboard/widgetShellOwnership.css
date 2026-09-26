@@ -82,12 +82,33 @@
 
   .vt-widget-body {
     --vt-widget-body-inset:var(--widget-content-inset);
-    display:flex;
+    --vt-widget-edge-safe:4px;
+    --vt-widget-zone-full-start:full-start;
+    --vt-widget-zone-full-end:full-end;
+    --vt-widget-zone-shadow-start:shadow-start;
+    --vt-widget-zone-shadow-end:shadow-end;
+    --vt-widget-zone-inset-start:inset-start;
+    --vt-widget-zone-inset-end:inset-end;
+    display:grid;
     flex:1 1 auto;
-    flex-direction:column;
+    grid-template-columns:
+      [full-start] var(--vt-widget-edge-safe)
+      [shadow-start] max(0px, calc(var(--vt-widget-body-inset) - var(--vt-widget-edge-safe)))
+      [inset-start] minmax(0, 1fr)
+      [inset-end] max(0px, calc(var(--vt-widget-body-inset) - var(--vt-widget-edge-safe)))
+      [shadow-end] var(--vt-widget-edge-safe)
+      [full-end];
+    grid-auto-rows:max-content;
+    align-content:start;
+    padding:0;
     min-width:0;
     min-height:0;
     overflow:visible;
+  }
+
+  .vt-widget-body > * {
+    grid-column:inset-start / inset-end;
+    min-width:0;
   }
 
   .vt-widget-paint-clip {
@@ -96,27 +117,18 @@
 
   .vt-widget-body--flush { --vt-widget-body-inset:0px; }
 
-  /* Full bleed is structural and is based on the body's actual inset.
-     Shadow clearance is a separate zone so it never widens the content column. */
+  /* Named geometry zones are grid tracks, not width compensation.
+     FULL reaches the paint edge, SHADOW-SAFE preserves effect clearance,
+     INSET is the default control/content column, and OVERLAY is the semantic
+     hook for floating UI (true escaping overlays should portal to the top layer). */
+  .vt-widget-zone-inset { grid-column:inset-start / inset-end; }
   .vt-full-bleed,
-  .vt-widget-zone-full {
-    margin-inline:calc(-1 * var(--vt-widget-body-inset));
-    width:calc(100% + (2 * var(--vt-widget-body-inset)));
-    max-width:none;
-    box-sizing:border-box;
-  }
-  .vt-full-bleed-bottom {
-    margin-inline:calc(-1 * var(--vt-widget-body-inset));
-    margin-bottom:calc(-1 * var(--vt-widget-body-inset));
-    width:calc(100% + (2 * var(--vt-widget-body-inset)));
-    max-width:none;
-  }
-  .vt-full-bleed-top {
-    margin-inline:calc(-1 * var(--vt-widget-body-inset));
-    margin-top:calc(-1 * var(--vt-widget-body-inset));
-    width:calc(100% + (2 * var(--vt-widget-body-inset)));
-    max-width:none;
-  }
+  .vt-widget-zone-full,
+  .vt-full-bleed-bottom,
+  .vt-full-bleed-top { grid-column:full-start / full-end; width:auto; max-width:none; margin-inline:0; }
+  .vt-widget-zone-shadow-safe,
+  .vt-widget-shadow-safe { grid-column:shadow-start / shadow-end; width:auto; margin-inline:0; box-sizing:border-box; overflow:visible; }
+  .vt-widget-zone-overlay { grid-column:full-start / full-end; position:relative; z-index:40; overflow:visible; }
 
   @media (prefers-reduced-motion: reduce) {
     .vt-widget-collapse-region { transition:none; }
