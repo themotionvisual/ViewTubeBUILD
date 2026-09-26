@@ -89,6 +89,34 @@ export const TOOLBOX_SHELL_GUTTER = {
   mobile: 5,
 } as const
 
+/**
+ * Vault asset-module compound geometry.
+ *
+ * This intentionally does not scale with L0/L1/L2. The donor design is a
+ * fixed compound system and is certified against the standalone reference.
+ * Toolbox tokens still own palette, typography context, focus safety and
+ * surrounding layout.
+ */
+export const VAULT_ASSET_MODULE_DNA = {
+  width: 276,
+  height: 189,
+  stroke: 2,
+  radius: 10,
+  innerWidth: 272,
+  innerHeight: 185,
+  headerHeight: 30,
+  doubleHeaderHeight: 60,
+  landscapeWidth: 184,
+  landscapeHeight: 103.5,
+  portraitHeight: 185,
+  portraitWidth: 104.0625,
+  portraitLeftWidth: 167.9375,
+  tagBackground: "#c1c1c1",
+  halfHeight: 94.5,
+  halfBodyHeight: 60.5,
+  halfPreviewWidth: 72,
+} as const
+
 export const MINI_SUBTOOLBOX_DNA = {
   desktop: {
     headerHeight: 40,
