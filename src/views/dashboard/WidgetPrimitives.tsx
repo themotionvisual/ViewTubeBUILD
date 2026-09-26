@@ -286,7 +286,7 @@ export const WidgetPreviewState: React.FC<WidgetPreviewStateProps> = ({
   <section
     className={`widget-preview-state ${compact ? "is-compact" : ""} ${className}`.trim()}
     data-widget-state="preview"
-    role="status"
+    role="region"
     aria-label={ariaLabel}
   >
     <header className="widget-preview-state-head">
