@@ -43,10 +43,15 @@ const browser = await chromium.launch({ headless: true })
 const report = { baseUrl, captures: [], overflow: [] }
 
 for (const viewport of [
-  { label: "desktop", width: 1440, height: 1000 },
-  { label: "phone", width: 390, height: 844 },
+  { label: "desktop", width: 1440, height: 1000, mobile: false },
+  { label: "phone", width: 390, height: 844, mobile: true },
+  { label: "phone-landscape", width: 844, height: 390, mobile: true },
 ]) {
-  const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } })
+  const context = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    isMobile: viewport.mobile,
+    hasTouch: viewport.mobile,
+  })
   const page = await context.newPage()
   await page.addInitScript(([key, value]) => {
     try { localStorage.setItem(key, value) } catch {}
