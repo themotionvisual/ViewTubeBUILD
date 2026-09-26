@@ -2,7 +2,7 @@
   "threadId": "widget-geometry-primitives-2026-09-26",
   "verb": "FIX",
   "tier": "T2",
-  "stage": "VERIFY",
+  "stage": "EXECUTE",
   "owner": "dashboard-widget-system",
   "status": "partial",
   "intent": "Repair mobile widget shell width/clipping and promote the shared header, split-control, video-selector, comment, compound and upload-frame corrections into canonical widget primitives.",
@@ -13,29 +13,33 @@
     "widget-video-select",
     "widget-comment-donors",
     "widget-compound-primitives",
-    "widget-upload-frames"
+    "widget-upload-frames",
+    "widget-settings-certification",
+    "widget-preview-state",
+    "widget-preview-cohort"
   ],
   "writerLock": {
     "held": true,
-    "branch": "fix/widget-geometry-finalize-2026-09-26",
+    "branch": "feat/widget-preview-settings-certification-2026-09-26",
     "paths": [
-      "src/views/dashboard/widgetMobileContract.css",
-      "src/views/dashboard/widgetShellOwnership.css",
-      "src/views/dashboard/toolboxWidgetSystem.css",
       "src/views/dashboard/WidgetPrimitives.tsx",
-      "src/views/dashboard/WidgetPrimitiveExtensions.tsx",
-      "src/views/dashboard/widgetMatrixPrimitives.css",
-      "src/views/dashboard/widgetPrimitiveTones.css",
-      "src/views/dashboard/widgetVideoSelectButtonScroll.css",
+      "src/views/dashboard/widgetCompoundPrimitives.css",
+      "src/views/dashboard/widgetPreviewFixtures.ts",
+      "src/views/dashboard/widgets/SettingsWidget.tsx",
+      "src/views/dashboard/widgets/SettingsWidget.css",
+      "src/views/dashboard/widgets/OpportunityRadarWidget.tsx",
       "src/views/dashboard/widgets/CommentReplyWidget.tsx",
+      "src/views/dashboard/widgets/VideoUploaderWidget.tsx",
       "src/views/dashboard/widgets/UIReferenceLibraryWidget.tsx",
-      "src/views/dashboard/__tests__/"
+      "src/views/dashboard/__tests__/",
+      "scripts/",
+      "docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md"
     ]
   },
   "reconRef": "VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md + 2026-09-26 user field QA screenshots",
   "approval": "Explicit creator approval: Begin",
   "openQuestions": [],
-  "nextAction": "Verify PR #456 final-head release gates and capture built-app desktop 1440×1000 + phone 390×844 evidence; if clean, mark Wave 0 complete, release writer lock, and resume WidgetPreviewState/Settings certification.",
+  "nextAction": "Certify Settings, add canonical WidgetPreviewState + governed fixtures, migrate representative analytics/AI/community/creation surfaces, capture desktop/phone evidence, then stop before consolidation work.",
   "entries": [
     {
       "ts": "2026-09-26",
@@ -51,8 +55,13 @@
       "ts": "2026-09-26T01:52-04:00",
       "stage": "VERIFY",
       "note": "PR #456 release gates on prior head: source-governance, focused-contracts, local-smoke and production-build passed; full-suite and static-quality failed only on unrelated current-main Vault/Editor/navigation/VT-SYNC/type debt. Widget master resource updated with Wave 0 receipt and revised next sequence. Visual proof remains pending."
+    },
+    {
+      "ts": "2026-09-26T04:36-04:00",
+      "stage": "EXECUTE",
+      "note": "Creator requested completion through the pre-consolidation boundary. New branch owns Settings certification, canonical preview-state system, representative preview migrations, visual evidence, tests and master-resource handoff."
     }
   ],
   "lastApp": "ChatGPT",
-  "lastTs": "2026-09-26T01:52-04:00"
+  "lastTs": "2026-09-26T04:36-04:00"
 }
