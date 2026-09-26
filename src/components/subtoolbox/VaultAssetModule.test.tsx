@@ -64,6 +64,20 @@ describe("VaultAssetModule", () => {
     expect(html).not.toContain('data-tag="DELTA"')
   })
 
+  it("renders a factual document excerpt when canonical text content is available", () => {
+    const html = renderToStaticMarkup(
+      <VaultAssetModule
+        kind="document"
+        variant="document"
+        title="RESEARCH.MD"
+        documentExcerpt="Napoleon moved the Grande Armée toward the Danube."
+      />,
+    )
+
+    expect(html).toContain("vt-vault-document-excerpt")
+    expect(html).toContain("Napoleon moved the Grande Armée toward the Danube.")
+  })
+
   it("preserves half-height audio/document anatomy and portrait selection placement", () => {
     const audio = renderToStaticMarkup(<VaultAssetModule kind="audio" variant="audio" title="AUDIO.WAV" />)
     const document = renderToStaticMarkup(<VaultAssetModule kind="document" variant="document" title="NOTES.PDF" />)
