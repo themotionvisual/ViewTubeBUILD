@@ -38,6 +38,18 @@ describe("mobile widget density and edge contracts", () => {
     expect(shellCss).toContain(".vt-widget-shadow-safe")
   })
 
+  it("keeps scrolling geometry on canonical named tracks without negative-margin width compensation", () => {
+    expect(scrollbar).not.toContain("margin-inline-end: calc(-1 * var(--widget-content-inset))")
+    expect(scrollbar).not.toContain("margin-inline-start: calc(-1 * var(--widget-content-inset))")
+    expect(scrollbar).not.toContain("margin-inline: calc(-1 * var(--vt-widget-body-inset")
+    expect(scrollbar).toContain(".widget-scroll-area.is-full")
+    expect(scrollbar).toContain("grid-column: full-start / full-end")
+    expect(scrollbar).toContain(".widget-scroll-area.is-full .widget-scroll-content")
+    expect(scrollbar).toContain("[full-start]")
+    expect(scrollbar).toContain("[inset-start]")
+    expect(scrollbar).toContain("--widget-scroll-safe-end")
+  })
+
   it("uses one canonical full-bleed owner for About and Oracle bands", () => {
     expect(about).not.toContain(".about-vt__intro,\n.about-vt__handoff")
     expect(oracle).not.toContain(".daily-oracle-v2__source-strip,\n.daily-oracle-v2__footer")
