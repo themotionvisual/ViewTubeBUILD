@@ -596,6 +596,15 @@ describe("expanded widget compound primitives", () => {
   })
 })
 
+describe("toolbox upload frame contract", () => {
+  it("uses solid split-rail upload frames and retires dashed legacy frames", () => {
+    expect(widgetSystemCss).toContain(".widget-media-upload-frame")
+    expect(widgetSystemCss).toContain("grid-template-columns: 52px minmax(0, 1fr)")
+    expect(widgetSystemCss).toContain(".widget-media-upload-icon")
+    expect(widgetSystemCss).not.toContain("border: var(--widget-module-stroke) dashed var(--widget-border)")
+  })
+})
+
 describe("comment responder donor primitives", () => {
   it("exposes the video mini-card, split counter badge and speech bubble through the shared surface", () => {
     const markup = renderToStaticMarkup(
