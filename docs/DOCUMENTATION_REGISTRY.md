@@ -240,3 +240,12 @@ The AI/Brain documentation family was re-audited against current main `c494d96aa
 | 120 | `docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md` | architecture | `canonical` | `retain-current` | living | Canonical living coordination resource for widget/dashboard architecture, settings redesign, consolidation decisions, task backlog, state/preview policy, inventories, QA and handoff. |
 
 | 121 | `docs/architecture/VIEWTUBE_MASTER_PRODUCT_TOOLS_WORKSTATION_ARCHITECTURE.md` | architecture | `canonical` | `retain-current` | living | Bounded cross-system authority for creator lifecycle, Master Tool taxonomy, tool/widget consolidation, product-level integration planning and current-code crosswalk; subordinate to scoped domain authorities for internal contracts. |
+
+## Post-baseline system convergence program
+
+- `docs/architecture/VIEWTUBE_SYSTEM_CONVERGENCE_AND_CONSOLIDATION.md` — active cross-domain convergence architecture. It coordinates consolidation of overlapping AI/Brain/context/evidence/intelligence/project/asset/operation/outcome systems into fewer canonical domains without replacing their bounded authorities.
+- `tasks/system-convergence/plan.md` — execution sequence.
+- `tasks/system-convergence/todo.md` — implementation checklist.
+- `tasks/system-convergence/SYSTEM-CLASSIFICATION.md` — working KEEP / MERGE / PROJECT / ADAPTER / PAIR / QUARANTINE / REMOVE registry.
+
+Destructive consolidation decisions require current-code reachability, donor-harvest and parity evidence. Historical documents are not removal authorization.

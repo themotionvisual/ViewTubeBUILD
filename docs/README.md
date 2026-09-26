@@ -158,3 +158,9 @@ Superseded broad AI audits, phase manifests and phase-closeout records are prese
 - [Master Product, Tools & Workstation Architecture](./architecture/VIEWTUBE_MASTER_PRODUCT_TOOLS_WORKSTATION_ARCHITECTURE.md) owns the cross-system creator lifecycle, 12-Master-Tool taxonomy, consolidation map, integration planning vocabulary and code-awareness crosswalk.
 - It coordinates but does **not** replace Analytics/VT-SYNC, BrainRuntime, Projects/ContentBuild, Asset Engine, Toolbox UI, Widget Registry, Editor, Auth, Deployment or Herald authorities.
 - Future tool/widget ideas should be assigned to a Master Tool here before creating a new page, store, registry or runtime.
+
+## Cross-system convergence and consolidation
+
+Before broad new AI/Brain/Project/Asset integration work, use [System Convergence & Consolidation](./architecture/VIEWTUBE_SYSTEM_CONVERGENCE_AND_CONSOLIDATION.md).
+
+It coordinates overlap reduction across Creator Context, Evidence & Intelligence, Project/Content/Asset identity, Creator Operations, Outcomes/Learning and BrainRuntime. It does not replace the bounded authorities above. Its rule is **converge before expansion**: donor-harvest useful behavior, migrate callers through stronger canonical contracts, prove parity/zero reachability, quarantine, then remove.

@@ -28,6 +28,19 @@ describe("BrainRuntime creator-surface migration guard", () => {
   expect(source).not.toContain("runBrainTurn(")
  })
 
+
+ it("passes the canonical Project snapshot through all shared Brain surfaces", () => {
+  for (const relativePath of SURFACES.map((item) => item.path)) {
+   const source = read(relativePath)
+   expect(source).toContain("project: activeProject")
+  }
+
+  const runtime = read("src/services/brain/runtime/BrainRuntime.ts")
+  const orchestrator = read("src/services/brain/BrainOrchestrator.ts")
+  expect(runtime).toContain("project: input.project")
+  expect(orchestrator).toContain("project: input.project")
+ })
+
  it("preserves selected sidebar UI context as runtime visibleContext rather than durable memory", () => {
   const source = read("src/components/SidebarChatbot.tsx")
   expect(source).toContain("visibleContext")
