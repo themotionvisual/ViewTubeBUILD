@@ -86,7 +86,13 @@ for (const viewport of [
       await page.waitForTimeout(100)
       await next.evaluate((button) => button.click())
       await page.waitForTimeout(350)
-      await widget.screenshot({ path: `${outDir}/${viewport.label}-ui-reference-preview-state.png` })
+      await widget.locator(".widget-scroll-viewport").first().evaluate((viewport) => { viewport.scrollTop = 0 })
+      await page.waitForTimeout(120)
+      if (viewport.label === "phone") {
+        await page.screenshot({ path: `${outDir}/${viewport.label}-ui-reference-preview-state.png`, fullPage: false })
+      } else {
+        await widget.screenshot({ path: `${outDir}/${viewport.label}-ui-reference-preview-state.png` })
+      }
 
       // COMPOUND -> VIDEO. Open a large canonical selector and capture the full
       // viewport because its menu is intentionally portalled outside the widget.
