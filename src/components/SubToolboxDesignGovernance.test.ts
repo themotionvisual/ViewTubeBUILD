@@ -245,6 +245,8 @@ describe("subtoolbox design governance", () => {
   expect(toolboxCss).toContain(".vt-toolbox-header-extras")
   expect(toolboxCss).toContain(".vt-toolbox-header-secondary-actions")
   expect(systemCss).toContain("CANONICAL HEADER CONTROL PRIMITIVES — 2026-09-26")
+  expect(systemCss).not.toContain(".vt-toolbox-header-actions{")
+  expect(systemCss).not.toContain(".vt-toolbox-header-icon-rail.is-toolbox { width:56px; }")
   expect(systemCss).toContain(".vt-toolbox-header-collapse.is-toolbox")
   expect(systemCss).toContain(".vt-toolbox-header-palette-button")
   expect(systemCss).toContain(".vt-toolbox-header-collapse svg.is-open")
@@ -396,32 +398,18 @@ describe("subtoolbox design governance", () => {
  })
 
 
- it("prevents page-local header width locks and mobile subtoolbox stretching", () => {
-  const headerActionConsumers = [
-    "src/views/VideoPublisher.tsx",
-    "src/views/VideoManager.tsx",
-    "src/views/ThumbnailStudio.tsx",
-    "src/views/SeoGenerator.tsx",
-    "src/components/ProjectStudio.tsx",
-  ]
+ it("keeps one canonical mobile shell geometry and gutter authority", () => {
+  const toolboxCss = source("src/styles/toolbox-system.css")
 
-  for (const path of headerActionConsumers) {
-    const contents = source(path)
-    const headerActionRegion = contents.match(/headerActions=\{[\s\S]{0,1600}?\n\s*\}/g)?.join("\n") || ""
-    expect(headerActionRegion).not.toMatch(/\bw-\[\d+px\]/)
-    expect(headerActionRegion).not.toMatch(/\bmin-w-\[\d+px\]/)
-  }
-
-  const mediaAnalyzer = source("src/views/MediaAnalyzer.tsx")
-  const storyboard = source("src/views/StoryboardStudio.tsx")
-
-  expect(mediaAnalyzer).not.toContain('shellClassName="h-full"')
-  expect(mediaAnalyzer).toContain('shellClassName="md:h-full"')
-  expect(mediaAnalyzer).not.toMatch(/contentClassName="[^"]*(?:^|\s)h-full(?:\s|")/)
-  expect(mediaAnalyzer).toContain('contentClassName="p-5 md:h-full flex flex-col"')
-
-  expect(storyboard).not.toContain('shellClassName="h-full"')
-  expect(storyboard).toContain('shellClassName="xl:h-full"')
+  expect(toolboxCss).toContain("Mobile density authority — 2026-09-22")
+  expect(toolboxCss).toContain("Canonical shell gutter authority — 2026-09-25")
+  expect(toolboxCss).not.toContain("Phone geometry. Titles retain their established size.")
+  expect(toolboxCss).not.toContain("Interior safety inset: all Toolbox and SubToolbox bodies")
+  expect(toolboxCss).not.toContain("Second mobile-density pass:")
+  expect(toolboxCss).not.toContain('data-vt-toolbox-help="true"')
+  expect(toolboxCss).not.toContain('data-vt-toolbox-toggle="true"')
+  expect(toolboxCss).not.toContain('data-vt-subtoolbox-help="true"')
+  expect(toolboxCss).not.toContain('data-vt-subtoolbox-toggle="true"')
  })
 
 })
