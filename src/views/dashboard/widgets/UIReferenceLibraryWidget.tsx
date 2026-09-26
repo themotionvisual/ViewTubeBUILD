@@ -308,6 +308,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   return (
     <WidgetShell widget={previewWidget} headerContent={headerContent} icon={<Layers size={22} />} {...common}>
       <WidgetScrollArea
+        key={activeCategory}
         ariaLabel="ViewTube Widget Component Reference Library"
         contentClassName="flex min-h-full flex-col gap-3 p-3"
       >
