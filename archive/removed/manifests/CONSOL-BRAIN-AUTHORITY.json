@@ -119,6 +119,8 @@
     "notes": "Replacement authorities are replayed onto current main with zero overlapping files across the 100-commit main delta. Active inbound references were rewired; historical/donor references remain by design. Source Git blob identities preserve pre-migration provenance. Archive moves remain pending until PR verification.",
     "sourceIdentitiesCaptured": true,
     "rebasedOnMainSha": "e289ac7497010cc6c629c7273850f86f9c13ae89",
-    "rebasedBranch": "docs/brain-authority-consolidation-phase-d-rebased-2026-09-26"
+    "rebasedBranch": "docs/brain-authority-consolidation-phase-d-rebased-2026-09-26",
+    "activeAuthorityBodyRefsChecked": true,
+    "activeAuthorityOldRefsOnlyInSupersedesMetadata": true
   }
 }
