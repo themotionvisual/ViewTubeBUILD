@@ -96,6 +96,45 @@ describe("ToolboxScaffold", () => {
  })
 })
 
+describe("Toolbox responsive header allocation", () => {
+ it("keeps feature actions available in the canonical phone secondary strip", () => {
+  const html = renderToStaticMarkup(
+   <ToolboxScaffold
+    title="VIDEO PUBLISHER"
+    icon={<span aria-hidden="true">I</span>}
+    collapsible
+    isOpen
+    helpText="Publisher help"
+    headerActions={
+     <ToolboxHeaderToggle
+      value="longform"
+      aria-label="Video format"
+      options={[
+       { value: "longform", label: "Longform" },
+       { value: "shorts", label: "Shorts" },
+      ]}
+     />
+    }
+   >
+    <div>Body</div>
+   </ToolboxScaffold>,
+  )
+
+  expect(html).toContain("VIDEO PUBLISHER")
+  expect(html).toContain("vt-toolbox-header-title-slot")
+  expect(html).toContain("vt-toolbox-header-extras")
+  expect(html).toContain("vt-toolbox-header-secondary-actions")
+  expect(html.match(/aria-label="Video format"/g)?.length).toBe(2)
+ })
+
+ it("keeps stacked SubToolbox content structurally intrinsic", () => {
+  const html = renderShell(true)
+  expect(html).toContain('class="vt-toolbox w-full relative flex flex-col')
+  expect(html).toContain("vt-subtoolbox-content")
+  expect(html).toContain("--vt-subtoolbox-content-min-height")
+ })
+})
+
 describe("Toolbox header controls", () => {
  it("keeps native button semantics and explicit pressed / expanded state", () => {
   const toggle = renderToStaticMarkup(
