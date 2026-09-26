@@ -84,7 +84,8 @@
 .vt-vault-module-check:checked{background:var(--vt-vault-check)}
 .vt-vault-module-check:focus-visible{outline:2px solid var(--vt-vault-header);outline-offset:1px}
 .vt-vault-media-frame{position:relative;overflow:hidden;background:#111}
-.vt-vault-media-frame img{
+.vt-vault-media-frame img,
+.vt-vault-media-frame video{
   width:100%;height:100%;display:block;object-fit:var(--vt-vault-media-fit,cover);object-position:center;
 }
 .vt-vault-media-frame>svg{width:34%;height:34%;stroke:#fff}
