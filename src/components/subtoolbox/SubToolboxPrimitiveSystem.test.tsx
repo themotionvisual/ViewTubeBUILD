@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolboxActions, SubToolboxGrid, SubToolboxStack } from "./SubToolboxLayouts"
 import { SubToolboxAlphabeticalSpectrumTags, SubToolboxAspectRatioFrame, SubToolboxAvatar, SubToolboxBreadcrumb, SubToolboxButton, SubToolboxCalendar, SubToolboxCarousel, SubToolboxCommandPalette, SubToolboxControllerSwitch, SubToolboxDataStats, SubToolboxDataTable, SubToolboxDisclosure, SubToolboxFileTarget, SubToolboxHoverCard, SubToolboxInput, SubToolboxKnob, SubToolboxLed, SubToolboxLedDot, SubToolboxLegendTooltip, SubToolboxLoader, SubToolboxMeter, SubToolboxMetric, SubToolboxMetricStrip, SubToolboxNameValueList, SubToolboxOutputCard, SubToolboxPagination, SubToolboxPopover, SubToolboxScrollbar, SubToolboxSplitField, SubToolboxSkeleton, SubToolboxStatePanel, SubToolboxTag, SubToolboxTagEditor, SubToolboxTextArea, SubToolboxTopTitleDropdown, SubToolboxToolbar, SubToolboxTooltip, SubToolboxProgressValue, SubToolboxTree, SubToolboxVaultAsset } from "./SubToolboxPrimitives"
-import { CONTROL_SHELL, SUBTOOLBOX_CONTROL_SIZES, SUBTOOLBOX_STATES, SUBTOOLBOX_TOKENS, TOOLBOX_LEVEL_DNA, resolveSubtoolboxMinHeight } from "./tokens"
+import { CONTROL_SHELL, SUBTOOLBOX_CONTROL_SIZES, SUBTOOLBOX_STATES, SUBTOOLBOX_TOKENS, TOOLBOX_LEVEL_DNA, VAULT_ASSET_MODULE_DNA, resolveSubtoolboxMinHeight } from "./tokens"
 
 describe("Subtoolbox Primitive System", () => {
   it("derives compatibility geometry from the single token source", () => {
@@ -30,6 +30,19 @@ describe("Subtoolbox Primitive System", () => {
   // 32db8dc lowered two levels of the ladder and left a third behind, which put
   // a level-1 control above the level-0 shell for weeks without failing a gate.
   // Assert the whole ladder, not one pair, so the next retune cannot repeat it.
+  it("locks the donor Vault asset-module geometry independently from the level ladder", () => {
+    expect(VAULT_ASSET_MODULE_DNA.width).toBe(276)
+    expect(VAULT_ASSET_MODULE_DNA.height).toBe(189)
+    expect(VAULT_ASSET_MODULE_DNA.stroke).toBe(2)
+    expect(VAULT_ASSET_MODULE_DNA.headerHeight).toBe(30)
+    expect(VAULT_ASSET_MODULE_DNA.doubleHeaderHeight).toBe(60)
+    expect(VAULT_ASSET_MODULE_DNA.landscapeWidth).toBe(184)
+    expect(VAULT_ASSET_MODULE_DNA.landscapeHeight).toBe(103.5)
+    expect(VAULT_ASSET_MODULE_DNA.portraitWidth).toBe(104.0625)
+    expect(VAULT_ASSET_MODULE_DNA.portraitLeftWidth).toBe(167.9375)
+    expect(VAULT_ASSET_MODULE_DNA.halfHeight).toBe(94.5)
+  })
+
   it("locks the reconciled structural height ladder", () => {
     expect(TOOLBOX_LEVEL_DNA.toolbox.height).toBe(80)
     expect(TOOLBOX_LEVEL_DNA.l0.height).toBe(56)

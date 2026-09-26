@@ -169,3 +169,17 @@ The Render/iPhone audit adds these mandatory primitive/compound demonstrations b
 - palette-sequence specimen proving Toolbox -> first SubToolbox -> sibling/nested SubToolbox ordering through the 12-color palette.
 
 Static source presence is insufficient for dropdown and editable-asset states; these examples must be interactable in the production-import track.
+
+## Vault Asset Module donor-parity authority — 2026-09-25
+
+The compact Vault asset family now has a dedicated production primitive: `VaultAssetModule`.
+
+- The source geometry and interaction donor is recorded in `VAULT_ASSET_MODULE_REFERENCE_PARITY.md`.
+- `VAULT_ASSET_MODULE_DNA` is the geometry authority. The module is a fixed compound and does not scale its outer anatomy through L0/L1/L2.
+- Production variants are Landscape, Landscape Swapped, Portrait Single, Portrait Double, Audio, and Document.
+- Creator Vault consumes the same component rendered in the Studio Hub primitive track.
+- The primitive track must use real editable title, shared spectrum tag editor, dirty-save notes, selection state, media preview, waveform and document-preview behavior.
+- The hardcoded catalog stays frozen as a comparison baseline; donor-only variants may therefore exist only in the primitive track.
+- Each Vault Asset Module represents one single image, video clip, audio file, or document. It is not a project/package/engine container, and higher-level Vault workflow controls must stay outside the compact module unless separately approved.
+- ViewTube palette/font/focus tokens may flow into the module, but generic Toolbox CSS must not change the donor's fixed dimensions or layout.
+
