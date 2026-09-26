@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react"
+import React, { useMemo, useRef, useState } from "react"
 import { AlertTriangle, Activity, ArrowRight, Award, BadgeDollarSign, BarChart3, Bell, Bookmark, Brain, CalendarDays, Camera, Check, ChevronDown, ChevronUp, CircleDollarSign, CirclePlay, Clock3, Coins, Download, Eye, FileText, Film, Filter, Flag, Flame, Folder, Gauge, Gem, Heart, Hourglass, Image, Info, Layers, Lightbulb, Link, ListChecks, ListPlus, Lock, Mail, MessageCircle, MessagesSquare, Mic, MonitorPlay, MousePointerClick, Music, OctagonAlert, Pencil, Percent, Play, Plus, Rocket, Search, Send, Settings, Share2, Sparkles, Star, Target, ThumbsUp, Timer, TrendingUp, Upload, UserPlus, Users, WandSparkles, X, Zap, type LucideIcon } from "lucide-react"
 import { WIDGET_BADGE_SPECTRUM, WidgetSelect, WidgetSplitButton, resolveBadgeHue, type WidgetBadgeSpectrumName, type WidgetBadgeStatus, type WidgetBadgeTone, type WidgetSelectOption } from "./WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06, VT_VISUAL_METRIC_ORDER } from "../../styles/toolboxPalette"
@@ -51,10 +51,13 @@ const resolveVideoOptionMeta = (option:WidgetVideoSelectOption) => {
 export const WidgetVideoSelect:React.FC<{value:string;onChange:(value:string)=>void;options:WidgetVideoSelectOption[];label:string;placeholder?:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;iconStyle?:WidgetSplitIconStyle;searchable?:boolean;disabled?:boolean;className?:string}> = ({value,onChange,options,label,placeholder="Select a video…",height=38,tone="default",iconStyle="white-on-color",searchable=true,disabled=false,className=""}) => {
  const[open,setOpen]=useState(false)
  const[query,setQuery]=useState("")
+ const[placement,setPlacement]=useState<"down"|"up">("down")
+ const triggerRef=useRef<HTMLButtonElement|null>(null)
  const selected=options.find(o=>o.value===value)
  const visibleOptions=useMemo(()=>{const n=query.trim().toLowerCase();return n?options.filter(o=>`${o.label} ${o.meta||""} ${o.duration||""} ${o.views||""}`.toLowerCase().includes(n)):options},[options,query])
- return <div className={`widget-video-select ${open?"is-open":""} ${className}`.trim()}>
-  <button type="button" className={`widget-video-select-trigger vt-interactive ${primitiveClass(height,tone)} is-icon-${iconStyle}`} aria-label={label} aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={()=>setOpen(c=>!c)}>
+ const toggleMenu=()=>{if(!open&&triggerRef.current&&typeof window!=="undefined"){const rect=triggerRef.current.getBoundingClientRect();const rows=Math.min(5,Math.max(1,visibleOptions.length))+(searchable?1:0);const expected=Math.min(window.innerHeight*.7,(height*rows)+12);const below=window.innerHeight-rect.bottom-8;const above=rect.top-8;setPlacement(below<expected&&above>below?"up":"down")}setOpen(current=>!current)}
+ return <div className={`widget-video-select ${open?"is-open":""} ${placement==="up"?"is-drop-up":""} ${className}`.trim()}>
+  <button ref={triggerRef} type="button" className={`widget-video-select-trigger vt-interactive ${primitiveClass(height,tone)} is-icon-${iconStyle}`} aria-label={label} aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={toggleMenu}>
    <span className="widget-video-select-trigger-selector" aria-hidden="true"><span>VIDEO</span><span>{open?<ChevronUp/>:<ChevronDown/>}</span></span>
    <span className="widget-video-select-trigger-copy">{selected?.thumbnail?<img src={selected.thumbnail} alt=""/>:null}<span>{selected?.label||placeholder}</span></span>
   </button>
