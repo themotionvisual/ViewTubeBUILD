@@ -61,6 +61,7 @@ export const projectHeraldThreadClaim = (thread, context) => {
     branch: thread.branch || null,
     sourcePath: context?.sourcePath || null,
     nextCheckpoint: thread.nextAction || null,
+    startedAt: thread.writerLock?.acquiredAt || null,
     evidenceState: "CLAIMED",
   };
 };
