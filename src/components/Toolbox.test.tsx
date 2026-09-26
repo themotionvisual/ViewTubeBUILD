@@ -2,6 +2,11 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SubToolbox, ToolboxScaffold } from "./Toolbox"
+import {
+ ToolboxHeaderCollapseButton,
+ ToolboxHeaderHelpButton,
+ ToolboxHeaderToggle,
+} from "./subtoolbox/SubToolboxPrimitives"
 
 const renderShell = (open: boolean) =>
  renderToStaticMarkup(
@@ -90,3 +95,47 @@ describe("ToolboxScaffold", () => {
   expect(html).toContain("duration-[600ms] ease-out motion-reduce:transition-none")
  })
 })
+
+describe("Toolbox header controls", () => {
+ it("keeps native button semantics and explicit pressed / expanded state", () => {
+  const toggle = renderToStaticMarkup(
+   <ToolboxHeaderToggle
+    value="longform"
+    aria-label="Video format"
+    options={[
+     { value: "longform", label: "Longform" },
+     { value: "shorts", label: "Shorts" },
+    ]}
+   />,
+  )
+  const help = renderToStaticMarkup(
+   <ToolboxHeaderHelpButton level="toolbox" aria-label="Help" />,
+  )
+  const collapse = renderToStaticMarkup(
+   <ToolboxHeaderCollapseButton
+    level="toolbox"
+    open
+    aria-label="Collapse toolbox"
+    icon={<span aria-hidden="true">X</span>}
+   />,
+  )
+
+  expect(toggle).toContain('role="group"')
+  expect(toggle).toContain('aria-label="Video format"')
+  expect(toggle).toContain('aria-pressed="true"')
+  expect(toggle).toContain('aria-pressed="false"')
+  expect(toggle).toContain('type="button"')
+  expect(toggle).toContain("Longform")
+  expect(toggle).toContain("Shorts")
+
+  expect(help).toContain('type="button"')
+  expect(help).toContain('aria-label="Help"')
+  expect(help).toContain('data-vt-toolbox-help="true"')
+
+  expect(collapse).toContain('type="button"')
+  expect(collapse).toContain('aria-expanded="true"')
+  expect(collapse).toContain('aria-label="Collapse toolbox"')
+  expect(collapse).toContain('data-vt-toolbox-toggle="true"')
+ })
+})
+
