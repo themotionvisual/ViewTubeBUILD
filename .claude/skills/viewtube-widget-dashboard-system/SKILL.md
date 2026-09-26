@@ -618,3 +618,148 @@ Every redesign reports:
 - exceptions and why they were necessary.
 
 A redesign that adds more system-level component/CSS machinery than it removes requires explicit justification.
+
+
+## Widget System Recovery Gate
+
+Before broad Preview State rollout, new widget creation, destructive widget consolidation, or fleet-wide migration, verify the shared Widget System recovery state.
+
+Unified program:
+
+`RECOVER → STANDARDIZE → AUTOMATE → MIGRATE → CONSOLIDATE → CERTIFY`
+
+### Recovery precedence
+
+If a defect is owned by the shell, primitive system, semantic color system, overlay system, component-size lattice or Reference Library, fix that canonical owner before patching an individual widget.
+
+Do not multiply a known shared defect across more widgets.
+
+### Evidence labels
+
+Classify important design inputs as:
+
+- CONFIRMED CURRENT DEFECT;
+- CURRENT AUTHORITY;
+- HISTORICAL DONOR;
+- PROPOSED TARGET.
+
+Historical screenshots/Library artifacts/old branches are donor evidence only. Rebuild useful ideas through current owners.
+
+### Shell geometry
+
+Use semantic zones:
+
+- **FULL** — deliberate edge-to-edge structural content;
+- **SHADOW-SAFE** — controls requiring paint/glow clearance;
+- **INSET** — normal content;
+- **OVERLAY** — dropdowns/popovers/tooltips outside clipping hierarchy.
+
+Do not fake full width with per-widget negative margins or magic reclaim widths.
+
+Use outer effect owner → inner radius-clipped paint surface → interior grid. Do not blanket-clip the outer widget shell.
+
+Changing internal pages must not change the widget's persisted outer dimensions.
+
+### Dashboard editing capabilities
+
+Keep these independent:
+
+- canResizeWidth;
+- canResizeHeight;
+- canReorder;
+- canDragReorder;
+- canHide.
+
+Never gate H−/H+ behind a generic drag capability. Disabled controls must look disabled and explain the unavailable capability rather than silently doing nothing.
+
+### Semantic color
+
+Use:
+
+- VT Ink — global structural ink;
+- Widget Ink — widget-derived ink;
+- Tone Ink — ink derived from a component's own tone/spectrum color.
+
+No authored structural UI color may bypass semantic token ownership. Audit black/#000, text-black, border-black, structural gray classes, raw spectrum values, dark fallbacks and unjustified !important.
+
+### Primitive recovery
+
+Before inventing new responsive/widget CSS, recover shared primitives in this order:
+
+1. shell mechanics;
+2. semantic colors;
+3. 18/24/32/38 geometry/type lattice;
+4. Header Controls;
+5. editing/focus surfaces;
+6. split-left family;
+7. Video Selector/overlay;
+8. media/upload frame;
+9. compound primitives;
+10. spectrum/icons;
+11. Reference Library certification.
+
+Density changes composition before shrinking typography.
+
+### Header Toggle
+
+Word-based Header Toggles use intrinsic label geometry. The active indicator changes both position and width to fit the selected label. Do not force unequal labels into equal-width selected boxes.
+
+### Split-left family
+
+Use one square-rail equation for split buttons, selectors, counters/badges and structurally equivalent rails. Support deliberate two-line labels. Selected icon and label bays must remain visually distinct.
+
+### Floating menus
+
+Dropdown/select menus that can escape a widget use OVERLAY/portal ownership, inherit source widget/tone variables, remain above neighboring modules and flip above/below according to viewport space.
+
+### Donor promotion
+
+Useful Comment Responder patterns should be reconciled into canonical owners where appropriate:
+
+- Video Mini Card S/M/L;
+- Split Counter Badge;
+- Speech Bubble;
+- two-line Split Button.
+
+Do not duplicate an existing primitive merely to promote a donor pattern.
+
+### Media
+
+Canonical upload/media frames use solid spectrum-derived Toolbox-compatible anatomy, S/L compositions, 16:9 or 1:1 media stages, explicit states and contained media. Retire dashed/black/custom parallel frames.
+
+### Reference Library
+
+The Reference Library is executable certification. Every shown example must use the production primitive and should expose status/owner/sizes/responsive/mobile/accessibility metadata.
+
+Target family order:
+
+`Controls → Size → Matrix → Compound → Video → Bars → Tags → Media → Header Controls → Alerts`
+
+Retire obsolete Navigation and Metrics/States families only after their useful capabilities are represented canonically.
+
+### Recovery pilot
+
+Use Video Director → Video Uploader → Video Manager → Settings as the initial recovery cohort unless current evidence shows one has already been fully certified.
+
+Do not fully migrate a widget scheduled to be removed by an imminent, tested consolidation.
+
+### Certification
+
+No recovery wave closes from source inspection alone. Require built interaction evidence and screenshots at desktop, narrow desktop, 390×844 portrait, phone landscape and declared width × height extremes.
+
+### Recovery receipt
+
+Record before/after:
+
+- local CSS selectors;
+- unauthorized raw structural colors;
+- private controls;
+- duplicate responsive rules;
+- legacy selectors;
+- component files;
+- certified dimension pairs;
+- canonical primitives/archetypes reused;
+- deleted code;
+- exceptions.
+
+Recovery is successful when private implementation decreases while certified capability increases.
