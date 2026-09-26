@@ -1,0 +1,42 @@
+name: Widget Pre-Consolidation Capture
+
+on:
+  push:
+    branches:
+      - feat/widget-preview-settings-certification-2026-09-26
+  workflow_dispatch:
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Build branch
+        run: npm run build
+      - name: Start local preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/widget-preview.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/widget-preview.log
+          exit 1
+      - name: Capture desktop and phone evidence
+        env:
+          PREVIEW_URL: http://127.0.0.1:4173
+        run: node scripts/capture-widget-preconsolidation.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: widget-preconsolidation-evidence
+          path: artifacts/widget-preconsolidation
+          if-no-files-found: error
+          retention-days: 14
