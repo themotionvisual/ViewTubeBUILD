@@ -72,7 +72,10 @@ describe("Settings dashboard control switchboard", () => {
   })
 
   it("defines compact, standard and wide container layouts for Settings", () => {
+    expect(css).toContain("@container vt-widget (max-width:260px)")
     expect(css).toContain("@container vt-widget (max-width:420px)")
+    expect(css).toContain("height:72px")
+    expect(css).toContain("padding-bottom:34px")
     expect(css).toContain("@container vt-widget (min-width:421px) and (max-width:760px)")
     expect(css).toContain("@container vt-widget (min-width:761px)")
     expect(css).toContain(".settings-switchboard-preview-grid")
