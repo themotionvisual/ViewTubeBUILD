@@ -217,7 +217,7 @@
   box-shadow:4px 4px 0 color-mix(in srgb,var(--widget-color) 42%,transparent);
 }
 .widget-video-mini-card-title,
-.widget-video-mini-card-meta{
+.widget-video-mini-card-footer{
   min-width:0;
   display:flex;
   align-items:center;
@@ -253,7 +253,7 @@
   height:100%;
   color:var(--vt-ink,var(--widget-border));
 }
-.widget-video-mini-card-meta{
+.widget-video-mini-card-footer{
   min-height:22px;
   justify-content:flex-end;
   background:color-mix(in srgb,var(--widget-color) 34%,white);
@@ -322,6 +322,7 @@
 .widget-speech-bubble-tail{
   position:absolute;
   top:-17px;
+  left:18px;
   width:30px;
   height:20px;
   overflow:visible;
