@@ -24,6 +24,8 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | Conversation & Improvement OS | [Conversation OS](./governance/CONVERSATION_OS.md) |
 | Crown mission coordination | [Crown](./governance/CROWN.md) |
 | Canonical task mutation | [Task Authority](./governance/TASK_AUTHORITY.md) |
+| Brain / creator AI | [Brain](./domains/BRAIN.md) |
+| Prompt architecture | [Prompts](./specifications/PROMPTS.md) + [Prompt Registry](./specifications/prompt-registry.json) |
 
 ### Existing scoped authorities
 
