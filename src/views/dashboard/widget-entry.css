@@ -8,6 +8,7 @@
 @import "./widgetPrimitiveVariants.css";
 @import "./widgetPrimitiveExactHeights.css";
 @import "./widgetPrimitiveTones.css";
+@import "./widgetCompoundPrimitives.css";
 @import "./widgetMatrixPrimitives.css";
 @import "./widgetControlOwnership.css";
 @import "./widgetArchetypeResponsive.css";
