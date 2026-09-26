@@ -2,8 +2,9 @@
 
 **Status:** MASTER HANDOFF / CURRENT CONTINUATION AUTHORITY  
 **Created:** 2026-09-26  
+**Last edited:** 2026-09-26  
 **Repository:** `themotionvisual/ViewTubeBUILD`  
-**Current main at handoff:** `3ddd86bab7593cfa1eff868024268f69c7bd9e74`  
+**Current main at handoff:** `ee02fdbd1af2be30e81de7955dad188999a03ac4`  
 **Primary route:** `/vault`  
 **Current live Vault preview:** `https://viewtube-vault-wave2-live.onrender.com/vault`  
 **Preview branch:** `feat/vault-wave2-organization-2026-09-25`  
@@ -18,6 +19,24 @@
 This document is the single handoff intended to let the next agent continue the ViewTube Creator Vault work without rediscovering the product, donor history, architecture, finished work, incomplete work, UI decisions, source files, tests, standalone HTML references, merged PR history, and current mobile UX problems.
 
 It consolidates the work from the long Creator Vault conversation, the donor re-harvest, current `main`, the Vault task workspace, the six latest iPhone screenshots, Library HTML references, and the completed implementation PRs.
+
+## Current-main verification snapshot
+
+Verified against `main` at `ee02fdbd1af2be30e81de7955dad188999a03ac4`.
+
+Current production ownership is confirmed as:
+
+- **Asset Operations** owns Search / Batch / Groups / Tools.
+- **Import & Tags** is one independent SubToolbox containing TAGS + IMPORT.
+- **Text Editor** is its own independent SubToolbox.
+- **Asset Library** remains the browser/results canvas.
+- **Task Center** remains the background-job surface.
+- **Inspector** remains selected-asset detail/provenance.
+- Current `main` contains the corrected ownership tests and workspace migration logic.
+- PR #441 is merged; do not treat its old open-branch description as current authority.
+- The Wave 2 Render preview remains useful visual evidence, but it is a branch snapshot and not a substitute for current-main verification.
+
+The latest mobile screenshot audit remains the next implementation priority: compact the Vault information architecture before adding another broad feature wave.
 
 This document is a **handoff map**, not a replacement for the canonical subsystem authorities. When there is a conflict, use this order:
 
@@ -1698,7 +1717,26 @@ Vault is complete when:
 
 ---
 
-# 31. One-paragraph handoff to the next agent
+# 31. Handoff artifact and continuation rule
+
+This file is the handoff artifact to pass to the next agent.
+
+The next agent should treat this document as the **single Vault continuation map** and use it to avoid re-discovery. The working rule is:
+
+1. inspect current `main`;
+2. verify the ownership contract above;
+3. read the compact UX audit and living task ledger;
+4. load TDD before behavior changes;
+5. create a new branch from current `main`;
+6. implement the compact UX lane first;
+7. preserve all donor/code/history references in this document when editing it;
+8. update **Last edited** and any changed status/PR/file inventory before handing off again.
+
+Do not replace this file with another dated duplicate. Update it in place and archive only if a future authority explicitly supersedes it.
+
+---
+
+# 32. One-paragraph handoff to the next agent
 
 Start from the latest `main`. Do **not** spend another cycle discovering Vault features: most Vault-native capability is already implemented. The immediate problem is the mobile information architecture documented in `UI-DENSITY-AUDIT-2026-09-25.md`. Begin with `RH-UX120`–`RH-UX135`: remove Workspace Controls from the page, collapse Navigator into a compact Library toolbar, turn Explorer into a drawer/rail, convert Asset Operations into contextual selection actions, separate external destinations under “Send to ViewTube…”, and redesign `SubToolboxVaultAsset` into a media-first compact card. Preserve the corrected ownership that already exists on main: **Import & Tags is one tool, Text Editor is its own tool.** Use tests first, keep all existing canonical asset/Project/ContentBuild/handoff contracts, and only return to Vision/STT/proxy work after the compact Vault passes mobile portrait/landscape acceptance.
 
