@@ -158,6 +158,48 @@ export const WidgetPagination:React.FC<{page:number;pageCount:number;onChange:(p
  */
 export const WidgetLeftSplitBadge:React.FC<{icon:React.ReactNode;children:React.ReactNode;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;spectrum?:WidgetBadgeSpectrumName;iconStyle?:WidgetSplitIconStyle;className?:string}> = ({icon,children,height=32,tone="default",spectrum,iconStyle="white-on-color",className=""}) => <span className={`widget-split-badge is-left-split ${primitiveClass(height,tone)} ${spectrum?`is-spectrum-${spectrum}`:""} is-icon-${iconStyle} ${className}`.trim().replace(/\s+/g," ")}><span className="widget-split-badge-icon" aria-hidden="true">{icon}</span><span className="widget-split-badge-label">{children}</span></span>
 export const WidgetSearchInput:React.FC<Omit<React.InputHTMLAttributes<HTMLInputElement>,"type">&{label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;iconStyle?:WidgetSplitIconStyle}> = ({label,height=32,tone="default",iconStyle="white-on-color",className="",...props}) => <label className={`widget-search-input is-left-split ${primitiveClass(height,tone)} is-icon-${iconStyle} ${className}`.trim()}><span className="widget-search-input-icon" aria-hidden="true"><Search strokeWidth={2.5}/></span><span className="vt-visually-hidden">{label}</span><input type="search" aria-label={label} {...props}/></label>
+
+export const WidgetVideoMiniCard:React.FC<{
+ title:string
+ thumbnail?:string
+ meta?:string
+ className?:string
+}> = ({title,thumbnail,meta,className=""}) => (
+ <article className={`widget-video-mini-card ${className}`.trim()}>
+  <div className="widget-video-mini-card-title">{title}</div>
+  <div className="widget-video-mini-card-media">
+   {thumbnail?<img src={thumbnail} alt="" />:<span className="widget-video-mini-card-placeholder" aria-hidden="true"><Film /></span>}
+  </div>
+  {meta?<div className="widget-video-mini-card-meta">{meta}</div>:null}
+ </article>
+)
+
+export const WidgetSplitCounterBadge:React.FC<{
+ icon:React.ReactNode
+ value:React.ReactNode
+ label:string
+ height?:WidgetControlHeight
+ tone?:WidgetPrimitiveTone
+ className?:string
+}> = ({icon,value,label,height=24,tone="default",className=""}) => (
+ <span className={`widget-split-counter-badge ${primitiveClass(height,tone)} ${className}`.trim()} aria-label={label}>
+  <span className="widget-split-counter-badge-icon" aria-hidden="true">{icon}</span>
+  <span className="widget-split-counter-badge-value">{value}</span>
+ </span>
+)
+
+export const WidgetSpeechBubble:React.FC<{
+ children:React.ReactNode
+ className?:string
+}> = ({children,className=""}) => (
+ <div className={`widget-speech-bubble ${className}`.trim()}>
+  <svg className="widget-speech-bubble-tail" viewBox="0 0 30 20" aria-hidden="true">
+   <path d="M4 18L15 4L26 18" />
+  </svg>
+  <div className="widget-speech-bubble-copy">{children}</div>
+ </div>
+)
+
 export const WidgetLiveBadge:React.FC<{children?:React.ReactNode;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;className?:string}> = ({children="Live",height=24,tone="primary",className=""}) => <span className={`widget-live-badge ${primitiveClass(height,tone)} ${className}`.trim()}><span className="widget-live-badge-dot" aria-hidden="true"/><span>{children}</span></span>
 
 export const WidgetSpectrumFillBadge:React.FC<{children:React.ReactNode;spectrum:WidgetBadgeSpectrumName;height?:18|24;className?:string}> = ({children,spectrum,height=24,className=""}) => <span className={`widget-spectrum-fill-badge ${widgetControlHeightClass(height)} is-spectrum-${spectrum} ${className}`.trim()}>{children}</span>
