@@ -34,28 +34,13 @@ const projection = (): PublishingPackageProjection => ({
  blockers: [],
  ready: true,
  missing: [],
- it("persists the immutable approved snapshot by stable identity", () => {
-  const saved = persistApprovedPublishSnapshot(projection())
-  const loaded = getApprovedPublishSnapshot(saved.id)
-
-  expect(loaded).toEqual(saved)
-  expect(loaded?.hash).toBe(saved.hash)
- })
-
- it("does not mutate a persisted snapshot when the current package later changes", () => {
-  const saved = persistApprovedPublishSnapshot(projection())
-  persistApprovedPublishSnapshot({ ...projection(), titleAssetId: "title-later", revision: 8 })
-
-  expect(getApprovedPublishSnapshot(saved.id)?.assets.titleAssetId).toBe("title-final")
-  expect(getApprovedPublishSnapshot(saved.id)?.contentBuildRevision).toBe(7)
- })
 })
 
 describe("ApprovedPublishSnapshot", () => {
  beforeEach(() => resetApprovedPublishSnapshotRepositoryForTests())
+
  it("freezes the exact approved package identity and assets", () => {
   const snapshot = createApprovedPublishSnapshot(projection())
-
   expect(snapshot.contentBuildId).toBe("cb-publish")
   expect(snapshot.contentBuildRevision).toBe(7)
   expect(snapshot.videoPackageId).toBe("vp-a")
@@ -77,45 +62,45 @@ describe("ApprovedPublishSnapshot", () => {
  it("creates the same stable identity for the same approved content", () => {
   const first = createApprovedPublishSnapshot(projection())
   const second = createApprovedPublishSnapshot(projection())
-
   expect(second.id).toBe(first.id)
   expect(second.hash).toBe(first.hash)
  })
 
  it("changes identity when an approved asset or schedule changes", () => {
   const first = createApprovedPublishSnapshot(projection())
-  const changedAsset = createApprovedPublishSnapshot({
-   ...projection(),
-   titleAssetId: "title-v2",
-  })
-  const changedSchedule = createApprovedPublishSnapshot({
-   ...projection(),
-   scheduledAt: "2026-10-01T18:00:00.000Z",
-  })
-
+  const changedAsset = createApprovedPublishSnapshot({ ...projection(), titleAssetId: "title-v2" })
+  const changedSchedule = createApprovedPublishSnapshot({ ...projection(), scheduledAt: "2026-10-01T18:00:00.000Z" })
   expect(changedAsset.hash).not.toBe(first.hash)
   expect(changedSchedule.hash).not.toBe(first.hash)
  })
 
  it("rejects packages that are not ready and creator-approved", () => {
-  expect(() =>
-   createApprovedPublishSnapshot({
-    ...projection(),
-    ready: false,
-    missing: ["approval"],
-    approval: { status: "ready" },
-   }),
-  ).toThrow(/ready and creator-approved/i)
+  expect(() => createApprovedPublishSnapshot({
+   ...projection(),
+   ready: false,
+   missing: ["approval"],
+   approval: { status: "ready" },
+  })).toThrow(/ready and creator-approved/i)
  })
 
  it("detects mutation after snapshot creation", () => {
   const snapshot = createApprovedPublishSnapshot(projection())
-  const tampered = {
-   ...snapshot,
-   assets: { ...snapshot.assets, titleAssetId: "title-tampered" },
-  }
-
+  const tampered = { ...snapshot, assets: { ...snapshot.assets, titleAssetId: "title-tampered" } }
   expect(verifyApprovedPublishSnapshot(snapshot)).toBe(true)
   expect(verifyApprovedPublishSnapshot(tampered)).toBe(false)
+ })
+
+ it("persists the immutable approved snapshot by stable identity", () => {
+  const saved = persistApprovedPublishSnapshot(projection())
+  const loaded = getApprovedPublishSnapshot(saved.id)
+  expect(loaded).toEqual(saved)
+  expect(loaded?.hash).toBe(saved.hash)
+ })
+
+ it("does not mutate a persisted snapshot when the current package later changes", () => {
+  const saved = persistApprovedPublishSnapshot(projection())
+  persistApprovedPublishSnapshot({ ...projection(), titleAssetId: "title-later", revision: 8 })
+  expect(getApprovedPublishSnapshot(saved.id)?.assets.titleAssetId).toBe("title-final")
+  expect(getApprovedPublishSnapshot(saved.id)?.contentBuildRevision).toBe(7)
  })
 })
