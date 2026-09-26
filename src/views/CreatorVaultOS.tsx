@@ -326,6 +326,8 @@ const CreatorVaultOS: React.FC = () => {
   [manualCollections],
  )
  const tasks = useMemo(() => listVaultTasks(), [taskRefresh])
+ const activeVaultTasks = tasks.filter((task) => task.status === "queued" || task.status === "running")
+ const failedVaultTasks = tasks.filter((task) => task.status === "failed")
  const scratchpads = useMemo(() => listVaultScratchpads(), [scratchpadRefresh])
  const checklistItems = useMemo(() => listVaultChecklistItems(), [checklistRefresh])
  const customFields = useMemo(() => listVaultCustomFields(), [customFieldRefresh])
@@ -2568,11 +2570,11 @@ const CreatorVaultOS: React.FC = () => {
        subtitle="Ingest and background processing jobs"
        icon={<Database />}
        paletteIndex={2}
-       isOpenInitial
+       isOpenInitial={Boolean(activeVaultTasks.length || failedVaultTasks.length)}
        persistenceId="vault-task-center"
       >
        <div className="flex flex-col gap-2">
-        {tasks.length ? tasks.slice(0, 12).map((task) => (
+        {activeVaultTasks.length || failedVaultTasks.length ? [...failedVaultTasks, ...activeVaultTasks].slice(0, 12).map((task) => (
          <div key={task.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
            <div className="truncate text-sm font-black uppercase">{task.label}</div>
@@ -2650,7 +2652,7 @@ const CreatorVaultOS: React.FC = () => {
             src={selectedAsset.url || selectedAsset.previewUrl || undefined}
             poster={selectedAsset.previewUrl || undefined}
             current={quickLookCurrent}
-            duration={Number(selectedAsset.metadata?.durationSeconds || selectedAsset.metadata?.duration || 60)}
+            duration={Number(selectedAsset.metadata?.durationSeconds || selectedAsset.metadata?.duration || 0)}
             playing={quickLookPlaying}
             muted={quickLookMuted}
             volume={quickLookVolume}
