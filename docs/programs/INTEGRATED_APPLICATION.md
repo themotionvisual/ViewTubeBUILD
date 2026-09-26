@@ -86,3 +86,10 @@ A workstream is not complete because implementation exists. It is complete when 
 ## Relationship to historical program material
 
 The dated Finish Program, its backlog registry, the 100-item audit, and system-convergence classification remain donor/audit/work sources during migration. Their IDs become aliases or references to permanent VT task records rather than parallel status ledgers.
+
+
+## Master-source input
+
+`docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md` is a MASTER_SOURCE for discovering missing capabilities, stronger master-tool consolidation, external API/research workstreams, creator-workflow improvements, AI/video-generation opportunities, analytics/visualization ideas, infrastructure/economics considerations, and product-roadmap candidates.
+
+Program work should reconcile its proposals against current code, Product Architecture, Domain Authorities, current API/provider reality, and Task Index state. Accepted work becomes CAP/VT/decision/program records; unaccepted ideas remain source material rather than hidden backlog commitments.
