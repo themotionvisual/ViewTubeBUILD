@@ -604,6 +604,28 @@
 
 /* UI Reference Library comparison grids. Component families own rows;
    size variants own cells, so mobile never becomes a mixed control stack. */
+.widget-reference-scroll-content {
+  row-gap: 12px;
+  padding-block: 12px;
+}
+
+.widget-reference-full-width-region {
+  display: grid;
+  gap: 8px;
+  padding-block: 4px 12px;
+  background: transparent;
+}
+
+.widget-reference-full-width-heading {
+  padding-inline: var(--vt-widget-body-inset, var(--widget-content-inset, 10px));
+}
+
+.widget-reference-full-width-stack {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
 .widget-reference-family {
   display: grid;
   gap: 7px;

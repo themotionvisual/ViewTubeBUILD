@@ -305,7 +305,8 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
       <WidgetScrollArea
         key={activeCategory}
         ariaLabel="ViewTube Widget Component Reference Library"
-        contentClassName="flex min-h-full flex-col gap-3 p-3"
+        edge="full"
+        contentClassName="widget-reference-scroll-content"
       >
         {activeCategory === "controls" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
@@ -894,6 +895,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
         )}
 
         {activeCategory === "compound" && (
+          <>
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("Compound Workflow Primitives", "Creator Operations donor patterns rebuilt in widget UI/CSS")}
 
@@ -950,16 +952,21 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
               </div>
             </div>
 
-            <div className="widget-reference-family">
-              {familyHeading("Full-Width Section Bands", "Lead / Proposal / Active / Paid · three monochromatic widget tones")}
-              <div className="grid gap-2">
-                <WidgetSectionBand tone="default">Lead</WidgetSectionBand>
-                <WidgetSectionBand tone="secondary">Proposal</WidgetSectionBand>
-                <WidgetSectionBand tone="primary">Active</WidgetSectionBand>
-                <WidgetSectionBand tone="secondary">Paid</WidgetSectionBand>
-              </div>
-            </div>
+          </WidgetSection>
 
+          <WidgetSection edge="full" surface="transparent" className="widget-reference-full-width-region">
+            <div className="widget-reference-full-width-heading">
+              {familyHeading("Full-Width Section Bands", "Lead / Proposal / Active / Paid · true FULL-track surfaces")}
+            </div>
+            <div className="widget-reference-full-width-stack">
+              <WidgetSectionBand tone="default">Lead</WidgetSectionBand>
+              <WidgetSectionBand tone="secondary">Proposal</WidgetSectionBand>
+              <WidgetSectionBand tone="primary">Active</WidgetSectionBand>
+              <WidgetSectionBand tone="secondary">Paid</WidgetSectionBand>
+            </div>
+          </WidgetSection>
+
+          <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             <div className="widget-reference-family">
               {familyHeading("Text + Badge Data Grid", "Subscriber CRM-style cells with semantic status badges")}
               <div className="grid gap-3">
@@ -1027,6 +1034,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
               />
             </div>
           </WidgetSection>
+          </>
         )}
 
         {activeCategory === "tags" && (
@@ -1075,6 +1083,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
         )}
 
         {activeCategory === "alerts" && (
+          <>
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("10. Alerts + Split Badges", "Toasts and the 12-slot split-left set")}
             <div className="widget-reference-family">
@@ -1118,16 +1127,21 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                 ))}
               </div>
             </div>
-            <div className="widget-reference-family">
-              {familyHeading("Full-Width Badges", "FULL track examples using the canonical badge owners")}
-              <div className="grid gap-2">
-                <WidgetSpectrumFillBadge spectrum="cyan" height={32} width="full">Full-width spectrum badge</WidgetSpectrumFillBadge>
-                <WidgetLeftSplitBadge spectrum="purple" height={38} width="full" icon={<Star strokeWidth={2.5} />}>
-                  Full-width split badge
-                </WidgetLeftSplitBadge>
-              </div>
-            </div>
+          </WidgetSection>
 
+          <WidgetSection edge="full" surface="transparent" className="widget-reference-full-width-region">
+            <div className="widget-reference-full-width-heading">
+              {familyHeading("Full-Width Badges", "Canonical badge owners on the true FULL track")}
+            </div>
+            <div className="widget-reference-full-width-stack">
+              <WidgetSpectrumFillBadge spectrum="cyan" height={32} width="full">Full-width spectrum badge</WidgetSpectrumFillBadge>
+              <WidgetLeftSplitBadge spectrum="purple" height={38} width="full" icon={<Star strokeWidth={2.5} />}>
+                Full-width split badge
+              </WidgetLeftSplitBadge>
+            </div>
+          </WidgetSection>
+
+          <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             <div className="widget-reference-family">
               {familyHeading("Split Badge Heights", "Icon bay tracks the control height")}
               <div className="widget-reference-variants">
@@ -1146,6 +1160,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
               </div>
             </div>
           </WidgetSection>
+          </>
         )}
 
         {activeCategory === "media" && (

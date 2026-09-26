@@ -664,6 +664,16 @@ describe("reference-library interaction recovery contracts", () => {
   })
 })
 
+describe("reference library full-width composition", () => {
+  it("places edge-to-edge examples on a full scroll grid instead of inside inset wrappers", () => {
+    expect(referenceSource).toContain('ariaLabel="ViewTube Widget Component Reference Library"')
+    expect(referenceSource).toContain('edge="full"')
+    expect(referenceSource).toContain('contentClassName="widget-reference-scroll-content"')
+    expect(referenceSource).toContain('className="widget-reference-full-width-region')
+    expect(referenceSource).toContain('edge="full" surface="transparent" className="widget-reference-full-width-region')
+  })
+})
+
 describe("reference-library video module and full-width primitive sizing", () => {
   it("offers compact, standard, and large video mini modules from one canonical primitive", () => {
     const markup = renderToStaticMarkup(
