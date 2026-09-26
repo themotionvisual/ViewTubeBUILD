@@ -73,6 +73,9 @@ Every final render should become a canonical versioned asset that can be selecte
 ### UI / Widget / Toolbox certification
 Finish shared primitive migration, natural responsive behavior, truthful preview/empty/disconnected states and screenshot-driven certification without forcing unique tools into identical internal layouts.
 
+### Brain and Prompt architecture convergence
+Converge creator-facing AI on the stable Brain domain authority and Prompt specification. Remove AI-management work/status responsibilities from Brain docs; route continuity through Conversation OS, missions through Crown and exact state through Task Authority. Continue migration of direct legacy provider/generator paths, prompt-family/version coverage, context/evidence consistency, outcome/evaluation producers and governed learning. Preserve prompt inventory/reachability as machine projections rather than a second work ledger.
+
 ### Documentation / Agent operating system
 Complete the Task Index VNext, Crown/Conversation OS integration, Documentation Registry, Removed Archive, lossless Consolidation Compiler, verification receipts and governed skill workflows.
 
