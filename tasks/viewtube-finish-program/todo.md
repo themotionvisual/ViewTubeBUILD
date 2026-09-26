@@ -79,3 +79,16 @@ Architecture: `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`
 - [ ] No legacy prompt or direct provider path remains reachable without documented compatibility purpose.
 - [ ] Desktop/narrow/mobile portrait/mobile landscape + state matrix is certified.
 - [ ] Dead/duplicate owners are removed only after parity.
+
+## Program 0 — System convergence prerequisite
+
+Source: `docs/architecture/VIEWTUBE_SYSTEM_CONVERGENCE_AND_CONSOLIDATION.md`
+
+- [ ] S00 Complete production reachability/caller classification for overlapping AI/context/evidence/project/asset systems.
+- [ ] S01 Define CreatorContextEnvelope + read-only resolver over existing owners.
+- [ ] S02 Define shared EvidenceRecord projection without replacing analytics-canon.
+- [ ] S03 Produce one-write-owner matrix for Project/ContentBuild/VideoPackage/PublishingPackage fields.
+- [ ] S04 Define shared Asset Engine/Vault asset identity boundary.
+- [ ] S05 Define Creator Operation identity across generation/handoff/receipt/trace.
+- [ ] S06 Define shared outcome producer identity/idempotency contract.
+- [ ] S07 Donor-harvest and quarantine rules pass before any subsystem deletion.
