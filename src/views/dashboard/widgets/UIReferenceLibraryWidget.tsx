@@ -1201,9 +1201,12 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   onPrevious={() => setStepperValue("Step 1 of 4")}
                   onNext={() => setStepperValue("Step 2 of 4")}
                 />
-                <WidgetHeaderActionButton aria-label="Open settings" onClick={() => undefined}>
-                  <Settings aria-hidden="true" />
-                </WidgetHeaderActionButton>
+                <WidgetHeaderActionButton
+                  icon={<Settings />}
+                  label="Settings"
+                  aria-label="Open settings"
+                  onClick={() => undefined}
+                />
               </div>
             </div>
             <div className="widget-reference-family">
