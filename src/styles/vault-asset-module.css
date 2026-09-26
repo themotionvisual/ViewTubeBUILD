@@ -21,7 +21,7 @@
   height:var(--vt-vault-module-h);
   overflow:hidden;
   border:var(--vt-vault-stroke) solid var(--vt-vault-ink);
-  border-radius:10px;
+  border-radius:var(--vt-vault-radius,10px);
   background:#fff;
   color:#000;
   font-family:var(--vt-studio-toolbox-font,"Inter",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,sans-serif);
@@ -252,10 +252,10 @@
 
 /* Half-height audio/document variants. */
 .vt-vault-asset-module.is-half{
-  width:var(--vt-vault-module-w);height:94.5px;
-  display:grid;grid-template-rows:var(--vt-vault-header-h) 60.5px;
+  width:var(--vt-vault-module-w);height:var(--vt-vault-half-h,94.5px);
+  display:grid;grid-template-rows:var(--vt-vault-header-h) var(--vt-vault-half-body-h,60.5px);
 }
-.vt-vault-half-body{min-width:0;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 72px}
+.vt-vault-half-body{min-width:0;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) var(--vt-vault-half-preview-w,72px)}
 .vt-vault-half-left{min-width:0;min-height:0;display:grid;grid-template-rows:1fr 1fr}
 .vt-vault-half-left .vt-vault-tag-panel{border-bottom:var(--vt-vault-stroke) solid #000;padding:4px;overflow:auto}
 .vt-vault-half-left .vt-vault-note-panel{min-width:0;min-height:0}
