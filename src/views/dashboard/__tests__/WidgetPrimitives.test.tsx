@@ -33,6 +33,9 @@ import {
   WidgetSizedButton,
   WidgetSizedSelect,
   WidgetVideoSelect,
+  WidgetVideoMiniCard,
+  WidgetSplitCounterBadge,
+  WidgetSpeechBubble,
   WidgetStepper,
   WidgetSplitCounter,
   WidgetTinySpectrumIcon,
@@ -590,6 +593,24 @@ describe("expanded widget compound primitives", () => {
     expect(variantsCss).toContain("--widget-video-split-bay: var(--vt-primitive-height")
     expect(extensionSource).toContain("is-drop-up")
     expect(variantsCss).toContain(".widget-video-select.is-drop-up .widget-video-select-menu")
+  })
+})
+
+describe("comment responder donor primitives", () => {
+  it("exposes the video mini-card, split counter badge and speech bubble through the shared surface", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <WidgetVideoMiniCard title="Napoleon's Last Great Victory" thumbnail="/thumb.jpg" meta="12:42" />
+        <WidgetSplitCounterBadge icon={<span>Like</span>} value={12} label="12 likes" />
+        <WidgetSpeechBubble>Big supporter of the channel.</WidgetSpeechBubble>
+      </div>,
+    )
+    expect(markup).toContain("widget-video-mini-card")
+    expect(markup).toContain("widget-split-counter-badge")
+    expect(markup).toContain("widget-speech-bubble")
+    expect(referenceSource).toContain("WidgetVideoMiniCard")
+    expect(referenceSource).toContain("WidgetSplitCounterBadge")
+    expect(referenceSource).toContain("WidgetSpeechBubble")
   })
 })
 
