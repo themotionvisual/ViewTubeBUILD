@@ -61,8 +61,8 @@
     }
 
     .dashboard-barrier .vt-widget-header .widget-header-toggle {
-      width: 100%;
-      min-width: 118px;
+      width: fit-content;
+      min-width: 0;
       max-width: 100%;
       height: auto;
       min-height: 30px;
