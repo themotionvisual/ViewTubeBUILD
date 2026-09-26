@@ -27,11 +27,12 @@ describe("portrait widget header control deck", () => {
     expect(mobile).toContain("background: var(--widget-color")
   })
 
-  it("reclaims the asymmetric live app-shell phone padding so visible gutters match", () => {
+  it("keeps portrait widgets inside the real viewport instead of asymmetric app-shell compensation", () => {
     expect(mobile).toContain("--vt-mobile-widget-gutter: 4px")
-    expect(mobile).toContain("--vt-mobile-reclaim-left: 12px")
-    expect(mobile).toContain("--vt-mobile-reclaim-right: 40px")
-    expect(mobile).toContain("width: calc(100% + var(--vt-mobile-reclaim-left) + var(--vt-mobile-reclaim-right))")
+    expect(mobile).not.toContain("--vt-mobile-reclaim-left")
+    expect(mobile).not.toContain("--vt-mobile-reclaim-right")
+    expect(mobile).toContain("width: 100%;")
+    expect(mobile).toContain("margin-inline: 0;")
   })
 
   it("collapses only the canvas region while the header remains fixed", () => {
