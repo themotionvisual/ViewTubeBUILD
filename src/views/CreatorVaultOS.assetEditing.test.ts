@@ -26,9 +26,10 @@ describe("CreatorVaultOS reference-parity asset modules", () => {
  it("maps image/video orientation plus audio/document to the donor variants", () => {
   expect(source).toContain('return "audio"')
   expect(source).toContain('return "document"')
-  expect(source).toContain('return asset.name.length > 26 ? "portrait-double" : "portrait-single"')
+  expect(source).toContain('if (vaultPreviewAspectRatio(asset) < 0.9) return "portrait-single"')
   expect(source).toContain('return "landscape"')
   expect(moduleSource).toContain('"landscape-swapped"')
+  expect(source).toContain('"portrait-double"')
   expect(moduleSource).toContain('"portrait-double"')
  })
 })
