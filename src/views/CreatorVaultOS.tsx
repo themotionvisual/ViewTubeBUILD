@@ -2513,14 +2513,12 @@ const CreatorVaultOS: React.FC = () => {
             selected={selectedAssetIds.includes(asset.id)}
             tags={asset.tags || []}
             sharedTags={vaultTagLibrary}
-            notes={String(asset.metadata?.notes || "")}
             mediaFit="cover"
             onTitleChange={(nextTitle) => updateAssetTitle(asset, nextTitle)}
             onTagsChange={(tags) => {
              updateVaultAsset(asset.id, { tags })
              setRefreshTick((value) => value + 1)
             }}
-            onNotesChange={(nextNotes) => updateAssetNotes(asset, nextNotes)}
             onClickCapture={(event) => {
              selectionShiftRef.current = event.shiftKey
             }}
@@ -2688,6 +2686,17 @@ const CreatorVaultOS: React.FC = () => {
          <div>
           <div className="text-xs font-black uppercase opacity-60">Project</div>
           <div className="text-sm font-black uppercase">{selectedAsset.projectName || "Unassigned"}</div>
+         </div>
+         <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Notes</div>
+          <SubToolboxTextArea
+           key={selectedAsset.id}
+           height="compact"
+           defaultValue={String(selectedAsset.metadata?.notes || "")}
+           placeholder="Asset notes…"
+           aria-label="Asset notes"
+           onBlur={(event) => updateAssetNotes(selectedAsset, event.target.value)}
+          />
          </div>
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Collection Membership</div>
