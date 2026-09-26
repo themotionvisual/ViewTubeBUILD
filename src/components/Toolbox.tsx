@@ -581,6 +581,7 @@ interface SubToolboxProps {
   overflowVisible?: boolean;
   helpText?: React.ReactNode;
   headerStyle?: React.CSSProperties;
+  style?: React.CSSProperties;
 }
 
 export const SubToolbox: React.FC<SubToolboxProps> = ({
@@ -605,6 +606,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
   overflowVisible = false,
   helpText,
   headerStyle,
+  style,
 }) => {
   const paletteCycle = React.useContext(PaletteCycleContext);
   const allocatedPaletteRef = useRef<number | null>(null);
@@ -699,6 +701,7 @@ export const SubToolbox: React.FC<SubToolboxProps> = ({
         boxShadow: `var(--vt-subtoolbox-shadow-offset, ${SUB_TOOLBOX_SHADOW}px) var(--vt-subtoolbox-shadow-offset, ${SUB_TOOLBOX_SHADOW}px) 0 0 var(--vt-subtoolbox-shell-shadow)`,
         ["--vt-subtoolbox-header" as any]: headerHex,
         ["--vt-subtoolbox-shell-shadow" as any]: shadowColor,
+        ...style,
       }}
     >
       <div
@@ -959,23 +962,25 @@ export interface StandardInputProps extends React.InputHTMLAttributes<HTMLInputE
   borderWidth?: 3 | 4;
 }
 
-export const StandardInput: React.FC<StandardInputProps> = ({
+export const StandardInput = React.forwardRef<HTMLInputElement, StandardInputProps>(({
   className,
   minHeight = "48px",
   hasBorder = true,
   sizeMode = "content",
   borderWidth = 3,
   ...props
-}) => {
+}, ref) => {
   return (
     <input
+      ref={ref}
       className={`vt-input-standard ${sizeMode === "fill" ? "vt-field-fill" : "vt-field-content"} ${hasBorder ? "" : "border-none bg-transparent p-0"} ${className || ""}`}
       data-border-width={borderWidth}
       style={{ minHeight }}
       {...props}
     />
   );
-};
+});
+StandardInput.displayName = "StandardInput";
 
 export const StandardTextArea: React.FC<StandardTextAreaProps> = ({
   className,
@@ -1198,226 +1203,3 @@ export const SubToolboxDropdownTopTitleControl: React.FC<SubToolboxDropdownTopTi
 
   useEffect(() => {
     const onOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (!rootRef.current?.contains(target) && !panelRef.current?.contains(target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onOutside);
-    return () => document.removeEventListener("mousedown", onOutside);
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    recalcMenuRect();
-    const onWindowChange = () => recalcMenuRect();
-    window.addEventListener("resize", onWindowChange);
-    window.addEventListener("scroll", onWindowChange, true);
-    return () => {
-      window.removeEventListener("resize", onWindowChange);
-      window.removeEventListener("scroll", onWindowChange, true);
-    };
-  }, [open, borderWidth]);
-
-  return (
-    <div ref={rootRef} className={`w-full relative ${className}`} style={{ zIndex: open ? 140 : 1 }}>
-      <button
-        type="button"
-        onClick={() => {
-          setOpen((v) => {
-            const next = !v;
-            if (next) setTimeout(() => recalcMenuRect(), 0);
-            return next;
-          });
-        }}
-        className={`group w-full border-black overflow-hidden transition-[border-radius] ${CONTROL_SHELL.transition} block appearance-none p-0 ${
-          open ? "rounded-t-[8px] rounded-b-none" : "rounded-[8px]"
-        } ${borderClass}`}
-        style={{
-          backgroundColor: resolvedBody,
-          height: `${CONTROL_SHELL.height}px`,
-          boxShadow: `${borderWidth === 4 ? SUB_TOOLBOX_SHADOW : SUB_TOOLBOX_INNER_SHADOW}px ${borderWidth === 4 ? SUB_TOOLBOX_SHADOW : SUB_TOOLBOX_INNER_SHADOW}px 0px 0px ${resolvedShadow}`,
-        }}
-      >
-        <div className="h-full w-full flex flex-col">
-          <div
-            className={`h-1/2 ${rowBorderClass} border-black text-[9px] font-black uppercase tracking-[0.14em] flex items-center justify-center px-2 leading-none`}
-            style={{ backgroundColor: resolvedTitle }}
-          >
-            {label}
-          </div>
-          <div className="h-1/2 flex items-center justify-between px-3">
-            <div className="text-[20px] font-[900] uppercase tracking-tighter leading-none text-center">
-              {value}
-            </div>
-            <ChevronDown size={18} strokeWidth={3} className={`text-black transition-transform ${open ? "rotate-180" : ""}`} />
-          </div>
-        </div>
-      </button>
-      {open && menuRect &&
-        createPortal(
-          <div
-            ref={panelRef}
-            data-vt-subtoolbox-dropdown-portal="true"
-            className={`${borderClass} border-black rounded-b-[8px] overflow-hidden bg-white`}
-            style={{
-              ...(inheritedPair.pairA ? { ["--pair-a" as string]: inheritedPair.pairA } : {}),
-              ...(inheritedPair.pairB ? { ["--pair-b" as string]: inheritedPair.pairB } : {}),
-              position: "fixed",
-              left: menuRect.left,
-              top: menuRect.top,
-              width: menuRect.width,
-              zIndex: 1400,
-              boxShadow: `${borderWidth === 4 ? SUB_TOOLBOX_SHADOW : SUB_TOOLBOX_INNER_SHADOW}px ${borderWidth === 4 ? SUB_TOOLBOX_SHADOW : SUB_TOOLBOX_INNER_SHADOW}px 0px 0px ${resolvedShadow}`,
-            }}
-          >
-            {options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => {
-                  onChange(option.value);
-                  if (!multiSelect) setOpen(false);
-                }}
-                data-selected={selectedValues.includes(option.value) ? "true" : "false"}
-                className={`w-full h-11 ${rowBorderClass} last:border-b-0 border-black bg-white text-left px-4 text-[20px] font-[900] uppercase tracking-tighter leading-none`}
-              >
-                {multiSelect && (
-                  <span className="inline-block w-6 mr-2 text-center">
-                    {selectedValues.includes(option.value) ? "✓" : ""}
-                  </span>
-                )}
-                {option.label}
-              </button>
-            ))}
-          </div>,
-          document.body
-        )}
-    </div>
-  );
-};
-
-type SubToolboxActionButtonProps = {
-  label: string;
-  iconName?: string;
-  onClick: () => void;
-  tone?: SubtoolboxControlTone;
-  disabled?: boolean;
-  className?: string;
-};
-
-type SubToolboxRefineButtonStyleProps = {
-  label: string;
-  iconName?: string;
-  showIconSection?: boolean;
-  onClick: () => void;
-  tone?: SubtoolboxControlTone;
-  disabled?: boolean;
-  className?: string;
-  borderWidth: 3 | 4;
-};
-
-const SubToolboxRefineButtonBase: React.FC<SubToolboxRefineButtonStyleProps> = ({
-  label,
-  iconName = "zap",
-  showIconSection = false,
-  onClick,
-  tone = "yellow",
-  disabled = false,
-  className = "",
-  borderWidth,
-}) => {
-  const [isHovering, setIsHovering] = useState(false);
-  const [isPressing, setIsPressing] = useState(false);
-  const theme = SUBTOOLBOX_CONTROL_THEMES[tone];
-  const resolvedSurface = `var(--pair-a, var(--vt-subtoolbox-fill, ${theme.surface}))`;
-  const resolvedControl = `var(--pair-b, ${theme.control})`;
-  const resolvedShadow = `var(--vt-subtoolbox-shadow, color-mix(in srgb, var(--pair-a, ${theme.shadow}) 45%, transparent))`;
-  const border = `${borderWidth}px solid black`;
-  const baseShadow = borderWidth === 4 ? SUB_TOOLBOX_SHADOW : SUB_TOOLBOX_INNER_SHADOW;
-  const hoverShadow = Math.max(1, Math.floor(baseShadow / 2));
-  const appliedShadow = isPressing ? 0 : isHovering ? hoverShadow : baseShadow;
-
-  const isSubtoolboxPeer = borderWidth === 4;
-  const peerHeight = isSubtoolboxPeer
-    ? `var(--vt-subtoolbox-header-height, ${SUBTOOLBOX_TOKENS.shell.headerHeight}px)`
-    : `${CONTROL_SHELL.height}px`;
-
-  return (
-    <button
-      type="button"
-      data-vt-split-left={isSubtoolboxPeer && showIconSection ? "true" : undefined}
-      onClick={onClick}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => {
-        setIsHovering(false);
-        setIsPressing(false);
-      }}
-      onMouseDown={() => setIsPressing(true)}
-      onMouseUp={() => setIsPressing(false)}
-      disabled={disabled}
-      className={`w-full overflow-hidden transition-all shrink-0 flex items-stretch appearance-none p-0 hover:translate-y-[1.5px] active:translate-y-[3px] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed ${isSubtoolboxPeer && showIconSection ? "vt-split-left-module-action" : ""} ${className}`}
-      style={{
-        height: peerHeight,
-        borderRadius: isSubtoolboxPeer
-          ? `var(--vt-subtoolbox-radius, ${SUBTOOLBOX_TOKENS.shell.radius}px)`
-          : "8px",
-        backgroundColor: resolvedSurface,
-        border,
-        boxShadow: `${appliedShadow}px ${appliedShadow}px 0px 0px ${resolvedShadow}`,
-      }}
-    >
-      {showIconSection && (
-        <div
-          data-vt-split-left-rail={isSubtoolboxPeer ? "true" : undefined}
-          className="h-full shrink-0 flex items-center justify-center"
-          style={{
-            width: isSubtoolboxPeer ? peerHeight : "48px",
-            backgroundColor: resolvedControl,
-            borderRight: border,
-          }}
-        >
-          <CustomIcon name={iconName} size={isSubtoolboxPeer ? 22 : 18} />
-        </div>
-      )}
-      <div
-        data-vt-split-left-label={isSubtoolboxPeer && showIconSection ? "true" : undefined}
-        className="h-full flex-1 flex items-center justify-center px-3 min-w-0"
-      >
-        <span
-          className="font-[1000] uppercase tracking-tighter mt-0.5 text-black text-center"
-          style={{
-            fontSize: isSubtoolboxPeer
-              ? `var(--vt-subtoolbox-title-size, ${SUBTOOLBOX_TOKENS.shell.titleSize}px)`
-              : "20px",
-            lineHeight: 0.88,
-          }}
-        >
-          {label}
-        </span>
-      </div>
-    </button>
-  );
-};
-
-type SubToolboxGridActionButtonProps = Omit<SubToolboxRefineButtonStyleProps, "borderWidth">;
-type SubToolboxInnerActionButtonProps = Omit<SubToolboxRefineButtonStyleProps, "borderWidth">;
-
-// 4px standard: for sub-toolbox grids (sub-toolbox color behavior, larger type)
-export const SubToolboxGridActionButton: React.FC<SubToolboxGridActionButtonProps> = (props) => (
-  <SubToolboxRefineButtonBase {...props} showIconSection={props.showIconSection ?? true} borderWidth={4} />
-);
-
-// 3px standard: for controls inside sub-toolboxes (same shell, compact stroke)
-export const SubToolboxInnerActionButton: React.FC<SubToolboxInnerActionButtonProps> = (props) => (
-  <SubToolboxRefineButtonBase {...props} borderWidth={3} />
-);
-
-export const SubToolboxActionButton: React.FC<SubToolboxActionButtonProps> = ({
-  label,
-  iconName = "zap",
-  onClick,
-  tone = "yellow",
-  disabled = false,
-  className = "",
-}) => {
-  return <SubToolboxGridActionButton label={label} iconName={iconName} onClick={onClick} tone={tone} disabled={disabled} className={className} />;
-};
