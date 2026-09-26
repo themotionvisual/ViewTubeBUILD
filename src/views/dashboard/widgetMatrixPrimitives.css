@@ -1185,3 +1185,22 @@
   border: 0 !important;
   box-shadow: none !important;
 }
+
+
+/* Spectrum split badges keep their spectrum surface but use global ViewTube Ink
+   for text, glyphs and dividers rather than inheriting the current widget ink. */
+.widget-split-badge[class*="is-spectrum-"]{
+  color:var(--vt-ink,#243247) !important;
+  border-color:var(--vt-ink,#243247) !important;
+}
+.widget-split-badge[class*="is-spectrum-"] .widget-split-badge-icon{
+  border-inline-end-color:var(--vt-ink,#243247) !important;
+  color:var(--vt-ink,#243247) !important;
+}
+.widget-split-badge[class*="is-spectrum-"] .widget-split-badge-icon > svg{
+  stroke:var(--vt-ink,#243247) !important;
+  color:var(--vt-ink,#243247) !important;
+}
+.widget-split-badge[class*="is-spectrum-"] .widget-split-badge-label{
+  color:var(--vt-ink,#243247) !important;
+}
