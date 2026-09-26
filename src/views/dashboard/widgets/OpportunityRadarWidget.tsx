@@ -4,13 +4,14 @@ import { WidgetShell } from "../WidgetShell"
 import {
   WidgetBadge,
   WidgetProgressBar,
+  WidgetPreviewState,
   WidgetScrollArea,
   WidgetSizedButton,
-  WidgetStatePanel,
 } from "../WidgetPrimitives"
 import { InstrumentExplanation, InstrumentSignals, WidgetInstrument } from "../instruments/WidgetInstrument"
 import type { DashboardData } from "../useDashboardData"
 import type { CommonWidgetProps } from "../types"
+import { OPPORTUNITY_RADAR_PREVIEW_CANDIDATES } from "../widgetPreviewFixtures"
 import "./OpportunityRadarWidget.css"
 
 type OpportunityCandidate = {
@@ -165,11 +166,23 @@ export const OpportunityRadarWidget: React.FC<CommonWidgetProps & { data: Dashbo
     >
       <div className="vt-opportunity-radar">
         {!candidates.length ? (
-          <WidgetStatePanel state={{
-            status: "empty",
-            data: null,
-            message: "Connect or import video performance data to build the opportunity compass.",
-          }} />
+          <WidgetPreviewState
+            ariaLabel="Opportunity Radar preview"
+            previewReason="Example opportunities show how connected performance, recency and evidence become ranked follow-up candidates."
+            recoveryAction="CONNECT DATA"
+            onRecover={() => onNavigate?.("/connect")}
+            illustration={
+              <OpportunityCompass
+                candidates={OPPORTUNITY_RADAR_PREVIEW_CANDIDATES.map((candidate) => ({ ...candidate }))}
+                selectedId="preview-momentum"
+                onSelect={() => {}}
+              />
+            }
+          >
+            <div className="vt-opportunity-radar__preview-note">
+              SAMPLE ONLY · CONNECT OR IMPORT VIDEO PERFORMANCE DATA TO PERSONALIZE
+            </div>
+          </WidgetPreviewState>
         ) : (
           <>
             <OpportunityCompass candidates={candidates} selectedId={selectedId} onSelect={setSelectedId} />
