@@ -1,11 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 import {
   validateAuthorityRecord,
   findAuthorityConflicts,
   findMissingSourceRefs,
   findStaleClaims,
+  auditAiSystemsGovernance,
 } from "./ai-systems-governance.mjs";
 
 const baseRecord = (overrides = {}) => ({
@@ -141,4 +145,75 @@ test("findStaleClaims reports active old claims but not completed or released wo
   const stale = findStaleClaims(claims, { now, maxAgeMs: day });
 
   assert.deepEqual(stale.map((claim) => claim.taskId), ["active-old"]);
+});
+
+
+test("auditAiSystemsGovernance audits every configured registry and counts all records", () => {
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "vt-ai-governance-"));
+  fs.mkdirSync(path.join(rootDir, "governance/ai-systems/registry"), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, "src/services"), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, "docs"), { recursive: true });
+  fs.writeFileSync(path.join(rootDir, "src/services/example.ts"), "export {}\n");
+  fs.writeFileSync(path.join(rootDir, "docs/example.md"), "# Example\n");
+
+  const one = baseRecord({ id: "one", ownership: { canonicalOwner: "owner-a", concern: "concern-a" } });
+  const two = baseRecord({ id: "two", ownership: { canonicalOwner: "owner-b", concern: "concern-b" } });
+
+  fs.writeFileSync(
+    path.join(rootDir, "governance/ai-systems/registry/systems.json"),
+    JSON.stringify({ records: [one] }),
+  );
+  fs.writeFileSync(
+    path.join(rootDir, "governance/ai-systems/registry/plans.json"),
+    JSON.stringify({ records: [two] }),
+  );
+
+  const result = auditAiSystemsGovernance({
+    rootDir,
+    registryPaths: [
+      "governance/ai-systems/registry/systems.json",
+      "governance/ai-systems/registry/plans.json",
+    ],
+    claims: [],
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.registryCount, 2);
+  assert.equal(result.recordCount, 2);
+});
+
+test("auditAiSystemsGovernance reads Herald thread claims and flags stale active work", () => {
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "vt-ai-herald-"));
+  fs.mkdirSync(path.join(rootDir, "governance/ai-systems/registry"), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, ".viewtube/herald/threads"), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, "src/services"), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, "docs"), { recursive: true });
+  fs.writeFileSync(path.join(rootDir, "src/services/example.ts"), "export {}\n");
+  fs.writeFileSync(path.join(rootDir, "docs/example.md"), "# Example\n");
+
+  fs.writeFileSync(
+    path.join(rootDir, "governance/ai-systems/registry/systems.json"),
+    JSON.stringify({ records: [baseRecord()] }),
+  );
+  fs.writeFileSync(
+    path.join(rootDir, ".viewtube/herald/threads/stale.json"),
+    JSON.stringify({
+      threadId: "stale",
+      owner: "Brain Runtime",
+      writerLock: { owner: "agent-a", acquiredAt: "2026-09-22T12:00:00Z" },
+      nextAction: "Resume work",
+    }),
+  );
+
+  const result = auditAiSystemsGovernance({
+    rootDir,
+    registryPaths: ["governance/ai-systems/registry/systems.json"],
+    observedMainSha: "fbaaff8de14c5948959251b0552519685c24c83e",
+    now: Date.parse("2026-09-24T18:00:00Z"),
+    maxClaimAgeMs: 24 * 60 * 60 * 1000,
+  });
+
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.staleClaims.map((claim) => claim.taskId), ["herald:stale"]);
+  assert.equal(result.claimCount, 1);
 });
