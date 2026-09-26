@@ -730,7 +730,7 @@ describe("reference library recovery completion", () => {
     expect(renderToStaticMarkup(<WidgetLeftSplitBadge spectrum="cyan" height={32} width="full" icon={<Check />}>Full</WidgetLeftSplitBadge>)).toContain("is-width-full")
     expect(matrixCss).toContain(".widget-spectrum-fill-badge.is-width-full")
     expect(matrixCss).toContain(".widget-split-badge.is-width-full")
-    expect(matrixCss).toMatch(/grid-column:\\s*full-start\\s*\\/\\s*full-end/)
+    expect(matrixCss).toContain("grid-column: full-start / full-end")
   })
 
   it("lets the video menu expand beyond a narrow trigger while remaining viewport bounded", () => {
