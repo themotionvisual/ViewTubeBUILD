@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs"
 import React from "react"
+import { Check, Plus } from "lucide-react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import {
@@ -32,10 +33,13 @@ import {
   WidgetIconButton,
   WidgetSizedButton,
   WidgetSizedSelect,
+  WidgetSpectrumFillBadge,
   WidgetVideoSelect,
   WidgetVideoMiniCard,
+  WidgetMediaUploadFrame,
   WidgetSplitCounterBadge,
   WidgetSpeechBubble,
+  WidgetDataGrid,
   WidgetStepper,
   WidgetSplitCounter,
   WidgetTinySpectrumIcon,
@@ -55,6 +59,7 @@ const variantsCss = readFileSync(new URL("../widgetPrimitiveVariants.css", impor
 const exactHeightsCss = readFileSync(new URL("../widgetPrimitiveExactHeights.css", import.meta.url), "utf8")
 const widgetSystemCss = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
 const matrixCss = readFileSync(new URL("../widgetMatrixPrimitives.css", import.meta.url), "utf8")
+const compoundCss = readFileSync(new URL("../widgetCompoundPrimitives.css", import.meta.url), "utf8")
 const tonesCss = readFileSync(new URL("../widgetPrimitiveTones.css", import.meta.url), "utf8")
 const videoSelectCss = readFileSync(new URL("../widgetVideoSelectButtonScroll.css", import.meta.url), "utf8")
 const extensionSource = readFileSync(new URL("../WidgetPrimitiveExtensions.tsx", import.meta.url), "utf8")
