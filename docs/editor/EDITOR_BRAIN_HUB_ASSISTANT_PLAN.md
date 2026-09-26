@@ -6,7 +6,7 @@
 **Date created:** 2026-09-24  
 **Last audited main commit:** 96a3cb13fcdfd36720aebd845e0ac5f7a5ab12c1  
 **Parent authority:** docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md  
-**Related authority:** docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md
+**Related authority:** docs/domains/BRAIN.md
 
 ## Objective
 
