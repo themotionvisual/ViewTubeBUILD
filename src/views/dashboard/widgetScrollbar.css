@@ -129,7 +129,7 @@
   }
 
   :where(.dashboard-barrier) .widget-scroll-area.is-full {
-    margin-inline: calc(-1 * var(--widget-content-inset));
+    margin-inline: calc(-1 * var(--vt-widget-body-inset, var(--widget-content-inset)));
   }
 
   :where(.dashboard-barrier) .widget-scroll-viewport {
