@@ -26,10 +26,14 @@ Never infer current-main integration from PR merge state alone.
 - `schemas/prompt-reference.schema.json`
 - `schemas/managed-action.schema.json`
 
-## First registries
+## Registries
 
-- `registry/systems.json` — seed canonical system/owner map.
-- Later: capabilities, integrations, donors, plans and agents.
+- `registry/systems.json` — canonical system/owner map.
+- `registry/plans.json` — current planning authorities and active execution programs.
+- `registry/donors.json` — historical branch/PR/document donors and disposition.
+- `registry/integrations.json` — cross-owner integration state and current-main verification.
+
+Agents/runs remain projected from Herald rather than copied into a second execution ledger. A dedicated agent-class registry can be added later if it proves useful.
 
 Generated projections must not silently become canonical authority.
 
@@ -67,3 +71,17 @@ npm run test:ai-systems-herald
 ```
 
 A projected receipt defaults `mainIntegrationState` to `unknown`; git ancestry/current-code verification must upgrade that state separately.
+
+
+## 2026-09-26 forward-port status
+
+The original governance stack (#422–#424) was merged only into stacked feature bases, not directly into `main`. This branch forward-ports the governance files onto current main `fbc7d25c71fa89c312da32280d9f77182065b42a`.
+
+Current branch validation:
+- 4 registries;
+- 27 authority records;
+- zero malformed owner/audit/main-state findings;
+- zero broken code/doc/test source references;
+- current package scripts expose `audit:ai-systems`, `test:ai-systems-governance`, and `test:ai-systems-herald`.
+
+The Herald projection remains read-only and still requires current-main merge before its integration state can be upgraded from branch-only.
