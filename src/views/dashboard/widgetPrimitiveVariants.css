@@ -179,7 +179,7 @@
 }
 
 .widget-video-select-trigger {
-  --widget-video-split-bay: var(--vt-primitive-height, 32px);
+  --widget-video-split-bay: calc(var(--vt-primitive-height, 32px) - (var(--vt-primitive-stroke, 2px) * 2));
   width: 100%;
   display: grid;
   grid-template-columns: var(--widget-video-split-bay) minmax(0, 1fr);
