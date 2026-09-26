@@ -21,7 +21,7 @@ Extend `viewtube-ai-system-governor` into the single AI Systems Management skill
 - [x] Define JSON Schema 2020-12 authority record.
 - [x] Define agent-report event schema.
 - [x] Define evidence/prompt/managed-action reference schemas.
-- [~] Seed systems/capabilities/integrations/donors/plans registries from current main. Systems, integrations, donors and plans are seeded; capabilities remains open.
+- [x] Seed systems/capabilities/integrations/donors/plans registries from current main.
 - [x] Import Prompt Registry by reference, not copy.
 - [x] Record exact audited-main SHA per record.
 
