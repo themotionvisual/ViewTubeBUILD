@@ -573,6 +573,26 @@ describe("expanded widget compound primitives", () => {
   })
 })
 
+describe("video selector overlay geometry", () => {
+  it("uses a square selector bay and a portalled fixed-position menu", () => {
+    expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height")
+    expect(variantsCss).not.toContain("--widget-video-split-bay: 40px")
+    expect(variantsCss).not.toContain("--widget-video-split-bay: 48px")
+    expect(variantsCss).not.toContain("--widget-video-split-bay: 54px")
+    expect(extensionSource).toContain("createPortal")
+    expect(extensionSource).toContain("widget-video-select-menu is-portalled")
+    expect(videoSelectCss).toContain(".widget-video-select-menu.is-portalled")
+    expect(videoSelectCss).toContain("position: fixed")
+    expect(videoSelectCss).toContain("z-index: 9999")
+  })
+
+  it("gives video labels and chevrons enough room at the standard heights", () => {
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 12px")
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-option-copy strong {")
+    expect(variantsCss).toContain("font-size: 14px")
+  })
+})
+
 // ═══════════════════════════════════════════════════════════════
 // A primitive that emits `is-<something>` as a class name renders
 // unstyled when the stylesheet has no matching rule, and nothing
