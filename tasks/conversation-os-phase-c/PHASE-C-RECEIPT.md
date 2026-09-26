@@ -85,3 +85,28 @@ Crown work-order schema now supports optional soft/expiring writer leases.
 ## Remaining
 - Task Index VNext structured writer/storage is not yet implemented; Task Authority therefore defaults to read/reconcile/propose unless the current canonical writer path is explicitly resolved.
 - Herald/Crown donor files are not archived yet; that waits for lossless consolidation manifests.
+
+
+## CI gate classification
+
+GitHub Actions release-gate run `36242580580` was inspected by job and log rather than treated as one undifferentiated red result.
+
+Passed:
+- production-build;
+- focused-contracts;
+- source-governance;
+- local-smoke.
+
+Failed but not introduced by Phase C:
+- `static-quality` fails in pre-existing/untouched application code including CrownLiveBrain typing, SubToolbox media primitives, Editor design-library templates, Vault adapter/CreatorVaultOS, and Brain conversation tests;
+- `full-suite` fails in pre-existing/untouched navigation, Vault workspace/export/organization, analytics visual, manual import, and BrainHub migration tests.
+
+Phase C changes are governance documents, agent contracts, registry/schema files, skill entrypoints, and migration notices; the failing application paths are not part of this diff.
+
+External deployment status:
+- Vercel contexts report build-rate-limit/plan-limit failures; the repository production-build job itself passed.
+
+Disposition:
+- classify typecheck/full-suite failures as inherited application debt for this Phase C PR;
+- classify Vercel failures as external deployment-account constraints;
+- do not attribute those failures to Conversation OS / Crown / Task Authority migration.
