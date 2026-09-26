@@ -283,6 +283,7 @@ const CreatorVaultOS: React.FC = () => {
  const [quickLookVolume, setQuickLookVolume] = useState(0.8)
  const [quickLookSpeed, setQuickLookSpeed] = useState(1)
  const [quickLookOpen, setQuickLookOpen] = useState(true)
+ const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false)
  const [compareReveal, setCompareReveal] = useState(50)
  const [smartCollectionName, setSmartCollectionName] = useState("")
  const [collectionRefresh, setCollectionRefresh] = useState(0)
@@ -1039,11 +1040,13 @@ const CreatorVaultOS: React.FC = () => {
   const index = visibleAssets.findIndex((asset) => asset.id === selectedAsset.id)
   setQuickLookCurrent(index >= 0 ? index : 0)
   setQuickLookOpen(true)
+  setMobileInspectorOpen(true)
   inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
  }
 
  const openSelectedInspector = () => {
   if (!selectedAsset) return
+  setMobileInspectorOpen(true)
   inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
   inspectorRef.current?.focus({ preventScroll: true })
  }
@@ -2319,6 +2322,7 @@ const CreatorVaultOS: React.FC = () => {
              setSelectionAnchorId(asset.id)
              setQuickLookCurrent(assetIndex)
              setQuickLookOpen(true)
+             setMobileInspectorOpen(true)
             }}
            />
           ))}
@@ -2749,7 +2753,7 @@ const CreatorVaultOS: React.FC = () => {
         ref={inspectorRef}
         tabIndex={-1}
         data-vault-mobile-sheet="inspector"
-        className="fixed inset-x-2 bottom-16 z-30 max-h-[65vh] overflow-y-auto xl:static xl:max-h-none xl:overflow-visible"
+        className={`${mobileInspectorOpen ? "fixed inset-x-2 bottom-16 z-30 max-h-[65vh] overflow-y-auto" : "hidden"} xl:static xl:block xl:max-h-none xl:overflow-visible`}
        >
        <SubToolbox
        style={moduleStyle("inspector" as VaultWorkspaceModuleId)}
@@ -2761,6 +2765,14 @@ const CreatorVaultOS: React.FC = () => {
        persistenceId="vault-inspector"
       >
        <div className="flex flex-col gap-3">
+         <div className="xl:hidden">
+          <SubToolboxInnerActionButton
+           label="Close Inspector"
+           iconName="x"
+           tone="pink"
+           onClick={() => setMobileInspectorOpen(false)}
+          />
+         </div>
          <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Quick Look</div>
           {!quickLookOpen ? (
