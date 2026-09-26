@@ -395,4 +395,33 @@ describe("subtoolbox design governance", () => {
   expect(systemCss).toContain("--vt-upload-target-min-height")
  })
 
+
+ it("prevents page-local header width locks and mobile subtoolbox stretching", () => {
+  const headerActionConsumers = [
+    "src/views/VideoPublisher.tsx",
+    "src/views/VideoManager.tsx",
+    "src/views/ThumbnailStudio.tsx",
+    "src/views/SeoGenerator.tsx",
+    "src/components/ProjectStudio.tsx",
+  ]
+
+  for (const path of headerActionConsumers) {
+    const contents = source(path)
+    const headerActionRegion = contents.match(/headerActions=\{[\s\S]{0,1600}?\n\s*\}/g)?.join("\n") || ""
+    expect(headerActionRegion).not.toMatch(/\bw-\[\d+px\]/)
+    expect(headerActionRegion).not.toMatch(/\bmin-w-\[\d+px\]/)
+  }
+
+  const mediaAnalyzer = source("src/views/MediaAnalyzer.tsx")
+  const storyboard = source("src/views/StoryboardStudio.tsx")
+
+  expect(mediaAnalyzer).not.toContain('shellClassName="h-full"')
+  expect(mediaAnalyzer).toContain('shellClassName="md:h-full"')
+  expect(mediaAnalyzer).not.toContain('contentClassName="p-5 h-full flex flex-col"')
+  expect(mediaAnalyzer).toContain('contentClassName="p-5 md:h-full flex flex-col"')
+
+  expect(storyboard).not.toContain('shellClassName="h-full"')
+  expect(storyboard).toContain('shellClassName="xl:h-full"')
+ })
+
 })
