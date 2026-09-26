@@ -437,6 +437,7 @@ describe("subtoolbox design governance", () => {
 
  it("keeps one canonical mobile shell geometry and gutter authority", () => {
   const toolboxCss = source("src/styles/toolbox-system.css")
+  const systemCss = source("src/styles/subtoolbox-system.css")
   const navigationCss = source("src/components/navigation/adaptive-navigation.css")
 
   expect(toolboxCss).toContain("Mobile density authority — 2026-09-22")
@@ -451,6 +452,8 @@ describe("subtoolbox design governance", () => {
   expect(navigationCss).not.toContain("top: 64px;")
   expect(navigationCss).toContain("var(--vt-toolbox-header-height, 80px)")
   expect(navigationCss).toContain("var(--vt-toolbox-stroke, 5px)")
+  expect(systemCss).toContain(".vt-toolbox-header-collapse:focus-visible")
+  expect(systemCss).toContain(".vt-toolbox-header-help:focus-visible")
  })
 
 })
