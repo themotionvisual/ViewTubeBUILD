@@ -64,7 +64,8 @@ describe("WidgetShell content layout", () => {
  it("renders a collapsed widget as a header-only region", () => {
   const markup = renderShell(undefined, { collapsed: true })
 
-  expect(markup).toContain('class="vt-widget is-collapsed"')
+  expect(markup).toContain('class="vt-widget-outer-effect"')
+  expect(markup).toContain('class="vt-widget vt-widget-paint-clip is-collapsed"')
   expect(markup).toContain('aria-expanded="false"')
  expect(markup).not.toContain("Content")
  })
@@ -76,5 +77,11 @@ describe("WidgetShell content layout", () => {
   expect(markup).toContain('class="widget-help-guide"')
   expect(guideIndex).toBeGreaterThan(markup.indexOf('class="widget-subtitle'))
   expect(guideIndex).toBeLessThan(markup.indexOf('class="vt-widget-content"'))
+ })
+ it("provides one canonical clipped paint surface inside the outer effect boundary", () => {
+  const markup = renderShell()
+
+  expect(markup).toContain('class="vt-widget-outer-effect"')
+  expect(markup).toContain('class="vt-widget vt-widget-paint-clip open"')
  })
 })

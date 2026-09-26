@@ -52,7 +52,7 @@ export const WidgetShell: React.FC<{
 
  const handleToggleCollapse = () => { setMobileControlsOpen(false); onToggleCollapse() }
 
- return <div className={cn("vt-widget", instance.collapsed ? "is-collapsed" : "open", mobileControlsOpen && "mobile-controls-open")} style={{ "--widget-color": widget.headerColor, "--widget-icon-rail-color": widget.iconRailColor } as React.CSSProperties} data-responsive-mode={widget.responsiveMode} data-control-density={controlDensity} data-widget-width={instance.size} data-widget-height={instance.height}>
+ return <div className="vt-widget-outer-effect"><div className={cn("vt-widget","vt-widget-paint-clip", instance.collapsed ? "is-collapsed" : "open", mobileControlsOpen && "mobile-controls-open")} style={{ "--widget-color": widget.headerColor, "--widget-icon-rail-color": widget.iconRailColor } as React.CSSProperties} data-responsive-mode={widget.responsiveMode} data-control-density={controlDensity} data-widget-width={instance.size} data-widget-height={instance.height}>
   <div className="vt-widget-header">
    <div className="left"><div className="icon-rail">{icon || <Layers size={22}/>}</div><span className="title">{widget.title}</span></div>
    {headerContent && <div className="header-extra" onClick={e=>e.stopPropagation()} onPointerDown={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()} style={{flex:1,display:"flex",justifyContent:"center"}}>{headerContent}</div>}
@@ -95,5 +95,5 @@ export const WidgetShell: React.FC<{
     </>}
    </div>
   </div>
- </div>
+ </div></div>
 }
