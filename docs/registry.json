@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "productionDate": "2026-09-26",
   "lastEdited": "2026-09-26",
-  "migrationState": "phase-c-conversation-crown-task-authority",
+  "migrationState": "phase-d-brain-prompt-authority-consolidation",
   "authorityRule": "One primary authority per bounded concern. Current executable evidence verifies implementation; registry metadata determines documentation role.",
   "entries": [
     {
@@ -208,17 +208,22 @@
     },
     {
       "id": "DOC-DOMAIN-BRAIN",
-      "path": "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md",
+      "path": "docs/domains/BRAIN.md",
       "class": "DOMAIN_AUTHORITY",
-      "status": "MIGRATING",
+      "status": "ACTIVE",
       "concern": "brain-runtime",
       "owner": "BrainRuntime",
       "productionDate": "2026-09-17",
-      "lastEdited": "2026-09-24",
-      "lastAuditedMainSha": "6e5df12c2f0d3d3f8d2d1ca88e6fe2b87ce366dc",
-      "supersedes": [],
-      "relatedAuthorities": [
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": "82460536651d1de368e09a2fb685a335cd27f312",
+      "supersedes": [
+        "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md",
         "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+      ],
+      "relatedAuthorities": [
+        "docs/specifications/PROMPTS.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md",
+        "docs/governance/CONVERSATION_OS.md"
       ]
     },
     {
@@ -295,6 +300,41 @@
         "docs/governance/VERIFICATION.md",
         "docs/governance/WORK_OBJECTS.md"
       ]
+    },
+    {
+      "id": "DOC-SPEC-PROMPTS",
+      "path": "docs/specifications/PROMPTS.md",
+      "class": "SPECIFICATION",
+      "status": "ACTIVE",
+      "concern": "prompt-system",
+      "owner": "BrainRuntime / Prompt System",
+      "productionDate": "2026-09-26",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": "82460536651d1de368e09a2fb685a335cd27f312",
+      "supersedes": [
+        "docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md"
+      ],
+      "relatedAuthorities": [
+        "docs/domains/BRAIN.md",
+        "docs/specifications/prompt-registry.json"
+      ]
+    },
+    {
+      "id": "DOC-GEN-PROMPT-REGISTRY",
+      "path": "docs/specifications/prompt-registry.json",
+      "class": "GENERATED",
+      "status": "ACTIVE",
+      "concern": "prompt-inventory",
+      "owner": "Prompt System",
+      "productionDate": "2026-09-24",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": "82460536651d1de368e09a2fb685a335cd27f312",
+      "supersedes": [
+        "docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json"
+      ],
+      "relatedAuthorities": [
+        "docs/specifications/PROMPTS.md"
+      ]
     }
   ],
   "legacyGlobalSources": [
@@ -350,6 +390,42 @@
       "path": "agent/contracts/herald-workflow.md",
       "status": "SUPERSEDED",
       "supersededBy": "DOC-GOV-CONVERSATION-OS",
+      "archiveState": "PENDING"
+    },
+    {
+      "path": "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+      "status": "SUPERSEDED",
+      "supersededBy": "DOC-DOMAIN-BRAIN",
+      "archiveState": "PENDING"
+    },
+    {
+      "path": "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md",
+      "status": "SUPERSEDED",
+      "supersededBy": "DOC-DOMAIN-BRAIN",
+      "archiveState": "PENDING"
+    },
+    {
+      "path": "docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md",
+      "status": "SUPERSEDED",
+      "supersededBy": "DOC-SPEC-PROMPTS",
+      "archiveState": "PENDING"
+    },
+    {
+      "path": "docs/brain/VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md",
+      "status": "DONOR",
+      "supersededBy": "DOC-SPEC-PROMPTS",
+      "archiveState": "PENDING_TASK_RECONCILIATION"
+    },
+    {
+      "path": "docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json",
+      "status": "SUPERSEDED",
+      "supersededBy": "DOC-GEN-PROMPT-REGISTRY",
+      "archiveState": "PENDING"
+    },
+    {
+      "path": "docs/brain/ai-systems/DOCUMENT_CONSOLIDATION_REGISTER_2026-09-24.md",
+      "status": "HISTORICAL",
+      "supersededBy": "DOC-DOMAIN-BRAIN",
       "archiveState": "PENDING"
     }
   ]
