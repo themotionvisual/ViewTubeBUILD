@@ -84,6 +84,13 @@ describe("mobile widget geometry contract", () => {
     expect(mobileCss).toContain("max-width: 100%;")
   })
 
+  it("keeps the mobile dashboard on the real viewport width instead of asymmetric reclaim math", () => {
+    expect(mobileCss).not.toContain("--vt-mobile-reclaim-left")
+    expect(mobileCss).not.toContain("--vt-mobile-reclaim-right")
+    expect(mobileCss).not.toContain("width: calc(100% + var(--vt-mobile-reclaim")
+    expect(mobileCss).toContain("margin-inline: 0;")
+  })
+
   it.each([
     ["short", "150px"],
     ["medium", "250px"],
