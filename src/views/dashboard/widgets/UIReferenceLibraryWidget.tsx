@@ -873,6 +873,71 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           </WidgetSection>
         )}
 
+        {activeCategory === "compound" && (
+          <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
+            {sectionHeading("Compound Workflow Primitives", "Creator Operations donor patterns rebuilt in widget UI/CSS")}
+
+            <div className="widget-reference-family">
+              {familyHeading("Full-Width Section Bands", "Three monochromatic tones · oversized ink label · edge-to-edge")}
+              <div className="grid gap-2">
+                <WidgetSectionBand tone="default">Lead</WidgetSectionBand>
+                <WidgetSectionBand tone="secondary">Proposal</WidgetSectionBand>
+                <WidgetSectionBand tone="primary">Active / Paid</WidgetSectionBand>
+              </div>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Text + Badge Data Grid", "Subscriber CRM-style cells with semantic status badges")}
+              <WidgetDataGrid
+                ariaLabel="Audience segment grid example"
+                columns={[
+                  { key: "segment", label: "Segment", width: "1.2fr" },
+                  { key: "signal", label: "Signal", width: "1.1fr" },
+                  { key: "action", label: "Best Action", width: "1.15fr" },
+                  { key: "activity", label: "Last Activity", width: ".9fr" },
+                  { key: "status", label: "Status", width: "1.1fr" },
+                ]}
+                rows={[
+                  { id: "superfans", cells: { segment: "History superfans", signal: "3+ longform comments", action: "Invite to topic poll", activity: "2 days ago", status: <WidgetBadge status="positive">Active</WidgetBadge> } },
+                  { id: "shorts", cells: { segment: "Shorts-only viewers", signal: "No longform click", action: "Pinned-video funnel", activity: "Today", status: <WidgetBadge status="warning">Opportunity</WidgetBadge> } },
+                  { id: "members", cells: { segment: "Members", signal: "High retention", action: "Early-access post", activity: "Yesterday", status: <WidgetBadge status="neutral">Priority</WidgetBadge> } },
+                ]}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Interactive Checklist Progress", "Checkboxes add/subtract fill automatically")}
+              <WidgetChecklistProgress
+                label="Completion"
+                items={[
+                  { id: "thumbnail", label: "Revise weak thumbnail", detail: "CTR fell below baseline.", badge: <WidgetBadge status="danger">High</WidgetBadge> },
+                  { id: "reply", label: "Reply to questions", detail: "Three include video ideas.", badge: <WidgetBadge status="warning">Medium</WidgetBadge> },
+                  { id: "script", label: "Finish script section", detail: "Project is 74% complete.", badge: <WidgetBadge status="neutral">Today</WidgetBadge> },
+                  { id: "sponsor", label: "Approve sponsor deliverables", detail: "Deadline tomorrow.", badge: <WidgetBadge status="danger">Urgent</WidgetBadge> },
+                ]}
+                checkedIds={compoundChecks}
+                onChange={setCompoundChecks}
+              />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Grid Calendar", "Seven-day production planner · responsive 2-column mobile grid")}
+              <WidgetCalendarGrid
+                ariaLabel="Production week example"
+                days={[
+                  { id: "mon", label: "Mon 20", events: [{ id: "research", label: "Research: Austerlitz", tone: "secondary" }, { id: "thumbs", label: "Thumbnail sketches", tone: "primary" }] },
+                  { id: "tue", label: "Tue 21", events: [{ id: "script-draft", label: "Script draft", tone: "default" }] },
+                  { id: "wed", label: "Wed 22", events: [{ id: "voiceover", label: "Voiceover", tone: "secondary" }, { id: "sponsor-review", label: "Sponsor review", tone: "primary" }] },
+                  { id: "thu", label: "Thu 23", events: [{ id: "main-edit", label: "Main edit", tone: "primary" }] },
+                  { id: "fri", label: "Fri 24", events: [{ id: "qc", label: "Quality control", tone: "secondary" }] },
+                  { id: "sat", label: "Sat 25", events: [{ id: "publish", label: "Publish longform", tone: "primary" }] },
+                  { id: "sun", label: "Sun 26", events: [{ id: "community", label: "Community follow-up", tone: "default" }] },
+                ]}
+              />
+            </div>
+          </WidgetSection>
+        )}
+
         {activeCategory === "tags" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("4. Infinite Spectrum Tags", "A–Z receives 26 distinct continuous-spectrum hues")}
@@ -1085,7 +1150,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
       </WidgetScrollArea>
 
       <WidgetFooter className="widget-toolbar widget-workflow-toolbar">
-        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.5 · size/color matrix + 62 icon set</span>
+        <span className="text-[9px] font-black uppercase opacity-60">UI Reference Library v3.6 · size/color matrix + 62 icon set</span>
         <WidgetLeftSplitButton height={32} tone="primary" iconStyle="white-on-color" icon={<Check />}>
           Standard Compliant
         </WidgetLeftSplitButton>
