@@ -161,13 +161,16 @@
 @container vt-widget (max-width:420px){
   :where(.dashboard-barrier) [data-widget-id="system-micro-stack"] .vt-widget-header .header-extra:has(.widget-header-toggle){
     flex:0 0 auto!important;
-    min-width:86px;
-    max-width:40%;
+    /* Keep enough room for the full-size SETTINGS title at quarter width.
+       The stepper remains intrinsic; its two square arrows + two-line value
+       fit inside 78px without shrinking the title. */
+    min-width:78px;
+    max-width:38%;
     overflow:visible;
   }
   :where(.dashboard-barrier) [data-widget-id="system-micro-stack"] .widget-header-stepper{
     width:auto;
-    min-width:86px;
+    min-width:78px;
   }
   :where(.dashboard-barrier) [data-widget-id="system-micro-stack"] .widget-header-stepper button{
     width:18px;
