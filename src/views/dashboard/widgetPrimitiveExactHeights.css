@@ -46,16 +46,16 @@
   .vt-widget-header .header-extra:not(:has(.widget-header-toggle)) { display:none !important; }
   .vt-widget-header .header-extra:has(.widget-header-toggle) {
     display:flex !important;
-    flex:0 1 108px !important;
-    min-width:72px;
-    max-width:36%;
-    overflow:hidden;
+    flex:0 0 auto !important;
+    min-width:0;
+    max-width:46%;
+    overflow:visible;
     justify-content:center !important;
   }
   .vt-widget-header:has(.header-extra .widget-header-toggle) .left {
     flex:1 1 auto;
     min-width:0;
-    max-width:48%;
+    max-width:none;
   }
   .vt-widget-header:has(.header-extra .widget-header-toggle) .title {
     display:block;
