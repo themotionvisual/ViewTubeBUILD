@@ -77,8 +77,10 @@ Each wave lands as small reversible PRs. Current main is rebased/merged forward 
 
 Wave 4 and all later creator-generation migrations use these current references:
 
-- `docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md`
+> The dated Prompt Improvement Program is donor/provenance. Durable prompt behavior is owned by `docs/specifications/PROMPTS.md`; exact work state should be reconciled into the Integrated Application Program / Task Index.
+
+- `docs/specifications/PROMPTS.md`
 - `docs/brain/VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md`
-- `docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json`
+- `docs/specifications/prompt-registry.json`
 
 The registry expands the original Brain-only Prompt System wave to cover legacy `prompts.ts`, legacy `gemini.ts` generation/refinement functions, Oracle/editor prompt templates, Brain task profiles and governed AssetGenerator strategies. Do not create a second prompt modernization track.
