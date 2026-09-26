@@ -69,6 +69,12 @@ describe("mobile widget geometry contract", () => {
     expect(widgetSystemCss).toContain(".vt-widget-header:has(.header-extra .widget-header-toggle)")
   })
 
+  it("lets intrinsic header toggles size to their labels instead of forcing fixed phone widths", () => {
+    expect(widgetSystemCss).toContain(".widget-header-toggle.is-intrinsic")
+    expect(widgetSystemCss).toContain("width: fit-content")
+    expect(widgetSystemCss).not.toContain('[data-widget-id="comment-replier"] .widget-header-toggle {\n    width: 88px')
+  })
+
   it("keeps portrait module titles full-size, two-line capable, and never ellipsized", () => {
     expect(widgetSystemCss).toContain("font-size: var(--widget-type-title) !important;")
     expect(widgetSystemCss).toContain("white-space: normal !important;")
@@ -82,6 +88,13 @@ describe("mobile widget geometry contract", () => {
     expect(mobileCss).toContain("width: 100%;")
     expect(mobileCss).toContain("min-width: 0;")
     expect(mobileCss).toContain("max-width: 100%;")
+  })
+
+  it("keeps the mobile dashboard on the real viewport width instead of asymmetric reclaim math", () => {
+    expect(mobileCss).not.toContain("--vt-mobile-reclaim-left")
+    expect(mobileCss).not.toContain("--vt-mobile-reclaim-right")
+    expect(mobileCss).not.toContain("width: calc(100% + var(--vt-mobile-reclaim")
+    expect(mobileCss).toContain("margin-inline: 0;")
   })
 
   it.each([

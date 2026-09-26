@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { WidgetFooter, WidgetHeaderStepper, WidgetHeaderToggle, WidgetScrollArea, WidgetSplitButton, WidgetTooltip } from "../WidgetPrimitives"
+import { WidgetFooter, WidgetHeaderStepper, WidgetHeaderToggle, WidgetScrollArea, WidgetSpeechBubble, WidgetSplitButton, WidgetSplitCounterBadge, WidgetTooltip, WidgetVideoMiniCard } from "../WidgetPrimitives"
 import {
   MessageSquare,
   Sparkles,
@@ -99,17 +99,16 @@ const CommentVideoThumbnail = ({ title, videoId, thumbnailUrl }: { title: string
   }
 
   return (
-    <div ref={cardRef} className="kpi-video-card comment-video-card">
-      <div ref={topTitleRef} className="kpi-header" style={{ fontSize: `${layout.fontSize}px` }}>{layout.lines[0]}</div>
-      <div className="kpi-body">
-        {videoId ? (
-          <img width={320} height={180} src={thumbnailUrl} onError={handleThumbnailError} alt={`Video thumbnail for ${title}`} />
-        ) : (
-          <div className="comment-video-card-placeholder"><Loader2 size={16} className="animate-spin text-black/20" /></div>
-        )}
-      </div>
-      <div ref={bottomTitleRef} className="kpi-header kpi-header-bottom" style={{ fontSize: `${layout.fontSize}px` }}>{layout.lines[1]}</div>
-    </div>
+    <WidgetVideoMiniCard
+      ref={cardRef}
+      className="comment-video-card"
+      title={<span ref={topTitleRef} style={{ display: "block", width: "100%", fontSize: `${layout.fontSize}px` }}>{layout.lines[0]}</span>}
+      thumbnail={videoId ? thumbnailUrl : undefined}
+      alt={`Video thumbnail for ${title}`}
+      onImageError={handleThumbnailError}
+      placeholder={<Loader2 size={16} className="animate-spin" />}
+      footer={<span ref={bottomTitleRef} style={{ display: "block", width: "100%", fontSize: `${layout.fontSize}px` }}>{layout.lines[1]}</span>}
+    />
   )
 }
 
@@ -159,12 +158,9 @@ const AutoFitCommentBubble = ({ text }: { text: string }) => {
   }, [text])
 
   return (
-    <div ref={bubbleRef} className="comment-responder-bubble">
-      <svg className="comment-responder-bubble-tail" viewBox="0 0 30 20" aria-hidden="true">
-        <path className="comment-responder-bubble-tail-stroke" d="M4 18L15 4L26 18" />
-      </svg>
+    <WidgetSpeechBubble ref={bubbleRef} className="comment-responder-bubble" scrollable>
       <span ref={textRef} className="comment-responder-bubble-copy">{text}</span>
-    </div>
+    </WidgetSpeechBubble>
   )
 }
 
@@ -287,7 +283,7 @@ export const CommentReplyWidget = ({
   }, [currentThread?.id, activeReplyText])
 
   const headerContent = (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", justifyContent: "center" }}>
+    <div className="comment-responder-header-controls">
       <WidgetHeaderToggle
         label="Comment responder view"
         value={tab}
@@ -331,7 +327,8 @@ export const CommentReplyWidget = ({
           disabled={loading || isGenerating[currentThread.id]}
           icon={<Link2 />}
           tone="neutral"
-          width="full">
+          width="full"
+          multiline>
           Suggest video
         </WidgetSplitButton>
         <WidgetSplitButton
@@ -360,14 +357,14 @@ export const CommentReplyWidget = ({
     }>
       <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: 0, minHeight: 0 }}>
         {inboundImageUrl && (
-          <div style={{ border: "2px solid color-mix(in srgb, var(--widget-color, #000) 60%, black)", borderRadius: "8px", padding: "6px 8px", margin: "10px 10px 0", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+          <div style={{ border: "2px solid var(--vt-ink, var(--widget-border))", borderRadius: "8px", padding: "6px 8px", margin: "10px 10px 0", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
             <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", opacity: 0.7 }}>Image received from generator</span>
             <button className="vt-button" style={{ height: "24px", fontSize: "8px", padding: "0 8px" }} onClick={() => navigator.clipboard?.writeText(inboundImageUrl)}>COPY URL</button>
           </div>
         )}
 
         {error && (
-          <div role="alert" style={{ border: "2px solid #000", margin: "10px 10px 0", padding: "7px 9px", background: "#FFB158", color: "#000", fontSize: "10px", fontWeight: 900, lineHeight: 1.3 }}>
+          <div role="alert" style={{ border: "2px solid #000", margin: "10px 10px 0", padding: "7px 9px", background: "#FFB158", color: "var(--vt-ink, var(--widget-border))", fontSize: "10px", fontWeight: 900, lineHeight: 1.3 }}>
             {error}
           </div>
         )}
@@ -436,25 +433,25 @@ export const CommentReplyWidget = ({
                             <span style={{ color: "#3157ff", fontSize: "10px", fontWeight: 800, letterSpacing: "0.02em", lineHeight: 1.2 }}>
                               {timestamp.dateLabel}<span style={{ fontSize: "7px", verticalAlign: "text-bottom", marginLeft: "1px" }}>{timestamp.meridiem}</span>
                             </span>
-                            <span style={{ color: "#000", fontSize: "8px", fontWeight: 700, letterSpacing: "0.04em", lineHeight: 1 }}>
+                            <span style={{ color: "var(--vt-ink, var(--widget-border))", fontSize: "8px", fontWeight: 700, letterSpacing: "0.04em", lineHeight: 1 }}>
                               {timestamp.relative}
                             </span>
                           </div>
                           <div className="comment-responder-reaction-row">
-                            <WidgetSplitButton
+                            <WidgetSplitCounterBadge
                               className="comment-responder-reaction-badge comment-responder-like-action"
-                              icon={<ThumbsUp fill={likeCountNumber === 0 ? "#fff" : "#FFE357"} />}
-                              size="compact"
-                              width="auto">
-                              {likeCount}
-                            </WidgetSplitButton>
-                            <WidgetSplitButton
+                              icon={<ThumbsUp />}
+                              value={likeCount}
+                              label={`${likeCount} likes`}
+                              height={24}
+                            />
+                            <WidgetSplitCounterBadge
                               className="comment-responder-reaction-badge comment-responder-reply-action"
                               icon={<MessagesSquare />}
-                              size="compact"
-                              width="auto">
-                              {replyCount}
-                            </WidgetSplitButton>
+                              value={replyCount}
+                              label={`${replyCount} replies`}
+                              height={24}
+                            />
                             <WidgetTooltip className="comment-responder-open-tooltip" content="Go to this comment on YouTube">
                               <a className="widget-split-button is-compact is-auto comment-responder-reaction-badge comment-responder-open-action" aria-label="Go to comment on YouTube" href={`https://www.youtube.com/watch?v=${videoId}&lc=${thread.snippet.topLevelComment.id}`} target="_blank" rel="noreferrer">
                                 <span className="widget-split-button-icon"><ExternalLink size={14} /></span>

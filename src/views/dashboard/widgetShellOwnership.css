@@ -72,6 +72,7 @@
   }
 
   .vt-widget-body {
+    --vt-widget-body-inset:var(--widget-content-inset);
     display:flex;
     flex:1 1 auto;
     flex-direction:column;
@@ -86,10 +87,27 @@
 
   .vt-widget-body--flush { --vt-widget-body-inset:0px; }
 
-  /* Full bleed is structural, so it should not need specificity escalation. */
-  .vt-full-bleed { margin-inline:calc(-1 * var(--widget-content-inset)); width:auto; }
-  .vt-full-bleed-bottom { margin-inline:calc(-1 * var(--widget-content-inset)); margin-bottom:calc(-1 * var(--widget-content-inset)); width:auto; }
-  .vt-full-bleed-top { margin-inline:calc(-1 * var(--widget-content-inset)); margin-top:calc(-1 * var(--widget-content-inset)); width:auto; }
+  /* Full bleed is structural and is based on the body's actual inset.
+     Shadow clearance is a separate zone so it never widens the content column. */
+  .vt-full-bleed,
+  .vt-widget-zone-full {
+    margin-inline:calc(-1 * var(--vt-widget-body-inset));
+    width:calc(100% + (2 * var(--vt-widget-body-inset)));
+    max-width:none;
+    box-sizing:border-box;
+  }
+  .vt-full-bleed-bottom {
+    margin-inline:calc(-1 * var(--vt-widget-body-inset));
+    margin-bottom:calc(-1 * var(--vt-widget-body-inset));
+    width:calc(100% + (2 * var(--vt-widget-body-inset)));
+    max-width:none;
+  }
+  .vt-full-bleed-top {
+    margin-inline:calc(-1 * var(--vt-widget-body-inset));
+    margin-top:calc(-1 * var(--vt-widget-body-inset));
+    width:calc(100% + (2 * var(--vt-widget-body-inset)));
+    max-width:none;
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .vt-widget-collapse-region { transition:none; }

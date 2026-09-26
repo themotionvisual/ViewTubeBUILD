@@ -8,15 +8,13 @@
       --vt-mobile-widget-gap: 8px;
       --vt-mobile-widget-gutter: 4px;
       --vt-widget-edge-safe: 4px;
-      --vt-mobile-reclaim-left: 12px;
-      --vt-mobile-reclaim-right: 40px;
-      /* Field-QA compensation for the mobile app shell: the live viewport
-         reserves ~28px more visual space on the right. Expand only that side
-         until the visible widget gutters are equal. */
-      width: calc(100% + var(--vt-mobile-reclaim-left) + var(--vt-mobile-reclaim-right));
-      max-width: none;
-      margin-left: calc(-1 * var(--vt-mobile-reclaim-left));
-      margin-right: calc(-1 * var(--vt-mobile-reclaim-right));
+      /* The dashboard owns the real phone viewport width. Earlier field-QA
+         compensation widened the row asymmetrically and eventually pushed
+         widget shells past the right edge. Keep outer gutter correction in the
+         app/grid owner instead of enlarging the dashboard canvas. */
+      width: 100%;
+      max-width: 100%;
+      margin-inline: 0;
       box-sizing: border-box;
       --vt-mobile-height-short: 150px;
       --vt-mobile-height-medium: 250px;
@@ -63,8 +61,8 @@
     }
 
     .dashboard-barrier .vt-widget-header .widget-header-toggle {
-      width: 100%;
-      min-width: 118px;
+      width: fit-content;
+      min-width: 0;
       max-width: 100%;
       height: auto;
       min-height: 30px;
@@ -248,22 +246,21 @@
     .dashboard-barrier .vt-widget-body > * > .vt-widget-full-bleed,
     .dashboard-barrier .widget-section.is-full,
     .dashboard-barrier .widget-divider.is-full {
-      width: calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance))));
+      width: calc(100% + (2 * var(--vt-widget-body-inset)));
       max-width: none;
-      margin-inline: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance)));
+      margin-inline: calc(-1 * var(--vt-widget-body-inset));
       box-sizing: border-box;
     }
 
     .dashboard-barrier .widget-section.is-full {
-      padding-inline: calc(var(--widget-content-inset) + var(--widget-shadow-clearance));
+      padding-inline: var(--vt-widget-body-inset);
     }
 
     .dashboard-barrier .widget-footer {
-      width: calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance))));
+      width: calc(100% + (2 * var(--vt-widget-body-inset)));
       max-width: none;
-      margin-left: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance)));
-      margin-right: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance)));
-      padding-inline: calc(var(--widget-content-inset) + var(--widget-shadow-clearance));
+      margin-inline: calc(-1 * var(--vt-widget-body-inset));
+      padding-inline: var(--vt-widget-body-inset);
       box-sizing: border-box;
     }
 

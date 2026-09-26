@@ -1,5 +1,5 @@
 import * as Select from "@radix-ui/react-select"
-import React, { useCallback, useEffect, useId, useRef, useState } from "react"
+import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react"
 import { AlertTriangle, Ban, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, Inbox, LoaderCircle, RotateCw, X } from "lucide-react"
 import type { WidgetDataState } from "./types"
 import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone, type WidgetPrimitiveTextFit } from "./widgetPrimitiveSystem"
@@ -291,11 +291,12 @@ export const WidgetSplitButton: React.FC<
     tone?: "primary" | "soft" | "neutral"
     size?: "compact" | "small" | "medium" | "large"
     width?: "auto" | "compact" | "wide" | "full"
+    multiline?: boolean
   }
-> = ({ icon, children, tone = "neutral", size = "medium", width = "auto", className = "", type = "button", ...props }) => (
+> = ({ icon, children, tone = "neutral", size = "medium", width = "auto", multiline = false, className = "", type = "button", ...props }) => (
   <button
     type={type}
-    className={`widget-split-button is-${tone} is-${size} is-${width} vt-interactive ${className}`.trim()}
+    className={`widget-split-button is-${tone} is-${size} is-${width} ${multiline ? "is-multiline" : ""} vt-interactive ${className}`.trim()}
     {...props}
   >
     <span className="widget-split-button-icon" aria-hidden="true">{icon}</span>
@@ -513,26 +514,49 @@ export const WidgetHeaderToggle = <T extends string>({
   className?: string
 }) => {
   const activeIndex = Math.max(0, items.findIndex((item) => item.id === value))
-  const toggleStyle = {
-    "--widget-header-toggle-count": String(Math.max(1, items.length)),
-    "--widget-header-toggle-index": String(activeIndex),
-  } as React.CSSProperties
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const buttonRefs = useRef<Array<HTMLButtonElement | null>>([])
+
+  const syncIndicator = useCallback(() => {
+    const root = rootRef.current
+    const activeButton = buttonRefs.current[activeIndex]
+    if (!root || !activeButton) return
+    root.style.setProperty("--widget-header-toggle-active-left", `${activeButton.offsetLeft}px`)
+    root.style.setProperty("--widget-header-toggle-active-width", `${activeButton.offsetWidth}px`)
+    root.dataset.measured = "true"
+  }, [activeIndex])
+
+  useLayoutEffect(() => {
+    syncIndicator()
+    if (typeof ResizeObserver === "undefined") return
+    const observer = new ResizeObserver(syncIndicator)
+    if (rootRef.current) observer.observe(rootRef.current)
+    buttonRefs.current.forEach((button) => button && observer.observe(button))
+    return () => observer.disconnect()
+  }, [items, syncIndicator])
 
   return (
-  <div className={`widget-header-toggle ${className}`.trim()} role="group" aria-label={label} style={toggleStyle}>
-    <span className="widget-header-toggle-indicator" aria-hidden="true" />
-    {items.map((item) => (
-      <button
-        key={item.id}
-        type="button"
-        className={value === item.id ? "is-active" : undefined}
-        aria-pressed={value === item.id}
-        onClick={() => onChange(item.id)}
-      >
-        {item.label}
-      </button>
-    ))}
-  </div>
+    <div
+      ref={rootRef}
+      className={`widget-header-toggle is-intrinsic ${className}`.trim()}
+      role="group"
+      aria-label={label}
+      data-active-index={activeIndex}
+    >
+      <span className="widget-header-toggle-indicator" aria-hidden="true" />
+      {items.map((item, index) => (
+        <button
+          key={item.id}
+          ref={(node) => { buttonRefs.current[index] = node }}
+          type="button"
+          className={value === item.id ? "is-active" : undefined}
+          aria-pressed={value === item.id}
+          onClick={() => onChange(item.id)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -805,6 +829,7 @@ export {
   WidgetTextArea,
   WidgetSizedSelect,
   WidgetVideoSelect,
+  WidgetSplitCounterBadge,
   WidgetProgressBar,
   WidgetIconButton,
   WidgetIconBadge,
@@ -828,6 +853,8 @@ export {
   WidgetToggleSwitch,
   WidgetRadio,
   WidgetCheckbox,
+  WidgetVideoMiniCard,
+  WidgetSpeechBubble,
   WidgetSectionBand,
   WidgetDataGrid,
   WidgetChecklistProgress,
@@ -837,6 +864,8 @@ export {
   type WidgetPrimitiveTone,
   type WidgetTextFit,
   type WidgetSplitIconStyle,
+  type WidgetVideoMiniCardProps,
+  type WidgetSpeechBubbleProps,
   type WidgetTinyIconName,
   type WidgetSectionBandTone,
   type WidgetDataGridColumn,

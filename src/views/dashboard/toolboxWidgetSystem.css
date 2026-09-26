@@ -158,8 +158,9 @@
 }
 
 :where(.dashboard-barrier) .vt-widget-body {
+  --vt-widget-body-inset: var(--widget-content-inset);
   background: var(--bg-widget);
-  padding: var(--vt-widget-body-inset, var(--widget-content-inset));
+  padding: var(--vt-widget-body-inset);
   color: var(--text-main);
   transition: background-color var(--transition), color var(--transition);
   display: flex;
@@ -175,23 +176,40 @@
   --vt-widget-body-inset: 0px;
 }
 
-/* Full-bleed utilities to let bottom bars, dividers, or edge boxes touch module borders */
-:where(.dashboard-barrier) .vt-full-bleed {
-  margin-inline: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance))) !important;
-  width: calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))) !important;
-  max-width:none !important;
+/* Widget interior zones:
+   INSET is the default body column.
+   FULL uses only the body's real inset and never borrows shadow clearance.
+   SHADOW-SAFE expands inside the usable edge without creating a fake white lane.
+   OVERLAY opts floating content out of the clipping hierarchy. */
+:where(.dashboard-barrier) .vt-full-bleed,
+:where(.dashboard-barrier) .vt-widget-zone-full {
+  margin-inline: calc(-1 * var(--vt-widget-body-inset)) !important;
+  width: calc(100% + (2 * var(--vt-widget-body-inset))) !important;
+  max-width: none !important;
+  box-sizing: border-box;
 }
 :where(.dashboard-barrier) .vt-full-bleed-bottom {
-  margin-inline: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance))) !important;
-  margin-bottom: calc(-1 * var(--widget-content-inset)) !important;
-  width: calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))) !important;
-  max-width:none !important;
+  margin-inline: calc(-1 * var(--vt-widget-body-inset)) !important;
+  margin-bottom: calc(-1 * var(--vt-widget-body-inset)) !important;
+  width: calc(100% + (2 * var(--vt-widget-body-inset))) !important;
+  max-width: none !important;
 }
 :where(.dashboard-barrier) .vt-full-bleed-top {
-  margin-inline: calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance))) !important;
-  margin-top: calc(-1 * var(--widget-content-inset)) !important;
-  width: calc(100% + (2 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))) !important;
-  max-width:none !important;
+  margin-inline: calc(-1 * var(--vt-widget-body-inset)) !important;
+  margin-top: calc(-1 * var(--vt-widget-body-inset)) !important;
+  width: calc(100% + (2 * var(--vt-widget-body-inset))) !important;
+  max-width: none !important;
+}
+:where(.dashboard-barrier) .vt-widget-zone-shadow-safe {
+  margin-inline: calc(-1 * var(--widget-shadow-clearance));
+  padding-inline: var(--widget-shadow-clearance);
+  box-sizing: border-box;
+  overflow: visible;
+}
+:where(.dashboard-barrier) .vt-widget-zone-overlay {
+  position: relative;
+  z-index: 40;
+  overflow: visible;
 }
 
 :where(.dashboard-barrier) .widget-section {
@@ -211,8 +229,8 @@
 :where(.dashboard-barrier) .widget-workflow-main > * { min-width: 0; }
 
 :where(.dashboard-barrier) .widget-section.is-full {
-  margin-inline: calc(-1 * var(--widget-content-inset));
-  padding-inline: var(--widget-content-inset);
+  margin-inline: calc(-1 * var(--vt-widget-body-inset));
+  padding-inline: var(--vt-widget-body-inset);
 }
 
 /* ═══ UNIVERSAL WIDGET ARCHETYPE RECIPES ═══ */
@@ -442,7 +460,7 @@
 :where(.dashboard-barrier) .community-image-copy .vt-textarea,
 :where(.dashboard-barrier) .community-video-workspace .vt-textarea { min-height: 0; }
 :where(.dashboard-barrier) .community-image-column { min-width: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 4px; }
-:where(.dashboard-barrier) .widget-upload-frame { position: relative; display: grid; min-width: 0; aspect-ratio: 16 / 9; padding: 4px; border: var(--widget-module-stroke) dashed var(--widget-border); border-radius: var(--widget-control-radius); background: color-mix(in srgb, var(--widget-color) 12%, #fff); transition: background-color 100ms linear; }
+:where(.dashboard-barrier) .widget-upload-frame { position: relative; display: grid; min-width: 0; aspect-ratio: 16 / 9; padding: 4px; border: 3px solid var(--widget-border, var(--vt-ink)); border-radius: var(--widget-control-radius); background: color-mix(in srgb, var(--widget-color) 10%, white); box-shadow: 4px 4px 0 color-mix(in srgb, var(--widget-color) 42%, transparent); color: var(--vt-ink, var(--widget-border)); transition: background-color 100ms linear, box-shadow 100ms linear; }
 :where(.dashboard-barrier) .widget-upload-frame:hover { background: color-mix(in srgb, var(--widget-color) 24%, #fff); }
 :where(.dashboard-barrier) .widget-upload-frame.is-dragging { background: color-mix(in srgb, var(--widget-color) 42%, #fff); }
 :where(.dashboard-barrier) .widget-upload-frame img,
@@ -454,7 +472,7 @@
 :where(.dashboard-barrier) .community-poll-option { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
 :where(.dashboard-barrier) .community-poll-grid.is-image-poll .community-poll-option { grid-template-columns: minmax(0, 1fr) 96px; align-items: stretch; gap: var(--widget-component-gap); }
 :where(.dashboard-barrier) .community-poll-grid.is-image-poll .vt-input { height: var(--widget-control-height); min-height: var(--widget-control-height); }
-:where(.dashboard-barrier) .community-poll-media { min-width: 0; height: var(--widget-control-height); padding: 0 7px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; overflow: hidden; border: var(--widget-module-stroke) dashed var(--widget-border); border-radius: var(--widget-control-radius); background: color-mix(in srgb, var(--widget-color) 12%, #fff); color: var(--widget-border); font: inherit; font-size: var(--widget-type-label); font-weight: 900; line-height: 1; text-transform: uppercase; }
+:where(.dashboard-barrier) .community-poll-media { min-width: 0; height: var(--widget-control-height); padding: 0 7px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; overflow: hidden; border: var(--widget-module-stroke) solid var(--widget-border, var(--vt-ink)); border-radius: var(--widget-control-radius); background: color-mix(in srgb, var(--widget-color) 12%, #fff); color: var(--widget-border); font: inherit; font-size: var(--widget-type-label); font-weight: 900; line-height: 1; text-transform: uppercase; }
 :where(.dashboard-barrier) .community-poll-media:hover { background: color-mix(in srgb, var(--widget-color) 24%, #fff); }
 :where(.dashboard-barrier) .community-poll-media.is-dragging { background: color-mix(in srgb, var(--widget-color) 42%, #fff); }
 :where(.dashboard-barrier) .community-poll-media.has-image { padding: 2px; background: #fff; }
@@ -1224,7 +1242,7 @@
   }
 
   :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) .widget-header-toggle {
-    width: 100%;
+    width: fit-content;
     min-width: 0;
     max-width: 100%;
     height: auto;
@@ -1290,11 +1308,6 @@
 
   :where(.dashboard-barrier) [data-widget-id="comment-replier"] .header-extra > div {
     gap: 3px !important;
-  }
-
-  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .widget-header-toggle {
-    width: 88px;
-    flex-basis: 88px;
   }
 
   :where(.dashboard-barrier) [data-widget-id="comment-replier"] .widget-header-toggle button,
@@ -1376,21 +1389,27 @@
   z-index: 0;
   top: 2px;
   bottom: 2px;
-  left: 3px;
-  width: calc((100% - 6px) / var(--widget-header-toggle-count));
+  left: 0;
+  width: var(--widget-header-toggle-active-width, 0px);
   border: 2px solid var(--widget-border);
   border-radius: 5px;
   background: var(--widget-color, #ffb570);
   box-shadow: 1px 1px 0 var(--widget-shadow, color-mix(in srgb, var(--widget-color) 40%, transparent));
+  opacity: 0;
   pointer-events: none;
-  transform: translateX(calc(var(--widget-header-toggle-index) * 100%));
-  transition: transform 180ms cubic-bezier(.2, .8, .2, 1), background-color 150ms ease;
+  transform: translateX(var(--widget-header-toggle-active-left, 0px));
+  transition: transform 180ms cubic-bezier(.2, .8, .2, 1), width 180ms cubic-bezier(.2, .8, .2, 1), background-color 150ms ease;
+}
+
+:where(.dashboard-barrier) .widget-header-toggle[data-measured="true"] .widget-header-toggle-indicator {
+  opacity: 1;
 }
 
 :where(.dashboard-barrier) .widget-header-toggle button {
   position: relative;
   z-index: 1;
-  flex: 1 1 0;
+  flex: 0 0 auto;
+  width: auto;
   min-width: max-content;
   height: 100%;
   padding: 0 8px;
@@ -2314,12 +2333,14 @@ stroke-width: 2px;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  border: var(--widget-module-stroke) solid var(--widget-border);
+  padding: 0;
+  border: 3px solid var(--widget-border, var(--vt-ink));
   border-radius: var(--widget-control-radius);
-  background: color-mix(in srgb, var(--widget-color) 12%, #fff);
-  color: var(--widget-border);
+  background: color-mix(in srgb, var(--widget-color) 10%, white);
+  color: var(--vt-ink, var(--widget-border));
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--widget-color) 42%, transparent);
   cursor: pointer;
-  transition: background-color 100ms linear;
+  transition: background-color 100ms linear, transform 100ms linear, box-shadow 100ms linear;
 }
 
 :where(.dashboard-barrier) .widget-media-upload-frame:hover {
@@ -2347,45 +2368,55 @@ stroke-width: 2px;
 }
 
 :where(.dashboard-barrier) .widget-media-upload-empty {
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 7px;
-  padding: 6px;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
   text-align: left;
+  align-items: stretch;
 }
 
 :where(.dashboard-barrier) .widget-media-upload-icon {
+  width: 52px;
+  min-width: 52px;
+  height: 100%;
   display: grid;
   place-items: center;
+  border-inline-end: 3px solid var(--widget-border, var(--vt-ink));
+  background: var(--widget-color);
+  color: var(--vt-ink, var(--widget-border));
 }
 
-:where(.dashboard-barrier) .widget-media-upload-icon svg { width: 21px; height: 21px; }
+:where(.dashboard-barrier) .widget-media-upload-icon svg { width: 26px; height: 26px; stroke-width: 2.5; }
 
 :where(.dashboard-barrier) .widget-media-upload-copy {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 12px;
 }
 
 :where(.dashboard-barrier) .widget-media-upload-copy strong,
 :where(.dashboard-barrier) .widget-media-upload-copy small,
 :where(.dashboard-barrier) .widget-media-file strong,
 :where(.dashboard-barrier) .widget-media-file small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 :where(.dashboard-barrier) .widget-media-upload-copy strong,
 :where(.dashboard-barrier) .widget-media-file strong {
-  font-size: var(--widget-type-body);
+  font-size: max(14px, var(--widget-type-body));
   font-weight: 950;
   text-transform: uppercase;
 }
 
 :where(.dashboard-barrier) .widget-media-upload-copy small,
 :where(.dashboard-barrier) .widget-media-file small {
-  font-size: var(--widget-type-label);
+  font-size: max(11px, var(--widget-type-label));
   font-weight: 750;
   opacity: .72;
 }
@@ -2511,7 +2542,7 @@ stroke-width: 2px;
   justify-items: center;
   gap: 6px;
   padding: 20px;
-  border: var(--widget-module-stroke) dashed var(--widget-border);
+  border: var(--widget-module-stroke) solid var(--widget-border, var(--vt-ink));
   border-radius: var(--widget-control-radius);
   background: color-mix(in srgb, var(--widget-color) 8%, #fff);
   text-align: center;
@@ -2682,7 +2713,7 @@ stroke-width: 2px;
   grid-template-columns: minmax(72px, 1fr) auto;
   gap: 6px;
   padding: 5px;
-  border: var(--widget-module-stroke) dashed var(--widget-border);
+  border: var(--widget-module-stroke) solid var(--widget-border, var(--vt-ink));
   border-radius: var(--widget-control-radius);
   background: color-mix(in srgb, var(--widget-color) 8%, #fff);
 }
@@ -3225,11 +3256,10 @@ stroke-width: 2px;
   width: 100%;
   height: 100%;
   min-height: 0;
-  /* Was 1.5px which rendered as an anemic hairline; use the standard
-     widget module stroke so it reads as a proper Neo-Brutalist border. */
-  border: var(--widget-module-stroke, 2px) dashed var(--widget-border);
+  border: 3px solid var(--widget-border, var(--vt-ink));
   border-radius: var(--widget-control-radius);
-  background: color-mix(in srgb, var(--widget-color) 8%, #fff);
+  background: color-mix(in srgb, var(--widget-color) 10%, #fff);
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--widget-color) 42%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4420,6 +4450,30 @@ textarea.vt-textarea {
 .comment-responder-reaction-badge.widget-split-button:active {
   box-shadow: none;
 }
+.comment-responder-reaction-badge.widget-split-counter-badge {
+  width: auto !important;
+  min-width: 0;
+  height: 24px;
+  min-height: 24px;
+  flex: 0 0 auto;
+  border-color: var(--comment-bubble-stroke, var(--vt-ink, var(--widget-border)));
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 18%, white);
+  box-shadow: none;
+  color: var(--vt-ink, var(--widget-border));
+  font-size: 10px;
+}
+.comment-responder-reaction-badge.widget-split-counter-badge .widget-split-counter-badge-icon {
+  width: 24px;
+  min-width: 24px;
+  border-inline-end-color: var(--vt-ink, var(--widget-border));
+  background: var(--widget-color);
+  color: var(--vt-ink, var(--widget-border));
+}
+.comment-responder-reaction-badge.widget-split-counter-badge .widget-split-counter-badge-value {
+  padding-inline: 5px;
+  color: var(--vt-ink, var(--widget-border));
+}
 .comment-responder-reaction-badge .widget-split-button-icon {
   width: 18px;
   flex-basis: 18px;
@@ -4518,7 +4572,7 @@ textarea.vt-textarea {
 
 /* Comment responder: horizontal speech bubble points back to the avatar. */
 .comment-responder-bubble {
-  --comment-bubble-stroke: color-mix(in srgb, var(--widget-color, #40C6E9) 62%, black);
+  --comment-bubble-stroke: var(--vt-ink, var(--widget-border));
   --comment-bubble-fill: color-mix(in srgb, var(--widget-color, #40C6E9) 18%, white);
   /* Default is large; AutoFitCommentBubble ratchets this down at the
      element level via inline font-size when the text cannot fit. */
@@ -4530,8 +4584,8 @@ textarea.vt-textarea {
   border: 2px solid var(--comment-bubble-stroke);
   border-radius: 7px;
   background: var(--comment-bubble-fill);
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
-  color: var(--widget-color, #40C6E9);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color, #40C6E9) 50%, transparent);
+  color: var(--vt-ink, var(--widget-border));
   font-size: var(--comment-bubble-font-size);
   font-weight: 900;
   line-height: 1.25;
@@ -4560,7 +4614,14 @@ textarea.vt-textarea {
 .comment-responder-bubble-copy::-webkit-scrollbar-track { background: transparent; }
 .comment-responder-bubble-copy::-webkit-scrollbar-thumb { border-radius: 3px; background: color-mix(in srgb, var(--widget-color) 72%, #fff); }
 
-.comment-responder-bubble-tail {
+.comment-responder-bubble > .widget-speech-bubble-copy {
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: visible;
+}
+.comment-responder-bubble .widget-speech-bubble-tail {
   position: absolute;
   top: -18px;
   left: 10px;
@@ -4569,9 +4630,6 @@ textarea.vt-textarea {
   transform: none;
   overflow: visible;
   z-index: 2;
-}
-
-.comment-responder-bubble-tail-stroke {
   fill: var(--comment-bubble-fill);
   stroke: var(--comment-bubble-stroke);
   stroke-width: 2px;
@@ -7701,5 +7759,91 @@ textarea.vt-textarea {
   }
   :where(.dashboard-barrier) .image-generator-template-toggle button:last-child{
     line-height:.82;
+  }
+}
+
+
+/* Split-control geometry correction.
+   The icon bay is a true square derived from the rendered control height.
+   Multiline labels may use two centered lines instead of escaping the button. */
+:where(.dashboard-barrier) .widget-split-button-icon,
+:where(.dashboard-barrier) .vt-button.split .split-icon {
+  width: auto;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
+:where(.dashboard-barrier) .widget-split-button.is-primary {
+  background: color-mix(in srgb, var(--widget-color) 30%, white);
+}
+
+:where(.dashboard-barrier) .widget-split-button.is-primary .widget-split-button-icon {
+  background: var(--widget-color);
+}
+
+:where(.dashboard-barrier) .widget-split-button.is-multiline .widget-split-button-label {
+  justify-content: center;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  text-align: center;
+  line-height: .88;
+}
+
+
+/* Intrinsic header toggles can grow/shrink with the selected label. On narrow
+   headers the buttons may shrink and wrap, but the group itself never adopts a
+   fixed per-widget width. */
+@container (max-width: 460px) {
+  :where(.dashboard-barrier) .widget-header-toggle.is-intrinsic {
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  :where(.dashboard-barrier) .widget-header-toggle.is-intrinsic button {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+}
+
+
+:where(.dashboard-barrier) .comment-responder-header-controls {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+@container (max-width: 460px) {
+  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .comment-responder-header-controls {
+    gap: 3px;
+    justify-content: flex-end;
+  }
+
+  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .comment-responder-header-controls > .widget-header-toggle,
+  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .comment-responder-header-controls > .widget-header-stepper {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .widget-header-stepper {
+    padding: 1px;
+    gap: 1px;
+  }
+
+  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .widget-header-stepper button {
+    width: 20px;
+    height: 22px;
+    flex-basis: 20px;
+  }
+
+  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .widget-header-stepper-value {
+    min-width: 38px;
+    padding-inline: 3px;
   }
 }

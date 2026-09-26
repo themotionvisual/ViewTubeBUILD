@@ -16,6 +16,8 @@ import {
   Heart,
   ImagePlus,
   Layers,
+  Link2,
+  MessagesSquare,
   Plus,
   RotateCcw,
   Save,
@@ -23,6 +25,7 @@ import {
   Sparkles,
   Star,
   Target,
+  ThumbsUp,
   TrendingUp,
   UploadCloud,
   Zap,
@@ -82,6 +85,9 @@ import {
   WidgetModuleHeader,
   WidgetModuleFrame,
   WidgetVideoSelect,
+  WidgetVideoMiniCard,
+  WidgetSplitCounterBadge,
+  WidgetSpeechBubble,
   type WidgetControlHeight,
   type WidgetPrimitiveTone,
   type WidgetSplitIconStyle,
@@ -199,7 +205,7 @@ const ToneRows = ({
   <div className="grid gap-2">
     {CONTROL_TONES.map((tone) => (
       <div key={tone} className="grid gap-1">
-        <small className="text-[8px] font-black uppercase tracking-wider opacity-55">{tone}</small>
+        <small className="text-[8px] font-black uppercase tracking-wider" style={{ color: "color-mix(in srgb, var(--vt-ink) 68%, var(--widget-color))" }}>{tone}</small>
         <SizeVariants square={square}>{(height) => render(tone, height)}</SizeVariants>
       </div>
     ))}
@@ -268,7 +274,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
       style={{ borderColor: "color-mix(in srgb, var(--widget-color) 30%, transparent)" }}
     >
       <strong className="text-xs font-black uppercase tracking-wider">{title}</strong>
-      <span className="text-[9px] font-black uppercase opacity-55">{detail}</span>
+      <span className="text-[9px] font-black uppercase" style={{ color: "color-mix(in srgb, var(--vt-ink) 68%, var(--widget-color))" }}>{detail}</span>
     </header>
   )
 
@@ -876,6 +882,29 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
         {activeCategory === "compound" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("Compound Workflow Primitives", "Creator Operations donor patterns rebuilt in widget UI/CSS")}
+
+            <div className="widget-reference-family">
+              {familyHeading("Comment + Video Mini Modules", "Comment Responder donor primitives promoted to the shared system")}
+              <div className="grid gap-3">
+                <WidgetVideoMiniCard
+                  title="Napoleon's Last Great Victory"
+                  thumbnail={VIDEO_OPTIONS[0].thumbnail}
+                  footer="12:42 · 48,230 views"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <WidgetSplitCounterBadge icon={<ThumbsUp />} value={184} label="184 likes" height={24} tone="primary" />
+                  <WidgetSplitCounterBadge icon={<MessagesSquare />} value={27} label="27 replies" height={24} tone="secondary" />
+                </div>
+                <WidgetSpeechBubble>
+                  Big supporter — the map explanation made the battle finally click.
+                </WidgetSpeechBubble>
+                <div className="max-w-[220px]">
+                  <WidgetLeftSplitButton icon={<Sparkles />} multiline width="full" tone="primary">
+                    Suggest video
+                  </WidgetLeftSplitButton>
+                </div>
+              </div>
+            </div>
 
             <div className="widget-reference-family">
               {familyHeading("Full-Width Section Bands", "Lead / Proposal / Active / Paid · three monochromatic widget tones")}
