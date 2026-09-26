@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { projectHeraldThreadClaim } from "./ai-systems-herald-projection.mjs";
 
 const ACTIVE_LIFECYCLES = new Set([
   "canonical",
@@ -19,6 +20,14 @@ const ACTIVE_LIFECYCLES = new Set([
 ]);
 
 const ACTIVE_CLAIM_STATES = new Set(["claimed", "started", "in_progress", "blocked"]);
+
+export const DEFAULT_REGISTRY_PATHS = [
+  "governance/ai-systems/registry/systems.json",
+  "governance/ai-systems/registry/capabilities.json",
+  "governance/ai-systems/registry/plans.json",
+  "governance/ai-systems/registry/donors.json",
+  "governance/ai-systems/registry/integrations.json",
+];
 
 const isSha = (value) => typeof value === "string" && /^[0-9a-f]{40}$/.test(value);
 
@@ -130,15 +139,51 @@ export const findStaleClaims = (claims, { now = Date.now(), maxAgeMs = 24 * 60 *
 
 const readJson = (filePath) => JSON.parse(fs.readFileSync(filePath, "utf8"));
 
+export const readHeraldClaims = ({
+  rootDir = process.cwd(),
+  observedMainSha = null,
+  heraldThreadsDir = ".viewtube/herald/threads",
+} = {}) => {
+  const absoluteDir = path.join(rootDir, heraldThreadsDir);
+  if (!fs.existsSync(absoluteDir)) return [];
+
+  return fs.readdirSync(absoluteDir)
+    .filter((name) => name.endsWith(".json"))
+    .sort()
+    .map((name) => {
+      const sourcePath = path.join(heraldThreadsDir, name).replaceAll("\\", "/");
+      const thread = readJson(path.join(absoluteDir, name));
+      return projectHeraldThreadClaim(thread, { observedMainSha, sourcePath });
+    })
+    .filter(Boolean);
+};
+
 export const auditAiSystemsGovernance = ({
   rootDir = process.cwd(),
-  registryPath = "governance/ai-systems/registry/systems.json",
-  claims = [],
+  registryPath,
+  registryPaths,
+  claims,
+  observedMainSha = null,
+  heraldThreadsDir = ".viewtube/herald/threads",
   now = Date.now(),
   maxClaimAgeMs = 24 * 60 * 60 * 1000,
 } = {}) => {
-  const registry = readJson(path.join(rootDir, registryPath));
-  const records = Array.isArray(registry.records) ? registry.records : [];
+  const resolvedRegistryPaths = registryPaths
+    || (registryPath ? [registryPath] : DEFAULT_REGISTRY_PATHS);
+
+  const registries = resolvedRegistryPaths.map((relativePath) => ({
+    relativePath,
+    value: readJson(path.join(rootDir, relativePath)),
+  }));
+  const records = registries.flatMap(({ value }) =>
+    Array.isArray(value.records) ? value.records : []
+  );
+
+  const effectiveClaims = claims ?? readHeraldClaims({
+    rootDir,
+    observedMainSha,
+    heraldThreadsDir,
+  });
 
   const recordIssues = records.flatMap((record) =>
     validateAuthorityRecord(record).map((entry) => ({ ...entry, recordId: record.id }))
@@ -147,11 +192,13 @@ export const auditAiSystemsGovernance = ({
   const missingSourceRefs = findMissingSourceRefs(records, (sourcePath) =>
     fs.existsSync(path.join(rootDir, sourcePath))
   );
-  const staleClaims = findStaleClaims(claims, { now, maxAgeMs: maxClaimAgeMs });
+  const staleClaims = findStaleClaims(effectiveClaims, { now, maxAgeMs: maxClaimAgeMs });
 
   return {
     ok: recordIssues.length === 0 && conflicts.length === 0 && missingSourceRefs.length === 0 && staleClaims.length === 0,
+    registryCount: registries.length,
     recordCount: records.length,
+    claimCount: effectiveClaims.length,
     recordIssues,
     conflicts,
     missingSourceRefs,
