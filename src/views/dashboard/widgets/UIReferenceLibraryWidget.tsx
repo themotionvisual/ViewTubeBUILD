@@ -878,11 +878,12 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             {sectionHeading("Compound Workflow Primitives", "Creator Operations donor patterns rebuilt in widget UI/CSS")}
 
             <div className="widget-reference-family">
-              {familyHeading("Full-Width Section Bands", "Three monochromatic tones · oversized ink label · edge-to-edge")}
+              {familyHeading("Full-Width Section Bands", "Lead / Proposal / Active / Paid · three monochromatic widget tones")}
               <div className="grid gap-2">
                 <WidgetSectionBand tone="default">Lead</WidgetSectionBand>
                 <WidgetSectionBand tone="secondary">Proposal</WidgetSectionBand>
-                <WidgetSectionBand tone="primary">Active / Paid</WidgetSectionBand>
+                <WidgetSectionBand tone="primary">Active</WidgetSectionBand>
+                <WidgetSectionBand tone="secondary">Paid</WidgetSectionBand>
               </div>
             </div>
 
