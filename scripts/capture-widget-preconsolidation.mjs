@@ -87,6 +87,19 @@ for (const viewport of [
       await next.evaluate((button) => button.click())
       await page.waitForTimeout(350)
       await widget.screenshot({ path: `${outDir}/${viewport.label}-ui-reference-preview-state.png` })
+
+      // COMPOUND -> VIDEO. Open a large canonical selector and capture the full
+      // viewport because its menu is intentionally portalled outside the widget.
+      await next.evaluate((button) => button.click())
+      await page.waitForTimeout(250)
+      const videoSelect = widget.getByRole("button", { name: "default select video 38px" }).first()
+      await videoSelect.scrollIntoViewIfNeeded()
+      await videoSelect.evaluate((button) => button.click())
+      await page.waitForTimeout(250)
+      const portal = page.locator(".widget-video-select-menu.is-portalled").first()
+      if (!(await portal.isVisible())) throw new Error(`${viewport.label} video selector portal did not open`)
+      await page.screenshot({ path: `${outDir}/${viewport.label}-video-selector-portal.png`, fullPage: false })
+      await videoSelect.evaluate((button) => button.click())
     } else {
       await widget.screenshot({ path: `${outDir}/${viewport.label}-${name}.png` })
     }
