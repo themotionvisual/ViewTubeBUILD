@@ -1869,94 +1869,7 @@ const CreatorVaultOS: React.FC = () => {
        </section>
       ) : null}
 
-      <SubToolbox
-       style={moduleStyle("workspace-notes" as VaultWorkspaceModuleId)}
-       title="Workspace Notes"
-       subtitle="Saved Vault scratchpads that do not become assets or Brain memory"
-       icon={<FileText />}
-       paletteIndex={6}
-       isOpenInitial={false}
-       persistenceId="vault-workspace-notes"
-      >
-       <div className="flex flex-col gap-3">
-        <StandardInput
-         value={scratchpadTitle}
-         onChange={(event) => setScratchpadTitle(event.target.value)}
-         placeholder="Note title"
-         aria-label="Vault note title"
-        />
-        <SubToolboxTextArea
-         value={scratchpadContent}
-         onChange={(event) => setScratchpadContent(event.target.value)}
-         placeholder="Write a Vault workspace note…"
-         aria-label="Vault note content"
-         rows={4}
-        />
-        <SubToolboxInnerActionButton
-         label="Save Workspace Note"
-         iconName="archive"
-         tone="yellow"
-         onClick={saveScratchpad}
-         disabled={!scratchpadTitle.trim() && !scratchpadContent.trim()}
-        />
-        {scratchpads.map((note) => (
-         <div key={note.id} className="flex flex-col gap-2">
-          <div className="text-sm font-black uppercase">{note.title}</div>
-          <div className="whitespace-pre-wrap text-xs font-bold opacity-70">{note.content}</div>
-          <SubToolboxInnerActionButton
-           label="Delete Note"
-           iconName="eye-off"
-           tone="pink"
-           onClick={() => removeScratchpad(note.id)}
-          />
-         </div>
-        ))}
-        <div className="mt-2 border-t-[3px] border-current pt-3">
-         <div className="mb-2 text-xs font-black uppercase opacity-60">Workspace Checklist</div>
-         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-          <StandardInput
-           value={checklistText}
-           onChange={(event) => setChecklistText(event.target.value)}
-           placeholder="Add checklist item"
-           aria-label="Vault checklist item"
-           onKeyDown={(event) => {
-            if (event.key === "Enter") addChecklistItem()
-           }}
-          />
-          <SubToolboxInnerActionButton
-           label="+"
-           iconName="plus"
-           tone="green"
-           onClick={addChecklistItem}
-           disabled={!checklistText.trim()}
-          />
-         </div>
-         <div className="mt-2 flex flex-col gap-2">
-          {checklistItems.map((item) => (
-           <div key={item.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
-            <button
-             type="button"
-             aria-label={item.done ? "Mark checklist item incomplete" : "Mark checklist item complete"}
-             onClick={() => toggleChecklistItem(item.id)}
-             className="text-lg font-black"
-            >
-             {item.done ? "☒" : "☐"}
-            </button>
-            <div className={item.done ? "text-xs font-bold line-through opacity-45" : "text-xs font-bold"}>
-             {item.text}
-            </div>
-            <SubToolboxInnerActionButton
-             label="×"
-             iconName="x"
-             tone="pink"
-             onClick={() => removeChecklistItem(item.id)}
-            />
-           </div>
-          ))}
-         </div>
-        </div>
-       </div>
-      </SubToolbox>
+
 
 
      </div>
@@ -2575,6 +2488,95 @@ const CreatorVaultOS: React.FC = () => {
            onClick={createTextAssetFromEditor}
           />
          </div>
+      </SubToolbox>
+
+      <SubToolbox
+       style={moduleStyle("workspace-notes" as VaultWorkspaceModuleId)}
+       title="Workspace Notes"
+       subtitle="Saved Vault scratchpads that do not become assets or Brain memory"
+       icon={<FileText />}
+       paletteIndex={6}
+       isOpenInitial={false}
+       persistenceId="vault-workspace-notes"
+      >
+       <div className="flex flex-col gap-3">
+        <StandardInput
+         value={scratchpadTitle}
+         onChange={(event) => setScratchpadTitle(event.target.value)}
+         placeholder="Note title"
+         aria-label="Vault note title"
+        />
+        <SubToolboxTextArea
+         value={scratchpadContent}
+         onChange={(event) => setScratchpadContent(event.target.value)}
+         placeholder="Write a Vault workspace note…"
+         aria-label="Vault note content"
+         rows={4}
+        />
+        <SubToolboxInnerActionButton
+         label="Save Workspace Note"
+         iconName="archive"
+         tone="yellow"
+         onClick={saveScratchpad}
+         disabled={!scratchpadTitle.trim() && !scratchpadContent.trim()}
+        />
+        {scratchpads.map((note) => (
+         <div key={note.id} className="flex flex-col gap-2">
+          <div className="text-sm font-black uppercase">{note.title}</div>
+          <div className="whitespace-pre-wrap text-xs font-bold opacity-70">{note.content}</div>
+          <SubToolboxInnerActionButton
+           label="Delete Note"
+           iconName="eye-off"
+           tone="pink"
+           onClick={() => removeScratchpad(note.id)}
+          />
+         </div>
+        ))}
+        <div className="mt-2 border-t-[3px] border-current pt-3">
+         <div className="mb-2 text-xs font-black uppercase opacity-60">Workspace Checklist</div>
+         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+          <StandardInput
+           value={checklistText}
+           onChange={(event) => setChecklistText(event.target.value)}
+           placeholder="Add checklist item"
+           aria-label="Vault checklist item"
+           onKeyDown={(event) => {
+            if (event.key === "Enter") addChecklistItem()
+           }}
+          />
+          <SubToolboxInnerActionButton
+           label="+"
+           iconName="plus"
+           tone="green"
+           onClick={addChecklistItem}
+           disabled={!checklistText.trim()}
+          />
+         </div>
+         <div className="mt-2 flex flex-col gap-2">
+          {checklistItems.map((item) => (
+           <div key={item.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+            <button
+             type="button"
+             aria-label={item.done ? "Mark checklist item incomplete" : "Mark checklist item complete"}
+             onClick={() => toggleChecklistItem(item.id)}
+             className="text-lg font-black"
+            >
+             {item.done ? "☒" : "☐"}
+            </button>
+            <div className={item.done ? "text-xs font-bold line-through opacity-45" : "text-xs font-bold"}>
+             {item.text}
+            </div>
+            <SubToolboxInnerActionButton
+             label="×"
+             iconName="x"
+             tone="pink"
+             onClick={() => removeChecklistItem(item.id)}
+            />
+           </div>
+          ))}
+         </div>
+        </div>
+       </div>
       </SubToolbox>
 
 
