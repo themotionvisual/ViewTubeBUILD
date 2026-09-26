@@ -30,6 +30,14 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).not.toContain('title="Asset Operations"')
  })
 
+ it("keeps Task Center compact when idle and makes Inspector selection-contextual", () => {
+  expect(source).toContain('const activeVaultTasks = tasks.filter')
+  expect(source).toContain('activeVaultTasks.length || failedVaultTasks.length')
+  expect(source).toContain('selectedAsset ? (')
+  expect(source).toContain('title="Inspector"')
+  expect(source).not.toContain('duration || 60')
+ })
+
  it("keeps workspace configuration off the default scrolling surface", () => {
   expect(source).toContain('aria-label="Open workspace layout settings"')
   expect(source).toContain('role="dialog"')
