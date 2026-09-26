@@ -289,16 +289,25 @@ export const VaultAssetNotes: React.FC<{
 
 const VaultMedia: React.FC<{
   kind: VaultAssetModuleKind
-  src?: string | null
+  previewSrc?: string | null
+  mediaSrc?: string | null
   title: string
   selected?: boolean
   showSelection?: boolean
   fit: "cover" | "contain"
   onSelectedChange?: (selected: boolean) => void
   onPreviewAction?: () => void
-}> = ({ kind, src, title, selected = false, showSelection = false, fit, onSelectedChange, onPreviewAction }) => (
+}> = ({ kind, previewSrc, mediaSrc, title, selected = false, showSelection = false, fit, onSelectedChange, onPreviewAction }) => (
   <div className="vt-vault-media-frame" style={{ ["--vt-vault-media-fit" as string]: fit } as React.CSSProperties}>
-    {src ? <img src={src} alt="" /> : <AssetIcon kind={kind} />}
+    {previewSrc ? (
+      <img src={previewSrc} alt="" />
+    ) : kind === "video" && mediaSrc ? (
+      <video src={mediaSrc} muted playsInline preload="metadata" aria-label={`Video preview for ${title}`} />
+    ) : mediaSrc && kind === "image" ? (
+      <img src={mediaSrc} alt="" />
+    ) : (
+      <AssetIcon kind={kind} />
+    )}
     {showSelection ? (
       <VaultSelection
         checked={selected}
@@ -362,7 +371,6 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
   const resolvedVariant = resolveVariant(kind, variant)
   const colors = getToolboxColorPair(paletteIndex)
   const isHalf = resolvedVariant === "audio" || resolvedVariant === "document"
-  const src = previewUrl || mediaUrl || null
   const fileType = fileTypeLabel
     || mimeType?.split("/").pop()
     || title.split(".").pop()
@@ -448,7 +456,8 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
         </div>
         <VaultMedia
           kind={kind}
-          src={src}
+          previewSrc={previewUrl}
+          mediaSrc={mediaUrl}
           title={title}
           selected={selected}
           showSelection={!double}
@@ -475,7 +484,7 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
           <VaultSelection checked={selected} label={`Select ${title}`} onChange={onSelectedChange} />
         </div>
         <div className="vt-vault-landscape-middle">
-          <VaultMedia kind={kind} src={src} title={title} fit={mediaFit} onPreviewAction={onPreviewAction} />
+          <VaultMedia kind={kind} previewSrc={previewUrl} mediaSrc={mediaUrl} title={title} fit={mediaFit} onPreviewAction={onPreviewAction} />
           <VaultAssetNotes value={notes} onChange={onNotesChange} />
         </div>
         <VaultAssetTagEditor tags={tags} sharedTags={sharedTags} onTagsChange={onTagsChange} />
@@ -497,7 +506,7 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
         <VaultSelection checked={selected} label={`Select ${title}`} onChange={onSelectedChange} />
       </div>
       <div className="vt-vault-landscape-middle">
-        <VaultMedia kind={kind} src={src} title={title} fit={mediaFit} onPreviewAction={onPreviewAction} />
+        <VaultMedia kind={kind} previewSrc={previewUrl} mediaSrc={mediaUrl} title={title} fit={mediaFit} onPreviewAction={onPreviewAction} />
         <VaultAssetTagEditor tags={tags} sharedTags={sharedTags} onTagsChange={onTagsChange} />
       </div>
       <VaultAssetNotes value={notes} onChange={onNotesChange} />
