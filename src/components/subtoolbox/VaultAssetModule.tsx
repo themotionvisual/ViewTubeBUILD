@@ -262,6 +262,14 @@ const VaultMedia: React.FC<{
     ) : (
       <AssetIcon kind={kind} />
     )}
+    {kind !== "video" && onPreviewAction ? (
+      <button
+        type="button"
+        className="vt-vault-media-open"
+        aria-label={`Preview ${title}`}
+        onClick={onPreviewAction}
+      />
+    ) : null}
     {showSelection ? (
       <VaultSelection
         checked={selected}
@@ -286,8 +294,18 @@ const AudioPreview: React.FC<{ durationLabel?: string | null; onPreviewAction?: 
   </div>
 )
 
-const DocumentPreview: React.FC<{ fileType?: string | null; excerpt?: string | null }> = ({ fileType, excerpt }) => (
-  <div className="vt-vault-half-preview vt-vault-document-preview">
+const DocumentPreview: React.FC<{
+  fileType?: string | null
+  excerpt?: string | null
+  title: string
+  onPreviewAction?: () => void
+}> = ({ fileType, excerpt, title, onPreviewAction }) => (
+  <button
+    type="button"
+    className="vt-vault-half-preview vt-vault-document-preview"
+    aria-label={`Preview ${title}`}
+    onClick={onPreviewAction}
+  >
     {excerpt ? (
       <div className="vt-vault-document-excerpt">{excerpt}</div>
     ) : (
@@ -298,7 +316,7 @@ const DocumentPreview: React.FC<{ fileType?: string | null; excerpt?: string | n
       </div>
     )}
     <span className="vt-vault-file-type">{(fileType || "DOC").replace(".", "").toUpperCase()}</span>
-  </div>
+  </button>
 )
 
 export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
@@ -378,7 +396,7 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
           </div>
           {resolvedVariant === "audio"
             ? <AudioPreview durationLabel={durationLabel} onPreviewAction={onPreviewAction} />
-            : <DocumentPreview fileType={fileType} excerpt={documentExcerpt} />}
+            : <DocumentPreview fileType={fileType} excerpt={documentExcerpt} title={title} onPreviewAction={onPreviewAction} />}
         </div>
       </article>
     )
