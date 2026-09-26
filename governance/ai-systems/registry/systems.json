@@ -2,8 +2,8 @@
   "schemaVersion": "vt-ai-systems-registry-v1",
   "generatedAt": "2026-09-26T01:05:00-04:00",
   "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
-  "authority": "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
-  "note": "Seed registry. Records point to canonical owners; this registry is not a replacement runtime/data store.",
+  "authority": "docs/domains/BRAIN.md",
+  "note": "Operational AI health/reachability projection. Durable Brain architecture is docs/domains/BRAIN.md; prompt behavior is docs/specifications/PROMPTS.md; exact work state belongs in Task Index.",
   "records": [
     {
       "id": "vt-ai-system:vt-sync",
@@ -167,8 +167,7 @@
           "src/services/brain"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md",
-          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -197,8 +196,7 @@
         "currentMainState": "present",
         "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
         "verificationRefs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md",
-          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+          "docs/domains/BRAIN.md"
         ]
       },
       "promptRefs": [],
@@ -240,7 +238,7 @@
           "src/services/brain"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -266,7 +264,7 @@
         "currentMainState": "present",
         "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
         "verificationRefs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ]
       },
       "promptRefs": [],
@@ -310,7 +308,7 @@
           "src/services/brain/BrainMemoryClaims.ts"
         ],
         "docs": [
-          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -335,7 +333,7 @@
         "currentMainState": "present",
         "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
         "verificationRefs": [
-          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+          "docs/domains/BRAIN.md"
         ]
       },
       "promptRefs": [],
@@ -491,11 +489,11 @@
       "recordVersion": 1,
       "kind": "system",
       "title": "Prompt System",
-      "summary": "Prompt family, version, precedence, personalization and modernization authority.",
+      "summary": "Versioned prompt families, Prompt Constitution, context recipes, provenance and evaluation.",
       "lifecycle": "canonical",
       "ownership": {
-        "canonicalOwner": "Prompt System Authority",
-        "concern": "prompt inventory, versions and governance",
+        "canonicalOwner": "BrainRuntime / Prompt System",
+        "concern": "prompt composition, versions, provenance and evaluation",
         "codeOwner": null,
         "documentationOwner": null
       },
@@ -516,8 +514,8 @@
           "src/services/oracle/prompts.ts"
         ],
         "docs": [
-          "docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md",
-          "docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json"
+          "docs/specifications/PROMPTS.md",
+          "docs/specifications/prompt-registry.json"
         ],
         "prs": [],
         "commits": [],
@@ -543,8 +541,8 @@
         "currentMainState": "present",
         "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
         "verificationRefs": [
-          "docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md",
-          "docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json"
+          "docs/specifications/PROMPTS.md",
+          "docs/specifications/prompt-registry.json"
         ]
       },
       "promptRefs": [],
@@ -563,12 +561,12 @@
       "schemaVersion": "vt-ai-authority-record-v1",
       "recordVersion": 1,
       "kind": "system",
-      "title": "Herald",
-      "summary": "Repository-agent orientation, evidence discipline, writer-lock, reporting and continuity owner.",
-      "lifecycle": "canonical",
+      "title": "Herald (legacy compatibility)",
+      "summary": "Legacy repository-agent protocol superseded by Conversation & Improvement OS; retained only for compatibility/provenance while old projections are migrated.",
+      "lifecycle": "superseded",
       "ownership": {
-        "canonicalOwner": "Herald",
-        "concern": "repository-agent work governance",
+        "canonicalOwner": "Conversation & Improvement OS",
+        "concern": "legacy repository-agent coordination compatibility",
         "codeOwner": null,
         "documentationOwner": null
       },
@@ -586,6 +584,8 @@
           "agent/contracts"
         ],
         "docs": [
+          "docs/governance/CONVERSATION_OS.md",
+          "agent/contracts/conversation-os.md",
           "agent/contracts/herald-out.md",
           "agent/contracts/herald-workflow.md"
         ],
@@ -601,7 +601,9 @@
           "repo-work-ledger"
         ],
         "supersedes": [],
-        "supersededBy": [],
+        "supersededBy": [
+          "docs/governance/CONVERSATION_OS.md"
+        ],
         "overlapsWith": [],
         "donorSources": []
       },
@@ -655,7 +657,7 @@
           "src/services/brain/BrainTrace.ts"
         ],
         "docs": [
-          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -681,7 +683,7 @@
         "currentMainState": "present",
         "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
         "verificationRefs": [
-          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+          "docs/domains/BRAIN.md"
         ]
       },
       "promptRefs": [],
@@ -723,7 +725,7 @@
           "src/services/brain"
         ],
         "docs": [
-          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+          "docs/domains/BRAIN.md",
           "tasks/ai-brain-quality/plan.md"
         ],
         "prs": [],
@@ -753,7 +755,7 @@
         "currentMainState": "present",
         "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
         "verificationRefs": [
-          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+          "docs/domains/BRAIN.md",
           "tasks/ai-brain-quality/plan.md"
         ]
       },
@@ -773,12 +775,12 @@
       "schemaVersion": "vt-ai-authority-record-v1",
       "recordVersion": 1,
       "kind": "system",
-      "title": "AI Systems Management",
-      "summary": "Agent-facing authority-of-authorities for AI ownership, status, claims, provenance, plans and health.",
-      "lifecycle": "canonical",
+      "title": "AI Systems Management (legacy control-plane role)",
+      "summary": "Legacy AI-specific work/status/orientation control plane. Durable architecture moved to Brain/Prompts; work coordination moved to Conversation OS, Crown and Task Authority.",
+      "lifecycle": "superseded",
       "ownership": {
         "canonicalOwner": "viewtube-ai-system-governor",
-        "concern": "AI systems management and cross-authority coordination",
+        "concern": "operational Brain health/reachability procedure, not independent authority",
         "codeOwner": null,
         "documentationOwner": null
       },
@@ -796,7 +798,9 @@
           ".claude/skills/viewtube-ai-system-governor"
         ],
         "docs": [
-          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+          "docs/domains/BRAIN.md",
+          "docs/governance/CONVERSATION_OS.md",
+          "docs/governance/TASK_AUTHORITY.md",
           "tasks/ai-systems-management/plan.md"
         ],
         "prs": [],
@@ -816,7 +820,11 @@
           "health-projection"
         ],
         "supersedes": [],
-        "supersededBy": [],
+        "supersededBy": [
+          "docs/domains/BRAIN.md",
+          "docs/governance/CONVERSATION_OS.md",
+          "docs/governance/TASK_AUTHORITY.md"
+        ],
         "overlapsWith": [],
         "donorSources": []
       },
@@ -827,7 +835,7 @@
         "currentMainState": "present",
         "verifiedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
         "verificationRefs": [
-          "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+          "docs/domains/BRAIN.md",
           "tasks/ai-systems-management/plan.md"
         ]
       },
