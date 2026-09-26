@@ -195,3 +195,8 @@ A document-system mission is complete only when:
 - `viewtube-document-consolidation` — losslessly consolidate multi-version documents, plans, HTML/prototypes and skill families with manifests and Removed Archive preservation.
 
 The parent skill may author additional narrow sub-skills using `references/sub-skill-authoring.md` and `templates/sub-skill-template.md` when repeated specialized work justifies them.
+
+
+## Master Source usage
+
+Treat registry entries with `sourceTier: MASTER_SOURCE` as mandatory high-value prior art within their scope. Use them to discover better systems, missing ideas, external research targets, architecture simplifications, new skills/workflows, and product opportunities. Do not let a Master Source override canonical current authorities or verified implementation evidence; promote accepted ideas through the governed object/document system.
