@@ -26,7 +26,9 @@ describe("Toolbox UI Reference Library", () => {
     expect(html).toContain("Popover")
     expect(html).toContain("Pagination")
     expect(html).toContain("Vault Landscape Asset")
+    expect(html).toContain("Vault Landscape Swapped Asset")
     expect(html).toContain("Vault Portrait Asset")
+    expect(html).toContain("Vault Portrait Double Asset")
     expect(html).toContain("Vault Audio Asset")
     expect(html).toContain("Vault Document Asset")
     expect(html).toContain("Knob Dial")
@@ -53,8 +55,8 @@ describe("Toolbox UI Reference Library", () => {
       "Pagination", "Controller Switch", "LED Light", "Icon Rail Control", "Hover Card",
       "Meter", "Avatar", "Name Value List", "Breadcrumb", "Carousel", "Command Palette",
       "Metric Strip", "Horizontal Scrollbar", "Vertical Scrollbar", "Data Stats Module",
-      "Upload Frame", "Vault Landscape Asset", "Vault Portrait Asset", "Vault Audio Asset",
-      "Vault Document Asset", "Tree View", "Disabled Button", "Disabled Split Button",
+      "Upload Frame", "Vault Landscape Asset", "Vault Landscape Swapped Asset", "Vault Portrait Asset",
+      "Vault Portrait Double Asset", "Vault Audio Asset", "Vault Document Asset", "Tree View", "Disabled Button", "Disabled Split Button",
       "Two Color Data Stats", "Monochrome Data Stats", "Tiny Data Stats", "Tooltip Dark",
       "Tooltip Color", "Dashboard Pill Tags", "Aspect Ratio Frame", "Toolbar",
       "LED Dot", "Loader Progress", "Loader Split", "Loader Orbit", "Loader Bars",
@@ -124,7 +126,7 @@ describe("Toolbox UI Reference Library", () => {
     expect(source).toContain("<SubToolboxScrollbar")
     expect(source).toContain("<SubToolboxDataStats")
     expect(source).toContain("<SubToolboxFileTarget")
-    expect(source).toContain("<SubToolboxVaultAsset")
+    expect(source).toContain("<VaultAssetModule")
     expect(source).toContain("<SubToolboxTree")
     expect(source).toContain("variant=\"dark\"")
     expect(source).toContain("variant=\"color\"")
