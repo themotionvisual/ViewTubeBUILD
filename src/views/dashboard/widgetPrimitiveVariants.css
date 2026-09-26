@@ -632,6 +632,22 @@
 }
 
 
+
+
+/* The reference library demonstrates the canonical primitive palette.
+   Supporting copy is a VT-Ink/widget-color mix, never black/neutral grey. */
+:where(.dashboard-barrier) [data-widget-id="ui-reference-library"] .vt-widget-body,
+:where(.dashboard-barrier) [data-widget-id="ui-reference-library"] .widget-reference-family-title,
+:where(.dashboard-barrier) [data-widget-id="ui-reference-library"] .widget-reference-variant > small {
+  color: var(--vt-ink, #243247);
+}
+
+.widget-reference-family-title small,
+.widget-reference-variant > small {
+  color: color-mix(in srgb, var(--vt-ink, #243247) 68%, var(--widget-color, #34cdea));
+  opacity: 1;
+}
+
 .widget-reference-header-controls {
   min-width: 0;
   max-width: 100%;
