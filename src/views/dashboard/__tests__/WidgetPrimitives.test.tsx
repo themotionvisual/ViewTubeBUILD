@@ -645,6 +645,13 @@ describe("video selector overlay geometry", () => {
     expect(videoSelectCss).toContain("z-index: 9999")
   })
 
+  it("keeps the UI Reference title room by hiding only secondary palette navigation on phones", () => {
+    expect(exactHeightsCss).not.toContain(".widget-reference-header-controls > .widget-header-toggle:first-child { display:none; }")
+    expect(variantsCss).toContain(".widget-reference-header-controls > .widget-header-toggle:first-child")
+    expect(variantsCss).toContain(".widget-reference-header-controls > .widget-header-toggle:last-child")
+    expect(variantsCss).toContain("display: none;")
+  })
+
   it("gives video labels and chevrons enough room at the standard heights", () => {
     expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 12px")
     expect(variantsCss).toContain("is-height-38 .widget-video-select-option-copy strong {")
