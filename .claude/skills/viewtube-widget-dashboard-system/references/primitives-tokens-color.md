@@ -103,6 +103,7 @@ The production primitive system should own reusable families including:
 - tooltips;
 - popovers/disclosures;
 - state panels;
+- preview-state wrappers;
 - toast/alert components;
 - upload/media frames;
 - scroll areas;
@@ -175,6 +176,21 @@ Resizable textareas should preserve the native/custom bottom-right diagonal resi
 Do not disable resize simply to make a screenshot align.
 
 The initial layout still must satisfy composition equations.
+
+
+## Preview-state color and truth contract
+
+`WidgetPreviewState` is a canonical compound state, not a decorative empty card.
+
+- use the widget's assigned spectrum color for tint/shadow;
+- use ViewTube Ink for text, glyphs and structural stroke;
+- identify generic content visibly as PREVIEW / EXAMPLE / SAMPLE ONLY;
+- keep sample fixtures outside production data stores;
+- never imply sample analytics/revenue/comments/advice belong to the connected creator;
+- keep loading, stale, blocked and error states separate;
+- when an empty creation form is itself usable, do not replace it with a preview.
+
+The UI Reference Library must include the real preview primitive and at least one production consumer must use it before the pattern is considered canonical.
 
 ## Color system
 
