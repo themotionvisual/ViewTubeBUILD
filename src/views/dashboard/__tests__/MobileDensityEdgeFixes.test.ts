@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import { overviewSlices } from "../widgets/channelOverviewChartData"
 
 const mobile = readFileSync(new URL("../widgetMobileContract.css", import.meta.url), "utf8")
+const shellCss = readFileSync(new URL("../widgetShellOwnership.css", import.meta.url), "utf8")
 const scrollbar = readFileSync(new URL("../widgetScrollbar.css", import.meta.url), "utf8")
 const about = readFileSync(new URL("../widgets/VerificationExplainerWidget.css", import.meta.url), "utf8")
 const oracle = readFileSync(new URL("../widgets/DailyOracleWidget.css", import.meta.url), "utf8")
@@ -34,7 +35,7 @@ describe("mobile widget density and edge contracts", () => {
   it("removes legacy horizontal clipping that chops full-bleed bands, glows and shadows", () => {
     expect(legacy).not.toContain("overflow-x: hidden !important")
     expect(mobile).toContain("--vt-widget-edge-safe")
-    expect(mobile).toContain(".vt-widget-shadow-safe")
+    expect(shellCss).toContain(".vt-widget-shadow-safe")
   })
 
   it("uses one canonical full-bleed owner for About and Oracle bands", () => {
@@ -61,11 +62,12 @@ describe("mobile widget density and edge contracts", () => {
     expect(shellSource).toContain("mobileControlsOpen")
   })
 
-  it("provides a full-bleed utility for bands and horizontal rails", () => {
-    expect(mobile).toContain(".vt-widget-full-bleed")
-    expect(mobile).toContain(".widget-section.is-full")
+  it("provides one canonical shell-owned full-bleed utility for bands and horizontal rails", () => {
+    expect(shellCss).toContain(".vt-full-bleed")
+    expect(shellCss).toContain(".vt-widget-zone-full")
+    expect(shellCss).toContain("grid-column:full-start / full-end")
+    expect(mobile).not.toContain(".vt-widget-full-bleed")
     expect(assetCss).toContain("vt-asset-engine-slot-panel")
-    expect(assetCss).toContain("margin-inline:calc(-1 * (var(--widget-content-inset) + var(--widget-shadow-clearance)))")
   })
 
   it("keeps Publishing Command full width and compact", () => {
