@@ -33,6 +33,9 @@ import {
   WidgetSizedButton,
   WidgetSizedSelect,
   WidgetVideoSelect,
+  WidgetVideoMiniCard,
+  WidgetSplitCounterBadge,
+  WidgetSpeechBubble,
   WidgetStepper,
   WidgetSplitCounter,
   WidgetTinySpectrumIcon,
@@ -49,6 +52,7 @@ import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
 import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"
 
 const variantsCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
+const widgetSystemCss = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
 const matrixCss = readFileSync(new URL("../widgetMatrixPrimitives.css", import.meta.url), "utf8")
 const tonesCss = readFileSync(new URL("../widgetPrimitiveTones.css", import.meta.url), "utf8")
 const videoSelectCss = readFileSync(new URL("../widgetVideoSelectButtonScroll.css", import.meta.url), "utf8")
@@ -274,11 +278,13 @@ describe("shared widget form primitives", () => {
       />,
     )
 
-    expect(markup).toContain('class="widget-header-toggle"')
+    expect(markup).toContain('class="widget-header-toggle is-intrinsic"')
     expect(markup).toContain('class="widget-header-toggle-indicator"')
-    expect(markup).toContain('--widget-header-toggle-index:0')
-    expect(markup).toContain('--widget-header-toggle-count:2')
+    expect(markup).toContain('data-active-index="0"')
     expect(markup).toContain('aria-pressed="true"')
+    expect(widgetSystemCss).toContain("--widget-header-toggle-active-width")
+    expect(widgetSystemCss).toContain("--widget-header-toggle-active-left")
+    expect(widgetSystemCss).toContain("transition: transform 180ms")
     expect(markup).toContain("48 hr")
     expect(markup).toContain("60 mn")
   })
@@ -326,6 +332,7 @@ describe("shared widget form primitives", () => {
     )
 
     expect(markup).toContain("widget-split-button is-primary is-large is-wide")
+    expect(renderToStaticMarkup(<WidgetSplitButton icon={<span>Icon</span>} multiline>Suggest video</WidgetSplitButton>)).toContain("is-multiline")
     expect(markup).toContain('role="switch"')
     expect(markup).toContain('aria-label="Remove Analytics tag"')
     expect(markup).toContain('role="tooltip"')
@@ -563,6 +570,65 @@ describe("expanded widget compound primitives", () => {
         options={[{ value: "v1", label: "Long title", meta: "12:42 · 48,230 views" }]}
       />,
     )).toContain("is-height-38")
+    expect(variantsCss).toContain("--widget-video-split-bay: var(--vt-primitive-height")
+    expect(extensionSource).toContain("is-drop-up")
+    expect(variantsCss).toContain(".widget-video-select.is-drop-up .widget-video-select-menu")
+  })
+})
+
+describe("split-left selected tone anatomy", () => {
+  it("keeps the icon bay stronger than the selected label bay", () => {
+    expect(tonesCss).toContain(".widget-split-button.is-left-split.vt-sized-control.is-tone-primary")
+    expect(tonesCss).toContain("28%, white")
+    expect(tonesCss).toContain(".widget-split-button.is-left-split.vt-sized-control.is-tone-primary .widget-split-button-icon")
+    expect(tonesCss).toContain("background: var(--widget-color")
+  })
+})
+
+describe("toolbox upload frame contract", () => {
+  it("uses solid split-rail upload frames and retires dashed legacy frames", () => {
+    expect(widgetSystemCss).toContain(".widget-media-upload-frame")
+    expect(widgetSystemCss).toContain("grid-template-columns: 52px minmax(0, 1fr)")
+    expect(widgetSystemCss).toContain(".widget-media-upload-icon")
+    expect(widgetSystemCss).not.toContain("border: var(--widget-module-stroke) dashed var(--widget-border)")
+  })
+})
+
+describe("comment responder donor primitives", () => {
+  it("exposes the video mini-card, split counter badge and speech bubble through the shared surface", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <WidgetVideoMiniCard title="Napoleon's Last Great Victory" thumbnail="/thumb.jpg" meta="12:42" />
+        <WidgetSplitCounterBadge icon={<span>Like</span>} value={12} label="12 likes" />
+        <WidgetSpeechBubble>Big supporter of the channel.</WidgetSpeechBubble>
+      </div>,
+    )
+    expect(markup).toContain("widget-video-mini-card")
+    expect(markup).toContain("widget-split-counter-badge")
+    expect(markup).toContain("widget-speech-bubble")
+    expect(referenceSource).toContain("WidgetVideoMiniCard")
+    expect(referenceSource).toContain("WidgetSplitCounterBadge")
+    expect(referenceSource).toContain("WidgetSpeechBubble")
+  })
+})
+
+describe("video selector overlay geometry", () => {
+  it("uses a square selector bay and a portalled fixed-position menu", () => {
+    expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height")
+    expect(variantsCss).not.toContain("--widget-video-split-bay: 40px")
+    expect(variantsCss).not.toContain("--widget-video-split-bay: 48px")
+    expect(variantsCss).not.toContain("--widget-video-split-bay: 54px")
+    expect(extensionSource).toContain("createPortal")
+    expect(extensionSource).toContain("widget-video-select-menu is-portalled")
+    expect(videoSelectCss).toContain(".widget-video-select-menu.is-portalled")
+    expect(videoSelectCss).toContain("position: fixed")
+    expect(videoSelectCss).toContain("z-index: 9999")
+  })
+
+  it("gives video labels and chevrons enough room at the standard heights", () => {
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 12px")
+    expect(variantsCss).toContain("is-height-38 .widget-video-select-option-copy strong {")
+    expect(variantsCss).toContain("font-size: 14px")
   })
 })
 
