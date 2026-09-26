@@ -96,7 +96,7 @@
 
 - audited main: `fbc7d25c71fa89c312da32280d9f77182065b42a`
 - branch: `feat/ai-systems-governance-mainline-2026-09-26`
-- authority records: 27
+- authority records: 41
 - broken source refs: 0
 - governance commands present: 3
 - Herald work projection: read-only
