@@ -17,15 +17,13 @@ import {
  Trash2,
 } from "lucide-react"
 import {
- StandardInput,
- StandardTextArea,
  SubToolbox,
  SubToolboxDropdownControl,
  SubToolboxGridActionButton,
  ToolboxScaffold,
 } from "../components/Toolbox"
 import { PostActionReflection } from "../components/PostActionReflection"
-import { SubToolboxButton } from "../components/subtoolbox/SubToolboxPrimitives"
+import { SubToolboxButton, SubToolboxInput, SubToolboxTextArea } from "../components/subtoolbox/SubToolboxPrimitives"
 import { formatClock } from "../services/scriptBudget"
 import {
  FRAGMENT_MODES,
@@ -69,8 +67,6 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
    title="SCRIPT ARCHITECT"
    subtitle="Give it a spark or give it everything — assembles a timed script, visuals + priming shorts"
    icon={<NotebookPen size={40} strokeWidth={3} className="text-black" />}
-   headerColor="bg-[#00F0FF]"
-   iconBoxColor="bg-[#CCFF00]"
    paletteIndex={paletteIndex}
    collapsible={collapsible}
    isOpen={isOpen}
@@ -95,12 +91,11 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
       <div className="space-y-3">
        <div className="flex gap-2">
         <div className="flex-1 min-w-0">
-         <StandardInput
+         <SubToolboxInput
           aria-label="Draft name"
           value={architect.draftName}
           onChange={(event) => architect.setDraftName(event.target.value)}
           placeholder="NAME THIS SCRIPT…"
-          minHeight="48px"
          />
         </div>
         <SubToolboxButton level="l1"
@@ -159,7 +154,7 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
         <label htmlFor="sa-topic" className={fieldLabel}>
          Topic
         </label>
-        <StandardInput
+        <SubToolboxInput
          id="sa-topic"
          name="scriptTopic"
          value={project.topic}
@@ -172,7 +167,7 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
         <label htmlFor="sa-angle" className={fieldLabel}>
          Angle
         </label>
-        <StandardInput
+        <SubToolboxInput
          id="sa-angle"
          name="scriptAngle"
          value={project.angle || ""}
@@ -186,7 +181,7 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
          <label htmlFor="sa-niche" className={fieldLabel}>
           Channel niche
          </label>
-         <StandardInput
+         <SubToolboxInput
           id="sa-niche"
           name="scriptNiche"
           value={project.niche || ""}
@@ -199,7 +194,7 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
          <label htmlFor="sa-audience" className={fieldLabel}>
           Ideal audience
          </label>
-         <StandardInput
+         <SubToolboxInput
           id="sa-audience"
           name="scriptAudience"
           value={project.audience || ""}
@@ -325,12 +320,11 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
            {String(index + 1).padStart(2, "0")}
           </span>
           <div className="flex-1 min-w-0">
-           <StandardInput
+           <SubToolboxInput
             aria-label={`Chapter ${index + 1} name`}
             value={chapter.name}
             onChange={(event) => architect.updateChapter(chapter.id, { name: event.target.value })}
             placeholder={`CHAPTER ${index + 1} NAME…`}
-            minHeight="48px"
            />
           </div>
           <SubToolboxButton level="l1"
@@ -359,18 +353,17 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
          </div>
          <div className="grid grid-cols-[1fr_88px] gap-2">
           <div className="min-w-0">
-           <StandardInput
+           <SubToolboxInput
             aria-label={`Chapter ${index + 1} description`}
             value={chapter.description}
             onChange={(event) =>
              architect.updateChapter(chapter.id, { description: event.target.value })
             }
             placeholder="WHAT THIS CHAPTER COVERS…"
-            minHeight="48px"
            />
           </div>
           <div className="min-w-0">
-           <StandardInput
+           <SubToolboxInput
             aria-label={`Chapter ${index + 1} runtime weight`}
             title="Runtime weight — how much of the body this chapter deserves"
             type="number"
@@ -380,7 +373,6 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
             onChange={(event) =>
              architect.updateChapter(chapter.id, { weight: Number(event.target.value) || 1 })
             }
-            minHeight="48px"
             className="text-center"
            />
           </div>
@@ -416,13 +408,12 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
         <div key={reference.id} className="border-[3px] border-black rounded-xl p-3 bg-white space-y-2">
          <div className="flex gap-2">
           <div className="flex-1 min-w-0">
-           <StandardInput
+           <SubToolboxInput
             aria-label={`Reference ${index + 1} link`}
             type="url"
             value={reference.url || ""}
             onChange={(event) => architect.updateReference(reference.id, { url: event.target.value })}
             placeholder="HTTPS://…"
-            minHeight="48px"
            />
           </div>
           <SubToolboxButton level="l1"
@@ -433,12 +424,12 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
            <Trash2 size={14} strokeWidth={3} />
           </SubToolboxButton>
          </div>
-         <StandardTextArea
+         <SubToolboxTextArea
           aria-label={`Reference ${index + 1} note`}
           value={reference.note || ""}
           onChange={(event) => architect.updateReference(reference.id, { note: event.target.value })}
           placeholder="PASTED NOTES, QUOTES, OR FACTS FROM THIS SOURCE…"
-          minHeight="70px"
+          height="compact"
          />
         </div>
        ))}
@@ -468,12 +459,11 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
          <div
           className={`flex items-center gap-2 p-2 border-b-[3px] border-black ${FRAGMENT_TONE[fragment.mode]}`}>
           <div className="flex-1 min-w-0">
-           <StandardInput
+           <SubToolboxInput
             aria-label={`Piece ${index + 1} label`}
             value={fragment.label}
             onChange={(event) => architect.updateFragment(fragment.id, { label: event.target.value })}
             placeholder={`PIECE ${index + 1} — E.G. COLD OPEN`}
-            minHeight="48px"
            />
           </div>
           <SubToolboxButton level="l1"
@@ -500,12 +490,12 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
             </SubToolboxButton>
            ))}
           </div>
-          <StandardTextArea
+          <SubToolboxTextArea
            aria-label={`Piece ${index + 1} text`}
            value={fragment.text}
            onChange={(event) => architect.updateFragment(fragment.id, { text: event.target.value })}
            placeholder="PASTE THE LINES YOU ALREADY WROTE…"
-           minHeight="90px"
+           height="standard"
           />
           <SubToolboxDropdownControl
            label="Pin to section"
@@ -849,7 +839,7 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
                </span>
               )}
              </div>
-             <StandardTextArea
+             <SubToolboxTextArea
               aria-label={`${section.label} script`}
               value={section.script}
               onChange={(event) =>
@@ -857,6 +847,7 @@ const ScriptArchitect: React.FC<ScriptArchitectProps> = ({
               }
               placeholder="No copy returned for this section…"
               className="mt-2"
+              height="standard"
               // Script prose is the one field meant to be read, so it opts out
               // of the standard field's uppercase transform. Inline style is
               // required: the shared rule outranks a utility class.
