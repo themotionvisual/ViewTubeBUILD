@@ -16,8 +16,8 @@ export type GuideSection = {
   tools: GuideToolEntry[]
 }
 
-export const GUIDE_PROTOCOL_VERSION = "v2.3"
-export const GUIDE_LAST_UPDATED = "2026-07-28"
+export const GUIDE_PROTOCOL_VERSION = "v2.4"
+export const GUIDE_LAST_UPDATED = "2026-09-26"
 
 export const userGuideSections: GuideSection[] = [
   {
@@ -31,19 +31,21 @@ export const userGuideSections: GuideSection[] = [
         toolName: "Widget Dashboard",
         routeRef: "/",
         whatItDoes:
-          "A grid of independent widgets — Channel Overview, Community Post, Comment Responder, Upload Cadence, Realtime, Goals Tracker, Keyword Engine, Daily Oracle, Ask Me, AI Journal, and more — each pulling from your synced channel data. You can rearrange, resize, hide, and re-add widgets to match how you actually work.",
+          "A grid of independent creator widgets plus a compact Settings control switchboard. Widgets use real synced data when available; disconnected or empty tools can show clearly labeled PREVIEW/EXAMPLE states so you can see what the tool does without mistaking sample values for your channel. You can rearrange, resize, hide, restore, preset, and lock the layout from the Dashboard or its Settings widget.",
         howToSteps: [
-          "Connect your channel and run a sync so widgets have real data instead of placeholders.",
-          "Open Widget Options from the account menu to toggle which widgets are visible.",
-          "Enable Rearrange Widgets to drag widgets into a new order or resize them, then lock the layout when you're happy with it.",
+          "Use the Settings widget's DASHBOARD page to manage widgets, apply Focus / Creation / Analytics / All presets, toggle Dashboard Controls, or lock the layout.",
+          "Open the Settings widget's DATA page to connect or sync your channel. A PREVIEW label means the visible example is generic, not your channel data.",
+          "Use the AI and ACCOUNT pages for Brain configuration handoff, account, billing, and the full User Guide. Deeper options still open the full Settings pages.",
         ],
         troubleshooting: [
-          "If a widget shows zeros or an empty state, you haven't synced yet, or that widget's data category isn't selected in Analytics.",
-          "If the layout looks wrong after an update, use Reset Layout from Widget Options to restore the default arrangement.",
+          "If a widget is labeled PREVIEW or EXAMPLE, connect/sync the required source to replace generic demonstration content with your data.",
+          "If Settings reports STALE, NEVER SYNCED, or ERROR, use its DATA page to sync again and read the source-health detail before troubleshooting elsewhere.",
+          "If the layout looks wrong after an update, use the guarded Reset Layout action in the Settings widget or full Dashboard Settings.",
         ],
         qaChecks: [
-          "Channel Overview shows your real avatar, channel name, and stats once synced.",
-          "Dragging a widget in edit mode persists its new position after a refresh.",
+          "Disconnected Opportunity Radar, Comment Responder, and Revenue Tracker show clearly labeled generic previews rather than unlabeled fake values.",
+          "Settings exposes Dashboard / Data / AI / Account pages and keeps its header readable on phone widths.",
+          "Dragging/resizing a widget in edit mode persists after refresh, while Layout Lock prevents accidental changes.",
         ],
       },
     ],
