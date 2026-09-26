@@ -77,7 +77,7 @@ describe("Settings dashboard control switchboard", () => {
     expect(css).toContain("@container vt-widget (min-width:761px)")
     expect(css).toContain(".settings-switchboard-preview-grid")
     expect(css).toContain(".settings-switchboard-issue")
-    expect(css).toContain("min-width:86px")
+    expect(css).toContain("min-width:78px")
     expect(css).toContain("font-size:8px")
   })
 
