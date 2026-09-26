@@ -1,0 +1,268 @@
+{
+  "schemaVersion": 1,
+  "productionDate": "2026-09-26",
+  "lastEdited": "2026-09-26",
+  "migrationState": "phase-a-b-active-side-by-side",
+  "authorityRule": "One primary authority per bounded concern. Current executable evidence verifies implementation; registry metadata determines documentation role.",
+  "entries": [
+    {
+      "id": "DOC-GOV-DOCUMENTATION",
+      "path": "docs/governance/DOCUMENTATION.md",
+      "class": "CONSTITUTION",
+      "status": "ACTIVE",
+      "concern": "documentation-governance",
+      "owner": "Documentation Governance",
+      "productionDate": "2026-09-26",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": "ee02fdbd1af2be30e81de7955dad188999a03ac4",
+      "supersedes": [
+        "docs/DOCUMENTATION_GOVERNANCE.md"
+      ],
+      "relatedAuthorities": [
+        "docs/registry.json"
+      ]
+    },
+    {
+      "id": "DOC-GOV-VERIFICATION",
+      "path": "docs/governance/VERIFICATION.md",
+      "class": "CONSTITUTION",
+      "status": "ACTIVE",
+      "concern": "verification-completion",
+      "owner": "Verification",
+      "productionDate": "2026-09-26",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": "ee02fdbd1af2be30e81de7955dad188999a03ac4",
+      "supersedes": [],
+      "relatedAuthorities": [
+        "docs/governance/DOCUMENTATION.md"
+      ]
+    },
+    {
+      "id": "DOC-GOV-WORK-OBJECTS",
+      "path": "docs/governance/WORK_OBJECTS.md",
+      "class": "SPECIFICATION",
+      "status": "ACTIVE",
+      "concern": "work-object-relations",
+      "owner": "Documentation Governance + Task Authority",
+      "productionDate": "2026-09-26",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": "ee02fdbd1af2be30e81de7955dad188999a03ac4",
+      "supersedes": [],
+      "relatedAuthorities": [
+        "docs/governance/DOCUMENTATION.md"
+      ]
+    },
+    {
+      "id": "DOC-ARCH-COMPLETION",
+      "path": "docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md",
+      "class": "CONSTITUTION",
+      "status": "ACTIVE",
+      "concern": "product-completion",
+      "owner": "Product Completion",
+      "productionDate": "2026-09-26",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": "ee02fdbd1af2be30e81de7955dad188999a03ac4",
+      "supersedes": [
+        "docs/architecture/VIEWTUBE_ONE_GOAL_COMPLETION_OPERATING_SYSTEM.md"
+      ],
+      "relatedAuthorities": [
+        "docs/architecture/PRODUCT_ARCHITECTURE.md",
+        "docs/programs/INTEGRATED_APPLICATION.md"
+      ]
+    },
+    {
+      "id": "DOC-ARCH-PRODUCT",
+      "path": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+      "class": "PRODUCT_ARCHITECTURE",
+      "status": "ACTIVE",
+      "concern": "product-capability-topology",
+      "owner": "Product Architecture",
+      "productionDate": "2026-09-26",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": "ee02fdbd1af2be30e81de7955dad188999a03ac4",
+      "supersedes": [
+        "docs/architecture/VIEWTUBE_MASTER_PRODUCT_TOOLS_WORKSTATION_ARCHITECTURE.md"
+      ],
+      "relatedAuthorities": [
+        "docs/architecture/capabilities.json"
+      ]
+    },
+    {
+      "id": "DOC-PROGRAM-INTEGRATED",
+      "path": "docs/programs/INTEGRATED_APPLICATION.md",
+      "class": "PROGRAM",
+      "status": "ACTIVE",
+      "concern": "application-integration-program",
+      "owner": "Integrated Application Program",
+      "productionDate": "2026-09-26",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": "ee02fdbd1af2be30e81de7955dad188999a03ac4",
+      "supersedes": [
+        "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md"
+      ],
+      "relatedAuthorities": [
+        "docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md",
+        "docs/architecture/PRODUCT_ARCHITECTURE.md"
+      ]
+    },
+    {
+      "id": "DOC-GOV-CROWN",
+      "path": "docs/architecture/VIEWTUBE_CROWN_INTEGRATION_SYSTEM.md",
+      "class": "CONSTITUTION",
+      "status": "MIGRATING",
+      "concern": "multi-agent-mission-coordination",
+      "owner": "Crown",
+      "productionDate": "2026-09-11",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": null,
+      "supersedes": [],
+      "relatedAuthorities": [
+        "docs/governance/DOCUMENTATION.md"
+      ]
+    },
+    {
+      "id": "DOC-DOMAIN-ANALYTICS",
+      "path": "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md",
+      "class": "DOMAIN_AUTHORITY",
+      "status": "ACTIVE",
+      "concern": "analytics-vt-sync",
+      "owner": "VT-SYNC + analytics-canon",
+      "productionDate": "2026-09-24",
+      "lastEdited": "2026-09-24",
+      "lastAuditedMainSha": "0c4610629bfba98ffc0703a42e422352d5f31514",
+      "supersedes": [],
+      "relatedAuthorities": []
+    },
+    {
+      "id": "DOC-DOMAIN-PROJECTS",
+      "path": "docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md",
+      "class": "DOMAIN_AUTHORITY",
+      "status": "ACTIVE",
+      "concern": "projects-contentbuild",
+      "owner": "Projects + ContentBuild",
+      "productionDate": "2026-09-22",
+      "lastEdited": "2026-09-24",
+      "lastAuditedMainSha": "c7d9f55268af61569fdba9c2afab256a5cfbf6ff",
+      "supersedes": [],
+      "relatedAuthorities": [
+        "docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md"
+      ]
+    },
+    {
+      "id": "DOC-DOMAIN-ASSET",
+      "path": "docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md",
+      "class": "DOMAIN_AUTHORITY",
+      "status": "ACTIVE",
+      "concern": "asset-engine",
+      "owner": "Asset Engine",
+      "productionDate": "2026-09-20",
+      "lastEdited": "2026-09-24",
+      "lastAuditedMainSha": "c7d9f55268af61569fdba9c2afab256a5cfbf6ff",
+      "supersedes": [],
+      "relatedAuthorities": [
+        "docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md"
+      ]
+    },
+    {
+      "id": "DOC-DOMAIN-TOOLBOX",
+      "path": "docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md",
+      "class": "DOMAIN_AUTHORITY",
+      "status": "ACTIVE",
+      "concern": "toolbox-ui",
+      "owner": "Toolbox UI",
+      "productionDate": "2026-09-14",
+      "lastEdited": "2026-09-25",
+      "lastAuditedMainSha": "3d9bb8fe26c4cc1419695715bd9c86ac3243b390",
+      "supersedes": [],
+      "relatedAuthorities": []
+    },
+    {
+      "id": "DOC-DOMAIN-WIDGETS",
+      "path": "docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md",
+      "class": "DOMAIN_AUTHORITY",
+      "status": "ACTIVE",
+      "concern": "widgets-dashboard",
+      "owner": "Dashboard Widget System",
+      "productionDate": "2026-09-25",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": "cf67573c2ce8eee58f5a63f7d2ae547e165ff3c8",
+      "supersedes": [],
+      "relatedAuthorities": []
+    },
+    {
+      "id": "DOC-DOMAIN-EDITOR",
+      "path": "docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md",
+      "class": "DOMAIN_AUTHORITY",
+      "status": "ACTIVE",
+      "concern": "editor",
+      "owner": "Editor",
+      "productionDate": "2026-09-24",
+      "lastEdited": "2026-09-24",
+      "lastAuditedMainSha": "56e2c0c03f83a168bf385dd2f71d32bc87166d08",
+      "supersedes": [],
+      "relatedAuthorities": []
+    },
+    {
+      "id": "DOC-DOMAIN-BRAIN",
+      "path": "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md",
+      "class": "DOMAIN_AUTHORITY",
+      "status": "MIGRATING",
+      "concern": "brain-runtime",
+      "owner": "BrainRuntime",
+      "productionDate": "2026-09-17",
+      "lastEdited": "2026-09-24",
+      "lastAuditedMainSha": "6e5df12c2f0d3d3f8d2d1ca88e6fe2b87ce366dc",
+      "supersedes": [],
+      "relatedAuthorities": [
+        "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
+      ]
+    },
+    {
+      "id": "DOC-DOMAIN-AUTH",
+      "path": "docs/architecture/SIMPLE_AUTH_V1.md",
+      "class": "DOMAIN_AUTHORITY",
+      "status": "ACTIVE",
+      "concern": "auth-session",
+      "owner": "Simple Auth",
+      "productionDate": "2026-09-24",
+      "lastEdited": "2026-09-24",
+      "lastAuditedMainSha": null,
+      "supersedes": [
+        "docs/architecture/YOUTUBE_AUTH_API_SIMPLIFICATION_PLAN.md"
+      ],
+      "relatedAuthorities": []
+    }
+  ],
+  "legacyGlobalSources": [
+    {
+      "path": "docs/DOCUMENTATION_GOVERNANCE.md",
+      "status": "SUPERSEDED",
+      "supersededBy": "DOC-GOV-DOCUMENTATION",
+      "archiveState": "PENDING"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_ONE_GOAL_COMPLETION_OPERATING_SYSTEM.md",
+      "status": "SUPERSEDED",
+      "supersededBy": "DOC-ARCH-COMPLETION",
+      "archiveState": "PENDING"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_MASTER_PRODUCT_TOOLS_WORKSTATION_ARCHITECTURE.md",
+      "status": "SUPERSEDED",
+      "supersededBy": "DOC-ARCH-PRODUCT",
+      "archiveState": "PENDING"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md",
+      "status": "SUPERSEDED",
+      "supersededBy": "DOC-PROGRAM-INTEGRATED",
+      "archiveState": "PENDING"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_SYSTEM_CONVERGENCE_AND_CONSOLIDATION.md",
+      "status": "DONOR",
+      "supersededBy": "DOC-ARCH-PRODUCT",
+      "archiveState": "ACTIVE_DONOR_UNTIL_PROGRAM_MIGRATION"
+    }
+  ]
+}
