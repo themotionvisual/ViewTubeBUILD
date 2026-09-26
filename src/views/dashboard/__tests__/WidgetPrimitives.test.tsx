@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs"
 import React from "react"
+import { Check, Plus } from "lucide-react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import {
@@ -32,10 +33,13 @@ import {
   WidgetIconButton,
   WidgetSizedButton,
   WidgetSizedSelect,
+  WidgetSpectrumFillBadge,
   WidgetVideoSelect,
   WidgetVideoMiniCard,
+  WidgetMediaUploadFrame,
   WidgetSplitCounterBadge,
   WidgetSpeechBubble,
+  WidgetDataGrid,
   WidgetStepper,
   WidgetSplitCounter,
   WidgetTinySpectrumIcon,
@@ -55,6 +59,7 @@ const variantsCss = readFileSync(new URL("../widgetPrimitiveVariants.css", impor
 const exactHeightsCss = readFileSync(new URL("../widgetPrimitiveExactHeights.css", import.meta.url), "utf8")
 const widgetSystemCss = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
 const matrixCss = readFileSync(new URL("../widgetMatrixPrimitives.css", import.meta.url), "utf8")
+const compoundCss = readFileSync(new URL("../widgetCompoundPrimitives.css", import.meta.url), "utf8")
 const tonesCss = readFileSync(new URL("../widgetPrimitiveTones.css", import.meta.url), "utf8")
 const videoSelectCss = readFileSync(new URL("../widgetVideoSelectButtonScroll.css", import.meta.url), "utf8")
 const extensionSource = readFileSync(new URL("../WidgetPrimitiveExtensions.tsx", import.meta.url), "utf8")
@@ -632,6 +637,33 @@ describe("comment responder donor primitives", () => {
   })
 })
 
+describe("reference-library interaction recovery contracts", () => {
+  it("keeps split-left rails square at every non-micro canonical size", () => {
+    expect(variantsCss).toContain("grid-template-columns: var(--vt-primitive-height, 32px) minmax(0, 1fr)")
+    expect(variantsCss).toContain("width: var(--vt-primitive-height, 32px)")
+    expect(variantsCss).not.toContain("calc(var(--vt-primitive-height, 32px) * 1.16)")
+  })
+
+  it("restores an external palette focus glow on canonical text inputs", () => {
+    expect(variantsCss).toContain(".widget-text-input.vt-sized-control:focus-visible")
+    expect(variantsCss).toContain("box-shadow: 0 0 0")
+    expect(variantsCss).toContain("color-mix(in srgb, var(--widget-color")
+  })
+
+  it("offers small and large toolbox media upload presentations from one primitive", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <WidgetMediaUploadFrame size="small" icon={<Plus />} title="Small upload" detail="Drop media" onBrowse={() => {}} />
+        <WidgetMediaUploadFrame size="large" icon={<Plus />} title="Large upload" detail="Drop media" onBrowse={() => {}} />
+      </div>,
+    )
+    expect(markup).toContain("is-size-small")
+    expect(markup).toContain("is-size-large")
+    expect(referenceSource).toContain('size="small"')
+    expect(referenceSource).toContain('size="large"')
+  })
+})
+
 describe("reference-library video module and full-width primitive sizing", () => {
   it("offers compact, standard, and large video mini modules from one canonical primitive", () => {
     const markup = renderToStaticMarkup(
@@ -667,6 +699,63 @@ describe("reference-library video module and full-width primitive sizing", () =>
   })
 })
 
+describe("reference library recovery completion", () => {
+  it("uses the approved family order and retires Navigation plus Metrics/States as standalone pages", () => {
+    expect(referenceSource).toContain('{ id: "header", label: "HEADER CONTROLS" }')
+    expect(referenceSource).not.toContain('{ id: "navigation", label: "NAV" }')
+    expect(referenceSource).not.toContain('{ id: "states", label: "STATES" }')
+    expect(referenceSource).toContain('activeCategory === "header"')
+    expect(referenceSource).not.toContain('activeCategory === "navigation"')
+    expect(referenceSource).not.toContain('activeCategory === "states"')
+  })
+
+  it("supports spectrum icon presentations at every canonical size tier", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <WidgetTinySpectrumIcon name="video" spectrum="cyan" height={18} />
+        <WidgetTinySpectrumIcon name="video" spectrum="cyan" height={24} />
+        <WidgetTinySpectrumIcon name="video" spectrum="cyan" height={32} />
+        <WidgetTinySpectrumIcon name="video" spectrum="cyan" height={38} />
+      </div>,
+    )
+    expect(markup).toContain("is-height-18")
+    expect(markup).toContain("is-height-24")
+    expect(markup).toContain("is-height-32")
+    expect(markup).toContain("is-height-38")
+    expect(referenceSource).toContain('familyHeading("Spectrum Icon Sizes"')
+  })
+
+  it("supports full-width canonical spectrum and split badges", () => {
+    expect(renderToStaticMarkup(<WidgetSpectrumFillBadge spectrum="cyan" height={24} width="full">Full</WidgetSpectrumFillBadge>)).toContain("is-width-full")
+    expect(renderToStaticMarkup(<WidgetLeftSplitBadge spectrum="cyan" height={32} width="full" icon={<Check />}>Full</WidgetLeftSplitBadge>)).toContain("is-width-full")
+    expect(matrixCss).toContain(".widget-spectrum-fill-badge.is-width-full")
+    expect(matrixCss).toContain(".widget-split-badge.is-width-full")
+    expect(matrixCss).toContain("grid-column:full-start / full-end")
+  })
+
+  it("lets the video menu expand beyond a narrow trigger while remaining viewport bounded", () => {
+    expect(extensionSource).toContain("VIDEO_MENU_MIN_WIDTH")
+    expect(extensionSource).toContain("Math.max(rect.width, VIDEO_MENU_MIN_WIDTH[height])")
+    expect(extensionSource).toContain("Math.min(preferredWidth, window.innerWidth - 16)")
+  })
+
+  it("offers small and large data-grid density from one canonical primitive", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <WidgetDataGrid size="small" ariaLabel="Small" columns={[{key:"a",label:"A"}]} rows={[{id:"1",cells:{a:"One"}}]} />
+        <WidgetDataGrid size="large" ariaLabel="Large" columns={[{key:"a",label:"A"}]} rows={[{id:"1",cells:{a:"One"}}]} />
+      </div>,
+    )
+    expect(markup).toContain("is-size-small")
+    expect(markup).toContain("is-size-large")
+    expect(compoundCss).toContain(".widget-data-grid.is-size-large")
+    expect(referenceSource).toContain('<WidgetDataGrid size="small"')
+    expect(referenceSource).toContain('<WidgetDataGrid size="large"')
+    expect(compoundCss).toContain(".widget-calendar-day-label")
+    expect(compoundCss).toContain("font-size:13px")
+  })
+})
+
 describe("video selector overlay geometry", () => {
   it("uses a square selector bay and a portalled fixed-position menu", () => {
     expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height")
@@ -678,6 +767,7 @@ describe("video selector overlay geometry", () => {
     expect(videoSelectCss).toContain(".widget-video-select-menu.is-portalled")
     expect(videoSelectCss).toContain("position: fixed")
     expect(videoSelectCss).toContain("z-index: 9999")
+    expect(variantsCss).not.toContain(".vt-widget:has(.widget-video-select.is-open)")
   })
 
   it("keeps the UI Reference title room by hiding only secondary palette navigation on phones", () => {

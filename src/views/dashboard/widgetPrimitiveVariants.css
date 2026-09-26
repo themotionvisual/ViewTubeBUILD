@@ -89,6 +89,7 @@
   outline: none;
   border-color: var(--widget-color, #34cdea) !important;
   background: color-mix(in srgb, var(--widget-color, #fff) 18%, white) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--widget-color, #34cdea) 34%, transparent);
 }
 
 .widget-select-trigger.vt-sized-control:focus-visible,
@@ -129,7 +130,7 @@
 /* Community Post-derived split-left anatomy: a dedicated left action/icon bay. */
 .widget-split-button.is-left-split {
   display: inline-grid;
-  grid-template-columns: calc(var(--vt-primitive-height, 32px) * 1.16) minmax(0, 1fr);
+  grid-template-columns: var(--vt-primitive-height, 32px) minmax(0, 1fr);
   align-items: stretch;
   padding: 0 !important;
   overflow: hidden;
@@ -138,7 +139,7 @@
 }
 
 .widget-split-button.is-left-split .widget-split-button-icon {
-  width: calc(var(--vt-primitive-height, 32px) * 1.16);
+  width: var(--vt-primitive-height, 32px);
   height: 100%;
   display: grid;
   place-items: center;
@@ -532,18 +533,18 @@
   display: none;
 }
 .widget-video-select-menu.is-height-24 .widget-video-select-option-copy strong {
-  font-size: 10px;
+  font-size: 11px;
   -webkit-line-clamp: 2;
 }
 .widget-video-select-menu.is-height-24 .widget-video-select-views {
   display: none;
 }
 .widget-video-select-menu.is-height-32 .widget-video-select-option-copy strong {
-  font-size: 12px;
+  font-size: 13px;
   -webkit-line-clamp: 2;
 }
 .widget-video-select-menu.is-height-38 .widget-video-select-option-copy strong {
-  font-size: 14px;
+  font-size: 15px;
   -webkit-line-clamp: 3;
 }
 
@@ -1114,27 +1115,11 @@
 :where(.dashboard-barrier) :is(.widget-text-input,.widget-text-area):focus-visible{
   border-color:var(--widget-color,#34cdea)!important;
   background:color-mix(in srgb,var(--widget-color,#34cdea) 18%,white)!important;
-  box-shadow:0 0 0 1px var(--widget-color,#34cdea)!important;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb,var(--widget-color,#34cdea) 34%,transparent),
+    0 0 12px color-mix(in srgb,var(--widget-color,#34cdea) 26%,transparent)!important;
   position:relative;
   z-index:2;
 }
 
 
-.widget-video-select.is-open{
-  z-index:1000;
-}
-.widget-video-select.is-drop-up .widget-video-select-menu{
-  top:auto;
-  bottom:calc(100% + 4px);
-}
-:where(.dashboard-barrier) .vt-widget:has(.widget-video-select.is-open){
-  z-index:900;
-}
-:where(.dashboard-barrier) .vt-widget:has(.widget-video-select.is-open) :is(
-  .vt-widget-content,
-  .vt-widget-body,
-  .vt-widget-collapse-inner,
-  .vt-widget-collapse-region
-){
-  overflow:visible !important;
-}

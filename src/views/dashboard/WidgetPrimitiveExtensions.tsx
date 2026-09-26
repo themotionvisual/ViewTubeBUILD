@@ -46,6 +46,7 @@ export const WidgetSplitCounterBadge:React.FC<{icon:React.ReactNode;value:React.
 )
 
 export interface WidgetVideoSelectOption {value:string;label:string;thumbnail?:string;meta?:string;duration?:string;views?:string}
+const VIDEO_MENU_MIN_WIDTH:Record<WidgetControlHeight,number> = {18:220,24:280,32:340,38:420}
 const resolveVideoOptionMeta = (option:WidgetVideoSelectOption) => {
  const parts=String(option.meta||"").split("·").map(part=>part.trim()).filter(Boolean)
  const first=parts[0]||""
@@ -83,7 +84,10 @@ export const WidgetVideoSelect:React.FC<{value:string;onChange:(value:string)=>v
     const value=styles.getPropertyValue(name).trim()
     if(value)theme[name]=value
    }
-   setMenuGeometry({left:Math.max(8,Math.min(rect.left,window.innerWidth-rect.width-8)),top,width:rect.width,maxHeight,placement,theme})
+   const preferredWidth=Math.max(rect.width, VIDEO_MENU_MIN_WIDTH[height])
+   const width=Math.min(preferredWidth, window.innerWidth - 16)
+   const left=Math.max(8,Math.min(rect.left,window.innerWidth-width-8))
+   setMenuGeometry({left,top,width,maxHeight,placement,theme})
   }
   sync()
   window.addEventListener("resize",sync)
@@ -136,11 +140,11 @@ export const WidgetPagination:React.FC<{page:number;pageCount:number;onChange:(p
  * widget's own colour through the tone tokens, which is the existing
  * behaviour and stays the default.
  */
-export const WidgetLeftSplitBadge:React.FC<{icon:React.ReactNode;children:React.ReactNode;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;spectrum?:WidgetBadgeSpectrumName;iconStyle?:WidgetSplitIconStyle;className?:string}> = ({icon,children,height=32,tone="default",spectrum,iconStyle="white-on-color",className=""}) => <span className={`widget-split-badge is-left-split ${primitiveClass(height,tone)} ${spectrum?`is-spectrum-${spectrum}`:""} is-icon-${iconStyle} ${className}`.trim().replace(/\s+/g," ")}><span className="widget-split-badge-icon" aria-hidden="true">{icon}</span><span className="widget-split-badge-label">{children}</span></span>
+export const WidgetLeftSplitBadge:React.FC<{icon:React.ReactNode;children:React.ReactNode;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;spectrum?:WidgetBadgeSpectrumName;iconStyle?:WidgetSplitIconStyle;width?:"auto"|"full";className?:string}> = ({icon,children,height=32,tone="default",spectrum,iconStyle="white-on-color",width="auto",className=""}) => <span className={`widget-split-badge is-left-split is-width-${width} ${primitiveClass(height,tone)} ${spectrum?`is-spectrum-${spectrum}`:""} is-icon-${iconStyle} ${className}`.trim().replace(/\s+/g," ")}><span className="widget-split-badge-icon" aria-hidden="true">{icon}</span><span className="widget-split-badge-label">{children}</span></span>
 export const WidgetSearchInput:React.FC<Omit<React.InputHTMLAttributes<HTMLInputElement>,"type">&{label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;iconStyle?:WidgetSplitIconStyle}> = ({label,height=32,tone="default",iconStyle="white-on-color",className="",...props}) => <label className={`widget-search-input is-left-split ${primitiveClass(height,tone)} is-icon-${iconStyle} ${className}`.trim()}><span className="widget-search-input-icon" aria-hidden="true"><Search strokeWidth={2.5}/></span><span className="vt-visually-hidden">{label}</span><input type="search" aria-label={label} {...props}/></label>
 export const WidgetLiveBadge:React.FC<{children?:React.ReactNode;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;className?:string}> = ({children="Live",height=24,tone="primary",className=""}) => <span className={`widget-live-badge ${primitiveClass(height,tone)} ${className}`.trim()}><span className="widget-live-badge-dot" aria-hidden="true"/><span>{children}</span></span>
 
-export const WidgetSpectrumFillBadge:React.FC<{children:React.ReactNode;spectrum:WidgetBadgeSpectrumName;height?:18|24;className?:string}> = ({children,spectrum,height=24,className=""}) => <span className={`widget-spectrum-fill-badge ${widgetControlHeightClass(height)} is-spectrum-${spectrum} ${className}`.trim()}>{children}</span>
+export const WidgetSpectrumFillBadge:React.FC<{children:React.ReactNode;spectrum:WidgetBadgeSpectrumName;height?:WidgetControlHeight;width?:"auto"|"full";className?:string}> = ({children,spectrum,height=24,width="auto",className=""}) => <span className={`widget-spectrum-fill-badge is-width-${width} ${widgetControlHeightClass(height)} is-spectrum-${spectrum} ${className}`.trim()}>{children}</span>
 export const WidgetToggleSwitch:React.FC<{checked:boolean;onChange:(checked:boolean)=>void;label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;disabled?:boolean;className?:string}> = ({checked,onChange,label,height=24,tone="default",disabled=false,className=""}) => <button type="button" role="switch" aria-checked={checked} aria-label={label} disabled={disabled} className={`widget-toggle-switch ${primitiveClass(height,tone)} ${checked?"is-checked":""} ${className}`.trim()} onClick={()=>onChange(!checked)}><span className="widget-toggle-switch-thumb" aria-hidden="true"/></button>
 export const WidgetRadio:React.FC<{checked:boolean;onChange:()=>void;label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;disabled?:boolean;className?:string}> = ({checked,onChange,label,height=24,tone="default",disabled=false,className=""}) => <button type="button" role="radio" aria-checked={checked} aria-label={label} disabled={disabled} className={`widget-radio vt-shape-round ${primitiveClass(height,tone)} ${checked?"is-checked":""} ${className}`.trim()} onClick={onChange}><span className="widget-radio-dot" aria-hidden="true"/></button>
 export const WidgetCheckbox:React.FC<{checked:boolean;onChange:(checked:boolean)=>void;label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;disabled?:boolean;className?:string}> = ({checked,onChange,label,height=24,tone="default",disabled=false,className=""}) => <button type="button" role="checkbox" aria-checked={checked} aria-label={label} disabled={disabled} className={`widget-checkbox vt-shape-square ${primitiveClass(height,tone)} ${checked?"is-checked":""} ${className}`.trim()} onClick={()=>onChange(!checked)}>{checked?<X aria-hidden="true" strokeLinecap="round" strokeLinejoin="round"/>:null}</button>
@@ -188,10 +192,10 @@ export const WidgetSectionBand:React.FC<{children:React.ReactNode;tone?:WidgetSe
 
 export interface WidgetDataGridColumn {key:string;label:React.ReactNode;width?:string;align?:"start"|"center"|"end"}
 export interface WidgetDataGridRow {id:string;cells:Record<string,React.ReactNode>}
-export const WidgetDataGrid:React.FC<{ariaLabel:string;columns:readonly WidgetDataGridColumn[];rows:readonly WidgetDataGridRow[];minWidth?:number;className?:string}> = ({ariaLabel,columns,rows,minWidth=520,className=""}) => {
+export const WidgetDataGrid:React.FC<{ariaLabel:string;columns:readonly WidgetDataGridColumn[];rows:readonly WidgetDataGridRow[];minWidth?:number;size?:"small"|"large";className?:string}> = ({ariaLabel,columns,rows,minWidth=520,size="small",className=""}) => {
  const template=columns.map(column=>column.width||"minmax(0,1fr)").join(" ")
  return <div className={`widget-data-grid-scroll ${className}`.trim()}>
-  <div className="widget-data-grid" role="table" aria-label={ariaLabel} style={{["--widget-data-grid-template" as string]:template,["--widget-data-grid-min" as string]:`${minWidth}px`}}>
+  <div className={`widget-data-grid is-size-${size}`} role="table" aria-label={ariaLabel} style={{["--widget-data-grid-template" as string]:template,["--widget-data-grid-min" as string]:`${minWidth}px`}}>
    <div className="widget-data-grid-row is-header" role="row">
     {columns.map(column=><div key={column.key} className={`widget-data-grid-cell is-align-${column.align||"start"}`} role="columnheader">{column.label}</div>)}
    </div>
@@ -283,7 +287,7 @@ export const WIDGET_METRIC_ICON_SET = [
  { metric:VT_VISUAL_METRIC_ORDER[11], label:"Playlist Saves", name:"metricPlaylistSaves", spectrum:"pink", color:VT_SPECTRUM_PALETTE_06[11] },
 ] as const satisfies readonly {metric:(typeof VT_VISUAL_METRIC_ORDER)[number];label:string;name:WidgetTinyIconName;spectrum:WidgetBadgeSpectrumName;color:string}[]
 
-export const WidgetTinySpectrumIcon:React.FC<{name:WidgetTinyIconName;spectrum:WidgetBadgeSpectrumName;label?:string;height?:18|24;className?:string}> = ({name,spectrum,label,height=18,className=""}) => {const Icon=WIDGET_TINY_ICON_SET[name];return <span className={`widget-tiny-spectrum-icon is-height-${height} ${className}`.trim()} role={label?"img":undefined} aria-label={label} aria-hidden={label?undefined:true} style={{["--widget-tiny-icon-color" as string]:resolveSpectrumHue(spectrum)}}><Icon aria-hidden="true"/></span>}
+export const WidgetTinySpectrumIcon:React.FC<{name:WidgetTinyIconName;spectrum:WidgetBadgeSpectrumName;label?:string;height?:WidgetControlHeight;className?:string}> = ({name,spectrum,label,height=18,className=""}) => {const Icon=WIDGET_TINY_ICON_SET[name];return <span className={`widget-tiny-spectrum-icon is-height-${height} ${className}`.trim()} role={label?"img":undefined} aria-label={label} aria-hidden={label?undefined:true} style={{["--widget-tiny-icon-color" as string]:resolveSpectrumHue(spectrum)}}><Icon aria-hidden="true"/></span>}
 
 export const WidgetAccentRailModule:React.FC<{spectrum:WidgetBadgeSpectrumName;title?:React.ReactNode;detail?:React.ReactNode;action?:React.ReactNode;className?:string;children?:React.ReactNode}> = ({spectrum,title,detail,action,className="",children}) => <section className={`widget-accent-rail-module ${className}`.trim()} style={{["--widget-module-accent" as string]:resolveSpectrumHue(spectrum)}}><span className="widget-accent-rail" aria-hidden="true"/><div className="widget-accent-rail-copy">{title?<strong>{title}</strong>:null}{detail?<small>{detail}</small>:null}{children}</div>{action?<div className="widget-accent-rail-action">{action}</div>:null}</section>
 

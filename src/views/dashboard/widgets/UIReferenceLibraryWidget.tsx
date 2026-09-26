@@ -44,11 +44,9 @@ import {
   WidgetHeaderToggle,
   WidgetMediaUploadAction,
   WidgetMediaUploadFrame,
-  WidgetMetric,
   WidgetScrollArea,
   WidgetSection,
   WidgetSplitButton,
-  WidgetStatePanel,
   WidgetStepTabs,
   WidgetSwitch,
   WidgetTag,
@@ -104,10 +102,9 @@ type ReferenceCategory =
   | "progress"
   | "tags"
   | "media"
-  | "navigation"
+  | "header"
   | "matrix"
   | "compound"
-  | "states"
   | "alerts"
 
 const REFERENCE_CATEGORIES: ReadonlyArray<{ id: ReferenceCategory; label: string }> = [
@@ -119,8 +116,7 @@ const REFERENCE_CATEGORIES: ReadonlyArray<{ id: ReferenceCategory; label: string
   { id: "progress", label: "BARS" },
   { id: "tags", label: "TAGS" },
   { id: "media", label: "MEDIA" },
-  { id: "navigation", label: "NAV" },
-  { id: "states", label: "STATES" },
+  { id: "header", label: "HEADER CONTROLS" },
   { id: "alerts", label: "ALERTS" },
 ]
 
@@ -232,7 +228,6 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   const [textValue, setTextValue] = useState("")
   const [tags, setTags] = useState(["viewtube", "analytics", "creator"])
   const [hasThumbnail, setHasThumbnail] = useState(false)
-  const [statePanelStatus, setStatePanelStatus] = useState<"loading" | "ready" | "empty" | "blocked" | "stale" | "error">("ready")
   const [matrixStepper, setMatrixStepper] = useState(10)
   const [matrixPage, setMatrixPage] = useState(2)
   const [matrixToggle, setMatrixToggle] = useState(true)
@@ -518,6 +513,23 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             </div>
 
             <div className="widget-reference-family">
+              {familyHeading("Spectrum Icon Sizes", "18 / 24 / 32 / 38px · canonical spectrum owner")}
+              <div className="flex flex-wrap items-end gap-3">
+                {CONTROL_HEIGHTS.map((height, index) => (
+                  <div className="widget-reference-variant" key={height}>
+                    <small>{height}px</small>
+                    <WidgetTinySpectrumIcon
+                      name={["video", "brain", "analytics", "sparkles"][index] as keyof typeof WIDGET_TINY_ICON_SET}
+                      spectrum={WIDGET_BADGE_SPECTRUM[index * 3]}
+                      height={height}
+                      label={`${height}px spectrum icon`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="widget-reference-family">
               {familyHeading("Steppers", "Clamped numeric control")}
               <ToneRows
                 render={(tone, height) => (
@@ -588,10 +600,10 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
             </div>
 
             <div className="widget-reference-family">
-              {familyHeading("Spectrum Fill Badges", "12 unique fills · 18/24px · white text")}
+              {familyHeading("Spectrum Fill Badges", "12 hues across 18 / 24 / 32 / 38px")}
               <div className="widget-reference-variants">
                 {WIDGET_BADGE_SPECTRUM.map((name, index) => {
-                  const height = index % 2 === 0 ? 18 : 24
+                  const height = CONTROL_HEIGHTS[index % CONTROL_HEIGHTS.length]
                   return (
                     <div className="widget-reference-variant" key={name}>
                       <small>{name} · {height}px</small>
@@ -950,7 +962,9 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
 
             <div className="widget-reference-family">
               {familyHeading("Text + Badge Data Grid", "Subscriber CRM-style cells with semantic status badges")}
-              <WidgetDataGrid
+              <div className="grid gap-3">
+                <WidgetDataGrid
+                size="small"
                 ariaLabel="Audience segment grid example"
                 columns={[
                   { key: "segment", label: "Segment", width: "1.2fr" },
@@ -964,7 +978,22 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   { id: "shorts", cells: { segment: "Shorts-only viewers", signal: "No longform click", action: "Pinned-video funnel", activity: "Today", status: <WidgetBadge status="warning">Opportunity</WidgetBadge> } },
                   { id: "members", cells: { segment: "Members", signal: "High retention", action: "Early-access post", activity: "Yesterday", status: <WidgetBadge status="neutral">Priority</WidgetBadge> } },
                 ]}
-              />
+                />
+                <WidgetDataGrid
+                  size="large"
+                  ariaLabel="Large audience segment grid example"
+                  minWidth={620}
+                  columns={[
+                    { key: "segment", label: "Segment", width: "1.2fr" },
+                    { key: "signal", label: "Signal", width: "1.1fr" },
+                    { key: "action", label: "Best Action", width: "1.15fr" },
+                  ]}
+                  rows={[
+                    { id: "longform", cells: { segment: "Longform regulars", signal: "High watch time", action: "Invite to next premiere" } },
+                    { id: "returning", cells: { segment: "Returning viewers", signal: "Strong repeat sessions", action: "Feature series playlist" } },
+                  ]}
+                />
+              </div>
             </div>
 
             <div className="widget-reference-family">
@@ -1017,6 +1046,20 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                 {ALPHABET.map((letter) => <WidgetAlphabeticalTag key={letter} label={letter} />)}
               </div>
             </div>
+            <div className="widget-reference-family">
+              {familyHeading("Editable Tags", "Useful tag editor retained from the retired Metrics/States page")}
+              <WidgetDisclosure title="Tags">
+                <div className="flex flex-wrap gap-1 p-2">
+                  {tags.map((tag) => (
+                    <WidgetTag key={tag} onRemove={() => setTags((current) => current.filter((item) => item !== tag))}>{tag}</WidgetTag>
+                  ))}
+                  <WidgetSizedButton height={24} tone="secondary" onClick={() => setTags((current) => [...current, `tag-${current.length + 1}`])} aria-label="Add tag">
+                    <Plus size={12} />
+                  </WidgetSizedButton>
+                </div>
+              </WidgetDisclosure>
+            </div>
+
             <div className="widget-reference-family">
               {familyHeading("Badge Heights", "Radius and typography follow component height")}
               <div className="widget-reference-variants">
@@ -1076,6 +1119,16 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
               </div>
             </div>
             <div className="widget-reference-family">
+              {familyHeading("Full-Width Badges", "FULL track examples using the canonical badge owners")}
+              <div className="grid gap-2">
+                <WidgetSpectrumFillBadge spectrum="cyan" height={32} width="full">Full-width spectrum badge</WidgetSpectrumFillBadge>
+                <WidgetLeftSplitBadge spectrum="purple" height={38} width="full" icon={<Star strokeWidth={2.5} />}>
+                  Full-width split badge
+                </WidgetLeftSplitBadge>
+              </div>
+            </div>
+
+            <div className="widget-reference-family">
               {familyHeading("Split Badge Heights", "Icon bay tracks the control height")}
               <div className="widget-reference-variants">
                 {CONTROL_HEIGHTS.map((height, index) => (
@@ -1099,54 +1152,76 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("5. Media Uploaders", "Upload + dropzone primitives")}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
-              <div className="flex flex-col gap-2">
-                <div className="w-full">
-                  <WidgetMediaUploadFrame
-                    aspect="16:9"
-                    icon={<ImagePlus />}
-                    title="THUMBNAIL"
-                    detail="Drop an image file here"
-                    hasValue={hasThumbnail}
-                    preview={hasThumbnail ? <div className="w-full h-full flex items-center justify-center font-black text-xs uppercase">Thumbnail Preview</div> : undefined}
-                    onBrowse={() => setHasThumbnail(!hasThumbnail)}
-                  />
-                </div>
-                <WidgetMediaUploadAction onClick={() => setHasThumbnail(!hasThumbnail)}>
-                  {hasThumbnail ? "REPLACE THUMBNAIL" : "UPLOAD THUMBNAIL"}
-                </WidgetMediaUploadAction>
-              </div>
-              <WidgetDropzone
+              <WidgetMediaUploadFrame
+                size="small"
+                aspect="1:1"
+                icon={<ImagePlus />}
+                title="SMALL MEDIA"
+                detail="Compact toolbox upload frame"
+                actionLabel="UPLOAD"
+                hasValue={hasThumbnail}
+                preview={hasThumbnail ? <div className="w-full h-full flex items-center justify-center font-black text-xs uppercase">Small Preview</div> : undefined}
+                onBrowse={() => setHasThumbnail(!hasThumbnail)}
+              />
+              <WidgetMediaUploadFrame
+                size="large"
+                aspect="16:9"
                 icon={<UploadCloud />}
-                title="SOURCE VIDEO FILE"
-                detail="Drag & drop .MP4, .MOV, or click to browse"
-                onClick={() => {}}
+                title="LARGE MEDIA"
+                detail="Full toolbox upload frame"
+                actionLabel="UPLOAD MEDIA"
+                onBrowse={() => {}}
               />
             </div>
           </WidgetSection>
         )}
 
-        {activeCategory === "navigation" && (
+        {activeCategory === "header" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("6. Navigation", "Toggles + steppers + tabs")}
-            <WidgetHeaderToggle
-              label="Project drafts"
-              value={headerToggleValue}
-              items={[
-                { id: "draft-1", label: "DRAFT 1" },
-                { id: "draft-2", label: "DRAFT 2" },
-                { id: "draft-3", label: "DRAFT 3" },
-              ]}
-              onChange={setHeaderToggleValue}
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <WidgetHeaderStepper
-                label="Workflow step"
-                value={stepperValue}
-                onPrevious={() => setStepperValue("Step 1 of 4")}
-                onNext={() => setStepperValue("Step 2 of 4")}
+            {sectionHeading("9. Header Controls", "Stepper / intrinsic toggle / action / checkbox / radio")}
+            <div className="widget-reference-family">
+              {familyHeading("Header Toggle", "Different label lengths keep intrinsic selected widths")}
+              <WidgetHeaderToggle
+                label="Comment responder view example"
+                value={headerToggleValue}
+                items={[
+                  { id: "draft-1", label: "CHAT" },
+                  { id: "draft-2", label: "CONTROLS" },
+                  { id: "draft-3", label: "QUEUE" },
+                ]}
+                onChange={setHeaderToggleValue}
               />
+            </div>
+            <div className="widget-reference-family">
+              {familyHeading("Header Stepper + Action", "Shared height, stroke, radius and baseline")}
+              <div className="flex flex-wrap gap-2 items-center">
+                <WidgetHeaderStepper
+                  label="Workflow step"
+                  value={stepperValue}
+                  onPrevious={() => setStepperValue("Step 1 of 4")}
+                  onNext={() => setStepperValue("Step 2 of 4")}
+                />
+                <WidgetHeaderActionButton
+                  icon={<Settings />}
+                  label="Settings"
+                  aria-label="Open settings"
+                  onClick={() => undefined}
+                />
+              </div>
+            </div>
+            <div className="widget-reference-family">
+              {familyHeading("Header Checkbox + Radio", "Same control lattice as toggle and stepper")}
+              <div className="flex flex-wrap gap-4 items-center">
+                <WidgetSwitch label="Automatic Chapters" checked={switchValue} onChange={setSwitchValue} />
+                <WidgetChoice label="Allow Embedding" checked={checkboxValue} onChange={() => setCheckboxValue(!checkboxValue)} />
+                <WidgetChoice type="radio" name="ref-radio" value="a" label="Option A" checked={radioValue === "a"} onChange={() => setRadioValue("a")} />
+                <WidgetChoice type="radio" name="ref-radio" value="b" label="Option B" checked={radioValue === "b"} onChange={() => setRadioValue("b")} />
+              </div>
+            </div>
+            <div className="widget-reference-family">
+              {familyHeading("Header Publishing Stages", "Header-compatible tabs remain a compound example")}
               <WidgetStepTabs
-                label="Publishing stages"
+                label="Header publishing stages"
                 value={stepTabValue}
                 items={[
                   { id: "meta", label: "DETAILS" },
@@ -1156,59 +1231,9 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                 onChange={setStepTabValue}
               />
             </div>
-            <div className="flex flex-wrap gap-4 items-center">
-              <WidgetSwitch label="Automatic Chapters" checked={switchValue} onChange={setSwitchValue} />
-              <WidgetChoice label="Allow Embedding" checked={checkboxValue} onChange={() => setCheckboxValue(!checkboxValue)} />
-              <WidgetChoice type="radio" name="ref-radio" value="a" label="Option A" checked={radioValue === "a"} onChange={() => setRadioValue("a")} />
-              <WidgetChoice type="radio" name="ref-radio" value="b" label="Option B" checked={radioValue === "b"} onChange={() => setRadioValue("b")} />
-            </div>
           </WidgetSection>
         )}
 
-        {activeCategory === "states" && (
-          <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("7. Metrics + States", "Feedback system")}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <WidgetMetric label="LIFETIME VIEWS" value="1.42M" detail="+14.2%" tone="#34cdea" />
-              <WidgetMetric label="CLICK-THROUGH" value="8.90%" detail="High" tone="#b9f536" />
-              <WidgetMetric label="AVG DURATION" value="06:42" detail="62.5%" tone="#ea58e8" />
-              <WidgetMetric label="REVENUE" value="$4,820" detail="+8.5%" tone="#ffad59" />
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {(["loading", "ready", "empty", "blocked", "stale", "error"] as const).map((status) => (
-                <WidgetSizedButton
-                  key={status}
-                  height={24}
-                  tone={statePanelStatus === status ? "primary" : "default"}
-                  onClick={() => setStatePanelStatus(status)}
-                >
-                  {status}
-                </WidgetSizedButton>
-              ))}
-            </div>
-            <WidgetStatePanel
-              state={{
-                data: null,
-                status: statePanelStatus,
-                message: statePanelStatus === "ready" ? "Data synchronized with the canonical store." : undefined,
-                provenance: "VT-SYNC",
-                updatedAt: "Just now",
-                recoveryAction: statePanelStatus === "error" || statePanelStatus === "blocked" ? "Retry Connection" : undefined,
-              }}
-              onRecover={() => setStatePanelStatus("ready")}
-            />
-            <WidgetDisclosure title="Tags">
-              <div className="flex flex-wrap gap-1 p-2">
-                {tags.map((tag) => (
-                  <WidgetTag key={tag} onRemove={() => setTags((current) => current.filter((item) => item !== tag))}>{tag}</WidgetTag>
-                ))}
-                <WidgetSizedButton height={24} tone="secondary" onClick={() => setTags((current) => [...current, `tag-${current.length + 1}`])} aria-label="Add tag">
-                  <Plus size={12} />
-                </WidgetSizedButton>
-              </div>
-            </WidgetDisclosure>
-          </WidgetSection>
-        )}
       </WidgetScrollArea>
 
       <WidgetFooter className="widget-toolbar widget-workflow-toolbar">
