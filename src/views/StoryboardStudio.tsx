@@ -488,7 +488,7 @@ const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
           isOpenInitial
           actionButton={blueprintActions}
           contentClassName="p-0"
-          shellClassName="h-full"
+          shellClassName="xl:h-full"
         >
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
             {scenes.map((scene) => (
@@ -528,7 +528,7 @@ const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
           isOpenInitial
           actionButton={visualCanvasAction}
           contentClassName="p-0"
-          shellClassName="h-full"
+          shellClassName="xl:h-full"
         >
           <div className="flex-1 overflow-y-auto p-6 bg-[#f3f4f6]">
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -627,7 +627,7 @@ const StoryboardStudio: React.FC<StoryboardStudioProps> = ({
           isOpenInitial
           actionButton={oracleStatus}
           contentClassName="p-0"
-          shellClassName="h-full"
+          shellClassName="xl:h-full"
         >
           <div className="p-4">
             <h3 className="font-black mb-3 flex gap-2">
