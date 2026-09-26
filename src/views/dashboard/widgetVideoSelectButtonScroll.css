@@ -1,7 +1,8 @@
 /* Video selector menu ownership.
    Closed trigger and each open row use the same canonical primitive height.
    Search is one split-left row; options are full-width rows with a scrollbar. */
-.widget-video-select .widget-video-select-menu {
+.widget-video-select .widget-video-select-menu,
+.widget-video-select-menu--portal {
   box-sizing: border-box;
   height: auto;
   min-height: 0;
@@ -15,7 +16,8 @@
   border-radius: var(--vt-primitive-radius, 7px);
 }
 
-.widget-video-select .widget-video-select-search {
+.widget-video-select .widget-video-select-search,
+.widget-video-select-menu--portal .widget-video-select-search {
   position: sticky;
   top: 0;
   z-index: 2;
@@ -28,7 +30,8 @@
   background: var(--vt-tone-bg, #fff);
 }
 
-.widget-video-select .widget-video-select-search > .widget-search-input {
+.widget-video-select .widget-video-select-search,
+.widget-video-select-menu--portal .widget-video-select-search > .widget-search-input {
   box-sizing: border-box;
   width: 100%;
   max-width: none;
@@ -38,13 +41,16 @@
   box-shadow: none;
 }
 
-.widget-video-select .widget-video-select-search .widget-search-input > input {
+.widget-video-select .widget-video-select-search,
+.widget-video-select-menu--portal .widget-video-select-search .widget-search-input > input {
   flex: 1 1 auto;
   width: auto;
   min-width: 0;
 }
 
-.widget-video-select .widget-video-select-options {
+.widget-video-select .widget-video-select-option,
+.widget-video-select-menu--portal .widget-video-select-options,
+.widget-video-select-menu--portal .widget-video-select-options {
   box-sizing: border-box;
   display: grid;
   width: 100%;
@@ -62,33 +68,44 @@
     color-mix(in srgb, var(--widget-color, #34cdea) 10%, white);
 }
 
-.widget-video-select .widget-video-select-options::-webkit-scrollbar {
+.widget-video-select .widget-video-select-option,
+.widget-video-select-menu--portal .widget-video-select-options,
+.widget-video-select-menu--portal .widget-video-select-options::-webkit-scrollbar {
   width: 11px;
 }
 
-.widget-video-select .widget-video-select-options::-webkit-scrollbar-track {
+.widget-video-select .widget-video-select-option,
+.widget-video-select-menu--portal .widget-video-select-options,
+.widget-video-select-menu--portal .widget-video-select-options::-webkit-scrollbar-track {
   background: color-mix(in srgb, var(--widget-color, #34cdea) 10%, white);
 }
 
-.widget-video-select .widget-video-select-options::-webkit-scrollbar-thumb {
+.widget-video-select .widget-video-select-option,
+.widget-video-select-menu--portal .widget-video-select-options,
+.widget-video-select-menu--portal .widget-video-select-options::-webkit-scrollbar-thumb {
   min-height: 34px;
   border: 2px solid var(--vt-tone-stroke, var(--widget-border, #243247));
   border-radius: 3px;
   background: color-mix(in srgb, var(--widget-color, #34cdea) 70%, white);
 }
 
-.widget-video-select .widget-video-select-options::-webkit-scrollbar-thumb:hover {
+.widget-video-select .widget-video-select-option,
+.widget-video-select-menu--portal .widget-video-select-options,
+.widget-video-select-menu--portal .widget-video-select-options::-webkit-scrollbar-thumb:hover {
   background: var(--widget-color, #34cdea);
 }
 
 @media (pointer: coarse) {
-  .widget-video-select .widget-video-select-options::-webkit-scrollbar {
+  .widget-video-select .widget-video-select-option,
+.widget-video-select-menu--portal .widget-video-select-options,
+.widget-video-select-menu--portal .widget-video-select-options::-webkit-scrollbar {
     width: 13px;
   }
 }
 
 
-.widget-video-select .widget-video-select-option {
+.widget-video-select .widget-video-select-option,
+.widget-video-select-menu--portal .widget-video-select-option {
   box-sizing: border-box;
   width: 100%;
   max-width: none;
