@@ -1,3 +1,5 @@
+> **MIGRATION NOTICE — 2026-09-26:** Current cross-system completion authority is `docs/programs/INTEGRATED_APPLICATION.md`. This dated task file is retained as donor/provenance; exact current work state belongs in Task Index.
+
 > **Expanded registry available:** this original 27-task list remains a useful phase index, but the current complete backlog now lives in `tasks/viewtube-finish-program/BACKLOG-REGISTRY.md`, `plan.md`, and `todo.md`. The expanded registry includes Asset Engine Studio, Launch Package, Asset Slot Registry, Project facade, destination Context Resolver recipes, AI prompt modernization, widget cohort, provider experiments, AI editor sidecar and other post-#322/#360 gaps.
 
 # ViewTube Finish Program — Task List
@@ -99,6 +101,6 @@ Source: `docs/architecture/VIEWTUBE_FINISH_PROGRAM_2026-09-24.md`
 - [ ] Prompt System Authority + modernization program.
 
 Prompt sub-track authority:
-- `docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md`
+- `docs/specifications/PROMPTS.md`
 - `docs/brain/VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md`
-- `docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json`
+- `docs/specifications/prompt-registry.json`
