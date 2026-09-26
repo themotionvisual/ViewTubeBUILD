@@ -1,5 +1,16 @@
 import type { GenerationArtifact, SuperToolId, VaultAsset, VaultAssetKind } from "@/types"
 import { nexusSyncService } from "./nexusSyncService"
+import { getVaultAttentionReasons } from "./vaultAttention"
+
+export type VaultAssetLifecycle =
+ | "DRAFT"
+ | "CANDIDATE"
+ | "APPROVED"
+ | "FINAL"
+ | "GOLDEN"
+ | "SUPERSEDED"
+ | "ARCHIVED"
+ | "TRASHED"
 
 const VAULT_STORAGE_KEY = "vt_creator_vault_assets_v1"
 
@@ -246,7 +257,7 @@ export const setVaultAssetLifecycle = (
 ): VaultAsset | null => {
  const existing = readAssets().find((asset) => asset.id === id)
  if (!existing) return null
- const metadata = { ...(existing.metadata || {}), lifecycle }
+ const metadata: Record<string, unknown> = { ...(existing.metadata || {}), lifecycle }
  if (lifecycle === "GOLDEN" && metadata.protected === undefined) metadata.protected = true
  return updateVaultAsset(id, { metadata })
 }
