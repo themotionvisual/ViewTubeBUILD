@@ -121,6 +121,7 @@ export const VaultAssetTagEditor: React.FC<{
   const [draft, setDraft] = React.useState("")
   const [existing, setExisting] = React.useState("")
   const [selected, setSelected] = React.useState<string | null>(null)
+  const [expandedTags, setExpandedTags] = React.useState(false)
 
   const library = React.useMemo(
     () => [...new Set([...DEFAULT_SHARED_TAG_LIBRARY, ...sharedTags, ...tags].map((value) => value.trim().toUpperCase()).filter(Boolean))]
@@ -159,7 +160,7 @@ export const VaultAssetTagEditor: React.FC<{
       <div className="vt-vault-tag-inline-row">
         <span className="vt-vault-tag-label">TAGS:</span>
         <div className="vt-vault-tag-list">
-          {[...tags].sort((a, b) => a.localeCompare(b)).map((tag) => {
+          {(expandedTags ? [...tags].sort((a, b) => a.localeCompare(b)) : [...tags].sort((a, b) => a.localeCompare(b)).slice(0, 3)).map((tag) => {
             const normalized = tag.toUpperCase()
             const color = getAlphabeticalSpectrumColor(normalized)
             return (
@@ -178,6 +179,16 @@ export const VaultAssetTagEditor: React.FC<{
               </button>
             )
           })}
+          {tags.length > 3 ? (
+            <button
+              type="button"
+              className="vt-vault-tag-badge vt-vault-tag-overflow"
+              aria-label={expandedTags ? "Collapse asset tags" : `Show ${tags.length - 3} more asset tags`}
+              onClick={() => setExpandedTags((current) => !current)}
+            >
+              {expandedTags ? "LESS" : `+${tags.length - 3}`}
+            </button>
+          ) : null}
         </div>
         <button type="button" className="vt-vault-add-tag" aria-label="Add tag" onClick={() => {
           setSelected(null)
