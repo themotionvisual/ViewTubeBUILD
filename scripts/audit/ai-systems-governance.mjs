@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { projectHeraldThreadClaim } from "./ai-systems-herald-projection.mjs";
+import { projectHeraldThreadClaim, projectHeraldLedgerReceipt } from "./ai-systems-herald-projection.mjs";
 
 const ACTIVE_LIFECYCLES = new Set([
   "canonical",
@@ -20,6 +20,7 @@ const ACTIVE_LIFECYCLES = new Set([
 ]);
 
 const ACTIVE_CLAIM_STATES = new Set(["claimed", "started", "in_progress", "blocked"]);
+const TERMINAL_THREAD_STATES = new Set(["complete", "completed", "released", "superseded", "retired", "certified"]);
 
 export const DEFAULT_REGISTRY_PATHS = [
   "governance/ai-systems/registry/systems.json",
@@ -137,11 +138,77 @@ export const findStaleClaims = (claims, { now = Date.now(), maxAgeMs = 24 * 60 *
     .slice()
     .sort((left, right) => Date.parse(left.startedAt) - Date.parse(right.startedAt));
 
+const pathScopeOverlaps = (left, right) => {
+  if (!left || !right) return false;
+  if (left === right) return true;
+  const prefix = (value) => value.endsWith("/**") ? value.slice(0, -2) : null;
+  const leftPrefix = prefix(left);
+  const rightPrefix = prefix(right);
+  if (leftPrefix && right.startsWith(leftPrefix)) return true;
+  if (rightPrefix && left.startsWith(rightPrefix)) return true;
+  return false;
+};
+
+export const findClaimCollisions = (claims) => {
+  const active = (claims || []).filter((claim) => ACTIVE_CLAIM_STATES.has(claim?.status));
+  const collisions = [];
+
+  for (let i = 0; i < active.length; i += 1) {
+    for (let j = i + 1; j < active.length; j += 1) {
+      const left = active[i];
+      const right = active[j];
+      if (!left?.threadId || !right?.threadId || left.threadId === right.threadId) continue;
+      if (left.agent && right.agent && left.agent === right.agent) continue;
+
+      for (const pathA of left.writerPaths || []) {
+        for (const pathB of right.writerPaths || []) {
+          if (!pathScopeOverlaps(pathA, pathB)) continue;
+          collisions.push({
+            code: "claim_collision",
+            taskA: left.taskId || null,
+            taskB: right.taskId || null,
+            threadA: left.threadId,
+            threadB: right.threadId,
+            agentA: left.agent || null,
+            agentB: right.agent || null,
+            pathA,
+            pathB,
+          });
+        }
+      }
+    }
+  }
+
+  return collisions.sort((a, b) =>
+    String(a.threadA).localeCompare(String(b.threadA))
+    || String(a.threadB).localeCompare(String(b.threadB))
+    || String(a.pathA).localeCompare(String(b.pathA))
+  );
+};
+
+export const findMissingCompletionReceipts = (threads, receipts) => {
+  const provenThreadIds = new Set(
+    (receipts || [])
+      .filter((receipt) => receipt?.threadId && receipt.evidenceState === "PROVEN")
+      .map((receipt) => receipt.threadId)
+  );
+
+  return (threads || [])
+    .filter((thread) => TERMINAL_THREAD_STATES.has(String(thread?.status || "").trim().toLowerCase()))
+    .filter((thread) => thread?.threadId && !provenThreadIds.has(thread.threadId))
+    .map((thread) => ({
+      code: "missing_completion_receipt",
+      threadId: thread.threadId,
+      status: thread.status,
+      sourcePath: thread.sourcePath || null,
+    }))
+    .sort((a, b) => String(a.threadId).localeCompare(String(b.threadId)));
+};
+
 const readJson = (filePath) => JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-export const readHeraldClaims = ({
+export const readHeraldThreads = ({
   rootDir = process.cwd(),
-  observedMainSha = null,
   heraldThreadsDir = ".viewtube/herald/threads",
 } = {}) => {
   const absoluteDir = path.join(rootDir, heraldThreadsDir);
@@ -152,10 +219,41 @@ export const readHeraldClaims = ({
     .sort()
     .map((name) => {
       const sourcePath = path.join(heraldThreadsDir, name).replaceAll("\\", "/");
-      const thread = readJson(path.join(absoluteDir, name));
-      return projectHeraldThreadClaim(thread, { observedMainSha, sourcePath });
-    })
+      return { ...readJson(path.join(absoluteDir, name)), sourcePath };
+    });
+};
+
+export const readHeraldClaims = ({
+  rootDir = process.cwd(),
+  observedMainSha = null,
+  heraldThreadsDir = ".viewtube/herald/threads",
+} = {}) =>
+  readHeraldThreads({ rootDir, heraldThreadsDir })
+    .map((thread) => projectHeraldThreadClaim(thread, {
+      observedMainSha,
+      sourcePath: thread.sourcePath,
+    }))
     .filter(Boolean);
+
+export const readHeraldReceipts = ({
+  rootDir = process.cwd(),
+  observedMainSha = null,
+  heraldLedgerDir = ".viewtube/herald/ledger",
+} = {}) => {
+  const absoluteDir = path.join(rootDir, heraldLedgerDir);
+  if (!fs.existsSync(absoluteDir)) return [];
+
+  const receipts = [];
+  for (const name of fs.readdirSync(absoluteDir).filter((entry) => entry.endsWith(".jsonl")).sort()) {
+    const sourcePath = path.join(heraldLedgerDir, name).replaceAll("\\", "/");
+    const lines = fs.readFileSync(path.join(absoluteDir, name), "utf8").split(/\r?\n/).filter(Boolean);
+    for (const line of lines) {
+      const entry = JSON.parse(line);
+      const receipt = projectHeraldLedgerReceipt(entry, { observedMainSha, sourcePath });
+      if (receipt) receipts.push(receipt);
+    }
+  }
+  return receipts;
 };
 
 export const auditAiSystemsGovernance = ({
@@ -163,8 +261,11 @@ export const auditAiSystemsGovernance = ({
   registryPath,
   registryPaths,
   claims,
+  threads,
+  receipts,
   observedMainSha = null,
   heraldThreadsDir = ".viewtube/herald/threads",
+  heraldLedgerDir = ".viewtube/herald/ledger",
   now = Date.now(),
   maxClaimAgeMs = 24 * 60 * 60 * 1000,
 } = {}) => {
@@ -179,10 +280,17 @@ export const auditAiSystemsGovernance = ({
     Array.isArray(value.records) ? value.records : []
   );
 
-  const effectiveClaims = claims ?? readHeraldClaims({
+  const effectiveThreads = threads ?? readHeraldThreads({ rootDir, heraldThreadsDir });
+  const effectiveClaims = claims ?? effectiveThreads
+    .map((thread) => projectHeraldThreadClaim(thread, {
+      observedMainSha,
+      sourcePath: thread.sourcePath,
+    }))
+    .filter(Boolean);
+  const effectiveReceipts = receipts ?? readHeraldReceipts({
     rootDir,
     observedMainSha,
-    heraldThreadsDir,
+    heraldLedgerDir,
   });
 
   const recordIssues = records.flatMap((record) =>
@@ -193,16 +301,27 @@ export const auditAiSystemsGovernance = ({
     fs.existsSync(path.join(rootDir, sourcePath))
   );
   const staleClaims = findStaleClaims(effectiveClaims, { now, maxAgeMs: maxClaimAgeMs });
+  const claimCollisions = findClaimCollisions(effectiveClaims);
+  const missingCompletionReceipts = findMissingCompletionReceipts(effectiveThreads, effectiveReceipts);
 
   return {
-    ok: recordIssues.length === 0 && conflicts.length === 0 && missingSourceRefs.length === 0 && staleClaims.length === 0,
+    ok:
+      recordIssues.length === 0
+      && conflicts.length === 0
+      && missingSourceRefs.length === 0
+      && staleClaims.length === 0
+      && claimCollisions.length === 0
+      && missingCompletionReceipts.length === 0,
     registryCount: registries.length,
     recordCount: records.length,
     claimCount: effectiveClaims.length,
+    receiptCount: effectiveReceipts.length,
     recordIssues,
     conflicts,
     missingSourceRefs,
     staleClaims,
+    claimCollisions,
+    missingCompletionReceipts,
   };
 };
 
