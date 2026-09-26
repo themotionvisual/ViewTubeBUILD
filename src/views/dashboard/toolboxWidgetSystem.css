@@ -3258,9 +3258,10 @@ stroke-width: 2px;
   min-height: 0;
   /* Was 1.5px which rendered as an anemic hairline; use the standard
      widget module stroke so it reads as a proper Neo-Brutalist border. */
-  border: var(--widget-module-stroke, 2px) dashed var(--widget-border);
+  border: 3px solid var(--widget-border, var(--vt-ink));
   border-radius: var(--widget-control-radius);
-  background: color-mix(in srgb, var(--widget-color) 8%, #fff);
+  background: color-mix(in srgb, var(--widget-color) 10%, #fff);
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--widget-color) 42%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7689,18 +7690,44 @@ textarea.vt-textarea {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  padding: 12px;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  place-content: stretch;
+  place-items: stretch;
+  justify-items: stretch;
+  text-align: left;
 }
-:where(.dashboard-barrier) .widget-media-upload-copy,
+:where(.dashboard-barrier) .widget-media-upload-icon {
+  width: 52px;
+  min-width: 52px;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border-inline-end: 3px solid var(--vt-ink, var(--widget-border));
+  background: var(--widget-color);
+  color: var(--vt-ink, var(--widget-border));
+}
+:where(.dashboard-barrier) .widget-media-upload-copy {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  text-align: left;
+}
 :where(.dashboard-barrier) .widget-dropzone-copy {
   display: grid;
   justify-items: center;
   gap: 4px;
   min-width: 0;
 }
-:where(.dashboard-barrier) .widget-media-upload-icon svg,
+:where(.dashboard-barrier) .widget-media-upload-icon svg {
+  width: 28px;
+  height: 28px;
+  stroke-width: 2.5;
+}
 :where(.dashboard-barrier) .widget-dropzone-icon svg {
   width: clamp(28px, 10cqw, 48px);
   height: auto;
