@@ -1169,3 +1169,495 @@ At PR #456 head `e27b43c7b4746b3312283372593db2fd1d24064c`:
 - **visual evidence:** pending; this wave remains **partial** until built-app desktop + phone captures prove the visible changes.
 
 Do not reopen the old asymmetric reclaim or negative-margin/shadow-clearance geometry as a local widget fix. Any regression must be corrected at the canonical shell/primitive owner first.
+
+
+---
+
+## K. Subtractive Widget Architecture — governing direction
+
+**Approved:** 2026-09-26  
+**Status:** ACTIVE GOVERNING DIRECTION
+
+The Dashboard program now adopts **subtractive optimization** as a primary engineering principle.
+
+### K.1 Core rule
+
+> **A new or redesigned widget consumes the canonical system by default. It does not create a new component system, primitive family, color system, size system, grid system, responsive system, or CSS architecture merely to achieve its interior design.**
+
+The default implementation path is:
+
+`REFERENCE LIBRARY CONTRACT → CODED PRIMITIVES → COMPOSITION RECIPE → WIDGET INTERIOR → DOMAIN DATA/ACTIONS`
+
+A widget may add domain-specific composition and signature visualization. It should not restyle standard controls privately.
+
+### K.2 Subtractive budget
+
+For every widget redesign, explicitly report:
+
+- canonical primitives reused;
+- existing archetype/composition recipes reused;
+- widget-local CSS removed;
+- legacy selectors removed;
+- duplicate components removed;
+- new CSS selectors added;
+- new component files added;
+- exceptions requiring new primitives.
+
+A redesign that adds more system-level CSS/components than it removes must explain why reuse was insufficient.
+
+**Preferred result:** fewer selectors, fewer private components, fewer duplicated states, and fewer independent sizing rules after the redesign than before it.
+
+### K.3 New primitive admission gate
+
+A new primitive/component may be added only when all are true:
+
+1. no canonical Reference Library component performs the same interaction;
+2. the need occurs, or is expected to occur, in multiple production surfaces;
+3. it has a stable semantic job rather than a one-widget visual preference;
+4. its sizes, states, accessibility and responsive behavior can be specified centrally;
+5. it is added to the UI Reference Library;
+6. at least one production consumer uses it;
+7. equivalent private implementations are scheduled for removal.
+
+Otherwise compose existing primitives.
+
+### K.4 CSS admission gate
+
+Widget-local CSS is reserved for:
+
+- unique domain visualization geometry;
+- signature composition not expressible through the standard grid/archetype contract;
+- data-driven visual encoding;
+- narrowly scoped exception proven necessary by certification.
+
+Widget-local CSS should **not** redefine buttons, inputs, dropdowns, tabs, badges, switches, typography ladders, spacing scales, borders, radii, shadows, standard grids, standard states, or responsive component sizing.
+
+---
+
+## L. Reference Library → Widget Interior automatic composition system
+
+### L.1 Objective
+
+Turn the UI Reference Library from a passive catalog into the **executable source for widget interior construction**.
+
+A widget designer should primarily choose:
+
+1. widget archetype;
+2. spectrum identity;
+3. interior grid recipe;
+4. canonical components;
+5. semantic component roles;
+6. domain data/actions;
+7. signature visualization, if needed.
+
+The system supplies component style, allowed sizes, typography, states, spacing, alignment, responsive transformations and transitions.
+
+### L.2 Proposed executable contract: Widget Interior Manifest
+
+Each redesigned widget should progressively move toward a declarative manifest similar to:
+
+```ts
+type WidgetInteriorManifest = {
+  archetype: WidgetArchetype;
+  tone: SpectrumTone;
+  grid: WidgetGridRecipe;
+  regions: WidgetRegion[];
+  responsivePolicy: WidgetResponsivePolicy;
+};
+
+type WidgetRegion = {
+  id: string;
+  row?: number;
+  column?: number;
+  columnSpan?: number;
+  rowSpan?: number;
+  role: "primary" | "secondary" | "control" | "visual" | "status" | "footer";
+  component: CanonicalWidgetComponentId;
+  sizePolicy: "auto" | "compact" | "standard" | "large" | "hero";
+  equalGroup?: string;
+};
+```
+
+This is a target architecture, not permission to introduce a second renderer prematurely. Begin by expressing these rules through existing primitives, CSS custom properties and archetype classes; extract a manifest runtime only after at least three widgets prove the pattern.
+
+### L.3 Reference Library component registry
+
+The Reference Library should expose machine-readable metadata for every canonical component:
+
+- stable component ID;
+- React owner;
+- semantic job;
+- allowed 18 / 24 / 32 / 38px size classes where applicable;
+- typography token for each size;
+- min/preferred/max width;
+- aspect/ratio constraints;
+- permitted variants;
+- spectrum/tone behavior;
+- default gap;
+- focus/hover/active/disabled/loading states;
+- coarse-pointer behavior;
+- compact/standard/wide composition behavior;
+- whether width may stretch;
+- whether height may stretch;
+- whether labels may wrap;
+- accessibility contract.
+
+Production widgets and Reference Library examples consume the **same metadata and same React primitives**. The Reference Library must never become a visually similar parallel implementation.
+
+### L.4 Automatic widget interior workflow
+
+When creating/redesigning a widget:
+
+1. classify its user job and archetype;
+2. select a standard grid recipe;
+3. map each required interaction to an existing canonical component ID;
+4. assign semantic regions and equal-size groups;
+5. choose the widget spectrum identity;
+6. allow the composition system to resolve component sizes from available container geometry;
+7. add only the unique signature functional/visual component;
+8. connect domain data/actions;
+9. run dimension and state certification;
+10. reject private component/CSS additions that duplicate canonical owners.
+
+---
+
+## M. Uniform Widget Interior Grid System
+
+### M.1 Grid principle
+
+Every widget interior uses a deterministic nested grid.
+
+The dashboard continues to use its outer **24-column macro grid**. Inside a widget, the canonical interior grid should use **12 columns** with a **4px base unit**, allowing dense subdivision while remaining compatible with 8 / 12 / 24px spacing.
+
+Default interior geometry:
+
+- 12 logical columns;
+- 4px base spatial unit;
+- 8px dense gap;
+- 12px standard gap;
+- 24px major-region gap only when the widget size supports it;
+- row height determined by canonical component size or explicit content region;
+- no arbitrary margins used to force alignment.
+
+### M.2 Row equality rule
+
+Components sharing a visual row must normally share:
+
+- control height;
+- baseline;
+- vertical padding family;
+- type-size tier;
+- radius family;
+- stroke tier.
+
+A 24px button should not casually sit beside a 38px select in the same control row.
+
+If a row intentionally mixes sizes, the manifest/composition must identify a dominant alignment rule and the difference must communicate hierarchy.
+
+### M.3 Column equality rule
+
+Repeated components in the same column family should share:
+
+- width behavior;
+- internal horizontal padding;
+- label/value alignment;
+- type tier;
+- comparable component density.
+
+For paired or repeated columns, combined heights including gaps must align at the next shared grid boundary.
+
+### M.4 Equal-group contract
+
+Components can declare an `equalGroup`.
+
+Members of an equal group resolve to the same:
+
+- rendered height;
+- width when in equivalent columns;
+- component-size tier;
+- text tier;
+- vertical alignment.
+
+Examples:
+
+- a row of three actions;
+- KPI tiles;
+- paired selects;
+- Details / Options / Suitability actions;
+- Published Video / Refresh;
+- two-column settings controls.
+
+### M.5 No accidental empty geometry
+
+A widget should not contain unexplained blank vertical bands caused by fixed component heights or old margins.
+
+Space must belong to one of:
+
+- grid gap;
+- deliberate breathing region;
+- scroll viewport;
+- visualization;
+- reserved state region.
+
+---
+
+## N. Two-dimensional widget resizing contract
+
+### N.1 Independent axes
+
+Widget width and height are independent inputs.
+
+A widget must be able to move:
+
+- narrower;
+- wider;
+- shorter;
+- taller;
+
+within its declared supported dimension matrix without losing its identity, controls, hierarchy or primary function.
+
+### N.2 Responsive composition is container-driven
+
+Internal composition responds to the widget's actual allocated dimensions, not merely viewport width.
+
+Each archetype defines four composition modes:
+
+1. **COMPACT**
+2. **STANDARD**
+3. **EXPANDED**
+4. **HERO**
+
+These are composition/component-density modes, not separate widget implementations.
+
+### N.3 Continuous resize + discrete morph
+
+Resizing has two simultaneous behaviors:
+
+**Continuous geometry**
+- grid tracks, gaps, region widths and flexible visuals interpolate smoothly;
+- components that permit stretch adjust within their min/max width;
+- chart/media regions preserve their declared ratio or crop policy;
+- transitions use transform/size/opacity where appropriate.
+
+**Discrete primitive morph**
+- when geometry crosses a canonical threshold, controls switch to the matching canonical component size/style;
+- the supported component ladder remains **18 / 24 / 32 / 38px** where applicable;
+- typography changes with the canonical size token;
+- no arbitrary 27px/31px/35px private variants are generated.
+
+This provides smooth resizing while preserving a small, testable component system.
+
+### N.4 Hysteresis
+
+Component-size thresholds should use a small hysteresis band so a control does not rapidly oscillate between sizes while a user drags around a breakpoint.
+
+Example concept:
+
+- enter STANDARD at threshold X;
+- remain STANDARD until shrinking below X minus the hysteresis margin.
+
+### N.5 Layout morph examples
+
+A four-action region may become:
+
+- HERO: one row, 4 × large/38 controls;
+- EXPANDED: one row, 4 × 32 controls;
+- STANDARD: two rows, 2 × 2 using 24/32 controls;
+- COMPACT: two rows or compact rail using 24 controls.
+
+A KPI region may become:
+
+- 4-up;
+- 2 × 2;
+- 2-up scroll/stack only when the archetype permits it.
+
+The semantic order never changes arbitrarily.
+
+### N.6 Animation contract
+
+Resize/morph animation should be centralized.
+
+Target behavior:
+
+- approximately 180–240ms for component/layout settling;
+- CSS custom properties/classes rather than widget-local animation code;
+- animate dimensions/transforms/opacity only where motion remains readable;
+- avoid animating every text metric continuously;
+- respect `prefers-reduced-motion`;
+- drag-resize may use immediate geometry with a short settle animation after threshold changes to avoid sluggish direct manipulation.
+
+---
+
+## O. Widget Archetype + Grid recipes
+
+Every production widget should ultimately declare one primary archetype:
+
+1. **KPI / Score**
+2. **Chart / Analytical**
+3. **Feed / Queue**
+4. **Matrix / Comparison**
+5. **Workflow / Pipeline**
+6. **Generator / Editor**
+7. **Command / Control**
+8. **Media / Asset**
+
+Each archetype owns:
+
+- interior grid template;
+- COMPACT / STANDARD / EXPANDED / HERO compositions;
+- allowed scroll ownership;
+- default state placement;
+- skeleton family;
+- preview/no-account recipe;
+- standard control regions;
+- supported component-size transitions;
+- minimum useful geometry;
+- accessibility expectations.
+
+Widgets own domain content and their unique signature component, not a new layout language.
+
+---
+
+## P. Skill workflow addition — Subtractive Widget Design
+
+The canonical widget skill must include this workflow before implementation:
+
+### Step 1 — RECON
+Inspect:
+
+- current widget;
+- Reference Library;
+- canonical primitive owners;
+- closest archetype;
+- existing grid recipes;
+- related widget implementations;
+- widget-local CSS.
+
+### Step 2 — REUSE MAP
+Create a table:
+
+`Need | Existing primitive/component | Existing recipe | Reuse? | Exception reason`
+
+No implementation begins until standard owners have been checked.
+
+### Step 3 — DELETE PLAN
+Identify before coding:
+
+- private components to remove;
+- widget-local selectors to remove;
+- legacy selectors made obsolete;
+- duplicated responsive rules to remove.
+
+### Step 4 — GRID SPEC
+Define:
+
+- 12-column regions;
+- rows;
+- equal groups;
+- min/default/max dimensions;
+- compact/standard/expanded/hero transformations;
+- scroll owner.
+
+### Step 5 — RED TESTS
+For behavior changes, add failing tests first covering:
+
+- dimension resolution;
+- equal-group sizing;
+- component-size threshold changes;
+- semantic order through layout morphs;
+- reduced-motion behavior where testable.
+
+### Step 6 — IMPLEMENT BY COMPOSITION
+Use Reference Library primitives first. Add domain logic and signature visualization. Do not add a private control implementation.
+
+### Step 7 — SUBTRACT
+Delete the superseded CSS/components in the same change where safe.
+
+### Step 8 — CERTIFY
+Verify:
+
+- min/default/max width;
+- min/default/max height;
+- at least one asymmetric width × height combination;
+- resizing in both directions;
+- all relevant data states;
+- 1440×1000;
+- 390×844;
+- phone landscape;
+- keyboard/coarse pointer/reduced motion;
+- no clipping;
+- one scroll owner.
+
+### Step 9 — RECORD
+Update this resource with:
+
+- before/after file counts;
+- CSS selector delta;
+- primitive reuse;
+- exceptions;
+- captures/tests;
+- remaining debt.
+
+---
+
+## Q. Subtractive Dashboard Work Queue
+
+### P0 — architecture
+- [ ] Add machine-readable metadata to canonical Reference Library components.
+- [ ] Establish canonical 12-column widget interior grid utilities/recipes using existing CSS architecture rather than another parallel stylesheet.
+- [ ] Add archetype metadata to production widget definitions.
+- [ ] Add COMPACT / STANDARD / EXPANDED / HERO composition policy.
+- [ ] Centralize component-size threshold resolution and hysteresis.
+- [ ] Centralize resize/morph motion and reduced-motion behavior.
+- [ ] Add equal-group row/column geometry contracts.
+
+### P0 — deletion
+- [ ] Measure legacy `toolboxWidgetSystem.css` ownership remaining.
+- [ ] Move owned rules into existing canonical owners and delete equivalent legacy rules in the same waves.
+- [ ] Block new private control styling in widget-local CSS.
+- [ ] Block new raw black UI, raw spectrum values and unjustified `!important`.
+- [ ] Track CSS/component **net delta** per widget redesign.
+- [ ] Delete `toolboxWidgetSystem.css` once parity is proven.
+
+### P1 — migration
+- [ ] Convert Settings to the new interior grid/equal-group contract as first reference implementation.
+- [ ] Convert one KPI widget, one chart widget, one workflow widget and one media widget.
+- [ ] Use those four migrations to finalize the eight archetype recipes.
+- [ ] Migrate the remaining supported cohort in bounded groups.
+- [ ] Fold repeated widget-local responsive rules back into archetype owners.
+
+### P1 — responsive certification
+- [ ] Certify horizontal and vertical resizing independently.
+- [ ] Certify every declared dimension pair.
+- [ ] Add drag-resize threshold/morph acceptance coverage.
+- [ ] Verify animation and reduced-motion behavior.
+- [ ] Verify labels wrap rather than clip during morphs.
+
+### P1 — system completion
+- [ ] Implement canonical `WidgetPreviewState`.
+- [ ] Finish System Health / Diagnostics widget.
+- [ ] Continue planned widget consolidation before adding new IDs.
+- [ ] Complete Top-40/190 donor classification, then close the historical atlas backlog.
+
+---
+
+## R. Updated definition of a finished widget
+
+A widget is not finished merely because it renders.
+
+A canonical widget:
+
+1. uses the shared shell;
+2. uses Reference Library primitives for standard interactions;
+3. declares an archetype;
+4. follows the canonical interior grid;
+5. has explicit equal groups where appropriate;
+6. supports its declared width × height matrix;
+7. morphs through canonical component sizes instead of private variants;
+8. has designed data states including preview where applicable;
+9. has one intentional scroll owner;
+10. adds no duplicate component/CSS system;
+11. removes superseded private implementation where safe;
+12. passes functional, responsive, mobile, visual, accessibility and production certification.
+
+**New governing metric:** dashboard quality is measured partly by what can be removed. A successful redesign should normally reduce local styling and duplicated implementation while increasing capability and consistency.
