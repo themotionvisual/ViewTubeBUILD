@@ -329,6 +329,7 @@ describe("shared widget form primitives", () => {
     )
 
     expect(markup).toContain("widget-split-button is-primary is-large is-wide")
+    expect(renderToStaticMarkup(<WidgetSplitButton icon={<span>Icon</span>} multiline>Suggest video</WidgetSplitButton>)).toContain("is-multiline")
     expect(markup).toContain('role="switch"')
     expect(markup).toContain('aria-label="Remove Analytics tag"')
     expect(markup).toContain('role="tooltip"')
