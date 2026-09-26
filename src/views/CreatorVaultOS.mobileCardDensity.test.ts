@@ -23,6 +23,13 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).not.toContain('title="Explorer"')
  })
 
+ it("shows selection operations contextually instead of as a permanent Asset Operations toolbox", () => {
+  expect(source).toContain('aria-label="Vault selection actions"')
+  expect(source).toContain('selectedAssetIds.length ? (')
+  expect(source).toContain('Send to ViewTube')
+  expect(source).not.toContain('title="Asset Operations"')
+ })
+
  it("keeps workspace configuration off the default scrolling surface", () => {
   expect(source).toContain('aria-label="Open workspace layout settings"')
   expect(source).toContain('role="dialog"')
