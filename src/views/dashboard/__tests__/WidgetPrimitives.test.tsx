@@ -596,6 +596,15 @@ describe("expanded widget compound primitives", () => {
   })
 })
 
+describe("split-left selected tone anatomy", () => {
+  it("keeps the icon bay stronger than the selected label bay", () => {
+    expect(tonesCss).toContain(".widget-split-button.is-left-split.vt-sized-control.is-tone-primary")
+    expect(tonesCss).toContain("28%, white")
+    expect(tonesCss).toContain(".widget-split-button.is-left-split.vt-sized-control.is-tone-primary .widget-split-button-icon")
+    expect(tonesCss).toContain("background: var(--widget-color")
+  })
+})
+
 describe("toolbox upload frame contract", () => {
   it("uses solid split-rail upload frames and retires dashed legacy frames", () => {
     expect(widgetSystemCss).toContain(".widget-media-upload-frame")
