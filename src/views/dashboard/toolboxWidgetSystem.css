@@ -1242,7 +1242,7 @@
   }
 
   :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) .widget-header-toggle {
-    width: 100%;
+    width: fit-content;
     min-width: 0;
     max-width: 100%;
     height: auto;
@@ -1308,11 +1308,6 @@
 
   :where(.dashboard-barrier) [data-widget-id="comment-replier"] .header-extra > div {
     gap: 3px !important;
-  }
-
-  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .widget-header-toggle {
-    width: 88px;
-    flex-basis: 88px;
   }
 
   :where(.dashboard-barrier) [data-widget-id="comment-replier"] .widget-header-toggle button,
@@ -7768,4 +7763,20 @@ textarea.vt-textarea {
   word-break: normal;
   text-align: center;
   line-height: .88;
+}
+
+
+/* Intrinsic header toggles can grow/shrink with the selected label. On narrow
+   headers the buttons may shrink and wrap, but the group itself never adopts a
+   fixed per-widget width. */
+@container (max-width: 460px) {
+  :where(.dashboard-barrier) .widget-header-toggle.is-intrinsic {
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  :where(.dashboard-barrier) .widget-header-toggle.is-intrinsic button {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
 }
