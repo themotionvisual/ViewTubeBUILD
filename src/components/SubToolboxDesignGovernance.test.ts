@@ -245,6 +245,8 @@ describe("subtoolbox design governance", () => {
   expect(toolboxCss).toContain(".vt-toolbox-header-extras")
   expect(toolboxCss).toContain(".vt-toolbox-header-secondary-actions")
   expect(systemCss).toContain("CANONICAL HEADER CONTROL PRIMITIVES — 2026-09-26")
+  expect(systemCss).not.toContain(".vt-toolbox-header-actions{")
+  expect(systemCss).not.toContain(".vt-toolbox-header-icon-rail.is-toolbox { width:56px; }")
   expect(systemCss).toContain(".vt-toolbox-header-collapse.is-toolbox")
   expect(systemCss).toContain(".vt-toolbox-header-palette-button")
   expect(systemCss).toContain(".vt-toolbox-header-collapse svg.is-open")
@@ -398,11 +400,19 @@ describe("subtoolbox design governance", () => {
 
  it("prevents page-local header width locks and mobile subtoolbox stretching", () => {
   const headerActionConsumers = [
-    "src/views/VideoPublisher.tsx",
-    "src/views/VideoManager.tsx",
-    "src/views/ThumbnailStudio.tsx",
-    "src/views/SeoGenerator.tsx",
+    "src/components/ToolHeader.tsx",
+    "src/components/ToolboxUIReferenceLibrary.tsx",
     "src/components/ProjectStudio.tsx",
+    "src/components/projects/ProjectBuilderModule.tsx",
+    "src/components/projects/ProjectsToolboxModule.tsx",
+    "src/views/BrainCommandCenter.tsx",
+    "src/views/PerformanceHub.tsx",
+    "src/views/SeoGenerator.tsx",
+    "src/views/ThumbnailStudio.tsx",
+    "src/views/VideoManager.tsx",
+    "src/views/VideoPublisher.tsx",
+    "src/views/supertools/SuperToolPrototypeWorkspace.tsx",
+    "src/views/supertools/SuperToolShell.tsx",
   ]
 
   for (const path of headerActionConsumers) {
@@ -422,6 +432,28 @@ describe("subtoolbox design governance", () => {
 
   expect(storyboard).not.toContain('shellClassName="h-full"')
   expect(storyboard).toContain('shellClassName="xl:h-full"')
+ })
+
+
+ it("keeps one canonical mobile shell geometry and gutter authority", () => {
+  const toolboxCss = source("src/styles/toolbox-system.css")
+  const systemCss = source("src/styles/subtoolbox-system.css")
+  const navigationCss = source("src/components/navigation/adaptive-navigation.css")
+
+  expect(toolboxCss).toContain("Mobile density authority — 2026-09-22")
+  expect(toolboxCss).toContain("Canonical shell gutter authority — 2026-09-25")
+  expect(toolboxCss).not.toContain("Phone geometry. Titles retain their established size.")
+  expect(toolboxCss).not.toContain("Interior safety inset: all Toolbox and SubToolbox bodies")
+  expect(toolboxCss).not.toContain("Second mobile-density pass:")
+  expect(toolboxCss).not.toContain('data-vt-toolbox-help="true"')
+  expect(toolboxCss).not.toContain('data-vt-toolbox-toggle="true"')
+  expect(toolboxCss).not.toContain('data-vt-subtoolbox-help="true"')
+  expect(toolboxCss).not.toContain('data-vt-subtoolbox-toggle="true"')
+  expect(navigationCss).not.toContain("top: 64px;")
+  expect(navigationCss).toContain("var(--vt-toolbox-header-height, 80px)")
+  expect(navigationCss).toContain("var(--vt-toolbox-stroke, 5px)")
+  expect(systemCss).toContain(".vt-toolbox-header-collapse:focus-visible")
+  expect(systemCss).toContain(".vt-toolbox-header-help:focus-visible")
  })
 
 })
