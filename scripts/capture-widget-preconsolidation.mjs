@@ -190,8 +190,9 @@ for (const viewport of [
     const settings = variantPage.locator('[data-widget-id="system-micro-stack"]').first()
     await settings.scrollIntoViewIfNeeded()
     await variantPage.waitForTimeout(250)
-    const resolvedSize = await settings.getAttribute("data-widget-width")
-    const resolvedHeight = await settings.getAttribute("data-widget-height")
+    const settingsShell = settings.locator(".vt-widget").first()
+    const resolvedSize = await settingsShell.getAttribute("data-widget-width")
+    const resolvedHeight = await settingsShell.getAttribute("data-widget-height")
     if (resolvedSize !== variant.size || resolvedHeight !== variant.height) {
       throw new Error(`${viewport.label} Settings ${variant.label} fixture normalized unexpectedly: requested ${variant.size}/${variant.height}, rendered ${resolvedSize}/${resolvedHeight}`)
     }
