@@ -144,7 +144,7 @@ const InlineMarkdown: React.FC<{ children: string }> = ({ children }) => (
   <ReactMarkdown
     components={{
       p: ({ children: paragraphChildren }) => <>{paragraphChildren}</>,
-      a: ({ children: linkChildren, ...props }) => (
+      a: ({ children: linkChildren, node: _node, ...props }) => (
         <a {...props} target="_blank" rel="noreferrer" className="vt-resource-inline-link">
           {linkChildren}
         </a>
@@ -165,7 +165,7 @@ const MarkdownContent: React.FC<{ value: string }> = ({ value }) => (
       ol: ({ children }) => <ol className="vt-resource-list vt-resource-list--ordered">{children}</ol>,
       li: ({ children }) => <li>{children}</li>,
       strong: ({ children }) => <strong className="vt-resource-strong">{children}</strong>,
-      a: ({ children, ...props }) => (
+      a: ({ children, node: _node, ...props }) => (
         <a {...props} target="_blank" rel="noreferrer" className="vt-resource-inline-link">
           {children}
         </a>
