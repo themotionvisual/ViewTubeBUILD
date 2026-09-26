@@ -67,15 +67,19 @@ for (const viewport of [
     if (id === "system-micro-stack" && name === "settings-dashboard") {
       await widget.screenshot({ path: `${outDir}/${viewport.label}-settings-dashboard.png` })
       const next = widget.getByRole("button", { name: "Next Settings control room page" })
-      await next.click()
-      await page.waitForTimeout(250)
+      await next.evaluate((button) => button.click())
+      await page.waitForTimeout(350)
       await widget.screenshot({ path: `${outDir}/${viewport.label}-settings-data-preview.png` })
-      await widget.getByRole("button", { name: "Previous Settings control room page" }).click()
+      await widget.getByRole("button", { name: "Previous Settings control room page" }).evaluate((button) => button.click())
     } else if (id === "ui-reference-library") {
       const next = widget.getByRole("button", { name: "Next Reference section" })
       // CONTROLS -> SIZE -> MATRIX -> COMPOUND
-      await next.click(); await next.click(); await next.click()
-      await page.waitForTimeout(300)
+      await next.evaluate((button) => button.click())
+      await page.waitForTimeout(100)
+      await next.evaluate((button) => button.click())
+      await page.waitForTimeout(100)
+      await next.evaluate((button) => button.click())
+      await page.waitForTimeout(350)
       await widget.screenshot({ path: `${outDir}/${viewport.label}-ui-reference-preview-state.png` })
     } else {
       await widget.screenshot({ path: `${outDir}/${viewport.label}-${name}.png` })
