@@ -21,6 +21,7 @@ import {
 import {
  SubToolboxAlphabeticalTag,
  SubToolboxDataTable,
+ type SubToolboxDataTableColumn,
  SubToolboxFileTarget,
  SubToolboxInput,
  SubToolboxSegmentedToggle,
@@ -327,7 +328,7 @@ const CreatorVaultOS: React.FC = () => {
   [manualCollections],
  )
  const tasks = useMemo(() => listVaultTasks(), [taskRefresh])
- const activeVaultTasks = tasks.filter((task) => task.status === "queued" || task.status === "running")
+ const activeVaultTasks = tasks.filter((task) => task.status === "queued" || task.status === "processing")
  const failedVaultTasks = tasks.filter((task) => task.status === "failed")
  const scratchpads = useMemo(() => listVaultScratchpads(), [scratchpadRefresh])
  const checklistItems = useMemo(() => listVaultChecklistItems(), [checklistRefresh])
@@ -527,7 +528,7 @@ const CreatorVaultOS: React.FC = () => {
   }
  }), [visibleAssets, selectedAssetIds, customFields])
 
- const finderListColumns = useMemo(() => [
+ const finderListColumns = useMemo<SubToolboxDataTableColumn<(typeof finderListRows)[number]>[]>(() => [
   { key: "select", label: "" },
   { key: "preview", label: "PREVIEW" },
   { key: "name", label: "NAME" },
@@ -1735,8 +1736,8 @@ const CreatorVaultOS: React.FC = () => {
          level="l1"
          variant="search"
          icon={<Search />}
+         inputRef={searchInputRef}
          inputProps={{
-          ref: searchInputRef,
           value: query,
           onChange: (event) => setQuery(event.target.value),
           placeholder: "Search assets…",
