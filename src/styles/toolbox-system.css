@@ -255,7 +255,11 @@
 
 @media (max-width: 767px) {
   [data-vt-toolbox][data-vt-toolbox-level="main"] {
-    --vt-toolbox-title-protected-width: 132px;
+    /* Protect one complete long title word (for example PUBLISHER) before
+       optional chrome gets any horizontal space. Actions already move to the
+       secondary strip on phones, so the title can keep its established 26px
+       size without mid-word fragmentation. */
+    --vt-toolbox-title-protected-width: clamp(148px, 42vw, 168px);
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -336,7 +340,10 @@
   display: block;
   max-height: 1.64em;
   overflow: hidden;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: balance;
 }
 
 /* One icon size per level. These previously fought the size the shell clones
