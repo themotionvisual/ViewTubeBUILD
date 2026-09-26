@@ -744,6 +744,8 @@ describe("reference library recovery completion", () => {
     expect(markup).toContain("is-size-small")
     expect(markup).toContain("is-size-large")
     expect(compoundCss).toContain(".widget-data-grid.is-size-large")
+    expect(referenceSource).toContain('<WidgetDataGrid size="small"')
+    expect(referenceSource).toContain('<WidgetDataGrid size="large"')
     expect(compoundCss).toContain(".widget-calendar-day-label")
     expect(compoundCss).toContain("font-size:13px")
   })
@@ -760,6 +762,7 @@ describe("video selector overlay geometry", () => {
     expect(videoSelectCss).toContain(".widget-video-select-menu.is-portalled")
     expect(videoSelectCss).toContain("position: fixed")
     expect(videoSelectCss).toContain("z-index: 9999")
+    expect(variantsCss).not.toContain(".vt-widget:has(.widget-video-select.is-open)")
   })
 
   it("keeps the UI Reference title room by hiding only secondary palette navigation on phones", () => {
