@@ -205,7 +205,7 @@ const ToneRows = ({
   <div className="grid gap-2">
     {CONTROL_TONES.map((tone) => (
       <div key={tone} className="grid gap-1">
-        <small className="text-[8px] font-black uppercase tracking-wider opacity-55">{tone}</small>
+        <small className="text-[8px] font-black uppercase tracking-wider" style={{ color: "color-mix(in srgb, var(--vt-ink) 68%, var(--widget-color))" }}>{tone}</small>
         <SizeVariants square={square}>{(height) => render(tone, height)}</SizeVariants>
       </div>
     ))}
@@ -274,7 +274,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
       style={{ borderColor: "color-mix(in srgb, var(--widget-color) 30%, transparent)" }}
     >
       <strong className="text-xs font-black uppercase tracking-wider">{title}</strong>
-      <span className="text-[9px] font-black uppercase opacity-55">{detail}</span>
+      <span className="text-[9px] font-black uppercase" style={{ color: "color-mix(in srgb, var(--vt-ink) 68%, var(--widget-color))" }}>{detail}</span>
     </header>
   )
 
