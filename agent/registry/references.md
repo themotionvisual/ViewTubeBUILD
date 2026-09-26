@@ -11,9 +11,9 @@ Re-audited 2026-09-24 against current main `c494d96aad9cbcf073e7d157685cb8b0269f
 
 | Path | Covers |
 |---|---|
-| `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md` | **Start here for cross-system AI work**: current AI ownership/status, work claims, provenance, plans, prompts, evidence, outcomes, historical donors and agent update protocol. |
-| `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` | Canonical creator-facing Brain/AI runtime architecture and owner boundaries. |
-| `docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md` | Current prompt-system architecture, precedence, personalization and migration authority. |
+| `docs/domains/BRAIN.md` | **Start here for creator-facing AI architecture**: Brain runtime, evidence/context, specialist intelligence, model/action/outcome/learning ownership. Work status and conversation continuity live in Task Authority / Conversation OS. |
+| `docs/domains/BRAIN.md` | Canonical creator-facing Brain/AI runtime architecture and owner boundaries. |
+| `docs/specifications/PROMPTS.md` | Current prompt-system architecture, precedence, personalization and migration authority. |
 | `docs/migration/reference/VIEWTUBE_SYSTEM_REGISTRY_2026-09-03.json` | Historical 2026-09-03 system-owner registry; useful migration evidence, **not current status authority**. |
 | `docs/architecture/VIEWTUBE_CROWN_INTEGRATION_SYSTEM.md` | the constitution: KING/EMPEROR, 5 record types, lifecycle, conflict levels |
 | `docs/architecture/viewtube-crown-protocols.schema.json` | schema for the five Crown records |
@@ -23,7 +23,7 @@ Re-audited 2026-09-24 against current main `c494d96aad9cbcf073e7d157685cb8b0269f
 | `docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md` | **canonical living Editor System integration authority**: desktop/mobile parity, Remotion, Editor Brain, generative media, skill/resource/branch registry and append-only update log. |
 | `docs/architecture/dashboard-baseline.json` · `dashboard-style-snapshot.json` | dashboard regression baselines |
 | `docs/MOBILE_VISUAL_RESPONSIVE_CONTRACT.md` · `MOBILE_VISUAL_QA_MATRIX.md` | mobile geometry contract + QA matrix |
-| `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md` · `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` | AI systems management/orientation + creator-facing Brain runtime architecture |
+| `docs/domains/BRAIN.md` · `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md` | AI systems management/orientation + creator-facing Brain runtime architecture |
 | `docs/architecture/SIMPLE_AUTH_V1.md` · `VIEWTUBE_AUTH_API_STABILIZATION_REFERENCE.md` | auth boundaries |
 | `.viewtube/exchange/README.md` | Royal Exchange record contract |
 | `CLAUDE.md` | deployment topology, golden rules, known lint debt |
@@ -133,7 +133,7 @@ entries below marked *external, unverified* stay unverified.
 
 | Path | Class | Covers |
 |---|---|---|
-| `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md` | canonical | AI systems management, cross-authority map, work claims/receipts, current-status and agent orientation |
+| `docs/domains/BRAIN.md` | canonical | AI systems management, cross-authority map, work claims/receipts, current-status and agent orientation |
 | `docs/brain/ai-systems/AGENT_READY_REPORT_2026-09-24.md` | reference | external public agent-readiness scan and remediation evidence |
 | `docs/brain/ai-systems/DOCUMENT_CONSOLIDATION_REGISTER_2026-09-24.md` | migration-receipt | AI document merge/archive/delete dispositions |
 | `docs/migration/reference/brain-ai-history/README.md` | historical-index | archived broad AI audits/phase inventories after durable-rule harvest |
