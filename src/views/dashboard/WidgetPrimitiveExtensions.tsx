@@ -165,6 +165,40 @@ export const WidgetRadio:React.FC<{checked:boolean;onChange:()=>void;label:strin
 export const WidgetCheckbox:React.FC<{checked:boolean;onChange:(checked:boolean)=>void;label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;disabled?:boolean;className?:string}> = ({checked,onChange,label,height=24,tone="default",disabled=false,className=""}) => <button type="button" role="checkbox" aria-checked={checked} aria-label={label} disabled={disabled} className={`widget-checkbox vt-shape-square ${primitiveClass(height,tone)} ${checked?"is-checked":""} ${className}`.trim()} onClick={()=>onChange(!checked)}>{checked?<X aria-hidden="true" strokeLinecap="round" strokeLinejoin="round"/>:null}</button>
 
 
+export interface WidgetVideoMiniCardProps {
+ title:React.ReactNode
+ thumbnail?:string
+ alt?:string
+ footer?:React.ReactNode
+ placeholder?:React.ReactNode
+ className?:string
+ onImageError?:React.ReactEventHandler<HTMLImageElement>
+}
+export const WidgetVideoMiniCard=React.forwardRef<HTMLDivElement,WidgetVideoMiniCardProps>(({title,thumbnail,alt="",footer,placeholder,className="",onImageError},ref)=>(
+ <div ref={ref} className={`widget-video-mini-card ${className}`.trim()}>
+  <div className="widget-video-mini-card-title">{title}</div>
+  <div className="widget-video-mini-card-media">
+   {thumbnail?<img src={thumbnail} alt={alt} onError={onImageError}/>:<div className="widget-video-mini-card-placeholder">{placeholder??<Film aria-hidden="true"/>}</div>}
+  </div>
+  {footer!==undefined&&footer!==null?<div className="widget-video-mini-card-footer">{footer}</div>:null}
+ </div>
+))
+WidgetVideoMiniCard.displayName="WidgetVideoMiniCard"
+
+export interface WidgetSpeechBubbleProps {
+ children:React.ReactNode
+ tone?:WidgetPrimitiveTone
+ className?:string
+ scrollable?:boolean
+}
+export const WidgetSpeechBubble=React.forwardRef<HTMLDivElement,WidgetSpeechBubbleProps>(({children,tone="default",className="",scrollable=false},ref)=>(
+ <div ref={ref} className={`widget-speech-bubble is-tone-${tone} ${scrollable?"is-scrollable":""} ${className}`.trim()}>
+  <svg className="widget-speech-bubble-tail" viewBox="0 0 30 20" aria-hidden="true"><path d="M4 18L15 4L26 18"/></svg>
+  <div className="widget-speech-bubble-copy">{children}</div>
+ </div>
+))
+WidgetSpeechBubble.displayName="WidgetSpeechBubble"
+
 export type WidgetSectionBandTone = WidgetPrimitiveTone
 export const WidgetSectionBand:React.FC<{children:React.ReactNode;tone?:WidgetSectionBandTone;edge?:"inset"|"full";className?:string}> = ({children,tone="primary",edge="full",className=""}) => (
  <div className={`widget-section-band vt-tone-${tone} is-tone-${tone} is-edge-${edge} ${className}`.trim()}>{children}</div>
