@@ -1797,7 +1797,7 @@
   box-sizing: border-box; width: 100%; padding: 0 14px;
   height: var(--widget-control-height);
   min-height: var(--widget-control-height);
-  border: 2px solid var(--widget-color, #000);
+  border: 2px solid var(--widget-field-rest-stroke, color-mix(in srgb, var(--widget-color, #34cdea) 52%, white));
   border-radius: 6px;
   background: #fff;
   font-size: 12px; font-weight: 700; font-family: inherit;
@@ -1823,11 +1823,11 @@
 }
 :where(.dashboard-barrier) .vt-textarea { resize: vertical; }
 :where(.dashboard-barrier) .vt-input:focus, :where(.dashboard-barrier) .vt-textarea:focus {
-  border-color: var(--widget-color, #000);
-  background: color-mix(in srgb, var(--widget-color, #fff) 18%, white);
+  border-color: var(--widget-field-focus-border, var(--widget-color, #34cdea));
+  background: var(--widget-field-focus-fill, color-mix(in srgb, var(--widget-color, #34cdea) 18%, white));
   box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--widget-color, #000) 35%, transparent),
-    0 0 16px 2px color-mix(in srgb, var(--widget-color, #000) 55%, transparent);
+    0 0 0 3px var(--widget-field-focus-ring, color-mix(in srgb, var(--widget-color, #34cdea) 35%, transparent)),
+    0 0 16px 2px var(--widget-field-focus-glow, color-mix(in srgb, var(--widget-color, #34cdea) 55%, transparent));
 }
 
 /* Fixed-height text fields use the same unobtrusive widget-color scroll rail. */
