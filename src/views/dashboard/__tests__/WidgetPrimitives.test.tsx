@@ -780,7 +780,7 @@ describe("video selector overlay geometry", () => {
   it("gives video labels and chevrons enough room at the standard heights", () => {
     expect(variantsCss).toContain("is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 12px")
     expect(variantsCss).toContain("is-height-38 .widget-video-select-option-copy strong {")
-    expect(variantsCss).toContain("font-size: 14px")
+    expect(variantsCss).toContain("font-size: 15px")
   })
 })
 
@@ -826,13 +826,15 @@ describe("spectrum tone classes", () => {
     })
   })
 
-  it("renders spectrum badges and toasts with tag-matched monochrome ink", () => {
+  it("renders spectrum badges and toasts with darker same-hue tone ink", () => {
     const badge = renderToStaticMarkup(
       <WidgetLeftSplitBadge spectrum="teal" icon={<span />}>On target</WidgetLeftSplitBadge>,
     )
     expect(badge).toContain("is-spectrum-teal")
     expect(badge).toContain("widget-split-badge-icon")
-    expect(matrixCss).toContain("--widget-spectrum-ink: #4EE4BE")
+    expect(matrixCss).toContain("--widget-spectrum-fill: #4EE4BE")
+    expect(matrixCss).toContain("--widget-spectrum-ink: color-mix(in srgb, var(--widget-spectrum-fill) 62%, var(--vt-ink) 38%)")
+    expect(matrixCss).not.toContain("--widget-spectrum-ink: #4EE4BE")
     expect(matrixCss).toContain("border: 2px solid var(--widget-spectrum-ink) !important")
     expect(matrixCss).toContain("color: var(--widget-spectrum-ink) !important")
     expect(matrixCss).toContain("--widget-toast-ink: var(--widget-spectrum-ink)")
