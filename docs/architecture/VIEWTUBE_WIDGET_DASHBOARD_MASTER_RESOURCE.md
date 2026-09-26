@@ -1661,3 +1661,540 @@ A canonical widget:
 12. passes functional, responsive, mobile, visual, accessibility and production certification.
 
 **New governing metric:** dashboard quality is measured partly by what can be removed. A successful redesign should normally reduce local styling and duplicated implementation while increasing capability and consistency.
+
+
+---
+
+## S. Widget System Recovery Authority
+
+**Approved direction:** 2026-09-26  
+**Priority:** BEFORE broad Preview State rollout, widget-ID consolidation, or new widget creation.
+
+### S.1 Why recovery precedes expansion
+
+The Dashboard has a strong target architecture but several shared foundations have regressed or remain contradictory. Fixing individual widgets before those owners are corrected would duplicate defects.
+
+Recovery is therefore the first implementation phase of the **same Subtractive Widget System program**, not a parallel program.
+
+Unified sequence:
+
+`RECOVER → STANDARDIZE → AUTOMATE → MIGRATE → CONSOLIDATE → CERTIFY`
+
+Planning for later consolidation may continue during recovery. Destructive consolidation and broad migrations wait until shared primitives pass recovery certification.
+
+### S.2 Evidence classification
+
+Every recovery rule must be classified:
+
+- **CONFIRMED CURRENT DEFECT** — reproduced in current main/code/runtime.
+- **CURRENT AUTHORITY** — governed by current skill/resource/production owner.
+- **HISTORICAL DONOR** — older Library/branch/screenshot that demonstrates a desirable behavior or appearance.
+- **PROPOSED TARGET** — approved design direction not yet implemented.
+
+Historical donors never override current architecture automatically. Extract their useful behavior/design and rebuild it through current owners.
+
+### S.3 Immediate recovery priorities
+
+1. shell geometry and dashboard editing mechanics;
+2. semantic color ownership;
+3. primitive size/type/radius lattice;
+4. header controls;
+5. editing/input surfaces;
+6. split-left family;
+7. video selector/dropdown;
+8. media/upload primitives;
+9. compound primitives;
+10. spectrum/icons;
+11. UI Reference Library certification;
+12. priority widget migrations;
+13. legacy widget sweep;
+14. full certification.
+
+---
+
+## T. Shell geometry and interior zones
+
+### T.1 No compensation geometry
+
+Do not solve dashboard gutters, scrollbars or full-width surfaces with accumulating magic reclaim widths, asymmetric negative margins or viewport-specific compensation.
+
+The dashboard row owns real outer gutters. The WidgetShell owns its internal geometry.
+
+### T.2 Four canonical interior zones
+
+A widget shell exposes four semantic geometry zones:
+
+**FULL**  
+Reaches the usable inside edge of the shell. For section bands, deliberate dividers, horizontal media rails, gradients and edge-to-edge structural surfaces.
+
+**SHADOW-SAFE**  
+Inset enough to preserve focus rings, raised borders and shadows. Use for components whose paint extends beyond their layout box.
+
+**INSET**  
+Default content column. Forms, buttons, cards, ordinary grids and text belong here.
+
+**OVERLAY**  
+Outside the clipping hierarchy. Dropdowns, popovers, menus, tooltips and floating editors use this layer/portal.
+
+Full-width behavior must come from shell-owned grid tracks, not per-widget negative-margin calculations.
+
+### T.3 Shell paint hierarchy
+
+Preferred structure:
+
+`outer effect owner → radius-clipped paint surface → interior grid → content`
+
+Floating overlays and focus paint that must escape clipping remain outside the inner paint clip.
+
+Do **not** apply blanket `overflow:hidden` to the outer widget shell merely to hide protruding corners.
+
+### T.4 Page invariance
+
+Changing an internal widget page/tab must not silently change the widget's persisted width or height bucket.
+
+Content adapts to the shell. The shell does not resize itself merely because a different Settings/Director/Manager page became active.
+
+---
+
+## U. Dashboard editing capability model
+
+Resize, reorder, drag and visibility are separate capabilities.
+
+Canonical capability vocabulary:
+
+- `canResizeWidth`
+- `canResizeHeight`
+- `canReorder`
+- `canDragReorder`
+- `canHide`
+
+Do not gate height resizing behind a generic `canDrag`.
+
+If a capability is unavailable, the matching control must be disabled/hidden intentionally and communicate why. Never render an apparently active control whose callback intentionally has no effect.
+
+Phone contract:
+
+- W− / W+ may be disabled where width is fixed by the mobile composition;
+- H− / H+ remain functional when the widget supports multiple phone height buckets;
+- Move Up / Move Down must alter and persist order when reorder capability is enabled.
+
+Interaction tests must prove DOM geometry/state and persisted layout both change.
+
+---
+
+## V. Semantic color recovery
+
+### V.1 Three ink concepts
+
+**VT Ink**  
+Global application structural/text ink.
+
+**Widget Ink**  
+Derived from the widget's assigned spectrum identity and used where the widget itself owns the color relationship.
+
+**Tone Ink**  
+Derived from the specific component's own tone/spectrum color. Use when a component such as a spectrum badge/toast owns a different hue from its parent widget.
+
+“No black” does **not** mean replacing all authored black with one nearly-black substitute.
+
+### V.2 Structural UI rule
+
+> **No authored structural widget UI color may bypass the ViewTube semantic color/token system.**
+
+Audit suspicious:
+
+- `#000` / `black`;
+- `text-black` / `border-black`;
+- neutral `gray-*` structural classes;
+- raw spectrum hexes;
+- dark fallbacks such as `var(...,#000)`;
+- ungoverned `!important`.
+
+Native media/source imagery and deliberate data encodings may be exempt when documented.
+
+### V.3 Split/spectrum ownership
+
+For spectrum badges/tags where the component owns its own hue:
+
+- fill/accent = component spectrum hue;
+- text/divider = VT Ink or accessibility-certified Tone Ink according to the component contract;
+- never inherit unrelated parent Widget Ink by accident.
+
+For selected split-left controls:
+
+- icon bay = stronger/full tone;
+- label bay = lighter tint;
+- divider/text = semantic ink;
+- shadow = transparent spectrum-derived tint.
+
+---
+
+## W. Primitive recovery lattice
+
+### W.1 Geometry
+
+Canonical component heights remain:
+
+**18 / 24 / 32 / 38px**
+
+Standard control rows should not mix arbitrary heights/radii/styles.
+
+Square icon/left bays are calculated from actual inner control height after border/stroke, not hard-coded independently.
+
+### W.2 Typography
+
+Density changes composition before it shrinks type.
+
+Order of adaptation:
+
+1. reduce gaps/padding within canonical bounds;
+2. recompose rows/columns;
+3. switch canonical component tier;
+4. wrap labels where allowed;
+5. use opt-in adaptive fit only for genuinely constrained controls.
+
+Do not apply widget-wide compact typography that turns spacious 24/32/38px controls into 8–10px text.
+
+The final typography mapping must have **one coded authority**. Historical mappings remain donor evidence until reconciled and explicitly certified.
+
+### W.3 Content fit
+
+Every primitive must pass realistic-label tests at every supported size/tone.
+
+The Size/Matrix Reference Library pages should prove useful real content, not placeholder strings that hide clipping.
+
+Progress controls must be long enough to communicate progress. Selects must have useful field proportions. Toggle width should follow its actual content contract.
+
+---
+
+## X. Header control family
+
+Use Header Stepper as a visual/geometry anchor for the coherent Header Controls family:
+
+- Header Stepper;
+- Header Toggle;
+- Header Action;
+- Header Checkbox;
+- Header Radio;
+- compact pagination where appropriate.
+
+Same-height header controls align in stroke, radius, shadow, type hierarchy and baseline.
+
+### X.1 Intrinsic animated header toggle
+
+A word toggle must not assume equal segment widths when labels have different intrinsic widths.
+
+The active indicator resolves from the selected item's measured position and width and animates both position and width.
+
+Example:
+
+`CHAT ↔ CONTROLS`
+
+The active box narrows around CHAT and widens around CONTROLS while remaining centered.
+
+Use reduced-motion fallback.
+
+### X.2 Dense header groups
+
+When multiple controls cannot fit one narrow row, use a governed two-row/secondary-line composition rather than clipping or shrinking all labels.
+
+Module titles never become ellipsized micro-type merely to preserve a one-row header.
+
+---
+
+## Y. Editing surfaces and focus system
+
+Canonical text inputs/textareas/select-like editing surfaces restore:
+
+**Default**
+- light spectrum-derived/translucent surface;
+- semantic colored border;
+- readable ink;
+- no black/neutral-grey fallback.
+
+**Focus**
+- clean editing surface;
+- colored boundary/outline;
+- palette-derived external glow/ring;
+- no geometry shift;
+- no clipping of focus paint.
+
+Textareas retain their intended resize affordance where the component contract permits it.
+
+Focus styling is owned centrally, not rewritten per widget.
+
+---
+
+## Z. Split-left family
+
+One mathematical split-left lattice governs:
+
+- split buttons;
+- search rails;
+- video selectors;
+- split badges/counters;
+- pagination/steppers where structurally equivalent.
+
+Rules:
+
+- true square left/icon rail;
+- no gap between rail and label bay;
+- distinct icon and label bay tones;
+- one-line or deliberate two-line labels;
+- label wrapping must never escape the component;
+- size-specific type/icon scaling;
+- consistent divider/stroke/radius behavior.
+
+Two-line labels are a first-class solution for controls such as `SUGGEST / VIDEO`, not a widget-specific hack.
+
+---
+
+## AA. Video selector and floating menu contract
+
+The canonical Video Selector:
+
+- uses the split-left lattice;
+- has a mathematically square VIDEO/identity rail;
+- gives the VIDEO label adequate size;
+- reserves real chevron space;
+- never clips the chevron at supported sizes;
+- uses larger, readable open-row title typography;
+- preserves thumbnail/title/meta hierarchy.
+
+Open menus use OVERLAY/portal ownership, inherit the originating widget/tone variables, stay above neighboring modules, and choose above/below placement based on available space.
+
+Menu width resolves to at least the trigger width and the content minimum while remaining within viewport bounds.
+
+The canonical search row is the first menu row where search is supported.
+
+---
+
+## AB. Canonical donor primitives from Comment Responder
+
+Promote useful patterns by extending/reconciling existing owners rather than creating redundant families.
+
+Target capabilities:
+
+### Video Mini Card
+Thumbnail + title identity module in **S / M / L** sizes with vertically centered media and optional compact metadata.
+
+### Split Counter Badge
+Square icon bay + compact value bay for like/reply/count patterns. Reconcile with existing split-counter ownership.
+
+### Speech Bubble
+Generalized comment/message bubble with governed tail position, spectrum tone, max height and optional internal scroll.
+
+### Split Button
+Support deliberate two-line labels and the canonical split-left geometry.
+
+All promoted components must appear in the UI Reference Library using the actual production component.
+
+---
+
+## AC. Media/upload frame recovery
+
+Retire generic/dashed/black upload treatments.
+
+Canonical Media Upload Frame uses Toolbox-compatible anatomy:
+
+- solid spectrum-derived outer stroke;
+- optional square identity/icon rail;
+- clear title and secondary instruction;
+- contained 16:9 or 1:1 media stage;
+- empty / dragging / selected / uploading / error states;
+- optional action/status rail;
+- spectrum-derived tint/shadow;
+- `object-fit: contain` when cropping is not intended.
+
+Provide **Small** and **Large** canonical compositions before proliferating more variants.
+
+Legacy/custom upload frames migrate to this owner rather than remaining parallel systems.
+
+---
+
+## AD. Compound primitive recovery
+
+Audit and recover together:
+
+- Section Band;
+- Data Grid;
+- Checklist Progress;
+- Calendar Grid;
+- progress/bars;
+- tags/badges;
+- alerts/toasts.
+
+Rules:
+
+- no unauthorized black/neutral-grey structural UI;
+- full-width Section Bands use the FULL shell zone and reach both usable shell edges;
+- Data Grid supports at least S/L density compositions;
+- grid headings/cells use readable canonical type;
+- Calendar day/event text uses readable canonical type;
+- muted/supporting copy uses semantic ink/tone rather than generic grey;
+- horizontal grids own their intentional scroll region;
+- corner radius/stroke follows the canonical lattice.
+
+---
+
+## AE. Spectrum and icon recovery
+
+Maintain all 12 spectrum slots as visibly distinct.
+
+Add/complete:
+
+- larger spectrum icon family;
+- widget-colored default/primary/secondary icon treatments;
+- restored split-spectrum badge anatomy;
+- canonical 24/32/38 badge/tag typography large enough to use the available height.
+
+Color-derived component text/dividers must meet accessibility contrast.
+
+---
+
+## AF. UI Reference Library as executable certification
+
+The Reference Library is not a gallery. Every displayed example must be an actual production primitive/component and a passing reference.
+
+Target families after recovery:
+
+`Controls → Size → Matrix → Compound → Video → Bars → Tags → Media → Header Controls → Alerts`
+
+Directive:
+
+- retire the separate Navigation #6 family after useful header behaviors are represented by Header Controls;
+- remove/redesign the old Metrics + States #7 family; preserve the useful Tags capability in its canonical family;
+- rebuild Alerts + split badges/toasts without unauthorized black/grey;
+- restore split-spectrum badge identity;
+- correct Size/Matrix widths, label fit, progress lengths, select proportions and toggle geometry.
+
+Every Reference Library component should expose certification metadata:
+
+- CERTIFIED / EXPERIMENTAL / LEGACY / DEPRECATED / MIGRATING;
+- owner;
+- supported sizes;
+- responsive/mobile status;
+- accessibility status.
+
+---
+
+## AG. Recovery implementation program
+
+### R0 — Authority reset
+Reconcile active color/type/geometry rules. Mark contradictory legacy instructions obsolete. Record historical donor references separately.
+
+### R1 — Shell + dashboard mechanics
+Repair clipping/corners, capability separation, H±, reorder, deterministic height, page invariance and named shell zones.
+
+### R2 — Semantic color recovery
+Implement VT Ink / Widget Ink / Tone Ink ownership and remove unauthorized structural black/grey/raw-color usage.
+
+### R3 — Primitive lattice
+Recover 18/24/32/38 geometry, typography authority, square bays, content fit, radii/strokes/shadows.
+
+### R4 — Header controls
+Intrinsic animated toggle plus coherent Stepper/Toggle/Action/Checkbox/Radio family.
+
+### R5 — Editing surfaces
+Restore input/textarea/select default tint, focus boundary and external glow.
+
+### R6 — Split-left family
+Square rails, two-line labels, distinct selected bay tones.
+
+### R7 — Video selector
+Correct trigger, chevron, readable rows, portal/flip behavior and search row.
+
+### R8 — Media primitives
+Toolbox-style S/L upload frame and thumbnail/media containment.
+
+### R9 — Compound primitives
+Mini video cards, section bands, Data Grid S/L, checklist/calendar, split counters, speech bubble.
+
+### R10 — Spectrum/icons
+Large icon families, spectrum badge/tag typography and color-derived ink.
+
+### R11 — Reference Library surgery
+Remove obsolete families, display only production primitives and certify every example.
+
+### R12 — Pilot widget migrations
+Preferred recovery cohort:
+
+1. Video Director;
+2. Video Uploader;
+3. Video Manager;
+4. Settings.
+
+These expose enough control/grid/media/state diversity to prove the recovered system.
+
+### R13 — Legacy sweep
+Classify every registered widget as CANONICAL or MIGRATION-NEEDED and migrate in bounded archetype batches.
+
+### R14 — Certification
+Built screenshots + interactions are mandatory. Source inspection alone cannot close a wave.
+
+Required minimum:
+- desktop 1440×1000;
+- narrow desktop;
+- 390×844 portrait;
+- phone landscape;
+- each declared min/default/max width × height;
+- resize/reorder;
+- focus;
+- dropdown selection;
+- upload states;
+- page invariance;
+- overflow/scroll ownership;
+- reduced motion;
+- keyboard/coarse pointer.
+
+---
+
+## AH. Relationship to Preview State and consolidation
+
+### Preview State
+The canonical Preview/Disconnected state remains important, but **broad rollout waits until R1–R11 stabilize the shell and primitives**. Otherwise defects would be multiplied across the fleet.
+
+The Preview State contract can be designed/tested during recovery.
+
+### Widget consolidation
+Capability analysis continues during recovery so redundant widgets are not fully migrated unnecessarily.
+
+Rules:
+
+- consolidation planning may proceed;
+- persisted-layout migration design may proceed;
+- destructive ID removal waits for parity/migration tests;
+- new widget proliferation pauses unless a critical missing job has no existing owner.
+
+### Initial consolidation queue after recovery checkpoint
+- Next Best Action → Daily Oracle;
+- News Ticker → Alerts/Header;
+- Video Uploader + Publishing Command → canonical Publisher;
+- then Retention / Keyword / Metadata-SEO / Calendar / Audience workbenches as capability matrices justify.
+
+---
+
+## AI. Recovery/subtraction scorecard
+
+Every recovery/migration PR records:
+
+**Before**
+- widget-local CSS selectors;
+- unauthorized raw structural colors;
+- private control implementations;
+- duplicate responsive rules;
+- legacy selectors;
+- component files;
+- supported/certified dimension pairs.
+
+**After**
+- same measures;
+- canonical primitives reused;
+- archetype/recipe reused;
+- deleted CSS/components;
+- exceptions introduced and rationale;
+- tests/captures.
+
+The target is not merely visual parity.
+
+> **Recovery should reduce private implementation while increasing certified capability.**
