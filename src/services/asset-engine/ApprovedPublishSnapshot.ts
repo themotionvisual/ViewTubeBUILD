@@ -108,3 +108,63 @@ export const verifyApprovedPublishSnapshot = (
  const expectedHash = stableHash(stableStringify(payload))
  return hash === expectedHash && id === `approved-publish:${payload.contentBuildId}:${expectedHash}`
 }
+
+
+const SNAPSHOT_KEY = "viewtube_approved_publish_snapshots_v1"
+let memorySnapshots: ApprovedPublishSnapshot[] = []
+
+const canStoreSnapshots = () => {
+ try { return typeof localStorage !== "undefined" } catch { return false }
+}
+
+const readSnapshots = (): ApprovedPublishSnapshot[] => {
+ if (!canStoreSnapshots()) return memorySnapshots
+ try {
+  const parsed = JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || "[]")
+  return Array.isArray(parsed) ? parsed : []
+ } catch {
+  return []
+ }
+}
+
+const writeSnapshots = (snapshots: ApprovedPublishSnapshot[]) => {
+ if (!canStoreSnapshots()) {
+  memorySnapshots = snapshots
+  return
+ }
+ try {
+  localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshots))
+ } catch {
+  // Persistence failures remain non-destructive; callers still receive the immutable value.
+ }
+}
+
+export const getApprovedPublishSnapshot = (id: string): ApprovedPublishSnapshot | null =>
+ readSnapshots().find(snapshot => snapshot.id === id) || null
+
+export const listApprovedPublishSnapshots = (contentBuildId: string): ApprovedPublishSnapshot[] =>
+ readSnapshots().filter(snapshot => snapshot.contentBuildId === contentBuildId)
+
+export const persistApprovedPublishSnapshot = (
+ projection: PublishingPackageProjection,
+): ApprovedPublishSnapshot => {
+ const snapshot = createApprovedPublishSnapshot(projection)
+ if (!verifyApprovedPublishSnapshot(snapshot)) {
+  throw new Error("Approved publish snapshot failed integrity verification.")
+ }
+ const snapshots = readSnapshots()
+ const existing = snapshots.find(candidate => candidate.id === snapshot.id)
+ if (existing) {
+  if (!verifyApprovedPublishSnapshot(existing) || existing.hash !== snapshot.hash) {
+   throw new Error("Persisted approved publish snapshot failed integrity verification.")
+  }
+  return existing
+ }
+ writeSnapshots([...snapshots, snapshot])
+ return snapshot
+}
+
+export const resetApprovedPublishSnapshotRepositoryForTests = () => {
+ memorySnapshots = []
+ if (canStoreSnapshots()) localStorage.removeItem(SNAPSHOT_KEY)
+}
