@@ -1728,7 +1728,10 @@ const CreatorVaultOS: React.FC = () => {
          aria-label="Open library navigation"
          aria-expanded={libraryNavigationOpen}
          className="min-h-9 rounded-md border-2 border-current px-3 text-xs font-black uppercase"
-         onClick={() => setLibraryNavigationOpen((open) => !open)}
+         onClick={() => {
+          setLibraryFiltersOpen(false)
+          setLibraryNavigationOpen((open) => !open)
+         }}
         >
          Library
         </button>
@@ -1760,7 +1763,10 @@ const CreatorVaultOS: React.FC = () => {
          aria-label="Open Vault filters"
          aria-expanded={libraryFiltersOpen}
          className="min-h-9 rounded-md border-2 border-current px-3 text-xs font-black uppercase"
-         onClick={() => setLibraryFiltersOpen((open) => !open)}
+         onClick={() => {
+          setLibraryNavigationOpen(false)
+          setLibraryFiltersOpen((open) => !open)
+         }}
         >
          Filters
         </button>
@@ -1831,7 +1837,11 @@ const CreatorVaultOS: React.FC = () => {
       ) : null}
 
       {libraryNavigationOpen ? (
-       <section aria-label="Vault library navigation" className="rounded-lg border-[3px] border-current p-3">
+       <section
+        aria-label="Vault library navigation"
+        data-vault-mobile-sheet="library-navigation"
+        className="fixed inset-x-2 bottom-2 z-50 max-h-[70vh] overflow-y-auto rounded-lg border-[3px] border-current bg-white p-3 shadow-[4px_4px_0_currentColor] xl:static xl:max-h-none xl:overflow-visible"
+       >
         <div className="mb-2 text-xs font-black uppercase">Projects & Collections</div>
         <div className="flex flex-wrap gap-2">
          <SubToolboxInnerActionButton
@@ -1888,7 +1898,11 @@ const CreatorVaultOS: React.FC = () => {
       ) : null}
 
       {libraryFiltersOpen ? (
-       <section aria-label="Vault filters" className="rounded-lg border-[3px] border-current p-3">
+       <section
+        aria-label="Vault filters"
+        data-vault-mobile-sheet="filters"
+        className="fixed inset-x-2 bottom-2 z-50 max-h-[70vh] overflow-y-auto rounded-lg border-[3px] border-current bg-white p-3 shadow-[4px_4px_0_currentColor] xl:static xl:max-h-none xl:overflow-visible"
+       >
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
          <SubToolboxDropdownControl
           label="Asset kind"
