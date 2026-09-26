@@ -85,3 +85,13 @@ Finish editor/render parity, responsive/state certification, the 10-widget cohor
 - backend contract PRs before large UI consumers;
 - every UI wave includes mobile/narrow certification;
 - every AI wave includes prompt/context/model/evidence provenance and focused evals.
+
+## Convergence prerequisite
+
+Before Wave 4 expands Brain/context/prompt integration or Wave 5 deepens Project/Asset integration, execute the relevant foundation slices in `tasks/system-convergence/`.
+
+The Finish Program remains the delivery backlog. The convergence program determines **which existing systems should survive, pair, project, merge or be retired** so Finish Program work does not cement redundant bridges or duplicate owners.
+
+Immediate dependency:
+
+`System classification → Creator Context facade → Evidence facade → package/asset ownership matrix → then broad Brain/Studio/widget migrations`.
