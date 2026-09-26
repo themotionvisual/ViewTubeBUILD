@@ -104,10 +104,9 @@ type ReferenceCategory =
   | "progress"
   | "tags"
   | "media"
-  | "navigation"
+  | "header"
   | "matrix"
   | "compound"
-  | "states"
   | "alerts"
 
 const REFERENCE_CATEGORIES: ReadonlyArray<{ id: ReferenceCategory; label: string }> = [
@@ -119,8 +118,7 @@ const REFERENCE_CATEGORIES: ReadonlyArray<{ id: ReferenceCategory; label: string
   { id: "progress", label: "BARS" },
   { id: "tags", label: "TAGS" },
   { id: "media", label: "MEDIA" },
-  { id: "navigation", label: "NAV" },
-  { id: "states", label: "STATES" },
+  { id: "header", label: "HEADER CONTROLS" },
   { id: "alerts", label: "ALERTS" },
 ]
 
@@ -232,7 +230,6 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   const [textValue, setTextValue] = useState("")
   const [tags, setTags] = useState(["viewtube", "analytics", "creator"])
   const [hasThumbnail, setHasThumbnail] = useState(false)
-  const [statePanelStatus, setStatePanelStatus] = useState<"loading" | "ready" | "empty" | "blocked" | "stale" | "error">("ready")
   const [matrixStepper, setMatrixStepper] = useState(10)
   const [matrixPage, setMatrixPage] = useState(2)
   const [matrixToggle, setMatrixToggle] = useState(true)
@@ -515,6 +512,23 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   <WidgetIconBadge height={height} tone={tone} label="Starred" icon={<Star strokeWidth={2.5} />} />
                 )}
               />
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Spectrum Icon Sizes", "18 / 24 / 32 / 38px · canonical spectrum owner")}
+              <div className="flex flex-wrap items-end gap-3">
+                {CONTROL_HEIGHTS.map((height, index) => (
+                  <div className="widget-reference-variant" key={height}>
+                    <small>{height}px</small>
+                    <WidgetTinySpectrumIcon
+                      name={["video", "brain", "analytics", "sparkles"][index] as keyof typeof WIDGET_TINY_ICON_SET}
+                      spectrum={WIDGET_BADGE_SPECTRUM[index * 3]}
+                      height={height}
+                      label={`${height}px spectrum icon`}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="widget-reference-family">
@@ -1018,6 +1032,20 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
               </div>
             </div>
             <div className="widget-reference-family">
+              {familyHeading("Editable Tags", "Useful tag editor retained from the retired Metrics/States page")}
+              <WidgetDisclosure title="Tags">
+                <div className="flex flex-wrap gap-1 p-2">
+                  {tags.map((tag) => (
+                    <WidgetTag key={tag} onRemove={() => setTags((current) => current.filter((item) => item !== tag))}>{tag}</WidgetTag>
+                  ))}
+                  <WidgetSizedButton height={24} tone="secondary" onClick={() => setTags((current) => [...current, `tag-${current.length + 1}`])} aria-label="Add tag">
+                    <Plus size={12} />
+                  </WidgetSizedButton>
+                </div>
+              </WidgetDisclosure>
+            </div>
+
+            <div className="widget-reference-family">
               {familyHeading("Badge Heights", "Radius and typography follow component height")}
               <div className="widget-reference-variants">
                 {CONTROL_HEIGHTS.map((height, index) => (
@@ -1075,6 +1103,16 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                 ))}
               </div>
             </div>
+            <div className="widget-reference-family">
+              {familyHeading("Full-Width Badges", "FULL track examples using the canonical badge owners")}
+              <div className="grid gap-2">
+                <WidgetSpectrumFillBadge spectrum="cyan" height={32} width="full">Full-width spectrum badge</WidgetSpectrumFillBadge>
+                <WidgetLeftSplitBadge spectrum="purple" height={38} width="full" icon={<Star strokeWidth={2.5} />}>
+                  Full-width split badge
+                </WidgetLeftSplitBadge>
+              </div>
+            </div>
+
             <div className="widget-reference-family">
               {familyHeading("Split Badge Heights", "Icon bay tracks the control height")}
               <div className="widget-reference-variants">
