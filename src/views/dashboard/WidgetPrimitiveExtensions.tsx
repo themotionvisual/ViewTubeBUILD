@@ -1,4 +1,5 @@
-import React, { useMemo, useRef, useState } from "react"
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { AlertTriangle, Activity, ArrowRight, Award, BadgeDollarSign, BarChart3, Bell, Bookmark, Brain, CalendarDays, Camera, Check, ChevronDown, ChevronUp, CircleDollarSign, CirclePlay, Clock3, Coins, Download, Eye, FileText, Film, Filter, Flag, Flame, Folder, Gauge, Gem, Heart, Hourglass, Image, Info, Layers, Lightbulb, Link, ListChecks, ListPlus, Lock, Mail, MessageCircle, MessagesSquare, Mic, MonitorPlay, MousePointerClick, Music, OctagonAlert, Pencil, Percent, Play, Plus, Rocket, Search, Send, Settings, Share2, Sparkles, Star, Target, ThumbsUp, Timer, TrendingUp, Upload, UserPlus, Users, WandSparkles, X, Zap, type LucideIcon } from "lucide-react"
 import { WIDGET_BADGE_SPECTRUM, WidgetSelect, WidgetSplitButton, resolveBadgeHue, type WidgetBadgeSpectrumName, type WidgetBadgeStatus, type WidgetBadgeTone, type WidgetSelectOption } from "./WidgetPrimitives"
 import { VT_SPECTRUM_PALETTE_06, VT_VISUAL_METRIC_ORDER } from "../../styles/toolboxPalette"
@@ -51,17 +52,45 @@ const resolveVideoOptionMeta = (option:WidgetVideoSelectOption) => {
 export const WidgetVideoSelect:React.FC<{value:string;onChange:(value:string)=>void;options:WidgetVideoSelectOption[];label:string;placeholder?:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;iconStyle?:WidgetSplitIconStyle;searchable?:boolean;disabled?:boolean;className?:string}> = ({value,onChange,options,label,placeholder="Select a video…",height=38,tone="default",iconStyle="white-on-color",searchable=true,disabled=false,className=""}) => {
  const[open,setOpen]=useState(false)
  const[query,setQuery]=useState("")
- const[placement,setPlacement]=useState<"down"|"up">("down")
+ const[menuGeometry,setMenuGeometry]=useState<{left:number;top:number;width:number;maxHeight:number;placement:"down"|"up";theme:Record<string,string>}>({left:0,top:0,width:0,maxHeight:320,placement:"down",theme:{}})
  const triggerRef=useRef<HTMLButtonElement|null>(null)
  const selected=options.find(o=>o.value===value)
  const visibleOptions=useMemo(()=>{const n=query.trim().toLowerCase();return n?options.filter(o=>`${o.label} ${o.meta||""} ${o.duration||""} ${o.views||""}`.toLowerCase().includes(n)):options},[options,query])
- const toggleMenu=()=>{if(!open&&triggerRef.current&&typeof window!=="undefined"){const rect=triggerRef.current.getBoundingClientRect();const rows=Math.min(5,Math.max(1,visibleOptions.length))+(searchable?1:0);const expected=Math.min(window.innerHeight*.7,(height*rows)+12);const below=window.innerHeight-rect.bottom-8;const above=rect.top-8;setPlacement(below<expected&&above>below?"up":"down")}setOpen(current=>!current)}
- return <div className={`widget-video-select ${open?"is-open":""} ${placement==="up"?"is-drop-up":""} ${className}`.trim()}>
-  <button ref={triggerRef} type="button" className={`widget-video-select-trigger vt-interactive ${primitiveClass(height,tone)} is-icon-${iconStyle}`} aria-label={label} aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={toggleMenu}>
-   <span className="widget-video-select-trigger-selector" aria-hidden="true"><span>VIDEO</span><span>{open?<ChevronUp/>:<ChevronDown/>}</span></span>
-   <span className="widget-video-select-trigger-copy">{selected?.thumbnail?<img src={selected.thumbnail} alt=""/>:null}<span>{selected?.label||placeholder}</span></span>
-  </button>
-  {open?<div className={`widget-video-select-menu ${selectMenuClass(height,tone)}`} style={selectMenuStyle(height)} role="listbox" aria-label={label}>
+
+ useLayoutEffect(()=>{
+  if(!open||!triggerRef.current||typeof window==="undefined")return
+  const sync=()=>{
+   const trigger=triggerRef.current
+   if(!trigger)return
+   const rect=trigger.getBoundingClientRect()
+   const rows=Math.min(5,Math.max(1,visibleOptions.length))+(searchable?1:0)
+   const desired=Math.min(window.innerHeight*.7,Math.max(height*rows+8,height*3))
+   const below=Math.max(0,window.innerHeight-rect.bottom-8)
+   const above=Math.max(0,rect.top-8)
+   const placement: "down"|"up" = below<Math.min(desired,height*4)&&above>below?"up":"down"
+   const maxHeight=Math.max(height*2,Math.min(desired,placement==="up"?above:below))
+   const top=placement==="up"?Math.max(8,rect.top-maxHeight-4):Math.min(window.innerHeight-maxHeight-8,rect.bottom+4)
+   const styles=window.getComputedStyle(trigger)
+   const theme:Record<string,string>={}
+   for(const name of ["--widget-color","--widget-border","--widget-ink","--vt-tone-bg","--vt-tone-ink","--vt-tone-stroke","--vt-tone-fill"]){
+    const value=styles.getPropertyValue(name).trim()
+    if(value)theme[name]=value
+   }
+   setMenuGeometry({left:Math.max(8,Math.min(rect.left,window.innerWidth-rect.width-8)),top,width:rect.width,maxHeight,placement,theme})
+  }
+  sync()
+  window.addEventListener("resize",sync)
+  window.addEventListener("scroll",sync,true)
+  return()=>{window.removeEventListener("resize",sync);window.removeEventListener("scroll",sync,true)}
+ },[height,open,searchable,visibleOptions.length])
+
+ const menu = open && typeof document!=="undefined" ? createPortal(
+  <div
+   className={`widget-video-select-menu is-portalled is-drop-${menuGeometry.placement} ${selectMenuClass(height,tone)}`}
+   style={{...selectMenuStyle(height),...menuGeometry.theme,left:`${menuGeometry.left}px`,top:`${menuGeometry.top}px`,width:`${menuGeometry.width}px`,maxHeight:`${menuGeometry.maxHeight}px`} as React.CSSProperties}
+   role="listbox"
+   aria-label={label}
+  >
    {searchable?<div className="widget-video-select-search"><WidgetSearchInput className="widget-video-select-menu-search-row" height={height} tone="primary" iconStyle={iconStyle} label={`Search ${label}`} value={query} onChange={e=>setQuery(e.currentTarget.value)} placeholder="Search videos…"/></div>:null}
    <div className="widget-video-select-options">
     {visibleOptions.map(option=>{const meta=resolveVideoOptionMeta(option);return <button key={option.value} type="button" role="option" aria-selected={option.value===value} className={`widget-video-select-option ${option.value===value?"is-selected":""}`.trim()} onClick={()=>{onChange(option.value);setOpen(false)}}>
@@ -75,7 +104,16 @@ export const WidgetVideoSelect:React.FC<{value:string;onChange:(value:string)=>v
      </span>
     </button>})}
    </div>
-  </div>:null}
+  </div>,
+  document.body,
+ ) : null
+
+ return <div className={`widget-video-select ${open?"is-open":""} ${className}`.trim()}>
+  <button ref={triggerRef} type="button" className={`widget-video-select-trigger vt-interactive ${primitiveClass(height,tone)} is-icon-${iconStyle}`} aria-label={label} aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={()=>setOpen(current=>!current)}>
+   <span className="widget-video-select-trigger-selector" aria-hidden="true"><span>VIDEO</span><span>{open?<ChevronUp/>:<ChevronDown/>}</span></span>
+   <span className="widget-video-select-trigger-copy">{selected?.thumbnail?<img src={selected.thumbnail} alt=""/>:null}<span>{selected?.label||placeholder}</span></span>
+  </button>
+  {menu}
  </div>
 }
 
