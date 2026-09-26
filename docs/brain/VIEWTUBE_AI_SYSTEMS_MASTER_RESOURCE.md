@@ -1,3 +1,5 @@
+> **PHASE D MIGRATION NOTICE — 2026-09-26:** Superseded as a current authority by `docs/domains/BRAIN.md` for creator-facing AI architecture and by Conversation OS / Crown / Task Authority for repository work continuity, missions, receipts and exact task state. This file remains intact below as donor/provenance material pending lossless Removed Archive consolidation.
+
 # ViewTube AI Systems — Living Master Resource
 
 **Status:** CANONICAL AI SYSTEMS MANAGEMENT / AGENT ORIENTATION AUTHORITY  
