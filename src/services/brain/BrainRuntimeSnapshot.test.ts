@@ -259,3 +259,271 @@ describe("readBrainRuntimeSnapshot", () => {
   expect(snapshot.brain.capabilityCount).toBe(14)
  })
 })
+
+
+it("projects an explicit provenance chain without fuzzy attribution", () => {
+ const events = [
+  {
+   id: "event-input",
+   contentBuildId: build.id,
+   timestamp: "2026-09-24T05:01:00.000Z",
+   eventType: "tool.input.received",
+   actorType: "tool",
+   inputAssetIds: ["asset-script"],
+   outputAssetIds: [],
+   evidenceIds: ["evidence-1", "evidence-2"],
+   actionPacketId: "packet-1",
+   traceId: "trace-1",
+   metadata: { generationRequest, contextManifest },
+  },
+  {
+   id: "event-output",
+   contentBuildId: build.id,
+   timestamp: "2026-09-24T05:01:02.000Z",
+   eventType: "tool.output.recorded",
+   actorType: "tool",
+   inputAssetIds: ["asset-script"],
+   outputAssetIds: ["asset-title-1", "asset-title-2"],
+   evidenceIds: ["evidence-1", "evidence-2"],
+   generationRecordId: "generation-record-1",
+   actionPacketId: "packet-1",
+   traceId: "trace-1",
+   metadata: { toolReceipt },
+  },
+ ] as any
+
+ const snapshot = readBrainRuntimeSnapshot(
+  {
+   channelId: "channel-1",
+   activeProjectId: "project-2",
+   projects: [{ id: "project-2", name: "Austerlitz package", status: "active", contentBuildId: build.id }],
+  },
+  {
+   listContentBuilds: () => [build],
+   listContentBuildEvents: () => events,
+   listBrainTraces: () => [{
+    id: "trace-1",
+    channelId: "channel-1",
+    kind: "asset",
+    createdAt: "2026-09-24T05:01:00.000Z",
+    completedAt: "2026-09-24T05:01:02.000Z",
+    status: "complete",
+    capabilitiesInvoked: ["content-generation"],
+    evidence: { requested: ["channel_profile"], returned: ["evidence-1"], missing: [] },
+    context: { tokensEstimated: 640, sectionsIncluded: ["evidence"], sectionsDropped: [] },
+    claims: { fabricated: [], unverifiedDerived: [] },
+    promptVersions: { title: "title-v1" },
+    model: { capability: "text", requested: "gemini-2.5-pro", served: "gemini-2.5-pro", substituted: false, reason: "honoured" },
+    grades: {},
+    repairAttempts: 0,
+    outputRef: "generation-record-1",
+   }],
+   summarizeBrainOutcomes: () => ({
+    total: 1, accepted: 1, negative: 0, acceptanceRate: 100,
+    completed: 1, corrected: 0, rejected: 0, abandoned: 0,
+   }),
+   capabilityCount: 14,
+   listGenerationRecords: () => [{
+    id: "generation-record-1",
+    toolId: "video-publisher",
+    provider: "google",
+    model: "gemini-2.5-pro",
+    prompt: "not exposed by provenance projection",
+    status: "completed",
+    createdAt: Date.parse("2026-09-24T05:01:00.000Z"),
+    updatedAt: Date.parse("2026-09-24T05:01:02.000Z"),
+    artifacts: [],
+    metadata: { actionPacketId: "packet-1", workflowId: "workflow-1" },
+   }],
+   listBrainOutcomes: () => [{
+    id: "brain-outcome-1",
+    channelId: "channel-1",
+    sourceToolId: "video-publisher",
+    targetToolId: null,
+    actionPacketId: "packet-1",
+    workflowId: "workflow-1",
+    outcome: "completed",
+    summary: "Creator completed the handoff.",
+    evidence: ["evidence-1"],
+    confidence: "high",
+    createdAt: Date.parse("2026-09-24T06:00:00.000Z"),
+   }],
+   listAlgorithmIntelligenceEvents: () => [
+    {
+     id: "algorithm-recommendation-1",
+     channelId: "channel-1",
+     projectId: "project-2",
+     kind: "RECOMMENDATION_EXECUTED",
+     sourceSystem: "decision",
+     sourceId: "recommendation-1",
+     parentEventIds: [],
+     actionPacketId: "packet-1",
+     workflowId: "workflow-1",
+     evidenceIds: ["evidence-1"],
+     confidence: "high",
+     title: "Recommendation executed",
+     summary: "Executed",
+     evaluationTargets: [],
+     metadata: {},
+     createdAt: Date.parse("2026-09-24T05:30:00.000Z"),
+    },
+    {
+     id: "algorithm-evaluation-1",
+     channelId: "channel-1",
+     projectId: "project-2",
+     kind: "OUTCOME_MEASURED",
+     sourceSystem: "evaluation",
+     sourceId: "algorithm-recommendation-1",
+     parentEventIds: ["algorithm-recommendation-1"],
+     evidenceIds: ["evidence-2"],
+     confidence: "high",
+     title: "Evaluation",
+     summary: "Positive",
+     evaluationTargets: [],
+     metadata: {},
+     createdAt: Date.parse("2026-09-24T07:00:00.000Z"),
+    },
+    {
+     id: "algorithm-learning-candidate-1",
+     channelId: "channel-1",
+     projectId: "project-2",
+     kind: "LEARNING_CANDIDATE_CREATED",
+     sourceSystem: "learning",
+     sourceId: "candidate-1",
+     parentEventIds: ["algorithm-evaluation-1"],
+     evidenceIds: ["evidence-2"],
+     confidence: "medium",
+     title: "Learning candidate",
+     summary: "Candidate",
+     evaluationTargets: [],
+     metadata: {},
+     createdAt: Date.parse("2026-09-24T08:00:00.000Z"),
+    },
+    {
+     id: "algorithm-learning-review-1",
+     channelId: "channel-1",
+     projectId: "project-2",
+     kind: "LEARNING_CANDIDATE_REVIEWED",
+     sourceSystem: "learning",
+     sourceId: "candidate-1",
+     parentEventIds: ["algorithm-learning-candidate-1"],
+     evidenceIds: ["evidence-2"],
+     confidence: "medium",
+     title: "Learning reviewed",
+     summary: "Held",
+     evaluationTargets: [],
+     metadata: {},
+     createdAt: Date.parse("2026-09-24T09:00:00.000Z"),
+    },
+   ],
+  } as any,
+ )
+
+ expect(snapshot.provenance.chainCount).toBe(1)
+ expect(snapshot.provenance.latestChain).toMatchObject({
+  requestId: "generation_request_1",
+  contextManifestId: "context-1",
+  receiptId: "tool_receipt_1",
+  traceId: "trace-1",
+  contentBuildId: build.id,
+  projectId: "project-2",
+  generationRecordId: "generation-record-1",
+  generationProvider: "google",
+  generationModel: "gemini-2.5-pro",
+  outputAssetIds: ["asset-title-1", "asset-title-2"],
+  actionPacketIds: ["packet-1"],
+  workflowIds: ["workflow-1"],
+  brainOutcomeIds: ["brain-outcome-1"],
+  algorithmEventIds: [
+   "algorithm-recommendation-1",
+   "algorithm-evaluation-1",
+   "algorithm-learning-candidate-1",
+   "algorithm-learning-review-1",
+  ],
+  evaluationEventIds: ["algorithm-evaluation-1"],
+  learningCandidateEventIds: ["algorithm-learning-candidate-1"],
+  learningReviewEventIds: ["algorithm-learning-review-1"],
+  unresolved: [],
+ })
+ expect(snapshot.provenance.latestChain?.traceOutputMatchesGenerationRecord).toBe(true)
+})
+
+it("keeps missing provenance links explicit instead of inferring from project scope", () => {
+ const requestWithoutLinks = {
+  ...generationRequest,
+  id: "generation_request_unlinked",
+  traceId: null,
+ }
+ const receiptWithoutLinks = {
+  ...toolReceipt,
+  id: "tool_receipt_unlinked",
+  requestId: requestWithoutLinks.id,
+  traceId: null,
+  generationRecordId: null,
+  outputAssetIds: ["asset-title-1"],
+ }
+
+ const snapshot = readBrainRuntimeSnapshot(
+  {
+   channelId: "channel-1",
+   activeProjectId: "project-2",
+   projects: [{ id: "project-2", name: "Austerlitz package", status: "active", contentBuildId: build.id }],
+  },
+  {
+   listContentBuilds: () => [build],
+   listContentBuildEvents: () => [
+    {
+     id: "event-input-unlinked",
+     contentBuildId: build.id,
+     timestamp: "2026-09-24T05:01:00.000Z",
+     eventType: "tool.input.received",
+     actorType: "tool",
+     inputAssetIds: [],
+     outputAssetIds: [],
+     evidenceIds: [],
+     metadata: { generationRequest: requestWithoutLinks, contextManifest },
+    },
+    {
+     id: "event-output-unlinked",
+     contentBuildId: build.id,
+     timestamp: "2026-09-24T05:01:02.000Z",
+     eventType: "tool.output.recorded",
+     actorType: "tool",
+     inputAssetIds: [],
+     outputAssetIds: ["asset-title-1"],
+     evidenceIds: [],
+     metadata: { toolReceipt: receiptWithoutLinks },
+    },
+   ] as any,
+   listBrainTraces: () => [],
+   summarizeBrainOutcomes: () => ({
+    total: 0, accepted: 0, negative: 0, acceptanceRate: 0,
+    completed: 0, corrected: 0, rejected: 0, abandoned: 0,
+   }),
+   capabilityCount: 14,
+   listGenerationRecords: () => [],
+   listBrainOutcomes: () => [],
+   listAlgorithmIntelligenceEvents: () => [{
+    id: "project-only-event",
+    channelId: "channel-1",
+    projectId: "project-2",
+    kind: "OUTCOME_MEASURED",
+    sourceSystem: "evaluation",
+    parentEventIds: [],
+    evidenceIds: [],
+    confidence: "low",
+    title: "Project-only event",
+    summary: "Must not be attributed without an explicit key.",
+    evaluationTargets: [],
+    metadata: {},
+    createdAt: Date.now(),
+   }],
+  } as any,
+ )
+
+ expect(snapshot.provenance.latestChain?.algorithmEventIds).toEqual([])
+ expect(snapshot.provenance.latestChain?.brainOutcomeIds).toEqual([])
+ expect(snapshot.provenance.latestChain?.unresolved).toEqual(
+  expect.arrayContaining(["trace", "generation_record", "outcome_attribution_key"]),
+ )
+})
