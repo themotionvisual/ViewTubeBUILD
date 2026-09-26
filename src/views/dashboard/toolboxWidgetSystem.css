@@ -7727,3 +7727,33 @@ textarea.vt-textarea {
     line-height:.82;
   }
 }
+
+
+/* Split-control geometry correction.
+   The icon bay is a true square derived from the rendered control height.
+   Multiline labels may use two centered lines instead of escaping the button. */
+:where(.dashboard-barrier) .widget-split-button-icon,
+:where(.dashboard-barrier) .vt-button.split .split-icon {
+  width: auto;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
+:where(.dashboard-barrier) .widget-split-button.is-primary {
+  background: color-mix(in srgb, var(--widget-color) 30%, white);
+}
+
+:where(.dashboard-barrier) .widget-split-button.is-primary .widget-split-button-icon {
+  background: var(--widget-color);
+}
+
+:where(.dashboard-barrier) .widget-split-button.is-multiline .widget-split-button-label {
+  justify-content: center;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  text-align: center;
+  line-height: .88;
+}
