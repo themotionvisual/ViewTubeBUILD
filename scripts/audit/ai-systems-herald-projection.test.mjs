@@ -33,6 +33,7 @@ test("projects an active Herald thread into an AI Systems claim without inventin
     branch: null,
     sourcePath: ".viewtube/herald/threads/brain-evidence-anomalies-2026-09-22.json",
     nextCheckpoint: "Run verification and request review",
+    startedAt: null,
     evidenceState: "CLAIMED",
   });
 });
@@ -59,6 +60,7 @@ test("projects writer-lock state as a coordination claim when explicit status is
   assert.equal(claim.status, "claimed");
   assert.equal(claim.agent, "agent-a");
   assert.equal(claim.branch, "feat/example");
+  assert.equal(claim.startedAt, "2026-09-24T17:00:00Z");
   assert.deepEqual(claim.canonicalOwners, ["Brain Runtime"]);
 });
 
