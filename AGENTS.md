@@ -1,10 +1,15 @@
 # AGENTS.md — ViewTube cross-agent entry point
 
-This file is the repository-wide agent pointer. The canonical response/evidence contract remains:
+This file is the repository-wide agent pointer.
 
-- agent/contracts/herald-out.md
+Canonical substantial-work conversation and evidence contracts:
+- docs/governance/CONVERSATION_OS.md
+- agent/contracts/conversation-os.md
+- docs/governance/CROWN.md
+- docs/governance/TASK_AUTHORITY.md
+- docs/governance/VERIFICATION.md
 
-The planned generator scripts/herald-sync.mjs is not yet implemented, so this file is maintained manually until the distributor exists.
+Herald is superseded donor material. Preserve its useful prior-art/evidence ideas through the Conversation OS; do not force Herald tiers or twelve response blocks into normal user-facing replies.
 
 ## Documentation + product-system workflow
 
@@ -19,7 +24,7 @@ For any work that creates, edits, consolidates, renames, archives, audits, or ma
 7. For code changes, follow `docs/governance/VERIFICATION.md`: tests/build are not enough when runtime/interaction/visual proof is relevant. Visible UI work requires screenshot capture and analysis, correction, and reverification.
 8. Exact work status belongs in the Task Index; conversations/PRs/skills/docs do not create competing status ledgers.
 
-Herald remains the current response-format contract until the Conversation OS migration phase replaces it; it does not override the documentation authority graph.
+For substantial work, use the Conversation & Improvement OS. Create a Crown Mission when the work crosses the mission threshold. Propose canonical task changes to Task Authority; never maintain a private status ledger.
 
 ## Mandatory editor rule
 
