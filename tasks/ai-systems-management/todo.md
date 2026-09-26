@@ -21,7 +21,7 @@
 - [x] Prompt reference schema.
 - [x] Managed action schema.
 - [x] Seed system registry.
-- [ ] Seed capability registry. **Next registry slice.**
+- [x] Seed capability registry.
 - [x] Seed integration registry.
 - [x] Seed donor registry.
 - [x] Seed plans registry.
