@@ -44,11 +44,9 @@ import {
   WidgetHeaderToggle,
   WidgetMediaUploadAction,
   WidgetMediaUploadFrame,
-  WidgetMetric,
   WidgetScrollArea,
   WidgetSection,
   WidgetSplitButton,
-  WidgetStatePanel,
   WidgetStepTabs,
   WidgetSwitch,
   WidgetTag,
@@ -1161,28 +1159,49 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           </WidgetSection>
         )}
 
-        {activeCategory === "navigation" && (
+        {activeCategory === "header" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("6. Navigation", "Toggles + steppers + tabs")}
-            <WidgetHeaderToggle
-              label="Project drafts"
-              value={headerToggleValue}
-              items={[
-                { id: "draft-1", label: "DRAFT 1" },
-                { id: "draft-2", label: "DRAFT 2" },
-                { id: "draft-3", label: "DRAFT 3" },
-              ]}
-              onChange={setHeaderToggleValue}
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <WidgetHeaderStepper
-                label="Workflow step"
-                value={stepperValue}
-                onPrevious={() => setStepperValue("Step 1 of 4")}
-                onNext={() => setStepperValue("Step 2 of 4")}
+            {sectionHeading("9. Header Controls", "Stepper / intrinsic toggle / action / checkbox / radio")}
+            <div className="widget-reference-family">
+              {familyHeading("Header Toggle", "Different label lengths keep intrinsic selected widths")}
+              <WidgetHeaderToggle
+                label="Comment responder view example"
+                value={headerToggleValue}
+                items={[
+                  { id: "draft-1", label: "CHAT" },
+                  { id: "draft-2", label: "CONTROLS" },
+                  { id: "draft-3", label: "QUEUE" },
+                ]}
+                onChange={setHeaderToggleValue}
               />
+            </div>
+            <div className="widget-reference-family">
+              {familyHeading("Header Stepper + Action", "Shared height, stroke, radius and baseline")}
+              <div className="flex flex-wrap gap-2 items-center">
+                <WidgetHeaderStepper
+                  label="Workflow step"
+                  value={stepperValue}
+                  onPrevious={() => setStepperValue("Step 1 of 4")}
+                  onNext={() => setStepperValue("Step 2 of 4")}
+                />
+                <WidgetHeaderActionButton aria-label="Open settings" onClick={() => undefined}>
+                  <Settings aria-hidden="true" />
+                </WidgetHeaderActionButton>
+              </div>
+            </div>
+            <div className="widget-reference-family">
+              {familyHeading("Header Checkbox + Radio", "Same control lattice as toggle and stepper")}
+              <div className="flex flex-wrap gap-4 items-center">
+                <WidgetSwitch label="Automatic Chapters" checked={switchValue} onChange={setSwitchValue} />
+                <WidgetChoice label="Allow Embedding" checked={checkboxValue} onChange={() => setCheckboxValue(!checkboxValue)} />
+                <WidgetChoice type="radio" name="ref-radio" value="a" label="Option A" checked={radioValue === "a"} onChange={() => setRadioValue("a")} />
+                <WidgetChoice type="radio" name="ref-radio" value="b" label="Option B" checked={radioValue === "b"} onChange={() => setRadioValue("b")} />
+              </div>
+            </div>
+            <div className="widget-reference-family">
+              {familyHeading("Header Publishing Stages", "Header-compatible tabs remain a compound example")}
               <WidgetStepTabs
-                label="Publishing stages"
+                label="Header publishing stages"
                 value={stepTabValue}
                 items={[
                   { id: "meta", label: "DETAILS" },
@@ -1192,59 +1211,9 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                 onChange={setStepTabValue}
               />
             </div>
-            <div className="flex flex-wrap gap-4 items-center">
-              <WidgetSwitch label="Automatic Chapters" checked={switchValue} onChange={setSwitchValue} />
-              <WidgetChoice label="Allow Embedding" checked={checkboxValue} onChange={() => setCheckboxValue(!checkboxValue)} />
-              <WidgetChoice type="radio" name="ref-radio" value="a" label="Option A" checked={radioValue === "a"} onChange={() => setRadioValue("a")} />
-              <WidgetChoice type="radio" name="ref-radio" value="b" label="Option B" checked={radioValue === "b"} onChange={() => setRadioValue("b")} />
-            </div>
           </WidgetSection>
         )}
 
-        {activeCategory === "states" && (
-          <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
-            {sectionHeading("7. Metrics + States", "Feedback system")}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <WidgetMetric label="LIFETIME VIEWS" value="1.42M" detail="+14.2%" tone="#34cdea" />
-              <WidgetMetric label="CLICK-THROUGH" value="8.90%" detail="High" tone="#b9f536" />
-              <WidgetMetric label="AVG DURATION" value="06:42" detail="62.5%" tone="#ea58e8" />
-              <WidgetMetric label="REVENUE" value="$4,820" detail="+8.5%" tone="#ffad59" />
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {(["loading", "ready", "empty", "blocked", "stale", "error"] as const).map((status) => (
-                <WidgetSizedButton
-                  key={status}
-                  height={24}
-                  tone={statePanelStatus === status ? "primary" : "default"}
-                  onClick={() => setStatePanelStatus(status)}
-                >
-                  {status}
-                </WidgetSizedButton>
-              ))}
-            </div>
-            <WidgetStatePanel
-              state={{
-                data: null,
-                status: statePanelStatus,
-                message: statePanelStatus === "ready" ? "Data synchronized with the canonical store." : undefined,
-                provenance: "VT-SYNC",
-                updatedAt: "Just now",
-                recoveryAction: statePanelStatus === "error" || statePanelStatus === "blocked" ? "Retry Connection" : undefined,
-              }}
-              onRecover={() => setStatePanelStatus("ready")}
-            />
-            <WidgetDisclosure title="Tags">
-              <div className="flex flex-wrap gap-1 p-2">
-                {tags.map((tag) => (
-                  <WidgetTag key={tag} onRemove={() => setTags((current) => current.filter((item) => item !== tag))}>{tag}</WidgetTag>
-                ))}
-                <WidgetSizedButton height={24} tone="secondary" onClick={() => setTags((current) => [...current, `tag-${current.length + 1}`])} aria-label="Add tag">
-                  <Plus size={12} />
-                </WidgetSizedButton>
-              </div>
-            </WidgetDisclosure>
-          </WidgetSection>
-        )}
       </WidgetScrollArea>
 
       <WidgetFooter className="widget-toolbar widget-workflow-toolbar">
