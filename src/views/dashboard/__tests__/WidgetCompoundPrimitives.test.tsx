@@ -28,7 +28,10 @@ describe("compound widget primitives from Creator Operations donor", () => {
     expect(markup).toContain("is-tone-secondary")
     expect(markup).toContain("is-edge-full")
     expect(css).toContain("var(--widget-ink")
-    expect(css).toContain("margin-inline:calc(-1 * var(--widget-content-inset))")
+    expect(css).toContain("margin-inline:calc(-1 * var(--widget-content-inset")
+    expect(css).toContain("font-size:18px")
+    expect(css).toContain("background:color-mix(in srgb,var(--widget-color) 18%,white)")
+    expect(css).toContain("background:color-mix(in srgb,var(--widget-color) 55%,white)")
   })
 
   it("renders a semantic text/badge data grid", () => {
@@ -102,5 +105,9 @@ describe("compound widget primitives from Creator Operations donor", () => {
     expect(reference).toContain("WidgetChecklistProgress")
     expect(reference).toContain("WidgetCalendarGrid")
     expect(reference).toContain("Compound Workflow Primitives")
+    expect(reference).toContain(">Lead</WidgetSectionBand>")
+    expect(reference).toContain(">Proposal</WidgetSectionBand>")
+    expect(reference).toContain(">Active</WidgetSectionBand>")
+    expect(reference).toContain(">Paid</WidgetSectionBand>")
   })
 })
