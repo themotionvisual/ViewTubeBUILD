@@ -40,9 +40,8 @@ import { buildBrainEvidenceIntelligence } from "./BrainStatisticsBridge"
 import { buildBrainAudienceIntelligence } from "./BrainAudienceBridge"
 import { readAlgorithmIntelligenceForBrain } from "./AlgorithmIntelligenceAccess"
 import { readBrainEngineControls } from "./BrainEngineControls"
-import { buildAlgorithmProjectContext } from "./BrainProjectContext"
 import { buildOpportunityEvidenceFromBrainPack } from "./OpportunityEvidenceAdapter"
-import { loadRelevantChannelKnowledge } from "./ChannelProfileAdapter"
+import { resolveCreatorContext } from "./CreatorContextResolver"
 import {
  cacheCurrentNicheResearch,
  readCachedCurrentNicheResearch,
@@ -328,13 +327,14 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   ? buildBrainAudienceIntelligence(canonicalEvidence)
   : null
  const engineControls = readBrainEngineControls(input.channelId)
- const wantsAlgorithmIntelligence = capabilityIds.includes("algorithm-intelligence") && engineControls.channelIntelligence
- const projectContext = buildAlgorithmProjectContext({
+ const creatorContext = await resolveCreatorContext({
   channelId: input.channelId,
+  query: input.userText,
   projectId: input.projectId,
   visibleContext: input.visibleContext,
   artifactRefs: input.artifactRefs,
- })
+ }).catch(() => null)
+ const wantsAlgorithmIntelligence = capabilityIds.includes("algorithm-intelligence") && engineControls.channelIntelligence
  const opportunityEvidence = engineControls.opportunityIntelligence && input.channelId
   ? buildOpportunityEvidenceFromBrainPack({
     channelId: input.channelId,
@@ -344,19 +344,12 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
  const algorithmAccess = wantsAlgorithmIntelligence && input.channelId
   ? await readAlgorithmIntelligenceForBrain({
     channelId: input.channelId,
-    project: engineControls.algorithmPriming ? projectContext : null,
+    project: engineControls.algorithmPriming && creatorContext ? creatorContext.project : null,
     includeAnomalies: engineControls.anomalyIntelligence,
     opportunities: opportunityEvidence,
    }).catch(() => null)
   : null
  const algorithmIntelligence = algorithmAccess?.status === "ok" ? algorithmAccess.value : null
- const channelKnowledge = input.channelId
-  ? await loadRelevantChannelKnowledge({
-    channelId: input.channelId,
-    query: input.userText,
-    limit: 10,
-   }).catch(() => null)
-  : null
  let nicheKnowledge: NicheKnowledgeProfile | null = null
  let currentResearch = ""
  let citations: BrainResponseCitation[] = []
@@ -370,7 +363,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   evidenceQuality,
   audienceIntelligence,
   algorithmIntelligence,
-  channelKnowledge,
+  channelKnowledge: creatorContext ? creatorContext.channelKnowledge : null,
  })
  try {
   if (capabilities.some((capability) => capability.id === "niche-knowledge")) {
@@ -412,7 +405,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
    evidenceQuality,
    audienceIntelligence,
    algorithmIntelligence,
-   channelKnowledge,
+   channelKnowledge: creatorContext ? creatorContext.channelKnowledge : null,
   })
 
   let response = buildFallback(input.userText, input.snapshot, input.growthContext)
