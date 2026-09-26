@@ -656,6 +656,10 @@ describe("reference-library interaction recovery contracts", () => {
     expect(matrixCss).toContain("background: var(--widget-field-focus-fill)")
     expect(matrixCss).toContain("0 0 16px 2px var(--widget-field-focus-glow)")
     expect(matrixCss).toContain("caret-color: var(--widget-color, #34cdea)")
+
+    expect(widgetSystemCss).toContain("border: 2px solid var(--widget-field-rest-stroke")
+    expect(widgetSystemCss).toContain("background: var(--widget-field-focus-fill")
+    expect(widgetSystemCss).toContain("0 0 16px 2px var(--widget-field-focus-glow")
   })
 
   it("offers small and large toolbox media upload presentations from one primitive", () => {
