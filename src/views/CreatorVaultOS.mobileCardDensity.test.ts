@@ -38,6 +38,16 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).not.toContain('duration || 60')
  })
 
+ it("renders Inspector only when an asset is selected", () => {
+  expect(source).toContain('{selectedAsset ? (\n       <div ref={inspectorRef}')
+  expect(source).not.toContain('message="Select an asset to inspect metadata, provenance, rights, versions, and relationships."')
+ })
+
+ it("marks the library as the first-viewport content target on mobile", () => {
+  expect(source).toContain('data-vault-first-viewport="library"')
+  expect(source).toContain('min-w-0 overflow-x-hidden')
+ })
+
  it("keeps workspace configuration off the default scrolling surface", () => {
   expect(source).toContain('aria-label="Open workspace layout settings"')
   expect(source).toContain('role="dialog"')
