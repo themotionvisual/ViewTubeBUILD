@@ -14,6 +14,7 @@ import {
 const css = readFileSync(new URL("../widgetCompoundPrimitives.css", import.meta.url), "utf8")
 const settings = readFileSync(new URL("../widgets/SettingsWidget.tsx", import.meta.url), "utf8")
 const opportunity = readFileSync(new URL("../widgets/OpportunityRadarWidget.tsx", import.meta.url), "utf8")
+const opportunityCss = readFileSync(new URL("../widgets/OpportunityRadarWidget.css", import.meta.url), "utf8")
 const comments = readFileSync(new URL("../widgets/CommentReplyWidget.tsx", import.meta.url), "utf8")
 const revenue = readFileSync(new URL("../widgets/RevenueChartWidget.tsx", import.meta.url), "utf8")
 const reference = readFileSync(new URL("../widgets/UIReferenceLibraryWidget.tsx", import.meta.url), "utf8")
@@ -54,6 +55,8 @@ describe("canonical WidgetPreviewState", () => {
     expect(settings).toContain("SETTINGS_AI_PREVIEW_ITEMS")
     expect(opportunity).toContain("WidgetPreviewState")
     expect(opportunity).toContain("OPPORTUNITY_RADAR_PREVIEW_CANDIDATES")
+    expect(opportunityCss).toContain(".vt-opportunity-radar > .widget-preview-state")
+    expect(opportunityCss).toContain("min-height:185px")
     expect(comments).toContain("WidgetPreviewState")
     expect(comments).toContain("COMMENT_RESPONDER_PREVIEW")
     expect(revenue).toContain("WidgetPreviewState")
@@ -63,5 +66,6 @@ describe("canonical WidgetPreviewState", () => {
   it("catalogues the preview primitive in the UI Reference Library", () => {
     expect(reference).toContain('familyHeading("Preview State"')
     expect(reference).toContain("CONNECT TO PERSONALIZE")
+    expect(reference).toContain("key={activeCategory}")
   })
 })
