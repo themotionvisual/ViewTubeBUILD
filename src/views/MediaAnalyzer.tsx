@@ -361,8 +361,8 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        title="VIDEO"
        icon={<Upload size={20} strokeWidth={3} className="text-black" />}
        collapsible
-       shellClassName="h-full"
-       contentClassName="p-5 h-full flex flex-col">
+       shellClassName="md:h-full"
+       contentClassName="p-5 md:h-full flex flex-col">
        <div className="flex flex-col gap-3">
        <SubToolboxFileTarget
         level="l1"
@@ -385,8 +385,8 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        title="SCRIPT"
        icon={<AlignLeft size={20} strokeWidth={3} className="text-black" />}
        collapsible
-       shellClassName="h-full"
-       contentClassName="p-5 h-full flex flex-col">
+       shellClassName="md:h-full"
+       contentClassName="p-5 md:h-full flex flex-col">
        <div className="flex flex-col gap-3 h-full min-h-0">
         <SubToolboxTextArea level="l1"
          value={script}
@@ -438,7 +438,7 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        title="VIDEO INFO"
        icon={<Target size={20} strokeWidth={3} className="text-black" />}
        collapsible
-       shellClassName="h-full"
+       shellClassName="md:h-full"
        contentClassName="p-5 h-full grid grid-cols-1 gap-4">
        <div className="space-y-1">
        <SubToolboxInput level="l1"
@@ -479,8 +479,8 @@ const MediaAnalyzer: React.FC<MediaAnalyzerProps> = ({
        title="ANALYSIS DIRECTIVE"
        icon={<FileText size={20} strokeWidth={3} className="text-black" />}
        collapsible
-       shellClassName="h-full"
-       contentClassName="p-5 h-full flex flex-col">
+       shellClassName="md:h-full"
+       contentClassName="p-5 md:h-full flex flex-col">
        <div className="flex flex-col h-full min-h-0">
        <SubToolboxTextArea level="l1"
         value={prompt}
