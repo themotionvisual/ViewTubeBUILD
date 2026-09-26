@@ -38,30 +38,11 @@ const selectMenuStyle = (height:WidgetControlHeight) => {
 }
 export const WidgetSizedSelect:React.FC<{value:string;onChange:(value:string)=>void;options:WidgetSelectOption[];label:string;placeholder?:string;disabled?:boolean;className?:string;style?:React.CSSProperties;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;textFit?:WidgetTextFit}> = ({height=32,tone="default",textFit="fixed",className="",...props}) => <WidgetSelect className={`${primitiveClass(height,tone,textFit)} ${className}`.trim()} contentClassName={selectMenuClass(height,tone)} contentStyle={selectMenuStyle(height)} {...props}/>
 
-export const WidgetVideoMiniCard:React.FC<{title:string;thumbnail?:string;meta?:React.ReactNode;className?:string}> = ({title,thumbnail,meta,className=""}) => (
- <article className={`widget-video-mini-card ${className}`.trim()}>
-  <div className="widget-video-mini-card-title">{title}</div>
-  <div className="widget-video-mini-card-media">
-   {thumbnail?<img src={thumbnail} alt="" />:<span className="widget-video-mini-card-placeholder" aria-hidden="true"><MonitorPlay /></span>}
-  </div>
-  {meta?<div className="widget-video-mini-card-meta">{meta}</div>:null}
- </article>
-)
-
 export const WidgetSplitCounterBadge:React.FC<{icon:React.ReactNode;value:React.ReactNode;label:string;tone?:WidgetPrimitiveTone;height?:WidgetControlHeight;className?:string}> = ({icon,value,label,tone="default",height=24,className=""}) => (
  <span className={`widget-split-counter-badge ${primitiveClass(height,tone)} ${className}`.trim()} aria-label={label}>
   <span className="widget-split-counter-badge-icon" aria-hidden="true">{icon}</span>
   <span className="widget-split-counter-badge-value">{value}</span>
  </span>
-)
-
-export const WidgetSpeechBubble:React.FC<{children:React.ReactNode;tail?:"top-left"|"top-center"|"top-right";className?:string}> = ({children,tail="top-left",className=""}) => (
- <div className={`widget-speech-bubble is-tail-${tail} ${className}`.trim()}>
-  <svg className="widget-speech-bubble-tail" viewBox="0 0 30 20" aria-hidden="true">
-   <path d="M4 18L15 4L26 18" />
-  </svg>
-  <div className="widget-speech-bubble-copy">{children}</div>
- </div>
 )
 
 export interface WidgetVideoSelectOption {value:string;label:string;thumbnail?:string;meta?:string;duration?:string;views?:string}
