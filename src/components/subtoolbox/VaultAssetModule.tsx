@@ -327,7 +327,7 @@ const VaultMedia: React.FC<{
 const AudioPreview: React.FC<{ durationLabel?: string | null; onPreviewAction?: () => void }> = ({ durationLabel, onPreviewAction }) => (
   <div className="vt-vault-half-preview vt-vault-audio-preview">
     <div className="vt-vault-waveform"><i /><i /><i /><i /><i /><i /><i /></div>
-    <div className="vt-vault-audio-time">{durationLabel || "01:24"}</div>
+    {durationLabel ? <div className="vt-vault-audio-time">{durationLabel}</div> : null}
     <button type="button" className="vt-vault-audio-mini-play" aria-label="Play audio" onClick={onPreviewAction}>▶</button>
   </div>
 )
@@ -417,7 +417,7 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
         <div className="vt-vault-half-body">
           <div className="vt-vault-half-left">
             <VaultAssetTagEditor tags={tags} sharedTags={sharedTags} onTagsChange={onTagsChange} />
-            <VaultAssetNotes value={notes} onChange={onNotesChange} />
+            <div className="vt-vault-card-meta">{kind.toUpperCase()} · {fileType.toUpperCase()}</div>
           </div>
           {resolvedVariant === "audio"
             ? <AudioPreview durationLabel={durationLabel} onPreviewAction={onPreviewAction} />
@@ -452,7 +452,7 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
             <VaultEditableTitle value={title} doubleHeight={double} onChange={onTitleChange} />
           </div>
           <VaultAssetTagEditor tags={tags} sharedTags={sharedTags} onTagsChange={onTagsChange} />
-          <VaultAssetNotes value={notes} onChange={onNotesChange} />
+          <div className="vt-vault-card-meta">{kind.toUpperCase()} · {tags.length} TAG{tags.length === 1 ? "" : "S"}</div>
         </div>
         <VaultMedia
           kind={kind}
@@ -485,7 +485,7 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
         </div>
         <div className="vt-vault-landscape-middle">
           <VaultMedia kind={kind} previewSrc={previewUrl} mediaSrc={mediaUrl} title={title} fit={mediaFit} onPreviewAction={onPreviewAction} />
-          <VaultAssetNotes value={notes} onChange={onNotesChange} />
+          <div className="vt-vault-card-meta">{kind.toUpperCase()} · {tags.length} TAG{tags.length === 1 ? "" : "S"}</div>
         </div>
         <VaultAssetTagEditor tags={tags} sharedTags={sharedTags} onTagsChange={onTagsChange} />
       </article>
@@ -509,7 +509,7 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
         <VaultMedia kind={kind} previewSrc={previewUrl} mediaSrc={mediaUrl} title={title} fit={mediaFit} onPreviewAction={onPreviewAction} />
         <VaultAssetTagEditor tags={tags} sharedTags={sharedTags} onTagsChange={onTagsChange} />
       </div>
-      <VaultAssetNotes value={notes} onChange={onNotesChange} />
+      <div className="vt-vault-card-meta">{kind.toUpperCase()} · {tags.length} TAG{tags.length === 1 ? "" : "S"}</div>
     </article>
   )
 }
