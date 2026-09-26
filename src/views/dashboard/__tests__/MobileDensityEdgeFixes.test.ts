@@ -44,6 +44,8 @@ describe("mobile widget density and edge contracts", () => {
     expect(scrollbar).not.toContain("margin-inline: calc(-1 * var(--vt-widget-body-inset")
     expect(scrollbar).toContain(".widget-scroll-area.is-full")
     expect(scrollbar).toContain("grid-column: full-start / full-end")
+    expect(scrollbar).toContain(".widget-scroll-area.is-full .widget-scroll-viewport")
+    expect(scrollbar).toContain("padding-inline-end: 0")
     expect(scrollbar).toContain(".widget-scroll-area.is-full .widget-scroll-content")
     expect(scrollbar).toContain("[full-start]")
     expect(scrollbar).toContain("[inset-start]")
