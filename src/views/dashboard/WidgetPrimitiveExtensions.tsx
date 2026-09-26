@@ -4,7 +4,6 @@ import { WIDGET_BADGE_SPECTRUM, WidgetSelect, WidgetSplitButton, resolveBadgeHue
 import { VT_SPECTRUM_PALETTE_06, VT_VISUAL_METRIC_ORDER } from "../../styles/toolboxPalette"
 import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone as PrimitiveTone, type WidgetPrimitiveTextFit } from "./widgetPrimitiveSystem"
 import "./widgetVideoSelectButtonScroll.css"
-import "./widgetCompoundPrimitives.css"
 
 export type WidgetControlHeight = WidgetPrimitiveSize
 export type WidgetPrimitiveTone = PrimitiveTone
