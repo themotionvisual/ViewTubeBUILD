@@ -400,11 +400,19 @@ describe("subtoolbox design governance", () => {
 
  it("prevents page-local header width locks and mobile subtoolbox stretching", () => {
   const headerActionConsumers = [
-    "src/views/VideoPublisher.tsx",
-    "src/views/VideoManager.tsx",
-    "src/views/ThumbnailStudio.tsx",
-    "src/views/SeoGenerator.tsx",
+    "src/components/ToolHeader.tsx",
+    "src/components/ToolboxUIReferenceLibrary.tsx",
     "src/components/ProjectStudio.tsx",
+    "src/components/projects/ProjectBuilderModule.tsx",
+    "src/components/projects/ProjectsToolboxModule.tsx",
+    "src/views/BrainCommandCenter.tsx",
+    "src/views/PerformanceHub.tsx",
+    "src/views/SeoGenerator.tsx",
+    "src/views/ThumbnailStudio.tsx",
+    "src/views/VideoManager.tsx",
+    "src/views/VideoPublisher.tsx",
+    "src/views/supertools/SuperToolPrototypeWorkspace.tsx",
+    "src/views/supertools/SuperToolShell.tsx",
   ]
 
   for (const path of headerActionConsumers) {
