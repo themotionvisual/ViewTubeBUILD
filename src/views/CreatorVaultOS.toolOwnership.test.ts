@@ -5,10 +5,12 @@ import { describe, expect, it } from "vitest"
 const source = fs.readFileSync(path.resolve(process.cwd(), "src/views/CreatorVaultOS.tsx"), "utf8")
 
 describe("CreatorVaultOS tool ownership", () => {
- it("keeps Send To and metadata export inside Asset Operations rather than duplicating them in Inspector", () => {
-  expect(source).not.toContain('>Send To</div>')
-  expect(source).not.toContain('>Metadata Export</div>')
+ it("keeps external handoffs and metadata export in contextual selection tools rather than duplicating them in Inspector", () => {
+  expect(source).not.toContain('title="Asset Operations"')
+  expect(source).toContain('aria-label="Send to ViewTube"')
+  expect(source).toContain("Send to ViewTube…")
+  expect(source).toContain("selectedToolTargets.map")
   expect(source).toContain("Export Selected Metadata JSON")
-  expect(source).toContain("Compatible Tools")
+  expect(source).toContain("Export Selected Metadata CSV")
  })
 })
