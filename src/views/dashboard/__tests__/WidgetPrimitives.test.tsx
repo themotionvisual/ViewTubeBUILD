@@ -52,12 +52,29 @@ import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
 import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"
 
 const variantsCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
+const exactHeightsCss = readFileSync(new URL("../widgetPrimitiveExactHeights.css", import.meta.url), "utf8")
 const widgetSystemCss = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
 const matrixCss = readFileSync(new URL("../widgetMatrixPrimitives.css", import.meta.url), "utf8")
 const tonesCss = readFileSync(new URL("../widgetPrimitiveTones.css", import.meta.url), "utf8")
 const videoSelectCss = readFileSync(new URL("../widgetVideoSelectButtonScroll.css", import.meta.url), "utf8")
 const extensionSource = readFileSync(new URL("../WidgetPrimitiveExtensions.tsx", import.meta.url), "utf8")
 const referenceSource = readFileSync(new URL("../widgets/UIReferenceLibraryWidget.tsx", import.meta.url), "utf8")
+
+describe("widget geometry finalization contracts", () => {
+  it("keeps legacy upload frames on the toolbox visual contract", () => {
+    expect(exactHeightsCss).toContain("border:3px solid var(--widget-border,var(--vt-ink))")
+    expect(exactHeightsCss).toContain("box-shadow:4px 4px 0 color-mix(in srgb,var(--widget-color,#34cdea) 42%,transparent)")
+    expect(exactHeightsCss).not.toContain("border-top-color:var(--widget-color")
+  })
+
+  it("keeps UI library labels readable and avoids grey-opacity captions", () => {
+    expect(variantsCss).toContain("font-size: 12px;")
+    expect(variantsCss).toContain("font-size: 10px;")
+    expect(referenceSource).not.toContain("opacity-60")
+    expect(referenceSource).not.toContain("opacity-55")
+    expect(referenceSource).not.toContain("opacity-65")
+  })
+})
 
 describe("widget viewport indicator geometry", () => {
   it.each([
