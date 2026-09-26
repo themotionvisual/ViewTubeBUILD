@@ -1,31 +1,31 @@
 # ViewTube AI Systems Management — To Do
 
 ## Authority / documentation
-- [ ] Finish AI historical archive link audit.
-- [ ] Register living master and supporting references everywhere agents orient.
-- [ ] Add stable document authority/freshness rules to AI Governor references.
-- [ ] Confirm no old AI audit/phase doc is still presented as current.
+- [x] Finish AI historical archive link audit.
+- [x] Register living master and supporting references everywhere agents orient.
+- [x] Add stable document authority/freshness rules to AI Governor references.
+- [x] Confirm no old AI audit/phase doc is still presented as current.
 
 ## Skill structure
-- [ ] Create `references/ai-systems-management.md`.
-- [ ] Create `references/work-claims-and-receipts.md`.
-- [ ] Create `references/authority-and-freshness.md`.
-- [ ] Create `references/prompt-and-model-governance.md`.
-- [ ] Create `references/donor-migration.md`.
+- [x] Create `references/ai-systems-management.md`.
+- [x] Create `references/work-claims-and-receipts.md`.
+- [x] Create `references/authority-and-freshness.md`.
+- [x] Create `references/prompt-and-model-governance.md`.
+- [x] Create `references/donor-migration.md`.
 - [ ] Keep SKILL.md under 500 lines and make it the MOC.
 
 ## Registries / schemas
-- [ ] Authority record schema.
-- [ ] Agent report schema.
-- [ ] Evidence reference schema.
-- [ ] Prompt reference schema.
-- [ ] Managed action schema.
-- [ ] Seed system registry.
-- [ ] Seed capability registry.
-- [ ] Seed integration registry.
-- [ ] Seed donor registry.
-- [ ] Seed plans registry.
-- [ ] Seed agents registry.
+- [x] Authority record schema.
+- [x] Agent report schema.
+- [x] Evidence reference schema.
+- [x] Prompt reference schema.
+- [x] Managed action schema.
+- [x] Seed system registry.
+- [ ] Seed capability registry. **Next registry slice.**
+- [x] Seed integration registry.
+- [x] Seed donor registry.
+- [x] Seed plans registry.
+- [ ] Seed agents registry. Prefer Herald-derived projection; add only if an agent-class registry proves necessary.
 
 ## Reporting / coordination
 - [ ] Claim event.
@@ -90,3 +90,14 @@
 - [ ] all canonical records expose freshness/main SHA.
 - [ ] all historical docs have explicit successors.
 - [ ] read-only AI Systems management workspace verified before any managed action is enabled.
+
+
+## Current branch evidence
+
+- audited main: `fbc7d25c71fa89c312da32280d9f77182065b42a`
+- branch: `feat/ai-systems-governance-mainline-2026-09-26`
+- authority records: 27
+- broken source refs: 0
+- governance commands present: 3
+- Herald work projection: read-only
+- current-main merge: pending
