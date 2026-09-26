@@ -36,12 +36,10 @@ export interface VaultAssetModuleProps extends Omit<React.HTMLAttributes<HTMLEle
   selected?: boolean
   tags?: string[]
   sharedTags?: string[]
-  notes?: string
   mediaFit?: "cover" | "contain"
   onSelectedChange?: (selected: boolean) => void
   onTitleChange?: (title: string) => void
   onTagsChange?: (tags: string[]) => void
-  onNotesChange?: (notes: string) => void
   onPreviewAction?: () => void
 }
 
@@ -357,12 +355,10 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
   selected = false,
   tags = [],
   sharedTags,
-  notes = "",
   mediaFit = "cover",
   onSelectedChange,
   onTitleChange,
   onTagsChange,
-  onNotesChange,
   onPreviewAction,
   className,
   style,
