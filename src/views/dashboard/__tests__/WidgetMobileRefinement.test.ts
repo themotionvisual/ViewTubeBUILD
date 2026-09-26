@@ -33,10 +33,12 @@ describe("mobile widget control refinements", () => {
     expect(canvas).toContain("window.scrollBy")
   })
 
-  it("reclaims the wider right app-shell lane measured in live phone QA", () => {
-    expect(mobile).toContain("--vt-mobile-reclaim-left: 12px")
-    expect(mobile).toContain("--vt-mobile-reclaim-right: 40px")
-    expect(mobile).toContain("width: calc(100% + var(--vt-mobile-reclaim-left) + var(--vt-mobile-reclaim-right))")
+  it("keeps the mobile dashboard on the real viewport width after field QA exposed reclaim overshoot", () => {
+    expect(mobile).not.toContain("--vt-mobile-reclaim-left")
+    expect(mobile).not.toContain("--vt-mobile-reclaim-right")
+    expect(mobile).toContain("width: 100%;")
+    expect(mobile).toContain("max-width: 100%;")
+    expect(mobile).toContain("margin-inline: 0;")
   })
 })
 
