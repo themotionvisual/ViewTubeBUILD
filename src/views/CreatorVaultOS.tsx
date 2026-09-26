@@ -21,6 +21,7 @@ import {
 import {
  SubToolboxAlphabeticalTag,
  SubToolboxDataTable,
+ type SubToolboxDataTableColumn,
  SubToolboxFileTarget,
  SubToolboxInput,
  SubToolboxSegmentedToggle,
@@ -286,6 +287,7 @@ const CreatorVaultOS: React.FC = () => {
  const [smartCollectionName, setSmartCollectionName] = useState("")
  const [collectionRefresh, setCollectionRefresh] = useState(0)
  const [manualCollectionName, setManualCollectionName] = useState("")
+ const [collectionRename, setCollectionRename] = useState("")
  const [manualCollectionRefresh, setManualCollectionRefresh] = useState(0)
  const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null)
  const [targetCollectionId, setTargetCollectionId] = useState("")
@@ -326,7 +328,7 @@ const CreatorVaultOS: React.FC = () => {
   [manualCollections],
  )
  const tasks = useMemo(() => listVaultTasks(), [taskRefresh])
- const activeVaultTasks = tasks.filter((task) => task.status === "queued" || task.status === "running")
+ const activeVaultTasks = tasks.filter((task) => task.status === "queued" || task.status === "processing")
  const failedVaultTasks = tasks.filter((task) => task.status === "failed")
  const scratchpads = useMemo(() => listVaultScratchpads(), [scratchpadRefresh])
  const checklistItems = useMemo(() => listVaultChecklistItems(), [checklistRefresh])
@@ -526,7 +528,7 @@ const CreatorVaultOS: React.FC = () => {
   }
  }), [visibleAssets, selectedAssetIds, customFields])
 
- const finderListColumns = useMemo(() => [
+ const finderListColumns = useMemo<SubToolboxDataTableColumn<(typeof finderListRows)[number]>[]>(() => [
   { key: "select", label: "" },
   { key: "preview", label: "PREVIEW" },
   { key: "name", label: "NAME" },
@@ -1024,6 +1026,54 @@ const CreatorVaultOS: React.FC = () => {
   })
   setBatchPrefix("")
   setRefreshTick((value) => value + 1)
+ }
+
+ const toggleSelectedFavorites = () => {
+  const selected = allAssets.filter((asset) => selectedAssetIds.includes(asset.id))
+  if (!selected.length) return
+  const nextFavorite = !selected.every((asset) => asset.metadata?.favorite === true)
+  selected.forEach((asset) => setVaultAssetState(asset.id, { favorite: nextFavorite }))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const archiveSelection = () => {
+  selectedAssetIds.forEach((assetId) => setVaultAssetState(assetId, { archived: true }))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const trashSelection = () => {
+  selectedAssetIds.forEach((assetId) => setVaultAssetState(assetId, { trashed: true }))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const restoreSelection = () => {
+  selectedAssetIds.forEach((assetId) => setVaultAssetState(assetId, { archived: false, trashed: false }))
+  setRefreshTick((value) => value + 1)
+ }
+
+ const renameActiveCollection = () => {
+  if (!activeCollectionId || !collectionRename.trim()) return
+  renameManualCollection(activeCollectionId, collectionRename.trim())
+  setCollectionRename("")
+ }
+
+ const openSelectedQuickLook = () => {
+  if (!selectedAsset) return
+  const index = visibleAssets.findIndex((asset) => asset.id === selectedAsset.id)
+  setQuickLookCurrent(index >= 0 ? index : 0)
+  setQuickLookOpen(true)
+  inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+ }
+
+ const openSelectedInspector = () => {
+  if (!selectedAsset) return
+  inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  inspectorRef.current?.focus({ preventScroll: true })
+ }
+
+ const copySelectedAssetId = () => {
+  if (!selectedAsset || typeof navigator === "undefined" || !navigator.clipboard) return
+  void navigator.clipboard.writeText(selectedAsset.id)
  }
 
  const isModuleVisible = (id: VaultWorkspaceModuleId) => visibleModules.includes(id)
@@ -1672,13 +1722,16 @@ const CreatorVaultOS: React.FC = () => {
      : "grid grid-cols-1 gap-4 xl:grid-cols-[minmax(220px,0.72fr)_minmax(0,2.1fr)_minmax(260px,0.9fr)]"}>
      <div className="flex min-w-0 flex-col gap-4">
       <section aria-label="Vault library toolbar" className="flex flex-col gap-2">
-       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] items-center gap-2">
+       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
         <button
          type="button"
          aria-label="Open library navigation"
          aria-expanded={libraryNavigationOpen}
          className="min-h-9 rounded-md border-2 border-current px-3 text-xs font-black uppercase"
-         onClick={() => setLibraryNavigationOpen((open) => !open)}
+         onClick={() => {
+          setLibraryFiltersOpen(false)
+          setLibraryNavigationOpen((open) => !open)
+         }}
         >
          Library
         </button>
@@ -1686,8 +1739,8 @@ const CreatorVaultOS: React.FC = () => {
          level="l1"
          variant="search"
          icon={<Search />}
+         inputRef={searchInputRef}
          inputProps={{
-          ref: searchInputRef,
           value: query,
           onChange: (event) => setQuery(event.target.value),
           placeholder: "Search assets…",
@@ -1696,10 +1749,24 @@ const CreatorVaultOS: React.FC = () => {
         />
         <button
          type="button"
+         aria-label="Clear Vault search"
+         disabled={!query}
+         className="min-h-9 min-w-9 rounded-md border-2 border-current px-2 text-xs font-black uppercase disabled:opacity-30"
+         onClick={() => setQuery("")}
+        >
+         ×
+        </button>
+       </div>
+       <div data-vault-toolbar-secondary className="flex flex-wrap items-center gap-2">
+        <button
+         type="button"
          aria-label="Open Vault filters"
          aria-expanded={libraryFiltersOpen}
          className="min-h-9 rounded-md border-2 border-current px-3 text-xs font-black uppercase"
-         onClick={() => setLibraryFiltersOpen((open) => !open)}
+         onClick={() => {
+          setLibraryNavigationOpen(false)
+          setLibraryFiltersOpen((open) => !open)
+         }}
         >
          Filters
         </button>
@@ -1714,6 +1781,12 @@ const CreatorVaultOS: React.FC = () => {
          value={viewMode}
          onChange={(value) => setViewMode(value as VaultWorkspaceViewMode)}
          options={["grid", "masonry", "list", "filmstrip", "lineage"]}
+        />
+        <SubToolboxDropdownControl
+         label="State"
+         value={special}
+         onChange={(value) => setSpecial(value as typeof special)}
+         options={["active", "recent", "generated", "inbox", "favorites", "archive", "trash"]}
         />
        </div>
        <div className="flex flex-wrap gap-2">
@@ -1730,26 +1803,45 @@ const CreatorVaultOS: React.FC = () => {
           { value: "document", label: "DOCS" },
          ]}
         />
-        <SubToolboxSegmentedToggle
-         level="l1"
-         ariaLabel="Vault library state"
-         value={special}
-         onValueChange={(value) => setSpecial(value as typeof special)}
-         options={[
-          { value: "active", label: "LIBRARY" },
-          { value: "recent", label: "RECENT" },
-          { value: "generated", label: "GENERATED" },
-          { value: "inbox", label: "INBOX" },
-          { value: "favorites", label: "FAVORITES" },
-          { value: "archive", label: "ARCHIVE" },
-          { value: "trash", label: "TRASH" },
-         ]}
-        />
        </div>
       </section>
 
+      {selectedTag || source !== "all" || filterLifecycle !== "all" || filterOrientation !== "all" || filterMimeType.trim() ? (
+       <section aria-label="Vault active filters" className="flex flex-wrap gap-1">
+        {selectedTag ? (
+         <button type="button" onClick={() => setSelectedTag(null)} aria-label={`Clear tag filter ${selectedTag}`}>
+          <SubToolboxAlphabeticalTag level="l2" label={`TAG · ${selectedTag} ×`} spectrumKey={selectedTag} />
+         </button>
+        ) : null}
+        {source !== "all" ? (
+         <button type="button" onClick={() => setSource("all")} aria-label={`Clear source filter ${source}`}>
+          <SubToolboxAlphabeticalTag level="l2" label={`SOURCE · ${source} ×`} spectrumKey={source} />
+         </button>
+        ) : null}
+        {filterLifecycle !== "all" ? (
+         <button type="button" onClick={() => setFilterLifecycle("all")} aria-label={`Clear lifecycle filter ${filterLifecycle}`}>
+          <SubToolboxAlphabeticalTag level="l2" label={`STATE · ${filterLifecycle} ×`} spectrumKey={filterLifecycle} />
+         </button>
+        ) : null}
+        {filterOrientation !== "all" ? (
+         <button type="button" onClick={() => setFilterOrientation("all")} aria-label={`Clear orientation filter ${filterOrientation}`}>
+          <SubToolboxAlphabeticalTag level="l2" label={`ORIENTATION · ${filterOrientation} ×`} spectrumKey={filterOrientation} />
+         </button>
+        ) : null}
+        {filterMimeType.trim() ? (
+         <button type="button" onClick={() => setFilterMimeType("")} aria-label={`Clear MIME filter ${filterMimeType}`}>
+          <SubToolboxAlphabeticalTag level="l2" label={`MIME · ${filterMimeType} ×`} spectrumKey={filterMimeType} />
+         </button>
+        ) : null}
+       </section>
+      ) : null}
+
       {libraryNavigationOpen ? (
-       <section aria-label="Vault library navigation" className="rounded-lg border-[3px] border-current p-3">
+       <section
+        aria-label="Vault library navigation"
+        data-vault-mobile-sheet="library-navigation"
+        className="fixed inset-x-2 bottom-2 z-50 max-h-[70vh] overflow-y-auto rounded-lg border-[3px] border-current bg-white p-3 shadow-[4px_4px_0_currentColor] xl:static xl:max-h-none xl:overflow-visible"
+       >
         <div className="mb-2 text-xs font-black uppercase">Projects & Collections</div>
         <div className="flex flex-wrap gap-2">
          <SubToolboxInnerActionButton
@@ -1806,7 +1898,11 @@ const CreatorVaultOS: React.FC = () => {
       ) : null}
 
       {libraryFiltersOpen ? (
-       <section aria-label="Vault filters" className="rounded-lg border-[3px] border-current p-3">
+       <section
+        aria-label="Vault filters"
+        data-vault-mobile-sheet="filters"
+        className="fixed inset-x-2 bottom-2 z-50 max-h-[70vh] overflow-y-auto rounded-lg border-[3px] border-current bg-white p-3 shadow-[4px_4px_0_currentColor] xl:static xl:max-h-none xl:overflow-visible"
+       >
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
          <SubToolboxDropdownControl
           label="Asset kind"
@@ -1889,7 +1985,8 @@ const CreatorVaultOS: React.FC = () => {
       {selectedAssetIds.length ? (
        <section
         aria-label="Vault selection actions"
-        className="sticky top-2 z-30 flex flex-wrap items-center gap-2 rounded-lg border-[3px] border-current bg-white p-2 shadow-[4px_4px_0_currentColor]"
+        data-vault-mobile-sheet="selection-actions"
+        className="fixed inset-x-2 bottom-2 z-40 flex flex-wrap items-center gap-2 rounded-lg border-[3px] border-current bg-white p-2 shadow-[4px_4px_0_currentColor] xl:sticky xl:inset-x-auto xl:bottom-auto xl:top-2"
        >
         <div className="mr-auto text-xs font-black uppercase">{selectedAssetIds.length} Selected</div>
         <SubToolboxInnerActionButton label="Tag" iconName="tag" tone="pink" onClick={() => setAssetOperationsMode("batch")} />
@@ -1917,6 +2014,12 @@ const CreatorVaultOS: React.FC = () => {
          <StandardInput value={batchPrefix} onChange={(event) => setBatchPrefix(event.target.value)} placeholder="Rename prefix, e.g. EP01_" aria-label="Batch rename prefix" />
          <SubToolboxInnerActionButton label="Apply Prefix" iconName="edit" tone="orange" onClick={applyBatchPrefix} disabled={!batchPrefix.trim()} />
         </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+         <SubToolboxInnerActionButton label="Toggle Favorite" iconName="sparkles" tone="yellow" onClick={toggleSelectedFavorites} />
+         <SubToolboxInnerActionButton label="Archive Selection" iconName="archive" tone="cyan" onClick={archiveSelection} />
+         <SubToolboxInnerActionButton label="Trash Selection" iconName="x" tone="pink" onClick={trashSelection} />
+         <SubToolboxInnerActionButton label="Restore Selection" iconName="checklist" tone="green" onClick={restoreSelection} />
+        </div>
        </section>
       ) : null}
 
@@ -1936,6 +2039,16 @@ const CreatorVaultOS: React.FC = () => {
          <StandardInput value={manualCollectionName} onChange={(event) => setManualCollectionName(event.target.value)} placeholder="New collection name" aria-label="New Vault collection name" />
          <SubToolboxInnerActionButton label="Create Collection From Selection" iconName="collection" tone="green" onClick={createManualCollection} disabled={!manualCollectionName.trim()} />
          <SubToolboxInnerActionButton label="Create Brand Kit From Selection" iconName="sparkles" tone="yellow" onClick={createBrandKitFromSelection} />
+         <SubToolboxSelect value={targetCollectionId} onChange={(event) => setTargetCollectionId(event.target.value)} aria-label="Target Vault collection">
+          <option value="">Target collection…</option>
+          {manualCollections.map((collection) => <option key={collection.id} value={collection.id}>{collection.name}</option>)}
+         </SubToolboxSelect>
+         <SubToolboxInnerActionButton label="Add Selection to Collection" iconName="collection" tone="cyan" onClick={addSelectionToCollection} disabled={!targetCollectionId} />
+         <SubToolboxInnerActionButton label="Set Target Collection as Brand Kit" iconName="sparkles" tone="yellow" onClick={() => targetCollectionId && makeBrandKit(targetCollectionId)} disabled={!targetCollectionId} />
+         <SubToolboxInnerActionButton label="Remove Selected Asset From Active Collection" iconName="x" tone="pink" onClick={removeSelectedAssetFromActiveCollection} disabled={!activeCollectionId || !selectedAsset} />
+         <StandardInput value={collectionRename} onChange={(event) => setCollectionRename(event.target.value)} placeholder="Rename active collection" aria-label="Rename active Vault collection" />
+         <SubToolboxInnerActionButton label="Rename Active Collection" iconName="edit" tone="orange" onClick={renameActiveCollection} disabled={!activeCollectionId || !collectionRename.trim()} />
+         <SubToolboxInnerActionButton label="Delete Active Collection" iconName="x" tone="pink" onClick={() => activeCollectionId && removeManualCollection(activeCollectionId)} disabled={!activeCollectionId} />
         </div>
        </section>
       ) : null}
@@ -1955,6 +2068,13 @@ const CreatorVaultOS: React.FC = () => {
         <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
          <SubToolboxInnerActionButton label="Export Selected Metadata JSON" iconName="database" tone="cyan" onClick={() => exportVaultMetadata(allAssets.filter((asset) => selectedAssetIds.includes(asset.id)), "json")} />
          <SubToolboxInnerActionButton label="Export Selected Metadata CSV" iconName="database" tone="cyan" onClick={() => exportVaultMetadata(allAssets.filter((asset) => selectedAssetIds.includes(asset.id)), "csv")} />
+        </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+         <SubToolboxInnerActionButton label="Open Quick Look" iconName="eye" tone="cyan" onClick={openSelectedQuickLook} disabled={!selectedAsset} />
+         <SubToolboxInnerActionButton label="Open Filmstrip" iconName="layers" tone="orange" onClick={() => { setViewMode("filmstrip"); assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }) }} />
+         <SubToolboxInnerActionButton label="Open Lineage" iconName="layers" tone="purple" onClick={() => { setViewMode("lineage"); assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }) }} disabled={!selectedAsset} />
+         <SubToolboxInnerActionButton label="Copy Asset ID" iconName="link" tone="yellow" onClick={copySelectedAssetId} disabled={!selectedAsset} />
+         <SubToolboxInnerActionButton label="Open Inspector" iconName="database" tone="green" onClick={openSelectedInspector} disabled={!selectedAsset} />
         </div>
        </section>
       ) : null}
@@ -2187,6 +2307,7 @@ const CreatorVaultOS: React.FC = () => {
             previewUrl={asset.previewUrl || asset.url || null}
             mediaUrl={asset.url || null}
             mimeType={asset.mimeType}
+            documentExcerpt={typeof asset.metadata?.textContent === "string" ? asset.metadata.textContent : null}
             durationLabel={typeof asset.metadata?.durationSeconds === "number"
              ? `${Number(asset.metadata.durationSeconds).toFixed(1)}s`
              : null}
@@ -2647,7 +2768,12 @@ const CreatorVaultOS: React.FC = () => {
 
 
       {selectedAsset ? (
-       <div ref={inspectorRef} tabIndex={-1}>
+       <div
+        ref={inspectorRef}
+        tabIndex={-1}
+        data-vault-mobile-sheet="inspector"
+        className="fixed inset-x-2 bottom-16 z-30 max-h-[65vh] overflow-y-auto xl:static xl:max-h-none xl:overflow-visible"
+       >
        <SubToolbox
        style={moduleStyle("inspector" as VaultWorkspaceModuleId)}
        title="Inspector"
