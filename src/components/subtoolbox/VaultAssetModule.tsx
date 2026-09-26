@@ -32,6 +32,7 @@ export interface VaultAssetModuleProps extends Omit<React.HTMLAttributes<HTMLEle
   mimeType?: string | null
   durationLabel?: string | null
   fileTypeLabel?: string | null
+  documentExcerpt?: string | null
   paletteIndex?: number
   selected?: boolean
   tags?: string[]
@@ -285,13 +286,17 @@ const AudioPreview: React.FC<{ durationLabel?: string | null; onPreviewAction?: 
   </div>
 )
 
-const DocumentPreview: React.FC<{ fileType?: string | null }> = ({ fileType }) => (
+const DocumentPreview: React.FC<{ fileType?: string | null; excerpt?: string | null }> = ({ fileType, excerpt }) => (
   <div className="vt-vault-half-preview vt-vault-document-preview">
-    <div className="vt-vault-document-sheet">
-      <div className="vt-vault-document-line" />
-      <div className="vt-vault-document-line" />
-      <div className="vt-vault-document-line" />
-    </div>
+    {excerpt ? (
+      <div className="vt-vault-document-excerpt">{excerpt}</div>
+    ) : (
+      <div className="vt-vault-document-sheet">
+        <div className="vt-vault-document-line" />
+        <div className="vt-vault-document-line" />
+        <div className="vt-vault-document-line" />
+      </div>
+    )}
     <span className="vt-vault-file-type">{(fileType || "DOC").replace(".", "").toUpperCase()}</span>
   </div>
 )
@@ -306,6 +311,7 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
   mimeType,
   durationLabel,
   fileTypeLabel,
+  documentExcerpt,
   paletteIndex = 0,
   selected = false,
   tags = [],
@@ -372,7 +378,7 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
           </div>
           {resolvedVariant === "audio"
             ? <AudioPreview durationLabel={durationLabel} onPreviewAction={onPreviewAction} />
-            : <DocumentPreview fileType={fileType} />}
+            : <DocumentPreview fileType={fileType} excerpt={documentExcerpt} />}
         </div>
       </article>
     )
