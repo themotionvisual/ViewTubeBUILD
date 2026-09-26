@@ -1,3 +1,6 @@
+import type { Project } from "../../types"
+import { getContentBuild } from "../asset-engine/ContentBuildRepository"
+import type { ContentBuildSnapshot } from "../asset-engine/contracts"
 import type { AlgorithmProjectContext } from "./AlgorithmIntelligenceOrchestrator"
 import {
  buildChannelKnowledgeContextFromProfile,
@@ -23,6 +26,7 @@ export interface ResolveCreatorContextInput {
  channelId?: string | null
  query: string
  projectId?: string | null
+ project?: Project | null
  visibleContext?: Record<string, unknown> | null
  artifactRefs?: string[]
  assetType?: string
@@ -44,7 +48,7 @@ export interface CreatorContextEnvelope {
  provenance: {
   profileLoadedAt: string | null
   selectionUpdatedAt: string | null
-  projectSource: "visible_context" | null
+  projectSource: "canonical_project_content_build" | "canonical_project" | "visible_context" | null
  }
 }
 
@@ -63,9 +67,12 @@ export interface CreatorContextResolverDependencies {
  buildProject: (input: {
   channelId?: string | null
   projectId?: string | null
+  project?: Project | null
+  contentBuild?: ContentBuildSnapshot | null
   visibleContext?: Record<string, unknown> | null
   artifactRefs?: string[]
  }) => AlgorithmProjectContext | null
+ getContentBuild?: (contentBuildId: string) => ContentBuildSnapshot | null
 }
 
 const DEFAULT_DEPENDENCIES: CreatorContextResolverDependencies = {
@@ -74,6 +81,7 @@ const DEFAULT_DEPENDENCIES: CreatorContextResolverDependencies = {
  buildKnowledge: buildChannelKnowledgeContextFromProfile,
  resolveStyle: resolveStyleProfile,
  buildProject: buildAlgorithmProjectContext,
+ getContentBuild,
 }
 
 const cleanId = (value?: string | null): string | null => {
@@ -88,8 +96,8 @@ const uniqueRefs = (...groups: Array<string[] | undefined>): string[] =>
  * Read-only convergence facade over the existing canonical context owners.
  *
  * This deliberately introduces no new persistence. It resolves the context
- * already owned by Channel Profile/Knowledge, Style, Project and surface
- * selection systems into one bounded envelope for Brain-aware consumers.
+ * already owned by Channel Profile/Knowledge, Style, Project/ContentBuild and
+ * surface selection systems into one bounded envelope for Brain-aware consumers.
  */
 export const resolveCreatorContext = async (
  input: ResolveCreatorContextInput,
@@ -118,13 +126,33 @@ export const resolveCreatorContext = async (
   }
  }
 
- const project = channelId && input.projectId && controls.enabled && controls.allowProjects
+ const requestedProjectId = cleanId(input.projectId)
+ const canonicalProject = input.project
+  && (!requestedProjectId || input.project.id === requestedProjectId)
+  ? input.project
+  : null
+ const projectId = requestedProjectId || cleanId(canonicalProject?.id)
+ const linkedContentBuild = canonicalProject?.contentBuildId && dependencies.getContentBuild
+  ? dependencies.getContentBuild(canonicalProject.contentBuildId)
+  : null
+
+ const project = channelId && projectId && controls.enabled && controls.allowProjects
   ? dependencies.buildProject({
     channelId,
-    projectId: input.projectId,
+    projectId,
+    project: canonicalProject,
+    contentBuild: linkedContentBuild,
     visibleContext: input.visibleContext,
     artifactRefs: evidenceRefs,
    })
+  : null
+
+ const projectSource = project
+  ? linkedContentBuild
+   ? "canonical_project_content_build" as const
+   : canonicalProject
+    ? "canonical_project" as const
+    : "visible_context" as const
   : null
 
  return {
@@ -141,7 +169,7 @@ export const resolveCreatorContext = async (
   provenance: {
    profileLoadedAt: profile?.loadedAt || null,
    selectionUpdatedAt: input.selection?.updatedAt || null,
-   projectSource: project ? "visible_context" : null,
+   projectSource,
   },
  }
 }
