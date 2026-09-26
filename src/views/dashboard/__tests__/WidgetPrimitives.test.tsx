@@ -647,7 +647,7 @@ describe("reference-library interaction recovery contracts", () => {
   it("matches the Community Post resting and focus states across editable widget primitives", () => {
     expect(variantsCss).toContain("--widget-field-rest-stroke")
     expect(variantsCss).toContain("caret-color:var(--widget-color,#34cdea)!important")
-    expect(variantsCss).toContain("border-color:var(--widget-field-rest-stroke)!important")
+    expect(variantsCss).toContain("border:2px solid var(--widget-field-rest-stroke)!important")
     expect(variantsCss).toContain("background:var(--widget-field-focus-fill)!important")
     expect(variantsCss).toContain("0 0 16px 2px var(--widget-field-focus-glow)")
 
