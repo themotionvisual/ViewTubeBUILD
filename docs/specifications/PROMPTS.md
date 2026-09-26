@@ -7,7 +7,7 @@
 **Concern:** prompt composition, prompt families, context personalization, provenance, validation, evaluation and migration  
 **Owner:** BrainRuntime / Prompt System  
 **Registry ID:** DOC-SPEC-PROMPTS  
-**Last Audited Main SHA:** 82460536651d1de368e09a2fb685a335cd27f312  
+**Last Audited Main SHA:** e289ac7497010cc6c629c7273850f86f9c13ae89  
 **Supersedes:** docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md after Phase D migration certification  
 **Related Authorities:** docs/domains/BRAIN.md; docs/specifications/prompt-registry.json; docs/architecture/PRODUCT_ARCHITECTURE.md
 
