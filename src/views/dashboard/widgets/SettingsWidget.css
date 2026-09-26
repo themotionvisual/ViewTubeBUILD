@@ -160,14 +160,14 @@
 
 @container vt-widget (max-width:420px){
   :where(.dashboard-barrier) [data-widget-id="system-micro-stack"] .vt-widget-header .header-extra:has(.widget-header-toggle){
-    flex:0 1 150px!important;
-    min-width:136px;
-    max-width:48%;
+    flex:0 0 auto!important;
+    min-width:110px;
+    max-width:44%;
     overflow:visible;
   }
   :where(.dashboard-barrier) [data-widget-id="system-micro-stack"] .widget-header-stepper{
-    width:100%;
-    min-width:136px;
+    width:auto;
+    min-width:110px;
   }
   :where(.dashboard-barrier) [data-widget-id="system-micro-stack"] .widget-header-stepper-value{
     min-width:0;
