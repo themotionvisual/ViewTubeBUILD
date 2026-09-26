@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "viewtube://schemas/capability",
+  "title": "ViewTube Capability",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "owner",
+    "status",
+    "description"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^CAP-[A-Z0-9-]+$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ACCEPTED",
+        "RESEARCH",
+        "DEPRECATED",
+        "SUPERSEDED"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "masterTools": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "creatorLifecycle": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "domains": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "interfaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "taskQuery": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "authority": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": true
+}
