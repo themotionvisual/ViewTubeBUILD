@@ -2,7 +2,7 @@
 
 **Status:** CANONICAL LIVING WIDGET / DASHBOARD PLANNING + IMPLEMENTATION RESOURCE  
 **Created:** 2026-09-25  
-**Last audited main:** `6e1766103153f73957013d1d499687d0ebd01b90`  
+**Last audited main:** `0dcbd638a7cde9855d9245c6a8b4855e1543058c`  
 **Current registered widget count:** 68  
 **Executable authority:** `src/views/dashboard/WidgetRegistryBase.ts`, `src/views/dashboard/WidgetRegistry.ts`, `src/views/dashboard/WidgetRenderer.tsx`, `src/views/dashboard/WidgetRendererBase.tsx`, `src/views/dashboard/WidgetShell.tsx`, `src/views/dashboard/DashboardCanvas.tsx`, `src/views/dashboard/storage.ts`, `src/views/dashboard/widgetCertification.ts`, `src/views/dashboard/WidgetPrimitives.tsx`, and widget-local modules under `src/views/dashboard/widgets/`.  
 **Design-system authority:** `.claude/skills/viewtube-widget-dashboard-system/`, `.claude/skills/viewtube-widget-dashboard/`, `docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md`, and the canonical widget primitives.  
@@ -855,3 +855,276 @@ The widget system is considered structurally mature when:
 - the UI Library matches production primitives;
 - Library artifacts and repo docs are indexed here;
 - this document, registry, certification matrix and User Guide no longer contradict one another.
+
+
+---
+
+# 2026-09-25 conversation handoff — dashboard/widget program
+
+**Handoff status:** ACTIVE / CONTINUE FROM HERE  
+**Repository:** `themotionvisual/ViewTubeBUILD`  
+**Branch:** `main`  
+**Handoff audit point:** after archival commits through `0dcbd638a7cde9855d9245c6a8b4855e1543058c`.
+
+This section captures the dashboard/widget work, field QA, design decisions, donor artifacts and unfinished implementation requirements from the current conversation and its source conversation. A new agent should read this section, then the rest of this master resource, then the widget-dashboard skill before changing production code.
+
+## A. Non-negotiable widget design doctrine
+
+1. **No authored black UI.** Widget text, strokes, borders and shadows use ViewTube Ink / assigned widget-spectrum colors. Black is not a normal widget design token.
+2. **Predominantly monochromatic widgets.** Each widget is led by its assigned spectrum color; secondary colors are justified semantic accents, not decoration.
+3. **Canonical primitive ownership.** Fix a recurring control problem in the primitive/component owner first, then remove widget-local hard-coded copies.
+4. **Widget anatomy:** Frame → Header → Interior → recognizable signature functional component. Explanatory material belongs in the existing help/`?` surface rather than displacing real controls.
+5. **Control ladder:** canonical 18/24/32/38px visual sizes. Current explicit type mapping remains 24px control → 14px type, 32px → 18px, 38px → 22px. Dense 24px rows may adapt type only when required. Module titles do not shrink on mobile; they wrap.
+6. **Geometry:** 4px shell / 3px module / 2px control hierarchy where applicable; 4px base spacing logic; square split-left rails; icon scale follows the control rather than using one universal icon size.
+7. **Width × height are independent inputs.** Widgets must support declared width and height buckets without changing identity. Height buckets are real design states, not merely CSS overflow.
+8. **Mobile portrait:** retain the wide mobile rendering contract (the restored width hack), but visible left/right gutters must be visually equal. Width resize is disabled on phones. Every widget can move at least one vertical size up/down.
+9. **Mobile reordering:** drag is disabled on phones. Use single-arrow Move Up / Move Down controls. One press moves one slot. Viewport anchoring keeps the moved widget at approximately the same screen position while surrounding widgets pass it.
+10. **Mobile controls:** the top-right widget-controls button remains available even when the widget body is collapsed. Opening it reveals the colored secondary header/control row so a collapsed widget can always be expanded again.
+11. **Full-bleed vs inset vs shadow-safe zones:** every widget must distinguish normal inset content, full-bleed dividers/bands/rails, and shadow/focus-safe interactive content. Never use a narrow clipping wrapper as a substitute for layout.
+12. **No clipping as responsiveness.** Labels wrap, adapt, or receive more width. Do not solve fit with ellipsis/clip except where a deliberately truncated data label has an accessible/full alternative.
+13. **No emoji in production widgets.** Use the icon system. This explicitly applies to Video Director's Studio header action and similar controls.
+14. **Dense composition:** conserve vertical and horizontal space. Prefer compact components, rows, and two-column/multi-column grids over long stacks when semantics allow it.
+15. **Empty/no-account states are designed states.** Disconnected, unsynced, loading, empty, blocked, stale, error and preview are distinct. Generic preview visuals may explain a widget but must be clearly marked PREVIEW/EXAMPLE/CONNECT TO PERSONALIZE and never impersonate user data.
+
+## B. Current field-QA defects that remain the next visual repair target
+
+The latest iPhone/Render screenshots showed a shared shell/interior geometry defect still manifesting across widgets. Treat this as a system bug first, not a collection of unrelated widget bugs.
+
+### Shared mobile shell / clipping
+- Right dashboard gutter is still visibly larger than the left. Expand the usable widget row so both outer gutters match.
+- A white/invisible interior edge is still clipping right-side cards, dividers, horizontal rails, focus glows and shadows; Daily Oracle also shows left-side clipping.
+- Full-bleed gradient bands and dividers in **About ViewTube** and **Daily Oracle** must reach the true interior borders.
+- Focus rings/glows and component shadows need clearance without creating a fake dead strip.
+- Horizontal rails such as the **Video Asset Engine** readiness asset row should use the full available width and may scroll internally without being cropped by the widget body.
+
+### Header toggles
+The canonical header toggle still needs a stronger portrait contract:
+- two-line labels allowed;
+- active pill remains legible;
+- minimum useful label width;
+- no overlap;
+- no ellipsis by default;
+- examples requiring re-certification: Image Generator **THUMBNAIL / END SCREEN**, Brain Hub chat/controls toggle, and other long header page labels.
+
+### About ViewTube
+- Full-bleed intro/handoff gradient areas must touch the intended interior edges symmetrically.
+- Bottom divider must span the complete intended width.
+
+### Daily Oracle
+- Bottom divider still stops early.
+- Channel-read percentage badge and canonical creator-context copy must not be cut off.
+- Remove left/right clipping and preserve complete supporting copy.
+- Keep its distinctive recommendation/quick-win/evidence structure; do not flatten it into generic cards.
+
+### Channel Overview
+- Audience and Devices visuals should render from compatible synced data when their preferred dataset is unavailable but a canonical compatible synced source exists.
+- Do not show “sync this dataset” when the relevant canonical dataset is already synced.
+
+### Video Director
+- Studio header action becomes a canonical header-button component; remove emoji.
+- Auto-Fill Director must not have black shadow.
+- Prevent vertical collisions between rows/dividers.
+- Reduce wasted vertical space without changing the Director mental model.
+- Preserve its specialized visual systems and use the responsive lessons document before any global primitive change.
+
+### Image Generator
+- Portrait header toggle must fit THUMBNAIL / END SCREEN; END SCREEN may wrap to two lines.
+- Collapsed widget controls must remain visible/reachable so re-expansion is always possible.
+
+### Video Uploader / Video Manager
+- Video title and description must use the same canonical input/textarea styling as Image Generator: same radius, default border logic, fill and focus behavior.
+- Add Suitability label must stay inside its button.
+- Published Video and Refresh controls must share height; Published Video text must be large enough.
+- Details / Options / Add Suitability row needs a larger, better-proportioned primitive.
+- The shared split-left primitive used by Published Video / No Changes should enlarge the icon bay and label type.
+- The video selector dropdown (thumbnail + title) is a canonical compound component and must be represented in the UI Reference Library.
+
+### Video Asset Engine
+- Repair top navigation/tabs, especially the right edge.
+- Full-width horizontal asset/readiness rail.
+- Remove black shadow from bottom CTA.
+- Preserve thumbnail-led package identity.
+
+### Publishing Command
+Redesign rather than patch:
+- scope the widget to a selected video/project;
+- use canonical checkbox/task primitives;
+- allow tasks to be added;
+- compact the checklist to eliminate excessive vertical whitespace;
+- make readiness/progress respond to checklist state;
+- preserve preflight/publish identity.
+
+## C. Newly approved primitive/component donors from Creator Operations HTML
+
+Source artifact archived in this repo at:
+[Creator Operations 20 widgets mobile-fixed donor](./widget-dashboard-master-resource/artifacts/viewtube_creator_operations_20_widgets_mobile_fixed.html)
+
+Rebuild these in ViewTube widget CSS/primitives; do **not** copy the donor's black-border styling literally.
+
+### 1. Full-bleed labeled stage divider
+Donor stages: LEAD / PROPOSAL / ACTIVE / PAID.
+
+Canonical ViewTube version:
+- full-bleed to both interior module edges;
+- label type substantially larger relative to divider height;
+- label uses ViewTube Ink token;
+- at least three color-style variants aligned with the monochromatic widget spectrum system;
+- usable as pipeline/status section divider, not tied to sponsorship semantics.
+
+### 2. Dense data grid / table with badges
+Donor: Subscriber CRM & Audience Segments table.
+
+Canonical version:
+- bordered grid cells using widget ink/spectrum tokens;
+- compact multi-line cell copy;
+- badge/status cell support;
+- responsive behavior that preserves readable columns before considering horizontal scroll;
+- appropriate for audience segments, project matrices, comparison/status tables and other dense operational data.
+
+### 3. Checkbox-linked progress system
+Donor: AI-ranked work queue.
+
+Canonical version:
+- task rows use the real ViewTube checkbox primitive;
+- progress fill is derived from checked/completed task state;
+- add/remove/check operations update progress deterministically;
+- supports semantic badges and compact completion summary;
+- suitable for Publishing Command and other readiness/workflow widgets.
+
+### 4. Grid calendar
+Donor: Content Calendar & Project Planner.
+
+Canonical version:
+- week/month grid cells;
+- colored task/event chips using spectrum tags;
+- compact date headers;
+- current selection and overflow states;
+- responsive phone behavior that preserves calendar identity;
+- candidate owner for Publishing Calendar / planning surfaces and UI Reference Library.
+
+These four components must be added to the canonical primitive/component set and to the UI Reference Library with interactive examples and mobile states.
+
+## D. Settings widget status and target
+
+Settings is now a dedicated widget owner and should remain the **Dashboard Control Switchboard**, not a second full Settings page.
+
+Pages:
+- DASHBOARD
+- DATA
+- AI
+- ACCOUNT
+
+Continue to compact it aggressively:
+- controls that can share a row should share a row;
+- Dashboard Controls + Layout Lock should use a dense two-column/row treatment where space allows;
+- preset buttons should not consume oversized vertical bands;
+- header page toggle must fit complete labels;
+- keep registered/visible/hidden counts and layout state;
+- preserve Focus / Creation / Analytics / All presets;
+- preserve import/export/reset, layout lock, show-all and full-settings handoff;
+- disconnected Data/AI states show generic labeled previews rather than blank panels.
+
+## E. Widget consolidation direction
+
+High-value consolidation decisions remain:
+- Daily Oracle + Next Best Action → Daily Oracle;
+- Alerts Feed + News Ticker → one alert/event stream;
+- Video Uploader + Publishing Command → Video Publisher with prep/preflight/publish pages;
+- Keyword Engine + Keyword Overlap → Keyword Intelligence;
+- Title Rewriter + Description Editor + Tag Generator + Hashtag Analyzer → Metadata/SEO Workbench;
+- Retention Dip + Algo Benchmark + Retention Simulator → Retention Lab;
+- Mini Calendar + Upload Scheduler → Publishing Calendar;
+- Audience Matrix + Device Matrix + Guest Ratio → Audience Intelligence;
+- Traffic Sources + Playback Origins + Sharing DNA + Bridge Efficiency → Discovery & Distribution;
+- Revenue Tracker + Revenue Momentum + Ad Stack + CPM Geography + Premium Pulse → Monetization Intelligence;
+- Comment Responder + Video Comment Operator → Comment Operations;
+- Task Stack + Content Pipeline → Content Pipeline with task lane;
+- Recent Uploads + Top Performer → optional Video Performance Shelf.
+
+Do not merge Brain Hub with Daily Oracle, Video Manager with Publisher, Video Autopsy with Video Manager, Opportunity Radar with Anomaly Radar, Video Director with Editor, or UI Reference Library with Settings.
+
+## F. Archived design/resource artifacts now in main docs
+
+Conversation/Library artifacts copied into the repository for durable handoff:
+
+- [viewtube_master_micro_dense_compositions.html](./widget-dashboard-master-resource/artifacts/viewtube_master_micro_dense_compositions.html)
+- [DASHBOARD_WIDGET_AND_40_SIGNATURE_SYSTEMS_CATALOG.html](./widget-dashboard-master-resource/artifacts/DASHBOARD_WIDGET_AND_40_SIGNATURE_SYSTEMS_CATALOG.html)
+- [ViewTube-All-190-Widgets-Source-Faithful-Gallery-and-Consolidation-Plan.html](./widget-dashboard-master-resource/artifacts/ViewTube-All-190-Widgets-Source-Faithful-Gallery-and-Consolidation-Plan.html)
+- [viewtube_creator_operations_20_widgets_mobile_fixed.html](./widget-dashboard-master-resource/artifacts/viewtube_creator_operations_20_widgets_mobile_fixed.html)
+- [STANDALONE_HTML_PROTOTYPE_INVENTORY_EXTRACT.md](./widget-dashboard-master-resource/library-extracts/STANDALONE_HTML_PROTOTYPE_INVENTORY_EXTRACT.md)
+- [ViewTube Widget Master Resource Guide 2026-09-11 extract](./widget-dashboard-master-resource/library-extracts/ViewTube_Widget_Master_Resource_Guide_2026-09-11_EXTRACT.md)
+
+Existing repository references that remain important:
+- [Widget Dashboard Optimization Plan](./VIEWTUBE_WIDGET_DASHBOARD_OPTIMIZATION_PLAN.md)
+- [Widget System Certification Master](./WIDGET_SYSTEM_CERTIFICATION_MASTER_2026-09-14.md)
+- [Post-current Consolidation Plan](./VIEWTUBE_WIDGET_POST_CURRENT_CONSOLIDATION_PLAN_2026-09-24.md)
+- [Shorts Multiplier notes](./SHORTS_MULTIPLIER_WIDGET_NOTES_2026-09-24.md)
+- [Toolbox UI Master Resource](./VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md)
+- [Studio Hub Component Library source of truth](../ui/STUDIO_HUB_COMPONENT_LIBRARY_SOURCE_OF_TRUTH.md)
+- [Widget dashboard system skill](../../.claude/skills/viewtube-widget-dashboard-system/SKILL.md)
+- [Current widget inventory](../../.claude/skills/viewtube-widget-dashboard-system/references/current-widget-inventory.md)
+- [Source-code map](../../.claude/skills/viewtube-widget-dashboard-system/references/source-code-map.md)
+- [Futures/prototypes/reference atlas](../../.claude/skills/viewtube-widget-dashboard-system/references/futures-prototypes-and-reference-atlas.md)
+- [Video Director responsive lessons](../../.claude/skills/viewtube-widget-dashboard-system/references/video-director-responsive-lessons.md)
+- [Governance widget library](../../governance/widget-library/README.md)
+
+## G. Runtime ownership map for the next agent
+
+Start here before editing:
+- `src/views/dashboard/WidgetRegistryBase.ts`
+- `src/views/dashboard/WidgetRegistry.ts`
+- `src/views/dashboard/WidgetRendererBase.tsx`
+- `src/views/dashboard/WidgetRenderer.tsx`
+- `src/views/dashboard/WidgetShell.tsx`
+- `src/views/dashboard/DashboardCanvas.tsx`
+- `src/views/dashboard/widget-entry.css`
+- `src/views/dashboard/WidgetPrimitives.tsx`
+- `src/components/UIReferenceLibraryContent.tsx`
+- `src/views/dashboard/widgets/UIReferenceLibraryWidget.tsx`
+- `src/views/referenceStudio/WidgetLabV2.tsx`
+- widget-local TSX/CSS under `src/views/dashboard/widgets/`.
+
+High-risk areas:
+- global overflow/clipping;
+- mobile width hack and dashboard gutter math;
+- shared header toggle sizing;
+- split-left button geometry;
+- input/textarea focus geometry;
+- shell collapse/control-panel interaction;
+- widget CSS ownership overlap.
+
+A local widget problem must not weaken a shared primitive guarantee. Before changing shared CSS, inspect consumers and add/adjust contract tests.
+
+## H. Next implementation sequence
+
+1. Reproduce and fix **mobile shell width symmetry + invisible clipping** globally.
+2. Introduce/normalize explicit **inset / full-bleed / shadow-safe** content utilities.
+3. Fix canonical **header toggle** portrait wrapping.
+4. Fix canonical **split-left compact button** proportions.
+5. Re-unify canonical **text input + textarea** geometry/focus treatment.
+6. Re-certify About ViewTube and Daily Oracle full-bleed bands/dividers.
+7. Repair Video Asset Engine tabs/rail/CTA shadow.
+8. Redesign Publishing Command around selected video/project + addable checklist + checkbox-driven readiness progress.
+9. Repair Video Director Studio header button, spacing and shadow ownership.
+10. Fix Image Generator portrait toggle and collapsed-controls recovery.
+11. Fix Video Uploader/Video Manager button rows and video-selector primitive.
+12. Add the four Creator Operations donor components to `WidgetPrimitives`/component owners and UI Reference Library.
+13. Certify the top widget cohort across width × height × disconnected/loading/empty/error/mobile states.
+14. Continue renderer/registry extraction, CSS ownership cleanup and persisted settings/schema migration work identified by the unfinished-work audit.
+15. Capture acceptance screenshots and update this document after each completed wave.
+
+## I. Completion protocol
+
+For every widget/system change:
+- record files/selectors/tokens changed;
+- record whether the change is shared or widget-local;
+- update relevant tests;
+- verify desktop, 390×844 portrait and phone landscape;
+- verify min/default/max width and height plus one asymmetric state;
+- verify disconnected/loading/empty/error where applicable;
+- verify no authored black UI;
+- verify no clipped labels, focus rings, glows or shadows;
+- verify one intentional scroll owner;
+- update this living master resource and the widget skill when the rule is systemic.
+
+**Handoff principle:** preserve **TOKENS → CODED PRIMITIVE → UI REFERENCE LIBRARY → PRODUCTION CONSUMER** alignment. A screenshot-only fix that bypasses this chain is incomplete.
