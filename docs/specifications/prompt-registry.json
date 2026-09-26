@@ -1,0 +1,1331 @@
+{
+  "version": "viewtube-prompt-registry-v2",
+  "generatedAt": "2026-09-26",
+  "authority": "docs/specifications/PROMPTS.md",
+  "targetArchitecture": "Prompt Constitution + prompt family + Context Resolver + personalization pack + evidence + schema + validators + trace",
+  "sources": [
+    "src/services/prompts.ts",
+    "src/services/gemini.ts",
+    "src/services/oracle/prompts.ts",
+    "src/services/brain/BrainTaskProfileRegistry.ts",
+    "src/services/brain/AssetGenerator.ts",
+    "src/services/brain/assetStrategies/communityPost.ts"
+  ],
+  "legacyPromptConstants": [
+    {
+      "id": "SCULPTING_ENGINE_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "legacy_other",
+      "expectedOutput": "unknown_or_version_marker",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "DATA_ANALYSIS_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "strategy_intelligence",
+      "expectedOutput": "channel_analysis_report",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "CHANNEL_ORACLE_PROMPT_VERSION",
+      "source": "src/services/prompts.ts",
+      "kind": "version_marker",
+      "aliasOf": null,
+      "family": "strategy_intelligence",
+      "expectedOutput": "strategy_or_intelligence",
+      "status": "retain_as_version_marker",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "DATA_HANDLING_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "data_handling",
+      "expectedOutput": "data_processing_instructions",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "KEYWORD_ANALYSIS_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "packaging",
+      "expectedOutput": "packaging_metadata_or_keyword_analysis",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "HOOK_GENERATION_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "content",
+      "expectedOutput": "hook_candidates",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "STRATEGY_CHAT_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "strategy_intelligence",
+      "expectedOutput": "strategy_or_intelligence",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "ALGORITHM_DIAGNOSIS_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "strategy_intelligence",
+      "expectedOutput": "algorithm_diagnosis_or_strategy",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "DAILY_COMMAND_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "strategy_intelligence",
+      "expectedOutput": "daily_creator_brief",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "INTEREST_SEEDING_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "strategy_intelligence",
+      "expectedOutput": "strategy_or_intelligence",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "FUNNEL_TEASER_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "packaging",
+      "expectedOutput": "promotion_teaser",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "THUMBNAIL_ANALYSIS_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "packaging",
+      "expectedOutput": "thumbnail_analysis_or_concept",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "RETENTION_ANALYSIS_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "content",
+      "expectedOutput": "retention_analysis",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "COMPETITOR_INTELLIGENCE_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "strategy_intelligence",
+      "expectedOutput": "strategy_or_intelligence",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "COMMUNITY_POST_REFINEMENT_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "community",
+      "expectedOutput": "community_post_or_schedule",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "COMMENT_REPLY_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "community",
+      "expectedOutput": "comment_reply",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "ORACLE_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "strategy_intelligence",
+      "expectedOutput": "strategy_or_intelligence",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "STRATEGY_CONSULTANT_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "strategy_intelligence",
+      "expectedOutput": "strategy_or_intelligence",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "TITLE_REWRITE_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "packaging",
+      "expectedOutput": "packaging_metadata_or_keyword_analysis",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "ORACLE_ANALYSIS_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "strategy_intelligence",
+      "expectedOutput": "channel_analysis_report",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "ALGORITHM_ARCHITECT_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "strategy_intelligence",
+      "expectedOutput": "algorithm_diagnosis_or_strategy",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "KEYWORD_LAB_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "packaging",
+      "expectedOutput": "packaging_metadata_or_keyword_analysis",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "END_SCREEN_CONCEPT_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "packaging",
+      "expectedOutput": "end_screen_concept",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "SEO_OVERHAUL_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "SCULPTING_ENGINE_SYSTEM_PROMPT",
+      "family": "packaging",
+      "expectedOutput": "packaging_metadata_or_keyword_analysis",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "HOOK_GENERATION_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "HOOK_GENERATION_SYSTEM_PROMPT",
+      "family": "content",
+      "expectedOutput": "hook_candidates",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "ALGORITHM_DIAGNOSIS_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "ALGORITHM_DIAGNOSIS_SYSTEM_PROMPT",
+      "family": "strategy_intelligence",
+      "expectedOutput": "algorithm_diagnosis_or_strategy",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "DAILY_COMMAND_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "DAILY_COMMAND_SYSTEM_PROMPT",
+      "family": "strategy_intelligence",
+      "expectedOutput": "daily_creator_brief",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "INTEREST_SEEDING_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "INTEREST_SEEDING_SYSTEM_PROMPT",
+      "family": "strategy_intelligence",
+      "expectedOutput": "strategy_or_intelligence",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "COMMUNITY_POST_REFINEMENT_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "COMMUNITY_POST_REFINEMENT_PROMPT",
+      "family": "community",
+      "expectedOutput": "community_post_or_schedule",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "COMMENT_REPLY_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "COMMENT_REPLY_SYSTEM_PROMPT",
+      "family": "community",
+      "expectedOutput": "comment_reply",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "ORACLE_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "ORACLE_SYSTEM_PROMPT",
+      "family": "strategy_intelligence",
+      "expectedOutput": "strategy_or_intelligence",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "STRATEGY_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "STRATEGY_CONSULTANT_PROMPT",
+      "family": "strategy_intelligence",
+      "expectedOutput": "strategy_or_intelligence",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "TITLE_REWRITE_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "TITLE_REWRITE_SYSTEM_PROMPT",
+      "family": "packaging",
+      "expectedOutput": "packaging_metadata_or_keyword_analysis",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "ORACLE_ANALYSIS_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "ORACLE_ANALYSIS_SYSTEM_PROMPT",
+      "family": "strategy_intelligence",
+      "expectedOutput": "channel_analysis_report",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "ALGORITHM_ARCHITECT_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "ALGORITHM_ARCHITECT_SYSTEM_PROMPT",
+      "family": "strategy_intelligence",
+      "expectedOutput": "algorithm_diagnosis_or_strategy",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "KEYWORD_LAB_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "KEYWORD_LAB_SYSTEM_PROMPT",
+      "family": "packaging",
+      "expectedOutput": "packaging_metadata_or_keyword_analysis",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "END_SCREEN_CONCEPT_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "END_SCREEN_CONCEPT_PROMPT",
+      "family": "packaging",
+      "expectedOutput": "end_screen_concept",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "ENHANCED_COMMENT_REPLY_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "community",
+      "expectedOutput": "comment_reply",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "REPLY_REFINEMENT_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "community",
+      "expectedOutput": "comment_reply",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "VIDEO_RECOMMENDATION_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "legacy_other",
+      "expectedOutput": "unknown_or_version_marker",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "VIDEO_AUTOPSY_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "legacy_other",
+      "expectedOutput": "unknown_or_version_marker",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "COMMUNITY_POST_SCHEDULER_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "community",
+      "expectedOutput": "community_post_or_schedule",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "ENHANCED_COMMENT_REPLY_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "ENHANCED_COMMENT_REPLY_PROMPT",
+      "family": "community",
+      "expectedOutput": "comment_reply",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "REPLY_REFINEMENT_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "REPLY_REFINEMENT_PROMPT",
+      "family": "community",
+      "expectedOutput": "comment_reply",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "VIDEO_RECOMMENDATION_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "VIDEO_RECOMMENDATION_PROMPT",
+      "family": "legacy_other",
+      "expectedOutput": "unknown_or_version_marker",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "VIDEO_AUTOPSY_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "VIDEO_AUTOPSY_PROMPT",
+      "family": "legacy_other",
+      "expectedOutput": "unknown_or_version_marker",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "COMMUNITY_POST_SCHEDULER_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "COMMUNITY_POST_SCHEDULER_PROMPT",
+      "family": "community",
+      "expectedOutput": "community_post_or_schedule",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    },
+    {
+      "id": "SCRIPT_ARCHITECT_SYSTEM_PROMPT",
+      "source": "src/services/prompts.ts",
+      "kind": "prompt",
+      "aliasOf": null,
+      "family": "content",
+      "expectedOutput": "script",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Must be reachability-audited before migration/removal."
+    },
+    {
+      "id": "SCRIPT_ARCHITECT_INSTRUCTIONS",
+      "source": "src/services/prompts.ts",
+      "kind": "alias",
+      "aliasOf": "SCRIPT_ARCHITECT_SYSTEM_PROMPT",
+      "family": "content",
+      "expectedOutput": "script",
+      "status": "legacy_migration_required",
+      "personalizationTarget": [
+        "creator_rules",
+        "channel_identity",
+        "validated_channel_knowledge",
+        "project_context",
+        "relevant_evidence"
+      ],
+      "notes": "Alias; do not version as an independent prompt family."
+    }
+  ],
+  "legacyGeminiExports": [
+    {
+      "id": "generateActionableTactics",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateIdeaSpark",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateEducationalTimestampQuestions",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateSeoData",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateKeywordAnalysis",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateThumbnailConcept",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateSpeech",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateVideo",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "analyzeImage",
+      "source": "src/services/gemini.ts",
+      "kind": "analysis_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateImage",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateChatResponse",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateStructuredBrainResponse",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "provider_or_canonical_helper"
+    },
+    {
+      "id": "analyzeVideo",
+      "source": "src/services/gemini.ts",
+      "kind": "analysis_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateThumbnail",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateStrategyResponse",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "analyzeChannelGoals",
+      "source": "src/services/gemini.ts",
+      "kind": "analysis_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateTagSuggestions",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "analyzeExistingTags",
+      "source": "src/services/gemini.ts",
+      "kind": "analysis_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateVisualImage",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateVisualVideo",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "analyzeMediaContent",
+      "source": "src/services/gemini.ts",
+      "kind": "analysis_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateHook",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "analyzeChannelData",
+      "source": "src/services/gemini.ts",
+      "kind": "analysis_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateAlgorithmDiagnosis",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateDailyBrief",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateInterestSeeding",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateProjectStrategy",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateStoryboard",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateScript",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateProjectSuggestions",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateOracleAdvice",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateTimelinePatch",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateChannelTaskSuggestions",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateFunnelTeaser",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateCommunityPosts",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateCommentResponses",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateEndScreen",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generatePerfectReply",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "refineCommunityPost",
+      "source": "src/services/gemini.ts",
+      "kind": "refinement_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateJournalFollowUps",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateInfiniteMicroPolls",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateEndScreenConcept",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateEndScreenImage",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateEnhancedReply",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "refineUserReply",
+      "source": "src/services/gemini.ts",
+      "kind": "refinement_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateVideoAutopsy",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateCommunityPostSchedule",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "legacy_reachability_and_migration_required"
+    },
+    {
+      "id": "generateBrainJsonObject",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "provider_or_canonical_helper"
+    },
+    {
+      "id": "generateSchemaJsonObject",
+      "source": "src/services/gemini.ts",
+      "kind": "generation_function",
+      "status": "provider_or_canonical_helper"
+    }
+  ],
+  "oracleTemplates": [
+    {
+      "id": "oracle-hook-v1",
+      "family": "editor_oracle",
+      "output": "hook alternatives",
+      "customization": [
+        "channelVoiceDna",
+        "audienceStyle",
+        "creatorConstraints",
+        "timelineContext"
+      ]
+    },
+    {
+      "id": "oracle-story-v1",
+      "family": "editor_oracle",
+      "output": "story beat patch proposal",
+      "customization": [
+        "channelVoiceDna",
+        "audienceStyle",
+        "creatorConstraints",
+        "timelineContext"
+      ]
+    },
+    {
+      "id": "oracle-visual-v1",
+      "family": "editor_oracle",
+      "output": "visual-motion variants",
+      "customization": [
+        "channelVoiceDna",
+        "audienceStyle",
+        "creatorConstraints",
+        "timelineContext"
+      ]
+    },
+    {
+      "id": "oracle-caption-v1",
+      "family": "editor_oracle",
+      "output": "caption rhythm plan",
+      "customization": [
+        "channelVoiceDna",
+        "audienceStyle",
+        "creatorConstraints",
+        "timelineContext"
+      ]
+    },
+    {
+      "id": "oracle-audio-v1",
+      "family": "editor_oracle",
+      "output": "audio energy map",
+      "customization": [
+        "channelVoiceDna",
+        "audienceStyle",
+        "creatorConstraints",
+        "timelineContext"
+      ]
+    },
+    {
+      "id": "oracle-retention-v1",
+      "family": "editor_oracle",
+      "output": "retention diagnostics/fixes",
+      "customization": [
+        "channelVoiceDna",
+        "audienceStyle",
+        "creatorConstraints",
+        "timelineContext"
+      ]
+    },
+    {
+      "id": "oracle-render-opt-v1",
+      "family": "editor_oracle",
+      "output": "render optimization plan",
+      "customization": [
+        "channelVoiceDna",
+        "audienceStyle",
+        "creatorConstraints",
+        "timelineContext"
+      ]
+    }
+  ],
+  "brainTaskProfiles": [
+    {
+      "id": "creator_asset_draft",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "daily_oracle",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "first_week_plan",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "best_video_autopsy",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "channel_revival",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "strategy",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "analytics",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "seo",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "audience",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "revenue",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "publishing",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "content_analysis",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "journal",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    },
+    {
+      "id": "goal_coach",
+      "source": "src/services/brain/BrainTaskProfileRegistry.ts",
+      "status": "canonical_task_routing_current_main"
+    }
+  ],
+  "governedAssetStrategies": [
+    {
+      "id": "community-post-v1",
+      "assetType": "community_post",
+      "output": "multi-day CommunityPostPlan",
+      "schema": "typed",
+      "status": "governed_current_main"
+    },
+    {
+      "id": "community-single-post-v1",
+      "assetType": "community_post",
+      "output": "single CommunitySinglePost",
+      "schema": "typed",
+      "status": "governed_current_main"
+    }
+  ],
+  "requiredFutureFields": [
+    "owner",
+    "productionCallers",
+    "promptFamily",
+    "promptVersion",
+    "constitutionVersion",
+    "contextResolverVersion",
+    "outputSchemaVersion",
+    "requestedModel",
+    "servedModel",
+    "channelKnowledgeFingerprint",
+    "projectRevision",
+    "styleProfileVersion",
+    "evaluationBaseline",
+    "reachabilityStatus"
+  ],
+  "migratedFrom": "docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json",
+  "role": "PROMPT_INVENTORY_AND_REACHABILITY_PROJECTION",
+  "note": "Inventory/projection only. Durable prompt behavior is governed by docs/specifications/PROMPTS.md; exact work state belongs in Task Index."
+}
