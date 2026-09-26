@@ -15,6 +15,9 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).toContain('"aria-label": "Search Vault assets"')
   expect(source).toContain('aria-label="Open library navigation"')
   expect(source).toContain('aria-label="Open Vault filters"')
+  expect(source).toContain('ariaLabel="Vault media type"')
+  expect(source).toContain('label="View"')
+  expect(source).toContain('onChange={(value) => setViewMode(value as VaultWorkspaceViewMode)}')
   expect(source).not.toContain('title="Navigator"')
  })
 
