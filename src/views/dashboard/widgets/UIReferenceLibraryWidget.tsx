@@ -87,6 +87,9 @@ import {
   WidgetVideoMiniCard,
   WidgetSpeechBubble,
   WidgetVideoSelect,
+  WidgetVideoMiniCard,
+  WidgetSplitCounterBadge,
+  WidgetSpeechBubble,
   type WidgetControlHeight,
   type WidgetPrimitiveTone,
   type WidgetSplitIconStyle,
@@ -901,6 +904,29 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                   <WidgetLeftSplitBadge height={24} tone="primary" icon={<ThumbsUp strokeWidth={2.5} />}>184</WidgetLeftSplitBadge>
                   <WidgetLeftSplitBadge height={24} tone="secondary" icon={<MessagesSquare strokeWidth={2.5} />}>12</WidgetLeftSplitBadge>
                   <WidgetSplitButton icon={<Link2 strokeWidth={2.5} />} width="auto" multiline>Suggest video</WidgetSplitButton>
+                </div>
+              </div>
+            </div>
+
+            <div className="widget-reference-family">
+              {familyHeading("Comment + Video Mini Modules", "Comment Responder donor primitives promoted to the shared system")}
+              <div className="grid gap-3">
+                <WidgetVideoMiniCard
+                  title="Napoleon's Last Great Victory"
+                  thumbnail={VIDEO_OPTIONS[0].thumbnail}
+                  meta="12:42 · 48,230 views"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <WidgetSplitCounterBadge icon={<ThumbsUp />} value={184} label="184 likes" height={24} tone="primary" />
+                  <WidgetSplitCounterBadge icon={<MessageSquare />} value={27} label="27 replies" height={24} tone="secondary" />
+                </div>
+                <WidgetSpeechBubble>
+                  Big supporter — the map explanation made the battle finally click.
+                </WidgetSpeechBubble>
+                <div className="max-w-[220px]">
+                  <WidgetLeftSplitButton icon={<Sparkles />} multiline width="full" tone="primary">
+                    Suggest video
+                  </WidgetLeftSplitButton>
                 </div>
               </div>
             </div>
