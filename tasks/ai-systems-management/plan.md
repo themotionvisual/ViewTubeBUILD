@@ -1,3 +1,5 @@
+> **MIGRATION NOTICE — 2026-09-26:** The AI-specific management/control-plane program has been consolidated. Current Brain architecture: `docs/domains/BRAIN.md`. Current prompt architecture: `docs/specifications/PROMPTS.md`. Conversation continuity: Conversation OS. Missions/receipts: Crown/Royal Exchange. Exact task state: Task Authority / Task Index. `governance/ai-systems/**` remains only an operational health/reachability projection.
+
 # Implementation Plan — ViewTube AI Systems Management
 
 ## Architecture decision
