@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "productionDate": "2026-09-26",
   "lastEdited": "2026-09-26",
-  "migrationState": "phase-a-b-active-side-by-side",
+  "migrationState": "phase-c-conversation-crown-task-authority",
   "authorityRule": "One primary authority per bounded concern. Current executable evidence verifies implementation; registry metadata determines documentation role.",
   "entries": [
     {
@@ -107,17 +107,21 @@
     },
     {
       "id": "DOC-GOV-CROWN",
-      "path": "docs/architecture/VIEWTUBE_CROWN_INTEGRATION_SYSTEM.md",
+      "path": "docs/governance/CROWN.md",
       "class": "CONSTITUTION",
-      "status": "MIGRATING",
+      "status": "ACTIVE",
       "concern": "multi-agent-mission-coordination",
       "owner": "Crown",
       "productionDate": "2026-09-11",
       "lastEdited": "2026-09-26",
-      "lastAuditedMainSha": null,
-      "supersedes": [],
+      "lastAuditedMainSha": "e657cefe83f3f66d5a8316543814d9d18197b338",
+      "supersedes": [
+        "docs/architecture/VIEWTUBE_CROWN_INTEGRATION_SYSTEM.md"
+      ],
       "relatedAuthorities": [
-        "docs/governance/DOCUMENTATION.md"
+        "docs/governance/CONVERSATION_OS.md",
+        "docs/governance/TASK_AUTHORITY.md",
+        "docs/governance/VERIFICATION.md"
       ]
     },
     {
@@ -251,6 +255,46 @@
         "docs/programs/INTEGRATED_APPLICATION.md",
         "docs/governance/DOCUMENTATION.md"
       ]
+    },
+    {
+      "id": "DOC-GOV-CONVERSATION-OS",
+      "path": "docs/governance/CONVERSATION_OS.md",
+      "class": "CONSTITUTION",
+      "status": "ACTIVE",
+      "concern": "conversation-improvement-operating-system",
+      "owner": "Conversation & Improvement OS",
+      "productionDate": "2026-09-26",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": "e657cefe83f3f66d5a8316543814d9d18197b338",
+      "supersedes": [
+        "agent/contracts/herald-in.md",
+        "agent/contracts/herald-out.md",
+        "agent/contracts/herald-workflow.md"
+      ],
+      "relatedAuthorities": [
+        "docs/governance/CROWN.md",
+        "docs/governance/TASK_AUTHORITY.md",
+        "docs/governance/DOCUMENTATION.md",
+        "docs/governance/VERIFICATION.md"
+      ]
+    },
+    {
+      "id": "DOC-GOV-TASK-AUTHORITY",
+      "path": "docs/governance/TASK_AUTHORITY.md",
+      "class": "CONSTITUTION",
+      "status": "ACTIVE",
+      "concern": "task-authority",
+      "owner": "Task Authority",
+      "productionDate": "2026-09-26",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": "e657cefe83f3f66d5a8316543814d9d18197b338",
+      "supersedes": [],
+      "relatedAuthorities": [
+        "docs/governance/CROWN.md",
+        "docs/governance/CONVERSATION_OS.md",
+        "docs/governance/VERIFICATION.md",
+        "docs/governance/WORK_OBJECTS.md"
+      ]
     }
   ],
   "legacyGlobalSources": [
@@ -283,6 +327,30 @@
       "status": "DONOR",
       "supersededBy": "DOC-ARCH-PRODUCT",
       "archiveState": "ACTIVE_DONOR_UNTIL_PROGRAM_MIGRATION"
+    },
+    {
+      "path": "docs/architecture/VIEWTUBE_CROWN_INTEGRATION_SYSTEM.md",
+      "status": "SUPERSEDED",
+      "supersededBy": "DOC-GOV-CROWN",
+      "archiveState": "PENDING"
+    },
+    {
+      "path": "agent/contracts/herald-in.md",
+      "status": "SUPERSEDED",
+      "supersededBy": "DOC-GOV-CONVERSATION-OS",
+      "archiveState": "PENDING"
+    },
+    {
+      "path": "agent/contracts/herald-out.md",
+      "status": "SUPERSEDED",
+      "supersededBy": "DOC-GOV-CONVERSATION-OS",
+      "archiveState": "PENDING"
+    },
+    {
+      "path": "agent/contracts/herald-workflow.md",
+      "status": "SUPERSEDED",
+      "supersededBy": "DOC-GOV-CONVERSATION-OS",
+      "archiveState": "PENDING"
     }
   ]
 }
