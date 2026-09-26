@@ -104,7 +104,16 @@ export interface BrainRuntimeProvenanceChain {
  generationRecordId: string | null
  generationProvider: string | null
  generationModel: string | null
+ promptVersions: Record<string, string>
+ modelRequested: string | null
+ modelServed: string | null
+ evidenceIds: string[]
+ selectedAssetIds: string[]
+ sourceAssetIds: string[]
  outputAssetIds: string[]
+ versionIds: string[]
+ variantGroupId: string | null
+ relationshipIds: string[]
  actionPacketIds: string[]
  workflowIds: string[]
  brainOutcomeIds: string[]
@@ -414,6 +423,16 @@ const buildProvenanceChain = (input: {
   new Set(directAlgorithmEvents.map(event => event.id)),
  )
 
+ const evidenceIds = uniqueStrings([
+  ...(input.request.evidenceIds || []),
+  ...(input.manifest?.evidenceIds || []),
+  ...(receipt?.evidenceIds || []),
+  ...(trace?.evidence?.returned || []),
+  ...relatedEvents.flatMap(event => event.evidenceIds || []),
+  ...matchedOutcomes.flatMap(outcome => outcome.evidence || []),
+  ...algorithmEvents.flatMap(event => event.evidenceIds || []),
+ ])
+
  const unresolved: string[] = []
  if (!input.manifest) unresolved.push("context_manifest")
  if (!receipt) unresolved.push("tool_receipt")
@@ -434,7 +453,16 @@ const buildProvenanceChain = (input: {
   generationRecordId,
   generationProvider: generationRecord?.provider || null,
   generationModel: generationRecord?.model || null,
+  promptVersions: { ...(trace?.promptVersions || {}) },
+  modelRequested: trace?.model?.requested || null,
+  modelServed: trace?.model?.served || null,
+  evidenceIds,
+  selectedAssetIds: uniqueStrings(input.manifest?.selectedAssetIds || []),
+  sourceAssetIds: uniqueStrings(input.request.sourceAssetIds || []),
   outputAssetIds: uniqueStrings(receipt?.outputAssetIds || []),
+  versionIds: uniqueStrings(receipt?.versionIds || []),
+  variantGroupId: receipt?.variantGroupId || null,
+  relationshipIds: uniqueStrings(receipt?.relationshipIds || []),
   actionPacketIds,
   workflowIds,
   brainOutcomeIds: matchedOutcomes.map(outcome => outcome.id),
