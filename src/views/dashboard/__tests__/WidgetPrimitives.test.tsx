@@ -694,6 +694,61 @@ describe("reference-library video module and full-width primitive sizing", () =>
   })
 })
 
+describe("reference library recovery completion", () => {
+  it("uses the approved family order and retires Navigation plus Metrics/States as standalone pages", () => {
+    expect(referenceSource).toContain('{ id: "header", label: "HEADER CONTROLS" }')
+    expect(referenceSource).not.toContain('{ id: "navigation", label: "NAV" }')
+    expect(referenceSource).not.toContain('{ id: "states", label: "STATES" }')
+    expect(referenceSource).toContain('activeCategory === "header"')
+    expect(referenceSource).not.toContain('activeCategory === "navigation"')
+    expect(referenceSource).not.toContain('activeCategory === "states"')
+  })
+
+  it("supports spectrum icon presentations at every canonical size tier", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <WidgetTinySpectrumIcon name="video" spectrum="cyan" height={18} />
+        <WidgetTinySpectrumIcon name="video" spectrum="cyan" height={24} />
+        <WidgetTinySpectrumIcon name="video" spectrum="cyan" height={32} />
+        <WidgetTinySpectrumIcon name="video" spectrum="cyan" height={38} />
+      </div>,
+    )
+    expect(markup).toContain("is-height-18")
+    expect(markup).toContain("is-height-24")
+    expect(markup).toContain("is-height-32")
+    expect(markup).toContain("is-height-38")
+    expect(referenceSource).toContain('familyHeading("Spectrum Icon Sizes"')
+  })
+
+  it("supports full-width canonical spectrum and split badges", () => {
+    expect(renderToStaticMarkup(<WidgetSpectrumFillBadge spectrum="cyan" height={24} width="full">Full</WidgetSpectrumFillBadge>)).toContain("is-width-full")
+    expect(renderToStaticMarkup(<WidgetLeftSplitBadge spectrum="cyan" height={32} width="full" icon={<Check />}>Full</WidgetLeftSplitBadge>)).toContain("is-width-full")
+    expect(matrixCss).toContain(".widget-spectrum-fill-badge.is-width-full")
+    expect(matrixCss).toContain(".widget-split-badge.is-width-full")
+    expect(matrixCss).toContain("grid-column:full-start / full-end")
+  })
+
+  it("lets the video menu expand beyond a narrow trigger while remaining viewport bounded", () => {
+    expect(extensionSource).toContain("VIDEO_MENU_MIN_WIDTH")
+    expect(extensionSource).toContain("Math.max(rect.width, VIDEO_MENU_MIN_WIDTH[height])")
+    expect(extensionSource).toContain("Math.min(preferredWidth, window.innerWidth - 16)")
+  })
+
+  it("offers small and large data-grid density from one canonical primitive", () => {
+    const markup = renderToStaticMarkup(
+      <div>
+        <WidgetDataGrid size="small" ariaLabel="Small" columns={[{key:"a",label:"A"}]} rows={[{id:"1",cells:{a:"One"}}]} />
+        <WidgetDataGrid size="large" ariaLabel="Large" columns={[{key:"a",label:"A"}]} rows={[{id:"1",cells:{a:"One"}}]} />
+      </div>,
+    )
+    expect(markup).toContain("is-size-small")
+    expect(markup).toContain("is-size-large")
+    expect(compoundCss).toContain(".widget-data-grid.is-size-large")
+    expect(compoundCss).toContain(".widget-calendar-day-label")
+    expect(compoundCss).toContain("font-size:13px")
+  })
+})
+
 describe("video selector overlay geometry", () => {
   it("uses a square selector bay and a portalled fixed-position menu", () => {
     expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height")
