@@ -4,7 +4,7 @@
 **Scope:** Agent-facing management, documentation, coordination, status, provenance, planning, audit and integration map for ViewTube AI/Brain systems.  
 **Canonical owner / concern:** AI systems management and cross-authority coordination.  
 **Created:** 2026-09-24  
-**Last audited main:** `c494d96aad9cbcf073e7d157685cb8b0269f123d`  
+**Last audited main:** `fbc7d25c71fa89c312da32280d9f77182065b42a`  
 **Does not replace:** `UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`, Prompt System Authority, Projects/ContentBuild, Asset Engine, Analytics/VT-SYNC, Herald, Editor, Toolbox/UI, auth, deployment, or other bounded authorities.  
 **Supersedes for AI-system-management orientation:** historical broad AI audits, phase inventories, and duplicated AI status/planning documents listed in `ai-systems/DOCUMENT_CONSOLIDATION_REGISTER_2026-09-24.md`.
 
@@ -293,7 +293,8 @@ Material agent events:
 | Prompt modernization | active-plan | Prompt System Authority + Finish Program | Legacy `prompts.ts`/`gemini.ts` strangler remains. |
 | Outcome/evaluation/learning | partial | Brain-quality + Finish Program | Broader domain writer/evaluation coverage remains open. |
 | Assistant continuity | open | Brain-quality plan | Sidebar/Brain Hub/workspace must share canonical context envelope. |
-| AI source-of-truth / systems registry | active-plan | this resource | Machine registries and validation are next. |
+| Agent work claims / receipts | implemented_branch | Herald + AI Systems governance | Read-only Herald projection exists; does not create a second work ledger or imply main integration. |
+| AI source-of-truth / systems registry | implemented_branch | this resource + `governance/ai-systems/` | Systems/plans/donors/integrations registries, schemas, health validator, and Herald read projection are forward-ported on the current branch; main merge still required. |
 | AI generation observability/evals | active-plan | Finish Program | BrainTrace/ToolReceipt foundations exist; complete coverage does not. |
 | Project-grounded retrieval | planned | Finish Program | Must use canonical Context Resolver, not parallel RAG ownership. |
 
@@ -384,3 +385,4 @@ Any AI-system change that materially alters ownership, reachability, prompt fami
 | Date | Agent / workstream | Change | Audited main |
 | --- | --- | --- | --- |
 | 2026-09-24 | AI Systems Management consolidation | Created living AI systems management authority; harvested unique rules from legacy AI audits/phase docs; linked Finish Program, Prompt Authority, Herald and Agent Ready work. | `c494d96aad9cbcf073e7d157685cb8b0269f123d` |
+| 2026-09-26 | AI Systems governance mainline forward-port | Re-audited after stacked-PR merge mismatch; forward-ported governance schemas, validator, Herald projection and system/plan/donor/integration registries onto current mainline branch; corrected Herald sync-script contradiction. | `fbc7d25c71fa89c312da32280d9f77182065b42a` |
