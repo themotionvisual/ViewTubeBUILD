@@ -2,7 +2,7 @@
 > This file preserves the 2026-09-03 reference branch context. It is not current application-status authority.  
 > Current documentation entrypoint: `docs/README.md`  
 > Current documentation registry: `docs/DOCUMENTATION_REGISTRY.md`  
-> Current AI systems management authority: `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`
+> Current AI systems management authority: `docs/domains/BRAIN.md`
 
 # ViewTube system reference — consolidated branch
 

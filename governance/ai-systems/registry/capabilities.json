@@ -2,7 +2,7 @@
   "schemaVersion": "vt-ai-capabilities-registry-v1",
   "generatedAt": "2026-09-26T01:15:00-04:00",
   "lastAuditedMainSha": "fbc7d25c71fa89c312da32280d9f77182065b42a",
-  "authority": "src/services/brain/BrainCapabilityRegistry.ts",
+  "authority": "docs/domains/BRAIN.md",
   "note": "Generated from the 14 current main BRAIN_CAPABILITY_REGISTRY definitions; historical capability counts are not authoritative.",
   "records": [
     {
@@ -33,7 +33,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -108,7 +108,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -184,7 +184,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -260,7 +260,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -336,7 +336,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -410,7 +410,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -485,7 +485,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -560,7 +560,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -634,7 +634,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -709,7 +709,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -783,7 +783,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -858,7 +858,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -934,7 +934,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],
@@ -1009,7 +1009,7 @@
           "src/services/brain/BrainCapabilityRegistry.ts"
         ],
         "docs": [
-          "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+          "docs/domains/BRAIN.md"
         ],
         "prs": [],
         "commits": [],

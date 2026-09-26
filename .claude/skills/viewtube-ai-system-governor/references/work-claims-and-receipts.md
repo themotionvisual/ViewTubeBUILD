@@ -1,3 +1,5 @@
+> **MIGRATION NOTE — 2026-09-26:** This file is historical donor guidance. New repository work claims/status use Task Authority; mission/work-order/receipt coordination uses Crown/Royal Exchange; conversation continuity uses Conversation OS.
+
 # Work Claims and Receipts
 
 ## Claim format
@@ -23,7 +25,7 @@ nextCheckpoint: <verification milestone>
 - A claim is coordination metadata, not proof.
 - Release claims on completion, cancellation, supersession or handoff.
 - A blocked claim must name the blocker and next action.
-- Herald remains the repository-agent execution ledger.
+- Herald is superseded donor/compatibility material; do not create new Herald work-state authority.
 
 ## Finished-work receipt
 

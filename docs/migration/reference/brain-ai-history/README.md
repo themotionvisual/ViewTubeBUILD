@@ -1,8 +1,9 @@
 # Brain / AI Historical Reference Archive
 
 **Status:** HISTORICAL ONLY  
-**Current management authority:** `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`  
-**Current runtime architecture authority:** `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`
+**Current management authority:** `docs/domains/BRAIN.md`  
+**Current runtime architecture authority:** `docs/domains/BRAIN.md`  
+**Current prompt architecture authority:** `docs/specifications/PROMPTS.md`
 
 This folder contains broad AI audits, inventories, work orders and phase-closeout documents removed from active authority locations on 2026-09-24 after their durable rules were harvested into current authorities.
 

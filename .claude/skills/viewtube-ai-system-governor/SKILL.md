@@ -1,190 +1,133 @@
 ---
 name: viewtube-ai-system-governor
-description: Govern, streamline, audit, extend, and optimize ViewTube's AI Brain, Channel Intelligence, Algorithm Intelligence, analytics evidence, creator-generation systems, learning loops, AI tools, and Brain-facing UI. Use this whenever work touches Brain architecture, prompts, model calls, context, memory, Channel Profile, intelligence engines, evidence, analytics-to-AI integration, generated creator assets, recommendation/evaluation loops, agent workflows, AI widgets, Brain UI, or any proposal that could create overlapping AI ownership.
+description: Govern, streamline, audit, extend and optimize ViewTube Brain/AI architecture, specialist intelligence, evidence/context, prompts, model routing, creator generation, outcomes/evaluation/learning, AI tools and Brain-facing UI without creating overlapping owners.
 ---
 
 # ViewTube AI System Governor
 
-**Primary orientation resource:** `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`
+## Canonical authorities
 
-Read the living master resource before planning or modifying a cross-system AI concern. It is the management/orientation authority; bounded runtime/data/domain owners remain canonical for implementation.
+Read first:
+1. `docs/domains/BRAIN.md`
+2. `docs/specifications/PROMPTS.md` when prompt/model behavior is involved
+3. `docs/architecture/PRODUCT_ARCHITECTURE.md`
+4. owning bounded authorities such as Analytics, Projects/ContentBuild, Asset Engine, Editor or Publishing
+5. `docs/governance/CONVERSATION_OS.md`, `docs/governance/CROWN.md`, `docs/governance/TASK_AUTHORITY.md`, and `docs/governance/VERIFICATION.md` for work coordination
 
-Keep ViewTube's AI system powerful, explainable, source-grounded, and consolidated.
+`governance/ai-systems/**` is an operational audit/reachability projection, not a second architecture, conversation or task authority.
 
 ## Core rule
 
-Prefer one shared runtime and clear specialized owners over parallel brains, duplicate stores, duplicate prompts, or surface-specific AI stacks.
-
-## Canonical owners
-
-- VT-SYNC owns raw analytics acquisition and freshness.
-- analytics-canon owns normalized AI/consumer analytics access.
-- Channel Profile owns durable creator/channel knowledge.
-- Projects own project-specific intent and workflow state.
-- Vault / Video Assets own artifact identity and provenance.
-- Brain Runtime owns routing, context assembly, reasoning, explanations, and orchestration.
-- Statistics Intelligence owns deterministic analytical calculations.
-- Channel Intelligence owns derived longitudinal channel patterns.
-- Audience Intelligence owns derived audience understanding.
-- Signal / Anomaly Intelligence owns unusual-change detection.
-- Opportunity Intelligence owns strategically useful openings.
-- Algorithm Priming owns proactive launch/momentum planning.
-- Algorithm Decision owns ranked recommended actions.
-- Creator Asset Engine owns AI-generated creator assets and generation provenance.
-- ActionPacket / Handoff owns cross-tool work transport.
-- Outcome / Evaluation owns measured results.
-- Learning owns candidates, contradiction, calibration, and promotion governance.
+Prefer one shared Brain runtime and clear specialized owners over parallel brains, duplicate stores, duplicate prompt systems, surface-specific provider stacks or AI-specific work ledgers.
 
 ## Procedure
 
-1. Classify the requested AI change.
-2. Locate the current canonical owner before proposing code.
-3. Identify overlapping services, prompts, stores, adapters, routes, tools, and UI surfaces.
-4. State the creator decision the change should improve.
-5. Define required evidence and what must remain unknown.
-6. Define the smallest context packet the model actually needs.
-7. Decide which work is deterministic and which genuinely requires model reasoning.
-8. Prefer semantic agent tools that complete meaningful creator tasks.
-9. Define output schemas, provenance, confidence, missing-data behavior, and approval requirements.
-10. Define how the result will be evaluated before implementing.
-11. Define how advice/generation can later be linked to real outcomes.
-12. Define whether the result may produce a Learning Candidate.
-13. Prevent direct promotion to durable Channel Profile unless governance policy permits it.
-14. Define all affected user-facing Brain surfaces.
-15. Require a trace path: `Evidence -> recommendation/generation -> creator decision -> ActionPacket/artifact -> outcome -> evaluation -> learning`.
-16. Implement only after architecture boundaries are clear.
-17. Run code tests plus Brain/eval regression tests.
-18. Compare behavior, latency, context size, token use, unsupported-claim rate, and creator utility.
-19. Remove superseded parallel paths only after parity is verified.
-20. Update architecture docs and registries.
+1. ORIENT through Conversation OS and current main.
+2. Resolve the existing capability/domain owner.
+3. Inspect current code callers, tests and runtime reachability.
+4. Identify overlapping services, prompts, stores, adapters, routes and UI surfaces.
+5. Define the creator decision/job the change should improve.
+6. Define required evidence and what must remain unknown.
+7. Define the smallest context packet needed.
+8. Separate deterministic computation from model reasoning.
+9. Route creator reasoning through BrainRuntime and model calls through BrainModelGateway.
+10. Preserve Project/ContentBuild and Asset identity.
+11. Define output schema, provenance, missing-data behavior, permissions and approval gates.
+12. Define evaluation before implementation.
+13. Define outcome attribution and whether a Learning Candidate is allowed.
+14. Prevent silent durable-learning promotion.
+15. Implement through the owning domain/skill.
+16. Verify tests + runtime + visible UI/responsive state where applicable.
+17. Compare behavior, unsupported-claim rate, latency/context/token cost and creator utility when relevant.
+18. Remove superseded parallel paths only after reachability/parity evidence.
+19. Update Brain/Prompt/domain authorities and machine projections.
+20. Propose task-state changes through Task Authority.
+
+## Canonical owner reminders
+
+- VT-SYNC: raw acquisition/freshness.
+- analytics-canon: normalized analytics evidence.
+- Channel Profile / Channel Knowledge: durable confirmed creator/channel knowledge.
+- Projects / ContentBuild: project/content identity.
+- Asset Engine / Vault: artifact identity/provenance.
+- BrainRuntime: creator reasoning/orchestration.
+- BrainModelGateway: model/provider boundary.
+- BrainContextBroker / Creator Context resolver: bounded context.
+- specialist intelligence modules: deterministic/derived interpretation.
+- Publishing: external publication state/side effects.
+- outcome/evaluation owners: measured results/evaluation.
+- learning governance: promotion into durable knowledge.
 
 ## Anti-duplication checks
 
-Before adding anything, ask:
+Before adding anything:
+- Does BrainRuntime/BrainModelGateway already provide this?
+- Does this create a second analytics or memory store?
+- Does this duplicate an existing specialist capability?
+- Is deterministic code more appropriate?
+- Does this UI start owning intelligence state?
+- Does this bypass analytics-canon or Project/Asset identity?
+- Does this bypass creator approval for side effects?
+- Does this make a causal/quantitative claim unsupported by evidence?
+- Does this silently promote learning?
+- Is this bridge permanent architecture or only migration scaffolding?
 
-- Does another Brain/model gateway already do this?
-- Does this create a second analytics reader?
-- Does this create another Channel Profile or memory store?
-- Does this duplicate Intelligence Hub reasoning?
-- Does this add a model call where deterministic code is sufficient?
-- Does this add a low-level agent tool that should be a semantic workflow?
-- Does this write durable learning from one observation?
-- Does this make an external action without the required approval?
-- Does this make a causal claim without adequate evidence?
-- Does this bypass analytics-canon?
-- Does this make the UI own intelligence state?
+If yes, redesign first.
 
-If yes, redesign before implementation.
+## Context / evidence
 
-## Context rules
-
+- Missing != zero.
+- Synthetic != live.
 - Treat context as scarce.
-- Retrieve just-in-time instead of dumping full histories.
-- Rank candidate context by relevance, authority, freshness, and contradiction risk.
-- Keep raw analytics out of prompts unless the task needs them.
-- Use typed summaries and evidence refs.
-- Explicitly represent missing and partial evidence.
-- Never reconstruct creator-disabled private context from memory.
+- Retrieve just-in-time.
+- Rank by relevance, authority, freshness, scope and contradiction.
+- Keep evidence provenance and coverage visible.
+- Never reconstruct creator-disabled private context.
+- Current measured evidence outranks stale inferred learning.
 
-## Tool rules
+## Prompt work
 
-Prefer semantic tools such as:
+Use `docs/specifications/PROMPTS.md` and `docs/specifications/prompt-registry.json`.
+Do not create another prompt authority or family for a new surface when an existing family can serve it.
 
-- `analyze_video_performance`
-- `compare_video_cohort`
-- `explain_retention_drop`
-- `inspect_traffic_shift`
-- `find_channel_opportunities`
-- `build_launch_plan`
-- `generate_video_package`
-- `prepare_packaging_experiment`
-- `prepare_editor_package`
-- `prepare_publish_package`
-- `evaluate_recommendation`
+## Generation / action
 
-Avoid broad catalogs of low-level getters/setters unless they are demonstrably more effective in evals.
+Significant creator outputs preserve task, project/content identity, evidence refs, prompt/model provenance, variants, selected output, asset lineage and later outcome refs.
 
-Every mutating tool declares permission, approval gate, side effects, reversibility, inputs, outputs and evidence requirements.
+Every mutating tool/action declares permission, approval, side effects, reversibility and verification.
 
-## Generation rules
+## Outcome / learning
 
-All significant creator assets should store project/video scope, task type, prompt version, model profile, profile/style version, creator instructions, evidence refs, generated variants, selected/used variant and outcome links.
+Preserve:
+Observation → creator decision → Outcome → Evaluation → Learning Candidate → governed promotion.
 
-Do not claim an asset was effective until outcome evidence exists.
+One success/correction/correlation is not durable knowledge by default.
 
-## Learning rules
+## Operational health
 
-Separate `Observation -> Outcome -> Learning Candidate -> Durable Profile knowledge`.
+Use `node scripts/audit/reach.mjs` and [references/operational-health-check.md](references/operational-health-check.md) as reachability signals.
 
-Use different promotion thresholds for explicit creator teaching, preferences, analytics patterns, experiments, temporary anomalies and causal claims.
+Definitions are not reachability proof. Static unused evidence is not deletion proof.
 
-Support contradiction, supersession, expiry, confidence decay and creator review.
+## External improvement research
 
-## UI rules
+Conversation OS may recommend current models/providers/repositories/video-generation systems/agent tooling. Verify current existence/capability before recommending or adopting them, then reconcile against existing Brain owners.
 
-Brain-facing UI should expose what the Brain knows, what evidence it used, what it is uncertain about, what it recommends, what awaits approval, what worked or failed, what it has learned, and what the creator can edit, reject, or retire.
+## Durable updates
 
-Do not make chat the only representation of the Brain.
+When AI architecture changes:
+- update `docs/domains/BRAIN.md`;
+- update `docs/specifications/PROMPTS.md` for prompt contract changes;
+- update Product Architecture/Capability Registry only if durable product topology changes;
+- update Integrated Application Program for cross-system convergence;
+- update operational projections only after their source authority changes;
+- route exact task status through Task Authority;
+- attach Verification receipts.
 
-## Eval rules
+## Supporting references
 
-Every significant AI change needs representative eval cases.
-
-Measure factual accuracy, evidence precision, unsupported claims, missing-data honesty, routing, tool trajectory, style fidelity, schema validity, latency, tokens, repair rate, creator acceptance and measured downstream success where attributable.
-
-Use deterministic graders first, model graders second, and human review where subjective.
-
-## Result format
-
-Return:
-
-1. Current owner(s)
-2. Problem
-3. Proposed architecture
-4. Data/evidence flow
-5. Context/model/tool flow
-6. UI impact
-7. Evaluation plan
-8. Learning/outcome path
-9. Risks and duplication checks
-10. Migration/removal plan
-11. Verification receipts
-12. Updated docs/registries
-
-## Handoff
-
-For code implementation, hand off clear acceptance criteria to the repository execution workflow. Preserve canonical owners and attach verification receipts.
-
-
-## Operational health / reachability ratchet
-
-PR #241 identified a recurring class of failures where correct-looking AI systems were built but unreachable, writer-less, inert or bypassed by surface-specific provider code.
-
-For AI-affecting release work and periodic health reviews, read:
-
+Load only as needed:
 - [references/operational-health-check.md](references/operational-health-check.md)
-
-Use `node scripts/audit/reach.mjs` as the first reachability signal, then classify every apparent orphan/bypass against current architecture before deleting or wiring it. Re-measure current counts; never reuse historical PR #241 counts as present truth.
-
-
-## Living master update rule
-
-When AI work changes cross-system ownership, reachability, prompt families, context/evidence flow, persistence, action permissions, outcome/evaluation/learning paths, or deprecates a prior authority:
-
-1. update the bounded owner document;
-2. update `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`;
-3. update `docs/DOCUMENTATION_REGISTRY.md` when lifecycle/authority changed;
-4. add a work claim/finished-work receipt through the current agent-work governance flow;
-5. preserve or archive superseded documents only after reference and unique-information checks.
-
-
-## AI Systems Management references
-
-Load only what the current branch of work needs:
-
-- [references/ai-systems-management.md](references/ai-systems-management.md) — orientation, ownership, status and handoff rules.
-- [references/work-claims-and-receipts.md](references/work-claims-and-receipts.md) — claim/collision/completion receipt contract.
-- [references/authority-and-freshness.md](references/authority-and-freshness.md) — canonical/historical/freshness/supersession rules.
-- [references/prompt-and-model-governance.md](references/prompt-and-model-governance.md) — prompt/model/provenance management.
-- [references/donor-migration.md](references/donor-migration.md) — donor branches, stacked PRs and historical-doc migration.
-- [references/operational-health-check.md](references/operational-health-check.md) — reachability and architectural decay checks.
+- [references/prompt-and-model-governance.md](references/prompt-and-model-governance.md)
+- [references/donor-migration.md](references/donor-migration.md)
+- historical management/claims references only for migration provenance; Conversation OS/Crown/Task Authority now own those functions.

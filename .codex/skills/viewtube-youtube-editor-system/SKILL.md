@@ -13,7 +13,7 @@ Keep the ViewTube editor one coherent product across desktop and mobile while co
 
 Read:
 1. docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md
-2. docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md when AI is involved
+2. docs/domains/BRAIN.md when AI is involved
 3. docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md when project identity is involved
 4. docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md when assets/generation are involved
 5. current source/tests for the specific capability

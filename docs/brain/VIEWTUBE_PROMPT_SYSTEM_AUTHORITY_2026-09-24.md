@@ -1,3 +1,5 @@
+> **PHASE D MIGRATION NOTICE — 2026-09-26:** Superseded as the current prompt architecture authority by `docs/specifications/PROMPTS.md` with machine inventory at `docs/specifications/prompt-registry.json`. This source remains intact below as donor/provenance material pending lossless Removed Archive consolidation.
+
 # ViewTube Prompt System Authority — 2026-09-24
 
 **Status:** current prompt-system reference and modernization authority.  

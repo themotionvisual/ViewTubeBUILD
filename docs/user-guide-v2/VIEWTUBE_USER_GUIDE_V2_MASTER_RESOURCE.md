@@ -80,7 +80,7 @@ Guide content should point to current living authorities when technical depth is
 - Auth: `docs/architecture/SIMPLE_AUTH_V1.md`
 - Editor: `docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md`
 - Analytics: `docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md`
-- Brain: `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`
+- Brain: `docs/domains/BRAIN.md`
 
 Implementation/migration details belong in technical-depth links, not duplicated beginner prose.
 

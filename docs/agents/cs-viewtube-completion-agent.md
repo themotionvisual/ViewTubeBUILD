@@ -45,7 +45,7 @@ No project-specific Python package is required. Python may be used only for dete
    - **Use Case:** generation, handoffs, selection, publication readiness.
 
 3. **Unified AI System Canonical Consolidation Contract**
-   - **Location:** `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`
+   - **Location:** `docs/domains/BRAIN.md`
    - **Content:** BrainRuntime, provider boundary, intelligence specialists, evidence, outcomes, learning.
    - **Use Case:** Brain, Algorithm/Anomaly/Opportunity Intelligence, learning.
 

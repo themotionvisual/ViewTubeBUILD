@@ -373,9 +373,9 @@ The work is grouped into four completion programs:
 Prompt modernization is now a named Finish Program capability rather than an implicit AI-cleanup task.
 
 References:
-- `docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md`
+- `docs/specifications/PROMPTS.md`
 - `docs/brain/VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md`
-- `docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json`
+- `docs/specifications/prompt-registry.json`
 
 Finish requirements:
 - every production prompt/generator registered and reachability-classified;
