@@ -1941,341 +1941,78 @@ const CreatorVaultOS: React.FC = () => {
      </div>
 
      <div className="flex min-w-0 flex-col gap-4">
-      <SubToolbox
-       style={moduleStyle("asset-operations" as VaultWorkspaceModuleId)}
-       title="Asset Operations"
-       subtitle="Search, batch-edit, group, and route canonical Vault assets"
-       icon={<Database />}
-       paletteIndex={9}
-       isOpenInitial
-       persistenceId="vault-asset-operations"
-      >
-       <div className="flex flex-col gap-3">
-        <SubToolboxSegmentedToggle
-         level="l1"
-         ariaLabel="Asset Operations tool"
-         value={assetOperationsMode}
-         onValueChange={(value) => setAssetOperationsMode(value as VaultAssetOperationsMode)}
-         options={[
-          { value: "search", label: "SEARCH" },
-          { value: "batch", label: "BATCH" },
-          { value: "groups", label: "GROUPS" },
-          { value: "tools", label: "TOOLS" },
-         ]}
+      {selectedAssetIds.length ? (
+       <section
+        aria-label="Vault selection actions"
+        className="sticky top-2 z-30 flex flex-wrap items-center gap-2 rounded-lg border-[3px] border-current bg-white p-2 shadow-[4px_4px_0_currentColor]"
+       >
+        <div className="mr-auto text-xs font-black uppercase">{selectedAssetIds.length} Selected</div>
+        <SubToolboxInnerActionButton label="Tag" iconName="tag" tone="pink" onClick={() => setAssetOperationsMode("batch")} />
+        <SubToolboxInnerActionButton label="Batch" iconName="edit" tone="orange" onClick={() => setAssetOperationsMode("batch")} />
+        <SubToolboxInnerActionButton label="Group" iconName="collection" tone="green" onClick={() => setAssetOperationsMode("groups")} />
+        <SubToolboxInnerActionButton
+         label="Compare"
+         iconName="layers"
+         tone="purple"
+         onClick={() => assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+         disabled={selectedAssetIds.length !== 2}
         />
+        <SubToolboxInnerActionButton label="Metadata" iconName="database" tone="cyan" onClick={() => setAssetOperationsMode("tools")} />
+        <SubToolboxInnerActionButton label="Export" iconName="database" tone="yellow" onClick={exportSelectionManifest} />
+        <SubToolboxInnerActionButton label="Send to ViewTube" iconName="link" tone="blue" onClick={() => setAssetOperationsMode("tools")} />
+        <SubToolboxInnerActionButton label="Clear" iconName="x" tone="cyan" onClick={() => setSelectedAssetIds([])} />
+       </section>
+      ) : null}
 
-        {assetOperationsMode === "search" ? (
-         <div className="flex flex-col gap-3">
-          <SubToolboxSplitField
-           level="l1"
-           variant="search"
-           icon={<Search />}
-           inputProps={{
-            ref: searchInputRef,
-            value: query,
-            onChange: (event) => setQuery(event.target.value),
-            placeholder: "Search names, projects, tags, kinds, and metadata…",
-            "aria-label": "Search Vault assets",
-           }}
-          />
-          <div className="text-xs font-black uppercase opacity-60">
-           {visibleAssets.length} visible · {allAssets.length} total
-          </div>
-          <SubToolboxInnerActionButton
-           label="Clear Asset Search"
-           iconName="x"
-           tone="cyan"
-           onClick={() => setQuery("")}
-           disabled={!query}
-          />
-         </div>
-        ) : null}
+      {selectedAssetIds.length && assetOperationsMode === "batch" ? (
+       <section aria-label="Vault batch actions" className="rounded-lg border-[3px] border-current p-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+         <StandardInput value={batchTag} onChange={(event) => setBatchTag(event.target.value)} placeholder="Add tag to selection" aria-label="Batch tag" />
+         <SubToolboxInnerActionButton label="Apply Tag" iconName="tag" tone="pink" onClick={applyBatchTag} disabled={!batchTag.trim()} />
+         <StandardInput value={batchPrefix} onChange={(event) => setBatchPrefix(event.target.value)} placeholder="Rename prefix, e.g. EP01_" aria-label="Batch rename prefix" />
+         <SubToolboxInnerActionButton label="Apply Prefix" iconName="edit" tone="orange" onClick={applyBatchPrefix} disabled={!batchPrefix.trim()} />
+        </div>
+       </section>
+      ) : null}
 
-        {assetOperationsMode === "batch" ? (
-         <div className="flex flex-col gap-3">
-          <div className="text-xs font-black uppercase opacity-60">Batch Processor · {selectedAssetIds.length} selected</div>
-          <StandardInput
-           value={batchTag}
-           onChange={(event) => setBatchTag(event.target.value)}
-           placeholder="Add tag to selection"
-           aria-label="Batch tag"
-          />
-          <SubToolboxInnerActionButton
-           label="Apply Tag"
-           iconName="tag"
-           tone="pink"
-           onClick={applyBatchTag}
-           disabled={!selectedAssetIds.length || !batchTag.trim()}
-          />
-          <StandardInput
-           value={batchPrefix}
-           onChange={(event) => setBatchPrefix(event.target.value)}
-           placeholder="Rename prefix, e.g. EP01_"
-           aria-label="Batch rename prefix"
-          />
-          <SubToolboxInnerActionButton
-           label="Apply Prefix"
-           iconName="edit"
-           tone="orange"
-           onClick={applyBatchPrefix}
-           disabled={!selectedAssetIds.length || !batchPrefix.trim()}
-          />
-          <SubToolboxInnerActionButton
-           label="Toggle Favorite"
-           iconName="sparkles"
-           tone="orange"
-           onClick={toggleFavoriteSelection}
-           disabled={!selectedAssetIds.length}
-          />
-          {special === "archive" || special === "trash" ? (
-           <SubToolboxInnerActionButton
-            label="Restore Selection"
-            iconName="checklist"
-            tone="green"
-            onClick={restoreSelection}
-            disabled={!selectedAssetIds.length}
-           />
-          ) : (
-           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <SubToolboxInnerActionButton
-             label="Archive Selection"
-             iconName="archive"
-             tone="cyan"
-             onClick={archiveSelection}
-             disabled={!selectedAssetIds.length}
-            />
-            <SubToolboxInnerActionButton
-             label="Move to Trash"
-             iconName="eye-off"
-             tone="pink"
-             onClick={trashSelection}
-             disabled={!selectedAssetIds.length}
-            />
-           </div>
-          )}
-          <SubToolboxInnerActionButton
-           label="Clear Selection"
-           iconName="x"
-           tone="cyan"
-           onClick={() => setSelectedAssetIds([])}
-           disabled={!selectedAssetIds.length}
-          />
-         </div>
-        ) : null}
+      {selectedAssetIds.length && assetOperationsMode === "groups" ? (
+       <section aria-label="Vault group builder" className="rounded-lg border-[3px] border-current p-3">
+        <div className="mb-2 text-xs font-black uppercase">Group Builder</div>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+         {brain.projects.length ? (
+          <SubToolboxSelect value={existingProjectId} onChange={(event) => setExistingProjectId(event.target.value)} aria-label="Existing project for selected Vault assets">
+           <option value="">Attach to existing project…</option>
+           {brain.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+          </SubToolboxSelect>
+         ) : null}
+         <SubToolboxInnerActionButton label="Attach Selection to Project" iconName="link" tone="blue" onClick={attachSelectionToExistingProject} disabled={!existingProjectId} />
+         <StandardInput ref={selectionProjectInputRef} value={selectionProjectName} onChange={(event) => setSelectionProjectName(event.target.value)} placeholder="New project from selection" aria-label="New project from selected assets" />
+         <SubToolboxInnerActionButton label="Create Project From Selection" iconName="checklist" tone="purple" onClick={createProjectFromSelection} disabled={!selectionProjectName.trim()} />
+         <StandardInput value={manualCollectionName} onChange={(event) => setManualCollectionName(event.target.value)} placeholder="New collection name" aria-label="New Vault collection name" />
+         <SubToolboxInnerActionButton label="Create Collection From Selection" iconName="collection" tone="green" onClick={createManualCollection} disabled={!manualCollectionName.trim()} />
+         <SubToolboxInnerActionButton label="Create Brand Kit From Selection" iconName="sparkles" tone="yellow" onClick={createBrandKitFromSelection} />
+        </div>
+       </section>
+      ) : null}
 
-        {assetOperationsMode === "groups" ? (
-         <div className="flex flex-col gap-3">
-          <div className="text-xs font-black uppercase opacity-60">Project / Asset Group Builder</div>
-          <div className="text-sm font-black uppercase">{selectedAssetIds.length} selected</div>
-          {brain.projects.length ? (
-           <>
-            <SubToolboxSelect
-             value={existingProjectId}
-             onChange={(event) => setExistingProjectId(event.target.value)}
-             aria-label="Existing project for selected Vault assets"
-            >
-             <option value="">Attach to existing project…</option>
-             {brain.projects.map((project) => (
-              <option key={project.id} value={project.id}>{project.name}</option>
-             ))}
-            </SubToolboxSelect>
-            <SubToolboxInnerActionButton
-             label="Attach Selection to Project"
-             iconName="link"
-             tone="blue"
-             onClick={attachSelectionToExistingProject}
-             disabled={!selectedAssetIds.length || !existingProjectId}
-            />
-           </>
-          ) : null}
-          <StandardInput
-           ref={selectionProjectInputRef}
-           value={selectionProjectName}
-           onChange={(event) => setSelectionProjectName(event.target.value)}
-           placeholder="New project from selection"
-           aria-label="New project from selected assets"
-          />
-          <SubToolboxInnerActionButton
-           label="Create Project From Selection"
-           iconName="checklist"
-           tone="purple"
-           onClick={createProjectFromSelection}
-           disabled={!selectedAssetIds.length || !selectionProjectName.trim()}
-          />
-          <div className="border-t-[3px] border-current pt-3">
-           <StandardInput
-            value={manualCollectionName}
-            onChange={(event) => setManualCollectionName(event.target.value)}
-            placeholder="New asset group / collection name"
-            aria-label="New Vault collection name"
-           />
-           <SubToolboxInnerActionButton
-            label="Create Collection From Selection"
-            iconName="collection"
-            tone="green"
-            onClick={createManualCollection}
-            disabled={!selectedAssetIds.length || !manualCollectionName.trim()}
-           />
-          </div>
-          {manualCollections.length ? (
-           <>
-            <SubToolboxSelect
-             value={targetCollectionId}
-             onChange={(event) => setTargetCollectionId(event.target.value)}
-             aria-label="Target Vault collection"
-            >
-             <option value="">Choose asset group / collection…</option>
-             {manualCollections.map((collection) => (
-              <option key={collection.id} value={collection.id}>
-               {collection.role === "brand-kit" ? "★ " : ""}{collection.name}
-              </option>
-             ))}
-            </SubToolboxSelect>
-            <SubToolboxInnerActionButton
-             label="Add Selection to Collection"
-             iconName="collection"
-             tone="blue"
-             onClick={addSelectionToCollection}
-             disabled={!selectedAssetIds.length || !targetCollectionId}
-            />
-            {targetCollectionId
-             && manualCollections.find((collection) => collection.id === targetCollectionId)?.role !== "brand-kit" ? (
-             <SubToolboxInnerActionButton
-              label="Set Target Collection as Brand Kit"
-              iconName="sparkles"
-              tone="yellow"
-              onClick={() => makeBrandKit(targetCollectionId)}
-             />
-            ) : null}
-           </>
-          ) : null}
-          <SubToolboxInnerActionButton
-           label="Create Brand Kit From Selection"
-           iconName="sparkles"
-           tone="yellow"
-           onClick={createBrandKitFromSelection}
-           disabled={!selectedAssetIds.length}
-          />
-          {activeCollectionId && selectedAsset ? (
-           <SubToolboxInnerActionButton
-            label="Remove Selected Asset From Active Collection"
-            iconName="x"
-            tone="orange"
-            onClick={removeSelectedAssetFromActiveCollection}
-           />
-          ) : null}
+      {selectedAssetIds.length && assetOperationsMode === "tools" ? (
+       <section aria-label="Send to ViewTube" className="rounded-lg border-[3px] border-current p-3">
+        <div className="mb-2 text-xs font-black uppercase">Send to ViewTube…</div>
+        {selectedAsset && selectedToolTargets.length ? (
+         <div className="flex flex-wrap gap-2">
+          {selectedToolTargets.map((target) => (
+           <SubToolboxInnerActionButton key={target.id} label={target.label} iconName="link" tone="blue" onClick={() => sendSelectedAssetToTool(target.id)} />
+          ))}
          </div>
-        ) : null}
-
-        {assetOperationsMode === "tools" ? (
-         <div className="flex flex-col gap-3">
-          <div className="text-xs font-black uppercase opacity-60">Compatible Tools</div>
-          {selectedAsset && selectedToolTargets.length ? (
-           <div className="flex flex-wrap gap-2">
-            {selectedToolTargets.map((target) => (
-             <SubToolboxInnerActionButton
-              key={target.id}
-              label={target.label}
-              iconName="link"
-              tone="blue"
-              onClick={() => sendSelectedAssetToTool(target.id)}
-             />
-            ))}
-           </div>
-          ) : (
-           <SubToolboxStatePanel
-            level="l1"
-            state="empty"
-            message="Select an asset to reveal compatible ViewTube tools and handoff destinations."
-           />
-          )}
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-           <SubToolboxInnerActionButton
-            label="Open Quick Look"
-            iconName="search"
-            tone="cyan"
-            onClick={() => {
-             setQuickLookOpen(true)
-             inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-            }}
-            disabled={!selectedAsset}
-           />
-           <SubToolboxInnerActionButton
-            label="Compare Selected Pair"
-            iconName="layers"
-            tone="purple"
-            onClick={() => assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-            disabled={selectedAssetIds.length !== 2}
-           />
-           <SubToolboxInnerActionButton
-            label="Open Filmstrip"
-            iconName="layers"
-            tone="yellow"
-            onClick={() => {
-             setViewMode("filmstrip")
-             assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-            }}
-           />
-           <SubToolboxInnerActionButton
-            label="Open Lineage"
-            iconName="layers"
-            tone="orange"
-            onClick={() => {
-             setViewMode("lineage")
-             assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-            }}
-            disabled={!selectedAsset}
-           />
-          </div>
-          <SubToolboxInnerActionButton
-           label="Copy Asset ID"
-           iconName="database"
-           tone="cyan"
-           onClick={() => {
-            if (selectedAsset && navigator.clipboard?.writeText) void navigator.clipboard.writeText(selectedAsset.id)
-           }}
-           disabled={!selectedAsset}
-          />
-          <SubToolboxInnerActionButton
-           label="Open Selected Asset Inspector"
-           iconName="search"
-           tone="cyan"
-           onClick={() => inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-           disabled={!selectedAsset}
-          />
-          <SubToolboxInnerActionButton
-           label="Download Selection Manifest"
-           iconName="database"
-           tone="yellow"
-           onClick={exportSelectionManifest}
-           disabled={!selectedAssetIds.length}
-          />
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-           <SubToolboxInnerActionButton
-            label="Export Selected Metadata JSON"
-            iconName="database"
-            tone="cyan"
-            onClick={() => exportVaultMetadata(
-             allAssets.filter((asset) => selectedAssetIds.includes(asset.id)),
-             "json",
-            )}
-            disabled={!selectedAssetIds.length}
-           />
-           <SubToolboxInnerActionButton
-            label="Export Selected Metadata CSV"
-            iconName="database"
-            tone="cyan"
-            onClick={() => exportVaultMetadata(
-             allAssets.filter((asset) => selectedAssetIds.includes(asset.id)),
-             "csv",
-            )}
-            disabled={!selectedAssetIds.length}
-           />
-          </div>
-         </div>
-        ) : null}
-       </div>
-      </SubToolbox>
+        ) : (
+         <SubToolboxStatePanel level="l1" state="empty" message="Select one compatible asset to reveal ViewTube handoff destinations." />
+        )}
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+         <SubToolboxInnerActionButton label="Export Selected Metadata JSON" iconName="database" tone="cyan" onClick={() => exportVaultMetadata(allAssets.filter((asset) => selectedAssetIds.includes(asset.id)), "json")} />
+         <SubToolboxInnerActionButton label="Export Selected Metadata CSV" iconName="database" tone="cyan" onClick={() => exportVaultMetadata(allAssets.filter((asset) => selectedAssetIds.includes(asset.id)), "csv")} />
+        </div>
+       </section>
+      ) : null}
 
       <SubToolbox
        style={moduleStyle("import-tags" as VaultWorkspaceModuleId)}
