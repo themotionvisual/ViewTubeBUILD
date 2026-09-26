@@ -2129,3 +2129,5 @@ export const SubToolboxToolbar: React.FC<SubToolboxToolbarProps> = ({ level = "l
 )
 
 export * from "./SubToolboxMediaPrimitives"
+
+export * from "./SubToolboxWorkflowPrimitives"

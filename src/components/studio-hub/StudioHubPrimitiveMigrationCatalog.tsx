@@ -51,6 +51,10 @@ import {
   SubToolboxMetric,
   SubToolboxMetricStrip,
   SubToolboxCalendar,
+  SubToolboxSectionBand,
+  SubToolboxTextBadgeGrid,
+  SubToolboxInteractiveChecklistProgress,
+  SubToolboxProductionPlannerGrid,
   SubToolboxHoverCard,
   SubToolboxOutputCard,
   SubToolboxPagination,
@@ -239,6 +243,10 @@ export const STUDIO_HUB_MIGRATED_FAMILIES = [
   "Labeled Textarea",
   "Video Selector",
   "Mini SubToolbox",
+  "Full-Width Section Band",
+  "Text + Badge Data Grid",
+  "Interactive Checklist Progress",
+  "Production Planner Grid",
 ] as const
 
 type StudioHubMigratedFamily = (typeof STUDIO_HUB_MIGRATED_FAMILIES)[number]
@@ -332,6 +340,10 @@ const CATALOG_PREVIEW_GEOMETRY: Partial<Record<StudioHubMigratedFamily, CatalogP
   "Labeled Textarea": { mode: "field", inlineUnits: 6.2, portraitStack: true },
   "Video Selector": { mode: "canvas", inlineUnits: 7.4, portraitStack: true },
   "Mini SubToolbox": { mode: "canvas", inlineUnits: 6.4, portraitStack: true },
+  "Full-Width Section Band": { mode: "field", inlineUnits: 6.4, portraitStack: true },
+  "Text + Badge Data Grid": { mode: "canvas", inlineUnits: 8.2, portraitStack: true },
+  "Interactive Checklist Progress": { mode: "canvas", inlineUnits: 7.4, portraitStack: true },
+  "Production Planner Grid": { mode: "canvas", inlineUnits: 9.2, portraitStack: true },
 }
 
 const getCatalogPreviewGeometry = (name: StudioHubMigratedFamily): CatalogPreviewGeometry =>
@@ -591,6 +603,35 @@ const PrimitiveMigrationControl: React.FC<{
   }
   if (name === "Calendar") {
     return <SubToolboxCalendar level={level} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+  }
+  if (name === "Full-Width Section Band") {
+    return <div className="grid gap-2"><SubToolboxSectionBand level={level} tone="primary" label="LEAD" /><SubToolboxSectionBand level={level} tone="secondary" label="PROPOSAL" /><SubToolboxSectionBand level={level} tone="tertiary" label="ACTIVE / PAID" /></div>
+  }
+  if (name === "Text + Badge Data Grid") {
+    return <SubToolboxTextBadgeGrid level={level} columns={[{key:"segment",label:"SEGMENT"},{key:"signal",label:"SIGNAL"},{key:"action",label:"BEST ACTION"},{key:"activity",label:"LAST ACTIVITY"},{key:"status",label:"STATUS"}]} rows={[
+      {segment:"History superfans",signal:"3+ longform comments",action:"Invite to topic poll",activity:"2 days ago",status:<span className="vt-workflow-badge is-success">ACTIVE</span>},
+      {segment:"Shorts-only viewers",signal:"No longform click",action:"Pinned-video funnel",activity:"Today",status:<span className="vt-workflow-badge is-warning">OPPORTUNITY</span>},
+      {segment:"Members",signal:"High retention",action:"Early-access post",activity:"Yesterday",status:<span className="vt-workflow-badge is-info">PRIORITY</span>},
+    ]} />
+  }
+  if (name === "Interactive Checklist Progress") {
+    return <SubToolboxInteractiveChecklistProgress level={level} items={[
+      {id:"a",title:"Revise weak thumbnail",detail:"CTR fell below baseline.",badge:"HIGH",badgeTone:"danger"},
+      {id:"b",title:"Reply to questions",detail:"Three include video ideas.",badge:"MEDIUM",badgeTone:"warning",checked:true},
+      {id:"c",title:"Finish script section",detail:"Project is 74% complete.",badge:"TODAY",badgeTone:"info",checked:true},
+      {id:"d",title:"Approve sponsor deliverables",detail:"Deadline tomorrow.",badge:"URGENT",badgeTone:"danger",checked:true},
+    ]} />
+  }
+  if (name === "Production Planner Grid") {
+    return <SubToolboxProductionPlannerGrid level={level} days={[
+      {id:"mon",label:"MON 20",items:[{id:"research",label:"RESEARCH: AUSTERLITZ",tone:"warning"},{id:"thumb",label:"THUMBNAIL SKETCHES",tone:"info"}]},
+      {id:"tue",label:"TUE 21",items:[{id:"script",label:"SCRIPT DRAFT",tone:"accent"}]},
+      {id:"wed",label:"WED 22",items:[{id:"voice",label:"VOICEOVER",tone:"accent"},{id:"sponsor",label:"SPONSOR REVIEW",tone:"warning"}]},
+      {id:"thu",label:"THU 23",items:[{id:"edit",label:"MAIN EDIT",tone:"info"}]},
+      {id:"fri",label:"FRI 24",items:[{id:"qc",label:"QUALITY CONTROL",tone:"danger"}]},
+      {id:"sat",label:"SAT 25",items:[{id:"publish",label:"PUBLISH LONGFORM",tone:"success"}]},
+      {id:"sun",label:"SUN 26",items:[{id:"community",label:"COMMUNITY FOLLOW-UP",tone:"accent"}]},
+    ]} />
   }
   if (name === "Loader") {
     return <SubToolboxLoader level={level} variant="spinner" label="LOADING" />
