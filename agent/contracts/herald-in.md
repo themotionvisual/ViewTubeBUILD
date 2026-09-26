@@ -1,3 +1,5 @@
+> **MIGRATION NOTICE — 2026-09-26:** This source is superseded by `docs/governance/CONVERSATION_OS.md` and `agent/contracts/conversation-os.md`. It remains intact below as donor/provenance material pending lossless Removed Archive consolidation. Do not treat it as current authority.
+
 # HERALD-IN — the ViewTube intake contract
 
 The user writes what they want. **You** write the good prompt, and show it to them before
