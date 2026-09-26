@@ -215,7 +215,7 @@
       "owner": "BrainRuntime",
       "productionDate": "2026-09-17",
       "lastEdited": "2026-09-26",
-      "lastAuditedMainSha": "82460536651d1de368e09a2fb685a335cd27f312",
+      "lastAuditedMainSha": "e289ac7497010cc6c629c7273850f86f9c13ae89",
       "supersedes": [
         "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md",
         "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md"
@@ -310,7 +310,7 @@
       "owner": "BrainRuntime / Prompt System",
       "productionDate": "2026-09-26",
       "lastEdited": "2026-09-26",
-      "lastAuditedMainSha": "82460536651d1de368e09a2fb685a335cd27f312",
+      "lastAuditedMainSha": "e289ac7497010cc6c629c7273850f86f9c13ae89",
       "supersedes": [
         "docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md"
       ],
@@ -328,7 +328,7 @@
       "owner": "Prompt System",
       "productionDate": "2026-09-24",
       "lastEdited": "2026-09-26",
-      "lastAuditedMainSha": "82460536651d1de368e09a2fb685a335cd27f312",
+      "lastAuditedMainSha": "e289ac7497010cc6c629c7273850f86f9c13ae89",
       "supersedes": [
         "docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json"
       ],
