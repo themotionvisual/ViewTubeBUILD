@@ -1091,3 +1091,24 @@
 }
 
 
+
+
+.widget-video-select-menu--portal{
+  position:fixed;
+  right:auto;
+  bottom:auto;
+  z-index:10000;
+  contain:layout paint;
+}
+
+.widget-video-select-menu--portal[data-side="top"]{
+  transform-origin:bottom center;
+}
+
+.widget-video-select-menu--portal[data-side="bottom"]{
+  transform-origin:top center;
+}
+
+.widget-video-select-menu.is-height-24 .widget-video-select-option-copy strong{font-size:10px}
+.widget-video-select-menu.is-height-32 .widget-video-select-option-copy strong{font-size:12px}
+.widget-video-select-menu.is-height-38 .widget-video-select-option-copy strong{font-size:13px}
