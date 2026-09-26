@@ -2,7 +2,6 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from "react"
 import {
   BarChart3,
   BookOpen,
-  Books,
   Bot,
   ChevronRight,
   CircleUserRound,
@@ -75,7 +74,7 @@ const iconById: Record<ApplicationMenuIconId, React.ComponentType<{ "aria-hidden
   integrations: KeyRound,
   crown: Crown,
   guide: BookOpen,
-  resources: Books,
+  resources: BookOpen,
   about: Info,
 }
 
