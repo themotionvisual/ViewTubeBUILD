@@ -23,7 +23,7 @@ describe("RealtimePerformanceWidget", () => {
 
   expect(markup).toContain("48 hr")
   expect(markup).toContain("60 mn")
-  expect(markup).toContain('class="widget-header-toggle"')
+  expect(markup).toContain('class="widget-header-toggle is-intrinsic"')
   expect(markup).toContain('aria-label="Realtime view range"')
   expect(markup).toContain("border:2px solid var(--widget-border, #000)")
   expect(markup).toContain("color:var(--widget-border, #000)")
