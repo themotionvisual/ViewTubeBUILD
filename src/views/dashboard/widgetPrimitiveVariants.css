@@ -228,7 +228,7 @@
 }
 
 .widget-video-select-trigger.is-height-18 {
-  --widget-video-split-bay: var(--vt-primitive-height, 18px);
+  --widget-video-split-bay: calc(var(--vt-primitive-height, 18px) - (var(--vt-primitive-stroke, 1px) * 2));
 }
 .widget-video-select-trigger.is-height-18 .widget-video-select-trigger-selector {
   border-inline-end: 0;
@@ -238,7 +238,7 @@
 }
 .widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 8px; letter-spacing: .02em; }
 .widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 10px; letter-spacing: .02em; }
-.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 11px; letter-spacing: .025em; }
+.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 12px; letter-spacing: .025em; }
 .widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector svg { width: 9px; height: 9px; }
 .widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector svg { width: 12px; height: 12px; }
 .widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector svg { width: 14px; height: 14px; }
@@ -543,7 +543,7 @@
   -webkit-line-clamp: 2;
 }
 .widget-video-select-menu.is-height-38 .widget-video-select-option-copy strong {
-  font-size: 13px;
+  font-size: 14px;
   -webkit-line-clamp: 3;
 }
 
