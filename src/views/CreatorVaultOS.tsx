@@ -1722,7 +1722,7 @@ const CreatorVaultOS: React.FC = () => {
      : "grid grid-cols-1 gap-4 xl:grid-cols-[minmax(220px,0.72fr)_minmax(0,2.1fr)_minmax(260px,0.9fr)]"}>
      <div className="flex min-w-0 flex-col gap-4">
       <section aria-label="Vault library toolbar" className="flex flex-col gap-2">
-       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto_auto_auto] items-center gap-2">
+       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
         <button
          type="button"
          aria-label="Open library navigation"
@@ -1753,6 +1753,8 @@ const CreatorVaultOS: React.FC = () => {
         >
          ×
         </button>
+       </div>
+       <div data-vault-toolbar-secondary className="flex flex-wrap items-center gap-2">
         <button
          type="button"
          aria-label="Open Vault filters"
@@ -1774,6 +1776,12 @@ const CreatorVaultOS: React.FC = () => {
          onChange={(value) => setViewMode(value as VaultWorkspaceViewMode)}
          options={["grid", "masonry", "list", "filmstrip", "lineage"]}
         />
+        <SubToolboxDropdownControl
+         label="State"
+         value={special}
+         onChange={(value) => setSpecial(value as typeof special)}
+         options={["active", "recent", "generated", "inbox", "favorites", "archive", "trash"]}
+        />
        </div>
        <div className="flex flex-wrap gap-2">
         <SubToolboxSegmentedToggle
@@ -1787,21 +1795,6 @@ const CreatorVaultOS: React.FC = () => {
           { value: "image", label: "IMAGE" },
           { value: "audio", label: "AUDIO" },
           { value: "document", label: "DOCS" },
-         ]}
-        />
-        <SubToolboxSegmentedToggle
-         level="l1"
-         ariaLabel="Vault library state"
-         value={special}
-         onValueChange={(value) => setSpecial(value as typeof special)}
-         options={[
-          { value: "active", label: "LIBRARY" },
-          { value: "recent", label: "RECENT" },
-          { value: "generated", label: "GENERATED" },
-          { value: "inbox", label: "INBOX" },
-          { value: "favorites", label: "FAVORITES" },
-          { value: "archive", label: "ARCHIVE" },
-          { value: "trash", label: "TRASH" },
          ]}
         />
        </div>
