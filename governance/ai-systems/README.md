@@ -1,7 +1,7 @@
 # ViewTube AI Systems Governance Registry
 
 **Status:** additive governance/control-plane data.  
-**Audited main:** `fbaaff8de14c5948959251b0552519685c24c83e`
+**Audited main:** `fbc7d25c71fa89c312da32280d9f77182065b42a`
 
 This folder is the machine-readable companion to:
 
