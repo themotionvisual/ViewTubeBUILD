@@ -29,7 +29,6 @@ import {
  SubToolboxStatePanel,
  SubToolboxTagEditor,
  SubToolboxTextArea,
- SubToolboxVaultAsset,
 } from "../components/subtoolbox/SubToolboxPrimitives"
 import {
  createImportedVaultAsset,
@@ -101,6 +100,7 @@ import {
 } from "../services/vaultManualCollections"
 import { resolveVaultKeyboardCommand, resolveVaultTagHotkey } from "../services/vaultKeyboard"
 import { SubToolboxMediaInspector, SubToolboxMediaPlayer } from "../components/subtoolbox/SubToolboxMediaPrimitives"
+import { VaultAssetModule, type VaultAssetModuleKind, type VaultAssetModuleVariant } from "../components/subtoolbox/VaultAssetModule"
 import { useBrain } from "../context/useBrain"
 import { initializeProjectContentIdentity } from "../services/projects/ProjectContentIdentityService"
 import {
@@ -196,10 +196,31 @@ const vaultPreviewAspectRatio = (asset: VaultAsset): number => {
  return 16 / 9
 }
 
-const vaultCardKind = (asset: VaultAsset): "landscape" | "portrait" | "audio" | "document" => {
+const vaultModuleKind = (asset: VaultAsset): VaultAssetModuleKind => {
  if (asset.kind === "audio") return "audio"
- if (asset.kind === "document" || asset.kind === "font" || asset.kind === "template") return "document"
- return vaultPreviewAspectRatio(asset) < 0.9 ? "portrait" : "landscape"
+ if (asset.kind === "document" || asset.kind === "font" || asset.kind === "template" || asset.kind === "json") return "document"
+ if (asset.kind === "video") return "video"
+ return "image"
+}
+
+const vaultModuleVariant = (asset: VaultAsset): VaultAssetModuleVariant => {
+ const metadataVariant = String(asset.metadata?.vaultModuleVariant || "")
+ if ([
+  "landscape",
+  "landscape-swapped",
+  "portrait-single",
+  "portrait-double",
+  "audio",
+  "document",
+ ].includes(metadataVariant)) return metadataVariant as VaultAssetModuleVariant
+
+ const kind = vaultModuleKind(asset)
+ if (kind === "audio") return "audio"
+ if (kind === "document") return "document"
+ if (vaultPreviewAspectRatio(asset) < 0.9) {
+  return asset.name.length > 26 ? "portrait-double" : "portrait-single"
+ }
+ return "landscape"
 }
 
 const formatVaultBytes = (bytes: number) => {
@@ -290,6 +311,13 @@ const CreatorVaultOS: React.FC = () => {
  const inspectorRef = useRef<HTMLDivElement | null>(null)
 
  const allAssets = useMemo(() => listVaultAssets(), [refreshTick])
+ const vaultTagLibrary = useMemo(
+  () => Array.from(new Set([
+   ...CORE_TAGS.map((tag) => tag.toUpperCase()),
+   ...allAssets.flatMap((asset) => asset.tags.map((tag) => tag.toUpperCase())),
+  ])).sort((a, b) => a.localeCompare(b)),
+  [allAssets],
+ )
  const smartCollections = useMemo(() => listVaultSmartCollections(), [collectionRefresh])
  const manualCollections = useMemo(() => listVaultCollections(), [manualCollectionRefresh])
  const brandKit = useMemo(
@@ -2845,24 +2873,32 @@ const CreatorVaultOS: React.FC = () => {
            ? "columns-1 gap-3 sm:columns-2 2xl:columns-3"
            : "flex flex-col gap-4 border-l-[4px] border-current pl-4"}
          >
-          {visibleAssets.map((asset) => (
-           <SubToolboxVaultAsset
+          {visibleAssets.map((asset, assetIndex) => (
+           <VaultAssetModule
             key={asset.id}
             level="l1"
             className={viewMode === "masonry" ? "mb-3 break-inside-avoid" : undefined}
-            kind={vaultCardKind(asset)}
+            kind={vaultModuleKind(asset)}
+            variant={vaultModuleVariant(asset)}
             title={asset.name}
-            onTitleChange={(nextTitle) => updateAssetTitle(asset, nextTitle)}
-            titleAriaLabel={`Edit title for ${asset.name}`}
-            previewAspectRatio={vaultPreviewAspectRatio(asset)}
-            preview={(asset.previewUrl || asset.url) ? (
-             <img
-              src={asset.previewUrl || asset.url || undefined}
-              alt=""
-              className="vt-subtoolbox-vault-media"
-             />
-            ) : assetIcon(asset)}
+            previewUrl={asset.previewUrl || asset.url || null}
+            mediaUrl={asset.url || null}
+            mimeType={asset.mimeType}
+            durationLabel={typeof asset.metadata?.durationSeconds === "number"
+             ? `${Number(asset.metadata.durationSeconds).toFixed(1)}s`
+             : null}
+            paletteIndex={assetIndex}
             selected={selectedAssetIds.includes(asset.id)}
+            tags={asset.tags || []}
+            sharedTags={vaultTagLibrary}
+            notes={String(asset.metadata?.notes || "")}
+            mediaFit="cover"
+            onTitleChange={(nextTitle) => updateAssetTitle(asset, nextTitle)}
+            onTagsChange={(tags) => {
+             updateVaultAsset(asset.id, { tags })
+             setRefreshTick((value) => value + 1)
+            }}
+            onNotesChange={(nextNotes) => updateAssetNotes(asset, nextNotes)}
             onClickCapture={(event) => {
              selectionShiftRef.current = event.shiftKey
             }}
@@ -2879,135 +2915,12 @@ const CreatorVaultOS: React.FC = () => {
              setSelectedAssetIds(next.selectedIds)
              setSelectionAnchorId(next.anchorId)
             }}
-            tags={(
-             <SubToolboxTagEditor
-              level="l2"
-              tagLevel="l3"
-              spectrum
-              tags={asset.tags || []}
-              onTagsChange={(tags) => {
-               updateVaultAsset(asset.id, { tags })
-               setRefreshTick((value) => value + 1)
-              }}
-              label="TAGS"
-             />
-            )}
-            notes={(
-             <div className="flex h-full min-h-0 flex-col gap-2">
-              <div className="text-[10px] font-black uppercase opacity-60">
-               {viewMode === "timeline"
-                ? `${new Date(asset.createdAt).toLocaleString()} · ${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`
-                : `${asset.kind.toUpperCase()} · ${asset.projectName || "UNASSIGNED"}`}
-              </div>
-              <SubToolboxTextArea
-               level="l2"
-               height="fill"
-               defaultValue={String(asset.metadata?.notes || "")}
-               placeholder="NOTES"
-               aria-label={`Notes for ${asset.name}`}
-               onBlur={(event) => updateAssetNotes(asset, event.currentTarget.value)}
-              />
-              {selectedAssetIds.includes(asset.id) ? (
-               <>
-                {activeCollectionId
-                 && manualCollections.find((collection) => collection.id === activeCollectionId)?.assetIds.includes(asset.id) ? (
-                 <SubToolboxInnerActionButton
-                  label="Remove from Collection"
-                  iconName="x"
-                  tone="pink"
-                  onClick={removeSelectedAssetFromActiveCollection}
-                 />
-                ) : null}
-                <SubToolboxSelect
-                 value={asset.projectId || ""}
-                 aria-label="Asset project assignment"
-                 onChange={(event) => assignAssetToProject(asset, event.target.value)}
-                >
-                 <option value="">UNASSIGNED</option>
-                 {brain.projects.map((project) => (
-                  <option key={project.id} value={project.id}>{project.name}</option>
-                 ))}
-                </SubToolboxSelect>
-                <SubToolboxSelect
-                 value={String(asset.metadata?.lifecycle || "DRAFT")}
-                 aria-label="Asset lifecycle"
-                 onChange={(event) => updateAssetLifecycle(asset, event.target.value as VaultAssetLifecycle)}
-                >
-                 {["DRAFT", "CANDIDATE", "APPROVED", "FINAL", "GOLDEN", "SUPERSEDED"].map((value) => (
-                  <option key={value} value={value}>{value}</option>
-                 ))}
-                </SubToolboxSelect>
-                <SubToolboxInnerActionButton
-                 label={(asset.metadata?.protected === true || (String(asset.metadata?.lifecycle || "").toUpperCase() === "GOLDEN" && asset.metadata?.protected !== false))
-                  ? "Unlock Protected Asset"
-                  : "Protect Asset"}
-                 iconName="checklist"
-                 tone="purple"
-                 onClick={() => toggleAssetProtection(asset)}
-                />
-                <div className="grid grid-cols-2 gap-2">
-                 <SubToolboxInnerActionButton
-                  label={asset.metadata?.favorite === true ? "Unfavorite" : "Favorite"}
-                  iconName="sparkles"
-                  tone="orange"
-                  onClick={() => toggleAssetFavorite(asset)}
-                  aria-label="Toggle asset favorite"
-                 />
-                 {special === "archive" ? (
-                  <SubToolboxInnerActionButton
-                   label="Restore from Archive"
-                   iconName="archive"
-                   tone="green"
-                   onClick={() => restoreAsset(asset)}
-                  />
-                 ) : special === "trash" ? (
-                  <SubToolboxInnerActionButton
-                   label="Restore from Trash"
-                   iconName="archive"
-                   tone="green"
-                   onClick={() => restoreAsset(asset)}
-                  />
-                 ) : (
-                  <SubToolboxInnerActionButton
-                   label="Archive"
-                   iconName="archive"
-                   tone="cyan"
-                   onClick={() => archiveAsset(asset)}
-                   aria-label="Archive asset"
-                  />
-                 )}
-                </div>
-                {special === "trash" ? (
-                 <SubToolboxInnerActionButton
-                  label="Delete Permanently"
-                  iconName="x"
-                  tone="pink"
-                  onClick={() => permanentlyDeleteAsset(asset)}
-                 />
-                ) : (
-                 <SubToolboxInnerActionButton
-                  label="Move to Trash"
-                  iconName="x"
-                  tone="pink"
-                  onClick={() => trashAsset(asset)}
-                 />
-                )}
-                <SubToolboxInput
-                 type="file"
-                 accept="image/*"
-                 aria-label={`Replace preview for ${asset.name}`}
-                 title="Replace Preview"
-                 onChange={(event) => {
-                  const file = event.currentTarget.files?.[0] || null
-                  void replaceAssetPreview(asset, file)
-                  event.currentTarget.value = ""
-                 }}
-                />
-                <span className="text-[10px] font-black uppercase opacity-60">Replace Preview</span>
-               </>
-              ) : null}
-             </div>
-            )}
+            onPreviewAction={() => {
+             setSelectedAssetIds([asset.id])
+             setSelectionAnchorId(asset.id)
+             setQuickLookCurrent(assetIndex)
+             setQuickLookOpen(true)
+            }}
            />
           ))}
          </div>
