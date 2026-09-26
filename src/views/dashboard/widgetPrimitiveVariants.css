@@ -89,6 +89,7 @@
   outline: none;
   border-color: var(--widget-color, #34cdea) !important;
   background: color-mix(in srgb, var(--widget-color, #fff) 18%, white) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--widget-color, #34cdea) 34%, transparent);
 }
 
 .widget-select-trigger.vt-sized-control:focus-visible,
@@ -129,7 +130,7 @@
 /* Community Post-derived split-left anatomy: a dedicated left action/icon bay. */
 .widget-split-button.is-left-split {
   display: inline-grid;
-  grid-template-columns: calc(var(--vt-primitive-height, 32px) * 1.16) minmax(0, 1fr);
+  grid-template-columns: var(--vt-primitive-height, 32px) minmax(0, 1fr);
   align-items: stretch;
   padding: 0 !important;
   overflow: hidden;
@@ -138,7 +139,7 @@
 }
 
 .widget-split-button.is-left-split .widget-split-button-icon {
-  width: calc(var(--vt-primitive-height, 32px) * 1.16);
+  width: var(--vt-primitive-height, 32px);
   height: 100%;
   display: grid;
   place-items: center;
