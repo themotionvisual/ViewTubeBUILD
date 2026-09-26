@@ -9,6 +9,8 @@ const SEEDED_LAYOUT = JSON.stringify({
   schemaVersion: 9,
   locked: false,
   order: [
+    "app-verification-explainer",
+    "daily-oracle",
     "system-micro-stack",
     "opportunity-radar",
     "comment-replier",
@@ -17,6 +19,8 @@ const SEEDED_LAYOUT = JSON.stringify({
   ],
   hidden: [],
   instances: {
+    "app-verification-explainer": { collapsed: false, size: "half", height: "medium" },
+    "daily-oracle": { collapsed: false, size: "half", height: "tall" },
     "system-micro-stack": { collapsed: false, size: "half", height: "tall" },
     "opportunity-radar": { collapsed: false, size: "half", height: "tall" },
     "comment-replier": { collapsed: false, size: "half", height: "tall" },
@@ -26,6 +30,8 @@ const SEEDED_LAYOUT = JSON.stringify({
 })
 
 const targets = [
+  ["about-viewtube-geometry", "app-verification-explainer"],
+  ["daily-oracle-geometry", "daily-oracle"],
   ["settings-dashboard", "system-micro-stack"],
   ["opportunity-preview", "opportunity-radar"],
   ["comment-preview", "comment-replier"],
