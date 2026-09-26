@@ -38,6 +38,12 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).not.toContain('duration || 60')
  })
 
+ it("keeps Notes editing in the contextual Inspector rather than permanent asset-card chrome", () => {
+  expect(source).toContain('aria-label="Asset notes"')
+  expect(source).toContain('onBlur={(event) => updateAssetNotes(selectedAsset, event.target.value)}')
+  expect(source).not.toContain('onNotesChange={(nextNotes) => updateAssetNotes(asset, nextNotes)}')
+ })
+
  it("renders Inspector only when an asset is selected", () => {
   expect(source).toContain('{selectedAsset ? (\n       <div ref={inspectorRef}')
   expect(source).not.toContain('message="Select an asset to inspect metadata, provenance, rights, versions, and relationships."')
