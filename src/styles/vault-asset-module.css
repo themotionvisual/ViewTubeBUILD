@@ -305,3 +305,42 @@
   }
   .vt-vault-new-tag-input{font-size:16px}
 }
+
+/* Compact Vault IA: media-first cards keep secondary chrome below the preview. */
+.vt-vault-card-meta{
+  min-width:0;
+  min-height:20px;
+  display:flex;
+  align-items:center;
+  padding:3px 6px;
+  overflow:hidden;
+  background:#fff;
+  color:var(--vt-vault-ink);
+  font-size:8px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.vt-vault-asset-module.is-landscape>.vt-vault-card-meta,
+.vt-vault-asset-module.is-landscape-swapped>.vt-vault-tag-panel{
+  border-top:var(--vt-vault-stroke) solid var(--vt-vault-ink);
+}
+.vt-vault-asset-module.is-landscape-swapped .vt-vault-landscape-middle>.vt-vault-card-meta{
+  border-left:var(--vt-vault-stroke) solid var(--vt-vault-ink);
+}
+.vt-vault-asset-module.is-portrait-single .vt-vault-portrait-left,
+.vt-vault-asset-module.is-portrait-double .vt-vault-portrait-left{
+  grid-template-rows:auto minmax(0,1fr) 20px;
+}
+.vt-vault-asset-module.is-portrait .vt-vault-card-meta{
+  border-top:var(--vt-vault-stroke) solid var(--vt-vault-ink);
+}
+.vt-vault-half-left{
+  grid-template-rows:minmax(0,1fr) 20px;
+}
+.vt-vault-half-left .vt-vault-card-meta{
+  border-top:var(--vt-vault-stroke) solid var(--vt-vault-ink);
+}
