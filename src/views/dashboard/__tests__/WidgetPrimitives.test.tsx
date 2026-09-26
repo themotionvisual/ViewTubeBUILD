@@ -570,9 +570,9 @@ describe("expanded widget compound primitives", () => {
         options={[{ value: "v1", label: "Long title", meta: "12:42 · 48,230 views" }]}
       />,
     )).toContain("is-height-38")
-    expect(variantsCss).toContain("--widget-video-split-bay: var(--vt-primitive-height")
-    expect(extensionSource).toContain("is-drop-up")
-    expect(variantsCss).toContain(".widget-video-select.is-drop-up .widget-video-select-menu")
+    expect(variantsCss).toContain("--widget-video-split-bay: calc(var(--vt-primitive-height")
+    expect(extensionSource).toContain("createPortal")
+    expect(extensionSource).toContain("widget-video-select-menu is-portalled")
   })
 })
 
@@ -674,7 +674,7 @@ describe("spectrum tone classes", () => {
     })
   })
 
-  it("renders spectrum badges and toasts with tag-matched monochrome ink", () => {
+  it("keeps spectrum split badges on their hue while their copy and glyphs use global VT Ink", () => {
     const badge = renderToStaticMarkup(
       <WidgetLeftSplitBadge spectrum="teal" icon={<span />}>On target</WidgetLeftSplitBadge>,
     )
@@ -682,7 +682,7 @@ describe("spectrum tone classes", () => {
     expect(badge).toContain("widget-split-badge-icon")
     expect(matrixCss).toContain("--widget-spectrum-ink: #4EE4BE")
     expect(matrixCss).toContain("border: 2px solid var(--widget-spectrum-ink) !important")
-    expect(matrixCss).toContain("color: var(--widget-spectrum-ink) !important")
+    expect(matrixCss).toContain("color: var(--vt-ink")
     expect(matrixCss).toContain("--widget-toast-ink: var(--widget-spectrum-ink)")
 
     // Status must not be carried by hue alone: it sets a data attribute
