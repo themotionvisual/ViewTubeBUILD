@@ -2,7 +2,7 @@
   "threadId": "widget-geometry-primitives-2026-09-26",
   "verb": "FIX",
   "tier": "T2",
-  "stage": "EXECUTE",
+  "stage": "VERIFY",
   "owner": "dashboard-widget-system",
   "status": "partial",
   "intent": "Repair mobile widget shell width/clipping and promote the shared header, split-control, video-selector, comment, compound and upload-frame corrections into canonical widget primitives.",
@@ -35,12 +35,17 @@
   "reconRef": "VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md + 2026-09-26 user field QA screenshots",
   "approval": "Explicit creator approval: Begin",
   "openQuestions": [],
-  "nextAction": "Fix mobile shell width first, then intrinsic header toggle geometry and shared split-control contracts before local widget migrations.",
+  "nextAction": "Open a draft PR, run focused widget contracts/build, then capture 390x844 and 1440x1000 visual evidence before merge.",
   "entries": [
     {
       "ts": "2026-09-26",
       "stage": "RECON",
       "note": "Current mobile contract uses asymmetric 12px/40px dashboard reclaim; screenshots show the compensation now overshoots right edge. Shared header toggle uses equal-width segments; split/video primitives retain hard-coded geometry."
+    },
+    {
+      "ts": "2026-09-26",
+      "stage": "EXECUTE",
+      "note": "Implemented shared mobile width repair, intrinsic animated header toggle, true inset/full/shadow-safe geometry separation, multiline/square split controls, Comment Responder donor primitives, portalled flip-aware video selector, VT-Ink split badge copy, larger compound typography, and toolbox-style upload frames. Parallel branch edits were reconciled to one canonical donor/portal implementation."
     }
   ],
   "lastApp": "ChatGPT",
