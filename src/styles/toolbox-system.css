@@ -255,7 +255,7 @@
 
 @media (max-width: 767px) {
   [data-vt-toolbox][data-vt-toolbox-level="main"] {
-    --vt-toolbox-title-protected-width: 150px;
+    --vt-toolbox-title-protected-width: 132px;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -295,11 +295,12 @@
 }
 .vt-toolbox-header-title-slot {
   flex: 1 1 var(--vt-toolbox-title-protected-width, 168px);
-  min-width: 0;
+  min-width: min(var(--vt-toolbox-title-protected-width, 168px), 100%);
   max-width: 100%;
 }
 .vt-toolbox-header-title-slot.is-subtoolbox {
-  flex-basis: var(--vt-subtoolbox-title-protected-width, 132px);
+  flex-basis: var(--vt-subtoolbox-title-protected-width, 110px);
+  min-width: min(var(--vt-subtoolbox-title-protected-width, 110px), 100%);
 }
 .vt-toolbox-header-actions {
   display: flex;
