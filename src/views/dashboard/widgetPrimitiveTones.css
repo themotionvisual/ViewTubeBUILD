@@ -334,3 +334,29 @@
   border: 0 !important;
   box-shadow: none !important;
 }
+
+
+/* Selected/emphasized split-left controls preserve two distinct surfaces:
+   strong icon bay + lighter label bay. This applies to the sized-control tone
+   owner used by WidgetLeftSplitButton, not only the legacy split tone prop. */
+.widget-split-button.is-left-split.vt-sized-control.is-tone-primary {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 28%, white) !important;
+  border-color: var(--vt-tone-stroke, var(--vt-ink)) !important;
+  color: var(--vt-ink, var(--widget-border)) !important;
+}
+.widget-split-button.is-left-split.vt-sized-control.is-tone-primary .widget-split-button-icon {
+  background: var(--widget-color, #34cdea) !important;
+  border-inline-end-color: var(--vt-tone-stroke, var(--vt-ink)) !important;
+}
+.widget-split-button.is-left-split.vt-sized-control.is-tone-secondary {
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 52%, white) !important;
+  border-color: var(--vt-tone-stroke, var(--vt-ink)) !important;
+  color: var(--vt-ink, var(--widget-border)) !important;
+}
+.widget-split-button.is-left-split.vt-sized-control.is-tone-secondary .widget-split-button-icon {
+  background: var(--widget-color, #34cdea) !important;
+  border-inline-end-color: var(--vt-tone-stroke, var(--vt-ink)) !important;
+}
+.widget-split-button.is-left-split.vt-sized-control:is(.is-tone-primary,.is-tone-secondary) .widget-split-button-label {
+  color: var(--vt-ink, var(--widget-border)) !important;
+}
