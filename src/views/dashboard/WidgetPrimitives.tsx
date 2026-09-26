@@ -1,6 +1,6 @@
 import * as Select from "@radix-ui/react-select"
 import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react"
-import { AlertTriangle, Ban, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, Inbox, LoaderCircle, RotateCw, X } from "lucide-react"
+import { AlertTriangle, Ban, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, Inbox, LoaderCircle, RotateCw, Sparkles, X } from "lucide-react"
 import type { WidgetDataState } from "./types"
 import { widgetSizedControlClasses, type WidgetPrimitiveSize, type WidgetPrimitiveTone, type WidgetPrimitiveTextFit } from "./widgetPrimitiveSystem"
 import { resolveWidgetViewportSegment } from "./widgetScrollGeometry"
@@ -253,6 +253,62 @@ export const WidgetStatePanel = <T,>({
     </section>
   )
 }
+
+export interface WidgetPreviewStateProps {
+  previewLabel?: string
+  previewReason: React.ReactNode
+  recoveryAction?: React.ReactNode
+  onRecover?: () => void
+  illustration?: React.ReactNode
+  children?: React.ReactNode
+  compact?: boolean
+  className?: string
+  ariaLabel?: string
+}
+
+/**
+ * Honest disconnected/empty preview wrapper.
+ *
+ * The preview keeps a widget's signature visual visible without presenting
+ * sample values as the creator's data. Fixtures belong in widgetPreviewFixtures.
+ */
+export const WidgetPreviewState: React.FC<WidgetPreviewStateProps> = ({
+  previewLabel = "PREVIEW",
+  previewReason,
+  recoveryAction,
+  onRecover,
+  illustration,
+  children,
+  compact = false,
+  className = "",
+  ariaLabel = "Widget preview",
+}) => (
+  <section
+    className={`widget-preview-state ${compact ? "is-compact" : ""} ${className}`.trim()}
+    data-widget-state="preview"
+    role="status"
+    aria-label={ariaLabel}
+  >
+    <header className="widget-preview-state-head">
+      <span className="widget-preview-state-badge">
+        <Sparkles size={14} strokeWidth={2.5} aria-hidden="true" />
+        {previewLabel}
+      </span>
+      <p>{previewReason}</p>
+      {recoveryAction && onRecover ? (
+        <button
+          type="button"
+          className={`widget-preview-state-action ${widgetSizedControlClasses(24, "primary", "adaptive")} vt-interactive`}
+          onClick={onRecover}
+        >
+          {recoveryAction}
+        </button>
+      ) : null}
+    </header>
+    {illustration ? <div className="widget-preview-state-illustration">{illustration}</div> : null}
+    {children ? <div className="widget-preview-state-body">{children}</div> : null}
+  </section>
+)
 
 export const WidgetMetric: React.FC<{
   label: string
