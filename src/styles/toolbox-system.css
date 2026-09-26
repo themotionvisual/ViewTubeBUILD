@@ -515,7 +515,7 @@
 }
 [data-vt-toolbox-level="sub"] [data-vt-subtoolbox-help="true"],
 [data-vt-toolbox-level="sub"] [data-vt-subtoolbox-toggle="true"]{
-  width:38px!important;min-width:38px!important;
+  width:44px!important;min-width:44px!important;
 }
 [data-vt-toolbox-level="sub"] [data-vt-subtoolbox-help="true"]>span{
   width:36px!important;height:36px!important;
@@ -594,8 +594,8 @@
   /* Main header actions must never be visually weaker than SubToolbox actions. */
   [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-help="true"],
   [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-toggle="true"] {
-    width: 40px !important;
-    min-width: 40px !important;
+    width: 44px !important;
+    min-width: 44px !important;
   }
   [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-help="true"] > span {
     width: 36px !important;
