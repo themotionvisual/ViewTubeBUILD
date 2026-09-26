@@ -47,6 +47,15 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).toContain('onClick={() => setQuery("")}')
  })
 
+ it("keeps the mobile Inspector closed until explicitly opened and provides a close action", () => {
+  expect(source).toContain("const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false)")
+  expect(source).toContain('label="Close Inspector"')
+  expect(source).toContain('setMobileInspectorOpen(true)')
+  expect(source).toContain('setMobileInspectorOpen(false)')
+  expect(source).toContain('mobileInspectorOpen ? "fixed inset-x-2 bottom-16')
+  expect(source).toContain('"hidden"} xl:static xl:block')
+ })
+
  it("uses contextual mobile sheets for selection actions and Inspector", () => {
   expect(source).toContain('data-vault-mobile-sheet="selection-actions"')
   expect(source).toContain('data-vault-mobile-sheet="inspector"')
