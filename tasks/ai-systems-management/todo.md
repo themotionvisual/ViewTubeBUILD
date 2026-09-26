@@ -32,11 +32,11 @@
 - [ ] Progress checkpoint.
 - [ ] Blocked event.
 - [ ] Claim release.
-- [ ] Completion receipt.
+- [x] Completion receipt projection and validation.
 - [ ] Handoff receipt.
 - [x] Stale claim detection from live Herald writer locks.
-- [ ] Collision detection.
-- [ ] Herald adapter/normalization.
+- [x] Collision detection from explicit Herald writer-lock paths.
+- [x] Herald adapter/normalization for current + legacy thread shapes.
 
 ## Runtime projection
 - [ ] BrainTrace projection.
@@ -51,14 +51,14 @@
 - [x] Live Herald claim ingestion for stale-lock detection.
 - [~] JSON schema validation. Record-level validation is enforced; full JSON Schema engine validation remains open.
 - [ ] Broken docs refs.
-- [ ] Duplicate owner detection.
+- [x] Duplicate owner detection by bounded current concern.
 - [ ] stale audited-main detection.
 - [ ] reachability audit.
 - [ ] writer-less ledger/store detection.
 - [ ] direct provider bypass detection.
 - [ ] analytics-canon bypass detection.
-- [ ] unclosed claims.
-- [ ] completion without receipt.
+- [x] Unclosed/stale writer-lock detection.
+- [x] Explicit terminal-thread completion without PROVEN receipt.
 - [ ] prompt provenance coverage.
 
 ## Brain Hub UI
@@ -102,4 +102,7 @@
 - broken source refs: 0
 - governance commands present: 3
 - Herald work projection: read-only
+- governance tests: 12/12
+- Herald projection tests: 8/8
+- live governance audit: 5 registries / 41 records / 9 claims / 5 receipts / 0 blockers
 - current-main merge: pending
