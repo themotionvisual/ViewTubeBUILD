@@ -274,11 +274,13 @@ describe("shared widget form primitives", () => {
       />,
     )
 
-    expect(markup).toContain('class="widget-header-toggle"')
+    expect(markup).toContain('class="widget-header-toggle is-intrinsic"')
     expect(markup).toContain('class="widget-header-toggle-indicator"')
-    expect(markup).toContain('--widget-header-toggle-index:0')
-    expect(markup).toContain('--widget-header-toggle-count:2')
+    expect(markup).toContain('data-active-index="0"')
     expect(markup).toContain('aria-pressed="true"')
+    expect(variantsCss).toContain("--widget-header-toggle-active-width")
+    expect(variantsCss).toContain("--widget-header-toggle-active-left")
+    expect(variantsCss).toContain("transition: transform 180ms")
     expect(markup).toContain("48 hr")
     expect(markup).toContain("60 mn")
   })
