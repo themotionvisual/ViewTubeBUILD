@@ -51,6 +51,10 @@ import {
   WidgetTag,
   WidgetTooltip,
   WidgetCheckbox,
+  WidgetSectionBand,
+  WidgetDataGrid,
+  WidgetChecklistProgress,
+  WidgetCalendarGrid,
   WidgetIconBadge,
   WidgetIconButton,
   WidgetLeftSplitBadge,
@@ -95,6 +99,7 @@ type ReferenceCategory =
   | "media"
   | "navigation"
   | "matrix"
+  | "compound"
   | "states"
   | "alerts"
 
@@ -102,6 +107,7 @@ const REFERENCE_CATEGORIES: ReadonlyArray<{ id: ReferenceCategory; label: string
   { id: "controls", label: "CONTROLS" },
   { id: "size", label: "SIZE" },
   { id: "matrix", label: "MATRIX" },
+  { id: "compound", label: "COMPOUND" },
   { id: "video", label: "VIDEO" },
   { id: "progress", label: "BARS" },
   { id: "tags", label: "TAGS" },
@@ -226,6 +232,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
   const [matrixRadio, setMatrixRadio] = useState<WidgetPrimitiveTone>("primary")
   const [matrixCheck, setMatrixCheck] = useState(true)
   const [matrixSearch, setMatrixSearch] = useState("")
+  const [compoundChecks, setCompoundChecks] = useState<string[]>(["reply", "script"])
   const [sizeGridMode, setSizeGridMode] = useState(false)
   const previewWidget = useMemo(
     () => ({ ...widget, ...getDashboardWidgetPaletteColors(paletteIndex) }),
