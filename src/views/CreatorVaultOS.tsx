@@ -217,9 +217,7 @@ const vaultModuleVariant = (asset: VaultAsset): VaultAssetModuleVariant => {
  const kind = vaultModuleKind(asset)
  if (kind === "audio") return "audio"
  if (kind === "document") return "document"
- if (vaultPreviewAspectRatio(asset) < 0.9) {
-  return asset.name.length > 26 ? "portrait-double" : "portrait-single"
- }
+ if (vaultPreviewAspectRatio(asset) < 0.9) return "portrait-single"
  return "landscape"
 }
 
@@ -2868,7 +2866,7 @@ const CreatorVaultOS: React.FC = () => {
           </div>
          ) : (
          <div className={viewMode === "grid"
-          ? "grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3"
+          ? "grid grid-cols-[repeat(auto-fill,276px)] justify-start gap-3"
           : viewMode === "masonry"
            ? "columns-1 gap-3 sm:columns-2 2xl:columns-3"
            : "flex flex-col gap-4 border-l-[4px] border-current pl-4"}
