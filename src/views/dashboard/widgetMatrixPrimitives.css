@@ -273,6 +273,19 @@
   box-shadow: none;
 }
 
+
+.widget-spectrum-fill-badge.is-width-full,
+.widget-split-badge.is-width-full {
+  grid-column: full-start / full-end;
+  width: 100%;
+  max-width: none;
+  justify-self: stretch;
+}
+.widget-split-badge.is-width-full .widget-split-badge-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 /* ── Toggle switch ──────────────────────────────────────────── */
 .widget-toggle-switch {
   position: relative;
@@ -757,6 +770,10 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+
+.widget-tiny-spectrum-icon.is-height-32 > svg { width: 78%; height: 78%; }
+.widget-tiny-spectrum-icon.is-height-38 > svg { width: 80%; height: 80%; }
 
 /* ── Accent rail module ───────────────────────────────────────
    The accent physically touches the module border: no wrapper padding,
