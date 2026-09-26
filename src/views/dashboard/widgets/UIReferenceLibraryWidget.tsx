@@ -893,7 +893,7 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
                 />
                 <div className="flex flex-wrap gap-2">
                   <WidgetSplitCounterBadge icon={<ThumbsUp />} value={184} label="184 likes" height={24} tone="primary" />
-                  <WidgetSplitCounterBadge icon={<MessageSquare />} value={27} label="27 replies" height={24} tone="secondary" />
+                  <WidgetSplitCounterBadge icon={<MessagesSquare />} value={27} label="27 replies" height={24} tone="secondary" />
                 </div>
                 <WidgetSpeechBubble>
                   Big supporter — the map explanation made the battle finally click.
