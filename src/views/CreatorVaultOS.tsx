@@ -263,6 +263,8 @@ const CreatorVaultOS: React.FC = () => {
  const [density, setDensity] = useState<VaultWorkspaceDensity>(initialWorkspace.density)
  const [arrangeMode, setArrangeMode] = useState(initialWorkspace.arrangeMode)
  const [workspaceSettingsOpen, setWorkspaceSettingsOpen] = useState(false)
+ const [libraryNavigationOpen, setLibraryNavigationOpen] = useState(false)
+ const [libraryFiltersOpen, setLibraryFiltersOpen] = useState(false)
  const [visibleModules, setVisibleModules] = useState<VaultWorkspaceModuleId[]>(initialWorkspace.visibleModules)
  const [moduleOrder, setModuleOrder] = useState<VaultWorkspaceModuleId[]>(initialWorkspace.moduleOrder)
  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([])
@@ -1667,36 +1669,46 @@ const CreatorVaultOS: React.FC = () => {
      ? "grid grid-cols-1 gap-2 xl:grid-cols-[minmax(220px,0.72fr)_minmax(0,2.1fr)_minmax(260px,0.9fr)]"
      : "grid grid-cols-1 gap-4 xl:grid-cols-[minmax(220px,0.72fr)_minmax(0,2.1fr)_minmax(260px,0.9fr)]"}>
      <div className="flex min-w-0 flex-col gap-4">
-      <SubToolbox
-       style={moduleStyle("navigator" as VaultWorkspaceModuleId)}
-       title="Navigator"
-       subtitle="Library views and smart filters"
-       icon={<Filter />}
-       paletteIndex={8}
-       isOpenInitial
-       persistenceId="vault-navigator"
-      >
-       <div className="flex flex-col gap-3">
-        <SubToolboxSegmentedToggle
+      <section aria-label="Vault library toolbar" className="flex flex-col gap-2">
+       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2">
+        <button
+         type="button"
+         aria-label="Open library navigation"
+         aria-expanded={libraryNavigationOpen}
+         className="min-h-9 rounded-md border-2 border-current px-3 text-xs font-black uppercase"
+         onClick={() => setLibraryNavigationOpen((open) => !open)}
+        >
+         Library
+        </button>
+        <SubToolboxSplitField
          level="l1"
-         ariaLabel="Vault view"
-         value={viewMode}
-         onValueChange={(value) => setViewMode(value as VaultWorkspaceViewMode)}
-         options={[
-          { value: "grid", label: "GRID" },
-          { value: "masonry", label: "MASONRY" },
-          { value: "filmstrip", label: "FILMSTRIP" },
-          { value: "lineage", label: "LINEAGE" },
-          { value: "list", label: "LIST" },
-          { value: "timeline", label: "TIMELINE" },
-         ]}
+         variant="search"
+         icon={<Search />}
+         inputProps={{
+          ref: searchInputRef,
+          value: query,
+          onChange: (event) => setQuery(event.target.value),
+          placeholder: "Search assets…",
+          "aria-label": "Search Vault assets",
+         }}
         />
+        <button
+         type="button"
+         aria-label="Open Vault filters"
+         aria-expanded={libraryFiltersOpen}
+         className="min-h-9 rounded-md border-2 border-current px-3 text-xs font-black uppercase"
+         onClick={() => setLibraryFiltersOpen((open) => !open)}
+        >
+         Filters
+        </button>
         <SubToolboxDropdownControl
-         label="Asset kind"
-         value={filterKind}
-         onChange={(value) => setFilterKind(value as "all" | VaultAssetKind)}
-         options={["all", "image", "video", "audio", "document", "font", "template", "generated", "other"]}
+         label="Sort"
+         value={sort}
+         onChange={(value) => setSort(value as VaultWorkspaceSort)}
+         options={["updated-desc", "updated-asc", "name-asc", "name-desc"]}
         />
+       </div>
+       <div className="flex flex-wrap gap-2">
         <SubToolboxSegmentedToggle
          level="l1"
          ariaLabel="Vault library state"
@@ -1712,286 +1724,129 @@ const CreatorVaultOS: React.FC = () => {
           { value: "trash", label: "TRASH" },
          ]}
         />
-        <SubToolboxDropdownControl
-         label="Source"
-         value={source}
-         onChange={(value) => setSource(value as typeof source)}
-         options={["all", "local", "drive", "generated", "project", "imported"]}
-        />
-        <SubToolboxDropdownControl
-         label="Sort"
-         value={sort}
-         onChange={(value) => setSort(value as VaultWorkspaceSort)}
-         options={["updated-desc", "updated-asc", "name-asc", "name-desc"]}
-        />
-        <SubToolboxInnerActionButton
-         label={selectedTag ? `Clear Tag: ${selectedTag}` : "All Spectrum Tags"}
-         iconName="tag"
-         tone="cyan"
-         onClick={() => setSelectedTag(null)}
-        />
-        <details className="border-t-[3px] border-current pt-3">
-         <summary className="cursor-pointer text-xs font-black uppercase">Advanced Metadata Filters</summary>
-         <div className="mt-3 flex flex-col gap-2">
-          <SubToolboxDropdownControl
-           label="Lifecycle"
-           value={filterLifecycle}
-           onChange={setFilterLifecycle}
-           options={["all", "DRAFT", "CANDIDATE", "APPROVED", "FINAL", "GOLDEN", "SUPERSEDED", "ARCHIVED", "TRASHED"]}
-          />
-          <SubToolboxDropdownControl
-           label="Orientation"
-           value={filterOrientation}
-           onChange={(value) => setFilterOrientation(value as typeof filterOrientation)}
-           options={["all", "landscape", "portrait", "square"]}
-          />
-          <div className="grid grid-cols-2 gap-2">
-           <SubToolboxInput
-            type="date"
-            value={filterUpdatedFrom}
-            onChange={(event) => setFilterUpdatedFrom(event.target.value)}
-            aria-label="UPDATED FROM"
-           />
-           <SubToolboxInput
-            type="date"
-            value={filterUpdatedTo}
-            onChange={(event) => setFilterUpdatedTo(event.target.value)}
-            aria-label="UPDATED TO"
-           />
-          </div>
-          <SubToolboxInput
-           value={filterMimeType}
-           onChange={(event) => setFilterMimeType(event.target.value)}
-           placeholder="MIME TYPE · video/mp4"
-           aria-label="Vault MIME type filter"
-          />
-          <div className="grid grid-cols-2 gap-2">
-           <SubToolboxInput
-            type="number"
-            min={0}
-            value={filterMinWidth}
-            onChange={(event) => setFilterMinWidth(event.target.value)}
-            placeholder="MIN WIDTH"
-            aria-label="Minimum asset width"
-           />
-           <SubToolboxInput
-            type="number"
-            min={0}
-            value={filterMinHeight}
-            onChange={(event) => setFilterMinHeight(event.target.value)}
-            placeholder="MIN HEIGHT"
-            aria-label="Minimum asset height"
-           />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-           <SubToolboxInput
-            type="number"
-            min={0}
-            step="0.1"
-            value={filterMinDuration}
-            onChange={(event) => setFilterMinDuration(event.target.value)}
-            placeholder="MIN DURATION S"
-            aria-label="Minimum asset duration seconds"
-           />
-           <SubToolboxInput
-            type="number"
-            min={0}
-            step="0.1"
-            value={filterMaxDuration}
-            onChange={(event) => setFilterMaxDuration(event.target.value)}
-            placeholder="MAX DURATION S"
-            aria-label="Maximum asset duration seconds"
-           />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-           <SubToolboxInput
-            type="number"
-            min={0}
-            step="0.1"
-            value={filterMinBytesMb}
-            onChange={(event) => setFilterMinBytesMb(event.target.value)}
-            placeholder="MIN SIZE MB"
-            aria-label="Minimum asset size megabytes"
-           />
-           <SubToolboxInput
-            type="number"
-            min={0}
-            step="0.1"
-            value={filterMaxBytesMb}
-            onChange={(event) => setFilterMaxBytesMb(event.target.value)}
-            placeholder="MAX SIZE MB"
-            aria-label="Maximum asset size megabytes"
-           />
-          </div>
-          <SubToolboxInnerActionButton
-           label="Clear Metadata Filters"
-           iconName="x"
-           tone="cyan"
-           onClick={() => {
-            setFilterLifecycle("all")
-            setFilterOrientation("all")
-            setFilterUpdatedFrom("")
-            setFilterUpdatedTo("")
-            setFilterMimeType("")
-            setFilterMinWidth("")
-            setFilterMinHeight("")
-            setFilterMinDuration("")
-            setFilterMaxDuration("")
-            setFilterMinBytesMb("")
-            setFilterMaxBytesMb("")
-           }}
-          />
-         </div>
-        </details>
-        <StandardInput
-         value={smartCollectionName}
-         onChange={(event) => setSmartCollectionName(event.target.value)}
-         placeholder="Name current smart filter"
-         aria-label="Smart collection name"
-        />
-        <SubToolboxInnerActionButton
-         label="Save Smart Collection"
-         iconName="collection"
-         tone="green"
-         onClick={saveSmartCollection}
-         disabled={!smartCollectionName.trim()}
-        />
-        {smartCollections.length ? (
-         <div className="flex flex-col gap-2">
-          {smartCollections.map((collection) => (
-           <div key={collection.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-            <SubToolboxInnerActionButton
-             label={collection.name}
-             iconName="collection"
-             tone="cyan"
-             onClick={() => applySmartCollection(collection)}
-            />
-            <SubToolboxInnerActionButton
-             label="×"
-             iconName="x"
-             tone="pink"
-             onClick={() => removeSmartCollection(collection.id)}
-            />
-           </div>
-          ))}
-         </div>
-        ) : null}
        </div>
-      </SubToolbox>
+      </section>
 
-      <SubToolbox
-       style={moduleStyle("explorer" as VaultWorkspaceModuleId)}
-       title="Explorer"
-       subtitle="Logical project views over canonical Vault assets"
-       icon={<Archive />}
-       paletteIndex={7}
-       isOpenInitial
-       persistenceId="vault-explorer"
-      >
-       <div className="flex flex-col gap-2">
-        <SubToolboxInnerActionButton
-         label={`All Assets · ${allAssets.length}`}
-         iconName="collection"
-         tone={explorerProject === "all" ? "pink" : "cyan"}
-         onClick={() => {
-          setActiveCollectionId(null)
-          setExplorerProject("all")
-         }}
-        />
-        {explorerGroups.unassignedCount ? (
+      {libraryNavigationOpen ? (
+       <section aria-label="Vault library navigation" className="rounded-lg border-[3px] border-current p-3">
+        <div className="mb-2 text-xs font-black uppercase">Projects & Collections</div>
+        <div className="flex flex-wrap gap-2">
          <SubToolboxInnerActionButton
-          label={`Unassigned · ${explorerGroups.unassignedCount}`}
+          label={`All Assets · ${allAssets.length}`}
           iconName="collection"
-          tone={explorerProject === "unassigned" ? "pink" : "cyan"}
-          onClick={() => {
-           setActiveCollectionId(null)
-           setExplorerProject("unassigned")
-          }}
+          tone={explorerProject === "all" && !activeCollectionId ? "pink" : "cyan"}
+          onClick={() => { setActiveCollectionId(null); setExplorerProject("all") }}
          />
-        ) : null}
-        {explorerGroups.projects.map((project) => (
-         <SubToolboxInnerActionButton
-          key={project.name}
-          label={`${project.name} · ${project.count}`}
-          iconName="collection"
-          tone={explorerProject === project.name ? "pink" : "cyan"}
-          onClick={() => {
-           setActiveCollectionId(null)
-           setExplorerProject(project.name)
-          }}
-         />
-        ))}
-        <div className="mt-2 border-t-[3px] border-current pt-3">
-         <div className="mb-2 text-xs font-black uppercase opacity-60">Collections</div>
-         {brandKit ? (
-          <div className="mb-3 flex flex-col gap-2">
-           <SubToolboxInnerActionButton
-            label={`Brand Kit · ${brandKit.assetIds.length}`}
-            iconName="sparkles"
-            tone={activeCollectionId === brandKit.id ? "pink" : "yellow"}
-            onClick={() => setActiveCollectionId(brandKit.id)}
-           />
-           <SubToolboxInnerActionButton
-            label="Add Selection to Brand Kit"
-            iconName="plus"
-            tone="green"
-            onClick={addSelectionToBrandKit}
-            disabled={!selectedAssetIds.length}
-           />
-          </div>
-         ) : (
+         {explorerGroups.unassignedCount ? (
           <SubToolboxInnerActionButton
-           label="Create Brand Kit from Selection"
-           iconName="sparkles"
-           tone="yellow"
-           onClick={createBrandKitFromSelection}
+           label={`Unassigned · ${explorerGroups.unassignedCount}`}
+           iconName="collection"
+           tone={explorerProject === "unassigned" ? "pink" : "cyan"}
+           onClick={() => { setActiveCollectionId(null); setExplorerProject("unassigned") }}
           />
-         )}
-         <SubToolboxInnerActionButton
-          label="All Collections / Clear Filter"
-          iconName="collection"
-          tone={!activeCollectionId ? "pink" : "cyan"}
-          onClick={() => setActiveCollectionId(null)}
-         />
-         {manualCollections.map((collection) => (
-          <div key={collection.id} className="flex flex-col gap-1">
-           {activeCollectionId === collection.id ? (
-            <StandardInput
-             defaultValue={collection.name}
-             aria-label={`Rename collection ${collection.name}`}
-             onBlur={(event) => renameManualCollection(collection.id, event.target.value)}
-             onKeyDown={(event) => {
-              if (event.key === "Enter") event.currentTarget.blur()
-             }}
-            />
-           ) : null}
-           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-            <SubToolboxInnerActionButton
-             label={`${collection.role === "brand-kit" ? "★ " : ""}${collection.name} · ${collection.assetIds.length}`}
-             iconName="collection"
-             tone={activeCollectionId === collection.id ? "pink" : collection.role === "brand-kit" ? "yellow" : "cyan"}
-             onClick={() => setActiveCollectionId(collection.id)}
-            />
-            <SubToolboxInnerActionButton
-             label="×"
-             iconName="x"
-             tone="pink"
-             onClick={() => removeManualCollection(collection.id)}
-            />
-           </div>
-           {collection.role !== "brand-kit" ? (
-            <SubToolboxInnerActionButton
-             label="Set as Brand Kit"
-             iconName="sparkles"
-             tone="yellow"
-             onClick={() => makeBrandKit(collection.id)}
-            />
-           ) : null}
-          </div>
+         ) : null}
+         {explorerGroups.projects.map((project) => (
+          <SubToolboxInnerActionButton
+           key={project.name}
+           label={`${project.name} · ${project.count}`}
+           iconName="collection"
+           tone={explorerProject === project.name ? "pink" : "cyan"}
+           onClick={() => { setActiveCollectionId(null); setExplorerProject(project.name) }}
+          />
+         ))}
+         {brandKit ? (
+          <SubToolboxInnerActionButton
+           label={`Brand Kit · ${brandKit.assetIds.length}`}
+           iconName="sparkles"
+           tone={activeCollectionId === brandKit.id ? "pink" : "yellow"}
+           onClick={() => setActiveCollectionId(brandKit.id)}
+          />
+         ) : null}
+         {manualCollections.filter((collection) => collection.id !== brandKit?.id).map((collection) => (
+          <SubToolboxInnerActionButton
+           key={collection.id}
+           label={`${collection.name} · ${collection.assetIds.length}`}
+           iconName="collection"
+           tone={activeCollectionId === collection.id ? "pink" : "cyan"}
+           onClick={() => setActiveCollectionId(collection.id)}
+          />
+         ))}
+         {smartCollections.map((collection) => (
+          <SubToolboxInnerActionButton
+           key={collection.id}
+           label={collection.name}
+           iconName="collection"
+           tone="cyan"
+           onClick={() => applySmartCollection(collection)}
+          />
          ))}
         </div>
-       </div>
-      </SubToolbox>
+       </section>
+      ) : null}
+
+      {libraryFiltersOpen ? (
+       <section aria-label="Vault filters" className="rounded-lg border-[3px] border-current p-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+         <SubToolboxDropdownControl
+          label="Asset kind"
+          value={filterKind}
+          onChange={(value) => setFilterKind(value as "all" | VaultAssetKind)}
+          options={["all", "image", "video", "audio", "document", "font", "template", "generated", "other"]}
+         />
+         <SubToolboxDropdownControl
+          label="Source"
+          value={source}
+          onChange={(value) => setSource(value as typeof source)}
+          options={["all", "local", "drive", "generated", "project", "imported"]}
+         />
+         <SubToolboxDropdownControl
+          label="Lifecycle"
+          value={filterLifecycle}
+          onChange={setFilterLifecycle}
+          options={["all", "DRAFT", "CANDIDATE", "APPROVED", "FINAL", "GOLDEN", "SUPERSEDED", "ARCHIVED", "TRASHED"]}
+         />
+         <SubToolboxDropdownControl
+          label="Orientation"
+          value={filterOrientation}
+          onChange={(value) => setFilterOrientation(value as typeof filterOrientation)}
+          options={["all", "landscape", "portrait", "square"]}
+         />
+        </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+         <SubToolboxInnerActionButton
+          label={selectedTag ? `Clear Tag: ${selectedTag}` : "All Spectrum Tags"}
+          iconName="tag"
+          tone="cyan"
+          onClick={() => setSelectedTag(null)}
+         />
+         <SubToolboxInnerActionButton
+          label="Clear Metadata Filters"
+          iconName="x"
+          tone="cyan"
+          onClick={() => {
+           setFilterLifecycle("all"); setFilterOrientation("all"); setFilterUpdatedFrom(""); setFilterUpdatedTo("");
+           setFilterMimeType(""); setFilterMinWidth(""); setFilterMinHeight(""); setFilterMinDuration("");
+           setFilterMaxDuration(""); setFilterMinBytesMb(""); setFilterMaxBytesMb("")
+          }}
+         />
+        </div>
+        <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+         <StandardInput
+          value={smartCollectionName}
+          onChange={(event) => setSmartCollectionName(event.target.value)}
+          placeholder="Name current smart filter"
+          aria-label="Smart collection name"
+         />
+         <SubToolboxInnerActionButton
+          label="Save Smart Collection"
+          iconName="collection"
+          tone="green"
+          onClick={saveSmartCollection}
+          disabled={!smartCollectionName.trim()}
+         />
+        </div>
+       </section>
+      ) : null}
 
       <SubToolbox
        style={moduleStyle("workspace-notes" as VaultWorkspaceModuleId)}
