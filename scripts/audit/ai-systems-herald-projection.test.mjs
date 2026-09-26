@@ -174,3 +174,38 @@ test("builds one read-only work projection from Herald threads and ledger entrie
   assert.equal(projection.claims[0].threadId, "a");
   assert.equal(projection.receipts[0].threadId, "a");
 });
+
+
+test("projects the live holder/acquired/paths writer-lock shape", () => {
+  const claim = projectHeraldThreadClaim({
+    threadId: "live-lock-shape",
+    stage: "VERIFY",
+    canonicalOwners: ["Brain Runtime", "Prompt System"],
+    writerLock: {
+      holder: "chatgpt",
+      acquired: "2026-09-24T12:00:00Z",
+      paths: ["src/services/brain/**", "docs/brain/**"],
+    },
+  }, {
+    observedMainSha: MAIN_SHA,
+    sourcePath: ".viewtube/herald/threads/live-lock-shape.json",
+  });
+
+  assert.equal(claim.agent, "chatgpt");
+  assert.equal(claim.startedAt, "2026-09-24T12:00:00Z");
+  assert.deepEqual(claim.canonicalOwners, ["Brain Runtime", "Prompt System"]);
+  assert.deepEqual(claim.writerPaths, ["src/services/brain/**", "docs/brain/**"]);
+});
+
+test("projects owners arrays used by current Herald thread files", () => {
+  const claim = projectHeraldThreadClaim({
+    threadId: "owners-array",
+    status: "partial",
+    owners: ["AlgorithmIntelligenceAccess", "BrainHubWidget"],
+  }, {
+    observedMainSha: MAIN_SHA,
+    sourcePath: ".viewtube/herald/threads/owners-array.json",
+  });
+
+  assert.deepEqual(claim.canonicalOwners, ["AlgorithmIntelligenceAccess", "BrainHubWidget"]);
+});
