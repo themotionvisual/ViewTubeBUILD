@@ -78,44 +78,46 @@ const resolveVideoOptionMeta = (option:WidgetVideoSelectOption) => {
 export const WidgetVideoSelect:React.FC<{value:string;onChange:(value:string)=>void;options:WidgetVideoSelectOption[];label:string;placeholder?:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;iconStyle?:WidgetSplitIconStyle;searchable?:boolean;disabled?:boolean;className?:string}> = ({value,onChange,options,label,placeholder="Select a video…",height=38,tone="default",iconStyle="white-on-color",searchable=true,disabled=false,className=""}) => {
  const[open,setOpen]=useState(false)
  const[query,setQuery]=useState("")
- const[menuGeometry,setMenuGeometry]=useState<{left:number;top:number;width:number;maxHeight:number;placement:"down"|"up";theme:Record<string,string>}>({left:0,top:0,width:0,maxHeight:320,placement:"down",theme:{}})
+ const[menuRect,setMenuRect]=useState<{left:number;top:number;width:number;maxHeight:number}|null>(null)
+ const[menuSide,setMenuSide]=useState<"top"|"bottom">("bottom")
  const triggerRef=useRef<HTMLButtonElement|null>(null)
  const selected=options.find(o=>o.value===value)
  const visibleOptions=useMemo(()=>{const n=query.trim().toLowerCase();return n?options.filter(o=>`${o.label} ${o.meta||""} ${o.duration||""} ${o.views||""}`.toLowerCase().includes(n)):options},[options,query])
 
  useLayoutEffect(()=>{
-  if(!open||!triggerRef.current||typeof window==="undefined")return
+  if(!open) return
   const sync=()=>{
    const trigger=triggerRef.current
-   if(!trigger)return
+   if(!trigger) return
    const rect=trigger.getBoundingClientRect()
-   const rows=Math.min(5,Math.max(1,visibleOptions.length))+(searchable?1:0)
-   const desired=Math.min(window.innerHeight*.7,Math.max(height*rows+8,height*3))
-   const below=Math.max(0,window.innerHeight-rect.bottom-8)
-   const above=Math.max(0,rect.top-8)
-   const placement: "down"|"up" = below<Math.min(desired,height*4)&&above>below?"up":"down"
-   const maxHeight=Math.max(height*2,Math.min(desired,placement==="up"?above:below))
-   const top=placement==="up"?Math.max(8,rect.top-maxHeight-4):Math.min(window.innerHeight-maxHeight-8,rect.bottom+4)
-   const styles=window.getComputedStyle(trigger)
-   const theme:Record<string,string>={}
-   for(const name of ["--widget-color","--widget-border","--widget-ink","--vt-tone-bg","--vt-tone-ink","--vt-tone-stroke","--vt-tone-fill"]){
-    const value=styles.getPropertyValue(name).trim()
-    if(value)theme[name]=value
-   }
-   setMenuGeometry({left:Math.max(8,Math.min(rect.left,window.innerWidth-rect.width-8)),top,width:rect.width,maxHeight,placement,theme})
+   const gap=4
+   const preferred=Math.min(340, Math.max(height*3, window.innerHeight*.52))
+   const below=Math.max(0, window.innerHeight-rect.bottom-gap-8)
+   const above=Math.max(0, rect.top-gap-8)
+   const side: "top"|"bottom" = below>=Math.min(preferred,180) || below>=above ? "bottom" : "top"
+   const available=side==="bottom"?below:above
+   const maxHeight=Math.max(height*2, Math.min(preferred,available))
+   setMenuSide(side)
+   setMenuRect({
+    left:Math.max(8,Math.min(rect.left,window.innerWidth-rect.width-8)),
+    top:side==="bottom"?rect.bottom+gap:Math.max(8,rect.top-gap-maxHeight),
+    width:Math.min(rect.width,window.innerWidth-16),
+    maxHeight,
+   })
   }
   sync()
   window.addEventListener("resize",sync)
   window.addEventListener("scroll",sync,true)
   return()=>{window.removeEventListener("resize",sync);window.removeEventListener("scroll",sync,true)}
- },[height,open,searchable,visibleOptions.length])
+ },[open,height])
 
- const menu = open && typeof document!=="undefined" ? createPortal(
+ const menu=open && menuRect && typeof document!=="undefined" ? createPortal(
   <div
-   className={`widget-video-select-menu is-portalled is-drop-${menuGeometry.placement} ${selectMenuClass(height,tone)}`}
-   style={{...selectMenuStyle(height),...menuGeometry.theme,left:`${menuGeometry.left}px`,top:`${menuGeometry.top}px`,width:`${menuGeometry.width}px`,maxHeight:`${menuGeometry.maxHeight}px`} as React.CSSProperties}
+   className={`widget-video-select-menu widget-video-select-menu--portal ${selectMenuClass(height,tone)}`}
+   style={{...selectMenuStyle(height),left:`${menuRect.left}px`,top:`${menuRect.top}px`,width:`${menuRect.width}px`,maxHeight:`${menuRect.maxHeight}px`}}
    role="listbox"
    aria-label={label}
+   data-side={menuSide}
   >
    {searchable?<div className="widget-video-select-search"><WidgetSearchInput className="widget-video-select-menu-search-row" height={height} tone="primary" iconStyle={iconStyle} label={`Search ${label}`} value={query} onChange={e=>setQuery(e.currentTarget.value)} placeholder="Search videos…"/></div>:null}
    <div className="widget-video-select-options">
@@ -135,14 +137,13 @@ export const WidgetVideoSelect:React.FC<{value:string;onChange:(value:string)=>v
  ) : null
 
  return <div className={`widget-video-select ${open?"is-open":""} ${className}`.trim()}>
-  <button ref={triggerRef} type="button" className={`widget-video-select-trigger vt-interactive ${primitiveClass(height,tone)} is-icon-${iconStyle}`} aria-label={label} aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={()=>setOpen(current=>!current)}>
+  <button ref={triggerRef} type="button" className={`widget-video-select-trigger vt-interactive ${primitiveClass(height,tone)} is-icon-${iconStyle}`} aria-label={label} aria-haspopup="listbox" aria-expanded={open} disabled={disabled} onClick={()=>setOpen(c=>!c)}>
    <span className="widget-video-select-trigger-selector" aria-hidden="true"><span>VIDEO</span><span>{open?<ChevronUp/>:<ChevronDown/>}</span></span>
    <span className="widget-video-select-trigger-copy">{selected?.thumbnail?<img src={selected.thumbnail} alt=""/>:null}<span>{selected?.label||placeholder}</span></span>
   </button>
   {menu}
  </div>
 }
-
 export const WidgetProgressBar:React.FC<{value:number;max?:number;label?:React.ReactNode;displayValue?:React.ReactNode;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone;className?:string;style?:React.CSSProperties}> = ({value,max=100,label,displayValue,height=24,tone="default",className="",style}) => {const percentage=Math.max(0,Math.min(100,max>0?(value/max)*100:0));return <div className={`widget-progress-bar ${primitiveClass(height,tone)} ${className}`.trim()} style={{...style,["--widget-progress" as string]:`${percentage}%`}} role="progressbar" aria-valuemin={0} aria-valuemax={max} aria-valuenow={Math.max(0,Math.min(max,value))}><span className="widget-progress-bar-fill" aria-hidden="true"/><span className="widget-progress-bar-copy"><span>{label}</span><strong>{displayValue??`${Math.round(percentage)}%`}</strong></span></div>}
 
 export const WidgetIconButton:React.FC<Omit<React.ButtonHTMLAttributes<HTMLButtonElement>,"children">&{icon:React.ReactNode;label:string;height?:WidgetControlHeight;tone?:WidgetPrimitiveTone}> = ({icon,label,height=32,tone="default",className="",type="button",...props}) => <button type={type} aria-label={label} title={label} className={`widget-icon-button vt-shape-square vt-interactive ${primitiveClass(height,tone)} ${className}`.trim()} {...props}><span className="widget-icon-button-glyph" aria-hidden="true">{icon}</span></button>
