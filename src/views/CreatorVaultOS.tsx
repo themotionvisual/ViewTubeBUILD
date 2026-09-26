@@ -1833,6 +1833,17 @@ const CreatorVaultOS: React.FC = () => {
           options={["all", "landscape", "portrait", "square"]}
          />
         </div>
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+         <StandardInput value={filterMimeType} onChange={(event) => setFilterMimeType(event.target.value)} placeholder="MIME type" aria-label="Vault MIME type filter" />
+         <StandardInput type="date" value={filterUpdatedFrom} onChange={(event) => setFilterUpdatedFrom(event.target.value)} aria-label="Vault updated from filter" />
+         <StandardInput type="date" value={filterUpdatedTo} onChange={(event) => setFilterUpdatedTo(event.target.value)} aria-label="Vault updated to filter" />
+         <StandardInput type="number" min="0" value={filterMinWidth} onChange={(event) => setFilterMinWidth(event.target.value)} placeholder="Min width" aria-label="Vault minimum width filter" />
+         <StandardInput type="number" min="0" value={filterMinHeight} onChange={(event) => setFilterMinHeight(event.target.value)} placeholder="Min height" aria-label="Vault minimum height filter" />
+         <StandardInput type="number" min="0" step="0.1" value={filterMinDuration} onChange={(event) => setFilterMinDuration(event.target.value)} placeholder="Min duration (s)" aria-label="Vault minimum duration filter" />
+         <StandardInput type="number" min="0" step="0.1" value={filterMaxDuration} onChange={(event) => setFilterMaxDuration(event.target.value)} placeholder="Max duration (s)" aria-label="Vault maximum duration filter" />
+         <StandardInput type="number" min="0" step="0.1" value={filterMinBytesMb} onChange={(event) => setFilterMinBytesMb(event.target.value)} placeholder="Min size (MB)" aria-label="Vault minimum size filter" />
+         <StandardInput type="number" min="0" step="0.1" value={filterMaxBytesMb} onChange={(event) => setFilterMaxBytesMb(event.target.value)} placeholder="Max size (MB)" aria-label="Vault maximum size filter" />
+        </div>
         <div className="mt-2 flex flex-wrap gap-2">
          <SubToolboxInnerActionButton
           label={selectedTag ? `Clear Tag: ${selectedTag}` : "All Spectrum Tags"}
