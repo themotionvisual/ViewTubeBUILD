@@ -231,6 +231,26 @@
         "docs/architecture/YOUTUBE_AUTH_API_SIMPLIFICATION_PLAN.md"
       ],
       "relatedAuthorities": []
+    },
+    {
+      "id": "DOC-REF-DEEP-RESEARCH-CONSTRUCTION",
+      "path": "docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md",
+      "class": "REFERENCE",
+      "status": "ACTIVE",
+      "concern": "deep-research-construction-master-source",
+      "owner": "Product Architecture",
+      "productionDate": "2026-09-26",
+      "lastEdited": "2026-09-26",
+      "lastAuditedMainSha": null,
+      "sourceTier": "MASTER_SOURCE",
+      "sourceHashSha256": "24a048e54a068eb6a6e48996466a0c94247e19ca25543661fbdd3b852593f1f6",
+      "authorityBoundary": "Privileged strategic prior art; requires promotion into canonical authorities/tasks/capabilities and current verification before implementation claims.",
+      "supersedes": [],
+      "relatedAuthorities": [
+        "docs/architecture/PRODUCT_ARCHITECTURE.md",
+        "docs/programs/INTEGRATED_APPLICATION.md",
+        "docs/governance/DOCUMENTATION.md"
+      ]
     }
   ],
   "legacyGlobalSources": [
