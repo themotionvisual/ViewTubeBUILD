@@ -1,8 +1,11 @@
 # Prompt and Model Governance
 
 Primary authority:
-- `docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md`
-- `docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json`
+- `docs/specifications/PROMPTS.md`
+- `docs/specifications/prompt-registry.json`
+- `docs/domains/BRAIN.md`
+
+Historical modernization donor:
 - `docs/brain/VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md`
 
 ## Management rules
