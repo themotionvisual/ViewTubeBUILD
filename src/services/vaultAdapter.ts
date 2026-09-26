@@ -1,5 +1,16 @@
 import type { GenerationArtifact, SuperToolId, VaultAsset, VaultAssetKind } from "@/types"
 import { nexusSyncService } from "./nexusSyncService"
+import { getVaultAttentionReasons } from "./vaultAttention"
+
+export type VaultAssetLifecycle =
+ | "DRAFT"
+ | "CANDIDATE"
+ | "APPROVED"
+ | "FINAL"
+ | "GOLDEN"
+ | "SUPERSEDED"
+ | "ARCHIVED"
+ | "TRASHED"
 
 const VAULT_STORAGE_KEY = "vt_creator_vault_assets_v1"
 
@@ -418,17 +429,3 @@ export const setVaultAssetAttention = (
  flagged: boolean,
  note = "",
 ): VaultAsset | null => {
- const existing = readAssets().find((asset) => asset.id === id)
- if (!existing) return null
- const metadata = { ...(existing.metadata || {}) }
- if (flagged) {
-  metadata.needsAttention = true
-  const trimmed = note.trim()
-  if (trimmed) metadata.attentionNote = trimmed
-  else delete metadata.attentionNote
- } else {
-  delete metadata.needsAttention
-  delete metadata.attentionNote
- }
- return updateVaultAsset(id, { metadata })
-}
