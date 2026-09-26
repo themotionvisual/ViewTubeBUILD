@@ -366,4 +366,24 @@ describe("subtoolbox design governance", () => {
   expect(splitCss).toContain("--vt-kpi-accent: var(--pair-a")
   expect(splitCss).toContain("--vt-kpi-rail: var(--pair-b")
  })
+
+ it("protects mobile toolbox titles and keeps stacked publisher modules intrinsic", () => {
+  const toolbox = source("src/components/Toolbox.tsx")
+  const toolboxCss = source("src/styles/toolbox-system.css")
+  const systemCss = source("src/styles/subtoolbox-system.css")
+  const publisher = source("src/views/VideoPublisher.tsx")
+
+  expect(toolbox).toContain("vt-toolbox-header-title-slot")
+  expect(toolboxCss).toContain("--vt-toolbox-title-protected-width")
+  expect(toolboxCss).toContain(".vt-toolbox-header-title-slot")
+  expect(systemCss).toContain("MOBILE HEADER ALLOCATION CONTRACT")
+  expect(systemCss).toContain("min-width:44px!important")
+
+  expect(publisher).toContain("ToolboxHeaderToggle")
+  expect(publisher).not.toContain('w-[210px]')
+  expect(publisher).not.toContain('shellClassName="h-full"')
+  expect(publisher).not.toContain('contentClassName="h-full"')
+  expect(publisher).not.toContain("minHeight={220}")
+ })
+
 })
