@@ -201,8 +201,13 @@
   white-space: nowrap;
 }
 
-/* ── Split-left search bar ──────────────────────────────────── */
-.widget-search-input { background: #fff; }
+/* ── Split-left search bar ────────────────────────────────────
+   Default/primary search editing surfaces use the same Community Post field
+   state contract as canonical text inputs and textareas. */
+.widget-search-input:not(.is-tone-secondary) {
+  border-color: var(--widget-field-rest-stroke, color-mix(in srgb, var(--widget-color, #34cdea) 52%, white));
+  background: #fff;
+}
 .widget-search-input > input {
   flex: 0 1 auto;
   width: 9ch;
@@ -211,6 +216,7 @@
   padding: 0 0.6em;
   background: transparent;
   color: var(--vt-tone-ink, var(--widget-ink, #243247));
+  caret-color: var(--widget-color, #34cdea);
   font: inherit;
   font-weight: 700;
   outline: none;
@@ -224,9 +230,12 @@
   opacity: .12;
 }
 .widget-search-input > input::-webkit-search-cancel-button { cursor: pointer; }
-.widget-search-input:focus-within {
-  border-color: var(--widget-color, #34cdea);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--widget-color, #34cdea) 30%, transparent);
+.widget-search-input:not(.is-tone-secondary):focus-within {
+  border-color: var(--widget-field-focus-border);
+  background: var(--widget-field-focus-fill);
+  box-shadow:
+    0 0 0 3px var(--widget-field-focus-ring),
+    0 0 16px 2px var(--widget-field-focus-glow);
 }
 
 /* ── Live badge ─────────────────────────────────────────────── */
