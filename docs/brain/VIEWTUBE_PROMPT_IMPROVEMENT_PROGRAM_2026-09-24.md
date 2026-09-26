@@ -1,3 +1,5 @@
+> **PHASE D MIGRATION NOTICE — 2026-09-26:** This is now an execution/donor source, not a prompt authority or canonical work ledger. Durable prompt rules live in `docs/specifications/PROMPTS.md`; exact unfinished migration/evaluation work must be reconciled into the Integrated Application Program / Task Index. The original program remains intact below for provenance.
+
 # ViewTube Prompt Improvement Program — 2026-09-24
 
 ## Goal
