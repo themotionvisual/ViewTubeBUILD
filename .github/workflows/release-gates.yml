@@ -39,6 +39,7 @@ jobs:
       - run: npm run check:privacy-src
       - run: npm run test:ai-systems-governance
       - run: npm run test:ai-systems-herald
+      - run: npm run test:brain-runtime-snapshot
       - run: npm run audit:ai-systems
 
   focused_contracts:
