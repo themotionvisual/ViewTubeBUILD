@@ -40,10 +40,22 @@ const normalizeThreadStatus = (thread) => {
 };
 
 const ownersFor = (thread) => {
-  if (Array.isArray(thread?.currentOwners) && thread.currentOwners.length) {
-    return thread.currentOwners.filter(Boolean);
+  for (const value of [thread?.currentOwners, thread?.canonicalOwners, thread?.owners]) {
+    if (Array.isArray(value) && value.length) return value.filter(Boolean);
   }
   return thread?.owner ? [thread.owner] : [];
+};
+
+const writerLockInfo = (writerLock) => {
+  if (!writerLock) return { agent: null, startedAt: null, paths: [] };
+  if (typeof writerLock === "string") {
+    return { agent: null, startedAt: null, paths: [writerLock] };
+  }
+  return {
+    agent: writerLock.owner || writerLock.holder || writerLock.agent || null,
+    startedAt: writerLock.acquiredAt || writerLock.acquired || writerLock.startedAt || null,
+    paths: Array.isArray(writerLock.paths) ? writerLock.paths.filter(Boolean) : [],
+  };
 };
 
 export const projectHeraldThreadClaim = (thread, context) => {
@@ -51,19 +63,22 @@ export const projectHeraldThreadClaim = (thread, context) => {
   const status = normalizeThreadStatus(thread);
   if (!status) return null;
 
-  return {
+  const lock = writerLockInfo(thread.writerLock);
+  const claim = {
     taskId: `herald:${thread.threadId}`,
     threadId: thread.threadId,
     status,
-    agent: thread.writerLock?.owner || thread.lastApp || "herald",
+    agent: lock.agent || thread.lastApp || "herald",
     canonicalOwners: ownersFor(thread),
     observedMainSha: context?.observedMainSha || null,
     branch: thread.branch || null,
     sourcePath: context?.sourcePath || null,
     nextCheckpoint: thread.nextAction || null,
-    startedAt: thread.writerLock?.acquiredAt || null,
+    startedAt: lock.startedAt,
     evidenceState: "CLAIMED",
   };
+  if (lock.paths.length) claim.writerPaths = lock.paths;
+  return claim;
 };
 
 const normalizeReceiptStatus = (status) => {
