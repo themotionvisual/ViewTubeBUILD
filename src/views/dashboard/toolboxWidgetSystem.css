@@ -121,7 +121,7 @@
   text-transform: uppercase;
   letter-spacing: -0.04em;
   color: color-mix(in srgb, var(--widget-color, #000) 60%, black);
-  line-height: 0.9;
+  line-height: 1;
   font-size: var(--widget-type-title);
   padding-left: 10px;
   pointer-events: none;
@@ -1207,7 +1207,7 @@
     padding-left: 7px;
     padding-right: 4px;
     font-size: var(--widget-type-title) !important;
-    line-height: .9;
+    line-height: 1;
     white-space: normal !important;
     overflow: hidden;
     text-overflow: clip !important;
