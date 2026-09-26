@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { WidgetFooter, WidgetHeaderStepper, WidgetHeaderToggle, WidgetScrollArea, WidgetSplitButton, WidgetTooltip } from "../WidgetPrimitives"
+import { WidgetFooter, WidgetHeaderStepper, WidgetHeaderToggle, WidgetScrollArea, WidgetSplitButton, WidgetSplitCounterBadge, WidgetTooltip } from "../WidgetPrimitives"
 import {
   MessageSquare,
   Sparkles,
@@ -331,7 +331,8 @@ export const CommentReplyWidget = ({
           disabled={loading || isGenerating[currentThread.id]}
           icon={<Link2 />}
           tone="neutral"
-          width="full">
+          width="full"
+          multiline>
           Suggest video
         </WidgetSplitButton>
         <WidgetSplitButton
@@ -441,20 +442,20 @@ export const CommentReplyWidget = ({
                             </span>
                           </div>
                           <div className="comment-responder-reaction-row">
-                            <WidgetSplitButton
+                            <WidgetSplitCounterBadge
                               className="comment-responder-reaction-badge comment-responder-like-action"
-                              icon={<ThumbsUp fill={likeCountNumber === 0 ? "#fff" : "#FFE357"} />}
-                              size="compact"
-                              width="auto">
-                              {likeCount}
-                            </WidgetSplitButton>
-                            <WidgetSplitButton
+                              icon={<ThumbsUp />}
+                              value={likeCount}
+                              label={`${likeCount} likes`}
+                              height={24}
+                            />
+                            <WidgetSplitCounterBadge
                               className="comment-responder-reaction-badge comment-responder-reply-action"
                               icon={<MessagesSquare />}
-                              size="compact"
-                              width="auto">
-                              {replyCount}
-                            </WidgetSplitButton>
+                              value={replyCount}
+                              label={`${replyCount} replies`}
+                              height={24}
+                            />
                             <WidgetTooltip className="comment-responder-open-tooltip" content="Go to this comment on YouTube">
                               <a className="widget-split-button is-compact is-auto comment-responder-reaction-badge comment-responder-open-action" aria-label="Go to comment on YouTube" href={`https://www.youtube.com/watch?v=${videoId}&lc=${thread.snippet.topLevelComment.id}`} target="_blank" rel="noreferrer">
                                 <span className="widget-split-button-icon"><ExternalLink size={14} /></span>
