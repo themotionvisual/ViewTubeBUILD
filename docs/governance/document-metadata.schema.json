@@ -108,6 +108,30 @@
         "string",
         "null"
       ]
+    },
+    "sourceTier": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "MASTER_SOURCE",
+        "STANDARD",
+        null
+      ]
+    },
+    "sourceHashSha256": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "authorityBoundary": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
   "additionalProperties": true
