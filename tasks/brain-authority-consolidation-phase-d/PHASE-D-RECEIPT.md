@@ -99,3 +99,26 @@ The newer main changes relevant by filename were Vault/Publisher UI files only; 
 - Legacy Herald compatibility readers/scripts still need replacement or retirement.
 - Physical Removed Archive moves for the dated Brain/Prompt authorities remain pending until this PR is verified.
 - Prompt/runtime implementation migration (legacy direct provider/generator paths) remains application work, not documentation work.
+
+
+## CI gate classification
+
+GitHub Actions release-gate run `36277630030` was inspected job-by-job and by failing log.
+
+Passed:
+- production-build;
+- source-governance;
+- focused-contracts;
+- local-smoke.
+
+Failed but not introduced by Phase D:
+- `static-quality` fails in `npm run typecheck` at `src/views/dashboard/__tests__/WidgetPrimitives.test.tsx:733` with an invalid-character/parser error. That Dashboard test is part of the newer current-main work and is not modified by this Phase D diff.
+- `full-suite` fails in untouched application tests including BrainHub migration assertions and mobile/widget contract assertions. Phase D changes documentation, skills, task plans and machine registries only; it does not modify the failing runtime/test source files.
+
+External deployment status:
+- Vercel checks report build-rate-limit/plan-limit failures; GitHub's production-build job itself passed.
+
+Disposition:
+- classify static-quality/full-suite failures as inherited current-main application debt for this documentation/governance PR;
+- classify Vercel failures as external deployment-account constraints;
+- do not attribute these failures to the Brain/Prompt authority consolidation.
