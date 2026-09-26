@@ -149,7 +149,6 @@ Implemented on the branch:
 - corrected Herald sync-script contradiction.
 
 Not yet complete:
-- capabilities registry;
 - live Herald claim ingestion into `audit:ai-systems`;
 - collision/stale-claim enforcement from real thread state;
 - provenance projector over BrainTrace/ToolReceipt/ContentBuild/Vault/outcomes;
