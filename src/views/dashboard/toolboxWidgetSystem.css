@@ -3256,11 +3256,10 @@ stroke-width: 2px;
   width: 100%;
   height: 100%;
   min-height: 0;
-  /* Was 1.5px which rendered as an anemic hairline; use the standard
-     widget module stroke so it reads as a proper Neo-Brutalist border. */
-  border: var(--widget-module-stroke, 2px) dashed var(--widget-border);
+  border: 3px solid var(--widget-border, var(--vt-ink));
   border-radius: var(--widget-control-radius);
-  background: color-mix(in srgb, var(--widget-color) 8%, #fff);
+  background: color-mix(in srgb, var(--widget-color) 10%, #fff);
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--widget-color) 42%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
