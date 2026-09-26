@@ -2652,7 +2652,10 @@
   overflow:hidden;
   white-space:normal;
   text-overflow:clip;
-  overflow-wrap:anywhere;
+  overflow-wrap:normal;
+  word-break:normal;
+  hyphens:none;
+  text-wrap:balance;
   text-transform:uppercase;
   letter-spacing:-.055em;
 }
