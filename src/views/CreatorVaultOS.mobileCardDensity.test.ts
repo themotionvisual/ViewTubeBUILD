@@ -10,6 +10,19 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).toContain("SELECT TO EDIT DETAILS")
  })
 
+ it("promotes library navigation and search into one compact toolbar", () => {
+  expect(source).toContain('aria-label="Vault library toolbar"')
+  expect(source).toContain('"aria-label": "Search Vault assets"')
+  expect(source).toContain('aria-label="Open library navigation"')
+  expect(source).toContain('aria-label="Open Vault filters"')
+  expect(source).not.toContain('title="Navigator"')
+ })
+
+ it("moves project and collection navigation into a contextual library drawer", () => {
+  expect(source).toContain('aria-label="Vault library navigation"')
+  expect(source).not.toContain('title="Explorer"')
+ })
+
  it("keeps workspace configuration off the default scrolling surface", () => {
   expect(source).toContain('aria-label="Open workspace layout settings"')
   expect(source).toContain('role="dialog"')
