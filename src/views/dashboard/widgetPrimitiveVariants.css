@@ -909,7 +909,7 @@
 /* ── Final video-select menu ownership ────────────────────────
    Keep this in the canonical variants layer so the open menu cannot regress
    back to the older padded "module inside a menu" construction. */
-.widget-video-select.is-open > .widget-video-select-menu {
+.widget-video-select-menu.is-portalled {
   box-sizing: border-box;
   display: grid;
   grid-template-rows: auto minmax(0, auto);
@@ -925,7 +925,7 @@
   overflow: hidden;
 }
 
-.widget-video-select.is-open > .widget-video-select-menu > .widget-video-select-search {
+.widget-video-select-menu.is-portalled > .widget-video-select-search {
   position: sticky;
   top: 0;
   z-index: 2;
@@ -939,7 +939,7 @@
   background: var(--vt-tone-bg, #fff);
 }
 
-.widget-video-select.is-open .widget-video-select-menu-search-row {
+.widget-video-select-menu.is-portalled .widget-video-select-menu-search-row {
   box-sizing: border-box;
   width: 100%;
   min-width: 100%;
@@ -951,25 +951,25 @@
   box-shadow: none;
   background: color-mix(in srgb, var(--widget-color, #34cdea) 12%, #fff);
 }
-.widget-video-select.is-open .widget-video-select-menu-search-row:focus-within {
+.widget-video-select-menu.is-portalled .widget-video-select-menu-search-row:focus-within {
   border: 0;
   border-radius: 0;
   box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--widget-color, #34cdea) 62%, transparent);
 }
-.widget-video-select.is-open .widget-video-select-menu-search-row .widget-search-input-icon {
+.widget-video-select-menu.is-portalled .widget-video-select-menu-search-row .widget-search-input-icon {
   align-self: stretch;
   height: var(--vt-primitive-height, 38px);
   border-block: 0;
   border-inline-start: 0;
 }
-.widget-video-select.is-open .widget-video-select-menu-search-row > input {
+.widget-video-select-menu.is-portalled .widget-video-select-menu-search-row > input {
   flex: 1 1 auto;
   width: auto;
   min-width: 0;
   height: var(--vt-primitive-height, 38px);
 }
 
-.widget-video-select.is-open > .widget-video-select-menu > .widget-video-select-options {
+.widget-video-select-menu.is-portalled > .widget-video-select-options {
   box-sizing: border-box;
   display: grid;
   width: 100%;
@@ -981,7 +981,7 @@
   overflow-x: hidden;
 }
 
-.widget-video-select.is-open .widget-video-select-option {
+.widget-video-select-menu.is-portalled .widget-video-select-option {
   box-sizing: border-box;
   width: 100%;
   min-width: 100%;
@@ -993,17 +993,17 @@
 
 /* Open-menu thumbnails are full-height media bays; only the right
    structural divider uses VT ink so the image does not read like an inset card. */
-.widget-video-select.is-open .widget-video-select-option-media {
+.widget-video-select-menu.is-portalled .widget-video-select-option-media {
   border-inline-end: 1.5px solid var(--vt-tone-ink, var(--widget-ink, var(--widget-border, #243247)));
 }
-.widget-video-select.is-open .widget-video-select-option img {
+.widget-video-select-menu.is-portalled .widget-video-select-option img {
   border: 0;
 }
 
 /* Time remains unboxed white-ish copy over the image, inset exactly 2px from
    the right and 0px from the bottom — one pixel up and one pixel left from
    the previous placement. */
-.widget-video-select.is-open .widget-video-select-duration {
+.widget-video-select-menu.is-portalled .widget-video-select-duration {
   right: 2px;
   bottom: 0;
   padding: 0;
