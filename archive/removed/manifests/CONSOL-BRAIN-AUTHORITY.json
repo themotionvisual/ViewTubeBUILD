@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "familyId": "CONSOL-BRAIN-AUTHORITY",
+  "title": "Brain, AI Systems Management, and Prompt Authority Consolidation",
+  "created": "2026-09-26",
+  "target": "docs/domains/BRAIN.md + docs/specifications/PROMPTS.md",
+  "sources": [
+    {
+      "path": "docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md",
+      "hash": "git-blob:5249836cad37135d74d20d1ceafe209d1fa2f913",
+      "classification": "management/orientation authority",
+      "sourceCommit": "82460536651d1de368e09a2fb685a335cd27f312",
+      "sourcePr": null,
+      "archivedPath": null
+    },
+    {
+      "path": "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md",
+      "hash": "git-blob:2c34b47155613b58c26bedb599f1fb9f04fbcbd6",
+      "classification": "runtime architecture authority",
+      "sourceCommit": "82460536651d1de368e09a2fb685a335cd27f312",
+      "sourcePr": null,
+      "archivedPath": null
+    },
+    {
+      "path": "docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md",
+      "hash": "git-blob:b215e46d7e2ea95b48d11cf3b680b7a8c4978f83",
+      "classification": "prompt architecture authority",
+      "sourceCommit": "82460536651d1de368e09a2fb685a335cd27f312",
+      "sourcePr": null,
+      "archivedPath": null
+    },
+    {
+      "path": "docs/brain/VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM_2026-09-24.md",
+      "hash": "git-blob:dac5e371c36fd53a38ba4855eacd13a546c9f578",
+      "classification": "prompt modernization execution plan",
+      "sourceCommit": "82460536651d1de368e09a2fb685a335cd27f312",
+      "sourcePr": null,
+      "archivedPath": null
+    },
+    {
+      "path": "docs/brain/VIEWTUBE_PROMPT_REGISTRY_2026-09-24.json",
+      "hash": "git-blob:eebbd3e9d44b2463bee9e29ecd7d94fb4fbcf880",
+      "classification": "prompt inventory",
+      "sourceCommit": "82460536651d1de368e09a2fb685a335cd27f312",
+      "sourcePr": null,
+      "archivedPath": null
+    },
+    {
+      "path": "docs/brain/ai-systems/DOCUMENT_CONSOLIDATION_REGISTER_2026-09-24.md",
+      "hash": "git-blob:a97697aa38be7552f8e2a5f7f32c47cb522bf98b",
+      "classification": "historical consolidation register",
+      "sourceCommit": "82460536651d1de368e09a2fb685a335cd27f312",
+      "sourcePr": null,
+      "archivedPath": null
+    }
+  ],
+  "accounting": [
+    {
+      "source": "VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE",
+      "kind": "TEXT",
+      "summary": "Canonical ownership map, evidence/context rules, handoff/action lifecycle and AI anti-duplication rules",
+      "disposition": "INCORPORATED",
+      "destination": "docs/domains/BRAIN.md"
+    },
+    {
+      "source": "VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE",
+      "kind": "TASK",
+      "summary": "Current work, claims, receipts, status and coordination",
+      "disposition": "SUPERSEDED",
+      "destination": "Conversation OS / Crown / Task Authority / Integrated Application Program"
+    },
+    {
+      "source": "UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT",
+      "kind": "TEXT",
+      "summary": "BrainRuntime, BrainModelGateway, context/evidence/specialist boundaries, runtime path and open architecture seams",
+      "disposition": "INCORPORATED",
+      "destination": "docs/domains/BRAIN.md"
+    },
+    {
+      "source": "VIEWTUBE_PROMPT_SYSTEM_AUTHORITY",
+      "kind": "TEXT",
+      "summary": "Prompt composition, precedence, family taxonomy, provenance, personalization, legacy anti-patterns",
+      "disposition": "INCORPORATED",
+      "destination": "docs/specifications/PROMPTS.md"
+    },
+    {
+      "source": "VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM",
+      "kind": "TEXT",
+      "summary": "Deterministic separation, context recipes, validators, eval harness, migration sequence, learning rules",
+      "disposition": "INCORPORATED",
+      "destination": "docs/specifications/PROMPTS.md"
+    },
+    {
+      "source": "VIEWTUBE_PROMPT_IMPROVEMENT_PROGRAM",
+      "kind": "TASK",
+      "summary": "Exact unfinished migration/evaluation work",
+      "disposition": "TASK_INDEX",
+      "destination": "Integrated Application Program / Task Index reconciliation"
+    },
+    {
+      "source": "VIEWTUBE_PROMPT_REGISTRY",
+      "kind": "JSON",
+      "summary": "Prompt constants, legacy provider helpers, Oracle templates, task profiles, governed strategies and future fields",
+      "disposition": "INCORPORATED",
+      "destination": "docs/specifications/prompt-registry.json"
+    },
+    {
+      "source": "DOCUMENT_CONSOLIDATION_REGISTER",
+      "kind": "REFERENCE",
+      "summary": "Historical AI-document harvest and removal-safety lineage",
+      "disposition": "ARCHIVED_ONLY",
+      "destination": "Removed Archive after final migration"
+    }
+  ],
+  "verification": {
+    "allSourcesArchived": false,
+    "allUniqueMaterialAccounted": true,
+    "inboundReferencesChecked": false,
+    "notes": "Phase D replacement authorities are side-by-side. Exact pre-migration Git blob identities are captured. Active inbound references are being rewired; archive moves remain pending until PR verification.",
+    "sourceIdentitiesCaptured": true
+  }
+}
