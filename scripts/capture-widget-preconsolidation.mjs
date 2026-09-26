@@ -72,7 +72,11 @@ for (const viewport of [
   })
   const page = await context.newPage()
   await page.addInitScript(([key, value]) => {
-    try { localStorage.setItem(key, value) } catch {}
+    try {
+      localStorage.setItem(key, value)
+      localStorage.setItem("viewtube.dashboard.all-ready-widgets-visible.v2", "1")
+      localStorage.setItem("viewtube.dashboard.redesigned-widgets-visible.v1", "1")
+    } catch {}
   }, ["vt_dashboard_layout_v9", SEEDED_LAYOUT])
 
   await page.goto(baseUrl, { waitUntil: "networkidle", timeout: 60000 })
@@ -161,15 +165,44 @@ for (const viewport of [
   ]) {
     const layout = JSON.parse(SEEDED_LAYOUT)
     layout.instances["system-micro-stack"] = { collapsed: false, size: variant.size, height: variant.height }
-    await page.evaluate(([key, value]) => localStorage.setItem(key, value), ["vt_dashboard_layout_v9", JSON.stringify(layout)])
-    await page.reload({ waitUntil: "networkidle", timeout: 60000 })
-    await page.waitForTimeout(1200)
-    const settings = page.locator('[data-widget-id="system-micro-stack"]').first()
+
+    // Use a fresh browsing context so the running Dashboard cannot persist its
+    // previous React state back over the variant fixture during reload.
+    const variantContext = await browser.newContext({
+      viewport: { width: viewport.width, height: viewport.height },
+      isMobile: viewport.mobile,
+      hasTouch: viewport.mobile,
+    })
+    const variantPage = await variantContext.newPage()
+    await variantPage.addInitScript(([key, value]) => {
+      try {
+        localStorage.setItem(key, value)
+        localStorage.setItem("viewtube.dashboard.all-ready-widgets-visible.v2", "1")
+        localStorage.setItem("viewtube.dashboard.redesigned-widgets-visible.v1", "1")
+      } catch {}
+    }, ["vt_dashboard_layout_v9", JSON.stringify(layout)])
+    await variantPage.goto(baseUrl, { waitUntil: "networkidle", timeout: 60000 })
+    await variantPage.waitForTimeout(1500)
+
+    const settings = variantPage.locator('[data-widget-id="system-micro-stack"]').first()
     await settings.scrollIntoViewIfNeeded()
-    await page.waitForTimeout(250)
+    await variantPage.waitForTimeout(250)
+    const resolvedSize = await settings.getAttribute("data-widget-width")
+    const resolvedHeight = await settings.getAttribute("data-widget-height")
+    if (resolvedSize !== variant.size || resolvedHeight !== variant.height) {
+      throw new Error(`${viewport.label} Settings ${variant.label} fixture normalized unexpectedly: requested ${variant.size}/${variant.height}, rendered ${resolvedSize}/${resolvedHeight}`)
+    }
     await settings.screenshot({ path: `${outDir}/${viewport.label}-settings-${variant.label}-${variant.size}-${variant.height}.png` })
     const box = await settings.boundingBox()
-    report.captures.push({ viewport: viewport.label, name: `settings-${variant.label}`, id: "system-micro-stack", box, size: variant.size, height: variant.height })
+    report.captures.push({
+      viewport: viewport.label,
+      name: `settings-${variant.label}`,
+      id: "system-micro-stack",
+      box,
+      size: resolvedSize,
+      height: resolvedHeight,
+    })
+    await variantContext.close()
   }
 
   await context.close()
