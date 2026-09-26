@@ -22,6 +22,7 @@ describe("application menu contract", () => {
     expect(searchApplicationMenuDestinations("thumbnail").map(({ id }) => id)).toEqual(["studio"])
     expect(searchApplicationMenuDestinations("retention").map(({ id }) => id)).toEqual(["analytics", "graphs"])
     expect(searchApplicationMenuDestinations("gemini key").map(({ id }) => id)).toEqual(["ai-integrations"])
+    expect(searchApplicationMenuDestinations("recommendations").map(({ id }) => id)).toEqual(["resources"])
   })
 
   it("returns the grouped inventory for an empty query and no rows for an unknown query", () => {

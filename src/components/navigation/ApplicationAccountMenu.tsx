@@ -74,6 +74,7 @@ const iconById: Record<ApplicationMenuIconId, React.ComponentType<{ "aria-hidden
   integrations: KeyRound,
   crown: Crown,
   guide: BookOpen,
+  resources: BookOpen,
   about: Info,
 }
 
