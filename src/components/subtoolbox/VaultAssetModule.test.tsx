@@ -22,13 +22,11 @@ describe("VaultAssetModule", () => {
           variant={variant}
           title="NAPOLEON_ASSET_01"
           tags={["NAPOLEON", "HISTORY"]}
-          notes="NOTES"
           selected
           previewUrl={kind === "video" ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" : null}
           onSelectedChange={() => undefined}
           onTitleChange={() => undefined}
           onTagsChange={() => undefined}
-          onNotesChange={() => undefined}
         />,
       )
       expect(html).toContain(`data-vt-vault-asset-variant="${variant}"`)
