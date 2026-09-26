@@ -619,16 +619,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  font-size: 9px;
+  color: var(--vt-ink, var(--widget-border));
+  font-size: 12px;
   font-weight: 1000;
   text-transform: uppercase;
   letter-spacing: .04em;
 }
 
 .widget-reference-family-title small {
-  font-size: 8px;
+  color: color-mix(in srgb, var(--widget-color) 58%, var(--vt-ink, var(--widget-border)));
+  font-size: 10px;
   font-weight: 900;
-  opacity: .5;
+  opacity: 1;
 }
 
 
@@ -680,11 +682,12 @@
 }
 
 .widget-reference-variant > small {
-  font-size: 8px;
+  color: color-mix(in srgb, var(--widget-color) 58%, var(--vt-ink, var(--widget-border)));
+  font-size: 10px;
   font-weight: 1000;
   line-height: 1;
   text-transform: uppercase;
-  opacity: .55;
+  opacity: 1;
 }
 
 .widget-reference-variant > *:not(small) {
