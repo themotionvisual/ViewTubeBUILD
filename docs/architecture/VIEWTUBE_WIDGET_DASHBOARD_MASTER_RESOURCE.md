@@ -412,7 +412,7 @@ Acceptance still requires visual re-check on the fresh mobile preview, especiall
 ## 5.6. Creator Operations compound primitive donor pass — 2026-09-25
 
 Added to the canonical widget primitive surface and UI Reference Library:
-- `WidgetSectionBand` — full-width labeled divider/status band with `default / primary / secondary` monochromatic tones, oversized widget-ink label text, and full-bleed edge geometry.
+- `WidgetSectionBand` — full-width labeled divider/status band with `default / primary / secondary` monochromatic tones, oversized widget-ink label text, and full-bleed edge geometry. The reference surface shows the donor workflow labels **Lead / Proposal / Active / Paid** across the three monochromatic tone levels, with the production band typography enlarged relative to its compact height.
 - `WidgetDataGrid` — semantic text/cell/badge grid for CRM, comparison, status and operations tables.
 - `WidgetChecklistProgress` — controlled checklist built from canonical `WidgetCheckbox` + `WidgetProgressBar`; fill is derived directly from checked items.
 - `WidgetCalendarGrid` — production/calendar grid with canonical event controls; seven-column wide layout and two-column narrow-widget layout.
