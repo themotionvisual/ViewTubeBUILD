@@ -1,3 +1,5 @@
+> **MIGRATION NOTICE — 2026-09-26:** The active documentation-governance authority is now `docs/governance/DOCUMENTATION.md` with machine metadata in `docs/registry.json`. This file is preserved intact below as a consolidation source pending the Removed Archive migration.
+
 # ViewTube Documentation Governance
 
 **Status:** Canonical documentation-governance contract  
