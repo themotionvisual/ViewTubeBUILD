@@ -39,6 +39,7 @@ export const GUIDE_FEATURES: readonly GuideFeatureDefinition[] = Object.freeze([
  { id:"research-lab", title:"Research Lab", domain:"reference", lifecycle:"live", routes:["/research-lab"], summary:"Research and exploratory creator intelligence workspace.", sourceOfTruth:"ResearchLab route" },
  { id:"reference-studio", title:"Reference Studio", domain:"reference", lifecycle:"experimental", routes:["/reference-studio","/reference-studio/:tabId"], summary:"Component, chart and design-system laboratories.", sourceOfTruth:"ReferenceStudio" },
  { id:"about", title:"About ViewTube", domain:"help", lifecycle:"live", routes:["/about"], summary:"Product purpose, positioning and application information.", sourceOfTruth:"About route" },
+ { id:"resource-library", title:"Resource Library", domain:"reference", lifecycle:"live", routes:["/resources"], summary:"Source-grounded creator guides, references, playbooks and reusable learning resources rendered from canonical Markdown.", sourceOfTruth:"RESOURCE_LIBRARY_ENTRIES + docs/resources/library" },
  { id:"user-guide", title:"User Guide", domain:"help", lifecycle:"live", routes:["/user-guide"], summary:"Current product documentation; V2 replacement target.", sourceOfTruth:"UserGuide + userGuideContent.ts" },
 ])
 
