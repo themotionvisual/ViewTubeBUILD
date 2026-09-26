@@ -112,6 +112,8 @@ for (const viewport of [
       await widget.locator(".widget-scroll-viewport").first().evaluate((viewport) => { viewport.scrollTop = 0 })
       await page.waitForTimeout(120)
       if (viewport.label === "phone") {
+        await widget.evaluate((element) => element.scrollIntoView({ block: "start", inline: "nearest" }))
+        await page.waitForTimeout(160)
         await page.screenshot({ path: `${outDir}/${viewport.label}-ui-reference-preview-state.png`, fullPage: false })
       } else {
         await widget.screenshot({ path: `${outDir}/${viewport.label}-ui-reference-preview-state.png` })
