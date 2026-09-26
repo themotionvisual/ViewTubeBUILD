@@ -287,7 +287,7 @@ export const CommentReplyWidget = ({
   }, [currentThread?.id, activeReplyText])
 
   const headerContent = (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", justifyContent: "center" }}>
+    <div className="comment-responder-header-controls">
       <WidgetHeaderToggle
         label="Comment responder view"
         value={tab}
