@@ -1090,17 +1090,28 @@
   }
 }
 
-/* Canonical textarea mirrors the input's default/focus geometry and palette. */
+/* Canonical Community Post field-state tokens. These are inherited by
+   ordinary text fields, textareas, and compound search controls so editable
+   surfaces share one resting/focus language without widget-local overrides. */
+:where(.dashboard-barrier){
+  --widget-field-rest-stroke:color-mix(in srgb,var(--widget-color,#34cdea) 52%,white);
+  --widget-field-focus-border:var(--widget-color,#34cdea);
+  --widget-field-focus-fill:color-mix(in srgb,var(--widget-color,#34cdea) 18%,white);
+  --widget-field-focus-ring:color-mix(in srgb,var(--widget-color,#34cdea) 35%,transparent);
+  --widget-field-focus-glow:color-mix(in srgb,var(--widget-color,#34cdea) 55%,transparent);
+}
+
+/* Canonical textarea mirrors the Community Post input geometry and palette. */
 .widget-text-area{
   width:100%;
   box-sizing:border-box;
   border-width:2px;
   border-style:solid;
-  border-color:var(--widget-border,var(--widget-ink,currentColor));
+  border-color:var(--widget-field-rest-stroke,var(--widget-border,var(--widget-ink,currentColor)));
   border-radius:var(--vt-primitive-radius,6px);
   background:var(--bg-input,#fff);
   color:var(--widget-ink,var(--widget-border,#243247));
-  caret-color:currentColor;
+  caret-color:var(--widget-color,#34cdea);
   padding:8px 9px;
   font:inherit;
   resize:vertical;
@@ -1108,9 +1119,11 @@
 }
 :where(.dashboard-barrier) .widget-text-area:focus,
 :where(.dashboard-barrier) .widget-text-area:focus-visible{
-  border-color:var(--widget-color,#34cdea);
-  background:color-mix(in srgb,var(--widget-color,#fff) 18%,white);
-  box-shadow:0 0 0 1px var(--widget-color,#34cdea);
+  border-color:var(--widget-field-focus-border,var(--widget-color,#34cdea));
+  background:var(--widget-field-focus-fill,color-mix(in srgb,var(--widget-color,#34cdea) 18%,white));
+  box-shadow:
+    0 0 0 3px var(--widget-field-focus-ring,color-mix(in srgb,var(--widget-color,#34cdea) 35%,transparent)),
+    0 0 16px 2px var(--widget-field-focus-glow,color-mix(in srgb,var(--widget-color,#34cdea) 55%,transparent));
 }
 
 .widget-split-button.is-left-split .widget-split-button-icon svg{
@@ -1126,20 +1139,21 @@
 :where(.dashboard-barrier) :is(.widget-text-input,.widget-text-area){
   box-sizing:border-box;
   width:100%;
-  border:2px solid var(--widget-border,var(--widget-ink,currentColor))!important;
+  border:2px solid var(--widget-field-rest-stroke)!important;
   border-radius:var(--vt-primitive-radius,6px)!important;
   background:var(--bg-input,#fff)!important;
   color:var(--widget-ink,var(--widget-border,#243247))!important;
+  caret-color:var(--widget-color,#34cdea)!important;
   outline:none!important;
   box-shadow:none;
 }
 :where(.dashboard-barrier) :is(.widget-text-input,.widget-text-area):focus,
 :where(.dashboard-barrier) :is(.widget-text-input,.widget-text-area):focus-visible{
-  border-color:var(--widget-color,#34cdea)!important;
-  background:color-mix(in srgb,var(--widget-color,#34cdea) 18%,white)!important;
+  border-color:var(--widget-field-focus-border)!important;
+  background:var(--widget-field-focus-fill)!important;
   box-shadow:
-    0 0 0 3px color-mix(in srgb,var(--widget-color,#34cdea) 34%,transparent),
-    0 0 12px color-mix(in srgb,var(--widget-color,#34cdea) 26%,transparent)!important;
+    0 0 0 3px var(--widget-field-focus-ring),
+    0 0 16px 2px var(--widget-field-focus-glow)!important;
   position:relative;
   z-index:2;
 }

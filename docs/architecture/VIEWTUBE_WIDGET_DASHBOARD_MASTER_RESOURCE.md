@@ -1170,6 +1170,19 @@ At PR #456 head `e27b43c7b4746b3312283372593db2fd1d24064c`:
 
 Do not reopen the old asymmetric reclaim or negative-margin/shadow-clearance geometry as a local widget fix. Any regression must be corrected at the canonical shell/primitive owner first.
 
+### 2026-09-26 editable-field parity follow-up — PR #487
+
+Community Post is the interaction donor for dashboard editable surfaces. The shared primitive system now owns the same state language instead of allowing newer primitive layers to downgrade it:
+
+- default text inputs/textareas use a lighter palette-derived border rather than the heavy ink stroke;
+- text-entry carets use the active widget spectrum color;
+- focus promotes to the full widget-color border, an 18% palette tint, a 3px external ring, and a broader palette glow;
+- `WidgetTextInput`, `WidgetTextArea`, raw dashboard `.vt-input/.vt-textarea`, and `WidgetSearchInput` share those semantics;
+- inverse/secondary controls may remain structurally distinct at rest, but their active editing state converges on the canonical field focus treatment;
+- the regression contract lives in `src/views/dashboard/__tests__/WidgetPrimitives.test.tsx` and explicitly covers text input, textarea/raw field ownership, and split search.
+
+The fix is intentionally primitive-owned; no widget-local Community Post styling was copied into individual consumers.
+
 
 ---
 
