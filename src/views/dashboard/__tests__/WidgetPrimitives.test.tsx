@@ -49,6 +49,7 @@ import { VT_SPECTRUM_PALETTE_06 } from "../../../styles/toolboxPalette"
 import { resolveWidgetViewportSegment } from "../widgetScrollGeometry"
 
 const variantsCss = readFileSync(new URL("../widgetPrimitiveVariants.css", import.meta.url), "utf8")
+const widgetSystemCss = readFileSync(new URL("../toolboxWidgetSystem.css", import.meta.url), "utf8")
 const matrixCss = readFileSync(new URL("../widgetMatrixPrimitives.css", import.meta.url), "utf8")
 const tonesCss = readFileSync(new URL("../widgetPrimitiveTones.css", import.meta.url), "utf8")
 const videoSelectCss = readFileSync(new URL("../widgetVideoSelectButtonScroll.css", import.meta.url), "utf8")
@@ -278,9 +279,9 @@ describe("shared widget form primitives", () => {
     expect(markup).toContain('class="widget-header-toggle-indicator"')
     expect(markup).toContain('data-active-index="0"')
     expect(markup).toContain('aria-pressed="true"')
-    expect(variantsCss).toContain("--widget-header-toggle-active-width")
-    expect(variantsCss).toContain("--widget-header-toggle-active-left")
-    expect(variantsCss).toContain("transition: transform 180ms")
+    expect(widgetSystemCss).toContain("--widget-header-toggle-active-width")
+    expect(widgetSystemCss).toContain("--widget-header-toggle-active-left")
+    expect(widgetSystemCss).toContain("transition: transform 180ms")
     expect(markup).toContain("48 hr")
     expect(markup).toContain("60 mn")
   })
