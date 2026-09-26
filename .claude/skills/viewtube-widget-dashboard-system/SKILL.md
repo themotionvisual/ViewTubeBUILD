@@ -528,3 +528,93 @@ Before certification ask:
 > **Does this feel like a uniquely designed, immediately understandable, highly useful creator tool — and does it still visibly belong to ViewTube?**
 
 If it looks like a generic template with different text, if its signature component disappears at supported sizes, if its layout is only approximately aligned, or if it reports information without helping the creator act, it is not finished.
+
+
+## Subtractive Widget Interior Workflow
+
+For every new or redesigned widget, **reuse is the default and net-new UI system code is an exception**.
+
+### Governing chain
+
+`REFERENCE LIBRARY CONTRACT → CODED PRIMITIVE → COMPOSITION RECIPE → WIDGET INTERIOR → DOMAIN DATA/ACTIONS`
+
+Do not create widget-local versions of canonical controls, component sizes, colors, states, spacing, grid behavior or responsive rules.
+
+### Required pre-implementation workflow
+
+1. **RECON** — inspect the widget, Reference Library, canonical primitives, nearest archetype, existing grid recipes and local CSS.
+2. **REUSE MAP** — list each UI need and its existing primitive/component/recipe. Record a reason for every exception.
+3. **DELETE PLAN** — identify private components, local selectors and legacy rules the redesign should remove.
+4. **GRID SPEC** — define 12-column regions, rows, equal groups, scroll owner, supported width × height states and COMPACT/STANDARD/EXPANDED/HERO transformations.
+5. **RED TESTS** — behavior changes require failing tests first.
+6. **COMPOSE** — build from canonical primitives and add only domain logic/signature visualization.
+7. **SUBTRACT** — remove superseded local implementation in the same change where safe.
+8. **CERTIFY** — min/default/max width and height, asymmetric pair, desktop, 390×844, phone landscape, states, keyboard/coarse pointer/reduced motion.
+9. **RECORD** — update the Widget + Dashboard Master Resource with primitive reuse, file/CSS delta, evidence and remaining debt.
+
+### Interior grid rules
+
+- Use a canonical **12-column interior grid** on the existing 4px spatial base.
+- Prefer 8px dense, 12px standard and 24px major-region gaps.
+- Components sharing a normal control row use the same height tier, type tier, radius/stroke family and baseline.
+- Repeated paired columns use equivalent width behavior and align combined heights + gaps at shared grid boundaries.
+- Use an **equal group** for controls/cards that must resolve to matching dimensions.
+- Do not use arbitrary margins or empty fixed-height blocks to manufacture alignment.
+- Every unexplained blank band is a defect until classified as deliberate space, visualization, scroll viewport or state region.
+
+### Two-dimensional resize rules
+
+Width and height are independent. Every declared dimension pair must preserve widget identity and primary function.
+
+Use four composition modes:
+
+- **COMPACT**
+- **STANDARD**
+- **EXPANDED**
+- **HERO**
+
+Resizing combines:
+
+1. **continuous geometry** — grid tracks, flexible widths, gaps and ratio-safe visual regions adjust smoothly;
+2. **discrete primitive morphing** — at canonical thresholds controls change to the matching supported size/style.
+
+Keep the canonical component ladder **18 / 24 / 32 / 38px** where applicable. Do not generate arbitrary intermediate private sizes.
+
+Use a small threshold hysteresis band so components do not flicker between size classes during drag resize.
+
+### Resize animation
+
+- Centralize motion; do not write a different resize animation in every widget.
+- Target roughly 180–240ms for settle/morph transitions.
+- Direct drag geometry should remain responsive; size-class changes may settle immediately after threshold crossing.
+- Animate geometry/transform/opacity selectively; do not continuously tween all typography metrics.
+- Respect `prefers-reduced-motion`.
+
+### New primitive admission gate
+
+Add a new primitive only when:
+
+- no canonical component owns the interaction;
+- the job is reusable beyond one widget;
+- it has a stable semantic purpose;
+- sizes/states/accessibility/responsiveness can be centralized;
+- it is added to the UI Reference Library;
+- a production consumer uses it;
+- equivalent private implementations are scheduled for removal.
+
+Otherwise compose existing primitives.
+
+### Subtractive completion receipt
+
+Every redesign reports:
+
+- primitives reused;
+- recipes/archetypes reused;
+- local CSS removed;
+- duplicate components removed;
+- legacy selectors removed;
+- new selectors/files added;
+- net code/CSS direction;
+- exceptions and why they were necessary.
+
+A redesign that adds more system-level component/CSS machinery than it removes requires explicit justification.
