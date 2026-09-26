@@ -22,6 +22,7 @@ import {
 import { useCommentResponderController, useCreatorEngagementContext } from "../../../features/creator-engagement"
 import { InstrumentExplanation, InstrumentStages, WidgetInstrument } from "../instruments/WidgetInstrument"
 import { COMMENT_RESPONDER_PREVIEW } from "../widgetPreviewFixtures"
+import "./CommentReplyWidget.css"
 
 const htmlDecode = (input: string) => {
   const doc = new DOMParser().parseFromString(input, "text/html")
