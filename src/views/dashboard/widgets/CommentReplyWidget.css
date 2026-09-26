@@ -45,3 +45,19 @@
 @container vt-widget (max-width:420px){
   .comment-responder-preview{grid-template-columns:1fr}
 }
+
+
+@container vt-widget (max-width:460px){
+  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .vt-widget-header .left{
+    flex:1 1 108px;
+    max-width:108px;
+  }
+  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .vt-widget-header .title{
+    max-width:104px;
+    overflow:visible;
+  }
+  :where(.dashboard-barrier) [data-widget-id="comment-replier"] .vt-widget-header .header-extra:has(.widget-header-toggle){
+    min-width:82px;
+    max-width:34%;
+  }
+}
