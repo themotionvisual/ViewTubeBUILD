@@ -2902,6 +2902,24 @@ const CreatorVaultOS: React.FC = () => {
           />
          </div>
          <div>
+          <div className="mb-2 text-xs font-black uppercase opacity-60">Recovery & Lifecycle</div>
+          <div className="flex flex-wrap gap-2">
+           {selectedAsset.metadata?.trashed === true ? (
+            <>
+             <SubToolboxInnerActionButton label="Restore from Trash" iconName="checklist" tone="green" onClick={() => restoreAsset(selectedAsset)} />
+             <SubToolboxInnerActionButton label="Delete Permanently" iconName="x" tone="pink" onClick={() => permanentlyDeleteAsset(selectedAsset)} />
+            </>
+           ) : selectedAsset.metadata?.archived === true ? (
+            <>
+             <SubToolboxInnerActionButton label="Restore from Archive" iconName="checklist" tone="green" onClick={() => restoreAsset(selectedAsset)} />
+             <SubToolboxInnerActionButton label="Move to Trash" iconName="x" tone="pink" onClick={() => trashAsset(selectedAsset)} />
+            </>
+           ) : (
+            <SubToolboxInnerActionButton label="Move to Trash" iconName="x" tone="pink" onClick={() => trashAsset(selectedAsset)} />
+           )}
+          </div>
+         </div>
+         <div>
           <div className="mb-2 text-xs font-black uppercase opacity-60">Collection Membership</div>
           <div className="flex flex-col gap-2">
            {selectedCollectionMemberships.length ? selectedCollectionMemberships.map((collection) => (
