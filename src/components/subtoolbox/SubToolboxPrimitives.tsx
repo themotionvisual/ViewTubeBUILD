@@ -2000,3 +2000,140 @@ export const SubToolboxVaultAsset: React.FC<SubToolboxVaultAssetProps> = ({
   notes,
   icon,
   selected = false,
+  onSelectedChange,
+  onRemove,
+  removeIcon = "×",
+  className,
+  style,
+  ...props
+}) => {
+  const editableTitle = typeof title === "string" && Boolean(onTitleChange)
+  const [titleDraft, setTitleDraft] = React.useState(typeof title === "string" ? title : "")
+  React.useEffect(() => {
+    if (typeof title === "string") setTitleDraft(title)
+  }, [title])
+  const commitTitle = () => {
+    const next = titleDraft.trim()
+    if (next && typeof title === "string" && next !== title) onTitleChange?.(next)
+    else if (!next && typeof title === "string") setTitleDraft(title)
+  }
+
+  const safeRatio = Number.isFinite(previewAspectRatio)
+    ? Math.min(16 / 9, Math.max(9 / 16, Number(previewAspectRatio)))
+    : kind === "portrait" ? 9 / 16 : 16 / 9
+  const normalized = (safeRatio - 9 / 16) / (16 / 9 - 9 / 16)
+  const previewShare = kind === "audio" || kind === "document"
+    ? 44
+    : Math.round(42 + normalized * 18)
+
+  const mergedStyle = {
+    ...(withComponentLevelStyle(level, style) ?? {}),
+    ["--vt-vault-preview-share" as string]: `${previewShare}%`,
+  } as React.CSSProperties
+
+  return (
+    <article
+      className={classes("vt-subtoolbox-vault-asset", `is-${kind}`, selected && "is-selected", className)}
+      data-vt-control-level={level}
+      style={mergedStyle}
+      {...props}
+    >
+      <header>
+        <button type="button" className="select" aria-pressed={selected} aria-label="Select asset" onClick={() => onSelectedChange?.(!selected)}><span /></button>
+        {editableTitle ? (
+          <input
+            className="vt-subtoolbox-vault-title-input"
+            value={titleDraft}
+            aria-label={titleAriaLabel ?? `Edit title ${String(title)}`}
+            onChange={(event) => setTitleDraft(event.target.value)}
+            onBlur={commitTitle}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur()
+              if (event.key === "Escape") {
+                setTitleDraft(typeof title === "string" ? title : "")
+                event.currentTarget.blur()
+              }
+            }}
+          />
+        ) : <strong>{title}</strong>}
+      </header>
+      <div className="vt-subtoolbox-vault-body">
+        <div className="vt-subtoolbox-vault-preview">{preview ?? icon}</div>
+        <div className="vt-subtoolbox-vault-meta">
+          <div className="tags">{tags ?? "ASSET"}</div>
+          <div className="notes">{notes ?? "NOTES"}</div>
+        </div>
+      </div>
+      {onRemove ? <button type="button" className="remove" aria-label="Remove asset" onClick={onRemove}>{removeIcon}</button> : null}
+    </article>
+  )
+}
+
+export interface SubToolboxTreeNode {
+  id: string
+  label: React.ReactNode
+  icon?: React.ReactNode
+  secondaryIcon?: React.ReactNode
+  children?: SubToolboxTreeNode[]
+}
+export interface SubToolboxTreeProps extends React.HTMLAttributes<HTMLDivElement> {
+  level?: ToolboxControlLevel
+  nodes: SubToolboxTreeNode[]
+  defaultOpenIds?: string[]
+}
+export const SubToolboxTree: React.FC<SubToolboxTreeProps> = ({ level = "l0", nodes, defaultOpenIds = [], className, style, ...props }) => {
+  const [openIds, setOpenIds] = React.useState<string[]>(defaultOpenIds)
+  const toggle = (id: string) => setOpenIds((ids) => ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id])
+  const renderNodes = (items: SubToolboxTreeNode[], depth = 0): React.ReactNode => items.map((node) => {
+    const hasChildren = Boolean(node.children?.length)
+    const open = openIds.includes(node.id)
+    const opacity = `${Math.max(20, 50 - depth * 15)}%`
+    return <React.Fragment key={node.id}>
+      <button
+        type="button"
+        className="vt-subtoolbox-tree-row"
+        data-depth={depth}
+        style={{ ["--vt-tree-depth" as string]: depth, ["--vt-tree-row-opacity" as string]: opacity } as React.CSSProperties}
+        aria-expanded={hasChildren ? open : undefined}
+        onClick={() => hasChildren && toggle(node.id)}
+      >
+        <span className="vt-subtoolbox-tree-icon is-primary" aria-hidden="true">{node.icon ?? (hasChildren ? (open ? "−" : "+") : "·")}</span>
+        {depth > 0 ? <span className="vt-subtoolbox-tree-icon is-secondary" aria-hidden="true">{node.secondaryIcon ?? (hasChildren ? (open ? "−" : "+") : "·")}</span> : null}
+        <strong>{node.label}</strong>
+      </button>
+      {hasChildren && open ? <div className="vt-subtoolbox-tree-children">{renderNodes(node.children ?? [], depth + 1)}</div> : null}
+    </React.Fragment>
+  })
+  return <div className={classes("vt-subtoolbox-tree", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} role="tree" {...props}>{renderNodes(nodes)}</div>
+}
+
+export interface SubToolboxAspectRatioFrameProps extends React.HTMLAttributes<HTMLDivElement> {
+  level?: ToolboxControlLevel
+  ratio?: "16:9" | "9:16" | "1:1"
+  label?: React.ReactNode
+  children?: React.ReactNode
+}
+export const SubToolboxAspectRatioFrame: React.FC<SubToolboxAspectRatioFrameProps> = ({ level = "l0", ratio = "16:9", label, children, className, style, ...props }) => (
+  <div className={classes("vt-subtoolbox-aspect-frame", className)} data-vt-control-level={level} data-ratio={ratio} style={withComponentLevelStyle(level, style)} {...props}>
+    <div className="vt-subtoolbox-aspect-frame-canvas">{children}</div>
+    {label ? <strong className="vt-subtoolbox-aspect-frame-label">{label}</strong> : null}
+  </div>
+)
+
+export interface SubToolboxToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
+  level?: ToolboxControlLevel
+  leading?: React.ReactNode
+  trailing?: React.ReactNode
+  children?: React.ReactNode
+}
+export const SubToolboxToolbar: React.FC<SubToolboxToolbarProps> = ({ level = "l0", leading, trailing, children, className, style, ...props }) => (
+  <div className={classes("vt-subtoolbox-toolbar", className)} data-vt-control-level={level} style={withComponentLevelStyle(level, style)} role="toolbar" {...props}>
+    {leading ? <div className="vt-subtoolbox-toolbar-leading">{leading}</div> : null}
+    <div className="vt-subtoolbox-toolbar-main">{children}</div>
+    {trailing ? <div className="vt-subtoolbox-toolbar-trailing">{trailing}</div> : null}
+  </div>
+)
+
+export * from "./SubToolboxMediaPrimitives"
+
+export * from "./SubToolboxWorkflowPrimitives"
