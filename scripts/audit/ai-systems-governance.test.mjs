@@ -9,6 +9,8 @@ import {
   findAuthorityConflicts,
   findMissingSourceRefs,
   findStaleClaims,
+  findClaimCollisions,
+  findMissingCompletionReceipts,
   auditAiSystemsGovernance,
 } from "./ai-systems-governance.mjs";
 
@@ -216,4 +218,96 @@ test("auditAiSystemsGovernance reads Herald thread claims and flags stale active
   assert.equal(result.ok, false);
   assert.deepEqual(result.staleClaims.map((claim) => claim.taskId), ["herald:stale"]);
   assert.equal(result.claimCount, 1);
+});
+
+
+test("findClaimCollisions detects overlapping writer paths held by different agents", () => {
+  const collisions = findClaimCollisions([
+    {
+      taskId: "a",
+      threadId: "a",
+      status: "in_progress",
+      agent: "agent-a",
+      writerPaths: ["src/services/brain/**"],
+    },
+    {
+      taskId: "b",
+      threadId: "b",
+      status: "claimed",
+      agent: "agent-b",
+      writerPaths: ["src/services/brain/BrainRuntime.ts"],
+    },
+  ]);
+
+  assert.equal(collisions.length, 1);
+  assert.equal(collisions[0].pathA, "src/services/brain/**");
+  assert.equal(collisions[0].pathB, "src/services/brain/BrainRuntime.ts");
+});
+
+test("findClaimCollisions ignores overlapping paths owned by the same agent", () => {
+  const collisions = findClaimCollisions([
+    { taskId: "a", threadId: "a", status: "in_progress", agent: "same", writerPaths: ["src/services/brain/**"] },
+    { taskId: "b", threadId: "b", status: "claimed", agent: "same", writerPaths: ["src/services/brain/BrainRuntime.ts"] },
+  ]);
+  assert.deepEqual(collisions, []);
+});
+
+test("findMissingCompletionReceipts requires a receipt for terminal Herald threads", () => {
+  const missing = findMissingCompletionReceipts(
+    [
+      { threadId: "done-a", status: "completed", sourcePath: ".viewtube/herald/threads/done-a.json" },
+      { threadId: "done-b", status: "released", sourcePath: ".viewtube/herald/threads/done-b.json" },
+      { threadId: "active", status: "in-progress", sourcePath: ".viewtube/herald/threads/active.json" },
+    ],
+    [
+      { threadId: "done-b", status: "completed", evidenceState: "PROVEN" },
+    ],
+  );
+
+  assert.deepEqual(missing.map((item) => item.threadId), ["done-a"]);
+});
+
+test("auditAiSystemsGovernance reports claim collisions and missing completion receipts", () => {
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "vt-ai-collision-"));
+  fs.mkdirSync(path.join(rootDir, "governance/ai-systems/registry"), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, ".viewtube/herald/threads"), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, ".viewtube/herald/ledger"), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, "src/services"), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, "docs"), { recursive: true });
+  fs.writeFileSync(path.join(rootDir, "src/services/example.ts"), "export {}\n");
+  fs.writeFileSync(path.join(rootDir, "docs/example.md"), "# Example\n");
+  fs.writeFileSync(
+    path.join(rootDir, "governance/ai-systems/registry/systems.json"),
+    JSON.stringify({ records: [baseRecord()] }),
+  );
+
+  fs.writeFileSync(path.join(rootDir, ".viewtube/herald/threads/a.json"), JSON.stringify({
+    threadId: "a",
+    status: "in-progress",
+    writerLock: { holder: "agent-a", acquired: "2026-09-24T16:00:00Z", paths: ["src/services/brain/**"] },
+  }));
+  fs.writeFileSync(path.join(rootDir, ".viewtube/herald/threads/b.json"), JSON.stringify({
+    threadId: "b",
+    status: "in-progress",
+    writerLock: { holder: "agent-b", acquired: "2026-09-24T16:10:00Z", paths: ["src/services/brain/BrainRuntime.ts"] },
+  }));
+  fs.writeFileSync(path.join(rootDir, ".viewtube/herald/threads/done.json"), JSON.stringify({
+    threadId: "done",
+    status: "completed",
+  }));
+  fs.writeFileSync(
+    path.join(rootDir, ".viewtube/herald/ledger/2026-09-24.jsonl"),
+    JSON.stringify({ ts: "2026-09-24T16:30:00Z", thread: "a", status: "in-progress" }) + "\n",
+  );
+
+  const result = auditAiSystemsGovernance({
+    rootDir,
+    registryPaths: ["governance/ai-systems/registry/systems.json"],
+    observedMainSha: "fbaaff8de14c5948959251b0552519685c24c83e",
+    now: Date.parse("2026-09-24T18:00:00Z"),
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.claimCollisions.length, 1);
+  assert.deepEqual(result.missingCompletionReceipts.map((item) => item.threadId), ["done"]);
 });
