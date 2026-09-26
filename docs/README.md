@@ -178,3 +178,10 @@ Superseded broad AI audits, phase manifests and phase-closeout records are prese
 Before broad new AI/Brain/Project/Asset integration work, use [System Convergence & Consolidation](./architecture/VIEWTUBE_SYSTEM_CONVERGENCE_AND_CONSOLIDATION.md).
 
 It coordinates overlap reduction across Creator Context, Evidence & Intelligence, Project/Content/Asset identity, Creator Operations, Outcomes/Learning and BrainRuntime. It does not replace the bounded authorities above. Its rule is **converge before expansion**: donor-harvest useful behavior, migrate callers through stronger canonical contracts, prove parity/zero reachability, quarantine, then remove.
+
+
+## Master Sources
+
+Master Sources are exceptional high-value references that must be consulted as prior art within their declared scope but do not override current authorities or verified implementation evidence.
+
+- [Deep Research & Construction Source](./references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md) — MASTER_SOURCE for product/tool ideation, master-tool consolidation, source/claim auditing, API feasibility, Channel Brain/agent architecture, analytics/visualization, creator workflow, external integrations, infrastructure/economics/governance, and roadmap construction.
