@@ -1672,7 +1672,7 @@ const CreatorVaultOS: React.FC = () => {
      : "grid grid-cols-1 gap-4 xl:grid-cols-[minmax(220px,0.72fr)_minmax(0,2.1fr)_minmax(260px,0.9fr)]"}>
      <div className="flex min-w-0 flex-col gap-4">
       <section aria-label="Vault library toolbar" className="flex flex-col gap-2">
-       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-2">
+       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] items-center gap-2">
         <button
          type="button"
          aria-label="Open library navigation"
@@ -1709,8 +1709,27 @@ const CreatorVaultOS: React.FC = () => {
          onChange={(value) => setSort(value as VaultWorkspaceSort)}
          options={["updated-desc", "updated-asc", "name-asc", "name-desc"]}
         />
+        <SubToolboxDropdownControl
+         label="View"
+         value={viewMode}
+         onChange={(value) => setViewMode(value as VaultWorkspaceViewMode)}
+         options={["grid", "masonry", "list", "filmstrip", "lineage"]}
+        />
        </div>
        <div className="flex flex-wrap gap-2">
+        <SubToolboxSegmentedToggle
+         level="l1"
+         ariaLabel="Vault media type"
+         value={filterKind}
+         onValueChange={(value) => setFilterKind(value as "all" | VaultAssetKind)}
+         options={[
+          { value: "all", label: "ALL" },
+          { value: "video", label: "VIDEO" },
+          { value: "image", label: "IMAGE" },
+          { value: "audio", label: "AUDIO" },
+          { value: "document", label: "DOCS" },
+         ]}
+        />
         <SubToolboxSegmentedToggle
          level="l1"
          ariaLabel="Vault library state"
