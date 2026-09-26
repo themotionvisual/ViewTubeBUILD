@@ -16,6 +16,8 @@ import {
   Heart,
   ImagePlus,
   Layers,
+  Link2,
+  MessagesSquare,
   Plus,
   RotateCcw,
   Save,
@@ -23,6 +25,7 @@ import {
   Sparkles,
   Star,
   Target,
+  ThumbsUp,
   TrendingUp,
   UploadCloud,
   Zap,
@@ -82,6 +85,9 @@ import {
   WidgetModuleHeader,
   WidgetModuleFrame,
   WidgetVideoSelect,
+  WidgetVideoMiniCard,
+  WidgetSplitCounterBadge,
+  WidgetSpeechBubble,
   type WidgetControlHeight,
   type WidgetPrimitiveTone,
   type WidgetSplitIconStyle,
@@ -876,6 +882,29 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
         {activeCategory === "compound" && (
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("Compound Workflow Primitives", "Creator Operations donor patterns rebuilt in widget UI/CSS")}
+
+            <div className="widget-reference-family">
+              {familyHeading("Comment + Video Mini Modules", "Comment Responder donor primitives promoted to the shared system")}
+              <div className="grid gap-3">
+                <WidgetVideoMiniCard
+                  title="Napoleon's Last Great Victory"
+                  thumbnail={VIDEO_OPTIONS[0].thumbnail}
+                  meta="12:42 · 48,230 views"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <WidgetSplitCounterBadge icon={<ThumbsUp />} value={184} label="184 likes" height={24} tone="primary" />
+                  <WidgetSplitCounterBadge icon={<MessageSquare />} value={27} label="27 replies" height={24} tone="secondary" />
+                </div>
+                <WidgetSpeechBubble>
+                  Big supporter — the map explanation made the battle finally click.
+                </WidgetSpeechBubble>
+                <div className="max-w-[220px]">
+                  <WidgetLeftSplitButton icon={<Sparkles />} multiline width="full" tone="primary">
+                    Suggest video
+                  </WidgetLeftSplitButton>
+                </div>
+              </div>
+            </div>
 
             <div className="widget-reference-family">
               {familyHeading("Full-Width Section Bands", "Lead / Proposal / Active / Paid · three monochromatic widget tones")}
