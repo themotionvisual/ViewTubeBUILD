@@ -13,17 +13,20 @@ describe("CreatorVaultOS Vault tool workflows", () => {
   expect(source).toContain("saveVaultTextDocument")
  })
 
- it("includes one group builder for projects and asset collections", () => {
-  expect(source).toContain("Project / Asset Group Builder")
+ it("includes one contextual group builder for projects and asset collections", () => {
+  expect(source).toContain('aria-label="Vault group builder"')
+  expect(source).toContain("Group Builder")
   expect(source).toContain("Create Project From Selection")
   expect(source).toContain("Attach Selection to Project")
   expect(source).toContain("Create Collection From Selection")
   expect(source).toContain("Create Brand Kit From Selection")
+  expect(source).toContain("Add Selection to Collection")
  })
 
- it("includes an asset-aware tools mode", () => {
-  expect(source).toContain("Compatible Tools")
-  expect(source).toContain("Download Selection Manifest")
+ it("includes asset-aware contextual tools and exports", () => {
+  expect(source).toContain("Send to ViewTube…")
+  expect(source).toContain("selectedToolTargets.map")
+  expect(source).toContain("exportSelectionManifest")
   expect(source).toContain("Export Selected Metadata JSON")
  })
 })
