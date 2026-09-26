@@ -1,0 +1,372 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "viewtube://schemas/conversation-os",
+  "title": "ViewTube Conversation and Improvement OS Records",
+  "$defs": {
+    "conversationEnvelope": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "conversationId",
+        "nextAction"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "viewtube.conversation-envelope.v1"
+        },
+        "conversationId": {
+          "type": "string",
+          "pattern": "^VT-CONV-"
+        },
+        "missionId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "taskIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "programs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "authoritiesRead": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "opportunities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "receipts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nextAction": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "opportunity": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "opportunityId",
+        "title",
+        "category",
+        "confidence",
+        "disposition"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "viewtube.opportunity.v1"
+        },
+        "opportunityId": {
+          "type": "string",
+          "pattern": "^VT-OPP-"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string"
+        },
+        "sourceConversationId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "missionId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "confidence": {
+          "enum": [
+            "OBSERVED",
+            "STRONGLY_INFERRED",
+            "POSSIBLE",
+            "EXPERIMENTAL"
+          ]
+        },
+        "impact": {
+          "type": "object"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "relatedTaskIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "disposition": {
+          "enum": [
+            "UNDER_REVIEW",
+            "ACCEPTED",
+            "DEFERRED",
+            "REJECTED",
+            "PROMOTED_TO_TASK"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "risk": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "riskId",
+        "title",
+        "category",
+        "impact",
+        "disposition"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "viewtube.risk.v1"
+        },
+        "riskId": {
+          "type": "string",
+          "pattern": "^VT-RISK-"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string"
+        },
+        "sourceConversationId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "missionId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "likelihood": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "UNKNOWN"
+          ]
+        },
+        "impact": {
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "CRITICAL"
+          ]
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mitigationCandidate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "disposition": {
+          "enum": [
+            "OPEN",
+            "MITIGATED",
+            "ACCEPTED",
+            "DEFERRED",
+            "PROMOTED_TO_TASK"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "taskMutationProposal": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "proposalId",
+        "reason",
+        "proposedChanges",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "viewtube.task-mutation-proposal.v1"
+        },
+        "proposalId": {
+          "type": "string",
+          "pattern": "^VT-TMP-"
+        },
+        "taskId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "candidateTitle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "proposedChanges": {
+          "type": "object",
+          "minProperties": 1
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourceConversationId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "missionId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pullRequest": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "PROVEN",
+            "SUPPORTED",
+            "CLAIMED",
+            "UNKNOWN"
+          ]
+        },
+        "creatorReviewRequired": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "writerLease": {
+      "type": "object",
+      "required": [
+        "missionId",
+        "owner",
+        "paths",
+        "expiresAt"
+      ],
+      "properties": {
+        "missionId": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "overrideReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
