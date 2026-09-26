@@ -409,6 +409,16 @@ Implemented in this wave:
 
 Acceptance still requires visual re-check on the fresh mobile preview, especially the outer right gutter, About/Daily Oracle edge bands, Brain Hub/Image Generator header toggles, Asset Engine rail, and collapsed-widget control deck.
 
+## 5.6. Creator Operations compound primitive donor pass — 2026-09-25
+
+Added to the canonical widget primitive surface and UI Reference Library:
+- `WidgetSectionBand` — full-width labeled divider/status band with `default / primary / secondary` monochromatic tones, oversized widget-ink label text, and full-bleed edge geometry.
+- `WidgetDataGrid` — semantic text/cell/badge grid for CRM, comparison, status and operations tables.
+- `WidgetChecklistProgress` — controlled checklist built from canonical `WidgetCheckbox` + `WidgetProgressBar`; fill is derived directly from checked items.
+- `WidgetCalendarGrid` — production/calendar grid with canonical event controls; seven-column wide layout and two-column narrow-widget layout.
+
+UI Reference Library now includes a dedicated **COMPOUND** category with live examples of all four primitives. The widget skill names these as canonical compound workflow primitives so future widgets reuse them instead of recreating local variants.
+
 ## 6. Widget task backlog / to-do list
 
 ### P0 — System integrity
