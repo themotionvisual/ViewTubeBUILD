@@ -230,9 +230,9 @@
   opacity: .12;
 }
 .widget-search-input > input::-webkit-search-cancel-button { cursor: pointer; }
-.widget-search-input:not(.is-tone-secondary):focus-within {
-  border-color: var(--widget-field-focus-border);
-  background: var(--widget-field-focus-fill);
+.widget-search-input:focus-within {
+  border-color: var(--widget-field-focus-border) !important;
+  background: var(--widget-field-focus-fill) !important;
   box-shadow:
     0 0 0 3px var(--widget-field-focus-ring),
     0 0 16px 2px var(--widget-field-focus-glow);
