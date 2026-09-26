@@ -1,7 +1,9 @@
+> **MIGRATION NOTE — 2026-09-26:** Herald has been superseded by the ViewTube Conversation & Improvement OS. Use `docs/governance/CONVERSATION_OS.md`, `docs/governance/CROWN.md`, `docs/governance/TASK_AUTHORITY.md`, and their current skills. Historical Herald capability notes below remain useful donor context until this registry is fully regenerated.
+
 # ViewTube capability registry — what is available right now
 
 Read this before proposing anything new. Verified 2026-09-24 for the Editor System addition; the remaining baseline inventory dates from 2026-09-16.
-Regenerate with `node scripts/herald-capabilities.mjs` once it exists (phase H1).
+A future capability-registry generator should target the Conversation OS / Crown / Task Authority model rather than the retired Herald protocol.
 
 ## Surface coverage — 3 of 8 in use
 
