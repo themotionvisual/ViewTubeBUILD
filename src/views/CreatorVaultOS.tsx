@@ -2269,6 +2269,7 @@ const CreatorVaultOS: React.FC = () => {
             previewUrl={asset.previewUrl || asset.url || null}
             mediaUrl={asset.url || null}
             mimeType={asset.mimeType}
+            documentExcerpt={typeof asset.metadata?.textContent === "string" ? asset.metadata.textContent : null}
             durationLabel={typeof asset.metadata?.durationSeconds === "number"
              ? `${Number(asset.metadata.durationSeconds).toFixed(1)}s`
              : null}
