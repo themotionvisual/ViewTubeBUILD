@@ -92,7 +92,6 @@
 
   .vt-widget-paint-clip {
     overflow:hidden;
-    border-radius:inherit;
   }
 
   .vt-widget-body--flush { --vt-widget-body-inset:0px; }
