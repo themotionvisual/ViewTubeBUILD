@@ -86,3 +86,15 @@ Current branch validation:
 - current package scripts expose `audit:ai-systems`, `test:ai-systems-governance`, and `test:ai-systems-herald`.
 
 The Herald projection remains read-only and still requires current-main merge before its integration state can be upgraded from branch-only.
+
+
+## Live audit coverage
+
+`audit:ai-systems` now:
+- audits all five authority registries by default;
+- aggregates authority conflicts across registry boundaries;
+- verifies code/doc/test source references;
+- reads active Herald thread files as the work-claim projection;
+- applies stale-claim detection only when a real writer-lock acquisition timestamp exists.
+
+This preserves the Herald ownership boundary: the audit reads `.viewtube/herald/threads/**`; it does not write or replace Herald state.
