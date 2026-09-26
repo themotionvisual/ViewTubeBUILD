@@ -1224,16 +1224,17 @@
      title or action rail is removed. Non-toggle extras may still hide. */
   :where(.dashboard-barrier) .header-extra:has(.widget-header-toggle) {
     display: flex !important;
-    flex: 1 1 132px !important;
-    min-width: 118px;
-    max-width: 50%;
+    flex: 0 0 auto !important;
+    min-width: 0;
+    max-width: 46%;
     overflow: visible;
     justify-content: center !important;
   }
 
   :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) .left {
-    flex: 1 1 38%;
-    max-width: 40%;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
   }
 
   :where(.dashboard-barrier) .vt-widget-header:has(.header-extra .widget-header-toggle) .title {
