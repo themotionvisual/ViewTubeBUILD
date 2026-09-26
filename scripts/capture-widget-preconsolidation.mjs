@@ -21,7 +21,7 @@ const SEEDED_LAYOUT = JSON.stringify({
   instances: {
     "app-verification-explainer": { collapsed: false, size: "half", height: "medium" },
     "daily-oracle": { collapsed: false, size: "half", height: "tall" },
-    "system-micro-stack": { collapsed: false, size: "half", height: "tall" },
+    "system-micro-stack": { collapsed: false, size: "quarter", height: "tall" },
     "opportunity-radar": { collapsed: false, size: "half", height: "tall" },
     "comment-replier": { collapsed: false, size: "half", height: "tall" },
     "revenue-chart": { collapsed: false, size: "half", height: "tall" },
@@ -106,6 +106,23 @@ for (const viewport of [
 
     const box = await widget.boundingBox()
     report.captures.push({ viewport: viewport.label, name, id, box })
+  }
+
+  for (const variant of [
+    { label: "min", size: "quarter", height: "short" },
+    { label: "max", size: "full", height: "xtall" },
+  ]) {
+    const layout = JSON.parse(SEEDED_LAYOUT)
+    layout.instances["system-micro-stack"] = { collapsed: false, size: variant.size, height: variant.height }
+    await page.evaluate(([key, value]) => localStorage.setItem(key, value), ["vt_dashboard_layout_v9", JSON.stringify(layout)])
+    await page.reload({ waitUntil: "networkidle", timeout: 60000 })
+    await page.waitForTimeout(1200)
+    const settings = page.locator('[data-widget-id="system-micro-stack"]').first()
+    await settings.scrollIntoViewIfNeeded()
+    await page.waitForTimeout(250)
+    await settings.screenshot({ path: `${outDir}/${viewport.label}-settings-${variant.label}-${variant.size}-${variant.height}.png` })
+    const box = await settings.boundingBox()
+    report.captures.push({ viewport: viewport.label, name: `settings-${variant.label}`, id: "system-micro-stack", box, size: variant.size, height: variant.height })
   }
 
   await context.close()
