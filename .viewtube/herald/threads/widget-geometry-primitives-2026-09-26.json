@@ -1,0 +1,48 @@
+{
+  "threadId": "widget-geometry-primitives-2026-09-26",
+  "verb": "FIX",
+  "tier": "T2",
+  "stage": "EXECUTE",
+  "owner": "dashboard-widget-system",
+  "status": "partial",
+  "intent": "Repair mobile widget shell width/clipping and promote the shared header, split-control, video-selector, comment, compound and upload-frame corrections into canonical widget primitives.",
+  "taskIds": [
+    "widget-shell-geometry",
+    "widget-header-toggle",
+    "widget-split-controls",
+    "widget-video-select",
+    "widget-comment-donors",
+    "widget-compound-primitives",
+    "widget-upload-frames"
+  ],
+  "writerLock": {
+    "held": true,
+    "branch": "fix/widget-geometry-primitives-2026-09-26",
+    "paths": [
+      "src/views/dashboard/widgetMobileContract.css",
+      "src/views/dashboard/widgetShellOwnership.css",
+      "src/views/dashboard/toolboxWidgetSystem.css",
+      "src/views/dashboard/WidgetPrimitives.tsx",
+      "src/views/dashboard/WidgetPrimitiveExtensions.tsx",
+      "src/views/dashboard/widgetMatrixPrimitives.css",
+      "src/views/dashboard/widgetPrimitiveTones.css",
+      "src/views/dashboard/widgetVideoSelectButtonScroll.css",
+      "src/views/dashboard/widgets/CommentReplyWidget.tsx",
+      "src/views/dashboard/widgets/UIReferenceLibraryWidget.tsx",
+      "src/views/dashboard/__tests__/"
+    ]
+  },
+  "reconRef": "VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md + 2026-09-26 user field QA screenshots",
+  "approval": "Explicit creator approval: Begin",
+  "openQuestions": [],
+  "nextAction": "Fix mobile shell width first, then intrinsic header toggle geometry and shared split-control contracts before local widget migrations.",
+  "entries": [
+    {
+      "ts": "2026-09-26",
+      "stage": "RECON",
+      "note": "Current mobile contract uses asymmetric 12px/40px dashboard reclaim; screenshots show the compensation now overshoots right edge. Shared header toggle uses equal-width segments; split/video primitives retain hard-coded geometry."
+    }
+  ],
+  "lastApp": "ChatGPT",
+  "lastTs": "2026-09-26"
+}
