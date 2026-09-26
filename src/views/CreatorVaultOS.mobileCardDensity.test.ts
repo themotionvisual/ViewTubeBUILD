@@ -35,9 +35,67 @@ describe("CreatorVaultOS mobile card density", () => {
   ]) expect(source).toContain(`aria-label="${label}"`)
  })
 
+ it("uses a three-cell search row plus a wrapped secondary toolbar for phone widths", () => {
+  expect(source).toContain('grid-cols-[auto_minmax(0,1fr)_auto]')
+  expect(source).toContain('data-vault-toolbar-secondary')
+  expect(source).toContain('label="State"')
+  expect(source).not.toContain('ariaLabel="Vault library state"')
+ })
+
+ it("provides an explicit compact search clear action without a second search owner", () => {
+  expect(source).toContain('aria-label="Clear Vault search"')
+  expect(source).toContain('onClick={() => setQuery("")}')
+ })
+
+ it("uses contextual mobile sheets for selection actions and Inspector", () => {
+  expect(source).toContain('data-vault-mobile-sheet="selection-actions"')
+  expect(source).toContain('data-vault-mobile-sheet="inspector"')
+  expect(source).toContain('fixed inset-x-2 bottom-2')
+  expect(source).toContain('xl:static')
+ })
+
+ it("shows removable applied-filter chips only when contextual filters are active", () => {
+  expect(source).toContain('aria-label="Vault active filters"')
+  expect(source).toContain('onClick={() => setSelectedTag(null)}')
+  expect(source).toContain('onClick={() => setSource("all")}')
+  expect(source).toContain('onClick={() => setFilterLifecycle("all")}')
+  expect(source).toContain('onClick={() => setFilterOrientation("all")}')
+ })
+
+ it("renders navigation and advanced filters as contextual phone sheets instead of inline mobile chrome", () => {
+  expect(source).toContain('data-vault-mobile-sheet="library-navigation"')
+  expect(source).toContain('data-vault-mobile-sheet="filters"')
+  expect(source).toContain('setLibraryFiltersOpen(false)')
+  expect(source).toContain('setLibraryNavigationOpen(false)')
+ })
+
  it("moves project and collection navigation into a contextual library drawer", () => {
   expect(source).toContain('aria-label="Vault library navigation"')
   expect(source).not.toContain('title="Explorer"')
+ })
+
+ it("preserves lifecycle batch operations inside the contextual selection workflow", () => {
+  for (const label of ["Toggle Favorite", "Archive Selection", "Trash Selection", "Restore Selection"]) {
+   expect(source).toContain(`label="${label}"`)
+  }
+  expect(source).toContain("setVaultAssetState(assetId")
+ })
+
+ it("preserves collection management inside Group Builder", () => {
+  expect(source).toContain('aria-label="Target Vault collection"')
+  for (const label of [
+   "Add Selection to Collection",
+   "Set Target Collection as Brand Kit",
+   "Remove Selected Asset From Active Collection",
+   "Rename Active Collection",
+   "Delete Active Collection",
+  ]) expect(source).toContain(`label="${label}"`)
+ })
+
+ it("keeps selected-asset utility actions contextual", () => {
+  for (const label of ["Open Quick Look", "Open Filmstrip", "Open Lineage", "Copy Asset ID", "Open Inspector"]) {
+   expect(source).toContain(`label="${label}"`)
+  }
  })
 
  it("shows selection operations contextually instead of as a permanent Asset Operations toolbox", () => {
