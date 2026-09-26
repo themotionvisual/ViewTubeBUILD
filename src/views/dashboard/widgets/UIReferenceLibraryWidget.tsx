@@ -1099,27 +1099,25 @@ export default function UIReferenceLibraryWidget({ widget, ...common }: UIRefere
           <WidgetSection surface="white" edge="inset" className="flex flex-col gap-3 p-3">
             {sectionHeading("5. Media Uploaders", "Upload + dropzone primitives")}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
-              <div className="flex flex-col gap-2">
-                <div className="w-full">
-                  <WidgetMediaUploadFrame
-                    aspect="16:9"
-                    icon={<ImagePlus />}
-                    title="THUMBNAIL"
-                    detail="Drop an image file here"
-                    hasValue={hasThumbnail}
-                    preview={hasThumbnail ? <div className="w-full h-full flex items-center justify-center font-black text-xs uppercase">Thumbnail Preview</div> : undefined}
-                    onBrowse={() => setHasThumbnail(!hasThumbnail)}
-                  />
-                </div>
-                <WidgetMediaUploadAction onClick={() => setHasThumbnail(!hasThumbnail)}>
-                  {hasThumbnail ? "REPLACE THUMBNAIL" : "UPLOAD THUMBNAIL"}
-                </WidgetMediaUploadAction>
-              </div>
-              <WidgetDropzone
+              <WidgetMediaUploadFrame
+                size="small"
+                aspect="1:1"
+                icon={<ImagePlus />}
+                title="SMALL MEDIA"
+                detail="Compact toolbox upload frame"
+                actionLabel="UPLOAD"
+                hasValue={hasThumbnail}
+                preview={hasThumbnail ? <div className="w-full h-full flex items-center justify-center font-black text-xs uppercase">Small Preview</div> : undefined}
+                onBrowse={() => setHasThumbnail(!hasThumbnail)}
+              />
+              <WidgetMediaUploadFrame
+                size="large"
+                aspect="16:9"
                 icon={<UploadCloud />}
-                title="SOURCE VIDEO FILE"
-                detail="Drag & drop .MP4, .MOV, or click to browse"
-                onClick={() => {}}
+                title="LARGE MEDIA"
+                detail="Full toolbox upload frame"
+                actionLabel="UPLOAD MEDIA"
+                onBrowse={() => {}}
               />
             </div>
           </WidgetSection>
