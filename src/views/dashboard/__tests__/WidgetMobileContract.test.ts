@@ -69,6 +69,12 @@ describe("mobile widget geometry contract", () => {
     expect(widgetSystemCss).toContain(".vt-widget-header:has(.header-extra .widget-header-toggle)")
   })
 
+  it("lets intrinsic header toggles size to their labels instead of forcing fixed phone widths", () => {
+    expect(widgetSystemCss).toContain(".widget-header-toggle.is-intrinsic")
+    expect(widgetSystemCss).toContain("width: fit-content")
+    expect(widgetSystemCss).not.toContain('[data-widget-id="comment-replier"] .widget-header-toggle {\n    width: 88px')
+  })
+
   it("keeps portrait module titles full-size, two-line capable, and never ellipsized", () => {
     expect(widgetSystemCss).toContain("font-size: var(--widget-type-title) !important;")
     expect(widgetSystemCss).toContain("white-space: normal !important;")
