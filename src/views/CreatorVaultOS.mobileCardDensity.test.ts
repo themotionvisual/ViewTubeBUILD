@@ -21,6 +21,13 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).not.toContain('title="Navigator"')
  })
 
+ it("filters by canonical Spectrum Tags inside the contextual Filters sheet without duplicating tag management", () => {
+  expect(source).toContain('aria-label="Vault tag filter"')
+  expect(source).toContain("availableTags.map((tag) =>")
+  expect(source).toContain("setSelectedTag((current) => current === tag ? null : tag)")
+  expect(source).not.toContain('aria-label="Create tag from Vault filters"')
+ })
+
  it("keeps advanced metadata filters available inside the contextual filter surface", () => {
   for (const label of [
    'Vault MIME type filter',
