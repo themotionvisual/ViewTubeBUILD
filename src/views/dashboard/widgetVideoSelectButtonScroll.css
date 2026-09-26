@@ -96,3 +96,54 @@
   border-inline: 0;
   border-radius: 0;
 }
+
+
+/* Portalled overlay ownership: open video menus leave the widget's overflow
+   hierarchy entirely, so short/tall modules and following widgets cannot clip it. */
+.widget-video-select-menu.is-portalled {
+  position: fixed;
+  z-index: 9999;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+  border: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, var(--vt-ink)));
+  border-radius: var(--vt-primitive-radius, 7px);
+  background: var(--vt-tone-bg, #fff);
+  color: var(--vt-tone-ink, var(--vt-ink));
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--widget-color, #34cdea) 45%, transparent);
+}
+
+.widget-video-select-menu.is-portalled .widget-video-select-search {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  background: var(--vt-tone-bg, #fff);
+}
+
+.widget-video-select-menu.is-portalled .widget-video-select-search > .widget-search-input {
+  width: 100%;
+  max-width: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.widget-video-select-menu.is-portalled .widget-video-select-options {
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.widget-video-select-menu.is-portalled.is-drop-up {
+  transform-origin: bottom center;
+}
+
+.widget-video-select-menu.is-portalled.is-drop-down {
+  transform-origin: top center;
+}
