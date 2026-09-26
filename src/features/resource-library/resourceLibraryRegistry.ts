@@ -1,4 +1,5 @@
 import recommendationsMarkdown from "../../../docs/resources/library/how-youtube-recommendations-and-discovery-work.md?raw"
+import metricsGlossaryMarkdown from "../../../docs/resources/library/youtube-metrics-and-dimensions-master-glossary.md?raw"
 
 export type ResourceStatus = "draft" | "published" | "archived"
 export type ResourceFormat = "markdown"
@@ -151,7 +152,37 @@ export const RESOURCE_LIBRARY_ENTRIES: readonly ResourceLibraryEntry[] = [
       "docs/resources/library/how-youtube-recommendations-and-discovery-work.md",
     accentPaletteIndex: 8,
     markdown: recommendationsMarkdown,
-  },
+  },,
+  {
+    id: "youtube-metrics-dimensions-glossary",
+    title: "YouTube Metrics and Dimensions Master Glossary",
+    shortTitle: "Metrics & Dimensions",
+    description:
+      "A source-grounded reference to YouTube Studio, Analytics API, Reporting API and Data API metrics, dimensions, schemas, privacy rules and cross-surface mappings.",
+    category: "Analytics",
+    secondaryCategories: ["APIs", "Data Architecture", "Reporting"],
+    format: "markdown",
+    status: "published",
+    tags: [
+      "metrics",
+      "dimensions",
+      "youtube-analytics-api",
+      "youtube-reporting-api",
+      "youtube-data-api",
+      "studio",
+      "shorts",
+      "revenue",
+      "traffic-sources",
+      "retention",
+    ],
+    difficulty: "Intermediate–Advanced",
+    readTime: "35–45 min",
+    updatedAt: "2026-09-26",
+    sourcePath:
+      "docs/resources/library/youtube-metrics-and-dimensions-master-glossary.md",
+    accentPaletteIndex: 6,
+    markdown: metricsGlossaryMarkdown,
+  }
 ] as const
 
 export const getResourceById = (
