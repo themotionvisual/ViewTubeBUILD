@@ -29,6 +29,7 @@ Never infer current-main integration from PR merge state alone.
 ## Registries
 
 - `registry/systems.json` — canonical system/owner map.
+- `registry/capabilities.json` — 14 live Brain capability definitions from `BrainCapabilityRegistry.ts`.
 - `registry/plans.json` — current planning authorities and active execution programs.
 - `registry/donors.json` — historical branch/PR/document donors and disposition.
 - `registry/integrations.json` — cross-owner integration state and current-main verification.
@@ -78,8 +79,8 @@ A projected receipt defaults `mainIntegrationState` to `unknown`; git ancestry/c
 The original governance stack (#422–#424) was merged only into stacked feature bases, not directly into `main`. This branch forward-ports the governance files onto current main `fbc7d25c71fa89c312da32280d9f77182065b42a`.
 
 Current branch validation:
-- 4 registries;
-- 27 authority records;
+- 5 registries;
+- 41 authority records;
 - zero malformed owner/audit/main-state findings;
 - zero broken code/doc/test source references;
 - current package scripts expose `audit:ai-systems`, `test:ai-systems-governance`, and `test:ai-systems-herald`.
