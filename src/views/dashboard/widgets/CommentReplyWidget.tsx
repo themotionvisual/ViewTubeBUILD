@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react"
 import { WidgetShell } from "../WidgetShell"
-import { WidgetFooter, WidgetHeaderStepper, WidgetHeaderToggle, WidgetScrollArea, WidgetSplitButton, WidgetSplitCounterBadge, WidgetTooltip } from "../WidgetPrimitives"
+import { WidgetFooter, WidgetHeaderStepper, WidgetHeaderToggle, WidgetScrollArea, WidgetSpeechBubble, WidgetSplitButton, WidgetSplitCounterBadge, WidgetTooltip, WidgetVideoMiniCard } from "../WidgetPrimitives"
 import {
   MessageSquare,
   Sparkles,
@@ -99,17 +99,16 @@ const CommentVideoThumbnail = ({ title, videoId, thumbnailUrl }: { title: string
   }
 
   return (
-    <div ref={cardRef} className="kpi-video-card comment-video-card">
-      <div ref={topTitleRef} className="kpi-header" style={{ fontSize: `${layout.fontSize}px` }}>{layout.lines[0]}</div>
-      <div className="kpi-body">
-        {videoId ? (
-          <img width={320} height={180} src={thumbnailUrl} onError={handleThumbnailError} alt={`Video thumbnail for ${title}`} />
-        ) : (
-          <div className="comment-video-card-placeholder"><Loader2 size={16} className="animate-spin text-black/20" /></div>
-        )}
-      </div>
-      <div ref={bottomTitleRef} className="kpi-header kpi-header-bottom" style={{ fontSize: `${layout.fontSize}px` }}>{layout.lines[1]}</div>
-    </div>
+    <WidgetVideoMiniCard
+      ref={cardRef}
+      className="comment-video-card"
+      title={<span ref={topTitleRef} style={{ display: "block", width: "100%", fontSize: `${layout.fontSize}px` }}>{layout.lines[0]}</span>}
+      thumbnail={videoId ? thumbnailUrl : undefined}
+      alt={`Video thumbnail for ${title}`}
+      onImageError={handleThumbnailError}
+      placeholder={<Loader2 size={16} className="animate-spin" />}
+      footer={<span ref={bottomTitleRef} style={{ display: "block", width: "100%", fontSize: `${layout.fontSize}px` }}>{layout.lines[1]}</span>}
+    />
   )
 }
 
@@ -159,12 +158,9 @@ const AutoFitCommentBubble = ({ text }: { text: string }) => {
   }, [text])
 
   return (
-    <div ref={bubbleRef} className="comment-responder-bubble">
-      <svg className="comment-responder-bubble-tail" viewBox="0 0 30 20" aria-hidden="true">
-        <path className="comment-responder-bubble-tail-stroke" d="M4 18L15 4L26 18" />
-      </svg>
+    <WidgetSpeechBubble ref={bubbleRef} className="comment-responder-bubble" scrollable>
       <span ref={textRef} className="comment-responder-bubble-copy">{text}</span>
-    </div>
+    </WidgetSpeechBubble>
   )
 }
 
