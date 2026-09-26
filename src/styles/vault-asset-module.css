@@ -253,6 +253,12 @@
   position:relative;width:36px;height:44px;padding:8px 5px 4px;
   border:var(--vt-vault-stroke) solid var(--vt-vault-ink);border-radius:4px;background:#fff;
 }
+.vt-vault-document-excerpt{
+  width:100%;height:100%;padding:6px 5px 15px;overflow:hidden;
+  background:#fff;color:var(--vt-vault-ink);
+  font-size:7px;line-height:1.25;font-weight:800;text-align:left;
+  white-space:normal;word-break:break-word;
+}
 .vt-vault-document-sheet::after{
   content:"";position:absolute;top:-2px;right:-2px;width:12px;height:12px;
   border-left:var(--vt-vault-stroke) solid var(--vt-vault-ink);border-bottom:var(--vt-vault-stroke) solid var(--vt-vault-ink);
