@@ -48,6 +48,8 @@ describe("mobile widget density and edge contracts", () => {
     expect(mobile).toContain(".widget-header-toggle button")
     expect(mobile).toContain("white-space: normal")
     expect(mobile).toContain("text-overflow: clip")
+    expect(mobile).toContain("flex: 0 0 auto !important")
+    expect(mobile).toContain("max-width: 46%")
   })
 
   it("keeps the mobile control deck visible while a widget is collapsed", () => {
