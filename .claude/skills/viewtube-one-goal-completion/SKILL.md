@@ -5,6 +5,8 @@ description: Canonical workflow for all AI agents completing ViewTube. Use befor
 
 # ViewTube One-Goal Completion Skill
 
+> **MIGRATION ROUTE — 2026-09-26:** This skill is retained for compatibility while callers migrate. Global completion authority is now `docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md`; cross-system convergence is `docs/programs/INTEGRATED_APPLICATION.md`; product/capability topology is `docs/architecture/PRODUCT_ARCHITECTURE.md`. Use `viewtube-document-system` for documentation/product-system authoring.
+
 ## Mission
 
 Finish ViewTube as one coherent production creator system. Optimize and connect existing stable systems before inventing anything new.
@@ -12,10 +14,12 @@ Finish ViewTube as one coherent production creator system. Optimize and connect 
 ## Mandatory first reads
 
 1. `CLAUDE.md`
-2. `docs/architecture/VIEWTUBE_ONE_GOAL_COMPLETION_OPERATING_SYSTEM.md`
-3. `tasks/viewtube-one-goal-status.md`
-4. the owning domain master named by the One-Goal artifact
-5. current source + tests for the exact task
+2. `docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md`
+3. `docs/architecture/PRODUCT_ARCHITECTURE.md`
+4. `docs/programs/INTEGRATED_APPLICATION.md`
+5. the owning Domain Authority
+6. current source + tests for the exact task
+7. Task Index / receipt context when available
 
 ## Evidence order
 

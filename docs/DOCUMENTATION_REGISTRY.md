@@ -1,3 +1,5 @@
+> **MIGRATION NOTICE — 2026-09-26:** Canonical machine-readable documentation metadata now lives in `docs/registry.json`. This Markdown file remains the preserved Wave 1 baseline inventory and audit source until a generated human registry replaces it; do not use it to override newer registry entries.
+
 # ViewTube Documentation Registry
 
 **Wave:** Docs consolidation Wave 1  

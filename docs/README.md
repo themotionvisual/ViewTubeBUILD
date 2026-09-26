@@ -1,15 +1,29 @@
 # ViewTube Documentation
 
+> **DOCUMENT SYSTEM PHASE A/B — 2026-09-26:** Current global documentation authority is now machine-routed through `docs/registry.json`. Start with `docs/governance/DOCUMENTATION.md`, `docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md`, `docs/architecture/PRODUCT_ARCHITECTURE.md`, and `docs/programs/INTEGRATED_APPLICATION.md`. Older One Goal / Master Product / Finish Program sources remain preserved in place during side-by-side migration and are explicitly registered as superseded/donor sources pending lossless Removed Archive consolidation.
+
 This directory contains ViewTube architecture, implementation plans, migration records, product references, verification evidence, and historical artifacts.
 
 **Start here before trusting a document title.** The repository currently contains several generations of plans and references. Wave 1 of the documentation consolidation adds an authority map without moving or deleting the existing 119-file baseline.
 
 ## Documentation control
 
-- [Documentation Registry](./DOCUMENTATION_REGISTRY.md) — complete classification of the 119 pre-wave files, including lifecycle and proposed disposition.
-- [Documentation Governance](./DOCUMENTATION_GOVERNANCE.md) — rules for authority, supersession, placement, consolidation, and deletion safety.
+- [Machine Documentation Registry](./registry.json) — canonical current authority metadata and supersession routing.
+- [Legacy Documentation Registry](./DOCUMENTATION_REGISTRY.md) — preserved Wave 1 baseline inventory/audit source pending generated replacement.
+- [Documentation Governance](./governance/DOCUMENTATION.md) — current rules for authority, metadata, supersession, lossless consolidation, Removed Archive, and document creation.
 
 ## Current explicit authorities
+
+| Concern | Current authority |
+| --- | --- |
+| Product completion constitution | [Product Completion Constitution](./architecture/PRODUCT_COMPLETION_CONSTITUTION.md) |
+| Product / capability architecture | [Product Architecture](./architecture/PRODUCT_ARCHITECTURE.md) + [Capability Registry](./architecture/capabilities.json) |
+| Cross-system application convergence | [Integrated Application Program](./programs/INTEGRATED_APPLICATION.md) |
+| Documentation governance | [Documentation Governance](./governance/DOCUMENTATION.md) + [Machine Registry](./registry.json) |
+| Verification / completion evidence | [Verification](./governance/VERIFICATION.md) |
+
+### Existing scoped authorities
+
 
 | Concern | Current authority |
 | --- | --- |
@@ -29,7 +43,7 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | AI / Brain runtime architecture | [Unified AI System Canonical Consolidation Contract](./brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md) |
 | Prompt system | [Prompt System Authority](./brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md) |
 | Herald repository-work governance | [HERALD-OUT](../agent/contracts/herald-out.md) + [workflow](../agent/contracts/herald-workflow.md) (implemented code/record authority) |
-| Cross-system product / Master Tool architecture | [Master Product, Tools & Workstation Architecture](./architecture/VIEWTUBE_MASTER_PRODUCT_TOOLS_WORKSTATION_ARCHITECTURE.md) — coordinates lifecycle/tool taxonomy and code-aware integration; scoped domain authorities still own internals |
+| Cross-system product / Master Tool architecture | [Product Architecture](./architecture/PRODUCT_ARCHITECTURE.md) — coordinates lifecycle/tool taxonomy and code-aware integration; scoped domain authorities still own internals |
 
 These are scoped authorities. They do not make every neighboring plan or reference obsolete automatically.
 
@@ -37,7 +51,7 @@ These are scoped authorities. They do not make every neighboring plan or referen
 
 When beginning work:
 
-1. Open the [registry](./DOCUMENTATION_REGISTRY.md).
+1. Open the machine [registry](./registry.json); use the legacy Markdown registry only for baseline/audit history.
 2. Find the owning domain and lifecycle for the relevant document.
 3. Prefer a `canonical` document over a historical plan.
 4. For `review` items, verify the claim against current code/tests before relying on it.
@@ -164,3 +178,10 @@ Superseded broad AI audits, phase manifests and phase-closeout records are prese
 Before broad new AI/Brain/Project/Asset integration work, use [System Convergence & Consolidation](./architecture/VIEWTUBE_SYSTEM_CONVERGENCE_AND_CONSOLIDATION.md).
 
 It coordinates overlap reduction across Creator Context, Evidence & Intelligence, Project/Content/Asset identity, Creator Operations, Outcomes/Learning and BrainRuntime. It does not replace the bounded authorities above. Its rule is **converge before expansion**: donor-harvest useful behavior, migrate callers through stronger canonical contracts, prove parity/zero reachability, quarantine, then remove.
+
+
+## Master Sources
+
+Master Sources are exceptional high-value references that must be consulted as prior art within their declared scope but do not override current authorities or verified implementation evidence.
+
+- [Deep Research & Construction Source](./references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md) — MASTER_SOURCE for product/tool ideation, master-tool consolidation, source/claim auditing, API feasibility, Channel Brain/agent architecture, analytics/visualization, creator workflow, external integrations, infrastructure/economics/governance, and roadmap construction.

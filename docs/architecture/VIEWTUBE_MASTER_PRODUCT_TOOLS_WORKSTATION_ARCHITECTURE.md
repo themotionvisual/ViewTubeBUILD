@@ -1,3 +1,5 @@
+> **MIGRATION NOTICE — 2026-09-26:** Product/capability architecture moved to `docs/architecture/PRODUCT_ARCHITECTURE.md` and `docs/architecture/capabilities.json`. This source remains intact below for consolidation lineage and pending archive.
+
 # ViewTube Master Product, Tools & Workstation Architecture
 
 **Status:** CANONICAL LIVING COORDINATION RESOURCE — bounded cross-system product/tool architecture  

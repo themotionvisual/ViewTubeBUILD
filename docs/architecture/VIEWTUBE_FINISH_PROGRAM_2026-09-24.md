@@ -1,3 +1,5 @@
+> **MIGRATION NOTICE — 2026-09-26:** Permanent application-integration program authority moved to `docs/programs/INTEGRATED_APPLICATION.md`. This dated plan remains an implementation/consolidation source until all open work is reconciled into the Task Index and Removed Archive.
+
 # ViewTube Finish Program — Current-Main Completion Plan
 
 **Date:** 2026-09-24  

@@ -1,3 +1,5 @@
+> **MIGRATION NOTICE — 2026-09-26:** Product-completion authority moved to `docs/architecture/PRODUCT_COMPLETION_CONSTITUTION.md`. Detailed cross-system convergence belongs to `docs/programs/INTEGRATED_APPLICATION.md`; exact work/status belongs in the Task Index. This source remains intact for lossless consolidation and pending archive.
+
 # ViewTube One-Goal Completion Operating System
 
 **Status:** CANONICAL LIVING COMPLETION / AUDIT / STATUS / AGENT-HANDOFF AUTHORITY  

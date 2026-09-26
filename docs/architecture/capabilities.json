@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 1,
+  "lastEdited": "2026-09-26",
+  "source": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+  "capabilities": [
+    {
+      "id": "CAP-CREATOR-CONTEXT",
+      "name": "Creator Context Resolution",
+      "owner": "Creator Context & Knowledge",
+      "status": "ACCEPTED",
+      "description": "Resolve channel/profile/knowledge/style/project/content/surface context and permissions through one governed facade.",
+      "masterTools": [
+        "Channel Intelligence Hub",
+        "Project & Production Command"
+      ],
+      "creatorLifecycle": [
+        "Validate",
+        "Design",
+        "Produce",
+        "Operate"
+      ],
+      "domains": [
+        "brain",
+        "projects"
+      ],
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md"
+    },
+    {
+      "id": "CAP-EVIDENCE-INTELLIGENCE",
+      "name": "Evidence & Intelligence",
+      "owner": "Evidence & Intelligence",
+      "status": "ACCEPTED",
+      "description": "Ground specialist intelligence in canonical evidence, deterministic signals, provenance, freshness and missingness.",
+      "masterTools": [
+        "Opportunity Radar",
+        "Channel Intelligence Hub",
+        "Content Strategy Lab"
+      ],
+      "creatorLifecycle": [
+        "Discover",
+        "Validate",
+        "Learn"
+      ],
+      "domains": [
+        "analytics",
+        "brain"
+      ],
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md"
+    },
+    {
+      "id": "CAP-PROJECT-CONTENT-IDENTITY",
+      "name": "Project / ContentBuild Identity",
+      "owner": "Projects + ContentBuild",
+      "status": "ACCEPTED",
+      "description": "Maintain one durable content identity across planning, tools, packages, assets, publish binding and outcomes.",
+      "masterTools": [
+        "Project & Production Command"
+      ],
+      "creatorLifecycle": [
+        "Design",
+        "Produce",
+        "Assemble",
+        "Package",
+        "Publish",
+        "Learn"
+      ],
+      "domains": [
+        "projects",
+        "asset-engine",
+        "publisher"
+      ],
+      "authority": "docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md"
+    },
+    {
+      "id": "CAP-ASSET-LINEAGE",
+      "name": "Asset Lineage & Provenance",
+      "owner": "Asset Engine",
+      "status": "ACCEPTED",
+      "description": "Track artifact identity, versions, variants, selections, provenance, dependencies and outcome attribution.",
+      "masterTools": [
+        "Vault & Asset Engine",
+        "Visual Development Studio",
+        "Video Director & Editor"
+      ],
+      "creatorLifecycle": [
+        "Produce",
+        "Assemble",
+        "Package",
+        "Learn"
+      ],
+      "domains": [
+        "asset-engine",
+        "vault",
+        "editor"
+      ],
+      "authority": "docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md"
+    },
+    {
+      "id": "CAP-CREATOR-OPERATIONS",
+      "name": "Creator Operations & Generation",
+      "owner": "Creator Operations & Generation",
+      "status": "ACCEPTED",
+      "description": "Provide a shared operation/provenance model for reasoning, generation, transforms, rendering, research, handoffs and execution.",
+      "masterTools": [
+        "Script & Story Studio",
+        "Visual Development Studio",
+        "Video Director & Editor"
+      ],
+      "creatorLifecycle": [
+        "Design",
+        "Produce",
+        "Assemble"
+      ],
+      "domains": [
+        "brain",
+        "asset-engine",
+        "editor"
+      ],
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md"
+    },
+    {
+      "id": "CAP-OUTCOME-LEARNING",
+      "name": "Outcome Evaluation & Governed Learning",
+      "owner": "Outcomes, Evaluation & Learning",
+      "status": "ACCEPTED",
+      "description": "Connect actions to measured outcomes, evaluation and governed durable learning.",
+      "masterTools": [
+        "Channel Intelligence Hub",
+        "Packaging & Experiment Lab",
+        "Audience & Community Desk"
+      ],
+      "creatorLifecycle": [
+        "Learn",
+        "Operate"
+      ],
+      "domains": [
+        "brain",
+        "analytics"
+      ],
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md"
+    },
+    {
+      "id": "CAP-BRAIN-EXPERIENCE",
+      "name": "Brain Runtime Experience",
+      "owner": "Brain Runtime",
+      "status": "ACCEPTED",
+      "description": "Route creator-facing AI surfaces through shared Brain runtime, capability and model gateway contracts.",
+      "masterTools": [
+        "Channel Intelligence Hub",
+        "Content Strategy Lab"
+      ],
+      "creatorLifecycle": [
+        "Discover",
+        "Validate",
+        "Design",
+        "Produce",
+        "Learn"
+      ],
+      "domains": [
+        "brain"
+      ],
+      "authority": "docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md"
+    },
+    {
+      "id": "CAP-ANALYTICS-CANON",
+      "name": "Canonical Analytics Evidence",
+      "owner": "VT-SYNC + analytics-canon",
+      "status": "ACCEPTED",
+      "description": "Acquire, persist and normalize YouTube analytics with truthful window, scope, provenance, coverage and missingness semantics.",
+      "masterTools": [
+        "Channel Intelligence Hub",
+        "Monetization & Operations Hub"
+      ],
+      "creatorLifecycle": [
+        "Validate",
+        "Learn",
+        "Operate"
+      ],
+      "domains": [
+        "analytics"
+      ],
+      "authority": "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md"
+    },
+    {
+      "id": "CAP-EDITOR-RENDER",
+      "name": "Editor & Deterministic Rendering",
+      "owner": "Editor + Remotion",
+      "status": "ACCEPTED",
+      "description": "Edit one portable project model across desktop/mobile and produce deterministic versioned outputs.",
+      "masterTools": [
+        "Video Director & Editor"
+      ],
+      "creatorLifecycle": [
+        "Assemble"
+      ],
+      "domains": [
+        "editor"
+      ],
+      "authority": "docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md"
+    },
+    {
+      "id": "CAP-PUBLISH",
+      "name": "Approved Publishing & Distribution",
+      "owner": "Publisher",
+      "status": "ACCEPTED",
+      "description": "Freeze approved intent, execute recoverable external side effects, bind remote identity and preserve exact published variants.",
+      "masterTools": [
+        "Publisher & Distribution Center"
+      ],
+      "creatorLifecycle": [
+        "Publish"
+      ],
+      "domains": [
+        "publisher"
+      ],
+      "authority": "docs/architecture/PRODUCT_ARCHITECTURE.md"
+    },
+    {
+      "id": "CAP-WIDGET-SURFACES",
+      "name": "Composable Dashboard Widgets",
+      "owner": "Dashboard Widget System",
+      "status": "ACCEPTED",
+      "description": "Expose governed capabilities through responsive purpose-built widgets without creating parallel product owners.",
+      "masterTools": [
+        "Monetization & Operations Hub"
+      ],
+      "creatorLifecycle": [
+        "Operate"
+      ],
+      "domains": [
+        "widgets",
+        "toolbox-ui"
+      ],
+      "authority": "docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md"
+    },
+    {
+      "id": "CAP-DOCUMENT-GOVERNANCE",
+      "name": "Documentation Governance & Lineage",
+      "owner": "Documentation Governance",
+      "status": "ACCEPTED",
+      "description": "Maintain one authority graph, lossless consolidation, removed archive, machine registry and agent-readable context.",
+      "masterTools": [],
+      "creatorLifecycle": [
+        "Operate"
+      ],
+      "domains": [
+        "governance"
+      ],
+      "authority": "docs/governance/DOCUMENTATION.md"
+    },
+    {
+      "id": "CAP-VERIFICATION",
+      "name": "Implementation Verification",
+      "owner": "Verification",
+      "status": "ACCEPTED",
+      "description": "Require task-specific tests, runtime exercise, screenshot analysis, correction, reverification and receipts before completion.",
+      "masterTools": [],
+      "creatorLifecycle": [
+        "Operate"
+      ],
+      "domains": [
+        "governance"
+      ],
+      "authority": "docs/governance/VERIFICATION.md"
+    }
+  ]
+}
