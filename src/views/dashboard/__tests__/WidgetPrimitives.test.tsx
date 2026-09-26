@@ -730,7 +730,7 @@ describe("reference library recovery completion", () => {
     expect(renderToStaticMarkup(<WidgetLeftSplitBadge spectrum="cyan" height={32} width="full" icon={<Check />}>Full</WidgetLeftSplitBadge>)).toContain("is-width-full")
     expect(matrixCss).toContain(".widget-spectrum-fill-badge.is-width-full")
     expect(matrixCss).toContain(".widget-split-badge.is-width-full")
-    expect(matrixCss).toContain("grid-column:full-start / full-end")
+    expect(matrixCss).toMatch(/grid-column:\\s*full-start\\s*\\/\\s*full-end/)
   })
 
   it("lets the video menu expand beyond a narrow trigger while remaining viewport bounded", () => {
@@ -749,8 +749,8 @@ describe("reference library recovery completion", () => {
     expect(markup).toContain("is-size-small")
     expect(markup).toContain("is-size-large")
     expect(compoundCss).toContain(".widget-data-grid.is-size-large")
-    expect(referenceSource).toContain('<WidgetDataGrid size="small"')
-    expect(referenceSource).toContain('<WidgetDataGrid size="large"')
+    expect(referenceSource).toMatch(/<WidgetDataGrid\s+[\s\S]*?size="small"[\s\S]*?ariaLabel="Audience segment grid example"/)
+    expect(referenceSource).toMatch(/<WidgetDataGrid\s+[\s\S]*?size="large"[\s\S]*?ariaLabel="Large audience segment grid example"/)
     expect(compoundCss).toContain(".widget-calendar-day-label")
     expect(compoundCss).toContain("font-size:13px")
   })
