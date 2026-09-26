@@ -64,6 +64,7 @@ const AccountConnectPage = lazy(() => import("../views/AccountConnectPage"))
 const SuperToolIndex = lazy(() => import("../views/SuperToolIndex"))
 const SuperToolRoute = lazy(() => import("../views/SuperToolRoute"))
 const CreatorVaultOS = lazy(() => import("../views/CreatorVaultOS"))
+const ResourceLibrary = lazy(() => import("../features/resource-library/ResourceLibrary"))
 
 /**
  * Honors the legacy "/data-transparency?internalTool=<id>" address.
@@ -180,6 +181,7 @@ export const AppRoutes: React.FC = () => {
     <Route path="/video-manager" element={<Navigate to="/studio" replace />} />
     <Route path="/strategy" element={<Navigate to="/studio" replace />} />
     <Route path="/vault" element={<CreatorVaultOS />} />
+    <Route path="/resources" element={<ResourceLibrary />} />
 
     {/* Hidden Routes - Access by typing URL directly */}
     <Route path="/simple-analytics" element={<SimpleAnalytics />} />

@@ -16,6 +16,7 @@ import {
  Gear,
  Compass,
  Database,
+ Books,
 } from "@phosphor-icons/react"
 
 export type NavIconId =
@@ -28,6 +29,7 @@ export type NavIconId =
  | "settings"
  | "user_guide"
  | "vault"
+ | "resources"
 
 const icons: Record<NavIconId, PhosphorIcon> = {
  dashboard:  Target,      // Concentric target — Dashboard's aim/focus metaphor
@@ -39,6 +41,7 @@ const icons: Record<NavIconId, PhosphorIcon> = {
  settings:   Gear,        // Dense-toothed cog
  user_guide: Compass,     // North-pointing compass rose
  vault:      Database,    // Durable creator asset store
+ resources:  Books,       // Creator education and reference library
 }
 
 export interface NavIconProps {

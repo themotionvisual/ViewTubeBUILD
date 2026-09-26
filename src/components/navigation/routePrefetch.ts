@@ -23,6 +23,7 @@ const factories: Record<string, PrefetchFactory> = {
  "/local-analytics": () => import("../../features/vt-sync-local/shell/VtSyncLocalAnalyticsPage"),
  "/analytics": () => import("../../features/vt-sync-local/shell/VtSyncLocalAnalyticsPage"),
  "/editor": () => import("../../views/EditorV1Page"),
+ "/resources": () => import("../../features/resource-library/ResourceLibrary"),
  "/settings": () => import("../../views/Settings"),
  "/user-guide": () => import("../../views/UserGuide"),
  "/crown": () => import("../../views/CrownControlRoom"),

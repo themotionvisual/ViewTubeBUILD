@@ -17,6 +17,7 @@ export type ApplicationMenuIconId =
   | "integrations"
   | "crown"
   | "guide"
+  | "resources"
   | "about"
 
 export interface ApplicationMenuDestination {
@@ -161,6 +162,15 @@ export const APPLICATION_MENU_DESTINATIONS: readonly ApplicationMenuDestination[
     group: "account",
     icon: "crown",
     keywords: ["king", "emperor", "mission", "work order", "receipt", "artifact", "verification", "governance"],
+  },
+  {
+    id: "resources",
+    path: "/resources",
+    label: "Resource Library",
+    description: "Open source-grounded creator guides and references",
+    group: "support",
+    icon: "resources",
+    keywords: ["resources", "library", "guides", "recommendations", "discovery", "algorithm", "youtube education"],
   },
   {
     id: "user-guide",

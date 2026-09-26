@@ -47,7 +47,7 @@ describe("adaptive navigation contract", () => {
     expect(listener).toHaveBeenCalledTimes(2)
   })
 
-  it("keeps the canonical route and Palette 06 order", () => {
+  it("keeps the canonical primary route and palette order", () => {
     expect(PRIMARY_NAV_ITEMS.map(({ path }) => path)).toEqual([
       "/",
       "/studio",
@@ -55,9 +55,11 @@ describe("adaptive navigation contract", () => {
       "/ai-brain",
       "/local-analytics",
       "/editor",
+      "/vault",
+      "/resources",
       "/settings",
       "/user-guide",
     ])
-    expect(PRIMARY_NAV_ITEMS.map(({ paletteIndex }) => paletteIndex)).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
+    expect(PRIMARY_NAV_ITEMS.map(({ paletteIndex }) => paletteIndex)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
   })
 })
