@@ -1,3 +1,5 @@
+> **PHASE D MIGRATION NOTICE — 2026-09-26:** Superseded as the current Brain architecture authority by `docs/domains/BRAIN.md`. The durable runtime, context, evidence, model-gateway, specialist-intelligence, action, outcome and learning rules have been consolidated there. This dated contract remains intact below as donor/provenance material pending lossless Removed Archive consolidation.
+
 # ViewTube Unified AI System — Canonical Consolidation Contract
 
 **Date:** 2026-09-17  
