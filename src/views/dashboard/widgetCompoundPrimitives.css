@@ -56,7 +56,7 @@
   border-right:2px solid var(--widget-border);
   border-bottom:2px solid var(--widget-border);
   background:white;
-  font-size:11px;
+  font-size:12px;
   font-weight:850;
   line-height:1.12;
   overflow-wrap:anywhere;
@@ -64,9 +64,18 @@
 .widget-data-grid-row.is-header .widget-data-grid-cell{
   min-height:32px;
   background:var(--widget-color);
-  font-size:12px;
+  font-size:13px;
   font-weight:1000;
   text-transform:uppercase;
+}
+.widget-data-grid.is-size-large .widget-data-grid-cell{
+  min-height:42px;
+  padding:9px 10px;
+  font-size:14px;
+}
+.widget-data-grid.is-size-large .widget-data-grid-row.is-header .widget-data-grid-cell{
+  min-height:46px;
+  font-size:15px;
 }
 .widget-data-grid-cell.is-align-center{justify-content:center;text-align:center}
 .widget-data-grid-cell.is-align-end{justify-content:flex-end;text-align:right}
@@ -143,13 +152,13 @@
   background:white;
 }
 .widget-calendar-day-label{
-  min-height:28px;
+  min-height:30px;
   display:flex;
   align-items:center;
-  padding:4px 7px;
+  padding:5px 8px;
   border-bottom:2px solid var(--widget-border);
   background:color-mix(in srgb,var(--widget-color) 10%,white);
-  font-size:11px;
+  font-size:13px;
   font-weight:1000;
   text-transform:uppercase;
 }
@@ -162,12 +171,12 @@
 .widget-calendar-event{
   width:max-content;
   max-width:100%;
-  min-height:24px;
+  min-height:26px;
   border:2px solid var(--widget-border);
   border-radius:5px;
-  padding:2px 7px;
+  padding:3px 8px;
   color:var(--widget-ink,var(--vt-ink,var(--widget-border)));
-  font-size:10px;
+  font-size:12px;
   font-weight:1000;
   line-height:1;
   text-align:left;
