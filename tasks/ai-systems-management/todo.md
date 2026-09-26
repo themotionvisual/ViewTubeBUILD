@@ -34,7 +34,7 @@
 - [ ] Claim release.
 - [ ] Completion receipt.
 - [ ] Handoff receipt.
-- [ ] Stale claim detection.
+- [x] Stale claim detection from live Herald writer locks.
 - [ ] Collision detection.
 - [ ] Herald adapter/normalization.
 
@@ -47,7 +47,9 @@
 - [ ] Prompt/model provenance joins.
 
 ## Health / CI
-- [ ] JSON schema validation.
+- [x] Multi-registry audit coverage.
+- [x] Live Herald claim ingestion for stale-lock detection.
+- [~] JSON schema validation. Record-level validation is enforced; full JSON Schema engine validation remains open.
 - [ ] Broken docs refs.
 - [ ] Duplicate owner detection.
 - [ ] stale audited-main detection.
