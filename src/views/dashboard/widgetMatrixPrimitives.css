@@ -431,28 +431,40 @@
 .widget-toast.is-spectrum-pink,
 .widget-split-badge.is-spectrum-pink { --widget-spectrum-fill: #FF7AC8; --widget-spectrum-ink: #FF7AC8; --vt-tone-fill: #FF7AC8; }
 
-/* Spectrum badges/toasts share the exact same monochrome ownership as
-   spectrum tags: hue-colored stroke, text and icons over a pale hue tint.
-   They never fall back to widget ink or black. */
+/* Spectrum surfaces retain their assigned spectrum hue, while split-badge
+   copy and glyphs use global ViewTube Ink so a parent widget cannot recolor
+   them. Toasts keep their semantic spectrum ink ownership. */
 .widget-spectrum-fill-badge[class*="is-spectrum-"],
 .widget-split-badge[class*="is-spectrum-"] {
   border: 2px solid var(--widget-spectrum-ink) !important;
   background: color-mix(in srgb, var(--widget-spectrum-fill) 18%, #fff) !important;
-  color: var(--widget-spectrum-ink) !important;
   --vt-tone-stroke: var(--widget-spectrum-ink);
-  --vt-tone-ink: var(--widget-spectrum-ink);
 }
 
-.widget-spectrum-fill-badge[class*="is-spectrum-"] svg,
-.widget-split-badge[class*="is-spectrum-"] svg {
+.widget-spectrum-fill-badge[class*="is-spectrum-"] {
+  color: var(--widget-spectrum-ink) !important;
+  --vt-tone-ink: var(--widget-spectrum-ink);
+}
+.widget-spectrum-fill-badge[class*="is-spectrum-"] svg {
   color: var(--widget-spectrum-ink) !important;
   stroke: var(--widget-spectrum-ink) !important;
 }
 
+.widget-split-badge[class*="is-spectrum-"] {
+  color: var(--vt-ink, #243247) !important;
+  --vt-tone-ink: var(--vt-ink, #243247);
+}
+.widget-split-badge[class*="is-spectrum-"] svg {
+  color: var(--vt-ink, #243247) !important;
+  stroke: var(--vt-ink, #243247) !important;
+}
 .widget-split-badge[class*="is-spectrum-"] .widget-split-badge-icon {
   border-color: var(--widget-spectrum-ink) !important;
   background: color-mix(in srgb, var(--widget-spectrum-fill) 28%, #fff) !important;
-  color: var(--widget-spectrum-ink) !important;
+  color: var(--vt-ink, #243247) !important;
+}
+.widget-split-badge[class*="is-spectrum-"] .widget-split-badge-label {
+  color: var(--vt-ink, #243247) !important;
 }
 
 .widget-toast[class*="is-spectrum-"] {
@@ -1184,23 +1196,4 @@
 .is-height-18.widget-split-counter.is-tone-secondary {
   border: 0 !important;
   box-shadow: none !important;
-}
-
-
-/* Spectrum split badges keep their spectrum surface but use global ViewTube Ink
-   for text, glyphs and dividers rather than inheriting the current widget ink. */
-.widget-split-badge[class*="is-spectrum-"]{
-  color:var(--vt-ink,#243247) !important;
-  border-color:var(--vt-ink,#243247) !important;
-}
-.widget-split-badge[class*="is-spectrum-"] .widget-split-badge-icon{
-  border-inline-end-color:var(--vt-ink,#243247) !important;
-  color:var(--vt-ink,#243247) !important;
-}
-.widget-split-badge[class*="is-spectrum-"] .widget-split-badge-icon > svg{
-  stroke:var(--vt-ink,#243247) !important;
-  color:var(--vt-ink,#243247) !important;
-}
-.widget-split-badge[class*="is-spectrum-"] .widget-split-badge-label{
-  color:var(--vt-ink,#243247) !important;
 }
