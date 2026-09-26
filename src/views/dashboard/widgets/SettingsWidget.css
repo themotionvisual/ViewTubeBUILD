@@ -260,3 +260,27 @@
     grid-template-columns:repeat(3,minmax(0,1fr));
   }
 }
+
+
+.settings-switchboard-issue{
+  min-width:0;
+  display:grid;
+  gap:3px;
+  padding:7px 8px;
+  border:2px solid var(--widget-border,var(--vt-ink));
+  border-radius:6px;
+  background:color-mix(in srgb,var(--widget-color) 15%,white);
+  color:var(--vt-ink,var(--widget-border));
+}
+.settings-switchboard-issue strong{
+  font-size:9px;
+  font-weight:1000;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.settings-switchboard-issue span{
+  font-size:9px;
+  font-weight:800;
+  line-height:1.15;
+  overflow-wrap:anywhere;
+}
