@@ -179,7 +179,7 @@
 }
 
 .widget-video-select-trigger {
-  --widget-video-split-bay: calc(var(--vt-primitive-height, 32px) - (var(--vt-primitive-stroke, 2px) * 2));
+  --widget-video-split-bay: var(--vt-primitive-height, 32px);
   width: 100%;
   display: grid;
   grid-template-columns: var(--widget-video-split-bay) minmax(0, 1fr);
@@ -197,7 +197,7 @@
   min-width: var(--widget-video-split-bay);
   height: 100%;
   display: grid;
-  grid-template-rows: 52% 48%;
+  grid-template-rows: 1fr 1fr;
   overflow: hidden;
   border-inline-end: var(--vt-primitive-stroke, 2px) solid var(--vt-tone-stroke, var(--widget-border, #243247));
   background: color-mix(in srgb, var(--widget-color, #34cdea) 82%, white);
@@ -236,16 +236,12 @@
 .widget-video-select-trigger.is-height-18 .widget-video-select-trigger-selector > span + span {
   border-block-start-width: 1px;
 }
-.widget-video-select-trigger.is-height-24 { --widget-video-split-bay: 40px; }
-.widget-video-select-trigger.is-height-32 { --widget-video-split-bay: 48px; }
-.widget-video-select-trigger.is-height-38 { --widget-video-split-bay: 54px; }
-
-.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 6px; letter-spacing: .02em; }
-.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 7px; letter-spacing: .02em; }
-.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 8px; letter-spacing: .025em; }
-.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector svg { width: 7px; height: 7px; transform: translateY(-.5px); }
-.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector svg { width: 9px; height: 9px; transform: translateY(-.5px); }
-.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector svg { width: 10px; height: 10px; transform: translateY(-.5px); }
+.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector > span:first-child { font-size: 8px; letter-spacing: .02em; }
+.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector > span:first-child { font-size: 10px; letter-spacing: .02em; }
+.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector > span:first-child { font-size: 11px; letter-spacing: .025em; }
+.widget-video-select-trigger.is-height-24 .widget-video-select-trigger-selector svg { width: 9px; height: 9px; }
+.widget-video-select-trigger.is-height-32 .widget-video-select-trigger-selector svg { width: 12px; height: 12px; }
+.widget-video-select-trigger.is-height-38 .widget-video-select-trigger-selector svg { width: 14px; height: 14px; }
 
 
 .widget-video-select-trigger-copy {
@@ -490,7 +486,7 @@
   -webkit-line-clamp: 3;
   white-space: normal;
   text-overflow: clip;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 1000;
   line-height: 1.02;
   text-transform: uppercase;
@@ -536,18 +532,18 @@
   display: none;
 }
 .widget-video-select-menu.is-height-24 .widget-video-select-option-copy strong {
-  font-size: 8px;
+  font-size: 10px;
   -webkit-line-clamp: 2;
 }
 .widget-video-select-menu.is-height-24 .widget-video-select-views {
   display: none;
 }
 .widget-video-select-menu.is-height-32 .widget-video-select-option-copy strong {
-  font-size: 9px;
+  font-size: 12px;
   -webkit-line-clamp: 2;
 }
 .widget-video-select-menu.is-height-38 .widget-video-select-option-copy strong {
-  font-size: 10px;
+  font-size: 13px;
   -webkit-line-clamp: 3;
 }
 
@@ -1092,4 +1088,24 @@
   box-shadow:0 0 0 1px var(--widget-color,#34cdea)!important;
   position:relative;
   z-index:2;
+}
+
+
+.widget-video-select.is-open{
+  z-index:1000;
+}
+.widget-video-select.is-drop-up .widget-video-select-menu{
+  top:auto;
+  bottom:calc(100% + 4px);
+}
+:where(.dashboard-barrier) .vt-widget:has(.widget-video-select.is-open){
+  z-index:900;
+}
+:where(.dashboard-barrier) .vt-widget:has(.widget-video-select.is-open) :is(
+  .vt-widget-content,
+  .vt-widget-body,
+  .vt-widget-collapse-inner,
+  .vt-widget-collapse-region
+){
+  overflow:visible !important;
 }
