@@ -21,6 +21,20 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).not.toContain('title="Navigator"')
  })
 
+ it("keeps advanced metadata filters available inside the contextual filter surface", () => {
+  for (const label of [
+   'Vault MIME type filter',
+   'Vault updated from filter',
+   'Vault updated to filter',
+   'Vault minimum width filter',
+   'Vault minimum height filter',
+   'Vault minimum duration filter',
+   'Vault maximum duration filter',
+   'Vault minimum size filter',
+   'Vault maximum size filter',
+  ]) expect(source).toContain(`aria-label="${label}"`)
+ })
+
  it("moves project and collection navigation into a contextual library drawer", () => {
   expect(source).toContain('aria-label="Vault library navigation"')
   expect(source).not.toContain('title="Explorer"')
