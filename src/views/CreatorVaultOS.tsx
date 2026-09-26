@@ -1966,6 +1966,12 @@ const CreatorVaultOS: React.FC = () => {
          <StandardInput value={batchPrefix} onChange={(event) => setBatchPrefix(event.target.value)} placeholder="Rename prefix, e.g. EP01_" aria-label="Batch rename prefix" />
          <SubToolboxInnerActionButton label="Apply Prefix" iconName="edit" tone="orange" onClick={applyBatchPrefix} disabled={!batchPrefix.trim()} />
         </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+         <SubToolboxInnerActionButton label="Toggle Favorite" iconName="sparkles" tone="yellow" onClick={toggleSelectedFavorites} />
+         <SubToolboxInnerActionButton label="Archive Selection" iconName="archive" tone="cyan" onClick={archiveSelection} />
+         <SubToolboxInnerActionButton label="Trash Selection" iconName="x" tone="pink" onClick={trashSelection} />
+         <SubToolboxInnerActionButton label="Restore Selection" iconName="checklist" tone="green" onClick={restoreSelection} />
+        </div>
        </section>
       ) : null}
 
@@ -1985,6 +1991,16 @@ const CreatorVaultOS: React.FC = () => {
          <StandardInput value={manualCollectionName} onChange={(event) => setManualCollectionName(event.target.value)} placeholder="New collection name" aria-label="New Vault collection name" />
          <SubToolboxInnerActionButton label="Create Collection From Selection" iconName="collection" tone="green" onClick={createManualCollection} disabled={!manualCollectionName.trim()} />
          <SubToolboxInnerActionButton label="Create Brand Kit From Selection" iconName="sparkles" tone="yellow" onClick={createBrandKitFromSelection} />
+         <SubToolboxSelect value={targetCollectionId} onChange={(event) => setTargetCollectionId(event.target.value)} aria-label="Target Vault collection">
+          <option value="">Target collection…</option>
+          {manualCollections.map((collection) => <option key={collection.id} value={collection.id}>{collection.name}</option>)}
+         </SubToolboxSelect>
+         <SubToolboxInnerActionButton label="Add Selection to Collection" iconName="collection" tone="cyan" onClick={addSelectionToCollection} disabled={!targetCollectionId} />
+         <SubToolboxInnerActionButton label="Set Target Collection as Brand Kit" iconName="sparkles" tone="yellow" onClick={() => targetCollectionId && makeBrandKit(targetCollectionId)} disabled={!targetCollectionId} />
+         <SubToolboxInnerActionButton label="Remove Selected Asset From Active Collection" iconName="x" tone="pink" onClick={removeSelectedAssetFromActiveCollection} disabled={!activeCollectionId || !selectedAsset} />
+         <StandardInput value={collectionRename} onChange={(event) => setCollectionRename(event.target.value)} placeholder="Rename active collection" aria-label="Rename active Vault collection" />
+         <SubToolboxInnerActionButton label="Rename Active Collection" iconName="edit" tone="orange" onClick={renameActiveCollection} disabled={!activeCollectionId || !collectionRename.trim()} />
+         <SubToolboxInnerActionButton label="Delete Active Collection" iconName="x" tone="pink" onClick={() => activeCollectionId && removeManualCollection(activeCollectionId)} disabled={!activeCollectionId} />
         </div>
        </section>
       ) : null}
@@ -2004,6 +2020,13 @@ const CreatorVaultOS: React.FC = () => {
         <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
          <SubToolboxInnerActionButton label="Export Selected Metadata JSON" iconName="database" tone="cyan" onClick={() => exportVaultMetadata(allAssets.filter((asset) => selectedAssetIds.includes(asset.id)), "json")} />
          <SubToolboxInnerActionButton label="Export Selected Metadata CSV" iconName="database" tone="cyan" onClick={() => exportVaultMetadata(allAssets.filter((asset) => selectedAssetIds.includes(asset.id)), "csv")} />
+        </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+         <SubToolboxInnerActionButton label="Open Quick Look" iconName="eye" tone="cyan" onClick={openSelectedQuickLook} disabled={!selectedAsset} />
+         <SubToolboxInnerActionButton label="Open Filmstrip" iconName="layers" tone="orange" onClick={() => { setViewMode("filmstrip"); assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }) }} />
+         <SubToolboxInnerActionButton label="Open Lineage" iconName="layers" tone="purple" onClick={() => { setViewMode("lineage"); assetLibraryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }) }} disabled={!selectedAsset} />
+         <SubToolboxInnerActionButton label="Copy Asset ID" iconName="link" tone="yellow" onClick={copySelectedAssetId} disabled={!selectedAsset} />
+         <SubToolboxInnerActionButton label="Open Inspector" iconName="database" tone="green" onClick={openSelectedInspector} disabled={!selectedAsset} />
         </div>
        </section>
       ) : null}
