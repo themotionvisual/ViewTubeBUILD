@@ -260,24 +260,6 @@
     max-width: 100% !important;
     min-width: 0 !important;
   }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-    height: 80px !important;
-    min-height: 80px !important;
-    max-height: 80px !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-    width: 80px !important;
-    min-width: 80px !important;
-    height: 80px !important;
-    flex-basis: 80px !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :last-child {
-    gap: 2px !important;
-    padding-right: 2px !important;
-  }
 }
 
 /* ==========================================================================
@@ -383,9 +365,8 @@
 }
 
 /* --------------------------------------------------------------------------
-   Phone geometry. Titles retain their established size. Optional main-header
-   actions yield to the secondary action strip, and stacked SubToolboxes return
-   to intrinsic content height instead of inheriting desktop equalization.
+   Phone action allocation and intrinsic sizing. Canonical 56/44 shell
+   geometry is declared once in the Mobile Density Authority below.
    -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
   .vt-toolbox-header-actions.is-toolbox .vt-toolbox-header-extras {
@@ -424,123 +405,13 @@
     min-height: clamp(140px, 44vw, var(--vt-upload-target-min-height, 220px)) !important;
   }
 
-  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) {
-    --vt-toolbox-header-height: 80px;
-    --vt-toolbox-title-size: 26px;
-  }
 
-  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header {
-    height: 80px !important;
-    min-height: 80px !important;
-    max-height: 80px !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child {
-    width: 80px !important;
-    min-width: 80px !important;
-    max-width: 80px !important;
-    height: 80px !important;
-    flex-basis: 80px !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header h1 {
-    font-size: 26px !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header > :first-child > :first-child svg {
-    width: 34px !important;
-    height: 34px !important;
-    max-width: 34px !important;
-    max-height: 34px !important;
-    stroke-width: 3.1px !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"],
-  [data-vt-toolbox-level="sub"],
-  [data-vt-subtoolbox-module="true"] {
-    --vt-subtoolbox-header-height: 56px;
-    --vt-subtoolbox-title-size: 20px;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header {
-    height: 56px !important;
-    min-height: 56px !important;
-    max-height: 56px !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child {
-    width: 56px !important;
-    min-width: 56px !important;
-    max-width: 56px !important;
-    height: 56px !important;
-    flex-basis: 56px !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header h3 {
-    font-size: 20px !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header svg,
-  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header > :first-child > :first-child svg {
-    width: 28px !important;
-    height: 28px !important;
-    max-width: 28px !important;
-    max-height: 28px !important;
-    stroke-width: 3.1px !important;
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"]:not([data-vt-toolbox-variant="accordion"]) > header::after {
-    height: var(--vt-toolbox-stroke, 5px);
-  }
-
-  [data-vt-toolbox][data-vt-toolbox-level="main"] [data-vt-toolbox-level="sub"] > div > header::after {
-    height: var(--vt-subtoolbox-stroke, 4px);
-  }
 }
 
-/* PR #266 visual correction: preserve current title sizes while reducing header geometry. */
-[data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-help="true"],
-[data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-toggle="true"]{
-  width:44px!important;
-  min-width:44px!important;
-}
-[data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-help="true"]>span{
-  width:40px!important;height:40px!important;
-}
-[data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-help="true"] svg{
-  width:24px!important;height:24px!important;max-width:24px!important;max-height:24px!important;
-}
-[data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-toggle="true"] svg{
-  width:38px!important;height:38px!important;max-width:38px!important;max-height:38px!important;
-}
-[data-vt-toolbox-level="sub"] [data-vt-subtoolbox-help="true"],
-[data-vt-toolbox-level="sub"] [data-vt-subtoolbox-toggle="true"]{
-  width:44px!important;min-width:44px!important;
-}
-[data-vt-toolbox-level="sub"] [data-vt-subtoolbox-help="true"]>span{
-  width:36px!important;height:36px!important;
-}
-[data-vt-toolbox-level="sub"] [data-vt-subtoolbox-help="true"] svg{
-  width:22px!important;height:22px!important;max-width:22px!important;max-height:22px!important;
-}
-[data-vt-toolbox-level="sub"] [data-vt-subtoolbox-toggle="true"] svg{
-  width:34px!important;height:34px!important;max-width:34px!important;max-height:34px!important;
-}
 /* Collapsed SubToolbox uses its outer shell bottom stroke; hide the header divider to avoid a doubled seam. */
 [data-vt-toolbox-level="sub"][data-state="closed"] > div > header::after{
   display:none!important;
 }
-
-/* Interior safety inset: all Toolbox and SubToolbox bodies keep 4px clearance
-   from their structural frame so child modules never collide with shell strokes. */
-[data-vt-toolbox][data-vt-toolbox-level="main"] .vt-main-toolbox-content{
-  padding:4px!important;
-  gap:4px!important;
-}
-[data-vt-toolbox-level="sub"] .vt-subtoolbox-inset{
-  padding:4px!important;
-}
-
 
 /* ==========================================================================
    Mobile density authority — 2026-09-22 screenshot certification.
@@ -591,43 +462,12 @@
     flex-basis: 44px !important;
   }
 
-  /* Main header actions must never be visually weaker than SubToolbox actions. */
-  [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-help="true"],
-  [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-toggle="true"] {
-    width: 44px !important;
-    min-width: 44px !important;
-  }
-  [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-help="true"] > span {
-    width: 36px !important;
-    height: 36px !important;
-    box-shadow: 3px 3px 0 0 #000 !important;
-  }
-  [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-help="true"] svg {
-    width: 22px !important;
-    height: 22px !important;
-    max-width: 22px !important;
-    max-height: 22px !important;
-  }
-  [data-vt-toolbox][data-vt-toolbox-level="main"] > header [data-vt-toolbox-toggle="true"] svg {
-    width: 34px !important;
-    height: 34px !important;
-    max-width: 34px !important;
-    max-height: 34px !important;
-  }
 
-  /* Shell-to-shell rhythm mirrors the compact 4px horizontal body inset. */
-  [data-vt-toolbox][data-vt-toolbox-level="main"] .vt-main-toolbox-content,
-  [data-vt-toolbox-level="sub"] .vt-subtoolbox-content {
-    gap: 4px !important;
-  }
+
 }
 
 
-/* Second mobile-density pass: align primary split-left actions and remove the
-   doubled bottom moat inside SubToolboxes. */
-[data-vt-toolbox-level="sub"] .vt-subtoolbox-inset {
-  padding: 4px 4px 0 !important;
-}
+/* Mobile split-left controls follow the certified compact control ladder. */
 @media (max-width: 767px) {
   [data-vt-split-left],
   .vt-split-left-module-action {
