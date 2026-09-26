@@ -49,6 +49,18 @@ describe("CreatorVaultOS mobile card density", () => {
   expect(source).not.toContain('message="Select an asset to inspect metadata, provenance, rights, versions, and relationships."')
  })
 
+ it("renders the asset library before secondary Import & Tags and Text Editor tools", () => {
+  const libraryIndex = source.indexOf('data-vault-first-viewport="library"')
+  const importIndex = source.indexOf('title="Import & Tags"')
+  const textEditorIndex = source.indexOf('title="Text Editor"')
+
+  expect(libraryIndex).toBeGreaterThan(-1)
+  expect(importIndex).toBeGreaterThan(libraryIndex)
+  expect(textEditorIndex).toBeGreaterThan(libraryIndex)
+  expect(source).toContain('persistenceId="vault-import-tags"')
+  expect(source).toContain('persistenceId="vault-text-editor"')
+ })
+
  it("marks the library as the first-viewport content target on mobile", () => {
   expect(source).toContain('data-vault-first-viewport="library"')
   expect(source).toContain('min-w-0 overflow-x-hidden')
