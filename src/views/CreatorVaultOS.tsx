@@ -1721,7 +1721,7 @@ const CreatorVaultOS: React.FC = () => {
      : "grid grid-cols-1 gap-4 xl:grid-cols-[minmax(220px,0.72fr)_minmax(0,2.1fr)_minmax(260px,0.9fr)]"}>
      <div className="flex min-w-0 flex-col gap-4">
       <section aria-label="Vault library toolbar" className="flex flex-col gap-2">
-       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] items-center gap-2">
+       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto_auto_auto] items-center gap-2">
         <button
          type="button"
          aria-label="Open library navigation"
@@ -1743,6 +1743,15 @@ const CreatorVaultOS: React.FC = () => {
           "aria-label": "Search Vault assets",
          }}
         />
+        <button
+         type="button"
+         aria-label="Clear Vault search"
+         disabled={!query}
+         className="min-h-9 min-w-9 rounded-md border-2 border-current px-2 text-xs font-black uppercase disabled:opacity-30"
+         onClick={() => setQuery("")}
+        >
+         ×
+        </button>
         <button
          type="button"
          aria-label="Open Vault filters"
@@ -1938,7 +1947,8 @@ const CreatorVaultOS: React.FC = () => {
       {selectedAssetIds.length ? (
        <section
         aria-label="Vault selection actions"
-        className="sticky top-2 z-30 flex flex-wrap items-center gap-2 rounded-lg border-[3px] border-current bg-white p-2 shadow-[4px_4px_0_currentColor]"
+        data-vault-mobile-sheet="selection-actions"
+        className="fixed inset-x-2 bottom-2 z-40 flex flex-wrap items-center gap-2 rounded-lg border-[3px] border-current bg-white p-2 shadow-[4px_4px_0_currentColor] xl:sticky xl:inset-x-auto xl:bottom-auto xl:top-2"
        >
         <div className="mr-auto text-xs font-black uppercase">{selectedAssetIds.length} Selected</div>
         <SubToolboxInnerActionButton label="Tag" iconName="tag" tone="pink" onClick={() => setAssetOperationsMode("batch")} />
@@ -2719,7 +2729,12 @@ const CreatorVaultOS: React.FC = () => {
 
 
       {selectedAsset ? (
-       <div ref={inspectorRef} tabIndex={-1}>
+       <div
+        ref={inspectorRef}
+        tabIndex={-1}
+        data-vault-mobile-sheet="inspector"
+        className="fixed inset-x-2 bottom-16 z-30 max-h-[65vh] overflow-y-auto xl:static xl:max-h-none xl:overflow-visible"
+       >
        <SubToolbox
        style={moduleStyle("inspector" as VaultWorkspaceModuleId)}
        title="Inspector"
