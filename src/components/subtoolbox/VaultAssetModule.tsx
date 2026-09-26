@@ -1,7 +1,7 @@
 import React from "react"
 import { FileText, Image as ImageIcon, Music, Play } from "lucide-react"
 import { getAlphabeticalSpectrumColor } from "../../styles/toolboxPalette"
-import { getToolboxColorPair, type ToolboxControlLevel } from "./tokens"
+import { getToolboxColorPair, VAULT_ASSET_MODULE_DNA, type ToolboxControlLevel } from "./tokens"
 import "../../styles/vault-asset-module.css"
 
 export type VaultAssetModuleKind = "image" | "video" | "audio" | "document"
@@ -369,6 +369,23 @@ export const VaultAssetModule: React.FC<VaultAssetModuleProps> = ({
     || "DOC"
 
   const mergedStyle = {
+    ["--vt-vault-module-w" as string]: `${VAULT_ASSET_MODULE_DNA.width}px`,
+    ["--vt-vault-module-h" as string]: `${VAULT_ASSET_MODULE_DNA.height}px`,
+    ["--vt-vault-stroke" as string]: `${VAULT_ASSET_MODULE_DNA.stroke}px`,
+    ["--vt-vault-radius" as string]: `${VAULT_ASSET_MODULE_DNA.radius}px`,
+    ["--vt-vault-inner-w" as string]: `${VAULT_ASSET_MODULE_DNA.innerWidth}px`,
+    ["--vt-vault-inner-h" as string]: `${VAULT_ASSET_MODULE_DNA.innerHeight}px`,
+    ["--vt-vault-header-h" as string]: `${VAULT_ASSET_MODULE_DNA.headerHeight}px`,
+    ["--vt-vault-header-h-double" as string]: `${VAULT_ASSET_MODULE_DNA.doubleHeaderHeight}px`,
+    ["--vt-vault-landscape-w" as string]: `${VAULT_ASSET_MODULE_DNA.landscapeWidth}px`,
+    ["--vt-vault-landscape-h" as string]: `${VAULT_ASSET_MODULE_DNA.landscapeHeight}px`,
+    ["--vt-vault-portrait-h" as string]: `${VAULT_ASSET_MODULE_DNA.portraitHeight}px`,
+    ["--vt-vault-portrait-w" as string]: `${VAULT_ASSET_MODULE_DNA.portraitWidth}px`,
+    ["--vt-vault-portrait-left" as string]: `${VAULT_ASSET_MODULE_DNA.portraitLeftWidth}px`,
+    ["--vt-vault-tag-bg" as string]: VAULT_ASSET_MODULE_DNA.tagBackground,
+    ["--vt-vault-half-h" as string]: `${VAULT_ASSET_MODULE_DNA.halfHeight}px`,
+    ["--vt-vault-half-body-h" as string]: `${VAULT_ASSET_MODULE_DNA.halfBodyHeight}px`,
+    ["--vt-vault-half-preview-w" as string]: `${VAULT_ASSET_MODULE_DNA.halfPreviewWidth}px`,
     ["--vt-vault-header" as string]: colors.body,
     ["--vt-vault-icon" as string]: colors.rail,
     ["--vt-vault-check" as string]: colors.rail,
