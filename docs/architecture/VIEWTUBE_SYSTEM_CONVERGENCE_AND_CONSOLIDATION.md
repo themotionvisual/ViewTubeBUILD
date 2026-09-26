@@ -551,9 +551,9 @@ This document coordinates convergence; it does not replace bounded canonical aut
 
 Still authoritative:
 
-- `docs/brain/VIEWTUBE_AI_SYSTEMS_MASTER_RESOURCE.md`
-- `docs/brain/UNIFIED_AI_SYSTEM_CANONICAL_CONSOLIDATION_CONTRACT_2026-09-17.md`
-- `docs/brain/VIEWTUBE_PROMPT_SYSTEM_AUTHORITY_2026-09-24.md`
+- `docs/domains/BRAIN.md`
+- `docs/domains/BRAIN.md`
+- `docs/specifications/PROMPTS.md`
 - `docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md`
 - `docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md`
 - `docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md`
