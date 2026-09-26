@@ -94,6 +94,20 @@ Canonical compound workflow primitives also include:
 - `WidgetDataGrid` — semantic text/cell/badge grid for CRM, comparison and operations tables. It owns its horizontal scrolling rather than being clipped by the widget shell.
 - `WidgetChecklistProgress` — controlled canonical-checkbox checklist whose progress fill is derived from checked items; do not maintain a second independent progress state.
 - `WidgetCalendarGrid` — production/calendar grid with canonical event controls; seven columns when space supports it and two columns in narrow widget containers.
+- `WidgetPreviewState` — honest disconnected/empty demonstration wrapper. It keeps a widget's signature visual visible using governed generic fixtures, displays an explicit PREVIEW label/reason, and provides a real recovery path. Sample values must never be presented as the connected creator's metrics, comments, revenue, advice, or account state.
+
+### Honest preview-state rule
+
+When a data-dependent widget has no creator data yet, prefer a useful, clearly labeled preview over an undesigned blank panel **only when the signature visual benefits from demonstration**.
+
+- Use the canonical `WidgetPreviewState`.
+- Source reusable sample values from `widgetPreviewFixtures.ts`, not scattered widget-local literals.
+- Use labels such as PREVIEW / EXAMPLE / SAMPLE ONLY.
+- Preserve the widget's real signature component where practical.
+- Provide a recovery action such as Connect, Sync, Import, Refresh, or Select.
+- Never mix sample values into real creator data, persistence, AI evidence, analytics, publishing, or outcome ledgers.
+- Creation widgets whose empty inputs are already useful should stay live rather than being converted into fake previews.
+- Error, loading, stale and blocked states remain semantically distinct from preview.
 
 Do **not** flatten custom functional interiors to make widgets look identical.
 
