@@ -116,7 +116,12 @@ for (const viewport of [
     }
 
     const box = await widget.boundingBox()
-    report.captures.push({ viewport: viewport.label, name, id, box })
+    if (!box) throw new Error(`${viewport.label} ${id} has no measurable widget box`)
+    const right = box.x + box.width
+    if (box.x < -1 || right > viewport.width + 1) {
+      throw new Error(`${viewport.label} ${id} escapes viewport horizontally: x=${box.x}, right=${right}, viewport=${viewport.width}`)
+    }
+    report.captures.push({ viewport: viewport.label, name, id, box, right })
   }
 
   for (const variant of [
