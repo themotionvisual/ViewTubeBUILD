@@ -1909,6 +1909,27 @@ const CreatorVaultOS: React.FC = () => {
           options={["all", "landscape", "portrait", "square"]}
          />
         </div>
+        <div aria-label="Vault tag filter" className="mt-2">
+         <div className="mb-1 text-[10px] font-black uppercase opacity-60">Spectrum Tags</div>
+         <div className="flex max-h-28 flex-wrap gap-1 overflow-y-auto">
+          {availableTags.map((tag) => (
+           <button
+            key={tag}
+            type="button"
+            aria-pressed={selectedTag === tag}
+            onClick={() => setSelectedTag((current) => current === tag ? null : tag)}
+            className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+           >
+            <SubToolboxAlphabeticalTag
+             level="l2"
+             label={tag}
+             spectrumKey={tag}
+             className={selectedTag === tag ? "is-selected" : ""}
+            />
+           </button>
+          ))}
+         </div>
+        </div>
         <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
          <StandardInput value={filterMimeType} onChange={(event) => setFilterMimeType(event.target.value)} placeholder="MIME type" aria-label="Vault MIME type filter" />
          <StandardInput type="date" value={filterUpdatedFrom} onChange={(event) => setFilterUpdatedFrom(event.target.value)} aria-label="Vault updated from filter" />
