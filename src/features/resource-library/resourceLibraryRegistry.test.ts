@@ -41,6 +41,23 @@ describe("resource library registry", () => {
     expect(entry?.tags).toContain("discovery")
   })
 
+
+  it("registers the metrics and dimensions glossary as the second creator-facing resource", () => {
+    const entry = RESOURCE_LIBRARY_ENTRIES.find(
+      (resource) => resource.id === "youtube-metrics-dimensions-glossary",
+    )
+
+    expect(entry).toMatchObject({
+      title: "YouTube Metrics and Dimensions Master Glossary",
+      category: "Analytics",
+      format: "markdown",
+      status: "published",
+    })
+    expect(entry?.tags).toContain("metrics")
+    expect(entry?.tags).toContain("dimensions")
+    expect(entry?.tags).toContain("youtube-analytics-api")
+  })
+
   it("parses canonical Markdown into metadata and SubToolbox-sized sections", () => {
     const parsed = parseResourceDocument(SAMPLE_DOCUMENT)
 

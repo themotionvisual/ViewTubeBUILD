@@ -14,8 +14,9 @@ This folder contains the canonical Markdown source documents that populate the c
 | ID | Resource | Category | Status | Source |
 |---|---|---|---|---|
 | `youtube-recommendations-discovery` | How YouTube Recommendations and Discovery Work | YouTube Strategy | Published | `library/how-youtube-recommendations-and-discovery-work.md` |
+| `youtube-metrics-dimensions-glossary` | YouTube Metrics and Dimensions Master Glossary | Analytics | Published | `library/youtube-metrics-and-dimensions-master-glossary.md` |
 
-**Initial creator-reference series:** 1 of 15 documents now authored and registered.
+**Initial creator-reference series:** 2 of 15 documents now authored and registered.
 
 ## Template
 
