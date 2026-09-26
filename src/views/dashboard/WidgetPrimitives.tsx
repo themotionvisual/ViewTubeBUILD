@@ -291,11 +291,12 @@ export const WidgetSplitButton: React.FC<
     tone?: "primary" | "soft" | "neutral"
     size?: "compact" | "small" | "medium" | "large"
     width?: "auto" | "compact" | "wide" | "full"
+    multiline?: boolean
   }
-> = ({ icon, children, tone = "neutral", size = "medium", width = "auto", className = "", type = "button", ...props }) => (
+> = ({ icon, children, tone = "neutral", size = "medium", width = "auto", multiline = false, className = "", type = "button", ...props }) => (
   <button
     type={type}
-    className={`widget-split-button is-${tone} is-${size} is-${width} vt-interactive ${className}`.trim()}
+    className={`widget-split-button is-${tone} is-${size} is-${width} ${multiline ? "is-multiline" : ""} vt-interactive ${className}`.trim()}
     {...props}
   >
     <span className="widget-split-button-icon" aria-hidden="true">{icon}</span>
