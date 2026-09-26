@@ -712,6 +712,7 @@ export const WidgetMediaUploadFrame: React.FC<{
   onDropFile?: (file: File | undefined) => void
   className?: string
   aspect?: "16:9" | "1:1"
+  size?: "small" | "large"
 }> = ({
   icon,
   title,
