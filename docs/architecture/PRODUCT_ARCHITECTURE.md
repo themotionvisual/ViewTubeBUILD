@@ -95,3 +95,12 @@ Any proposed feature/system/integration/design must be classified as:
 - experimental opportunity.
 
 Before creating a new capability, reconcile current Product Architecture, Capability Registry, Domain Authority, Task Index, active mission/PR and donor artifacts.
+
+
+## Strategic master sources
+
+Before major feature/tool/system ideation, consolidation, creator-workstation redesign, AI/agent architecture expansion, API/integration planning, analytics invention, monetization architecture, or product-roadmap work, consult:
+
+- `docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md` — MASTER_SOURCE tier; broad research and construction blueprint containing the feature-canon methodology, master-tool consolidation model, API/capability atlas, Channel Brain and agent architecture, analytics/visualization framework, creator-workflow model, infrastructure/economics/governance research program, and final master-document production blueprint.
+
+Use it to challenge and improve the current architecture. Promote accepted improvements through this document, the Capability Registry, Domain Authorities, Decision records, Integrated Application Program, and Task Index rather than treating source proposals as automatically canonical.
