@@ -4451,6 +4451,30 @@ textarea.vt-textarea {
 .comment-responder-reaction-badge.widget-split-button:active {
   box-shadow: none;
 }
+.comment-responder-reaction-badge.widget-split-counter-badge {
+  width: auto !important;
+  min-width: 0;
+  height: 24px;
+  min-height: 24px;
+  flex: 0 0 auto;
+  border-color: var(--comment-bubble-stroke, var(--vt-ink, var(--widget-border)));
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--widget-color, #40C6E9) 18%, white);
+  box-shadow: none;
+  color: var(--vt-ink, var(--widget-border));
+  font-size: 10px;
+}
+.comment-responder-reaction-badge.widget-split-counter-badge .widget-split-counter-badge-icon {
+  width: 24px;
+  min-width: 24px;
+  border-inline-end-color: var(--vt-ink, var(--widget-border));
+  background: var(--widget-color);
+  color: var(--vt-ink, var(--widget-border));
+}
+.comment-responder-reaction-badge.widget-split-counter-badge .widget-split-counter-badge-value {
+  padding-inline: 5px;
+  color: var(--vt-ink, var(--widget-border));
+}
 .comment-responder-reaction-badge .widget-split-button-icon {
   width: 18px;
   flex-basis: 18px;
@@ -4549,7 +4573,7 @@ textarea.vt-textarea {
 
 /* Comment responder: horizontal speech bubble points back to the avatar. */
 .comment-responder-bubble {
-  --comment-bubble-stroke: color-mix(in srgb, var(--widget-color, #40C6E9) 62%, black);
+  --comment-bubble-stroke: var(--vt-ink, var(--widget-border));
   --comment-bubble-fill: color-mix(in srgb, var(--widget-color, #40C6E9) 18%, white);
   /* Default is large; AutoFitCommentBubble ratchets this down at the
      element level via inline font-size when the text cannot fit. */
@@ -4561,8 +4585,8 @@ textarea.vt-textarea {
   border: 2px solid var(--comment-bubble-stroke);
   border-radius: 7px;
   background: var(--comment-bubble-fill);
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color, #000) 50%, transparent);
-  color: var(--widget-color, #40C6E9);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--widget-color, #40C6E9) 50%, transparent);
+  color: var(--vt-ink, var(--widget-border));
   font-size: var(--comment-bubble-font-size);
   font-weight: 900;
   line-height: 1.25;
@@ -4591,7 +4615,14 @@ textarea.vt-textarea {
 .comment-responder-bubble-copy::-webkit-scrollbar-track { background: transparent; }
 .comment-responder-bubble-copy::-webkit-scrollbar-thumb { border-radius: 3px; background: color-mix(in srgb, var(--widget-color) 72%, #fff); }
 
-.comment-responder-bubble-tail {
+.comment-responder-bubble > .widget-speech-bubble-copy {
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: visible;
+}
+.comment-responder-bubble .widget-speech-bubble-tail {
   position: absolute;
   top: -18px;
   left: 10px;
@@ -4600,9 +4631,6 @@ textarea.vt-textarea {
   transform: none;
   overflow: visible;
   z-index: 2;
-}
-
-.comment-responder-bubble-tail-stroke {
   fill: var(--comment-bubble-fill);
   stroke: var(--comment-bubble-stroke);
   stroke-width: 2px;
