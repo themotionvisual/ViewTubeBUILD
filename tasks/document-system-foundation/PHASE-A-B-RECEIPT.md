@@ -60,3 +60,26 @@ Legacy global sources are preserved in place with migration notices. No source w
 - capability registry structure check: no duplicate capability IDs and no missing owner/authority fields at the time checked;
 - Deep Research source body exact-match check: PASS;
 - latest main advanced by one unrelated Vault-handoff commit after branch creation; branch changes do not touch that file.
+
+
+## CI gate classification
+
+GitHub Actions run `36240255038` was inspected rather than treated as a single undifferentiated red result.
+
+Passed:
+- local-smoke;
+- source-governance;
+- focused-contracts;
+- production-build.
+
+Failed but not introduced by this documentation-system branch:
+- `static-quality` fails during `npm run typecheck` in untouched application areas including Editor design templates, Vault adapter/CreatorVaultOS, and Brain conversation tests;
+- `full-suite` fails on existing BrainRuntime surface-migration assertions in untouched BrainHub/application files.
+
+External deployment status:
+- Vercel contexts are failing because the linked projects report a build-rate-limit/plan limit, not because this PR failed its production build.
+
+Disposition:
+- treat these as inherited/external gates for this PR;
+- preserve them as application debt/risk for later Task Index reconciliation;
+- do not misattribute them to the Phase A/B documentation foundation.
