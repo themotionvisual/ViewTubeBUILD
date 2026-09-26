@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - feat/widget-preview-settings-certification-2026-09-26
+    paths:
+      - "src/views/dashboard/**"
+      - "src/content/userGuideContent.ts"
+      - "scripts/capture-widget-preconsolidation.mjs"
+      - ".github/workflows/widget-preconsolidation-capture.yml"
   workflow_dispatch:
 
 jobs:
