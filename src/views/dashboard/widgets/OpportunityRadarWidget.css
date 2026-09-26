@@ -187,3 +187,14 @@
   .vt-opportunity-compass__node{min-width:44px;min-height:44px}
   .vt-opportunity-radar__rank-row{min-height:44px}
 }
+
+
+.vt-opportunity-radar__preview-note{
+  color:var(--vt-ink,var(--widget-border));
+  font-size:9px;
+  font-weight:1000;
+  line-height:1.1;
+  letter-spacing:.035em;
+  text-align:center;
+  text-transform:uppercase;
+}
