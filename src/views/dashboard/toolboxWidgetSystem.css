@@ -142,42 +142,21 @@
   height: 100%;
 }
 
-:where(.dashboard-barrier) .vt-widget-content {
-  margin-top: -3px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: visible;
-}
-
 :where(.dashboard-barrier) .vt-widget,
 :where(.dashboard-barrier) .vt-widget-body,
 :where(.dashboard-barrier) .vt-widget-content {
   overflow-x: visible;
 }
 
+/* Widget interior geometry is owned exclusively by widgetShellOwnership.css.
+   Do not re-introduce body padding, negative content overlap, flex layout, or
+   flush/inset sizing here: unlayered legacy rules outrank the layered shell and
+   recreate the white interior lanes / clipped full-bleed edges. */
 :where(.dashboard-barrier) .vt-widget-body {
-  --vt-widget-body-inset: var(--widget-content-inset);
   background: var(--bg-widget);
-  padding: var(--vt-widget-body-inset);
   color: var(--text-main);
   transition: background-color var(--transition), color var(--transition);
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: visible;
 }
-
-/* Modules that own their section spacing can meet the shell dividers directly.
-   Inset remains the default so form-heavy and prose widgets do not regress. */
-:where(.dashboard-barrier) .vt-widget-body--flush {
-  --vt-widget-body-inset: 0px;
-}
-
-/* Widget interior geometry moved to widgetShellOwnership.css.
-   The legacy monolith no longer owns FULL / SHADOW-SAFE / INSET / OVERLAY. */
 
 :where(.dashboard-barrier) .widget-section {
   min-width: 0;
