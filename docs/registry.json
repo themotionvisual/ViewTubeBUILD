@@ -377,6 +377,25 @@
         "docs/architecture/PRODUCT_ARCHITECTURE.md",
         "docs/programs/INTEGRATED_APPLICATION.md"
       ]
+    },
+    {
+      "id": "DOC-SPEC-TOOLBOX-WORKFLOWS",
+      "path": "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md",
+      "class": "SPECIFICATION",
+      "status": "ACTIVE",
+      "concern": "toolbox-promotion-workflow-chains",
+      "owner": "Integrated Application Program + Dashboard Widget System + Creator Operations & Generation",
+      "productionDate": "2026-09-27",
+      "lastEdited": "2026-09-27",
+      "lastAuditedMainSha": "3ed2bc91f324338fd110a160d65ddbed93806142",
+      "supersedes": [],
+      "relatedAuthorities": [
+        "docs/architecture/PRODUCT_ARCHITECTURE.md",
+        "docs/programs/INTEGRATED_APPLICATION.md",
+        "docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md",
+        "docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md",
+        "docs/brain/UNIVERSAL_TOOL_HANDOFFS_AND_SUGGESTED_CHAINS.md"
+      ]
     }
   ],
   "legacyGlobalSources": [
