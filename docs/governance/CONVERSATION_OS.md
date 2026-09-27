@@ -1,13 +1,13 @@
 # ViewTube Conversation & Improvement OS
 
 **Production Date:** 2026-09-26  
-**Last Edited:** 2026-09-26  
+**Last Edited:** 2026-09-27  
 **Class:** CONSTITUTION  
 **Status:** ACTIVE  
 **Concern:** cross-agent conversation continuity, prior-art reconciliation, proactive improvement, recommendation and governed handoff  
 **Owner:** Conversation & Improvement OS  
 **Registry ID:** DOC-GOV-CONVERSATION-OS  
-**Last Audited Main SHA:** e657cefe83f3f66d5a8316543814d9d18197b338  
+**Last Audited Main SHA:** faa07ed085173f5764db72054f17583ce9a3cb38  
 **Supersedes:** agent/contracts/herald-in.md; agent/contracts/herald-out.md; agent/contracts/herald-workflow.md after migration certification  
 **Related Authorities:** docs/governance/CROWN.md; docs/governance/TASK_AUTHORITY.md; docs/governance/DOCUMENTATION.md; docs/governance/VERIFICATION.md; docs/references/DEEP_RESEARCH_CONSTRUCTION_SOURCE.md
 
@@ -219,6 +219,25 @@ nextAction: ...
 ```
 
 The envelope is a resumability pointer, not a truth store.
+
+
+
+## Long conversation handoff and work reconciliation
+
+When a conversation becomes too long to resume safely from the normal envelope, changes owner/phase, or contains substantial unfinished work, use the governed handoff system:
+
+- specification: `docs/governance/CONVERSATION_HANDOFFS.md`
+- handoff skill: `.claude/skills/viewtube-conversation-handoff/SKILL.md`
+- reconciliation skill: `.claude/skills/viewtube-conversation-work-reconciliation/SKILL.md`
+- intake workspace: `tasks/conversation-intake/<conversation-id>/`
+
+The handoff preserves continuation context. The work log captures **all** meaningful planned, completed, partial, blocked, abandoned and discovered work.
+
+The conversation-local work state is provenance only. A later reconciliation pass must compare every item with current main, Task Index, Integrated Application Program, Product Architecture, Domain Authorities, plans/handoffs and active PRs before promotion.
+
+A conversation package is not closed merely because the thread ended. It is closed when every captured work item has a recorded disposition and canonical target or explicit no-action/reject/archive result.
+
+Use this process proactively before context loss; do not wait for a failed handoff.
 
 ## Context layers
 

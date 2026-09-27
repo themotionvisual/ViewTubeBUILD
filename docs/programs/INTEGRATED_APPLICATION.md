@@ -76,6 +76,9 @@ Finish shared primitive migration, natural responsive behavior, truthful preview
 ### Brain and Prompt architecture convergence
 Converge creator-facing AI on the stable Brain domain authority and Prompt specification. Remove AI-management work/status responsibilities from Brain docs; route continuity through Conversation OS, missions through Crown and exact state through Task Authority. Continue migration of direct legacy provider/generator paths, prompt-family/version coverage, context/evidence consistency, outcome/evaluation producers and governed learning. Preserve prompt inventory/reachability as machine projections rather than a second work ledger.
 
+### Conversation handoff and work reconciliation
+Use the global Conversation Handoff specification and `tasks/conversation-intake/` workspace to prevent long ChatGPT/Codex/Claude threads from losing or duplicating development work. Every substantial handoff should capture completed, partial, planned, blocked, abandoned and discovered work, then reconcile it against current main, Task Index, this Program, Product Architecture, Domain Authorities, existing plans/handoffs and active PRs. Similar plans/features/tools/widgets/pages/processes should be grouped into plan families and merged into a surviving plan/authority after unique-content harvest. Domain-specific update-log/handoff conventions should migrate toward the global process where doing so does not lose specialized evidence.
+
 ### Documentation / Agent operating system
 Complete the Task Index VNext, Crown/Conversation OS integration, Documentation Registry, Removed Archive, lossless Consolidation Compiler, verification receipts and governed skill workflows.
 

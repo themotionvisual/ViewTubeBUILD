@@ -51,3 +51,15 @@ Follow CLAUDE.md:
 ## Documentation authority
 
 Follow docs/governance/DOCUMENTATION.md and docs/registry.json. The legacy governance/registry files are preserved migration sources. A prototype, screenshot, old plan or branch is evidence/prior art, not runtime authority.
+
+
+## Long-conversation handoff
+
+When a ViewTube conversation becomes too long for safe context retention, changes owner/phase, or contains substantial unfinished work:
+
+1. use `.claude/skills/viewtube-conversation-handoff/SKILL.md`;
+2. write `tasks/conversation-intake/<conversation-id>/handoff.md` + `worklog.json`;
+3. continue from the handoff rather than relying on host memory;
+4. use `.claude/skills/viewtube-conversation-work-reconciliation/SKILL.md` to audit every planned/completed/uncompleted item and route it to Task Index, Integrated Application Program, an owning authority/specification, a merged plan, decision, opportunity/risk, receipt/evidence or archive/no-action.
+
+Conversation intake is not a second task ledger.

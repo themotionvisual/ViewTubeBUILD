@@ -1,13 +1,13 @@
 # ViewTube Work Objects
 
 **Production Date:** 2026-09-26  
-**Last Edited:** 2026-09-26  
+**Last Edited:** 2026-09-27  
 **Class:** SPECIFICATION  
 **Status:** ACTIVE  
 **Concern:** relationships between durable product, work, coordination, evidence, and conversation objects  
 **Owner:** Documentation Governance + Task Authority  
 **Registry ID:** DOC-GOV-WORK-OBJECTS  
-**Last Audited Main SHA:** ee02fdbd1af2be30e81de7955dad188999a03ac4  
+**Last Audited Main SHA:** faa07ed085173f5764db72054f17583ce9a3cb38  
 **Supersedes:** none  
 **Related Authorities:** docs/governance/DOCUMENTATION.md; docs/architecture/PRODUCT_ARCHITECTURE.md
 
@@ -28,6 +28,9 @@
 - OPPORTUNITY — noncommittal improvement candidate with evidence/confidence/impact.
 - RISK — evidence-backed concern that may need mitigation but is not automatically a task.
 - TASK_MUTATION_PROPOSAL — requested canonical task change submitted to Task Authority.
+- CONVERSATION_HANDOFF — resumability/provenance package for transferring a long conversation without replaying the whole transcript.
+- CONVERSATION_WORK_ITEM — conversation-local record of planned/completed/partial/blocked/discovered work pending reconciliation; not a canonical Task.
+- RECONCILIATION_REVIEW — audit mapping conversation work items to their canonical destinations, merges, rejections or archive dispositions.
 
 ## Relationship rules
 
@@ -50,3 +53,14 @@ Opportunity != Task. Risk != Task. They become committed work only after Task Au
 Task Mutation Proposal != canonical mutation. It is an input to Task Authority.
 
 Conversation Envelope != ledger. It points to governed objects for resumability.
+
+
+## Conversation handoff rules
+
+Conversation Handoff != authority. It packages context for continuation.
+
+Conversation Work Item != Task. It may become a Task Candidate only after prior-art/current-main reconciliation.
+
+Reconciliation Review != work ledger. It documents how intake material was valued, deduplicated, merged and routed.
+
+A completed conversation work item may become evidence/receipt or prove an existing task needs verification; it does not automatically become Task Index DONE.

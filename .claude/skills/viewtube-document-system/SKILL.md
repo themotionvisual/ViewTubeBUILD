@@ -189,10 +189,22 @@ A document-system mission is complete only when:
 - templates/sub-skill-template.md
 
 
+## Conversation-derived work
+
+Long conversations are governed intake sources, not permanent work authorities.
+
+Use:
+- `viewtube-conversation-handoff` to preserve a long thread;
+- `viewtube-conversation-work-reconciliation` to audit, value, deduplicate, merge and route all planned/completed/uncompleted conversation work.
+
+Conversation work that overlaps existing plans/tasks should normally update/merge the existing survivor instead of spawning a new document.
+
 ## Built-in sub-skills
 
 - `viewtube-main-document-editor` — edit the main constitutions, architecture, program, capability registry and Domain Authorities when durable product/system meaning changes.
 - `viewtube-document-consolidation` — losslessly consolidate multi-version documents, plans, HTML/prototypes and skill families with manifests and Removed Archive preservation.
+- `viewtube-conversation-handoff` — create durable continuation packages for long conversations.
+- `viewtube-conversation-work-reconciliation` — review, value, dedupe, combine and route conversation-derived work.
 
 The parent skill may author additional narrow sub-skills using `references/sub-skill-authoring.md` and `templates/sub-skill-template.md` when repeated specialized work justifies them.
 

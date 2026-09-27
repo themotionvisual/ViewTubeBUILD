@@ -57,3 +57,16 @@ Before naming a current repository/package/provider/model/service:
 ## Output
 
 Natural response + governed durable records as needed.
+
+
+## Long-thread handoff
+
+If context is becoming large/repetitive, a phase/agent changes, or substantial unfinished work remains:
+- invoke `viewtube-conversation-handoff` before context is lost;
+- store the package under `tasks/conversation-intake/<conversation-id>/`;
+- preserve completed work as well as unfinished work;
+- make the exact next action resumable.
+
+After the handoff, invoke `viewtube-conversation-work-reconciliation` to review every work item against current main, Task Index, Integrated Application Program, capabilities, domain authorities, related plans and active PRs.
+
+The reconciliation pass should combine overlapping plans/features/tools/widgets/pages/processes rather than creating parallel work.
