@@ -139,3 +139,66 @@ Already-current or newer material was not overwritten:
 - newer registry state.
 
 Disposition: preserve PR #500 as provenance, transplant only unique material, and close the stale PR after the replacement PR is opened.
+
+
+## Convergence Governance / Ideas Library wave
+
+Work item: `VT-CWI-DOCS-012`.
+
+Implemented on branch `governance/convergence-ideas-system-2026-09-27` as one anti-splintering system rather than 17 independent documents.
+
+### Requested ideas implemented
+
+- 1 — Capability Home Pages
+- 2 — Plan Families
+- 3 — Automatic Similar-Plan Detection
+- 4 — Mandatory Existing Work Checked
+- 5 — Universal Work Packet
+- 6 — Capability IDs Everywhere
+- 7 — Plan Merge Records
+- 8 — Feature Idea Registry
+- 9 — Idea-to-Capability Routing
+- 10 — Code Ownership Map
+- 37 — Open Questions Queue
+- 43 — Capability Coverage Audit
+- 46 — Reusable Workflow Registry
+- 47 — Skill-to-Workflow Mapping
+- 48 — Improvement Recommendation Log
+- 49 — Unified Development Control Room
+- 50 — Convergence-First Governance Rule
+
+The repeated request for item 37 was treated as one implementation.
+
+### Master Ideas Library
+
+The complete 50-item governance idea list is preserved at:
+`ideas/lists/governance/document-governance-improvements.md`.
+
+Normalized unique records live in:
+`ideas/registry.json`.
+
+Human consolidated projection:
+`ideas/MASTER_IDEAS.md`.
+
+Ideas are grouped by category/subcategory and routed to capability/tool/system/feature/function targets. Source lists remain intact as provenance.
+
+The 17 requested ideas are marked `IMPLEMENTATION_WAVE`; the other 33 remain `UNREVIEWED` and were not silently converted into tasks.
+
+### Verification before PR
+
+- deterministic convergence engine focused tests: 6/6 passing;
+- document/registry structural audit: 0 issues;
+- capability homes: 13;
+- plan families: 10;
+- plan merge records: 4;
+- code ownership records: 13;
+- open questions: 6;
+- reusable workflows: 10;
+- workflow/skill mappings: 10;
+- improvement recommendations in implementation wave: 17;
+- normalized ideas: 50;
+- branch was 0 behind main at the structural audit.
+
+### Canonical routing
+
+This wave extends Documentation Governance / Conversation OS / Product Architecture / Task Authority through the new `docs/governance/CONVERGENCE.md` authority. It does not create a second Task Index or product-architecture authority.
