@@ -20,6 +20,9 @@ This directory contains ViewTube architecture, implementation plans, migration r
 | Product / capability architecture | [Product Architecture](./architecture/PRODUCT_ARCHITECTURE.md) + [Capability Registry](./architecture/capabilities.json) |
 | Cross-system application convergence | [Integrated Application Program](./programs/INTEGRATED_APPLICATION.md) |
 | Documentation governance | [Documentation Governance](./governance/DOCUMENTATION.md) + [Machine Registry](./registry.json) |
+| Convergence governance | [Convergence Governance](./governance/CONVERGENCE.md) |
+| Capability homes | [Capability Home Index](./capabilities/README.md) |
+| Development control room | [Convergence Control Room](./generated/CONVERGENCE_CONTROL_ROOM.md) |
 | Verification / completion evidence | [Verification](./governance/VERIFICATION.md) |
 | Conversation & Improvement OS | [Conversation OS](./governance/CONVERSATION_OS.md) |
 | Conversation handoff / work intake | [Conversation Handoffs](./governance/CONVERSATION_HANDOFFS.md) |
