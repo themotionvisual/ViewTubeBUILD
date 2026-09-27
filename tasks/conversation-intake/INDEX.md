@@ -12,4 +12,6 @@ When packages are created, list:
 | Conversation | Goal | Handoff | Work Log | Review | Reconciliation Status | Canonical Targets |
 | --- | --- | --- | --- | --- | --- | --- |
 
+| VT-CONV-DOCS-OS-TASK-INDEX | Build the ViewTube documentation/agent/task operating system | [handoff](./VT-CONV-DOCS-OS-TASK-INDEX/handoff.md) | [worklog](./VT-CONV-DOCS-OS-TASK-INDEX/worklog.json) | [review](./VT-CONV-DOCS-OS-TASK-INDEX/review.md) | PARTIALLY_RECONCILED | Documentation Governance; Product Architecture; Integrated Application Program; Task Authority |
+
 Do not infer Task Index lifecycle from this index.
