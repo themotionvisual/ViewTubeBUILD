@@ -9,6 +9,7 @@ Source:
 - [ ] Refresh audited main SHA immediately before execution.
 - [ ] Verify every “eliminate from unfinished” claim against current source/tests/receipts.
 - [ ] Inventory and hash all backlog/plan/audit/handoff/reference families.
+- [ ] Include registry-declared MASTER_SOURCE references as mandatory prior art without auto-promoting their ideas to tasks.
 - [ ] Classify every source by documentation class/lifecycle/disposition.
 
 ### Checkpoint 0
@@ -29,6 +30,7 @@ Source:
 
 ## Phase 2 — Authority routing
 - [ ] Reconcile accepted capabilities into Product Architecture + capabilities.json.
+- [ ] Update docs/registry.json in the same PR as every authority metadata/supersession change.
 - [ ] Reconcile cross-system seams into Integrated Application Program.
 - [ ] Reconcile Analytics/VT-SYNC authority.
 - [ ] Reconcile Projects/ContentBuild authority.
@@ -41,7 +43,7 @@ Source:
 - [ ] Promote durable ownership/tradeoff choices to Decision records where needed.
 
 ## Phase 3 — Active projection cleanup
-- [ ] Reconcile Finish Program BACKLOG-REGISTRY against current main.
+- [ ] Reconcile Finish Program BACKLOG-REGISTRY against current main without deleting DONE/SUPERSEDED identity history.
 - [ ] Reconcile Finish Program plan/todo.
 - [ ] Reconcile One-Goal status ledger.
 - [ ] Close stale Settings root plan/todo through receipt + no-loss routing.
@@ -99,3 +101,4 @@ Source:
 - [ ] No broken links or registry conflicts.
 - [ ] Task VNext writer state explicitly resolved/documented.
 - [ ] Final audit refreshed to the merge SHA.
+- [ ] Historical task identities and aliases remain traceable after active-projection cleanup.
