@@ -32,6 +32,48 @@ describe("CanonicalAlgorithmEvaluation", () => {
   expect(result?.evidenceId).toContain("videos:2:engagedViews")
  })
 
+ it("carries typed comparison context from the actual resolved source field", () => {
+  const percentage = resolveAlgorithmMetricFromCanonicalCatalog({
+   snapshotId: "snapshot-current",
+   window: "28d",
+   videoId: "video-2",
+   rule: rule("watch_quality"),
+   catalog: [{
+    id: "videos",
+    status: "available",
+    sampleRows: [
+     { videoId: "video-2", format: "long", averagePercentageViewed: 62 },
+    ],
+    metrics: {},
+   }] as any,
+  })
+  expect(percentage?.comparisonContext).toMatchObject({
+   metricKey: "watch_quality",
+   unit: "percent",
+   entityScope: "video",
+   formatScope: "long",
+   window: "28d",
+   aggregation: "snapshot",
+   availability: "available",
+  })
+
+  const duration = resolveAlgorithmMetricFromCanonicalCatalog({
+   snapshotId: "snapshot-current",
+   window: "28d",
+   videoId: "video-2",
+   rule: rule("watch_quality"),
+   catalog: [{
+    id: "videos",
+    status: "available",
+    sampleRows: [
+     { videoId: "video-2", format: "long", averageViewDuration: 180 },
+    ],
+    metrics: {},
+   }] as any,
+  })
+  expect(duration?.comparisonContext.unit).toBe("seconds")
+ })
+
  it("uses canonical summary aggregation when no video row is requested", () => {
   const result = resolveAlgorithmMetricFromCanonicalCatalog({
    snapshotId: "snapshot-current",

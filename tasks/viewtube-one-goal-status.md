@@ -5,7 +5,7 @@
 
 | ID | Workstream | Task | Priority | Status | Depends on | Evidence / next action |
 |---|---|---|---|---|---|---|
-| VT-001 | Analytics | Define typed MetricComparabilityPolicy | P0 | VERIFYING | — | PR #419 merged; contract + behavior tests are on main. Branch CI was obscured by Vercel build-rate limits, so focused certification remains before DONE; consumer integration stays VT-023/024. |
+| VT-001 | Analytics | Define typed MetricComparabilityPolicy | P0 | DONE | — | Canonical policy now lives in analytics-canon with legacy compatibility re-export; 7/7 policy tests passed during Evidence convergence and VT-023 consumes it in Algorithm evaluation. |
 | VT-002 | Publishing | Define ApprovedPublishSnapshot schema/hash | P0 | VERIFYING | — | PR #420 merged; immutable schema/hash + tamper tests are on main. Branch CI was obscured by Vercel build-rate limits; durable persistence remains VT-014. |
 | VT-003 | Brain | Resolve active Project/ContentBuild context uniformly | P0 | VERIFYING | — | BrainRuntime surfaces now supply active Project + ContentBuild identity through one bounded project-context adapter; focused tests added. |nded active-Project context for Brain Hub/Next Best Action via shared dashboard adapter; finish uniform BrainRuntime/ContentBuild supply outside dashboard. |
 | VT-004 | Brain | Build canonical Opportunity evidence feed | P0 | VERIFYING | VT-003 | Canonical Brain evidence pack now deterministically produces provenance/confidence-bounded Opportunity evidence and joins Anomaly + Opportunity + Channel + Project in Algorithm Intelligence. |nce-backed Opportunity Radar, but PR #413 still records canonical shared Opportunity Evidence input as remaining. Build one reusable evidence feed for runtime + widgets. |
@@ -27,7 +27,7 @@
 | VT-020 | Brain | Migrate Hook Generator through canonical generation/runtime | P1 | NOT_STARTED | — | parity first, then shrink allowlist |
 | VT-021 | Brain | Migrate Script Architect through canonical generation/runtime | P1 | NOT_STARTED | VT-020 | parity first |
 | VT-022 | Brain | Build versioned AI regression/evaluation corpus | P1 | NOT_STARTED | VT-003,VT-004 | evidence/missingness/tool-selection cases |
-| VT-023 | Analytics | Integrate MetricComparabilityPolicy into evaluation | P0 | NOT_STARTED | VT-001 | invalid comparisons rejected |
+| VT-023 | Analytics | Integrate MetricComparabilityPolicy into evaluation | P0 | DONE | VT-001 | PR #511: canonical observations/baselines carry source-field metric semantics; incompatible window/unit/entity/format/aggregation/availability comparisons fail closed as insufficient_data. 7/7 AlgorithmEvaluationEngine + 6/6 CanonicalAlgorithmEvaluation tests pass; production build/focused/source/smoke green. |
 | VT-024 | Analytics | Integrate comparability into visual/experiment consumers | P1 | NOT_STARTED | VT-001 | structured UI incompatibility reasons |
 | VT-025 | Analytics | Retire legacy selectors/cache consumers | P1 | IN_PROGRESS | — | Analytics master records remaining debt |
 | VT-026 | Data Visuals | Retire controllerSpec/legacy preview compatibility | P2 | IN_PROGRESS | VT-025 | reachability zero before deletion |

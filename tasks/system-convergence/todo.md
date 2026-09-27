@@ -34,7 +34,7 @@
 ## Evidence & Intelligence
 
 - [x] Inventory all analytics-canon consumers in Brain.
-- [ ] Implement unified EvidenceRecord projection. Contract drafted in `tasks/system-convergence/EVIDENCE-RECORD-DERIVED-SIGNAL-CONTRACT.md`.
+- [x] Implement unified EvidenceRecord projection. Contract: `tasks/system-convergence/EVIDENCE-RECORD-DERIVED-SIGNAL-CONTRACT.md`.
 - [x] Map BrainAnalyticsEvidence.
 - [x] Map BrainStatisticsBridge.
 - [x] Map BrainAudienceBridge.
@@ -43,7 +43,7 @@
 - [x] Map OpportunityEvidenceAdapter.
 - [x] Preserve Statistics/Audience/Channel/Opportunity specialists.
 - [ ] Audit Algorithm Intelligence helper/ledger sprawl.
-- [ ] Add metric comparability guard.
+- [x] Add metric comparability guard.
 - [ ] Certify evidence IDs end-to-end.
 
 ## Project / Content / Asset Graph
@@ -133,8 +133,22 @@
 - [x] Prove resolver RED contract before implementation.
 - [x] Route one canonical analytics snapshot to evidence quality, Statistics Intelligence and optional Audience Intelligence.
 - [x] Route Opportunity evidence through the same Brain runtime facade while preserving its deterministic builder.
-- [ ] Verify BrainOrchestrator migration GREEN in CI.
+- [x] Verify BrainOrchestrator migration GREEN in CI.
 - [ ] Prove BrainStatisticsBridge and BrainAudienceBridge have zero production callers after merge.
 - [ ] Donor-harvest BrainAnalyticsEvidence evidence-explanation behavior before quarantine decision.
-- [ ] Define the broader `EvidenceRecord / DerivedSignal` cross-domain contract.
-- [ ] Add metric-comparability guard before cross-window/cross-population comparisons.
+- [x] Define the broader `EvidenceRecord / DerivedSignal` cross-domain contract.
+- [x] Add metric-comparability guard before cross-window/cross-population comparisons.
+
+
+## Evaluation comparability seam — 2026-09-27
+
+- [x] Promote MetricComparabilityPolicy into `analytics-canon` while preserving the legacy import path as a compatibility re-export.
+- [x] Add metric-key mismatch protection to the canonical policy.
+- [x] Project analytics evidence into typed `EvidenceRecord[]` from the same canonical snapshot used by Brain evidence intelligence.
+- [x] Normalize Anomaly and Opportunity evidence through shared `DerivedSignal` contracts.
+- [x] Carry source-field unit/aggregation/entity/format/window/availability metadata into canonical Algorithm observations.
+- [x] Carry canonical baseline comparison context into evaluation targets without overwriting explicit baseline values.
+- [x] Reject semantically incompatible canonical baseline/current comparisons before relative-change calculation.
+- [x] Preserve legacy/lifecycle evaluation behavior until those baseline producers gain typed comparison contexts.
+- [x] Prove 7/7 AlgorithmEvaluationEngine tests and 6/6 CanonicalAlgorithmEvaluation tests GREEN.
+- [ ] Extend comparability to experiment and data-visual consumers (VT-024).

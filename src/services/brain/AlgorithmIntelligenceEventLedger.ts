@@ -1,4 +1,5 @@
 import type { BrainConfidenceLevel } from "../../types"
+import type { MetricComparisonContext } from "../analytics-canon"
 
 const STORAGE_KEY = "vt_algorithm_intelligence_events_v1"
 export const ALGORITHM_INTELLIGENCE_EVENT_CHANGED = "vt_algorithm_intelligence_event_changed"
@@ -24,6 +25,7 @@ export interface AlgorithmEvaluationTarget {
  targetValue?: number | null
  minimumRelativeChange?: number | null
  windowHours?: number | null
+ baselineComparisonContext?: MetricComparisonContext | null
 }
 
 export interface AlgorithmIntelligenceEvent {
