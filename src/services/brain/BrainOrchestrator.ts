@@ -36,11 +36,9 @@ import {
  shouldUseCurrentGrounding,
 } from "./BrainCapabilityRegistry"
 import { resolveBrainTaskProfile } from "./BrainTaskProfileRegistry"
-import { buildBrainEvidenceIntelligence } from "./BrainStatisticsBridge"
-import { buildBrainAudienceIntelligence } from "./BrainAudienceBridge"
+import { resolveEvidenceIntelligence } from "./EvidenceIntelligenceResolver"
 import { readAlgorithmIntelligenceForBrain } from "./AlgorithmIntelligenceAccess"
 import { readBrainEngineControls } from "./BrainEngineControls"
-import { buildOpportunityEvidenceFromBrainPack } from "./OpportunityEvidenceAdapter"
 import { resolveCreatorContext } from "./CreatorContextResolver"
 import {
  cacheCurrentNicheResearch,
@@ -310,23 +308,26 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
  const capabilities = selectBrainCapabilities({ channelId: input.channelId, userText: input.userText, snapshot: input.snapshot })
  const capabilityIds = capabilities.map((capability) => capability.id)
  const brainIntent = inferBrainIntent(input.userText)
- const evidenceIntelligence = capabilityIds.includes("statistics-intelligence")
-  ? buildBrainEvidenceIntelligence({
-    expectedChannelId: input.channelId,
-    includeAudienceRows: brainIntent === "audience",
+ const engineControls = readBrainEngineControls(input.channelId)
+ const wantsStatisticsIntelligence = capabilityIds.includes("statistics-intelligence")
+ const wantsAlgorithmIntelligence = capabilityIds.includes("algorithm-intelligence") && engineControls.channelIntelligence
+ const evidenceIntelligence = wantsStatisticsIntelligence || wantsAlgorithmIntelligence
+  ? resolveEvidenceIntelligence({
+    channelId: input.channelId,
+    includeAudience: wantsStatisticsIntelligence && brainIntent === "audience",
+    includeOpportunities: wantsAlgorithmIntelligence && engineControls.opportunityIntelligence,
+    brainEvidencePack: input.snapshot.evidencePack,
    })
   : null
- const evidenceQuality = evidenceIntelligence?.evidenceQuality || null
- const canonicalEvidence = evidenceQuality?.scopeMatch === "mismatch"
-  ? null
-  : evidenceIntelligence?.canonicalEvidence || null
- const statisticsIntelligence = canonicalEvidence
+ const evidenceQuality = wantsStatisticsIntelligence
+  ? evidenceIntelligence?.evidenceQuality || null
+  : null
+ const statisticsIntelligence = wantsStatisticsIntelligence
   ? evidenceIntelligence?.statisticsIntelligence || null
   : null
- const audienceIntelligence = canonicalEvidence && brainIntent === "audience"
-  ? buildBrainAudienceIntelligence(canonicalEvidence)
+ const audienceIntelligence = wantsStatisticsIntelligence
+  ? evidenceIntelligence?.audienceIntelligence || null
   : null
- const engineControls = readBrainEngineControls(input.channelId)
  const creatorContext = await resolveCreatorContext({
   channelId: input.channelId,
   query: input.userText,
@@ -334,13 +335,7 @@ export const runBrainTurn = async (input: RunBrainTurnInput): Promise<BrainOrche
   visibleContext: input.visibleContext,
   artifactRefs: input.artifactRefs,
  }).catch(() => null)
- const wantsAlgorithmIntelligence = capabilityIds.includes("algorithm-intelligence") && engineControls.channelIntelligence
- const opportunityEvidence = engineControls.opportunityIntelligence && input.channelId
-  ? buildOpportunityEvidenceFromBrainPack({
-    channelId: input.channelId,
-    evidencePack: input.snapshot.evidencePack,
-   })
-  : []
+ const opportunityEvidence = evidenceIntelligence?.opportunityEvidence || []
  const algorithmAccess = wantsAlgorithmIntelligence && input.channelId
   ? await readAlgorithmIntelligenceForBrain({
     channelId: input.channelId,
