@@ -1,0 +1,430 @@
+.longform-optimizer-widget {
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  align-content: stretch;
+  gap: 6px;
+  padding-block: 6px;
+}
+
+.longform-optimizer-command {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto auto auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.longform-optimizer-video-select {
+  min-width: 0;
+}
+
+.longform-optimizer-experiment {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.longform-optimizer-experiment > span,
+.longform-optimizer-experiment > b {
+  font-size: 8px;
+  font-weight: 1000;
+  line-height: 1;
+  letter-spacing: .03em;
+  color: var(--widget-ink, var(--vt-ink));
+}
+
+.longform-optimizer-experiment > b {
+  min-width: 20px;
+  text-align: center;
+}
+
+.longform-optimizer-summary {
+  min-width: 0;
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: minmax(170px, 1.35fr) minmax(230px, 1fr);
+  gap: 6px;
+  align-items: stretch;
+}
+
+.longform-optimizer-identity {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: stretch;
+  overflow: hidden;
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--widget-color) 10%, white);
+}
+
+.longform-optimizer-identity > img,
+.longform-optimizer-thumb-placeholder {
+  box-sizing: border-box;
+  width: 76px;
+  height: 100%;
+  min-height: 44px;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  border-inline-end: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  background: color-mix(in srgb, var(--widget-color) 28%, white);
+}
+
+.longform-optimizer-thumb-placeholder > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.longform-optimizer-identity > div {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  padding: 4px 6px;
+}
+
+.longform-optimizer-identity span {
+  min-width: 0;
+  font-size: 7px;
+  font-weight: 1000;
+  line-height: 1;
+  text-transform: uppercase;
+  opacity: .62;
+}
+
+.longform-optimizer-identity strong {
+  min-width: 0;
+  max-height: 2em;
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 1000;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.longform-optimizer-kpis {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  border-radius: 5px;
+  overflow: hidden;
+  background: white;
+}
+
+.longform-optimizer-kpis > span {
+  min-width: 0;
+  display: grid;
+  place-content: center;
+  gap: 1px;
+  padding: 2px 4px;
+  border-inline-end: var(--widget-module-stroke, 2px) solid var(--widget-border);
+  text-align: center;
+}
+
+.longform-optimizer-kpis > span:last-child {
+  border-inline-end: 0;
+}
+
+.longform-optimizer-kpis small {
+  font-size: 7px;
+  font-weight: 1000;
+  line-height: 1;
+  opacity: .58;
+}
+
+.longform-optimizer-kpis b {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 1000;
+  line-height: 1;
+  text-overflow: clip;
+}
+
+.longform-optimizer-workspace {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.longform-optimizer-scroll-content {
+  min-width: 0;
+  min-height: 100%;
+}
+
+.longform-optimizer-report,
+.longform-optimizer-changes,
+.longform-optimizer-outcome {
+  min-width: 0;
+  min-height: 0;
+}
+
+.longform-optimizer-report-card {
+  min-width: 0;
+}
+
+.longform-optimizer-report-card .widget-module-frame-body {
+  padding-block: 7px;
+}
+
+.longform-optimizer-report-copy {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.longform-optimizer-report-copy > strong {
+  font-size: 11px;
+  font-weight: 1000;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.longform-optimizer-report-copy > p,
+.longform-optimizer-ready p,
+.longform-optimizer-outcome-note {
+  margin: 0;
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.longform-optimizer-evidence,
+.longform-optimizer-handoffs {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.longform-optimizer-ready {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+}
+
+.longform-optimizer-ready > svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.5;
+}
+
+.longform-optimizer-ready > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.longform-optimizer-ready strong {
+  font-size: 10px;
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.longform-optimizer-error {
+  margin-top: 5px;
+  padding: 5px 7px;
+  border: 2px solid var(--widget-border);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--widget-color) 16%, white);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.longform-optimizer-change-actions {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.longform-optimizer-change-actions > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.longform-optimizer-change-actions strong,
+.longform-optimizer-review-heading strong {
+  font-size: 10px;
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.longform-optimizer-change-actions span,
+.longform-optimizer-review-heading span {
+  font-size: 8px;
+  font-weight: 750;
+  line-height: 1.1;
+  opacity: .62;
+}
+
+.longform-optimizer-empty,
+.longform-optimizer-outcome-note {
+  min-height: 70px;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  border: 2px solid color-mix(in srgb, var(--widget-color) 55%, white);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--widget-color) 8%, white);
+  text-align: center;
+}
+
+.longform-optimizer-outcome {
+  display: grid;
+  gap: 6px;
+}
+
+.longform-optimizer-review {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(130px, .9fr) auto auto minmax(130px, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+}
+
+.longform-optimizer-review-heading {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+}
+
+.longform-optimizer-review-heading > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.longform-optimizer-review-heading > div {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.longform-optimizer-no-data {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  text-align: center;
+}
+
+.longform-optimizer-no-data > svg {
+  width: 34px;
+  height: 34px;
+}
+
+.longform-optimizer-no-data > strong {
+  font-size: 13px;
+  font-weight: 1000;
+}
+
+.longform-optimizer-no-data > span {
+  max-width: 52ch;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+@container vt-widget (max-width: 700px) {
+  .longform-optimizer-command {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .longform-optimizer-video-select {
+    grid-column: 1 / -1;
+  }
+
+  .longform-optimizer-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .longform-optimizer-identity {
+    display: none;
+  }
+
+  .longform-optimizer-kpis {
+    min-height: 38px;
+  }
+
+  .longform-optimizer-review {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .longform-optimizer-review-heading,
+  .longform-optimizer-review > .widget-text-input {
+    grid-column: 1 / -1;
+  }
+}
+
+@container vt-widget (max-width: 460px) {
+  .longform-optimizer-widget {
+    gap: 4px;
+    padding-block: 4px;
+  }
+
+  .longform-optimizer-command {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px;
+  }
+
+  .longform-optimizer-experiment {
+    grid-template-columns: auto auto;
+  }
+
+  .longform-optimizer-experiment > b {
+    display: none;
+  }
+
+  .longform-optimizer-analyze {
+    min-width: 86px;
+  }
+
+  .longform-optimizer-kpis > span {
+    padding-inline: 2px;
+  }
+
+  .longform-optimizer-kpis b {
+    font-size: 9px;
+  }
+
+  .longform-optimizer-report-card .widget-module-header-copy > small {
+    display: none;
+  }
+
+  .longform-optimizer-handoffs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .longform-optimizer-handoffs > * {
+    width: 100%;
+  }
+
+  .longform-optimizer-change-actions {
+    align-items: stretch;
+  }
+
+  .longform-optimizer-change-actions > div {
+    display: none;
+  }
+
+  .longform-optimizer-change-actions > * {
+    width: 100%;
+  }
+}
