@@ -1,4 +1,5 @@
 import type { AlgorithmSignal } from "./AlgorithmStrategyEngine"
+import type { DerivedSignal } from "./EvidenceRecord"
 
 export type OpportunityKind =
  | "emerging_search"
@@ -25,7 +26,37 @@ export interface OpportunityEvidence {
  context?: AlgorithmSignal["context"]
 }
 
+export const opportunityToDerivedSignal = (opportunity: OpportunityEvidence): DerivedSignal => ({
+ id: `derived:opportunity:${opportunity.id}`,
+ kind: "opportunity",
+ channelId: opportunity.channelId,
+ videoId: opportunity.videoId,
+ label: `Opportunity: ${opportunity.entity || opportunity.kind.replaceAll("_", " ")}`,
+ metric: opportunity.metric,
+ currentValue: opportunity.currentValue,
+ baselineValue: opportunity.baselineValue,
+ delta: (
+  typeof opportunity.currentValue === "number"
+  && typeof opportunity.baselineValue === "number"
+ )
+  ? opportunity.currentValue - opportunity.baselineValue
+  : null,
+ relativeDelta: opportunity.relativeDelta,
+ confidence: opportunity.confidence,
+ impact: opportunity.impactScore,
+ evidenceIds: [...new Set(opportunity.evidenceIds)],
+ derivation: {
+  method: "opportunity-evidence-normalization",
+  version: "v1",
+  deterministic: true,
+ },
+ metadata: {
+  sourceKind: opportunity.kind,
+ },
+})
+
 export const opportunityToAlgorithmSignal = (opportunity: OpportunityEvidence): AlgorithmSignal => {
+ const derived = opportunityToDerivedSignal(opportunity)
  const kind: AlgorithmSignal["kind"] = (() => {
   switch (opportunity.kind) {
    case "emerging_search": return "search_breakout"
@@ -43,15 +74,15 @@ export const opportunityToAlgorithmSignal = (opportunity: OpportunityEvidence): 
   origin: "opportunity",
   kind,
   channelId: opportunity.channelId,
-  videoId: opportunity.videoId,
+  videoId: derived.videoId,
   entity: opportunity.entity,
-  metric: opportunity.metric,
-  currentValue: opportunity.currentValue,
-  baselineValue: opportunity.baselineValue,
-  relativeDelta: opportunity.relativeDelta,
-  impactScore: opportunity.impactScore,
-  confidence: opportunity.confidence,
-  evidenceIds: [...new Set(opportunity.evidenceIds)],
+  metric: derived.metric,
+  currentValue: derived.currentValue,
+  baselineValue: derived.baselineValue,
+  relativeDelta: derived.relativeDelta,
+  impactScore: derived.impact ?? opportunity.impactScore,
+  confidence: derived.confidence,
+  evidenceIds: derived.evidenceIds,
   context: opportunity.context,
  }
 }
