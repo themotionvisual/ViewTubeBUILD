@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "viewtube.open-questions.v1",
+  "lastEdited": "2026-09-27",
+  "questions": [
+    {
+      "id": "QUESTION-001",
+      "question": "What is the final canonical repo-native storage/writer shape for Task Index VNext?",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "planFamilyId": "PLAN-FAMILY-DOCS-AGENTS",
+      "status": "OPEN",
+      "decisionOwner": "Task Authority",
+      "blockingScope": "full canonical task mutation"
+    },
+    {
+      "id": "QUESTION-002",
+      "question": "Should capability home pages become fully generated or remain partly hand-authored routing pages?",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "planFamilyId": "PLAN-FAMILY-DOCS-AGENTS",
+      "status": "OPEN",
+      "decisionOwner": "Documentation Governance",
+      "blockingScope": "capability-home automation"
+    },
+    {
+      "id": "QUESTION-003",
+      "question": "What code-ownership confidence is required before CI may enforce path ownership?",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-VERIFICATION"
+      ],
+      "planFamilyId": "PLAN-FAMILY-DOCS-AGENTS",
+      "status": "OPEN",
+      "decisionOwner": "Documentation Governance + Verification",
+      "blockingScope": "ownership enforcement"
+    },
+    {
+      "id": "QUESTION-004",
+      "question": "Should the Unified Development Control Room remain generated documentation or become an application route?",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "planFamilyId": "PLAN-FAMILY-DOCS-AGENTS",
+      "status": "OPEN",
+      "decisionOwner": "Product Architecture",
+      "blockingScope": "runtime control-room surface"
+    },
+    {
+      "id": "QUESTION-005",
+      "question": "Should similarity thresholds differ by domain or remain globally configured?",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "planFamilyId": "PLAN-FAMILY-DOCS-AGENTS",
+      "status": "OPEN",
+      "decisionOwner": "Documentation Governance",
+      "blockingScope": "automatic merge suggestions"
+    },
+    {
+      "id": "QUESTION-006",
+      "question": "What review gate promotes an accepted idea into a permanent Task Candidate?",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ],
+      "planFamilyId": "PLAN-FAMILY-DOCS-AGENTS",
+      "status": "OPEN",
+      "decisionOwner": "Task Authority + Product Architecture",
+      "blockingScope": "idea-to-task automation"
+    }
+  ]
+}
