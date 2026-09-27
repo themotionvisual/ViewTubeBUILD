@@ -1,5 +1,6 @@
 import type { CreatorBrainResponse } from "../types"
 import { runBrainTask } from "./brain/runtime/BrainRuntime"
+import type { BrainRuntimeRequest } from "./brain/runtime/BrainRuntimeContracts"
 import {
   appendContentBuildEvent,
   ensureContentBuild,
@@ -210,7 +211,7 @@ const evaluationTargetsFor = (context: LongformOptimizationContext): AlgorithmEv
     .filter((entry): entry is [string, number] => entry[1] != null)
     .map(([metric, baselineValue]) => ({
       metric,
-      direction: "increase",
+      direction: "increase" as const,
       baselineValue,
       minimumRelativeChange: 0,
       windowHours: 168,
@@ -234,16 +235,18 @@ export const runLongformOptimizationAnalysis = async (input: {
   projectId?: string | null
   video: LongformOptimizationVideoInput
   experiment: LongformExperimentChoice
+  brainRuntime: Pick<BrainRuntimeRequest, "snapshot" | "systemPrompt" | "growthContext" | "allowModel">
 }): Promise<LongformOptimizationAnalysis> => {
   const context = buildLongformOptimizationContext(input.video, input.experiment)
   const build = ensureContentBuild({
     videoId: input.video.videoId,
     channelId: input.channelId || null,
-    legacyProjectId: input.projectId || null,
+    legacyProjectId: null,
     toolId: "longform-optimizer",
   })
 
   const result = await runBrainTask({
+    ...input.brainRuntime,
     surface: "longform-optimizer-widget",
     channelId: input.channelId || null,
     projectId: input.projectId || null,
