@@ -40,7 +40,7 @@ This guide focuses on the parts creators can actually use: audience fit, topic c
 
 A useful way to think about a video's journey is:
 
-\`\`\`mermaid
+```mermaid
 flowchart LR
     A[You Make a Video] --> B[YouTube Finds Possible Viewers]
     B --> C[The Video Appears on a Surface]
@@ -48,7 +48,7 @@ flowchart LR
     D --> E[Viewer Watches and Reacts]
     E --> F[YouTube Learns Where the Video Fits]
     F --> B
-\`\`\`
+```
 
 This process is not a single one-time test. It can continue for hours, days, months, or years as YouTube finds new viewing contexts and the topic itself changes in popularity.
 
@@ -451,13 +451,13 @@ A channel with one isolated video gives YouTube and viewers fewer next-step opti
 
 A connected catalog can create:
 
-\`\`\`mermaid
+```mermaid
 flowchart LR
     A[Discovery Video] --> B[Related Video]
     B --> C[Deeper Topic Video]
     C --> D[Playlist or Series]
     D --> E[Returning Viewer]
-\`\`\`
+```
 
 ViewTube should help you see those relationships rather than only score uploads independently.
 
