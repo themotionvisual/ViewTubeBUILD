@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "viewtube.plan-families.v1",
+  "lastEdited": "2026-09-27",
+  "families": [
+    {
+      "id": "PLAN-FAMILY-BRAIN-AI",
+      "title": "Brain / AI Convergence",
+      "capabilityIds": [
+        "CAP-CREATOR-CONTEXT",
+        "CAP-EVIDENCE-INTELLIGENCE",
+        "CAP-BRAIN-EXPERIENCE",
+        "CAP-OUTCOME-LEARNING"
+      ],
+      "survivor": "docs/domains/BRAIN.md",
+      "members": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "PLAN-FAMILY-ANALYTICS",
+      "title": "Analytics / VT-SYNC Convergence",
+      "capabilityIds": [
+        "CAP-ANALYTICS-CANON",
+        "CAP-EVIDENCE-INTELLIGENCE"
+      ],
+      "survivor": "docs/analytics/VIEWTUBE_ANALYTICS_VT_SYNC_MASTER_RESOURCE.md",
+      "members": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "PLAN-FAMILY-PROJECTS",
+      "title": "Projects / ContentBuild",
+      "capabilityIds": [
+        "CAP-PROJECT-CONTENT-IDENTITY"
+      ],
+      "survivor": "docs/architecture/VIEWTUBE_PROJECTS_CONTENTBUILD_WORKFLOW_MASTER_RESOURCE.md",
+      "members": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "PLAN-FAMILY-ASSET-VAULT",
+      "title": "Asset Engine / Vault",
+      "capabilityIds": [
+        "CAP-ASSET-LINEAGE"
+      ],
+      "survivor": "docs/architecture/VIEWTUBE_ASSET_ENGINE_MASTER_RESOURCE.md",
+      "members": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "PLAN-FAMILY-EDITOR-REMOTION",
+      "title": "Editor / Remotion",
+      "capabilityIds": [
+        "CAP-EDITOR-RENDER",
+        "CAP-CREATOR-OPERATIONS"
+      ],
+      "survivor": "docs/editor/VIEWTUBE_YOUTUBE_EDITOR_SYSTEM_MASTER_RESOURCE.md",
+      "members": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "PLAN-FAMILY-WIDGETS",
+      "title": "Dashboard Widgets",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES"
+      ],
+      "survivor": "docs/architecture/VIEWTUBE_WIDGET_DASHBOARD_MASTER_RESOURCE.md",
+      "members": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "PLAN-FAMILY-TOOLBOX",
+      "title": "Toolbox / Primitive UI",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-VERIFICATION"
+      ],
+      "survivor": "docs/architecture/VIEWTUBE_TOOLBOX_UI_MASTER_RESOURCE.md",
+      "members": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "PLAN-FAMILY-PUBLISHING",
+      "title": "Publishing / Distribution / Recovery",
+      "capabilityIds": [
+        "CAP-PUBLISH",
+        "CAP-PROJECT-CONTENT-IDENTITY",
+        "CAP-ASSET-LINEAGE"
+      ],
+      "survivor": "docs/programs/INTEGRATED_APPLICATION.md",
+      "members": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "PLAN-FAMILY-DOCS-AGENTS",
+      "title": "Documentation / Agents / Task Governance",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-VERIFICATION"
+      ],
+      "survivor": "docs/programs/INTEGRATED_APPLICATION.md",
+      "members": [],
+      "status": "ACTIVE"
+    },
+    {
+      "id": "PLAN-FAMILY-MOBILE-RESPONSIVE",
+      "title": "Cross-App Mobile / Responsive",
+      "capabilityIds": [
+        "CAP-WIDGET-SURFACES",
+        "CAP-EDITOR-RENDER",
+        "CAP-VERIFICATION"
+      ],
+      "survivor": "docs/programs/INTEGRATED_APPLICATION.md",
+      "members": [],
+      "status": "ACTIVE"
+    }
+  ]
+}

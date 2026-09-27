@@ -201,6 +201,9 @@ Conversation work that overlaps existing plans/tasks should normally update/merg
 
 ## Built-in sub-skills
 
+- `viewtube-convergence-governance` — route plans/ideas/workflows through capability homes, plan families, prior-art and convergence decisions.
+- `viewtube-ideas-curator` — preserve idea lists, dedupe unique ideas and route them to capabilities/tools/systems/features/functions.
+
 - `viewtube-main-document-editor` — edit the main constitutions, architecture, program, capability registry and Domain Authorities when durable product/system meaning changes.
 - `viewtube-document-consolidation` — losslessly consolidate multi-version documents, plans, HTML/prototypes and skill families with manifests and Removed Archive preservation.
 - `viewtube-conversation-handoff` — create durable continuation packages for long conversations.
@@ -212,3 +215,16 @@ The parent skill may author additional narrow sub-skills using `references/sub-s
 ## Master Source usage
 
 Treat registry entries with `sourceTier: MASTER_SOURCE` as mandatory high-value prior art within their scope. Use them to discover better systems, missing ideas, external research targets, architecture simplifications, new skills/workflows, and product opportunities. Do not let a Master Source override canonical current authorities or verified implementation evidence; promote accepted ideas through the governed object/document system.
+
+
+## Convergence-first document routing
+
+Before CREATE for any substantial plan/system/workflow/tool documentation:
+1. use `viewtube-convergence-governance`;
+2. resolve CAP IDs and capability homes;
+3. inspect `governance/convergence/plan-families.json`;
+4. inspect `ideas/registry.json`;
+5. complete Existing Work Checked;
+6. prefer UPDATE / EXTEND / CONSOLIDATE / MERGE over a parallel file.
+
+Plan merges must update `governance/convergence/plan-merges.json` with survivor + harvested unique material.

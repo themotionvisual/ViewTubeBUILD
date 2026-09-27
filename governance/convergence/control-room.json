@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "viewtube.convergence-control-room.v1",
+  "generatedAt": "2026-09-27T19:09:00Z",
+  "source": "governance/convergence/* + ideas/registry.json",
+  "counts": {
+    "capabilities": 13,
+    "incompleteCapabilities": 13,
+    "planFamilies": 10,
+    "ideas": 50,
+    "implementationWaveIdeas": 17,
+    "openQuestions": 6,
+    "workflows": 10,
+    "improvements": 17,
+    "planMergeRecords": 4
+  },
+  "alerts": [
+    "All capability homes exist, but task/test/Guide/verification coverage remains incomplete and must be populated from canonical sources.",
+    "Code ownership includes PARTIAL records; do not enforce uncertain paths as hard CI ownership yet.",
+    "Task Index VNext remains a critical convergence dependency."
+  ],
+  "authority": "docs/governance/CONVERGENCE.md"
+}

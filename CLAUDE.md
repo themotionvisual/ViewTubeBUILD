@@ -14,8 +14,10 @@ For any audit, plan, implementation, review, merge, status, product/system desig
 - `docs/architecture/capabilities.json`
 - `docs/programs/INTEGRATED_APPLICATION.md`
 - `docs/governance/DOCUMENTATION.md`
+- `docs/governance/CONVERGENCE.md`
 - `docs/governance/VERIFICATION.md`
 - `.claude/skills/viewtube-document-system/SKILL.md` for documentation/product-system changes
+- `.claude/skills/viewtube-convergence-governance/SKILL.md` before creating substantial new plans/tools/systems/workflows
 - `docs/governance/CONVERSATION_OS.md`
 - `docs/governance/CROWN.md`
 - `docs/governance/TASK_AUTHORITY.md`
@@ -23,7 +25,7 @@ For any audit, plan, implementation, review, merge, status, product/system desig
 
 The Product Completion Constitution defines what complete ViewTube means. Product Architecture defines the product/capability topology. Integrated Application owns cross-system convergence. Exact work/status belongs in the Task Index. Scoped domain authorities remain primary for bounded internals. Current code/tests/runtime verify implementation claims.
 
-Conversation OS handles continuity, prior-art reconciliation and proactive improvement. Crown coordinates substantial missions. Task Authority alone commits canonical task-state mutations.
+Conversation OS handles continuity, prior-art reconciliation and proactive improvement. Crown coordinates substantial missions. Task Authority alone commits canonical task-state mutations. Convergence Governance prevents parallel plan/tool/system creation by routing work through capability homes, plan families, Ideas Registry and Existing Work Checked.
 
 The legacy One Goal / dated Finish Program / Master Product documents remain preserved consolidation sources during migration and must not override the new global authorities.
 

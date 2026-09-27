@@ -669,6 +669,97 @@
         "generated dashboard"
       ],
       "reviewNotes": "Do not turn into committed work yet."
+    },
+    {
+      "itemId": "VT-CWI-DOCS-012",
+      "title": "Convergence Governance and Master Ideas Library",
+      "summary": "Build capability-centered anti-splintering governance plus a normalized master ideas system so similar plans/tools/features/functions converge instead of being built in parallel.",
+      "details": "Implements requested governance ideas 1-10, 37, 43 and 46-50; adds convergence authority, capability homes, plan families, similarity detection, work packets, capability IDs, plan merge records, idea registry/routing, code ownership, open questions, capability coverage, workflows, skill mapping, improvement log, control room, convergence-first rule, and a 50-idea source/registry/master library.",
+      "kind": "INTEGRATION",
+      "conversationState": "VERIFIED_IN_CONVERSATION",
+      "domains": [
+        "governance",
+        "documentation",
+        "agents",
+        "product-architecture",
+        "developer-experience"
+      ],
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-VERIFICATION"
+      ],
+      "surfaces": [
+        "developer governance",
+        "agent routing",
+        "ideas library",
+        "convergence control room"
+      ],
+      "sourceRefs": [
+        "current conversation request",
+        "docs/governance/CONVERGENCE.md",
+        "ideas/lists/governance/document-governance-improvements.md"
+      ],
+      "changedPaths": [
+        "docs/governance/CONVERGENCE.md",
+        "governance/convergence/",
+        "docs/capabilities/",
+        "ideas/",
+        "scripts/governance/",
+        ".claude/skills/viewtube-convergence-governance/",
+        ".claude/skills/viewtube-ideas-curator/"
+      ],
+      "branchPrRefs": [
+        "governance/convergence-ideas-system-2026-09-27"
+      ],
+      "evidenceRefs": [
+        "focused convergence tests 6/6 passing",
+        "structural registry audit: 0 issues",
+        "13 capability homes",
+        "10 plan families",
+        "50 normalized ideas",
+        "17 implementation-wave ideas",
+        "branch 0 behind main at structural audit"
+      ],
+      "dependencies": [
+        "PR review / CI before production merge"
+      ],
+      "blockers": [],
+      "similarityKeys": [
+        "convergence governance",
+        "master ideas",
+        "plan families",
+        "capability homes",
+        "idea registry",
+        "work packet",
+        "similar plan detection"
+      ],
+      "value": {
+        "creatorImpact": "HIGH",
+        "systemLeverage": "CRITICAL",
+        "urgency": "HIGH",
+        "reusePotential": "HIGH",
+        "confidence": "HIGH",
+        "estimatedEffort": "LARGE",
+        "implementationRisk": "MEDIUM",
+        "rationale": "Creates the anti-splintering machinery needed for agents/conversations/plans/code to converge on shared capabilities and preserves brainstorm quality without multiplying parallel systems."
+      },
+      "relationship": "EXPANDS",
+      "suggestedDestination": "Convergence Governance / Documentation Governance / Integrated Application Program",
+      "reviewStatus": "RECONCILED",
+      "disposition": "UPDATE_SPECIFICATION",
+      "targetRefs": [
+        "docs/governance/CONVERGENCE.md",
+        "governance/convergence/",
+        "ideas/registry.json",
+        "ideas/MASTER_IDEAS.md"
+      ],
+      "harvestedMaterial": [
+        "17 requested governance improvements implemented as one system",
+        "all 50 governance ideas preserved in source list and normalized registry",
+        "capability/plan/code/workflow/idea routing model",
+        "convergence-first creation rule"
+      ],
+      "reviewNotes": "Built and branch-verified. Canonical production status awaits PR CI/merge. Remaining 33 ideas stay UNREVIEWED rather than becoming tasks."
     }
   ]
 }

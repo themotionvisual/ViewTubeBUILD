@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "viewtube.skill-workflow-map.v1",
+  "lastEdited": "2026-09-27",
+  "mappings": [
+    {
+      "workflowId": "WF-FEATURE-BUILD",
+      "skillIds": [
+        "viewtube-conversation-os",
+        "viewtube-task-authority"
+      ]
+    },
+    {
+      "workflowId": "WF-BUG-FIX",
+      "skillIds": [
+        "viewtube-conversation-os",
+        "test-driven-development"
+      ]
+    },
+    {
+      "workflowId": "WF-PLAN-CONSOLIDATION",
+      "skillIds": [
+        "viewtube-document-consolidation",
+        "viewtube-conversation-work-reconciliation"
+      ]
+    },
+    {
+      "workflowId": "WF-DOCUMENT-CONSOLIDATION",
+      "skillIds": [
+        "viewtube-document-consolidation"
+      ]
+    },
+    {
+      "workflowId": "WF-PROTOTYPE-PROMOTION",
+      "skillIds": [
+        "viewtube-conversation-os"
+      ]
+    },
+    {
+      "workflowId": "WF-LEGACY-MIGRATION",
+      "skillIds": [
+        "viewtube-conversation-os",
+        "viewtube-document-consolidation"
+      ]
+    },
+    {
+      "workflowId": "WF-CONVERSATION-HANDOFF",
+      "skillIds": [
+        "viewtube-conversation-handoff",
+        "viewtube-conversation-work-reconciliation"
+      ]
+    },
+    {
+      "workflowId": "WF-CAPABILITY-CHANGE",
+      "skillIds": [
+        "viewtube-main-document-editor",
+        "viewtube-task-authority"
+      ]
+    },
+    {
+      "workflowId": "WF-VISIBLE-UI-SHIP",
+      "skillIds": [
+        "viewtube-conversation-os"
+      ]
+    },
+    {
+      "workflowId": "WF-RELEASE-VERIFY",
+      "skillIds": [
+        "viewtube-task-authority",
+        "viewtube-crown"
+      ]
+    }
+  ]
+}

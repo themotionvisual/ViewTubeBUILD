@@ -142,3 +142,20 @@ Use `docs/governance/CONVERSATION_HANDOFFS.md` and `tasks/conversation-intake/` 
 - route surviving material into the correct canonical destination.
 
 A conversation intake package is not closed while any captured work item lacks a disposition.
+
+
+## Convergence-first creation gate
+
+Documentation creation also follows `docs/governance/CONVERGENCE.md`.
+
+Before creating a new plan, workflow, tool/system specification, idea document or major reference family:
+1. resolve capability ID(s);
+2. open the capability home;
+3. identify the current plan family;
+4. complete Existing Work Checked;
+5. search Ideas Registry and conversation intake;
+6. choose `EXTEND → COMBINE → MERGE → GENERALIZE → ADAPT → CREATE_REVIEW`.
+
+A new filename is not evidence of a new concern.
+
+When plans overlap, preserve all unique material through a Plan Merge record and keep one survivor.

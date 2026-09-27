@@ -70,3 +70,10 @@ If context is becoming large/repetitive, a phase/agent changes, or substantial u
 After the handoff, invoke `viewtube-conversation-work-reconciliation` to review every work item against current main, Task Index, Integrated Application Program, capabilities, domain authorities, related plans and active PRs.
 
 The reconciliation pass should combine overlapping plans/features/tools/widgets/pages/processes rather than creating parallel work.
+
+
+## Convergence-first creation
+
+Before recommending/creating a new plan, page, tool, service, store, workflow or subsystem, invoke `viewtube-convergence-governance`.
+
+New brainstorms should enter the Ideas Registry via `viewtube-ideas-curator` unless they are already accepted work.

@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "viewtube.workflows.v1",
+  "lastEdited": "2026-09-27",
+  "workflows": [
+    {
+      "id": "WF-FEATURE-BUILD",
+      "title": "Feature Build",
+      "trigger": "Accepted feature/capability change",
+      "steps": [
+        "reconcile prior art",
+        "resolve capability/plan family",
+        "define acceptance",
+        "implement",
+        "verify",
+        "record"
+      ],
+      "skillIds": [
+        "viewtube-conversation-os",
+        "viewtube-task-authority"
+      ]
+    },
+    {
+      "id": "WF-BUG-FIX",
+      "title": "Bug Fix",
+      "trigger": "Reproducible defect",
+      "steps": [
+        "reproduce with test",
+        "resolve owner",
+        "fix",
+        "focused verify",
+        "runtime verify",
+        "record"
+      ],
+      "skillIds": [
+        "viewtube-conversation-os",
+        "test-driven-development"
+      ]
+    },
+    {
+      "id": "WF-PLAN-CONSOLIDATION",
+      "title": "Plan Consolidation",
+      "trigger": "Overlapping plans/handoffs/audits",
+      "steps": [
+        "inventory family",
+        "choose survivor",
+        "harvest unique material",
+        "merge",
+        "record plan merge",
+        "archive donors"
+      ],
+      "skillIds": [
+        "viewtube-document-consolidation",
+        "viewtube-conversation-work-reconciliation"
+      ]
+    },
+    {
+      "id": "WF-DOCUMENT-CONSOLIDATION",
+      "title": "Document Consolidation",
+      "trigger": "Multiple versions or competing docs",
+      "steps": [
+        "discover family",
+        "hash/inventory",
+        "harvest",
+        "manifest",
+        "archive",
+        "verify"
+      ],
+      "skillIds": [
+        "viewtube-document-consolidation"
+      ]
+    },
+    {
+      "id": "WF-PROTOTYPE-PROMOTION",
+      "title": "Prototype Promotion",
+      "trigger": "Prototype proposed for production",
+      "steps": [
+        "resolve capability",
+        "compare current implementation",
+        "map primitives/contracts",
+        "implement",
+        "runtime/screenshot verify",
+        "record"
+      ],
+      "skillIds": [
+        "viewtube-conversation-os"
+      ]
+    },
+    {
+      "id": "WF-LEGACY-MIGRATION",
+      "title": "Legacy Migration",
+      "trigger": "Legacy/compatibility path replacement",
+      "steps": [
+        "prove callers",
+        "define replacement",
+        "migrate incrementally",
+        "verify parity",
+        "prove zero reachability",
+        "remove/quarantine"
+      ],
+      "skillIds": [
+        "viewtube-conversation-os",
+        "viewtube-document-consolidation"
+      ]
+    },
+    {
+      "id": "WF-CONVERSATION-HANDOFF",
+      "title": "Long Conversation Handoff",
+      "trigger": "Context pressure or ownership handoff",
+      "steps": [
+        "capture handoff",
+        "capture worklog",
+        "resume",
+        "reconcile all items"
+      ],
+      "skillIds": [
+        "viewtube-conversation-handoff",
+        "viewtube-conversation-work-reconciliation"
+      ]
+    },
+    {
+      "id": "WF-CAPABILITY-CHANGE",
+      "title": "Capability Change",
+      "trigger": "Durable capability/owner/topology change",
+      "steps": [
+        "prior-art check",
+        "product architecture review",
+        "capability update",
+        "plan/task routing",
+        "implementation",
+        "verification"
+      ],
+      "skillIds": [
+        "viewtube-main-document-editor",
+        "viewtube-task-authority"
+      ]
+    },
+    {
+      "id": "WF-VISIBLE-UI-SHIP",
+      "title": "Visible UI Ship",
+      "trigger": "User-visible UI change",
+      "steps": [
+        "define states",
+        "implement with canonical primitives",
+        "focused tests",
+        "runtime interaction",
+        "desktop/mobile screenshots",
+        "analyze/fix",
+        "receipt"
+      ],
+      "skillIds": [
+        "viewtube-conversation-os"
+      ]
+    },
+    {
+      "id": "WF-RELEASE-VERIFY",
+      "title": "Release Verification",
+      "trigger": "PR/deployment intended as complete",
+      "steps": [
+        "CI classify",
+        "build",
+        "runtime smoke",
+        "visual/auth checks as relevant",
+        "receipt",
+        "Task Authority update"
+      ],
+      "skillIds": [
+        "viewtube-task-authority",
+        "viewtube-crown"
+      ]
+    }
+  ]
+}

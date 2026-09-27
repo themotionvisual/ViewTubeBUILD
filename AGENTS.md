@@ -63,3 +63,19 @@ When a ViewTube conversation becomes too long for safe context retention, change
 4. use `.claude/skills/viewtube-conversation-work-reconciliation/SKILL.md` to audit every planned/completed/uncompleted item and route it to Task Index, Integrated Application Program, an owning authority/specification, a merged plan, decision, opportunity/risk, receipt/evidence or archive/no-action.
 
 Conversation intake is not a second task ledger.
+
+
+## Convergence-first routing
+
+For substantial new plans, features, tools, systems, workflows, pages, stores or code owners:
+
+1. read `docs/governance/CONVERGENCE.md`;
+2. resolve `CAP-*` IDs and capability home(s);
+3. check `governance/convergence/plan-families.json`;
+4. check `ideas/registry.json`, Task Authority, current code and active PRs;
+5. record Existing Work Checked;
+6. choose `EXTEND → COMBINE → MERGE → GENERALIZE → ADAPT → CREATE_REVIEW`.
+
+Use `.claude/skills/viewtube-convergence-governance/SKILL.md`.
+
+Do not create parallel systems merely because a new conversation uses a new name.

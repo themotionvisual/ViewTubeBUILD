@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "viewtube://schemas/convergence-work-packet",
+  "title": "ViewTube Universal Work Packet",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "packetId",
+    "title",
+    "intent",
+    "capabilityIds",
+    "existingWorkChecked",
+    "priorArtVerdict",
+    "convergenceDecision",
+    "acceptance",
+    "nextAction"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "viewtube.work-packet.v1"
+    },
+    "packetId": {
+      "type": "string",
+      "pattern": "^VT-WORK-"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "intent": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capabilityIds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^CAP-"
+      }
+    },
+    "planFamilyId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "existingWorkChecked": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "priorArtVerdict": {
+      "enum": [
+        "NEW",
+        "CONTINUATION",
+        "ALREADY_TRACKED",
+        "DUPLICATE",
+        "OVERLAPS",
+        "EXPANDS",
+        "SUPERSEDES",
+        "BUG_IN_EXISTING",
+        "VERIFICATION_ONLY",
+        "DONOR_ONLY"
+      ]
+    },
+    "convergenceDecision": {
+      "enum": [
+        "EXTEND",
+        "COMBINE",
+        "MERGE",
+        "GENERALIZE",
+        "ADAPT",
+        "CREATE_REVIEW"
+      ]
+    },
+    "taskIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "missionId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "branch": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "pullRequest": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "codePaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "authorityRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "decisionRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ideaRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "nextAction": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": true
+}

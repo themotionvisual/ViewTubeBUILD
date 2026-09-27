@@ -50,7 +50,13 @@
     "smoke:local": "node scripts/release-smoke.mjs",
     "vt-e1-render:dev": "node src/server/vt-e1-render-server.mjs",
     "audit:documents": "node scripts/audit/document-system.mjs",
-    "test:document-system": "node --test scripts/audit/document-system.test.mjs"
+    "test:document-system": "node --test scripts/audit/document-system.test.mjs",
+    "test:convergence-governance": "node --test scripts/governance/convergence.test.mjs",
+    "audit:convergence": "node scripts/governance/audit-convergence.mjs",
+    "generate:ideas-master": "node scripts/governance/build-ideas-master.mjs",
+    "generate:convergence-control-room": "node scripts/governance/build-control-room.mjs",
+    "generate:capability-coverage": "node scripts/governance/build-capability-coverage.mjs",
+    "consolidate:ideas": "node scripts/governance/consolidate-ideas.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
