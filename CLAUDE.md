@@ -178,3 +178,15 @@ git rev-list --count <branch>..origin/main   # commits main has, <branch> doesn'
 # Verify a candidate for deletion has no unique content (patch-equal check)
 git cherry origin/main <branch>              # - = present on main; + = unique
 ```
+
+
+## Conversation handoff / reconciliation
+
+For long-running ViewTube threads, do not leave the only record of planned/completed/uncompleted work inside chat history.
+
+Use:
+- `.claude/skills/viewtube-conversation-handoff/SKILL.md`
+- `.claude/skills/viewtube-conversation-work-reconciliation/SKILL.md`
+- `tasks/conversation-intake/<conversation-id>/`
+
+The handoff is for resumability; the review reconciles all work into canonical Task/Program/Authority/Plan/Decision/Opportunity/Risk/Evidence destinations and merges duplicate plans/work before creating anything new.
