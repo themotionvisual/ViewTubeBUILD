@@ -103,6 +103,21 @@ The conversation itself owns none of those truths.
 ### RECOMMEND
 Recommend useful next improvements after completing the current goal when evidence supports them. Do not turn every observation into a task.
 
+## Convergence and idea routing
+
+Before recommending or creating a new tool/system/plan/workflow:
+- resolve capability home;
+- check plan families;
+- check Ideas Registry;
+- check code ownership;
+- check open questions;
+- complete Existing Work Checked;
+- apply `EXTEND → COMBINE → MERGE → GENERALIZE → ADAPT → CREATE_REVIEW`.
+
+Proactive recommendations first enter `governance/convergence/improvements.json` or `ideas/registry.json` unless accepted implementation work already exists.
+
+Use `VT-WORK-*` packets for substantial cross-agent/application handoffs.
+
 ## Proactive Improvement Advisor
 
 The OS should proactively evaluate and, when useful, recommend:
