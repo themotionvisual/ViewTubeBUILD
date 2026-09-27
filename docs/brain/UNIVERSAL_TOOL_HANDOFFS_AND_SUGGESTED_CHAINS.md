@@ -17,6 +17,14 @@ The first-class participants are the production Studio Hub tools that already ex
 
 A packet carries a typed payload, creator/channel/project/video context, evidence, provenance, and suggested destinations. It does not force a destination. The creator can accept a suggested next tool, choose another compatible destination, save the packet to Vault, or stop the chain.
 
+## Toolbox promotion and workflow recipe specification
+
+The detailed compact-widget → Toolbox promotion boundary, twenty promotion/consolidation candidates, normalized workflow recipe contract, forty creator workflow recipes, candidate work families, and pilot-chain acceptance criteria are consolidated in:
+
+`docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md`
+
+This reference remains the protocol-level description of `ViewTubeActionPacket` and suggested chains. The specification does not create a second packet/runtime owner; it applies this protocol to reusable creator workflows and explicitly prevents forty recipes from becoming forty duplicate task or persistence systems.
+
 ## Immediate examples
 
 1. Thumbnail Studio -> Video Publisher -> Video Manager
