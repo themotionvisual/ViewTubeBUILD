@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "viewtube.mission.v2",
+  "missionId": "VT-MISSION-current-main-backlog-reconciliation",
+  "taskIds": [],
+  "objective": "Losslessly reconcile conversation-derived plans, dated unfinished-work audits, Finish Program sources, domain plans/handoffs and current main into the canonical ViewTube documentation/task/mission system, eliminating work already completed or superseded before proposing surviving tasks.",
+  "why": "The backlog spans multiple generations of plans and conversation memory. Current main has already absorbed substantial work, so blindly copying old lists would recreate completed systems and establish competing status ledgers.",
+  "nonGoals": [
+    "Do not mutate canonical Task Index state until the active Task Index VNext writer is positively resolved.",
+    "Do not delete or archive donor sources before no-loss harvesting and inbound-reference checks.",
+    "Do not reopen completed greenfield programs merely because dated audits still list them.",
+    "Do not redesign product architecture while performing status reconciliation."
+  ],
+  "domains": [
+    "documentation",
+    "task-index",
+    "projects",
+    "publishing",
+    "brain",
+    "analytics",
+    "toolbox-ui",
+    "widgets",
+    "vault",
+    "asset-engine",
+    "editor",
+    "auth",
+    "resource-library"
+  ],
+  "canonicalOwners": {
+    "program": "docs/programs/INTEGRATED_APPLICATION.md",
+    "documentation": "docs/governance/DOCUMENTATION.md",
+    "taskState": "docs/governance/TASK_AUTHORITY.md",
+    "product": "docs/architecture/PRODUCT_ARCHITECTURE.md",
+    "verification": "docs/governance/VERIFICATION.md"
+  },
+  "acceptance": [
+    "Every candidate source is inventoried and classified without creating a second work ledger.",
+    "Completed/superseded work is removed from active implementation intake using current-main evidence.",
+    "Every surviving item is routed to one canonical owner and either a Task Authority proposal, domain/program update, decision, evidence/receipt, reference/donor or idea catalog.",
+    "Superseded sources are archived only after no-loss consolidation manifests prove unique material was harvested.",
+    "Implementation-complete but verification-incomplete work remains explicitly distinguishable."
+  ],
+  "authorization": {
+    "externalWrites": false,
+    "deploy": false,
+    "billingChange": false,
+    "oauthScopeChange": false
+  },
+  "risk": "low",
+  "rollback": "Revert only this mission's documentation/Royal Exchange records; do not alter source donor artifacts or canonical Task Index state.",
+  "state": "planned"
+}
