@@ -56,6 +56,23 @@
         "prompt/model architecture"
       ],
       "disposition": "BRAIN_AND_PROMPTS_SPLIT"
+    },
+    {
+      "id": "PLAN-MERGE-0005",
+      "sources": [
+        "docs/VIEWTUBE_UNFINISHED_WORK_MASTER_RESOURCE_2026-09-11.md",
+        "docs/VIEWTUBE_100_ITEM_CURRENT_MAIN_UNFINISHED_WORK_AUDIT_2026-09-25.md",
+        "tasks/viewtube-finish-program-2026-09-24.md"
+      ],
+      "survivor": "docs/programs/INTEGRATED_APPLICATION.md",
+      "harvested": [
+        "current unfinished cross-system work routed to plan-family survivors and current task projections",
+        "55 expansion ideas preserved in ideas/lists/product/current-main-audit-expansion-opportunities.md and ideas/registry.json",
+        "standalone HTML/widget/prototype atlas preserved as donor/reference material",
+        "verification/release/receipt/backlog-governance concepts promoted into current governance authorities",
+        "historical acceptance criteria and phase ordering retained through consolidation manifest and source provenance"
+      ],
+      "disposition": "MULTI_TARGET_DONOR_CONSOLIDATION_IN_PROGRESS"
     }
   ]
 }
