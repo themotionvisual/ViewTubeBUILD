@@ -1,0 +1,177 @@
+{
+  "schemaVersion": "viewtube.improvements.v1",
+  "lastEdited": "2026-09-27",
+  "recommendations": [
+    {
+      "id": "IMPROVE-001",
+      "title": "Capability Home Pages",
+      "category": "GOVERNANCE",
+      "ideaId": "IDEA-GOV-001",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-002",
+      "title": "Plan Families",
+      "category": "GOVERNANCE",
+      "ideaId": "IDEA-GOV-002",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-003",
+      "title": "Automatic Similar-Plan Detection",
+      "category": "AUTOMATION",
+      "ideaId": "IDEA-GOV-003",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-004",
+      "title": "Mandatory Existing Work Checked",
+      "category": "GOVERNANCE",
+      "ideaId": "IDEA-GOV-004",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-005",
+      "title": "Universal Work Packet",
+      "category": "WORKFLOW",
+      "ideaId": "IDEA-GOV-005",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-006",
+      "title": "Capability IDs Everywhere",
+      "category": "GOVERNANCE",
+      "ideaId": "IDEA-GOV-006",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-007",
+      "title": "Plan Merge Records",
+      "category": "GOVERNANCE",
+      "ideaId": "IDEA-GOV-007",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-008",
+      "title": "Feature Idea Registry",
+      "category": "IDEAS",
+      "ideaId": "IDEA-GOV-008",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-009",
+      "title": "Idea-to-Capability Routing",
+      "category": "IDEAS",
+      "ideaId": "IDEA-GOV-009",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-010",
+      "title": "Code Ownership Map",
+      "category": "ARCHITECTURE",
+      "ideaId": "IDEA-GOV-010",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-037",
+      "title": "Open Questions Queue",
+      "category": "GOVERNANCE",
+      "ideaId": "IDEA-GOV-037",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-043",
+      "title": "Capability Coverage Audit",
+      "category": "AUDIT",
+      "ideaId": "IDEA-GOV-043",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE",
+        "CAP-VERIFICATION"
+      ]
+    },
+    {
+      "id": "IMPROVE-046",
+      "title": "Reusable Workflow Registry",
+      "category": "WORKFLOW",
+      "ideaId": "IDEA-GOV-046",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-047",
+      "title": "Skill-to-Workflow Mapping",
+      "category": "WORKFLOW",
+      "ideaId": "IDEA-GOV-047",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-048",
+      "title": "Improvement Recommendation Log",
+      "category": "IMPROVEMENT",
+      "ideaId": "IDEA-GOV-048",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-049",
+      "title": "Unified Development Control Room",
+      "category": "CONTROL_ROOM",
+      "ideaId": "IDEA-GOV-049",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    },
+    {
+      "id": "IMPROVE-050",
+      "title": "Convergence-First Governance Rule",
+      "category": "GOVERNANCE",
+      "ideaId": "IDEA-GOV-050",
+      "status": "IMPLEMENTING",
+      "capabilityIds": [
+        "CAP-DOCUMENT-GOVERNANCE"
+      ]
+    }
+  ]
+}
