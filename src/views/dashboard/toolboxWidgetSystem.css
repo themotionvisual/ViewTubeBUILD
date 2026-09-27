@@ -1778,7 +1778,7 @@
   min-height: var(--widget-control-height);
   border: 2px solid var(--widget-field-rest-stroke, color-mix(in srgb, var(--widget-color, #34cdea) 52%, white));
   border-radius: 6px;
-  background: #fff;
+  background: color-mix(in srgb, var(--widget-color, #34cdea) 8%, white);
   font-size: 12px; font-weight: 700; font-family: inherit;
   color: var(--widget-border);
   font-weight: 950;
@@ -1803,10 +1803,10 @@
 :where(.dashboard-barrier) .vt-textarea { resize: vertical; }
 :where(.dashboard-barrier) .vt-input:focus, :where(.dashboard-barrier) .vt-textarea:focus {
   border-color: var(--widget-field-focus-border, var(--widget-color, #34cdea));
-  background: var(--widget-field-focus-fill, color-mix(in srgb, var(--widget-color, #34cdea) 18%, white));
+  background: var(--widget-field-focus-fill, #fff);
   box-shadow:
-    0 0 0 3px var(--widget-field-focus-ring, color-mix(in srgb, var(--widget-color, #34cdea) 35%, transparent)),
-    0 0 16px 2px var(--widget-field-focus-glow, color-mix(in srgb, var(--widget-color, #34cdea) 55%, transparent));
+    0 0 0 3px var(--widget-field-focus-ring, color-mix(in srgb, var(--widget-color, #34cdea) 58%, transparent)),
+    0 0 16px 2px var(--widget-field-focus-glow, color-mix(in srgb, var(--widget-color, #34cdea) 46%, transparent));
 }
 
 /* Fixed-height text fields use the same unobtrusive widget-color scroll rail. */
@@ -4192,11 +4192,12 @@ stroke-width: 2px;
 
 input.vt-input:focus,
 textarea.vt-input:focus {
-  background: color-mix(in srgb, var(--widget-color, #fff) 18%, white) !important;
-  
-  /* Optional: ensure the transition is smooth */
+  background: #fff !important;
+  border-color: var(--widget-field-focus-border, var(--widget-color, #34cdea)) !important;
+  box-shadow:
+    0 0 0 3px var(--widget-field-focus-ring, color-mix(in srgb, var(--widget-color, #34cdea) 58%, transparent)),
+    0 0 16px 2px var(--widget-field-focus-glow, color-mix(in srgb, var(--widget-color, #34cdea) 46%, transparent)) !important;
   transition: background-color 0.2s ease;
-
 }
 
 /* Legacy shadow-clearance margin/padding hacks removed.
