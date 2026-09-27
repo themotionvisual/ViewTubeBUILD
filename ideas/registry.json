@@ -5154,6 +5154,294 @@
       "sourceListId": "IDEA-LIST-APP-CONVERGENCE-001",
       "status": "UNREVIEWED",
       "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WFI-001",
+      "title": "Promotion framework",
+      "summary": "Reusable compact-widget → Toolbox launcher/resume contract.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Workflow Infrastructure",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "PROMOTION-FRAMEWORK",
+      "similarityKeys": [
+        "promotion framework",
+        "workflow infrastructure"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WFI-002",
+      "title": "Handoff metadata convergence",
+      "summary": "`accepts` / `produces` already exist in `VIEWTUBE_TOOL_CAPABILITIES`; add required-context, mutation/resume semantics, explicit suggested-handoff metadata where useful, and bridge tool metadata with WidgetRegistry rather than recreating it.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Workflow Infrastructure",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "HANDOFF-METADATA-CONVERGENCE",
+      "similarityKeys": [
+        "handoff metadata convergence",
+        "workflow infrastructure"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WFI-003",
+      "title": "Universal operation envelope",
+      "summary": "ActionPacket already fans into GenerationRecord, Vault and ContentBuild events; converge these IDs/receipts/BrainTrace/render-generation records toward shared operation identity.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Workflow Infrastructure",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "UNIVERSAL-OPERATION-ENVELOPE",
+      "similarityKeys": [
+        "universal operation envelope",
+        "workflow infrastructure"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WFI-004",
+      "title": "Workflow recipe registry",
+      "summary": "Eight hard-coded suggested chain templates already exist; generalize them into structured validated recipe definitions and add the remaining catalog without creating another execution owner.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Workflow Infrastructure",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "WORKFLOW-RECIPE-REGISTRY",
+      "similarityKeys": [
+        "workflow recipe registry",
+        "workflow infrastructure"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WFI-005",
+      "title": "Workflow chain viewer convergence",
+      "summary": "WorkflowChainBuilder/workflowEngine already exist; connect them to universal packet receipts, evidence, canonical IDs and outcomes instead of building a parallel viewer.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Workflow Infrastructure",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "WORKFLOW-CHAIN-VIEWER-CONVERGENCE",
+      "similarityKeys": [
+        "workflow chain viewer convergence",
+        "workflow infrastructure"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WFI-006",
+      "title": "Brain-compatible destination ranking",
+      "summary": "Preference-based ranking already exists; extend ranking with bounded Project/evidence/required-context compatibility and User Controls.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Workflow Infrastructure",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "BRAIN-COMPATIBLE-DESTINATION-RANKING",
+      "similarityKeys": [
+        "brain compatible destination ranking",
+        "workflow infrastructure"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WFI-007",
+      "title": "Creator preference learning",
+      "summary": "Accepted/rejected suggestion signals are already creator-learning gated; remaining work is governed outcome/evaluation integration, freshness/decay policy if required, and certification.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Workflow Infrastructure",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "CREATOR-PREFERENCE-LEARNING",
+      "similarityKeys": [
+        "creator preference learning",
+        "workflow infrastructure"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WFI-008",
+      "title": "Core Toolbox promotions",
+      "summary": "Director, Publisher, Manager, Autopsy, Oracle, Brain Hub, Comment Operations, Optimization, Asset Engine and Thumbnail Studio.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Workflow Infrastructure",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "CORE-TOOLBOX-PROMOTIONS",
+      "similarityKeys": [
+        "core toolbox promotions",
+        "workflow infrastructure"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WFI-009",
+      "title": "Domain-workbench consolidation",
+      "summary": "Metadata/SEO, Retention, Keyword, Calendar, Audience, Discovery and Monetization.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Workflow Infrastructure",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "DOMAIN-WORKBENCH-CONSOLIDATION",
+      "similarityKeys": [
+        "domain workbench consolidation",
+        "workflow infrastructure"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WFI-010",
+      "title": "Project/asset identity continuity certification",
+      "summary": "ActionPacket already carries Project/ContentBuild/video/evidence fields and persists scoped events; prove package/asset/version identity through real destination consumers.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Workflow Infrastructure",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "PROJECT-ASSET-IDENTITY-CONTINUITY-CERTIFICATION",
+      "similarityKeys": [
+        "project asset identity continuity certification",
+        "workflow infrastructure"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WFI-011",
+      "title": "Outcome/evaluation closure",
+      "summary": "Consequential recipes declare outcome target/checkpoint and bind later measurements.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Workflow Infrastructure",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "OUTCOME-EVALUATION-CLOSURE",
+      "similarityKeys": [
+        "outcome evaluation closure",
+        "workflow infrastructure"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
+    },
+    {
+      "id": "IDEA-WFI-012",
+      "title": "Responsive/accessibility certification",
+      "summary": "Compact widget and full Toolbox pairs pass desktop/narrow/mobile portrait/mobile landscape and relevant state matrices.",
+      "category": "Toolbox & Widget Architecture",
+      "subcategory": "Workflow Infrastructure",
+      "capabilityIds": [
+        "CAP-CREATOR-OPERATIONS",
+        "CAP-WIDGET-SURFACES"
+      ],
+      "targetType": "SYSTEM",
+      "targetId": "RESPONSIVE-ACCESSIBILITY-CERTIFICATION",
+      "similarityKeys": [
+        "responsive accessibility certification",
+        "workflow infrastructure"
+      ],
+      "sourceRefs": [
+        "ideas/lists/product/toolbox-widget-promotion-and-workbench-ideas-2026-09-27.md",
+        "docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md"
+      ],
+      "sourceListId": "IDEA-LIST-TOOLBOX-WIDGETS-001",
+      "status": "UNREVIEWED",
+      "relatedPlanFamilyIds": []
     }
   ]
 }
