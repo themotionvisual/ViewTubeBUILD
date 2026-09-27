@@ -292,6 +292,28 @@ Keep these independent unless later evidence proves duplication:
 
 ---
 
+## 4.5. Widget → Toolbox promotion boundary
+
+The Dashboard should remain an instrument panel. A widget may expose status, a signature visualization, bounded controls, a quick action and a resumable handoff, but it should not become a permanently expanded multi-page application just to preserve feature parity.
+
+Use `docs/specifications/TOOLBOX_PROMOTION_AND_WORKFLOW_CHAINS.md` for the current promotion audit and workflow-chain contract. It identifies twenty existing/proposed surfaces that should be audited for one of five dispositions:
+
+- `KEEP_WIDGET`;
+- `PROMOTE_TOOLBOX`;
+- `WIDGET_PLUS_TOOLBOX`;
+- `MERGE_WORKBENCH`;
+- `RETIRE_AFTER_PARITY`.
+
+Promotion is required for review when a surface accumulates multiple workflow stages, editable asset families, async job state, variant comparison, lineage/provenance, approvals, history, or repeated cross-tool handoffs. File size is evidence for review, not the decision criterion.
+
+The likely first `WIDGET_PLUS_TOOLBOX` cohort is Video Director, Video Publisher, Video Manager, Video Autopsy, Daily Oracle, Brain Hub, Video Asset Engine and the Thumbnail Studio family. Comment Responder/Operator, Metadata/SEO, Retention, Keyword, Publishing Calendar, Audience, Discovery/Distribution and Monetization should be evaluated primarily as consolidation/workbench families.
+
+Compact and full surfaces must share canonical domain state. Do not mount a Dashboard `WidgetShell` inside Studio/Toolbox and do not mount a full Toolbox inside a Dashboard widget as a shortcut.
+
+### Workflow-chain relationship
+
+The same specification preserves forty creator workflow recipes, but they are **not forty widget requirements and not forty task records**. Dashboard widgets participate as evidence sources, compact actions, packet producers/consumers and resume points. Cross-tool continuity should be implemented through shared handoff metadata and ActionPacket/operation identity rather than bespoke widget-to-widget wiring.
+
 ## 5. Empty, disconnected and no-data preview framework
 
 Every widget must look intentionally designed when no account is connected, data has not synced, or the relevant collection is genuinely empty.
